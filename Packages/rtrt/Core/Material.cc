@@ -28,39 +28,55 @@ Material::~Material()
 Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& normal) const
 {
     if(scene->ambient_hack){
-#if 0
-	Color B(scene->get_cup() );
-	Color C(scene->get_cdown());
-#endif
-
-        float cosine = scene->get_groundplane().cos_angle( normal );
-        float sine = fsqrt ( 1.F - cosine*cosine );
-        //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
-        float w0, w1;
-	if(cosine > 0){
-             w0= sine/2.F;
-	     w1= (1.F -  sine/2.F);
-	} else {
-             w1= sine/2.F;
-	     w0= (1.F -  sine/2.F);
-	}
-/*
-        double cons =  scene->get_groundplane().scaled_distance( p );
-        cons += 0.5*(1+cosine);
-        if (cons > 1) cons = 1;
-*/
-#if 0
-        double cons = 1;
-        Color D = B*C;
-        Color E = B*(1.F-w) + C*(w);
-        return cons*E + (1-cons)*D;
-#else
-        return scene->get_cup()*w1 + scene->get_cdown()*w0;
-#endif
+      
+      float cosine = scene->get_groundplane().cos_angle( normal );
+      if (cosine < 0)
+	cosine *= -1;
+      float angle = acos(cosine);
+      float t = angle/M_PI_2;
+      
+      return scene->get_cup()*(1.-t) + scene->get_cdown()*t;
     } else {
-	return scene->get_average_bg( ) ;
+      return scene->get_average_bg( ) ;
     }
 } 
+
+//  Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& normal) const
+//  {
+//      if(scene->ambient_hack){
+//  #if 0
+//  	Color B(scene->get_cup() );
+//  	Color C(scene->get_cdown());
+//  #endif
+
+//          float cosine = scene->get_groundplane().cos_angle( normal );
+//          float sine = fsqrt ( 1.F - cosine*cosine );
+//          //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
+//          float w0, w1;
+//  	if(cosine > 0){
+//               w0= sine/2.F;
+//  	     w1= (1.F -  sine/2.F);
+//  	} else {
+//               w1= sine/2.F;
+//  	     w0= (1.F -  sine/2.F);
+//  	}
+//  /*
+//          double cons =  scene->get_groundplane().scaled_distance( p );
+//          cons += 0.5*(1+cosine);
+//          if (cons > 1) cons = 1;
+//  */
+//  #if 0
+//          double cons = 1;
+//          Color D = B*C;
+//          Color E = B*(1.F-w) + C*(w);
+//          return cons*E + (1-cons)*D;
+//  #else
+//          return scene->get_cup()*w1 + scene->get_cdown()*w0;
+//  #endif
+//      } else {
+//  	return scene->get_average_bg( ) ;
+//      }
+//  } 
 
 
 Vector Material::reflection(const Vector& v, const Vector n) const {
