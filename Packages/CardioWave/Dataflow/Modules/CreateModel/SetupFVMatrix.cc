@@ -23,11 +23,15 @@ namespace CardioWave {
 using namespace SCIRun;
 
 class CardioWaveSHARE SetupFVMatrix : public Module {
-	GuiDouble	sigx_;
-	GuiDouble	sigy_;
-	GuiDouble	sigz_;
+	GuiDouble	sigx1_;
+	GuiDouble	sigy1_;
+	GuiDouble	sigz1_;
+	GuiDouble	sigx2_;
+	GuiDouble	sigy2_;
+	GuiDouble	sigz2_;
 	GuiString	sprfile_;
 	GuiString	volumefile_;
+	GuiInt		BW_;
 
 public:
   SetupFVMatrix(const string& id);
@@ -41,11 +45,16 @@ extern "C" CardioWaveSHARE Module* make_SetupFVMatrix(const string& id) {
 
 SetupFVMatrix::SetupFVMatrix(const string& id)
   : Module("SetupFVMatrix", id, Source, "CreateModel", "CardioWave"),
-    sigx_("sigx", id, this),
-    sigy_("sigy", id, this),
-    sigz_("sigz", id, this),
+    sigx1_("sigx1", id, this),
+    sigy1_("sigy1", id, this),
+    sigz1_("sigz1", id, this),
+    sigx2_("sigx2", id, this),
+    sigy2_("sigy2", id, this),
+    sigz2_("sigz2", id, this),
     sprfile_("sprfile", id, this),
-    volumefile_("volumefile", id, this)
+    volumefile_("volumefile", id, this),
+    BW_("BW", id, this)
+
 {
 }
 
@@ -53,11 +62,15 @@ SetupFVMatrix::~SetupFVMatrix(){
 }
 
 void SetupFVMatrix::execute(){
-	double sigx = sigx_.get();
-	double sigy = sigy_.get();
-	double sigz = sigz_.get();
+	double sigx1 = sigx1_.get();
+	double sigy1 = sigy1_.get();
+	double sigz1 = sigz1_.get();
+	double sigx2 = sigx2_.get();
+	double sigy2 = sigy2_.get();
+	double sigz2 = sigz2_.get();
 	string sprfile = sprfile_.get();
 	string volumefile = volumefile_.get();
+	int BW = BW_.get();
 
 //	FILE HANDEL IN
 
