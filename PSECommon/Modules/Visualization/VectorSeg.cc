@@ -196,6 +196,7 @@ void VectorSeg::execute()
 }
 
 void VectorSeg::parallel_vec_seg(int proc) {
+    cerr << "parallel_vec_seg "<<proc<<"\n";
     int first_active_field=1;
     int sx=proc*(nx-1)/np;
     int ex=(proc+1)*(nx-1)/np;
@@ -244,7 +245,8 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
     int min_changed;
     int max_changed;
     int have_any=0;
-    for (int f=0; f<numFields.get(); f++) {
+    int f;
+    for (f=0; f<numFields.get(); f++) {
 	int fs=fld_sel[f]->get();
 	fld_changed = (fs!=last_fld_sel[f]);
 	last_fld_sel[f]=fs;
@@ -262,6 +264,12 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 	    }
 	}
     }
+    cerr << "have_any = "<<have_any<<"\n";
+    cerr << "numFields.get = "<<numFields.get() << "\n";
+    for (f=0; f<numFields.get(); f++)
+	for (int m=0; m<NUM_MATERIALS; m++)
+	    cerr << "min("<<f<<","<<m<<")=" << last_min(f,m) << "  max("<<f<<","<<m<<")=" << last_max(f,m) <<"\n";
+
     if (!have_any) {
 	ofieldRG->grid.initialize(0);
     } else if (isoChanged) {
@@ -275,6 +283,9 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.8  2000/02/02 05:51:58  dmw
+// added new module to index.cc and fixed bugs
+//
 // Revision 1.7  1999/10/07 02:07:08  sparker
 // use standard iostreams and complex type
 //
