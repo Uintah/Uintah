@@ -55,13 +55,8 @@ ProblemSpecP ProblemSpecReader::readInputFile(const std::string name)
 
   DOM_Document doc = parser.getDocument();
 
-  cout << "Works after doing getDocument . . ." << endl;
-  DOM_Node null_node;
-
-  cout << "Works after doing null_node . . . " << endl;
-
   ProblemSpecP prob_spec = new ProblemSpec;
-  cout << "Works after creating prob_spec . . ." << endl;
+  DOM_Node null_node;
  
   prob_spec->setDoc(doc);
   prob_spec->setNode(null_node);
