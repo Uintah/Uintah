@@ -76,6 +76,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
@@ -3011,6 +3012,31 @@ BoundaryCondition::intrusionScalarBC( const ProcessorGroup*,
 		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
 		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
 		vars->cellType, d_intrusionBC->d_cellTypeID);
+}
+
+void
+BoundaryCondition::intrusionEnthalpyBC( const ProcessorGroup*,
+					const Patch* patch, double delta_t,
+					CellInformation* cellinfo,
+					ArchesVariables* vars) {
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  //fortran call
+  fort_mmwallbc_trans(idxLo, idxHi,
+		      vars->scalarCoeff[Arches::AE],
+		      vars->scalarCoeff[Arches::AW],
+		      vars->scalarCoeff[Arches::AN],
+		      vars->scalarCoeff[Arches::AS],
+		      vars->scalarCoeff[Arches::AT],
+		      vars->scalarCoeff[Arches::AB],
+		      vars->scalarNonlinearSrc,
+		      vars->scalarLinearSrc,
+		      vars->old_enthalpy,
+		      vars->old_density,
+		      vars->cellType, d_intrusionBC->d_cellTypeID,
+		      cellinfo->sew, cellinfo->sns, cellinfo->stb, 
+		      delta_t);
 }
 
 
