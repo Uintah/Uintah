@@ -355,6 +355,8 @@ int main(int argc, char** argv)
   float threshold = 0.3;
   float luminance=1.0;
   int num_sample_divs=0;
+  bool noShadows = false;
+  bool noDirectL = false;
   
   for(int i=1;i<argc;i++) {
     if(strcmp(argv[i], "-light_pos")==0) {
@@ -413,6 +415,11 @@ int main(int argc, char** argv)
       work_load_max = atoi(argv[++i]);
     } else if (strcmp(argv[i],"-start")==0) {
       next_sphere = (size_t)atoi(argv[++i]);
+    } else if (strcmp(argv[i],"-ambientonly")==0) {
+      noShadows = true;
+      noDirectL = true;
+    } else if (strcmp(argv[i],"-no_shadows")==0) {
+      noShadows = true;
     } else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
@@ -440,6 +447,8 @@ int main(int argc, char** argv)
       cerr<<"  -lum <float>                luminance value (1.0)"<<endl;
       cerr<<"  -workload <int>             size of the maximum work load (1000)"<<endl;
       cerr<<"  -start <int>                start at given sphere (0)"<<endl;
+      cerr<<"  -ambientonly                only compute the ambient term\n";
+      cerr<<"  -no_shadows                 don't compute shadows\n";
       exit(1);
     }
   }
@@ -475,6 +484,9 @@ int main(int argc, char** argv)
   if (outfile == 0) {
     outfile = "sphere";
   }
+
+  if (noShadows) ptcontext.shadowsOff();
+  if (noDirectL) ptcontext.directLightingOff();
   
   // Partition the spheres out and generate textures
   if (nworkers <= 1) {
