@@ -18,10 +18,11 @@ OPENGLSRCS =
 #endif
 
 OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  GenSigmaSet.o  \
-	Gradient.o  MMeshToSFUG.o  TransformField.o  $(OPENGLOBJS)
+	Gradient.o  MMeshToSFUG.o  TransformField.o  FieldSeed.o \
+	MergeTensor.o FieldRGAug.o $(OPENGLOBJS)
 SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc GenSigmaSet.cc \
-	Gradient.cc MMeshToSFUG.cc \
-	TransformField.cc $(OPENGLSRCS)
+	Gradient.cc MMeshToSFUG.cc FieldSeed.cc MergeTensor.cc\
+	TransformField.cc FieldRGAug.cc $(OPENGLSRCS)
 
 LIBNAME = Fields
 
@@ -34,3 +35,4 @@ SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+

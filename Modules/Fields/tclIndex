@@ -7,5 +7,7 @@
 # a script that loads the command.
 
 set auto_index(ClipField) "source $dir/ClipField.tcl"
+set auto_index(FieldRGAug) "source $dir/FieldRGAug.tcl"
 set auto_index(FieldFilter) "source $dir/FieldFilter.tcl"
+set auto_index(FieldSeed) "source $dir/FieldSeed.tcl"
 set auto_index(Downsample) "source $dir/Downsample.tcl"
