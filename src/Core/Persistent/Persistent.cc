@@ -77,8 +77,8 @@ PersistentTypeID::PersistentTypeID(const char* typeName,
 }
 
 //----------------------------------------------------------------------
-PersistentTypeID::PersistentTypeID(const string typeName, 
-				   const string parentName,
+PersistentTypeID::PersistentTypeID(const string& typeName, 
+				   const string& parentName,
 				   Persistent* (*maker)())
   :  type(typeName), parent(parentName), maker(maker)
 {
@@ -102,6 +102,19 @@ PersistentTypeID::PersistentTypeID(const string typeName,
   }
   
   (*table)[typestring] = this;
+}
+
+PersistentTypeID::~PersistentTypeID()
+{
+  Piostream::MapClStringPersistentTypeID::iterator iter;
+  iter = table->find(type.c_str());
+  if (iter == table->end()) {
+    cerr << "WARNING: Could not remove type from Object type database: " << type << endl;
+  } else {
+    table->erase(iter);
+  }
+  if(table->size() == 0)
+    delete table;
 }
 
 //----------------------------------------------------------------------
