@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined( __sgi ) || defined ( __alpha )
+#if defined( __sgi ) || defined ( __alpha ) || defined ( _AIX )
 #  include <fcntl.h>
 #  include <sys/ioctl.h>
 #  include <sys/procfs.h>
@@ -48,7 +48,8 @@ namespace SCIRun {
 
   bool ProcessInfo::IsSupported ( int info_type )
   {
-#if defined( __linux ) || defined( __sgi ) || defined( __alpha)
+
+#if defined( __linux ) || defined( __sgi ) || defined( __alpha) || defined( _AIX )
 
     switch ( info_type ) {
     case MEM_SIZE: return true;
@@ -58,15 +59,16 @@ namespace SCIRun {
 
 #elif defined( __APPLE__ )
     return false;
-#elif defined( _AIX )
-    return false;
 #else
     return false;
 #endif
+
   }
+
 
   unsigned long ProcessInfo::GetInfo ( int info_type )
   {
+
 #if defined( __linux )
 
     char statusFileName[MAXPATHLEN];
@@ -124,14 +126,35 @@ namespace SCIRun {
     
     return 0;
 
-#elif defined( __APPLE__ )
-    return 0;
 #elif defined( _AIX )
+
+    char statusFileName[MAXPATHLEN];
+    sprintf( statusFileName, "/proc/%d/psinfo", getpid() );
+
+    int file = open( statusFileName, O_RDONLY );
+
+    if ( file != -1 ) {
+      struct psinfo processInfo;
+      read( file, &processInfo, sizeof( psinfo ) );
+
+      close( file );
+
+      switch ( info_type ) {
+      case MEM_SIZE: return processInfo.pr_size   * 1024;
+      case MEM_RSS : return processInfo.pr_rssize * 1024;
+      default:       return 0;
+      }
+    }
+
+    return 0;
+
+#elif defined( __APPLE__ )
     return 0;
 #else
     return 0;
 #endif
-  }
+
+  } // unsigned long ProcessInfo::GetInfo ( int info_type )
 
 
 } // namespace SCIRun {
