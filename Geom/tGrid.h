@@ -27,18 +27,29 @@ class TexGeomGrid : public GeomObj {
     Vector u, v, w;
     void adjust();
 
-    unsigned char* tmapdata; // texture map
+    unsigned short* tmapdata; // texture map
     int MemDim;
     int dimU,dimV;
+
+    int num_chan;
+    int convolve;
+    int conv_dim;
+
+    int kernal_change;
+
+    float conv_data[25];
 public:
-    TexGeomGrid(int, int, const Point&, const Vector&, const Vector&);
+    TexGeomGrid(int, int, const Point&, const Vector&, const Vector&,
+		int chanels=3);
     TexGeomGrid(const TexGeomGrid&);
     virtual ~TexGeomGrid();
 
     virtual GeomObj* clone();
 
-    void set(unsigned char* data,int datadim);
-    
+    void set(unsigned short* data,int datadim);
+
+    void do_convolve(int dim, float* data);
+  
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif

@@ -642,57 +642,126 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
   Vector uu(u/(nu-1));
   Vector vv(v/(nv-1));
 
-  cerr << "Trying to do texture draw...\n";
+//  cerr << "Trying to do texture draw...\n";
+
+  if (!convolve) {
   
-  switch(di->get_drawtype()){
-  case DrawInfoOpenGL::WireFrame:
-    break;
-  case DrawInfoOpenGL::Flat:
-  case DrawInfoOpenGL::Gouraud:
-  case DrawInfoOpenGL::Phong:
-    {
-      if (tmap_dlist == -1) {
-	tmap_dlist = glGenLists(1);
-	glNewList(tmap_dlist,GL_COMPILE_AND_EXECUTE);
-	glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
-		  GL_MODULATE);
-	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
-			GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
-			GL_LINEAR);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	
-	glTexImage2D(GL_TEXTURE_2D,0,3,tmap_size,tmap_size,
-		     0,GL_RGB,GL_UNSIGNED_BYTE,tmapdata);
-	glEndList();
-	// cerr << "Generated List " << tmap_dlist << endl;
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+//      break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+      {
+	if (tmap_dlist == -1) {
+	  tmap_dlist = glGenLists(1);
+	  glNewList(tmap_dlist,GL_COMPILE_AND_EXECUTE);
+	  glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
+		    GL_MODULATE);
+	  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+			  GL_NEAREST);
+	  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
+			  GL_NEAREST);
+	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	  if (num_chan == 3) {
+	    glTexImage2D(GL_TEXTURE_2D,0,3,tmap_size,tmap_size,
+			 0,GL_RGB,GL_UNSIGNED_INT,tmapdata);
+	  } else {
+
+	    glTexImage2D(GL_TEXTURE_2D,0,GL_LUMINANCE,tmap_size,tmap_size,
+			 0,GL_LUMINANCE,GL_UNSIGNED_SHORT,tmapdata);
+	  }
+	  glEndList();
+	  // cerr << "Generated List " << tmap_dlist << endl;
+	}
+	else {
+	  glCallList(tmap_dlist);
+	}
+	glColor4f(1.0,1.0,1.0,1.0);
+	glEnable(GL_TEXTURE_2D);
+      
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0,0.0);
+	glVertex3d(corner.x(),corner.y(),corner.z());
+      
+	glTexCoord2f(dimU/(1.0*tmap_size),0.0);
+	glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
+      
+	glTexCoord2f(dimU/(1.0*tmap_size),
+		     dimV/(1.0*tmap_size));
+	glVertex3d(corner.x()+v.x()+u.x(),
+		   corner.y()+v.y()+u.y(),
+		   corner.z()+v.z()+u.z());
+      
+	glTexCoord2f(0.0,dimV/(1.0*tmap_size));
+	glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
+      
+	glEnd();
+      
+	glDisable(GL_TEXTURE_2D);
+	break;
       }
-      else {
-	glCallList(tmap_dlist);
-      }
-      glColor4f(1.0,1.0,1.0,1.0);
-      glEnable(GL_TEXTURE_2D);
-      
-      glBegin(GL_QUADS);
-      glTexCoord2f(0.0,0.0);
-      glVertex3d(corner.x(),corner.y(),corner.z());
-      
-      glTexCoord2f(dimU/(1.0*tmap_size),0.0);
-      glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
-      
-      glTexCoord2f(dimU/(1.0*tmap_size),
-		   dimV/(1.0*tmap_size));
-      glVertex3d(corner.x()+v.x()+u.x(),
-		 corner.y()+v.y()+u.y(),
-		 corner.z()+v.z()+u.z());
-      
-      glTexCoord2f(0.0,dimV/(1.0*tmap_size));
-      glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
-      
-      glEnd();
-      
-      glDisable(GL_TEXTURE_2D);
+    }
+  } else { // doing convolution
+  
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
       break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+      {
+	if (tmap_dlist == -1 || kernal_change) {
+	  if (tmap_dlist == -1)
+	    tmap_dlist = glGenLists(1);
+	  glNewList(tmap_dlist,GL_COMPILE_AND_EXECUTE);
+	  glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
+		    GL_MODULATE);
+	  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+			  GL_NEAREST);
+	  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
+			  GL_NEAREST);
+	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	  glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,
+				   GL_INTENSITY_EXT,
+				   conv_dim,conv_dim,
+				   GL_FLOAT,GL_RED,conv_data);
+	  
+	  glTexImage2D(GL_TEXTURE_2D,0,GL_INTENSITY_EXT,
+		       tmap_size,tmap_size,
+		       0,GL_RED,GL_UNSIGNED_BYTE,tmapdata);
+	  glEndList();
+	  // cerr << "Generated List " << tmap_dlist << endl;
+	}
+	else {
+	  glCallList(tmap_dlist);
+	}
+	glColor4f(1.0,1.0,1.0,1.0);
+	glEnable(GL_TEXTURE_2D);
+      
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0,0.0);
+	glVertex3d(corner.x(),corner.y(),corner.z());
+      
+	glTexCoord2f(dimU/(1.0*tmap_size),0.0);
+	glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
+      
+	glTexCoord2f(dimU/(1.0*tmap_size),
+		     dimV/(1.0*tmap_size));
+	glVertex3d(corner.x()+v.x()+u.x(),
+		   corner.y()+v.y()+u.y(),
+		   corner.z()+v.z()+u.z());
+      
+	glTexCoord2f(0.0,dimV/(1.0*tmap_size));
+	glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
+      
+	glEnd();
+      
+	glDisable(GL_TEXTURE_2D);
+	break;
+      }
     }
   }
 }
