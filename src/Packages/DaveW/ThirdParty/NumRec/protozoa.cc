@@ -70,7 +70,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
 
 	    for (i=1;i<=mpts;i++) {
 		A(mpts,i)=1;
-		A(mpts+1,i)= y[i];
+		A(mpts+1,i)= y[i]*y[i];
 		for (j=1;j<=ndim;j++) {
 		    A(j,i)= p[i][j];
 		    A(j+ndim,i) = p[i][j]*p[i][j];
@@ -118,6 +118,7 @@ void protozoa(double **p, double y[], int ndim, double ftol,
    // so you have the matrix solution.  Now to find the minimum value for the quadratic equation you take the derivative of ax^2 + bx (for each dimension x,y,z) and set it to zero so x = -b/2a
    for (i=1;i<=ndim;i++){
        if (x[i+ndim] <=  0) {  // it is convex instead of concave
+	   cerr << "convexity detected on axis " << i << endl;
 	   GET_PSUM
 	   p[ihi][i] = psum[i]/mpts;
        }
