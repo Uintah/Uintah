@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 
 #include <fstream>
+#include <algorithm>
 
 #ifdef HAVE_HDF5
 #include "hdf5.h"
