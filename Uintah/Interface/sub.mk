@@ -11,7 +11,7 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/DataWarehouse.cc $(SRCDIR)/LoadBalancer.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Scheduler.cc \
+	$(SRCDIR)/Scheduler.cc $(SRCDIR)/MPMCFDInterface.cc \
 	$(SRCDIR)/MDInterface.cc $(SRCDIR)/Analyze.cc
 
 PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions PSECore/XMLUtil \
@@ -22,6 +22,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.15  2000/12/01 23:02:37  guilkey
+# Adding stuff for coupled MPM and CFD.
+#
 # Revision 1.14  2000/08/24 21:18:13  dav
 # Removed DWMpiHandler
 #

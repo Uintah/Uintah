@@ -20,6 +20,7 @@
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/MPMInterface.h>
+#include <Uintah/Interface/MPMCFDInterface.h>
 #include <Uintah/Interface/MDInterface.h>
 #include <Uintah/Interface/Output.h>
 #include <Uintah/Interface/Analyze.h>
@@ -121,13 +122,17 @@ void SimulationController::run()
    SimulationStateP sharedState = scinew SimulationState(ups);
    
    // Initialize the CFD and/or MPM components
-   CFDInterface* cfd = dynamic_cast<CFDInterface*>(getPort("cfd"));
-   if(cfd)
+   CFDInterface* cfd       = dynamic_cast<CFDInterface*>(getPort("cfd"));
+   MPMInterface* mpm       = dynamic_cast<MPMInterface*>(getPort("mpm"));
+   MPMCFDInterface* mpmcfd = dynamic_cast<MPMCFDInterface*>(getPort("mpmcfd"));
+   if(cfd && !mpmcfd)
       cfd->problemSetup(ups, grid, sharedState);
    
-   MPMInterface* mpm = dynamic_cast<MPMInterface*>(getPort("mpm"));
-   if(mpm)
+   if(mpm && !mpmcfd)
       mpm->problemSetup(ups, grid, sharedState);
+
+   if(mpmcfd)
+      mpmcfd->problemSetup(ups, grid, sharedState);
 
    // Initialize the MD components --tan
    MDInterface* md = dynamic_cast<MDInterface*>(getPort("md"));
@@ -149,7 +154,7 @@ void SimulationController::run()
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
 	 LevelP level = grid->getLevel(i);
-	 scheduleInitialize(level, scheduler, old_dw, cfd, mpm, md);
+	 scheduleInitialize(level, scheduler, old_dw, cfd, mpm, mpmcfd, md);
       }
    }
    
@@ -164,7 +169,7 @@ void SimulationController::run()
    double start_time = Time::currentSeconds();
    double t = timeinfo.initTime;
    
-   scheduleComputeStableTimestep(level, scheduler, old_dw, cfd, mpm, md);
+   scheduleComputeStableTimestep(level,scheduler, old_dw, cfd, mpm, mpmcfd, md);
 
    Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
    if(analyze)
@@ -250,7 +255,7 @@ void SimulationController::run()
       //DataWarehouseP new_dw = scheduler->createDataWarehouse(old_dw);
 
       scheduleTimeAdvance(t, delt, level, scheduler, old_dw, new_dw,
-			  cfd, mpm, md);
+			  cfd, mpm, mpmcfd, md);
 
       //data analyze in each step
       if(analyze) {
@@ -262,7 +267,8 @@ void SimulationController::run()
 	 output->finalizeTimestep(t, delt, level, scheduler, new_dw);
       
       // Begin next time step...
-      scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, md);
+      scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, mpmcfd,
+									 md);
       scheduler->execute(d_myworld, old_dw, new_dw);
       
       old_dw = new_dw;
@@ -394,13 +400,19 @@ void SimulationController::scheduleInitialize(LevelP& level,
 					      DataWarehouseP& new_dw,
 					      CFDInterface* cfd,
 					      MPMInterface* mpm,
+					      MPMCFDInterface* mpmcfd,
 					      MDInterface* md)
 {
-  if(cfd) {
-    cfd->scheduleInitialize(level, sched, new_dw);
+  if(mpmcfd){
+    mpmcfd->scheduleInitialize(level, sched, new_dw);
   }
-  if(mpm) {
-    mpm->scheduleInitialize(level, sched, new_dw);
+  else {
+    if(cfd) {
+      cfd->scheduleInitialize(level, sched, new_dw);
+    }
+    if(mpm) {
+      mpm->scheduleInitialize(level, sched, new_dw);
+    }
   }
   if(md) {
     md->scheduleInitialize(level, sched, new_dw);
@@ -408,16 +420,22 @@ void SimulationController::scheduleInitialize(LevelP& level,
 }
 
 void SimulationController::scheduleComputeStableTimestep(LevelP& level,
-							 SchedulerP& sched,
-							 DataWarehouseP& new_dw,
-							 CFDInterface* cfd,
-							 MPMInterface* mpm,
-							 MDInterface* md)
+							SchedulerP& sched,
+							DataWarehouseP& new_dw,
+							CFDInterface* cfd,
+							MPMInterface* mpm,
+							MPMCFDInterface* mpmcfd,
+							MDInterface* md)
 {
-   if(cfd)
-      cfd->scheduleComputeStableTimestep(level, sched, new_dw);
-   if(mpm)
-      mpm->scheduleComputeStableTimestep(level, sched, new_dw);
+  if(mpmcfd){
+    mpmcfd->scheduleComputeStableTimestep(level, sched, new_dw);
+  }
+  else {
+     if(cfd)
+        cfd->scheduleComputeStableTimestep(level, sched, new_dw);
+     if(mpm)
+        mpm->scheduleComputeStableTimestep(level, sched, new_dw);
+   }
    if(md)
       md->scheduleComputeStableTimestep(level, sched, new_dw);
 }
@@ -429,13 +447,19 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 					       DataWarehouseP& new_dw,
 					       CFDInterface* cfd,
 					       MPMInterface* mpm,
+					       MPMCFDInterface* mpmcfd,
 					       MDInterface* md)
 {
    // Temporary - when cfd/mpm are coupled this will need help
+  if(mpmcfd){
+      mpmcfd->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
+  }
+  else {
    if(cfd)
       cfd->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
    if(mpm)
       mpm->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
+  }
       
    // Added molecular dynamics module, currently it will not be coupled with 
    // cfd/mpm.  --tan
@@ -540,6 +564,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.50  2000/12/01 23:01:46  guilkey
+// Adding stuff for coupled MPM and CFD.
+//
 // Revision 1.49  2000/11/14 04:05:52  jas
 // Now storing patches with two indices: extraCell and interior cell limits.
 //

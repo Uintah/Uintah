@@ -11,6 +11,7 @@
 namespace Uintah {
    class CFDInterface;
    class MPMInterface;
+   class MPMCFDInterface;
    class MDInterface;
 
 /**************************************
@@ -53,14 +54,20 @@ namespace Uintah {
       void problemSetup(const ProblemSpecP&, GridP&);
       void scheduleInitialize(LevelP&, SchedulerP&,
 			      DataWarehouseP&,
-			      CFDInterface*, MPMInterface*, MDInterface*);
+			      CFDInterface*,
+			      MPMInterface*,
+			      MPMCFDInterface*,
+			      MDInterface*);
       void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
 					 DataWarehouseP&, CFDInterface*,
-					 MPMInterface*, MDInterface*);
+					 MPMInterface*,
+					 MPMCFDInterface*,
+					 MDInterface*);
       void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
 			       DataWarehouseP& old_ds,
 			       DataWarehouseP& new_ds,
-			       CFDInterface*, MPMInterface*, MDInterface*);
+			       CFDInterface*, MPMInterface*,
+			       MPMCFDInterface*, MDInterface*);
       
       SimulationController(const SimulationController&);
       SimulationController& operator=(const SimulationController&);
@@ -72,6 +79,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.15  2000/12/01 23:01:46  guilkey
+// Adding stuff for coupled MPM and CFD.
+//
 // Revision 1.14  2000/08/24 20:51:47  dav
 // Removed DWMpiHandler.
 //
