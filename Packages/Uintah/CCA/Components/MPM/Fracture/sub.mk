@@ -19,3 +19,7 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/Connectivity.cc \
 	$(SRCDIR)/CrackFace.cc
 
+PSELIBS	:= Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Exceptions
+
+
