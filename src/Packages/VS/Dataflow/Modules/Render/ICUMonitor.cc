@@ -1170,6 +1170,9 @@ ICUMonitor::setConfigFromData()
            gui_plot_count_.set(intValue);
            if(intValue < 10) idxDigits = 1;
            else if(intValue < 100) idxDigits = 2;
+	   // once we know how many plots we are drawing
+	   // we can (must) call init_plots()
+	   init_plots();
        }
        if(string(ICUvarName, 0, 9) ==  "nw_label-")
        {
