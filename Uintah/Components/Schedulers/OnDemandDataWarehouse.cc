@@ -82,6 +82,12 @@ bool OnDemandDataWarehouse::isFinalized() const
 
 void OnDemandDataWarehouse::finalize()
 {
+   d_ncDB.cleanForeign();
+   d_ccDB.cleanForeign();
+   d_particleDB.cleanForeign();
+   d_sfcxDB.cleanForeign();
+   d_sfcyDB.cleanForeign();
+   d_sfczDB.cleanForeign();
   d_finalized=true;
 }
 
@@ -262,6 +268,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(pset);
+	 var->setForeign();
 	 if(pset->numParticles() == 0){
 	    *size=-1;
 	 } else {
@@ -287,6 +294,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -308,6 +316,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -329,6 +338,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -350,6 +360,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -371,6 +382,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -1597,6 +1609,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.56  2000/10/13 20:46:40  sparker
+// Clean out foreign variables at finalize time
+//
 // Revision 1.55  2000/10/12 20:10:14  sparker
 // rewindow SFC* variables on put()
 //
