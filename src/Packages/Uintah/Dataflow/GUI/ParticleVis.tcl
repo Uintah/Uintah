@@ -163,8 +163,8 @@ itcl_class Uintah_Visualization_ParticleVis {
     method scalable { truefalse } {
 	set w .ui[modname]
 	if {[winfo exists $w]} { 
-	    puts "scalable is $truefalse"
-	    if { $truefalse } {
+	    puts "scalable is $truefalse in tcl"
+	    if { $truefalse == 1} {
 		$w.f3.sf.cb configure -state normal -foreground black
 		$w.f3.l configure -foreground black
 	    } else {
