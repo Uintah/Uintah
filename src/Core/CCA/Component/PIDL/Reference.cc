@@ -89,7 +89,11 @@ Reference::cloneTo(Reference &Clone)
 
 Reference::~Reference()
 {
-  if(primary) delete chan;
+#ifdef HAVE_GLOBUS
+  if(primary)
+#endif
+    delete chan;
+
 }
 
 Reference& Reference::operator=(const Reference& copy)
