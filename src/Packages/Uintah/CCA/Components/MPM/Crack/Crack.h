@@ -19,6 +19,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
 #define MNM 10   // maximum number of materials
+#define MNP 1000 // maximum number of crack points
 
 namespace Uintah {
 using namespace SCIRun;
@@ -62,7 +63,6 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-
     void addComputesAndRequiresAdjustCrackContactInterpolated(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
@@ -76,6 +76,24 @@ class Crack
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
     void AdjustCrackContactIntegrated(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+    void addComputesAndRequiresCalculateJIntegral(Task* task,
+                                const PatchSet* patches,
+                                const MaterialSet* matls) const;
+    void CalculateJIntegral(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+    void addComputesAndRequiresPropagateCracks(Task* task,
+                                const PatchSet* patches,
+                                const MaterialSet* matls) const;
+    void PropagateCracks(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -123,17 +141,17 @@ class Crack
      int NGN;
 
      // Data members for cracks
-     Point cmin[MNM],cmax[MNM];       //extent of crack plane
+     Point cmin[MNM],cmax[MNM];       //crack extent
      int numElems[MNM];               //number of carck elements    
      int numPts[MNM];                 //number of crack points
-     double c_mu[MNM];                //Frcition coefficient
-     double separateVol[MNM];         //normal volume to seperate
-     double contactVol[MNM];          //normal volume to contact
+     double c_mu[MNM];                //Frcition coefficients
+     double separateVol[MNM];         //critical separate volume
+     double contactVol[MNM];          //critical contact volume
      string crackType[MNM];           //crack contact type
-     Point cx[MNM][1000];             //crack position
-     short moved[MNM][1000];          //if crack point moved
-     IntVector cElemNodes[MNM][1000]; //crack element nodes
-     Vector cElemNorm[MNM][1000];     //crack element normals     
+     Point cx[MNM][MNP];              //crack position
+     short moved[MNM][MNP];           //if crack point moved
+     IntVector cElemNodes[MNM][MNP];  //crack nodes
+     Vector cElemNorm[MNM][MNP];      //crack element normals     
  
      //crack geometry
      //quadrilateral segments of cracks
