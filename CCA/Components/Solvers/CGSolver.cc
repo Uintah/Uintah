@@ -762,21 +762,21 @@ public:
 	memrefs += 7L*diff.x()*diff.y()*diff.z()*8L;
 #else
 	// X = a*D+X
-	ScMult_Add(Xnew, a, D, X, iter, flops, memrefs);
+	::ScMult_Add(Xnew, a, D, X, iter, flops);
 	// R = -a*Q+R
-	ScMult_Add(Rnew, -a, Q, R, iter, flops, memrefs);
+	::ScMult_Add(Rnew, -a, Q, R, iter, flops);
 
 	// Simple Preconditioning...
-	Mult(Q, Rnew, diagonal, iter, flops, memrefs);
+	::Mult(Q, Rnew, diagonal, iter, flops);
 
 	// Calculate coefficient bk and direction vectors p and pp
-	double dnew=Dot(Q, Rnew, iter, flops, memrefs);
+	double dnew = ::Dot(Q, Rnew, iter, flops);
 
 	// Calculate error term
 	switch(params->norm){
 	case CGSolverParams::L1:
 	  {
-	    double err = L1(Q, iter, flops, memrefs);
+	    double err = ::L1(Q, iter, flops);
 	    new_dw->put(sum_vartype(err), err_label);
 	  }
 	  break;
@@ -785,7 +785,7 @@ public:
 	  break;
 	case CGSolverParams::LInfinity:
 	  {
-	    double err = LInf(Q, iter, flops, memrefs);
+	    double err = ::LInf(Q, iter, flops);
 	    new_dw->put(max_vartype(err), err_label);
 	  }
 	  break;
@@ -1123,7 +1123,8 @@ public:
 	cerr << " completed in ";
       else
 	cerr << " FAILED in ";
-      cerr << niter << " iterations, " << dt << " seconds (" << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
+      cerr << niter << " iterations, " << dt << " seconds (" 
+	   << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
     }
   }
     
