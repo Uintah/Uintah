@@ -195,62 +195,6 @@ string GuiContext::format_varname()
   return name.substr(end_of_modulename+1);
 }
 
-void GuiContext::emit(std::ostream& out,
-		      const string& midx,
-		      const string& indent)
-{
-  const string prefix = indent + (indent.length()==0?"set ":"setGlobal ");
-  if(save){
-    string result;
-    gui->get(name, result);
-    if (usedatadir && sci_getenv("SCIRUN_NET_SUBSTITUTE_DATADIR"))
-    {
-      const char *tmp;
-      // Replace DATADIR
-      if ((tmp = sci_getenv("SCIRUN_DATA")))
-      {
-	const string datadir(tmp);
-	const string::size_type loc = result.find(datadir);
-	if (loc != string::npos)
-	{
-	  result.replace(loc, datadir.size(), "$DATADIR");
-	}
-      }
-      
-      // Replace DATASET
-      if ((tmp = sci_getenv("SCIRUN_DATASET")))
-      {
-	const string dataset(tmp);
-	while (1)
-	{
-	  const string::size_type loc = result.find(dataset);
-	  if (loc != string::npos)
-	  {
-	    result.replace(loc, dataset.size(), "$DATASET");
-	  }
-	  else
-	  {
-	    break;
-	  }
-	}
-      }
-
-      out << prefix << midx << "-" << format_varname() << " \""
-	  << result << "\"" << std::endl;
-    }
-    else
-    {
-      if (gui->eval("isaDefaultValue {"+name+"}") == "0") {
-	out << prefix << midx << "-" << format_varname() << " {"
-	    << result << "}" << std::endl;
-      }
-    }
-  }
-  for(vector<GuiContext*>::iterator iter = children.begin();
-      iter != children.end(); ++iter)
-    (*iter)->emit(out, midx, indent);
-}
-
 void GuiContext::reset()
 {
   cached=false;
