@@ -254,11 +254,13 @@ main(int argc, char** argv)
     if(scheduler == ""){
        if(Uintah::Parallel::usingMPI()){
 	  scheduler="MPIScheduler"; // Default for parallel runs
-	  loadbalancer="SimpleLoadBalancer";
+	  if(loadbalancer == "")
+	    loadbalancer="SimpleLoadBalancer";
 	  Uintah::Parallel::noThreading();
        } else {
 	  scheduler="SingleProcessorScheduler"; // Default for serial runs
-	  loadbalancer="SingleProcessorLoadBalancer";
+	  if(loadbalancer == "")
+	    loadbalancer="SingleProcessorLoadBalancer";
        }
     }
 
@@ -449,4 +451,37 @@ main(int argc, char** argv)
     }
 
     //Thread::exitAll(0);
+}
+
+extern "C" {
+  void dgesvd_() {
+    cerr << "Error: dgesvd called!\n";
+    Thread::exitAll(1);
+  }
+
+  void dpotrf_() {
+    cerr << "Error: dpotrf called!\n";
+    Thread::exitAll(1);
+  }
+
+  void dgetrf_() {
+    cerr << "Error: dgetrf called!\n";
+    Thread::exitAll(1);
+  }
+
+  void dpotrs_() {
+    cerr << "Error: dpotrs called!\n";
+    Thread::exitAll(1);
+  }
+
+  void dgeev_() {
+    cerr << "Error: dgeev called!\n";
+    Thread::exitAll(1);
+  }
+
+  void dgetrs_() {
+    cerr << "Error: dgetrs called!\n";
+    Thread::exitAll(1);
+  }
+
 }
