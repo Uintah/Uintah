@@ -1876,7 +1876,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
           if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
           oss << "[TRISURFFIELD (" << numpoints << " nodes, " << numel << " faces) - " << fieldtype << "]";
           infostring = oss.str();           
-          return(1);
+          return(1+ret);
         }
                 
       if ((m==4)||((n==4)&&(n!=3)))
