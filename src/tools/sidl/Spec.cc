@@ -4,7 +4,11 @@
 #include <map>
 #include <pair.h>
 #include <iostream>
+#if 0
 #include <sstream>
+#else
+#include <strstream.h>
+#endif
 
 using std::string;
 using std::cerr;
@@ -51,22 +55,22 @@ Argument::~Argument()
 
 string Argument::fullsignature() const
 {
-    std::ostringstream o;
+    string s;
     switch(mode){
     case In:
-	o << "in ";
+	s="in ";
 	break;
     case Out:
-	o << "out ";
+	s="out ";
 	break;
     case InOut:
-	o << "inout ";
+	s="inout ";
 	break;
     }
-    o << type->fullname();
+    s+=type->fullname();
     if(id != "")
-	o << " " << id << '\n';
-    return o.str();
+	s+=" "+id+"\n";
+    return s;
 }
 
 ArgumentList::ArgumentList()
@@ -92,14 +96,14 @@ void ArgumentList::add(Argument* arg)
 
 string ArgumentList::fullsignature() const
 {
-    std::ostringstream o;
+    std::string s="";
     int c=0;
     for(vector<Argument*>::const_iterator iter=list.begin(); iter != list.end(); iter++){
 	if(c++ > 0)
-	    o << ", ";
-	o << (*iter)->fullsignature();
+	    s+=", ";
+	s+=(*iter)->fullsignature();
     }
-    return o.str();
+    return s;
 }
 
 Class::Class(const string& curfile, int lineno, const string& name,
@@ -279,25 +283,26 @@ string Method::fullname() const
 
 string Method::fullsignature() const
 {
-    std::ostringstream o;
+    string s;
     switch(modifier){
     case Abstract:
-	o << "abstract ";
+	s="abstract ";
 	break;
     case Final:
-	o << "final ";
+	s="final ";
 	break;
     case Static:
-	o << "static ";
+	s="static ";
 	break;
     case Unknown:
+	s="";
 	break;
     }
-    o << return_type->fullname() << " " << fullname() << "(" << args->fullsignature() << ")";
+    s+=return_type->fullname()+" "+fullname()+"("+args->fullsignature()+")";
     if(throws_clause){
-	o << "throws " << throws_clause->fullsignature();
+	s+="throws "+throws_clause->fullsignature();
     }
-    return o.str();
+    return s;
 }
 
 MethodList::MethodList()
@@ -446,14 +451,14 @@ vector<ScopedName*> const& ScopedNameList::getList() const
 
 std::string ScopedNameList::fullsignature() const
 {
-    std::ostringstream o;
+    string s="";
     int c=0;
     for(vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++){
 	if(c++ > 0)
-	    o << ", ";
-	o << (*iter)->fullname();
+	    s+=", ";
+	s+=(*iter)->fullname();
     }
-    return o.str();
+    return s;
 }
 
 Specification::Specification()
@@ -603,7 +608,29 @@ ArrayType::~ArrayType()
 
 std::string ArrayType::fullname() const
 {
+#if 0
     std::ostringstream o;
     o << "array<" << subtype->fullname() << ", " << dim << ">";
     return o.str();
+#else
+    char dimstr[8];
+    ostrstream o(dimstr, 8);
+    o << dim;
+    return "array<"+subtype->fullname()+", "+dimstr+">";
+#endif
 }
+//
+// $Log$
+// Revision 1.2  1999/08/30 17:39:54  sparker
+// Updates to configure script:
+//  rebuild configure if configure.in changes (Bug #35)
+//  Fixed rule for rebuilding Makefile from Makefile.in (Bug #36)
+//  Rerun configure if configure changes (Bug #37)
+//  Don't build Makefiles for modules that aren't --enabled (Bug #49)
+//  Updated Makfiles to build sidl and Component if --enable-parallel
+// Updates to sidl code to compile on linux
+// Imported PIDL code
+// Created top-level Component directory
+// Added ProcessManager class - a simpler interface to fork/exec (not finished)
+//
+//

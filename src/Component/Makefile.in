@@ -1,0 +1,10 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ..
+
+SUBDIRS = PIDL
+SOLIB   = libComponent.so
+
+SOLIBRARIES = 
+
+include $(SRCTOP)/scripts/solib.mk

@@ -10,8 +10,13 @@ TCL_LIB_FLAG  = @TCL_LIB_FLAG@
 TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
+ifeq (@BUILD_PARALLEL@,yes)
+GLOBUS_DIR = globus_threads
+endif
+
 SUBDIRS = Containers Datatypes Exceptions Geom Geometry Malloc Math \
-          TclInterface Thread TkExtensions Tester Persistent Util
+          Process TclInterface Thread TkExtensions Tester Persistent \
+	  Util $(GLOBUS_THREADS)
 SOLIB   = libSCICore.so
 
 SOLIBRARIES = -lGLU -lGL \

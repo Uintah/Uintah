@@ -1,0 +1,11 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+SRCS     = Dispatch.cc Object.cc Reference.cc GlobusError.cc \
+	   Object_proxy.cc ReplyEP.cc InvalidReference.cc PIDL.cc \
+	   URL.cc MalformedURL.cc ProxyBase.cc Wharehouse.cc     
+
+INCLUDES = -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
