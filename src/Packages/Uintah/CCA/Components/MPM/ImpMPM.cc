@@ -103,8 +103,14 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }
-   
-   d_solver = scinew MPMPetscSolver();
+   string solver;
+   if (!mpm_ps->get("solver",solver))
+     solver = "petsc";
+
+   if (solver == "petsc")
+     d_solver = scinew MPMPetscSolver();
+   else if (solver == "simple")
+     d_solver = scinew SimpleSolver();
    d_solver->initialize();
 
 }
