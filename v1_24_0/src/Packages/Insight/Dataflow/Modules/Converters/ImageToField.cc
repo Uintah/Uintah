@@ -139,8 +139,8 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x);
-  double spread_y = (space_y * size_y);
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
   
   Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
@@ -214,9 +214,9 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x);
-  double spread_y = (space_y * size_y);
-  double spread_z = (space_z * size_z);
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
+  double spread_z = (space_z * (size_z-1));
   
   Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
@@ -291,8 +291,8 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x);
-  double spread_y = (space_y * size_y);
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
   
   Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
@@ -368,9 +368,9 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x);
-  double spread_y = (space_y * size_y);
-  double spread_z = (space_z * size_z);
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
+  double spread_z = (space_z * (size_z-1));
   
   Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
@@ -450,8 +450,8 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x);
-  double spread_y = (space_y * size_y);
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
   
   Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
@@ -524,9 +524,9 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x);
-  double spread_y = (space_y * size_y);
-  double spread_z = (space_z * size_z);
+  double spread_x = (space_x * (size_x-1));
+  double spread_y = (space_y * (size_y-1));
+  double spread_z = (space_z * (size_z-1));
   
   Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
