@@ -57,7 +57,7 @@ NoiseAlg::get_compile_info(const TypeDescription *td) {
     subname.append("Cannot compile this unsupported type");
   }
 
-  string fname("Noise." + td->get_name(".", "."));
+  string fname("Noise." + td->get_filename() + ".");
   CompileInfo *rval = scinew CompileInfo(fname, "NoiseAlg", 
 					 "Noise", subname);
   rval->add_include(get_h_file_path());
