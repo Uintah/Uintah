@@ -35,13 +35,17 @@ LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpets
 endif
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
-CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG -DHAVE_PETSC
+CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+# -DHAVE_PETSC
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.34  2000/09/25 16:31:40  rawat
+# removed petsc lib from sub.mk
+#
 # Revision 1.33  2000/09/25 16:29:24  rawat
 # modified requires in PressureSolver for multiple patches
 #
