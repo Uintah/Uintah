@@ -126,6 +126,7 @@ SparseRowMatrix *SparseRowMatrix::sparse() {
 DenseMatrix *SparseRowMatrix::dense() {
   DenseMatrix *dm = scinew DenseMatrix(nnrows,nncols);
   if (nnrows==0) return dm;
+  dm->zero();
   int count=0;
   int nextRow;
   for (int r=0; r<nnrows; r++) {
@@ -141,6 +142,7 @@ DenseMatrix *SparseRowMatrix::dense() {
 ColumnMatrix *SparseRowMatrix::column() {
   ColumnMatrix *cm = scinew ColumnMatrix(nnrows);
   if (nnrows) {
+    cm->zero();
     for (int i=0; i<nnrows; i++)
       // if the first column entry for the row is a zero...
       if (columns[rows[i]] == 0) 

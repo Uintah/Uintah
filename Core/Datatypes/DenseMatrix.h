@@ -74,6 +74,8 @@ public:
   
   virtual DenseMatrix* transpose();
   
+  virtual string type_name() { return "DenseMatrix"; }
+
   virtual int     nrows() const;
   virtual int     ncols() const;
  

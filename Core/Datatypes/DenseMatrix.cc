@@ -100,7 +100,7 @@ DenseMatrix *DenseMatrix::dense() {
 
 ColumnMatrix *DenseMatrix::column() {
   ColumnMatrix *cm = scinew ColumnMatrix(nr);
-  for(int i=0;i<nc;i++)
+  for(int i=0;i<nr;i++)
     (*cm)[i]=data[i][0];
   return cm;
 }

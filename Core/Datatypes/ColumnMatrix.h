@@ -69,6 +69,7 @@ public:
   double& get(int) const;
   virtual void put(int, int, const double&);
   void put(int, const double&);
+  virtual string type_name() { return "ColumnMatrix"; }
   virtual int nrows() const;
   virtual int ncols() const;
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
