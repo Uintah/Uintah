@@ -138,7 +138,7 @@ void Worker::run()
     for(;;){
       /* <<<< bigler >>>> */
       //stats[showing_scene]->add(Thread::currentSeconds(), Color(0,1,0));
-      stats[showing_scene]->add(Time::currentSeconds(), Color(0,1,0));
+      stats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,0));
       barrier->wait(dpy->get_num_procs()+1);
 
       // exit if you are supposed to
@@ -153,7 +153,7 @@ void Worker::run()
       Stats* st=stats[rendering_scene];
       st->reset();
       barrier->wait(dpy->get_num_procs()+1);
-      st->add(Time::currentSeconds(), Color(1,0,0));
+      st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
       for(int i=0;i<MAXDEPTH;i++){
 	shadow_cache[i]=0;
       }
@@ -171,7 +171,7 @@ void Worker::run()
       WorkQueue& work=scene->work;
       // <<<< bigler >>>>
       //st->add(Thread::currentSeconds(), Color(0,0,0));
-      st->add(Time::currentSeconds(), Color(0,0,0));
+      st->add(SCIRun::Time::currentSeconds(), Color(0,0,0));
       int xtilesize=scene->xtilesize;
       int ytilesize=scene->ytilesize;
       int nx=(xres+xtilesize-1)/xtilesize;
@@ -196,7 +196,7 @@ void Worker::run()
 	    if(scene->doHotSpots())
 	      // <<<< bigler >>>>
 	      //stime=Thread::currentSeconds();
-	      stime=Time::currentSeconds();
+	      stime=SCIRun::Time::currentSeconds();
 	    for(int y=sy;y<ey;y++){
 	      for(int x=sx;x<ex;x++){
 		camera->makeRayL(ray, x+xoffset, y+yoffset, ixres, iyres);
@@ -204,7 +204,7 @@ void Worker::run()
 		if(scene->doHotSpots()){
 		  // <<<< bigler >>>>
 		  //double etime=Thread::currentSeconds();
-		  double etime=Time::currentSeconds();
+		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
 		  (*image)(x,y).set(CMAP(t));
@@ -217,7 +217,7 @@ void Worker::run()
 		traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		if(scene->doHotSpots()){
 		  //double etime=Thread::currentSeconds();
-		  double etime=Time::currentSeconds();
+		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
 		  (*image)(x,y).set(CMAP(t));
@@ -233,7 +233,7 @@ void Worker::run()
 	      double stime;
 	      if(scene->doHotSpots())
 		//stime=Thread::currentSeconds();
-		stime=Time::currentSeconds();
+		stime=SCIRun::Time::currentSeconds();
 	      for(int y=sy;y<ey;y++){
 		for(int x=sx;x<ex;x++){
 		  // do central ray plus 3 jittered samples...
@@ -256,7 +256,7 @@ void Worker::run()
 		  sum = (sum+result+resulta+resultb)*0.25;
 		  if(scene->doHotSpots()){
 		    //double etime=Thread::currentSeconds();
-		    double etime=Time::currentSeconds();
+		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
 		    (*image)(x,y).set(CMAP(t));
@@ -269,14 +269,14 @@ void Worker::run()
 	      double stime;
 	      if(scene->doHotSpots())
 		//stime=Thread::currentSeconds();
-		stime=Time::currentSeconds();
+		stime=SCIRun::Time::currentSeconds();
 	      for(int y=sy;y<ey;y++){
 		for(int x=sx;x<ex;x++){
 		  camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
 		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		  if(scene->doHotSpots()){
 		    //double etime=Thread::currentSeconds();
-		    double etime=Time::currentSeconds();
+		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
 		    (*image)(x,y).set(CMAP(t));
@@ -289,7 +289,7 @@ void Worker::run()
 	  }
 	}
 	//st->add(Thread::currentSeconds(), (n%2)?Color(0,0,0):Color(1,1,1));
-	st->add(Time::currentSeconds(), (n%2)?Color(0,0,0):Color(1,1,1));
+	st->add(SCIRun::Time::currentSeconds(), (n%2)?Color(0,0,0):Color(1,1,1));
 	n++;
       }
       rendering_scene=1-rendering_scene;
@@ -655,7 +655,7 @@ void Worker::run()
 	  double stime;
 	  if(scene->doHotSpots())
 	    //stime=Thread::currentSeconds();
-	      stime=Time::currentSeconds();
+	      stime=SCIRun::Time::currentSeconds();
 	for(int ci=0;ci<xpos.size();ci++) { 
 	  Ray ray;
 	  Color result;
@@ -689,7 +689,7 @@ void Worker::run()
 	    
 	    if(scene->doHotSpots()){
 	      //double etime=Thread::currentSeconds();
-		double etime=Time::currentSeconds();
+		double etime=SCIRun::Time::currentSeconds();
 		double t=etime-stime;	
 		stime=etime;
 		(*image)(x,y).set(CMAP(t));
@@ -703,7 +703,7 @@ void Worker::run()
 	    (*clrs[wcI&1])[ci] = result;
 	    if(scene->doHotSpots()){
 	      //double etime=Thread::currentSeconds();
-		double etime=Time::currentSeconds();
+		double etime=SCIRun::Time::currentSeconds();
 		double t=etime-stime;	
 		stime=etime;
 		(*image)(x,y).set(CMAP(t));
@@ -765,7 +765,7 @@ void Worker::run()
 	  double stime;
 	  if(scene->doHotSpots())
 	    //stime=Thread::currentSeconds();
-	      stime=Time::currentSeconds();
+	      stime=SCIRun::Time::currentSeconds();
 	  for(int ci=0;ci<xpos.size();ci++) { 
 	    Ray ray;
 	    Color result;
@@ -801,7 +801,7 @@ void Worker::run()
 	    
 	      if(scene->doHotSpots()){
 		//double etime=Thread::currentSeconds();
-		  double etime=Time::currentSeconds();
+		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
 		  (*image)(x,y).set(CMAP(t));
@@ -822,7 +822,7 @@ void Worker::run()
 	      (*clrs[ji])[ci] = (result + resultb)*0.5;
 	      if(scene->doHotSpots()){
 		//double etime=Thread::currentSeconds();
-		  double etime=Time::currentSeconds();
+		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
 		  (*image)(x,y).set(CMAP(t));
@@ -840,7 +840,7 @@ void Worker::run()
 		(*clrs[wcI&3])[ci] = result;
 		if(scene->doHotSpots()){
 		  //double etime=Thread::currentSeconds();
-		    double etime=Time::currentSeconds();
+		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
 		    (*image)(x,y).set(CMAP(t));
@@ -859,7 +859,7 @@ void Worker::run()
 		(*clrs[wcI&3])[ci] = result;
 		if(scene->doHotSpots()){
 		  //double etime=Thread::currentSeconds();
-		    double etime=Time::currentSeconds();
+		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
 		    (*image)(x,y).set(CMAP(t));

@@ -71,23 +71,23 @@ ALLTARGETS := $(ALLTARGETS) $(SCENES)
 RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_CCA_Components_DataArchiver -lPackages_Uintah_CCA_Components_MPM -lPackages_Uintah_Core_Grid -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc
 
 $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
-	$(CXX) -o $@ $(LDFLAGS) -shared -Wl,-no_unresolved $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) -lnrrd -lair -lbiff -lnrrd -lm
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) -lnrrd -lair -lbiff -lnrrd -lm
 
 $(SRCDIR)/uintahparticle2.mo: $(SRCDIR)/uintahparticle2.o
-	$(CXX) -o $@ $(LDFLAGS) -shared -Wl,-no_unresolved $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
 
 $(SRCDIR)/uintahparticle.mo: $(SRCDIR)/uintahparticle.o
-	$(CXX) -o $@ $(LDFLAGS) -shared -Wl,-no_unresolved $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
 
 $(SRCDIR)/uintahisosurface.mo: $(SRCDIR)/uintahisosurface.o
-	$(CXX) -o $@ $(LDFLAGS) -shared -Wl,-no_unresolved $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
 
 #$(SRCDIR)/uintahparticle.o: $(SRCDIR)/uintahparticle.cc
 #	$(CXX) -c $(CCFLAGS) $<
 
 .SUFFIXES: .mo
 .o.mo:
-	$(CXX) -o $@ $(LDFLAGS) -shared -Wl,-no_unresolved $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Geometry -lCore_Malloc
+	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Geometry -lCore_Malloc
 
 CLEANPROGS := $(CLEANPROGS) $(SCENES) 
 

@@ -1,6 +1,6 @@
 
 #include <Packages/rtrt/Core/Stealth.h>
-
+#include <stdio.h>
 #include <math.h>
 
 using namespace rtrt;

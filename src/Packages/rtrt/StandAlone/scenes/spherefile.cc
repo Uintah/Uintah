@@ -334,7 +334,7 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
 			  float radius_in, float radius_factor,
 			  int numvars)
 {
-  double time=Time::currentSeconds();
+  double time=SCIRun::Time::currentSeconds();
 
   //------------------------------------
   // open the header file
@@ -555,7 +555,7 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   
   
   
-  double dt=Time::currentSeconds()-time;
+  double dt=SCIRun::Time::currentSeconds()-time;
   cerr << "Read " << nspheres << " spheres in " << dt << " seconds (" << nspheres/dt << " spheres/sec)\n";
   close(in_fd);
   return new GridSpheres(data, mins, maxs, nspheres, numvars-3, gridcellsize, griddepth, radius, matls.size(), &matls[0]);

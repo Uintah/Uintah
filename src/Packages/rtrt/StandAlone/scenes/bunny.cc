@@ -17,6 +17,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <values.h>
 #include <Packages/rtrt/Core/Tri.h>
 
 #define SCALE 700
