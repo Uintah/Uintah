@@ -93,7 +93,8 @@ for test in *$USER_FLAG; do
 	echo "#!/bin/tcsh" > "$doTestScript"
 	echo "setenv PATH $PATH" >> "$doTestScript"
         echo "setenv OS $OS" >> "$doTestScript"
-        
+        echo "setenv SCI_DEBUG \"\"" >> "$doTestScript"
+
         echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
 	rm -f "${BUILDROOT}/${mode}/${test}-short.log"
