@@ -559,14 +559,14 @@ void Sage<AI,Field>::search( double iso,
 	    extract( iso, x,y,z );
     }
     else {
-    int sx = i*d1;
-    int ex = sx + d1;
-    
-    int sy = j*d2;
-    int ey = sy + d2;
-    
-    int sz = k*d3;
-    int ez = sz + d3;
+      int sx = i*d1;
+      int ex = sx + d1;
+      
+      int sy = j*d2;
+      int ey = sy + d2;
+      
+      int sz = k*d3;
+      int ez = sz + d3;
 
       for (int x=sx; x<ex; x++)
 	for (int y=sy; y<ey; y++)
