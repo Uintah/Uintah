@@ -1840,37 +1840,35 @@ fi
 ##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
 ##  for those of us who are too lazy to type out all the --with paths
 
-TP_VERSION=1.7
-TP_ARCH=`uname -s`
-TP_COMPILER=gcc-3.0.4
-ac_try="$CC -v > /dev/null 2> conftest.out"
-(eval $ac_try) 2>&5
-vers=`grep "gcc version" conftest.out | cut -d' ' -f 3`
-rm -f conftest.out
-if test -n "$vers"; then
-  TP_COMPILER=gcc-$vers
-else
-  ac_try="$CC -version > /dev/null 2> conftest.out"
+if test -z "$thirdparty"; then
+  TP_VERSION=1.7
+  TP_ARCH=`uname -s`
+  TP_COMPILER=gcc-3.0.4
+  ac_try="$CC -v > /dev/null 2> conftest.out"
   (eval $ac_try) 2>&5
-  vers=`grep MIPSpro conftest.out | cut -d' ' -f 4`
+  vers=`grep "gcc version" conftest.out | cut -d' ' -f 3`
   rm -f conftest.out
   if test -n "$vers"; then
-    TP_COMPILER=MIPSpro-$vers
+    TP_COMPILER=gcc-$vers
   else
-    TP_COMPILER=""
+    ac_try="$CC -version > /dev/null 2> conftest.out"
+    (eval $ac_try) 2>&5
+    vers=`grep MIPSpro conftest.out | cut -d' ' -f 4`
+    rm -f conftest.out
+    if test -n "$vers"; then
+      TP_COMPILER=MIPSpro-$vers
+    else
+      TP_COMPILER=""
+    fi
   fi
-fi
 
-
-# Only check this is the base dir is around.
-TP_BASE=/usr/sci/projects
-
-if test -e $TP_BASE && test "$TP_ARCH" && test "$TP_COMPILER"; then
+  TP_BASE=/usr/sci/projects
   TP_SUBDIR=$TP_ARCH/$TP_COMPILER-${NBITS}bit
   TP_PATH=$TP_BASE/SCIRun/Thirdparty/$TP_VERSION/$TP_SUBDIR
 
   if test -e $TP_PATH; then
     SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $TP_PATH"
+    AC_MSG_RESULT(Using default thirdparty directory $TP_PATH)
   else
     AC_MSG_WARN(Default thirdparty directory $TP_PATH does not exists!)
   fi
@@ -1913,6 +1911,45 @@ for i in $SCI_LAB_TP_DEFAULT; do
 
   SCI_LAB_TP_LIBS="$SCI_LAB_TP_LIBS $i/lib"
 done
+
+#########################################################################
+##  Set the no_optimize_flag flag 
+##  
+
+case $host in
+  *-irix*) 
+    no_optimize_flag=-O0
+    TIME_IMPL=Time_irix.cc
+    ;;
+  *linux*)
+    no_optimize_flag=-O0
+    ;;
+  *-aix*)
+
+    AC_MSG_WARN(AIX is not completely supported!)
+
+    # On AIX, don't automatically generate .so's.  Make .a's and then
+    # later we will make .so's from them.
+    SO_OR_ARCHIVE_EXTENSION=a
+    no_optimize_flag=-O0
+    case $CXX in
+      *xlC*)
+         # xlC does not know the -O0 flag.
+         no_optimize_flag=""
+	 ;;
+      *KCC*)
+         ;;
+      *g++*)
+	 ;;
+      *)
+         AC_MSG_WARN(Do not know this compiler.)
+         AC_MSG_WARN(Defaulting to -O0 for the no optimize flag.)
+         ;;
+    esac
+    ;;
+  *)
+    ;;
+esac
 
 ##  ----------------------------------------------------------------------
 ##  ----------  search for required libraries and headers  ---------------
