@@ -64,7 +64,7 @@ Persistent* make_HexVolMesh() {
 }
 
 PersistentTypeID HexVolMesh::type_id("HexVolMesh", "Mesh",
-				     make_HexVolMesh);
+                                     make_HexVolMesh);
 
 const string
 HexVolMesh::type_name(int n)
@@ -125,7 +125,7 @@ HexVolMesh::~HexVolMesh()
    barrycentric coordinates (independent random variables between 0 and
    1 that sum to 1) for the point. */
 void HexVolMesh::get_random_point(Point &/*p*/, Cell::index_type /*ei*/,
-				  int /*seed*/) const
+                                  int /*seed*/) const
 {
   ASSERTFAIL("don't know how to pick a random point in a hex");
 }
@@ -168,8 +168,8 @@ HexVolMesh::transform(const Transform &t)
 
 void
  HexVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
-		       Node::index_type n3, Node::index_type n4,
-		       Cell::index_type ci, face_ht &table) const {
+                       Node::index_type n3, Node::index_type n4,
+                       Cell::index_type ci, face_ht &table) const {
   PFace f(n1, n2, n3, n4);
 
   face_ht::iterator iter = table.find(f);
@@ -180,13 +180,13 @@ void
     PFace f = (*iter).first;
     if (f.cells_[1] != MESH_NO_NEIGHBOR) {
       cerr << "This Mesh has problems: Cells #" 
-	   << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci 
-	   << " are illegally adjacent." << endl; 
+           << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci 
+           << " are illegally adjacent." << endl; 
       //     SCI_THROW(InternalError("Corrupt HexVolMesh"));      
     } else if (f.cells_[0] == ci) {
       cerr << "This Mesh has problems: Cells #" 
-	   << f.cells_[0] << " and #" << ci 
-	   << " are the same." << endl; 
+           << f.cells_[0] << " and #" << ci 
+           << " are the same." << endl; 
       //     SCI_THROW(InternalError("Corrupt HexVolMesh"));      
     } else {
       f.cells_[1] = ci; // add this cell
@@ -238,7 +238,7 @@ HexVolMesh::compute_faces()
 
 void
 HexVolMesh::hash_edge(Node::index_type n1, Node::index_type n2,
-		      Cell::index_type ci, edge_ht &table) const {
+                      Cell::index_type ci, edge_ht &table) const {
   PEdge e(n1, n2);
   edge_ht::iterator iter = table.find(e);
   if (iter == table.end()) {
@@ -318,7 +318,7 @@ void
 HexVolMesh::begin(HexVolMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on HexVolMesh first");
+            "Must call synchronize NODES_E on HexVolMesh first");
   itr = 0;
 }
 
@@ -326,7 +326,7 @@ void
 HexVolMesh::end(HexVolMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on HexVolMesh first");
+            "Must call synchronize NODES_E on HexVolMesh first");
   itr = static_cast<Node::iterator>(points_.size());
 }
 
@@ -334,7 +334,7 @@ void
 HexVolMesh::size(HexVolMesh::Node::size_type &s) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
-	    "Must call synchronize NODES_E on HexVolMesh first");
+            "Must call synchronize NODES_E on HexVolMesh first");
   s = static_cast<Node::size_type>(points_.size());
 }
 
@@ -342,7 +342,7 @@ void
 HexVolMesh::begin(HexVolMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   itr = 0;
 }
 
@@ -350,7 +350,7 @@ void
 HexVolMesh::end(HexVolMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   itr = static_cast<Edge::iterator>(edges_.size());
 }
 
@@ -358,7 +358,7 @@ void
 HexVolMesh::size(HexVolMesh::Edge::size_type &s) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   s = static_cast<Edge::size_type>(edges_.size());
 }
 
@@ -366,7 +366,7 @@ void
 HexVolMesh::begin(HexVolMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   itr = 0;
 }
 
@@ -374,7 +374,7 @@ void
 HexVolMesh::end(HexVolMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   itr = static_cast<Face::iterator>(faces_.size());
 }
 
@@ -382,7 +382,7 @@ void
 HexVolMesh::size(HexVolMesh::Face::size_type &s) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   s = static_cast<Face::size_type>(faces_.size());
 }
 
@@ -390,7 +390,7 @@ void
 HexVolMesh::begin(HexVolMesh::Cell::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on HexVolMesh first");
+            "Must call synchronize CELLS_E on HexVolMesh first");
   itr = 0;
 }
 
@@ -398,7 +398,7 @@ void
 HexVolMesh::end(HexVolMesh::Cell::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on HexVolMesh first");
+            "Must call synchronize CELLS_E on HexVolMesh first");
   itr = static_cast<Cell::iterator>(cells_.size() >> 3);
 }
 
@@ -406,7 +406,7 @@ void
 HexVolMesh::size(HexVolMesh::Cell::size_type &s) const
 {
   ASSERTMSG(synchronized_ & CELLS_E,
-	    "Must call synchronize CELLS_E on HexVolMesh first");
+            "Must call synchronize CELLS_E on HexVolMesh first");
   s = static_cast<Cell::size_type>(cells_.size() >> 3);
 }
 
@@ -414,7 +414,7 @@ void
 HexVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   array.clear();
   PEdge e = edges_[idx];
   array.push_back(e.nodes_[0]);
@@ -426,7 +426,7 @@ void
 HexVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   array.push_back(f.nodes_[0]);
@@ -454,7 +454,7 @@ void
 HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   PEdge e0(f.nodes_[0], f.nodes_[1]);
@@ -463,7 +463,7 @@ HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   PEdge e3(f.nodes_[3], f.nodes_[0]);
 
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e0))).second);
   array.push_back((*(edge_table_.find(e1))).second);
   array.push_back((*(edge_table_.find(e2))).second);
@@ -490,7 +490,7 @@ HexVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
   PEdge e11(cells_[off + 7], cells_[off + 3]);
 
   ASSERTMSG(synchronized_ & EDGES_E,
-	    "Must call synchronize EDGES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e00))).second);
   array.push_back((*(edge_table_.find(e01))).second);
   array.push_back((*(edge_table_.find(e02))).second);
@@ -521,7 +521,7 @@ HexVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 
   // operator[] not const safe...
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   array.push_back((*(face_table_.find(f0))).second);
   array.push_back((*(face_table_.find(f1))).second);
   array.push_back((*(face_table_.find(f2))).second);
@@ -532,10 +532,10 @@ HexVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 
 bool
 HexVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
-			 Face::index_type idx) const
+                         Face::index_type idx) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize FACES_E on HexVolMesh first");
   const PFace &f = faces_[idx];
 
   if (from == f.cells_[0]) {
@@ -565,13 +565,13 @@ HexVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 
 void
 HexVolMesh::get_neighbors(vector<Node::index_type> &array,
-			  Node::index_type idx) const
+                          Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
-	    "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
+            "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
   array.clear();
   array.insert(array.end(), node_neighbors_[idx].begin(),
-	       node_neighbors_[idx].end());
+               node_neighbors_[idx].end());
 }
 
 void
@@ -676,8 +676,8 @@ HexVolMesh::locate(Node::index_type &loc, const Point &p)
       const double d = distance2(p, points_[nodes[i]]);
       if (d < dmin)
       {
-	dmin = d;
-	loc = nodes[i];
+        dmin = d;
+        loc = nodes[i];
       }
     }
     return true;
@@ -698,8 +698,8 @@ HexVolMesh::locate(Node::index_type &loc, const Point &p)
       const double dist = distance2(p, points_[*ni]);
       if (dist < min_dist)
       {
-	loc = *ni;
-	min_dist = dist;
+        loc = *ni;
+        min_dist = dist;
       }
       ++ni;
     }
@@ -729,8 +729,8 @@ HexVolMesh::locate(Edge::index_type &edge, const Point &p)
       const double dist = distance2(p, loc);
       if (dist < mindist)
       {
-	edge = edges[i];
-	mindist = dist;
+        edge = edges[i];
+        mindist = dist;
       }
     }
     return true;
@@ -760,8 +760,8 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
       const double dist = distance2(p, loc);
       if (dist < mindist)
       {
-	face = faces[i];
-	mindist = dist;
+        face = faces[i];
+        mindist = dist;
       }
     }
     return true;
@@ -796,9 +796,9 @@ HexVolMesh::locate(Cell::index_type &cell, const Point &p)
     {
       if (inside8_p(Cell::index_type(*iter), p))
       {
-	cell = Cell::index_type(*iter);
-	locate_cache_ = cell;
-	return true;
+        cell = Cell::index_type(*iter);
+        locate_cache_ = cell;
+        return true;
       }
       ++iter;
     }
@@ -850,7 +850,7 @@ tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
 // Tet inside test, cut and pasted from TetVolMesh.cc
 static bool
 tet_inside_p(const Point &p, const Point &p0, const Point &p1,
-	  const Point &p2, const Point &p3)
+          const Point &p2, const Point &p3)
 {
   const double x0 = p0.x();
   const double y0 = p0.y();
@@ -905,7 +905,7 @@ tet_inside_p(const Point &p, const Point &p0, const Point &p1,
 
 static void
 tetinterp(const Point &p, Point nodes[8],
-	  vector<double> &w, int a, int b, int c, int d)
+          vector<double> &w, int a, int b, int c, int d)
 {
   int i;
   w.resize(8);
@@ -970,15 +970,15 @@ HexVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
         switch (coord) {
         case 1:
             area += (points_[ni[i%n]].y() *
-		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+                     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
             continue;
         case 2:
             area += (points_[ni[i%n]].x() * 
-		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+                     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
             continue;
         case 3:
             area += (points_[ni[i%n]].x() * 
-		     (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
+                     (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
             continue;
         }
 
@@ -1037,7 +1037,7 @@ tri_area(const Point &a, const Point &b, const Point &c)
 
 void
 HexVolMesh::get_face_weights(double *w, const Node::array_type &nodes,
-			     const Point &p, int i0, int i1, int i2, int i3)
+                             const Point &p, int i0, int i1, int i2, int i3)
 {
   for (unsigned int j = 0; j < 8; j++)
   {
@@ -1115,35 +1115,35 @@ HexVolMesh::get_weights(const Point &p, Node::array_type &nodes, double *w)
     for (i=0; i < nnodes; i++)
     {
       const double a0 =
-	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][0]]),
-		 point(nodes[wtable[i][1]]));
+        tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][0]]),
+                 point(nodes[wtable[i][1]]));
       if (a0 < 1.0e-6)
       {
-	get_face_weights(w, nodes, p, i, wtable[i][0],
-			 wtable[i][3], wtable[i][1]);
-	return 8;
+        get_face_weights(w, nodes, p, i, wtable[i][0],
+                         wtable[i][3], wtable[i][1]);
+        return 8;
       }
       const double a1 =
-	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][1]]),
-		 point(nodes[wtable[i][2]]));
+        tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][1]]),
+                 point(nodes[wtable[i][2]]));
       if (a1 < 1.0e-6)
       {
-	get_face_weights(w, nodes, p, i, wtable[i][1],
-			 wtable[i][4], wtable[i][2]);
-	return 8;
+        get_face_weights(w, nodes, p, i, wtable[i][1],
+                         wtable[i][4], wtable[i][2]);
+        return 8;
       }
       const double a2 =
-	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][2]]),
-		 point(nodes[wtable[i][0]]));
+        tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][2]]),
+                 point(nodes[wtable[i][0]]));
       if (a2 < 1.0e-6)
       {
-	get_face_weights(w, nodes, p, i, wtable[i][2],
-			 wtable[i][5], wtable[i][0]);
-	return 8;
+        get_face_weights(w, nodes, p, i, wtable[i][2],
+                         wtable[i][5], wtable[i][0]);
+        return 8;
       }
       w[i] = tet_vol6(point(nodes[i]), point(nodes[wtable[i][0]]),
-		      point(nodes[wtable[i][1]]), point(nodes[wtable[i][2]]))
-	/ (a0 * a1 * a2);
+                      point(nodes[wtable[i][1]]), point(nodes[wtable[i][2]]))
+        / (a0 * a1 * a2);
       sum += w[i];
     }
     const double suminv = 1.0 / sum;
@@ -1247,10 +1247,10 @@ HexVolMesh::inside8_p(Cell::index_type i, const Point &p) const
 //! return the volume of the hex.
 double
 HexVolMesh::get_gradient_basis(Cell::index_type /*ci*/, 
-			       Vector& /*g0*/, Vector& /*g1*/,
-			       Vector& /*g2*/, Vector& /*g3*/,
-			       Vector& /*g4*/, Vector& /*g5*/,
-			       Vector& /*g6*/, Vector& /*g7*/)
+                               Vector& /*g0*/, Vector& /*g1*/,
+                               Vector& /*g2*/, Vector& /*g3*/,
+                               Vector& /*g4*/, Vector& /*g5*/,
+                               Vector& /*g6*/, Vector& /*g7*/)
 {
   ASSERTFAIL("get_gradient_basis not implemented for hexes");
 }
@@ -1273,9 +1273,9 @@ HexVolMesh::add_find_point(const Point &p, double err)
 
 void
 HexVolMesh::add_hex(Node::index_type a, Node::index_type b, 
-		    Node::index_type c, Node::index_type d,
-		    Node::index_type e, Node::index_type f,
-		    Node::index_type g, Node::index_type h)
+                    Node::index_type c, Node::index_type d,
+                    Node::index_type e, Node::index_type f,
+                    Node::index_type g, Node::index_type h)
 {
   cells_.push_back(a);
   cells_.push_back(b);
@@ -1299,14 +1299,14 @@ HexVolMesh::add_point(const Point &p)
 
 void
 HexVolMesh::add_hex(const Point &p0, const Point &p1, 
-		    const Point &p2, const Point &p3,
-		    const Point &p4, const Point &p5,
-		    const Point &p6, const Point &p7)
+                    const Point &p2, const Point &p3,
+                    const Point &p4, const Point &p5,
+                    const Point &p6, const Point &p7)
 {
   add_hex(add_find_point(p0), add_find_point(p1),
-	  add_find_point(p2), add_find_point(p3),
-	  add_find_point(p4), add_find_point(p5),
-	  add_find_point(p6), add_find_point(p7));
+          add_find_point(p2), add_find_point(p3),
+          add_find_point(p4), add_find_point(p5),
+          add_find_point(p6), add_find_point(p7));
 }
 
 
@@ -1363,8 +1363,8 @@ get_type_description(HexVolMesh *)
   if (!td)
   {
     td = scinew TypeDescription("HexVolMesh",
-				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+                                TypeDescription::cc_to_h(__FILE__),
+                                "SCIRun");
   }
   return td;
 }
@@ -1376,8 +1376,8 @@ get_type_description(HexVolMesh::Node *)
   if (!td)
   {
     td = scinew TypeDescription("HexVolMesh::Node",
-				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+                                TypeDescription::cc_to_h(__FILE__),
+                                "SCIRun");
   }
   return td;
 }
@@ -1389,8 +1389,8 @@ get_type_description(HexVolMesh::Edge *)
   if (!td)
   {
     td = scinew TypeDescription("HexVolMesh::Edge",
-				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+                                TypeDescription::cc_to_h(__FILE__),
+                                "SCIRun");
   }
   return td;
 }
@@ -1402,8 +1402,8 @@ get_type_description(HexVolMesh::Face *)
   if (!td)
   {
     td = scinew TypeDescription("HexVolMesh::Face",
-				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+                                TypeDescription::cc_to_h(__FILE__),
+                                "SCIRun");
   }
   return td;
 }
@@ -1415,8 +1415,8 @@ get_type_description(HexVolMesh::Cell *)
   if (!td)
   {
     td = scinew TypeDescription("HexVolMesh::Cell",
-				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+                                TypeDescription::cc_to_h(__FILE__),
+                                "SCIRun");
   }
   return td;
 }
@@ -1468,14 +1468,14 @@ HexVolMesh::compute_face_neighbors(double err)
       list<int>::iterator li2 = li1;
       while (li2 != edgemap[i].end())
       {
-	int e2 = *li2;
-	li2++;
-	
-	if ( faces_[next(e1)] == faces_[prev(e2)])
-	{
-	  neighbors_[e1] = e2;
-	  neighbors_[e2] = e1;
-	}
+        int e2 = *li2;
+        li2++;
+        
+        if ( faces_[next(e1)] == faces_[prev(e2)])
+        {
+          neighbors_[e1] = e2;
+          neighbors_[e2] = e1;
+        }
       }
     }
   }
