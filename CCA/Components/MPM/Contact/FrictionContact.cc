@@ -35,9 +35,11 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
 {
   // Constructor
   IntVector v_f;
+  d_vol_const=0.;
 
   ps->require("vel_fields",v_f);
   ps->require("mu",d_mu);
+  ps->get("volume_constraint",d_vol_const);
 
   d_sharedState = d_sS;
   lb = Mlb;
@@ -61,9 +63,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
 
     // Need access to all velocity fields at once
     StaticArray<constNCVariable<double> >  gmass(numMatls);
+    StaticArray<constNCVariable<double> >  gvolume(numMatls);
+    StaticArray<constNCVariable<double> >  numnearparticles(numMatls);
     StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
     StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
     StaticArray<NCVariable<double> >       frictionalWork(numMatls);
@@ -81,6 +86,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
       new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,      dwi, patch);
       new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::AroundNodes, 1);
+      new_dw->get(gvolume[m],         lb->gVolumeLabel,      
+                                                  dwi, patch, Ghost::None, 0);
+      new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
+                                                  dwi, patch, Ghost::None, 0);
       new_dw->allocate(gsurfnorm[m],      lb->gSurfNormLabel,      dwi, patch);
       new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel, dwi, patch);
 
@@ -257,15 +266,22 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
+      double totalNodalVol=0.0; 
+      double totalNearParticles=0.0; 
       for(int n = 0; n < numMatls; n++){
         centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
         centerOfMassMass+=gmass[n][*iter]; 
+        totalNodalVol+=gvolume[n][*iter];
+        totalNearParticles+=numnearparticles[n][*iter];
       }
 
       // Apply Coulomb friction contact
       // For grid points with mass calculate velocity
       if(!compare(centerOfMassMass,0.0)){
-        Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+       Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+
+       // Only apply contact if the node is nearly "full"
+       if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
 
         // Loop over velocity fields.  Only proceed if velocity field mass
         // is nonzero (not numerical noise) and the difference from
@@ -280,8 +296,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             // or the surface is stress free and surface is approaching.
             // Otherwise apply free surface conditions (do nothing).
             double normalDeltaVel=Dot(deltaVelocity,gsurfnorm[n][*iter]);
+
 	    Vector Dvdt(0.,0.,0.);
-            if((gnormtraction[n][*iter] < 0.0) ||
+            if((gnormtraction[n][*iter] <  0.0) ||
                (compare(fabs(gnormtraction[n][*iter]),0.0) &&
                 normalDeltaVel>0.0)){
 
@@ -324,8 +341,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 	        }
 	        gvelocity[n][*iter]+=Dvdt;
             }  // if traction
-	  }    // if
+	  }    // if !compare && !compare
         }      // matls
+       }       // if (volume constraint)
       }        // if(!compare(centerOfMassMass,0.0))
     }          // NodeIterator
 
@@ -352,10 +370,13 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
 
     // Need access to all velocity fields at once, so store in
     // vectors of NCVariables
     StaticArray<constNCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<double> > gvolume(numMatls);
+    StaticArray<constNCVariable<double> > numnearparticles(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
     StaticArray<constNCVariable<double> > normtraction(numMatls);
@@ -364,19 +385,23 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
     for(int m=0;m<matls->size();m++){
-      int matlindex = matls->get(m);
-      new_dw->get(gmass[m],       lb->gMassLabel,        matlindex,
+      int dwi = matls->get(m);
+      new_dw->get(gmass[m],       lb->gMassLabel,        dwi,
                                                          patch, Ghost::None, 0);
-      new_dw->get(normtraction[m],lb->gNormTractionLabel,matlindex,
+      new_dw->get(normtraction[m],lb->gNormTractionLabel,dwi,
                                                          patch, Ghost::None, 0);
-      new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    matlindex,
+      new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    dwi,
                                                          patch, Ghost::None, 0);
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
-                                                         matlindex, patch);
+                                                         dwi, patch);
       new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel,
-                                                         matlindex, patch);
+                                                         dwi, patch);
       new_dw->getModifiable(frictionalWork[m], lb->frictionalWorkLabel,
-                                                         matlindex, patch);
+                                                         dwi, patch);
+      new_dw->get(gvolume[m],         lb->gVolumeLabel,      
+                                                  dwi, patch, Ghost::None, 0);
+      new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
+                                                  dwi, patch, Ghost::None, 0);
     }
 
     delt_vartype delT;
@@ -386,15 +411,22 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
+      double totalNodalVol=0.0; 
+      double totalNearParticles=0.0; 
       for(int  n = 0; n < numMatls; n++){
          centerOfMassMom+=gvelocity_star[n][*iter] * gmass[n][*iter];
          centerOfMassMass+=gmass[n][*iter]; 
+        totalNodalVol+=gvolume[n][*iter];
+        totalNearParticles+=numnearparticles[n][*iter];
       }
 
       // Apply Coulomb friction contact
       // For grid points with mass calculate velocity
       if(!compare(centerOfMassMass,0.0)){
-        Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+       Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+
+       // Only apply contact if the node is nearly "full"
+       if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
 
         // Loop over velocity fields.  Only proceed if velocity field mass
         // is nonzero (not numerical noise) and the difference from
@@ -403,13 +435,13 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         for(int n = 0; n < numMatls; n++){
           Vector deltaVelocity=gvelocity_star[n][*iter]-centerOfMassVelocity;
           if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
-	     //           && !compare(deltaVelocity.length(),0.0)){
              && !compare(gmass[n][*iter]-centerOfMassMass,0.0)){
 
             // Apply frictional contact if the surface is in compression
             // or the surface is stress free and surface is approaching.
             // Otherwise apply free surface conditions (do nothing).
             double normalDeltaVel=Dot(deltaVelocity,gsurfnorm[n][*iter]);
+
 	    Vector Dvdt(0.,0.,0.);
             if((normtraction[n][*iter] < 0.0) ||
 	       (compare(fabs(normtraction[n][*iter]),0.0) &&
@@ -451,11 +483,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 	      gvelocity_star[n][*iter]+=Dvdt;
 	      Dvdt=Dvdt/delT;
 	      gacceleration[n][*iter]+=Dvdt;
-            }
-	  }
-        }
-      }
-    }
+            } // traction
+	  }   // if !compare && !compare
+        }     // for numMatls
+       }      // volume constraint
+      }       // if centerofmass > 0
+    }         // nodeiterator
 
     //  print out epsilon_max_max
     //  static int ts=0;
@@ -491,6 +524,8 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
     t->requires(Task::OldDW, lb->pSizeLabel,        Ghost::AroundNodes, 1);
   }
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
@@ -507,6 +542,8 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
   t->requires(Task::NewDW, lb->gNormTractionLabel,  Ghost::None);
   t->requires(Task::NewDW, lb->gSurfNormLabel,      Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->gAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
