@@ -71,6 +71,7 @@ Properties::sched_computeProps(const LevelP& level,
 
       int numGhostCells = 0;
       int matlIndex = 0;
+      // requires scalars
       tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->computes(new_dw, d_densityLabel, matlIndex, patch);
@@ -135,6 +136,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.12  2000/06/14 20:40:49  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.11  2000/06/07 06:13:55  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

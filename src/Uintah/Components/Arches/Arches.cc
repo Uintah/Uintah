@@ -57,6 +57,8 @@ Arches::Arches( int MpiRank, int MpiProcesses ) :
 				  CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity", 
 				     CCVariable<double>::getTypeDescription() );
+  d_cellTypeLabel = scinew VarLabel("CellType", 
+				    CCVariable<int>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -120,11 +122,11 @@ Arches::problemSetup(const ProblemSpecP& params,
 }
 
 /*
-void 
-Arches::problemInit(const LevelP& ,
-		    SchedulerP& , 
-		    DataWarehouseP& ,
-		    bool )
+  void 
+  Arches::problemInit(const LevelP& ,
+  SchedulerP& , 
+  DataWarehouseP& ,
+  bool )
 {
   cerr << "** NOTE ** Problem init has been called for ARCHES";
 #if 0
@@ -158,6 +160,18 @@ Arches::scheduleInitialize(const LevelP& level,
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
+    // cell type initialization
+    {
+      Task* tsk = new Task("BoundaryCondition::cellTypeInit",
+			   patch, dw, dw, d_boundaryCondition,
+			   &BoundaryCondition::cellTypeInit);
+      cerr << "New task created successfully\n";
+      int matlIndex = 0;
+      tsk->computes(dw, d_cellTypeLabel, matlIndex, patch);
+      sched->addTask(tsk);
+      cerr << "New task added successfully to scheduler\n";
+    }
+    // primitive variable initialization
     {
       Task* tsk = new Task("Arches::paramInit",
 			   patch, dw, dw, this,
@@ -344,6 +358,10 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.37  2000/06/14 20:40:47  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.36  2000/06/13 06:02:30  bbanerje
 // Added some more StencilMatrices and vector<CCVariable> types.
 //
@@ -383,7 +401,7 @@ Arches::paramInit(const ProcessorContext* ,
 //
 // Revision 1.24  2000/04/28 07:35:23  sparker
 // Started implementation of DataWarehouse
-// MPM particle initialization now works
+// MPM particle initalization now works
 //
 // Revision 1.23  2000/04/26 06:48:00  sparker
 // Streamlined namespaces

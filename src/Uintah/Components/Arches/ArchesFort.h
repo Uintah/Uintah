@@ -37,6 +37,8 @@ WARNING
 //
 #define FORT_INIT init_
 #define FORT_INIT_SCALAR initscal_
+#define FORT_CELLTYPEINIT celltypeinit_
+#define FORT_CELLG cellg_
 #define FORT_PROFV profv_
 #define FORT_INLBCS inlbcs_
 #define FORT_CALPBC calpbc_
@@ -87,6 +89,42 @@ extern "C"
     FORT_INIT_SCALAR(const int* domainLow, const int* domainHigh, 
 		     const int* indexLow, const int* indexHigh,
 		     double* scalar, const double* scalarVal);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Initialize celltype variables :
+    //
+    void
+    FORT_CELLTYPEINIT(const int* domainLow, const int* domainHigh, 
+		     const int* indexLow, const int* indexHigh,
+		     int* celltype, const int* celltypeval);
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Initialize geometry variables :
+    //
+    void
+    FORT_CELLG(const int* domainLow, const int* domainHigh, 
+	       const int* indexLow, const int* indexHigh,
+	       double* sew,double* sns, double* stb,
+	     double* sewu, double* snsv, double* stbw,
+	     double* dxep, double* dynp, double* dztp,
+	     double* dxepu,double*  dynpv,double*  dztpw,
+	     double* dxpw, double* dyps, double* dzpb,
+	     double* dxpwu, double* dypsv, double* dzpbw,
+	     double* cee, double* cwe,double*  cww,
+	     double* ceeu, double* cweu, double* cwwu,
+	     double* cnn, double* csn,double*  css,
+	     double* cnnv,double*  csnv, double* cssv,
+	     double* ctt, double* cbt, double* cbb,
+	     double* cttw, double* cbtw, double* cbbw,
+	     //	     rr, ra, rv, rone,
+	     //	     rcv, rcva,
+	     double* xx,double*  xu, double* yy, double* yv, double* zz, double* zw,
+	     double* efac, double* wfac, double* nfac, double* sfac,double*  tfac, double* bfac,
+	     double* fac1u, double* fac2u, double* fac3u, double* fac4u,
+	     double* fac1v, double* fac2v, double* fac3v, double* fac4v,
+	     double* fac1w, double* fac2w, double* fac3w, double* fac4w,
+	     double* iesdu, double* iwsdu, double* jnsdv, double* jssdv, double* ktsdw,double*  kbsdw);
 }
 
 
@@ -94,6 +132,10 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.2  2000/06/14 20:40:48  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.1  2000/06/10 06:30:37  bbanerje
 // Arches : Fortran wrappers in C++
 //

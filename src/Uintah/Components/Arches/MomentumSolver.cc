@@ -185,18 +185,18 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
       /// requires convection coeff because of the nodal
       // differencing
       // computes index components of velocity
-      tsk->computes(new_dw, d_uVelConvCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelConvCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelConvCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelNonLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelNonLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelConvCoefLabel, index, patch);
+      tsk->computes(new_dw, d_vVelConvCoefLabel, index, patch);
+      tsk->computes(new_dw, d_wVelConvCoefLabel, index, patch);
+      tsk->computes(new_dw, d_uVelCoefLabel, index, patch);
+      tsk->computes(new_dw, d_vVelCoefLabel, index, patch);
+      tsk->computes(new_dw, d_wVelCoefLabel, index, patch);
+      tsk->computes(new_dw, d_uVelLinSrcLabel, index, patch);
+      tsk->computes(new_dw, d_vVelLinSrcLabel, index, patch);
+      tsk->computes(new_dw, d_wVelLinSrcLabel, index, patch);
+      tsk->computes(new_dw, d_uVelNonLinSrcLabel, index, patch);
+      tsk->computes(new_dw, d_vVelNonLinSrcLabel, index, patch);
+      tsk->computes(new_dw, d_wVelNonLinSrcLabel, index, patch);
 
       sched->addTask(tsk);
     }
@@ -233,6 +233,10 @@ void MomentumSolver::buildLinearMatrix(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.6  2000/06/14 20:40:49  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.5  2000/06/07 06:13:54  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils
