@@ -36,7 +36,7 @@ tarball : tar
 
 # Construct list of files to be included in the tar archive.  Edit
 # tarlist to make changes to this list.
-tarlist := ${shell ruby tarlist}
+tarlist = ${shell ruby tarlist}
 
 # Build all docs and put them in a tar archive.
 tar: index.html products
