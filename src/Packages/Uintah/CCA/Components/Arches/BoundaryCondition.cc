@@ -135,6 +135,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_flowInlets[d_numInlets].problemSetup(inlet_db);
     d_cellTypes.push_back(total_cellTypes);
     // compute density and other dependent properties
+    d_flowInlets[d_numInlets].streamMixturefraction.d_initEnthalpy=true;
     d_props->computeInletProperties(
                       d_flowInlets[d_numInlets].streamMixturefraction,
 		      d_flowInlets[d_numInlets].calcStream);
@@ -156,6 +157,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_pressureBdry = scinew PressureInlet(numMixingScalars, total_cellTypes);
     d_pressureBdry->problemSetup(press_db);
     // compute density and other dependent properties
+    d_pressureBdry->streamMixturefraction.d_initEnthalpy=true;
     d_props->computeInletProperties(
                 		 d_pressureBdry->streamMixturefraction, 
 		        	 d_pressureBdry->calcStream);
@@ -171,6 +173,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_outletBC = scinew FlowOutlet(numMixingScalars, total_cellTypes);
     d_outletBC->problemSetup(outlet_db);
     // compute density and other dependent properties
+    d_outletBC->streamMixturefraction.d_initEnthalpy=true;
     d_props->computeInletProperties(
 			       d_outletBC->streamMixturefraction, 
 			       d_outletBC->calcStream);
