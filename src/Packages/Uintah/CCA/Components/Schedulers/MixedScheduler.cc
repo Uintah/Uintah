@@ -44,6 +44,15 @@ MixedScheduler::~MixedScheduler()
   delete d_threadPool;
 }
 
+SchedulerP
+MixedScheduler::createSubScheduler()
+{
+  MixedScheduler* newsched = new MixedScheduler(d_myworld, m_outPort);
+  UintahParallelPort* lbp = getPort("load balancer");
+  newsched->attachPort("load balancer", lbp);
+  return newsched;
+}
+
 bool
 MixedScheduler::useInternalDeps()
 {

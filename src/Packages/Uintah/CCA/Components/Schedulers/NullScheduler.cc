@@ -35,6 +35,15 @@ NullScheduler::~NullScheduler()
 {
 }
 
+SchedulerP
+NullScheduler::createSubScheduler()
+{
+  NullScheduler* newsched = new NullScheduler(d_myworld, m_outPort);
+  UintahParallelPort* lbp = getPort("load balancer");
+  newsched->attachPort("load balancer", lbp);
+  return newsched;
+}
+
 void
 NullScheduler::verifyChecksum()
 {

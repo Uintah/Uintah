@@ -30,6 +30,15 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
 {
 }
 
+SchedulerP
+SingleProcessorScheduler::createSubScheduler()
+{
+  SingleProcessorScheduler* newsched = new SingleProcessorScheduler(d_myworld, m_outPort);
+  UintahParallelPort* lbp = getPort("load balancer");
+  newsched->attachPort("load balancer", lbp);
+  return newsched;
+}
+
 void
 SingleProcessorScheduler::verifyChecksum()
 {
