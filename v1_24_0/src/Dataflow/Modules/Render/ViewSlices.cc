@@ -817,7 +817,7 @@ void
 ViewSlices::real_draw_all()
 {
   TCLTask::lock();
-  for_each(&ViewSlices::extract_slice);
+  //  for_each(&ViewSlices::extract_slice);
   if (for_each(&ViewSlices::render_window)) 
     for_each(&ViewSlices::swap_window);
   TCLTask::unlock();
