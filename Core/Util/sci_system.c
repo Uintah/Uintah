@@ -16,6 +16,8 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#ifndef __sgi  // This file is for linux only.
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -206,3 +208,5 @@ sci_system(const char *line)
 // -cm commented
 //weak_alias (__libc_system, system)
 // -cm
+
+#endif
