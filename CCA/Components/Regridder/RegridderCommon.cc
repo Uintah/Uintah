@@ -448,8 +448,8 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     IntVector low  = flaggedCells.getLowIndex();
     IntVector high = flaggedCells.getHighIndex();
     
-    for (int z = low.z(); z < high.z(); z++) {
-      for (int y = low.y(); y < high.y(); y++) {
+    for (int z = high.z()-1; z >= low.z(); z--) {
+      for (int y = high.y()-1; y >= low.y(); y--) {
         for (int x = low.x(); x < high.x(); x++) {
           dilate_dbg << flaggedCells[IntVector(x,y,z)] << " ";
         }
@@ -461,8 +461,8 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     dilate_dbg << "----------------------------------------------------------------" << endl;
     dilate_dbg << "DILATED FLAGGED CELLS" << endl;
 
-    for (int z = low.z(); z < high.z(); z++) {
-      for (int y = low.y(); y < high.y(); y++) {
+    for (int z = high.z()-1; z >= low.z(); z--) {
+      for (int y = high.y()-1; y >= low.y(); y--) {
         for (int x = low.x(); x < high.x(); x++) {
           dilate_dbg << dilatedFlaggedCells[IntVector(x,y,z)] << " ";
         }
