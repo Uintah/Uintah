@@ -66,6 +66,11 @@ void SimpleHEBurn::initializeBurnModelData(const Patch* patch,
    new_dw->put(burnedMass, lb->cBurnedMassLabel, matl->getDWIndex(), patch);
 }
 
+bool SimpleHEBurn::getBurns() const
+{
+  return d_burnable;
+}
+
 void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
                                                  const MPMMaterial* matl,
                                                  const Patch* patch,
@@ -226,6 +231,11 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
+// Revision 1.10  2000/06/19 23:52:14  guilkey
+// Added boolean d_burns so that certain stuff only gets done
+// if a burn model is present.  Not to worry, the if's on this
+// are not inside of inner loops.
+//
 // Revision 1.9  2000/06/16 23:23:38  guilkey
 // Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
 // the scheduler was having.

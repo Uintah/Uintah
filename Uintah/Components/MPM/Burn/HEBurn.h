@@ -76,9 +76,12 @@ WARNING
 
          //////////
          // Create space in data warehouse for burn model data
-         virtual void initializeBurnModelData(const Patch* patch,
-                                              const MPMMaterial* matl,
-                                              DataWarehouseP& new_dw) = 0;
+
+          virtual bool getBurns() const = 0;
+
+          virtual void initializeBurnModelData(const Patch* patch,
+                                               const MPMMaterial* matl,
+                                               DataWarehouseP& new_dw) = 0;
 
           virtual void addCheckIfComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
@@ -102,6 +105,11 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.5  2000/06/19 23:52:14  guilkey
+// Added boolean d_burns so that certain stuff only gets done
+// if a burn model is present.  Not to worry, the if's on this
+// are not inside of inner loops.
+//
 // Revision 1.4  2000/06/17 07:06:35  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -54,6 +54,11 @@ void NullHEBurn::addCheckIfComputesAndRequires(Task* task,
 
 }
 
+bool NullHEBurn::getBurns() const
+{
+  return d_burnable;
+}
+
 void NullHEBurn::addMassRateComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const Patch* patch,
@@ -103,6 +108,11 @@ void NullHEBurn::computeMassRate(const Patch* patch,
 }
 
 // $Log$
+// Revision 1.7  2000/06/19 23:52:14  guilkey
+// Added boolean d_burns so that certain stuff only gets done
+// if a burn model is present.  Not to worry, the if's on this
+// are not inside of inner loops.
+//
 // Revision 1.6  2000/06/16 23:23:38  guilkey
 // Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
 // the scheduler was having.
