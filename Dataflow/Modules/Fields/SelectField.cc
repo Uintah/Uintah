@@ -114,6 +114,10 @@ SelectField::execute()
     output_field_ =
       algo->execute(ifieldhandle->mesh(), ifieldhandle->data_at());
 
+    // copy the properties
+    *((PropertyManager *)(output_field_.get_rep())) =
+          *((PropertyManager *)(ifieldhandle.get_rep()));
+    
     last_generation_ = ifieldhandle->generation;
 
     BBox obox = output_field_->mesh()->get_bounding_box();
