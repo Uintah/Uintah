@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*  mcube.h
     Marching Cubes style interpolation for structured and unstructured grids
@@ -2180,6 +2180,9 @@ MCubesCL<T>::interpRegular8( int zone, int x, int y, int z, float iso ) {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:13:02  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:01:05  psutton
 // initial revision
 //

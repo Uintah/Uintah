@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*
   TbonP.cc
@@ -505,6 +505,9 @@ TbonP::parallel( int rank ) {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:13:03  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:03:15  psutton
 // initial revision
 //

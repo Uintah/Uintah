@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* BonoTreeP.h
    class declarations for the parallel BONO tree
@@ -1126,6 +1126,9 @@ BonoTreeP<T>::assignPoints( int myindex, int d, int x, int y, int z,
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:07:19  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:49:38  psutton
 // initial revision
 //

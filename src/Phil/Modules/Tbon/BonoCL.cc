@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* BonoCL.cc
    BONO - curvilinear grid implementation
@@ -410,6 +410,9 @@ BonoCL::processQuery() {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:09:56  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:52:32  psutton
 // initial revision
 //

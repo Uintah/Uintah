@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*
   datalist.h
@@ -160,6 +160,9 @@ DataList<T>::getValue( int x, int y, int z ) {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:15:10  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:12:00  psutton
 // initial revision
 //

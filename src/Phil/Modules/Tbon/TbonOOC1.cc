@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TbonOOC1.cc
    Temporal Branch-on-Need tree (T-BON) implementation
@@ -363,6 +363,9 @@ TbonOOC1::processQuery() {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:15:08  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:11:58  psutton
 // initial revision
 //
