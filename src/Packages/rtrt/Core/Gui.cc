@@ -230,6 +230,7 @@ GGT::~GGT()
 }
 
 void GGT::run() {
+  DpyBase::xlock();
   printf("before glutInit\n");
   char *argv = "GGT Thread run";
   int argc = 1;
@@ -242,9 +243,7 @@ void GGT::run() {
   glutInitWindowSize(400, 545 );
   glutInitWindowPosition( 400, 0 );
     
-  DpyBase::xlock();
   mainWindowID = glutCreateWindow("GG Controls");
-  DpyBase::xunlock();
 
   glut_dpy = __glutDisplay;
   // This is an ugly, cheaty way of getting the window id out of glut...
@@ -278,6 +277,7 @@ void GGT::run() {
 
   addSceneLights();
   
+  DpyBase::xunlock();
   printf("end glut inits\n");
     
   glutMainLoop();
@@ -300,6 +300,7 @@ GGT::cleanup() {
 
 void
 GGT::stop() {
+  cerr << "GGT::stop called\n";
   on_death_row = true;
 }
 
@@ -381,8 +382,10 @@ GGT::setDpy( Dpy * dpy )
 void
 GGT::idleFunc() {
   // Check to see if we need to go bye bye
-  if (activeGGT->on_death_row)
+  if (activeGGT->on_death_row) {
+    cerr << "GGT::idleFunc:: calling Thread::exit()\n";
     Thread::exit();
+  }
   else
     usleep(1000);
 }
@@ -2261,7 +2264,6 @@ void
 GGT::createMenus( int winId, bool soundOn /* = false */,
 		  bool showGui /* = true */ )
 {
-  DpyBase::xlock();
   printf("createmenus\n");
 
   // Register callbacks
@@ -2566,8 +2568,6 @@ GGT::createMenus( int winId, bool soundOn /* = false */,
     add_button_to_panel( button_panel, "Triggers",
 			 OBJECTS_BUTTON_ID, toggleTriggersWindowCB );
 
-
-  DpyBase::xunlock();
   printf("done createmenus\n");
 } // end createMenus()
 
