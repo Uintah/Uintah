@@ -15,7 +15,7 @@ PSELIBS := \
 	Core/Util       \
 	Core/Geometry
 
-LIBS := $(MPI_LIBRARY)
+LIBS := $(MPI_LIBRARY) $(XML_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
