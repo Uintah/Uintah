@@ -83,7 +83,7 @@ NullScheduler::actuallyCompile(const ProcessorGroup* pg)
   graph.createDetailedDependencies(dts_, lb, pg);
   releasePort("load balancer");
 
-  dts_->assignMessageTags(graph.getTasks());
+  dts_->assignMessageTags(pg->myrank());
 }
 
 void
