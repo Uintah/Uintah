@@ -107,6 +107,73 @@ AC_DEFUN([BASE_LIB_PATH], [
   eval $1='"$_new_lib_path"'
 ])
 
+
+AC_DEFUN([ABSOLUTE_LIBRARY], [
+##
+## ABSOLUTE_LIBRARY:
+##
+## arguments mean:
+##
+## arg 1 : This argument will be written with the result
+## arg 2 : library flag (should be -L/some/dir -lsomelib
+##
+## The result (which the varaible named by arg1 is set to)
+## will be /some/dir/somelib.<ext>
+##
+
+  _final_libs=""
+
+echo "starting with $2"
+
+  # Remove any -Wl's
+  _lib_list=`echo "$2"      | sed "s%-Wl[[.,-/a-zA-Z0-9]]*%%g"`
+
+echo "_lib_list: $_lib_list"
+  # Find all the -L's and -l's.
+
+  _BigLs=`echo $_lib_list   | sed "s%-l[[./a-zA-Z0-9]]*%%g"`
+  _SmallLs=`echo $_lib_list | sed "s%-L[[./a-zA-Z0-9]]*%%g"`
+
+  # Must add /usr/lib at the end so that libraries in /usr/lib
+  # can be found.  
+  _BigLs="$_BigLs /usr/lib"
+
+echo "BigLs: $_BigLs"
+echo "SmlLs: $_SmallLs"
+
+  _checked_dirs=""
+
+  for _bigL in $_BigLs; do
+
+     _the_dir=`echo $_bigL | sed "s%-L%%"`
+echo "the_dir: $_the_dir"
+
+     _already_checked=`echo "$_checked_dirs" | grep "$_the_dir"`
+     if test -n "$_already_checked"; then
+        echo "Already checked in $_the_dir.  Skipping."
+        continue
+     fi
+
+     for _smallL in $_SmallLs; do
+        _the_lib=`echo $_smallL | sed "s%-l%%"`
+
+echo "the_lib: $_the_lib"
+        for _extension in so dylib a; do
+           _lib_name="$_the_dir/lib$_the_lib.$_extension"
+
+           if test -e $_lib_name; then
+              _checked_dirs="$_checked_dirs $_the_dir"
+echo "found it with .$_extension"
+              _final_libs="$_final_libs $_lib_name"
+              break
+           fi
+        done
+     done
+  done
+
+  eval $1='"$_final_libs"'
+])
+
 ## original SCI_TRY_LINK...
 AC_DEFUN([SCI_COMPILE_LINK_TEST], [
 ## arguments mean:
@@ -576,19 +643,26 @@ fi
 ])
 
 if test "$9" = "specific"; then
-#echo specific
+  #echo specific
   # Make sure the exact includes were found
   for i in "" $3; do
-#echo looking for $4/$i
+    #echo looking for $4/$i
     if test ! -e $4/$i; then
-     AC_MSG_ERROR(Specificly requested $1 include file '$4/$i' was not found)
+     AC_MSG_ERROR(Specifically requested $1 include file '$4/$i' was not found)
     fi
   done
   # Make sure the exact libraries were found
   for i in "" $5; do
-#echo looking for $6/$i
-    if test -n "$i" && test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
-     AC_MSG_ERROR(Specificly requested $1 library file '$6/$i' was not found)
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    #echo looking for $6/$i
+    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
+     AC_MSG_ERROR(Specifically requested $1 library file '$6/$i' (.so or .a) was not found)
     fi
   done
 fi
