@@ -128,6 +128,9 @@ public:
 #endif
     int debug;
     void reset();
+
+    bool   fontinit;
+    GLuint fontbase;
 };
 
 } // End namespace SCIRun
