@@ -188,17 +188,17 @@ void
 					 control_z_.get()));
       control_widget_->SetScale(dv.length()/80.0);
     } else {
-      int nx, ny, nz;
-      tex_->get_dimensions(nx,ny,nz);
-      Transform t(tex_->get_field_transform());
-      dmin_=t.project(Point(0,0,0));
-      ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
-      ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
-      ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
-      ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
-      control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
+      control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5) );
       control_widget_->SetScale(dv.length()/80.0);
     }
+    int nx, ny, nz;
+    tex_->get_dimensions(nx,ny,nz);
+    Transform t(tex_->get_field_transform());
+    dmin_=t.project(Point(0,0,0));
+    ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
+    ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
+    ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
+    ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
   }
 
   //AuditAllocator(default_allocator);
