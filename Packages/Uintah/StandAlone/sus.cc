@@ -28,6 +28,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
 #include <Packages/Uintah/CCA/Components/Examples/Burger.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
+#include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
@@ -173,6 +174,7 @@ main( int argc, char** argv )
     bool   do_poisson1=false;
     bool   do_poisson2=false;
     bool   do_poisson3=false;
+    bool   do_simplecfd=false;
     bool   do_AMR=false;
     bool   emit_graphs=false;
     bool   restart=false;
@@ -235,10 +237,12 @@ main( int argc, char** argv )
 	    do_poisson2=true;
 	} else if(s == "-poisson3"){
 	    do_poisson3=true;
+	} else if(s == "-scfd" || s == "-simplecfd"){
+	    do_simplecfd=true;
 	} else if(s == "-mpmarches"){
 	    do_arches=true;
 	    do_mpm=true;
-	} else if(s == "-AMR"){
+	} else if(s == "-AMR" || s == "-amr"){
 	    do_AMR=true;
 	} else if(s == "-nthreads"){
 	  cerr << "reading number of threads\n";
@@ -259,16 +263,10 @@ main( int argc, char** argv )
 		    s, argv[0]);
 	   }
 	   loadbalancer = argv[i];
-      //} else if(s.substr(0,3) == "-p4") {
-	  // This should never happen anymore as the MPI_Init strips
-	  // the "-p4" and other args off of the command line before
-	  // we get to this point.  This use to be necessary as we did
-	  // not call MPI_Init() before parsing args.  It is necessary
-	  // to do so because mpich doesn't send the args through
-	  // correctly if you don't.  Dd.
-
-	   // mpich - skip the rest
-	   // break;
+	} else if(s == "-mpi") {
+	  Uintah::Parallel::forceMPI();
+	} else if(s == "-nompi") {
+	  Uintah::Parallel::forceNoMPI();
 	} else if (s == "-emit_taskgraphs") {
 	   emit_graphs = true;
 	} else if(s == "-restart") {
@@ -322,7 +320,7 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || combine_patches)){
+    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
@@ -394,6 +392,8 @@ main( int argc, char** argv )
 	  sim = scinew Poisson2(world);
 	} else if(do_poisson3){
 	  sim = scinew Poisson3(world);
+	} else if(do_simplecfd){
+	  sim = scinew SimpleCFD(world);
 	} else if (combine_patches) {
 	  sim = scinew PatchCombiner(world, udaDir);
 	  ctl->doCombinePatches(udaDir);
