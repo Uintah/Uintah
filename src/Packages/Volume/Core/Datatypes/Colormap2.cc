@@ -52,42 +52,13 @@ void Colormap2::io(Piostream&)
 }
 
 Colormap2::Colormap2()
-  : dirty_(false), lock_("Colormap2 lock")
+  : dirty_(false), updating_(false),
+    array_lock_("Colormap2 array lock"), widget_lock_("Colormap2 widget lock")
 {}
 
 Colormap2::~Colormap2()
 {
   // TODO:  Delete widgets here.
-}
-
-Array3<float>&
-Colormap2::array()
-{
-  return array_;
-}
-
-bool
-Colormap2::dirty()
-{
-  return dirty_;
-}
-
-void
-Colormap2::set_dirty(bool b)
-{
-  dirty_ = b;
-}
-
-void
-Colormap2::lock_array()
-{
-  lock_.lock();
-}
-
-void
-Colormap2::unlock_array()
-{
-  lock_.unlock();
 }
 
 } // End namespace Volume

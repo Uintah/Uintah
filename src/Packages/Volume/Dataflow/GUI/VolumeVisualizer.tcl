@@ -25,8 +25,10 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-num_slices
-	set $this-num_slices 64
+	global $this-num_slices_lo
+	set $this-num_slices_lo 128
+	global $this-num_slices_hi
+	set $this-num_slices_hi 768
 	global $this-alpha_scale
 	set $this-alpha_scale 0
 	global $this-render_style
@@ -138,9 +140,15 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 		-anchor w -command $n
 	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
 
-	global $this-num_slices
-	scale $w.nslice -variable $this-num_slices \
-		-from 1 -to 1024 -label "Number of Slices" \
+	global $this-num_slices_lo
+	scale $w.nslice_lo -variable $this-num_slices_lo \
+		-from 1 -to 1024 -label "Number of Slices (Interactive)" \
+		-showvalue true \
+		-orient horizontal \
+
+	global $this-num_slices_hi
+	scale $w.nslice_hi -variable $this-num_slices_hi \
+		-from 1 -to 1024 -label "Number of Slices (High Quality)" \
 		-showvalue true \
 		-orient horizontal \
 
@@ -151,14 +159,15 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 		-showvalue true -resolution 0.001 \
 		-orient horizontal 
 
-	pack $w.stransp $w.nslice  -side top -fill x -padx 4 -pady 2
+	pack $w.stransp $w.nslice_lo $w.nslice_hi -side top -fill x -padx 4 -pady 2
 
         bind $w.f6.ambient <ButtonRelease> $n
         bind $w.f6.diffuse <ButtonRelease> $n
         bind $w.f6.specular <ButtonRelease> $n
         bind $w.f6.shine <ButtonRelease> $n
 
-	bind $w.nslice <ButtonRelease> $n
+	bind $w.nslice_lo <ButtonRelease> $n
+	bind $w.nslice_hi <ButtonRelease> $n
 	bind $w.stransp <ButtonRelease> $n
 	
 	makeSciButtonPanel $w $w $this

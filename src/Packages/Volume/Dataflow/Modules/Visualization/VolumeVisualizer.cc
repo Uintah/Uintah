@@ -63,7 +63,8 @@ private:
   int cmap_id;  // id associated with color map...
   
 
-  GuiInt gui_num_slices_;
+  GuiInt gui_num_slices_hi_;
+  GuiInt gui_num_slices_lo_;
   GuiInt gui_render_style_;
   GuiDouble gui_alpha_scale_;
   GuiInt gui_interp_mode_;
@@ -86,7 +87,8 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     control_lock("VolumeVisualizer resolution lock"),
     control_widget(0),
     control_id(-1),
-    gui_num_slices_(ctx->subVar("num_slices")),
+    gui_num_slices_hi_(ctx->subVar("num_slices_hi")),
+    gui_num_slices_lo_(ctx->subVar("num_slices_lo")),
     gui_render_style_(ctx->subVar("render_style")),
     gui_alpha_scale_(ctx->subVar("alpha_scale")),
     gui_interp_mode_(ctx->subVar("interp_mode")),
@@ -195,7 +197,15 @@ VolumeVisualizer::execute(){
   }
   
   //AuditAllocator(default_allocator);
-  volren_->SetNSlices( gui_num_slices_.get() );
+  if(cmap2.get_rep()) {
+    if(cmap2->is_updating()) {
+      volren_->SetNSlices(gui_num_slices_lo_.get());
+    } else {
+      volren_->SetNSlices(gui_num_slices_hi_.get());
+    }
+  } else {
+    volren_->SetNSlices(gui_num_slices_hi_.get());
+  }
   volren_->SetSliceAlpha( gui_alpha_scale_.get() );
 
   volren_->setShading(gui_shading_.get());

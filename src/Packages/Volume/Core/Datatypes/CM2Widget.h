@@ -37,6 +37,8 @@
 
 namespace Volume {
 
+class CM2ShaderFactory;
+
 class CM2Widget
 {
 public:
@@ -45,7 +47,7 @@ public:
 
   // appearance
   virtual void draw() = 0;
-  virtual void rasterize() = 0;
+  virtual void rasterize(CM2ShaderFactory& factory) = 0;
   virtual void rasterize(SCIRun::Array3<float>& array) = 0;
 
   // behavior
@@ -72,20 +74,41 @@ protected:
   int selected_;
 };
 
-
 class FragmentProgramARB;
+
+enum {
+  CM2_TRIANGLE = 0,
+  CM2_RECTANGLE_1D = 1,
+  CM2_RECTANGLE_ELLIPSOID = 2,
+  CM2_LAST = 3
+};
+
+class CM2ShaderFactory
+{
+public:
+  CM2ShaderFactory();
+  ~CM2ShaderFactory();
+  
+  bool create();
+  void destroy();
+
+  FragmentProgramARB* shader(int type);
+
+protected:
+  FragmentProgramARB** shader_;
+};
 
 class TriangleCM2Widget : public CM2Widget
 {
 public:
   TriangleCM2Widget();
   TriangleCM2Widget(float base, float top_x, float top_y,
-                 float width, float bottom);
+                    float width, float bottom);
   ~TriangleCM2Widget();
 
   // appearance
   void draw();
-  void rasterize();
+  void rasterize(CM2ShaderFactory& factory);
   void rasterize(SCIRun::Array3<float>& array);
   
   // behavior
@@ -93,9 +116,6 @@ public:
   virtual int pick2 (int x, int y, int w, int h);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
-
-  static bool Init();
-  static void Exit();
   
 protected:
   float base_;
@@ -106,26 +126,19 @@ protected:
   // Used by picking.
   float last_x_, last_y_, last_width_;
   int pick_ix_, pick_iy_;
-
-  static FragmentProgramARB* shader_;
-};
-
-enum RectangleType {
-  RECTANGLE_ELLIPSOID,
-  RECTANGLE_1D
 };
 
 class RectangleCM2Widget : public CM2Widget
 {
 public:
   RectangleCM2Widget();
-  RectangleCM2Widget(RectangleType type, float left_x, float left_y,
-                  float width, float height, float offset);
+  RectangleCM2Widget(int type, float left_x, float left_y,
+                     float width, float height, float offset);
   ~RectangleCM2Widget();
 
   // appearance
   void draw();
-  void rasterize();
+  void rasterize(CM2ShaderFactory& factory);
   void rasterize(SCIRun::Array3<float>& array);
   
   // behavior
@@ -133,21 +146,15 @@ public:
   virtual int pick2 (int x, int y, int w, int h);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
-
-  static bool Init();
-  static void Exit();
   
 protected:
-
-  RectangleType type_;
+  int type_;
   float left_x_, left_y_;
   float width_, height_, offset_;
 
   // Used by picking.
   float last_x_, last_y_;
   int pick_ix_, pick_iy_;
-
-  static FragmentProgramARB* shader_;
 };
 
 

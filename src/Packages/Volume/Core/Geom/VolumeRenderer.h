@@ -38,6 +38,8 @@ using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
 class VertexProgramARB;
 class FragmentProgramARB;
+class Pbuffer;
+class CM2ShaderFactory;
 
 class VolumeRenderer : public TextureRenderer
 {
@@ -53,9 +55,9 @@ public:
   virtual void BuildTransferFunction();
   virtual void BuildTransferFunction2();
   
-  void SetNSlices(int s) { slices_ = s;}
-  void SetSliceAlpha( double as){ slice_alpha_ = as;}
-  void SetRenderMode( vol_ren_mode vrm) { mode_ = vrm; }
+  void SetNSlices(int s) { slices_ = s; }
+  void SetSliceAlpha(double as){ slice_alpha_ = as;}
+  void SetRenderMode(vol_ren_mode vrm) { mode_ = vrm; }
 
   inline void setShading(bool shading) { shading_ = shading; }
   inline void setMaterial(double ambient, double diffuse, double specular, double shine)
@@ -74,10 +76,10 @@ public:
   double slice_alpha() const { return slice_alpha_; }
 
 protected:
-  int               slices_;
-  double            slice_alpha_;
-  vol_ren_mode      mode_;
-  unsigned char     transfer_function_[1024];
+  int slices_;
+  double slice_alpha_;
+  vol_ren_mode mode_;
+  unsigned char transfer_function_[1024];
 
   bool shading_;
   double ambient_, diffuse_, specular_, shine_;
@@ -96,6 +98,11 @@ protected:
   FragmentProgramARB* LitVolShader_2;
   FragmentProgramARB* LitFogVolShader_2;
   VertexProgramARB* FogVertexShader;
+  Pbuffer* pbuffer_;
+  CM2ShaderFactory* shader_factory_;
+  Pbuffer* texbuffer_;
+  FragmentProgramARB* texshader_;
+  bool use_pbuffer_;
 };
 
 } // End namespace SCIRun

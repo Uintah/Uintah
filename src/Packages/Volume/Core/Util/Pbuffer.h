@@ -55,13 +55,17 @@ public:
   void bind(unsigned int buffer = GL_FRONT); // bind as 2D texture
   void release(unsigned int buffer = GL_FRONT); 
 
-  void enable();
-  void disable();
+  void activate();
+  void deactivate();
   
   inline int width() const { return mWidth; }
   inline int height() const { return mHeight; }
   inline int visual() const { return mVisualId; }
+  inline unsigned int target() const { return mTexTarget; }
 
+  bool need_shader();
+  void set_use_default_shader(bool b);
+  
 protected:
   int mWidth, mHeight;
   int mFormat, mNumColorBits; /* , mChannels; */
@@ -73,6 +77,7 @@ protected:
   unsigned int mTex; // associated texture id
   unsigned int mTexTarget; // associated texture target
   unsigned int mTexFormat; // associated texture format
+  bool mUseDefaultShader;
   // GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE_NV
   struct PbufferImpl* mImpl; // implementation specific details
 };

@@ -37,7 +37,6 @@
 
 #include <sci_gl.h>
 #include <Packages/Volume/Core/Util/Pbuffer.h>
-#include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
@@ -59,7 +58,6 @@ using namespace SCITeem;
 
 namespace Volume {
 
-
 class EditTransferFunc2 : public Module {
 
   GLXContext ctx_;
@@ -68,6 +66,7 @@ class EditTransferFunc2 : public Module {
   int width_, height_;
   bool button_;
   vector<CM2Widget*> widget_;
+  CM2ShaderFactory* shader_factory_;
   Pbuffer* pbuffer_;
   bool use_pbuffer_;
   
@@ -84,6 +83,8 @@ class EditTransferFunc2 : public Module {
   int pick_widget_; // Which widget is selected.
   int pick_object_; // The part of the widget that is selected.
 
+  bool updating_; // updating the tf or not
+  
 public:
   EditTransferFunc2(GuiContext* ctx);
   virtual ~EditTransferFunc2();
@@ -108,11 +109,12 @@ DECLARE_MAKER(EditTransferFunc2)
 
 EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   : Module("EditTransferFunc2", ctx, Filter, "Visualization", "Volume"),
-    ctx_(0), dpy_(0), win_(0), button_(0), pbuffer_(0), use_pbuffer_(true),
+    ctx_(0), dpy_(0), win_(0), button_(0), shader_factory_(0),
+    pbuffer_(0), use_pbuffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
     cmap_(new Colormap2),
     cmap_dirty_(true), cmap_size_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0),
-    pick_widget_(-1), pick_object_(0)
+    pick_widget_(-1), pick_object_(0), updating_(false)
 {
   widget_.push_back(scinew TriangleCM2Widget());
   widget_.push_back(scinew RectangleCM2Widget());
@@ -122,6 +124,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
 
 EditTransferFunc2::~EditTransferFunc2()
 {
+  delete pbuffer_;
+  delete shader_factory_;
   // Clean up currently unmemorymanaged widgets.
   //for (unsigned int i = 0; i < widget_.size(); i++)
   //{
@@ -233,6 +237,7 @@ EditTransferFunc2::motion(int x, int y)
   {
     widget_[pick_widget_]->move(pick_object_, x, 255-y, 512, 256);
     cmap_dirty_ = true;
+    updating_ = true;
   }
   update();
   redraw();
@@ -249,7 +254,8 @@ EditTransferFunc2::release(int x, int y, int button)
   if (pick_widget_ != -1)
   {
     widget_[pick_widget_]->release(pick_object_, x, 255-y, 512, 256);
-    //cmap_dirty_ = true;
+    updating_ = false;
+    cmap_dirty_ = true;
   }
 
   update();
@@ -261,7 +267,7 @@ EditTransferFunc2::release(int x, int y, int button)
 void
 EditTransferFunc2::execute()
 {
-  //cerr << "execute" << endl;
+  //cerr << "EditTransferFunc2::execute" << endl;
   
   NrrdIPort* histo_port = (NrrdIPort*)get_iport("Histogram");
   if(histo_port) {
@@ -289,8 +295,11 @@ EditTransferFunc2::execute()
   update();
   redraw();
 
-  Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Colormap");
+  Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Output Colormap");
   if(cmap_port) {
+    cmap_->lock_widgets();
+    cmap_->widgets() = widget_;
+    cmap_->unlock_widgets();
     cmap_port->send(cmap_);
   }
 }
@@ -332,10 +341,12 @@ EditTransferFunc2::update()
   glXMakeCurrent(dpy_, win_, ctx_);
 
   if(use_pbuffer_) {
-    if (TriangleCM2Widget::Init()
-        || RectangleCM2Widget::Init()) {
-      use_pbuffer_ = false;
-      cerr << "Shaders not supported; switching to software rasterization" << endl;
+    if(!shader_factory_) {
+      shader_factory_ = new CM2ShaderFactory();
+      if(shader_factory_->create()) {
+        use_pbuffer_ = false;
+        cerr << "Shaders not supported; switching to software rasterization" << endl;
+      }
     }
   }
   
@@ -384,7 +395,7 @@ EditTransferFunc2::update()
     // Rasterize widgets
     for (unsigned int i = 0; i < widget_.size(); i++)
     {
-      widget_[i]->rasterize();
+      widget_[i]->rasterize(*shader_factory_);
     }
 
     glDisable(GL_BLEND);
@@ -396,7 +407,9 @@ EditTransferFunc2::update()
     if (cmap_dirty_)
     {
       cmap_->widgets() = widget_;
+      cmap_->set_updating(updating_);
       cmap_dirty_ = false;
+      do_execute = true;
     }
   } else {
     Array3<float>& cmap = cmap_->array();
