@@ -9,8 +9,6 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/HitInfo.h>
-#include <Core/Thread/Barrier.h>
-#include <Core/Thread/Mutex.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
@@ -19,13 +17,20 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BBox.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/Context.h>
+
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #ifdef __sgi
 #include <sys/sysmp.h>
 #endif
@@ -220,11 +225,43 @@ void Worker::run()
 	    ex=xres;
 	  st->npixels+=(ex-sx)*(ey-sy);
 	  if(stereo){
+#if 1
+	    double stime = 0;
+	    if( hotSpotMode )
+	      stime = SCIRun::Time::currentSeconds();
+	    for(int y=sy;y<ey;y++){
+	      for(int x=sx;x<ex;x++){
+		camera->makeRayL(ray, x+xoffset, y+yoffset, ixres, iyres);
+		traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+		if( !hotSpotMode ) {
+		    (*image)(x,y).set(result);
+		} else {
+		    double etime=SCIRun::Time::currentSeconds();
+		    double dt=etime-stime;	
+		    stime=etime;
+		    (*image)(x,y).set(CMAP(dt));
+		}
+	      }
+	      for(int x=sx;x<ex;x++){
+		camera->makeRayR(ray, x+xoffset, y+yoffset, ixres, iyres);
+		traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+		if( !hotSpotMode ) {
+		    (*image)(x,y).set(result);
+		} else {
+		    double etime=SCIRun::Time::currentSeconds();
+		    double dt=etime-stime;	
+		    stime=etime;
+		    (*image)(x,y).set(CMAP(dt));
+		}
+	      }
+	    }
+#else
 	    static bool warned = false;
 	    if( !warned ) {
 	      warned = true;
 	      cout << "WARNING: Stereo not implemented now!\n";
 	    }
+#endif
 	  } else {
 	    if (scene->get_rtrt_engine()->do_jitter) {
 	      Color sum;
