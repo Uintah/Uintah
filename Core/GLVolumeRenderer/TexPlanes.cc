@@ -168,7 +168,7 @@ TexPlanes::draw()
 }
   
 
-  void
+void
 TexPlanes::draw(Brick& b, Polygon* poly)
 {
   vector<Polygon *> polys;

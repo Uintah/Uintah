@@ -39,5 +39,20 @@
 @DEF_OGL_EXT_HDRS@
 @DEF_HAVE_AVR@
 
+@OGL_ERR_MACRO@
+#if defined(OGL_DBG)
+#define CHECK_OPENGL_ERROR(x)                                           \
+   {                                                                    \
+    GLenum errCode;                                                     \
+    int cnt = 1;                                                        \
+    while ((errCode = glGetError()) != GL_NO_ERROR) {                   \
+      std::cerr<< "OpenGL Error(" << cnt << "): "<< x << " "            \
+	  << (const char*)gluErrorString(errCode) << std::endl;         \
+    }                                                                   \
+  }
+#else
+#define CHECK_OPENGL_ERROR(x) 
+#endif
+
 #endif
 
