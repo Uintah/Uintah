@@ -45,16 +45,16 @@ Group *make_geometry(char* tex_names[NUM_TEXTURES])
   Group* group=new Group();
 
   int E = 0;
-  if (!E) E |= add_sphere(tex_names[0], Point(-1,-1,-1), group);
-  if (!E) E |= add_sphere(tex_names[1], Point(-1, 1,-1), group);
-  if (!E) E |= add_sphere(tex_names[2], Point( 1, 1,-1), group);
-  if (!E) E |= add_sphere(tex_names[3], Point( 1,-1,-1), group);
+  int tex_index = 0;
+  for(int z = -1; z <= 1; z+=2)
+    for(int y = -1; y <= 1; y+=2)
+      for(int x = -1; x <= 1; x+=2)
+	{
+	  if (!E) E |= add_sphere(tex_names[tex_index++],
+				  Point(x, y, z),
+				  group);
+	}
 
-  if (!E) E |= add_sphere(tex_names[4], Point(-1,-1, 1), group);
-  if (!E) E |= add_sphere(tex_names[5], Point(-1, 1, 1), group);
-  if (!E) E |= add_sphere(tex_names[6], Point( 1, 1, 1), group);
-  if (!E) E |= add_sphere(tex_names[7], Point( 1,-1, 1), group);
-  
   if (!E)
     return group;
   else
