@@ -5,7 +5,7 @@
 using namespace rtrt;
 
 PerProcessorContext::PerProcessorContext(int size, int scratchsize)
-  : datasize(size), scratchsize(scratchsize)
+  : datasize(size), scratchsize(scratchsize), debug_(0)
 {
   data=new char[size];
   for(int i=0;i<size;i++)
