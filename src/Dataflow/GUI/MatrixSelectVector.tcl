@@ -44,7 +44,6 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         setGlobal $this-range_min		0
         setGlobal $this-range_max		100
 	setGlobal $this-playmode		once
-	setGlobal $this-dependence		independent
 	setGlobal $this-current			0
 	setGlobal $this-execmode		init
 	setGlobal $this-delay			0
@@ -65,6 +64,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         if {[winfo exists $w]} {
             return
         }
+
         toplevel $w
 
 	frame $w.roc -borderwidth 0
@@ -85,23 +85,26 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 
 	# load the VCR button bitmaps
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set rewind [image create photo -file ${image_dir}/rewind-icon.ppm]
-	set stepb [image create photo -file ${image_dir}/step-back-icon.ppm]
-	set pause [image create photo -file ${image_dir}/pause-icon.ppm]
-	set play [image create photo -file ${image_dir}/play-icon.ppm]
-	set stepf [image create photo -file ${image_dir}/step-forward-icon.ppm]
+	set rewind   [image create photo -file ${image_dir}/rewind-icon.ppm]
+	set stepb    [image create photo -file ${image_dir}/step-back-icon.ppm]
+	set pause    [image create photo -file ${image_dir}/pause-icon.ppm]
+	set play     [image create photo -file ${image_dir}/play-icon.ppm]
+	set stepf    [image create photo -file ${image_dir}/step-forward-icon.ppm]
 	set fforward [image create photo -file ${image_dir}/fast-forward-icon.ppm]
 
 	# Create and pack the VCR buttons frame
-	button $vcr.rewind -image $rewind -command "set $this-current \[set $this-range_min\]"
-	button $vcr.stepb -image $stepb -command "set $this-execmode stepb
-                                                  $this-c needexecute"
-	button $vcr.pause -image $pause -command "$this-c stop"
-	button $vcr.play -image $play -command "set $this-execmode play
-                                                $this-c needexecute"
-	button $vcr.stepf -image $stepf -command "set $this-execmode step
-                                                  $this-c needexecute"
-	button $vcr.fforward -image $fforward -command "set $this-current \[set $this-range_max\]"
+	button $vcr.rewind -image $rewind \
+	    -command "set $this-execmode rewind;   $this-c needexecute"
+	button $vcr.stepb -image $stepb \
+	    -command "set $this-execmode stepb;    $this-c needexecute"
+	button $vcr.pause -image $pause \
+	    -command "set $this-execmode stop;     $this-c needexecute"
+	button $vcr.play  -image $play  \
+	    -command "set $this-execmode play;     $this-c needexecute"
+	button $vcr.stepf -image $stepf \
+	    -command "set $this-execmode step;     $this-c needexecute"
+	button $vcr.fforward -image $fforward \
+	    -command "set $this-execmode fforward; $this-c needexecute"
 
 	pack $vcr.rewind $vcr.stepb $vcr.pause \
 	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
@@ -112,7 +115,6 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	Tooltip $vcr.play $ToolTipText(VCRplay)
 	Tooltip $vcr.stepf $ToolTipText(VCRstepforward)
 	Tooltip $vcr.fforward $ToolTipText(VCRfastforward)
-
 
 
 	# Save range, creating the scale resets it to defaults.
@@ -165,19 +167,6 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 		$playmode.bounce1 $playmode.bounce2 $playmode.delay \
 	        -side top -anchor w
 
-
-	# Create and pack the Dependencies frame
-	label $w.dependence.label -text "Downstream Dependencies"
-	radiobutton $w.dependence.independent -text \
-	        "Column and Index are Independent" \
-	        -variable $this-dependence -value independent
-	radiobutton $w.dependence.dependent -text \
-	        "Column and Index are Dependent" \
-		-variable $this-dependence -value dependent
-	pack $w.dependence.label -side top -expand yes -fill both
-	pack $w.dependence.independent $w.dependence.dependent \
-	        -side top -anchor w
-
 	# Create the button to show/hide extened options
 	button $w.expanded
 	# Create the sci button panel
@@ -186,13 +175,14 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	# Show the no-frills interface
 	show_small_interface
 
-	moveToCursor $w
+	update
     }
 
 
     method forget_packing {} {
 	set w .ui[modname]
-	pack forget $w.vcr $w.roc $w.cur $w.expanded $w.min $w.max $w.inc $w.amount $w.playmode $w.dependence $w.buttonPanel
+	pack forget $w.vcr $w.roc $w.cur $w.expanded \
+	    $w.min $w.max $w.inc $w.amount $w.playmode $w.dependence $w.buttonPanel
     }
 
     method show_small_interface {} {
@@ -241,8 +231,6 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 
             $w.amount config -label "Number of ${pre}s to send:" \
 		-from 1 -to [expr $max-$min]
-
-
         }
     }
 }
