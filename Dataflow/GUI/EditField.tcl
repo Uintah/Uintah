@@ -44,44 +44,35 @@ itcl_class SCIRun_Fields_EditField {
 	global $this-datamin2
 	global $this-datamax2
 	global $this-dataat2
-	global $this-rotx
-	global $this-roty
-	global $this-rotz
-	global $this-rotdeg
-	global $this-transx
-	global $this-transy
-	global $this-transz
-	global $this-scalex
-	global $this-scaley
-	global $this-scalez
 	global $this-cfldname
 	global $this-ctypename
 	global $this-cdataminmax
-	global $this-cbboxmin
-	global $this-cbboxmax
+	global $this-cbbox
 	global $this-cnumelems
 	global $this-cdataat
+	global $this-minx2
+	global $this-miny2
+	global $this-minz2
+	global $this-maxx2
+	global $this-maxy2
+	global $this-maxz2
 	set $this-fldname2 ""
 	set $this-typename2 "--- No typename ---"
-	set $this-datamin2 ""
-	set $this-datamax2 ""
+	set $this-datamin2 0
+	set $this-datamax2 0
 	set $this-dataat2 "Field::CELL"
-	set $this-rotx ""
-	set $this-roty ""
-	set $this-rotz ""
-	set $this-transx ""
-	set $this-transy ""
-	set $this-transz ""
-	set $this-scalex ""
-	set $this-scaley ""
-	set $this-scalez ""
 	set $this-cfldname 0
 	set $this-ctypename 0
 	set $this-cdataminmax 0
-	set $this-cbboxmin 0
-	set $this-cbboxmax 0
+	set $this-cbbox 0
 	set $this-cnumelems 0
 	set $this-cdataat 0
+	set $this-minx2 1
+	set $this-miny2 1
+	set $this-minz2 1
+	set $this-maxx2 0
+	set $this-maxy2 0
+	set $this-maxz2 0
     }
 
     method ui {} {
@@ -129,6 +120,10 @@ itcl_class SCIRun_Fields_EditField {
 	labelcombo $edit.l2 "Typename" \
 		   "[possible_typenames [set $this-typename2]]" \
                    $this-typename2 $this-ctypename
+	labelentry3 $edit.l3 "BBox min" $this-minx2 $this-miny2 \
+		    $this-minz2 $this-cbbox
+	labelentry3 $edit.l4 "BBox max" $this-maxx2 $this-maxy2 $this-maxz2 \
+		    $this-cbbox
 	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2 \
 		    $this-cdataminmax
 	labelcombo $edit.l9 "Data at" {Field::CELL 

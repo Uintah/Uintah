@@ -33,22 +33,25 @@ public:
   // out is the output field
   // in is the input field
 
+  GuiString numnodes_;   // the in number of nodes 
+
   GuiString fldname_;    // the out property "name"
   GuiString typename_;   // the out field type
   GuiDouble datamin_;    // the out data min
   GuiDouble datamax_;    // the out data max
-  GuiString numnodes_;   // the in field number of nodes 
   GuiString dataat_;     // the out data at
-  GuiDouble rotx_,roty_,rotz_,rotdeg_;
-  GuiDouble transx_,transy_,transz_;
-  GuiDouble scalex_,scaley_,scalez_;
+  GuiDouble minx_;       // the out bounding box
+  GuiDouble miny_;
+  GuiDouble minz_;
+  GuiDouble maxx_;
+  GuiDouble maxy_;
+  GuiDouble maxz_;
 
   GuiInt cfldname_;      // change name
   GuiInt ctypename_;     // change type
   GuiInt cdataat_;       // change data at
   GuiInt cdataminmax_;   // change data value extents
-  GuiInt cbboxmin_;      // change bbox
-  GuiInt cbboxmax_;
+  GuiInt cbbox_;         // change bbox
 
   CrowdMonitor widget_lock_;
   ScaledBoxWidget *box_;
@@ -83,28 +86,23 @@ extern "C" PSECORESHARE Module* make_EditField(const string& id) {
 
 EditField::EditField(const string& id)
   : Module("EditField", id, Source, "Fields", "SCIRun"),
+    numnodes_("numnodes2", id, this),
     fldname_("fldname2", id, this),
     typename_("typename2", id, this),
     datamin_("datamin2", id, this),
     datamax_("datamax2", id, this),
-    numnodes_("numnodes2", id, this),
     dataat_("dataat2", id, this),
-    rotx_("rotx", id, this), 
-    roty_("roty", id, this), 
-    rotz_("rotz", id, this),
-    rotdeg_("rotdeg", id, this),
-    transx_("transx", id, this),
-    transy_("transy", id, this),
-    transz_("transz", id, this),
-    scalex_("scalex", id, this),
-    scaley_("scaley", id, this),
-    scalez_("scalez", id, this),
+    minx_("minx2", id, this),
+    miny_("miny2", id, this),
+    minz_("minz2", id, this),
+    maxx_("maxx2", id, this),
+    maxy_("maxy2", id, this),
+    maxz_("maxz2", id, this),
     cfldname_("cfldname", id, this),
     ctypename_("ctypename", id, this),
     cdataat_("cdataat", id, this),
     cdataminmax_("cdataminmax", id, this),
-    cbboxmin_("cbboxmin", id, this),
-    cbboxmax_("cbboxmax", id, this),
+    cbbox_("cbbox", id, this),
     widget_lock_("EditField widget lock"),
     minmax_(1,0)
   
@@ -302,10 +300,9 @@ EditField::create_edited_field(field_type_in *f, field_type_out * )
 
   // create storage for a new mesh
   mesh_type_out *omesh = scinew mesh_type_out(*imesh);
-  string tn = typename_.get();
 
   // transform the mesh if necessary
-  if (cbboxmin_.get() || cbboxmax_.get()) {
+  if (cbbox_.get()) {
     BBox old = imesh->get_bounding_box();
     Point oldc = old.min()+(old.max()-old.min())/2.;
     Point center, right, down, in;
@@ -377,8 +374,6 @@ EditField::create_edited_field(field_type_in *f, field_type_out * )
   if (sfi) {
     std::pair<double,double> minmax(1,0);
     sfi->compute_min_max(minmax.first,minmax.second);
-    std::cerr << "min, max = " << minmax.first << ", " << minmax.second
-	      << std::endl;
     field->store(string("minmax"),minmax);
   }
     
@@ -389,31 +384,33 @@ void EditField::build_widget(Field* f)
 {
   double l2norm;
   Point center, right, down, in;
-  if (firsttime_) {
-    firsttime_ = false;
+  Point min,max;
+
+  if (!cbbox_.get()) {
+    // build a widget identical to the BBox
     const BBox bbox = f->mesh()->get_bounding_box();
-    Point min = bbox.min();
-    Point max = bbox.max();
-    
-    // the widget is always axis aligned (like the bbox)
-    center = Point(min.x()+(max.x()-min.x())/2.,
-		   min.y()+(max.y()-min.y())/2.,
-		   min.z()+(max.z()-min.z())/2.);
-    right = center + Vector((max.x()-min.x())/2.,0,0);
-    down = center + Vector(0,(max.y()-min.y())/2.,0);
-    in = center + Vector(0,0,(max.z()-min.z())/2.);
-    
-    l2norm = (max-min).length();
+    min = bbox.min();
+    max = bbox.max();
+  } else {
+    // build a widget as described by the UI
+    min = Point(minx_.get(),miny_.get(),minz_.get());
+    max = Point(maxx_.get(),maxy_.get(),maxz_.get());
   }
+    
+  center = Point(min.x()+(max.x()-min.x())/2.,
+		 min.y()+(max.y()-min.y())/2.,
+		 min.z()+(max.z()-min.z())/2.);
+  right = center + Vector((max.x()-min.x())/2.,0,0);
+  down = center + Vector(0,(max.y()-min.y())/2.,0);
+  in = center + Vector(0,0,(max.z()-min.z())/2.);
 
-  if (!box_)
-  {
-    box_ = scinew ScaledBoxWidget(this,&widget_lock_,1);
-    box_->SetScale(l2norm*.015);
-    box_->SetPosition(center,right,down,in);
-    box_->AxisAligned(1);
-  }
-
+  l2norm = (max-min).length();
+  
+  box_ = scinew ScaledBoxWidget(this,&widget_lock_,1);
+  box_->SetScale(l2norm*.015);
+  box_->SetPosition(center,right,down,in);
+  box_->AxisAligned(1);
+  
   GeomGroup *widget_group = scinew GeomGroup;
   widget_group->add(box_->GetWidget());
 
@@ -445,13 +442,17 @@ void EditField::execute(){
   // get and display the attributes of the input field
   update_input_attributes(f);
 
+  // build the transform widget
+  if (firsttime_) {
+    firsttime_ = false;
+    build_widget(f);
+  } 
+
   if (!cfldname_.get() &&
       !ctypename_.get() &&
       !cdataminmax_.get() &&
-      !cdataat_.get() ) return;
-
-  // build the transform widget
-  build_widget(f);
+      !cdataat_.get() &&
+      !cbbox_.get()) return;
 
   // verify that the requested edits are possible (type check)
   if (ctypename_.get() && !check_types(f))
