@@ -52,7 +52,6 @@ Salmon::Salmon()
 {
     // Create the input port
     add_iport(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
-cerr << &mailbox << "\n";
     default_matl=new MaterialProp(Color(.1,.1,.1),
 				  Color(.6,0,0),
 				  Color(.7,.7,.7),

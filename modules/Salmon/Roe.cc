@@ -374,8 +374,7 @@ void Roe::orthoCB(CallbackData*, void*) {
     make_current();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-4, 4, -3, 3, 100, -100);
-//    glOrtho(-4, 4, -3, 3, -100, 100); /* might flip it? */
+    glOrtho(-8, 8, -6, 6, 100, -100);
     glMatrixMode(GL_MODELVIEW);
     redrawAll();
 }
