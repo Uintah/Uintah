@@ -44,8 +44,22 @@ itcl_class Teem_UnuNtoZ_UnuRmap {
 	global $this-min
 	set $this-min 0
 
+	global $this-useinputmin
+	set $this-useinputmin 1
+
 	global $this-max
 	set $this-max 0
+
+	global $this-useinputmax
+	set $this-useinputmax 1
+
+        global $this-type
+        set $this-type "nrrdTypeFloat"
+
+	global $this-usetype
+	set $this-usetype 1
+
+	trace variable $this-type w "$this set_type" 
     }
 
     method ui {} {
@@ -67,18 +81,65 @@ itcl_class Teem_UnuNtoZ_UnuRmap {
 	    -variable $this-rescale
         pack $w.f.options.rescale -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.min -labeltext "Min:" \
-	    -textvariable $this-min
-        pack $w.f.options.min -side top -expand yes -fill x
+	frame $w.f.options.min -relief groove -borderwidth 2
+	pack $w.f.options.min -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.max -labeltext "Max:" \
+        iwidgets::entryfield $w.f.options.min.v -labeltext "Min:" \
+	    -textvariable $this-min
+        pack $w.f.options.min.v -side top -expand yes -fill x
+
+        checkbutton $w.f.options.min.useinputmin \
+	    -text "Use lowest value of input nrrd as min" \
+	    -variable $this-useinputmin
+        pack $w.f.options.min.useinputmin -side top -anchor nw 
+
+	frame $w.f.options.max -relief groove -borderwidth 2
+	pack $w.f.options.max -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.max.v -labeltext "Max:" \
 	    -textvariable $this-max
-        pack $w.f.options.max -side top -expand yes -fill x
+        pack $w.f.options.max.v -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.max.v -labeltext "Max:" \
+	    -textvariable $this-max
+        pack $w.f.options.max.v -side top -anchor nw -expand yes -fill x
+
+        checkbutton $w.f.options.max.useinputmax \
+	    -text "Use highest value of input nrrd as max" \
+	    -variable $this-useinputmax
+        pack $w.f.options.max.useinputmax -side top -anchor nw 
+
+	iwidgets::optionmenu $w.f.options.type -labeltext "Type:" \
+	    -labelpos w -command "$this update_type $w.f.options.type"
+	$w.f.options.type insert end nrrdTypeChar nrrdTypeUChar \
+	    nrrdTypeShort nrrdTypeUShort nrrdTypeInt nrrdTypeUInt \
+	    nrrdTypeLLong nrrdTupeULLong nrrdTypeFloat nrrdTypeDouble
+	pack $w.f.options.type -side top -anchor nw -padx 3 -pady 3
+	$w.f.options.type select [set $this-type]
+
+	checkbutton $w.f.options.usetype \
+	    -text "Use map's type as output type" \
+	    -variable $this-usetype
+	pack $w.f.options.usetype -side top -anchor nw -padx 3 -pady 3
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
+    }
+
+    method update_type {menu} {
+	global $this-type
+	set which [$menu get]
+	set $this-type $which
+    }
+
+    method set_type { name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.f.options.type
+	if {[winfo exists $menu]} {
+	    $menu select [set $this-type]
+	}
     }
 }
 

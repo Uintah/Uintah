@@ -135,7 +135,7 @@ void
   Nrrd *dmap = dmap_handle->nrrd;
   Nrrd *nout = nrrdNew();
   Nrrd *nacl = 0;
-  NrrdRange *range = 0;
+  NrrdRange *range = NULL;
 
   if (length_.get()) {
     nacl = nrrdNew();
