@@ -1362,8 +1362,8 @@ class PowerAppBase {
 	global $color
 	set window .standalone
 	if {[winfo exists $window.color]} {
-	    raise $window.color
-	    return;
+	    SciRaise $window.color
+	    return
 	} else {
 	    toplevel $window.color
 	    makeColorPicker $window.color $color \
