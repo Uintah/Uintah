@@ -216,6 +216,7 @@
    <DataArchiver>
       <filebase>DEBUGCH4Fire_container.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
+      <compression>gzip</compression>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
       <save label="vol_frac_CC"/>
       <save label="press_CC"/>
@@ -232,14 +233,14 @@
       
       <save label="p.x"/>
       <save label="p.particleID"/>
-      <save label="p.volume"/>
       <save label="p.mass"/>
       <save label="p.temperature"/>
+      <!-- 
+      <save label="p.volume"/>
       <save label="p.stress"/> 
       <save label="p.plasticStrain"/> 
       <save label="p.strainRate"/> 
       <save label="p.localized"/> 
-      <!-- 
       <save label="p.velocity"/>
       <save label="g.mass"/>
       <save label="g.temperature"/>  -->
