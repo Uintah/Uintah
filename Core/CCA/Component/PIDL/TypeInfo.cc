@@ -71,7 +71,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
 
   ReferenceMgr* _rm;
   _rm = p->_proxyGetReferenceMgr(); 
-  Message* message = _rm->getIndependentReference()->chan->getMessage();
+  Message* message = _rm->d_ref[0].chan->getMessage();
 
   // Get a startpoint ready for the reply
   message->createMessage();
