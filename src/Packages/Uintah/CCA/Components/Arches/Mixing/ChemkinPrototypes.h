@@ -34,26 +34,28 @@
 
   ***************************************************************************/
 
-#define ckinterp ckinterp_
-#define mrhlen mrhlen_
-#define mrhinit mrhinit_
-#define mrhsyms mrhsyms_
-#define mrhsyme mrhsyme_
-#define ckindx ckindx_
-#define ckwt ckwt_
-#define ckawt ckawt_
-#define ckxty ckxty_
-#define ckytx ckytx_
-#define ckcpbs ckcpbs_
-#define ckhms ckhms_
-#define ckwyp ckwyp_
-#define ckhbms ckhbms_
-#define ckmmwy ckmmwy_
-#define ckrhoy ckrhoy_
-#define equil equil_
-#define eqsol eqsol_
-#define dvode dvode_
-#define dgelss dgelss_
+#if !defined(_AIX)
+#  define ckinterp ckinterp_
+#  define mrhlen mrhlen_
+#  define mrhinit mrhinit_
+#  define mrhsyms mrhsyms_
+#  define mrhsyme mrhsyme_
+#  define ckindx ckindx_
+#  define ckwt ckwt_
+#  define ckawt ckawt_
+#  define ckxty ckxty_
+#  define ckytx ckytx_
+#  define ckcpbs ckcpbs_
+#  define ckhms ckhms_
+#  define ckwyp ckwyp_
+#  define ckhbms ckhbms_
+#  define ckmmwy ckmmwy_
+#  define ckrhoy ckrhoy_
+#  define equil equil_
+#  define eqsol eqsol_
+#  define dvode dvode_
+#  define dgelss dgelss_
+#endif
 
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
@@ -141,16 +143,3 @@ extern "C"
 
 #endif
 
-//
-// $Log$
-// Revision 1.3  2002/02/07 22:16:35  borodai
-// Fixed the terminal output problem
-//
-// Revision 1.2  2001/07/16 21:15:38  rawat
-// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
-//
-// Revision 1.1  2001/01/31 16:35:30  rawat
-// Implemented mixing and reaction models for fire.
-//
-//
-//
