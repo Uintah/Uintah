@@ -175,6 +175,29 @@ namespace Uintah {
 
       const VarLabel* d_reactscalNonLinSrcSBLMLabel;
 
+       // Labels for Thermal NOx
+
+      const VarLabel* d_thermalnoxSPLabel;
+      const VarLabel* d_thermalnoxTempLabel;
+
+      // thermal NOx Coef
+
+      const VarLabel* d_thermalnoxCoefSBLMLabel;
+
+      // thermal NOx Diffusion Coef
+
+      const VarLabel* d_thermalnoxDiffCoefLabel;
+
+      // thermal NOx NonLinear Src
+
+      const VarLabel* d_thermalnoxNonLinSrcSBLMLabel;
+
+      // thermal NOx source term from properties
+      const VarLabel* d_thermalnoxSRCINLabel;
+
+      // End of Thermal NOx labels
+
+
       // labels for scalesimilaritymodels
 
       const VarLabel* d_stressTensorCompLabel;
@@ -211,6 +234,7 @@ namespace Uintah {
       const VarLabel* d_wVelocityRes;
       const VarLabel* d_scalarRes;
       const VarLabel* d_reactscalarRes;
+      const VarLabel* d_thermalnoxRes;
 
 
       // Not sure what these labels are for
