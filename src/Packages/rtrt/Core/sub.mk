@@ -85,6 +85,10 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/VolumeDpy.cc \
 	$(SRCDIR)/VolumeBrick16.cc \
 	$(SRCDIR)/Volume16.cc \
+	$(SRCDIR)/Hist2DDpy.cc \
+	$(SRCDIR)/VolumeVGBase.cc \
+	$(SRCDIR)/HVolumeVG.cc \
+	$(SRCDIR)/HVolumeVGspecific.cc \
 	$(SRCDIR)/MIPHVB16.cc \
 	$(SRCDIR)/TimeObj.cc \
 	$(SRCDIR)/Plane.cc \
