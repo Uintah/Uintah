@@ -127,6 +127,15 @@ operator*(MatrixHandle A, MatrixHandle B)
     Mult(*cd, *(A.get_rep()), *(B->column()));
     return cd;
   }
+  else if (A->is_sparse())
+  {
+    SparseRowMatrix *ad = A->sparse();
+    DenseMatrix *bd = B->dense();
+    DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
+    ad->sparse_mult(*bd, *cd);
+    if (!(B->is_dense())) { delete bd; }
+    return cd;
+  }
   else
   {
     DenseMatrix *ad = A->dense();
