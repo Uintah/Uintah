@@ -10,12 +10,13 @@ namespace SCIRun {
 
 namespace Uintah {
 
+using SCIRun::Point;
+using SCIRun::Vector;
+
 class Matrix3;
 class Stencil7;
 class Short27;
 class TypeDescription;
-
-using namespace SCIRun;
 
 typedef int64_t long64;
 

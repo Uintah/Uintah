@@ -10,6 +10,9 @@
 
 namespace Uintah {
 
+using SCIRun::ConsecutiveRangeSet;
+using SCIRun::Mutex;
+
 using std::string;
 using std::vector;
 using std::list;

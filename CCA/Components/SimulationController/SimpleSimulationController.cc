@@ -387,6 +387,9 @@ SimpleSimulationController::run()
 
       // output timestep statistics
       if(d_myworld->myrank() == 0){
+	cout << "Current Top Level Time Step: " 
+	     << sharedState->getCurrentTopLevelTimeStep() << "\n";
+
 	cout << "Time=" << t << ", delT=" << delt 
 	     << ", elap T = " << wallTime 
 	     << ", DW: " << newDW->getID() << ", Mem Use = ";

@@ -35,8 +35,6 @@ namespace Uintah {
       
      ****************************************/
 
-using namespace SCIRun;
-
    class Ghost {
    public:
       enum GhostType {
@@ -50,14 +48,14 @@ using namespace SCIRun;
 	 numGhostTypes // 7
       };
 
-     static IntVector getGhostTypeDir(Ghost::GhostType gtype)
+     static SCIRun::IntVector getGhostTypeDir(Ghost::GhostType gtype)
      {
        int index = (int)gtype;
        CHECKARRAYBOUNDS(index, 0, numGhostTypes);
        return directions[index];
      }
 
-     static string getGhostTypeName(Ghost::GhostType gtype)
+     static std::string getGhostTypeName(Ghost::GhostType gtype)
      {
        int index = (int)gtype;
        CHECKARRAYBOUNDS(index, 0, numGhostTypes);
@@ -68,8 +66,8 @@ using namespace SCIRun;
       Ghost(const Ghost&);
       Ghost& operator=(const Ghost&);
 
-     static IntVector directions[numGhostTypes];
-     static string names[numGhostTypes];
+     static SCIRun::IntVector directions[numGhostTypes];
+     static std::string names[numGhostTypes];
 #ifdef __GNUG__
    public:
       // Keep gcc quiet, to avoid:

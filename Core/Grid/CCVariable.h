@@ -89,8 +89,8 @@ WARNING
 
     // Clones the type with a variable having the given extents
     // but with null data -- good as a place holder.
-    virtual CCVariableBase* makePlaceHolder(IntVector low,
-					    IntVector high) const
+    virtual CCVariableBase* makePlaceHolder(const IntVector & low,
+					    const IntVector & high) const
     {
       Array3Window<T>* window = scinew
       Array3Window<T>(0, IntVector(INT_MAX, INT_MAX, INT_MAX), low, high);

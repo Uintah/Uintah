@@ -25,7 +25,6 @@ namespace Uintah {
   using std::ostream;
   using std::multimap;
   
-  using namespace SCIRun;
   class DataWarehouse;
   class Level;
   class ProcessorGroup;

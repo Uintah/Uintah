@@ -69,8 +69,8 @@ WARNING
 
       // Clones the type with a variable having the given extents
       // but with null data -- good as a place holder.
-      virtual CCVariableBase* makePlaceHolder(IntVector low,
-					      IntVector high) const = 0;
+      virtual CCVariableBase* makePlaceHolder(const IntVector & low,
+					      const IntVector & high) const = 0;
      
       virtual void allocate(const Patch* patch) = 0;
       virtual void allocate(const IntVector& lowIndex,
