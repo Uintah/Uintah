@@ -40,6 +40,11 @@ namespace Containers {
 using SCICore::PersistentSpace::Piostream;
 using SCICore::Tester::RigorousTest;
 
+template<class T>
+class Array3;
+template<class T>
+void Pio(Piostream& stream, Array3<T>& array);
+
 /**************************************
 
 CLASS
@@ -127,8 +132,8 @@ public:
 
     //////////
     //read/write from a separate raw file
-    virtual int input( const clString& );
-    virtual int output( const clString&);
+    int input( const clString& );
+    int output( const clString&);
 
     //////////
     //Rigorous Tests
@@ -415,6 +420,9 @@ Array3<T>::output( const clString &filename )
 
 //
 // $Log$
+// Revision 1.12  2000/03/17 08:27:10  sparker
+// Made input() and output() be non-virtual functions
+//
 // Revision 1.11  2000/02/04 01:25:51  dmw
 // added std:: before cerr and endl
 //
