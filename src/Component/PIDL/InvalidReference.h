@@ -16,6 +16,7 @@
 #define Component_PIDL_InvalidReference_h
 
 #include <Component/PIDL/PIDLException.h>
+#include <string>
 
 namespace Component {
     namespace PIDL {
@@ -44,7 +45,11 @@ DESCRIPTION
 
 	    //////////
 	    // Return the explanation
-	    std::string message() const;
+	    const char* message() const;
+
+	    //////////
+	    // Return the name of this class
+	    const char* type() const;
 	protected:
 	private:
 	    //////////
@@ -58,6 +63,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 10:27:36  sparker
+// Added "name" method to match new Exception base class
+//
 // Revision 1.4  1999/09/24 20:15:58  sparker
 // Cocoon documentation updates
 //
