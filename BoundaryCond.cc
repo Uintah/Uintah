@@ -871,15 +871,13 @@ void setBC(CCVariable<double>& press_CC,
       // it is symmetric, neumann, dirichlet, and its value,
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
       for (int child = 0;  child < numChildren; child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+       vector<IntVector> bound,inter,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 							 kind,bound,inter,
-							 sfx,sfy,sfz,nbound,
-							 child);
+							 nbound, child);
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
 							     "Symmetric",
 							     bound,inter,
-							     sfx,sfy,sfz,
 							     nbound, child);
 #ifdef PRINT
        if (bc == 0)
@@ -992,16 +990,14 @@ void setBC(CCVariable<double>& variable, const string& kind,
 #endif
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
       for (int child = 0; child < numChildren; child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+       vector<IntVector> bound,inter,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 							 kind, bound,inter,
-							 sfx,sfy,sfz,nbound,
-							 child);
+							 nbound,child);
       
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
 							     "Symmetric",
 							     bound,inter,
-							     sfx,sfy,sfz,
 							     nbound, child);
 #ifdef PRINT
        if (bc == 0)
@@ -1155,16 +1151,14 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
       for (int child = 0; 
           child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
 	   child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+       vector<IntVector> bound,inter,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 							 kind,bound,inter,
-							 sfx,sfy,sfz,nbound,
-							 child);
+							 nbound,child);
       
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
 							     "Symmetric",
 							     bound,inter,
-							     sfx,sfy,sfz,
 							     nbound,child);
 #ifdef PRINT
        if (bc == 0)
@@ -1272,16 +1266,14 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
       for (int child = 0; 
           child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
 	   child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+       vector<IntVector> bound,inter,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
 							 bound,inter,
-							 sfx,sfy,sfz,nbound,
-							 child);
+							 nbound,child);
        
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
 							     "Symmetric",
 							     bound,inter,
-							     sfx,sfy,sfz,
 							     nbound,child);
 #ifdef PRINT
        if (bc == 0)
@@ -1312,7 +1304,7 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
          cout << "BC value = " << bc_value << endl;
 #endif
        }
-       vector<IntVector>::const_iterator boundary,interior,sfcx;
+       vector<IntVector>::const_iterator boundary,interior;
        //__________________________________
        //  Symmetry boundary conditions
        //  -set Neumann = 0 on all walls
@@ -1334,11 +1326,15 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
        //__________________________________
        // Neumann or Dirichlet
        if (bc_kind == "Dirichlet") {
-         // Use the interior index for the xminus face and 
-         // no neighboring patches
+	 // Add an offset of (1,0,0) for xminus face.
          // Use the boundary index for the xplus face
-         for (sfcx=sfx.begin(); sfcx != sfx.end(); sfcx++)
-           variable[*sfcx] = bc_value.x();
+	 if (face == Patch::xminus) {
+	   for (boundary=bound.begin(); boundary != bound.end();  boundary++) 
+	     variable[*boundary + IntVector(1,0,0)] = bc_value.x();
+	 } else {
+	   for (boundary=bound.begin(); boundary != bound.end();  boundary++) 
+	     variable[*boundary] = bc_value.x();
+	 }
        }
        if (bc_kind == "Neumann") {
          if (face == Patch::yminus || face == Patch::yplus || 
@@ -1379,16 +1375,14 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
       for (int child = 0; 
           child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
 	   child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+       vector<IntVector> bound,inter,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
 							 bound,inter,
-							 sfx,sfy,sfz,nbound,
-							 child);
+							 nbound,child);
        
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
 							     "Symmetric",
 							     bound,inter,
-							     sfx,sfy,sfz,
 							     nbound,child);
 #ifdef PRINT
        if (bc == 0)
@@ -1419,7 +1413,7 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
          cout << "BC value = " << bc_value << endl;
 #endif
        }
-       vector<IntVector>::const_iterator boundary,interior,sfcy;
+       vector<IntVector>::const_iterator boundary,interior;
        //__________________________________
        //  Symmetry boundary conditions
        //  -set Neumann = 0 on all walls
@@ -1441,9 +1435,14 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
        //__________________________________
        // Neumann or Dirichlet
        if (bc_kind == "Dirichlet") {
-         for (sfcy=sfy.begin();sfcy != sfy.end(); sfcy++) {
-           variable[*sfcy] = bc_value.y();
-         }
+	 if (face == Patch::yminus) {
+	   // Add an offset of (0,1,0) for yminus face.
+	   for (boundary=bound.begin();boundary != bound.end();boundary++) 
+	     variable[*boundary + IntVector(0,1,0)] = bc_value.y();
+	 } else {
+	   for (boundary=bound.begin();boundary != bound.end();boundary++) 
+	     variable[*boundary] = bc_value.y();
+	 }
        }
        
        if (bc_kind == "Neumann") {
@@ -1484,16 +1483,14 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
       cout << "Face = " << face << endl;
 #endif
       for (int child = 0;  child < numChildren; child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+       vector<IntVector> bound,inter,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
 							 bound,inter,
-							 sfx,sfy,sfz,nbound,
-							 child);
+							 nbound,child);
        
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
 							     "Symmetric",
 							     bound,inter,
-							     sfx,sfy,sfz,
 							     nbound,child);
 #ifdef PRINT 
        if (bc == 0)
@@ -1524,7 +1521,7 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
          cout << "BC value = " << bc_value << endl;
 #endif
        }
-       vector<IntVector>::const_iterator boundary,interior,sfcz;
+       vector<IntVector>::const_iterator boundary,interior;
        //__________________________________
        //  Symmetry boundary conditions
        //  -set Neumann = 0 on all walls
@@ -1546,8 +1543,14 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
        //__________________________________
        // Neumann or Dirichlet
        if (bc_kind == "Dirichlet") 
-         for (sfcz=sfz.begin();sfcz != sfz.end(); sfcz++)
-           variable[*sfcz] = bc_value.z();
+	 // Add an offset of (0,0,1) for zminus face
+	 if (face == Patch::zminus) {
+	   for (boundary=bound.begin();boundary != bound.end(); boundary++)
+	     variable[*boundary+IntVector(0,0,1)] = bc_value.z();
+	 } else {
+	   for (boundary=bound.begin();boundary != bound.end(); boundary++)
+	     variable[*boundary] = bc_value.z();
+	 }
        
        if (bc_kind == "Neumann") {
          if (face == Patch::xminus || face == Patch::xplus || 
