@@ -60,6 +60,9 @@ MPMLabel::MPMLabel()
   pStressLabel = scinew VarLabel( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
+  pCrackRadiusLabel = scinew VarLabel( "p.CrackRadius",
+			ParticleVariable<double>::getTypeDescription());
+  
   pVolumeLabel = scinew VarLabel( "p.volume",
 			ParticleVariable<double>::getTypeDescription());
   
