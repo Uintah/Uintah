@@ -121,11 +121,6 @@ public:
 				    SchedulerP&,
 				    DataWarehouseP&,
 				    DataWarehouseP&);
-                                
-  void  scheduleMassExchange(const Patch* patch, 
-                             SchedulerP&,
-                             DataWarehouseP&,
-                             DataWarehouseP&);
 
   void scheduleComputeMassBurnRate(const  Patch* patch,
 				   SchedulerP&,
@@ -179,11 +174,6 @@ public:
                             const Patch* patch,
                             DataWarehouseP& old_dw,
                             DataWarehouseP& new_dw);
-                            
-  void massExchange(const ProcessorGroup*,
-                    const Patch* patch,   
-                    DataWarehouseP& old_dw,
-                    DataWarehouseP& new_dw);
 
   void computeMassBurnRate(const ProcessorGroup*,
 			   const Patch* patch,
