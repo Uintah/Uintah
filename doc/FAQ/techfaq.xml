@@ -30,8 +30,9 @@
 <faq name="Technical FAQ">
   <description>
     <p>
-      For problems with building the thirdparty software or SCIRun, or 
-      for problems such as crashes during runtime such as SIGSEGV or SIGABRT.
+      For technical issues with compiling and linking SCIRun and it's
+      required thirdparty software including some runtime issues (some types 
+      of crashes)
     </p>
   </description>
   <entry>

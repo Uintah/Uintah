@@ -97,7 +97,7 @@
       <xsl:if test="$num2=1">
         <p><b><xsl:value-of select="$num"/></b>
         <a><xsl:attribute name="href">
-           <xsl:value-of select="concat('techfaq.xml?dir=1','#',$num)"/></xsl:attribute>
+           <xsl:value-of select="concat('techfaq.xml?dir=2','#',$num)"/></xsl:attribute>
         <xsl:apply-templates/></a></p>
       </xsl:if>
     </xsl:for-each>
