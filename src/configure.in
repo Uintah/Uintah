@@ -1951,6 +1951,10 @@ case $host in
     ;;
   *linux*)
     PETSC_ARCH=linux
+
+    # Necessary for linking blas and lapack with petsc on icebox
+    AC_MSG_WARN(Hard coded PGI libs.  May not work if you are not on icebox.)
+    PGI_STUFF="-L/uufs/icebox/sys/pgi/linux86/lib -lpgftnrtl -lpgc"
     ;;
   *)
     PETSC_ARCH=unknown
@@ -1987,10 +1991,7 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
     FOUND_ALL_PETSC=yes
     DEF_PETSC="#define HAVE_PETSC 1"
     PETSC_DIR=$i
-    PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
-      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK \
-      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $MPI_LIBRARY $MPI \
-	$FLIBS -lm"
+    PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $PGI_STUFF $MPI_LIBRARY $MPI $FLIBS -lm"
     break
   fi 
 done
