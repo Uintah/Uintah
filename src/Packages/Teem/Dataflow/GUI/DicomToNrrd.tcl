@@ -68,9 +68,8 @@ itcl_class Teem_DataIO_DicomToNrrd {
         pack $w.row10 $w.row8 $w.which $w.listing \
         $w.row3 $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 5
 
-	button $w.row10.browse_button -text "Browse" -command \
-	    "$this ChooseDir;\ 
-             $this UpdateSeriesUIDs"
+	button $w.row10.browse_button -text " Browse " \
+	    -command "$this ChooseDir;  $this UpdateSeriesUIDs"
        
 
 	#entry $w.row10.browse -textvariable $this-browse

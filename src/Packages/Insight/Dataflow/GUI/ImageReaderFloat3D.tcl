@@ -28,13 +28,9 @@ itcl_class Insight_DataIO_ImageReaderFloat3D {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-	    
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return;
+	    return
         }
-        #toplevel $w
+        toplevel $w -class TkFDialog
 
 	set defext ".mhd"
 	set title "Open image file"
@@ -47,10 +43,10 @@ itcl_class Insight_DataIO_ImageReaderFloat3D {
 	}
 
 	makeOpenFilebox \
-		-parent . \
+		-parent $w \
 		-filevar $this-filename \
-		-command "$this-c needexecute; destroy " \
-		-cancel "destroy " \
+		-command "$this-c needexecute; wm withdraw $w" \
+		-cancel "wm withdraw $w" \
 		-title "Open Image File" \
                 -filetypes $types \
 		-defaultextension $defext
