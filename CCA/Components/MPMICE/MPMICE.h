@@ -58,22 +58,22 @@ class MPMICE : public UintahParallelComponent, public SimulationInterface {
 public:
   MPMICE(const ProcessorGroup* myworld);
   virtual ~MPMICE();
-	 
+         
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			    SimulationStateP&);
-	 
+                            SimulationStateP&);
+         
   virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&);
+                                  SchedulerP&);
 
   virtual void restartInitialize();
 
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
-					     SchedulerP&);
-	 
+                                             SchedulerP&);
+         
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
@@ -82,122 +82,137 @@ public:
   void scheduleInterpolateNCToCC_0(SchedulerP&, 
                                   const PatchSet*,
                                   const MaterialSubset*,
-				      const MaterialSet*);
+                                  const MaterialSet*);
 
   
   void scheduleInterpolateNCToCC(SchedulerP&, 
                                 const PatchSet*,
                                 const MaterialSubset*,
-				    const MaterialSet*);
+                                const MaterialSet*);
 
   void scheduleCCMomExchange(SchedulerP&, 
                             const PatchSet*,
                             const MaterialSubset*,
                             const MaterialSubset*,
-			       const MaterialSet*);
+                            const MaterialSet*);
 
   void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
-				 const MaterialSet*);
+                                 const MaterialSet*);
 
   void scheduleComputeNonEquilibrationPressure(SchedulerP&, 
                                                const PatchSet*,
                                                const MaterialSubset*,
                                                const MaterialSubset*,
                                                const MaterialSubset*,
-					       const MaterialSet*);
+                                               const MaterialSet*);
 
   void scheduleComputeEquilibrationPressure(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
                                             const MaterialSubset*,
                                             const MaterialSubset*,
-					    const MaterialSet*);
+                                            const MaterialSet*);
 
 
   void scheduleInterpolatePressCCToPressNC(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
-					       const MaterialSet*);
+                                          const MaterialSet*);
 
   void scheduleInterpolatePAndGradP(SchedulerP&, 
                                     const PatchSet*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
-				        const MaterialSet*);
+                                    const MaterialSet*);
 
   void scheduleHEChemistry(SchedulerP&, 
                            const PatchSet*,
                            const MaterialSubset*,
                            const MaterialSubset*,
                            const MaterialSubset*,
-			      const MaterialSet*);
+                           const MaterialSet*);
   
-  void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, const PatchSet*,
-						const MaterialSet*);
+  void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSet*);
+//__________________________________
+//   R A T E   F O R M 
+  void scheduleComputeNonEquilibrationPressureRF(SchedulerP&, 
+                                               const PatchSet*,
+                                               const MaterialSubset*,
+                                               const MaterialSubset*,
+                                               const MaterialSubset*,
+                                               const MaterialSet*);
+  void scheduleCCMomExchangeRF(SchedulerP&, 
+                            const PatchSet*,
+                            const MaterialSubset*,
+                            const MaterialSubset*,
+                            const MaterialSet*);
+                    
 
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
   void actuallyInitialize(const ProcessorGroup*,
-			  const PatchSubset* patch,
-			  const MaterialSubset* matls,
-			  DataWarehouse*,
-			  DataWarehouse* new_dw);
+                          const PatchSubset* patch,
+                          const MaterialSubset* matls,
+                          DataWarehouse*,
+                          DataWarehouse* new_dw);
                          
                                                     
   void interpolateNCToCC_0(const ProcessorGroup*,
                            const PatchSubset* patch,
-			   const MaterialSubset* matls,
+                           const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
   
   void interpolateNCToCC(const ProcessorGroup*,
                          const PatchSubset* patch,
-			 const MaterialSubset* matls,
+                         const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
 
   void computeEquilibrationPressure(const ProcessorGroup*,
-				    const PatchSubset* patch,
-				    const MaterialSubset* matls,
-				    DataWarehouse*, 
-				    DataWarehouse*);
+                                    const PatchSubset* patch,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse*, 
+                                    DataWarehouse*);
 
   void doCCMomExchange(const ProcessorGroup*,
                        const PatchSubset* patch,
-		       const MaterialSubset* matls,
+                       const MaterialSubset* matls,
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw);
 
   void interpolateCCToNC(const ProcessorGroup*,
                          const PatchSubset* patch,
-			 const MaterialSubset* matls,
+                         const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
 
   void interpolatePressCCToPressNC(const ProcessorGroup*,
-				   const PatchSubset* patch,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
+                                   const PatchSubset* patch,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 
   void interpolatePAndGradP(const ProcessorGroup*,
                             const PatchSubset* patch,
-			       const MaterialSubset* matls,
+                            const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
                             
   void HEChemistry(const ProcessorGroup*,
-		     const PatchSubset* patch,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw,
-		     DataWarehouse* new_dw);
+                     const PatchSubset* patch,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
   
   void interpolateMassBurnFractionToNC(const ProcessorGroup*,
-		                       const PatchSubset* patch,
-				       const MaterialSubset* matls,
-		                       DataWarehouse* old_dw,
-		                       DataWarehouse* new_dw);
+                                       const PatchSubset* patch,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
   void printData(const Patch* patch, 
                   int   include_EC,
                   char  message1[],
@@ -209,7 +224,20 @@ public:
                      char    message2[],
                      int     component,
                      const NCVariable<Vector>& q_NC);
-        
+                     
+//__________________________________
+//    R A T E   F O R M                   
+  void computeNonEquilibrationPressureRF(const ProcessorGroup*,
+                                             const PatchSubset* patch,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse*, 
+                                             DataWarehouse*); 
+
+ void doCCMomExchangeRF(const ProcessorGroup*,
+                       const PatchSubset* patch,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);       
         
   enum bctype { NONE=0,
                 FIXED,
