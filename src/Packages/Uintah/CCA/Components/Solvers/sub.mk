@@ -9,7 +9,7 @@ SRCS     += \
 
 PSELIBS := Packages/Uintah/CCA/Ports
 
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

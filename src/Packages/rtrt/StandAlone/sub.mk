@@ -5,21 +5,13 @@ SRCDIR := Packages/rtrt/StandAlone
 
 SRCS := $(SRCDIR)/rtrt.cc
 
-ifeq ($(findstring -n32, $(C_FLAGS)),-n32)
-#ifneq ($(USE_SOUND),no)
-   AUDIOFILE_LIBRARY := -L/home/sci/dav
-   SOUNDDIR := Packages/rtrt/Sound
-   SOUNDLIBS := -laudio $(AUDIOFILE_LIBRARY) -laudiofile
-endif
-
 PROGRAM := Packages/rtrt/StandAlone/rtrt
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/rtrt
 else
 
-  PSELIBS := \
+PSELIBS := \
 	Packages/rtrt/Core \
-	$(SOUNDDIR) \
 	Packages/rtrt/visinfo \
 	Core/Thread \
 	Core/Persistent \
@@ -27,7 +19,14 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY) $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUNDLIBS)
+
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
+
+ifeq ($(findstring -n32, $(C_FLAGS)),-n32)
+#ifneq ($(USE_SOUND),no)
+  PSELIBS += Packages/rtrt/Sound
+  libs +=  $(SOUND_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -38,7 +37,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 #nrrd2brick
 SRCS := $(SRCDIR)/nrrd2brick.cc
-LIBS := $(FASTM_LIBRARY) $(TEEM_LIBRARY) $(THREAD_LIBRARY) $(X11_LIBRARY) -lm
+LIBS := $(FASTM_LIBRARY) $(TEEM_LIBRARY) $(THREAD_LIBRARY) $(X11_LIBRARY) $(M_LIBRARY)
 PROGRAM := Packages/rtrt/StandAlone/nrrd2brick
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -76,7 +75,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -97,7 +96,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

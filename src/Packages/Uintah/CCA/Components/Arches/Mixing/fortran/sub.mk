@@ -13,8 +13,8 @@ SRCS     += $(SRCDIR)/dqagpe.F $(SRCDIR)/dqelg.F $(SRCDIR)/dqk21.F \
 	$(SRCDIR)/ChemkinHacks.F
 
 PSELIBS :=
-#LIBS := -lftn -lm -lblas
-#LIBS := -lftn -lm 
+#LIBS := $(F_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY)
+#LIBS := $(F_LIBRARY) $(M_LIBRARY) 
 
 #FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
 #FFLAGS += -g 
@@ -24,6 +24,9 @@ FFLAGS +=
 
 #
 # $Log$
+# Revision 1.5  2002/10/10 17:34:15  allen
+# removed -l flags and replaced with *_LIB_FLAG from configure script
+#
 # Revision 1.4  2001/08/25 07:32:47  skumar
 # Incorporated Jennifer's beta-PDF mixing model code with some
 # corrections to the equilibrium code.

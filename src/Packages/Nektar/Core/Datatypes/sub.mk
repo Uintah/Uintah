@@ -12,7 +12,7 @@ SRCS += $(SRCDIR)/Packages/NektarScalarField.cc \
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math
-LIBS := $(NEKTAR_LIBRARY) -lm
+LIBS := $(NEKTAR_LIBRARY) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

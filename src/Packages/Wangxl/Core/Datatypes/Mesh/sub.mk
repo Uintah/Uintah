@@ -24,7 +24,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/TkExtensions \
 	Packages/Wangxl/Core/ThirdParty \
 
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

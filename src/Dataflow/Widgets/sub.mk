@@ -37,7 +37,7 @@ SRCS +=	$(SRCDIR)/ArrowWidget.cc           \
 PSELIBS := Core/Datatypes Dataflow/Constraints Dataflow/Ports \
 	Core/Exceptions Core/Geom Core/Thread Core/GuiInterface \
 	Core/Containers Core/Geometry Core/GeomInterface Dataflow/Network
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

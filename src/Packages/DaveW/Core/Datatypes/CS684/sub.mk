@@ -11,7 +11,7 @@ SRCS     += $(SRCDIR)/DRaytracer.cc $(SRCDIR)/ImageR.cc \
 PSELIBS := Core/Persistent Core/Geometry Core/Math \
 	Core/Thread Core/Exceptions Core/Geom \
 	Core/Containers Core/Datatypes
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

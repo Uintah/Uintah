@@ -13,6 +13,6 @@ PSELIBS := Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread \
         Core/Geom Core/Datatypes Core/Geometry 
-LIBS :=  -lm
+LIBS :=  $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

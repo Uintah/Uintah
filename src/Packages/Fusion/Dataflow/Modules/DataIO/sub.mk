@@ -28,7 +28,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 	Packages/Fusion/Core/ThirdParty \
 	Packages/Fusion/Core/Datatypes
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

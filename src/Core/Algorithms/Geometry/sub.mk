@@ -27,6 +27,6 @@ SRCS     += \
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
 	Core/Exceptions Core/Geometry Core/Util Core/Math
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

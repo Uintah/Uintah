@@ -27,7 +27,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Datatypes
 
-LIBS := $(XML_LIBRARY) -lm
+LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

@@ -40,7 +40,7 @@ PSELIBS := Packages/BioPSE/Core/Algorithms/NumApproximation \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface Core/Math \
         Core/TkExtensions
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

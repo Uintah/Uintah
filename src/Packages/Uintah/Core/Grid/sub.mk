@@ -64,7 +64,7 @@ PSELIBS := \
 	Core/Util                        \
 	Dataflow/XMLUtil
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm $(GZ_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

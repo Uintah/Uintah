@@ -9,7 +9,7 @@ SUBDIRS := $(SRCDIR)/Util $(SRCDIR)/Math $(SRCDIR)/Model $(SRCDIR)/Image
 include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := 
-LIBS := -lm -L/usr/local/gnu/lib -lfl -ltiff -ljpeg
+LIBS := $(LEX_LIBRARY) $(TIFF_LIBRARY) $(JPEG_LIBRARY) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

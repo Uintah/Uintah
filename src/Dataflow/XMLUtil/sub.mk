@@ -25,7 +25,7 @@ SRCS     += $(SRCDIR)/SimpleErrorHandler.cc $(SRCDIR)/XMLUtil.cc \
 	$(SRCDIR)/StrX.cc
 
 PSELIBS := Core/Containers
-LIBS := $(XML_LIBRARY) $(GZ_LIBRARY)
+LIBS := $(XML_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -29,7 +29,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports Core/Containers \
 	Core/Persistent Core/Datatypes Core/Util \
 	Packages/Teem/Core/Datatypes
 
-LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair
+LIBS := $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

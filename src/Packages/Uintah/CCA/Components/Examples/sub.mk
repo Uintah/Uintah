@@ -20,7 +20,7 @@ PSELIBS :=  Packages/Uintah/Core/Grid Packages/Uintah/Core/ProblemSpec \
 	Core/Exceptions Packages/Uintah/Core/Disclosure \
 	Packages/Uintah/Core/Parallel
 
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

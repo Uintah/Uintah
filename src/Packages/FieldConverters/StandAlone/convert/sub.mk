@@ -24,7 +24,7 @@ PSELIBS := Core Packages/FieldConverters/Core
 else
 PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Math Packages/FieldConverters/Core/Datatypes
 endif
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/OldSFRGtoNewLatVolField
 SRCS := $(SRCDIR)/OldSFRGtoNewLatVolField.cc

@@ -23,7 +23,7 @@ PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Ports \
 	Core/Math Core/Exceptions Core/Datatypes \
 	Core/Thread Core/Geom Core/Containers \
 	Core/GuiInterface 
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

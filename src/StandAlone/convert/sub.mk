@@ -25,7 +25,7 @@ else
 PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
            Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom
 endif
-LIBS := $(XML_LIBRARY) -lm
+LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/BugProgram
 SRCS := $(SRCDIR)/BugProgram.cc

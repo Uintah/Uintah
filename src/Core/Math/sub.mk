@@ -49,7 +49,7 @@ SRCS     += $(SRCDIR)/CubicPWI.cc              \
 
 
 PSELIBS := Core/Exceptions Core/Containers
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -7,7 +7,7 @@ PSELIBS := Packages/Morgan/StandAlone/convert
 else
 PSELIBS := Core/Datatypes Core/Math Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
 endif
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/BuildNeurons
 SRCS := $(SRCDIR)/BuildNeurons.cc

@@ -20,7 +20,7 @@ PSELIBS := \
 	Packages/rtrt/Core \
 	Packages/rtrt/Dataflow/Ports
 
-LIBS := -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+LIBS := $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

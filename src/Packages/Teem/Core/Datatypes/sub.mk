@@ -34,7 +34,7 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math Core/Util
 
-LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair
+LIBS := $(TEEM_LIBRARY)
 
 INCLUDES += -I./Packages $(TEEM_INCLUDE)
 
