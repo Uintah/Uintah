@@ -864,7 +864,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
   for( ; req != 0; req = req->next){
     if(dbg.active())
       dbg << d_myworld->myrank() << "  req: " << *req << '\n';
-    
+
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
     if (req->var->typeDescription()->isReductionVariable() &&
@@ -968,7 +968,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		  DetailedTask* prevReqTask = *reqTaskIter;
 		  if(prevReqTask->task == task->task){
 		    if(!task->task->getHasSubScheduler()) {
-                      static ProgressiveWarning warn("WARNING - task that requires with Ghost cells *and* modifies may not be correct",4);
+                      static ProgressiveWarning warn("WARNING - task that requires with Ghost cells *and* modifies may not be correct",10);
                       warn.invoke();
                       dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
                     }
