@@ -29,7 +29,9 @@
 #include <sci_config.h> // For MPIPP_H on SGI
 #include<mpi.h>
 #include <CCA/Components/PWorld/PWorld.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace SCIRun;
@@ -47,17 +49,56 @@ PWorld::~PWorld(){
 }
 
 void PWorld::setServices(const sci::cca::Services::pointer& svc){
+  typedef char urlString[100] ;
+  urlString s;
 
   int mpi_size, mpi_rank;
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-
-  cerr<<"setServices() is called, rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
   services=svc;
+  urlString *buf;
+
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
+
+  /////////////////////////////////////////////////
+  //add StringPort
   StringPort::pointer strport=StringPort::pointer(new StringPort);
+  strcpy(s, strport->getURL().getString().c_str());
   if(mpi_rank==0){
-    svc->addProvidesPort(strport,"stringport","sci.cca.ports.StringPort", props);
+    buf=new urlString[mpi_size];
   }
+  MPI_Gather(  s, 100, MPI_CHAR,    buf, 100, MPI_CHAR,   0, MPI_COMM_WORLD);
+  if(mpi_rank==0){
+    vector<URL> URLs; 
+    for(int i=0; i<mpi_size; i++){
+      string url(buf[i]);
+      URLs.push_back(url);
+      cerr<<"stringport URL["<<i<<"]="<<url<<endl;
+    }
+    Object::pointer obj=PIDL::objectFrom(URLs);
+    sci::cca::ports::StringPort::pointer pstrport=pidl_cast<sci::cca::ports::StringPort::pointer>(obj);
+
+    //cerr<<"$$$ "<<pstrport->getString()<< " $$$"<<endl ;
+    
+    svc->addProvidesPort(pstrport,"stringport","sci.cca.ports.StringPort", props);
+    delete buf;
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD );
+
+
+
+
+}
+
+std::string 
+StringPort::getString(){
+  int mpi_size, mpi_rank;
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  cerr<<"### mpi_rank="<<mpi_rank<<"###"<<endl;
+  if(mpi_rank==0) return "PWorld One";
+  else if(mpi_rank==1) return "PWorld Two";
+  else return "PWorld ...";
 }
 
