@@ -104,13 +104,17 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
   nb[0] = nv_nrrd->dim > 3 ? axis_size[0] : 1;
   nb[1] = gm_nrrd ? 1 : 0;
 
-  BBox bbox;
-  bbox.extend(Point(axis_min[nv_nrrd->dim-3],
-                    axis_min[nv_nrrd->dim-2],
-                    axis_min[nv_nrrd->dim-1]));
-  bbox.extend(Point(axis_max[nv_nrrd->dim-3],
-                    axis_max[nv_nrrd->dim-2],
-                    axis_max[nv_nrrd->dim-1]));
+  const BBox bbox(Point(0,0,0), Point(1,1,1)); 
+
+  Transform tform;
+  const Point nmin(axis_min[nv_nrrd->dim-3],
+                   axis_min[nv_nrrd->dim-2],
+                   axis_min[nv_nrrd->dim-1]);
+  const Point nmax(axis_max[nv_nrrd->dim-3],
+                   axis_max[nv_nrrd->dim-2],
+                   axis_max[nv_nrrd->dim-1]);
+  tform.pre_scale(nmax - nmin);
+  tform.pre_translate(nmin.asVector());
 
   texture->lock_bricks();
   vector<TextureBrickHandle>& bricks = texture->bricks();
@@ -125,6 +129,7 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
   }
   texture->set_bbox(bbox);
   texture->set_minmax(0.0, 255.0, 0.0, 255.0);
+  texture->set_transform(tform);
   for (unsigned int i=0; i<bricks.size(); i++)
   {
     fill_brick(bricks[i], nvn, gmn, nx, ny, nz);
