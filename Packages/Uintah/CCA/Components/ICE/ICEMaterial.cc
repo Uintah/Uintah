@@ -149,12 +149,11 @@ double ICEMaterial::getSpeedOfSound() const
  |____|____|____|____|          |____|____|____|____|=
 _____________________________________________________________________*/
 void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
-                                  CCVariable<double>& sp_vol_CC,
-                              CCVariable<double>& rho_CC,
-                              CCVariable<double>& temp,
-                              CCVariable<double>& speedSound,
-                              CCVariable<double>& vol_frac_CC,
-                              CCVariable<Vector>& vel_CC,
+                                  CCVariable<double>& rho_CC,
+                                  CCVariable<double>& temp,
+                                  CCVariable<double>& speedSound,
+                                  CCVariable<double>& vol_frac_CC,
+                                  CCVariable<Vector>& vel_CC,
                                   CCVariable<double>& press_CC,
                                   int numMatls,
                               const Patch* patch,DataWarehouse* new_dw)
@@ -210,11 +209,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
-         IveBeenHere[*iter]= 1;
+          IveBeenHere[*iter]= 1;
         }
 
         if (count > 0 && obj > 0) {
@@ -222,32 +220,23 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
-         IveBeenHere[*iter]= 2;
+          IveBeenHere[*iter]= 2;
         } 
       }   
       if (numMatls > 1 ) {
-           vol_frac_CC[*iter]= count/totalppc;       
-           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
-           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-           sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
-           rho_CC[*iter]    = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
-           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
-           speedSound[*iter] = d_speed_of_sound;
-          IveBeenHere[*iter]= obj; 
+        vol_frac_CC[*iter]= count/totalppc;       
+        press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+        vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+        rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+        rho_CC[*iter]    = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
+        temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+        speedSound[*iter] = d_speed_of_sound;
+        IveBeenHere[*iter]= obj; 
       }    
-   }  // Loop over domain
-    /*`==========DEBUGGING==========*/
-#if 0
-    ICE* d_ice;
-    d_ice->printData( patch,1, "cellInitialization","IveBeenHere",IveBeenHere);
-    d_ice->printData( patch,1, "cellInitialization","press_CC",press_CC);
-#endif
-    /*==========DEBUGGING==========`*/
+    }  // Loop over domain
   }  // Loop over geom_objects
 }
 
