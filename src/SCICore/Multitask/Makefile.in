@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../..
-
-SRCS     = @TASK_IMPL@ ITC.cc Task.cc @LOCK_IMPL@
-
-INCLUDES = -I$(OBJTOP)
-
-include $(SRCTOP)/scripts/objs.mk

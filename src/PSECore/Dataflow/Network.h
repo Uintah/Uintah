@@ -20,15 +20,14 @@
 
 #include <PSECore/share/share.h>
 
-#include <SCICore/Multitask/ITC.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/String.h>
+#include <SCICore/Thread/Mutex.h>
 
 namespace PSECore {
 namespace Dataflow {
 
-using SCICore::Multitask::Mutex;
 using SCICore::Containers::clString;
 using SCICore::Containers::HashTable;
 using SCICore::Containers::Array1;
@@ -39,7 +38,7 @@ class Module;
 class NetworkEditor;
 
 class PSECORESHARE Network {
-    Mutex the_lock;
+    SCICore::Thread::Mutex the_lock;
     int read_file(const clString&);
 
     HashTable<clString, Connection*> conn_ids;
@@ -91,6 +90,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:29  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/26 23:59:07  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

@@ -97,7 +97,7 @@ SCICore::Thread::FutureValue<Item>::receive()
 {
   int s=Thread::couldBlock(name);
   sema.down();
-  Thread::couldBlock(s);
+  Thread::couldBlockDone(s);
   return value;
 }
 
@@ -113,6 +113,9 @@ SCICore::Thread::FutureValue<Item>::send(const Item& reply)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:53  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/28 03:46:47  sparker
 // Final updates before integration with PSE
 //

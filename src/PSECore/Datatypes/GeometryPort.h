@@ -16,7 +16,6 @@
 
 #include <PSECore/share/share.h>
 #include <PSECore/Dataflow/Port.h>
-#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
   namespace Containers {
@@ -26,8 +25,10 @@ namespace SCICore {
     class GeomObj;
     class View;
   }
-  namespace Multitask {
-    class Mutex;
+  namespace Thread {
+      class CrowdMonitor;
+      class Mutex;
+      template<class T> class Mailbox;
   }
   namespace Datatypes {
     class ColorImage;
@@ -45,9 +46,9 @@ using PSECore::Dataflow::Connection;
 using PSECore::Comm::MessageBase;
 
 using SCICore::Containers::clString;
-using SCICore::Multitask::Mutex;
-using SCICore::Multitask::Mailbox;
-using SCICore::Multitask::CrowdMonitor;
+using SCICore::Thread::Mutex;
+using SCICore::Thread::Mailbox;
+using SCICore::Thread::CrowdMonitor;
 using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::View;
 using SCICore::Datatypes::ColorImage;
@@ -134,6 +135,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:31  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/27 00:03:02  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

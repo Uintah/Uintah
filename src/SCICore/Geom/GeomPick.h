@@ -19,7 +19,6 @@
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Geometry/Vector.h>
-#include <SCICore/Multitask/ITC.h>
 
 namespace PSECore {
   namespace Widgets {
@@ -95,6 +94,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:41  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:39:10  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
