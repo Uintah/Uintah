@@ -1088,7 +1088,8 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	    }
 	}
     }
-
+    
+    set sub_datadir_p [envBool SCIRUN_NET_SUBSTITUTE_DATADIR]
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	incr i
@@ -1140,7 +1141,8 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 		    set varname \"${varname}\"
 		}
 
-		if { [info exists ModuleSubstitutedVars($module)] && \
+		if { $sub_datadir_p && \
+		     [info exists ModuleSubstitutedVars($module)] && \
 		     [lsearch $ModuleSubstitutedVars($module) $var] != -1 } {
 		    set tmpval [subDATADIRandDATASET $val]
 		    append script "${tab}set $varname \"${tmpval}\"\n"
