@@ -153,7 +153,7 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
   else {
     // write out the uncompressed size to the first part of the buffer
     char* pbyte = (char*)(&uncompressedSize);
-    for (int i = 0; i < sizeof(unsigned long); i++, pbyte++) {
+    for (int i = 0; i < (int)sizeof(unsigned long); i++, pbyte++) {
       (*pBuffer)[i] = *pbyte;
     }
     pUncompressed->erase(); /* the original buffer isn't needed, erase it to
