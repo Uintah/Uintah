@@ -77,6 +77,7 @@ namespace Uintah {
       SimulationState& operator=(const SimulationState&);
       
       const VarLabel* delt_label;
+      const VarLabel* strain_energy_label;
       std::vector<Material*> matls;
       Vector d_gravity;
    };
@@ -85,6 +86,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.8  2000/05/31 20:28:08  guilkey
+// Added strain_energy_label to the .h file.
+//
 // Revision 1.7  2000/05/18 18:48:31  jas
 // Added gravity.  It is read in from the input file.
 //
