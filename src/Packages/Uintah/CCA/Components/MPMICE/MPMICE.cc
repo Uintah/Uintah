@@ -27,10 +27,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-#define EOSCM
-//#undef EOSCM
-//#define IDEAL_GAS
-#undef IDEAL_GAS
+//#define EOSCM
+#undef EOSCM
+#define IDEAL_GAS
+//#undef IDEAL_GAS
 /*`==========TESTING==========*/ 
 // KEEP THIS AROUND UNTIL
 // I'M SURE OF THE NEW STYLE OF SETBC -Todd
@@ -1867,9 +1867,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 	  bool doTheBurn = 1;
 	  
 	    
-	  if (gasVolumeFraction[*iter] < 1.e-10 ||
-	      absGradRho < 1.e-10) doTheBurn = 0;
-	  
+	  if (gasVolumeFraction[*iter] < 1.e-5 ||
+	      absGradRho < 1.e-5) doTheBurn = 0;
 
 	  if (doTheBurn)
 	    {
@@ -1898,10 +1897,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 						burnedMass[m][*iter],
 						releasedHeat[m][*iter],
 						delt, surfArea);
-	      
+             
 	      sumBurnedMass[*iter]    += burnedMass[m][*iter];
 	      sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
-
+             // reactantants: (-)burnedMass
+             // products:     (+)burnedMass
+             // Need the proper sign on burnedMass in ICE::DelPress calc
+             burnedMass[m][*iter]      = -burnedMass[m][*iter];
+ 
 	    }
 	  else {
 	    burnedMass[m][*iter]=0;
@@ -1984,8 +1987,9 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 	   massBurnFraction[*iter]         = 0.0;
 	   for (int in=0;in<8;in++){
 	     massBurnFraction[*iter] +=
-				(burnedMassCC[cIdx[in]]/massCC[cIdx[in]])*.125;
-           }
+				(fabs(burnedMassCC[cIdx[in]])/massCC[cIdx[in]])*.125;
+
+          }
         }
         new_dw->put(massBurnFraction,Mlb->massBurnFractionLabel, dwindex,patch);
       }  //if(mpm_matl)
