@@ -66,13 +66,13 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
         print "\tComparison tests passed."
 
     if mode in ('dbg', 'dbgmpi'):
-	rc = system("mem_leak_check %s malloc_stats %s/%s/malloc_stats %s %s" % (testname, compare_root, testname, ".", errors_to))
+	rc = system("mem_leak_check %s malloc_stats %s/%s/malloc_stats %s %s > mem_leak_check.log" % (testname, compare_root, testname, ".", errors_to))
         if rc == 0:
 	    print "\tMemory leak tests passed."
-	elif rc == 5:
+	elif rc == 5 * 256:
 	    print "\t*** Warning, no malloc_stats file created.  Memory leak test failed."
 	    return 1
-	elif rc == 1:
+	elif rc == 256:
 	    print "\t*** Warning, test %s failed memory leak test" % (testname)
 	    return 1
 	else:
