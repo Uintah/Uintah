@@ -28,18 +28,13 @@
         <div align="left">  
 	<p><b><H4><A href="#section 1">Putting the nets together</H4></b></A>
 	<p><b><H4><A href="#section 2">Isosurface</p></b></H4></A>
+	<p><b>Chapter Overview</b><br>
+        <p>In the previous chapter, we constructed three networks to visualize the utahtorso-lowres-voltage 
+	dataset.  In this chapter, we will merge those networks into one larger network
+	that performs all visualizations concurrently[link 4.0 UG
+	Working with Networks].  We will also add a fourth visualization tool--isosurface extraction.
 	
-
-
-	<H3>Chapter Overview</H3><br>
-        <p>In the previous chapter, we constructed three [visualization|]
-	networks to [examine|visualize] the utahtorso-lowres-voltage dataset.  In this
-	chapter, we will [integrate those small|merge those] networks into one larger network
-	that performs all [of the|] visualizations concurrently[link 4.0 UG
-	Working with Networks].  We will
-	also add a fourth visualization tool--isosurface extraction.
-	<ol>
-        <p><b><A name="section 1">Putting the nets together</b><br></A>
+        <p><b><A name="section 1">Putting the nets together</b></A>
 
         <p>Now we will perform all of the 3A, 3B, and 3C work in a single
         network. This procedure involves sharing the FieldReader, and
@@ -47,33 +42,23 @@
         last chapter. 
 	<ol>
 	<li value+"1.">Repeat all of the steps for creating A.
-
-	<li value="2.">Do the same for B and C, [but use the FieldReader and Viewer from
-        A|<I don't like this but I can't think of a better way right now>].</ol><br>
+	<li value="2.">Do the same for B and C, but use the FieldReader and Viewer from
+        A.</ol>
                   
-        <p>At this point, all of the visualization from the previous
-        chapter has existed in one network. Now, we will add isosurface
-        visualization.<br> 
-		
-	[<p>From the SCIRun/Visualization menu,<br>|]
-	<ol>
-	<li value="1."> [Add in the|Create an] Isosurface module [|---
-	  select Visualization/Isosurface from the SCIRun menu.]
-	<li value="2.">[connect the output from the field
-	  reader to the Isosurface module's
-        yellow Field input.|Connect the FieldReader module's output port to the
-	Isosurface module's (yellow) input port.]
-	<li value="3.">[Add the pink Geometry output to the Viewer
-	  module|Connect the Isosurface module's (pink) output port to the
-	  Viewer's input port].</ol><br> 
+        <p>You will find the complete network in <b>Figure 4.1</b> color coded to show the 
+	previous chapter's networks. Yellow corresponds to 3A, green to 3B, and red to 3C. As soon as
+	Isosurface executes, you will see this surface appear in the viewer
+	<b>(Figure 4.2)</b>.
+	<ol><li value="1.">Create an Isosurface module---select Visualization/Isosurface from the SCIRun menu.
+	<li value="2.">Connect the FieldReader module's output port to the
+	Isosurface module's (yellow) input port.
+	<li value="3.">Connect the Isosurface module's (pink) output port to the
+	  Viewer's input port.</ol>
 
-	<p>[You will find t|T]he complete network [|is shown] in
-	  <b>Figure 4.1</b>[|. The network is] color
-	[coated|coded] to show the [previous chapter's networks|networks
-	from previous chapters, 3A, 3B, and 3C]. Yellow corresponds
-	to 3A, green to 3B, and red to 3C. [As soon as|After]
-	Isosurface executes, [you will see this surface appear in the
-	viewer|the surface shown in <b>[(|]Figure 4.2[)|]</b>.
+	<p>The complete network appears in
+	  <b>Figure 4.1</b>. The network is color coded to show the 
+	networks from previous chapters, 3A, 3B, and 3C. Yellow corresponds
+	to 3A, green to 3B, and red to 3C. Afte Isosurface executes, the surface shown in <b>Figure 4.2</b>.
 
       </div>
 	<center>
@@ -90,31 +75,21 @@
 	</center>
 	<div align="left">
 	<p><br>
+	
+        <p><b><a name="section 2">Isosurface</b></A>
 
-
-	<ol>
-        <p><b><a name="section 2">Isosurface</b><br></A>
-
-	[|<p>The Isosurface module's input is a volume field and its
+	<p>The Isosurface module's input is a volume field and its
 	output is a surface field or scene graph data (visualized
-        with or without a color map).<br>]
+        with or without a color map).
 
-        [<p>The isosurface module's [|UI] [link 4.0 UG Working with Networks] provides 
-	the interface to isosurface creation.  The module takes a volume field in, 
-	and outputs a surface field or scene graph data, visualized
-        with or without a color map.<br>|]
+        <p>The Isosurface's UI is shown in Figure <b>Figure 4.3</b>.  The
+	"iso-value" "slider" determines the location of the surface in the volume.
 
-	<p>[The Iso Value is the first item to set in UI for the Isosurface(<b>Figure 4.3</b>).
-	This determines where the surface resides throught the
-	volume|Isosurface's UI is shown in Figure <b>Figure 4.3</b>.  The
-	"iso-value" "slider" determines the location of the surface in the volume.<br> 
-
-	<p>[To make the module update the visualization, you may:|The
-	  module will render the surface when you:]
-	<ol>
-	<li value="1.">[change the value with the slider only by releasing your mouse button 
-	over the slider|release the mouse button after dragging the slider] or;
-	<li value="2.">press the extract button.</ol><br>
+	<p>The
+	  module will render the surface when you:
+	
+	<ol><li value="1.">Release the mouse button after dragging the slider or;
+	<li value="2.">Press the extract button.</ol>
 
 	</div>
 	<center>
@@ -124,23 +99,18 @@
 	<div align="left">
 	<p><br>
 	
-	<p><b><H3>Summary</b></H3><br>
-                
-	<p>[Similar to the ShowField Module, you can set a default
-        color for the Isosurface or, if it has a color map input, the
-        color map will visualize the data values|If you input a color map
-	then it will be used to visualize the surface, otherwise the
-	"Default Color" will be used].<br>
+      
+	<p>If you input a color map then it will be used to visualize the surface, otherwise the
+	"Default Color" will appear.<br>
 
-	<p>[You can choose a
-        method for extracting the isosurface and the number of threads
-        the algorithm will use (how many processors to use).
-        By default, we use a Marching Cubes algorithm, but you can
-        also use the NOISE algorithm.|By default the surface is extracted
-	using the the Marching Cubes algorithm
-	but you may instead use the NOISE
-	algorithm.  You may also choose the number of threads (processors)
-	the algorithm will use.]<br>
+	<p>By default the surface is extracted using the the Marching Cubes algorithm
+	but you may instead use the NOISE algorithm.  You may also choose the number of threads (processors)
+	the algorithm will use.<br>
+	
+	<p><b>Summary</b><br>
+	Now that we can perform concurrent visualizations,in Chapter 5, we will begin 
+	to use modules from the biolelectric problem solving environment (BioPSE) package. 
+
 	<br>
 	<br>
         </div>
