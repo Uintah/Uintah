@@ -55,6 +55,7 @@ class SCICORESHARE TexSquare : public GeomObj {
   int width_;
   int height_;
   unsigned int texname_;
+  double alpha_cutoff_;
   void	bind_texture();
 public:
   TexSquare();
@@ -63,6 +64,7 @@ public:
   void set_coords(float *tex, float *pos);
   void set_texture( unsigned char *tex, int num, int w, int h);
   void set_texname(unsigned int texname);
+  void set_alpha_cutoff(double alpha);
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
 

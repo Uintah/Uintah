@@ -29,7 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Tue Jul 13 02:27:42 2004
 
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Volume/CM2Shader.h>
 
 #include <iostream>
@@ -42,16 +42,20 @@ namespace SCIRun {
 #define CM2_TRIANGLE_BASE \
 "!!ARBfp1.0 \n" \
 "PARAM color = program.local[0]; \n" \
-"PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n" \
+"PARAM geom0 = program.local[1]; # {base, top_x, top_y, bottom_y} \n" \
 "PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n" \
 "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
 "TEMP c, p, t;" \
-"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
-"MUL p.z, geom1.y, geom0.z; \n" \
-"SUB p.z, p.y, p.z; \n" \
+"MUL p.xy, fragment.position.xyyy, sz.xyyy;\n" \
+"MOV t.x, geom0.z; \n" \
+"SUB t.x, t.x, geom1.z; \n" \
+"MUL p.z, geom1.y, t.x; # p.z = bottom y cutoff \n" \
+"SUB p.z, p.y, p.z; # p.z = p.y - p.z \n" \
+"SUB p.z, p.z, geom1.z; \n" \
 "KIL p.z; \n" \
-"RCP t.z, geom0.z; \n" \
-"MUL t.x, p.y, t.z; \n" \
+"RCP t.z, t.x; \n" \
+"SUB p.y, p.y, geom1.z; \n" \
+"MUL t.x, p.y, t.z; # t.x = p.y / top_y \n" \
 "LRP c.x, t.x, geom0.y, geom0.x; \n" \
 "MUL c.y, t.x, geom1.x; \n" \
 "MUL c.y, c.y, 0.5; \n" \
@@ -85,25 +89,35 @@ namespace SCIRun {
 "PARAM color = program.local[0]; \n" \
 "TEMP c, p, t;"
 
+#define CM2_PAINT_BASE \
+"!!ARBfp1.0 \n" \
+"PARAM color = program.local[0]; \n" \
+"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
+"TEMP c, p, t; \n" \
+"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
+"MOV t.w, fragment.color.a; \n" \
+
 #define CM2_REGULAR \
 "MUL c.w, color.w, t.w; \n" \
 "MOV c.xyz, color.xyzz; \n"
+
 #define CM2_FAUX \
 "MUL c, color, t.w; \n"
 
 #define CM2_FLAT \
-"MOV c.w, color.w; \n" \
-"MOV c.xyz, color.xyzz; \n"
+"MOV c, color; \n"
 
 #define CM2_RASTER_BLEND \
 "MOV result.color, c; \n" \
 "END"
+
 #define CM2_FRAGMENT_BLEND_ATI \
 "MUL p.xy, fragment.position.xyyy, program.local[4].xyyy; \n" \
 "TEX t, p.xyyy, texture[0], 2D; \n" \
 "SUB p.w, 1.0, c.w; \n" \
 "MAD_SAT result.color, t, p.w, c; \n" \
 "END"
+
 #define CM2_FRAGMENT_BLEND_NV \
 "TEX t, fragment.position.xyyy, texture[0], RECT; \n" \
 "SUB p.w, 1.0, c.w; \n" \
@@ -148,10 +162,13 @@ CM2Shader::emit(string& s)
   case CM2_SHADER_RECTANGLE_ELLIPSOID:
     z << CM2_RECTANGLE_ELLIPSOID_BASE;
     break;
+  case CM2_SHADER_PAINT:
+    z << CM2_PAINT_BASE;
+    break;
   default:
     break;
   }
-  if(faux_) {
+  if(faux_ || type_ == CM2_SHADER_PAINT) {
     z << CM2_FAUX;
   } else {
     z << CM2_REGULAR;

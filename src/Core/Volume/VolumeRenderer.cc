@@ -32,7 +32,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>
@@ -360,7 +360,7 @@ VolumeRenderer::draw_volume()
   
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
-    load_brick(b);
+    load_brick(b, use_cmap2);
     vertex.clear();
     texcoord.clear();
     size.clear();
@@ -734,7 +734,7 @@ VolumeRenderer::multi_level_draw()
 	if( vertex.size() == 0 ) {
 	  continue;
 	}
-	load_brick(b);
+	load_brick(b, use_cmap2);
 	draw_polygons(vertex, texcoord, size, false, use_fog,
 		      blend_num_bits_ > 8 ? blend_buffer_ : 0);
       }
