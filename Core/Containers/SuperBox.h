@@ -307,7 +307,7 @@ public:
 				  RangeQuerier& rangeQuerier,
 				  BoxHashMap& boxMap,
 				  vector<SuperBox*>& maximalSuperBoxes,
-				  const Region* withinRegion = 0);  
+				  const Region* withinRegion = 0);
 
   
 protected:
@@ -326,7 +326,7 @@ protected:
   void init(const vector<BasicBox*>& basicBoxes)
   {
     boxes_.reserve(basicBoxes.size());
-    vector<BasicBox*>::const_iterator iter = basicBoxes.begin();
+    typename vector<BasicBox*>::const_iterator iter = basicBoxes.begin();
     for (; iter != basicBoxes.end(); ++iter) {
       boxes_.push_back((*iter)->getBox());
     }
@@ -575,7 +575,7 @@ conflictsWith(const Region& region) const
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 template <class SuperBoxPIterator>
-SuperBox<BoxP, Point, Volume, Value, Evaluator>::Region
+typename SuperBox<BoxP, Point, Volume, Value, Evaluator>::Region
 SuperBox<BoxP, Point, Volume, Value, Evaluator>::
 computeEnclosingRegion(SuperBoxPIterator superBoxesBegin,
 		       SuperBoxPIterator superBoxesEnd)
@@ -597,7 +597,7 @@ bool SuperBox<BoxP, Point, Volume, Value, Evaluator>::isValid() const
   if (boxes_.size() == 0)
     return false; // must contain at least one box
 
-  vector<BoxP>::const_iterator iter = boxes_.begin();
+  typename vector<BoxP>::const_iterator iter = boxes_.begin();
   BoxP box = *iter;
   Point low = box->getLow();
   Point high = box->getHigh();
@@ -739,8 +739,8 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
     
     // Try picking conflicts of the pick starting with the one having the
     // greatest value.
-    set<CompositeBox*, ValueCompare>::iterator conflictIter;
-    set<CompositeBox*, ValueCompare>::reverse_iterator rConflictIter;
+    typename set<CompositeBox*, ValueCompare>::iterator conflictIter;
+    typename set<CompositeBox*, ValueCompare>::reverse_iterator rConflictIter;
     for (conflictIter = compositePick->getActiveConflicts().begin();
 	 conflictIter != compositePick->getActiveConflicts().end();
 	 conflictIter++) {
@@ -882,7 +882,7 @@ undoPicks(const vector<SuperBox*>& picks,
 	  set<SuperBox*, ValueCompare>& activeBoxes,
 	  Value& maxPossibleValue)
 {
-  vector<SuperBox*>::const_reverse_iterator rIter;
+  typename vector<SuperBox*>::const_reverse_iterator rIter;
   for (rIter = picks.rbegin(); rIter != picks.rend(); rIter++) {
     undoPick(*rIter, activeBoxes, maxPossibleValue);
   }
@@ -892,7 +892,7 @@ template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 bool BasicBox<BoxP, Point, Volume, Value, Evaluator>::
 allActiveEnclosingSuperBoxesAlsoEnclose(SuperBox* other) const
 {
-  set<CompositeBox*>::iterator iter;  
+  typename set<CompositeBox*>::iterator iter;  
   for (iter = getActiveEnclosingSuperBoxes().begin();
        iter != getActiveEnclosingSuperBoxes().end(); iter++) {
     if (!(*iter)->contains(other))
@@ -906,7 +906,7 @@ CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
 BasicBox<BoxP, Point, Volume, Value, Evaluator>::
 anyActiveEnclosingSuperBoxAlsoEnclosing(SuperBox* other) const
 {
-  set<CompositeBox*>::const_iterator iter;  
+  typename set<CompositeBox*>::const_iterator iter;  
   for (iter = getActiveEnclosingSuperBoxes().begin();
        iter != getActiveEnclosingSuperBoxes().end(); iter++) {
     if ((*iter)->contains(other))
@@ -920,7 +920,7 @@ CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
 BasicBox<BoxP, Point, Volume, Value, Evaluator>::
 getActiveEnclosingSuperBox(const Region& region) const
 {
-  set<CompositeBox*>::iterator iter;  
+  typename set<CompositeBox*>::iterator iter;  
   for (iter = getActiveEnclosingSuperBoxes().begin();
        iter != getActiveEnclosingSuperBoxes().end(); iter++) {
     if ((*iter)->getRegion() == region)
@@ -968,7 +968,7 @@ CompositeBox<BoxP, Point, Volume, Value, Evaluator>::~CompositeBox()
   if (isActive_)
     inactivate();
 
-  for (vector<SuperBox*>::iterator iter = createdSubSuperBoxes_.begin();
+  for (typename vector<SuperBox*>::iterator iter = createdSubSuperBoxes_.begin();
        iter != createdSubSuperBoxes_.end(); iter++)
     delete *iter;
 }
@@ -981,13 +981,13 @@ inactivate()
   ASSERT(activatedSubSuperBoxes_.size() == 0);
   isActive_ = false;
 
-  set<CompositeBox*, ValueCompare>::iterator conflictIter;
+  typename set<CompositeBox*, ValueCompare>::iterator conflictIter;
   for (conflictIter = activeConflicts_.begin();
        conflictIter != activeConflicts_.end(); conflictIter++) {
     (*conflictIter)->activeConflicts_.erase(this);
   }
 
-  vector<BasicBox*>::iterator iter;
+  typename vector<BasicBox*>::iterator iter;
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
     (*iter)->removeActiveEnclosingSuperBox(this);
   }
@@ -1023,7 +1023,7 @@ inactivate(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
   activeBoxes.erase(this);  
   activeBoxes.insert(activatedSubSuperBoxes_.begin(),
 		     activatedSubSuperBoxes_.end());
-  for (vector<SuperBox*>::iterator subIter = activatedSubSuperBoxes_.begin();
+  for (typename vector<SuperBox*>::iterator subIter = activatedSubSuperBoxes_.begin();
        subIter != activatedSubSuperBoxes_.end(); subIter++) {
     CompositeBox* compositeBox = dynamic_cast<CompositeBox*>(*subIter);
     if (compositeBox != 0)
@@ -1040,7 +1040,7 @@ reactivate(set<SuperBox*, ValueCompare>& activeBoxes,
 {
   isActive_ = true;
 
-  vector<SuperBox*>::iterator subIter;
+  typename vector<SuperBox*>::iterator subIter;
   for (subIter = activatedSubSuperBoxes_.begin();
        subIter != activatedSubSuperBoxes_.end(); subIter++) {
     activeBoxes.erase(*subIter);
@@ -1054,12 +1054,12 @@ reactivate(set<SuperBox*, ValueCompare>& activeBoxes,
 
   activatedSubSuperBoxes_.clear();  
   
-  vector<BasicBox*>::iterator iter;
+  typename vector<BasicBox*>::iterator iter;
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
     (*iter)->addActiveEnclosingSuperBox(this);
   }
 
-  set<CompositeBox*, ValueCompare>::iterator conflictIter;
+  typename set<CompositeBox*, ValueCompare>::iterator conflictIter;
   for (conflictIter = activeConflicts_.begin();
        conflictIter != activeConflicts_.end(); conflictIter++) {
     ASSERT(conflictsWith(*conflictIter));
@@ -1074,13 +1074,13 @@ void CompositeBox<BoxP, Point, Volume, Value, Evaluator>::
 makeUnavailable()
 {
   isActive_ = false;
-  set<CompositeBox*, ValueCompare>::iterator conflictIter;
+  typename set<CompositeBox*, ValueCompare>::iterator conflictIter;
   for (conflictIter = activeConflicts_.begin();
        conflictIter != activeConflicts_.end(); conflictIter++) {
     (*conflictIter)->activeConflicts_.erase(this);
   }
 
-  vector<BasicBox*>::iterator iter;
+  typename vector<BasicBox*>::iterator iter;
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
     (*iter)->makeUnavailable();
   }
@@ -1091,14 +1091,14 @@ void CompositeBox<BoxP, Point, Volume, Value, Evaluator>::
 makeAvailable()
 {
   isActive_ = true;
-  set<CompositeBox*, ValueCompare>::iterator conflictIter;
+  typename set<CompositeBox*, ValueCompare>::iterator conflictIter;
   for (conflictIter = activeConflicts_.begin();
        conflictIter != activeConflicts_.end(); conflictIter++) {
     ASSERT(conflictsWith(*conflictIter));
     (*conflictIter)->activeConflicts_.insert(this);
   }
   
-  vector<BasicBox*>::iterator iter;
+  typename vector<BasicBox*>::iterator iter;
   for (iter = basicBoxes_.begin(); iter != basicBoxes_.end(); iter++) {
     (*iter)->makeAvailable();
   }
@@ -1110,7 +1110,7 @@ addCreatedSubSuperBoxes(const vector<SuperBox*>& candidates)
 {
   createdSubSuperBoxes_.reserve(createdSubSuperBoxes_.size() +
 				candidates.size());
-  for (vector<SuperBox*>::const_iterator iter = candidates.begin();
+  for (typename vector<SuperBox*>::const_iterator iter = candidates.begin();
        iter != candidates.end(); iter++) {
     // could only have created CompositeBoxes, not BasicBoxes
     if (dynamic_cast<CompositeBox*>(*iter) != 0)
@@ -1169,7 +1169,7 @@ buildActivatedMaximalSuperBoxes(BasicBoxPIterator begin,
   }
   
   // delete temporary ones
-  set<CompositeBox*, LexCompare>::iterator iter;
+  typename set<CompositeBox*, LexCompare>::iterator iter;
   for (iter = allExploredBoxes.begin(); iter != allExploredBoxes.end(); iter++)
   {
     if (!(*iter)->isActive())
@@ -1370,11 +1370,11 @@ void CompositeBox<BoxP, Point, Volume, Value, Evaluator>::
 makeActive()
 {
   isActive_ = true;
-  for (vector<BasicBox*>::iterator iter = basicBoxes_.begin();
+  for (typename vector<BasicBox*>::iterator iter = basicBoxes_.begin();
        iter != basicBoxes_.end(); ++iter) {
     const set<CompositeBox*>& conflicts =
       (*iter)->getActiveEnclosingSuperBoxes();
-    set<CompositeBox*>::const_iterator conflictIter = conflicts.begin();
+    typename set<CompositeBox*>::const_iterator conflictIter = conflicts.begin();
     for ( ; conflictIter != conflicts.end(); ++conflictIter) {
       CompositeBox* conflict = *conflictIter;
       ASSERT(conflictsWith(conflict));
@@ -1392,7 +1392,7 @@ inactivateConflicts(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 		    set<SuperBox*, ValueCompare>& activeBoxes,
 		    Value& maxPossibleValue)
 {
-  set<CompositeBox*>::iterator iter;
+  typename set<CompositeBox*>::iterator iter;
   for (iter = activeConflicts_.begin(); iter != activeConflicts_.end();
        iter++) {
 #ifdef SUPERBOX_DEBUGGING
@@ -1408,7 +1408,7 @@ void CompositeBox<BoxP, Point, Volume, Value, Evaluator>::
 reactivateConflicts(set<SuperBox*, ValueCompare>& activeBoxes,
 		    Value& maxPossibleValue)
 {
-  set<CompositeBox*>::reverse_iterator rIter;  
+  typename set<CompositeBox*>::reverse_iterator rIter;  
   for (rIter = activeConflicts_.rbegin(); rIter != activeConflicts_.rend();
        rIter++) {
     (*rIter)->reactivate(activeBoxes, maxPossibleValue);
@@ -1443,8 +1443,8 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   for (BoxIterator it = begin; it != end; it++)
     n++; // count number of boxes
 
-  vector<BasicBox*>::iterator b_iter;
-  vector<SuperBox*>::iterator sb_iter;
+  typename vector<BasicBox*>::iterator b_iter;
+  typename vector<SuperBox*>::iterator sb_iter;
 
   vector<BasicBox*> basicBoxes(n);
 #ifdef HAVE_HASH_MAP
@@ -1484,7 +1484,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   Value totalPossibleValue =
     SuperBox::valueSum(maximalSuperBoxes.begin(), maximalSuperBoxes.end());
 
-  set<SuperBox*, SuperBox::ValueCompare> activeBoxes(maximalSuperBoxes.begin(),
+  set<SuperBox*, typename SuperBox::ValueCompare> activeBoxes(maximalSuperBoxes.begin(),
 						     maximalSuperBoxes.end());
   SuperBoxSet* superBoxSet;
   if (useGreedyApproach) {
@@ -1503,7 +1503,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   // will be simple SuperBoxes without the extraneous garbage of BasicBox
   // and CompositeBox.
   SuperBoxSet* result = scinew SuperBoxSet();
-  SuperBoxContainer::const_iterator const_iter;
+  typename SuperBoxContainer::const_iterator const_iter;
   for (const_iter = superBoxSet->getSuperBoxes().begin();
        const_iter != superBoxSet->getSuperBoxes().end(); const_iter++) {
     result->addSuperBox(scinew SuperBox(**const_iter));
@@ -1546,7 +1546,7 @@ getBasicBoxes(BoxHashMap& boxMap)
   vector<BasicBox*> result;
   result.reserve(boxes_.size());
     
-  for (vector<BoxP>::iterator iter = boxes_.begin(); iter != boxes_.end();
+  for (typename vector<BoxP>::iterator iter = boxes_.begin(); iter != boxes_.end();
        iter++) {
     result.push_back(boxMap[*iter]);
   }
@@ -1591,9 +1591,9 @@ operator<<(ostream& out, const
 	   SuperBoxSet<BoxP, Point, Volume, Value, Evaluator>& superBoxSet)
 {
   typedef SuperBoxSet<BoxP, Point, Volume, Value, Evaluator> SuperBoxSet;
-  typedef SuperBoxSet::SuperBoxContainer SuperBoxContainer;
+  typedef typename SuperBoxSet::SuperBoxContainer SuperBoxContainer;
 
-  SuperBoxContainer::const_iterator iter;
+  typename SuperBoxContainer::const_iterator iter;
   for (iter = superBoxSet.getSuperBoxes().begin();
        iter != superBoxSet.getSuperBoxes().end(); iter++) {
     out << *(*iter) << endl;
