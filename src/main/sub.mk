@@ -48,7 +48,7 @@ else
 	SCIRun Core/CCA/Component/CIA Core/Thread
 endif
 
-LIBS := $(GLOBUS_LIBS) -lglobus_io
+LIBS :=
 PROGRAM := sr
 
 $(SRCDIR)/newmain.o: Core/CCA/spec/cca_sidl.h
