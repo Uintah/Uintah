@@ -441,6 +441,8 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (timelabels->multiple_steps)
     tsk->requires(Task::NewDW, d_lab->d_reactscalarTempLabel, 
@@ -543,6 +545,8 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     new_dw->get(constReactscalarVars.old_density, d_lab->d_densityCPLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constReactscalarVars.density_guess, d_lab->d_densityGuessLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     if (timelabels->multiple_steps)

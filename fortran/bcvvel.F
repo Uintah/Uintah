@@ -93,7 +93,7 @@ C$DIR SCALAR
 C$DIR SCALAR
                I = ist - 1
                XP = X(I+1) - XU(I+1)
-               TMULT = VISCOS/XP
+               TMULT = 0.5D0*(VISCOS(ist,j-1,k)+VISCOS(ist,j,k))/XP
 
                IF (PCELL(I,J,K).EQ.WALL) THEN
                   if (.not.(yminus.and.j.eq.jst)) then
