@@ -48,7 +48,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 
     method set_defaults {} { 
         global $this-tcl_status 
-	global $this-pvVar;
+	global $this-psVar;
 	global $this-pvVar;
 	global $this-ptVar;
 	global $this-pNMaterials;
