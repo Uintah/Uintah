@@ -1,5 +1,15 @@
 #! /bin/sh
 
+# 
+# This script starts or stops the matlab engine.  
+#
+# Usage: mlabengine.bat <start | stop>
+#
+# A byproduct of running this script is the creation of the
+# 'transport.mexsg' file.  This file is actually created
+# in the 'mlabengine.m' foutine.
+#
+
 if test "$1" = "stop"; then
  echo 
  echo "Stopping the matlab engine.  THIS MAY TAKE A FEW SECONDS"
