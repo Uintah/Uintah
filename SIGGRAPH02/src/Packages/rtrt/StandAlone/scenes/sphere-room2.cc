@@ -146,7 +146,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                          bgcolor, cdown, cup, groundplane,
                          ambient_scale, Constant_Ambient);
   scene->select_shadow_mode(No_Shadows);
-  LinearBackground *background= 
+  LinearBackground *background = 
     new LinearBackground(Color(.8,.5,.2),Color(.2,.8,.1),Vector(0,0,-1));
   scene->set_background_ptr( background );
 
@@ -335,17 +335,17 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                             Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
 
-  galaxy_room->add(door0a);
-  galaxy_room->add(door0b);
-  galaxy_room->add(door1a);
-  galaxy_room->add(door1b);
+  galaxy_room->add( door0a );
+  galaxy_room->add( door0b );
+  galaxy_room->add( door1a );
+  galaxy_room->add( door1b );
   PortalParallelogram::attach(door0a,door0b);
   PortalParallelogram::attach(door1a,door1b);
 #endif
 
 #if RENDERPLANETS
   // build the sun but don't add it to the scene 
-  // (represented later as the light in the scene)
+  // (represented later by the light in the scene)
   Satellite *sol = new Satellite(table[0].name_, white, 
                                  Point(ROOMCENTER, ROOMHEIGHT/2.), 
                                  .01, 0);
