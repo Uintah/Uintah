@@ -16,6 +16,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
@@ -90,13 +91,15 @@ void CompNeoHook::initializeCMData(const Patch* patch,
 
 void CompNeoHook::allocateCMDataAddRequires(Task* task,
 					    const MPMMaterial* matl,
-					    const PatchSet* patch,
+					    const PatchSet* ,
 					    MPMLabel* lb) const
 {
 
-  //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 
@@ -104,7 +107,7 @@ void CompNeoHook::allocateCMDataAdd(DataWarehouse* new_dw,
 				    ParticleSubset* addset,
 				    map<const VarLabel*, ParticleVariableBase*>* newState,
 				    ParticleSubset* delset,
-				    DataWarehouse* old_dw)
+				    DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -116,11 +119,14 @@ void CompNeoHook::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,addset);
   
+  new_dw->get(o_deformationGradient, lb->pDeformationMeasureLabel_preReloc,
+              delset);
+  new_dw->get(o_stress, lb->pStressLabel_preReloc, delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
-    pstress[*n] = zero;
+    pstress[*n] = o_stress[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
@@ -337,6 +343,7 @@ void CompNeoHook::carryForward(const PatchSubset* patches,
                                                                        pset);
     new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
@@ -377,8 +384,6 @@ void CompNeoHook::addComputesAndRequires(Task* task,
     task->computes(lb->pStressLabel_preReloc,             matlset);
     task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
     task->computes(lb->pVolumeDeformedLabel,              matlset);
-
-
 }
 
 void 

@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
@@ -77,7 +78,6 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
    new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
    new_dw->allocateAndPut(bElBar,lb->bElBarLabel,pset);
 
-
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
@@ -89,14 +89,17 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
 
 void CompNeoHookImplicit::allocateCMDataAddRequires(Task* task,
 						    const MPMMaterial* matl,
-						    const PatchSet* patch,
+						    const PatchSet* ,
 						    MPMLabel* lb) const
 {
 
-  //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
-  task->requires(Task::OldDW,bElBarLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,bElBarLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 
@@ -104,11 +107,10 @@ void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 					    ParticleSubset* addset,
 					    map<const VarLabel*, ParticleVariableBase*>* newState,
 					    ParticleSubset* delset,
-					    DataWarehouse* old_dw)
+					    DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3  zero(0.);
   
   ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
   constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_bElBar;
@@ -117,22 +119,20 @@ void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pstress,addset);
   new_dw->allocateTemporary(bElBar,addset);
   
-  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_stress,lb->pStressLabel,delset);
-  old_dw->get(o_bElBar,bElBarLabel,delset);
-
+  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,delset);
+  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
+  new_dw->get(o_bElBar,bElBarLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
     bElBar[*n] = o_bElBar[*o];
-    pstress[*n] = zero;
+    pstress[*n] = o_stress[*o];
   }
   
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
   (*newState)[lb->bElBarLabel]=bElBar.clone();
-  
 }
 
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
@@ -164,7 +164,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 #else
 					 SimpleSolver* solver,
 #endif
-					 const bool recursion)
+					 const bool )
 
 {
   for(int pp=0;pp<patches->size();pp++){
@@ -506,8 +506,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
 						 const MPMMaterial* matl,
-						 const PatchSet* patches,
-						 const bool recursion) const
+						 const PatchSet* ,
+						 const bool ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 

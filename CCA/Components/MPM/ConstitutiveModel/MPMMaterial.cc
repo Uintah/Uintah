@@ -253,8 +253,8 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
    Box b1 = piece->getBoundingBox();
-   Box b2 = patch->getBox();
-   Box b = b1.intersect(b2);
+   //Box b2 = patch->getBox();
+   //Box b = b1.intersect(b2);
    // Find the bounds of a region a little bigger than the piece's BBox.
    Point b1low(b1.lower().x()-3.*dx.x(),b1.lower().y()-3.*dx.y(),
                                         b1.lower().z()-3.*dx.z());
@@ -319,8 +319,8 @@ MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
                                         CCVariable<double>& rho_CC,
                                         CCVariable<double>& temp,
                                         CCVariable<Vector>& vel_CC,
-                                        int numMatls,
-                                        const Patch* patch)
+                                        int ,
+                                        const Patch* )
 { 
   vel_CC.initialize(Vector(0.,0.,0.));
   rho_micro.initialize(d_density);

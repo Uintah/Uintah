@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Malloc/Allocator.h>
@@ -63,6 +64,7 @@ void HypoElasticImplicit::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
   ParticleVariable<Matrix3> pstress;
   new_dw->allocateAndPut(pstress, lb->pStressLabel, pset);
+
   for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
      deformationGradient[*iter] = Identity;
      pstress[*iter] = zero;
@@ -71,13 +73,15 @@ void HypoElasticImplicit::initializeCMData(const Patch* patch,
 
 void
 HypoElasticImplicit::allocateCMDataAddRequires( Task* task,
-						const MPMMaterial* /*matl*/,
-						const PatchSet* patch,
+						const MPMMaterial* matl,
+						const PatchSet* ,
 						MPMLabel* lb ) const
 {
-  //const MaterialSubset* matlset = matl->thisMaterial(); <- Unused
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial(); 
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 void
@@ -85,25 +89,23 @@ HypoElasticImplicit::allocateCMDataAdd( DataWarehouse* new_dw,
 					ParticleSubset* addset,
 					map<const VarLabel*, ParticleVariableBase*>* newState,
 					ParticleSubset* delset,
-					DataWarehouse* old_dw )
+					DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
-
   ParticleVariable<Matrix3> pstress,deformationGradient;
   constParticleVariable<Matrix3> o_stress, o_deformationGradient;
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,addset);
 
-  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_stress,lb->pStressLabel,delset);
+  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
+              delset);
+  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
-    pstress[*n] = zero;
+    pstress[*n] = o_stress[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
@@ -133,8 +135,12 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 					 const MPMMaterial* matl,
 					 DataWarehouse* old_dw,
 					 DataWarehouse* new_dw,
-					 Solver* solver,
-					 const bool recursion)
+#ifdef HAVE_PETSC
+                                         MPMPetscSolver* solver,
+#else
+                                         SimpleSolver* solver,
+#endif
+					 const bool )
 
 {
   for(int pp=0;pp<patches->size();pp++){
@@ -145,8 +151,10 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     solver->copyL2G(l2g,patch);
 
     Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
+    /*
     FastMatrix kmat(24,24);
     FastMatrix kgeo(24,24);
+    */
     double onethird = (1.0/3.0);
     
     Matrix3 Identity;
@@ -184,10 +192,20 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     double G = d_initialData.G;
     double K  = d_initialData.K;
     
+    /*
     FastMatrix B(6,24);
     FastMatrix Btrans(24,6);
     FastMatrix Bnl(3,24);
     FastMatrix Bnltrans(24,3);
+    */
+
+    double B[6][24];
+    double Bnl[3][24];
+#ifdef HAVE_PETSC
+    PetscScalar v[576];
+#else
+    double v[576];
+#endif
 
     if(matl->getIsRigid()){
       for(ParticleSubset::iterator iter = pset->begin();
@@ -202,21 +220,22 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
         IntVector ni[8];
         Vector d_S[8];
 
         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        vector<int> dof(0);
+        int dof[24];
         int l2g_node_num;
         for(int k = 0; k < 8; k++) {
           // Need to loop over the neighboring patches l2g to get the right
           // dof number.
           l2g_node_num = l2g[ni[k]];
-          dof.push_back(l2g_node_num);
-          dof.push_back(l2g_node_num+1);
-          dof.push_back(l2g_node_num+2);
+          dof[3*k]  =l2g_node_num;
+          dof[3*k+1]=l2g_node_num+1;
+          dof[3*k+2]=l2g_node_num+2;
 
           const Vector& disp = dispNew[ni[k]];
 	
@@ -226,36 +245,36 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
             }
           }
 
-          B(0,3*k) = d_S[k][0]*oodx[0];
-          B(3,3*k) = d_S[k][1]*oodx[1];
-          B(5,3*k) = d_S[k][2]*oodx[2];
-          B(1,3*k) = 0.;
-          B(2,3*k) = 0.;
-          B(4,3*k) = 0.;
+          B[0][3*k] = d_S[k][0]*oodx[0];
+          B[3][3*k] = d_S[k][1]*oodx[1];
+          B[5][3*k] = d_S[k][2]*oodx[2];
+          B[1][3*k] = 0.;
+          B[2][3*k] = 0.;
+          B[4][3*k] = 0.;
 
-          B(1,3*k+1) = d_S[k][1]*oodx[1];
-          B(3,3*k+1) = d_S[k][0]*oodx[0];
-          B(4,3*k+1) = d_S[k][2]*oodx[2];
-          B(0,3*k+1) = 0.;
-          B(2,3*k+1) = 0.;
-          B(5,3*k+1) = 0.;
+          B[1][3*k+1] = d_S[k][1]*oodx[1];
+          B[3][3*k+1] = d_S[k][0]*oodx[0];
+          B[4][3*k+1] = d_S[k][2]*oodx[2];
+          B[0][3*k+1] = 0.;
+          B[2][3*k+1] = 0.;
+          B[5][3*k+1] = 0.;
 
-          B(2,3*k+2) = d_S[k][2]*oodx[2];
-          B(4,3*k+2) = d_S[k][1]*oodx[1];
-          B(5,3*k+2) = d_S[k][0]*oodx[0];
-          B(0,3*k+2) = 0.;
-          B(1,3*k+2) = 0.;
-          B(3,3*k+2) = 0.;
+          B[2][3*k+2] = d_S[k][2]*oodx[2];
+          B[4][3*k+2] = d_S[k][1]*oodx[1];
+          B[5][3*k+2] = d_S[k][0]*oodx[0];
+          B[0][3*k+2] = 0.;
+          B[1][3*k+2] = 0.;
+          B[3][3*k+2] = 0.;
 
-          Bnl(0,3*k) = d_S[k][0]*oodx[0];
-          Bnl(1,3*k) = 0.;
-          Bnl(2,3*k) = 0.;
-          Bnl(0,3*k+1) = 0.;
-          Bnl(1,3*k+1) = d_S[k][1]*oodx[1];
-          Bnl(2,3*k+1) = 0.;
-          Bnl(0,3*k+2) = 0.;
-          Bnl(1,3*k+2) = 0.;
-          Bnl(2,3*k+2) = d_S[k][2]*oodx[2];
+          Bnl[0][3*k] = d_S[k][0]*oodx[0];
+          Bnl[1][3*k] = 0.;
+          Bnl[2][3*k] = 0.;
+          Bnl[0][3*k+1] = 0.;
+          Bnl[1][3*k+1] = d_S[k][1]*oodx[1];
+          Bnl[2][3*k+1] = 0.;
+          Bnl[0][3*k+2] = 0.;
+          Bnl[1][3*k+2] = 0.;
+          Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
         }
       
         // Calculate the strain (here called D), and deviatoric rate DPrime
@@ -285,46 +304,79 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         double C12 = E*PR/((1.+PR)*(1.-2.*PR));
         double C44 = G;
 
-        FastMatrix D(6,6);
+        double D[6][6];
       
-        D(0,0) = C11;
-        D(0,1) = C12;
-        D(0,2) = C12;
-        D(0,3) = 0.;
-        D(0,4) = 0.;
-        D(0,5) = 0.;
-        D(1,1) = C11;
-        D(1,2) = C12;
-        D(1,3) = 0.;
-        D(1,4) = 0.;
-        D(1,5) = 0.;
-        D(2,2) = C11;
-        D(2,3) = 0.;
-        D(2,4) = 0.;
-        D(2,5) = 0.;
-        D(3,3) = C44;
-        D(3,4) = 0.;
-        D(3,5) = 0.;
-        D(4,4) = C44;
-        D(4,5) = 0.;
-        D(5,5) = C44;
+        D[0][0] = C11;
+        D[0][1] = C12;
+        D[0][2] = C12;
+        D[0][3] = 0.;
+        D[0][4] = 0.;
+        D[0][5] = 0.;
+        D[1][1] = C11;
+        D[1][2] = C12;
+        D[1][3] = 0.;
+        D[1][4] = 0.;
+        D[1][5] = 0.;
+        D[2][2] = C11;
+        D[2][3] = 0.;
+        D[2][4] = 0.;
+        D[2][5] = 0.;
+        D[3][3] = C44;
+        D[3][4] = 0.;
+        D[3][5] = 0.;
+        D[4][4] = C44;
+        D[4][5] = 0.;
+        D[5][5] = C44;
       
-        D(1,0)=D(0,1);
-        D(2,0)=D(0,2);
-        D(2,1)=D(1,2);
-        D(3,0)=D(0,3);
-        D(3,1)=D(1,3);
-        D(3,2)=D(2,3);
-        D(4,0)=D(0,4);
-        D(4,1)=D(1,4);
-        D(4,2)=D(2,4);
-        D(4,3)=D(3,4);
-        D(5,0)=D(0,5);
-        D(5,1)=D(1,5);
-        D(5,2)=D(2,5);
-        D(5,3)=D(3,5);
-        D(5,4)=D(4,5);
+        D[1][0]=D[0][1];
+        D[2][0]=D[0][2];
+        D[2][1]=D[1][2];
+        D[3][0]=D[0][3];
+        D[3][1]=D[1][3];
+        D[3][2]=D[2][3];
+        D[4][0]=D[0][4];
+        D[4][1]=D[1][4];
+        D[4][2]=D[2][4];
+        D[4][3]=D[3][4];
+        D[5][0]=D[0][5];
+        D[5][1]=D[1][5];
+        D[5][2]=D[2][5];
+        D[5][3]=D[3][5];
+        D[5][4]=D[4][5];
       
+        // kmat = B.transpose()*D*B*volold
+        double kmat[24][24];
+        BtDB(B,D,kmat);
+        // kgeo = Bnl.transpose*sig*Bnl*volnew;
+        double sig[3][3];
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            sig[i][j]=pstress[idx](i,j);
+          }
+        }
+        double kgeo[24][24];
+        BnltDBnl(Bnl,sig,kgeo);
+
+        double volold = pvolumeold[idx];
+        double volnew = pvolumeold[idx]*J;
+
+        pvolume_deformed[idx] = volnew;
+
+        for(int ii = 0;ii<24;ii++){
+          for(int jj = 0;jj<24;jj++){
+            kmat[ii][jj]*=volold;
+            kgeo[ii][jj]*=volnew;
+          }
+        }
+
+	for (int I = 0; I < 24;I++){
+	  for (int J = 0; J < 24; J++){
+	    v[24*I+J] = kmat[I][J] + kgeo[I][J];
+	  }
+	}
+        solver->fillMatrix(24,dof,24,dof,v);
+
+	/*
         FastMatrix sig(3,3);
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
@@ -359,6 +411,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 	    solver->fillMatrix(dofi,dofj,v);
 	  }
 	}
+	*/
      }
     }
   }
@@ -496,8 +549,8 @@ void HypoElasticImplicit::addInitialComputesAndRequires(Task*,
 
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
 						 const MPMMaterial* matl,
-						 const PatchSet* patches,
-						 const bool recursion) const
+						 const PatchSet* ,
+						 const bool ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -510,6 +563,7 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
   task->computes(lb->pVolumeDeformedLabel, matlset);
+
 }
 
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
