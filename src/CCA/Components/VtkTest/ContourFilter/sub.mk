@@ -27,19 +27,10 @@ PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 LIBS := $(QT_LIBRARY)
 
-Vtk_LIBRARY:= -L/home/kzhang/download/VTK/bin \
+Vtk_LIBRARY:=  \
 	 -lvtkFiltering -lvtkGraphics -lvtkImaging -lvtkCommon -lvtkRendering -lvtkIO
 
 LIBS += $(Vtk_LIBRARY)
-
-INCLUDES+=\
-	 -I/home/kzhang/download/VTK \
-	 -I/home/kzhang/download/VTK/Imaging\
-	 -I/home/kzhang/download/VTK/Graphics \
-	 -I/home/kzhang/download/VTK/Rendering \
-	 -I/home/kzhang/download/VTK/Filtering \
-	 -I/home/kzhang/download/VTK/Common \
-	 -I/home/kzhang/download/VTK/IO 
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

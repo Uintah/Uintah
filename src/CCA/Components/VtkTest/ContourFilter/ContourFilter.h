@@ -66,8 +66,6 @@ namespace SCIRun {
   public:
     ContourFilter();
     virtual ~ContourFilter();
-    bool haveUI();
-    int popupUI();
   private:
     vtkContourFilter *filter;
 

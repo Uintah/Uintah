@@ -85,17 +85,21 @@ Renderer::Renderer(){
   renWin=vtkRenderWindow::New();
   iren=vtkRenderWindowInteractor::New();
 
-  ren1->GetActiveCamera()->Azimuth(20);
+  //  ren1->GetActiveCamera()->Azimuth(20);
   
-  ren1->GetActiveCamera()->Elevation(30);
+  //ren1->GetActiveCamera()->Elevation(30);
 
   ren1->SetBackground(0.1,0.2,0.4);
   
-  renWin->SetSize( 500, 500);
-
-  ren1->GetActiveCamera()->Zoom(1.4);
+  //ren1->GetActiveCamera()->Zoom(1.4);
 
   ren1->ResetCameraClippingRange();
+
+  renWin->SetSize( 500, 500);
+
+  renWin->AddRenderer(ren1);
+
+  iren->SetRenderWindow(renWin);
 }
 
 Renderer::~Renderer(){
