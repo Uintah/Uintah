@@ -43,9 +43,10 @@ WARNING
     virtual ~BoundCondBase() {};
     virtual BoundCondBase* clone() = 0;
     string getType() const { return d_type;};
+    virtual string getKind() const = 0;
     
   protected:
-    string d_type;
+    string d_type,d_kind;
     
   };
 } // End namespace Uintah

@@ -48,7 +48,7 @@ WARNING
      };
    virtual ~BoundCond() {};
    virtual BoundCond* clone() = 0;
-   string getKind() const 
+   virtual string getKind() const 
      {
        // Tells whether it is Dirichlet or Neumann
        return d_kind;
@@ -56,7 +56,6 @@ WARNING
    T getValue() const { return d_value;}; 
    
  protected:
-   std::string d_kind;
    T d_value;
    
  };
