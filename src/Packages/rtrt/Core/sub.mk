@@ -89,6 +89,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Wood.cc \
 	$(SRCDIR)/HTVolumeBrick.cc  \
 	$(SRCDIR)/Disc.cc \
+	$(SRCDIR)/Ring.cc \
 	$(SRCDIR)/imageutils.c \
 	$(SRCDIR)/input_ppm.c \
 	$(SRCDIR)/write_ppm.c \
