@@ -53,7 +53,7 @@ void MetalMaterial::shade(Color& result, const Ray& ray,
 	normal=-normal;
     }
 
-    double ray_objnormal_dot(Dot(ray.direction(),normal));
+//    double ray_objnormal_dot(Dot(ray.direction(),normal));
     int ngloblights=cx->scene->nlights();
     int nloclights=my_lights.size();
     int nlights=ngloblights+nloclights;
