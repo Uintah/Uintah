@@ -1516,7 +1516,7 @@ e.out << leader2 << "::std::cout << \"CALLNORET sending _sessionID = '\" << _ses
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLONLY:\n";
     e.out << leader2 << "_flag = ::SCIRun::CALLONLY;\n";
-    e.out << leader2 << "message->marshalInt((int*)i&_flag);\n";
+    e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
 e.out << leader2 << "::std::cout << \"CALLONLY sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
