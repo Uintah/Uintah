@@ -12,7 +12,7 @@
 using namespace Uintah;
 
 #define FRACTURE
-//#undef FRACTURE
+#undef FRACTURE
 
 STThermalContact::STThermalContact(ProblemSpecP&,SimulationStateP& d_sS,
 								 MPMLabel* Mlb)

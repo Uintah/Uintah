@@ -35,7 +35,7 @@ using namespace SCIRun;
 using std::vector;
 
 #define FRACTURE
-//#undef FRACTURE
+#undef FRACTURE
 
 SingleVelContact::SingleVelContact(ProblemSpecP& ps, 
 				    SimulationStateP& d_sS, MPMLabel* Mlb)

@@ -33,7 +33,7 @@ using namespace std;
 #define MAX_BASIS 27
 
 #define FRACTURE
-//#undef FRACTURE
+#undef FRACTURE
 
 FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
                                  MPMLabel* Mlb,int n8or27)

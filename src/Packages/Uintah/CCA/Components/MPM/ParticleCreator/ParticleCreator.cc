@@ -27,7 +27,7 @@ using std::cerr;
 using std::ofstream;
 
 #define FRACTURE
-//#undef FRACTURE
+#undef FRACTURE
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMLabel* lb,
