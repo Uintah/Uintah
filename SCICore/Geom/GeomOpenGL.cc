@@ -131,7 +131,15 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	}
     }
     di->set_matl(matl);
+#if (_MIPS_SZPTR == 64)
+    unsigned long o=(unsigned long)this;
+    unsigned int o1=(o>>32)&0xffffffff;
+    unsigned int o2=o&0xffffffff;
+    glPushName(o1);
+    glPushName(o2);
+#else
     glPushName((GLuint)this);
+#endif
     glPushName(0x12345678);
     //if(di->pickchild) cerr << "picking a child " <<(GLuint)this << endl;
     return 1;
@@ -4154,6 +4162,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.16  2000/02/01 05:02:39  sparker
+// Fixed 64 bit compile - untested
+//
 // Revision 1.15  1999/11/12 21:05:23  dav
 // type casted GLenums to be GLenums so that linux compiler would not complain
 //
