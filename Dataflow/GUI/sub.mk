@@ -69,6 +69,7 @@ SRCS := \
 	$(SRCDIR)/GenTransferFunc.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/Isosurface.tcl \
+	$(SRCDIR)/IsoClip.tcl \
 	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LinAlgBinary.tcl \
 	$(SRCDIR)/LinAlgUnary.tcl \
