@@ -41,6 +41,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/QuadSurfMesh.cc               \
 	$(SRCDIR)/QuadraticTetVolMesh.cc        \
+	$(SRCDIR)/QuadraticLatVolMesh.cc        \
 	$(SRCDIR)/ScanlineMesh.cc           	\
 	$(SRCDIR)/SparseRowMatrix.cc	    	\
 	$(SRCDIR)/StructCurveMesh.cc	    	\
