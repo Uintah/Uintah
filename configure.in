@@ -917,9 +917,6 @@ if test -z "$XML_LIB_DIR"; then
   AC_MSG_ERROR(Could not find a Xerces-C library.  exiting.)
 fi
 
-AC_MSG_RESULT($XML_LIB_DIR)
-
-
 if (test $XML_LIB_DIR &&
     test -d "$XML_LIB_DIR/../include/xercesc/util" &&
     test -d "$XML_LIB_DIR/../include/xercesc/sax" &&
@@ -927,7 +924,8 @@ if (test $XML_LIB_DIR &&
     test -d "$XML_LIB_DIR/../include/xercesc/parsers") ; then
   XML_INCLUDE_DIR="$XML_LIB_DIR/../include/xercesc"
 else
-  AC_MSG_ERROR(Couldn't find the Xerces-C headers.  exiting.)
+  AC_MSG_RESULT(no)
+  AC_MSG_ERROR(Found the library, but couldn't find the headers.  exiting.)
 fi
 
 XML_LIB_FLAG="`ls -1 $XML_LIB_DIR/libxerces-c1_?.so |\
@@ -1109,7 +1107,7 @@ elif test -e /usr/local/lib/libGL.so; then
   GL_LIB_DIR="/usr/local/lib"
 fi
 
-AC_MSG_RESULT(-l$GL_LIB_DIR -L$GL_INCLUDE_FLAG)
+AC_MSG_RESULT(-L$GL_LIB_DIR -lGL)
 
 AC_SUBST(GL_INCLUDE_FLAG)
 AC_SUBST(GL_LIB_DIR)
@@ -1151,6 +1149,119 @@ AC_SUBST(PETSC_DIR)
 AC_SUBST(PETSC_SUB)
 AC_SUBST(PETSC_ARCH)
 
+##-- Check for BLAS ------------------------------------------------
+
+AC_ARG_WITH(blas,
+        [  --with-blas=<path-to-blas>  <path-to-blas>],
+        [blas="$withval"],
+	[blas=""])
+
+AC_MSG_CHECKING(for BLAS)
+
+BLAS_LIB_DIR=""
+
+if test "$blas"; then
+  if test -e "$blas/lib/libblas.a" ||
+     test -e "$blas/lib/libblas.so"; then
+    BLAS_LIB_DIR="$blas/lib"
+  fi
+fi
+
+# if not found try the default
+if test -z "$BLAS_LIB_DIR"; then
+  if test -e "$thirdparty/lib/libblas.a" ||
+     test -e "$thirdparty/lib/libblas.so"; then
+    BLAS_LIB_DIR="$thirdparty/lib"
+  fi
+fi
+
+# if still not found, try some standard locations
+if test -z "$BLAS_LIB_DIR"; then
+  if test -e "/usr/lib/libblas.a" ||
+     test -e "/usr/lib/libblas.so"; then
+    BLAS_LIB_DIR="/usr/lib"
+  elif test -e "/lib/libblas.a" ||
+       test -e "/lib/libblas.so"; then
+    BLAS_LIB_DIR="/lib"
+  fi
+fi
+
+if test "$blas" &&
+   test -z "BLAS_LIB_DIR"; then
+  AC_MSG_RESULT(no)
+  AC_MSG_WARN(BLAS library not found)
+  AC_MSG_ERROR(Stopping.)
+fi
+
+if test "$BLAS_LIB_DIR"; then
+  BLAS_DEF="#define BLAS_ENABLED 1"
+  BLAS_LIBS="-lblas"
+  AC_MSG_RESULT(-L$BLAS_LIB_DIR $BLAS_LIBS)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_SUBST(BLAS_LIB_DIR)
+AC_SUBST(BLAS_DEF)
+AC_SUBST(BLAS_LIBS)
+  
+
+##-- Check for LAPACK ----------------------------------------------
+
+AC_ARG_WITH(lapack,
+        [  --with-lapack=<path-to-lapack>  <path-to-lapack>],
+        [lapack="$withval"],
+	[lapack=""])
+
+AC_MSG_CHECKING(for LAPACK)
+
+LAPACK_LIB_DIR=""
+
+if test "$lapack"; then
+  if test -e "$lapack/lib/liblapack.a" ||
+     test -e "$lapack/lib/liblapack.so"; then
+    LAPACK_LIB_DIR="$lapack/lib"
+  fi
+fi
+
+# if not found try the default
+if test -z "$LAPACK_LIB_DIR"; then
+  if test -e "$thirdparty/lib/liblapack.a" ||
+     test -e "$thirdparty/lib/liblapack.so"; then
+    LAPACK_LIB_DIR="$thirdparty/lib"
+  fi
+fi
+
+# if still not found, try some standard locations
+if test -z "$LAPACK_LIB_DIR"; then
+  if test -e "/usr/lib/liblapack.a" ||
+     test -e "/usr/lib/liblapack.so"; then
+    LAPACK_LIB_DIR="/usr/lib"
+  elif test -e "/lib/liblapack.a" ||
+       test -e "/lib/liblapack.so"; then
+    LAPACK_LIB_DIR="/lib"
+  fi
+fi
+
+if test "$lapack" &&
+   test -z "LAPACK_LIB_DIR"; then
+  AC_MSG_RESULT(no)
+  AC_MSG_WARN(LAPACK library not found)
+  AC_MSG_ERROR(Stopping.)
+fi
+
+if test "$LAPACK_LIB_DIR"; then
+  LAPACK_DEF="#define LAPACK_ENABLED 1"
+  LAPACK_LIBS="-llapack"
+  AC_MSG_RESULT(-L$LAPACK_LIB_DIR $LAPACK_LIBS)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_SUBST(LAPACK_LIB_DIR)
+AC_SUBST(LAPACK_DEF)
+AC_SUBST(LAPACK_LIBS)
+
 ##-- Check for a uni-PETSc -----------------------------------------
 
 AC_ARG_WITH(unipetsc,
@@ -1176,11 +1287,11 @@ fi
 # try the user supplied path first
 if test "$unipetsc"; then
   if test -e "$unipetsc/lib/$PETSC_SUB/$PETSC_ARCH/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR="-L$unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+    UNI_PETSC_LIB_DIR="$unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
     UNI_PETSC_INC_DIR="$unipetsc/include"
     UNI_PETSC_INC="-I$unipetsc/bmake/linux -I$unipetsc/include"
   elif test -e "$unipetsc/lib/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR="-L$unipetsc/lib"
+    UNI_PETSC_LIB_DIR="$unipetsc/lib"
     UNI_PETSC_INC_DIR="$unipetsc/include"
     UNI_PETSC_INC="-I$unipetsc/include"
   fi
@@ -1189,11 +1300,11 @@ fi
 # if not found try the default
 if test -z "$UNI_PETSC_LIB_DIR" ; then
   if test -e "$thirdparty/$PETSC_SUB/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR=-L$thirdparty/$PETSC_SUB
+    UNI_PETSC_LIB_DIR=$thirdparty/$PETSC_SUB
     UNI_PETSC_INC_DIR="$thirdparty/include"
     UNI_PETSC_INC="-I$thirdparty/include"
   elif test -e "$thirdparty/lib/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR=-L$thirdparty/lib
+    UNI_PETSC_LIB_DIR=$thirdparty/lib
     UNI_PETSC_INC_DIR="$thirdparty/include"
     UNI_PETSC_INC="-I$thirdparty/include"
   fi
@@ -1202,23 +1313,48 @@ fi
 # if still not found try a standard location
 if test -z "$UNI_PETSC_LIB_DIR" ; then
   if test -e /usr/lib/libpetsc.so; then
-    UNI_PETSC_LIB_DIR=-L/usr/lib
+    UNI_PETSC_LIB_DIR=/usr/lib
     UNI_PETSC_INC_DIR=/usr/include
     UNI_PETSC_INC=-I/usr/include
   fi
 fi
 
+case $host in
+  *-linux-gnu) 
+    FORTRAN=-lg2c 
+    ;;
+  *)
+    FORTRAN=-lF77
+    ;;
+esac
+
 if test "$unipetsc" &&
-   test "$UNI_PETSC_LIB_DIR" == ""; then
+   test -z "$UNI_PETSC_LIB_DIR"; then
   AC_MSG_RESULT(no)
   AC_MSG_WARN(uni-PETSc libraries not found)
   AC_MSG_ERROR(Stopping.)
 fi
 
-if test "$UNI_PETSC_LIB_DIR"; then
+if test "$UNI_PETSC_LIB_DIR" &&
+   test "$BLAS_LIB_DIR" &&
+   test "$LAPACK_LIB_DIR"; then
   UNI_PETSC_DEF="#define UNI_PETSC"
   UNI_PETSC_LIBS="-lpetsc -lpetscsles -lpetscmat -lpetscvec \
-                   -lpetscdm -lpetsccontrib -llapack -lblas -lg2c -lmpiuni"
+-lpetscdm -lpetsccontrib -lmpiuni \
+-L$LAPACK_LIB_DIR $LAPACK_LIBS -L$BLAS_LIB_DIR $BLAS_LIBS \
+$FORTRAN "
+elif test "$UNI_PETSC_LIB_DIR"; then
+  if (test -e "$UNI_PETSC_LIB_DIR/libblas.a" ||
+      test -e "$UNI_PETSC_LIB_DIR/libblas.so") &&
+     (test -e "$UNI_PETSC_LIB_DIR/liblapack.a" ||
+      test -e "$UNI_PETSC_LIB_DIR/liblapack.so"); then
+  UNI_PETSC_DEF="#define UNI_PETSC"
+  UNI_PETSC_LIBS="-lpetsc -lpetscsles -lpetscmat -lpetscvec \
+-lpetscdm -lpetsccontrib -lmpiuni \
+-llapack -lblas $FORTRAN "
+  fi
+else
+  UNI_PETSC_LIB_DIR=""
 fi
 
 if test "$UNI_PETSC_LIB_DIR"; then
