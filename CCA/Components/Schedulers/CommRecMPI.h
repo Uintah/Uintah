@@ -157,7 +157,7 @@ donesome( const ProcessorGroup * pg, int donecount, list<int>* finishedGroups )
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();
-	mixedDebug << "Actually received " << idx << endl;
+	mixedDebug << "Actually received " << idx << "\n";
 	cerrLock.unlock();
       }
       handlers[idx]->finishedCommunication(pg);
