@@ -679,12 +679,8 @@ GeomDL::~GeomDL()
   {
     glDeleteLists(display_list_, 1);
   }
-
-  if (child)
-  {
-    delete child;
-  }
 }
+
 
 void GeomDL::reset_bbox()
 {
