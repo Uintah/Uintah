@@ -515,3 +515,78 @@ VTKtoTriSurfField_plugin("VTKtoTriSurfField",
 			     ".vtk", "",
 			     VTKtoTriSurfField_reader,
 			     NULL);
+			     
+// Conversion of a tetrahedra FE mesh in VGRID *.gmv format into SCIRun *.pts/*.tet format
+static FieldHandle
+VgridTetGmv_reader(ProgressReporter *pr, const char *filename)
+{
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
+  const string command =
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvTopts -t %f %t1 && " +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
+    "TextToTetVolField %t1.pts %t1.tet %t -binOutput";
+  return Exec_reader(pr, filename, command);
+}
+
+static FieldIEPlugin
+VgridTetGmv_plugin("VgridTetGmv",
+		       "{.gmv}", "",
+		       VgridTetGmv_reader,
+		       NULL);
+
+static FieldHandle
+// Conversion of a hexahedra FE mesh in VGRID *.gmv format into SCIRun *.pts/*.hex format
+VgridHexGmv_reader(ProgressReporter *pr, const char *filename)
+{
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
+  const string command =
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvTopts -h %f %t1 && " +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
+    "TextToHexVolField %t1.pts %t1.hex %t -binOutput";
+  return Exec_reader(pr, filename, command);
+}
+
+static FieldIEPlugin
+VgridHexGmv_plugin("VgridHexGmv",
+		       "{.gmv}", "",
+		       VgridHexGmv_reader,
+		       NULL);
+
+// Conversion of an tetrahedra FE-mesh in NeuroFEM/CAUCHY/CURRY-geo format into SCIRun *.pts/*.tet format
+static FieldHandle
+NeuroFEMTetGeo_reader(ProgressReporter *pr, const char *filename)
+{
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
+  const string command =
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoTopts -t %f %t1 && " +
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
+   "TextToTetVolField %t1.pts %t1.tet %t -binOutput";
+  return Exec_reader(pr, filename, command);
+}
+
+static FieldIEPlugin
+NeuroFEMTetGeo_plugin("NeuroFEMTetGeo",
+		       "{.geo}", "",
+		       NeuroFEMTetGeo_reader,
+		       NULL);
+
+//  Conversion of a hexahedra FE-mesh in NeuroFEM/CAUCHY/CURRY-geo format into SCIRun *.pts/*.hex format
+static FieldHandle
+NeuroFEMHexGeo_reader(ProgressReporter *pr, const char *filename)
+{
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
+  const string command =
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoTopts -h %f %t1 && " +
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
+   "TextToHexVolField %t1.pts %t1.hex %t -binOutput";
+  return Exec_reader(pr, filename, command);
+}
+
+static FieldIEPlugin
+NeuroFEMHexGeo_plugin("NeuroFEMHexGeo",
+		       "{.geo}", "",
+		       NeuroFEMHexGeo_reader,
+		       NULL);
+
+/*****************************************************************/
+
