@@ -143,7 +143,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     top = group;
   }
   
-  double bgscale=0.3;
   Color groundcolor(0,0,0);
   Color averagelight(1,1,1);
   double ambient_scale=.5;
