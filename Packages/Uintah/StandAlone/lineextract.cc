@@ -56,25 +56,30 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -h,--help\n";
     cerr << "  -v,--variable <variable name>\n";
     cerr << "  -m,--material <material number> [defaults to 0]\n";
-    //    cerr << "  -binary (prints out the data in binary)\n";
     cerr << "  -tlow,--timesteplow [int] (sets start output timestep to int) [defaults to 0]\n";
     cerr << "  -thigh,--timestephigh [int] (sets end output timestep to int) [defaults to last timestep]\n";
     cerr << "  -timestep,--timestep [int] (only outputs from timestep int) [defaults to 0]\n";
     cerr << "  -istart,--indexs <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
     cerr << "  -iend,--indexe <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
-    cerr << "  -o,--out <outputfilename> [defaults to stdout]\n";
+    cerr << "  -o,--out <outputfilename> [defaults to stdout]\n"; 
     cerr << "  -vv,--verbose (prints status of output)\n";
     cerr << "  -q,--quiet (only print data values)\n";
+    cerr << "  --cellIndexFile <filename> (file that contains a list of cell indices)\n";
+    cerr << "                                   [int 100, 43, 0]\n";
+    cerr << "                                   [int 101, 43, 0]\n";
+    cerr << "                                   [int 102, 44, 0]\n";
     exit(1);
 }
 
 // arguments are the dataarchive, the successive arguments are the same as 
 // the arguments to archive->query for data values.  Then comes a type 
 // dexcription of the variable being queried, and last is an output stream.
-
+//______________________________________________________________________
+//
 template<class T>
 void printData(DataArchive* archive, string& variable_name,
-	       int material, IntVector& var_start, IntVector& var_end,
+	       int material, const bool use_cellIndex_file,
+               IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
                unsigned long time_start, unsigned long time_end, ostream& out) 
 
 {
@@ -84,29 +89,31 @@ void printData(DataArchive* archive, string& variable_name,
 
   archive->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
-  if (!quiet) cout << "There are " << index.size() << " timesteps\n";
-      
-
-  //------------------------------
-  // figure out the lower and upper bounds on the timesteps
-  if (time_start >= times.size()) {
-    cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-    exit(1);
+  if (!quiet){
+    cout << "There are " << index.size() << " timesteps\n";
   }
-
+  
   // set default max time value
   if (time_end == (unsigned long)-1) {
-    if (verbose)
+    if (verbose) {
       cout <<"Initializing time_step_upper to "<<times.size()-1<<"\n";
+    }
     time_end = times.size() - 1;
-  }
+  }      
 
+  //__________________________________
+  // bullet proofing 
   if (time_end >= times.size() || time_end < time_start) {
     cerr << "timestephigh("<<time_end<<") must be greater than " << time_start 
 	 << " and less than " << times.size()-1 << endl;
     exit(1);
   }
+  if (time_start >= times.size() || time_end > times.size()) {
+    cerr << "timestep must be between 0 and " << times.size()-1 << endl;
+    exit(1);
+  }
   
+  //__________________________________
   // make sure the user knows it could be really slow if he
   // tries to output a big range of data...
   IntVector var_range = var_end - var_start;
@@ -119,17 +126,12 @@ void printData(DataArchive* archive, string& variable_name,
     cerr << "PERFORMANCE WARNING: Outputting over 2 dimensions\n";
   }
 
-  //------------------------------
-  // figure out the lower and upper bounds on the timesteps
-  if (time_start >= times.size() || time_end > times.size()) {
-    cerr << "timestep must be between 0 and " << times.size()-1 << endl;
-    exit(1);
-  }
-
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
   out.precision(8);
   
+  //__________________________________
+  // loop over timesteps
   for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
   
     cerr << "%outputting for times["<<time_step<<"] = " << times[time_step]<< endl;
@@ -137,46 +139,100 @@ void printData(DataArchive* archive, string& variable_name,
     // for each type available, we need to query the values for the time range, 
     // variable name, and material
     
-    for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
-      vector<T> values;
-      try {
-        archive->query(values, variable_name, material, *ci, times[time_step], times[time_step]);
-      } catch (const VariableNotFoundInGrid& exception) {
-        cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-        exit(1);
+    //__________________________________
+    // User input starting and ending indicies    
+    if(!use_cellIndex_file) {
+      for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
+        vector<T> values;
+        try {
+          archive->query(values, variable_name, material, *ci, 
+                          times[time_step], times[time_step]);
+        } catch (const VariableNotFoundInGrid& exception) {
+          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+          exit(1);
+        }
+        IntVector c = *ci;
+        out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
       }
-      IntVector c = *ci;
-      out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
+    }
+    
+    //__________________________________
+    // If the cell indicies were read from a file. 
+    if(use_cellIndex_file) {
+      for (int i = 0; i<(int) cells.size(); i++) {
+        IntVector c = cells[i];
+        vector<T> values;
+        try {
+          archive->query(values, variable_name, material, c, 
+                          times[time_step], times[time_step]);
+        } catch (const VariableNotFoundInGrid& exception) {
+          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+          exit(1);
+        }
+        out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
+      }
     }
     out << endl;
   }
 } 
+/*_______________________________________________________________________
+ Function:  readCellIndicies--
+ Purpose: reads in a list of cell indicies
+_______________________________________________________________________ */
+void readCellIndicies(const string& filename, vector<IntVector>& cells)
+{ 
+  // open the file
+  ifstream fp(filename.c_str());
+  if (!fp){
+    cerr << "Couldn't open the file that contains the cell indicies " << filename<< endl;
+  }
+  char c;
+  int i,j,k;
+  string text, comma;  
+  
+  while (fp >> c) {
+    fp >> text>>i >> comma >> j >> comma >> k;
+    IntVector indx(i,j,k);
+    cells.push_back(indx);
+    fp.get(c);
+  }
+  for (int i = 0; i<(int) cells.size(); i++) {
+    cout << cells[i] << endl;
+  }
+}
+
+//______________________________________________________________________
+//    Notes:
+// Now the material index is kind of a hard thing.  There is no way
+// to reliably determine a default material.  Materials are defined
+// on the patch for each varialbe, so this subset of materials could
+// change over patches.  We can guess, that there will be a material
+// 0.  This shouldn't cause the program to crash.  It will spit out
+// an exception and exit gracefully.
+
 
 int main(int argc, char** argv)
 {
-  /*
-   * Default values
-   */
-  bool do_binary=false;
+
+  //__________________________________
+  //  Default Values
+  bool use_cellIndex_file = false;
 
   unsigned long time_start = 0;
   unsigned long time_end = (unsigned long)-1;
-  string input_uda_name;
+  string input_uda_name;  
+  string input_file_cellIndices;
   string output_file_name("-");
   IntVector var_start(0,0,0);
   IntVector var_end(0,0,0);
+  vector<IntVector> cells;
   string variable_name;
-  // Now the material index is kind of a hard thing.  There is no way
-  // to reliably determine a default material.  Materials are defined
-  // on the patch for each varialbe, so this subset of materials could
-  // change over patches.  We can guess, that there will be a material
-  // 0.  This shouldn't cause the program to crash.  It will spit out
-  // an exception and exit gracefully.
+
   int material = 0;
   
-  /*
-   * Parse arguments
-   */
+  //__________________________________
+  // Parse arguments
+
   for(int i=1;i<argc;i++){
     string s=argv[i];
     if(s == "-v" || s == "--variable") {
@@ -206,14 +262,14 @@ int main(int argc, char** argv)
       int z = atoi(argv[++i]);
       var_end = IntVector(x,y,z);
     } else if( (s == "-h") || (s == "--help") ) {
-    } else if( (s == "-h") || (s == "--help") ) {
       usage( "", argv[0] );
     } else if (s == "-uda") {
       input_uda_name = string(argv[++i]);
     } else if (s == "-o" || s == "--out") {
       output_file_name = string(argv[++i]);
-    } else if(s == "-binary") {
-      do_binary=true;
+    } else if (s == "--cellIndexFile") {
+      use_cellIndex_file = true;
+      input_file_cellIndices = string(argv[++i]);
     } else {
       usage(s, argv[0]);
     }
@@ -241,7 +297,8 @@ int main(int argc, char** argv)
 	break;
       }
     }
-    
+    //__________________________________
+    // bulletproofing
     if (!var_found) {
       cerr << "Variable \"" << variable_name << "\" was not found.\n";
       cerr << "If a variable name was not specified try -var [name].\n";
@@ -252,15 +309,19 @@ int main(int argc, char** argv)
       }
       cerr << "Aborting!!\n";
       exit(-1);
-      //      var = vars[0];
     }
 
-    if (!quiet) cout << vars[var_index] << ": " << types[var_index]->getName() << " being extracted for material "<<material<<" at index "<<var_start << " to " << var_end <<endl;
-
+    if (!quiet) {
+      cout << vars[var_index] << ": " << types[var_index]->getName() 
+           << " being extracted for material "<<material
+           <<" at index "<<var_start << " to " << var_end <<endl;
+    }
+    //__________________________________
     // get type and subtype of data
     const Uintah::TypeDescription* td = types[var_index];
     const Uintah::TypeDescription* subtype = td->getSubType();
-
+     
+    //__________________________________
     // Open output file, call printData with it's ofstream
     // if no output file, call with cout
     ostream *output_stream = &cout;
@@ -268,8 +329,8 @@ int main(int argc, char** argv)
       if (verbose) cout << "Opening \""<<output_file_name<<"\" for writing.\n";
       ofstream *output = new ofstream();
       output->open(output_file_name.c_str());
-      if (!(*output)) {
-	// Error!!
+      
+      if (!(*output)) {   // bullet proofing
 	cerr << "Could not open "<<output_file_name<<" for writing.\n";
 	exit(1);
       }
@@ -277,42 +338,53 @@ int main(int argc, char** argv)
     } else {
       //output_stream = cout;
     }
-  //__________________________________
-  //  print data
-  switch (subtype->getType()) {
-  case Uintah::TypeDescription::double_type:
-    printData<double>(archive, variable_name, material, var_start, var_end,
-		      time_start, time_end, *output_stream);
-    break;
-  case Uintah::TypeDescription::float_type:
-    printData<float>(archive, variable_name, material, var_start, var_end,
-		      time_start, time_end, *output_stream);
-    break;
-  case Uintah::TypeDescription::int_type:
-    printData<int>(archive, variable_name, material, var_start, var_end,
-		   time_start, time_end, *output_stream);
-    break;
-  case Uintah::TypeDescription::Vector:
-    printData<Vector>(archive, variable_name, material, var_start, var_end,
-		   time_start, time_end, *output_stream);    
-    break;
-  case Uintah::TypeDescription::Matrix3:
-  case Uintah::TypeDescription::bool_type:
-  case Uintah::TypeDescription::short_int_type:
-  case Uintah::TypeDescription::long_type:
-  case Uintah::TypeDescription::long64_type:
-    cerr << "Subtype is not implemented\n";
-    exit(1);
-    break;
-  default:
-    cerr << "Unknown subtype\n";
-    exit(1);
-  }
+    
+    //__________________________________    
+    // read in cell indices from a file
+    if ( use_cellIndex_file) {
+      readCellIndicies(input_file_cellIndices, cells);
+    }
+    
+    //__________________________________
+    //  print data
+    switch (subtype->getType()) {
+    case Uintah::TypeDescription::double_type:
+      printData<double>(archive, variable_name, material, use_cellIndex_file,
+                        var_start, var_end, cells,
+		        time_start, time_end, *output_stream);
+      break;
+    case Uintah::TypeDescription::float_type:
+      printData<float>(archive, variable_name, material, use_cellIndex_file,
+                        var_start, var_end, cells,
+		        time_start, time_end, *output_stream);
+      break;
+    case Uintah::TypeDescription::int_type:
+      printData<int>(archive, variable_name, material, use_cellIndex_file,
+                     var_start, var_end, cells,
+		     time_start, time_end, *output_stream);
+      break;
+    case Uintah::TypeDescription::Vector:
+      printData<Vector>(archive, variable_name, material, use_cellIndex_file,
+                        var_start, var_end, cells,
+		        time_start, time_end, *output_stream);    
+      break;
+    case Uintah::TypeDescription::Matrix3:
+    case Uintah::TypeDescription::bool_type:
+    case Uintah::TypeDescription::short_int_type:
+    case Uintah::TypeDescription::long_type:
+    case Uintah::TypeDescription::long64_type:
+      cerr << "Subtype is not implemented\n";
+      exit(1);
+      break;
+    default:
+      cerr << "Unknown subtype\n";
+      exit(1);
+    }
 
-  // Delete the output file if it was created.
-  if (output_file_name != "-") {
-    delete((ofstream*)output_stream);
-  }
+    // Delete the output file if it was created.
+    if (output_file_name != "-") {
+      delete((ofstream*)output_stream);
+    }
 
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
