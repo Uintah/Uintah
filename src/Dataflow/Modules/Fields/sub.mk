@@ -50,6 +50,8 @@ SRCS     += \
 	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
+	$(SRCDIR)/MapDataToMeshCoord.cc\
+	$(SRCDIR)/MapScalarData.cc\
 	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/SampleField.cc\
 	$(SRCDIR)/SampleLattice.cc\
