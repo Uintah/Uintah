@@ -6,8 +6,6 @@
 using namespace Uintah;
 using std::vector;
 
-#define PETSC_DEBUG
-
 PetscSolver::PetscSolver()
 {
 
@@ -22,6 +20,7 @@ PetscSolver::~PetscSolver()
 
 void PetscSolver::initialize()
 {
+#ifdef HAVE_PETSC
   int argc = 4;
   char** argv;
   argv = new char*[argc];
@@ -31,9 +30,9 @@ void PetscSolver::initialize()
   argv[1] = "-no_signal_handler";
   argv[2] = "-log_exclude_actions";
   argv[3] = "-log_exclude_objects";
-  
+
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
-  
+#endif
 }
 
 void PetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
@@ -71,7 +70,6 @@ void PetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     const Patch* patch=patches->get(p);
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex() + IntVector(1,1,1);
-    cerr << "patch extents = " << lowIndex << " " << highIndex << endl;
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalNodes=0;
@@ -83,7 +81,6 @@ void PetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       
       IntVector plow = neighbor->getNodeLowIndex();
       IntVector phigh = neighbor->getNodeHighIndex();
-      cerr << "neighbor extents = " << plow << " " << phigh << endl;
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
       
@@ -96,19 +93,9 @@ void PetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*3
 	+start.y()*dnodes.x()*2 + start.x();
-#ifdef PETSC_DEBUG
-      cerr << "Looking at patch: " << neighbor->getID() << '\n';
-      cerr << "low=" << low << '\n';
-      cerr << "high=" << high << '\n';
-      cerr << "dnodes=" << dnodes << '\n';
-      cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
-      cerr << "globalIndex = " << petscglobalIndex << '\n';
-#endif
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
 	int idx_slab = petscglobalIndex;
-	cerr << "idx_slab = " << idx_slab << "\n";
 	petscglobalIndex += dnodes.x()*dnodes.y()*3;
-	cerr << "petscglobalIndex = " << petscglobalIndex << "\n";
 	
 	for (int colY = low.y(); colY < high.y(); colY ++) {
 	  int idx = idx_slab;
@@ -123,26 +110,13 @@ void PetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       totalNodes+=d.x()*d.y()*d.z()*3;
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
-#ifdef PETSC_DEBUG
-    {	
-      IntVector l = l2g.getWindow()->getLowIndex();
-      IntVector h = l2g.getWindow()->getHighIndex();
-      for(int z=l.z();z<h.z();z++){
-	for(int y=l.y();y<h.y();y++){
-	  for(int x=l.x();x<h.x();x++){
-	    IntVector idx(x,y,z);
-	    //cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
-	  }
-	}
-      }
-    }
-#endif
   }
 
 }
 
 void PetscSolver::solve()
 {
+#ifdef HAVE_PETSC
   PC          pc;           
   KSP         ksp;
   SLESCreate(PETSC_COMM_WORLD,&sles);
@@ -160,7 +134,7 @@ void PetscSolver::solve()
   SLESSolve(sles,d_B,d_x,&its);
   SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
-
+#endif
 }
 
 void PetscSolver::createMatrix(const ProcessorGroup* d_myworld)
@@ -171,9 +145,6 @@ void PetscSolver::createMatrix(const ProcessorGroup* d_myworld)
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes;
   
-#ifdef PETSC_DEBUG
-  cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
-#endif
 #ifdef HAVE_PETSC
   PetscTruth exists;
   PetscObjectExists((PetscObject)d_A,&exists);
@@ -198,7 +169,7 @@ void PetscSolver::createMatrix(const ProcessorGroup* d_myworld)
 
 void PetscSolver::destroyMatrix(bool recursion)
 {
-
+#ifdef HAVE_PETSC
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
@@ -207,9 +178,7 @@ void PetscSolver::destroyMatrix(bool recursion)
     VecSet(&zero,d_x);
   } else {
     PetscTruth exists;
-    cerr << "Before checking if d_A exists" << endl;
     PetscObjectExists((PetscObject)d_A,&exists);
-    cerr << "After checking if d_A exists" << endl;
     if (exists == PETSC_TRUE) {
       MatDestroy(d_A);
       VecDestroy(d_B);
@@ -217,45 +186,39 @@ void PetscSolver::destroyMatrix(bool recursion)
       VecDestroy(d_x);
     }
   }
-  
-}
-
-void PetscSolver::setRhs()
-{
-
-}
-
-void PetscSolver::zeroColumn(int)
-{
-}
-
-void PetscSolver::zeroRow(int)
-{
+#endif
 }
 
 void PetscSolver::fillMatrix(int i,int j,double value)
 {
+#ifdef HAVE_PETSC
   PetscScalar v = value;
   MatSetValues(d_A,1,&i,1,&j,&v,ADD_VALUES);
- 
+#endif
 }
 
 void PetscSolver::flushMatrix()
 {
+#ifdef HAVE_PETSC
   MatAssemblyBegin(d_A,MAT_FLUSH_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FLUSH_ASSEMBLY);
+#endif
 }
 
 void PetscSolver::fillVector(int i,double v)
 {
+#ifdef HAVE_PETSC
   PetscScalar value = v;
   VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
+#endif
 }
 
 void PetscSolver::assembleVector()
 {
+#ifdef HAVE_PETSC
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
+#endif
 }
 
 void PetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
@@ -265,6 +228,7 @@ void PetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 
 void PetscSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
 {
+#ifdef HAVE_PETSC
   IS is;
   int* indices;
   int in = 0;
@@ -309,33 +273,33 @@ void PetscSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
   MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
-
+#endif
 }
 
 
 
 void PetscSolver::finalizeMatrix()
 {
+#ifdef HAVE_PETSC
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+#endif
 }
 
 int PetscSolver::getSolution(vector<double>& xPetsc)
 {
+#ifdef HAVE_PETSC
   int nlocal,ierr,begin,end;
   double* x;
   VecGetLocalSize(d_x,&nlocal);
   VecGetOwnershipRange(d_x,&begin,&end);
-  cerr << "nlocal = " << nlocal << "range = " << begin << " " << end 
-       << endl;
   ierr = VecGetArray(d_x,&x);
   if (ierr)
     cerr << "VecGetArray failed" << endl;
   for (int ii = 0; ii < nlocal; ii++) {
     xPetsc.push_back(x[ii]);
-    cerr << " x[" << ii << "]=" << x[ii] << endl;
   }
   VecRestoreArray(d_x,&x);
   return begin;
-
+#endif
 }

@@ -8,7 +8,8 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/MPMLabel.cc \
 	$(SRCDIR)/Solver.cc 	\
-	$(SRCDIR)/PetscSolver.cc 
+	$(SRCDIR)/PetscSolver.cc \
+	$(SRCDIR)/SimpleSolver.cc 
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
