@@ -13,6 +13,7 @@
  */
 
 #include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -21,10 +22,10 @@ using namespace SCICore::Datatypes;
 
 extern "C" {
 PSECORESHARE IPort* make_SurfaceIPort(Module* module, const clString& name) {
-  return new SimpleIPort<SurfaceHandle>(module,name);
+  return scinew SimpleIPort<SurfaceHandle>(module,name);
 }
 PSECORESHARE OPort* make_SurfaceOPort(Module* module, const clString& name) {
-  return new SimpleOPort<SurfaceHandle>(module,name);
+  return scinew SimpleOPort<SurfaceHandle>(module,name);
 }
 }
 
@@ -36,6 +37,9 @@ template<> clString SimpleIPort<SurfaceHandle>::port_color("SteelBlue4");
 
 //
 // $Log$
+// Revision 1.6  2000/11/29 09:49:37  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.5  2000/11/22 17:14:42  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).

@@ -13,6 +13,7 @@
  */
 
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -22,11 +23,11 @@ using namespace SCICore::Datatypes;
 extern "C" {
 PSECORESHARE IPort* make_ColumnMatrixIPort(Module* module,
 					   const clString& name) {
-  return new SimpleIPort<ColumnMatrixHandle>(module,name);
+  return scinew SimpleIPort<ColumnMatrixHandle>(module,name);
 }
 PSECORESHARE OPort* make_ColumnMatrixOPort(Module* module,
 					   const clString& name) {
-  return new SimpleOPort<ColumnMatrixHandle>(module,name);
+  return scinew SimpleOPort<ColumnMatrixHandle>(module,name);
 }
 }
 
@@ -38,6 +39,9 @@ template<> clString SimpleIPort<ColumnMatrixHandle>::port_color("dodgerblue4");
 
 //
 // $Log$
+// Revision 1.6  2000/11/29 09:49:35  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.5  2000/11/22 17:14:41  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).

@@ -13,6 +13,7 @@
  */
 
 #include <PSECore/Datatypes/ScaledBoxWidgetDataPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -22,11 +23,11 @@ using namespace SCICore::Datatypes;
 extern "C" {
 PSECORESHARE IPort* make_ScaledBoxWidgetDataIPort(Module* module,
 						  const clString& name) {
-  return new SimpleIPort<ScaledBoxWidgetDataHandle>(module,name);
+  return scinew SimpleIPort<ScaledBoxWidgetDataHandle>(module,name);
 }
 PSECORESHARE OPort* make_ScaledBoxWidgetDataOPort(Module* module,
 						  const clString& name) {
-  return new SimpleOPort<ScaledBoxWidgetDataHandle>(module,name);
+  return scinew SimpleOPort<ScaledBoxWidgetDataHandle>(module,name);
 }
 }
 
@@ -38,6 +39,9 @@ template<> clString SimpleIPort<ScaledBoxWidgetDataHandle>::port_color("black");
 
 //
 // $Log$
+// Revision 1.6  2000/11/29 09:49:37  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.5  2000/11/22 17:14:42  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).

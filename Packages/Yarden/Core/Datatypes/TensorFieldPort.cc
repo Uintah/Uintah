@@ -12,6 +12,7 @@
 
 #include <Yarden/Datatypes/TensorFieldPort.h>
 #include <Yarden/share/share.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
   namespace Datatypes {
@@ -22,11 +23,11 @@ namespace SCICore {
     extern "C" {
       YardenSHARE IPort* make_MatrixIPort(Module* module,
 					   const clString& name) {
-	return new SimpleIPort<MatrixHandle>(module,name);
+	return scinew SimpleIPort<MatrixHandle>(module,name);
       }
       YardenSHARE OPort* make_MatrixOPort(Module* module,
 					   const clString& name) {
-	return new SimpleOPort<MatrixHandle>(module,name);
+	return scinew SimpleOPort<MatrixHandle>(module,name);
       }
     }
 
@@ -37,6 +38,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.3  2000/11/29 09:49:43  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.2  2000/11/22 18:53:46  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the autoport facility).

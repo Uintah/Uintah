@@ -12,6 +12,7 @@
  */
 
 #include <PSECore/Datatypes/CameraViewPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
   namespace Datatypes {
@@ -21,11 +22,11 @@ namespace PSECore {
     extern "C" {
       PSECORESHARE IPort* make_CameraViewIPort(Module* module,
 					       const clString& name) {
-	return new SimpleIPort<CameraViewHandle>(module,name);
+	return scinew SimpleIPort<CameraViewHandle>(module,name);
       }
       PSECORESHARE OPort* make_CameraViewOPort(Module* module,
 					       const clString& name) {
-	return new SimpleOPort<CameraViewHandle>(module,name);
+	return scinew SimpleOPort<CameraViewHandle>(module,name);
       }
     }
 
