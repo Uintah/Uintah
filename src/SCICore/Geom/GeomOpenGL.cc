@@ -54,6 +54,7 @@
 #include <SCICore/Geom/GeomTetra.h>
 #include <SCICore/Geom/GeomTexSlices.h>
 #include <SCICore/Geom/TexSquare.h>
+#include <SCICore/Geom/ColorMapTex.h>
 #include <SCICore/Geom/GeomText.h>
 #include <SCICore/Geom/GeomTorus.h>
 #include <SCICore/Geom/GeomTransform.h>
@@ -4094,28 +4095,66 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
+void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
+{
+  if(!pre_draw(di, matl, 0)) return;
+  static GLuint texName = 0;
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  if( !glIsTexture( texName ) ){
+    glGenTextures(1, &texName);
+    glBindTexture(GL_TEXTURE_1D, texName);
+  }
+    
+  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+  glTexImage1D( GL_TEXTURE_1D, 0, GL_RGB, 256, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE,texture );
+
+  if (GL_NO_ERROR == glGetError()){
+    glEnable(GL_TEXTURE_1D);
+    glShadeModel(GL_FLAT);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    glBegin( GL_QUADS );
+      glTexCoord2f(0.0, 0.0); glVertex3f( a.x(), a.y(), a.z() );
+      glTexCoord2f(1.0, 0.0); glVertex3f( b.x(), b.y(), b.z() );
+      glTexCoord2f(1.0, 1.0); glVertex3f( c.x(), c.y(), c.z() );
+      glTexCoord2f(0.0, 1.0); glVertex3f( d.x(), d.y(), d.z() );
+    glEnd();
+    glFlush();
+  
+    glDisable(GL_TEXTURE_1D);
+    glEnable(GL_LIGHTING);
+  } else {
+    cerr<<"Some sort of texturing error\n";
+  }
+  post_draw(di);
+}
 
 void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
   if(!pre_draw(di, matl, 0)) return;
   static GLuint texName = 0;
   glClearColor(0.0, 0.0, 0.0, 0.0);
-  //  glEnable(GL_DEPTH_TEST);
-  //  glDepthFunc(GL_LEQUAL);
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  if( !glIsTexture( texName ) )
-    {
-      glGenTextures(1, &texName);
-      glBindTexture(GL_TEXTURE_2D, texName);
-    }
+  if( !glIsTexture( texName ) ){
+    glGenTextures(1, &texName);
+    glBindTexture(GL_TEXTURE_2D, texName);
+  }
+    
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
   glTexImage2D( GL_TEXTURE_2D, 0, 3, 64, 64, 0,
-		GL_RGB, GL_UNSIGNED_BYTE,texture );
+ 		GL_RGB, GL_UNSIGNED_BYTE,texture );
 
   if (GL_NO_ERROR == glGetError()){
     glEnable(GL_TEXTURE_2D);
@@ -4166,6 +4205,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.19  2000/05/31 21:54:00  kuzimmer
+// Changes to make the ColorMapKey Module work properly
+//
 // Revision 1.18  2000/03/11 00:41:31  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>
