@@ -22,241 +22,314 @@
 #if !defined(DirectInterpolate_h)
 #define DirectInterpolate_h
 
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Geometry/Tensor.h>
+#include <sci_hash_map.h>
+#include <float.h> // for DBL_MAX
 
 namespace SCIRun {
 
-//! DirectInterpBaseBase supports the dynamically loadable algorithm concept.
-//! when dynamically loaded the user will dynamically cast to a 
-//! DirectInterpBaseBase from the DynamicAlgoBase they will have a pointer to.
-class DirectInterpScalarAlgoBase : public DynamicAlgoBase
-{
-public:
-  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
-			      ScalarFieldInterface *sfi,
-			      bool interp, bool closest, double dist) = 0;
-
-  //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const TypeDescription *fdst,
-					    const TypeDescription *element);
-};
-
-
-template <class Fld, class Loc>
-class DirectInterpScalarAlgo : public DirectInterpScalarAlgoBase
-{
-public:
-  //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
-			      ScalarFieldInterface *sfi,
-			      bool interp, bool closest, double dist);
-};
-
-
-template <class Fld, class Loc>
-FieldHandle
-DirectInterpScalarAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
-					  Field::data_location at,
-					  ScalarFieldInterface *sfi,
-					  bool interp, bool closest,
-					  double dist)
-{
-  typename Fld::mesh_handle_type mesh =
-    dynamic_cast<typename Fld::mesh_type *>(meshhandle.get_rep());
-  Fld *fld = scinew Fld(mesh, at);
-
-  if (at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
-  else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
-  else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
-  else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
-
-  typename Loc::iterator itr, itr_end;
-  mesh->begin(itr);
-  mesh->end(itr_end);
-
-  double val = 0.0;
-  Point p;
-  while (itr != itr_end)
-  {
-    mesh->get_center(p, *itr);
-
-    if (interp && sfi->interpolate(val, p))
-    {
-      fld->set_value((typename Fld::value_type)val, *itr);
-    } 
-    else if (closest && sfi->find_closest(val, p) < dist)
-    {
-      fld->set_value((typename Fld::value_type)val, *itr);
-    }
-    else
-    {
-      fld->set_value((typename Fld::value_type)0, *itr);
-    }
-    ++itr;
-  }
+typedef struct _DIData {
+  FieldHandle src_fieldH;
+  MeshHandle dst_meshH;
+  Field::data_location loc;
+  string basis;
+  bool source_to_single_dest;
+  bool exhaustive_search;
+  double dist;
+  int np;
+  FieldHandle out_fieldH;
+  Barrier barrier;
   
-  FieldHandle ofh(fld);
-  return ofh;
-}
+  _DIData() : barrier("DirectInterpolate Barrier") {}
+} DIData;
 
-
-
-class DirectInterpVectorAlgoBase : public DynamicAlgoBase
+class DirectInterpAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
-			      VectorFieldInterface *vfi,
-			      bool interp, bool closest, double dist) = 0;
+  virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
+			      Field::data_location loc,
+			      const string &basis, bool source_to_single_dest,
+			      bool exhaustive_search, double dist, int np) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *lsrc,
 					    const TypeDescription *fdst,
-					    const TypeDescription *element);
+					    const TypeDescription *ldst);
 };
 
 
-template <class Fld, class Loc>
-class DirectInterpVectorAlgo : public DirectInterpVectorAlgoBase
+template <class FSRC, class LSRC, class FOUT, class LDST>
+class DirectInterpAlgoT : public DirectInterpAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
-			      VectorFieldInterface *vfi,
-			      bool interp, bool closest, double dist);
+  virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
+			      Field::data_location loc,
+			      const string &basis, bool source_to_single_dest,
+			      bool exhaustive_search, double dist, int np);
+
+private:
+  double find_closest_src_loc(typename LSRC::index_type &index,
+			      typename FSRC::mesh_type *mesh, 
+			      const Point &p) const;
+  double find_closest_dst_loc(typename LDST::index_type &index,
+			      typename FOUT::mesh_type *mesh, 
+			      const Point &p) const;
+  void parallel_execute(int proc, DIData *d);
 };
 
-
-template <class Fld, class Loc>
-FieldHandle
-DirectInterpVectorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
-					  Field::data_location at,
-					  VectorFieldInterface *vfi,
-					  bool interp, bool closest,
-					  double dist)
+template <class FSRC, class LSRC, class FOUT, class LDST>
+double
+DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_src_loc(typename LSRC::index_type &index, typename FSRC::mesh_type *mesh, const Point &p) const
 {
-  typename Fld::mesh_handle_type mesh =
-    dynamic_cast<typename Fld::mesh_type *>(meshhandle.get_rep());
-  Fld *fld = scinew Fld(mesh, at);
-
-  if (at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
-  else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
-  else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
-  else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
-
-  typename Loc::iterator itr, itr_end;
+  double mindist = DBL_MAX;
+  
+  typename LSRC::iterator itr, eitr;
   mesh->begin(itr);
-  mesh->end(itr_end);
-
-  Point p;
-  Vector val;
-
-  while (itr != itr_end)
+  mesh->end(eitr);
+  while (itr != eitr)
   {
-    mesh->get_center(p, *itr);
-
-    if (interp && vfi->interpolate(val, p))
+    Point c;
+    mesh->get_center(c, *itr);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
     {
-      fld->set_value((typename Fld::value_type)val, *itr);
+      mindist = dist;
+      index = *itr;
     }
-    else if (closest && vfi->find_closest(val, p) < dist)
-    {
-      fld->set_value((typename Fld::value_type)val, *itr);
-    }
-    else
-    {
-      fld->set_value((typename Fld::value_type)0, *itr);
-    }
-
     ++itr;
   }
-
-  FieldHandle ofh(fld);
-  return ofh;
+  return mindist;
 }
 
-
-class DirectInterpTensorAlgoBase : public DynamicAlgoBase
+template <class FSRC, class LSRC, class FOUT, class LDST>
+double
+DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_dst_loc(typename LDST::index_type &index, typename FOUT::mesh_type *mesh, const Point &p) const
 {
-public:
-  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
-			      TensorFieldInterface *tfi,
-			      bool interp, bool closest, double dist) = 0;
-  //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const TypeDescription *fdst,
-					    const TypeDescription *element);
-};
-
-
-template <class Fld, class Loc>
-class DirectInterpTensorAlgo : public DirectInterpTensorAlgoBase
-{
-public:
-  //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
-			      TensorFieldInterface *tfi,
-			      bool interp, bool closest, double dist);
-};
-
-
-template <class Fld, class Loc>
-FieldHandle
-DirectInterpTensorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
-					  Field::data_location at,
-					  TensorFieldInterface *tfi,
-					  bool interp, bool closest,
-					  double dist)
-{
-  typename Fld::mesh_handle_type mesh =
-    dynamic_cast<typename Fld::mesh_type *>(meshhandle.get_rep());
-  Fld *fld = scinew Fld(mesh, at);
-
-  if (at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
-  else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
-  else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
-  else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
-
-  typename Loc::iterator itr, itr_end;
+  double mindist = DBL_MAX;
+  
+  typename LDST::iterator itr, eitr;
   mesh->begin(itr);
-  mesh->end(itr_end);
-
-  Point p;
-  Tensor val;
-
-  while (itr != itr_end)
+  mesh->end(eitr);
+  while (itr != eitr)
   {
-    mesh->get_center(p, *itr);
-
-    if (interp && tfi->interpolate(val, p))
+    Point c;
+    mesh->get_center(c, *itr);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
     {
-      fld->set_value((typename Fld::value_type)val, *itr);
+      mindist = dist;
+      index = *itr;
     }
-    else if (closest && tfi->find_closest(val, p) < dist)
-    {
-      fld->set_value((typename Fld::value_type)val, *itr);
-    }
-    else
-    {
-      fld->set_value((typename Fld::value_type)0, *itr);
-    }
-
     ++itr;
   }
+  return mindist;
+}
 
-  FieldHandle ofh(fld);
-  return ofh;
+template <class FSRC, class LSRC, class FOUT, class LDST>
+FieldHandle
+DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::execute(FieldHandle src_fieldH, MeshHandle dst_meshH, Field::data_location loc, const string &basis, bool source_to_single_dest, bool exhaustive_search, double dist, int np)
+{
+  DIData d;
+  d.src_fieldH=src_fieldH;
+  d.dst_meshH=dst_meshH;
+  d.loc=loc;
+  d.basis=basis;
+  d.source_to_single_dest=source_to_single_dest;
+  d.exhaustive_search=exhaustive_search;
+  d.dist=dist;
+  d.np=np;
+  typename FOUT::mesh_type *dst_mesh = 
+    dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
+  FOUT *out_field = scinew FOUT(dst_mesh, loc);  
+  d.out_fieldH = out_field;
+  if (((basis == "constant") && source_to_single_dest) || np==1)
+    parallel_execute(0, &d);
+  else
+    Thread::parallel(this, 
+       &DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute,
+       np, true, &d);
+  return out_field;
+}
+
+template <class FSRC, class LSRC, class FOUT, class LDST>
+void
+DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
+							    DIData *d) {
+  FieldHandle src_fieldH = d->src_fieldH;
+  MeshHandle dst_meshH = d->dst_meshH;
+  Field::data_location loc = d->loc;
+  const string& basis = d->basis;
+  bool source_to_single_dest = d->source_to_single_dest;
+  bool exhaustive_search = d->exhaustive_search;
+  double dist = d->dist;
+  int np = d->np;
+  FieldHandle out_fieldH = d->out_fieldH;
+  
+  FSRC *src_field = dynamic_cast<FSRC *>(src_fieldH.get_rep());
+  typename FSRC::mesh_type *src_mesh = src_field->get_typed_mesh().get_rep();
+  typename FOUT::mesh_type *dst_mesh = 
+    dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
+  FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
+
+  if (proc == 0) {
+    if (loc == Field::NODE) src_mesh->synchronize(Mesh::NODES_E);
+    else if (loc == Field::CELL) src_mesh->synchronize(Mesh::CELLS_E);
+    else if (loc == Field::FACE) src_mesh->synchronize(Mesh::FACES_E);
+    else if (loc == Field::EDGE) src_mesh->synchronize(Mesh::EDGES_E);
+  }
+  d->barrier.wait(np);
+  int count=0;
+
+  // note: this first option isn't parallelized
+  if ((basis == "constant") && source_to_single_dest) {
+    // For each source location, we will map it to a single destination
+    //   location.  This is different from our other interpolation
+    //   methods in that here, many destination locations are likely to
+    //   have no source location mapped to them at all.
+    // Note: it is possible that multiple source will be mapped to the
+    //   same destination, which is fine -- but we will flag it as a
+    //   remark, just to let the user know.  
+    // Also: if a source is outside of the destination volume,
+    //   and the "exhaustive search" option is not selected,
+    //   that source will not be mapped to any destination.
+    typename LSRC::iterator itr, end_itr;
+    src_mesh->begin(itr);
+    src_mesh->end(end_itr);
+    typename LDST::size_type sz;
+    dst_mesh->size(sz);
+
+    typedef pair<typename LDST::index_type, 
+                 vector<typename LSRC::index_type> > dst_src_pair;
+#ifdef HAVE_HASH_MAP
+    typedef hash_map<unsigned int,
+                     dst_src_pair,
+                     hash<unsigned int>, 
+                     equal_to<unsigned int> > hash_type;
+#else
+    typedef map<unsigned int,
+                dst_src_pair,
+                equal_to<unsigned int> > hash_type;
+#endif
+
+    hash_type dstmap;
+    while (itr != end_itr) {
+      typename LDST::array_type locs;
+      vector<double> weights;
+      Point p;
+      src_mesh->get_center(p, *itr);
+      bool failed = true;
+      dst_mesh->get_weights(p, locs, weights);
+      if (weights.size() > 0) {
+	failed = false;
+	double max_weight=weights[0];
+	int max_idx=0;
+	for (unsigned int i=1; i<locs.size(); i++) {
+	  if (weights[i] > max_weight) {
+	    max_idx = i;
+	    max_weight = weights[i];
+	  }
+	}
+	unsigned int uint_idx = (unsigned int) locs[max_idx];
+	typename hash_type::iterator dst_iter = dstmap.find(uint_idx);
+	if (dst_iter != dstmap.end()) {
+	  dst_iter->second.second.push_back(*itr);
+	} else {
+	  vector<typename LSRC::index_type> v;
+	  v.push_back(*itr);
+	  dstmap[uint_idx] = dst_src_pair(locs[max_idx], v);
+	}
+      }
+      if (exhaustive_search && failed) {
+	typename LDST::index_type index;
+	double d=find_closest_dst_loc(index, dst_mesh, p);
+	if (dist<=0 || d<dist) {
+	  unsigned int uint_idx = (unsigned int) index;
+	  typename hash_type::iterator dst_iter = dstmap.find(uint_idx);
+	  if (dst_iter != dstmap.end()) {
+	    dst_iter->second.second.push_back(*itr);
+	  } else {
+	    vector<typename LSRC::index_type> v;
+	    v.push_back(*itr);
+	    dstmap[uint_idx] = dst_src_pair(index, v);
+	  }
+	}
+      }
+      ++itr;
+    }
+    typename hash_type::iterator dst_iter = dstmap.begin();
+    while (dst_iter != dstmap.end()) {
+      vector<pair<typename LSRC::index_type, double> > v;
+      unsigned long n=dst_iter->second.second.size();
+      if (n) {
+	typename FOUT::value_type val =
+	  (typename FOUT::value_type)(src_field->value(dst_iter->second.second[0])*(1./n));
+	for (unsigned int i=1; i<n; i++) {
+	  val += 
+	    (typename FOUT::value_type)(src_field->value(dst_iter->second.second[i])*(1./n));
+	}
+	out_field->set_value(val, dst_iter->second.first);
+      }
+      ++dst_iter;
+    }
+  } else { // linear (or constant, with each src mapping to many dests)
+    typename LDST::iterator itr, end_itr;
+    dst_mesh->begin(itr);
+    dst_mesh->end(end_itr);
+    bool linear(basis == "linear");
+    while (itr != end_itr) {
+      if (count%np != proc) {
+	++itr;
+	++count;
+	continue;
+      }
+      typename LSRC::array_type locs;
+      vector<double> weights;
+      Point p;
+      dst_mesh->get_center(p, *itr);
+      bool failed = true;
+      src_mesh->get_weights(p, locs, weights);
+      typename FOUT::value_type val;
+      if (weights.size() > 0)	{
+	failed = false;
+	if (linear) {
+	  if (locs.size())
+	    val = (typename FOUT::value_type)(src_field->value(locs[0])*weights[0]);
+	  for (unsigned int i = 1; i < locs.size(); i++) {
+	    val +=(typename FOUT::value_type)(src_field->value(locs[i])*weights[i]);
+	  }
+	} else {
+	  double max_weight=weights[0];
+	  int max_idx=0;
+	  for (unsigned int i=1; i<locs.size(); i++) {
+	    if (weights[i] > max_weight) {
+	      max_idx = i;
+	      max_weight = weights[i];
+	    }
+	  }
+	  val = (typename FOUT::value_type)(src_field->value(locs[max_idx]));
+	}
+      }
+      if (exhaustive_search && failed) {
+	typename LSRC::index_type index;
+	double d=find_closest_src_loc(index, src_mesh, p);
+	if (dist<=0 || d<dist)
+	{
+	  val = (typename FOUT::value_type)(src_field->value(index));
+	}
+      }
+      out_field->set_value(val, *itr);
+      ++itr;
+      ++count;
+    }
+  }
 }
 
 
 } // end namespace SCIRun
 
 #endif // DirectInterpolate_h
-
-
-
-
-

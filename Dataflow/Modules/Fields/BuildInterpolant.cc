@@ -54,14 +54,12 @@ class BuildInterpolant : public Module
   GuiInt     map_source_to_single_dest_;
   GuiInt     exhaustive_search_;
   GuiDouble  exhaustive_search_max_dist_;
+  GuiInt     np_;
 
 public:
   BuildInterpolant(GuiContext* ctx);
   virtual ~BuildInterpolant();
   virtual void execute();
-
-  //template <class Mesh, class Index>
-  //void find_closest(Mesh *mesh, typename Index::index_type &idx, Point &p);
 };
 
 DECLARE_MAKER(BuildInterpolant)
@@ -70,7 +68,8 @@ BuildInterpolant::BuildInterpolant(GuiContext* ctx) :
   interpolation_basis_(ctx->subVar("interpolation_basis")),
   map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
   exhaustive_search_(ctx->subVar("exhaustive_search")),
-  exhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist"))
+  exhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist")),
+  np_(ctx->subVar("np"))
 {
 }
 
@@ -123,7 +122,7 @@ BuildInterpolant::execute()
 			  interpolation_basis_.get(),
 			  map_source_to_single_dest_.get(),
 			  exhaustive_search_.get(),
-			  exhaustive_search_max_dist_.get()));
+			  exhaustive_search_max_dist_.get(), np_.get()));
 }
 
 CompileInfoHandle
@@ -142,11 +141,10 @@ BuildInterpAlgo::get_compile_info(const TypeDescription *msrc,
   const string fout = fdst->get_name().substr(0, loc) +
     "<vector<pair<" + lsrc->get_name() + "::index_type, double> > > ";
 
+
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       msrc->get_filename() + "." +
 		       lsrc->get_filename() + "." +
-		       fdst->get_filename() + "." +
 		       ldst->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 

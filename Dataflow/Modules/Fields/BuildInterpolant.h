@@ -22,6 +22,8 @@
 #if !defined(BuildInterpolant_h)
 #define BuildInterpolant_h
 
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <sci_hash_map.h>
@@ -29,13 +31,28 @@
 
 namespace SCIRun {
 
+typedef struct _BIData {
+  MeshHandle src_meshH;
+  MeshHandle dst_meshH;
+  Field::data_location loc;
+  string basis;
+  bool source_to_single_dest;
+  bool exhaustive_search;
+  double dist;
+  int np;
+  FieldHandle out_fieldH;
+  Barrier barrier;
+  
+  _BIData() : barrier("BuildInterpolant Barrier") {}
+} BIData;
+
 class BuildInterpAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
 			      Field::data_location loc,
 			      const string &basis, bool source_to_single_dest,
-			      bool exhaustive_search, double dist) = 0;
+			      bool exhaustive_search, double dist, int np) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *msrc,
@@ -54,13 +71,14 @@ public:
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
 			      Field::data_location loc,
 			      const string &basis, bool source_to_single_dest,
-			      bool exhaustive_search, double dist);
+			      bool exhaustive_search, double dist, int np);
 
 private:
   double find_closest_src_loc(typename LSRC::index_type &index,
 			      MSRC *mesh, const Point &p) const;
   double find_closest_dst_loc(typename LDST::index_type &index,
 			      MDST *mesh, const Point &p) const;
+  void parallel_execute(int proc, BIData *d);
 };
 
 
@@ -113,20 +131,59 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest_dst_loc(typename LD
   return mindist;
 }
 
-
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 FieldHandle
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc, const string &basis, bool source_to_single_dest, bool exhaustive_search, double dist)
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc, const string &basis, bool source_to_single_dest, bool exhaustive_search, double dist, int np)
 {
+  BIData d;
+  d.src_meshH=src_meshH;
+  d.dst_meshH=dst_meshH;
+  d.loc=loc;
+  d.basis=basis;
+  d.source_to_single_dest=source_to_single_dest;
+  d.exhaustive_search=exhaustive_search;
+  d.dist=dist;
+  d.np=np;
+  MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
+  FOUT *out_field = scinew FOUT(dst_mesh, loc);  
+  d.out_fieldH = out_field;
+  if (((basis == "constant") && source_to_single_dest) || np==1)
+    parallel_execute(0, &d);
+  else
+    Thread::parallel(this, 
+       &BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute,
+       np, true, &d);
+  return out_field;
+}
+
+template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
+void
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
+								 BIData *d) {
+  MeshHandle src_meshH = d->src_meshH;
+  MeshHandle dst_meshH = d->dst_meshH;
+  Field::data_location loc = d->loc;
+  const string& basis = d->basis;
+  bool source_to_single_dest = d->source_to_single_dest;
+  bool exhaustive_search = d->exhaustive_search;
+  double dist = d->dist;
+  int np = d->np;
+  FieldHandle out_fieldH = d->out_fieldH;
+  
   MSRC *src_mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
-  FOUT *ofield = scinew FOUT(dst_mesh, loc);
+  FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
 
-  if (loc == Field::NODE) src_mesh->synchronize(Mesh::NODES_E);
-  else if (loc == Field::CELL) src_mesh->synchronize(Mesh::CELLS_E);
-  else if (loc == Field::FACE) src_mesh->synchronize(Mesh::FACES_E);
-  else if (loc == Field::EDGE) src_mesh->synchronize(Mesh::EDGES_E);
+  if (proc == 0) {
+    if (loc == Field::NODE) src_mesh->synchronize(Mesh::NODES_E);
+    else if (loc == Field::CELL) src_mesh->synchronize(Mesh::CELLS_E);
+    else if (loc == Field::FACE) src_mesh->synchronize(Mesh::FACES_E);
+    else if (loc == Field::EDGE) src_mesh->synchronize(Mesh::EDGES_E);
+  }
+  d->barrier.wait(np);
+  int count=0;
 
+  // note: this first option isn't parallelized
   if ((basis == "constant") && source_to_single_dest) {
     // For each source location, we will map it to a single destination
     //   location.  This is different from our other interpolation
@@ -211,7 +268,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
 						  1./(double)n);
 	v.push_back(p);
       }
-      ofield->set_value(v, dst_iter->second.first);
+      out_field->set_value(v, dst_iter->second.first);
       ++dst_iter;
     }
   } else { // linear (or constant, with each src mapping to many dests)
@@ -220,6 +277,11 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
     dst_mesh->end(end_itr);
     bool linear(basis == "linear");
     while (itr != end_itr) {
+      if (count%np != proc) {
+	++itr;
+	++count;
+	continue;
+      }
       typename LSRC::array_type locs;
       vector<double> weights;
       Point p;
@@ -255,13 +317,11 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
 	  v.push_back(pair<typename LSRC::index_type, double>(index, 1.0));
 	}
       }
-      ofield->set_value(v, *itr);
+      out_field->set_value(v, *itr);
       ++itr;
+      ++count;
     }
   }
-
-  FieldHandle fh(ofield);
-  return fh;
 }
 
 

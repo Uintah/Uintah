@@ -27,10 +27,12 @@ itcl_class SCIRun_Fields_BuildInterpolant {
 	global $this-map_source_to_single_dest
 	global $this-exhaustive_search
 	global $this-exhaustive_search_max_dist
+	global $this-np
 	set $this-interpolation_basis linear
 	set $this-map_source_to_single_dest 0
 	set $this-exhaustive_search 1
 	set $this-exhaustive_search_max_dist -1
+	set $this-np 1
     }
 
     method ui {} {
@@ -79,6 +81,9 @@ itcl_class SCIRun_Fields_BuildInterpolant {
 	pack $w.exhaustive.check -side top -anchor w -padx 15
 	pack $w.exhaustive.dist -side top -anchor w -padx 30
 
+	scale $w.scale -orient horizontal -variable $this-np -from 1 -to 32 \
+		-showvalue true -label "Number of Threads"
+	
 	frame $w.buttons
 	button $w.buttons.execute -text "Execute" \
 	    -command "$this-c needexecute"
@@ -87,6 +92,7 @@ itcl_class SCIRun_Fields_BuildInterpolant {
 
 	pack $w.basis -side top -anchor w
 	pack $w.exhaustive -side top -anchor w -pady 15
-	pack $w.buttons -side top
+	pack $w.scale -side top -expand 1 -fill x
+	pack $w.buttons -side top -pady 5
     }
 }
