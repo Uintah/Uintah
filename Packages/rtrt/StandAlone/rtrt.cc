@@ -101,7 +101,6 @@ namespace rtrt {
 int main(int argc, char* argv[])
 {
   RTRT* rtrt_engine = new RTRT();
-  int displayproc=0;
 
   int xres=360;
   int yres=360;
@@ -360,13 +359,11 @@ int main(int argc, char* argv[])
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1,1.0,1.0,do_frameless==true);
   /* <<<< bigler >>>> */
-  Thread* t=new Thread(dpy, "Display thread");
-  t->migrate(displayproc);
+  new Thread(dpy, "Display thread");
 #if 0
   Dpy* dpy2=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1,1.0,1.0,do_frameless==true);
-  Thread* t2=new Thread(dpy2, "Display thread2");
-  t2->migrate(displayproc+1);
+  new Thread(dpy2, "Display thread2");
 #endif
   
   // Start up worker threads...
@@ -374,17 +371,14 @@ int main(int argc, char* argv[])
     char buf[100];
     sprintf(buf, "worker %d", i);
 #if 0
-    /* Thread* t=*/new Thread(new Worker(dpy, scene, i,
-					 pp_size, scratchsize,
-					 ncounters, c0, c1), buf);
-    //t->migrate(i);
+    new Thread(new Worker(dpy, scene, i,
+			     pp_size, scratchsize,
+			     ncounters, c0, c1), buf);
 #endif
-    /* <<<< bigler >>>> */
 #if 1
-    Thread* t= new Thread(new Worker(dpy, scene, i,
-				     pp_size, scratchsize,
-				     ncounters, c0, c1), buf);
-    t->migrate(i);
+    new Thread(new Worker(dpy, scene, i,
+			     pp_size, scratchsize,
+			     ncounters, c0, c1), buf);
 #endif
   }
   
