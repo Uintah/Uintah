@@ -19,6 +19,8 @@
 
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Core/Geom/GeomArrows.h>
+#include <Core/Geom/GeomCone.h>
+
 
 namespace SCIRun {
 
@@ -160,6 +162,53 @@ add_data(const Point &p, const Vector &d, GeomArrows *arrows,
     return true;
   }
   return false;
+}
+
+void 
+RenderFieldDataBase::add_disk(const Point &p, const Vector &vin,
+			      double scale, int resolution,
+			      GeomGroup *g, MaterialHandle mh,
+			      bool normalize)
+{
+  Vector v = vin;
+  if (v.length2() * scale > 1.0e-10)
+  {
+    if (normalize) { v.safe_normalize(); }
+    const double len = v.length() * scale;
+    v*=(scale / 6.0);
+    GeomCappedCylinder *d =
+      scinew GeomCappedCylinder(p + v, p - v, len, resolution, 1, 1);
+    g->add(scinew GeomMaterial(d, mh));
+  }
+  else
+  {
+    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
+    g->add(scinew GeomMaterial(s, mh));
+  }
+}
+
+
+void 
+RenderFieldDataBase::add_cone(const Point &p, const Vector &vin,
+			      double scale, int resolution,
+			      GeomGroup *g, MaterialHandle mh,
+			      bool normalize)
+{
+  Vector v = vin;
+  if (v.length2() * scale > 1.0e-10)
+  {
+    if (normalize) { v.safe_normalize(); }
+    const double len = v.length() * scale;
+    v*=scale;
+    GeomCone *c = scinew GeomCone(p, p + v, len/6.0, 0, resolution, 1);
+
+    g->add(scinew GeomMaterial(c, mh));
+  }
+  else
+  {
+    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
+    g->add(scinew GeomMaterial(s, mh));
+  }
 }
 
 } // end namespace SCIRun

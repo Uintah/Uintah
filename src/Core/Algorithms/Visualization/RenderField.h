@@ -267,7 +267,7 @@ RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin,
 				GeomGroup *g, MaterialHandle mh)
 {
   Vector v = vin;
-  if (v.length() > 0.00001)
+  if (v.length2() * scale > 1.0e-10)
   {
     v.safe_normalize();
     v*=scale/6;
@@ -1261,7 +1261,8 @@ public:
 				  const string &data_display_mode,
 				  double scale, bool normalize,
 				  bool bidirectional,
-				  bool arrow_heads) = 0;
+				  bool arrow_heads,
+				  int resolution) = 0;
 
 
 
@@ -1272,6 +1273,18 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *vftd,
 					    const TypeDescription *cftd,
 					    const TypeDescription *ltd);
+
+protected:
+
+  void add_disk(const Point &p, const Vector &vin,
+		double scale, int resolution,
+		GeomGroup *g, MaterialHandle mh,
+		bool normalize);
+
+  void add_cone(const Point &p, const Vector &vin,
+		double scale, int resolution,
+		GeomGroup *g, MaterialHandle mh,
+		bool normalize);
 };
 
 
@@ -1287,7 +1300,8 @@ public:
 				  double scale,
 				  bool normalize,
 				  bool bidirectional,
-				  bool arrow_heads);
+				  bool arrow_heads,
+				  int resolution);
 };
 
 
@@ -1301,21 +1315,27 @@ RenderFieldData<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 					      double scale, 
 					      bool normalize,
 					      bool bidirectional,
-					      bool arrow_heads)
+					      bool arrow_heads,
+					      int resolution)
 {
   VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep());
 
+  GeomGroup *disks;
   GeomArrows *vec_node;
-  if (arrow_heads)
+  const bool disks_p = (display_mode == "Disks");
+  const bool cones_p = (display_mode == "Cones");
+  GeomSwitch *data_switch;
+  if (disks_p || cones_p)
   {
-    vec_node = scinew GeomArrows(0.15, 0.6);
+    disks = scinew GeomGroup();
+    data_switch = scinew GeomSwitch(disks);
   }
   else
   {
-    vec_node = scinew GeomArrows(0, 0.6);
+    vec_node = scinew GeomArrows(arrow_heads?0.15:0.0, 0.6);
+    data_switch = scinew GeomSwitch(vec_node);
   }
-  GeomSwitch *data_switch = scinew GeomSwitch(vec_node);
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
 
@@ -1336,9 +1356,24 @@ RenderFieldData<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       double ctmpd;
       to_double(ctmp, ctmpd);
 
-      add_data(p, tmp, vec_node,
-	       (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
-	       display_mode, scale, normalize, bidirectional); 
+      if (disks_p)
+      {
+	add_disk(p, tmp, scale, resolution, disks,
+		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
+		 normalize);
+      }
+      else if (cones_p)
+      {
+	add_cone(p, tmp, scale, resolution, disks,
+		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
+		 normalize);
+      }
+      else
+      {
+	add_data(p, tmp, vec_node,
+		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
+		 display_mode, scale, normalize, bidirectional);
+      }
     }
     ++iter;
   }

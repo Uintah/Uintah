@@ -35,6 +35,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-use-transparency
 	global $this-normalize_vectors
 	global $this-node_display_type
+	global $this-edge_display_type
+	global $this-data_display_type
 	global $this-def-color-r
 	global $this-def-color-g
 	global $this-def-color-b
@@ -62,6 +64,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-show-cells
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
+	set $this-data_display_type Arrows
 	set $this-node_scale 0.03
 	set $this-edge_scale 0.015
 	set $this-vectors_scale 0.30
@@ -223,7 +226,6 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_display_edges" \
 		-variable $this-edges-on
 
-	global $this-edge_display_type
 	make_labeled_radio $edge.radio \
 		"Edge Display Type" "$this-c edge_display_type" top \
 		$this-edge_display_type {{Cylinders Cylinders} {Lines Lines}}
@@ -279,6 +281,12 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_display_vectors" \
 		-variable $this-vectors-on
 
+	make_labeled_radio $vector.radio \
+	    "Vector Display Type" "$this-c data_display_type" top \
+	    $this-data_display_type \
+	    {{Arrows Arrows} {Disks Disks} {Cones Cones}}
+	
+	
 	checkbutton $vector.normalize_vectors \
 		-text "Normalize Vectors before scaling" \
 		-command "$this-c toggle_normalize" \
@@ -294,7 +302,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_arrowheads" \
 		-variable $this-arrow-heads-on
 
-	pack $vector.show_vectors $vector.normalize_vectors \
+	pack $vector.show_vectors $vector.radio $vector.normalize_vectors \
 	        $vector.bidirectional $vector.arrowheads \
 		-side top -fill y -anchor w
 
@@ -411,17 +419,16 @@ itcl_class SCIRun_Visualization_ShowField {
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	#iwidgets::tabnotebook  $dof.tabs -height 250 -raiseselect true 
-	iwidgets::tabnotebook  $dof.tabs -height 300 -raiseselect true 
+	iwidgets::tabnotebook  $dof.tabs -height 300 -width 325 \
+	    -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
 	add_nodes_tab $dof
 	add_edges_tab $dof
 	add_faces_tab $dof
+	add_text_tab $dof
 	if {[set $this-has_vec_data] == 1} {
 	    add_vector_tab $dof
-	} else {
-	    add_text_tab $dof
 	}
 
 	global $this-active_tab
