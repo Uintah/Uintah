@@ -11,8 +11,13 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/rtrt.h>
+
 #include <Core/Thread/Thread.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <math.h>
 #include <string.h>
 

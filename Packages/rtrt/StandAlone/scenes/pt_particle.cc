@@ -1,18 +1,3 @@
-#include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <fstream>
-#include <sgi_stl_warnings_on.h>
-#include <math.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Transform.h>
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Camera.h>
@@ -25,10 +10,28 @@
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/TextureGridSpheres.h>
 
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+
 #include <teem/nrrd.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
+#include <string.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 using namespace SCIRun;
 using namespace rtrt;
+using namespace std;
 
 #define MAX_LINE_LEN 1024
 #define DEFAULT_RADIUS 0.001

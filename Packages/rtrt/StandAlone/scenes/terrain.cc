@@ -21,14 +21,16 @@
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/HierarchicalGrid.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 #include <math.h>
 #include <ctype.h>
 
 #if defined(__sgi)  // breaks linux build
-  #include <widec.h>
+#  include <widec.h>
 #endif
 
 #include <wctype.h>
@@ -50,11 +52,11 @@ read_matls(FILE* f, Array1<Material *>& mats, Array1<char *>& matnames)
 	    {
 //  		fprintf(stderr,"Reading new material!\n");
 		
-		int i=strlen("newmtl");
+                size_t i=strlen("newmtl");
 		while (iswspace(buf[i]))
 		    i++;
 
-		int numchars = strcspn(&buf[i],"\n");
+		size_t numchars = strcspn(&buf[i],"\n");
 		char *name = new char[numchars+1];
 		
 		strncpy(name,&buf[i],numchars);
@@ -80,7 +82,7 @@ read_matls(FILE* f, Array1<Material *>& mats, Array1<char *>& matnames)
 		fgets(buf,4096,f);
 		sscanf(buf,"%s %lf",junk,&Ns);
 		
- 		mats.add(new Phong(Kd,Ks,Ns));
+ 		mats.add(new Phong(Kd,Ks,(int)Ns));
 // 		mats.add(new LambertianMaterial(Kd));
 
 	    }
@@ -141,7 +143,7 @@ void GetFace(char *buf, Group* tris,
   int val;
   int what=0; // fi's
 
-  while(wptr = GetNum(wptr,val)) {
+  while((wptr = GetNum(wptr,val))) {
     switch(what) {
     case 0:
       fis.add(val);
@@ -200,7 +202,6 @@ void
 parseobj(FILE *f, Group *tris) {
 
    Point P;
-   Group *grp=0;
    Array1<Point> points;
    Array1<Vector> vn;
    Array1<Material*> mats;
@@ -251,7 +252,7 @@ parseobj(FILE *f, Group *tris) {
 	 {
 	     //fprintf(stderr,"Found a material library....\n");
 	     
-	     int i=strlen("mtllib");
+	     size_t i=strlen("mtllib");
 
 	     char matfname[256];
 	     sscanf(&buf[i],"%s",matfname);
@@ -270,10 +271,10 @@ parseobj(FILE *f, Group *tris) {
 	     int i;
 	     
 	     //fprintf(stderr,"Assigning a material\n");
-	     int j=strlen("usemtl");
+	     size_t j=strlen("usemtl");
 	     while (iswspace(buf[j]))
 		 j++;
-	     int numchars = strcspn(&buf[j],"\n");
+	     size_t numchars = strcspn(&buf[j],"\n");
 
 	     for (i=0;
 		  (i < matnames.size()) &&
@@ -325,7 +326,7 @@ read_geom(Group *g, char *geomfile, char *locfile)
 
     Grid *tri_grid;
     //BV1 *tri_grid;
-    InstanceWrapperObject *tri_wrap;
+    InstanceWrapperObject *tri_wrap = 0;
     if (!realgeom) {
       tri_grid = new HierarchicalGrid(tris,
       				10,10,10,10,10,1);
@@ -412,7 +413,6 @@ Scene* make_scene(int argc, char* argv[])
     bool shownodes=false;
     bool headlight=false;
     char *tfile=0;
-    bool geom = false;
     realgeom = false;
     
     char *locfile;
@@ -432,7 +432,6 @@ Scene* make_scene(int argc, char* argv[])
 	   tfile = argv[i];
        } else if(strcmp(argv[i], "-geom")==0)
        {
-	   geom = true;
 	   i++;
 	   locfile = argv[i];
 	   i++;

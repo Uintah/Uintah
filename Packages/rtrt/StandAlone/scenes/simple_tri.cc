@@ -16,16 +16,17 @@
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/Checker.h>
 #include <Packages/rtrt/Core/Tri.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <math.h>
 #include <string.h>
 
 using namespace rtrt;
 using namespace std;
 using namespace SCIRun;
-
-static const double SCALE = 1./3.;
-static const double BV_RADIUS = 1.0;
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)

@@ -10,9 +10,14 @@
  */
 
 #include <Packages/rtrt/Core/PPMImage.h>
+
 #include <Core/Math/Trig.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -49,7 +54,7 @@ main(int argc, char **argv) {
       y+=y_width/2;
       if (x<0) x=0; else if (x>=x_width) x=x_width-1;
       if (y<0) y=0; else if (y>=y_width) y=y_width-1;
-      envmap_image(t,p)=top_image(x,y);
+      envmap_image(t,p)=top_image((int)x,(int)y);
     }
   }
 
@@ -63,7 +68,7 @@ main(int argc, char **argv) {
       y+=y_width/2;
       if (x<0) x=0; else if (x>=x_width) x=x_width-1;
       if (y<0) y=0; else if (y>=y_width) y=y_width-1;
-      envmap_image(t,p)=bottom_image(x,y);
+      envmap_image(t,p)=bottom_image((int)x,(int)y);
     }
   }
   envmap_image.write_image(argv[5], 1);

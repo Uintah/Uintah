@@ -29,7 +29,11 @@
 #include <Packages/rtrt/Core/TimeObj.h>
 #endif
 #include <Core/Thread/Thread.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>

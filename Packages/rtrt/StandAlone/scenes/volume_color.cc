@@ -6,16 +6,7 @@
 #include <Packages/rtrt/Core/PhongColorMapMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <iostream>
-#include <math.h>
-#include <string.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Geometry/Transform.h>
-
-#include <Core/Thread/Thread.h>
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/HVolume.h>
@@ -32,6 +23,19 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/DynamicInstance.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Math/MinMax.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
+#include <string.h>
 
 using namespace rtrt;
 using namespace std;
