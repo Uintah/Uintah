@@ -42,6 +42,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
@@ -85,6 +86,7 @@ static bool split_name(const std::string& type, std::string& package,
 SCIRunComponentModel::SCIRunComponentModel(SCIRunFramework* framework)
   : ComponentModel("scirun"), framework(framework)
 {
+  create_sci_environment(0,0);
   packageDB = new PackageDB(0);
   // load the packages
   packageDB->loadPackage(false);

@@ -123,32 +123,38 @@ MacroSubstitute( const char * var_value )
 // with all the currently set environment variable keys, but not their values
 void create_sci_environment(char **environ, char *execname)
 {
-  
-  char **environment = environ;
-  scirun_env.clear();
-  while (*environment) {
-    const string str(*environment);
-    const size_t pos = str.find("=");
-    scirun_env[str.substr(0,pos)] = str.substr(pos+1, str.length());
-    environment++;
+  if (environ) {
+    char **environment = environ;
+    scirun_env.clear();
+    while (*environment) {
+      const string str(*environment);
+      const size_t pos = str.find("=");
+      scirun_env[str.substr(0,pos)] = str.substr(pos+1, str.length());
+      environment++;
+    }
   }
-  if (!sci_getenv("SCIRUN_SRCDIR"))
-      sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
+
   if (!sci_getenv("SCIRUN_OBJDIR")) 
   {
-    ASSERT(execname);
-    string objdir(execname);
-    if (execname[0] != '/') {
-      char cwd[MAXPATHLEN];
-      getcwd(cwd,MAXPATHLEN);
-      objdir = cwd+string("/")+objdir;
+    if (!execname)
+      sci_putenv("SCIRUN_OBJDIR", SCIRUN_OBJDIR);
+    else {
+      string objdir(execname);
+      if (execname[0] != '/') {
+	char cwd[MAXPATHLEN];
+	getcwd(cwd,MAXPATHLEN);
+	objdir = cwd+string("/")+objdir;
+      }
+      int pos = objdir.length()-1;
+      while (pos >= 0 && objdir[pos] != '/') --pos;
+      ASSERT(pos >= 0);
+      objdir.erase(objdir.begin()+pos+1, objdir.end());
+      sci_putenv("SCIRUN_OBJDIR", objdir);
     }
-    int pos = objdir.length()-1;
-    while (pos >= 0 && objdir[pos] != '/') --pos;
-    ASSERT(pos >= 0);
-    objdir.erase(objdir.begin()+pos+1, objdir.end());
-    sci_putenv("SCIRUN_OBJDIR", objdir);
   }
+
+  if (!sci_getenv("SCIRUN_SRCDIR"))
+      sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
   if (!sci_getenv("SCIRUN_THIRDPARTY_DIR"))
       sci_putenv("SCIRUN_THIRDPARTY_DIR", SCIRUN_THIRDPARTY_DIR);
   if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
