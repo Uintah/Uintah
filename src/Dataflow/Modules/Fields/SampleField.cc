@@ -245,7 +245,7 @@ SampleField::execute()
     FieldHandle seedhandle(algo->execute(vfhandle_, numSeeds_.get(),
 					 rngSeed_.get(), randDist_.get(), 
                                          clamp_.get()));
-    
+    rngSeed_.set(rngSeed_.get()+1);
     ofport_->send(seedhandle);
     if (widgetid_) { ogport_->delObj(widgetid_); }
     widgetid_=0;
