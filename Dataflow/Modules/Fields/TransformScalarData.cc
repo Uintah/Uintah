@@ -54,14 +54,14 @@ public:
 DECLARE_MAKER(TransformScalarData)
 
 
-  TransformScalarData::TransformScalarData(GuiContext* ctx)
-    : Module("TransformScalarData", ctx, Filter,"Fields", "SCIRun"),
-      method_(ctx->subVar("method")),
-      function_(ctx->subVar("function")),
-      imin_(ctx->subVar("imin")),
-      imax_(ctx->subVar("imax")),
-      omin_(ctx->subVar("omin")),
-      omax_(ctx->subVar("omax"))
+TransformScalarData::TransformScalarData(GuiContext* ctx)
+  : Module("TransformScalarData", ctx, Filter,"Fields", "SCIRun"),
+    method_(ctx->subVar("method")),
+    function_(ctx->subVar("function")),
+    imin_(ctx->subVar("imin")),
+    imax_(ctx->subVar("imax")),
+    omin_(ctx->subVar("omin")),
+    omax_(ctx->subVar("omax"))
 {
 }
 

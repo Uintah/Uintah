@@ -26,7 +26,8 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Performs the unary matrix operation transpose.</summary>
+    <summary>Perform a specified functional transform on all of the
+  data in a scalar field.</summary>
     <description>
       <p>
 	Do the specified transformation to each data element in the
