@@ -42,6 +42,13 @@
 #include <pthread.h>
 #endif
 
+/* we use UCONV to avoid compiler warnings. */
+#if (_MIPS_SZLONG == 64)
+#define UCONV "%lx"
+#else
+#define UCONV "%x"
+#endif
+
 extern "C" void audit() {
   using namespace SCIRun;
   AuditAllocator(DefaultAllocator());
@@ -104,7 +111,8 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
 	bytes_inuse+=p->reqsize;
 	bytes_fragmented+=a->obj_maxsize(p)-p->reqsize;
 	if(out){
-	    fprintf(out, "%p: %d bytes (%s)\n", p+sizeof(Tag)+sizeof(Sentinel),
+	    fprintf(out, "%p: "UCONV" bytes (%s)\n", 
+		    p+sizeof(Tag)+sizeof(Sentinel),
 		    p->reqsize, p->tag);
 	}
     }
@@ -147,28 +155,32 @@ static void shutdown()
 	    fprintf(a->stats_out, "None\n");
 
         fprintf(a->stats_out, "statistics:\n");
-	fprintf(a->stats_out, "alloc:\t\t\t%d calls\n", a->nalloc);
-	fprintf(a->stats_out, "alloc:\t\t\t%d bytes\n", a->sizealloc);
-	fprintf(a->stats_out, "free:\t\t\t%d calls\n", a->nfree);
-	fprintf(a->stats_out, "free:\t\t\t%d bytes\n", a->sizefree);
-	fprintf(a->stats_out, "fillbin:\t\t%d calls\n", a->nfillbin);
-	fprintf(a->stats_out, "mmap:\t\t\t%d calls\n", a->nmmap);
-	fprintf(a->stats_out, "mmap:\t\t\t%d bytes\n", a->sizemmap);
-	fprintf(a->stats_out, "munmap:\t\t\t%d calls\n", a->nmunmap);
-	fprintf(a->stats_out, "munmap:\t\t\t%d bytes\n", a->sizemunmap);
-	fprintf(a->stats_out, "highwater alloc:\t%d bytes\n", a->highwater_alloc);
-	fprintf(a->stats_out, "highwater mmap:\t\t%d bytes\n", a->highwater_mmap);
-	fprintf(a->stats_out, "long locks:\t\t%d times\n", a->nlonglocks);
-	fprintf(a->stats_out, "naps:\t\t\t%d times\n", a->nnaps);
+	fprintf(a->stats_out, "alloc:\t\t\t"UCONV" calls\n",a->nalloc);
+	fprintf(a->stats_out, "alloc:\t\t\t"UCONV" bytes\n", a->sizealloc);
+	fprintf(a->stats_out, "free:\t\t\t"UCONV" calls\n", a->nfree);
+	fprintf(a->stats_out, "free:\t\t\t"UCONV" bytes\n", a->sizefree);
+	fprintf(a->stats_out, "fillbin:\t\t"UCONV" calls\n", a->nfillbin);
+	fprintf(a->stats_out, "mmap:\t\t\t"UCONV" calls\n", a->nmmap);
+	fprintf(a->stats_out, "mmap:\t\t\t"UCONV" bytes\n", a->sizemmap);
+	fprintf(a->stats_out, "munmap:\t\t\t"UCONV" calls\n", a->nmunmap);
+	fprintf(a->stats_out, "munmap:\t\t\t"UCONV" bytes\n", a->sizemunmap);
+	fprintf(a->stats_out, "highwater alloc:\t"UCONV" bytes\n",
+		a->highwater_alloc);
+	fprintf(a->stats_out, "highwater mmap:\t\t"UCONV" bytes\n",
+		a->highwater_mmap);
+	fprintf(a->stats_out, "long locks:\t\t"UCONV" times\n", a->nlonglocks);
+	fprintf(a->stats_out, "naps:\t\t\t"UCONV" times\n", a->nnaps);
 	fprintf(a->stats_out, "\n");
 	fprintf(a->stats_out, "breakdown of total bytes:\n");	
-	fprintf(a->stats_out, "in use:\t\t\t%d bytes\n", bytes_inuse);
-	fprintf(a->stats_out, "free:\t\t\t%d bytes\n", bytes_free);
-	fprintf(a->stats_out, "fragmentation:\t\t%d bytes\n", bytes_fragmented);
-	fprintf(a->stats_out, "left in mmap hunks:\t%d\n", bytes_inhunks);
-	fprintf(a->stats_out, "per object overhead:\t%d bytes\n", bytes_overhead);
+	fprintf(a->stats_out, "in use:\t\t\t"UCONV" bytes\n", bytes_inuse);
+	fprintf(a->stats_out, "free:\t\t\t"UCONV" bytes\n", bytes_free);
+	fprintf(a->stats_out, "fragmentation:\t\t"UCONV" bytes\n",
+		bytes_fragmented);
+	fprintf(a->stats_out, "left in mmap hunks:\t"UCONV"\n", bytes_inhunks);
+	fprintf(a->stats_out, "per object overhead:\t"UCONV" bytes\n",
+		bytes_overhead);
 	fprintf(a->stats_out, "\n");
-	fprintf(a->stats_out, "%d bytes missing (%d memory objects)\n",
+	fprintf(a->stats_out, ""UCONV" bytes missing ("UCONV" memory objects)\n",
 		a->sizealloc-a->sizefree, a->nalloc-a->nfree);
 
 	if(a->stats_out != stderr)
@@ -180,10 +192,10 @@ static void shutdown()
 inline AllocBin* Allocator::get_bin(size_t size)
 {
     if(size <= SMALL_THRESHOLD){
-	int bin=SMALL_BIN(size);
+	int bin=(int)SMALL_BIN(size);
 	return &small_bins[bin];
     } else if(size <= MEDIUM_THRESHOLD){
-	int bin=MEDIUM_BIN(size);
+	int bin=(int)MEDIUM_BIN(size);
 	return &medium_bins[bin];
     } else {
 	return &big_bin;
@@ -462,8 +474,8 @@ void* Allocator::alloc(size_t size, const char* tag)
     AllocBin* obj_bin=get_bin(size);
 #ifndef DEBUG
     if(obj_bin->maxsize < size || size < obj_bin->minsize){
-	fprintf(stderr, "maxsize: %d\n", obj_bin->maxsize);
-	fprintf(stderr, "size: %d\n", size);
+	fprintf(stderr, "maxsize: "UCONV"\n", obj_bin->maxsize);
+	fprintf(stderr, "size: "UCONV"\n", size);
 	AllocError("Bins messed up...");
     }
 #endif
@@ -516,14 +528,15 @@ void* Allocator::alloc(size_t size, const char* tag)
     // end of the chunk.
     if(strict){
 	unsigned int i = 0xffff5a5a;
-	unsigned int start = (obj->reqsize+sizeof(int))/sizeof(int);
+	unsigned int start = 
+	  (unsigned int)((obj->reqsize+sizeof(int))/sizeof(int));
 	for(unsigned int* p=(unsigned int*)d+start;
 	    p<(unsigned int*)sent2;p++)
 	    *p++=i;
     }
 
     if(trace_out)
-	fprintf(trace_out, "A %p %d (%s)\n", d, size, tag);
+	fprintf(trace_out, "A %p "UCONV" (%s)\n", d, size, tag);
 
     return (void*)d;
 }
@@ -654,14 +667,15 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     // end of the chunk.
     if(strict){
 	unsigned int i = 0xffff5a5a;
-	unsigned int start = (obj->reqsize+sizeof(int))/sizeof(int);
+	unsigned int start = 
+	  (unsigned int)((obj->reqsize+sizeof(int))/sizeof(int));
 	for(unsigned int* p=(unsigned int*)d+start;
 	    p<(unsigned int*)sent2;p++)
 	    *p++=i;
     }
 
     if(trace_out)
-	fprintf(trace_out, "A %p %d (%s)\n",d, size, tag);
+	fprintf(trace_out, "A %p "UCONV" (%s)\n",d, size, tag);
 
     return (void*)d;
 }
@@ -698,13 +712,14 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 	// end of the chunk.
 	if(strict){
 	    unsigned int i = 0xffff5a5a;
-	    unsigned int start = (oldobj->reqsize+sizeof(int))/sizeof(int);
+	    unsigned int start = 
+	      (unsigned int)((oldobj->reqsize+sizeof(int))/sizeof(int));
 	    for(unsigned int* p=(unsigned int*)d+start;
 		p<(unsigned int*)sent2;p++)
 		*p++=i;
 	}
 	if(trace_out)
-	    fprintf(trace_out, "R %p %d %p %d (%s)\n", dobj, oldsize, 
+	    fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj, oldsize, 
 		    dobj, newsize, oldobj->tag);
 
 	return dobj;
@@ -718,7 +733,7 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     bcopy(dobj, nobj, minsize);
     free(dobj);
     if(trace_out)
-	fprintf(trace_out, "R %p %d %p %d (%s)\n", dobj,
+	fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj,
 		oldsize, nobj, newsize, oldobj->tag);
 
     return nobj;
@@ -770,7 +785,7 @@ void Allocator::free(void* dobj)
 
     // Make sure that it is still intact...
     if(trace_out)
-	fprintf(trace_out, "F %p %d (%s)\n", dobj, obj->reqsize, obj->tag);
+	fprintf(trace_out, "F %p "UCONV" (%s)\n", dobj, obj->reqsize, obj->tag);
 
     if(!lazy)
 	audit(obj, OBJFREEING);
@@ -838,7 +853,7 @@ void Allocator::fill_bin(AllocBin* bin)
     if (bin->maxsize <= MEDIUM_THRESHOLD){
 	size_t tsize;
 	tsize=bin->maxsize+OVERHEAD;
-	unsigned int nalloc=SMALLEST_ALLOCSIZE/tsize;
+	unsigned int nalloc=(unsigned int)(SMALLEST_ALLOCSIZE/tsize);
 	if(nalloc<1)nalloc=1;
 	size_t reqsize=nalloc*tsize;
 
@@ -970,7 +985,8 @@ void Allocator::audit(Tag* obj, int what)
     // Check the space between the end of the allocation and the sentinel...
     if(strict && (what == OBJFREEING || what == OBJINUSE)){
 	unsigned int i = 0xffff5a5a;
-	unsigned int start = (obj->reqsize+sizeof(int))/sizeof(int);
+	unsigned int start = 
+	  (unsigned int)((obj->reqsize+sizeof(int))/sizeof(int));
 	for(unsigned int* p=(unsigned int*)d+start;
 	    p<(unsigned int*)sent2;p++){
 	    unsigned int p1=*p++;
@@ -1036,13 +1052,13 @@ void PrintTag(void* dobj)
     Tag* obj=(Tag*)dd;
 
     fprintf(stderr, "tag %p: allocated by: %s\n", obj, obj->tag);
-    fprintf(stderr, "requested object size: %d bytes\n", obj->reqsize);
-    fprintf(stderr, "maximum bin size: %d bytes\n", obj->bin->maxsize);
-    fprintf(stderr, "range of object: %p - %x\n", dobj,
-	    (unsigned long)dobj+obj->reqsize);
+    fprintf(stderr, "requested object size: "UCONV" bytes\n", obj->reqsize);
+    fprintf(stderr, "maximum bin size: "UCONV" bytes\n", obj->bin->maxsize);
+    fprintf(stderr, "range of object: %p - "UCONV"\n", dobj,
+	    (size_t)dobj+obj->reqsize);
     fprintf(stderr, "range of object with overhead and sentinels: %p - %p\n",
 	    obj, obj+OVERHEAD);
-    fprintf(stderr, "range of hunk: %x - %x\n", (unsigned long)obj->hunk->data, (unsigned long)obj->hunk->data+obj->hunk->len);
+    fprintf(stderr, "range of hunk: "UCONV" - "UCONV"\n", (size_t)obj->hunk->data, (size_t)obj->hunk->data+obj->hunk->len);
     fprintf(stderr, "pre-sentinels: %x %x\n",
 	    sent1->first_word, sent1->second_word);
     if(sent1->first_word == SENT_VAL_FREE && sent1->second_word == SENT_VAL_FREE){
@@ -1185,7 +1201,7 @@ void AuditDefaultAllocator()
 static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
 {
     for(Tag* p=bin->inuse;p!=0;p=p->next){
-	fprintf(fp, "%p %d %s\n", (p+sizeof(Tag)+sizeof(Sentinel)),
+	fprintf(fp, "%p "UCONV" %s\n", (p+sizeof(Tag)+sizeof(Sentinel)),
 		p->reqsize, p->tag);
     }
 }
