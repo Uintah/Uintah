@@ -406,8 +406,35 @@ LatVolMesh::get_faces(Face::array_type &array,
 void
 LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 {
-  // Limited to range of ints.
+  // Get our min and max
+  Cell::index_type min, max;
+  get_cells(min, max, bbox);
+
+  // Clear the input array.  Limited to range of ints.
   arr.clear();
+
+  // Loop over over min to max and fill the array
+  unsigned int i, j, k;
+  for (i = min.i_; i <= max.i_; i++) {
+    for (j = min.j_; j <= max.j_; j++) {
+      for (k = min.k_; k <= max.k_; k++) {
+	arr.push_back(Cell::index_type(this, i,j,k));
+      }
+    }
+  }
+}
+
+//! Returns the min and max indices that fall within or on the BBox.
+
+// If the max index lies "in front of" (meaning that any of the
+// indexes are negative) then the max will be set to [0,0,0] and the
+// min to [1,1,1] in the hopes that they will be used something like
+// this: for(unsigned int i = min.i_; i <= max.i_; i++)....  Otherwise
+// you can expect the min and max to be set clamped to the boundaries.
+void
+LatVolMesh::get_cells(Cell::index_type &begin, Cell::index_type &end,
+		      const BBox &bbox) {
+
   const Point minp = transform_.unproject(bbox.min());
   int mini = (int)floor(minp.x());
   int minj = (int)floor(minp.y());
@@ -415,7 +442,7 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
   if (mini < 0) { mini = 0; }
   if (minj < 0) { minj = 0; }
   if (mink < 0) { mink = 0; }
-
+  
   const Point maxp = transform_.unproject(bbox.max());
   int maxi = (int)floor(maxp.x());
   int maxj = (int)floor(maxp.y());
@@ -423,15 +450,18 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
   if (maxi >= (int)(ni_ - 1)) { maxi = ni_ - 2; }
   if (maxj >= (int)(nj_ - 1)) { maxj = nj_ - 2; }
   if (maxk >= (int)(nk_ - 1)) { maxk = nk_ - 2; }
-
-  int i, j, k;
-  for (i = mini; i <= maxi; i++) {
-    for (j = minj; j <= maxj; j++) {
-      for (k = mink; k <= maxk; k++) {
-	arr.push_back(Cell::index_type(this, i,j,k));
-      }
-    }
+  // We also need to protect against when any of these guys are
+  // negative.  In this case we should not have any iteration.  We
+  // can't however express negative numbers with unsigned ints (in the
+  // case of index_type).
+  if (maxi < 0 || maxj < 0 || maxk < 0) {
+    // We should create a range which will not be iterated over
+    mini = minj = mink = 1;
+    maxi = maxj = maxk = 0;
   }
+
+  begin = Cell::index_type(this, mini, minj, mink);
+  end   = Cell::index_type(this, maxi, maxj, maxk);
 }
 
 
@@ -522,104 +552,15 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 }
 
 
-//! return iterators over that fall within or on the BBox
-
-// This function does a pretty good job of giving you the set of iterators
-// that would loop over the mesh that falls within the BBox.  When the
-// BBox falls outside the mesh boundaries, the iterators should equal each
-// other so that a for loop using them [for(;iter != end; iter++)] will
-// not enter.  There are some cases where you can get a range for cells on
-// the edge when the BBox is to the side, but not inside, the mesh.
-// This could be remedied, by more insightful inspection of the bounding
-// box and the mesh.  Checking all cases would be tedious and probably
-// fraught with error.
 void
-LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end_iter,
-			   const BBox &box) {
+LatVolMesh::get_nodes(Node::index_type &begin, Node::index_type &end,
+		      const BBox &bbox) {
   // get the min and max points of the bbox and make sure that they lie
   // inside the mesh boundaries.
   BBox mesh_boundary = get_bounding_box();
   // crop by min boundary
-  Point min = Max(box.min(), mesh_boundary.min());
-  Point max = Max(box.max(), mesh_boundary.min());
-  // crop by max boundary
-  min = Min(min, mesh_boundary.max());
-  max = Min(max, mesh_boundary.max());
-  
-  Cell::index_type min_index, max_index;
-
-  // If one of the locates return true, then we have a valid iteration
-  bool min_located = locate(min_index, min);
-  bool max_located = locate(max_index, max);
-  if (!min_located && !max_located) {
-    // first check to see if there is a box overlap
-    BBox box;
-    box.extend(min);
-    box.extend(max);
-    if ( box.Overlaps(mesh_boundary) ){
-      Point r = transform_.unproject(min);
-      double rx = floor(r.x());
-      double ry = floor(r.y());
-      double rz = floor(r.z());
-      min_index.i_ = (unsigned int)Max(rx, 0.0);
-      min_index.j_ = (unsigned int)Max(ry, 0.0);
-      min_index.k_ = (unsigned int)Max(rz, 0.0);
-      r = transform_.unproject(max);
-      rx = floor(r.x());
-      ry = floor(r.y());
-      rz = floor(r.z());
-      max_index.i_ = (unsigned int)Min(rx, (double)(ni_-1));
-      max_index.j_ = (unsigned int)Min(ry, (double)(nj_-1));
-      max_index.k_ = (unsigned int)Min(rz, (double)(nk_-1));
-      iter = Cell::range_iter(this,
-                            min_index.i_, min_index.j_, min_index.k_,
-                            max_index.i_, max_index.j_, max_index.k_);
-    } else {
-    // If both of these are false and there is no overlap
-    // then we are outside the boundary.
-    // Set the min and max extents of the range iterator to be the same thing.
-    // When they are the same end_iter will be set to the starting state of
-    // the range iterator, thereby causing any for loop using these
-    // iterators [for(;iter != end_iter; iter++)] to never enter.
-      iter = Cell::range_iter(this, 0, 0, 0, 0, 0, 0);
-    }
-  } else if ( !min_located ) {    
-    const Point r = transform_.unproject(min);
-    const double rx = floor(r.x());
-    const double ry = floor(r.y());
-    const double rz = floor(r.z());
-    min_index.i_ = (unsigned int)Max(rx, 0.0);
-    min_index.j_ = (unsigned int)Max(ry, 0.0);
-    min_index.k_ = (unsigned int)Max(rz, 0.0);
-    iter = Cell::range_iter(this,
-			    min_index.i_, min_index.j_, min_index.k_,
-			    max_index.i_, max_index.j_, max_index.k_);
-    
-  } else { //  !max_located 		       
-    const Point r = transform_.unproject(max);
-    const double rx = floor(r.x());
-    const double ry = floor(r.y());
-    const double rz = floor(r.z());
-    max_index.i_ = (unsigned int)Min(rx, (double)(ni_-1));
-    max_index.j_ = (unsigned int)Min(ry, (double)(nj_-1));
-    max_index.k_ = (unsigned int)Min(rz, (double)(nk_-1));
-    iter = Cell::range_iter(this,
-			    min_index.i_, min_index.j_, min_index.k_,
-			    max_index.i_, max_index.j_, max_index.k_);
-  }
-  // initialize the end iterator
-  iter.end(end_iter);
-}
-
-void
-LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
-			   const BBox &box) {
-  // get the min and max points of the bbox and make sure that they lie
-  // inside the mesh boundaries.
-  BBox mesh_boundary = get_bounding_box();
-  // crop by min boundary
-  Point min = Max(box.min(), mesh_boundary.min());
-  Point max = Max(box.max(), mesh_boundary.min());
+  Point min = Max(bbox.min(), mesh_boundary.min());
+  Point max = Max(bbox.max(), mesh_boundary.min());
   // crop by max boundary
   min = Min(min, mesh_boundary.max());
   max = Min(max, mesh_boundary.max());
@@ -629,7 +570,7 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
   bool min_located = locate(min_index, min);
   bool max_located = locate(max_index, max);
   if (!min_located && !max_located) {
-    // first check to see if there is a box overlap
+    // first check to see if there is a bbox overlap
     BBox box;
     box.extend(min);
     box.extend(max);
@@ -648,17 +589,14 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
       max_index.i_ = (unsigned int)Min(rx, (double)ni_ );
       max_index.j_ = (unsigned int)Min(ry, (double)nj_ );
       max_index.k_ = (unsigned int)Min(rz, (double)nk_ );
-      iter = Node::range_iter(this,
-                            min_index.i_, min_index.j_, min_index.k_,
-                            max_index.i_, max_index.j_, max_index.k_);
     } else {
-    // If both of these are false and there is no overlap
-    // then we are outside the boundary.
-    // Set the min and max extents of the range iterator to be the same thing.
-    // When they are the same end_iter will be set to the starting state of
-    // the range iterator, thereby causing any for loop using these
-    // iterators [for(;iter != end_iter; iter++)] to never enter.
-      iter = Node::range_iter(this, 0, 0, 0, 0, 0, 0);
+      // Set the min and max extents of the range iterator to be the
+      // same thing.  When they are the same end_iter will be set to
+      // the starting state of the range iterator, thereby causing any
+      // for loop using these iterators [for(;iter != end_iter;
+      // iter++)] to never enter.
+      min_index = Node::index_type(this, 0,0,0);
+      max_index = Node::index_type(this, 0,0,0);
     }
   } else if ( !min_located ) {    
     const Point r = transform_.unproject(min);
@@ -668,10 +606,6 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
     min_index.i_ = (unsigned int)Max(rx, 0.0);
     min_index.j_ = (unsigned int)Max(ry, 0.0);
     min_index.k_ = (unsigned int)Max(rz, 0.0);
-    iter = Node::range_iter(this,
-			    min_index.i_, min_index.j_, min_index.k_,
-			    max_index.i_, max_index.j_, max_index.k_);
-    
   } else { //  !max_located 		       
     const Point r = transform_.unproject(max);
     const double rx = floor(r.x());
@@ -680,33 +614,10 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
     max_index.i_ = (unsigned int)Min(rx, (double) ni_ );
     max_index.j_ = (unsigned int)Min(ry, (double) nj_ );
     max_index.k_ = (unsigned int)Min(rz, (double) nk_ );
-    iter = Node::range_iter(this,
-			    min_index.i_, min_index.j_, min_index.k_,
-			    max_index.i_, max_index.j_, max_index.k_);
   }
   
-  // initialize the end iterator
-  iter.end(end_iter);
-}
-
-void
-LatVolMesh::get_cell_range(Cell::range_iter &begin, Cell::iterator &end,
-			   const Cell::index_type &begin_index,
-			   const Cell::index_type &end_index) {
-  begin = Cell::range_iter(this,
-			   begin_index.i_, begin_index.j_, begin_index.k_,
-			     end_index.i_,   end_index.j_,   end_index.k_);
-  begin.end(end);
-}
-
-void
-LatVolMesh::get_node_range(Node::range_iter &begin, Node::iterator &end,
-			   const Node::index_type &begin_index,
-			   const Node::index_type &end_index) {
-  begin = Node::range_iter(this,
-			   begin_index.i_, begin_index.j_, begin_index.k_,
-			     end_index.i_,   end_index.j_,   end_index.k_);
-  begin.end(end);
+  begin = min_index;
+  end   = max_index;
 }
 
 void
