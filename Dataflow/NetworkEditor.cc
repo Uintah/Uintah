@@ -151,7 +151,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	args.error("netedit needs a minor command");
 	return;
     }
-    if(args[1] == "addmodule"){
+    if(args[1] == "quit"){
+	TaskManager::exit_all(-1);
+    } else if(args[1] == "addmodule"){
 	if(args.count() < 3){
 	    args.error("netedit addmodule needs a module name");
 	    return;
