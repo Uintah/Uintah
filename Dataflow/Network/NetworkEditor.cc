@@ -161,7 +161,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("netedit deleteconnection needs 1 arg");
 	    return;
 	}
-	if (args.count() == 4)
+	if (args.count() == 4 && args[3] == "1")
 	  net->disable_connection(args[2]);
 	if (!net->disconnect(args[2])) {
 	    args.error("Cannot find connection "+args[2]+" for deletion");
