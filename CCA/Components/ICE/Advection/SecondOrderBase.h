@@ -228,6 +228,13 @@ SecondOrderBase::flux_to_primitive( const bool useCompatibleFluxes,
                                     const CCVariable<double>& mass,
                                     CCVariable<T>& q_CC)
 {
+
+
+  // bulletproofing
+  if(useCompatibleFluxes && !is_Q_mass_specific){
+    throw InternalError("ICE:SecondOrderAdvection:\n"
+    " For compatible fluxes, Q_CC must be a mass-specific quantity \n");
+  }
                 // compatible fluxes.
   if(useCompatibleFluxes && is_Q_mass_specific) {
     CellIterator iter = patch->getExtraCellIterator();
@@ -241,14 +248,7 @@ SecondOrderBase::flux_to_primitive( const bool useCompatibleFluxes,
   } else {      // non-compatible fluxes
     q_CC.copyData(A_CC);
     return false;
-  }        
-  
-  // bulletproofing
-  if(useCompatibleFluxes && !is_Q_mass_specific){
-    throw InternalError("ICE:SecondOrderAdvection:\n"
-    " For compatible fluxes, Q_CC must be a mass-specific quantity \n");
   }
-  return false;
 }
 /*_____________________________________________________________________
  Function~ limitedGradient
