@@ -56,8 +56,5 @@ SUBDIRS += \
         $(SRCDIR)/exceptiontest
 endif
 
-SUBDIRS +=$(SRCDIR)/stopserver
-
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
