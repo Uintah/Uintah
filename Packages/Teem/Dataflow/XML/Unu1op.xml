@@ -25,6 +25,7 @@
     <summary>Unary operation on a nrrd.
     </summary>
     <description>
+    <p>Unary operation on a nrrd.</p>
     <p>Operator: Unary operator.  Posibilities include:</p>
     <p>- : negative (multiply by -1.0)</p>
     <p>r : reciprocal (1.0/value)</p>

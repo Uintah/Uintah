@@ -25,6 +25,8 @@
     <summary>Ternary operation on three nrrds or constants. Can have one,
      two, or three nrrds, but not zero. </summary>
     <description>
+    <p>Ternary operation on three nrrds or constants. Can have one,
+     two, or three nrrds, but not zero.</p>
     <p>Operator: Binary operator. Possibilities include:</p>
     <p>    +, x, : sum or product of three values</p>
     <p>min, max : minimum, maximum</p>

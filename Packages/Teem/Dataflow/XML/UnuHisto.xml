@@ -25,6 +25,7 @@
     <summary>Create 1-D histogram of values in a nrrd.
     </summary>
     <description>
+    <p>Create 1-D histogram of values in a nrrd.</p>
     <p>Weight Nrrd: Nrrd indicating how to weigh contributions
     to joint histogram.  By default (not passing in this Nrrd),
     the increment is one bin count per sample, but by giving a 

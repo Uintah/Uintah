@@ -30,6 +30,11 @@ stand-alone file, the image is conveniently centered on an 8.5x11 inch page,
 with 0.5 inch margins.
     </summary>
     <description>
+    <p>Write nrrd with specific format, encoding, or endianness. EPS
+output is a EPSF-3.0 file with BoundingBox and HiResBoundingBox DSC comments,
+and is suitable for inclusion into other PostScript documents. As a
+stand-alone file, the image is conveniently centered on an 8.5x11 inch page,
+with 0.5 inch margins.</p>
     <p> Format: output file format. Possibilities include:
      nrrd : standard nrrd format;
      png : PNG image;

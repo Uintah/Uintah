@@ -25,6 +25,7 @@
     <summary>Create (PGM) image of 1-D value histogram
     </summary>
     <description>
+    <p>Create (PGM) image of 1-D value histogram</p>
     <p>Height: height of output image (horizontal size is determined by
     number of bins in input histogram). This value should be an integer.</p>
     <p>Show log-scaled hisogram: will show the log-scaled histogram with decade

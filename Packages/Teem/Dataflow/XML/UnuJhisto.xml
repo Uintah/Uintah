@@ -29,6 +29,10 @@ records the number of corresponding positions in the inputs with a combination
 of values represented by the coordinates of the bin.
     </summary>
     <description>
+    <p>Create joint histogram of two or more nrrds. Each axis of the
+output corresponds to one of the input nrrds, and each bin in the output
+records the number of corresponding positions in the inputs with a combination
+of values represented by the coordinates of the bin.</p>
     <p> Bins : bins(i) is the number of bins to use along axis i (of
     joint histogram), which represents the values of InputNrrd(i). This
     should be two or more integers separated by white space.</p>
