@@ -47,6 +47,7 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/Comm/DT/DataTransmitter.h>
 #include <Core/CCA/Comm/DT/DTMessage.h>
+#include <Core/CCA/Comm/DT/DTMessageTag.h>
 #include <Core/CCA/Comm/DT/DTPoint.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
@@ -137,7 +138,7 @@ public:
 	msg->to_addr=addrlist[iaddr];
 	msg->autofree=true;
 	//msg->display();
-	me->putMessage(msg);
+	me->putInitialMessage(msg);
 	
 
 	log[ipt]++;
@@ -158,7 +159,7 @@ public:
 	}
 	if(done) break;
 
-	DTMessage *msg=me->getMessage();
+	DTMessage *msg=me->getMsg();
 	bool bad=true;
 	int iaddr=-1;
 	for(iaddr=0; iaddr<mpi_size; iaddr++){
