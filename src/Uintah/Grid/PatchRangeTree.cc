@@ -70,4 +70,3 @@ void PatchRangeTree::query(const IntVector& low, const IntVector& high,
 }
 
 
-
