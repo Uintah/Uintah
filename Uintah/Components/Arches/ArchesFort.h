@@ -57,10 +57,10 @@ WARNING
 #define FORT_MASCAL mascal_
 #define FORT_APCAL apcal_
 #define FORT_PRESSCOEFF prescoef_
+#define FORT_PRESSOURCE pressrc_
 #define FORT_PRESSBC pressbc_
 #define FORT_VELCOEF velcoef_
 #define FORT_SCALARCOEF scalcof_
-#define FORT_PRESSSOURCE psource_
 #define FORT_VELSOURCE vsource_
 #define FORT_SCALARSOURCE ssource_
 #define FORT_COLDPROPS cprops_
@@ -516,12 +516,58 @@ extern "C"
 		    const double* snsv, const double* dynp, const double* dyps,
 		    const double* stbw, const double* dztp, const double* dzpb); 
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the pressure source terms
+    //
+    void
+    FORT_PRESSOURCE(const int* domLo, const int* domHi,
+		    const int* idxLo, const int* idxHi,
+		    double* pressureLinSrc,
+		    double* pressureNonLinSrc,
+		    const double* density,
+		    const int* domLoU, const int* domHiU,
+		    const double* uVelocity,
+		    const double* uVelCoefAP,
+		    const double* uVelCoefAE,
+		    const double* uVelCoefAW,
+		    const double* uVelCoefAN,
+		    const double* uVelCoefAS,
+		    const double* uVelCoefAT,
+		    const double* uVelCoefAB,
+		    const double* uVelNonLinSrc,
+		    const int* domLoV, const int* domHiV,
+		    const double* vVelocity,
+		    const double* vVelCoefAP,
+		    const double* vVelCoefAE,
+		    const double* vVelCoefAW,
+		    const double* vVelCoefAN,
+		    const double* vVelCoefAS,
+		    const double* vVelCoefAT,
+		    const double* vVelCoefAB,
+		    const double* vVelNonLinSrc,
+		    const int* domLoW, const int* domHiW,
+		    const double* wVelocity,
+		    const double* wVelCoefAP,
+		    const double* wVelCoefAE,
+		    const double* wVelCoefAW,
+		    const double* wVelCoefAN,
+		    const double* wVelCoefAS,
+		    const double* wVelCoefAT,
+		    const double* wVelCoefAB,
+		    const double* wVelNonLinSrc,
+		    const double* sew, const double* sns, const double* stb,
+		    const int* cellType, const int* cellTypeID);
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.18  2000/07/12 23:23:23  bbanerje
+// Added pressure source .. modified Kumar's version a bit.
+//
 // Revision 1.17  2000/07/12 22:15:01  bbanerje
 // Added pressure Coef .. will do until Kumar's code is up and running
 //

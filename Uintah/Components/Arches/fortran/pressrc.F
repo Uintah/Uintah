@@ -1,0 +1,266 @@
+c
+c $Id$
+c
+      subroutine pressrc(domLo, domHi, idxLo, idxHi, 
+     $     su, sp, 
+     &     den,
+     &     domLoU, domHiU, uu, 
+     $     aup, aue, auw, aun, aus, aut, aub, suu,
+     &     domLoV, domHiV, vv, 
+     $     avp, ave, avw, avn, avs, avt, avb, svu,
+     &     domLoW, domHiW, ww, 
+     $     awp, awe, aww, awn, aws, awt, awb, swu,
+c    &     convs, 
+c    &     spm, cpl,
+c    $     rv, ra, rcv, 
+     &     sew, sns, stb, 
+c    &     sign,
+c    $     ltest,
+     $     pcell, ffield)
+
+      implicit none
+      INCLUDE 'param4.h'
+
+*     passed variables
+
+      integer domLo(3), domHi(3)
+      integer idxLo(3), idxHi(3)
+      double precision su(domLo(1):domHi(1), domLo(2):domHi(2),
+     $     domLo(3):domHi(3))
+      double precision sp(domLo(1):domHi(1), domLo(2):domHi(2),
+     $     domLo(3):domHi(3))
+      double precision den(domLo(1):domHi(1), domLo(2):domHi(2),
+     $     domLo(3):domHi(3))
+
+      integer domLoU(3), domHiU(3)
+      double precision uu(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision aup(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision aue(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision auw(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision aun(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision aus(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision aut(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision aub(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+      double precision suu(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+     $     domLoU(3):domHiU(3))
+
+      integer domLoV(3), domHiV(3)
+      double precision vv(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision avp(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision ave(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision avw(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision avn(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision avs(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision avt(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision avb(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+      double precision svu(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+     $     domLoV(3):domHiV(3))
+
+      integer domLoW(3), domHiW(3)
+      double precision ww(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision awp(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision awe(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision aww(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision awn(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision aws(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision awt(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision awb(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+      double precision swu(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+     $     domLoW(3):domHiW(3))
+
+c     double precision convs
+
+c     double precision spm(
+c    $     domLo(1):domHi(1),
+c    $     domLo(2):domHi(2),
+c    $     domLo(3):domHi(3))
+
+c     double precision cpl(
+c    $     domLo(1):domHi(1),
+c    $     domLo(2):domHi(2),
+c    $     domLo(3):domHi(3))
+      
+c     double precision sign
+      
+c     double precision rv(domLo(2):domHi(2))
+c     double precision ra(domLo(2):domHi(2))
+c     double precision rcv(domLo(2):domHi(2))
+
+      double precision sew(domLo(1):domHi(1))
+      double precision sns(domLo(2):domHi(2))
+      double precision stb(domLo(3):domHi(3))
+
+      integer pcell(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer ffield
+      
+*     local variables
+
+      double precision arean, areas, areaew, areatb, vol
+      double precision dene, denw, denn, dens, dent, denb
+      double precision ue, uw, vn, vs, wt, wb
+      double precision ce, cw, cn, cs, ct, cb
+      double precision smp
+      integer IST, JST, KST, IEND, JEND, KEND
+      integer i, j, k
+      logical ltest
+
+c     include 'celltypes.h'
+
+      ltest = .false.
+      IST = idxLo(1)
+      JST = idxLo(2)
+      KST = idxLo(3)
+      IEND = idxHi(1)
+      JEND = idxHi(2)
+      KEND = idxHi(3)
+c-----------------------------------------------------------------------
+
+      do 120 k = KST, KEND
+         do 110 j = JST, JEND
+            do 100 i = IST, IEND
+
+               arean = sew(i)*stb(k)
+               areas = sew(i)*stb(k)
+               areaew = sns(j)*stb(k)
+               areatb = sns(j)*sew(i)
+               vol = sns(j)*sew(i)*stb(k)
+c-----------------------------------------------------------------------
+c     calculate coefficients
+c-----------------------------------------------------------------------
+
+               dene = pt5*(den(i,j,k)+den(i+1,j,k))
+               denw = pt5*(den(i,j,k)+den(i-1,j,k))
+               denn = pt5*(den(i,j,k)+den(i,j+1,k))
+               dens = pt5*(den(i,j,k)+den(i,j-1,k))
+               dent = pt5*(den(i,j,k)+den(i,j,k+1))
+               denb = pt5*(den(i,j,k)+den(i,j,k-1))
+
+c-----------------------------------------------------------------------
+c     calculate pseudovelocities for boundaries 
+c     (setting uhat = u on boundaries makes it easy to set bcs. for
+c     the pressure)
+c-----------------------------------------------------------------------
+
+               ue = uu(i+1,j,k)
+               uw = uu(i,j,k)
+               vn = vv(i,j+1,k)
+               vs = vv(i,j,k)
+               wt = ww(i,j,k+1)
+               wb = ww(i,j,k)
+
+c-----------------------------------------------------------------------
+c     calculate pseudovelocities when not on boundaries
+c-----------------------------------------------------------------------
+
+               if (pcell(i-1,j,k).eq.ffield)
+     &              uw = (aue(i,j,k)*uu(i+1,j,k)+
+     $                    auw(i,j,k)*uu(i-1,j,k)+
+     &                    aun(i,j,k)*uu(i,j+1,k)+
+     $                    aus(i,j,k)*uu(i,j-1,k)+
+     &                    aut(i,j,k)*uu(i,j,k+1)+
+     $                    aub(i,j,k)*uu(i,j,k-1)+
+     &                    suu(i,j,k))/aup(i,j,k)
+               if (pcell(i+1,j,k).eq.ffield)
+     &              ue = (aue(i+1,j,k)*uu(i+2,j,k)+
+     &                    auw(i+1,j,k)*uu(i,j,k)+
+     $                    aun(i+1,j,k)*uu(i+1,j+1,k)+
+     &                    aus(i+1,j,k)*uu(i+1,j-1,k)+
+     $                    aut(i+1,j,k)*uu(i+1,j,k+1)+
+     &                    aub(i+1,j,k)*uu(i+1,j,k-1)+
+     $                    suu(i+1,j,k))/aup(i+1,j,k)
+               if (pcell(i,j-1,k).eq.ffield)
+     &              vs = (ave(i,j,k)*vv(i+1,j,k)+
+     $                    avw(i,j,k)*vv(i-1,j,k)+
+     &                    avn(i,j,k)*vv(i,j+1,k)+
+     $                    avs(i,j,k)*vv(i,j-1,k)+
+     &                    avt(i,j,k)*vv(i,j,k+1)+
+     $                    avb(i,j,k)*vv(i,j,k-1)+
+     &                    svu(i,j,k))/avp(i,j,k)
+               if (pcell(i,j+1,k).eq.ffield)
+     &              vn = (ave(i,j+1,k)*vv(i+1,j+1,k)+
+     &                    avw(i,j+1,k)*vv(i-1,j+1,k)+
+     $                    avn(i,j+1,k)*vv(i,j+2,k)+
+     &                    avs(i,j+1,k)*vv(i,j,k)+
+     $                    avt(i,j+1,k)*vv(i,j+1,k+1)+
+     &                    avb(i,j+1,k)*vv(i,j+1,k-1)+
+     $                    svu(i,j+1,k))/avp(i,j+1,k)
+               if (pcell(i,j,k-1).eq.ffield)
+     &              wb = (awe(i,j,k)*ww(i+1,j,k)+
+     $                    aww(i,j,k)*ww(i-1,j,k)+
+     &                    awn(i,j,k)*ww(i,j+1,k)+
+     $                    aws(i,j,k)*ww(i,j-1,k)+
+     &                    awt(i,j,k)*ww(i,j,k+1)+
+     $                    awb(i,j,k)*ww(i,j,k-1)+
+     &                    swu(i,j,k))/awp(i,j,k)
+               if (pcell(i,j,k+1).eq.ffield)
+     &              wt = (awe(i,j,k+1)*ww(i+1,j,k+1)+
+     &                    aww(i,j,k+1)*ww(i-1,j,k+1)+
+     $                    awn(i,j,k+1)*ww(i,j+1,k+1)+
+     &                    aws(i,j,k+1)*ww(i,j-1,k+1)+
+     $                    awt(i,j,k+1)*ww(i,j,k+2)+
+     &                    awb(i,j,k+1)*ww(i,j,k)+
+     $                    swu(i,j,k+1))/awp(i,j,k+1)   
+
+c-----calculate source terms--------------------------------------------
+
+               ce = dene*areaew
+               cw = denw*areaew
+               cn = denn*arean
+               cs = dens*areas
+               ct = dent*areatb
+               cb = denb*areatb
+
+               smp = cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb
+c    $              -sign*spm(i,j,k)
+
+               if (ltest) then
+                  sp(i,j,k) = zero
+c                 su(i,j,k) = -smp + cpl(i,j,k)*vol
+               else
+                  sp(i,j,k) = zero
+                  su(i,j,k) = -smp
+c                 if (smp.ne.zero)
+c    &                 convs = convs + abs(smp)/max(abs(cn*vn),
+c    $                 abs(cs*vs),abs(ce*ue),abs(cw*uw),
+c    &                 abs(ct*wt),abs(cb*wb),abs(spm(i,j,k)))
+               end if
+
+ 100           continue
+ 110        continue
+ 120     continue
+
+c        convs = convs/((KEND-KST+1)*(JEND-JST+1)*(IEND-IST+1))
+
+         return
+         end
+c
+c $Log$
+c Revision 1.1  2000/07/12 23:23:25  bbanerje
+c Added pressure source .. modified Kumar's version a bit.
+c
+c
