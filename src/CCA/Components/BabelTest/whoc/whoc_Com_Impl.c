@@ -3,15 +3,15 @@
  * Symbol:        whoc.Com-v1.0
  * Symbol Type:   class
  * Babel Version: 0.7.4
- * SIDL Created:  20030305 18:50:12 MST
- * Generated:     20030305 18:50:23 MST
+ * SIDL Created:  20030227 09:45:28 MST
+ * Generated:     20030227 09:45:31 MST
  * Description:   Server-side implementation for whoc.Com
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
  * babel-version = 0.7.4
  * source-line   = 13
- * source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/whoc/whoc.sidl
+ * source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/whoc/whoc.sidl
  */
 
 /*
@@ -62,8 +62,10 @@ impl_whoc_Com__dtor(
 }
 
 /*
- * Obtain Services handle, through which the component communicates with the
- * framework. This is the one method that every CCA Component must implement. 
+ * Obtain Services handle, through which the 
+ * component communicates with the framework. 
+ * This is the one method that every CCA Component
+ * must implement. 
  */
 
 #undef __FUNC__
@@ -71,10 +73,15 @@ impl_whoc_Com__dtor(
 
 void
 impl_whoc_Com_setServices(
-  whoc_Com self, govcca_Services svc)
+  whoc_Com self, gov_cca_Services services)
 {
   /* DO-NOT-DELETE splicer.begin(whoc.Com.setServices) */
-  govcca_Port idport=govcca_Port__cast(whoc_IDPort__create());
-  govcca_Services_addProvidesPort(svc,idport,"idport","gov.cca.IDPort",0);
+
+  SIDL_BaseException ex;
+  gov_cca_TypeMap properties=gov_cca_Services_createTypeMap(
+       services, &ex);
+
+  gov_cca_Port idport=gov_cca_Port__cast(whoc_IDPort__create());
+  gov_cca_Services_addProvidesPort(services,idport,"idport","gov.cca.ports.IDPort",properties,&ex);
   /* DO-NOT-DELETE splicer.end(whoc.Com.setServices) */
 }
