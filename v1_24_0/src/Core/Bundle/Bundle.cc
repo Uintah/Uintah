@@ -104,14 +104,14 @@ Bundle::merge(LockingHandle<Bundle> C)
     }
 }
 
-#define CLUSTER_VERSION 2
+#define BUNDLE_VERSION 2
 
 //////////
 // PIO for NrrdData objects
 void
 Bundle::io(Piostream& stream)
 {
-  stream.begin_class("Bundle", CLUSTER_VERSION);
+  stream.begin_class("Bundle", BUNDLE_VERSION);
   // Do the base class first...
  
   PropertyManager::io(stream);
@@ -129,7 +129,7 @@ Bundle::io(Piostream& stream)
     
       string type;
       for (int p = 0; p < size; p++)
-	{
+      {
           stream.begin_cheap_delim();
           stream.io(bundleName_[p]);
           stream.io(type);
@@ -230,11 +230,14 @@ Bundle::io(Piostream& stream)
               if (nrrdhandle.get_rep())
                 { 
                   type = "nrrd";
+                  bool embed_old = nrrdhandle->get_embed_object();
+                  nrrdhandle->set_embed_object(true);
                   stream.io(type);
                   stream.end_cheap_delim();		
                   stream.begin_cheap_delim();            
                   Pio(stream,nrrdhandle); 
                   stream.end_cheap_delim(); 
+                  nrrdhandle->set_embed_object(embed_old);
                   continue; 
                 }
             
