@@ -131,12 +131,14 @@ When working with &sr;'s <ulink
 url="../../User/Tutorial/index.html">tutorial</ulink>, 
 the value of <envar>SCIRUN_DATA</envar> must refer to the sample
 data sets directory, <filename>&sr;Data</filename>.  
-For sh-type shells type:
+</para>
+<para>
+for sh-type shells type:
 <literallayout class="monospaced">
 SCIRUN_DATA=<replaceable>path-to-&sr;Data</replaceable>
 export SCIRUN_DATA
 </literallayout>
-For csh-type shells type:
+for csh-type shells type:
 <literallayout class="monospaced">
 setenv SCIRUN_DATA <replaceable>path-to-&sr;Data</replaceable>
 </literallayout>

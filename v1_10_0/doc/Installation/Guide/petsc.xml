@@ -200,7 +200,7 @@ and
 </literallayout>
 </para>
 <para>
-To become the root user:
+Become root user:
 <literallayout class="monospaced">
 su -
 </literallayout>

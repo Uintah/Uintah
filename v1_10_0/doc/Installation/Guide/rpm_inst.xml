@@ -90,12 +90,7 @@ for Redhat 8 systems.
 <para>
 Open a shell terminal (e.g. xterm) and enter the command
 <command>su</command> to become the root user (superuser).  The
-<command>su</command> command will prompt for root's password.  To acquire root access, ask the system administrator to
-install the RPM.
-</para>
-
-<para>
-Type:
+<command>su</command> command will prompt for root's password:
 <literallayout class="monospaced">
 rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
 </literallayout>
