@@ -171,7 +171,7 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
     attachedObject_(NULL), turnOnTransmissionMode_(false), 
     numThreadsRequested_(nworkers), changeNumThreads_(false),
     pp_size_(pp_size), scratchsize_(scratchsize),
-    toggleRenderWindowSize_(false), renderWindowSize_(1),
+    toggleRenderWindowSize_(fullscreen), renderWindowSize_(1),
     fullScreenMode_( fullscreen ), holoToggle_(false)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
