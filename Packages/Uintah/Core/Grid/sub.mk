@@ -38,6 +38,7 @@ SRCS     += \
 	$(SRCDIR)/PressureBoundCond.cc \
 	$(SRCDIR)/DensityBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc \
+	$(SRCDIR)/BoundCondData.cc \
 	$(SRCDIR)/UnknownVariable.cc
 
 PSELIBS := \
