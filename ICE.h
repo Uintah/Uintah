@@ -163,6 +163,10 @@ using namespace SCIRun;
 
       void readData(const Patch* patch, int include_GC, char    filename[],          
                  char    var_name[],  const CCVariable<double>& q_CC);
+                 
+      void  hydrostaticPressureAdjustment(const Patch* patch, 
+                const CCVariable<double>& rho_micro_CC, 
+                      CCVariable<double>& press_CC);
       
       // Debugging switches
       bool switchDebugInitialize;
