@@ -109,42 +109,6 @@ GeomTransform::io(Piostream& stream)
     stream.end_class();
 }
 
-bool
-GeomTransform::saveobj(ostream&, const string&,
-			   GeomSave*)
-{
-    cerr << "don't know how to output a transform matrix!\n";
-    return false;
-
-#if 0
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_sep(out);
-	saveinfo->start_node(out, "Transform");
-	saveinfo->indent(out);
-
-	// not sure what to put here!
-
-	saveinfo->end_node(out);
-	if(!child->saveobj(out, format, saveinfo))
-	    return false;
-	saveinfo->end_sep(out);
-	return true;
-    } else if(format == "rib"){
-	saveinfo->start_attr(out);
-	saveinfo->indent(out);
-
-	// not sure what to put here!
-
-	if(!child->saveobj(out, format, saveinfo))
-	    return false;
-	saveinfo->end_attr(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomTransform::saveobj");
-	return false;
-    }
-#endif
-}
 
 } // End namespace SCIRun
 

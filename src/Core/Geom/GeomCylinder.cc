@@ -151,36 +151,6 @@ void GeomCylinder::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomCylinder::saveobj(ostream& out, const string& format,
-			   GeomSave* saveinfo)
-{
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_tsep(out);
-	saveinfo->orient(out, bottom+axis*0.5, axis);
-	saveinfo->start_node(out, "Cylinder");
-	saveinfo->indent(out);
-	out << "parts SIDES\n";
-	saveinfo->indent(out);
-	out << "radius " << rad << "\n";
-	saveinfo->indent(out);
-	out << "height " << height << "\n";
-	saveinfo->end_node(out);
-	saveinfo->end_tsep(out);
-	return true;
-    } else if(format == "rib"){
-	saveinfo->start_trn(out);
-	saveinfo->rib_orient(out, bottom, axis);
-	saveinfo->indent(out);
-	out << "Cylinder " << rad << " 0 " << height << " 360\n";
-	saveinfo->end_trn(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomCylinder::saveobj");
-	return false;
-    }
-}
-
-
 Persistent* make_GeomColoredCylinders()
 {
     return new GeomColoredCylinders();
@@ -232,16 +202,6 @@ void GeomColoredCylinders::io(Piostream& stream)
   Pio(stream, points_);
   Pio(stream, colors_);
   stream.end_class();
-}
-
-bool GeomColoredCylinders::saveobj(ostream&, const string&, GeomSave*)
-{
-#if 0
-  NOT_FINISHED("GeomColoredCylinders::saveobj");
-  return false;
-#else
-  return true;
-#endif
 }
 
 void GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
@@ -299,36 +259,6 @@ void GeomCappedCylinder::io(Piostream& stream)
     stream.begin_class("GeomCappedCylinder", GEOMCAPPEDCYLINDER_VERSION);
     GeomCylinder::io(stream);
     Pio(stream, nvdisc);
-}
-
-bool GeomCappedCylinder::saveobj(ostream& out, const string& format,
-				 GeomSave* saveinfo)
-{
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_tsep(out);
-	saveinfo->orient(out, bottom+axis*0.5, axis);
-	saveinfo->start_node(out, "Cylinder");
-	saveinfo->indent(out);
-	out << "parts ALL\n";
-	saveinfo->indent(out);
-	out << "radius " << rad << "\n";
-	saveinfo->indent(out);
-	out << "height " << height << "\n";
-	saveinfo->end_node(out);
-	saveinfo->end_tsep(out);
-	return true;
-    } else if(format == "rib"){
-	saveinfo->start_trn(out);
-	saveinfo->rib_orient(out, bottom, axis);
-	saveinfo->indent(out);
-	out << "Cylinder " << rad << " 0 " << height << " 360\n";
-	out << "Disk " << height << " " << rad << " 360\n";
-	saveinfo->end_trn(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomCylinder::saveobj");
-	return false;
-    }
 }
 
 } // End namespace SCIRun

@@ -146,35 +146,6 @@ void GeomCone::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomCone::saveobj(ostream& out, const string& format,
-		       GeomSave* saveinfo)
-{
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_tsep(out);
-	saveinfo->orient(out, bottom+axis*0.5, axis);
-	saveinfo->start_node(out, "Cone");
-	saveinfo->indent(out);
-	out << "parts SIDES\n";
-	saveinfo->indent(out);
-	out << "bottomRadius " << bot_rad << "\n";
-	saveinfo->indent(out);
-	out << "height " << height << "\n";
-	saveinfo->end_node(out);
-	saveinfo->end_tsep(out);
-	return true;
-    } else if(format == "rib"){
-	saveinfo->start_trn(out);
-	saveinfo->rib_orient(out, bottom, axis);
-	saveinfo->indent(out);
-	out << "Cone " << height << " " << bot_rad << " 360\n";
-	saveinfo->end_trn(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomCone::saveobj");
-	return false;
-    }
-}
-
 // Capped Geometry
 
 GeomCappedCone::GeomCappedCone(int nu, int nv, int nvdisc1, int nvdisc2)
@@ -214,26 +185,6 @@ void GeomCappedCone::io(Piostream& stream)
     Pio(stream, nvdisc1);
     Pio(stream, nvdisc2);
     stream.end_class();
-}
-
-bool GeomCappedCone::saveobj(ostream& out, const string& format,
-			   GeomSave* saveinfo)
-{
-    if(format == "vrml" || format == "iv" ){
-	NOT_FINISHED("GeomCappedCone::saveobj");
-	return false;
-    } else if(format == "rib"){
-	saveinfo->start_trn(out);
-	saveinfo->rib_orient(out, bottom, axis);
-	saveinfo->indent(out);
-	out << "Cone " << height << " " << bot_rad << " 360\n";
-	out << "Disk " << 0 << " " << bot_rad << " 360\n";
-	saveinfo->end_trn(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomCappedCone::saveobj");
-	return false;
-    }
 }
 
 } // End namespace SCIRun

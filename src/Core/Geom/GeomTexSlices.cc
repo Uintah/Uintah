@@ -89,10 +89,5 @@ void GeomTexSlices::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool GeomTexSlices::saveobj(ostream&, const string& /*format*/, GeomSave*)
-{
-  return 0;
-}
-
 } // End namespace SCIRun
 

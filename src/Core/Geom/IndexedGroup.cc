@@ -101,18 +101,6 @@ void GeomIndexedGroup::io(Piostream& stream)
 }
 
 //----------------------------------------------------------------------
-bool GeomIndexedGroup::saveobj(ostream& out, const string& format,
-			       GeomSave* saveinfo)
-{
-    cerr << "saveobj IndexedGroup\n";
-    MapIntGeomObj::iterator iter;
-    for (iter = objs.begin(); iter != objs.end(); iter++) {
-      if (!(*iter).second->saveobj(out, format, saveinfo)) return false;
-    }
-    return true;
-}
-
-//----------------------------------------------------------------------
 void GeomIndexedGroup::addObj(GeomHandle obj, int id)
 {
     objs[id] = obj;

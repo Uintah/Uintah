@@ -142,22 +142,5 @@ void GeomTimeGroup::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTimeGroup::saveobj(ostream& out, const string& format,
-			    GeomSave* saveinfo)
-{
-    static int cnt = 0;
-    cnt++;
-    cerr << "saveobj TimeGroup " << cnt << "\n";
-
-    for(unsigned int i=0;i<objs.size();i++){ cerr << cnt << ">";
-	if(!objs[i]->saveobj(out, format, saveinfo))
-	  { cnt--;
-	    return false;
-	  }
-    }
-    cnt--;
-    return true;
-}
-
 } // End namespace SCIRun
 

@@ -112,12 +112,5 @@ ColorMapTex::io(Piostream& stream)
 }
 
 
-bool
-ColorMapTex::saveobj(ostream&, const string&, GeomSave*)
-{
-  NOT_FINISHED("ColorMapTex::saveobj");
-  return false;
-}
-
 } // End namespace SCIRun
 

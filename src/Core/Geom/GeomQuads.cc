@@ -226,14 +226,6 @@ void GeomFastQuads::io(Piostream& stream)
 }
 
 
-bool GeomFastQuads::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomFastQuads::saveobj");
-    return false;
-}
-
-
-
 GeomTranspQuads::GeomTranspQuads()
   : xreverse_(false),
     yreverse_(false),

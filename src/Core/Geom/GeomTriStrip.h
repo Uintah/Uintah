@@ -50,7 +50,6 @@ public:
     int size(void);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 class SCICORESHARE GeomTriStripList : public GeomObj {
@@ -81,10 +80,9 @@ public:
 
    int size(void);
    int num_since(void);
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
-    
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+
+   virtual void io(Piostream&);
+   static PersistentTypeID type_id;
 };
 
 } // End namespace SCIRun

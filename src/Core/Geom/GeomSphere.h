@@ -64,7 +64,6 @@ public:
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 
   // This is a helper function which determins the nu and nv given an
   // approximate number of polygons desired.

@@ -196,17 +196,10 @@ void GeomTorus::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTorus::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomTorus::saveobj");
-    return false;
-}
-
 #define GEOMTORUSARC_VERSION 1
 
 void GeomTorusArc::io(Piostream& stream)
 {
-
     stream.begin_class("GeomTorusArc", GEOMTORUSARC_VERSION);
     GeomTorus::io(stream);
     Pio(stream, zero);
@@ -214,12 +207,6 @@ void GeomTorusArc::io(Piostream& stream)
     Pio(stream, arc_angle);
     Pio(stream, yaxis);
     stream.end_class();
-}
-
-bool GeomTorusArc::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomTorusArc::saveobj");
-    return false;
 }
 
 } // End namespace SCIRun

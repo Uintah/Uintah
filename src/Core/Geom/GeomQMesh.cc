@@ -98,12 +98,6 @@ void GeomQMesh::io(Piostream&)
 
 }    
 
-bool GeomQMesh::saveobj(ostream&, const string&, GeomSave*)
-{
-    NOT_FINISHED("GeomQMesh::saveobj");
-    return false;
-}
-
 } // End namespace SCIRun
 
 

@@ -115,16 +115,6 @@ void GeomLine::io(Piostream& stream)
   stream.end_class();
 }
 
-bool GeomLine::saveobj(ostream&, const string&, GeomSave*)
-{
-#if 0
-  NOT_FINISHED("GeomLine::saveobj");
-  return false;
-#else
-  return true;
-#endif
-}
-
 Persistent* make_GeomLines()
 {
   return new GeomLines();
@@ -165,16 +155,6 @@ void GeomLines::io(Piostream& stream)
   GeomObj::io(stream);
   Pio(stream, pts);
   stream.end_class();
-}
-
-bool GeomLines::saveobj(ostream&, const string&, GeomSave*)
-{
-#if 0
-  NOT_FINISHED("GeomLines::saveobj");
-  return false;
-#else
-  return true;
-#endif
 }
 
 void GeomLines::add(const Point& p1, const Point& p2)
@@ -232,17 +212,6 @@ void GeomCLines::io(Piostream& stream)
   Pio(stream, colors_);
   stream.end_class();
 }
-
-bool GeomCLines::saveobj(ostream&, const string&, GeomSave*)
-{
-#if 0
-  NOT_FINISHED("GeomCLines::saveobj");
-  return false;
-#else
-  return true;
-#endif
-}
-
 
 static unsigned char
 COLOR_FTOB(double v)
@@ -332,17 +301,6 @@ void GeomTranspLines::io(Piostream& stream)
   GeomCLines::io(stream);
   stream.end_class();
 }
-
-bool GeomTranspLines::saveobj(ostream&, const string&, GeomSave*)
-{
-#if 0
-  NOT_FINISHED("GeomTranspLines::saveobj");
-  return false;
-#else
-  return true;
-#endif
-}
-
 
 static bool
 pair_less(const pair<float, unsigned int> &a,
@@ -454,12 +412,6 @@ void TexGeomLines::io(Piostream& stream)
   GeomObj::io(stream);
   Pio(stream, pts);
   stream.end_class();
-}
-
-bool TexGeomLines::saveobj(ostream&, const string&, GeomSave*)
-{
-  NOT_FINISHED("TexGeomLines::saveobj");
-  return false;
 }
 
 // this is used by the hedgehog...

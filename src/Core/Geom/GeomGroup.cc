@@ -132,22 +132,4 @@ void GeomGroup::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomGroup::saveobj(ostream& out, const string& format,
-			GeomSave* saveinfo)
-{
-    static int cnt = 0;
-    cnt++;
-    cerr << "saveobj Group " << cnt << "\n";
-
-    for(unsigned int i=0;i<objs.size();i++){
-	if(!objs[i]->saveobj(out, format, saveinfo))
-	  { cnt--;
-	    return false;
-	  }
-    }
-    cerr << "saveobj Group done " << cnt << "\n";
-    cnt--;
-    return true;
-}
-
 } // End namespace SCIRun

@@ -156,11 +156,6 @@ void TimeGrid::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool TimeGrid::saveobj(ostream&, const string&, GeomSave*)
-{
-  return 0;
-}
-
 } // End namespace SCIRun
 
 

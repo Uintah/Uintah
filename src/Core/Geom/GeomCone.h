@@ -71,7 +71,6 @@ public:
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 class SCICORESHARE GeomCappedCone : public GeomCone {
@@ -90,7 +89,6 @@ public:
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 } // End namespace SCIRun

@@ -37,7 +37,6 @@
 #endif
 #include <Core/Util/NotFinished.h>
 
-#include <algorithm>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/BBoxCache.h>
@@ -94,7 +93,9 @@
 #include <Core/Math/Trig.h>
 #include <Core/Math/TrigTable.h>
 #include <Core/Geometry/Plane.h>
+
 #include <iostream>
+#include <algorithm>
 using std::cerr;
 using std::endl;
 
@@ -2537,7 +2538,6 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glEnd();
 	p+=3;
       }
-     
     }
   }
   else

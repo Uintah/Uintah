@@ -167,63 +167,6 @@ void GeomMaterial::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomMaterial::saveobj(ostream& out, const string& format,
-			   GeomSave* saveinfo)
-{
-    cerr << "saveobj Material\n";
-    if(format == "vrml" || format == "iv"){
-	saveinfo->start_sep(out);
-	saveinfo->start_node(out, "Material");
-	saveinfo->indent(out);
-	//Color& amb(matl->ambient);  // visual C++ hates constructors as reference initializers
-	Color& amb = matl->ambient;
-	out << "ambientColor " << amb.r() << " " << amb.g() << " " << amb.b() << "\n";
-
-	saveinfo->indent(out);
-	//Color& dif(matl->diffuse);
-	Color& dif = matl->diffuse;
-	out << "diffuseColor " << dif.r() << " " << dif.g() << " " << dif.b() << "\n";
-	saveinfo->indent(out);
-	//Color& spec(matl->specular);
-	Color& spec = matl->specular;
-	out << "specularColor " << spec.r() << " " << spec.g() << " " << spec.b() << "\n";
-	saveinfo->indent(out);
-	//Color& em(matl->emission);
-	Color& em = matl->emission;
-	out << "emissiveColor " << em.r() << " " << em.g() << " " << em.b() << "\n";
-	saveinfo->indent(out);
-	out << "shininess " << matl->shininess << "\n";
-	saveinfo->indent(out);
-	out << "transparency " << matl->transparency << "\n";
-	saveinfo->end_node(out);
-	if(!child_->saveobj(out, format, saveinfo))
-	    return false;
-	saveinfo->end_sep(out);
-	return true;
-    } else if(format == "rib"){
-	saveinfo->start_attr(out);
-	//Color& spec(matl->specular);
-	Color& spec = matl->specular;
-	//Color& dif(matl->diffuse);
-	Color& dif = matl->diffuse;
-
-	saveinfo->indent(out);
-	out << "Color [ " << dif.r() << " " << dif.g() << " " << dif.b() << " ]\n";
-	saveinfo->indent(out);
-	out << "Surface \"plastic\" \"Ka\" 0.0 \"Kd\" 1.0 \"Ks\" 1.0 \"roughness\" "
-	    << 1.0 / matl->shininess << " \"specularcolor\" [ "
-	    << spec.r() << " " << spec.g() << " " << spec.b() << " ]\n";
-
-	if(!child_->saveobj(out, format, saveinfo))
-	    return false;
-	saveinfo->end_attr(out);
-	return true;
-    } else {
-	NOT_FINISHED("GeomMaterial::saveobj");
-	return false;
-    }
-}
-
 } // End namespace SCIRun
 
 // $Log

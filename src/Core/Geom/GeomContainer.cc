@@ -91,15 +91,4 @@ GeomContainer::io(Piostream& stream)
 }
 
 
-bool
-GeomContainer::saveobj(ostream& out, const string& format,
-		       GeomSave* saveinfo)
-{
-  if ( child_.get_rep() )
-    return child_->saveobj(out, format, saveinfo);
-  else
-    return true;
-}
-
-
 } // End namespace SCIRun
