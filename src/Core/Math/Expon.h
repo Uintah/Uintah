@@ -93,4 +93,15 @@ inline SCICORESHARE double Sqr(double x)
     return x*x;
 }
 
+inline SCICORESHARE double ipow(double x, int p)
+{
+  double result=1;
+  while(p){
+    if(p&1)
+      result*=x;
+    x*=x;
+      p>>=1;
+  }
+  return result;
+}
 #endif
