@@ -18,7 +18,7 @@
 %   
 %   See also SETBOUNDARYCONDITIONS, ADVECTQ.
 
-%clear all;
+clear all;
 close all;
 globalParams;                               % Load global parameters
 
@@ -39,8 +39,8 @@ extraCells      = 1;                        % Number of ghost cells in each dire
 maxTime         = 0.0005;                   % Maximum simulation time [sec]
 initTime        = 0.0;                      % Initial simulation time [sec]
 delt_init       = 1e-6;                     % First timestep [sec]
-maxTimeSteps    = 100;                      % Maximum number of timesteps [dimensionless]
-CFL             = 0.999;                    % Courant number (~velocity*delT/delX) [dimensionless]
+maxTimeSteps    = 1;                      % Maximum number of timesteps [dimensionless]
+CFL             = 0.4;                    % Courant number (~velocity*delT/delX) [dimensionless]
 
 % Material properties (ideal gas)
 cv              = 717.5;                    % Specific_heat
@@ -48,7 +48,6 @@ gamma           = 1.4;                      % gamma coefficient in the Equation 
 
 %================ ICE Interal Parameters ================
 
-d_delT_knob     = 1.0;                      % For delT computation
 
 %================ Partition of the domain into regions ================
 
@@ -62,7 +61,7 @@ count           = count+1;
 R.label         = 'leftpartition';          % Title of this region
 R.min           = 0;                        % Location of lower-left corner of this region [length]
 R.max           = 0.5;                      % Location of upper-right corner of this region [length]
-R.velocity      = 0.0;                      % Initial velocity
+R.velocity      = 10.0;                      % Initial velocity
 R.temperature   = 300.0;                    % Initial temperature [Kelvin]
 R.density       = 1.1768292682926831000;    % Initial density
 R.pressure      = 101325.0;                 % Initial pressure (1 atmosphere)
@@ -73,10 +72,12 @@ Region{count}   = R;                        % Add region to list
 count           = count+1;
 R.min           = 0.5;                      % Location of lower-left corner of this region [length]
 R.max           = 1;                        % Location of upper-right corner of this region [length]
-R.velocity      = 0.0;                      % Initial velocity
+R.velocity      = 10.0;                      % Initial velocity
 R.temperature   = 300.0;                    % Initial temperature [Kelvin]
-R.density       = 0.11768292682926831000;   % Initial density
-R.pressure      = 10132.50;                 % Initial pressure (0.1 atmosphere)
+%R.density       = 0.11768292682926831000;   % Initial density
+%R.pressure      = 10132.50;                 % Initial pressure (0.1 atmosphere)
+R.density       = 1.1768292682926831000;   % Initial density
+R.pressure      = 101325.0;                 % Initial pressure (0.1 atmosphere)
 Region{count}   = R;                        % Add region to list
 
 %______________________________________________________________________
@@ -165,7 +166,6 @@ temp_CC     = setBoundaryConditions(temp_CC     ,'temp_CC');
 press_CC    = setBoundaryConditions(press_CC    ,'press_CC');
 
 %================ Initialize graphics ================
-
 figure(1);
 set(0,'DefaultFigurePosition',[0,0,1024,768]);
 %================ Plot results ================
@@ -191,7 +191,6 @@ legend('p');
 grid on;
 
 %M(tstep) = getframe(gcf);
-
 
 %______________________________________________________________________
 %     Time integration loop
@@ -246,11 +245,14 @@ for tstep = 1:maxTimeSteps
         right       = j+1;
         term1       = (...
             rho_CC(left )*xvel_CC(left ) + ...
-            rho_CC(right)*xvel_FC(right) ...
+            rho_CC(right)*xvel_CC(right) ...
             ) / (rho_CC(left) + rho_CC(right) + d_SMALL_NUM);
+            
         term2a      = 2.0*spvol_CC(left)*spvol_CC(right) ...
             / (spvol_CC(left) + spvol_CC(right) + d_SMALL_NUM);
+            
         term2b      = (press_CC(right) - press_CC(left))/delX;
+        
         xvel_FC(j)  = term1 - delT*term2a*term2b;
     end
     
@@ -275,9 +277,10 @@ for tstep = 1:maxTimeSteps
         advectRho(volfrac_CC, ofs, rx, xvel_FC, delX, nCells);      % Treat theta advection like a rho advection (van Leer limiter, etc.)
     
     % Advance pressure in time
-    press_CC(firstCell:lastCell) = press_CC(firstCell:lastCell) ...
-        - (speedSound_CC(firstCell:lastCell).^2 ./ spvol_CC(firstCell:lastCell)) .* q_advected;
-
+    delPDilatate(firstCell:lastCell) = (speedSound_CC(firstCell:lastCell).^2 ./ spvol_CC(firstCell:lastCell)) .* q_advected;
+    
+    press_CC(firstCell:lastCell) = press_CC(firstCell:lastCell) + delPDilatate(firstCell:lastCell);
+    %   ^^----------------DOUBLE CHECK THIS SIGN!!!
     % Set boundary conditions on the new pressure
     press_CC =  setBoundaryConditions(press_CC,'press_CC');
            
@@ -305,8 +308,9 @@ for tstep = 1:maxTimeSteps
     for j = firstCell:lastCell
         del_mom(j)  = -delT * delX * ...
             ((press_FC(j) - press_FC(j-1))/(delX));
-        del_eng(j)  = -delT * delX * ...
-            press_CC(j) * q_advected(j-firstCell+1);                % Shift q to the indices of the rest of the arrays in this formula
+            
+        del_eng(j)  =  delX * press_CC(j) * delPDilatate(j) ...
+                      /(speedSound_CC(j).^2 ./ spvol_CC(j));                % Shift q to the indices of the rest of the arrays in this formula
     end
 
     
@@ -343,7 +347,7 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting density\n');
     [q_advected, gradLim, grad_x, rho_slab, rho_vrtx_1, rho_vrtx_2] = ...
         advectRho(mass_L, ofs, rx, xvel_FC, delX, nCells);      
-    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) - delT * ofs .* q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
+    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) - q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
 %    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) - delT * q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
     rho_CC      = mass_CC ./ delX;                                  % Updated density
     % Need to set B.C. on rho,T,u!!
@@ -373,14 +377,14 @@ for tstep = 1:maxTimeSteps
     
     delt_CFL        = 1e+30;
     for j = firstCell:lastCell
-        speed_Sound = d_delT_knob * speedSound_CC(j);
+        speed_Sound = speedSound_CC(j);
         A           = CFL*delX/(speed_Sound + abs(xvel_CC(j))+d_SMALL_NUM);
         delt_CFL    = min(A, delt_CFL);
     end
     fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delt_CFL);
 
     %================ Plot results ================
-    
+    figure(1)
     subplot(2,2,1), plot(x_CC,rho_CC);
     xlim([boxLower(1) boxUpper(1)]);
     legend('\rho');
@@ -400,8 +404,8 @@ for tstep = 1:maxTimeSteps
     xlim([boxLower(1) boxUpper(1)]);
     legend('p');
     grid on;
-    
-    M(tstep) = getframe(gcf);
+   
+     M(tstep) = getframe(gcf);
     
     %================ Various breaks ================
     

@@ -23,8 +23,8 @@ case 'rho_cc'                               % Homogeneous Neumann B.C. for rho a
     q(ghost_Right)     = q(ghost_Right-1);  % Right boundary
     
 case 'xvel_cc'                              % Homogeneous Dirichlet B.C. for u at left boundary    
-    q(ghost_Left)     = 0;                  % Left boundary
-    q(ghost_Right)    = 0;                  % Right boundary
+    q(ghost_Left)     = q(ghost_Left+1);    % Left boundary               
+    q(ghost_Right)    = q(ghost_Right-1);   % Right boundary              
     
 case 'temp_cc'                              % Homogeneous Neumann B.C. for T at left boundary
     q(ghost_Left)   = q(ghost_Left+1);      % Left boundary
@@ -38,8 +38,8 @@ case 'press_cc'                             % Homogeneous Neumann B.C. for p at 
     % FC Variables
     
 case 'xvel_fc'                              % Homogeneous Dirichlet B.C. for u at face centers
-    q(ghost_Left)   = 0;                    % Left boundary. This is a FIRST ORDER approximation! (could be bad)
-    q(ghost_Right)  = 0;                    % Right boundary. This is a FIRST ORDER approximation! (could be bad)
+    %q(ghost_Left)   =q(ghost_Left+1);       % Left boundary. This is a FIRST ORDER approximation! (could be bad)               
+    %q(ghost_Right)  =q(ghost_Right-1);      % Right boundary. This is a FIRST ORDER approximation! (could be bad)              
     
 otherwise
     error('setBoundaryConditions: unknown variable');
