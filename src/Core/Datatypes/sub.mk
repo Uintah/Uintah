@@ -17,7 +17,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
         $(SRCDIR)/MeshBase.cc		    \
-        $(SRCDIR)/MeshTet.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PropertyManager.cc	    \
         $(SRCDIR)/ScalarField.cc	    \
@@ -29,8 +28,9 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/ScalarFieldZone.cc	    \
         $(SRCDIR)/SparseRowMatrix.cc	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
+        $(SRCDIR)/TetVolMesh.cc 	    \
         $(SRCDIR)/TriDiagonalMatrix.cc	    \
-        $(SRCDIR)/TriSurf.cc		    \
+        $(SRCDIR)/TriSurfMesh.cc	    \
 	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/VectorField.cc	    \
         $(SRCDIR)/VectorFieldHUG.cc	    \

@@ -1828,7 +1828,7 @@ void Mesh::add_node_neighbors(int nodei, Array1<int>& idx, int apBC)
   }
 }
 
-DirichletBC::DirichletBC(const TriSurfHandle& fromsurf, double value)
+DirichletBC::DirichletBC(const TriSurfMeshHandle& fromsurf, double value)
   : fromsurf(fromsurf), value(value)
 {
 }

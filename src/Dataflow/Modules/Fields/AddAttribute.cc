@@ -18,7 +18,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/Expon.h>
 
@@ -78,11 +78,11 @@ AddAttribute::execute()
   {
     return;
   }
-  //TriSurf *ts = sh.get_rep();  // FIXME: extract surf from field
-  TriSurf *ts = 0;
+  //TriSurfMesh *ts = sh.get_rep();  // FIXME: extract surf from field
+  TriSurfMesh *ts = 0;
   if (!ts)
   {
-    cerr << "Error: surface isn't a trisurface\n";
+    cerr << "Error: surface isn't a TriSurfMesh\n";
     return;
   }
 

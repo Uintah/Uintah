@@ -14,7 +14,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -121,20 +121,20 @@ LocateNbrhd::execute()
   clString m(method_.get());
 
 #if 0
-  TriSurf *ots = new TriSurf;
+  TriSurfMesh *ots = new TriSurfMesh;
   osurfH_ = ots;
   if (m == "project")
   {	
-    TriSurf *ts = scinew TriSurf;
+    TriSurfMesh *ts = scinew TriSurfMesh;
 	
     // First, set up the data point locations and values in an array.
     Array1<Point> p;
 
-    // Get the right TriSurf and grab those vals.
-    if (!(ts = surfH->getTriSurf()))
+    // Get the right TriSurfMesh and grab those vals.
+    if (!(ts = surfH->getTriSurfMesh()))
     {
 
-      cerr << "Error - need a TriSurf!\n";
+      cerr << "Error - need a TriSurfMesh!\n";
       return;
     }
     if (ts->bcIdx.size()==0)

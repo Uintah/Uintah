@@ -1,5 +1,5 @@
 /*
- *  MeshTet.cc: Tetrahedral mesh with new design.
+ *  TetVolMesh.cc: Tetrahedral mesh with new design.
  *
  *  Written by:
  *   Michael Callahan
@@ -11,37 +11,37 @@
  *
  */
 
-#include <Core/Datatypes/MeshTet.h>
+#include <Core/Datatypes/TetVolMesh.h>
 
 
 namespace SCIRun {
 
-PersistentTypeID MeshTet::type_id("MeshTet", "Datatype", NULL);
+PersistentTypeID TetVolMesh::type_id("TetVolMesh", "Datatype", NULL);
 
-const string MeshTet::type_name(int)
+const string TetVolMesh::type_name(int)
 {
-  return "MeshTet";
+  return "TetVolMesh";
 }
 
 
-MeshTet::MeshTet()
+TetVolMesh::TetVolMesh()
 {
 }
 
-MeshTet::MeshTet(const MeshTet &copy)
+TetVolMesh::TetVolMesh(const TetVolMesh &copy)
   : points_(copy.points_),
-    tets_(copy.tets_),
+    cells_(copy.cells_),
     neighbors_(copy.neighbors_)
 {
 }
 
-MeshTet::~MeshTet()
+TetVolMesh::~TetVolMesh()
 {
 }
 
 
 BBox
-MeshTet::get_bounding_box() const
+TetVolMesh::get_bounding_box() const
 {
 #if 0
   BBox result;
@@ -68,57 +68,57 @@ MeshTet::get_bounding_box() const
 }
 
 
-MeshTet::node_iterator
-MeshTet::node_begin() const
+TetVolMesh::node_iterator
+TetVolMesh::node_begin() const
 {
   return 0;
 }
 
-MeshTet::node_iterator
-MeshTet::node_end() const
+TetVolMesh::node_iterator
+TetVolMesh::node_end() const
 {
   return points_.size();
 }
 
-MeshTet::edge_iterator
-MeshTet::edge_begin() const
+TetVolMesh::edge_iterator
+TetVolMesh::edge_begin() const
 {
   return 0;
 }
 
-MeshTet::edge_iterator
-MeshTet::edge_end() const
+TetVolMesh::edge_iterator
+TetVolMesh::edge_end() const
 {
-  return (tets_.size() >> 2) * 6;
+  return (cells_.size() >> 2) * 6;
 }
 
-MeshTet::face_iterator
-MeshTet::face_begin() const
+TetVolMesh::face_iterator
+TetVolMesh::face_begin() const
 {
   return 0;
 }
 
-MeshTet::face_iterator
-MeshTet::face_end() const
+TetVolMesh::face_iterator
+TetVolMesh::face_end() const
 {
-  return tets_.size();
+  return cells_.size();
 }
 
-MeshTet::cell_iterator
-MeshTet::cell_begin() const
+TetVolMesh::cell_iterator
+TetVolMesh::cell_begin() const
 {
   return 0;
 }
 
-MeshTet::cell_iterator
-MeshTet::cell_end() const
+TetVolMesh::cell_iterator
+TetVolMesh::cell_end() const
 {
-  return tets_.size() >> 2;
+  return cells_.size() >> 2;
 }
 
 
 void
-MeshTet::get_nodes(node_array &array, edge_index idx) const
+TetVolMesh::get_nodes(node_array &array, edge_index idx) const
 {
   static int table[6][2] =
   {
@@ -134,13 +134,13 @@ MeshTet::get_nodes(node_array &array, edge_index idx) const
   const int off = *idx % 6;
   const int node = tet * 4;
 
-  array.push_back(tets_[node + table[off][0]]);
-  array.push_back(tets_[node + table[off][1]]);
+  array.push_back(cells_[node + table[off][0]]);
+  array.push_back(cells_[node + table[off][1]]);
 }
 
 
 void
-MeshTet::get_nodes(node_array &array, face_index idx) const
+TetVolMesh::get_nodes(node_array &array, face_index idx) const
 {
   static int table[4][3] =
   {
@@ -152,25 +152,25 @@ MeshTet::get_nodes(node_array &array, face_index idx) const
   
   int tet = *idx & 0xfffffffc;
   int off = *idx & 3;
-  array.push_back(tets_[tet + table[off][0]]);
-  array.push_back(tets_[tet + table[off][1]]);
-  array.push_back(tets_[tet + table[off][2]]);
-  array.push_back(tets_[tet + table[off][3]]);
+  array.push_back(cells_[tet + table[off][0]]);
+  array.push_back(cells_[tet + table[off][1]]);
+  array.push_back(cells_[tet + table[off][2]]);
+  array.push_back(cells_[tet + table[off][3]]);
 }
 
 
 void
-MeshTet::get_nodes(node_array &array, cell_index idx) const
+TetVolMesh::get_nodes(node_array &array, cell_index idx) const
 {
-  array.push_back(tets_[*idx * 4 + 0]);
-  array.push_back(tets_[*idx * 4 + 1]);
-  array.push_back(tets_[*idx * 4 + 2]);
-  array.push_back(tets_[*idx * 4 + 3]);
+  array.push_back(cells_[*idx * 4 + 0]);
+  array.push_back(cells_[*idx * 4 + 1]);
+  array.push_back(cells_[*idx * 4 + 2]);
+  array.push_back(cells_[*idx * 4 + 3]);
 }
 
 
 void
-MeshTet::get_edges(edge_array &array, face_index idx) const
+TetVolMesh::get_edges(edge_array &array, face_index idx) const
 {
   static int table[4][3] =
   {
@@ -191,7 +191,7 @@ MeshTet::get_edges(edge_array &array, face_index idx) const
 
 
 void
-MeshTet::get_edges(edge_array &array, cell_index index) const
+TetVolMesh::get_edges(edge_array &array, cell_index index) const
 {
   cell_index::value_type idx = *index;
   idx *= 6;
@@ -205,7 +205,7 @@ MeshTet::get_edges(edge_array &array, cell_index index) const
 
 
 void
-MeshTet::get_faces(face_array &array, cell_index index) const
+TetVolMesh::get_faces(face_array &array, cell_index index) const
 {
   cell_index::value_type idx = *index;
   idx *= 4;
@@ -216,19 +216,19 @@ MeshTet::get_faces(face_array &array, cell_index index) const
 }
 
 void
-MeshTet::get_neighbor(cell_index &neighbor, face_index idx) const
+TetVolMesh::get_neighbor(cell_index &neighbor, face_index idx) const
 {
   neighbor = neighbors_[*idx];
 }
 
 void 
-MeshTet::get_center(Point &p, node_index idx) const
+TetVolMesh::get_center(Point &p, node_index idx) const
 {
   get_point(p, idx);
 }
 
 void 
-MeshTet::get_center(Point &p, edge_index idx) const
+TetVolMesh::get_center(Point &p, edge_index idx) const
 {
   const double s = 1./2.;
   node_array arr;
@@ -241,7 +241,7 @@ MeshTet::get_center(Point &p, edge_index idx) const
 }
 
 void 
-MeshTet::get_center(Point &p, face_index idx) const
+TetVolMesh::get_center(Point &p, face_index idx) const
 {
   const double s = 1./3.;
   node_array arr;
@@ -255,7 +255,7 @@ MeshTet::get_center(Point &p, face_index idx) const
 }
 
 void 
-MeshTet::get_center(Point &p, cell_index idx) const
+TetVolMesh::get_center(Point &p, cell_index idx) const
 {
   const double s = 1./5.;
   node_array arr;
@@ -282,7 +282,7 @@ distance2(const Point &p0, const Point &p1)
 
 
 void
-MeshTet::locate(node_index &node, const Point &p)
+TetVolMesh::locate(node_index &node, const Point &p)
 {
   // TODO: Use search structure instead of exaustive search.
   int min_indx;
@@ -312,13 +312,13 @@ MeshTet::locate(node_index &node, const Point &p)
 
 #if 0
 void
-MeshTet::locate(edge_index &edge, const Point & /* p */)
+TetVolMesh::locate(edge_index &edge, const Point & /* p */)
 {
   edge = edge_end();
 }
 
 void
-MeshTet::locate(face_index &face, const Point & /* p */)
+TetVolMesh::locate(face_index &face, const Point & /* p */)
 {
   face = face_end();
 }
@@ -326,9 +326,9 @@ MeshTet::locate(face_index &face, const Point & /* p */)
 
 
 void
-MeshTet::locate(cell_index &cell, const Point &p)
+TetVolMesh::locate(cell_index &cell, const Point &p)
 {
-  for (int i=0; i < tets_.size(); i+=4)
+  for (int i=0; i < cells_.size(); i+=4)
   {
     if (inside4_p(i, p))
     {
@@ -342,29 +342,29 @@ MeshTet::locate(cell_index &cell, const Point &p)
 
 
 void
-MeshTet::unlocate(Point &result, const Point &p)
+TetVolMesh::unlocate(Point &result, const Point &p)
 {
   result = p;
 }
 
 
 void
-MeshTet::get_point(Point &result, node_index index) const
+TetVolMesh::get_point(Point &result, node_index index) const
 {
   result = points_[*index];
 }
 
 
 bool
-MeshTet::inside4_p(int i, const Point &p)
+TetVolMesh::inside4_p(int i, const Point &p)
 {
   // TODO: This has not been tested.
   // TODO: Looks like too much code to check sign of 4 plane/point tests.
 
-  const Point &p0 = points_[tets_[i+0]];
-  const Point &p1 = points_[tets_[i+1]];
-  const Point &p2 = points_[tets_[i+2]];
-  const Point &p3 = points_[tets_[i+3]];
+  const Point &p0 = points_[cells_[i+0]];
+  const Point &p1 = points_[cells_[i+1]];
+  const Point &p2 = points_[cells_[i+2]];
+  const Point &p3 = points_[cells_[i+3]];
   const double x0 = p0.x();
   const double y0 = p0.y();
   const double z0 = p0.z();
@@ -416,15 +416,15 @@ MeshTet::inside4_p(int i, const Point &p)
 }
 
 
-#define MESHTET_VERSION 1
+#define TETVOLMESH_VERSION 1
 
 void
-MeshTet::io(Piostream &stream)
+TetVolMesh::io(Piostream &stream)
 {
-  stream.begin_class(type_id.type.c_str(), MESHTET_VERSION);
+  stream.begin_class(type_id.type.c_str(), TETVOLMESH_VERSION);
 
   Pio(stream, points_);
-  Pio(stream, tets_);
+  Pio(stream, cells_);
   Pio(stream, neighbors_);
 
   stream.end_class();

@@ -1,5 +1,5 @@
 /*
- *  MeshRG.h: Templated Mesh defined on a 3D Regular Grid
+ *  Lat3VolMesh.h: Templated Mesh defined on a 3D Regular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef SCI_project_MeshRG_h
-#define SCI_project_MeshRG_h 1
+#ifndef SCI_project_Lat3VolMesh_h
+#define SCI_project_Lat3VolMesh_h 1
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/FieldIterator.h>
@@ -24,7 +24,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE MeshRG : public Datatype
+class SCICORESHARE Lat3VolMesh : public Datatype
 {
 public:
 
@@ -46,14 +46,14 @@ public:
   //! Storage types for the arguments passed to the 
   //  get_*() functions.  For rg meshes, these all have
   //  known maximum sizes, so we use them.
-  typedef node_index[8]   node_array;
-  typedef edge_index[12]  edge_array;
-  typedef face_index[6]   face_array;
-  typedef cell_index[8]   cell_array;
+  typedef node_index      node_array[8];
+  typedef edge_index      edge_array[12];
+  typedef face_index      face_array[6];
+  typedef cell_index      cell_array[8];
 
-  MeshRG(int x, int y, int z, Point &min, Point &max);
-  MeshRG(const MeshRG &);
-  virtual ~MeshRG(){};
+  Lat3VolMesh(int x, int y, int z, Point &min, Point &max);
+  Lat3VolMesh(const Lat3VolMesh &);
+  virtual ~Lat3VolMesh();
 
   node_iterator node_begin() const;
   node_iterator node_end() const;
@@ -73,20 +73,20 @@ public:
   virtual BBox get_bounding_box() const;
 
   //! get the child elements of the given index
-  void get_nodes(rg_node_array &array, edge_index idx) const;
-  void get_nodes(rg_node_array &array, face_index idx) const;
-  void get_nodes(rg_node_array &array, cell_index idx) const;
-  void get_edges(rg_edge_array &array, face_index idx) const;
-  void get_edges(rg_edge_array &array, cell_index idx) const;
-  void get_faces(rg_face_array &array, cell_index idx) const;
+  void get_nodes(node_array &array, edge_index idx) const;
+  void get_nodes(node_array &array, face_index idx) const;
+  void get_nodes(node_array &array, cell_index idx) const;
+  void get_edges(edge_array &array, face_index idx) const;
+  void get_edges(edge_array &array, cell_index idx) const;
+  void get_faces(face_array &array, cell_index idx) const;
 
   //! get the parent element(s) of the given index
-  int get_edges(rg_edge_array &array, node_index idx) const;
-  int get_faces(rg_face_array &array, node_index idx) const;
-  int get_faces(rg_face_array &array, edge_index idx) const;
-  int get_cells(rg_cell_array &array, node_index idx) const;
-  int get_cells(rg_cell_array &array, edge_index idx) const;
-  int get_cells(rg_cell_array &array, face_index idx) const;
+  int get_edges(edge_array &array, node_index idx) const;
+  int get_faces(face_array &array, node_index idx) const;
+  int get_faces(face_array &array, edge_index idx) const;
+  int get_cells(cell_array &array, node_index idx) const;
+  int get_cells(cell_array &array, edge_index idx) const;
+  int get_cells(cell_array &array, face_index idx) const;
 
   //! similar to get_cells() with face_index argument, but
   //  returns the "other" cell if it exists, not all that exist
@@ -113,13 +113,13 @@ public:
 
 private:
 
-  //! the object space extents of a MeshRG
+  //! the object space extents of a Lat3VolMesh
   Point min_, max_;
 
-  //! the node_index extents of a MeshRG (min=0, max=n)
+  //! the node_index extents of a Lat3VolMesh (min=0, max=n)
   int nx_, ny_, nz_;
 
-  // returns a MeshRG
+  // returns a Lat3VolMesh
   static Persistent *maker();
 };
 
@@ -130,98 +130,98 @@ private:
 
 
 #if 0
-  //old iterator and index stuff
-  struct IPoint
+//old iterator and index stuff
+struct IPoint
+{
+  IPoint() {}
+  IPoint(int i, int j, int k) : i_(i), j_(j), k_(k) {}
+
+  int i_, j_, k_;
+};
+
+
+struct NCIter : public IPoint
+{
+  NCIter(const Lat3VolMesh *m, int i, int j, int k) : IPoint(i, j, k), mesh_(m) {}
+
+  const IPoint &operator *() { return *this; }
+
+  bool operator ==(const NCIter &a)
   {
-    IPoint() {}
-    IPoint(int i, int j, int k) : i_(i), j_(j), k_(k) {}
+    return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
+  }
 
-    int i_, j_, k_;
-  };
-
-
-  struct NCIter : public IPoint
+  bool operator !=(const NCIter &a)
   {
-    NCIter(const MeshRG *m, int i, int j, int k) : IPoint(i, j, k), mesh_(m) {}
+    return !(*this == a);
+  }
 
-    const IPoint &operator *() { return *this; }
-
-    bool operator ==(const NCIter &a)
-    {
-      return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
-    }
-
-    bool operator !=(const NCIter &a)
-    {
-      return !(*this == a);
-    }
-
-    const MeshRG *mesh_;
-  };
+  const Lat3VolMesh *mesh_;
+};
 
 
-  struct NodeIter : public NCIter
+struct NodeIter : public NCIter
+{
+  NodeIter(const Lat3VolMesh *m, int i, int j, int k) : NCIter(m, i, j, k) {}
+
+  NodeIter &operator++()
   {
-    NodeIter(const MeshRG *m, int i, int j, int k) : NCIter(m, i, j, k) {}
-
-    NodeIter &operator++()
+    i_++;
+    if (i_ > mesh_->nx_)
     {
-      i_++;
-      if (i_ > mesh_->nx_)
+      i_ = 0;
+      j_++;
+      if (j_ > mesh_->ny_)
       {
-	i_ = 0;
-	j_++;
-	if (j_ > mesh_->ny_)
-	{
-	  j_ = 0;
-	  k_++;
-	}
+	j_ = 0;
+	k_++;
       }
-      return *this;
     }
+    return *this;
+  }
 
-    NodeIter operator++(int)
-    {
-      NodeIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-
-  struct CellIter : public NCIter
+  NodeIter operator++(int)
   {
-    CellIter(const MeshRG *m, int i, int j, int k) : NCIter(m, i, j, k) {}
+    NodeIter result(*this);
+    operator++();
+    return result;
+  }
+};
 
-    CellIter &operator++()
+
+struct CellIter : public NCIter
+{
+  CellIter(const Lat3VolMesh *m, int i, int j, int k) : NCIter(m, i, j, k) {}
+
+  CellIter &operator++()
+  {
+    i_++;
+    if (i_ >= mesh_->nx_)
     {
-      i_++;
-      if (i_ >= mesh_->nx_)
+      i_ = 0;
+      j_++;
+      if (j_ >= mesh_->ny_)
       {
-	i_ = 0;
-	j_++;
-	if (j_ >= mesh_->ny_)
-	{
-	  j_ = 0;
-	  k_++;
-	}
+	j_ = 0;
+	k_++;
       }
-      return *this;
     }
+    return *this;
+  }
 
-  private:
-    CellIter operator++(int)
-    {
-      CellIter result(*this);
-      operator++();
-      return result;
-    }
-  };
+private:
+  CellIter operator++(int)
+  {
+    CellIter result(*this);
+    operator++();
+    return result;
+  }
+};
 #endif
 
 
 
-#endif // SCI_project_MeshRG_h
+#endif // SCI_project_Lat3VolMesh_h
 
 
 
