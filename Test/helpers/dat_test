@@ -27,8 +27,12 @@ if [ -d "$TEST_UDADIR" ]; then
     cd $COMPARE_ROOT/$TEST
     cvs add $UDADIR
     cd $UDADIR
-    cvs add *.dat
-    cvs commit -m "Automated Tester storing dat files" *.dat
+    ls -1 $TEST_UDADIR/*.dat
+    retval=$?
+    if [ $retval == "0" ]; then
+	cvs add *.dat
+	cvs commit -m "Automated Tester storing dat files" *.dat
+    fi
   else
     cd $TEST_UDADIR
     echo "Comparing dat files"
