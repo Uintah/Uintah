@@ -22,7 +22,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomPick.h>
-#include <Core/Geom/Pt.h> 
+#include <Core/Geom/GeomPoint.h> 
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Malloc/Allocator.h>
@@ -416,7 +416,7 @@ void ParticleVis::execute()
       }
     } else if( ps->getParticleSet()->numParticles() ) { // Particles
       GeomGroup *obj = scinew GeomGroup;
-      GeomPts *pts = scinew GeomPts(ps->getParticleSet()->numParticles());
+      GeomPoints *pts= scinew GeomPoints(ps->getParticleSet()->numParticles());
       pts->pickable = 1;
       int count = 0;
       GeomArrows* arrows;
