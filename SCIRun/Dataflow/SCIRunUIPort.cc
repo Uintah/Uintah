@@ -45,7 +45,7 @@ int SCIRunUIPort::ui()
 {
   Module* module = component->getModule();
   module->popupUI();
-  cerr<<"Warning: need return correct value (0 success, -1 fatal error, other values for other errors !"<<endl;
+  cerr<<"Warning: need return correct value (0 success, -1 fatal error, other values for other errors !\n";
   return 0;
 }
 

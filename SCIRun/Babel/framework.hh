@@ -2,13 +2,16 @@
 // File:          framework.hh
 // Symbol:        framework-v1.0
 // Symbol Type:   package
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:07:10 CDT
-// Generated:     20020813 11:07:12 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021108 00:42:45 EST
+// Generated:     20021108 00:42:50 EST
 // Description:   Client-side glue code for framework
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
+// babel-version = 0.7.4
+// source-line   = 5
+// source-url    = file:/.automount/linbox1/root/home/user2/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_hh

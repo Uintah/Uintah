@@ -2,13 +2,16 @@
 // File:          framework_Port.hh
 // Symbol:        framework.Port-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:07:11 CDT
-// Generated:     20020813 11:07:13 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021108 00:42:48 EST
+// Generated:     20021108 00:42:50 EST
 // Description:   Client-side glue code for framework.Port
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
+// babel-version = 0.7.4
+// source-line   = 14
+// source-url    = file:/.automount/linbox1/root/home/user2/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_Port_hh
@@ -27,7 +30,7 @@ namespace framework {
 #endif
 namespace SIDL {
   template<>
-  class array<framework::Port>;
+  class array< ::framework::Port>;
 }
 
 #ifndef included_SIDL_cxx_hh
@@ -48,7 +51,7 @@ namespace framework {
   /**
    * Symbol "framework.Port" (version 1.0)
    */
-  class Port : public SIDL::StubBase {
+  class Port : public ::SIDL::StubBase {
 
     //////////////////////////////////////////////////
     // 
@@ -58,78 +61,78 @@ namespace framework {
   public:
 
     /**
-     * <p>
+     * &amp;lt;p&amp;gt;
      * Add one to the intrinsic reference count in the underlying object.
-     * Object in <code>SIDL</code> have an intrinsic reference count.
+     * Object in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
      * Objects continue to exist as long as the reference count is
      * positive. Clients should call this method whenever they
      * create another ongoing reference to an object or interface.
-     * </p>
-     * <p>
+     * &amp;lt;/p&amp;gt;
+     * &amp;lt;p&amp;gt;
      * This does not have a return value because there is no language
      * independent type that can refer to an interface or a
      * class.
-     * </p>
+     * &amp;lt;/p&amp;gt;
      */
     void
-    addReference() throw ( SIDL::NullIORException ) 
+    addReference() throw ( ::SIDL::NullIORException ) 
     ;
 
 
     /**
      * Decrease by one the intrinsic reference count in the underlying
      * object, and delete the object if the reference is non-positive.
-     * Objects in <code>SIDL</code> have an intrinsic reference count.
+     * Objects in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
      * Clients should call this method whenever they remove a
      * reference to an object or interface.
      */
     void
-    deleteReference() throw ( SIDL::NullIORException ) 
+    deleteReference() throw ( ::SIDL::NullIORException ) 
     ;
 
 
     /**
-     * Return true if and only if <code>obj</code> refers to the same
+     * Return true if and only if &amp;lt;code&amp;gt;obj&amp;lt;/code&amp;gt; refers to the same
      * object as this object.
      */
     bool
     isSame (
-      /*in*/ SIDL::BaseInterface iobj
+      /*in*/ ::SIDL::BaseInterface iobj
     )
-    throw ( SIDL::NullIORException ) 
+    throw ( ::SIDL::NullIORException ) 
     ;
 
 
 
     /**
      * Check whether the object can support the specified interface or
-     * class.  If the <code>SIDL</code> type name in <code>name</code>
+     * class.  If the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name in &amp;lt;code&amp;gt;name&amp;lt;/code&amp;gt;
      * is supported, then a reference to that object is returned with the
      * reference count incremented.  The callee will be responsible for
-     * calling <code>deleteReference</code> on the returned object.  If
+     * calling &amp;lt;code&amp;gt;deleteReference&amp;lt;/code&amp;gt; on the returned object.  If
      * the specified type is not supported, then a null reference is
      * returned.
      */
-    SIDL::BaseInterface
+    ::SIDL::BaseInterface
     queryInterface (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
-    throw ( SIDL::NullIORException ) 
+    throw ( ::SIDL::NullIORException ) 
     ;
 
 
 
     /**
      * Return whether this object is an instance of the specified type.
-     * The string name must be the <code>SIDL</code> type name.  This
-     * routine will return <code>true</code> if and only if a cast to
+     * The string name must be the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name.  This
+     * routine will return &amp;lt;code&amp;gt;true&amp;lt;/code&amp;gt; if and only if a cast to
      * the string type name would succeed.
      */
     bool
     isInstanceOf (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
-    throw ( SIDL::NullIORException ) 
+    throw ( ::SIDL::NullIORException ) 
     ;
 
 
@@ -150,7 +153,7 @@ namespace framework {
     Port() : d_self(0), d_weak_reference(false) { }
 
     // static constructor
-    static framework::Port _create();
+    static ::framework::Port _create();
 
     // default destructor
     virtual ~Port ();
@@ -170,7 +173,7 @@ namespace framework {
     Port ( Port::ior_t* ior, bool isWeak );
 
     // conversion from a StubBase
-    Port ( const SIDL::StubBase& base );
+    Port ( const ::SIDL::StubBase& base );
 
     ior_t* _get_ior() { return d_self; }
 
@@ -198,7 +201,7 @@ namespace framework {
     static const ext_t * s_ext;
 
   public:
-    static const ext_t * _get_ext() throw ( SIDL::NullIORException );
+    static const ext_t * _get_ext() throw ( ::SIDL::NullIORException );
 
   }; // end class Port
 } // end namespace framework
@@ -206,14 +209,14 @@ namespace framework {
 // array specialization
 namespace SIDL {
   template<>
-  class array<framework::Port> : public array_mixin< struct 
-    framework_Port__array, struct framework_Port__object*, framework::Port>{
+  class array< ::framework::Port> : public array_mixin< struct 
+    framework_Port__array, struct framework_Port__object*, ::framework::Port>{
   public:
     /**
      * default constructor
      */
     array() : array_mixin< struct framework_Port__array,
-      struct framework_Port__object*, framework::Port>() {}
+      struct framework_Port__object*, ::framework::Port>() {}
 
     /**
      * default destructor
@@ -223,7 +226,7 @@ namespace SIDL {
     /**
      * copy constructor
      */
-    array( const array< framework::Port >& original ) {
+    array( const array< ::framework::Port >& original ) {
       d_array = original.d_array;
       if ( d_array ) { addReference(); }
     }
@@ -231,7 +234,8 @@ namespace SIDL {
     /**
      * assignment operator
      */
-    array< framework::Port >& operator=( const array< framework::Port >& rhs ) {
+    array< ::framework::Port >& operator=( const array< ::framework::Port >& 
+      rhs ) {
       if ( d_array != rhs.d_array ) {
         if ( d_array ) { deleteReference(); }
         d_array=rhs.d_array;
@@ -246,14 +250,14 @@ namespace SIDL {
    */
   array( struct framework_Port__array* src ) : array_mixin< struct 
     framework_Port__array, struct framework_Port__object*,
-    framework::Port>(src) {}
+    ::framework::Port>(src) {}
 
   /**
    * static constructor: createRow
    */
-  static array < framework::Port >
+  static array < ::framework::Port >
   createRow(int32_t dimen, const int32_t lower[], const int32_t upper[]) {
-    array < framework::Port > a;
+    array < ::framework::Port > a;
     a._set_ior( (struct framework_Port__array*)
                 SIDL_interface__array_createRow( dimen, lower, upper ) );
     return a;
@@ -262,9 +266,9 @@ namespace SIDL {
   /**
    * static constructor: createCol
    */
-  static array < framework::Port >
+  static array < ::framework::Port >
   createCol(int32_t dimen, const int32_t lower[], const int32_t upper[]) {
-    array < framework::Port > a;
+    array < ::framework::Port > a;
     a._set_ior( (struct framework_Port__array*)
                 SIDL_interface__array_createCol( dimen, lower, upper ) );
     return a;
@@ -273,9 +277,9 @@ namespace SIDL {
   /**
    * static constructor: create1d
    */
-  static array < framework::Port >
+  static array < ::framework::Port >
   create1d(int32_t len) {
-    array < framework::Port > a;
+    array < ::framework::Port > a;
     a._set_ior( (struct framework_Port__array*)
                 SIDL_interface__array_create1d(len));
     return a;
@@ -284,9 +288,9 @@ namespace SIDL {
   /**
    * static constructor: create2dCol
    */
-  static array < framework::Port >
+  static array < ::framework::Port >
   create2dCol(int32_t m, int32_t n) {
-    array < framework::Port > a;
+    array < ::framework::Port > a;
     a._set_ior( (struct framework_Port__array*)
                 SIDL_interface__array_create2dCol(m,n));
     return a;
@@ -295,9 +299,9 @@ namespace SIDL {
   /**
    * static constructor: create2dRow
    */
-  static array < framework::Port >
+  static array < ::framework::Port >
   create2dRow(int32_t m, int32_t n) {
-    array < framework::Port > a;
+    array < ::framework::Port > a;
     a._set_ior( (struct framework_Port__array*)
                 SIDL_interface__array_create2dRow(m,n));
     return a;
@@ -306,13 +310,13 @@ namespace SIDL {
   /**
    * constructor: slice
    */
-  array < framework::Port >
+  array < ::framework::Port >
   slice( int dimen,
          const int32_t newElem[],
          const int32_t *srcStart = 0,
          const int32_t *srcStride = 0,
          const int32_t *newStart = 0) {
-    array < framework::Port > a;
+    array < ::framework::Port > a;
     a._set_ior( (struct framework_Port__array*)
                 SIDL_interface__array_slice( (struct SIDL_interface__array *) 
       d_array,
@@ -324,7 +328,7 @@ namespace SIDL {
   /**
    * copy
    */
-  void copy( const array<framework::Port>& src ) {
+  void copy( const array< ::framework::Port>& src ) {
     SIDL_interface__array_copy( (const struct SIDL_interface__array*) 
       src._get_ior(),(struct SIDL_interface__array*) _get_ior() );
   }
