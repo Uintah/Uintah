@@ -18,14 +18,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>
-#ifdef __sun
-  #include <string.h>
-  #define bcopy(src,dest,n) memcpy(dest,src,n)
+#include <strings.h>#
+#if defined(__sun)
+#include <string.h>
+#define bcopy(src,dest,n) memcpy(dest,src,n)
+#elif defined(__linux) || defined(__digital__) || defined __sgi
+#include <string.h>
 #else
-  #ifndef __linux
-    #include <bstring.h>
-  #endif
+#error "Need bcopy idfdef for this architecture"
 #endif
 
 int
