@@ -313,56 +313,47 @@ void SolveMatrix::execute()
   epcount = Max(1, emit_iter.get());
   string meth=method.get();
 
+  bool intermediate = false;
+
   if(meth == "Conjugate Gradient & Precond. (SCI)"){
     conjugate_gradient_sci(mat, *solp, *rhsp);
-    solport->send(solution);
   } else if(meth == "BiConjugate Gradient & Precond. (SCI)"){
     bi_conjugate_gradient_sci(mat, *solp, *rhsp);
-    solport->send_intermediate(solution);
+    intermediate = true;
   } else if(meth == "Jacoby & Precond. (SCI)"){
     jacobi_sci(mat, *solp, *rhsp);
-    solport->send(solution);
 #ifdef PETSC_UNI
   } else if(meth == "KSPRICHARDSON (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPRICHARDSON,mat,rhsp,solp); 
-    solport->send(solution);
   } else if(meth == "KSPCHEBYCHEV (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPCHEBYCHEV,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPCG (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPCG,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPGMRES (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPGMRES,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPTCQMR (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPTCQMR,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPBCGS (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPBCGS,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPCGS (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPCGS,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPTFQMR (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPTFQMR,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPCR (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPCR,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPLSQR (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPLSQR,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPBICG (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPBICG,mat,rhsp,solp);
-    solport->send(solution);
   } else if(meth == "KSPPREONLY (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPPREONLY,mat,rhsp,solp);
-    solport->send(solution);
 #endif
   } else {
     error("Unknown method: " + meth);
+    return;
   }
+
+  solport->send(solution, intermediate);
 }
 
 #ifdef PETSC_UNI
@@ -395,7 +386,7 @@ int PETSc_monitor(KSP,int niter,PetscReal err,void *context)
 		     (solver->PETSc_log_orig-log(solver->PETSc_max_err)));
     solver->update_progress(progress);
     //    if(ep && niter%epcount == 0)
-    // solport->send_intermediate(rhs.clone());
+    // solport->send(rhs.clone(), true);
   }
 
   return 0;
@@ -694,7 +685,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
 	    if(ep && niter%epcount == 0)
-	      solport->send_intermediate(rhs.clone());
+	      solport->send(rhs.clone(), true);
 	}
     }
     iteration.set(niter);
@@ -938,7 +929,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 	}
 
 	if(ep && data.niter%epcount == 0)
-	  solport->send_intermediate(lhs.clone());
+	  solport->send(lhs.clone(), true);
 
       }
     }
@@ -1229,7 +1220,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 	}
 #ifdef yarden
 	if(data.niter%60 == 0)
-	  solport->send_intermediate(lhs.clone());
+	  solport->send(lhs.clone(), true);
 #endif
       }
     }
