@@ -85,6 +85,8 @@ public:
     int TestTx( const Point& e, const Vector& v, double tx, Point& hitNear );
     int TestTy( const Point& e, const Vector& v, double ty, Point& hitNear );
     int TestTz( const Point& e, const Vector& v, double tz, Point& hitNear );
+
+    bool Overlaps( const BBox& bb );
 };
 
 } // End namespace Geometry
@@ -92,6 +94,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  2000/04/11 19:06:09  kuzimmer
+// Includes an Overlap function to test to see if two BBoxes overlap
+//
 // Revision 1.2  1999/08/17 06:39:26  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

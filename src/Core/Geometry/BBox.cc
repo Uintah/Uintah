@@ -512,6 +512,20 @@ BBox::TestTz( const Point& e, const Vector& v, double tz, Point& hitNear )
   return 0;
 }
 
+bool 
+BBox::Overlaps( const BBox & bb)
+{
+  if( bb.cmin.x() > cmax.x() || bb.cmax.x() < cmin.x())
+    return false;
+  else if( bb.cmin.y() > cmax.y() || bb.cmax.y() < cmin.y())
+    return false;
+  else if( bb.cmin.z() > cmax.z() || bb.cmax.z() < cmin.z())
+    return false;
+
+  return true;
+}
+
+
 void Pio(Piostream & stream, BBox & box) {
 
     using SCICore::PersistentSpace::Pio;
@@ -531,6 +545,9 @@ void Pio(Piostream & stream, BBox & box) {
 
 //
 // $Log$
+// Revision 1.5  2000/04/11 19:06:08  kuzimmer
+// Includes an Overlap function to test to see if two BBoxes overlap
+//
 // Revision 1.4  2000/03/23 10:29:21  sparker
 // Use new exceptions/ASSERT macros
 // Fixed compiler warnings
