@@ -3172,7 +3172,7 @@ echo "configure:3128: checking for $MAKE version 3.78.1" >&5
     fi
   
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3472,7 +3472,7 @@ else
 #line 3473 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 #include <stdio.h>
 main()
@@ -9046,6 +9046,10 @@ case $host in
     ;;
   *linux*)
     PETSC_ARCH=linux
+
+    # Necessary for linking blas and lapack with petsc on icebox
+    echo "configure: warning: Hard coded PGI libs.  May not work if you are not on icebox." 1>&2
+    PGI_STUFF="-L/uufs/icebox/sys/pgi/linux86/lib -lpgftnrtl -lpgc"
     ;;
   *)
     PETSC_ARCH=unknown
@@ -9053,7 +9057,7 @@ case $host in
 esac
 
 echo "checking for an MPI PETSc..." 1>&6
-echo "configure:9057: checking for an MPI PETSc..." >&5
+echo "configure:9061: checking for an MPI PETSc..." >&5
 echo "$ac_t""using PETSC_ARCH: $PETSC_ARCH" 1>&6
 
 FOUND_ALL_PETSC=no
@@ -9062,7 +9066,7 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   echo "checking in $i..." 1>&6
-echo "configure:9066: checking in $i..." >&5
+echo "configure:9070: checking in $i..." >&5
   if test "$PETSC_ARCH" = "unknown" &&
      test -x "$i/bin/petscarch"; then
     PETSC_ARCH=`$i/bin/petscarch`
@@ -9099,10 +9103,10 @@ echo "configure:9066: checking in $i..." >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:9103: checking for -lpetsc" >&5
+echo "configure:9107: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:9106: checking for main in -lpetsc" >&5
+echo "configure:9110: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9180,10 +9184,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:9184: checking for -lpetsc" >&5
+echo "configure:9188: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:9187: checking for main in -lpetsc" >&5
+echo "configure:9191: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9252,7 +9256,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:9256: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:9260: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -9291,10 +9295,7 @@ EOF
     FOUND_ALL_PETSC=yes
     DEF_PETSC="#define HAVE_PETSC 1"
     PETSC_DIR=$i
-    PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
-      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK \
-      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $MPI_LIBRARY $MPI \
-	$FLIBS -lm"
+    PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $PGI_STUFF $MPI_LIBRARY $MPI $FLIBS -lm"
     break
   fi 
 done
@@ -9323,7 +9324,7 @@ fi
 ##  --  search for uni-petsc  --------------------------------------------
 
 echo "checking for an mpiuni PETSc..." 1>&6
-echo "configure:9327: checking for an mpiuni PETSc..." >&5
+echo "configure:9328: checking for an mpiuni PETSc..." >&5
 
 FOUND_ALL_PETSC=no
 for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
@@ -9366,10 +9367,10 @@ for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:9370: checking for -lpetsc" >&5
+echo "configure:9371: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:9373: checking for main in -lpetsc" >&5
+echo "configure:9374: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9448,10 +9449,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:9452: checking for -lpetsc" >&5
+echo "configure:9453: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:9455: checking for main in -lpetsc" >&5
+echo "configure:9456: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9520,7 +9521,7 @@ EOF
       fi
 
       echo $ac_n "checking for $_SCI_LOOP_VAR_""... $ac_c" 1>&6
-echo "configure:9524: checking for $_SCI_LOOP_VAR_" >&5
+echo "configure:9525: checking for $_SCI_LOOP_VAR_" >&5
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -9597,17 +9598,17 @@ fi
 ##  --  search for optional headers  ------------------------------------
 ac_safe=`echo "sstream" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sstream""... $ac_c" 1>&6
-echo "configure:9601: checking for sstream" >&5
+echo "configure:9602: checking for sstream" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9606 "configure"
+#line 9607 "configure"
 #include "confdefs.h"
 #include <sstream>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:9611: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:9612: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
