@@ -13,7 +13,6 @@ SRCS     += \
 #	$(SRCDIR)/ParticleColorMapKey.cc \
 
 PSELIBS := \
-	Packages/Kurt/Core/Geom \
 	Dataflow/Network Dataflow/Ports \
 	Dataflow/Modules/Visualization Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
@@ -21,6 +20,7 @@ PSELIBS := \
         Core/Geom Core/GeomInterface Core/GLVolumeRenderer \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \
+	Packages/Kurt/Core/Geom \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Dataflow/Ports \
 	Packages/Uintah/CCA/Ports       \
@@ -28,7 +28,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Datatypes
 
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY)  $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
