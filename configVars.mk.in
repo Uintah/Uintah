@@ -274,7 +274,6 @@ SSTREAM_COMPAT := @SSTREAM_COMPAT@
 ifeq ($(SSTREAM_COMPAT),yes)
 INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
 endif
-INCLUDES := $(sort $(INCLUDES))
 
 # variables and suffix rules for module transformation
 #------------------------------------------------------------------------------
