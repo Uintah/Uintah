@@ -28,8 +28,12 @@ itcl_class DialW {
     # None of these are required.  None work after initialization.
     # Use either text or textVariable, not both.
     public initialDialtype ""
+<<<<<<< Dial.tcl
+    public dialtypeVariable ""
+=======
     public typeVariable ""
     public dialtypeVariable ""
+>>>>>>> 1.2
     public text ""
     public textVariable ""
     public variable ""
@@ -170,23 +174,30 @@ itcl_class DialW {
     # Dial is in crank mode -- this gets called with the most recent
     # positional change in radians
     method dialRot {rad rate} {
+	global $dialtypeVariable
 	global $variable
+	global $minVariable
+	global $maxVariable
 	global $scaleVariable
 
 	set f [expr $rad*4.77*$rate*[set $scaleVariable]/30.0]
 	set $variable [format %3.3f [expr $f+[set $variable]]]
 
+<<<<<<< Dial.tcl
+	if [expr ([string compare [set $dialtypeVariable] "bounded"] == 0)] {
+=======
 	global $dialtypeVariable
 	global $minVariable
 	global $maxVariable
 	if [expr ([string compare [set $dialtypeVariable] "bounded"]!=0)] {
+>>>>>>> 1.2
 	    if [expr [set $variable] < [set $minVariable]] {
 		set $variable [set $minVariable]
 	    }
 	    if [expr [set $variable] > [set $maxVariable]] {
 		set $variable [set $maxVariable]
 	    }
-	} else if [expr ([string compare [set $dialtypeVariable] "wrapped"]!=0)] {
+	} else if [expr ([string compare [set $dialtypeVariable] "wrapped"] == 0)] {
 	    if [expr [set $variable] < [set $minVariable]] {
 		set $variable [expr [set $variable] + \
 			([set $maxVariable]-[set $minVariable])]
