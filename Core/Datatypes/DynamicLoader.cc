@@ -52,18 +52,15 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 }
 
 
-typedef void (*entry)();
-
-// Static initializers
-//DynamicLoader::libs_map_t DynamicLoader::libs_;
-
-
-
 DynamicLoader::DynamicLoader() 
-{}
+{
+  algo_map_.clear();
+}
 
 DynamicLoader::~DynamicLoader() 
-{}
+{
+  algo_map_.clear();
+}
 
 bool
 DynamicLoader::compile_and_store(const CompileInfo &info)
@@ -101,7 +98,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info)
     return false;
   }
   // store this so that we can get at it again.
-  store(info.filename_, maker()); 
+  store(info.filename_, DynamicAlgoHandle(maker())); 
   return true;
 }
 
@@ -159,6 +156,24 @@ DynamicLoader::create_cc(const CompileInfo &info)
        << "}" << endl << "}" << endl;
 
   return true;
+}
+
+void 
+DynamicLoader::store(const string &name, DynamicAlgoHandle algo)
+{
+  algo_map_[name] = algo;
+}
+
+bool 
+DynamicLoader::get(const string &name, DynamicAlgoHandle algo)
+{
+  map_type::iterator loc = algo_map_.find(name);
+  if (loc != algo_map_.end()) {
+    algo = loc->second;
+    return true;
+  }
+  // do not have this algo.
+  return false;
 }
 
 

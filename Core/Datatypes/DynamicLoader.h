@@ -20,7 +20,10 @@
 #if ! defined(Datatypes_DynamicLoader_h)
 #define Datatypes_DynamicLoader_h
 
-#include <Core/Algorithms/Loader/Loader.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+
+#include <map>
 #include <string>
 #include <vector>
 
@@ -47,11 +50,13 @@ public:
 //! A type that maker functions can create, and DynamicLoader can store.
 //! All algorithms that support the dynamic loading concept must 
 //! inherit from this.
-struct DynamicAlgoBase {
-  virtual ~DynamicAlgoBase() {}
+struct DynamicAlgoBase : public Datatype { // inherit from Datatype to get 
+  virtual ~DynamicAlgoBase() {}            // handle functionality.   
 };
 
-class DynamicLoader : public Loader
+typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
+
+class DynamicLoader
 {
 public:
   DynamicLoader();
@@ -59,10 +64,16 @@ public:
 
   // Compile and load .so for the selected manipulation
   bool compile_and_store(const CompileInfo &info);
+  bool get( const string &, DynamicAlgoHandle);
+
 
 private:
   bool create_cc(const CompileInfo &info);
   bool compile_so(const string &file);
+  void store( const string &, DynamicAlgoHandle);
+
+  typedef map<string, DynamicAlgoHandle> map_type;
+  map_type algo_map_;
 };
 
 } // End namespace SCIRun
