@@ -19,7 +19,10 @@ DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs)
   right=rhs.right->clone();
 
   boundary=rhs.boundary;
-  interior=rhs.interior;
+  nboundary=rhs.nboundary;
+  sfcx=rhs.sfcx;
+  sfcy=rhs.sfcy;
+  sfcz=rhs.sfcz;
 }
 
 DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
@@ -37,7 +40,10 @@ DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
   right = rhs.right->clone();
 
   boundary = rhs.boundary;
-  interior = rhs.interior;
+  nboundary = rhs.nboundary;
+  sfcx=rhs.sfcx;
+  sfcy=rhs.sfcy;
+  sfcz=rhs.sfcz;
   return *this;
 }
 
