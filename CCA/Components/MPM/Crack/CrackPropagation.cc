@@ -92,7 +92,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
         /* Step 1: Detect if crack front nodes propagate (cp)
            and propagate them virtually (da) for the active nodes
         */
-        // Clear up cfSegPtsT -- crack-front points after propagation
+        // Clear up cfSegPtsT-Positions of crack-front nodes after propagation
         cfSegPtsT[m].clear();
 
         int cfNodeSize=cfSegNodes[m].size();
@@ -116,7 +116,8 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
             cp[i]=NO;
             double KI  = cfSegK[m][i].x();
             double KII = cfSegK[m][i].y();
-            if(cm->CrackSegmentPropagates(KI,KII)) cp[i]=YES;
+	    double Vc  = cfSegVel[m][i];
+            if(cm->CrackSegmentPropagates(Vc,KI,KII)) cp[i]=YES;
 
             // Propagate the node virtually
             double theta=cm->GetPropagationDirection(KI,KII);
@@ -169,7 +170,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
         delete [] cp;
         delete [] da;
 
-        /* Step 3: Deal with propagating edge nodes which is prpagating,
+        /* Step 3: Deal with the propagating edge nodes,
                    extending new_pt out to the boundary 
         */
         for(int i=0; i<cfNodeSize; i++) {
@@ -299,17 +300,18 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
   } // End of loop over patches
 }
 
-void Crack::addComputesAndRequiresConstructNewCrackFrontElems(Task* /*t*/,
+void Crack::addComputesAndRequiresConstructNewCrackFrontElems(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
 {
-  // Nothing to do currently
+  // delT will be used to calculate crack propagation velocity	
+   t->requires(Task::OldDW, d_sharedState->get_delt_label());
 }
 
 void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* /*matls*/,
-                      DataWarehouse* /*old_dw*/,
+                      DataWarehouse* old_dw,
                       DataWarehouse* /*new_dw*/)
 {
   for(int p=0; p<patches->size(); p++) {
@@ -320,7 +322,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
     for(int m=0; m<numMPMMatls; m++) {
       if(doCrackPropagation) {
-        /*
+/*        
         // Step 1: Combine crack front nodes if they propagates
         // a little (<10%) or in self-similar way (angle<10 degree)
         for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
@@ -336,11 +338,12 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
            if(dis<0.1*(rdadx*dx_bar) || fabs(angle)<5)
              cx[m][node]=cfSegPtsT[m][i];
         }
-        */
+*/        
         // Temporary crack-front segment nodes
         vector<int> cfSegNodesT;
         cfSegNodesT.clear();
-
+        cfSegVel[m].clear();
+	
         int ncfSegs=cfSegNodes[m].size()/2;
         int preIdxAtMin=-1;	
         for(int i=0; i<ncfSegs; i++) { // Loop over front segs
@@ -380,6 +383,28 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           if((p1p-p1).length()/dx_bar<0.01) sp=NO; // p1 no propagating
           if((p2p-p2).length()/dx_bar<0.01) ep=NO; // p2 no propagating
 
+	  // velocity of crack propagation
+	  double vc1=0.,vc2=0., vcc=0.; 
+/*	  
+	  double time=d_sharedState->getElapsedTime();
+	  delt_vartype delT;
+	  old_dw->get(delT, d_sharedState->get_delt_label() );
+	  if(sp) { // Record crack incremental and time instant 
+            cfSegDis[m][2*i]=(p1p-p1).length();
+            cfSegTime[m][2*i]=time-delT;	    
+   	  }
+		  
+          if(ep) { // Record crack incremental and time instant
+	    cfSegDis[m][2*i+1]=(p2p-p2).length();
+            cfSegTime[m][2*i+1]=time-delT;	    
+          }
+	  
+	  if(time>0.) {
+            vc1=cfSegDis[m][2*i]/(time-cfSegTime[m][2*i]);
+  	    vc2=cfSegDis[m][2*i+1]/(time-cfSegTime[m][2*i+1]);
+	    vcc=(vc1+vc2)/2.;
+	  }  
+*/	  
           short CASE=0;             // No propagation
           if(l12/css[m]<0.25) {
 	    CASE=1;                 // Too short segment, drop it
@@ -403,6 +428,11 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size();    
               cfSegNodesT.push_back(n1);
               cfSegNodesT.push_back(n2);
+	      
+	      // Velocity of crack-front nodes
+	      cfSegVel[m].push_back(vc1);
+	      cfSegVel[m].push_back(vc2);
+	      
               break;
 
 	    case 1: // The segment becomes too short (<25%) after propagation
@@ -442,6 +472,10 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 	      if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size(); 
               cfSegNodesT.push_back(n1p);
               cfSegNodesT.push_back(n2);
+
+	      // Velocity of crack-front nodes
+	      cfSegVel[m].push_back(vc1);
+	      cfSegVel[m].push_back(vc2); 
 	      
               break;
 
@@ -463,6 +497,10 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT.push_back(n1);
               cfSegNodesT.push_back(n2p);
 
+	      // Velocity of crack-front nodes
+	      cfSegVel[m].push_back(vc1);
+	      cfSegVel[m].push_back(vc2);
+	      
               break;
 
             case 4: // Both of the two ends propagate
@@ -497,9 +535,13 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 	      ce[m].push_back(IntVector(nmc,n1p,n2p));
 	      
               // The new crack-front segment
-              if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size(); 	      
+              if(firstSegOfEnclosedCrack) preIdxAtMin=cfSegNodesT.size(); 	     
 	      cfSegNodesT.push_back(n1p);
               cfSegNodesT.push_back(n2p);
+	      
+	      // Velocity of crack-front nodes
+	      cfSegVel[m].push_back(vc1);
+	      cfSegVel[m].push_back(vc2);
 	      
               break;
 
@@ -528,6 +570,12 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT.push_back(nc);
               cfSegNodesT.push_back(nc);
               cfSegNodesT.push_back(n2);
+
+	      // Velocity of crack-front nodes
+	      cfSegVel[m].push_back(vc1);
+	      cfSegVel[m].push_back(vcc);
+	      cfSegVel[m].push_back(vcc);
+	      cfSegVel[m].push_back(vc2);
 	      
               break;
 
@@ -557,6 +605,12 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT.push_back(nc);
               cfSegNodesT.push_back(n2p);
  
+	      // Velocity of crack-front nodes
+	      cfSegVel[m].push_back(vc1);
+	      cfSegVel[m].push_back(vcc);
+	      cfSegVel[m].push_back(vcc);
+	      cfSegVel[m].push_back(vc2);
+	      
               break;
 
             case 7: // Too long segment with both ends propagating
@@ -602,6 +656,12 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT.push_back(nc);
               cfSegNodesT.push_back(n2p);
 
+	      // Velocity of crack-front nodes
+	      cfSegVel[m].push_back(vc1);
+	      cfSegVel[m].push_back(vcc);
+	      cfSegVel[m].push_back(vcc);
+	      cfSegVel[m].push_back(vc2);
+	      
               break;
           }
         } // End of loop over crack front segs
