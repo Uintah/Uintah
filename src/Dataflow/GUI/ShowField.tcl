@@ -62,7 +62,6 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-has_scalar_data
 	global $this-interactive_mode
 	global $this-bidirectional
-	global $this-arrow-heads-on
 	global $this-text-use-default-color
 	global $this-text-color-r
 	global $this-text-color-g
@@ -113,7 +112,6 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-use-transparency 0
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
-	set $this-arrow-heads-on 1
 	set $this-text-use-default-color 1
 	set $this-text-color-r 1.0
 	set $this-text-color-g 1.0
@@ -324,7 +322,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	make_labeled_radio $vector.radio \
 	    "Vector Display Type" "$this-c data_display_type" top \
 	    $this-data_display_type \
-	    {{Arrows Arrows} {Disks Disks} {Cones Cones}}
+	    {{Lines Lines} {Needles Needles} {Cones Cones} \
+		 {Arrows Arrows} {Disks Disks}}
 	
 	
 	checkbutton $vector.normalize_vectors \
@@ -333,17 +332,12 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-normalize-vectors
 
 	checkbutton $vector.bidirectional \
-		-text "Render Arrows bidirectionally" \
+		-text "Render bidirectionally" \
 		-command "$this-c toggle_bidirectional" \
 		-variable $this-bidirectional
 
-	checkbutton $vector.arrowheads \
-		-text "Show Vector arrowheads" \
-		-command "$this-c toggle_arrowheads" \
-		-variable $this-arrow-heads-on
-
 	pack $vector.show_vectors $vector.radio $vector.normalize_vectors \
-	        $vector.bidirectional $vector.arrowheads \
+	        $vector.bidirectional \
 		-side top -fill y -anchor w
 
 	expscale $vector.slide -label "Vector Scale" \
@@ -594,7 +588,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook  $dof.tabs -height 350 -width 330 \
+	iwidgets::tabnotebook  $dof.tabs -height 360 -width 330 \
 	    -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
