@@ -237,7 +237,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget can't parse default material index `"+args[2]+"'");
 	 return;
       }
-      if ((mati < 0) || (mati >= NumDefaultMaterials)) {
+      if ((mati < 0) || ((unsigned int)mati >= NumDefaultMaterials)) {
 	 args.error("widget default material index out of range `"+args[2]+"'");
 	 return;
       }
@@ -252,7 +252,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
-      if ((mati < 0) || (mati >= NumMaterials)) {
+      if ((mati < 0) || ((unsigned int)mati >= NumMaterials)) {
 	 args.error("widget material index out of range `"+args[2]+"'");
 	 return;
       }
@@ -266,7 +266,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
-      if ((mati <0) || (mati >= NumDefaultMaterials)) {
+      if ((mati <0) || ((unsigned int)mati >= NumDefaultMaterials)) {
 	 args.error("widget material index out of range `"+args[2]+"'");
 	 return;
       }
@@ -283,7 +283,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget can't parse material index `"+args[2]+"'");
 	 return;
       }
-      if ((mati < 0) || (mati >= NumMaterials)) {
+      if ((mati < 0) || ((unsigned int)mati >= NumMaterials)) {
 	 args.error("widget material index out of range `"+args[2]+"'");
 	 return;
       }

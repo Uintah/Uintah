@@ -89,7 +89,7 @@ BaseConstraint::VarChoices( const Scheme scheme,
 			    const Index i6,
 			    const Index i7 )
 {
-   ASSERT(scheme<nschemes);
+   ASSERT((Index)scheme<nschemes);
    Index p=0;
    
    if (p == varCount) return;

@@ -115,7 +115,7 @@ ConstraintSolver::AddVariable( BaseVariable* v )
 void
 ConstraintSolver::RemoveVariable( BaseVariable* v )
 {
-   for (Index i=0; i<variables.size(); i++)
+   for (Index i=0; i<(Index)(variables.size()); i++)
       if (variables[i] == v) {
 	 variables.remove(i);
 	 NumVariables--;
@@ -161,7 +161,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 		  cout << "Recursion level = " << stack.size() << endl;
 	    
 		  cout << v->name << " S(" << v->levellevel << ")*";
-		  for (index=0; index<v->level; index++)
+		  for (index=0; index<(Index)(v->level); index++)
 		      cout << " ";
 		  cout << "*" << endl;
 	    
@@ -175,16 +175,16 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	 
 	      v->data = newval;
 
-	      if (v->level++ == MaxDepth) {
+	      if ((Index)(v->level++) == MaxDepth) {
 		  v->level = 0;
-		  if (++(v->levellevel) < v->numconstraints) {
+		  if ((Index)(++(v->levellevel)) < v->numconstraints) {
 		      if (cs_debug)
 			  cerr << "Maximum recursion level reached..." << endl;
 		      item.rtype = RecurseMax;
 		  } else {
 		      if (cs_debug) {
 			  cout << v->name << " E(" << v->levellevel << ")*";
-			  for (index=0; index<v->level; index++)
+			  for (index=0; index< (Index)(v->level); index++)
 			      cout << " ";
 			  cout << "*" << endl;
 		  
@@ -220,7 +220,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	    
 	    if (cs_debug) {
 	       cout << v->name << " E(" << v->levellevel << ")*";
-	       for (index=0; index<v->level; index++)
+	       for (index=0; index<(Index)(v->level); index++)
 		  cout << " ";
 	       cout << "*" << endl;
 	       cout << "Recursion level = " << stack.size()-1 << endl;
@@ -247,7 +247,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 	    
 	    if (cs_debug) {
 	       cout << v->name << " E(" << v->levellevel << ")*";
-	       for (index=0; index<v->level; index++)
+	       for (index=0; index<(Index)(v->level); index++)
 		  cout << " ";
 	       cout << "*" << endl;
 	       cout << "Recursion level = " << stack.size()-1 << endl;
