@@ -100,6 +100,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
+	$(SRCDIR)/TransformData.tcl \
 	$(SRCDIR)/TransformScalarData.tcl \
 	$(SRCDIR)/TransformVectorData.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
