@@ -40,6 +40,7 @@ tar: products
 		--file=$${root}/doc/SCIRunDocs.tar \
 		$${root}/doc/index.html \
 		$${root}/doc/.htaccess \
+		$${root}/doc/Documentum/index.html \
 		$${root}/doc/Documentum/documentum.html \
 		$${root}/doc/Documentum/module-latex \
 		$${root}/doc/Documentum/module-xml \
