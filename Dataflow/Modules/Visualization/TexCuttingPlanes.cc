@@ -251,7 +251,6 @@ void TexCuttingPlanes::execute(void)
       }
       control_widget_->SetScale(dv.length()/80.0);
       geom_lock_.writeLock();
-      volren_->SetVol( tex_.get_rep() );
       volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
       geom_lock_.writeUnlock();
     }
@@ -265,6 +264,7 @@ void TexCuttingPlanes::execute(void)
   }
  
   geom_lock_.writeLock();
+  volren_->SetVol( tex_.get_rep() );
   volren_->SetInterp( bool(interp_mode_.get()));
   geom_lock_.writeUnlock();
   //AuditAllocator(default_allocator);
