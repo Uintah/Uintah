@@ -1844,7 +1844,7 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > solid_fraction_cc_old(numMPMMatls);
     StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
     
-    int zeroGhostCells = 0;
+    // int zeroGhostCells = 0;
 
     // get and allocate
 
