@@ -16,6 +16,7 @@
 #define SCI_Math_MiscMath_h 1
 
 #include <SCICore/share/share.h>
+#include <math.h>
 
 namespace SCICore {
 namespace Math {
@@ -121,24 +122,26 @@ inline SCICORESHARE int Round(double d)
 
 inline SCICORESHARE int Floor(double d)
 {
-  if(d>=0){
-    return (int)d;
-  } else {
-    return -(int)(-d);
-  }
+/*   if(d>=0){ */
+/*     return (int)d; */
+/*   } else { */
+/*     return -(int)(-d); */
+/*   } */
+  return (int)floor( d );
 }
 
 inline SCICORESHARE int Ceil(double d)
 {
-  if(d==(int)d){
-    return (int)d;
-  } else {
-    if(d>0){
-      return 1+(int)d;
-    } else {
-      return -(1+(int)(-d));
-    }
-  }
+/*   if(d==(int)d){ */
+/*     return (int)d; */
+/*   } else { */
+/*     if(d>0){ */
+/*       return 1+(int)d; */
+/*     } else { */
+/*       return -(1+(int)(-d)); */
+/*     } */
+/*   } */
+  return (int)ceil(d);
 }
 
 inline SCICORESHARE int Tile(int tile, int tf)
@@ -161,6 +164,9 @@ inline SCICORESHARE int Tile(int tile, int tf)
 
 //
 // $Log$
+// Revision 1.3  2001/01/08 19:29:35  kuzimmer
+// changed Floor and Ceil to use standard math library calls,  They now give the correct results for negative numbers.
+//
 // Revision 1.2  1999/08/17 06:39:34  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
