@@ -16,21 +16,35 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <vector>
+
 
 namespace SCIRun {
 
-//template <class T> typedef GenericField<TetVolMesh, T> TetVol; 
+template <class T> 
+class TetVol : public GenericField<MeshTet, vector<T> > {
+public:
+  GenericField() {};
+  GenericField(data_location data_at) {};
+  virtual ~GenericField() {};
+ 
+};
 
-//template <class T> GenericField<TetVolMesh, T>::type_name(int a)
-//{
-//  const static string name =  "TetVol<" + find_type_name((T *)0) + ">";
-//  return name;
-//}
+// FIX_ME support the int arg return vals...
+template <class T> 
+TetVol::type_name(int a)
+{
+  const static string name =  "TetVol<" + find_type_name((T *)0) + ">";
+  return name;
+}
 
 } // end namespace SCIRun
 
 #endif // Datatypes_TetVol_h
+
+
+
 
 
 
