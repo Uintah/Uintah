@@ -220,6 +220,7 @@ public:
   void mouse_translate(int, int, int, int, int, int);
   void mouse_scale(int, int, int, int, int, int);
   void mouse_rotate(int, int, int, int, int, int);
+  void mouse_rotate_eyep(int, int, int, int, int, int);
   void mouse_pick(int, int, int, int, int, int);
 
   void tcl_command(TCLArgs&, void*);
@@ -296,6 +297,9 @@ public:
 
 //
 // $Log$
+// Revision 1.17  2000/10/08 05:42:38  samsonov
+// Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
+//
 // Revision 1.16  2000/09/29 08:06:59  samsonov
 // Changes in stereo implementation
 //

@@ -386,7 +386,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
     switch(action){
     case MouseStart:
 	{
-	    if(inertia_mode){
+	  if(inertia_mode){
 		inertia_mode=0;
 		redraw();
 	    }
@@ -554,7 +554,188 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 	    if (mag < 0.00001) { // arbitrary ad-hoc threshold
 		inertia_mode = 0;
 		need_redraw = 1;
-//		cerr << mag << " " << prev_time[0] - prev_time[index] << endl;
+	    }
+	    else {
+		double c = 1.0/mag;
+		double dt = prev_time[0] - prev_time[index];// time between last 2 events
+		ball->qNorm.x *= c;
+		ball->qNorm.y *= c;
+		ball->qNorm.z *= c;
+		angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
+		cerr << dt << endl;
+	    }
+	} else {
+	    inertia_mode=0;
+	}
+	ball->EndDrag();
+	rot_point_valid = 0; // so we don't have to draw this...
+	need_redraw = 1;     // always update this...
+	update_mode_string("");
+	break;
+    }
+}
+
+void Roe::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
+{
+    switch(action){
+    case MouseStart:
+	{
+	    if(inertia_mode){
+		inertia_mode=0;
+		redraw();
+	    }
+	    update_mode_string("rotate lookatP:");
+	    last_x=x;
+	    last_y=y;
+
+	    // The center of rotation is eye point...
+	    View tmpview(view.get());
+	    int xres=current_renderer->xres;
+	    int yres=current_renderer->yres;
+	    
+	    rot_point_valid=0;
+
+	    rot_point = tmpview.eyep();
+	    rot_view=tmpview;
+	    rot_point_valid=1;
+
+	    double rad = 0.8;
+	    HVect center(0,0,0,1.0);
+	
+	    // we also want to keep the old transform information
+	    // around (so stuff correlates correctly)
+	    // OGL uses left handed coordinate system!
+	
+	    Vector z_axis,y_axis,x_axis;
+
+	    y_axis = tmpview.up();
+	    z_axis = tmpview.eyep() - tmpview.lookat();
+	    eye_dist = z_axis.normalize();
+	    x_axis = Cross(y_axis,z_axis);
+	    x_axis.normalize();
+	    y_axis = Cross(z_axis,x_axis);
+	    y_axis.normalize();
+	    tmpview.up(y_axis); // having this correct could fix something?
+
+	    prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+
+	    ball->Init();
+	    ball->Place(center,rad);
+	    HVect mouse((2.0*x)/xres-1.0, 2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+	    ball->Mouse(mouse);
+	    ball->BeginDrag();
+
+	    prev_time[0] = time;
+	    prev_quat[0] = mouse;
+	    prev_time[1] = prev_time[2] = -100;
+	    ball->Update();
+	    last_time=time;
+	    inertia_mode=0;
+	    need_redraw = 1;
+	}
+	break;
+    case MouseMove:
+	{
+	    int xres=current_renderer->xres;
+	    int yres=current_renderer->yres;
+	    
+	    if(!rot_point_valid)
+		break;
+
+	    HVect mouse((2.0*x)/(xres) - 1.0, 2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+	    prev_time[2] = prev_time[1];
+	    prev_time[1] = prev_time[0];
+	    prev_time[0] = time;
+	    ball->Mouse(mouse);
+	    ball->Update();
+
+	    prev_quat[2] = prev_quat[1];
+	    prev_quat[1] = prev_quat[0];
+	    prev_quat[0] = mouse;
+
+	    // now we should just sendthe view points through
+	    // the rotation (after centerd around the ball)
+	    // eyep lookat and up
+
+	    View tmpview(rot_view);
+
+	    Transform tmp_trans;
+	    HMatrix mNow;
+	    ball->Value(mNow);
+	    tmp_trans.set(&mNow[0][0]);
+
+	    Transform prv = prev_trans;
+	    prv.post_trans(tmp_trans);
+
+	    HMatrix vmat;
+	    prv.get(&vmat[0][0]);
+
+	    Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+
+	    tmpview.up(y_a.vector());
+	    tmpview.lookat(tmpview.eyep()-(z_a*(eye_dist)).vector());
+	    view.set(tmpview);
+	    need_redraw=1;
+	    update_mode_string("rotate lookatP:");
+
+	    last_time=time;
+	    inertia_mode=0;
+	}
+	break;
+    case MouseEnd:
+	if(time-last_time < 20){
+	    // now setup the normalized quaternion
+	    View tmpview(rot_view);
+	    
+	    Transform tmp_trans;
+	    HMatrix mNow;
+	    ball->Value(mNow);
+	    tmp_trans.set(&mNow[0][0]);
+	    
+	    Transform prv = prev_trans;
+	    prv.post_trans(tmp_trans);
+	    
+	    HMatrix vmat;
+	    prv.get(&vmat[0][0]);
+	    
+	    Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+	    
+	    tmpview.up(y_a.vector());
+	    tmpview.lookat((tmpview.eyep()-(z_a*(eye_dist)).vector()));
+	    view.set(tmpview);
+	    prev_trans = prv;
+
+	    // now you need to use the history to 
+	    // set up the arc you want to use...
+
+	    ball->Init();
+	    double rad = 0.8;
+	    HVect center(0,0,0,1.0);
+
+	    ball->Place(center,rad);
+
+	    int index=2;
+
+	    if (prev_time[index] == -100)
+		index = 1;
+
+	    ball->vDown = prev_quat[index];
+	    ball->vNow  = prev_quat[0];
+	    ball->dragging = 1;
+	    ball->Update();
+	    
+	    ball->qNorm = ball->qNow.Conj();
+	    double mag = ball->qNow.VecMag();
+
+	    // Go into inertia mode...
+	    inertia_mode=2;
+	    need_redraw=1;
+
+	    if (mag < 0.00001) { // arbitrary ad-hoc threshold
+		inertia_mode = 0;
+		need_redraw = 1;
 	    }
 	    else {
 		double c = 1.0/mag;
@@ -856,6 +1037,8 @@ void Roe::tcl_command(TCLArgs& args, void*)
     do_mouse(&Roe::mouse_translate, args);
   } else if(args[1] == "mrotate"){
     do_mouse(&Roe::mouse_rotate, args);
+  } else if(args[1] == "mrotate_eyep"){
+    do_mouse(&Roe::mouse_rotate_eyep, args);
   } else if(args[1] == "mscale"){
     do_mouse(&Roe::mouse_scale, args);
   } else if(args[1] == "mpick"){
@@ -1249,6 +1432,9 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.19  2000/10/08 05:42:38  samsonov
+// Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
+//
 // Revision 1.18  2000/09/29 08:06:59  samsonov
 // Changes in stereo implementation
 //
