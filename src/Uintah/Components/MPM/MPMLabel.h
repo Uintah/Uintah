@@ -75,6 +75,8 @@ namespace Uintah {
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* TotalMassLabel;
+      const VarLabel* CenterOfMassPositionLabel;
+      const VarLabel* CenterOfMassVelocityLabel;
 
       const VarLabel* ppNAPIDLabel;
       
@@ -84,6 +86,11 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.13  2000/06/27 21:50:57  guilkey
+// Added saving of more "meta data."  Namely, center of mass position and
+// velocity.  These are both actually mass weighted, so should be divided
+// by total mass which is being saved in TotalMass.dat.
+//
 // Revision 1.12  2000/06/23 21:18:24  tan
 // Added pExternalHeatRateLabel for heat conduction.
 //
