@@ -145,7 +145,7 @@ public:
 
   void get_random_point(Point &p, const Face::index_type &ei) const;
 
-  double get_element_size(const Face::index_type &fi) { return get_area(fi); }
+  double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
 
   virtual void finish_mesh(); // to get normals calculated.
   void compute_normals();

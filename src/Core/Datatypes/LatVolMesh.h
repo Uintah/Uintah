@@ -327,7 +327,7 @@ public:
   virtual BBox get_bounding_box() const;
   double get_volume(const Cell::index_type &) { return cell_volume_; }
   double get_area(const Face::index_type &) { return 0; }
-  double get_element_size(const Cell::index_type &) { return cell_volume_; }
+  double get_element_size(const Elem::index_type &) { return cell_volume_; }
 
   //! set the mesh statistics
   void set_min_x(unsigned x) {min_x_ = x; }
