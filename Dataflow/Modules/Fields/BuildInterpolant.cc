@@ -142,11 +142,9 @@ BuildInterpolant::execute()
     error("Could not get algorithm.");
     return;
   }
-  FieldHandle result =
-    algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->data_at());
 
   ofp = (FieldOPort *)get_oport("Interpolant");
-  ofp->send(result);
+  ofp->send(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->data_at()));
 }
 
 
