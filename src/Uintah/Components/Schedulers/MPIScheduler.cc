@@ -651,6 +651,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
 		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
+		  smr->relocset->addReference();
 	       }
 	       sr[i]->matls[m]->relocset->addParticle(idx);
 	    }
@@ -680,7 +681,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
 		  var2->packsizeMPI(&sendsize, pc, 0, numP);
-		  //delete var2;
+		  delete var2;
 		}
 	      } else {
 		int size;
@@ -858,10 +859,14 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 delete subsets[i];
    }
    for(int i=0;i<(int)sr.size();i++){
-     for(int m=0;m<reloc_numMatls;m++)
-       if(sr[i]->matls[m])
-	 delete sr[i]->matls[m];
-     delete sr[i];
+      for(int m=0;m<reloc_numMatls;m++){
+	 if(sr[i]->matls[m]){
+	    if(sr[i]->matls[m]->relocset->removeReference())
+	       delete sr[i]->matls[m]->relocset;
+	    delete sr[i]->matls[m];
+	 }
+      }
+      delete sr[i];
    }
    for(int i=0;i<(int)neighbors.size();i++){
       ASSERTEQ(recvsize[i], recvpos[i]);
@@ -888,6 +893,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.29  2000/10/10 05:13:31  sparker
+// Repaired (a) memory leak in particle relcation
+//
 // Revision 1.28  2000/10/09 22:43:33  sparker
 // must free mpi buffer
 //

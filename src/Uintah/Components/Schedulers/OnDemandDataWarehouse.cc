@@ -173,7 +173,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
       var->getMPIBuffer(buf, count, datatype);
 
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
+      
 #if 0 //DAV_DEBUG
       cerr << "ISend Particle: buf=" << buf << ", count=" << count 
 	   << ", dest=" << dest << ", tag=" << tag << ", comm=" 
@@ -1557,6 +1557,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.53  2000/10/10 05:13:31  sparker
+// Repaired (a) memory leak in particle relcation
+//
 // Revision 1.52  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //
