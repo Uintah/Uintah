@@ -30,7 +30,7 @@ using std::endl;
 using namespace SCIRun;
 using namespace FieldConverters;
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
   
   if (argc !=3) {
     cerr << "Usage: " << argv[0] << " Old Mesh to New FieldSet"<< endl;
