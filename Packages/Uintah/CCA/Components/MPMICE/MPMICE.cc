@@ -155,6 +155,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->rho_CCLabel); 
   t->computes(Ilb->temp_CCLabel);
   t->computes(Ilb->sp_vol_CCLabel);
+  t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
   
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -624,19 +625,21 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     //  Initialize CCVaribles for MPM Materials
     //  Even if mass = 0 in a cell you still need
     //  CC Variables defined.
-   int numALL_matls = d_sharedState->getNumMatls();
-   int numMPM_matls = d_sharedState->getNumMPMMatls();
-   for (int m = 0; m < numMPM_matls; m++ ) {
-      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
+    double junk, tmp;
+    int numALL_matls = d_sharedState->getNumMatls();
+    int numMPM_matls = d_sharedState->getNumMPMMatls();
+    for (int m = 0; m < numMPM_matls; m++ ) {
+      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
       CCVariable<Vector> vel_CC;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int indx= mpm_matl->getDWIndex();
       new_dw->allocateTemporary(rho_micro, patch);
-      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx,patch);      
-      new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx,patch);      
-      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx,patch);      
-      new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx,patch);      
-      
+      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);      
+      new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,       indx,patch);
+      new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);      
+      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);      
+      new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
+             
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
                                       numALL_matls,patch);  
@@ -649,7 +652,12 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
                                                         !iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[c] = 1.0/rho_micro[c];
+
+        mpm_matl->getConstitutiveModel()->
+            computePressEOSCM(rho_micro[c],junk, junk, junk, tmp,mpm_matl); 
+        speedSound[c] = sqrt(tmp);
       }
+      
       //__________________________________
       //    B U L L E T   P R O O F I N G
       IntVector neg_cell;
