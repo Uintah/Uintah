@@ -32,6 +32,7 @@
 #include <Core/2d/OpenGL.h>
 #include <Core/2d/Polyline.h>
 #include <Core/2d/Diagram.h>
+#include <Core/2d/Axes.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -109,6 +110,15 @@ Diagram::draw()
       }
     }
   }
+}
+
+void 
+Axes::draw()
+{
+  glBegin(GL_LINE);
+  glVertex2f(0.0f, 0.0f);
+  glVertex2f(100.0f, 100.0f);
+  glEnd();
 }
 
 } // End namespace SCIRun
