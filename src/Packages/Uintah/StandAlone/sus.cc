@@ -692,5 +692,4 @@ extern "C" {
     cerr << "Error: dgetrs called!\n";
     Thread::exitAll(1);
   }
-
 }
