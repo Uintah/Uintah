@@ -29,11 +29,12 @@
 ##    new macro definitions
 ##    declare arguments  (the --with and --enable stuff)
 ##    check for unknown or mis-spelled arguments
-##    determine host type and OS version
+##    determine host type, processor count and OS version
 ##    set variable defaults 
 ##    set host specific build tools
 ##    search for required libraries and headers
-##    search for standard/optional libraries and headers
+##    search for optional libraries and headers
+##    configure packages
 ##    declare output files
 ##
 ##  NOTE: When committing this file, do NOT commit both configure.in
@@ -57,8 +58,10 @@ AC_PREREQ(2.0)
 ##  set the location of config.guess, config.sub, and install.sh
 AC_CONFIG_AUX_DIR(scripts)
 
+##  set the autoconf list delimiter
 IFS=' '
 
+##  initialize the recognized argument lists
 SCI_ARG_WITH_LIST=""
 SCI_ARG_ENABLE_LIST=""
 
@@ -69,14 +72,15 @@ SCI_ARG_ENABLE_LIST=""
 ##  none of the new macros can be nested with or within other macros
 
 ##  these are platform sensitive - be very careful, when adding or
-##  editing, to make sure it works on all platforms
+##  editing, to make sure it works on all required platforms
 
 ##
 ##  SCI_CHECK_LIB(path,lib,function,if-found,if-not-found,other-libraries)
 ##
 ##  check whether the function exists within the lib found in path.
 ##  use other-libraries to resolve undefined symbols.
-##  sets allcaps(LIB$lib) to "-L$path" if found, or to "" if not found. 
+##  sets allcaps(LIB$lib) to "-L$path" and allcaps(HAVE_LIB$lib) if
+##  found, or to "" and "no" (respectively) if not found. 
 ##
 
 AC_DEFUN(SCI_CHECK_LIB,
@@ -87,6 +91,7 @@ AC_DEFUN(SCI_CHECK_LIB,
     _SCI_DECL_="char $3();"
     _SCI_CALL_="$3();"
     _SCI_VAR_NAME_=LIB`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+    _SCI_VAR_HAVE_="HAVE_$_SCI_VAR_NAME_"
 
     if test "$4"; then
       _SCI_FOUND_='$4'
@@ -106,7 +111,9 @@ AC_DEFUN(SCI_CHECK_LIB,
 
     cat > conftest.$ac_ext <<EOF
     #include "confdefs.h"
+    extern "C" {
     $_SCI_DECL_
+    }
     int main() {
       $_SCI_CALL_
       return 0;
@@ -123,13 +130,16 @@ EOF
          test "$1" != "/lib" &&
          test "$1" != "/lib/"; then
         eval $_SCI_VAR_NAME_='-L$1'
+        eval $_SCI_VAR_HAVE_=yes
       else
         eval $_SCI_VAR_NAME_='\ '
+        eval $_SCI_VAR_HAVE_=yes
       fi
       AC_MSG_RESULT(yes)
       eval $_SCI_FOUND_
     else
       eval $_SCI_VAR_NAME_=''
+      eval $_SCI_VAR_HAVE_=''
       AC_MSG_RESULT(no)
       eval $_SCI_NOTFOUND_
     fi
@@ -653,22 +663,35 @@ for i in $myargs; do
 done
 
 ##  --------------------------------------------------------------------
-##  ---------------  determine host type and OS version  ---------------
+##  -----  determine host type, processor count and OS version  --------
 ##  --------------------------------------------------------------------
 
 echo 
 AC_CANONICAL_HOST
 
 unset NUM_CPUS
-AC_MSG_CHECKING(physical processor count)
 case $host in
-  *-irix*) NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"
-           ;;
-  *linux*) NUM_CPUS="`cat /proc/cpuinfo | fgrep processor | wc | cut -c1-7`"
-           ;;
-  *)       NUM_CPUS="1"
-           ;;
+  *-irix*)
+    SCI_CHECK_OS_VERSION(6.5,,
+      configure: error: wrong Irix version. exiting.;exit)
+    AC_MSG_CHECKING(physical processor count)
+    NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"    
+    ;;
+  *linux*)
+    SCI_CHECK_OS_VERSION(2.2.17,,
+      configure: error: wrong Linux version. exiting.;exit)
+    AC_MSG_CHECKING(physical processor count)
+    NUM_CPUS="`cat /proc/cpuinfo | fgrep processor | wc | cut -c1-7`"
+    ;;
+  *)    
+    echo
+    AC_MSG_WARN( !!!!!! this system is untested - You are on your own !!!!!!)
+    echo
+    AC_MSG_CHECKING(physical processor count)
+    NUM_CPUS="1"
+    ;;
 esac
+
 if ! NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
   NUM_CPUS="1"
 fi
@@ -689,22 +712,6 @@ else
   fi
 fi
 
-case $host in
-  *-irix*)
-    SCI_CHECK_OS_VERSION(6.5,,
-      configure: error: wrong Irix version. exiting.;exit)
-    ;;
-  *linux*)
-    SCI_CHECK_OS_VERSION(2.2.17,,
-      configure: error: wrong Linux version. exiting.;exit)
-    ;;
-  *)    
-    echo
-    AC_MSG_WARN( !!!!!! this system is untested - You are on your own !!!!!!)
-    echo
-    ;;
-esac
-
 export MAKE_PARALLELISM
 AC_SUBST(MAKE_PARALLELISM)
 
@@ -713,33 +720,8 @@ AC_SUBST(MAKE_PARALLELISM)
 ##  --------------------------------------------------------------------
 
 ##
-##  DO NOT "hardcode" ANY libraries here.
+##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
-
-##  at the moment, compilers are set elsewhere to suppress autoconf warnings
-
-case $host in
-  *-irix*) 
-    if test "$is_64bit" = "yes"; then
-      SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_64
-    else
-      SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_32
-    fi
-    # this WOFF is required for configure
-    WOFF="-woff 1047 -Wl,-woff -Wl,84 -LANG:std"
-    ;; 
-  *linux*)
-    SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
-                        /local/SCIRun_Thirdparty_32 \
-                        /local"
-    ;;
-  *-aix*)
-    AC_MSG_WARN(AIX is not completely supported!)
-    SCI_LAB_TP_DEFAULT=""
-    ;;
-  *)
-    ;;
-esac
 
 TIME_IMPL=Time_unix.cc
 TEMPLATE_TAG=
@@ -750,12 +732,6 @@ extra_cflags="";
 
 if ! test "$output_avg_walltime" = "no"; then
   extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
-fi
-
-if ! test "$perfex" = "no"; then
-  extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
-  PERFEX_LIBRARY=-lperfex
-  AC_SUBST(PERFEX_LIBRARY)
 fi
 
 PACKAGE_DIRS=""
@@ -802,6 +778,71 @@ else
   NOPRINTDIR="--no-print-directory"
 fi
 
+if test "$enable_parallel" = "yes"; then
+  if test "$with_globus" = "no"; then
+    AC_MSG_ERROR(Must include --with-globus with --enable-parallel)
+    exit 1
+  fi
+
+  PARALLEL_DEFINE="#define SCI_PARALLEL"
+  BUILD_PARALLEL="yes"
+  GLOBUS_INCLUDE="-I$with_globus/include"
+  GLOBUS_LIB="$with_globus/lib$NBITS"
+
+  is_linux=`echo $host | sed 's/.*linux.*/linux/'`
+  if test "$is_linux" = "linux"; then
+    GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto"
+  fi
+else
+  PARALLEL_DEFINE=""
+  BUILD_PARALLEL="no"
+  GLOBUS_INCLUDE=""
+  GLOBUS_LIB=""
+fi
+
+case $host in
+  *-irix*) 
+    if test "$is_64bit" = "yes"; then
+      SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_64
+    else
+      SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_32
+    fi
+    if test "$is_64bit" = "yes"; then
+      BINARYFLAGS="-64 -mips4"
+    else
+      BINARYFLAGS="-n32 -mips4"
+    fi
+    # this WOFF is required for configure 
+    WOFF="-woff 1047 -Wl,-woff -Wl,84"
+    CPPFLAGS=" -E $WOFF -LANG:std"
+    FFLAGS="$BINARYFLAGS $extra_cflags"
+    CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
+    ASFLAGS="$BINARYFLAGS"
+    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations ${SOFLAGS}"
+    LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
+    ;;
+  *linux*)
+    SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
+                        /local/SCIRun_Thirdparty_32 \
+                        /local"
+    CFLAGS="-Wall $extra_cflags"
+    FFLAGS="$extra_cflags"
+    SOFLAGS="-shared ${SOFLAGS}"
+    NEED_SONAME=yes
+    ;;
+  *-aix*)
+    AC_MSG_WARN(AIX is not completely supported!)
+    SCI_LAB_TP_DEFAULT=""
+    ;;
+  *)
+    ;;
+esac
+
+AC_SUBST(GLOBUS_EXTRA_DIRS)
+AC_SUBST(GLOBUS_INCLUDE)
+AC_SUBST(GLOBUS_LIB)
+AC_SUBST(PARALLEL_DEFINE)
+AC_SUBST(BUILD_PARALLEL)
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(NBITS)
 AC_SUBST(MALLOC_DEFINE)
@@ -809,6 +850,10 @@ AC_SUBST(PACKAGE_DIRS)
 AC_SUBST(LOAD_PACKAGE)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
+AC_SUBST(TIME_IMPL)
+AC_SUBST(TEMPLATE_TAG)
+AC_SUBST(TEMPLATE_BOX)
+AC_SUBST(LDRUN_PREFIX)
 
 ##  ----------------------------------------------------------------------
 ##  ----------------  set host specific build tools  ---------------------
@@ -840,7 +885,6 @@ case $host in
     AC_PATH_PROG(LD,ld,,$MIPSPRO,)
     CPP="$CC"
     CXXCPP="$CXX"
-    CPPFLAGS=" -E $WOFF"
     AC_MSG_CHECKING(if ${CC} talks too much)
     touch wow.c
     if ${CC} -c wow.c 2>&1 | fgrep "requires a license password" > /dev/null ; then
@@ -884,7 +928,7 @@ CC_DEPEND_REGEN='unknown'
 CC_DEPEND_REGEN_MOVE='y'
 case $host in
   *-irix*)
-    if test "${CC_DEPEND_REGEN}" = "unkown" ; then
+    if test "${CC_DEPEND_REGEN}" = "unknown" ; then
       ${CC} -MDupdate configure-test.d -c configure-test.c 2> /dev/null
       if test -f configure-test.d ; then
         CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
@@ -913,8 +957,9 @@ case $host in
     ;;
   *)
 esac
-F77_DEPEND_REGEN=$CC_DEPEND_REGEN
 AC_MSG_RESULT($CC_DEPEND_REGEN)
+
+F77_DEPEND_REGEN=$CC_DEPEND_REGEN
 
 AC_MSG_CHECKING(whether debug was enabled)
 if test "$debug" = "no"; then
@@ -943,8 +988,6 @@ else
   AC_MSG_RESULT(yes ($optimize) )
 fi
 
-
-
 AC_PATH_PROG(MAKE,gmake,NOT_FOUND,,)
 if test "$MAKE" = "NOT_FOUND"; then
   AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
@@ -967,8 +1010,14 @@ if test "$uintah" = "yes" ; then
     AC_MSG_RESULT(Creating Packages/Uintah/tools directory)
     mkdir -p "Packages/Uintah/tools"
   fi
+  if test "$ac_cv_prog_g77" = "yes" ; then
+     G77=1
+  else
+     G77=0
+  fi
 fi
 
+AC_SUBST(G77)
 AC_SUBST(CC)
 AC_SUBST(F77)
 AC_SUBST(CXX)
@@ -979,6 +1028,9 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(FFLAGS)
 AC_SUBST(LDFLAGS)
+AC_SUBST(SOFLAGS)
+AC_SUBST(ASFLAGS)
+AC_SUBST(LDRUN_PREFIX)
 AC_SUBST(extra_cflags)
 AC_SUBST(CC_DEPEND_REGEN)
 AC_SUBST(CC_DEPEND_REGEN_MOVE)
@@ -1017,15 +1069,33 @@ AC_LANG_CPLUSPLUS
 ##  2. declare the substitutions to be made:
 ##
 ##    AC_SUBST(LIBXXX)
+##    AC_SUBST(HAVE_LIBXXX)
 ##    AC_SUBST(INCXXX)
 ##
 
-##  --  search for the required fortran library  -------------------------
-
 echo 
-AC_CHECKING(for the required fortran library...)
+AC_CHECKING(for required standard components...)
 echo
 
+##  --  search for X  ----------------------------------------------------
+AC_PATH_X
+if test "$x_libraries" &&
+   test "$x_libraries" != "/usr/lib"; then
+  LIBX=-L$x_libraries
+else
+  LIBX=""
+fi
+if test "$x_includes" &&
+   test "$x_includes" != "/usr/include"; then
+  INCX_H=-I$x_includes
+else
+  INCX_H=""
+fi
+
+AC_SUBST(LIBX)
+AC_SUBST(INCX_H)
+
+##  --  search for the fortran library  ----------------------------------
 FLIBS=""
 case $host in 
   *-irix*)
@@ -1046,10 +1116,6 @@ fi
 AC_SUBST(FLIBS)
 
 ##  --  check for the required thread library  ---------------------------
-
-echo 
-AC_CHECKING(for the required thread library...)
-echo
 
 case $host in
   *-irix*)
@@ -1094,10 +1160,6 @@ AC_SUBST(CFLAGS)
 
 ##  --  search for OpenGL  -----------------------------------------------
 
-echo 
-AC_CHECKING(for required OpenGL components...)
-echo
-
 SCI_CHECK_LIB($thirdparty/lib,GL,main,HAVE_LIBGL=yes,,)
 SCI_CHECK_LIB($thirdparty/lib,GLU,main,HAVE_LIBGLU=yes,,-lGL)
 AC_CHECK_HEADERS(GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no)
@@ -1110,22 +1172,45 @@ fi
 
 ##  --  search for dlopen  -----------------------------------------------
 
-echo 
-AC_CHECKING(for required dynamic library components...)
-echo
-
 SCI_CHECK_LIB($thirdparty/lib,c, dlopen, HAVE_LIBDL=yes;DL_LIBRARY=,)
 if test -z "$HAVE_LIBDL"; then
   SCI_CHECK_LIB($thirdparty/lib,dl, dlopen, HAVE_LIBDL=yes; DL_LIBRARY="-ldl",)
 fi
 AC_CHECK_HEADERS(dlfcn.h,HAVE_DLFCN_H=yes)
 
-if test -z "HAVE_LIBDL" ||
-   test -z "HAVE_DLFCN_H"; then
+if test -z "$HAVE_LIBDL" ||
+   test -z "$HAVE_DLFCN_H"; then
   AC_MSG_ERROR(couldn't find the required dynamic library components. exiting.)
 fi
 
+PLATFORM_LDFLAGS="-ldl"
+
+AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(DL_LIBRARY)
+
+##  --  search for required headers  --------------------------------------
+
+##  --  required standard headers
+AC_CHECK_HEADERS(stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
+  errno.h fcntl.h math.h float.h values.h memory.h unistd.h netdb.h \
+  ctype.h signal.h locale.h malloc.h dirent.h assert.h sys/select.h \
+  sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h \
+  sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h \
+  sys/utsname.h sys/prctl.h rpc/types.h rpc/xdr.h netinet/in.h,,
+  echo configure: error: could not find a required standard header. exiting.
+  exit)
+
+##  --  required SGI headers
+if test "$host" = "irix"; then
+  AC_CHECK_HEADERS(libexc.h ieeefp.h ulocks.h sys/uuid.h,,
+    echo configure: error: could not find a required standard header. exiting.
+  exit)
+fi
+
+##  --  required STL headers
+AC_CHECK_HEADERS(algorithm vector map iostream string,,
+  echo configure: error: could not find a required STL header. exiting.
+  exit)
 
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
@@ -1239,45 +1324,43 @@ fi
 AC_SUBST(LIBXERCES_C)
 AC_SUBST(INCXERCESC_H)
 
-##  --  if building uintah, search for mpi  ------------------------------
+##  --  search for mpi  --------------------------------------------------
 
-if test "$uintah" = "yes"; then
+echo
+AC_CHECKING(for MPI components...)
+echo
 
-  echo
-  AC_CHECKING(for required MPI components...)
-  echo
-
-  FOUND_ALL_MPI=no
-  for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
-    if test ! -d "$i"; then 
-      continue
-    fi
-    AC_CHECKING(in $i...)
-    SCI_CHECK_LIB($i/lib,mpi,main,MPI=-lmpi,,)
-    if test -z "$LIBMPI"; then
-      SCI_CHECK_LIB($i/lib,mpich,main,MPI=-lmpich,continue,)
-    fi
-    SCI_CHECK_HEADER($i/include,mpi.h,,continue,)
-
-    if test "$LIBMPI" &&
-       test "$INCBLT_H"; then
-      FOUND_ALL_MPI=yes
-      break
-    fi
-  done
-
-  if test "$FOUND_ALL_MPI" != "yes"; then
-    echo
-    AC_MSG_ERROR(one or more of the MPI components is missing.)
-    echo
+MPI=''
+FOUND_ALL_MPI=no
+for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then 
+    continue
   fi
+  AC_CHECKING(in $i...)
+  SCI_CHECK_LIB($i/lib,mpi,main,MPI=-lmpi,,)
+  if test -z "$LIBMPI"; then
+    SCI_CHECK_LIB($i/lib,mpich,main,MPI=-lmpich,continue,)
+  fi
+  SCI_CHECK_HEADER($i/include,mpi.h,,continue,)
+  if test "$LIBMPI" &&
+     test "$INCBLT_H"; then
+    FOUND_ALL_MPI=yes
+    break
+  fi
+done
+
+if test "$FOUND_ALL_MPI" != "yes" &&
+   test "$uintah" = "yes"; then
+  echo
+  AC_MSG_ERROR(one or more of the MPI components is missing.)
+  echo
 fi
 
 AC_SUBST(MPI)
 AC_SUBST(LIBMPI)
 AC_SUBST(INCMPI_H)
 
-##  --  if building uintah, search for TAU makefile ?!?!  -----------------
+##  --  if building uintah, search for TAU makefile  ---------------------
 
 if test "$uintah" = "yes"; then
   if test "$tau" ; then
@@ -1313,7 +1396,6 @@ EOF
     fi
     rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
   fi
-
 fi
 
 AC_SUBST(TAU_MAKEFILE)
@@ -1321,34 +1403,15 @@ AC_SUBST(TAU_MAKEFILE)
 ##  -- globus nexus ------------------------------------------------------
 
 ##  ----------------------------------------------------------------------
-##  ------  search for standard/optional libraries and headers  ----------
+##  ----------  search for optional libraries and headers  ---------------
 ##  ----------------------------------------------------------------------
 
 echo
-AC_CHECKING(for standard/optional components...)
+AC_CHECKING(for optional components...)
 echo
-
-##  --  search for X  ----------------------------------------------------
-AC_PATH_X
-if test "$x_libraries" &&
-   test "$x_libraries" != "/usr/lib"; then
-  LIBX=-L$x_libraries
-else
-  LIBX=""
-fi
-if test "$x_includes" &&
-   test "$x_includes" != "/usr/include"; then
-  INCX_H=-I$x_includes
-else
-  INCX_H=""
-fi
-
-AC_SUBST(LIBX)
-AC_SUBST(INCX_H)
 
 ##  --  search for teem  -------------------------------------------------
 
-FOUND_ALL_TEEM=no
 for i in $teem $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
@@ -1360,12 +1423,16 @@ for i in $teem $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue,)
 done
 
+if test "$LIBTEEM"; then
+  HAVE_LIBTEEM=yes
+fi
+
+AC_SUBST(HAVE_LIBTEEM)
 AC_SUBST(LIBTEEM)
 AC_SUBST(INCTEEM_H)
 
 ##  --  search for mpeg  -------------------------------------------------
 
-FOUND_ALL_MPEG=no
 for i in $mpeg $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
@@ -1374,12 +1441,17 @@ for i in $mpeg $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_HEADER($i/include,mpege.h,,continue,)
 done
 
+if test -z "$HAVE_LIBMPEGE" ||
+   test -z "$INCMPEGE_H"; then
+  HAVE_LIBMPEGE=''
+fi
+
+AC_SUBST(HAVE_LIBMPEGE)
 AC_SUBST(LIBMPEGE)
 AC_SUBST(INCMPEGE_H)
 
 ##  --  search for libimage  ---------------------------------------------
 
-FOUND_ALL_LIBIMAGE=no
 for i in $libimage $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
@@ -1388,10 +1460,33 @@ for i in $libimage $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_HEADER($i/include,image.h,,continue,)
 done
 
+if test -z "$HAVE_LIBIMAGE" ||
+   test -z "$INCIMAGE_H"; then
+  HAVE_LIBIMAGE=''
+fi
+
+AC_SUBST(HAVE_LIBIMAGE)
 AC_SUBST(LIBIMAGE)
 AC_SUBST(INCIMAGE_H)
 
-##  --  search fo SGI's IFL  ---------------------------------------------
+##  --  search for perfex  -----------------------------------------------
+for i in $perfex $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then
+    continue
+  fi
+  SCI_CHECK_LIB($i/lib,perfex,main,,continue,)
+done
+
+if ! test "$perfex" = "no" &&
+     test "$HAVE_LIBPERFEX"; then
+  extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
+  PERFEX_LIBRARY=-lperfex
+fi
+
+AC_SUBST(PERFEX_LIBRARY)
+##  --  search for SGI's IFL  --------------------------------------------
+
+##  --  search for traceback  -------------------------------------------- 
 
 ##  --  search for Nektar  -----------------------------------------------
 
@@ -1408,10 +1503,16 @@ AC_SUBST(INCIMAGE_H)
 
 ##  --  search fo gzopen (and related)  ----------------------------------
 
-SCI_CHECK_LIB($thirdparty/lib,z,main,GZ_LIBRARY="-lz")
+SCI_CHECK_LIB($thirdparty/lib,z,main,,,)
 AC_CHECK_HEADERS(zlib.h)
 
-AC_SUBST(GZ_LIBRARY)
+if test -z "$HAVE_LIBZ" ||
+   test -z "$INCZLIB_H"; then
+  HAVE_LIBZ=''
+fi
+
+AC_SUBST(HAVE_LIBZ)
+AC_SUBST(LIBZ)
 
 ##  --  search for blas stuff  -------------------------------------------
 for i in $blas $thirdparty $SCI_LAB_TP_DEFAULT; do
@@ -1421,6 +1522,12 @@ for i in $blas $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_LIB($i/lib,blas,main,break,continue,$FLIBS)
 done
 
+if test "$HAVE_LIBBLAS"; then
+  BLAS_DEF="#define BLAS_ENABLED 1"
+fi
+
+AC_SUBST(BLAS_DEF)
+AC_SUBST(HAVE_LIBBLAS)
 AC_SUBST(LIBBLAS)
 
 ##  --  search for lapack stuff  -----------------------------------------
@@ -1431,16 +1538,22 @@ for i in $lapack $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_LIB($i/lib,lapack,main,break,continue,-lblas $FLIBS)
 done
 
+if test "$HAVE_LIBLAPACK"; then
+  LAPACK_DEF="#define LAPACK_ENABLED 1"
+fi
+
+AC_SUBST(LAPACK_DEF)
+AC_SUBST(HAVE_LAPACK)
 AC_SUBST(LIBLAPACK)
 
-##  --  search for petsc stuff  -----------------------------------------
+##  --  search for petsc stuff  ------------------------------------------
 FOUND_ALL_PETSC=no
-for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
+for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
   SCI_CHECK_LIB($i/lib,petsc,main,break,continue,
-    $LIBLAPACK -llapack $LIBBLAS -lblas $LIBX -lX11 -lmpiuni $FLIBS)
+    $LIBLAPACK -llapack $LIBBLAS -lblas $LIBX -lX11 $LIBMPI -l$MPI $FLIBS)
   SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,)
   if test "$LIBPETSC" &&
      test "$INCPETSC_H"; then 
@@ -1452,33 +1565,34 @@ done
 if test "$FOUND_ALL_PETSC" != "yes"; then
   LIBPETSC=""
   INCPETSC_H=""
+  HAVE_LIBPETSC=''
 fi
 
+AC_SUBST(HAVE_LIBPETSC)
 AC_SUBST(LIBPETSC)
 AC_SUBST(INCPETSC_H)
 
-##  --  search for standard headers  -------------------------------------
+##  --  uni-petsc  ------------------------------------------------------
 
-##  --  required standard headers
-AC_CHECK_HEADERS(stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
-  errno.h fcntl.h math.h float.h values.h memory.h unistd.h netdb.h \
-  ctype.h signal.h locale.h malloc.h dirent.h assert.h sys/select.h \
-  sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h \
-  sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h \
-  sys/utsname.h sys/prctl.h rpc/types.h rpc/xdr.h netinet/in.h,,
-  echo configure: error: could not find a required standard header. exiting.
-  exit)
-
-##  --  optional standard headers
-AC_CHECK_HEADERS(libexc.h ieeefp.h ulocks.h sys/uuid.h)
-
-##  --  required STL headers
-AC_CHECK_HEADERS(algorithm vector map iostream string,,
-  echo configure: error: could not find a required STL header. exiting.
-  exit)
-
-##  --  optional STL headers
+##  --  search for optional headers  ------------------------------------
 AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
+
+##  --  finish LD flags  ------------------------------------------------
+case $host in
+  *-irix*)
+    LDFLAGS="$LDFLAGS -J\$(MAKE_PARALLELISM) $(TLINK)"
+    ;;
+  *linux*)
+    ;;
+  *)
+    ;;
+esac
+
+##  ---------------------------------------------------------------------
+##  --------------------  configure packages  ---------------------------
+##  ---------------------------------------------------------------------
+
+
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  declare output files  -------------------------
