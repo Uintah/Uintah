@@ -332,7 +332,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
         } else { 
 	    # build the window
 	    toplevel $w
-	    $this buildVarFrame $w
+	    $this buildVarFrame $w $part_id
 
 	    wm deiconify $w
             raise $w 
@@ -368,148 +368,6 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	set graph_data_names $args
 	puts "graph_data_names is now $graph_data_names"
     }
-    method mat_sel_b { var num_mat val} {
-	for {set j 0} { $j < $num_mat} {incr j} {
-	    set nvar $var
-	    append nvar $j
-	    set $this-matvar$nvar $val
-	}
-    }
-    method make_mat_menu_b {w mat i} {
-	set fname "$w.mat$mat"
-	menubutton $fname -text "Material" \
-		-menu $fname.list -relief groove
-	pack $fname -side right -padx 2 -pady 2
-	
-	menu $fname.list
-	$fname.list add command -label "Sel All" \
-		-command "$this mat_sel $i $mat 1"
-	$fname.list add command -label "Sel None" \
-		-command "$this mat_sel $i $mat 0"
-	for {set j 0} { $j < $mat} {incr j} {
-	    set var $i
-	    append var $j
-	    set $this-matvar$var 0
-	    $fname.list add checkbutton \
-		    -variable $this-matvar$var \
-		    -label "Mat $j"
-	}
-    }
-    method graphbutton_b {name var_index num_mat} {
-#	$this-c graph $name [set $this-vmat$i] $i
-	set val_list {}
-	set num_vals 0
-	for {set j 0} { $j < $num_mat} {incr j} {
-	    set nvar $var_index
-	    append nvar $j
-	    if {[set $this-matvar$nvar] != 0} {
-		lappend val_list $j
-		incr num_vals
-	    }
-	}
-	puts "Calling $this-c graph"
-	puts "name      = $name"
-	puts "num_mat   = $num_mat"
-	puts "var_index = $var_index"
-	puts "num_vals  = $num_vals"
-	puts "val_list  = $val_list"
-	set call "$this-c graph $name $var_index $num_vals"
-	for {set i 0} { $i < [llength $val_list] } { incr i } {
-	    set insert [lindex $val_list $i]
-	    append call " $insert"
-	}
-	eval $call
-	puts "call = $call"
-    }
-    method addVar_b {w name mat i} {
-	set fname "$w.var$i"
-	frame $fname
-	pack $fname -side top -fill x -padx 2 -pady 2
-
-	label $fname.label -text "$name"
-	pack $fname.label -side left -padx 2 -pady 2
-
-	button $fname.button -text "Graph" -command "$this graphbutton $name $i $mat"
-	pack $fname.button -side right -padx 2 -pady 2
-
-	if {$mat > $num_materials} {
-	    set num_materials $mat
-	    puts "num_materials is now $num_materials"
-	}
-
-	make_mat_menu $fname $mat $i
-    }
-    method buildVarFrame_b {w } {
-	if {[llength $var_list] > 0} {
-	    frame $w.vars -borderwidth 3 -relief ridge
-	    pack $w.vars -side top -fill x -padx 2 -pady 2
-	    
-	    puts "var_list length [llength $var_list]"
-	    for {set i 0} { $i < [llength $var_list] } { incr i } {
-		set newvar [lindex $var_list $i]
-#		set newmat [lindex $mat_list $i]
-#		addVar $w.vars $newvar $newmat $i
-		addVar $w.vars $newvar $num_materials $i
-	    }
-	}
-    }
-
-    method graph_data_b { id var args } {
-	set w .graph[modname]$id
-        if {[winfo exists $w]} { 
-            destroy $w 
-	}
-	toplevel $w
-#	wm minsize $w 300 300
-
-	puts "id = $id"
-	puts "var = $var"
-	puts "args = $args"
-
-	button $w.close -text "Close" -command "destroy $w"
-	pack $w.close -side bottom -anchor s -expand yes -fill x
-	
-	blt::graph $w.graph -title "Plot of $var with materials $args" \
-		-height 250 -plotbackground gray99
-
-	set max 1e-10
-	set min 1e+10
-
-	puts "length of var_val_list = [llength $var_val_list]"
-	puts "length of args         = $args"
-	for { set i 0 } { $i < [llength $args] } {incr i} {
-	    set mat_vals [lindex $var_val_list [lindex $args $i]]
-	    for { set j 0 } { $j < [llength $mat_vals] } {incr j} {
-		set val [lindex $mat_vals $j]
-		if { $max < $val } { set max $val }
-		if { $min > $val } { set min $val }
-	    }
-	}
-	
-	if { ($max - $min) > 1000 || ($max - $min) < 1e-3 } {
-	    $w.graph yaxis configure -logscale true -title $var
-	} else {
-	    $w.graph yaxis configure -title $var
-	}
-	
-	$w.graph xaxis configure -title "Timestep" -loose true
-	
-	puts "length of var_val_list = [llength $var_val_list]"
-	for { set i 0 } { $i < [llength $args] } {incr i} {
-	    puts "adding line"
-	    set mat_index  [lindex $args $i]
-	    set mat_vals [lindex $var_val_list $mat_index]
-	    puts "\[llength mat_vals\] = [llength $mat_vals]"
-	    puts "mat_vals = $mat_vals"
-	    set color_ind [expr round(double($mat_index) / ($num_materials-1) * ($num_colors - 1))]
-	    $w.graph element create "Material $mat_index" -linewidth 2 \
-		-pixels 3 -color [$this get_color $color_ind] \
-		-xdata $time_list -ydata $mat_vals
-	}
-	
-	pack $w.graph
-    }
-
     method get_color { index } {
 	set color_scheme {
 	    { 255 0 0}  { 255 102 0}
@@ -548,7 +406,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	return $c
     }
 ###############################################################################
-    method buildVarFrame {w} {
+    method buildVarFrame {w part_id} {
 	if {[llength $var_list] > 0} {
 	    frame $w.vars -borderwidth 3 -relief ridge
 	    pack $w.vars -side top -fill x -padx 2 -pady 2
@@ -558,7 +416,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 		set newvar [lindex $var_list $i]
 #		set newmat [lindex $mat_list $i]
 		set newtype [lindex $type_list $i]
-		addVar $w.vars $newvar $num_materials $newtype $i
+		addVar $w.vars $part_id $newvar $num_materials $newtype $i
 	    }
 	}
     }
@@ -588,23 +446,30 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
     }	
     # creates the material selection menu
     # it generates sub menus for matrix3 and vector types
-    method make_mat_menu {w mat i type} {
+    #
+    # w - parent widget
+    # part_id - particle id pertaining to the variable
+    # mat - number of materials
+    # i - index of variable
+    # type - type of variable
+    method make_mat_menu {w part_id mat i type} {
 	set fname "$w.mat$i"
 	menubutton $fname -text "Material" \
 		-menu $fname.list -relief groove
 	pack $fname -side right -padx 2 -pady 2
 	
 	menu $fname.list
-	set var_o $i
-#	append var_o "_o[set $this-var_orientation]"
+	set var_id $i
+#	puts "var_id = $var_id"
+	append var_id "_id$part_id"
 	$fname.list add command -label "Sel All" \
-		-command "$this mat_sel $this-matvar_$var_o $mat 1 $type"
+		-command "$this mat_sel $this-matvar_$var_id $mat 1 $type"
 	$fname.list add command -label "Sel None" \
-		-command "$this mat_sel $this-matvar_$var_o $mat 0 $type"
+		-command "$this mat_sel $this-matvar_$var_id $mat 0 $type"
 	for {set j 0} { $j < $mat} {incr j} {
-	    set var $var_o
+	    set var $var_id
 	    append var "_$j"
-#	    puts "***var = $var"
+#	    puts "var = $var"
 	    if {$type == "matrix3"} {
 		$fname.list add cascade -label "Mat $j" \
 			-menu $fname.list.types$var
@@ -621,6 +486,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 		    $fname.list.types$var add checkbutton \
 			    -variable $this-matvar_$var2 \
 			    -label [lindex $matrix_types $k]
+#		    puts "actual variable = $this-matvar_$var2"
 		}
 	    } elseif {$type == "vector"} {
 		$fname.list add cascade -label "Mat $j" \
@@ -638,19 +504,21 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 		    $fname.list.types$var add checkbutton \
 			    -variable $this-matvar_$var2 \
 			    -label [lindex $vector_types $k]
+#		    puts "actual variable = $this-matvar_$var2"
 		}
 	    } elseif {$type == "scaler"} {
 		$fname.list add checkbutton \
 			-variable $this-matvar_$var \
 			-label "Mat $j"
+#		puts "actual variable = $this-matvar_$var"
 	    }
 	}
     }
-    method graphbutton {name var_index num_mat type} {
+    method graphbutton {part_id name var_index num_mat type} {
 	set val_list {}
 	set num_vals 0
 	set var_root $this-matvar_$var_index
-#	append var_root "_o[set $this-var_orientation]"
+	append var_root "_id$part_id"
 #	puts "var_root = $var_root"
 	# loop over all the materials	
 	for {set j 0} { $j < $num_mat} {incr j} {
@@ -690,7 +558,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 #	puts "num_vals  = $num_vals"
 #	puts "val_list  = $val_list"
 	if {[llength $val_list] > 0} {
-	    set call "$this-c graph $name $var_index $num_vals"
+	    set call "$this-c graph $name $part_id $num_vals"
 	    for {set i 0} { $i < [llength $val_list] } { incr i } {
 		set insert [lindex $val_list $i]
 		append call " $insert"
@@ -699,15 +567,22 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	    eval $call
 	}
     }
-    method addVar {w name mat type i} {
+    # w - the window parent
+    # part_id - particle id pertaining to the variable
+    # name - name of the variable to be added
+    # mat - index into the matierial list
+    # type - the type of the variable
+    # i - variable index
+    method addVar {w part_id name mat type i} {
 	set fname "$w.var$i"
+#	puts "addVar: fname = $fname"
 	frame $fname
 	pack $fname -side top -fill x -padx 2 -pady 2
 
 	label $fname.label -text "$name"
 	pack $fname.label -side left -padx 2 -pady 2
 
-	button $fname.button -text "Graph" -command "$this graphbutton $name $i $mat $type"
+	button $fname.button -text "Graph" -command "$this graphbutton $part_id $name $i $mat $type"
 	pack $fname.button -side right -padx 2 -pady 2
 
 	if {$mat > $num_materials} {
@@ -715,7 +590,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 #	    puts "num_materials is now $num_materials"
 	}
 
-	make_mat_menu $fname $mat $i $type
+	make_mat_menu $fname $part_id $mat $i $type
     }
     method graph_data { id var args } {
 	set w .graph[modname]$graph_id
@@ -733,7 +608,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	button $w.close -text "Close" -command "destroy $w"
 	pack $w.close -side bottom -anchor s -expand yes -fill x
 	
-	blt::graph $w.graph -title "Plot of $var" \
+	blt::graph $w.graph -title "Plot of $var with particle $id" \
 		-height 250 -plotbackground gray99
 
 	set max 1e-10
