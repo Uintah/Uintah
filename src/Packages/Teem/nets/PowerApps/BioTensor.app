@@ -3218,6 +3218,8 @@ class BioTensorApp {
 	    ### Renderer Options Tab
 	    create_viewer_tab $vis
 	    
+	    $vis.tnb view "Vis Options"
+	    
 	    
 	    ### Attach/Detach button
             frame $m.d 
