@@ -1378,12 +1378,12 @@ protected:
   void add_disk(const Point &p, const Vector &vin,
 		double scale, int resolution,
 		GeomGroup *g, MaterialHandle mh,
-		bool normalize);
+		bool normalize, bool colorify);
 
   void add_cone(const Point &p, const Vector &vin,
 		double scale, int resolution,
 		GeomGroup *g, MaterialHandle mh,
-		bool normalize);
+		bool normalize, bool colorify);
 };
 
 
@@ -1420,20 +1420,32 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep());
 
+  const bool colorify = false;
+
   GeomGroup *disks;
   GeomArrows *vec_node;
+  GeomCLines *lines;
   const bool disks_p = (display_mode == "Disks");
   const bool cones_p = (display_mode == "Cones");
   GeomSwitch *data_switch;
   if (disks_p || cones_p)
   {
     disks = scinew GeomGroup();
-    data_switch = scinew GeomSwitch(scinew GeomDL(disks));
+    data_switch =
+      scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(disks,
+							  default_material)));
+  }
+  else if (arrow_heads)
+  {
+    vec_node = scinew GeomArrows(0.15, 0.6);
+    data_switch = scinew GeomSwitch(scinew GeomDL(vec_node));
   }
   else
   {
-    vec_node = scinew GeomArrows(arrow_heads?0.15:0.0, 0.6);
-    data_switch = scinew GeomSwitch(scinew GeomDL(vec_node));
+    lines = scinew GeomCLines();
+    data_switch =
+      scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(lines,
+							  default_material)));
   }
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
@@ -1458,20 +1470,48 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       if (disks_p)
       {
 	add_disk(p, tmp, scale, resolution, disks,
-		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
-		 normalize);
+		 (cmap.get_rep())?(cmap->lookup(ctmpd)):0,
+		 normalize, colorify);
       }
       else if (cones_p)
       {
 	add_cone(p, tmp, scale, resolution, disks,
-		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
-		 normalize);
+		 (cmap.get_rep())?(cmap->lookup(ctmpd)):0,
+		 normalize, colorify);
       }
-      else
+      else if (arrow_heads)
       {
 	add_data(p, tmp, vec_node,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
 		 display_mode, scale, normalize, bidirectional);
+      }
+      else
+      {
+	tmp *= scale;
+	if (bidirectional)
+	{
+	  if (cmap.get_rep())
+	  {
+	    lines->add(p - tmp, cmap->lookup(ctmpd),
+		       p + tmp, cmap->lookup(ctmpd));
+	  }
+	  else
+	  {
+	    lines->add(p - tmp, p + tmp);
+	  }
+	}
+	else
+	{
+	  if (cmap.get_rep())
+	  {
+	    lines->add(p, cmap->lookup(ctmpd),
+		       p + tmp, cmap->lookup(ctmpd));
+	  }
+	  else
+	  {
+	    lines->add(p, p + tmp);
+	  }
+	}
       }
     }
     ++iter;
