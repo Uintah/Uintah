@@ -1005,8 +1005,9 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 		    set tmpval [subDATADIRandDATASET $val]
 		    append script "${tab}set \$m$i-${var} \"${tmpval}\"\n"
 		} else {
-		    if { ![string is double $val] } {
-			set failed [catch "set num [format %e $val]"]
+		    set len [string length $val]
+		    if { $len > 9 } {
+			set failed [catch "set num [format %.${len}e $val]"]
 			if { !$failed } {
 			    append script "${tab}set \$m$i-${var} \{${num}\}\n"
 			    continue
