@@ -8,14 +8,6 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS := $(SRCDIR)/sus.cc
 
-#ifneq ($(CC_DEPEND_REGEN),-MD)
-# Arches doesn't work under g++ yet
-ARCHES := Packages/Uintah/CCA/Components/Arches \
-	Packages/Uintah/CCA/Components/MPMArches
-#else
-#SRCS := $(SRCS) $(SRCDIR)/FakeArches.cc
-#endif
-
 PROGRAM := Packages/Uintah/StandAlone/sus
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
@@ -34,7 +26,9 @@ else
 	Packages/Uintah/CCA/Components/Schedulers \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/CCA/Components/ICE \
-	$(ARCHES)        \
+	Packages/Uintah/CCA/Components/Examples \
+	Packages/Uintah/CCA/Components/Arches \
+	Packages/Uintah/CCA/Components/MPMArches \
 	Dataflow/Network \
 	Core/Exceptions  \
 	Core/Thread      \
