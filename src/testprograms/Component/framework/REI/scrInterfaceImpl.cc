@@ -1,5 +1,5 @@
 
-#include <testprograms/Component/framework/scrInterfaceImpl.h>
+#include <testprograms/Component/framework/REI/scrInterfaceImpl.h>
 
 #include <sstream>
 #include <iostream>

@@ -4,7 +4,7 @@
 
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
-#include <testprograms/Component/framework/scrInterfaceImpl.h>
+#include <testprograms/Component/framework/REI/scrInterfaceImpl.h>
 
 namespace sci_cca {
 
