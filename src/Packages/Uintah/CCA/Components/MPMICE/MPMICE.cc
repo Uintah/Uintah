@@ -94,6 +94,14 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     exit(1);
   }
   d_ice->attachPort("output", dataArchiver);
+  
+/*`==========TESTING==========*/
+  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  if(!solver){
+    throw InternalError("ICE needs a solver component to work");
+  }
+  d_ice->attachPort("solver", solver); 
+/*==========TESTING==========`*/
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
   //__________________________________

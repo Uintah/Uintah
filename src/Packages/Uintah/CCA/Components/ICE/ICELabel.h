@@ -57,7 +57,12 @@ namespace Uintah {
     const VarLabel* f_theta_CCLabel;
     const VarLabel* Tdot_CCLabel;
     const VarLabel* SumThermExpLabel;
-   
+/*`==========TESTING==========*/
+    const VarLabel* matrixLabel;
+    const VarLabel* rhsLabel;
+    const VarLabel* initialGuessLabel;
+    const VarLabel* imp_delPLabel;
+/*==========TESTING==========`*/    
     // Face centered variables
     const VarLabel* uvel_FCLabel;
     const VarLabel* vvel_FCLabel;
