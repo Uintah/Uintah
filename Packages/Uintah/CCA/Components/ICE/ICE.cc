@@ -29,6 +29,7 @@
 #include <float.h>
 #include <iostream>
 #include <stdio.h>
+#include <Core/Util/DebugStream.h>
 
 using std::vector;
 using std::max;
@@ -36,9 +37,15 @@ using std::istringstream;
  
 using namespace SCIRun;
 using namespace Uintah;
+//__________________________________
+//  To turn on normal output
+//  setenv SCI_DEBUG ICE_NORMAL_COUT:+, ICE_DOING_COUT.....
+//  ICE_NORMAL_COUT:  dumps out during problemSetup 
+//  ICE_DOING_COUT:   dumps when tasks are scheduled and performed
+//  default is OFF
+static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
+static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-//#define DOING
-#undef DOING
 /*`==========TESTING==========*/ 
 // KEEP THIS AROUND UNTIL
 // I'M SURE OF THE NEW STYLE OF SETBC -Todd
@@ -124,7 +131,7 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 {
   d_sharedState = sharedState;
   d_SMALL_NUM   = 1.e-100;
-  cerr << "In the preprocessor . . ." << endl;
+  cout_norm << "In the preprocessor . . ." << endl;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(dataArchiver == 0){
     cout<<"dataArhiver in ICE is null now exiting; "<<endl;
@@ -172,25 +179,25 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
         switchTestConservation           = true;
     }
   }
-  cerr << "Pulled out the debugging switches from input file" << endl;
-  cerr<< "  debugging starting time "  <<d_dbgStartTime<<endl;
-  cerr<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
-  cerr<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
+  cout_norm << "Pulled out the debugging switches from input file" << endl;
+  cout_norm<< "  debugging starting time "  <<d_dbgStartTime<<endl;
+  cout_norm<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
+  cout_norm<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
 
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   cfd_ps->require("cfl",d_CFL);
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
-  cout << "cfl = " << d_CFL << endl;
-  cout << "max_iteration_equilibration " << d_max_iter_equilibration << endl;
-  cerr << "Pulled out CFD-ICE block of the input file" << endl;
+  cout_norm << "cfl = " << d_CFL << endl;
+  cout_norm << "max_iteration_equilibration " << d_max_iter_equilibration << endl;
+  cout_norm << "Pulled out CFD-ICE block of the input file" << endl;
     
   // Pull out from Time section
   ProblemSpecP time_ps = prob_spec->findBlock("Time");
   time_ps->require("delt_init",d_initialDt);
-  cout << "Initial dt = " << d_initialDt << endl;
-  cerr << "Pulled out Time block of the input file" << endl;
+  cout_norm << "Initial dt = " << d_initialDt << endl;
+  cout_norm << "Pulled out Time block of the input file" << endl;
 
   // Pull out Initial Conditions
   ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
@@ -203,7 +210,7 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
      ICEMaterial *mat = scinew ICEMaterial(ps);
      sharedState->registerICEMaterial(mat);
   }     
-  cerr << "Pulled out InitialConditions block of the input file" << endl;
+  cout_norm << "Pulled out InitialConditions block of the input file" << endl;
 
   // Pull out the exchange coefficients
   ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
@@ -215,10 +222,10 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   exch_co_ps->require("heat",d_K_heat);
 
   for (int i = 0; i<(int)d_K_mom.size(); i++)
-    cout << "K_mom = " << d_K_mom[i] << endl;
+    cout_norm << "K_mom = " << d_K_mom[i] << endl;
   for (int i = 0; i<(int)d_K_heat.size(); i++)
-    cout << "K_heat = " << d_K_heat[i] << endl;
-  cerr << "Pulled out exchange coefficients of the input file" << endl;
+    cout_norm << "K_heat = " << d_K_heat[i] << endl;
+  cout_norm << "Pulled out exchange coefficients of the input file" << endl;
 
   string mass_exch_in;
   ProblemSpecP mass_exch_ps = exch_ps->get("mass_exchange",mass_exch_in);
@@ -235,35 +242,35 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   } else
     d_massExchange = false;
 
-  cerr << "Mass exchange = " << d_massExchange << endl;
+  cout_norm << "Mass exchange = " << d_massExchange << endl;
 
   //__________________________________
   //  Print out what I've found
-  cout << "Number of ICE materials: " 
+  cout_norm << "Number of ICE materials: " 
        << d_sharedState->getNumICEMatls()<< endl;
 
   if (switchDebugInitialize == true) 
-    cout << "switchDebugInitialize is ON" << endl;
+    cout_norm << "switchDebugInitialize is ON" << endl;
   if (switchDebug_equilibration_press == true) 
-    cout << "switchDebug_equilibration_press is ON" << endl;
+    cout_norm << "switchDebug_equilibration_press is ON" << endl;
   if (switchDebug_vel_FC == true) 
-    cout << "switchDebug_vel_FC is ON" << endl;
+    cout_norm << "switchDebug_vel_FC is ON" << endl;
   if (switchDebug_Exchange_FC == true) 
-    cout << "switchDebug_Exchange_FC is ON" << endl;
+    cout_norm << "switchDebug_Exchange_FC is ON" << endl;
   if (switchDebug_explicit_press == true) 
-    cout << "switchDebug_explicit_press is ON" << endl;
+    cout_norm << "switchDebug_explicit_press is ON" << endl;
   if (switchDebug_PressFC == true) 
-    cout << "switchDebug_PressFC is ON" << endl;
+    cout_norm << "switchDebug_PressFC is ON" << endl;
   if (switchDebugLagrangianValues == true) 
-    cout << "switchDebugLagrangianValues is ON" << endl;
+    cout_norm << "switchDebugLagrangianValues is ON" << endl;
   if (switchDebugSource_Sink == true) 
-    cout << "switchDebugSource_Sink is ON" << endl;
+    cout_norm << "switchDebugSource_Sink is ON" << endl;
   if (switchDebug_advance_advect == true) 
-    cout << "switchDebug_advance_advect is ON" << endl;
+    cout_norm << "switchDebug_advance_advect is ON" << endl;
   if (switchDebug_advectQFirst == true) 
-    cout << "switchDebug_advectQFirst is ON" << endl;
+    cout_norm << "switchDebug_advectQFirst is ON" << endl;
   if (switchTestConservation == true)
-    cout << "switchTestConservation is ON" << endl;
+    cout_norm << "switchTestConservation is ON" << endl;
 
 }
 /* ---------------------------------------------------------------------
@@ -272,9 +279,8 @@ _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level, 
                              SchedulerP& sched)
 {
-#ifdef DOING
-  cout << "Doing ICE::scheduleInitialize " << endl;
-#endif  
+
+  cout_doing << "Doing ICE::scheduleInitialize " << endl;
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
   t->computes(d_sharedState->get_delt_label());
@@ -298,16 +304,14 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
-#ifdef DOING
-  cout << "ICE::scheduleComputeStableTimestep " << endl;
-#endif
-    Task* task = scinew Task("ICE::actuallyComputeStableTimestep",
-			  this, &ICE::actuallyComputeStableTimestep);
+  cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
+  Task* task = scinew Task("ICE::actuallyComputeStableTimestep",
+			this, &ICE::actuallyComputeStableTimestep);
 
-    task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
-    task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
-    task->computes(d_sharedState->get_delt_label());
-    sched->addTask(task,level->eachPatch(), d_sharedState->allICEMaterials());
+  task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
+  task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
+  task->computes(d_sharedState->get_delt_label());
+  sched->addTask(task,level->eachPatch(), d_sharedState->allICEMaterials());
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
@@ -315,9 +319,7 @@ _____________________________________________________________________*/
 void ICE::scheduleTimeAdvance(double /*t*/, double /*dt*/,const LevelP& level,
 			      SchedulerP& sched)
 {
-#ifdef DOING
-  cout << "ICE::scheduleTimeAdvance" << endl;
-#endif
+  cout_doing << "ICE::scheduleTimeAdvance" << endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -376,9 +378,7 @@ void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
                                           const MaterialSubset* press_matl,
 					       const MaterialSet* ice_matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleComputeEquilibrationPressure" << endl;
-#endif
+  cout_doing << "ICE::scheduleComputeEquilibrationPressure" << endl;
   Task* task = scinew Task("ICE::computeEquilibrationPressure",
                      this, &ICE::computeEquilibrationPressure);
   
@@ -405,9 +405,7 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
                                           const MaterialSubset* press_matl,
                                           const MaterialSet* all_matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleComputeFaceCenteredVelocities" << endl;
-#endif
+  cout_doing << "ICE::scheduleComputeFaceCenteredVelocities" << endl;
   Task* task = scinew Task("ICE::computeFaceCenteredVelocities",
                      this, &ICE::computeFaceCenteredVelocities);
 
@@ -436,9 +434,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
 						 const PatchSet* patches,
 						 const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleAddExchangeContributionToFCVel" << endl;
-#endif
+  cout_doing << "ICE::scheduleAddExchangeContributionToFCVel" << endl;
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel);
 
@@ -462,9 +458,7 @@ void  ICE::scheduleMassExchange(SchedulerP& sched,
 				const PatchSet* patches,
 				const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleMassExchange" << endl;
-#endif 
+  cout_doing << "ICE::scheduleMassExchange" << endl;
   Task* task = scinew Task("ICE::massExchange",
 			this, &ICE::massExchange);
   task->requires(Task::NewDW, lb->rho_CCLabel,  Ghost::None);
@@ -485,9 +479,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const MaterialSubset* mpm_matls,
 						  const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
-#endif
+  cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
   Task* task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                      this, &ICE::computeDelPressAndUpdatePressCC);
   
@@ -521,9 +513,7 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
                              const MaterialSubset* press_matl,
 				 const MaterialSet* matls)
 { 
-#ifdef DOING
-  cout << "ICE::scheduleComputePressFC" << endl;
-#endif                    
+  cout_doing << "ICE::scheduleComputePressFC" << endl;                   
   Task* task = scinew Task("ICE::computePressFC",
                      this, &ICE::computePressFC);
 
@@ -547,9 +537,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
                                           const MaterialSubset* ice_matls_sub,
 						const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleAccumulateMomentumSourceSinks" << endl;
-#endif 
+  cout_doing << "ICE::scheduleAccumulateMomentumSourceSinks" << endl; 
   Task* task = scinew Task("ICE::accumulateMomentumSourceSinks", 
                      this, &ICE::accumulateMomentumSourceSinks);
                      
@@ -579,9 +567,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 					      const MaterialSet* matls)
 
 {
-#ifdef DOING
-  cout << "ICE::scheduleAccumulateEnergySourceSinks" << endl;
-#endif 
+  cout_doing << "ICE::scheduleAccumulateEnergySourceSinks" << endl;
   Task* task = scinew Task("ICE::accumulateEnergySourceSinks",
                      this, &ICE::accumulateEnergySourceSinks);
   
@@ -611,9 +597,7 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
                                      const MaterialSubset* mpm_matls,
                                      const MaterialSet* ice_matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleComputeLagrangianValues" << endl;
-#endif 
+  cout_doing << "ICE::scheduleComputeLagrangianValues" << endl;
   Task* task = scinew Task("ICE::computeLagrangianValues",
                       this,&ICE::computeLagrangianValues);
 
@@ -645,9 +629,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 						 const PatchSet* patches, 
 						 const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleAddExchangeToMomentumAndEnergy" << endl;
-#endif
+  cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy" << endl;
   Task* task = scinew Task("ICE::addExchangeToMomentumAndEnergy",
                      this, &ICE::addExchangeToMomentumAndEnergy);;
   task->requires(Task::NewDW, lb->mass_L_CCLabel,   Ghost::None);
@@ -669,9 +651,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
 					 const PatchSet* patches,
 					 const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
-#endif
+  cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime);
   task->requires(Task::NewDW, lb->uvel_FCMELabel,      Ghost::AroundCells,2);
@@ -699,9 +679,7 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
 					   const MaterialSubset* press_matl,
 					   const MaterialSet* matls)
 {
-#ifdef DOING
-  cout << "ICE::schedulePrintConservedQuantities" << endl;
-#endif
+  cout_doing << "ICE::schedulePrintConservedQuantities" << endl;
   Task* task = scinew Task("ICE::printConservedQuantities",
                      this, &ICE::printConservedQuantities);
 
@@ -730,10 +708,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing Compute Stable Timestep on patch " << patch->getID() 
+    cout_doing << "Doing Compute Stable Timestep on patch " << patch->getID() 
          << "\t\t ICE" << endl;
-  #endif
       
       Vector dx = patch->dCell();
       double delt_CFL = 100000, fudge_factor = 1.;
@@ -789,23 +765,19 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 			     DataWarehouse*, 
                           DataWarehouse* new_dw)
 {
-#ifdef DOING
  //__________________________________
  //  dump patch limits to screen
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout<< "patch: "<<patch->getID()<<
+    cout_doing<< "patch: "<<patch->getID()<<
           patch->getCellLowIndex()  << 
           patch->getCellHighIndex() << endl;
   }
-#endif
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-  #ifdef DOING
-    cout << "Doing Initialize on patch " << patch->getID() 
+    cout_doing << "Doing Initialize on patch " << patch->getID() 
          << "\t\t\t ICE" << endl;
-  #endif
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
     Vector dx       = patch->dCell();
@@ -893,7 +865,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->put(vel_CC[m],        lb->vel_CCLabel,            indx,patch);
 
       if (switchDebugInitialize){
-        cout << " Initial Conditions" << endl;       
+        cout_norm << " Initial Conditions" << endl;       
         char description[50];
         sprintf(description, "Initialization_Mat_%d_patch_%d ", indx, 
                 patch->getID());
@@ -950,10 +922,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing calc_equilibration_pressure on patch " << patch->getID() 
+    cout_doing << "Doing calc_equilibration_pressure on patch "<<patch->getID() 
          << "\t\t ICE" << endl;
-  #endif
     double    converg_coeff = 15;              
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    sum, tmp;
@@ -1178,7 +1148,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }     // end of cell interator
 
-    fprintf(stderr, "\n max. iterations in any cell %i\n", test_max_iter); 
+    fprintf(stderr, " max. iterations in any cell %i \t", test_max_iter); 
     //__________________________________
     // update Boundary conditions
 /*`==========TESTING==========*/ 
@@ -1241,13 +1211,9 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 {
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
-    
 
-  #ifdef DOING
-    cout << "Doing compute_face_centered_velocities on patch " 
+    cout_doing << "Doing compute_face_centered_velocities on patch " 
          << patch->getID() << "\t ICE" << endl;
-  #endif
-
     int numMatls = d_sharedState->getNumMatls();
 
     delt_vartype delT;
@@ -1453,10 +1419,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
+    cout_doing << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
       patch->getID() << "\t ICE" << endl;
-  #endif
 
     int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
@@ -1715,10 +1679,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing explicit delPress on patch " << patch->getID() 
+    
+    cout_doing << "Doing explicit delPress on patch " << patch->getID() 
          <<  "\t\t\t ICE" << endl;
-  #endif
+
     int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1891,10 +1855,10 @@ void ICE::computePressFC(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing press_face_MM on patch " << patch->getID() 
+
+    cout_doing << "Doing press_face_MM on patch " << patch->getID() 
          << "\t\t\t\t ICE" << endl;
-  #endif
+
     int numMatls = d_sharedState->getNumMatls();
     double sum_rho, sum_rho_adj;
     double A;                                 
@@ -1993,10 +1957,10 @@ void ICE::massExchange(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing massExchange on patch " <<
+
+    cout_doing << "Doing massExchange on patch " <<
       patch->getID() << "\t\t\t\t ICE" << endl;
-  #endif
+
 
    Vector dx        = patch->dCell();
    double vol       = dx.x()*dx.y()*dx.z();
@@ -2111,10 +2075,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing accumulate_momentum_source_sinks_MM on patch " <<
+
+    cout_doing << "Doing accumulate_momentum_source_sinks_MM on patch " <<
       patch->getID() << "\t ICE" << endl;
-  #endif
+
     int indx;
     int numMatls  = d_sharedState->getNumMatls();
 
@@ -2265,10 +2229,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing accumulate_energy_source_sinks on patch " 
+    cout_doing << "Doing accumulate_energy_source_sinks on patch " 
          << patch->getID() << "\t\t ICE" << endl;
-  #endif
+
     int numMatls = d_sharedState->getNumMatls();
 
     delt_vartype delT;
@@ -2350,10 +2313,9 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing Lagrangian mass, momentum and energy on patch " <<
+
+    cout_doing << "Doing Lagrangian mass, momentum and energy on patch " <<
       patch->getID() << "\t ICE" << endl;
-  #endif
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
@@ -2565,10 +2527,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing Heat and momentum exchange on patch " << 
+    cout_doing << "Doing Heat and momentum exchange on patch " << 
       patch->getID() << "\t\t ICE" << endl;
-  #endif
+
     int     numMatls  = d_sharedState->getNumICEMatls();
     double  tmp;
     delt_vartype delT;
@@ -2776,10 +2737,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-  #ifdef DOING
-    cout << "Doing Advect and Advance in Time on patch " << 
+ 
+    cout_doing << "Doing Advect and Advance in Time on patch " << 
       patch->getID() << "\t\t ICE" << endl;
-  #endif
+
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
 
@@ -3034,9 +2995,6 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
 void ICE::setBC(CCVariable<double>& variable, const string& kind, 
 		const Patch* patch, const int mat_id)
 {
-#if 0
-  cerr << "Setting BC " << kind << " for material " << mat_id << endl;
-#endif
   Vector dx = patch->dCell();
   Vector grav = d_sharedState->getGravity();
   for(Patch::FaceType face = Patch::startFace;
