@@ -191,9 +191,6 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-  //The next line is used for data analyze, please do not move.  --tan
-  if(d_analyze) d_analyze->performAnalyze(sched, patches, matls);
-
   if(d_fracture) {
     scheduleSetPositions(                 sched, patches, matls);
     scheduleComputeBoundaryContact(       sched, patches, matls);
@@ -218,6 +215,9 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
     scheduleComputeCrackExtension(        sched, patches, matls);
   }
   scheduleCarryForwardVariables(          sched, patches, matls);
+
+  //The next line is used for data analyze, please do not move.  --tan
+  if(d_analyze) d_analyze->performAnalyze(sched, patches, matls);
     
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
 				    lb->d_particleState_preReloc,
@@ -912,8 +912,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           Connectivity connectivity(pConnectivity[idx]);
   	  int conn[8];
 	  connectivity.getInfo(conn);
-      	  connectivity.modifyWeights(conn,S_connect,Connectivity::connect);
-      	  connectivity.modifyWeights(conn,S_contact,Connectivity::contact);
+      	  Connectivity::modifyWeights(conn,S_connect,Connectivity::connect);
+      	  Connectivity::modifyWeights(conn,S_contact,Connectivity::contact);
 
           for(int k = 0; k < 8; k++) {
 	    if( patch->containsNode(ni[k]) ) {
@@ -929,18 +929,20 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	      }
 
 	      if( conn[k] == Connectivity::connect ) {
+	        double area = M_PI * pow(0.75/M_PI*pvolume[idx],0.6667);
 	        gexternalforce[ni[k]] += 
 		  ( pexternalforce[idx] - 
-		    pCrackNormal[idx] * pCrackSurfacePressure[idx]
+		    pCrackNormal[idx] * (pCrackSurfacePressure[idx] * area)
 		  ) * S_contact[k];
 	        gvelocity[ni[k]]      += pvelocity[idx] *pmass[idx]*S_contact[k];
 	      }
 	      else if( conn[k] == Connectivity::contact ) {
+	        double area = M_PI * pow(0.75/M_PI*pvolume[idx],0.6667);
 	        gexternalforce[ni[k]] += pContactNormal[idx] * 
-		  ( Dot(pContactNormal[idx],
+		  ( ( Dot(pContactNormal[idx],
 		    pexternalforce[idx] -
-		    pCrackNormal[idx] * pCrackSurfacePressure[idx]
-		  ) * S_contact[k]);
+		    pCrackNormal[idx] * (pCrackSurfacePressure[idx] * area)
+		  ) * S_contact[k]) );
 	        gvelocity[ni[k]]      += pContactNormal[idx] * 
                   ( Dot(pContactNormal[idx],pvelocity[idx]) * 
                   pmass[idx] * S_contact[k] );
@@ -1188,12 +1190,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   	   int conn[8];
 	   connectivity.getInfo(conn);
 	 
-           connectivity.modifyShapeDerivatives(
+           Connectivity::modifyShapeDerivatives(
 				      conn,d_S_connect,Connectivity::connect);
-      	   connectivity.modifyWeights(conn,S_connect,Connectivity::connect);
-           connectivity.modifyShapeDerivatives(
+      	   Connectivity::modifyWeights(conn,S_connect,Connectivity::connect);
+           Connectivity::modifyShapeDerivatives(
 				      conn,d_S_contact,Connectivity::contact);
-      	   connectivity.modifyWeights(conn,S_contact,Connectivity::contact);
+      	   Connectivity::modifyWeights(conn,S_contact,Connectivity::contact);
 
            for(int k = 0; k < 8; k++) {
 	     if( patch->containsNode(ni[k]) ) {
@@ -1818,6 +1820,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   	  int conn[8];
 	  connectivity.getInfo(conn);
       	  Connectivity::modifyWeights(conn,S_connect,Connectivity::connect);
+      	  Connectivity::modifyWeights(conn,S_contact,Connectivity::contact);
 
           double tempRate = 0;
           // Accumulate the contribution from each surrounding vertex
@@ -1827,13 +1830,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 							* S_connect[k];
              }
 	  }
-
-          for(int k = 0; k < 8; k++) {
-	     if( conn[k] == Connectivity::contact ) {
-	        if(Dot(gacceleration[ni[k]],pvelocity[idx]) > 0) conn[k] = 0;
-	     }
-	  }
-      	  Connectivity::modifyWeights(conn,S_contact,Connectivity::contact);
 	  
           vel = Vector(0.0,0.0,0.0);
           acc = Vector(0.0,0.0,0.0);
@@ -1843,12 +1839,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
    	        acc += gacceleration[ni[k]]   * S_contact[k];
              }
 	     else if( conn[k] == Connectivity::contact ) {
-	         vel += pContactNormal[idx] *
-	           ( Dot(pContactNormal[idx], gvelocity_star[ni[k]]) * 
-		    S_contact[k] );
-   	         acc += pContactNormal[idx] *
-	           ( Dot(pContactNormal[idx], gacceleration[ni[k]]) * 
-		    S_contact[k] );
+	        Vector v1n = pContactNormal[idx] *
+	           ( Dot(pContactNormal[idx], pvelocity[idx]) * S_contact[k] );
+	        Vector v1p = pvelocity[idx] * S_contact[k] - v1n;
+	     
+	        Vector v2n = pContactNormal[idx] *
+	           Dot(pContactNormal[idx], gvelocity_star[ni[k]]);
+	        const Vector& v2p = v1p;
+		 
+	        vel += (v2n + v2p) * S_contact[k];
+   	        acc += (v2n-v1n) * (S_contact[k]/delT);
 	     }
 	  }
 	  
@@ -1933,7 +1933,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
 
-  cout << "Solid mass lost this timestep = " << massLost << endl;
+//  cout << "Solid mass lost this timestep = " << massLost << endl;
 //  cout << "Solid momentum after advection = " << CMV << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
