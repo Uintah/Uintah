@@ -223,7 +223,6 @@ private:
   GLUI_Spinner  * soundVolumeSpinner_;
   GLUI_Spinner  * glyphThresholdSpinner_;
 
-  GLUI_EditText * framesPerSecondTxt;
   GLUI_Spinner  * fovSpinner_;
 
   float           fovValue_;
