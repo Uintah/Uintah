@@ -14,14 +14,14 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = BB.o  RenderRG.o  BitVisualize.o  BoxClipSField.o BoundGrid.o \
+OBJS = BitVisualize.o  BoxClipSField.o BoundGrid.o \
 	CuttingPlane.o FastRender.o    \
 	GenAxes.o GenColorMap.o  GenFieldEdges.o GenTransferFunc.o  \
 	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o IsoSurfaceMRSG.o \
 	OctIsoSurface.o   CuttingPlaneTex.o  \
 	RescaleColorMap.o  Streamline.o  VectorSeg.o  VolVis.o   \
 	WidgetTest.o
-SRCS = BB.cc RenderRG.cc  BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
+SRCS = BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
 	CuttingPlane.cc FastRender.c    \
 	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenTransferFunc.cc \
 	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc IsoSurfaceMRSG.cc\
@@ -36,7 +36,6 @@ LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom -lGeometry \
 	-lTCL -lscitk -ltk -ltcl -lClasslib -lMultitask  $(OPENGLLIBS) \
-	-lvolpack \
 	-lMalloc -lm -lC -lc
 
 SCIDependTarget($(SRCS))
