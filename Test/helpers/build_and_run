@@ -172,7 +172,7 @@ for test in *; do
 	doTestScript="do${test}tests"
 	echo "#!/bin/tcsh" > "$doTestScript"
 	echo "setenv PATH $PATH" >> "$doTestScript"
-	echo "python TestScripts/${OS}/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
 	nice "$doTestScript" > "${test}.log"  2>&1
 	retval=$?
