@@ -2591,17 +2591,7 @@ OpenGL::render_rotation_axis(const View &view,
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  if (viewwindow->ortho_view())
-  {
-    const double len = (view.lookat() - view.eyep()).length();
-    const double yval = tan(fovy * M_PI / 360.0) * len;
-    const double xval = yval * aspect;
-    glOrtho(-xval, xval, -yval, yval, znear, zfar);
-  }
-  else
-  {
-    gluPerspective(fovy, aspect, znear, zfar);
-  }
+  gluPerspective(fovy, aspect, znear, zfar);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
