@@ -183,6 +183,10 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
+
+    // in the level code, the refinement ratio is the relation
+    // between it and the coarser level.
+    newLevel->setRefinementRatio(d_cellRefinementRatio[levelIdx]);
     newLevel->setExtraCells(extraCells);
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
@@ -197,7 +201,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
         if (idx.z() == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2)-1;
         // endCell = Min (endCell, d_cellNum[levelIdx]);
         // ignores extra cells, boundary conditions.
-        /*Patch* newPatch =*/ newLevel->addPatch(startCell, endCell + IntVector(1,1,1) , startCell, endCell + IntVector(1,1,1));
+        /*Patch* newPatch =*/ newLevel->addPatch(startCell-extraCells, endCell + IntVector(1,1,1) + extraCells , startCell, endCell + IntVector(1,1,1));
         //newPatch->setLayoutHint(oldPatch->layouthint);
       }
     }
