@@ -100,7 +100,7 @@ ManageFieldData::execute()
   // Compute output matrix.
   if (ifieldhandle->data_at() == Field::NONE)
   {
-    remark("Input field contains no data, no matrix created.");
+    remark("Input field contains no data, no output matrix created.");
   }
   else
   {
@@ -108,15 +108,20 @@ ManageFieldData::execute()
       ManageFieldDataAlgoField::
       get_compile_info(ifieldhandle->get_type_description(), svt_flag);
     Handle<ManageFieldDataAlgoField> algo_field;
-    if (!module_dynamic_compile(ci_field, algo_field)) return;
-
-    MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-    if (!omp) {
-      error("Unable to initialize oport 'Output Matrix'.");
+    if (!DynamicCompilation::compile(ci_field, algo_field, true, this))
+    {
+      warning("Unable to extract data from input field, no output matrix created.");
     }
     else
     {
-      omp->send(algo_field->execute(ifieldhandle, datasize));
+      MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
+      if (!omp) {
+	error("Unable to initialize oport 'Output Matrix'.");
+      }
+      else
+      {
+	omp->send(algo_field->execute(ifieldhandle, datasize));
+      }
     }
   }
 
