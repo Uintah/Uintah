@@ -1114,7 +1114,7 @@ SCI_ARG_WITH(hypre,
   [with_hypre="$withval"],
   [with_hypre=""])
 SCI_ARG_WITH(netsolve,
-  [  --with-petsc=<path-to-petsc>      <path-to-netsolve>],
+  [  --with-netsolve=<path-to-netsolve> <path-to-netsolve>],
   [with_netsolve="$withval"],
   [with_netsolve=""])
 SCI_ARG_WITH(petsc,
@@ -1137,6 +1137,10 @@ SCI_ARG_WITH(qt,
   [  --with-qt=DIR                     Use the Qt installation in DIR],
   [with_qt="$withval"],
   [with_qt=""])
+SCI_ARG_WITH(babel,
+  [  --with-babel=DIR                  Use the Babel installation in DIR],
+  [with_babel="$withval"],
+  [with_babel=""])
 SCI_ARG_WITH(opengl,
   [  --with-opengl=DIR                 Use the OpenGL installation in DIR],
   [with_opengl="$withval"],
@@ -3017,6 +3021,38 @@ AC_SUBST(QT_MT_LIB_FLAG)
 AC_SUBST(QT_MT_LIB_DIR_FLAG)
 AC_SUBST(INC_QT_MT_H)
 AC_SUBST(DEF_QT)
+
+##  --  search for Babel  ----------------------------------------------------
+
+if test "$with_babel"; then
+  dirs="$with_babel/lib $SCI_LAB_TP_LIBS"
+else
+  dirs="$SCI_LAB_TP_LIBS"
+fi
+
+SCI_CHECK_LIB($dirs,sidl,main,,,optional)
+
+BABEL_BIN=""
+AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
+AC_CHECK_PROG(BABEL_BIN,babel,$ac_dir/babel,NONE,$LIB_DIR_SIDL/../bin)
+
+if test "$HAVE_LIB_SIDL" && test $BABEL_BIN != "NONE"; then
+   DEF_BABEL="#define HAVE_BABEL 1"
+   HAVE_BABEL="yes"
+fi
+
+if test "$with_babel" && test ! "$DEF_BABEL"; then
+  echo
+  AC_MSG_ERROR(One or more of the Babel components is missing.)
+  echo
+fi
+
+AC_SUBST(HAVE_BABEL)
+AC_SUBST(SIDL_LIB_FLAG)
+AC_SUBST(SIDL_LIB_DIR_FLAG)
+AC_SUBST(INC_BABEL_H)
+AC_SUBST(DEF_BABEL)
+AC_SUBST(BABEL_BIN)
 
 ##  --  search for VDT  ----------------------------------------------------
 
