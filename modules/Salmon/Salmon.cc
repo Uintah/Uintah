@@ -48,7 +48,8 @@ static Module* make_Salmon()
 static RegisterModule db1("Geometry", "Salmon", make_Salmon);
 
 Salmon::Salmon()
-: Module("Salmon", Sink), max_portno(0), need_reconfig(0)
+: Module("Salmon", Sink), max_portno(0), need_reconfig(0),
+  drawing_a(0), popup_menu(0)
 {
     // Create the input port
     add_iport(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));

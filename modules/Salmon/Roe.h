@@ -18,16 +18,20 @@
 #include <Geometry/BBox.h>
 
 class CallbackData;
+class DBContext;
 class DialogShellC;
 class DrawInfo;
 class DrawingAreaC;
 class FormC;
 class FrameC;
 class GLwMDrawC;
+class LabelC;
+class MainWindowC;
+class MenuBarC;
+class MenuC;
 class Salmon;
 class Vector;
 class RowColumnC;
-class LabelC;
 class ScrolledWindowC;
 class ToggleButtonC;
 class PushButtonC;
@@ -89,8 +93,14 @@ class Roe {
     PushButtonC* spawnInd;
     FormC* form;
     FrameC* gr_frame;
+    MainWindowC* mainw;
+    MenuBarC* menubar;
+    MenuC* menu_dials;
+    PushButtonC* st_button;
     Salmon* manager;
     BBox bb;
+
+    DBContext* dbcontext_st;
     
     void eventCB(CallbackData*, void*);
     void itemCB(CallbackData*, void*);
@@ -110,6 +120,9 @@ class Roe {
     void destroyWidgetCB(CallbackData*, void*); 
     void redrawCB(CallbackData*, void*);
     void initCB(CallbackData*, void*);
+    void attach_dials(CallbackData*, void*);
+    void DBscale(DBContext*, int, void*);
+    void DBtranslate(DBContext*, int, void*);
     void make_current();
 
     Array1<Roe *> kids;

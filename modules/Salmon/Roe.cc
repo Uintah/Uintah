@@ -17,7 +17,10 @@
 #include "myXmStrDefs.h"
 #include "myShell.h"
 
+#include <DBContext.h>
+#include <Dialbox.h>
 #include <Geom.h>
+#include <MenuBar.h>
 #include <XQColor.h>
 #include <Salmon/Salmon.h>
 #include <Salmon/Roe.h>
@@ -32,6 +35,7 @@
 #include <Mt/GLwMDraw.h>
 #include <Mt/RowColumn.h>
 #include <Mt/Label.h>
+#include <Mt/MainWindow.h>
 #include <Mt/ScrolledWindow.h>
 #include <Mt/ToggleButton.h>
 #include <Mt/PushButton.h>
@@ -125,6 +129,25 @@ Roe::Roe(Salmon* s) {
 }
 
 void Roe::RoeInit(Salmon* s) {
+    // Build the Dialog Box Contexts...
+    dbcontext_st=new DBContext("Salmon");
+    dbcontext_st->set_knob(1, "Scale",
+			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
+					       &Roe::DBscale, 0));
+    dbcontext_st->set_range(1, -10, 10); 
+    dbcontext_st->set_value(1, 1.0);
+    dbcontext_st->set_knob(5, "Translate X",
+			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
+					       &Roe::DBtranslate, (void*)0));
+    dbcontext_st->set_range(5, -100, 100);
+    dbcontext_st->set_knob(6, "Translate Y",
+			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
+					       &Roe::DBtranslate, (void*)1));
+    dbcontext_st->set_range(5, -100, 100);
+    dbcontext_st->set_knob(7, "Translate Z",
+			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
+					       &Roe::DBtranslate, (void*)2));
+    dbcontext_st->set_range(5, -100, 100);
     evl->lock();
     modifier_mask=0;
     doneInit=0;
@@ -146,9 +169,20 @@ void Roe::RoeInit(Salmon* s) {
     dialog->SetHeight(400);
     dialog->Create("sci", "sci", evl->get_display());
 
+    mainw=new MainWindowC;
+    mainw->Create(*dialog, "Roe");
+
+    menubar=new MenuBarC(*mainw);
+    menu_dials=menubar->AddMenu("Dials");
+    st_button=menu_dials->AddButton("Scale/Translate...");
+    new MotifCallback<Roe>FIXCB(st_button, XmNactivateCallback,
+				&manager->mailbox, this,
+				&Roe::attach_dials,
+				(void*)0, 0);
+
     wholeWin=new RowColumnC;
     wholeWin->SetOrientation(XmHORIZONTAL);
-    wholeWin->Create(*dialog, "wholeWin");
+    wholeWin->Create(*mainw, "wholeWin");
 
     left=new RowColumnC;
     left->SetOrientation(XmVERTICAL);
@@ -1185,3 +1219,22 @@ void Roe::redraw_buttons(CallbackData*, void*)
     update_modifier_widget();
 }
 
+void Roe::attach_dials(CallbackData*, void* ud)
+{
+    int which=(int)ud;
+    switch(which){
+    case 0:
+	Dialbox::attach_dials(dbcontext_st);
+	break;
+    }
+}
+
+void Roe::DBscale(DBContext*, int, void*)
+{
+    NOT_FINISHED("Roe::DBSCale");
+}
+
+void Roe::DBtranslate(DBContext*, int, void*)
+{
+    NOT_FINISHED("Roe::DBtranslate");
+}
