@@ -31,11 +31,13 @@ itcl_class SCIRun_Fields_SeedField {
 	global $this-dist
 	global $this-numseeds
 	global $this-rngseed
+	global $this-whichtab
 	set $this-wtype rake
 	set $this-maxseeds 15
 	set $this-dist importance
 	set $this-numseeds 10
 	set $this-rngseed 1234
+	set $this-whichtab widget
     }
 
     method ui {} {
@@ -48,8 +50,10 @@ itcl_class SCIRun_Fields_SeedField {
 
 	iwidgets::tabnotebook  $w.tabs -raiseselect true -width 350
 	pack $w.tabs -side top
-	set wtab [$w.tabs add -label "Widget" -command ""]
-	set rtab [$w.tabs add -label "Random" -command ""]
+	set wtab [$w.tabs add -label "Widget" \
+		  -command "set $this-whichtab widget"]
+	set rtab [$w.tabs add -label "Random" \
+		  -command "set $this-whichtab random"]
 	$w.tabs view "Widget"
 
 	iwidgets::Labeledframe $wtab.type -labelpos nw -labeltext "Widget type"

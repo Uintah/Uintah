@@ -39,6 +39,8 @@
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <math.h>
 #include <set>
 
@@ -54,9 +56,9 @@ template <class Field>
 class DistTable
 {
 public:
-  typedef typename Field::mesh_type      mesh_type;
-  typedef typename mesh_type::elem_index elem_index;
-  typedef pair<double,elem_index>        table_entry;
+  typedef typename Field::mesh_type            mesh_type;
+  typedef typename mesh_type::Elem::index_type elem_index;
+  typedef pair<double,elem_index>              table_entry;
 
   vector<table_entry> table_;
 
@@ -75,17 +77,17 @@ public:
 
   double size() { return table_.size(); }
 
-  bool search(double, table_entry&);
+  bool search(table_entry&, double);
 };
 
 template <class Field>
 bool
-DistTable<Field>::search(double d, table_entry &e)
+DistTable<Field>::search(table_entry &e, double d)
 {
-  int min=0,max=table.size()-1;
+  int min=0,max=table_.size()-1;
   int cur = max/2;
 
-  if ( (d<table[0].first) || (d>table[max].first) )
+  if ( (d<table_[0].first) || (d>table_[max].first) )
     return false; 
 
   // use binary search to find the bin holding the value d
@@ -95,7 +97,7 @@ DistTable<Field>::search(double d, table_entry &e)
     cur = (max-min)/2+min;
   }
 
-  e = (table_[min]>d)?table_[min]:table_[max];
+  e = (table_[min].first>d)?table_[min]:table_[max];
   return true;
 }
 
@@ -115,18 +117,16 @@ class SeedField : public Module
   GuiInt rngSeed_;
   GuiString widgetType_;
   GuiString randDist_;
+  GuiString whichTab_;
 
   int vf_generation_;
 
-  void execute_rake();
-  void execute_gui();
-
   template <class Field> 
-  bool build_weight_table(Field &, DistTable<Field> &);
+  bool build_weight_table(Field *, DistTable<Field> &);
   template <class Field>
-  PointCloud<double>* GenWidgetSeeds(Field &);
+  PointCloud<double>* generate_widget_seeds(Field *);
   template <class Field>
-  PointCloud<double>* GenRandomSeeds(Field &);
+  PointCloud<double>* generate_random_seeds(Field *);
 
   template <class M> 
   void dispatch(M *mesh);
@@ -154,6 +154,7 @@ SeedField::SeedField(const string& id)
     rngSeed_("rngseed", id, this),
     widgetType_("type", id, this),
     randDist_("dist", id, this),
+    whichTab_("whichtab", id, this),
     vf_generation_(0),
     widget_lock_("StreamLines widget lock"),
     rake_(this,&widget_lock_,1)
@@ -191,39 +192,42 @@ SeedField::widget_moved(int i)
 
 template <class Field>
 bool 
-SeedField::build_weight_table(Field &field, DistTable<Field> &table)
+SeedField::build_weight_table(Field *field, DistTable<Field> &table)
 {
-  typedef typename Field::mesh_type         mesh_type;
-  typedef typename Field::fdata_type        fdata_type;
-  typedef typename mesh_type::elem_iterator elem_iterator;
-  typedef typename mesh_type::elem_index    elem_index;
+  typedef typename Field::mesh_type            mesh_type;
+  typedef typename Field::fdata_type           fdata_type;
+  typedef typename mesh_type::Elem::iterator   elem_iterator;
+  typedef typename mesh_type::Elem::index_type elem_index;
 
-  string dist = randDist.get();
+  string dist = randDist_.get();
 
-  mesh_type* mesh = field->mesh().get_rep();
+  mesh_type* mesh = field->get_typed_mesh().get_rep();
   fdata_type fdata = field->fdata();
 
   elem_iterator ei = mesh->elem_begin();
   if (ei==mesh->elem_end()) // empty mesh
     return false;
 
+  // the tables are to be filled with strictly increasing values.
+
   if (dist=="importance") { // size of element * data at element
-    table.push_back(mesh->elems_size(*ei)*fdata[*ei],*ei);
+    table.push_back(mesh->get_element_size(*ei)*fdata[*ei],*ei);
     ++ei;
-    while (ei != mesh.elem_end()) {
-      table.push_back(mesh->elems_size(*ei)*fdata[*ei]+
-		      table[table.size()-1],*ei);
+    while (ei != mesh->elem_end()) {
+      table.push_back(mesh->get_element_size(*ei)*fdata[*ei]+
+		      table[table.size()-1].first,*ei);
       ++ei;
     }
   } else if (dist=="uniform") { // size of element only
-    table.push_back(mesh->elems_size(*ei),*ei);
+    table.push_back(mesh->get_element_size(*ei),*ei);
     ++ei;
-    while (ei != mesh.elem_end()) {
-      table.push_back(mesh->elems_size(*ei)+table[table.size()-1],*ei);
+    while (ei != mesh->elem_end()) {
+      table.push_back(mesh->get_element_size(*ei)+
+		      table[table.size()-1].first,*ei);
       ++ei;
     }
   } else if (dist=="scattered") { // element index; not uniform!
-    while (ei != mesh.elem_end()) {
+    while (ei != mesh->elem_end()) {
       table.push_back(table.size(),*ei);
       ++ei;
     }    
@@ -236,135 +240,42 @@ SeedField::build_weight_table(Field &field, DistTable<Field> &table)
 
 template <class Field>
 PointCloud<double>*
-SeedField::GenWidgetSeeds(Field &field)
+SeedField::generate_widget_seeds(Field *field)
 {
 }
 
 template <class Field>
 PointCloud<double>*
-SeedField::GenRandomSeeds(Field &field)
+SeedField::generate_random_seeds(Field *field)
 {
   typedef typename Field::mesh_type              mesh_type;
-  typedef typename Field::elem_index             elem_index;
   typedef typename DistTable<Field>::table_entry table_entry;
 
-  DistTable<Field> wt;
+  DistTable<Field> table;
 
-  if (!build_weight_table(field,wt))
+  if (!build_weight_table(field,table)) // unknown dist type
     return 0;
 
-  MusilRNG rng(rngSeed.get());
+  MusilRNG rng(rngSeed_.get());
 
-  double max = wt[wt.size()-1].first;
-  mesh_type *mesh = field.mesh().get_rep();
-  PointCloudMesh pcmesh = scinew PointCloudMesh;
+  double max = table[table.size()-1].first;
+  mesh_type *mesh = field->get_typed_mesh().get_rep();
+  PointCloudMesh *pcmesh = scinew PointCloudMesh;
   PointCloud<double> *pc = scinew PointCloud<double>(pcmesh,Field::NODE);
 
   unsigned int ns = numSeeds_.get();
-  for (int loop=0;loop<ns;loop++) {
+  for (unsigned int loop=0;loop<ns;loop++) {
     Point p;
-    field.get_random_point(p,table.search(rng()*max).second);
+    table_entry e;
+    table.search(e,rng()*max);           // find random cell
+    mesh->get_random_point(p,e.second);  // find random point in that cell
     pcmesh->add_node(p);
   }
 
-  return pcmesh;
+  return pc;
 }
 
-template <class M>
-void
-SeedField::dispatch(M *mesh)
-{
 #if 0
-  // Get size of mesh.
-  unsigned int mesh_size = 0;
-  typename M::Cell::iterator itr = mesh->cell_begin();
-  while (itr != mesh->cell_end())
-  {
-    mesh_size++;
-    ++itr;
-  }
-
-  ASSERT((unsigned int)number_dipoles_ < mesh_size);
-
-  set<unsigned int, less<unsigned int> > picks;
-
-  // Pick a bunch of unique points.
-  int i;
-  srand(random_seed_);
-  for (i=0; i < number_dipoles_; i++)
-  {
-    while (!(picks.insert(rand()%mesh_size).second));
-  }
-
-  PointCloudMesh *cloud_mesh = scinew PointCloudMesh;
-  PointCloud<double> *cloud =
-    scinew PointCloud<double>(cloud_mesh, Field::NODE);
-
-  unsigned int counter = 0;
-  itr = mesh->cell_begin();
-  set<unsigned int, less<unsigned int> >::iterator pitr;
-  for (pitr = picks.begin(); pitr != picks.end(); pitr++)
-  {
-    while (counter < *pitr)
-    {
-      ++counter;
-      ++itr;
-    }
-
-    Point p;
-    mesh->get_center(p, *itr);
-    
-    cloud_mesh->add_node(p);
-  }
-
-  PointCloud<double>::fdata_type &fdata = cloud->fdata();
-  for (unsigned int i = 0; i < fdata.size(); i++)
-  {
-    fdata[i] = 1.0;
-  }
-
-  ofport_->send(cloud);
-#endif
-}
-      
-  
-
-void
-SeedField::execute_gui()
-{
-#if 0
-  // get gui variables;
-  const int rand_seed = random_seed_GUI_.get();
-  const int num_dipoles = number_dipoles_GUI_.get();
-
-  if (vf_generation_ != vfhandle_->generation ||
-      random_seed_ != rand_seed ||
-      number_dipoles_ != num_dipoles)
-  {
-    vf_generation_ = vfhandle_->generation;
-    random_seed_ = rand_seed;
-    number_dipoles_ = num_dipoles;
-
-    const string geom_name = vf_->get_type_name(0);
-    MeshBase *mesh = vf_->mesh().get_rep();
-    if (geom_name == "TetVol")
-    {
-      dispatch((TetVolMesh *)mesh);
-    }
-    else if (geom_name == "LatticeVol")
-    {
-      dispatch((LatVolMesh *)mesh);
-    }
-    else
-    {
-      error("Unsupported input field type, no cells.");
-      return;
-    }
-  }
-#endif
-}
-
-void
 SeedField::execute_rake()
 {
   const BBox bbox = vf_->mesh()->get_bounding_box();
@@ -427,7 +338,7 @@ SeedField::execute_rake()
   ofport_->send(seeds);
   ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
 }
-
+#endif
 
 void
 SeedField::execute()
@@ -438,13 +349,30 @@ SeedField::execute()
     return;
   }
 
-  if (ogport_->nconnections() > 0)
-  {
-    execute_rake();
-  }
-  else
-  {
-    execute_gui();
+  PointCloud<double> *seeds;
+
+  string tab = whichTab_.get();
+
+  if (tab=="random") {
+    if (vf_->get_type_name(-1)=="LatticeVol<double>") {
+      seeds = generate_random_seeds((LatticeVol<double>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TetVol<double>") {
+      seeds = generate_random_seeds((TetVol<double>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
+      seeds = generate_random_seeds((TriSurf<double>*)vf_);
+    } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
+      //pc = generate_random_seeds((LatticeVol<Vector>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
+      //pc = generate_random_seeds((TetVol<Vector>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
+      //pc = generate_random_seeds((TriSurf<Vector>*)vf_);
+    } else {
+      // can't do this kind of field
+      return;
+    }
+    ofport_->send(seeds);
+  } else if (tab=="widget") {
+    //pc = generate_widget_seeds(vf_);
   }
 }
 
