@@ -469,6 +469,10 @@ DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
 void
 DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
 {
+  if (scrub_old)
+    cerr << "Scrub old!!!\n";
+  if (scrub_new)
+    cerr << "Scrub new!!!\n";
   // For now, turn scrubbing off when using internal dependencies
   // (i.e. threaded version) as it needs to be fixed to work right).
   if (mustConsiderInternalDependencies())
