@@ -56,7 +56,8 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
     SIJ[comp].initialize(0.0);
   }
    
-  computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, indx, d_sharedState, SIJ);
+  computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, indx, d_sharedState, new_dw,
+                    SIJ);
 
   //__________________________________
   //  At patch boundaries you need to extend
@@ -85,6 +86,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
                                     const SFCZVariable<double>& wvel_FC,
                                     const int indx,
                                     SimulationStateP&  d_sharedState,
+                                    DataWarehouse* new_dw,
                                     StaticArray<CCVariable<double> >& SIJ)
 {
   Vector dx = patch->dCell();
@@ -122,7 +124,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
   }
   
   for (int comp = 0; comp < 6; comp ++ ) {
-    setBC(SIJ[comp],"zeroNeumann",patch, d_sharedState, indx);
+    setBC(SIJ[comp],"zeroNeumann",patch, d_sharedState, indx, new_dw);
   } 
  
 }

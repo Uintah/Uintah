@@ -33,13 +33,15 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
             const Patch* patch,  
             SimulationStateP& sharedState,
             const int mat_id,
+            DataWarehouse* new_dw,
             Lodi_vars* lv);
             
   void setBC(CCVariable<double>& var,     
             const std::string& type,     // stub function
             const Patch* patch,  
             SimulationStateP& sharedState,
-            const int mat_id); 
+            const int mat_id,
+            DataWarehouse* new_dw); 
   //__________________________________
   //  P R E S S U R E        
   void setBC(CCVariable<double>& press_CC,          
@@ -71,14 +73,16 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
              const std::string& type,
              const Patch* patch,
              SimulationStateP& sharedState,
-             const int mat_id, 
+             const int mat_id,
+             DataWarehouse* new_dw, 
              Lodi_vars* lv);
              
    void setBC(CCVariable<Vector>& variable,  // stub function
              const std::string& type,
              const Patch* patch,
              SimulationStateP& sharedState,
-             const int mat_id);
+             const int mat_id,
+             DataWarehouse* new_dw);
 
 template<class T> 
   void setBC(T& variable, 
@@ -156,8 +160,8 @@ void getIteratorBCValueBCKind( const Patch* patch,
                             string& bc_kind,
                             T& value,
                             const Vector& cell_dx,
-			    const int mat_id,
-			    const int child)
+			       const int mat_id,
+			       const int child)
 {
  vector<IntVector>::const_iterator iter;
  IntVector oneCell = patch->faceDirection(face);
@@ -169,14 +173,14 @@ void getIteratorBCValueBCKind( const Patch* patch,
  if (bc_kind == "Neumann" && value == T(0)) { 
    bc_kind = "zeroNeumann";  // for speed
  }
-                                   //   C C _ D I R I C H L E T
- if (bc_kind == "Dirichlet") {     
+ //__________________________________        
+ if (bc_kind == "Dirichlet") {    //   D I R I C H L E T 
    for (iter = bound.begin(); iter != bound.end(); iter++) {
      var[*iter] = value;
    }
    IveSetBC = true;
  }
-
+ //__________________________________
  // Random variations for density
  if (bc_kind == "Dirichlet_perturbed") {
    vector<IntVector> cbound,nbound,sfx,sfy,sfz;

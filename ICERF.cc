@@ -384,7 +384,7 @@ void ICE::computeDivThetaVel_CC(const ProcessorGroup*,
         }
       }
       
-      setBC(D, "Neumann", patch, d_sharedState, indx);
+      setBC(D, "Neumann", patch, d_sharedState, indx, new_dw);
     }  // matls loop
   } // patches
 } 
@@ -1093,8 +1093,8 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
-      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, dwindex);
-      setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex);
+      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, dwindex, new_dw);
+      setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex, new_dw);
     }
     //__________________________________
     // Convert vars. primitive-> flux 
@@ -1249,7 +1249,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
       //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx);
+      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
       
       //__________________________________
       //  add the sources to spec_vol_L
@@ -1308,7 +1308,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
      }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
+      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
