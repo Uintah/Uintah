@@ -1766,7 +1766,7 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
   double tmin_x, tmax_x, tmin_y, tmax_y;
 
   // create texture array 
-  unsigned char texture[colorbytes*width*height];
+  unsigned char * texture = new unsigned char[colorbytes*width*height];
   //  cerr<<"texture size is "<< colorbytes*width*height<<"\n";
 
   //***************************************************
@@ -1929,7 +1929,7 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
 //    cerr<<"setting texture\n";
   tr->set_texture( texture, colorbytes, width, height );
 //    cerr<<"texture set\n";
-//    delete [] texture;
+  delete [] texture;
   return texture_face;
 }
 
