@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Models/test/Mixing.h>
 #include <Packages/Uintah/CCA/Components/Models/test/Mixing2.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
+#include <Packages/Uintah/CCA/Components/Models/test/TableTest.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
 #include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
@@ -42,6 +43,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
 
     if(type == "SimpleRxn")
       models.push_back(scinew SimpleRxn(d_myworld, model));
+    else if(type == "TableTest")
+      models.push_back(scinew TableTest(d_myworld, model));
     else if(type == "Test")
       models.push_back(scinew TestModel(d_myworld, model));
     else if(type == "Mixing")
