@@ -877,7 +877,7 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
-#if defined(__APPLE__) && (__GNUC__ == 3) && (__GNUC_MINOR__  < 3)
+#if defined(__APPLE__) && (__GNUC__ == 3) && (__GNUC_MINOR__  <= 3)
   if (xdr)
     if ((xdr)->x_ops)
       if ((xdr)->x_ops->x_destroy)
