@@ -1430,18 +1430,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     }
     new_dw->put(delt_vartype(delt), lb->delTLabel);
   }  // patch loop
-  
-  //__________________________________
-  // Is it time to dump printData
-  d_dbgTime_to_printData = false;
-  
-  double time= dataArchiver->getCurrentTime();
-  if (time >= d_dbgStartTime && 
-      time <= d_dbgStopTime  &&
-      time >= d_dbgNextDumpTime) {
-    d_dbgTime_to_printData  = true;
-    d_dbgNextDumpTime = d_dbgOutputInterval * ceil(time/d_dbgOutputInterval); 
-  }
 }
 
 /* --------------------------------------------------------------------- 
@@ -1703,6 +1691,19 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
       gamma.initialize  (     ice_matl->getGamma());
       cv.initialize(          ice_matl->getSpecificHeat());
     }
+  }
+  //__________________________________
+  // Is it time to dump printData ?
+  // You need this in the first task
+  d_dbgTime_to_printData = false;       
+  double time= dataArchiver->getCurrentTime() + d_SMALL_NUM;
+  if (time >= d_dbgStartTime && 
+      time <= d_dbgStopTime  &&
+      time >= d_dbgNextDumpTime) {
+    d_dbgTime_to_printData  = true;
+    
+    d_dbgNextDumpTime = d_dbgOutputInterval 
+                      * ceil(time/d_dbgOutputInterval + d_SMALL_NUM); 
   }
 }
 /* --------------------------------------------------------------------- 
