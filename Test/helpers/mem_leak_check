@@ -38,19 +38,24 @@ else
     echo "Performing highwater memory usage check"
     percent=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 
-    if [ $percent -gt "30" ]; then
+    if [ $percent -gt "10" ]; then
 	echo "***Highwater memory usage test failed"
 	echo " -- memory usage increased by %$percent" > $TMPDIR/highwater_shortmessage.txt
         error=2
-    elif [ $percent -gt "5" ]; then
-	echo "Warning: -- memory usage increased by %$percent" > $TMPDIR/highwater_shortmessage.txt
-    elif [ $percent -lt "-5" ]; then
+    elif [ $percent -gt "0" ]; then
+	echo " -- memory usage increased by %$percent" > $TMPDIR/highwater_shortmessage.txt
+    elif [ $percent -lt "0" ]; then
 	let percent_improvement=-$percent;
-	echo "Highwater memory usage passed with some improvement!!"
-	echo " -- memory usage improved by %$percent_improvement, replacing malloc_stats" > $TMPDIR/highwater_shortmessage.txt
-	cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
-	chgrp csafe $COMPARISON_MALLOC_STATS
-	chmod g+rw $COMPARISON_MALLOC_STATS
+	
+	if [ $percent -lt "-5" ]; then
+	    echo "Highwater memory usage passed with some improvement!!"
+	    echo " -- memory usage improved by %$percent_improvement, replacing malloc_stats" > $TMPDIR/highwater_shortmessage.txt
+	    cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
+	    chgrp csafe $COMPARISON_MALLOC_STATS
+	    chmod g+rw $COMPARISON_MALLOC_STATS
+	else
+	    echo " -- memory usage improved by %$percent_improvement" > $TMPDIR/highwater_shortmessage.txt
+	fi
     else
 	echo "" > $TMPDIR/highwater_shortmessage.txt
 	echo "Highwater memory usage check passed!"
