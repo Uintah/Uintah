@@ -18,10 +18,12 @@
 
 # SCI Network 1.0
 
-set DATADIR .
-if [info exists env(INSIGHT_DATA)] {
-   set DATADIR $env(INSIGHT_DATA)
-}
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+#######################################################################
+
 
 ::netedit dontschedule
 
@@ -43,7 +45,7 @@ addConnection $m5 0 $m6 0
 addConnection $m6 0 $m7 0
 
 set $m0-notes {}
-set $m0-filename $DATADIR/BrainProtonDensitySlice.png
+set $m0-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
 set $m1-notes {}
 set $m1-time_step {0.25}
 set $m1-iterations {10}
