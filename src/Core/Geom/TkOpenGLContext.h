@@ -27,60 +27,87 @@
 */
 
 /*
- *  OpenGLViewPort.h:
+ *  TkOpenGLContext.h:
  *
  *  Written by:
  *   McKay Davis
- *   August 2004
+ *   December 2004
  */
 
 
-#ifndef SCIRun_Core_Geom_OpenGLViewport_h
-#define SCIRun_Core_Geom_OpenGLViewport_h
+#ifndef SCIRun_Core_2d_TkOpenGLContext_h
+#define SCIRun_Core_2d_TkOpenGLContext_h
+
+#include <sci_glx.h>
+#include <Core/share/share.h>
+#include <stdio.h>
+#include <tk.h>
+
+#ifdef _WIN32
+#  include <tkWinInt.h>
+#  include <tkWinPort.h>
+#  include <X11\XUtil.h>
+#endif
+
+#ifdef __sgi
+#  include <X11/extensions/SGIStereo.h>
+#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
-#include <map>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 
 using std::string;
+using std::vector;
 
 namespace SCIRun {
 
-class TkOpenGLContext;
-
-class OpenGLViewport {
-private:
-  TkOpenGLContext *	context_;
-  float			x_;
-  float			y_;
-  float			width_;
-  float			height_;
-  int			current_level_;
-
-  void			check_bounds();
+class TkOpenGLContext {
 public:
-  OpenGLViewport(TkOpenGLContext *ctx=0, 
-		 float x = 0.0, float y = 0.0, 
-		 float w = 1.0, float h = 1.0);
-
-  void		resize(float x=0.0, float y=0.0, float w=1.0, float h=1.0);
-  int		x();
-  int		y();
-  int		width();
-  int		height();
-  int		max_width();
-  int		max_height();
-
-  void		clear(float r=0.0, float g=0.0, float b=0.0, float a=0.0);
+  TkOpenGLContext(const string &, int visualid=0);
+  virtual ~TkOpenGLContext();
   
-  bool		make_current();
-  void		swap();
-  void		release();
+  static string		listvisuals();
+  bool			make_current();
+  void			release();
+  int			width();
+  int			height();
+  void			swap();
+
+  static vector<int>	valid_visuals_;
+  int			direct_;
+  int			buffersize_;
+  int			level_;
+  int			rgba_;
+  int			doublebuffer_;
+  int			stereo_;
+  int			auxbuffers_;
+  int			redsize_;
+  int			greensize_;
+  int			bluesize_;
+  int			alphasize_;
+  int			depthsize_;
+  int			stencilsize_;
+  int			accumredsize_;
+  int			accumgreensize_;
+  int			accumbluesize_;
+  int			accumalphasize_;
+  int			visualid_;
+  int			screen_number_;
+  char*			geometry_;
+  Tcl_Interp *		interp_;  /* Interpreter associated with widget. */
+  Display *		display_; /* X's token for the window's display. */
+  Window		x11_win_;
+  Tk_Window		tkwin_;
+  Tk_Window		mainwin_;
+  GLXContext		context_;
+  XVisualInfo*		vi_;
+  Colormap		colormap_;
+  Tk_Cursor		cursor_;
+  string		id_;
 };
 
 } // End namespace SCIRun
 
-#endif // SCIRun_Core_2d_OpenGLViewport_h
-
-
+#endif // SCIRun_Core_2d_OpenGLContext_h

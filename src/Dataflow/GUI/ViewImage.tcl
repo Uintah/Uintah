@@ -139,9 +139,8 @@ itcl_class SCIRun_Render_ViewImage {
     method gl_frame { w title main } {
 	set id [string tolower [join $title ""]]
 	# Create an OpenGL widget. # -visualid 35
-	opengl $w.$id -geometry 640x640 -rgba true -doublebuffer true \
-	    -direct true -cursor crosshair
-	$this-c setgl $w.$id $id
+#	opengl $w.$id -geometry 640x640 -rgba true -doublebuffer true -direct true -cursor crosshair
+	$this-c setgl $w.$id $id 0
 #	pack $w.$id -expand 1 -fill both
 
 	bind $w.$id <Expose> "$this-c redraw %W"
@@ -197,6 +196,10 @@ itcl_class SCIRun_Render_ViewImage {
 	labeledSlider $f.zoom "Zoom %:" $prefix-zoom 1 2000 3
 	$f.zoom.scale configure -command \
 	    "$this-c redraw $gl"
+
+	labeledSlider $f.slab_width "Slab Width:" $prefix-slab_width 1 255 2
+	$f.slab_width.scale configure -command \
+	    "$this-c rebind $gl"
 
 	labeledSlider $f.clutww "Window Width:" $prefix-clut_ww 1 2000 3
 	$f.clutww.scale configure -command \
@@ -276,7 +279,7 @@ itcl_class SCIRun_Render_ViewImage {
 	if { $four_view } {
 	    four_view $w.f $w
 	} else {
-	    pack [gl_frame $w.f] -expand 0 -fill both
+	    pack [gl_frame $w.f "Main" $w] -expand 0 -fill both
 	}
     }
 

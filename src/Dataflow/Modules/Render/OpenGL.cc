@@ -50,6 +50,7 @@
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <sci_values.h>
 
 #ifdef HAVE_MAGICK
@@ -62,7 +63,6 @@ namespace C_Magick {
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
 namespace SCIRun {
@@ -106,17 +106,16 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   make_MPEG_p_(false),
   current_movie_frame_(0),
   movie_name_("./movie.%04d"),
+  tk_gl_context_(0),
+  myname_("Not Intialized"),
   // private member variables
   gui_(gui),
   helper_(0),
   helper_thread_(0),
   tkwin_(0),
-  x11_dpy_(0),
-  myname_("INVAID"),
   viewer_(viewer),
   view_window_(vw),
   drawinfo_(scinew DrawInfoOpenGL),
-  x11_visuals_(),
   have_pbuffer_(false),
   dead_(false),
   do_hi_res_(false),
@@ -168,17 +167,12 @@ OpenGL::~OpenGL()
   delete drawinfo_;
   drawinfo_ = 0;
 
-  gui_->lock();
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
-				      Tk_MainWindow(the_interp));
-  if(!new_tkwin)
-  {
-    cerr << "Unable to locate window!\n";
+  if (tk_gl_context_) {
+    gui_->lock();
+    tk_gl_context_->release();
+    delete tk_gl_context_;
     gui_->unlock();
-    return;
   }
-  glXMakeCurrent(Tk_Display(new_tkwin), None, NULL);
-  gui_->unlock();
 
   if (pbuffer_) { delete pbuffer_; }
 }
@@ -436,7 +430,7 @@ OpenGL::render_and_save_image(int x, int y,
   // Don't need to raise if using pbuffer.
   // FIXME: this next line was apparently meant to raise the Viewer to the
   //        top... but it doesn't actually seem to work
-  Tk_RestackWindow(tkwin_,Above,NULL);
+  Tk_RestackWindow(tk_gl_widget_->tkwin_,Above,NULL);
 #endif
 
   gui_->lock();
@@ -444,7 +438,7 @@ OpenGL::render_and_save_image(int x, int y,
   if(current_drawer != this)
   {
     current_drawer=this;
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    tk_gl_context_->make_current();
   }
   deriveFrustum();
 
@@ -621,45 +615,17 @@ void
 OpenGL::redraw_frame()
 {
   if (dead_) return;
+  if (!tk_gl_context_) return;
   gui_->lock();
   if (dead_) { // ViewWindow was deleted from gui_
     gui_->unlock(); 
     return;
   }
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
-				      Tk_MainWindow(the_interp));
-  if(!new_tkwin)
-  {
-    cerr << "Unable to locate window!\n";
-    gui_->unlock();
-    return;
-  }
-  if(tkwin_ != new_tkwin)
-  {
-    tkwin_=new_tkwin;
-    x11_dpy_=Tk_Display(tkwin_);
-    x11_win_=Tk_WindowId(tkwin_);
-    // Race condition,  create context before the window is done.
-    while (x11_win_==0)
-    {
-      gui_->unlock();
-      Thread::yield();
-      gui_->lock();
-      x11_win_ = Tk_WindowId(tkwin_);
-    }
-    x11_gl_context_=OpenGLGetContext(the_interp, ccast_unsafe(myname_));
-    if(!x11_gl_context_)
-    {
-      cerr << "Unable to create OpenGL Context!\n";
-      gui_->unlock();
-      return;
-    }
-    //cerr << "The next line will crash!: " << (unsigned int)x11_dpy_ <<  ", " 
-    //	 << (unsigned int)x11_win_ << ", " << (unsigned int)x11_gl_context_ 
-    //	 << std::endl;
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
-    //    cerr << "See! it crashed";
+  if (tkwin_ != tk_gl_context_->tkwin_) {
+    tkwin_ = tk_gl_context_->tkwin_;
+    tk_gl_context_->make_current();
     glXWaitX();
+    
 #if defined(HAVE_GLEW)
     sci_glew_init();
 #endif
@@ -678,6 +644,10 @@ OpenGL::redraw_frame()
 #endif
   }
 
+  // Get the window size
+  xres_ = tk_gl_context_->width();
+  yres_ = tk_gl_context_->height();
+
   gui_->unlock();
 
   // Start polygon counter...
@@ -685,19 +655,16 @@ OpenGL::redraw_frame()
   timer.clear();
   timer.start();
 
-  // Get the window size
-  xres_=Tk_Width(tkwin_);
-  yres_=Tk_Height(tkwin_);
 
   // Make ourselves current
   if(current_drawer != this)
   {
     current_drawer=this;
     gui_->lock();
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    tk_gl_context_->make_current();
     gui_->unlock();
   }
-  // Set up a pbuffer associated with x11_dpy_
+  // Set up a pbuffer associated with tk_gl_context_
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
   viewer_->geomlock_.readLock();
@@ -709,12 +676,13 @@ OpenGL::redraw_frame()
     if (xres_ != pbuffer_->width() || yres_ != pbuffer_->height())
     {
       cerr << "creating new pbuffer: w = "<<xres_<<", h = "<<yres_<<"\n";
-      int screen = Tk_ScreenNumber(tkwin_);
       pbuffer_->destroy();
-      if (pbuffer_->create(x11_dpy_, screen, x11_gl_context_,
-			   xres_, yres_, 8, 8))
+      if (pbuffer_->create(tk_gl_context_->display_, 
+			   tk_gl_context_->screen_number_,
+			   tk_gl_context_->context_,
+      			   xres_, yres_, 8, 8))
       {
-	have_pbuffer_ = true;
+      	have_pbuffer_ = true;
       }
     }
   }
@@ -726,7 +694,7 @@ OpenGL::redraw_frame()
   }
   else if (have_pbuffer_ && pbuffer_->is_current())
   {
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    tk_gl_context_->make_current();
   }
 #endif
 
@@ -775,7 +743,7 @@ OpenGL::redraw_frame()
 #if defined(HAVE_PBUFFER)
     if (pbuffer_->is_current() && (!doing_movie_p_ && !doing_image_p_))
     {
-      glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+      tk_gl_context_->make_current();
     }
 #endif
     // Do the redraw loop for each time value
@@ -976,7 +944,7 @@ OpenGL::redraw_frame()
 #if defined(HAVE_PBUFFER)
       if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
-	glXSwapBuffers(x11_dpy_, x11_win_);
+	tk_gl_context_->swap();
     }
     throttle.stop();
     double fps;
@@ -1000,7 +968,7 @@ OpenGL::redraw_frame()
 #if defined(HAVE_PBUFFER)
       if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
-    glXSwapBuffers(x11_dpy_, x11_win_);
+	tk_gl_context_->swap();
   }
 
   viewer_->geomlock_.readUnlock();
@@ -1181,8 +1149,8 @@ OpenGL::real_get_pick(int x, int y,
   {
     current_drawer=this;
     gui_->lock();
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
-    cerr<<"viewer current\n";
+    tk_gl_context_->make_current();
+    //    cerr<<"viewer current\n";
     gui_->unlock();
   }
   // Setup the view...
@@ -1357,7 +1325,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 #if defined(HAVE_PBUFFER)
   if (have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current())
   {
-    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
+    tk_gl_context_->make_current();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -1374,8 +1342,8 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     glEnable(GL_DEPTH_TEST);
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glXSwapBuffers(x11_dpy_,x11_win_);
+    glPopMatrix();    
+    tk_gl_context_->swap();
   }
 #endif
 
@@ -1759,38 +1727,30 @@ GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
 
 
 
-#define GETCONFIG(attrib) \
-if(glXGetConfig(x11_dpy_, &vinfo[i], attrib, &value) != 0){\
-  args.error("Error getting attribute: " #attrib); \
-  return; \
-}
-
+#if 0
 
 void
 OpenGL::listvisuals(GuiArgs& args)
 {
-  gui_->lock();
-
-  Thread::allow_sgi_OpenGL_page0_sillyness();
-  Tk_Window topwin=Tk_NameToWindow(the_interp, ccast_unsafe(args[2]),
-				   Tk_MainWindow(the_interp));
+  TCLTask::lock();
+  Tk_Window topwin=Tk_MainWindow(the_interp);
   if(!topwin)
   {
     cerr << "Unable to locate window!\n";
-    gui_->unlock();
+    TCLTask::unlock();
     return;
   }
-  x11_dpy_=Tk_Display(topwin);
+  Display *display =Tk_Display(topwin);
   int screen=Tk_ScreenNumber(topwin);
   vector<string> visualtags;
   vector<int> scores;
-  x11_visuals_.clear();
+  vector<XVisualInfo*> x11_visuals;
   int nvis;
-  XVisualInfo* vinfo=XGetVisualInfo(x11_dpy_, 0, NULL, &nvis);
+  XVisualInfo* vinfo=XGetVisualInfo(display, 0, NULL, &nvis);
   if(!vinfo)
   {
     args.error("XGetVisualInfo failed");
-    gui_->unlock();
+    TCLTask::unlock();
     return;
   }
   int i;
@@ -1861,13 +1821,13 @@ OpenGL::listvisuals(GuiArgs& args)
     GETCONFIG(GLX_SAMPLES_SGIS);
     if(value)
       score+=50;
-#endif
     tag += to_string(value);
+#endif
 
     tag += ", score=" + to_string(score);
 
     visualtags.push_back(tag);
-    x11_visuals_.push_back(&vinfo[i]);
+    x11_visuals.push_back(&vinfo[i]);
     scores.push_back(score);
   }
   for(i=0;(unsigned int)i<scores.size()-1;i++)
@@ -1877,20 +1837,20 @@ OpenGL::listvisuals(GuiArgs& args)
       if(scores[i] < scores[j])
       {
 	// Swap.
-	int tmp1=scores[i];
-	scores[i]=scores[j];
-	scores[j]=tmp1;
-	string tmp2=visualtags[i];
-	visualtags[i]=visualtags[j];
-	visualtags[j]=tmp2;
-	XVisualInfo* tmp3=x11_visuals_[i];
-	x11_visuals_[i]=x11_visuals_[j];
-	x11_visuals_[j]=tmp3;
+	int tmp1 = scores[i];
+	scores[i] = scores[j];
+	scores[j] = tmp1;
+	string tmp2 = visualtags[i];
+	visualtags[i] = visualtags[j];
+	visualtags[j] = tmp2;
+	XVisualInfo* tmp3 = x11_visuals[i];
+	x11_visuals[i] = x11_visuals[j];
+	x11_visuals[j] = tmp3;
       }
     }
   }
   args.result(GuiArgs::make_list(visualtags));
-  gui_->unlock();
+  TCLTask::unlock();
 }
 
 
@@ -1898,13 +1858,15 @@ OpenGL::listvisuals(GuiArgs& args)
 void
 OpenGL::setvisual(const string& wname, unsigned int which, int wid, int height)
 {
+  return;
+#if 0
   if (which >= x11_visuals_.size())
   {
     cerr << "Invalid OpenGL visual, using default.\n";
     which = 0;
   }
 
-  tkwin_=0;
+  //  tkwin_=0;
   current_drawer=0;
 
   gui_->execute("opengl " + wname +
@@ -1913,8 +1875,10 @@ OpenGL::setvisual(const string& wname, unsigned int which, int wid, int height)
 	       " -geometry " + to_string(wid) + "x" + to_string(height));
 
   myname_ = wname;
+#endif
 }
 
+#endif
 
 
 void
@@ -2108,7 +2072,7 @@ OpenGL::AddMpegFrame()
 #if defined(HAVE_PBUFFER)
   if (have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current())
   {
-    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
+    tk_gl_context_->make_current();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -2126,7 +2090,7 @@ OpenGL::AddMpegFrame()
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    glXSwapBuffers(x11_dpy_,x11_win_);
+    tk_gl_context_->swap();
   }
 #endif
 

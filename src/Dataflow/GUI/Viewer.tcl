@@ -294,8 +294,9 @@ itcl_class BaseViewWindow {
 	if {[winfo exists $renderWindow]} {
 	    destroy $renderWindow
 	}
-	$this-c listvisuals .standalone
-	$this-c switchvisual $renderWindow 0 $width $height
+
+	upvar \#0 $this-currentvisual visual
+	$this-c setgl $renderWindow $visual
 	bindEvents $renderWindow
 	$this-c startup
     }
@@ -461,7 +462,8 @@ itcl_class ViewWindow {
 	    -menu $w.menu.visual.menu
 	menu $w.menu.visual.menu
 	set i 0
-	foreach t [$this-c listvisuals $w] {
+	upvar \#0 $this-currentvisual visual
+	foreach t [$this-c listvisuals] {
 	    $w.menu.visual.menu add radiobutton -value $i -label $t \
 		-variable $this-currentvisual \
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
@@ -896,7 +898,7 @@ itcl_class ViewWindow {
 	if { [winfo exists $renderWindow] } {
 	    destroy $renderWindow
 	}
-	$this-c switchvisual $renderWindow $visual 640 512
+	$this-c setgl $renderWindow $visual
 	if { [winfo exists $renderWindow] } {
 	    bindEvents $renderWindow
 	    pack $renderWindow -expand yes -fill both

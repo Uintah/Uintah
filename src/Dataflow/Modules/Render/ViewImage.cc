@@ -229,6 +229,8 @@ class ViewImage : public Module
     int			colormap_size_;
     NrrdDataHandle	colormap_nrrd_;
 
+    int			cursor_;
+
     GLdouble		gl_modelview_matrix_[16];
     GLdouble		gl_projection_matrix_[16];
     GLint		gl_viewport_[4];
@@ -238,7 +240,7 @@ class ViewImage : public Module
   struct WindowLayout {
     WindowLayout	(GuiContext *ctx);
     //    void		reset();
-    OpenGLContext *	opengl_;
+    TkOpenGLContext *	opengl_;
     int			mouse_x_;
     int			mouse_y_;
     SliceWindows	windows_;
@@ -350,7 +352,7 @@ class ViewImage : public Module
   void			draw_crop_bbox(SliceWindow &, BBox &);
   PickBoxes		compute_crop_pick_boxes(SliceWindow &, BBox &);
   int			mouse_in_pick_boxes(SliceWindow &, PickBoxes &);
-  void			set_crop_cursor(SliceWindow &, int pick);
+  void			set_window_cursor(SliceWindow &, int pick);
   pair<Vector, Vector>	get_crop_vectors(SliceWindow &, int pick);
   BBox			update_crop_bbox(SliceWindow &, int pick, int X, int Y);
   void			update_crop_bbox_from_gui();
@@ -361,7 +363,7 @@ class ViewImage : public Module
 
   void			setup_gl_view(SliceWindow &);
 
-  void			set_slice_coords(NrrdSlice &slice);
+  void			set_slice_coords(NrrdSlice &slice, bool origin=true);
 
 
   void			extract_window_slices(SliceWindow &);
@@ -465,6 +467,7 @@ RealDrawer::run()
 
 void
 ViewImage::extract_all_slices() {
+  TCLTask::lock();
   WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
   for (; liter != lend; ++liter) {
     WindowLayout &layout = *(liter->second);
@@ -479,6 +482,7 @@ ViewImage::extract_all_slices() {
       }
     }
   }
+  TCLTask::unlock();
 }
   
 
@@ -564,7 +568,8 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   mouse_in_window_(false),
   fusion_(ctx->subVar("fusion"), 1.0),
   colormap_generation_(-1),
-  colormap_size_(32)
+  colormap_size_(32),
+  cursor_(-1)
 {
 }
 
@@ -750,6 +755,7 @@ ViewImage::real_draw_all()
       SliceWindow &window = **viter;
       if (!window.redraw_) continue;
       window.redraw_ = false;
+      TCLTask::lock();
       window.viewport_->make_current();
       window.viewport_->clear();
       GL_ERROR();
@@ -764,14 +770,18 @@ ViewImage::real_draw_all()
 		      cur_slice_[1]*scale_[1], cur_slice_[2]*scale_[2], false);
       if (crop_) {
 	draw_crop_bbox(window, crop_draw_bbox_);
-	crop_pick_boxes_ = compute_crop_pick_boxes(window, crop_draw_bbox_);
-	set_crop_cursor(window, mouse_in_pick_boxes(window, crop_pick_boxes_));
+	crop_pick_boxes_ = compute_crop_pick_boxes(window,crop_draw_bbox_);
+	set_window_cursor(window,
+			  mouse_in_pick_boxes(window, crop_pick_boxes_));
+      } else {
+	set_window_cursor(window, 0);
       }
 
       draw_all_labels(window);
       GL_ERROR();
 
       window.viewport_->release();
+      TCLTask::unlock();
     }
   }
 
@@ -783,9 +793,11 @@ ViewImage::real_draw_all()
     for (; viter != vend; ++viter) {
       if (!*viter) continue;
       SliceWindow &window = **viter;
+      TCLTask::lock();
       window.viewport_->make_current();
       window.viewport_->swap();
       window.viewport_->release();
+      TCLTask::unlock();
     }
   }
 
@@ -860,8 +872,7 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z,
 			   bool cursor) {
   if (cursor && !current_window_) return;
   if (cursor && !current_window_->show_guidelines_()) return;
-  window.viewport_->make_current();
-  GL_ERROR();
+
   setup_gl_view(window);
   GL_ERROR();
   const bool inside = mouse_in_window(window);
@@ -924,7 +935,6 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z,
 
 
   if (!inside || !cursor) {
-    window.viewport_->release();
     return;
   }
 
@@ -985,9 +995,6 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z,
 
       
   glEnd();
-
-
-  window.viewport_->release();
 }  
 
 
@@ -995,8 +1002,6 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z,
 
 void
 ViewImage::draw_crop_bbox(SliceWindow &window, BBox &bbox) {
-  window.viewport_->make_current();
-  GL_ERROR();
   setup_gl_view(window);
   GL_ERROR();
   float unscaled_one = 1.0;
@@ -1138,9 +1143,6 @@ ViewImage::draw_crop_bbox(SliceWindow &window, BBox &bbox) {
 
   glDisable(GL_POINT_SMOOTH);
   glDisable(GL_BLEND);
-
-
-  window.viewport_->release();
 }  
 
 
@@ -1226,22 +1228,27 @@ ViewImage::mouse_in_pick_boxes(SliceWindow &window, PickBoxes &pick_boxes)
 }
 
 void
-ViewImage::set_crop_cursor(SliceWindow &window, int pick) 
+ViewImage::set_window_cursor(SliceWindow &window, int cursor) 
 {
-  string cursor;
-  switch (pick) {
-  case 1: cursor = "bottom_left_corner"; break;
-  case 2: cursor = "bottom_right_corner"; break;
-  case 3: cursor = "top_right_corner"; break;
-  case 4: cursor = "top_left_corner"; break;
-  case 5: cursor = "sb_h_double_arrow"; break;
-  case 6: cursor = "sb_v_double_arrow"; break;
-  case 7: cursor = "sb_h_double_arrow"; break;
-  case 8: cursor = "sb_v_double_arrow"; break;
-  case 9: cursor = "fleur"; break;
-  case 0: cursor = "crosshair"; break;
+  if (!mouse_in_window(window) || window.cursor_ == cursor) return;
+  window.cursor_ = cursor;
+  string cursor_name;
+  switch (cursor) {
+  case 1: cursor_name = "bottom_left_corner"; break;
+  case 2: cursor_name = "bottom_right_corner"; break;
+  case 3: cursor_name = "top_right_corner"; break;
+  case 4: cursor_name = "top_left_corner"; break;
+  case 5: cursor_name = "sb_h_double_arrow"; break;
+  case 6: cursor_name = "sb_v_double_arrow"; break;
+  case 7: cursor_name = "sb_h_double_arrow"; break;
+  case 8: cursor_name = "sb_v_double_arrow"; break;
+  case 9: cursor_name = "fleur"; break;
+  case 0: cursor_name = "crosshair"; break;
   }
-  gui->eval(window.name_+" configure -cursor "+cursor);
+  Tk_Window &tkwin = layouts_[window.name_]->opengl_->tkwin_;
+  Tk_DefineCursor(tkwin, Tk_GetCursor(the_interp, tkwin, 
+				      ccast_unsafe(cursor_name)));
+//  gui->eval(window.name_+" configure -cursor "+cursor_name);
 }
 
 
@@ -1451,8 +1458,6 @@ ViewImage::draw_position_label(SliceWindow &window)
   FreeTypeFace *font = fonts_["position"];
   if (!font) return;
 
-  window.viewport_->make_current();
-  GL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
@@ -1518,8 +1523,6 @@ ViewImage::draw_position_label(SliceWindow &window)
   glDeleteTextures(1, &tex_id);
   //  glRasterPos2d(0.0, 0.0);
   //  glDrawPixels (wid, hei, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-
-  window.viewport_->release();
 }  
 
 
@@ -1579,8 +1582,6 @@ ViewImage::draw_label(SliceWindow &window, string text, int x, int y,
   if (!font && fonts_.size()) 
     font = fonts_["default"];
   if (!font) return;
-  window.viewport_->make_current();  
-  GL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
@@ -1655,8 +1656,6 @@ ViewImage::draw_label(SliceWindow &window, string text, int x, int y,
 
   glEnd();
   glDeleteTextures(1, &tex_id);
-
-  window.viewport_->release();
 }  
 
 
@@ -1806,8 +1805,6 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
   slice.do_lock();
 
   GL_ERROR();
-  window.viewport_->make_current();
-  GL_ERROR();
   setup_gl_view(window);
 
   glRasterPos2d(0.0, 0.0);
@@ -1904,8 +1901,6 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
   glDisable(GL_BLEND);
     
   GL_ERROR();
-  window.viewport_->release();
-  return;
 }
 
 
@@ -1958,7 +1953,7 @@ ViewImage::draw_all_labels(SliceWindow &window) {
 
 
 void
-ViewImage::set_slice_coords(NrrdSlice &slice) {
+ViewImage::set_slice_coords(NrrdSlice &slice, bool origin) {
   slice.do_lock();
 
   // Texture coordinates
@@ -2035,16 +2030,20 @@ ViewImage::set_slice_coords(NrrdSlice &slice) {
   slice.pos_coords_[i++] = y_pos+y_wid;
   slice.pos_coords_[i++] = z_pos+z_wid;
 
-  slice.pos_coords_[i++ % 12] = x_pos+x_wid+x_hei;
-  slice.pos_coords_[i++ % 12] = y_pos+y_wid+y_hei;
-  slice.pos_coords_[i++ % 12] = z_pos+z_wid+z_hei;
+  slice.pos_coords_[i++] = x_pos+x_wid+x_hei;
+  slice.pos_coords_[i++] = y_pos+y_wid+y_hei;
+  slice.pos_coords_[i++] = z_pos+z_wid+z_hei;
 
-  slice.pos_coords_[i++ % 12] = x_pos+x_hei;
-  slice.pos_coords_[i++ % 12] = y_pos+y_hei;
-  slice.pos_coords_[i++ % 12] = z_pos+z_hei;
+  slice.pos_coords_[i++] = x_pos+x_hei;
+  slice.pos_coords_[i++] = y_pos+y_hei;
+  slice.pos_coords_[i++] = z_pos+z_hei;
 
-  for (i = 0; i < 12; ++i) 
+  for (i = 0; i < 12; ++i) {
     slice.pos_coords_[i] *= scale_[i%3];
+    if (!origin) 
+      slice.pos_coords_[i] += slice.volume_->nrrd_->nrrd->axis[i%3].min;
+  }
+
   slice.do_unlock();
 }
 
@@ -2257,7 +2256,7 @@ ViewImage::send_mip_slices(SliceWindow &window)
     TexSquare *mintex = scinew TexSquare();
 
     slice.slice_num_ = 0;
-    set_slice_coords(slice);
+    set_slice_coords(slice, false);
     mintex->set_coords(slice.tex_coords_, slice.pos_coords_);
     mintex->set_texname(slice.tex_name_);
 
@@ -2267,7 +2266,7 @@ ViewImage::send_mip_slices(SliceWindow &window)
 
     TexSquare *maxtex = scinew TexSquare();
     slice.slice_num_ = max_slice_[axis];
-    set_slice_coords(slice);
+    set_slice_coords(slice, false);
     maxtex->set_coords(slice.tex_coords_, slice.pos_coords_);
     maxtex->set_texname(slice.tex_name_);
 
@@ -2538,7 +2537,7 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
   int x, y;
   string_to_int(args[3], x);
   string_to_int(args[4], y);
-  y = layout.opengl_->yres() - 1 - y;
+  y = layout.opengl_->height() - 1 - y;
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
     SliceWindow &window = *layout.windows_[w];
     window.mouse_x_ = x;
@@ -2897,9 +2896,15 @@ ViewImage::tcl_command(GuiArgs& args, void* userdata) {
   else if (args[1] == "enter")    handle_gui_enter(args);
   else if (args[1] == "leave")    handle_gui_leave(args);
   else if(args[1] == "setgl") {
+    int visualid = 0;
+    if (args.count() == 5 && !string_to_int(args[4], visualid))
+      error("setgl bad visual id: "+args[4]);
+
+    TkOpenGLContext *context = scinew TkOpenGLContext(args[2], visualid);
+    XSync(context->display_, 0);
     ASSERT(layouts_.find(args[2]) == layouts_.end());
     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
-    layouts_[args[2]]->opengl_ = scinew OpenGLContext(gui, args[2]);
+    layouts_[args[2]]->opengl_ = context;
   } else if(args[1] == "add_viewport") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
     WindowLayout *layout = layouts_[args[2]];
@@ -2947,7 +2952,9 @@ ViewImage::send_slice_geometry(NrrdSlice &slice) {
   string name = "Slice"+to_string(slice.axis_);
   if (tobjs_[name] == 0) 
     tobjs_[name] = scinew TexSquare();
+  set_slice_coords(slice, false);
   tobjs_[name]->set_coords(slice.tex_coords_, slice.pos_coords_);
+  set_slice_coords(slice, true);
   tobjs_[name]->set_texname(slice.tex_name_);
   GeomHandle gobj = tobjs_[name];
   slice.geom_dirty_ = false;
