@@ -528,11 +528,18 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       if (bcs_type == "Pressure") {
 	PressureBoundCond* bc = 
 	  static_cast<PressureBoundCond*>(bcs[i]);
+	cout << "bc value = " << bc->getPressure() << endl;
 	press.fillFace(face,bc->getPressure());
       }
     }
   }
 
+  cout << "low index = " << press.getLowIndex() << endl;
+  cout << "high index = " << press.getHighIndex() << endl;
+
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    cout << "press["<< *iter<< "]=" << press[*iter] << endl;
+  } 
 
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
@@ -579,6 +586,15 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 	  }
 	}
       }
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	cout << "rho_CC["<< *iter<< "]=" << rho_CC[*iter] << endl;
+	cout << "temp["<< *iter<< "]=" << temp[*iter] << endl;
+	cout << "uvel_CC["<< *iter<< "]=" << uvel_CC[*iter] << endl;
+	cout << "vvel_CC["<< *iter<< "]=" << vvel_CC[*iter] << endl;
+	cout << "wvel_CC["<< *iter<< "]=" << wvel_CC[*iter] << endl;
+	
+      } 
 
       new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
@@ -2286,6 +2302,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.53  2000/10/27 23:41:01  jas
+// Added more material constants and some debugging output.
+//
 // Revision 1.52  2000/10/26 23:22:09  jas
 // BCs are now implemented.
 //

@@ -68,6 +68,8 @@ WARNING
          double getSpecificHeat() const;
          double getHeatTransferCoefficient() const;
          double getGamma() const;
+	 double getViscosity() const;
+	 double getSpeedOfSound() const;
 
       private:
 
@@ -78,6 +80,8 @@ WARNING
          double d_thermalConductivity;
          double d_specificHeat;
 	 double d_heatTransferCoefficient;
+	 double d_speed_of_sound;
+	 double d_viscosity;
 	 double d_gamma;
          
 	 ICELabel* lb;
@@ -94,6 +98,9 @@ WARNING
 #endif // __ICE_MATERIAL_H__
 
 // $Log$
+// Revision 1.5  2000/10/27 23:41:01  jas
+// Added more material constants and some debugging output.
+//
 // Revision 1.4  2000/10/06 04:05:18  jas
 // Move files into EOS directory.
 //
