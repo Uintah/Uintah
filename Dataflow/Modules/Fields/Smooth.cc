@@ -95,21 +95,21 @@ Smooth::~Smooth()
 
 void Smooth::bldNbrs() {
     st->buildNodeInfo();
-    nbrs.resize(st->nodeI.size());
+    nbrs.resize(st->nodeI_.size());
     int i;
-    for (i=0; i<st->nodeI.size(); i++) 
-	nbrs[i].resize(st->nodeI[i].nbrs.size()+1);
+    for (i=0; i<st->nodeI_.size(); i++) 
+	nbrs[i].resize(st->nodeI_[i].nbrs.size()+1);
 //    st->nodeNbrs;
 //    st->printNbrInfo();
     int j,k;
     dx=dy=dz=0;
-    for (i=0; i<st->nodeI.size(); i++) {
+    for (i=0; i<st->nodeI_.size(); i++) {
 //	cerr << "i="<<i<<"  nbrsSize="<<st->nodeNbrs[i].size();
-	for (j=0, k=0; j<st->nodeI[i].nbrs.size(); j++, k++) {
-	    int nbr=st->nodeI[i].nbrs[j];
+	for (j=0, k=0; j<st->nodeI_[i].nbrs.size(); j++, k++) {
+	    int nbr=st->nodeI_[i].nbrs[j];
 	    if ((nbr>i) && (j==k)) {
 		nbrs[i][k]=i;
-		Vector v(st->nodes[i]-st->nodes[nbr]);
+		Vector v(st->points_[i]-st->points_[nbr]);
 		if (Abs(v.x())>dx) dx=v.x();
 		if (Abs(v.y())>dy) dy=v.y();
 		if (Abs(v.z())>dz) dz=v.z();
@@ -177,31 +177,31 @@ void Smooth::bldMatrices() {
 
 void Smooth::Reset() {
     int i;
-    for (i=0; i<st->nodes.size(); i++) {
+    for (i=0; i<st->points_.size(); i++) {
 	oldX[i]=origX[i];
 	oldY[i]=origY[i];
 	oldZ[i]=origZ[i];
-	st->nodes[i].x(oldX[i]);
-	st->nodes[i].y(oldY[i]);
-	st->nodes[i].z(oldZ[i]);
+	st->points_[i].x(oldX[i]);
+	st->points_[i].y(oldY[i]);
+	st->points_[i].z(oldZ[i]);
     }
 }
 
 void Smooth::bldCols() {
     int i;
-    origX.resize(st->nodes.size());
-    origY.resize(st->nodes.size());
-    origZ.resize(st->nodes.size());
-    oldX.resize(st->nodes.size());
-    oldY.resize(st->nodes.size());
-    oldZ.resize(st->nodes.size());
-    tmpX.resize(st->nodes.size());
-    tmpY.resize(st->nodes.size());
-    tmpZ.resize(st->nodes.size());
-    for (i=0; i<st->nodes.size(); i++) {
-	origX[i]=oldX[i]=st->nodes[i].x();
-	origY[i]=oldY[i]=st->nodes[i].y();
-	origZ[i]=oldZ[i]=st->nodes[i].z();
+    origX.resize(st->points_.size());
+    origY.resize(st->points_.size());
+    origZ.resize(st->points_.size());
+    oldX.resize(st->points_.size());
+    oldY.resize(st->points_.size());
+    oldZ.resize(st->points_.size());
+    tmpX.resize(st->points_.size());
+    tmpY.resize(st->points_.size());
+    tmpZ.resize(st->points_.size());
+    for (i=0; i<st->points_.size(); i++) {
+	origX[i]=oldX[i]=st->points_[i].x();
+	origY[i]=oldY[i]=st->points_[i].y();
+	origZ[i]=oldZ[i]=st->points_[i].z();
     }
 }
 #if 0
@@ -217,7 +217,7 @@ void Smooth::smooth(int constrained, double cons) {
     int iters=N.get();
 
     if (jitterTCL.get()) {
-	for (int i=0; i<st->nodes.size(); i++) {
+	for (int i=0; i<st->points_.size(); i++) {
 	    oldX[i] += (mr()-.5)*dx/10.;
 	    oldY[i] += (mr()-.5)*dy/10.;
 	    oldZ[i] += (mr()-.5)*dz/10.;
@@ -233,7 +233,7 @@ void Smooth::smooth(int constrained, double cons) {
     }
 
     // copy the resultant points back into the data
-    for (int i=0; i<st->nodes.size(); i++) {
+    for (int i=0; i<st->points_.size(); i++) {
 	if (constrained) {
 	    double tmp, d2;
 	    // (x-x0)^2 / dx^2 + (y-y0)^2 / dy^2 + (z-z0)^2 / dz^2 < 1.0
@@ -266,20 +266,20 @@ void Smooth::smooth(int constrained, double cons) {
 		cerr << "("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n";
 	    }
 	}
-	st->nodes[i].x(oldX[i]);
-	st->nodes[i].y(oldY[i]);
-	st->nodes[i].z(oldZ[i]);
+	st->points_[i].x(oldX[i]);
+	st->points_[i].y(oldY[i]);
+	st->points_[i].z(oldZ[i]);
     }    
 }
 #endif
 
-void Smooth::smooth(int constrained, double cons) {
+void Smooth::smooth(int constrained, double /* cons */) {
     int flops, memrefs;
     // multiplyiteratively
     int iters=N.get();
 
     if (jitterTCL.get()) {
-	for (int i=0; i<st->nodes.size(); i++) {
+	for (int i=0; i<st->points_.size(); i++) {
 	    oldX[i] += (mr()-.5)*dx/10.;
 	    oldY[i] += (mr()-.5)*dy/10.;
 	    oldZ[i] += (mr()-.5)*dz/10.;
@@ -295,7 +295,7 @@ void Smooth::smooth(int constrained, double cons) {
     }
 
     // copy the resultant points back into the data
-    for (int i=0; i<st->nodes.size(); i++) {
+    for (int i=0; i<st->points_.size(); i++) {
 	if (constrained) {
 
 	  if (oldX[i]-origX[i] > 0.49*dx) oldX[i]=origX[i]+0.49*dx;
@@ -307,9 +307,9 @@ void Smooth::smooth(int constrained, double cons) {
 	  if (oldZ[i]-origZ[i] > 0.49*dz) oldZ[i]=origZ[i]+0.49*dz;
 	  else if (origZ[i]-oldZ[i] > 0.49*dz) oldZ[i]=origZ[i]-0.49*dz;
 	}
-	st->nodes[i].x(oldX[i]);
-	st->nodes[i].y(oldY[i]);
-	st->nodes[i].z(oldZ[i]);
+	st->points_[i].x(oldX[i]);
+	st->points_[i].y(oldY[i]);
+	st->points_[i].z(oldZ[i]);
     }    
 }
 

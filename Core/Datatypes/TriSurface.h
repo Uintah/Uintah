@@ -26,10 +26,10 @@ struct TSElement {
   int i1; 
   int i2; 
   int i3;
-  inline TSElement(int i1, int i2, int i3):i1(i1), i2(i2), i3(i3) {}
+  inline TSElement(int i1 = -1, int i2 = -1, int i3 = -1)
+    : i1(i1), i2(i2), i3(i3) {}
+
   inline TSElement(const TSElement& e):i1(e.i1), i2(e.i2), i3(e.i3) {}
-  void* operator new(size_t);
-  void operator delete(void*, size_t);
 };
 
 struct TSEdge {
@@ -41,27 +41,18 @@ struct TSEdge {
   void operator delete(void*, size_t);
 };
 
-void Pio (Piostream& stream, TSElement*& data);
+void Pio (Piostream& stream, TSElement &data);
 void Pio (Piostream& stream, TSEdge*& data);
 
 
-class SCICORESHARE TriSurface : public Surface {
+class SCICORESHARE TriSurface : public Surface
+{
   friend class SurfTree;
 
 public:
-  Array1<Point> points;
-  Array1<TSElement*> elements;
-  Array1<int> bcIdx;		// indices of any points w/ boundary conditions
-  Array1<double> bcVal;		// the values at each boundary condition
+  Array1<Point> points_;
+  Array1<TSElement> faces_;
 
-protected:
-  enum BCType {
-    NodeType,
-    FaceType
-  };
-  BCType valType;   // are the bc indices/values refering to elements or nodes
-
-public:
   enum NormalsType {
     PointType,	// one normal per point of the surface
     VertexType,	// one normal for each vertex of each element
@@ -72,17 +63,8 @@ public:
 
   Array1<Vector> normals;
 
-protected:
-  int haveNodeInfo;
-
-  Array1<Array1<int> > nodeElems;	// which elements is a node part of
-  Array1<Array1<int> > nodeNbrs;	// which nodes are one neighbors
-
 private:
   int empty_index;
-  int directed;	// are the triangle all ordered clockwise?
-  double distance(const Point &p, int i, int *type, Point *pp=0);
-  int find_or_add(const Point &p);
 
 public:
   TriSurface();
@@ -102,7 +84,6 @@ public:
   virtual GeomObj* get_geom(const ColorMapHandle&);
 
   void buildNormals(NormalsType);
-  void buildNodeInfo();
 
   SurfTree *toSurfTree();
 
@@ -121,6 +102,7 @@ public:
 
 
 protected:
+
   // pass in allocated surfaces for conn and d_conn. NOTE: contents will be
   // overwritten
   void separate(int idx, TriSurface* conn, TriSurface* d_conn, int updateConnIndices=1, int updateDConnIndices=1);
@@ -129,22 +111,13 @@ protected:
   // remove_empty_index() MUST be called before passing a TriSurface
   // to another module!  
   void remove_empty_index();
-  void order_faces();
-  inline int is_directed() {return directed;}
-  void add_point(const Point& p);
+  int find_or_add(const Point &p);
   void remove_triangle(int i);
   double distance(const Point &p, Array1<int> &res, Point *pp=0);
-    
-  // this is for random distributions on the surface...
-
-  Array1< Point > samples; // random points
-  Array1< double > weights; // weight for particular element
-
-  void compute_samples(int nsamp); // compute the "weights" and 
-
-  void distribute_samples(); // samples are really computed
+  double distance(const Point &p, int i, int *type, Point *pp=0);
 };
 
 } // End namespace SCIRun
+
 
 #endif /* SCI_Datatytpes_TriSurface_h */
