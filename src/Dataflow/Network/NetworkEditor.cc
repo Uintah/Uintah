@@ -115,8 +115,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("netedit deletemodule needs a module name");
 	    return;
 	}
-	Module* mod=net->get_module_by_id(args[2]);
-	gui->delete_command( mod->id+"-c" );
 	if(!net->delete_module(args[2])){
 	    args.error("Cannot delete module "+args[2]);
 	}
