@@ -16,6 +16,8 @@
 
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/GeomLine.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geometry/BBox.h>
@@ -33,6 +35,8 @@
 #include <sstream>
 #include <iostream>
 #include <float.h>
+#include <time.h>
+#include <stdlib.h>
 //#include <string>
 
 namespace PSECommon {
@@ -50,6 +54,12 @@ using namespace std;
 #define GRID_COLOR 1
 #define NODE_COLOR 2
 
+#define SOLID 0
+#define X_DIM 1
+#define Y_DIM 2
+#define Z_DIM 3
+#define RANDOM 4
+  
 class PatchVisualizer : public Module {
 public:
   PatchVisualizer(const clString& id);
@@ -62,24 +72,27 @@ private:
 		      const Vector & change);
   bool getGrid();
   void setupColors();
+  int getScheme(clString scheme);
   MaterialHandle getColor(clString color, int type);
   
   ArchiveIPort* in;
   GeometryOPort* ogeom;
+  ColorMapIPort *inColorMap;
   MaterialHandle level_color[6];
-
+  int level_color_scheme[6];
+  
+  TCLstring level0_grid_color;
   TCLstring level1_grid_color;
   TCLstring level2_grid_color;
   TCLstring level3_grid_color;
   TCLstring level4_grid_color;
   TCLstring level5_grid_color;
-  TCLstring level6_grid_color;
-  TCLstring level1_node_color;
-  TCLstring level2_node_color;
-  TCLstring level3_node_color;
-  TCLstring level4_node_color;
-  TCLstring level5_node_color;
-  TCLstring level6_node_color;
+  TCLstring level0_color_scheme;
+  TCLstring level1_color_scheme;
+  TCLstring level2_color_scheme;
+  TCLstring level3_color_scheme;
+  TCLstring level4_color_scheme;
+  TCLstring level5_color_scheme;
   TCLint nl;
   TCLint patch_seperate;
   
@@ -103,18 +116,18 @@ extern "C" Module* make_PatchVisualizer(const clString& id) {
 
 PatchVisualizer::PatchVisualizer(const clString& id)
 : Module("PatchVisualizer", id, Filter),
+  level0_grid_color("level0_grid_color",id, this),
   level1_grid_color("level1_grid_color",id, this),
   level2_grid_color("level2_grid_color",id, this),
   level3_grid_color("level3_grid_color",id, this),
   level4_grid_color("level4_grid_color",id, this),
   level5_grid_color("level5_grid_color",id, this),
-  level6_grid_color("level6_grid_color",id, this),
-  level1_node_color("level1_node_color",id, this),
-  level2_node_color("level2_node_color",id, this),
-  level3_node_color("level3_node_color",id, this),
-  level4_node_color("level4_node_color",id, this),
-  level5_node_color("level5_node_color",id, this),
-  level6_node_color("level6_node_color",id, this),
+  level0_color_scheme("level0_color_scheme",id, this),
+  level1_color_scheme("level1_color_scheme",id, this),
+  level2_color_scheme("level2_color_scheme",id, this),
+  level3_color_scheme("level3_color_scheme",id, this),
+  level4_color_scheme("level4_color_scheme",id, this),
+  level5_color_scheme("level5_color_scheme",id, this),
   nl("nl",id,this),
   patch_seperate("patch_seperate",id,this),
   grid(NULL),
@@ -125,9 +138,20 @@ PatchVisualizer::PatchVisualizer(const clString& id)
   in=scinew ArchiveIPort(this, "Data Archive", ArchiveIPort::Atomic);
   add_iport(in);
 
+  // color map
+  inColorMap = scinew ColorMapIPort( this, "ColorMap",
+				     ColorMapIPort::Atomic);
+  add_iport( inColorMap);
+
   // Create the output port
   ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
+
+  // seed the random number generator 
+  time_t t;
+  time(&t);
+  srand(t);
+  
 }
 
 PatchVisualizer::~PatchVisualizer()
@@ -175,19 +199,32 @@ void PatchVisualizer::addBoxGeometry(GeomLines* edges, const Box& box,
   Point min = box.lower() + change;
   Point max = box.upper() - change;
   
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), max.y(), min.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(max.x(), min.y(), min.z()));
-  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), max.y(), min.z()));
-  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), max.y(), min.z()), Point(max.x(), max.y(), min.z()));
-  edges->add(Point(min.x(), max.y(), min.z()), Point(min.x(), max.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), max.z()), Point(max.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), max.z()), Point(min.x(), max.y(), max.z()));
-  edges->add(Point(max.x(), max.y(), min.z()), Point(max.x(), max.y(), max.z()));
-  edges->add(Point(max.x(), min.y(), max.z()), Point(max.x(), max.y(), max.z()));
-  edges->add(Point(min.x(), max.y(), max.z()), Point(max.x(), max.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), min.z()),
+	     Point(min.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), min.z()),
+	     Point(min.x(), max.y(), min.z()));
+  edges->add(Point(min.x(), min.y(), min.z()),
+	     Point(max.x(), min.y(), min.z()));
+  edges->add(Point(max.x(), min.y(), min.z()),
+	     Point(max.x(), max.y(), min.z()));
+  edges->add(Point(max.x(), min.y(), min.z()),
+	     Point(max.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), max.y(), min.z()),
+	     Point(max.x(), max.y(), min.z()));
+  edges->add(Point(min.x(), max.y(), min.z()),
+	     Point(min.x(), max.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), min.z()),
+	     Point(min.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), max.z()),
+	     Point(max.x(), min.y(), max.z()));
+  edges->add(Point(min.x(), min.y(), max.z()),
+	     Point(min.x(), max.y(), max.z()));
+  edges->add(Point(max.x(), max.y(), min.z()),
+	     Point(max.x(), max.y(), max.z()));
+  edges->add(Point(max.x(), min.y(), max.z()),
+	     Point(max.x(), max.y(), max.z()));
+  edges->add(Point(min.x(), max.y(), max.z()),
+	     Point(max.x(), max.y(), max.z()));
 }
 
 // grabs the colors form the UI and assigns them to the local colors
@@ -197,13 +234,34 @@ void PatchVisualizer::setupColors() {
 
   // define some colors
   // assign some colors to the different levels
-  level_color[0] = getColor(level1_grid_color.get(),GRID_COLOR);
-  level_color[1] = getColor(level2_grid_color.get(),GRID_COLOR);
-  level_color[2] = getColor(level3_grid_color.get(),GRID_COLOR);
-  level_color[3] = getColor(level4_grid_color.get(),GRID_COLOR);
-  level_color[4] = getColor(level5_grid_color.get(),GRID_COLOR);
-  level_color[5] = getColor(level6_grid_color.get(),GRID_COLOR);
+  level_color[0] = getColor(level0_grid_color.get(),GRID_COLOR);
+  level_color[1] = getColor(level1_grid_color.get(),GRID_COLOR);
+  level_color[2] = getColor(level2_grid_color.get(),GRID_COLOR);
+  level_color[3] = getColor(level3_grid_color.get(),GRID_COLOR);
+  level_color[4] = getColor(level4_grid_color.get(),GRID_COLOR);
+  level_color[5] = getColor(level5_grid_color.get(),GRID_COLOR);
 
+  level_color_scheme[0] = getScheme(level0_color_scheme.get());
+  level_color_scheme[1] = getScheme(level1_color_scheme.get());
+  level_color_scheme[2] = getScheme(level2_color_scheme.get());
+  level_color_scheme[3] = getScheme(level3_color_scheme.get());
+  level_color_scheme[4] = getScheme(level4_color_scheme.get());
+  level_color_scheme[5] = getScheme(level5_color_scheme.get());
+}
+
+int PatchVisualizer::getScheme(clString scheme) {
+  if (scheme == "solid")
+    return SOLID;
+  if (scheme == "x")
+    return X_DIM;
+  if (scheme == "y")
+    return Y_DIM;
+  if (scheme == "z")
+    return Z_DIM;
+  if (scheme == "random")
+    return RANDOM;
+  cerr << "PatchVisualizer: Warning: Unknown color scheme!\n";
+  return SOLID;
 }
 
 // based on the color expressed by color returns the color
@@ -253,6 +311,10 @@ void PatchVisualizer::execute()
   if(!grid)
     return;
   int numLevels = grid->numLevels();
+
+  
+  ColorMapHandle cmap;
+  int have_cmap=inColorMap->get( cmap );
 
   // setup the tickle stuff
   setupColors();
@@ -318,21 +380,21 @@ void PatchVisualizer::execute()
       patch_list[i] = box;
 
       // determine boundaries
-      if (seperate_patches) {
-	if (box.upper().x() > max.x())
-	  max.x(box.upper().x());
-	if (box.upper().y() > max.y())
-	  max.y(box.upper().y());
-	if (box.upper().z() > max.z())
-	  max.z(box.upper().z());
-	
-	if (box.lower().x() < min.x())
-	  min.x(box.lower().x());
-	if (box.lower().y() < min.y())
-	  min.y(box.lower().y());
-	if (box.lower().z() < min.z())
-	  min.z(box.lower().z());
-      }
+      //if (seperate_patches) {
+      if (box.upper().x() > max.x())
+	max.x(box.upper().x());
+      if (box.upper().y() > max.y())
+	max.y(box.upper().y());
+      if (box.upper().z() > max.z())
+	max.z(box.upper().z());
+      
+      if (box.lower().x() < min.x())
+	min.x(box.lower().x());
+      if (box.lower().y() < min.y())
+	min.y(box.lower().y());
+      if (box.lower().z() < min.z())
+	min.z(box.lower().z());
+      //}
       i++;
     }
     patches[l] = patch_list;
@@ -349,26 +411,93 @@ void PatchVisualizer::execute()
   //double x_change = (max.x() - min.x())/change_factor;
   //double y_change = (max.y() - min.y())/change_factor;
   //double z_change = (max.z() - min.z())/change_factor;
+  
+  // loops over all the levels
   for(int l = 0;l<patches.size();l++){
-    // there can be up to 6 colors only
-    int color_index = l;
-    if (color_index >= 6)
-      color_index = 5;
+    // there can be up to 6 levels only
+    int level_index = l;
+    if (level_index >= 6)
+      level_index = 5;
     
-    // edges is all the edges made up all the patches in the level
-    GeomLines* edges = scinew GeomLines();
+    GeomGroup *level_geom = scinew GeomGroup();
 
-    //---------------------------------------
-    // for each patch in the level
-    for(int i = 0; i < patches[l].size(); i++){
-      addBoxGeometry(edges, patches[l][i], change_v);
+    int scheme;
+    if (have_cmap)
+      scheme = level_color_scheme[level_index];
+    else
+      scheme = SOLID;
+    // determine the coloring scheme
+    switch (scheme) {
+    case SOLID: {
+      
+      // edges is all the edges made up all the patches in the level
+      GeomLines* edges = scinew GeomLines();
+      
+      //---------------------------------------
+      // for each patch in the level
+      for(int i = 0; i < patches[l].size(); i++){
+	addBoxGeometry(edges, patches[l][i], change_v);
+      }
+      
+      level_geom->add(scinew GeomMaterial(edges, level_color[level_index]));
     }
+    break;
+    case X_DIM:
+      cmap->Scale(min.x(),max.x());
 
+      //---------------------------------------
+      // for each patch in the level
+      for(int i = 0; i < patches[l].size(); i++){
+	GeomLines* edges = scinew GeomLines();
+	addBoxGeometry(edges, patches[l][i], change_v);
+	level_geom->add(scinew GeomMaterial(edges,
+			       cmap->lookup(patches[l][i].lower().x())));
+      }
+      
+      break;
+    case Y_DIM:
+      cmap->Scale(min.y(),max.y());
+
+      //---------------------------------------
+      // for each patch in the level
+      for(int i = 0; i < patches[l].size(); i++){
+	GeomLines* edges = scinew GeomLines();
+	addBoxGeometry(edges, patches[l][i], change_v);
+	level_geom->add(scinew GeomMaterial(edges,
+			       cmap->lookup(patches[l][i].lower().y())));
+      }
+      
+      break;
+    case Z_DIM:
+      cmap->Scale(min.z(),max.z());
+
+      //---------------------------------------
+      // for each patch in the level
+      for(int i = 0; i < patches[l].size(); i++){
+	GeomLines* edges = scinew GeomLines();
+	addBoxGeometry(edges, patches[l][i], change_v);
+	level_geom->add(scinew GeomMaterial(edges,
+			       cmap->lookup(patches[l][i].lower().z())));
+      }
+      
+      break;
+    case RANDOM:
+      cmap->Scale(0, 1);
+
+      //---------------------------------------
+      // for each patch in the level
+      for(int i = 0; i < patches[l].size(); i++){
+	GeomLines* edges = scinew GeomLines();
+	addBoxGeometry(edges, patches[l][i], change_v);
+	level_geom->add(scinew GeomMaterial(edges, cmap->lookup(drand48())));
+      }
+      
+      break;
+    } // end of switch
     // add all the edges for the level
     ostringstream name_edges;
     name_edges << "Patches - level " << l;
-    id_list.push_back(ogeom->addObj(scinew GeomMaterial(edges, level_color[color_index]), name_edges.str().c_str()));
-
+    id_list.push_back(ogeom->addObj(level_geom, name_edges.str().c_str()));
   }
   
   

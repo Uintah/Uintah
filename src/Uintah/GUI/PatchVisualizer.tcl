@@ -22,18 +22,32 @@ itcl_class Uintah_Visualization_PatchVisualizer {
     
     method set_defaults {} {
 	#the grid colors
+	global $this-level0_grid_color
+	set $this-level0_grid_color red
 	global $this-level1_grid_color
-	set $this-level1_grid_color red
+	set $this-level1_grid_color green
 	global $this-level2_grid_color
-	set $this-level2_grid_color green
+	set $this-level2_grid_color yellow
 	global $this-level3_grid_color
-	set $this-level3_grid_color yellow
+	set $this-level3_grid_color magenta
 	global $this-level4_grid_color
-	set $this-level4_grid_color magenta
+	set $this-level4_grid_color cyan
 	global $this-level5_grid_color
-	set $this-level5_grid_color cyan
-	global $this-level6_grid_color
-	set $this-level6_grid_color blue
+	set $this-level5_grid_color blue
+	
+	#the grid colors
+	global $this-level0_color_scheme
+	set $this-level0_color_scheme solid
+	global $this-level1_color_scheme
+	set $this-level1_color_scheme solid
+	global $this-level2_color_scheme
+	set $this-level2_color_scheme solid
+	global $this-level3_color_scheme
+	set $this-level3_color_scheme solid
+	global $this-level4_color_scheme
+	set $this-level4_color_scheme solid
+	global $this-level5_color_scheme
+	set $this-level5_color_scheme solid
 	
 	global $this-nl
 	set $this-nl 0
@@ -77,19 +91,45 @@ itcl_class Uintah_Visualization_PatchVisualizer {
     }
     # this is used for seting up the colors used for
     # the levels and grid points
-    method setup_color {w text nl n} {
-	for {set i 1} { $i <= $nl} {incr i} {
+    method setup_color {w nl n} {
+	for {set i 0} { $i < $nl} {incr i} {
+	    # color scheme menu stuff
+	    frame $w.colorscheme -borderwidth 3 -relief ridge
+	    pack $w.colorscheme -side left -anchor w -padx 2 -pady 2
+	    
+	    set var "$this-level$i"
+	    append var "_color_scheme"
+
+	    radiobutton $w.colorscheme.solid -text "solid" -variable $var \
+		    -command $n -value solid
+	    pack $w.colorscheme.solid -side top -anchor w -pady 2 -ipadx 3
+
+	    radiobutton $w.colorscheme.x -text "x" -variable $var \
+		    -command $n -value x
+	    pack $w.colorscheme.x -side top -anchor w -pady 2 -ipadx 3
+
+	    radiobutton $w.colorscheme.y -text "y" -variable $var \
+		    -command $n -value y
+	    pack $w.colorscheme.y -side top -anchor w -pady 2 -ipadx 3
+
+	    radiobutton $w.colorscheme.z -text "z" -variable $var \
+		    -command $n -value z
+	    pack $w.colorscheme.z -side top -anchor w -pady 2 -ipadx 3
+
+	    radiobutton $w.colorscheme.random -text "random" -variable $var \
+		    -command $n -value random
+	    pack $w.colorscheme.random -side top -anchor w -pady 2 -ipadx 3
+
 	    set st "$w.l$i"
-	    append st "$text"
+	    append st "grid"
 #	    puts $st
-	    menubutton $st -text "Level [expr $i - 1] $text color" \
+	    menubutton $st -text "Level [expr $i - 1] grid color" \
 		    -menu $st.list -relief groove
-	    pack $st -side top -anchor w -padx 2 -pady 2
+	    pack $st -side left -anchor n -padx 2 -pady 2
 	    
 	    menu $st.list
 	    set var "$this-level$i"
-	    append var "_$text"
-	    append var "_color"
+	    append var "_grid_color"
 	    make_color_menu $st.list $var $n
 	}
     }
@@ -133,7 +173,7 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	    frame $w.colormenus.gridcolor
 	    pack $w.colormenus.gridcolor -side left -fill y -padx 2 -pady 2
 	    
-	    setup_color $w.colormenus.gridcolor "grid" [set $this-nl] $n
+	    setup_color $w.colormenus.gridcolor [set $this-nl] $n
 	}
     }
     method make_entry {w text v c} {
