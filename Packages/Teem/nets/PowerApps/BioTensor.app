@@ -19,7 +19,7 @@ puts "\nLoading BioTensor (this may take a minute)...\n"
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
 # Attempt to get environment variables:
-set DATADIR [lindex [array get env SCIRUN_DATA] 1]
+set DATADIR [netedit getenv SCIRUN_DATA]
 set DATASET brain-dt
 #######################################################################
 
