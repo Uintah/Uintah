@@ -891,7 +891,7 @@ set $m44-ViewWindow_0-global-light {1}
 set $m44-ViewWindow_0-global-fog {0}
 set $m44-ViewWindow_0-global-debug {0}
 set $m44-ViewWindow_0-global-clip {0}
-set $m44-ViewWindow_0-global-cull {1}
+set $m44-ViewWindow_0-global-cull {0}
 set $m44-ViewWindow_0-global-dl {0}
 set $m44-ViewWindow_0-global-type {Gouraud}
 set $m44-ViewWindow_0-ortho-view {1}
@@ -2159,7 +2159,7 @@ class BioTensorApp {
         # Building Diffusion Tensors
         disableModule $mods(NrrdReader-BMatrix) 1
         disableModule $mods(TendEstim) 1
-#	disableModule $mods(ChooseNrrd-DT) 1
+	disableModule $mods(ChooseNrrd-DT) 1
 
         # Planes
         #disableModule $mods(QuadToTri-X) 1
