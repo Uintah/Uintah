@@ -8,6 +8,7 @@ InletStream::InletStream()
 {
   d_axialLoc = 0;
   d_enthalpy = 0;
+  //d_scalarDisp = 0.0;
 }
 
 InletStream::InletStream(int numMixVars, int numMixStatVars, int numRxnVars)
