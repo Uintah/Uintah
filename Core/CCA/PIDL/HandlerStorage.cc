@@ -66,6 +66,7 @@ void HandlerStorage::clear()
 
 void HandlerStorage::add(int handler_num, int queue_num, void* data, std::string uuid, int callID, int numCalls)
 {
+  ::std::cout<<" ### HandlerStorage::add is called. ###"<<::std::endl;
   ::std::ostringstream index;
   index << uuid << callID << handler_num;
   /*Move everyone one space forward, to leave spc#0 for numCalls*/

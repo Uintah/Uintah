@@ -50,6 +50,7 @@
 #include <sgi_stl_warnings_on.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 #include <Core/CCA/PIDL/MxNArrSynch.h>
+#include <Core/CCA/PIDL/MxNMetaSynch.h>
 #include <Core/CCA/PIDL/MxNScheduleEntry.h>
 
 /**************************************
@@ -76,21 +77,32 @@ namespace SCIRun {
 
   //////////////
   //A map of scheduleEntries to distibution names
+  //The string has different meaning for server scheduler and client scheduler:
+  //It is the distribution name + proxy_uuid for the server's caller scheduler
+  //entries, and only distribution name for anything else. However, to make the
+  //the program easier to understand, callers' schedule entries always stored
+  //distribution name+proxy_uuid, and callees' with only distribution name.
   typedef std::map<std::string, MxNScheduleEntry*, ltstr> schedList;
+  typedef std::map<std::string, MxNArrayRep* , ltstr> arrRepList;
 
   class MxNScheduler {    
   public:
     
-    MxNScheduler();
+    MxNScheduler(sched_t sch=caller);
     virtual ~MxNScheduler();
 
     ////////////
     // Accepts an array representation describing a callee/callee
     // and assigns it to the appropriate ScheduleEntry for that 
-    // distribution name
+    // distribution name.
     void setCalleeRepresentation(std::string distname, 
 				 MxNArrayRep* arrrep);
-    void setCallerRepresentation(std::string distname, 
+
+    ////////////
+    // Accepts an array representation describing a callee/callee
+    // and assigns it to the appropriate ScheduleEntry for that 
+    // distribution name + proxy_uuid
+    void setCallerRepresentation(std::string distname, std::string uuid, 
 				 MxNArrayRep* arrrep);
     
     ////////////
@@ -98,7 +110,7 @@ namespace SCIRun {
     // from the perspective of the distribution and 
     // gets the native distribution representation
     MxNArrayRep* calleeGetCalleeRep(std::string distname);
-    MxNArrayRep* callerGetCallerRep(std::string distname);
+    MxNArrayRep* callerGetCallerRep(std::string distname, std::string uuid);
 
     /////////
     // Static methods that retrieve a appropriate Index
@@ -107,12 +119,6 @@ namespace SCIRun {
     static Index* makeBlock(int rank, int size, int length);
     static Index* makeCyclic(int rank, int size, int length);
     
-    ///////////
-    // (Callee Method)
-    // Report the reception of array distribution metadata. Size denotes the
-    // number of metadata receptions we are expecting.
-    // See Also: MxNScheduleEntry::reportMetaRecvFinished(...)
-    void reportMetaRecvDone(std::string distname, int size);
 
     ////////////
     // (Callee Metods)
@@ -135,7 +141,7 @@ namespace SCIRun {
     // (Caller Method) 
     // It acquires all of the array descriptions that this object
     // needs to send part of its array to
-    descriptorList* getRedistributionReps(std::string distname);
+    descriptorList* getRedistributionReps(std::string distname, std::string uuid);
  
     //////////
     // (Callee Method)
@@ -143,9 +149,14 @@ namespace SCIRun {
     // array as well as many other "great" synchronization methods
     MxNArrSynch* getArrSynch(::std::string distname, ::std::string uuid, int callid);
 
-    //////////
+     //////////
+    // (Callee Method)
+    // Retrieves a pointer to the MetaSynch, which provides ynchronization methods
+    // for setCallerDistribution and RMIs.
+    MxNMetaSynch* getMetaSynch(::std::string distname, ::std::string uuid, int size);
+   //////////
     // Erases the ScheduleEntry with a particular name
-    void clear(std::string distname, sched_t sch);
+    void clear(std::string distname, std::string uuid, sched_t sch);
 
     //////////
     // Prints this object
@@ -157,14 +168,21 @@ namespace SCIRun {
 
   private:
     ///////////
-    // List of ScheduleEntries which represent every distibution
-    // that this object participates in.
+    // List of ScheduleEntries (the remote array represenations)
+    // which represent every distibution that this object participates in.
     schedList entries;
+
+    ///////////
+    // List of array representations (the local array represenations)
+    // which represent every distibution that this object participates in.
+    arrRepList myreps;
 
     ////////
     // Mutex used to control access to MxNScheduleEntry::synchlist
     Mutex s_mutex;
-    
+
+    //TODO: change contructor.
+    sched_t sch_type;
   };
 
 } // End namespace SCIRun

@@ -48,9 +48,11 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Thread/Semaphore.h>
+#include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 #include <Core/CCA/PIDL/MxNScheduleEntry.h>
+#include <map>
 
 /**************************************
 				       
@@ -74,7 +76,7 @@ namespace SCIRun {
     //////////////
     // Default constructor accepts a pointer to the MxNScheduleEntry
     // class encapsulating the distribution schedule.
-    MxNArrSynch(MxNScheduleEntry* sched);
+    MxNArrSynch(MxNScheduleEntry* sched, MxNArrayRep *myrep);
 
     /////////////
     // Destructor which takes care of various memory freeing
@@ -104,14 +106,21 @@ namespace SCIRun {
     // Blocks until data redistribution is complete and placed
     // within the array. After that is complete we return the
     // pointer to the array. [CALLEE ONLY]
-    void* waitCompleteArray();
+    void* waitCompleteArray(MxNArrayRep *myrep);
 
     /////////
     // This method is called when we have recieved the distribution
-    // from a particular object denoted by its rank. It sets the 
-    // recieve flag on that distribution in the caller's descriptorList.
+    // from a particular object denoted by its rank. It increses the 
+    // recieve count
     // [CALLEE ONLY]
     void doReceive(int rank);
+
+    /////////
+    // This method is called when we have sent the distribution
+    // to a particular object denoted by its rank. It increses the 
+    // send count
+    // [CALLEE ONLY]
+    void doSend(int rank);
 
     ///////////
     // Prints the contents of this object
@@ -132,24 +141,42 @@ namespace SCIRun {
     void* arr_ptr;
 
     //////////
-    // The semaphore used to block until all data has been recieved.
-    // After all data is received the call to getCompleteArray() will
-    // go through.
-    Semaphore recv_sema;
+    // The condition variable is used to block until all data has been recieved.
+    ConditionVariable recvCondition;
 
     //////////
-    // The semaphore used to block until setArray() has been called
-    // in the case of getArrayWait()
-    Semaphore arr_wait_sema;
+    // The condition variable is used to block until all data has been sent.
+    ConditionVariable sendCondition;
+
+    //////////
+    // The condition variable is used to block until the arr_ptr is set
+    ConditionVariable arrCondition;
 
     ////////
     // Mutex used to control access of the array pointer
     Mutex arr_mutex;
 
+    //////////
+    // expected count of data redistributions that should be received/sent
+    int expected_count;
+
     ///////
     // Mutex used to control access of the receive flags on the 
     // array representations
     Mutex recv_mutex;
+
+    ///////
+    // count of received distribution
+    int recv_count;
+
+    ///////
+    // Mutex used to control access of the receive flags on the 
+    // array representations
+    Mutex send_mutex;
+
+    ///////
+    // count of sent distribution
+    int send_count;
 
     ///////
     // Used to determine whether we should let the array pointer to be set

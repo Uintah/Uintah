@@ -68,8 +68,8 @@
 #endif
 
 //Inter-Component Comm libraries supported
-#define COMM_NEXUS 0
-#define COMM_SOCKET 1
+#define COMM_NEXUS  1
+#define COMM_SOCKET 2
 
 //Intra-Component Comm libraries supported
 #define INTRA_COMM_MPI 1

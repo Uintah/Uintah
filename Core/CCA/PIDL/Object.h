@@ -49,7 +49,7 @@
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 #include <Core/CCA/PIDL/MxNScheduler.h>
 #include <Core/CCA/PIDL/HandlerStorage.h>
-#include <Core/CCA/PIDL/HandlerGateKeeper.h>
+//#include <Core/CCA/PIDL/HandlerGateKeeper.h>
 #include <Core/CCA/Comm/EpChannel.h>
 #include <Core/CCA/SmartPointer.h>
 
@@ -188,6 +188,8 @@ private:
   // of Object.
   static SCIRun::MutexPool* getMutexPool();
 
+  static Mutex sm;
+
   //////////
   // Private copy constructor to make copying impossible.
   Object(const Object&);
@@ -195,6 +197,9 @@ private:
   //////////
   // Private assignment operator to make assignment impossible.
   Object& operator=(const Object&);
+
+  int objid;
+  static int objcnt;
 };
 
 } // End namespace SCIRun

@@ -51,6 +51,7 @@ SRCS     += \
 	$(SRCDIR)/MxNScheduler.cc \
 	$(SRCDIR)/MxNScheduleEntry.cc \
 	$(SRCDIR)/MxNArrSynch.cc \
+	$(SRCDIR)/MxNMetaSynch.cc \
 	$(SRCDIR)/HandlerStorage.cc \
 	$(SRCDIR)/HandlerGateKeeper.cc \
 	$(SRCDIR)/ReferenceMgr.cc \

@@ -305,6 +305,8 @@ package cca {
 	 */
 	collective
 	void setServices(in Services services);
+
+	void setCommunicator(in int communicator);
     }
 
     /**

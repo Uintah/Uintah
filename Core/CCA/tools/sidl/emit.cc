@@ -258,6 +258,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/CCA/Comm/Message.h>\n";
   out << "#include <Core/CCA/PIDL/MxNScheduler.h>\n";
   out << "#include <Core/CCA/PIDL/MxNArrSynch.h>\n";
+  out << "#include <Core/CCA/PIDL/MxNMetaSynch.h>\n";
   out << "#include <Core/CCA/PIDL/xcept.h>\n";
   out << "#include <Core/Util/NotFinished.h>\n";
   out << "#include <Core/Thread/Thread.h>\n";
@@ -558,12 +559,17 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  name[distname_s] = 0;\n";
     e.out << "  std::string dname(name);\n";
     e.out << "  delete[] name;\n";
+    e.out << "  //Unmarshal sessionID\n";
+    e.out << "  ::std::string _sessionID(36, ' ');\n";
+    e.out << "  message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << "  //Unmarshal rank\n";
     e.out << "  int rank;\n";
     e.out << "  message->unmarshalInt(&rank, 1);\n";
     e.out << "  //Unmarshal size\n";
     e.out << "  int size;\n";
     e.out << "  message->unmarshalInt(&size, 1);\n";
+    e.out << "  //Get/Initialize the synchronization object for meta data distribution.\n";
+    e.out << "  SCIRun::MxNMetaSynch* _synch = _sc->d_sched->getMetaSynch(dname,_sessionID,size);\n";
     e.out << "  //Unmarshal recieved distribution\n";
     e.out << "  int _arg1_dim[2];\n";
     e.out << "  message->unmarshalInt(&_arg1_dim[0], 2);\n";
@@ -591,8 +597,9 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  //Report the recieved distribution to this object's scheduler\n";
     e.out << "  ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_arg1);\n";
     e.out << "  arep->setRank(rank);\n";
-    e.out << "  _sc->d_sched->setCallerRepresentation(dname,arep);\n";
-    e.out << "  _sc->d_sched->reportMetaRecvDone(dname,size);\n";
+    e.out << "  _synch->enter();\n";
+    e.out << "  _sc->d_sched->setCallerRepresentation(dname,_sessionID,arep);\n";
+    e.out << "  _synch->leave(rank);\n";
     e.out << "}\n\n";
 
   }  
@@ -1424,9 +1431,9 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  //copy the MxNArrayRep\n";
     e.out << "  SCIRun::MxNArrayRep* arrrep = new SCIRun::MxNArrayRep(*in_arrrep);\n"; 
     e.out << "  //First clear this distribution in case it already exists\n";
-    e.out << "  d_sched->clear(distname, ::SCIRun::caller);\n";
-    e.out << "  d_sched->clear(distname, ::SCIRun::callee);\n";
-    e.out << "  d_sched->setCallerRepresentation(distname,arrrep);\n";
+    e.out << "  d_sched->clear(distname, getProxyUUID(), ::SCIRun::caller);\n";
+    e.out << "  d_sched->clear(distname, getProxyUUID(), ::SCIRun::callee);\n";
+    e.out << "  d_sched->setCallerRepresentation(distname,getProxyUUID(),arrrep);\n";
     e.out << "  //Scatter to all callee objects\n";
     e.out << "  ::SSIDL::array2< int> _rep = arrrep->getArray();\n";
     e.out << "  ::SCIRun::refList* _refL;\n";
@@ -1450,6 +1457,10 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    int distname_s = distname.size();\n";
     e.out << "    message->marshalInt(&distname_s, 1);\n";
     e.out << "    message->marshalChar((char*)distname.c_str(),distname_s);\n";
+
+    e.out << "    //Marshal uuid\n";
+    e.out << "    ::std::string _sessionID = getProxyUUID();\n";
+    e.out << "    message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << "    //Marshal rank\n";
     e.out << "    int rank = rm.getRank();\n";
     e.out << "    message->marshalInt(&rank, 1);\n";
@@ -1481,6 +1492,8 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    message->unmarshalInt(_ret_uptr, _ret_totalsize);\n";
     e.out << "    message->destroyMessage();\n";
     e.out << "    ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_ret,(*iter));\n";
+    e.out << "    //Assuming that the servers are ordered by their rank, future work will follow this assumption.\n";
+    e.out << "    arep->setRank(i);\n";
     e.out << "    d_sched->setCalleeRepresentation(distname,arep);\n";
     e.out << "  }\n";
     e.out << "  d_sched->print();\n";
@@ -2490,8 +2503,8 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	// *********** OUT arg -- Special Redis ******************************
 	e.out << leader2 << "//Collect redistributions of out arguments:\n";
 	e.out << leader2 << "if (1) { //Hack to prevent variable shadowing of _rl_out and _this_rep\n";
-        e.out << leader2 << "SCIRun::descriptorList* _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
-	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" << distarr->getName() << "\");\n";
+        e.out << leader2 << "SCIRun::descriptorList* _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\",getProxyUUID() );\n";
+	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" << distarr->getName() << "\",getProxyUUID() );\n";
 	e.out << leader2 << "//Resize array \n";
         e.out << leader2 << arg << ".resize(";
         for(int i=arr_t->dim; i > 0; i--) {
@@ -2766,9 +2779,10 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "//Redistribute the array:\n";
 	e.out << leader2 << "if (1) { //Hack to prevent varable shadowing on rl & this_rep\n";
 	string ifone = e.out.push_leader(); 
-	e.out << leader2 << "SCIRun::descriptorList* rl = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
+	e.out << leader2 << "SCIRun::descriptorList* rl = d_sched->getRedistributionReps(\"" 
+	      << distarr->getName() << "\",getProxyUUID() );\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* this_rep = d_sched->callerGetCallerRep(\"" 
-	      << distarr->getName() << "\");\n";
+	      << distarr->getName() << "\",getProxyUUID() );\n";
 	e.out << leader2 << "for(int i = 0; i < (int)rl->size(); i++) {\n";
 	e.out << leader2 << "  SCIRun::Message* message = (*rl)[i]->getReference()->chan->getMessage();\n";
 	//string dimname=arg+"_mdim";
@@ -2876,7 +2890,8 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Send Message\n";
 	e.out << leader2 << "  message->sendMessage(0);\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
-        e.out << leader2 << "  _synch->doReceive(rank);\n";
+        e.out << leader2 << "  //One redistribution is sent back\n";
+        e.out << leader2 << "  _synch->doSend(rank);\n";
 	e.out << leader2 << "} /*endif \"" << distarr->getName() << "\"*/\n";
 	// *********** END OF OUT arg -- Special Redis ******************************
       }
