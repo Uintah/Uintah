@@ -16,15 +16,15 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-tcl=<path-to-tcl>          <path-to-tcl>/lib/libtcl.so"
 ac_help="$ac_help
---with-xercesc=<path-to-tcl>      <path-to-tcl>/lib/libxerces-c.so"
+--with-xercesc=<path-to-tcl>      <path-to-xerces-c>/lib/libxerces-c.so"
 ac_help="$ac_help
---with-teem=<path-to-tcl>         <path-to-tcl>/lib/libnrrd.so et al"
+--with-teem=<path-to-tcl>         <path-to-nrrd>/lib/libnrrd.so et al"
 ac_help="$ac_help
---with-mpeg=<path-to-tcl>         <path-to-tcl>/lib/libmpege.so"
+--with-mpeg=<path-to-tcl>         <path-to-mpege>/lib/libmpege.so"
 ac_help="$ac_help
---with-blas=<path-to-tcl>         <path-to-tcl>/lib/libblas.a"
+--with-blas=<path-to-tcl>         <path-to-blas>/lib/libblas.a"
 ac_help="$ac_help
---with-lapack=<path-to-tcl>       <path-to-tcl>/lib/liblapack.a"
+--with-lapack=<path-to-tcl>       <path-to-lapack>/lib/liblapack.a"
 ac_help="$ac_help
 --with-mpi=<path-to-mpi>          <path-to-mpi>"
 ac_help="$ac_help
@@ -36,7 +36,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-petsc=<path-to-petsc>      <path-to-petsc>"
 ac_help="$ac_help
---with-unipetsc=<path-to-tcl>     <path-to-tcl>/lib/libpetsc.so"
+--with-unipetsc=<path-to-tcl>     <path-to-petsc>/lib/libpetsc.so"
 ac_help="$ac_help
 --with-tau=<tau-makefile>         Specify Tau Makefile"
 ac_help="$ac_help
@@ -50,9 +50,9 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-vdt=DIR                    <path-to-vdt>"
 ac_help="$ac_help
---with-jpeg=DIR                   <path-to-jpeg>"
+--with-jpeg=DIR                   <path-to-jpeg>/lib/libjpeg.so"
 ac_help="$ac_help
---with-tiff=DIR                   <path-to-tiff>"
+--with-tiff=DIR                   <path-to-tiff>/lib/libtiff.so"
 ac_help="$ac_help
 --with-imagemagick=DIR            <path-to-imagemagick>"
 ac_help="$ac_help
@@ -10837,7 +10837,7 @@ INC_GL_H=$INC_GL_GL_H
 if test "$pkg_remote" = "yes"; then
 
    if test "$with_jpeg"; then
-     dirs="$with_jpeg $SCI_LAB_TP_LIBS"
+     dirs="$with_jpeg/lib $SCI_LAB_TP_LIBS"
    else
      dirs="$SCI_LAB_TP_LIBS"
    fi 
@@ -11159,7 +11159,7 @@ EOF
   
 
    if test "$with_tiff"; then
-     dirs="$with_tiff $SCI_LAB_TP_LIBS"
+     dirs="$with_tiff/lib $SCI_LAB_TP_LIBS"
    else
      dirs="$SCI_LAB_TP_LIBS"
    fi
