@@ -35,7 +35,6 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
-//#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Port.h>
 
 #include <iostream>
