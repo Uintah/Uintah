@@ -1,25 +1,32 @@
 #!/usr/local/bin/python
 
-from os import environ,mkdir,path,system
+from os import environ,mkdir,path,system,chdir
 from time import asctime,localtime,time
 from sys import argv,exit
 
 TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
     	    ("disks2mat.ups",		    ["dbg", "opt"]),    \
-	    ("disks2mat4patch.ups",	    ["dbg", "opt"]),	\
+	    ("disks2mat4patch.ups",	    ["dbg", "opt", "mpi"], 4), \
     	    ("disks2mat_fc.ups",	    ["dbg", "opt"]),    \
     	    ("disks_complex.ups",	    ["dbg", "opt"]),    \
 	    ("disks_fracture.ups",	    ["dbg", "opt"]),	\
 	    ("heatcond.ups",		    ["dbg", "opt"]),	\
 	    ("heatcond2mat.ups",	    ["dbg", "opt"]),	\
     	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
-	    ("sidecrack.ups",		    ["dbg", "opt"])	\
+	    ("const_test_cmr.ups",	    ["dbg", "opt"]),	\
+	    ("const_test_hypo.ups",	    ["dbg", "opt"]),	\
+	    ("const_test_nh.ups",	    ["dbg", "opt"]),	\
+	    ("const_test_nhp.ups",	    ["dbg", "opt"]),	\
+	    ("const_test_vs.ups",	    ["dbg", "opt"]),	\
+	    ("sidecrack.ups",		    ["dbg", "opt", "mpi"], 2)	\
     	]
 
 def input (test):
     return test[0]
 def modes (test):
     return test[1]
+def num_processes (test):
+    return test[2]
 def date ():
     return asctime(localtime(time()))
 
@@ -29,7 +36,10 @@ if len(argv) < 2:
     exit(1)
 mode = argv[1]
 
-mkdir("%s/MPM-%s" % (environ['BUILDROOT'], mode))
+testdir = "%s/MPM-%s" % (environ['BUILDROOT'], mode)
+susdir = "%s/SCIRun/src/Packages/Uintah/StandAlone" % (environ['BUILDROOT'])
+mkdir(testdir)
+chdir(testdir)
 
 failcode = 0
 
@@ -38,13 +48,27 @@ for test in TESTS:
     	continue
 
     testname = path.splitext(input(test))[0]
-    testlog = "%s/MPM-%s/%s.log" % (environ['BUILDROOT'], mode, testname)
+    mkdir(testname)
+    chdir(testname)
 
     print "MPM-%s: Running test %s on %s" % (mode, testname, date())
-    rc = system("StandAlone/sus -mpm StandAlone/inputs/MPM/%s > %s 2>&1" % (input(test), testlog))
+    if mode == "mpi":
+    	rc = system("mpirun -np %s %s/sus -mpm %s/inputs/MPM/%s > sus.log 2>&1" % (num_processes(test), susdir, susdir, input(test)))
+    else:
+    	rc = system("%s/sus -mpm %s/inputs/MPM/%s > sus.log 2>&1" % (susdir, susdir, input(test)))
     if rc != 0:
     	print "MPM-%s: Test %s failed with code %d" % (mode, testname, rc)
     	failcode = 1
-    system("/bin/rm -rf %s.uda*" % testname)
+    else:
+	print "\tComparing dat files"
+    	rc = system("dat_test %s %s/MPM-%s %s/SCIRun/src/Packages/Uintah/Test/ComparisonDats > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT']))
+    	if rc != 0:
+    	    print "\tWarning, test %s failed dat comparision with error code %s" % (testname, rc)
+	else:
+	    print "\tComparison tests passed."
+    chdir("..")
 
 exit(failcode)
+
+
+
