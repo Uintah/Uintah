@@ -105,7 +105,8 @@ AC_DEFUN([SCI_TRY_LINK], [
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
 ## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile (e.g., math.h)
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
 ## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
 ##           Any other -? args are removed.
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
@@ -165,6 +166,7 @@ _sci_savecxxflags=$CXXFLAGS
 _sci_includes=
 
 if test "$9" != "optional" -a "$9" != "required" -a "$9" != "specific"; then
+     echo
      AC_MSG_ERROR(Last parameter of SCI-TRY-LINK for $2 must be: optional or required or specific.  (You had $9.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
 fi
 
@@ -184,6 +186,7 @@ for inc in $4; do
      has_minus_i=`echo $inc | sed 's/-I.*//'`
      if test -n "$has_minus_i"; then
         # Has some other -?.
+        echo
         AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
         continue
      fi
@@ -194,19 +197,11 @@ for inc in $4; do
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
-        if test -z "$_sci_includes"; then
-           _sci_includes=-I$inc
-        else
-           _sci_includes="$_sci_includes -I$inc"
-        fi
+        _sci_includes="$_sci_includes -I$inc"
      fi
   else
      # It already has -I so just add it directly.
-     if test -z "$_sci_includes"; then
-        _sci_includes=$inc
-     else
-        _sci_includes="$_sci_includes $inc"
-     fi
+     _sci_includes="$_sci_includes $inc"
   fi
 done
 ])dnl
@@ -241,11 +236,7 @@ if test -n "$5"; then
          # It already has -l so just add it directly.
          final_lib=$lib
       fi
-      if test -z "$_sci_libs"; then
-         _sci_libs=$final_lib
-      else
-         _sci_libs="$_sci_libs $final_lib"
-      fi
+      _sci_libs="$_sci_libs $final_lib"
    done
 fi
    
@@ -271,17 +262,12 @@ if test -n "$6"; then
          fi
       fi
    
-      the_path=`echo $path | grep "\-L"`
-      if test -z "$the_path"; then
-         # If the path arg does not have -L on it, then add -L.
-         final_path="-L$path"
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
       else
-         final_path="$path"
-      fi
-      if test -z "$_sci_libs"; then
-         _sci_lib_path=$final_path
-      else
-         _sci_lib_path="$_sci_lib_path $final_path"
+         AC_MSG_WARN(The path given $the_path is not a valid directory... ignoring.)
       fi
    done
 fi
@@ -338,15 +324,28 @@ LDFLAGS="$_sci_lib_path $LDFLAGS"
 LIBS="$_sci_libs $7 $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
-__sci_pound_includes=
+__extern_c="no"
+__sci_pound_includes=""
+
 for inc in "" $3; do
-    # Have to have the "" for the SGI sh. 
-    if test "$inc" = ""; then
-      continue
-    fi
-    __sci_pound_includes="$__sci_pound_includes
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh. 
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
 #include <$inc>"
+    fi
 done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
 
 AC_TRY_LINK($__sci_pound_includes,[$8],[
 eval LIB_DIR_$1='"$6"'
@@ -359,17 +358,27 @@ for _dir in "" $_sci_lib_path; do
   fi
 done
 
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib%%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
 eval $1_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_arg=`echo "$_lib" | grep "\-L"`
-  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_arg"; then
+  bad_l_arg=`echo "$_lib" | grep "\-L"`
+  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
 done
 
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
 eval $1_LIB_FLAG="'$final_libs'"
 eval HAVE_$1="yes"
 
@@ -379,6 +388,9 @@ for inc in "" $_sci_includes; do
       final_incs="$final_incs $inc"
    fi
 done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
 
 eval INC_$1_H="'$final_incs'"
 eval HAVE_$1_H="yes"
