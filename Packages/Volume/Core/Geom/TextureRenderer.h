@@ -73,6 +73,7 @@ public:
   void set_colormap_size(int size);
   void set_slice_alpha(double alpha);
   void set_sw_raster(bool b);
+  bool use_pbuffer() { return use_pbuffer_; }
   void set_blend_numbits(int b);
   inline void set_interp(bool i) { interp_ = i; }
   
