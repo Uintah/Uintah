@@ -120,7 +120,8 @@ void NrrdToField::execute()
   }
 
   if (n->dim != 3) {
-    cerr << "Can only deal with 3-dimensional scalar fields... sorry.\n";
+    cerr << "NrrdToField error: nrrd->dim="<<n->dim<<"\n";
+    cerr << "  Can only deal with 3-dimensional scalar fields... sorry.\n";
     return;
   }
   int nx = n->axis[0].size;

@@ -77,9 +77,7 @@ void NrrdWriter::execute()
     return;
   }
 
-  char name[200];
-  strcpy(name, fn.c_str());
-  if (nrrdSave(name, handle->nrrd, nrrdIONew())) {
+  if (nrrdSave(strdup(fn.c_str()), handle->nrrd, 0)) {
     char *err = biffGet(NRRD);      
     cerr << "Error writing nrrd " << fn << ": " << err << "\n";
     free(err);
