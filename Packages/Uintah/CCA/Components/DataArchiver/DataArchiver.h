@@ -49,124 +49,124 @@ using std::pair;
       
      ****************************************/
     
+   //! Handles outputting the data.
    class DataArchiver : public Output, public UintahParallelComponent {
    public:
       DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
       virtual ~DataArchiver();
 
-      //////////
-      // Sets up when the DataArchiver will output and what data, according
-      // to params.  Also stores state to keep track of time and timesteps
-      // in the simulation.  (If you only need to use DataArchiver to copy 
-      // data, then you can pass a NULL SimulationState
+      //! Sets up when the DataArchiver will output and what data, according
+      //! to params.  Also stores state to keep track of time and timesteps
+      //! in the simulation.  (If you only need to use DataArchiver to copy 
+      //! data, then you can pass a NULL SimulationState
       virtual void problemSetup(const ProblemSpecP& params,
                                 SimulationState* state);
 
-      //////////
-      // This function will set up the output for the simulation.  As part
-      // of this it will output the input.xml and index.xml in the uda
-      // directory.  Call after calling all problemSetups.
+      //! This function will set up the output for the simulation.  As part
+      //! of this it will output the input.xml and index.xml in the uda
+      //! directory.  Call after calling all problemSetups.
       virtual void initializeOutput(const ProblemSpecP& params);
 
-      //////////
-      // Call this when restarting from a checkpoint after calling
-      // problemSetup.  This will copy timestep directories and dat
-      // files up to the specified timestep from restartFromDir if
-      // fromScratch is false and will set time and timestep variables
-      // appropriately to continue smoothly from that timestep.
-      // If timestep is negative, then all timesteps will get copied
-      // if they are to be copied at all (fromScratch is false).
+      //! Call this when restarting from a checkpoint after calling
+      //! problemSetup.  This will copy timestep directories and dat
+      //! files up to the specified timestep from restartFromDir if
+      //! fromScratch is false and will set time and timestep variables
+      //! appropriately to continue smoothly from that timestep.
+      //! If timestep is negative, then all timesteps will get copied
+      //! if they are to be copied at all (fromScratch is false).
       virtual void restartSetup(Dir& restartFromDir, int startTimestep,
 				int timestep, double time, bool fromScratch,
 				bool removeOldDir);
 
-      //////////
-      // Call this when doing a combine_patches run after calling
-      // problemSetup.  It will copy the data files over and make it ignore
-      // dumping reduction variables.
+      //! Call this when doing a combine_patches run after calling
+      //! problemSetup.  It will copy the data files over and make it ignore
+      //! dumping reduction variables.
       virtual void combinePatchSetup(Dir& fromDir);
 
-      // Copy a section from another uda's index.xml.
+      //! Copy a section between udas' index.xml.
       void copySection(Dir& fromDir, Dir& toDir, string section);
+
+      //! Copy a section from another uda's to our index.xml.
       void copySection(Dir& fromDir, string section)
       { copySection(fromDir, d_dir, section); }
 
-      //////////
-      // Call this after all other tasks have been added to the scheduler
+      //! Checks to see if this is an output timestep. 
+      //! If it is, setup directories and xml files that we need to output.
+      //! Will also setup the tasks if we are recompiling the taskgraph.
+      //! Call once per timestep, and if recompiling,
+      //! after all the other tasks are scheduled.
       virtual void finalizeTimestep(double t, double delt, const GridP&,
 				    SchedulerP&, bool recompile=false);
 
-      //////////
-      // Call this after the timestep has been executed.
+      //! Find the next times to output and dumps open files to disk.
+      //! Call after timestep has completed.
       virtual void executedTimestep(double delt);
      
-      //////////
-      // Insert Documentation Here:
+      //! Returns as a string the name of the top of the output directory.
       virtual const string getOutputLocation() const;
 
+      //! Asks if we need to recompile the task graph.
       virtual bool needRecompile(double time, double dt,
 				  const GridP& grid);
 
-      //////////
-      // Insert Documentation Here:
-      void output(const ProcessorGroup*,
-		  const PatchSubset* patch,
-		  const MaterialSubset* matls,
-		  DataWarehouse* old_dw,
-		  DataWarehouse* new_dw,
-		  Dir* p_dir,
-		  const VarLabel*,
-		  bool isThisCheckpoint);
+      //! The task that handles the outputting.  Scheduled in finalizeTimestep.
+      //! Handles outputs and checkpoints and differentiates between them in the
+      //! last argument.  Outputs as binary the data acquired from VarLabel in 
+      //! p_dir.
+      void output(const ProcessorGroup*, const PatchSubset* patch,
+		              const MaterialSubset* matls, DataWarehouse* old_dw,
+		              DataWarehouse* new_dw, Dir* p_dir, const VarLabel*,
+		              bool isThisCheckpoint);
 
-      // Method to output reduction variables to a single file
+      //! Task that handles outputting non-checkpoint reduction variables.
+      //! Scheduled in finalizeTimestep.
       void outputReduction(const ProcessorGroup*,
 			   const PatchSubset* patch,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
 
-      // This calls output for all of the checkpoint reduction variables
-      // which will end up in globals.xml / globals.data -- in this way,
-      // all this data will be output by one process avoiding conflicts.
+      //! This calls output for all of the checkpoint reduction variables
+      //! which will end up in globals.xml / globals.data -- in this way,
+      //! all this data will be output by one process avoiding conflicts.
       void outputCheckpointReduction(const ProcessorGroup* world,
 				     const PatchSubset* patch,
 				     const MaterialSubset* matls,
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
 
-      //////////
-      // Use the sharedState directly if you can, but if you must use these...
+      //! Recommended to use sharedState directly if you can.
       virtual int getCurrentTimestep()
       { return d_sharedState->getCurrentTopLevelTimeStep(); }
        
+      //! Recommended to use sharedState directly if you can.
       virtual double getCurrentTime()
       { return  d_sharedState->getElapsedTime(); }
 
-      // Get the time the next output will occur
+      //! Get the time the next output will occur
       virtual double getNextOutputTime() { return d_nextOutputTime; }
       
-      // Get the timestep the next output will occur
+      //! Get the timestep the next output will occur
       virtual int getNextOutputTimestep() { return d_nextOutputTimestep; }
       
-      // Get the time the next checkpoint will occur
+      //! Get the time the next checkpoint will occur
       virtual double getNextCheckpointTime() { return d_nextCheckpointTime; }
       
-      // Get the timestep the next checkpoint will occur
+      //! Get the timestep the next checkpoint will occur
       virtual int getNextCheckpointTimestep(){return d_nextCheckpointTimestep;}
 
-      //////////
-      // Returns true if the last timestep was one
-      // in which data was output.
+      //! Returns true if the last timestep was one in which data was output.
       virtual bool wasOutputTimestep()
       { return d_wasOutputTimestep; }
 
-      //////////
-      // Get the directory of the current time step for outputting info.
+      //! Get the directory of the current time step for outputting info.
       virtual const string& getLastTimestepOutputLocation() const
       { return d_lastTimestepLocation; }
 
      public:
      
+      //! problemSetup parses the ups file into a list of these
+      //! (d_saveLabelNames)
       struct SaveNameItem {
 	string labelName;
 	string compressionMode;
@@ -192,7 +192,8 @@ using std::pair;
       };
 
    private:
-      // returns a ProblemSpecP that you need to call releaseDocument on
+      //! returns a ProblemSpecP reading the xml file xmlName.
+      //! You will need to that you need to call ProblemSpec::releaseDocument
       ProblemSpecP loadDocument(std::string xmlName);     
 
       //! creates the uda directory with a trailing version suffix
@@ -201,65 +202,93 @@ using std::pair;
       void initSaveLabels(SchedulerP& sched);
       void initCheckpoints(SchedulerP& sched);
      
-      // helper for finalizeTimestep
+      //! helper for beginOutputTimestep - creates and writes
+      //! the necessary directories and xml files to begin the 
+      //! output timestep.
       void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
-			  double time, double delt,
-			  const GridP& grid,
-			  string* pTimestepDir /* passed back */,
-			  bool hasGlobals = false);
+			  double time, double delt, const GridP& grid,
+			  string* pTimestepDir /* passed back */, bool hasGlobals = false);
 
+      //! helper for finalizeTimestep - schedules a task for each var's output
       void scheduleOutputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
 				  const GridP& grid, SchedulerP& sched,
 				  bool isThisCheckpoint);
+
+      //! Helper for finalizeTimestep - determines if, based on the current
+      //! time and timestep, this will be an output or checkpoint timestep.
       void beginOutputTimestep(double time, double delt,
 			       const GridP& grid);
 
-      //////////
-      // Call this after a timestep restart to make sure we still
-      // have an output timestep
+      //! After a timestep restart (delt adjusted), we need to see if we are 
+      //! still an output timestep.
       virtual void reEvaluateOutputTimestep(double old_delt, double new_delt);
-      // helper for problemSetup
+
+      //! helper for initializeOutput - writes the initial index.xml file,
+      //! both setting the d_indexDoc var and writing it to disk.
       void createIndexXML(Dir& dir);
 
-      // helpers for restartSetup
+      //! helper for restartSetup - adds the restart field to index.xml
       void addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 			   int timestep);
 
+      //! helper for restartSetup - copies the timestep directories AND
+      //! timestep entries in index.xml
       void copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 			 int maxTimestep, bool removeOld,
 			 bool areCheckpoints = false);
+
+      //! helper for restartSetup - copies the reduction dat files to 
+      //! new uda dir (from startTimestep to maxTimestep)
       void copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 			int maxTimestep, bool removeOld);
    
-      // add saved global (reduction) variables to index.xml
+      //! add saved global (reduction) variables to index.xml
       void indexAddGlobals();
 
+      //! string for uda dir (actual dir will have postpended numbers
+      //! i.e., filebase.000
       string d_filebase;
-      SimulationStateP d_sharedState;
-      double d_tempElapsedTime; // set in finalizeTimestep for output tasks
 
-      // only one of these should be nonzero
+      //! pointer to simulation state, to get timestep and time info
+      SimulationStateP d_sharedState;
+
+      //! set in finalizeTimestep for output tasks to see how far the 
+      //! next timestep will go.  Stored as temp in case of a
+      //! timestep restart.
+      double d_tempElapsedTime; 
+
+      // only one of these should be nonzero - read from ups file.
       double d_outputInterval;
       int d_outputTimestepInterval;
      
       double d_nextOutputTime; // used when d_outputInterval != 0
       int d_nextOutputTimestep; // used when d_outputTimestepInterval != 0
       //int d_currentTimestep;
-      Dir d_dir;
+      Dir d_dir; //!< top of uda dir
+      
+      //! Represents whether this proc will output non-processor-specific
+      //! files
       bool d_writeMeta;
+
+      //! last timestep dir (filebase.000/t#)
       string d_lastTimestepLocation;
-      bool d_wasOutputTimestep;
-      bool d_wasCheckpointTimestep;
-      bool d_saveParticleVariables;
+      bool d_wasOutputTimestep; //!< set if this is an output timestep
+      bool d_wasCheckpointTimestep; //!< set if a checkpoint timestep
+
+      //! Whether or not particle vars are saved
+      //! Requires p.x to be set
+      bool d_saveParticleVariables; 
+
+      //! Wheter or not p.x is saved 
       bool d_saveP_x;
 
       //double d_currentTime;
 
-      // d_saveLabelNames is a temporary list containing VarLabel
-      // names to be saved and the materials to save them for.  The
-      // information will be basically transferred to d_saveLabels or
-      // d_saveReductionLabels after mapping VarLabel names to their
-      // actual VarLabel*'s.
+      //! d_saveLabelNames is a temporary list containing VarLabel
+      //! names to be saved and the materials to save them for.  The
+      //! information will be basically transferred to d_saveLabels or
+      //! d_saveReductionLabels after mapping VarLabel names to their
+      //! actual VarLabel*'s.
       list< SaveNameItem > d_saveLabelNames;
       vector< SaveItem > d_saveLabels;
       vector< SaveItem > d_saveReductionLabels;
@@ -268,8 +297,8 @@ using std::pair;
       ConsecutiveRangeSet prevMatls_;
       MaterialSetP prevMatlSet_;     
      
-      // d_checkpointLabelNames is a temporary list containing
-      // the names of labels to save when checkpointing
+      //! d_checkpointLabelNames is a temporary list containing
+      //! the names of labels to save when checkpointing
       vector< SaveItem > d_checkpointLabels;
       vector< SaveItem > d_checkpointReductionLabels;
 
@@ -283,13 +312,18 @@ using std::pair;
       int d_checkpointWalltimeStart;     //how long to wait before first 
       int d_checkpointWalltimeInterval;
       
+      //! How many checkpoint dirs to keep around
       int d_checkpointCycle;
 
+      //! Top of checkpoints dir
       Dir d_checkpointsDir;
+
+      //! List of current checkpoint dirs
       list<string> d_checkpointTimestepDirs;
-      double d_nextCheckpointTime; // used when d_checkpointInterval != 0
-      int d_nextCheckpointTimestep; // used when d_checkpointTimestepInterval != 0
-      int d_nextCheckpointWalltime; // used when d_checkpointWalltimeInterval != 0
+      double d_nextCheckpointTime; //!< used when d_checkpointInterval != 0
+      int d_nextCheckpointTimestep; //!< used when d_checkpointTimestepInterval != 0
+      int d_nextCheckpointWalltime; //!< used when d_checkpointWalltimeInterval != 0
+
       //-----------------------------------------------------------
       // RNJ - 
       //
@@ -304,15 +338,19 @@ using std::pair;
       // because it is possible to do an output
       // and a checkpoint at the same time.
 
-      ProblemSpecP d_XMLIndexDoc;
+      //! index.xml
+      ProblemSpecP d_XMLIndexDoc; 
+
+      //! checkpoints/index.xml
       ProblemSpecP d_CheckpointXMLIndexDoc;
 
       // Each level needs it's own data file handle 
       // and if we are outputting and checkpointing
       // at the same time we need two different sets.
+      // Also store the filename for error-tracking purposes.
 
-      map< int, int > d_DataFileHandles;
-      map< int, int > d_CheckpointDataFileHandles;
+      map< int, pair<int, char*> > d_DataFileHandles;
+      map< int, pair<int, char*> > d_CheckpointDataFileHandles;
 
       // Each level needs it's own XML Data Doc
       // and if we are outputting and checkpointing
