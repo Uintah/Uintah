@@ -257,26 +257,107 @@ inline AllocBin* Allocator::get_bin(size_t size)
 
 #ifdef SCI_PTHREAD
 
+// This is code taken from Core/Thread/RecursiveMutex_default.cc
+// I'm using this code to make sure that if a thread locks the allocator
+// that this thread is the only one who can use the allocator until
+// it unlocks the mutex.
+
+// These should be made part of the allocator class when verified that it
+// works.
+
 void Allocator::initlock()
 {
+  // Set this to false.  We don't want to use a recursive mutex unless needed
+  use_rlock = false;
+  lock_count = 0;
+  owner = 0;
+  owner_initialized = false;
+  
   static pthread_mutex_t init = PTHREAD_MUTEX_INITIALIZER;
   the_lock=init;
 }
 
 inline void Allocator::lock()
 {
-  if(pthread_mutex_lock(&the_lock) != 0){
-    perror("pthread_mutex_lock");
+  if (!use_rlock) {
+    // Lock the mutex
+    if(pthread_mutex_lock(&the_lock) != 0) {
+      perror("Allocator::lock: pthread_mutex_lock");
+      exit(-1);
+    }
+  } else {
+    pthread_t me= pthread_self();
+    // pthread_equal returns a non zero value when they are equal
+    if(owner_initialized && pthread_equal(owner, me)) {
+      // Already have exclusive rights, so increment the lock count
+      lock_count++;
+      return;
+    }
+    // Lock the mutex
+    if(pthread_mutex_lock(&the_lock) != 0) {
+      perror("Allocator::lock: pthread_mutex_lock");
+      exit(-1);
+    }
+  }
+}
+
+inline void Allocator::rlock()
+{
+  pthread_t me= pthread_self();
+  // pthread_equal returns a non zero value when they are equal
+  if(owner_initialized && pthread_equal(owner, me)) {
+    // Already have exclusive rights, so increment the lock count
+    lock_count++;
+    return;
+  }
+  // Lock the mutex
+  if(pthread_mutex_lock(&the_lock) != 0) {
+    perror("Allocator::lock: pthread_mutex_lock");
     exit(-1);
   }
+  // Set the owner to the calling thread
+  owner = me;
+  owner_initialized = true;
+  use_rlock = true;
+  // Start the count at 1.
+  lock_count = 1;
 }
 
 inline void Allocator::unlock()
 {
-  if(pthread_mutex_unlock(&the_lock) != 0){
-    perror("pthread_mutex_lock");
-    exit(-1);
+  if (!use_rlock) {
+    if(pthread_mutex_unlock(&the_lock) != 0) {
+      perror("pthread_mutex_lock");
+      exit(-1);
+    }
+  } else {
+    // If the lock_count is 0, then the thread is done using it.  Unlock it
+    // and go.
+    if(--lock_count == 0) {
+      // Again, I don't know what to initialize owner to, so I'll make sure
+      // that I set this flag to make sure we know if it is initialized.
+      owner = 0;
+      owner_initialized = false;
+      // Since this is the last unlock for this thread, we turn off the use
+      // of the recursive mutex.  If we want to use it again, we have to
+      // explicitly lock the allocator again.
+      use_rlock = false;
+      if(pthread_mutex_unlock(&the_lock) != 0) {
+	perror("pthread_mutex_lock");
+	exit(-1);
+      }
+    }
   }
+}
+
+void LockAllocator(Allocator *a)
+{
+  a->rlock();
+}
+
+void UnLockAllocator(Allocator *a)
+{
+  a->unlock();
 }
 
 #else
@@ -299,6 +380,17 @@ inline void Allocator::unlock()
 {
    if(release_lock(&the_lock) != 0)
       AllocError("Error unlocking lock");
+}
+
+
+void LockAllocator(Allocator *a)
+{
+  a->lock();
+}
+
+void UnLockAllocator(Allocator *a)
+{
+  a->unlock();
 }
 
 #else
