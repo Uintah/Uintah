@@ -24,13 +24,13 @@ class GenericField: public Field
 {
 public:
   //! Typedefs to support the Field concept.
-  typedef typename FData::value_type value_type;
-  typedef Mesh                       mesh_type;
-  typedef LockingHandle<mesh_type>   mesh_handle_type;
-  typedef FData                      fdata_type;
+  typedef typename FData::value_type      value_type;
+  typedef Mesh                            mesh_type;
+  typedef LockingHandle<mesh_type>        mesh_handle_type;
+  typedef FData                           fdata_type;
 
-  GenericField() : Field() {};
-  GenericField(data_location data_at) : Field(data_at) {};
+  GenericField() : Field(), location_(Field::NODE) {};
+  GenericField(data_location data_at) : Field(), location_(data_at) {};
   virtual ~GenericField() {};
 
   //! Required virtual functions from field base.
