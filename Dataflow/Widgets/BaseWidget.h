@@ -184,6 +184,7 @@ protected:
 
    void CreateModeSwitch( const Index snum, GeomObj* o );
    void SetMode( const Index mode, const long swtchs );
+   void SetNumModes(int num) { NumModes = num; }
    void FinishWidget();
 
    // Used to pass a material to .tcl file.

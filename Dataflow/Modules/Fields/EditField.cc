@@ -71,7 +71,7 @@ public:
 
   CrowdMonitor     widget_lock_;
   ScaledBoxWidget *box_;
-  Transform        box_initial_transform__;
+  Transform        box_initial_transform_;
   BBox             box_initial_bounds_;
   int              generation_;
 
@@ -121,7 +121,7 @@ EditField::EditField(const string& id)
     minmax_(1,0)
   
 {
-  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 1);
+  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, false, false);
   widgetid_ = 0;
 }
 
@@ -294,19 +294,18 @@ EditField::build_widget(FieldHandle f)
   // Rotate * Scale * Translate.
   Transform r;
   Point unused;
-  box_initial_transform__.load_identity();
+  box_initial_transform_.load_identity();
   r.load_frame(unused, (right-center).normal(),
 	       (down-center).normal(),
 	       (in-center).normal());
-  box_initial_transform__.pre_trans(r);
-  box_initial_transform__.pre_scale(Vector((right-center).length(),
+  box_initial_transform_.pre_trans(r);
+  box_initial_transform_.pre_scale(Vector((right-center).length(),
 			     (down-center).length(),
 			     (in-center).length()));
-  box_initial_transform__.pre_translate(center.asVector());
+  box_initial_transform_.pre_translate(center.asVector());
 
   box_->SetScale(l2norm * 0.015);
   box_->SetPosition(center, right, down, in);
-  box_->AxisAligned(0);
   
   GeomGroup *widget_group = scinew GeomGroup;
   widget_group->add(box_->GetWidget());
@@ -485,7 +484,7 @@ EditField::execute()
 		       (in-center).length()));
     t.pre_translate(center.asVector());
 
-    Transform inv(box_initial_transform__);
+    Transform inv(box_initial_transform_);
     inv.invert();
     t.post_trans(inv);
 
@@ -520,7 +519,7 @@ EditField::execute()
   DenseMatrix *matrix_transform = scinew DenseMatrix(4,4);
   MatrixHandle mh = matrix_transform;
   double dummy[16];   
-  box_initial_transform__.get(dummy);   
+  box_initial_transform_.get(dummy);   
   double *p=&(dummy[0]);   
   for (int i=0; i<4; ++i)     
     for (int j=0; j<4; ++j,++p)       

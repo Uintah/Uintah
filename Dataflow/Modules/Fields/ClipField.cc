@@ -84,7 +84,7 @@ ClipField::ClipField(const string& id)
     last_input_generation_(0),
     last_clip_generation_(0)
 {
-  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 0);
+  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, false, false);
 }
 
 

@@ -115,7 +115,7 @@ BuildTransform::BuildTransform(const string& id)
     have_been_initialized_(0)
 {
   
-  box_widget_=scinew ScaledBoxWidget(this, &widget_lock_, 0.2);
+  box_widget_=scinew ScaledBoxWidget(this, &widget_lock_, 0.2, false, false);
   widget_switch_=box_widget_->GetWidget();
 }
 

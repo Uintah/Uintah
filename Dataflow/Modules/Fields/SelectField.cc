@@ -65,7 +65,7 @@ SelectField::SelectField(const string& id)
     mode_("runmode", id, this),
     last_generation_(0)
 {
-  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 1);
+  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, false, false);
 }
 
 
