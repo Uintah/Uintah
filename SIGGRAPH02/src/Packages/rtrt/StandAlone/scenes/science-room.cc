@@ -59,7 +59,7 @@ using namespace std;
 using SCIRun::Thread;
 
 #define ADD_VIS_FEM 1
-#define ADD_DAVE_HEAD 1
+#define ADD_HEAD 1
 #define ADD_CSAFE_FIRE 1
 #define ADD_GEO_DATA 1
 
@@ -636,16 +636,16 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   }
 
 // Start inside:
-//  Point Eye(-5.85, 6.2, 2.0);
-//  Point Lookat(-13.5, 13.5, 2.0);
-//  Vector Up(0,0,1);
-//  double fov=60;
+  Point Eye(-5.85, 6.2, 2.0);
+  Point Lookat(-13.5, 13.5, 2.0);
+  Vector Up(0,0,1);
+  double fov=60;
 
 // Start outside:
-  Point Eye(-10.9055, -0.629515, 1.56536);
-  Point Lookat(-8.07587, 15.7687, 1.56536);
-  Vector Up(0, 0, 1);
-  double fov=60;
+  //  Point Eye(-10.9055, -0.629515, 1.56536);
+  // Point Lookat(-8.07587, 15.7687, 1.56536);
+  //Vector Up(0, 0, 1);
+  //double fov=60;
 
 // Just table:
 //  Point Eye(-7.64928, 6.97951, 1.00543);
@@ -677,9 +677,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   SpinningInstance *smw = make_dna(g);
 
   //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
-  Light *holo_light1 = new Light(Point(-8, 10, 2.2), Color(0.3,0.3,0.4), 0);
-  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2), Color(0.3,0.3,0.4), 0);
-  Light *holo_light3 = new Light(Point(-6.58, 6.58, 2.2), Color(0.3,0.3,0.4), 0);
+  Light *holo_light1 = new Light(Point(-8, 10, 2.2), Color(0.4,0.4,0.45), 0);
+  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2), Color(0.4,0.4,0.45), 0);
+  Light *holo_light3 = new Light(Point(-6.58, 6.58, 2.2), Color(0.4,0.4,0.45), 0);
   holo_light1->name_ = "hololight1";
   holo_light2->name_ = "hololight2";
   holo_light3->name_ = "hololight3";
@@ -755,9 +755,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   vcut->add(vinst);
 #endif
 
-#ifdef ADD_DAVE_HEAD
-  //ADD THE DAVE HEAD DATA SET
-  ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/dave",256);
+#ifdef ADD_HEAD
+  //ADD THE HEAD DATA SET
+  ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/head",256);
   Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   hmat->my_lights.add(holo_light1);
   hmat->my_lights.add(holo_light2);
@@ -768,24 +768,27 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   hcutmat->my_lights.add(holo_light2);
   hcutmat->my_lights.add(holo_light3);
 
-  CutVolumeDpy* hcvdpy = new CutVolumeDpy(82.5, hcmap);
+  //82.5 for dave
+  CutVolumeDpy* hcvdpy = new CutVolumeDpy(11000.0, hcmap);
 
-  HVolumeBrick16* davehead=new HVolumeBrick16(hcutmat, hcvdpy,
-					      "/usr/sci/data/Geometry/volumes2/gk2-anat-US.raw",
+  HVolumeBrick16* head=new HVolumeBrick16(hcutmat, hcvdpy,
+					  //    "/usr/sci/data/Geometry/volumes2/dave",
+					  "/usr/sci/data/Geometry/volumes2/gk2-anat-US.raw",
 					      3, nworkers);
-  InstanceWrapperObject *diw = new InstanceWrapperObject(davehead);
+  InstanceWrapperObject *hiw = new InstanceWrapperObject(head);
 
-  Transform *dtrans = new Transform();
-  dtrans->rotate(Vector(1,0,0), Vector(0,0,1));
-  dtrans->pre_scale(Vector(2.12,2.12,2.12)); //scale to fit max
-  dtrans->pre_translate(Vector(-8, 8, 1.75));
-  dtrans->pre_translate(Vector(0,0,-0.71)); //place 1cm above table
+  Transform *htrans = new Transform();
+  htrans->rotate(Vector(1,0,0), Vector(0,0,-1));
+  htrans->pre_scale(Vector(1.11,1.11,1.11)); //scale to fit max
+  htrans->pre_translate(Vector(-8, 8, 1.75));
+  htrans->pre_translate(Vector(0,0,-0.352)); //place 1cm above table
 
-  SpinningInstance *dinst = new SpinningInstance(diw, dtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
-  dinst->name_ = "Spinning Head";
+  SpinningInstance *hinst = new SpinningInstance(hiw, htrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
+  
+  hinst->name_ = "Spinning Head";
 
   CutGroup *hcut = new CutGroup(cpdpy);
-  hcut->add(dinst);
+  hcut->add(hinst);
   hcut->name_ = "Cutting Plane";
 #endif
 
@@ -859,7 +862,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Transform *gtrans = new Transform();
   gtrans->rotate(Vector(1,0,0), Vector(0,0,-1));
-  gtrans->pre_scale(Vector(2.49,2.49,2.49)); //fit between z=0.51 and 3
+  gtrans->pre_scale(Vector(1.245,1.245,1.245)); //fit between z=0.51 and 3
   gtrans->pre_translate(Vector(-8, 8, 1.75));
   gtrans->pre_translate(Vector(0,0,0.005)); //place 1 cm above table
 
@@ -876,7 +879,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #ifdef ADD_VIS_FEM
   sg->add(vcut);
 #endif
-#ifdef ADD_DAVE_HEAD
+#ifdef ADD_HEAD
   sg->add(hcut);
 #endif
 #ifdef ADD_CSAFE_FIRE
@@ -922,18 +925,16 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(vcvdpy);
   (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
 #endif
-#ifdef ADD_DAVE_HEAD
-  scene->addObjectOfInterest( hcut, false );
-  scene->addObjectOfInterest( dinst, false );
+#ifdef ADD_HEAD
+  scene->addObjectOfInterest( hinst, false );
   scene->attach_auxiliary_display(hcvdpy);
   hcvdpy->setName("Brain Volume");
   scene->attach_display(hcvdpy);
   (new Thread(hcvdpy, "HEAD Volume Dpy"))->detach();
-  scene->addObjectOfInterest( hcut, false );
 #endif
 #ifdef ADD_CSAFE_FIRE
-  scene->addObjectOfInterest( fire_time, true );
-  scene->addObjectOfInterest( fire_inst, true );
+  scene->addObjectOfInterest( fire_time, false );
+  scene->addObjectOfInterest( fire_inst, false );
   scene->attach_auxiliary_display(firedpy);
   firedpy->setName("CSAFE Fire Volume");
   scene->attach_display(firedpy);
@@ -946,7 +947,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(gcvdpy);
   (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
 #endif
-
+#ifdef ADD_HEAD
+  scene->addObjectOfInterest( hcut, false );
+#endif
   scene->attach_auxiliary_display(cpdpy);
   cpdpy->setName("Cutting Plane");
   scene->attach_display(cpdpy);
