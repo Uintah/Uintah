@@ -37,8 +37,8 @@ prog-STreeToTris:
 prog-SurfToJAS:
 	@$(MAKE) --no-print-directory SRCS=SurfToJAS.cc PROGRAM=SurfToJAS SurfToJAS
 
-prog-SurfToVIN:
-	@$(MAKE) --no-print-directory SRCS=SurfToVIN.cc PROGRAM=SurfToVIN SurfToVIN
+prog-SurfToVDT:
+	@$(MAKE) --no-print-directory SRCS=SurfToVDT.cc PROGRAM=SurfToVDT SurfToVDT
 
 prog-VDTtoMesh:
 	@$(MAKE) --no-print-directory SRCS=VDTtoMesh.cc PROGRAM=VDTtoMesh VDTtoMesh
