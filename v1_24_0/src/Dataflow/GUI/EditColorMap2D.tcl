@@ -503,15 +503,15 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    create_swatches
 	}
 
-        makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
+        makeSciButtonPanel $w $w $this
         moveToCursor $w
     }
             
     method bind_events {w} {
         bind $w <Destroy>		"$this-c destroygl"
         # every time the OpenGL widget is displayed, redraw it
-        bind $w <Expose>		"$this-c resize"
-        bind $w <Configure>		"$this-c resize"
+        bind $w <Expose>		"$this-c redraw"
+        bind $w <Configure>		"$this-c redraw"
         bind $w <ButtonPress-1>		"$this-c mouse push %x %y %b"
         bind $w <ButtonPress-2>		"$this-c mouse push %x %y %b"
         bind $w <ButtonPress-3>		"$this-c mouse push %x %y %b"
@@ -531,10 +531,6 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         bind $w <Shift-ButtonPress-3>   "$this-c mouse scale_start %x %y %b"
         bind $w <Shift-Button3-Motion>  "$this-c mouse scale_motion %x %y %b"
         bind $w <Shift-ButtonRelease-3> "$this-c mouse scale_end %x %y %b"
-    }
-            
-    method create_gl { frame } {
-
     }
 }
 
