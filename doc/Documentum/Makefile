@@ -34,7 +34,10 @@ rmfiles:=rm -f
 rmdirs:=rm -rf
 
 
-default: documentum module-xml module-latex
+default: index.html documentum module-xml module-latex
+
+index.html: index.rhtml ../edition.xml
+	eruby --delimiters html $< >$@
 
 documentum : documentum.html
 
