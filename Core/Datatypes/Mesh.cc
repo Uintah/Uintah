@@ -21,7 +21,7 @@
 namespace SCIRun{
 
 // initialize the static member type_id
-PersistentTypeID Mesh::type_id(type_name(-1), "PropertyManager", NULL);
+PersistentTypeID Mesh::type_id("Mesh", "PropertyManager", NULL);
 
 
 Mesh::~Mesh() 
@@ -29,12 +29,19 @@ Mesh::~Mesh()
 }
 
 
-const int MESHBASE_VERSION = 1;
+const int MESHBASE_VERSION = 2;
 
 void 
 Mesh::io(Piostream& stream)
 {
-  stream.begin_class("MeshBase", MESHBASE_VERSION);
+  if (stream.reading() && stream.peek_class() == "MeshBase")
+  {
+    stream.begin_class("MeshBase", 1);
+  }
+  else
+  {
+    stream.begin_class("Mesh", MESHBASE_VERSION);
+  }
   PropertyManager::io(stream);
   stream.end_class();
 }
