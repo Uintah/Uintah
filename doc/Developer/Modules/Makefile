@@ -152,7 +152,7 @@ SCIRun.html : ${edition} ${SCIRun_xml_html_files} ${SCIRun_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,SCIRun,${SCIRun_xml_dir},${SCIRun_tex_dir}}
 
-${SCIRun_xml_html_files}: %.html: %.xml
+${SCIRun_xml_html_files}: %.html: %.xml ${stylesheet}
 	${call xmltohtml,${xmlsrtreetop}}
 
 ${SCIRun_tex_html_dirs}: %: %.tex
@@ -178,7 +178,7 @@ BioPSE.html : ${edition} ${BioPSE_xml_html_files} ${BioPSE_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,BioPSE,${BioPSE_xml_dir},${BioPSE_tex_dir}}
 
-${BioPSE_xml_html_files}: %.html: %.xml
+${BioPSE_xml_html_files}: %.html: %.xml ${stylesheet}
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${BioPSE_tex_html_dirs}: %: %.tex
@@ -204,7 +204,7 @@ Teem.html : ${edition} ${Teem_xml_html_files} ${Teem_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,Teem,${Teem_xml_dir},${Teem_tex_dir}}
 
-${Teem_xml_html_files}: %.html: %.xml
+${Teem_xml_html_files}: %.html: %.xml ${stylesheet}
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${Teem_tex_html_dirs}: %: %.tex
@@ -230,7 +230,7 @@ VDT.html : ${edition} ${VDT_xml_html_files} ${VDT_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,VDT,${VDT_xml_dir},${VDT_tex_dir}}
 
-${VDT_xml_html_files}: %.html: %.xml
+${VDT_xml_html_files}: %.html: %.xml ${stylesheet}
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${VDT_tex_html_dirs}: %: %.tex
@@ -256,7 +256,7 @@ MatlabInterface.html : ${edition} ${MatlabInterface_xml_html_files} \
 		${MatlabInterface_tex_html_dirs} ${pkgindexgenscript}
 	${call makepkgindex,MatlabInterface,${MatlabInterface_xml_dir},${MatlabInterface_tex_dir}}
 
-${MatlabInterface_xml_html_files}: %.html: %.xml
+${MatlabInterface_xml_html_files}: %.html: %.xml ${stylesheet}
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${MatlabInterface_tex_html_dirs}: %: %.tex
@@ -282,7 +282,7 @@ Fusion.html : ${edition} ${Fusion_xml_html_files} ${Fusion_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,Fusion,${Fusion_xml_dir},${Fusion_tex_dir}}
 
-${Fusion_xml_html_files}: %.html: %.xml
+${Fusion_xml_html_files}: %.html: %.xml ${stylesheet}
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${Fusion_tex_html_dirs}: %: %.tex
