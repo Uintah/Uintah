@@ -8,7 +8,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
 #include <Dataflow/XMLUtil/XMLUtil.h>
-#include <Core/Util/NotFinished.h>
 
 #include <algorithm>
 #include <map>
