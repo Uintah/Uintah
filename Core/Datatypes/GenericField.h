@@ -29,8 +29,8 @@ public:
   typedef LockingHandle<mesh_type>        mesh_handle_type;
   typedef FData                           fdata_type;
 
-  GenericField() : Field(), location_(Field::NODE) {};
-  GenericField(data_location data_at) : Field(), location_(data_at) {};
+  GenericField() : Field() {};
+  GenericField(data_location data_at) : Field(data_at) {};
   virtual ~GenericField() {};
 
   //! Required virtual functions from field base.
