@@ -45,6 +45,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
+#include <stack>
 
 using namespace std;
 using namespace SCIRun;
@@ -472,6 +473,79 @@ void Module::get_position(int& x, int& y)
   }
 }
 
+
+// Simple and limited parsing for help descriptions.
+static string
+parse_description(const string &in)
+{
+  std::stack<int> state;
+  string out;
+  state.push(0);
+  state.push(2);
+  for (unsigned int i=0; i < in.size(); i++)
+  {
+    char c = in[i];
+    if (c == '\n' || c == '\t')
+    {
+      c = ' ';
+    }
+    if (state.top() == 0)
+    {
+      if (c == '<')
+      {
+	state.push(1);
+      }
+      else if (c == ' ')
+      {
+	out.push_back(' ');
+	state.push(2);
+      }
+      else if (c == '.' || c == '!' || c == '?')
+      {
+	out.push_back(c);
+	out.push_back(' ');
+	out.push_back(' ');
+	state.push(2);
+      }
+      else
+      {
+	out.push_back(c);
+      }
+    }
+    else if (state.top() == 1)
+    {
+      if (c == '>')
+      {
+	if (i > 1 && in[i-2] == '/' && in[i-1] == 'p')
+	{
+	  out.push_back('\n');
+	  out.push_back('\n');
+	  state.pop();
+	  state.push(2);
+	}
+	else
+	{
+	  state.pop();
+	}
+      }
+    }
+    else if (state.top() == 2)
+    {
+      if (c == '<')
+      {
+	state.push(1);
+      }
+      else if (c != ' ')
+      {
+	state.pop();
+	i--;
+      }
+    }
+  }
+  return out;
+}
+
+
 void Module::tcl_command(GuiArgs& args, void*)
 { 
   if(args.count() < 2){
@@ -510,7 +584,7 @@ void Module::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "getpid"){
     args.result(to_string(pid_));
   } else if(args[1] == "help"){
-    args.result(description);
+    args.result(parse_description(description));
   } else {
     args.error("Unknown minor command for module: "+args[1]);
   }
