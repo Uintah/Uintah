@@ -4,8 +4,10 @@
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/CellIterator.h>
+#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/FaceIterator.h>
 #include <Uintah/Interface/Scheduler.h>
-#include "ICE.h"
+
 
 #include "macros.h"
 #include "parameters.h"
@@ -26,7 +28,7 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<Vector>& vel_ucf,
         double  ****uvel_CC,
         double  ****vvel_CC,
         double  ****wvel_CC,
-        int     include_ghostcells,
+        bool     include_ghostcells,
         int     xLoLimit,
         int     xHiLimit,
         int     yLoLimit,
@@ -41,7 +43,7 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<Vector>& vel_ucf,
     /*__________________________________
     *   Looping Limits
     *___________________________________*/
-    if (include_ghostcells == YES)
+    if (include_ghostcells == true)
     {
         xLo = GC_LO(xLoLimit);  yLo = GC_LO(yLoLimit);  zLo = GC_LO(zLoLimit);
         xHi = GC_HI(xHiLimit);  yHi = GC_HI(yHiLimit);  zHi = GC_HI(zHiLimit);
@@ -106,7 +108,7 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/ 
 void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<double>& scalar_ucf, 
         double  ****scalar_CC,
-        int     include_ghostcells,
+	bool     include_ghostcells,
         int     xLoLimit,
         int     xHiLimit,
         int     yLoLimit,
@@ -121,7 +123,7 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<double>& scalar_ucf,
     /*__________________________________
     *   Looping Limits
     *___________________________________*/
-    if (include_ghostcells == YES)
+    if (include_ghostcells == true)
     {
         xLo = GC_LO(xLoLimit);  yLo = GC_LO(yLoLimit);  zLo = GC_LO(zLoLimit);
         xHi = GC_HI(xHiLimit);  yHi = GC_HI(yHiLimit);  zHi = GC_HI(zHiLimit);
@@ -180,7 +182,7 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
         double  ****uvel_CC,
         double  ****vvel_CC,
         double  ****wvel_CC,
-        int     include_ghostcells,
+        bool     include_ghostcells,
         int     xLoLimit,
         int     xHiLimit,
         int     yLoLimit,
@@ -195,7 +197,7 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
     /*__________________________________
     *   Looping Limits
     *___________________________________*/
-    if (include_ghostcells == YES)
+    if (include_ghostcells == true)
     {
         xLo = GC_LO(xLoLimit);  yLo = GC_LO(yLoLimit);  zLo = GC_LO(zLoLimit);
         xHi = GC_HI(xHiLimit);  yHi = GC_HI(yHiLimit);  zHi = GC_HI(zHiLimit);
@@ -257,7 +259,7 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/ 
 void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf, 
         double  ****scalar_CC,
-        int     include_ghostcells,
+        bool     include_ghostcells,
         int     xLoLimit,
         int     xHiLimit,
         int     yLoLimit,
@@ -272,7 +274,7 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf,
     /*__________________________________
     *   Looping Limits
     *___________________________________*/
-    if (include_ghostcells == YES)
+    if (include_ghostcells == true)
     {
         xLo = GC_LO(xLoLimit);  yLo = GC_LO(yLoLimit);  zLo = GC_LO(zLoLimit);
         xHi = GC_HI(xHiLimit);  yHi = GC_HI(yHiLimit);  zHi = GC_HI(zHiLimit);
@@ -315,4 +317,78 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf,
     }
     return;
 }
+
+void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf, 
+        double  ****uvel_FC,
+        double  ****vvel_FC,
+        double  ****wvel_FC,
+        bool     include_ghostcells,
+        int     xLoLimit,
+        int     xHiLimit,
+        int     yLoLimit,
+        int     yHiLimit,
+        int     zLoLimit,
+        int     zHiLimit,
+        int     nMaterials)
+{
+    int i, j, k, m,
+        xLo, yLo, zLo,
+        xHi, yHi, zHi;
+    /*__________________________________
+    *   Looping Limits
+    *___________________________________*/
+    if (include_ghostcells == true)
+    {
+        xLo = GC_LO(xLoLimit);  yLo = GC_LO(yLoLimit);  zLo = GC_LO(zLoLimit);
+        xHi = GC_HI(xHiLimit);  yHi = GC_HI(yHiLimit);  zHi = GC_HI(zHiLimit);
+    } else
+    {
+        xLo = xLoLimit;         yLo = yLoLimit;         zLo = zLoLimit;
+        xHi = xHiLimit;         yHi = yHiLimit;         zHi = zHiLimit;
+    }
+
+    for (FaceIterator iter = patch->getFaceIterator(patch->getBox()); 
+         !iter.done(); iter++) 
+    {
+      // Do something
+    }
+
+    FaceIterator iter = patch->getFaceIterator(patch->getBox());
+    cerr << "FC iterator begin = " << iter.begin() << " end = " << iter.end() 
+         << endl;
+
+    cerr << "FC variables limits " << vel_ucf.getLowIndex() << " " 
+         << vel_ucf.getHighIndex() << endl;
+
+    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo << "] [ " 
+         << xHi << " " << yHi << " " << zHi << "]" << endl;  
+
+    for (i = xLo; i <= xHi; i++) 
+    {
+        for (j = yLo; j <= yHi; j++) 
+        {
+            for (k = zLo; k <= zHi; k++) 
+            {
+	        for (m = 1; m <= nMaterials; m++) 
+               {
+	          // Do something
+	          //  cerr << "uvel = " << uvel_FC[m][i][j][k] 
+	          //     << " vvel = " << vvel_FC[m][i][j][k] 
+	          //     << " wvel = " << wvel_FC[m][i][j][k] << endl;
+	          IntVector idx(i-xLo,j-yLo,k-zLo);
+	          vel_ucf[idx]=Vector(uvel_FC[m][i][j][k], 
+				      vvel_FC[m][i][j][k], 
+			              wvel_FC[m][i][j][k]);
+	          //cerr << "vel_ucf = " << vel_ucf[idx] << endl;
+	        }
+            }
+        }
+    }
+
+  return;
+
+}
+
+
+
 

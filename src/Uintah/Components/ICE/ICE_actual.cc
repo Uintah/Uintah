@@ -86,19 +86,21 @@ using Uintah::ICESpace::ICE;
 
 ICE::ICE()
 {
-    delTLabel     =   new VarLabel( "delT",       delt_vartype::getTypeDescription() );
-    vel_CCLabel   =   new VarLabel( "vel_CC",     CCVariable<Vector>::getTypeDescription() );
-    press_CCLabel =   new VarLabel( "press_CC",   CCVariable<double>::getTypeDescription() );
-    press_CCLabel_1 = new VarLabel( "press_CC_1", CCVariable<double>::getTypeDescription() );
+  delTLabel = new VarLabel("delT", delt_vartype::getTypeDescription() );
+  vel_CCLabel = new VarLabel("vel_CC",CCVariable<Vector>::getTypeDescription() );
+  press_CCLabel = new VarLabel("press_CC", CCVariable<double>::getTypeDescription() );
+  press_CCLabel_1 = new VarLabel("press_CC_1", CCVariable<double>::getTypeDescription() );
+  
+  rho_CCLabel = new VarLabel("rho_CC",CCVariable<double>::getTypeDescription() );
+  temp_CCLabel= new VarLabel("temp_CC",CCVariable<double>::getTypeDescription() );
+  cv_CCLabel=new VarLabel("cv_CC", CCVariable<double>::getTypeDescription() );
 
-    rho_CCLabel   =   new VarLabel( "rho_CC",     CCVariable<double>::getTypeDescription() );
-    temp_CCLabel  =   new VarLabel( "temp_CC",    CCVariable<double>::getTypeDescription() );
-    cv_CCLabel    =   new VarLabel( "cv_CC",      CCVariable<double>::getTypeDescription() );
+  div_velfc_CCLabel=new VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
 
-    // Face centered variables
-    vel_FCLabel   =   new VarLabel( "vel_FC",     FCVariable<Vector>::getTypeDescription() );
-    press_FCLabel =   new VarLabel( "press_FC",   FCVariable<double>::getTypeDescription() );
-    tau_FCLabel   =   new VarLabel( "tau_FC",     FCVariable<Vector>::getTypeDescription() );
+  // Face centered variables
+  vel_FCLabel= new VarLabel("vel_FC", FCVariable<Vector>::getTypeDescription() );
+  press_FCLabel=new VarLabel("press_FC", FCVariable<double>::getTypeDescription() );
+    tau_FCLabel= new VarLabel("tau_FC", FCVariable<Vector>::getTypeDescription() );
 
 /*__________________________________
 *   Plotting variables
@@ -108,12 +110,12 @@ ICE::ICE()
     stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
     stat = putenv("PGPLOT_OPEN_NEW_WINDOWS=1");  
     
-/*__________________________________
-*   Allocate memory for the arrays
-*___________________________________*/
-    #include "allocate_memory.i"
-   
-
+    /*__________________________________
+     *   Allocate memory for the arrays
+     *___________________________________*/
+#include "allocate_memory.i"
+    
+    
 }
 
 
@@ -122,180 +124,174 @@ ICE::ICE()
 
 ICE::~ICE()
 {
-    /*__________________________________
-    *   Now deallocate memory
-    *___________________________________*/
-    fprintf(stderr,"Now deallocating memory");
-    #include "free_memory.i"
+  /*__________________________________
+   *   Now deallocate memory
+   *___________________________________*/
+  fprintf(stderr,"Now deallocating memory");
+#include "free_memory.i"
 }
 
 
 
 
 /* ---------------------------------------------------------------------
-GENERAL INFORMATION
- Function:  ICE::problemSetup--
- Filename:  ICE_actual.cc
- Purpose:   
-
-History: 
-Version   Programmer         Date       Description                      
--------   ----------         ----       -----------                 
-  1.0     John Schmidt      06/23/00                              
-_____________________________________________________________________*/
+   GENERAL INFORMATION
+   Function:  ICE::problemSetup--
+   Filename:  ICE_actual.cc
+   Purpose:   
+   
+   History: 
+   Version   Programmer         Date       Description                      
+   -------   ----------         ----       -----------                 
+   1.0     John Schmidt      06/23/00                              
+   _____________________________________________________________________*/
 void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 		       SimulationStateP&)
 {
-
-  double 
-    viscosity,
-    thermal_conductivity,
-    specific_heat,
-    speed_of_sound,
-    ideal_gas_constant,
-    d_gamma;
-    
-    printSwitch = 1;    
-    t           = 0.0;  
-    m           = 1;
-    fileNum     = 1;
-/*__________________________________
-*   Read in from the spec file
-*___________________________________*/
-    ProblemSpecP mat_ps = prob_spec->findBlock("MaterialProperties");
-
-    ProblemSpecP ice_mat_ps = mat_ps->findBlock("ICE");
-
-    for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
-         ps = ps->findNextBlock("material") ) 
-   {
-        ps->require("viscosity",viscosity);
-        ps->require("thermal_conductivity",thermal_conductivity);
-        ps->require("specific_heat",specific_heat);
-        ps->require("speed_of_sound",speed_of_sound);
-        ps->require("ideal_gas_constant",ideal_gas_constant);
-        ps->require("gamma",d_gamma);
-    }
-
-    cerr << "viscosity " << viscosity << endl;
-    cerr << "thermal_conductivity " << thermal_conductivity << endl;
-    cerr << "specific_heat " << specific_heat << endl;
-    cerr << "speed_of_sound " << speed_of_sound << endl;
-    cerr << "ideal_gas_constant " << ideal_gas_constant << endl;
-    cerr << "gamma " << d_gamma << endl;
   
-audit();
-
-/*______________________________________________________________________
-*
-*  P  R  O  B  L  E  M     I  N  I  T  I  A  L  I  Z  A  T  I  O  N  
-*  - read input file
-*   - test the input variables
-*   - Equate the address of the face centered variables
-*   - Generate a grid
-*   - zero all of the face-centered arrays
-*   
-*                  
-* -----------------------------------------------------------------------  */
-                                        
-       readInputFile(   &xLoLimit,      &yLoLimit,      &zLoLimit,     
-                        &xHiLimit,      &yHiLimit,      &zHiLimit,
-                        &delX,          &delY,          &delZ,
-                        uvel_CC,        vvel_CC,        wvel_CC, 
-                        Temp_CC,        press_CC,       rho_CC,
-                        scalar1_CC,     scalar2_CC,     scalar3_CC,
-                        viscosity_CC,   thermalCond_CC, cv_CC,
-                        R,              gamma,
-                        &t_final,       t_output_vars,  delt_limits,
-                        output_file_basename,           output_file_desc,       
-                        grav,           speedSound,
-                        BC_inputs,      BC_Values,      &CFL,
-                        &nMaterials);      
+  double  viscosity, thermal_conductivity, specific_heat, speed_of_sound;
+  double ideal_gas_constant, d_gamma;
     
-    testInputFile(      xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        Temp_CC,        press_CC,       rho_CC,
-                        viscosity_CC,   thermalCond_CC, cv_CC,
-                        speedSound,      
-                        t_final,        t_output_vars,  delt_limits,
-                        BC_inputs,      printSwitch,    CFL,
-                        nMaterials); 
-                   
-    definition_of_different_physical_boundary_conditions(              
-                        BC_inputs,      BC_types,       BC_float_or_fixed,
-                        BC_Values,      nMaterials  );  
-                        
-/*__________________________________
-* Now make sure that the face centered
-* values know about each other.
-* for example 
-* [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
-*___________________________________*/  
+  printSwitch = 1;    
+  t           = 0.0;  
+  m           = 1;
+  fileNum     = 1;
+  /*__________________________________
+   *   Read in from the spec file
+   *___________________________________*/
+  ProblemSpecP mat_ps = prob_spec->findBlock("MaterialProperties");
+  
+  ProblemSpecP ice_mat_ps = mat_ps->findBlock("ICE");
+  
+  for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
+       ps = ps->findNextBlock("material") ) {
+    ps->require("viscosity",viscosity);
+    ps->require("thermal_conductivity",thermal_conductivity);
+    ps->require("specific_heat",specific_heat);
+    ps->require("speed_of_sound",speed_of_sound);
+    ps->require("ideal_gas_constant",ideal_gas_constant);
+    ps->require("gamma",d_gamma);
+  }
+  
+  cerr << "viscosity " << viscosity << endl;
+  cerr << "thermal_conductivity " << thermal_conductivity << endl;
+  cerr << "specific_heat " << specific_heat << endl;
+  cerr << "speed_of_sound " << speed_of_sound << endl;
+  cerr << "ideal_gas_constant " << ideal_gas_constant << endl;
+  cerr << "gamma " << d_gamma << endl;
+  
+  audit();
+  
+  /*______________________________________________________________________
+   *
+   *  P  R  O  B  L  E  M     I  N  I  T  I  A  L  I  Z  A  T  I  O  N  
+   *  - read input file
+   *   - test the input variables
+   *   - Equate the address of the face centered variables
+   *   - Generate a grid
+   *   - zero all of the face-centered arrays
+   *   
+   *                  
+   * -----------------------------------------------------------------------  */
+  
+  readInputFile(   &xLoLimit,      &yLoLimit,      &zLoLimit,     
+		   &xHiLimit,      &yHiLimit,      &zHiLimit,
+		   &delX,          &delY,          &delZ,
+		   uvel_CC,        vvel_CC,        wvel_CC, 
+		   Temp_CC,        press_CC,       rho_CC,
+		   scalar1_CC,     scalar2_CC,     scalar3_CC,
+		   viscosity_CC,   thermalCond_CC, cv_CC,
+		   R,              gamma,
+		   &t_final,       t_output_vars,  delt_limits,
+		   output_file_basename,           output_file_desc,       
+		   grav,           speedSound,
+		   BC_inputs,      BC_Values,      &CFL,
+		   &nMaterials);      
+  
+  testInputFile(      xLoLimit,       yLoLimit,       zLoLimit,
+		      xHiLimit,       yHiLimit,       zHiLimit,
+		      delX,           delY,           delZ,
+		      Temp_CC,        press_CC,       rho_CC,
+		      viscosity_CC,   thermalCond_CC, cv_CC,
+		      speedSound,      
+		      t_final,        t_output_vars,  delt_limits,
+		      BC_inputs,      printSwitch,    CFL,
+		      nMaterials); 
+  
+  definition_of_different_physical_boundary_conditions(BC_inputs, BC_types,
+						       BC_float_or_fixed,
+						       BC_Values, nMaterials);  
+  
+  /*__________________________________
+   * Now make sure that the face centered
+   * values know about each other.
+   * for example 
+   * [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
+   *___________________________________*/  
+  
+  equate_ptr_addresses_adjacent_cell_faces(              
+					   x_FC,  y_FC,  z_FC,
+					   uvel_FC, vvel_FC, wvel_FC,
+					   press_FC,
+					   tau_X_FC,tau_Y_FC, tau_Z_FC,
+					   nMaterials);   
 
-    equate_ptr_addresses_adjacent_cell_faces(              
-                        x_FC,           y_FC,           z_FC,
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        press_FC,
-                        tau_X_FC,       tau_Y_FC,       tau_Z_FC,
-                        nMaterials);   
-
-    /*__________________________________
-    * Generate a grid
-    *___________________________________*/ 
-    generateGrid(       xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        x_CC,           y_CC,           z_CC,   Vol_CC,  
-                        x_FC,           y_FC,           z_FC );
-    /*__________________________________
-    *   zero the face-centered arrays
-    *___________________________________*/
-    zero_arrays_6d(
-                        xLoLimit,       yLoLimit,       zLoLimit,             
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        1,              N_CELL_FACES,
-                        1,              nMaterials,     
-                        7,             
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        press_FC,
-                        tau_X_FC,       tau_Y_FC,       tau_Z_FC);                         
-    stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
-                            
-   
-    /*__________________________________
-    *   overide the initial conditions
-    *___________________________________*/
-    #if switchOveride_Initial_Conditions                               
-      #include "overide_initial_conds.i"
-    #endif 
-    
-    /*__________________________________
-    *  If desired plot the inputs
-    *___________________________________*/
-    #if switchDebug_main_input
-        #define switchInclude_main_1 1
-        #include "debugcode.i"
-        #undef switchInclude_main_1
-    #endif 
-        
-    /*__________________________________
-    *   For the first time through
-    *   set some variables
-    *___________________________________*/
-    delt    = delt_limits[3];              
-    t       = delt;
-    fprintf(stderr,"\nInitial time %f, timestep is %f\n",t,delt); 
- 
- 
+  /*__________________________________
+   * Generate a grid
+   *___________________________________*/ 
+  generateGrid(       xLoLimit,       yLoLimit,       zLoLimit,
+		      xHiLimit,       yHiLimit,       zHiLimit,
+		      delX,           delY,           delZ,
+		      x_CC,           y_CC,           z_CC,   Vol_CC,  
+		      x_FC,           y_FC,           z_FC );
+  /*__________________________________
+   *   zero the face-centered arrays
+   *___________________________________*/
+  zero_arrays_6d(
+		 xLoLimit,       yLoLimit,       zLoLimit,             
+		 xHiLimit,       yHiLimit,       zHiLimit,
+		 1,              N_CELL_FACES,
+		 1,              nMaterials,     
+		 7,             
+		 uvel_FC,        vvel_FC,        wvel_FC,
+		 press_FC,
+		 tau_X_FC,       tau_Y_FC,       tau_Z_FC);                         
+  stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+  
+  
+  /*__________________________________
+   *   overide the initial conditions
+   *___________________________________*/
+#if switchOveride_Initial_Conditions                               
+#include "overide_initial_conds.i"
+#endif 
+  
+  /*__________________________________
+   *  If desired plot the inputs
+   *___________________________________*/
+#if switchDebug_main_input
+#define switchInclude_main_1 1
+#include "debugcode.i"
+#undef switchInclude_main_1
+#endif 
+  
+  /*__________________________________
+   *   For the first time through
+   *   set some variables
+   *___________________________________*/
+  delt    = delt_limits[3];              
+  t       = delt;
+  fprintf(stderr,"\nInitial time %f, timestep is %f\n",t,delt); 
+  
+  
 #if 0
- CCVariable<Vector> vel_CC;
- ds.put("vel_CC", vel_CCLabel,0,patch);
- 
+  CCVariable<Vector> vel_CC;
+  ds.put("vel_CC", vel_CCLabel,0,patch);
+  
 #else
- cerr << "put vel_CC not done\n";
+  cerr << "put vel_CC not done\n";
 #endif
- 
+  
 }
 
 
@@ -322,7 +318,7 @@ void ICE::actuallyInitialize(
     DataWarehouseP& /* old_dw */,
     DataWarehouseP& new_dw)
 {
-    int include_ghost_cells = YES;
+    bool include_ghost_cells = true;
     cerr <<"Doing actuallyInitialize . . ." << endl;
     CCVariable<Vector> vel_cc;
     CCVariable<double> press_cc,    press_cc_1,     rho_cc, temp_cc,    cv_cc;
@@ -333,11 +329,11 @@ void ICE::actuallyInitialize(
     *___________________________________*/
     new_dw->allocate(   vel_cc,     vel_CCLabel,    0,patch);
     new_dw->allocate(   press_cc,   press_CCLabel,  0,patch);
-    new_dw->allocate(   press_cc_1, press_CCLabel_1,0,patch);
+
     new_dw->allocate(   rho_cc,     rho_CCLabel,    0,patch);
     new_dw->allocate(   temp_cc,    temp_CCLabel,   0,patch);
     new_dw->allocate(   cv_cc,      cv_CCLabel,     0,patch);
-    new_dw->allocate(   vel_fc,     vel_FCLabel,    0,patch);
+    //    new_dw->allocate(   vel_fc,     vel_FCLabel,    0,patch);
     new_dw->allocate(   press_fc,   press_FCLabel,  0,patch);
     new_dw->allocate(   tau_fc,     tau_FCLabel,    0,patch);
     /*__________________________________
@@ -390,7 +386,7 @@ void ICE::actuallyInitialize(
     *___________________________________*/                        
     new_dw->put(      vel_cc,     vel_CCLabel,    0,patch);
     new_dw->put(      press_cc,   press_CCLabel,  0,patch);
-    new_dw->put(      press_cc_1, press_CCLabel_1,0,patch);
+
     new_dw->put(      rho_cc,     rho_CCLabel,    0,patch);
     new_dw->put(      temp_cc,    temp_CCLabel,   0,patch);
     new_dw->put(      cv_cc,      cv_CCLabel,     0,patch);
@@ -416,7 +412,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     DataWarehouseP& fromDW,
     DataWarehouseP& toDW)
 {
-    int include_ghost_cells = NO;
+  bool include_ghost_cells = NO;
   cerr << "Doing actuallyComputeStableTimestep . . ." << endl;
 
     /*__________________________________
@@ -551,41 +547,43 @@ void ICE::actuallyStep1(const ProcessorGroup*,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
 {
-    int include_ghost_cells = NO;
-    /*__________________________________
-    * get data from the data warehouse and
-    *  convert it to NR arrays
-    *___________________________________*/
+  bool include_ghost_cells = NO;
+  /*__________________________________
+   * get data from the data warehouse and
+   *  convert it to NR arrays
+   *___________________________________*/
 #if 1
-    CCVariable<double> press_cc; 
-    CCVariable<double> rho_cc;
-    CCVariable<double> temp_cc;
-    CCVariable<double> cv_cc;
+  CCVariable<double> press_cc; 
+  CCVariable<double> rho_cc;
+  CCVariable<double> temp_cc;
+  CCVariable<double> cv_cc;
 
-    old_dw->get(  press_cc,   press_CCLabel,  0, patch, Ghost::None, 0);  
-    old_dw->get(  rho_cc,     rho_CCLabel,    0, patch, Ghost::None, 0);
-    old_dw->get(  temp_cc,    temp_CCLabel,   0, patch, Ghost::None, 0); 
-    old_dw->get(  cv_cc,      cv_CCLabel,     0, patch, Ghost::None, 0);
+  
+  old_dw->get(  press_cc,   press_CCLabel,  0, patch, Ghost::None, 0);  
+  old_dw->get(  rho_cc,     rho_CCLabel,    0, patch, Ghost::None, 0);
+  old_dw->get(  temp_cc,    temp_CCLabel,   0, patch, Ghost::None, 0); 
+  old_dw->get(  cv_cc,      cv_CCLabel,     0, patch, Ghost::None, 0);
 
-     ICE::convertUCFToNR_4d(patch,
-          press_cc,   press_CC,
-          include_ghost_cells,
-          xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-          nMaterials); 
-
-    ICE::convertUCFToNR_4d(patch,
+  
+  ICE::convertUCFToNR_4d(patch,
+	 press_cc,   press_CC,
+	 include_ghost_cells,
+	 xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
+	 nMaterials); 
+  
+  ICE::convertUCFToNR_4d(patch,
           rho_cc,     rho_CC,
           include_ghost_cells,
           xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
           nMaterials); 
 
-    ICE::convertUCFToNR_4d(patch,
+  ICE::convertUCFToNR_4d(patch,
           temp_cc,    Temp_CC,
           include_ghost_cells,
           xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
           nMaterials); 
 
-    ICE::convertUCFToNR_4d(patch,
+  ICE::convertUCFToNR_4d(patch,
           cv_cc,      cv_CC,
           include_ghost_cells,
           xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
@@ -593,41 +591,42 @@ void ICE::actuallyStep1(const ProcessorGroup*,
 #endif
     
     
-     /*__________________________________
-     *  Use the equation of state to get
-     *  P at the cell center
-     *___________________________________*/
-    #if switch_step1_OnOff
-    cerr << "Actually step 1 " << endl;
-        equation_of_state(
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        R,
-                        press_CC,       rho_CC,         Temp_CC,
-                        cv_CC,          nMaterials   );
-                        
-        speed_of_sound(
-                        xLoLimit,       yLoLimit,       zLoLimit,       
-                        xHiLimit,       yHiLimit,       zHiLimit,       
-                        gamma,          R,              Temp_CC,     
-                        speedSound,     nMaterials   );
+  /*__________________________________
+   *  Use the equation of state to get
+   *  P at the cell center
+   *___________________________________*/
+#if switch_step1_OnOff
+  cerr << "Actually step 1 " << endl;
+
+  // INPUTS:  R, rho_CC, Temp_CC
+  // OUTPUTS: press_CC
+  equation_of_state(
+		    xLoLimit,       yLoLimit,       zLoLimit,
+		    xHiLimit,       yHiLimit,       zHiLimit,
+		    R,
+		    press_CC,       rho_CC,         Temp_CC,
+		    cv_CC,          nMaterials   );
+  
+  // INPUTS: gamma, R, Temp_CC
+  // OUTPUS: speedSound
+  speed_of_sound(
+		 xLoLimit,       yLoLimit,       zLoLimit,       
+		 xHiLimit,       yHiLimit,       zHiLimit,       
+		 gamma,          R,              Temp_CC,     
+		 speedSound,     nMaterials   );
 #endif
      
   // ICE::convert NR stuff back to ucf and store in data warehouse
-/*    CCVariable<double> press_cc_1;
-     old_dw->allocate(   press_cc_1,   press_CCLabel_1,  0,patch); 
-     old_dw->get(  press_cc_1,   press_CCLabel_1,  0, patch, Ghost::None, 0);
-     ICE::convertNR_4dToUCF(patch,
-          press_cc_1,   press_CC,
-          include_ghost_cells,
-          xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-          nMaterials);
+  CCVariable<double> press_cc_1;
+  new_dw->allocate( press_cc_1,press_CCLabel_1,0,patch); 
+
+  ICE::convertNR_4dToUCF(patch,
+	  press_cc_1,   press_CC,
+	 include_ghost_cells,
+	 xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
+         nMaterials);
           
-    old_dw->put(        press_cc_1,   press_CCLabel_1,  0,patch); */             
-    /*__________________________________
-    *   Quite full warn remarks
-    *___________________________________*/
-    include_ghost_cells = include_ghost_cells; 
+  new_dw->put(press_cc_1, press_CCLabel_1,  0,patch); 
 
 }
 
@@ -654,12 +653,12 @@ void ICE::actuallyStep2(const ProcessorGroup*,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
 {
-    int include_ghost_cells = NO;
+  bool include_ghost_cells = false;
     /*__________________________________
     * get data from the data warehouse and
     *  convert it to NR arrays
     *___________________________________*/
-#if 0
+#if 1
     CCVariable<Vector> vel_cc;
    
   
@@ -672,20 +671,22 @@ void ICE::actuallyStep2(const ProcessorGroup*,
         nMaterials);
         
         
-/*      CCVariable<double> press_cc_1;    
-    old_dw->get(press_cc_1, press_CCLabel_1, 0, patch, Ghost::None,0);
+    CCVariable<double> press_cc_1;    
+    new_dw->get(press_cc_1, press_CCLabel_1, 0, patch, Ghost::None,0);
   
     ICE::convertUCFToNR_4d(patch,
         press_cc_1,             press_CC,
         include_ghost_cells,
         xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-        nMaterials); */
+        nMaterials); 
 #endif
     
     cerr << "Actually doing step 2" << endl;
 
 
     stat = putenv("PGPLOT_PLOTTING_ON_OFF=1"); 
+    // INPUTS: uvel_CC, vvel_CC, wvel_CC
+    // OUTPUTS: uvel_FC, vvel_FC, wvel_FC
     compute_face_centered_velocities( 
                     xLoLimit,       yLoLimit,       zLoLimit,
                     xHiLimit,       yHiLimit,       zHiLimit,
@@ -698,18 +699,43 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                     uvel_FC,        vvel_FC,        wvel_FC,
                     nMaterials ); 
 
+    FCVariable<Vector> vel_fc;
+    new_dw->allocate(vel_fc, vel_FCLabel, 0 , patch);
 
+  ICE::convertNR_4dToUCF(patch,
+        vel_fc, uvel_CC,    vvel_CC,    wvel_CC,
+        include_ghost_cells,
+        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
+	 nMaterials);
+  
+  new_dw->put(vel_fc, vel_FCLabel, 0, patch);
+
+    // INPUTS: delX, delY, delZ, uvel_FC, vvel_FC, wvel_FC
+    // OUTPUTS: div_velFC_CC
     divergence_of_face_centered_velocity(  
                     xLoLimit,       yLoLimit,       zLoLimit,
                     xHiLimit,       yHiLimit,       zHiLimit,
                     delX,           delY,           delZ,
                     uvel_FC,        vvel_FC,        wvel_FC,
                     div_velFC_CC,   nMaterials); 
+    CCVariable<double> div_velfc_cc;
+
+    new_dw->allocate(div_velfc_cc,div_velfc_CCLabel,0,patch);
+    ICE::convertNR_4dToUCF(patch,
+        div_velfc_cc, div_velFC_CC,
+        include_ghost_cells,
+        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
+	 nMaterials);
+
+    new_dw->put(div_velfc_cc, div_velfc_CCLabel, 0, patch);    
+
     stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
 
 
 #if switch_step2_OnOff                        
-  
+    // INPUTS: delX, delY, delZ, div_velFC_CC, delPress_CC, press_CC, rho_CC,
+    //         delt, speedSound               
+    // OUTPUTS: ?? delPress_CC    Is this right?
     explicit_delPress
              (  
                     xLoLimit,       yLoLimit,       zLoLimit,
@@ -719,7 +745,9 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                     delPress_CC,    press_CC,
                     rho_CC,         delt,           speedSound,
                     nMaterials );
-                
+    
+    // INPUTS:
+    // OUTPUTS:  
     update_CC_physical_boundary_conditions( 
                     xLoLimit,       yLoLimit,       zLoLimit,             
                     xHiLimit,       yHiLimit,       zHiLimit,             
@@ -731,11 +759,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                                             
     #endif
   // ICE::convert back to ucf format and store in data warehouse
-    /*__________________________________
-    *   Quite full warn remarks
-    *___________________________________*/
-    include_ghost_cells = include_ghost_cells;
-
+   
 }
 
 
@@ -986,8 +1010,8 @@ void ICE::actually_Bottom_of_main_loop(const ProcessorGroup*,
 {
   double t      = this->cheat_t;
   double delt   = this->cheat_delt;
-  int   should_I_write_output,
-        include_ghost_cells = NO;
+  int   should_I_write_output;
+  bool include_ghost_cells = true;
   /*__________________________________
    *   Plotting variables
    *___________________________________*/
@@ -1128,10 +1152,6 @@ void ICE::actually_Bottom_of_main_loop(const ProcessorGroup*,
     new_dw->put(        new_press_cc,   press_CCLabel,  0,patch); 
     new_dw->put(        new_rho_cc,     rho_CCLabel,    0,patch);    
     
-    /*__________________________________
-    *   Quite full warn remarks
-    *___________________________________*/
-    include_ghost_cells = include_ghost_cells;
 
 }
 
