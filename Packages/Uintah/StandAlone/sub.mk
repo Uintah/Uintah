@@ -265,12 +265,16 @@ PROGRAM := Packages/Uintah/StandAlone/gambitFileReader
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+##############################################
+# Uintah
 # Convenience targets for Specific executables 
 uintah: sus \
         puda \
         compare_uda \
         restart_merger \
         gambitFileReader \
+        lineextract \
+        timeextract \
         link_inputs
                 
 ###############################################
@@ -320,6 +324,10 @@ gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 slb: prereqs Packages/Uintah/StandAlone/slb
 
 pfs: prereqs Packages/Uintah/StandAlone/pfs
+
+timeextract: Packages/Uintah/StandAlone/timeextract
+
+lineextract: Packages/Uintah/StandAlone/lineextract
 
 # For some reason, SRCDIR does not resolve correctly in the if
 # statement, so I am hardcoding it:
