@@ -183,6 +183,7 @@ private:
   GuiDouble			       gui_font_scale_;
   GuiInt			       gui_show_name_;
   GuiInt			       gui_show_date_;
+  GuiInt			       gui_show_time_;
 
   GuiInt                               gui_plot_count_;
   vector<GuiString*>                   gui_nw_label_;
@@ -228,6 +229,8 @@ private:
   LabelTex 				*name_label;
   string 				name_text;
   int 					injury_offset_;
+  LabelTex				*time_label;
+  string 				time_text;
   LabelTex 				*date_label;
   string 				date_text;
 
@@ -379,6 +382,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_font_scale_(ctx->subVar("font_scale")),
   gui_show_name_(ctx->subVar("show_name")),
   gui_show_date_(ctx->subVar("show_date")),
+  gui_show_time_(ctx->subVar("show_time")),
   gui_plot_count_(ctx->subVar("plot_count")),
   ctx_(0),
   dpy_(0),
@@ -399,6 +403,8 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   name_label(0),
   name_text(" "),
   injury_offset_(0),
+  time_label(0),
+  time_text("Time: 00:00:00"),
   date_label(0),
   date_text(" ")
 {
@@ -616,6 +622,10 @@ ICUMonitor::init_plots()
   date_label = scinew LabelTex(date_text);
   date_label->bind(font);
 
+  if (time_label) delete time_label;
+  time_label = scinew LabelTex(time_text);
+  time_label->bind(font);
+
   int i = 0;
   vector<Plot>::iterator iter = plots_.begin();
   while (iter != plots_.end()) {
@@ -788,6 +798,18 @@ ICUMonitor::draw_plots()
       glColor4f(1.0, 1.0, 1.0, 1.0);
       //date_label->draw((cur_x + (w*cw)) - xoff, h - yoff, sx, sy);
       date_label->draw(cur_x, h - yoff, sx, sy);
+  }
+  if (time_label && gui_show_time_.get()) { 
+    FreeTypeFace *font = fonts_["anatomical"];
+    font->set_points(14.0 * gui_font_scale_.get());
+    time_label->set(time_text);
+    time_label->bind(font);
+
+    float yoff = time_label->tex_height_ * time_label->v_ * 1.5;
+    float xoff = time_label->tex_width_ * time_label->u_;
+
+    glColor4f(1.0, 1.0, 1.0, 1.0);
+    time_label->draw((cur_x + (w*cw)) - xoff, h - yoff, sx, sy);
   }
 
   vector<Plot>::iterator iter = plots_.begin();
@@ -1079,6 +1101,8 @@ ICUMonitor::setTimeLabel()
     timestr << setw(2) << min << ":";
     timestr << setw(2) << sec;
     gui->execute(id + " setTimeLabel {" + timestr.str() + "}");
+
+    time_text.replace(0, time_text.length(), timestr.str());
 }
 
 void 
