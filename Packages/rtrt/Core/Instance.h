@@ -10,18 +10,30 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
+// Known problems:
+// Only translations will work because normal isn't transformed
+// Scales will not work because ray parameter isn't transformed
+// Why are all the virtual functions in this file?  We should make it's
+//  very own .cc file
+// Any nested material that might need the scratchpad will be quite broken
+// Faster by calling o->obj->intersect
+// Do they cast correct shadows?
+
 namespace rtrt {
 
-class Instance: public Object
+  class Instance: public Object, public Material
 {
 public:
-    
+  struct InstanceHit {
+    Vector normal;
+    Object* obj;
+  };
     InstanceWrapperObject *o;
     Transform *t;
     BBox bbox;
 
     Instance(InstanceWrapperObject* o, Transform* trans) 
-	: Object(0), o(o), t(trans) 
+	: Object(this), o(o), t(trans) 
 	{
 	    if (!t->inv_valid())
 		t->compute_imat();
@@ -38,7 +50,7 @@ public:
 	}
 
     Instance(InstanceWrapperObject* o, Transform* trans, BBox& b) 
-	: Object(0), o(o), t(trans)
+	: Object(this), o(o), t(trans)
 	{
 	    if (!t->inv_valid())
 		t->compute_imat();
@@ -47,12 +59,6 @@ public:
 	    
 	}
 	    
-    virtual Material* get_matl(HitInfo& hit) const 
-	{
-	    Material **mat = (Material **)&hit.scratchpad[sizeof(Vector)];
-	    return *mat;
-	}
-
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext* ppc)
 	{
@@ -68,34 +74,30 @@ public:
 	    // if the ray hit one of our objects....
 	    if (min_t > hit.min_t)
 	    {
-	    	Vector *n = (Vector *)hit.scratchpad;
-		Point p = ray.origin() + hit.min_t*ray.direction();
-		*n = hit.hit_obj->normal(p,hit);
-		
-		Material **mat = (Material **)&hit.scratchpad[sizeof(Vector)];
-		*mat = hit.hit_obj->get_matl();
-
-		hit.hit_obj = this;
-
+	      InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+	      Point p = ray.origin() + hit.min_t*ray.direction();
+	      i->normal = hit.hit_obj->normal(p,hit);
+	      i->obj = hit.hit_obj;
+	      hit.hit_obj = this;
 	    }
 	}
     
-    virtual void light_intersect(Light* light, const Ray& ray,
-				 HitInfo& hit, double dist, Color& atten,
-				 DepthStats* st, PerProcessorContext* ppc)
+  virtual void light_intersect(Light* /*light*/, const Ray& ray,
+			       HitInfo& hit, double /*dist*/, Color& /*atten*/,
+			       DepthStats* st, PerProcessorContext* ppc)
 	{
 	    intersect(ray,hit,st,ppc);
 	}
     
-    virtual Vector normal(const Point& p, const HitInfo& hit)
+    virtual Vector normal(const Point&, const HitInfo& hit)
 	{
-	    Vector* n=(Vector*)hit.scratchpad;
-	    t->project_normal_inplace(*n);
-	    (*n).normalize();
-	    return *n;
+	  InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+	  t->project_normal_inplace(i->normal);
+	  i->normal.normalize();
+	  return i->normal;
 	}
 
-    virtual void compute_bounds(BBox& b, double offset)
+  virtual void compute_bounds(BBox& b, double /*offset*/)
 	{
 	    b.extend(bbox);
 	}
@@ -104,6 +106,14 @@ public:
 	{
 	  o->preprocess(maxradius,pp_offset,scratchsize);
 	}
-};
+    virtual void shade(Color& result, const Ray& ray,
+		       const HitInfo& hit, int depth,
+		       double atten, const Color& accumcolor,
+		       Context* cx) {
+      InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+      Material *mat = i->obj->get_matl();
+      mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
+    }
+  };
 }
 #endif

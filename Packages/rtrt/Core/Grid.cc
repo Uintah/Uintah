@@ -371,9 +371,6 @@ void Grid::compute_bounds(BBox& bbox, double offset)
 
 Vector Grid::normal(const Point&, const HitInfo&)
 {
-  return Vector (1,0,0);
-
-    cerr << "Error: Grid normal should not be called!\n";
-    return Vector(0,0,0);
-
+  cerr << "Error: Grid normal should not be called!\n";
+  return Vector(0,0,0);
 }

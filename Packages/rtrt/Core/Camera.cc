@@ -30,7 +30,6 @@ Camera::~Camera()
 {
 }
 
-#if 1
 void Camera::makeRay(Ray& ray, double x, double y, double, double iyres)
 {
     ray.set_origin(eye);
@@ -42,7 +41,7 @@ void Camera::makeRay(Ray& ray, double x, double y, double, double iyres)
     raydir.normalize();
     ray.set_direction(raydir);
 }
-#endif
+
 void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
 {
     ray.set_origin(eye-v*5*eyesep*iyres);
@@ -54,6 +53,7 @@ void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
     raydir.normalize();
     ray.set_direction(raydir);
 }
+
 void Camera::makeRayR(Ray& ray, double x, double y, double, double iyres)
 {
     ray.set_origin(eye+v*5*eyesep*iyres);

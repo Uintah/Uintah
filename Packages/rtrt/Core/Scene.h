@@ -100,8 +100,8 @@ public:
     groundplane=p;
   }
   
-  inline Color get_bgcolor( const Vector& v ) const {
-    return background->color_in_direction( v );
+  inline void get_bgcolor( const Vector& v, Color& result ) const {
+    background->color_in_direction( v, result );
   }
   
   inline const Color& get_average_bg( ) const {

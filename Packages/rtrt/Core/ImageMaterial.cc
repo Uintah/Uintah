@@ -154,7 +154,7 @@ static void eat_comments_and_whitespace(ifstream &str)
 {
   char c;
   str.get(c);
-  while (1) {
+  for(;;) {
     if (c==' '||c=='\t'||c=='\n') {
       str.get(c);
       continue;

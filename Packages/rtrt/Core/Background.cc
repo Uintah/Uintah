@@ -17,19 +17,19 @@ Background::Background(const Color& avg)
 Background::~Background() {}
 
 
-//*****************************************************************
+// *****************************************************************
 //     ConstantBackground members
 
 ConstantBackground::ConstantBackground(const Color& C) : Background(C), C(C) {}
 
 ConstantBackground::~ConstantBackground() {}
 
-Color ConstantBackground::color_in_direction( const Vector& ) const
+void ConstantBackground::color_in_direction( const Vector&, Color& result) const
 {
-    return C;
+  result=C;
 }
 
-//*****************************************************************
+// *****************************************************************
 //     LinearBackground members
 
 
@@ -40,9 +40,9 @@ LinearBackground::LinearBackground( const Color& C1, const Color& C2,  const Vec
     C1(C1), C2(C2),  direction_to_C1(direction_to_C1) {}
 
     
-Color LinearBackground::color_in_direction(const Vector& v) const {
+void LinearBackground::color_in_direction(const Vector& v, Color& result) const {
     double t = 0.5* (1 + Dot(v, direction_to_C1 ) );
-    return (t)*C1 + (1-t)*C2;
+    result=t*C1 + (1-t)*C2;
 }
 
 inline  int IndexOfMinAbsComponent( const Vector& v ) 
@@ -76,15 +76,15 @@ EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
     _text( 0 ),
     _up( up )
 {
-    //
-    // Built an orthonormal basis
-    //
-    double d = _up.normalize();
-    _u = PerpendicularVector( _up );
-    _v = Cross( _up, _u );
-    read_image( filename );
-
-    cout << "env_map width, height: " << _width << ", " << _height << endl;
+  //
+  // Built an orthonormal basis
+  //
+  _up.normalize();
+  _u = PerpendicularVector( _up );
+  _v = Cross( _up, _u );
+  read_image( filename );
+  
+  cout << "env_map width, height: " << _width << ", " << _height << endl;
 }
 
 EnvironmentMapBackground::~EnvironmentMapBackground( void )
@@ -98,8 +98,8 @@ EnvironmentMapBackground::~EnvironmentMapBackground( void )
     }
 }
 
-Color 
-EnvironmentMapBackground::color_in_direction( const Vector& DIR ) const
+void
+EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result) const
 {
     //
     // Convert to local basis
@@ -130,14 +130,14 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR ) const
     //double v = (DIR.x()+1)/2.;
     //double u = (DIR.z()+1)/2.;
 
-    return _image( int( v*( _width - 1 ) ), int( u*( _height - 1 ) ) );
+    result = _image( int( v*( _width - 1 ) ), int( u*( _height - 1 ) ) );
 }
 
 static void eat_comments_and_whitespace(ifstream &str)
 {
   char c;
   str.get(c);
-  while (1) {
+  for(;;) {
     if (c==' '||c=='\t'||c=='\n') {
       str.get(c);
       continue;
@@ -184,7 +184,7 @@ EnvironmentMapBackground::read_image( char* filename )
 
 #else
 
-  unsigned nu, nv;
+  //unsigned nu, nv;
   double size;
   ifstream indata(filename);
   unsigned char color[3];

@@ -23,10 +23,10 @@ public:
     {
     }
 	
-    inline Point origin() const {
+    inline const Point& origin() const {
 	return _origin;
     }
-    inline Vector direction() const {
+    inline const Vector& direction() const {
 	return _direction;
     }
     inline void set_origin(const Point& p) {

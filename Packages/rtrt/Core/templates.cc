@@ -4,6 +4,10 @@
 #include <Packages/rtrt/Core/Heightfield.h>
 #include <Packages/rtrt/Core/BrickArray2.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1468
+#endif
+
 using rtrt::Array1;
 using rtrt::Array2;
 using rtrt::Heightfield;
@@ -51,6 +55,6 @@ template class rtrt::HashTableEntry<rtrt::RandomTable::TableInfo, double*>;
 template class rtrt::HashTable<rtrt::RandomTable::TableInfo, int*>;
 template class rtrt::HashTableEntry<rtrt::RandomTable::TableInfo, int*>;
 
-
-
-
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1468
+#endif

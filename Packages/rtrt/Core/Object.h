@@ -37,9 +37,6 @@ public:
     inline Material* get_matl() const {
 	return matl;
     }
-    virtual Material* get_matl(HitInfo&) const {
-	return matl;
-    }
     inline void set_matl(Material* new_matl) {
 	matl=new_matl;
     }
