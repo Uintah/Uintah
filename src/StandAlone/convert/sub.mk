@@ -197,11 +197,11 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 ####################################
 # added by C.Wolters, Nov.18 2004:
-PROGRAM := $(SRCDIR)/gmvTopts
-SRCS := $(SRCDIR)/gmvTopts.cc
+PROGRAM := $(SRCDIR)/gmvToPts
+SRCS := $(SRCDIR)/gmvToPts.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/geoTopts
-SRCS := $(SRCDIR)/geoTopts.cc
+PROGRAM := $(SRCDIR)/geoToPts
+SRCS := $(SRCDIR)/geoToPts.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 ####################################
