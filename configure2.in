@@ -1491,6 +1491,7 @@ for i in $teem $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_LIB($i/lib,air,main,,continue,)
   SCI_CHECK_LIB($i/lib,biff,main,,continue,-lair)
   SCI_CHECK_LIB($i/lib,nrrd,main,,continue,-lbiff -lair)
+  SCI_CHECK_LIB($i/lib,ell,main,,continue,-lair -lbiff -lnrrd)
   SCI_CHECK_HEADER($i/include,nrrd.h,LIBTEEM=$i/lib;INCTEEM_H=$i/include;break,
     continue,)
 done
