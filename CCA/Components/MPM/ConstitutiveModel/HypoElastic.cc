@@ -40,6 +40,17 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb,
   // Read in fracture toughness curve versus crack velocity
   ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
   if(curve_ps!=0) {
+    crackPropagationCriterion="max_hoop_stress";	  
+    curve_ps->get("crack_propagation_criterion",crackPropagationCriterion);	  
+    if(crackPropagationCriterion!="max_hoop_stress" && 
+       crackPropagationCriterion!="max_principal_stress" &&
+       crackPropagationCriterion!="max_energy_release_rate" &&
+       crackPropagationCriterion!="strain_energy_density") {
+       cout << "!!! Undefinded crack propagation criterion: "
+	    << crackPropagationCriterion << ". Program terminated."
+            << endl;
+       exit(1);       
+    }	    
     for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
   	  	     child_ps=child_ps->findNextBlock("point")) {
       double Vc,KIc,KIIc;
@@ -468,8 +479,8 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
   G=d_initialData.G;                  // shear modulus
   K=d_initialData.K;                  // bulk modulus
   v=0.5*(3.*K-2.*G)/(3*K+G);          // Poisson ratio
-  k=(3.-v)/(1.+v);                    // plane stress
-  //k=3.-4*v;                           // plane strain
+  string stressState="planeStress";   // Plane stress
+  k = (stressState=="planeStress")? (3.-v)/(1.+v) : (3.-4.*v); 
 
   double Cs2,Cd2,D,B1,B2,A1,A2;
   if(sqrt(CC)<1.e-16) {               // for static crack
@@ -502,96 +513,194 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
   SIF=Vector(KI,KII,0.);
 }
 
-// Determine crack-propagating direction by maximum hoop stress criterion
-// for FRACTURE
-double
-HypoElastic::GetPropagationDirection(const double& KI,
-                                    const double& KII)
-{
-  double sinTheta,cosTheta;
-
-  if(fabs(KI)==0.0 || fabs(KII/KI)>50.0) { // pure mode II
-    cosTheta = 1./3.;
-    sinTheta = (KII>=0.) ? -0.942809 : 0.942809;
-  }
-  else {  // pure mode I or mixed mode
-    double KI2=KI*KI;
-    double KII2=KII*KII;
-    cosTheta=(3*KII2 + KI*sqrt(KI2+8.*KII2))/(KI2+9*KII2);
-    if(KII>=0.)
-      sinTheta=-fabs(KII*(3*cosTheta-1.)/KI);
-    else
-      sinTheta= fabs(KII*(3*cosTheta-1.)/KI);
-  }
-
-  double theta=asin(sinTheta);
-  if(fabs(theta)<=3.141592655/2) {
-    return theta;
-  }
-  else {
-    cout << "*** Crack propagation angle larger than PI/2"
-         << " (KI=" << KI << ", KII=" << KII << ")." 
-	 << " Programm terminated." << endl;
-    exit(1);
-  }
-  return 0.0;
-}
-	 
-// Detect if crack propagates by maximum stress criterion
+// Detect if crack propagates and the propagation direction
 // for FRACTURE
 short
-HypoElastic::CrackSegmentPropagates(const double& Vc,const double& KI,
-                                  const double& KII)
+HypoElastic::CrackPropagates(const double& Vc,const double& KI,
+                             const double& KII, double& theta)
 {
-  // Dynamic fracture toughness Kc(Vc,KIc,KIIC)	
+  /* Task 1: Determine fracture toughness KIc at velocity Vc
+  */
+  // Dynamic fracture toughness Kc(Vc,KIc,KIIC) 
   vector<Vector> Kc = d_initialData.Kc;
-  
-  // Determine fracture toughness KIc at velocity Vc
-  int num = (int) Kc.size();                  
-  double KIc=-1.; 
+  int num = (int) Kc.size();
+  double KIc=-1.;
   if(Vc<=Kc[0].x()) { // Beyond the left bound
     KIc=Kc[0].y();
-  }  
+  }
   else if(Vc>=Kc[num-1].x()) { // Beyond the right bound
     KIc=Kc[num-1].y();
-  }  
+  }
   else { // In between 
     for(int i=0; i<num-1;i++) {
       double Vi=Kc[i].x();
-      double Vj=Kc[i+1].x();    
-      if(Vc>=Vi && Vc<Vj) {	
+      double Vj=Kc[i+1].x();
+      if(Vc>=Vi && Vc<Vj) {
         double Ki=Kc[i].y();
-        double Kj=Kc[i+1].y();      
-        KIc=Ki+(Kj-Ki)*(Vc-Vi)/(Vj-Vi);
-        break;
+	double Kj=Kc[i+1].y();
+	KIc=Ki+(Kj-Ki)*(Vc-Vi)/(Vj-Vi);
+	break;
       }
     } // End of loop over i
   }
 
-  // The direction of the maximum hoop stress
-  double cosTheta,sinTheta,cosTheta2,Kq;
-  if(fabs(KI)==0.0 || fabs(KII/KI)>50.0) { // pure mode II
-    cosTheta = 1./3.;
-    sinTheta = (KII>=0.) ? -0.942809 : 0.942809;
-  }
-  else {  // Pure mode I or mixed mode
-    double KI2=KI*KI;
-    double KII2=KII*KII;
-    cosTheta=(3*KII2 + KI*sqrt(KI2+8.*KII2))/(KI2+9*KII2);
-    if(KII>=0.)
-      sinTheta=-fabs(KII*(3*cosTheta-1.)/KI);
-    else
-      sinTheta= fabs(KII*(3*cosTheta-1.)/KI);
+  /* Task 2: Determine crack propagation direction (theta) and 
+  	     the equivalent stress intensity factor (Kq)
+  */	     
+  double Kq=-9e32;
+  if(crackPropagationCriterion=="max_hoop_stress" ||
+     crackPropagationCriterion=="max_energy_release_rate") {
+    // Crack propagation direction	  
+    double sinTheta,cosTheta,value;
+    if(KI==0.0 || (KI!=0. && fabs(KII/KI)>1000.)) { // Pure mode II
+      cosTheta = 1./3.;
+      sinTheta = (KII>=0.) ? -sqrt(8./9.) : sqrt(8./9.);
+    }
+    else {  // Mixed mode or pure mode I 
+      double R=KII/KI;	    
+      cosTheta=(3.*R*R+sqrt(1.+8.*R*R))/(1.+9.*R*R);
+      value=fabs(R*(3.*cosTheta-1.));
+      sinTheta = (KII>=0.)? -value : value;
+    }
+    theta=asin(sinTheta);
+      
+    // Equivalent stress intensity
+    double ct=cos(theta/2.);
+    double st=sin(theta/2.);
+    Kq=KI*pow(ct,3)-3*KII*ct*ct*st;
+  } // End of max_hoop_stress criterion
+ 
+  if(crackPropagationCriterion=="max_principal_stress") {
+    if(KII==0. || (KII!=0. && fabs(KI/KII)>1000.)) { // Pure mode I
+      theta=0.;
+      Kq=KI; 
+    }	    
+    else { // Mixed mode or pure mode II
+      double R=KI/KII;	    
+      int sign = (KII>0.)? -1 : 1;
+      double tanTheta2=(R+sign*sqrt(R*R+8.))/4.;
+      double theta2=atan(tanTheta2);
+      double ct=cos(theta2);
+      double st=sin(theta2);
+      Kq=KI*pow(ct,3)-3*KII*ct*ct*st;
+      theta=2*theta2;
+    }				  
+  } // End of max_principal_stress criterion
+  
+  if(crackPropagationCriterion=="strain_energy_density") {
+    // Calculate parameter k
+    double k;
+    string stressState="planeStress";     // Plane stress
+    double G=d_initialData.G;             // Shear modulus
+    double K=d_initialData.K;             // Bulk modulus
+    double v=0.5*(3*K-2*G)/(3*K+G);     // Poisson ratio
+    k = (stressState=="planeStress")? (3.-v)/(1.+v) : (3.-4.*v);
+    
+    // Crack propagation direction
+    if(KII==0.0 || (KII!=0. && fabs(KI/KII)>1000.)) { // Pure mode I
+      theta=0.0;
+      Kq=KI;
+    }
+    else { // Mixed mode or pure mode II
+      theta=CrackPropagationAngleFromStrainEnergyDensityCriterion(k,KI,KII);
+      // Equivalent stress intensity
+      double ct=cos(theta),st=sin(theta);
+      double a11=(1+ct)*(k-ct);
+      double a12=st*(2*ct-k+1);
+      double a22=(k+1)*(1-ct)+(1+ct)*(3*ct-1);
+      Kq=sqrt((a11*KI*KI+2*a12*KI*KII+a22*KII*KII)/2/(k-1)); 
+    }  
+  }  // End of STRAINENRGYDENSITY criterion	  
+
+  if(fabs(theta)>3.141592655/2) {
+    cout << "*** Warning: predicted crack propagation angle ("
+         << theta*180/3.141592654 << ") is larger than 90 degree"
+         << " (KI=" << KI << ", KII=" << KII << ")." << endl;
   }
 
-  // Equivalent stress intensity factor
-  cosTheta2=sqrt((1.+cosTheta)/2.);
-  Kq=KI*pow(cosTheta2,3)-1.5*KII*cosTheta2*sinTheta;
+  if(Kq>=KIc) return 1;
+  else        return 0;
+}
 
-  if(Kq>=KIc)
-    return 1;
-  else   
-    return 0;
+// Solve crack propagation angle numerically from strain energy density criterion
+// for FRACTURE
+double
+HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double& k,
+		const double& KI, const double& KII)
+{
+  double errF=1.e-6,errV=1.e-2,PI=3.141592654;
+  double a,b,c,fa,fb,fc;
+  
+  double A=-PI, B=PI;   // The region of the roots 
+  int n=36;             // Divide [A,B] into n intervals
+  double h=(B-A)/n;     // Subinterval length
+  
+  double theta=0.0;
+  double theta0=atan(KI/KII);
+  vector<double> root;  // Store the solutions of the equation
+  // Solve the equation numerically
+  for(int i=0; i<n; i++) { // Loop over the whole interval [A,B]
+    a=A+i*h;
+    b=A+(i+1)*h;
+    fa=(k-1)*sin(a-2*theta0)-2*sin(2*(a-theta0))-sin(2*a);
+    fb=(k-1)*sin(b-2*theta0)-2*sin(2*(b-theta0))-sin(2*b);
+    
+    // Find the root in [a,b)
+    if(fabs(fa)<errF) { // Where f(a)=0
+      root.push_back(a);
+    }
+    else if(fa*fb<0.) { // There is a root in (a,b)
+      double cp=2*B;    // Set the value beyond [A,B]      
+      for(int j=0; j<32768; j++) { // 32768=2^15 (a big int) 
+        c=b-(a-b)*fb/(fa-fb);
+        fc=(k-1)*sin(c-2*theta0)-2*sin(2*(c-theta0))-sin(2*c);
+        if(fabs(fc)<errF || fabs(c-cp)<errV) { // c is the root
+          root.push_back(c);
+          break;
+        }
+        else { // Record the cross point with axis x
+  	  cp=c;
+	}  
+	  
+	// Narrow the region of the root
+        if(fc*fa<0.) { // The root is in (a,c)
+	  fb=fc; b=c;
+  	}
+        else if(fc*fb<0.) { // The root is in (c,b)
+  	  fa=fc; a=c;
+        }
+      } // End of loop over j
+    } // End of if(fa*fb<0.)
+  } // End of loop over i
+    
+  // Determine the direction along which exists the minimum strain energy density   
+  int count=0;
+  double S0=0.0;
+  for(int i=0;i<(int)root.size();i++) {
+    double r=root[i];	    
+
+    // The signs of propagation angle and KII must be opposite 
+    if(KII*r>0.) continue;
+
+    // Calculate the second derivative of the strain energy density
+    double sr=sin(r),cr=cos(r),sr2=sin(2*r),cr2=cos(2*r);
+    double dsdr2=KI*KI*((1-k)*cr+2*cr2)-2*KI*KII*(4*sr2+(1-k)*sr)+
+    	         KII*KII*((k-1)*cr-6*cr2); 
+    if(dsdr2>0.) { 
+      // Determine propagation angle by comparison ofstrain energy density. 
+      // Along the angle exists the minimum strain energy density. 
+      double S=(1+cr)*(k-cr)*KI*KI+2*sr*(2*cr-k+1)*KI*KII+
+	       ((k+1)*(1-cr)+(1+cr)*(3*cr-1))*KII*KII; 
+      if(count==0 || (count>0 && S<S0)) {
+        theta=r;  
+      	S0=S;
+        count++;
+      }	
+    }
+  } // Enf of loop over i
+  root.clear();
+
+  return theta;
 }
 
 void HypoElastic::addComputesAndRequires(Task* task,
