@@ -771,11 +771,18 @@ void ImpMPM::iterate(const ProcessorGroup*,
       delt_vartype dt;
       old_dw->get(dt,d_sharedState->get_delt_label());
       sum_vartype dispIncQNorm0,dispIncNormMax;
+      double nothing = 0.;
       if(m==0){
         new_dw->get(dispIncQNorm0, lb->dispIncQNorm);
         new_dw->get(dispIncNormMax,lb->dispIncNormMax);
-        subsched->get_dw(3)->put(dispIncQNorm0, lb->dispIncQNorm0);
-        subsched->get_dw(3)->put(dispIncNormMax,lb->dispIncNormMax);
+	if(d_myworld->myrank() != 0){
+          subsched->get_dw(3)->put(sum_vartype(nothing), lb->dispIncQNorm0);
+          subsched->get_dw(3)->put(sum_vartype(nothing),lb->dispIncNormMax);
+        }
+	else {
+          subsched->get_dw(3)->put(dispIncQNorm0, lb->dispIncQNorm0);
+          subsched->get_dw(3)->put(dispIncNormMax,lb->dispIncNormMax);
+        }
       }
 
       // New data to be stored in the subscheduler
@@ -1890,11 +1897,17 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
         cerr << "dispIncQNorm0 = " << dispIncQNorm0 << "\n";
       }
 
-      new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
-      new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
+      double nothing = 0.;
+      if(recursion && d_myworld->myrank() != 0){
+        new_dw->put(sum_vartype(nothing),lb->dispIncNormMax);
+        new_dw->put(sum_vartype(nothing), lb->dispIncQNorm0);
+      }
+      else {
+        new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
+        new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
+      }
       new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
       new_dw->put(sum_vartype(dispIncQNorm),  lb->dispIncQNorm);
-
      }
 
     }  // End of loop over materials
