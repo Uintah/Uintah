@@ -25,6 +25,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Hedgehog.tcl\
 	$(SRCDIR)/ScalarOperator.tcl\
 	$(SRCDIR)/ScalarFieldOperator.tcl\
+	$(SRCDIR)/ScalarFieldBinaryOperator.tcl\
 	$(SRCDIR)/TensorOperator.tcl\
 	$(SRCDIR)/TensorFieldOperator.tcl\
 	$(SRCDIR)/TensorParticlesOperator.tcl\
