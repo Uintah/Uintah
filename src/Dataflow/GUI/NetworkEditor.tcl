@@ -864,6 +864,7 @@ proc NiceQuit {} {
 	#    }
 	#}    
 	set modules ""
+	puts "Goodbye!"
 	netedit quit
     }   
 }
