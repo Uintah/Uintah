@@ -211,7 +211,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/Thread/Thread.h>\n";
   out << "#include <iostream>\n";
   out << "#include <sci_config.h>\n";
-  out << "#if HAVE_MPI\n";
+  out << "#if HAVE_MPI || HAVE_MPICH\n";
   out << "#include <mpi.h> //Debugging purposes\n";
   out << "#endif\n";
   out << "using namespace std;\n";
