@@ -134,8 +134,6 @@ public:
   bool get_gradient(FieldHandle f, const Point& p, Vector& g);
 
   void get_minmax(FieldHandle f);
-  template<class F> void dispatch_minmax(F *f) 
-  { success_ = field_minmax(*f, minmax_); }
 
   bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
   template <class Mesh>  bool get_dimensions(Mesh, int&, int&, int&);
@@ -194,7 +192,13 @@ CuttingPlane::~CuttingPlane()
 #pragma set woff 1184
 #endif
 
-
+void CuttingPlane::get_minmax(FieldHandle f)
+{
+  double mn, mx;
+  ScalarFieldInterface* sfi = f->query_scalar_interface();
+  sfi->compute_min_max(mn, mx);
+  minmax_ = pair<double, double>(mn, mx);
+}
 
 void CuttingPlane::execute()
 {
@@ -818,6 +822,7 @@ CuttingPlane::interpolate(FieldHandle texfld_, const Point& p, double& val)
   } else {
     return false;
   }
+  return false;
 }
 
 
