@@ -357,7 +357,7 @@ proc startIPortConnection {imodid iwhich x y} {
     set portname [lindex [lindex [$imodid-c iportinfo] $iwhich] 3]
     set fullname $typename:$portname
     eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
-	    -anchor sw -text $fullname -tags "tempname"
+	    -anchor sw -text {$fullname} -tags "tempname"
     foreach i $conn_oports {
 	set omodid [lindex $i 0]
 	set owhich [lindex $i 1]
@@ -380,7 +380,7 @@ proc startOPortConnection {omodid owhich x y} {
     set portname [lindex [lindex [$omodid-c oportinfo] $owhich] 3]
     set fullname $typename:$portname
     eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
-	    -anchor nw -text $fullname -tags "tempname"
+	    -anchor nw -text {$fullname} -tags "tempname"
     foreach i $conn_iports {
 	set imodid [lindex $i 0]
 	set iwhich [lindex $i 1]
