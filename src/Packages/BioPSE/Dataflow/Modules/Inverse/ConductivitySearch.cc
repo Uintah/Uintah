@@ -61,6 +61,7 @@ class ConductivitySearch : public Module {
   FieldHandle mesh_out_;
   MatrixHandle cond_params_;
   MatrixHandle cond_vector_;
+  MatrixHandle fem_mat_;
 
   MatrixHandle AmatH_;
   Array1<Array1<double> > data_basis_;
@@ -142,6 +143,7 @@ void ConductivitySearch::build_basis_matrices() {
   AmatH_ = aH;
   AmatH_.detach(); // this will be our global "shape" information
   
+  data_basis_.resize(NDIM_);
   for (int i=0; i<NDIM_; i++) {
     tens[i]=identity;
     BuildFEMatrix::build_FEMatrix(tvH, dirBC, tens, aH, bH);
@@ -232,8 +234,8 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
   // build the new conductivity vector, the new mesh (just new tensors), 
   // and the new fem matrix
   cond_vector_.detach();
-  FieldHandle mesh_out(mesh_in_);
-  mesh_out.detach();
+  mesh_out_ = mesh_in_;
+  mesh_out_.detach();
   Array1<Tensor> conds;
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(cond_vector_.get_rep());
   int i;
@@ -242,17 +244,14 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
     conds.add(Tensor(c));
     (*cm)[i]=c;
   }
-  mesh_out->store("data_storage", string("table"));
-  mesh_out->store("name", string("conductivity"));
-  mesh_out->store("conductivity_table", conds);
+  mesh_out_->store("conductivity_table", conds);
 
-  MatrixHandle fem_mat = build_composite_matrix(which_conductivity);
+  fem_mat_ = build_composite_matrix(which_conductivity);
   
   // send out data
-  mesh_out_=mesh_out;
   mesh_oport_->send_intermediate(mesh_out_);
   cond_vector_oport_->send_intermediate(cond_vector_);
-  fem_mat_oport_->send(fem_mat);
+  fem_mat_oport_->send_intermediate(fem_mat_);
   last_intermediate_=1;
 
   // read back data, and set the caches and search matrix
@@ -281,7 +280,7 @@ int ConductivitySearch::pre_search() {
   seed_counter_++;
 
   // done seeding, prepare for search phase
-  if (seed_counter_ > NSEEDS_) {
+  if (seed_counter_ == NSEEDS_) {
     seed_counter_ = 0;
     state_ = "START_SEARCHING";
   }
@@ -358,7 +357,6 @@ void ConductivitySearch::simplex_search() {
       worst = 1;
       next_worst = 0;
     }
-    int i;
     for (i=0; i<NSEEDS_; i++) {
       if (misfit_[i] <= misfit_[best]) best=i;
       if (misfit_[i] > misfit_[worst]) {
@@ -387,7 +385,6 @@ void ConductivitySearch::simplex_search() {
       if (step_misfit >= old_misfit) {
 	for (i=0; i<NSEEDS_; i++) {
 	  if (i != best) {
-	    int j;
 	    for (j=0; j<NDIM_; j++)
 	      conductivities_(i,j) = conductivities_(NSEEDS_,j) = 
 		0.5 * (conductivities_(i,j) + conductivities_(best,j));
@@ -403,6 +400,27 @@ void ConductivitySearch::simplex_search() {
 	  sum[j]+=conductivities_(i,j); 
       }
     }
+    if ((num_evals % 10) == 0) {
+      cerr << "ConductivitySearch -- Iter "<<num_evals<<":\n";
+      for (i=0; i<NSEEDS_; i++) {
+	cerr << "\t";
+	for (j=0; j<NDIM_; j++) {
+	  cerr << conductivities_(i,j) << " ";
+	}
+	cerr << "\n";
+      }
+    }
+  }
+  ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(cond_vector_.get_rep());
+  cerr << "ConductivitySearch -- Original conductivities: \n\t";
+  for (i=NDIM_; i<NDIM_*2; i++) cerr << (*cm)[i] << " ";
+  cerr << "\nConductivitiySearch -- Final conductivities: \n";
+  for (i=0; i<NSEEDS_; i++) {
+    cerr << "\t";
+    for (j=0; j<NDIM_; j++) {
+      cerr << conductivities_(i,j) << " ";
+    }
+    cerr << "(error="<<misfit_[i]<<")\n";
   }
 }
 
@@ -463,7 +481,7 @@ void ConductivitySearch::execute() {
   int valid_data, new_data;
   mesh_iport_ = (FieldIPort *)get_iport("FiniteElementMesh");
   cond_params_iport_ = (MatrixIPort *)get_iport("ConductivityParameters");
-  misfit_iport_ = (MatrixIPort *)get_iport("TextMisfit");
+  misfit_iport_ = (MatrixIPort *)get_iport("TestMisfit");
 
   mesh_oport_ = (FieldOPort *)get_oport("FiniteElementMesh");
   cond_vector_oport_ = (MatrixOPort *)get_oport("OldAndNewConductivities");
@@ -474,10 +492,13 @@ void ConductivitySearch::execute() {
   if (!new_data) {
     if (mesh_out_.get_rep()) { // if we have valid old data
       // send old data and clear ports
+      cerr << "Sending old data...\n";
       mesh_oport_->send(mesh_out_);
       cond_vector_oport_->send(cond_vector_);
+      fem_mat_oport_->send(fem_mat_);
       MatrixHandle dummy_mat;
       misfit_iport_->get(dummy_mat);
+      cerr << "Done!\n";
       return;
     } else {
       return;
@@ -490,7 +511,7 @@ void ConductivitySearch::execute() {
   while (1) {
     if (state_ == "SEEDING") {
       if (!pre_search()) break;
-    } else if (state_ == "START_SEARCH") {
+    } else if (state_ == "START_SEARCHING") {
       simplex_search();
       state_ = "DONE";
     }
@@ -500,8 +521,8 @@ void ConductivitySearch::execute() {
     // gotta do final sends and clear the ports
     mesh_oport_->send(mesh_out_);
     cond_vector_oport_->send(cond_vector_);
+    fem_mat_oport_->send(fem_mat_);
     MatrixHandle dummy_mat;
-    fem_mat_oport_->send(dummy_mat);
     misfit_iport_->get(dummy_mat);
   }
   state_ = "SEEDING";
@@ -526,6 +547,9 @@ void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
     mylock_.unlock();
   } else if (args[1] == "stop") {
     stop_search_=1;
+  } else if (args[1] == "exec") {
+    mesh_in_=0;
+    want_to_execute();
   } else {
     Module::tcl_command(args, userdata);
   }

@@ -33,6 +33,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -53,17 +54,18 @@ class DipoleSearch : public Module {
   MatrixIPort    *misfit_iport_;
   MatrixIPort    *dir_iport_;
 
-  MatrixOPort    *x_oport_;
-  MatrixOPort    *y_oport_;
-  MatrixOPort    *z_oport_;
+  MatrixOPort    *leadfield_select_oport_;
   FieldOPort     *simplex_oport_;
   FieldOPort     *dipole_oport_;
 
   FieldHandle seedsH_;
   FieldHandle meshH_;
   TetVolMeshHandle vol_mesh_;
-  FieldHandle simplexH_;
 
+  MatrixHandle leadfield_selectH_;
+  FieldHandle simplexH_;
+  FieldHandle dipoleH_;
+  
   int seed_counter_;
   string state_;
   Array1<double> misfit_;
@@ -90,6 +92,7 @@ class DipoleSearch : public Module {
   double simplex_step(Array1<double>& sum, double factor, int worst);
   void simplex_search();
   void read_field_ports(int &valid_data, int &new_data);
+  void organize_last_send();
 public:
   GuiInt use_cache_gui_;
   DipoleSearch(const string& id);
@@ -166,16 +169,16 @@ void DipoleSearch::send_and_get_data(int which_dipole,
     mylock_.unlock();
   }
 
-  ColumnMatrix *x_out = scinew ColumnMatrix(7);
-  ColumnMatrix *y_out = scinew ColumnMatrix(7);
-  ColumnMatrix *z_out = scinew ColumnMatrix(7);
   int j;
-  for (j=0; j<3; j++)
-    (*x_out)[j] = (*y_out)[j] = (*z_out)[j] = dipoles_(which_dipole,j);
-  for (j=3; j<6; j++)
-    (*x_out)[j] = (*y_out)[j] = (*z_out)[j] = 0;
-  (*x_out)[3] = (*y_out)[4] = (*z_out)[5] = 1;
-  (*x_out)[6] = (*y_out)[6] = (*z_out)[6] = (double)ci;
+
+  // build columns for MatrixSelectVec
+  // each column is an interpolant vector or index/weight pairs
+  // we just have one entry for each -- index=leadFieldColumn, weight=1
+  DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
+  for (j=0; j<3; j++) {
+    (*leadfield_select_out)[0][j] = ci*3+j;
+    (*leadfield_select_out)[1][j] = 1;
+  }
   
   PointCloudMeshHandle pcm = scinew PointCloudMesh;
   for (j=0; j<NSEEDS_; j++)
@@ -190,12 +193,12 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   PointCloud<double> *pcd = scinew PointCloud<double>(pcm, Field::NODE);
   
   // send out data
-  x_oport_->send_intermediate(x_out);
-  y_oport_->send_intermediate(y_out);
-  z_oport_->send_intermediate(z_out);
+  leadfield_selectH_ = leadfield_select_out;
+  leadfield_select_oport_->send_intermediate(leadfield_selectH_);
   simplexH_ = pcv;
   simplex_oport_->send_intermediate(simplexH_);
-  dipole_oport_->send_intermediate(pcd);
+  dipoleH_ = pcd;
+  dipole_oport_->send_intermediate(dipoleH_);
   last_intermediate_=1;
 
   // read back data, and set the caches and search matrix
@@ -206,13 +209,13 @@ void DipoleSearch::send_and_get_data(int which_dipole,
     return;
   }
   cell_err_[ci]=misfit_[which_dipole]=(*m)[0][0];
-  if (!dir_iport_->get(mH) || !mH.get_rep() || mH->ncols()<3) {
+  if (!dir_iport_->get(mH) || !(m=mH.get_rep()) || mH->nrows()<3) {
     error("DipoleSearch::failed to read back orientation");
     return;
   }
-  cell_dir_[ci]=Vector((*m)[0][0], (*m)[0][1], (*m)[0][2]);
+  cell_dir_[ci]=Vector((*m)[0][0], (*m)[1][0], (*m)[2][0]);
   for (j=0; j<3; j++)
-    dipoles_(which_dipole,j+3)=(*m)[0][j];
+    dipoles_(which_dipole,j+3)=(*m)[j][0];
 }  
 
 
@@ -234,7 +237,9 @@ int DipoleSearch::pre_search() {
 				   dipoles_(seed_counter_,2)))) {
     cerr << "Error: seedpoint " <<seed_counter_<<" is outside of mesh!" << endl;
     return 0;
-  }
+  } 
+//  else 
+//    cerr << "Seed " << seed_counter_ << " was found in cell " << ci <<"\n";
   if (cell_visited_[ci]) {
     cerr << "Warning: redundant seedpoints.\n";
     misfit_[seed_counter_]=cell_err_[ci];
@@ -245,7 +250,7 @@ int DipoleSearch::pre_search() {
   seed_counter_++;
 
   // done seeding, prepare for search phase
-  if (seed_counter_ > NSEEDS_) {
+  if (seed_counter_ == NSEEDS_) {
     seed_counter_ = 0;
     state_ = "START_SEARCHING";
   }
@@ -375,6 +380,7 @@ void DipoleSearch::simplex_search() {
       }
     }
   }
+  cerr << "DipoleSearch -- num_evals = "<<num_evals << "\n";
 }
 
 
@@ -402,23 +408,57 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   }
   
   FieldHandle seeds;    
-  PointCloud<double> *d;
-  if (seeds_iport_->get(seeds) && seeds.get_rep() &&
-      (seedsH_->get_type_name(0) == "PointCloud") &&
-      (d=dynamic_cast<PointCloud<double> *>(seedsH_.get_rep())) &&
-      (d->get_typed_mesh()->nodes_size() == (unsigned int)NSEEDS_)) {
-    if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation)) {
+  if (!seeds_iport_->get(seeds)) {
+    cerr << "No input seeds.\n";
+    valid_data=0;
+  } else if (!seeds.get_rep()) {
+    cerr << "Empty seeds handle.\n";
+    valid_data=0;
+  } else if (seeds->get_type_name(-1) != "PointCloud<double>") {
+    cerr << "Seeds typename should have been PointCloud<double>, not "<<seeds->get_type_name(-1) <<"\n";
+    valid_data=0;
+  } else {
+    PointCloud<double> *d=dynamic_cast<PointCloud<double> *>(seeds.get_rep());
+    if (d->get_typed_mesh()->nodes_size() != (unsigned int)NSEEDS_){
+      cerr << "Got "<<d->get_typed_mesh()->nodes_size()<<" seeds, instead of "<<NSEEDS_<<"\n";
+      valid_data=0;
+    } else if (!seedsH_.get_rep() || 
+	       (seedsH_->generation != seeds->generation)) {
       new_data = 1;
       seedsH_=seeds;
     } else {
-      cerr << "DipoleSearch -- same SeedsMesh as before."<<endl;
+      cerr << "Using same seeds as before.\n";
     }
-  } else {
-    valid_data=0;
-    cerr << "DipoleSearch -- didn't get a valid SeedsMesh."<<endl;
   }
 }
 
+void DipoleSearch::organize_last_send() {
+  int bestIdx=0;
+  double bestMisfit = misfit_[0];
+  int i;
+  for (i=1; i<misfit_.size(); i++)
+    if (misfit_[i] < bestMisfit) {
+      bestMisfit = misfit_[i];
+      bestIdx = i;
+    }
+
+  Point best_pt(dipoles_(bestIdx,0), dipoles_(bestIdx,1), dipoles_(bestIdx,2));
+  TetVolMesh::Cell::index_type best_cell_idx;
+  vol_mesh_->locate(best_cell_idx, best_pt);
+
+  cerr << "DipoleSearch -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
+
+  DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
+  for (i=0; i<3; i++) {
+    (*leadfield_select_out)[0][i] = best_cell_idx*3+i;
+    (*leadfield_select_out)[1][i] = 1;
+  }
+  leadfield_selectH_ = leadfield_select_out;
+  PointCloudMeshHandle pcm = scinew PointCloudMesh;
+  pcm->add_point(best_pt);
+  PointCloud<double> *pcd = scinew PointCloud<double>(pcm, Field::NODE);
+  dipoleH_ = pcd;
+}
 
 //! If we have an old solution and the inputs haven't changed, send that
 //! one.  Otherwise, if the input is valid, run a simplex search to find
@@ -426,15 +466,22 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
 
 void DipoleSearch::execute() {
   int valid_data, new_data;
+  // point cloud of vectors -- the seed positions/orientations for our search
   seeds_iport_ = (FieldIPort *)get_iport("DipoleSeeds");
+  // domain of search -- used for constraining and for caching misfits
   mesh_iport_ = (FieldIPort *)get_iport("TetMesh");
+  // the computed misfit for the latest test dipole
   misfit_iport_ = (MatrixIPort *)get_iport("TestMisfit");
+  // optimal orientation for the test dipole
   dir_iport_ = (MatrixIPort *)get_iport("TestDirection");
 
-  x_oport_ = (MatrixOPort *)get_oport("TestDipoleX");
-  y_oport_ = (MatrixOPort *)get_oport("TestDipoleY");
-  z_oport_ = (MatrixOPort *)get_oport("TestDipoleZ");
+  // matrix of selection columns (for MatrixSelectVector) to pull out the
+  //    appropriate x/y/z columns from the leadfield matrix
+  leadfield_select_oport_ = 
+    (MatrixOPort *)get_oport("LeadFieldSelectionMatrix");
+  // point cloud of vectors -- the latest simplex (for vis)
   simplex_oport_ = (FieldOPort *)get_oport("DipoleSimplex");
+  // point cloud of one vector, just the test dipole (for vis)
   dipole_oport_ = (FieldOPort *)get_oport("TestDipole");
 
   read_field_ports(valid_data, new_data);
@@ -442,7 +489,9 @@ void DipoleSearch::execute() {
   if (!new_data) {
     if (simplexH_.get_rep()) { // if we have valid old data
       // send old data and clear ports
+      leadfield_select_oport_->send(leadfield_selectH_);
       simplex_oport_->send(simplexH_);
+      dipole_oport_->send(dipoleH_);
       MatrixHandle dummy_mat;
       misfit_iport_->get(dummy_mat);
       dir_iport_->get(dummy_mat);
@@ -458,7 +507,7 @@ void DipoleSearch::execute() {
   while (1) {
     if (state_ == "SEEDING") {
       if (!pre_search()) break;
-    } else if (state_ == "START_SEARCH") {
+    } else if (state_ == "START_SEARCHING") {
       simplex_search();
       state_ = "DONE";
     }
@@ -466,13 +515,12 @@ void DipoleSearch::execute() {
   }
   if (last_intermediate_) { // last sends were send_intermediates
     // gotta do final sends and clear the ports
-    MatrixHandle dummy_mat;
-    x_oport_->send(dummy_mat);
-    y_oport_->send(dummy_mat);
-    z_oport_->send(dummy_mat);
+    organize_last_send();
+    leadfield_select_oport_->send(leadfield_selectH_);
     simplex_oport_->send(simplexH_);
-    FieldHandle dummy_fld;
-    dipole_oport_->send(dummy_fld);
+    dipole_oport_->send(dipoleH_);
+
+    MatrixHandle dummy_mat;
     misfit_iport_->get(dummy_mat);
     dir_iport_->get(dummy_mat);
   }
