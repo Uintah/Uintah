@@ -83,9 +83,6 @@
 		    <MixtureFraction>
 			<Mixfrac>0.3</Mixfrac>
 	            </MixtureFraction>
-		    <MixtureFraction>
-			<Mixfrac>0.7</Mixfrac>
-	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <inletType>primary</inletType>
 		    <geom_object>
@@ -107,9 +104,6 @@
 		    <flowRate>0</flowRate>
 		    <MixtureFraction>
 			<Mixfrac>0.3</Mixfrac>
-	            </MixtureFraction>
-		    <MixtureFraction>
-			<Mixfrac>0.7</Mixfrac>
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <RefPressure>1</RefPressure>
@@ -134,9 +128,6 @@
 		</PressureBC>
 		<outletBC>
 		    <flowRate>0</flowRate>
-		    <MixtureFraction>
-			<Mixfrac>0</Mixfrac>
-	            </MixtureFraction>
 		    <MixtureFraction>
 			<Mixfrac>0</Mixfrac>
 	            </MixtureFraction>
