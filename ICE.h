@@ -1,7 +1,7 @@
 
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
-
+#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/CFDInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
@@ -154,6 +154,10 @@ using namespace SCIRun;
                    
       void printData(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], const  CCVariable<double>& q_CC); 
+
+      void printVector(const  Patch* patch,int include_GC,char message1[],
+		     char message2[], int component, 
+                   const CCVariable<Vector>& q_CC);
                    
       void Message(int abort, char message1[],char message2[],char message3[]);
       
@@ -165,12 +169,12 @@ using namespace SCIRun;
       bool switchDebug_explicit_press;
       bool switchDebug_PressFC;
       bool switchDebugLagrangianValues;
+      bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
       bool switchDebug_advectQFirst;
-
-     // exchange coefficients -- off diagonal terms
-      vector<double> d_K_mom, d_K_heat;      
+      
+      int d_max_iter_equilibration;
      
     private:
       friend const TypeDescription* fun_getTypeDescription(fflux*);
@@ -239,10 +243,6 @@ using namespace SCIRun;
 			  CCVariable<eflux>& r_out_y_CF,
 			  CCVariable<eflux>& r_out_z_CF,
 			  const Vector& dx);
-      
-      void printVector(const  Patch* patch,int include_GC,char message1[],
-		     char message2[], int component, 
-                   const CCVariable<Vector>& q_CC);
                    
        void printData_FC(const  Patch* patch,int include_GC,char message1[],
 		      char message2[], const SFCXVariable<double>& q_FC);
@@ -254,12 +254,15 @@ using namespace SCIRun;
 		      char message2[], const SFCZVariable<double>& q_FC);
       
       ICELabel* lb; 
+      MPMICELabel* MIlb;
       SimulationStateP d_sharedState;
       double d_SMALL_NUM;
       double d_pressure;
       double d_initialDt;
       double d_CFL;
-      int d_max_iter_equilibration;
+      
+     // exchange coefficients -- off diagonal terms
+      vector<double> d_K_mom, d_K_heat;
 
       ICE(const ICE&);
       ICE& operator=(const ICE&);
