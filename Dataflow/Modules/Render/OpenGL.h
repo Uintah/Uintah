@@ -252,13 +252,13 @@ private:
   View lastview;
   double znear, zfar;
 
-  GeomCappedCylinder* stylusCylinder[2];
-  GeomTri* stylusTriangle[4];
-  GeomSphere* pinchSphere;
+  GeomHandle stylusCylinder[2];
+  GeomHandle stylusTriangle[4];
+  GeomHandle pinchSphere;
   Material* stylusMaterial[16], *pinchMaterial;
     
-  GeomText* pinchText[2];
-  GeomCappedCylinder* pinchCylinder[4];
+  GeomHandle pinchText[2];
+  GeomHandle pinchCylinder[4];
 
   Thread *helper_thread_;
   bool dead_;
