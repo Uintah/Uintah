@@ -12,6 +12,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/Grid2.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Image.h>
@@ -419,6 +420,9 @@ main(int argc, char* argv[])
 	  }
 	else
 	  scene->set_object(new BV1(obj));
+      } else if(use_bv==6){
+                  scene->set_object(new Grid2( scene->get_object(), 
+                                               gridcellsize));
       } else {
 	cerr << "WARNING: Unknown bv method\n";
       }
