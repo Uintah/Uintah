@@ -839,7 +839,7 @@ void Thread::exitAll(int code) {
 	if(active[i]->pid != me)
 	    kill(active[i]->pid, SIGQUIT);
     }
-    if(idle_main->pid != me)
+    if(idle_main && idle_main->pid != me)
 	kill(idle_main->pid, SIGQUIT);
     kill(me, SIGQUIT);
     fprintf(stderr, "Should not reach this point!\n");
