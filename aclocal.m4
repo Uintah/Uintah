@@ -106,10 +106,10 @@ for i in $6; do
 done
 ])dnl
 
-CFLAGS="$CFLAGS $_sci_includes"
-CXXFLAGS="$CXXFLAGS $_sci_includes"
-LDFLAGS="$LDFLAGS $_sci_lib_path"
-LIBS="$LIBS $_sci_libs $7"
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs $7 $LIBS"
 
 AC_TRY_LINK([$3],[$8],[
 eval LIB_DIR_$1='"$6"'
@@ -394,7 +394,6 @@ AC_DEFUN([SCI_ARG_VAR], [
   sci_arg_var_list="$sci_arg_var_list $1"
 ])
 
-
 ##
 ##  INIT_PACKAGE_CHECK_VARS
 ##  
@@ -496,6 +495,7 @@ case $1 in
     sci_check_netsolve=yes
   ;;
   rtrt)
+    sci_check_teem=yes
     sci_check_glut=yes
     sci_check_glui=yes
     sci_check_oogl=yes
