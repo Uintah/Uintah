@@ -52,8 +52,8 @@ using std::string;
 // Find the segment numbers which are connected by the node
 void Crack::FindSegsFromNode(const int& m,const int& node, int segs[])
 {
-  // segs[R] -- the seg on the right of the node
-  // segs[L] -- the seg on the left of the node
+  // segs[R] -- the segment on the right of the node
+  // segs[L] -- the segment on the left of the node
 
   segs[R]=segs[L]=-1;
 
@@ -244,7 +244,7 @@ void Crack::TrimLineSegmentWithBox(const Point& p1, Point& p2,
   p2=Point(x2,y2,z2);
 }  
 
-// Calculate normal of a triangle
+// Calculate outer normal of a triangle
 Vector Crack::TriangleNormal(const Point& p1,
             const Point& p2, const Point& p3)
 {
@@ -366,7 +366,7 @@ IntVector Crack::CellOffset(const Point& p1, const Point& p2, Vector dx)
   return IntVector(nx,ny,nz);
 }
 
-// Detect if line-segment (p3-p4) is included in line-segment (p1-p2)
+// Detect if a line-segment (p3-p4) is part of another line-segment (p1-p2)
 short Crack::TwoLinesDuplicate(const Point& p1,const Point& p2,
                                const Point& p3,const Point& p4)
 {
@@ -453,7 +453,7 @@ bool Crack::FindIntersectionOfJPathAndCrackPlane(const int& m,
    int numCross=0;
    crossPt=Point(-9e32,-9e32,-9e32);
    for(int i=0; i<(int)ce[m].size(); i++) {  // Loop over crack segments
-     // Find equation of crack segment: a2x+b2y+c2z+d2=0
+     // Find the equation of crack segment: a2x+b2y+c2z+d2=0
      double a2,b2,c2,d2;   // parameters of a 3D plane
      Point pt1,pt2,pt3;    // three vertices of the segment
      pt1=cx[m][ce[m][i].x()];
@@ -610,7 +610,7 @@ Vector Crack::TwoPtsDirCos(const Point& p1,const Point& p2)
   return v;
 }
 
-// Find the equation of a plane by three points on it
+// Find the equation of a plane defined by three points
 void Crack::FindPlaneEquation(const Point& p1,const Point& p2,
             const Point& p3, double& a,double& b,double& c,double& d)
 {
@@ -725,8 +725,8 @@ void Crack::ApplySymmetricBCsToCrackPoints(const Vector& cs,
   }
 }
 
-// Calculate normals, tangential normals and bi-normals of crack plane 
-// at  crack-front nodes
+// Calculate outer normals, tangential normals and bi-normals of crack plane 
+// at crack-front nodes
 short Crack::SmoothCrackFrontAndCalculateNormals(const int& mm)
 {
   int i=-1,l=-1,k=-1;
@@ -756,13 +756,13 @@ short Crack::SmoothCrackFrontAndCalculateNormals(const int& mm)
       maxIdx=cfSegMaxIdx[mm][k];
       minIdx=cfSegMinIdx[mm][k];
 
-      // numbers of segs and points of this sub-crack  
+      // numbers of segments and points of this sub-crack  
       minNode=cfSegNodes[mm][minIdx];
       maxNode=cfSegNodes[mm][maxIdx];
       numSegs=(maxIdx-minIdx+1)/2;
       numPts=numSegs+1; 
 
-      // Allocate memory for the sub-crack
+      // Allocate memories for the sub-crack
       pts.resize(numPts);
       V3.resize(numPts);
       dis.resize(numPts);
@@ -1141,7 +1141,7 @@ void Crack::PruneCrackFrontAfterPropagation(const int& m, const double& ca)
 {
   // If the angle between two line-segments connected by 
   // a point is larger than a certain value (ca), move the point to
-  // the mass center of the triangle which is composed of the three points
+  // the mass center of the triangle 
 
   int num=(int)cfSegNodes[m].size();
   vector<Point> cfSegPtsPruned;
@@ -1234,7 +1234,7 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
       }
       Point pt2=cx[mm][node2];
 
-      // Weighting tangential vector between pt1->pt->pt2
+      // Weighted tangential vector between pt1->pt->pt2
       double l1=(pt1-pt).length();
       double l2=(pt-pt2).length();
       Vector v1 = (l1==0.? Vector(0.,0.,0.):TwoPtsDirCos(pt1,pt));

@@ -62,7 +62,7 @@ void Crack::addComputesAndRequiresGetNodalSolutions(Task* t,
   t->requires(Task::NewDW,lb->gMassLabel,                         gnone);
   t->requires(Task::NewDW,lb->GMassLabel,                         gnone);
 
-  // The nodal solutions to be calculated
+  // Nodal solutions to be calculated
   t->computes(lb->gGridStressLabel);
   t->computes(lb->GGridStressLabel);
   t->computes(lb->gStrainEnergyDensityLabel);
@@ -83,7 +83,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
 {
   /* Compute nodal solutions of stresses, displacement gradients,
      strain energy density and  kinetic energy density by interpolating
-     particle's solutions to grid. Those variables are used to calculate
+     particle's solutions to grid. Those variables will be used to calculate
      J-integral
   */
 
@@ -179,7 +179,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
           // Get the node indices that surround the cell
 	  interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
 
-          for (int k = 0; k < flag->d_8or27; k++){
+          for (int k = 0; k < n8or27; k++){
             if(patch->containsNode(ni[k])){
               double pmassTimesS=pmass[idx]*S[k];
               if(pgCode[idx][k]==1) {
@@ -229,7 +229,7 @@ void Crack::addComputesAndRequiresCalculateFractureParameters(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
 {
-  // Requires nodal solutions
+  // Required nodal solutions
   int NGC=NJ+NGN+1;
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW, lb->gMassLabel,                gac,NGC);
@@ -253,9 +253,7 @@ void Crack::addComputesAndRequiresCalculateFractureParameters(Task* t,
   t->requires(Task::NewDW, lb->GVelGradsLabel,            gac,NGC);
   t->requires(Task::NewDW, lb->gVelocityLabel,            gac,NGC);
   t->requires(Task::NewDW, lb->GVelocityLabel,            gac,NGC);
-
-  if(flag->d_8or27==27)
-    t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
 }
 
 void Crack::CalculateFractureParameters(const ProcessorGroup*,
@@ -281,7 +279,6 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
     MPI_Comm_size(mpi_crack_comm,&patch_size);
     MPI_Comm_rank(mpi_crack_comm,&pid);
     MPI_Datatype MPI_VECTOR=fun_getTypeDescription((Vector*)0)->getMPIType();
-
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m=0;m<numMatls;m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -327,7 +324,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       new_dw->get(GvelGrads,  lb->GVelGradsLabel,     dwi,patch,gac,NGC);
 
       constParticleVariable<Vector> psize;
-      if(flag->d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
+      old_dw->get(psize, lb->pSizeLabel, pset);
 
       // Allocate memory for cfSegJ and cfSegK
       int cfNodeSize=(int)cfSegNodes[m].size();
@@ -341,7 +338,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
             Vector* cfJ=new Vector[num];
             Vector* cfK=new Vector[num];
 
-            if(pid==i) { // Calculte J & K by proc i
+            if(pid==i) { // Calculte J & K by processor i
               for(int l=0; l<num; l++) {
                 int idx=cfnset[m][i][l];     // index of this node
                 int node=cfSegNodes[m][idx]; // node
@@ -359,7 +356,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                    Origin located at the point at which J&K is calculated
                   */
                   
-                  // Two segs connected by the node
+                  // Two segments connected by the node
                   int segs[2];
                   FindSegsFromNode(m,node,segs);
                   
@@ -480,15 +477,14 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   */
                   for(int j=0; j<=nSegs; j++) {
 		    interpolator->findCellAndWeights(X[j],ni,S,psize[j]);
-
-                    for(int k=0; k<flag->d_8or27; k++) {
+                    for(int k=0; k<n8or27; k++) {
                       if(GnumPatls[ni[k]]!=0 && j<nSegs/2) {  //below crack
                         W[j]  += GW[ni[k]]          * S[k];
                         K[j]  += GK[ni[k]]          * S[k];
                         ST[j] += GgridStress[ni[k]] * S[k];
                         DG[j] += GdispGrads[ni[k]]  * S[k];
                       }
-                      else { //above crack or in non-crack zone
+                      else { //above crack
                         W[j]  += gW[ni[k]]          * S[k];
                         K[j]  += gK[ni[k]]          * S[k];
                         ST[j] += ggridStress[ni[k]] * S[k];
@@ -594,7 +590,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 
 		      interpolator->findCellAndWeights(X[j],ni,S,psize[j]);
 
-                      for(int k=0; k<flag->d_8or27; k++) {
+                      for(int k=0; k<n8or27; k++) {
                         if(GnumPatls[ni[k]]!=0 && x[j].y()<0.) { // below crack
                           // Valid only for stright crack within J-path, usually true
                           ACC += Gacc[ni[k]]       * S[k];
@@ -602,7 +598,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                           DG  += GdispGrads[ni[k]] * S[k];
                           VG  += GvelGrads[ni[k]]  * S[k];
                         }
-                        else {  // above crack or in non-crack zone
+                        else {  // above crack
                           ACC += gacc[ni[k]]       * S[k];
                           VEL += gvel[ni[k]]       * S[k];
                           DG  += gdispGrads[ni[k]] * S[k];
@@ -670,7 +666,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   Vector disp_a=Vector(0.);
                   Vector disp_b=Vector(0.);
 		  interpolator->findCellAndWeights(p_d,ni,S,psize[0]);
-                  for(int k=0; k<flag->d_8or27; k++) {
+                  for(int k=0; k<n8or27; k++) {
                     disp_a += gdisp[ni[k]] * S[k];
                     disp_b += Gdisp[ni[k]] * S[k];
                   }
