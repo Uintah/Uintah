@@ -276,7 +276,9 @@ void FusionFieldReader::execute(){
 
     unsigned int idim, jdim, kdim;
 
-    ifs >> idim >> jdim >> kdim; 
+    ifs >> idim >> jdim >> kdim;
+    
+    
 
     //    remark( idim + "  " + jdim + "  " + kdim );
 

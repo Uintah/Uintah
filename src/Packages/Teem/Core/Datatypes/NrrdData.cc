@@ -26,6 +26,7 @@
 //  Copyright (C) 2001 SCI Institute
 
 #include <Teem/Core/Datatypes/NrrdData.h>
+#include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -33,16 +34,25 @@ using std::cerr;
 
 namespace SCITeem {
 
+using namespace SCIRun;
+
 static Persistent* make_NrrdData() {
   return scinew NrrdData;
 }
 
 PersistentTypeID NrrdData::type_id("NrrdData", "Datatype", make_NrrdData);
 
+vector<string> NrrdData::valid_tup_types_;
+
+
 NrrdData::NrrdData(bool owned) : 
   nrrd(nrrdNew()),
   data_owned_(owned)
-{}
+{
+  if (valid_tup_types_.size() == 0) {
+    load_valid_tuple_types();
+  }
+}
 
 NrrdData::NrrdData(const NrrdData &copy) :
   nrrd_fname_(copy.nrrd_fname_) 
@@ -53,6 +63,7 @@ NrrdData::NrrdData(const NrrdData &copy) :
 }
 
 NrrdData::~NrrdData() {
+  cout << "deleting nrrd" << endl;
   if(data_owned_) {
     nrrdNuke(nrrd);
   } else {
@@ -66,6 +77,13 @@ NrrdData::clone()
   return new NrrdData(*this);
 }
 
+void 
+NrrdData::load_valid_tuple_types() 
+{
+  valid_tup_types_.push_back("Scalar");
+  valid_tup_types_.push_back("Vector");
+  valid_tup_types_.push_back("Tensor");
+}
 
 // This needs to parse axis 0 and see if the label is tuple as well...
 bool
@@ -88,22 +106,105 @@ NrrdData::get_tuple_axis_size() const
   return elems.size();
 }
 
+
+// This would be much easier to check with a regular expression lib
+// A valid label has the following format:
+// type = one of the valid types (Scalar, Vector, Tensor)
+// elem = [A-Za-z0-9\-]+:type
+// (elem,?)+
+
+bool 
+NrrdData::in_name_set(const string &s) const
+{
+  const string 
+    word("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_");
+  
+  //cout << "checking in_name " << s << endl;
+  // test against valid char set.
+
+  for(string::size_type i = 0; i < s.size(); i++) {
+    bool in_set = false;
+    for (unsigned int c = 0; c < word.size(); c++) {
+      if (s[i] == word[c]) {
+	in_set = true;
+	break;
+      }
+    }
+    if (! in_set) {
+      //cout << "in_name_set failing" << endl;
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool 
+NrrdData::in_type_set(const string &s) const
+{
+  // test against valid char set.
+  vector<string>::iterator iter = valid_tup_types_.begin();
+  while (iter != valid_tup_types_.end()) {
+    //cout << "comp " << s << " " << *iter << endl;
+    if (s == *iter) {
+      return true;
+    }
+    ++iter;
+  }
+  //cout << "in_type_set failing" << endl;
+  return false;
+}
+
+
+bool
+NrrdData::verify_tuple_label(const string &s, vector<string> &elems) const
+{
+
+  // first char must be part of name set
+  string::size_type nm_idx = 0;
+  string::size_type type_idx = s.size();
+
+  if (! s.size()) return false;
+
+  //cout << "label is: " << s << endl;
+  for(string::size_type i = 0; i < s.size(); i++) {
+    //cout << s[i] << endl;
+    if (s[i] == ':') {
+      // substring up until here must be a name
+      string sub = s.substr(nm_idx, i - nm_idx);
+      if (! in_name_set(sub)) return false;
+      // set nm_idx to something invalid for now.
+      type_idx = i+1;
+
+    } else if (s[i] == ',' || (i == s.size() - 1)) {
+      int off = 0;
+      if (i == s.size() - 1) {
+	off = 1;
+      }
+      // substring up until here must be an elem
+      //cout << "sub from : " << type_idx << " to: " << i << endl;
+      string sub = s.substr(type_idx, i - type_idx + off);
+      if (! in_type_set(sub)) return false;
+      // the valid elem is from nm_idx to i-1
+      string elem = s.substr(nm_idx, i - nm_idx + off);
+      elems.push_back(elem);
+
+      // start looking for next valid elem
+      nm_idx = i+1;
+      // set type_idx to something invalid for now.
+      type_idx = s.size();
+    }
+  }
+  return true;
+}
+
+
 bool
 NrrdData::get_tuple_indecies(vector<string> &elems) const
 {
   if (!nrrd) return false;
   string tup(nrrd->axis[0].label);
-  
-  string::size_type s, e;
-  s = 0;
-  e = 0;
-
-  while (e < (tup.size() - 1)) {
-    e = tup.find(",", s);
-    elems.push_back(tup.substr(s, e));
-    s = e + 1;
-  }
-  return true;
+  return verify_tuple_label(tup, elems);
 }
 
 bool 
@@ -158,13 +259,20 @@ void NrrdData::io(Piostream& stream) {
     // the nrrd file name will just append .nrrd
     nrrd_fname_ = stream.file_name + string(".nrrd");
     Pio(stream, nrrd_fname_);
-    if (nrrdSave(strdup(nrrd_fname_.c_str()), nrrd, 0)) {
+    NrrdIO *no = 0;
+    TextPiostream *text = dynamic_cast<TextPiostream*>(&stream);
+    if (text) {
+      no = nrrdIONew();
+      no->encoding = nrrdEncodingAscii;
+    } 
+    if (nrrdSave(strdup(nrrd_fname_.c_str()), nrrd, no)) {
       char *err = biffGet(NRRD);      
       cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << endl;
       free(err);
       biffDone(NRRD);
       return;
     }
+    if (text) { nrrdIONix(no); }
   }
   if (version > 1) {
     Pio(stream, data_owned_);

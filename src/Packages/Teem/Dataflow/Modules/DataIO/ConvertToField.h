@@ -97,12 +97,14 @@ fill_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end)
 {
   typedef typename Fld::value_type val_t;
   void *p = inrrd->data;
+  int i = 0;
   while (iter != end) {
     val_t tmp;
     get_val_and_inc_nrrdptr(tmp, p);
     fld->set_value(tmp, *iter);
-    ++iter;
+    ++iter; ++i;
   }
+  cout << "set " << i << " values" << endl;
 }
 
 template <class Fld>
@@ -160,7 +162,7 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     off = 1;
   }
   // All sci nrrds should have a tuple axis, we assume it.
-  // It is axis 0.  Make sure sizEs along each dim still match.
+  // It is axis 0.  Make sure sizes along each dim still match.
   if (inrrd->dim != (int)dims.size() + 1) return false;
   switch ((int)dims.size()) {
   case 1:
@@ -208,6 +210,7 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
       typename Fld::mesh_type::Node::iterator iter, end;
       mesh->begin(iter);
       mesh->end(end);
+      cout << "end - iter : " << *end - *iter << endl;
       fill_data((Fld*)out.get_rep(), inrrd, iter, end);
     }
   break;

@@ -16,6 +16,7 @@ INCLUDES += $(MDSPLUS_INCLUDE)
 
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
+	$(SRCDIR)/FusionFieldSetReader.cc\
 	$(SRCDIR)/MDSPlusFieldReader.cc\
 	$(SRCDIR)/MDSPlusDataReader.cc\
 #[INSERT NEW CODE FILE HERE]
