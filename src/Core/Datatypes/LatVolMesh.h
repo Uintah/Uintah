@@ -331,6 +331,10 @@ public:
   friend struct LatVolMeshRangeNodeIter;
   friend struct LatVolMeshRangeCellIter;
 
+  // Backwards compatability with interp fields
+  typedef LatVolMeshNodeIndex NodeIndex;
+  typedef LatVolMeshCellIndex CellIndex;
+
   typedef LatVolMeshNode Node;
   typedef LatVolMeshEdge Edge;
   typedef LatVolMeshFace Face;
