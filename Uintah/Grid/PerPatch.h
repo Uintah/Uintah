@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_PERPATCH_H
 #define UINTAH_HOMEBREW_PERPATCH_H
 
-#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/PerPatchBase.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 
 namespace Uintah {
@@ -35,10 +35,11 @@ WARNING
   
 ****************************************/
 
-   template<class T> class PerPatch : public DataItem {
+   template<class T> class PerPatch : public PerPatchBase {
    public:
       inline PerPatch() {}
       inline PerPatch(T value) : value(value) {}
+      virtual void copyPointer(const PerPatchBase&);
       inline PerPatch(const PerPatch<T>& copy) : value(copy.value) {}
       virtual ~PerPatch();
       
@@ -47,12 +48,10 @@ WARNING
       inline operator T () const {
 	 return value;
       }
-      virtual void get(DataItem&) const;
-      virtual void setData(const T&);
+      void setData(const T&);
       virtual PerPatch<T>* clone() const;
-      virtual void allocate(const Patch*);
-   private:
       PerPatch<T>& operator=(const PerPatch<T>& copy);
+   private:
       T value;
    };
    
@@ -61,16 +60,6 @@ WARNING
       PerPatch<T>::getTypeDescription()
       {
 	 return 0;
-      }
-   
-   template<class T>
-      void
-      PerPatch<T>::get(DataItem& copy) const
-      {
-	 PerPatch<T>* ref = dynamic_cast<PerPatch<T>*>(&copy);
-	 if(!ref)
-	    throw TypeMismatchException("PerPatch<T>");
-	 *ref = *this;
       }
    
    template<class T>
@@ -92,18 +81,24 @@ WARNING
 	 value = copy.value;
 	 return *this;
       }
-   
+
    template<class T>
       void
-      PerPatch<T>::allocate(const Patch*)
+      PerPatch<T>::copyPointer(const PerPatchBase& copy)
       {
-	 throw TypeMismatchException("PerPatch shouldn't use allocate");
+         const PerPatch<T>* c = dynamic_cast<const PerPatch<T>* >(&copy);
+         if(!c)
+            throw TypeMismatchException("Type mismatch in PerPatch variable");
+         *this = *c;
       }
-   
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/06/05 19:44:48  guilkey
+// Created PerPatchBase, filled in PerPatch class.
+//
 // Revision 1.1  2000/05/30 20:19:32  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
