@@ -23,7 +23,7 @@
 namespace SCIRun {
 
 template <class T> 
-class TetVol : public GenericField<MeshTet, vector<T> > {
+class TetVol : public GenericField<TetVolMesh, vector<T> > {
 public:
   GenericField() {};
   GenericField(data_location data_at) {};
