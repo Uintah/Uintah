@@ -31,6 +31,9 @@ using namespace std;
 //  SIMPLE_RXN_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("SIMPLE_RXN_DOING_COUT", false);
 static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
+/*`==========TESTING==========*/
+static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
+/*==========TESTING==========`*/
 //______________________________________________________________________              
 SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
                                ProblemSpecP& params)
@@ -72,6 +75,19 @@ SimpleRxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
                         ModelSetup* setup)
 {
+/*`==========TESTING==========*/
+if (!oldStyleAdvect.active()){
+  ostringstream desc;
+  desc<< "\n----------------------------\n"
+      <<" ICE need the following environmental variable \n"
+       << " \t setenv SCI_DEBUG oldStyleAdvect:+ \n"
+       << "for this model to work.  This is gross--Todd"
+       << "\n----------------------------\n";
+  throw ProblemSetupException(desc.str());  
+} 
+/*==========TESTING==========`*/
+
+
   cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
   sharedState = in_state;
   d_matl = sharedState->parseAndLookupMaterial(params, "material");
