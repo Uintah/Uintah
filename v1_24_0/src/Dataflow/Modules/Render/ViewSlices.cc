@@ -473,7 +473,7 @@ RealDrawer::run()
   double t2;
   double frame_count_start = t;
   double time_since_frame_count_start;
-  int frames;
+  int frames = -1;
   while (!dead_) {
     module_->extract_all_slices();
     throttle_.wait_for_time(t);
@@ -1784,7 +1784,7 @@ ViewSlices::apply_colormap(NrrdSlice &slice,
   unsigned int x, y;
   int val, pos, resolution;  
   const float *rgba;
-  float *greyscale_rgba;
+  float *greyscale_rgba = NULL;
   float fval;
   if (!colormap_.get_rep()) {
     resolution = 255;
@@ -3155,7 +3155,7 @@ ViewSlices::handle_gui_keypress(GuiArgs &args) {
 	paint_widget_ = scinew PaintCM2Widget();	
 	vector<CM2WidgetHandle> widgets;
 	widgets.reserve(cm2_->widgets().size()+1);
-	bool added = -1;
+	int added = -1;
 	for (unsigned int w = 0; w < cm2_->widgets().size(); ++w) {
 	  if (added == -1 && 
 	      (!dynamic_cast<PaintCM2Widget*>(cm2_->widgets()[w].get_rep()))) {
