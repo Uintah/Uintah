@@ -327,14 +327,13 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 	GLuint hit_pick=0;
 	if(hits >= 1){
 	    int idx=0;
-	    min_z=pick_buffer[1];
-	    hit_obj=pick_buffer[3];
-	    hit_pick=pick_buffer[4];
+	    min_z=0;
+	    hit_obj=0;
+	    hit_pick=0;
 	    for (int h=0; h<hits; h++) {
 		int nnames=pick_buffer[idx++];
-		ASSERT(nnames >= 2);
 		GLuint z=pick_buffer[idx++];
-		if (h==0 || z < min_z) {
+		if (nnames > 1 && (h==0 || z < min_z)) {
 		    min_z=z;
 		    idx++; // Skip Max Z
 		    hit_obj=pick_buffer[idx++];
