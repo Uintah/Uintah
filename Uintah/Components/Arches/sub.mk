@@ -24,12 +24,17 @@ include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
-LIBS := $(XML_LIBRARY) -lftn -lm -lblas
+LIBS := $(XML_LIBRARY) -lftn -lm 
+#LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.16  2000/07/02 05:47:31  bbanerje
+# Uncommented all PerPatch and CellInformation stuff.
+# Updated array sizes in inlbcs.F
+#
 # Revision 1.15  2000/06/14 20:40:50  rawat
 # modified boundarycondition for physical boundaries and
 # added CellInformation class

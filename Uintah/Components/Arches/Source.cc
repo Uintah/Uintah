@@ -31,6 +31,8 @@ using SCICore::Geometry::Vector;
 Source::Source()
 {
   // inputs (calcVelocitySource)
+  d_cellInfoLabel = scinew VarLabel("cellInformation",
+			    PerPatch<CellInformation*>::getTypeDescription());
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
@@ -173,19 +175,17 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   //get index component of gravity
   double gravity = d_physicalConsts->getGravity(index);
 
@@ -360,20 +360,17 @@ Source::calculatePressureSource(const ProcessorGroup*,
   new_dw->get(wNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
   
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  // move cell information to global space of Arches
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   // Create vars for new_dw
   CCVariable<double> pressLinearSrc;
   CCVariable<double> pressNonlinearSrc;
@@ -487,19 +484,17 @@ Source::calculateScalarSource(const ProcessorGroup*,
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   CCVariable<double> scalarLinearSrc; //SP term in Arches
   CCVariable<double> scalarNonlinearSrc; // SU in Arches
 
@@ -612,6 +607,10 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.17  2000/07/02 05:47:31  bbanerje
+//Uncommented all PerPatch and CellInformation stuff.
+//Updated array sizes in inlbcs.F
+//
 //Revision 1.16  2000/06/30 04:36:47  bbanerje
 //Changed FCVarsto SFC[X,Y,Z]Vars and added relevant getIndex() calls.
 //

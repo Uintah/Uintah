@@ -91,6 +91,13 @@ public:
 					       DataWarehouseP& old_dw,
 					       DataWarehouseP& new_dw);
 
+      // GROUP: Access Methods :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Get the molecular viscosity
+      //
+      double getMolecularViscosity() const; 
+
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       //

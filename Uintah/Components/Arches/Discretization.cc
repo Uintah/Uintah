@@ -33,6 +33,8 @@ using SCICore::Geometry::Vector;
 Discretization::Discretization()
 {
   // inputs
+  d_cellInfoLabel = scinew VarLabel("cellInformation",
+			    PerPatch<CellInformation*>::getTypeDescription());
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
@@ -180,19 +182,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     throw InvalidValue("Equation type should be PRESSURE or MOMENTUM");
   }
 
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   // Allocate space in new datawarehouse
   for (int ii = 0; ii < nofStencils; ii++) {
     switch(eqnType) {
@@ -317,9 +317,6 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
       throw InvalidValue("EqnType in calcVelCoef should be 0 or 1");
     }
   }
-  //new_dw->put(uVelocityCoeff, "VelocityCoeff", patch, index);
-  //new_dw->put(uVelocityConvectCoeff, "VelocityConvectCoeff", patch, index);
-
 }
 
 
@@ -365,34 +362,23 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
     new_dw->get(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
   }
-  //int index = 1;
-  //new_dw->get(uVelCoeff,"VelocityCoeff",patch, 0, index);
-  //index++;
-  //FCVariable<Vector> vVelCoeff;
-  //new_dw->get(vVelCoeff,"VelocityCoeff",patch, 0, index);
-  //index++;
-  //FCVariable<Vector> wVelCoeff;
-  //new_dw->get(wVelCoeff,"VelocityCoeff",patch, 0, index);
 
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   // Create vars for new_dw
   StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->allocate(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
   }
-  //new_dw->allocate(pressCoeff,"pressureCoeff",patch, 0);
 
   // Get the domain size and the patch indices
   IntVector domLoU = uVelocity.getFortLowIndex();
@@ -462,7 +448,6 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->put(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
   }
-  //new_dw->put(pressCoeff, "pressureCoeff", patch, 0);
 }
   
 //****************************************************************************
@@ -501,19 +486,17 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
 
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   //7pt stencil declaration
   StencilMatrix<CCVariable<double> > scalarCoeff;
 
@@ -578,7 +561,6 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->put(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
   }
-  //new_dw->put(scalarCoeff, "ScalarCoeff", patch, index);
 }
 
 //****************************************************************************
@@ -724,18 +706,14 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   int nofStencils = 7;
 
   StencilMatrix<CCVariable<double> > pressCoeff;
+  CCVariable<double> presLinearSrc;
+
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
   }
-  //Stencil<double> pressCoeff;
-  //new_dw->get(pressCoeff, "PressureCoCoeff", patch, 0);
-
-  CCVariable<double> presLinearSrc;
   new_dw->get(presLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
-  //FCVariable<double> pressLinearSrc;
-  //new_dw->get(pressLinearSrc, "pressureLinearSource", patch, 0);
 
   // Get the domain size and the patch indices
   IntVector domLo = presLinearSrc.getFortLowIndex();
@@ -759,7 +737,6 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->put(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
   }
-  //new_dw->put(pressCoeff, "pressureLinearSource", patch, 0);
 }
 
 //****************************************************************************
@@ -781,18 +758,14 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   //             Currently overwriting scalarCoeff[ii] with the same data
   //             for the current scalar
   StencilMatrix<CCVariable<double> > scalarCoeff;
+  CCVariable<double> scalarLinearSrc;
+
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(scalarCoeff[ii], d_scalCoefSBLMLabel, index, patch, 
 		Ghost::None, numGhostCells);
   }
-  //Stencil<double> scalarCoeff;
-  //new_dw->get(scalarCoeff, "ScalarCoeff", patch, index, 0);
-
-  CCVariable<double> scalarLinearSrc;
   new_dw->get(scalarLinearSrc, d_scalLinSrcSBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
-  //FCVariable<double> scalarLinearSrc;
-  //new_dw->get(scalarLinearSrc, "ScalarLinearSource", patch, index, 0);
 
   // Get the domain size and the patch indices
   IntVector domLo = scalarLinearSrc.getFortLowIndex();
@@ -819,11 +792,14 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->put(scalarCoeff[ii], d_scalCoefSBLMLabel, index, patch);
   }
-  //new_dw->put(scalarCoeff, "ScalarCoeff", patch, index, 0);
 }
 
 //
 // $Log$
+// Revision 1.20  2000/07/02 05:47:30  bbanerje
+// Uncommented all PerPatch and CellInformation stuff.
+// Updated array sizes in inlbcs.F
+//
 // Revision 1.19  2000/06/29 21:48:58  bbanerje
 // Changed FC Vars to SFCX,Y,ZVars and added correct getIndex() to get domainhi/lo
 // and index hi/lo

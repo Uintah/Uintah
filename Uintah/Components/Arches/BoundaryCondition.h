@@ -144,30 +144,30 @@ public:
       //
       // Schedule Computation of Velocity boundary conditions terms. 
       //
-      //void sched_velocityBC(const LevelP& level,
-      //    SchedulerP& sched,
-      //    DataWarehouseP& old_dw,
-      //    DataWarehouseP& new_dw,
-      //    int index);
+      void sched_velocityBC(const LevelP& level,
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw,
+			    int index);
 
       ////////////////////////////////////////////////////////////////////////
       //
       // Schedule Computation of Pressure boundary conditions terms. 
       //
-      //void sched_pressureBC(const LevelP& level,
-      //    SchedulerP& sched,
-      //    DataWarehouseP& old_dw,
-      //    DataWarehouseP& new_dw);
+      void sched_pressureBC(const LevelP& level,
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       //
       // Schedule Computation of Scalar boundary conditions terms. 
       //
-      //void sched_scalarBC(const LevelP& level,
-      //    SchedulerP& sched,
-      //    DataWarehouseP& old_dw,
-      //    DataWarehouseP& new_dw,
-      //    int index);
+      void sched_scalarBC(const LevelP& level,
+			  SchedulerP& sched,
+			  DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw,
+			  int index);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -432,7 +432,8 @@ private:
       const VarLabel* d_wVelocitySPLabel;
       const VarLabel* d_scalarSPLabel;
 
-      // Labels for data computed by setInletVelocityBC()
+      // Labels for data used/computed by setInletVelocityBC()
+      const VarLabel* d_densityCPLabel;
       const VarLabel* d_densitySIVBCLabel;
       const VarLabel* d_uVelocitySIVBCLabel;
       const VarLabel* d_vVelocitySIVBCLabel;
@@ -478,6 +479,10 @@ private:
   
 //
 // $Log$
+// Revision 1.31  2000/07/02 05:47:30  bbanerje
+// Uncommented all PerPatch and CellInformation stuff.
+// Updated array sizes in inlbcs.F
+//
 // Revision 1.30  2000/06/30 06:29:42  bbanerje
 // Got Inlet Area to be calculated correctly .. but now two CellInformation
 // variables are being created (Rawat ... check that).

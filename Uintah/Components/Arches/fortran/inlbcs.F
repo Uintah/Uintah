@@ -4,13 +4,16 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE inlbcs(indexLow, indexHigh, PCELL,
-     &     UU,VV,WW, 
-     &     DEN,
-     &     UINLT,VINLT,WINLT,
-     &     INCELL,
-     &     LMODBC,
-     &     USAV, VSAV, WSAV,
+      SUBROUTINE inlbcs(domLoU, domHiU, idxLoU, idxHiU, UU,
+     &     domLoV, domHiV, idxLoV, idxHiV, VV,
+     &     domLoW, domHiW, idxLoW, idxHiW, WW,
+     &     domLo, domHi, idxLo, idxHi, DEN,
+     &     PCELL, PFIELD,
+     &     FLOWPR, AREAPR, DENPR,
+c     &     UINLT,VINLT,WINLT,
+c     &     INCELL,
+c     &     LMODBC,
+c     &     USAV, VSAV, WSAV,
      &     ierr)
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
@@ -26,53 +29,78 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(indexLow(1):indexHigh(1), indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision UU(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision VV(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision WW(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision USAV(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision VSAV(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision WSAV(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision DEN(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision UINLT(indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision VINLT(indexLow(1):indexHigh(1), 
-     &     indexLow(3):indexHigh(3))
-      double precision WINLT(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2))
-      integer INCELL(6, indexLow(1):indexHigh(1), 
-     &     indexLow(1):indexHigh(1))
-      logical LMODBC
+      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
+      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+     &     domLoU(3):domHiU(3))
+      integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
+      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
+      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
+     &     domLoW(3):domHiW(3))
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer PFIELD
+      double precision FLOWPR, AREAPR, DENPR
+c     double precision USAV(indexLow(1):indexHigh(1), 
+c    &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
+c     double precision VSAV(indexLow(1):indexHigh(1), 
+c    &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
+c     double precision WSAV(indexLow(1):indexHigh(1), 
+c    &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
+c     double precision UINLT(indexLow(2):indexHigh(2), 
+c    &     indexLow(3):indexHigh(3))
+c     double precision VINLT(indexLow(1):indexHigh(1), 
+c    &     indexLow(3):indexHigh(3))
+c     double precision WINLT(indexLow(1):indexHigh(1), 
+c    &     indexLow(2):indexHigh(2))
+c     integer INCELL(6, indexLow(1):indexHigh(1), 
+c    &     indexLow(1):indexHigh(1))
+c     logical LMODBC
       integer ierr
       
 c*********************************************************************
 c     Locals :
 c*********************************************************************
-      integer          iBegGhost, iEndGhost
-      integer          jBegGhost, jEndGhost
-      integer          kBegGhost, kEndGhost
+      integer iBegGhostU, iBegGhostV, iBegGhostW, iBegGhost
+      integer iEndGhostU, iEndGhostV, iEndGhostW, iEndGhost
+      integer jBegGhostU, jBegGhostV, jBegGhostW, jBegGhost
+      integer jEndGhostU, jEndGhostV, jEndGhostW, jEndGhost
+      integer kBegGhostU, kBegGhostV, kBegGhostW, kBegGhost
+      integer kEndGhostU, kEndGhostV, kEndGhostW, kEndGhost
 
       integer i, j, k
 
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      iEndGhost = indexHigh(1)
-      jEndGhost = indexHigh(2)
-      kEndGhost = indexHigh(3)
+      iBegGhostU = domLoU(1)
+      jBegGhostU = domLoU(2)
+      kBegGhostU = domLoU(3)
+      iEndGhostU = domHiU(1)
+      jEndGhostU = domHiU(2)
+      kEndGhostU = domHiU(3)
+      iBegGhostV = domLoV(1)
+      jBegGhostV = domLoV(2)
+      kBegGhostV = domLoV(3)
+      iEndGhostV = domHiV(1)
+      jEndGhostV = domHiV(2)
+      kEndGhostV = domHiV(3)
+      iBegGhostW = domLoW(1)
+      jBegGhostW = domLoW(2)
+      kBegGhostW = domLoW(3)
+      iEndGhostW = domHiW(1)
+      jEndGhostW = domHiW(2)
+      kEndGhostW = domHiW(3)
+      iBegGhost = domLo(1)
+      jBegGhost = domLo(2)
+      kBegGhost = domLo(3)
+      iEndGhost = domHi(1)
+      jEndGhost = domHi(2)
+      kEndGhost = domHi(3)
 
 C-----------------------------------------------------------------------
 C     EAST AND WEST INLETS
@@ -191,6 +219,10 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/02 05:47:33  bbanerje
+c Uncommented all PerPatch and CellInformation stuff.
+c Updated array sizes in inlbcs.F
+c
 c Revision 1.1  2000/04/12 20:31:47  rawat
 c modified PressureSolver and added fortran subroutines
 c

@@ -92,7 +92,9 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				    CCVariable<double>::getTypeDescription() );
   
 
-  // 2) The labels computed by setInletVelocityBC (SIVBC)
+  // 2) The labels used/computed by setInletVelocityBC (SIVBC)
+  d_densityCPLabel = scinew VarLabel("densityCP", 
+				   CCVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC", 
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC", 
@@ -516,7 +518,6 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 //****************************************************************************
 // Schedule the calculation of the velocity BCs
 //****************************************************************************
-/*
 void 
 BoundaryCondition::sched_velocityBC(const LevelP& level,
 				    SchedulerP& sched,
@@ -605,12 +606,10 @@ BoundaryCondition::sched_velocityBC(const LevelP& level,
   }
 #endif
 }
-*/
 
 //****************************************************************************
 // Schedule the computation of the presures bcs
 //****************************************************************************
-/*
 void 
 BoundaryCondition::sched_pressureBC(const LevelP& level,
 				    SchedulerP& sched,
@@ -645,12 +644,10 @@ BoundaryCondition::sched_pressureBC(const LevelP& level,
   }
 #endif
 }
-*/
 
 //****************************************************************************
 // Schedule the computation of scalar BCS
 //****************************************************************************
-/*
 void 
 BoundaryCondition::sched_scalarBC(const LevelP& level,
 				  SchedulerP& sched,
@@ -659,7 +656,6 @@ BoundaryCondition::sched_scalarBC(const LevelP& level,
 				  int index)
 {
 }
-*/
 
 //****************************************************************************
 // Schedule the setting of inlet velocity BC
@@ -681,7 +677,9 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
 
-      // This task requires old uVelocity, vVelocity and wVelocity
+      // This task requires old densityCP, [u,v,w]VelocitySP
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
       tsk->requires(old_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
@@ -689,7 +687,7 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       tsk->requires(old_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
-      // This task computes new uVelocity, vVelocity and wVelocity
+      // This task computes new density, uVelocity, vVelocity and wVelocity
       tsk->computes(new_dw, d_densitySIVBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_vVelocitySIVBCLabel, matlIndex, patch);
@@ -871,43 +869,33 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
     throw InvalidValue("Equation type can only be PRESSURE or MOMENTUM");
   }
   
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-  // ** WARNING ** this is just for compilation purposes
-  CellInformation* cellinfo = scinew CellInformation(patch);
-
-#ifdef WONT_COMPILE_YET
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   //get Molecular Viscosity of the fluid
-  SoleVariable<double> VISCOS_CONST;
-  top_dw->get(VISCOS_CONST, "viscosity"); 
-  double VISCOS = VISCOS_CONST;
-#endif
-  // ** WARNING ** temporarily assigning VISCOS
-  double VISCOS = 1.0;
+  double molViscosity = d_turbModel->getMolecularViscosity();
 
   // Call the fortran routines
   switch(index) {
   case 1:
     uVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
-		&density, &VISCOS, cellinfo, eqnType);
+		&density, &molViscosity, cellinfo, eqnType);
     break;
   case 2:
     vVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
-		&density, &VISCOS, cellinfo, eqnType);
+		&density, &molViscosity, cellinfo, eqnType);
     break;
   case 3:
     wVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
-		&density, &VISCOS, cellinfo, eqnType);
+		&density, &molViscosity, cellinfo, eqnType);
     break;
   default:
     cerr << "Invalid Index value" << endl;
@@ -1251,23 +1239,30 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellInfo = cellInfoP;
 
+#ifdef WONT_COMPILE_YET
   //fortran call
   FORT_PRESSBC(domLo.get_pointer(), domHi.get_pointer(),
 	       idxLo.get_pointer(), idxHi.get_pointer(),
-	       pressCoeff, pressure, 
-	       cellType);
+	       pressCoeff[StencilMatrix::AP].getPointer(),
+	       pressCoeff[StencilMatrix::AE].getPointer(),
+	       pressCoeff[StencilMatrix::AW].getPointer(),
+	       pressCoeff[StencilMatrix::AN].getPointer(),
+	       pressCoeff[StencilMatrix::AS].getPointer(),
+	       pressCoeff[StencilMatrix::AT].getPointer(),
+	       pressCoeff[StencilMatrix::AB].getPointer(),
+	       pressure.getPointer(), 
+	       cellType.getPointer());
 #endif
 
   // Put the calculated data into the new DW
@@ -1313,23 +1308,30 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellInfo = cellInfoP;
 
+#ifdef WONT_COMPILE_YET
   //fortran call
   FORT_SCALARBC(domLo.get_pointer(), domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
-		scalarCoeff, scalar, 
-		cellType);
+		scalarCoeff[Stencilmatrix::AP].getPointer(), 
+		scalarCoeff[Stencilmatrix::AE].getPointer(), 
+		scalarCoeff[Stencilmatrix::AW].getPointer(), 
+		scalarCoeff[Stencilmatrix::AN].getPointer(), 
+		scalarCoeff[Stencilmatrix::AS].getPointer(), 
+		scalarCoeff[Stencilmatrix::AT].getPointer(), 
+		scalarCoeff[Stencilmatrix::AB].getPointer(), 
+		scalar.getPointer(), 
+		cellType.getPointer());
 #endif
 
   // Put the calculated data into the new DW
@@ -1360,7 +1362,7 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   int matlIndex = 0;
   int nofGhostCells = 0;
 
-  // get cellType and velocity
+  // get cellType, velocity and density
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
@@ -1368,6 +1370,8 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Get the low and high index for the patch and the variables
@@ -1391,6 +1395,11 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   // stores cell type info for the patch with the ghost cell type
   for (int indx = 0; indx < d_numInlets; indx++) {
 
+    // Get area
+    sum_vartype area_var;
+    old_dw->get(area_var, d_flowInlets[indx].d_area_label);
+    double area = area_var;
+
     // Get a copy of the current flowinlet
     FlowInlet fi = d_flowInlets[indx];
 
@@ -1409,17 +1418,18 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 		domLo.get_pointer(), domHi.get_pointer(), 
 		idxLo.get_pointer(), idxHi.get_pointer(), 
 		density.getPointer(),
-		&fi.cellTypeID, &fi.flowRate, &fi.area, &fi.density, 
+		cellType.getPointer(),
+		&fi.cellTypeID, &fi.flowRate, area, &fi.density, 
 		&fi.inletType,
 		flowType);
 #endif
 
-    // Put the calculated data into the new DW
-    new_dw->put(density, d_densitySIVBCLabel, matlIndex, patch);
-    new_dw->put(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch);
   }
+  // Put the calculated data into the new DW
+  new_dw->put(density, d_densitySIVBCLabel, matlIndex, patch);
+  new_dw->put(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch);
+  new_dw->put(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch);
+  new_dw->put(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -1850,6 +1860,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.34  2000/07/02 05:47:29  bbanerje
+// Uncommented all PerPatch and CellInformation stuff.
+// Updated array sizes in inlbcs.F
+//
 // Revision 1.33  2000/06/30 22:41:18  bbanerje
 // Corrected behavior of profv and profscalar
 //

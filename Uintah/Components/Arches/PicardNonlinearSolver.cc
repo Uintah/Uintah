@@ -132,7 +132,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //++d_generation;
 
     //correct inlet velocities to account for change in properties
-    // require : [u,v,w]VelocitySP
+    // require : densityCP, [u,v,w]VelocitySP
     // compute : densitySIVBC, [u,v,w]VelocitySIVBC
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, 
 						  new_dw);
@@ -379,6 +379,10 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.32  2000/07/02 05:47:30  bbanerje
+// Uncommented all PerPatch and CellInformation stuff.
+// Updated array sizes in inlbcs.F
+//
 // Revision 1.31  2000/06/29 22:56:43  bbanerje
 // Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
 //

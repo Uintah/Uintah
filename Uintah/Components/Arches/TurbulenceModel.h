@@ -57,6 +57,12 @@ public:
       //
       virtual ~TurbulenceModel();
 
+      // GROUP: Access Methods :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Get the molecular viscisity
+      //
+      virtual double getMolecularViscosity() const = 0;
 
       // GROUP: Problem Setup :
       ///////////////////////////////////////////////////////////////////////

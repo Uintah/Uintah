@@ -126,6 +126,14 @@ SmagorinskyModel::~SmagorinskyModel()
 }
 
 //****************************************************************************
+//  Get the molecular viscosity from the Physical Constants object 
+//****************************************************************************
+double 
+SmagorinskyModel::getMolecularViscosity() const {
+  return d_physicalConsts->getMolecularViscosity();
+}
+
+//****************************************************************************
 // Problem Setup 
 //****************************************************************************
 void 
@@ -335,15 +343,18 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	      zeroGhostCells);
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      zeroGhostCells);
-  PerPatch<CellInformation*> cellinfop;
-  if (old_dw->exists(d_cellInfoLabel, patch)) {
-    old_dw->get(cellinfop, d_cellInfoLabel, matlIndex, patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
-  }
-  CellInformation* cellinfo = cellinfop;
 
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   // get physical constants
   double mol_viscos; // molecular viscosity
   mol_viscos = d_physicalConsts->getMolecularViscosity();
@@ -457,23 +468,20 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
-
-#ifdef WONT_COMPILE_YET
-  PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
-  CellInformation* cellinfo = cellinfop;
-#endif
-
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  
   // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
-  top_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   //get Molecular Viscosity of the fluid
@@ -688,6 +696,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.24  2000/07/02 05:47:31  bbanerje
+// Uncommented all PerPatch and CellInformation stuff.
+// Updated array sizes in inlbcs.F
+//
 // Revision 1.23  2000/07/01 05:20:59  bbanerje
 // Changed CellInformation calcs for Turbulence model requirements ..
 // CellInformation still needs work.
