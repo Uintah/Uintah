@@ -57,10 +57,11 @@ GLAnimatedStreams::GLAnimatedStreams(int id,
 
 GLAnimatedStreams::GLAnimatedStreams(const GLAnimatedStreams& copy)
   : GeomObj( copy.id ), mutex("GLAnimatedStreams Mutex"),
-    vfh_(copy.vfh_), _cmapH(copy._cmapH), fx(copy.fx),
-    head(copy.head), tail(copy.tail), _numStreams(copy._numStreams),
+    vfh_(copy.vfh_), _cmapH(copy._cmapH),
     _pause(copy._pause), _normalsOn(copy._normalsOn),
     _lighting(copy._lighting), _use_dt(copy._use_dt),
+    _stepsize(copy._stepsize), fx(copy.fx),
+    tail(copy.tail), head(copy.head), _numStreams(copy._numStreams),
     _linewidth(copy._linewidth), flow(copy.flow), _delta_T(copy._delta_T), 
     _normal_method(copy._normal_method),
     _usesWidget(copy._usesWidget), widgetLocation(copy.widgetLocation)
@@ -557,7 +558,7 @@ GLAnimatedStreams::interpolate(FieldHandle texfld_, const Point& p, Vector& val)
   } else if( texfld_->get_type_name(0) == "LatticeVol" ){
     VectorFieldInterface *vfi;
     // use virtual field interpolation
-    if( vfi = texfld_->query_vector_interface()){
+    if( (vfi = texfld_->query_vector_interface()) ){
       return vfi->interpolate( val, p);
     }
     return false; // Added by Dd... if this is correct, remove this comment
