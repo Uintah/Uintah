@@ -151,48 +151,48 @@ public:
    Properties* d_props;
    struct FlowInlet {
      // define enum for cell type
-     //     CellTypeInfo inletType; 
+     int d_cellTypeID;
      // input vars
      double flowRate;
      // array of size numMixingVars -1
-     Array1<double> streamMixturefraction;
+     std::vector<double> streamMixturefraction;
      double turb_lengthScale;
      // calculated values
      double density;
      // inlet area
      double area;
-     // need a constructor
-     FlowInlet(int numMix);
-     problemSetup(ProblemSpecP& params);
+     FlowInlet(int numMix, int cellID);
+     void problemSetup(ProblemSpecP& params);
    };
-   // Diff BC types
-   Array3<int>* cellTypes;
+   struct PressureInlet {
+     int d_cellTypeID;
+     // array of size numMixingVars -1
+     std::vector<double> streamMixturefraction;
+     double turb_lengthScale;
+     double density;
+     double refPressure;
+     double area;
+     PressureInlet(int numMix, int cellID);
+     void problemSetup(ProblemSpecP& params);
+   };
+   struct FlowOutlet {
+     int d_cellTypeID;
+     std::vector<double> streamMixturefraction;
+     double turb_lengthScale;
+     double density;
+     double area;
+     FlowOutlet(int numMix, int cellID);
+     void problemSetup(ProblemSpecP& params);
+   };
+   // Diff BC types, stores the numbers for different boundary types
+   std::vector<int> d_cellTypes;
    int d_numInlets;
    int d_numMixingScalars;
    std::vector<FlowInlet> d_flowInlets;
    bool d_pressBoundary;
-#if 0
-   struct PressureInlet {
-     CellTypeInfo pressureType;
-     // array of size numMixingVars -1
-     Array1<double> streamMixturefraction;
-     double turb_lengthScale;
-     double density;
-     double refPressure;
-     PressureInlet(int numMix);
-     problemSetup(ProblemSpecP& params);
-   };
-   struct FlowOutlet {
-     CellTypeInfo outletType;
-     // imp for convergence
-     Array1<double> streamMixturefraction;
-     double turb_lengthScale;
-     double density;
-     double area;
-     FlowOutlet(int numMix);
-     problemSetup(ProblemSpecP& params);
-   };
-#endif
+   PressureInlet* d_pressureBdry;
+   bool d_outletBoundary;
+   FlowOutlet* d_outletBC;
 };
 }
 }

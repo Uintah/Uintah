@@ -48,28 +48,38 @@ void BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
   ProblemSpecP db = params->findBlock("BoundaryConditions");
   d_numInlets = 0;
+  int total_cellTypes = 0;
   int numMixingScalars = d_props->getNumMixVars();
   for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
-       inlet_db != 0; inlet_db->findNextBlock("FlowInlet")) {
-    d_flowInlets.push_back(FlowInlet(numMixingScalars));
+       inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
+    d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
     d_flowInlets[d_numInlets].problemSetup(inlet_db);
+    d_cellTypes.push_back(total_cellTypes);
+    ++total_cellTypes;
     ++d_numInlets;
   }
-#if 0
-  bool pressureBC;
-  // set the boolean in the section where cell type info is read
-  dw->get(pressureBC, "bool_pressureBC");
-  if (pressureBC) {
-    PressureInlet* press_inlet = scinew PressureInlet(numMixingScalars);
-    press_inlet->problemSetup(db, dw);
+  if (ProblemSpecP press_db = db->findBlock("PressureBC")) {
+    d_pressBoundary = true;
+    d_pressureBdry = scinew PressureInlet(numMixingScalars, total_cellTypes);
+    d_pressureBdry->problemSetup(press_db);
+    d_cellTypes.push_back(total_cellTypes);
+    ++total_cellTypes;
+
   }
-  bool outletBC;
-  dw->get(outletBC, "bool_outletBC");
-  if (outletBC) {
-    FlowOutlet* flow_outlet = scinew FlowOutlet(numMixingScalars);
-    flow_outlet->problemSetup(db, dw);
+  else
+    d_pressBoundary = false;
+  
+  if (ProblemSpecP outlet_db = db->findBlock("outletBC")) {
+    d_outletBoundary = true;
+    d_outletBC = scinew FlowOutlet(numMixingScalars, total_cellTypes);
+    d_outletBC->problemSetup(outlet_db);
+    d_cellTypes.push_back(total_cellTypes);
+    ++total_cellTypes;
+
   }
-#endif
+  else
+    d_outletBoundary = false;
+
 }
 
     
@@ -526,3 +536,98 @@ void BoundaryCondition::sched_scalarBC(const int index,
 {
 }
 
+
+//****************************************************************************
+// constructor for BoundaryCondition::FlowInlet
+//****************************************************************************
+BoundaryCondition::FlowInlet::FlowInlet(int numMix, int cellID):
+  d_cellTypeID(cellID)
+{
+  area = 0.0;
+  density = 0.0;
+  turb_lengthScale = 0.0;
+  flowRate = 0.0;
+}
+
+//****************************************************************************
+// Problem Setup for BoundaryCondition::FlowInlet
+//****************************************************************************
+void 
+BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
+{
+  params->require("Flow_rate", flowRate);
+  params->require("TurblengthScale", turb_lengthScale);
+  // check to see if this will work
+  double mixfrac;
+  for (ProblemSpecP mixfrac_db = params->findBlock("MixtureFraction");
+       mixfrac_db != 0; 
+       mixfrac_db = mixfrac_db->findNextBlock("MixtureFraction")) {
+    mixfrac_db->require("Mixfrac", mixfrac);
+    streamMixturefraction.push_back(mixfrac);
+  }
+ 
+}
+
+//****************************************************************************
+// constructor for BoundaryCondition::PressureInlet
+//****************************************************************************
+BoundaryCondition::PressureInlet::PressureInlet(int numMix, int cellID):
+  d_cellTypeID(cellID)
+{
+  //  streamMixturefraction.setsize(numMix-1);
+  area = 0.0;
+  density = 0.0;
+  turb_lengthScale = 0.0;
+  refPressure = 0.0;
+}
+
+//****************************************************************************
+// Problem Setup for BoundaryCondition::PressureInlet
+//****************************************************************************
+void 
+BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
+{
+  params->require("RefPressure", refPressure);
+  params->require("TurblengthScale", turb_lengthScale);
+  double mixfrac;
+  for (ProblemSpecP mixfrac_db = params->findBlock("MixtureFraction");
+       mixfrac_db != 0; 
+       mixfrac_db = mixfrac_db->findNextBlock("MixtureFraction")) {
+    mixfrac_db->require("Mixfrac", mixfrac);
+    streamMixturefraction.push_back(mixfrac);
+  }
+  // check to see if this will work
+  // params->require("Mixturefraction", streamMixturefraction[0]);
+}
+
+//****************************************************************************
+// constructor for BoundaryCondition::FlowOutlet
+//****************************************************************************
+BoundaryCondition::FlowOutlet::FlowOutlet(int numMix, int cellID):
+  d_cellTypeID(cellID)
+{
+  //  streamMixturefraction.setsize(numMix-1);
+  area = 0.0;
+  density = 0.0;
+  turb_lengthScale = 0.0;
+}
+
+//****************************************************************************
+// Problem Setup for BoundaryCondition::FlowInlet
+//****************************************************************************
+void 
+BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
+{
+  params->require("TurblengthScale", turb_lengthScale);
+  double mixfrac;
+  for (ProblemSpecP mixfrac_db = params->findBlock("MixtureFraction");
+       mixfrac_db != 0; 
+       mixfrac_db = mixfrac_db->findNextBlock("MixtureFraction")) {
+    mixfrac_db->require("Mixfrac", mixfrac);
+    streamMixturefraction.push_back(mixfrac);
+  }
+  //params->require("Mixturefraction", streamMixturefraction[0]);
+  // check to see if this will work
+  //  for (int i = 0; i < d_numMix; i++)
+  // params->require("Mixturefraction"+i, streamMixturefraction[i]);
+}
