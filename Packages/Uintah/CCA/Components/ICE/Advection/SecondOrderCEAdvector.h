@@ -49,9 +49,6 @@ namespace Uintah {
                          CCVariable<Vector>& q_advected,
                          DataWarehouse* new_dw);
 
-    struct eflux { double d_eflux[12]; };         //edge flux
-    struct cflux { double d_cflux[8]; };          //corner flux
-
   private:
     CCVariable<fflux> d_OFS, r_out_x, r_out_y, r_out_z;
     CCVariable<eflux> d_OFE, r_out_x_EF, r_out_y_EF, r_out_z_EF;
@@ -60,10 +57,6 @@ namespace Uintah {
     const VarLabel* OFE_CCLabel;
     const VarLabel* OFC_CCLabel;
     
-    friend const TypeDescription* fun_getTypeDescription(fflux*);
-    friend const TypeDescription* fun_getTypeDescription(eflux*);
-    friend const TypeDescription* fun_getTypeDescription(cflux*);
-  
   private:
                          
     template<class T> 
@@ -98,13 +91,5 @@ namespace Uintah {
                     F save_q_FC);   // passed in function
   };
 }
-
-// Added for compatibility with core types
-namespace SCIRun {
-  void swapbytes( Uintah::SecondOrderCEAdvector::fflux& );
-  void swapbytes( Uintah::SecondOrderCEAdvector::eflux& );
-  void swapbytes( Uintah::SecondOrderCEAdvector::cflux& );
-
-} // namespace SCIRun
 
 #endif

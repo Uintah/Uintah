@@ -1,6 +1,7 @@
 #ifndef UINTAH_SECOND_ORDER_BASE_H
 #define UINTAH_SECOND_ORDER_BASE_H
 
+#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -42,14 +43,7 @@ public:
                                CCVariable<T>& q_grad_y,
                                CCVariable<T>& q_grad_z);
                                   
-  struct fflux { double d_fflux[6]; };    // face flux
-
   CCVariable<fflux>  r_out_x, r_out_y, r_out_z;
-
-
- private:
-
-  friend const TypeDescription* fun_getTypeDescription(fflux*); 
 
 };
 /* ---------------------------------------------------------------------
@@ -263,10 +257,5 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
 }
 
 } // end namespace Uintah
-
-// Added for compatibility with core types
-namespace SCIRun {
-  void swapbytes( Uintah::SecondOrderBase::fflux& );
-} // end namespace SCIRun
 
 #endif
