@@ -21,6 +21,7 @@ class VarLabel;
 class Material; 
 class ICEMaterial;
 class MPMMaterial;
+class ArchesMaterial; 
    
     /**************************************
       
@@ -60,6 +61,7 @@ class MPMMaterial;
       }
 
       void registerMPMMaterial(MPMMaterial*);
+      void registerArchesMaterial(ArchesMaterial*);
       void registerICEMaterial(ICEMaterial*);
       int getNumVelFields() const;
 
@@ -68,6 +70,9 @@ class MPMMaterial;
       }
       int getNumMPMMatls() const {
 	 return (int)mpm_matls.size();
+      }
+      int getNumArchesMatls() const {
+	 return (int)arches_matls.size();
       }
       int getNumICEMatls() const {
 	 return (int)ice_matls.size();
@@ -79,6 +84,9 @@ class MPMMaterial;
       MPMMaterial* getMPMMaterial(int idx) const {
 	 return mpm_matls[idx];
       }
+      ArchesMaterial* getArchesMaterial(int idx) const {
+	 return arches_matls[idx];
+      }
       ICEMaterial* getICEMaterial(int idx) const {
 	 return ice_matls[idx];
       }
@@ -89,6 +97,7 @@ class MPMMaterial;
 
       void finalizeMaterials();
       const MaterialSet* allMPMMaterials() const;
+      const MaterialSet* allArchesMaterials() const;
       const MaterialSet* allICEMaterials() const;
       const MaterialSet* allMaterials() const;
 
@@ -114,10 +123,12 @@ class MPMMaterial;
       const VarLabel* delt_label;
       std::vector<Material*> matls;
       std::vector<MPMMaterial*> mpm_matls;
+      std::vector<ArchesMaterial*> arches_matls;
       std::vector<ICEMaterial*> ice_matls;
       Vector d_gravity;
       MaterialSet* all_mpm_matls;
       MaterialSet* all_ice_matls;
+      MaterialSet* all_arches_matls;
       MaterialSet* all_matls;
       double d_ref_press;
       double d_elapsed_time;

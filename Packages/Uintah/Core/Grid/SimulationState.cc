@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
 #include <Core/Malloc/Allocator.h>
@@ -28,6 +29,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   all_mpm_matls = 0;
   all_ice_matls = 0;
+  all_arches_matls = 0;
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -39,6 +41,12 @@ void SimulationState::registerMaterial(Material* matl)
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
 {
    mpm_matls.push_back(matl);
+   registerMaterial(matl);
+}
+
+void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
+{
+   arches_matls.push_back(matl);
    registerMaterial(matl);
 }
 
@@ -57,6 +65,13 @@ void SimulationState::finalizeMaterials()
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   all_mpm_matls->addAll(tmp_mpm_matls);
   
+  all_arches_matls = scinew MaterialSet();
+  all_arches_matls->addReference();
+  vector<int> tmp_arches_matls(arches_matls.size());
+  for (int i = 0; i<(int)arches_matls.size();i++)
+    tmp_arches_matls[i] = arches_matls[i]->getDWIndex();
+  all_arches_matls->addAll(tmp_arches_matls);
+
   all_ice_matls = scinew MaterialSet();
   all_ice_matls->addReference();
   vector<int> tmp_ice_matls(ice_matls.size());
@@ -88,7 +103,10 @@ SimulationState::~SimulationState()
     delete matls[i];
   if(all_mpm_matls && all_mpm_matls->removeReference())
     delete all_mpm_matls;
-    
+
+  if (all_arches_matls && all_arches_matls->removeReference())
+    delete all_arches_matls;
+
   if(all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
 }
@@ -97,6 +115,12 @@ const MaterialSet* SimulationState::allMPMMaterials() const
 {
   ASSERT(all_mpm_matls != 0);
   return all_mpm_matls;
+}
+
+const MaterialSet* SimulationState::allArchesMaterials() const
+{
+  ASSERT(all_arches_matls != 0);
+  return all_arches_matls;
 }
 
 const MaterialSet* SimulationState::allICEMaterials() const
