@@ -2,4 +2,9 @@
 # This script is just a short cut to run the BioTensor SCIRun Power App
 # It will be copied to the top of the object side of the tree.
 
+if grep -q Packages/Teem __OBJ_DIR__/configVars.mk
+then
 __OBJ_DIR__/scirun __SRC_DIR__/Packages/Teem/nets/PowerApps/BioTensor.app $1
+else
+echo "Please build the Teem Package before to run BioTensor"
+fi
