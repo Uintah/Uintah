@@ -57,32 +57,24 @@ originally by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
 <A NAME="sec:import">&#160;</A> 
 <A NAME="2019">&#160;</A>
 <BR>
-6. Importing data into <EM>SCIRun</EM>
-</H1>
+  6. Importing Data Into <EM>SCIRun</EM> </H1>
 
-<P>
-Here we describe some of the channels through which you can import data
-into <EM>SCIRun</EM>.  The basic paradigm a this point requires converting existing
-files into standard <EM>SCIRun</EM> files.  We will extend this very soon to support
-readers within <EM>SCIRun</EM> that will accept other formats.
-
+<P> The following illustrates some of the channels through which users can import 
+  data into <EM>SCIRun</EM>. The basic paradigm, at this point, requires converting 
+  existing files into standard <EM>SCIRun</EM> files. <i>SCIRun</i> will soon 
+  extend to upport for readers within <EM>SCIRun</EM> that accept other formats. 
 <P>
 
-<H2><A NAME="SECTION00071000000000000000">
-6.1 CVRTI converters</A>
-</H2>
+<H2><A NAME="SECTION00071000000000000000"> 6.1 CVRTI Converters</A> </H2>
 
-<P>
-The Cardiovascular Research and Training Institute (CVRTI) has developed a
-number of scalar and vector data and geometry file formats which required
-converters for <EM>SCIRun</EM>.  The result is a set of stand-alone programs that read
-in one more more existing CVRTI files and generate a particular form of
-<EM>SCIRun</EM> file, the details of which depend on the particular combination of
-nodes, connectivities, and associated attributes.
-
-<P>
-The programs and their parameters as as follows (go to the end of the list
-to see the definitions of the different parameter and file types):
+<P> The Cardiovascular Research and Training Institute (CVRTI) has developed a 
+  number of scalar and vector data and geometry file formats which require converters 
+  for <EM>SCIRun</EM>. The result is a set of stand-alone programs that read in 
+  one more more existing CVRTI file and generate a particular form of <EM>SCIRun</EM> 
+  file, the details of which depend on the particular combination of nodes, connectivities 
+  and associated attributes. 
+<P> The programs and their parameters as as follows (go to the end of the list 
+  for definitions of the different parameter and file types): 
 <DL>
 <DT><STRONG>CVRTItoTriSurfGrad: </STRONG>
 <DD>converts nodes, triangle connectivities, and
@@ -173,14 +165,11 @@ scalar, and vector files, count the number of lines in the file.</TD>
 </TABLE></DIV>
 <P>
 
-<H4><A NAME="SECTION00071020000000000000">
-6.1.0.2 Location of converter programs:</A>
+<H4><A NAME="SECTION00071020000000000000"> 6.1.0.2 Location of Converter Programs:</A> 
 </H4>
-All converter programs are normally available in the subdirectory of the
-<EM>SCIRun</EM> distribution called <TT>src/StandAlone/convert</TT>.  If they are
-not easily available, ask the local person who installed <EM>SCIRun</EM> for
-assistance.
-
+All converter programs are normally available in the subdirectory of the <EM>SCIRun</EM> 
+distribution called <TT>src/StandAlone/convert</TT>. If they are not easily available, 
+ask the local <EM>SCIRun</EM> installer for assistance. 
 <P>
 
 <P>
