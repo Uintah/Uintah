@@ -200,12 +200,8 @@ void MPMICE::scheduleTimeAdvance(double, double,
 
   //The next line is used for data analyze, please do not move.  --tan
   if(d_analyze) {
-    cout<<"Do ANALYZE"<<endl;
     d_analyze->performAnalyze(sched, patches, mpm_matls);
   }
-  else {
-     cout<<"NOT Do ANALYZE"<<endl;
- }
 
   sched->scheduleParticleRelocation(level,
 				    Mlb->pXLabel_preReloc, 
@@ -1189,7 +1185,6 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       CCVariable<double> dTdt_CC;
       NCVariable<Vector> gacceleration, gvelocity;
 
-//      NCVariable<Vector> gMEacceleration, gMEvelocity;
       NCVariable<double> dTdt_NC;
 
       new_dw->get(gvelocity,    Mlb->gVelocityStarLabel,dwindex, patch,
@@ -1201,18 +1196,12 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(dTdt_CC,      MIlb->dTdt_CCLabel,     dwindex, patch,
 		    Ghost::AroundCells,1);      
 
-//      new_dw->allocate(gMEvelocity, Mlb->gMomExedVelocityStarLabel,
-//							  dwindex, patch);
-//      new_dw->allocate(gMEacceleration, Mlb->gMomExedAccelerationLabel,
-//							  dwindex, patch);
       new_dw->allocate(dTdt_NC, Mlb->dTdt_NCLabel,        dwindex, patch);
 
       IntVector cIdx[8];
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
-//	gMEvelocity[*iter]     = gvelocity[*iter];
-//	gMEacceleration[*iter] = gacceleration[*iter];
 	dTdt_NC[*iter]         = 0.0;
 	for(int in=0;in<8;in++){
 	   gvelocity[*iter]     +=  dvdt_CC[cIdx[in]]*.125;
@@ -1823,6 +1812,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 		    Ghost::AroundCells, 1);
 
         double delt = delT;
+        double cv_solid = mpm_matl->getSpecificHeat();
 
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
 	  
@@ -1897,6 +1887,13 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 						burnedMass[m][*iter],
 						releasedHeat[m][*iter],
 						delt, surfArea);
+
+	      // In addition to the heat of formation,
+	      // releasedHeat also needs to include the
+	      // internal energy of the solid before reaction
+
+	      releasedHeat[m][*iter] +=
+			 cv_solid*solidTemperature[*iter]*burnedMass[m][*iter];
              
 	      sumBurnedMass[*iter]    += burnedMass[m][*iter];
 	      sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
