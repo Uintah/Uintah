@@ -93,6 +93,31 @@ void Array3<T>::initialize(const T& t)
     }
 }
 
+template<class T>
+T* Array3<T>::get_onedim()
+{
+  int i,j,k, index;
+  T* a = scinew T[dm1*dm2*dm3];
+  
+  for( i=0; i<dm1; i++)
+    for( j=0; j<dm2; j++ )
+      for( k=0; k<dm3; k++ )
+	a[index++] = objs[i][j][k];
+}
+
+template<class T>
+void
+Array3<T>::get_onedim_byte( unsigned char *v )
+{
+  int i,j,k, index;
+  index = 0;
+  
+  for( k=0; k<dm3; k++ )
+    for( j=0; j<dm2; j++ )
+      for( i=0; i<dm1; i++)
+	v[index++] = objs[i][j][k];
+}
+
 #define ARRAY3_VERSION 1
 
 template<class T>

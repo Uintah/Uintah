@@ -48,6 +48,9 @@ public:
     void newsize(int, int, int);
     void initialize(const T&);
 
+    T* get_onedim();
+    void get_onedim_byte( unsigned char *v );
+
     inline T*** get_dataptr() {return objs;}
 
     friend void Pio(Piostream&, Array3<T>&);

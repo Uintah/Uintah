@@ -64,6 +64,9 @@ public:
     // Change the size of the array.
     void resize(int newsize);
 
+    // Get the array information
+    T* get_objs();
+
 
     friend void Pio(Piostream&, Array1<T>&);
     friend void Pio(Piostream&, Array1<T>*&);

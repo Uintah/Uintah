@@ -137,6 +137,12 @@ void Array1<T>::resize(int newsize)
 	_size=newsize;
 }
 
+template<class T>
+T* Array1<T>::get_objs()
+{
+  return objs;
+}
+
 #define ARRAY1_VERSION 1
 
 template<class T>
