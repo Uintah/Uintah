@@ -15,7 +15,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SparseSolve.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/NetSolve/Dataflow/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/NetSolve/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
