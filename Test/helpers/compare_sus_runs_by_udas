@@ -1,10 +1,8 @@
 #!/bin/sh
 
-TEST=$1
-TEST_UDADIR=$2
-COMPARE_UDADIR=$3
-SUS_DIR=$4
-TMPDIR=$5
+TEST_UDADIR=$1
+COMPARE_UDADIR=$2
+SUS_DIR=$3
 
 inputs_differ=0
 echo
@@ -25,7 +23,7 @@ echo "Comparing dat files"
 echo "======================================"
 echo
 
-compare_dats $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR
+compare_dats $TEST_UDADIR $COMPARE_UDADIR
 compare_dats_retval=$?
 if [ $compare_dats_retval = "1" ]; then
     echo 
@@ -40,8 +38,11 @@ echo
 echo "Comparing udas"
 echo "======================================"
 echo
-compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR ""
+echo "$SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR"
+
+$SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR
 uda_retval=$?
+
 if [ $uda_retval != "0" ]; then
     echo 
     echo "*** uda comparison tests failed ***"
@@ -52,8 +53,11 @@ echo
 echo "Comparing checkpoints"
 echo "======================================"
 echo
-compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR "-skip_unknown_types"
+echo "$SUS_DIR/compare_uda -skip_unknown_types $TEST_UDADIR $COMPARE_UDADIR"
+
+$SUS_DIR/compare_uda -skip_unknown_types $TEST_UDADIR $COMPARE_UDADIR
 chp_retval=$?
+
 if [ $chp_retval != "0" ]; then
     echo 
     echo "*** checkpoint comparison tests failed ***"

@@ -12,7 +12,6 @@ cd $WD
 
 TEST_UDADIR=$TEST_DIR/$UDADIR
 COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
-TMPDIR=$TEST_DIR
 
 echo "Testing $TEST"
 
@@ -55,7 +54,7 @@ if [ -d "$TEST_UDADIR" ]; then
 #    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
   else
 
-      compare_sus_runs_by_udas $TEST $TEST_UDADIR $COMPARE_UDADIR $SUS_DIR $TMPDIR
+      compare_sus_runs_by_udas $TEST_UDADIR $COMPARE_UDADIR $SUS_DIR
       exit $?
   fi
 else
