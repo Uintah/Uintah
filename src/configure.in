@@ -835,26 +835,27 @@ AC_MSG_CHECKING(whether debug was enabled)
 if test "$debug" = "no"; then
   AC_MSG_RESULT(no)
 elif test "$debug" = "yes"; then
-  extra_cflags="-g ${extra_cflags}";
+  extra_cflags="-g ${extra_cflags}"
   AC_MSG_RESULT(yes (-g) )
 else
-  extra_cflags="$debug ${extra_cflags}";
+  extra_cflags="$debug ${extra_cflags}"
   AC_MSG_RESULT(yes ($debug) )
 fi
 
 AC_MSG_CHECKING(whether optimize was enabled)
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
-    extra_cflags="-O2 ${extra_cflags}";
+    extra_cflags="-O2 ${extra_cflags}"
     AC_MSG_RESULT(no (-O2) )
   else
-    AC_MSG_RESULT(no)
+    extra_cflags="-O0 ${extra_cflags}"
+    AC_MSG_RESULT(no (-O0) )
   fi
 elif test "$optimize" = "yes"; then
-  extra_cflags="-O2 ${extra_cflags}";
+  extra_cflags="-O2 ${extra_cflags}"
   AC_MSG_RESULT(yes (-O2) )
 else
-  extra_cflags="$optimize ${extra_cflags}";
+  extra_cflags="$optimize ${extra_cflags}"
   AC_MSG_RESULT(yes ($optimize) )
 fi
 
@@ -1034,7 +1035,10 @@ else
 fi
 
 if test "$PERL" = "perl"; then
-  PERL=`which perl`
+  PERL=`alias perl 2> /dev/null | sed 's,perl=,,g'`
+  if test -z "$PERL"; then
+    PERL=`which perl`
+  fi
 fi
 
 AC_CHECK_PROG(ETAGS, etags, etags)
@@ -1633,8 +1637,10 @@ AC_SUBST(DEF_CL)
 ##  --  search for SGI'S traceback library  ------------------------------ 
 
 SCI_CHECK_LIB($thirdparty/lib,exc,main)
+SCI_CHECK_HEADER($thirdparty/lib,libexc.h,,,)
 
-if test "$HAVE_LIBEXC"; then
+if test "$HAVE_LIBEXC" &&
+   test "$INCLIBEXC_H"; then
   TRACEBACK_LIB=-lexc
   DEF_EXC="#define HAVE_EXC 1"
 fi
