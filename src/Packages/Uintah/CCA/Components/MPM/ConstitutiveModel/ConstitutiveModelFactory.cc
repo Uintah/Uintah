@@ -6,15 +6,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HyperElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
@@ -77,9 +74,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "visco_scram")
     return(scinew ViscoScram(child,lb,flags->d_8or27));
    
-  else if (mat_type ==  "visco_scram_binder")
-    return(scinew ViscoScramForBinder(child,lb,flags->d_8or27));
-   
   else if (mat_type ==  "hypo_elastic") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
@@ -97,14 +91,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "shell_CNH")
     return(scinew ShellMaterial(child,lb,flags->d_8or27));
    
-  else if (mat_type ==  "GUV")
-    return(scinew GUVMaterial(child,lb,flags->d_8or27));
-   
   else if (mat_type ==  "hypoelastic_plastic")
     return(scinew HypoElasticPlastic(child,lb,flags->d_8or27));
-   
-  else if (mat_type ==  "hyperelastic_plastic")
-    return(scinew HyperElasticPlastic(child,lb,flags->d_8or27));
    
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")");
@@ -140,9 +128,6 @@ ConstitutiveModelFactory::createCopy(const ConstitutiveModel* cm)
   else if (dynamic_cast<const ViscoScram*>(cm)) 
     return(scinew ViscoScram(dynamic_cast<const ViscoScram*>(cm)));
    
-  else if (dynamic_cast<const ViscoScramForBinder*>(cm)) 
-    return(scinew ViscoScramForBinder(dynamic_cast<const ViscoScramForBinder*>(cm)));
-   
   else if (dynamic_cast<const HypoElastic*>(cm)) 
     return(scinew HypoElastic(dynamic_cast<const HypoElastic*>(cm)));
    
@@ -158,14 +143,8 @@ ConstitutiveModelFactory::createCopy(const ConstitutiveModel* cm)
   else if (dynamic_cast<const ShellMaterial*>(cm)) 
     return(scinew ShellMaterial(dynamic_cast<const ShellMaterial*>(cm)));
    
-  else if (dynamic_cast<const GUVMaterial*>(cm)) 
-    return(scinew GUVMaterial(dynamic_cast<const GUVMaterial*>(cm)));
-   
   else if (dynamic_cast<const HypoElasticPlastic*>(cm)) 
     return(scinew HypoElasticPlastic(dynamic_cast<const HypoElasticPlastic*>(cm)));
-   
-  else if (dynamic_cast<const HyperElasticPlastic*>(cm)) 
-    return(scinew HyperElasticPlastic(dynamic_cast<const HyperElasticPlastic*>(cm)));
    
   else 
     throw ProblemSetupException("Cannot create copy of unknown material.");

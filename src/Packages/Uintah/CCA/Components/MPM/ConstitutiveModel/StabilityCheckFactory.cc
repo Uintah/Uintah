@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/StabilityCheckFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/AcousticTensorCheck.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DruckerCheck.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/BeckerCheck.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DruckerBeckerCheck.h>
@@ -23,9 +22,7 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for stability check criterion.");
    
-   if (mat_type == "acoustic")
-      return(scinew AcousticTensorCheck(child));
-   else if (mat_type == "drucker")
+   if (mat_type == "drucker")
       return(scinew DruckerCheck(child));
    else if (mat_type == "becker")
       return(scinew BeckerCheck(child));
@@ -40,10 +37,7 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
 StabilityCheck* 
 StabilityCheckFactory::createCopy(const StabilityCheck* sc)
 {
-   if (dynamic_cast<const AcousticTensorCheck*>(sc))
-      return(scinew AcousticTensorCheck(dynamic_cast<const AcousticTensorCheck*>(sc)));
-
-   else if (dynamic_cast<const DruckerCheck*>(sc))
+   if (dynamic_cast<const DruckerCheck*>(sc))
       return(scinew DruckerCheck(dynamic_cast<const DruckerCheck*>(sc)));
 
    else if (dynamic_cast<const BeckerCheck*>(sc))

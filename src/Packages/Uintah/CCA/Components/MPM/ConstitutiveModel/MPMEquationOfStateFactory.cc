@@ -1,7 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfStateFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DefaultHypoElasticEOS.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DefaultHyperElasticEOS.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MieGruneisenEOS.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -30,8 +29,6 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
       return(scinew MieGruneisenEOS(child));
    else if (mat_type == "default_hypo")
       return(scinew DefaultHypoElasticEOS(child));
-   else if (mat_type == "default_hyper")
-      return(scinew DefaultHyperElasticEOS(child));
    else 
       throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")");
 
@@ -46,9 +43,6 @@ MPMEquationOfStateFactory::createCopy(const MPMEquationOfState* eos)
 
    else if (dynamic_cast<const DefaultHypoElasticEOS*>(eos))
       return(scinew DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));
-
-   else if (dynamic_cast<const DefaultHyperElasticEOS*>(eos))
-      return(scinew DefaultHyperElasticEOS(dynamic_cast<const DefaultHyperElasticEOS*>(eos)));
 
    else 
       throw ProblemSetupException("Cannot create copy of unknown MPM EOS");

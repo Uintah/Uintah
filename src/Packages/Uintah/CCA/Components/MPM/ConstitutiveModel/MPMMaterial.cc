@@ -5,13 +5,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/GUVParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -54,10 +52,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flags)
     d_particle_creator = scinew MembraneParticleCreator(this,lb, flags);
 
   else if (dynamic_cast<ShellMaterial*>(d_cm) != 0) {
-    if (dynamic_cast<GUVMaterial*>(d_cm) != 0)
-      d_particle_creator = scinew GUVParticleCreator(this,lb, flags);
-    else
-      d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
+    d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
   }
 
   else
@@ -168,9 +163,6 @@ MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags)
 
   else if (dynamic_cast<ShellMaterial*>(d_cm))
     d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
-
-  else if (dynamic_cast<GUVMaterial*>(d_cm))
-    d_particle_creator = scinew GUVParticleCreator(this,lb, flags);
 
   else
     d_particle_creator = scinew DefaultParticleCreator(this,lb, flags);

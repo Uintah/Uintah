@@ -15,16 +15,13 @@ SRCS     += \
 	$(SRCDIR)/TransIsoHyperImplicit.cc 	\
 	$(SRCDIR)/CompNeoHookPlas.cc          	\
 	$(SRCDIR)/ViscoScram.cc               	\
-	$(SRCDIR)/ViscoScramForBinder.cc      	\
 	$(SRCDIR)/HypoElastic.cc              	\
 	$(SRCDIR)/HypoElasticImplicit.cc      	\
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
 	$(SRCDIR)/ShellMaterial.cc 			\
-	$(SRCDIR)/GUVMaterial.cc 			\
 	$(SRCDIR)/HypoElasticPlastic.cc \
-	$(SRCDIR)/HyperElasticPlastic.cc \
 	$(SRCDIR)/DamageModel.cc \
 	$(SRCDIR)/DamageModelFactory.cc \
 	$(SRCDIR)/JohnsonCookDamage.cc \
@@ -32,7 +29,6 @@ SRCS     += \
 	$(SRCDIR)/MPMEquationOfState.cc \
 	$(SRCDIR)/MPMEquationOfStateFactory.cc \
 	$(SRCDIR)/DefaultHypoElasticEOS.cc \
-	$(SRCDIR)/DefaultHyperElasticEOS.cc \
 	$(SRCDIR)/MieGruneisenEOS.cc \
 	$(SRCDIR)/PlasticityModel.cc \
 	$(SRCDIR)/PlasticityModelFactory.cc \
@@ -43,11 +39,9 @@ SRCS     += \
 	$(SRCDIR)/YieldCondition.cc \
 	$(SRCDIR)/YieldConditionFactory.cc \
 	$(SRCDIR)/GursonYield.cc \
-	$(SRCDIR)/RousselierYield.cc \
 	$(SRCDIR)/VonMisesYield.cc \
 	$(SRCDIR)/StabilityCheck.cc \
 	$(SRCDIR)/StabilityCheckFactory.cc \
-	$(SRCDIR)/AcousticTensorCheck.cc \
 	$(SRCDIR)/BeckerCheck.cc \
 	$(SRCDIR)/DruckerCheck.cc \
 	$(SRCDIR)/DruckerBeckerCheck.cc \

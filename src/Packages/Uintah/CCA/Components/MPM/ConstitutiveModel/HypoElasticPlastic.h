@@ -102,6 +102,8 @@ namespace Uintah {
     bool   d_removeParticles;
     bool   d_setStressToZero;
     bool   d_evolvePorosity;
+    bool   d_evolveDamage;
+    bool   d_checkTeplaFailureCriterion;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
