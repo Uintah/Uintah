@@ -34,6 +34,8 @@
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Datatypes/DispatchScalar1.h>
+#include <Core/Datatypes/DispatchMesh1.h>
 
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -50,6 +52,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Util/DebugStream.h>
 
+#include <typeinfo>
 #include <map.h>
 #include <iostream>
 using std::cerr;
@@ -60,7 +63,6 @@ using std::ostringstream;
 
 namespace SCIRun {
 
-
 class ShowField : public Module 
 {
   
@@ -68,11 +70,10 @@ class ShowField : public Module
   DebugStream              dbg_;  
 
   //! input ports
-  FieldIPort*              geom_;
-  FieldIPort*              data_;
+  FieldIPort*              fld_;
   ColorMapIPort*           color_;
-  int                      geom_gen_;
-  int                      data_gen_;
+  ColorMapHandle           color_handle_;
+  int                      fld_gen_;
   int                      colm_gen_;
   //! output port
   GeometryOPort           *ogeom_;  
@@ -97,7 +98,6 @@ class ShowField : public Module
   bool                     faces_dirty_;
 
   //! default grey material
-  Material                 def_mat_;
   MaterialHandle           def_mat_handle_;
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
@@ -105,11 +105,15 @@ class ShowField : public Module
   GuiInt                   showProgress_;
 
   //! Private Methods
-  template <class Field>
-  bool render(Field *f, Field *f1, ColorMapHandle cm);
+
+  template <class Msh> void finish_mesh(Msh* m);
+  template <class Fld> void render_nodes(const Fld *sfld);
+  template <class Fld> void render_edges(const Fld *sfld);
+  template <class Fld> void render_faces(const Fld *sfld);
+  template <class F1>  void render(const F1 *fld);
 
   inline
-  MaterialHandle choose_mat(bool def, ColorMapHandle cm, double val);
+  MaterialHandle choose_mat(bool def, double val);
 public:
   ShowField(const clString& id);
   virtual ~ShowField();
@@ -131,15 +135,22 @@ public:
 
 };
 
+template <class Msh>
+void 
+ShowField::finish_mesh(Msh* m) {}
+
+template <>
+void 
+ShowField::finish_mesh(TetVolMesh* tvm) { tvm->finish(); }
+
 ShowField::ShowField(const clString& id) : 
   Module("ShowField", id, Filter, "Visualization", "SCIRun"), 
   dbg_("ShowField", true),
-  geom_(0),
-  data_(0),
+  fld_(0),
   color_(0),
-  geom_gen_(0),
-  data_gen_(0),
-  colm_gen_(0),
+  color_handle_(0),
+  fld_gen_(-1),
+  colm_gen_(-1),
   ogeom_(0),
   node_id_(0),
   edge_id_(0),
@@ -153,22 +164,19 @@ ShowField::ShowField(const clString& id) :
   face_switch_(0),
   faces_on_(true),
   faces_dirty_(true),
-  def_mat_(Color(.5, .5, .5)),
-  def_mat_handle_(&def_mat_),
+  def_mat_handle_(scinew Material(Color(.5, .5, .5))),
   node_display_type_("node_display_type", id, this),
   node_scale_("scale", id, this),
   showProgress_("show_progress", id, this)
  {
   // Create the input ports
-  geom_ = scinew FieldIPort(this, "Field-Geometry", FieldIPort::Atomic);
-  add_iport(geom_);
-  data_ = scinew FieldIPort(this, "Field-ColorIndex", FieldIPort::Atomic);
-  add_iport(data_);
+  fld_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
+  add_iport(fld_);
   color_ = scinew ColorMapIPort(this, "ColorMap", FieldIPort::Atomic);
   add_iport(color_);
     
   // Create the output port
-  ogeom_ = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  ogeom_ = scinew GeometryOPort(this, "Scene Graph", GeometryIPort::Atomic);
   add_oport(ogeom_);
  }
 
@@ -180,112 +188,36 @@ ShowField::execute()
 
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
-  FieldHandle geom_handle;
-  geom_->get(geom_handle);
-  if(!geom_handle.get_rep()){
-    cerr << "No Geometry in port 1 field" << endl;
+  FieldHandle fld_handle;
+  fld_->get(fld_handle);
+  if(!fld_handle.get_rep() || !fld_handle->is_scalar()){
+    cerr << "No Data or Not Scalar Data in port 1 field" << endl;
     return;
-  } else if (geom_gen_ != geom_handle->generation) {
-    geom_gen_ = geom_handle->generation;  
+  } else if (fld_gen_ != fld_handle->generation) {
+    fld_gen_ = fld_handle->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
+    MeshBaseHandle mh = fld_handle->mesh();
+    dispatch_mesh1(mh, finish_mesh);
   }
 
-  FieldHandle data_handle;
-  data_->get(data_handle);
-  if(!data_handle.get_rep()){
-    cerr << "No Data in port 2 field" << endl;
-    if (data_gen_) {
-      nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
-    }
-    data_gen_ = -1;
-  } else if (data_gen_ != data_handle->generation) {
-    data_gen_ = data_handle->generation;
-    nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
-  }
-
-  ColorMapHandle color_handle;
-  color_->get(color_handle);
-  if(!color_handle.get_rep()){
+  color_->get(color_handle_);
+  if(!color_handle_.get_rep()){
     cerr << "No ColorMap in port 3 ColorMap" << endl;
-    if (colm_gen_) {
+    if (colm_gen_ != -1) {
       nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
     }
     colm_gen_ = -1;
-  } else if (colm_gen_ != color_handle->generation) {
-    colm_gen_ = color_handle->generation;
+  } else if (colm_gen_ != color_handle_->generation) {
+    colm_gen_ = color_handle_->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
   }
 
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) && (!faces_dirty_))  { return; }
 
-  bool error = false;
-  string msg;
-  string name = geom_handle->get_type_name(0);
-  if (name == "TetVol") {
-    if (geom_handle->get_type_name(1) == "double") {
-      TetVol<double> *tv = 0;
-      TetVol<double> *tv1 = 0;
-      tv = dynamic_cast<TetVol<double>*>(geom_handle.get_rep());
-      if (data_gen_) {
-	tv1 = dynamic_cast<TetVol<double>*>(data_handle.get_rep());
-      }
-      if (tv) { 
-	// need faces and edges.
-	tv->finish_mesh();
-	render(tv, tv1, color_handle); 
-      }
-      else { error = true; msg = "Not a valid TetVol."; }
-    } else {
-      error = true; msg ="TetVol of unknown type.";
-    }
-  } else if (name == "LatticeVol") {
-    if (geom_handle->get_type_name(1) == "double") {
-      LatticeVol<double> *lv = 0;
-      LatticeVol<double> *tv1 = 0;
-      lv = dynamic_cast<LatticeVol<double>*>(geom_handle.get_rep());
-      if (data_gen_) {
-	tv1 = dynamic_cast<LatticeVol<double>*>(data_handle.get_rep());
-      }
-      if (lv)
-	render(lv, tv1, color_handle);
-      else { error = true; msg = "Not a valid LatticeVol."; }
-    } else {
-      error = true; msg ="LatticeVol of unknown type.";
-    }
-  } else if (name == "ContourField") {
-    if (geom_handle->get_type_name(1) == "double") {
-      ContourField<double> *cf = 0;
-      ContourField<double> *tv1 = 0;
-      cf = dynamic_cast<ContourField<double>*>(geom_handle.get_rep());
-      if (data_gen_) {
-	tv1 = dynamic_cast<ContourField<double>*>(data_handle.get_rep());
-      }
-      if (cf)
-	render(cf, tv1, color_handle);
-      else { error = true; msg = "Not a valid ContourField."; }
-    } else {
-      error = true; msg ="ContourField of unknown type.";
-    }
-  } else if (name == "TriSurf") {
-    if (geom_handle->get_type_name(1) == "double") {
-      TriSurf<double> *ts = 0;
-      TriSurf<double> *ts1 = 0;
-      ts = dynamic_cast<TriSurf<double>*>(geom_handle.get_rep());
-      if (data_gen_) {
-	ts1 = dynamic_cast<TriSurf<double>*>(data_handle.get_rep());
-      }
-      if (ts)
-	render(ts, ts1, color_handle);
-      else { error = true; msg = "Not a valid TriSurf."; }
-    } else {
-      error = true; msg ="ContourField of unknown type.";
-    }
-  } else if (error) {
-    cerr << "ShowField Error: " << msg << endl;
-    return;
-  }
-  
+  dispatch_scalar1(fld_handle, render);
+  if (disp_error) return; // dispatch already printed an error message. 
+
   // cleanup...
   if (nodes_dirty_) {
     if (node_id_) ogeom_->delObj(node_id_);
@@ -306,25 +238,22 @@ ShowField::execute()
     faces_dirty_ = false;
     if (faces_on_) face_id_ = ogeom_->addObj(face_switch_, "Faces");
   }  
-
-  
   ogeom_->flushViews();
 }
 
 inline
 MaterialHandle 
-ShowField::choose_mat(bool def, ColorMapHandle cm, double val) {
+ShowField::choose_mat(bool def, double val) {
   if (def) return def_mat_handle_;
-  return cm->lookup(val);
+  return color_handle_->lookup(val);
 }
 
-template <class Field>
-bool
-ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm) 
+template <class Fld>
+void 
+ShowField::render_nodes(const Fld *sfld) 
 {
-  typename Field::mesh_handle_type mesh = geom->get_typed_mesh();
-
   if (nodes_dirty_) {
+    typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
     GeomGroup* nodes = scinew GeomGroup;
     node_switch_ = scinew GeomSwitch(nodes);
     GeomPts *pts = 0;
@@ -333,25 +262,44 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
       pts = scinew GeomPts(mesh->nodes_size());
     }
     // First pass: over the nodes
-    typename Field::mesh_type::node_iterator niter = mesh->node_begin();  
+    typename Fld::mesh_type::node_iterator niter = mesh->node_begin();  
     while (niter != mesh->node_end()) {
       // Use a default color?
-      bool def_color = (c_index == 0);
+      bool def_color = (color_handle_.get_rep() == 0);
     
       Point p;
       mesh->get_point(p, *niter);
+
       // val is double because the color index field must be scalar.
       double val = 0.L;
-      if ((c_index) && (! c_index->value(val, *niter))) { def_color = true; }
+
+      switch (sfld->data_at()) {
+      case Field::NODE:
+	{
+	  typename Fld::value_type tmp = 0;
+	  if (sfld->value(tmp, *niter)) { 
+	    val = tmp;
+	  } else {
+	    def_color = true; 
+	  }
+	}
+	break;
+      case Field::EDGE:
+      case Field::FACE:
+      case Field::CELL:
+      case Field::NONE:
+	def_color = true;
+	break;
+      }
 
       node_scale_.reset();
       if (node_display_type_.get() == "Spheres") {
 	add_sphere(p, node_scale_.get(), nodes, 
-		   choose_mat(def_color, cm, val));
+		   choose_mat(def_color, val));
       } else if (node_display_type_.get() == "Axes") {
-	add_axis(p, node_scale_.get(), nodes, choose_mat(def_color, cm, val));
+	add_axis(p, node_scale_.get(), nodes, choose_mat(def_color, val));
       } else {
-	add_point(p, pts, choose_mat(def_color, cm, val));
+	add_point(p, pts, choose_mat(def_color, val));
       }
       ++niter;
     }
@@ -359,45 +307,83 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
       nodes->add(pts);
     }
   }
+}
 
+
+template <class Fld>
+void 
+ShowField::render_edges(const Fld *sfld) 
+{
   if (edges_dirty_) { 
+    typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
     GeomGroup* edges = scinew GeomGroup;
     edge_switch_ = scinew GeomSwitch(edges);
     // Second pass: over the edges
-    typename Field::mesh_type::edge_iterator eiter = mesh->edge_begin();  
+    typename Fld::mesh_type::edge_iterator eiter = mesh->edge_begin();  
     while (eiter != mesh->edge_end()) {  
       // Use a default color?
-      bool def_color = (c_index == 0);
+      bool def_color = (color_handle_.get_rep() == 0);
 
-      typename Field::mesh_type::node_array nodes;
+      typename Fld::mesh_type::node_array nodes;
       mesh->get_nodes(nodes, *eiter); ++eiter;
     
+      
       Point p1, p2;
       mesh->get_point(p1, nodes[0]);
       mesh->get_point(p2, nodes[1]);
       double val1 = 0.L;
-      if ((c_index) && (! c_index->value(val1, nodes[0]))) { 
-	def_color = true; 
-      }
       double val2 = 0.L;
-      if ((c_index) && (! c_index->value(val2, nodes[1]))) { 
-	def_color = true; 
+      switch (sfld->data_at()) {
+      case Field::NODE:
+	{
+	  typename Fld::value_type tmp1 = 0;
+	  typename Fld::value_type tmp2 = 0;
+	  if (sfld->value(tmp1, nodes[0]) && sfld->value(tmp2, nodes[1])) { 
+	    val1 = tmp1;
+	    val2 = tmp2;
+	    val1 = (val1 + val2) * .5;
+	  } else {
+	    def_color = true; 
+	  }
+	}
+	break;
+      case Field::EDGE:
+	{
+	  typename Fld::value_type tmp = 0;
+	  if (sfld->value(tmp, *eiter)) { 
+	    val1 = tmp;
+	  } else {
+	    def_color = true; 
+	  }
+	}
+	break;
+      case Field::FACE:
+      case Field::CELL:
+      case Field::NONE:
+	def_color = true;
+	break;
       }
-      val1 = (val1 + val2) * .5;
-      add_edge(p1, p2, 1.0, edges, choose_mat(def_color, cm, val1));
+      add_edge(p1, p2, 1.0, edges, choose_mat(def_color, val1));
     }
   }
+}
 
+
+template <class Fld>
+void 
+ShowField::render_faces(const Fld *sfld) 
+{
   if (faces_dirty_) {
+    typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
     GeomGroup* faces = scinew GeomGroup;
     face_switch_ = scinew GeomSwitch(faces);
     // Third pass: over the faces
-    typename Field::mesh_type::face_iterator fiter = mesh->face_begin();  
+    typename Fld::mesh_type::face_iterator fiter = mesh->face_begin();  
     while (fiter != mesh->face_end()) {  
       // Use a default color?
-      bool def_color = (c_index == 0);
+      bool def_color = (color_handle_.get_rep() == 0);
 
-      typename Field::mesh_type::node_array nodes;
+      typename Fld::mesh_type::node_array nodes;
       mesh->get_nodes(nodes, *fiter); ++fiter;
       
       Point p1, p2, p3;
@@ -405,26 +391,60 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
       mesh->get_point(p2, nodes[1]);
       mesh->get_point(p3, nodes[2]);
       double val1 = 0.L;
-      if ((c_index) && (! c_index->value(val1, nodes[0]))) { 
-	def_color = true; 
-      }
       double val2 = 0.L;
-      if ((c_index) && (! c_index->value(val2, nodes[1]))) { 
-	def_color = true; 
-      }
       double val3 = 0.L;
-      if ((c_index) && (! c_index->value(val3, nodes[2]))) { 
-	def_color = true; 
-      }
 
+      switch (sfld->data_at()) {
+      case Field::NODE:
+	{
+	  typename Fld::value_type tmp1 = 0;
+	  typename Fld::value_type tmp2 = 0;
+	  typename Fld::value_type tmp3 = 0;
+	  if (sfld->value(tmp1, nodes[0]) && sfld->value(tmp2, nodes[1])
+	      && sfld->value(tmp3, nodes[2])) { 
+	    val1 = tmp1;
+	    val2 = tmp2;
+	    val3 = tmp3;
+	  } else {
+	    def_color = true; 
+	  }
+	}
+	break;
+      case Field::FACE: 
+	{
+	  typename Fld::value_type tmp = 0;
+	  if (sfld->value(tmp, *fiter)) { 
+	    val1 = tmp;
+	    val2 = tmp;
+	    val3 = tmp;
+	  } else {
+	    def_color = true; 
+	  }
+	}
+	break;
+
+      case Field::EDGE:
+      case Field::CELL:
+      case Field::NONE:
+	def_color = true;
+	break;
+      }
       add_face(p1, p2, p3, 
-	       choose_mat(def_color, cm, val1), 
-	       choose_mat(def_color, cm, val2), 
-	       choose_mat(def_color, cm, val3), 
+	       choose_mat(def_color, val1), 
+	       choose_mat(def_color, val2), 
+	       choose_mat(def_color, val3), 
 	       faces);
     }
   }
-  return true;
+}
+
+template <class F1>
+void
+ShowField::render(const F1 *fld)
+{
+  render_nodes(fld);
+  render_edges(fld);
+  render_faces(fld);
 }
 
 void 
