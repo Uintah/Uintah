@@ -142,7 +142,7 @@ GeneralField<G,A>::~GeneralField()
 
 template <class G, class A >
 GeneralField<G,A>::GeneralField(G* igeom, A* ifdata):
-  Field(), geom(igeom), fdata(ifdata)
+  Field(), geom_(igeom), fdata_(ifdata)
 {
 }
 

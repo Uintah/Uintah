@@ -55,7 +55,7 @@ public:
   void operator()(int &result, double d) { result = int(d) + 5; }
 };
 
-template class FDataUnOp<int, FData1D<double>, add5>;
+//template class FDataUnOp<int, FData1D<double>, add5>;
 
 
 class minwrap
@@ -64,7 +64,7 @@ public:
   void operator()(double &result, double a, double b) { result = Min(a, b); }
 };
 
-template class FDataBinOp<double, FData1D<double>, FData1D<double>, minwrap>;
+//template class FDataBinOp<double, FData1D<double>, FData1D<double>, minwrap>;
 
 #ifdef __sgi
 #pragma reset woff 1468
