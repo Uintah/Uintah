@@ -129,53 +129,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }
-   
-   cout << "Number of materials: " << d_sharedState->getNumMatls() << endl;
-
-   lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
-   lb->d_particleState_preReloc.resize(d_sharedState->getNumMPMMatls());    
-   
-   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-     mpm_matl->getParticleState(lb->d_particleState[m],
-				lb->d_particleState_preReloc[m]);
-     
-   }
-
-   
-#if 0
-   // Load up all the VarLabels that will be used in each of the
-   // physical models
-   lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
-   lb->d_particleState_preReloc.resize(d_sharedState->getNumMPMMatls());
-
-   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-     lb->registerPermanentParticleState(m,lb->pVelocityLabel,
-					lb->pVelocityLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
-					lb->pExternalForceLabel_preReloc);
-
-     lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
-					  lb->pTemperatureLabel_preReloc); 
-       //lb->registerPermanentParticleState(m,lb->pExternalHeatRateLabel,
-       //lb->pExternalHeatRateLabel_preReloc); 
-
-     lb->registerPermanentParticleState(m,lb->pParticleIDLabel,
-					lb->pParticleIDLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pMassLabel,
-					lb->pMassLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pVolumeLabel,
-					lb->pVolumeLabel_preReloc);
-     if(d_8or27==27){
-       lb->registerPermanentParticleState(m,lb->pSizeLabel,
-                                            lb->pSizeLabel_preReloc);
-     }
-     
-     mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
-					lb->d_particleState_preReloc[m]);
-   }
-#endif
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,

@@ -19,6 +19,11 @@ ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
   :  ParticleCreator(matl,lb,n8or27)
 {
   registerPermanentParticleState(matl,lb);
+
+  // Transfer to the lb's permanent particle state array of vectors
+
+  lb->d_particleState.push_back(particle_state);
+  lb->d_particleState_preReloc.push_back(particle_state_preReloc);
 }
 
 ImplicitParticleCreator::~ImplicitParticleCreator()

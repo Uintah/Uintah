@@ -118,44 +118,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      sharedState->registerMPMMaterial(mat);
    }
 
-   cerr << "Number of materials: " << d_sharedState->getNumMatls() << "\n";
-
-   lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
-   lb->d_particleState_preReloc.resize(d_sharedState->getNumMPMMatls());
-
-   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-     mpm_matl->getParticleState(lb->d_particleState[m],
-				lb->d_particleState_preReloc[m]);
-   }
-
-#if 0
-   // Load up all the VarLabels that will be used in each of the
-   // physical models
-   lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
-   lb->d_particleState_preReloc.resize(d_sharedState->getNumMPMMatls());
-
-   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-     lb->registerPermanentParticleState(m,lb->pVelocityLabel,
-					lb->pVelocityLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pAccelerationLabel,
-					lb->pAccelerationLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
-					lb->pExternalForceLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pParticleIDLabel,
-					lb->pParticleIDLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pMassLabel,
-					lb->pMassLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pVolumeLabel,
-					lb->pVolumeLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pVolumeOldLabel,
-					lb->pVolumeOldLabel_preReloc);
-     mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
-					lb->d_particleState_preReloc[m]);
-   }
-#endif
-
 #ifdef HAVE_PETSC
    int argc = 4;
    char** argv;
