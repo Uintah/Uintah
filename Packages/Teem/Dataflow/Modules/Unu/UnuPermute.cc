@@ -57,12 +57,13 @@ public:
   UnuPermute(GuiContext *ctx);
   virtual ~UnuPermute();
   virtual void execute();
+  virtual void tcl_command(GuiArgs&, void*);
 private:
-  void load_gui();
 
   NrrdIPort           *inrrd_;
   NrrdOPort           *onrrd_;
   GuiInt               dim_;
+  GuiInt               uis_;
   vector<GuiInt*>      axes_;
   vector<int>          last_axes_;
   int                  last_generation_;
@@ -76,30 +77,24 @@ DECLARE_MAKER(UnuPermute)
 
 UnuPermute::UnuPermute(GuiContext *ctx) : 
   Module("UnuPermute", ctx, Filter, "UnuNtoZ", "Teem"),
-  dim_(ctx->subVar("dim")),
+  dim_(ctx->subVar("dim")), uis_(ctx->subVar("uis")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
   // value will be overwritten at gui side initialization.
   dim_.set(0);
+
+  for (int a = 0; a < 4; a++) {
+    ostringstream str;
+    str << "axis" << a;
+    axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+    last_axes_.push_back(a);
+  }
 }
 
 UnuPermute::~UnuPermute() {
 }
 
-void
-UnuPermute::load_gui() {
-  dim_.reset();
-  if (dim_.get() == 0) { return; }
-
-  last_axes_.resize(dim_.get(), -1);
-
-  for (int a = 0; a < dim_.get(); a++) {
-    ostringstream str;
-    str << "axis" << a;
-    axes_.push_back(new GuiInt(ctx->subVar(str.str())));
-  }
-}
 
 // check to see that the axes specified are in bounds
 int
@@ -141,51 +136,83 @@ UnuPermute::execute()
     return;
   }
 
-  if (last_generation_ != nrrdH->generation) {
-    ostringstream str;
-    
-    if (last_generation_ != -1) {
-      last_axes_.clear();
-      vector<GuiInt*>::iterator iter = axes_.begin();
-      while(iter != axes_.end()) {
-	delete *iter;
-	++iter;
-      }
-      axes_.clear();
-      gui->execute(id.c_str() + string(" clear_axes"));
-    }
+  dim_.set(nrrdH->nrrd->dim);
 
-    dim_.set(nrrdH->nrrd->dim);
-    dim_.reset();
-    load_gui();
-    gui->execute(id.c_str() + string(" init_axes"));
-
-  }
-  
   if (dim_.get() == 0) { return; }
+
+  bool new_dataset = (last_generation_ != nrrdH->generation);
+  bool first_time = (last_generation_ == -1);
+
+  // create any axes that might have been saved
+  if (first_time) {
+    uis_.reset();
+    for(int i=4; i<uis_.get(); i++) {
+      ostringstream str, str2;
+      str << "axis" << i;
+      str2 << i;
+      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      last_axes_.push_back(axes_[i]->get());
+      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+    }
+  }
+
+  last_generation_ = nrrdH->generation;
+  dim_.set(nrrdH->nrrd->dim);
+  dim_.reset();
+
+  // remove any unused uis or add any needes uis
+  if (uis_.get() > nrrdH->nrrd->dim) {
+    // remove them
+    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+      ostringstream str;
+      str << i;
+      vector<GuiInt*>::iterator iter = axes_.end();
+      vector<int>::iterator iter2 = last_axes_.end();
+      axes_.erase(iter, iter);
+      last_axes_.erase(iter2, iter2);
+      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
+  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    for (int i=uis_.get()-1; i< dim_.get(); i++) {
+      ostringstream str, str2;
+      str << "axis" << i;
+      str2 << i;
+      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      last_axes_.push_back(i);
+      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
+  }
 
   for (int a = 0; a < dim_.get(); a++) {
     axes_[a]->reset();
   }
 
+  // See if gui values have changed from last execute,
+  // and set up execution values. 
+  bool changed = false;
 
-  bool same = true;
-  for (int i = 0; i < dim_.get(); i++) {
-    if (last_axes_[i] != axes_[i]->get()) {
-      same = false;
-      last_axes_[i] = axes_[i]->get();
+  for (int a = 0; a < dim_.get(); a++) {
+    axes_[a]->reset();
+  }
+
+  for (int a = 0; a < dim_.get(); a++) {
+    if (last_axes_[a] != axes_[a]->get()) {
+      changed = true;
+      last_axes_[a] = axes_[a]->get();
     }
   }
-  
-  if (same && last_nrrdH_.get_rep()) {
+
+  if (!changed && !new_dataset) {
     onrrd_->send(last_nrrdH_);
     return;
   }
 
+
+
   int* axp = &(last_axes_[0]);
   if (!valid_data(axp)) return;
-
-  last_generation_ = nrrdH->generation;
 
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
@@ -193,8 +220,46 @@ UnuPermute::execute()
   nrrdAxesPermute(nout, nin, axp);
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  //nrrd->copy_sci_data(*nrrdH.get_rep());
+
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }
 
+void 
+UnuPermute::tcl_command(GuiArgs& args, void* userdata)
+{
+  if(args.count() < 2){
+    args.error("UnuPermute needs a minor command");
+    return;
+  }
+
+  if( args[1] == "add_axis" ) 
+  {
+      uis_.reset();
+      int i = uis_.get();
+      ostringstream str, str2;
+      str << "axis" << i;
+      str2 << i;
+      axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+      last_axes_.push_back(i);
+      gui->execute(id.c_str() + string(" make_axis " + str2.str()));
+      uis_.set(uis_.get() + 1);
+  }
+  else if( args[1] == "remove_axis" ) 
+  {
+    uis_.reset();
+    int i = uis_.get()-1;
+    ostringstream str;
+    str << i;
+    vector<GuiInt*>::iterator iter = axes_.end();
+    vector<int>::iterator iter2 = last_axes_.end();
+    axes_.erase(iter, iter);
+    last_axes_.erase(iter2, iter2);
+    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    uis_.set(uis_.get() - 1);
+  }
+  else 
+  {
+    Module::tcl_command(args, userdata);
+  }
+}

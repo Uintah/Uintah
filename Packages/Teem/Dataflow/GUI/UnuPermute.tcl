@@ -47,52 +47,49 @@ itcl_class Teem_UnuNtoZ_UnuPermute {
     }
     method set_defaults {} {
         global $this-dim
+	global $this-uis
+	global $this-axis0
+	global $this-axis1
+	global $this-axis2
+	global $this-axix3
 
         set $this-dim 0
+	set $this-uis 4
+	set $this-axis0 0
+	set $this-axis1 1
+	set $this-axis2 2
+	set $this-axis3 3
     }
 
-    method make_axes {} {
+    method make_axis {i} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
   
 	    if {[winfo exists $w.f.t]} {
 		destroy $w.f.t
 	    }
-	    for {set i 0} {$i < [set $this-dim]} {incr i} {
-		#puts $i
-		if {! [winfo exists $w.f.a$i]} {
-		    make_entry $w.f.a$i "Axis $i <- " $this-axis$i
-		    pack $w.f.a$i -side top -expand 1 -fill x
+	    if {! [winfo exists $w.f.f.a$i]} {
+		if {![info exists $this-axis$i]} {
+		    set $this-axis$i $i
 		}
+		make_entry $w.f.f.a$i "Axis $i <- " $this-axis$i
+		pack $w.f.f.a$i -side top -expand 1 -fill x
 	    }
 	}
     }
     
-    method init_axes {} {
-	for {set i 0} {$i < [set $this-dim]} {incr i} {
-	    #puts "init_axes----$i"
 
-	    if { [catch { set t [set $this-axis$i] } ] } {
-		set $this-axis$i $i
-	    }
-	}
-	make_axes
-    }
-
-    method clear_axes {} {
+    method clear_axis {i} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
 	    
 	    if {[winfo exists $w.f.t]} {
 		destroy $w.f.t
 	    }
-	    for {set i 0} {$i < [set $this-dim]} {incr i} {
-		#puts $i
-		if {[winfo exists $w.f.a$i]} {
-		    destroy $w.f.a$i
-		}
-		unset $this-axis$i
+	    if {[winfo exists $w.f.f.a$i]} {
+		destroy $w.f.f.a$i
 	    }
+	    unset $this-axis$i
 	}
     }
 
@@ -115,13 +112,24 @@ itcl_class Teem_UnuNtoZ_UnuPermute {
         wm minsize $w 100 80
         frame $w.f
 
-	if {[set $this-dim] == 0} {
-	    label $w.f.t -text "Need to Execute to know the number of Axes."
-	    pack $w.f.t
-	} else {
-	    init_axes 
+	frame $w.f.f
+
+	# add permute axes
+	for {set i 0} {$i < [set $this-uis]} {incr i} {
+	    make_axis $i
 	}
 
+	pack $w.f.f -side top -expand 1 -fill x
+
+	# add buttons to increment/decrement resample axes
+	frame $w.f.buttons
+	pack $w.f.buttons -side top -anchor n
+
+	button $w.f.buttons.add -text "Add Axis" -command "$this-c add_axis"
+	button $w.f.buttons.remove -text "Remove Axis" -command "$this-c remove_axis"
+	
+	pack $w.f.buttons.add $w.f.buttons.remove -side left -anchor nw -padx 5 -pady 5	
+	
 	pack $w.f -side top -anchor nw -padx 3 -pady 3
 
         makeSciButtonPanel $w $w $this
