@@ -23,7 +23,7 @@
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/VarTypes.h>
-#include <SCICore/Malloc/Allocator.>
+#include <SCICore/Malloc/Allocator.h>
 
 #include "ICE_switches.i"
 #include "nrutil+.h"
