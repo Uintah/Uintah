@@ -16,20 +16,16 @@
     </inputs>
     <outputs>
       <port>
-        <name>Output Grid Field</name>
-        <datatype>SCIRun::Field</datatype>
+	<name>Output Pressure Field</name>
+	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Output Pressure Scalar</name>
-	<datatype>SCIRun::Matrix</datatype>
+	<name>Output B Field</name>
+	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Output B Field Vector</name>
-	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-	<name>Output V Field Vector</name>
-	<datatype>SCIRun::Matrix</datatype>
+	<name>Output V Field</name>
+	<datatype>SCIRun::Field</datatype>
       </port>
      </outputs>
   </io>
