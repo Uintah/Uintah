@@ -100,6 +100,7 @@ void ErrorMetric::execute()
          double tmp=(*ivec1)[i]-(*ivec2)[i];
          RMS+=tmp*tmp;
      }
+     RMS = Sqrt(RMS);
      double CCdenom=Sqrt(CCdenom1*CCdenom2);
      double CC=Min(CCnum/CCdenom, 1000000.);
      double CCinv=Min(1.0/(Abs(CCnum)/CCdenom), 1000000.);
@@ -137,6 +138,9 @@ void ErrorMetric::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/12/11 05:43:20  dmw
+// need to take sqrt to get RMS error
+//
 // Revision 1.4  1999/10/07 02:06:34  sparker
 // use standard iostreams and complex type
 //
