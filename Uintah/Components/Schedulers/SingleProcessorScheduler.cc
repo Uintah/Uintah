@@ -234,9 +234,8 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
 	       sr[i]->matls[m]->relocset->addParticle(idx);
 	    }
 	 }
-      } else {
-	 delete relocset;
       }
+      delete relocset;
    }
    for(int i=0;i<sr.size();i++){
       new_dw->scatter(sr[i], patch, neighbors[i]);
@@ -333,6 +332,9 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.15  2000/08/23 21:40:04  sparker
+// Fixed slight memory leak when particles cross patch boundaries
+//
 // Revision 1.14  2000/08/22 20:54:49  sparker
 // Fixed memory leaks
 //
