@@ -186,7 +186,30 @@ NrrdReader::read_nrrd()
 	return;
       }
       handle_ = n;
+
     }
+
+      cout << "handle->nrrd " << handle_->nrrd << endl;
+      cout << "handle->nrrd->data " << handle_->nrrd->data << endl;
+      
+      for (int d = 0; d < handle_->nrrd->dim; d++) {
+	cout << "handle->nrrd->axis[" << d << "] " 
+	     << handle_->nrrd->axis[d].size << endl;
+      }
+#if 0
+
+      
+      double**** arr = (double****)handle_->nrrd->data;
+      for(int i=0; i < 10; i++ ) {
+	for(int j=0; j < 192; j++ ) {
+	  for(int k=0; k < 385; k++ ) {
+	    
+	    cout << "pressure: " << arr[i][j][k][6] << endl;
+	  }
+	}
+      }	
+#endif
+
   }
 }
 
@@ -272,8 +295,12 @@ void NrrdReader::execute()
     handle_ = newnrrd;
   }
 
-  handle_->nrrd->axis[0].label = strdup(lbl.c_str());
-
+  // if the tuple label is valid use it. If not use the string provided
+  // in the gui.
+  vector<string> elems;
+  if (add_.get() || (! handle_->get_tuple_indecies(elems))) {
+    handle_->nrrd->axis[0].label = strdup(lbl.c_str());
+  }
   // Send the data downstream
   outport_->send(handle_);
 }

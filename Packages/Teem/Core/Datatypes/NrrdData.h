@@ -64,7 +64,12 @@ public:
   bool get_tuple_index_info(int tmin, int tmax, int &min, int &max) const;
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
 private:
+  bool verify_tuple_label(const string &s, vector<string> &elems) const;
+  bool in_name_set(const string &s) const;
+  bool in_type_set(const string &s) const;
+
   //! did we wrap some existing memory, or was this allocated
   //! for this object to delete.
   bool                 data_owned_;
@@ -74,6 +79,9 @@ private:
 
   // To help with pio
   string                nrrd_fname_;
+
+  static void load_valid_tuple_types();
+  static vector<string> valid_tup_types_;
 };
 
 typedef LockingHandle<NrrdData> NrrdDataHandle;
