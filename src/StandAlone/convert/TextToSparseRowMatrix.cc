@@ -160,6 +160,10 @@ main(int argc, char **argv) {
   }
 
   ifstream matstream(textfileName);
+  if (matstream.fail()) {
+    cerr << "Error -- Could not open file " << textfileName << "\n";
+    return 2;
+  }
   if (header) matstream >> nr >> nc >> nnz;
 
   cerr << "nrows="<<nr<<" ncols="<<nc<<" # of non-zeros="<<nnz<<"\n";

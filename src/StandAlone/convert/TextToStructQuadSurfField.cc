@@ -137,6 +137,10 @@ main(int argc, char **argv) {
   }
 
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (header) ptsstream >> ni >> nj;
   cerr << "number of points = ("<<ni<<" "<<nj<<")\n";
   StructQuadSurfMesh *qsm = new StructQuadSurfMesh(ni, nj);

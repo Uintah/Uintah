@@ -139,6 +139,10 @@ main(int argc, char **argv) {
   }
 
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (header) ptsstream >> ni >> nj >> nk;
   cerr << "number of points = ("<<ni<<" "<<nj<<" "<<nk<<")\n";
   StructHexVolMesh *hvm = new StructHexVolMesh(ni, nj, nk);

@@ -145,6 +145,10 @@ main(int argc, char **argv) {
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (ptsCountHeader) ptsstream >> npts;
   cerr << "number of points = "<< npts <<"\n";
   int i;
@@ -160,6 +164,10 @@ main(int argc, char **argv) {
   int nedges;
   if (!elementsCountHeader) nedges = getNumNonEmptyLines(edgesName);
   ifstream edgesstream(edgesName);
+  if (edgesstream.fail()) {
+    cerr << "Error -- Could not open file " << edgesName << "\n";
+    return 2;
+  }
   if (elementsCountHeader) edgesstream >> nedges;
   cerr << "number of edges = "<< nedges <<"\n";
   for (i=0; i<nedges; i++) {

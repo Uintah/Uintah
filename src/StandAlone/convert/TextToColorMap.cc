@@ -126,6 +126,10 @@ main(int argc, char **argv) {
   int ncolors;
   if (!header) ncolors = getNumNonEmptyLines(textfileName);
   ifstream textstream(textfileName);
+  if (textstream.fail()) {
+    cerr << "Error -- Could not open file " << textfileName << "\n";
+    return 2;
+  }
   if (header) textstream >> ncolors;
   cerr << "number of colormap entries = "<< ncolors <<"\n";
   int i;

@@ -208,6 +208,10 @@ main(int argc, char **argv) {
     return 1;
   }
   ifstream vtk(in, std::ios_base::binary);
+  if (vtk.fail()) {
+    cerr << "Error -- Could not open file " << in << "\n";
+    return 2;
+  }
 
   char id[256], header[256], format[256];
 

@@ -128,6 +128,10 @@ main(int argc, char **argv) {
 
   int ni;
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (header) ptsstream >> ni;
   cerr << "number of points = ("<<ni<<")\n";
   StructCurveMesh *cm = new StructCurveMesh(ni);
