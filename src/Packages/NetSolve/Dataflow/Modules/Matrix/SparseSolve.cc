@@ -47,18 +47,18 @@ class NetSolveSHARE SparseSolve : public Module {
   
 public:
   //! Constructor/Destructor
-  SparseSolve(const clString& id);
+  SparseSolve(const string& id);
   virtual ~SparseSolve();
 
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" NetSolveSHARE Module* make_SparseSolve(const clString& id) {
+extern "C" NetSolveSHARE Module* make_SparseSolve(const string& id) {
   return new SparseSolve(id);
 }
 
-SparseSolve::SparseSolve(const clString& id)
+SparseSolve::SparseSolve(const string& id)
   : Module("SparseSolve", id, Source), 
   target_error("target_error", id, this), 
   final_error("final_error", id, this),
