@@ -58,7 +58,7 @@ template class Property<string>;
 template class Property<pair<double,double> >;
 template class Property<Array1<double> >;
 template class Property<Array1<Tensor> >;
-
+template class Property<pair<int,double> >;
 #ifdef __sgi
 #pragma reset woff 1468
 #endif

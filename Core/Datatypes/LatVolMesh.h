@@ -278,6 +278,7 @@ public:
   unsigned get_nz() const { return nz_; }
   Point get_min() const { return min_; }
   Point get_max() const { return max_; }
+  Vector diagonal() const { return max_-min_; }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
@@ -346,8 +347,3 @@ typedef LockingHandle<LatVolMesh> LatVolMeshHandle;
 } // namespace SCIRun
 
 #endif // SCI_project_LatVolMesh_h
-
-
-
-
-

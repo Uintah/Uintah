@@ -38,6 +38,9 @@ public:
     is already finished. */
   void finish_mesh() { get_typed_mesh()->finish(); }
 
+  bool get_gradient(Vector &, Point &);
+  Vector cell_gradient(TetVolMesh::cell_index);
+
   //! Persistent IO
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -97,6 +100,37 @@ TetVol<T>::type_name(int n)
   }
 }
 
+//! compute the gradient g, at point p
+template <class T>
+bool TetVol<T>::get_gradient(Vector &g, Point &p) {
+  TetVolMesh::cell_index ci;
+  if (get_typed_mesh()->locate(ci, p)) {
+    g = cell_gradient(ci);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+//! compute the gradient g in cell ci
+template <class T>
+Vector TetVol<T>::cell_gradient(TetVolMesh::cell_index ci) {
+  // for now we only know how to do this for field with doubles at the nodes
+  ASSERT(data_at() == Field::NODE)
+  ASSERT(type_name(1) == "double")
+
+  // load up the indices of the nodes for this cell
+  TetVolMesh::node_array nodes;
+  get_typed_mesh()->get_nodes(nodes, ci);
+  Vector gb0, gb1, gb2, gb3;
+  get_typed_mesh()->get_gradient_basis(ci, gb0, gb1, gb2, gb3);
+
+  // we really want this for all scalars... 
+  //  but for now, we'll just make doubles work
+  TetVol<double> *tvd = dynamic_cast<TetVol<double> *>(this);
+  return Vector(gb0*tvd->value(nodes[0]) + gb1*tvd->value(nodes[1]) + 
+		gb2*tvd->value(nodes[2]) + gb3*tvd->value(nodes[3]));
+}
 } // end namespace SCIRun
 
 #endif // Datatypes_TetVol_h
