@@ -57,9 +57,9 @@ public:
   bool startSoundThread;
   bool show_gui;
 private:
+  bool first_time;
   Scene *current_scene, *next_scene;
   RTRT *rtrt_engine;
-  bool first_time;
   
   GuiInt nworkers;
   GuiInt xres_gui, yres_gui; 	// default to 400
@@ -84,14 +84,14 @@ DECLARE_MAKER(RTRTViewer)
 
 RTRTViewer::RTRTViewer(GuiContext* ctx)
 : Module("RTRTViewer", ctx, Filter, "Render", "rtrt"),
+  startSoundThread(false),show_gui(true),first_time(true),
   current_scene(0), next_scene(0), rtrt_engine(0),
   nworkers(ctx->subVar("nworkers")),
   xres_gui(ctx->subVar("xres_gui")),
   yres_gui(ctx->subVar("yres_gui")),
   render_mode(ctx->subVar("render_mode")),
   scene_opt_type(ctx->subVar("scene_opt_type")),
-  gridcellsize_gui(ctx->subVar("gridcellsize_gui")),
-  startSoundThread(false),show_gui(true),first_time(true)
+  gridcellsize_gui(ctx->subVar("gridcellsize_gui"))
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
   //				     ColorMapIPort::Atomic);
@@ -105,8 +105,6 @@ RTRTViewer::~RTRTViewer()
 void RTRTViewer::execute()
 {
   reset_vars();
-  int xres=xres_gui.get();
-  int yres=yres_gui.get();
 
   // get the scene
   in_scene_port = (SceneIPort*) get_iport("Scene");
@@ -270,6 +268,20 @@ void RTRTViewer::start_rtrt() {
     Thread::parallel(this, &RTRTViewer::GlutHelper, 1, false, xres, yres);
     cout << "thread started\n";
     first_time = false;
+
+    // Let the GUI know about the lights.
+    int cnt;
+    for( cnt = 0; cnt < current_scene->nlights(); cnt++ ) {
+      gui->addLight( current_scene->light( cnt ) );
+    }
+    for(;cnt < current_scene->nlights()+current_scene->nPerMatlLights();cnt++){
+      Light *light = current_scene->per_matl_light(cnt -
+						   current_scene->nlights() );
+      if( light->name_ != "" )
+	light->name_ = light->name_ + " (pm)";
+      gui->addLight( light );
+    }
+    
   }
 } // end start_rtrt()
 
