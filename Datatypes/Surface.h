@@ -31,10 +31,11 @@ protected:
 	TriSurf,
 	Other,
     };
-    Surface(Representation);
+    Surface(Representation, int closed);
 private:
     Representation rep;
 public:
+    int closed;
     clString name;
     Grid *grid;
     enum Boundary_type {
