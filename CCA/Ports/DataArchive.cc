@@ -491,6 +491,33 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
   }
 }
 
+bool DataArchive::queryRestartTimestep(int& timestep)
+{
+  DOM_Node restartNode = findNode("restart", d_indexDoc.getDocumentElement());
+  if (restartNode == 0) {
+    DOM_Node restartsNode = findNode("restarts", d_indexDoc.getDocumentElement());
+    if (restartsNode == 0)
+      return false;
+    
+    restartNode = findNode("restart", restartsNode);
+    if (restartNode == 0)
+      return false;
+
+    // get the last restart tag in the restarts list
+    while (findNextNode("restart", restartNode) != 0)
+      restartNode = findNextNode("restart", restartNode);
+  }
+  
+  DOM_NamedNodeMap attributes = restartNode.getAttributes();
+  DOM_Node timestepNode = attributes.getNamedItem("timestep");
+  if (timestepNode == 0)
+    return false;
+  char*s = timestepNode.getNodeValue().transcode();
+  timestep = atoi(s);
+  delete[] s;
+  return true;
+}
+
 void
 DataArchive::initVariable(const Patch* patch,
 			  DataWarehouse* dw,
