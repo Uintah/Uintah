@@ -232,6 +232,23 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 sched->addTask(t);
       }
+
+      {
+	 /*
+	  * updateSurfaceNormalOfBoundaryParticle
+	  *   in(P.DEFORMATIONMEASURE)
+	  *   operation(update the surface normal of each boundary particles)
+	  * out(P.SURFACENORMAL)
+	  */
+	 Task* t = new Task("SerialMPM::updateSurfaceNormalOfBoundaryParticle",
+			    region, old_dw, new_dw,
+			    this, &SerialMPM::updateSurfaceNormalOfBoundaryParticle);
+	 t->requires(new_dw, pDeformationMeasureLabel, region, 0);
+
+	 t->computes(new_dw, pSurfaceNormalLabel, region);
+
+	 sched->addTask(t);
+      }
       
       {
 	 /*
@@ -336,6 +353,26 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 sched->addTask(t);
       }
+
+      {
+	 /*
+	  * crackGrow
+	  *   in(P.STRESS)
+	  *   operation(check the stress on each boudary particle to see
+	  *             if the microcrack will grow.  If fracture occur,
+	  *             more interior particles become boundary particles)
+	  * out(P.SURFACENORMAL)
+	  */
+	 Task* t = new Task("SerialMPM::crackGrow",
+			    region, old_dw, new_dw,
+			    this, &SerialMPM::crackGrow);
+	 t->requires(new_dw, pStressLabel, region, 0 );
+
+	 t->computes(new_dw, pSurfaceNormalLabel, region );
+
+	 sched->addTask(t);
+      }
+
     }
 }
 
@@ -486,6 +523,14 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 	 cm->computeStressTensor(region, mpm_matl, old_dw, new_dw);
       }
    }
+}
+
+void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
+				    const Region* region,
+				    const DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw)
+{
+  //Tan: not finished yet. 
 }
 
 void SerialMPM::computeInternalForce(const ProcessorContext*,
@@ -761,7 +806,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   }
 }
 
+void SerialMPM::crackGrow(const ProcessorContext*,
+                          const Region* region,
+                          const DataWarehouseP& old_dw,
+                          DataWarehouseP& new_dw)
+{
+}
+
+
 // $Log$
+// Revision 1.42  2000/05/04 23:40:00  tan
+// Added fracture interface to general MPM.
+//
 // Revision 1.41  2000/05/04 19:10:52  guilkey
 // Added code to apply boundary conditions.  This currently calls empty
 // functions which will be implemented soon.
