@@ -36,6 +36,7 @@ INCLUDES += $(TEEM_INCLUDE)
 SRCDIR   := Core/Algorithms/Visualization
 
 SRCS     += \
+	$(SRCDIR)/EdgeMC.cc             \
         $(SRCDIR)/HexMC.cc		\
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/mcube2.cc		\
