@@ -63,7 +63,7 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
     vector<int> blocklens(sendset->numParticles(), 1);
     MPI_Datatype datatype;
     MPI_Type_indexed(count, &blocklens[0],
-		     sendset->begin(), td->getMPIType(), &datatype);
+		     sendset->getPointer(), td->getMPIType(), &datatype);
     MPI_Type_commit(&datatype);
     buffer.add(buf, 1, datatype, true);
   } 
