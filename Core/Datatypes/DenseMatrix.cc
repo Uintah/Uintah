@@ -220,7 +220,17 @@ void DenseMatrix::solve(ColumnMatrix& sol)
     // Back-substitution
     for(i=1;i<nr;i++){
 //	cout << "Solve: " << i << " of " << nr << endl;
-	ASSERT(Abs(data[i][i]) > 1.e-12);
+	if (Abs(data[i][i] < 1.e-12)) {
+	    cerr << "Error in DenseMatrix::solve() -- returning zero sol'n.\n";
+	    for (int jj=0; jj<nr; jj++) sol[jj]=0;
+	    return;
+	}
+//	ASSERT(Abs(data[i][i]) > 1.e-12);
+	if (Abs(data[i][i]) < 1.e-12) {
+	    cerr << "Error in DenseMatrix::solve() -- returning zero sol'n.\n";
+	    for (int jj=0; jj<nr; jj++) sol[jj]=0;
+	    return;
+	}
 	double denom=1./data[i][i];
 	double* r1=data[i];
 	double s1=sol[i];
@@ -236,7 +246,12 @@ void DenseMatrix::solve(ColumnMatrix& sol)
     // Normalize
     for(i=0;i<nr;i++){
 //	cout << "Solve: " << i << " of " << nr << endl;
-	ASSERT(Abs(data[i][i]) > 1.e-12);
+//	ASSERT(Abs(data[i][i]) > 1.e-12);
+	if (Abs(data[i][i]) < 1.e-12) {
+	    cerr << "Error in DenseMatrix::solve() -- returning zero sol'n.\n";
+	    for (int jj=0; jj<nr; jj++) sol[jj]=0;
+	    return;
+	}
 	double factor=1./data[i][i];
 	for(int j=0;j<nr;j++)
 	    data[i][j]*=factor;
@@ -502,6 +517,9 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.6  1999/12/09 20:12:25  dmw
+// shouldn't crash on solving an under-determined system -- rather, just return some vector from the solution space... for now, just return a 0-vector and Rob V will put in the minimum norm solution later today or tomorrow.
+//
 // Revision 1.5  1999/12/09 09:53:23  dmw
 // commented out debug info in DenseMatrix::solve()
 //
