@@ -47,6 +47,7 @@ namespace Uintah {
 	 double_type,
 	 bool_type,
 	 int_type,
+         long_type,
 	 Unknown,
 	 Other
       };
@@ -91,6 +92,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.5  2000/06/02 17:22:14  guilkey
+// Added long_type to the the TypeDescription and TypeUtils.
+//
 // Revision 1.4  2000/05/21 08:19:09  sparker
 // Implement NCVariable read
 // Do not fail if variable type is not known

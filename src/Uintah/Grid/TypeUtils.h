@@ -13,6 +13,7 @@ namespace Uintah {
    const TypeDescription* fun_getTypeDescription(double*);
    const TypeDescription* fun_getTypeDescription(bool*);
    const TypeDescription* fun_getTypeDescription(int*);
+   const TypeDescription* fun_getTypeDescription(long*);
    const TypeDescription* fun_getTypeDescription(SCICore::Geometry::Point*);
    const TypeDescription* fun_getTypeDescription(SCICore::Geometry::Vector*);
    
@@ -20,6 +21,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.2  2000/06/02 17:22:15  guilkey
+// Added long_type to the the TypeDescription and TypeUtils.
+//
 // Revision 1.1  2000/05/20 08:09:29  sparker
 // Improved TypeDescription
 // Finished I/O
