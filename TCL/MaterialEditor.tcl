@@ -264,11 +264,11 @@ proc makeMaterialEditor {w var command cancel} {
     pack $opts.ok $opts.cancel $opts.preview $opts.resync -in $opts -side left -anchor nw
     pack $opts -in $left.sample -side top -fill both -anchor nw
 
-    canvas $left.sample.sam -width 5.9c -height 5.9c -background #000000
+    canvas $left.sample.sam -width 5.9c -height 5.9c -background #FFFFFF
     pack $left.sample.sam -in $left.sample -side top -padx 2 -pady 2 -expand 1 -fill both -anchor nw
-    $left.sample.sam create text 2c 3c -text Preview -anchor sw -fill white
+    $left.sample.sam create text 2c 3c -text Preview -anchor sw -fill black
     $left.sample.sam create text 2.5c 3.5c -text Not -anchor sw -fill red
-    $left.sample.sam create text 1.5c 4c -text Implemented -anchor sw -fill white
+    $left.sample.sam create text 1.5c 4c -text Implemented -anchor sw -fill black
     pack $left.sample -in $left -side left -padx 2 -pady 2 -expand 1 -fill both -anchor nw
 
     pack $middle $right -in $w.lmr.mr -side left -pady 2 -anchor nw -fill both
