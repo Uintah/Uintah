@@ -324,6 +324,7 @@ MPMLabel::~MPMLabel()
   delete pCrackSurfaceContactForceLabel;
   delete pTensileStrengthLabel;
   delete pEnergyReleaseRateLabel;
+  delete pImageVelocityLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
@@ -345,6 +346,7 @@ MPMLabel::~MPMLabel()
   delete pCrackSurfaceContactForceLabel_preReloc;
   delete pTensileStrengthLabel_preReloc;
   delete pEnergyReleaseRateLabel_preReloc;
+  delete pImageVelocityLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
   delete pMassRateLabel_preReloc;
@@ -360,6 +362,9 @@ MPMLabel::~MPMLabel()
   delete gMomExedVelocityStarLabel;
   delete gNormTractionLabel;
   delete gStressLabel;
+  delete gStressForSavingLabel;
+  delete gVolumeLabel;
+  delete gWeightLabel;
   delete gSurfNormLabel;
   delete gSelfContactLabel;
   delete gCrackNormalLabel;
@@ -402,6 +407,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.50  2001/01/20 00:37:56  jas
+// Removed some memory leaks.
+//
 // Revision 1.49  2001/01/15 23:24:10  guilkey
 // Removed mom_L_MECCLabel.  This is all in the MPMICELabel now.
 //
