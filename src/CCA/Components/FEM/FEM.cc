@@ -281,6 +281,7 @@ int myGoPort::go()
     delete dr[0]; 
     delete dr[1];
     com->matrixPort->setCalleeDistribution("DMatrix",arrr); 
+
     /*
     cerr<<"MATRIX Ag \n======================="<<endl;
     for(int i=0;i<size;i++){
