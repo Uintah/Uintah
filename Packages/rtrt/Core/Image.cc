@@ -38,6 +38,7 @@ Image::Image(int xres, int yres, bool stereo)
     : xres(xres), yres(yres), stereo(stereo)
 {
     image=0;
+    depth=0;
     resize_image();
 }
 
@@ -138,10 +139,11 @@ void Image::draw( int window_size, bool fullscreen )
   }
 }
 
-#if 0
 void Image::draw_depth( float max_depth ) {
   int num_pixels = xres*yres;
   float *pixel = &depth[0][0];
+  Pixel *pic = image[0];
+  
 #if 0
   float max = *pixel;
   for(int i = 1; i < num_pixels; i++) {
@@ -154,25 +156,39 @@ void Image::draw_depth( float max_depth ) {
   float inv_md = 1.0f/max;
 #else
   float inv_md = 1.0f/max_depth;
+  if (max_depth == 0) inv_md = 0;
 #endif
-  pixel = &depth[0][0];
-  for(int i = 0; i < num_pixels; i++) {
-    //
-    *pixel = sqrtf((*pixel)*inv_md);    
-    //*pixel = ((*pixel)*inv_md);    
-    pixel++;
+  pixel = depth[0];
+  for(int i = 0; i < num_pixels; i++, pixel++, pic++) {
+    float val;
+    val = *pixel;
+    if (val > 0) {
+      if (val < max_depth)
+        val = sqrtf(val*inv_md) * 255;
+      else
+        val = 255;
+    } else {
+      val = 0;
+    }
+    pic[0] = Pixel(val, val, val, 255);
   }
+#if 0
   glDrawBuffer(GL_BACK);
   glRasterPos2i(0,0);
   glDrawPixels(xres, yres, GL_LUMINANCE, GL_FLOAT, &depth[0][0]);
+#else
+  draw(0,0);
+#endif
 }
 
-//void Image::draw_sils( float max_depth ) {
-#else
-void Image::draw_depth( float max_depth ) {
+void Image::draw_sils_on_image( float max_depth ) {
   int num_pixels = xres*yres;
   float *pixel = &depth[0][0];
-  float inv_md = 1.0f/max_depth;
+  float inv_md;
+  if (max_depth > 0)
+    inv_md = 1.0f/max_depth;
+  else
+    inv_md = 0;
   pixel = &depth[0][0];
 
   float max_val = -MAXFLOAT;
@@ -225,7 +241,8 @@ void Image::draw_depth( float max_depth ) {
       else
         val = 0;
 
-      if (val > 0) {
+      //      if (val > 0) {
+      if (true) {
         // Compute the laplacian
         float inside_val = depth[j][i];
         inside_val *= 8;
@@ -251,10 +268,13 @@ void Image::draw_depth( float max_depth ) {
           image[j][i] = Pixel(0, 50, 0, 255);
         else
           image[j][i] = Pixel(0, 0, val, 255);
-#else
+#elif 0
         if (inside_val > 0 && inside_val > outside_val)
           image[j][i] = Pixel(255, 255, 255, 255);
         else
+          image[j][i] = Pixel(0, 0, 0, 255);
+#else
+        if (inside_val - outside_val > inv_md)
           image[j][i] = Pixel(0, 0, 0, 255);
 #endif
         //        if (val > max_val) max_val = val;
@@ -262,19 +282,12 @@ void Image::draw_depth( float max_depth ) {
         //      val = (val*.5)+128;
         //      val = fabsf(val)*10;
       } else {
-        image[j][i] = Pixel(0, 0, 0, 255);
+        //        image[j][i] = Pixel(0, 0, 0, 255);
       }      
 #endif
     }
   }
-
-  cout << "val range = ("<<min_val<<", "<<max_val<<")\n";
-  
-  glDrawBuffer(GL_BACK);
-  glRasterPos2i(0,0);
-  glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
 }
-#endif
 
 void Image::set(const Pixel& value)
 {
@@ -306,7 +319,7 @@ void Image::save(char* filename)
   printf("Finished writing image\n");
 }
 
-void Image::save_ppm(char *filename)
+void Image::save_ppm(char *filename, bool draw_sils, float max_depth)
 {
   // We need to find a filename that isn't already taken
   FILE *input_test;
@@ -327,6 +340,9 @@ void Image::save_ppm(char *filename)
     else
       sprintf(new_filename, "%s%02d-L.ppm", filename, ++count);
   }
+
+  if (draw_sils) draw_sils_on_image(max_depth);
+  
   ofstream outdata(new_filename);
   if (!outdata.is_open()) {
     cerr << "Image::save_ppm: ERROR: I/O fault: couldn't write image file: "
@@ -373,6 +389,81 @@ void Image::save_ppm(char *filename)
       }
     }
     outdata.close();
+    printf("Finished writing Right image of size (%d, %d) to %s\n", xres, yres,
+	   new_filename);
+  }
+}
+
+void Image::save_depth(char *filename)
+{
+  // We need to find a filename that isn't already taken
+  FILE *input_test;
+  char new_filename[1000];
+  if (!stereo)
+    sprintf(new_filename, "%s00.nrrd", filename);
+  else
+    sprintf(new_filename, "%s00-L.nrrd", filename);
+  int count = 0;
+  // I'm placing a max on how high count can get to prevent an
+  // infinate loop when the path is just bad and no amount of testing
+  // will create a viable filename.
+  while ((input_test = fopen(new_filename, "r")) != 0 && count < 500) {
+    fclose(input_test);
+    input_test = 0;
+    if (!stereo)
+      sprintf(new_filename, "%s%02d.nrrd", filename, ++count);
+    else
+      sprintf(new_filename, "%s%02d-L.nrrd", filename, ++count);
+  }
+  ofstream outdata(new_filename);
+  if (!outdata.is_open()) {
+    cerr << "Image::save_depth: ERROR: I/O fault: couldn't open image file to write: " << new_filename << "\n";
+    return;
+  }
+  outdata << "NRRD0001\n";
+
+  outdata << "type: float\n";
+  outdata << "dimension: 2\n";
+  outdata << "sizes: "<< xres << " " << yres << "\n";
+#ifdef __sgi
+  outdata << "endian: big\n";
+#else
+  outdata << "endian: little\n";
+#endif
+  outdata << "encoding: raw\n\n";
+  
+  for(int v=yres-1;v>=0;--v)
+    outdata.write((char*)depth[v], xres*sizeof(float));
+
+  outdata.close();
+  printf("Finished writing image of size (%d, %d) to %s\n", xres, yres,
+	 new_filename);
+  if (stereo) {
+    sprintf(new_filename, "%s%02d-R.nrrd", filename, count);
+    outdata.open(new_filename);
+    if (!outdata.is_open()) {
+      cerr << "Image::save_ppm: ERROR: I/O fault: couldn't image file to write: "
+	   << new_filename << "\n";
+      return;
+    }
+
+    outdata << "NRRD0001\n";
+
+    outdata << "type: float\n";
+    outdata << "dimension: 2\n";
+    outdata << "sizes: "<< xres << " " << yres << "\n";
+#ifdef __sgi
+    outdata << "endian: big\n";
+#else
+    outdata << "endian: little\n";
+#endif
+    outdata << "encoding: raw\n\n";
+  
+    for(int v=yres-1;v>=0;--v)
+      outdata.write((char*)depth[v+yres], xres*sizeof(float));
+
+    outdata.close();
+
     printf("Finished writing Right image of size (%d, %d) to %s\n", xres, yres,
 	   new_filename);
   }
