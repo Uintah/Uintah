@@ -229,10 +229,16 @@ namespace SCIRun {
       NeedData,
       JustStarted,
       Executing,
-      Completed,
-      Error
+      Completed
+    };
+    enum MsgState {  
+      Remark,
+      Warning,
+      Error,
+      Nothing
     };
     void update_state(State);
+    void update_msg_state(MsgState);  
     CPUTimer timer;
   public:
     TCLstrbuff msgStream_;
@@ -253,6 +259,7 @@ namespace SCIRun {
     void reconfigure_iports();
     void reconfigure_oports();
     State state;
+    MsgState msg_state;  
     double progress;
     bool show_stat;
     
