@@ -46,8 +46,15 @@ namespace VS {
 
 using namespace SCIRun;
 
+// Query Data Source
 #define VS_DATASOURCE_OQAFMA 1
 #define VS_DATASOURCE_FILES 2
+
+// Query Type
+#define VS_QUERYTYPE_ADJACENT_TO 1
+#define VS_QUERYTYPE_CONTAINS 2
+#define VS_QUERYTYPE_PARTS 3
+#define VS_QUERYTYPE_PARTCONTAINS 4
 
 class PSECORESHARE HotBox : public Module {
 private:
@@ -77,6 +84,10 @@ private:
 
   // file or OQAFMA
   GuiInt datasource_;
+
+  // Query Type
+  GuiInt querytype_;
+
   // "fromHotBoxUI" or "fromProbe"
   GuiString selectionsource_;
 
@@ -119,6 +130,7 @@ HotBox::HotBox(GuiContext* ctx)
   gui_label9_(ctx->subVar("gui_label9")),
   enableDraw_(ctx->subVar("enableDraw")),
   datasource_(ctx->subVar("datasource")),
+  querytype_(ctx->subVar("querytype")),
   selectionsource_(ctx->subVar("selectionsource")),
   anatomydatasource_(ctx->subVar("anatomydatasource")),
   adjacencydatasource_(ctx->subVar("adjacencydatasource")),
@@ -217,6 +229,7 @@ void
   //  Matrix *matrixPtr = inputMatrixHandle.get_rep();
 
   const int dataSource(datasource_.get());
+  const int queryType(querytype_.get());
   const string selectionSource(selectionsource_.get());
   const string currentSelection(currentselection_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
@@ -290,11 +303,33 @@ void
     ns1__processStruQLResponse resultStruQL;
     ServiceInterfaceSoapBinding ws;
     // build the query to send to OQAFMA
-    std::string p2 = "WHERE X->\":NAME\"->\"";
-    p2 += selectName;
-    p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
-    p2 += space_to_underbar(partsName, selectName);
-    p2 += "(Parts)";
+    std::string p2;
+    switch(queryType)
+    {
+      case VS_QUERYTYPE_ADJACENT_TO:
+      case VS_QUERYTYPE_CONTAINS:
+      {
+        p2 = "WHERE X->\":NAME\"->\"";
+        p2 += selectName;
+        p2 += "\", X->\"part\"+.\"contains\"->Y, Y->\":NAME\"->Contains CREATE The";
+        p2 += space_to_underbar(partsName, selectName);
+        p2 += "(Contains)";
+        break;
+      }
+      case VS_QUERYTYPE_PARTS:
+      {
+        p2 = "WHERE X->\":NAME\"->\"";
+        p2 += selectName;
+        p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
+        p2 += space_to_underbar(partsName, selectName);
+        p2 += "(Parts)";
+        break;
+      }
+      case VS_QUERYTYPE_PARTCONTAINS:
+      default:
+      {
+      }
+    }
     cout << "OQAFMA query: " <<  p2  << endl;
     // launch a query via OQAFMA/Protege C function calls
     if (ws.ns1__processStruQL(p2, resultStruQL) != SOAP_OK)
