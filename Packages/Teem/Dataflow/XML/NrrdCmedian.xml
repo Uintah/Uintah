@@ -37,7 +37,7 @@ because it doesn't do any filtering on the border (as defined by
 radius "-r"); values at these locations are simply copied from input.
       </p>
     </description>
-    <examplesr></examplesr>
+    <examplesr>Teem/nets/cmedian.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">
