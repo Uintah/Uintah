@@ -2205,7 +2205,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
-    e.out << leader2 << "  ::SCIRun::Reference _ref();\n";
+    e.out << leader2 << "  ::SCIRun::Reference _ref;\n";
     e.out << leader2 << "  _ref.d_vtable_base=" << arg << "_vtable_base;\n";
     e.out << leader2 << "  message->unmarshalSpChannel(_ref.chan);\n";
     e.out << leader2 << "  ::SCIRun::Message* spmsg = (_ref.chan)->getMessage();\n";
@@ -2504,7 +2504,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
     e.out << leader2 << "  int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref();\n";
+    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref;\n";
     e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
     e.out << leader2 << "  int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
     e.out << leader2 << "  message->marshalInt(&_vtable_base);\n";
