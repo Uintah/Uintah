@@ -14,6 +14,9 @@
 #include <Packages/rtrt/Core/RegularColorMap.h>
 
 #include <Core/Thread/Time.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
 
 
 #include <sgi_stl_warnings_off.h>
@@ -36,6 +39,7 @@ using namespace std;
 //using SCIRun::Time;
 
 using SCIRun::Thread;
+using SCIRun::Semaphore;
 
 //#define NDATA 3
 
@@ -509,8 +513,30 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   return new GridSpheres(data, mins, maxs, nspheres, numvars, gridcellsize, griddepth, radius, cmap);
 }
 
+/////////////////////////////////////////////////////////////
+//////////////////
+//////             Parallel code
+/////////////////////////////////////////////////////////////
+class Preprocessor: public Runnable {
+  GridSpheres *grid;
+  Semaphore *sema;
+
+public:
+  Preprocessor(GridSpheres* grid, Semaphore *sema):
+    grid(grid), sema(sema)
+  {}
+  ~Preprocessor() {}
+  void run() {
+    int a,b;
+    grid->preprocess(0,a,b);
+    sema->up();
+  }
+};
+
+/////////////////////////////////////////////////
+
 extern "C" 
-Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
+Scene* make_scene(int argc, char* argv[], int nworkers)
 {
   char* file=0;
   int gridcellsize=4;
@@ -603,6 +629,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   SelectableGroup* alltime = 0;
   
   if (timevary) {
+    // Semaphore for preprossing
+    Semaphore* prepro_sema = new Semaphore("rtrt::tstdemo preprocess semaphore", nworkers);
     ifstream in(file);
     alltime = new SelectableGroup(1.0/rate);
     //Group* timeblock;
@@ -641,10 +669,19 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	  GridSpheres* obj=read_spheres(file, colordata, gridcellsize, griddepth, radius, radius_factor, numvars, cmap);
 	  display->attach(obj);
 	  alltime->add((Object*)obj);
+          prepro_sema->down();
+          Thread *thrd = new Thread(new Preprocessor(obj, prepro_sema),
+                                       "rtrt::spherefile:Preprocessor Thread");
+          thrd->detach();
+
 #endif
 	}
       }
-    }
+    } // while there are files
+    // Wait for everyone to finish
+    prepro_sema->down(nworkers);
+    if (prepro_sema) delete prepro_sema;
+    
     all->add(alltime);
   }
   else {
