@@ -98,7 +98,7 @@
                            <value> 0. </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Dirichlet">
-                           <value> [0.,0.,0.] </value>
+                           <value> [1.,1.,0.] </value>
                         </BCType>
 			<BCType label = "Temperature" var = "Dirichlet">
                            <value> 300. </value>
@@ -112,7 +112,7 @@
                            <value> 0. </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Dirichlet">
-                           <value> [0.,0.,0.] </value>
+                           <value> [1.,1.,0.] </value>
                         </BCType>
 			<BCType label = "Temperature" var = "Dirichlet">
                            <value> 300. </value>
@@ -125,11 +125,11 @@
 	<Level>
 	    <Box label="1">
 	    	<lower>       [1,1,1]     </lower>
-	    	<upper>       [3,3,3]   </upper>
-	       	<resolution>  [2,2,1]   </resolution>
+	    	<upper>       [3,3,2]   </upper>
                 <extraCells>  [1,1,1]	  </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
+	    <spacing>[1,1,1] </spacing>
 	</Level>
     </Grid>
    
@@ -195,8 +195,8 @@
 	    <velocity_field>0</velocity_field>
 	    <geom_object>
                 <box label="gp1">
-                    <min>[ 1.0, 1.0, 1.0 ]</min>
-                    <max>[ 3.0, 3.0, 3.0 ]</max>
+                    <min>[ 0.0, 0.0, 0.0 ]</min>
+                    <max>[ 4.0, 4.0, 3.0 ]</max>
                 </box>
 	        <res>		   [2,2,2]    </res>
 	        <velocity>         [1,1,0]    </velocity>
