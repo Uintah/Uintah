@@ -454,6 +454,8 @@ const Patch* Level::selectPatch( const IntVector& idx) const
 {
   selectType pv;
   selectPatches(idx,idx,pv);
-  // may need to check if pv is empty
-  return pv[0];
+  if(pv.size() == 0)
+    return 0;
+  else
+    return pv[0];
 }
