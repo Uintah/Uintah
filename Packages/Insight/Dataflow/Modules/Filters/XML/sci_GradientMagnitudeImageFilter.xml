@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <filter name="GradientMagnitude">
-  <include href="../../../../ITK/itk_GradientMagnitudeImageFilter.xml"/>
-  <include href="gui_GradientMagnitudeImageFilter_Darby.xml"/>
-<filter-sci name="GradientMagnitudeImageFilter">
+  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/ITK/itk_GradientMagnitudeImageFilter.xml"/>
+  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML/gui_GradientMagnitudeImageFilter_Darby.xml"/>
+
+<filter-sci name="GradientMagnitude">
   <package>Insight</package>
 
   <category>Filters</category>

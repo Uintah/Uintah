@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <filter name="CaannySegmentationLevelSetImageFilter">
-  <include href="../../../../ITK/itk_CannySegmentationLevelSetImageFilter.xml"/>
-  <include href="gui_CannySegmentationLevelSetImageFilter_Darby.xml"/>
+  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/ITK/itk_CannySegmentationLevelSetImageFilter.xml"/>
 
 <filter-sci name="CannySegmentationLevelSetImageFilter">
   <package>Insight</package>

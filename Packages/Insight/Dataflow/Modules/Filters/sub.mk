@@ -15,24 +15,26 @@ INCLUDES += $(INSIGHT_INCLUDE)
 SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 
 #XMLS :=  $(wildcard $(SRCDIR)/XML/sci_*.xml)
-XMLS :=  sci_CannySegmentationLevelSetImageFilter.xml \
+XMLS :=  \
 	sci_DiscreteGaussianImageFilter.xml \
-	sci_GradientAnisotropicDiffusionImageFilter.xml \
-	sci_GradientMagnitudeImageFilter.xml \
+  sci_GradientAnisotropicDiffusionImageFilter.xml \
+  sci_GradientMagnitudeImageFilter.xml \
 	sci_WatershedRelabeler.xml \
 	sci_WatershedSegmentTreeGenerator.xml \
 	sci_WatershedSegmenter.xml \
 #[INSERT NEW CODE FILE HERE]
+#sci_CannySegmentationLevelSetImageFilter.xml \
 
 SRC_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
 
 CATEGORY := Filters
-CODEGEN := Packages/Insight/generate
+CODEGEN := Packages/Insight/Core/CodeGenerator/generate
 
 SRCS += ${SRC_GEN} 
 
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
-	$(CODEGEN) $(SRCDIR)/Packages/Insight $(CATEGORY) $*
+	$(CODEGEN) /Users/yarden/projects/SCIRun/src/Packages/Insight $(CATEGORY) $*
+	cp ../src/$@ $@
 
 PSELIBS := Packages/Insight/Core/Datatypes \
 	Core/Datatypes Dataflow/Network Dataflow/Ports \

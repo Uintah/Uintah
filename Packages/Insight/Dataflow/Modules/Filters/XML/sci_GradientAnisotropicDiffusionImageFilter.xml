@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <filter name="GradientAnisotropicDiffusionImageFilter">
-   <include href="../../../../ITK/itk_GradientAnisotropicDiffusionImageFilter.xml"/>
+   <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/ITK/itk_GradientAnisotropicDiffusionImageFilter.xml"/>
+   <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML/gui_GradientAnisotropicDiffusionImageFilter_Darby.xml"/>
    <filter-sci name="GradientAnisotropicDiffusionImageFilter">
       <package>Insight</package>
       <category>Filters</category>

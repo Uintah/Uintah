@@ -5,7 +5,7 @@
 #####################################
 
 # Need to have full path as variable
-SRCDIR := /home/sci/darbyb/work/Yarden/SCIRun/src/Packages/Insight
+SRCDIR := /Users/yarden/projects/SCIRun/src/Packages/Insight
 CATEGORY := Filters
 
 OBJECTS := $(patsubst sci_%.xml, ../%.cc, $(wildcard sci_*.xml))
@@ -16,4 +16,4 @@ all:	${OBJECTS}
 
 # generate program must already be compiled
 ../%.cc: 	sci_%.xml
-	/home/sci/darbyb/work/Yarden/SCIRun/src/Packages/Insight/Core/CodeGenerator/generate ${SRCDIR} ${CATEGORY} $(patsubst ../%.cc, %, $@)
+	/Users/yarden/projects/SCIRun/osx/Packages/Insight/Core/CodeGenerator/generate ${SRCDIR} ${CATEGORY} $(patsubst ../%.cc, %, $@)
