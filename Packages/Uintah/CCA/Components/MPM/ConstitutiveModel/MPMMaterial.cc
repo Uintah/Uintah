@@ -158,14 +158,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 }
 
 
-void MPMMaterial::getParticleState(vector<const VarLabel* >& pstate,
-				   vector<const VarLabel* >& pstate_rel)
-{
-  d_particle_creator->ParticleCreator::getPermanentParticleState(pstate,
-								 pstate_rel);
-
-}
-
 double MPMMaterial::getThermalConductivity() const
 {
   return d_thermalConductivity;
