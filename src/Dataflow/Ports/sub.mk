@@ -33,7 +33,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Ports
 
-SRCS     += $(SRCDIR)/ColorMapPort.cc             \
+SRCS     += $(SRCDIR)/BundlePort.cc		  \
+	    $(SRCDIR)/ColorMapPort.cc             \
 	    $(SRCDIR)/Colormap2Port.cc            \
             $(SRCDIR)/FieldPort.cc                \
             $(SRCDIR)/GeometryPort.cc             \
@@ -47,7 +48,7 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
 	Core/Thread Core/Geom Core/Geometry Core/Exceptions Core/Util \
-	Core/Persistent Core/Datatypes Core/Volume
+	Core/Persistent Core/Datatypes Core/Volume Core/Bundle
 
 LIBS := 
 
