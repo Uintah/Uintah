@@ -290,12 +290,10 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 				    bool use_transparency)
 {
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-  GeomGroup* nodes = scinew GeomGroup;
-  GeomDL *display_list =
-    scinew GeomDL(scinew GeomMaterial(nodes, def_mat_handle_));
-  GeomSwitch *node_switch = scinew GeomSwitch(display_list);
+  GeomGroup *nodes = 0;
   GeomPoints *points = 0;
   GeomLines *lines = 0;
+  GeomHandle display_list(0);
 
   // 0 Points 1 Spheres 2 Axes 3 Disks
   int mode = 0;
@@ -304,28 +302,43 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   else if (node_display_mode == "Axes")    { mode = 2; }
   else if (node_display_mode == "Disks")   { mode = 3; }
 
-  if (mode == 0) { // Points
+  if (mode == 0) // Points
+  {
     if (use_transparency)
     {
       points = scinew GeomTranspPoints();
+      display_list = points;
     }
     else
     {
       points = scinew GeomPoints();
+      display_list = scinew GeomDL(points);
     }
+  }
+  else if (mode == 1 || mode == 3)
+  {
+    nodes = scinew GeomGroup();
+    display_list = scinew GeomDL(nodes);
   }
   else if (mode == 2) // Axis
   {
     if (use_transparency)
     {
       lines = scinew GeomTranspLines();
+      display_list = lines;
     }
     else
     {
       lines = scinew GeomLines();
+      display_list = scinew GeomDL(lines);
     }
     lines->setLineWidth(3);
   }
+
+  GeomSwitch *node_switch =
+    scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(display_list,
+							      def_mat_handle_),
+					  color_handle_));
 
   // First pass: over the nodes
   mesh->synchronize(Mesh::NODES_E);
@@ -333,7 +346,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   typename Fld::mesh_type::Node::iterator niter_end;  mesh->end(niter_end);  
   while (niter != niter_end) {
     // Use a default color?
-    bool def_color = false;
+    bool def_color = !(color_handle_.get_rep());
     
     Point p;
     mesh->get_point(p, *niter);
@@ -411,14 +424,6 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       break;
     }
     ++niter;
-  }
-  if (mode == 0) { // Points
-    nodes->add(scinew GeomColorMap(scinew GeomMaterial(points, def_mat_handle_),
-				   color_handle_));
-  }
-  else if (mode == 2) { // Axes
-    nodes->add(scinew GeomColorMap(scinew GeomMaterial(lines, def_mat_handle_),
-				   color_handle_));
   }
 
   return node_switch;

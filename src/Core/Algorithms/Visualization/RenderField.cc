@@ -63,9 +63,12 @@ RenderFieldBase::add_sphere(const Point &p0, double scale,
 			    int resolution,
 			    GeomGroup *g, MaterialHandle mh)
 {
-  GeomSphere *s = scinew GeomSphere(p0, scale, resolution, resolution);
-  if (mh.get_rep()) { g->add(scinew GeomMaterial(s, mh)); }
-  else { g->add(s); }
+  if (scale > 0.0)
+  {
+    GeomSphere *s = scinew GeomSphere(p0, scale, resolution, resolution);
+    if (mh.get_rep()) { g->add(scinew GeomMaterial(s, mh)); }
+    else { g->add(s); }
+  }
 }
 
 
