@@ -476,10 +476,10 @@ itcl_class SCIRun_Visualization_ShowField {
 	frame $window.control.excdis -borderwidth 2
 	button $window.control.excdis.execute -text Execute \
 	    -command "$this-c needexecute"
-	button $window.control.excdis.dismiss -text Dismiss \
+	button $window.control.excdis.close -text Close \
 		-command "destroy $window"
 
-	pack $window.control.excdis.execute $window.control.excdis.dismiss \
+	pack $window.control.excdis.execute $window.control.excdis.close \
 		-side left -padx 5 -expand 1 -fill x
 	pack $window.control.excdis -padx 2 -pady 2 -side top -fill both
 	pack $window.control -padx 2 -pady 2 -side top -fill both
