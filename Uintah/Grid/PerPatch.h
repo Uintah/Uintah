@@ -3,6 +3,7 @@
 
 #include <Uintah/Grid/PerPatchBase.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace Uintah {
 
@@ -104,6 +105,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/09/20 15:48:30  sparker
+// Added .copy() method to copy one Array3 from another
+//
 // Revision 1.3  2000/06/30 04:17:25  rawat
 // added setData() function in PerPatch.h
 //

@@ -45,6 +45,7 @@ namespace Uintah {
 	 return data;
       }
       
+      void copy(const Array3Window<T>*);
       void initialize(const T&);
       void initialize(const T&, const IntVector& s, const IntVector& e);
       inline IntVector getLowIndex() const {
@@ -99,6 +100,13 @@ namespace Uintah {
       }
    
    template<class T>
+      void Array3Window<T>::copy(const Array3Window<T>* from)
+      {
+	 data->copy(lowIndex-offset, highIndex-offset, from->data,
+		    from->lowIndex-from->offset, from->highIndex-from->offset);
+      }
+   
+   template<class T>
       void Array3Window<T>::initialize(const T& val,
 				       const IntVector& s,
 				       const IntVector& e)
@@ -146,6 +154,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.8  2000/09/20 15:48:30  sparker
+// Added .copy() method to copy one Array3 from another
+//
 // Revision 1.7  2000/06/15 21:57:15  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
