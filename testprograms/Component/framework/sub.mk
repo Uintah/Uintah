@@ -16,7 +16,8 @@ LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io
 
 PROGRAM := $(SRCDIR)/main
 
-SRCS    := $(SRCDIR)/cca_sidl.cc \
+SRCS    := \
+	$(SRCDIR)/cca_sidl.cc \
 	$(SRCDIR)/main.cc \
 	$(SRCDIR)/cca.cc \
 	$(SRCDIR)/Registry.cc \
@@ -29,15 +30,12 @@ SRCS    := $(SRCDIR)/cca_sidl.cc \
 	$(SRCDIR)/ConnectionServicesImpl.cc \
 	$(SRCDIR)/RegistryServicesImpl.cc \
 	$(SRCDIR)/LocalFramework.cc \
-	$(SRCDIR)/Builder.cc \
-	$(SRCDIR)/Sender.cc \
-	$(SRCDIR)/Provider.cc \
 	$(SRCDIR)/TestPortImpl.cc 
 
 GENHDRS := $(SRCDIR)/cca_sidl.h
 
 # Must be after the SRCS so that the REI files can be added to them.
-SUBDIRS := $(SRCDIR)/REI
+SUBDIRS := $(SRCDIR)/Builders $(SRCDIR)/REI $(SRCDIR)/TestComponents
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 include $(SRCTOP)/scripts/program.mk

@@ -1,5 +1,5 @@
 
-#include <testprograms/Component/framework/Sender.h>
+#include <testprograms/Component/framework/TestComponents/Sender.h>
 #include <testprograms/Component/framework/PortInfoImpl.h>
 
 #include <sstream>

@@ -1,6 +1,6 @@
 
 #include <testprograms/Component/framework/cca.h>
-#include <testprograms/Component/framework/Builder.h>
+#include <testprograms/Component/framework/Builders/Builder.h>
 #include <testprograms/Component/framework/ConnectionServicesImpl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
