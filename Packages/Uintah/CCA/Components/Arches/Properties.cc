@@ -98,8 +98,7 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		numGhostCells);
   // requires scalars
-  tsk->requires(Task::NewDW, d_lab->d_densitySPLabel, Ghost::None,
-		numGhostCells);
+  tsk->modifies(d_lab->d_densityINLabel);
   // will only work for one mixing variables
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
 		numGhostCells);
@@ -235,19 +234,24 @@ Properties::computeProps(const ProcessorGroup*,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Get the cellType and density from the old datawarehouse
     int nofGhostCells = 0;
-    CCVariable<int> cellType;
+    constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
+    constCCVariable<double> density_old;
     CCVariable<double> density;
-    StaticArray<CCVariable<double> > scalar(d_numMixingVars);
+    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
     CCVariable<double> enthalpy;
+    new_dw->getModifiable(density, d_lab->d_densityINLabel, 
+		matlIndex, patch);
 
-    new_dw->get(density, d_lab->d_densitySPLabel, 
-		matlIndex, patch, Ghost::None, nofGhostCells);
-    if (d_enthalpySolve)
-      new_dw->get(enthalpy, d_lab->d_enthalpySPBCLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
-
+    if (d_enthalpySolve) {
+      //constCCVariable<double> enthalpy_old;
+      //new_dw->get(enthalpy_old, d_lab->d_enthalpySPBCLabel, 
+      //	  matlIndex, patch, Ghost::None, nofGhostCells);
+      new_dw->allocate(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      //enthalpy.copyData(enthalpy_old);
+    }
+    
     CCVariable<double> temperature;
     CCVariable<double> co2;
     CCVariable<double> enthalpyRXN;
@@ -274,14 +278,14 @@ Properties::computeProps(const ProcessorGroup*,
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
 
-    StaticArray<CCVariable<double> > scalarVar(d_numMixStatVars);
+    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
 
     if (d_numMixStatVars > 0) {
     for (int ii = 0; ii < d_numMixStatVars; ii++)
       new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
     }
-    StaticArray<CCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
     
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
@@ -362,6 +366,8 @@ Properties::computeProps(const ProcessorGroup*,
 	    //	    density[currCell] = d_denUnderrelax*local_den +
 	    //  (1.0-d_denUnderrelax)*density[currCell];
 	    density[currCell] = local_den;
+	  else
+	    density[currCell] = density_old[currCell];
 	}
       }
     }
@@ -397,8 +403,10 @@ Properties::computeProps(const ProcessorGroup*,
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
     // Write the computed density to the new data warehouse
-
-    new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
+    CCVariable<double> density_cp;
+    new_dw->allocate(density_cp,d_lab->d_densityCPLabel, matlIndex, patch);
+    density_cp.copyData(density);
+    new_dw->put(density_cp,d_lab->d_densityCPLabel, matlIndex, patch);
     if (d_enthalpySolve)
       new_dw->put(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
     if (d_reactingFlow) {
@@ -438,8 +446,8 @@ Properties::reComputeProps(const ProcessorGroup*,
     // Get the CCVariable (density) from the old datawarehouse
     // just write one function for computing properties
 
-    CCVariable<double> density;
-    CCVariable<double> voidFraction;
+    constCCVariable<double> density;
+    constCCVariable<double> voidFraction;
     CCVariable<double> temperature;
     CCVariable<double> new_density;
     CCVariable<double> co2;
@@ -465,9 +473,9 @@ Properties::reComputeProps(const ProcessorGroup*,
     }
     new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
  
-    StaticArray<CCVariable<double> > scalar(d_numMixingVars);
+    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
 
-    CCVariable<double> enthalpy_comp;
+    constCCVariable<double> enthalpy_comp;
     CCVariable<double> denMicro;
 
     int nofGhostCells = 0;
@@ -479,15 +487,17 @@ Properties::reComputeProps(const ProcessorGroup*,
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
-      new_dw->get(denMicro, d_lab->d_densityMicroINLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+      //new_dw->get(denMicro_old, d_lab->d_densityMicroINLabel, 
+      //	  matlIndex, patch, Ghost::None, nofGhostCells);
+      new_dw->allocate(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+      //denMicro.copyData(denMicro_old);
     }
 
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
 
-    StaticArray<CCVariable<double> > scalarVar(d_numMixStatVars);
+    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
 
     if (d_numMixStatVars > 0) {
       for (int ii = 0; ii < d_numMixStatVars; ii++)
@@ -495,7 +505,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 		    matlIndex, patch, Ghost::None, nofGhostCells);
     }
 
-    StaticArray<CCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
     
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
@@ -657,7 +667,7 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> denRefArray;
-    CCVariable<double> voidFraction;
+    constCCVariable<double> voidFraction;
 
     int zeroGhostCells = 0;
 
@@ -750,24 +760,24 @@ Properties::computePropsPred(const ProcessorGroup*,
     // Get the CCVariable (density) from the old datawarehouse
     // just write one function for computing properties
 
-    CCVariable<double> density;
+    constCCVariable<double> density;
     CCVariable<double> new_density;
-    CCVariable<double> voidFraction;
+    constCCVariable<double> voidFraction;
  
-    StaticArray<CCVariable<double> > scalar(d_numMixingVars);
-    CCVariable<double> denMicro;
+    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
+    //constCCVariable<double> denMicro;
 
     int nofGhostCells = 0;
     new_dw->allocate(new_density, d_lab->d_densityPredLabel, 
 		     matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
-    new_density.copyPatch(density);
+    new_density.copyData(density);
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
-      new_dw->get(denMicro, d_lab->d_densityMicroINLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+      //new_dw->get(denMicro, d_lab->d_densityMicroINLabel, 
+      //	  matlIndex, patch, Ghost::None, nofGhostCells);
     }
 
     for (int ii = 0; ii < d_numMixingVars; ii++)
@@ -816,7 +826,7 @@ Properties::computePropsPred(const ProcessorGroup*,
 
 
 	  if (d_MAlab) {
-	    denMicro[IntVector(colX, colY, colZ)] = local_den;
+	    //denMicro[IntVector(colX, colY, colZ)] = local_den;
 	    if (voidFraction[currCell] > 0.01)
 	      local_den *= voidFraction[currCell];
 

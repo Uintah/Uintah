@@ -163,25 +163,27 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    CCVariable<double> density;
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
+    constCCVariable<double> density;
     CCVariable<double> viscosity;
 
     // Get the velocity, density and viscosity from the old data warehouse
     int numGhostCells = 1;
     int zeroGhostCells = 0;
-    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
-		zeroGhostCells);
+    
+    new_dw->allocate(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
 		Ghost::AroundCells, numGhostCells);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch, 
 		Ghost::AroundCells, numGhostCells);
     new_dw->get(wVelocity,d_lab->d_wVelocitySPLabel, matlIndex, patch, 
 		Ghost::AroundCells, numGhostCells);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		zeroGhostCells);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
+		Ghost::None, zeroGhostCells);
 
     PerPatch<CellInformationP> cellinfop;
     //if (old_dw->exists(d_cellInfoLabel, patch)) {
@@ -263,15 +265,20 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    CCVariable<double> density;
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
+    constCCVariable<double> density;
     CCVariable<double> viscosity;
-    CCVariable<double> voidFraction;
+    constCCVariable<double> voidFraction;
     // Get the velocity, density and viscosity from the old data warehouse
     int numGhostCells = 1;
     int zeroGhostCells = 0;
+
+    new_dw->allocate(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+    
     new_dw->get(uVelocity,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundCells, numGhostCells);
     new_dw->get(vVelocity,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
@@ -280,8 +287,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 		Ghost::AroundCells, numGhostCells);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
 		zeroGhostCells);
-    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
-		zeroGhostCells);
+    
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
 		  Ghost::None, zeroGhostCells);
@@ -412,15 +418,17 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
-    CCVariable<double> scalar;
+    constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
     int numGhostCells = 1;
     int zeroGhostCells = 0;
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
 		numGhostCells);
-    new_dw->get(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
-		Ghost::None, zeroGhostCells);
+    new_dw->allocate(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    new_dw->copyOut(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+    
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
