@@ -354,7 +354,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     MaterialSubset* thismatl = scinew MaterialSubset();
     thismatl->add(m);
     for(int i=0;i<(int)old_labels[m].size();i++)
-      t->requires( Task::NewDW, old_labels[m][i], Ghost::None);
+      t->requires( Task::NewDW, old_labels[m][i], thismatl, Ghost::None);
 
     t->computes( new_posLabel, thismatl);
     for(int i=0;i<(int)new_labels[m].size();i++)
