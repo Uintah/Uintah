@@ -32,6 +32,7 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Visualization
 SRCS     += \
 	$(SRCDIR)/ShowDipoles.cc\
 	$(SRCDIR)/ShowLeads.cc\
+	$(SRCDIR)/Tensorlines.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
