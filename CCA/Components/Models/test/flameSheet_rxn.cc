@@ -408,7 +408,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
         /*`==========TESTING==========*/    
         // this needs to be changed
         CCVariable<double> diff_coeff;
-        new_dw->allocateTemporary(diff_coeff, patch);
+        new_dw->allocateTemporary(diff_coeff, patch,Ghost::AroundCells, 1);
         diff_coeff.initialize(d_diffusivity);    
         /*==========TESTING==========`*/
         scalarDiffusionOperator(new_dw, patch, use_vol_frac,
