@@ -755,40 +755,38 @@ proc instanceSubnet { subnet_name { x 0 } { y 0 } { from 0 } } {
 }
 
 
-proc isaDefaultValue { var } {
-    set var [string trimleft $var :]
-    upvar \#0 $var val
-    # If this variable doesn't globally exist, its definitely default
+proc isaDefaultValue { module varname classname } {
+    global DefaultClassInstances
+    upvar \#0 "$module-$varname" val
+    # If this variable doesn't exist in the TCL namespace yet,
+    # it was created by a C-side GuiVar, but it hasn't been modified yet,
+    # Assume the variable we're checking is DEFAULT, so return TRUE
     if { ![info exists val] } {
 	return 1
     }
-    # Find string position where Module and Variable name are deliniated by -
-    set pos [string first - $var]
-    # Get the module instantiations name
-    set module [string range $var 0 [expr $pos-1]]
-    # Get the variables name
-    set varname [string range $var [expr $pos+1] end]
-    # Get the name of the TCL instance of the modules GUI
-    set classname [join [modulePath $module] _]
-    if { ![llength [info commands $classname]] } { 
-	error "TCL Class not found while writing guiVar $var"	
-	return 0 
+
+    # If the default class has not already been instantced
+    if { ![info exists DefaultClassInstances($classname)] } {
+	if { ![llength [info commands $classname]] } { 
+	    error "TCL Class not found while writing guiVar $var"	
+	    return 0 
+	}
+	eval $classname DEFAULT-$classname
+	# Save a list of all default classes made for speed
+	set DefaultClassInstances($classname) 1
     }
-    # If it doesn't already exist from a previous check...
-    set command ${classname}-DEFAULT
-    if { ![llength [info commands $command]] } {
-	# Then try and create a default TCL instance of that modules GUI
-	eval $classname $command
-    }
-    # Get the newly created variablee at the global level
-    upvar \#0 "$command-$varname" default_value
+
+    # Get a link to the newly created default variable at the global level
+    upvar \#0 "DEFAULT-$classname-$varname" default_value
 
     # If the default variable hasn't been created in TCL yet...
     if { ![info exists default_value] } {
-	# Assume the variable we're checknig is NOT DEFAULT and return FALSE
+	# Assume the variable we're checking is NOT DEFAULT so return FALSE
 	return 0
     }
-    # Compare strings values exactly, returns FALSE if there is any differnce
+
+    # Some sort of default variable was created, so we
+    # Compare strings values exactly, and return FALSE if there is a differnce
     return [string equal $default_value $val]
 }
 
@@ -991,12 +989,14 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	set write_vars ""
 	global ModuleSavedVars ModuleSubstitutedVars
 	if { [info exists ModuleSavedVars($module)] } {
+	    set classname [join [modulePath $module] _]
 	    foreach var $ModuleSavedVars($module) {
-		if { ![isaDefaultValue $module-$var] } {
+		if { ![isaDefaultValue $module $var $classname] } {
 		    lappend write_vars $var
 		}
 	    }
 	}
+
 	if { [llength $write_vars] } {
 	    # Write the comment line for this modules GUI values
 	    append script "\n${tab}\# Set GUI variables for the $modstr Module\n"
