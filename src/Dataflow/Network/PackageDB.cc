@@ -104,6 +104,8 @@ void PackageDB::loadPackage(const clString& packPath)
       packagePath="";
     }
     
+    TCL::execute(clString("lappend auto_path ")+packageElt+"/Dataflow/GUI");
+    
     clString bname = basename(packageElt);
     clString pname = basename(packageElt);
     
@@ -217,8 +219,6 @@ void PackageDB::loadPackage(const clString& packPath)
     }
 
     postMessage(clString("Loading package '")+pname+"'", false);
-    TCL::execute(clString("lappend auto_path Packages/")+
-		 pname+"/Dataflow/GUI");
     TCL::execute(clString(".loading.fb configure "
 			  "-labeltext {Loading package: ") +
 		 pname + " }");
