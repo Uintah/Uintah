@@ -132,8 +132,8 @@ public:
   virtual void reset();
   virtual void finish();
 
-  virtual void attach(Connection*);
-  virtual void detach(Connection*);
+  virtual void attach(Connection *c);
+  virtual void detach(Connection *c, bool blocked);
 
   virtual bool have_data();
   virtual void resend(Connection*);

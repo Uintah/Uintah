@@ -63,7 +63,7 @@ Connection::Connection(Module* m1, int p1, Module* m2, int p2,
 
 Connection::~Connection()
 {
-  oport->detach(this);
+  oport->detach(this, false);
   iport->detach(this, disabled_);
 }
 

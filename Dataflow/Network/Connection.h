@@ -49,6 +49,7 @@ public:
   IPort* const iport;
   std::string id;
   bool disabled_;
+
   void makeID();
 };
 
