@@ -26,10 +26,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-//#define EOSCM
-#undef EOSCM
-#define IDEAL_GAS
-//#undef IDEAL_GAS
+#define EOSCM
+//#undef EOSCM
+//#define IDEAL_GAS
+#undef IDEAL_GAS
 //#define BURN_DEBUG
 #undef BURN_DEBUG
 /*`==========TESTING==========*/ 
@@ -555,7 +555,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     double S[8];
     Vector zero(0.,0.,0.);
     IntVector cIdx[8];
-
+    double p_ref = d_sharedState->getRefPress();
     new_dw->get(pressNC,MIlb->press_NCLabel,0,patch,Ghost::AroundCells,1);
 
     delt_vartype delT;
@@ -582,8 +582,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
         for (int k = 0; k < 8; k++) {
 	  press += pressNC[ni[k]] * S[k];
         }
-        // HARDWIRING
-        pPressure[idx] = press-101325.0;
+        pPressure[idx] = press-p_ref;
       }
 
       CCVariable<Vector> mom_source;
@@ -1255,9 +1254,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     double    converg_coeff = 100.;
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    sum, tmp;
+    double press_ref= d_sharedState->getRefPress();
     int numICEMatls = d_sharedState->getNumICEMatls();
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numALLMatls = numICEMatls + numMPMMatls;
+
     Vector dx       = patch->dCell(); 
     double cell_vol = dx.x()*dx.y()*dx.z();
     char warning[100];
@@ -1287,7 +1288,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     old_dw->get(press,         Ilb->press_CCLabel, 0,patch,Ghost::None, 0); 
     new_dw->allocate(press_new,Ilb->press_equil_CCLabel, 0,patch);
     
-    
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
@@ -1313,7 +1313,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(rho_micro[m], Ilb->rho_micro_CCLabel, dwindex, patch);
       new_dw->allocate(speedSound_new[m],Ilb->speedSound_CCLabel,dwindex,patch);
     }
-
+    
     press_new.copyPatch(press);
 
 
@@ -1399,11 +1399,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         if(mpm_matl){                //  M P M
   #ifdef EOSCM
 	   rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
-	     computeRhoMicroCM(press_new[*iter],mpm_matl);
+	     computeRhoMicroCM(press_new[*iter],press_ref, mpm_matl);
 
 	   mpm_matl->getConstitutiveModel()->
-	     computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
-			      tmp,mpm_matl);
+	     computePressEOSCM(rho_micro[m][*iter],press_eos[m],press_ref,
+                              dp_drho[m], tmp,mpm_matl);
   #endif
 	   mat_volume[m] = mat_vol[m][*iter];
 
@@ -1494,8 +1494,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           //  Hardwire for an ideal gas
   #ifdef EOSCM
             mpm_matl->getConstitutiveModel()->
-                 computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
-								  tmp,mpm_matl);
+                 computePressEOSCM(rho_micro[m][*iter],press_eos[m],press_ref,
+                                   dp_drho[m], tmp,mpm_matl);
   #endif
   //    This is the IDEAL GAS stuff
   #ifdef IDEAL_GAS
@@ -1542,7 +1542,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   #ifdef EOSCM
            rho_micro[m][*iter] =  
              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-						press_new[*iter], mpm_matl);
+						press_new[*iter],press_ref,mpm_matl);
   #endif
   //    This is the IDEAL GAS stuff
   #ifdef IDEAL_GAS
@@ -1579,8 +1579,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          if(mpm_matl){
   #ifdef EOSCM
             mpm_matl->getConstitutiveModel()->
-                 computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
-								  tmp,mpm_matl);
+                 computePressEOSCM(rho_micro[m][*iter],press_eos[m],press_ref,
+                                   dp_drho[m],tmp,mpm_matl);
   #endif
   //    This is the IDEAL GAS stuff
   #ifdef IDEAL_GAS
