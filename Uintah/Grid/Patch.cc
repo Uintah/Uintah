@@ -248,6 +248,18 @@ NodeIterator Patch::getNodeIterator() const
    return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
 }
 
+NodeIterator
+Patch::getNodeIterator(const Box& b) const
+{
+   Point l = d_level->positionToIndex(b.lower());
+   Point u = d_level->positionToIndex(b.upper());
+   IntVector low((int)l.x(), (int)l.y(), (int)l.z());
+   IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+   low = SCICore::Geometry::Max(low, getNodeLowIndex());
+   high = SCICore::Geometry::Min(high, getNodeHighIndex());
+   return NodeIterator(low, high);
+}
+
 IntVector Patch::getNodeHighIndex() const
 {
    IntVector h(d_highIndex+
@@ -259,6 +271,10 @@ IntVector Patch::getNodeHighIndex() const
 
 //
 // $Log$
+// Revision 1.13  2000/06/26 17:09:01  bigler
+// Added getNodeIterator which takes a Box and returns the iterator
+// that will loop over the nodes that lie withing the Box.
+//
 // Revision 1.12  2000/06/16 05:19:21  sparker
 // Changed arrays to fortran order
 //
