@@ -39,8 +39,6 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#include <sci_defs/environment_defs.h>
-
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
