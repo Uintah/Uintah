@@ -380,5 +380,37 @@ itcl_class Uintah_MPMViz_VizControl {
 	    $w.graph element configure "Particle Value" -data "$args"
 	}
     }
-	    
+    method infoFrame { id } {
+	set w .info[modname]$id
+        if {[winfo exists $w]} { 
+            destroy $w 
+        } 
+
+	toplevel $w
+	button $w.close -text "Close" -command "destroy $w"
+	pack $w.close -side bottom -expand yes -fill x
+	
+    }
+
+    method infoAdd { id addbutton args } {
+	set w .info[modname]$id
+        if { ![winfo exists $w]} { 
+            $this infoFrame $id 
+        }
+	
+
+	set text [join $args]
+	set var [lindex $args 0]
+	set args1 [string tolower $var ]
+	frame $w.$args1 -relief flat 
+	pack $w.$args1 -side top -expand yes -fill x
+	label $w.$args1.l -text $text
+	pack $w.$args1.l -anchor w -side left   -expand yes -fill x
+	if { $addbutton } {
+	    button $w.$args1.b -text "Graph $var over time" \
+		-command "$this-c graph $id $var"
+	    pack $w.$args1.b -side left -expand yes -fill x
+	}
+    }
+	    	    
 }
