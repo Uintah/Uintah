@@ -6,7 +6,7 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 
 #include <Packages/rtrt/Core/Satellite.h>
-#include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/PortalParallelogram.h>
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Camera.h>
@@ -35,7 +35,7 @@ using namespace std;
 #define SYSTEM_TIME_SCALE1     .4
 #define SYSTEM_TIME_SCALE2     .02
 #define FLIP_IMAGES            true
-#if 0
+#if 1
 #define IMAGEDIR      "/home/moulding/images/"
 #else
 #define IMAGEDIR      "/home/sci/moulding/images/"
@@ -150,7 +150,25 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   double radius;
   double orb_radius;
 
-  // build the sun (represented later as a light in the scene)
+  // test portals
+#if 1
+  PortalParallelogram *portal1 = 
+      new PortalParallelogram(Point(-3,-4,16),
+                              Vector(6,0,0),
+                              Vector(0,8,0));
+
+  PortalParallelogram *portal2 = 
+      new PortalParallelogram(Point(4,-4,16),
+                              Vector(0,0,-6),
+                              Vector(0,8,0));
+
+  PortalParallelogram::attach(portal1,portal2);
+  solar_system->add(portal1);
+  solar_system->add(portal2);
+#endif
+
+  // build the sun but don't add it to the scene 
+  // (represented later as a light in the scene)
   Satellite *sol = new Satellite("Sol", sol_m, Point(0,0,0), .01);
 
   radius = table[1].radius_*SYSTEM_SIZE_SCALE;
@@ -176,6 +194,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   scene->addObjectOfInterest(earth,true);
 
+#if 0
   // build the other satellites
   for (unsigned loop=2; table[loop].radius_!=0; ++loop) {
 
@@ -205,6 +224,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
     scene->addObjectOfInterest( newsat, true );
   }
+#endif
 
   // add the light (the sun, as mentioned above)
   Light2 *light = new Light2(sol_m, Color(1,1,1), Point(0,0,0), 1);
