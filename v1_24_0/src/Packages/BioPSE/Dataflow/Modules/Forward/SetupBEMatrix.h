@@ -31,8 +31,8 @@
  *  SetupBEMatrix.h:  class to build Boundary Elements matrix
  *
  *  Written by:
- *   Saeed Babaei Zadeh
- *   Norteastern University
+ *   Saeed Babaeizadeh
+ *   Northeastern University
  *   July 2003
  *   Copyright (C) 2001 SCI Group
  */

@@ -31,7 +31,7 @@
  *  SetupBEMatrix.cc: TODO: Describe this module.
  *
  *  Written by:
- *   Saeed Babaei Zadeh - Norteastern University
+ *   Saeed Babaeizadeh - Northeastern University
  *   Michael Callahan - Department of Computer Science - University of Utah
  *   May, 2003
  *
