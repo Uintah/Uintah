@@ -137,11 +137,23 @@ void FieldToNrrd::execute()
 			  lab);
   }
   
-  if (points_handle_ != 0)
+  // set the Nrrd names and send them
+  string property;
+  string nrrd_name = "Unknown";
+  if (field_handle->get_property( "name", property ) && property != "Unknown") 
+    nrrd_name = property;
+  if (points_handle_ != 0) {
     opoints_->send(points_handle_);
-  if (connect_handle_ != 0)
+    points_handle_->set_property("Name", nrrd_name + "-Points", false);
+  }
+  if (connect_handle_ != 0) {
     oconnect_->send(connect_handle_);
-  if (data_handle_ != 0) 
+    connect_handle_->set_property("Name", nrrd_name + "-Connectivity", false);
+  }
+  if (data_handle_ != 0) {
     odata_->send(data_handle_);
+    data_handle_->set_property("Name", nrrd_name + "-Data", false);
+  }
+
 }
 

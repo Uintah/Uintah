@@ -294,6 +294,19 @@ void
   } 
   if (last_field_ != 0) {
     has_error_ = false;
+    // set the name of the field to be that
+    // of data or points, depending on what is defined
+    string field_name;
+    if (dataH != 0) {
+      if (dataH->get_property( "Name", property ) && property != "Unknown")
+	field_name = property;
+    } else if (pointsH != 0) {
+      if (pointsH->get_property( "Name", property ) && property != "Unknown")
+	field_name = property;
+    } else {
+      field_name = "Unknown";
+    }
+    last_field_->set_property("name", field_name, false);
     ofield_->send(last_field_);  
   }
 }
