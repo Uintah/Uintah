@@ -231,7 +231,7 @@ Isosurface::send_results()
   geom_id=ogeom->addObj( geom, surface_name);
 
   // output surface
-  if (build_trisurf) {
+  if (build_trisurf && trisurf_mesh_.get_rep()) {
     TriSurfField<double> *ts = new TriSurfField<double>(trisurf_mesh_, Field::NODE);
     vector<double>::iterator iter = ts->fdata().begin();
     while (iter != ts->fdata().end()) { (*iter)=iso_value; ++iter; }
