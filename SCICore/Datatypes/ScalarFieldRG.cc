@@ -231,7 +231,7 @@ int ScalarFieldRG::interpolate(const Point& p, double& value, int&,
     return interpolate(p, value, epsilon1, epsilon2);
 }
 
-int ScalarFieldRG::interpolate(const Point& p, double& value, double,
+int ScalarFieldRG::interpolate(const Point& p, double& value, double eps,
 				   double)
 {
     using SCICore::Math::Interpolate;
@@ -249,9 +249,12 @@ int ScalarFieldRG::interpolate(const Point& p, double& value, double,
     int ix1=ix+1;
     int iy1=iy+1;
     int iz1=iz+1;
-    if(ix<0 || ix1>=nx)return 0;
-    if(iy<0 || iy1>=ny)return 0;
-    if(iz<0 || iz1>=nz)return 0;
+    if (ix<0) { if (x<-eps) return 0; else ix=0; }
+    if (iy<0) { if (y<-eps) return 0; else iy=0; }
+    if (iz<0) { if (z<-eps) return 0; else iz=0; }
+    if (ix1>=nx) { if (x>nx-1+eps) return 0; else ix1=ix; }
+    if (iy1>=ny) { if (y>ny-1+eps) return 0; else iy1=iy; }
+    if (iz1>=nz) { if (z>nz-1+eps) return 0; else iz1=iz; }
     double fx=x-ix;
     double fy=y-iy;
     double fz=z-iz;
@@ -404,8 +407,11 @@ void ScalarFieldRG::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
-// Revision 1.7  2000/03/05 06:45:02  dmw
-// fixed the constructor so it once again stores its ScalarFieldRGBase::rep as Double
+// Revision 1.8  2000/03/13 04:47:51  dmw
+// SurfTree and TriSurface - made get_surfnodes and set_surfnodes work
+// ScalarFieldRG - interpolate uses epsilon bounds, so interpolate on
+// 	the point at (nx-1,ny-1,nz-1) returns a value (rather than
+// 	failing)
 //
 // Revision 1.6  2000/02/04 01:25:53  dmw
 // added std:: before cerr and endl

@@ -482,9 +482,14 @@ void SurfTree::get_surfnodes(Array1<NodeHandle> &n)
     }
 }
 
-void SurfTree::set_surfnodes(const Array1<NodeHandle> &/*n*/)
+void SurfTree::set_surfnodes(const Array1<NodeHandle> &n)
 {
-    NOT_FINISHED("SurfTree::set_surfnodes");
+    if (n.size() != nodes.size()) {
+	cerr << "SurfTree::set_surfnodes - wrong sized array!\n";
+	return;
+    }
+    for (int i=0; i<nodes.size(); i++)
+	nodes[i]=n[i]->p;
 }
 
 void SurfTree::get_surfnodes(Array1<NodeHandle>&n, clString name) {
@@ -587,6 +592,12 @@ void Pio(Piostream& stream, NodeInfo& node)
 
 //
 // $Log$
+// Revision 1.10  2000/03/13 04:47:53  dmw
+// SurfTree and TriSurface - made get_surfnodes and set_surfnodes work
+// ScalarFieldRG - interpolate uses epsilon bounds, so interpolate on
+// 	the point at (nx-1,ny-1,nz-1) returns a value (rather than
+// 	failing)
+//
 // Revision 1.9  1999/11/17 00:35:07  dmw
 // added support for not renumbering the nodes when extracting a trisurface from a surftree
 //
