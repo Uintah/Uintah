@@ -188,6 +188,10 @@ private:
 			     DataWarehouse* new_dw,
 			     int index);
 
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Build the linear matrix
+      //    [in] 
+      //        add documentation here
       void buildLinearMatrixPred(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
@@ -196,7 +200,7 @@ private:
 			     const int index);
 
       ///////////////////////////////////////////////////////////////////////
-      // Actually Solver the Linear System for Scalar[index]
+      // Actually Solve the Linear System for Scalar[index]
       //    [in] 
       //        add documentation here
       void scalarLinearSolvePred(const ProcessorGroup* pc,
@@ -206,6 +210,10 @@ private:
 			     DataWarehouse* new_dw,
 			     int index);
 
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Build the linear matrix
+      //    [in] 
+      //        add documentation here
       void buildLinearMatrixCorr(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
@@ -213,15 +221,8 @@ private:
 			     DataWarehouse* new_dw,
 			     const int index);
 
-      void buildLinearMatrixInterm(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const int index);
-
       ///////////////////////////////////////////////////////////////////////
-      // Actually Solver the Linear System for Scalar[index]
+      // Actually Solve the Linear System for Scalar[index]
       //    [in] 
       //        add documentation here
       void scalarLinearSolveCorr(const ProcessorGroup* pc,
@@ -231,6 +232,21 @@ private:
 			     DataWarehouse* new_dw,
 			     int index);
 
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Build the linear matrix
+      //    [in] 
+      //        add documentation here
+      void buildLinearMatrixInterm(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     const int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Solve the Linear System for Scalar[index]
+      //    [in] 
+      //        add documentation here
       void scalarLinearSolveInterm(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,

@@ -274,6 +274,10 @@ namespace Uintah {
 
       const VarLabel* d_enthDiffCoefCorrLabel;
 
+      const VarLabel* d_reactscalDiffCoefPredLabel;
+
+      const VarLabel* d_reactscalDiffCoefCorrLabel;
+
       // Scalar Conv Coef
 
       const VarLabel* d_scalConvCoefSBLMLabel;
@@ -626,6 +630,7 @@ namespace Uintah {
       const VarLabel* d_reactscalNonLinSrcIntermLabel;
       const VarLabel* d_reactscalarIntermLabel;
       const VarLabel* d_reactscalConvCoefIntermLabel;
+      const VarLabel* d_reactscalDiffCoefIntermLabel;
       const VarLabel* d_reactscalLinSrcIntermLabel;
       const VarLabel* d_reactscalarTempLabel;
       

@@ -79,6 +79,8 @@ public:
       // Set up the problem specification database
       void problemSetup(const ProblemSpecP& params);
 
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Solve of linearized reactive scalar equation
       void solvePred(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
@@ -93,6 +95,44 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for ReactiveScalar[index]
       void sched_reactscalarLinearSolvePred(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Solve of linearized reactive scalar equation
+      void solveCorr(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
+		 int index);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Build of linearized matrix
+      void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Linear Solve for ReactiveScalar[index]
+      void sched_reactscalarLinearSolveCorr(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Solve of linearized reactive scalar equation
+      void solveInterm(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
+		 int index);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Build of linearized matrix
+      void sched_buildLinearMatrixInterm(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Linear Solve for ReactiveScalar[index]
+      void sched_reactscalarLinearSolveInterm(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
 				   int index);
 protected:
@@ -118,10 +158,56 @@ private:
 			     const int index);
 
       ///////////////////////////////////////////////////////////////////////
-      // Actually Solver the Linear System for ReactiveScalar[index]
+      // Actually Solve the Linear System for ReactiveScalar[index]
       //    [in] 
       //        add documentation here
       void reactscalarLinearSolvePred(const ProcessorGroup* pc,
+				      const PatchSubset* patches,
+				      const MaterialSubset* /*matls*/,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw,
+				      int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Build the linear matrix
+      //    [in] 
+      //        add documentation here
+
+      void buildLinearMatrixCorr(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     const int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Solve the Linear System for ReactiveScalar[index]
+      //    [in] 
+      //        add documentation here
+      void reactscalarLinearSolveCorr(const ProcessorGroup* pc,
+				      const PatchSubset* patches,
+				      const MaterialSubset* /*matls*/,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw,
+				      int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Build the linear matrix
+      //    [in] 
+      //        add documentation here
+
+      void buildLinearMatrixInterm(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     const int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Solve the Linear System for ReactiveScalar[index]
+      //    [in] 
+      //        add documentation here
+      void reactscalarLinearSolveInterm(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
 				      const MaterialSubset* /*matls*/,
 				      DataWarehouse* old_dw,
