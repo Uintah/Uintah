@@ -27,6 +27,7 @@ using std::vector;
       const VarLabel* pPressureLabel;
       const VarLabel* p_qLabel;
       const VarLabel* pVolumeDeformedLabel;
+      const VarLabel* pXXLabel;
       
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
