@@ -1,2 +1,4 @@
 Makefile
 pingpong
+PingPong_sidl.h
+PingPong_sidl.cc

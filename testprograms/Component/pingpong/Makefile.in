@@ -19,7 +19,7 @@ LDRUN_PREFIX  = @LDRUN_PREFIX@
 OBJTOP_ABS    = $(shell cd $(OBJTOP) ; pwd)
 SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
 
-SRCS      = pingpong.cc PingPong_impl.cc PingPong_manual.cc
+SRCS      = pingpong.cc PingPong_impl.cc PingPong_sidl.cc
 INCLUDES  = -I$(SRCTOP) -I$(OBJTOP) $(GLOBUS_INCLUDE) 
             
 PROGRAM   = pingpong
@@ -33,5 +33,14 @@ LIBRARIES = $(LDRUN_PREFIX)$(OBJTOP_ABS)/SCICore \
             -L$(TK_LIB_DIR) \
             -L$(TCL_LIB_DIR)
 
+SIDL_EXE = $(OBJTOP)/tools/sidl/sidl
 
 include $(SRCTOP)/scripts/program.mk
+
+PingPong_sidl.o: PingPong_sidl.cc PingPong_sidl.h
+
+PingPong_sidl.cc: PingPong.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -o $@ $<
+
+PingPong_sidl.h: PingPong.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -h -o $@ $<
