@@ -68,15 +68,13 @@ Gradient::execute()
   FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
 
   FieldHandle fieldin;
-  Field *field;
 
   if (!ifp) {
     error( "Unable to initialize "+name+"'s iport" );
     return;
   }
 
-  if (!(ifp->get(fieldin) && (field = fieldin.get_rep())))
-  {
+  if (!(ifp->get(fieldin) && fieldin.get_rep())) {
     error( "No handle or representation" );
     return;
   }
