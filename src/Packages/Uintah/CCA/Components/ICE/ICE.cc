@@ -2765,8 +2765,12 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     //________________________________
     //  Boundary Conditons for Dirichlet and Neumann ONLY
     //  For LODI they are computed above.
+/*`==========TESTING==========*/
     NG_BC_vars* ng = new NG_BC_vars;
-    getVars_for_NGNozzle(old_dw, new_dw, lb, patch, 1,"velFC_Exchange",ng);    
+    if(d_usingNG_hack){
+      getVars_for_NGNozzle(old_dw, new_dw, lb, patch, 1,"velFC_Exchange",ng); 
+    } 
+/*===========TESTING==========`*/   
     
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
