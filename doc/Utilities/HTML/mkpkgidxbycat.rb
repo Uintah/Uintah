@@ -97,7 +97,6 @@ end
 def insertTopBoilerPlate(file, packageName)
   # Insert boilerplate at top of file
   file.print <<BOILER_PLATE_TEXT
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <!--
 The contents of this file are subject to the University of Utah Public
 License (the "License"); you may not use this file except in compliance
@@ -114,7 +113,7 @@ The Original Source Code was developed by the University of Utah.
 Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 University of Utah. All Rights Reserved.
 -->
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <script type="text/javascript">
 var treetop="";
@@ -139,20 +138,17 @@ if (inDocTree) {
 <body>
 <script type="text/javascript">
 if (inDocTree) {
-  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\\/script>');
+    document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/tools.js"><\\/script>');
 }
 </script>
+<script type="text/javascript">preContent();</script>
 BOILER_PLATE_TEXT
 end
 
 def insertBottomBoilerPlate(file)
   # Generate end of file boilerplate.
   file.print <<BOILER_PLATE_TEXT
-<script type="text/javascript">
-if (inDocTree) {
-  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\\/script>');
-}
-</script>
+<script type="text/javascript">postContent();</script>
 </body>
 </html>
 BOILER_PLATE_TEXT
@@ -199,17 +195,12 @@ def genPage(packageName, list)
       etable[2] = list[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
     end
 
-    file.print("<div class=\"block-center\">\n")
-    file.print("<a href=\"index.html\">Back to Package Listing</a>\n")
-    file.print("<table class='default' cellspacing='0' border='1' cellpadding='2'>\n")
+    file.print("<table cellspacing='0' border='1' cellpadding='2'>\n")
     # Generate page title and subtitle
     file.print("
 <th colspan=\"#{numCols}\">
-<span class=\"title\">#{packageName} Module Descriptions</span>
-<br/>
-<span class=\"subtitle\">by category (and <a class=\"alt\" href=\"#{packageName}.html\">alphabetically</a>)</span>
-<br/>
-<span class=\"subtitle\">for SCIRun version #{version}</span>
+<h1>#{packageName} Module Descriptions (v. #{version})</h1>
+<h2><a class=\"alt\" href=\"index.html\">package index</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a class=\"alt\" href=\"#{packageName}.html\">alphabetically</a></h2>
 </th>
 ")
 
@@ -230,11 +221,8 @@ def genPage(packageName, list)
     if LatexEntry.count > 0
       file.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
     end
-    file.print("</div>\n")
-
 
     insertBottomBoilerPlate(file)
-    
   end
 end
 
