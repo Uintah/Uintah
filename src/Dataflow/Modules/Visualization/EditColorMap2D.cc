@@ -989,17 +989,17 @@ void EditColorMap2D::save_ppm(const string &filename,
   if ( bpp == 1 || bpp == 2 )
     output << "P2 \n# CREATOR: " << "\n"; // endl;
   else if ( bpp == 3 || bpp == 4 )
-    output << "P3 \n# CREATOR: " << "\n"; // endl;
+    output << "P6 \n# CREATOR: " << "\n"; // endl;
   else {
     error("Error: unknown number of bytes per pixel " + to_string(bpp));
     return;
   }
   
-  output << sx << " " << sy << " \n"; // endl;
+  output << sx/4 << " " << sy/4 << " \n"; // endl;
   output << 255 << " \n"; // endl;
   
-  for (int row = sy - 1; row >= 0; --row) {
-    for (int col = 0; col < sx; ++col) {
+  for (int row = sy - 1; row >= 0; row-=4) {
+    for (int col = 0; col < sx; col+=4) {
       int p = bpp * ( row * sx + col );
       switch (bpp) {
       case 2:
@@ -1007,8 +1007,8 @@ void EditColorMap2D::save_ppm(const string &filename,
 	output << (int) buf[p] << " \n"; // endl;
 	break;
       default:
-	output << (int) buf[p + R] << " " << (int) buf[p + G]
-	       << " " << (int) buf[p + B] << " \n"; // endl;
+	output <<buf[p + G]<<buf[p + B]
+	       <<buf[p + R];
 	break;
       }
     }
@@ -1275,16 +1275,11 @@ EditColorMap2D::redraw()
     glVertex2f( 0.0,  0.0);
   }
   glEnd();
-  ctx_->swap();
-  ctx_->release();
 
-  gui->unlock();
-
-#if 0
   if (save_ppm_) {
     unsigned int* FrameBuffer = scinew unsigned int[width_*height_];
     glFlush();
-    glReadBuffer(GL_FRONT);
+    glReadBuffer(GL_BACK);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
     glReadPixels(0, 0,width_, height_,
 		 GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, FrameBuffer);
@@ -1297,7 +1292,10 @@ EditColorMap2D::redraw()
     delete FrameBuffer;
     save_ppm_ = false;
   }
-#endif
+  
+  ctx_->swap();
+  ctx_->release();
+  gui->unlock();
 }
 
 } // end namespace SCIRun
