@@ -21,7 +21,7 @@
 
 <!DOCTYPE book
   PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-  "http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd" [
+  "../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
 <!ENTITY quickstart SYSTEM "quickstart.xml">
 <!ENTITY inst SYSTEM "inst.xml">
 <!ENTITY requirements  SYSTEM "requirements.xml">
@@ -41,7 +41,7 @@ end
 <subtitle>(for &sr; Version <!--%= version %-->)</subtitle>
 &quickstart;
 &inst;
-&appendix;
+<!-- &appendix; -->
 &cvs;
 </book>
 
