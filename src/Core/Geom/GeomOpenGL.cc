@@ -113,16 +113,8 @@ namespace SCIRun {
 
 int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 {
-  if (di->polygon_offset_factor || di->polygon_offset_units) {
-    glPolygonOffset(di->polygon_offset_factor, di->polygon_offset_units);
-    glEnable(GL_POLYGON_OFFSET_FILL);
-  }
-  glPointSize(di->point_size);
-  glLineWidth(di->line_width);
-  glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-
-    /* All primitives that get drawn must check the return value of this
-       function to determine if they get drawn or not */
+  /* All primitives that get drawn must check the return value of this
+     function to determine if they get drawn or not */
   if((!di->pickmode)||(di->pickmode&&di->pickchild)){
     if(lit && di->lighting && !di->currently_lit){
 	di->currently_lit=1;
@@ -176,7 +168,6 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 
 int GeomObj::post_draw(DrawInfoOpenGL* di)
 {
-  glDisable(GL_POLYGON_OFFSET_FILL);
     if(di->pickmode && di->pickchild){
 #if (_MIPS_SZPTR == 64)
 	glPopName();
