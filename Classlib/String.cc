@@ -15,9 +15,24 @@
 #include <Classlib/String.h>
 #include <Classlib/Assert.h>
 #include <Classlib/Persistent.h>
+#include <Classlib/TrivialAllocator.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
+
+static TrivialAllocator* srep_alloc=0;
+
+inline void* clString::srep::operator new(size_t)
+{
+    if(!srep_alloc)srep_alloc=new TrivialAllocator(sizeof(clString::srep));
+    return srep_alloc->alloc();
+}
+
+inline void clString::srep::operator delete(void* rp, size_t)
+{
+    srep_alloc->free(rp);
+}
+
 #define inline
 #include <Classlib/String.icc>
 #undef inline
@@ -25,14 +40,14 @@
 clString::clString(const char* s)
 {
     p=new srep;
-    p->len=strlen(s);
-    p->s=new char[p->len+1];
+    int len=strlen(s);
+    p->s=new char[len+1];
     strcpy(p->s,s);
 }
 
 clString clString::operator+(const clString& str) const
 {
-    int newlen=(p?p->len:0) + (str.p?str.p->len:0);
+    int newlen=(p?strlen(p->s):0) + (str.p?strlen(str.p->s):0);
     char* ns=new char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
@@ -42,7 +57,7 @@ clString clString::operator+(const clString& str) const
 
 clString clString::operator+(const char* c) const
 {
-    int newlen=(p?p->len:0)+strlen(c);
+    int newlen=(p?strlen(p->s):0)+strlen(c);
     char* ns=new char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
@@ -52,7 +67,7 @@ clString clString::operator+(const char* c) const
 
 clString operator+(const char* c, const clString& str)
 {
-    int newlen=(str.p?str.p->len:0)+strlen(c);
+    int newlen=(str.p?strlen(str.p->s):0)+strlen(c);
     char* ns=new char[newlen+1];
     strcpy(ns, c);
     if(str.p && str.p->s)strcat(ns, str.p->s);
@@ -135,9 +150,10 @@ int clString::index(const char match) const
 clString clString::substr(int start, int length)
 {
     ASSERT(p != 0);
-    ASSERTRANGE(start, 0, p->len);
-    int l=length==-1?p->len-start:length;
-    ASSERTRANGE(start+l, 0, p->len+1);
+    int len=strlen(p->s);
+    ASSERTRANGE(start, 0, len);
+    int l=length==-1?len-start:length;
+    ASSERTRANGE(start+l, 0, len+1);
     char* tmp=new char[l+1];
     for(int i=0;i<l;i++){
 	tmp[i]=p->s[i+start];
@@ -179,20 +195,21 @@ clString& clString::operator+=(char c)
 	    // detach...
 	    srep* oldp=p;
 	    p=new srep;
-	    p->s=new char[p->len+2];
+	    int len=strlen(oldp->s);
+	    p->s=new char[len+2];
 	    strcpy(p->s, oldp->s);
-	    p->s[oldp->len]=c;
-	    p->s[oldp->len+1]=0;
-	    p->len=oldp->len+1;
+	    p->s[len]=c;
+	    p->s[len+1]=0;
 	    oldp->n--;
 	    p->n=1;
 	} else {
 	    char* olds=p->s;
-	    p->s=new char[p->len+2];
+	    int len=strlen(olds);
+	    p->s=new char[len+2];
 	    strcpy(p->s, olds);
-	    p->s[p->len]=c;
-	    p->s[p->len+1]=0;
-	    p->len++;
+	    p->s[len]=c;
+	    p->s[len+1]=0;
+	    delete[] olds;
 	}
     } else {
 	p=new srep;
@@ -200,14 +217,13 @@ clString& clString::operator+=(char c)
 	p->s=new char[2];
 	p->s[0]=c;
 	p->s[1]=0;
-	p->len=1;
     }
     return *this;
 }
 
 clString& clString::operator+=(const clString& str)
 {
-    int newlen=(p?p->len:0)+(str.p?str.p->len:0);
+    int newlen=(p?strlen(p->s):0)+(str.p?strlen(str.p->s):0);
     char* ns=new char[newlen+1];
     if(p && p->s)strcpy(ns, p->s);
     else ns[0]=0;
@@ -220,7 +236,6 @@ clString& clString::operator+=(const clString& str)
 	if(!p)
 	    p=new srep;
     }
-    p->len=newlen;
     p->s=ns;
     return *this;
 }

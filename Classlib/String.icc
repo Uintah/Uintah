@@ -28,7 +28,6 @@ inline clString::clString(const clString& str)
 inline clString::clString(int, char* s)
 {
     p=new srep;
-    p->len=strlen(s);
     p->s=s;
 }
 
@@ -50,8 +49,8 @@ inline clString& clString::operator=(const char* s)
 	// Free old clString
 	if(p->s)delete [] p->s;
     }
-    p->len=strlen(s);
-    p->s=new char[p->len+1];
+    int len=strlen(s);
+    p->s=new char[len+1];
     strcpy(p->s,s);
     return *this;
 }
@@ -114,26 +113,26 @@ inline char* clString::operator()() const
 
 inline char clString::operator()(int index) const
 {
-    ASSERT(p != 0);
-    ASSERTRANGE(index, 0, p->len);
+    ASSERT(p != 0 && p->s != 0);
+    ASSERTRANGE(index, 0, strlen(p->s));
     return p->s[index];
 }
 
 inline int clString::len() const
 {
-    return p?p->len:0;
+    return p?strlen(p->s):0;
 }
 
 inline int clString::is_alpha(int i)
 {
-    ASSERT(p != 0);
-    ASSERTRANGE(i, 0, p->len);
+    ASSERT(p != 0 && p->s);
+    ASSERTRANGE(i, 0, strlen(p->s));
     return isalpha(p->s[i]);
 }
 
 inline int clString::is_digit(int i)
 {
     ASSERT(p != 0);
-    ASSERTRANGE(i, 0, p->len);
+    ASSERTRANGE(i, 0, strlen(p->s));
     return isdigit(p->s[i]);
 }
