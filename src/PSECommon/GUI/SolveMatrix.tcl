@@ -113,7 +113,7 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 	pack $w.target_error -side top -fill x -pady 2
 
 	scale $w.maxiter -orient horizontal -label "Maximum Iterations:" \
-		-variable $this-maxiter -from 0 -to 1000
+		-variable $this-maxiter -from 0 -to 2000
 	pack $w.maxiter -side top -fill x -pady 2
 	
 	checkbutton $w.use_prev -variable $this-use_previous_soln \

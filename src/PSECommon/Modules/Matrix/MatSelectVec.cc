@@ -216,8 +216,8 @@ void MatSelectVec::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
-// Revision 1.5.2.1  2000/09/28 03:16:02  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.5.2.2  2000/10/31 02:27:56  dmw
+// Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
 //
 // Revision 1.6  2000/08/04 18:09:06  dmw
 // added widget-based transform generation
