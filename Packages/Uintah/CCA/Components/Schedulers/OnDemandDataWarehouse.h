@@ -235,10 +235,10 @@ private:
   
   // These will return false if access is not allowed for
   // the current task.
-  inline bool hasGetAccess(const VarLabel* label, int matlIndex,
-			   const Patch* patch);
-  inline bool hasPutAccess(const VarLabel* label, int matlIndex,
-			   const Patch* patch, bool replace);
+  inline bool hasGetAccess(const Task* currentTask, const VarLabel* label,
+			   int matlIndex, const Patch* patch);
+  inline bool hasPutAccess(const Task* currentTask, const VarLabel* label,
+			   int matlIndex, const Patch* patch, bool replace);
 
   void checkAccesses(const Task* currentTask, const Task::Dependency* dep,
 		     AccessType accessType, const PatchSubset* patches,
@@ -276,28 +276,44 @@ private:
    // Is this the first DW -- created by the initialization timestep?
    bool d_isInitializationDW;
 
-   inline const Task* getCurrentTask();	 
-   map<Thread*, const Task*> d_runningTasks;
-  
-  struct SpecificVarLabel {
-    SpecificVarLabel(const VarLabel* label, int matlIndex, const Patch* patch)
-      : label_(label), matlIndex_(matlIndex), patch_(patch) {}
-    SpecificVarLabel(const SpecificVarLabel& copy)
-      : label_(copy.label_), matlIndex_(copy.matlIndex_), patch_(copy.patch_)
-    {}
-    SpecificVarLabel& operator=(const SpecificVarLabel& copy)
-    {
-      label_=copy.label_; matlIndex_=copy.matlIndex_; patch_=copy.patch_;
-      return *this;
-    }
+   struct SpecificVarLabel {
+     SpecificVarLabel(const VarLabel* label, int matlIndex, const Patch* patch)
+       : label_(label), matlIndex_(matlIndex), patch_(patch) {}
+     SpecificVarLabel(const SpecificVarLabel& copy)
+       : label_(copy.label_), matlIndex_(copy.matlIndex_), patch_(copy.patch_)
+     {}
+     SpecificVarLabel& operator=(const SpecificVarLabel& copy)
+     {
+       label_=copy.label_; matlIndex_=copy.matlIndex_; patch_=copy.patch_;
+       return *this;
+     }
     
-    bool operator<(const SpecificVarLabel& other) const;
-    const VarLabel* label_;
-    int matlIndex_;
-    const Patch* patch_;    
-  };
+     bool operator<(const SpecificVarLabel& other) const;
+     const VarLabel* label_;
+     int matlIndex_;
+     const Patch* patch_;    
+   };  
   
-  map<SpecificVarLabel, AccessType> d_currentTaskAccesses;
+   typedef map<SpecificVarLabel, AccessType> VarAccessMap;
+
+   struct CurrentTaskInfo {
+     CurrentTaskInfo()
+       : d_task(0) {}
+     CurrentTaskInfo(const Task* task)
+       : d_task(task) {}
+     CurrentTaskInfo(const CurrentTaskInfo& copy)
+       : d_task(copy.d_task), d_accesses(copy.d_accesses) {}
+     CurrentTaskInfo& operator=(const CurrentTaskInfo& copy)
+     { d_task = copy.d_task; d_accesses = copy.d_accesses; return *this; }
+     const Task* d_task;
+     VarAccessMap d_accesses;
+   };
+  
+   inline CurrentTaskInfo* getCurrentTaskInfo();
+   inline const Task* getCurrentTask();
+   inline VarAccessMap& getCurrentTaskAccesses();
+    
+   map<Thread*, CurrentTaskInfo> d_runningTasks;
   
    // Internal VarLabel for the position of this DataWarehouse
    // ??? with respect to what ???? 
