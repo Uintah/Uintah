@@ -94,13 +94,13 @@ setenv TEEM_PNG
 	  <para>
 	    For sh-type shells:
 	    <literallayout class="monospaced">
-TEEM_PNG_LPATH=-I/usr/local/lib
+TEEM_PNG_LPATH=-L/usr/local/lib
 TEEM_PNG_IPATH=-I/usr/local/include
 export 	TEEM_PNG_LPATH TEEM_PNG_IPATH
 	    </literallayout>
 	    for csh-type shells:
 	    <literallayout class="monospaced">
-setenv TEEM_PNG_LPATH -I/usr/local/lib
+setenv TEEM_PNG_LPATH -L/usr/local/lib
 setenv TEEM_PNG_IPATH -I/usr/local/include
 	    </literallayout>
 	  </para>
@@ -116,13 +116,13 @@ setenv TEEM_PNG_IPATH -I/usr/local/include
 	  <para>
 	    For sh-type shells:
 	    <literallayout class="monospaced">
-TEEM_ZLIB_LPATH=-I/usr/local/lib
+TEEM_ZLIB_LPATH=-L/usr/local/lib
 TEEM_ZLIB_IPATH=-I/usr/local/include
 export TEEM_ZLIB_LPATH TEEM_ZLIB_IPATH
 	    </literallayout>
 	    for csh-type shells:
 	    <literallayout class="monospaced">
-setenv TEEM_ZLIB_LPATH -I/usr/local/lib
+setenv TEEM_ZLIB_LPATH -L/usr/local/lib
 setenv TEEM_ZLIB_IPATH -I/usr/local/include
 	    </literallayout>
 	  </para>
@@ -250,13 +250,13 @@ setenv TEEM_PNG
 	<para>
 	  For sh-type shells:
 	  <literallayout class="monospaced">
-TEEM_PNG_LPATH=-I/usr/local/lib
+TEEM_PNG_LPATH=-L/usr/local/lib
 TEEM_PNG_IPATH=-I/usr/local/include
 export TEEM_PNG_LPATH TEEM_PNG_IPATH
 	  </literallayout>
 	  for csh-type shells:
 	  <literallayout class="monospaced">
-setenv TEEM_PNG_LPATH -I/usr/local/lib
+setenv TEEM_PNG_LPATH -L/usr/local/lib
 setenv TEEM_PNG_IPATH -I/usr/local/include
 	  </literallayout>
 	</para>
@@ -271,13 +271,13 @@ setenv TEEM_PNG_IPATH -I/usr/local/include
 	<para>
 	  For sh-type shells:
 	  <literallayout class="monospaced">
-TEEM_ZLIB_LPATH=-I/usr/local/lib
+TEEM_ZLIB_LPATH=-L/usr/local/lib
 TEEM_ZLIB_IPATH=-I/usr/local/include
 export TEEM_ZLIB_LPATH TEEM_ZLIB_IPATH
 	  </literallayout>
 	  for csh-type shells:
 	  <literallayout class="monospaced">
-setenv TEEM_ZLIB_LPATH -I/usr/local/lib
+setenv TEEM_ZLIB_LPATH -L/usr/local/lib
 setenv TEEM_ZLIB_IPATH -I/usr/local/include
 	  </literallayout>
 	</para>
