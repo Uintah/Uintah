@@ -330,6 +330,7 @@ StdinProc(clientData, mask)
     char *cmd;
     int code, count;
 
+    fprintf(stderr, "Reading from stdin\n");
     count = read(fileno(stdin), input, BUFFER_SIZE);
     if (count <= 0) {
 	if (!gotPartial) {
