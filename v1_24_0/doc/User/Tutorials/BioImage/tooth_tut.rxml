@@ -498,7 +498,7 @@ DEALINGS IN THE SOFTWARE.
 	  </para>
 	  <para>
 	    To edit the transfer function directly, select the "Edit Transfer Function"
-	    button in the Volume Rendering Tab. <xref linkend="fig.show_vol_ren_button"/>
+	    button in the Volume Rendering Tab. <xref linkend="fig.volrender_tab"/>
 	  </para>
 	  <section><title>The Edit Transfer Function Window</title>
             <figure id="fig.editTFWindow"><title>The Edit Transfer Function Window</title>
@@ -620,7 +620,7 @@ DEALINGS IN THE SOFTWARE.
 	      <para>
 		The arcs in the histogram <xref linkend="fig.histo"/> represent the borders
 		between different materials in the tooth dataset. If we add a triangle to the
-		transfer function and position it on the arc <xref linkend="fig.border_dentin_enamel_tf"/>
+		transfer function and position it on the arc <xref linkend="fig.border_dentin_enamel_ren_tf"/>
 		connecting the dentin and enamel, we see the dentin-enamel border displayed 
 		<xref linkend="fig.border_dentin_enamel_ren_tf"/> in the viewer window.
 	      </para>
