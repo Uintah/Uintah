@@ -9,7 +9,7 @@ SRCS     += \
 	$(SRCDIR)/Phase.cc \
 	$(SRCDIR)/Screen.cc 
 
-PSELIBS := Core/Datatypes Dataflow/Network \
+PSELIBS := Packages/Yarden/Core/Datatypes \
 	   Core/Persistent Core/Containers Core/Util \
 	   Core/Exceptions Core/Thread Core/TclInterface \
 	   Core/Geom Core/Datatypes Core/Geometry \

@@ -14,7 +14,7 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLvar.h>
-#include <Packages/Yarden/Core/Datatypes/TensorFieldPort.h>
+#include <Packages/Yarden/Dataflow/Ports/TensorFieldPort.h>
 
 namespace Yarden {
 using namespace SCIRun;

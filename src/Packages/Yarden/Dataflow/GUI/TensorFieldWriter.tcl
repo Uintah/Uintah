@@ -1,6 +1,6 @@
-catch {rename Packages/Yarden_Writers_TensorFieldWriter ""}
+catch {rename Yarden_Writers_TensorFieldWriter ""}
 
-itcl_class Packages/Yarden_Writers_TensorFieldWriter {
+itcl_class Yarden_Writers_TensorFieldWriter {
     inherit Module
     constructor {config} {
 	set name TensorFieldWriter

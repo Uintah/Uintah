@@ -15,7 +15,7 @@
 #include <Core/Containers/Queue.h>  
 #include <Core/Persistent/Pstreams.h>          
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/SpanSpace.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
 #include <Core/Datatypes/TriSurface.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Geom/BBoxCache.h>

@@ -18,7 +18,6 @@
 #include <Core/Datatypes/ScalarFieldRGshort.h>
 
 namespace Yarden {
-  using namespace Yarden::Datatypes;
 
   template< class T >
   struct Node {

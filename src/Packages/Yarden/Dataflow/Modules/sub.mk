@@ -3,9 +3,9 @@
 SRCDIR := Packages/Yarden/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/Readers\
 	$(SRCDIR)/Visualization\
-	$(SRCDIR)/Writers\
+#	$(SRCDIR)/Readers\
+#	$(SRCDIR)/Writers\
 #[INSERT NEW CATEGORY DIR HERE]
 
 

@@ -15,7 +15,7 @@
 #include <Core/Containers/Queue.h>  
 #include <Core/Persistent/Pstreams.h>          
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/SpanSpace.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
 #include <Core/Datatypes/TriSurface.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Geom/BBoxCache.h>
@@ -28,7 +28,7 @@
 #include <Core/Datatypes/ScalarField.h>
 
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/SpanPort.h>
+#include <Packages/Yarden/Dataflow/Ports/SpanPort.h>
 #include <Dataflow/Ports/SurfacePort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -41,16 +41,17 @@
 
 #include <iostream>
 
-#include <Dataflow/Ports/SpanSpace.h>
-#include <Core/Algorithms/Visualization/MCRGScan.h>
-#include <Core/Algorithms/Visualization/MCUG.h>
-#include <Core/Algorithms/Visualization/Noise.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/MCRGScan.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/MCUG.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/Noise.h>
 
 
 
-namespace SCIRun {
+namespace Yarden {
     
-    
+using namespace SCIRun;
+
     class SearchNOISE : public Module 
     {
       // input
@@ -279,4 +280,4 @@ namespace SCIRun {
     return scinew Noise<T,MCRGScan<F>,Module> (span, mc,this);
   }
 
-} // End namespace SCIRun
+} // End namespace Yarden

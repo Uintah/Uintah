@@ -14,14 +14,15 @@
 #define SCI_project_SpanPort_h 1
 
 #include <Dataflow/Ports/SimplePort.h>
-#include <Dataflow/Ports/SpanSpace.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
 
-namespace SCIRun {
+namespace Yarden {
     
-    
+using namespace SCIRun;    
+
     typedef SimpleIPort<SpanUniverseHandle> SpanUniverseIPort;
     typedef SimpleOPort<SpanUniverseHandle> SpanUniverseOPort;
     
-} // End namespace SCIRun
+} // End namespace Yarden
 
 #endif

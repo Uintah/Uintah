@@ -97,4 +97,5 @@ using namespace SCIRun;
   typedef ScalarFieldRGdouble FIELD_TYPE ;
 #define GET_FIELD(f) (f->getRGBase()->getRGDouble())
 #endif
-  
+
+}

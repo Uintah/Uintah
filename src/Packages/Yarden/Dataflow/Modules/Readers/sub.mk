@@ -15,7 +15,10 @@ SRCS     += \
 	$(SRCDIR)/TensorFieldReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Yarden/Datatypes Dataflow/Network Core/Datatypes \
+PSELIBS := Packages/Yarden/Core/Algorithms/Visualization \
+	Packages/Yarden/Core/Datatypes \
+	Packages/Yarden/Dataflow/Ports \
+	Dataflow/Network Core/Datatypes \
 	Core/Exceptions Core/Thread Core/Containers \
 	Core/TclInterface Core/Persistent
 LIBS := 

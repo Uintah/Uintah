@@ -8,9 +8,9 @@ SRCS     += \
 	$(SRCDIR)/Clock.cc \
 	$(SRCDIR)/SpanSpace.cc \
 	$(SRCDIR)/SpanTree.cc \
-	$(SRCDIR)/TensorField.cc \
+#	$(SRCDIR)/TensorField.cc \
 
-PSELIBS :=
+PSELIBS := Core/Datatypes
 LIBS :=
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

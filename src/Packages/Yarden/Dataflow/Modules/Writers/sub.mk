@@ -15,7 +15,7 @@ SRCS     += \
 	$(SRCDIR)/TensorFieldWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Yarden/Datatypes Core/Datatypes Dataflow/Network \
+PSELIBS := Packages/Yarden/Core Packages/Yarden/Dataflow \
 	Core/Persistent Core/Exceptions Core/Containers \
 	Core/TclInterface Core/Thread 
 LIBS := 
