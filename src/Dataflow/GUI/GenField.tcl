@@ -57,6 +57,18 @@ itcl_class PSECommon_Fields_GenField {
 	bind $w.e <Return> $c
 	pack $w.e -side right
     }
+    method make_range_entry {w text text1 text2 v1 v2 c} {
+	frame $w
+	label $w.l -text "$text"
+	label $w.t1 -text "$text1"
+	entry $w.e1 -textvariable $v1 -width 8
+	bind $w.e1 <Return> $c
+	label $w.t2 -text "$text2"
+	entry $w.e2 -textvariable $v2 -width 8
+	bind $w.e2 <Return> $c
+	pack $w.l -side left
+	pack $w.e2 $w.t2 $w.e1 $w.t1 -side right
+    }    
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
@@ -126,7 +138,6 @@ itcl_class PSECommon_Fields_GenField {
 
 	pack $w.f.r.functions
 
-	
 	frame $w.f.r.geom
 	radiobutton $w.f.r.geom.structured -text Structured -variable $this-geomtype -value 1
 	radiobutton $w.f.r.geom.unstructured -text Unstructured -variable $this-geomtype -value 2
@@ -150,23 +161,19 @@ itcl_class PSECommon_Fields_GenField {
 
 	pack $w.f.r.attrib -side top -fill x
 
-	make_entry $w.f.r.nx "x:" $this-nx "$this-c needexecute"
-	make_entry $w.f.r.ny "y:" $this-ny "$this-c needexecute"
-	make_entry $w.f.r.nz "z:" $this-nz "$this-c needexecute"
+	make_entry $w.f.r.nx "X Sample Size" $this-nx "$this-c needexecute"
+	make_entry $w.f.r.ny "Y Sample Size" $this-ny "$this-c needexecute"
+	make_entry $w.f.r.nz "Z Sample Size" $this-nz "$this-c needexecute"
 	pack $w.f.r.nx $w.f.r.ny $w.f.r.nz -fill x
 
-	make_entry $w.f.r.sx "sx:" $this-sx "$this-c needexecute"
-	make_entry $w.f.r.sy "sy:" $this-sy "$this-c needexecute"
-	make_entry $w.f.r.sz "sz:" $this-sz "$this-c needexecute"
-	pack $w.f.r.sx $w.f.r.sy $w.f.r.sz -fill x
+	make_range_entry $w.f.r.rangex "X Location" "From" "To" $this-sx $this-ex "$this-c needexecute"
+	make_range_entry $w.f.r.rangey "Y Location" "From" "To" $this-sy $this-ey "$this-c needexecute"
+	make_range_entry $w.f.r.rangez "Z Location" "From" "To" $this-sz $this-ez "$this-c needexecute"
+	pack $w.f.r.rangex $w.f.r.rangey $w.f.r.rangez -fill x
 
-	make_entry $w.f.r.ex "ex:" $this-ex "$this-c needexecute"
-	make_entry $w.f.r.ey "ey:" $this-ey "$this-c needexecute"
-	make_entry $w.f.r.ez "ez:" $this-ez "$this-c needexecute"
-	pack $w.f.r.ex $w.f.r.ey $w.f.r.ez -fill x
 
 	checkbutton $w.f.r.indexed -text "Force Indexed" -variable $this-indexed
-	pack $w.f.r.indexed
+	pack $w.f.r.indexed -fill x
 
 	button $w.f.r.go -text "Execute" -relief raised -command $n
 	pack $w.f.r $w.f.r.go -fill y
