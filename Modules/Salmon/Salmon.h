@@ -77,7 +77,11 @@ public:
     void addTopRoe(Roe *r);
     void delTopRoe(Roe *r);
 
+    void delete_roe(Roe* r);
+
     void tcl_command(TCLArgs&, void*);
+
+    virtual void emit_vars(ostream& out); // Override from class TCL
 
     // The scene...
     GeomIndexedGroup ports; // this contains all of the ports...

@@ -156,6 +156,8 @@ public:
     Roe(const Roe&);
     ~Roe();
 
+    clString set_id(const clString& new_id);
+
     void itemAdded(GeomSalmonItem*);
     void itemDeleted(GeomSalmonItem*);
     void rotate(double angle, Vector v, Point p);

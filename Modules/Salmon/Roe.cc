@@ -72,6 +72,13 @@ Roe::Roe(Salmon* s, const clString& id)
     ball->Init();
 }
 
+clString Roe::set_id(const clString& new_id)
+{
+  clString old_id=id;
+  id=new_id;
+  return old_id;
+}
+
 void Roe::itemAdded(GeomSalmonItem* si)
 {
     ObjTag* vis;
@@ -694,6 +701,8 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	} else {
 	    manager->mailbox.send(scinew SalmonMessage(id));
 	}
+    } else if(args[1] == "destroy"){
+        manager->delete_roe(this);
     } else if(args[1] == "anim_redraw"){
 	// We need to dispatch this one to the remote thread
 	// We use an ID string instead of a pointer in case this roe

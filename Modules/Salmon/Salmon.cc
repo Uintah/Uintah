@@ -325,6 +325,16 @@ void Salmon::connection(ConnectionMode mode, int which_port, int)
     }
 }
 
+void Salmon::delete_roe(Roe* delroe)
+{
+  for(int i=0;i<roe.size();i++){
+    if(roe[i] == delroe){
+      roe.remove(i);
+      delete delroe;
+    }
+  }
+}
+
 void Salmon::tcl_command(TCLArgs& args, void* userdata)
 {
     if(args.count() < 2){
@@ -460,6 +470,15 @@ int Salmon::lookup_specific(const clString& key, void*& data)
 void Salmon::insert_specific(const clString& key, void* data)
 {
     specific.insert(key, data);
+}
+
+void Salmon::emit_vars(ostream& out)
+{
+  TCL::emit_vars(out);
+  for(int i=0;i<roe.size();i++){
+    out << id << " ui " << roe[i]->id << "\n";
+    roe[i]->emit_vars(out);
+  }
 }
 
 #ifdef __GNUG__

@@ -15,11 +15,20 @@ itcl_class Salmon {
     method makeRoeID {} {
 	set id $this-Roe_$nextrid
 	incr nextrid
+	puts $id
+	puts " commands: [info commands $id]"
+	while {[:: info commands $id] != ""} {
+	    puts "trying new id $id"
+	    set id $this-Roe_$nextrid
+	    incr nextrid
+	}
 	return $id
     }
     protected roe
-    method ui {} {
-	set rid [makeRoeID]
+    method ui {{rid -1}} {
+	if {$rid == -1} {
+	    set rid [makeRoeID]
+	}
 	Roe $rid -salmon $this
 	lappend roe $rid
     }
@@ -301,6 +310,7 @@ itcl_class Roe {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+	bind $w <Destroy> "$this-c destroy"
     }
     method removeMFrame {w} {
 	pack forget $w.mframe.f
@@ -363,10 +373,13 @@ itcl_class Roe {
 	pack $w.f
 	scale $w.f.fov -orient horizontal -variable $view-fov \
 		-from 0 -to 180 -label "Field of View:" \
-		-showvalue true -tickinterval 30 \
+		-showvalue true -tickinterval 90 \
 		-digits 3 \
 		-command $c
 	pack $w.f.fov -expand yes -fill x
+# 	entry $w.f.fove -textvariable $view-fov
+# 	pack $w.f.fove -side top -expand yes -fill x
+# 	bind $w.f.fove <Return> "$command $view-fov"
     }
 
     method makeBackgroundPopup {} {
