@@ -13,7 +13,7 @@ using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
 
-static Mutex lock("TypeDescription::getMPIType lock");
+static Mutex tdLock("TypeDescription::getMPIType lock");
 
 struct KillMap {
   KillMap();
@@ -120,16 +120,16 @@ TypeDescription::Register::~Register()
 MPI_Datatype TypeDescription::getMPIType() const
 {
   if(d_mpitype == -1){
-    lock.lock();
+    tdLock.lock();
     if (d_mpitype == -1) {
       if(d_mpitypemaker){
 	d_mpitype = (*d_mpitypemaker)();
       } else {
-	lock.unlock();
+	tdLock.unlock();
 	throw InternalError("MPI Datatype requested, but do not know how to make it");
       }
     }
-    lock.unlock();
+    tdLock.unlock();
   }
   ASSERT(d_mpitype != -2);
   return d_mpitype;
