@@ -90,7 +90,7 @@ using std::vector;
 
 
 class OpenGLHelper;
-  class GuiArgs;
+class GuiArgs;
 
 /* #define DO_REDRAW 0 */
 /* #define DO_PICK 1 */
@@ -102,10 +102,10 @@ class OpenGLHelper;
 /* #define IMAGE_DONE 8 */
 
 struct GetReq {
-    int datamask;
-    FutureValue<GeometryData*>* result;
-    GetReq(int, FutureValue<GeometryData*>* result);
-    GetReq();
+  int datamask;
+  FutureValue<GeometryData*>* result;
+  GetReq(int, FutureValue<GeometryData*>* result);
+  GetReq();
 };
 
 struct ImgReq {
@@ -144,26 +144,26 @@ protected:
   bool compute_depth(ViewWindow* viewwindow, const View& view, double& near, double& far);
   int xres, yres;
   Runnable *helper;
-    Tk_Window tkwin;
-    Window win;
-    Display* dpy;
-    GLXContext cx;
-    int maxlights;
-    DrawInfoOpenGL* drawinfo;
-    WallClockTimer fpstimer;
-    double current_time;
+  Tk_Window tkwin;
+  Window win;
+  Display* dpy;
+  GLXContext cx;
+  int maxlights;
+  DrawInfoOpenGL* drawinfo;
+  WallClockTimer fpstimer;
+  double current_time;
 
-    int old_stereo;
-    GLuint imglist;
-    void make_image();
+  int old_stereo;
+  GLuint imglist;
+  void make_image();
 
-    void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
-    void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
-    //OpenGLHelper* helper;
-    string my_openglname;
-    vector<XVisualInfo*> visuals;
+  void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
+  void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
+  //OpenGLHelper* helper;
+  string my_openglname;
+  vector<XVisualInfo*> visuals;
 
-   /* Call this each time an mpeg frame is generated. */
+  /* Call this each time an mpeg frame is generated. */
   void StartMpeg(const string& fname);
   void AddMpegFrame();
   void EndMpeg();
@@ -185,91 +185,89 @@ protected:
 
 public:
   static bool query(GuiInterface* gui);
-    OpenGL(GuiInterface* gui);
-     ~OpenGL();
-     void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
-      int ntimesteps, double frametime);
-    void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&, GeomPick*&, int&);
-     void get_pick(Viewer*, ViewWindow*, int, int,
-      GeomObj*&, GeomPick*&, int& );
-     void dump_image(const string& fname,
-			    const string& type = "raw");
-     void put_scanline(int y, int width, Color* scanline, int repeat=1);
+  OpenGL(GuiInterface* gui);
+  ~OpenGL();
+  void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
+	      int ntimesteps, double frametime);
+  void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&, GeomPick*&, int&);
+  void get_pick(Viewer*, ViewWindow*, int, int,
+		GeomObj*&, GeomPick*&, int& );
+  void dump_image(const string& fname,
+		  const string& type = "raw");
+  void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
-   void saveImage(const string& fname,
-			 const string& type = "ppm", int x=640, int y=512);
+  void saveImage(const string& fname,
+		 const string& type = "ppm", int x=640, int y=512);
   void render_and_save_image(int x, int y,
 			     const string& fname,
 			     const string& type = "ppm");
   void setFrustumToWindowPortion();
   void deriveFrustum();
 
-// HACK -- support data for get_pixel_depth
-float  pixel_depth_data[1310720];  // assume no screen is > 1280x1024
-GLdouble get_depth_model[16];
-GLdouble get_depth_proj[16];
-GLint    get_depth_view[4];
+  // HACK -- support data for get_pixel_depth
+  float  pixel_depth_data[1310720];  // assume no screen is > 1280x1024
+  GLdouble get_depth_model[16];
+  GLdouble get_depth_proj[16];
+  GLint    get_depth_view[4];
 
 
-    // compute world space point under cursor (x,y).  If successful,
-    // set 'p' to that value & return true.  Otherwise, return false.
-     int    pick_scene(int x, int y, Point *p);
-     void kill_helper();
+  // compute world space point under cursor (x,y).  If successful,
+  // set 'p' to that value & return true.  Otherwise, return false.
+  int pick_scene(int x, int y, Point *p);
+  void kill_helper();
 
-    string myname;
-     void redraw_loop();
-    Mailbox<int> send_mb;
-    Mailbox<int> recv_mb;
-    Mailbox<GetReq> get_mb;
-    Mailbox<ImgReq> img_mb;
+  string myname;
+  void redraw_loop();
+  Mailbox<int> send_mb;
+  Mailbox<int> recv_mb;
+  Mailbox<GetReq> get_mb;
+  Mailbox<ImgReq> img_mb;
     
-    Frustum frustum;
-    HiRes hi_res;
+  Frustum frustum;
+  HiRes hi_res;
 
-    Viewer* viewer;
-    ViewWindow* viewwindow;
-    double tbeg;
-    double tend;
-    int nframes;
-    double framerate;
-    void redraw_frame();
+  Viewer* viewer;
+  ViewWindow* viewwindow;
+  double tbeg;
+  double tend;
+  int nframes;
+  double framerate;
+  void redraw_frame();
 
-    int send_pick_x;
-    int send_pick_y;
+  int send_pick_x;
+  int send_pick_y;
 
-    GeomObj* ret_pick_obj;
-    GeomPick* ret_pick_pick;
-    int ret_pick_index;
+  GeomObj* ret_pick_obj;
+  GeomPick* ret_pick_pick;
+  int ret_pick_index;
 
-     void listvisuals(GuiArgs&);
-     void setvisual(const string&, int i, int width, int height);
+  void listvisuals(GuiArgs&);
+  void setvisual(const string&, int i, int width, int height);
 
-    View lastview;
-    double znear, zfar;
+  View lastview;
+  double znear, zfar;
 
-    GeomCappedCylinder* stylusCylinder[2];
-    GeomTri* stylusTriangle[4];
-    GeomSphere* pinchSphere;
-    Material* stylusMaterial[16], *pinchMaterial;
+  GeomCappedCylinder* stylusCylinder[2];
+  GeomTri* stylusTriangle[4];
+  GeomSphere* pinchSphere;
+  Material* stylusMaterial[16], *pinchMaterial;
     
-    GeomText* pinchText[2];
-    GeomCappedCylinder* pinchCylinder[4];
+  GeomText* pinchText[2];
+  GeomCappedCylinder* pinchCylinder[4];
 
-    Thread *helper_thread;
-    bool dead;
+  Thread *helper_thread;
+  bool dead;
 
-    // these functions were added to clean things up a bit...
+  // These functions were added to clean things up a bit.
 
-//protected:
-     void getData(int datamask,
-      FutureValue<GeometryData*>* result);
+  //protected:
+  void getData(int datamask, FutureValue<GeometryData*>* result);
   
 protected:
     
-     void real_getData(int datamask,
-      FutureValue<GeometryData*>* result);
-  
+  void real_getData(int datamask, FutureValue<GeometryData*>* result);
 };
+
 
 } // End namespace SCIRun
 
