@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <string>
 using std::cerr;
 
@@ -38,6 +39,7 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
     
       else {
 	 cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
+        throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type");
 	 //      exit(1);
       }
     
