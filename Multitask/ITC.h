@@ -78,17 +78,6 @@ public:
     void write_unlock();
 };
 
-template<class Item> struct Mailbox_private;
-
-template<class Item> class Mailbox {
-    Mailbox_private<Item>* priv;
-public:
-    Mailbox(int max);
-    ~Mailbox();
-    void send(Item);
-    Item receive();
-    int size() const;
-    int nitems() const;
-};
+#include <Multitask/Mailbox.h>
 
 #endif /* SCI_Multitask_ITC_h */
