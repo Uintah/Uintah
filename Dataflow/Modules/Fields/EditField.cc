@@ -297,17 +297,17 @@ EditField::build_widget(FieldHandle f)
 
   l2norm = size.length();
 
-  // Rotate * Scale * Translate.
+  // Translate * Rotate * Scale.
   Transform r;
   Point unused;
   box_initial_transform_.load_identity();
+  box_initial_transform_.pre_scale(Vector((right-center).length(),
+			     (down-center).length(),
+			     (in-center).length()));
   r.load_frame(unused, (right-center).normal(),
 	       (down-center).normal(),
 	       (in-center).normal());
   box_initial_transform_.pre_trans(r);
-  box_initial_transform_.pre_scale(Vector((right-center).length(),
-			     (down-center).length(),
-			     (in-center).length()));
   box_initial_transform_.pre_translate(center.asVector());
 
   box_->SetScale(l2norm * 0.015);
@@ -471,20 +471,21 @@ EditField::execute()
   
 
   // Transform the mesh if necessary.
-  // Rotate * Scale * Translate.
+  // Translate * Rotate * Scale.
   Point center, right, down, in;
   box_->GetPosition(center, right, down, in);
   Transform t, r;
   Point unused;
   t.load_identity();
+  t.pre_scale(Vector((right-center).length(),
+       (down-center).length(),
+       (in-center).length()));
   r.load_frame(unused, (right-center).normal(),
 	 (down-center).normal(),
 	 (in-center).normal());
   t.pre_trans(r);
-  t.pre_scale(Vector((right-center).length(),
-       (down-center).length(),
-       (in-center).length()));
   t.pre_translate(center.asVector());
+
   Transform inv(box_initial_transform_);
   inv.invert();
   t.post_trans(inv);
