@@ -1,4 +1,4 @@
-
+#if 1
 
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
@@ -8,6 +8,7 @@
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
 #include <iostream.h>
+#include <stdio.h>
 
 Point Interpolate(const Point& p1, const Point& p2, double w)
 {
@@ -19,10 +20,15 @@ Point Interpolate(const Point& p1, const Point& p2, double w)
 
 clString Point::string() const
 {
+#if 0
     return clString("[")
 	+to_string(_x)+clString(", ")
 	    +to_string(_y)+clString(", ")
 		+to_string(_z)+clString("]");
+#endif
+    char buf[100];
+    sprintf(buf, "[%g, %g, %g]", _x, _y, _z);
+    return clString(buf);
 }
 
 int Point::operator==(const Point& p) const
@@ -83,6 +89,7 @@ ostream& operator<<( ostream& os, const Point& p )
    return os;
 }
 
+#if 0
 istream& operator>>( istream& is, Point& v)
 {
   double x, y, z;
@@ -91,6 +98,7 @@ istream& operator>>( istream& is, Point& v)
   v=Point(x,y,z);
   return is;
 }
+#endif
 
 void Pio(Piostream& stream, Point& p)
 {
@@ -131,3 +139,4 @@ Point::InInterval( Point a, double epsilon )
 
 
 
+#endif

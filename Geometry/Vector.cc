@@ -1,4 +1,4 @@
-
+#if 1
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
 #include <Classlib/Assert.h>
@@ -7,13 +7,19 @@
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
 #include <iostream.h>
+#include <stdio.h>
 
 clString Vector::string() const
 {
+#if 0
     return clString("[")
 	+to_string(_x)+clString(", ")
 	    +to_string(_y)+clString(", ")
 		+to_string(_z)+clString("]");
+#endif
+    char buf[100];
+    sprintf(buf, "[%g, %g, %g]", _x, _y, _z);
+    return clString(buf);
 }
 
 void Vector::find_orthogonal(Vector& v1, Vector& v2) const
@@ -65,3 +71,4 @@ Vector::operator== ( const Vector& v ) const
 {
     return v._x == _x && v._y == _y && v._z == _z;
 }
+#endif
