@@ -1,35 +1,24 @@
-/*
-  The contents of this file are subject to the University of Utah Public
-  License (the "License"); you may not use this file except in compliance
-  with the License.
-  
-  Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-  License for the specific language governing rights and limitations under
-  the License.
-  
-  The Original Source Code is SCIRun, released March 12, 2001.
-  
-  The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
-*/
+//  The contents of this file are subject to the University of Utah Public
+//  License (the "License"); you may not use this file except in compliance
+//  with the License.
+//  
+//  Software distributed under the License is distributed on an "AS IS"
+//  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+//  License for the specific language governing rights and limitations under
+//  the License.
+//  
+//  The Original Source Code is SCIRun, released March 12, 2001.
+//  
+//  The Original Source Code was developed by the University of Utah.
+//  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+//  University of Utah. All Rights Reserved.
+//  
+//    File   : MarchingCubes.h
+//    Author : Yarden Livnat
+//    Date   : Fri Jun 15 16:20:11 2001
 
-/*!
- *  MarchingCubes.h
- *      Isosurface extraction based on Marching Cubes
- *
- *   \author Yarden Livnat
- *   Department of Computer Science
- *   University of Utah
- *   \date Feb 2001
- *
- *  Copyright (C) 2001 SCI Group
- */
-
-
-#ifndef MarchingCubes_h
-#define MarchingCubes_h
+#if !defined(Visualization_MarchingCubes_h)
+#define Visualization_MarchingCubes_h
 
 #include <iostream>
 #include <string>
@@ -38,16 +27,19 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomObj.h>
+#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Datatypes/TriSurf.h>
 
 namespace SCIRun {
+class Field;
 
-class MarchingCubesAlg {
+class MarchingCubesAlg : public DynamicAlgoBase {
 protected:
   int np_;
 public:
 
-  MarchingCubesAlg() : np_(1) {}
-  virtual ~MarchingCubesAlg() {}
+  MarchingCubesAlg();
+  virtual ~MarchingCubesAlg();
 
   virtual void set_np( int np ) { np_ = np; }
   virtual void release() = 0;
@@ -55,10 +47,14 @@ public:
   virtual void search( double, bool ) = 0;
   virtual GeomObj* get_geom() = 0;
   virtual TriSurfMeshHandle get_trisurf() = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static const string& get_h_file_path();
+  static CompileInfo *get_compile_info(const TypeDescription *td);
 };
 
   
-template < class AI, class Tesselator>
+template <class Tesselator>
 class MarchingCubes : public MarchingCubesAlg
 {
   typedef typename Tesselator::field_type       field_type;
@@ -66,13 +62,11 @@ class MarchingCubes : public MarchingCubesAlg
   typedef typename Tesselator::mesh_handle_type mesh_handle_type;
 
 protected:
-  AI *ai_;
   vector<Tesselator *> tess_;
   mesh_handle_type mesh_;
   GeomObj *geom_;
 public:
-  MarchingCubes() { tess_.resize(np_, 0); }
-  MarchingCubes(AI *ai) : ai_(ai), mesh_(0) { tess_.resize( np_, 0 ); }
+  MarchingCubes() : mesh_(0) { tess_.resize( np_, 0 ); }
   virtual ~MarchingCubes() {}
 
   virtual void set_np( int );
@@ -89,18 +83,18 @@ public:
     
 // MarchingCubes
 
-template<class AI, class Tesselator>
+template<class Tesselator>
 void 
-MarchingCubes<AI,Tesselator>::release() 
+MarchingCubes<Tesselator>::release() 
 {
   for (int i=0; i<np_; i++)
     if ( tess_[i] ) { delete tess_[i]; tess_[i] = 0; }
   if (geom_) geom_=0;
 }
 
-template<class AI, class Tesselator>
+template<class Tesselator>
 void 
-MarchingCubes<AI,Tesselator>::set_np( int np )
+MarchingCubes<Tesselator>::set_np( int np )
 {
   if ( np > np_ ) 
     tess_.resize( np, 0 );
@@ -110,9 +104,9 @@ MarchingCubes<AI,Tesselator>::set_np( int np )
   np_ = np;
 }  
 
-template<class AI, class Tesselator>
+template<class Tesselator>
 void 
-MarchingCubes<AI,Tesselator>::set_field( Field *f )
+MarchingCubes<Tesselator>::set_field( Field *f )
 {
   if ( field_type *field = dynamic_cast<field_type *>(f) ) {
     for (int i=0; i<np_; i++) {
@@ -123,9 +117,9 @@ MarchingCubes<AI,Tesselator>::set_field( Field *f )
   }
 }
 
-template<class AI, class Tesselator>
+template<class Tesselator>
 void
-MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
+MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
 {
   if ( np_ == 1 ) {
     tess_[0]->reset(0, build_trisurf);
@@ -139,7 +133,7 @@ MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
   }
   else {
     Thread::parallel( this,  
-		      &MarchingCubes<AI,Tesselator>::parallel_search, 
+		      &MarchingCubes<Tesselator>::parallel_search, 
 		      np_, 
 		      true,    // block
 		      iso, 
@@ -159,9 +153,9 @@ MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
   }
 }
 
-template<class AI,class Tesselator>
+template<class Tesselator>
 void 
-MarchingCubes<AI,Tesselator>::parallel_search( int proc, 
+MarchingCubes<Tesselator>::parallel_search( int proc, 
 					       double iso, bool build_trisurf)
 {
   tess_[proc]->reset(0, build_trisurf);
@@ -179,4 +173,4 @@ MarchingCubes<AI,Tesselator>::parallel_search( int proc,
 
 } // End namespace SCIRun
 
-#endif // MarchingCubes_h
+#endif // Visualization_MarchingCubes_h

@@ -30,9 +30,9 @@
 #include <Core/Geom/Material.h>
 #include <Core/GuiInterface/GuiVar.h>
 
-#include <Core/Algorithms/Loader/Loader.h>
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
+#include <Core/Disclosure/DynamicLoader.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -96,23 +96,18 @@ class Isosurface : public Module {
   bool have_colorfield;
   bool have_ColorMap;
 
-  MarchingCubesAlg *mc_alg;
-  NoiseAlg *noise_alg;
-  SageAlg *sage_alg;
+  //! Handles to the isosurfacing algorithms.
+  DynamicAlgoHandle            mc_alg_;
+  DynamicAlgoHandle            noise_alg_;
+  DynamicAlgoHandle            sage_alg_;
 
-  MaterialHandle matl;
-
-protected:
-  Loader loader;
-  Loader minmax_loader;
-
+  MaterialHandle               matl_;
 
 public:
   Isosurface(const string& id);
   virtual ~Isosurface();
   virtual void execute();
 
-  virtual void initialize();
   void new_field( FieldHandle & );
   void send_results();
 };

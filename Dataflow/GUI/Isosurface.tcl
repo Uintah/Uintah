@@ -162,7 +162,7 @@ itcl_class SCIRun_Visualization_Isosurface {
         pack $alg.np -side left -fill x
 
 	set alg [$mf.tabs add -label "NOISE"  -command "$this select-alg 1"]
-	set alg [$mf.tabs add -label "SAGE"  -command "$this select-alg 2"]
+#	set alg [$mf.tabs add -label "SAGE"  -command "$this select-alg 2"]
 
 # 	iwidgets::checkbox $alg.prune -labeltext "Prune"
 # 	$alg.prune add value  -text "Value"  -variable $this-value

@@ -34,13 +34,18 @@
 #include <Core/Geom/GeomTriangles.h>
 //#include <Core/Algorithms/Visualization/mc_table.h>
 #include <Core/Algorithms/Visualization/mcube2.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 
 namespace SCIRun {
 
+struct HexMCBase {
+  virtual ~HexMCBase() {}
+  static const string& get_h_file_path();
+};
 //! A Macrching Cube teselator for a Hexagon cell     
 
 template<class Field>
-class HexMC
+class HexMC : public HexMCBase
 {
 public:
   typedef Field                                  field_type;
