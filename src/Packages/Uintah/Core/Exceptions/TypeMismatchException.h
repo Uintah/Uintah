@@ -9,7 +9,7 @@ class TypeMismatchException : public SCICore::Exceptions::Exception {
     std::string msg;
 public:
     TypeMismatchException(const std::string&);
-    virtual std::string message() const;
+    const char* message() const;
 };
 
 #endif
