@@ -237,15 +237,18 @@ void Network::initialize(NetworkEditor* _netedit)
     //NOT_FINISHED("Network::initialize"); // Should read a file???
 }
 
-static string removeSpaces(const string& str) {
-  string result=str;
-  int i;
-  while((i=result.find(' ')) != -1) {
-    if(i==0) result=result.substr(1,-1); else
-      result=result.substr(0,i)+result.substr(i+1,-1);
+
+static string
+remove_spaces(const string& str)
+{
+  string result;
+  for (string::const_iterator i = str.begin(); i != str.end(); i++)
+  {
+    if (*i != ' ') { result.push_back(*i); }
   }
   return result;
 }
+
 
 Module* Network::add_module(const string& packageName,
                             const string& categoryName,
@@ -257,16 +260,16 @@ Module* Network::add_module(const string& packageName,
 
   string instanceName;
   {
-    string name=removeSpaces(packageName)+"_"+removeSpaces(categoryName)+
-                  "_"+removeSpaces(moduleName)+"_";
-    int i;
-    for(i=0;get_module_by_id(instanceName=name+to_string(i));i++);
+    const string name = remove_spaces(packageName + "_" +
+				      categoryName + "_" +
+				      moduleName + "_");
+    for (int i=0; get_module_by_id(instanceName = name + to_string(i)); i++);
   }
 
   // Instantiate the module
 
-  Module* mod=packageDB.instantiateModule(packageName,categoryName,moduleName,
-                                          instanceName);
+  Module* mod = packageDB.instantiateModule(packageName, categoryName,
+					    moduleName, instanceName);
   if(!mod) {
     cerr << "Error: can't create instance " << instanceName << "\n";
     return 0;
