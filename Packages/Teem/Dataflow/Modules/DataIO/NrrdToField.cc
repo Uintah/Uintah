@@ -62,6 +62,7 @@ public:
   GuiString   datasets_;
   int         data_generation_, points_generation_;
   int         connect_generation_, origfield_generation_;
+  bool        has_error_;
   FieldHandle last_field_;
 
   NrrdToField(GuiContext*);
@@ -126,7 +127,7 @@ NrrdToField::NrrdToField(GuiContext* ctx)
     datasets_(ctx->subVar("datasets")),
     data_generation_(-1), points_generation_(-1),
     connect_generation_(-1), origfield_generation_(-1),
-    last_field_(0)
+    has_error_(false), last_field_(0)
 {
 }
 
@@ -169,18 +170,41 @@ void
   NrrdDataHandle pointsH;
   NrrdDataHandle connectH;
   FieldHandle origfieldH;
-
-  // Determine if we have data, points, connections, etc.
-  if (!ndata_->get(dataH))
-    dataH = 0;
-  if (!npoints_->get(pointsH))
-    pointsH = 0;
-  if (!nconnect_->get(connectH))
-    connectH = 0;
-  if (!ifield_->get(origfieldH))
-    origfieldH = 0;
-
+  
   bool do_execute = false;
+  // Determine if we have data, points, connections, etc.
+  if (!ndata_->get(dataH)) {
+    dataH = 0;
+    if (data_generation_ != -1) {
+      data_generation_ = -1;
+      do_execute = true;
+    }
+  }
+  
+  if (!npoints_->get(pointsH)) {
+    pointsH = 0;
+    if (points_generation_ != -1) {
+      points_generation_ = -1;
+      do_execute = true;
+    }
+  }
+  
+  if (!nconnect_->get(connectH)) {
+    connectH = 0;
+    if (connect_generation_ != -1) {
+      connect_generation_ = -1;
+      do_execute = true;
+    }
+  }
+  
+  if (!ifield_->get(origfieldH)) {
+    origfieldH = 0;
+    if (origfield_generation_ != -1) {
+      origfield_generation_ = -1;
+      do_execute = true;
+    }
+  }
+  
   // check the generations to see if we need to re-execute
   if (dataH != 0 && data_generation_ != dataH->generation) {
     data_generation_ = dataH->generation;
@@ -245,6 +269,9 @@ void
     gui->execute(str.str().c_str());
   }
 
+  if (has_error_)
+    do_execute = true;
+
   // execute the module
   if (do_execute) {
     last_field_ = create_field_from_nrrds(dataH, pointsH, connectH, origfieldH,
@@ -253,8 +280,10 @@ void
 							struct_unstruct_.get());
     
   } 
-  if (last_field_ != 0)
+  if (last_field_ != 0) {
+    has_error_ = false;
     ofield_->send(last_field_);  
+  }
 }
 
 FieldHandle 
@@ -409,6 +438,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       // account for vector/scalar data
       if (connect->dim != 2) {
 	error("Connections Nrrd must be two dimensional (number of points in each connection by the number of connections)");
+	has_error_ = true;
 	return 0;
       }
       
@@ -425,6 +455,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	which = 0;
       } else { 
 	error("Connections nrrd must have one axis with a size less than or equal to 8.");
+	has_error_ = true;
 	return 0;
       }
 
@@ -477,6 +508,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    connectivity = 4;
 	  } else {
 	    error("Connections Nrrd indicates 4 points per connection. Please indicate whether a Tet or Quad in UI.");
+	    has_error_ = true;
 	    return 0;
 	  }
 	  topology_ = UNSTRUCTURED;
@@ -506,6 +538,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	break;
       default:
 	error("Connections Nrrd must contain 2, 3, 4, 6, or 8 points per connection.");
+	has_error_ = true;
 	return 0;
       }
       
@@ -538,11 +571,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	int d = 0, p = 0;
 	if (!(dataH->nrrd->dim == pointsH->nrrd->dim || dataH->nrrd->dim == (pointsH->nrrd->dim-1))) {
 	  error ("Data and Points must have the same dimension for the domain.");
+	  has_error_ = true;
 	  return 0;
 	}
 	for (d = dataH->nrrd->dim-1, p = pointsH->nrrd->dim-1; p > 0; d--, p--) {
 	  if (dataH->nrrd->axis[d].size != pointsH->nrrd->axis[p].size) {
 	    error("Data and Points must have the same size for all domain axes.");
+	    has_error_ = true;
 	    return 0;
 	  }
 	}
@@ -662,6 +697,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  }
 	} else {
 	  error("Incorrect dimensions for Data Nrrd");
+	  has_error_ = true;
 	  return 0;
 	}
 
@@ -798,6 +834,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  break;
 	default:
 	  error("Cannot convert > 3 dimesional data to a SCIRun Field. If first dimension is vector/tensor data, make sure the nrrdKind is set for that axis.");
+	  has_error_ = true;
 	  return 0;
 	}
       }
@@ -862,6 +899,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  kdim = points->axis[3].size;
 	} else {
 	  error("Points nrrd must have 1, 2, or 3 dimensions.");
+	  has_error_ = true;
 	  return 0;
 	}
 	// create mesh
@@ -883,6 +921,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       } else {
 	// no data given
 	error("Not enough information given to create a Field.");
+	has_error_ = true;
 	return 0;
       }
     }
