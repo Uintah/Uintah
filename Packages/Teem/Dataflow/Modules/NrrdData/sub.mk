@@ -32,6 +32,7 @@ SRCS     += \
 	$(SRCDIR)/EditTupleAxis.cc\
 	$(SRCDIR)/NrrdInfo.cc\
 	$(SRCDIR)/NrrdSelectTime.cc\
+	$(SRCDIR)/NrrdSetProperty.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \

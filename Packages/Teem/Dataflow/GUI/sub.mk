@@ -31,6 +31,7 @@ SRCS := \
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/HDF5DataReader.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\
+	$(SRCDIR)/NrrdSetProperty.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
 	$(SRCDIR)/NrrdSelectTime.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
