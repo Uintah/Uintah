@@ -21,8 +21,9 @@ class MapBlendMaterial : public Material
 
  public:
 
-  MapBlendMaterial(const string& s, Material *one, Material *two)
-    : mat1_(one), mat2_(two), map_(s) {}
+  MapBlendMaterial(const string& s, Material *one, Material *two, 
+                   bool flip=false)
+    : mat1_(one), mat2_(two), map_(s,flip) {}
   virtual ~MapBlendMaterial() {}
 
   Color interp_color(double u, double v)

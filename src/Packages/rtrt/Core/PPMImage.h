@@ -43,11 +43,13 @@ class PPMImage
   bool                flipped_;
 
  public:
-  PPMImage(const string& s) : valid_(false), flipped_(false) 
+  PPMImage(const string& s, bool flip=false) 
+    : valid_(false), flipped_(flip) 
   { 
     read_image(s.c_str()); 
   }
-  PPMImage(int nu, int nv) : u_(nu), v_(nv), valid_(false), flipped_(false) 
+  PPMImage(int nu, int nv, bool flip=false) 
+    : u_(nu), v_(nv), valid_(false), flipped_(flip) 
   {
     image_.resize(u_*v_);
   }
@@ -58,22 +60,14 @@ class PPMImage
   unsigned get_height() { return v_; }
   unsigned get_size() { return max_; }
 
-  void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv, 
-                               bool flipped=false) {
+  void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv) {
     if (valid_) {
       c.resize(u_+2,v_+2);  // image size + slop for interpolation
       nu=u_;
       nv=v_;
-      flipped_ = flipped;
-      if (!flipped_) {
+      for (unsigned v=0; v<v_; ++v)
         for (unsigned u=0; u<u_; ++u)
-          for (unsigned v=0; v<v_; ++v)
-            c(u,v)=image_[v*u_+u];
-      } else {
-        for (unsigned u=0; u<u_; ++u)
-          for (unsigned v=0; v<v_; ++v)
-            c(u,v_-v-1)=image_[v*u_+u];
-      }
+          c(u,v)=image_[v*u_+u];
     } else {
       c.resize(0,0);
       nu=0;
@@ -166,9 +160,15 @@ class PPMImage
       for(unsigned v=0;v<v_;++v){
 	for(unsigned u=0;u<u_;++u){
 	  indata.read((char*)color, 3);
-	  image_[v*u_+u]=rtrt::Color(color[0]/(double)max_,
-                                     color[1]/(double)max_,
-                                     color[2]/(double)max_);
+          if (flipped_) {
+            image_[(v_-v-1)*u_+u]=rtrt::Color(color[0]/(double)max_,
+                                              color[1]/(double)max_,
+                                              color[2]/(double)max_);
+          } else {
+            image_[v*u_+u]=rtrt::Color(color[0]/(double)max_,
+                                       color[1]/(double)max_,
+                                       color[2]/(double)max_);
+          }
 	}
       }    
     } else { // P3
@@ -176,9 +176,15 @@ class PPMImage
       for(unsigned v=0;v<v_;++v){
 	for(unsigned u=0;u<u_;++u){
 	  indata >> r >> g >> b;
-	  image_[v*u_+u]=rtrt::Color(r/(double)max_,
-                                     g/(double)max_,
-                                     b/(double)max_);
+          if (flipped_) {
+            image_[(v_-v-1)*u_+u]=rtrt::Color(r/(double)max_,
+                                              g/(double)max_,
+                                              b/(double)max_);
+          } else {
+            image_[v*u_+u]=rtrt::Color(r/(double)max_,
+                                       g/(double)max_,
+                                       b/(double)max_);
+          }
 	}
       }    
     }
