@@ -37,7 +37,7 @@
 
 class Viewer;
 
-class myUIPort : public virtual gov::cca::ports::UIPort {
+class myUIPort : public virtual sci::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
    void setParent(Viewer *com){this->com=com;}
@@ -47,19 +47,19 @@ public:
 };
 
 
-class Viewer : public gov::cca::Component{
+class Viewer : public sci::cca::Component{
                 
   public:
     Viewer();
     virtual ~Viewer();
-    gov::cca::Services::pointer getServices(){return services;}
-    virtual void setServices(const gov::cca::Services::pointer& svc);
+    sci::cca::Services::pointer getServices(){return services;}
+    virtual void setServices(const sci::cca::Services::pointer& svc);
   private:
 
     Viewer(const Viewer&);
     Viewer& operator=(const Viewer&);
     myUIPort uiPort;
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 //}
 
