@@ -86,7 +86,7 @@ public:
       //
       virtual void calcVelocityWallBC(const ProcessorContext*,
 				      const Patch* patch,
-				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, 
 				      int index) = 0;
 

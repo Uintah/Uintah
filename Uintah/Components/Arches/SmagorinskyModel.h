@@ -89,7 +89,7 @@ public:
       //
       virtual void calcVelocityWallBC(const ProcessorContext*,
 				      const Patch* patch,
-				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, 
 				      int index);
       ///////////////////////////////////////////////////////////////////////
@@ -140,6 +140,13 @@ private:
       const VarLabel* d_wVelocityLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_viscosityLabel;
+      const VarLabel* d_cellTypeLabel;
+      const VarLabel* d_uLinSrcLabel;
+      const VarLabel* d_vLinSrcLabel;
+      const VarLabel* d_wLinSrcLabel;
+      const VarLabel* d_uNonLinSrcLabel;
+      const VarLabel* d_vNonLinSrcLabel;
+      const VarLabel* d_wNonLinSrcLabel;
 
 }; // End class SmagorinkyModel
   

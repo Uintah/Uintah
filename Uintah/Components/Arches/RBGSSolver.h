@@ -221,12 +221,8 @@ private:
 
       // const VarLabel *
       const VarLabel* d_pressureLabel;
-      const VarLabel* d_xPresCoefLabel;
-      const VarLabel* d_yPresCoefLabel;
-      const VarLabel* d_zPresCoefLabel;
-      const VarLabel* d_xPresNonLinSrcLabel;
-      const VarLabel* d_yPresNonLinSrcLabel;
-      const VarLabel* d_zPresNonLinSrcLabel;
+      const VarLabel* d_presCoefLabel;
+      const VarLabel* d_presNonLinSrcLabel;
       const VarLabel* d_presResidualLabel;
 
 }; // End class RBGSSolver.h
@@ -238,6 +234,10 @@ private:
   
 //
 // $Log$
+// Revision 1.8  2000/06/12 21:29:59  bbanerje
+// Added first Fortran routines, added Stencil Matrix where needed,
+// removed unnecessary CCVariables (e.g., sources etc.)
+//
 // Revision 1.7  2000/06/07 06:13:56  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils
