@@ -21,6 +21,7 @@ namespace Uintah {
   using namespace std;
   class LoadBalancer;
   class Task;
+  class SimulationInterface;
 /**************************************
 
 CLASS
@@ -113,7 +114,8 @@ WARNING
 					    const MaterialSet* matls) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleDataCopy(const GridP& grid, SimulationStateP& state) = 0;
+    virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& state, 
+                                       SimulationInterface* sim) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
