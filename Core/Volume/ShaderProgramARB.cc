@@ -89,12 +89,14 @@ using std::string;
 #      define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
 #    endif /* APPLE */
 #  endif /* HAVE_GLEW */
-   //static PFNGLGENPROGRAMSARBPROC SCIglGenProgramsARB = 0;
-   //static PFNGLDELETEPROGRAMSARBPROC SCIglDeleteProgramsARB = 0;
-   //static PFNGLBINDPROGRAMARBPROC SCIglBindProgramARB = 0;
-   //static PFNGLPROGRAMSTRINGARBPROC SCIglProgramStringARB = 0;
-   //static PFNGLISPROGRAMARBPROC SCIglIsProgramARB = 0;
-   //static PFNGLPROGRAMLOCALPARAMETER4FARBPROC SCIglProgramLocalParameter4fARB = 0;
+#  if !defined(CORRECT_OGL_HDRS)
+  static PFNGLGENPROGRAMSARBPROC glGenProgramsARB = 0;
+  static PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB = 0;
+  static PFNGLBINDPROGRAMARBPROC glBindProgramARB = 0;
+  static PFNGLPROGRAMSTRINGARBPROC glProgramStringARB = 0;
+  static PFNGLISPROGRAMARBPROC glIsProgramARB = 0;
+  static PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB = 0;
+#  endif
 #endif /* HAVE_AVR_SUPPORT */
 
 namespace SCIRun {
@@ -142,7 +144,7 @@ ShaderProgramARB::create()
       mSupported = true;
     }
     bool fail = !mSupported;
-#if 0
+#if !defined(CORRECT_OGL_HDRS)
     fail = fail
       || (glGenProgramsARB = (PFNGLGENPROGRAMSARBPROC)getProcAddress("glGenProgramsARB")) == 0;
     fail = fail
