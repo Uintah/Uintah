@@ -274,17 +274,21 @@ Arches::scheduleInitialize(const LevelP& level,
   // require : densityCP, viscosityIN, [u,v,w]VelocitySP
   // compute : viscosityCTS
 
-  // check if filter is defined...
+  if (!d_MAlab) {
+
+    // check if filter is defined...
 #ifdef PetscFilter
-  if (d_turbModel->getFilter()) {
-    // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized()) 
-      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
-  }
+    if (d_turbModel->getFilter()) {
+      // if the matrix is not initialized
+      if (!d_turbModel->getFilter()->isInitialized()) 
+	d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+    }
 #endif
 
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 					   init_timelabel);
+
+  }
 
   // Computes velocities at apecified pressure b.c's
   // require : densityCP, pressureIN, [u,v,w]VelocitySP
