@@ -20,24 +20,10 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!DOCTYPE article
-  PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-  "../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
-<!--%= doc.sysEntity("intro") %-->
-<!--%= doc.sysEntity("requirements") %-->
-<!--%= doc.sysEntity("recommendations") %-->
-<!--%= doc.sysEntity("rpm_inst") %-->
-<!--%= doc.sysEntity("source_inst") %-->
-<!--%= doc.sysEntity("petsc") %-->
-<!--%= doc.sysEntity("itk") %-->
-<!--%= doc.sysEntity("opt_inst") %-->
-<!--%= doc.sysEntity("preparing") %-->
-<!--%= doc.sysEntity("starting") %-->
-<!--%= doc.sysEntity("help") %-->
-<!--%= doc.sysEntity("cvs") %-->
-<!ENTITY sr  "SCIRun">
-<!ENTITY osx "Mac OS X">
-]>
+<!--% doc.insertDocType("article", {"sr"=>"SCIRun","osx"=>"Mac OS X"},
+["intro", "requirements","recommendations", "rpm_inst","source_inst",
+ "petsc", "itk", "opt_inst", "preparing", "starting", "help", "cvs"]) 
+%-->
 
 <article id="article.main">
 <title>&sr; Installation Guide (v. <!--%= doc.edition %-->)</title>
