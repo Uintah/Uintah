@@ -26,7 +26,7 @@ $(SRCDIR)/tclIndex: \
 #	$(SRCDIR)/TensorParticlesOperator.tcl\
 
 
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI
 
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
