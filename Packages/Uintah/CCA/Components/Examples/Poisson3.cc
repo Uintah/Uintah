@@ -163,7 +163,7 @@ void Poisson3::timeAdvance(const ProcessorGroup*,
 void Poisson3::scheduleRefine(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched)
 {
   PatchSubset* coarsePatches = (PatchSubset*) (coarseLevel->allPatches()->getUnion());
-  PatchSubset* finePatches = (PatchSubset*) (fineLevel->allPatches()->getUnion());
+  //PatchSubset* finePatches = (PatchSubset*) (fineLevel->allPatches()->getUnion());
 
   Task* task = scinew Task("refine", this, &Poisson3::refine, coarseLevel);
   task->requires(Task::OldDW, lb_->phi, coarsePatches, Task::OutOfDomain, 0, Task::NormalDomain, 
@@ -200,7 +200,7 @@ void Poisson3::refine(const ProcessorGroup*,
       IntVector h = finePatch->getNodeHighIndex(); 
       // For all finegrid nodes
       for(NodeIterator iter(l, h); !iter.done(); iter++){
-//	finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
+	finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::Inner);
       }
     }
   }
@@ -215,7 +215,7 @@ void Poisson3::scheduleRefineInterface(LevelP& coarseLevel,
 			               SchedulerP& sched)
 {
   PatchSubset* coarsePatches = (PatchSubset*) (coarseLevel->allPatches()->getUnion());
-  PatchSubset* finePatches = (PatchSubset*) (fineLevel->allPatches()->getUnion());
+  //PatchSubset* finePatches = (PatchSubset*) (fineLevel->allPatches()->getUnion());
 
   Task* task = scinew Task("refineInterface", this, &Poisson3::refine, coarseLevel);
   task->requires(Task::OldDW, lb_->phi, coarsePatches, Task::OutOfDomain, 0, Task::NormalDomain, 
@@ -265,7 +265,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 
 	    // For all finegrid nodes
 	    for(NodeIterator iter(l, h); !iter.done(); iter++){
-//	      finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
+	      finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::Inner);
 	    }
 	  }
         }
@@ -281,7 +281,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 void Poisson3::scheduleCoarsen(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched)
 {
   PatchSubset* coarsePatches = (PatchSubset*) coarseLevel->allPatches()->getUnion();
-  PatchSubset* finePatches = (PatchSubset*) fineLevel->allPatches()->getUnion();
+  //PatchSubset* finePatches = (PatchSubset*) fineLevel->allPatches()->getUnion();
 
   Task* task = scinew Task("coarsen", this, &Poisson3::coarsen, coarseLevel);
   task->requires(Task::OldDW, lb_->phi, Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());
@@ -326,7 +326,7 @@ void Poisson3::coarsen(const ProcessorGroup*,
 
       // For all coarsegrid nodes
       for(NodeIterator iter(l, h); !iter.done(); iter++){
-//	coarsePhi[*iter] = interpolator_.coarsen(finePhi, *iter, Interpolator::inner);
+	coarsePhi[*iter] = interpolator_.coarsen(finePhi, *iter, Interpolator::Inner);
       }
 
       coarseDW->put(coarsePhi, lb_->phi, matl, coarsePatch);
