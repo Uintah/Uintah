@@ -329,8 +329,11 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 
 //
 // $Log$
-// Revision 1.3.2.4  2000/10/31 02:30:41  dmw
-// Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
+// Revision 1.3.2.5  2000/11/01 23:02:59  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.3.2.3  2000/10/26 14:16:56  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.6  2000/10/29 04:44:18  dmw
 // arrows can now be dragged

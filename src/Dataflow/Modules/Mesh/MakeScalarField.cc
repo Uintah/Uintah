@@ -98,8 +98,11 @@ void MakeScalarField::execute()
 
 //
 // $Log$
-// Revision 1.3.2.3  2000/10/31 02:33:16  dmw
-// Merging SCIRun changes in HEAD into FIELD_REDESIGN branch
+// Revision 1.3.2.4  2000/11/01 23:03:23  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.3.2.2  2000/10/26 13:49:33  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.4  2000/09/07 00:12:19  zyp
 // MakeScalarField.cc

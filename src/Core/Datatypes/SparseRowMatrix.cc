@@ -349,8 +349,11 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
-// Revision 1.8.2.4  2000/10/31 02:36:24  dmw
-// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
+// Revision 1.8.2.5  2000/11/01 23:03:19  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.8.2.3  2000/10/26 17:30:46  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.10  2000/10/29 04:46:17  dmw
 // changed private/public status, added a flag for whether datavalues were associate with elements or nodes

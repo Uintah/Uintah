@@ -662,8 +662,11 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
-// Revision 1.8.2.4  2000/10/31 02:36:21  dmw
-// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
+// Revision 1.8.2.5  2000/11/01 23:03:00  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.8.2.3  2000/10/26 17:30:32  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.11  2000/10/18 17:26:14  guilkey
 // Added a version of solve which take a vector<double>.

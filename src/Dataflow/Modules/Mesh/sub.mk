@@ -43,8 +43,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.4  2000/10/31 02:33:18  dmw
-# Merging SCIRun changes in HEAD into FIELD_REDESIGN branch
+# Revision 1.2.2.5  2000/11/01 23:03:23  mcole
+# Fix for previous merge from trunk
+#
+# Revision 1.2.2.3  2000/10/26 13:49:33  moulding
+# merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.10  2000/10/29 04:42:24  dmw
 # MeshInterpVals -- fixed a bug

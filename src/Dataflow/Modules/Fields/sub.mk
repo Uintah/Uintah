@@ -28,6 +28,7 @@ SRCS     += \
 	$(SRCDIR)/GenField.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/GradientMagnitude.cc\
+	$(SRCDIR)/LocalMinMax.cc\
 	$(SRCDIR)/MergeTensor.cc\
 	$(SRCDIR)/OpenGL_Ex.cc\
 	$(SRCDIR)/SFRGfile.cc\
@@ -54,8 +55,8 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.9  2000/11/01 20:42:26  mcole
-# revert to previous version 1.2.2.6
+# Revision 1.2.2.10  2000/11/01 23:02:55  mcole
+# Fix for previous merge from trunk
 #
 # Revision 1.2.2.6  2000/10/27 16:29:21  mcole
 # add back removed modules to compile
@@ -74,6 +75,19 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 #
 # Revision 1.2.2.1  2000/06/07 17:28:46  kuehne
 # Added GenField module.  Creates a scalar field from a specified equation and bounds.
+#
+# Revision 1.8  2000/10/29 04:34:52  dmw
+# BuildFEMatrix -- ground an arbitrary node
+# SolveMatrix -- when preconditioning, be careful with 0's on diagonal
+# MeshReader -- build the grid when reading
+# SurfToGeom -- support node normals
+# IsoSurface -- fixed tet mesh bug
+# MatrixWriter -- support split file (header + raw data)
+#
+# LookupSplitSurface -- split a surface across a place and lookup values
+# LookupSurface -- find surface nodes in a sfug and copy values
+# Current -- compute the current of a potential field (- grad sigma phi)
+# LocalMinMax -- look find local min max points in a scalar field
 #
 # Revision 1.7  2000/10/24 05:57:33  moulding
 # new module maker Phase 2: new module maker goes online
