@@ -39,16 +39,20 @@
 #include "Connection.h"
 #include "Core/CCA/Component/PIDL/PIDL.h"
 #include "Core/CCA/spec/cca_sidl.h"
+
+using namespace std;
+
 //namespace SCIRun {
 
 class NetworkCanvasView:public QCanvasView
 {
   Q_OBJECT
 public:
+
   NetworkCanvasView(BuilderWindow* p2BuilderWindow, QCanvas* canvas, QWidget* parent=0);
   void setServices(const gov::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
-  void addModule(const std::string& name, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
+  void addModule(const std::string& name, int x, int y, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
   void addConnection(Module *m1, const std::string & portname1, Module *m2, const std::string & portname2);	
   void removeConnection(QCanvasItem *c);
   void highlightConnection(QCanvasItem *c);
@@ -58,16 +62,19 @@ public:
   void removeAllConnections(Module *module);
 
   std::vector<Module*> getModules();
+  std::vector<Connection*> getConnections();
   BuilderWindow* p2BuilderWindow;
 
 public slots:
   void removeModule(Module *);
+
 protected:
   void contentsMousePressEvent(QMouseEvent*);
   void contentsMouseMoveEvent(QMouseEvent*);
   void contentsMouseReleaseEvent(QMouseEvent*);
   //void contentsMouseDoubleClickEvent( QMouseEvent * );
   void NetworkCanvasView::viewportResizeEvent( QResizeEvent* );
+
 private:
   Module* moving;
   Module* connecting;

@@ -59,6 +59,8 @@ public:
   bool clickedPort(QPoint localpos, PortType &porttype,
 		   std::string &portname);
 
+  std::string moduleName;
+
 public slots:
   void go();
   void stop();
@@ -71,7 +73,7 @@ protected:
   void paintEvent(QPaintEvent *e);
   void mousePressEvent(QMouseEvent*);
   QRect nameRect;
-  std::string moduleName;
+  //  std::string moduleName;
   std::string instanceName;
   CIA::array1<std::string> up, pp;
 private:

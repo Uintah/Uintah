@@ -57,7 +57,6 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
   if(nameRect.width()+dx*2>w) w=nameRect.width()+dx*2;
 //	QRect uiRect(dx,nameRect.bottom()+d,20,20);
 
-	
   setGeometry(QRect(0,0,w,h));
   setFrameStyle(Panel|Raised);
   setLineWidth(4);
@@ -128,7 +127,6 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
   services->releasePort("cca.BuilderService");
   viewWindow=parent;
 }
-
 
 void Module::paintEvent(QPaintEvent *e)
 {

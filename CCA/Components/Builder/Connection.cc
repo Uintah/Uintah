@@ -156,6 +156,7 @@ QPointArray pa(12);
 
 	setPoints(pa);
   */
+
 }
 
 void Connection::drawShape ( QPainter & p)
@@ -184,7 +185,6 @@ void Connection:: highlight()
   color=red;
 }
 
-
 Module * Connection::getUsesModule()
 {
   return pUse;
@@ -204,3 +204,6 @@ std::string Connection::getProvidesPortName()
 {
   return portname2;
 }
+
+
+
