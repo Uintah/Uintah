@@ -154,6 +154,7 @@ HexIntMask::execute()
   if (counter > 0)
   {
     ofield = scinew HexVolField<int>(clipped, Field::CELL);
+    *(PropertyManager *)ofield = *(PropertyManager *)hvfield;
   }
 
   // Forward the results.
