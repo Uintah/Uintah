@@ -39,8 +39,7 @@ itcl_class PSECommon_Matrix_BldTransform {
 	global $this-xmapTCL
 	global $this-ymapTCL
 	global $this-zmapTCL
-	global $this-widgetAutoUpdate
-	global $this-widgetIgnoreChanges
+#	global $this-widgetIgnoreChanges
 	global $this-widgetScale
 	set $this-rx 0
 	set $this-ry 0
@@ -63,9 +62,8 @@ itcl_class PSECommon_Matrix_BldTransform {
 	set $this-xmapTCL 1
 	set $this-ymapTCL 2
 	set $this-zmapTCL 3
-	set $this-widgetAutoUpdate 0
 	set $this-widgetScale 1
-	set $this-widgetIgnoreChanges 1
+#	set $this-widgetIgnoreChanges 1
     }
     method ui {} {
 	set w .ui[modname]
@@ -111,7 +109,8 @@ itcl_class PSECommon_Matrix_BldTransform {
 	button $w.f.b.doit -text "Apply Transform" -command \
 		"$this-c needexecute"
 	button $w.f.b.comp -text "Composite Transform" -command "$this-c composite; $this setxform $w translate; $this set_defaults"
-	pack $w.f.b.doit $w.f.b.comp -side left -fill x -padx 10 -pady 3
+	button $w.f.b.reset -text "Reset" -command "$this-c reset; $this setxform $w translate; $this set_defaults"
+	pack $w.f.b.doit $w.f.b.comp $w.f.b.reset -side left -fill x -padx 10 -pady 3
 
 	frame $w.f.prepost
 	radiobutton $w.f.prepost.pre -variable $this-pre \
@@ -245,25 +244,29 @@ itcl_class PSECommon_Matrix_BldTransform {
 		-expand 1 -side bottom
 	
 	global $this-widgetScale
-	global $this-widgetAutoUpdate
 	global $this-widgetIgnoreChanges
+	global $this-widgetShowResizeHandles
 	frame $w.f.w -relief groove -borderwidth 5
 	label $w.f.w.l -text "Widget"
 	pack $w.f.w.l -side top
 	expscale $w.f.w.d -orient horizontal -variable $this-widgetScale \
 		-label "Uniform Scale"
 	frame $w.f.w.b 
-        set $this-widgetAutoUpdate 0
-        set $this-widgetChangeIgnore 1
 
-	checkbutton $w.f.w.b.auto -text "Auto Update" \
-		-variable $this-widgetAutoUpdate \
-		-command "$this change_autoupdate"
+        set $this-widgetIgnoreChanges 1
+	set $this-widgetScale 1
+	set $this-widgetShowResizeHandles 0
+
+	checkbutton $w.f.w.b.handles -text "Resize Separably" \
+		-variable $this-widgetShowResizeHandles \
+		-command "$this change_handles"
+	button $w.f.w.b.reset -text "Reset Widget" \
+		-command "$this-c reset_widget"
 	checkbutton $w.f.w.b.ignore -text "Ignore Changes" \
 		-variable $this-widgetIgnoreChanges \
 		-command "$this change_ignore"
-	pack $w.f.w.b.auto $w.f.w.b.ignore -side left -fill x \
-		-expand 1
+	pack $w.f.w.b.handles $w.f.w.b.reset $w.f.w.b.ignore -side left \
+		-fill x -expand 1 -pady 3 -padx 12
 	pack $w.f.w.d $w.f.w.b -side top -fill x -expand 1
 
 	pack $w.f -fill x -expand 1 -side top
@@ -289,9 +292,9 @@ itcl_class PSECommon_Matrix_BldTransform {
 	$this-c change_ignore [set $this-widgetIgnoreChanges]
     }
 
-    method change_autoupdate { } {
-	global $this-widgetAutoUpdate
-	$this-c change_autoupdate [set $this-widgetAutoUpdate]
+    method change_handles { } {
+	global $this-widgetShowResizeHandles
+	$this-c change_handles [set $this-widgetShowResizeHandles]
     }
 
     method setxform {w t} {
