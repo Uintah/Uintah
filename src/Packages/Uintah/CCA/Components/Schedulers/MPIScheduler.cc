@@ -505,7 +505,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   SendRecord sends;
 
   int me = pg->myrank();
-  makeTaskGraphDoc(dts_, me == 0);
+  makeTaskGraphDoc(dts_, me);
 
   emitTime("taskGraph output");
 

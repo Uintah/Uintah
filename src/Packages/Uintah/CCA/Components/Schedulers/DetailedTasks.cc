@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -82,8 +83,10 @@ DetailedTasks::assignMessageTags(vector<Task*>& tasks)
     ASSERT(iter != batch->toTasks.end());
     int toTask = (*iter)->getTask()->getTaskNumber();
     ASSERT(toTask != -1);
+    /*
     for(;iter != batch->toTasks.end();iter++)
       ASSERTEQ(toTask, (*iter)->getTask()->getTaskNumber());
+    */
     int tag = (fromTask<<taskbits)|toTask;
     batches[i]->messageTag = tag;
   }
@@ -132,8 +135,10 @@ DetailedTasks::computeLocalTasks(int me)
 
       if (task->areInternalDependenciesSatisfied()) {
 	initiallyReadyTasks_.push_back(task);
+
 	if( mixedDebug.active() ) {
 	  cerrLock.lock();
+	  //	  mixedDebug << "Initially Ready Task: "
 	  mixedDebug << "Initially Ready Task: " 
 		     << task->getTask()->getName() << endl;
 	  cerrLock.unlock();
@@ -462,6 +467,11 @@ DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
 void
 DetailedTasks::createScrublists(bool init_timestep)
 {
+  // For now, turn scrubbing off when using internal dependencies
+  // (i.e. threaded version) as it needs to be fixed to work right).
+  if (mustConsiderInternalDependencies())
+    return;
+  
   const set<const VarLabel*, VarLabel::Compare>& initreqs = taskgraph->getInitialRequiredVars();
   ASSERT(localtasks.size() != 0 || tasks.size() == 0);
   // Create scrub lists
@@ -679,4 +689,90 @@ void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
   elems3 << ndeps;
   logMemory(out, total, tag, "deps", "DetailedDep", 0, -1,
 	    elems3.str(), ndeps*sizeof(DetailedDep), 0);
+}
+
+void DetailedTasks::emitEdges(DOM_Element edgesElement, int rank)
+{
+  for (int i = 0; i < tasks.size(); i++) {
+    if (tasks[i]->getAssignedResourceIndex() == rank) {
+      tasks[i]->emitEdges(edgesElement);
+    }
+  }
+}
+
+void DetailedTask::emitEdges(DOM_Element edgesElement)
+{
+  map<DependencyBatch*, DependencyBatch*>::iterator req_iter;
+  for (req_iter = reqs.begin(); req_iter != reqs.end(); req_iter++) {
+    DetailedTask* fromTask = (*req_iter).first->fromTask;
+    DOM_Element edge = edgesElement.getOwnerDocument().createElement("edge");
+    appendElement(edge, "source", fromTask->getName());
+    appendElement(edge, "target", getName());
+    edgesElement.appendChild(edge);
+  }
+
+  list<InternalDependency>::iterator iter;
+  for (iter = internalDependencies.begin();
+       iter != internalDependencies.end(); iter++) {
+    DetailedTask* fromTask = (*iter).prerequisiteTask;
+    if (getTask()->isReductionTask() &&
+	fromTask->getTask()->isReductionTask()) {
+      // Ignore internal links between reduction tasks because they
+      // are only needed for logistic reasons
+      continue;
+    }
+    DOM_Element edge = edgesElement.getOwnerDocument().createElement("edge");
+    appendElement(edge, "source", fromTask->getName());
+    appendElement(edge, "target", getName());
+    edgesElement.appendChild(edge);
+  }
+}
+
+class PatchIDIterator
+{
+public:
+  PatchIDIterator(const vector< const Patch*>::const_iterator& iter)
+    : iter_(iter) {}
+
+  PatchIDIterator& operator=(const PatchIDIterator& iter2)
+  { iter_ = iter2.iter_; return *this; }
+  
+  int operator*()
+  {
+    const Patch* patch = *iter_; //vector<Patch*>::iterator::operator*();
+    return patch ? patch->getID() : -1;
+  }
+
+  PatchIDIterator& operator++()
+  { iter_++; return *this; }
+
+  bool operator!=(const PatchIDIterator& iter2)
+  { return iter_ != iter2.iter_; }
+  
+private:
+  vector<const Patch*>::const_iterator iter_;
+};
+
+string DetailedTask::getName() const
+{
+  if (name_ != "")
+    return name_;
+
+  name_ = string(task->getName());
+
+  if (patches != 0) {
+    ConsecutiveRangeSet patchIDs;
+    patchIDs.addInOrder(PatchIDIterator(patches->getVector().begin()),
+			PatchIDIterator(patches->getVector().end()));
+    name_ += string("\\nPatches: ") + patchIDs.toString();
+  }
+
+  if (matls != 0) {
+    ConsecutiveRangeSet matlSet;
+    matlSet.addInOrder(matls->getVector().begin(),
+		       matls->getVector().end());
+    name_ += string("\\nMaterials: ") + matlSet.toString();
+  }
+  
+  return name_;
 }
