@@ -19,6 +19,8 @@
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
+#define PRINT
+#undef PRINT
 using namespace Uintah;
 namespace Uintah {
 
@@ -844,7 +846,7 @@ void setBC(CCVariable<double>& press_CC,
               const int mat_id,
               DataWarehouse* new_dw)
 {
-  BC_doing << "Johns setBC (press_CC) "<< kind <<" " << which_Var<<endl;
+  BC_doing << "Johns setBC (press_CC) "<< kind <<" " << which_Var<< " mat_id = " << mat_id << endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
@@ -853,6 +855,9 @@ void setBC(CCVariable<double>& press_CC,
     determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
 
     if (patch->getBCType(face) == Patch::None) {
+#ifdef PRINT
+      cout << "Face = " << face << endl;
+#endif
       // find the correct BC
       // check its type (symmetric, neumann, dirichlet)
       // do the fill face
@@ -864,19 +869,34 @@ void setBC(CCVariable<double>& press_CC,
 
       // For a given Intvector boundary, find the appropriate bc, determine if
       // it is symmetric, neumann, dirichlet, and its value,
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren();
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
       for (int child = 0;  child < numChildren; child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-                                                   kind,bound,inter,
-                                                   sfx,sfy,sfz,
-                                                   child);
+							 kind,bound,inter,
+							 sfx,sfy,sfz,nbound,
+							 child);
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-                                                       "Symmetric",
-                                                       bound,inter,
-                                                       sfx,sfy,sfz,
-                                                       child);
-
+							     "Symmetric",
+							     bound,inter,
+							     sfx,sfy,sfz,
+							     nbound, child);
+#ifdef PRINT
+       if (bc == 0)
+	 cout << "Didn't get the array bc values" << endl;
+       else {
+	 cout << "Found the array bc values" << endl;
+	 cout << "bc = " << bc->getType() << endl;
+	 cout << "bctype = " << typeid(*bc).name() << endl;
+	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
+	      << endl;
+       }
+#endif
+#if 0
+       if (sym_bc == 0)
+	 cout << "Didn't get the symmetric array bc values" << endl;
+#endif
+     
        const BoundCond<double> *new_bcs = 
          dynamic_cast<const BoundCond<double> *>(bc);       
        double bc_value=0;
@@ -884,7 +904,7 @@ void setBC(CCVariable<double>& press_CC,
        if (new_bcs != 0) {
          bc_value = new_bcs->getValue();
          bc_kind = new_bcs->getKind();
-#if 0
+#ifdef PRINT
          cout << "BC kind = " << bc_kind << endl;
          cout << "BC value = " << bc_value << endl;
 #endif
@@ -926,6 +946,8 @@ void setBC(CCVariable<double>& press_CC,
               gravity*spacing*rho_micro[*interior];
          }
        }
+       delete bc;
+       delete sym_bc;
       }
     }
   }
@@ -955,7 +977,8 @@ void setBC(CCVariable<double>& variable, const string& kind,
               const Patch* patch,  SimulationStateP& sharedState,
               const int mat_id)
 {
-  BC_doing << "Johns setBC (Temp, Density) "<< kind <<endl;
+  BC_doing << "Johns setBC (Temp, Density) "<< kind << " mat_id = " << mat_id
+	   << endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
@@ -964,19 +987,37 @@ void setBC(CCVariable<double>& variable, const string& kind,
     determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
 
     if (patch->getBCType(face) == Patch::None) {
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren();
+#ifdef PRINT
+      cout << "Face = " << face << endl;
+#endif
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
       for (int child = 0; child < numChildren; child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-                                                   kind, bound,inter,
-                                                   sfx,sfy,sfz,
-                                                   child);
+							 kind, bound,inter,
+							 sfx,sfy,sfz,nbound,
+							 child);
       
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-                                                       "Symmetric",
-                                                       bound,inter,
-                                                       sfx,sfy,sfz,
-                                                       child);
+							     "Symmetric",
+							     bound,inter,
+							     sfx,sfy,sfz,
+							     nbound, child);
+#ifdef PRINT
+       if (bc == 0)
+	 cout << "Didn't get the array bc values" << endl;
+       else {
+	 cout << "Found the array bc values" << endl;
+	 cout << "bc = " << bc->getType() << endl;
+	 cout << "bctype = " << typeid(*bc).name() << endl;
+	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
+	      << endl;
+       }
+#endif
+#if 0       
+       if (sym_bc == 0)
+	 cout << "Didn't get the symmetric array bc values" << endl;
+#endif
        const BoundCond<double> *new_bcs = 
          dynamic_cast<const BoundCond<double> *>(bc);       
        
@@ -985,7 +1026,13 @@ void setBC(CCVariable<double>& variable, const string& kind,
        if (new_bcs != 0) {
          bc_value = new_bcs->getValue();
          bc_kind = new_bcs->getKind();
+#ifdef PRINT
+         cout << "BC kind = " << bc_kind << endl;
+         cout << "BC value = " << bc_value << endl;
+#endif
        }
+
+
        
        // Apply the "zeroNeumann"
        vector<IntVector>::const_iterator boundary,interior;
@@ -1064,7 +1111,9 @@ void setBC(CCVariable<double>& variable, const string& kind,
              }
            }
          }
-       }
+	}
+	delete bc;
+	delete sym_bc;
       }
     } 
     
@@ -1079,7 +1128,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
 void setBC(CCVariable<Vector>& variable, const string& kind, 
               const Patch* patch, const int mat_id) 
 {
-  BC_doing << "Johns setBC (Vector) "<< kind << endl;
+  BC_doing << "Johns setBC (Vector) "<< kind << " mat_id = " << mat_id << endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
@@ -1100,19 +1149,39 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
     }
 
     if (patch->getBCType(face) == Patch::None) {
+#ifdef PRINT
+      cout << "Face = " << face << endl;
+#endif
       for (int child = 0; 
-          child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz;
+          child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
+	   child++) {
+       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-                                                   kind,bound,inter,
-                                                   sfx,sfy,sfz,
-                                                   child);
+							 kind,bound,inter,
+							 sfx,sfy,sfz,nbound,
+							 child);
       
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-                                                       "Symmetric",
-                                                       bound,inter,
-                                                       sfx,sfy,sfz,
-                                                       child);
+							     "Symmetric",
+							     bound,inter,
+							     sfx,sfy,sfz,
+							     nbound,child);
+#ifdef PRINT
+       if (bc == 0)
+	 cout << "Didn't get the array bc values" << endl;
+       else {
+	 cout << "Found the array bc values" << endl;
+	 cout << "bc = " << bc->getType() << endl;
+	 cout << "bctype = " << typeid(*bc).name() << endl;
+	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
+	      << endl;
+       }
+#endif
+#if 0
+       if (sym_bc == 0)
+	 cout << "Didn't get the symmetric array bc values" << endl;
+#endif
+
        const BoundCond<Vector> *new_bcs = 
          dynamic_cast<const BoundCond<Vector> *>(bc);       
        
@@ -1121,7 +1190,7 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
        if (new_bcs != 0) {
          bc_value = new_bcs->getValue();
          bc_kind = new_bcs->getKind();
-#if 0
+#ifdef PRINT
          cout << "BC kind = " << bc_kind << endl;
          cout << "BC value = " << bc_value << endl;
 #endif
@@ -1150,6 +1219,8 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
                boundary != bound.end(); boundary++,interior++) 
              variable[*boundary] = variable[*interior] - bc_value*spacing;
        }
+       delete bc;
+       delete sym_bc;
       }
     }
   }
@@ -1186,7 +1257,8 @@ void determineSpacingAndSign(Patch::FaceType face, Vector& dx,double& spacing,
 void setBC(SFCXVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
-  BC_doing << "Johns setBC (SFCXVariable) "<< kind <<endl;
+  BC_doing << "Johns setBC (SFCXVariable) "<< kind << " mat_id = " << mat_id 
+	   <<endl;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
@@ -1194,19 +1266,39 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
     determineSpacingAndSign(face,dx,spacing,sign);
 
     if (patch->getBCType(face) == Patch::None) {
+#ifdef PRINT
+      cout << "Face = " << face << endl;
+#endif
       for (int child = 0; 
-          child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz;
+          child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
+	   child++) {
+       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-                                                   bound,inter,
-                                                   sfx,sfy,sfz,child);
+							 bound,inter,
+							 sfx,sfy,sfz,nbound,
+							 child);
        
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-                                                       "Symmetric",
-                                                       bound,inter,
-                                                       sfx,sfy,sfz,
-                                                       child);
-       
+							     "Symmetric",
+							     bound,inter,
+							     sfx,sfy,sfz,
+							     nbound,child);
+#ifdef PRINT
+       if (bc == 0)
+	 cout << "Didn't get the array bc values" << endl;
+       else {
+	 cout << "Found the array bc values" << endl;
+	 cout << "bc = " << bc->getType() << endl;
+	 cout << "bctype = " << typeid(*bc).name() << endl;
+	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
+	      << endl;
+       }
+#endif
+#if 0
+       if (sym_bc == 0)
+	 cout << "Didn't get the symmetric array bc values" << endl;
+#endif  
+
        const BoundCond<Vector>* new_bcs  = 
          dynamic_cast<const BoundCond<Vector> *>(bc);
     
@@ -1215,6 +1307,10 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
        if (new_bcs != 0) {
          bc_value = new_bcs->getValue();
          bc_kind = new_bcs->getKind();
+#ifdef PRINT
+         cout << "BC kind = " << bc_kind << endl;
+         cout << "BC value = " << bc_value << endl;
+#endif
        }
        vector<IntVector>::const_iterator boundary,interior,sfcx;
        //__________________________________
@@ -1252,6 +1348,8 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
              variable[*boundary] = variable[*interior] + 
               bc_value.x()*spacing*sign;
        }
+       delete bc;
+       delete sym_bc;
       }
     }
   }
@@ -1266,7 +1364,8 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
 void setBC(SFCYVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
-  BC_doing << "Johns setBC (SFCYVariable) "<< kind <<endl;
+  BC_doing << "Johns setBC (SFCYVariable) "<< kind << " mat_id = " << mat_id 
+	   << endl;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
@@ -1274,19 +1373,39 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
     determineSpacingAndSign(face,dx,spacing,sign);
 
     if (patch->getBCType(face) == Patch::None) {
+#ifdef PRINT
+      cout << "Face = " << face << endl;
+#endif
       for (int child = 0; 
-          child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz;
+          child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
+	   child++) {
+       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-                                                   bound,inter,
-                                                   sfx,sfy,sfz,child);
+							 bound,inter,
+							 sfx,sfy,sfz,nbound,
+							 child);
        
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-                                                       "Symmetric",
-                                                       bound,inter,
-                                                       sfx,sfy,sfz,
-                                                       child);
-       
+							     "Symmetric",
+							     bound,inter,
+							     sfx,sfy,sfz,
+							     nbound,child);
+#ifdef PRINT
+       if (bc == 0)
+	 cout << "Didn't get the array bc values" << endl;
+       else {
+	 cout << "Found the array bc values" << endl;
+	 cout << "bc = " << bc->getType() << endl;
+	 cout << "bctype = " << typeid(*bc).name() << endl;
+	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
+	      << endl;
+       }
+#endif
+#if 0
+       if (sym_bc == 0)
+	 cout << "Didn't get the symmetric array bc values" << endl;
+#endif
+
        const BoundCond<Vector>* new_bcs  = 
          dynamic_cast<const BoundCond<Vector> *>(bc);
     
@@ -1295,6 +1414,10 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
        if (new_bcs != 0) {
          bc_value = new_bcs->getValue();
          bc_kind = new_bcs->getKind();
+#ifdef PRINT
+         cout << "BC kind = " << bc_kind << endl;
+         cout << "BC value = " << bc_value << endl;
+#endif
        }
        vector<IntVector>::const_iterator boundary,interior,sfcy;
        //__________________________________
@@ -1331,6 +1454,8 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
              variable[*boundary] = variable[*interior] + 
               bc_value.y()*spacing*sign;
        }
+       delete bc;
+       delete sym_bc;
       }
     }
   }
@@ -1345,26 +1470,47 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 void setBC(SFCZVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
-  BC_doing << "Johns setBC (SFCZVariable) "<< kind <<endl;
+  BC_doing << "Johns setBC (SFCZVariable) "<< kind << " mat_id = " << mat_id 
+	   << endl;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
     double spacing,sign;
     determineSpacingAndSign(face,dx,spacing,sign);
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren();
+
     if (patch->getBCType(face) == Patch::None) {
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+#ifdef PRINT
+      cout << "Face = " << face << endl;
+#endif
       for (int child = 0;  child < numChildren; child++) {
-       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
        const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-                                                   bound,inter,
-                                                   sfx,sfy,sfz,child);
+							 bound,inter,
+							 sfx,sfy,sfz,nbound,
+							 child);
        
        const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-                                                       "Symmetric",
-                                                       bound,inter,
-                                                       sfx,sfy,sfz,
-                                                       child);
-       
+							     "Symmetric",
+							     bound,inter,
+							     sfx,sfy,sfz,
+							     nbound,child);
+#ifdef PRINT 
+       if (bc == 0)
+	 cout << "Didn't get the array bc values" << endl;
+       else {
+	 cout << "Found the array bc values" << endl;
+	 cout << "bc = " << bc->getType() << endl;
+	 cout << "bctype = " << typeid(*bc).name() << endl;
+	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
+	      << endl;
+       }
+#endif
+#if 0
+       if (sym_bc == 0)
+	 cout << "Didn't get the symmetric array bc values" << endl;
+#endif
+
        const BoundCond<Vector>* new_bcs  = 
          dynamic_cast<const BoundCond<Vector> *>(bc);
     
@@ -1373,6 +1519,10 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
        if (new_bcs != 0) {
          bc_value = new_bcs->getValue();
          bc_kind = new_bcs->getKind();
+#ifdef PRINT
+         cout << "BC kind = " << bc_kind << endl;
+         cout << "BC value = " << bc_value << endl;
+#endif
        }
        vector<IntVector>::const_iterator boundary,interior,sfcz;
        //__________________________________
@@ -1407,6 +1557,8 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
              variable[*boundary] = variable[*interior] + 
               bc_value.z()*spacing*sign;
        }
+       delete bc;
+       delete sym_bc;
       }
     }
   }
