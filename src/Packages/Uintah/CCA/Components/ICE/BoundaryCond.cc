@@ -70,6 +70,7 @@ void setBC(CCVariable<double>& var_CC,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
+           DataWarehouse*,
            Lodi_vars*)
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
@@ -94,6 +95,7 @@ void setBC(CCVariable<Vector>& var_CC,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
+           DataWarehouse*,
            Lodi_vars*)
 {
   BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
@@ -383,7 +385,7 @@ void setBC(CCVariable<double>& press_CC,
 }
 /* --------------------------------------------------------------------- 
  Function~  setBC--
- Purpose~   Takes care any CC variable, except Pressure
+ Purpose~   Takes care any CCvariable<double>, except Pressure
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& var_CC,
            const string& desc,
@@ -392,6 +394,7 @@ void setBC(CCVariable<double>& var_CC,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
+           DataWarehouse*  /*new_dw*/,
            Lodi_vars* lv)
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
@@ -496,6 +499,7 @@ void setBC(CCVariable<Vector>& var_CC,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
+           DataWarehouse* /*new_dw*/,
            Lodi_vars* lv)
 {
   BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
@@ -587,13 +591,15 @@ void setBC(CCVariable<double>& var,
           const std::string& type,     // so gcc compiles
           const Patch* patch,  
           SimulationStateP& sharedState,
-          const int mat_id)
+          const int mat_id,
+          DataWarehouse* new_dw)
 {
   Lodi_vars* lv = new Lodi_vars();
   lv->setLodiBcs = false;
   constCCVariable<double> placeHolder;
   
-  setBC(var, type, placeHolder, placeHolder, patch, sharedState, mat_id, lv);
+  setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
+        mat_id, new_dw,lv);
   
   delete lv;
 } 
@@ -620,12 +626,13 @@ void setBC(CCVariable<Vector>& variable,
           const std::string& type,
           const Patch* p,
           SimulationStateP& sharedState,
-          const int mat_id)
+          const int mat_id,
+          DataWarehouse* new_dw)
 { 
   Lodi_vars* lv = new Lodi_vars();
   lv->setLodiBcs = false;
   
-  setBC( variable, type, p, sharedState, mat_id, lv);
+  setBC( variable, type, p, sharedState, mat_id, new_dw, lv);
   
   delete lv; 
 }

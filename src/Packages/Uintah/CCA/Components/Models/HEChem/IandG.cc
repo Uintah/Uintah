@@ -280,12 +280,12 @@ void IandG::massExchange(const ProcessorGroup*,
 
     //__________________________________
     //  set symetric BC
-    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0);
-    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1);
-    setBC(term1, "set_if_sym_BC",patch, d_sharedState, m0);
-    setBC(term2, "set_if_sym_BC",patch, d_sharedState, m0);
-    setBC(term3, "set_if_sym_BC",patch, d_sharedState, m0);
-    setBC(Fr,    "set_if_sym_BC",patch, d_sharedState, m0);
+    setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
+    setBC(term1, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(term2, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(term3, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
+    setBC(Fr,    "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
   }
 }
 //______________________________________________________________________

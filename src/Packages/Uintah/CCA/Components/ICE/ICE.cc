@@ -1575,12 +1575,12 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC, numALLMatls, patch, new_dw);
 
-      setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
-      setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
-      setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
-      setBC(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
-      setBC(vel_CC[m],        "Velocity",     patch, d_sharedState, indx); 
-      setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx,
+      setBC(rho_CC[m],     "Density",     patch, d_sharedState, indx, new_dw);
+      setBC(rho_micro[m],  "Density",     patch, d_sharedState, indx, new_dw);
+      setBC(Temp_CC[m],    "Temperature", patch, d_sharedState, indx, new_dw);
+      setBC(speedSound[m], "zeroNeumann", patch, d_sharedState, indx, new_dw); 
+      setBC(vel_CC[m],     "Velocity",    patch, d_sharedState, indx, new_dw); 
+      setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
             
       for (CellIterator iter = patch->getExtraCellIterator();
@@ -3093,7 +3093,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         }
       }
 
-      setBC(press_force, "set_if_sym_BC",patch, d_sharedState, indx); 
+      setBC(press_force, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
@@ -3510,7 +3510,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
      }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx);
+      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
 
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
@@ -3868,9 +3868,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, lv);
+      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,lv);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], 
-                                      patch, d_sharedState, indx, lv);
+                                      patch, d_sharedState, indx, new_dw,lv);
     }
     delete lv;
 /*==========TESTING==========`*/
@@ -4083,7 +4083,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
         rho_CC[c]    = mass_new[c] * invvol;
       }   
       setBC(rho_CC, "Density", placeHolder, placeHolder,
-                               patch, d_sharedState, indx, lodi_vars);
+                               patch, d_sharedState, indx, new_dw,lodi_vars);
 
       if(d_usingLODI){  // you need rho_new
         lodi_vars->rho_CC.copyData(rho_CC);
@@ -4107,7 +4107,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       //  }
       //}
       
-      setBC(vel_CC, "Velocity", patch,d_sharedState, indx, lodi_vars); 
+      setBC(vel_CC, "Velocity", patch,d_sharedState, indx, new_dw, lodi_vars); 
 
       if(d_usingLODI){  // you need vel_CC_new
         lodi_vars->vel_CC.copyData(vel_CC);
@@ -4124,7 +4124,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
                    mass_L, mass_new, mass_advected, PH, PH2, patch);
 
       //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
+      setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
       //__________________________________
       // Advect  model variables 
@@ -4166,7 +4166,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
 
              //  Set Boundary Conditions 
              string Labelname = tvar->var->getName();
-             setBC(q_CC, Labelname,  patch, d_sharedState, indx);
+	      setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);
           }
         }
       }
@@ -4195,7 +4195,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
                   ("energy",temp, int_eng_L_ME, q_advected, 
                    mass_L, mass_new, mass_advected, cv, cv_new, patch);
                                      
-      setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,indx,lodi_vars);
+      setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,
+                                                    indx, new_dw,lodi_vars);
       //__________________________________
       // Compute Auxilary quantities
       for(CellIterator iter = patch->getExtraCellIterator();
