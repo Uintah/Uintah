@@ -75,9 +75,7 @@ using std::pair;
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& new_dw,
 		  Dir* p_dir, int timestep,
-		  pair<const VarLabel*, int>
-		  /* combined as a pair because Tasks take up to 3 extra
-		     args and I'm too lazy to overload for a 4 arg Task */);
+		  const VarLabel*, int material);
 
       // Method to output reduction variables to a single file
       void outputReduction(const ProcessorGroup*,
