@@ -222,8 +222,8 @@ SCIRUN_TMP_DIR = /tmp
 
 ### SCIRUN_DRAWARRAYS_DISABLE
 #   Turns off use of glDrawArrays.  This should be turned on in order
-#   to avoid drawing artifacts on ATI Radeon cards under Linux and to fix
-#   cross-platform remote display problems.
+#   to avoid drawing artifacts on ATI Radeon cards under Linux and to
+#   fix cross-platform remote display problems.
 # SCIRUN_DRAWARRAYS_DISABLE = false
 
 
