@@ -153,7 +153,7 @@ void BuildFEMatrixQuadratic::execute()
   }
 
   rows=scinew int[nnodes+1];  
-  np=Thread::numProcessors();
+  np=1;//Thread::numProcessors();
   if (np>10) np/=2;
   colidx.resize(np+1);
 
@@ -176,18 +176,25 @@ void BuildFEMatrixQuadratic::execute()
   if (PinZero) cerr << "BuildFEM: pinning node "<<refnode<<" to zero.\n";
   if (AverageGround) cerr << "BuildFEM: averaging of all nodes to zero.\n";
 
+    QuadraticTetVolMesh::Cell::array_type array;
+  qtvm_->get_cells(array,(QuadraticTetVolMesh::Node::index_type)0);
+
   Thread::parallel(Parallel<BuildFEMatrixQuadratic>(this, &BuildFEMatrixQuadratic::parallel), np, true);
 
-  //     for (int i=0; i<nnodes; i++) {
-  //for (int j=0; j<nnodes; j++) {
-  //  cerr << gbl_matrix->get(i,j);
-  //	 cerr << " ";
-  //       }
-  //       cerr << "\n";
-  //       }
-     
 
-  outmatrix = (MatrixOPort *)get_oport("FEM Matrix");
+  /*        for (int i=0; i<nnodes; i++) {
+  for (int j=0; j<nnodes; j++) {
+    cerr << gbl_matrix->get(i,j);
+  	 cerr << " ";
+         }
+         cerr << "\n";
+         }
+  */
+
+  current_time = time(NULL);
+  printf("End simulation: %s\n",ctime(&current_time));
+
+  outmatrix = (MatrixOPort *)get_oport("FEMMatrix");
   rhsoport = (MatrixOPort *)get_oport("RHS");
   gbl_matrixH=MatrixHandle(gbl_matrix);
   outmatrix->send(gbl_matrixH);
@@ -202,16 +209,23 @@ void BuildFEMatrixQuadratic::execute()
 
 void BuildFEMatrixQuadratic::parallel(int proc)
 {
-
   QuadraticTetVolMesh::Node::size_type nnodes;
   qtvm_->size(nnodes);
   int start_node=nnodes*proc/np; 
   int end_node=nnodes*(proc+1)/np; 
   int ndof=end_node-start_node;
 
+  if (proc==0){
+    qtvm_->compute_edges();
+    qtvm_->compute_node_neighbors();
+  }
+
   int r=start_node;
   int i;
-  QuadraticTetVolMesh::Node::array_type mycols(15*ndof, 0);
+  
+  QuadraticTetVolMesh::Node::array_type mycols(0,15*ndof);
+
+
   for(i=start_node;i<end_node;i++){
     rows[r++]=mycols.size();
     if((bcArray[i] && DirSub) || (i==refnode && PinZero)) {
@@ -230,7 +244,9 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 	}
 	}*/ 
     else {
+      mutex.lock();      
       qtvm_->add_node_neighbors(mycols, i, bcArray, DirSub);
+      mutex.unlock();
     }
   }
 
@@ -250,7 +266,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
     cerr << "st=" << st << endl;
     allcols=scinew int[st];
   }
-      
+
   barrier.wait(np);
   int s=colidx[proc];
 
@@ -258,6 +274,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   for(i=0;i<n;i++){
     allcols[i+s]=mycols[i];
   }
+  
   for(i=start_node;i<end_node;i++){
     rows[i]+=s;
   }
@@ -342,7 +359,6 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 	a[ii]=1;
     }
   }
-
 }
 
 void BuildFEMatrixQuadratic::build_local_matrix(Element elem, 
