@@ -73,6 +73,21 @@ namespace Uintah {
 			   DataWarehouseP& new_dw,
 			   double time);
 
+      //////////
+      // Get the current time step
+      virtual int getCurrentTimestep()
+      { return d_currentTimestep; }
+
+      //////////
+      // Returns true if the last timestep was one
+      // in which data was output.
+      virtual bool wasOutputTimestep()
+      { return d_wasOutputTimestep; }
+
+      //////////
+      // Get the directory of the current time step for outputting info.
+      virtual const std::string& getLastTimestepOutputLocation() const
+      { return d_lastTimestepLocation; }
    private:
       std::string d_filebase;
       double d_outputInterval;
@@ -80,6 +95,8 @@ namespace Uintah {
       int d_currentTimestep;
       Dir d_dir;
       bool d_writeMeta;
+      std::string d_lastTimestepLocation;
+      bool d_wasOutputTimestep;
 
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);
@@ -89,6 +106,12 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.11  2000/09/08 17:00:11  witzel
+// Added functions for getting the last timestep directory, the current
+// timestep, and whether the last timestep was one in which data was
+// output.  These functions are needed by the Scheduler to archive taskgraph
+// data.
+//
 // Revision 1.10  2000/08/25 17:41:15  sparker
 // All output from an MPI run now goes into a single UDA dir
 //

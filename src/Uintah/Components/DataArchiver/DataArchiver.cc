@@ -45,6 +45,7 @@ static DebugStream dbg("DataArchiver", false);
 DataArchiver::DataArchiver(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
 {
+  d_wasOutputTimestep = false;
 }
 
 DataArchiver::~DataArchiver()
@@ -59,6 +60,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       d_outputInterval = 1.0;
 
    d_currentTimestep = 0;
+   d_lastTimestepLocation = "invalid";
+   d_wasOutputTimestep = false;
 
    if (d_outputInterval == 0.0) 
 	return;
@@ -194,21 +197,25 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    dbg << "Created reduction variable output task" << endl;
 
    d_currentTimestep++;
-   if(time<d_nextOutputTime)
+   if(time<d_nextOutputTime) {
+      d_wasOutputTimestep = false;
       return;
-
+   }
+   d_wasOutputTimestep = true;
+   
 //   if((d_currentTimestep++ % d_outputInterval) != 0)
 //      return;
 
    d_nextOutputTime+=d_outputInterval;
 
+   ostringstream tname;
+   tname << "t" << setw(4) << setfill('0') << timestep;
+   d_lastTimestepLocation = d_dir.getName() + "/" + tname.str();
+
    // Create the directory for this timestep, if necessary
    if(d_writeMeta){
       Dir tdir;
-      ostringstream tname;
-      tname << "t" << setw(4) << setfill('0') << timestep;
       try {
-
 	 tdir = d_dir.createSubdir(tname.str());
 
 	 DOM_DOMImplementation impl;
@@ -625,6 +632,12 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.18  2000/09/08 17:00:10  witzel
+// Added functions for getting the last timestep directory, the current
+// timestep, and whether the last timestep was one in which data was
+// output.  These functions are needed by the Scheduler to archive taskgraph
+// data.
+//
 // Revision 1.17  2000/08/25 18:04:42  sparker
 // Yanked print statement
 //
