@@ -15,6 +15,7 @@
 #define Geometry_IntVector_h
 
 #include <iosfwd>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
   namespace Geometry {
@@ -68,10 +69,21 @@ namespace SCICore {
 	inline void z(int z) {
 	    d_z=z;
 	}
+        friend inline Vector operator*(const Vector&, const IntVector&);
+        friend inline Vector operator*(const IntVector&, const Vector&);
     private:
 	int d_x, d_y, d_z;
     };
 
+    inline Vector operator*(const Vector& a, const IntVector& b) {
+       return Vector(a.x()*b.x(), a.y()*b.y(), a.z()*b.z());
+    }
+    inline Vector operator*(const IntVector& a, const Vector& b) {
+       return Vector(a.x()*b.x(), a.y()*b.y(), a.z()*b.z());
+    }
+    inline Vector operator/(const Vector& a, const IntVector& b) {
+       return Vector(a.x()/b.x(), a.y()/b.y(), a.z()/b.z());
+    }
   } // End namespace Geometry
 } // End namespace SCICore
 
@@ -79,6 +91,9 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.3  2000/04/27 23:18:14  sparker
+// Added multiplication operators with Vector
+//
 // Revision 1.2  2000/04/13 06:48:38  sparker
 // Implemented more of IntVector class
 //
