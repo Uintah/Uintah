@@ -136,13 +136,13 @@
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="delP_Dilatate"/>
-      <save label= "scalar-f"/>
+      <save label="scalar-f"/>
+      <save label="sum_scalar_f"/>
       <save label="TotalMass"/>
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
    
    <Debug>
-      <debug label = "switchTestConservation"/>
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -232,6 +232,7 @@
        <Model type = "SimpleRxn">
         <material>BackgroundGas</material>
          <scalar name = "f">
+           <test_conservation>       true            </test_conservation>
            <constants>
              <f_stoichometric>          0.06207   </f_stoichometric>
              <diffusivity>              0.0       </diffusivity>
