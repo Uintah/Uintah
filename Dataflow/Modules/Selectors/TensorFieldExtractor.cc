@@ -34,6 +34,7 @@ LOG
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
@@ -188,11 +189,11 @@ void TensorFieldExtractor::execute()
    // set the index for the correct timestep.
    int idx = handle->timestep();
 
-  int max_workers = Max(Thread::numProcessors()/2, 8);
+  int max_workers = Max(Thread::numProcessors()/3, 4);
   Semaphore* thread_sema = scinew Semaphore( "tensor extractor semahpore",
 					     max_workers); 
 
-
+  WallClockTimer my_timer;
   GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
   const TypeDescription* subtype = type->getSubType();
@@ -204,17 +205,21 @@ void TensorFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::Matrix3:
       {	
+	my_timer.start();
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Matrix3> *vfd =
 	  scinew LevelField<Matrix3>( mesh, Field::NODE );
 	vector<ShareAssignArray3<Matrix3> >& data = vfd->fdata();
 	data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	vector<ShareAssignArray3<Matrix3> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
-	    thread_sema->down();
+	  update_progress(count++/size, my_timer);
+	  thread_sema->down();
 	    Thread *thrd =
-	      scinew Thread(new PatchDataThread<NCVariable<Matrix3>,
+	      scinew Thread(scinew PatchDataThread<NCVariable<Matrix3>,
 			    vector<ShareAssignArray3<Matrix3> >::iterator>
 			    (archive, it, var, mat, *r, time, thread_sema),
 			    "patch_data_worker");
@@ -222,7 +227,10 @@ void TensorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time());
+	my_timer.stop();
 	tfout->send(vfd);
+	// 	DumpAllocator(default_allocator, "TensorDump.allocator");
 	return;
       }
       break;
@@ -234,18 +242,22 @@ void TensorFieldExtractor::execute()
   case TypeDescription::CCVariable:
     switch ( subtype->getType() ) {
     case TypeDescription::Matrix3:
-      {	
+      {
+	my_timer.start();
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Matrix3> *vfd =
 	  scinew LevelField<Matrix3>( mesh, Field::CELL );
 	vector<ShareAssignArray3<Matrix3> >& data = vfd->fdata();
 	data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	vector<ShareAssignArray3<Matrix3> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
 	    Thread *thrd =
-	      scinew Thread(new PatchDataThread<CCVariable<Matrix3>,
+	      scinew Thread(scinew PatchDataThread<CCVariable<Matrix3>,
 			    vector<ShareAssignArray3<Matrix3> >::iterator>
 			    (archive, it, var, mat, *r, time, thread_sema),
 			    "patch_data_worker");
@@ -253,7 +265,10 @@ void TensorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time() );
+	my_timer.stop();
 	tfout->send(vfd);
+	// 	DumpAllocator(default_allocator, "TensorDump.allocator");
 	return;
       }
       break;
