@@ -224,26 +224,26 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->get(scalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
+    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(scalarVars.density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
+    new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
-    new_dw->get(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
@@ -337,19 +337,23 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
-    new_dw->get(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
+    {
+    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    }
     scalarVars.old_scalar.allocate(scalarVars.scalar.getLowIndex(),
 				   scalarVars.scalar.getHighIndex());
     scalarVars.old_scalar.copy(scalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, 
+      new_dw->getCopy(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel,
+    new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
 		     matlIndex, patch);
@@ -478,28 +482,28 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->get(scalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     //    new_dw->get(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
     //		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(scalarVars.old_scalar, d_lab->d_scalarOUTBCLabel, 
+    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(scalarVars.density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
+    new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
-    new_dw->get(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
@@ -631,19 +635,23 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
-    new_dw->get(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
+    {
+    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+                matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    }
     scalarVars.old_scalar.allocate(scalarVars.scalar.getLowIndex(),
 				   scalarVars.scalar.getHighIndex());
     scalarVars.old_scalar.copy(scalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefPredLabel, 
+      new_dw->getCopy(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefPredLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcPredLabel,
+    new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcPredLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
 		     matlIndex, patch);
@@ -777,27 +785,27 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->get(scalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     // ***warning* 21st July changed from IN to Pred
-    new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
+    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(scalarVars.density, d_lab->d_densityPredLabel, 
+    new_dw->getCopy(scalarVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+    new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarPredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
-    new_dw->get(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(scalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
@@ -927,19 +935,23 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     // ***warning* 21st July changed from IN to Pred
-    new_dw->get(scalarVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
-    new_dw->get(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+    {
+    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    }
     scalarVars.old_scalar.allocate(scalarVars.scalar.getLowIndex(),
 				   scalarVars.scalar.getHighIndex());
     scalarVars.old_scalar.copy(scalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefCorrLabel, 
+      new_dw->getCopy(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefCorrLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->get(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcCorrLabel,
+    new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
 		     matlIndex, patch);
