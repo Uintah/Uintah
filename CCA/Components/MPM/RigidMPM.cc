@@ -64,7 +64,16 @@ RigidMPM::~RigidMPM()
 void RigidMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                        SimulationStateP& sharedState)
 {
+
   SerialMPM::problemSetup(prob_spec, grid, sharedState);
+  ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
+  if(cfd_ps){
+    cout << "\n__________________________________"<< endl;
+    cout << "  W A R N I N G :  " << endl;
+    cout << "  You must use stiff MPM material properties" << endl;
+    cout << "  to get the correct pressure solution in rmpmice" << endl;
+    cout << "__________________________________\n"<< endl;
+  }
 }
 
 void RigidMPM::computeStressTensor(const ProcessorGroup*,
