@@ -90,8 +90,11 @@ class SCICORESHARE Colorub { // unsigned byte color
   unsigned char data[3]; // data...
 public:
   Colorub() {};
-  Colorub(Color& c) { data[0] = c.r()*255; data[1] = c.g()*255;
-		      data[2] = c.b()*255; }; // converts them...
+  Colorub(Color& c) {
+      data[0] = (unsigned char)(c.r()*255);
+      data[1] = (unsigned char)(c.g()*255);
+      data[2] = (unsigned char)(c.b()*255);
+  }; // converts them...
 
   unsigned char* ptr() { return &data[0]; }; // grab pointer
 
@@ -167,6 +170,11 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:35  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/18 21:45:26  sparker
 // Array1 const correctness, and subsequent fixes
 // Array1 bug fix courtesy Tom Thompson

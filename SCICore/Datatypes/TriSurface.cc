@@ -513,8 +513,8 @@ void TriSurface::construct_grid(int xdim, int ydim, int zdim,
 }
 
 void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) {
-    xdim/=res;
-    ydim/=res;
+    xdim=(int)(xdim/res);
+    ydim=(int)(ydim/res);
     hash_x = xdim;
     hash_y = ydim;
     hash_min = p;
@@ -1131,6 +1131,11 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:35  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/18 20:20:20  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

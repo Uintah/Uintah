@@ -137,10 +137,10 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double ep
     if (!mesh->locate(p,ix,epsilon1,epsilon2)) {
 	if (exhaustive > 0) {
 	    MusilRNG mr;
-	    ix=mr()*mesh->nodes.size();
+	    ix=(int)(mr()*mesh->nodes.size());
 	    int cntr=0;
 	    while(!mesh->locate(p,ix,epsilon1, epsilon2) && cntr<5) {
-		ix=mr()*mesh->nodes.size();
+		ix=(int)(mr()*mesh->nodes.size());
 		cntr++;
 	    }
 	    if (cntr==5) {
@@ -396,6 +396,11 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:35  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:38:53  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

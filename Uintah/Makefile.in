@@ -18,6 +18,6 @@ SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
               -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG) \
               -L$(TK_LIB_DIR) $(TK_LIB_FLAG) \
               -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) \
-              -lGLU -lGL -lXext -lX11 -lm
+              -lm
 
 include $(SRCTOP)/scripts/solib.mk

@@ -22,7 +22,7 @@
   #include <string.h>
   #define bzero(p,sz)  memset(p,0, sz);
 #else
-  #ifndef LINUX
+  #ifndef __linux
     #include <bstring.h>
   #endif
 #endif
@@ -81,6 +81,11 @@ void* valloc(size_t)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:37  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:39:31  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

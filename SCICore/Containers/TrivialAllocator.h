@@ -72,7 +72,7 @@ inline void* TrivialAllocator::alloc()
 inline void TrivialAllocator::free(void* rp)
 {
     if(ta_disable){
-	delete[] rp;
+	delete[] (char*)rp;
 	return;
     }
     lock.lock();
@@ -87,6 +87,11 @@ inline void TrivialAllocator::free(void* rp)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:34  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:38:39  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

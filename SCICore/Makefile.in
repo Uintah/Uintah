@@ -18,6 +18,7 @@ SOLIBRARIES = -lGLU -lGL \
               -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG) \
               -L$(TK_LIB_DIR) $(TK_LIB_FLAG) \
               -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) \
-              -lXext -lX11 -lm -lz
+              @X_LIBS@ @X_PRE_LIBS@ -lXext -lX11 @X_EXTRA_LIBS@ \
+	      -ldl -lm -lz @THREAD_LIBS@
 
 include $(SRCTOP)/scripts/solib.mk

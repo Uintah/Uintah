@@ -23,7 +23,7 @@
 #include <iostream.h>
 #include <fcntl.h>
 
-#ifdef __sun
+#if defined(__sun) || defined(__linux)
 #define MMAP_TYPE char*
 #else
 #define MMAP_TYPE void*
@@ -124,10 +124,8 @@ VectorFieldOcean::VectorFieldOcean(const clString& filename, const clString& dep
 
 VectorFieldOcean::~VectorFieldOcean()
 {
-#ifndef SCI_NOMMAP_IO
   munmap((MMAP_TYPE)data, 1280*896*20*2*sizeof(float));
   munmap((MMAP_TYPE)depth, 1280*896*sizeof(int));
-#endif
 }
 
 void VectorFieldOcean::locate(const Point& p, int& ix, int& iy, int& iz)
@@ -267,6 +265,11 @@ void VectorFieldOcean::get_boundary_lines(Array1<Point>&)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:35  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:38:58  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

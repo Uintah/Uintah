@@ -105,7 +105,7 @@ void CylinderSurface::add_node(Array1<NodeHandle>& nodes,
 	  << " " << r << " " << rn << " " << theta << " " << h
 	  << " " << hn << '\0';
 	  */
-	sprintf(str,"%s %f %f %f %f %f %f %f %f\0",id,p.x(),p.y(),p.z(),r,rn,theta,h,hn);
+	sprintf(str,"%s %f %f %f %f %f %f %f %f",id,p.x(),p.y(),p.z(),r,rn,theta,h,hn);
 	clString retval;
 	int err=TCL::eval(str, retval);
 	if(err){
@@ -141,7 +141,7 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	proc << "proc " << id << " {x y z r rn theta h hn} { expr "
 	     << boundary_expr << "}" << '\0';
 	*/
-	sprintf(proc_string,"proc %s {x y z r rn theta h hn} { expr %s }\0",id,boundary_expr());
+	sprintf(proc_string,"proc %s {x y z r rn theta h hn} { expr %s }",id,boundary_expr());
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, p1, 0, 0, 0, 0, 0);
@@ -360,7 +360,7 @@ void SphereSurface::add_node(Array1<NodeHandle>& nodes,
 	s << id << " " << p.x() << " " << p.y() << " " << p.z()
 	  << " " << r << " " << theta << " " << phi << '\0';
 	*/
-	sprintf(str,"%s %f %f %f %f %f %f\0",id,p.x(),p.y(),p.z(),r,theta,phi);
+	sprintf(str,"%s %f %f %f %f %f %f",id,p.x(),p.y(),p.z(),r,theta,phi);
 	clString retval;
 	int err=TCL::eval(str, retval);
 	if(err){
@@ -396,7 +396,7 @@ void SphereSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	proc << "proc " << id << " {x y z r theta phi} { expr "
 	     << boundary_expr << "}" << '\0';
 	*/
-	sprintf(proc_string,"proc %s {x y z r theta phi} { expr %s }\0",id,boundary_expr());
+	sprintf(proc_string,"proc %s {x y z r theta phi} { expr %s }",id,boundary_expr());
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, cen-pole*radius, radius, 0, -Pi/2);
@@ -574,7 +574,7 @@ void PointSurface::add_node(Array1<NodeHandle>& nodes,
 	ostrstream s(str, 200);
 	s << id << " " << p.x() << " " << p.y() << " " << p.z() << '\0';
 	*/
-	sprintf(str,"%s %f %f %f\0",id,p.x(),p.y(),p.z());
+	sprintf(str,"%s %f %f %f",id,p.x(),p.y(),p.z());
 	clString retval;
 	int err=TCL::eval(str, retval);
 	if(err){
@@ -608,7 +608,7 @@ void PointSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	proc << "proc " << id << " {x y z} { expr "
 	     << boundary_expr << "}" << '\0';
 	*/
-	sprintf(proc_string,"proc %s {x y z} { expr %s }\0",id,boundary_expr());
+	sprintf(proc_string,"proc %s {x y z} { expr %s }",id,boundary_expr());
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, pos);
@@ -758,6 +758,11 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:34  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/18 20:20:19  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

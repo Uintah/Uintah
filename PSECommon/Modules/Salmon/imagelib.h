@@ -15,7 +15,7 @@ extern "C" {
 
 #include <stdio.h>
 
-#ifdef LINUX
+#ifdef __linux
   #define _IOERR          0040    /* I/O error from system */
 
   #define _IOREAD         0001    /* currently reading */

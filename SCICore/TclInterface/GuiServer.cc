@@ -24,12 +24,10 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLTask.h>
-
+#include <string.h>
 #include <sys/types.h>
 #include <tcl.h>
 #include <tk.h>
-
-//#include <strings.h>
 
 //#define DEBUG 1
 extern "C" Tcl_Interp* the_interp;
@@ -199,6 +197,11 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:39  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/18 20:20:21  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

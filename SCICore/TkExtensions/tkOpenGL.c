@@ -21,9 +21,9 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <GL/glx.h>
 
 #ifdef _WIN32
-#include <GL/glx.h>
 #include <X11\XUtil.h>
 #include <tcltk\tk\win\tkWinInt.h>
 #define GLXContext HGLRC
@@ -31,8 +31,6 @@
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
-#include <GL/glx.h> /* For GLXContext */
-/* #include "imagelib.h" */
 #endif
 
 /*
@@ -166,7 +164,7 @@ OpenGLCmd(clientData, interp, argc, argv)
     char **argv;		/* Argument strings. */
 {
     XVisualInfo* vi=0;
-    Tk_Window main = (Tk_Window) clientData;
+    Tk_Window mainwin = (Tk_Window) clientData;
     OpenGL *OpenGLPtr;
     Colormap cmap;
     Tk_Window tkwin;
@@ -180,7 +178,7 @@ OpenGLCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_CreateWindowFromPath(interp, main, argv[1], (char *) NULL);
+    tkwin = Tk_CreateWindowFromPath(interp, mainwin, argv[1], (char *) NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }

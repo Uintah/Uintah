@@ -23,8 +23,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _WIN32
 #include <string.h>
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <sys/mman.h>

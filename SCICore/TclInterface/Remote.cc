@@ -29,6 +29,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 //#define DEBUG 1
 
@@ -56,7 +57,7 @@ cerr << "setupConnect() opened listen socket = " << in_socket << endl;
     master.sin_port = port;
 
     // bind to socket
-#ifdef LINUX
+#ifdef __linux
     if (bind (in_socket, (sockaddr*)&master, sizeof(master))) {
 #else
     if (bind (in_socket, &master, sizeof(master))) {
@@ -120,7 +121,7 @@ int requestConnect (int port, char* host)
     master.sin_family = SOCKET_DOMAIN;
     master.sin_port = htons (port);
 
-#ifdef LINUX
+#ifdef __linux
     if (connect (master_socket, (sockaddr*)&master, sizeof(master)) < 0) {
 #else
     if (connect (master_socket, &master, sizeof(master)) < 0) {
@@ -174,6 +175,11 @@ int receiveReply (TCLMessage* msg, int skt)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:40  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:39:44  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

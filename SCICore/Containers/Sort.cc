@@ -14,11 +14,11 @@ namespace SCICore {
 namespace Containers {
 
 const unsigned int KEY_SIZE=8;       // #bits for the Key
-const unsigned int K = 1<<KEY_SIZE;  // size of psum table
+const int K = 1<<KEY_SIZE;  // size of psum table
 
 const unsigned int BMASK=K-1; // bit mask for given key
 
-const unsigned int NPASS=32/KEY_SIZE; // number of passes...
+const int NPASS=32/KEY_SIZE; // number of passes...
 
 void SortObjs::DoRadixSort(Array1<unsigned int>& data, 
 			   Array1<unsigned int>& index,
@@ -38,7 +38,7 @@ void SortObjs::DoRadixSort(Array1<unsigned int>& data,
 
   unsigned int cur_index=0;
 
-  unsigned int i,j;
+  int i,j;
 
   for(i=0;i<NPASS;i++) {
     // toggle between index and nindex...
@@ -90,7 +90,7 @@ void SortObjs::DoRadixSort(Array1<unsigned int>& data, Array1<unsigned int>& nin
   DoRadixSort(data,tmp_idex,nindex);
 }
 
-const unsigned int K16 = 1<<16;  // size of psum table
+const int K16 = 1<<16;  // size of psum table
 
 const unsigned int BMASK16=K16-1; // bit mask for given key
 
@@ -104,7 +104,7 @@ void SortObjs::RSort16(Array1<unsigned int>& data,
   unsigned int *dst_ptr = &dindex[0];
   unsigned int *datap = &data[0];
 
-  unsigned int j;
+  int j;
   
 
   keys.initialize(0);
@@ -130,7 +130,7 @@ void SortObjs::RSort16(Array1<unsigned int>& data,
   }
 }
 
-const unsigned int K12 = 1<<12;  // size of psum table
+const int K12 = 1<<12;  // size of psum table
 
 const unsigned int BMASK12=K12-1; // bit mask for given key
 
@@ -144,7 +144,7 @@ void SortObjs::RSort12(Array1<unsigned int>& data,
   unsigned int *dst_ptr = &dindex[0];
   unsigned int *datap = &data[0];
   
-  unsigned int j;
+  int j;
 
   keys.initialize(0);
 
@@ -169,7 +169,7 @@ void SortObjs::RSort12(Array1<unsigned int>& data,
   }
 }
 
-const unsigned int K8 = 1<<8;  // size of psum table
+const int K8 = 1<<8;  // size of psum table
 
 const unsigned int BMASK8=K8-1; // bit mask for given key
 
@@ -183,7 +183,7 @@ void SortObjs::RSort8(Array1<unsigned int>& data,
   unsigned int *dst_ptr = &dindex[0];
   unsigned int *datap = &data[0];
 
-  unsigned int j;
+  int j;
   
 
   keys.initialize(0);
@@ -209,7 +209,7 @@ void SortObjs::RSort8(Array1<unsigned int>& data,
   }
 }
 
-const unsigned int K4 = 1<<4;  // size of psum table
+const int K4 = 1<<4;  // size of psum table
 
 const unsigned int BMASK4=K4-1; // bit mask for given key
 
@@ -568,6 +568,11 @@ void main(int argc, char* argv)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:33  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:38:37  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-SRCS     = Allocator.cc AllocOS.cc malloc.cc new.cc lock_mips.s
+SRCS     = Allocator.cc AllocOS.cc malloc.cc new.cc @LOCK_IMPL@
 
 INCLUDES = -I$(OBJTOP)
 
