@@ -12,12 +12,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Fusion/Core/ThirdParty
 
-INCLUDES += $(MDSPLUS_INCLUDE)
-
 SRCS     += \
-	$(SRCDIR)/mdsPlusAPI.c\
-	$(SRCDIR)/mdsPlusReader.cc\
-
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -26,6 +21,6 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) $(M_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
