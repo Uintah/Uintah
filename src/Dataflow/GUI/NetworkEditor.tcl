@@ -248,6 +248,11 @@ proc activate_file_submenus { } {
     .main_menu.file.menu entryconfig 5 -state active
 }
 
+proc handle_bad_startnet { netfile } {
+    set answer [tk_messageBox -type ok -parent . -message "Unable to load $netfile as a network.  Exiting." -icon error]
+    netedit quit
+}
+
 proc modulesMenuPressCB { x y } {
     set canvas .bot.neteditFrame.canvas
 
