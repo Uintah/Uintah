@@ -41,7 +41,6 @@ SRCDIR := Packages/DataIO/Dataflow/GUI
 SRCS := \
 	$(SRCDIR)/HDF5DataReader.tcl\
 	$(SRCDIR)/MDSPlusDataReader.tcl\
-	$(SRCDIR)/MDSPlusFieldReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

@@ -44,7 +44,6 @@ SRCDIR   := Packages/DataIO/Dataflow/Modules/Readers
 
 SRCS     += \
 	$(SRCDIR)/MDSPlusDataReader.cc\
-	$(SRCDIR)/MDSPlusFieldReader.cc\
 	$(SRCDIR)/MDSPlusDump.cc\
 	$(SRCDIR)/HDF5DataReader.cc\
 	$(SRCDIR)/HDF5Dump.cc\
