@@ -164,10 +164,8 @@ ManageFieldSet::update_hiertable()
 const clString
 ManageFieldSet::get_name(PropertyManager *pm)
 {
-  const string n = pm->get_string("name");
-
-  if (n != "")
-  {
+  string n;
+  if ( pm->get("name", n) ) {
     return n.c_str();
   }
   else
@@ -286,7 +284,7 @@ ManageFieldSet::execute()
     if (ofs != NULL)
     {
       cout << "Dumping out a field set\n";
-      ofs->set_string("name", "glomfield");
+      ofs->store("name", "glomfield");
       FieldSetHandle ofsh(ofs);
       FieldSetOPort *ofsp = (FieldSetOPort *)get_oport("Output FieldSet");
       ofsp->send(ofsh);
