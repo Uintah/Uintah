@@ -14,5 +14,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports Core/Containers \
 	Core/Persistent Core/Datatypes Core/Util \
 	Packages/Nrrd/Core/Datatypes
 
+LIBS := $(NRRD_LIBRARY) -lnrrd -lbiff -lair
+
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

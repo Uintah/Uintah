@@ -805,50 +805,43 @@ AC_SUBST(XML_INCLUDE_DIR)
 
 ##-- Find Nrrd ------------------------------------------------------
 
-# Check whether --with-nrrd was given.
-if test "${with_nrrd+set}" = set; then
-  withval="$with_nrrd"
-  if test "$withval" != "yes"; then
-    if test -d "$withval"; then
-      NRRD_PREFIX="$withval"
-    else
-      echo "Could not find Nrrd dir $withval -- looking elsewhere..."
+nrrd_pkg="no"
+for i in $package; do
+  if test "$i" = "Nrrd" ; then
+    nrrd_pkg="yes"
+    if test -e "$thirdparty/include/nrrd.h" ; then
+      NRRD_PREFIX=$thirdparty
     fi
   fi
-  nrrd="yes"
-else
-  nrrd="no"
-  for i in $package; do
-    if test "$i" = "Nrrd"; then
-      nrrd="yes"
+done
+
+if test "${nrrd_pkg}" = "yes" ; then
+  if test "${with_nrrd+set}" = set; then
+    withval="$with_nrrd"
+    if test "$withval" != "yes" ; then
+      if test -e "${withval}/include/nrrd.h"; then
+        NRRD_PREFIX="$withval"
+      else
+        echo "\n*** Error - could not find ${withval}/include/nrrd.h\n"
+        nrrd_pkg="no"
+      fi
     fi
-  done
+  fi
 fi
 
-if test "$nrrd" = "yes" ; then
-  if test -z "${NRRD_PREFIX}" ; then
-    echo -n "checking for Nrrd... "
-    if test -d "$thirdparty/Nrrd" ; then
-      NRRD_PREFIX="$thirdparty/Nrrd"
-    elif test -d "$thirdparty/teem" ; then
-      NRRD_PREFIX="$thirdparty/teem"
-    fi
-  fi
+if test "${nrrd_pkg}" = "yes" ; then
+  echo -n "checking for nrrd... "
   if test "$NRRD_PREFIX" ; then
-    NRRD_INCLUDE="${NRRD_PREFIX}/include"
-    if test "$is_64bit" = "yes" ; then
-      NRRD_LIBRARY="${NRRD_PREFIX}/lib64"
-    else
-      NRRD_LIBRARY="${NRRD_PREFIX}/lib32"
-    fi
+    NRRD_INCLUDE_DIR="${NRRD_PREFIX}/include"
+    NRRD_LIB_DIR="${NRRD_PREFIX}/lib"
     echo "${NRRD_PREFIX}"
   else
     echo "no"
   fi
 fi
 
-AC_SUBST(NRRD_INCLUDE)
-AC_SUBST(NRRD_LIBRARY)
+AC_SUBST(NRRD_INCLUDE_DIR)
+AC_SUBST(NRRD_LIB_DIR)
 
 ##-- Find Nektar--------------------------------------------------------------
 
