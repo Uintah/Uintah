@@ -1,10 +1,11 @@
 c
 c $Log$
-c Revision 1.4  2000/08/19 16:36:40  rawat
+c Revision 1.1  2000/08/19 16:36:40  rawat
 c fixed some bugs in scalarcoef calculations
 c
 c Revision 1.3  2000/07/28 02:31:04  rawat
-c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store
+c matrix
 c coeffecients
 c
 c Revision 1.2  2000/07/12 19:55:45  bbanerje
@@ -12,7 +13,7 @@ c Added apcal stuff in calcVelDiagonal
 c
 c
 
-      SUBROUTINE apcal(dim_lo, dim_hi, valid_lo, valid_hi,
+      SUBROUTINE apcalvel(dim_lo, dim_hi, valid_lo, valid_hi,
      &     AP,AE,AW,AN,AS,AT,AB,SP)
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996
@@ -86,7 +87,7 @@ c-----------------------------------------------------------------------
          do 250 j = dim_lo(2), dim_hi(2)
             do 150 i = dim_lo(1), dim_hi(1)
 
-               ap(i,j,k) = 0.0
+               ap(i,j,k) = 1.0
 
  150        continue
  250     continue

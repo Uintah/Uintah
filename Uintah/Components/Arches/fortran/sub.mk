@@ -13,7 +13,9 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/inlbcs.F $(SRCDIR)/uvelcoef.F $(SRCDIR)/vvelcoef.F \
 	$(SRCDIR)/wvelcoef.F $(SRCDIR)/uvelsrc.F $(SRCDIR)/vvelsrc.F \
 	$(SRCDIR)/wvelsrc.F $(SRCDIR)/arrass.F $(SRCDIR)/mascal.F \
-	$(SRCDIR)/apcal.F $(SRCDIR)/prescoef.F $(SRCDIR)/pressrc.F \
+	$(SRCDIR)/mascal_scalar.F \
+	$(SRCDIR)/apcal.F $(SRCDIR)/apcal_vel.F $(SRCDIR)/prescoef.F \
+	$(SRCDIR)/pressrc.F \
 	$(SRCDIR)/bcuvel.F $(SRCDIR)/bcvvel.F $(SRCDIR)/bcwvel.F  \
 	$(SRCDIR)/bcpress.F $(SRCDIR)/symbcs.F \
 	$(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F $(SRCDIR)/wallbc.F \
@@ -60,6 +62,9 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.34  2000/08/19 16:36:40  rawat
+# fixed some bugs in scalarcoef calculations
+#
 # Revision 1.33  2000/08/15 00:23:38  rawat
 # added explicit solve for momentum and scalar eqns
 #

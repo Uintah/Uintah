@@ -244,6 +244,7 @@ c     double precision rone(domLo(2):domHi(2))
       double precision tew, tns, ttb
       double precision aec, awc, anc, asc, atc, abc
       double precision crn0
+      double precision prandtlno
 
       integer i, j, k
       integer IST, JST, KST
@@ -256,6 +257,7 @@ c     double precision rone(domLo(2):domHi(2))
       lcend = .false.
       lsmpt = .false.
       vol = zero
+      prandtlno = 0.9
 
       IST = idxLo(1)
       JST = idxLo(2)
@@ -320,12 +322,12 @@ C-----------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C--------------------------------------------------------------------
-               GAME = 0.5*(VIS(I,J,K)+VIS(I+1,J,K))
-               GAMW = 0.5*(VIS(I,J,K)+VIS(I-1,J,K))
-               GAMN = 0.5*(VIS(I,J,K)+VIS(I,J+1,K))
-               GAMS = 0.5*(VIS(I,J,K)+VIS(I,J-1,K))
-               GAMT = 0.5*(VIS(I,J,K)+VIS(I,J,K+1))
-               GAMB = 0.5*(VIS(I,J,K)+VIS(I,J,K-1))
+               GAME = 0.5*(VIS(I,J,K)+VIS(I+1,J,K))/prandtlno
+               GAMW = 0.5*(VIS(I,J,K)+VIS(I-1,J,K))/prandtlno
+               GAMN = 0.5*(VIS(I,J,K)+VIS(I,J+1,K))/prandtlno
+               GAMS = 0.5*(VIS(I,J,K)+VIS(I,J-1,K))/prandtlno
+               GAMT = 0.5*(VIS(I,J,K)+VIS(I,J,K+1))/prandtlno
+               GAMB = 0.5*(VIS(I,J,K)+VIS(I,J,K-1))/prandtlno
                DEO = GAME*AREAEW/DXEP(I)
                DWO = GAMW*AREAEW/DXPW(I)
                DNO = GAMN*AREAN/DYNP(J)
@@ -414,6 +416,9 @@ c                  AC(I,J,K) = 0.0
 
 c
 c $Log$
+c Revision 1.4  2000/08/19 16:36:40  rawat
+c fixed some bugs in scalarcoef calculations
+c
 c Revision 1.3  2000/08/09 20:19:27  rawat
 c modified scalcoef.F
 c

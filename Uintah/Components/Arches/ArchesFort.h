@@ -57,7 +57,9 @@ WARNING
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
 #define FORT_MASCAL mascal_
+#define FORT_MASCALSCALAR mascalscalar_
 #define FORT_APCAL apcal_
+#define FORT_APCAL_VEL apcalvel_
 #define FORT_PRESSCOEFF prescoef_
 #define FORT_PRESSOURCE pressrc_
 #define FORT_PRESSBC bcpress_
@@ -484,6 +486,27 @@ extern "C"
 		double* velConvectCoefAS,
 		double* velConvectCoefAT,
 		double* velConvectCoefAB);
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the velocity mass source terms
+    //
+    void
+    FORT_MASCALSCALAR(const int* domLo, const int* domHi,
+		       const int* idxLo, const int* idxHi,
+		       const double* velocity,  
+		       const double* velCoefAE,
+		       const double* velCoefAW,
+		       const double* velCoefAN,
+		       const double* velCoefAS,
+		       const double* velCoefAT,
+		       const double* velCoefAB,
+		       double* velNonLinSrc, double* velLinSrc,
+		       double* velConvectCoefAE,
+		       double* velConvectCoefAW,
+		       double* velConvectCoefAN,
+		       double* velConvectCoefAS,
+		       double* velConvectCoefAT,
+		       double* velConvectCoefAB);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -575,6 +598,21 @@ extern "C"
 	       const double* velCoefAB,
 	       const double* velLinSrc); 
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the velocity diagonal
+    //
+    void
+    FORT_APCAL_VEL(const int* domLo, const int* domHi,
+		   const int* idxLo, const int* idxHi,
+		   double* velCoefAP,
+		   const double* velCoefAE,
+		   const double* velCoefAW,
+		   const double* velCoefAN,
+		   const double* velCoefAS,
+		   const double* velCoefAT,
+		   const double* velCoefAB,
+		   const double* velLinSrc); 
     ////////////////////////////////////////////////////////////////////////
     //
     // Calculate the pressure stencil coefficients
@@ -760,7 +798,8 @@ extern "C"
 		  const double* sew, const double* sns, const double* stb,
 		  int* cellType,
 		  int* wall_celltypeval, int* symmetry_celltypeval,
-		  int* flow_celltypeval, const int* ffield, const int* sfield,
+		  int* flow_celltypeval, int* press_celltypeval, 
+		  const int* ffield, const int* sfield,
 		  const int* outletfield);
 
     ////////////////////////////////////////////////////////////////////////
@@ -846,6 +885,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.33  2000/08/19 16:36:34  rawat
+// fixed some bugs in scalarcoef calculations
+//
 // Revision 1.32  2000/08/15 00:23:32  rawat
 // added explicit solve for momentum and scalar eqns
 //

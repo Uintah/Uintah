@@ -1402,6 +1402,7 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   // Get the wall boundary and flow field codes
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
   int flow_celltypeval = d_flowfieldCellTypeVal;
+  int press_celltypeval = d_pressureBdry->d_cellTypeID;
   // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
   //               Fmixin hardcoded to 0
   int symmetry_celltypeval = -3;
@@ -1434,7 +1435,8 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 		cellinfo->stb.get_objs(),
 		vars->cellType.getPointer(),
 		&wall_celltypeval, &symmetry_celltypeval,
-		&flow_celltypeval, &ffield, &sfield, &outletfield);
+		&flow_celltypeval, &press_celltypeval,
+		&ffield, &sfield, &outletfield);
 
 #ifdef ARCHES_DEBUG
   cerr << "AFTER FORT_SCALARBC" << endl;
@@ -2108,6 +2110,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.54  2000/08/19 16:36:35  rawat
+// fixed some bugs in scalarcoef calculations
+//
 // Revision 1.53  2000/08/19 05:53:43  bbanerje
 // Changed code so that output looks more like fortran output.
 //

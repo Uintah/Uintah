@@ -5,12 +5,13 @@ c
      &     ae,aw,an,as,at,ab,
      &     su,sp,
      &     den, fmixin,
-     $     domLoU, domHiU, u,
-     &     domLoV, domHiV, v,
-     &     domLoW, domHiW, w,
+     $     domLoU, domHiU, uu,
+     &     domLoV, domHiV, vv,
+     &     domLoW, domHiW, ww,
 c    &     uinlt,vinlt,winlt,
      $     sew,sns,stb,
-     &     pcell, wall, symtry, pfield, ffield, sfield, outletfield)
+     &     pcell, wall, symtry, pfield, presstype, ffield, sfield,
+     $     outletfield)
 c    &     r,rv,ra,
 c    $     idxLo_ext, idxHi_ext, 
 c    $     ltest,lwrap,lsymb,loutsf,
@@ -48,13 +49,13 @@ c     integer idxLo_ext(3), idxHi_ext(3)
      $     domLo(3):domHi(3))
       double precision fmixin
       integer domLoU(3), domHiU(3)
-      double precision u(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
+      double precision uu(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
      $     domLoU(3):domHiU(3))
       integer domLoV(3), domHiV(3)
-      double precision v(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
+      double precision vv(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
      $     domLoV(3):domHiV(3))
       integer domLoW(3), domHiW(3)
-      double precision w(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
+      double precision ww(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
      $     domLoW(3):domHiW(3))
 
 c     double precision uinlt(domLo(2):domHi(2),domLo(3):domHi(3))
@@ -71,7 +72,8 @@ c     double precision ra(domLo(2):domHi(2))
       
       integer pcell(domLo(1):domHi(1), domLo(2):domHi(2),
      $     domLo(3):domHi(3))
-      integer wall, symtry, pfield, ffield, sfield, outletfield
+      integer wall, symtry, pfield, presstype, 
+     $        ffield, sfield, outletfield
 *
 *     declare local variables
 *
@@ -134,7 +136,7 @@ c                 areaew = ra(j)*sns(j)*stb(k)
                   areaew = sns(j)*stb(k)
                   ae(idxHi(1),j,k) = zero
                   su(idxHi(1),j,k) = su(idxHi(1),j,k) - 
-     $                 u(idxHi(1)+2,j,k)*
+     $                 uu(idxHi(1)+2,j,k)*
      &                 den(idxHi(1)+1,j,k)*f(idxHi(1)+1,j,k)*
      $                 areaew
                end if
@@ -144,7 +146,7 @@ c                 areaew = ra(j)*sns(j)*stb(k)
                   areaew = sns(j)*stb(k)
                   aw(idxLo(1),j,k) = zero
                   su(idxLo(1),j,k) = su(idxLo(1),j,k) + 
-     $                 u(idxLo(1)-1,j,k)*
+     $                 uu(idxLo(1)-1,j,k)*
      &                 den(idxLo(1)-1,j,k)*f(idxLo(1)-1,j,k)*
      $                 areaew
                end if
@@ -161,7 +163,7 @@ c                 arean = rv(idxHi(2)+1)*sew(i)*stb(k)
                   arean = sew(i)*stb(k)
                   an(i,idxHi(2),k) = zero
                   su(i,idxHi(2),k) = su(i,idxHi(2),k) - 
-     $                 v(i,idxHi(2)+2,k)*
+     $                 vv(i,idxHi(2)+2,k)*
      &                 den(i,idxHi(2)+1,k)*f(i,idxHi(2)+1,k)*
      $                 arean
                end if
@@ -171,7 +173,7 @@ c                 areas = rv(idxLo(2))*sew(i)*stb(k)
                   areas = sew(i)*stb(k)
                   as(i,idxLo(2),k) = zero
                   su(i,idxLo(2),k) = su(i,idxLo(2),k) + 
-     $                 v(i,idxLo(2)-1,k)*
+     $                 vv(i,idxLo(2)-1,k)*
      &                 den(i,idxLo(2)-1,k)*f(i,idxLo(2)-1,k)*
      $                 areas
                end if
@@ -187,7 +189,7 @@ c--------------------------------------------------------------------
                   areatb = sew(i)*sns(j)
                   at(i,j,idxHi(3)) = zero
                   su(i,j,idxHi(3)) = su(i,j,idxHi(3)) - 
-     $                 w(i,j,idxHi(3)+2)*
+     $                 ww(i,j,idxHi(3)+2)*
      &                 den(i,j,idxHi(3)+1)*f(i,j,idxHi(3)+1)*
      $                 areatb
                end if
@@ -196,7 +198,7 @@ c--------------------------------------------------------------------
                   areatb = sew(i)*sns(j)
                   ab(i,j,idxLo(3)) = zero
                   su(i,j,idxLo(3)) = su(i,j,idxLo(3)) + 
-     $                 w(i,j,idxLo(3)-1)*
+     $                 ww(i,j,idxLo(3)-1)*
      &                 den(i,j,idxLo(3)-1)*f(i,j,idxLo(3)-1)*
      $                 areatb
                end if
@@ -209,22 +211,20 @@ c       east and/or west walls
 c----------------------------------------------------------------------
       do 610 k = idxLo(3),idxHi(3)
          do 600 j = idxLo(2),idxHi(2)
-          if ((pcell(idxHi(1)+1,j,k).eq.outletfield.and.
-     $          pcell(idxHi(1),j,k).eq.ffield)) then
-c    &      .or. (pcell(idxHi(1)+1,j,k).eq.decomp.and.
-c    $          uinlt(j,k).gt.zero)) then
-             if (loutsf) then
+          if ((pcell(idxHi(1)+1,j,k).eq.outletfield).or.
+     $          ((pcell(idxHi(1)+1,j,k).eq.presstype).and.
+     $           (uu(idxHi(1)+2,j,k).gt.0.0))) then
+             if ((loutsf).or.(pcell(idxHi(1)+1,j,k).eq.presstype)) then
                 f(idxHi(1)+1,j,k) = f(idxHi(1),j,k)
                 ae(idxHi(1),j,k) = two*tiny
              else
                 f(idxHi(1)+1,j,k) = fmixin
              end if
           end if
-          if ((pcell(idxLo(1)-1,j,k).eq.outletfield.and.
-     $         pcell(idxLo(1),j,k).eq.ffield)) then
-c    &      .or.(pcell(idxLo(1)-1,j,k).eq.decomp.and.
-c    $         u(idxLo(1)-1,j,k).lt.zero)) then
-             if (loutsf) then
+          if ((pcell(idxLo(1)-1,j,k).eq.outletfield).or.
+     $          ((pcell(idxLo(1)-1,j,k).eq.presstype).and.
+     $           (uu(idxLo(1)-1,j,k).lt.0.0))) then
+             if ((loutsf).or.(pcell(idxLo(1)-1,j,k).eq.presstype)) then
                 f(idxLo(1)-1,j,k) = f(idxLo(1),j,k)
                 aw(idxLo(1),j,k) = two*tiny
              else
@@ -238,22 +238,22 @@ c     north and/or south walls
 c--------------------------------------------------------------------
       do 710 k = idxLo(3),idxHi(3)
          do 700 i = idxLo(1),idxHi(1)
-            if ((pcell(i,idxHi(2)+1,k).eq.outletfield.and.
-     $           pcell(i,idxHi(2),k).eq.ffield)) then
-c    &      .or.(pcell(i,idxHi(2)+1,k).eq.decomp.and.
-c    $          vinlt(i,k).gt.zero)) then
-             if (loutsf) then
-                f(i,idxHi(2)+1,k) = f(i,idxHi(2),k)
-                an(i,idxHi(2),k) = two*tiny
-             else
-                f(i,idxHi(2)+1,k) = fmixin
-             end if
-          end if
-          if ((pcell(i,idxLo(2)-1,k).eq.outletfield.and.
-     $         pcell(i,idxLo(2),k).eq.ffield)) then
-c    &      .or.(pcell(i,idxLo(2)-1,k).eq.decomp.and.
-c    $         v(i,idxLo(2)-1,k).lt.zero)) then
-             if (loutsf) then
+            if ((pcell(i,idxHi(2)+1,k).eq.outletfield).or.
+     $          ((pcell(i,idxHi(2)+1,k).eq.presstype).and.
+     $           (vv(i,idxHi(2)+2,k).gt.0.0))) then
+               if ((loutsf).or.(pcell(i, idxHi(2)+1, k).eq.
+     $              presstype)) then
+                  f(i,idxHi(2)+1,k) = f(i,idxHi(2),k)
+                  an(i,idxHi(2),k) = two*tiny
+               else
+                  f(i,idxHi(2)+1,k) = fmixin
+               end if
+            end if
+          if ((pcell(i,idxLo(2)-1,k).eq.outletfield).or.
+     $          ((pcell(i,idxLo(2)-1,k).eq.presstype).and.
+     $           (vv(i,idxLo(2)-1,k).lt.0.0))) then
+               if ((loutsf).or.(pcell(i, idxLo(2)-1, k).eq.
+     $              presstype)) then
                 f(i,idxLo(2)-1,k) = f(i,idxLo(2),k)
                 as(i,idxLo(2),k) = two*tiny
              else
@@ -267,35 +267,38 @@ c     top and/or bottom walls
 c--------------------------------------------------------------------
       do 810 j = idxLo(2),idxHi(2)
         do 800 i = idxLo(1),idxHi(1)
-          if ((pcell(i,j,idxHi(3)+1).eq.outletfield.and.
-     $          pcell(i,j,idxHi(3)).eq.ffield)) then
-c    &      .or.(pcell(i,j,idxHi(3)+1).eq.decomp.and.
-c    $          winlt(i,j).gt.zero)) then
-             if (loutsf) then
-                f(i,j,idxHi(3)+1) = f(i,j,idxHi(3))
-                at(i,j,idxHi(3)) = two*tiny
-             else
-                f(i,j,idxHi(3)+1) = fmixin
-             end if
-          end if
-          if ((pcell(i,j,idxLo(3)-1).eq.outletfield.and.
-     $         pcell(i,j,idxLo(3)).eq.ffield)) then
-c    &      .or.(pcell(i,j,idxLo(3)-1).eq.decomp.and.
-c    $         w(i,j,idxLo(3)-1).lt.zero)) then
-             if (loutsf) then
-                f(i,j,idxLo(3)-1) = f(i,j,idxLo(3))
-                ab(i,j,idxLo(3)) = two*tiny
-             else
-                f(i,j,idxLo(3)-1) = fmixin
-             end if
-          end if
-  800   continue
-  810 continue
+          if ((pcell(i,j,idxHi(3)+1).eq.outletfield).or.
+     $          ((pcell(i,j,idxHi(3)+1).eq.presstype).and.
+     $           (ww(i,j,idxHi(3)+2).gt.0.0))) then
+               if ((loutsf).or.(pcell(i, j, idxHi(3)+1).eq.
+     $              presstype)) then
+                  f(i,j,idxHi(3)+1) = f(i,j,idxHi(3))
+                  at(i,j,idxHi(3)) = two*tiny
+               else
+                  f(i,j,idxHi(3)+1) = fmixin
+               end if
+            end if
+          if ((pcell(i,j,idxLo(3)-1).eq.outletfield).or.
+     $          ((pcell(i,j,idxLo(3)-1).eq.presstype).and.
+     $           (ww(i,j,idxLo(3)-1).gt.0.0))) then
+               if ((loutsf).or.(pcell(i, j, idxLo(3)-1).eq.
+     $              presstype)) then
+                  f(i,j,idxLo(3)-1) = f(i,j,idxLo(3))
+                  ab(i,j,idxLo(3)) = two*tiny
+               else
+                  f(i,j,idxLo(3)-1) = fmixin
+               end if
+            end if
+ 800     continue
+ 810  continue
       return
       end
 
 c
 c $Log$
+c Revision 1.3  2000/08/19 16:36:40  rawat
+c fixed some bugs in scalarcoef calculations
+c
 c Revision 1.2  2000/08/09 20:19:27  rawat
 c modified scalcoef.F
 c

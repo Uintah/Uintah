@@ -453,23 +453,23 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
   IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
-	      idxLo.get_pointer(), idxHi.get_pointer(),
-	      vars->scalar.getPointer(),
-	      vars->scalarCoeff[Arches::AE].getPointer(),
-	      vars->scalarCoeff[Arches::AW].getPointer(),
-	      vars->scalarCoeff[Arches::AN].getPointer(),
-	      vars->scalarCoeff[Arches::AS].getPointer(),
-	      vars->scalarCoeff[Arches::AT].getPointer(),
-	      vars->scalarCoeff[Arches::AB].getPointer(),
-	      vars->scalarNonlinearSrc.getPointer(), 
-	      vars->scalarLinearSrc.getPointer(), 
-	      vars->scalarConvectCoeff[Arches::AE].getPointer(),
-	      vars->scalarConvectCoeff[Arches::AW].getPointer(),
-	      vars->scalarConvectCoeff[Arches::AN].getPointer(),
-	      vars->scalarConvectCoeff[Arches::AS].getPointer(),
-	      vars->scalarConvectCoeff[Arches::AT].getPointer(),
-	      vars->scalarConvectCoeff[Arches::AB].getPointer());
+  FORT_MASCALSCALAR(domLo.get_pointer(), domHi.get_pointer(),
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    vars->scalar.getPointer(),
+		    vars->scalarCoeff[Arches::AE].getPointer(),
+		    vars->scalarCoeff[Arches::AW].getPointer(),
+		    vars->scalarCoeff[Arches::AN].getPointer(),
+		    vars->scalarCoeff[Arches::AS].getPointer(),
+		    vars->scalarCoeff[Arches::AT].getPointer(),
+		    vars->scalarCoeff[Arches::AB].getPointer(),
+		    vars->scalarNonlinearSrc.getPointer(), 
+		    vars->scalarLinearSrc.getPointer(), 
+		    vars->scalarConvectCoeff[Arches::AE].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AW].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AN].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AS].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AT].getPointer(),
+		    vars->scalarConvectCoeff[Arches::AB].getPointer());
 }
 
 //****************************************************************************
@@ -571,6 +571,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.36  2000/08/19 16:36:35  rawat
+//fixed some bugs in scalarcoef calculations
+//
 //Revision 1.35  2000/08/17 20:32:00  rawat
 //Fixed some bugs
 //
