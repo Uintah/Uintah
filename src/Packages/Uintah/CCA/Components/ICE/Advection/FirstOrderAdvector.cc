@@ -69,7 +69,8 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
                         const SFCZVariable<double>& wvel_FC,
                         const double& delT, 
                         const Patch* patch,
-                        const int& indx)
+                        const int& indx,
+                        const bool& bulletProof_test)
 
 {
   Vector dx = patch->dCell();
@@ -82,7 +83,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   const IntVector gc(1,1,1);
   double error_test = 0.0;
   int    num_cells = 0;
-  
+
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
     IntVector curcell = *iter;
     delY_top    = std::max(0.0, (vvel_FC[curcell+IntVector(0,1,0)] * delT));
@@ -124,8 +125,11 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   
   //__________________________________
   // if total_fluxout > vol then 
-  // find the cell and throw an exception.  
-  if (fabs(error_test - num_cells) > 1.0e-2) {
+  // find the cell and throw an exception.
+  if(fabs(error_test - num_cells) > 1.0e-2){
+    cout << " outfluxVol > vol " << endl;
+  }
+  if (fabs(error_test - num_cells) > 1.0e-2 && bulletProof_test) {
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
       IntVector curcell = *iter; 
       double total_fluxout = 0.0;
