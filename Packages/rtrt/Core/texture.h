@@ -1,11 +1,14 @@
 #ifndef __TEXTURE_H__
 #define __TEXTURE_H__
 
-#include <GL/glu.h>
-#include <GL/glx.h>
-#include <math.h>
 #include <Packages/rtrt/Core/Array3.h>
 #include <Packages/rtrt/Core/Assert.h>
+
+#include <GL/glu.h>
+#include <GL/glx.h>
+
+#include <math.h>
+
 #define textureHeight 256
 #define textureWidth 256
 
