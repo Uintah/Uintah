@@ -8,6 +8,7 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/RigidMPM.cc \
 	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
+	$(SRCDIR)/ShellMPM.cc \
 	$(SRCDIR)/MPMLabel.cc \
 	$(SRCDIR)/Solver.cc 	\
 	$(SRCDIR)/PetscSolver.cc \

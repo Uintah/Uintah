@@ -108,7 +108,7 @@ public:
     Implicit
   };
 
-private:
+protected:
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
@@ -291,6 +291,9 @@ private:
   void scheduleComputeStressTensor(            SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
+  void scheduleComputeAccStrainEnergy(         SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
   void scheduleComputeInternalForce(           SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
@@ -326,10 +329,6 @@ private:
 
   void scheduleCalculateDampingRate(           SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
-
-  SerialMPM(const SerialMPM&);
-  SerialMPM& operator=(const SerialMPM&);
-	 
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   bool             d_artificial_viscosity;
@@ -353,6 +352,12 @@ private:
   bool             d_with_ice;
   bool             d_with_arches;
   IntegratorType d_integrator;
+
+private:
+
+  SerialMPM(const SerialMPM&);
+  SerialMPM& operator=(const SerialMPM&);
+	 
 };
       
 } // end namespace Uintah
