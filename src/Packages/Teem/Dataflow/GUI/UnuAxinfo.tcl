@@ -213,9 +213,8 @@ itcl_class Teem_Unu_UnuAxinfo {
 	pack $att.type $att.dim -side top 
 	pack $att.tabs -side top -fill x -expand yes
 
-	frame $w.exec
-	pack $w.exec -side bottom -padx 5 -pady 5
-	makeSciButtonPanel $w.exec $w $this
+
+	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
 

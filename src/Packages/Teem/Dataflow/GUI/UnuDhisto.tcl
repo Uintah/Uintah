@@ -55,8 +55,8 @@ itcl_class Teem_Unu_UnuDhisto {
         iwidgets::entryfield $w.f.options.log -labeltext "log:" -textvariable $this-log
         pack $w.f.options.log -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
-	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

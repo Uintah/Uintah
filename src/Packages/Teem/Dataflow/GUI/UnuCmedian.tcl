@@ -92,8 +92,7 @@ itcl_class Teem_Unu_UnuCmedian {
 	pack $w.f.options.padlabel $w.f.options.pad -side left -anchor w 
 	
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
-	pack $w.f -expand 1 -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
