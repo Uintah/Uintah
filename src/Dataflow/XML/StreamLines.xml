@@ -72,11 +72,10 @@
         <componentname>ReadField</componentname>
       </port>
       <port>
-        <name>Colormap domain</name>
+        <name>Seeds</name>
         <description>
           <p>
-            The domain for a function that maps a data value to a color and
-	    opacity.
+            The seed points (in object space)
           </p>
         </description>
         <datatype>SCIRun::Field</datatype>
