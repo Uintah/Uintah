@@ -1705,9 +1705,9 @@ PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
 	  data(x, y, 1) = color_.g();
 	  data(x, y, 2) = color_.b();
 	  if (shadeType_ == CM2_SHADE_FLAT)
-	    data(x, y, 3) = 1.0;
+	    data(x, y, 3) = alpha_;
 	  else 
-	    data(x, y, 3) = Max(data(x, y, 3),float(alpha_*((3.0-sqrt(double((x-x0)*(x-x0)+(y-y0)*(y-y0))))/3.0)));
+	  data(x, y, 3) = Max(data(x, y, 3),float(alpha_*((3.0-sqrt(double((x-x0)*(x-x0)+(y-y0)*(y-y0))))/3.0)));
 	}
 }
 
