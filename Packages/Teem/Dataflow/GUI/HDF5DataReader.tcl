@@ -43,9 +43,14 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	global $this-filename
 	global $this-datasets
 	global $this-dumpname
+	global $this-selectionString
+	global $this-regexp
+
 	set $this-filename ""
 	set $this-datasets ""
 	set $this-dumpname ""
+	set $this-selectionString ""
+	set $this-regexp 0
 
 	global $this-ndims
 	set $this-ndims 0
@@ -176,46 +181,90 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	#option add *TreeView.Column.titleFont { Helvetica 12 bold }
 	option add *TreeView.Column.font { Courier 12 }
 
-	iwidgets::scrolledframe $w.treeview
+#	iwidgets::scrolledframe $w.treeview
+	iwidgets::labeledframe $w.treeview -labeltext "File Treeview"
 
 	set treeframe [$w.treeview childsite]
 
 	global tree
 	set tree [blt::tree create]    
 
-	blt::treeview $treeframe.tree \
-	    -width 0 \
-	    -selectmode multiple \
-	    -selectcommand [list $this SelectNotify] \
-	    -tree $tree
+	set treeview [Scrolled_Treeview $treeframe.tree \
+			  -width 0 \
+			  -selectmode multiple \
+			  -selectcommand [list $this SelectNotify] \
+			  -tree $tree]
 
-  	pack $treeframe.tree
+  	pack $treeframe.tree -fill x -expand yes
 
-	$treeframe.tree column configure treeView -text Group
-	$treeframe.tree column insert end Type Value
+	$treeview column configure treeView -text Group
+	$treeview column insert end Type Value
 
-	$treeframe.tree column configure Type Value -justify left -edit no
-	$treeframe.tree column configure treeView -hide no -edit no
-	$treeframe.tree text configure -selectborderwidth 0
+	$treeview column configure Type Value -justify left -edit no
+	$treeview column configure treeView -hide no -edit no
+	$treeview text configure -selectborderwidth 0
 
-	focus $treeframe.tree
+	focus $treeview
 
   	pack $w.treeview -fill both -expand yes -side top
 
-	$treeframe.tree column bind all <ButtonRelease-3> {
+	$treeview column bind all <ButtonRelease-3> {
 	    %W configure -flat no
 	}
 
-	$treeframe.tree column bind all <ButtonRelease-3> {
+	$treeview column bind all <ButtonRelease-3> {
 	    %W configure -flat no
 	}
 
-	foreach column [$treeframe.tree column names] {
-	    $treeframe.tree column configure $column -command [list $this SortColumn $column]
+	foreach column [$treeview column names] {
+	    $treeview column configure $column \
+		-command [list $this SortColumn $column]
 	}
 
-	pack $treeframe.tree -fill x -expand yes -side top
+	pack $treeview -fill x -expand yes -side top
 
+
+	iwidgets::labeledframe $w.sel -labeltext "Search Selection"
+	set sel [$w.sel childsite]
+
+	global $this-selectionString
+	global $this-regexp
+
+	iwidgets::entryfield $sel.name -textvariable $this-selectionString
+
+	label $sel.label -text "Reg-Exp" -width 7 -anchor w -just left
+	checkbutton $sel.regexp -variable $this-regexp
+	button $sel.path -text "Select Path" -command "$this AddSelection 0"
+	button $sel.node -text "Select Node" -command "$this AddSelection 1"
+
+	pack $sel.node $sel.path $sel.regexp $sel.label -side right -padx 3
+	pack $sel.name -side left -fill x -expand yes
+	pack $w.sel -fill x -expand yes -side top
+
+
+
+	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
+	set sd [$w.sd childsite]
+
+	set listbox [Scrolled_Listbox $sd.listbox -width 100 -height 10 -selectmode extended]
+
+	if { [string first "\{" $datasets] == 0 } {
+	    set tmp $datasets
+	} else {
+	    set tmp "\{"
+	    append tmp $datasets
+	    append tmp "\}"
+	}
+
+	foreach dataset $tmp {
+	    $listbox insert end $dataset
+	}
+
+	button $sd.delete -text "Delete Selection" \
+	    -command "$this DeleteSelection"
+
+	pack $sd.listbox $sd.delete -side top -fill x -expand yes
+	pack $w.sd -fill x -expand yes -side top
 
 
 	iwidgets::labeledframe $w.dm -labeltext "Data Management"
@@ -341,13 +390,18 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 		# Reselect the datasets
 		foreach dataset $tmp {
-		    set id [eval $treeframe.tree find -exact -full "{$dataset}"]
+		    set id [eval $treeview find -exact -full "{$dataset}"]
 
 		    if {"$id" != ""} {
-			$treeframe.tree selection set $id
-			$treeframe.tree open $id
-		    } else {
 
+			if { [eval $treeview entry isopen $id] == 1 } {
+			    $treeview selection set $id
+			} else {
+			    $treeview open $id
+			    $treeview selection set $id
+			    $treeview close $id
+			}
+		    } else {
 			set message "Could not find dataset: "
 			append message $dataset
 			$this-c error $message
@@ -446,7 +500,12 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
+	    set sd [$w.sd childsite]
+	    set listbox $sd.listbox
+	    $listbox.list delete 0 end
+
 	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
 
 	    global tree
 	    $tree delete root
@@ -476,8 +535,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	    close $fileId
 
-	    $treeframe.tree entry configure "attribute" -foreground green4
-	    $treeframe.tree entry configure "dataset"   -foreground cyan4
+	    $treeview entry configure "attribute" -foreground green4
+	    $treeview entry configure "dataset"   -foreground cyan4
 	}
     }
 
@@ -679,20 +738,21 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	if [ expr [winfo exists $w] ] {
 
 	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
 
-	    set old [$treeframe.tree sort cget -column] 
+	    set old [$treeview sort cget -column] 
 	    set decreasing 0
 	    if { "$old" == "$column" } {
-		set decreasing [$treeframe.tree sort cget -decreasing]
+		set decreasing [$treeview sort cget -decreasing]
 		set decreasing [expr !$decreasing]
 	    }
-	    $treeframe.tree sort configure -decreasing $decreasing -column $column -mode integer
-	    $treeframe.tree configure -flat yes
-	    $treeframe.tree sort auto yes
+	    $treeview sort configure -decreasing $decreasing -column $column -mode integer
+	    $treeview configure -flat yes
+	    $treeview sort auto yes
 
-	    blt::busy hold $treeframe.tree
+	    blt::busy hold $treeview
 	    update
-	    blt::busy release $treeframe.tree
+	    blt::busy release $treeview
 	}
     }
 
@@ -709,18 +769,19 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    if [ expr [winfo exists $w] ] {
 
 		set treeframe [$w.treeview childsite]
+		set treeview $treeframe.tree.tree
 
-		set groups     [$treeframe.tree tag nodes "group"]
-		set attributes [$treeframe.tree tag nodes "attribute"]
+		set groups     [$treeview tag nodes "group"]
+		set attributes [$treeview tag nodes "attribute"]
 
-		set ids [$treeframe.tree curselection]
+		set ids [$treeview curselection]
 
 		foreach id $ids {
 
 #		    Check to see if the selection is an attribute
 		    foreach attribute $attributes {
 			if { $attribute == $id } { 
-			    $treeframe.tree selection clear $id
+			    $treeview selection clear $id
 			    break
 			}
 		    }
@@ -728,20 +789,14 @@ itcl_class Teem_DataIO_HDF5DataReader {
 #		    Check to see if the selection is a group
 		    foreach group $groups {
 			if { $group == $id } { 
-			    $treeframe.tree selection clear $id
+			    $treeview selection clear $id
 			    SelectChildrenDataSet $id
 			    break
 			}
 		    }
 		}
-
-		set ids [$treeframe.tree curselection]
-		set names [eval $treeframe.tree get -full $ids]
-
-		global $this-datasets
-		set $this-datasets $names
-
-		$this-c update_selection;
+		
+		updateSelection
 	    }
 
 	    set allow_selection true
@@ -754,20 +809,25 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	if [ expr [winfo exists $w] ] {
 
 	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
 
-	    set datasets [$treeframe.tree tag nodes "dataset"]
-	    set groups   [$treeframe.tree tag nodes "group"]
+	    set datasets [$treeview tag nodes "dataset"]
+	    set groups   [$treeview tag nodes "group"]
 
-	    set children [eval $treeframe.tree entry children $parent]
+	    set children [eval $treeview entry children $parent]
 	    
 	    foreach child $children {
 
 		foreach dataset $datasets {
 		    if { $dataset == $child } {
 # Open the node so it can be selected properly
-			$treeframe.tree open $child
-			$treeframe.tree selection set $child
-			$treeframe.tree close $child
+			if { [eval $treeview entry isopen $child] == 1 } {
+			    $treeview selection set $child
+			} else {
+			    $treeview open $child
+			    $treeview selection set $child
+			    $treeview close $child
+			}
 			break
 		    }
 		}
@@ -781,4 +841,196 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    }
 	}
     }
-}
+
+
+    method updateSelection { } {
+
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    set ids [$treeview curselection]
+	    set names [eval $treeview get -full $ids]
+
+	    global $this-datasets
+	    set $this-datasets $names
+
+	    set sd [$w.sd childsite]
+	    set listbox $sd.listbox
+	    $listbox.list delete 0 end
+
+	    if { [string first "\{" $names] == 0 } {
+		set tmp $names
+	    } else {
+		set tmp "\{"
+		append tmp $names
+		append tmp "\}"
+	    }
+
+	    foreach dataset $tmp {
+		$listbox.list insert end $dataset
+	    }
+
+	    $this-c update_selection;
+	}
+    }
+
+
+    method AddSelection { node } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+
+	    global allow_selection
+	    set allow_selection false
+
+	    global $this-selectionString
+	    global $this-regexp
+
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    set path -full
+	    if { $node == 1 } {
+		set path -name
+	    }
+	    
+	    set match -exact
+	    if {[set $this-regexp] == 1 } {
+		set match -glob
+	    }
+
+	    set ids [eval $treeview find \
+			 $match $path "{[set $this-selectionString]}" \
+			    ]
+
+	    foreach id $ids {
+		if { [eval $treeview entry isopen $id] == 1 } {
+		    $treeview selection set $id
+		} else {
+		    $treeview open $id
+		    $treeview selection set $id
+		    $treeview close $id
+		}
+	    }
+	    
+	    set allow_selection true
+
+	    SelectNotify
+	}
+    }
+
+    method DeleteSelection { } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    set sd [$w.sd childsite]
+	    set listbox $sd.listbox
+
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    set indices [$listbox.list curselection]
+
+	    if { [string first "\{" [set $this-datasets]] == 0 } {
+		set tmp [set $this-datasets]
+	    } else {
+		set tmp "\{"
+		append tmp [set $this-datasets]
+		append tmp "\}"
+	    }
+	    
+	    set index 0
+	    # Reselect the datasets
+	    foreach dataset $tmp {
+
+		foreach idx $indices {
+		    if { $index == $idx } { 
+			set id [eval $treeview find -exact -full "{$dataset}"]
+			
+			if {"$id" != ""} {
+			    $treeview selection clear $id
+			    $treeview open $id
+			} else {
+			    
+			    set message "Could not find dataset: "
+			    append message $dataset
+			    $this-c error $message
+			}
+		    }
+		}
+
+		incr index
+	    }
+	}
+    }
+
+
+# Copied from Chapter 30 of Practical Programming in Tcl and Tk
+# by Brent B. Welch.Copyright 2000 Pentice Hall. 
+
+    method Scroll_Set {scrollbar geoCmd offset size} {
+	if {$offset != 0.0 || $size != 1.0} {
+	    eval $geoCmd ;# Make sure it is visible
+	}
+	$scrollbar set $offset $size
+    }
+
+    method Scrolled_Listbox { f args } {
+	frame $f
+	listbox $f.list \
+		-xscrollcommand [list $this Scroll_Set $f.xscroll \
+			[list grid $f.xscroll -row 1 -column 0 -sticky we]] \
+		-yscrollcommand [list $this Scroll_Set $f.yscroll \
+			[list grid $f.yscroll -row 0 -column 1 -sticky ns]]
+	eval {$f.list configure} $args
+	scrollbar $f.xscroll -orient horizontal \
+		-command [list $f.list xview]
+	scrollbar $f.yscroll -orient vertical \
+		-command [list $f.list yview]
+	grid $f.list -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
+	return $f.list
+    }
+
+    method Scrolled_Text { f args } {
+	frame $f
+	eval {text $f.text -wrap none \
+		  -xscrollcommand [list $f.xscroll set] \
+		  -yscrollcommand [list $f.yscroll set]} $args
+	scrollbar $f.xscroll -orient horizontal \
+	    -command [list $f.text xview]
+	scrollbar $f.yscroll -orient vertical \
+	    -command [list $f.text yview]
+	grid $f.text $f.yscroll -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
+	return $f.text
+    }
+
+    method Scrolled_Treeview { f args } {
+	frame $f
+	eval {blt::treeview $f.tree \
+		  -xscrollcommand [list $f.xscroll set] \
+		  -yscrollcommand [list $f.yscroll set]}
+	eval {$f.tree configure} $args
+
+	scrollbar $f.xscroll -orient horizontal \
+	    -command [list $f.tree xview]
+	scrollbar $f.yscroll -orient vertical \
+	    -command [list $f.tree yview]
+#	grid $f.tree $f.yscroll -sticky news
+#	grid $f.xscroll -sticky news
+#	grid rowconfigure $f 0 -weight 1
+#	grid columnconfigure $f 0 -weight 1
+	return $f.tree
+    }
+
+ }
+
+
