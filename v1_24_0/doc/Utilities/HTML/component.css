@@ -42,7 +42,7 @@ img.top-banner {
   margin-right: auto;
 }
 
-div.content {
+div#content {
   background-color: rgb(73, 91, 105);
   width: 800px;
   margin-left: auto;
@@ -51,7 +51,7 @@ div.content {
   padding-bottom: 0.25in;
 }
 
-div.content-layer1 {
+div#content-layer1 {
   padding-left: 5px;
   padding-right: 5px;
   background-color: white;
