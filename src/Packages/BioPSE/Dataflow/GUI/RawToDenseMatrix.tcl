@@ -94,7 +94,7 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-filename \
 		-command "$this working_files from-gui; destroy " \
 		-cancel "destroy " \

@@ -4418,9 +4418,9 @@ class BioTensorApp {
 
     method load_nrrd_dwi {} {
 	global mods
-        $mods(NrrdReader1) make_file_open_box
+	set theWindow [$mods(NrrdReader1) make_file_open_box]
 	
-	tkwait window .ui$mods(NrrdReader1)-fb
+	tkwait window $theWindow
 	
 	update idletasks
 
@@ -4432,9 +4432,9 @@ class BioTensorApp {
     
     method load_nrrd_t2 {} {
 	global mods
-        $mods(NrrdReader-T2) make_file_open_box
+        set theWindow [$mods(NrrdReader-T2) make_file_open_box]
 	
-	tkwait window .ui$mods(NrrdReader-T2)-fb
+	tkwait window $theWindow
 
  	global $mods(NrrdReader-T2)-axis
 	set $mods(NrrdReader-T2)-axis axis0
@@ -4540,9 +4540,9 @@ class BioTensorApp {
 
     method load_gradient {} {
         global mods
-        $mods(NrrdReader-Gradient) make_file_open_box
+        set theWindow [$mods(NrrdReader-Gradient) make_file_open_box]
 	
-        tkwait window .ui$mods(NrrdReader-Gradient)-fb
+        tkwait window $theWindow
 	
         update idletasks
 	
@@ -4693,9 +4693,9 @@ class BioTensorApp {
     
     method load_bmatrix {} {
 	global mods
-        $mods(NrrdReader-BMatrix) make_file_open_box
+        set theWindow [$mods(NrrdReader-BMatrix) make_file_open_box]
 	
-	tkwait window .ui$mods(NrrdReader-BMatrix)-fb
+	tkwait window $theWindow
 	
 	update idletasks
 	
