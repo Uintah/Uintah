@@ -97,7 +97,7 @@ SampleFieldRandomAlgoT<Mesh>::build_table(Mesh *mesh,
 	Vector v;
 	if (vfi->interpolate(v, p))
 	{
-	  elemsize = v.length() * mesh->get_element_size(*ei);
+	  elemsize = v.length() * mesh->get_size(*ei);
 	}
       }
       if (sfi.get_rep())
@@ -105,7 +105,7 @@ SampleFieldRandomAlgoT<Mesh>::build_table(Mesh *mesh,
 	double d;
 	if (sfi->interpolate(d, p) && d > 0.0)
 	{
-	  elemsize = d * mesh->get_element_size(*ei);
+	  elemsize = d * mesh->get_size(*ei);
 	}
       }
     }
@@ -132,7 +132,7 @@ SampleFieldRandomAlgoT<Mesh>::build_table(Mesh *mesh,
     }
     else if (dist == UNIUNI)
     { // size of element only
-      elemsize = mesh->get_element_size(*ei);
+      elemsize = mesh->get_size(*ei);
     }
     else if (dist == UNISCAT)
     { 
