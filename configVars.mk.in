@@ -400,8 +400,8 @@ ifeq ($(CC_DEPEND_MODE),normal)
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 else
 ifeq ($(CC_DEPEND_MODE),move)
-	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
-	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
 ifeq ($(CC_DEPEND_MODE),stdout)
@@ -414,7 +414,7 @@ ifeq ($(CC_DEPEND_MODE),stdout)
         #
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
-	($(ECHO) "$(dir $@)"; $(CXX) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CFLAGS) $(INCLUDES) -M -c $< | sed 's,^$(basename $@):,$@:,g' > $(basename $@).$(CC_DEPEND_EXT)
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
@@ -431,8 +431,8 @@ ifeq ($(CC_DEPEND_MODE),normal)
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 else
 ifeq ($(CC_DEPEND_MODE),move)
-	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
-	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
 ifeq ($(CC_DEPEND_MODE),stdout)
@@ -462,8 +462,8 @@ ifeq ($(F77_DEPEND_MODE),normal)
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
 else
 ifeq ($(F77_DEPEND_MODE),move)
-	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(F77_DEPEND_EXT)
-	cat $(basename $(notdir $@)).$(F77_DEPEND_EXT) >> $(basename $@).$(F77_DEPEND_EXT)
+	$(F77) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(F77_DEPEND_EXT)
 else
 ifeq ($(F77_DEPEND_MODE),stdout)
@@ -493,8 +493,8 @@ ifeq ($(CC_DEPEND_MODE),normal)
 	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 else
 ifeq ($(CC_DEPEND_MODE),move)
-	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
-	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	$(F77) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
 ifeq ($(CC_DEPEND_MODE),stdout)
@@ -508,6 +508,7 @@ ifeq ($(CC_DEPEND_MODE),stdout)
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	($(ECHO) "$(dir $@)"; $(CC) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
+	@rm -f $(basename $@).depend
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
