@@ -34,7 +34,7 @@ using std::endl;
 
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
-    : volren( glvr ), texName(0), reload((unsigned char *)1)
+  : volren( glvr ), texName(0), reload((unsigned char *)1), newbricks_(false)
 {
   // Base Class, holds pointer to VolumeRenderer and 
   // common computation
@@ -163,8 +163,10 @@ GLVolRenState::loadTexture(Brick& brick)
 {
 #ifdef __sgi
   if( !brick.texName() || reload ) {
-    if( !brick.texName() )
+    if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
+      textureNames.push_back( brick.texName() );
+    }
 
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 

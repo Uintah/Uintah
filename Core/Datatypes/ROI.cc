@@ -48,8 +48,13 @@ ROI::draw()
 {
   Ray viewRay;
   Brick* brick;
-  computeView(viewRay);
+  if( newbricks_ ){
+    glDeleteTextures( textureNames.size(), &(textureNames[0]));
+    textureNames.clear();
+    newbricks_ = false;
+  }
 
+  computeView(viewRay);
   
   ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
@@ -81,7 +86,7 @@ ROI::draw()
     loadTexture( b );
     makeTextureMatrix( b );
     enableTexCoords();
-    //setAlpha( b );
+    //    setAlpha( b );
     drawPolys( polys );
     disableTexCoords();
   }

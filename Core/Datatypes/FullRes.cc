@@ -40,6 +40,13 @@ FullRes::draw()
 {
   Ray viewRay;
   Brick* brick;
+
+  if( newbricks_ ){
+    glDeleteTextures( textureNames.size(), &(textureNames[0]));
+    textureNames.clear();
+    newbricks_ = false;
+  }
+
   computeView(viewRay);
   
   FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);

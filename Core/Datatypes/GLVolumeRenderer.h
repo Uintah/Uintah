@@ -91,7 +91,7 @@ public:
 
 
   void SetVol( GLTexture3DHandle tex ){ 
-    mutex.lock(); this->tex = tex; mutex.unlock();}
+    mutex.lock(); this->tex = tex; _state->NewBricks(); mutex.unlock();}
   void SetColorMap( ColorMapHandle map){
     mutex.lock(); this->cmap = map; BuildTransferFunctions();
     cmapHasChanged = true; mutex.unlock(); }
