@@ -1174,7 +1174,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       NCVariable<double> dTdt_NC;
       constCCVariable<double> mass_L_CC;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
-      constCCVariable<double> int_eng_L_ME_CC, old_int_eng_L_CC;
+      constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC;
       
       new_dw->getModifiable(gvelocity,    Mlb->gVelocityStarLabel,indx,patch);
       new_dw->getModifiable(gacceleration,Mlb->gAccelerationLabel,indx,patch);
@@ -1184,7 +1184,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
       new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
-      new_dw->get(int_eng_L_ME_CC, Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
+      new_dw->get(eng_L_ME_CC, Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
       double cv = mpm_matl->getSpecificHeat();     
 
       new_dw->allocateAndPut(dTdt_NC, Mlb->dTdt_NCLabel,        indx, patch);
@@ -1192,19 +1192,52 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       IntVector cIdx[8];
       Vector dvdt_tmp;
       double dTdt_tmp;
+      //__________________________________
+      //  Take care of momentum
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-       patch->findCellsFromNode(*iter,cIdx);
-       for(int in=0;in<8;in++){
+        patch->findCellsFromNode(*iter,cIdx);
+        for(int in=0;in<8;in++){
           dvdt_tmp  = (mom_L_ME_CC[cIdx[in]] - old_mom_L_CC[cIdx[in]])
-                    / (mass_L_CC[cIdx[in]] * delT);
-                                
-          dTdt_tmp  = ( int_eng_L_ME_CC[cIdx[in]] - old_int_eng_L_CC[cIdx[in]])
-                    / (mass_L_CC[cIdx[in]] * cv * delT); 
+                    / (mass_L_CC[cIdx[in]] * delT); 
+                    
           gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
-          gacceleration[*iter] +=  dvdt_tmp*.125;
-          dTdt_NC[*iter]       +=  dTdt_tmp*.125;
+          gacceleration[*iter] +=  dvdt_tmp*.125; 
         }
-      } 
+      }    
+      
+      //__________________________________
+      //  E Q  F O R M
+      if (d_ice->d_EqForm){
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+         patch->findCellsFromNode(*iter,cIdx);
+         for(int in=0;in<8;in++){
+                         // eng_L_ME = internal energy
+            dTdt_tmp  = ( eng_L_ME_CC[cIdx[in]] - old_int_eng_L_CC[cIdx[in]])
+                      / (mass_L_CC[cIdx[in]] * cv * delT);
+            dTdt_NC[*iter]  +=  dTdt_tmp*.125;
+          }
+        } 
+      }
+      //__________________________________
+      //   R A T E   F O R M
+      if (d_ice->d_RateForm){
+        double KE, int_eng_L_ME;
+        Vector vel_CC;
+      
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          patch->findCellsFromNode(*iter,cIdx);
+          for(int in=0;in<8;in++){
+            // convert total energy to internal energy
+            vel_CC = mom_L_ME_CC[cIdx[in]]/mass_L_CC[cIdx[in]];
+            KE = 0.5 * mass_L_CC[cIdx[in]] * vel_CC.length() * vel_CC.length();
+            int_eng_L_ME = eng_L_ME_CC[cIdx[in]] - KE;
+
+            dTdt_tmp  = ( int_eng_L_ME - old_int_eng_L_CC[cIdx[in]])
+                        / (mass_L_CC[cIdx[in]] * cv * delT); 
+            dTdt_NC[*iter]   +=  dTdt_tmp*.125;
+          }
+        }
+      }
   
       //---- P R I N T   D A T A ------ 
       if(switchDebug_InterpolateCCToNC) {
