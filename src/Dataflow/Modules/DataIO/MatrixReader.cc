@@ -67,12 +67,12 @@ MatrixReader::~MatrixReader()
 
 void MatrixReader::execute()
 {
-  string fn(filename_.get());
+  const string fn(filename_.get());
 
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
   if (stat(fn.c_str(), &buf)) {
-    error("Warning: couldn't get stats on file " + fn);
+    error("Couldn't get stats on file '" + fn + "'.");
     return;
   }
 
@@ -91,14 +91,14 @@ void MatrixReader::execute()
     old_filename_=fn;
     Piostream* stream=auto_istream(fn);
     if(!stream){
-      error("Error reading file: " + fn);
+      error("Error reading file '" + fn + "'.");
       return;
     }
     
     // Read the file
     Pio(*stream, handle_);
     if(!handle_.get_rep() || stream->error()){
-      error("Error reading Matrix from file: " + fn);
+      error("Error reading Matrix from file " + fn + "'.");
       delete stream;
       return;
     }

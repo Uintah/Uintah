@@ -70,16 +70,16 @@ void ColorMapWriter::execute()
     return;
 
   // If no name is provided, return
-  string fn(filename_.get());
+  const string fn(filename_.get());
   if (fn == "") {
-    error("No filename in ColorMapWriter.");
+    warning("No filename.");
     return;
   }
    
   // Open up the output stream
   Piostream* stream;
   string ft(filetype_.get());
-  if(ft=="Binary"){
+  if(ft=="Binary") {
     stream=scinew BinaryPiostream(fn, Piostream::Write);
   } else { // "ASCII"
     stream=scinew TextPiostream(fn, Piostream::Write);
