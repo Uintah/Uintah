@@ -705,7 +705,7 @@ class Eigenvalue
    
                   // Column modification
    
-                  for (int i = 0; i <= min(n,k+3); i++) {
+                  for (int i = 0; i <= TNT::min(n,k+3); i++) {
                      p = x * H[i][k] + y * H[i][k+1];
                      if (notlast) {
                         p = p + z * H[i][k+2];
@@ -881,7 +881,7 @@ class Eigenvalue
       for (int j = nn-1; j >= low; j--) {
          for (int i = low; i <= high; i++) {
             z = 0.0;
-            for (int k = low; k <= min(j,high); k++) {
+            for (int k = low; k <= TNT::min(j,high); k++) {
                z = z + V[i][k] * H[k][j];
             }
             V[i][j] = z;
