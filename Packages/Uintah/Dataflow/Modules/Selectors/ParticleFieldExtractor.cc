@@ -532,6 +532,7 @@ void PFEThread::run(){
 	  have_subset = true;
 	}
 	//cerr << "Got data\n";
+        break;
       case TypeDescription::int_type:
 	//cerr << "Getting data for ParticleVariable<int>\n";
 	archive.query(pvint, pfe->psVar.get(), matl, patch, pfe->time);
