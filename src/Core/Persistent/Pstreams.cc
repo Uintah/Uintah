@@ -209,6 +209,28 @@ void TextPiostream::end_cheap_delim()
     }
 }
 
+void TextPiostream::io(bool& data)
+{
+    if(err)return;
+    if(dir==Read){
+	ifstream& in=*istr;
+	in >> data;
+	if(!in){
+	    cerr << "Error reading char\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
+	expect(' ');
+    } else {
+	ofstream& out=*ostr;
+	out << data << " ";
+    }
+}
+
 void TextPiostream::io(char& data)
 {
     if(err)return;
@@ -687,6 +709,16 @@ void BinaryPiostream::end_cheap_delim()
     // No-op
 }
 
+void BinaryPiostream::io(bool& data)
+{
+    unsigned char tmp = data;
+    io(tmp);
+    if (dir == Read)
+    {
+      data = tmp;
+    }
+}
+
 void BinaryPiostream::io(char& data)
 {
     if(err)return;
@@ -874,6 +906,16 @@ void GzipPiostream::begin_cheap_delim()
 void GzipPiostream::end_cheap_delim()
 {
     // No-op
+}
+
+void GzipPiostream::io(bool& data)
+{
+    unsigned char tmp = data;
+    io(tmp);
+    if (dir == Read)
+    {
+      data = tmp;
+    }
 }
 
 void GzipPiostream::io(char& data)
@@ -1133,6 +1175,16 @@ void GunzipPiostream::begin_cheap_delim()
 void GunzipPiostream::end_cheap_delim()
 {
     // No-op
+}
+
+void GunzipPiostream::io(bool& data)
+{
+    unsigned char tmp = data;
+    io(tmp);
+    if (dir == Read)
+    {
+      data = tmp;
+    }
 }
 
 void GunzipPiostream::io(char& data)

@@ -52,6 +52,7 @@ public:
     virtual void begin_cheap_delim();
     virtual void end_cheap_delim();
 
+    virtual void io(bool&);
     virtual void io(char&);
     virtual void io(unsigned char&);
     virtual void io(short&);
@@ -82,6 +83,7 @@ public:
     virtual void begin_cheap_delim();
     virtual void end_cheap_delim();
 
+    virtual void io(bool&);
     virtual void io(char&);
     virtual void io(unsigned char&);
     virtual void io(short&);
@@ -112,6 +114,7 @@ public:
     virtual void begin_cheap_delim();
     virtual void end_cheap_delim();
 
+    virtual void io(bool&);
     virtual void io(char&);
     virtual void io(unsigned char&);
     virtual void io(short&);
@@ -143,6 +146,7 @@ public:
     virtual void begin_cheap_delim();
     virtual void end_cheap_delim();
 
+    virtual void io(bool&);
     virtual void io(char&);
     virtual void io(unsigned char&);
     virtual void io(short&);
