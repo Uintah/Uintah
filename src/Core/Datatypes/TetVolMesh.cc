@@ -481,6 +481,58 @@ TetVolMesh::inside4_p(int i, const Point &p) const
   return true;
 }
 
+//! return the volume of the tet.
+double 
+TetVolMesh::get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
+			       Vector& g2, Vector& g3)
+{
+  Point p1, p2, p3, p4;
+  node_array nodes;
+  get_nodes(nodes, ci);
+  get_point(p1, nodes[0]);
+  get_point(p2, nodes[1]);
+  get_point(p3, nodes[2]);
+  get_point(p4, nodes[3]);
+
+  double x1=p1.x();
+  double y1=p1.y();
+  double z1=p1.z();
+  double x2=p2.x();
+  double y2=p2.y();
+  double z2=p2.z();
+  double x3=p3.x();
+  double y3=p3.y();
+  double z3=p3.z();
+  double x4=p4.x();
+  double y4=p4.y();
+  double z4=p4.z();
+  double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+  double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+  double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+  double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+  double iV6=1./(a1+a2+a3+a4);
+
+  double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+  double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+  double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+  g0=Vector(b1*iV6, c1*iV6, d1*iV6);
+  double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+  double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+  double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+  g1=Vector(b2*iV6, c2*iV6, d2*iV6);
+  double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+  double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+  double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+  g2=Vector(b3*iV6, c3*iV6, d3*iV6);
+  double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+  double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+  double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+  g3=Vector(b4*iV6, c4*iV6, d4*iV6);
+
+  double vol=(1./iV6)/6.0;
+  return(vol);
+}
+
 
 #define TETVOLMESH_VERSION 1
 
