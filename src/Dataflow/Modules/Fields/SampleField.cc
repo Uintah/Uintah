@@ -174,16 +174,22 @@ SampleField::generate_widget_seeds(Field *field)
 
   rake_->GetEndpoints(min, max);
   
-  int max_seeds = maxSeeds_.get();
-
   Vector dir(max-min);
-  int num_seeds = (int)(rake_->GetRatio()*max_seeds);
+  int num_seeds = Max(0, maxSeeds_.get());
+  if (num_seeds <= 0)
+  {
+    remark("No seeds to send.");
+    return;
+  }
   remark("num_seeds = " + to_string(num_seeds));
-  dir*=1./(num_seeds-1);
+  if (num_seeds > 1)
+  {
+    dir *= 1.0 / (num_seeds - 1.0);
+  }
 
   PointCloudMesh* mesh = scinew PointCloudMesh;
   int loop;
-  for (int loop=0; loop<num_seeds; ++loop)
+  for (loop=0; loop<num_seeds; ++loop)
   {
     mesh->add_node(min+dir*loop);
   }
@@ -195,7 +201,7 @@ SampleField::generate_widget_seeds(Field *field)
   
   for (loop=0;loop<num_seeds;++loop)
   {
-    fdata[loop]=1;
+    fdata[loop]=loop;
   }
   seeds->freeze();
   ofport_->send(seeds);
