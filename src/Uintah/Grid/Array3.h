@@ -44,7 +44,10 @@ namespace Uintah {
 	 d_window=scinew Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
 	 d_window->addReference();
       }
-      Array3(const IntVector& lowIndex, const IntVector& highIndex);
+      Array3(const IntVector& lowIndex, const IntVector& highIndex) {
+	 d_window = 0;
+	 resize(lowIndex,highIndex);
+      };
       virtual ~Array3();
       Array3(const Array3& copy)
 	 : d_window(copy.d_window)
@@ -116,6 +119,10 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.13  2000/06/05 18:47:38  tan
+// Filled in the constructor
+// Array3(const IntVector& lowIndex, const IntVector& highIndex).
+//
 // Revision 1.12  2000/06/05 17:32:19  tan
 // Corrected errors in:
 //   1. Array3(int size1, int size2, int size3)
