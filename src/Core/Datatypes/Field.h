@@ -124,6 +124,11 @@ protected:
   string          d_currAttrib;
 };
 
+template <class T> T* Field::query_interface(T *)
+{
+  return dynamic_cast<T*>(this);
+}
+
 } // end namespace SCIRun
 
 #endif
