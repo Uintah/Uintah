@@ -1482,11 +1482,20 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
   tclID_ = (string) tclID;
 
+  GuiInt useglobal(ctx_->subVar(tclID+"-useglobal", false));
+  if (useglobal.valid() && useglobal.get())
+  {
+    setState(drawinfo, "global");
+    return;
+  }
+
   GuiString type(ctx_->subVar(tclID+"-type",false));
   if (type.valid()) {
-    if (type.get() == "Default")
+    if (type.get() == "Default") 
     {
-      setState(drawinfo,"global");	
+      // 'Default' should be unreachable now, subsumed by useglobal variable.
+      type.set("Gouraud"); // semi-backwards compatability.
+      setState(drawinfo,"global");
       return; // if they are using the default, con't change
     } 
     else if(type.get() == "Wire")
