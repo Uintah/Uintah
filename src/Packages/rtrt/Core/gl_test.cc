@@ -11,6 +11,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <iostream>
+#include <stdio.h>
 
 using namespace std;
 using namespace rtrt;
@@ -152,7 +153,7 @@ void run_gl_test() {
   glTranslatef(0.375, 0.375, 0.0);
   
   double framerate;
-  double past=Time::currentSeconds();
+  double past=SCIRun::Time::currentSeconds();
   //  for (int i = 0; i < 20000; i++) {
   for (;;) {
     glClearColor(1,0,1, 1);
@@ -167,7 +168,7 @@ void run_gl_test() {
     glVertex2f(50,200);
     glEnd();
     
-    double current=Time::currentSeconds();
+    double current=SCIRun::Time::currentSeconds();
     framerate = 1./ (current - past);
     //cerr << "dt1 = " << (current - past) << ",\tcurrent = " << current << ",\tpast = " << past << endl;
     past = current;
@@ -192,7 +193,7 @@ void run_gl_test() {
     glEnd();
     
     //    for (int i = 0; i < 1e8; i++);
-    current=Time::currentSeconds();
+    current=SCIRun::Time::currentSeconds();
     framerate = 1./ (current - past);
     //cerr << "dt2 = " << (current - past) << ",\tcurrent = " << current << ",\tpast = " << past << endl;
     past = current;
