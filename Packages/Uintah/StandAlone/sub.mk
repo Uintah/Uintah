@@ -12,7 +12,6 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 # sus
 
 SRCS := $(SRCDIR)/sus.cc
-SRCS := $(SRCS) $(SRCDIR)/FakeArches.cc
 
 ifeq ($(CC),newmpxlc)
   AIX_LIBRARY := \
@@ -22,7 +21,11 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
-        Packages/Uintah/CCA/Components/HETransformation 
+        Packages/Uintah/CCA/Components/HETransformation \
+        Packages/Uintah/CCA/Components/Arches/Mixing \
+        Packages/Uintah/CCA/Components/Arches/fortran \
+        Packages/Uintah/CCA/Components/Arches/Radiation \
+        Packages/Uintah/CCA/Components/Arches/Radiation/fortran
 endif
 
 PROGRAM := Packages/Uintah/StandAlone/sus
@@ -55,6 +58,8 @@ else
         Packages/Uintah/CCA/Components/Solvers \
         Packages/Uintah/CCA/Components/ICE \
         Packages/Uintah/CCA/Components/Examples \
+        Packages/Uintah/CCA/Components/Arches \
+        Packages/Uintah/CCA/Components/MPMArches \
         Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBRARY)
 endif
@@ -215,31 +220,6 @@ LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
-# pfs
-
-SRCS := $(SRCDIR)/pfs.cc
-PROGRAM := Packages/Uintah/StandAlone/pfs
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Core/Exceptions \
-        Core/Geometry
-endif
-
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
 # restart_merger
 
 SRCS := $(SRCDIR)/restart_merger.cc
@@ -284,6 +264,32 @@ uintah: sus \
         gambitFileReader \
         link_inputs
                 
+###############################################
+# pfs
+
+SRCS := $(SRCDIR)/pfs.cc
+PROGRAM := Packages/Uintah/StandAlone/pfs
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+      Packages/Uintah/Core/Grid \
+      Packages/Uintah/Core/Parallel \
+      Packages/Uintah/Core/Exceptions \
+      Packages/Uintah/Core/Math \
+      Packages/Uintah/Core/ProblemSpec \
+      Packages/Uintah/CCA/Ports \
+      Packages/Uintah/CCA/Components/ProblemSpecification \
+      Core/Exceptions \
+      Core/Geometry
+endif
+
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+###############################################
             
 link_inputs: 
 	@( ln -s $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs)
