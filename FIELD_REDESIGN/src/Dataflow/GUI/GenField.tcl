@@ -126,13 +126,13 @@ itcl_class PSECommon_Fields_GenField {
 
 	pack $w.f.r.functions
 
-
-	 frame $w.f.r.geom
-	 radiobutton $w.f.r.geom.structured -text Structured -variable $this-geomtype -value 1
-	 radiobutton $w.f.r.geom.unstructured -text Unstructured -variable $this-geomtype -value 2
-	 pack $w.f.r.geom.structured -side left
-	 pack $w.f.r.geom.unstructured -side right
-	 pack $w.f.r.geom -side top -fill x
+	
+	frame $w.f.r.geom
+	radiobutton $w.f.r.geom.structured -text Structured -variable $this-geomtype -value 1
+	radiobutton $w.f.r.geom.unstructured -text Unstructured -variable $this-geomtype -value 2
+	pack $w.f.r.geom.structured -side left
+	pack $w.f.r.geom.unstructured -side right
+	pack $w.f.r.geom -side top -fill x
 
 	frame $w.f.r.attrib
 
