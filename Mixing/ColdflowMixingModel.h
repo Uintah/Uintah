@@ -75,7 +75,7 @@ public:
       virtual void computeProps(const InletStream& inStream,
 				Stream& outStream);
       inline Stream speciesStateSpace(const std::vector<double>& mixVar) {
-	return 0;
+	//return 0;
       }
 
       // GROUP: Get Methods :
@@ -144,6 +144,11 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2001/11/28 23:43:10  jas
+// Commented out the return 0 in the speciesStateSpace since there is no
+// conversion from int to Stream.  This needs to be fixed by someone who
+// knows the proper fix.  The arches code will now compile.
+//
 // Revision 1.6  2001/11/27 23:29:01  spinti
 // Added "return 0" to function speciesStateSpace.
 //
