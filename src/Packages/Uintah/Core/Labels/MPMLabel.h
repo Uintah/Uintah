@@ -218,6 +218,7 @@ using std::vector;
       const VarLabel* pTypeLabel;
       const VarLabel* pTypeLabel_preReloc;
 
+      const VarLabel* gTypeLabel; 
       const VarLabel* gNormalRotRateLabel; 
       const VarLabel* gNormalRotMomentLabel; 
       const VarLabel* gNormalRotMassLabel; 

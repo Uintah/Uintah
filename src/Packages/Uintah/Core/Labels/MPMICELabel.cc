@@ -57,6 +57,9 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription());
   aveSurfTempLabel     = VarLabel::create("aveSurfTemp",
                      CCVariable<double>::getTypeDescription());
+
+  cTypeLabel           = VarLabel::create( "c.type",
+                     CCVariable<double>::getTypeDescription() );
 } 
 
 MPMICELabel::~MPMICELabel()
@@ -82,4 +85,6 @@ MPMICELabel::~MPMICELabel()
   //  WSB1 burn model
   VarLabel::destroy(TempGradLabel);
   VarLabel::destroy(aveSurfTempLabel);
+
+  VarLabel::destroy(cTypeLabel);
 }
