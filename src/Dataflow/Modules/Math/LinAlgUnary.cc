@@ -13,7 +13,6 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Math/function.h>
 #include <iostream>
 #include <sstream>
 #include <math.h>
@@ -162,13 +161,8 @@ void LinAlgUnary::execute() {
     int n = m->nrows()*m->ncols();
     Ceil(x, n);
   } else if (op == "Function") {
-    Function *f = new Function(1);
-    fnparsestring(function_.get().c_str(), &f);
-    m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    for (int i=0; i<n; i++)
-      x[i]=f->eval(&(x[i]));
+    // TODO: Implement this similar to TransformData
+    
   } else {
     warning("Don't know operation "+op);
     return;

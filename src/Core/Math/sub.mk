@@ -46,9 +46,6 @@ SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/TrigTable.cc	       \
             $(SRCDIR)/sci_lapack.cc	       \
             $(SRCDIR)/fft.c		       \
-            $(TARGDIR)/fnparser.cc	       \
-            $(TARGDIR)/fnscanner.cc	       \
-            $(SRCDIR)/function.cc	       \
             $(SRCDIR)/ssmult.c
 
 PSELIBS := Core/Exceptions Core/Containers
