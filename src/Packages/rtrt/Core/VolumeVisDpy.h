@@ -12,7 +12,7 @@
 
 namespace rtrt {
 
-class VolumeVis;
+class VolumeVisBase;
 
   class AlphaPos {
   public:
@@ -29,6 +29,7 @@ class VolumeVisDpy : public DpyBase {
   int histmax;
   int* hist_log;
   int histmax_log;
+  int nhist;
 #if 0
   // For the bounding box changes
   double bbox_min_x, bbox_min_y, bbox_min_z;
@@ -37,12 +38,11 @@ class VolumeVisDpy : public DpyBase {
   double range_max_x, range_max_y, range_max_z;
 #endif
   
-  friend class VolumeVis;
-  Array1<VolumeVis*> volumes;
+  Array1<VolumeVisBase*> volumes;
   char* in_file;
   float data_min, data_max;
   float scale;
-  float original_t_inc, current_t_inc, t_inc;
+  float original_t_inc, current_t_inc;
   Array1<Color> colors_index;
   Array1<AlphaPos> alpha_list;
   int ncolors;
@@ -66,13 +66,21 @@ public:
   VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas, int ncolors,
 	       float t_inc, char *in_file=0);
   virtual ~VolumeVisDpy();
-  void attach(VolumeVis* volume);
+  void attach(VolumeVisBase* volume);
   virtual void run();
   void setup_vars();
   void animate(bool& changed);
   void rescale_alphas(float new_t_inc);
   void create_alpha_transfer();
   void create_color_transfer();
+  inline float lookup_alpha(float val) {
+    return alpha_transform.lookup(val);
+  }
+  inline Color* lookup_color(float val) {
+    return color_transform.lookup(val);
+  }
+
+  float t_inc;
 };
 
 } // end namespace rtrt
