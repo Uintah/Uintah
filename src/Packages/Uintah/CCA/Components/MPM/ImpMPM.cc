@@ -1506,6 +1506,7 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
 
       NCVariable<Vector> dispInc;
       new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
+      dispInc.initialize(Vector(0.));
 
       if(!mpm_matl->getIsRigid()){  // i.e. Leave dispInc zero for Rigd Bodies
 	// remove fixed degrees of freedom and solve K*du = Q
