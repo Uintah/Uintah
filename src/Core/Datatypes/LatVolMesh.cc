@@ -133,8 +133,8 @@ LatVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
     const int j = jk % ny_;
     const int k = jk / ny_;
 
-    array[0] = Node::index_type(i+0, j, k);
-    array[1] = Node::index_type(i+1, j, k);
+    array[0] = Node::index_type(this, i+0, j, k);
+    array[1] = Node::index_type(this, i+1, j, k);
   }
   else
   {
@@ -146,8 +146,8 @@ LatVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
       const int i = ik / nz_;
       const int k = ik % nz_;
 
-      array[0] = Node::index_type(i, j+0, k);
-      array[1] = Node::index_type(i, j+1, k);
+      array[0] = Node::index_type(this, i, j+0, k);
+      array[1] = Node::index_type(this, i, j+1, k);
     }
     else
     {
@@ -157,8 +157,8 @@ LatVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
       const int i = ij % nx_;
       const int j = ij / nx_;
 
-      array[0] = Node::index_type(i, j, k+0);
-      array[1] = Node::index_type(i, j, k+1);
+      array[0] = Node::index_type(this, i, j, k+0);
+      array[1] = Node::index_type(this, i, j, k+1);
     }      
   }
 }
@@ -175,10 +175,10 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
     const int jk = xidx / (nx_ - 1);
     const int j = jk % (ny_ - 1);
     const int k = jk / (ny_ - 1);
-    array[0] = Node::index_type(i+0, j+0, k);
-    array[1] = Node::index_type(i+1, j+0, k);
-    array[2] = Node::index_type(i+1, j+1, k);
-    array[3] = Node::index_type(i+0, j+1, k);
+    array[0] = Node::index_type(this, i+0, j+0, k);
+    array[1] = Node::index_type(this, i+1, j+0, k);
+    array[2] = Node::index_type(this, i+1, j+1, k);
+    array[3] = Node::index_type(this, i+0, j+1, k);
   }
   else
   {
@@ -189,10 +189,10 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
       const int ik = yidx / (ny_ - 1);
       const int k = ik % (nz_ - 1);
       const int i = ik / (nz_ - 1);
-      array[0] = Node::index_type(i, j+0, k+0);
-      array[1] = Node::index_type(i, j+1, k+0);
-      array[2] = Node::index_type(i, j+1, k+1);
-      array[3] = Node::index_type(i, j+0, k+1);
+      array[0] = Node::index_type(this, i, j+0, k+0);
+      array[1] = Node::index_type(this, i, j+1, k+0);
+      array[2] = Node::index_type(this, i, j+1, k+1);
+      array[3] = Node::index_type(this, i, j+0, k+1);
     }
     else
     {
@@ -201,10 +201,10 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
       const int ij = zidx / (nz_ - 1);
       const int i = ij % (nx_ - 1);
       const int j = ij / (nx_ - 1);
-      array[0] = Node::index_type(i+0, j, k+0);
-      array[1] = Node::index_type(i+0, j, k+1);
-      array[2] = Node::index_type(i+1, j, k+1);
-      array[3] = Node::index_type(i+1, j, k+0);
+      array[0] = Node::index_type(this, i+0, j, k+0);
+      array[1] = Node::index_type(this, i+0, j, k+1);
+      array[2] = Node::index_type(this, i+1, j, k+1);
+      array[3] = Node::index_type(this, i+1, j, k+0);
     }
   }
 }
@@ -242,7 +242,7 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
   for (unsigned i = min.i_; i <= max.i_; i++) {
     for (unsigned j = min.j_; j <= max.j_; j++) {
       for (unsigned k = min.k_; k <= max.k_; k++) {
-	arr.push_back(Cell::index_type(i,j,k));
+	arr.push_back(Cell::index_type(this, i,j,k));
       }
     }
   }

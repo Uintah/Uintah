@@ -56,7 +56,7 @@ public:
   {
   public:
     LatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
-    LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k), mesh_(0) {}
+    //LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k), mesh_(0) {}
 
     LatIndex(const LatVolMesh *m, unsigned i, unsigned j, 
 	     unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
@@ -77,7 +77,8 @@ public:
   struct CellIndex : public LatIndex
   {
     CellIndex() : LatIndex() {}
-    CellIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}
+    CellIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+      : LatIndex(m, i,j,k) {}
     friend void Pio(Piostream&, CellIndex&);
     friend const TypeDescription* get_type_description(CellIndex *);
     friend const string find_type_name(CellIndex *);
@@ -86,7 +87,8 @@ public:
   struct NodeIndex : public LatIndex
   {
     NodeIndex() : LatIndex() {}
-    NodeIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}
+    NodeIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+      : LatIndex(m, i,j,k) {}
     static string type_name(int i=-1) { ASSERT(i<1); return "LatVolMesh::NodeIndex"; }
     friend void Pio(Piostream&, NodeIndex&);
     friend const TypeDescription* get_type_description(NodeIndex *);
@@ -120,7 +122,7 @@ public:
 
   struct LatIter : public LatIndex
   {
-    LatIter() : LatIndex(0, 0, 0) {}
+    LatIter() : LatIndex() {}
     LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIndex(m, i, j, k) {}
     
