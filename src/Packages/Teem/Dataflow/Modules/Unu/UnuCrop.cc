@@ -62,12 +62,14 @@ public:
   UnuCrop(SCIRun::GuiContext *ctx);
   virtual ~UnuCrop();
   virtual void execute();
-  void load_gui();
+  virtual void tcl_command(GuiArgs&, void*);
+
 private:
   vector<GuiInt*> mins_;
   vector<GuiInt*> maxs_;
   vector<GuiInt*> absmaxs_;
   GuiInt          num_axes_;
+  GuiInt          uis_;
   vector<int>     lastmin_;
   vector<int>     lastmax_;
   int             last_generation_;
@@ -82,39 +84,30 @@ DECLARE_MAKER(UnuCrop)
 UnuCrop::UnuCrop(SCIRun::GuiContext *ctx) : 
   Module("UnuCrop", ctx, Filter, "UnuAtoM", "Teem"), 
   num_axes_(ctx->subVar("num-axes")),
+  uis_(ctx->subVar("uis")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
   // this will get overwritten when tcl side initializes, but 
   // until then make sure it is initialized.
   num_axes_.set(0); 
-  load_gui();
+  lastmin_.resize(4, -1);
+  lastmax_.resize(4, -1);  
+
+  for (int a = 0; a < 4; a++) {
+    ostringstream str;
+    str << "minAxis" << a;
+    mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+    ostringstream str1;
+    str1 << "maxAxis" << a;
+    maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
+    ostringstream str2;
+    str2 << "absmaxAxis" << a;
+    absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+  }
 }
 
 UnuCrop::~UnuCrop() {
-}
-
-void
-UnuCrop::load_gui() {
-  num_axes_.reset();
-  if (num_axes_.get() == 0) { return; }
-   
-  lastmin_.resize(num_axes_.get(), -1);
-  lastmax_.resize(num_axes_.get(), -1);  
-
-  if (mins_.size() != (unsigned int) num_axes_.get()) {
-    for (int a = 0; a < num_axes_.get(); a++) {
-      ostringstream str;
-      str << "minAxis" << a;
-      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
-      ostringstream str1;
-      str1 << "maxAxis" << a;
-      maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
-      ostringstream str2;
-      str2 << "absmaxAxis" << a;
-      absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
-    }
-  }
 }
 
 void 
@@ -144,71 +137,94 @@ UnuCrop::execute()
   }
 
   num_axes_.reset();
-  
-  // If not the same nrrd check the dims.
-  if (last_generation_ != nrrdH->generation) {
-    last_generation_ = nrrdH->generation;
-    
-    load_gui();
 
-    bool do_clear = false;
-    // if the dim and sizes are the same don't clear.
-    if ((num_axes_.get() == nrrdH->nrrd->dim)) {
-      for (int a = 0; a < num_axes_.get(); a++) {
-	if (absmaxs_[a]->get() != nrrdH->nrrd->axis[a].size - 1) {
-	  do_clear = true;
-	  break;
-	}
-      }
-    } else {
-      do_clear = true;
-    }
+  bool new_dataset = (last_generation_ != nrrdH->generation);
+  bool first_time = (last_generation_ == -1);
 
-    // Different dims and sizes so clear.
-    if (do_clear) {
+  // create any resample axes that might have been saved
+  if (first_time) {
+    uis_.reset();
+    for(int i=4; i<uis_.get(); i++) {
+      ostringstream str, str2, str3, str4;
+      str << "minAxis" << i;
+      str2 << "maxAxis" << i;
+      str3 << "absmaxAxis" << i;
+      str4 << i;
+      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
 
-      lastmin_.clear();
-      lastmax_.clear();
-      vector<GuiInt*>::iterator iter = mins_.begin();
-      while(iter != mins_.end()) {
-	delete *iter;
-	++iter;
-      }
-      mins_.clear();
-      iter = maxs_.begin();
-      while(iter != maxs_.end()) {
-	delete *iter;
-	++iter;
-      }
-      maxs_.clear();
-      iter = absmaxs_.begin();
-      while(iter != absmaxs_.end()) {
-	delete *iter;
-	++iter;
-      }
-      absmaxs_.clear();
+      lastmin_.push_back(mins_[i]->get());
+      lastmax_.push_back(maxs_[i]->get());  
 
-      gui->execute(id.c_str() + string(" clear_axes"));
-      
-    
-      num_axes_.set(nrrdH->nrrd->dim);
-      num_axes_.reset();
-      load_gui();
-      gui->execute(id.c_str() + string(" init_axes"));
-
-      for (int a=0; a<num_axes_.get(); a++) {
-	mins_[a]->set(0);
-	absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
-	maxs_[a]->reset();
-	absmaxs_[a]->reset();
-      }
-    
-      ostringstream str;
-      str << id.c_str() << " set_max_vals" << endl; 
-      gui->execute(str.str());    
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
     }
   }
 
+  last_generation_ = nrrdH->generation;
+  num_axes_.set(nrrdH->nrrd->dim);
+  num_axes_.reset();
+
+  // remove any unused uis or add any needes uis
+  if (uis_.get() > nrrdH->nrrd->dim) {
+    // remove them
+    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+      ostringstream str;
+      str << i;
+      vector<GuiInt*>::iterator iter = mins_.end();
+      vector<GuiInt*>::iterator iter2 = maxs_.end();
+      vector<GuiInt*>::iterator iter3 = absmaxs_.end();
+      vector<int>::iterator iter4 = lastmin_.end();
+      vector<int>::iterator iter5 = lastmax_.end();
+      mins_.erase(iter, iter);
+      maxs_.erase(iter2, iter2);
+      absmaxs_.erase(iter3, iter3);
+
+      lastmin_.erase(iter4, iter4);
+      lastmax_.erase(iter5, iter5);
+
+      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
+  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    for (int i=uis_.get(); i < num_axes_.get(); i++) {
+      ostringstream str, str2, str3, str4;
+      str << "minAxis" << i;
+      str2 << "maxAxis" << i;
+      str3 << "absmaxAxis" << i;
+      str4 << i;
+      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+      maxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+      absmaxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
+
+      lastmin_.push_back(0);
+      lastmax_.push_back(nrrdH->nrrd->axis[i].size - 1); 
+
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
+  }
+  
+
+  if (new_dataset) {
+    for (int a=0; a<num_axes_.get(); a++) {
+      int max = nrrdH->nrrd->axis[a].size - 1;
+      maxs_[a]->reset();
+      absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
+      absmaxs_[a]->reset();
+      if (maxs_[a]->get() > max) {
+	maxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
+	maxs_[a]->reset();
+      }
+    }
+    
+    ostringstream str;
+    str << id.c_str() << " set_max_vals" << endl; 
+    gui->execute(str.str());  
+  }
+  
   if (num_axes_.get() == 0) {
     warning("Trying to crop a nrrd with no axes" );
     return;
@@ -282,7 +298,7 @@ UnuCrop::execute()
 
     if (nrrdCrop(nout, nin, min, max)) {
       char *err = biffGetDone(NRRD);
-      error(string("Trouble resampling: ") + err);
+      error(string("Trouble cropping: ") + err);
       msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
       free(err);
     }
@@ -327,5 +343,60 @@ UnuCrop::execute()
     }
     
     omatrix->send( last_matrixH_ );
+  }
+}
+
+void 
+UnuCrop::tcl_command(GuiArgs& args, void* userdata)
+{
+  if(args.count() < 2){
+    args.error("UnuCrop needs a minor command");
+    return;
+  }
+
+  if( args[1] == "add_axis" ) 
+  {
+      uis_.reset();
+      int i = uis_.get();
+      ostringstream str, str2, str3, str4;
+      str << "minAxis" << i;
+      str2 << "maxAxis" << i;
+      str3 << "absmaxAxis" << i;
+      str4 << i;
+      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+
+      lastmin_.push_back(0);
+      lastmax_.push_back(1023); 
+
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+
+      uis_.set(uis_.get() + 1);
+  }
+  else if( args[1] == "remove_axis" ) 
+  {
+    uis_.reset();
+    int i = uis_.get()-1;
+    ostringstream str;
+    str << i;
+    vector<GuiInt*>::iterator iter = mins_.end();
+    vector<GuiInt*>::iterator iter2 = maxs_.end();
+    vector<GuiInt*>::iterator iter3 = absmaxs_.end();
+    vector<int>::iterator iter4 = lastmin_.end();
+    vector<int>::iterator iter5 = lastmax_.end();
+    mins_.erase(iter, iter);
+    maxs_.erase(iter2, iter2);
+    absmaxs_.erase(iter3, iter3);
+    
+    lastmin_.erase(iter4, iter4);
+    lastmax_.erase(iter5, iter5);
+    
+    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    uis_.set(uis_.get() - 1);
+  }
+  else 
+  {
+    Module::tcl_command(args, userdata);
   }
 }

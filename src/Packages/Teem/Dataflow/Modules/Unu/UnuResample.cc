@@ -59,14 +59,14 @@ public:
   UnuResample(GuiContext *ctx);
   virtual ~UnuResample();
   virtual void execute();
+  virtual void tcl_command(GuiArgs&, void*);
 
 private:
-  void load_gui();
-
   NrrdIPort          *inrrd_;
   NrrdOPort          *onrrd_;
   GuiString           filtertype_;
   GuiInt              dim_;
+  GuiInt              uis_;
   vector<GuiString*>  resampAxes_;
   vector<string>      last_RA_;
   GuiDouble           sigma_;
@@ -86,6 +86,7 @@ UnuResample::UnuResample(GuiContext *ctx) :
   Module("UnuResample", ctx, Filter, "UnuNtoZ", "Teem"),
   filtertype_(ctx->subVar("filtertype")),
   dim_(ctx->subVar("dim")),
+  uis_(ctx->subVar("uis")),
   sigma_(ctx->subVar("sigma")),
   extent_(ctx->subVar("extent")),
   last_filtertype_(""), 
@@ -94,25 +95,19 @@ UnuResample::UnuResample(GuiContext *ctx) :
 {
   // value will be overwritten at gui side initialization.
   dim_.set(0);
+
+  last_RA_.resize(4, "--");
+  for (int a = 0; a < 4; a++) {
+    ostringstream str;
+    str << "resampAxis" << a;
+    resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+  }
 }
 
 UnuResample::~UnuResample() 
 {
 }
 
-
-void
-UnuResample::load_gui() {
-  dim_.reset();
-  if (dim_.get() == 0) { return; }
-
-  last_RA_.resize(dim_.get(), "--");
-  for (int a = 0; a < dim_.get(); a++) {
-    ostringstream str;
-    str << "resampAxis" << a;
-    resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
-  }
-}
 
 int 
 UnuResample::getint(const char *str, int *n, int *none) 
@@ -158,30 +153,51 @@ UnuResample::execute()
     return;
   }
   dim_.reset();
+  uis_.reset();
 
   bool new_dataset = (last_generation_ != nrrdH->generation);
   bool first_time = (last_generation_ == -1);
-  bool new_dim_size = (dim_.get() != nrrdH->nrrd->dim);
 
-  // update the number of axes
-  if (first_time || new_dim_size) {
-    // if we've set anything before, delete it
-    if (new_dim_size) {
-      last_RA_.clear();
-      vector<GuiString*>::iterator iter = resampAxes_.begin();
-      while(iter != resampAxes_.end()) {
-	delete *iter;
-	++iter;
-      }
-      resampAxes_.clear();
-      gui->execute(id.c_str() + string(" clear_axes"));
+  // create any resample axes that might have been saved
+  if (first_time) {
+    uis_.reset();
+    for(int i=4; i<uis_.get(); i++) {
+      ostringstream str, str2;
+      str << "resampAxis" << i;
+      str2 << i;
+      resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+      last_RA_.push_back(resampAxes_[i]->get());
+      gui->execute(id.c_str() + string(" make_min_max " + str2.str()));
     }
-    // setup the axes
-    last_generation_ = nrrdH->generation;
-    dim_.set(nrrdH->nrrd->dim);
-    dim_.reset();
-    load_gui();
-    gui->execute(id.c_str() + string(" init_axes"));
+  }
+
+  last_generation_ = nrrdH->generation;
+  dim_.set(nrrdH->nrrd->dim);
+  dim_.reset();
+
+  // remove any unused uis or add any needes uis
+  if (uis_.get() > nrrdH->nrrd->dim) {
+    // remove them
+    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+      ostringstream str;
+      str << i;
+      vector<GuiString*>::iterator iter = resampAxes_.end();
+      vector<string>::iterator iter2 = last_RA_.end();
+      resampAxes_.erase(iter, iter);
+      last_RA_.erase(iter2, iter2);
+      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
+  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    for (int i=uis_.get()-1; i< dim_.get(); i++) {
+      ostringstream str, str2;
+      str << "resampAxis" << i;
+      str2 << i;
+      resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+      last_RA_.push_back("x1");
+      gui->execute(id.c_str() + string(" make_min_max " + str2.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
   }
 
   filtertype_.reset();
@@ -282,5 +298,44 @@ UnuResample::execute()
   //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
+}
+
+void 
+UnuResample::tcl_command(GuiArgs& args, void* userdata)
+{
+  if(args.count() < 2){
+    args.error("UnuResample needs a minor command");
+    return;
+  }
+
+  if( args[1] == "add_axis" ) 
+  {
+      uis_.reset();
+      int i = uis_.get();
+      ostringstream str, str2;
+      str << "resampAxis" << i;
+      str2 << i;
+      resampAxes_.push_back(new GuiString(ctx->subVar(str.str())));
+      last_RA_.push_back("x1");
+      gui->execute(id.c_str() + string(" make_min_max " + str2.str()));
+      uis_.set(uis_.get() + 1);
+  }
+  else if( args[1] == "remove_axis" ) 
+  {
+    uis_.reset();
+    int i = uis_.get()-1;
+    ostringstream str;
+    str << i;
+    vector<GuiString*>::iterator iter = resampAxes_.end();
+    vector<string>::iterator iter2 = last_RA_.end();
+    resampAxes_.erase(iter, iter);
+    last_RA_.erase(iter2, iter2);
+    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    uis_.set(uis_.get() - 1);
+  }
+  else 
+  {
+    Module::tcl_command(args, userdata);
+  }
 }
 

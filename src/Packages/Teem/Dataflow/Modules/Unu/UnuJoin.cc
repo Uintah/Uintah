@@ -152,7 +152,6 @@ UnuJoin::execute()
   if (max_dim != dim_.get()) {    
     dim_.set(max_dim);
     dim_.reset();
-    gui->execute(id + " axis_radio");
   }
 
   // re-join if old axis is different from new
@@ -179,11 +178,6 @@ UnuJoin::execute()
       ++iter;
 
       NrrdData* cur_nrrd = nh.get_rep();
-      //if (i == 0) {
-      //new_label += string(cur_nrrd->nrrd->axis[0].label);
-      //} else {
-      //new_label += string(",") + string(cur_nrrd->nrrd->axis[0].label);
-      //}
       // does it need conversion to the bigger type?
       if (cur_nrrd->nrrd->type != onrrd_type_) {
 	Nrrd* new_nrrd = nrrdNew();
@@ -197,9 +191,6 @@ UnuJoin::execute()
       } else {
 	arr[i] = cur_nrrd->nrrd;
       }
-      //if (i == 0) {
-      //onrrd->copy_sci_data(*cur_nrrd);
-      //}
       ++i;
     }
     
@@ -215,8 +206,6 @@ UnuJoin::execute()
       return;
     }
 
-    // Take care of tuple axis label.
-    //onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
     onrrd_handle_ = onrrd;
   }
 
