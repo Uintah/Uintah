@@ -222,7 +222,7 @@ void MatlabMatricesWriter::execute()
 		mfile.open(filename,"w");   // open file for writing
 		
 		// Add an information tag to the data, so the origin of the file is known
-		// There are 124 bytes of free data storage at the header of the file.
+		// There are 116 bytes of free data storage at the header of the file.
 		// Do not start the file with 'SCI ', otherwise the file looks like a
 		// native SCIRun file which uses the same extension.
 		
@@ -238,13 +238,17 @@ void MatlabMatricesWriter::execute()
 			{   
 				// translate the matrix into a matlab structured array, which
 				// can also store some data from the property manager
-				translate_.sciMatrixTOmlArray(matrixhandle[p],ma,convertdataformat(dataformat[p]));
+				translate_.converttostructmatrix();
+				translate_.setdatatype(convertdataformat(dataformat[p]));
+				translate_.sciMatrixTOmlArray(matrixhandle[p],ma);
 			}
 			
 			if (matrixformat[p] == "numeric array")
 			{
 				// only store the numeric parts of the data
-				translate_.sciMatrixTOmlMatrix(matrixhandle[p],ma,convertdataformat(dataformat[p]));
+				translate_.converttonumericmatrix();
+				translate_.setdatatype(convertdataformat(dataformat[p]));
+				translate_.sciMatrixTOmlArray(matrixhandle[p],ma);
 			}
 				
 			if (ma.isempty())

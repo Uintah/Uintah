@@ -237,6 +237,7 @@ void MatlabFieldsReader::execute()
 }
 
 
+
 void MatlabFieldsReader::tcl_command(GuiArgs& args, void* userdata)
 {
 	if(args.count() < 2){
@@ -384,7 +385,7 @@ void MatlabFieldsReader::indexmatlabfile()
 				matrixnames += std::string("{" + ma.getname() + "} "); 
 				for (long q=0;q<NUMPORTS;q++)
 				{
-					if (ma.getname() == matrixnamelist[p]) foundmatrixname[p] = true;
+					if (ma.getname() == matrixnamelist[q]) foundmatrixname[q] = true;
 				}
 			}
 		}

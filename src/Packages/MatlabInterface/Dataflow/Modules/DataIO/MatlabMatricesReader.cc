@@ -381,7 +381,7 @@ void MatlabMatricesReader::indexmatlabfile()
 				matrixnames += std::string("{" + ma.getname() + "} "); 
 				for (long q=0;q<NUMPORTS;q++)
 				{
-					if (ma.getname() == matrixnamelist[p]) foundmatrixname[p] = true;
+					if (ma.getname() == matrixnamelist[q]) foundmatrixname[q] = true;
 				}
 			}
 		}

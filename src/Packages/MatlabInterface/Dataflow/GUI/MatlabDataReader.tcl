@@ -28,11 +28,11 @@
 
 
 
-itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
+itcl_class MatlabInterface_DataIO_MatlabDataReader {
 	inherit Module
 
 	constructor {config} {
-		set name MatlabNrrdsReader
+		set name MatlabFieldsReader
 		set_defaults
 	}
 
@@ -45,6 +45,9 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		global $this-filename-set
 		global $this-portsel
 		global $this-numport
+		global $this-portname
+		global $this-matrixinfotextslist
+		global $this-matrixnameslist
 		
 		set $this-filename ""
 		set $this-matrixinfotexts ""
@@ -53,8 +56,10 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		set $this-matriceslistbox ""
 		set $this-filename-set ""
 		set $this-portsel 0
-		set $this-numport 6
-		
+		set $this-numport 9
+		set $this-portname {{field %d} {field %d} {field %d} {matrix %d} {matrix %d} {matrix %d} {nrrd %d} {nrrd %d} {nrrd %d}}
+		set $this-matrixinfotextslist {""}
+		set $this-matrixnameslist {""}
 	}
 
 
@@ -62,11 +67,16 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 
 		global $this-filename
 		global $this-matrixinfotexts		
+		global $this-matrixnames
+		global $this-matrixname
 		global $this-matriceslistbox		
 		global $this-filename-entry
 		global $this-port
 		global $this-numport
 		global $this-portsel
+		global $this-portname
+		global $this-matrixinfotextslist
+		global $this-matrixnameslist
 
 		set w .ui[modname]
 
@@ -95,8 +105,8 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		label $childfile.f1.label -text ".MAT FILE "
 		entry $childfile.f1.file -textvariable $this-filename
 		set $this-filename-entry $childfile.f1.file  
-		button $childfile.f2.open -text "Open" -command "$this OpenMatfile"
-		button $childfile.f2.browse -text "Browse" -command "$this ChooseFile"
+		button $childfile.f2.open -text "Open" -command [format "%s OpenMatfile" $this]
+		button $childfile.f2.browse -text "Browse" -command [format "%s ChooseFile" $this]
 
 		pack $childfile.f1.label -side left -padx 3p -pady 2p -padx 4p
 		pack $childfile.f1.file -side left -fill x -expand yes -padx 3p -pady 2p
@@ -112,14 +122,16 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		set $this-port $childframe.portframe
 		
 		for {set x 0} {$x < [set $this-numport]} {incr x} {
-			button [set $this-port].$x -text [format "Port %d" [expr $x + 1]] -command [format "%s SetPort %d" $this $x]
+			button [set $this-port].$x -text [format [lindex [set $this-portname] $x] [expr $x + 1]] -command [format "%s SetPort %d" $this $x]
 			pack [set $this-port].$x  -side left -fill x -padx 2p -anchor w
 		}
 		[set $this-port].[set $this-portsel] configure -fg #FFFFFF
 
-		iwidgets::scrolledlistbox $childframe.listbox -selectmode single -selectioncommand "$this ChooseMatrix" -width 500p -height 300p
+		iwidgets::scrolledlistbox $childframe.listbox  -selectioncommand [format "%s ChooseMatrix" $this] -width 500p -height 300p
 		set $this-matriceslistbox $childframe.listbox
-		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts
+		set $this-matrixinfotexts [lindex [set $this-matrixinfotextslist] 0]
+		set $this-matrixnames [lindex [set $this-matrixnameslist] 0]
+		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts -selectmode browse
 		pack $childframe.listbox -fill both -expand yes
 
 		makeSciButtonPanel $w $w $this
@@ -139,9 +151,13 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		global $this-port
 		global $this-numport
 		global $this-portsel
-
+		global $this-matrixinfotextslist
+		global $this-matrixnameslist
 		
 		set $this-portsel $num
+
+		set $this-matrixinfotexts [lindex [set $this-matrixinfotextslist] $num]
+		set $this-matrixnames [lindex [set $this-matrixnameslist] $num]
 
 		set matrixname [lindex [set $this-matrixname] [set $this-portsel] ]
 		set selnum [lsearch [set $this-matrixnames] $matrixname]
@@ -236,6 +252,8 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		global $this-matrixname
 		global $this-matrixinfotexts
 		global $this-portsel
+		global $this-matrixnameslist
+		global $this-matrixinfotexts
 		
 		set $this-filename [set $this-filename-set] 
 		
@@ -243,6 +261,8 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		
 		$this-c indexmatlabfile
 
+		set $this-matrixinfotexts [lindex [set $this-matrixinfotextslist] [set $this-portsel]]
+		set $this-matrixnames [lindex [set $this-matrixnameslist] [set $this-portsel]]
 		set matrixname [lindex [set $this-matrixname] [set $this-portsel] ]
 		set selnum [lsearch [set $this-matrixnames] $matrixname]
 		[set $this-matriceslistbox] component listbox selection clear 0 end
@@ -257,13 +277,17 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 		global $this-matrixname
 		global $this-filename-entry
 		global $this-portsel
+		global $this-matrixnameslist
+		global $this-matrixinfotexts
 		
 		set $this-filename [[set $this-filename-entry] get] 
 		
 		# get the matrices in this file from the C++ side
 		
 		$this-c indexmatlabfile
-		
+
+		set $this-matrixinfotexts [lindex [set $this-matrixinfotextslist] [set $this-portsel]]
+		set $this-matrixnames [lindex [set $this-matrixnameslist] [set $this-portsel]]		
 		set matrixname [lindex [set $this-matrixname] [set $this-portsel] ]
 		set selnum [lsearch [set $this-matrixnames] $matrixname]
 		[set $this-matriceslistbox] component listbox selection clear 0 end

@@ -119,7 +119,7 @@ itcl_class MatlabInterface_DataIO_MatlabFieldsReader {
 		}
 		[set $this-port].[set $this-portsel] configure -fg #FFFFFF
 
-		iwidgets::scrolledlistbox $childframe.listbox  -selectioncommand [format "%s ChooseMatrix" $this] -width 400p -height 300p
+		iwidgets::scrolledlistbox $childframe.listbox  -selectioncommand [format "%s ChooseMatrix" $this] -width 500p -height 300p
 		set $this-matriceslistbox $childframe.listbox
 		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts -selectmode browse
 		pack $childframe.listbox -fill both -expand yes

@@ -237,13 +237,17 @@ void MatlabNrrdsWriter::execute()
 			{   
 				// translate the matrix into a matlab structured array, which
 				// can also store some data from the property manager
-				translate_.sciNrrdDataTOmlArray(matrixhandle[p],ma,convertdataformat(dataformat[p]));
+				translate_.converttostructmatrix();
+				translate_.setdatatype(convertdataformat(dataformat[p]));
+				translate_.sciNrrdDataTOmlArray(matrixhandle[p],ma);
 			}
 			
 			if (matrixformat[p] == "numeric array")
 			{
 				// only store the numeric parts of the data
-				translate_.sciNrrdDataTOmlMatrix(matrixhandle[p],ma,convertdataformat(dataformat[p]));
+				translate_.converttonumericmatrix();
+				translate_.setdatatype(convertdataformat(dataformat[p]));
+				translate_.sciNrrdDataTOmlArray(matrixhandle[p],ma);
 			}
 				
 			if (ma.isempty())

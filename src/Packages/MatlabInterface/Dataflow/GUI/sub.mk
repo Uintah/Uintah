@@ -38,6 +38,7 @@ SRCDIR := Packages/MatlabInterface/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/Matlab.tcl\
+	$(SRCDIR)/MatlabDataReader.tcl\
 	$(SRCDIR)/MatlabMatricesReader.tcl\
 	$(SRCDIR)/MatlabNrrdsReader.tcl\
 	$(SRCDIR)/MatlabNrrdsWriter.tcl\
