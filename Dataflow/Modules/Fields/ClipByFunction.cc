@@ -185,6 +185,8 @@ ClipByFunction::execute()
       gMode = 0;
     else if (gMode_.get() == "onenode")
       gMode = 1;
+    else if (gMode_.get() == "majoritynodes")
+      gMode = 2;
     else if (gMode_.get() == "allnodes")
       gMode = -1;
 
