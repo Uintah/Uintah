@@ -3,6 +3,9 @@
 
 // Headers
 #include <Core/Util/Assert.h>
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 // Base class
 #include <Packages/Uintah/Core/Math/Tensor.h>
@@ -34,8 +37,11 @@ namespace Uintah {
       /** Assignment operator */
       Tensor4D<T>& operator=(const Tensor4D<T>& tensor); 
 
-      /** Element access operator */
+      /** Element modification operator */
       T& operator()(int dim0, int dim1, int dim2, int dim3);
+
+      /** Element access operator */
+      T operator()(int dim0, int dim1, int dim2, int dim3) const;
 
     protected:
       
@@ -89,6 +95,16 @@ namespace Uintah {
   template <class T>
     inline T&
     Tensor4D<T>::operator()(int dim0, int dim1, int dim2, int dim3) 
+    {
+      ASSERT(!(dim0 < 0 || dim0 >= d_dim[0] || dim1 < 0 || dim1 >= d_dim[1] ||
+	       dim2 < 0 || dim2 >= d_dim[2] || dim3 < 0 || dim3 >= d_dim[3]));
+      return d_data[dim0*d_offset0 + dim1*d_offset1 + dim2*d_offset2 + dim3];
+    }
+
+  // Operator()
+  template <class T>
+    inline T
+    Tensor4D<T>::operator()(int dim0, int dim1, int dim2, int dim3) const
     {
       ASSERT(!(dim0 < 0 || dim0 >= d_dim[0] || dim1 < 0 || dim1 >= d_dim[1] ||
 	       dim2 < 0 || dim2 >= d_dim[2] || dim3 < 0 || dim3 >= d_dim[3]));
