@@ -43,7 +43,7 @@ MP(SiReOutput)
 using namespace PSECore::Dataflow;
 using namespace DaveW::Modules;
 
-#define RM(a,b,c,d) packageDB.registerModule("PSE Common",a,b,c,d)
+#define RM(a,b,c,d) packageDB.registerModule("DaveW",a,b,c,d)
 
 extern "C" {
 void initPackage(const clString& tcl) {
