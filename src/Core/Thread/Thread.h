@@ -15,6 +15,9 @@
 #ifndef SCICore_Thread_Thread_h
 #define SCICore_Thread_Thread_h
 
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Parallel2.h>
+#include <SCICore/Thread/Parallel3.h>
 #include <SCICore/share/share.h>
 
 namespace SCICore {
@@ -146,13 +149,55 @@ DESCRIPTION
 	    //////////
 	    // Start up several threads that will run in parallel.  A new
 	    // <b>ThreadGroup</b> is created as a child of the optional parent.
-	    // If <i>block</i> is true, theen the caller will block until all
+	    // If <i>block</i> is true, then the caller will block until all
 	    // of the threads return.  Otherwise, the call will return
 	    // immediately.
 	    static ThreadGroup* parallel(const ParallelBase& helper,
 					 int nthreads, bool block,
 					 ThreadGroup* threadGroup=0);
-	    
+
+	    //////////
+	    // Start up several threads that will run in parallel.
+	    // If <i>block</i> is true, then the caller will block until all
+	    // of the threads return.  Otherwise, the call will return
+	    // immediately.
+	    template<class T>
+	    static void parallel(T* ptr, void (T::*pmf)(int),
+				 int numThreads, bool block) {
+		parallel(Parallel<T>(ptr, pmf),
+			 numThreads, block);
+	    }
+
+	    //////////
+	    // Another overloaded version of parallel that passes 1 argument
+	    template<class T, class Arg1>
+	    static void parallel(T* ptr, void (T::*)(int, Arg1),
+				 int numThreads, bool block,
+				 Arg1 a1) {
+		parallel(Parallel1<T, Arg1>(ptr, pmf, a1),
+			 numThreads, block);
+	    }
+
+	    //////////
+	    // Another overloaded version of parallel that passes 2 arguments
+	    template<class T, class Arg1, class Arg2>
+	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2),
+				 int numThreads, bool block,
+				 Arg1 a1, Arg2 a2) {
+		parallel(Parallel2<T, Arg1, Arg2>(ptr, pmf, a1, a2),
+			 numThreads, block);
+	    }
+
+	    //////////
+	    // Another overloaded version of parallel that passes 3 arguments
+	    template<class T, class Arg1, class Arg2, class Arg3>
+	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2, Arg3),
+				 int numThreads, bool block,
+				 Arg1 a1, Arg2 a2, Arg3 a3) {
+		parallel(Parallel3<T, Arg1, Arg2, Arg3>(ptr, pmf, a1, a2, a3),
+			 numThreads, block);
+	    }
+
 	    //////////
 	    // Abort the current thread, or the process.  Prints a message on
 	    // stderr, and the user may choose one of:
@@ -176,6 +221,20 @@ DESCRIPTION
 	    // The calling process voluntarily gives up time to another process
 	    static void yield();
 
+	    //////////
+	    // SGI (irix 6.2-6.5.6 at least) maps page 0 for some
+	    // OpenGL registers.  This is extremely silly, because now
+	    // all programs that dereference null will not crash at
+	    // the deref, and will be much harder to debug.  The
+	    // thread library mprotects page 0 so that a deref of null
+	    // WILL crash.  However, OpenGL programs then break.  This
+	    // call unprotects page 0, making OpenGL work and also
+	    // making a deref of 0 succeed.  You should call it before
+	    // calling your first OpenGL function - usually
+	    // glXQueryExtension or glXChooseVisual, glXGetConfig or
+	    // similar.  Calling it multiple times is unncessary, but
+	    // harmless.
+	    static void allow_sgi_OpenGL_page0_sillyness();
 	private:
 	    friend class Barrier;
 	    friend class Mutex;
@@ -234,6 +293,20 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.19  2000/02/15 00:23:50  sparker
+// Added:
+//  - new Thread::parallel method using member template syntax
+//  - Parallel2 and Parallel3 helper classes for above
+//  - min() reduction to SimpleReducer
+//  - ThreadPool class to help manage a set of threads
+//  - unmap page0 so that programs will crash when they deref 0x0.  This
+//    breaks OpenGL programs, so any OpenGL program linked with this
+//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
+//    before calling any glX functions.
+//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
+//  - Added "volatile" to fetchop barrier implementation to workaround
+//    SGI optimizer bug
+//
 // Revision 1.18  1999/11/10 19:44:52  moulding
 // moved some data members and member functions from private: to public:
 // so that the many global functions that require it, have access.
