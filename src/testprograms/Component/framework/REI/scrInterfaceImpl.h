@@ -4,7 +4,7 @@
 
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
-#include <Core/CCA/Component/SSIDL/array.h>
+#include <Core/CCA/SSIDL/array.h>
 
 namespace sci_cca {
 

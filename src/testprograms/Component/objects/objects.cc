@@ -29,7 +29,7 @@
  */
 
 #include <iostream>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <testprograms/Component/objects/objects_sidl.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>

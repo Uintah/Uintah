@@ -6,7 +6,7 @@
 #include <string>
 
 #include <Core/Containers/StringUtil.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
 

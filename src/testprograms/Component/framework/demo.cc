@@ -6,7 +6,7 @@
 #include <Core/Thread/Thread.h>
 #include <testprograms/Component/framework/cca.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 
 using namespace sci_cca;
 using namespace SCIRun;

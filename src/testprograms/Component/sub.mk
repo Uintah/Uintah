@@ -43,5 +43,7 @@ SUBDIRS += \
 	$(SRCDIR)/passPPtr
 endif
 
+//SUBDIRS := $(SRCDIR)/pingpongArr $(SRCDIR)/pp0
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include <assert.h>
-#include <Core/CCA/Component/PIDL/MxNArrayRep.h>
+#include <Core/CCA/PIDL/MxNArrayRep.h>
 using namespace SCIRun;
 using namespace std;
 

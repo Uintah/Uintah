@@ -13,7 +13,7 @@
 
 #include <Core/Exceptions/InternalError.h>
 
-#include <Core/CCA/Component/SSIDL/array.h>
+#include <Core/CCA/SSIDL/array.h>
 
 #include <string>
 

@@ -33,9 +33,9 @@
 #include <iostream>
 #include <algorithm>
 
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/PIDL/MxNArrayRep.h>
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/MxNArrayRep.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 #include <Core/Thread/Time.h>
 
 #include <testprograms/Component/LUFactor/LUFactor_impl.h>

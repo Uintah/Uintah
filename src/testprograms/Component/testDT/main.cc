@@ -31,13 +31,13 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <Core/CCA/Component/Comm/DT/DTThread.h>
-#include <Core/CCA/Component/PIDL/URL.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/Comm/DT/DataTransmitter.h>
-#include <Core/CCA/Component/Comm/DT/DTMessage.h>
-#include <Core/CCA/Component/Comm/DT/DTPoint.h>
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/Comm/DT/DTThread.h>
+#include <Core/CCA/PIDL/URL.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/DT/DataTransmitter.h>
+#include <Core/CCA/Comm/DT/DTMessage.h>
+#include <Core/CCA/Comm/DT/DTPoint.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 #include <Core/Thread/Thread.h>
 
 using namespace SCIRun;

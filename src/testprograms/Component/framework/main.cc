@@ -3,7 +3,7 @@
 #include <testprograms/Component/framework/Builders/Builder.h>
 #include <testprograms/Component/framework/BuilderServicesImpl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 
 #include <unistd.h>
 #include <iostream>

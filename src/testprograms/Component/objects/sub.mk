@@ -22,8 +22,8 @@ SRCDIR := testprograms/Component/objects
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Component/Comm
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
+	Core/Exceptions Core/CCA/Comm
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)

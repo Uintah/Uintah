@@ -32,13 +32,13 @@
 #include <vector>
 #include <unistd.h>
 #include <string>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 
-#include <Core/CCA/Component/Comm/SocketEpChannel.h>
-#include <Core/CCA/Component/Comm/SocketSpChannel.h>
-#include <Core/CCA/Component/Comm/Message.h>
+#include <Core/CCA/Comm/SocketEpChannel.h>
+#include <Core/CCA/Comm/SocketSpChannel.h>
+#include <Core/CCA/Comm/Message.h>
 
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 
 #include <testprograms/Component/pp/PingPong_impl.h>
 

@@ -20,10 +20,10 @@
 #ifndef pp_interface
 #define pp_interface
 
-#include <Core/CCA/Component/PIDL/Object.h>
-#include <Core/CCA/Component/PIDL/Object_proxy.h>
-#include <Core/CCA/Component/PIDL/ProxyBase.h>
-#include <Core/CCA/Component/PIDL/pidl_cast.h>
+#include <Core/CCA/PIDL/Object.h>
+#include <Core/CCA/PIDL/Object_proxy.h>
+#include <Core/CCA/PIDL/ProxyBase.h>
+#include <Core/CCA/PIDL/pidl_cast.h>
 
 namespace PingPong {
 

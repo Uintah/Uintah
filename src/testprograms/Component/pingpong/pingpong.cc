@@ -29,9 +29,9 @@
  */
 
 #include <iostream>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 
 #include <testprograms/Component/pingpong/PingPong_impl.h>
 #include <testprograms/Component/pingpong/PingPong_sidl.h>

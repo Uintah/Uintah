@@ -5,8 +5,8 @@
 
 #include <iostream>
 #include <assert.h>
-#include <Core/CCA/Component/PIDL/MxNScheduleEntry.h>
-#include <Core/CCA/Component/SSIDL/array.h>
+#include <Core/CCA/PIDL/MxNScheduleEntry.h>
+#include <Core/CCA/SSIDL/array.h>
 using namespace SCIRun;
 using namespace std;
 
