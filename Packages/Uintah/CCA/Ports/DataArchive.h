@@ -103,6 +103,8 @@ private:
 				 int matl, double time, XMLURL& foundUrl);
     
     inline PatchHashMaps* findTimeData(double time);
+    void purgeTimeData(double time); // purge some caching
+    
     MaterialHashMaps* findPatchData(double time, const Patch* patch);
   private:
     map<double, PatchHashMaps> d_patchHashMaps;
@@ -117,6 +119,8 @@ private:
     PatchHashMaps();
     void init(XMLURL tsUrl, DOM_Node tsTopNode,
 	      int processor, int numProcessors);
+
+    void purgeCache(); // purge the cached data
     
     inline DOM_Node findVariable(const string& name, const Patch* patch,
 				 int matl, XMLURL& foundUrl);
@@ -178,6 +182,9 @@ public:
   void queryTimesteps( std::vector<int>& index,
 		       std::vector<double>& times );
   GridP queryGrid( double time );
+
+  void purgeTimestepCache(double time)
+  { if (d_varHashMaps) d_varHashMaps->purgeTimeData(time); }
   
 #if 0
   //////////
