@@ -75,7 +75,7 @@ public:
   //////////
   virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
-  // Interpolate Particle variables from Node-centered to cell-centered
+  // Interpolate Particle variables from Nodes to cell centers
   void scheduleInterpolateNCToCC(SchedulerP&,
 				 const PatchSet* patches,
 				 const MaterialSet* matls);
@@ -100,6 +100,13 @@ public:
 			   const MaterialSet* arches_matls,
 			   const MaterialSet* mpm_matls,
 			   const MaterialSet* all_matls);
+
+  // Calculate heat exchange terms for gas-solid interface
+  void scheduleEnergyExchange(SchedulerP& sched,
+			      const PatchSet* patches,
+			      const MaterialSet* arches_matls,
+			      const MaterialSet* mpm_matls,
+			      const MaterialSet* all_matls);
 
   // Interpolate all momentum and energy exchange sources from
   // face centers and accumulate with cell-center sources
@@ -146,18 +153,6 @@ public:
 		     DataWarehouse* old_dw,
 		     DataWarehouse* new_dw);
 
-  void putAllForcesOnCC(const ProcessorGroup*,
-		        const PatchSubset* patches,
-		        const MaterialSubset*,
-		        DataWarehouse* old_dw,
-		        DataWarehouse* new_dw);
-
-  void putAllForcesOnNC(const ProcessorGroup*,
-		        const PatchSubset* patches,
-		        const MaterialSubset*,
-		        DataWarehouse* old_dw,
-		        DataWarehouse* new_dw);
-
   void collectToCCGasMomExchSrcs(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset*,
@@ -179,6 +174,29 @@ public:
 
 #endif
 
+  void doEnergyExchange(const ProcessorGroup*,
+			const PatchSubset* patches,
+			const MaterialSubset*,
+			DataWarehouse* old_dw,
+			DataWarehouse* new_dw);
+
+  void collectToCCGasEnergyExchSrcs(const ProcessorGroup*,
+				    const PatchSubset* patches,
+				    const MaterialSubset*,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw);
+
+  void putAllForcesOnCC(const ProcessorGroup*,
+		        const PatchSubset* patches,
+		        const MaterialSubset*,
+		        DataWarehouse* old_dw,
+		        DataWarehouse* new_dw);
+
+  void putAllForcesOnNC(const ProcessorGroup*,
+		        const PatchSubset* patches,
+		        const MaterialSubset*,
+		        DataWarehouse* old_dw,
+		        DataWarehouse* new_dw);
 
   double d_SMALL_NUM;
   // GROUP: Constructors (Private):
@@ -198,6 +216,10 @@ public:
   SerialMPM*       d_mpm;
   Arches*          d_arches;
   bool             d_fracture;
+
+  double d_htcoeff;
+  bool d_calcEnergyExchange;
+
 };
       
 } // End namespace Uintah

@@ -31,6 +31,7 @@ LIBS := $(PETSC_LIBS) $(XML_LIBRARY) $(MPI_LIBRARY) -lm $(FLIBS)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/collect_drag_cc_fort.h
+$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/collect_scalar_fctocc_fort.h
 $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/interp_centertoface_fort.h
 $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/momentum_exchange_term_continuous_cc_fort.h
 $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/pressure_force_fort.h
