@@ -393,6 +393,8 @@ const TypeDescription* get_type_description(ImageMesh::Node *);
 const TypeDescription* get_type_description(ImageMesh::Edge *);
 const TypeDescription* get_type_description(ImageMesh::Face *);
 const TypeDescription* get_type_description(ImageMesh::Cell *);
+std::ostream& operator<<(std::ostream& os, const ImageMesh::ImageIndex& n);
+std::ostream& operator<<(std::ostream& os, const ImageMesh::ImageSize& s);
 
 } // namespace SCIRun
 

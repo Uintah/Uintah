@@ -1010,6 +1010,11 @@ const TypeDescription* get_type_description(MaskedLatVolMesh::Cell *);
 
 const TypeDescription* get_type_description(MaskedLatVolMesh::CellIndex *);
 
+std::ostream& operator<<(std::ostream& os, const MaskedLatVolMesh::NodeIndex& n);
+std::ostream& operator<<(std::ostream& os, const MaskedLatVolMesh::CellIndex& n);
+std::ostream& operator<<(std::ostream& os, const MaskedLatVolMesh::NodeSize& n);
+std::ostream& operator<<(std::ostream& os, const MaskedLatVolMesh::CellSize& n);
+
 } // namespace SCIRun
 
 #endif // SCI_project_MaskedLatVolMesh_h

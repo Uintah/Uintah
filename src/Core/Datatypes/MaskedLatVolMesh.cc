@@ -749,6 +749,7 @@ MaskedLatVolMesh::get_type_description() const
   return SCIRun::get_type_description((MaskedLatVolMesh *)0);
 }
 
+
 const TypeDescription*
 get_type_description(MaskedLatVolMesh *)
 {
@@ -839,6 +840,33 @@ get_type_description(MaskedLatVolMesh::Cell *)
   }
   return td;
 }
+
+std::ostream& 
+operator<<(std::ostream& os, const MaskedLatVolMesh::CellIndex& n) {
+  os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
+  return os;
+}
+
+std::ostream& 
+operator<<(std::ostream& os, const MaskedLatVolMesh::NodeIndex& n) {
+  os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
+  return os;
+}
+
+
+std::ostream& 
+operator<<(std::ostream& os, const MaskedLatVolMesh::NodeSize& n) {
+  os << (int)n << " (" << n.i_ << "," << n.j_ << "," << n.k_ << ")";
+  return os;
+}
+
+
+std::ostream& 
+operator<<(std::ostream& os, const MaskedLatVolMesh::CellSize& n) {
+  os << (int)n << " (" << n.i_ << "," << n.j_ << "," << n.k_ << ")";
+  return os;
+}
+
 
 
 } // namespace SCIRun

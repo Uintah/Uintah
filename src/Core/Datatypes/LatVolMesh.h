@@ -579,6 +579,10 @@ const TypeDescription* get_type_description(LatVolMesh::Cell *);
 
 const TypeDescription* get_type_description(LatVolMesh::CellIndex *);
 
+
+std::ostream& operator<<(std::ostream& os, const LatVolMesh::LatIndex& n);
+std::ostream& operator<<(std::ostream& os, const LatVolMesh::LatSize& s);
+
 } // namespace SCIRun
 
 #endif // SCI_project_LatVolMesh_h

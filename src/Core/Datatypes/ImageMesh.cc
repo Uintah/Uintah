@@ -593,6 +593,19 @@ ImageMesh::size(ImageMesh::Cell::size_type &s) const
 }
 
 
+std::ostream& 
+operator<<(std::ostream& os, const ImageMesh::ImageIndex& n) {
+  os << "[" << n.i_ << "," << n.j_ << "]";
+  return os;
+}
+
+std::ostream& 
+operator<<(std::ostream& os, const ImageMesh::ImageSize& s) {
+  os << (int)s << " (" << s.i_ << " x " << s.j_ << ")";
+  return os;
+}
+
+
 const TypeDescription*
 ImageMesh::get_type_description() const
 {
