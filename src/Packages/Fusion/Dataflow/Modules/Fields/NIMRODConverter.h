@@ -290,20 +290,71 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 						vector< int >& data,
 						vector< int >& modes)
 {
-  int rank = 3;
+  int rank = 0;
   int ndims = 3;
 
   int idim = nHandles[data[0]]->nrrd->axis[1].size; // Radial
   int jdim = nHandles[data[0]]->nrrd->axis[2].size; // Theta
   int kdim = nHandles[data[0]]->nrrd->axis[3].size; // Phi
 
+  string nrrdName;
+  if( data.size() == 1 ) {
+    nHandles[data[0]]->get_property( "Name", nrrdName );
+    if( nrrdName.find( ":Scalar" ) != string::npos )
+      rank = 1;
+    else if( nrrdName.find( ":Vector" ) != string::npos )
+      rank = 3;
+  } else if( data.size() == 3 ) {
+    rank = 3;
+  }
+
   NrrdData *nout = scinew NrrdData(true);
 
-  NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*3];
+  NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
 
   register int i,j,k,cc = 0;
 
-  if( data.size() == 3 ) {
+  if( data.size() == 1 ) {
+    NTYPE *ptr        = (NTYPE *)(nHandles[data[0  ]]->nrrd->data);  
+    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+
+    if( rank == 1 ) {
+      for( k=0; k<kdim; k++ ) {
+	for( j=0; j<jdim; j++ ) {
+	  for( i=0; i<idim; i++ ) {
+	  
+	    unsigned int index = (k * jdim + j) * idim + i;
+
+	    // Value
+	    ndata[cc] =  ptr[index];
+	  
+	    ++cc;
+	  }
+	}
+      }
+
+    } else if( rank == 3 ) {
+      for( k=0; k<kdim; k++ ) {
+	double cosPhi = cos( ptrMeshPhi[k] );
+	double sinPhi = sin( ptrMeshPhi[k] );
+
+	for( j=0; j<jdim; j++ ) {
+	  for( i=0; i<idim; i++ ) {
+	  
+	    unsigned int index = (k * jdim + j) * idim + i;
+
+	    // Value
+	    ndata[cc*3  ] =  ptr[index*3+1] * cosPhi - ptr[index*3] * sinPhi;
+	    ndata[cc*3+1] = -ptr[index*3+1] * sinPhi - ptr[index*3] * cosPhi;
+	    ndata[cc*3+2] =  ptr[index*3+2];
+	  
+	    ++cc;
+	  }
+	}
+      }
+    }
+
+  } else if( data.size() == 3 ) {
     NTYPE *ptrR   = (NTYPE *)(nHandles[data[R]]->nrrd->data);
     NTYPE *ptrZ   = (NTYPE *)(nHandles[data[Z]]->nrrd->data);
     NTYPE *ptrPhi = (NTYPE *)(nHandles[data[PHI]]->nrrd->data);
@@ -328,30 +379,6 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 	}
       }
     }
-  } else if( data.size() == 1 ) {
-
-    NTYPE *ptr        = (NTYPE *)(nHandles[data[0  ]]->nrrd->data);  
-    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
-
-
-    for( k=0; k<kdim; k++ ) {
-      double cosPhi = cos( ptrMeshPhi[k] );
-      double sinPhi = sin( ptrMeshPhi[k] );
-
-      for( j=0; j<jdim; j++ ) {
-	for( i=0; i<idim; i++ ) {
-	  
-	  unsigned int index = (k * jdim + j) * idim + i;
-
-	  // Value
-	  ndata[cc*3  ] =  ptr[index*3+1] * cosPhi - ptr[index*3] * sinPhi;
-	  ndata[cc*3+1] = -ptr[index*3+1] * sinPhi - ptr[index*3] * cosPhi;
-	  ndata[cc*3+2] =  ptr[index*3+2];
-	  
-	  ++cc;
-	}
-      }
-    }
   }
 
   string source;
@@ -369,7 +396,6 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 		  nrrdCenterNode, nrrdCenterNode,
 		  nrrdCenterNode, nrrdCenterNode);
 
-  string nrrdName;
   nHandles[data[0]]->get_property( "Name", nrrdName );
 
   string::size_type pos = nrrdName.find( "R:Scalar" );
@@ -419,17 +445,36 @@ NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 						vector< int >& data,
 						vector< int >& modes)
 {
-  unsigned int ndims = 3;
+  unsigned int rank, ndims = 3;
+  int idim, jdim, kdim;
 
-  int idim = nHandles[data[  0]]->nrrd->axis[0].size; // Radial
-  int jdim = nHandles[data[  0]]->nrrd->axis[1].size; // Theta
-  int kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
+  string nrrdName;
+
+  nHandles[data[0]]->get_property( "Name", nrrdName );
+
+  if( data.size() == 2 ) {
+    if( nrrdName.find( ":Scalar" ) != string::npos ) {
+      idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
+      jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
+      rank = 1;
+    } else if( nrrdName.find( ":Vector" ) != string::npos ) {
+      idim = nHandles[data[0]]->nrrd->axis[1].size; // Radial
+      jdim = nHandles[data[0]]->nrrd->axis[2].size; // Theta
+      rank = 3;
+    }
+  } else if( data.size() == 6 ) {
+    idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
+    jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
+    rank = 3;
+  }
+
+
+  kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
 
   NrrdData *nout = scinew NrrdData(true);
 
   register int i,j,k,m,cc = 0;
 
-  unsigned int rank = data.size() / 2;
 
   NTYPE *ptrs[data.size()];
 
@@ -439,33 +484,77 @@ NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
   NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
   NTYPE *ptrMeshK   = (NTYPE *)(nHandles[mesh[K]]->nrrd->data);
 
-  int nmodes = nHandles[mesh[K]]->nrrd->axis[1].size;
+  int nmodes = nHandles[mesh[K]]->nrrd->axis[0].size;
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
 
-  for( k=0; k<kdim; k++ ) {
+  double mmin=+1.0e16;
+  double mmax=-1.0e16;
+
+  if( data.size() == 2 ) {
+    for( k=0; k<kdim; k++ ) {
     
-    double phi = ptrMeshPhi[k];
+      double phi = ptrMeshPhi[k];
 
-    for( j=0; j<jdim; j++ ) {
-      for( i=0; i<idim; i++ ) {	
-      	for( m=0; m<nmodes; m++ ) {  // Mode loop.
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {	
 
-	  if( modes[m] || modes[nmodes] ) {
-	    unsigned int index = (m * jdim + j) * idim + i;
+	  for( unsigned int c=0; c<rank; c++ )
+	    ndata[cc*rank+c] = 0.0;
+
+	  for( m=0; m<nmodes; m++ ) {  // Mode loop.
+
+	    if( modes[m] || modes[nmodes] ) {
+	      unsigned int index = (m * jdim + j) * idim + i;
 	
-	    double angle = ptrMeshK[m] * phi; // Mode * phi slice.
+	      double angle = ptrMeshK[m] * phi; // Mode * phi slice.
 
-	    for( unsigned int c=0; c<rank; c++ )
-	      ndata[cc*rank+c] = 0;
+	      for( unsigned int c=0; c<rank; c++ ) {
+		ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[0][index*rank+c] -
+					    sin( angle ) * ptrs[1][index*rank+c] );
 
-	    for( unsigned int c=0; c<rank; c++ )
-	      ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[c     ][index] -
-					  sin( angle ) * ptrs[c+rank][index] );
+		if( ptrs[0][index*rank+c] < mmin )
+		  mmin = ptrs[0][index*rank+c];
+		if( ptrs[1][index*rank+c] < mmin )
+		  mmin = ptrs[1][index*rank+c];
+		if( ptrs[0][index*rank+c] > mmax )
+		  mmax = ptrs[0][index*rank+c];
+		if( ptrs[1][index*rank+c] > mmax )
+		  mmax = ptrs[1][index*rank+c];
+	      }
+	    }
 	  }
-	}
 
-	++cc;
+	  ++cc;
+	}
+      }
+    }
+  }
+  else if( data.size() == 6 ) {
+    for( k=0; k<kdim; k++ ) {
+    
+      double phi = ptrMeshPhi[k];
+
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {	
+	  for( m=0; m<nmodes; m++ ) {  // Mode loop.
+
+	    for( unsigned int c=0; c<rank; c++ )
+	      ndata[cc*rank+c] = 0.0;
+
+	    if( modes[m] || modes[nmodes] ) {
+	      unsigned int index = (m * jdim + j) * idim + i;
+	
+	      double angle = ptrMeshK[m] * phi; // Mode * phi slice.
+
+	      for( unsigned int c=0; c<rank; c++ )
+		ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[c  ][index] -
+					   sin( angle ) * ptrs[c+3][index] );
+	    }
+	  }
+
+	  ++cc;
+	}
       }
     }
   }
@@ -497,7 +586,6 @@ NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 		    nrrdCenterNode, nrrdCenterNode);
   }
 
-  string nrrdName;
   nHandles[data[0]]->get_property( "Name", nrrdName );
 
   char tmpstr[12];
