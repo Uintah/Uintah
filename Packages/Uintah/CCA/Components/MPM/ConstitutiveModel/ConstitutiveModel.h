@@ -79,6 +79,10 @@ WARNING
 				       const MPMMaterial* matl,
 				       DataWarehouse* new_dw) = 0;
 
+	 virtual void addInitialComputesAndRequires(Task* task,
+                                             const MPMMaterial* matl,
+                                             const PatchSet* patches) const = 0;
+
 	 virtual void addComputesAndRequires(Task* task,
 					   const MPMMaterial* matl,
 					   const PatchSet* patches) const = 0;
