@@ -9,11 +9,13 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
+
 SRCS     += \
 	$(SRCDIR)/ApplyFEMCurrentSource.cc\
+	$(SRCDIR)/BuildFDMatrix.cc\
 	$(SRCDIR)/BuildFEMatrix.cc\
-#	$(SRCDIR)/BuildFDMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/BuildFEMatrix.cc\
 #	$(SRCDIR)/DipoleInSphere.cc\
 
 PSELIBS := Packages/BioPSE/Core/Datatypes Core/Datatypes \
