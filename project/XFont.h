@@ -21,19 +21,20 @@ struct XFont {
 	Bold,
 	Medium,
     };
-    XFont(int pointsize, Face face);
+    XFont(int pointsize, Face face, int monospaced=0);
     XFontStruct* font;
 };
 
 struct XFontIndex {
     int pointsize;
     XFont::Face face;
+    int monospaced;
     int operator==(const XFontIndex&);
 };
 
 inline int Hash(const XFontIndex& k, int hash_size)
 {
-    return ((k.pointsize^(3*hash_size+1))+(int)k.face)%hash_size;
+    return ((k.pointsize^(3*hash_size+1))+(int)k.face+3*k.monospaced)%hash_size;
 }
 
 

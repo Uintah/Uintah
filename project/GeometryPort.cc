@@ -33,7 +33,8 @@ GeometryIPort::~GeometryIPort()
 }
 
 GeometryOPort::GeometryOPort(Module* module, const clString& portname, int protocol)
-: OPort(module, Geometry_type, portname, Geometry_color, protocol)
+: OPort(module, Geometry_type, portname, Geometry_color, protocol),
+  outbox(0)
 {
 }
 
@@ -75,11 +76,11 @@ void GeometryOPort::finish()
     }
 }
 
-GeomID GeometryOPort::addObj(GeomObj* obj)
+GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name)
 {
     turn_on();
     GeomID id=serial++;
-    outbox->send(new GeometryComm(portid, id, obj));
+    outbox->send(new GeometryComm(portid, id, obj, name));
     dirty=1;
     turn_off();
     return id;
@@ -114,9 +115,10 @@ GeometryComm::GeometryComm(Mailbox<int>* reply)
 {
 }
 
-GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj)
+GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj,
+			   const clString& name)
 : MessageBase(MessageTypes::GeometryAddObj),
-  portno(portno), serial(serial), obj(obj)
+  portno(portno), serial(serial), obj(obj), name(name)
 {
 }
 

@@ -1,5 +1,9 @@
 #!/bin/csh -f
-(cd $1 && echo "static int _dummy_;" > x.c && ls *.{c,cc}) > tmpl_cclist.new
+set savedir = $PWD
+if(! -f $1/x.c) then
+	 echo "static int _dummy_;" > $1/x.c
+endif
+(cd $1 && ls *.{c,cc}) > tmpl_cclist.new
 if ( -f tmpl_cclist ) then
 else
   touch tmpl_cclist

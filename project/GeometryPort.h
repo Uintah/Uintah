@@ -16,6 +16,7 @@
 
 #include <MessageBase.h>
 #include <Port.h>
+#include <Classlib/String.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
 #include <Multitask/ITC.h>
@@ -53,7 +54,7 @@ public:
     GeometryOPort(Module*, const clString& name, int protocol);
     virtual ~GeometryOPort();
 
-    GeomID addObj(GeomObj*);
+    GeomID addObj(GeomObj*, const clString& name);
     void delObj(GeomID);
     void delAll();
     void flushViews();
@@ -62,7 +63,7 @@ public:
 class GeometryComm : public MessageBase {
 public:
     GeometryComm(Mailbox<int>*);
-    GeometryComm(int, GeomID, GeomObj*);
+    GeometryComm(int, GeomID, GeomObj*, const clString&);
     GeometryComm(int, GeomID);
     GeometryComm(int);
     GeometryComm();
@@ -72,6 +73,7 @@ public:
     int portno;
     GeomID serial;
     GeomObj* obj;
+    clString name;
 };
 
 #endif /* SCI_project_GeometryPort_h */

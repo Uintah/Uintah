@@ -37,18 +37,39 @@ extern MtXEventLoop* evl;
 #define MEMSTATS_INLISTCOLOR "blue"
 #define MEMSTATS_UNFREEDCOLOR "red"
 #define MEMSTATS_UPDATE_MS 500 // 2X per second...
+#define MEMSTATS_NLINES 100
+#define MEMSTATS_TITLE "  ssize   lsize        reqd     deld  inlist  inuse"
+#define MEMSTATS_MAXWIDTH "*100"
 
 MemStats::MemStats(NetworkEditor* netedit)
 : netedit(netedit)
 {
     evl->lock();
+    stats_font=new XFont(MEMSTATS_FONTSIZE, MEMSTATS_FONTFACE, 1);
     dialog=new DialogShellC;
     dialog->Create("Memory Stats", "Memory Stats", evl->get_display());
+    int dir;
+    XCharStruct dim;
+    if(!XTextExtents(stats_font->font, MEMSTATS_TITLE, strlen(MEMSTATS_TITLE),
+		     &dir, &ascent, &descent, &dim)){
+	cerr << "XTextExtents failed???\n";
+    }
+    textwidth=dim.width;
+    graphwidth=textwidth/2;
+    if(!XTextExtents(stats_font->font, MEMSTATS_MAXWIDTH, strlen(MEMSTATS_MAXWIDTH),
+		     &dir, &ascent, &descent, &dim)){
+	cerr << "XTextExtents failed???\n";
+    }
+    int factwidth=dim.width;
+    if(!XTextExtents(stats_font->font, "Xpq", 3, &dir, &ascent, &descent,
+		     &dim)){
+	cerr << "XTextExtents failed...\n";
+	exit(-1);
+    }
+    line_height=ascent+descent-1;
     drawing_a=new DrawingAreaC;
-    textwidth=255;
-    graphwidth=150;
-    drawing_a->SetWidth(textwidth+graphwidth+20);
-    drawing_a->SetHeight(830);
+    drawing_a->SetWidth(textwidth+graphwidth+factwidth);
+    drawing_a->SetHeight(MEMSTATS_NLINES*line_height);
     drawing_a->SetShadowThickness(0);
     drawing_a->SetResizePolicy(XmRESIZE_NONE);
     // Add redraw callback...
@@ -58,7 +79,6 @@ MemStats::MemStats(NetworkEditor* netedit)
     drawing_a->Create(*dialog, "memory_stats");
 
     dpy=evl->get_display();
-    stats_font=new XFont(MEMSTATS_FONTSIZE, MEMSTATS_FONTFACE);
     win=XtWindow(*drawing_a);
     gc=XCreateGC(dpy, win, 0, 0);
     fgcolor=new XQColor(netedit->color_manager, MEMSTATS_FGCOLOR);
@@ -85,14 +105,6 @@ MemStats::MemStats(NetworkEditor* netedit)
 	    lines[i]=nnz++;
 	}
     }
-    XCharStruct dim;
-    int dir;
-    if(!XTextExtents(stats_font->font, "Xpq", 3, &dir, &ascent, &descent,
-		     &dim)){
-	cerr << "XTextExtents failed...\n";
-	exit(-1);
-    }
-    line_height=ascent+descent-1;
 
 
     // Create the timer callback...
@@ -129,10 +141,8 @@ void MemStats::redraw(CallbackData*, void*)
     drawing_a->GetValues();
     width=w;
     height=h;
-    char buf[1000];
-    sprintf(buf, " ssize  lsize        reqd     deld  inlist  inuse");
     XSetForeground(dpy, gc, fgcolor->pixel());
-    write_text_line(x,y,buf);
+    write_text_line(x,y,MEMSTATS_TITLE);
     for(int i=0;i<nbins;i++){
 	if(old_inlist[i] || old_reqd[i] || old_deld[i]){
 	    redraw_bin(i, lines[i], 0);
@@ -150,7 +160,7 @@ void MemStats::redraw_bin(int bin, int line, int cflag)
 	XClearArea(dpy, win, x, y, width-x, line_height+1, False);
     }
     char buf[1000];
-    sprintf(buf, "%6d-%6d : %9d%9d %7d%7d", old_ssize[bin], old_lsize[bin],
+    sprintf(buf, "%7d-%7d : %9d%9d %7d%7d", old_ssize[bin], old_lsize[bin],
 	    old_reqd[bin], old_deld[bin], old_inlist[bin],
 	    old_reqd[bin]-old_deld[bin]);
     XSetForeground(dpy, gc, fgcolor->pixel());
