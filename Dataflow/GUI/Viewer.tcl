@@ -552,7 +552,7 @@ itcl_class ViewWindow {
 
 	switchvisual 0
 	$this-c startup
-
+	
 #	puts [pack slaves $w]
 	pack slaves $w
     }
@@ -1659,11 +1659,16 @@ itcl_class ViewWindow {
 	set color [format "#%04x%04x%04x" $ir $ig $ib]
 	set news [$c create oval 5 5 95 95 -outline "#000000" \
 		     -fill $color -tags lc ]
+
+	set x [expr int([lindex [lindex [set $this-lightVectors] $i] 0] * 50) + 50]
+	set y [expr int([lindex [lindex [set $this-lightVectors] $i] 1] * -50) + 50]
 	set t  $i
 	if { $t == 0 } { set t "HL" }
-	set newt [$c create text 50 50 -fill "#555555" -text $t -tags lname ]
+	set newt [$c create text $x $y -fill "#555555" -text $t -tags lname ]
 	$c bind lname <B1-Motion> "$this moveLight $c $i %x %y"
 	$c bind lc <ButtonPress-1> "$this lightColor $w $c $i"
+	$this lightSwitch $i
+
     }
 
     method lightColor { w c i } {
@@ -1707,6 +1712,12 @@ itcl_class ViewWindow {
 	for { set i 0 } { $i < 4 } { incr i 1 } {
 	    if { $i == 0 } {
 		set $this-global-light$i 1
+		set c $w.tf.f$i.c
+		$c itemconfigure lc -fill \
+		    [format "#%04x%04x%04x" 65535 65535 65535 ]
+		set lightColor [list 1.0 1.0 1.0]
+		set $this-lightColors \
+		    [lreplace [set $this-lightColors] $i $i $lightColor]
 		$this lightSwitch $i
 	    } else {
 		if { $i < 4 } {
@@ -1770,13 +1781,9 @@ itcl_class ViewWindow {
     }
 
     method lightSwitch {i} {
-	if { [set $this-global-light$i] == 0 } {
-	    $this-c edit_light $i 0 [lindex [set $this-lightVectors] $i] \
-		[lindex [set $this-lightColors] $i]
-	} else {
-	    $this-c edit_light $i 1 [lindex [set $this-lightVectors] $i] \
-		[lindex [set $this-lightColors] $i]
-	}
+	$this-c edit_light $i [set $this-global-light$i] \
+	    [lindex [set $this-lightVectors] $i] \
+	    [lindex [set $this-lightColors] $i]
     }
 	
     method makeSaveImagePopup {} {
