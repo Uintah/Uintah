@@ -53,7 +53,7 @@ itcl_class MatlabInterface_DataIO_MatlabDataWriter {
 		set $this-matrixformat ""		
 		set $this-filename-set ""
 		set $this-overwrite 1
-		set $this-numport 6
+		set $this-numport 9
 		set $this-filename-entry ""
 		
 		for {set x 0} {$x < 3} {incr x} {
