@@ -159,17 +159,14 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	    -variable $this-use-gui-values
 
 	frame $w.controls
-	button $w.controls.execute -text "Execute" \
-	    -command "$this-c needexecute"
-	button $w.controls.reset -text "Reset" \
-	    -command "$this-c reset_gui"
-	pack $w.controls.execute $w.controls.reset \
-	    -side left -fill x -expand y
 
 	pack $w.title  -fill x
 	pack $w.tensors -side top -fill both -expand yes
 	pack $w.guivals -anchor w -padx 10
 	pack $w.controls -fill x 
+
+	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
+	moveToCursor $w
 
 	create_entries
     }
