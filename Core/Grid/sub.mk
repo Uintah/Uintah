@@ -26,6 +26,7 @@ SRCS     += \
 	$(SRCDIR)/PerPatchBase.cc \
 	$(SRCDIR)/GeometryPiece.cc \
 	$(SRCDIR)/SphereGeometryPiece.cc \
+	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
 	$(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc \
 	$(SRCDIR)/TriGeometryPiece.cc \
