@@ -29,7 +29,17 @@
 <faqbook>
   <title>SCIRun Frequently Asked Questions</title>
   <subtitle>Updated July 15, 2001</subtitle>
-  <source>faq.xml</source>
+
+  <bookinfo>
+    <title>faq.xml</title>
+    <authorgroup>
+      <author>Chris Moulding</author>
+    </authorgroup>
+    <copyright>
+      <holder>SCI Institute, University of Utah</holder>
+      <year>2001</year>
+    </copyright>
+  </bookinfo>
 
   <description>
     <para>

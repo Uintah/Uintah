@@ -15,19 +15,28 @@
   University of Utah. All Rights Reserved.
 -->
 
-
 <!-- FAQ specification -->
 
-<!ELEMENT p (#CDATA)>
-<!ELEMENT pre (#CDATA)>
-<!ELEMENT img (#CDATA)>
+<!ELEMENT para (#PCDATA)>
+<!ELEMENT pre (#PCDATA)>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT subtitle (#PCDATA)>
+<!ELEMENT holder (#PCDATA)>
+<!ELEMENT year (#PCDATA)>
 
-<!ELEMENT faq (entry+)>
-<!ATTLIST faq name CDATA #REQUIRED>
+<!ELEMENT faqbook (title,subtitle,bookinfo,description,faq+)>
+
+<!ELEMENT bookinfo (authorgroup,copyright)>
+
+<!ELEMENT copyright (holder,year)>
+
+<!ELEMENT faq (title,description,entry+)>
+<!ELEMENT description (para+)>
 
 <!ELEMENT entry (keywords, question, answer)>
 
-<!ELEMENT keywords (#CDATA)>
-<!ELEMENT question (p|pre)+>
-<!ELEMENT answer (p|pre)+>
-|pre|img)+>
+<!ELEMENT keywords (#PCDATA)>
+<!ELEMENT question (para|pre)+>
+<!ELEMENT answer (para|pre)+>
+
+

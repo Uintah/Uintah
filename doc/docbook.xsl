@@ -306,7 +306,7 @@
 
         <area coords="536,41,600,64" shape="rect" alt="FAQ">  
         <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/FAQ/faq.html')" />
+        <xsl:value-of select="concat($swidk,'/doc/FAQ/faq.xml?cont=0&amp;dir=2')" />
         </xsl:attribute>
         </area>
 </map> 
@@ -442,21 +442,6 @@
   <p class="pfirstpara">
     <xsl:value-of select="./sect1/para" />
   </p>
-
-<!--
-  <xsl:for-each select="./sect1">
-    <xsl:variable name="sectnum">
-      <xsl:number/>
-    </xsl:variable>
-    <xsl:for-each select="./title">
-    <p class="psubhead">
-      <xsl:value-of select="$chapnum"/>.
-      <xsl:value-of select="$sectnum + -1"/>
-      <xsl:value-of select="concat(' ',' ')"/><xsl:value-of select="."/>
-    </p>
-    </xsl:for-each>
-  </xsl:for-each>
--->
 
   <ul>
     <xsl:for-each select="./sect1/title">

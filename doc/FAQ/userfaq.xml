@@ -1,50 +1,56 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<?xml-stylesheet href="../faq.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!-- 
 
   each faq is a collection of entries.  Entries are a paired question and
   answer, along with a set of keywords.  Questions and answers are delimited
-  with <p> or <pre> tags.
+  with <para> or <pre> tags.
 
   <entry>
     <keywords>SGI, endian</keywords>
     <question>
-      <p>
+      <para>
         ...
-      </p>
+      </para>
       ...
     </question>
     <answer>
-      <p>
+      <para>
         ...
-      </p>
+      </para>
       ...
     </answer>
   </entry>
           
+  the guts of para's and pre's are "free form": you can use HTML
+  inside them.
 
- -->
+-->
 
-<faq name="User FAQ">
+<faq>
+  <title>User FAQ</title>
+  <description>
+    <para>
+      For questions about the behavior of SCIRun, modules, messages
+      issued, etc.  Also addresses other high level issues.
+    </para>
+  </description>
   <entry>
     <keywords>unable to load module, can't find symbol</keywords>
     <question>
-      <p>
+      <para>
         When I run SCIRun, one or more messages appear in the message
         window indicating a problem with a package and/or module.
-      </p>
-      <p>
+      </para>
+      <para>
         The message(s) is/are similar to the following:
-      </p>
+      </para>
       <pre>Loading package 'SCIRun'
 Unable to load module 'CastField' :
 - can't find symbol 'make_CastField'
       </pre>
-      <p>
+      <para>
         or
-      </p>
+      </para>
       <pre>Unable to load all of package 'Teem' (category 'DataIO' failed) :
 - libPackages_Teem_Dataflow.so: cannot open shared object file: No
 such file or directory
@@ -53,7 +59,7 @@ object file: No such file or directory
       </pre>
     </question>
     <answer>
-      <p>
+      <para>
         Each module for a given package has it's own .xml file that 
         describes it.  When SCIRun starts, it parses all the .xml files
         in the packages (under Dataflow/XML) and tries to find the 
@@ -61,8 +67,8 @@ object file: No such file or directory
         be found the message "No such file or directory" is given.  If the .so
         can be found, but the code for a particular module does not exist 
         within the library, then the message "can't find symbol" is given.
-      </p>
-      <p>
+      </para>
+      <para>
         The message(s) may or may not indicate a problem with SCIRun. 
         For some modules, the
         .xml file may be listed but the code has not yet been
@@ -70,39 +76,39 @@ object file: No such file or directory
         be common for module developers).  For others it may mean that the
         SCIRun installation is some how corrupt (.so files have been deleted,
         moved, etc.)
-      </p>
-      <p>
+      </para>
+      <para>
         The solution to this problem is to either a) build the libraries
         that the .xml files need, or b) remove the offending .xml files.
-      </p>
+      </para>
     </answer>
   </entry>
 
   <entry>
     <question>
-      <p>
+      <para>
         What kind of systems is SCIRun compatible with?
-      </p>
+      </para>
     </question>
     <answer>
-      <p>
+      <para>
         SCIRun should be generally compatible with any SGI or Linux machine.
-      </p>
-      <p>
+      </para>
+      <para>
         SCIRun has been tested on the following Linux distributions:
-      </p>
-      <p>
+      </para>
+      <para>
         <ul>
           <li>Mandrake 7.2 &amp; 8.0</li>
           <li>Redhat 6.2, 7.0 &amp; 7.1</li>
           <li>SuSE 6.4, 7.0 &amp; 7.2</li>
           <li>Debian testing</li>
         </ul> 
-      </p>
-      <p>
+      </para>
+      <para>
         SCIRun has been tested on the following PC processor configurations:
-      </p>
-      <p>
+      </para>
+      <para>
         <ul>
           <li>Dual Intel Pentium II</li>
           <li>Single Intel Pentium III</li>
@@ -110,15 +116,15 @@ object file: No such file or directory
           <li>Single Intel Pentium 4</li>
           <li>Single AMD Athlon</li>
         </ul>
-      </p>
-      <p>
+      </para>
+      <para>
         SCIRun has been tested with the following graphics cards:
-      </p>
-      <p>
+      </para>
+      <para>
         <ul>
           <li>NVIDIA GeForce, GeForce II &amp; GeForce3</li>
         </ul>
-      </p>
+      </para>
     </answer>
   </entry>
 </faq>

@@ -1,50 +1,50 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<?xml-stylesheet href="../faq.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!-- 
 
   each faq is a collection of entries.  Entries are a paired question and
   answer, along with a set of keywords.  Questions and answers are delimited
-  with <p> or <pre> tags.
+  with <para> or <pre> tags.
 
   <entry>
     <keywords>SGI, endian</keywords>
     <question>
-      <p>
+      <para>
         ...
-      </p>
+      </para>
       ...
     </question>
     <answer>
-      <p>
+      <para>
         ...
-      </p>
+      </para>
       ...
     </answer>
   </entry>
           
+  the guts of para's and pre's are "free form": you can use HTML
+  inside them.
 
 -->
  
-<faq name="Technical FAQ">
+<faq>
+  <title>Technical FAQ</title>
   <description>
-    <p>
+    <para>
       This FAQ includes questions of a technical nature of interest to people
-installing, maintaining, and developing within SCIRun.
-    </p>
+      installing, maintaining, and developing within SCIRun.
+    </para>
   </description>
   <entry>
     <keywords>SGI, runtime, pthreads, SIGABRT</keywords>
     <question>
-      <p>
+      <para>
         I successfully installed SCIRun and it's required thirdparty software
         (by hand) onto an SGI target install machine, but when I run SCIRun it 
         immediately signals an abort (SIGABRT).
-      </p>
-      <p>
+      </para>
+      <para>
         The output of SCIRun after it signals the abort looks like this:
-      </p>
+      </para>
       <pre>Thread "main"(pid 251775) caught signal SIGABRT (Abort)
 Backtrace:
 0x5ff69224: SCIRun::Thread::niceAbort(void)
@@ -71,15 +71,15 @@ Occured for thread:
       </pre>
     </question>
     <answer>
-      <p>
+      <para>
         One or more of the thirdparty libraries was configured and built to
         use (i.e. link against) pthreads.  On SGI machines, SCIRun uses sproc
         threads instead of pthreads.  It is illegal to use both sproc and 
         pthreads in a single process.  When two binaries are linked together
         into a single process at runtime (e.g. scirun and libxerces-c1_4.so)
         an abort is signalled and the process is shutdown.
-      </p>
-      <p>
+      </para>
+      <para>
         The solution is to rebuild the offending libraries, configuring them
         to _not_ use threads.  Xerces is typically the offending library, 
         although Tcl and others may also be incorrectly configured to use
@@ -88,35 +88,35 @@ Occured for thread:
 	configure arguments for the thirdparty software.  Note that when the
 	automatic install script is used, all the software is automatically
         configured and built correctly.
-      </p>
+      </para>
     </answer>
   </entry>
 
   <entry>
     <keywords>Compile, Red Hat, Mandrake, GCC 2.96, GCC 2.97</keywords> 
     <question>
-      <p>
+      <para>
         I successfully installed the thirdparty software onto a Redhat or
         Mandrake (v8.0 +) linux target install machine, but when I try
         to build SCIRun it fails while compiling.
-      </p>
+      </para>
     </question>
     <answer>
-      <p>
+      <para>
         Some linux distributions are shipped with a version of the GCC
         compiler (e.g. 2.96, 2.97) that doesn't work for building SCIRun. 
         For more information, please visit
         <a href="http://www.gnu.org/software/gcc/gcc-2.96.html">the GCC site
         </a> regarding this problem.
-      </p>
-      <p>
+      </para>
+      <para>
         The solution is to update your compiler to version 2.95.2 or 2.95.3.
         You can check your existing compilers version by typing:
-      </p>
+      </para>
       <pre>gcc --version</pre>
-      <p> 
+      <para> 
         or
-      </p>
+      </para>
       <pre>g++ --version</pre>
     </answer>
   </entry>
@@ -124,60 +124,60 @@ Occured for thread:
   <entry>
     <keywords>SGI, LANG:std, MIPSpro</keywords>
     <question>
-      <p>
+      <para>
 	I successfully installed the thirdparty software onto an SGI
         target install machine, but when I try to build SCIRun it fails
         during the compile phase.
-      </p>
-      <p>
+      </para>
+      <para>
         The error message displayed contains the following warning:
-      </p>
+      </para>
       <pre>...
 Warning: Option 'std' not in group 'LANG' (LANG:std)
 ...
       </pre>
     </question>
     <answer>
-      <p>
+      <para>
         The MIPSpro compiler on your target install machine is too old.
         SCIRun requires version 7.3.1.1m at a minimum.
-      </p>
+      </para>
     </answer>
   </entry>
 
   <entry>
     <keywords>SGI, Linux, ~</keywords>
     <question>
-      <p>
+      <para>
         I'm trying to install SCIRun or the thirdparty software into 
         my home directory, but it fails when building.
-      </p>
+      </para>
     </question>
     <answer>
-      <p>
+      <para>
         When installing any of the software into your home directory
         be sure to use complete and absolute paths when providing
         configure argumenst.  <b>Do Not</b> use tilde expansion or
         any other short cuts, as they will not be properly expanded
         by the install scripts and makefiles.
-      </p>
+      </para>
     </answer>
   </entry>
 
   <entry>
     <question>
-      <p>
+      <para>
         How can I make a 64 bit build of SCIRun?
-      </p>
+      </para>
     </question>
     <answer>
-      <p>
+      <para>
         64 bit is currently only available on the SGI platform.  To
         build a 64 bit version of SCIRun, you first need to have 64
         bit versions of the thirdparty software.  Then, configure
         SCIRun with the "--enable-64bit" option and rebuild.
-      </p>
-      <p>
+      </para>
+      <para>
         Unfortunately, most of the required third party software did
         not take 64 bit SGI platforms into account when writing
         configure scripts and makefiles. However, with some effort, it
@@ -190,47 +190,47 @@ Warning: Option 'std' not in group 'LANG' (LANG:std)
         with "-64". For Xerces, this means changing the environment
         variables listed above replacing all instances of " -n32 "
         with " -64 " before configuring. 
-      </p>       
+      </para>       
     </answer>
   </entry>
 
   <entry>
     <question>
-      <p>
+      <para>
         I want to build the thirdparty software by hand.  What are the
         gotchas and bugs I should be aware of?
-      </p>
+      </para>
     </question>
     <answer>
-      <p>
+      <para>
         <b><i>Building [incr Tcl/Tk]</i></b>
-      </p>
+      </para>
     
-      <p> 
+      <para> 
         The [incr Tcl/Tk] distribution listed in the system
         requirements has a bug in it: the installation scripts are
         bundled without execute permissions.  Before attempting to
         configure or make [incr Tcl/Tk], type the following commands:  
-      </p>
+      </para>
 
       <pre class="example">cd itcl3.1.0/config
 chmod a+x install-sh mkinstalldirs
       </pre>
 
-      <p>
+      <para>
         Then, proceed normally with the configure and make.
-      </p>
+      </para>
 
-      <p>
+      <para>
         <b><i>Building BLT</i></b>
-      </p>
+      </para>
     
-      <p>
+      <para>
         The BLT make files have bugs in them that cause apparent
         errors in the building process. To build without the apparent
         errors, type the following (in the order shown) after
         configuring: 
-      </p> 
+      </para> 
 
       <pre class="example">cd blt2.4u
 make 
@@ -242,59 +242,59 @@ cd src/shared
 make -k install
       </pre>
 
-      <p>
+      <para>
         <b><i>Building Xerces-C++</i></b>
-      </p>
+      </para>
 
-      <p>
+      <para>
         Xerces-C++ uses a non-standard configure mechanism.  You must
         specify most options as environment variables, and then run
         the configure command with the --prefix option only.
-      </p>
+      </para>
 
-      <p>
+      <para>
         The Xerces-C++ configure scripts are bundled without execute
         permissions.  Before attempting to configure, type the following
         commands: 
-      </p>
+      </para>
 
       <pre class="example">cd xerces-c-src1_4_0/src
 chmod a+x configure runConfigure
       </pre>
 
-      <p> 
+      <para> 
         There is no dependency tree for the copy phase of the xerces
         build, so using a -j flag (number of jobs) as a GNU make
         argument will cause the build to fail. 
-      </p>
+      </para>
 
-      <p>
+      <para>
         There is no dependency tree for the "install" target within
         the make files, so passing "install" as an argument to the
         first time "make" is typed will cause the build to
         fail. Instead type "make" first, then "make install."
-      </p>
+      </para>
 
-      <p>
+      <para>
         The make system ignores errors in compilation and forces a
         link.  Verify that the build was actually successful by
         checking the size of libxerces-c1_4.so.  The sizes should be:
         ~2.1MB for SGI 32 bit, ~2.4MB for SGI 64 bit, and ~1.4MB for
         linux. 
-      </p>
+      </para>
     </answer>
   </entry>
  
   <entry>
     <question>
-      <p>
+      <para>
         When I try to configure SCIRun, it says that it cannot find
         header files for one or more of the Tcl distributions, but my 
         system has the correct versions for all the Tcl distributions.
-      </p>
+      </para>
     </question>
     <answer>
-      <p>
+      <para>
         SCIRun currently requires the full source of Tcl and Tk to be
         installed.  This is required because SCIRun defines a few Tk
         widgets of it's own, and needs some headers from the source that
@@ -302,7 +302,7 @@ chmod a+x configure runConfigure
         already has the correct Tcl and Tk versions installed, you will
         have to re-install (see above) in order to have the sources
         included. 
-      </p>
+      </para>
     </answer>
   </entry>
 

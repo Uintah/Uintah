@@ -57,6 +57,8 @@ td {font-family:"arial", "helvetica", "sans-serif"}
 
 .dropcap {font-family: "times"; font-size:40px; margin:0; color:#660000}
 
+.pdropcap {font-family: "times"; font-size:1.2em; margin:0; color:#660000}
+
 .question {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; color:#660000}
 
 div {page-break-inside:avoid}
