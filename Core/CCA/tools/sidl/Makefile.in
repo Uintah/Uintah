@@ -6,7 +6,7 @@ SRCS      = Spec.cc SymbolTable.cc emit.cc main.cc parser.y scanner.l \
 		static_check.cc
 LIBRARIES = @LEXLIB@
 SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
-SIDL_BUILTINS = $(SRCTOP_ABS)/tools/sidl/
+SIDL_BUILTINS = $(SRCTOP_ABS)/Component/CIA/
 
 CFLAGS := $(CFLAGS) -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"
 INCLUDES  = -I$(SRCTOP) -I$(SRCTOP)

@@ -22,15 +22,6 @@ namespace PingPong {
 	PingPong_impl();
 	virtual ~PingPong_impl();
 	virtual int pingpong(int);
-
-	// CCA spec
-	virtual CIA::Object addReference();
-	virtual void deleteReference();
-	virtual CIA::Class getClass();
-	virtual bool isSame(const CIA::Interface& object);
-	virtual bool isInstanceOf(const CIA::Class& type);
-	virtual bool supportsInterface(const CIA::Class& type);
-	virtual CIA::Interface queryInterface(const CIA::Class& type);
     };
 }
 
