@@ -98,8 +98,12 @@ template class GenericField<LatVolMesh, FData3d<double> >;
 template class GenericField<LatVolMesh, FData3d<int> >;
 template class GenericField<LatVolMesh, FData3d<short> >;
 template class GenericField<LatVolMesh, FData3d<unsigned char> >;
-
-
+template class FData3d<Tensor>;
+template class FData3d<Vector>;
+template class FData3d<double>;
+template class FData3d<int>;
+template class FData3d<short>;
+template class FData3d<unsigned char>;
 
 template class TriSurf<Tensor>;
 template class TriSurf<Vector>;
@@ -126,7 +130,12 @@ template class GenericField<ImageMesh, FData2d<double> >;
 template class GenericField<ImageMesh, FData2d<int> >;
 template class GenericField<ImageMesh, FData2d<short> >;
 template class GenericField<ImageMesh, FData2d<unsigned char> >;
-
+template class FData2d<Tensor>;
+template class FData2d<Vector>;
+template class FData2d<double>;
+template class FData2d<int>;
+template class FData2d<short>;
+template class FData2d<unsigned char>;
 
 template class ContourField<Tensor>;
 template class ContourField<Vector>;

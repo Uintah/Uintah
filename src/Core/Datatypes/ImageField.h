@@ -40,8 +40,8 @@ public:
   typedef Data value_type;
   typedef Data * iterator;
 
-  Data *begin() { return &(*this)(0,0,0); }
-  Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  Data *begin() { return &(*this)(0,0); }
+  Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
     
   FData2d():Array2<Data>() {}
   FData2d(const FData2d& data) : Array2<Data>(data) {} 
