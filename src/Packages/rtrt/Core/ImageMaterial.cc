@@ -19,9 +19,9 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
 			     ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl)
+			     double refl, bool flipped=false)
     : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(0), flip_(false), valid_(false)
+      specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
     read_hdr_image(texfile);
     outcolor=Color(0,0,0);
@@ -30,27 +30,26 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl)
+			     double refl, bool flipped=false)
     : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(0), flip_(false), valid_(false)
+      specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
   PPMImage ppm(texfile);
   int nu, nv;
-  ppm.get_dimensions_and_data(image, nu, nv);
+  ppm.get_dimensions_and_data(image, nu, nv, flipped);
   outcolor=Color(0,0,0);
 }
 
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl,  double transp)
+			     double refl,  double transp, bool flipped=false)
     : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(transp), flip_(false), 
-      valid_(false)
+      specpow(specpow), refl(refl),  transp(transp), valid_(false)
 {
   PPMImage ppm(texfile);
   int nu, nv;
-  ppm.get_dimensions_and_data(image, nu, nv);
+  ppm.get_dimensions_and_data(image, nu, nv, flipped);
   outcolor=Color(0,0,0);
 }
 
@@ -76,7 +75,6 @@ Color interp_color(Array2<Color>& image,
 	image(iu+1,iv+1)*tu*tv;
 
     return c;
-    
 }
 
 void ImageMaterial::shade(Color& result, const Ray& ray,
@@ -131,12 +129,9 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	else if(v<0)
 	    v=0;
     };
-    {
-      if (flip_)
-	diffuse = interp_color(image,u,1-v);
-      else
-	diffuse = interp_color(image,u,v);
-    }
+
+    diffuse = interp_color(image,u,v);
+
 skip:
     phongshade(result, diffuse, specular, specpow, refl,
                 ray, hit, depth,  atten,
