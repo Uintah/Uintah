@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <valarray>
 #include <map>
+#include <vector>
 
 using namespace std;
 
@@ -330,7 +331,8 @@ private:
   
   const PatchSet* d_perproc_patches;
 
-  Solver* d_solver;
+  vector<Solver*> d_solver;
+// Solver* d_solver;
   
   bool dynamic;
   bool d_rigid_body;
