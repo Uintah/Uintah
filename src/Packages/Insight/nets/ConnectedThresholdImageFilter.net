@@ -48,15 +48,12 @@ set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 402]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 218 245]
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 218 325]
 set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 481]
-set m7 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 400 444]
-set m8 [addModuleAtPosition "Insight" "Converters" "ImageToField" 400 364]
 set m9 [addModuleAtPosition "Insight" "Filters" "ConnectedThresholdImageFilter" 10 167]
 
 # Set the Module Notes Dispaly Options
 
 # Create the Connections between Modules
 set c0 [addConnection $m2 0 $m3 0]
-set c1 [addConnection $m8 0 $m7 0]
 set c2 [addConnection $m1 0 $m0 0]
 set c3 [addConnection $m9 0 $m2 0]
 set c4 [addConnection $m0 0 $m9 0]
@@ -240,9 +237,6 @@ set $m6-ViewWindow_0-clip-normal-y-6 {}
 set $m6-ViewWindow_0-clip-normal-z-6 {}
 set $m6-ViewWindow_0-clip-normal-d-6 {}
 set $m6-ViewWindow_0-unused {1}
-set $m7-notes {}
-set $m8-notes {}
-set $m8-copy {0}
 set $m9-notes {}
 set $m9-replace_value {255}
 set $m9-lower_threshold {150}
