@@ -33,7 +33,7 @@ WARNING
 ****************************************/
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
@@ -53,7 +53,7 @@ namespace Uintah {
   class MPMArchesLabel;
   class ArchesLabel;
 
-class Arches : public UintahParallelComponent, public CFDInterface {
+class Arches : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
