@@ -205,10 +205,7 @@ using namespace SCIRun;
 			       const double& delT, const Patch* patch,
 			       CCVariable<fflux>& OFS, 
 			       CCVariable<eflux>& OFE,
-			       CCVariable<cflux>& OFC,
-			       CCVariable<fflux>& IFS, 
-			       CCVariable<eflux>& IFE,
-			       CCVariable<cflux>& IFC);
+			       CCVariable<cflux>& OFC);
       
       void outflowVolCentroid(const SFCXVariable<double>& uvel_CC,
 			      const SFCYVariable<double>& vvel_CC,
@@ -226,9 +223,6 @@ using namespace SCIRun;
 			const CCVariable<fflux>& OFS,
 			const CCVariable<eflux>& OFE,
 			const CCVariable<cflux>& OFC,
-			const CCVariable<fflux>& IFS,
-			const CCVariable<eflux>& IFE,
-			const CCVariable<cflux>& IFC,
 			CCVariable<double>& q_advected);
       
       void qOutfluxFirst(const CCVariable<double>& q_CC,const Patch* patch,
