@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>.01</maxTime>
+	<maxTime>.001</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>2.e-8</delt_min>
 	<delt_max>2.e-5</delt_max>
@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>const_test_vs.uda</filebase>
-	<outputInterval>.005</outputInterval>
+	<outputInterval>.0005</outputInterval>
 <!--
         <save label = "NTractionZMinus"/>
 -->
