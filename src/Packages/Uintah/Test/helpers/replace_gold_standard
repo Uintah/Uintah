@@ -1,0 +1,51 @@
+#!/bin/sh
+
+gold_standard_dir="$1"
+replacement_dir="$2"
+testname="$3"
+
+if [ $# -ne 3 -o ! -d $gold_standard_dir/$testname -o ! -d $replacement_dir/$testname/*.uda ]; then
+  echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname>"
+  exit 1
+fi
+
+echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$testname with $replacement_dir/$testname?"
+read yesno
+
+if [ $yesno == "y" -o $yesno == "yes" ]; then
+  echo "rm -rf $gold_standard_dir/$testname/"
+  rm -r $gold_standard_dir/$testname/
+  if [ $? != "0" ]; then
+    echo "failed"
+    exit 1
+  fi
+  echo "mkdir $gold_standard_dir/$testname/"
+  mkdir $gold_standard_dir/$testname/
+  if [ $? != "0" ]; then
+    echo "failed"
+    exit 1
+  fi
+  echo "cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
+  cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
+  if [ $? != "0" ]; then
+    echo "failed"
+    exit 1
+  fi
+  echo "cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/."
+  cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/.
+  if [ $? != "0" ]; then
+    echo "failed"
+    exit 1
+  fi
+  echo "cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/const_test_nh/."
+  cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/const_test_nh/.
+  if [ $? != "0" ]; then
+    echo "failed"
+    exit 1
+  fi
+  echo
+  echo "Gold Standard successfully replaced!"
+else
+  echo "cancelled"
+  exit 1
+fi
