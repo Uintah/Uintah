@@ -392,8 +392,8 @@ void DetailedTasks::createScrubCounts()
   scrubCountMap_.clear();
   
   // Go through each of the tasks and determine which variables it will require
-  for(int i=0;i<(int)tasks_.size();i++){
-    DetailedTask* dtask = tasks_[i];
+  for(int i=0;i<(int)localtasks_.size();i++){
+    DetailedTask* dtask = localtasks_[i];
     const Task* task = dtask->getTask();
     for(const Task::Dependency* req = task->getRequires(); req != 0; req=req->next){
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
