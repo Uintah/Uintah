@@ -10,7 +10,7 @@
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <iostream>
-#include "EquationOfStateFactory.h"
+#include <Uintah/Components/ICE/EOS/EquationOfStateFactory.h>
 
 using namespace std;
 using namespace Uintah::ICESpace;
@@ -85,6 +85,9 @@ double ICEMaterial::getGamma() const
 }
 
 // $Log$
+// Revision 1.4  2000/10/06 04:05:18  jas
+// Move files into EOS directory.
+//
 // Revision 1.3  2000/10/05 04:26:48  guilkey
 // Added code for part of the EOS evaluation.
 //
