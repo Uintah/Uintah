@@ -119,7 +119,7 @@ private:
       int sfield;
       int pbcfld;
       int outletfield;
-      bool lprobone, lprobtwo, lprobthree, lradcal;
+      bool lprobone, lprobtwo, lprobthree, lradcal, loptthin;
 
       OffsetArray1<double> fraction;
 
