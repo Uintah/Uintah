@@ -429,28 +429,29 @@ itcl_class Roe {
         if {$b == 1} {
             if {[winfo exists $w.wframe.draw]} {
                 destroy $w.wframe.draw
+		destroy $w.wframe
             }
-            toplevel $w.wframe.bench -borderwidth 1
-            wm overrideredirect $w.wframe.bench 1
-            wm geometry $w.wframe.bench 1024x768+1024+0
-            $this-c switchvisual $w.wframe.bench.draw 0 1024 768
-            if {[winfo exists $w.wframe.bench.draw]} {
-                bind $w <Expose> "$this-c redraw"
-                bind $w <Configure> "$this-c redraw"
+            toplevel $w.wframe -borderwidth 1
+            wm overrideredirect $w.wframe 1
+            wm geometry $w.wframe 1024x768+1280+0
+            $this-c switchvisual $w.wframe.draw 0 1024 768
+            if {[winfo exists $w.wframe.draw]} {
                 bind $w <KeyPress-Escape> "$w.mframe.f.bench invoke"
-                pack $w.wframe.bench.draw -expand yes -fill both
-            }
-            $this-c startbawgl
+		pack $w.wframe.draw -expand yes -fill both
+		$this-c startbawgl
+	    }
         } else {
-            $this-c stopbawgl
             if {[winfo exists $w.wframe.bench.draw]} {
-                destroy $w.wframe.bench.draw
+                $this-c stopbawgl
+		bind $w <KeyPress-Escape> ""
+		destroy $w.wframe.bench.draw
             }
-            destroy $w.wframe.bench
+            destroy $w.wframe
+	    frame $w.wframe
+            pack $w.wframe
             $this-c switchvisual $w.wframe.draw 0 640 512
             if {[winfo exists $w.wframe.draw]} {
                 bindEvents $w.wframe.draw
-                bind $w <KeyPress-Escape> ""
                 pack $w.wframe.draw -expand yes -fill both
             }
         }
