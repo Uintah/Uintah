@@ -938,7 +938,7 @@ VolumeRenderer::draw_wireframe()
 
   for (unsigned int i=0; i<bricks.size(); i++)
   {
-    glColor4f(0.8, 0.8, 0.8, 1.0);
+    glColor4f(0.8*(i+1.0)/bricks.size(), 0.8*(i+1.0)/bricks.size(), 0.8, 1.0);
 
     TextureBrickHandle b = bricks[i];
     const Point &pmin(b->bbox().min());
