@@ -5,7 +5,7 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <xercesc/dom/DOMElement.hpp>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
    /**************************************
@@ -39,7 +39,7 @@ namespace Uintah {
     
    class OutputContext {
    public:
-      OutputContext(int fd, long cur, DOMElement* varnode)
+      OutputContext(int fd, long cur, ProblemSpecP varnode)
 	 : fd(fd), cur(cur), varnode(varnode)
       {
       }
@@ -47,7 +47,7 @@ namespace Uintah {
 
       int fd;
       long cur;
-      DOMElement* varnode;
+      ProblemSpecP varnode;
    private:
       OutputContext(const OutputContext&);
       OutputContext& operator=(const OutputContext&);
