@@ -316,8 +316,8 @@ GLVolRenState::loadColorMap(Brick& brick)
 
 #ifndef HAVE_CHROMIUM
   //cerr << "not HAVE_CHROMIUM" << endl;
-  ASSERT(glColorTableEXT != NULL );
-  glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
+  //ASSERT(glColorTableEXT != NULL );
+  glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
 		  GL_RGBA,
 		  256, // try larger sizes?
 		  GL_RGBA,  // need an alpha value...
