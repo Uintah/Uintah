@@ -45,6 +45,9 @@ WARNING
 #define FORT_SCALARVARMODEL scalarvarmodel_
 #define FORT_CALPBC calpbc_
 #define FORT_INLBCS inlbcs_
+#define FORT_DENACCUM denaccum_
+#define FORT_OUTAREA outarea_
+#define FORT_BCINOUT bcinout_
 #define FORT_UVELCOEF uvelcoef_
 #define FORT_VVELCOEF vvelcoef_
 #define FORT_WVELCOEF wvelcoef_
@@ -247,6 +250,48 @@ extern "C"
 		int* xminus, int* xplus, int* yminus, int* yplus,
 		int* zminus, int* zplus);
 
+    void
+    FORT_BCINOUT(const int* domLoU, const int* domHiU, 
+		 double* uVelocity, 
+		 const int* domLoV, const int* domHiV, 
+		 double* vVelocity, 
+		 const int* domLoW, const int* domHiW, 
+		 double* wVelocity, 
+		 const int* domLoD, const int* domHiD, 
+		 const int* idxLo, const int* idxHi, 
+		 const double* density,
+		 const int* domLo, const int* domHi, 
+		 const int* cellType,
+		 const int* cellTypeVal,
+		 double* delta_t, double* flowin, double* flowout,
+		 const double* sew,const double* sns,const double* stb,
+		 int* xminus, int* xplus, int* yminus, int* yplus,
+		 int* zminus, int* zplus);
+
+
+
+    void
+    FORT_DENACCUM(const int* domLoD, const int* domHiD, 
+		  const int* idxLo, const int* idxHi, 
+		  const double* density,
+		  const int* domLoD_old, const int* domHiD_old, 
+		  const double* old_den,
+		  const int* domLo, const int* domHi, 
+		  double* denAccum,
+		  double* delta_t,
+		  const double* sew,const double* sns,const double* stb);
+
+    void
+    FORT_OUTAREA(const int* domLo, const int* domHi, 
+		 const int* idxLo, const int* idxHi, 
+		 const int* cellType,
+		 const int* domLoD, const int* domHiD, 
+		 const double* density,
+		 const double* sew,const double* sns,const double* stb,
+		 double* areaOUT, const int* cellTypeVal,
+		 int* xminus, int* xplus, int* yminus, int* yplus,
+		 int* zminus, int* zplus);
+
     ////////////////////////////////////////////////////////////////////////
     // set pressure BC:
     void
@@ -418,9 +463,10 @@ extern "C"
 		    const double* viscosity,
 		    const int* domLong, const int* domHing,
 		    const double* old_density,
+		    const int* domLodenref, const int* domHidenref,
+		    const double* den_ref,
 		    const double* gravity,
 		    const double* deltaT, 
-		    const double* den_ref,
 		    const double* ceeu, const double* cweu, const double* cwwu,
 		    const double* cnn, const double* csn, const double* css,
 		    const double* ctt, const double* cbt, const double* cbb,
@@ -449,9 +495,10 @@ extern "C"
 		    const double* viscosity,
 		    const int* domLong, const int* domHing,
 		    const double* old_density,
+		    const int* domLodenref, const int* domHidenref,
+		    const double* den_ref,
 		    const double* gravity,
 		    const double* deltaT, 
-		    const double* den_ref,
 		    const double* cee, const double* cwe, const double* cww,
 		    const double* cnnv, const double* csnv, const double* cssv,
 		    const double* ctt, const double* cbt, const double* cbb,
@@ -480,9 +527,10 @@ extern "C"
 		    const double* viscosity,
 		    const int* domLong, const int* domHing,
 		    const double* old_density,
+		    const int* domLodenref, const int* domHidenref,
+		    const double* den_ref,
 		    const double* gravity,
 		    const double* deltaT, 
-		    const double* den_ref,
 		    const double* cee, const double* cwe, const double* cww,
 		    const double* cnn, const double* csn, const double* css,
 		    const double* cttw, const double* cbtw, const double* cbbw,

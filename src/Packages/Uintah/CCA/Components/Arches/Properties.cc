@@ -98,30 +98,6 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   tsk->computes(d_lab->d_densityMicroLabel);
 
   sched->addTask(tsk, patches, matls);
-
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("Properties::ComputeProps",
-			      patch, Task::OldDW, new_dw, this,
-			      &Properties::computeProps);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-      // requires scalars
-      tsk->requires(old_dw, d_lab->d_densitySPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      for (int ii = 0; ii < d_numMixingVars; ii++) 
-	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
-			 numGhostCells);
-      tsk->computes(old_dw, d_lab->d_refDensity_label);
-      tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 //****************************************************************************
@@ -150,37 +126,10 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
+  tsk->computes(d_lab->d_tempINLabel);
+  //  tsk->computes(d_lab->d_co2INLabel);
   tsk->computes(d_lab->d_densityMicroLabel);
-
   sched->addTask(tsk, patches, matls);
-
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("Properties::ReComputeProps",
-			      patch, old_dw, new_dw, this,
-			      &Properties::reComputeProps);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-      // requires scalars
-      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
-		    Ghost::AroundCells,
-		    numGhostCells+2);
-      if (d_MAlab)
-	tsk->requires(new_dw, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		      Ghost::None, numGhostCells);
-      for (int ii = 0; ii < d_numMixingVars; ii++) 
-	tsk->requires(new_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
-			 numGhostCells);
-      tsk->computes(new_dw, d_lab->d_refDensity_label);
-      tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 //****************************************************************************
@@ -246,12 +195,6 @@ Properties::computeProps(const ProcessorGroup*,
 
     // get multimaterial vars
 
-#ifdef multimaterialform
-    MultiMaterialVars* mmVars = 0;
-    if (d_mmInterface) 
-      mmVars = d_mmInterface->getMMVars();
-#endif
-
     //CCVariable<double> new_density;
     //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
 
@@ -294,12 +237,6 @@ Properties::computeProps(const ProcessorGroup*,
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
-
-#ifdef multimaterialform
-	  if (d_mmInterface) 
-	    local_den *= mmVars->voidFraction[currCell];
-#endif
-
 	  if (d_bc == 0)
 	    throw InvalidValue("BoundaryCondition pointer not assigned");
 
@@ -371,6 +308,11 @@ Properties::reComputeProps(const ProcessorGroup*,
 
     CCVariable<double> density;
     CCVariable<double> voidFraction;
+    CCVariable<double> temperature;
+    //    CCVariable<double> co2;
+    new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+    //    new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
+ 
     std::vector<CCVariable<double> > scalar(d_numMixingVars);
     CCVariable<double> denMicro;
 
@@ -433,12 +375,8 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
-
-#ifdef multimaterialform
-	  if (d_mmInterface) 
-	    local_den *= mmVars->voidFraction[currCell];
-#endif
-
+	  temperature[currCell] = outStream.getTemperature();
+	  //	  co2[currCell] = outStream.getCO2();
 	  denMicro[IntVector(colX, colY, colZ)] = local_den;
 
 	  if (d_MAlab) {
@@ -470,6 +408,9 @@ Properties::reComputeProps(const ProcessorGroup*,
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
     new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+    //    new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
+
     new_dw->put(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
   }
 

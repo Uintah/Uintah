@@ -54,6 +54,12 @@ namespace Uintah {
       inline double getDensity() const {
 	return d_density;
       }
+      inline double getTemperature() const {
+	return d_temperature;
+      }
+      inline double getCO2() const {
+	return d_speciesConcn[3];
+      }
       inline int getDepStateSpaceVars() const {
 	// 4 correspond to density, pressure, temp, enthalpy
 	return d_depStateSpaceVars;

@@ -73,8 +73,6 @@ C---------------------------------------------------------------------
       ELSE
         AVGVELP = FLOW/(RHO*AREAPR)
       ENDIF
-
-      print*, 'primary fluid velocity = ',avgvelp
 c
 c     debug to try pure diffusion case: if we don't do this, then
 c     since den = 0.0, avgvelp = nan.

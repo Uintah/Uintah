@@ -18,7 +18,7 @@ Stream::Stream(const int numSpecies)
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
   d_pressure = 0.0;
   d_density = 0.0;
-  d_temperature = 0.0;
+  d_temperature = 298;
   d_enthalpy = 0.0;
   d_sensibleEnthalpy = 0.0;
   d_moleWeight = 0.0;
@@ -205,6 +205,11 @@ Stream::print(std::ostream& out) const {
 }
 //
 // $Log$
+// Revision 1.2  2001/04/25 18:02:16  rawat
+// added capability to compute overall mass balance
+// modified flow inlet geometry to do circular inlets
+// removed some print statements
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //

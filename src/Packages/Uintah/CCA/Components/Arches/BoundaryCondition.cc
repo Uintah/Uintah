@@ -28,6 +28,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -308,6 +309,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	  continue; // continue the loop for other inlets
 	// iterates thru box b, converts from geometry space to index space
 	// make sure this works
+#if 0
 	CellIterator iter = patch->getCellIterator(b);
 	IntVector idxLo = iter.begin();
 	IntVector idxHi = iter.end() - IntVector(1,1,1);
@@ -318,6 +320,12 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(),
 			  idxLo.get_pointer(), idxHi.get_pointer(),
 			  cellType.getPointer(), &celltypeval);
+#endif
+	for (CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++) {
+	  Point p = patch->cellPosition(*iter);
+	  if (piece->inside(p)) 
+	    cellType[*iter] = d_flowInlets[ii].d_cellTypeID;
+	}
       }
     }
     
@@ -551,17 +559,17 @@ BoundaryCondition::sched_computePressureBC(SchedulerP& sched, const PatchSet* pa
   int numGhostCells = 0;
   // This task requires the pressure
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::None, numGhostCells);
+		Ghost::AroundCells, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_pressureINLabel, Ghost::None,
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
 		numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, Ghost::None,
-		numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel, Ghost::None,
-		numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel, Ghost::None,
-		numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, Ghost::AroundCells,
+		numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel, Ghost::AroundCells,
+		numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel, Ghost::AroundCells,
+		numGhostCells+1);
       // This task computes new uVelocity, vVelocity and wVelocity
   tsk->computes(d_lab->d_pressureSPBCLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -569,43 +577,6 @@ BoundaryCondition::sched_computePressureBC(SchedulerP& sched, const PatchSet* pa
   tsk->computes(d_lab->d_wVelocitySPBCLabel);
 
   sched->addTask(tsk, patches, matls);
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      //copies old db to new_db and then uses non-linear
-      //solver to compute new values
-      Task* tsk = scinew Task("BoundaryCondition::calcPressureBC",patch,
-			      old_dw, new_dw, this,
-			      &BoundaryCondition::calcPressureBC);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-      
-      // This task requires the pressure
-      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_pressureINLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      // This task computes new uVelocity, vVelocity and wVelocity
-      tsk->computes(new_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 //****************************************************************************
@@ -726,8 +697,6 @@ BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* p
   // This task requires densityCP, [u,v,w]VelocitySP from new_dw
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, Ghost::None,
-		numGhostCells);
   // changes to make it work for the task graph
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,  
 		Ghost::AroundCells, numGhostCells+2);
@@ -781,6 +750,265 @@ BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* p
     }
   }
 #endif
+}
+
+void
+BoundaryCondition::sched_computeFlowINOUT(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls,
+					  double delta_t)
+{
+  Task* tsk = scinew Task("BoundaryCondition::computeFlowINOUT",
+			  this,
+			  &BoundaryCondition::computeFlowINOUT,
+			  delta_t);
+  
+  int zeroGhostCells = 0;
+  int numGhostCells = 1;
+  // This task requires densityCP, [u,v,w]VelocitySP from new_dw
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells,
+		numGhostCells);
+  tsk->requires(Task::OldDW, d_lab->d_densityINLabel, Ghost::None,
+		zeroGhostCells);
+  // changes to make it work for the task graph
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,  
+		Ghost::AroundCells, numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySIVBCLabel, Ghost::AroundCells,
+		numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySIVBCLabel, Ghost::AroundCells,
+		numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySIVBCLabel, Ghost::AroundCells,
+		numGhostCells+1);
+  
+  // This task computes new density, uVelocity, vVelocity and wVelocity
+  tsk->computes(d_lab->d_totalflowINLabel);
+  tsk->computes(d_lab->d_totalflowOUTLabel);
+  tsk->computes(d_lab->d_totalflowOUToutbcLabel);
+  tsk->computes(d_lab->d_totalAreaOUTLabel);
+  tsk->computes(d_lab->d_denAccumLabel);
+  
+  sched->addTask(tsk, patches, matls);
+  
+}
+
+void 
+BoundaryCondition::computeFlowINOUT(const ProcessorGroup* pc,
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw,
+				    double delta_t)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    CCVariable<int> cellType;
+    CCVariable<double> old_density;
+    CCVariable<double> density;
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    int nofGhostCells = 0;
+
+    // get cellType, velocity and density
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		Ghost::AroundCells,
+		nofGhostCells+1);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		nofGhostCells);
+    new_dw->get(density, d_lab->d_densityINLabel, matlIndex, patch, 
+		Ghost::AroundCells,
+		nofGhostCells+1);
+    old_dw->get(old_density, d_lab->d_densityINLabel, matlIndex, patch, 
+		Ghost::None,
+		nofGhostCells);
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+   
+    // Get the low and high index for the patch and the variables
+    IntVector domLo = cellType.getFortLowIndex();
+    IntVector domHi = cellType.getFortHighIndex();
+    IntVector domLoD = density.getFortLowIndex();
+    IntVector domHiD = density.getFortHighIndex();
+    IntVector domLoD_old = old_density.getFortLowIndex();
+    IntVector domHiD_old = old_density.getFortHighIndex();
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector domLoU = uVelocity.getFortLowIndex();
+    IntVector domHiU = uVelocity.getFortHighIndex();
+    IntVector domLoV = vVelocity.getFortLowIndex();
+    IntVector domHiV = vVelocity.getFortHighIndex();
+    IntVector domLoW = wVelocity.getFortLowIndex();
+    IntVector domHiW = wVelocity.getFortHighIndex();
+    int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+    int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+    int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+    int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+    int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+    int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
+    double flowIN = 0.0;
+    double flowOUT = 0.0;
+    double flowOUT_outbc = 0.0;
+    double areaOUT = 0.0;
+    double denAccum = 0.0;
+    FORT_DENACCUM(domLoD.get_pointer(), domHiD.get_pointer(), 
+		  idxLo.get_pointer(), idxHi.get_pointer(), 
+		  density.getPointer(),
+		  domLoD_old.get_pointer(), domHiD_old.get_pointer(), 
+		  old_density.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(), 
+		  &denAccum, &delta_t,
+		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		  cellinfo->stb.get_objs());
+    if (xminus||xplus||yminus||yplus||zminus||zplus) {
+      for (int indx = 0; indx < d_numInlets; indx++) {
+	// Get a copy of the current flowinlet
+	// assign flowType the value that corresponds to flow
+	//CellTypeInfo flowType = FLOW;
+	FlowInlet fi = d_flowInlets[indx];
+	FORT_BCINOUT(domLoU.get_pointer(), domHiU.get_pointer(), 
+		     uVelocity.getPointer(),
+		     domLoV.get_pointer(), domHiV.get_pointer(), 
+		     vVelocity.getPointer(),
+		     domLoW.get_pointer(), domHiW.get_pointer(), 
+		     wVelocity.getPointer(),
+		     domLoD.get_pointer(), domHiD.get_pointer(), 
+		     idxLo.get_pointer(), idxHi.get_pointer(), 
+		     density.getPointer(),
+		     domLo.get_pointer(), domHi.get_pointer(), 
+		     cellType.getPointer(),
+		     &fi.d_cellTypeID, &delta_t,
+		     &flowIN, &flowOUT,
+		     cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		     cellinfo->stb.get_objs(),
+		     &xminus, &xplus, &yminus, &yplus, &zminus, &zplus); 
+      } 
+      if (d_pressBoundary) {
+	int press_celltypeval = d_pressureBdry->d_cellTypeID;
+	FORT_BCINOUT(domLoU.get_pointer(), domHiU.get_pointer(), 
+		     uVelocity.getPointer(),
+		     domLoV.get_pointer(), domHiV.get_pointer(), 
+		     vVelocity.getPointer(),
+		     domLoW.get_pointer(), domHiW.get_pointer(), 
+		     wVelocity.getPointer(),
+		     domLoD.get_pointer(), domHiD.get_pointer(), 
+		     idxLo.get_pointer(), idxHi.get_pointer(), 
+		     density.getPointer(),
+		     domLo.get_pointer(), domHi.get_pointer(), 
+		     cellType.getPointer(),
+		     &press_celltypeval, &delta_t,
+		     &flowIN, &flowOUT,
+		     cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		     cellinfo->stb.get_objs(),
+		     &xminus, &xplus, &yminus, &yplus, &zminus, &zplus); 
+      }
+      if (d_outletBoundary) {
+	int out_celltypeval = d_outletBC->d_cellTypeID;
+	FORT_OUTAREA(domLo.get_pointer(), domHi.get_pointer(),
+		     idxLo.get_pointer(), idxHi.get_pointer(),
+		     cellType.getPointer(),
+		     domLoD.get_pointer(), domHiD.get_pointer(), 
+		     density.getPointer(),
+		     cellinfo->sew.get_objs(),
+		     cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
+		     &areaOUT, &out_celltypeval,
+		     &xminus, &xplus, &yminus, &yplus,
+		     &zminus, &zplus);
+	
+	FORT_BCINOUT(domLoU.get_pointer(), domHiU.get_pointer(), 
+		     uVelocity.getPointer(),
+		     domLoV.get_pointer(), domHiV.get_pointer(), 
+		     vVelocity.getPointer(),
+		     domLoW.get_pointer(), domHiW.get_pointer(), 
+		     wVelocity.getPointer(),
+		     domLoD.get_pointer(), domHiD.get_pointer(), 
+		     idxLo.get_pointer(), idxHi.get_pointer(), 
+		     density.getPointer(),
+		     domLo.get_pointer(), domHi.get_pointer(), 
+		     cellType.getPointer(),
+		     &out_celltypeval, &delta_t,
+		     &flowIN, &flowOUT_outbc,
+		     cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		     cellinfo->stb.get_objs(),
+		     &xminus, &xplus, &yminus, &yplus, &zminus, &zplus); 
+      }
+            
+    }
+    new_dw->put(sum_vartype(flowIN), d_lab->d_totalflowINLabel);
+    new_dw->put(sum_vartype(flowOUT), d_lab->d_totalflowOUTLabel);
+    new_dw->put(sum_vartype(flowOUT_outbc), d_lab->d_totalflowOUToutbcLabel);
+    new_dw->put(sum_vartype(areaOUT),d_lab->d_totalAreaOUTLabel);
+    new_dw->put(sum_vartype(denAccum), d_lab->d_denAccumLabel);
+  }
+}
+
+void BoundaryCondition::sched_computeOMB(SchedulerP& sched,
+					 const PatchSet* patches,
+					 const MaterialSet* matls){
+
+  Task* tsk = scinew Task("BoundaryCondition::computeOMB",
+			  this,
+			  &BoundaryCondition::computeOMB);
+
+  tsk->requires(Task::NewDW, d_lab->d_totalflowINLabel);
+  tsk->requires(Task::NewDW, d_lab->d_totalflowOUTLabel);
+  tsk->requires(Task::NewDW, d_lab->d_totalflowOUToutbcLabel);
+  tsk->requires(Task::NewDW, d_lab->d_totalAreaOUTLabel);
+  tsk->requires(Task::NewDW, d_lab->d_denAccumLabel);
+  sched->addTask(tsk, patches, matls);
+}
+
+void 
+BoundaryCondition::computeOMB(const ProcessorGroup* pc,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw)
+{
+    sum_vartype sum_totalFlowIN, sum_totalFlowOUT, sum_totalFlowOUToutbc,
+                sum_totalAreaOUT, sum_denAccum;
+    double totalFlowIN, totalFlowOUT, totalFlowOUT_outbc, totalAreaOUT, denAccum;
+    new_dw->get(sum_totalFlowIN, d_lab->d_totalflowINLabel);
+    new_dw->get(sum_totalFlowOUT, d_lab->d_totalflowOUTLabel);
+    new_dw->get(sum_totalFlowOUToutbc, d_lab->d_totalflowOUToutbcLabel);
+    new_dw->get(sum_totalAreaOUT, d_lab->d_totalAreaOUTLabel);
+    new_dw->get(sum_denAccum, d_lab->d_denAccumLabel);
+    totalFlowIN = sum_totalFlowIN;
+    totalFlowOUT = sum_totalFlowOUT;
+    totalFlowOUT_outbc = sum_totalFlowOUToutbc;
+    totalAreaOUT = sum_totalAreaOUT;
+    denAccum = sum_denAccum;
+    d_overallMB = fabs((totalFlowIN - totalFlowOUT - -totalFlowOUT_outbc - 
+			denAccum)/totalFlowIN);
+    if (d_outletBoundary) {
+      if (totalAreaOUT > 0.0)
+	d_uvwout = (totalFlowIN - denAccum - totalFlowOUT - totalFlowOUT_outbc)/
+	            totalAreaOUT;
+      if (d_uvwout < 0.0) 
+	d_uvwout = 0.0;
+    }
+    else
+      d_uvwout = 0.0;
+    int me = pc->myrank();
+    if (me == 0) {
+      if (d_overallMB > 0.0)
+	cerr << "Overall Mass Balance" << log10(d_overallMB/1.e-7) << endl;
+      cerr << "Total flow in" << totalFlowIN << endl;
+      cerr << "Total flow out" << totalFlowOUT << endl;
+      cerr << "Overall velocity correction" << d_uvwout << endl;
+      cerr << "Total Area out" << totalAreaOUT << endl;
+    }
 }
 
 //****************************************************************************
@@ -2067,7 +2295,9 @@ BoundaryCondition::addPressureGrad(const ProcessorGroup* ,
 	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
 	  // Store current cell
 	    IntVector currCell(colX, colY, colZ);
-	    vars->pressGradUSu[currCell] *= vars->voidFraction[currCell];
+	    IntVector prevCell(colX-1, colY, colZ);
+	    vars->pressGradUSu[currCell] *= (vars->voidFraction[currCell]+
+					     vars->voidFraction[prevCell])/2;
 	  }
 	}
       }
@@ -2098,7 +2328,9 @@ BoundaryCondition::addPressureGrad(const ProcessorGroup* ,
 	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
 	  // Store current cell
 	    IntVector currCell(colX, colY, colZ);
-	    vars->pressGradVSu[currCell] *= vars->voidFraction[currCell];
+	    IntVector prevCell(colX, colY-1, colZ);
+	    vars->pressGradVSu[currCell] *= (vars->voidFraction[currCell]+
+					     vars->voidFraction[prevCell])/2;
 	  }
 	}
       }
@@ -2129,7 +2361,9 @@ BoundaryCondition::addPressureGrad(const ProcessorGroup* ,
 	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
 	  // Store current cell
 	    IntVector currCell(colX, colY, colZ);
-	    vars->pressGradWSu[currCell] *= vars->voidFraction[currCell];
+	    IntVector prevCell(colX, colY, colZ-1);
+	    vars->pressGradWSu[currCell] *= (vars->voidFraction[currCell]+
+					     vars->voidFraction[prevCell])/2;
 	  }
 	}
       }

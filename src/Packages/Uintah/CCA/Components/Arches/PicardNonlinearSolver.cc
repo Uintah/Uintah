@@ -138,7 +138,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // compute : [u,v,w]VelocitySIVBC
 
     d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls);
-
+    // compute total flowin, flow out and overall mass balance
+    d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls, delta_t);
+    d_boundaryCondition->sched_computeOMB(sched, patches, matls);
     // linearizes and solves pressure eqn
     // require : pressureIN, densityIN, viscosityIN,
     //           [u,v,w]VelocitySIVBC (new_dw)
@@ -205,13 +207,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // compute : viscosityCTS
 
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
-
-#ifdef multimaterialform
-    if (!(d_mmInterface == 0)) {
-      d_mmInterface->sched_putCFDVars();
-    }
-#endif
-
     ++nlIterations;
 
 #if 0    
@@ -231,106 +226,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   if (d_probe_data)
     sched_probeData(sched, patches, matls);
 
-#if 0  
-  // for multimaterial, reset wall cell type
-  if (d_MAlab)
-    d_boundaryCondition->sched_mmWallCellTypeInit(level, sched, old_dw, new_dw);
-  //initializes and allocates vars for new_dw
-  // set initial guess
-  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
-  //                     viscosityCTS
-  // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
-  //                     viscosityIN
-  sched_setInitialGuess(level, sched, old_dw, new_dw);
-
-  // Start the iterations
-  int nlIterations = 0;
-  double nlResidual = 2.0*d_resTol;;
-  int nofScalars = d_props->getNumMixVars();
-  do{
-#ifdef multimaterialform
-    if (!(d_mmInterface == 0)) {
-      d_mmInterface->sched_getMPMVars();
-    }
-#endif
-    //correct inlet velocities to account for change in properties
-    // require : densityIN, [u,v,w]VelocityIN (new_dw)
-    // compute : [u,v,w]VelocitySIVBC
-    d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, new_dw);
-
-    // linearizes and solves pressure eqn
-    // require : pressureIN, densityIN, viscosityIN,
-    //           [u,v,w]VelocitySIVBC (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
-    //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
-    //           pressurePS (new_dw)
-    d_pressSolver->solve(level, sched, old_dw, new_dw, time, delta_t);
-
-
-    // if external boundary then recompute velocities using new pressure
-    // and puts them in nonlinear_dw
-    // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
-    // compute : [u,v,w]VelocityCPBC, pressureSPBC
-    d_boundaryCondition->sched_recomputePressureBC(level, sched, old_dw,
-						 new_dw);
-
-    // Momentum solver
-    // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
-    // viscosityIN (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-    //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
-    //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
-    //           [u,v,w]VelocitySPBC
-    for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
-    }
-    // equation for scalars
-    // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
-    //           scalarSP, densityCP (old_dw)
-    // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
-    //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
-    for (int index = 0;index < nofScalars; index ++) {
-      // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve multiple scalars
-      d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
-    }
-
-
-    // update properties
-    // require : densityIN
-    // compute : densityCP
-    d_props->sched_reComputeProps(level, sched, old_dw, new_dw);
-
-    // LES Turbulence model to compute turbulent viscosity
-    // that accounts for sub-grid scale turbulence
-    // require : densityCP, viscosityIN, [u,v,w]VelocitySPBC
-    // compute : viscosityCTS
-    d_turbModel->sched_reComputeTurbSubmodel(level, sched, old_dw, new_dw);
-#ifdef multimaterialform
-    if (!(d_mmInterface == 0)) {
-      d_mmInterface->sched_putCFDVars();
-    }
-#endif
-
-
-    ++nlIterations;
-#if 0    
-    // residual represents the degrees of inaccuracies
-    nlResidual = computeResidual(level, sched, old_dw, new_dw);
-#endif
-  }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
-
-  // Schedule an interpolation of the face centered velocity data 
-  // to a cell centered vector for used by the viz tools
-  sched_interpolateFromFCToCC(level, sched, old_dw, new_dw);
-  // print information at probes provided in input file
-  if (d_probe_data)
-    sched_probeData(level, sched, old_dw, new_dw);
-#endif
 
   return(0);
 }
