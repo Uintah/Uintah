@@ -3,10 +3,10 @@
 #__________________________________
 !../inputs/ICE/gnuplotScripts/combinePatches
 !cp ../inputs/ICE/gnuplotScripts/test2.dat /tmp/exactSolution
-!cp BOT_explicit_Pressure/215/patch_combined/Press_CC /tmp/.
-!cp BOT_Advection_after_BC/215/patch_combined/Mat_0/Temp_CC /tmp/.
-!cp BOT_Advection_after_BC/215/patch_combined/Mat_0/X_vel_CC /tmp/.
-!cp BOT_Advection_after_BC/215/patch_combined/Mat_0/rho_CC /tmp/.
+!cp BOT_explicit_Pressure/215/L-0/patch_combined/Press_CC /tmp/.
+!cp BOT_Advection_after_BC/215/L-0/patch_combined/Mat_0/Temp_CC /tmp/.
+!cp BOT_Advection_after_BC/215/L-0/patch_combined/Mat_0/X_vel_CC /tmp/.
+!cp BOT_Advection_after_BC/215/L-0/patch_combined/Mat_0/rho_CC /tmp/.
 !echo "Done with moving data"
 
 set ytics
