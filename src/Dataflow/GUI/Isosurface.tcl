@@ -34,6 +34,10 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-isoval
 	global $this-isoval-typed
 	global $this-isoval-quantity
+	global $this-quantity-range
+	global $this-quantity-min
+	global $this-quantity-max
+	global $this-isoval-list
 	global $this-active-isoval-selection-tab
 	global $this-continuous
 	global $this-extract-from-new-field
@@ -53,6 +57,10 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval 0
 	set $this-isoval-typed 0
 	set $this-isoval-quantity 1
+	set $this-quantity-range "colormap"
+	set $this-quantity-min 0
+	set $this-quantity-max 100
+	set $this-isoval-list "0"
 	set $this-active-isoval-selection-tab 0
 	set $this-continuous 0
 	set $this-extract-from-new-field 1
@@ -66,6 +74,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-color-r 0.4
 	set $this-color-g 0.2
 	set $this-color-b 0.9
+
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-update_type w "$this set_update_type"
 
@@ -171,7 +180,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection Methods"
 	set isf [$w.f.iso childsite]
 
-	iwidgets::tabnotebook $isf.tabs -raiseselect true
+	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 180
 	pack $isf.tabs -side top -fill x -expand 1
 	pack $w.f.iso -side top -fill x -expand 1
 
@@ -220,8 +229,45 @@ itcl_class SCIRun_Visualization_Isosurface {
 	entry $sel.f.e -width 20 -text $this-isoval-quantity
 	bind $sel.f.e <Return> "$this-c needexecute"
 	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
+	frame $sel.m -relief groove -borderwidth 2
+	label $sel.m.l -text "MinMax of isovals:"
+	radiobutton $sel.m.f -text "Field MinMax" \
+		-variable $this-quantity-range -value "field" \
+		-command "$this-c needexecute"
+	radiobutton $sel.m.c -text "ColorMap MinMax" \
+		-variable $this-quantity-range -value "colormap" \
+		-command "$this-c needexecute"
+	radiobutton $sel.m.m -text "Manual MinMax" \
+		-variable $this-quantity-range -value "manual" \
+		-command "$this-c needexecute"
+
+	frame $sel.m.t 
+	label $sel.m.t.minl -text "Manual Min:"
+	entry $sel.m.t.mine -width 6 -text $this-quantity-min
+	label $sel.m.t.maxl -text "Max:"
+	entry $sel.m.t.maxe -width 6 -text $this-quantity-max
+	bind $sel.m.t.mine <Return> "$this-c needexecute"
+	bind $sel.m.t.maxe <Return> "$this-c needexecute"
+	pack $sel.m.t.minl $sel.m.t.mine $sel.m.t.maxl $sel.m.t.maxe \
+		-side left -fill x -expand 1
+	pack $sel.m.l $sel.m.f $sel.m.c $sel.m.m $sel.m.t \
+	    -side top -fill both -expand 1
+
 	button $sel.extract -text "Extract" -command "$this-c needexecute"
-	pack $sel.f $sel.extract -side top -expand 1
+	pack $sel.f $sel.m $sel.extract -side top -expand 1 -fill x
+
+	# Iso Value using list
+	
+	set isolist [$isf.tabs add -label "List" -command "set $this-active-isoval-selection-tab 2"]
+	
+	frame $isolist.f
+	label $isolist.f.l -text "Number of evenly-spaced isovals:"
+	entry $isolist.f.e -width 20 -text $this-isoval-list
+	bind $isolist.f.e <Return> "$this-c needexecute"
+	pack $isolist.f.l $isolist.f.e -side left -fill both -expand 1
+	button $isolist.extract -text "Extract" -command "$this-c needexecute"
+	pack $isolist.f -fill x
+	pack $isolist.extract -side top -expand 1
 
 	# Pack the Iso Value Selection Tabs
 
@@ -399,11 +445,12 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval-min $min
 	set $this-isoval-max $max
 	if [ expr [winfo exists $w] ] {
-	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.s \
-		configure -from $min -to $max
-	    
-	    bind $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.e \
-		<Return> "$this manualSliderEntry $min $max $this-isoval $this-isoval2"
+          $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
+		  configure -from $min -to $max
+	  $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
+		  configure -tickinterval [expr ($max - $min)/3.001]
+	  bind $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.r.e \
+		  <Return> "$this manualSliderEntry $min $max $this-isoval $this-isoval2"
 	}
     }
 
@@ -414,7 +461,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	frame $win.l
 	frame $win.r
 	scale $win.l.s -from $start -to $stop -length $length \
-	    -tickinterval [expr ($start - $stop)/3.00001] \
+	    -tickinterval [expr ($stop - $start)/3.001] \
 	    -variable $var1 -orient horizontal -showvalue false \
 	    -command "$this updateSliderEntry $var1 $var2" \
 	    -resolution 0.001

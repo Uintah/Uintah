@@ -63,6 +63,10 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_iso_value_max_(ctx->subVar("isoval-max")),
   gui_iso_value_typed_(ctx->subVar("isoval-typed")),
   gui_iso_value_quantity_(ctx->subVar("isoval-quantity")),
+  gui_iso_quantity_range_(ctx->subVar("quantity-range")),
+  gui_iso_quantity_min_(ctx->subVar("quantity-min")),
+  gui_iso_quantity_max_(ctx->subVar("quantity-max")),
+  gui_iso_value_list_(ctx->subVar("isoval-list")),
   gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
   gui_use_algorithm_(ctx->subVar("algorithm")),
   gui_build_field_(ctx->subVar("build_trisurf")),
@@ -200,6 +204,16 @@ Isosurface::execute()
     // fall through and extract isosurface from the new field
   }
 
+  // Color the surface.
+  ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Color Map");
+  if (!inColorMap)
+  {
+    error("Unable to initialize iport 'Color Map'.");
+    return;
+  }
+  ColorMapHandle cmap;
+  const bool have_ColorMap = inColorMap->get(cmap);
+  
   vector<double> isovals;
   if (gui_active_isoval_selection_tab_.get() == "0")
   { // slider / typed
@@ -219,9 +233,45 @@ Isosurface::execute()
       warning("Isosurface quantity must be at least one -- skipping isosurfacing.");
       return;
     }
-    double di=(prev_max_ - prev_min_)/(num+1);
+
+    string range = gui_iso_quantity_range_.get();
+    double qmax=prev_max_;
+    double qmin=prev_min_;
+    if (range == "colormap") {
+      if (!have_ColorMap) {
+	error("Error - I don't have a colormap");
+	return;
+      }
+      qmin=cmap->getMin();
+      qmax=cmap->getMax();
+    } else if (range == "manual") {
+      qmin=gui_iso_quantity_min_.get();
+      qmax=gui_iso_quantity_max_.get();
+    } // else we're using "field" and qmax and qmin were set above
+    
+    if (qmin>=qmax) {
+      error("Can't use quantity tab if Min == Max");
+      return;
+    }
+    double di=(qmax - qmin)/(num+1);
     for (int i=0; i<num; i++) 
-      isovals.push_back((i+1)*di+prev_min_);
+      isovals.push_back((i+1)*di+qmin);
+  }
+  else if (gui_active_isoval_selection_tab_.get() == "2")
+  { // list
+    string vlist = gui_iso_value_list_.get();
+    char **v;
+    char *value_str = new char[500];
+    v = &value_str;
+    strcpy(value_str, vlist.c_str());
+    char *val;
+    while (val = strtok(value_str, " ")) {
+      value_str = 0;
+      isovals.push_back(atof(val));
+    }
+//    cerr << "Number of isovalues="<<isovals.size()<<"\n";
+//    for (int idx=0; idx<isovals.size(); idx++) 
+//      cerr << "  "<<idx<<" - "<<isovals[idx]<<"\n";
   }
   else
   {
@@ -307,16 +357,6 @@ Isosurface::execute()
   // Merged send_results.
   GeomGroup *geom = new GeomGroup;;
 
-  // Color the surface.
-  ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Color Map");
-  if (!inColorMap)
-  {
-    error("Unable to initialize iport 'Color Map'.");
-    return;
-  }
-  ColorMapHandle cmap;
-  const bool have_ColorMap = inColorMap->get(cmap);
-  
   for (unsigned int iv=0; iv<isovals.size(); iv++)
   {
     MaterialHandle matl;
