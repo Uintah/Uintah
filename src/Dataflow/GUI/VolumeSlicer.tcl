@@ -51,6 +51,9 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	global $this-draw_phi_0
 	global $this-draw_phi_1
 	global $this-cyl_active
+	global $this-use_stencil
+	global $this-multi_level
+	global $this-outline_levels
 	set $this-drawX 0
 	set $this-drawY 0
 	set $this-drawZ 0
@@ -61,6 +64,9 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	set $this-phi_0 30.0
 	set $this-phi_1 60.0
 	set $this-control_pos_saved 0
+	set $this-use_stencil 0
+	set $this-multi_level 1
+	set $this-outline_levels 0
     }
 
 
@@ -204,17 +210,39 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	pack $standard.v -side top -fill x -expand 1
     }
 
-    method ui {} {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    return
+    method ui {} { 
+        set w .ui[modname] 
+
+        if {[winfo exists $w]} {
+            return
+        } else {
+	    buildTopLevel
 	}
-	toplevel $w
+    }
+
+    method buildTopLevel {} {
+        set w .ui[modname] 
+
+        if {[winfo exists $w]} { 
+            return
+        } 
+	
+        toplevel $w 
+	wm withdraw $w
+
+	build_ui
+    }
+     
+    method build_ui {} {
+	set w .ui[modname]
 	set n "$this-c needexecute "
+	frame $w.main -relief flat
+	pack $w.main -fill both -expand yes
+
 	#wm minsize $w 250 300
-	iwidgets::labeledframe $w.frame_title \
+	iwidgets::labeledframe $w.main.frame_title \
 		-labelpos nw -labeltext "Plane Options"
-	set dof [$w.frame_title childsite]
+	set dof [$w.main.frame_title childsite]
 
 	iwidgets::tabnotebook  $dof.tabs -height 250 -raiseselect true 
 
@@ -236,26 +264,37 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	$dof.tabs pageconfigure 0 -command "$this set_active_tab $st; $n"
 	pack $dof.tabs -side top -expand yes
 
-	pack $w.frame_title -side top -expand yes
+	pack $w.main.frame_title -side top -expand yes
 
-	frame $w.f3 -relief groove -borderwidth 2
-	pack $w.f3 -padx 4 -pady 4 -fill x
+#  	checkbutton $w.main.cb -text "use stencil" \
+#  	    -variable $this-use_stencil -command $n
+#  	pack $w.main.cb -side top
+	frame $w.main.f4 -relief flat -borderwidth 0
+	pack $w.main.f4 -fill x -expand yes
 
-	label $w.f3.l -text "Interpolation Mode"
-	radiobutton $w.f3.interp -text "Interpolate" -relief flat \
+	if { [set $this-multi_level] > 1 } {
+	    $this build_multi_level
+	}
+	
+	frame $w.main.f3 -relief groove -borderwidth 2
+	pack $w.main.f3 -padx 4 -pady 4 -fill x -side top
+
+	label $w.main.f3.l -text "Interpolation Mode"
+	radiobutton $w.main.f3.interp -text "Interpolate" -relief flat \
 		-variable $this-interp_mode -value 1 \
 		-anchor w -command $n
 
-	radiobutton $w.f3.near -text "Nearest" -relief flat \
+	radiobutton $w.main.f3.near -text "Nearest" -relief flat \
 		-variable $this-interp_mode -value 0 \
 		-anchor w -command $n
 
-	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4 -pady 2
+	pack $w.main.f3.l $w.main.f3.interp $w.main.f3.near -side top -fill x -padx 4 -pady 2
 	
-	makeSciButtonPanel $w $w $this
+	makeSciButtonPanel $w.main $w $this
+	$this state 
 	moveToCursor $w
 
-	$this state 
+
 	
     }
 
@@ -311,5 +350,57 @@ itcl_class SCIRun_Visualization_VolumeSlicer {
 	set inactivecolor "#010101"
 	$w configure -state disabled -foreground $inactivecolor
     }
+
+    method build_multi_level { } {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    puts -nonewline "building ml frame"
+	    frame $w.main.f4.f -relief groove -borderwidth 2
+	    pack $w.main.f4.f -padx 2 -pady 2 -fill x -expand yes -side top
+	    frame $w.main.f4.f.f1 -relief flat -borderwidth 2
+	    pack $w.main.f4.f.f1 -padx 2 -pady 2 -fill x -expand yes
+	    checkbutton $w.main.f4.f.f1.stencil -text "Use Stencil" \
+		-variable $this-use_stencil -command "$this-c needexecute"
+	    checkbutton $w.main.f4.f.f1.opacity -text "Outline Levels" \
+		-variable $this-outline_levels -command "$this-c needexecute"
+	    pack $w.main.f4.f.f1.stencil $w.main.f4.f.f1.opacity -side left
+	    
+	    frame $w.main.f4.f.f2 -relief flat -borderwidth 2
+	    pack $w.main.f4.f.f2 -padx 2 -pady 2 -fill x -expand yes
+	    label $w.main.f4.f.f2.l -text "Show level"
+	    pack $w.main.f4.f.f2.l -side left
+	    frame $w.main.f4.f.f2.f -relief flat -borderwidth 2
+	    pack $w.main.f4.f.f2.f -side right -expand yes -fill x
+	    set selected 0
+	    for { set i 0 } { $i < [set $this-multi_level] } { incr i } {
+		checkbutton $w.main.f4.f.f2.f.b$i -text $i \
+		    -variable $this-l$i -command "$this-c needexecute" 
+		pack $w.main.f4.f.f2.f.b$i -side left
+		if { [isOn l$i] } {
+		    set selected 1
+		}
+	    }
+	    if { !$selected && [winfo exists $w.main.f4.f.f2.f.b0] } {  
+		$w.main.f4.f.f2.f.b0 select 
+	    }
+	}
+    }
+    
+    method destroy_multi_level { } {
+	set w .ui[modname]
+	if {[winfo exists $w.main]} {
+	    destroy $w.main
+	}
+	build_ui
+    }
+
+    method hasUI {} {
+	return [winfo exists .ui[modname]]
+    }
+
+    method isOn { bval } {
+	return  [set $this-$bval]
+    }
+
 }
 
