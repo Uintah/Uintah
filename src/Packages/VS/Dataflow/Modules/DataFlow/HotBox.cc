@@ -144,7 +144,12 @@ private:
   GuiString boundingboxdatasource_;
   GuiString injurylistdatasource_;
   GuiString geometrypath_;
+
+  // the current selection
   GuiString currentselection_;
+
+  // current time
+  GuiInt gui_curTime_;
 
   // fixed anatomical label map files
   VH_MasterAnatomy *anatomytable;
@@ -249,6 +254,7 @@ HotBox::HotBox(GuiContext* ctx)
   injurylistdatasource_(ctx->subVar("injurylistdatasource")),
   geometrypath_(ctx->subVar("geometrypath")),
   currentselection_(ctx->subVar("currentselection")),
+  gui_curTime_(ctx->subVar("currentTime")),
   probeWidget_lock_("PointWidget lock"),
   gui_probeLocx_(ctx->subVar("gui_probeLocx")),
   gui_probeLocy_(ctx->subVar("gui_probeLocy")),
@@ -1186,6 +1192,10 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
       {
         (*injuryPtr)->context = SET_DIAMETER;
       }
+      else if(geomParamName == string("inside diameter"))
+      {
+        (*injuryPtr)->context = SET_INSIDE_DIAMETER;
+      }
       else
       { // unset context
         (*injuryPtr)->context = UNSET;
@@ -1226,9 +1236,16 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
       else if( (*injuryPtr)->context == SET_DIAMETER)
       { // expect a single float
         if(sscanf(geomValueStr, "%f", &diam) != 1)
-          cerr << "Error reading Axis End Point" << endl;
+          cerr << "Error reading diameter" << endl;
         (*injuryPtr)->rad0 = (*injuryPtr)->rad1 = diam/2.0;
         (*injuryPtr)->rad0set = (*injuryPtr)->rad1set = true;
+      }
+      else if( (*injuryPtr)->context == SET_INSIDE_DIAMETER)
+      { // expect a single float
+        if(sscanf(geomValueStr, "%f", &diam) != 1)
+          cerr << "Error reading inside diameter" << endl;
+        (*injuryPtr)->inside_rad0 = (*injuryPtr)->inside_rad1 = diam/2.0;
+        (*injuryPtr)->inside_rad0set = (*injuryPtr)->inside_rad1set = true;
       }
       else
       {
@@ -1283,12 +1300,12 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
     cerr << "Adding: " << endl;
     (*injuryPtr)->print();
     injured_tissue.push_back(**injuryPtr);
-    int curTime = (*injuryPtr)->timeStamp;
+    int woundTime = (*injuryPtr)->timeStamp;
     // create the next injury record
     *injuryPtr = new VH_injury();
 
     // carry through timeStamp
-    (*injuryPtr)->timeStamp =  curTime;
+    (*injuryPtr)->timeStamp =  woundTime;
     (*injuryPtr)->timeSet = true;
   }
   if(woundNode.hasChildNodes())
@@ -1364,6 +1381,7 @@ HotBox::execInjuryList()
   // report number of injuries read
   cerr << "HotBox::execInjuryList(): ";
   cerr << injured_tissue.size() << " injuries found" << endl;
+
 } // end execInjuryList()
 
 /*****************************************************************************

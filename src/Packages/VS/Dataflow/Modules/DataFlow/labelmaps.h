@@ -143,8 +143,9 @@ VH_Anatomy_findMaxBoundingBox(VH_AnatomyBoundingBox *list);
 
 #define UNSET -1
 #define SET_AXIS_START_POINT 0
-#define SET_AXIS_END_POINT 1
-#define SET_DIAMETER 2
+#define SET_AXIS_END_POINT   1
+#define SET_DIAMETER         2
+#define SET_INSIDE_DIAMETER  3
 
 class VH_injury
 {
@@ -156,14 +157,18 @@ class VH_injury
   bool isPrimaryInjury, isSecondaryInjury, isGeometry;
   // flags to test whether this node is complete
   bool timeSet, nameSet, point0set, point1set, rad0set, rad1set;
+  bool inside_rad0set, inside_rad1set;
   string geom_type; // line, sphere, cylinder, hollow cylinder
   float axisX0, axisY0, axisZ0; // center axis endpoint 0
   float axisX1, axisY1, axisZ1; // center axis endpoint 1
-  float rad0, rad1;
+  float inside_rad0, inside_rad1, rad0, rad1;
 
-  VH_injury() { context = UNSET;
+  VH_injury() { context = UNSET; rad0set = rad1set = false;
+                inside_rad0set = inside_rad1set = false;
                 nameSet = timeSet = point0set = point1set = false; };
   VH_injury(char *newName) { anatomyname = string(newName);
+             context = UNSET; rad0set = rad1set = false;
+             inside_rad0set = inside_rad1set = false;
              nameSet = true; timeSet = point0set = point1set = false; };
   bool isset();
   void print();
