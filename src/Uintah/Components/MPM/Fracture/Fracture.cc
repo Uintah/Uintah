@@ -37,6 +37,8 @@ initializeFractureModelData(const Patch* patch,
    new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);   
    ParticleVariable<double> pMicrocrackSize;
    new_dw->allocate(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
+   ParticleVariable<double> pMicrocrackPosition;
+   new_dw->allocate(pMicrocrackPosition, lb->pMicrocrackPositionLabel, pset);
    
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
@@ -44,11 +46,13 @@ initializeFractureModelData(const Patch* patch,
 	pIsBroken[idx] = 0;
 	pCrackSurfaceNormal[idx] = Vector(0.,0.,0.);
 	pMicrocrackSize[idx] = 0;
+	pMicrocrackPosition[idx] = 0;
    }
 
    new_dw->put(pIsBroken, lb->pIsBrokenLabel);
    new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
    new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel);
+   new_dw->put(pMicrocrackPosition, lb->pMicrocrackPositionLabel);
 }
 
 void
@@ -65,6 +69,7 @@ crackGrow(const Patch* patch,
    ParticleVariable<int> pIsBroken;
    ParticleVariable<Vector> pCrackSurfaceNormal;
    ParticleVariable<double> pMicrocrackSize;
+   ParticleVariable<double> pMicrocrackPosition;
    ParticleVariable<double> pDilationalWaveSpeed;
    ParticleVariable<double> pVolume;
    ParticleVariable<Vector> pRotationRate;
@@ -73,6 +78,7 @@ crackGrow(const Patch* patch,
    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
    old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
+   old_dw->get(pMicrocrackPosition, lb->pMicrocrackPositionLabel, pset);
    old_dw->get(pVolume, lb->pVolumeLabel, pset);
    new_dw->get(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
    new_dw->get(pRotationRate, lb->pRotationRateLabel, pset);
@@ -126,6 +132,7 @@ crackGrow(const Patch* patch,
 	  pIsBroken[idx] = 1;
 	  pCrackSurfaceNormal[idx] = maxDirection;
 	  pMicrocrackSize[idx] = 0;
+	  pMicrocrackPosition[idx] = pow(pVolume[idx],0.33333) * (drand48() - 0.5);
 	  cout<<"Microcrack initiated in direction "<<maxDirection<<"."<<endl;
 	}
       }
@@ -150,6 +157,7 @@ crackGrow(const Patch* patch,
    new_dw->put(pIsBroken, lb->pIsBrokenLabel_preReloc);
    new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc);
    new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel_preReloc);
+   new_dw->put(pMicrocrackPosition, lb->pMicrocrackPositionLabel_preReloc);
 }
 
 Fracture::
@@ -172,8 +180,8 @@ void Fracture::computerNodesVisibility(const Patch* patch,
   ParticleVariable<Point>  pX;
   ParticleVariable<Vector> pCrackSurfaceNormal;
   ParticleVariable<double> pMicrocrackSize;
+  ParticleVariable<double> pMicrocrackPosition;
   ParticleVariable<int>    pIsBroken;
-  ParticleVariable<double> pVolume;
 
   ParticleSubset* outsidePset = old_dw->getParticleSubset(matlindex, patch,
 	Ghost::AroundNodes, 1, lb->pXLabel);
@@ -181,8 +189,8 @@ void Fracture::computerNodesVisibility(const Patch* patch,
   old_dw->get(pX,             lb->pXLabel, outsidePset);
   old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, outsidePset);
   old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, outsidePset);
+  old_dw->get(pMicrocrackPosition, lb->pMicrocrackPositionLabel, outsidePset);
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, outsidePset);
-  old_dw->get(pVolume, lb->pVolumeLabel, outsidePset);
 
   ParticleVariable<int>    pVisibility;
   ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
@@ -190,10 +198,10 @@ void Fracture::computerNodesVisibility(const Patch* patch,
 
   Lattice lattice(pX);
   ParticlesNeighbor particles( pX,
-                               pVolume,
 			       pIsBroken,
 			       pCrackSurfaceNormal,
-			       pMicrocrackSize);
+			       pMicrocrackSize,
+			       pMicrocrackPosition );
   IntVector cellIdx;
   IntVector nodeIdx[8];
   
@@ -226,6 +234,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.41  2000/09/11 00:15:00  tan
+// Added calculations on random distributed microcracks in broken particles.
+//
 // Revision 1.40  2000/09/10 23:09:59  tan
 // Added calculations on the rotation of crack surafce during fracture.
 //

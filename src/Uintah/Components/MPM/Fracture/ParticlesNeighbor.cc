@@ -13,16 +13,16 @@ namespace Uintah {
 namespace MPM {
 
 ParticlesNeighbor::ParticlesNeighbor(const ParticleVariable<Point>& pX,
-                          const ParticleVariable<double>& pVolume,
 	                  const ParticleVariable<int>& pIsBroken,
 			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
-			  const ParticleVariable<double>& pMicrocrackSize)
+			  const ParticleVariable<double>& pMicrocrackSize,
+			  const ParticleVariable<double>& pMicrocrackPosition)
 : std::vector<particleIndex>(),
   d_pX(pX),
-  d_pVolume(pVolume),
   d_pIsBroken(pIsBroken),
   d_pCrackSurfaceNormal(pCrackSurfaceNormal),
-  d_pMicrocrackSize(pMicrocrackSize)
+  d_pMicrocrackSize(pMicrocrackSize),
+  d_pMicrocrackPosition(pMicrocrackPosition)
 {
 }
 
@@ -104,8 +104,7 @@ bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
       if( d_pIsBroken[index] ) {
         Vector N = d_pCrackSurfaceNormal[index];
         double size2 = d_pMicrocrackSize[index] * d_pMicrocrackSize[index];
-        Point O = d_pX[index] + N *
-           ( pow(d_pVolume[index],0.3333) /2 );
+        Point O = d_pX[index] + N * d_pMicrocrackPosition[index];
 
 	double A_N = Dot(A,N);
 	
@@ -128,6 +127,9 @@ bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.10  2000/09/11 00:15:00  tan
+// Added calculations on random distributed microcracks in broken particles.
+//
 // Revision 1.9  2000/09/08 18:25:44  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.

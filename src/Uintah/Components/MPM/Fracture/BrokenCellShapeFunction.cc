@@ -9,17 +9,17 @@ namespace MPM {
 
 BrokenCellShapeFunction::
 BrokenCellShapeFunction( const Lattice& lattice,
-                         const ParticleVariable<double>& pVolume,
                          const ParticleVariable<int>& pIsBroken,
 			 const ParticleVariable<Vector>& pCrackSurfaceNormal,
-			 const ParticleVariable<double>& pMicrocrackSize )
+			 const ParticleVariable<double>& pMicrocrackSize,
+			 const ParticleVariable<double>& pMicrocracPosition )
 
 
 : d_lattice(lattice),
-  d_pVolume(pVolume),
   d_pIsBroken(pIsBroken),
   d_pCrackSurfaceNormal(pCrackSurfaceNormal),
-  d_pMicrocrackSize(pMicrocrackSize)
+  d_pMicrocrackSize(pMicrocrackSize),
+  d_pMicrocracPosition(pMicrocracPosition)
 {
 }
 
@@ -89,10 +89,10 @@ getVisibility(int partIdx,const IntVector& nodeIdx) const
   d_lattice.getPatch()->findCell(d_lattice.getpX()[partIdx],cellIdx);
 
   ParticlesNeighbor particles( d_lattice.getpX(),
-                               d_pVolume,
 			       d_pIsBroken,
 			       d_pCrackSurfaceNormal,
-			       d_pMicrocrackSize);
+			       d_pMicrocrackSize,
+			       d_pMicrocracPosition);
   particles.buildIn(cellIdx,d_lattice);
 
   return particles.visible(d_lattice.getpX()[partIdx],
@@ -103,6 +103,9 @@ getVisibility(int partIdx,const IntVector& nodeIdx) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.8  2000/09/11 00:15:00  tan
+// Added calculations on random distributed microcracks in broken particles.
+//
 // Revision 1.7  2000/09/08 18:24:51  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.

@@ -71,6 +71,9 @@ MPMLabel::MPMLabel()
   pMicrocrackSizeLabel = scinew VarLabel( "p.microcrackSize",
 			ParticleVariable<double>::getTypeDescription() );
 
+  pMicrocrackPositionLabel = scinew VarLabel( "p.microcrackPosition",
+			ParticleVariable<double>::getTypeDescription() );
+
   pParticleIDLabel = scinew VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
 
@@ -124,6 +127,9 @@ MPMLabel::MPMLabel()
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pMicrocrackSizeLabel_preReloc = scinew VarLabel( "p.microcrackSize+",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pMicrocrackPositionLabel_preReloc = scinew VarLabel( "p.microcrackPosition+",
 			ParticleVariable<double>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
@@ -252,6 +258,7 @@ MPMLabel::~MPMLabel()
   delete pIsBrokenLabel;
   delete pCrackSurfaceNormalLabel;
   delete pMicrocrackSizeLabel;
+  delete pMicrocrackPositionLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
@@ -271,9 +278,11 @@ MPMLabel::~MPMLabel()
   delete pIsBrokenLabel_preReloc;
   delete pCrackSurfaceNormalLabel_preReloc;
   delete pMicrocrackSizeLabel_preReloc;
+  delete pMicrocrackPositionLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
   delete pMassRateLabel_preReloc;
+
   delete gAccelerationLabel;
   delete gMomExedAccelerationLabel;
   delete gMassLabel;
@@ -286,8 +295,6 @@ MPMLabel::~MPMLabel()
   delete gNormTractionLabel;
   delete gStressLabel;
   delete gSurfNormLabel;
-  delete pCrackSurfaceNormalLabel;
-  delete pCrackSurfaceNormalLabel_preReloc;
   delete gSelfContactLabel;
   delete gTemperatureLabel;
   delete gTemperatureStarLabel;
@@ -324,6 +331,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.34  2000/09/11 00:14:55  tan
+// Added calculations on random distributed microcracks in broken particles.
+//
 // Revision 1.33  2000/09/10 22:51:09  tan
 // Added particle rotationRate computation in computeStressTensor functions
 // in each constitutive model classes.  The particle rotationRate will be used
