@@ -63,7 +63,7 @@ WARNING
 #define FORT_PRESSBC bcpress_
 #define FORT_ADDPRESSGRAD addpressgrad_
 #define FORT_SCALARCOEFF scalcoef_
-#define FORT_SCALARSOURCE ssource_
+#define FORT_SCALARSOURCE scalsrc_
 #define FORT_SCALARBC bcscalar_
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERRELAX urelax_
@@ -716,6 +716,19 @@ extern "C"
 
     ////////////////////////////////////////////////////////////////////////
     //
+    // Calculate the scalar source terms
+    //
+    void
+    FORT_SCALARSOURCE(const int* domLo, const int* domHi,
+		      const int* idxLo, const int* idxHi,
+		      double* scalarLinSrc,
+		      double* scalarNonLinSrc,
+		      const double* old_density, const double* old_scalar,
+		      const double* sew, const double* sns, const double* stb,
+		      const double* delta_t);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
     // Calculate the scalar BC
     //
     void
@@ -749,6 +762,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.26  2000/07/30 22:59:31  bbanerje
+// Added scalar source term calcs.
+//
 // Revision 1.25  2000/07/30 22:21:21  bbanerje
 // Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
 // in C++ side.

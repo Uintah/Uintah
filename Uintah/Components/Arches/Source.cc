@@ -27,16 +27,7 @@ using namespace Uintah::ArchesSpace;
 using SCICore::Geometry::Vector;
 
 //****************************************************************************
-// Default constructor for Source
-//****************************************************************************
-Source::Source()
-{
-
- 				
-}
-
-//****************************************************************************
-// Another Constructor for Source
+// Constructor for Source
 //****************************************************************************
 Source::Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const)
                            :d_turbModel(turb_model), 
@@ -274,7 +265,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
   IntVector domLoW = vars->uVelocity.getFortLowIndex();
   IntVector domHiW = vars->uVelocity.getFortHighIndex();
 
-  //fortran call
+  //fortran call ** WARNING ** ffield = -1
   int ffield = -1;
   FORT_PRESSOURCE(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
@@ -331,61 +322,24 @@ Source::calculateScalarSource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector domLoU = vars->uVelocity.getFortLowIndex();
-  IntVector domHiU = vars->uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector domLoV = vars->vVelocity.getFortLowIndex();
-  IntVector domHiV = vars->vVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector domLoW = vars->wVelocity.getFortLowIndex();
-  IntVector domHiW = vars->wVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
-  IntVector domLo = vars->scalar.getFortLowIndex();
-  IntVector domHi = vars->scalar.getFortHighIndex();
+  IntVector domLo = vars->old_scalar.getFortLowIndex();
+  IntVector domHi = vars->old_scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
   // 3-d array for volume - fortran uses it for temporary storage
-  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   FORT_SCALARSOURCE(domLo.get_pointer(), domHi.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
-		    scalarLinearSrc.getPointer(),
-		    scalarNonlinearSrc.getPointer(),
-		    scalar.getPointer(),
-		    density.getPointer(),
-		    viscosity.getPointer(),
-		    domLoU.get_pointer(), domHiU.get_pointer(),
-		    idxLoU.get_pointer(), idxHiU.get_pointer(),
-		    uVelLinearSrc.getPointer(), 
-		    uVelNonlinearSrc.getPointer(), 
-		    uVelocity.getPointer(), 
-		    domLoV.get_pointer(), domHiV.get_pointer(),
-		    idxLoV.get_pointer(), idxHiV.get_pointer(),
-		    vVelLinearSrc.getPointer(), 
-		    vVelNonlinearSrc.getPointer(), 
-		    vVelocity.getPointer(), 
-		    domLoW.get_pointer(), domHiW.get_pointer(),
-		    idxLoW.get_pointer(), idxHiW.get_pointer(),
-		    wVelLinearSrc.getPointer(), 
-		    wVelNonlinearSrc.getPointer(), 
-		    wVelocity.getPointer(), 
-		    cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		    cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		    cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		    cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		    cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		    cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-		    cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-		    cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-		    cellinfo->tfac, cellinfo->bfac, volume);
-#endif
-
+		    vars->scalarLinearSrc.getPointer(),
+		    vars->scalarNonlinearSrc.getPointer(),
+		    vars->old_density.getPointer(),
+		    vars->old_scalar.getPointer(),
+		    cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		    cellinfo->stb.get_objs(),
+		    &delta_t);
 }
 
 //****************************************************************************
@@ -594,6 +548,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.33  2000/07/30 22:59:31  bbanerje
+//Added scalar source term calcs.
+//
 //Revision 1.32  2000/07/28 02:31:00  rawat
 //moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 //coeffecients
