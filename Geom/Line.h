@@ -35,6 +35,8 @@ public:
     virtual double depth(DrawInfoX11*);
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
+    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit);
 };
 
 #endif /* SCI_Geom_Line_h */

@@ -18,8 +18,8 @@
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
-GeomDisc::GeomDisc()
-: GeomObj(1)
+GeomDisc::GeomDisc(int nu, int nv)
+: GeomObj(1), nu(nu), nv(nv)
 {
 }
 
@@ -118,3 +118,8 @@ void GeomDisc::make_prims(Array1<GeomObj*>& free,
     }
 }
 
+void GeomDisc::intersect(const Ray&, const MaterialHandle&,
+			 Hit&)
+{
+    NOT_FINISHED("GeomDisc::intersect");
+}

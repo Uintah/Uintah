@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Tri.h>
+#include <Classlib/NotFinished.h>
 #include <Geometry/BBox.h>
 #include <Math/MinMax.h>
 
@@ -50,3 +51,8 @@ void GeomTri::make_prims(Array1<GeomObj*>&,
     dontfree.add(tri);
 }
 
+void GeomTri::intersect(const Ray&, const MaterialHandle& matl,
+			Hit&)
+{
+    NOT_FINISHED("GeomTri::intersect");
+}

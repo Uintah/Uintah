@@ -23,8 +23,10 @@ class BBox;
 class DrawInfoOpenGL;
 class DrawInfoX11;
 class GeomPick;
+class Hit;
 class Vector;
 class Point;
+class Ray;
 
 class GeomObj {
 protected:
@@ -60,6 +62,11 @@ public:
     // For all Painter's algorithm based renderers
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree) = 0;
+
+    // For Raytracing
+    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit)=0;
+    virtual Vector normal(const Point& p);
 };
 
 #endif

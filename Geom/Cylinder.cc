@@ -19,8 +19,8 @@
 #include <Math/Trig.h>
 #include <Classlib/String.h>
 
-GeomCylinder::GeomCylinder()
-: GeomObj(1)
+GeomCylinder::GeomCylinder(int nu, int nv)
+: GeomObj(1), nu(nu), nv(nv)
 {
 }
 
@@ -120,4 +120,10 @@ void GeomCylinder::make_prims(Array1<GeomObj*>& free,
 	    l2=p2;
 	}
     }
+}
+
+void GeomCylinder::intersect(const Ray&, const MaterialHandle&,
+			 Hit&)
+{
+    NOT_FINISHED("GeomCylinder::intersect");
 }

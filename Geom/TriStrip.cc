@@ -12,6 +12,7 @@
  */
 
 #include <Geom/TriStrip.h>
+#include <Classlib/NotFinished.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 
@@ -58,3 +59,8 @@ void GeomTriStrip::add(const Point& pt, const Vector& norm)
     norms.add(norm);
 }
 
+void GeomTriStrip::intersect(const Ray&, const MaterialHandle&,
+			 Hit&)
+{
+    NOT_FINISHED("GeomTriStrip::intersect");
+}

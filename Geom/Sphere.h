@@ -27,7 +27,7 @@ public:
     void adjust();
     void move(const Point&, double, int nu=20, int nv=10);
 
-    GeomSphere();
+    GeomSphere(int nu=20, int nv=10);
     GeomSphere(const Point&, double, int nu=20, int nv=10);
     GeomSphere(const GeomSphere&);
     virtual ~GeomSphere();
@@ -40,6 +40,9 @@ public:
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
+    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit);
+    virtual Vector normal(const Point& p);
 };
 
 #endif /* SCI_Geom_Sphere_h */

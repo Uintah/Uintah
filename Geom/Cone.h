@@ -37,7 +37,7 @@ public:
     void adjust();
     void move(const Point&, const Point&, double, double, int nu=20, int nv=4);
 
-    GeomCone();
+    GeomCone(int nu=20, int nv=4);
     GeomCone(const Point&, const Point&, double, double, int nu=20, int nv=4);
     GeomCone(const GeomCone&);
     virtual ~GeomCone();
@@ -50,6 +50,8 @@ public:
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
+    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit);
 };
 
 #endif /* SCI_Geom_Cone_h */

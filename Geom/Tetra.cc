@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Tetra.h>
+#include <Classlib/NotFinished.h>
 #include <Geom/Line.h>
 #include <Geometry/BBox.h>
 
@@ -59,3 +60,10 @@ void GeomTetra::make_prims(Array1<GeomObj*>& free,
     l4->set_matl(matl);
     free.add(l4);
 }
+
+void GeomTetra::intersect(const Ray& ray, const MaterialHandle& matl,
+			  Hit& hit)
+{
+    NOT_FINISHED("GeomTetra::intersect");
+}
+
