@@ -91,7 +91,38 @@ Brick::bbox() const
   bb.extend( corner[7] );
   return bb;
 }
+
+void Brick::ComputePoly(Ray r, double t, Polygon* p) const
+{
+  double t0, t1;
+  int i,j,k, tIndex = 1;
+  Point p0, p1;
+  Ray edgeList[6];
+  Point intersects[6];
+  Vector view = r.direction();
+  bool buildEdgeList = true;
+  RayStep dts[6];
+  int nIntersects = 0;
+  p0 = r.parameter(t);
+  p1 = r.parameter(t);
+  for( j = 0; j < 12; j++) {
+    t0 = intersectParam(-view, p0, edge[j] );
+    t1 = intersectParam(-view, p1, edge[j] );
+    if(t0 > 0.0 && t0 < 1.0 ) {
+      intersects[nIntersects] = edge[j].parameter(t0);
+      edgeList[nIntersects] = edge[j];
+      dts[nIntersects].base = t0;
+      dts[nIntersects++].step = t1 - t0;
+    }
+  }
+  if(nIntersects > 3) {
+    OrderIntersects( intersects, edgeList, dts, nIntersects );
+  }
   
+  p = new Polygon( intersects, nIntersects );
+
+}
+
 void
 Brick::ComputePolys(Ray r, double tmin, double tmax,
 		    double dt, double* ts, vector<Polygon*>& polys ) const
