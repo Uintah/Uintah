@@ -25,7 +25,7 @@ public:
    virtual ~ScaledBoxWidget();
 
    virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, int);
+   virtual void geom_moved(int, double, const Vector&, int, const BState&);
 
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
@@ -46,6 +46,9 @@ public:
    // Material indexs
    enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl };
 
+protected:
+   virtual clString GetMaterialName( const Index mindex ) const;   
+   
 private:
    Vector oldrightaxis, olddownaxis, oldinaxis;
 };

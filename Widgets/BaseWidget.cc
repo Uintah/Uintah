@@ -14,6 +14,8 @@
 
 #include <Widgets/BaseWidget.h>
 
+static const Index NumDefaultMaterials = 6;
+
 MaterialHandle BaseWidget::DefaultPointMaterial(new Material(Color(0,0,0),
 							     Color(.54,.60,1),
 							     Color(.5,.5,.5),
@@ -39,7 +41,19 @@ MaterialHandle BaseWidget::DefaultHighlightMaterial(new Material(Color(0,0,0),
 								 Color(.5,.5,.5),
 								 20));
 
+static clString make_id(const clString& name)
+{
+   static int next_widget_number=0;
+   static Mutex idlock;
+   idlock.lock();
+   clString id ( name+"_"+to_string(next_widget_number++) );
+   idlock.unlock();
+   return id;
+   
+}
+
 BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
+			const clString& name,
 			const Index NumVariables,
 			const Index NumConstraints,
 			const Index NumGeometries,
@@ -48,7 +62,7 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumModes,
 			const Index NumSwitches,
 			const Real widget_scale )
-: module(module), lock(lock),
+: module(module), lock(lock), name(name),
   solve(new ConstraintSolver), 
   NumVariables(NumVariables), NumConstraints(NumConstraints),
   NumGeometries(NumGeometries), NumPicks(NumPicks), NumMaterials(NumMaterials),
@@ -56,9 +70,10 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
   geometries(NumGeometries), picks(NumPicks), materials(NumMaterials),
   NumModes(NumModes), NumSwitches(NumSwitches),
   modes(NumModes), mode_switches(NumSwitches), CurrentMode(0),
-  widget_scale(widget_scale),
-  epsilon(1e-6)
+  widget_scale(widget_scale), id(make_id(name)), tclmat("material", id, this),
+  user_scale("scale", id, this), epsilon(1e-6)
 {
+
    for (Index i=0; i<NumSwitches; i++)
       mode_switches[i] = NULL;
    for (i=0; i<NumConstraints; i++)
@@ -73,6 +88,8 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
       materials[i] = NULL;
    for (i=0; i<NumModes; i++)
       modes[i] = -1;
+
+   init_tcl();
 }
 
 
@@ -87,6 +104,154 @@ BaseWidget::~BaseWidget()
    for (index = 0; index < NumConstraints; index++) {
       delete constraints[index];
    }
+}
+
+
+void
+BaseWidget::init_tcl()
+{
+   TCL::add_command(id+"-c", this, 0);
+   TCL::execute(name+" "+id);
+}
+
+
+void
+BaseWidget::ui() const
+{
+   TCL::execute(id+" ui");
+}
+
+
+void
+pmat( const MaterialHandle& mat )
+{
+   cout << "Material{" << endl;
+   cout << "  ambient(" << mat->ambient.r() << "," << mat->ambient.g() << "," << mat->ambient.b() << ")" << endl;
+   cout << "  diffuse(" << mat->diffuse.r() << "," << mat->diffuse.g() << "," << mat->diffuse.b() << ")" << endl;
+   cout << "  specular(" << mat->specular.r() << "," << mat->specular.g() << "," << mat->specular.b() << ")" << endl;
+   cout << "  shininess(" << mat->shininess << ")" << endl;
+   cout << "  emission(" << mat->emission.r() << "," << mat->emission.g() << "," << mat->emission.b() << ")" << endl;
+   cout << "  reflectivity(" << mat->reflectivity << ")" << endl;
+   cout << "  transparency(" << mat->transparency << ")" << endl;
+   cout << "  refraction_index(" << mat->refraction_index << ")" << endl;
+   cout << "}" << endl;
+}
+
+
+void
+BaseWidget::tcl_command(TCLArgs& args, void*)
+{
+   if(args.count() < 2){
+      args.error("widget needs a minor command");
+      return;
+   }
+   int mati;
+   
+   if (args[1] == "nextmode") {
+      if (args.count() != 2) {
+	 args.error("widget doesn't need a minor command");
+	 return;
+      }
+      NextMode();
+   } else if (args[1] == "defmaterials") {
+      if (args.count() != 2) {
+	 args.error("widget doesn't need a minor command");
+	 return;
+      }
+      Array1<clString> defmateriallist(NumDefaultMaterials);
+      
+      for(Index i=0;i<NumDefaultMaterials;i++){
+	 defmateriallist[i]=GetDefaultMaterialName(i);
+      }   
+      args.result(args.make_list(defmateriallist));
+   } else if (args[1] == "materials") {
+      if (args.count() != 2) {
+	 args.error("widget doesn't nedd a minor command");
+	 return;
+      }
+      Array1<clString> materiallist(NumMaterials);
+      
+      for(Index i=0;i<NumMaterials;i++){
+	 materiallist[i]=GetMaterialName(i);
+      }   
+      args.result(args.make_list(materiallist));
+   } else if (args[1] == "getdefmat") {
+      if (args.count() != 3) {
+	 args.error("widget needs default material index");
+	 return;
+      }
+      if (!args[2].get_int(mati)){
+	 args.error("widget can't parse default material index `"+args[2]+"'");
+	 return;
+      }
+      if ((mati < 0) || (mati >= NumDefaultMaterials)) {
+	 args.error("widget default material index out of range `"+args[2]+"'");
+	 return;
+      }
+      pmat(GetDefaultMaterial(mati));
+      tclmat.set(*(GetDefaultMaterial(mati).get_rep()));
+   } else if (args[1] == "getmat") {
+      if (args.count() != 3) {
+	 args.error("widget needs material index");
+ 	 return;
+      }
+      if (!args[2].get_int(mati)) {
+	 args.error("widget can't parse material index `"+args[2]+"'");
+	 return;
+      }
+      if ((mati < 0) || (mati >= NumMaterials)) {
+	 args.error("widget material index out of range `"+args[2]+"'");
+	 return;
+      }
+      tclmat.set(*(GetMaterial(mati).get_rep()));
+   } else if(args[1] == "setdefmat"){
+      if (args.count() != 3) {
+	 args.error("widget needs material index");
+	 return;
+      }
+      if (!args[2].get_int(mati)) {
+	 args.error("widget can't parse material index `"+args[2]+"'");
+	 return;
+      }
+      if ((mati <0) || (mati >= NumDefaultMaterials)) {
+	 args.error("widget material index out of range `"+args[2]+"'");
+	 return;
+      }
+      reset_vars();
+      MaterialHandle mat(new Material(tclmat.get()));
+      pmat(mat);
+      SetDefaultMaterial(mati, mat);
+   } else if(args[1] == "setmat"){
+      if (args.count() != 3) {
+	 args.error("widget needs material index");
+	 return;
+      }
+      if (!args[2].get_int(mati)) {
+	 args.error("widget can't parse material index `"+args[2]+"'");
+	 return;
+      }
+      if ((mati < 0) || (mati >= NumMaterials)) {
+	 args.error("widget material index out of range `"+args[2]+"'");
+	 return;
+      }
+      reset_vars();
+      MaterialHandle mat(new Material(tclmat.get()));
+      pmat(mat);
+      SetMaterial(mati, mat);
+   } else if(args[1] == "scale"){
+      if (args.count() != 3) {
+	 args.error("widget needs user scale");
+	 return;
+      }
+      Real us;
+      if (!args[2].get_double(us)) {
+	 args.error("widget can't parse user scale `"+args[2]+"'");
+	 return;
+      }
+      cout << "User scale now " << us << endl;
+   }
+
+   reset_vars();
 }
 
 
@@ -145,14 +310,12 @@ BaseWidget::SetState( const int state )
 void
 BaseWidget::NextMode()
 {
-   Index s;
-   for (s=0; s<NumSwitches; s++)
-      if (modes[CurrentMode]&(1<<s))
-	 mode_switches[s]->set_state(0);
    CurrentMode = (CurrentMode+1) % NumModes;
-   for (s=0; s<NumSwitches; s++)
+   for (Index s=0; s<NumSwitches; s++)
       if (modes[CurrentMode]&(1<<s))
 	 mode_switches[s]->set_state(1);
+      else
+	 mode_switches[s]->set_state(0);
 
    execute();
 }
@@ -182,6 +345,76 @@ BaseWidget::GetMaterial( const Index mindex ) const
 
 
 void
+BaseWidget::SetDefaultMaterial( const Index mindex, const MaterialHandle& matl )
+{
+   ASSERT(mindex<NumDefaultMaterials);
+   switch(mindex){
+   case 0:
+      *DefaultPointMaterial.get_rep() = *matl.get_rep();
+      break;
+   case 1:
+      *DefaultEdgeMaterial.get_rep() = *matl.get_rep();
+      break;
+   case 2:
+      *DefaultSliderMaterial.get_rep() = *matl.get_rep();
+      break;
+   case 3:
+      *DefaultResizeMaterial.get_rep() = *matl.get_rep();
+      break;
+   case 4:
+      *DefaultSpecialMaterial.get_rep() = *matl.get_rep();
+      break;
+   default:
+      *DefaultHighlightMaterial.get_rep() = *matl.get_rep();
+      break;
+   }
+}
+
+
+const MaterialHandle&
+BaseWidget::GetDefaultMaterial( const Index mindex ) const
+{
+   ASSERT(mindex<NumDefaultMaterials);
+   switch(mindex){
+   case 0:
+      return DefaultPointMaterial;
+   case 1:
+      return DefaultEdgeMaterial;
+   case 2:
+      return DefaultSliderMaterial;
+   case 3:
+      return DefaultResizeMaterial;
+   case 4:
+      return DefaultSpecialMaterial;
+   default:
+      return DefaultHighlightMaterial;
+   }
+}
+
+
+clString
+BaseWidget::GetDefaultMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumDefaultMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Edge";
+   case 2:
+      return "Slider";
+   case 3:
+      return "Resize";
+   case 4:
+      return "Special";
+   default:
+      return "Highlight";
+   }
+}
+
+
+void
 BaseWidget::execute()
 {
    lock->write_lock();
@@ -191,13 +424,21 @@ BaseWidget::execute()
 
 
 void
-BaseWidget::geom_pick( int /* cbdata */)
+BaseWidget::geom_pick( int /* cbdata */, const BState& state )
 {
+   cerr << "btn=" << state.btn << endl;
+   cerr << "alt=" << state.alt << endl;
+   cerr << "ctl=" << state.control << endl;
+   if (state.btn == 3 && !state.alt && !state.control) {
+      TCL::execute(id+" ui");
+   } else if (state.btn == 2 && !state.alt && !state.control) {
+      NextMode();
+   }
 }
 
 
 void
-BaseWidget::geom_release( int /* cbdata */)
+BaseWidget::geom_release( int /* cbdata */, const BState& )
 {
 }
 

@@ -43,7 +43,7 @@ enum { PickSphR, PickSphL, PickSphD, PickSphU, PickSphI, PickSphO,
        PickResizeI, PickResizeO };
 
 BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "BoxWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1)
 {
    Real INIT = 5.0*widget_scale;
@@ -307,7 +307,7 @@ BoxWidget::widget_execute()
 
 void
 BoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
-		       int pick )
+		       int pick, const BState& )
 {
    switch(pick){
    case PickSphU:
@@ -418,6 +418,24 @@ BoxWidget::GetInAxis()
       return oldinaxis;
    else
       return (oldinaxis = axis.normal());
+}
+
+
+clString
+BoxWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Edge";
+   case 2:
+      return "Resize";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

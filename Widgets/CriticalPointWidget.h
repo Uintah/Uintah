@@ -30,7 +30,7 @@ public:
    virtual ~CriticalPointWidget();
 
    virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, int);
+   virtual void geom_moved(int, double, const Vector&, int, const BState&);
 
    virtual void NextMode();
 
@@ -52,6 +52,9 @@ public:
    // Material indexs
    enum { PointMaterial, ShaftMaterial, HeadMaterial, CylinderMatl, TorusMatl, ConeMatl };
 
+protected:
+   virtual clString GetMaterialName( const Index mindex ) const;   
+   
 private:
    CriticalType crittype;
    Vector direction;

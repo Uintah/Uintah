@@ -36,7 +36,7 @@ enum { GeomSource, GeomDirect, GeomCone, GeomAxis, GeomRing, GeomHead, GeomShaft
 enum { PickSource, PickDirect, PickCone, PickAxis, PickArrow };
 
 LightWidget::LightWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "LightWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   ltype(DirectionalLight), oldaxis(1, 0, 0)
 {
    Real INIT = 10.0*widget_scale;
@@ -199,7 +199,7 @@ LightWidget::widget_execute()
 
 void
 LightWidget::geom_moved( int axis, double dist, const Vector& delta,
-			 int pick )
+			 int pick, const BState& state )
 {
    switch(ltype) {
    case DirectionalLight:
@@ -226,7 +226,7 @@ LightWidget::geom_moved( int axis, double dist, const Vector& delta,
       }
       break;
    case AreaLight:
-      arealight->geom_moved(axis, dist, delta, pick);
+      arealight->geom_moved(axis, dist, delta, pick, state);
       break;
    }
    
@@ -313,6 +313,26 @@ LightWidget::NextMode()
 	 mode_switches[s]->set_state(1);
 
    execute();
+}
+
+
+clString
+LightWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Source";
+   case 1:
+      return "Arrow";
+   case 2:
+      return "Point";
+   case 3:
+      return "Cone";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

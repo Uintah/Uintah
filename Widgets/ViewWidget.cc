@@ -42,7 +42,7 @@ enum { PickUp, PickCyls, PickShaft,
 
 ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
 			const Real AspectRatio )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "ViewWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   ratio(AspectRatio), oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
 {
    Real INIT = 10.0*widget_scale;
@@ -269,7 +269,7 @@ ViewWidget::widget_execute()
 
 void
 ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-		        int pick )
+		        int pick, const BState& )
 {
    switch(pick){
    case PickEye:
@@ -455,6 +455,26 @@ ViewWidget::GetBackDL()
    return (variables[LookAtVar]->point()
 	   - GetUpAxis() * variables[UpDistVar]->real() * t
 	   + Cross(GetUpAxis(), GetEyeAxis()) * variables[UpDistVar]->real() * ratio * t);
+}
+
+
+clString
+ViewWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Eyes";
+   case 1:
+      return "Resize";
+   case 2:
+      return "Shaft";
+   case 3:
+      return "Frustrum";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

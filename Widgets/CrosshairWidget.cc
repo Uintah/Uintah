@@ -29,7 +29,7 @@ enum { GeomCenter, GeomAxis1, GeomAxis2, GeomAxis3 };
 enum { Pick, PickAxes };
 
 CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "CrosshairWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
 {
    variables[CenterVar] = new PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
@@ -93,7 +93,7 @@ CrosshairWidget::widget_execute()
 
 void
 CrosshairWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			     int pick )
+			     int pick, const BState& )
 {
    switch(pick){
    case Pick:
@@ -158,6 +158,22 @@ CrosshairWidget::GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const
    v1 = axis1;
    v2 = axis2;
    v3 = axis3;
+}
+
+
+clString
+CrosshairWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Axes";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

@@ -25,13 +25,16 @@
 #include <Geom/Material.h>
 #include <Geom/Pick.h>
 #include <Geom/Switch.h>
+#include <TCL/TCL.h>
+#include <TCL/TCLvar.h>
 
 class CrowdMonitor;
 class Module;
 
-class BaseWidget {
+class BaseWidget : public TCL {
 public:
    BaseWidget( Module* module, CrowdMonitor* lock,
+	       const clString& name,
 	       const Index NumVariables,
 	       const Index NumConstraints,
 	       const Index NumGeometries,
@@ -65,23 +68,35 @@ public:
    void SetMaterial( const Index mindex, const MaterialHandle& matl );
    const MaterialHandle& GetMaterial( const Index mindex ) const;
 
+   void SetDefaultMaterial( const Index mindex, const MaterialHandle& matl );
+   const MaterialHandle& GetDefaultMaterial( const Index mindex ) const;
+
+   virtual clString GetMaterialName( const Index mindex ) const=0;
+   virtual clString GetDefaultMaterialName( const Index mindex ) const;
+
    inline Point GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
    
    void execute();
 
-   virtual void geom_pick(int);
-   virtual void geom_release(int);
-   virtual void geom_moved(int, double, const Vector&, int)=0;
+   virtual void geom_pick(int, const BState& bs);
+   virtual void geom_release(int, const BState& bs);
+   virtual void geom_moved(int, double, const Vector&, int, const BState& bs)=0;
 
    BaseWidget& operator=( const BaseWidget& );
    int operator==( const BaseWidget& );
 
    void print( ostream& os=cout ) const;
 
+   void init_tcl();
+   virtual void tcl_command(TCLArgs&, void*);
+   void ui() const;
+   
 protected:
    Module* module;
    CrowdMonitor* lock;
+   clString name;
+   clString id;
 
    ConstraintSolver* solve;
    
@@ -124,6 +139,11 @@ protected:
    void FinishWidget();
 
 protected:
+   // Used to pass a material to .tcl file.
+   TCLMaterial tclmat;
+
+   TCLdouble user_scale;
+
    // These affect ALL widgets!!!
    static MaterialHandle DefaultPointMaterial;
    static MaterialHandle DefaultEdgeMaterial;

@@ -40,7 +40,7 @@ enum { PickSphU, PickSphR, PickSphD, PickSphL, PickCyls,
        PickSliderR, PickSliderD };
 
 ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "ScaledFrameWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
 {
    Real INIT = 5.0*widget_scale;
@@ -263,7 +263,7 @@ ScaledFrameWidget::widget_execute()
 
 void
 ScaledFrameWidget::geom_moved( int axis, double dist, const Vector& delta,
-			       int pick )
+			       int pick, const BState& )
 {
    Vector delt(delta);
    Real ResizeMin(1.5*widget_scale);
@@ -488,6 +488,26 @@ ScaledFrameWidget::GetDownAxis()
       return olddownaxis;
    else
       return (olddownaxis = axis.normal());
+}
+
+
+clString
+ScaledFrameWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Edge";
+   case 2:
+      return "Resize";
+   case 3:
+      return "Slider";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

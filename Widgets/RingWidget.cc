@@ -41,7 +41,7 @@ enum { PickSphU, PickSphR, PickSphD, PickSphL,
        PickResizeU, PickResizeR, PickResizeD, PickResizeL };
 
 RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "RingWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
 {
    Real INIT = 5.0*widget_scale;
@@ -268,7 +268,7 @@ RingWidget::widget_execute()
 
 void
 RingWidget::geom_moved( int axis, double dist, const Vector& delta,
-		        int pick )
+		        int pick, const BState& )
 {
    Point p;
    Real ResizeMin(1.5*widget_scale);
@@ -445,4 +445,27 @@ RingWidget::GetPlane(Vector& v1, Vector& v2)
     v1=GetRightAxis();
     v2=GetDownAxis();
 }
+
+
+clString
+RingWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Ring";
+   case 2:
+      return "Slider";
+   case 3:
+      return "Resize";
+   case 4:
+      return "HalfResize";
+   default:
+      return "UnknownMaterial";
+   }
+}
+
 

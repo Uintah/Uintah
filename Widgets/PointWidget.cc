@@ -28,7 +28,7 @@ enum { GeomPoint };
 enum { Pick };
 
 PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale)
+: BaseWidget(module, lock, "PointWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
@@ -60,7 +60,7 @@ PointWidget::widget_execute()
 
 void
 PointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 int pick )
+			 int pick, const BState& )
 {
    switch(pick){
    case Pick:
@@ -100,6 +100,20 @@ Point
 PointWidget::GetPosition() const
 {
    return variables[PointVar]->point();
+}
+
+
+clString
+PointWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

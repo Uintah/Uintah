@@ -26,7 +26,7 @@ public:
    ~PathPoint();
 
    void execute();
-   void geom_moved( const Vector& delta, Index cbdata );
+   void geom_moved( const Vector& delta, Index cbdata, const BState& );
 
    void MoveDelta( const Vector& delta );
    Point ReferencePoint() const;
@@ -199,7 +199,7 @@ PathPoint::execute()
 }
 
 void
-PathPoint::geom_moved( const Vector& delta, Index pick )
+PathPoint::geom_moved( const Vector& delta, Index pick, const BState& )
 {
    switch(pick) {
    case 0:
@@ -258,7 +258,7 @@ const Index NumSwtchs = 5;
 
 PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 			Index num_points )
-: BaseWidget(module, lock, NumVars, NumCons, 0, 0, 0, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "PathWidget", NumVars, NumCons, 0, 0, 0, NumMdes, NumSwtchs, widget_scale),
   npoints(0), points(num_points)
 {
    dist = variables[0] = new RealVariable("Dist", solve, Scheme3, widget_scale*5.0);
@@ -336,18 +336,18 @@ PathWidget::GenerateSpline()
 
 void
 PathWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			int pick )
+			int pick, const BState& state )
 {
    if (pick == -1) // Spline pick.
       MoveDelta(delta);
    else if (pick < 10000)
-      points[pick]->geom_moved(delta, 0);
+      points[pick]->geom_moved(delta, 0, state);
    else if (pick < 20000)
-      points[pick-10000]->geom_moved(delta, 1);
+      points[pick-10000]->geom_moved(delta, 1, state);
    else if (pick < 30000)
-      points[pick-20000]->geom_moved(delta, 2);
+      points[pick-20000]->geom_moved(delta, 2, state);
    else
-      points[pick-30000]->geom_moved(delta, 3);
+      points[pick-30000]->geom_moved(delta, 3, state);
    execute();
 }
 
@@ -375,4 +375,17 @@ PathWidget::GetNumPoints() const
 {
    return npoints;
 }
+
+
+clString
+PathWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   default:
+      return "UnknownMaterial";
+   }
+}
+
 

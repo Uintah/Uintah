@@ -34,7 +34,7 @@ enum { GeomPoint, GeomShaft, GeomHead,
 enum { Pick };
 
 CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "CriticalPointWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   crittype(Regular), direction(0, 0, 1.0)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
@@ -286,7 +286,7 @@ CriticalPointWidget::widget_execute()
 
 void
 CriticalPointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-				 int pick )	
+				 int pick, const BState& )
 {
    switch(pick){
    case Pick:
@@ -375,6 +375,30 @@ const Vector&
 CriticalPointWidget::GetDirection() const
 {
    return direction;
+}
+
+
+clString
+CriticalPointWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Shaft";
+   case 2:
+      return "Head";
+   case 3:
+      return "Cylinder";
+   case 4:
+      return "Torus";
+   case 5:
+      return "Cone";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

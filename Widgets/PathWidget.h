@@ -29,12 +29,15 @@ public:
    virtual ~PathWidget();
 
    virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, int);
+   virtual void geom_moved(int, double, const Vector&, int, const BState&);
 
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
    Index GetNumPoints() const;
+   
+protected:
+   virtual clString GetMaterialName( const Index mindex ) const;   
    
 private:
    RealVariable* dist;

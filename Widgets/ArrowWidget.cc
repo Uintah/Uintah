@@ -30,7 +30,7 @@ enum { GeomPoint, GeomShaft, GeomHead };
 enum { Pick };
 
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   direction(0, 0, 1)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
@@ -86,7 +86,7 @@ ArrowWidget::widget_execute()
 
 void
 ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 int pick )
+			 int pick, const BState& )
 {
     switch(pick){
     case Pick:
@@ -142,6 +142,24 @@ const Vector&
 ArrowWidget::GetDirection() const
 {
    return direction;
+}
+
+
+clString
+ArrowWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Shaft";
+   case 2:
+      return "Head";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

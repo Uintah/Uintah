@@ -32,7 +32,7 @@ enum { GeomPointL, GeomPointR, GeomShaft, GeomSlider, GeomResizeL, GeomResizeR }
 enum { PickSphL, PickSphR, PickCyl, PickSlider, PickResizeL, PickResizeR };
 
 GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, "GaugeWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldaxis(1, 0, 0)
 {
    Real INIT = 10.0*widget_scale;
@@ -152,7 +152,7 @@ GaugeWidget::widget_execute()
 
 void
 GaugeWidget::geom_moved( int axis, double dist, const Vector& delta,
-			 int pick )
+			 int pick, const BState& )
 {
    ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetAxis());
 
@@ -246,6 +246,26 @@ GaugeWidget::GetAxis()
       return oldaxis;
    else 
       return (oldaxis = axis.normal());
+}
+
+
+clString
+GaugeWidget::GetMaterialName( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   
+   switch(mindex){
+   case 0:
+      return "Point";
+   case 1:
+      return "Shaft";
+   case 2:
+      return "Resize";
+   case 3:
+      return "Slider";
+   default:
+      return "UnknownMaterial";
+   }
 }
 
 

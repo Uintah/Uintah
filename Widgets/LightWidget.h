@@ -29,7 +29,7 @@ public:
    ~LightWidget();
 
    virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, int);
+   virtual void geom_moved(int, double, const Vector&, int, const BState&);
 
    virtual void NextMode();
 
@@ -47,6 +47,9 @@ public:
    // Variable Indexs
    enum { SourceMatl, ArrowMatl, PointMatl, ConeMatl };
 
+protected:
+   virtual clString GetMaterialName( const Index mindex ) const;   
+   
 private:
    LightType ltype;
 
