@@ -107,7 +107,7 @@ WARNING
       
       inline bool compare(double num1, double num2)
 	 {
-	    double EPSILON=1.e-8;
+	    double EPSILON=1.e-16;
 	    
 	    return (fabs(num1-num2) <= EPSILON);
 	 }
@@ -117,6 +117,10 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.20  2000/07/25 19:10:27  guilkey
+// Changed code relating to particle combustion as well as the
+// heat conduction.
+//
 // Revision 1.19  2000/07/05 23:43:35  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

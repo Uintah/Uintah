@@ -60,11 +60,6 @@ WARNING
       // Destructor
       ~NullHEBurn();
 
-      void checkIfIgnited(const Patch* patch,
-			  const MPMMaterial* matl,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw);
-
       void computeMassRate(const Patch* patch,
 			   const MPMMaterial* matl,
 			   DataWarehouseP& old_dw,
@@ -77,17 +72,11 @@ WARNING
                                    const MPMMaterial* matl,
                                    DataWarehouseP& new_dw);
 
-      void addCheckIfComputesAndRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const Patch* patch,
-					 DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw) const;
-
-      void addMassRateComputesAndRequires(Task* task,
-					  const MPMMaterial* matl,
-					  const Patch* patch,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw) const;
+      void addComputesAndRequires(Task* task,
+				  const MPMMaterial* matl,
+				  const Patch* patch,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw) const;
 
     };
     
@@ -95,6 +84,10 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/07/25 19:10:25  guilkey
+// Changed code relating to particle combustion as well as the
+// heat conduction.
+//
 // Revision 1.4  2000/06/19 23:52:14  guilkey
 // Added boolean d_burns so that certain stuff only gets done
 // if a burn model is present.  Not to worry, the if's on this
