@@ -1344,7 +1344,7 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
       // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
       if (range->find(level->getIndex()) != range->end() ||
           range->find(level->getIndex() - level->getGrid()->numLevels()) != range->end()) {
-        Task* t = scinew Task("DataArchiver::output", 
+        Task* t = scinew Task((isThisCheckpoint ? "DataArchiver::checkpoint" : "DataArchiver::output"), 
                               this, &DataArchiver::output,
                               &baseDir, (*saveIter).label_, isThisCheckpoint);
         t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
