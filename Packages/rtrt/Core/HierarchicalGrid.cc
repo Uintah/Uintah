@@ -70,6 +70,9 @@ void
 HierarchicalGrid::preprocess( double maxradius, int& pp_offset, 
 			      int& scratchsize )
 {
+    if (was_preprocessed) return;
+    was_preprocessed=true;
+
     obj->preprocess(maxradius, pp_offset, scratchsize);
 
     Array1<Object*> prims;
