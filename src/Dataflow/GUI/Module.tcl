@@ -1383,8 +1383,8 @@ proc moduleDestroy {modid} {
 
     $modid delete
     if { ![isaSubnetIcon $modid] } {
-	netedit deletemodule $modid
 	proc $modid { args } { }
+	netedit deletemodule $modid
     }
     
     # Kill the modules UI if it exists
