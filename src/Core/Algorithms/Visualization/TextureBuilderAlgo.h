@@ -62,8 +62,10 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription* td);
 
 protected:
-  virtual void build_bricks(vector<TextureBrick*>& bricks, int nx, int ny, int nz,
-                            int nc, int* nb, const BBox& bbox, int brick_mem) = 0;
+  virtual void build_bricks(vector<TextureBrick*>& bricks,
+			    int nx, int ny, int nz,
+                            int nc, int* nb,
+			    const BBox& bbox, int brick_mem) = 0;
   virtual void fill_brick(TextureBrick* brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax) = 0;
@@ -84,8 +86,10 @@ public:
                      int card_mem);
   
 protected:
-  virtual void build_bricks(vector<TextureBrick*>& bricks, int nx, int ny, int nz,
-                            int nc, int* nb, const BBox& bbox, int brick_mem);
+  virtual void build_bricks(vector<TextureBrick*>& bricks,
+			    int nx, int ny, int nz,
+                            int nc, int* nb,
+			    const BBox& bbox, int brick_mem);
   virtual void fill_brick(TextureBrick* brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax);
@@ -94,8 +98,10 @@ protected:
 template<typename FieldType>
 void
 TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
-                                     FieldHandle vfield, double vmin, double vmax,
-                                     FieldHandle gfield, double gmin, double gmax,
+                                     FieldHandle vfield,
+				     double vmin, double vmax,
+                                     FieldHandle gfield,
+				     double gmin, double gmax,
                                      int card_mem)
 {
   LatVolMeshHandle mesh = (LatVolMesh*)(vfield->mesh().get_rep());
@@ -111,17 +117,22 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
   nb[1] = gfield.get_rep() ? 1 : 0;
   Transform tform;
   mesh->transform(tform);
-  //
+
   texture->lock_bricks();
   vector<TextureBrick*>& bricks = texture->bricks();
-  if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
-     || nc != texture->nc() || card_mem != texture->card_mem()) {
-//     cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
-    build_bricks(bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(), card_mem);
+  // TODO:  BBox is only the transform if we're axis aligned.
+  // Fix to use the mesh transform.
+  const BBox &bbox = mesh->get_bounding_box();
+  if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
+      || nc != texture->nc() || card_mem != texture->card_mem() ||
+      bbox.min() != texture->bbox().min() ||
+      bbox.max() != texture->bbox().max())
+  {
+    build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
     texture->set_size(nx, ny, nz, nc, nb);
     texture->set_card_mem(card_mem);
   }
-  texture->set_bbox(mesh->get_bounding_box());
+  texture->set_bbox(bbox);
   texture->set_minmax(vmin, vmax, gmin, gmax);
   texture->set_transform(tform);
   for(unsigned int i=0; i<bricks.size(); i++) {
@@ -133,12 +144,13 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 
 template<typename FieldType>
 void
-TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks, int nx, int ny,
-                                            int nz, int nc, int* nb,
+TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks,
+					    int nx, int ny, int nz,
+					    int nc, int* nb,
                                             const BBox& bbox, int card_mem)
 {
   int brick_mem = card_mem*1024*1024/2;
-  int data_size[3] = { nx, ny, nz };
+  const int data_size[3] = { nx, ny, nz };
   int brick_size[3];
   int brick_offset[3];
   int brick_pad[3];
@@ -148,9 +160,9 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks, int n
   int size[3];
   size[0] = data_size[0]; size[1] = data_size[1]; size[2] = data_size[2];
   // initial brick size
-  brick_size[0] = NextPowerOf2(size[0]);
-  brick_size[1] = NextPowerOf2(size[1]);
-  brick_size[2] = NextPowerOf2(size[2]);
+  brick_size[0] = NextPowerOf2(data_size[0]);
+  brick_size[1] = NextPowerOf2(data_size[1]);
+  brick_size[2] = NextPowerOf2(data_size[2]);
   // number of bytes per brick
   brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
   // find brick size
@@ -294,8 +306,10 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks, int n
 template <class FieldType>
 void 
 TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
-                                          FieldHandle vfield, double vmin, double vmax,
-                                          FieldHandle gfield, double gmin, double gmax)
+                                          FieldHandle vfield,
+					  double vmin, double vmax,
+                                          FieldHandle gfield,
+					  double gmin, double gmax)
 {
   LatVolField<value_type>* vfld = 
     dynamic_cast<LatVolField<value_type>*>(vfield.get_rep());
