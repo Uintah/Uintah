@@ -476,17 +476,17 @@ operator << ( ostream & out, const Uintah::Task::Dependency & dep )
   case Ghost::AroundCells:
     out << "Ghost::AroundCells";
     break;
-  case Ghost::AroundXFaces:
-    out << "Ghost::AroundXFaces";
+  case Ghost::AroundFacesX:
+    out << "Ghost::AroundFacesX";
     break;
-  case Ghost::AroundYFaces:
-    out << "Ghost::AroundYFaces";
+  case Ghost::AroundFacesY:
+    out << "Ghost::AroundFacesY";
     break;
-  case Ghost::AroundZFaces:
-    out << "Ghost::AroundZFaces";
+  case Ghost::AroundFacesZ:
+    out << "Ghost::AroundFacesZ";
     break;
-  case Ghost::AroundAllFaces:
-    out << "Ghost::AroundAllFaces";
+  case Ghost::AroundFaces:
+    out << "Ghost::AroundFaces";
     break;
   }
   if(dep.gtype != Ghost::None)
