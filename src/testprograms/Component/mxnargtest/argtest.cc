@@ -52,7 +52,7 @@ void usage(char* progname)
     exit(1);
 }
 
-void init(SIDL::array2<int>& a, int sta1, int fin1, int sta2, int fin2)
+void init(SSIDL::array2<int>& a, int sta1, int fin1, int sta2, int fin2)
 {
   a.resize(fin2-sta2,fin1-sta1);
 //  std::cerr << "SIZE1 = " << a.size1() << " : SIZE2 = " << a.size2() << "\n";
@@ -72,7 +72,7 @@ void init(SIDL::array2<int>& a, int sta1, int fin1, int sta2, int fin2)
   */  
 }
 
-bool test(SIDL::array2<int>& a)
+bool test(SSIDL::array2<int>& a)
 {
   bool success = true;
  
@@ -89,10 +89,10 @@ public:
   Server_impl();
   virtual ~Server_impl();
 	
-  virtual SIDL::array2< int> return_arr();
-  virtual void in_arr(const SIDL::array2< int>& a);
-  virtual void out_arr(SIDL::array2< int>& a);
-  virtual void inout_arr(SIDL::array2< int>& a);
+  virtual SSIDL::array2< int> return_arr();
+  virtual void in_arr(const SSIDL::array2< int>& a);
+  virtual void out_arr(SSIDL::array2< int>& a);
+  virtual void inout_arr(SSIDL::array2< int>& a);
   virtual bool getSuccess();
 private:
   bool success;
@@ -107,20 +107,20 @@ Server_impl::~Server_impl()
 {
 }
 
-SIDL::array2< int> Server_impl::return_arr()
+SSIDL::array2< int> Server_impl::return_arr()
 {
 }
 
-void Server_impl::in_arr(const SIDL::array2< int>& a)
+void Server_impl::in_arr(const SSIDL::array2< int>& a)
 {
 }
 
-void Server_impl::out_arr(SIDL::array2< int>& a)
+void Server_impl::out_arr(SSIDL::array2< int>& a)
 {
   init(a,0,100,0,4); 
 }
 
-void Server_impl::inout_arr(SIDL::array2< int>& a)
+void Server_impl::inout_arr(SSIDL::array2< int>& a)
 {
 }
 
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
-    	  SIDL::array2<int> s_arr;
+    	  SSIDL::array2<int> s_arr;
 	  Server_impl* serv=new Server_impl;
 
           //Set up server's requirement of the distribution array 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 	  cerr << serv->getURL().getString() << '\n';
 
 	} else {
-          SIDL::array2<int> c_arr;
+          SSIDL::array2<int> c_arr;
           //Creating a multiplexing proxy from all the URLs
 	  Object::pointer obj=PIDL::objectFrom(server_urls,mysize,myrank);
 	  Server::pointer serv=pidl_cast<Server::pointer>(obj);
