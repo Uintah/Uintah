@@ -5,7 +5,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/rtrt/Dataflow/Modules/Scenes
 
 SRCS     += \
+	$(SRCDIR)/GeoProbeScene.cc \
 	$(SRCDIR)/Scene0.cc \
+	$(SRCDIR)/SimpleScene.cc \
 #	$(SRCDIR)/VolumeVisScene.cc \
 #[INSERT NEW CODE FILE HERE]
 
