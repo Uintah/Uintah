@@ -146,9 +146,14 @@
    </DataArchiver>
    
    <Debug>
-    <dbg_timeStart>       0.00   </dbg_timeStart>
-    <dbg_timeStop>        0.1    </dbg_timeStop>
-    <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+      <dbg_timeStart>       0.00    </dbg_timeStart>
+      <dbg_timeStop>        0.1     </dbg_timeStop>
+      <dbg_outputInterval>  1e-9    </dbg_outputInterval>
+   <!--
+      <dbg_BeginIndex>      [0,0,0] </dbg_BeginIndex>
+      <dbg_EndIndex>        [2,2,2] </dbg_EndIndex>
+      <dbg_SigFigs>         10      </dbg_SigFigs>
+    -->
      <!-- need this one for regression tester dat comparisons -->       
      <debug label = "switchTestConservation"/>   
 <!--     
