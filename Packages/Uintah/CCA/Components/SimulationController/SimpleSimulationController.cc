@@ -262,7 +262,7 @@ SimpleSimulationController::run()
    setStartSimTime(t);
 
    if(output)
-      output->finalizeTimestep(t, 0, grid, scheduler, true);
+      output->finalizeTimestep(t, 0, grid, scheduler, 1);
 
    scheduler->compile();
    
@@ -413,7 +413,7 @@ SimpleSimulationController::run()
       }
       else {
         if (output)
-          output->finalizeTimestep(t, delt, grid, scheduler, false);
+          output->finalizeTimestep(t, delt, grid, scheduler, 0);
       }
 
       // Execute the current timestep.  If the timestep needs to be

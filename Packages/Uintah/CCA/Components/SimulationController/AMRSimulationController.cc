@@ -181,6 +181,18 @@ void AMRSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
      }
 
+     // For material addition.  Once a material is added, need to
+     // reset the flag, but can't do it til the subsequent timestep
+     static int sub_step=0;
+
+     if(d_sharedState->needAddMaterial() != 0){
+       if(sub_step==1){
+         d_sharedState->resetNeedAddMaterial();
+         sub_step = -1;
+       }
+       sub_step++;
+     }
+
      if(d_sharedState->needAddMaterial() != 0){
        d_sim->addMaterial(d_ups, currentGrid, d_sharedState);
        d_sharedState->finalizeMaterials();
@@ -209,7 +221,7 @@ void AMRSimulationController::run()
      }
      else {
        if (d_output)
-         d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, false);
+         d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, 0);
      }
 
      // adjust the delt for each level and store it in all applicable dws.
@@ -326,7 +338,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   }
   
   if(d_output)
-    d_output->finalizeTimestep(t, 0, grid, d_scheduler, true);
+    d_output->finalizeTimestep(t, 0, grid, d_scheduler, 1);
 
   d_scheduler->compile();
   
