@@ -168,6 +168,20 @@ public:
 	return d_calcEnergyExchange;
       }      
 
+      ////////////////////////////////////////////////////////////////////////
+      // sets boolean for fixing gas temperature in multimaterial cells
+      void setIfFixTemp(bool fixTemp)
+	{
+	  d_fixTemp = fixTemp;
+	}
+
+      ////////////////////////////////////////////////////////////////////////
+      // Access function for d_fixTemp (multimaterial)
+
+      inline bool getIfFixTemp() const{
+	return d_fixTemp;
+      }      
+
       inline bool getCarbonBalance() const{
 	return d_carbon_balance;
       }      
@@ -739,6 +753,7 @@ private:
       // cutoff for void fraction rqd to determine multimaterial wall
       double MM_CUTOFF_VOID_FRAC;
       bool d_calcEnergyExchange;
+      bool d_fixTemp;
 
       // used for calculating wall boundary conditions
       PhysicalConstants* d_physicalConsts;

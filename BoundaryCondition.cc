@@ -1522,20 +1522,24 @@ BoundaryCondition::mmWallTemperatureBC(const ProcessorGroup*,
 {
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  bool fixTemp = true;
+
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	IntVector currCell = IntVector(colX, colY, colZ);	  
+
+	IntVector currCell = IntVector(colX, colY, colZ);
+
 	if (cellType[currCell]==d_mmWallID) {
+
 	  if (d_energyEx) {
-	    if (!fixTemp) 
-	      temperature[currCell] = solidTemp[currCell];
-	    else
+	    if (d_fixTemp) 
 	      temperature[currCell] = 298.0;
+	    else
+	      temperature[currCell] = solidTemp[currCell];
 	  }
 	  else
 	    temperature[currCell] = 298.0;
+
 	}
       }
     }
