@@ -45,14 +45,14 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 
 SRCS     += \
-	$(SRCDIR)/ApplyFEMCurrentSource.cc\
-	$(SRCDIR)/BuildFEMatrix.cc\
 	$(SRCDIR)/DipoleInSphere.cc\
+	$(SRCDIR)/SetupFEMatrix.cc\
+	$(SRCDIR)/ApplyFEMCurrentSource.cc\
 #[INSERT NEW CODE FILE HERE]
-#	$(SRCDIR)/DipoleInSphere.cc\
 
 
-PSELIBS := Packages/BioPSE/Core/Datatypes Core/Datatypes \
+PSELIBS := Packages/BioPSE/Core/Datatypes Packages/BioPSE/Core/Algorithms/NumApproximation \
+	Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
@@ -61,5 +61,3 @@ PSELIBS := Packages/BioPSE/Core/Datatypes Core/Datatypes \
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
-
-
