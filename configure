@@ -7908,7 +7908,7 @@ EOF
     fi
 
   
-    if test "$HAVE_LIB_FTN" == "yes" && test "$HAVE_LIB_FORTRAN" == "yes"; then
+    if test "$HAVE_LIB_FTN" = "yes" && test "$HAVE_LIB_FORTRAN" = "yes"; then
        F_LIB_FLAG="$FTN_LIB_FLAG $FORTRAN_LIB_FLAG"
     fi
     ;;
