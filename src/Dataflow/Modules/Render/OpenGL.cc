@@ -78,11 +78,12 @@ RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
   : tkwin(0),
-    helper(0),
     send_mb("OpenGL renderer send mailbox",10),
     recv_mb("OpenGL renderer receive mailbox", 10),
     get_mb("OpenGL renderer request mailbox", 5),
-    img_mb("OpenGL renderer image data mailbox", 5)
+    img_mb("OpenGL renderer image data mailbox", 5),
+    helper_thread(0),
+    dead(0)
 {
   encoding_mpeg = false;
   drawinfo=scinew DrawInfoOpenGL;
@@ -190,8 +191,8 @@ void OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
   if(!helper){
     my_openglname=clString("OpenGL: ")+myname;
     helper=new OpenGLHelper(this);
-    Thread* t=new Thread(helper, my_openglname());
-    t->detach();
+    helper_thread=new Thread(helper, my_openglname());
+    //helper_thread->detach();
   }
   
   send_mb.send(DO_REDRAW);
@@ -211,6 +212,7 @@ void OpenGL::redraw_loop()
   throttle.start();
   double newtime=0;
   while(1) {
+    if (dead) return;
     int nreply=0;
     if(viewwindow->inertia_mode){
       double current_time=throttle.time();

@@ -76,11 +76,13 @@ public:
   int compute_depth(ViewWindow* viewwindow, const View& view, double& near, double& far);
 
   int xres, yres;
+  Runnable *helper;
   virtual void getData(int datamask, FutureValue<GeometryData*>* result);
 
   // compute world space point under cursor (x,y).  If successful,
   // set 'p' to that value & return true.  Otherwise, return false.
   virtual int    pick_scene(int, int, Point *) { return 0; }
+  virtual void kill_helper() {}
 };
 
 class RegisterRenderer {
