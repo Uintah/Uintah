@@ -84,7 +84,7 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
 
   // Account for the repeated values in the theta and phi directions
   // by subtracting 1 in the j and k directions.
-  //  const unsigned int idim_in = imesh->get_nx();
+  const unsigned int idim_in = imesh->get_nx();
   const unsigned int jdim_in = imesh->get_ny() - 1;
   const unsigned int kdim_in = imesh->get_nz() - 1;
 
@@ -106,7 +106,7 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
   FIELD *ofield = scinew FIELD(omesh, Field::NODE);
 
   unsigned int i, j, k;
-  unsigned int iend_skip = iend+iskip-1;  // Minus one - no wrap around.
+  unsigned int iend_skip = iend+iskip;
   unsigned int jend_skip = jend+jskip;
   unsigned int kend_skip = kend+kskip;
 
@@ -144,8 +144,8 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
       for( i=istart, new_node.i_=0; i<iend_skip; i+=iskip, new_node.i_++ ) {
 
 	// Check for going past the end.
-	if( i > iend - 1 )
-	  i = iend - 1;
+	if( i > iend )
+	  i = iend;
 
 	old_node.i_ = i;
  
