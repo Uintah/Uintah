@@ -147,7 +147,7 @@ $(SRCDIR)/mmbcvelocity.o: $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/mmcelltypeinit.o: $(SRCDIR)/mmcelltypeinit_fort.h
 $(SRCDIR)/mmmomsrc.o: $(SRCDIR)/mmmomsrc_fort.h
 $(SRCDIR)/mmwallbc.o: $(SRCDIR)/mmwallbc_fort.h
-$(SRCDIR)/mmwallbc.o: $(SRCDIR)/mmwallbc_trans_fort.h
+$(SRCDIR)/mmwallbc_trans.o: $(SRCDIR)/mmwallbc_trans_fort.h
 $(SRCDIR)/normpress.o: $(SRCDIR)/normpress_fort.h
 $(SRCDIR)/outarea.o: $(SRCDIR)/outarea_fort.h
 $(SRCDIR)/outletbc.o: $(SRCDIR)/outletbc_fort.h
