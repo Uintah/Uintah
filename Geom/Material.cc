@@ -29,14 +29,17 @@ Material::Material()
 Material::Material(const Color& ambient, const Color& diffuse,
 		   const Color& specular, double shininess)
 : ref_cnt(0), ambient(ambient), diffuse(diffuse), specular(specular),
-  shininess(shininess), emission(0,0,0), reflectivity(0.5)
+  shininess(shininess), emission(0,0,0), reflectivity(0.5),
+  transparency(0), refraction_index(1)
 {
 }
 
 Material::Material(const Material& copy)
 : ref_cnt(0), ambient(copy.ambient), diffuse(copy.diffuse),
   specular(copy.specular), shininess(copy.shininess),
-  emission(copy.emission)
+  emission(copy.emission), reflectivity(copy.reflectivity),
+  transparency(copy.transparency),
+  refraction_index(copy.refraction_index)
 {
 }
 
@@ -59,6 +62,9 @@ void Material::io(Piostream& stream)
     Pio(stream, specular);
     Pio(stream, shininess);
     Pio(stream, emission);
+    Pio(stream, reflectivity);
+    Pio(stream, transparency);
+    Pio(stream, refraction_index);
 }
 
 GeomMaterial::GeomMaterial(GeomObj* obj, const MaterialHandle& matl)
