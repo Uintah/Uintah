@@ -40,7 +40,7 @@ class DataWarehouseException : public SCICore::Exceptions::Exception {
     std::string msg;
 public:
     DataWarehouseException(const std::string&);
-    virtual std::string message() const;
+    virtual const char* message() const;
 };
 
 } // end namespace Exception
