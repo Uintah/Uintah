@@ -13,13 +13,11 @@
 extern "C" {
 #include </usr/local/include/unuran.h>
 
-#ifdef CVODE
 #include <cvode/llnltyps.h>
 #include <cvode/cvode.h>
 #include <cvode/cvdense.h>
 #include <cvode/nvector.h>
 #include <cvode/cvdense.h>
-#endif
 }
 
 
@@ -28,13 +26,15 @@ extern "C" {
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Algorithms/DataIO/GuiFile.h>
 #include <Core/2d/Polyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Graph.h>
 
 #include <Packages/MIT/Core/Datatypes/MetropolisData.h>
 #include <Packages/MIT/Dataflow/Ports/MetropolisPorts.h>
-//#include <Packages/MIT/Dataflow/Modules/Bayer/Bayer.h>
+
+#include <Packages/MIT/Dataflow/Modules/Bayer/Bayer.h>
 
 #include <Packages/MIT/share/share.h>
 
@@ -64,8 +64,6 @@ private:
 
   MeasurementsHandle measurements;
   DistributionHandle pd;
-
-  // GUI
 
   GuiInt gui_burning, gui_monitor, gui_thin;
   GuiDouble gui_kappa;
@@ -102,6 +100,9 @@ private:
   Array1<Polyline *> poly;
 
   UNUR_GEN *gen;
+
+  Bayer bayer;
+
 public:
   Metropolis(const string& id);
 
@@ -334,7 +335,7 @@ void Metropolis::metropolis()
   }
   
   if ( !r_port ) 
-    cerr << " not output port\n";
+    cerr << " no output port\n";
   else
     r_port->send( results );
 }
@@ -398,7 +399,7 @@ Metropolis::loglike( double theta[] )
   double ymi[100];
   double dt = exp(theta[4]);
   
-  double reltol = 1e-4;   // should be input from the UI
+  double reltol = 1e-6;   // should be input from the UI
   double abstol = 1e-6;
   double f = 0.1335;
 
@@ -412,7 +413,6 @@ Metropolis::loglike( double theta[] )
   p[5] = theta[3];
 
 
-#ifdef CVODE
   if ( gui_use_cvode.get() == 1 ) {
     bayer.set_p( p );
     
@@ -463,17 +463,14 @@ Metropolis::loglike( double theta[] )
     N_VFree( y );
   }
   else {
-#else
     for (int i=0; i<neq; i++) { 
       double tf = measurements->t[i]+dt;
       bayer_( tf, p, ymi );
       ym1[i] = ymi[0];
       ym2[i] = ymi[5];
     }
-#endif
-#ifdef CVODE
+
   }
-#endif
 
   double l1 = 0.05*0.05;
   double l2 = 0.015*0.015;
@@ -514,6 +511,7 @@ void Metropolis::tcl_command(TCLArgs& args, void* userdata)
   else
     Module::tcl_command(args, userdata);
 }
+
 
 } // End namespace MIT
 

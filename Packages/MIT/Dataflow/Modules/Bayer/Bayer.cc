@@ -38,7 +38,7 @@ Bayer::bayer_function_ ( int n, double t ,
                      + b.k22*N_VIth(y,3)*N_VIth(y,6) 
                      - b.k2*N_VIth(y,1)*N_VIth(y,0);
 
-  N_VIth(y_prime,1) = - b.k1*N_VIth(y,1)*N_VIth(y,3) 
+  N_VIth(y_prime,1) = - b.k1*N_VIth(y,1)*N_VIth(y,2) 
                       - 2.0*b.k31*N_VIth(y,1)*N_VIth(y,1)
                       + 2.0*b.k32*N_VIth(y,4)*N_VIth(y,6)
                       - b.k2*N_VIth(y,1)*N_VIth(y,0);
