@@ -177,6 +177,8 @@ void DpyBase::set_resolution(const int xres_in, const int yres_in) {
 void DpyBase::run() {
   open_display();
 
+  init();
+  
   // Create the Xevent handler
   for(;;){
     XEvent e;
