@@ -37,12 +37,13 @@ public:
 
 	    o->compute_bounds(bbox,1E-5);
 
-	    Point cmin = bbox.min(), cmax=bbox.max();
+	    //cerr << "B IBBMIN" << bbox.min() << endl;
+	    //cerr << "B IBBMAX" << bbox.max() << endl;
 
 	    bbox.transform_inplace(t);
 
-	    cmin = bbox.min();
-	    cmax=bbox.max();
+	    //cerr << "A IBBMIN" << bbox.min() << endl;
+	    //cerr << "A IBBMAX" << bbox.max() << endl;
 
 	}
 
@@ -60,16 +61,17 @@ public:
 			   PerProcessorContext* ppc)
 	{
 
-	    Ray tray;
+	  double min_t = hit.min_t;
+	  if (!bbox.intersect(ray, min_t)) return;	  
 
-	    ray.transform(t,tray);
-
-	    double min_t = hit.min_t;
-
-	    o->intersect(tray,hit,st,ppc);
-
-	    // if the ray hit one of our objects....
-	    if (min_t > hit.min_t)
+	  Ray tray;
+	  
+	  ray.transform(t,tray);
+	  	  
+	  o->intersect(tray,hit,st,ppc);
+	  
+	  // if the ray hit one of our objects....
+	  if (min_t > hit.min_t)
 	    {
 	      InstanceHit* i = (InstanceHit*)(hit.scratchpad);
 	      Point p = ray.origin() + hit.min_t*ray.direction();
@@ -87,7 +89,7 @@ public:
 	  return i->normal;
 	}
 
-  virtual void compute_bounds(BBox& b, double /*offset*/)
+    virtual void compute_bounds(BBox& b, double /*offset*/)
 	{
 	    b.extend(bbox);
 	}
@@ -96,6 +98,7 @@ public:
 	{
 	  o->preprocess(maxradius,pp_offset,scratchsize);
 	}
+
     virtual void shade(Color& result, const Ray& ray,
 		       const HitInfo& hit, int depth,
 		       double atten, const Color& accumcolor,
@@ -104,6 +107,19 @@ public:
       Material *mat = i->obj->get_matl();
       mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
     }
+
+    virtual void animate(double t, bool& changed) {
+      o->animate(t, changed);
+    }
+
+    bool interior_value(double& ret_val, const Ray &ref, const double _t) {
+      Ray tray;
+
+      ref.transform(t,tray);
+
+      return o->interior_value(ret_val, tray, _t);
+    }
+
   };
 }
 #endif

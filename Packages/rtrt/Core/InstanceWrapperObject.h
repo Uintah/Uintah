@@ -54,5 +54,15 @@ class InstanceWrapperObject {
       }
       bbox.extend(bb);
     }
+
+  virtual void animate(double t, bool& changed) {
+    obj->animate(t, changed);
+  }
+
+  bool interior_value(double& ret_val, const Ray &ref, const double t) {
+    return obj->interior_value(ret_val, ref, t);
+  }
+
 };
 #endif
+

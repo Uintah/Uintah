@@ -21,8 +21,8 @@
 
 namespace rtrt {
 
-#define CUTGROUPDIST 24
-#define CUTGROUPPTR 32
+#define CUTGROUPDIST 48
+#define CUTGROUPPTR 56
 //Note, this uses 
 //8 bytes at HitInfo.scratchpad+CUTGROUPDIST for CutPlane distance and
 //4 bytes at HitInfo.scratchpad+CUTGROUPPTR for CutGroup detection

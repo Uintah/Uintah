@@ -53,16 +53,23 @@ void CutMaterial::shade(Color& result, const Ray& ray,
 
       //use the cut group to test just the related objects, and to treat them
       //as one object (ie visible female sections are all equal)
+      Object *cutobj; //add a little safety in case not used with a cut
       CutGroup* cutgrp = *((CutGroup **)(hit.scratchpad+CUTGROUPPTR));      
-      //use sub_intersect instead of intersect to ignore the cutting plane
-      cutgrp->sub_intersect(bray, bhit, &cx->stats->ds[depth], cx->worker->get_ppc());
+      if (cutgrp) {
+	//use sub_intersect instead of intersect to ignore the cutting plane
+	cutobj = cutgrp;
+	cutgrp->sub_intersect(bray, bhit, &cx->stats->ds[depth], cx->worker->get_ppc());
+      } else {
+	cutobj = hit.hit_obj;
+	cutobj->intersect(bray, bhit, &cx->stats->ds[depth], cx->worker->get_ppc());
+      }
       
       if (bhit.was_hit) {
 	//hit a relative, we are inside, try to ColorMap the interior value
 
 	double internal_val = 0;
 	//can this object be colored internally?
-	if (cutgrp->interior_value(internal_val, ray, it)) {
+	if (cutobj->interior_value(internal_val, ray, it)) {
 	  //it can be, map it to a color map, and make some attempy to shade that
 
 	  Color difflight = Color(0,0,0);
