@@ -31,7 +31,6 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-
 DebugStream DataArchive::dbg("DataArchive", false);
 
 DataArchive::DataArchive(const std::string& filebase,
@@ -467,15 +466,15 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
 	  const vector<VarHashMap>& matVec = matlMap->getVarHashMaps();
 	  for (int matl = -1; matl < (int)matVec.size()-1; matl++) {
 	    const VarHashMap& hashMap = matVec[matl+1];
-	    for (VarHashMap::const_iterator varIter = hashMap.begin();
-		 varIter != hashMap.end(); varIter++) {
-	      VarLabel* label = VarLabel::find((*varIter).first);
+	    VarHashMapIterator varIter(const_cast<VarHashMap*>(&hashMap));
+	    for (varIter.first(); varIter.ok(); ++varIter) {
+	      VarLabel* label = VarLabel::find(varIter.get_key());
 	      if (label == NULL)
 		throw UnknownVariable(label->getName(), patch, matl,
 				      "on DataArchive::scheduleRestartInitialize");
 
 	      initVariable(patch, dw, label,
-			   matl, (*varIter).second);
+			   matl, varIter.get_data());
 	    }
 	  }
 	}
@@ -680,11 +679,10 @@ DOM_Node DataArchive::MaterialHashMaps::findVariable(const string& name,
  
   if (matl < (int)d_varHashMaps.size()) {
     VarHashMap& hashMap = d_varHashMaps[matl];
-    VarHashMapIterator foundIt = hashMap.find(name.c_str());
-    
-    if (foundIt !=  hashMap.end()) {
-      foundUrl = (*foundIt).second.second;
-      return (*foundIt).second.first;
+    pair<DOM_Node, XMLURL> found;
+    if (hashMap.lookup(name, found)) {
+      foundUrl = found.second;
+      return found.first;
     }
   }
   return DOM_Node();  
@@ -695,15 +693,14 @@ void DataArchive::MaterialHashMaps::add(const string& name, int matl,
 {
   matl++; // allows for matl=-1 for universal variables
    
-  d_varNames.push_back(name);
-  const char* var_name = d_varNames.back().c_str();
   if (matl >= (int)d_varHashMaps.size())
     d_varHashMaps.resize(matl + 1);
   pair<DOM_Node, XMLURL> value(varNode, url);
-  pair<const char*, pair<DOM_Node, XMLURL> > valkeypair(var_name, value);
-  if (d_varHashMaps[matl].insert(valkeypair).second == false) {
+  pair<DOM_Node, XMLURL> dummy;
+  if (d_varHashMaps[matl].lookup(name, dummy) == 1)
     cerr << "Duplicate variable name: " << name << endl;
-  }
+  else
+    d_varHashMaps[matl].insert(name, value);
 }
 
 ConsecutiveRangeSet DataArchive::queryMaterials( const string& name,
