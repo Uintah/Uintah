@@ -16,7 +16,7 @@
 */
 
 /*
- *  BuildLeadField.cc: Build the Reciprocity Basis
+ *  BuildLeadField.cc: Build the lead field matrix through reciprocity
  *
  *  Written by:
  *   David Weinstein
@@ -43,12 +43,15 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildLeadField : public Module {    
-  FieldIPort* mesh_iport;
-  FieldIPort* interp_iport;
-  MatrixIPort* sol_iport;
-  MatrixOPort* rhs_oport;
-  MatrixOPort* basis_oport;
-  MatrixOPort* basis2_oport;
+  FieldIPort* mesh_iport_;
+  FieldIPort* interp_iport_;
+  MatrixIPort* sol_iport_;
+  MatrixOPort* rhs_oport_;
+  MatrixOPort* leadfield_oport_;
+
+  MatrixHandle leadfield_;
+  int last_mesh_generation_;
+  int last_interp_generation_;
 public:
   BuildLeadField(const clString& id);
   virtual ~BuildLeadField();
@@ -62,79 +65,111 @@ extern "C" Module* make_BuildLeadField(const clString& id) {
 
 //---------------------------------------------------------------
 BuildLeadField::BuildLeadField(const clString& id)
-  : Module("BuildLeadField", id, Filter)
+  : Module("BuildLeadField", id, Filter), leadfield_(0),
+    last_mesh_generation_(-1), last_interp_generation_(-1)
 {
-  mesh_iport = new FieldIPort(this, "Domain Mesh",
+  mesh_iport_ = new FieldIPort(this, "Domain Mesh",
 			      FieldIPort::Atomic);
-  add_iport(mesh_iport);
-  interp_iport = new FieldIPort(this, "Electrode Interpolant",
+  add_iport(mesh_iport_);
+  interp_iport_ = new FieldIPort(this, "Electrode Interpolant",
 				FieldIPort::Atomic);
-  add_iport(interp_iport);
-  sol_iport = new MatrixIPort(this,"Solution Vectors",
+  add_iport(interp_iport_);
+  sol_iport_ = new MatrixIPort(this,"Solution Vectors",
 			      MatrixIPort::Atomic);
-  add_iport(sol_iport);
-  rhs_oport = new MatrixOPort(this,"RHS Vector",
+  add_iport(sol_iport_);
+  rhs_oport_ = new MatrixOPort(this,"RHS Vector",
 			      MatrixIPort::Atomic);
-  add_oport(rhs_oport);
-  basis_oport = new MatrixOPort(this, "EBasis (nelems x (nelecs-1)x3)",
-				MatrixIPort::Atomic);
-  add_oport(basis_oport);
-  basis2_oport = new MatrixOPort(this, "EBasis (nelecs x nelemsx3)",
+
+  leadfield_oport_ = new MatrixOPort(this, "Leadfield (nelecs x nelemsx3)",
 				 MatrixIPort::Atomic);
-  add_oport(basis2_oport);
+  add_oport(leadfield_oport_);
 }
 
 BuildLeadField::~BuildLeadField(){}
 
 void BuildLeadField::execute() {
   FieldHandle mesh_in;
-  if (!mesh_iport->get(mesh_in)) {
+  if (!mesh_iport_->get(mesh_in)) {
     cerr << "BuildLeadField -- couldn't get mesh.  Returning.\n";
     return;
   }
-#if 0 // FIX_ME mesh to TetVol
-  MatrixHandle idx_inH;
-  ColumnMatrix *idx_in;
-  if (!idx_iport->get(idx_inH) || !(idx_in = dynamic_cast<ColumnMatrix *>(idx_inH.get_rep()))) {
-    cerr << "BuildLeadField -- couldn't get index vector.  Returning.\n";
+  if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVol") {
+    cerr << "Error - BuildLeadField didn't get a TetVol for the mesh" << "\n";
     return;
   }
-  int nelecs=idx_in->nrows();
-  int nnodes=mesh_in->nodes.size();
-  int nelems=mesh_in->elems.size();
+  TetVolMesh* mesh = 
+    (TetVolMesh*)dynamic_cast<TetVolMesh*>(mesh_in->mesh().get_rep());
+
+  FieldHandle interp_in;
+  if (!interp_iport_->get(interp_in)) {
+    cerr << "BuildLeadField -- couldn't get interp.  Returning.\n";
+    return;
+  }
+  if (!interp_in.get_rep() || interp_in->get_type_name(0)!="TetVol") {
+    cerr << "Error - BuildLeadField didn't get a TetVol for interp" << "\n";
+    return;
+  }
+  TetVolMesh* interp_mesh = 
+    (TetVolMesh*)dynamic_cast<TetVolMesh*>(interp_in->mesh().get_rep());
+
+  TetVol<vector<pair<int,double> > >* interp = 
+    (TetVol<vector<pair<int,double> > >*)
+    dynamic_cast<TetVol<vector<pair<int,double> > >*>(interp_in.get_rep());
+  
+  if (leadfield_.get_rep() && 
+      mesh_in->generation == last_mesh_generation_ &&
+      interp_in->generation == last_interp_generation_) {
+    leadfield_oport_->send(leadfield_);
+    return;
+  }
+  last_mesh_generation_ = mesh_in->generation;
+  last_interp_generation_ = interp_in->generation;
+
+  int nelecs=interp_mesh->nodes_size();
+  int nnodes=mesh->nodes_size();
+  int nelems=mesh->cells_size();
   int counter=0;
-  DenseMatrix *bmat=new DenseMatrix(nelems, (nelecs-1)*3);
-  DenseMatrix *bmat2=new DenseMatrix(nelecs, nelems*3);
-  bmat2->zero();
+  DenseMatrix *leadfield_mat=new DenseMatrix(nelecs, nelems*3);
+  leadfield_mat->zero();
   
   while (counter<(nelecs-1)) {
-    // send rhs
     ColumnMatrix* rhs=new ColumnMatrix(nnodes);
     int i;
     for (i=0; i<nnodes; i++) (*rhs)[i]=0;
-    (*rhs)[(*idx_in)[0]]=1;
-    (*rhs)[(*idx_in)[counter+1]]=-1;
-    if (counter<(nelecs-2)) rhs_oport->send_intermediate(rhs);
-    else rhs_oport->send(rhs);
+    
+    vector<pair<int,double> >::iterator iter = interp->fdata()[0].begin();
+    while (iter != interp->fdata()[0].end()) {
+      int idx = (*iter).first;
+      double val = (*iter).second;
+      (*rhs)[idx]+=val;
+    }
+
+    iter = interp->fdata()[counter+1].begin();
+    while (iter != interp->fdata()[counter+1].end()) {
+      int idx = (*iter).first;
+      double val = (*iter).second;
+      (*rhs)[idx]-=val;
+    }
+
+    if (counter<(nelecs-2)) rhs_oport_->send_intermediate(rhs);
+    else rhs_oport_->send(rhs);
     
     // read sol'n
     MatrixHandle sol_in;
-    if (!sol_iport->get(sol_in)) {
+    if (!sol_iport_->get(sol_in)) {
       cerr <<"BuildLeadField -- couldn't get solution vector.  Returning.\n";
       return;
     }
     for (i=0; i<nelems; i++)
       for (int j=0; j<3; j++) {
-	(*bmat)[i][counter*3+j]=-(*sol_in.get_rep())[i][j];
-	(*bmat2)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
+	(*leadfield_mat)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
       }
     cerr << "BuildLeadField: "<<counter<<"/"<<nelecs-1<<"\n";
     counter++;
     
   }
-  basis_oport->send(bmat);
-  basis2_oport->send(bmat2);
+  leadfield_=leadfield_mat;
+  leadfield_oport_->send(leadfield_);
   cerr << "Done with the Module!"<<endl;
-#endif
 } 
 } // End namespace BioPSE

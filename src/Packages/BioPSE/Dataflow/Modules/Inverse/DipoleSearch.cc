@@ -519,22 +519,22 @@ void DipoleSearch::execute() {
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
 void DipoleSearch::tcl_command(TCLArgs& args, void* userdata) {
-    if (args[1] == "pause") {
-        if (mylock_.tryLock())
-	  cerr << "DipoleSearch pausing..."<<endl;
-        else 
-	  cerr << "DipoleSearch: can't lock -- already locked"<<endl;
-    } else if (args[1] == "unpause") {
-        if (mylock_.tryLock())
-	  cerr << "DipoleSearch: can't unlock -- already unlocked"<<endl;
-        else
-	  cerr << "DipoleSearch: unpausing"<<endl;
-        mylock_.unlock();
-    } else if (args[1] == "stop") {
-        stop_search_=1;
-    } else {
-        Module::tcl_command(args, userdata);
-    }
+  if (args[1] == "pause") {
+    if (mylock_.tryLock())
+      cerr << "DipoleSearch pausing..."<<endl;
+    else 
+      cerr << "DipoleSearch: can't lock -- already locked"<<endl;
+  } else if (args[1] == "unpause") {
+    if (mylock_.tryLock())
+      cerr << "DipoleSearch: can't unlock -- already unlocked"<<endl;
+    else
+      cerr << "DipoleSearch: unpausing"<<endl;
+    mylock_.unlock();
+  } else if (args[1] == "stop") {
+    stop_search_=1;
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 } // End namespace BioPSE
