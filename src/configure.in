@@ -3212,11 +3212,11 @@ if test "$HAVE_LIB_GLOBUS_DC" &&
   INC_GLOBUS_H="$INC_GLOBUS_NEXUS_H"
 fi
 
-if test "$with_globus" && test ! "$DEF_GLOBUS"; then
-  echo
-  AC_MSG_ERROR(One or more of the GLOBUS components is missing.)
-  echo
-fi
+#if test "$with_globus" && test ! "$DEF_GLOBUS"; then
+#  echo
+#  AC_MSG_ERROR(One or more of the GLOBUS components is missing.)
+#  echo
+#fi
 
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_io,        ,,,optional)
 
@@ -3864,14 +3864,14 @@ AC_SUBST(UUID_LIB_FLAG)
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-  if test "$HAVE_GLOBUS" != "yes"; then
-    if test "$with_globus" = "no"; then
-      SCI_MSG_ERROR(Must include --with-globus with --enable-scirun2)
-    else
-      SCI_MSG_ERROR(Globus not found required for scirun2)
-    fi
-    exit 1
-  fi
+#  if test "$HAVE_GLOBUS" != "yes"; then
+#    if test "$with_globus" = "no"; then
+#      SCI_MSG_ERROR(Must include --with-globus with --enable-scirun2)
+#    else
+#      SCI_MSG_ERROR(Globus not found required for scirun2)
+#    fi
+#    exit 1
+#  fi
   if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)

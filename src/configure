@@ -20029,50 +20029,14 @@ fi # end sci_check_uuid
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-  if test "$HAVE_GLOBUS" != "yes"; then
-    if test "$with_globus" = "no"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Must include --with-globus with --enable-scirun2" >&5
-echo "$as_me: error: Must include --with-globus with --enable-scirun2" >&2;}
-   { (exit 1); exit 1; }; }
-
-    else
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Globus not found required for scirun2" >&5
-echo "$as_me: error: Globus not found required for scirun2" >&2;}
-   { (exit 1); exit 1; }; }
-
-    fi
-    exit 1
-  fi
+#  if test "$HAVE_GLOBUS" != "yes"; then
+#    if test "$with_globus" = "no"; then
+#      SCI_MSG_ERROR(Must include --with-globus with --enable-scirun2)
+#    else
+#      SCI_MSG_ERROR(Globus not found required for scirun2)
+#    fi
+#    exit 1
+#  fi
   if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
