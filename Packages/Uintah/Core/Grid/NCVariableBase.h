@@ -14,6 +14,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 class OutputContext;
+   class Patch;
 
 /**************************************
 

@@ -7,7 +7,10 @@
 
 namespace Uintah {
 
-class TypeDescription;
+   class TypeDescription;
+   class InputContext;
+   class OutputContext;
+   class Patch;
 
 /**************************************
      
