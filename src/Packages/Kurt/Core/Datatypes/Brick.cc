@@ -92,7 +92,7 @@ Brick::bbox() const
   return bb;
 }
 
-void Brick::ComputePoly(Ray r, double t, Polygon* p) const
+void Brick::ComputePoly(Ray r, double t, Polygon*& p) const
 {
   double t0, t1;
   int i,j,k, tIndex = 1;
