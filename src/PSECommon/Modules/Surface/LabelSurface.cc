@@ -14,26 +14,26 @@
  */
 
 #include <config.h>
-#include <Containers/String.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/BasicSurfaces.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/SurfTree.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/BasicSurfaces.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/SurfTree.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
-#include <Malloc/Allocator.h>
-#include <Geometry/BBox.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geometry/BBox.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::SurfTree;
-using PSECommon::CommonDatatypes::SurfaceIPort;
-using PSECommon::CommonDatatypes::SurfaceOPort;
-using PSECommon::CommonDatatypes::SurfaceHandle;
-using PSECommon::CommonDatatypes::TriSurface;
+using PSECore::Dataflow::Module;
+using PSECore::CommonDatatypes::SurfTree;
+using PSECore::CommonDatatypes::SurfaceIPort;
+using PSECore::CommonDatatypes::SurfaceOPort;
+using PSECore::CommonDatatypes::SurfaceHandle;
+using PSECore::CommonDatatypes::TriSurface;
 
 using namespace SCICore::TclInterface;
 using SCICore::Containers::Array1;
@@ -122,6 +122,10 @@ void LabelSurface::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:57  mcq
 // Initial commit
 //

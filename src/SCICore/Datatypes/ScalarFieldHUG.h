@@ -24,9 +24,9 @@
 * Includes
 *******************************************************************************/
 
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/HexMesh.h>
-#include <Containers/Array1.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/HexMesh.h>
+#include <SCICore/Containers/Array1.h>
 
 
 /*******************************************************************************
@@ -36,7 +36,7 @@
 namespace SCICore {
 namespace CoreDatatypes {
 
-class ScalarFieldHUG : public ScalarField 
+class SCICORESHARE ScalarFieldHUG : public ScalarField 
 {
   public:
   
@@ -66,6 +66,10 @@ class ScalarFieldHUG : public ScalarField
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:49  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:24  mcq
 // Initial commit
 //

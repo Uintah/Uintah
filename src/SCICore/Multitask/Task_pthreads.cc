@@ -11,16 +11,18 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifdef __linux
-#define __KERNEL__
-#include <linux/signal.h>
-typedef __sighandler_t SIG_PF;
-typedef struct sigcontext_struct sigcontext_t;
+#if 0
+  #ifdef __linux
+    #define __KERNEL__
+    #include <linux/signal.h>
+    typedef __sighandler_t SIG_PF;
+    typedef struct sigcontext_struct sigcontext_t;
+  #endif
 #endif
 
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -47,11 +49,16 @@ extern "C" {
 ssize_t _read(int fildes, void *buf, size_t nbyte);
 };
 
-#ifdef __linux
-extern "C" {
-    size_t getpagesize();
-};
+#if 0
+  #ifdef __linux
+    extern "C" {
+        size_t getpagesize();
+    };
+  #endif
 #endif
+
+namespace SCICore {
+namespace Multitask {
 
 #define DEFAULT_STACK_LENGTH 64*1024
 #define INITIAL_STACK_LENGTH 48*1024
@@ -67,7 +74,9 @@ static int aborting=0;
 static int exit_code;
 static int exiting=0;
 static long tick;
+
 #endif
+
 static int pagesize;
 static int devzero_fd;
 static char* progname;
@@ -895,4 +904,8 @@ int MainTask::body(int)
     exit(-1);
     return 0;
 }
+
+} // End namespace SCICore
+} // End namespace Multitask
+
 

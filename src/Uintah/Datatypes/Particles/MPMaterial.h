@@ -29,14 +29,16 @@ LOG
     Created January 12, 1999
 ----------------------------------------------------------------------*/
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
-#include <Datatypes/Particles/ParticleSet.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/VectorField.h>
 #include <map.h>
-#include <Containers/Array1.h>
-#include <Containers/String.h>
+
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/String.h>
+
+#include <Uintah/Datatypes/Particles/ParticleSet.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -91,6 +93,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:06  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:58  mcq
 // Initial commit
 //

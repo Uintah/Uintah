@@ -68,7 +68,7 @@ WARNING
 ****************************************/
 
 
-class CrowdMonitor {
+class SCICORESHARE CrowdMonitor {
     const char* name;
     ConditionVariable write_waiters;
     ConditionVariable read_waiters;

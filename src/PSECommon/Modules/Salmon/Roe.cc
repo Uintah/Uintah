@@ -12,34 +12,34 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Salmon/Salmon.h>
-#include <Modules/Salmon/Roe.h>
-#include <Modules/Salmon/Renderer.h>
-#include <Modules/Salmon/Ball.h>
-#include <Modules/Salmon/BallMath.h>
-#include <Util/Debug.h>
-#include <Util/NotFinished.h>
-#include <Util/Timer.h>
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
-#include <Persistent/Pstreams.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Transform.h>
-#include <Geometry/Vector.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomOpenGL.h>
-#include <Geom/GeomPick.h>
-#include <Geom/PointLight.h>
-#include <Geom/GeomScene.h>
-#include <Geom/GeomSphere.h>
-#include <Malloc/Allocator.h>
-#include <Math/Trig.h>
-#include <TclInterface/TCLTask.h>
+#include <PSECommon/Modules/Salmon/Salmon.h>
+#include <PSECommon/Modules/Salmon/Roe.h>
+#include <PSECommon/Modules/Salmon/Renderer.h>
+#include <PSECommon/Modules/Salmon/Ball.h>
+#include <PSECommon/Modules/Salmon/BallMath.h>
+#include <SCICore/Util/Debug.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Util/Timer.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Transform.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/PointLight.h>
+#include <SCICore/Geom/GeomScene.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/TclInterface/TCLTask.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
 #include <strstream.h>
-#include <Multitask/AsyncReply.h>
+#include <SCICore/Multitask/AsyncReply.h>
 
 #define MouseStart 0
 #define MouseEnd 1
@@ -788,6 +788,23 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	lookdir*=amount;
 	cv.eyep(cv.lookat()+lookdir);
 	animate_to_view(cv, 1.0);
+    } else if(args[1] == "dolly2"){
+	if(args.count() != 3){
+	    args.error("dolly2 needs an amount");
+	    return;
+	}
+	double amount;
+	if(!args[2].get_double(amount)){
+	    args.error("Can't figure out amount");
+	    return;
+	}
+	View cv(view.get());
+	Vector lookdir(cv.eyep()-cv.lookat());
+	amount = amount-1;
+	lookdir*=amount;
+	cv.eyep(cv.eyep()+lookdir);
+	cv.lookat(cv.lookat()+lookdir);
+	animate_to_view(cv, 1.0);
     } else if(args[1] == "saveobj") {
 	if(args.count() != 4){
 	    args.error("Roe::dump_roe needs an output file name and format!");
@@ -988,6 +1005,10 @@ void Roe::force_redraw()
     need_redraw=1;
 }
 
+void Roe::do_for_pick(Renderer* r, RoeVisPMF pmf)
+{
+}
+
 void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 {
   // Do internal objects first...
@@ -1062,7 +1083,7 @@ void Roe::dump_objects(const clString& filename, const clString& format)
 	manager->geomlock.read_lock();
 	GeomScene scene(bgcolor.get(), view.get(), &manager->lighting,
 			&manager->ports);
-	PersistentSpace::Pio(*stream, scene);
+	SCICore::PersistentSpace::Pio(*stream, scene);
 	if(stream->error()){
 	    cerr << "Error writing geom file: " << filename << endl;
 	} else {
@@ -1090,6 +1111,10 @@ void Roe::getData(int datamask, AsyncReply<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:52  mcq
 // Initial commit
 //

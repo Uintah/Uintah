@@ -14,6 +14,8 @@
 #ifndef SCI_SCICore_String_h
 #define SCI_SCICore_String_h 1
 
+#include <SCICore/share/share.h>
+
 #include <stdlib.h> // For size_t
 
 #ifdef KCC
@@ -64,7 +66,7 @@ PATTERNS
 WARNING
   
 ****************************************/
-class clString {
+class SCICORESHARE clString {
     struct srep {
 	char* s;		// pointer to data
 	int n;			// reference count
@@ -94,11 +96,11 @@ public:
 
     //////////
     // I/O
-    friend ostream& operator<<(ostream& s, const clString&);
+    friend SCICORESHARE ostream& operator<<(ostream& s, const clString&);
     
     //////////
     //<i>No documentation provided</i>
-    friend istream& operator>>(istream& s, clString&);
+    friend SCICORESHARE istream& operator>>(istream& s, clString&);
 
 
     //////////
@@ -150,7 +152,7 @@ public:
     
     //////////
     //<i>No documentation provided</i>
-    friend clString operator+(const char*, const clString&);
+    friend SCICORESHARE clString operator+(const char*, const clString&);
 
     //////////
     //<i>No documentation provided</i>
@@ -211,10 +213,10 @@ public:
 
     //////////
     // Remove directory name
-    friend clString basename(const clString&);
+    friend SCICORESHARE clString basename(const clString&);
     //////////
     // Return directory name
-    friend clString pathname(const clString&);
+    friend SCICORESHARE clString pathname(const clString&);
   
 
     static void test_rigorous(RigorousTest* __test);
@@ -222,14 +224,18 @@ public:
 };
 
 // Build a string from an int/double
-clString to_string(int);
-clString to_string(double);
+SCICORESHARE clString to_string(int);
+SCICORESHARE clString to_string(double);
 
 } // End namespace Containers
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:15  mcq
 // Initial commit
 //

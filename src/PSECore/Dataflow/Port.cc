@@ -12,16 +12,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Port.h>
+#include <PSECore/Dataflow/Port.h>
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
 
 #include <iostream.h>
-#include <strstream.h>
+#include <stdio.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 Port::Port(Module* module, const clString& type_name,
@@ -114,10 +114,9 @@ void IPort::update_light()
 	color="black";
 	break;
     }
-    char buf[1000];
-    ostrstream str(buf, 1000);
-    str << module->id << " lightIPort " << which_port << " " << color << '\0';
-    TCL::execute(str.str());
+    char str[1000];
+    sprintf(str,"%s lightIPort %d %s",module->id(),which_port,color);
+    TCL::execute(str);
 }
 
 void OPort::update_light()
@@ -142,10 +141,9 @@ void OPort::update_light()
 	}
 	break;
     }
-    char buf[1000];
-    ostrstream str(buf, 1000);
-    str << module->id << " lightOPort " << which_port << " " << color << '\0';
-    TCL::execute(str.str());
+    char str[1000];
+    sprintf(str,"%s lightOPort %d %s",module->id(),which_port,color);
+    TCL::execute(str);
 }
 
 void IPort::turn_on(PortState st)
@@ -201,10 +199,14 @@ clString Port::get_colorname()
 }
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:00  mcq
 // Initial commit
 //

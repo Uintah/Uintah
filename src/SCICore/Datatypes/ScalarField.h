@@ -14,11 +14,11 @@
 #ifndef SCI_project_ScalarField_h
 #define SCI_project_ScalarField_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/Array1.h>
-#include <Containers/LockingHandle.h>
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -60,7 +60,7 @@ struct SampInfo {    // these are just the raw samples
 };
 
 
-class ScalarField : public Datatype {
+class SCICORESHARE ScalarField : public Datatype {
 protected:
     int have_bounds;
     Point bmin;
@@ -146,6 +146,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:48  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:24  mcq
 // Initial commit
 //

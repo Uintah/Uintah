@@ -14,18 +14,12 @@
 #ifndef SCI_CoreDatatypes_TriSurface_h
 #define SCI_CoreDatatypes_TriSurface_h 1
 
-#include <CoreDatatypes/Surface.h>
-#include <Containers/Array1.h>
-#include <Geometry/Point.h>
-
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Geometry/Point.h>
 #include <stdlib.h> // For size_t
 
 namespace SCICore {
-
-namespace PersistentSpace {
-  class Piostream;
-}
-
 namespace CoreDatatypes {
 
 using Containers::Array1;
@@ -33,7 +27,6 @@ using Geometry::Point;
 using Geometry::Vector;
 
 class SurfTree;
-
 struct TSElement {
     int i1; 
     int i2; 
@@ -56,7 +49,7 @@ struct TSEdge {
 void Pio (Piostream& stream, TSElement*& data);
 void Pio (Piostream& stream, TSEdge*& data);
 
-class TriSurface : public Surface {
+class SCICORESHARE TriSurface : public Surface {
 public:
     Array1<Point> points;
     Array1<TSElement*> elements;
@@ -146,6 +139,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:57  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:31  mcq
 // Initial commit
 //

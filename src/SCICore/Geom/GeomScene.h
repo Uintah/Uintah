@@ -14,14 +14,17 @@
 #ifndef GeomScene_h
 #define GeomScene_h 1
 
-#include <Persistent/Persistent.h>
-#include <Geom/Color.h>
-#include <Geom/View.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Persistent/Persistent.h>
+
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/View.h>
 
 #ifdef KCC
-#include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
+  #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
 #else
-class ostream;
+  class ostream;
 #endif
 
 namespace SCICore {
@@ -33,7 +36,7 @@ using SCICore::Containers::clString;
 class Lighting;
 class GeomObj;
 
-struct GeomScene : public Persistent {
+struct SCICORESHARE GeomScene : public Persistent {
     GeomScene();
     GeomScene(const Color& bgcolor, const View& view, Lighting* lighting,
 	     GeomObj* topobj);
@@ -50,6 +53,10 @@ struct GeomScene : public Persistent {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:44  mcq
 // Initial commit
 //

@@ -12,17 +12,18 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Geom/GeomOpenGL.h>
-#include <Malloc/Allocator.h>
-#include <Modules/Salmon/SalmonGeom.h>
-#include <Geom/BBoxCache.h>
 #include <iostream.h>
-#include <Modules/Salmon/Roe.h>
+
+#include <SCICore/Geom/GeomOpenGL.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geom/BBoxCache.h>
+
+#include <PSECommon/Modules/Salmon/SalmonGeom.h>
+#include <PSECommon/Modules/Salmon/Roe.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using SCICore::PersistentSpace::Persistent;
 using SCICore::PersistentSpace::Persistent;
 using SCICore::GeomSpace::GeomBBoxCache;
 
@@ -107,6 +108,7 @@ void GeomSalmonItem::intersect(const Ray& ray, Material* m,
 void GeomSalmonItem::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
+    using SCICore::GeomSpace::Pio;
 
     stream.begin_class("GeomSalmonItem", GEOMSALMONITEM_VERSION);
     int have_lock;
@@ -134,6 +136,10 @@ bool GeomSalmonItem::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:39  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:53  mcq
 // Initial commit
 //

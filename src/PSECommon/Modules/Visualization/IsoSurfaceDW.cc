@@ -15,42 +15,42 @@
 
 // Esc-x replace-string uchar [double | float | int | ushort]
 
-#include <Containers/BitArray1.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Containers/Queue.h>
-#include <Containers/Ring.h>
-#include <Containers/Stack.h>
-#include <Util/Timer.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRGBase.h>
-#include <CoreDatatypes/ScalarFieldRGshort.h>
-#include <CoreDatatypes/ScalarFieldRGuchar.h>
-#include <CoreDatatypes/ScalarFieldRGchar.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CoreDatatypes/ScalarFieldRGdouble.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Material.h>
-#include <Geom/GeomTriangles.h>
-#include <Geom/GeomTriStrip.h>
-#include <Geometry/Point.h>
-#include <Geometry/Plane.h>
-#include <Malloc/Allocator.h>
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
-#include <Multitask/ITC.h>
-#include <Multitask/Task.h>
-#include <TclInterface/TCLvar.h>
-#include <Widgets/ArrowWidget.h>
+#include <SCICore/Containers/BitArray1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/Queue.h>
+#include <SCICore/Containers/Ring.h>
+#include <SCICore/Containers/Stack.h>
+#include <SCICore/Util/Timer.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGshort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGuchar.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGdouble.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Geom/GeomTriStrip.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <PSECore/Widgets/ArrowWidget.h>
 #include <iostream.h>
 #include <strstream.h>
 
@@ -64,9 +64,9 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
@@ -2845,6 +2845,10 @@ void IsoSurfaceDW::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:51  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:15  mcq
 // Initial commit
 //

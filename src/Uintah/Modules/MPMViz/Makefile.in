@@ -1,13 +1,10 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../../..
+OBJTOP   = ../../..
 
 SRCS     = TecplotFileSelector.cc ParticleGridVisControl.cc PartToGeom.cc \
            RescaleParticleColorMap.cc cfdGridLines.cc TecplotReader.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs \
-           -I$(SRCTOP)/libs/PSECore -I$(SRCTOP)/libs/SCICore \
-           -I$(SRCTOP)/packages/Uintah \
-           -I$(SRCTOP)/packages/Uintah/Modules/MPMViz
+INCLUDES = -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

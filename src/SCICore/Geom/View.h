@@ -14,9 +14,11 @@
 #ifndef SCI_Geom_View_h
 #define SCI_Geom_View_h 1
 
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Geom/Color.h>
+#include <SCICore/share/share.h>
+  
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geom/Color.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -24,7 +26,7 @@ namespace GeomSpace {
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 
-class View {
+class SCICORESHARE View {
 protected:
     Point eyep_;
     Point lookat_;
@@ -63,10 +65,10 @@ public:
     double fov() const;	
     void fov(double);
 
-    friend void Pio (Piostream&, View&);
+    friend SCICORESHARE void Pio (Piostream&, View&);
 };
 
-class ExtendedView : public View
+class SCICORESHARE ExtendedView : public View
 {
   int xres_, yres_;
   Color bg_;
@@ -86,7 +88,7 @@ public:
   int yres() const;
   void yres(int);
 
-  friend void Pio( Piostream&, ExtendedView& );
+  friend SCICORESHARE void Pio( Piostream&, ExtendedView& );
   
   void Print();
   
@@ -97,6 +99,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:54  mcq
 // Initial commit
 //

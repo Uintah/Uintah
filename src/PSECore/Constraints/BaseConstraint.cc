@@ -14,9 +14,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <Constraints/BaseConstraint.h>
+#include <PSECore/Constraints/BaseConstraint.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 /***************************************************************************
@@ -184,10 +184,14 @@ BaseConstraint::Register()
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:15  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:53  mcq
 // Initial commit
 //

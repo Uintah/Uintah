@@ -12,7 +12,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Tester/RigorousTest.h>
+#include <SCICore/Tester/RigorousTest.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -78,6 +78,10 @@ int RigorousTest::get_ntests()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:20  mcq
 // Initial commit
 //

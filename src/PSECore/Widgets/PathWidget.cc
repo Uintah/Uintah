@@ -12,16 +12,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Widgets/PathWidget.h>
-#include <Constraints/DistanceConstraint.h>
-#include <Constraints/RatioConstraint.h>
-#include <Geom/GeomCone.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomSphere.h>
-#include <Malloc/Allocator.h>
-#include <Dataflow/Module.h>
+#include <PSECore/Widgets/PathWidget.h>
+#include <PSECore/Constraints/DistanceConstraint.h>
+#include <PSECore/Constraints/RatioConstraint.h>
+#include <SCICore/Geom/GeomCone.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <PSECore/Dataflow/Module.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::GeomSpace::GeomSphere;
@@ -30,7 +30,7 @@ using SCICore::GeomSpace::GeomCappedCone;
 using SCICore::GeomSpace::GeomCylinder;
 using SCICore::Geometry::Cross;
 
-using namespace PSECommon::Constraints;
+using namespace PSECore::Constraints;
 
 class PathPoint {
 public:
@@ -461,10 +461,14 @@ PathWidget::GetMaterialName( const Index mindex ) const
 }
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:31  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:07  mcq
 // Initial commit
 //

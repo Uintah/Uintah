@@ -14,20 +14,22 @@
 #ifndef SCI_project_Connection_h
 #define SCI_project_Connection_h 1
 
-#include <Containers/String.h>
-#include <Comm/MessageBase.h>
+#include <SCICore/share/share.h>
 
-namespace PSECommon {
+#include <SCICore/Containers/String.h>
+#include <PSECore/Comm/MessageBase.h>
+
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::Containers::clString;
-using PSECommon::Comm::MessageBase;
+using PSECore::Comm::MessageBase;
 
 class IPort;
 class Module;
 class OPort;
 
-class Connection {
+class SCICORESHARE Connection {
     int connected;
 public:
     Connection(Module*, int, Module*, int);
@@ -55,7 +57,7 @@ public:
 };
 
 
-class Demand_Message : public MessageBase {
+class SCICORESHARE Demand_Message : public MessageBase {
 public:
     Connection* conn;
     Demand_Message(Connection* conn);
@@ -63,10 +65,14 @@ public:
 };
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:22  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:57  mcq
 // Initial commit
 //

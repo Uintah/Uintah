@@ -14,9 +14,9 @@
 #ifndef SCI_Geom_GeomObj_h
 #define SCI_Geom_GeomObj_h 1
 
-#include <Containers/Array1.h>
-#include <Containers/Handle.h>
-#include <Persistent/Persistent.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Handle.h>
+#include <SCICore/Persistent/Persistent.h>
 #include <config.h>
 
 #ifdef KCC
@@ -26,26 +26,18 @@ class istream;
 #endif
 
 namespace SCICore {
-  namespace GeomSpace {
-    class GeomObj;
-  }
-  namespace PersistentSpace {
-    class Piostream;
-    void Pio( Piostream &, GeomSpace::GeomObj *& );
-  }
-  namespace Containers {
-    class clString;
-  }
-  namespace Geometry {
-    class BBox;
-    class BSphere;
-    class Vector;
-    class Point;
-    class Ray;
-  }
+
+namespace Containers {
+  class clString;
+}
+namespace Geometry {
+  class BBox;
+  class BSphere;
+  class Vector;
+  class Point;
+  class Ray;
 }
 
-namespace SCICore {
 namespace GeomSpace {
 
 struct DrawInfoOpenGL;
@@ -65,7 +57,7 @@ using SCICore::Geometry::Point;
 using SCICore::Geometry::Ray;
 using SCICore::Containers::clString;
 
-class GeomObj : public Persistent {
+class SCICORESHARE GeomObj : public Persistent {
 protected:
     GeomObj* parent;
 public:
@@ -107,11 +99,17 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*)=0;
 };
 
+void Pio(Piostream&, GeomObj*&);
+
 } // End namespace GeomSpace
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:09  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:40  mcq
 // Initial commit
 //

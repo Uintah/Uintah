@@ -12,8 +12,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Malloc/Allocator.h>
-#include <Malloc/AllocPriv.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Malloc/AllocPriv.h>
 
 using namespace SCICore::Malloc;
 
@@ -41,7 +41,8 @@ void* operator new(size_t size, Allocator* a, char* tag)
     return a->alloc(size, tag);
 }
 
-#ifdef _BOOL
+// Dd: Assuming _BOOL should be defined...
+//#ifdef _BOOL
 void* operator new[](size_t size, Allocator* a, char* tag)
 {
     if(!a){
@@ -51,11 +52,14 @@ void* operator new[](size_t size, Allocator* a, char* tag)
     }
     return a->alloc(size, tag);
 }
-
-#endif
+//#endif
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:31  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:59  mcq
 // Initial commit
 //

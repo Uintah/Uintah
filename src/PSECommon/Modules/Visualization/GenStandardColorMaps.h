@@ -1,50 +1,51 @@
-/************************************** 
-CLASS 
-   GenStandardColorMaps
-
-   A module that generates fixed Colormaps for visualation purposes.
-
-GENERAL INFORMATION 
-   GenStandarColorMaps.h
-   Written by: 
-
-     Kurt Zimmerman
-     Department of Computer Science 
-     University of Utah 
-     December 1998
-
-     Copyright (C) 1998 SCI Group
-
-KEYWORDS 
-   Colormap, Transfer Function
-
-DESCRIPTION 
-     This module is used to create some   
-     "standard" non-editable colormaps in SCIRun/Uintah.      
-     Non-editable simply means that the colors cannot be      
-     interactively manipulated.  The Module does, allow       
-     for the the resolution of the colormaps to be changed.
-     This class sets up the data structures for Colormaps and 
-     creates a module from which the user can choose from several
-     popular colormaps.
-
-****************************************/ 
-
 #ifndef GENSTANDARDCOLORMAPS_H
 #define GENSTANDARDCOLORMAPS_H 1
 
-#include <Dataflow/Module.h> 
-#include <TclInterface/TCLvar.h> 
-#include <Geom/Color.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <CommonDatatypes/ColorMapPort.h>
+#include <SCICore/TclInterface/TCLvar.h> 
+#include <SCICore/Geom/Color.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+
+#include <PSECore/Dataflow/Module.h> 
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
+
+/**************************************
+CLASS
+   GenStandardColorMaps
+
+   A module that generates fixed Colormaps for visualation purposes.
+
+GENERAL INFORMATION
+   GenStandarColorMaps.h
+   Written by:
+
+     Kurt Zimmerman
+     Department of Computer Science
+     University of Utah
+     December 1998
+
+     Copyright (C) 1998 SCI Group
+
+KEYWORDS
+   Colormap, Transfer Function
+
+DESCRIPTION
+     This module is used to create some
+     "standard" non-editable colormaps in SCIRun/Uintah.
+     Non-editable simply means that the colors cannot be
+     interactively manipulated.  The Module does, allow
+     for the the resolution of the colormaps to be changed.
+     This class sets up the data structures for Colormaps and
+     creates a module from which the user can choose from several
+     popular colormaps.
+
+****************************************/
 
 class GenStandardColorMaps : public Module { 
   class StandardColorMap;

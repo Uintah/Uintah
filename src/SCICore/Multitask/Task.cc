@@ -12,9 +12,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Multitask/Task.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Multitask/Task.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Multitask/ITC.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -66,7 +66,7 @@ TaskInfo::~TaskInfo()
     delete[] tinfo;
 }
 
-class Multiprocess : public Task {
+class SCICORESHARE Multiprocess : public Task {
 public:
   Multiprocess* next;
   Semaphore sema1;
@@ -96,21 +96,33 @@ static Multiprocess* mpworkers;
 static Mutex workerlock;
 
 #ifdef __sgi
-#include <sys/sysmp.h>
+  #include <sys/sysmp.h>
+#elif defined(_WIN32)
+  #define _WIN32_WINNT 0x0400  
+  #include <windows.h>
+  #include <stdio.h>
+  #include <SCICore/share/share.h>
+  #define PTHREAD HANDLE
+  #undef _WIN32_WINNT
 #endif
 
 void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
 			void* userdata, bool block)
 {
+	int i;
     if(!block){
-	for(int i=0;i<nprocessors;i++){
+	for(i=0;i<nprocessors;i++){
 	    Multiprocess* w=new Multiprocess;
 	    w->activate(0);
 	    w->starter=starter;
 	    w->userdata=userdata;
 	    w->processor=i;
 	    w->sema1.up();
+#ifdef _WIN32
+		SetThreadIdealProcessor(GetCurrentThread(),i);
+#elif defined __sgi
 	    sysmp(MP_MUSTRUN, i);
+#endif
 	    w->next=0;
 	}
 	return;
@@ -118,7 +130,7 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
     workerlock.lock();
 
     Multiprocess* workers=0;
-    for(int i=0;i<nprocessors;i++){
+    for(i=0;i<nprocessors;i++){
       Multiprocess* w=mpworkers;
       if(!w){
 	w=new Multiprocess;
@@ -132,19 +144,21 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
     workerlock.unlock();
 
     Multiprocess* w=workers;
-    for(int i=0;i<nprocessors;i++){
+    for(i=0;i<nprocessors;i++){
       w->starter=starter;
       w->userdata=userdata;
       w->processor=i;
       w->sema1.up();
-#ifdef __sgi
+#ifdef _WIN32
+	  SetThreadIdealProcessor(GetCurrentThread(),i);
+#elif defined __sgi
       sysmp(MP_MUSTRUN, i);
 #endif
       w=w->next;
     }
 
     w=workers;
-    for(int i=0;i<nprocessors;i++){
+    for(i=0;i<nprocessors;i++){
       w->sema2.down();
       w=w->next;
     }
@@ -159,6 +173,10 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:07  mcq
 // Initial commit
 //

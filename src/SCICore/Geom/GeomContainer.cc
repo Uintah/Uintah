@@ -12,8 +12,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomContainer.h>
-#include <Containers/String.h>
+#include <SCICore/Geom/GeomContainer.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -84,6 +84,10 @@ void GeomContainer::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:06  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:38  mcq
 // Initial commit
 //

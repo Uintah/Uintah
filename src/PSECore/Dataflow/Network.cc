@@ -15,21 +15,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network.h>
-
-#include <Util/NotFinished.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
+#include <PSECore/Dataflow/Network.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
 #include <PSECore/Dataflow/PackageDB.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/Remote.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/Remote.h>
 
 #include <stdio.h>
 #include <iostream.h>
 
 //#define DEBUG 1
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::TclInterface::setupConnect;
@@ -158,9 +157,11 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
         write (slave_socket, buf, sizeof(buf));
 
 	// setup data connection
+#ifndef _WIN32
 	int listen_socket = setupConnect (conn->socketPort);
 	conn->remSocket = acceptConnect (listen_socket);
 	close (listen_socket);
+#endif
     }
     return id;
 }
@@ -233,7 +234,7 @@ Module* Network::add_module(const clString& packageName,
                             const clString& moduleName)
 { 
   using namespace SCICore::Containers;
-  using namespace PSECommon::Dataflow;
+  using namespace PSECore::Dataflow;
 
   // Find a unique id in the Network for the new instance of this module and
   // form an instance name from it
@@ -271,6 +272,7 @@ Module* Network::add_module(const clString& packageName,
     	cerr << "Network::add_module remote module\n";
 #endif
 
+#ifndef _WIN32
 	// open listen socket and startup slave if not done yet
 	if (slave_socket == 0) {
 	    int listen_socket = setupConnect (BASE_PORT);
@@ -281,6 +283,7 @@ Module* Network::add_module(const clString& packageName,
  */ 	    slave_socket = acceptConnect (listen_socket);
             close (listen_socket);
 	}
+#endif
 
 	// send message to addModule (pass ID to link 2 instances);
 	msg.type 	= CREATE_MOD;
@@ -390,10 +393,14 @@ int Network::delete_module(const clString& id)
 }
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:23  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:58  mcq
 // Initial commit
 //

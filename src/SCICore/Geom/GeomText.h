@@ -14,13 +14,18 @@
 #ifndef SCI_Geom_Text_h
 #define SCI_Geom_Text_h 1
 
-#include <Geom/GeomObj.h>
+#include <SCICore/Geom/GeomObj.h>
+#ifdef _WIN32
+#define WINGDIAPI __declspec(dllimport)
+#define APIENTRY __stdcall
+#define CALLBACK APIENTRY
+#endif
 #include <GL/gl.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomText : public GeomObj {
+class SCICORESHARE GeomText : public GeomObj {
   static int init;
   static GLuint fontbase;
 public:
@@ -56,6 +61,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:14  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:45  mcq
 // Initial commit
 //

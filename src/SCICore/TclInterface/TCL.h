@@ -14,8 +14,8 @@
 #ifndef sci_project_TCL_h
 #define sci_project_TCL_h 1
 
-#include <Containers/Array1.h>
-#include <Containers/String.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
 namespace TclInterface {
@@ -25,7 +25,7 @@ using SCICore::Containers::clString;
 
 class TCLvar;
 
-class TCLArgs {
+class SCICORESHARE TCLArgs {
     Array1<clString> args;
 public:
     int have_error;
@@ -47,7 +47,7 @@ public:
     static clString make_list(const Array1<clString>&);
 };
 
-class TCL {
+class SCICORESHARE TCL {
     Array1<TCLvar*> vars;
     friend class TCLvar;
     void register_var(TCLvar*);
@@ -89,6 +89,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:16  mcq
 // Initial commit
 //

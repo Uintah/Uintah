@@ -14,6 +14,8 @@
 #ifndef SCI_Geom_Pickable_h
 #define SCI_Geom_Pickable_h 1
 
+#include <SCICore/share/share.h>
+
 namespace PSECommon {
   namespace Modules {
     class Roe;
@@ -43,7 +45,7 @@ struct BState {
    unsigned int btn:2;
 };
 
-class Pickable {
+class SCICORESHARE Pickable {
 
 public:
   virtual ~Pickable();
@@ -67,6 +69,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:21  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:50  mcq
 // Initial commit
 //

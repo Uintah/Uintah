@@ -15,9 +15,9 @@
 #ifndef sci_Geometry_BSphere_h
 #define sci_Geometry_BSphere_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Geometry/Point.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace Geometry {
@@ -25,10 +25,10 @@ namespace Geometry {
 class Ray;
 class Vector;
 
-class SHARE BSphere {
+class SCICORESHARE BSphere {
 protected:
 
-    friend void Pio( Piostream &, BSphere& );
+    friend SCICORESHARE void Pio( Piostream &, BSphere& );
 
     int have_some;
     Point cen;
@@ -54,6 +54,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:27  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:55  mcq
 // Initial commit
 //

@@ -1,7 +1,7 @@
 // soloader.cpp written by Chris Moulding 11/98
 
 #include <iostream.h>
-#include <Util/soloader.h>
+#include <SCICore/Util/soloader.h>
 
 LIBRARY_HANDLE explicitlyopenedhandles[3000];
 int numberofopenedhandles = 0;

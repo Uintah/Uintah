@@ -18,8 +18,10 @@ itcl_class PSECommon_FEM_BuildFEMatrix {
         set_defaults
     }
     method set_defaults {} {
-        global $this-DirSubFlag
-        set $this-DirSubFlag 1
+        global $this-BCFlag
+	global $this-UseCondTCL
+        set $this-BCFlag "none"
+	set $this-UseCondTCL 1
     }
     method ui {} {
         set w .ui[modname]
@@ -29,12 +31,18 @@ itcl_class PSECommon_FEM_BuildFEMatrix {
         }
 
         toplevel $w
-        wm minsize $w 300 80
+        wm minsize $w 150 20
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
-        global $this-DirSubFlag
-	checkbutton $w.f.b -variable $this-DirSubFlag -text "Dirichlet Substitution"
-	pack $w.f.b -expand 1 -fill x
+        global $this-BCFlag
+        make_labeled_radio $w.f.r "Boundary Conditions:" "" \
+                left $this-BCFlag \
+                {{"None" none} \
+                {"Apply Dirichlet" DirSub} \
+                {"Pin Node Zero" PinZero}}
+	global $this-UseCondTCL
+	checkbutton $w.f.b -text "Use Conductivities" -variable $this-UseCondTCL
+	pack $w.f.r $w.f.b -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }
 }

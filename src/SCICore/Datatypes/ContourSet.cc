@@ -12,12 +12,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/ContourSet.h>
+#include <SCICore/CoreDatatypes/ContourSet.h>
 
-#include <Containers/String.h>
-#include <CoreDatatypes/Surface.h>
-#include <Geometry/Transform.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/Geometry/Transform.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <iostream.h>
 
@@ -117,6 +117,8 @@ void ContourSet::io(Piostream& stream)
     using SCICore::Geometry::Pio;
 
     int version=stream.begin_class("ContourSet", CONTOUR_SET_VERSION);
+    Pio(stream, levels);
+    Pio(stream, level_map);
     Pio(stream, contours);
     if (version >=3) {
 	Pio(stream, conductivity);
@@ -130,6 +132,8 @@ void ContourSet::io(Piostream& stream)
     if (version >= 2)
 	Pio(stream, bbox);
     Pio(stream, name);
+    Pio(stream, split_join);
+    Pio(stream, matl);
     stream.end_class();
 }
 
@@ -137,12 +141,15 @@ ContourSet* ContourSet::clone()
 {
     return scinew ContourSet(*this);
 }
-
 } // End namespace CoreDatatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:20  mcq
 // Initial commit
 //

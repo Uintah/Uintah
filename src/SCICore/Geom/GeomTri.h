@@ -14,12 +14,12 @@
 #ifndef SCI_Geom_Tri_h
 #define SCI_Geom_Tri_h 1
 
-#include <Geom/GeomVertexPrim.h>
+#include <SCICore/Geom/GeomVertexPrim.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomTri : public GeomVertexPrim {
+class SCICORESHARE GeomTri : public GeomVertexPrim {
     int x_cross(double p1[2], double p2[2], double p[2]);
     Vector n;
 public:
@@ -60,6 +60,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:16  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:46  mcq
 // Initial commit
 //

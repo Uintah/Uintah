@@ -14,11 +14,11 @@
 #ifndef SCI_project_Debug_h
 #define SCI_project_Debug_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Containers/Array1.h>
-#include <Containers/AVLTree.h>
-#include <Containers/String.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/AVLTree.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
 namespace Util {
@@ -41,7 +41,7 @@ typedef AVLTreeIter<clString, DebugVars*> DebugIter;
  */
 
 // DebugSwitch class.
-class SHARE DebugSwitch {
+class SCICORESHARE DebugSwitch {
     clString module;
     clString var;
     friend ostream& operator<<(ostream&, DebugSwitch&);
@@ -84,6 +84,10 @@ DebugSwitch::operator int() const
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:35  mcq
 // Initial commit
 //

@@ -14,8 +14,10 @@
 #ifndef SCI_project_MemStats_h
 #define SCI_project_MemStats_h 1
 
-#include <TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCL.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 namespace SCICore {
   namespace Malloc {
@@ -28,7 +30,7 @@ namespace TclInterface {
 
 using SCICore::Malloc::Allocator;
 
-class MemStats : public TCL {
+class SCICORESHARE MemStats : public TCL {
     Allocator* a;
     int textwidth;
     int graphwidth;
@@ -63,6 +65,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:15  mcq
 // Initial commit
 //

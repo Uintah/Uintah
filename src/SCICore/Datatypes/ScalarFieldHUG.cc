@@ -24,10 +24,10 @@
 * Includes
 *******************************************************************************/
 
-#include <CoreDatatypes/ScalarFieldHUG.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/ScalarFieldHUG.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
 
 /*******************************************************************************
 ********************************************************************************
@@ -198,6 +198,10 @@ void ScalarFieldHUG::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:49  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:24  mcq
 // Initial commit
 //

@@ -11,19 +11,25 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
-#include <unistd.h>
-#include <stdio.h>
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Module.h>
-#include <Dataflow/Port.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+#include <stdio.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 
 //#define DEBUG 1
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 Connection::Connection(Module* m1, int p1, Module* m2, int p2)
@@ -91,10 +97,14 @@ Demand_Message::~Demand_Message()
 }
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:21  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:57  mcq
 // Initial commit
 //

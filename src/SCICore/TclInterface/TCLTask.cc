@@ -12,10 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Multitask/ITC.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/Exceptions/Exceptions.h>
 
 #include <iostream.h>
 #include <tcl.h>
@@ -25,16 +26,15 @@ typedef void (Tcl_LockProc)();
 typedef int (IsTclThreadProc)();
 
 #ifdef _WIN32
+#undef ASSERT
 #include <afxwin.h>
 #define GLXContext HGLRC
 #ifdef __cplusplus
 extern "C" {
 #endif
-__declspec(dllimport) Tcl_Interp* the_interp;
-__declspec(dllimport) GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 __declspec(dllimport) void Tcl_SetIsTclThread(IsTclThreadProc* proc);
-__declspec(dllimport) int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
+int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
 #ifdef __cplusplus
 }
 #endif
@@ -42,12 +42,12 @@ __declspec(dllimport) int tkMain(int argc, char** argv, void (*nwait_func)(void*
 #else
 
 extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
-extern "C" Tcl_Interp* the_interp;
-//extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 extern "C" void Tcl_SetIsTclThread(IsTclThreadProc* proc);
 
 #endif
+
+extern "C" Tcl_Interp* the_interp;
 
 namespace SCICore {
 namespace TclInterface {
@@ -105,6 +105,7 @@ static int x_error_handler(Display* dpy, XErrorEvent* error)
 
 static int exitproc(ClientData, Tcl_Interp*, int, char* [])
 {
+	printf("exitproc() {%s,%d}\n",__FILE__,__LINE__);
     Task::exit_all(0);
     return TCL_OK; // not reached
 }
@@ -137,6 +138,10 @@ void wait_func(void* thatp)
 
 int TCLTask::body(int)
 {
+    // Acquire the lock before we go into the Tcl/Tk main loop.
+    // From now on, it will only get unlocked when the GUI blocks.
+    do_lock();
+
     tkMain(argc, argv, wait_func, (void*)this);
     return 0;
 }
@@ -155,6 +160,7 @@ void TCLTask::mainloop_wait()
 {
     TCL::initialize();
     Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
+    do_unlock();
 
     // The main program will want to know that we are started...
     start.up();
@@ -162,9 +168,6 @@ void TCLTask::mainloop_wait()
     // Wait for the main program to tell us that all initialization
     // has occurred...
     cont.down();
-
-    // Acquire the lock before we go into the Tcl/Tk main loop.
-    // From now on, it will only get unlocked when the GUI blocks.
     do_lock();
 }
 
@@ -205,6 +208,10 @@ Task* TCLTask::get_owner()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:45  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:16  mcq
 // Initial commit
 //

@@ -31,8 +31,8 @@
 namespace SCIRun {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 
 using namespace SCICore::TclInterface;
 using namespace SCICore::Multitask;
@@ -455,11 +455,15 @@ void HistEq::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:59  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:52  mcq
 // Initial commit
 //
 // Revision 1.2  1999/04/30 01:11:52  dav
-// moved TiffReader to SCIRun from PSECommon
+// moved TiffReader to SCIRun from PSECore
 //
 // Revision 1.1  1999/04/29 22:26:32  dav
 // Added image files to SCIRun

@@ -12,10 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/Lighting.h>
-#include <Geom/Light.h>
-#include <Persistent/Persistent.h>
-#include <Containers/String.h>
+#include <SCICore/Geom/Lighting.h>
+#include <SCICore/Geom/Light.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/String.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -30,32 +30,28 @@ Lighting::~Lighting()
 {
 }
 
-} // End namespace GeomSpace
-
-
-namespace PersistentSpace {
-
 #define LIGHTING_VERSION 1
 
-void Pio( Piostream& stream, GeomSpace::Lighting & l )
+void Pio( Piostream& stream, Lighting & l )
 {
     using SCICore::PersistentSpace::Pio;
     using SCICore::Containers::Pio;
 
     stream.begin_class("Lighting", LIGHTING_VERSION);
     Pio(stream, l.lights);
-    Pio(stream, l.amblight);
+    GeomSpace::Pio(stream, l.amblight);
     stream.end_class();
 }
 
-} // End namespace PersistentSpace
-
-
-
+} // End namespace GeomSpace
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:19  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:49  mcq
 // Initial commit
 //

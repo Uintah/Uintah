@@ -13,11 +13,11 @@
  */
 
 
-#include <Constraints/SegmentConstraint.h>
-#include <Geometry/Vector.h>
-#include <Util/Debug.h>
+#include <PSECore/Constraints/SegmentConstraint.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Util/Debug.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 using SCICore::Util::DebugSwitch;
@@ -123,10 +123,14 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:20  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:56  mcq
 // Initial commit
 //

@@ -39,7 +39,7 @@ PATTERNS
 WARNING
    
 ****************************************/
-class ThreadTopology {
+class SCICORESHARE ThreadTopology {
 public:
     //////////
     //Make a thread topology of

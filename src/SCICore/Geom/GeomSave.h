@@ -14,8 +14,8 @@
 #ifndef GeomSave_h
 #define GeomSave_h 1
 
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
 
 #ifdef KCC
 #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
@@ -62,6 +62,10 @@ struct GeomSave {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:43  mcq
 // Initial commit
 //

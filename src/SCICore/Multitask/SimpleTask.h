@@ -13,7 +13,9 @@
 
 // No include guards - this can by done more than once...
 
-#include <Multitask/Task.h>
+#include <SCICore/Multitask/Task.h>
+
+#include <SCICore/share/share.h>
 
 // To use this, define SIMPLE_TASK_NAME to the name of the class that
 // you want to build, and #include this header.  The class definition
@@ -23,7 +25,7 @@
 #error Must define SIMPLE_TASK_NAME before including SimpleTask
 #endif
 
-class SIMPLE_TASK_NAME : public Task {
+class SCICORESHARE SIMPLE_TASK_NAME : public Task {
 public:
     inline SIMPLE_TASK_NAME(const clString& n, int detached=1, int prio=Task::DEFAULT_PRIORITY,
 			    Processor* wh=0)

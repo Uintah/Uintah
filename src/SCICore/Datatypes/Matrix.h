@@ -14,10 +14,10 @@
 #ifndef SCI_project_Matrix_h
 #define SCI_project_Matrix_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/Array1.h>
-#include <Containers/LockingHandle.h>
-#include <Containers/String.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -35,7 +35,7 @@ class Matrix;
 class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class Matrix : public Datatype {
+class SCICORESHARE Matrix : public Datatype {
 protected:
     enum Sym {
         non_symmetric,
@@ -88,7 +88,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class MatrixRow {
+class SCICORESHARE MatrixRow {
     Matrix* matrix;
     int row;
 public:
@@ -110,6 +110,10 @@ void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:23  mcq
 // Initial commit
 //

@@ -14,7 +14,9 @@
 #ifndef Malloc_Allocator_h
 #define Malloc_Allocator_h 1
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <stdio.h> // ??? How else to get size_t defined?
 
 namespace SCICore {
@@ -53,13 +55,22 @@ void DumpAllocator(Allocator*);
 } // End namespace Malloc
 } // End namespace SCICore
 
+
+#ifdef _WIN32
+#define scinew new
+#else
 void* operator new(size_t, SCICore::Malloc::Allocator*, char*);
 void* operator new[](size_t, SCICore::Malloc::Allocator*, char*);
-
 #define scinew new(SCICore::Malloc::default_allocator, __FILE__)
+#endif
+
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:31  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:59  mcq
 // Initial commit
 //

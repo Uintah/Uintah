@@ -12,10 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/ScalarFieldZone.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/ScalarFieldZone.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -123,6 +123,10 @@ void ScalarFieldZone::get_boundary_lines(Array1<Point>& lines)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:28  mcq
 // Initial commit
 //

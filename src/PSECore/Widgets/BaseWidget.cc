@@ -13,14 +13,23 @@
  */
 
 
-#include <Widgets/BaseWidget.h>
-#include <Constraints/BaseConstraint.h>
-#include <Constraints/ConstraintSolver.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Malloc/Allocator.h>
+#include <PSECore/Widgets/BaseWidget.h>
+#include <PSECore/Constraints/BaseConstraint.h>
+#include <PSECore/Constraints/ConstraintSolver.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
-namespace PSECommon {
+#ifdef _WIN32
+
+// cheesy hack (should link against the Salmon module instead; do this for now)
+
+PSECore::Modules::RoeMouseMessage::~RoeMouseMessage()
+{
+}
+#endif
+
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::Geometry::BBox;
@@ -711,10 +720,14 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 }
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:27  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:05  mcq
 // Initial commit
 //

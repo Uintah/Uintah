@@ -42,7 +42,7 @@ WARNING
 
 
 
-class Barrier {
+class SCICORESHARE Barrier {
     Barrier_private* priv;
     const char* name;
 protected:

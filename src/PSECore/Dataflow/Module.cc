@@ -12,21 +12,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Module.h>
+#ifdef _WIN32
+#pragma warning(disable:4355)
+#endif
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/ModuleHelper.h>
-#include <Dataflow/Network.h>
-#include <Dataflow/NetworkEditor.h>
-#include <Dataflow/Port.h>
-#include <Geom/GeomPick.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCL.h>
+#include <PSECore/Dataflow/Module.h>
+
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/ModuleHelper.h>
+#include <PSECore/Dataflow/Network.h>
+#include <PSECore/Dataflow/NetworkEditor.h>
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCL.h>
 
 #include <stdlib.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 using SCICore::Containers::to_string;
@@ -36,14 +40,10 @@ bool global_remote = false;
 Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
-  name(name), abort_flag(0), need_execute(0),
-  sched_class(sched_class),
+  name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
   notes("notes", id, this)
 {
-  packageName="error: unset package name";
-  categoryName="error: unset category name";
-  moduleName="error: unset module name";
 }
 
 Module::Module(const Module& copy, int)
@@ -443,12 +443,13 @@ void Module::multisend(OPort* p1, OPort* p2)
 }
 
 } // End namespace Dataflow
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
-// Revision 1.2  1999/07/30 17:12:28  kuzimmer
-// Fixed Saving and loading
+// Revision 1.3  1999/08/17 06:38:22  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
 //
 // Revision 1.1  1999/07/27 16:55:57  mcq
 // Initial commit

@@ -1,7 +1,11 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <Math/fft.h>
+#include <SCICore/Math/fft.h>
+
+#ifndef M_PI
+#define M_PI 3.1415926535898
+#endif
 
 #ifndef M_PI
 #define M_PI 3.1415926535898

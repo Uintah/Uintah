@@ -12,20 +12,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/BasicSurfaces.h>
-#include <Util/NotFinished.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Pt.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/GeomTriangles.h>
-#include <Malloc/Allocator.h>
-#include <Math/Trig.h>
-#include <Math/TrigTable.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/CoreDatatypes/BasicSurfaces.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/Math/TrigTable.h>
+#include <SCICore/TclInterface/TCL.h>
 
 #include <stdio.h>
-#include <strstream.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -100,10 +99,13 @@ void CylinderSurface::add_node(Array1<NodeHandle>& nodes,
     Node* node=new Node(p);
     if(boundary_type == DirichletExpression){
 	char str [200];
+	/*
 	ostrstream s(str, 200);
 	s << id << " " << p.x() << " " << p.y() << " " << p.z()
 	  << " " << r << " " << rn << " " << theta << " " << h
 	  << " " << hn << '\0';
+	  */
+	sprintf(str,"%s %f %f %f %f %f %f %f %f\0",id,p.x(),p.y(),p.z(),r,rn,theta,h,hn);
 	clString retval;
 	int err=TCL::eval(str, retval);
 	if(err){
@@ -133,9 +135,12 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	// Format this string - we will use it later...
 	char proc_string[1000];
 	sprintf(id, "CylinderSurface%p%p", this, &nodes);
+	/*
 	ostrstream proc(proc_string, 1000);
 	proc << "proc " << id << " {x y z r rn theta h hn} { expr "
 	     << boundary_expr << "}" << '\0';
+	*/
+	sprintf(proc_string,"proc %s {x y z r rn theta h hn} { expr %s }\0",id,boundary_expr());
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, p1, 0, 0, 0, 0, 0);
@@ -229,7 +234,8 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
     int i;
     double v1=nodes[0]->bc->value;
     Color cc1(cmap->lookup(v1)->diffuse);
-    Point& pp1(nodes[0]->p);
+    //Point& pp1(nodes[0]->p);
+	Point& pp1 = nodes[0]->p;
     int j;
     for(j=0;j<nv;j++){
 	int i2=1+(j%nv);
@@ -238,8 +244,10 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 	double v3=nodes[i3]->bc->value;
 	Color cc2(cmap->lookup(v2)->diffuse);
 	Color cc3(cmap->lookup(v3)->diffuse);
-	Point& pp2(nodes[i2]->p);
-	Point& pp3(nodes[i3]->p);
+	//Point& pp2(nodes[i2]->p);
+	//Point& pp3(nodes[i3]->p);
+	Point& pp2 = nodes[i2]->p;
+	Point& pp3 = nodes[i3]->p;
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     for(i=0;i<2*(ndiscu-2)+nu;i++){
@@ -256,10 +264,14 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 	    Color cc2(cmap->lookup(v2)->diffuse);
 	    Color cc3(cmap->lookup(v3)->diffuse);
 	    Color cc4(cmap->lookup(v4)->diffuse);
-	    Point& pp1(nodes[i1]->p);
-	    Point& pp2(nodes[i2]->p);
-	    Point& pp3(nodes[i3]->p);
-	    Point& pp4(nodes[i4]->p);
+	    //Point& pp1(nodes[i1]->p);
+	    //Point& pp2(nodes[i2]->p);
+	    //Point& pp3(nodes[i3]->p);
+	    //Point& pp4(nodes[i4]->p);
+		Point& pp1 = nodes[i1]->p;
+		Point& pp2 = nodes[i2]->p;
+		Point& pp3 = nodes[i3]->p;
+		Point& pp4 = nodes[i4]->p;
 	    tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
 	    tris->add(pp2, cc2, pp3, cc3, pp4, cc4);
 	}
@@ -268,7 +280,8 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
     int last=nodes.size()-1;
     double v3=nodes[last]->bc->value;
     Color cc3(cmap->lookup(v3)->diffuse);
-    Point& pp3(nodes[last]->p);
+    //Point& pp3(nodes[last]->p);
+	Point& pp3 = nodes[last]->p;
     for(j=0;j<nv;j++){
 	int i1=s+(j%nv);
 	int i2=s+((j+1)%nv);
@@ -276,8 +289,11 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 	double v2=nodes[i2]->bc->value;
 	Color cc1(cmap->lookup(v1)->diffuse);
 	Color cc2(cmap->lookup(v2)->diffuse);
-	Point& pp1(nodes[i1]->p);
-	Point& pp2(nodes[i2]->p);
+	//Point& pp1(nodes[i1]->p);
+	//Point& pp2(nodes[i2]->p);
+	Point& pp1 = nodes[i1]->p;
+	Point& pp2 = nodes[i2]->p;
+
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     return group;
@@ -338,9 +354,12 @@ void SphereSurface::add_node(Array1<NodeHandle>& nodes,
     Node* node=new Node(p);
     if(boundary_type == DirichletExpression){
 	char str [200];
+	/*
 	ostrstream s(str, 200);
 	s << id << " " << p.x() << " " << p.y() << " " << p.z()
 	  << " " << r << " " << theta << " " << phi << '\0';
+	*/
+	sprintf(str,"%s %f %f %f %f %f %f\0",id,p.x(),p.y(),p.z(),r,theta,phi);
 	clString retval;
 	int err=TCL::eval(str, retval);
 	if(err){
@@ -370,9 +389,12 @@ void SphereSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	// Format this string - we will use it later...
 	char proc_string[1000];
 	sprintf(id, "CylinderSurface%p%p", this, &nodes);
+	/*
 	ostrstream proc(proc_string, 1000);
 	proc << "proc " << id << " {x y z r theta phi} { expr "
 	     << boundary_expr << "}" << '\0';
+	*/
+	sprintf(proc_string,"proc %s {x y z r theta phi} { expr %s }\0",id,boundary_expr());
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, cen-pole*radius, radius, 0, -Pi/2);
@@ -444,7 +466,8 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
     int i;
     double v1=nodes[0]->bc->value;
     Color cc1(cmap->lookup(v1)->diffuse);
-    Point& pp1(nodes[0]->p);
+    //Point& pp1(nodes[0]->p);
+	Point& pp1 = nodes[0]->p;
     int j;
     for(j=0;j<nv;j++){
 	int i2=1+(j%nv);
@@ -453,8 +476,10 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 	double v3=nodes[i3]->bc->value;
 	Color cc2(cmap->lookup(v2)->diffuse);
 	Color cc3(cmap->lookup(v3)->diffuse);
-	Point& pp2(nodes[i2]->p);
-	Point& pp3(nodes[i3]->p);
+	//Point& pp2(nodes[i2]->p);
+	//Point& pp3(nodes[i3]->p);
+	Point& pp2 = nodes[i2]->p;
+	Point& pp3 = nodes[i3]->p;
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     for(i=0;i<nu-3;i++){
@@ -471,10 +496,14 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 	    Color cc2(cmap->lookup(v2)->diffuse);
 	    Color cc3(cmap->lookup(v3)->diffuse);
 	    Color cc4(cmap->lookup(v4)->diffuse);
-	    Point& pp1(nodes[i1]->p);
-	    Point& pp2(nodes[i2]->p);
-	    Point& pp3(nodes[i3]->p);
-	    Point& pp4(nodes[i4]->p);
+	    //Point& pp1(nodes[i1]->p);
+	    //Point& pp2(nodes[i2]->p);
+	    //Point& pp3(nodes[i3]->p);
+	    //Point& pp4(nodes[i4]->p);
+		Point& pp1 = nodes[i1]->p;
+		Point& pp2 = nodes[i2]->p;
+		Point& pp3 = nodes[i3]->p;
+		Point& pp4 = nodes[i4]->p;
 	    tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
 	    tris->add(pp2, cc2, pp3, cc3, pp4, cc4);
 	}
@@ -483,7 +512,8 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
     int last=nodes.size()-1;
     double v3=nodes[last]->bc->value;
     Color cc3(cmap->lookup(v3)->diffuse);
-    Point& pp3(nodes[last]->p);
+    //Point& pp3(nodes[last]->p);
+	Point& pp3 = nodes[last]->p;
     for(j=0;j<nv;j++){
 	int i1=s+(j%nv);
 	int i2=s+((j+1)%nv);
@@ -491,8 +521,10 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 	double v2=nodes[i2]->bc->value;
 	Color cc1(cmap->lookup(v1)->diffuse);
 	Color cc2(cmap->lookup(v2)->diffuse);
-	Point& pp1(nodes[i1]->p);
-	Point& pp2(nodes[i2]->p);
+	//Point& pp1(nodes[i1]->p);
+	//Point& pp2(nodes[i2]->p);
+	Point& pp1 = nodes[i1]->p;
+	Point& pp2 = nodes[i2]->p;
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     return group;
@@ -536,8 +568,11 @@ void PointSurface::add_node(Array1<NodeHandle>& nodes,
     Node* node=new Node(p);
     if(boundary_type == DirichletExpression){
 	char str [200];
+	/*
 	ostrstream s(str, 200);
 	s << id << " " << p.x() << " " << p.y() << " " << p.z() << '\0';
+	*/
+	sprintf(str,"%s %f %f %f\0",id,p.x(),p.y(),p.z());
 	clString retval;
 	int err=TCL::eval(str, retval);
 	if(err){
@@ -565,9 +600,12 @@ void PointSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	// Format this string - we will use it later...
 	char proc_string[1000];
 	sprintf(id, "PointSurface%p", this);
+	/*
 	ostrstream proc(proc_string, 1000);
 	proc << "proc " << id << " {x y z} { expr "
 	     << boundary_expr << "}" << '\0';
+	*/
+	sprintf(proc_string,"proc %s {x y z} { expr %s }\0",id,boundary_expr());
 	TCL::execute(proc_string);
     }
     add_node(nodes, id, pos);
@@ -717,6 +755,10 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:18  mcq
 // Initial commit
 //

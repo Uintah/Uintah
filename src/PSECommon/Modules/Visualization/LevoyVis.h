@@ -14,25 +14,25 @@
 #ifndef SCI_project_LevoyVol_h
 #define SCI_project_LevoyVol_h 1
 
-#include <Containers/Array2.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
 
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CoreDatatypes/Image.h>
-#include <CommonDatatypes/GeometryPort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECommon/CommonDatatypes/ColorMapPort.h>
+#include <SCICore/CoreDatatypes/Image.h>
+#include <PSECommon/CommonDatatypes/GeometryPort.h>
 
-#include <Geom/Color.h>
-#include <Geom/View.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Geometry/Plane.h>
-#include <Geometry/BBox.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/View.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Geometry/BBox.h>
 
-#include <Math/Trig.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdlib.h>
 

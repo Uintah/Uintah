@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Exceptions/Exceptions.h>
+#include <SCICore/Exceptions/Exceptions.h>
 #include <iostream.h>
 #include <stdlib.h>		// for abort()
 #include <string.h>

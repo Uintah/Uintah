@@ -12,33 +12,33 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/Assert.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/ContourSet.h>
-#include <CommonDatatypes/ContourSetPort.h>
-#include <CoreDatatypes/Surface.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <Geometry/Grid.h>
-#include <Malloc/Allocator.h>
-#include <Math/MiscMath.h>
-#include <Math/MinMax.h>
-#include <Math/Expon.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/ContourSet.h>
+#include <PSECore/CommonDatatypes/ContourSetPort.h>
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Geometry/Grid.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/Expon.h>
 
 #include <iostream.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::ContourSetIPort;
-using PSECommon::CommonDatatypes::SurfaceOPort;
-using PSECommon::CommonDatatypes::SurfaceIPort;
-using PSECommon::CommonDatatypes::SurfaceHandle;
-using PSECommon::CommonDatatypes::TriSurface;
-using PSECommon::CommonDatatypes::ContourSetHandle;
+using PSECore::Dataflow::Module;
+using PSECore::CommonDatatypes::ContourSetIPort;
+using PSECore::CommonDatatypes::SurfaceOPort;
+using PSECore::CommonDatatypes::SurfaceIPort;
+using PSECore::CommonDatatypes::SurfaceHandle;
+using PSECore::CommonDatatypes::TriSurface;
+using PSECore::CommonDatatypes::ContourSetHandle;
 
 using SCICore::Containers::Array1;
 using SCICore::Containers::clString;
@@ -288,7 +288,7 @@ void ContoursToSurf::contours_to_surf(const Array1<ContourSetHandle> &contours,
     // have to make sure all of the contour-sets have valid bboxes...
     // ...the build_bbox() method does just that.
 
-    surf->name=contours[0]->name;
+    surf->name=contours[0]->name[0];
     BBox bb;
     int i;
     for (i=0; i<contours.size(); i++) {
@@ -340,6 +340,10 @@ void ContoursToSurf::contours_to_surf(const Array1<ContourSetHandle> &contours,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:56  mcq
 // Initial commit
 //

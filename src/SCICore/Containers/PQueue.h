@@ -1,7 +1,10 @@
 
 #ifndef SCI_Containers_PQueue_h
 #define SCI_Containers_PQueue_h 1
-#include <Tester/RigorousTest.h>
+
+#include <SCICore/share/share.h>
+
+#include <SCICore/Tester/RigorousTest.h>
 
 namespace SCICore {
 namespace Containers {
@@ -11,7 +14,7 @@ using SCICore::Tester::RigorousTest;
 /* Provides a priority queue of a fixed maximum size N that holds integers
    in the range 1..N (inclusive) that are weighted with positive integers. */
 
-class PQueue {
+class SCICORESHARE PQueue {
 
 
 public:
@@ -78,6 +81,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:13  mcq
 // Initial commit
 //

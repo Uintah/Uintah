@@ -14,8 +14,8 @@
 #ifndef SCI_CoreDatatypes_sciBoolean_h
 #define SCI_CoreDatatypes_sciBoolean_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -27,7 +27,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class sciBoolean;
 typedef LockingHandle<sciBoolean> sciBooleanHandle;
 
-class sciBoolean : public Datatype {
+class SCICORESHARE sciBoolean : public Datatype {
 public:
     int value;
     sciBoolean(int value);
@@ -45,6 +45,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:19  mcq
 // Initial commit
 //

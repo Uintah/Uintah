@@ -15,10 +15,11 @@
 #ifndef SCI_project_VarCore_h
 #define SCI_project_VarCore_h 1
 
-#include <Constraints/manifest.h>
-#include <Geometry/Point.h>
+#include <SCICore/share/share.h>
+#include <PSECore/Constraints/manifest.h>
+#include <SCICore/Geometry/Point.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Constraints {
 
 using SCICore::Geometry::Point;
@@ -26,7 +27,7 @@ using SCICore::Geometry::Vector;
 
 // VarCore is the data of a Variable.  It implements the polymorphism.
 class BaseVariable;
-class VarCore {
+class SCICORESHARE VarCore {
 public:
    enum VarType { PointVar, RealVar };
    // This controls operator= with different VarTypes.
@@ -57,7 +58,7 @@ public:
    VarCore& operator+=( const Real r );
 
    inline int epsilonequal( const Real Epsilon, const VarCore& v );
-   friend ostream& operator<<( ostream& os, VarCore& c );
+   friend SCICORESHARE ostream& operator<<( ostream& os, VarCore& c );
 private:
    VarType vartype;
    Point pointvalue;
@@ -122,15 +123,19 @@ VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:21  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:57  mcq
 // Initial commit
 //
 // Revision 1.3  1999/05/06 20:17:08  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:52  dav
 // Import sources

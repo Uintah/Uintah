@@ -14,7 +14,7 @@
 #ifndef SCI_Multitask_Task_h
 #define SCI_Multitask_Task_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -29,7 +29,7 @@ class Task;
 typedef int TaskKey;
 class TaskPrivate;
 
-struct SHARE TaskTime {
+struct SCICORESHARE TaskTime {
     long secs;
     long usecs;
     TaskTime(int secs, int usecs);
@@ -38,7 +38,7 @@ struct SHARE TaskTime {
     TaskTime();
 };
 
-struct SHARE TaskInfo
+struct SCICORESHARE TaskInfo
 {
     int ntasks;
     struct Info {
@@ -54,7 +54,7 @@ struct SHARE TaskInfo
 };
 
 // Basic Task class.  Inherit to provide the body()
-class SHARE Task {
+class SCICORESHARE Task {
 protected:
     friend class TaskManager;
     const char* name;
@@ -144,6 +144,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:07  mcq
 // Initial commit
 //

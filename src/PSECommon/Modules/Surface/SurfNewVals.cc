@@ -12,20 +12,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Persistent/Pstreams.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColumnMatrixPort.h>
-#include <CoreDatatypes/ColumnMatrix.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
-#include <Math/Expon.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColumnMatrixPort.h>
+#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Expon.h>
 
-#include <TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 #include <iostream.h>
 #include <stdio.h>
@@ -33,7 +33,7 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 
@@ -139,6 +139,10 @@ void SurfNewVals::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:59  mcq
 // Initial commit
 //

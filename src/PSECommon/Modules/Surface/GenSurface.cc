@@ -12,41 +12,41 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/BasicSurfaces.h>
-#include <CoreDatatypes/ColorMap.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <Geom/Material.h>
-#include <Geom/GeomPick.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/TCLGeom.h>
-#include <Geometry/Point.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Widgets/GaugeWidget.h>
-#include <Widgets/PointWidget.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/BasicSurfaces.h>
+#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/TCLGeom.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <PSECore/Widgets/GaugeWidget.h>
+#include <PSECore/Widgets/PointWidget.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::Surface;
-using PSECommon::CommonDatatypes::SurfaceHandle;
-using PSECommon::CommonDatatypes::MaterialHandle;
-using PSECommon::CommonDatatypes::CylinderSurface;
-using PSECommon::CommonDatatypes::SphereSurface;
-using PSECommon::CommonDatatypes::PointSurface;
-using PSECommon::CommonDatatypes::ColorMapIPort;
-using PSECommon::CommonDatatypes::ColorMapHandle;
-using PSECommon::CommonDatatypes::SurfaceIPort;
-using PSECommon::CommonDatatypes::SurfaceOPort;
-using PSECommon::CommonDatatypes::GeometryIPort;
-using PSECommon::CommonDatatypes::GeometryOPort;
-using PSECommon::Widgets::GaugeWidget;
-using PSECommon::Widgets::PointWidget;
+using PSECore::Dataflow::Module;
+using PSECore::CommonDatatypes::Surface;
+using PSECore::CommonDatatypes::SurfaceHandle;
+using PSECore::CommonDatatypes::MaterialHandle;
+using PSECore::CommonDatatypes::CylinderSurface;
+using PSECore::CommonDatatypes::SphereSurface;
+using PSECore::CommonDatatypes::PointSurface;
+using PSECore::CommonDatatypes::ColorMapIPort;
+using PSECore::CommonDatatypes::ColorMapHandle;
+using PSECore::CommonDatatypes::SurfaceIPort;
+using PSECore::CommonDatatypes::SurfaceOPort;
+using PSECore::CommonDatatypes::GeometryIPort;
+using PSECore::CommonDatatypes::GeometryOPort;
+using PSECore::Widgets::GaugeWidget;
+using PSECore::Widgets::PointWidget;
 
 using namespace SCICore::TclInterface;
 using SCICore::GeomSpace::GeomObj;
@@ -358,6 +358,10 @@ void GenSurface::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:57  mcq
 // Initial commit
 //

@@ -217,4 +217,5 @@ int getrow(IMAGE *image, unsigned short *buffer,
 	}
     } else 
 	i_errhdlr("getrow: weird image type\n");
+    return -1;
 }

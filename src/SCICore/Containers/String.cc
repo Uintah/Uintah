@@ -12,19 +12,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Containers/String.h>
+#ifdef _WIN32
+extern "C" {
+size_t strlen(const char*);
+char *strcat( char *, const char *);
+int strcmp( const char *, const char *);
+char *strcpy( char *, const char *);
+}
+#endif
+
+#include <SCICore/Containers/String.h>
 
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
 #include <iomanip.h>
 
-#include <Util/Assert.h>
-#include <Persistent/Persistent.h>
-#include <Containers/TrivialAllocator.h>
-#include <Malloc/Allocator.h>
-#include <Tester/RigorousTest.h>
-#include <Tester/PerfTest.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Tester/PerfTest.h>
 
 namespace SCICore {
 namespace Containers {
@@ -53,7 +62,7 @@ inline void clString::srep::operator delete(void* rp, size_t)
 #endif
 
 #define inline
-#include <Containers/String.icc>
+#include <SCICore/Containers/String.icc>
 #undef inline
 
 clString::clString(const char* s)
@@ -410,6 +419,10 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:14  mcq
 // Initial commit
 //

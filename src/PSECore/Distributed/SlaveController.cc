@@ -27,16 +27,19 @@
 #include <TclInterface/Remote.h>
 
 #include <stdio.h>
+#ifdef _WIN32
+#include <string.h>
+#include <io.h>
+#endif
 #include <iostream.h>
-//#define DEBUG 1
 
-namespace PSECommon {
+namespace PSECore {
 namespace Distributed {
 
-//using PSECommon::Dataflow::ModuleList;
-//using PSECommon::Dataflow::ModuleDB;
-//using PSECommon::Dataflow::makeModule;
-using PSECommon::Comm::MessageTypes;
+//using PSECore::Dataflow::ModuleList;
+//using PSECore::Dataflow::ModuleDB;
+//using PSECore::Dataflow::makeModule;
+using PSECore::Comm::MessageTypes;
 
 using SCICore::Containers::clString;
 using SCICore::TclInterface::Message;
@@ -446,10 +449,14 @@ Module_Scheduler_Message::~Module_Scheduler_Message()
  */
 
 } // End namespace Distributed
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:25  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:01  mcq
 // Initial commit
 //

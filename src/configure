@@ -597,9 +597,9 @@ case $host in
              CXX=/opt/MIPSpro/bin/CC
              AS=/opt/MIPSpro/bin/as
              LD=/opt/MIPSpro/bin/ld
-             CFLAGS="-g -xansi -LANG:ansi-for-init-scope=ON -n32 ${CFLAGS}"
-             SOFLAGS="-g -shared -n32 -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
-             LDFLAGS="-g -n32 -no_unresolved -J\$(MAKE_PARALLELISM)"
+             CFLAGS="-xansi -LANG:ansi-for-init-scope=ON -n32 ${CFLAGS}"
+             SOFLAGS="-shared -n32 -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
+             LDFLAGS="-n32 -no_unresolved -J\$(MAKE_PARALLELISM)"
              LDRUN_PREFIX="-Wl,-rpath -Wl,"
            else
              echo "no"
@@ -1204,7 +1204,6 @@ if test "$ITCL_VERSION" = "3.0" ; then
   ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_LIB_FLAG="-litk3.0 -litcl3.0"
-  ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
 
   echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
 else
@@ -1217,11 +1216,10 @@ fi
 
 
 
-
 ##-- Check for header files ---------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1225: checking how to run the C preprocessor" >&5
+echo "configure:1223: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1236,13 +1234,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1240 "configure"
+#line 1238 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1246: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1244: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   :
@@ -1253,13 +1251,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1257 "configure"
+#line 1255 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1263: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1261: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   :
@@ -1285,17 +1283,17 @@ for ac_hdr in limits.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:1289: checking for $ac_hdr" >&5
+echo "configure:1287: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1294 "configure"
+#line 1292 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1299: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1297: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1325,17 +1323,17 @@ for ac_hdr in sys/select.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:1329: checking for $ac_hdr" >&5
+echo "configure:1327: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1334 "configure"
+#line 1332 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1339: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1337: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1365,17 +1363,17 @@ for ac_hdr in unistd.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:1369: checking for $ac_hdr" >&5
+echo "configure:1367: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1374 "configure"
+#line 1372 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1379: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1377: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1405,17 +1403,17 @@ for ac_hdr in sys/time.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:1409: checking for $ac_hdr" >&5
+echo "configure:1407: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1414 "configure"
+#line 1412 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1419: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1417: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1547,49 +1545,46 @@ ac_given_srcdir=$srcdir
 trap 'rm -fr `echo "Makefile \
             scripts/compile.mk \
             scripts/targets.mk \
-            Makefile \
-              libs/Makefile \
-                libs/SCICore/Makefile \
-                  libs/SCICore/Containers/Makefile \
-                  libs/SCICore/CoreDatatypes/Makefile \
-                  libs/SCICore/Exceptions/Makefile \
-                  libs/SCICore/Geom/Makefile \
-                  libs/SCICore/Geometry/Makefile \
-                  libs/SCICore/Malloc/Makefile \
-                  libs/SCICore/Math/Makefile \
-                  libs/SCICore/Multitask/Makefile \
-                  libs/SCICore/Persistent/Makefile \
-                  libs/SCICore/TclInterface/Makefile \
-                  libs/SCICore/TkExtensions/Makefile \
-                  libs/SCICore/Tester/Makefile \
-                  libs/SCICore/Util/Makefile \
-                libs/PSECore/Makefile \
-                  libs/PSECore/Comm/Makefile \
-                  libs/PSECore/CommonDatatypes/Makefile \
-                  libs/PSECore/Constraints/Makefile \
-                  libs/PSECore/Dataflow/Makefile \
-                  libs/PSECore/Widgets/Makefile \
+              SCICore/Makefile \
+                SCICore/Containers/Makefile \
+                SCICore/CoreDatatypes/Makefile \
+                SCICore/Exceptions/Makefile \
+                SCICore/Geom/Makefile \
+                SCICore/Geometry/Makefile \
+                SCICore/Malloc/Makefile \
+                SCICore/Math/Makefile \
+                SCICore/Multitask/Makefile \
+                SCICore/Persistent/Makefile \
+                SCICore/TclInterface/Makefile \
+                SCICore/TkExtensions/Makefile \
+                SCICore/Tester/Makefile \
+                SCICore/Util/Makefile \
+              PSECore/Makefile \
+                PSECore/Comm/Makefile \
+                PSECore/CommonDatatypes/Makefile \
+                PSECore/Constraints/Makefile \
+                PSECore/Dataflow/Makefile \
+                PSECore/Widgets/Makefile \
               main/Makefile \
-              packages/Makefile \
-                packages/PSECommon/Makefile \
-                  packages/PSECommon/ThirdParty/Makefile \
-                    packages/PSECommon/ThirdParty/mpeg/Makefile \
-                  packages/PSECommon/Modules/Makefile \
-                    packages/PSECommon/Modules/FEM/Makefile \
-                    packages/PSECommon/Modules/Readers/Makefile \
-                    packages/PSECommon/Modules/Salmon/Makefile \
-                    packages/PSECommon/Modules/Surface/Makefile \
-                    packages/PSECommon/Modules/Matrix/Makefile \
-                    packages/PSECommon/Modules/Iterators/Makefile \
-                    packages/PSECommon/Modules/Fields/Makefile \
-                    packages/PSECommon/Modules/Writers/Makefile \
-                    packages/PSECommon/Modules/Visualization/Makefile \
-                packages/Uintah/Makefile \
-                  packages/Uintah/Datatypes/Makefile \
-                    packages/Uintah/Datatypes/Particles/Makefile \
-                  packages/Uintah/Modules/Makefile \
-                    packages/Uintah/Modules/MPMViz/Makefile \
-                    packages/Uintah/Modules/Readers/Makefile \
+              PSECommon/Makefile \
+                PSECommon/ThirdParty/Makefile \
+                  PSECommon/ThirdParty/mpeg/Makefile \
+                PSECommon/Modules/Makefile \
+                  PSECommon/Modules/FEM/Makefile \
+                  PSECommon/Modules/Readers/Makefile \
+                  PSECommon/Modules/Salmon/Makefile \
+                  PSECommon/Modules/Surface/Makefile \
+                  PSECommon/Modules/Matrix/Makefile \
+                  PSECommon/Modules/Iterators/Makefile \
+                  PSECommon/Modules/Fields/Makefile \
+                  PSECommon/Modules/Writers/Makefile \
+                  PSECommon/Modules/Visualization/Makefile \
+              Uintah/Makefile \
+                Uintah/Datatypes/Makefile \
+                  Uintah/Datatypes/Particles/Makefile \
+                Uintah/Modules/Makefile \
+                  Uintah/Modules/MPMViz/Makefile \
+                  Uintah/Modules/Readers/Makefile \
           config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -1643,7 +1638,6 @@ s%@TK_LIB_FLAG@%$TK_LIB_FLAG%g
 s%@ITCL_INCLUDE_DIR@%$ITCL_INCLUDE_DIR%g
 s%@ITCL_LIB_DIR@%$ITCL_LIB_DIR%g
 s%@ITCL_LIB_FLAG@%$ITCL_LIB_FLAG%g
-s%@ITCL_WIDGETS@%$ITCL_WIDGETS%g
 s%@CPP@%$CPP%g
 
 CEOF
@@ -1689,49 +1683,46 @@ cat >> $CONFIG_STATUS <<EOF
 CONFIG_FILES=\${CONFIG_FILES-"Makefile \
             scripts/compile.mk \
             scripts/targets.mk \
-            Makefile \
-              libs/Makefile \
-                libs/SCICore/Makefile \
-                  libs/SCICore/Containers/Makefile \
-                  libs/SCICore/CoreDatatypes/Makefile \
-                  libs/SCICore/Exceptions/Makefile \
-                  libs/SCICore/Geom/Makefile \
-                  libs/SCICore/Geometry/Makefile \
-                  libs/SCICore/Malloc/Makefile \
-                  libs/SCICore/Math/Makefile \
-                  libs/SCICore/Multitask/Makefile \
-                  libs/SCICore/Persistent/Makefile \
-                  libs/SCICore/TclInterface/Makefile \
-                  libs/SCICore/TkExtensions/Makefile \
-                  libs/SCICore/Tester/Makefile \
-                  libs/SCICore/Util/Makefile \
-                libs/PSECore/Makefile \
-                  libs/PSECore/Comm/Makefile \
-                  libs/PSECore/CommonDatatypes/Makefile \
-                  libs/PSECore/Constraints/Makefile \
-                  libs/PSECore/Dataflow/Makefile \
-                  libs/PSECore/Widgets/Makefile \
+              SCICore/Makefile \
+                SCICore/Containers/Makefile \
+                SCICore/CoreDatatypes/Makefile \
+                SCICore/Exceptions/Makefile \
+                SCICore/Geom/Makefile \
+                SCICore/Geometry/Makefile \
+                SCICore/Malloc/Makefile \
+                SCICore/Math/Makefile \
+                SCICore/Multitask/Makefile \
+                SCICore/Persistent/Makefile \
+                SCICore/TclInterface/Makefile \
+                SCICore/TkExtensions/Makefile \
+                SCICore/Tester/Makefile \
+                SCICore/Util/Makefile \
+              PSECore/Makefile \
+                PSECore/Comm/Makefile \
+                PSECore/CommonDatatypes/Makefile \
+                PSECore/Constraints/Makefile \
+                PSECore/Dataflow/Makefile \
+                PSECore/Widgets/Makefile \
               main/Makefile \
-              packages/Makefile \
-                packages/PSECommon/Makefile \
-                  packages/PSECommon/ThirdParty/Makefile \
-                    packages/PSECommon/ThirdParty/mpeg/Makefile \
-                  packages/PSECommon/Modules/Makefile \
-                    packages/PSECommon/Modules/FEM/Makefile \
-                    packages/PSECommon/Modules/Readers/Makefile \
-                    packages/PSECommon/Modules/Salmon/Makefile \
-                    packages/PSECommon/Modules/Surface/Makefile \
-                    packages/PSECommon/Modules/Matrix/Makefile \
-                    packages/PSECommon/Modules/Iterators/Makefile \
-                    packages/PSECommon/Modules/Fields/Makefile \
-                    packages/PSECommon/Modules/Writers/Makefile \
-                    packages/PSECommon/Modules/Visualization/Makefile \
-                packages/Uintah/Makefile \
-                  packages/Uintah/Datatypes/Makefile \
-                    packages/Uintah/Datatypes/Particles/Makefile \
-                  packages/Uintah/Modules/Makefile \
-                    packages/Uintah/Modules/MPMViz/Makefile \
-                    packages/Uintah/Modules/Readers/Makefile \
+              PSECommon/Makefile \
+                PSECommon/ThirdParty/Makefile \
+                  PSECommon/ThirdParty/mpeg/Makefile \
+                PSECommon/Modules/Makefile \
+                  PSECommon/Modules/FEM/Makefile \
+                  PSECommon/Modules/Readers/Makefile \
+                  PSECommon/Modules/Salmon/Makefile \
+                  PSECommon/Modules/Surface/Makefile \
+                  PSECommon/Modules/Matrix/Makefile \
+                  PSECommon/Modules/Iterators/Makefile \
+                  PSECommon/Modules/Fields/Makefile \
+                  PSECommon/Modules/Writers/Makefile \
+                  PSECommon/Modules/Visualization/Makefile \
+              Uintah/Makefile \
+                Uintah/Datatypes/Makefile \
+                  Uintah/Datatypes/Particles/Makefile \
+                Uintah/Modules/Makefile \
+                  Uintah/Modules/MPMViz/Makefile \
+                  Uintah/Modules/Readers/Makefile \
          "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF

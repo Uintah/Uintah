@@ -1,5 +1,3 @@
-#ifndef cDMATRIX_H
-#define ccDMatrix_H 1
 
 /*
  *  cDMatrix.h : ?
@@ -13,16 +11,21 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#ifndef CDMATRIX_H
+#define CDMATRIX_H 1
+
+#include <SCICore/share/share.h>
+
 #include <iostream.h>
 #include <fstream.h>
-#include <CoreDatatypes/cMatrix.h>
-#include <Math/Complex.h>
-#include <CoreDatatypes/cVector.h>
+#include <SCICore/CoreDatatypes/cMatrix.h>
+#include <SCICore/Math/Complex.h>
+#include <SCICore/CoreDatatypes/cVector.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
-class cDMatrix:public cMatrix{
+class SCICORESHARE cDMatrix:public cMatrix{
   
 private:
   Complex **a;
@@ -43,14 +46,14 @@ public:
   cDMatrix operator-(const cDMatrix& B) const;
   cDMatrix operator*(const cDMatrix& B) const;
 
-  friend cDMatrix operator*(const cDMatrix& B,Complex x);
-  friend cDMatrix operator*(Complex x, const cDMatrix& B);
+  friend SCICORESHARE cDMatrix operator*(const cDMatrix& B,Complex x);
+  friend SCICORESHARE cDMatrix operator*(Complex x, const cDMatrix& B);
   
-  friend cDMatrix operator*(const cDMatrix& B,double x);
-  friend cDMatrix operator*(double x, const cDMatrix& B);
+  friend SCICORESHARE cDMatrix operator*(const cDMatrix& B,double x);
+  friend SCICORESHARE cDMatrix operator*(double x, const cDMatrix& B);
 
   
-  friend ostream &operator<< (ostream &output, cDMatrix &B);
+  friend SCICORESHARE ostream &operator<< (ostream &output, cDMatrix &B);
   
   cVector  operator*(cVector &V);
 
@@ -64,6 +67,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:01  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:33  mcq
 // Initial commit
 //

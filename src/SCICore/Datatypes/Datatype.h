@@ -14,8 +14,10 @@
 #ifndef SCI_project_Datatype_h
 #define SCI_project_Datatype_h 1
 
-#include <Persistent/Persistent.h>
-#include <Multitask/ITC.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -24,7 +26,7 @@ using SCICore::PersistentSpace::Persistent;
 using SCICore::Multitask::Mutex;
 using SCICore::Containers::clString;
 
-class Datatype : public Persistent {
+class SCICORESHARE Datatype : public Persistent {
 public:
     int ref_cnt;
     Mutex lock;
@@ -38,6 +40,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:45  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:20  mcq
 // Initial commit
 //

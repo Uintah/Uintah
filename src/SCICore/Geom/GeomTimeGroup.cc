@@ -12,12 +12,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomTimeGroup.h>
-#include <Containers/Array2.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/GeomTimeGroup.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
+#ifdef _WIN32
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#else
 #include <values.h>
+#endif
 
 namespace SCICore {
 namespace GeomSpace {
@@ -183,6 +188,10 @@ bool GeomTimeGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:14  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:45  mcq
 // Initial commit
 //

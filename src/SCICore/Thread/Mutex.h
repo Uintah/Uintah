@@ -39,7 +39,7 @@ WARNING
    
 ****************************************/
 
-class Mutex {
+class SCICORESHARE Mutex {
     Mutex_private* priv;
     const char* name;
 public:

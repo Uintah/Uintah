@@ -12,17 +12,17 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldRGchar.h>
-#include <Geom/GeomTexSlices.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
+#include <SCICore/Geom/GeomTexSlices.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 #include <iostream.h>
 
@@ -31,8 +31,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
@@ -158,6 +158,10 @@ void VolRendTexSlices::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:54  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:17  mcq
 // Initial commit
 //

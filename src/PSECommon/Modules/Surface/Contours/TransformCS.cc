@@ -10,15 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Classlib/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ContourSet.h>
-#include <CommonDatatypes/ContourSetPort.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <PSECommon/CommonDatatypes/ContourSet.h>
+#include <PSECommon/CommonDatatypes/ContourSetPort.h>
 // #include <Devices/Dialbox.h>
 // #include <Devices/DBContext.h>
-#include <Geometry/Vector.h>
-#include <Math/Expon.h>
-#include <Math/Trig.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/Trig.h>
 
 
 class TransformCS : public Module {

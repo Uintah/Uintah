@@ -1,9 +1,9 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../..
+OBJTOP   = ../..
 
 SRCS     = Debug.cc Timer.cc soloader.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCDIR)/..
+INCLUDES = -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

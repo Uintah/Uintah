@@ -1,6 +1,6 @@
 SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
-OBJTOP  = ../..
+OBJTOP  = ..
 
 TCL_LIB_DIR   = @TCL_LIB_DIR@
 TCL_LIB_FLAG  = @TCL_LIB_FLAG@
@@ -13,8 +13,8 @@ ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 SUBDIRS = Datatypes Modules
 SOLIB   = libUintah.so
 
-SOLIBRARIES = -L$(OBJTOP)/libs/PSECore -lPSECore \
-              -L$(OBJTOP)/libs/SCICore -lSCICore \
+SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
+              -L$(OBJTOP)/SCICore -lSCICore \
               -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG) \
               -L$(TK_LIB_DIR) $(TK_LIB_FLAG) \
               -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) \

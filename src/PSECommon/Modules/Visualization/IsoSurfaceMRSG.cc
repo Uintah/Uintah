@@ -12,33 +12,33 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Tester/RigorousTest.h>
-#include <Containers/BitArray1.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Containers/Queue.h>
-#include <Containers/Stack.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <Geom/GeomTimeGroup.h>
-#include <Geom/Material.h>
-#include <Geom/GeomTriangles.h>
-#include <Geom/GeomTriStrip.h>
-#include <Geometry/Point.h>
-#include <Geometry/Plane.h>
-#include <Malloc/Allocator.h>
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
-#include <TclInterface/TCLvar.h>
-#include <Widgets/ArrowWidget.h>
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Containers/BitArray1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/Queue.h>
+#include <SCICore/Containers/Stack.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Geom/GeomTimeGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Geom/GeomTriStrip.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <PSECore/Widgets/ArrowWidget.h>
 #include <iostream.h>
 #include <strstream.h>
 
@@ -50,9 +50,9 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
@@ -674,6 +674,10 @@ void IsoSurfaceMRSG::iso_reg_grid(ScalarFieldRG* field, double isoval,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:52  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:15  mcq
 // Initial commit
 //

@@ -1,6 +1,6 @@
 SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
-OBJTOP  = ../../..
+OBJTOP  = ../..
 
 SUBDIRS = mpeg
 
