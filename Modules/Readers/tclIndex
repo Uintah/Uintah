@@ -6,12 +6,14 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
-set auto_index(TYPEReader) "source $dir/Reader.tcl"
-set auto_index(ContourSetReader) "source $dir/ContourSetReader.tcl"
+set auto_index(MultiMeshReader) "source $dir/MultiMeshReader.tcl"
 set auto_index(GeomReader) "source $dir/GeomReader.tcl"
 set auto_index(MeshReader) "source $dir/MeshReader.tcl"
-set auto_index(MultiMeshReader) "source $dir/MultiMeshReader.tcl"
-set auto_index(PointsReader) "source $dir/PointsReader.tcl"
+set auto_index(TYPEReader) "source $dir/Reader.tcl"
+set auto_index(ContourSetReader) "source $dir/ContourSetReader.tcl"
 set auto_index(ScalarFieldReader) "source $dir/ScalarFieldReader.tcl"
 set auto_index(SurfaceReader) "source $dir/SurfaceReader.tcl"
 set auto_index(VectorFieldReader) "source $dir/VectorFieldReader.tcl"
+set auto_index(PointsReader) "source $dir/PointsReader.tcl"
+set auto_index(ColumnMatrixReader) "source $dir/ColumnMatrixReader.tcl"
+set auto_index(MatrixReader) "source $dir/MatrixReader.tcl"

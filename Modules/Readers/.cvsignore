@@ -1,16 +1,12 @@
 Makefile Makefile.bak
 .~*
 so_locations ii_files
-ContourSetReader.cc
-ContourSetReader.tcl
+ColumnMatrixReader.cc ColumnMatrixReader.tcl
+ContourSetReader.cc ContourSetReader.tcl
 GeomReader.tcl
-MeshReader.cc
-MeshReader.tcl
-MultiMeshReader.cc
-MultiMeshReader.tcl
-ScalarFieldReader.cc
-ScalarFieldReader.tcl
-SurfaceReader.cc
-SurfaceReader.tcl
-VectorFieldReader.cc
-VectorFieldReader.tcl
+MatrixReader.cc MatrixReader.tcl
+MeshReader.cc MeshReader.tcl
+MultiMeshReader.cc MultiMeshReader.tcl
+ScalarFieldReader.cc ScalarFieldReader.tcl
+SurfaceReader.cc SurfaceReader.tcl
+VectorFieldReader.cc VectorFieldReader.tcl
