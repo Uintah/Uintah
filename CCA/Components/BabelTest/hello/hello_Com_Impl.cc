@@ -2,13 +2,16 @@
 // File:          hello_Com_Impl.cc
 // Symbol:        hello.Com-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:08:19 CDT
-// Generated:     20020813 11:08:21 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021110 23:39:38 MST
+// Generated:     20021110 23:39:39 MST
 // Description:   Server-side implementation for hello.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
+// babel-version = 0.7.4
+// source-line   = 10
+// source-url    = file:/home/sparker/SCIRun/src/Babel/Components/hello/hello.sidl
 // 
 #include "hello_Com_Impl.hh"
 
@@ -41,7 +44,7 @@ void hello::Com_impl::_dtor() {
  */
 void
 hello::Com_impl::setServices (
-  /*in*/ govcca::Services svc ) 
+  /*in*/ ::govcca::Services svc ) 
 throw () 
 {
   // DO-NOT-DELETE splicer.begin(hello.Com.setServices)

@@ -2,13 +2,16 @@
 // File:          whoc_UIPort.hh
 // Symbol:        whoc.UIPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:08:08 CDT
-// Generated:     20020813 11:08:09 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021110 23:39:20 MST
+// Generated:     20021110 23:39:22 MST
 // Description:   Client-side glue code for whoc.UIPort
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
+// babel-version = 0.7.4
+// source-line   = 10
+// source-url    = file:/home/sparker/SCIRun/src/Babel/Components/whoc/whoc.sidl
 // 
 
 #ifndef included_whoc_UIPort_hh
@@ -27,7 +30,7 @@ namespace whoc {
 #endif
 namespace SIDL {
   template<>
-  class array<whoc::UIPort>;
+  class array< ::whoc::UIPort>;
 }
 
 #ifndef included_SIDL_cxx_hh
@@ -48,7 +51,7 @@ namespace whoc {
   /**
    * Symbol "whoc.UIPort" (version 1.0)
    */
-  class UIPort : public SIDL::StubBase {
+  class UIPort : public ::SIDL::StubBase {
 
     //////////////////////////////////////////////////
     // 
@@ -58,78 +61,78 @@ namespace whoc {
   public:
 
     /**
-     * <p>
+     * &amp;lt;p&amp;gt;
      * Add one to the intrinsic reference count in the underlying object.
-     * Object in <code>SIDL</code> have an intrinsic reference count.
+     * Object in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
      * Objects continue to exist as long as the reference count is
      * positive. Clients should call this method whenever they
      * create another ongoing reference to an object or interface.
-     * </p>
-     * <p>
+     * &amp;lt;/p&amp;gt;
+     * &amp;lt;p&amp;gt;
      * This does not have a return value because there is no language
      * independent type that can refer to an interface or a
      * class.
-     * </p>
+     * &amp;lt;/p&amp;gt;
      */
     void
-    addReference() throw ( SIDL::NullIORException ) 
+    addReference() throw ( ::SIDL::NullIORException ) 
     ;
 
 
     /**
      * Decrease by one the intrinsic reference count in the underlying
      * object, and delete the object if the reference is non-positive.
-     * Objects in <code>SIDL</code> have an intrinsic reference count.
+     * Objects in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
      * Clients should call this method whenever they remove a
      * reference to an object or interface.
      */
     void
-    deleteReference() throw ( SIDL::NullIORException ) 
+    deleteReference() throw ( ::SIDL::NullIORException ) 
     ;
 
 
     /**
-     * Return true if and only if <code>obj</code> refers to the same
+     * Return true if and only if &amp;lt;code&amp;gt;obj&amp;lt;/code&amp;gt; refers to the same
      * object as this object.
      */
     bool
     isSame (
-      /*in*/ SIDL::BaseInterface iobj
+      /*in*/ ::SIDL::BaseInterface iobj
     )
-    throw ( SIDL::NullIORException ) 
+    throw ( ::SIDL::NullIORException ) 
     ;
 
 
 
     /**
      * Check whether the object can support the specified interface or
-     * class.  If the <code>SIDL</code> type name in <code>name</code>
+     * class.  If the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name in &amp;lt;code&amp;gt;name&amp;lt;/code&amp;gt;
      * is supported, then a reference to that object is returned with the
      * reference count incremented.  The callee will be responsible for
-     * calling <code>deleteReference</code> on the returned object.  If
+     * calling &amp;lt;code&amp;gt;deleteReference&amp;lt;/code&amp;gt; on the returned object.  If
      * the specified type is not supported, then a null reference is
      * returned.
      */
-    SIDL::BaseInterface
+    ::SIDL::BaseInterface
     queryInterface (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
-    throw ( SIDL::NullIORException ) 
+    throw ( ::SIDL::NullIORException ) 
     ;
 
 
 
     /**
      * Return whether this object is an instance of the specified type.
-     * The string name must be the <code>SIDL</code> type name.  This
-     * routine will return <code>true</code> if and only if a cast to
+     * The string name must be the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name.  This
+     * routine will return &amp;lt;code&amp;gt;true&amp;lt;/code&amp;gt; if and only if a cast to
      * the string type name would succeed.
      */
     bool
     isInstanceOf (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
-    throw ( SIDL::NullIORException ) 
+    throw ( ::SIDL::NullIORException ) 
     ;
 
 
@@ -140,7 +143,7 @@ namespace whoc {
      * -2 if error so severe that component cannot be further used safely.
      */
     int32_t
-    ui() throw ( SIDL::NullIORException ) 
+    ui() throw ( ::SIDL::NullIORException ) 
     ;
 
 
@@ -160,7 +163,7 @@ namespace whoc {
     UIPort() : d_self(0), d_weak_reference(false) { }
 
     // static constructor
-    static whoc::UIPort _create();
+    static ::whoc::UIPort _create();
 
     // default destructor
     virtual ~UIPort ();
@@ -180,7 +183,7 @@ namespace whoc {
     UIPort ( UIPort::ior_t* ior, bool isWeak );
 
     // conversion from a StubBase
-    UIPort ( const SIDL::StubBase& base );
+    UIPort ( const ::SIDL::StubBase& base );
 
     ior_t* _get_ior() { return d_self; }
 
@@ -208,7 +211,7 @@ namespace whoc {
     static const ext_t * s_ext;
 
   public:
-    static const ext_t * _get_ext() throw ( SIDL::NullIORException );
+    static const ext_t * _get_ext() throw ( ::SIDL::NullIORException );
 
   }; // end class UIPort
 } // end namespace whoc
@@ -216,14 +219,14 @@ namespace whoc {
 // array specialization
 namespace SIDL {
   template<>
-  class array<whoc::UIPort> : public array_mixin< struct whoc_UIPort__array,
-    struct whoc_UIPort__object*, whoc::UIPort>{
+  class array< ::whoc::UIPort> : public array_mixin< struct whoc_UIPort__array,
+    struct whoc_UIPort__object*, ::whoc::UIPort>{
   public:
     /**
      * default constructor
      */
     array() : array_mixin< struct whoc_UIPort__array,
-      struct whoc_UIPort__object*, whoc::UIPort>() {}
+      struct whoc_UIPort__object*, ::whoc::UIPort>() {}
 
     /**
      * default destructor
@@ -233,7 +236,7 @@ namespace SIDL {
     /**
      * copy constructor
      */
-    array( const array< whoc::UIPort >& original ) {
+    array( const array< ::whoc::UIPort >& original ) {
       d_array = original.d_array;
       if ( d_array ) { addReference(); }
     }
@@ -241,7 +244,7 @@ namespace SIDL {
     /**
      * assignment operator
      */
-    array< whoc::UIPort >& operator=( const array< whoc::UIPort >& rhs ) {
+    array< ::whoc::UIPort >& operator=( const array< ::whoc::UIPort >& rhs ) {
       if ( d_array != rhs.d_array ) {
         if ( d_array ) { deleteReference(); }
         d_array=rhs.d_array;
@@ -255,14 +258,14 @@ namespace SIDL {
    * (constructor/casting operator)
    */
   array( struct whoc_UIPort__array* src ) : array_mixin< struct 
-    whoc_UIPort__array, struct whoc_UIPort__object*, whoc::UIPort>(src) {}
+    whoc_UIPort__array, struct whoc_UIPort__object*, ::whoc::UIPort>(src) {}
 
   /**
    * static constructor: createRow
    */
-  static array < whoc::UIPort >
+  static array < ::whoc::UIPort >
   createRow(int32_t dimen, const int32_t lower[], const int32_t upper[]) {
-    array < whoc::UIPort > a;
+    array < ::whoc::UIPort > a;
     a._set_ior( (struct whoc_UIPort__array*)
                 SIDL_interface__array_createRow( dimen, lower, upper ) );
     return a;
@@ -271,9 +274,9 @@ namespace SIDL {
   /**
    * static constructor: createCol
    */
-  static array < whoc::UIPort >
+  static array < ::whoc::UIPort >
   createCol(int32_t dimen, const int32_t lower[], const int32_t upper[]) {
-    array < whoc::UIPort > a;
+    array < ::whoc::UIPort > a;
     a._set_ior( (struct whoc_UIPort__array*)
                 SIDL_interface__array_createCol( dimen, lower, upper ) );
     return a;
@@ -282,9 +285,9 @@ namespace SIDL {
   /**
    * static constructor: create1d
    */
-  static array < whoc::UIPort >
+  static array < ::whoc::UIPort >
   create1d(int32_t len) {
-    array < whoc::UIPort > a;
+    array < ::whoc::UIPort > a;
     a._set_ior( (struct whoc_UIPort__array*)
                 SIDL_interface__array_create1d(len));
     return a;
@@ -293,9 +296,9 @@ namespace SIDL {
   /**
    * static constructor: create2dCol
    */
-  static array < whoc::UIPort >
+  static array < ::whoc::UIPort >
   create2dCol(int32_t m, int32_t n) {
-    array < whoc::UIPort > a;
+    array < ::whoc::UIPort > a;
     a._set_ior( (struct whoc_UIPort__array*)
                 SIDL_interface__array_create2dCol(m,n));
     return a;
@@ -304,9 +307,9 @@ namespace SIDL {
   /**
    * static constructor: create2dRow
    */
-  static array < whoc::UIPort >
+  static array < ::whoc::UIPort >
   create2dRow(int32_t m, int32_t n) {
-    array < whoc::UIPort > a;
+    array < ::whoc::UIPort > a;
     a._set_ior( (struct whoc_UIPort__array*)
                 SIDL_interface__array_create2dRow(m,n));
     return a;
@@ -315,13 +318,13 @@ namespace SIDL {
   /**
    * constructor: slice
    */
-  array < whoc::UIPort >
+  array < ::whoc::UIPort >
   slice( int dimen,
          const int32_t newElem[],
          const int32_t *srcStart = 0,
          const int32_t *srcStride = 0,
          const int32_t *newStart = 0) {
-    array < whoc::UIPort > a;
+    array < ::whoc::UIPort > a;
     a._set_ior( (struct whoc_UIPort__array*)
                 SIDL_interface__array_slice( (struct SIDL_interface__array *) 
       d_array,
@@ -333,7 +336,7 @@ namespace SIDL {
   /**
    * copy
    */
-  void copy( const array<whoc::UIPort>& src ) {
+  void copy( const array< ::whoc::UIPort>& src ) {
     SIDL_interface__array_copy( (const struct SIDL_interface__array*) 
       src._get_ior(),(struct SIDL_interface__array*) _get_ior() );
   }

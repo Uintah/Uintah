@@ -1,5 +1,5 @@
 SRCDIR   := Babel/Components/who
-XSRCS:=
+XSRCS := 
 include $(SCIRUN_SCRIPTS)/babel_component.mk
 
 

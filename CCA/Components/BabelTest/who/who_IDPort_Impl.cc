@@ -2,13 +2,16 @@
 // File:          who_IDPort_Impl.cc
 // Symbol:        who.IDPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:08:12 CDT
-// Generated:     20020813 11:08:15 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021110 23:39:30 MST
+// Generated:     20021110 23:39:33 MST
 // Description:   Server-side implementation for who.IDPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
+// babel-version = 0.7.4
+// source-line   = 7
+// source-url    = file:/home/sparker/SCIRun/src/Babel/Components/who/who.sidl
 // 
 #include "who_IDPort_Impl.hh"
 
@@ -36,7 +39,7 @@ void who::IDPort_impl::_dtor() {
 /**
  * Test prot. Return a string as an ID for Hello component
  */
-std::string
+::std::string
 who::IDPort_impl::getID () 
 throw () 
 
