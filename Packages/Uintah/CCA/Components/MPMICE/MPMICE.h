@@ -204,6 +204,22 @@ public:
                      int     component,
                      const NCVariable<Vector>& q_NC);
                      
+  void binaryPressureSearch(   StaticArray<constCCVariable<double> >& Temp, 
+                            StaticArray<CCVariable<double> >& rho_micro, 
+                            StaticArray<CCVariable<double> >& vol_frac, 
+                            StaticArray<CCVariable<double> >& rho_CC_new,
+                            StaticArray<CCVariable<double> >& speedSound_new,
+                            StaticArray<double> & dp_drho, 
+                            StaticArray<double> & dp_de, 
+                            StaticArray<double> & press_eos,
+                            constCCVariable<double> & press,
+                            CCVariable<double> & press_new, 
+                            double press_ref,
+                            StaticArray<double> & cv,
+                            double convergence_crit,
+                            int numALLMatls,
+                            int count,
+                            IntVector c );                   
 //__________________________________
 //    R A T E   F O R M                   
   void computeRateFormPressure(const ProcessorGroup*,
