@@ -25,52 +25,38 @@
 #define SCI_DeltaCCompiler cc
 #define SCI_DeltaOptimizeCFlags -O
 #define SCI_DeltaDebugCFlags -g
-#ifdef SCI_IRIX6
-#ifdef SCI_64BIT
-#define SCI_DeltaOtherCFlags -mips4 -fullwarn
+#ifdef SCI_IRIX_BIN_o32
+#define SCI_BinFlags -32 -mips2
 #else
-#ifdef SCI_N32
-#define SCI_DeltaOtherCFlags -n32 -mips4 -fullwarn
+#ifdef SCI_IRIX_BIN_n32_mips3
+#define SCI_BinFlags -n32 -mips3
 #else
-#define SCI_DeltaOtherCFlags -32 -mips2 -fullwarn
+#ifdef SCI_IRIX_BIN_n32_mips4
+#define SCI_BinFlags -n32 -mips4
+#else
+#ifdef SCI_IRIX_BIN_64_mips3
+#define SCI_BinFlags -64 -mips3
+#else
+#ifdef SCI_IRIX_BIN_64_mips4
+#define SCI_BinFlags -64 -mips4
+#else
+#error "Unknown irix binary format"
 #endif
 #endif
-#else
-#define SCI_DeltaOtherCFlags -mips2 -fullwarn
+#endif
+#endif
 #endif
 
+#define SCI_DeltaOtherCFlags -xansi -fullwarn SCI_BinFlags
 #define SCI_DeltaCppCompiler CC
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
-#ifdef SCI_IRIX6
-#ifdef SCI_64BIT
-#define SCI_DeltaOtherCppFlags -mips4
-#else
-#ifdef SCI_N32
-#define SCI_DeltaOtherCppFlags -n32 -mips4
-#else
-#define SCI_DeltaOtherCppFlags -32 -mips2
-#endif
-#endif
-#else
-#define SCI_DeltaOtherCppFlags -mips2
-#endif
+#define SCI_DeltaOtherCppFlags SCI_BinFlags
 #define SCI_DeltaCppIncludeLocation /usr/include/CC
 #define SCI_DeltaLinker time CC
-#ifdef SCI_64BIT
-#define SCI_DeltaLinkerFlags -64
-#else
-#ifdef SCI_N32
-#define SCI_DeltaLinkerFlags -n32
-#else
-#define SCI_DeltaLinkerFlags -32
-#endif
-#endif
+#define SCI_DeltaLinkerFlags SCI_BinFlags
 #define SCI_DeltaLinkerNeedsCppFlags
 #define SCI_DeltaLinkerLib
-#if 0
-#define SCI_DeltaPrelinkCommand /usr/lib/DCC/edg_prelink -v
-#endif
 
 #define SCI_GNUCCompiler gcc
 #define SCI_GNUOptimizeCFlags -O2

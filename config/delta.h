@@ -20,18 +20,7 @@
 #define SCI_Linker SCI_DeltaLinker
 #define SCI_LinkerFlags SCI_DeltaLinkerFlags
 #define SCI_LinkerLib SCI_DeltaLinkerLib
-#if 0
-#define SCI_PrelinkCommand SCI_DeltaPrelinkCommand
-#endif
-#ifdef SCI_64BIT
-#define SCI_ShLib CC -64 -shared -Wl,-no_unresolved
-#else
-#ifdef SCI_N32
-#define SCI_ShLib CC -n32 -shared -Wl,-no_unresolved
-#else
-#define SCI_ShLib CC -32 -shared -Wl,-no_unresolved
-#endif
-#endif
+#define SCI_ShLib CC SCI_BinFlags -shared -Wl,-no_unresolved
 #define SCI_CCLibs -lC -lc
 
 #define CppNeedsIncludes
