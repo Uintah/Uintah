@@ -54,7 +54,8 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -h[elp]\n";
     cerr << "  -abs_tolerance [double] (allowable absolute difference of any numbers)\n";
     cerr << "  -rel_tolerance [double] (allowable relative difference of any numbers)\n";
-    cerr << "  -as_warnings (treat tolerance errors as warnings and continue)";
+    cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
+    cerr << "  -skip_unknown_types (skip variable comparisons of unknown types without error)";    
     cerr << "\nNote: The absolute and relative tolerance tests must both fail\n      for a comparison to fail.\n";
     Thread::exitAll(1);
 }
@@ -65,6 +66,7 @@ string filebase1;
 string filebase2;
 bool tolerance_as_warnings = false;
 bool tolerance_error = false;
+bool strict_types = true;
 
 void abort_uncomparable()
 {
@@ -978,6 +980,9 @@ int main(int argc, char** argv)
     else if(s == "-as_warnings") {
       tolerance_as_warnings = true;
     }
+    else if(s == "-skip_unknown_types") {
+      strict_types = false;
+    }
     else {
       if (filebase1 != "") {
 	if (filebase2 != "")
@@ -1152,7 +1157,12 @@ int main(int argc, char** argv)
 	  const Uintah::TypeDescription* subtype = td->getSubType();
 	  cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	  if (td->getName() == string("-- unknown type --")) {
-	    cerr << "\t\tParticleVariable of unknown type; skipping comparison...\n";
+	    cerr << "\t\tParticleVariable of unknown type";
+	    if (strict_types) {
+	      cerr << ".\nQuitting.\n";
+	      Thread::exitAll(-1);
+	    }
+	    cerr << "; skipping comparison...\n";
 	    continue;
 	  }
 	  for(int l=0;l<grid->numLevels();l++){
@@ -1281,7 +1291,12 @@ int main(int argc, char** argv)
 	  continue;
 	cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	if (td->getName() == string("-- unknown type --")) {
-	  cerr << "\t\tParticleVariable of unknown type; skipping comparison...\n";
+	  cerr << "\t\tParticleVariable of unknown type";
+	  if (strict_types) {
+	    cerr << ".\nQuitting.\n";
+	    Thread::exitAll(-1);
+	  }
+	  cerr << "; skipping comparison...\n";
 	  continue;
 	}
 	
