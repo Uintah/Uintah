@@ -13,12 +13,20 @@ class DOM_Document;
 class DOM_Element;
 
 namespace Uintah {
-   class LoadBalancer;
-    class Task;
-    class TaskGraph;
-    class VarLabel;
-    class ProcessorGroup;
-    using namespace std;
+
+class Task;
+class VarLabel;
+class ProcessorGroup;
+
+using std::vector;
+using std::string;
+
+class LoadBalancer;
+class Task;
+class TaskGraph;
+class VarLabel;
+class ProcessorGroup;
+
 /**************************************
 
 CLASS
@@ -108,6 +116,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.20  2000/09/26 21:41:52  dav
+// minor formatting
+//
 // Revision 1.19  2000/09/20 15:50:30  sparker
 // Added problemSetup interface to scheduler
 // Added ability to get/release the loadBalancer from the scheduler
