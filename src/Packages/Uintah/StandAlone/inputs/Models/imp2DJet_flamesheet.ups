@@ -192,6 +192,7 @@
          <material name = "source" >
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
+           <isSurroundingMatl>          true            </isSurroundingMatl>
            <viscosity>                  15.89e-6        </viscosity>
            <thermal_conductivity>       26.3e-3         </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
