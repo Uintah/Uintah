@@ -46,8 +46,15 @@ html: ${HTMLFILE}
 
 ps: ${PSFILE}
 
-${DVIFILE}: ${MAINFILE} ${SRCS}
-	for i in 1 2 3; do latex ${MAINFILE}; done
+${DVIFILE}: ${MAINFILE} ${SRCS} ${BN}.bbl
+	latex  ${BN}
+	makeindex ${BN}.idx
+	latex ${BN}
+
+#	for i in 1 2 3; do latex ${MAINFILE}; done
+
+${BN}.bbl: ${MAINFILE}
+	bibtex ${BN}
 
 ${HTMLFILE}: ${DVIFILE}
 	latex2html ${LATEX2HTMLOPTIONS} ${MAINFILE}
