@@ -2166,7 +2166,8 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 					 const VarLabel* var,
 					 const PatchSubset* patches,
 					 const MaterialSubset* matls,
-                                         const PatchSubset* newPatches)
+                                         bool replace /*=false*/,
+                                         const PatchSubset* newPatches /*=0*/)
 {
   OnDemandDataWarehouse* fromDW = dynamic_cast<OnDemandDataWarehouse*>(from);
   ASSERT(fromDW != 0);
@@ -2178,7 +2179,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
     const Patch* copyPatch = (newPatches ? newPatches->get(p) : patch);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-      checkPutAccess(var, matl, patch, false);      
+      checkPutAccess(var, matl, patch, replace);      
       switch(var->typeDescription()->getType()){
       case TypeDescription::NCVariable:
 	{
@@ -2186,7 +2187,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
 	  NCVariableBase* v = fromDW->d_ncDB.get(var, matl, patch);
-	  d_ncDB.put(var, matl, copyPatch, v->clone(), false);
+	  d_ncDB.put(var, matl, copyPatch, v->clone(), replace);
 	}
 	break;
       case TypeDescription::CCVariable:
@@ -2195,16 +2196,18 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
 	  CCVariableBase* v = fromDW->d_ccDB.get(var, matl, patch);
-	  d_ccDB.put(var, matl, copyPatch, v->clone(), false);
+	  d_ccDB.put(var, matl, copyPatch, v->clone(), replace);
 	}
 	break;
       case TypeDescription::SFCXVariable:
 	{
-	  if(!fromDW->d_sfcxDB.exists(var, matl, patch))
+	  if(!fromDW->d_sfcxDB.exists(var, matl, patch)) {
+            fromDW->d_sfcxDB.print(cout);
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
+          }
 	  SFCXVariableBase* v = fromDW->d_sfcxDB.get(var, matl, patch);
-	  d_sfcxDB.put(var, matl, copyPatch, v->clone(), false);
+	  d_sfcxDB.put(var, matl, copyPatch, v->clone(), replace);
 	}
 	break;
       case TypeDescription::SFCYVariable:
@@ -2213,7 +2216,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
 	  SFCYVariableBase* v = fromDW->d_sfcyDB.get(var, matl, patch);
-	  d_sfcyDB.put(var, matl, copyPatch, v->clone(), false);
+	  d_sfcyDB.put(var, matl, copyPatch, v->clone(), replace);
 	}
 	break;
       case TypeDescription::SFCZVariable:
@@ -2222,7 +2225,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
 	  SFCZVariableBase* v = fromDW->d_sfczDB.get(var, matl, patch);
-	  d_sfczDB.put(var, matl, copyPatch, v->clone(), false);
+	  d_sfczDB.put(var, matl, copyPatch, v->clone(), replace);
 	}
 	break;
       case TypeDescription::ParticleVariable:
@@ -2239,7 +2242,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
           }
           d_lock.writeLock();
 	  ParticleVariableBase* v = fromDW->d_particleDB.get(var, matl, patch);
-	  d_particleDB.put(var, matl, copyPatch, v->clone(), false);
+	  d_particleDB.put(var, matl, copyPatch, v->clone(), replace);
 	}
 	break;
       case TypeDescription::PerPatch:
@@ -2248,7 +2251,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
 	  PerPatchBase* v = fromDW->d_perpatchDB.get(var, matl, patch);
-	  d_perpatchDB.put(var, matl, copyPatch, v->clone(), false);
+	  d_perpatchDB.put(var, matl, copyPatch, v->clone(), replace);
 	}
 	break;
       case TypeDescription::ReductionVariable:
