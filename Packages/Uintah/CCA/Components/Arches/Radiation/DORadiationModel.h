@@ -79,7 +79,8 @@ public:
       virtual void computeRadiationProps(const ProcessorGroup* pc,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
-					 ArchesVariables* vars);
+					 ArchesVariables* vars,
+					 ArchesConstVariables* constvars);
 
       /////////////////////////////////////////////////////////////////////////
       //      
@@ -92,13 +93,15 @@ public:
       virtual void boundarycondition(const ProcessorGroup* pc,
                                       const Patch* patch,
       				      CellInformation* cellinfo, 
-      				      ArchesVariables* vars);
+      				      ArchesVariables* vars,
+      				      ArchesConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
 
       virtual void intensitysolve(const ProcessorGroup* pc,
                                       const Patch* patch,
       				      CellInformation* cellinfo, 
-      				      ArchesVariables* vars);
+      				      ArchesVariables* vars,
+      				      ArchesConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
 
 protected: 

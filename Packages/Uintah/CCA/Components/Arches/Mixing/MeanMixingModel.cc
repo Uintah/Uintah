@@ -1,5 +1,6 @@
 //----- MeanMixingModel.cc --------------------------------------------------
 
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MeanMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/KDTree.h>
@@ -197,6 +198,9 @@ MeanMixingModel::computeProps(const InletStream& inStream,
 			     Stream& outStream)
 {
   // convert inStream to array
+  TAU_PROFILE_TIMER(mixing, "Mixing", "[Mixing::mixing]" , TAU_USER);
+  TAU_PROFILE_TIMER(reaction, "Reaction", "[Mixing::reaction]" , TAU_USER);
+  TAU_PROFILE_START(mixing);
   std::vector<double> mixRxnVar(d_tableDimension); 
   std::vector<double> normVar(d_tableDimension);
   int count = 0;
@@ -235,7 +239,9 @@ MeanMixingModel::computeProps(const InletStream& inStream,
   // Normalize enthalpy
   if (!(d_adiabatic)) {
     Stream normStream;
+  TAU_PROFILE_START(reaction);
     getProps(normVar, normStream);
+  TAU_PROFILE_STOP(reaction);
     double adiabaticEnthalpy = normStream.getEnthalpy();
     double sensEnthalpy = normStream.getSensEnthalpy();
     double normEnthalpy;
@@ -257,7 +263,9 @@ MeanMixingModel::computeProps(const InletStream& inStream,
     //same for every rxn parameter entry, look up the first entry;
     Stream paramValues;
     for (int ii = 0; ii < d_numRxnVars; ii++) {
+  TAU_PROFILE_START(reaction);
       getProps(normVar, paramValues);
+  TAU_PROFILE_STOP(reaction);
       double minParamValue = paramValues.d_rxnVarNorm[0];
       double maxParamValue = paramValues.d_rxnVarNorm[1];
       if (mixRxnVar[rxncount+ii] < minParamValue)
@@ -285,7 +293,10 @@ MeanMixingModel::computeProps(const InletStream& inStream,
   }
   cout << endl;
 #endif
+  TAU_PROFILE_STOP(mixing);
+  TAU_PROFILE_START(reaction);
   getProps(mixRxnVar, outStream); //function in DynamicTable
+  TAU_PROFILE_STOP(reaction);
   outStream.d_CO2index = d_CO2index; //Needed for radiation model
   outStream.d_H2Oindex = d_H2Oindex; //Needed for radiation model
   //outStream.print(cout);
@@ -296,6 +307,8 @@ MeanMixingModel::computeProps(const InletStream& inStream,
 
 void
 MeanMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
+  TAU_PROFILE("lookup", "[Properties::lookup]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute, "Compute", "[Mixing::compute]" , TAU_USER);
   vector<double> vec_stateSpaceVars;
   bool lsoot = d_rxnModel->getSootBool();
   bool flag = false;
@@ -310,11 +323,13 @@ MeanMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
 #endif
   if (!(d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
     {
+  TAU_PROFILE_START(compute);
       computeMeanValues(tableKeyIndex, stateSpaceVars);
       vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
       // defined in K-D tree or 2D vector implementation
       d_mixTable->Insert(tableKeyIndex, vec_stateSpaceVars);
       //stateSpaceVars.print(cerr);
+  TAU_PROFILE_STOP(compute);
     }
   else {
     bool flag = false;

@@ -97,7 +97,7 @@ C$DIR SCALAR
 
                IF (PCELL(I,J,K).EQ.WALL) THEN
                   if (.not.(yminus.and.j.eq.jst)) then
-                     VV(I,J,K) = 0.0D0
+c                     VV(I,J,K) = 0.0D0
 C--------------------------------------------------------------------
 C             SOUTHEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------

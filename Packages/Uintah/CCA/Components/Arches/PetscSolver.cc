@@ -6,7 +6,6 @@
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
@@ -299,15 +298,17 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
 // ****************************************************************************
 void 
 PetscSolver::computePressUnderrelax(const ProcessorGroup*,
-				   const Patch* patch,
-				    ArchesVariables* vars)
+				    const Patch* patch,
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->pressure, vars->pressCoeff[Arches::AP],
+  fort_underelax(idxLo, idxHi, constvars->pressure,
+		 vars->pressCoeff[Arches::AP],
 		 vars->pressNonlinearSrc, d_underrelax);
 
 #ifdef ARCHES_PRES_DEBUG
@@ -356,6 +357,7 @@ void
 PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    const Patch* patch,
 			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars,
 			    const ArchesLabel*)
 {
   double solve_start = Time::currentSeconds();
@@ -414,13 +416,13 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 #ifdef ARCHES_PETSC_DEBUG
 	  cerr << "filling in row: " << col[3] << '\n';
 #endif
-	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
-	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  value[5] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-	  value[6] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
+	  value[0] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
+	  value[1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
+	  value[2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
+	  value[3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
+	  value[4] = -constvars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
+	  value[5] = -constvars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
+	  value[6] = -constvars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
 #ifdef ARCHES_PETSC_DEBUG
 	  for(int i=0;i<7;i++)
 	     cerr << "A[" << col[3] << "][" << col[i] << "]=" << value[i] << '\n';
@@ -444,7 +446,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  vecvalueb = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
+	  vecvalueb = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
 	  vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
 	  int row = l2g[IntVector(colX, colY, colZ)];	  
 //	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
@@ -877,8 +879,9 @@ PetscSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
-				 const Patch* patch,
-				  int index, ArchesVariables* vars)
+				  const Patch* patch,
+				  int index, ArchesVariables* vars,
+				  ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo;
@@ -890,13 +893,13 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
   switch (index) {
   case Arches::XDIR:
-    domLo = vars->uVelocity.getFortLowIndex();
-    domHi = vars->uVelocity.getFortHighIndex();
+    domLo = constvars->uVelocity.getFortLowIndex();
+    domHi = constvars->uVelocity.getFortHighIndex();
     domLong = vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->uVelocity,
+    fort_underelax(idxLo, idxHi, constvars->uVelocity,
 		   vars->uVelocityCoeff[Arches::AP], vars->uVelNonlinearSrc,
 		   d_underrelax);
 
@@ -938,13 +941,13 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
     case Arches::YDIR:
-    domLo = vars->vVelocity.getFortLowIndex();
-    domHi = vars->vVelocity.getFortHighIndex();
+    domLo = constvars->vVelocity.getFortLowIndex();
+    domHi = constvars->vVelocity.getFortHighIndex();
     domLong = vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->vVelocity,
+    fort_underelax(idxLo, idxHi, constvars->vVelocity,
 		   vars->vVelocityCoeff[Arches::AP], vars->vVelNonlinearSrc,
 		   d_underrelax);
 
@@ -986,13 +989,13 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
     case Arches::ZDIR:
-    domLo = vars->wVelocity.getFortLowIndex();
-    domHi = vars->wVelocity.getFortHighIndex();
+    domLo = constvars->wVelocity.getFortLowIndex();
+    domHi = constvars->wVelocity.getFortHighIndex();
     domLong = vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->wVelocity,
+    fort_underelax(idxLo, idxHi, constvars->wVelocity,
 		   vars->wVelocityCoeff[Arches::AP], vars->wVelNonlinearSrc,
 		   d_underrelax);
 
@@ -1354,14 +1357,15 @@ void
 PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
 				    int,
-				    ArchesVariables* vars)
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->scalar,
+  fort_underelax(idxLo, idxHi, constvars->scalar,
 		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
 		 d_underrelax);
 }
@@ -1374,6 +1378,7 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 			  const Patch*,
 			  int, double,
 			  ArchesVariables*,
+			  ArchesConstVariables*,
 			  CellInformation*,
 			  const ArchesLabel*)
 {
@@ -1473,14 +1478,15 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 void 
 PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
 				       const Patch* patch,
-				       ArchesVariables* vars)
+				       ArchesVariables* vars,
+				       ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->enthalpy,
+  fort_underelax(idxLo, idxHi, constvars->enthalpy,
 		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
 		 d_underrelax);
 }
@@ -1493,6 +1499,7 @@ PetscSolver::enthalpyLisolve(const ProcessorGroup*,
 			     const Patch*,
 			     double,
 			     ArchesVariables*,
+			     ArchesConstVariables*,
 			     CellInformation*,
 			     const ArchesLabel*)
 {

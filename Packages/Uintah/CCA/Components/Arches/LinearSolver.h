@@ -15,6 +15,7 @@ namespace Uintah {
 class ProcessorGroup;
 class LoadBalancer;
 class ArchesVariables;
+class ArchesConstVariables;
 class ArchesLabel;
 class CellInformation;
 // class StencilMatrix;
@@ -80,7 +81,8 @@ public:
       // Pressure Underrelaxation
       virtual void computePressUnderrelax(const ProcessorGroup* pc,
 					  const Patch* patch,
-					  ArchesVariables* vars)= 0;
+					  ArchesVariables* vars,
+				          ArchesConstVariables* constvars) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Pressure Solve
@@ -111,7 +113,8 @@ public:
       virtual void computeVelUnderrelax(const ProcessorGroup* pc,
 					const Patch* patch,
 					int index,
-					ArchesVariables* vars)= 0;
+					ArchesVariables* vars,
+				        ArchesConstVariables* constvars) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Velocity Solve
@@ -144,7 +147,8 @@ public:
       virtual void computeScalarUnderrelax(const ProcessorGroup* pc,
 					   const Patch* patch,
 					   int index,
-					   ArchesVariables* vars)= 0;
+					   ArchesVariables* vars,
+				           ArchesConstVariables* constvars) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
@@ -153,12 +157,14 @@ public:
 				 int index,
 				 double delta_t,
 				 ArchesVariables* vars,
+				 ArchesConstVariables* constvars,
 				 CellInformation* cellinfo,
 				 const ArchesLabel* lab) = 0;
 
       virtual void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
 					     const Patch* patch,
-					     ArchesVariables* vars)= 0;
+					     ArchesVariables* vars,
+					     ArchesConstVariables* constvars)=0;
 
       ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
@@ -166,6 +172,7 @@ public:
 				   const Patch* patch,
 				   double delta_t,
 				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars,
 				   CellInformation* cellinfo,
 				   const ArchesLabel* lab) = 0;
 
@@ -189,6 +196,7 @@ public:
 			     const PatchSubset* mypatches) = 0;
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
 			       ArchesVariables* vars,
+			       ArchesConstVariables* constvars,
 			       const ArchesLabel* lab) = 0;
    
 

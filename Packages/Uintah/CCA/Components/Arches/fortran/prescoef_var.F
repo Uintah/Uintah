@@ -59,21 +59,17 @@ C-----------------------------------------------------------------------
                DENT = PT5*(DEN(i,j,k)+DEN(i,j,k+1))
                DENB = PT5*(DEN(i,j,k)+DEN(i,j,k-1))
 
-               AE(i,j,k) = AREAEW/
-     &              (DENE*DXEP(i))*EPSG
+               AE(i,j,k) = AREAEW/(DENE*DXEP(i))*EPSG
 
-               AW(i,j,k) = AREAEW/
-     &              (DENW*DXPW(i))*EPSG
+               AW(i,j,k) = AREAEW/(DENW*DXPW(i))*EPSG
 
                AN(i,j,k) = AREAN/(DENN*DYNP(j))*EPSG
 
                AS(i,j,k) = AREAS/(DENS*DYPS(j))*EPSG
 
-               AT(i,j,k) = AREATB/
-     &              (DENT*DZTP(k))*EPSG
+               AT(i,j,k) = AREATB/(DENT*DZTP(k))*EPSG
 
-               AB(i,j,k) = AREATB/
-     &              (DENB*DZPB(k)) *EPSG
+               AB(i,j,k) = AREATB/(DENB*DZPB(k)) *EPSG
  100        CONTINUE
  110     CONTINUE
  120  CONTINUE

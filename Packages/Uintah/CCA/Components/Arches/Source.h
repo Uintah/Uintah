@@ -38,6 +38,7 @@ WARNING
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 
 #include <Core/Containers/Array1.h>
 namespace Uintah {
@@ -82,7 +83,8 @@ public:
 				       const Patch* patch,
 				       double delta_t,
 				       CellInformation* cellinfo,
-				       ArchesVariables* vars); 
+				       ArchesVariables* vars,
+				       ArchesConstVariables* constvars); 
 
       void calculatePressureSourceCorr(const ProcessorGroup* pc,
 				   const Patch* patch,
@@ -95,7 +97,8 @@ public:
 				 double delta_t,
 				 int index,
 				 CellInformation* cellinfo,
-				 ArchesVariables* vars);
+				 ArchesVariables* vars,
+				 ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
@@ -105,7 +108,8 @@ public:
 				   double delta_t, 
 				   int index,
 				   CellInformation* cellinfo,
-				   ArchesVariables* vars);
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
@@ -115,21 +119,24 @@ public:
 				 double delta_t, 
 				 int index,
 				 CellInformation* cellinfo,
-				 ArchesVariables* vars);
+				 ArchesVariables* vars,
+				 ArchesConstVariables* constvars);
 
       void addReactiveScalarSource(const ProcessorGroup*,
 				   const Patch* patch,
 				   double delta_t,
 				   int, 
 				   CellInformation* cellinfo,
-				   ArchesVariables* vars);
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars);
 
 
       void calculateEnthalpySource(const ProcessorGroup* pc,
 				 const Patch* patch,
 				 double delta_t, 
 				 CellInformation* cellinfo,
-				 ArchesVariables* vars);
+				 ArchesVariables* vars,
+				 ArchesConstVariables* constvars);
 
       void computeEnthalpyRadFluxes(const ProcessorGroup* pc,
 				    const Patch* patch,
@@ -144,7 +151,8 @@ public:
       void computeEnthalpyRadThinSrc(const ProcessorGroup* pc,
 				     const Patch* patch,
 				     CellInformation* cellinfo,
-				     ArchesVariables* vars);
+				     ArchesVariables* vars,
+				     ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
@@ -153,7 +161,8 @@ public:
 			       const Patch* patch,
 			       double delta_t, 
 			       int index,
-			       ArchesVariables* vars);
+			       ArchesVariables* vars,
+			       ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
@@ -162,12 +171,14 @@ public:
 				  const Patch* patch,
 				  double delta_t, 
 				  int index, ArchesVariables* vars,
+				  ArchesConstVariables* constvars,
 				  int conv_scheme);
 
       void modifyEnthalpyMassSource(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  double delta_t, 
 				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars,
 				  int conv_scheme);
 
       ////////////////////////////////////////////////////////////////////////
@@ -199,12 +210,14 @@ public:
 				   const Patch* patch,
 				   int index,
 				   CellInformation* cellinfo,
-				   ArchesVariables* vars);
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars);
   
       void addMMEnthalpySource(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    CellInformation* cellinfo,
-			    ArchesVariables* vars);
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars);
   
 private:
 
