@@ -36,7 +36,7 @@
 
 namespace SCIRun {
 
-PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
+PersistentTypeID Matrix::type_id("Matrix", "PropertyManager", 0);
 
 #define MATRIX_VERSION 3
 
