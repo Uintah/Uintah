@@ -40,16 +40,13 @@
 // irix64 KCC stuff
 #include <strings.h>
 
-#ifdef __sun
-  #include <string.h>
-  #define bcopy(src,dest,n) memcpy(dest,src,n)
-#else
-  #ifndef __linux
-    #include <bstring.h>
-  #endif
-#endif
-#ifdef __linux
+#if defined(__sun)
 #include <string.h>
+#define bcopy(src,dest,n) memcpy(dest,src,n)
+#elif defined(__linux) || defined(__digital__) || defined __sgi
+#include <string.h>
+#else
+#error "Need bcopy idfdef for this architecture"
 #endif
 
 #include <sys/param.h>
@@ -256,10 +253,8 @@ inline AllocBin* Allocator::get_bin(size_t size)
 
 void Allocator::initlock()
 {
-   if(pthread_mutex_init(&the_lock,0) != 0){
-      perror("pthread_mutex_init");
-      exit(-1);
-   }
+  static pthread_mutex_t init = PTHREAD_MUTEX_INITIALIZER;
+  the_lock=init;
 }
 
 inline void Allocator::lock()
