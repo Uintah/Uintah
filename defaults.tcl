@@ -11,5 +11,5 @@ option add *Fscale*activeForeground SteelBlue2
 option add *selector red
 option add *font "-Adobe-Helvetica-bold-R-Normal--*-120-75-*"
 
-set tcl_prompt1 "puts -nonewline \"sr> \""
-set tcl_prompt2 "puts -nonewline \"sr>> \""
+set tcl_prompt1 "puts -nonewline \"scirun> \""
+set tcl_prompt2 "puts -nonewline \"scirun>> \""
