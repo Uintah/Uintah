@@ -105,14 +105,17 @@ void ViscoScram::initializeCMData(const Patch* patch,
    new_dw->put(pCrackRadius,        lb->pCrackRadiusLabel);
 
    computeStableTimestep(patch, matl, new_dw);
-
 }
 
 void ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {
    from.push_back(p_statedata_label);
+   from.push_back(lb->pDeformationMeasureLabel);
+   from.push_back(lb->pStressLabel);
    to.push_back(p_statedata_label_preReloc);
+   to.push_back(lb->pDeformationMeasureLabel_preReloc);
+   to.push_back(lb->pStressLabel_preReloc);
 }
 
 void ViscoScram::computeStableTimestep(const Patch* patch,
