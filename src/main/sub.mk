@@ -13,7 +13,7 @@ ifeq ($(LARGESOS),yes)
   endif
 else
   PSELIBS := PSECore/Dataflow SCICore/Containers SCICore/TclInterface \
-	SCICore/Thread
+	SCICore/Thread SCICore/Exceptions
   ifeq ($(BUILD_PARALLEL),yes)
    PSELIBS := $(PSELIBS) Component/PIDL SCICore/globus_threads
   endif
@@ -41,6 +41,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.4  2000/03/23 10:30:53  sparker
+# Now need to link pse with SCICore/Exceptions
+#
 # Revision 1.3  2000/03/20 21:53:29  yarden
 # Linux port: add action for NEED_SONAME
 #
