@@ -19,6 +19,7 @@ static char *id="@(#) $Id$";
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <strstream>
 #include <unistd.h>
 
 using namespace Uintah;
@@ -136,8 +137,13 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
 				   const ProcessorContext * pc) const
 {
    //   cerr << "Looking at task: " << task->task->getName() << " on patch " << (void*)task->task->getPatch()->getID() << '\n';
-   if(task->visited)
-      throw InternalError("Cycle detected in task graph");
+   if(task->visited) {
+      ostrstream error;
+      error << "Cycle detected in task graph: already did\n\t"
+            << task->task->getName() << " on patch "
+            << task->task->getPatch()->getID() << "\n";
+      throw InternalError(error.str());
+   }
    task->visited=true;
    const vector<Task::Dependency*>& reqs = task->task->getRequires();
    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
@@ -404,6 +410,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.19  2000/06/14 23:43:25  jehall
+// - Made "cycle detected" exception more informative
+//
 // Revision 1.18  2000/06/08 17:11:39  jehall
 // - Added quotes around task names so names with spaces are parsable
 //
