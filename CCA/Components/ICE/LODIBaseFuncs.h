@@ -47,13 +47,86 @@ double computeConvection(const double& nuFrt,     const double& nuMid,
               +  eminus * qLast)/deltaX; 
              
    return  0.5 * (qConFrt - qConLast)/deltaX - dissipation;
+} 
+/*_________________________________________________________________
+ Function~ computeCornerCellIndices--
+ Purpose~  compute the corner cells for any face
+___________________________________________________________________*/  
+void computeCornerCellIndices(const Patch* patch,
+                              const Patch::FaceType face,
+                              vector<IntVector>& crn)
+{     
+  IntVector low,hi;
+  low = patch->getLowIndex();
+  hi  = patch->getHighIndex() - IntVector(1,1,1);  
+  
+  switch(face){
+  case Patch::xminus:
+    crn[0] = IntVector(low.x(), low.y(), hi.z());   
+    crn[1] = IntVector(low.x(), hi.y(),  hi.z());   
+    crn[2] = IntVector(low.x(), hi.y(),  low.z());
+    crn[3] = IntVector(low.x(), low.y(), low.z());
+    break;
+  case Patch::xplus:
+    crn[0] = IntVector(hi.x(), low.y(), hi.z());   
+    crn[1] = IntVector(hi.x(), hi.y(),  hi.z());   
+    crn[2] = IntVector(hi.x(), hi.y(),  low.z());
+    crn[3] = IntVector(hi.x(), low.y(), low.z());
+    break;
+  case Patch::yminus:
+    crn[0] = IntVector(hi.x(),  low.y(), hi.z());    
+    crn[1] = IntVector(low.x(), low.y(), hi.z());    
+    crn[2] = IntVector(low.x(), low.y(), low.z()); 
+    crn[3] = IntVector(hi.x(),  low.y(), low.z()); 
+    break;
+  case Patch::yplus:
+    crn[0] = IntVector(hi.x(),  hi.y(), hi.z());    
+    crn[1] = IntVector(low.x(), hi.y(), hi.z());    
+    crn[2] = IntVector(low.x(), hi.y(), low.z()); 
+    crn[3] = IntVector(hi.x(),  hi.y(), low.z()); 
+    break;
+  case Patch::zminus:
+    crn[0] = IntVector(hi.x(),  low.y(), low.z()); 
+    crn[1] = IntVector(hi.x(),  hi.y(),  low.z()); 
+    crn[2] = IntVector(low.x(), hi.y(),  low.z()); 
+    crn[3] = IntVector(low.x(), low.y(), low.z()); 
+    break;
+  case Patch::zplus:
+    crn[0] = IntVector(hi.x(),  low.y(), hi.z()); 
+    crn[1] = IntVector(hi.x(),  hi.y(),  hi.z()); 
+    crn[2] = IntVector(low.x(), hi.y(),  hi.z()); 
+    crn[3] = IntVector(low.x(), low.y(), hi.z()); 
+    break;
+  default:
+    throw InternalError("Illegal FaceType in LODIBaseFunc.h"
+                        " computeCornerCellIndices");
+  }
+}
+/*_________________________________________________________________
+ Function~ otherDirection--
+ Purpose~  returns the remaining vector component.
+___________________________________________________________________*/  
+int otherDirection(int dir1, int dir2)
+{ 
+  int dir3 = -9;
+  if ((dir1 == 0 && dir2 == 1) || (dir1 == 1 && dir2 == 0) ){  // x, y
+    dir3 = 2; // z
+  }
+  if ((dir1 == 0 && dir2 == 2) || (dir1 == 2 && dir2 == 0) ){  // x, z
+    dir3 = 1; // y
+  }
+  if ((dir1 == 1 && dir2 == 2) || (dir1 == 2 && dir2 == 1) ){   // y, z
+    dir3 = 0; //x
+  }
+  return dir3;
 }
 
 /*_________________________________________________________________
- Function~ xFaceDensityLODI--
- Purpose~  Compute density in boundary cells on x_plus face
+ Function~ FaceDensityLODI--
+ Purpose~  Compute density in boundary cells on any face
 ___________________________________________________________________*/
-void xFaceDensityLODI(const Patch::FaceType face,
+void FaceDensityLODI(const Patch* patch,
+                const Patch::FaceType face,
                 CCVariable<double>& rho_CC,
                 StaticArray<CCVariable<Vector> >& d,
                 const CCVariable<Vector>& nu,
@@ -62,380 +135,105 @@ void xFaceDensityLODI(const Patch::FaceType face,
                 const double delT,
                 const Vector& dx)
 {
-  cout_doing << "I am in xFaceDensityLODI on face " << face<<endl;
-  IntVector low,hi;
-  int xFaceCell;
-  double y_conv, z_conv;
+  cout_doing << "I am in FaceDensityLODI on face " << face<<endl;
+  double conv_dir1, conv_dir2;
   double qConFrt,qConLast;
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-  int hi_x = hi.x() - 1;
-  int hi_y = hi.y() - 1;
-  int hi_z = hi.z() - 1;
   
-  if(face == Patch::xplus ){
-    xFaceCell = hi_x;  
-  } else {
-    xFaceCell = low.x();
-  }
-  for(int j = low.y()+1; j < hi_y; j++) {
-    for(int k = low.z()+1; k < hi_z; k++) {
-      IntVector c (xFaceCell,  j,   k);
-      IntVector t (xFaceCell,  j+1, k);
-      IntVector b (xFaceCell,  j-1, k);
-      IntVector f (xFaceCell,  j,   k+1);
-      IntVector bk(xFaceCell,  j,   k-1);       
-
-      qConFrt  = rho_tmp[t] * vel[t].y();
-      qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
-                                 rho_tmp[t], rho_tmp[c], rho_tmp[b], qConFrt, 
-                                 qConLast, delT, dx.y());
-
-      qConFrt  = rho_tmp[f] * vel[f].z();
-      qConLast = rho_tmp[bk] * vel[bk].z();
-      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
-                                 rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
-                                 qConFrt, qConLast, delT, dx.z());
-
-      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + y_conv + z_conv);
-
-     // rho_CC[c] = rho_tmp[c] - delT * d[1][c].x() ;
-    } // end of j loop
-  } //end of k loop
-
-  //__________________________________
-  //  E D G E    right/left-bottom
-  for(int k = low.z()+1; k < hi_z; k++) {
-    IntVector c (xFaceCell,  low.y(), k);     
-    IntVector f (xFaceCell,  low.y(), k+1);   
-    IntVector bk(xFaceCell,  low.y(), k-1);    
+  IntVector axes = patch->faceAxes(face);
+  int P_dir = axes[0];  // principal direction
+  int dir1  = axes[1];  // other vector directions
+  int dir2  = axes[2];
+  
+  IntVector offset = IntVector(1,1,1) - Abs(patch->faceDirection(face));
+  
+  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+                                                      !iter.done();iter++) {
+    IntVector c = *iter;
     
-    qConFrt  = rho_tmp[f]  * vel[f].z();
-    qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
-                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
-                               qConFrt, qConLast, delT, dx.z());
+    IntVector r1 = c;
+    IntVector l1 = c;
+    r1[dir1] += offset[dir1];  // tweak the r and l cell indices
+    l1[dir1] -= offset[dir1];
+    qConFrt  = rho_tmp[r1] * vel[r1][dir1];
+    qConLast = rho_tmp[l1] * vel[l1][dir1];
+    
+    conv_dir1 = computeConvection(nu[r1][dir1], nu[c][dir1], nu[l1][dir1], 
+                                  rho_tmp[r1], rho_tmp[c], rho_tmp[l1], 
+                                  qConFrt, qConLast, delT, dx[dir1]);
+    IntVector r2 = c;
+    IntVector l2 = c;
+    r2[dir2] += offset[dir2];  // tweak the r and l cell indices
+    l2[dir2] -= offset[dir2];
+    
+    qConFrt  = rho_tmp[r2] * vel[r2][dir2];
+    qConLast = rho_tmp[l2] * vel[l2][dir2];
+    conv_dir2 = computeConvection(nu[r2][dir2], nu[c][dir2], nu[l2][dir2],
+                                  rho_tmp[r2], rho_tmp[c], rho_tmp[l2], 
+                                  qConFrt, qConLast, delT, dx[dir2]);
 
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c][P_dir] + conv_dir1 + conv_dir2);
+  }
+ 
+  //__________________________________
+  //    E D G E S
+  for(Patch::FaceType face0 = Patch::startFace; face0 <= Patch::endFace; 
+                                                  face0=Patch::nextFace(face0)){
+/*`==========TESTING==========*/
+ /*__________________________________
+ *CHEEZY BULLET PROOFING UNTIL CELL ITERATOR is FIXED
+ *__________________________________*/
+IntVector Tdir0 = patch->faceDirection(face);
+IntVector Tdir1 = patch->faceDirection(face0);
+IntVector test = Abs(Tdir0) - Abs(Tdir1); 
+if (test != IntVector(0,0,0)) {  //  no edge here 
+/*==========TESTING==========`*/
+    
+    //__________________________________
+    //  Find the offset for the r and l cells
+    //  and the Vector components Edir1 and Edir2
+    //  for this particular edge
+    IntVector offset = IntVector(1,1,1)  - Abs(patch->faceDirection(face)) 
+                                         - Abs(patch->faceDirection(face0));
+           
+    IntVector axes = patch->faceAxes(face0);
+    int Edir1 = axes[0];
+    int Edir2 = otherDirection(P_dir, Edir1);
+     
+    CellIterator iterLimits =  
+                  patch->getEdgeCellIterator(face, face0, "minusCornerCells");
+                  
+    for(CellIterator iter = iterLimits;!iter.done();iter++){ 
+      IntVector c = *iter;  
+      IntVector r = c + offset;  
+      IntVector l = c - offset;
+
+      qConFrt  = rho_tmp[r] * vel[r][Edir2];
+      qConLast = rho_tmp[l] * vel[l][Edir2];
+      double conv = computeConvection(nu[r][Edir2], nu[c][Edir2], nu[l][Edir2],
+                                rho_tmp[r], rho_tmp[c], rho_tmp[l], 
+                                qConFrt, qConLast, delT, dx[Edir2]);
+                                
+      rho_CC[c] = rho_tmp[c] - delT * (d[1][c][P_dir] + d[1][c][Edir1] + conv);
+    }
+}  // cheezy bulletproofing
   }
 
   //__________________________________
-  //    E D G E   right/left-top
-  for(int k = low.z()+1; k < hi_z; k++) {
-    IntVector c (xFaceCell,  hi_y, k);     
-    IntVector f (xFaceCell,  hi_y, k+1);   
-    IntVector bk(xFaceCell,  hi_y, k-1);    
-
-    qConFrt  = rho_tmp[f]  * vel[f].z();
-    qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv   = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
-                              rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
-                              qConFrt, qConLast, delT, dx.z());
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
-  }
-
-  //_____________________________________________________
-  //    E D G E   right/left--back
-  for(int j = low.y()+1; j < hi_y; j++) {
-    IntVector c (xFaceCell,   j,   low.z());  
-    IntVector t (xFaceCell,   j+1, low.z());  
-    IntVector b (xFaceCell,   j-1, low.z());  
-    qConFrt  = rho_tmp[t] * vel[t].y();
-    qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
-                           rho_tmp[t], rho_tmp[c], rho_tmp[b], 
-                           qConFrt, qConLast, delT, dx.y());
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
-  } 
-
-  //_________________________________________________
-  // E D G E    right/left--front
-  for(int j = low.y()+1; j < hi_y; j++) {
-    IntVector c (xFaceCell,   j,   hi_z);
-    IntVector t (xFaceCell,   j+1, hi_z);
-    IntVector b (xFaceCell,   j-1, hi_z);
-
-    qConFrt  = rho_tmp[t] * vel[t].y();
-    qConLast = rho_tmp[b] * vel[b].y();
-    y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
-                              rho_tmp[t], rho_tmp[c], rho_tmp[b], 
-                              qConFrt, qConLast, delT, dx.y());
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
-  } 
-
-  //________________________________________________________
   // C O R N E R S    
   vector<IntVector> crn(4);
-  crn[0] = IntVector(xFaceCell, low.y(), hi_z);   // right/left-bottom-front
-  crn[1] = IntVector(xFaceCell, hi_y,    hi_z);   // right/left-top-front
-  crn[2] = IntVector(xFaceCell, hi_y,    low.z());// right/left-top-back
-  crn[3] = IntVector(xFaceCell, low.y(), low.z());// right/left-bottom-back
-
+  computeCornerCellIndices(patch, face, crn);
+ 
   for(int corner = 0; corner <4; corner ++ ) {
     IntVector c = crn[corner];
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + d[1][c].z());
-  }                     
-} 
-
-/*_________________________________________________________________
- Function~ yFaceDensityLODI--
- Purpose~  Compute density in boundary cells on y_plus face 
-___________________________________________________________________*/
-void yFaceDensityLODI(const Patch::FaceType face,
-                CCVariable<double>& rho_CC,
-                StaticArray<CCVariable<Vector> >& d,
-                const CCVariable<Vector>& nu,
-                const CCVariable<double>& rho_tmp,
-                const CCVariable<Vector>& vel,
-                const double delT,
-                const Vector& dx)
-
-{
-  cout_doing << "I am in yFaceDensityLODI on face " <<face << endl;    
-  IntVector low,hi;
-  int yFaceCell;
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-  int hi_x = hi.x() - 1;
-  int hi_y = hi.y() - 1;
-  int hi_z = hi.z() - 1;
-  double x_conv, z_conv;
-  double qConFrt,qConLast;
-
-  if(face == Patch::yplus ){
-    yFaceCell = hi_y;  
-  } else {
-    yFaceCell = low.y();
-  }
-
-  for(int i = low.x()+1; i < hi_x; i++) {
-    for(int k = low.z()+1; k < hi_z; k++) {
-      IntVector r (i+1,  yFaceCell,   k);
-      IntVector l (i-1,  yFaceCell,   k);
-      IntVector c (i,    yFaceCell,   k);
-      IntVector f (i,    yFaceCell,   k+1);
-      IntVector bk(i,    yFaceCell,   k-1);       
-
-      qConFrt  = rho_tmp[r] * vel[r].x();
-      qConLast = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
-                                 rho_tmp[r], rho_tmp[c], rho_tmp[l], qConFrt, 
-                                 qConLast, delT, dx.x());
-
-      qConFrt  = rho_tmp[f] * vel[f].z();
-      qConLast = rho_tmp[bk] * vel[bk].z();
-      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
-                                 rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
-                                 qConFrt, qConLast, delT, dx.z());
-
-      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + x_conv + z_conv);
-     // rho_CC[c] = rho_tmp[c] - delT * d[1][c].y() ;   
-    } 
-  } 
-
-  //__________________________________________________________
-  //  E D G E    right-top/bottom
-  for(int k = low.z()+1; k < hi_z; k++) {
-    IntVector c (hi_x,   yFaceCell,   k);
-    IntVector f (hi_x,   yFaceCell,   k+1);
-    IntVector bk(hi_x,   yFaceCell,   k-1);
-    qConFrt  = rho_tmp[f]  * vel[f].z();
-    qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
-                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
-                               qConFrt, qConLast, delT, dx.z());
-
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
-  }
-  //_______________________________________________________
-  //    E D G E    top/bottom-front
-  for(int i = low.x()+1; i < hi_x; i++) {
-    IntVector r (i+1, yFaceCell,  hi_z);
-    IntVector l (i-1, yFaceCell,  hi_z);
-    IntVector c (i,   yFaceCell,  hi_z);
-    qConFrt  = rho_tmp[r] * vel[r].x();
-    qConLast = rho_tmp[l] * vel[l].x();
-    x_conv   = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
-                              rho_tmp[r], rho_tmp[c], rho_tmp[l], 
-                              qConFrt, qConLast, delT, dx.x());
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
-  }
-         
-  //_____________________________________________________
-  //    E D G E    left-top/bottom
-  for(int k = low.z()+1; k < hi_z; k++) {
-     IntVector c  (low.x(),   yFaceCell,   k);
-     IntVector f  (low.x(),   yFaceCell,   k+1);
-     IntVector bk (low.x(),   yFaceCell,   k-1);
-     qConFrt  = rho_tmp[f] * vel[f].z();
-     qConLast = rho_tmp[bk] * vel[bk].z();
-     z_conv   = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
-                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
-                               qConFrt, qConLast, delT, dx.z());
-     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
-   }
-
-  //_________________________________________________
-  // E D G E    top/bottom-back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    IntVector r (i+1, yFaceCell,   low.z());
-    IntVector l (i-1, yFaceCell,   low.z());
-    IntVector c (i,   yFaceCell,   low.z());
-
-    qConFrt  = rho_tmp[r] * vel[r].x();
-    qConLast = rho_tmp[l] * vel[l].x();
-    x_conv   = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
-                              rho_tmp[r], rho_tmp[c], rho_tmp[l], 
-                              qConFrt, qConLast, delT, dx.x());
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
-  }
-  //________________________________________________________
-  // C O R N E R S    
-  vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x,    yFaceCell, hi_z);     // right-top/bottom-front
-  crn[1] = IntVector(low.x(), yFaceCell, hi_z);     // left-top/bottom-front
-  crn[2] = IntVector(low.x(), yFaceCell, low.z());  // left-top/bottom-back
-  crn[3] = IntVector(hi_x,    yFaceCell, low.z());  // right-top/bottom-back
-
-  for( int corner = 0; corner <4; corner ++ ) {
-    IntVector c = crn[corner];
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + d[1][c].z());
-  }
-}
-/*_________________________________________________________________
- Function~ zFaceDensityLODI--
- Purpose~  Compute density in boundary cells on the z_plus face
-___________________________________________________________________*/
-void zFaceDensityLODI( const Patch::FaceType face,
-                CCVariable<double>& rho_CC,
-                StaticArray<CCVariable<Vector> >& d,
-                const CCVariable<Vector>& nu,
-                const CCVariable<double>& rho_tmp,
-                const CCVariable<Vector>& vel,
-                const double delT,
-                const Vector& dx)
-
-{
-  cout << "I am in zFaceDensityLODI on face " <<face<< endl;    
-  IntVector low,hi;
-  int zFaceCell;
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-  int hi_x = hi.x() - 1;
-  int hi_y = hi.y() - 1;
-  int hi_z = hi.z() - 1;
-
-  double x_conv, y_conv;
-  double qConFrt,qConLast;
-  
-  if(face == Patch::zplus ){
-    zFaceCell = hi_z;  
-  } else {
-    zFaceCell = low.z();
-  }  
-
-  for(int i = low.x()+1; i < hi_x; i++) {
-    for(int j = low.y()+1; j < hi_y; j++) {
-      IntVector r (i+1, j,   zFaceCell);
-      IntVector l (i-1, j,   zFaceCell);
-      IntVector t (i,   j+1, zFaceCell);
-      IntVector b (i,   j-1, zFaceCell);
-      IntVector c (i,   j,   zFaceCell);
-
-      qConFrt  = rho_tmp[r] * vel[r].x();
-      qConLast = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
-                                 rho_tmp[r], rho_tmp[c], rho_tmp[l], qConFrt, 
-                                 qConLast, delT, dx.x());
-
-      qConFrt  = rho_tmp[t] * vel[t].y();
-      qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
-                                 rho_tmp[t], rho_tmp[c], rho_tmp[b], 
-                                 qConFrt, qConLast, delT, dx.y());
-
-      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].z() + x_conv + y_conv);
-     // rho_CC[c] = rho_tmp[c] - delT * d[1][c].x() ; 
-     } // end of j loop
-  } //end of i loop
-     
-  //__________________________________________________________
-  //  E D G E      right-front/back
-  for(int j = low.y()+1; j < hi_y; j++) {
-    IntVector c (hi_x,   j,   zFaceCell);
-    IntVector t (hi_x,   j+1, zFaceCell);
-    IntVector b (hi_x,   j-1, zFaceCell);
-    qConFrt  = rho_tmp[t] * vel[t].y();
-    qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
-                               rho_tmp[t], rho_tmp[c], rho_tmp[b], 
-                               qConFrt, qConLast, delT, dx.y());
-
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
-  } 
-  //__________________________________________________________
-  //  E D G E      left-front/back
-  for(int j = low.y()+1; j < hi_y; j++) {
-    IntVector c (low.x(),   j,   zFaceCell);
-    IntVector t (low.x(),   j+1, zFaceCell);
-    IntVector b (low.x(),   j-1, zFaceCell);
-    qConFrt  = rho_tmp[t] * vel[t].y();
-    qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
-                               rho_tmp[t], rho_tmp[c], rho_tmp[b], 
-                               qConFrt, qConLast, delT, dx.y());
-
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
-
-  } //end of j loop
-
-  //_______________________________________________________
-  //    E D G E   top-front/back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    IntVector r (i+1, hi_y,   zFaceCell);
-    IntVector l (i-1, hi_y,   zFaceCell);
-    IntVector c (i,   hi_y,   zFaceCell);
-    qConFrt  = rho_tmp[r] * vel[r].x();
-    qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
-                           rho_tmp[r], rho_tmp[c], rho_tmp[l], 
-                            qConFrt, qConLast, delT, dx.x());
-    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
-  }   
-  //_______________________________________________________
-  //    E D G E    bottom-front/back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    IntVector r (i+1, low.y(), zFaceCell);
-    IntVector l (i-1, low.y(), zFaceCell);
-    IntVector c (i,   low.y(), zFaceCell);
-
-    qConFrt  = rho_tmp[r] * vel[r].x();
-    qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
-                            rho_tmp[r], rho_tmp[c], rho_tmp[l], 
-                            qConFrt, qConLast, delT, dx.x());
-     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
-   } 
-
-   //________________________________________________________
-   // C O R N E R S    
-   vector<IntVector> crn(4);
-   crn[0] = IntVector(hi_x,    low.y(), zFaceCell); // right-bottom-front/back
-   crn[1] = IntVector(hi_x,    hi_y,    zFaceCell); // right-top-front/back
-   crn[2] = IntVector(low.x(), hi_y,    zFaceCell); // left-top-front/back 
-   crn[3] = IntVector(low.x(), low.y(), zFaceCell); // left-bottom-front/back
-
-   for( int corner = 0; corner < 4; corner ++ ) {
-     IntVector c = crn[corner];
-     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + d[1][c].z());
-   }                
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c][P_dir] + d[1][c][dir1] + d[1][c][dir2]);
+  }           
 }
 /*_________________________________________________________________
  Function~ fillFaceDensityLODI--
  Purpose~  
 ___________________________________________________________________*/
-void fillFaceDensityLODI(CCVariable<double>& rho_CC,
+void fillFaceDensityLODI(const Patch* patch,
+                   CCVariable<double>& rho_CC,
                    StaticArray<CCVariable<Vector> >& di,
                    const CCVariable<Vector>& nu,
                    const CCVariable<double>& rho_tmp,
@@ -443,18 +241,17 @@ void fillFaceDensityLODI(CCVariable<double>& rho_CC,
                    const Patch::FaceType face,
                    const double delT,
                    const Vector& dx)
-
 {   
   if (face == Patch::xplus || face == Patch::xminus ) {
-    xFaceDensityLODI(face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
+    FaceDensityLODI(patch, face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
   } 
 
   if (face == Patch::yplus || face == Patch::yminus ) {
-    yFaceDensityLODI(face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
+    FaceDensityLODI(patch, face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
   } 
 
   if (face == Patch::zplus || face == Patch::zminus ) { 
-    zFaceDensityLODI(face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
+    FaceDensityLODI(patch, face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
   } 
 }
 
@@ -1513,7 +1310,7 @@ void zFaceVelLODI(const Patch::FaceType face,
   crn[0] = IntVector(hi_x,    low.y(), zFaceCell);   // right-bottom-front/back
   crn[1] = IntVector(hi_x,    hi_y,    zFaceCell);   // right-top-front/back   
   crn[2] = IntVector(low.x(), hi_y,    zFaceCell);   // left-top-front/back 
-  crn[3] = IntVector(low.x(), low.y(), zFaceCell);;  // left-bottom-front/back
+  crn[3] = IntVector(low.x(), low.y(), zFaceCell);  // left-bottom-front/back
 
   for( int corner = 0; corner < 4; corner ++ ) {
     IntVector c = crn[corner];
