@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/fillFace.h>
 #include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <vector>
 #include <iostream>
 
