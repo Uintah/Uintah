@@ -56,6 +56,10 @@ endif
 endif
 
 LIBS := $(GLOBUS_LIBRARY)
+
+ifeq ($(HAVE_MPI),yes)
+LIBS += $(MPI_LIBRARY) 
+endif
 PROGRAM := sr
 
 include $(SCIRUN_SCRIPTS)/program.mk

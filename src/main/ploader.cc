@@ -47,9 +47,13 @@ main(int argc, char *argv[] )
 {
  /*Loader is MPI enabled*/
  MPI_Init(&argc,&argv);
+ int mpi_size, mpi_rank;
+ MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+ MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+
 
   try {
-    PIDL::initialize();
+    PIDL::initialize(mpi_rank, mpi_size);
   } 
   catch(const Exception& e) {
     cerr << "Caught exception:\n";
@@ -89,8 +93,12 @@ main(int argc, char *argv[] )
     dr[0] = new Index((sl->mpi_rank),(sl->mpi_rank)+1,1);  //first, last, stride
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
     sl->setCalleeDistribution("dURL",arrr);   //server is callee
+   
+    vector<URL> vURL;
+    vURL.push_back(frameworkURL);
     
-    Object::pointer obj=PIDL::objectFrom(frameworkURL);
+    Object::pointer obj=PIDL::objectFrom(vURL,1,0);
+    //Object::pointer obj=PIDL::objectFrom(frameworkURL,1,0);
     if(obj.isNull()){
       cerr<<"Cannot get framework from url="<<frameworkURL<<endl;
       return 0;

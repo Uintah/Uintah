@@ -31,6 +31,7 @@
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
+#include <mpi.h>
 using namespace std;
 using namespace SCIRun;
 using namespace sci::cca;
@@ -89,6 +90,7 @@ int
 main(int argc, char *argv[] )
 {
   bool framework=true;
+  MPI_Init(&argc,&argv);
 
   parse_args( argc, argv );
 
