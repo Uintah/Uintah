@@ -16,8 +16,8 @@
 
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
-Surface::Surface(Representation rep)
-: rep(rep), grid(0)
+Surface::Surface(Representation rep, int closed)
+: rep(rep), grid(0), closed(closed)
 {
 }
 
@@ -27,6 +27,7 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
+: closed(copy.closed)
 {
     NOT_FINISHED("Surface::Surface");
 }
