@@ -295,7 +295,7 @@ char gui_submk_skeleton[] = \
 "\n"
 "$(SRCDIR)/tclIndex: \\\n"
 "#[INSERT NEW TCL FILE HERE]\n"
-"\t$(OBJTOP)createTclIndex "
+"\t$(OBJTOP)/createTclIndex "
 "$(SRCTOP)/Packages/%s/Dataflow/GUI\n" /* package name */
 "\n"
 "CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex\n"
