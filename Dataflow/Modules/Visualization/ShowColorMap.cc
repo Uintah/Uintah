@@ -153,7 +153,7 @@ ShowColorMap::execute()
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
   GeomSticky *sticky = scinew GeomSticky(all);
   ogeom->delAll();
-  ogeom->addObj( sticky, "ShowColorMap" );
+  ogeom->addObj( sticky, "ShowColorMap Sticky" );
   ogeom->flushViews();
 }
 
