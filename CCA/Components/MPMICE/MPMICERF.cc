@@ -31,7 +31,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<double> mat_mass(numALLMatls);
     StaticArray<double> cv(numALLMatls);
     StaticArray<double> gamma(numALLMatls);
-    StaticArray<double> compressibility(numALLMatls);
+    StaticArray<double> kappa(numALLMatls);
     StaticArray<CCVariable<double> > vol_frac(numALLMatls);
     StaticArray<CCVariable<double> > rho_micro(numALLMatls);
     StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
@@ -91,7 +91,8 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
         if(ice_matl){                // I C E
-         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
+         rho_micro[m][c]  = 1.0/sp_vol_CC[m][c];
+         sp_vol_new[m][c] = sp_vol_CC[m][c];
          ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
                                          cv[m],Temp[m][c],
                                          press_eos[m],dp_drho[m],dp_de[m]);
@@ -100,25 +101,35 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
          mat_volume[m] = mat_mass[m] * sp_vol_CC[m][c];
 
          tmp = dp_drho[m] + dp_de[m] * 
-           (press_eos[m]*(sp_vol_CC[m][c] * sp_vol_CC[m][c]));  
+           (press_eos[m]*(sp_vol_CC[m][c] * sp_vol_CC[m][c])); 
+/*`==========TESTING==========*/
+      //speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
+        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound 
+/*==========TESTING==========`*/           
         } 
-
         if(mpm_matl){                //  M P M
-          rho_micro[m][c] = mass_CC[m][c]/mat_vol[m][c];
-          mat_mass[m]     = mass_CC[m][c];
+          rho_micro[m][c]  = mass_CC[m][c]/mat_vol[m][c];
+          sp_vol_new[m][c] = 1/rho_micro[m][c];
+          mat_mass[m]      = mass_CC[m][c];
 
           mpm_matl->getConstitutiveModel()->
             computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
                               dp_drho[m], tmp,mpm_matl);
 
           mat_volume[m] = mat_vol[m][c];
+/*`==========TESTING==========*/
+      //speedSound_new[m][c] = tmp/gamma[m];    // Isothermal speed of sound
+        speedSound_new[m][c] = tmp;             // Isentropic speed of sound 
+/*==========TESTING==========`*/   
         }              
         matl_press[m][c] = press_eos[m];
         total_mat_vol += mat_volume[m];
 /*`==========TESTING==========*/
-        speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
-        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
-        compressibility[m] = sp_vol_CC[m][c]/ 
+// THESE OBNOXIOUS STATEMENTS WILL DISAPPEAR WHEN WE FIGURE OUT WHAT TO DO WITH 
+//  MPM'S SPEED OF SOUND.
+    //  speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
+    //  speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
+        kappa[m] = sp_vol_new[m][c]/ 
                             (speedSound_new[m][c] * speedSound_new[m][c]); 
 /*==========TESTING==========`*/
        }  // for ALLMatls...
@@ -129,12 +140,12 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
        double f_theta_denom = 0.0;
        for (int m = 0; m < numALLMatls; m++) {
          vol_frac[m][c] = mat_volume[m]/total_mat_vol;
-         f_theta_denom += vol_frac[m][c]*compressibility[m];
+         f_theta_denom += vol_frac[m][c]*kappa[m];
        }
        //__________________________________
        // Compute press_new
        for (int m = 0; m < numALLMatls; m++) {
-         f_theta[m][c] = vol_frac[m][c]*compressibility[m]/f_theta_denom;
+         f_theta[m][c] = vol_frac[m][c]*kappa[m]/f_theta_denom;
          press_new[c] += f_theta[m][c]*matl_press[m][c];
        }
     } // for(CellIterator...)
