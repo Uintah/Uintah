@@ -449,7 +449,7 @@ WARNING
      const vector<FaceType>* getBoundaryFaces() const { return &d_BoundaryFaces; }
      //////////
      // Return the list of corner cells for the given face.
-     const vector<IntVector>* getCornerCells(const Patch::FaceType face) const { return &(d_CornerCells[face]); }
+     const vector<IntVector> getCornerCells(const Patch::FaceType face) const { return d_CornerCells[face]; }
 
      static const int MAX_PATCH_SELECT = 32;
      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
