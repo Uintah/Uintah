@@ -58,17 +58,15 @@ using std::string;
                    _c = *++_p; *_p = _p[3]; _p[3] = _c; \
                    _c = *++_p; *_p = _p[1]; _p[1] = _c; }
 
-void swapbytes(short& i);
-void swapbytes(unsigned short& i);
-void swapbytes(int& i);
-void swapbytes(unsigned int& i);
-// Temporary for initial compile, must be removed
-void swapbytes(long int& i);
-void swapbytes(long long& i);
+void swapbytes(int16_t& i);
+void swapbytes(uint16_t& i);
+void swapbytes(int32_t& i);
+void swapbytes(uint32_t& i);
+void swapbytes(int64_t& i);
+void swapbytes(uint64_t& i);
 // /////////////////////////////////////////////
 void swapbytes(float& i);
 //void swapbytes(int64_t& i){SWAP_8(i);}
-void swapbytes(uint64_t& i);
 void swapbytes(double& i);
 void swapbytes(Point &i);
 void swapbytes(Vector &i);

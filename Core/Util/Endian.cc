@@ -2,17 +2,13 @@
 
 namespace SCIRun {
 
-void swapbytes(short& i){SWAP_2(i);}
-void swapbytes(unsigned short& i){SWAP_2(i);}
-void swapbytes(int& i){ SWAP_4(i);}
-void swapbytes(unsigned int& i){ SWAP_4(i);}
-// Temporary for initial compile, must be removed
-void swapbytes(long int& i){ SWAP_4(i);}
-void swapbytes(long long& i){ SWAP_8(i);}
-// /////////////////////////////////////////////
+void swapbytes(int16_t& i) { SWAP_2(i); }
+void swapbytes(uint16_t& i) { SWAP_2(i); }
+void swapbytes(int32_t& i) { SWAP_4(i); }
+void swapbytes(uint32_t& i) { SWAP_4(i); }
+void swapbytes(int64_t& i) { SWAP_8(i); }
+void swapbytes(uint64_t& i) { SWAP_8(i); }
 void swapbytes(float& i){SWAP_4(i);}
-//void swapbytes(int64_t& i){SWAP_8(i);}
-void swapbytes(uint64_t& i){SWAP_8(i);}
 void swapbytes(double& i){SWAP_8(i);}
 void swapbytes(Point &i){ // probably dangerous, but effective
      double* p = (double *)(&i);
