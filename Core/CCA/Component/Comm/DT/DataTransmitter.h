@@ -98,11 +98,17 @@ namespace SCIRun {
 
     Mutex *sendQ_mutex;
     Mutex *recvQ_mutex;
+    Mutex *sockmap_mutex;
 
     ConditionVariable *sendQ_cond;
     ConditionVariable *recvQ_cond;
 
+    //number of TD threads have quit
+    //0: all are running, 3: all quit
+    //int nquit; 
+
     bool quit;
+    bool quitSending;
   };
 
 }//namespace SCIRun
