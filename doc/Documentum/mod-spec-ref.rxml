@@ -1,20 +1,20 @@
-<?xml version="1.0" encoding="UTF-8" ?> <!-- -*- nxml -*- -->
+<?xml version="1.0" encoding="UTF-8" ?><!-- -*- nxml -*- -->
 
 <!--
-  The contents of this file are subject to the University of Utah Public
-  License (the "License"); you may not use this file except in compliance
-  with the License.
-  
-  Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-  License for the specific language governing rights and limitations under
-  the License.
-  
-  The Original Source Code is SCIRun, released March 12, 2001.
-  
-  The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
 -->
 
 <!--% require("../Utilities/Publish/srdoc.rb") %-->
@@ -29,31 +29,32 @@
     <chapter id="chapter.introduction">
       <title>Justification</title>
       <para>This section introduces the SCIRun module specification
-language.</para>
+      language.</para>
       <sect1>
 	<title>Purpose</title>
 	<para>Writing a module specification should be one of the first
-steps in the design and implementation of a module.</para>
+	steps in the design and implementation of a module.</para>
 	<para>A module specification documents the use, design,
-implementation, and testing of a SCIRun module.</para>
+	implementation, and testing of a SCIRun module.</para>
 	<para><acronym>HTML</acronym> and <acronym>PDF</acronym>
-documention for a module are generated from a module specification.  A
-module's source code can be partially generated from its module
-specification.</para>
+	documention for a module are generated from a module specification.  A
+	module's source code can be partially generated from its module
+	specification.</para>
 	<para>A module specification is written in an
-<acronym>XML</acronym>-based mark-up language.  The rest of this
-document describes the grammer and semantics of the module
-specificition language.</para>
+	<acronym>XML</acronym>-based mark-up language.  The rest of this
+	document describes the grammer and semantics of the module
+	specificition language.</para>
       </sect1>
       <sect1>
 	<title><acronym>XML</acronym> Language</title>
 	<para>An <acronym>XML</acronym> formulation of the module
-specification is used to achieve the following goals:</para>
+	specification is used to achieve the following goals:</para>
 	<variablelist>
 	  <varlistentry>
 	    <term>Data centric viewpoint</term>
 	    <listitem>
-	      <para>Represent the module specification as a set of data to be used in several contexts.</para>
+	      <para>Represent the module specification as a set of
+	      data to be used in several contexts.</para>
 	    </listitem>
 	  </varlistentry>
 	  <varlistentry>
@@ -77,24 +78,20 @@ specification is used to achieve the following goals:</para>
 	</para>
       </sect1>
       <sect1>
-	<title>Module Description <acronym>DTD</acronym></title>
-	<para>A <firstterm>Document Type Definition</firstterm>
-	(<acronym>DTD</acronym>) defines a set of elements, element
+	<title>Module Specification Schema</title>
+	<para>An XML Schema defines a set of elements, element
 	attributes, and the way they may be used in order to produce a
-	valid document.</para>
+	valid document.  The module specification language definition
+	is available as a <acronym>DTD</acronym> and as a RELAX NG
+	schema.</para>
+	<para></para>
 	<para>The module specification <acronym>DTD</acronym> can be
-	found, relative to the top of the SCIRun tree, here:</para>
-	<literallayout>src/Dataflow/XML/component.dtd</literallayout>
-	<para>The module specification <acronym>DTD</acronym> is used
-	to validate module specifications.  <xref
-	    linkend="sect.validation"/> shows how to validate a module
-	specification document.</para>
-	<para>The module specification <acronym>DTD</acronym> can
-	assist the creation and editing of module specifications.
-	<xref linkend="chap.edit-mode-spec"/> shows how to use the
-	module specification <acronym>DTD</acronym> to edit module
-	specifications.</para>
-      </sect1>
+	found, relative to the top of the SCIRun tree, here:
+	<literallayout
+	class="monospaced">src/Dataflow/XML/component.dtd</literallayout>.
+	The RELAX NG schema can be found here: <literallayout
+	class="monospaced">src/Dataflow/XML/component.rnc</literallayout></para>
+	</sect1>
     </chapter>
 
     <chapter id="chap.edit-mode-spec">
@@ -102,42 +99,103 @@ specification is used to achieve the following goals:</para>
       <sect1>
 	<title>Emacs</title>
 	<para>Any text editor can be used to create a module
-specification document's content.  However, because it is easy to get
-lost in the <quote>noise</quote> of <acronym>XML</acronym> syntax, it
-is best to use an <acronym>XML</acronym>/<acronym>DTD</acronym> aware
-editor.  This type of editor will help construct a valid module
-specification document.  Emacs is one such editor.</para>
-	<para>Emacs supports an editing environment called
-<acronym>XML</acronym> mode, a derivative of <acronym>PSGML</acronym>
-mode.  <acronym>XML</acronym> mode highlights <acronym>XML</acronym>
-syntax, indents nested elements and their content, and suggests
-elements that are valid at the position of the insertion point.
-However, it is still possible to create invalid documents using Emacs
-<acronym>XML</acronym> mode.</para>
-	<para>Recent versions of Emacs come with
-<acronym>XML</acronym> mode installed.  To check if
-<acronym>XML</acronym> mode is installed,  type <userinput>M-x
-xml-mode</userinput>.   <acronym>XML</acronym> mode is
-<emphasis>not</emphasis> installed if Emacs displays the message
-<screen>[No match]</screen> in return.</para>
-	<para>Use of Emacs <acronym>XML</acronym> mode is described in
-the following sections.</para>
+	specification document's content.  However, because it is easy
+	to get lost in the <quote>noise</quote> of
+	<acronym>XML</acronym> syntax, it is best to use an
+	<acronym>XML</acronym>/Schema (e.g. <acronym>DTD</acronym>,
+	Relax NG) aware editor.  This type of editor will help
+	construct a valid module specification document.  Emacs is one
+	such editor.</para>
+	<para>Emacs supports editing environments
+	<acronym>PSGML</acronym> mode and nxml mode.  These modes
+	highlight <acronym>XML</acronym> syntax, indent nested
+	elements and their content, and suggest elements based
+	on the position of the insertion point.  Nxml mode
+	performs on-the-fly validation (<acronym>PSGML</acronym> does
+	not).</para>
+	<para>Nxml mode can be downloaded from:</para>
+	<literallayout class="monospaced">
+	  http://www.thaiopensource.com/download/
+	</literallayout>
+	<para>Information on the use of nxml mode can be found here:
+	<literallayout>
+	  http://www.xmlhack.com/read.php?item=2061	  
+	</literallayout></para>
+	<para>PSGML mode can be downloaded from:</para>
+	<literallayout class="monospaced">
+	  http://sourceforge.net/projects/psgml/	  
+	</literallayout>
+	<para>Information on the use of psgml mode can be found here:
+	<literallayout class="monospaced">
+	  http://www.lysator.liu.se/~lenst/about_psgml/	  
+	</literallayout></para>
       </sect1>
 
       <sect1>
-	<title>.emacs</title>
+	<title>Nxml Prerequisites</title>
+	<sect2>
+	  <title>Installation</title>
+	  <para>Nxml mode should be installed in a sub-directory of
+	  emacs'<filename>site-lisp</filename> directory.  Typically
+	  <filename>/usr/share/emacs/sitelisp/nxml</filename>.</para>
+	  <para>After installing nxml, file
+	  <filename>component.rnc</filename> must be copied to
+	  <filename>nxml/schema</filename>.</para>
+	  <para>The following lines must be added to file
+	  <filename>nxml/schema/schemas.xml</filename>:
+	  <literallayout class="monospaced">
+&lt;documentElement prefix="" localName="component" typeId="Component"/&gt;
+&lt;typeId id="Component" uri="component.rnc"/&gt;
+	  </literallayout>
+	  </para>
+	</sect2>
+	<sect2>
+	  <title>.emacs (nxml mode)</title>
+	  <para>The following lisp code should be inserted into Emacs'
+	  <filename>.emacs</filename> initialization file prior to using
+	  nxml mode:</para>
+	  <programlisting>
+(load "nxml/rng-auto")
+(setq auto-mode-alist
+(append
+'(("\\.xml" . nxml-mode)
+("\\.rxml" . nxml-mode)
+("\\.html" . nxml-mode)
+("\\.rhtml" . nxml-mode))
+auto-mode-alist))
+(make-face 'nxml-delimited-data-face)
+(make-face 'nxml-name-face)
+(make-face 'nxml-ref-face)
+(make-face 'nxml-delimiter-face)
+(make-face 'nxml-comment-content-face)
+(make-face 'nxml-comment-delimiter-face)
+(set-face-foreground 'nxml-delimited-data-face "grey55")
+(set-face-foreground 'nxml-name-face "#257A25")
+(set-face-foreground 'nxml-ref-face "#9292C9")
+(set-face-foreground 'nxml-delimiter-face "#9292C9")
+(set-face-foreground 'nxml-comment-content-face "orange")
+(set-face-foreground 'nxml-comment-delimiter-face "orange")
+	  </programlisting>
+	</sect2>
+      </sect1>
+
+      <sect1>
+	<title>PSGML Prerequisites</title>
+	<sect2>
+	<title>.emacs (<acronym>SGML</acronym> mode)</title>
 	<para>The following lisp code should be inserted into Emacs'
-<filename>.emacs</filename> initialization file:</para>
+	<filename>.emacs</filename> initialization file prior to using
+	<acronym>SGML</acronym> mode:</para>
 	<programlisting>
 ;; Setup autoloading
 (require 'psgml)
 (autoload 'sgml-mode "psgml" "Major mode to edit SGML files" t)
 (autoload 'xml-mode "psgml" "Major mode to edit XML files." t) 
 (setq auto-mode-alist
-      (append
-	 ("\\.xml" . xml-mode)
-	 ("\\.html" . sgml-mode)
-       auto-mode-alist))
+(append
+'(("\\.xml" . xml-mode)
+("\\.html" . sgml-mode))
+auto-mode-alist))
 
 ;; Indent tags but not content.
 (setq sgml-indent-step 2)
@@ -160,20 +218,19 @@ the following sections.</para>
 ;; Assign faces to sgml objects
 (setq sgml-set-face t)
 (setq sgml-markup-faces 
-      '((comment   . sgml-comment-face) 
-	(start-tag . sgml-start-tag-face) 
-	(end-tag   . sgml-end-tag-face) 
-	(doctype   . sgml-doctype-face) 
-	(entity    . sgml-entity-face))) 
-</programlisting>
-	<para>Restart Emacs after editing its
-<filename>.emacs</filename> file.</para>
+'((comment   . sgml-comment-face) 
+(start-tag . sgml-start-tag-face) 
+(end-tag   . sgml-end-tag-face) 
+(doctype   . sgml-doctype-face) 
+(entity    . sgml-entity-face))) 
+	</programlisting>
+	</sect2>
       </sect1>
 
       <sect1>
 	<title>Creating a Module Specification</title>
 	<para>To create a new module specification follow these
-steps:</para>
+	steps:</para>
 	<orderedlist>
 	  <listitem>
 	    <para></para>
@@ -191,28 +248,29 @@ steps:</para>
       <title>Example</title>
       <para></para>
       <literallayout class="monospaced">
-</literallayout>
+      </literallayout>
     </chapter>
 
   </part>
 
   <part>
+    <title>Module Description Element Reference</title>
+    <partintro>
+      <sect1>
+	<title>Organization</title>
+	<para></para>
+      </sect1>
+      <sect1>
+	<title>Content Models</title>
+	<para></para>
+      </sect1>
+      <sect1>
+	<title>Attribute Types</title>
+	<para></para>
+      </sect1>
+    </partintro>
     <reference>
       <title>Module Description Element Reference</title>
-      <partintro>
-	<sect1>
-	  <title>Organization</title>
-	  <para></para>
-	</sect1>
-	<sect1>
-	  <title>Content Models</title>
-	  <para></para>
-	</sect1>
-	<sect1>
-	  <title>Attribute Types</title>
-	  <para></para>
-	</sect1>
-      </partintro>
 
       <!--===== author -->
       <refentry id="refentry.author">
@@ -230,14 +288,14 @@ steps:</para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">is the full name of
-one author</sgmltag></para>
+	  one author</sgmltag></para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-class="element">author</sgmltag>: <link
-linkend="refentry.authors"><sgmltag
-class="element">authors</sgmltag></link></para>
+	  class="element">author</sgmltag>: <link
+	  linkend="refentry.authors"><sgmltag
+	  class="element">authors</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -257,14 +315,14 @@ class="element">authors</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">authors</sgmltag> lists
-the authors of a module.</para>
+	  the authors of a module.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-class="element">authors</sgmltag>: <link
-linkend="refentry.overview"><sgmltag
-class="element">overview</sgmltag></link></para>
+	  class="element">authors</sgmltag>: <link
+	  linkend="refentry.overview"><sgmltag
+	  class="element">overview</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -284,13 +342,13 @@ class="element">overview</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">ccfile</sgmltag>
-	specifies the name of one c++ source code file.</para>
+	  specifies the name of one c++ source code file.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-	class="element">ccfile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
-	class="element">implementation</sgmltag></link></para>
+	  class="element">ccfile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
+	  class="element">implementation</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -310,13 +368,13 @@ class="element">overview</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">cfile</sgmltag>
-	specifies the name of one c source code file.</para>
+	  specifies the name of one c source code file.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-	class="element">cfile</sgmltag>: <link linkend="refentry.implentation"><sgmltag
-	class="element">implementation</sgmltag></link></para>
+	  class="element">cfile</sgmltag>: <link linkend="refentry.implentation"><sgmltag
+	  class="element">implementation</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -331,7 +389,7 @@ class="element">overview</sgmltag></link></para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">component</sgmltag> ::= <link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link>, <link linkend="refentry.implementation"><sgmltag class="element">implementation</sgmltag></link>?, <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link>, <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link>?, <link linkend="refentry.nets"><sgmltag class="element">nets</sgmltag></link>? ,<link linkend="refentry.testing"><sgmltag class="element">testing</sgmltag></link>?
-          </synopsis>
+	    </synopsis>
 	  </refsect2>
 	  <refsect2>
 	    <title>Attributes</title>
@@ -363,8 +421,8 @@ class="element">overview</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Top-level module description element.  All module
-descriptions start with this element.  All other elements are enclosed
-by this one.</para>
+	  descriptions start with this element.  All other elements are enclosed
+	  by this one.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Attributes</title>
@@ -373,16 +431,16 @@ by this one.</para>
 	      <term>name</term>
 	      <listitem>
 		<para><sgmltag class="attribute">Name</sgmltag>
-	      specifies a module's name.  <sgmltag
-	      class="attribute">Name</sgmltag>'s value must be unique
-	      among module names in a module's category.</para>
+		specifies a module's name.  <sgmltag
+		class="attribute">Name</sgmltag>'s value must be unique
+		among module names in a module's category.</para>
 	      </listitem>
 	    </varlistentry>
 	    <varlistentry>
 	      <term>category</term>
 	      <listitem>
 		<para><sgmltag class="attribute">Category</sgmltag> specifies the
-module's category.</para>
+		module's category.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -423,7 +481,7 @@ module's category.</para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">description</sgmltag> ::= (<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
-<link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
+	    <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
 	  </refsect2>
 	  <refsect2>
 	    <title>Attributes</title>
@@ -450,10 +508,10 @@ module's category.</para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">description</sgmltag>
-is a small documentation environment.  It is used in several places to
-document a particular aspect of a module.  It offers many markup
-tags equivalent to those found in xhtml.  A number of tags are
-unique to the task of writing module descriptions.</para>
+	  is a small documentation environment.  It is used in several places to
+	  document a particular aspect of a module.  It offers many markup
+	  tags equivalent to those found in xhtml.  A number of tags are
+	  unique to the task of writing module descriptions.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Attributes</title>
@@ -462,13 +520,13 @@ unique to the task of writing module descriptions.</para>
 	      <term><sgmltag class="attribute">id</sgmltag></term>
 	      <listitem>
 		<para><sgmltag class="attribute">Id</sgmltag> is an
-identifying string for a <sgmltag
-class="element">description</sgmltag> element. It must be unique
-within a module description and must begin with a letter.</para>
+		identifying string for a <sgmltag
+		class="element">description</sgmltag> element. It must be unique
+		within a module description and must begin with a letter.</para>
 		<para>Attribute <sgmltag class="attribute">id</sgmltag>
-is used with element <link linkend="refentry.xref"><sgmltag
-class="element">xref</sgmltag></link> to create cross-references
-within a module description document.</para>
+		is used with element <link linkend="refentry.xref"><sgmltag
+		class="element">xref</sgmltag></link> to create cross-references
+		within a module description document.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -476,16 +534,16 @@ within a module description document.</para>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain
-<sgmltag>description</sgmltag>: <simplelist type="inline">
-	      <member><link linkend="refentry.device"><sgmltag class="element">device</sgmltag></link></member>
-	      <member><link linkend="refentry.file"><sgmltag class="element">file</sgmltag></link></member>
-	      <member><link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link></member>
-	      <member><link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link></member>
-	      <member><link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link></member>
-	      <member><link linkend="refentry.plan"><sgmltag class="element">plan</sgmltag></link></member>
-	      <member><link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link></member>
-	    </simplelist>
-</para>
+	  <sgmltag>description</sgmltag>: <simplelist type="inline">
+	  <member><link linkend="refentry.device"><sgmltag class="element">device</sgmltag></link></member>
+	  <member><link linkend="refentry.file"><sgmltag class="element">file</sgmltag></link></member>
+	  <member><link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link></member>
+	  <member><link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link></member>
+	  <member><link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link></member>
+	  <member><link linkend="refentry.plan"><sgmltag class="element">plan</sgmltag></link></member>
+	  <member><link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link></member>
+	  </simplelist>
+	  </para>
 	</refsect1>
       </refentry>
 
@@ -500,7 +558,7 @@ within a module description document.</para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">developer</sgmltag> ::= (<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
-<link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)</synopsis>
+	    <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)</synopsis>
 	  </refsect2>
 	</refsect1>
 	<refsect1>
@@ -533,8 +591,8 @@ within a module description document.</para>
 	<refnamediv>
 	  <refname>examplesr</refname>
 	  <refpurpose>Specifies the path of a SCIRun network file which
-demonstrates the use of a module.
-<emphasis>Deprecated</emphasis></refpurpose>
+	  demonstrates the use of a module.
+	  <emphasis>Deprecated</emphasis></refpurpose>
 	</refnamediv>
 	<refsect1>
 	  <title>Synopsis</title>
@@ -546,17 +604,17 @@ demonstrates the use of a module.
 	<refsect1>
 	  <title>Description</title>
 	  <para>Specifies the path of a SCIRun network file which
-demonstrates the use of a module.  Element <sgmltag
-class="element">examplesr</sgmltag> is deprecated.  Element <link
-linkend="refentry.nets"><sgmltag class="element">nets</sgmltag></link>
-is now used to demonstrate the use of a module in a network.</para>
+	  demonstrates the use of a module.  Element <sgmltag
+	  class="element">examplesr</sgmltag> is deprecated.  Element <link
+	  linkend="refentry.nets"><sgmltag class="element">nets</sgmltag></link>
+	  is now used to demonstrate the use of a module in a network.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-class="element">examplesr</sgmltag>: <link
-linkend="refentry.overview"><sgmltag
-class="element">overview</sgmltag></link></para>
+	  class="element">examplesr</sgmltag>: <link
+	  linkend="refentry.overview"><sgmltag
+	  class="element">overview</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -576,13 +634,13 @@ class="element">overview</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">ffile</sgmltag>
-	specifies the name of one fortran source code file.</para>
+	  specifies the name of one fortran source code file.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-	class="element">ffile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
-	class="element">implementation</sgmltag></link></para>
+	  class="element">ffile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
+	  class="element">implementation</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -596,7 +654,7 @@ class="element">overview</sgmltag></link></para>
 	  <title>Synopsis</title>
 	  <refsect2>
 	    <title>Content Model</title>
-	  <synopsis><sgmltag class="element">figure</sgmltag> ::= (<link linkend="refentry.img"><sgmltag class="element">img</sgmltag></link>,<link linkend="refentry.caption"><sgmltag class="element">caption</sgmltag></link>)</synopsis>
+	    <synopsis><sgmltag class="element">figure</sgmltag> ::= (<link linkend="refentry.img"><sgmltag class="element">img</sgmltag></link>,<link linkend="refentry.caption"><sgmltag class="element">caption</sgmltag></link>)</synopsis>
 	  </refsect2>
 	  <refsect2>
 	    <title>Attributes</title>
@@ -623,7 +681,7 @@ class="element">overview</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">figure</sgmltag> is a
-captioned image.</para>
+	  captioned image.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Attributes</title>
@@ -632,13 +690,13 @@ captioned image.</para>
 	      <term><sgmltag class="attribute">id</sgmltag></term>
 	      <listitem>
 		<para><sgmltag class="attribute">Id</sgmltag> is an
-identifying string for a <sgmltag class="element">figure</sgmltag>
-element. <sgmltag class="attribute">Id</sgmltag> must be unique within
-a module specification and must begin with a letter.</para>
+		identifying string for a <sgmltag class="element">figure</sgmltag>
+		element. <sgmltag class="attribute">Id</sgmltag> must be unique within
+		a module specification and must begin with a letter.</para>
 		<para>Attribute <sgmltag class="attribute">id</sgmltag>
-is used with element <link linkend="refentry.xref"><sgmltag
-class="element">xref</sgmltag></link> to create cross-references
-within a module specification document.</para>
+		is used with element <link linkend="refentry.xref"><sgmltag
+		class="element">xref</sgmltag></link> to create cross-references
+		within a module specification document.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -654,18 +712,18 @@ within a module specification document.</para>
 	<refnamediv>
 	  <refname>file</refname>
 	  <refpurpose>Describe type and content of data in a file</refpurpose>
-      </refnamediv>
+	</refnamediv>
 	<refsect1>
 	  <title>Synopsis</title>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">file</sgmltag> ::= (<link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>,<link linkend="refentry.datatype">datatype</link>)</synopsis>
-	 </refsect2>
+	  </refsect2>
 	</refsect1>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag>file</sgmltag> describes the type and
-content of data in a file.</para>
+	  content of data in a file.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
@@ -689,23 +747,23 @@ content of data in a file.</para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">gui</sgmltag>
-documents the use of a module's graphical user interface.</para>
+	  documents the use of a module's graphical user interface.</para>
 	  <para>Use of content model fragment <synopsis>(<link
-linkend="refentry.img"><sgmltag class="element">img</sgmltag></link>,
-<link linkend="refentry.caption"><sgmltag
-class="element">caption</sgmltag></link>?)*</synopsis> is deprecated.
-Instead, screenshots of a module's <acronym>GUI</acronym> should be
-presented within the <link linkend="refentry.description"><sgmltag
-class="element">description</sgmltag></link> element using <link
-linkend="refentry.figure"><sgmltag
-class="element">figure</sgmltag></link>s and <link
-linkend="refentry.xref"><sgmltag
-class="element">xref</sgmltag></link>s.</para>
+	  linkend="refentry.img"><sgmltag class="element">img</sgmltag></link>,
+	  <link linkend="refentry.caption"><sgmltag
+	  class="element">caption</sgmltag></link>?)*</synopsis> is deprecated.
+	  Instead, screenshots of a module's <acronym>GUI</acronym> should be
+	  presented within the <link linkend="refentry.description"><sgmltag
+	  class="element">description</sgmltag></link> element using <link
+	  linkend="refentry.figure"><sgmltag
+	  class="element">figure</sgmltag></link>s and <link
+	  linkend="refentry.xref"><sgmltag
+	  class="element">xref</sgmltag></link>s.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag class="element">gui</sgmltag>: <link
-linkend="refentry.component"><sgmltag class="element">component</sgmltag></link></para>
+	  linkend="refentry.component"><sgmltag class="element">component</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -729,8 +787,8 @@ linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain
-<sgmltag class="element">implementation</sgmltag>: <link
-linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
+	  <sgmltag class="element">implementation</sgmltag>: <link
+	  linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
 	</refsect1>
       </refentry>
 
@@ -760,15 +818,15 @@ linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>
 		<tbody>
 		  <row>
 		    <entry>
-		    <sgmltag class="attribute">lastportdynamic</sgmltag>
-		  </entry>
+		      <sgmltag class="attribute">lastportdynamic</sgmltag>
+		    </entry>
 		    <entry>
-		    <emphasis>Enumeration:</emphasis>
-		    <simplelist>
+		      <emphasis>Enumeration:</emphasis>
+		      <simplelist>
 			<member>no</member>
 			<member>yes</member>
 		      </simplelist>
-		  </entry>
+		    </entry>
 		    <entry>no</entry>
 		  </row>
 		</tbody>
@@ -779,8 +837,8 @@ linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">inputs</sgmltag>
-	specifies and documents a module's inputs.  An input may come
-	from a port, file, or device.</para>
+	  specifies and documents a module's inputs.  An input may come
+	  from a port, file, or device.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Attributes</title>
@@ -789,8 +847,8 @@ linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>
 	      <term>lastportdynamic</term>
 	      <listitem>
 		<para>Specifies whether a new instance of a module's
-	      last port is dynamically created when a connection is
-	      made to a module's last port.</para>
+		last port is dynamically created when a connection is
+		made to a module's last port.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -806,7 +864,7 @@ linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>
 	<refnamediv>
 	  <refname><sgmltag class="element">label</sgmltag></refname>
 	  <refpurpose>A label (text) associated with a <acronym>GUI</acronym>
-widget.</refpurpose>
+	  widget.</refpurpose>
 	</refnamediv>
 	<refsect1>
 	  <title>Synopsis</title>
@@ -818,15 +876,15 @@ widget.</refpurpose>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">label</sgmltag>
-specifies text associated with a <acronym>GUI</acronym>
-widget.</para>
+	  specifies text associated with a <acronym>GUI</acronym>
+	  widget.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-class="element">label</sgmltag>: <link
-linkend="refentry.parameter"><sgmltag
-class="element">parameter</sgmltag></link></para>
+	  class="element">label</sgmltag>: <link
+	  linkend="refentry.parameter"><sgmltag
+	  class="element">parameter</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -841,28 +899,28 @@ class="element">parameter</sgmltag></link></para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">modref</sgmltag> ::= (#PCDATA)</synopsis>
-	   </refsect2>
-	   <refsect2>
-	     <title>Attributes</title>
-	     <informaltable>
-	       <tgroup cols="3">
-		 <thead>
-		   <row>
-		     <entry>Name</entry>
-		     <entry>Type</entry>
-		     <entry>Default</entry>
-		   </row>
-		 </thead>
-		 <tbody>
-		   <row>
-		     <entry>package</entry>
-		     <entry>NMTOKEN</entry>
-		     <entry><emphasis>Required</emphasis></entry>
-		   </row>
-		   <row>
-		     <entry>name</entry>
-		     <entry>CDATA</entry>
-		     <entry><emphasis>Required</emphasis></entry>
+	  </refsect2>
+	  <refsect2>
+	    <title>Attributes</title>
+	    <informaltable>
+	      <tgroup cols="3">
+		<thead>
+		  <row>
+		    <entry>Name</entry>
+		    <entry>Type</entry>
+		    <entry>Default</entry>
+		  </row>
+		</thead>
+		<tbody>
+		  <row>
+		    <entry>package</entry>
+		    <entry>NMTOKEN</entry>
+		    <entry><emphasis>Required</emphasis></entry>
+		  </row>
+		  <row>
+		    <entry>name</entry>
+		    <entry>CDATA</entry>
+		    <entry><emphasis>Required</emphasis></entry>
 		  </row>
 		</tbody>
 	      </tgroup>
@@ -875,7 +933,7 @@ class="element">parameter</sgmltag></link></para>
 	  cross-reference to another module specification.  Attributes
 	  <sgmltag class="attribute">name</sgmltag> and <sgmltag
 	  class="attribute">package</sgmltag> uniquely specify the
-	  reference module.  <sgmltag class="element">Modref</sgmltag>
+	  referenced module.  <sgmltag class="element">Modref</sgmltag>
 	  may be empty or may contain cross-reference text.  If
 	  <sgmltag class="element">modref</sgmltag> is empty, suitable
 	  cross-refence text will be generated.</para>
@@ -932,8 +990,8 @@ class="element">parameter</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">outputs</sgmltag>
-	specifies and documents a module's outputs.  An output may come
-	from a port, file, or device.</para>
+	  specifies and documents a module's outputs.  An output may come
+	  from a port, file, or device.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
@@ -975,7 +1033,7 @@ class="element">parameter</sgmltag></link></para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">net</sgmltag> := (<link linkend="refentry.title"><sgmltag class="element">title</sgmltag></link>,(<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
-<link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*)</synopsis>
+	    <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*)</synopsis>
 	  </refsect2>
 	  <refsect2>
 	    <title>Attributes</title>
@@ -1002,11 +1060,11 @@ class="element">parameter</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">net</sgmltag>
-is an environment for documenting the use of a
-module within a SCIRun network.  Element <sgmltag
-class="element">net</sgmltag>'s content model is identical to
-element <link linkend="refentry.description"><sgmltag
-class="element">description</sgmltag></link>'s content model.</para>
+	  is an environment for documenting the use of a
+	  module within a SCIRun network.  Element <sgmltag
+	  class="element">net</sgmltag>'s content model is identical to
+	  element <link linkend="refentry.description"><sgmltag
+	  class="element">description</sgmltag></link>'s content model.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Attributes</title>
@@ -1015,13 +1073,13 @@ class="element">description</sgmltag></link>'s content model.</para>
 	      <term><sgmltag class="attribute">id</sgmltag></term>
 	      <listitem>
 		<para><sgmltag class="attribute">Id</sgmltag> is an
-identifying string for a <sgmltag
-class="element">description</sgmltag> element. It must be unique
-within a module description and must begin with a letter.</para>
+		identifying string for a <sgmltag
+		class="element">description</sgmltag> element. It must be unique
+		within a module description and must begin with a letter.</para>
 		<para>Attribute <sgmltag class="attribute">id</sgmltag>
-is used with element <link linkend="refentry.xref"><sgmltag
-class="element">xref</sgmltag></link> to create cross-references
-within a module description document.</para>
+		is used with element <link linkend="refentry.xref"><sgmltag
+		class="element">xref</sgmltag></link> to create cross-references
+		within a module description document.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -1056,7 +1114,7 @@ within a module description document.</para>
 	<refnamediv>
 	  <refname><sgmltag class="element">overview</sgmltag></refname>
 	  <refpurpose>Lists a module's authors and describes a module's
-purpose.</refpurpose>
+	  purpose.</refpurpose>
 	</refnamediv>
 	<refsect1>
 	  <title>Synopsis</title>
@@ -1068,7 +1126,7 @@ purpose.</refpurpose>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">overview</sgmltag> lists a module's authors and describes a module's
-purpose.</para>
+	  purpose.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
@@ -1087,7 +1145,7 @@ purpose.</para>
 	  <synopsis><sgmltag>p</sgmltag> ::= <link
 	  linkend="refentry.firstterm"><sgmltag
 	  class="element">firstterm</sgmltag></link>|<link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link>|<link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link>|<link linkend="refentry.abbr"><sgmltag class="element">abbr</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link>|<link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link>|
-<link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>|<link linkend="refentry.link"><sgmltag class="element">rlink</sgmltag></link>|<link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link>|<link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link>|<link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link>|<link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link>|<link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link>|<link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
+	  <link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>|<link linkend="refentry.link"><sgmltag class="element">rlink</sgmltag></link>|<link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link>|<link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link>|<link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link>|<link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link>|<link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link>|<link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
 	</refsect1>
 	<refsect1>
 	  <title>Description</title>
@@ -1116,8 +1174,8 @@ purpose.</para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">parameter</sgmltag>
-documents the purpose and use of a module <acronym>GUI</acronym>
-<quote>parameter</quote>.</para>
+	  documents the purpose and use of a module <acronym>GUI</acronym>
+	  <quote>parameter</quote>.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
@@ -1141,19 +1199,19 @@ documents the purpose and use of a module <acronym>GUI</acronym>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">plan</sgmltag>
-outlines one plan for testing a module.  <sgmltag
-class="element">Plan</sgmltag> consists of a general test plan <link
-linkend="refentry.description"><sgmltag
-class="element">description</sgmltag></link> followed by one or more
-specfic test plan <link linkend="refentry.step"><sgmltag
-class="element">step</sgmltag></link>s.</para>
+	  outlines one plan for testing a module.  <sgmltag
+	  class="element">Plan</sgmltag> consists of a general test plan <link
+	  linkend="refentry.description"><sgmltag
+	  class="element">description</sgmltag></link> followed by one or more
+	  specfic test plan <link linkend="refentry.step"><sgmltag
+	  class="element">step</sgmltag></link>s.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain element <sgmltag
-class="element">plan</sgmltag>: <link
-linkend="refentry.testing"><sgmltag
-class="element">testing</sgmltag></link></para>
+	  class="element">plan</sgmltag>: <link
+	  linkend="refentry.testing"><sgmltag
+	  class="element">testing</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -1168,7 +1226,7 @@ class="element">testing</sgmltag></link></para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">section</sgmltag> ::= (<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
-<link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
+	    <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
 	  </refsect2>
 	  <refsect2>
 	    <title>Attributes</title>
@@ -1212,13 +1270,13 @@ class="element">testing</sgmltag></link></para>
 	      <term><sgmltag class="attribute">id</sgmltag></term>
 	      <listitem>
 		<para><sgmltag class="attribute">Id</sgmltag> is an
-identifying string for a <sgmltag
-class="element">section</sgmltag> element. It must be unique
-within a module description and must begin with a letter.</para>
+		identifying string for a <sgmltag
+		class="element">section</sgmltag> element. It must be unique
+		within a module description and must begin with a letter.</para>
 		<para>Attribute <sgmltag class="attribute">id</sgmltag>
-is used with element <link linkend="refentry.xref"><sgmltag
-class="element">xref</sgmltag></link> to create cross-references
-within a module description document.</para>
+		is used with element <link linkend="refentry.xref"><sgmltag
+		class="element">xref</sgmltag></link> to create cross-references
+		within a module description document.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
@@ -1249,22 +1307,22 @@ within a module description document.</para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">step</sgmltag> ::= (<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>|<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>|<link linkend="refentry.p"><sgmltag class="element">p</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link>|<link linkend="refentry.pre"><sgmltag class="element">pre</sgmltag></link>|
-<link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
+	    <link linkend="refentry.orderedlist"><sgmltag class="element">orderedlist</sgmltag></link>|<link linkend="refentry.unorderedlist"><sgmltag class="element">unorderedlist</sgmltag></link>|<link linkend="refentry.desclist"><sgmltag class="element">desclist</sgmltag></link>|<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>|<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>|<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link>)*</synopsis>
 	  </refsect2>
 	</refsect1>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">step</sgmltag>
-describes one step in a module's test plan.</para>
+	  describes one step in a module's test plan.</para>
 	  <para><sgmltag class="element">Step</sgmltag>'s content
-model is identical to  <link linkend="refentry.description"><sgmltag
-class="element">description</sgmltag></link>'s content model.</para>
+	  model is identical to  <link linkend="refentry.description"><sgmltag
+	  class="element">description</sgmltag></link>'s content model.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-class="element">step</sgmltag>: <link linkend="refentry.plan"><sgmltag
-class="element">plan</sgmltag></link></para>
+	  class="element">step</sgmltag>: <link linkend="refentry.plan"><sgmltag
+	  class="element">plan</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -1279,7 +1337,7 @@ class="element">plan</sgmltag></link></para>
 	  <refsect2>
 	    <title>Content Model</title>
 	    <synopsis><sgmltag class="element">summary</sgmltag> ::= #PCDATA | <link linkend="refentry.firstterm"><sgmltag class="element">firstterm</sgmltag></link> | <link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link> | <link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link> | <link linkend="refentry.abbr"><sgmltag class="element">abbr</sgmltag></link> | <link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link> | <link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link> | <link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link> | 
-<link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link> | <link linkend="refentry.rlink"><sgmltag class="element">rlink</sgmltag></link> | <link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link> | <link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link> |  <link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link> | <link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link> | <link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link> | <link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
+	    <link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link> | <link linkend="refentry.rlink"><sgmltag class="element">rlink</sgmltag></link> | <link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link> | <link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link> |  <link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link> | <link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link> | <link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link> | <link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
 	  </refsect2>
 	</refsect1>
 	<refsect1>
@@ -1308,14 +1366,14 @@ class="element">plan</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">testing</sgmltag>
-documents a plan for testing a module.</para>
+	  documents a plan for testing a module.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-class="element">testing</sgmltag>: <link
-linkend="refentry.component"><sgmltag
-class="element">component</sgmltag></link></para>
+	  class="element">testing</sgmltag>: <link
+	  linkend="refentry.component"><sgmltag
+	  class="element">component</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -1407,27 +1465,28 @@ class="element">component</sgmltag></link></para>
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">widget</sgmltag> is
-the generic name of an element in a <acronym>GUI</acronym>, e.g.
-<quote>scrollbar</quote>.</para>
+	  the generic name of an element in a <acronym>GUI</acronym>, e.g.
+	  <quote>scrollbar</quote>.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
 	  <para>The following elements contain <sgmltag
-class="element">widget</sgmltag>: <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link></para>
+	  class="element">widget</sgmltag>: <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
-     <!--===== xref  -->
-      <refentry id="refentry.modref">
+      <!--===== xref  -->
+      <refentry id="refentry.xref">
 	<refnamediv>
-	  <refname><sgmltag class="element"></sgmltag></refname>
-	  <refpurpose></refpurpose>
+	  <refname><sgmltag class="element">xref</sgmltag></refname>
+	  <refpurpose>An intra-document cross-reference</refpurpose>
 	</refnamediv>
 	<refsect1>
 	  <title>Synopsis</title>
 	  <refsect2>
 	    <title>Content Model</title>
-	    <synopsis></synopsis>
+	    <synopsis><sgmltag class="element">xref</sgmltag> ::=
+	    (#PCDATA)</synopsis>
 	  </refsect2>
 	  <refsect2>
 	    <title>Attributes</title>
@@ -1442,9 +1501,9 @@ class="element">widget</sgmltag>: <link linkend="refentry.parameter"><sgmltag cl
 		</thead>
 		<tbody>
 		  <row>
-		    <entry></entry>
-		    <entry></entry>
-		    <entry></entry>
+		    <entry><sgmltag class="attribute">target</sgmltag></entry>
+		    <entry>IDREF</entry>
+		    <entry><emphasis>Required</emphasis></entry>
 		  </row>
 		</tbody>
 	      </tgroup>
@@ -1453,22 +1512,34 @@ class="element">widget</sgmltag>: <link linkend="refentry.parameter"><sgmltag cl
 	</refsect1>
 	<refsect1>
 	  <title>Description</title>
-	  <para></para>
+	  <para>Element <sgmltag class="element">xref</sgmltag> is an
+	  intra-document cross-reference.  <sgmltag class="element">Xref</sgmltag>'s <sgmltag class="attribute">target</sgmltag> attribute provides the id of the cross-referenced element.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Attributes</title>
 	  <variablelist>
 	    <varlistentry>
-	      <term></term>
+	      <term><sgmltag class="attribute">target</sgmltag></term>
 	      <listitem>
-		<para></para>
+		<para>Attribute <sgmltag class="attribute">target</sgmltag> specifies the id of the cross-referenced element.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para></para>
+	  <para>The following elements contain <sgmltag
+	  class="element">modref</sgmltag>: <link
+	  linkend="refentry.title"><sgmltag
+	  class="element">title</sgmltag></link>, <link
+	  linkend="refentry.summary"><sgmltag
+	  class="element">summary</sgmltag></link>, <link
+	  linkend="refentry.author"><sgmltag
+	  class="element">author</sgmltag></link>, <link
+	  linkend="refentry.caption"><sgmltag
+	  class="element">caption</sgmltag></link>, <link
+	  linkend="refentry.p"><sgmltag
+	  class="element">p</sgmltag></link>.</para>
 	</refsect1>
       </refentry>
 
