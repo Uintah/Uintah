@@ -86,7 +86,7 @@ Roe::Roe(Salmon* s, const clString& id)
     ball = new BallData();
     ball->Init();
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-    bawgl = new SCIBaWGL("/home/sci/u2/VR/bench.config");
+    bawgl = new SCIBaWGL();
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 }
 
@@ -559,6 +559,78 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
     }
 }
 
+//>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+static int prevPrinc;
+void Roe::bawgl_pick(int action, GLint iv[3], GLfloat fv[3])
+{
+    BState bs;
+    switch(action) {
+    case BAWGL_PICK_START:
+	{
+	    
+	    current_renderer->get_pick(manager, this, iv[0], iv[1],
+				       pick_obj, pick_pick, pick_n); 
+	    if (pick_obj){
+		update_mode_string(pick_obj);
+		pick_pick->set_index(pick_n);
+		pick_pick->pick(this,bs);
+		total_x=0;
+		total_y=0;
+		total_z=0;
+		//need_redraw=1;
+	    } else {
+		update_mode_string("pick: none");
+	    }
+
+	}
+    break;
+    case BAWGL_PICK_MOVE:
+	{
+	    if (!pick_obj || !pick_pick) break;
+	    Vector dir(fv[0],fv[1],fv[2]);
+	    //float dv= sqrt(fv[0]*fv[0]+fv[1]*fv[1]+fv[2]*fv[2]);
+	    //pick_pick->moved(0, dv, dir, bs);
+
+	    double maxdot=0;
+	    int prin_dir=-1;
+	    for (int i=0; i<pick_pick->nprincipal(); i++) {
+		double pdot=Dot(dir, pick_pick->principal(i));
+		if(pdot > maxdot){
+		    maxdot=pdot;
+		    prin_dir=i;
+		}
+	    }
+	    if(prin_dir != -1){
+		prevPrinc= prin_dir;
+		double dist=dir.length();
+		Vector mtn(pick_pick->principal(prin_dir)*dist);
+		total_x+=mtn.x();
+		total_y+=mtn.y();
+		total_z+=mtn.z();
+		if (Abs(total_x) < .0001) total_x=0;
+		if (Abs(total_y) < .0001) total_y=0;
+		if (Abs(total_z) < .0001) total_z=0;
+		update_mode_string(pick_obj);
+		pick_pick->moved(prin_dir, dist, mtn, bs);
+	    } else {
+		update_mode_string("pick: Bad direction...");
+	    }
+	}
+    break;
+    case BAWGL_PICK_END:
+	{
+	    if(pick_pick){
+		pick_pick->release( bs );
+	    }
+	    pick_pick=0;
+	    pick_obj=0;
+	    update_mode_string("");
+	}
+    break;
+    }
+}
+//<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<
+
 void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 {
     BState bs;
@@ -826,7 +898,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
       current_renderer->setvisual(args[2], idx, width, height);
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
    } else if(args[1] == "startbawgl") {
-        if( bawgl->start(this)  == 0 )
+        if( bawgl->start(this, "bench.config")  == 0 )
 	  {
 	    bawgl_error = 0;
 	  }
@@ -1094,7 +1166,7 @@ void Roe::dump_objects(const clString& filename, const clString& format)
 	}
 	delete stream;
 	manager->geomlock.readUnlock();
-    } else {
+   } else {
 	cerr << "WARNING: format " << format << " not supported!\n";
     }
 }
@@ -1115,6 +1187,9 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.8  1999/10/21 22:39:06  ikits
+// Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
+//
 // Revision 1.7  1999/10/16 20:50:59  jmk
 // forgive me if I break something -- this fixes picking and sets up sci
 // bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology

@@ -133,7 +133,7 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
     di->set_matl(matl);
     glPushName((GLuint)this);
     glPushName(0x12345678);
-    if(di->pickchild) cerr << "picking a child " <<(GLuint)this << endl;
+    //if(di->pickchild) cerr << "picking a child " <<(GLuint)this << endl;
     return 1;
   }
   else return 0;
@@ -1980,7 +1980,7 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
     if(drawOnlyOnPick && !di->pickmode) return;
     if(di->pickmode){
-    cerr <<"found a widget " << (GLuint)this << endl;
+	// cerr <<"found a widget " << (GLuint)this << endl;
 	++di->npicks;
 #if (_MIPS_SZPTR == 64)
 	unsigned long o=(unsigned long)this;
@@ -4152,6 +4152,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.13  1999/10/21 22:39:07  ikits
+// Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
+//
 // Revision 1.12  1999/10/16 20:51:00  jmk
 // forgive me if I break something -- this fixes picking and sets up sci
 // bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
