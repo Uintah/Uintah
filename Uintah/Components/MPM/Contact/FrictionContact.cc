@@ -222,12 +222,15 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       new_dw->get(gmass[vfi], gMassLabel,vfi , region, 0);
       new_dw->allocate(gsurfnorm, gSurfNormLabel, vfi, region);
 
+      gsurfnorm.initialize(Vector(0.0,0.0,0.0));
+
       IntVector lowi(gsurfnorm.getLowIndex());
       IntVector highi(gsurfnorm.getHighIndex());
 
 //      cout << "Low" << lowi << endl;
 //      cout << "High" << highi << endl;
 
+      // Compute the normals for all of the interior nodes
       for(int i = lowi.x()+1; i < highi.x()-1; i++){
         for(int j = lowi.y()+1; j < highi.y()-1; j++){
           for(int k = lowi.z()+1; k < highi.z()-1; k++){
@@ -235,11 +238,87 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 	        -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
          	-(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
 	        -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
-		double length = surnor.length();
-		if(length>0.0){
+	     double length = surnor.length();
+	     if(length>0.0){
 	    	 gsurfnorm[IntVector(i,j,k)] = surnor/length;;
-		}
+	     }
           }
+        }
+      }
+
+     // Compute normals on the surface nodes assuming a single region
+     // with reflective boundaries.  This needs to be generalized for
+     // running in parallel.
+
+      // Compute the normals for the x-surface nodes
+      for(int j = lowi.y()+1; j < highi.y()-1; j++){
+        for(int k = lowi.z()+1; k < highi.z()-1; k++){
+           int i=lowi.x();
+	   surnor = Vector(
+	      0.0,
+	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	   double length = surnor.length();
+	   if(length>0.0){
+	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	   }
+           i=highi.x();
+	   surnor = Vector(
+	      0.0,
+	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	   length = surnor.length();
+	   if(length>0.0){
+	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	   }
+        }
+      }
+
+      // Compute the normals for the y-surface nodes
+      for(int i = lowi.x()+1; i < highi.x()-1; i++){
+        for(int k = lowi.z()+1; k < highi.z()-1; k++){
+           int j=lowi.y();
+	   surnor = Vector(
+	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
+	      0.0,
+	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	   double length = surnor.length();
+	   if(length>0.0){
+	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	   }
+           j=highi.y();
+	   surnor = Vector(
+	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
+	      0.0,
+	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
+	   length = surnor.length();
+	   if(length>0.0){
+	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	   }
+        }
+      }
+
+      // Compute the normals for the z-surface nodes
+      for(int i = lowi.x()+1; i < highi.x()-1; i++){
+        for(int j = lowi.y()+1; j < highi.y()-1; j++){
+           int k=lowi.z();
+	   surnor = Vector(
+	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
+	      0.0);
+	   double length = surnor.length();
+	   if(length>0.0){
+	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	   }
+           k=highi.z();
+	   surnor = Vector(
+	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
+	      0.0);
+	   length = surnor.length();
+	   if(length>0.0){
+	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	   }
         }
       }
 
@@ -379,7 +458,6 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       new_dw->allocate(gnormtraction, gNormTractionLabel, vfindex, region);
 
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
-//	gnormtraction[*iter]=SCICore::Geometry::Dot(gsurfnorm[*iter]*gstress[*iter],gsurfnorm[*iter]);
 	gnormtraction[*iter]=
 			Dot(gsurfnorm[*iter]*gstress[*iter],gsurfnorm[*iter]);
       }
@@ -443,7 +521,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 	    // is in direction of surface normal.
 	    Dvdt = -gvelocity_star[n][*iter];
 	    if(compare( (deltaVelocity
-			 -surfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
+		 -surfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
 	      gvelocity_star[n][*iter]-= surfnorm[n][*iter]*normalDeltaVelocity;
 	    }
 	    else{
@@ -474,6 +552,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.14  2000/05/08 21:55:54  guilkey
+// Added calculation of surface normals on the boundary.
+//
 // Revision 1.13  2000/05/08 18:42:46  guilkey
 // Added an initializeContact function to all contact classes.  This is
 // a null function for all but the FrictionContact.

@@ -26,8 +26,10 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
-
+using namespace std;
 using namespace Uintah::MPM;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::IntVector;
@@ -70,6 +72,8 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
+
+  cout << "NVFs " << NVFs << endl;
 
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(NVFs);
@@ -166,6 +170,9 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.13  2000/05/08 21:55:54  guilkey
+// Added calculation of surface normals on the boundary.
+//
 // Revision 1.12  2000/05/08 18:42:46  guilkey
 // Added an initializeContact function to all contact classes.  This is
 // a null function for all but the FrictionContact.
