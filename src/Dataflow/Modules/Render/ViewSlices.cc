@@ -1458,9 +1458,13 @@ ViewSlices::x_axis(SliceWindow &window)
 {
   Vector dir = screen_to_world(window,1,0)-screen_to_world(window,0,0);
   Vector adir = Abs(dir);
-  int m = adir[0] > adir[1] ? 0 : 1;
-  m = adir[m] > adir[2] ? m : 2;
-  return dir[m] < 0.0 ? m+3 : m;
+  if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
+  if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
+  return 2;
+
+  //  int m = adir[0] > adir[1] ? 0 : 1;
+  //  m = adir[m] > adir[2] ? m : 2;
+  //  return dir[m] < 0.0 ? m+3 : m;
 }
 
 // Returns and index to the axis that is most parallel and in the direction of
@@ -1472,9 +1476,12 @@ ViewSlices::y_axis(SliceWindow &window)
 {
   Vector dir = screen_to_world(window,0,1)-screen_to_world(window,0,0);
   Vector adir = Abs(dir);
-  int m = adir[0] > adir[1] ? 0 : 1;
-  m = adir[m] > adir[2] ? m : 2;
-  return dir[m] < 0.0 ? m+3 : m;
+  if ((adir[0] > adir[1]) && (adir[0] > adir[2])) return 0;
+  if ((adir[1] > adir[0]) && (adir[1] > adir[2])) return 1;
+  return 2;
+  //  int m = adir[0] > adir[1] ? 0 : 1;
+  //  m = adir[m] > adir[2] ? m : 2;
+  //  return dir[m] < 0.0 ? m+3 : m;
 }
 
 void
