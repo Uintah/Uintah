@@ -726,7 +726,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
-  t->requires(Task::NewDW, lb->gSp_volLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->frictionalWorkLabel,    gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
@@ -746,7 +745,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->GTemperatureRateLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->GTemperatureLabel,      gac,NGN);
   t->requires(Task::NewDW, lb->GTemperatureNoBCLabel,  gac,NGN);
-  t->requires(Task::NewDW, lb->GSp_volLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->pgCodeLabel,            Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->computes(lb->pDispLabel_preReloc);
@@ -763,8 +761,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
-    t->requires(Task::NewDW, lb->gSp_vol_srcLabel,     gac,NGN);
-    t->requires(Task::NewDW, lb->GSp_vol_srcLabel,     gac,NGN); // for Fracture
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
 
@@ -2247,7 +2243,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
       constNCVariable<double> dTdt, massBurnFraction, frictionTempRate;
-      constNCVariable<double> gSp_vol_src;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -2294,7 +2289,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
       constNCVariable<Vector> Gvelocity_star, Gacceleration;
       constNCVariable<double> GTemperatureRate, GTemperature, GTemperatureNoBC;
-      constNCVariable<double> GSp_vol_src;
 
       new_dw->get(Gvelocity_star,   lb->GVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(Gacceleration,    lb->GAccelerationLabel,   dwi,patch,gac,NGP);
@@ -2304,24 +2298,15 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       if(d_with_ice){
 	new_dw->get(dTdt,            lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
-	new_dw->get(gSp_vol_src,     lb->gSp_vol_srcLabel,     dwi,patch,gac,NGP);
-        new_dw->get(GSp_vol_src,     lb->GSp_vol_srcLabel,     dwi,patch,gac,NGP);
 	new_dw->get(massBurnFraction,lb->massBurnFractionLabel,dwi,patch,gac,NGP);
       }
       else{
-	NCVariable<double> dTdt_create,massBurnFraction_create,gSp_vol_src_create;
-        NCVariable<double> GSp_vol_src_create;
+	NCVariable<double> dTdt_create,massBurnFraction_create;
 	new_dw->allocateTemporary(dTdt_create,                     patch,gac,NGP);
-	new_dw->allocateTemporary(gSp_vol_src_create,              patch,gac,NGP);
-        new_dw->allocateTemporary(GSp_vol_src_create,              patch,gac,NGP);
 	new_dw->allocateTemporary(massBurnFraction_create,         patch,gac,NGP);
 	dTdt_create.initialize(0.);
-	gSp_vol_src_create.initialize(0.);
 	massBurnFraction_create.initialize(0.);
-        GSp_vol_src_create.initialize(0.);
 	dTdt = dTdt_create;                         // reference created data
-	gSp_vol_src = gSp_vol_src_create;           // reference created data
-        GSp_vol_src = GSp_vol_src_create;           // reference created data
  	massBurnFraction = massBurnFraction_create; // reference created data
       }
 
@@ -2351,7 +2336,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	Vector acc(0.0,0.0,0.0);
 	double tempRate = 0;
 	double burnFraction = 0;
-	double sp_vol_dt = 0.0;
 
 	// Accumulate the contribution from each surrounding vertex
 	for (int k = 0; k < flags->d_8or27; k++) {
@@ -2361,7 +2345,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
              tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
                           frictionTempRate[ni[k]])   * S[k];
              burnFraction += massBurnFraction[ni[k]] * S[k];
-             sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
           }
           else if(pgCode[idx][k]==2) {
              vel      += Gvelocity_star[ni[k]]  * S[k];
@@ -2369,7 +2352,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
              tempRate += (GTemperatureRate[ni[k]] + dTdt[ni[k]] +
                           frictionTempRate[ni[k]])   * S[k];
              burnFraction += massBurnFraction[ni[k]] * S[k];
-             sp_vol_dt += GSp_vol_src[ni[k]]   * S[k];
           }
 	}
 
@@ -2378,7 +2360,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pdispnew[idx]        = pdisp[idx] + vel * delT;
 	pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
 	pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
-	pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
+	pSp_volNew[idx]      = pSp_vol[idx];
 
 	double rho;
 	if(pvolume[idx] > 0.){
