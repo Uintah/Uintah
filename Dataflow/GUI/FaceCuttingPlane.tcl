@@ -58,28 +58,28 @@ itcl_class Uintah_Visualization_FaceCuttingPlane {
 
 	frame $w.g -bd 2 -relief groove
 	frame $w.g.x
-	button $w.g.x.plus -text "+" -command "$this-c plusx" \
+	button $w.g.x.plus -text "+" -command "$this-c MoveWidget plusx" \
 	    -disabledforeground $color
 	label $w.g.x.label -text " X " -disabledforeground $color
-	button $w.g.x.minus -text "-" -command "$this-c minusx" \
+	button $w.g.x.minus -text "-" -command "$this-c MoveWidget minusx" \
 	    -disabledforeground $color
 	pack $w.g.x.plus $w.g.x.label $w.g.x.minus -side left -fill x -expand 1 -padx 10
 	pack $w.g.x -side top
 
 	frame $w.g.y
-	button $w.g.y.plus -text "+" -command "$this-c plusy" \
+	button $w.g.y.plus -text "+" -command "$this-c MoveWidget plusy" \
 	    -disabledforeground $color
 	label $w.g.y.label -text " Y " -disabledforeground $color
-	button $w.g.y.minus -text "-" -command "$this-c minusy" \
+	button $w.g.y.minus -text "-" -command "$this-c MoveWidget minusy" \
 	    -disabledforeground $color
 	pack $w.g.y.plus $w.g.y.label $w.g.y.minus -side left -fill x -expand 1 -padx 10
 	pack $w.g.y -side top
 
 	frame $w.g.z
-	button $w.g.z.plus -text "+" -command "$this-c plusz" \
+	button $w.g.z.plus -text "+" -command "$this-c MoveWidget plusz" \
 	    -disabledforeground $color
 	label $w.g.z.label -text " Z " -disabledforeground $color
-	button $w.g.z.minus -text "-" -command "$this-c minusz" \
+	button $w.g.z.minus -text "-" -command "$this-c MoveWidget minusz" \
 	    -disabledforeground $color
 	pack $w.g.z.plus $w.g.z.label $w.g.z.minus -side left \
 	    -fill x -expand 1 -padx 10
