@@ -44,6 +44,10 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include <Geom/Color.h>
+
+#include <stdio.h>
+
 #define MAX_MATL_STACK 100
 
 void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
@@ -98,10 +102,12 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
     case DrawInfoOpenGL::Gouraud:
 	gluQuadricNormals(qobj, GLU_FLAT);
 	gluQuadricDrawStyle(qobj, GLU_FILL);
+	glShadeModel(GL_FLAT);
 	break;
     case DrawInfoOpenGL::Phong:
 	gluQuadricNormals(qobj, GLU_SMOOTH);
 	gluQuadricDrawStyle(qobj, GLU_FILL);
+	glShadeModel(GL_SMOOTH);
 	break;
     }
     
@@ -109,20 +115,43 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
 
 void DrawInfoOpenGL::set_matl(Material* matl)
 {
-    if(matl==current_matl || ignore_matl)
-	return;
-    current_matl=matl;
+    if(matl==current_matl || ignore_matl) {
+	return;	
+    }
     float color[4];
-    matl->ambient.get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-    matl->diffuse.get_color(color);
-    glColor4fv(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
-    matl->specular.get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
-    matl->emission.get_color(color);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+    if (!current_matl) {
+	matl->ambient.get_color(color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+	matl->diffuse.get_color(color);
+	glColor4fv(color);
+	matl->specular.get_color(color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+	matl->emission.get_color(color);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+    }    
+    else {
+	matl->ambient.get_color(color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+
+	matl->diffuse.get_color(color);
+	glColor4fv(color);
+
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
+
+	matl->specular.get_color(color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+
+	matl->emission.get_color(color);	
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+
+        if (matl->shininess != current_matl->shininess) {
+	    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess);
+        }
+    }	
+
+    current_matl=matl;
+
 }
 
 void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -704,13 +733,16 @@ void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    if(rad < 1.e-6)return;
-    pre_draw(di, matl, 1);
-    glPushMatrix();
-    glTranslated(cen.x(), cen.y(), cen.z());
-    di->polycount+=2*(nu-1)*(nv-1);
-    gluSphere(di->qobj, rad, nu, nv);
-    glPopMatrix();
+  if(rad < 1.e-6)return;
+  pre_draw(di, matl, 1);
+  glPushMatrix();
+  
+  glTranslated(cen.x(), cen.y(), cen.z());
+  di->polycount+=2*(nu-1)*(nv-1);
+
+  gluSphere(di->qobj, rad, nu, nv);
+
+  glPopMatrix();
 }
 
 void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -738,6 +770,28 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 	break;
     case DrawInfoOpenGL::Flat:
 	// this should be made into a tri-strip, but I couldn;t remember how...
+
+	/* this can be done as a triangle strip using 8 vertices, or
+	 * as a triangle fan with 5 and 1 single triangle (8 verts)
+	 * I am doing the fan now (ordering is wierd with a tri-strip), but
+	 * will switch to the tri-strip when I can test it, if it's faster
+	 */	
+	glBegin(GL_TRIANGLE_FAN);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+#if 0
+	/*
+	 * This has inconsistant ordering....
+	 */ 
 	glBegin(GL_TRIANGLES);
 	glVertex3d(p1.x(), p1.y(), p1.z());
 	glVertex3d(p2.x(), p2.y(), p2.z());
@@ -758,34 +812,40 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glVertex3d(p4.x(), p4.y(), p4.z());
 	glVertex3d(p3.x(), p3.y(), p3.z());
 	glEnd();
+#endif
 	break;
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	// this should be made into a tri-strip, but I couldn;t remember how...
+
+	/*
+	 * These are actualy just flat shaded, to get "gourad" shading
+	 * you could average the facet normals for all the faces touching
+	 * a given vertex.  I don't think there is a faster way to do this
+	 * using flat shading.
+	 */
 	{
 	    Vector n1(Plane(p1, p2, p3).normal());
+	    Vector n2(Plane(p1, p2, p4).normal());
+	    Vector n3(Plane(p4, p2, p3).normal());
+	    Vector n4(Plane(p1, p4, p3).normal());
+
 	    glBegin(GL_TRIANGLES);
 	    glNormal3d(n1.x(), n1.y(), n1.z());
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
 	    glVertex3d(p3.x(), p3.y(), p3.z());
-	    glEnd();
-	    Vector n2(Plane(p1, p2, p4).normal());
-	    glBegin(GL_TRIANGLES);
+	 
 	    glNormal3d(n2.x(), n2.y(), n2.z());
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
 	    glVertex3d(p4.x(), p4.y(), p4.z());
-	    glEnd();
-	    Vector n3(Plane(p4, p2, p3).normal());
-	    glBegin(GL_TRIANGLES);
+
 	    glNormal3d(n3.x(), n3.y(), n3.z());
 	    glVertex3d(p4.x(), p4.y(), p4.z());
 	    glVertex3d(p2.x(), p2.y(), p2.z());
 	    glVertex3d(p3.x(), p3.y(), p3.z());
-	    glEnd();
-	    Vector n4(Plane(p1, p4, p3).normal());
-	    glBegin(GL_TRIANGLES);
+
 	    glNormal3d(n4.x(), n4.y(), n4.z());
 	    glVertex3d(p1.x(), p1.y(), p1.z());
 	    glVertex3d(p4.x(), p4.y(), p4.z());
@@ -985,6 +1045,7 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	{
+	    glDisable(GL_NORMALIZE);
 	    glBegin(GL_TRIANGLES);
 	    for(int i=0;i<verts.size();i+=3){
 		glNormal3d(normals[i/3].x(), normals[i/3].y(), 
@@ -994,6 +1055,7 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 		verts[i+2]->emit_all(di);
 	    }
 	    glEnd();
+	    glEnable(GL_NORMALIZE);
 	}
 	break;
     }
@@ -1255,6 +1317,17 @@ void GeomMVertex::emit_all(DrawInfoOpenGL* di)
 void GeomMVertex::emit_matl(DrawInfoOpenGL* di)
 {
     di->set_matl(matl.get_rep());
+}
+
+void GeomCVertex::emit_all(DrawInfoOpenGL* /*di*/)
+{
+    glColor3d(color.r(),color.g(),color.b());
+    glVertex3d(p.x(), p.y(), p.z());
+}
+
+void GeomCVertex::emit_matl(DrawInfoOpenGL* /*di*/)
+{
+    glColor3d(color.r(),color.g(),color.b());
 }
 
 void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
