@@ -1486,7 +1486,6 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       
       gui->execute(str.str().c_str());
 
-      cerr << "updating set_size from update_file" << endl;
       // Update the dims in the GUI.
       gui->execute(id + " set_size 0 {}");
     }
