@@ -880,12 +880,16 @@ if test -e /usr/include/GL; then
   GL_INCLUDE_DIR="/usr/include"
 elif test -e /usr/X11R6/include/GL; then
   GL_INCLUDE_DIR="/usr/X11R6/include"
+elif test -e /usr/local/include/GL; then
+  GL_INCLUDE_DIR="/usr/local/include"
 fi
 
 if test -e /usr/lib/libGL.so; then
   GL_LIB_DIR="/usr/lib"
 elif test -e /usr/X11R6/lib/libGL.so; then
   GL_LIB_DIR="/usr/X11R6/lib"
+elif test -e /usr/local/lib/libGL.so; then
+  GL_LIB_DIR="/usr/local/lib"
 fi
 
 if test -z "$GL_INCLUDE_DIR"; then
