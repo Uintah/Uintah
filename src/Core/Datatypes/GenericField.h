@@ -39,15 +39,13 @@ public:
   GenericField() : 
     Field(),
     mesh_(mesh_handle_type(new mesh_type())),
-    fdata_(fdata_type()),
-    has_minmax(false)
+    fdata_(fdata_type())
   {};
 
   GenericField(data_location data_at) : 
     Field(data_at),
     mesh_(mesh_handle_type(new mesh_type())),
-    fdata_(fdata_type()),
-    has_minmax(false)
+    fdata_(fdata_type())
   {};
 
   virtual ~GenericField() {};
@@ -58,9 +56,7 @@ public:
 
   //! Required interfaces from field base.
   virtual interp_type* query_interpolate() const;
-  virtual InterpolateToScalar* query_interpolate_to_scalar() const;
-  bool get_minmax( double &, double &);
-  bool compute_minmax();
+//  virtual InterpolateToScalar* query_interpolate_to_scalar() const;
 
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::node_index i) const
@@ -111,8 +107,8 @@ private:
   //! Data container.
   fdata_type                   fdata_;
   //! minmax
-  bool has_minmax;
-  double min_, max_;
+//  bool has_minmax;
+//  double min_, max_;
 }; 
 
 //! Virtual interface.
@@ -152,46 +148,14 @@ GenericField<Mesh, FData>::query_interpolate() const
   return new GInterp<value_type>(this); 
 }
 
+#if 0
 template <class Mesh, class FData>
 InterpolateToScalar* 
 GenericField<Mesh, FData>::query_interpolate_to_scalar() const
 {
   return new GInterp<double>(this);
 }
-   
-template <class Mesh, class FData>
-bool
-GenericField<Mesh, FData>::compute_minmax()
-{
-  typename Mesh::node_iterator i = mesh_->node_begin();
-  if ( i == mesh_->node_end() )
-    return false;
-  min_ = max_ = fdata_[*i];
-  for (++i; i != mesh_->node_end(); ++i) {
-    value_type v = fdata_[*i];
-    if ( v < min_ ) min_ = v;
-    else if ( v > max_ ) max_ = v;
-  }
-  
-  return true;
-}
-
-template<class Mesh, class FData>
-bool
-GenericField<Mesh, FData>::get_minmax( double &min, double &max) 
-{
-  if ( !has_minmax ) { 
-    if ( !compute_minmax() )
-      return false;
-    has_minmax = true;
-  }
-
-  min = min_;
-  max = max_;
-
-  return true;
-}
-
+#endif
 
 // PIO
 const int GENERICFIELD_VERSION = 1;
