@@ -215,6 +215,8 @@ itcl_class SubnetModule {
 # Automatically updates the Subnet Icon and the Subnet Network Editor names
 proc updateSubnetName { subnet_number name1 name2 op } {
     global Subnet
+    set Subnet($name2) [join [split $Subnet($name2) \"\{\}] ""]
+
     # Set the title bar for the Subnet Network Editor Window
     if [winfo exists .subnet${subnet_number}] {
 	wm title .subnet${subnet_number} "$Subnet($name2) Sub-Network Editor"
