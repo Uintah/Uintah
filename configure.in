@@ -549,10 +549,6 @@ SCI_ARG_WITH(mpeg,
   [  --with-mpeg=<path-to-tcl>         <path-to-tcl>/lib/libmpege.so],
   [mpeg="$withval"],
   [mpeg=""])
-SCI_ARG_WITH(image,
-  [  --with-image=<path-to-tcl>        <path-to-tcl>/lib/libimage.so],
-  [image="$withval"],
-  [image=""])
 SCI_ARG_WITH(blas,
   [  --with-blas=<path-to-tcl>         <path-to-tcl>/lib/libblas.a],
   [blas="$withval"],
@@ -1551,28 +1547,6 @@ AC_SUBST(MPEG_DEF_FLAG)
 AC_SUBST(HAVE_LIBMPEGE)
 AC_SUBST(LIBMPEGE)
 
-##  --  search for libimage  ---------------------------------------------
-
-for i in $libimage $thirdparty $SCI_LAB_TP_DEFAULT; do
-  if test ! -d "$i"; then 
-    continue
-  fi
-  SCI_CHECK_LIB($i/lib,image,main,,continue,)
-  SCI_CHECK_HEADER($i/include,image.h,,continue,)
-done
-
-if test -z "$HAVE_LIBIMAGE" ||
-   test -z "$INCIMAGE_H"; then
-  HAVE_LIBIMAGE=''
-else
-  LIBIMAGE_DEF_FLAG="-DLIBIMAGE"
-fi
-
-AC_SUBST(LIBIMAGE_DEF_FLAG)
-AC_SUBST(HAVE_LIBIMAGE)
-AC_SUBST(LIBIMAGE)
-AC_SUBST(INCIMAGE_H)
-
 ##  --  search for perfex  -----------------------------------------------
 for i in $perfex $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
@@ -1612,33 +1586,6 @@ fi
 AC_SUBST(HAVE_LIBCRYPTO)
 AC_SUBST(LIBCRYPTO)
 AC_SUBST(DEF_CRYPTO)
-
-##  --  search for SGI's image format library  ---------------------------
-
-SCI_CHECK_LIB($thirdparty/lib,ifl,main)
-
-if test "$LIBIFL"; then
-  IMAGE_LIBS=" -lifl"
-  DEF_IFL="#define HAVE_IFL 1"
-fi
-
-AC_SUBST(HAVE_LIBIFL)
-AC_SUBST(LIBIFL)
-AC_SUBST(DEF_IFL)
-
-##  --  search for SGI's compression library  ----------------------------
-
-SCI_CHECK_LIB($thirdparty/lib,cl,main)
-
-if test "$LIBCL"; then
-  IMAGE_LIBS="$IMAGE_LIBS -lcl"
-  DEF_CL="#define HAVE_CL 1"
-fi
-
-AC_SUBST(HAVE_LIBCL)
-AC_SUBST(LIBCL)
-AC_SUBST(IMAGE_LIBS)
-AC_SUBST(DEF_CL)
 
 ##  --  search for SGI'S traceback library  ------------------------------ 
 
