@@ -292,7 +292,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                     this, &SerialMPM::initializePressureBC);
     t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel);
+    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel, loadCurveIndex, Task::OutOfDomain, Ghost::None);
     t->modifies(lb->pExternalForceLabel);
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
   }
