@@ -138,7 +138,7 @@ BundleSetField::execute()
               ctx->reset();
             }
         }
-      handle->setfield(field1name,fhandle);
+      handle->setField(field1name,fhandle);
     }
 
   // Scan field input port 2      
@@ -162,7 +162,7 @@ BundleSetField::execute()
             }    
         }
 
-      handle->setfield(field2name,fhandle);
+      handle->setField(field2name,fhandle);
     }
 
   // Scan field input port 3      
@@ -186,7 +186,7 @@ BundleSetField::execute()
             }
         }
     
-      handle->setfield(field3name,fhandle);
+      handle->setField(field3name,fhandle);
     }
         
   // Now post the output
