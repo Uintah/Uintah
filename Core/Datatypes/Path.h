@@ -75,9 +75,8 @@ typedef LockingHandle<Path> PathHandle;
 //typedef Handle<PiecewiseInterp<Vector> > VectorPWI;
 //typedef Handle<PiecewiseInterp<double> > SimplePWI;
 
-
 enum {KEYFRAMED=0, LINEAR, CUBIC};
-enum {NO_ACC=0, SMOOTH, USERMODE};
+enum {NO_ACCEL=0, SMOOTH, USERMODE};
 
 class SCICORESHARE Path : public Datatype {
  
@@ -134,8 +133,8 @@ public:
    
     void   reset();
     void   del_keyF(int);
-    bool   ins_keyF(int, const View&, double speed=1, int acc_patt=NO_ACC);
-    bool   add_keyF(const View&, double speed=1, int acc_patt=NO_ACC);
+    bool   ins_keyF(int, const View&, double speed=1, int acc_patt=NO_ACCEL);
+    bool   add_keyF(const View&, double speed=1, int acc_patt=NO_ACCEL);
     int    get_acc_t (int n=0) const;
     bool   set_acc_t(int);
     double get_speed_val(int) const;
