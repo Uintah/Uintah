@@ -141,6 +141,8 @@ if test $# = 0; then
    ALL=yes
 fi
 
+echo;echo "Using the "$DIR "gold standard directory"
+
 
 # Set up the various test cases
 
@@ -170,6 +172,12 @@ if test ! -e inputs; then
     echo; echo "'inputs' data directory is not available . . . exiting"
     exit
 fi
+
+if test  -e $results; then
+   echo; echo "cleaning out old "$results "directory"
+   rm -rf $results/*
+fi
+
 
 REMOVE () {
     if test -a chem.bin
