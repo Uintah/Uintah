@@ -85,10 +85,6 @@ extern Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
-static Mutex vlock("ViewImage GL task lock");
-static Thread* owner;
-static int lock_count;
-  
 
 class RealDrawer;
 
@@ -143,6 +139,7 @@ class ViewImage : public Module
     NrrdSlice(int axis=0, int slice=0, NrrdVolume *volume=0);
     int			axis_;  // which axis
     int			slice_num_;   // which slice # along axis
+    int			slab_width_;
     NrrdDataHandle      nrrd_;
     
     bool		nrrd_dirty_;
@@ -181,9 +178,10 @@ class ViewImage : public Module
     OpenGLViewport *	viewport_;
     NrrdSlices		slices_;
      
-    UIint		slice_[3];
+    UIint		slice_num_;
     UIint		axis_;
     UIdouble		zoom_;
+    UIint		slab_width_;
       
     UIdouble		x_;
     UIdouble		y_;
@@ -260,6 +258,7 @@ class ViewImage : public Module
   int			cur_slice_[3];
   double		scale_[3];
   double		center_[3];
+  UIint			probe_;
 
   UIdouble		min_;
   UIdouble		max_;
@@ -291,7 +290,7 @@ class ViewImage : public Module
   bool			extract_clut(SliceWindow &);
 
   void			draw_guidelines(SliceWindow &, float, float, float, 
-					bool thin=true);
+					bool cursor=true);
 
   int			x_axis(SliceWindow &);
   int			y_axis(SliceWindow &);
@@ -352,7 +351,7 @@ public:
 GLenum err; 
 #define GL_ERROR() \
   while ((err = glGetError()) != GL_NO_ERROR) \
-    cerr << id << ": GL error #" << int(err) << " on line #" << __LINE__ << std::endl;
+    error("GL error #"+to_string(err)+" on line #"+to_string(__LINE__));
 
 
 
@@ -373,25 +372,21 @@ RealDrawer::run()
   double frame_count_start = t;
   double time_since_frame_count_start;
   int frames;
-  //  try {
-    while (!dead_) {
-      module_->extract_all_slices();
-      throttle_.wait_for_time(t);
-      module_->real_draw_all();
-      t2 = throttle_.time();
-      frames++;
-      time_since_frame_count_start = t2 - frame_count_start;
-      if (frames > 30 || ((time_since_frame_count_start > 0.75) && frames)) {
-	module_->fps_ = frames / time_since_frame_count_start;
-	frames = 0;
-	frame_count_start = t2;
-      }
-      
-      while (t <= t2) t += 1.0/120;
+  while (!dead_) {
+    module_->extract_all_slices();
+    throttle_.wait_for_time(t);
+    module_->real_draw_all();
+    t2 = throttle_.time();
+    frames++;
+    time_since_frame_count_start = t2 - frame_count_start;
+    if (frames > 30 || ((time_since_frame_count_start > 0.75) && frames)) {
+      module_->fps_ = frames / time_since_frame_count_start;
+      frames = 0;
+      frame_count_start = t2;
     }
-//   } catch(const Exception& e) {
-//     cerr << "RealDrawer caught exception!\n";    
-//   }
+    
+    while (t <= t2) t += 1.0/120;
+  }
 }
 
 void
@@ -406,7 +401,7 @@ ViewImage::extract_all_slices() {
       for (unsigned int s = 0; s < window.slices_.size(); ++s) {
 	NrrdSlice &slice = *window.slices_[s];
 	if (slice.axis_ != window.axis_() || !slice.nrrd_dirty_) continue;
-	extract_slice(slice, window.axis_, window.slice_[window.axis_]());
+	extract_slice(slice, window.axis_, window.slice_num_());
       }
     }
   }
@@ -416,6 +411,7 @@ ViewImage::extract_all_slices() {
 ViewImage::NrrdSlice::NrrdSlice(int axis, int slice, NrrdVolume *volume) :
   axis_(axis),
   slice_num_(slice),
+  slab_width_(0),
   nrrd_(0),
   nrrd_dirty_(true),
   tex_dirty_(true),
@@ -470,8 +466,10 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   name_("INVALID"),
   viewport_(0),
   slices_(),
+  slice_num_(ctx->subVar("slice"), 0),
   axis_(ctx->subVar("axis"), 2),
   zoom_(ctx->subVar("zoom"), 100.0),
+  slab_width_(ctx->subVar("slab_width"), 1),
   x_(ctx->subVar("posx"),0.0),
   y_(ctx->subVar("posy"),0.0),
   redraw_(true),
@@ -492,11 +490,6 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   colormap_generation_(-1),
   colormap_size_(32)
 {
-  for (int i = 0; i < 3; ++i) {
-    //    slice_[i] = ctx->subVar("slice_"+to_string(i),0);
-    slice_[i] = ctx->subVar("slice");
-    slice_[i] = 0;
-  }
   for (int i = 0; i < 4; ++i) rgba_[i] = 0; 
 }
 
@@ -534,6 +527,7 @@ ViewImage::ViewImage(GuiContext* ctx) :
   colormap_(0),
   current_window_(0),
   window_level_(0),
+  probe_(ctx->subVar("probe"),0),
   min_(ctx->subVar("min"), -1),
   max_(ctx->subVar("max"), -1),
   ogeom_(0),
@@ -665,8 +659,20 @@ ViewImage::real_draw_all()
       draw_guidelines(window, cur_slice_[0]*scale_[0],
 		      cur_slice_[1]*scale_[1], cur_slice_[2]*scale_[2], false);
       GL_ERROR();
-      window.viewport_->swap();
+      //      window.viewport_->swap();
       GL_ERROR();
+      window.viewport_->release();
+    }
+  }
+
+  for (liter = layouts_.begin(); liter != lend; ++liter) {
+    WindowLayout &layout = *(liter->second);
+    SliceWindows::iterator viter = layout.windows_.begin();
+    SliceWindows::iterator vend = layout.windows_.end();
+    for (; viter != vend; ++viter) {
+      SliceWindow &window = **viter;
+      window.viewport_->make_current();
+      window.viewport_->swap();
       window.viewport_->release();
     }
   }
@@ -768,9 +774,9 @@ ViewImage::extract_colormap(SliceWindow &window)
 // if x, y, or z < 0, then that dimension wont be rendered
 void
 ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z, 
-			   bool thin) {
-  if (thin && !current_window_) return;
-  if (thin && !current_window_->show_guidelines_()) return;
+			   bool cursor) {
+  if (cursor && !current_window_) return;
+  if (cursor && !current_window_->show_guidelines_()) return;
   window.viewport_->make_current();
   GL_ERROR();
   setup_gl_view(window);
@@ -781,7 +787,7 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z,
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
   float screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
-  if (thin || screen_space_one > unscaled_one) 
+  if (cursor || screen_space_one > unscaled_one) 
     unscaled_one = screen_space_one;
 
   glEnable(GL_BLEND);
@@ -803,7 +809,7 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z,
   c[1] = y;
   c[2] = z;
   for (int i = 0; i < 2; ++i) {
-    if (thin) {
+    if (cursor) {
       one = unscaled_one;
       glColor4dv(yellow);
     } else {
@@ -834,7 +840,7 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z,
 
 
 
-  if (!inside || !thin) {
+  if (!inside || !cursor) {
     window.viewport_->release();
     return;
   }
@@ -954,9 +960,9 @@ ViewImage::setup_gl_view(SliceWindow &window)
   }
   GL_ERROR();
   
-  glTranslated((axis==0)?-double(window.slice_[axis]):0.0,
-  	       (axis==1)?-double(window.slice_[axis]):0.0,
-  	       (axis==2)?-double(window.slice_[axis]):0.0);
+  glTranslated((axis==0)?-double(window.slice_num_):0.0,
+  	       (axis==1)?-double(window.slice_num_):0.0,
+  	       (axis==2)?-double(window.slice_num_):0.0);
   GL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -1211,7 +1217,7 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
   if (slice.axis_ != window.axis_) return;
   if (slice.nrrd_dirty_ && slice.volume_) {
-      extract_slice(slice, window.axis_(), window.slice_[window.axis_]());
+      extract_slice(slice, window.axis_(), window.slice_num_());
   }
 
   if (!slice.nrrd_.get_rep())
@@ -1456,28 +1462,25 @@ ViewImage::extract_window_slices(SliceWindow &window) {
 
   if (!window.slices_.size()) {
     for (v = 0; v < volumes_.size(); ++v) {
-      for (a = 0; a < 3; a++) {
+      for (a = 0; a < 3; a++)
 	window.slices_.push_back
-	  (scinew NrrdSlice(a, window.slice_[a], volumes_[v]));
-	window.slices_.back()->mode_ = window.mode_();
-      //      if (window.axis_ == a)
-      //extract_slice(*volumes_[v], *window.slices_.back(), a, *window.slice_[a]);
-      }
+	  (scinew NrrdSlice(a, window.slice_num_(), volumes_[v]));
     }
-  } else {
-    s = 0;
-    for (v = 0; v < volumes_.size(); ++v) {
-      for (a = 0; a < 3; a++) {
-	window.slices_[s]->do_lock();
-	window.slices_[s]->nrrd_dirty_ = true;
-	window.slices_[s]->mode_ = window.mode_();
-	window.slices_[s]->volume_ = volumes_[v];
-	window.slices_[s]->do_unlock();	
-	s++;
-      }
+  } 
+
+  s = 0;
+  for (v = 0; v < volumes_.size(); ++v) {
+    for (a = 0; a < 3; a++) {
+      window.slices_[s]->do_lock();
+      window.slices_[s]->nrrd_dirty_ = true;
+      window.slices_[s]->mode_ = window.mode_();
+      window.slices_[s]->volume_ = volumes_[v];
+      window.slices_[s]->slab_width_ = window.slab_width_();
+      cur_slice_[window.axis_()] = window.slice_num_();
+      window.slices_[s]->do_unlock();	
+      s++;
     }
   }
-  //  lock_.unlock();
 }
 
 
@@ -1485,11 +1488,11 @@ ViewImage::extract_window_slices(SliceWindow &window) {
 void
 ViewImage::extract_slice(NrrdSlice &slice, int axis, int slice_num)
 {
-  if (!slice.nrrd_dirty_) { cerr << "hoho\n"; return; }
-  if (!slice.volume_) { cerr << "blah2\n"; }
-  if (!slice.volume_->nrrd_.get_rep()) { cerr << "blah\n"; return; }
+  if (!slice.nrrd_dirty_) { return; }
+  if (!slice.volume_) { return; }
+  if (!slice.volume_->nrrd_.get_rep()) { return; }
   slice.do_lock();
-  //  cerr << "Extracting slice " << slice_num << "  axis " << axis << "\n";
+
   slice.nrrd_ = scinew NrrdData;
   slice.nrrd_->nrrd = nrrdNew();
 
@@ -1497,9 +1500,24 @@ ViewImage::extract_slice(NrrdSlice &slice, int axis, int slice_num)
   temp1->nrrd = nrrdNew();  
 
   NrrdDataHandle temp2 = scinew NrrdData;
+  temp2->nrrd = nrrdNew();
   
   if (slice.mode_ == mip_e) {
-    if (nrrdProject(temp1->nrrd, slice.volume_->nrrd_->nrrd, axis, 2, nrrdTypeDefault)) {
+    int min[3], max[3];
+    for (int i = 0; i < 3; i++) {
+      min[i] = 0;
+      max[i] = max_slice_[i];
+    }
+    min[axis] = Max(0, slice_num - slice.slab_width_/2);
+    max[axis] = Min(max_slice_[axis], slice_num + slice.slab_width_/2);
+    
+    if (nrrdCrop(temp2->nrrd, slice.volume_->nrrd_->nrrd, min, max)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error MIP cropping nrrd: ") + err);
+      free(err);
+    }
+      
+    if (nrrdProject(temp1->nrrd, temp2->nrrd, axis, 2, nrrdTypeDefault)) {
       char *err = biffGetDone(NRRD);
       error(string("Error Projecting nrrd: ") + err);
       free(err);
@@ -1528,7 +1546,6 @@ ViewImage::extract_slice(NrrdSlice &slice, int axis, int slice_num)
       temp1->nrrd->type != nrrdTypeUChar || 
       temp1->nrrd->type != nrrdTypeShort || 
       temp1->nrrd->type != nrrdTypeUShort) {
-    temp2->nrrd = nrrdNew();  
     NrrdRange range;
     range.min = min_;
     range.max = max_;
@@ -1584,14 +1601,12 @@ ViewImage::set_axis(SliceWindow &window, unsigned int axis) {
 void
 ViewImage::prev_slice(SliceWindow &window)
 {
-  if (window.mode_ == mip_e) return;
-  if (window.slice_[window.axis_] == 0) 
+  if (window.slice_num_() == 0) 
     return;
-  if (window.slice_[window.axis_] < 1)
-    window.slice_[window.axis_] = 0;
+  if (window.slice_num_ < 1)
+    window.slice_num_ = 0;
   else 
-    window.slice_[window.axis_]--;
-  cur_slice_[window.axis_] = window.slice_[window.axis_];
+    window.slice_num_--;
   cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   extract_window_slices(window);
   redraw_all();
@@ -1600,14 +1615,12 @@ ViewImage::prev_slice(SliceWindow &window)
 void
 ViewImage::next_slice(SliceWindow &window)
 {
-  if (window.mode_ == mip_e) return;
-  if (*window.slice_[window.axis_] == max_slice_[window.axis_]) 
+  if (*window.slice_num_() == max_slice_[window.axis_()]) 
     return;
-  if (window.slice_[window.axis_] > max_slice_[window.axis_])
-    window.slice_[window.axis_] = max_slice_[window.axis_];
+  if (window.slice_num_ > max_slice_[window.axis_])
+    window.slice_num_ = max_slice_[window.axis_];
   else
-    window.slice_[window.axis_]++;
-  cur_slice_[window.axis_] = window.slice_[window.axis_];
+    window.slice_num_++;
   cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   extract_window_slices(window);
   redraw_all();
@@ -1632,12 +1645,12 @@ Point
 ViewImage::screen_to_world(SliceWindow &window, 
 			   unsigned int x, unsigned int y) {
   GLdouble xyz[3];
-  gluUnProject(double(x), double(y), double(window.slice_[window.axis_]),
+  gluUnProject(double(x), double(y), double(window.slice_num_),
 	       window.gl_modelview_matrix_, 
 	       window.gl_projection_matrix_,
 	       window.gl_viewport_,
 	       xyz+0, xyz+1, xyz+2);
-  xyz[window.axis_] = double(window.slice_[window.axis_])*scale_[window.axis_];
+  xyz[window.axis_] = double(window.slice_num_)*scale_[window.axis_];
 
   return Point(xyz[0], xyz[1], xyz[2]);
 }
@@ -1696,7 +1709,7 @@ ViewImage::execute()
     error ("Unable to get a nrrd from Nrrd1 or Nrrd2.");
     return;
   }
-  int i;
+  unsigned int i;
 
 					 
   for (i = 0; i < 3; i++)
@@ -1786,6 +1799,8 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
     return;
   }
 
+  SliceWindow *inside_window = 0;
+
   WindowLayout &layout = *layouts_[args[2]];
   int x, y;
   string_to_int(args[3], x);
@@ -1795,8 +1810,10 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
     SliceWindow &window = *layout.windows_[w];
     window.mouse_x_ = x; // - window.viewport_->x();
     window.mouse_y_ = y; //- window.viewport_->y();
-    if (mouse_in_window(window))
+    if (mouse_in_window(window)) {
+      inside_window = &window;
       cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
+    }
   }
 
   int X, Y;
@@ -1804,7 +1821,24 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
   string_to_int(args[8], Y);
 
 
-  if (window_level_) {
+  if (inside_window && probe_()) {
+    WindowLayouts::iterator liter = layouts_.begin();
+    while (liter != layouts_.end()) {
+      for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
+	SliceWindow &window = *(*liter).second->windows_[v];
+	const int axis = window.axis_();
+	window.slice_num_ = Round(cursor_(axis)/scale_[axis]);
+	if (window.slice_num_ < 0) 
+	  window.slice_num_ = 0;
+	if (window.slice_num_ > max_slice_[axis]) 
+	  window.slice_num_ = max_slice_[axis];
+	
+	extract_window_slices(window);
+      }
+      ++liter;
+    }
+    extract_all_slices();
+  } else if (window_level_) {
     if (state & SHIFT_E) {
       SliceWindow &window = *window_level_;
       window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
@@ -1826,8 +1860,6 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
       }
     }
   }
-
-
   redraw_all();
 }
 
@@ -1934,7 +1966,13 @@ ViewImage::handle_gui_button_release(GuiArgs &args) {
   case 1:
     window_level_ = 0;
     break;
+  case 2:
+    probe_ = 0;
+    break;
+  default:
+    break;
   }
+
 }
 
 void
@@ -1987,6 +2025,10 @@ ViewImage::handle_gui_button(GuiArgs &args) {
       window_level_ww_ = window.clut_ww_();
       window_level_wl_ = window.clut_wl_();
       break;
+    case 2:
+      probe_ = 1;
+      break;
+
 
     case 4:
       if (state & CONTROL_E == CONTROL_E) 
