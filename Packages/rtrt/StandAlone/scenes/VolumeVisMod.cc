@@ -183,7 +183,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       return 0;
     }
     // convert the type to floats if you need to
-    cerr << "Number of data members = " << n->num << endl;
+    nrrdBigInt num_elements = nrrdElementNumber(n);
+    cerr << "Number of data members = " << num_elements << endl;
     if (n->type != nrrdTypeFloat) {
       cerr << "Converting type from ";
       switch(n->type) {
@@ -205,7 +206,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       // since the data was copied blow away the memory for the old nrrd
       nrrdNuke(n);
       n = new_n;
-      cerr << "Number of data members = " << n->num << endl;
+      cerr << "Number of data members = " << num_elements << endl;
     }
     // get the dimensions
     nx = n->axis[0].size;
@@ -227,7 +228,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     maxP = ((maxP-minP)/max_dim).asPoint();
     minP = Point(0,0,0);
     // copy the data into the brickArray
-    cerr << "Number of data members = " << n->num << endl;
+    cerr << "Number of data members = " << num_elements << endl;
     float *p = (float*)n->data; // get the pointer to the raw data
     data_min = data_max = *p;
     for (int z = 0; z < nz; z++)
