@@ -701,15 +701,15 @@ proc NiceQuit {} {
     global NetworkChanged netedit_savefile
     if {$NetworkChanged} {
         if {[winfo exists .standalone] } {
-	    set result [tk_messageBox -type yesnocancel -parent . -message \
-			    "Your session has not been saved.\nWould you like to save before exiting?" -icon warning ]
-	    if {![string compare "yes" $result]} { app save_session }
-	    if {![string compare "cancel" $result]} { return }
+	    set result [createSciDialog -warning -button1 "Save" -button2 "Quit" -button3 "Cancel" -message \
+			    "Your session has not been saved.\nWould you like to save before exiting?"  ]
+	    if {![string compare "1" $result]} { app save_session }
+	    if {![string compare "3" $result]} { return }
 	} else {
-	    set result [tk_messageBox -type yesnocancel -parent . -message \
-			    "Your network has not been saved.\nWould you like to save before exiting?" -icon warning ]
-	    if {![string compare "cancel" $result]} { return }
-	    if {![string compare "yes" $result]} { 
+	    set result [createSciDialog -warning -button1 "Save" -button2 "Quit" -button3 "Cancel" -message \
+			    "Your network has not been saved.\nWould you like to save before exiting?" ]
+	    if {![string compare "3" $result]} { return }
+	    if {![string compare "1" $result]} { 
 		puts -nonewline "Saving $netedit_savefile..."
 		popupSaveMenu
 	    }	
@@ -827,7 +827,7 @@ proc loadfile {netedit_loadfile} {
 proc loadnet {netedit_loadfile } {
     # Check to see of the file exists; warn user if it doesnt
     if { ![file exists $netedit_loadfile] } {
-	tk_messageBox -type ok -parent . -icon warning -message \
+	createSciDialog -warning -message \
 	    "File \"$netedit_loadfile\" does not exist."
 	return
     }
@@ -845,11 +845,11 @@ proc loadnet {netedit_loadfile } {
 # Ask the user to select a data directory 
 # (Because the enviroment variable SCIRUN_DATA was not set)
 proc getDataDirectory { dataset } {
-   set answer [tk_messageBox -type okcancel -parent . -message \
+   set answer [createSciDialog -warning -button1 "Ok" -button2 "Quit SCIRun" -message \
          "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.20.0).  Note, this directory must have the '$dataset' subdirectory in it." ]
    case $answer {
-       ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
-       cancel "netedit quit"
+       1 "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
+       2 "netedit quit"
    }
 }
 
@@ -862,11 +862,11 @@ proc getDataDirectory { dataset } {
 proc getSettingsDirectory { warn_user } {
 
    if { "$warn_user" == "true" } {
-      set answer [tk_messageBox -type okcancel -parent . -message \
-         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.20.0/sphere)\n\nFYI, if you set these environment variables, you will not need to select a directory manually when you load this network." ]
+      set answer [createSciDialog -warning -button1 "Ok" -parent . -button2 "Quit SCIRun" -message \
+         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET\nare not set (or are invalid).  You must specify a valid data\nset directory in order to use this net!  You will now be asked\nto select the directory of the dataset you are interested in.\n(eg: /usr/sci/data/SCIRunData/1.20.0/sphere)\n\nFYI, if you set these environment variables, you will not need\nto select a directory manually when you load this network." ]
        case $answer {
-	   ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
-	   cancel "netedit quit"
+	   1 "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
+	   2 "netedit quit"
        }
    }
    return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]
@@ -881,14 +881,14 @@ proc getSettingsDirectory { warn_user } {
 proc verifyFile { file_name } {
   if {![file isfile $file_name]} {
 
-     set message "Error: $file_name is not a valid file.  Please select a valid directory (eg: /usr/sci/data/SCIRunData/1.20.0/sphere)"
+     set message "Error: $file_name is not a valid file.\nPlease select a valid directory (eg: /usr/sci/data/SCIRunData/1.20.0/sphere)"
 
      # This occurs if the user presses "cancel".
      if { "$file_name" == "//.settings" } {
-        set message "You must select a data set directory for use with this network. Eg: /usr/sci/data/SCIRunData/1.20.0/sphere"
+        set message "You must select a data set directory for use with this network.\n\nEg: /usr/sci/data/SCIRunData/1.20.0/sphere"
      }
 
-     tk_messageBox -type ok -parent . -message "$message" -icon warning
+     createSciDialog -error -message "$message"
 
      return "false"
   }
@@ -1020,8 +1020,7 @@ proc licenseDialog { {firsttime 0} } {
     set stream [open $filename r]
     toplevel .license
     wm protocol .license WM_DELETE_WINDOW {
-	tk_messageBox -type ok -parent .license -icon error \
-	    -message "Please choose Accept, Decline, or Later to continue"
+	createSciDialog -error -message "You must choose Accept, Decline, or Later to continue."
     }
 
     wm geometry .license 504x482+135+170
