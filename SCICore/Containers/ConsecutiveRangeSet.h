@@ -76,7 +76,7 @@ public:
    class iterator
    {
    public:
-      iterator(ConsecutiveRangeSet* set, int range, int offset)
+      iterator(const ConsecutiveRangeSet* set, int range, int offset)
 	 : d_set(set), d_range(range), d_offset(offset) { }
       iterator(const iterator& it2)
 	 : d_set(it2.d_set), d_range(it2.d_range), d_offset(it2.d_offset) { }
@@ -97,12 +97,11 @@ public:
       iterator& operator++();
       inline iterator operator++(int);
    private:
-      ConsecutiveRangeSet* d_set;
+      const ConsecutiveRangeSet* d_set;
       int d_range;
       int d_offset;
    };
 
-  
    // represents range: [low, low+extent]
    struct Range
    {
@@ -166,16 +165,19 @@ public:
    // needed. -- Wayne
    //iterator find(int n);
    
-   inline iterator begin()
+   inline iterator begin() const
    { return iterator(this, 0, 0); }
-   
-   inline iterator end()
+
+   inline iterator end() const
    { return iterator(this, (int)d_rangeSet.size(), 0); }
    
    unsigned long size() const
    { return d_size; }
    
    std::string toString() const;
+
+   // return a space separated list of integers
+   std::string expandedString() const;
    
    // used for debugging
    int getNumRanges()
