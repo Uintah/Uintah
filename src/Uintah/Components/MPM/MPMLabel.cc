@@ -189,6 +189,9 @@ MPMLabel::MPMLabel()
   gStressLabel   = scinew VarLabel( "g.stress",
                    NCVariable<Matrix3>::getTypeDescription() );
 
+  gStressForSavingLabel   = scinew VarLabel( "g.stressFS",
+                   NCVariable<Matrix3>::getTypeDescription() );
+
   gVolumeLabel = scinew VarLabel("g.volume",
 			NCVariable<double>::getTypeDescription());
 
@@ -315,6 +318,12 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.30  2000/09/08 17:31:28  guilkey
+// Added interpolateParticlesForSaving task which interpolates particle
+// data, interpolates it to the grid using another particle scalar variable
+// for weighting, and saves it to the grid data to the uda.  Note that these
+// interpolations only get done when it's time to save data to the uda.
+//
 // Revision 1.29  2000/09/08 01:47:34  tan
 // Added pDilatationalWaveSpeedLabel for fracture and is saved as a
 // side-effect of computeStressTensor in each constitutive model class.

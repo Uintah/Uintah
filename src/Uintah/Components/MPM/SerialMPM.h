@@ -88,13 +88,6 @@ protected:
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
 
-//  void pleaseSaveParticlesToGrid(const VarLabel* var,
-//                                 const VarLabel* varweight,
-//                                 const VarLabel* gvar, int number,
-//				 DataWarehouseP& old_dw,
-//				 DataWarehouseP& new_dw,double t,
-//				 const LevelP& level);
-
   void interpolateParticlesForSaving(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
@@ -205,6 +198,10 @@ protected:
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   bool             d_burns;
+  double           d_nextOutputTime;
+  double           d_outputInterval;
+
+  vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
 };
       
@@ -213,6 +210,12 @@ protected:
    
 //
 // $Log$
+// Revision 1.56  2000/09/08 17:31:28  guilkey
+// Added interpolateParticlesForSaving task which interpolates particle
+// data, interpolates it to the grid using another particle scalar variable
+// for weighting, and saves it to the grid data to the uda.  Note that these
+// interpolations only get done when it's time to save data to the uda.
+//
 // Revision 1.55  2000/09/06 20:41:47  tan
 // Fixed bugs on pleasesave for fracture stuff.
 //
