@@ -104,6 +104,8 @@ void BuildFEMatrix::execute()
      int r=0;
      int i;
      for(i=0;i<nnodes;i++){
+	 if(i%200 == 0)
+	     update_progress(i, 2*nnodes);
 	 rows[r++]=cols.size();
 	 if(mesh->nodes[i]->ndof > 0){
 	     mesh->add_node_neighbors(i, cols);
@@ -121,7 +123,7 @@ void BuildFEMatrix::execute()
      int nelems=mesh->elems.size();
      for (i=0; i<nelems; i++){
 	 if(i%200 == 0)
-	     update_progress(i, nelems);
+	     update_progress(nelems+i, 2*nelems);
 	 build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
 	 add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh);
      }
