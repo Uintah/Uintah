@@ -94,8 +94,8 @@ class PSet : public Datatype {
   // GROUP: Modify
   //////////  
   // add a particle
-  void AddParticles( const ParticleVariable<Point> locs,
-		     const ParticleVariable<long64> ids,
+  void AddParticles( const ParticleVariable<Point>& locs,
+		     const ParticleVariable<long64>& ids,
 		     const Patch* p);
   //////////  
   // associate a grid

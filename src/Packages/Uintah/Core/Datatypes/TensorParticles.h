@@ -87,7 +87,7 @@ public:
   // Set the Tensors
   void Set(vector<ShareAssignParticleVariable<Matrix3> >& s){ tensors = s; }
 
-  void AddVar( const ParticleVariable<Matrix3> parts );
+  void AddVar( const ParticleVariable<Matrix3>& parts );
 
 
   void SetName( string vname ) { _varname = vname; }

@@ -41,7 +41,7 @@ ScalarParticles::~ScalarParticles()
 {
 }
 
-void ScalarParticles:: AddVar( const ParticleVariable<double> parts )
+void ScalarParticles:: AddVar( const ParticleVariable<double>& parts )
 {
   scalars.push_back( parts );
 }
