@@ -235,6 +235,7 @@ static void processPackage(PackageDB* db, const DOM_Node& pkgNode,
 
 void PackageDB::loadPackage(const clString& packPath)
 {
+#if !NEW_MODULE_MAKER
   // Initialize the XML4C system
   try {
     XMLPlatformUtils::Initialize();
@@ -243,6 +244,7 @@ void PackageDB::loadPackage(const clString& packPath)
 	 << StrX(toCatch.getMessage()) << endl;
     return;
   }
+#endif
   
   // The format of a package path element is either URL,URL,...
   // Where URL is a filename or a url to an XML file that
@@ -272,12 +274,15 @@ void PackageDB::loadPackage(const clString& packPath)
 
     // get *.xml in the above GUI directory.
     clString xmldir = packageElt+"/XML";
-    std::map<int,char*>* files = GetFilenamesEndingWith((char*)xmldir(),".xml");
+    std::map<int,char*>* files = 
+      GetFilenamesEndingWith((char*)xmldir(),".xml");
+    component_node* node = 0;
     for (char_iter i=files->begin();
 	 i!=files->end();
 	 i++) {
 #endif
-      
+
+#if !NEW_MODULE_MAKER
     // Instantiate the DOM parser.
     DOMParser parser;
     parser.setDoValidation(false);
@@ -290,11 +295,7 @@ void PackageDB::loadPackage(const clString& packPath)
     //  file. Catch any exceptions that might propogate out of it.
     //
     try {
-#if NEW_MODULE_MAKER
-      parser.parse(clString(packageElt+"/XML/"+(*i).second)());
-#else
       parser.parse(packageElt());
-#endif
     }  catch (const XMLException& toCatch) {
       postMessage(clString("Error during parsing: '")+
 		  packageElt+"'\nException message is:  "+
@@ -315,13 +316,23 @@ void PackageDB::loadPackage(const clString& packPath)
     //  Extract the components from the DOM tree
     //
     DOM_Document doc = parser.getDocument();
-#if NEW_MODULE_MAKER
-      component_node* node = CreateComponentNode(3);
-      DOM_NodeList list = doc.getElementsByTagName("component");
-      int nlist = list.getLength();
-      for (int i=0;i<nlist;i++) {
-	// get the component name and category name
-	ProcessComponentNode(list.item(i),node);
+    DOM_NodeList list = doc.getElementsByTagName("package");
+    int nlist = list.getLength();
+    for(int i=0;i<nlist;i++){
+      DOM_Node n = list.item(i);
+      processPackage(this, n, packageElt);
+    }
+
+    if(handler.foundError){
+      TCL::execute("tk_dialog .errorPopup"
+		   " {Processing Error}"
+		   " {Error processing package file,"
+		   " see message window for more information} error 0 Ok");
+    }
+#else
+        if (node) DestroyComponentNode(node);
+	node = CreateComponentNode(3);
+	ReadComponentNodeFromFile(node,(packageElt+"/XML/"+(*i).second)());
 
 	// find the .so for this component
 	LIBRARY_HANDLE so;
@@ -352,27 +363,6 @@ void PackageDB::loadPackage(const clString& packPath)
 	  registerModule(basename(packageElt()),node->category,
 			 node->name,makeaddr,"not currently used");
       }
-      
-      if(handler.foundError)
-	TCL::execute("tk_dialog .errorPopup"
-		     " {Processing Error}"
-		     " {Error processing package file,"
-		     " see message window for more information} error 0 Ok");
-    }
-#else
-    DOM_NodeList list = doc.getElementsByTagName("package");
-    int nlist = list.getLength();
-    for(int i=0;i<nlist;i++){
-      DOM_Node n = list.item(i);
-      processPackage(this, n, packageElt);
-    }
-
-    if(handler.foundError){
-      TCL::execute("tk_dialog .errorPopup"
-		   " {Processing Error}"
-		   " {Error processing package file,"
-		   " see message window for more information} error 0 Ok");
-    }
 #endif
 
   }
@@ -582,6 +572,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.22  2000/10/22 21:27:09  moulding
+// cleaned up code associated with the new module maker
+//
 // Revision 1.21  2000/10/21 18:46:06  moulding
 // turned new module maker off ... again.
 //
