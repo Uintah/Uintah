@@ -70,6 +70,8 @@ RigidMaterial::computeStableTimestep(const Patch* patch,
   Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+  if (pset->numParticles() == 0) return;
+
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
 
