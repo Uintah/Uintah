@@ -41,9 +41,8 @@ namespace Uintah {
     public:
       Stream();
       Stream(int numSpecies, int numElements);
-      Stream(int numSpecies, int numElements, int numMixVars,
-	     int numRxnVars, bool lsoot);
-
+      Stream(int numSpecies, int numElements,
+	     int numMixVars, int numRxnVars, bool lsoot);
       ///////////////////////////////////////////////////////////////////////
       //
       // Copy Constructor
@@ -62,13 +61,13 @@ namespace Uintah {
       Stream& linInterpolate(double upfactor, double lowfactor,
 			     Stream& rightvalue);
       void addStream(const Stream& strm, ChemkinInterface* chemInterf,
-		     double factor) ;
+		     const double factor) ;
       void addSpecies(const ChemkinInterface* chemInterf, 
 		      const char* speciesName, double mfrac);
       int speciesIndex(const ChemkinInterface* chemInterf, const char* name);
       void print(std::ostream& out) const;
       void print(std::ostream& out, ChemkinInterface* chemInterf);
-      //std::vector<double> convertStreamToVec(bool lsoot);
+      //std::vector<double> convertStreamToVec(const bool lsoot);
       std::vector<double> convertStreamToVec();
       void convertVecToStream(const std::vector<double>& vec_stateSpace, 
 			      bool flag, int numMixVars, 
@@ -97,12 +96,15 @@ namespace Uintah {
       inline double getRxnSource() const {
 	return d_rxnVarRates[0];
       }
+
       inline double getdrhodf() const {
-        return d_drhodf;
+	return d_drhodf;
       }
+
       inline double getdrhodh() const {
-        return d_drhodh;
+	return d_drhodh;
       }
+
 
     public:
       double d_pressure; // Pa
@@ -129,8 +131,6 @@ namespace Uintah {
     private:
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables
-      // WARNING: If you change this value, you must also change it in
-      // all reaction model header files
       //
       static const int NUM_DEP_VARS = 9;
 

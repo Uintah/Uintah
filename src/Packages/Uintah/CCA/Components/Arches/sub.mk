@@ -33,8 +33,8 @@ else
 SRCS +=	$(SRCDIR)/FakePetscSolver.cc
 endif
 
-SUBDIRS := $(SRCDIR)/fortran $(SRCDIR)/Mixing
-include $(SCIRUN_SCRIPTS)/recurse.mk
+# SUBDIRS := $(SRCDIR)/fortran 
+# include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
@@ -43,6 +43,8 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/CCA/Components/Arches/fortran \
+	Packages/Uintah/CCA/Components/Arches/Mixing \
 	Core/Thread 			 \
 	Core/Geometry                    \
 	Core/Exceptions

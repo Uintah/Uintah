@@ -101,12 +101,9 @@ namespace  Uintah {
     // stream information and values for the independent variables 
     // (no variance)
     //
-    virtual void getRxnStateSpace(Stream unreactedMixture,
-				  std::vector<double> mixRxnVar,
+    virtual void getRxnStateSpace(Stream& unreactedMixture,
+				  std::vector<double>& mixRxnVar,
 				  Stream& reactedStream) = 0;
-    virtual void computeRxnStateSpace(Stream unreactedMixture, vector<double> mixRxnVar, 
-                              Stream& equilStateSpace) = 0;
-
 
       
     // GROUP: Get Methods :
@@ -128,12 +125,10 @@ namespace  Uintah {
 
 //
 // $Log$
-// Revision 1.6  2002/03/28 23:14:51  spinti
-// 1. Added in capability to save mixing and reaction tables as KDTree or 2DVector
-// 2. Tables can be declared either static or dynamic
-// 3. Added capability to run using static clipped Gaussian MixingModel table
-// 4. Removed mean values mixing model option from PDFMixingModel and made it
-//    a separate mixing model, MeanMixingModel.
+// Revision 1.7  2002/04/08 18:09:43  rawat
+// i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
+// ii) Modified computeStableTImeStep to include diffusion time scale
+// iii) changed mixing model back to the old one
 //
 // Revision 1.5  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc

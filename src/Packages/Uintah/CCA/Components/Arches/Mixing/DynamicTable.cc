@@ -43,10 +43,9 @@ DynamicTable::tableSetup(int numTableDim, MixRxnTableInfo* tableInfo)
     } 
 }
   
-void
-DynamicTable::getProps(const vector<double> mixRxnVar, Stream& outStream)
+Stream
+DynamicTable::getProps(const vector<double> mixRxnVar)
 {
-  //cout << "Made it to GetProps" << endl;
   for (int i = 0; i < d_tableDim; i++)
     {
 	// calculates index in the table
@@ -87,30 +86,27 @@ DynamicTable::getProps(const vector<double> mixRxnVar, Stream& outStream)
   int *upIndex = new int[d_tableDim + 1];
   double *lowFactor = new double[d_tableDim + 1];
   double *upFactor = new double[d_tableDim + 1];
-  interpolate(0, lowIndex, upIndex, lowFactor, upFactor, outStream);
+  Stream outStream = interpolate(0, lowIndex, upIndex, lowFactor, upFactor);
   delete[] lowIndex;
   delete[] upIndex;
   delete[] lowFactor;
   delete[] upFactor;
+  return outStream;
 }
 
-void
+Stream
 DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
-			  double* lowFactor, double* upFactor, Stream& interpValue) {
-  Stream upValue;
-  Stream lowValue;
-  //cout << "made it to interpolate" << endl;
+			      double* lowFactor, double* upFactor) {
   if (currentDim == (d_tableDim- 1))
     {
       lowFactor[currentDim] = d_tableBoundsVec[0][currentDim];
       upFactor[currentDim] = d_tableBoundsVec[1][currentDim];
       lowIndex[currentDim] = d_tableIndexVec[0][currentDim];
-      //cout << "interpolate:lowIndex = " << lowIndex[0] << " " << lowIndex[1] << endl;
-      tableLookUp(lowIndex, lowValue);
+      Stream lowValue = tableLookUp(lowIndex);
       lowIndex[currentDim] = d_tableIndexVec[1][currentDim];
-      tableLookUp(lowIndex, upValue);
-      interpValue =  lowValue.linInterpolate(upFactor[currentDim],
-					     lowFactor[currentDim], upValue);
+      Stream upValue = tableLookUp(lowIndex);
+      return lowValue.linInterpolate(upFactor[currentDim],
+				     lowFactor[currentDim], upValue);
     }
   else
     {
@@ -120,16 +116,16 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
       upFactor[currentDim] = d_tableBoundsVec[1][currentDim];
       for (int i = 0; i < currentDim; i++)
 	upIndex[i] = lowIndex[i];
-      Stream leftValue;
-      interpolate(currentDim+1,lowIndex,upIndex,lowFactor, upFactor, leftValue);
+      Stream leftValue = interpolate(currentDim+1,lowIndex,upIndex,
+				     lowFactor, upFactor);
       if (currentDim < (d_tableDim - 2))
 	{
 	  lowIndex[currentDim] = d_tableIndexVec[0][currentDim];
 	  upIndex[currentDim] = d_tableIndexVec[1][currentDim];
 	}
-      Stream rightValue;
-      interpolate(currentDim+1,upIndex,lowIndex,lowFactor, upFactor, rightValue);
-      interpValue =  leftValue.linInterpolate(upFactor[currentDim], 
+      Stream rightValue =  interpolate(currentDim+1,upIndex,lowIndex,
+				       lowFactor, upFactor);
+      return leftValue.linInterpolate(upFactor[currentDim], 
 				      lowFactor[currentDim], rightValue);
     }
 }
@@ -138,12 +134,10 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
  
 //
 // $Log$
-// Revision 1.6  2002/03/28 23:14:50  spinti
-// 1. Added in capability to save mixing and reaction tables as KDTree or 2DVector
-// 2. Tables can be declared either static or dynamic
-// 3. Added capability to run using static clipped Gaussian MixingModel table
-// 4. Removed mean values mixing model option from PDFMixingModel and made it
-//    a separate mixing model, MeanMixingModel.
+// Revision 1.7  2002/04/08 18:09:42  rawat
+// i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
+// ii) Modified computeStableTImeStep to include diffusion time scale
+// iii) changed mixing model back to the old one
 //
 // Revision 1.5  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc

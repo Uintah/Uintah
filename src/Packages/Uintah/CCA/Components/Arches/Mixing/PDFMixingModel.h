@@ -12,7 +12,6 @@ GENERAL INFORMATION
     PDFMixingModel.h - Declaration of PDFMixingModel class
 
     Author: Rajesh Rawat (rawat@crsim.utah.edu)
-    Revised: Jennifer Spinti (spinti@crsim.utah.edu)
     
     Creation Date : 05-30-2000
 
@@ -39,11 +38,10 @@ POSSIBLE REVISIONS
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/DynamicTable.h>
 
 #include <vector>
-#include <string>
 
 namespace Uintah {
   class ReactionModel;
-  class MixRxnTable;
+  class KD_Tree;
   class MixRxnTableInfo;
   class Integrator;
   class InletStream;
@@ -55,7 +53,7 @@ public:
       // GROUP: Constructors:
       ///////////////////////////////////////////////////////////////////////
       //
-      // Constructs an instance of PDFMixingModel
+      // Constructor taking
       //   [in] 
       //
       PDFMixingModel();
@@ -91,7 +89,7 @@ public:
       // All variables are in SI units with pressure in Pascals.
       // Parameters:
       // [in] mixVar is an array of independent variables
-      virtual Stream speciesStateSpace(const std::vector<double> mixVar);
+      virtual Stream speciesStateSpace(const std::vector<double>& mixVar);
 
 
       // GROUP: Get Methods :
@@ -113,12 +111,6 @@ public:
       }
       inline int getTableDimension() const{
 	return d_tableDimension;
-      }
-      inline string getMixTableType() const{
-	return d_tableType;
-      }
-      inline string getPDFShape() const {
-	return d_pdfShape;
       }
       //***warning** compute totalvars from number of species and dependent vars
       inline int getTotalVars() const {
@@ -153,30 +145,26 @@ private:
       PDFMixingModel& operator=(const PDFMixingModel&);
 
 private:
-      // Looks for needed entry in table and returns that entry. If entry 
-      // does not exist and table is dynamic, it calls integrator to compute
-      // entry before returning it. If table is static and entry is non-existent,
-      // it exits program.
-      void tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars);
-      // Reads static data files created by James' tableGenerator program
-      void readStaticTable();
+      // Looks for needed entry in KDTree and returns that entry. If entry 
+      // does not exist, calls integrator to compute entry before returning it.
+      Stream tableLookUp(int* tableKeyIndex);
 
       MixRxnTableInfo* d_tableInfo;
       int d_numMixingVars;
       int d_numMixStatVars;
       int d_numRxnVars;
-      string d_pdfShape;
-      string d_tableType;		 
       int d_depStateSpaceVars;
       bool d_adiabatic;
       std::vector<Stream> d_streams; 
       int d_tableDimension;
-      bool d_dynamic; //If true, table is dynamic; if false, table is static
+      // two dimensional arrays for storing information for linear interpolation
+      int **d_tableIndexVec;
+      double **d_tableBoundsVec;
 
       // Data structure class that stores the table entries for state-space
       // variables as a function of independent variables.
-      // Implemented either as a k-d tree or 2D vector data structure.
-      MixRxnTable* d_mixTable;
+      // This could be implemented either as a k-d or a binary tree data structure.
+      KD_Tree* d_mixTable;
       Integrator* d_integrator;
       ReactionModel* d_rxnModel;
       
