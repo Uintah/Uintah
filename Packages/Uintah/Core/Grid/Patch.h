@@ -144,7 +144,8 @@ WARNING
      CellIterator getSFCXIterator(const int offset = 0) const;
      CellIterator getSFCYIterator(const int offset = 0) const;
      CellIterator getSFCZIterator(const int offset = 0) const;
-     
+     CellIterator getSFCIterator( const int dir, const int offset = 0) const; 
+
      //////////
      // Insert Documentation Here:
      NodeIterator getNodeIterator() const;

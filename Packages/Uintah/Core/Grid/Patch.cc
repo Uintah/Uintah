@@ -386,7 +386,6 @@ Patch::getExtraCellIterator(const IntVector gc) const
   return CellIterator(getCellLowIndex()-gc, getCellHighIndex()+gc);
 }
 
-
 //__________________________________
 //  Iterates over all interior facing cell faces
 CellIterator
@@ -434,6 +433,20 @@ Patch::getSFCZIterator(const int offset) const
   return CellIterator(low, hi);
 }
 
+CellIterator
+Patch::getSFCIterator(const int dir, const int offset) const
+{
+  IntVector low,hi; 
+  if (dir == 0) {
+    return getSFCXIterator(offset);
+  }
+  if (dir == 1) {
+    return getSFCYIterator(offset);
+  }
+  if (dir == 2) {
+    return getSFCZIterator(offset);
+  } 
+} 
 
 CellIterator    
 Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
