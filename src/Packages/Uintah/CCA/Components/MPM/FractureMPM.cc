@@ -152,7 +152,8 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    ProblemSpecP p = prob_spec->findBlock("DataArchiver");
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
-   crackMethod->d_outputInterval=d_outputInterval; 
+   if(!p->get("outputCFInterval", crackMethod->d_outputCFInterval))
+      crackMethod->d_outputCFInterval=0.; 
 
    //Search for the MaterialProperties block and then get the MPM section
 
