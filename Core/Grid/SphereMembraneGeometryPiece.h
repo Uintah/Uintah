@@ -34,7 +34,9 @@ KEYWORDS
 	
 DESCRIPTION
    Creates a sphere from the xml input file description.
-   Requires three inputs: origin, radius and thickness.
+   Requires five inputs: origin, radius and thickness as well as
+   num_lat and num_long.  These last two indicate how many lines of
+   latitude and longitude there are that are made up by particles.
    There are methods for checking if a point is inside the sphere
    and also for determining the bounding box for the sphere.
    The input form looks like this:
@@ -42,6 +44,8 @@ DESCRIPTION
          <origin>[0.,0.,0.]</origin>
 	 <radius>2.0</radius>
 	 <thickness>0.1</thickness>
+	 <num_lat>20</num_lat>
+	 <num_long>40</num_long>
        </sphere_membrane>
 	
 	
@@ -75,6 +79,9 @@ WARNING
          int createParticles(const Patch* patch,
                              ParticleVariable<Point>&  pos,
                              ParticleVariable<double>& vol,
+                             ParticleVariable<Vector>& pt1,
+                             ParticleVariable<Vector>& pt2,
+                             ParticleVariable<Vector>& pn,
                              particleIndex start);
 
 
@@ -83,6 +90,8 @@ WARNING
 	 Point  d_origin;
 	 double d_radius;
 	 double d_h;
+	 double d_numLat;
+	 double d_numLong;
       };
 } // End namespace Uintah
 
