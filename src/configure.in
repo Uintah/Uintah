@@ -41,9 +41,9 @@ AC_ARG_ENABLE(exename,
 gmake_version=`gmake -version | grep version | cut -f4 -d" "`
 
 if test -z "$gmake_version"; then
-    echo "Cannot tell which version of gmake you are using!"
-    echo ""
-    echo "You must be using gmake version 3.78.1!"
+    AC_MSG_WARN(Cannot tell which version of gmake you are using!)
+    AC_MSG_WARN()
+    AC_MSG_ERROR(You must be using gmake version 3.78.1!)
     exit 1
 else
 
@@ -64,8 +64,7 @@ else
     fi
 
     if test "$gmake_too_old" = "true"; then
-        echo "gmake version ($gmake_version) is too old.  Need at least 3.78.1"
-        exit 1
+        AC_MSG_ERROR(gmake version ($gmake_version) is too old.  Need at least 3.78.1)
     fi
 fi
 
@@ -163,28 +162,28 @@ AC_ARG_ENABLE(output-avg-walltime,
 
 extra_cflags="";
 if test "$debug" = "no"; then
-  echo "     No debug flags."
+  AC_MSG_WARN(   No debug flags.)
 elif test "$debug" = "yes"; then
   extra_cflags="-g ${extra_cflags}";
-  echo "     -g debug flag."
+  AC_MSG_WARN(   -g debug flag.)
 else
   extra_cflags="$debug ${extra_cflags}";
-  echo "     " $debug" debug flags."
+  AC_MSG_WARN(   $debug debug flags.)
 fi
 
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
     extra_cflags="-O2 ${extra_cflags}";
-    echo "     -O2 optimize flag."
+    AC_MSG_WARN(     -O2 optimize flag.)
   else
-    echo "     No optimize flags."
+    AC_MSG_WARN(     No optimize flags.)
   fi
 elif test "$optimize" = "yes"; then
   extra_cflags="-O2 ${extra_cflags}";
-  echo "     -O2 optimize flag."
+  AC_MSG_WARN(     -O2 optimize flag.)
 else
   extra_cflags="$optimize ${extra_cflags}";
-  echo "     " $optimize" optimize flags."
+  AC_MSG_WARN(     " $optimize" optimize flags.)
 fi
 
 
@@ -219,7 +218,7 @@ AC_ARG_ENABLE(64bit,
 
 NEED_SONAME=no
 case $host in
-  *-irix*) echo -n "Checking for /opt/MIPSpro/bin/cc... "
+  *-irix*) AC_MSG_CHECKING(/opt/MIPSpro/bin/cc)
 	   if test "$is_64bit" = "yes" ; then
              BINARYFLAGS="-64 -mips4"
 	     if test "$thirdparty" = "/res/sci/data1/SCIRun_Thirdparty_32"; then
@@ -229,27 +228,27 @@ case $host in
              BINARYFLAGS="-n32 -mips4"
            fi
            if test -f /opt/MIPSpro/bin/cc; then
-             echo "yes"
-             echo "  Using MIPSpro compilers instead of gcc; they're better"
+             AC_MSG_RESULT(yes)
+             AC_MSG_RESULT(  Using MIPSpro compilers instead of gcc; they're better)
              CC=/opt/MIPSpro/bin/cc
              CXX=/opt/MIPSpro/bin/CC
              AS=/opt/MIPSpro/bin/as
              LD=/opt/MIPSpro/bin/ld
            else
-             echo "no"
+             AC_MSG_RESULT(no)
            fi
 #           if test "${CC}" = "" ; then
              if type CC | sed 's/^.* //' > /dev/null 2>&1 ; then
                CXX=`type CC | sed 's/^.* //' `
-               echo "Using C++ compiler ${CXX}"
+               AC_MSG_RESULT(Using C++ compiler ${CXX})
              fi
              if type cc | sed 's/^.* //' > /dev/null 2>&1 ; then
                CC=`type cc | sed 's/^.* //' `
-               echo "Using C compiler ${CC}"
+               AC_MSG_RESULT(Using C compiler ${CC})
              fi
              if type as | sed 's/^.* //' > /dev/null 2>&1 ; then
                AS=`type as | sed 's/^.* //' `
-               echo "Using Assembler ${AS}"
+               AC_MSG_RESULT(Using Assembler ${AS})
              fi
 #           fi
 	   F77=f77
@@ -286,8 +285,12 @@ case $host in
      IMAGE_LIBS=""
      AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
            ;;
+  *-aix*)
+     AC_MSG_WARN(WARNING: AIX is not completely supported!)
+     TIME_IMPL=Time_unix.cc
+           ;;
   *)
-     echo "WARNING: Untested configuration - you are on your own!"
+     AC_MSG_WARN(WARNING: Untested configuration - you are on your own!)
      AC_PROG_CC
      AC_PROG_CXX
      ;;
@@ -321,7 +324,7 @@ AC_ARG_WITH(mpi,
 if test -z "$mpi"; then
   MPI_INCLUDE_DIR=""
   for trylib in mpi mpich; do
-     echo -n "Looking for MPI in -l$trylib... "
+     AC_MSG_CHECKING(for MPI in -l$trylib)
      LIBS="$oldLibs -l$trylib"
      AC_TRY_LINK(
 #include <mpi.h>
@@ -338,7 +341,7 @@ else
   oldLibs=$LIBS
   for trydir in lib lib32 lib64; do
      for trylib in mpi mpich; do
-        echo -n "Looking for MPI in -L$mpi/$trydir -l$trylib... "
+        AC_MSG_CHECKING(for MPI in -L$mpi/$trydir -l$trylib)
         LIBS="$oldLibs -L$mpi/$trydir -l$trylib"
         AC_TRY_LINK(
 #include <mpi.h>
@@ -346,7 +349,8 @@ else
 	int argc;
 	char** argv;
 	MPI_Init(&argc, &argv);
-, mpi_dir=$mpi/$trydir; mpi_lib=$trylib; echo "found"; break 2, echo "not found")
+, mpi_dir=$mpi/$trydir; mpi_lib=$trylib; 
+	AC_MSG_RESULT(found); break 2, AC_MSG_RESULT(not found))
      done
   done
   LIBS=$oldLibs
@@ -387,8 +391,7 @@ case $threads in
 	    THREAD_DEFINE=""
   ;;  
   *)
-    echo "Unknown thread implementation: $threads"
-    exit 1
+    AC_MSG_ERROR(Unknown thread implementation: $threads)
   ;;
 esac
 AC_SUBST(THREAD_LIBS)
@@ -403,19 +406,18 @@ THREAD_IMPL="Thread_"$threads".cc"
 
 AC_PATH_PROG(PERL, perl, none)
 if test "${PERL}" = "none" ; then
-  echo "  You must have perl on your path for configure to succeed."
-  exit 1
+  AC_MSG_ERROR(  You must have perl on your path for configure to succeed.)
 fi
 
 ##-- Twitty SGI License Chatter ----------------------------------------------
 
-echo -n "Checking if ${CC} talks too much... "
+AC_MSG_CHECKING(if ${CC} talks too much)
 touch wow.c
 if ${CC} -c wow.c 2>&1 | fgrep "requires a license password" > /dev/null ; then
-  echo "yes"
-  echo "  Using cc and CC wrappers in scripts/cc and scripts/CC to remove"
-  echo "  irritating license verbosity from SGI's Varsity Pack MIPSpro"
-  echo "  compilers."
+  AC_MSG_RESULT(yes)
+  AC_MSG_WARN(  Using cc and CC wrappers in scripts/cc and scripts/CC to remove)
+  AC_MSG_WARN(  irritating license verbosity from SGI's Varsity Pack MIPSpro)
+  AC_MSG_WARN(  compilers.)
 
   mkdir -p scripts
   sed "s+VERBOSE_CC+${CC}+g;" < ${srcdir}/scripts/cc.in > scripts/cc
@@ -425,13 +427,13 @@ if ${CC} -c wow.c 2>&1 | fgrep "requires a license password" > /dev/null ; then
   CC="$(OBJTOP)/scripts/cc"
   CXX="$(OBJTOP)/scripts/CC"
 else
-  echo "no"
+  AC_MSG_RESULT(no)
 fi
 rm -f wow.c wow.o
 
 ##-- Dependency Regen Switch -------------------------------------------------
 
-echo -n "Determining cc dependency regen switch: "
+AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
 echo "#include <stdio.h>" > configure-test.c
 mkdir configure-test-dir
@@ -452,9 +454,17 @@ fi
 
 # SGI cc wants -MDupdate <filename>.
 if test "${CC_DEPEND_REGEN}" = "" ; then
-  ${CC} -MDupdate configure-test.d -c configure-test.c
+  ${CC} -MDupdate configure-test.d -c configure-test.c 2> /dev/null
   if test -f configure-test.d ; then
     CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
+  fi
+fi
+
+# IBM/AIX KCC wants "-M > filename"
+if test "${CC_DEPEND_REGEN}" = "" ; then
+  ${CC} -M -c configure-test.c > configure-test.d 2> /dev/null
+  if test -s configure-test.d ; then
+    CC_DEPEND_REGEN='-M'
   fi
 fi
 
@@ -462,10 +472,10 @@ rm -f configure-test.*
 rm -rf configure-test-dir
 
 if test "${CC_DEPEND_REGEN}" = "" ; then
-  echo unknown
-  echo "  Warning: Dependency information will not be maintained."
+  AC_MSG_RESULT(unknown)
+  AC_MSG_WARN(Dependency information will not be maintained.)
 else
-  echo $CC_DEPEND_REGEN
+  AC_MSG_RESULT($CC_DEPEND_REGEN)
 fi
 AC_SUBST(CC_DEPEND_REGEN)
 AC_SUBST(CC_DEPEND_REGEN_MOVE)
@@ -475,7 +485,7 @@ AC_SUBST(F77_DEPEND_REGEN)
 ##-- How Many Processors -----------------------------------------------------
 
 unset NUM_CPUS
-echo -n "Determining physical processor count: "
+AC_MSG_CHECKING(physical processor count)
 case $host in
   *-irix*) NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"
            ;;
@@ -487,7 +497,7 @@ esac
 if ! NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
   NUM_CPUS="1"
 fi
-echo $NUM_CPUS
+AC_MSG_RESULT($NUM_CPUS)
 
 MAKE_PARALLELISM="`expr ${NUM_CPUS} \* 2`"
 export MAKE_PARALLELISM
@@ -497,11 +507,10 @@ AC_SUBST(MAKE_PARALLELISM)
 
 if test "$tau" ; then
   if ! test -f "$tau/libTAU.so" ; then
-	echo "Directory '$tau' does not contain libTAU.so.  Bye!"
-	exit 1
+	AC_MSG_ERROR(Directory '$tau' does not contain libTAU.so.  Bye!)
   fi
 
-  echo "Using TAU dir: $tau"
+  AC_MSG_RESULT(Using TAU dir: $tau)
 
   TAU_INCLUDE_DIR="${tau}/../../include"
   TAU_LIB_DIR="${tau}"
@@ -516,7 +525,7 @@ AC_SUBST(TAU_LIB_FLAG)
 
 ##-- Find TCL ----------------------------------------------------------------
 
-echo -n "checking for Tcl 8.X... "
+AC_MSG_CHECKING(for Tcl 8.X)
 
 # try the user supplied path first
 if test "$tcl" ; then
@@ -557,21 +566,19 @@ if test "$TCL_MAJOR_VERSION" = "8" ; then
   # TCL_LIB_FLAG set by tclConfig.sh, but needs eval'ing for debug flags
   TCL_LIB_FLAG="`eval echo $TCL_LIB_FLAG`"
   TCL_INIT_DIR="${TCL_LIB_DIR}/tcl${TCL_VERSION}"
-  echo -L$TCL_LIB_DIR $TCL_LIB_FLAG
+  AC_MSG_RESULT(-L$TCL_LIB_DIR $TCL_LIB_FLAG)
 
   if test "$TCL_LD_FLAGS" != "" ; then
     if test "$host" = "*-irix*"; then
-      echo "  XXX: Check SGI ABI"
+      AC_MSG_WARN(  XXX: Check SGI ABI)
     fi
   fi
 else
   if test -z "TCL_MAJOR_VERSION" ; then
-    echo "not found -- must build"
-    echo "  Implement me."
+    AC_MSG_ERROR(not found -- must build.  Implement me.)
   else
-    echo "incorrect tcl version $TCL_MAJOR_VERSION$TCL_MINOR_VERSION$TCL_PATCH_LEVEL found"
+    AC_MSG_ERROR(incorrect tcl version $TCL_MAJOR_VERSION$TCL_MINOR_VERSION$TCL_PATCH_LEVEL found)
   fi
-  exit 1
 fi
 
 # These are headers we need to build our custom widgets.
@@ -580,9 +587,8 @@ if test ! -d "$TCL_SRC_DIR/generic" ||
    test ! -f "$TCL_SRC_DIR/generic/tclPort.h" ||
    test ! -f "$TCL_SRC_DIR/generic/tclMath.h" ||
    test ! -f "$TCL_SRC_DIR/generic/tclInt.h"; then
-  echo "Couldn't find the necessary Tcl include files."
-  echo "The full Tcl source is required.  exiting."
-  exit 1
+  AC_MSG_WARN(Couldn't find the necessary Tcl include files.)
+  AC_MSG_ERROR(The full Tcl source is required.  exiting.)
 fi
 
 AC_SUBST(TCL_INCLUDE_DIR)
@@ -593,7 +599,7 @@ AC_SUBST(TCL_INIT_DIR)
 
 ##-- Find Tk -----------------------------------------------------------------
 
-echo -n "checking for Tk 8.X... "
+AC_MSG_CHECKING(for Tk 8.X)
 
 if test "$tk" ; then
   unset cfsh
@@ -640,26 +646,22 @@ if test "$TK_MAJOR_VERSION" = "8" ; then
   TK_LIB_FLAG="`eval echo $TK_LIB_FLAG`"
   TK_LIB_SPEC="`eval echo $TK_LIB_SPEC`"
 
-  echo -L$TK_LIB_DIR $TK_LIB_FLAG
+  AC_MSG_RESULT(-L$TK_LIB_DIR $TK_LIB_FLAG)
 
   # Can't check the SGI ABI 'cause LD_FLAGS doesn't get def'd in tkConfig.sh;
   # just assume the tk we find matches the tcl we find.
 
   if ! test "$TCL_PREFIX" = "$TK_PREFIX" ; then
-    echo "  WARNING: Tcl and Tk not colocated; this might indicate a problem"
+    AC_MSG_WARN(Tcl and Tk not colocated; this might indicate a problem)
   fi
 
   if ! test "$TCL_VERSION" = "$TK_VERSION" -a \
             "$TCL_PATCH_LEVEL" = "$TK_PATCH_LEVEL" ; then
-    echo "  ERROR: Tcl and Tk are not the same version & patch level; this is Wrong"
-    exit 1
+    AC_MSG_ERROR(Tcl and Tk are not the same version & patch level; this is Wrong)
   fi
 
 else
-  echo "not found -- must build"
-  BUILDING_TK=1
-  echo "  Implement me."
-  exit 1
+  AC_MSG_ERROR(not found -- must build.  Implement me.)
 fi
 
 # These are headers we need to build our custom widgets.
@@ -667,9 +669,8 @@ if test ! -d "$TK_SRC_DIR/generic" ||
    test ! -f "$TK_SRC_DIR/generic/tk.h" ||
    test ! -f "$TK_SRC_DIR/generic/tk3d.h" ||
    test ! -f "$TK_SRC_DIR/generic/tkPort.h" ; then
-  echo "Couldn't find the necessary Tk include files."
-  echo "The full Tk source is required.  exiting."
-  exit 1
+  AC_MSG_WARN(Couldn't find the necessary Tk include files.)
+  AC_MSG_ERROR(The full Tk source is required.  exiting.)
 fi
 
 AC_SUBST(TK_INCLUDE_DIR)
@@ -681,7 +682,7 @@ AC_SUBST(TK_VERSION)
 
 ##-- Find iTcl ---------------------------------------------------------------
 
-echo -n "checking for [[incr Tcl/Tk]] 3.X... "
+AC_MSG_CHECKING([for [[incr Tcl/Tk]] 3.X])
 
 if test "$BUILDING_TK" = "" ; then
 
@@ -773,22 +774,20 @@ if test "$ITCL_MAJOR_VERSION" = "3" ; then
   ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
   ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${ITCL_VERSION}"
-  echo "${ITCL_LIB_SPEC} -l`basename $ITK_LIB_FILE | sed -e 's,lib,,g' -e 's,.so,,g'`"
+  result="${ITCL_LIB_SPEC} -l`basename $ITK_LIB_FILE | sed -e 's,lib,,g' -e 's,.so,,g'`"
+  AC_MSG_RESULT($result)
 else
   if test -z "$ITCL_VERSION" ; then
-    echo "not found -- must build"
-    echo "  Implement me."
+    AC_MSG_ERROR(not found -- must build.  Implement me.)
   else
-    echo "incorrect itcl/itk version $ITCL_VERSION$ITCL_PATCH_LEVEL found"
+    AC_MSG_ERROR(incorrect itcl/itk version $ITCL_VERSION$ITCL_PATCH_LEVEL found)
   fi
-  exit 1
 fi
 
 if test ! -d "$ITCL_SRC_DIR/generic" ||
    test ! -f "$ITCL_SRC_DIR/generic/itcl.h" ||
    test ! -f "$ITK_SRC_DIR/generic/itk.h" ; then
-  echo "Couldn't find the [[incr Tcl/Tk]] include files.  exiting."
-  exit 1
+  AC_MSG_ERROR(Couldn't find the [[incr Tcl/Tk]] include files.  exiting.)
 fi
 
 AC_SUBST(ITCLSH)
@@ -806,22 +805,27 @@ AC_SUBST(ITK_LIB_DIR)
 AC_SUBST(ITK_LIB_SPEC)
 
 ##-- Find BLT ---------------------------------------------------------------
-echo -n "checking for BLT 2.4x... "
+AC_MSG_CHECKING(for BLT 2.4x)
 
 if test "$blt" &&
-   test -n "`ls -1r $blt/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+      ( test -f "$blt/lib/libBLT24.so" || test -f "$blt/lib/libBLT24.a" ); then
   BLT_PREFIX=$blt
-elif test "$tcl" &&
-     test -n "`ls -1r $tcl/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+elif test "$tcl" && 
+      ( test -f "$tcl/lib/libBLT24.so" || test -f "$tcl/lib/libBLT24.a" ); then
   BLT_PREFIX=$tcl
 fi
 
 if test -z "$BLT_PREFIX" ; then
-  if test -n "`ls -1r $thirdparty/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+
+echo "here: thirdparty: $thirdparty"
+
+  if test -f "$thirdparty/lib/libBLT24.so" || 
+     test -f "$thirdparty/lib/libBLT24.a"; then
     BLT_PREFIX="$thirdparty"
-  elif test -n "`ls -1r /usr/local/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`";  then
+  elif test -f "/usr/local/lib/libBLT24.so" || 
+       test -f "/usr/local/lib/libBLT24.a";  then
     BLT_PREFIX=/usr/local
-  elif test -n "`ls -1r /usr/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+  elif test -f "/usr/lib/libBLT24.so" || test -f "/usr/lib/libBLT24.a"; then
     BLT_PREFIX=/usr
   fi
 fi
@@ -830,17 +834,14 @@ if test "$BLT_PREFIX" ; then
   BLT_INCLUDE_DIR="$BLT_PREFIX/include"
   BLT_LIB_DIR="$BLT_PREFIX/lib"
   BLT_LIB_FLAG="-lBLT24"
-  echo -L$BLT_LIB_DIR $BLT_LIB_FLAG $BLT_INCLUDE_DIR
+  AC_MSG_RESULT(-L$BLT_LIB_DIR $BLT_LIB_FLAG -I$BLT_INCLUDE_DIR)
 else
-  echo "not found -- must build"
-  echo "  Implement me."
-  exit 1
+  AC_MSG_ERROR(not found -- must build.  Implement me.)
 fi
 
 if test ! -d "$BLT_INCLUDE_DIR" ||
    test ! -f "$BLT_INCLUDE_DIR/blt.h" ; then
-  echo "Couldn't find the BLT include file.  exiting."
-  exit 1
+  AC_MSG_ERROR(Couldn't find the BLT include file in $BLT_INCLUDE_DIR.  Exiting.)
 fi
 
 AC_SUBST(BLT_INCLUDE_DIR)
@@ -849,7 +850,7 @@ AC_SUBST(BLT_LIB_FLAG)
 
 ##-- Find Xerces-C  ------------------------------------------------------
 
-echo -n "checking for Xerces-C 1.X... "
+AC_MSG_CHECKING(for Xerces-C 1.X)
 
 if test "$xerces" &&
    test -n "`ls -1r $xerces/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
@@ -867,27 +868,33 @@ if test -z "$XML_LIB_DIR"; then
 fi
 
 if test -z "$XML_LIB_DIR"; then
-  echo "Couldn't find a Xerces-C library.  exiting."
-  exit 1
+  AC_MSG_ERROR(Could not find a Xerces-C library.  exiting.)
 fi
 
-echo $XML_LIB_DIR
+AC_MSG_RESULT($XML_LIB_DIR)
+
+
 if (test $XML_LIB_DIR &&
     test -d "$XML_LIB_DIR/../util" &&
     test -d "$XML_LIB_DIR/../sax" &&
     test -d "$XML_LIB_DIR/../dom" &&
     test -d "$XML_LIB_DIR/../parsers") ; then
   XML_INCLUDE_DIR="$XML_LIB_DIR/.."
+elif (test $XML_LIB_DIR &&
+    test -d "$XML_LIB_DIR/../include/util" &&
+    test -d "$XML_LIB_DIR/../include/sax" &&
+    test -d "$XML_LIB_DIR/../include/dom" &&
+    test -d "$XML_LIB_DIR/../include/parsers") ; then
+  XML_INCLUDE_DIR="$XML_LIB_DIR/../include"
 else
-  echo "Couldn't find the Xerces-C headers.  exiting."
-  exit 1
+  AC_MSG_ERROR(Couldn't find the Xerces-C headers.  exiting.)
 fi
 
 XML_LIB_FLAG="`ls -1 $XML_LIB_DIR/libxerces-c1_?.so |\
 	      sort -r | head -n 1 |  sed -e's,lib,,g' -e 's,.so,,g'`"
 XML_LIB_FLAG="-l`basename $XML_LIB_FLAG`"
 
-echo "-L$XML_LIB_DIR $XML_LIB_FLAG"
+AC_MSG_RESULT(-L$XML_LIB_DIR $XML_LIB_FLAG)
 
 AC_SUBST(XML_LIB_DIR)
 AC_SUBST(XML_LIB_FLAG)
@@ -913,23 +920,23 @@ if test "${teem_pkg}" = "yes" ; then
       if test -e "${withval}/include/nrrd.h"; then
         TEEM_PREFIX="$withval"
       else
-        echo "\n*** Error - could not find ${withval}/include/nrrd.h\n"
+        AC_MSG_ERROR(could not find ${withval}/include/nrrd.h)
         teem_pkg="no"
       fi
     else
-      echo "Remark: ignoring pathless with-teem flag"
+      AC_MSG_WARN(ignoring pathless with-teem flag)
     fi
   fi
 fi
 
 if test "${teem_pkg}" = "yes" ; then
-  echo -n "checking for teem... "
+  AC_MSG_CHECKING(for teem)
   if test "$TEEM_PREFIX" ; then
     TEEM_INCLUDE="-I${TEEM_PREFIX}/include"
     TEEM_LIB_DIR="${TEEM_PREFIX}/lib"
-    echo "${TEEM_PREFIX}"
+    AC_MSG_RESULT(${TEEM_PREFIX})
   else
-    echo "no"
+    AC_MSG_RESULT(no)
   fi
 fi
 
@@ -959,7 +966,7 @@ if test "${with_mpeg+set}" = set; then
 fi
 
 if test "$MPEG_PREFIX" != "" ; then
-  echo -n "checking for mpeg... "
+  AC_MSG_CHECKING(for mpeg)
   MPEG_DEF_FLAG="-DMPEG"
   MPEG_INCLUDE="-I${MPEG_PREFIX}/include"
   MPEG_LIBRARY="-L${MPEG_PREFIX}/lib -lmpege"
@@ -993,7 +1000,7 @@ if test "${with_libimage+set}" = set; then
 fi
 
 if test "$LIBIMAGE_PREFIX" != "" ; then
-  echo -n "checking for libimage... "
+  AC_MSG_CHECKING(for libimage)
   LIBIMAGE_DEF_FLAG="-DLIBIMAGE"
   LIBIMAGE_INCLUDE="-I${LIBIMAGE_PREFIX}/include"
   LIBIMAGE_LIBRARY="-L${LIBIMAGE_PREFIX}/lib -limage"
@@ -1037,14 +1044,21 @@ fi
 
 ##-- Find location of OpenGL -----------------------------------------------
 
-echo -n "checking for OpenGL... "
+AC_MSG_CHECKING(for OpenGL)
 
 if test -e /usr/include/GL; then
-  GL_INCLUDE_DIR="/usr/include"
+  #GL_INCLUDE_FLAG="-I/usr/include"
+  # using -I/usr/include is a bad idea... compilers should
+  # be looking there anyway.  If they are not then we have
+  # a problem as KCC cannot be told to use /usr/include
+  GL_INCLUDE_FLAG=""
 elif test -e /usr/X11R6/include/GL; then
-  GL_INCLUDE_DIR="/usr/X11R6/include"
+  GL_INCLUDE_FLAG="-I/usr/X11R6/include"
 elif test -e /usr/local/include/GL; then
-  GL_INCLUDE_DIR="/usr/local/include"
+  GL_INCLUDE_FLAG="-I/usr/local/include"
+else
+  AC_MSG_WARN(could not find the location of the GL headers.)
+  AC_MSG_ERROR(by standard convention, they should be in /usr/include/GL)
 fi
 
 if test -e /usr/lib/libGL.so; then
@@ -1055,16 +1069,9 @@ elif test -e /usr/local/lib/libGL.so; then
   GL_LIB_DIR="/usr/local/lib"
 fi
 
-if test -z "$GL_INCLUDE_DIR"; then
-  echo "couldn't find the location of the GL headers."
-  echo "by standard convention, they should be in /usr/include/GL"
-  echo ""
-  exit 1
-else
-  echo libraries $GL_LIB_DIR, headers $GL_INCLUDE_DIR/GL
-fi
+AC_MSG_RESULT(-l$GL_LIB_DIR -L$GL_INCLUDE_FLAG)
 
-AC_SUBST(GL_INCLUDE_DIR)
+AC_SUBST(GL_INCLUDE_FLAG)
 AC_SUBST(GL_LIB_DIR)
 
 
