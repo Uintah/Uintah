@@ -101,7 +101,7 @@ elif [ -f  "$BUILDROOT"/opt/remake.log ]; then
     remake_file="$BUILDROOT"/opt/remake.log
 fi
 
-if [ "$MAIL_REMAKE_LOG_TO" != "" ]; then
+if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
     subject="Failed to compile scirun with Uintah on `hostname`"
 
     cat > "$BUILDROOT"/mail.msg <<EOF
