@@ -128,8 +128,8 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>ch4blob1.uda</filebase>
-      <!--<outputInterval>0.005</outputInterval> -->
-      <outputTimestepInterval> 1 </outputTimestepInterval>
+      <outputInterval>0.0002</outputInterval>
+      <!--      <outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="press_CC"/>
@@ -244,6 +244,10 @@
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
 	   <defaultValue name="heat loss">0.0</defaultValue>
+           <derivedValue name="initial heat capacity Cp(j/kg-K)">[heat capacity Cp(j/kg-K)]</derivedValue>
+           <derivedValue name="initial heat capacity Cv(j/kg-K)">[heat capacity Cv(j/kg-K)]</derivedValue>
+           <derivedValue name="initial gamma">[gamma]</derivedValue>
+           <constantValue name="initial temp(K)">298</constantValue>
 	   <filename>inputs/Models/ch4.rxn</filename>
 	</table>
         <material>BackgroundGas</material>
