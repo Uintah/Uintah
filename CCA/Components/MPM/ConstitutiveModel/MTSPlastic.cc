@@ -84,7 +84,7 @@ MTSPlastic::allocateCMDataAddRequires(Task* task,
 				      MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,pMTSLabel, Ghost::None);
+  task->requires(Task::NewDW,pMTSLabel_preReloc, Ghost::None);
 }
 
 void 
@@ -103,7 +103,7 @@ MTSPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
   new_dw->allocateTemporary(pMTS,addset);
 
-  old_dw->get(o_MTS,pMTSLabel,delset);
+  old_dw->get(o_MTS,pMTSLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o = delset->begin(); o != delset->end(); o++, n++) {
