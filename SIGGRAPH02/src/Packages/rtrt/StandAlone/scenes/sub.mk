@@ -54,6 +54,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/cutdemo.mo  \
 	$(SRCDIR)/basic-sea.mo  \
 	$(SRCDIR)/dtiglyph.mo \
+	$(SRCDIR)/volume_color.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
 	$(SRCDIR)/ramsey.mo \
