@@ -26,6 +26,7 @@ public:
   MarchingCubesAlg() {}
   virtual ~MarchingCubesAlg() {}
 
+  virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
   virtual GeomObj* search( double ) = 0;
 };
@@ -47,6 +48,7 @@ public:
   MarchingCubes( AI *ai ) : ai_(ai), tess_(0), mesh_(0) {}
   virtual ~MarchingCubes() {}
 
+  virtual void release();
   virtual void set_field( Field * );
   virtual GeomObj* search( double );
 };
@@ -54,6 +56,13 @@ public:
 
     
 // MarchingCubes
+
+template<class AI, class Tesselator>
+void 
+MarchingCubes<AI,Tesselator>::release() 
+{
+  if ( tess_ ) { delete tess_; tess_ = 0; }
+}
 
 template<class AI, class Tesselator>
 void 
