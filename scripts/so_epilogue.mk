@@ -62,10 +62,16 @@ CLEANOBJS := $(CLEANOBJS) $(OBJS)
 #
 SRCS := INVALID_SRCS.cc
 
+ifneq ($(GENHDRS),)
 ALLGEN := $(ALLGEN) $(GENHDRS)
+$(OBJS): $(GENHDRS)
+endif
 
 #
 # $Log$
+# Revision 1.2  2000/03/17 09:43:45  sparker
+# Fixed dependencies for $(GENHDRS)
+#
 # Revision 1.1  2000/03/17 09:30:58  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository
