@@ -3,10 +3,11 @@
 #ifndef IMAGE_H
 #define IMAGE_H 1
 
+#include <sci_defs.h> // For HAVE_OOGL
+
 #include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
-
 
 #if defined(HAVE_OOGL)
 

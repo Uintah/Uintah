@@ -1,8 +1,6 @@
 
 #include <Packages/rtrt/Core/Image.h>
 
-#include <sci_defs.h> // For HAVE_OOGL
-
 #include <GL/gl.h>
 
 #include <fstream>
