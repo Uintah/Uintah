@@ -40,7 +40,8 @@ itcl_class Module {
 	# these live in parallel temporarily
 	global $this-notes Notes
 	if ![info exists $this-notes] { set $this-notes "" }
-
+	trace variable $this-notes w "syncNotes [modname]"
+	
 	# messages should be accumulating
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
@@ -543,7 +544,7 @@ proc regenModuleMenu {modid menu_id} {
 	$menu_id add command -label "Help" -command "moduleHelp $modid"
     }
     $menu_id add command -label "Notes" \
-	-command "notesWindow $Subnet($modid) $modid notesDoneModule"
+	-command "notesWindow $modid notesDoneModule"
     if [$modid is_selected] { 
 	$menu_id add command -label "Destroy Selected" \
 	    -command "moduleDestroySelected"
@@ -593,7 +594,7 @@ proc regenConnectionMenu { menu_id conn } {
     set label [expr $Disabled($connid)?"Enable":"Disable"]
     $menu_id add command -command "disableConnection {$conn}" -label $label
     set subnet $Subnet([lindex $conn 0])
-    $menu_id add command -label "Notes" -command "notesWindow $subnet $connid"
+    $menu_id add command -label "Notes" -command "notesWindow $connid"
 }
 
 proc notesDoneModule { id } {
@@ -601,28 +602,32 @@ proc notesDoneModule { id } {
     set $id-notes $Notes($id)
 }
 
-proc notesWindow { subnet id {done ""} } {
-    global Notes Color NotesPos Subnet
+proc notesWindow { id {done ""} } {
+    global Notes Color
     if { [winfo exists .notes] } { destroy .notes }
+    setIfExists cache Notes($id) ""
     toplevel .notes
     text .notes.input -relief sunken -bd 2 -height 20
+    bind .notes.input <KeyRelease> \
+	"set Notes($id) \[.notes.input get 1.0 \"end - 1 chars\"\]"
     frame .notes.b
     button .notes.b.done -text "Done" \
-	-command "okNotesWindow $subnet $id \"$done\""
+	-command "okNotesWindow $id \"$done\""
     button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end"
-    button .notes.b.cancel -text "Cancel" -command "destroy .notes"
-    set rgb white
-    if { [info exists Color($id)] } { set rgb $Color($id) }
-    button .notes.b.reset -fg black -text "Reset Color" -command \
-	"set Color(Notes-$id) $rgb; .notes.b.color configure -bg $rgb"
+    button .notes.b.cancel -text "Cancel" -command \
+	"set Notes($id) \"$cache\"; destroy .notes"
 
-    if { [info exists Color(Notes-$id)] } { set rgb $Color(Notes-$id) }
+    setIfExists rgb Color($id) white
+    button .notes.b.reset -fg black -text "Reset Color" -command \
+	"unset Notes($id-Color); .notes.b.color configure -bg $rgb"
+
+    setIfExists rgb Notes($id-Color) $rgb
     button .notes.b.color -fg black -bg $rgb -text "Text Color" -command \
 	"colorNotes $id"
 
     frame .notes.d -relief groove -borderwidth 2
-    if {![info exists NotesPos($id)] } { set NotesPos($id) def }
-    make_labeled_radio .notes.d.pos "Display:" "" left NotesPos($id) \
+    setIfExists Notes($id-Position) Notes($id-Position) def
+    make_labeled_radio .notes.d.pos "Display:" "" left Notes($id-Position) \
 	{
 	    { "Default" def } \
 		{ "None" none } \
@@ -644,20 +649,15 @@ proc notesWindow { subnet id {done ""} } {
 }
 
 proc colorNotes { id } {
-    global Color
+    global Notes
     networkHasChanged
-    .notes.b.color configure -bg [set Color(Notes-$id) \
+    .notes.b.color configure -bg [set Notes($id-Color) \
        [tk_chooseColor -initialcolor [.notes.b.color cget -bg]]]
 }
 
-proc okNotesWindow {subnet id {done  ""}} {
-    global Notes
-    networkHasChanged
-    set Notes($id) [.notes.input get 1.0 "end - 1 chars"]
+proc okNotesWindow {id {done  ""}} {
     destroy .notes
     if { $done != ""} { eval $done $id }
-    drawNotes $subnet $id
-    update idletasks
 }
 
 proc disableModule { module state } {
@@ -728,7 +728,7 @@ proc drawConnections { connlist } {
 	    eval $minicanvas itemconfigure $miniflags
 	}
 	$minicanvas lower $id
-	drawNotes $Subnet([oMod conn]) $id
+	drawNotes $id
     }
 }
 
@@ -819,8 +819,7 @@ proc canvasExists { canvas arg } {
 }
 
 proc disableConnection { conn } {
-    networkHasChanged
-    global Subnet Disabled Color
+    global Disabled
     set connid [makeConnID $conn]
     set realConn [findRealConnection $conn]
     if {!$Disabled($connid)} {
@@ -828,17 +827,12 @@ proc disableConnection { conn } {
 	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]] } {
 	    netedit blockconnection [makeConnID $realConn]
 	}
-	set Color(Notes-$connid) $Color(ConnDisabled)
     } else {
 	set Disabled($connid) 0
 	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]] } {
 	    netedit unblockconnection [makeConnID $realConn]
 	}
-	set Color(Notes-$connid) $Color($connid)
     }
-    $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $connid
-    drawConnections [list $conn]
-    checkForDisabledModules [oMod conn] [iMod conn]
 }
 
 proc drawConnectionTrace { conn } {
@@ -860,7 +854,7 @@ proc drawConnectionTrace { conn } {
 
 #this procedure exists to support SCIRun 1.0 Networks
 proc addConnection { omodid owhich imodid iwhich } {
-    createConnection [list $omodid $owhich $imodid $iwhich]
+    return [createConnection [list $omodid $owhich $imodid $iwhich]]
 }
 
 proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
@@ -901,18 +895,15 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     lappend Subnet([oMod conn]_connections) $conn
     lappend Subnet([iMod conn]_connections) $conn
     set connid [makeConnID $conn]
-    if ![info exists Notes($connid)] { set Notes($connid) "" }
-    if ![info exists Disabled($connid)] { set Disabled($connid) 0 }
-    if ![info exists Color($connid)] {
-	set Color($connid) \
-	    [lindex [lindex [getModulePortinfo [oMod conn] o] [oNum conn]] 0]
-	if ![llength $Color($connid)] { set $Color($connid) red }
-    }
+
+    setIfExists Disabled($connid) Disabled($connid) 0
+    setIfExists Color($connid) Color($connid) \
+	[lindex [lindex [getModulePortinfo [oMod conn] o] [oNum conn]] 0]
+    if ![llength $Color($connid)] { set $Color($connid) red }
 
     drawConnections [list $conn]
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
-    checkForDisabledModules [oMod conn] [iMod conn]
 
     #if we got here from undo, record this action as undoable
     if { $undo } {
@@ -921,13 +912,13 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 	# new actions invalidate the redo list
 	set redoList ""	
     }
-    update idletasks
+    return $connid
 }
 		      
 
 
 proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } { 
-    global Subnet Disabled Color
+    global Subnet Color Disabled
     networkHasChanged
     deleteTraces
     listFindAndRemove Subnet([oMod conn]_connections) $conn
@@ -952,7 +943,6 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
-    checkForDisabledModules [oMod conn] [iMod conn]
 
     #if we got here from undo, record this action as undoable
     if { $undo } {
@@ -1009,10 +999,11 @@ proc getConnectionNotesOptions { id } {
 }
 
 proc getModuleNotesOptions { module } {
-    global Subnet NotesPos
+    global Subnet Notes
     set bbox [$Subnet(Subnet$Subnet($module)_canvas) bbox $module]
     set off 2
-    switch $NotesPos($module) {
+    setIfExists pos Notes($module-Position) def
+    switch $pos {
 	n {
 	    return [list [lindex $bbox 0] [lindex $bbox 1] \
 			-anchor sw -justify left]
@@ -1405,27 +1396,38 @@ proc do_moduleDrag {modid x y} {
     $canvas move $modid $dx $dy
     $minicanvas move $modid [expr $dx / $SCALEX ] [expr $dy / $SCALEY ]
     
-    drawNotes $Subnet($modid) $modid
+    drawNotes $modid
 }
 
 
-proc drawNotes { subnet args } {
-    global Subnet Color Notes Font NotesPos HelpText modname_font
+proc drawNotes { args } {
+    global Subnet Color Notes Font HelpText modname_font
     set Font(Notes) $modname_font
-    set canvas $Subnet(Subnet${subnet}_canvas)
+
     foreach id $args {
-	if { ![info exists NotesPos($id)] } {
-	    set NotesPos($id) def
+	setIfExists position Notes($id-Position) def	
+	setIfExists isModuleNotes  0
+	setIfExists color Color($id) white
+	setIfExists color Notes($id-Color) $color
+	setIfExists text Notes($id) ""
+
+	set isModuleNotes 0 
+	if [info exists Subnet($id)] {
+	    set isModuleNotes 1
 	}
 	
-	set isModuleNotes \
-	    [expr [lsearch $Subnet(Subnet${subnet}_Modules) $id]!=-1?1:0]
-	
-	if {$NotesPos($id) == "tooltip"} {
+	if $isModuleNotes {
+	    set subnet $Subnet($id)
+	} else {
+	    set subnet $Subnet([lindex [parseConnectionID $id] 0])
+	}
+	set canvas $Subnet(Subnet${subnet}_canvas)
+
+	if {$position == "tooltip"} {
 	    if { $isModuleNotes } {
-		Tooltip $canvas.module$id $Notes($id) 
+		Tooltip $canvas.module$id $text
 	    } else {
-		canvasTooltip $canvas $id $Notes($id)
+		canvasTooltip $canvas $id $text
 	    }
 	} else {
 	    if { $isModuleNotes } {
@@ -1435,31 +1437,20 @@ proc drawNotes { subnet args } {
 	    }
 	}
 	
-	if { $NotesPos($id) == "none" || $NotesPos($id) == "tooltip"} {
+	if { $position == "none" || $position == "tooltip"} {
 	    $canvas delete $id-notes $id-notes-shadow
 	    continue
 	}
-	
-	if { ![info exists Color(Notes-$id)] } { 
-	    if { [info exists Color($id)] } {
-		set Color(Notes-$id) $Color($id)
-	    } else {
-		set Color(Notes-$id) white 
-	    }
-	}
-	
-	if { ![info exists Notes($id)] } { set Notes($id) "" }
+
+        set shadowCol [expr [brightness $color]>0.2?"black":"white"]
 	
 	if { ![canvasExists $canvas $id-notes] } {
 	    $canvas create text 0 0 -text "" \
-		-tags "$id-notes notes" -fill white
-	    $canvas create text 0 0 -text "" -fill black \
+		-tags "$id-notes notes" -fill $color
+	    $canvas create text 0 0 -text "" -fill $shadowCol \
 		-tags "$id-notes-shadow shadow"
 	}
-	
-        set shadowCol [expr [brightness $Color(Notes-$id)]>0.2?"black":"white"]
-	
-	
+
 	if { $isModuleNotes } { 
 	    set opt [getModuleNotesOptions $id]
 	} else {
@@ -1470,25 +1461,26 @@ proc drawNotes { subnet args } {
 	$canvas coords $id-notes-shadow [shadow [lrange $opt 0 1]]    
 	eval $canvas itemconfigure $id-notes [lrange $opt 2 end]
 	eval $canvas itemconfigure $id-notes-shadow [lrange $opt 2 end]
-	$canvas itemconfigure $id-notes	-fill $Color(Notes-$id) \
-	    -font $Font(Notes) -text "$Notes($id)"
+	$canvas itemconfigure $id-notes	-fill $color \
+	    -font $Font(Notes) -text "$text"
 	$canvas itemconfigure $id-notes-shadow -fill $shadowCol \
-	    -font $Font(Notes) -text "$Notes($id)"
+	    -font $Font(Notes) -text "$text"
 	
 	if {!$isModuleNotes} {
-	    $canvas bind $id-notes <ButtonPress-1> "notesWindow $subnet $id"
+	    $canvas bind $id-notes <ButtonPress-1> "notesWindow $id"
 	    $canvas bind $id-notes <ButtonPress-2> \
-		"global NotesPos;set NotesPos($id) none; drawNotes $subnet $id"
+		"set Notes($id-Position) none"
 	} else {
 	    $canvas bind $id-notes <ButtonPress-1> \
-		"notesWindow $subnet $id notesDoneModule"
+		"notesWindow $id notesDoneModule"
 	    $canvas bind $id-notes <ButtonPress-2> \
-		"global NotesPos;set NotesPos($id) none; drawNotes $subnet $id"
+		"set Notes($id-Position) none"
 	}
 	canvasTooltip $canvas $id-notes $HelpText(Notes)		
+	$canvas raise shadow
+	$canvas raise notes
     }
-    $canvas raise shadow
-    $canvas raise notes
+    return 1
 }
     
 
@@ -1888,9 +1880,9 @@ proc shiftLeftIPort { modid num } {
 	    lappend Subnet([oMod newconn]_connections) $newconn
 	    lappend Subnet([iMod newconn]_connections) $newconn
 	    set newconnid [makeConnID $newconn]
-	    set    Notes($newconnid) $Notes($connid)
-	    set Disabled($newconnid) $Disabled($connid)
-	    set    Color($newconnid) $Color($connid)    
+	    setIfExists Notes($newconnid) Notes($connid)
+	    setIfExists Disabled($newconnid) $Disabled($connid)
+	    setIfExists Color($newconnid) $Color($connid)    
 	    drawConnections [list $newconn]
 	}
     }
@@ -1979,6 +1971,57 @@ proc isaSubnetIcon { modid } {
 
 proc isaSubnetEditor { modid } {
     return [expr ![isaSubnetIcon $modid] && [isaSubnet $modid]]
+}
+
+
+trace variable Notes wu notesTrace
+trace variable Disabled wu disabledTrace
+
+
+proc syncNotes { Modname VarName Index mode } {
+    global Notes $VarName
+    set Notes($Modname) [set $VarName]
+}
+
+# This proc will set Varname to the global value of GlobalName if GlobalName exists
+# if GlobalName does not exist it will set Varname to DefaultVal, otherwise
+# nothing is set
+proc setIfExists { Varname GlobalName { DefaultVal __none__ } } {
+    global $GlobalName
+    upvar $Varname var
+    upvar \#0 $GlobalName glob
+    if [info exists glob] {
+	set var $glob
+    } elseif { ![string equal $DefaultVal __none__] } {
+	set var $DefaultVal
+    }
+}
+
+proc notesTrace { ArrayName Index mode } {
+    networkHasChanged
+    set pos [string last - $Index]
+    if { $pos != -1 } { set Index [string range $Index 0 [expr $pos-1]] }
+    drawNotes $Index
+    return 1
+}
+
+proc disabledTrace { ArrayName Index mode } {
+    networkHasChanged
+    global Subnet Disabled Notes Color    
+    if [info exists Subnet($Index)] {
+	return
+    } else {
+	if { [info exists Disabled($Index)] && $Disabled($Index) } {
+	    set Notes($Index-Color) $Color(ConnDisabled)
+	} else {	    
+	    set Notes($Index-Color) $Color($Index)
+	}
+	set conn [parseConnectionID $Index]
+	drawConnections [list $conn]	
+	$Subnet(Subnet$Subnet([oMod conn])_canvas) raise $Index
+	checkForDisabledModules [oMod conn] [iMod conn]
+    }
+    return 1
 }
 
 
