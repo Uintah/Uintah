@@ -107,8 +107,8 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
-  virtual double getMin const();
-  virtual double getMax const();
+  virtual double getMin() const;
+  virtual double getMax() const;
 
   Color FindColor(double t);
   double FindAlpha(double t);
