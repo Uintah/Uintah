@@ -43,7 +43,7 @@
       <p>
          Nodes can be rendered as spheres, axes, or as points. Edges can be
          rendered as lines or cylinders. All of which have editable size.
-         Faces can be rendered or not.
+         Faces and text can be rendered or not.  
       </p>
       <p>
          Vector and Tensor vis are forthcoming.
