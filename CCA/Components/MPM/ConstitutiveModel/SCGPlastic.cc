@@ -120,7 +120,7 @@ SCGPlastic::computeFlowStress(const PlasticityState* state,
   double mu_mu_0 = mu/d_CM.mu_0;
 
   // Calculate Y <= Ymax
-  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  double Ya = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(Ya >= 0.0);
   double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
 
@@ -213,7 +213,7 @@ SCGPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   double mu_mu_0 = mu/d_CM.mu_0;
 
   // Calculate Y <= Ymax
-  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  double Ya = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(Ya >= 0.0);
   double Y = pow(Ya, d_CM.n-1.0);
 
@@ -256,7 +256,7 @@ SCGPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
   double ep = state->plasticStrain;
 
   // Calculate Y <= Ymax
-  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  double Ya = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(Ya >= 0.0);
   double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
 
@@ -271,7 +271,7 @@ SCGPlastic::evalDerivativeWRTPressure(const PlasticityState* state,
   double ep = state->plasticStrain;
 
   // Calculate Y <= Ymax
-  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  double Ya = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(Ya >= 0.0);
   double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
 
