@@ -232,13 +232,15 @@ void ColorMap::build_default() {
 	}
 }    
 
-#define COLORMAP_VERSION 2
+#define COLORMAP_VERSION 3
 
 void ColorMap::io(Piostream& stream)
 {
 
     int version= stream.begin_class("ColorMap", COLORMAP_VERSION);
     Pio(stream, colors);
+    if ( version > 2 )
+      Pio(stream, units);
     if ( version > 1 ) {
       Pio(stream,rawRampAlpha);
       Pio(stream,rawRampAlphaT);

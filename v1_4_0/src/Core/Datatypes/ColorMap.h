@@ -110,6 +110,7 @@ public:
 
     virtual double getMin();
     virtual double getMax();
+  string units;
 private:
   bool scaled;
    
