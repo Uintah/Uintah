@@ -248,8 +248,8 @@ class PaintCM2Widget : public CM2Widget
 {
 public:
   typedef pair<double, double>		Coordinate;
-  typedef pair<Coordinate, Coordinate>	Segment;
-  typedef vector<Segment>		Segments;
+  typedef vector<Coordinate>		Stroke;
+  typedef vector<Stroke>		Strokes;
 
   PaintCM2Widget();
   ~PaintCM2Widget();
@@ -262,20 +262,22 @@ public:
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(Array3<float>& array, bool faux);
   
-  bool is_empty() { return segments_.empty(); }
+  bool is_empty() { return strokes_.empty(); }
   // behavior
   virtual int pick1 (int x, int y, int w, int h) { return 0;}
   virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
   virtual void move (int x, int y, int w, int h) {}
   virtual void release (int x, int y, int w, int h) {}
   
-  virtual std::string tcl_pickle() {return "i";}
+  virtual std::string tcl_pickle() {return "p";}
   virtual void tcl_unpickle(const std::string &/*p*/) {}
 
   virtual void io(Piostream &stream);
   static PersistentTypeID type_id;
 
-  Segments &	get_segments() { return segments_; }
+  void		add_stroke();
+  bool		pop_stroke();
+  void		add_coordinate(const Coordinate &);
   void		set_dirty(bool dirty){ dirty_ = dirty; }
   virtual void	set_color(const Color &c);
   virtual void	set_shadeType(int type); 
@@ -285,7 +287,7 @@ protected:
   void				line(Array3<float> &, int, int, int, int);
   void				draw_point(Array3<float> &, int, int);
   void				splat(Array3<float> &, int, int);
-  Segments			segments_;
+  Strokes			strokes_;
   Array3<float>			pixels_;
   bool				dirty_;
   bool				faux_;
