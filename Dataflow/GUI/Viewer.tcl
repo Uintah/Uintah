@@ -105,16 +105,16 @@ itcl_class SCIRun_Render_Viewer {
     #
     # 'scriptVar' is the name of the TCL variable one level
     # up that we will append our commands to 
-    # 'i' is the number indicating the prefix for the variables
+    # 'prefix' is the number indicating the prefix for the variables
     # 'tab' is the indent string to make it look pretty
-    method writeStateToScript { scriptVar i { tab "" }} {
+    method writeStateToScript { scriptVar prefix { tab "" }} {
 	upvar 1 $scriptVar script
 	set module [modname]
 	set num 0
 	foreach w [winfo children .] {
 	    if { [string first .ui$module $w] == 0 && \
 		     [winfo exists $w.bsframe] } {
-		append script "\n${tab}\$m$i addViewer"
+		append script "\n${tab}${prefix} addViewer"
 		# since the viewer always initially comes up without
 		# the extended controls, save the geometry to only
 		# include the menu, viewer gl window, and standard controls
@@ -128,13 +128,13 @@ itcl_class SCIRun_Render_Viewer {
 		set height [expr $height1 + $height2 + $height3 + 7]
 		set x [winfo rootx $w]
 		set y [winfo rooty $w]
-		append script "\n${tab}set \$m$i-ViewWindow_$num"
+		append script "\n${tab}set ${prefix}-ViewWindow_$num"
 		append script "-geometry $width\x$height\+$x\+$y\n"
 		incr num
 	    }
 	}
 
-	Module::writeStateToScript $scriptVar $i $tab
+	Module::writeStateToScript $scriptVar $prefix $tab
     }
 }
 
