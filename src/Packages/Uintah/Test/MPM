@@ -2,7 +2,6 @@
 
 from os import environ,mkdir,path,system
 from time import asctime,localtime,time
-from types import *
 from sys import argv,exit
 
 TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
