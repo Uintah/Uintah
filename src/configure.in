@@ -308,15 +308,20 @@ EOF
                 continue
              fi
           fi
-          if test "$debugging" = "yes"; then
-             echo "Found it"
-          fi
           eval $_SCI_VAR_NAME_=$_CHECK_PATH_
           eval $_SCI_VAR_HAVE_=yes
           if test "$_CHECK_PATH_" != ""; then
              eval $_SCI_VAR_LIBRARY_=-L$_CHECK_PATH_
           fi
-          eval $_SCI_FOUND_
+
+          if test "$debugging" = "yes"; then
+             echo "FOUND IT"
+	     eval echo "$_SCI_VAR_NAME_    is $"$_SCI_VAR_NAME_""
+	     eval echo "$_SCI_VAR_HAVE_    is $"$_SCI_VAR_HAVE_""
+	     eval echo "$_SCI_VAR_LIBRARY_ is $"$_SCI_VAR_LIBRARY_""
+	     echo
+          fi
+
           break
        else
           if test "$debugging" = "yes"; then
@@ -1728,8 +1733,17 @@ case $ac_cv_sizeof_voidp in
   NBITS=32
   ;;
  *)
-  SCI_MSG_ERROR(This machine has some strange sizeof(void*):
-  $ac_cv_sizeof_voidp.)
+  AC_MSG_WARN(This machine has some strange sizeof(void*): $ac_cv_sizeof_voidp.)
+  AC_MSG_WARN(Usually this means that your LD_LIBRARY_PATH is set)
+  AC_MSG_WARN(incorrectly for the compiler you are using.  To verify)
+  AC_MSG_WARN(that this is the problem you will need to copy the C++)
+  AC_MSG_WARN(program ...about 8 lines long... from the end of the)
+  AC_MSG_WARN(config.log file and run the compile command which is just)
+  AC_MSG_WARN(before it in config.log.  Run the executable and see what)
+  AC_MSG_WARN(error message you get.)
+  AC_MSG_WARN(You can also just fix your LD_LIBRARY_PATH if you know what)
+  AC_MSG_WARN(is wrong with it.)
+  SCI_MSG_ERROR(Exiting due to size of void* problem! Read above warnings!)
   ;;
 esac
 AC_SUBST(NBITS)
@@ -2210,7 +2224,7 @@ case $host in
       if test -z "$HAVE_LIBMPI"; then
          SCI_CHECK_LIB($dirs,mpich,main,,,optional)
          if test "$HAVE_LIBMPICH"; then
-            MPI=-lmpich
+            MPI="-lmpich -lpmpich"
          fi
       else
          MPI=-lmpi
@@ -2224,6 +2238,8 @@ case $host in
          if test "$HAVE_LIBMPICH"; then
            DEF_MPICH="#define HAVE_MPICH 1"
            LIBMPI=$LIBMPICH
+           MPI_LIBRARY=$MPICH_LIBRARY
+           HAVE_MPI=$HAVE_MPICH
          else
            DEF_MPI="#define HAVE_MPI 1"
          fi
