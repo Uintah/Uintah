@@ -458,15 +458,6 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 	result.data[i] = a.data[i]*s;
 }
 
-void ColumnMatrix::scalar_multiply(double s)
-{
-  for (int i=0; i<nrows_; i++)
-  {
-    data[i] *= s;
-  }
-}
-
-
 MatrixHandle
 ColumnMatrix::submatrix(int r1, int c1, int r2, int c2)
 {

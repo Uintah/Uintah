@@ -124,9 +124,9 @@ public:
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs,
 			      int beg=-1, int end=-1, int spVec=0) const=0;
-  virtual void scalar_multiply(double s) = 0;
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2) = 0;
 
+  void scalar_multiply(double s);
   Transform toTransform();
   DenseMatrix *direct_inverse();
   DenseMatrix *iterative_inverse();

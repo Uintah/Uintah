@@ -71,6 +71,19 @@ Matrix::io(Piostream& stream)
   stream.end_class();
 }
 
+
+void
+Matrix::scalar_multiply(double s)
+{
+  double *ptr = get_data_pointer();
+  const size_t sz = get_data_size();
+  for (size_t i = 0; i < sz; i++)
+  {
+    ptr[i] *= s;
+  }
+}
+
+
 Transform Matrix::toTransform() {
   Transform t;
   if (nrows() != 4 || ncols() != 4) {

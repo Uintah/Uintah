@@ -750,15 +750,6 @@ SubSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
 }
 
 
-void SparseRowMatrix::scalar_multiply(double s)
-{
-  for (int i=0;i<nnz;i++)
-  {
-    a[i] *= s;
-  }
-}
-
-
 MatrixHandle
 SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
 {
