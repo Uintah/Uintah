@@ -41,6 +41,7 @@ struct Allocator {
 
     void* alloc_big(size_t size, const char* tag);
     
+    void* memalign(size_t alignment, size_t size, const char* tag);
     void* alloc(size_t size, const char* tag);
     void free(void*);
     void* realloc(void* p, size_t size);

@@ -46,14 +46,17 @@ void* realloc(void* p, size_t s)
     return default_allocator->realloc(p, s);
 }
 
-void* memalign(size_t, size_t)
+void* memalign(size_t alignment, size_t size)
 {
-    AllocError("memalign not finished");
-    return 0;
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    return default_allocator->memalign(alignment, size, "Unknown - memalign");
 }
 
-void* valloc(size_t)
+void* valloc(size_t size)
 {
-    AllocError("valloc not finished");
-    return 0;
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    return default_allocator->memalign(getpagesize(), size,
+				       "Unknown - valloc");
 }
