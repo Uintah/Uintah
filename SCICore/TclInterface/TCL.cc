@@ -130,7 +130,7 @@ printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
     else 
 #endif
 	{
-		printf("TCL::execute() 1\n");
+	    //printf("TCL::execute() 1\n");
 	    TCLTask::lock();
         int code = Tcl_Eval(the_interp, string);
         if(code != TCL_OK)
@@ -456,6 +456,12 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.5  1999/08/23 20:11:51  sparker
+// GenAxes had no UI
+// Removed extraneous print statements
+// Miscellaneous compilation issues
+// Fixed an authorship error
+//
 // Revision 1.4  1999/08/19 23:18:07  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

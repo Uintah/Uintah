@@ -2,7 +2,7 @@
 #  Hedgehog.tcl
 #
 #  Written by:
-#   Colette Mullenhoff
+#   Steve Parker
 #   Department of Computer Science
 #   University of Utah
 #   May. 1995
@@ -112,4 +112,3 @@ itcl_class PSECommon_Visualization_Hedgehog {
 	pack $w.close -side bottom -expand yes -fill x
     }
 }
-
