@@ -16,6 +16,7 @@ public:
     };
 private:
     bool flip_;
+    bool valid_;
     Color ambient;
     double Kd;
     Color specular;
@@ -43,6 +44,7 @@ public:
                        double atten, const Color& accumcolor,
                        Context* cx);
     void flip() { flip_ = !flip_; }
+    bool valid() { return valid_; }
 };
 
 } // end namespace rtrt

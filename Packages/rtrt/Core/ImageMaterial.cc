@@ -20,7 +20,7 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
 			     const Color& specular, double specpow,
 			     double refl)
     : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(0), flip_(false)
+      specpow(specpow), refl(refl),  transp(0), flip_(false), valid_(false)
 {
     read_image(texfile);
     outcolor=Color(0,0,0);
@@ -32,7 +32,8 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
 			     const Color& specular, double specpow,
 			     double refl,  double transp)
     : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(transp), flip_(false)
+      specpow(specpow), refl(refl),  transp(transp), flip_(false), 
+      valid_(false)
 {
     read_image(texfile);
     outcolor=Color(0,0,0);
@@ -157,6 +158,8 @@ void ImageMaterial::read_image(char* filename)
       image(u,v)=Color(r,g,b);
     }
   }
+
+  valid_ = true;
 }
 
 
