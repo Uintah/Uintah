@@ -22,7 +22,7 @@ clean()
   for(int i=0;i<n;++i) {
     _equ.vec[i] = 0;
     for(int j=0;j<n;++j) {
-      _equ.mat[i,j] = 0;
+      _equ.mat[i][j] = 0;
     }
   }
 }
@@ -65,6 +65,9 @@ output(double& a,Vector& b)
 }} //namespace
 
 // $Log$
+// Revision 1.3  2000/07/06 06:32:03  tan
+// A modification to clean function.
+//
 // Revision 1.2  2000/07/06 06:23:53  tan
 // Added Least Square interpolation of double (such as temperatures),
 // vector (such as velocities) and stresses for particles in the
