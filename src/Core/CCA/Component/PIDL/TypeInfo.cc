@@ -102,7 +102,6 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   int vtbase;
   message->unmarshalInt(&vtbase);
   message->destroyMessage();
-  delete message;
 
   if(!flag){
     // isa failed

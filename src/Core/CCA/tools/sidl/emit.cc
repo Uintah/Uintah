@@ -1354,7 +1354,6 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    message->destroyMessage();\n";
     e.out << "    ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_ret,&(*iter));\n";
     e.out << "    d_sched->setCalleeRepresentation(distname,arep);\n";
-    e.out << "    delete message;\n";
     e.out << "  }\n";
     e.out << "  d_sched->print();\n";
 #ifdef MxNDEBUG
@@ -1464,7 +1463,6 @@ e.out << leader2 << "//::std::cout << \" NOCALLRET sending _sessionID = '\" << _
       }
       
       e.out << leader2 << "message->destroyMessage();\n";
-      e.out << leader2 << "delete message;\n";
     }
     
     e.out.pop_leader(nocallret_ldr);
@@ -1517,7 +1515,6 @@ e.out << leader2 << "//::std::cout << \"CALLNORET sending _sessionID = '\" << _s
     e.out << leader2 << "int _handler=(*iter)->getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
     e.out << leader2 << "message->destroyMessage();\n";
-    e.out << leader2 << "delete message;\n";
 
     e.out.pop_leader(loop_leader1);
     e.out << leader2 << "}\n\n";
@@ -1635,7 +1632,6 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
       }
     }
     e.out << leader2 << "message->destroyMessage();\n";
-    e.out << leader2 << "delete message;\n";
 
     if (isCollective) {
       e.out.pop_leader(call_ldr);
@@ -2581,7 +2577,6 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int _handler=rl[i]->getReference()->getVtableBase()+" << handler << ";\n";
 	e.out << leader2 << "  message->sendMessage(_handler);\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
-        e.out << leader2 << "  delete message;\n";
 	e.out << leader2 << "}\n";
 	e.out.pop_leader(ifone);
 	e.out << leader2 << "}\n"; //if (1) ...
