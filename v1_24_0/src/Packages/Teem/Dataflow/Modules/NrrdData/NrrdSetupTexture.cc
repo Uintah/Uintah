@@ -108,7 +108,7 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
   int i, j, k;
   //const unsigned int nk = nin->axis[0].size;
   const unsigned int njk = nj * nk;
-  const double dmaxplus = (dmax - dmin) * 255.0;
+  const double dmaxplus = 255.0 / (dmax - dmin);
   for (i = 0; i < ni; i++)
   {
     for (j = 0; j < nj; j++)
