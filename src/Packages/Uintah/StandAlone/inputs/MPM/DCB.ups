@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>.2</maxTime>
+	<maxTime>1.2</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>DCB.uda</filebase>
-	<outputInterval>.005</outputInterval>
+	<outputInterval>.024</outputInterval>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "StrainEnergy"/>
@@ -25,6 +25,7 @@
 	<save label = "p.x"/>
 	<save label = "p.volume"/>
 	<save label = "p.stress"/>
+        <save label = "p.particleID"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
 
@@ -34,6 +35,10 @@
     <MPM>
 	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
+        <artificial_damping_coeff>0.005</artificial_damping_coeff>
+        <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
+        <J_radius>0.005</J_radius>
+        <do_crack_propagation>false</do_crack_propagation>
     </MPM>
 
     <PhysicalConstants>
@@ -47,7 +52,7 @@
 		<density>1500</density>
 		<constitutive_model type="hypo_elastic"> 
 		   <G>37594</G>
-		   <K>294118</K>
+		   <K>98039</K>
 	        </constitutive_model>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
@@ -64,20 +69,18 @@
 		<velocity_field>0</velocity_field>
 
                 <crack>
-                   <type>frictional</type>
-                   <mu>0.0</mu>
-                   <separateVol>0.9</separateVol>
-                   <contactVol>1.1</contactVol>
-                   <cracksegments>
+                   <type>null</type>
+                   <crack_segments>
                       <quadrilateral>
-                        <pt1> [0.051, 0.0, 0.001]  </pt1>
-                        <pt2> [0.102, 0.0, 0.001]  </pt2>
-                        <pt3> [0.102, 0.0, -0.001] </pt3>
-                        <pt4> [0.051, 0.0, -0.001] </pt4>
-                        <n12> 4 </n12>
-                        <n23> 1 </n23>
+                        <p1> [0.051, 0.0, 0.00075]  </p1>
+                        <p2> [0.102, 0.0, 0.00075]  </p2>
+                        <p3> [0.102, 0.0, -0.00075] </p3>
+                        <p4> [0.051, 0.0, -0.00075] </p4>
+                        <resolution_p1_p2> 4 </resolution_p1_p2>
+                        <resolution_p2_p3> 1 </resolution_p2_p3>
+                        <crack_front_sides>NNNY</crack_front_sides>
                       </quadrilateral>
-                   </cracksegments>
+                   </crack_segments>
                 </crack>
 	    </material>
 
@@ -122,7 +125,7 @@
 	    <Box label = "1">
 		<lower>[0.0, -0.018, -0.0015]</lower>
 		<upper>[0.11, 0.018, 0.0015]</upper>
-	        <resolution>[22,12,3]</resolution>
+	        <resolution>[55,18,3]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
@@ -131,14 +134,14 @@
     <PhysicalBC>
 	<MPM>
            <force>
-             <lower>[0.0975, 0.0, -0.0005]</lower>
+             <lower>[0.099, 0.0, -0.0005]</lower>
              <upper>[0.1, 0.012, 0.0005]</upper>
-             <force_density>[0.0, 8.8888888889, 0.0]</force_density>
+             <force_density>[0.0, 22.2222222, 0.0]</force_density>
            </force>
            <force>
-             <lower>[0.0975, -0.012, -0.0005]</lower>
+             <lower>[0.099, -0.012, -0.0005]</lower>
              <upper>[0.1, 0.0, 0.0005]</upper>
-             <force_density>[0.0, -8.8888888889, 0.0]</force_density>
+             <force_density>[0.0, -22.2222222, 0.0]</force_density>
            </force>
 	</MPM>
     </PhysicalBC>
