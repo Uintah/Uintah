@@ -2448,7 +2448,7 @@ class BioTensorApp {
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
 
 	    button $page.load -text "Dicom Loader" \
-		-command "$mods(DicomToNrrd1) ui"
+		-command "$mods(DicomToNrrd1) initialize_ui"
 	    Tooltip $page.load $tips(DicomFiles)
 
 	    pack $page.load -side top -anchor n \
@@ -2461,7 +2461,7 @@ class BioTensorApp {
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
 
 	    button $page.load2 -text "Dicom Loader" \
-		-command "$mods(DicomToNrrd-T2) ui"
+		-command "$mods(DicomToNrrd-T2) initialize_ui"
 	    Tooltip $page.load2 $tips(DicomFiles)
 
 	    pack $page.load2 -side top -anchor n \
@@ -2484,7 +2484,7 @@ class BioTensorApp {
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
 
 	    button $page.load -text "Analyze Loader" \
-		-command "$mods(AnalyzeToNrrd1) ui"
+		-command "$mods(AnalyzeToNrrd1) initialize_ui"
 	    Tooltip $page.load $tips(AnalyzeFiles)
 
 	    pack $page.load -side top -anchor n \
@@ -2497,7 +2497,7 @@ class BioTensorApp {
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
 	    
 	    button $page.load2 -text "Analyze Loader" \
-		-command "$mods(AnalyzeToNrrd-T2) ui"
+		-command "$mods(AnalyzeToNrrd-T2) initialize_ui"
 	    Tooltip $page.load2 $tips(AnalyzeFiles)
 
 	    pack $page.load2 -side top -anchor n \
