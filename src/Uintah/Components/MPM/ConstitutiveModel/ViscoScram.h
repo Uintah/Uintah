@@ -30,9 +30,32 @@ namespace Uintah {
          // Create datatype for storing model parameters
       public:
          struct CMData {
-            double Bulk;
-            double Shear;
+            double PR;
+	    double CrackParameterA;
+	    double CrackPowerValue;
+	    double CrackMaxGrowthRate;
+	    double StressIntensityF;
+	    double CrackFriction;
+            double InitialCrackRadius;
+	    double CrackGrowthRate;
+	    double G1, G2, G3, G4, G5;
+	    double RTau1, RTau2, RTau3, RTau4, RTau5;
+            double Beta, Gamma;
+	    double DCp_DTemperature;
+	    int LoadCurveNumber, NumberOfPoints;
          };
+
+	 struct StateData {
+	    Matrix3 DevStress1;
+	    Matrix3 DevStress2;
+	    Matrix3 DevStress3;
+	    Matrix3 DevStress4;
+	    Matrix3 DevStress5;
+	    double VolumeChangeHeating;
+	    double ViscousHeating;
+	    double CrackHeating;
+	    double CrackRadius;
+	 };
       private:
          friend const TypeDescription* fun_getTypeDescription(CMData*);
 
@@ -96,10 +119,10 @@ namespace Uintah {
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
 
-         const VarLabel* p_cmdata_label;
-         const VarLabel* bElBarLabel;
-         const VarLabel* p_cmdata_label_preReloc;
-         const VarLabel* bElBarLabel_preReloc;
+         const VarLabel* p_statedata_label;
+         const VarLabel* p_statedata_label_preReloc;
+//         const VarLabel* bElBarLabel;
+//         const VarLabel* bElBarLabel_preReloc;
 
       };
       
@@ -110,6 +133,9 @@ namespace Uintah {
 #endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.2  2000/08/21 23:13:54  guilkey
+// Adding actual ViscoScram functionality.  Not done yet, but compiles.
+//
 // Revision 1.1  2000/08/21 18:37:41  guilkey
 // Initial commit of ViscoScram stuff.  Don't get too excited yet,
 // currently these are just cosmetically modified copies of CompNeoHook.
