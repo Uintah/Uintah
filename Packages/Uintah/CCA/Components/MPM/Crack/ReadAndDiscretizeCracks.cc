@@ -39,6 +39,7 @@ using std::string;
 #define MAX_BASIS 27
 
 Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
+                           Output* dataArchiver_tmp,
                            MPMLabel* Mlb,int n8or27)
 { 
   MPI_Comm_dup( MPI_COMM_WORLD, & mpi_crack_comm );
@@ -47,6 +48,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   */
   d_SMALL_NUM_MPM=1e-200;
   d_sharedState = d_sS;
+  dataArchiver = dataArchiver_tmp;
   lb = Mlb;
   d_8or27=n8or27;
   d_outputCrackInterval=-1.0;
