@@ -166,7 +166,7 @@ public:
   // Destructor
   virtual ~DataArchive();
   
-  void restartInitialize(int& timestep, const GridP& grid,
+  void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
 			 double* pTime /* passed back */);
   
   // GROUP:  Information Access

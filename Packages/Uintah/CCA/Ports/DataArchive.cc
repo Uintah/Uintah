@@ -414,9 +414,8 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 
 void
 DataArchive::restartInitialize(int& timestep, const GridP& grid,
-			       double* pTime)
+			       DataWarehouse* dw, double* pTime)
 {
-#if 0
   vector<int> indices;
   vector<double> times;
   queryTimesteps(indices, times);
@@ -482,9 +481,6 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
 	}
       }
   }
-#else
-  NOT_FINISHED("new task stuff");
-#endif
 }
 
 void
