@@ -64,7 +64,7 @@ public:
     mutex_.lock(); cmap_ = cmap; BuildTransferFunction(); 
     cmap_has_changed_ = true; mutex_.unlock();
   }
-  void SetInterp( bool i) { interp_ = i; tex_->tagBricksForReloading();}
+  void SetInterp( bool i) { interp_ = i;}
 
   void set_bounding_box(BBox &bb) { bounding_box_ = bb; }
 
