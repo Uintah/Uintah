@@ -13,6 +13,11 @@ echo "" >> $HTMLLOG
 
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
+
+chgrp csafe *
+chmod g+rwX * 
+
+
 if [ $retval != "0" ]; then
 	echo "Configure failed:" >> $HTMLLOG
 	cat "${BUILDROOT}"/"${mode}"/configure.log >> $HTMLLOG
