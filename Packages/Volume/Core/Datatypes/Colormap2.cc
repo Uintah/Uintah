@@ -56,7 +56,9 @@ Colormap2::Colormap2()
 {}
 
 Colormap2::~Colormap2()
-{}
+{
+  // TODO:  Delete widgets here.
+}
 
 Array3<float>&
 Colormap2::array()
