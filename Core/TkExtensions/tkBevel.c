@@ -57,6 +57,11 @@
 
 #include "tkPort.h"
 #include "tkInt.h"
+#if (TCL_MINOR_VERSION >= 4)
+#define TCLCONST const
+#else
+#define TCLCONST
+#endif
 
 /*
  * A data structure of the following type is kept for each Bevel
@@ -184,7 +189,7 @@ BevelCmd(clientData, interp, argc, argv)
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    TCLCONST char **argv;	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     Bevel *BevelPtr;

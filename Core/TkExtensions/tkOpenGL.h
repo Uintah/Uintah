@@ -36,11 +36,11 @@
  */
 
 #include <sci_glx.h>
-#include <Core/share/share.h>
 #include <stdio.h>
 #include <tk.h>
 
 #ifdef _WIN32
+#  include <windows.h>
 #  include <tkWinInt.h>
 #  include <tkWinPort.h>
 #  include <X11\XUtil.h>
@@ -85,10 +85,12 @@ typedef struct {
     Display *display;		/* X's token for the window's display. */
     Window x11_win;
     int screen_number;
+#ifndef _WIN32
     GLXWindow glx_win;
     GLXContext cx;
     XVisualInfo* vi;
     GLXFBConfig *fb_configs;
+#endif
 } OpenGLClientData;
 
 

@@ -37,8 +37,7 @@
 #include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
 
 #include <stdio.h>
-#include "tkPort.h"
-#include "tkInt.h"
+#include "tk.h"
 #include "tcl.h"
 
 void Tk_DrawBeveledLine(Display* display, Drawable drawable,
@@ -108,58 +107,74 @@ static void		TranslateBLine _ANSI_ARGS_((Tk_Canvas canvas,
  * Information used for parsing configuration specs.  If you change any
  * of the default strings, be sure to change the corresponding default
  * values in CreateBLine.
+ *
+ * Some compilers didn't like initializing them here, so we needed to
+ * in BLineInit
  */
 
-static Tk_CustomOption tagsOption = {Tk_CanvasTagsParseProc,
-                                     Tk_CanvasTagsPrintProc, (ClientData) NULL};
-
+static Tk_CustomOption tagsOption;
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CAP_STYLE, "-capstyle", (char *) NULL, (char *) NULL,
-	"butt", Tk_Offset(BLineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT},
+     "butt", Tk_Offset(BLineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_BORDER, "-fill", (char *) NULL, (char *) NULL,
-	"black", Tk_Offset(BLineItem, border), TK_CONFIG_NULL_OK},
+     "black", Tk_Offset(BLineItem, border), TK_CONFIG_NULL_OK},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", (char *) NULL, (char *) NULL,
-	"round", Tk_Offset(BLineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT},
+     "round", Tk_Offset(BLineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+     (char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_PIXELS, "-width", (char *) NULL, (char *) NULL,
-	"1", Tk_Offset(BLineItem, width), TK_CONFIG_DONT_SET_DEFAULT},
+     "1", Tk_Offset(BLineItem, width), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_PIXELS, "-borderwidth", (char *) NULL, (char *) NULL,
-        "2", Tk_Offset(BLineItem, borderWidth), TK_CONFIG_DONT_SET_DEFAULT},
+     "2", Tk_Offset(BLineItem, borderWidth), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_RELIEF, "-relief", (char*) NULL, (char *) NULL,
      "raised", Tk_Offset(BLineItem, relief), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, 0}
-};
+  };
 
+Tk_ItemType TkBLineType; 
 /*
- * The structures below defines the line item type by means
- * of procedures that can be invoked by generic item code.
+ * Register the item...
  */
+void BLineInit()
+{
 
-Tk_ItemType TkBLineType = {
-    "bline",				/* name */
-    sizeof(BLineItem),			/* itemSize */
-    CreateBLine,				/* createProc */
-    configSpecs,			/* configSpecs */
-    ConfigureBLine,			/* configureProc */
-    BLineCoords,				/* coordProc */
-    DeleteBLine,				/* deleteProc */
-    DisplayBLine,			/* displayProc */
-    0,					/* alwaysRedraw */
-    BLineToPoint,			/* pointProc */
-    BLineToArea,				/* areaProc */
-    BLineToPostscript,			/* postscriptProc */
-    ScaleBLine,				/* scaleProc */
-    TranslateBLine,			/* translateProc */
-    (Tk_ItemIndexProc *) NULL,		/* indexProc */
-    (Tk_ItemCursorProc *) NULL,		/* icursorProc */
-    (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
-    (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL		/* nextPtr */
-};
+  Tk_CustomOption option = {Tk_CanvasTagsParseProc,
+				Tk_CanvasTagsPrintProc, (ClientData) NULL};
 
+  /* The structures below defines the line item type by means
+   * of procedures that can be invoked by generic item code.
+   */
+
+
+  Tk_ItemType it = {
+    "bline",				
+    sizeof(BLineItem),		
+    CreateBLine,		
+    configSpecs,		
+    ConfigureBLine,		
+    BLineCoords,		
+    DeleteBLine,		
+    DisplayBLine,		
+    0,				
+    BLineToPoint,		
+    BLineToArea,		
+    BLineToPostscript,		
+    ScaleBLine,			
+    TranslateBLine,		
+    (Tk_ItemIndexProc *) NULL,	
+    (Tk_ItemCursorProc *) NULL,	
+    (Tk_ItemSelectionProc *) NULL,
+    (Tk_ItemInsertProc *) NULL,		
+    (Tk_ItemDCharsProc *) NULL,		
+    (Tk_ItemType *) NULL		
+  };
+
+  tagsOption = option;
+
+  TkBLineType = it;
+  Tk_CreateItemType(&TkBLineType);
+}
 /*
  * The definition below determines how large are static arrays
  * used to hold spline points (splines larger than this have to
@@ -231,8 +246,8 @@ CreateBLine(interp, canvas, itemPtr, argc, argv)
      */
 
     for (i = 4; i < (argc-1); i+=2) {
-	if ((!isdigit(UCHAR(argv[i][0]))) &&
-		((argv[i][0] != '-') || (!isdigit(UCHAR(argv[i][1]))))) {
+	if ((!isdigit((unsigned char)(argv[i][0]))) &&
+		((argv[i][0] != '-') || (!isdigit((unsigned char)(argv[i][1]))))) {
 	    break;
 	}
     }
@@ -247,7 +262,7 @@ CreateBLine(interp, canvas, itemPtr, argc, argv)
     DeleteBLine(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -325,7 +340,7 @@ BLineCoords(interp, canvas, itemPtr, argc, argv)
     }
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -362,7 +377,6 @@ ConfigureBLine(interp, canvas, itemPtr, argc, argv, flags)
 	     (char *) linePtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
-
     /*
      * Recompute bounding box for line.
      */
@@ -405,7 +419,7 @@ DeleteBLine(canvas, itemPtr, display)
 	Tk_Free3DBorder(linePtr->border);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -487,7 +501,7 @@ ComputeBLineBbox(canvas, linePtr)
     linePtr->header.y1 -= 1;
     linePtr->header.y2 += 1;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -552,7 +566,7 @@ DisplayBLine(canvas, itemPtr, display, drawable, x, y, width, height)
 	ckfree((char *) pointPtr);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -714,7 +728,7 @@ BLineToPoint(canvas, itemPtr, pointPtr)
     }
     return bestDist;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -878,7 +892,7 @@ BLineToArea(canvas, itemPtr, rectPtr)
     }
     return inside;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -918,7 +932,7 @@ ScaleBLine(canvas, itemPtr, originX, originY, scaleX, scaleY)
     }
     ComputeBLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1026,12 +1040,4 @@ BLineToPostscript(interp, canvas, itemPtr, prepass)
     Tcl_AppendResult(interp, "stroke\n", (char *) NULL);
 
     return TCL_OK;
-}
-
-/*
- * Register the item...
- */
-void BLineInit()
-{
-    Tk_CreateItemType(&TkBLineType);
 }
