@@ -272,7 +272,7 @@ public:
   int status() { return status_; }
 private:
   Network          *net_;
-  const string     &id_;
+  string            id_;
   int               status_;
 };
 }

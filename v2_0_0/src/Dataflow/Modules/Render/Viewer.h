@@ -66,6 +66,7 @@ public:
   Lighting            lighting_;
   map<int, map<LightID, int> > pli_;  // port->light->index
 
+  Mutex               view_window_lock_;
   CrowdMonitor        geomlock_;
   GeomIndexedGroup    ports_;
 
