@@ -155,7 +155,7 @@ C-----------------------------------------------------------------------
 
 *     p-cell distances and co-ordinates
 
-      DO 150 I = iBegGhost,IEND
+      DO 150 I = iBegGhost,iEndGhost-1
         DXEP(I) = XX(I+1)-XX(I)
         DXPW(I+1) = DXEP(I)
   150 CONTINUE
@@ -167,11 +167,11 @@ C-----------------------------------------------------------------------
 
 *     u-cell distances and co-ordinates
 
-      DO 450 I = IST,iEndGhost
+      DO 450 I = iBegGhost+1,iEndGhost
         XU(I) = PT5*(XX(I)+XX(I-1))
   450 CONTINUE
-      XU(iBegGhost) = (THREE*XX(iBegGhost)-XX(IST))/TWO
-      DO 500 I = iBegGhost,IEND
+      XU(iBegGhost) = (THREE*XX(iBegGhost)-XX(iBegGhost+1))/TWO
+      DO 500 I = iBegGhost,iEndGhost-1
         DXEPU(I) = XU(I+1)-XU(I)
         DXPWU(I+1) = DXEPU(I)
   500 CONTINUE
@@ -241,7 +241,7 @@ C-----------------------------------------------------------------------
 
 *     p-cell distances and co-ordinates
 
-      DO 200 J = jBegGhost,JEND
+      DO 200 J = jBegGhost,jEndGhost-1
         DYNP(J) = YY(J+1)-YY(J)
         DYPS(J+1) = DYNP(J)
   200 CONTINUE
@@ -253,11 +253,11 @@ C-----------------------------------------------------------------------
 
 *     v-cell distances and co-ordinates
 
-      DO 601 J = JST,jEndGhost
+      DO 601 J = jBegGhost+1,jEndGhost
          YV(J) = PT5*(YY(J)+YY(J-1))
  601  CONTINUE
-      YV(jBegGhost) = (THREE*YY(jBegGhost)-YY(JST))/TWO
-      DO 650 J = jBegGhost,JEND
+      YV(jBegGhost) = (THREE*YY(jBegGhost)-YY(jBegGhost+1))/TWO
+      DO 650 J = jBegGhost,jEndGhost-1
         DYNPV(J) = YV(J+1)-YV(J)
         DYPSV(J+1) = DYNPV(J)
   650 CONTINUE
@@ -328,7 +328,7 @@ C-----------------------------------------------------------------------
 
 *     p-cell distances and co-ordinates
 
-      DO 250 K = kBegGhost,KEND
+      DO 250 K = kBegGhost,kEndGhost-1
         DZTP(K) = ZZ(K+1)-ZZ(K)
         DZPB(K+1) = DZTP(K)
   250 CONTINUE
@@ -342,11 +342,11 @@ c      IF (LCORD) DZTP(kEndGhost) = DZTP(KST)
 
 *     w-cell distances and co-ordinates
 
-      DO 725 K = KST,kEndGhost
+      DO 725 K = kBegGhost+1,kEndGhost
          ZW(K) = PT5*(ZZ(K)+ZZ(K-1))
   725 CONTINUE
-      ZW(kBegGhost) = (THREE*ZZ(kBegGhost)-ZZ(KST))/TWO
-      DO 750 K = kBegGhost,KEND
+      ZW(kBegGhost) = (THREE*ZZ(kBegGhost)-ZZ(kBegGhost+1))/TWO
+      DO 750 K = kBegGhost,kEndGhost-1
         DZTPW(K) = ZW(K+1)-ZW(K)
         DZPBW(K+1) = DZTPW(K)
   750 CONTINUE

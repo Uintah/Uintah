@@ -123,17 +123,18 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP&,
 void 
 SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
 					      const PatchSet* patches,
-					      const MaterialSet* matls)
+					      const MaterialSet* matls,
+					    const int Runge_Kutta_current_step,
+					    const bool Runge_Kutta_last_step)
 {
   Task* tsk = scinew Task("SmagorinskyModel::ReTurbSubmodel",
 			  this,
-			  &SmagorinskyModel::reComputeTurbSubmodel);
+			  &SmagorinskyModel::reComputeTurbSubmodel,
+			  Runge_Kutta_current_step, Runge_Kutta_last_step);
 
   // Requires
+  if (Runge_Kutta_last_step) {
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
-		Ghost::None,
 		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces,
@@ -144,6 +145,43 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		Ghost::AroundFaces,
 		Arches::ONEGHOSTCELL);
+  }
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::AroundFaces,
+		Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel, 
+		Ghost::AroundFaces,
+		Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel, 
+		Ghost::AroundFaces,
+		Arches::ONEGHOSTCELL);
+	 break;
+
+	 case Arches::SECOND:
+  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+		Ghost::AroundFaces,
+		Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel, 
+		Ghost::AroundFaces,
+		Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel, 
+		Ghost::AroundFaces,
+		Arches::ONEGHOSTCELL);
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+	 }
+  }
+
+  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
+		Ghost::None,
+		Arches::ZEROGHOSTCELLS);
   // for multimaterial
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
@@ -153,7 +191,20 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
       // Computes
+  if (Runge_Kutta_last_step)
   tsk->computes(d_lab->d_viscosityCTSLabel);
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+  tsk->computes(d_lab->d_viscosityPredLabel);
+	 break;
+
+	 case Arches::SECOND:
+  tsk->computes(d_lab->d_viscosityIntermLabel);
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+	 }
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -345,7 +396,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
-					DataWarehouse* new_dw)
+					DataWarehouse* new_dw,
+					const int Runge_Kutta_current_step,
+					const bool Runge_Kutta_last_step)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -361,18 +414,63 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
+  if (Runge_Kutta_last_step)
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
+	 break;
+
+	 case Arches::SECOND:
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+	 }
+  }
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
+  if (Runge_Kutta_last_step) {
     new_dw->get(uVelocity,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+    new_dw->get(uVelocity,d_lab->d_uVelocityPredLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelocity,d_lab->d_vVelocityPredLabel, matlIndex, patch,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelocity, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(density, d_lab->d_densityPredLabel, matlIndex, patch,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 case Arches::SECOND:
+    new_dw->get(uVelocity,d_lab->d_uVelocityIntermLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelocity,d_lab->d_vVelocityIntermLabel, matlIndex, patch,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelocity, d_lab->d_wVelocityIntermLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(density, d_lab->d_densityIntermLabel, matlIndex, patch,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+	 }
+  }
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
@@ -510,453 +608,47 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-SmagorinskyModel::sched_computeTurbSubmodelPred(SchedulerP& sched, 
-						const PatchSet* patches,
-						const MaterialSet* matls)
-{
-  Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodelPred",
-			  this,
-			  &SmagorinskyModel::computeTurbSubmodelPred);
-
-  // Requires
-  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
-		Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  // for multimaterial
-  if (d_MAlab)
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-      // Computes
-  tsk->computes(d_lab->d_viscosityPredLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-
-//****************************************************************************
-// Actual compute for predictor step 
-//****************************************************************************
-void 
-SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
-					    const PatchSubset* patches,
-					    const MaterialSubset*,
-					    DataWarehouse*,
-					    DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    // Variables
-    constSFCXVariable<double> uVelocity;
-    constSFCYVariable<double> vVelocity;
-    constSFCZVariable<double> wVelocity;
-    constCCVariable<double> density;
-    CCVariable<double> viscosity;
-    constCCVariable<double> voidFraction;
-    constCCVariable<int> cellType;
-    // Get the velocity, density and viscosity from the old data warehouse
-
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
-    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    new_dw->get(uVelocity,d_lab->d_uVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity,d_lab->d_vVelocityPredLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityPredLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    
-    if (d_MAlab)
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    // Get the PerPatch CellInformation data
-
-    PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
-    // get physical constants
-    double mol_viscos; // molecular viscosity
-    mol_viscos = d_physicalConsts->getMolecularViscosity();
-    
-    // Get the patch and variable details
-    // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
-    double CF = d_CF;
-#if 0
-    if (time < 2.0 ) 
-      CF *= (time+ 0.0001)*0.5;
-#endif
-    fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
-		   idxLo, idxHi,
-		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-		   mol_viscos, CF, d_factorMesh, d_filterl);
-
-    // boundary conditions
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int wallID = d_boundaryCondition->wallCellType();
-    if (xminus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  int colX = idxLo.x();
-	  IntVector currCell(colX-1, colY, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (xplus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  int colX = idxHi.x();
-	  IntVector currCell(colX+1, colY, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yminus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colY = idxLo.y();
-	  IntVector currCell(colX, colY-1, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yplus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colY = idxHi.y();
-	  IntVector currCell(colX, colY+1, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zminus) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colZ = idxLo.z();
-	  IntVector currCell(colX, colY, colZ-1);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zplus) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colZ = idxHi.z();
-	  IntVector currCell(colX, colY, colZ+1);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-
-    if (d_MAlab) {
-      IntVector indexLow = patch->getCellLowIndex();
-      IntVector indexHigh = patch->getCellHighIndex();
-      for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	    // Store current cell
-	    IntVector currCell(colX, colY, colZ);
-	    viscosity[currCell] *=  voidFraction[currCell];
-	  }
-	}
-      }
-    }
-
-#ifdef ARCHES_PRES_DEBUG
-    // Testing if correct values have been put
-    cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-    viscosity.print(cerr);
-#endif
-    
-    // Put the calculated viscosityvalue into the new data warehouse
-    // allocateAndPut instead:
-    /* new_dw->put(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch); */;
-  }
-}
-
-
-
-
-//****************************************************************************
-// Schedule recomputation of the turbulence sub model 
-//****************************************************************************
-void 
-SmagorinskyModel::sched_computeTurbSubmodelInterm(SchedulerP& sched, 
-						const PatchSet* patches,
-						const MaterialSet* matls)
-{
-  Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodelInterm",
-			  this,
-			  &SmagorinskyModel::computeTurbSubmodelInterm);
-
-  // Requires
-  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
-		Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  // for multimaterial
-  if (d_MAlab)
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-      // Computes
-  tsk->computes(d_lab->d_viscosityIntermLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-
-//****************************************************************************
-// Actual compute for intermediate step 
-//****************************************************************************
-void 
-SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
-					    const PatchSubset* patches,
-					    const MaterialSubset*,
-					    DataWarehouse*,
-					    DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    // Variables
-    constSFCXVariable<double> uVelocity;
-    constSFCYVariable<double> vVelocity;
-    constSFCZVariable<double> wVelocity;
-    constCCVariable<double> density;
-    CCVariable<double> viscosity;
-    constCCVariable<double> voidFraction;
-    constCCVariable<int> cellType;
-    // Get the velocity, density and viscosity from the old data warehouse
-
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
-    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    new_dw->get(uVelocity,d_lab->d_uVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity,d_lab->d_vVelocityIntermLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityIntermLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    
-    if (d_MAlab)
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    // Get the PerPatch CellInformation data
-
-    PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
-    // get physical constants
-    double mol_viscos; // molecular viscosity
-    mol_viscos = d_physicalConsts->getMolecularViscosity();
-    
-    // Get the patch and variable details
-    // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
-    double CF = d_CF;
-#if 0
-    if (time < 2.0 ) 
-      CF *= (time+ 0.0001)*0.5;
-#endif
-    fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
-		   idxLo, idxHi,
-		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-		   mol_viscos, CF, d_factorMesh, d_filterl);
-
-    // boundary conditions
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int wallID = d_boundaryCondition->wallCellType();
-    if (xminus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  int colX = idxLo.x();
-	  IntVector currCell(colX-1, colY, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (xplus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  int colX = idxHi.x();
-	  IntVector currCell(colX+1, colY, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yminus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colY = idxLo.y();
-	  IntVector currCell(colX, colY-1, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (yplus) {
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colY = idxHi.y();
-	  IntVector currCell(colX, colY+1, colZ);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zminus) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colZ = idxLo.z();
-	  IntVector currCell(colX, colY, colZ-1);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-    if (zplus) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  int colZ = idxHi.z();
-	  IntVector currCell(colX, colY, colZ+1);
-	  if (cellType[currCell] != wallID)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-	}
-      }
-    }
-
-    if (d_MAlab) {
-      IntVector indexLow = patch->getCellLowIndex();
-      IntVector indexHigh = patch->getCellHighIndex();
-      for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	    // Store current cell
-	    IntVector currCell(colX, colY, colZ);
-	    viscosity[currCell] *=  voidFraction[currCell];
-	  }
-	}
-      }
-    }
-
-#ifdef ARCHES_PRES_DEBUG
-    // Testing if correct values have been put
-    cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-    viscosity.print(cerr);
-#endif
-    
-    // Put the calculated viscosityvalue into the new data warehouse
-    // allocateAndPut instead:
-    /* new_dw->put(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch); */;
-  }
-}
-
-
-
-
-//****************************************************************************
-// Schedule recomputation of the turbulence sub model 
-//****************************************************************************
-void 
 SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
-					      const MaterialSet* matls)
+					      const MaterialSet* matls,
+					    const int Runge_Kutta_current_step,
+					    const bool Runge_Kutta_last_step)
 {
   Task* tsk = scinew Task("SmagorinskyModel::computeScalarVar",
 			  this,
-			  &SmagorinskyModel::computeScalarVariance);
+			  &SmagorinskyModel::computeScalarVariance,
+			  Runge_Kutta_current_step, Runge_Kutta_last_step);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-#ifdef correctorstep
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#else  
+  if (Runge_Kutta_last_step)
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#endif
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 case Arches::SECOND:
+  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+	 }
+  }
   tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   // Computes
-  tsk->computes(d_lab->d_scalarVarSPLabel);
+  if (Runge_Kutta_current_step == Arches::FIRST)
+     tsk->computes(d_lab->d_scalarVarSPLabel);
+  else
+     tsk->modifies(d_lab->d_scalarVarSPLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -967,9 +659,11 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
-					DataWarehouse* new_dw)
+					DataWarehouse* new_dw,
+					const int Runge_Kutta_current_step,
+					const bool Runge_Kutta_last_step)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
+  //double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -978,14 +672,31 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-#ifdef correctorstep
-    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch, Ghost::AroundCells,
-		Arches::ONEGHOSTCELL);
-#else
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
-		Arches::ONEGHOSTCELL);
-#endif
-    new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    if (Runge_Kutta_last_step)
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 case Arches::SECOND:
+    new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
+	 }
+    }
+    if (Runge_Kutta_current_step == Arches::FIRST)
+    	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
+			       patch);
+    else
+    	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
+			       patch);
     new_dw->copyOut(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
@@ -1026,28 +737,61 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 void 
 SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
-						 const MaterialSet* matls)
+						 const MaterialSet* matls,
+					const int Runge_Kutta_current_step,
+					const bool Runge_Kutta_last_step)
 {
   Task* tsk = scinew Task("SmagorinskyModel::computeScalarDissipation",
 			  this,
-			  &SmagorinskyModel::computeScalarDissipation);
+			  &SmagorinskyModel::computeScalarDissipation,
+			  Runge_Kutta_current_step, Runge_Kutta_last_step);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#ifdef correctorstep
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#else  
+  if (Runge_Kutta_last_step)
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#endif
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 case Arches::SECOND:
+  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+	 }
+  }
+  switch (Runge_Kutta_current_step) {
+  case Arches::FIRST:
+  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  break;
+
+  case Arches::SECOND:
+  tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  break;
+
+  case Arches::THIRD:
+  tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  default:
+	throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+  }
 
   // Computes
-  tsk->computes(d_lab->d_scalarDissSPLabel);
+  if (Runge_Kutta_current_step == Arches::FIRST)
+     tsk->computes(d_lab->d_scalarDissSPLabel);
+  else
+     tsk->modifies(d_lab->d_scalarDissSPLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1058,7 +802,9 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset*,
 					DataWarehouse*,
-					DataWarehouse* new_dw)
+					DataWarehouse* new_dw,
+					const int Runge_Kutta_current_step,
+					const bool Runge_Kutta_last_step)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1068,16 +814,51 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
     CCVariable<double> scalarDiss;  // dissipation..chi
+    if (Runge_Kutta_last_step)
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 case Arches::SECOND:
+    new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+	 }
+    }
+    switch (Runge_Kutta_current_step) {
+    case Arches::FIRST:
     new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#ifdef correctorstep
-    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch, Ghost::AroundCells,
-		Arches::ONEGHOSTCELL);
-#else
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
-		Arches::ONEGHOSTCELL);
-#endif
-    new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+    break;
+
+    case Arches::SECOND:
+    new_dw->get(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    break;
+
+    case Arches::THIRD:
+    new_dw->get(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    break;
+
+    default:
+	throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
+    }
+
+    if (Runge_Kutta_current_step == Arches::FIRST)
+       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
+			      matlIndex, patch);
+    else
+       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
+			      matlIndex, patch);
     scalarDiss.initialize(0.0);
     
     // Get the PerPatch CellInformation data
@@ -1380,7 +1161,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
 
 
 //****************************************************************************
-// No source term for samgorinsky model
+// No source term for smagorinsky model
 //****************************************************************************
 void SmagorinskyModel::calcVelocitySource(const ProcessorGroup*,
 					  const Patch*,

@@ -1041,10 +1041,17 @@ PressureSolver::updatePressure(const ProcessorGroup*,
 // Schedule solve of linearized pressure equation
 // ****************************************************************************
 void PressureSolver::solvePred(const LevelP& level,
-			       SchedulerP& sched)
+			       SchedulerP& sched,
+                       const int Runge_Kutta_current_step,
+                       const bool Runge_Kutta_last_step)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+#ifdef filter_convection_terms
+  sched_computeNonlinearTerms(sched, patches, matls, d_lab, 
+		Runge_Kutta_current_step, Runge_Kutta_last_step);
+#endif
 
   //computes stencil coefficients and source terms
   // require : old_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC
@@ -1114,8 +1121,9 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
-      tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel, d_lab->d_stressTensorMatl,
-		    Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
+		    d_lab->d_stressTensorMatl,Task::OutOfDomain,
+		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #ifdef correctorstep
     tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
@@ -1183,6 +1191,18 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
     }
+
+#ifdef filter_convection_terms
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjULabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjVLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjWLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+#endif
     
     
     // requires convection coeff because of the nodal
@@ -1538,7 +1558,124 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					cellinfo, &pressureVars);
       //      d_source->addPressureSource(pc, patch, delta_t, index,
       //				  cellinfo, &pressureVars);
-      // add multimaterial momentum source term
+
+#ifdef filter_convection_terms
+    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      switch (index) {
+	  case Arches::XDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjU[ii], 
+			    d_lab->d_filteredRhoUjULabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+
+	case Arches::YDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjV[ii], 
+			    d_lab->d_filteredRhoUjVLabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+
+	case Arches::ZDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjW[ii], 
+			    d_lab->d_filteredRhoUjWLabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+      }
+    }
+
+    filterNonlinearTerms(pc, patch, index, cellinfo, &pressureVars);
+
+    IntVector indexLow;
+    IntVector indexHigh;
+    double areaew, areans, areatb;
+	
+    switch (index) {
+	case Arches::XDIR:
+	  indexLow = patch->getSFCXFORTLowIndex();
+	  indexHigh = patch->getSFCXFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->sns[colY] * cellinfo->stb[colZ];
+	  	areans = cellinfo->sewu[colX] * cellinfo->stb[colZ];
+	  	areatb = cellinfo->sewu[colX] * cellinfo->sns[colY];
+
+		pressureVars.uVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjU[0])[xplusCell]-(pressureVars.filteredRhoUjU[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjU[1])[yplusCell]-(pressureVars.filteredRhoUjU[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjU[2])[zplusCell]-(pressureVars.filteredRhoUjU[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+
+	case Arches::YDIR:
+	  indexLow = patch->getSFCYFORTLowIndex();
+	  indexHigh = patch->getSFCYFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->snsv[colY] * cellinfo->stb[colZ];
+	  	areans = cellinfo->sew[colX] * cellinfo->stb[colZ];
+	  	areatb = cellinfo->sew[colX] * cellinfo->snsv[colY];
+
+		pressureVars.vVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjV[0])[xplusCell]-(pressureVars.filteredRhoUjV[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjV[1])[yplusCell]-(pressureVars.filteredRhoUjV[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjV[2])[zplusCell]-(pressureVars.filteredRhoUjV[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+
+	case Arches::ZDIR:
+	  indexLow = patch->getSFCZFORTLowIndex();
+	  indexHigh = patch->getSFCZFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->sns[colY] * cellinfo->stbw[colZ];
+	  	areans = cellinfo->sew[colX] * cellinfo->stbw[colZ];
+	  	areatb = cellinfo->sew[colX] * cellinfo->sns[colY];
+
+		pressureVars.wVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjW[0])[xplusCell]-(pressureVars.filteredRhoUjW[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjW[1])[yplusCell]-(pressureVars.filteredRhoUjW[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjW[2])[zplusCell]-(pressureVars.filteredRhoUjW[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+    }
+#endif
+
       // for scalesimilarity model add stress tensor to the source of velocity eqn.
       if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
 	StencilMatrix<CCVariable<double> > stressTensor; //9 point tensor
@@ -1672,10 +1809,12 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 	  }
 	  break;
 	default:
-	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeffPred");
 	}
       }
 	
+      // add multimaterial momentum source term
+
       if (d_MAlab)
 	d_source->computemmMomentumSource(pc, patch, index, cellinfo,
 					  &pressureVars);
@@ -1709,14 +1848,16 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
       d_source->modifyVelMassSource(pc, patch, delta_t, index,
 				    &pressureVars);
+
+      // Calculate Velocity diagonal
+      //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
+      //  outputs: [u,v,w]VelCoefPBLM
+
       d_discretize->calculateVelDiagonal(pc, patch,
 					 index,
 					 &pressureVars);
 
 
-      // Calculate Velocity diagonal
-      //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
-      //  outputs: [u,v,w]VelCoefPBLM
 
       d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
 				     cellinfo, &pressureVars);
@@ -2263,10 +2404,17 @@ PressureSolver::pressureLinearSolvePred (const ProcessorGroup* pc,
 // Schedule solve of linearized pressure equation, corrector step
 // ****************************************************************************
 void PressureSolver::solveCorr(const LevelP& level,
-			       SchedulerP& sched)
+			       SchedulerP& sched,
+                       const int Runge_Kutta_current_step,
+                       const bool Runge_Kutta_last_step)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+#ifdef filter_convection_terms
+  sched_computeNonlinearTerms(sched, patches, matls, d_lab, 
+		Runge_Kutta_current_step, Runge_Kutta_last_step);
+#endif
 
   //computes stencil coefficients and source terms
   // require : old_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC
@@ -2315,6 +2463,11 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     //    tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
     //		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
+      tsk->requires(Task::NewDW, d_lab->d_stressTensorCompLabel,
+		    d_lab->d_stressTensorMatl,Task::OutOfDomain,
+		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   #ifdef Runge_Kutta_3d
     tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
@@ -2410,6 +2563,17 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 
     }
     
+#ifdef filter_convection_terms
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjULabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjVLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjWLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+#endif
     
     // requires convection coeff because of the nodal
     // differencing
@@ -2768,6 +2932,261 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 					cellinfo, &pressureVars);
       //      d_source->addPressureSource(pc, patch, delta_t, index,
       //				  cellinfo, &pressureVars);
+
+#ifdef filter_convection_terms
+    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      switch (index) {
+	  case Arches::XDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjU[ii], 
+			    d_lab->d_filteredRhoUjULabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+
+	case Arches::YDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjV[ii], 
+			    d_lab->d_filteredRhoUjVLabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+
+	case Arches::ZDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjW[ii], 
+			    d_lab->d_filteredRhoUjWLabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+      }
+    }
+
+    filterNonlinearTerms(pc, patch, index, cellinfo, &pressureVars);
+
+    IntVector indexLow;
+    IntVector indexHigh;
+    double areaew, areans, areatb;
+	
+    switch (index) {
+	case Arches::XDIR:
+	  indexLow = patch->getSFCXFORTLowIndex();
+	  indexHigh = patch->getSFCXFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->sns[colY] * cellinfo->stb[colZ];
+	  	areans = cellinfo->sewu[colX] * cellinfo->stb[colZ];
+	  	areatb = cellinfo->sewu[colX] * cellinfo->sns[colY];
+
+		pressureVars.uVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjU[0])[xplusCell]-(pressureVars.filteredRhoUjU[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjU[1])[yplusCell]-(pressureVars.filteredRhoUjU[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjU[2])[zplusCell]-(pressureVars.filteredRhoUjU[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+
+	case Arches::YDIR:
+	  indexLow = patch->getSFCYFORTLowIndex();
+	  indexHigh = patch->getSFCYFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->snsv[colY] * cellinfo->stb[colZ];
+	  	areans = cellinfo->sew[colX] * cellinfo->stb[colZ];
+	  	areatb = cellinfo->sew[colX] * cellinfo->snsv[colY];
+
+		pressureVars.vVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjV[0])[xplusCell]-(pressureVars.filteredRhoUjV[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjV[1])[yplusCell]-(pressureVars.filteredRhoUjV[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjV[2])[zplusCell]-(pressureVars.filteredRhoUjV[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+
+	case Arches::ZDIR:
+	  indexLow = patch->getSFCZFORTLowIndex();
+	  indexHigh = patch->getSFCZFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->sns[colY] * cellinfo->stbw[colZ];
+	  	areans = cellinfo->sew[colX] * cellinfo->stbw[colZ];
+	  	areatb = cellinfo->sew[colX] * cellinfo->sns[colY];
+
+		pressureVars.wVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjW[0])[xplusCell]-(pressureVars.filteredRhoUjW[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjW[1])[yplusCell]-(pressureVars.filteredRhoUjW[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjW[2])[zplusCell]-(pressureVars.filteredRhoUjW[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+    }
+#endif
+
+      // for scalesimilarity model add stress tensor to the source of velocity eqn.
+      if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+	StencilMatrix<CCVariable<double> > stressTensor; //9 point tensor
+	for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
+	  new_dw->getCopy(stressTensor[ii], 
+			  d_lab->d_stressTensorCompLabel, ii, patch,
+			  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	}
+
+	IntVector indexLow = patch->getCellFORTLowIndex();
+	IntVector indexHigh = patch->getCellFORTHighIndex();
+	
+	// set density for the whole domain
+
+
+	      // Store current cell
+	double sue, suw, sun, sus, sut, sub;
+	switch (index) {
+	case Arches::XDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             (stressTensor[0])[currCell];
+		suw = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             (stressTensor[0])[prevXCell];
+		sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[1])[currCell]+
+			      (stressTensor[1])[prevXCell]+
+			      (stressTensor[1])[IntVector(colX,colY+1,colZ)]+
+			      (stressTensor[1])[IntVector(colX-1,colY+1,colZ)]);
+		sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[1])[currCell]+
+			      (stressTensor[1])[prevXCell]+
+			      (stressTensor[1])[IntVector(colX,colY-1,colZ)]+
+			      (stressTensor[1])[IntVector(colX-1,colY-1,colZ)]);
+		sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		             ((stressTensor[2])[currCell]+
+			      (stressTensor[2])[prevXCell]+
+			      (stressTensor[2])[IntVector(colX,colY,colZ+1)]+
+			      (stressTensor[2])[IntVector(colX-1,colY,colZ+1)]);
+		sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		             ((stressTensor[2])[currCell]+
+			      (stressTensor[2])[prevXCell]+
+			      (stressTensor[2])[IntVector(colX,colY,colZ-1)]+
+			      (stressTensor[2])[IntVector(colX-1,colY,colZ-1)]);
+		pressureVars.uVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	case Arches::YDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		  ((stressTensor[3])[currCell]+
+		   (stressTensor[3])[prevYCell]+
+		   (stressTensor[3])[IntVector(colX+1,colY,colZ)]+
+		   (stressTensor[3])[IntVector(colX+1,colY-1,colZ)]);
+		suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		  ((stressTensor[3])[currCell]+
+		   (stressTensor[3])[prevYCell]+
+		   (stressTensor[3])[IntVector(colX-1,colY,colZ)]+
+		   (stressTensor[3])[IntVector(colX-1,colY-1,colZ)]);
+		sun = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		  (stressTensor[4])[currCell];
+		sus = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		  (stressTensor[4])[prevYCell];
+		sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		  ((stressTensor[5])[currCell]+
+		   (stressTensor[5])[prevYCell]+
+		   (stressTensor[5])[IntVector(colX,colY,colZ+1)]+
+		   (stressTensor[5])[IntVector(colX,colY-1,colZ+1)]);
+		sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		  ((stressTensor[5])[currCell]+
+		   (stressTensor[5])[prevYCell]+
+		   (stressTensor[5])[IntVector(colX,colY,colZ-1)]+
+		   (stressTensor[5])[IntVector(colX,colY-1,colZ-1)]);
+		pressureVars.vVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	case Arches::ZDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             ((stressTensor[6])[currCell]+
+			      (stressTensor[6])[prevZCell]+
+			      (stressTensor[6])[IntVector(colX+1,colY,colZ)]+
+			      (stressTensor[6])[IntVector(colX+1,colY,colZ-1)]);
+		suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             ((stressTensor[6])[currCell]+
+			      (stressTensor[6])[prevZCell]+
+			      (stressTensor[6])[IntVector(colX-1,colY,colZ)]+
+			      (stressTensor[6])[IntVector(colX-1,colY,colZ-1)]);
+		sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[7])[currCell]+
+			      (stressTensor[7])[prevZCell]+
+			      (stressTensor[7])[IntVector(colX,colY+1,colZ)]+
+			      (stressTensor[7])[IntVector(colX,colY+1,colZ-1)]);
+		sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[7])[currCell]+
+			      (stressTensor[7])[prevZCell]+
+			      (stressTensor[7])[IntVector(colX,colY-1,colZ)]+
+			      (stressTensor[7])[IntVector(colX,colY-1,colZ-1)]);
+		sut = cellinfo->sew[colX]*cellinfo->sns[colY]*
+		             (stressTensor[8])[currCell];
+		sub = cellinfo->sew[colX]*cellinfo->sns[colY]*
+		             (stressTensor[8])[prevZCell];
+		pressureVars.wVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeffCorr");
+	}
+      }
+
       // add multimaterial momentum source term
 
       if (d_MAlab)
@@ -2804,14 +3223,16 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
       d_source->modifyVelMassSource(pc, patch, delta_t, index,
 				    &pressureVars);
+
+    // Calculate Velocity diagonal
+    //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
+    //  outputs: [u,v,w]VelCoefPBLM
+
       d_discretize->calculateVelDiagonal(pc, patch,
 					 index,
 					 &pressureVars);
 
 
-    // Calculate Velocity diagonal
-    //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
-    //  outputs: [u,v,w]VelCoefPBLM
 
     d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
 				     cellinfo, &pressureVars);
@@ -3276,10 +3697,17 @@ PressureSolver::pressureLinearSolveCorr (const ProcessorGroup* pc,
 // Schedule solve of linearized pressure equation, intermediate step
 // ****************************************************************************
 void PressureSolver::solveInterm(const LevelP& level,
-			       SchedulerP& sched)
+			       SchedulerP& sched,
+                       const int Runge_Kutta_current_step,
+                       const bool Runge_Kutta_last_step)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+#ifdef filter_convection_terms
+  sched_computeNonlinearTerms(sched, patches, matls, d_lab,
+		Runge_Kutta_current_step, Runge_Kutta_last_step);
+#endif
 
   //computes stencil coefficients and source terms
   // require : old_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC
@@ -3328,6 +3756,11 @@ PressureSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     //    tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
     //		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
+      tsk->requires(Task::NewDW, d_lab->d_stressTensorCompLabel,
+		    d_lab->d_stressTensorMatl,Task::OutOfDomain,
+		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // from new_dw
   // for new task graph to work
@@ -3380,6 +3813,17 @@ PressureSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
 
     }
     
+#ifdef filter_convection_terms
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjULabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjVLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjWLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+#endif
     
     // requires convection coeff because of the nodal
     // differencing
@@ -3672,6 +4116,261 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 				      cellinfo, &pressureVars);
     //      d_source->addPressureSource(pc, patch, delta_t, index,
     //				  cellinfo, &pressureVars);
+
+#ifdef filter_convection_terms
+    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      switch (index) {
+	  case Arches::XDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjU[ii], 
+			    d_lab->d_filteredRhoUjULabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+
+	case Arches::YDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjV[ii], 
+			    d_lab->d_filteredRhoUjVLabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+
+	case Arches::ZDIR:
+	    new_dw->getCopy(pressureVars.filteredRhoUjW[ii], 
+			    d_lab->d_filteredRhoUjWLabel, ii, patch,
+			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
+	break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+      }
+    }
+
+    filterNonlinearTerms(pc, patch, index, cellinfo, &pressureVars);
+
+    IntVector indexLow;
+    IntVector indexHigh;
+    double areaew, areans, areatb;
+	
+    switch (index) {
+	case Arches::XDIR:
+	  indexLow = patch->getSFCXFORTLowIndex();
+	  indexHigh = patch->getSFCXFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->sns[colY] * cellinfo->stb[colZ];
+	  	areans = cellinfo->sewu[colX] * cellinfo->stb[colZ];
+	  	areatb = cellinfo->sewu[colX] * cellinfo->sns[colY];
+
+		pressureVars.uVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjU[0])[xplusCell]-(pressureVars.filteredRhoUjU[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjU[1])[yplusCell]-(pressureVars.filteredRhoUjU[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjU[2])[zplusCell]-(pressureVars.filteredRhoUjU[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+
+	case Arches::YDIR:
+	  indexLow = patch->getSFCYFORTLowIndex();
+	  indexHigh = patch->getSFCYFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->snsv[colY] * cellinfo->stb[colZ];
+	  	areans = cellinfo->sew[colX] * cellinfo->stb[colZ];
+	  	areatb = cellinfo->sew[colX] * cellinfo->snsv[colY];
+
+		pressureVars.vVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjV[0])[xplusCell]-(pressureVars.filteredRhoUjV[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjV[1])[yplusCell]-(pressureVars.filteredRhoUjV[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjV[2])[zplusCell]-(pressureVars.filteredRhoUjV[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+
+	case Arches::ZDIR:
+	  indexLow = patch->getSFCZFORTLowIndex();
+	  indexHigh = patch->getSFCZFORTHighIndex();
+
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          	IntVector currCell(colX, colY, colZ);
+          	IntVector xplusCell(colX+1, colY, colZ);
+          	IntVector yplusCell(colX, colY+1, colZ);
+        	IntVector zplusCell(colX, colY, colZ+1);
+	  	areaew = cellinfo->sns[colY] * cellinfo->stbw[colZ];
+	  	areans = cellinfo->sew[colX] * cellinfo->stbw[colZ];
+	  	areatb = cellinfo->sew[colX] * cellinfo->sns[colY];
+
+		pressureVars.wVelNonlinearSrc[currCell] -=
+		((pressureVars.filteredRhoUjW[0])[xplusCell]-(pressureVars.filteredRhoUjW[0])[currCell]) *
+		areaew +
+		((pressureVars.filteredRhoUjW[1])[yplusCell]-(pressureVars.filteredRhoUjW[1])[currCell]) *
+		areans +
+		((pressureVars.filteredRhoUjW[2])[zplusCell]-(pressureVars.filteredRhoUjW[2])[currCell]) *
+		areatb;
+	      }
+	    }
+	  }
+	break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeff");
+    }
+#endif
+
+      // for scalesimilarity model add stress tensor to the source of velocity eqn.
+      if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+	StencilMatrix<CCVariable<double> > stressTensor; //9 point tensor
+	for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
+	  new_dw->getCopy(stressTensor[ii], 
+			  d_lab->d_stressTensorCompLabel, ii, patch,
+			  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+	}
+
+	IntVector indexLow = patch->getCellFORTLowIndex();
+	IntVector indexHigh = patch->getCellFORTHighIndex();
+	
+	// set density for the whole domain
+
+
+	      // Store current cell
+	double sue, suw, sun, sus, sut, sub;
+	switch (index) {
+	case Arches::XDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             (stressTensor[0])[currCell];
+		suw = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             (stressTensor[0])[prevXCell];
+		sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[1])[currCell]+
+			      (stressTensor[1])[prevXCell]+
+			      (stressTensor[1])[IntVector(colX,colY+1,colZ)]+
+			      (stressTensor[1])[IntVector(colX-1,colY+1,colZ)]);
+		sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[1])[currCell]+
+			      (stressTensor[1])[prevXCell]+
+			      (stressTensor[1])[IntVector(colX,colY-1,colZ)]+
+			      (stressTensor[1])[IntVector(colX-1,colY-1,colZ)]);
+		sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		             ((stressTensor[2])[currCell]+
+			      (stressTensor[2])[prevXCell]+
+			      (stressTensor[2])[IntVector(colX,colY,colZ+1)]+
+			      (stressTensor[2])[IntVector(colX-1,colY,colZ+1)]);
+		sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		             ((stressTensor[2])[currCell]+
+			      (stressTensor[2])[prevXCell]+
+			      (stressTensor[2])[IntVector(colX,colY,colZ-1)]+
+			      (stressTensor[2])[IntVector(colX-1,colY,colZ-1)]);
+		pressureVars.uVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	case Arches::YDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		  ((stressTensor[3])[currCell]+
+		   (stressTensor[3])[prevYCell]+
+		   (stressTensor[3])[IntVector(colX+1,colY,colZ)]+
+		   (stressTensor[3])[IntVector(colX+1,colY-1,colZ)]);
+		suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		  ((stressTensor[3])[currCell]+
+		   (stressTensor[3])[prevYCell]+
+		   (stressTensor[3])[IntVector(colX-1,colY,colZ)]+
+		   (stressTensor[3])[IntVector(colX-1,colY-1,colZ)]);
+		sun = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		  (stressTensor[4])[currCell];
+		sus = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		  (stressTensor[4])[prevYCell];
+		sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		  ((stressTensor[5])[currCell]+
+		   (stressTensor[5])[prevYCell]+
+		   (stressTensor[5])[IntVector(colX,colY,colZ+1)]+
+		   (stressTensor[5])[IntVector(colX,colY-1,colZ+1)]);
+		sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+		  ((stressTensor[5])[currCell]+
+		   (stressTensor[5])[prevYCell]+
+		   (stressTensor[5])[IntVector(colX,colY,colZ-1)]+
+		   (stressTensor[5])[IntVector(colX,colY-1,colZ-1)]);
+		pressureVars.vVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	case Arches::ZDIR:
+	  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+		IntVector currCell(colX, colY, colZ);
+		IntVector prevXCell(colX-1, colY, colZ);
+		IntVector prevYCell(colX, colY-1, colZ);
+		IntVector prevZCell(colX, colY, colZ-1);
+
+		sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             ((stressTensor[6])[currCell]+
+			      (stressTensor[6])[prevZCell]+
+			      (stressTensor[6])[IntVector(colX+1,colY,colZ)]+
+			      (stressTensor[6])[IntVector(colX+1,colY,colZ-1)]);
+		suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+		             ((stressTensor[6])[currCell]+
+			      (stressTensor[6])[prevZCell]+
+			      (stressTensor[6])[IntVector(colX-1,colY,colZ)]+
+			      (stressTensor[6])[IntVector(colX-1,colY,colZ-1)]);
+		sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[7])[currCell]+
+			      (stressTensor[7])[prevZCell]+
+			      (stressTensor[7])[IntVector(colX,colY+1,colZ)]+
+			      (stressTensor[7])[IntVector(colX,colY+1,colZ-1)]);
+		sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+		             ((stressTensor[7])[currCell]+
+			      (stressTensor[7])[prevZCell]+
+			      (stressTensor[7])[IntVector(colX,colY-1,colZ)]+
+			      (stressTensor[7])[IntVector(colX,colY-1,colZ-1)]);
+		sut = cellinfo->sew[colX]*cellinfo->sns[colY]*
+		             (stressTensor[8])[currCell];
+		sub = cellinfo->sew[colX]*cellinfo->sns[colY]*
+		             (stressTensor[8])[prevZCell];
+		pressureVars.wVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+	      }
+	    }
+	  }
+	  break;
+	default:
+	  throw InvalidValue("Invalid index in PressureSolver::BuildVelCoeffInterm");
+	}
+      }
+
     // add multimaterial momentum source term
 
     if (d_MAlab)
@@ -3710,6 +4409,9 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     d_discretize->calculateVelDiagonal(pc, patch,
 				         index,
 				         &pressureVars);
+
+
+
     d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
 				     cellinfo, &pressureVars);
 
@@ -3720,8 +4422,10 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     SFCZVariable<double> temp_wVel;
     constCCVariable<double> old_density;
     constCCVariable<double> new_density;
+#ifndef filter_convection_terms
     IntVector indexLow;
     IntVector indexHigh;
+#endif
 
     new_dw->get(old_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -4160,3 +4864,926 @@ PressureSolver::pressureLinearSolveInterm (const ProcessorGroup* pc,
   //  d_linearSolver->pressLinearSolve();
 }
 
+//****************************************************************************
+//  Schedule computing of nonlinear terms
+//****************************************************************************
+void 
+PressureSolver::sched_computeNonlinearTerms(SchedulerP& sched, 
+					      const PatchSet* patches,
+					      const MaterialSet* matls,
+					const ArchesLabel* d_lab,
+					    const int Runge_Kutta_current_step,
+					    const bool Runge_Kutta_last_step)
+{
+  Task* tsk = scinew Task("PressureSolver::computeNTerms",
+			  this,
+			  &PressureSolver::computeNonlinearTerms,
+			  d_lab,
+			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  switch (Runge_Kutta_current_step) {
+  	case Arches::FIRST:
+		tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    		tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel, 
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel, 
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	break;
+
+	case Arches::SECOND:
+    		tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    		tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel, 
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel, 
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	break;
+
+	case Arches::THIRD:
+    		tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    		tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel, 
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel, 
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in computeRhoUiUj");
+  }
+
+
+      // Computes
+  if (Runge_Kutta_current_step == Arches::FIRST) {
+    tsk->computes(d_lab->d_filteredRhoUjULabel, d_lab->d_scalarFluxMatl,
+		  Task::OutOfDomain);
+    tsk->computes(d_lab->d_filteredRhoUjVLabel, d_lab->d_scalarFluxMatl,
+		  Task::OutOfDomain);
+    tsk->computes(d_lab->d_filteredRhoUjWLabel, d_lab->d_scalarFluxMatl,
+		  Task::OutOfDomain);
+  }
+  else {
+    tsk->modifies(d_lab->d_filteredRhoUjULabel, d_lab->d_scalarFluxMatl,
+		  Task::OutOfDomain);
+    tsk->modifies(d_lab->d_filteredRhoUjVLabel, d_lab->d_scalarFluxMatl,
+		  Task::OutOfDomain);
+    tsk->modifies(d_lab->d_filteredRhoUjWLabel, d_lab->d_scalarFluxMatl,
+		  Task::OutOfDomain);
+  }
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+//  Computation of and setting boundary conditions for nonlinear terms
+//****************************************************************************
+void 
+PressureSolver::computeNonlinearTerms(const ProcessorGroup* pc,
+					const PatchSubset* patches,
+					const MaterialSubset*,
+					DataWarehouse*,
+					DataWarehouse* new_dw,
+					const ArchesLabel* d_lab,
+					const int Runge_Kutta_current_step,
+					const bool)
+				//	const bool Runge_Kutta_last_step)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    ArchesVariables pressureVars;
+    int index;
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    CCVariable<double> density;
+
+    new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    switch (Runge_Kutta_current_step) {
+  	case Arches::FIRST:
+		new_dw->getCopy(density, d_lab->d_densityINLabel,
+		  matlIndex, patch,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    		new_dw->getCopy(uVelocity, d_lab->d_uVelocityOUTBCLabel,
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		new_dw->getCopy(vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		new_dw->getCopy(wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	break;
+
+	case Arches::SECOND:
+		new_dw->getCopy(density, d_lab->d_densityPredLabel,
+		  matlIndex, patch,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    		new_dw->getCopy(uVelocity, d_lab->d_uVelocityPredLabel,
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		new_dw->getCopy(vVelocity, d_lab->d_vVelocityPredLabel, 
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		new_dw->getCopy(wVelocity, d_lab->d_wVelocityPredLabel, 
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	break;
+
+	case Arches::THIRD:
+		new_dw->getCopy(density, d_lab->d_densityIntermLabel,
+		  matlIndex, patch,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    		new_dw->getCopy(uVelocity, d_lab->d_uVelocityIntermLabel,
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		new_dw->getCopy(vVelocity, d_lab->d_vVelocityIntermLabel, 
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    		new_dw->getCopy(wVelocity, d_lab->d_wVelocityIntermLabel, 
+		  matlIndex, patch,
+		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in computeRhoUiUj");
+    }
+
+    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      if (Runge_Kutta_current_step == Arches::FIRST) {
+        new_dw->allocateAndPut(pressureVars.filteredRhoUjU[ii], 
+			       d_lab->d_filteredRhoUjULabel, ii, patch);
+        new_dw->allocateAndPut(pressureVars.filteredRhoUjV[ii], 
+			       d_lab->d_filteredRhoUjVLabel, ii, patch);
+        new_dw->allocateAndPut(pressureVars.filteredRhoUjW[ii], 
+			       d_lab->d_filteredRhoUjWLabel, ii, patch);
+      }
+      else {
+        new_dw->getModifiable(pressureVars.filteredRhoUjU[ii], 
+			       d_lab->d_filteredRhoUjULabel, ii, patch);
+        new_dw->getModifiable(pressureVars.filteredRhoUjV[ii], 
+			       d_lab->d_filteredRhoUjVLabel, ii, patch);
+        new_dw->getModifiable(pressureVars.filteredRhoUjW[ii], 
+			       d_lab->d_filteredRhoUjWLabel, ii, patch);
+      }
+      pressureVars.filteredRhoUjU[ii].initialize(0.0);
+      pressureVars.filteredRhoUjV[ii].initialize(0.0);
+      pressureVars.filteredRhoUjW[ii].initialize(0.0);
+    }
+
+    IntVector idxLo;
+    IntVector idxHi;
+    IntVector idxULo;
+    IntVector idxUHi;
+    IntVector idxVLo;
+    IntVector idxVHi;
+    IntVector idxWLo;
+    IntVector idxWHi;
+    
+
+    idxLo = patch->getSFCXLowIndex();
+    idxHi = patch->getSFCXHighIndex();
+
+    if (xminus) idxLo = idxLo + IntVector(2,0,0);
+    if (yminus) idxLo = idxLo + IntVector(0,1,0);
+    if (zminus) idxLo = idxLo + IntVector(0,0,1);
+    if (xplus) idxHi = idxHi - IntVector(1,0,0);
+
+// sizes for computed rhoUU
+    idxULo = idxLo;
+    idxUHi = idxHi;
+    if (yplus) idxUHi = idxUHi - IntVector(0,1,0);
+    if (zplus) idxUHi = idxUHi - IntVector(0,0,1);
+// sizes for computed rhoVU
+    idxVLo = idxLo;
+    idxVHi = idxHi;
+    if (xplus) idxVHi = idxVHi - IntVector(1,0,0);
+    if (zplus) idxVHi = idxVHi - IntVector(0,0,1);
+// sizes for computed rhoWU
+    idxWLo = idxLo;
+    idxWHi = idxHi;
+    if (xplus) idxWHi = idxWHi - IntVector(1,0,0);
+    if (yplus) idxWHi = idxWHi - IntVector(0,1,0);
+
+    for (int k = idxULo.z(); k < idxUHi.z(); ++k) {
+      for (int j = idxULo.y(); j < idxUHi.y(); ++j) {
+	for (int i = idxULo.x(); i < idxUHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusu(i-1,j,k);
+	  IntVector idxminusuminusu(i-2,j,k);
+	  (pressureVars.filteredRhoUjU[0])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusu])*uVelocity[idx]+
+	    (density[idxminusu]+density[idxminusuminusu])*uVelocity[idxminusu])*
+	    (uVelocity[idx]+uVelocity[idxminusu]));
+	}
+      }
+    }
+    for (int k = idxVLo.z(); k < idxVHi.z(); ++k) {
+      for (int j = idxVLo.y(); j < idxVHi.y(); ++j) {
+	for (int i = idxVLo.x(); i < idxVHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusu(i-1,j,k);
+	  IntVector idxminusv(i,j-1,k);
+	  IntVector idxminusuminusv(i-1,j-1,k);
+	  (pressureVars.filteredRhoUjU[1])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusv])*vVelocity[idx]+
+	    (density[idxminusu]+density[idxminusuminusv])*vVelocity[idxminusu])*
+	    (uVelocity[idx]+uVelocity[idxminusv]));
+//	if (i == 1) cerr << idx << " " << (pressureVars.filteredRhoUjU[1])[idx] << " " << density[idx] << " " << density[idxminusv] << " " << density[idxminusuminusv] << " " << uVelocity[idx] << " " << uVelocity[idxminusv] << " " << vVelocity[idx] << " " << vVelocity[idxminusu] << endl;
+	}
+      }
+    }
+    for (int k = idxWLo.z(); k < idxWHi.z(); ++k) {
+      for (int j = idxWLo.y(); j < idxWHi.y(); ++j) {
+	for (int i = idxWLo.x(); i < idxWHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusu(i-1,j,k);
+	  IntVector idxminusw(i,j,k-1);
+	  IntVector idxminusuminusw(i-1,j,k-1);
+	  (pressureVars.filteredRhoUjU[2])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusw])*wVelocity[idx]+
+	    (density[idxminusu]+density[idxminusuminusw])*wVelocity[idxminusu])*
+	    (uVelocity[idx]+uVelocity[idxminusw]));
+	}
+      }
+    }
+
+    index = Arches::XDIR;
+    d_boundaryCondition->setFluxBC(pc, patch, index, &pressureVars);
+
+
+    
+    idxLo = patch->getSFCYLowIndex();
+    idxHi = patch->getSFCYHighIndex();
+
+    if (xminus) idxLo = idxLo + IntVector(1,0,0);
+    if (yminus) idxLo = idxLo + IntVector(0,2,0);
+    if (zminus) idxLo = idxLo + IntVector(0,0,1);
+    if (yplus) idxHi = idxHi - IntVector(0,1,0);
+
+// sizes for computed rhoUV
+    idxULo = idxLo;
+    idxUHi = idxHi;
+    if (yplus) idxUHi = idxUHi - IntVector(0,1,0);
+    if (zplus) idxUHi = idxUHi - IntVector(0,0,1);
+// sizes for computed rhoVV
+    idxVLo = idxLo;
+    idxVHi = idxHi;
+    if (xplus) idxVHi = idxVHi - IntVector(1,0,0);
+    if (zplus) idxVHi = idxVHi - IntVector(0,0,1);
+// sizes for computed rhoWV
+    idxWLo = idxLo;
+    idxWHi = idxHi;
+    if (xplus) idxWHi = idxWHi - IntVector(1,0,0);
+    if (yplus) idxWHi = idxWHi - IntVector(0,1,0);
+
+    for (int k = idxULo.z(); k < idxUHi.z(); ++k) {
+      for (int j = idxULo.y(); j < idxUHi.y(); ++j) {
+	for (int i = idxULo.x(); i < idxUHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusu(i-1,j,k);
+	  IntVector idxminusv(i,j-1,k);
+	  IntVector idxminusvminusu(i-1,j-1,k);
+	  (pressureVars.filteredRhoUjV[0])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusu])*uVelocity[idx]+
+	    (density[idxminusv]+density[idxminusvminusu])*uVelocity[idxminusv])*
+	    (vVelocity[idx]+vVelocity[idxminusu]));
+	}
+      }
+    }
+    for (int k = idxVLo.z(); k < idxVHi.z(); ++k) {
+      for (int j = idxVLo.y(); j < idxVHi.y(); ++j) {
+	for (int i = idxVLo.x(); i < idxVHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusv(i,j-1,k);
+	  IntVector idxminusvminusv(i,j-2,k);
+	  (pressureVars.filteredRhoUjV[1])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusv])*vVelocity[idx]+
+	    (density[idxminusv]+density[idxminusvminusv])*vVelocity[idxminusv])*
+	    (vVelocity[idx]+vVelocity[idxminusv]));
+	}
+      }
+    }
+    for (int k = idxWLo.z(); k < idxWHi.z(); ++k) {
+      for (int j = idxWLo.y(); j < idxWHi.y(); ++j) {
+	for (int i = idxWLo.x(); i < idxWHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusv(i,j-1,k);
+	  IntVector idxminusw(i,j,k-1);
+	  IntVector idxminusvminusw(i,j-1,k-1);
+	  (pressureVars.filteredRhoUjV[2])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusw])*wVelocity[idx]+
+	    (density[idxminusv]+density[idxminusvminusw])*wVelocity[idxminusv])*
+	    (vVelocity[idx]+vVelocity[idxminusw]));
+	}
+      }
+    }
+
+    index = Arches::YDIR;
+    d_boundaryCondition->setFluxBC(pc, patch, index, &pressureVars);
+
+
+    
+    idxLo = patch->getSFCZLowIndex();
+    idxHi = patch->getSFCZHighIndex();
+
+    if (xminus) idxLo = idxLo + IntVector(1,0,0);
+    if (yminus) idxLo = idxLo + IntVector(0,1,0);
+    if (zminus) idxLo = idxLo + IntVector(0,0,2);
+    if (zplus) idxHi = idxHi - IntVector(0,0,1);
+
+// sizes for computed rhoUW
+    idxULo = idxLo;
+    idxUHi = idxHi;
+    if (yplus) idxUHi = idxUHi - IntVector(0,1,0);
+    if (zplus) idxUHi = idxUHi - IntVector(0,0,1);
+// sizes for computed rhoVW
+    idxVLo = idxLo;
+    idxVHi = idxHi;
+    if (xplus) idxVHi = idxVHi - IntVector(1,0,0);
+    if (zplus) idxVHi = idxVHi - IntVector(0,0,1);
+// sizes for computed rhoWW
+    idxWLo = idxLo;
+    idxWHi = idxHi;
+    if (xplus) idxWHi = idxWHi - IntVector(1,0,0);
+    if (yplus) idxWHi = idxWHi - IntVector(0,1,0);
+
+    for (int k = idxULo.z(); k < idxUHi.z(); ++k) {
+      for (int j = idxULo.y(); j < idxUHi.y(); ++j) {
+	for (int i = idxULo.x(); i < idxUHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusu(i-1,j,k);
+	  IntVector idxminusw(i,j,k-1);
+	  IntVector idxminuswminusu(i-1,j,k-1);
+	  (pressureVars.filteredRhoUjW[0])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusu])*uVelocity[idx]+
+	    (density[idxminusw]+density[idxminuswminusu])*uVelocity[idxminusw])*
+	    (wVelocity[idx]+wVelocity[idxminusu]));
+	}
+      }
+    }
+    for (int k = idxVLo.z(); k < idxVHi.z(); ++k) {
+      for (int j = idxVLo.y(); j < idxVHi.y(); ++j) {
+	for (int i = idxVLo.x(); i < idxVHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusv(i,j-1,k);
+	  IntVector idxminusw(i,j,k-1);
+	  IntVector idxminuswminusv(i,j-1,k-1);
+	  (pressureVars.filteredRhoUjW[1])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusv])*vVelocity[idx]+
+	    (density[idxminusw]+density[idxminuswminusv])*vVelocity[idxminusw])*
+	    (wVelocity[idx]+wVelocity[idxminusv]));
+	}
+      }
+    }
+    for (int k = idxWLo.z(); k < idxWHi.z(); ++k) {
+      for (int j = idxWLo.y(); j < idxWHi.y(); ++j) {
+	for (int i = idxWLo.x(); i < idxWHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  IntVector idxminusw(i,j,k-1);
+	  IntVector idxminuswminusw(i,j,k-2);
+	  (pressureVars.filteredRhoUjW[2])[idx] = 0.125 * 
+	   (((density[idx]+density[idxminusw])*wVelocity[idx]+
+	    (density[idxminusw]+density[idxminuswminusw])*wVelocity[idxminusw])*
+	    (wVelocity[idx]+wVelocity[idxminusw]));
+	}
+      }
+    }
+
+    index = Arches::ZDIR;
+    d_boundaryCondition->setFluxBC(pc, patch, index, &pressureVars);
+
+  }
+}
+//****************************************************************************
+//  Filtering of nonlinear terms
+//****************************************************************************
+void 
+PressureSolver::filterNonlinearTerms(const ProcessorGroup*,
+					const Patch* patch,
+					int index,
+					CellInformation* cellinfo,
+					ArchesVariables* vars)
+
+{
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  Array3<double> rhoUU;
+  Array3<double> rhoVU;
+  Array3<double> rhoWU;
+  Array3<double> rhoUV;
+  Array3<double> rhoVV;
+  Array3<double> rhoWV;
+  Array3<double> rhoUW;
+  Array3<double> rhoVW;
+  Array3<double> rhoWW;
+
+  IntVector idxLo;
+  IntVector idxHi;
+  IntVector idxUnfilteredLo;
+  IntVector idxUnfilteredHi;
+  IntVector idxFilteredLo;
+  IntVector idxFilteredHi;
+  IntVector idxFilterComputedLo;
+  IntVector idxFilterComputedHi;
+  IntVector idxUFilterComputedLo;
+  IntVector idxUFilterComputedHi;
+  IntVector idxVFilterComputedLo;
+  IntVector idxVFilterComputedHi;
+  IntVector idxWFilterComputedLo;
+  IntVector idxWFilterComputedHi;
+
+  switch (index) {
+    case Arches::XDIR:
+    
+    idxLo = patch->getSFCXLowIndex();
+    idxHi = patch->getSFCXHighIndex();
+
+// sizes for unfiltered rhoUU, rhoVU, rhoWU
+    idxUnfilteredLo = idxLo;
+    idxUnfilteredHi = idxHi;
+    if (xminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(2,0,0);
+    if (yminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(0,1,0);
+    if (zminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(0,0,1);
+    if (xplus) idxUnfilteredHi = idxUnfilteredHi - IntVector(1,0,0);
+    if (!(xminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(1,0,0);
+    if (!(yminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(0,1,0);
+    if (!(zminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(0,0,1);
+    if (!(xplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(2,0,0);
+    if (!(yplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(0,2,0);
+    if (!(zplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(0,0,2);
+
+// sizes for filtered rhoUU, rhoVU, rhoWU
+    idxFilteredLo = idxUnfilteredLo;
+    idxFilteredHi = idxUnfilteredHi;
+    if (!(xminus)) idxFilteredLo = idxFilteredLo + IntVector(1,0,0);
+    if (!(yminus)) idxFilteredLo = idxFilteredLo + IntVector(0,1,0);
+    if (!(zminus)) idxFilteredLo = idxFilteredLo + IntVector(0,0,1);
+    if (!(xplus)) idxFilteredHi = idxFilteredHi - IntVector(1,0,0);
+    if (!(yplus)) idxFilteredHi = idxFilteredHi - IntVector(0,1,0);
+    if (!(zplus)) idxFilteredHi = idxFilteredHi - IntVector(0,0,1);
+
+    idxFilterComputedLo = idxFilteredLo;
+    idxFilterComputedHi = idxFilteredHi;
+    if (xminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(1,0,0);
+    if (yminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(0,1,0);
+    if (zminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(0,0,1);
+    if (xplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(1,0,0);
+    if (yplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(0,1,0);
+    if (zplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(0,0,1);
+
+// sizes for rhoUU, where filter is actually applied
+    idxUFilterComputedLo = idxFilterComputedLo;
+    idxUFilterComputedHi = idxFilterComputedHi;
+    if (yplus) idxUFilterComputedHi = idxUFilterComputedHi - IntVector(0,1,0);
+    if (zplus) idxUFilterComputedHi = idxUFilterComputedHi - IntVector(0,0,1);
+// sizes for rhoVU where filter is actually applied
+    idxVFilterComputedLo = idxFilterComputedLo;
+    idxVFilterComputedHi = idxFilterComputedHi;
+    if (xplus) idxVFilterComputedHi = idxVFilterComputedHi - IntVector(1,0,0);
+    if (zplus) idxVFilterComputedHi = idxVFilterComputedHi - IntVector(0,0,1);
+// sizes for rhoWU where filter is actually applied
+    idxWFilterComputedLo = idxFilterComputedLo;
+    idxWFilterComputedHi = idxFilterComputedHi;
+    if (xplus) idxWFilterComputedHi = idxWFilterComputedHi - IntVector(1,0,0);
+    if (yplus) idxWFilterComputedHi = idxWFilterComputedHi - IntVector(0,1,0);
+
+    rhoUU.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoVU.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoWU.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoUU.initialize(0.0);
+    rhoVU.initialize(0.0);
+    rhoWU.initialize(0.0);
+
+  //  vars->filteredRhoUjU[0].print(cerr);
+  //  vars->filteredRhoUjU[1].print(cerr);
+  //  vars->filteredRhoUjU[2].print(cerr);
+    for (int k = idxUnfilteredLo.z(); k < idxUnfilteredHi.z(); ++k) {
+      for (int j = idxUnfilteredLo.y(); j < idxUnfilteredHi.y(); ++j) {
+	for (int i = idxUnfilteredLo.x(); i < idxUnfilteredHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+	  rhoUU[idx] = (vars->filteredRhoUjU[0])[idx];
+	  rhoVU[idx] = (vars->filteredRhoUjU[1])[idx];
+	  rhoWU[idx] = (vars->filteredRhoUjU[2])[idx];
+	}
+      }
+    }
+
+    for (int k = idxUFilterComputedLo.z(); k < idxUFilterComputedHi.z(); ++k) {
+      for (int j = idxUFilterComputedLo.y(); j < idxUFilterComputedHi.y(); ++j) {
+	for (int i = idxUFilterComputedLo.x(); i < idxUFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sewu[i])*
+			      (2.0*cellinfo->sns[j])*
+                 	      (2.0*cellinfo->stb[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjU[0])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sewu[i] * cellinfo->sns[j] *
+			     cellinfo->stb[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjU[0])[currCell] += rhoUU[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjU[0])[currCell] *= invDelta;
+	}
+      }
+    }
+    for (int k = idxVFilterComputedLo.z(); k < idxVFilterComputedHi.z(); ++k) {
+      for (int j = idxVFilterComputedLo.y(); j < idxVFilterComputedHi.y(); ++j) {
+	for (int i = idxVFilterComputedLo.x(); i < idxVFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sewu[i])*
+			      (2.0*cellinfo->sns[j])*
+                 	      (2.0*cellinfo->stb[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjU[1])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sewu[i] * cellinfo->sns[j] *
+			     cellinfo->stb[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjU[1])[currCell] += rhoVU[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjU[1])[currCell] *= invDelta;
+	}
+      }
+    }
+    for (int k = idxWFilterComputedLo.z(); k < idxWFilterComputedHi.z(); ++k) {
+      for (int j = idxWFilterComputedLo.y(); j < idxWFilterComputedHi.y(); ++j) {
+	for (int i = idxWFilterComputedLo.x(); i < idxWFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sewu[i])*
+			      (2.0*cellinfo->sns[j])*
+                 	      (2.0*cellinfo->stb[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjU[2])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sewu[i] * cellinfo->sns[j] *
+			     cellinfo->stb[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjU[2])[currCell] += rhoWU[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjU[2])[currCell] *= invDelta;
+	}
+      }
+    }
+    //vars->filteredRhoUjU[0].print(cerr);
+    //vars->filteredRhoUjU[1].print(cerr);
+    //vars->filteredRhoUjU[2].print(cerr);
+
+    break;
+
+    case Arches::YDIR:
+    
+    idxLo = patch->getSFCYLowIndex();
+    idxHi = patch->getSFCYHighIndex();
+
+// sizes for unfiltered rhoUV, rhoVV, rhoWV
+    idxUnfilteredLo = idxLo;
+    idxUnfilteredHi = idxHi;
+    if (xminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(1,0,0);
+    if (yminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(0,2,0);
+    if (zminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(0,0,1);
+    if (yplus) idxUnfilteredHi = idxUnfilteredHi - IntVector(0,1,0);
+    if (!(xminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(1,0,0);
+    if (!(yminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(0,1,0);
+    if (!(zminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(0,0,1);
+    if (!(xplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(2,0,0);
+    if (!(yplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(0,2,0);
+    if (!(zplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(0,0,2);
+
+// sizes for filtered rhoUV, rhoVV, rhoWV
+    idxFilteredLo = idxUnfilteredLo;
+    idxFilteredHi = idxUnfilteredHi;
+    if (!(xminus)) idxFilteredLo = idxFilteredLo + IntVector(1,0,0);
+    if (!(yminus)) idxFilteredLo = idxFilteredLo + IntVector(0,1,0);
+    if (!(zminus)) idxFilteredLo = idxFilteredLo + IntVector(0,0,1);
+    if (!(xplus)) idxFilteredHi = idxFilteredHi - IntVector(1,0,0);
+    if (!(yplus)) idxFilteredHi = idxFilteredHi - IntVector(0,1,0);
+    if (!(zplus)) idxFilteredHi = idxFilteredHi - IntVector(0,0,1);
+
+    idxFilterComputedLo = idxFilteredLo;
+    idxFilterComputedHi = idxFilteredHi;
+    if (xminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(1,0,0);
+    if (yminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(0,1,0);
+    if (zminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(0,0,1);
+    if (xplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(1,0,0);
+    if (yplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(0,1,0);
+    if (zplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(0,0,1);
+
+// sizes for rhoUV, where filter is actually applied
+    idxUFilterComputedLo = idxFilterComputedLo;
+    idxUFilterComputedHi = idxFilterComputedHi;
+    if (yplus) idxUFilterComputedHi = idxUFilterComputedHi - IntVector(0,1,0);
+    if (zplus) idxUFilterComputedHi = idxUFilterComputedHi - IntVector(0,0,1);
+// sizes for rhoVV, where filter is actually applied
+    idxVFilterComputedLo = idxFilterComputedLo;
+    idxVFilterComputedHi = idxFilterComputedHi;
+    if (xplus) idxVFilterComputedHi = idxVFilterComputedHi - IntVector(1,0,0);
+    if (zplus) idxVFilterComputedHi = idxVFilterComputedHi - IntVector(0,0,1);
+// sizes for rhoWV where filter is actually applied
+    idxWFilterComputedLo = idxFilterComputedLo;
+    idxWFilterComputedHi = idxFilterComputedHi;
+    if (xplus) idxWFilterComputedHi = idxWFilterComputedHi - IntVector(1,0,0);
+    if (yplus) idxWFilterComputedHi = idxWFilterComputedHi - IntVector(0,1,0);
+
+    rhoUV.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoVV.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoWV.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoUV.initialize(0.0);
+    rhoVV.initialize(0.0);
+    rhoWV.initialize(0.0);
+
+    for (int k = idxUnfilteredLo.z(); k < idxUnfilteredHi.z(); ++k) {
+      for (int j = idxUnfilteredLo.y(); j < idxUnfilteredHi.y(); ++j) {
+	for (int i = idxUnfilteredLo.x(); i < idxUnfilteredHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+          rhoUV[idx] = (vars->filteredRhoUjV[0])[idx];
+          rhoVV[idx] = (vars->filteredRhoUjV[1])[idx];
+          rhoWV[idx] = (vars->filteredRhoUjV[2])[idx];
+	}
+      }
+    }
+
+    for (int k = idxUFilterComputedLo.z(); k < idxUFilterComputedHi.z(); ++k) {
+      for (int j = idxUFilterComputedLo.y(); j < idxUFilterComputedHi.y(); ++j) {
+	for (int i = idxUFilterComputedLo.x(); i < idxUFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sew[i])*
+			      (2.0*cellinfo->snsv[j])*
+                 	      (2.0*cellinfo->stb[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjV[0])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sew[i] * cellinfo->snsv[j] *
+			     cellinfo->stb[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjV[0])[currCell] += rhoUV[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjV[0])[currCell] *= invDelta;
+	}
+      }
+    }
+    for (int k = idxVFilterComputedLo.z(); k < idxVFilterComputedHi.z(); ++k) {
+      for (int j = idxVFilterComputedLo.y(); j < idxVFilterComputedHi.y(); ++j) {
+	for (int i = idxVFilterComputedLo.x(); i < idxVFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sew[i])*
+			      (2.0*cellinfo->snsv[j])*
+                 	      (2.0*cellinfo->stb[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjV[1])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sew[i] * cellinfo->snsv[j] *
+			     cellinfo->stb[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjV[1])[currCell] += rhoVV[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjV[1])[currCell] *= invDelta;
+	}
+      }
+    }
+    for (int k = idxWFilterComputedLo.z(); k < idxWFilterComputedHi.z(); ++k) {
+      for (int j = idxWFilterComputedLo.y(); j < idxWFilterComputedHi.y(); ++j) {
+	for (int i = idxWFilterComputedLo.x(); i < idxWFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sew[i])*
+			      (2.0*cellinfo->snsv[j])*
+                 	      (2.0*cellinfo->stb[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjV[2])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sew[i] * cellinfo->snsv[j] *
+			     cellinfo->stb[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjV[2])[currCell] += rhoWV[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjV[2])[currCell] *= invDelta;
+	}
+      }
+    }
+
+    break;
+
+    case Arches::ZDIR:
+    
+    idxLo = patch->getSFCZLowIndex();
+    idxHi = patch->getSFCZHighIndex();
+
+// sizes for unfiltered rhoUW, rhoVW, rhoWW
+    idxUnfilteredLo = idxLo;
+    idxUnfilteredHi = idxHi;
+    if (xminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(1,0,0);
+    if (yminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(0,1,0);
+    if (zminus) idxUnfilteredLo = idxUnfilteredLo + IntVector(0,0,2);
+    if (zplus) idxUnfilteredHi = idxUnfilteredHi - IntVector(0,0,1);
+    if (!(xminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(1,0,0);
+    if (!(yminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(0,1,0);
+    if (!(zminus)) idxUnfilteredLo = idxUnfilteredLo - IntVector(0,0,1);
+    if (!(xplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(2,0,0);
+    if (!(yplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(0,2,0);
+    if (!(zplus)) idxUnfilteredHi = idxUnfilteredHi + IntVector(0,0,2);
+
+// sizes for filtered rhoUW, rhoVW, rhoWW
+    idxFilteredLo = idxUnfilteredLo;
+    idxFilteredHi = idxUnfilteredHi;
+    if (!(xminus)) idxFilteredLo = idxFilteredLo + IntVector(1,0,0);
+    if (!(yminus)) idxFilteredLo = idxFilteredLo + IntVector(0,1,0);
+    if (!(zminus)) idxFilteredLo = idxFilteredLo + IntVector(0,0,1);
+    if (!(xplus)) idxFilteredHi = idxFilteredHi - IntVector(1,0,0);
+    if (!(yplus)) idxFilteredHi = idxFilteredHi - IntVector(0,1,0);
+    if (!(zplus)) idxFilteredHi = idxFilteredHi - IntVector(0,0,1);
+
+    idxFilterComputedLo = idxFilteredLo;
+    idxFilterComputedHi = idxFilteredHi;
+    if (xminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(1,0,0);
+    if (yminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(0,1,0);
+    if (zminus) idxFilterComputedLo= idxFilterComputedLo + IntVector(0,0,1);
+    if (xplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(1,0,0);
+    if (yplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(0,1,0);
+    if (zplus) idxFilterComputedHi = idxFilterComputedHi - IntVector(0,0,1);
+
+// sizes for rhoUW, where filter is actually applied
+    idxUFilterComputedLo = idxFilterComputedLo;
+    idxUFilterComputedHi = idxFilterComputedHi;
+    if (yplus) idxUFilterComputedHi = idxUFilterComputedHi - IntVector(0,1,0);
+    if (zplus) idxUFilterComputedHi = idxUFilterComputedHi - IntVector(0,0,1);
+// sizes for rhoVW, where filter is actually applied
+    idxVFilterComputedLo = idxFilterComputedLo;
+    idxVFilterComputedHi = idxFilterComputedHi;
+    if (xplus) idxVFilterComputedHi = idxVFilterComputedHi - IntVector(1,0,0);
+    if (zplus) idxVFilterComputedHi = idxVFilterComputedHi - IntVector(0,0,1);
+// sizes for rhoWW, where filter is actually applied
+    idxWFilterComputedLo = idxFilterComputedLo;
+    idxWFilterComputedHi = idxFilterComputedHi;
+    if (xplus) idxWFilterComputedHi = idxWFilterComputedHi - IntVector(1,0,0);
+    if (yplus) idxWFilterComputedHi = idxWFilterComputedHi - IntVector(0,1,0);
+
+    rhoUW.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoVW.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoWW.resize(idxUnfilteredLo,idxUnfilteredHi);
+    rhoUW.initialize(0.0);
+    rhoVW.initialize(0.0);
+    rhoWW.initialize(0.0);
+
+    for (int k = idxUnfilteredLo.z(); k < idxUnfilteredHi.z(); ++k) {
+      for (int j = idxUnfilteredLo.y(); j < idxUnfilteredHi.y(); ++j) {
+	for (int i = idxUnfilteredLo.x(); i < idxUnfilteredHi.x(); ++i) {
+	  IntVector idx(i,j,k);
+          rhoUW[idx] = (vars->filteredRhoUjW[0])[idx];
+          rhoVW[idx] = (vars->filteredRhoUjW[1])[idx];
+          rhoWW[idx] = (vars->filteredRhoUjW[2])[idx];
+	}
+      }
+    }
+
+    for (int k = idxUFilterComputedLo.z(); k < idxUFilterComputedHi.z(); ++k) {
+      for (int j = idxUFilterComputedLo.y(); j < idxUFilterComputedHi.y(); ++j) {
+	for (int i = idxUFilterComputedLo.x(); i < idxUFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sew[i])*
+			      (2.0*cellinfo->sns[j])*
+                 	      (2.0*cellinfo->stbw[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjW[0])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sew[i] * cellinfo->sns[j] *
+			     cellinfo->stbw[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjW[0])[currCell] += rhoUW[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjW[0])[currCell] *= invDelta;
+	}
+      }
+    }
+    for (int k = idxVFilterComputedLo.z(); k < idxVFilterComputedHi.z(); ++k) {
+      for (int j = idxVFilterComputedLo.y(); j < idxVFilterComputedHi.y(); ++j) {
+	for (int i = idxVFilterComputedLo.x(); i < idxVFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sew[i])*
+			      (2.0*cellinfo->sns[j])*
+                 	      (2.0*cellinfo->stbw[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjW[1])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sew[i] * cellinfo->sns[j] *
+			     cellinfo->stbw[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjW[1])[currCell] += rhoVW[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjW[1])[currCell] *= invDelta;
+	}
+      }
+    }
+    for (int k = idxWFilterComputedLo.z(); k < idxWFilterComputedHi.z(); ++k) {
+      for (int j = idxWFilterComputedLo.y(); j < idxWFilterComputedHi.y(); ++j) {
+	for (int i = idxWFilterComputedLo.x(); i < idxWFilterComputedHi.x(); ++i){
+	  IntVector currCell(i,j,k);
+	  double cube_delta = (2.0*cellinfo->sew[i])*
+			      (2.0*cellinfo->sns[j])*
+                 	      (2.0*cellinfo->stbw[k]);
+	  double invDelta = 1.0/cube_delta;
+          (vars->filteredRhoUjW[2])[currCell] = 0.0;
+	  
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(i+ii,j+jj,k+kk);
+		double vol = cellinfo->sew[i] * cellinfo->sns[j] *
+			     cellinfo->stbw[k] *
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		(vars->filteredRhoUjW[2])[currCell] += rhoWW[filterCell]*vol;  
+	      }
+	    }
+	  }
+	  (vars->filteredRhoUjW[2])[currCell] *= invDelta;
+	}
+      }
+    }
+
+    break;
+
+    default:
+	  throw InvalidValue("Invalid index in PressureSolver::filterNterms");
+  }
+}

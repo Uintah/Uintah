@@ -287,6 +287,18 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &reactscalarVars );
+#ifdef Scalar_ENO
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &reactscalarVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &reactscalarVars, wallID);
+#endif
+#endif
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, reactscalCoefSBLM
     // outputs: reactscalCoefSBLM
@@ -307,17 +319,6 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // outputs: reactscalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
 
-#ifdef Scalar_ENO
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
@@ -771,6 +772,18 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &reactscalarVars );
+#ifdef Scalar_ENO
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &reactscalarVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &reactscalarVars, wallID);
+#endif
+#endif
 
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
@@ -792,17 +805,6 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
 
-#ifdef Scalar_ENO
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
@@ -1244,6 +1246,18 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &reactscalarVars );
+#ifdef Scalar_ENO
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &reactscalarVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &reactscalarVars, wallID);
+#endif
+#endif
 
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
@@ -1265,17 +1279,6 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
 
-#ifdef Scalar_ENO
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &reactscalarVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(reactscalarVars.scalarCoeff[ii], 

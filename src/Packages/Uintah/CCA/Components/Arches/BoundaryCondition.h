@@ -294,6 +294,11 @@ public:
 				    int index,
 				    CellInformation* cellinfo,
 				    ArchesVariables* vars);
+
+      void setFluxBC(const ProcessorGroup* pc,
+		      const Patch* patch,
+		      int index,
+		      ArchesVariables* vars);
 			
 private:
 

@@ -104,6 +104,12 @@ public:
       void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
 				       const MaterialSet* matls);
 
+      void sched_interpolateFromFCToCCPred(SchedulerP&, const PatchSet* patches,
+				       const MaterialSet* matls);
+
+      void sched_interpolateFromFCToCCInterm(SchedulerP&, const PatchSet* patches,
+				       const MaterialSet* matls);
+
       void sched_probeData(SchedulerP&, const PatchSet* patches,
 			   const MaterialSet* matls);
 
@@ -141,6 +147,18 @@ private:
       // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
       //    [in] 
       void interpolateFromFCToCC(const ProcessorGroup* pc,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
+
+      void interpolateFromFCToCCPred(const ProcessorGroup* pc,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
+
+      void interpolateFromFCToCCInterm(const ProcessorGroup* pc,
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
