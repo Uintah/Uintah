@@ -37,7 +37,7 @@ else
 PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
            Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom
 endif
-LIBS := $(PLPLOT_LIBRARY) $(LAPACK_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(LAPACK_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/PCA-example
 SRCS := $(SRCDIR)/PCA-example.cc

@@ -864,7 +864,6 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_oogl=no
   sci_required_perl=no
   sci_required_petsc=no
-  sci_required_plplot=no
   sci_required_qt=no
   sci_required_ruby=no
   sci_required_ssl=no
