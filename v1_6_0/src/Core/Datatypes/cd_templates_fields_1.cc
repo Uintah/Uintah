@@ -63,16 +63,16 @@ const TypeDescription* get_type_description(ImageField<unsigned char> *);
 
 
 
-vector<Tensor>;       
-vector<Vector>;       
-vector<double>;       
-vector<float>;        
-vector<int>;          
-vector<short>;        
-vector<char>;         
-vector<unsigned int>; 
-vector<unsigned short>;
-vector<unsigned char>;
+template class vector<Tensor>;       
+template class vector<Vector>;       
+template class vector<double>;       
+template class vector<float>;        
+template class vector<int>;          
+template class vector<short>;        
+template class vector<char>;         
+template class vector<unsigned int>; 
+template class vector<unsigned short>;
+template class vector<unsigned char>;
 
 template class GenericField<QuadSurfMesh, vector<Tensor> >;       
 template class GenericField<QuadSurfMesh, vector<Vector> >;       
