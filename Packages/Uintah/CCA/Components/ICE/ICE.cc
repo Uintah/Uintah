@@ -319,11 +319,22 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     modelMaker->makeModels(prob_spec, grid, sharedState, d_models);
     releasePort("ModelMaker");
     d_modelSetup = scinew ICEModelSetup();
+      
+    // problem setup for each model  
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
        iter != d_models.end(); iter++){
       (*iter)->problemSetup(grid, sharedState, d_modelSetup);
     }
-
+    
+    //  bullet proofing each transported variable must have a boundary condition.
+    for(vector<TransportedVariable*>::iterator
+                                    iter =  d_modelSetup->tvars.begin();
+                                    iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      string Labelname = tvar->var->getName();
+      is_BC_specified(prob_spec, Labelname);
+    }
+    
     d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
                                lb->modelMass_srcLabel,
                                lb->modelMom_srcLabel,
@@ -807,8 +818,9 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
                                     iter =  d_modelSetup->tvars.begin();
                                     iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
-      if(tvar->src)
-	task->computes(tvar->src, tvar->matls);
+      if(tvar->src){
+        task->computes(tvar->src, tvar->matls);
+      }
     }
     sched->addTask(task, level->eachPatch(), matls);
 
@@ -4284,35 +4296,35 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
             constCCVariable<double> q_L_CC,q_src;
             CCVariable<double> q_new, q_CC;
             
-	     old_dw->get(q_L_CC,   tvar->var, indx, patch, gac, 2);         
-	     if(tvar->src){
-	       new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);
-             }
-             new_dw->allocateTemporary(q_new, patch, gac, 2);
-             new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
+            old_dw->get(q_L_CC,   tvar->var, indx, patch, gac, 2);         
+            if(tvar->src){
+              new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);
+            }
+            new_dw->allocateTemporary(q_new, patch, gac, 2);
+            new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
 
-             if(tvar->src){  // if transported variable has a source
+            if(tvar->src){  // if transported variable has a source
               for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
                                !iter.done(); iter++){
-		  IntVector c = *iter;                            
-		  q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
+                  IntVector c = *iter;                            
+                  q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
               }
-	     } else {
+            } else {
               for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
                               !iter.done(); iter++){
-		  IntVector c = *iter;                            
-		  q_new[c]  = q_L_CC[c]*mass_L[c];
-	      }
-	     }
-             advector->advectQ(q_new,patch,q_advected, new_dw);
-            
-             update_q_CC<CCVariable<double>, double>
-                  ("q_new",q_CC, q_new, q_advected, 
-                   mass_L, mass_new, mass_advected, PH, PH2, patch);
+                  IntVector c = *iter;                            
+                  q_new[c]  = q_L_CC[c]*mass_L[c];
+              }
+            }
+            advector->advectQ(q_new,patch,q_advected, new_dw);
 
-             //  Set Boundary Conditions 
-             string Labelname = tvar->var->getName();
-	      setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);
+            update_q_CC<CCVariable<double>, double>
+                 ("q_new",q_CC, q_new, q_advected, 
+                  mass_L, mass_new, mass_advected, PH, PH2, patch);
+
+            //  Set Boundary Conditions 
+            string Labelname = tvar->var->getName();
+            setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);
           }
         }
       }
