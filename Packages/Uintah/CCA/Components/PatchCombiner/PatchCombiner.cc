@@ -38,7 +38,7 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
   }  
   dataArchive_ = scinew DataArchive(udaDir_, world_->myrank(), world_->size());
   dataArchive_->queryTimesteps(timesteps_, times_);
-  DataArchive::cacheOnlyCurrentTimestep = true;
+  dataArchive_->turnOffXMLCaching();
 
   // try to add a time to times_ that will get us passed the end of the
   // simulation -- yes this is a hack!!
