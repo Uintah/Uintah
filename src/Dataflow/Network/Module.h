@@ -60,7 +60,7 @@ public:
   void add(T);
   void remove(int);
   const T& operator[](int);
-  dynamic_port_range* operator[](clString);
+  dynamic_port_range operator[](clString);
 };
 
 class PSECORESHARE Module : public TCL, public Pickable {
@@ -167,10 +167,12 @@ public:
     void rename_oport(int, const clString&);
     virtual void reconfigure_iports();
     virtual void reconfigure_oports();
-    IPort* get_iport(int);   // return port at position
-    OPort* get_oport(int);
-    dynamic_port_range* get_iport(char*); // return port(s) with name
-    dynamic_port_range* get_oport(char*);
+    // return port at position
+    IPort* get_iport(int item) { return iports[item]; }
+    OPort* get_oport(int item) { return oports[item]; }
+    // return port(s) with name
+    dynamic_port_range get_iport(const char *name) { return iports[name]; }
+    dynamic_port_range get_oport(const char *name) { return oports[name]; }
 
     // Used by Module subclasses
     void error(const clString&);
@@ -247,8 +249,8 @@ const T& PortManager<T>::operator[](int item) {
 }
 
 template<class T>
-dynamic_port_range* PortManager<T>::operator[](clString item) {
-  return new dynamic_port_range(namemap.equal_range(item));
+dynamic_port_range PortManager<T>::operator[](clString item) {
+  return dynamic_port_range(namemap.equal_range(item));
 }
 
 
