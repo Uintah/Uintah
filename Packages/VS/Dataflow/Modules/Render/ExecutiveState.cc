@@ -345,8 +345,8 @@ ExecutiveState::LabelTex::bind(FreeTypeFace *font)
   u_ = w / (float)tex_width_;
   v_ = h / (float)tex_height_;
 
-  GLubyte *buf = scinew GLubyte[tex_width_ * tex_height_ * 4];
-  memset(buf, 0, tex_width_ * tex_height_ * 4);
+  GLubyte *buf = scinew GLubyte[tex_width_ * tex_height_];
+  memset(buf, 0, tex_width_ * tex_height_);
   fttext.render(tex_width_, tex_height_, buf);     
 
   GLboolean istex = glIsTexture(tex_id_);
@@ -359,16 +359,15 @@ ExecutiveState::LabelTex::bind(FreeTypeFace *font)
   glBindTexture(GL_TEXTURE_2D, tex_id_);
       
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-  //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glPixelTransferi(GL_MAP_COLOR, 0);
       
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 
-	       0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, tex_width_, tex_height_, 
+	       0, GL_ALPHA, GL_UNSIGNED_BYTE, buf);
       
   delete[] buf;
 }
@@ -1389,10 +1388,15 @@ ExecutiveState::addMarkersToMenu()
   int value;
   hash_map<int, string> tmpmkrs;
   set<int> keys;
+  string val;
 
   for (unsigned int c = 0; c < data_->nproperties(); c++) {
      string name = data_->get_property_name(c);
-     data_->get_property(name, value);
+     //data_->get_property(name, value);
+     data_->get_property(name, val);
+
+     stringstream ss(val);
+     ss >> value;
 
      keys.insert(value);
      tmpmkrs[value] = name;
