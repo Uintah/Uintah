@@ -37,7 +37,10 @@ public:
     void dup();
     void yank(int);
     void remove_all();
-    inline T& top() const {
+    inline const T& top() const {
+	return stack[sp-1];
+    }
+    inline T& top() {
 	return stack[sp-1];
     }
     inline int size() const {
@@ -48,7 +51,7 @@ public:
     }
 
     // Accesses the nth element of the stack (0=bottom)
-    inline T& operator[](int n) const {
+    inline const T& operator[](int n) const {
 	return stack[n];
     }
 };
@@ -101,6 +104,10 @@ void Stack<T>::remove_all()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 21:45:25  sparker
+// Array1 const correctness, and subsequent fixes
+// Array1 bug fix courtesy Tom Thompson
+//
 // Revision 1.2  1999/08/17 06:38:38  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

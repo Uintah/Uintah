@@ -93,7 +93,14 @@ public:
     
     //////////
     // Accesses the nth element of the array
-    inline T& operator[](int n) const {
+    inline const T& operator[](int n) const {
+	ASSERTRANGE(n, 0, _size);
+	return objs[n];
+    }
+
+    //////////
+    // Accesses the nth element of the array
+    inline T& operator[](int n) {
 	ASSERTRANGE(n, 0, _size);
 	return objs[n];
     }
@@ -203,28 +210,24 @@ Array1<T>::Array1(int size, int gs, int asize)
 {
     ASSERT(size >= 0);
     default_grow_size=gs;
+    _size=size;
     if(size){
-	if(asize==-1){
+	if(asize <= size){
 	    objs=new T[size];
-	    _size=size;
 	    nalloc=_size;
 	} else {
 	    objs=new T[asize];
-	    _size=size;
 	    nalloc=asize;
 	}
     } else {
-	if(asize==-1){
-	    objs=0;
-	    _size=0;
-	    nalloc=0;
-	} else {
+	if(asize > 0){
 	    objs=new T[asize];
-	    _size=0;
 	    nalloc=asize;
+	} else {
+	    objs=0;
+	    nalloc=0;
 	}
     }
-    nalloc=_size;
 }	
 
 template<class T>
@@ -358,6 +361,10 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 21:45:25  sparker
+// Array1 const correctness, and subsequent fixes
+// Array1 bug fix courtesy Tom Thompson
+//
 // Revision 1.2  1999/08/17 06:38:34  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
