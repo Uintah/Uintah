@@ -1441,7 +1441,34 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
   BC_doing << "LODI setBC (Density) "<< endl;
   Vector dx = patch->dCell();
   IntVector offset(0,0,0);  
+
+  //__________________________________
+  //  Set the LODI BC's first and then let
+  //  the other faces and BC's wipe out what
+  //  LODI set in the corners and edges
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){ 
+
+    const BoundCondBase *rho_bcs;
+    const BoundCond<double> *rho_new_bcs;
+    std::string rho_kind   = "Density";
+
+    if(patch->getBCType(face) == Patch::None) {
+      rho_bcs = patch->getBCValues(mat_id, rho_kind,face);
+      rho_new_bcs   = dynamic_cast<const BoundCond<double> *>(rho_bcs);
+    } else {
+      continue;
+    }
+ 
+    if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "LODI"){ 
+      fillFaceDensityLODI(rho_CC, d1_x, d1_y, d1_z,
+                          nux, nuy, nuz, rho_tmp, vel,  
+                          face, delT, dx); 
+    }
+  }  
   
+  
+  //__________________________________
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){ //loop over faces for a given patch: 2
 
@@ -1469,14 +1496,7 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
     if (rho_new_bcs != 0 && rho_new_bcs->getKind() == "Neumann") {
       fillFaceFlux(rho_CC, face, 
                  rho_new_bcs->getValue(), dx, 1.0, offset);
-    }
- 
-    if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "LODI"){ 
-      fillFaceDensityLODI(rho_CC, d1_x, d1_y, d1_z,
-                          nux, nuy, nuz, rho_tmp, vel,  
-                          face, delT, dx); 
-    }  
-      
+    }    
 /*`==========TESTING==========*/
 #ifdef JET_BC
     double hardCodedDensity = 1.1792946927* (300.0/1000.0);
@@ -1519,7 +1539,36 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
   BC_doing << "LODI setBC (Vel) "<< endl;
   Vector dx = patch->dCell();
   IntVector offset(0,0,0);
+  
+  //__________________________________
+  //  Set the LODI BC's first and then let
+  //  the other faces and BC's wipe out what
+  //  LODI set in the corners and edges
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){ 
 
+    const BoundCondBase *vel_bcs;
+    const BoundCond<Vector> *vel_new_bcs;
+
+    std::string kind   = "Velocity";
+
+    if(patch->getBCType(face) == Patch::None) {
+      vel_bcs   = patch->getBCValues(mat_id, kind, face);
+      vel_new_bcs = dynamic_cast<const BoundCond<Vector> *>(vel_bcs);
+    } else {
+      continue;
+    } 
+    if (vel_new_bcs != 0 && kind == "Velocity" && vel_new_bcs->getKind() == "LODI") {
+      fillFaceVelLODI(vel_CC, 
+                      d1_x, d3_x, d4_x, d5_x,
+                      d1_y, d3_y, d4_y, d5_y,
+                      d1_z, d3_z, d4_z, d5_z,
+                      nux, nuy, nuz, rho_tmp, p, vel,  
+                      face, delT, dx);
+    }
+  } 
+  
+  //__________________________________
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){ //loop over faces for a given patch: 2
 
@@ -1552,14 +1601,6 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
 
       if (vel_new_bcs->getKind() == "Neumann") {
         fillFaceFlux(vel_CC, face, vel_new_bcs->getValue(), dx, 1.0, offset);
-      }
-      
-      if(vel_new_bcs->getKind() == "LODI") {
-      fillFaceVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x,
-                      d1_y, d3_y, d4_y, d5_y,
-                      d1_z, d3_z, d4_z, d5_z,
-                      nux, nuy, nuz, rho_tmp, p, vel,  
-                      face, delT, dx);
       }
 /*`==========TESTING==========*/
 #ifdef JET_BC
@@ -1610,6 +1651,36 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
   Vector dx = patch->dCell();
   IntVector offset(0,0,0);
 
+  //__________________________________
+  //  Set the LODI BC's first and then let
+  //  the other faces and BC's wipe out what
+  //  LODI set in the corners and edges
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+
+    const BoundCondBase *temp_bcs;
+    const BoundCond<double> *temp_new_bcs;
+
+    std::string temp_kind  = "Temperature";
+    if(patch->getBCType(face) == Patch::None) {
+      temp_bcs      = patch->getBCValues(mat_id, temp_kind,  face);
+      temp_new_bcs  = dynamic_cast<const BoundCond<double> *>(temp_bcs);
+    } else {
+      continue;
+    }
+
+    if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "LODI") {
+       fillFaceTempLODI(temp_CC, 
+                        d1_x, d2_x, d3_x, d4_x, d5_x, 
+                        d1_y, d2_y, d3_y, d4_y, d5_y,
+                        d1_z, d2_z, d3_z, d4_z, d5_z, 
+                        e, rho_CC, nux, nuy, nuz, rho_tmp, 
+                        p, vel, face, delT, cv, gamma,
+                        dx);
+    }
+  } 
+  
+  //__________________________________
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){ //loop over faces for a given patch: 2
 
@@ -1636,16 +1707,6 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
     if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "Neumann") {
       fillFaceFlux(temp_CC, face, 
                  temp_new_bcs->getValue(), dx, 1.0, offset);
-    }
-
-    if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "LODI") {
-       fillFaceTempLODI(temp_CC, 
-                        d1_x, d2_x, d3_x, d4_x, d5_x, 
-                        d1_y, d2_y, d3_y, d4_y, d5_y,
-                        d1_z, d2_z, d3_z, d4_z, d5_z, 
-                        e, rho_CC, nux, nuy, nuz, rho_tmp, 
-                        p, vel, face, delT, cv, gamma,
-                        dx);
     }
 /*`==========TESTING==========*/
   #ifdef JET_BC
@@ -1678,11 +1739,10 @@ void computeDiFirstOrder(const Vector& n,
                          const Vector& vel2, 
                          const double& vel_cross_bound, 
                          const double& dx) 
-{    
-  BC_doing << "LODI ComputeDIFirstOrder "<< endl;    
+{     
   double d_SMALL_NUM = 1.0e-100;
   //________________________________________________________
-  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
+  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1= 0,L2=0,L3=0,L4=0,L5=0;
   drho_dx = (rho1 - rho2)/dx;
   dp_dx   = (  p1 - p2  )/dx;
   du_dx   = (vel1.x() - vel2.x())/dx;
@@ -1707,21 +1767,24 @@ void computeDiFirstOrder(const Vector& n,
     L1_sign =      n.x() * (vel_cross_bound - c)/
                      (fabs(vel_cross_bound - c) + d_SMALL_NUM);
     if(L1_sign > 0) {      // outgoing waves
-      if(n.x() > 0.0) L1 = (vel_cross_bound - c) * 
-                           (dp_dx - rho1 * c * du_dx);
-      if(n.x() < 0.0) L1 = (vel_cross_bound - c) *
-                           (dp_dx - rho2 * c * du_dx);
+      if(n.x() > 0.0) {
+        L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * du_dx);
+      }
+      if(n.x() < 0.0) {
+        L1 = (vel_cross_bound - c) * (dp_dx - rho2 * c * du_dx);
+      }
     } else {               // incomming waves
       L1 = 0.0;
     }
   }
 
   if (n.y() != 0.0) {
-    L1_sign =      n.y() * (vel_cross_bound - c)/
-                     (fabs(vel_cross_bound - c) + d_SMALL_NUM);
+    L1_sign = n.y() * (vel_cross_bound - c)/
+                 (fabs(vel_cross_bound - c) + d_SMALL_NUM);
     if(L1_sign > 0) {      // outgoing waves
-      if(n.y() > 0.0) L1 = (vel_cross_bound - c) * 
-                           (dp_dx - rho1 * c * dv_dx);
+      if(n.y() > 0.0){ 
+        L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dv_dx);
+      }
       if(n.y() < 0.0) L1 = (vel_cross_bound - c) *
                            (dp_dx - rho2 * c * dv_dx);
       } else {               // incomming waves
@@ -1733,10 +1796,12 @@ void computeDiFirstOrder(const Vector& n,
     L1_sign =      n.z() * (vel_cross_bound - c)/
                     (fabs(vel_cross_bound - c) + d_SMALL_NUM);
     if(L1_sign > 0) {      // outgoing waves
-      if(n.z() > 0.0) L1 = (vel_cross_bound - c) * 
-                           (dp_dx - rho1 * c * dw_dx);
-      if(n.z() < 0.0) L1 = (vel_cross_bound - c) *
-                           (dp_dx - rho2 * c * dw_dx);
+      if(n.z() > 0.0){ 
+        L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dw_dx);
+      }
+      if(n.z() < 0.0){ 
+        L1 = (vel_cross_bound - c) * (dp_dx - rho2 * c * dw_dx);
+      }
     } else {               // incomming waves
       L1 = 0.0;
     }
@@ -1795,12 +1860,10 @@ void computeDiFirstOrder(const Vector& n,
                      (fabs(vel_cross_bound + c) + d_SMALL_NUM);
     if(L5_sign > 0) {      // outgoing wave
       if(n.x() > 0.0){
-        L5 = (vel_cross_bound + c) * 
-             (dp_dx + rho1 * c * du_dx);
+        L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * du_dx);
       }
       if(n.x() < 0.0){  
-        L5 = (vel_cross_bound + c) * 
-             (dp_dx + rho2 * c * du_dx);
+        L5 = (vel_cross_bound + c) * (dp_dx + rho2 * c * du_dx);
       }
     } else {               // incoming waves
       L5 = 0.0;
@@ -1812,12 +1875,10 @@ void computeDiFirstOrder(const Vector& n,
                      (fabs(vel_cross_bound + c) + d_SMALL_NUM);
     if(L5_sign > 0) {      // outgoing wave
       if(n.y() > 0.0){
-        L5 = (vel_cross_bound + c) * 
-             (dp_dx + rho1 * c * dv_dx);
+        L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dv_dx);
       }
       if(n.y() < 0.0){
-        L5 = (vel_cross_bound + c) * 
-             (dp_dx + rho2 * c * dv_dx);
+        L5 = (vel_cross_bound + c) * (dp_dx + rho2 * c * dv_dx);
       }
     } else {               // incoming waves
        L5 = 0.0;
@@ -1825,16 +1886,14 @@ void computeDiFirstOrder(const Vector& n,
   }
 
   if(n.z() != 0.0){
-   L5_sign =      n.z() * (vel_cross_bound + c)/
+   L5_sign = n.z() * (vel_cross_bound + c)/
                      (fabs(vel_cross_bound + c) + d_SMALL_NUM);
     if(L5_sign > 0) {      // outgoing wave
       if(n.z() > 0.0){
-        L5 = (vel_cross_bound + c) * 
-             (dp_dx + rho1 * c * dw_dx);
+        L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dw_dx);
       }
       if(n.z() < 0.0){ 
-        L5 = (vel_cross_bound + c) * 
-             (dp_dx + rho2 * c * dw_dx);
+        L5 = (vel_cross_bound + c) * (dp_dx + rho2 * c * dw_dx);
       }
     } else {               // incoming waves
       L5 = 0.0;
@@ -1882,12 +1941,12 @@ void computeDiSecondOrder(const Vector& n,
                           const double& dx) 
 {       
   double d_SMALL_NUM = 1.0e-100;
-  double faceNormal;
+  double faceNormal = 0;
   if(n.x() != 0.0)faceNormal = n.x(); 
   if(n.y() != 0.0)faceNormal = n.y(); 
   if(n.z() != 0.0)faceNormal = n.z(); 
   //________________________________________________________
-  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
+  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1=0,L2=0,L3=0,L4=0,L5=0;
   drho_dx = 0.5 * faceNormal * (3.0 * rho1 - 4.0 * rho2 + rho3)/dx;
   dp_dx   = 0.5 * faceNormal * (3.0 *   p1 - 4.0 *   p2 + p3)/dx;
   du_dx   = 0.5 * faceNormal * (3.0 * vel1.x() - 4.0 * vel2.x() + vel3.x())/dx;
@@ -1911,8 +1970,7 @@ void computeDiSecondOrder(const Vector& n,
     L1_sign =  n.x() * (vel_cross_bound - c)/
                      (fabs(vel_cross_bound - c) + d_SMALL_NUM);
     if(L1_sign > 0) {      // outgoing waves
-      L1 = (vel_cross_bound - c) * 
-           (dp_dx - rho1 * c * du_dx);
+      L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * du_dx);
     } else {               // incomming waves
       L1 = 0.0;
     }
@@ -1922,8 +1980,7 @@ void computeDiSecondOrder(const Vector& n,
     L1_sign =  n.y() * (vel_cross_bound - c)/
                      (fabs(vel_cross_bound - c) + d_SMALL_NUM);
     if(L1_sign > 0) {      // outgoing waves
-      L1 = (vel_cross_bound - c) * 
-           (dp_dx - rho1 * c * dv_dx);
+      L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dv_dx);
     } else {               // incomming waves
       L1 = 0.0;
     }
@@ -1933,8 +1990,7 @@ void computeDiSecondOrder(const Vector& n,
     L1_sign = n.z() * (vel_cross_bound - c)/
                      (fabs(vel_cross_bound - c) + d_SMALL_NUM);
     if(L1_sign > 0) {      // outgoing waves
-      L1 = (vel_cross_bound - c) * 
-           (dp_dx - rho1 * c * dw_dx);
+      L1 = (vel_cross_bound - c) * (dp_dx - rho1 * c * dw_dx);
     } else {               // incomming waves
       L1 = 0.0;
     }
@@ -1992,8 +2048,7 @@ void computeDiSecondOrder(const Vector& n,
     L5_sign =  n.x() * (vel_cross_bound + c)/
                (fabs(vel_cross_bound + c) + d_SMALL_NUM);
     if(L5_sign > 0) {      // outgoing wave
-      L5 = (vel_cross_bound + c) * 
-           (dp_dx + rho1 * c * du_dx);
+      L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * du_dx);
     } else {               // incomming waves
       L5 = 0.0;
     }
@@ -2003,8 +2058,7 @@ void computeDiSecondOrder(const Vector& n,
     L5_sign =  n.y() * (vel_cross_bound + c)/
                (fabs(vel_cross_bound + c) + d_SMALL_NUM);
     if(L5_sign > 0) {      // outgoing wave
-       L5 = (vel_cross_bound + c) * 
-            (dp_dx + rho1 * c * dv_dx);
+       L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dv_dx);
     } else {               // incomming waves
       L5 = 0.0;
     }
@@ -2014,8 +2068,7 @@ void computeDiSecondOrder(const Vector& n,
     L5_sign = n.z() * (vel_cross_bound + c)/
                      (fabs(vel_cross_bound + c) + d_SMALL_NUM);
     if(L5_sign > 0) {      // outgoing wave
-      L5 = (vel_cross_bound + c) * 
-            (dp_dx + rho1 * c * dw_dx);
+      L5 = (vel_cross_bound + c) * (dp_dx + rho1 * c * dw_dx);
     } else {               // incomming waves
       L5 = 0.0;
     }
@@ -2787,7 +2840,29 @@ void  setBCPress_LODI(CCVariable<double>& press_CC,
   if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
     throw InternalError("setBCPress_LODI: Invalid option for which_var");
   }
+
+  //__________________________________
+  //  Set the LODI BC's first and then let
+  //  the other faces and BC's wipe out what
+  //  LODI set in the corners and edges
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    const BoundCondBase *bcs;
+    const BoundCond<double> *new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      new_bcs = dynamic_cast<const BoundCond<double> *>(bcs);
+    } else {
+      continue;
+    }
+
+    if ( new_bcs != 0 && new_bcs->getKind() == "LODI"){
+      fillFacePress_LODI(press_CC, rho_micro, Temp_CC, f_theta, numALLMatls,
+                         sharedState, face);
+    }
+  } 
   
+  //__________________________________
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     const BoundCondBase *bcs, *sym_bcs;
@@ -2810,11 +2885,6 @@ void  setBCPress_LODI(CCVariable<double>& press_CC,
 
       if (new_bcs->getKind() == "Neumann") { 
         fillFaceFlux(press_CC,face,new_bcs->getValue(),dx, 1.0, offset);
-      }
-
-      if (new_bcs->getKind() == "LODI"){
-        fillFacePress_LODI(press_CC, rho_micro, Temp_CC, f_theta, numALLMatls,
-                           sharedState, face);
       }
                
       //__________________________________
