@@ -527,7 +527,7 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
   t->modifies(             lb->gTemperatureRateLabel,  mss);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::None,0);
   sched->addTask(t, patches, matls);
 }
 
