@@ -133,7 +133,7 @@ void initField(TensorField* tensorField, Field* field)
   IntVector lowIndex, highIndex;
 
   tensorField->get_bounds(lb, ub);
-  tensorField->GetLevel()->getIndexRange(lowIndex, highIndex);
+  tensorField->GetLevel()->findIndexRange(lowIndex, highIndex);
 
   field->resize(highIndex.x(), highIndex.y(), highIndex.z());
   field->set_bounds(lb, ub);
@@ -147,7 +147,7 @@ void computeScalars(TensorField* tensorField, ScalarField* scalarField,
   Matrix3 M;
   IntVector lowIndex, highIndex;
 
-  tensorField->GetLevel()->getIndexRange(lowIndex, highIndex);
+  tensorField->GetLevel()->findIndexRange(lowIndex, highIndex);
   
   for (int x = lowIndex.x(); x < highIndex.x(); x++) {
     for (int y = lowIndex.y(); y < highIndex.y(); y++) {
