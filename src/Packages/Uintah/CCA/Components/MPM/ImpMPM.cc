@@ -494,11 +494,10 @@ void ImpMPM::scheduleMoveData(SchedulerP& sched,const LevelP& level,
   task->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeOldLabel,Ghost::None,0);
-#endif
-
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel_preReloc,
 		 Ghost::None,0);
   task->requires(Task::OldDW,lb->bElBarLabel_preReloc,Ghost::None,0);
+#endif
 #if 0
   task->requires(Task::OldDW,lb->gMassLabel,Ghost::None,0);
   //task->requires(Task::OldDW,lb->gVelocityOldLabel,Ghost::None,0);
@@ -511,10 +510,9 @@ void ImpMPM::scheduleMoveData(SchedulerP& sched,const LevelP& level,
   task->computes(lb->pXLabel);
   task->computes(lb->pVolumeLabel);
   task->computes(lb->pVolumeOldLabel);
-#endif
-
   task->modifies(lb->pDeformationMeasureLabel_preReloc);
   task->modifies(lb->bElBarLabel_preReloc);
+#endif
 
 #if 0
   task->computes(lb->gMassLabel);
@@ -701,13 +699,14 @@ void ImpMPM::iterate(const ProcessorGroup*,
       sum_vartype dispIncQNorm0,dispIncNormMax;
       new_dw->get(dispIncQNorm0,lb->dispIncQNorm);
       new_dw->get(dispIncNormMax,lb->dispIncNormMax);
+#if 0
       constParticleVariable<Matrix3> pstress;
-      ParticleVariable<Matrix3> bElBar,deformationGradient;
       new_dw->get(pstress,lb->pStressLabel_preReloc,pset);
-
+      ParticleVariable<Matrix3> bElBar,deformationGradient;
       new_dw->getModifiable(deformationGradient, 
 			    lb->pDeformationMeasureLabel_preReloc, pset);
       new_dw->getModifiable(bElBar, lb->bElBarLabel_preReloc, pset);
+#endif
 #if 0
       // Similar to gVelocityOld
       constParticleVariable<Point> px;
@@ -722,7 +721,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
       NCVariable<Vector> new_vel_old,new_ext_force,new_acc;
       NCVariable<double> newgmass;
 #endif
-      ParticleVariable<Matrix3> newpstress,newdefGrad,newbElBar;
+#if 0
+      ParticleVariable<Matrix3> newdefGrad,newbElBar;
+      ParticleVariable<Matrix3> newpstress;
+#endif
 #if 0
       // Like gVelocityOld
       ParticleVariable<Point> newpx;
@@ -750,6 +752,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       subsched->get_dw(3)->allocateAndPut(newgmass,lb->gMassLabel,matlindex,
 					     patch);
 #endif
+#if 0
       subsched->get_dw(3)->allocateAndPut(newpstress,
 					     lb->pStressLabel_preReloc,
 					     pset);
@@ -761,6 +764,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       subsched->get_dw(3)->allocateAndPut(newbElBar,
 					     lb->bElBarLabel_preReloc,
 					     pset);
+#endif
 #if 0
       // Like gVelocityOld
       subsched->get_dw(3)->allocateAndPut(newpx,lb->pXLabel, pset);
@@ -779,9 +783,12 @@ void ImpMPM::iterate(const ProcessorGroup*,
       new_acc.copyData(acc);
       newgmass.copyData(gmass);
 #endif
+
+#if 0
       newpstress.copyData(pstress);
       newdefGrad.copyData(deformationGradient);
       newbElBar.copyData(bElBar);
+#endif
 #if 0
       // Like gVelocityOld
       newpx.copyData(px);
@@ -832,7 +839,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       ParticleSubset* pset = 
-	subsched->get_dw(2)->getParticleSubset(matlindex, patch);
+	subsched->get_dw(0)->getParticleSubset(matlindex, patch);
       cerr << "number of particles = " << pset->numParticles() << "\n";
 
       // Needed in computeStressTensorOnly
@@ -891,12 +898,15 @@ void ImpMPM::moveData(const ProcessorGroup*,
       old_dw->get(pvol_old,lb->pVolumeLabel,pset);
       old_dw->get(pvol_old_old,lb->pVolumeOldLabel,pset);
 #endif
+
+#if 0
       constParticleVariable<Matrix3> deformationGradient,bElBar;
 
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel_preReloc, 
 		  pset);
 
       old_dw->get(bElBar, lb->bElBarLabel_preReloc, pset);
+#endif
 
       delt_vartype dt;
       old_dw->get(dt,d_sharedState->get_delt_label());
@@ -917,7 +927,9 @@ void ImpMPM::moveData(const ProcessorGroup*,
       ParticleVariable<Point> newpx;
       ParticleVariable<double> newpvol,newpvolold;
 #endif
+#if 0
       ParticleVariable<Matrix3> newdefGrad,newbElBar;
+#endif
       NCVariable<Vector> newdispInc;
 #if 0
       NCVariable<double> newgmass;
@@ -933,10 +945,12 @@ void ImpMPM::moveData(const ProcessorGroup*,
       new_dw->allocateAndPut(newpvolold,lb->pVolumeOldLabel,pset);
 
 #endif
+#if 0
       new_dw->getModifiable(newdefGrad,lb->pDeformationMeasureLabel_preReloc,
 			    pset);
 
       new_dw->getModifiable(newbElBar,lb->bElBarLabel_preReloc,pset);
+#endif
 #if 0
       new_dw->allocateAndPut(newgmass,lb->gMassLabel,matlindex,patch);
       //new_dw->allocateAndPut(newvelocity_old,lb->gVelocityOldLabel,
@@ -956,8 +970,10 @@ void ImpMPM::moveData(const ProcessorGroup*,
       newpvol.copyData(pvol_old);
       newpvolold.copyData(pvol_old_old);
 #endif
+#if 0
       newdefGrad.copyData(deformationGradient);
       newbElBar.copyData(bElBar);
+#endif
 #if 0
       newgmass.copyData(gmass);
       newext_force.copyData(ext_force);
