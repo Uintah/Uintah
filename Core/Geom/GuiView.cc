@@ -36,6 +36,14 @@ GuiView::~GuiView()
 {
 }
 
+void GuiView::reset() {
+  eyep.reset();
+  lookat.reset();
+  up.reset();
+  fov.reset();
+  eyep_offset.reset();
+}
+
 View
 GuiView::get()
 {
@@ -68,7 +76,7 @@ GuiView::emit(ostream& out)
 
 
 
-TCLExtendedView::TCLExtendedView( const clString& name, const clString& id,
+GuiExtendedView::GuiExtendedView( const clString& name, const clString& id,
 				 TCL* tcl )
 : GuiVar(name, id, tcl), eyep("eyep", str(), tcl),
   lookat("lookat", str(), tcl), up("up", str(), tcl),
@@ -77,13 +85,24 @@ TCLExtendedView::TCLExtendedView( const clString& name, const clString& id,
 {
 }
 
-TCLExtendedView::~TCLExtendedView()
+GuiExtendedView::~GuiExtendedView()
 {
 }
 
 
+void GuiExtendedView::reset() {
+  eyep.reset();
+  lookat.reset();
+  up.reset();
+  fov.reset();
+  eyep_offset.reset();
+  xres.reset();
+  yres.reset();
+  bg.reset();
+}
+
 ExtendedView
-TCLExtendedView::get()
+GuiExtendedView::get()
 {
     TCLTask::lock();
     ExtendedView v(eyep.get(), lookat.get(), up.get(), fov.get(), xres.get(),
@@ -93,7 +112,7 @@ TCLExtendedView::get()
 }
 
 void
-TCLExtendedView::set(const ExtendedView& view)
+GuiExtendedView::set(const ExtendedView& view)
 {
     TCLTask::lock();
     eyep.set(view.eyep());
@@ -108,7 +127,7 @@ TCLExtendedView::set(const ExtendedView& view)
 
 
 void
-TCLExtendedView::emit(ostream& out)
+GuiExtendedView::emit(ostream& out)
 {
     eyep.emit(out);
     lookat.emit(out);

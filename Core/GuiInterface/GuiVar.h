@@ -36,7 +36,7 @@ protected:
 public:
     GuiVar(const clString& name, const clString& id, TCL* tcl);
     virtual ~GuiVar();
-    void reset();
+    virtual void reset();
 
     clString format_varname();
 

@@ -31,6 +31,12 @@ GuiColor::~GuiColor()
 {
 }
 
+void GuiColor::reset() {
+  r.reset();
+  g.reset();
+  b.reset();
+}
+
 Color GuiColor::get()
 {
     return Color(r.get(), g.get(), b.get());
@@ -62,6 +68,17 @@ GuiMaterial::GuiMaterial(const clString& name, const clString& id, TCL* tcl)
 
 GuiMaterial::~GuiMaterial()
 {
+}
+
+void GuiMaterial::reset() {
+  ambient.reset();
+  diffuse.reset();
+  specular.reset();
+  shininess.reset();
+  emission.reset();
+  reflectivity.reset();
+  transparency.reset();
+  refraction_index.reset();
 }
 
 Material GuiMaterial::get()
