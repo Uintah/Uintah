@@ -694,10 +694,14 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 	have_dl = true;
       }
       
-      // create a new dl
-      glNewList( dl,  GL_COMPILE_AND_EXECUTE);
+      // create a new dl 
+
+      // don't use COMPILE_AND_EXECUTE as it seems to cause the dl to be slower
+      glNewList( dl,  GL_COMPILE);
       child->draw(di,m,time);
       glEndList();
+      glCallList(dl); 
+
       // update poly count;
       polygons = di->polycount - polygons; 
     } 
@@ -4254,6 +4258,13 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.22  2000/08/01 01:30:46  yarden
+// replace call to glNewList(dl, GL_COMPILE_AND_EXECUTE)
+// with a call using GL_COMPILE
+// it seems that the first call cause the display list to slower than
+// not using the display list at all !? using compile does improve performance
+// (at least on the linux side)
+//
 // Revision 1.21  2000/07/28 21:13:17  yarden
 // GeomDL: Create and manage a display list for its child.
 // the user can select to ignore it via check buttons in Salmon
