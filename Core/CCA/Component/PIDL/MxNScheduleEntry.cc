@@ -119,7 +119,7 @@ void MxNScheduleEntry::setArray(void** a_ptr)
     //Raise getArrayWait's semaphore if 
     //there is somebody waiting on it
     ::std::cout << "setArray -- Raised sema +" << caller_rep.size()+1 << "\n";
-    arr_wait_sema.up((int) caller_rep.size()+1);
+    arr_wait_sema.up((int) caller_rep.size());
   }
   else {
     (*a_ptr) = arr_ptr;
@@ -172,7 +172,7 @@ void* MxNScheduleEntry::waitCompleteArray()
     }
     //Refresh semaphores
     //while (meta_sema.tryDown());
-    meta_sema.up(2);
+    meta_sema.up((int) caller_rep.size());
     while (arr_wait_sema.tryDown());
 
   }  
@@ -185,7 +185,7 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
   if (scht == callee) {
     //::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
     if (size == static_cast<int>(caller_rep.size())) { 
-      meta_sema.up(2);
+      meta_sema.up((int) 2*caller_rep.size());
       ::std::cout << "UP Meta semaphore\n";
     }
   }  
