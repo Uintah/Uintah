@@ -97,6 +97,7 @@ public:
   
   virtual double& get(int, int) const = 0;
   virtual void    put(int r, int c, double val) = 0;
+  virtual void    add(int r, int c, double val) = 0;
   inline MatrixRow operator[](int r);
 
   //friend SCICORESHARE Matrix *Add(Matrix *, Matrix *);
