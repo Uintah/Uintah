@@ -77,7 +77,8 @@ Thread::~Thread()
 {
     if(runner_){
         runner_->my_thread_=0;
-        delete runner_;
+	if(runner_->delete_on_exit)
+	  delete runner_;
     }
     free(const_cast<char *>(threadname_));
 }

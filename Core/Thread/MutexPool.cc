@@ -33,7 +33,7 @@ namespace SCIRun {
 
 
 MutexPool::MutexPool(const char* name, int size)
-    :  nextID_("MutexPool ID lock"), size_(size)
+    :  nextID_("MutexPool ID lock", 0), size_(size)
 {
     // Mutex has no default CTOR so we must allocate them
     // indepdently.

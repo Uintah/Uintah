@@ -35,7 +35,7 @@
 
 namespace SCIRun {
 
-class Thread;
+  class Thread;
 
 /**************************************
  
@@ -61,31 +61,33 @@ DESCRIPTION
    of this same thread.
    
 ****************************************/
-	class SCICORESHARE Runnable {
-	protected:
-	    friend class Thread;
-	    Thread* my_thread_;
+  class SCICORESHARE Runnable {
+  protected:
+    friend class Thread;
+    Thread* my_thread_;
     
-	    //////////
-	    // Create a new runnable, and initialize it's state.
-	    Runnable();
+    //////////
+    // Create a new runnable, and initialize it's state.
+    Runnable(bool delete_on_exit = true);
 
-	    //////////
-	    // The runnable destructor.  See the note above about deleting any
-	    // object derived from runnable.
-	    virtual ~Runnable();
+    //////////
+    // The runnable destructor.  See the note above about deleting any
+    // object derived from runnable.
+    virtual ~Runnable();
 
-	    //////////
-	    // This method will be overridden to implement the main body
-	    // of the thread.  This method will called when the runnable
-	    // is attached to a <b>Thread</b> object, and will be executed
-	    // in a new context.
-	    virtual void run()=0;
-	private:
-	    // Cannot copy them
-	    Runnable(const Runnable&);
-	    Runnable& operator=(const Runnable&);
-	};
+    //////////
+    // This method will be overridden to implement the main body
+    // of the thread.  This method will called when the runnable
+    // is attached to a <b>Thread</b> object, and will be executed
+    // in a new context.
+    virtual void run()=0;
+  private:
+    bool delete_on_exit;
+
+    // Cannot copy them
+    Runnable(const Runnable&);
+    Runnable& operator=(const Runnable&);
+  };
 } // End namespace SCIRun
 
 #endif
