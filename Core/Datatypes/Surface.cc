@@ -20,7 +20,7 @@ namespace SCIRun {
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
 Surface::Surface(Representation rep, int closed)
-: monitor("Surface crowd monitor"), rep(rep), grid(0), closed(closed), pntHash(0), boundary_type(BdryNone)
+  : rep(rep), grid(0), closed(closed), pntHash(0), boundary_type(BdryNone)
 {
 }
 
@@ -31,7 +31,7 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
-  : monitor("Surface crowd monitor"), closed(copy.closed), rep(copy.rep), name(copy.name), grid(0), pntHash(0)
+  : closed(copy.closed), rep(copy.rep), name(copy.name), grid(0), pntHash(0)
 {
 //    NOT_FINISHED("Surface::Surface");
 }

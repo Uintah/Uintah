@@ -112,7 +112,7 @@ void AddAttribute::execute() {
     }
 #endif
 
-    nts->name=nts->name+clString("Fwd");
+    nts->name = nts->name + "Fwd";
     SurfaceHandle sh2(nts);
     osurf->send(sh2);
 }
