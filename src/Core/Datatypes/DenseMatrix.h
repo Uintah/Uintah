@@ -61,12 +61,12 @@ class SparseRowMatrix;
 
 class SCICORESHARE DenseMatrix : public Matrix {
   //!private data
-  int nc;
-  int nr;
-//  double   minVal;
-//  double   maxVal;
+  int nrows_;
+  int ncols_;
+
   double** data;
   double*  dataptr;
+
 public:
   //! Constructors
   DenseMatrix();
@@ -120,11 +120,11 @@ public:
     return data[r];
   };
   
-  inline double* getData() { 
+  inline double* getData() {
     return dataptr;
   }
   
-  inline double** getData2D() { 
+  inline double** getData2D() {
     return data; 
   }
 

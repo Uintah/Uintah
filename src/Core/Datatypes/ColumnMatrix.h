@@ -59,7 +59,7 @@ class DenseMatrix;
 class SparseRowMatrix;
 
 class SCICORESHARE ColumnMatrix : public Matrix {
-  int rows;
+  int nrows_;
   double* data;
 
 public:
@@ -75,13 +75,13 @@ public:
 
   inline double& operator[](int r) const
   {
-    ASSERTRANGE(r, 0, rows)
+    ASSERTRANGE(r, 0, nrows_)
     return data[r];
   }
   double* get_data() const {return data;}
   void set_data(double* d) {data = d;} 
-  double& get(int r) const       { ASSERTRANGE(r, 0, rows); return data[r]; };
-  void    put(int r, double val) { ASSERTRANGE(r, 0, rows); data[r] = val; };
+  double& get(int r) const      { ASSERTRANGE(r, 0, nrows_); return data[r]; };
+  void    put(int r, double val) { ASSERTRANGE(r, 0, nrows_); data[r] = val; };
 
   void resize(int);
 

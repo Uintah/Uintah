@@ -53,8 +53,8 @@ class ColumnMatrix;
 class SparseRowMatrix;
 
 class SCICORESHARE SparseRowMatrix : public Matrix {
-  int nnrows;
-  int nncols;
+  int nrows_;
+  int ncols_;
 
   SparseRowMatrix(); // This is only used by the maker function.
 
