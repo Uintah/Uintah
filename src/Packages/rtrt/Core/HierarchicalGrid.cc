@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Core/Thread/Parallel.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/WorkQueue.h>
@@ -12,6 +13,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <Packages/rtrt/Core/Tri.h>
+#include <Packages/rtrt/Core/TexturedTri.h>
 
 extern "C" {
 #include <Packages/rtrt/Core/pcube.h>
@@ -165,12 +167,26 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 	    polynormal[1] = n.y();
 	    polynormal[2] = n.z();
 	}
+        TexturedTri *ttri = dynamic_cast<TexturedTri*>(prims[i]);
+
+        if (ttri) {
+            if (ttri->isbad())
+                continue;
+            p0 = (ttri->pt(0) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p1 = (ttri->pt(1) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            p2 = (ttri->pt(2) - bbox.min())*(Vector(nx,ny,nz)/diag);
+            Vector n = Cross((p2-p0),(p1-p0));
+            n.normalize();
+            polynormal[0] = n.x();
+            polynormal[1] = n.y();
+            polynormal[2] = n.z();
+        }
 
 	for(int x=primsGridData[i].sx;x<=primsGridData[i].ex;x++){
 	    for(int y=primsGridData[i].sy;y<=primsGridData[i].ey;y++){
 		int idx=x*nynz+y*nz+primsGridData[i].sz;
 		for(int z=primsGridData[i].sz;z<=primsGridData[i].ez;z++){
-		  if (tri) {	
+		  if (tri || ttri) {	
 		    verts[0][0] = p0.x() - ((double)x+.5);
 		    verts[1][0] = p1.x() - ((double)x+.5);
 		    verts[2][0] = p2.x() - ((double)x+.5);
@@ -305,7 +321,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     for(int i=0;i<ngrid;i++){
 	if( ( current[i] != counts[i*2+1] ) ) {
 	    if( ( whichCell[i] > 0 ) && ( counts[i*2+1] != 1 ) ) {
-		cerr << "OOPS!\n";
+		cerr << "OOPS! in HGrid\n";
 		cerr << "current: " << current[i] << '\n';
 		cerr << "counts: " << counts[i*2+1] << '\n';
 		cerr << "whichCell: " << whichCell[i] << '\n';
