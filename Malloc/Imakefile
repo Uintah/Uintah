@@ -15,8 +15,9 @@ SRCS = new.cc malloc.cc Allocator.cc AllocOS.cc \
 
 LIBNAME = Malloc
 
+SCI_CLIBS = -lc
 SO_LIBS =
-SO_LDFLAGS = -lc
+SO_LDFLAGS =
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
