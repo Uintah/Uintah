@@ -295,8 +295,18 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       
 
   # actually run the test!
-  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   print "Command Line: %s %s" % (command, susinput)
+  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
+
+  if do_restart == "yes":
+    chdir("..")
+    replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
+    system("rm *.uda")
+    system("ln -s restart/*.uda .")
+    chdir("restart")
+  else:
+    replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
+
 
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
@@ -307,15 +317,6 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   else:
     # determine path of replace_msg in 2 places to not have 2 different msgs.
     replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: "
-
-    if do_restart == "yes":
-      chdir("..")
-      replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
-      system("rm *.uda")
-      system("ln -s restart/*.uda .")
-      chdir("restart")
-    else:
-      replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
 
     # get the time from sus.log
     # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
