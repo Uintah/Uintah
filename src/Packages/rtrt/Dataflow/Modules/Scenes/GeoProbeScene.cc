@@ -513,10 +513,10 @@ Material *GeoProbeScene::gen_color_map(ColorMapHandle cmap, Object *obj,
   Array1<float> *alphas = new Array1<float>(256);
   for (int i = 0; i < size; i++) {
     double index = (double)i/(size-1);
-    SCIRun::Color sc = cmap->FindColor(index);
+    SCIRun::Color sc = cmap->getColor(index);
     rtrt::Color rc(sc.r(), sc.g(), sc.b());
     (*colors)[i] = rc;
-    (*alphas)[i] = cmap->FindAlpha(index);
+    (*alphas)[i] = cmap->getAlpha(index);
 #if 1
     cout << "colors["<<i<<"] = "<<(*colors)[i];
     cout << ", alpha = "<<(*alphas)[i]<<endl;
