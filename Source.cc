@@ -943,6 +943,199 @@ Source::addPressureSource(const ProcessorGroup* ,
 }
 
 
+//****************************************************************************
+// Documentation here
+//****************************************************************************
+void 
+Source::addTransMomSource(const ProcessorGroup* ,
+			  const Patch* patch ,
+			  double delta_t,
+			  int index,
+			  CellInformation* cellinfo,			  
+			  ArchesVariables* vars)
+{
+  // Get the patch and variable indices
+  IntVector domLoU, domHiU;
+  IntVector domLoUng, domHiUng;
+  IntVector idxLoU, idxHiU;
+  IntVector domLo = vars->pressure.getFortLowIndex();
+  IntVector domHi = vars->pressure.getFortHighIndex();
+  IntVector domLong = vars->old_density.getFortLowIndex();
+  IntVector domHing = vars->old_density.getFortHighIndex();
+  switch(index) {
+  case Arches::XDIR:
+    domLoU = vars->uVelocity.getFortLowIndex();
+    domHiU = vars->uVelocity.getFortHighIndex();
+    domLoUng = vars->uVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->uVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+    FORT_ADDTRANSSRC(domLoU.get_pointer(), domHiU.get_pointer(),
+		     domLoUng.get_pointer(), domHiUng.get_pointer(),
+		     idxLoU.get_pointer(), idxHiU.get_pointer(),
+		     vars->uVelocity.getPointer(),
+		     vars->uVelNonlinearSrc.getPointer(), 
+		     vars->uVelocityCoeff[Arches::AP].getPointer(),
+		     domLo.get_pointer(), domHi.get_pointer(),
+		     domLong.get_pointer(), domHing.get_pointer(),
+		     vars->old_density.getPointer(),
+		     &delta_t,
+		     cellinfo->sewu.get_objs(), 
+		     cellinfo->sns.get_objs(),
+		     cellinfo->stb.get_objs());
+    break;
+  case Arches::YDIR:
+    domLoU = vars->vVelocity.getFortLowIndex();
+    domHiU = vars->vVelocity.getFortHighIndex();
+    domLoUng = vars->vVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->vVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+    FORT_ADDTRANSSRC(domLoU.get_pointer(), domHiU.get_pointer(),
+		     domLoUng.get_pointer(), domHiUng.get_pointer(),
+		     idxLoU.get_pointer(), idxHiU.get_pointer(),
+		     vars->vVelocity.getPointer(),
+		     vars->vVelNonlinearSrc.getPointer(), 
+		     vars->vVelocityCoeff[Arches::AP].getPointer(),
+		     domLo.get_pointer(), domHi.get_pointer(),
+		     domLong.get_pointer(), domHing.get_pointer(),
+		     vars->old_density.getPointer(),
+		     &delta_t, 
+		     cellinfo->sew.get_objs(), 
+		     cellinfo->snsv.get_objs(), 
+		     cellinfo->stb.get_objs());
+    break;
+  case Arches::ZDIR:
+    domLoU = vars->wVelocity.getFortLowIndex();
+    domHiU = vars->wVelocity.getFortHighIndex();
+    domLoUng = vars->wVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->wVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+    FORT_ADDTRANSSRC(domLoU.get_pointer(), domHiU.get_pointer(),
+		     domLoUng.get_pointer(), domHiUng.get_pointer(),
+		     idxLoU.get_pointer(), idxHiU.get_pointer(),
+		     vars->wVelocity.getPointer(),
+		     vars->wVelNonlinearSrc.getPointer(), 
+		     vars->wVelocityCoeff[Arches::AP].getPointer(),
+		     domLo.get_pointer(), domHi.get_pointer(),
+		     domLong.get_pointer(), domHing.get_pointer(),
+		     vars->old_density.getPointer(),
+		     &delta_t, 
+		     cellinfo->sew.get_objs(), 
+		     cellinfo->sns.get_objs(),
+		     cellinfo->stbw.get_objs());
+    break;
+  default:
+    throw InvalidValue("Invalid index in Source::calcTrabsSource");
+  }
+}
+
+//****************************************************************************
+// Documentation here
+//****************************************************************************
+void 
+Source::computePressureSource(const ProcessorGroup* ,
+			      const Patch* patch ,
+			      int index,
+			      CellInformation* cellinfo,			  
+			      ArchesVariables* vars)
+{
+  // Get the patch and variable indices
+  IntVector domLoU, domHiU;
+  IntVector domLoUng, domHiUng;
+  IntVector idxLoU, idxHiU;
+  IntVector domLo = vars->pressure.getFortLowIndex();
+  IntVector domHi = vars->pressure.getFortHighIndex();
+#ifdef ARCHES_SOURCE_DEBUG
+  if (patch->containsCell(IntVector(2,3,3))) {
+    cerr << "[2,3,3] press" << vars->pressure[IntVector(2,3,3)] << " " <<
+      vars->pressure[IntVector(1,3,3)] << endl;
+  }
+#endif
+  int ioff, joff, koff;
+  switch(index) {
+  case Arches::XDIR:
+    domLoU = vars->uVelocity.getFortLowIndex();
+    domHiU = vars->uVelocity.getFortHighIndex();
+    domLoUng = vars->pressGradUSu.getFortLowIndex();
+    domHiUng = vars->pressGradUSu.getFortHighIndex();
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+
+    ioff = 1;
+    joff = 0;
+    koff = 0;
+    FORT_CALCPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		       domLoUng.get_pointer(), domHiUng.get_pointer(),
+		       idxLoU.get_pointer(), idxHiU.get_pointer(),
+		       vars->uVelocity.getPointer(),
+		       vars->pressGradUSu.getPointer(), 
+		       domLo.get_pointer(), domHi.get_pointer(),
+		       vars->pressure.getPointer(),
+		       &ioff, &joff, &koff,
+		       cellinfo->sewu.get_objs(), 
+		       cellinfo->sns.get_objs(),
+		       cellinfo->stb.get_objs(),
+		       cellinfo->dxpw.get_objs());
+    break;
+  case Arches::YDIR:
+    domLoU = vars->vVelocity.getFortLowIndex();
+    domHiU = vars->vVelocity.getFortHighIndex();
+    domLoUng = vars->pressGradVSu.getFortLowIndex();
+    domHiUng = vars->pressGradVSu.getFortHighIndex();
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+    ioff = 0;
+    joff = 1;
+    koff = 0;
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+
+    FORT_CALCPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		       domLoUng.get_pointer(), domHiUng.get_pointer(),
+		       idxLoU.get_pointer(), idxHiU.get_pointer(),
+		       vars->vVelocity.getPointer(),
+		       vars->pressGradVSu.getPointer(), 
+		       domLo.get_pointer(), domHi.get_pointer(),
+		       vars->pressure.getPointer(),
+		       &ioff, &joff, &koff,
+		       cellinfo->sew.get_objs(), 
+		       cellinfo->snsv.get_objs(), 
+		       cellinfo->stb.get_objs(),
+		       cellinfo->dyps.get_objs());
+    break;
+  case Arches::ZDIR:
+    domLoU = vars->wVelocity.getFortLowIndex();
+    domHiU = vars->wVelocity.getFortHighIndex();
+    domLoUng = vars->pressGradWSu.getFortLowIndex();
+    domHiUng = vars->pressGradWSu.getFortHighIndex();
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+    ioff = 0;
+    joff = 0;
+    koff = 1;
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_CALCPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		       domLoUng.get_pointer(), domHiUng.get_pointer(),
+		       idxLoU.get_pointer(), idxHiU.get_pointer(),
+		       vars->wVelocity.getPointer(),
+		       vars->pressGradWSu.getPointer(), 
+		       domLo.get_pointer(), domHi.get_pointer(),
+		       vars->pressure.getPointer(),
+		       &ioff, &joff, &koff,
+		       cellinfo->sew.get_objs(), 
+		       cellinfo->sns.get_objs(),
+		       cellinfo->stbw.get_objs(),
+		       cellinfo->dzpb.get_objs());
+    break;
+  default:
+    throw InvalidValue("Invalid index in Source::calcPressGrad");
+  }
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // Add multimaterial source term
 void 
@@ -951,5 +1144,74 @@ Source::computemmMomentumSource(const ProcessorGroup* pc,
 				int index,
 				CellInformation* cellinfo,
 				ArchesVariables* vars) {
+  IntVector idxLoU;
+  IntVector idxHiU;
+  // for no ghost cells
+  IntVector domLoUng;
+  IntVector domHiUng;
+  IntVector domLo;
+  IntVector domHi;
+  
+  switch(index) {
+  case 1:
+  // Get the low and high index for the patch and the variables
+  idxLoU = patch->getSFCXFORTLowIndex();
+  idxHiU = patch->getSFCXFORTHighIndex();
+  // for no ghost cells
+  domLoUng = vars->uVelLinearSrc.getFortLowIndex();
+  domHiUng = vars->uVelLinearSrc.getFortHighIndex();
+  domLo = vars->mmuVelSu.getFortLowIndex();
+  domHi = vars->mmuVelSu.getFortHighIndex();
+  
+
+  FORT_MMMOMSRC(domLoUng.get_pointer(), domHiUng.get_pointer(), 
+		idxLoU.get_pointer(), idxHiU.get_pointer(),
+		vars->uVelNonlinearSrc.getPointer(), 
+		vars->uVelLinearSrc.getPointer(),
+		domLo.get_pointer(), domHi.get_pointer(),
+		vars->mmuVelSu.getPointer(),
+		vars->mmuVelSp.getPointer());
+  break;
+  case 2:
+  // Get the low and high index for the patch and the variables
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+  // for no ghost cells
+    domLoUng = vars->vVelLinearSrc.getFortLowIndex();
+    domHiUng = vars->vVelLinearSrc.getFortHighIndex();
+    domLo = vars->mmvVelSu.getFortLowIndex();
+    domHi = vars->mmvVelSu.getFortHighIndex();
+  
+    FORT_MMMOMSRC(domLoUng.get_pointer(), domHiUng.get_pointer(), 
+		  idxLoU.get_pointer(), idxHiU.get_pointer(),
+		  vars->vVelNonlinearSrc.getPointer(), 
+		  vars->vVelLinearSrc.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  vars->mmvVelSu.getPointer(),
+		  vars->mmvVelSp.getPointer());
+    break;
+  case 3:
+  // Get the low and high index for the patch and the variables
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+  // for no ghost cells
+    domLoUng = vars->wVelLinearSrc.getFortLowIndex();
+    domHiUng = vars->wVelLinearSrc.getFortHighIndex();
+    domLo = vars->mmwVelSu.getFortLowIndex();
+    domHi = vars->mmwVelSu.getFortHighIndex();
+  
+    FORT_MMMOMSRC(domLoUng.get_pointer(), domHiUng.get_pointer(), 
+		  idxLoU.get_pointer(), idxHiU.get_pointer(),
+		  vars->wVelNonlinearSrc.getPointer(), 
+		  vars->wVelLinearSrc.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  vars->mmwVelSu.getPointer(),
+		  vars->mmwVelSp.getPointer());
+    break;
+  default:
+    cerr << "Invalid Index value" << endl;
+    break;
+  }
+
   // add in su and sp terms from multimaterial based on index
 }
