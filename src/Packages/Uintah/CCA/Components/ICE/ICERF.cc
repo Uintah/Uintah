@@ -564,80 +564,79 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
              
         //__________________________________
         //  term1
-        double term1 = 0.0;
+        double term1, term1_X, term1_Y, term1_Z;
         double tmp_R = 0.0, tmp_L   = 0.0;
         double tmp_T = 0.0, tmp_BOT = 0.0;
         double tmp_F = 0.0, tmp_BK  = 0.0;
-        //   O H   T H I S   I S   G O I N G   T O   B E   S L O W
-        for(int m = 0; m < numMatls; m++) {
-      
-/*`==========TESTING==========*/
-#if 1
-          IntVector upwc     = upwindCell_X(c, uvel_FC[m][right], 1.0);
-          tmp_R   += vol_frac[m][upwc] * uvel_FC[m][right];
-          upwc     = upwindCell_X(c, uvel_FC[m][left], 0.0);
-          tmp_L   += vol_frac[m][upwc] * uvel_FC[m][left];
-#endif
-#if 0
-          tmp_R   += vol_frac_CC * uvel_FC[m][right];
-          tmp_L   += vol_frac_CC * uvel_FC[m][left]; 
-#endif
-/*==========TESTING==========`*/
-// DONT FORGET TO DO UPWINDING ON THE REST OF THESE
-          tmp_T   += vol_frac_CC * vvel_FC[m][top];
-          tmp_BOT += vol_frac_CC * vvel_FC[m][bottom];
 
-          tmp_F   += vol_frac_CC * wvel_FC[m][front];
-          tmp_BK  += vol_frac_CC * wvel_FC[m][back];
+        for(int m = 0; m < numMatls; m++) {
+        
+          //   O H   T H I S   I S   G O I N G   T O   B E   S L O W   
+          //__________________________________
+          //  use the upwinded vol_frac
+          IntVector upwc;    
+          upwc     = upwindCell_X(c, uvel_FC[m][right],  1.0);
+          tmp_R   += vol_frac[m][upwc] * uvel_FC[m][right];
+          upwc     = upwindCell_X(c, uvel_FC[m][left],   0.0);
+          tmp_L   += vol_frac[m][upwc] * uvel_FC[m][left];
+          
+          upwc     = upwindCell_Y(c, vvel_FC[m][top],    1.0);
+          tmp_T   += vol_frac[m][upwc] * vvel_FC[m][top];
+          upwc     = upwindCell_Y(c, vvel_FC[m][bottom], 0.0);
+          tmp_BOT += vol_frac[m][upwc] * vvel_FC[m][bottom];
+          
+          upwc     = upwindCell_Z(c, vvel_FC[m][front],  1.0);
+          tmp_F   += vol_frac[m][upwc] * wvel_FC[m][front];
+          upwc     = upwindCell_Z(c, vvel_FC[m][back],   0.0);
+          tmp_BK  += vol_frac[m][upwc] * wvel_FC[m][back];
         }
 
-/*`==========TESTING==========*/
-        term1 =(tmp_R * pressX_FC[right] - tmp_L   * pressX_FC[left])  * areaX;
-#if 0   
-              +(tmp_T * pressY_FC[top]   - tmp_BOT * pressY_FC[bottom])* areaY   
-              +(tmp_F * pressZ_FC[front] - tmp_BK  * pressZ_FC[back])  * areaZ;
-#endif 
-/*==========TESTING==========`*/
+
+        term1_X =(tmp_R * pressX_FC[right] - tmp_L  * pressX_FC[left])  *areaX;   
+        term1_Y =(tmp_T * pressY_FC[top]   - tmp_BOT* pressY_FC[bottom])*areaY;     
+        term1_Z =(tmp_F * pressZ_FC[front] - tmp_BK * pressZ_FC[back])  *areaZ;   
+
+        term1 = term1_X + term1_Y + term1_Z;
+
         term1 *= f_theta[c];
         //__________________________________
         // Gradient of press_FC term
-        double term2 = 0.0;
+        double term2, term2_X, term2_Y, term2_Z;
         Vector U = Vector(0,0,0);
         for (int dir = 0; dir <3; dir++) {  //loop over all three directons
           for(int m = 0; m < numMatls; m++) {
             U(dir) = vol_frac_CC * vel_CC[m][c](dir);
           }
         }
-        term2 =  ( f_theta[c] * U.x() - vol_frac_CC * vel_CC[m][c].x() ) * 
+
+        term2_X =  ( f_theta[c] * U.x() - vol_frac_CC * vel_CC[m][c].x() ) * 
                  (pressX_FC[right] - pressX_FC[left])  * areaX;
                 
-/*`==========TESTING==========*/
-#if 0
-        term2 += ( f_theta[c] * U.y() - vol_frac_CC * vel_CC[m][c].y() ) * 
+        term2_Y = ( f_theta[c] * U.y() - vol_frac_CC * vel_CC[m][c].y() ) * 
                  (pressY_FC[top]   - pressY_FC[bottom])* areaY;
                  
-        term2 += ( f_theta[c] * U.z() - vol_frac_CC * vel_CC[m][c].z() ) * 
+        term2_Z = ( f_theta[c] * U.z() - vol_frac_CC * vel_CC[m][c].z() ) * 
                  (pressZ_FC[front] - pressZ_FC[back])  * areaZ; 
-#endif
-/*==========TESTING==========`*/
+
+        term2 = term2_X + term2_Y + term2_Z;
+
         
         //__________________________________
         //  Divergence of work flux
-        double term3;       
-        term3 = (uvel_FC[m][right]  * pressDiffX_FC[right] - 
-                 uvel_FC[m][left]   * pressDiffX_FC[left] )   * areaX;  
-/*`==========TESTING==========*/
-#if 0
-              + (vvel_FC[m][top]    * pressDiffY_FC[top]   - 
-                 vvel_FC[m][bottom] * pressDiffY_FC[bottom] ) * areaY  
-              + (wvel_FC[m][front]  * pressDiffZ_FC[front] - 
-                 wvel_FC[m][back]   * pressDiffZ_FC[back])    * areaZ;
- #endif   
-/*==========TESTING==========`*/  
+        double term3, term3_X, term3_Y, term3_Z;
+       
+        term3_X = (uvel_FC[m][right]  * pressDiffX_FC[right] - 
+                 uvel_FC[m][left]   * pressDiffX_FC[left] )   * areaX;
+                  
+        term3_Y = (vvel_FC[m][top]    * pressDiffY_FC[top]   - 
+                 vvel_FC[m][bottom] * pressDiffY_FC[bottom] ) * areaY;
+                   
+        term3_Z = (wvel_FC[m][front]  * pressDiffZ_FC[front] - 
+                 wvel_FC[m][back]   * pressDiffZ_FC[back])    * areaZ; 
                  
-/*`==========TESTING==========*/ 
+        term3 = term3_X + term3_Y + term3_Z;
+  
         int_eng_source[c] = (-term1 + term2 - term3) * delT;
-/*==========TESTING==========`*/
       }  // iter loop
 
       //---- P R I N T   D A T A ------ 
@@ -645,6 +644,17 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         ostringstream desc;
         desc <<  "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
+        if (m == 0 ){
+          printData_FC( patch,1, desc.str(), "pressX_FC",     pressX_FC);
+          printData_FC( patch,1, desc.str(), "pressY_FC",     pressY_FC);
+          printData_FC( patch,1, desc.str(), "pressZ_FC",     pressZ_FC);
+          printData_FC( patch,1, desc.str(), "pressDiffX_FC", pressDiffX_FC);
+          printData_FC( patch,1, desc.str(), "pressDiffY_FC", pressDiffY_FC);
+          printData_FC( patch,1, desc.str(), "pressDiffZ_FC", pressDiffZ_FC);
+        }
+        printData_FC( patch,1, desc.str(), "uvel_FC",       uvel_FC[m]);
+        printData_FC( patch,1, desc.str(), "vvel_FC",       vvel_FC[m]);
+        printData_FC( patch,1, desc.str(), "wvel_FC",       wvel_FC[m]);
       }
     }  // matl loop
   }  // patch loop
@@ -966,11 +976,9 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     double areaZ = dx.x() * dx.y();    
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
-/*`==========TESTING==========*/
     StaticArray<constSFCXVariable<double> > uvel_FC(numALLMatls);
     StaticArray<constSFCYVariable<double> > vvel_FC(numALLMatls);
     StaticArray<constSFCZVariable<double> > wvel_FC(numALLMatls); 
-/*==========TESTING==========`*/
 
     StaticArray<constCCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
@@ -996,13 +1004,9 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);  
       new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gn,0);  
       old_dw->get(Temp_CC[m], lb->temp_CCLabel,    indx,patch, gn,0); 
-
-/*`==========TESTING==========*/
       new_dw->get(uvel_FC[m], lb->uvel_FCMELabel,  indx, patch, gac, 1);   
       new_dw->get(vvel_FC[m], lb->vvel_FCMELabel,  indx, patch, gac, 1);   
       new_dw->get(wvel_FC[m], lb->wvel_FCMELabel,  indx, patch, gac, 1);   
-/*==========TESTING==========`*/
-
 
       if_mpm_matl_ignore[m] = 1.0; 
       if ( mpm_matl) {       
@@ -1040,58 +1044,59 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
 
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-/*`==========TESTING==========*/
+
         double vol_frac_CC =  vol_frac[m][c];
         IntVector right, left, top, bottom, front, back;
         right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
         top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
         front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
-      //__________________________________
+        //__________________________________
         //  term1
+        double term1, term1_X, term1_Y, term1_Z;
         double tmp_R = 0.0, tmp_L   = 0.0;
         double tmp_T = 0.0, tmp_BOT = 0.0;
         double tmp_F = 0.0, tmp_BK  = 0.0;
-        //   O H   T H I S   I S   G O I N G   T O   B E   S L O W  A N D   N E E D S   T O   B E   R E D O N E
+        //   O H   T H I S   I S   G O I N G   T O   B E   S L O W  
+        //  A N D   N E E D S   T O   B E   R E D O N E
         for(int m = 0; m < numALLMatls; m++) {
-          IntVector upwc     
-                   = upwindCell_X(c, uvel_FC[m][right], 1.0);
+          //  use the upwinded vol_frac
+          IntVector upwc;     
+          upwc     = upwindCell_X(c, uvel_FC[m][right],  1.0);
           tmp_R   += vol_frac[m][upwc] * uvel_FC[m][right];
-          upwc     = upwindCell_X(c, uvel_FC[m][left], 0.0);
+          upwc     = upwindCell_X(c, uvel_FC[m][left],   0.0);
           tmp_L   += vol_frac[m][upwc] * uvel_FC[m][left];
-
-// DONT FORGET TO DO UPWINDING ON THE REST OF THESE
-          tmp_T   += vol_frac_CC * vvel_FC[m][top];
-          tmp_BOT += vol_frac_CC * vvel_FC[m][bottom];
-
-          tmp_F   += vol_frac_CC * wvel_FC[m][front];
-          tmp_BK  += vol_frac_CC * wvel_FC[m][back];
+          
+          upwc     = upwindCell_Y(c, vvel_FC[m][top],    1.0);
+          tmp_T   += vol_frac[m][upwc] * vvel_FC[m][top];
+          upwc     = upwindCell_Y(c, vvel_FC[m][bottom], 0.0);
+          tmp_BOT += vol_frac[m][upwc] * vvel_FC[m][bottom];
+          
+          upwc     = upwindCell_Z(c, vvel_FC[m][front],  1.0);
+          tmp_F   += vol_frac[m][upwc] * wvel_FC[m][front];
+          upwc     = upwindCell_Z(c, vvel_FC[m][back],   0.0);
+          tmp_BK  += vol_frac[m][upwc] * wvel_FC[m][back];
         } 
-/*==========TESTING==========`*/
-       
- 
+        term1_X = (tmp_R - tmp_L)   * areaX;
+        term1_Y = (tmp_T - tmp_BOT) * areaY;
+        term1_Z = (tmp_F - tmp_BK)  * areaZ;
 
+        term1 = f_theta[c] * delT * (term1_X + term1_Y + term1_Z);
        
 /*`==========TESTING==========*/
-       double term1 = (tmp_R - tmp_L) * areaX;
 #if 0
-                    + (tmp_T - tmp_BOT) * areaY
-                    + (tmp_F - tmp_BK) * areaZ;
-#endif
-       term1 *= f_theta[c] * delT;
-       
-#if 0
-       double kappa = sp_vol_CC[c]/(speedSound[c] * speedSound[c]);
-       double term1 = -vol * vol_frac[m][c] * kappa * delP_Dilatate[c]; 
-#endif
-/*==========TESTING==========`*/
-       double alpha = 1.0/Temp_CC[m][c];  // HARDWRIED FOR IDEAL GAS
-       double term2 = delT * vol * (vol_frac[m][c] * alpha *  Tdot[m][c] -
+        double kappa = sp_vol_CC[c]/(speedSound[c] * speedSound[c]);
+        double term1 = -vol * vol_frac[m][c] * kappa * delP_Dilatate[c]; 
+#endif 
+/*===========TESTING==========`*/
+
+        double alpha = 1.0/Temp_CC[m][c];  // HARDWRIED FOR IDEAL GAS
+        double term2 = delT * vol * (vol_frac[m][c] * alpha *  Tdot[m][c] -
                                    f_theta[c] * sum_therm_exp[c]);
                                    
         // This is actually mass * sp_vol
-       spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2; 
+        spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2; 
 
-       spec_vol_L[c] += spec_vol_source[c]; 
+        spec_vol_L[c] += spec_vol_source[c]; 
      }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
