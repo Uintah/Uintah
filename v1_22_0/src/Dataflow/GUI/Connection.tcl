@@ -600,7 +600,15 @@ proc insertModuleOnConnection { conn package category module onum inum } {
     global Subnet mouseX mouseY inserting insertOffset
     set inserting 1
     set insertOffset "0 0"
+    set Subnet(Loading) $Subnet([oMod conn])
+    if { ![isaSubnetEditor [oMod conn]] } {
+	set canvas $Subnet(Subnet$Subnet([oMod conn])_canvas)
+	set bbox [$canvas bbox [oMod conn]]
+	set mouseX [lindex $bbox 0]
+	set mouseY [expr [lindex $bbox 3] + 10]
+    }
     set modid [addModuleAtPosition $package $category $module $mouseX $mouseY]
+    set Subnet(Loading) 0
     set inserting 0
     destroyConnection $conn 1 1 0
     after 100 createConnection \{[makeConn "$modid $onum o" [iPort conn]]\} 1 1
