@@ -525,6 +525,7 @@ void OpenGL::redraw_frame()
     drawinfo->reset();
     int do_stereo=roe->do_stereo.get();
     
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     int do_bawgl = roe->do_bawgl.get();
     SCIBaWGL* bawgl = roe->get_bawgl();
@@ -532,7 +533,7 @@ void OpenGL::redraw_frame()
     if(!do_bawgl)
       bawgl->shutdown_ok();
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-
+#endif
     // Compute znear and zfar...
     if(compute_depth(roe, view, znear, zfar)){
 
@@ -548,7 +549,7 @@ void OpenGL::redraw_frame()
 	roe->setState(drawinfo,globals);
 	drawinfo->pickmode=0;
 
-	int errcode;
+	GLenum errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -568,13 +569,14 @@ void OpenGL::redraw_frame()
 	    eyesep=u*eye_sep_dist*zmid;
 	}
 	
-// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 	GLfloat realStylusMatrix[16], realPinchMatrix[16];
 	int stylusID, pinchID;
 	int stylus, pinch;
 	GLfloat scale;
 	char scalestr[512];
 	
+#ifdef __sgi
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 	if( do_bawgl )
 	  {
 	    bawgl->getAllEyePositions();
@@ -589,12 +591,19 @@ void OpenGL::redraw_frame()
 				       realPinchMatrix, BAWGL_REAL_SPACE);
 	    bawgl->getControllerState(pinchID, &pinch);
 	  }
+#endif
 
 	for(int t=0;t<nframes;t++){
 	  int n=1;
+#ifdef __sgi
 	  if( do_stereo || do_bawgl ) n=2;
 	  for(int i=0;i<n;i++){
 	    if( do_stereo || do_bawgl ){
+#else
+	  if( do_stereo ) n=2;
+	  for(int i=0;i<n;i++){
+	    if( do_stereo ){
+#endif
 	      glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
 	    } else {
 	      glDrawBuffer(GL_BACK);
@@ -606,6 +615,7 @@ void OpenGL::redraw_frame()
 	    double modeltime=t*dt+tbeg;
 	    roe->set_current_time(modeltime);
 
+#ifdef __sgi
 	    if( do_bawgl ) // render head tracked stereo
 	      {
 		bawgl->setViewPort(0, 0, xres, yres);
@@ -626,9 +636,10 @@ void OpenGL::redraw_frame()
 		glPushMatrix();
 		
 		bawgl->setVirtualView();
+	      } else 
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-
-	      } else { // render normal
+#endif
+	      {  // render normal
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPerspective(fovy, aspect, znear, zfar);
@@ -661,9 +672,9 @@ void OpenGL::redraw_frame()
 	      light->opengl_setup(view, drawinfo, idx);
 	    }
 	    for(ii=0;ii<idx && ii<maxlights;ii++)
-	      glEnable(GL_LIGHT0+ii);
+	      glEnable((GLenum)(GL_LIGHT0+ii));
 	    for(;ii<maxlights;ii++)
-	      glDisable(GL_LIGHT0+ii);
+	      glDisable((GLenum)(GL_LIGHT0+ii));
 
 	    // now set up the fog stuff
 
@@ -677,6 +688,7 @@ void OpenGL::redraw_frame()
 	    current_time=modeltime;
 	    roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
 
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 	    if( do_bawgl ) // render stylus and pinch 'metaphores'
 	      {
@@ -807,6 +819,7 @@ void OpenGL::redraw_frame()
 		  }
 	      }
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+#endif
 	  }
 
 #if 0
@@ -874,6 +887,7 @@ void OpenGL::redraw_frame()
 	// Just show the cleared screen
 	roe->set_current_time(tend);
 
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 	if( do_stereo || do_bawgl ) {
 	    glDrawBuffer(GL_BACK_LEFT);
@@ -883,7 +897,7 @@ void OpenGL::redraw_frame()
 	    glDrawBuffer(GL_BACK);
 	}
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-
+#endif
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(roe->drawimg.get()){
 	  if(!imglist)
@@ -897,7 +911,7 @@ void OpenGL::redraw_frame()
     salmon->geomlock.readUnlock();
 
     // Look for errors
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -916,7 +930,8 @@ void OpenGL::redraw_frame()
     str << drawinfo->polycount << " polygons in " << timer.time()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
 	<< " polygons/second\"" << " \"" << fps_whole << "."
-	<< fps_tenths << " frames/sec\"";
+	<< fps_tenths << " frames/sec\"" << '\0';
+    cerr <<"updatePerf: <" << str.str() << ">\n";	
     if (roe->doingMovie) {
 //      cerr << "Saving a movie!\n";
       unsigned char movie[10];
@@ -1024,6 +1039,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	glPushName(0x12345678); //for the object
 	glPushName(0x12345678); //for the object's face index
 #endif
+#ifdef __sgi
 	if(!roe->do_bawgl.get()){ //Regular flavor picking
 	    glViewport(0, 0, xres, yres);
 	    glMatrixMode(GL_PROJECTION);
@@ -1042,7 +1058,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 		  lookat.x(), lookat.y(), lookat.z(),
 		  up.x(), up.y(), up.z());
 	}
-	else{ //BAWGL flavored picking setup!!!
+	else { //BAWGL flavored picking setup!!!
 	    SCIBaWGL* bawgl = roe->get_bawgl();
 	    bawgl->setModelViewMatrix(BAWGL_MIDDLE_EYE);
 	    bawgl->setPickProjectionMatrix(BAWGL_MIDDLE_EYE, x, y, pick_window);
@@ -1050,6 +1066,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	    bawgl->setSurfaceView();
 	    bawgl->setVirtualView();      
 	}
+#endif
 	drawinfo->lighting=0;
 	drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
 	drawinfo->pickmode=1;
@@ -1069,7 +1086,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 
 	glFlush();
 	int hits=glRenderMode(GL_RENDER);
-	int errcode;
+	GLenum errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -1392,12 +1409,12 @@ void Roe::setClip(DrawInfoOpenGL* drawinfo)
 			plane[1] /= mag;
 			plane[2] /= mag;
 			plane[3] = -plane[3]; // so moves in planes direction...
-			glClipPlane(GL_CLIP_PLANE0+i,plane);
+			glClipPlane((GLenum)(GL_CLIP_PLANE0+i),plane);	
 
 			if (drawinfo->check_clip)
-			    glEnable(GL_CLIP_PLANE0+i);
+			    glEnable((GLenum)(GL_CLIP_PLANE0+i));
 			else
-			    glDisable(GL_CLIP_PLANE0+i);
+			    glDisable((GLenum)(GL_CLIP_PLANE0+i));
 			    
 			drawinfo->clip_planes |= cur_flag;
 
@@ -1406,7 +1423,7 @@ void Roe::setClip(DrawInfoOpenGL* drawinfo)
 			}
 		    }
 		    else {
-			glDisable(GL_CLIP_PLANE0+i);
+			glDisable((GLenum)(GL_CLIP_PLANE0+i));
 		    }
 
 		}
@@ -1700,7 +1717,7 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 	delete[] data;
     }
     if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)){
-	int errcode;
+	GLenum errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -1724,6 +1741,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.15  1999/11/16 23:22:46  yarden
+// more int to GLenum fixes.
+//
 // Revision 1.14  1999/11/12 01:38:29  ikits
 // Added ANL AVTC site visit modifications to make the demos work.
 // Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
