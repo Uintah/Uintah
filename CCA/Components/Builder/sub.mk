@@ -39,7 +39,7 @@ PROGRAM := builder_main
 SRCS := $(SRCDIR)/builder_main.cc
 PSELIBS := CCA/Components/Builder Core/CCA/SSIDL \
 	Core/CCA/PIDL Core/Exceptions Core/CCA/spec SCIRun
-LIBS := 
+LIBS := $(QT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
