@@ -149,9 +149,10 @@ itcl_class SCIRun_Render_ViewImage {
 	# the focus belowis to generate keypress events 
 	bind $w.$id <Enter>       "focus $w.$id; $this-c enter %W"
 	bind $w.$id <Leave>       "$this-c leave %W; $this-c redrawall"
-	bind $w.$id <Motion>	  "$this-c motion   %W %x %y %s %t"
+	bind $w.$id <Motion>	  "$this-c motion   %W %x %y %s %t %X %Y"
 	bind $w.$id <KeyPress>    "$this-c keypress %W %k %K %t"
-	bind $w.$id <ButtonPress> "$this-c button   %W %b %s"
+	bind $w.$id <ButtonPress> "$this-c button   %W %b %s %X %Y"
+	bind $w.$id <ButtonRelease> "$this-c release  %W %b %s %X %Y"
 
 	$this-c add_viewport $w.$id $id-viewport0
 	add_viewport_tab $main $title $id-viewport0 $w.$id
@@ -210,8 +211,11 @@ itcl_class SCIRun_Render_ViewImage {
 	    "$this-c redraw $gl"
 	update_clut_range
 
-	checkbutton $f.guidelines -text "Show Guidelines" -variable $prefix-show_guidelines \
+	checkbutton $f.guidelines -text "Show Guidelines" \
+	    -variable $prefix-show_guidelines \
 	    -command "$this-c redraw $gl"
+
+	bind $gl <ButtonPress> "+$w.cp.tabs select \"$name\""
 	pack $f.guidelines -side top -anchor w
     }	
 	
