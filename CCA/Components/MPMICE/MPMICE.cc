@@ -18,6 +18,7 @@
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Containers/StaticArray.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -738,9 +739,11 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
   //    cout << "Solid matl CC momentum = " << cell_mom << endl;
 
       //  Set BC's and put into new_dw
+      
       d_ice->setBC(vel_CC,  "Velocity",   patch, matlindex);
       d_ice->setBC(Temp_CC, "Temperature",patch, matlindex);
 
+      
       new_dw->put(cmass,    MIlb->cMassLabel,       matlindex, patch);
       new_dw->put(cvolume,  MIlb->cVolumeLabel,     matlindex, patch);
       new_dw->put(vel_CC,   MIlb->vel_CCLabel,      matlindex, patch);
@@ -841,21 +844,21 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
-    vector<CCVariable<double> > rho_CC(numALLMatls);
-    vector<CCVariable<double> > Temp_CC(numALLMatls);  
-    vector<CCVariable<double> > vol_frac_CC(numALLMatls);
-    vector<CCVariable<double> > rho_micro_CC(numALLMatls);
+    StaticArray<CCVariable<double> > rho_CC(numALLMatls);
+    StaticArray<CCVariable<double> > Temp_CC(numALLMatls);  
+    StaticArray<CCVariable<double> > vol_frac_CC(numALLMatls);
+    StaticArray<CCVariable<double> > rho_micro_CC(numALLMatls);
 
-    vector<CCVariable<Vector> > mom_L(numALLMatls);
-    vector<CCVariable<double> > int_eng_L(numALLMatls);
+    StaticArray<CCVariable<Vector> > mom_L(numALLMatls);
+    StaticArray<CCVariable<double> > int_eng_L(numALLMatls);
 
     // Create variables for the results
-    vector<CCVariable<Vector> > mom_L_ME(numALLMatls);
-    vector<CCVariable<Vector> > vel_CC(numALLMatls);
-    vector<CCVariable<Vector> > dvdt_CC(numALLMatls);
-    vector<CCVariable<double> > dTdt_CC(numALLMatls);
-    vector<NCVariable<double> > dTdt_NC(numALLMatls);
-    vector<CCVariable<double> > int_eng_L_ME(numALLMatls);
+    StaticArray<CCVariable<Vector> > mom_L_ME(numALLMatls);
+    StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
+    StaticArray<CCVariable<Vector> > dvdt_CC(numALLMatls);
+    StaticArray<CCVariable<double> > dTdt_CC(numALLMatls);
+    StaticArray<NCVariable<double> > dTdt_NC(numALLMatls);
+    StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
 
     vector<double> b(numALLMatls);
     vector<double> mass(numALLMatls);
@@ -1251,27 +1254,28 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     static int n_passes;                  
     n_passes ++; 
 
-    vector<double> delVol_frac(numALLMatls),press_eos(numALLMatls);
-    vector<double> dp_drho(numALLMatls),dp_de(numALLMatls);
-    vector<double> mat_volume(numALLMatls);
-    vector<double> mat_mass(numALLMatls);
-    vector<double> cv(numALLMatls);
-    vector<CCVariable<double> > vol_frac(numALLMatls);
-    vector<CCVariable<double> > rho_micro(numALLMatls);
-    vector<CCVariable<double> > rho_CC(numALLMatls);
-    vector<CCVariable<double> > Temp(numALLMatls);
-    vector<CCVariable<double> > speedSound_new(numALLMatls);
-    vector<CCVariable<double> > speedSound(numALLMatls);
-    vector<CCVariable<double> > sp_vol_CC(numALLMatls);
-    vector<CCVariable<double> > mat_vol(numALLMatls);
-    vector<CCVariable<double> > mass_CC(numALLMatls);
+    StaticArray<double> delVol_frac(numALLMatls),press_eos(numALLMatls);
+    StaticArray<double> dp_drho(numALLMatls),dp_de(numALLMatls);
+    StaticArray<double> mat_volume(numALLMatls);
+    StaticArray<double> mat_mass(numALLMatls);
+    StaticArray<double> cv(numALLMatls);
+    StaticArray<CCVariable<double> > vol_frac(numALLMatls);
+    StaticArray<CCVariable<double> > rho_micro(numALLMatls);
+    StaticArray<CCVariable<double> > rho_CC(numALLMatls);
+    StaticArray<CCVariable<double> > Temp(numALLMatls);
+    StaticArray<CCVariable<double> > speedSound_new(numALLMatls);
+    StaticArray<CCVariable<double> > speedSound(numALLMatls);
+    StaticArray<CCVariable<double> > sp_vol_CC(numALLMatls);
+    StaticArray<CCVariable<double> > mat_vol(numALLMatls);
+    StaticArray<CCVariable<double> > mass_CC(numALLMatls);
     CCVariable<double> press, press_new;
 /**/  CCVariable<double> delPress_tmp;
 /**/  new_dw->allocate(delPress_tmp,
                                Ilb->press_CCLabel, 0,patch); 
     old_dw->get(press,         Ilb->press_CCLabel, 0,patch,Ghost::None, 0); 
-    new_dw->allocate(press_new,Ilb->press_CCLabel, 0,patch);
-
+    new_dw->allocate(press_new,Ilb->press_equil_CCLabel, 0,patch);
+    
+    
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
@@ -1296,8 +1300,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(speedSound_new[m],Ilb->speedSound_CCLabel,dwindex,patch);
     }
 
+    press_new.copyPatch(press);
 
-    press_new = press;
 
   //---- P R I N T   D A T A ------
   #if 0
@@ -1491,7 +1495,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        //__________________________________
        // - compute delPress
        // - update press_CC     
-       vector<double> Q(numALLMatls),y(numALLMatls);     
+       StaticArray<double> Q(numALLMatls),y(numALLMatls);     
        for (int m = 0; m < numALLMatls; m++)   {
          Q[m] =  press_new[*iter] - press_eos[m];
          y[m] =  dp_drho[m] * ( rho_CC[m][*iter]/
@@ -1711,8 +1715,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     int numALLMatls=d_sharedState->getNumMatls();
-    vector<CCVariable<double> > burnedMass(numALLMatls);
-    vector<CCVariable<double> > releasedHeat(numALLMatls);
+    StaticArray<CCVariable<double> > burnedMass(numALLMatls);
+    StaticArray<CCVariable<double> > releasedHeat(numALLMatls);
     CCVariable<double> gasTemperature;
     CCVariable<double> gasPressure;
     CCVariable<double> gasVolumeFraction;
