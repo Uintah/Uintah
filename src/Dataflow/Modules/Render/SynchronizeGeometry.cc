@@ -81,6 +81,7 @@ SynchronizeGeometry::do_execute()
   if (ogeom_ == NULL)
   {
     error("Unable to initialize iport 'Output Geometry");
+    return;
   }
 
   for (;;)
