@@ -23,16 +23,16 @@
     <authors>
       <author>Alexei Samsonov</author>
     </authors>
-    <summary>The module takes two triangulated meshes representing two
+    <summary>The module takes two triangulated meshes that represent two
     closed surfaces, one inside the other, and calculates transfer
-    matrix to transfer potential values from inner to outer surface
+    matrix to transfer potential values from inner to outer surfaces.
     </summary>
     
     <description>
       <p>Version Date: March 2001</p><p>Version: 1.0</p>
       <p>The basic idea underlying the module implementation was taken
       from [1]. The methods in numerical estimation of integral parts
-      of the problem setup were provided by Rob McLeod and Guo Tang</p>
+      of the problem setup were provided by Rob MacLeod and Guo Tang</p>
       
       <p>References:
       </p>
@@ -107,7 +107,7 @@
 	<p></p>
       </description>
     </parameter>
-    <img></img>
+    <img>
   </gui>
   <testing>
   </testing>
