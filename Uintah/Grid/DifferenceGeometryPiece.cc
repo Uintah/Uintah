@@ -8,7 +8,6 @@ using SCICore::Geometry::Point;
 using SCICore::Geometry::Min;
 using SCICore::Geometry::Max;
 
-using namespace Uintah::MPM;
 using namespace Uintah;
 using std::cerr;
 using std::endl;

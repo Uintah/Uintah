@@ -6,7 +6,6 @@
 #include <vector>
 
 namespace Uintah {
-   namespace MPM {
       class GeometryPiece;
       
       class GeometryPieceFactory
@@ -18,7 +17,6 @@ namespace Uintah {
 	 static void create(const ProblemSpecP& ps,
 			    std::vector<GeometryPiece*>& objs);
       };
-   } // end namespace MPM
 } // end namespace Uintah
 
 

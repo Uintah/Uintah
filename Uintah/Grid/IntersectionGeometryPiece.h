@@ -9,7 +9,6 @@
 
 
 namespace Uintah {
-   namespace MPM {
       using SCICore::Geometry::Point;
 
 
@@ -84,12 +83,14 @@ WARNING
 	 
       };
       
-   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __INTERSECTION_GEOMETRY_PIECE_H__
 
 // $Log$
+// Revision 1.2  2000/11/21 23:53:34  guilkey
+// Moved Geometry Stuff from MPM namespace to Uintah namespace.
+//
 // Revision 1.1  2000/06/09 18:38:22  jas
 // Moved geometry piece stuff to Grid/ from MPM/GeometryPiece/.
 //

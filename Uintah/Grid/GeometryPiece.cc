@@ -1,9 +1,6 @@
 
 #include <math.h>
-#include <Uintah/Grid/BoxGeometryPiece.h>
-#include <Uintah/Grid/SphereGeometryPiece.h>
-#include <Uintah/Grid/CylinderGeometryPiece.h>
-#include <Uintah/Grid/TriGeometryPiece.h>   
+#include <Uintah/Grid/GeometryPiece.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -20,7 +17,7 @@ using std::ifstream;
 using std::string;
 using std::vector;
 
-using namespace Uintah::MPM;
+using namespace Uintah;
 
 GeometryPiece::GeometryPiece()
 {
@@ -30,6 +27,9 @@ GeometryPiece::~GeometryPiece()
 }
 
 // $Log$
+// Revision 1.5  2000/11/21 23:53:33  guilkey
+// Moved Geometry Stuff from MPM namespace to Uintah namespace.
+//
 // Revision 1.4  2000/11/06 21:29:04  guilkey
 // Got rid of a bunch of crap.
 //
