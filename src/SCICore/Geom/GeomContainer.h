@@ -32,7 +32,7 @@ public:
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-
+    virtual void get_triangles( Array1<float> &);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };    
@@ -42,6 +42,13 @@ public:
 
 //
 // $Log$
+// Revision 1.4  2000/06/06 16:01:43  dahart
+// - Added get_triangles() to several classes for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.3  1999/08/17 23:50:19  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -245,6 +245,8 @@ int GeomTrianglesPT1d::add(const Point& p1,const Point& p2,const Point& p3,
   }
   return 0;
 }
+
+
 #define GeomTrianglesPT1d_VERSION 1
 
 void GeomTrianglesPT1d::io(Piostream& stream)
@@ -633,6 +635,14 @@ GeomTrianglesP::GeomTrianglesP()
 GeomTrianglesP::~GeomTrianglesP()
 {
 
+}
+
+void GeomTrianglesP::get_triangles( Array1<float> &v)
+{
+  int end = v.size();
+  v.grow (points.size());
+  for (int i=0; i<points.size(); i++)
+    v[end+i] = points[i];
 }
 
 int GeomTrianglesP::size(void)
@@ -1072,6 +1082,13 @@ bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.8  2000/06/06 16:01:45  dahart
+// - Added get_triangles() to several classes for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.7  1999/10/07 02:07:47  sparker
 // use standard iostreams and complex type
 //

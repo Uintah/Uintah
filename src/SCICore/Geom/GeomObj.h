@@ -64,6 +64,7 @@ public:
     virtual void draw(DrawInfoOpenGL*, Material*, double time)=0;
     int post_draw(DrawInfoOpenGL*);
 #endif
+    virtual void get_triangles( Array1<float> &v );
     static PersistentTypeID type_id;
 
     virtual void io(Piostream&);    
@@ -82,6 +83,13 @@ void Pio(Piostream&, GeomObj*&);
 
 //
 // $Log$
+// Revision 1.9  2000/06/06 16:01:45  dahart
+// - Added get_triangles() to several classes for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.8  2000/01/03 20:12:36  kuzimmer
 //  Forgot to check in these files for picking spheres
 //
