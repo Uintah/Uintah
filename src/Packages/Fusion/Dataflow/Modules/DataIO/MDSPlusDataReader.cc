@@ -35,7 +35,7 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Core/Datatypes/ScanlineField.h>
+#include <Core/Datatypes/StructCurveField.h>
 #include <Packages/Fusion/share/share.h>
 
 #include <Packages/Fusion/Core/ThirdParty/mdsPlusReader.h>
@@ -106,8 +106,8 @@ void MDSPlusDataReader::execute(){
    
     double *phi_data = NULL;   // phi Grid data.
 
-    ScanlineMesh *slm = NULL;
-    ScanlineField<double> *pField = NULL;
+    StructCurveMesh *slm = NULL;
+    StructCurveField<double> *pField = NULL;
     
     MDSPlusReader mds;
 
@@ -179,17 +179,21 @@ void MDSPlusDataReader::execute(){
 	remark( str.str() );
       }
 
-      ScanlineMesh::Node::index_type node;
+      StructCurveMesh::Node::index_type node;
 
-      slm = scinew ScanlineMesh(nPhi-1,
-				Point(0,0,0),
-				Point(nPhi-2, nPhi-2, nPhi-2) );
-      pField = scinew ScanlineField<double>(slm, Field::NODE);
+      //      slm = scinew ScanLineMesh(nPhi-1,
+      //			        Point(0,0,0),
+      //			        Point(nPhi-2, nPhi-2, nPhi-2) );
+
+      slm = scinew StructCurveMesh(nPhi-1);
+      pField = scinew StructCurveField<double>(slm, Field::NODE);
 
       pHandle_ = pField;
 
       for( int phi=0; phi<nPhi-1; phi++ ) {
 	node = phi;
+
+	slm->set_point( node, Point(phi,phi,phi) );
 	pField->set_value(phi_data[phi], node);
       }
     }

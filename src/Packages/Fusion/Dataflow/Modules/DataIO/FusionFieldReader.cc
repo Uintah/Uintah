@@ -32,8 +32,8 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/StructHexVolField.h>
 
-#include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/share/share.h>
 
 #include <fstream>
