@@ -64,7 +64,7 @@ namespace SCIRun {
     Thread *accept_thread;
 
     void *object;
-
+    bool dead;
 
   };
 }// namespace SCIRun
