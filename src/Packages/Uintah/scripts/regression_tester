@@ -1,0 +1,216 @@
+#!/bin/sh
+
+# Check if we are on inferno, if so, use the TestData in /usr/sci/projects
+# if not revert to the 1st test_dir
+hostname=`uname -n`
+
+test_dir=/home/jas/SCIRun/TestData
+
+hostname_test=`uname -n | grep inf`
+
+if test "$hostname" = "$hostname_test";
+    then
+    test_dir=/usr/sci/projects/Uintah/tester/Linux/TestData
+fi
+
+
+# Set up the various test cases
+
+mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere const_test_hypo const_test_nh const_test_cmr const_test_nhp const_test_vs"
+ice_test_cases="advect hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
+#ice_test_cases="advect hotBlob2mat hotBlob2mat_sym"
+mpmice_test_cases="advect massX thermx thermx8patch"
+
+# Check if the applications sus and compare_uda are available
+
+if test -x sus;
+    then continue;
+    else
+    echo; echo "sus is not available . . . exiting"
+    exit
+fi
+
+if test -x compare_uda;
+    then continue;
+    else
+    echo; echo "compare_uda is not available . . . exiting"
+    exit
+fi
+
+REMOVE () {
+    rm *.out;
+    rm *.compare; 
+    rm -rf *.uda*
+}
+
+mpm_test () {
+    echo; echo "Testing $mpm_test_cases"
+    
+    for n in $mpm_test_cases; do
+	echo; echo "Running sus -mpm inputs/MPM/$n.ups"
+	uda=`grep filebase inputs/MPM/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -mpm inputs/MPM/$n.ups &> $n.out
+	success=`grep "successfully" $n.out`
+	if test -n "$success";
+	    then 
+	    echo $success
+	else
+	    echo; echo "FAILURE running sus . . ."
+	    continue;
+	fi
+	udadir=$n
+	if test "$n" = "disks2mat4patch"; 
+	    then
+	    udadir=disks2mat4patch1proc
+	fi
+	echo "compare_uda $test_dir/dbg/MPM/$udadir/$uda $uda &> $n.compare"
+	compare_uda $test_dir/dbg/MPM/$udadir/$uda $uda &> $n.compare
+	compare=`grep "passed" $n.compare`
+	if test -n "$compare";
+	    then
+	    echo $compare
+	else
+	    echo; echo "FAILURE running compare_uda . . ."
+	fi
+    done
+}
+
+mpmice_test () {
+    echo; echo "Testing $mpmice_test_cases"
+    
+    for n in $mpmice_test_cases; do
+	echo; echo "Running sus -mpmice inputs/MPMICE/$n.ups"
+	uda=`grep filebase inputs/MPMICE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
+	sus -mpmice inputs/MPMICE/$n.ups &> $n.out
+	success=`grep "successfully" $n.out`
+	if test -n "$success";
+	    then 
+	    echo $success
+	    else
+	    echo; echo "FAILURE running sus . . ."
+	    continue;
+	fi
+	udadir=$n
+	if test "$n" = "advect"; then
+	    udadir=advect_mpmice
+	fi
+	echo "compare_uda $test_dir/dbg/MPMICE/$udadir/$uda $uda &> $n.compare"
+	compare_uda $test_dir/dbg/MPMICE/$udadir/$uda $uda &> $n.compare
+	compare=`grep "passed" $n.compare`
+	if test -n "$compare";
+	    then
+	    echo $compare
+	else
+	    echo; echo "FAILURE running compare_uda . . ."
+	fi
+    done
+}
+
+ice_test () {
+    echo; echo "Testing $ice_test_cases"
+    
+    for n in $ice_test_cases; do
+	echo; echo "Running sus -ice inputs/ICE/$n.ups"
+	uda=`grep filebase inputs/ICE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -ice inputs/ICE/$n.ups &> $n.out
+	success=`grep "successfully" $n.out`
+	if test -n "$success";
+	    then 
+	    echo $success
+	else
+	    echo; echo "FAILURE running sus . . ."
+	    continue;
+	fi
+	udadir=$n
+	if test "$n" = "hotBlob2mat8patch"; then
+	    udadir=hotBlob8patch
+	fi
+	echo "compare_uda $test_dir/dbg/ICE/$udadir/$uda $uda &> $n.compare"
+	compare_uda $test_dir/dbg/ICE/$udadir/$uda $uda &> $n.compare
+	compare=`grep "passed" $n.compare`
+	if test -n "$compare";
+	    then
+	    echo $compare
+	else
+	    echo; echo "FAILURE running compare_uda . . ."
+	fi
+    done
+}
+
+usage () {
+    echo;
+    echo "Usage: regression_tester [OPTION]..."
+    echo "Run the regression tester.  With no OPTION, run all the tests."
+    echo;
+    echo "  -a             run the mpm,ice, and mpmice tests"
+    echo "  -m             run the mpm tests"
+    echo "  -i             run the ice tests"
+    echo "  -mi            run the mpmice tests"
+    echo "  -r             remove the *.out *.compare and uda directories"
+    echo "  -h             display this help and exit"
+    echo;
+    exit
+}
+
+do_mpm=0
+do_ice=0
+do_mpmice=0
+do_remove=0
+
+if test $# = 0;
+    then
+    echo; echo "Using $test_dir"
+    echo; echo "Running mpm, ice and mpmice tests . . ."
+    mpm_test;
+    ice_test;
+    mpmice_test;
+fi
+
+
+for args in $*; do
+    case $args in
+	-a)
+	    echo; echo "Running mpm, ice, and mpmice tests . . ."
+	    do_ice=1
+	    do_mpm=1
+	    do_mpmice=1;;
+	-i) 
+	    echo; echo "Running the ice tests . . ."
+	    do_ice=1;;
+	-m)
+	    echo; echo "Running the mpm tests . . ."
+	    do_mpm=1;;
+	-mi)
+	    echo; echo "Running the mpmice tests . . ."
+	    do_mpmice=1;;
+	-r)
+	    echo; echo "Removing *.out *.compare and *.uda files . . ."
+	    do_remove=1;;
+	-h)
+	    usage ;;
+    esac
+done
+
+# Actually do the tests
+
+echo; echo "Using $test_dir"
+
+if test $do_mpm -eq 1;
+    then
+    mpm_test
+fi
+
+if test $do_ice -eq 1;
+    then
+    ice_test
+fi
+
+if test $do_mpmice -eq 1;
+    then
+    mpmice_test
+fi
+
+if test $do_remove -eq 1;
+    then
+    REMOVE
+fi
