@@ -1,8 +1,15 @@
+#if 1
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/walmom_cc_fort.h>
+#include "../../Arches/fortran/param4.h"
+#else
       subroutine walmom_cc(
-     $     su_dragx_fcy, sp_dragx_fcy, 
-     $     dragforcex_fcy, 
-     $     ug_cc, up_fcy, eps_Gas, 
-     $     eps_Solid,
+     $     sux_fcy, 
+     $     spx_fcy, 
+     $     dfx_fcy, 
+     $     ug_cc, 
+     $     up_fcy, 
+     $     epsg, 
+     $     epss,
      $     sew, stb, yv, yy,
      $     viscos, csmag, 
      $     idf, idt1, idt2, 
@@ -60,17 +67,17 @@ c--------------------------------------------------------------------
       integer valid_lo(3)
       integer valid_hi(3)
 
-      double precision su_dragx_fcy(
+      double precision sux_fcy(
      $     dim_lo_su_fcy(1):dim_hi_su_fcy(1),
      $     dim_lo_su_fcy(2):dim_hi_su_fcy(2),
      $     dim_lo_su_fcy(3):dim_hi_su_fcy(3))
 
-      double precision sp_dragx_fcy(
+      double precision spx_fcy(
      $     dim_lo_sp_fcy(1):dim_hi_sp_fcy(1),
      $     dim_lo_sp_fcy(2):dim_hi_sp_fcy(2),
      $     dim_lo_sp_fcy(3):dim_hi_sp_fcy(3))
 
-      double precision dragforcex_fcy(
+      double precision dfx_fcy(
      $     dim_lo_dx_fcy(1):dim_hi_dx_fcy(1),
      $     dim_lo_dx_fcy(2):dim_hi_dx_fcy(2),
      $     dim_lo_dx_fcy(3):dim_hi_dx_fcy(3))
@@ -85,12 +92,12 @@ c--------------------------------------------------------------------
      $     dim_lo_upy(2):dim_hi_upy(2),
      $     dim_lo_upy(3):dim_hi_upy(3))
 
-      double precision eps_Gas(
+      double precision epsg(
      $     dim_lo_eps(1):dim_hi_eps(1),
      $     dim_lo_eps(2):dim_hi_eps(2),
      $     dim_lo_eps(3):dim_hi_eps(3))
 
-      double precision eps_Solid(
+      double precision epss(
      $     dim_lo_epss(1):dim_hi_epss(1),
      $     dim_lo_epss(2):dim_hi_epss(2),
      $     dim_lo_epss(3):dim_hi_epss(3))
@@ -129,6 +136,8 @@ c--------------------------------------------------------------------
 
       integer ffield
 
+#endif
+
 *     executable statements
 
 c--------------------------------------------------------------------
@@ -140,28 +149,35 @@ c--------------------------------------------------------------------
      $     idt2.ne.valid_lo_ext(indext2)) then
 
          call taucal_cc(
-     $        su_dragx_fcy, sp_dragx_fcy, 
-     $        dragforcex_fcy, 
-     $        ug_cc, up_fcy, eps_Gas, 
-     $        eps_Solid,
-     $        sew, stb, yv, yy,
+     $        PASS3A(sux_fcy)
+     $        PASS3B(sux_fcy), 
+     $        PASS3A(spx_fcy)
+     $        PASS3B(spx_fcy), 
+     $        PASS3A(dfx_fcy)
+     $        PASS3B(dfx_fcy), 
+     $        PASS3A(ug_cc)
+     $        PASS3B(ug_cc), 
+     $        PASS3A(up_fcy)
+     $        PASS3B(up_fcy), 
+     $        PASS3A(epsg)
+     $        PASS3B(epsg), 
+     $        PASS3A(epss)
+     $        PASS3B(epss),
+     $        PASS1(sew), 
+     $        PASS1(stb), 
+     $        PASS1(yv), 
+     $        PASS1(yy),
      $        viscos, csmag, one,
      $        1,
      $        idf, idt1, idt2,
      $        i-ioff2, j-joff2, k-koff2, 
      $        i, j, k, 
      $        ioff, joff, koff,
-     $        dim_lo, dim_hi, 
-     $        dim_lo_dx_fcy, dim_hi_dx_fcy,
-     $        dim_lo_su_fcy, dim_hi_su_fcy,
-     $        dim_lo_sp_fcy, dim_hi_sp_fcy,
-     $        dim_lo_ugc, dim_hi_ugc, 
-     $        dim_lo_upy, dim_hi_upy,
-     $        dim_lo_eps, dim_hi_eps, 
-     $        dim_lo_epss, dim_hi_epss, 
      $        indexflo, indext1, indext2,
      $        lmltm,
-     $        pcell, ffield)
+     $        PASS3A(pcell)
+     $        PASS3B(pcell), 
+     $        ffield)
 
       end if
 
@@ -174,28 +190,35 @@ c--------------------------------------------------------------------
      $     idt2.ne.valid_lo_ext(indext2)) then
 
          call taucal_cc(
-     $        su_dragx_fcy, sp_dragx_fcy, 
-     $        dragforcex_fcy, 
-     $        ug_cc, up_fcy, eps_Gas, 
-     $        eps_Solid, 
-     $        sew, stb, yv, yy,
+     $        PASS3A(sux_fcy)
+     $        PASS3B(sux_fcy), 
+     $        PASS3A(spx_fcy)
+     $        PASS3B(spx_fcy), 
+     $        PASS3A(dfx_fcy)
+     $        PASS3B(dfx_fcy), 
+     $        PASS3A(ug_cc)
+     $        PASS3B(ug_cc), 
+     $        PASS3A(up_fcy)
+     $        PASS3B(up_fcy), 
+     $        PASS3A(epsg)
+     $        PASS3B(epsg), 
+     $        PASS3A(epss)
+     $        PASS3B(epss), 
+     $        PASS1(sew), 
+     $        PASS1(stb), 
+     $        PASS1(yv), 
+     $        PASS1(yy),
      $        viscos, csmag, -one,
      $        0, 
      $        idf, idt1+1, idt2,
      $        i+ioff2, j+joff2, k+koff2, 
      $        i, j, k, 
      $        ioff, joff, koff, 
-     $        dim_lo, dim_hi, 
-     $        dim_lo_dx_fcy, dim_hi_dx_fcy,
-     $        dim_lo_su_fcy, dim_hi_su_fcy,
-     $        dim_lo_sp_fcy, dim_hi_sp_fcy,
-     $        dim_lo_ugc, dim_hi_ugc, 
-     $        dim_lo_upy, dim_hi_upy,
-     $        dim_lo_eps, dim_hi_eps, 
-     $        dim_lo_epss, dim_hi_epss, 
      $        indexflo, indext1, indext2,
      $        lmltm,
-     $        pcell, ffield)
+     $        PASS3A(pcell)
+     $        PASS3B(pcell), 
+     $        ffield)
 
       end if
 

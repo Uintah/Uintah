@@ -28,8 +28,8 @@
  300  continue
 
 c     debug
-      print*, 'printing debug values of su_enth and sp_enth'
-      print*, su_enth_cc(7,9,9), sp_enth_cc(7,9,9)
+c      print*, 'printing debug values of su_enth and sp_enth'
+c      print*, su_enth_cc(7,9,9), sp_enth_cc(7,9,9)
 
       return
       end

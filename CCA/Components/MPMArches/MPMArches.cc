@@ -27,6 +27,7 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -38,6 +39,7 @@ using namespace std;
 
 #include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_scalar_fctocc_fort.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/energy_exchange_term_fort.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/fortran/interp_centertoface_fort.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/fortran/momentum_exchange_term_continuous_cc_fort.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/fortran/pressure_force_fort.h>
@@ -107,7 +109,7 @@ void MPMArches::scheduleInitialize(const LevelP& level,
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
-  scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
+  //  scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
   //  scheduleInterpolateNCToCC(sched, patches, mpm_matls);
   //  scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
 
@@ -209,11 +211,9 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
   schedulePutAllForcesOnCC(sched, patches, mpm_matls);
   schedulePutAllForcesOnNC(sched, patches, mpm_matls);
 
-  // we also need mass and energy exchanges here.  These are
-  // not implemented yet.  They will be of the form
-  // scheduleEnergyExchange(level, sched, old_dw, new_dw)
+  // we may also need mass exchange here later.  This is 
+  // not implemented yet.  This will be of the form
   // scheduleMassExchange(level, sched, old_dw, new_dw)
-  // (though, compare with mpm's scheduleComputeHeatExchange)
 
   // both Arches and MPM now have all the information they need
   // to proceed independently with their solution
@@ -241,8 +241,6 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
   }
   d_mpm->scheduleCarryForwardVariables(sched, patches, mpm_matls);
 
-  //int numMPMMatls = d_sharedState->getNumMPMMatls();
-
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,
                                     Mlb->d_particleState_preReloc,
@@ -262,10 +260,9 @@ void MPMArches::scheduleInterpolateNCToCC(SchedulerP& sched,
 {
    /* interpolateNCToCC */
 
-    // primitive variable initialization
+  // primitive variable initialization
   Task* t=scinew Task("MPMArches::interpolateNCToCC",
 		      this, &MPMArches::interpolateNCToCC);
-  //int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numGhostCells = 1;
   t->requires(Task::NewDW, Mlb->gMassLabel, 
 	      Ghost::AroundNodes, numGhostCells);
@@ -658,7 +655,7 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   t->requires(Task::NewDW, d_MAlb->tempSolid_FCYLabel, 
 	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->tempSolid_FCZLabel, 
-	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
 
   // computes, for mpm, heat transferred to solid at cell centers 
   // and at all face centers
@@ -741,26 +738,27 @@ void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
 				         const PatchSet* patches,
 				         const MaterialSet* mpm_matls)
 {
-  // Grab all of the forces which Arches wants to give to MPM and
-  // accumulate them on the cell centers
+  // Grab all of the forces and energy fluxes which Arches wants to 
+  // give to MPM and accumulate them on the cell centers
+
   Task* t=scinew Task("MPMArches::putAllForcesOnCC",
 		      this, &MPMArches::putAllForcesOnCC);
 
   t->requires(Task::NewDW, d_MAlb->cMassLabel, Ghost::None, 0);
 
   t->requires(Task::NewDW, d_MAlb->DragForceX_CCLabel, mpm_matls->getUnion(),
-								Ghost::None, 0);
+	      Ghost::None, 0);
   t->requires(Task::NewDW, d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion(),
-								Ghost::None, 0);
+	      Ghost::None, 0);
   t->requires(Task::NewDW, d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion(),
-								Ghost::None, 0);
+	      Ghost::None, 0);
 	      
   t->requires(Task::NewDW, d_MAlb->PressureForce_FCXLabel,mpm_matls->getUnion(),
-						Ghost::AroundFaces, 1);
+	      Ghost::AroundFaces, 1);
   t->requires(Task::NewDW, d_MAlb->PressureForce_FCYLabel,mpm_matls->getUnion(),
-						Ghost::AroundFaces, 1);
+	      Ghost::AroundFaces, 1);
   t->requires(Task::NewDW, d_MAlb->PressureForce_FCZLabel,mpm_matls->getUnion(),
-						Ghost::AroundFaces, 1);
+	      Ghost::AroundFaces, 1);
 
   if (d_calcEnergyExchange) {
 
@@ -1059,12 +1057,12 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
       if (d_calcEnergyExchange)
 	tempSolid_CC.initialize(0.);
 
-      new_dw->get(gmass,     Mlb->gMassLabel,        matlindex, patch, 
-		  Ghost::AroundNodes, numGhostCells);
-      new_dw->get(gvolume,   Mlb->gVolumeLabel,      matlindex, patch,
-		  Ghost::AroundNodes, numGhostCells);
-      new_dw->get(gvelocity, Mlb->gVelocityLabel,    matlindex, patch,
-		  Ghost::AroundNodes, numGhostCells);
+      new_dw->get(gmass,     Mlb->gMassLabel,        matlindex, 
+		  patch, Ghost::AroundNodes, numGhostCells);
+      new_dw->get(gvolume,   Mlb->gVolumeLabel,      matlindex, 
+		  patch, Ghost::AroundNodes, numGhostCells);
+      new_dw->get(gvelocity, Mlb->gVelocityLabel,    matlindex, 
+		  patch, Ghost::AroundNodes, numGhostCells);
 
       if (d_calcEnergyExchange)
 	new_dw->get(gTemperature, Mlb->gTemperatureLabel, matlindex, 
@@ -1077,17 +1075,26 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 
 	patch->findNodesFromCell(*iter,nodeIdx);
 	for (int in=0;in<8;in++){
+
 	  cmass[*iter]    += .125*gmass[nodeIdx[in]];
 	  cvolume[*iter]  += .125*gvolume[nodeIdx[in]];
 	  vel_CC[*iter]   += gvelocity[nodeIdx[in]]*.125*
 	    gmass[nodeIdx[in]];
+	  if (d_calcEnergyExchange) 
+	    tempSolid_CC[*iter] += gTemperature[nodeIdx[in]]*.125*
+	      gmass[nodeIdx[in]];
+
 	}
 	vel_CC[*iter]      /= (cmass[*iter]     + d_SMALL_NUM);
+	tempSolid_CC[*iter]   /= (cmass[*iter]     + d_SMALL_NUM);
       }
       
-      new_dw->put(cmass,     d_MAlb->cMassLabel,    matlindex, patch);
-      new_dw->put(cvolume,   d_MAlb->cVolumeLabel,  matlindex, patch);
-      new_dw->put(vel_CC,    d_MAlb->vel_CCLabel,   matlindex, patch);
+      new_dw->put(cmass,     d_MAlb->cMassLabel,    
+		  matlindex, patch);
+      new_dw->put(cvolume,   d_MAlb->cVolumeLabel,  
+		  matlindex, patch);
+      new_dw->put(vel_CC,    d_MAlb->vel_CCLabel,   
+		  matlindex, patch);
       if (d_calcEnergyExchange) 
 	new_dw->put(tempSolid_CC, d_MAlb->tempSolid_CCLabel,   
 		    matlindex, patch);
@@ -1110,7 +1117,6 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
 
-      //Vector zero(0.0,0.0,0.0);
       int numGhostCells = 1;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
@@ -1684,59 +1690,15 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     double viscos = d_arches->getTurbulenceModel()->getMolecularViscosity();
     double csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
 
-//    IntVector dim_lo = cellType.getFortLowIndex();
-//    IntVector dim_hi = cellType.getFortHighIndex();
-    
-//    IntVector dim_lo_eps = gas_fraction_cc.getFortLowIndex();
-//    IntVector dim_hi_eps = gas_fraction_cc.getFortHighIndex();
-    
-    IntVector dim_lo_ugc;
-    IntVector dim_hi_ugc;
-    
-    IntVector dim_lo_dx_cc;
-    IntVector dim_hi_dx_cc;
-    
     IntVector valid_lo;
     IntVector valid_hi;
     
     for (int m = 0; m < numMPMMatls; m++) {
       
-//      IntVector dim_lo_upc = xvelCC_solid[m].getFortLowIndex();
-//      IntVector dim_hi_upc = xvelCC_solid[m].getFortHighIndex();
-      
-//      IntVector dim_lo_epss = solid_fraction_cc[m].getFortLowIndex();
-//      IntVector dim_hi_epss = solid_fraction_cc[m].getFortHighIndex();
-      
-      // code for x-direction momentum exchange
-      
-      dim_lo_ugc = xvelCC_gas.getFortLowIndex();
-      dim_hi_ugc = xvelCC_gas.getFortHighIndex();
-      
-      dim_lo_dx_cc = dragForceX_cc[m].getFortLowIndex();
-      dim_hi_dx_cc = dragForceX_cc[m].getFortHighIndex();
-      
       valid_lo = patch->getSFCXFORTLowIndex();
       valid_hi = patch->getSFCXFORTHighIndex();
       
-      // gas variables
-      
-//      IntVector xdim_lo_su_fcy = uVelNonlinearSrc_fcy.getFortLowIndex();
-//      IntVector xdim_hi_su_fcy = uVelNonlinearSrc_fcy.getFortHighIndex();
-      
-//      IntVector xdim_lo_sp_fcy = uVelLinearSrc_fcy.getFortLowIndex();
-//      IntVector xdim_hi_sp_fcy = uVelLinearSrc_fcy.getFortHighIndex();
-      
-//      IntVector xdim_lo_su_fcz = uVelNonlinearSrc_fcz.getFortLowIndex();
-//      IntVector xdim_hi_su_fcz = uVelNonlinearSrc_fcz.getFortHighIndex();
-      
-//      IntVector xdim_lo_sp_fcz = uVelLinearSrc_fcz.getFortLowIndex();
-//      IntVector xdim_hi_sp_fcz = uVelLinearSrc_fcz.getFortHighIndex();
-      
-//      IntVector xdim_lo_su_cc = uVelNonlinearSrc_cc.getFortLowIndex();
-//      IntVector xdim_hi_su_cc = uVelNonlinearSrc_cc.getFortHighIndex();
-      
-//      IntVector xdim_lo_sp_cc = uVelLinearSrc_cc.getFortLowIndex();
-//      IntVector xdim_hi_sp_cc = uVelLinearSrc_cc.getFortHighIndex();
+      // code for x-direction momentum exchange
       
       int ioff = 1;
       int joff = 0;
@@ -1745,20 +1707,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       int indexflo = 1;
       int indext1 =  2;
       int indext2 =  3;
-      
-      // solid material variables
-      
-//      IntVector xdim_lo_dx_fcy = dragForceX_fcy[m].getFortLowIndex();
-//      IntVector xdim_hi_dx_fcy = dragForceX_fcy[m].getFortHighIndex();
-      
-//      IntVector xdim_lo_dx_fcz = dragForceX_fcz[m].getFortLowIndex();
-//      IntVector xdim_hi_dx_fcz = dragForceX_fcz[m].getFortHighIndex();
-      
-//      IntVector xdim_lo_upy = xvelFCY_solid[m].getFortLowIndex();
-//      IntVector xdim_hi_upy = xvelFCY_solid[m].getFortHighIndex();
-      
-//      IntVector xdim_lo_upz = xvelFCZ_solid[m].getFortLowIndex();
-//      IntVector xdim_hi_upz = xvelFCZ_solid[m].getFortHighIndex();
       
       fort_momentum_exchange_term_continuous_cc(uVelNonlinearSrc_fcy,
 						uVelLinearSrc_fcy,
@@ -1787,35 +1735,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // code for y-direction momentum exchange
       
-      dim_lo_ugc = yvelCC_gas.getFortLowIndex();
-      dim_hi_ugc = yvelCC_gas.getFortHighIndex();
-      
-      dim_lo_dx_cc = dragForceY_cc[m].getFortLowIndex();
-      dim_hi_dx_cc = dragForceY_cc[m].getFortHighIndex();
-      
-      valid_lo = patch->getSFCYFORTLowIndex();
-      valid_hi = patch->getSFCYFORTHighIndex();
-      
-      // gas variables
-      
-//      IntVector ydim_lo_su_fcy = vVelNonlinearSrc_fcz.getFortLowIndex();
-//      IntVector ydim_hi_su_fcy = vVelNonlinearSrc_fcz.getFortHighIndex();
-      
-//      IntVector ydim_lo_sp_fcy = vVelLinearSrc_fcz.getFortLowIndex();
-//      IntVector ydim_hi_sp_fcy = vVelLinearSrc_fcz.getFortHighIndex();
-      
-//      IntVector ydim_lo_su_fcz = vVelNonlinearSrc_fcx.getFortLowIndex();
-//      IntVector ydim_hi_su_fcz = vVelNonlinearSrc_fcx.getFortHighIndex();
-      
-//      IntVector ydim_lo_sp_fcz = vVelLinearSrc_fcx.getFortLowIndex();
-//      IntVector ydim_hi_sp_fcz = vVelLinearSrc_fcx.getFortHighIndex();
-      
-//      IntVector ydim_lo_su_cc = vVelNonlinearSrc_cc.getFortLowIndex();
-//      IntVector ydim_hi_su_cc = vVelNonlinearSrc_cc.getFortHighIndex();
-      
-//      IntVector ydim_lo_sp_cc = vVelLinearSrc_cc.getFortLowIndex();
-//      IntVector ydim_hi_sp_cc = vVelLinearSrc_cc.getFortHighIndex();
-      
       ioff = 0;
       joff = 1;
       koff = 0;
@@ -1823,20 +1742,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       indexflo = 2;
       indext1 =  3;
       indext2 =  1;
-      
-      // solid material variables
-      
-//      IntVector ydim_lo_dx_fcy = dragForceY_fcz[m].getFortLowIndex();
-//      IntVector ydim_hi_dx_fcy = dragForceY_fcz[m].getFortHighIndex();
-      
-//      IntVector ydim_lo_dx_fcz = dragForceY_fcx[m].getFortLowIndex();
-//      IntVector ydim_hi_dx_fcz = dragForceY_fcx[m].getFortHighIndex();
-      
-//      IntVector ydim_lo_upy = yvelFCZ_solid[m].getFortLowIndex();
-//      IntVector ydim_hi_upy = yvelFCZ_solid[m].getFortHighIndex();
-      
-//      IntVector ydim_lo_upz = yvelFCX_solid[m].getFortLowIndex();
-//      IntVector ydim_hi_upz = yvelFCX_solid[m].getFortHighIndex();
 
       fort_momentum_exchange_term_continuous_cc(vVelNonlinearSrc_fcz,
 						vVelLinearSrc_fcz,
@@ -1865,35 +1770,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
     // code for z-direction momentum exchange
 			  
-      dim_lo_ugc = zvelCC_gas.getFortLowIndex();
-      dim_hi_ugc = zvelCC_gas.getFortHighIndex();
-      
-      dim_lo_dx_cc = dragForceZ_cc[m].getFortLowIndex();
-      dim_hi_dx_cc = dragForceZ_cc[m].getFortHighIndex();
-      
-      valid_lo = patch->getSFCZFORTLowIndex();
-      valid_hi = patch->getSFCZFORTHighIndex();
-      
-      // gas variables
-      
-//      IntVector zdim_lo_su_fcy = wVelNonlinearSrc_fcx.getFortLowIndex();
-//      IntVector zdim_hi_su_fcy = wVelNonlinearSrc_fcx.getFortHighIndex();
-      
-//      IntVector zdim_lo_sp_fcy = wVelLinearSrc_fcx.getFortLowIndex();
-//      IntVector zdim_hi_sp_fcy = wVelLinearSrc_fcx.getFortHighIndex();
-      
-//      IntVector zdim_lo_su_fcz = wVelNonlinearSrc_fcy.getFortLowIndex();
-//      IntVector zdim_hi_su_fcz = wVelNonlinearSrc_fcy.getFortHighIndex();
-      
-//      IntVector zdim_lo_sp_fcz = wVelLinearSrc_fcy.getFortLowIndex();
-//      IntVector zdim_hi_sp_fcz = wVelLinearSrc_fcy.getFortHighIndex();
-      
-//      IntVector zdim_lo_su_cc = wVelNonlinearSrc_cc.getFortLowIndex();
-//      IntVector zdim_hi_su_cc = wVelNonlinearSrc_cc.getFortHighIndex();
-      
-//      IntVector zdim_lo_sp_cc = wVelLinearSrc_cc.getFortLowIndex();
-//      IntVector zdim_hi_sp_cc = wVelLinearSrc_cc.getFortHighIndex();
-      
       ioff = 0;
       joff = 0;
       koff = 1;
@@ -1902,20 +1778,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       indext1 =  1;
       indext2 =  2;
       
-      // solid material variables
-      
-//      IntVector zdim_lo_dx_fcy = dragForceZ_fcx[m].getFortLowIndex();
-//      IntVector zdim_hi_dx_fcy = dragForceZ_fcx[m].getFortHighIndex();
-      
-//      IntVector zdim_lo_dx_fcz = dragForceZ_fcy[m].getFortLowIndex();
-//      IntVector zdim_hi_dx_fcz = dragForceZ_fcy[m].getFortHighIndex();
-      
-//      IntVector zdim_lo_upy = zvelFCX_solid[m].getFortLowIndex();
-//      IntVector zdim_hi_upy = zvelFCX_solid[m].getFortHighIndex();
-      
-//      IntVector zdim_lo_upz = zvelFCY_solid[m].getFortLowIndex();
-//      IntVector zdim_hi_upz = zvelFCY_solid[m].getFortHighIndex();
-
       fort_momentum_exchange_term_continuous_cc(wVelNonlinearSrc_fcx,
 						wVelLinearSrc_fcx,
 						wVelNonlinearSrc_fcy,
@@ -1940,20 +1802,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						ioff, joff, koff,
 						indexflo, indext1, indext2,
 						cellType, mmwallid, ffieldid);
-      
+
       // code for pressure forces (direction-independent)
-      
-//      IntVector dim_lo_fcx = pressForceX[m].getFortLowIndex();
-//      IntVector dim_hi_fcx = pressForceX[m].getFortHighIndex();
-      
-//      IntVector dim_lo_fcy = pressForceY[m].getFortLowIndex();
-//      IntVector dim_hi_fcy = pressForceY[m].getFortHighIndex();
-      
-//      IntVector dim_lo_fcz = pressForceZ[m].getFortLowIndex();
-//      IntVector dim_hi_fcz = pressForceZ[m].getFortHighIndex();
-      
-//      IntVector dim_lo_pres = pressure.getFortLowIndex();
-//      IntVector dim_hi_pres = pressure.getFortHighIndex();
       
       valid_lo = patch->getCellFORTLowIndex();
       valid_hi = patch->getCellFORTHighIndex();
@@ -2158,15 +2008,6 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     int joff;
     int koff;
     
-    IntVector dim_lo_su_cc;
-    IntVector dim_hi_su_cc;
-    IntVector dim_lo_sp_cc;
-    IntVector dim_hi_sp_cc;
-    IntVector dim_lo_su_fc;
-    IntVector dim_hi_su_fc;
-    IntVector dim_lo_sp_fc;
-    IntVector dim_hi_sp_fc;
-    
     // collect x-direction sources from face centers to cell center
     
     valid_lo = patch->getSFCXFORTLowIndex();
@@ -2176,20 +2017,8 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     joff = 0;
     koff = 0;
     
-    dim_lo_su_cc = su_dragx_cc.getFortLowIndex();
-    dim_hi_su_cc = su_dragx_cc.getFortHighIndex();
-    
-    dim_lo_sp_cc = sp_dragx_cc.getFortLowIndex();
-    dim_hi_sp_cc = sp_dragx_cc.getFortHighIndex();
-    
     // for first transverse direction, i.e., y
     
-    dim_lo_su_fc = su_dragx_fcy.getFortLowIndex();
-    dim_hi_su_fc = su_dragx_fcy.getFortHighIndex();
-    
-    dim_lo_sp_fc = sp_dragx_fcy.getFortLowIndex();
-    dim_hi_sp_fc = sp_dragx_fcy.getFortHighIndex();
-
     fort_collect_drag_cc(su_dragx_cc, sp_dragx_cc,
 			 su_dragx_fcy, sp_dragx_fcy,
 			 koff, ioff, joff,
@@ -2197,12 +2026,6 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
 
     // for second transverse direction, i.e., z
     
-    dim_lo_su_fc = su_dragx_fcz.getFortLowIndex();
-    dim_hi_su_fc = su_dragx_fcz.getFortHighIndex();
-    
-    dim_lo_sp_fc = sp_dragx_fcz.getFortLowIndex();
-    dim_hi_sp_fc = sp_dragx_fcz.getFortHighIndex();
-
     fort_collect_drag_cc(su_dragx_cc, sp_dragx_cc,
 			 su_dragx_fcz, sp_dragx_fcz,
 			 joff, joff, ioff,
@@ -2217,19 +2040,7 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     joff = 1;
     koff = 0;
     
-    dim_lo_su_cc = su_dragy_cc.getFortLowIndex();
-    dim_hi_su_cc = su_dragy_cc.getFortHighIndex();
-    
-    dim_lo_sp_cc = sp_dragy_cc.getFortLowIndex();
-    dim_hi_sp_cc = sp_dragy_cc.getFortHighIndex();
-    
   // for first transverse direction, i.e., z
-    
-    dim_lo_su_fc = su_dragy_fcz.getFortLowIndex();
-    dim_hi_su_fc = su_dragy_fcz.getFortHighIndex();
-    
-    dim_lo_sp_fc = sp_dragy_fcz.getFortLowIndex();
-    dim_hi_sp_fc = sp_dragy_fcz.getFortHighIndex();
     
     fort_collect_drag_cc(su_dragy_cc, sp_dragy_cc,
 			 su_dragy_fcz, sp_dragy_fcz,
@@ -2238,12 +2049,6 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
 
     
     // for second transverse direction, i.e., x
-    
-    dim_lo_su_fc = su_dragy_fcx.getFortLowIndex();
-    dim_hi_su_fc = su_dragy_fcx.getFortHighIndex();
-    
-    dim_lo_sp_fc = sp_dragy_fcx.getFortLowIndex();
-    dim_hi_sp_fc = sp_dragy_fcx.getFortHighIndex();
     
     fort_collect_drag_cc(su_dragy_cc, sp_dragy_cc,
 			 su_dragy_fcx, sp_dragy_fcx,
@@ -2259,19 +2064,7 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     joff = 0;
     koff = 1;
     
-    dim_lo_su_cc = su_dragz_cc.getFortLowIndex();
-    dim_hi_su_cc = su_dragz_cc.getFortHighIndex();
-    
-    dim_lo_sp_cc = sp_dragz_cc.getFortLowIndex();
-    dim_hi_sp_cc = sp_dragz_cc.getFortHighIndex();
-    
     // for first transverse direction, i.e., x
-    
-    dim_lo_su_fc = su_dragz_fcx.getFortLowIndex();
-    dim_hi_su_fc = su_dragz_fcx.getFortHighIndex();
-    
-    dim_lo_sp_fc = sp_dragz_fcx.getFortLowIndex();
-    dim_hi_sp_fc = sp_dragz_fcx.getFortHighIndex();
     
     fort_collect_drag_cc(su_dragz_cc, sp_dragz_cc,
 			 su_dragz_fcx, sp_dragz_fcx,
@@ -2280,12 +2073,6 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
 
     
     // for second transverse direction, i.e., y
-    
-    dim_lo_su_fc = su_dragz_fcy.getFortLowIndex();
-    dim_hi_su_fc = su_dragz_fcy.getFortHighIndex();
-    
-    dim_lo_sp_fc = sp_dragz_fcy.getFortLowIndex();
-    dim_hi_sp_fc = sp_dragz_fcy.getFortHighIndex();
     
     fort_collect_drag_cc(su_dragz_cc, sp_dragz_cc,
 			 su_dragz_fcy, sp_dragz_fcy,
@@ -2388,12 +2175,6 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     new_dw->allocate(sp_dragz_fcz, d_MAlb->d_wVel_mmLinSrcLabel,
 		     matlIndex, patch);
     
-    IntVector dim_lo_fc;
-    IntVector dim_hi_fc;
-    
-    IntVector dim_lo_cc;
-    IntVector dim_hi_cc;
-    
     IntVector valid_lo;
     IntVector valid_hi;
     
@@ -2412,26 +2193,16 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     
     // nonlinear source
     
-    dim_lo_fc = su_dragx_fcx.getFortLowIndex();
-    dim_hi_fc = su_dragx_fcx.getFortHighIndex();
-    
-    dim_lo_cc = su_dragx_cc.getFortLowIndex();
-    dim_hi_cc = su_dragx_cc.getFortHighIndex();
-    
     fort_interp_centertoface(su_dragx_fcx,
-			     su_dragx_cc, ioff, joff, koff,
+			     su_dragx_cc, 
+			     ioff, joff, koff,
 			     valid_lo, valid_hi);
     
     // linear source
     
-    dim_lo_fc = sp_dragx_fcx.getFortLowIndex();
-    dim_hi_fc = sp_dragx_fcx.getFortHighIndex();
-    
-    dim_lo_cc = sp_dragx_cc.getFortLowIndex();
-    dim_hi_cc = sp_dragx_cc.getFortHighIndex();
-    
     fort_interp_centertoface(sp_dragx_fcx,
-			     sp_dragx_cc, ioff, joff, koff,
+			     sp_dragx_cc, 
+			     ioff, joff, koff,
 			     valid_lo, valid_hi);
     
     // Interpolate y-momentum source terms
@@ -2445,26 +2216,16 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     
     // nonlinear source
     
-    dim_lo_fc = su_dragy_fcy.getFortLowIndex();
-    dim_hi_fc = su_dragy_fcy.getFortHighIndex();
-    
-    dim_lo_cc = su_dragy_cc.getFortLowIndex();
-    dim_hi_cc = su_dragy_cc.getFortHighIndex();
-    
     fort_interp_centertoface(su_dragy_fcy,
-			     su_dragy_cc, ioff, joff, koff,
+			     su_dragy_cc, 
+			     ioff, joff, koff,
 			     valid_lo, valid_hi);
     
     // linear source
     
-    dim_lo_fc = sp_dragy_fcy.getFortLowIndex();
-    dim_hi_fc = sp_dragy_fcy.getFortHighIndex();
-    
-    dim_lo_cc = sp_dragy_cc.getFortLowIndex();
-    dim_hi_cc = sp_dragy_cc.getFortHighIndex();
-    
     fort_interp_centertoface(sp_dragy_fcy,
-			     sp_dragy_cc, ioff, joff, koff,
+			     sp_dragy_cc, 
+			     ioff, joff, koff,
 			     valid_lo, valid_hi);
     
     // Interpolate z-momentum source terms
@@ -2478,27 +2239,18 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     
     // nonlinear source
     
-    dim_lo_fc = su_dragz_fcz.getFortLowIndex();
-    dim_hi_fc = su_dragz_fcz.getFortHighIndex();
-    
-    dim_lo_cc = su_dragz_cc.getFortLowIndex();
-    dim_hi_cc = su_dragz_cc.getFortHighIndex();
-    
     fort_interp_centertoface(su_dragz_fcz,
-			     su_dragz_cc, ioff, joff, koff,
+			     su_dragz_cc, 
+			     ioff, joff, koff,
 			     valid_lo, valid_hi);
     
     // linear source
     
-    dim_lo_fc = sp_dragz_fcz.getFortLowIndex();
-    dim_hi_fc = sp_dragz_fcz.getFortHighIndex();
-    
-    dim_lo_cc = sp_dragz_cc.getFortLowIndex();
-    dim_hi_cc = sp_dragz_cc.getFortHighIndex();
-    
     fort_interp_centertoface(sp_dragz_fcz,
-			     sp_dragz_cc, ioff, joff, koff,
+			     sp_dragz_cc, 
+			     ioff, joff, koff,
 			     valid_lo, valid_hi);
+
     // Calculation done: now put things in DW
     
     new_dw->put(su_dragx_fcx, d_MAlb->d_uVel_mmNonlinSrcLabel,
@@ -2576,22 +2328,10 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       new_dw->allocate(dragForceZ_fcz, d_MAlb->DragForceZ_FCZLabel,
 		       idx, patch);
 
-      IntVector dim_lo_cc;
-      IntVector dim_hi_cc;
-      
-      IntVector dim_lo_fcx;
-      IntVector dim_hi_fcx;
-      
       IntVector valid_lo;
       IntVector valid_hi;
 
       // redistribute x-direction drag forces
-
-      dim_lo_cc = dragForceX_cc.getFortLowIndex();
-      dim_hi_cc = dragForceX_cc.getFortHighIndex();
-      
-      dim_lo_fcx = dragForceX_fcx.getFortLowIndex();
-      dim_hi_fcx = dragForceX_fcx.getFortHighIndex();
 
       valid_lo = patch->getSFCXFORTLowIndex();
       valid_hi = patch->getSFCXFORTHighIndex();
@@ -2600,16 +2340,12 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       int joff = 0;
       int koff = 0;
 
-      fort_mm_redistribute_drag(dragForceX_fcx, dragForceX_cc,
-				ioff, joff, koff, valid_lo, valid_hi);
+      fort_mm_redistribute_drag(dragForceX_fcx, 
+				dragForceX_cc,
+				ioff, joff, koff, 
+				valid_lo, valid_hi);
       
       // redistribute y-direction drag forces
-      
-      dim_lo_cc = dragForceY_cc.getFortLowIndex();
-      dim_hi_cc = dragForceY_cc.getFortHighIndex();
-      
-      dim_lo_fcx = dragForceY_fcy.getFortLowIndex();
-      dim_hi_fcx = dragForceY_fcy.getFortHighIndex();
       
       valid_lo = patch->getSFCYFORTLowIndex();
       valid_hi = patch->getSFCYFORTHighIndex();
@@ -2618,16 +2354,12 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       joff = 1;
       koff = 0;
       
-      fort_mm_redistribute_drag(dragForceY_fcx, dragForceY_cc,
-				ioff, joff, koff, valid_lo, valid_hi);
+      fort_mm_redistribute_drag(dragForceY_fcx, 
+				dragForceY_cc,
+				ioff, joff, koff, 
+				valid_lo, valid_hi);
       
       // redistribute z-direction drag forces
-      
-      dim_lo_cc = dragForceZ_cc.getFortLowIndex();
-      dim_hi_cc = dragForceZ_cc.getFortHighIndex();
-      
-      dim_lo_fcx = dragForceZ_fcz.getFortLowIndex();
-      dim_hi_fcx = dragForceZ_fcz.getFortHighIndex();
       
       valid_lo = patch->getSFCZFORTLowIndex();
       valid_hi = patch->getSFCZFORTHighIndex();
@@ -2636,8 +2368,10 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
       joff = 0;
       koff = 1;
       
-      fort_mm_redistribute_drag(dragForceZ_fcx, dragForceZ_cc,
-				iof,f joff, koff, valid_lo, valid_hi);
+      fort_mm_redistribute_drag(dragForceZ_fcx, 
+				dragForceZ_cc,
+				iof,f joff, koff, 
+				valid_lo, valid_hi);
       
       // Calculation done; now put things back in DW
       
@@ -2741,11 +2475,11 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 		  idx, patch, Ghost::AroundCells, numGhostCells);
 
       new_dw->get(tempSolid_fcz[m], d_MAlb->tempSolid_FCZLabel,
-		  idx, patch, Ghost::AroundCells, numGhostCells);
+      		  idx, patch, Ghost::AroundCells, numGhostCells);
 
       // allocates
       
-      new_dw->allocate(heaTranSolid_cc[m], d_MAlb->heaTranSolid_CCLabel,
+      new_dw->allocate(heaTranSolid_cc[m], d_MAlb->heaTranSolid_tmp_CCLabel,
 		       idx, patch);
       heaTranSolid_cc[m].initialize(0.);
 
@@ -2819,8 +2553,6 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     IntVector valid_lo = patch->getCellFORTLowIndex();
     IntVector valid_hi = patch->getCellFORTHighIndex();
 
-    /*
-    
     for (int m = 0; m < numMPMMatls; m++) {
 
       fort_energy_exchange_term(
@@ -2828,11 +2560,16 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      heaTranSolid_fcy[m],
 			      heaTranSolid_fcz[m],
 			      heaTranSolid_cc[m],
-			      su_enth_cc, sp_enth_cc,
-			      su_enth_fcx, sp_enth_fcx,
-			      su_enth_fcy, sp_enth_fcy,
-			      su_enth_fcz, sp_enth_fcz,
-			      tempGas, tempSolid_cc[m],
+			      su_enth_cc, 
+			      sp_enth_cc,
+			      su_enth_fcx, 
+			      sp_enth_fcx,
+			      su_enth_fcy, 
+			      sp_enth_fcy,
+			      su_enth_fcz, 
+			      sp_enth_fcz,
+			      tempGas, 
+			      tempSolid_cc[m],
 			      tempSolid_fcx[m],
 			      tempSolid_fcy[m],
 			      tempSolid_fcz[m],
@@ -2845,8 +2582,6 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
     }
 
-    */
-    
     // Calculation done: now put computed/modified variables in 
     // data warehouse
     
