@@ -252,7 +252,7 @@ ParticleFieldExtractor::getVarsForMaterials(list<VarInfo>& vars,
   return names;
 }
 
-void ParticleFieldExtractor::addGraphingVars(long particleID,
+void ParticleFieldExtractor::addGraphingVars(long64 particleID,
 					     const list<VarInfo>& vars,
 					     string type)
 {
@@ -261,7 +261,8 @@ void ParticleFieldExtractor::addGraphingVars(long particleID,
   for (iter = vars.begin(); iter != vars.end(); iter++, i++) {
      ostringstream call;
      call << id << " addGraphingVar " << particleID << " " << (*iter).name <<
-	" {" << (*iter).matls.expandedString() << "} " << type <<
+	" { " << get_matl_from_particleID(particleID) << " } " << type <<
+       //	" {" << (*iter).matls.expandedString() << "} " << type <<
 	" " << i;
      TCL::execute(call.str().c_str());
   }
@@ -280,7 +281,36 @@ void ParticleFieldExtractor::callback(long64 particleID)
   addGraphingVars(particleID, tensorVars, "matrix3");
 }		
 		
-		
+// This may need be made faster in the future.  Right now we are just looping
+// over all the particle ID's for each materials searching for a match.
+// Since this should only be used in debugging experiments it doesn't need
+// to be super speedy, just responsive.
+int ParticleFieldExtractor::get_matl_from_particleID(long64 particleID) {
+  DataArchive& archive = *((*(archiveH.get_rep()))());
+  GridP grid = archive.queryGrid( time );
+  LevelP level = grid->getLevel( 0 );
+  // loop over all the materials
+  
+  for(Level::const_patchIterator patch = level->patchesBegin();
+      patch != level->patchesEnd();
+      patch++ )
+    {
+      for(int matl = 0; matl < num_materials; matl++) {
+	ParticleVariable< long64 > pvi;
+	archive.query(pvi, particleIDs, matl, *patch, time);
+	ParticleSubset* pset = pvi.getParticleSubset();
+	// check if we have an particles on this patch
+	if(pset->numParticles() > 0){
+	  // now loop over the ParticleVariables and find it
+	  for(ParticleSubset::iterator iter = pset->begin();
+	      iter != pset->end(); iter++) {
+	    if (pvi[*iter] == particleID)
+	      return matl;
+	  }
+	}
+      }
+    }
+}
 /*
 
 void ParticleFieldExtractor::graph(string idx, string var)
@@ -395,11 +425,11 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   Mutex imutex("ParticleIds Mutex");
 
   // iterate over patches
-  for(Level::const_patchIterator r = level->patchesBegin();
-      r != level->patchesEnd(); r++ ){
+  for(Level::const_patchIterator patch = level->patchesBegin();
+      patch != level->patchesEnd(); patch++ ){
     sema->down();
     Thread *thrd =
-      new Thread( scinew PFEThread( this, archive, *r,  sp, vp, tp, pset,
+      new Thread( scinew PFEThread( this, archive, *patch,  sp, vp, tp, pset,
 			     scalar_type, have_sp, have_vp,
 			     have_tp, have_ids, sema,
 			     &smutex, &vmutex, &tmutex, &imutex),
@@ -444,7 +474,7 @@ void ParticleFieldExtractor::PFEThread::run(){
       continue;
     if (pfe->pvVar.get() != ""){
       have_vp = true;
-      archive.query(pvv, pfe->pvVar.get(), matl, r, pfe->time);	
+      archive.query(pvv, pfe->pvVar.get(), matl, patch, pfe->time);	
       if( !have_subset){
 	source_subset = pvv.getParticleSubset();
 	have_subset = true;
@@ -454,7 +484,7 @@ void ParticleFieldExtractor::PFEThread::run(){
       have_sp = true;
       switch (scalar_type) {
       case TypeDescription::double_type:
-	archive.query(pvs, pfe->psVar.get(), matl, r, pfe->time);
+	archive.query(pvs, pfe->psVar.get(), matl, patch, pfe->time);
 	if( !have_subset){
 	  source_subset = pvs.getParticleSubset();
 	  have_subset = true;
@@ -462,7 +492,7 @@ void ParticleFieldExtractor::PFEThread::run(){
 	break;
       case TypeDescription::int_type:
 	//cerr << "Getting data for ParticleVariable<int>\n";
-	archive.query(pvint, pfe->psVar.get(), matl, r, pfe->time);
+	archive.query(pvint, pfe->psVar.get(), matl, patch, pfe->time);
 	if( !have_subset){
 	  source_subset = pvi.getParticleSubset();
 	  have_subset = true;
@@ -473,19 +503,19 @@ void ParticleFieldExtractor::PFEThread::run(){
     }
     if (pfe->ptVar.get() != ""){
       have_tp = true;
-      archive.query(pvt, pfe->ptVar.get(), matl, r, pfe->time);
+      archive.query(pvt, pfe->ptVar.get(), matl, patch, pfe->time);
       if( !have_subset){
 	source_subset = pvt.getParticleSubset();
 	have_subset = true;
       }
     }
     if(pfe->positionName != "")
-      archive.query(pvp, pfe->positionName, matl, r, pfe->time);
+      archive.query(pvp, pfe->positionName, matl, patch, pfe->time);
 
     if(pfe->particleIDs != ""){
       cerr<<"paricleIDs = "<<pfe->particleIDs<<endl;
       have_ids = true;
-      archive.query(pvi, pfe->particleIDs, matl, r, pfe->time);
+      archive.query(pvi, pfe->particleIDs, matl, patch, pfe->time);
     }
 
     if( !have_subset )
@@ -545,7 +575,7 @@ void ParticleFieldExtractor::PFEThread::run(){
     }
   }
   imutex->lock();
-  pset->AddParticles( positions, ids, r);
+  pset->AddParticles( positions, ids, patch);
   imutex->unlock();
   if(have_sp) {
     smutex->lock();

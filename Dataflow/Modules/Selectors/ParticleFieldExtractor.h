@@ -138,8 +138,9 @@ private:
 		 VectorParticles*& vp,
 		 TensorParticles*& tp);
 
-  void addGraphingVars(long particleID, const list<VarInfo> &vars,
+  void addGraphingVars(long64 particleID, const list<VarInfo> &vars,
 		       string type);
+  int get_matl_from_particleID(long64 particleID);
    
   //  void graph(string varname, vector<string> mat_list, string particleID);
 
@@ -170,23 +171,23 @@ private:
   class  PFEThread : public Runnable
     {
     public:
-      PFEThread( ParticleFieldExtractor *pfe, DataArchive& archive, Patch *r,
-		 ScalarParticles*& sp, VectorParticles*& vp,
+      PFEThread( ParticleFieldExtractor *pfe, DataArchive& archive,
+		 Patch *patch, ScalarParticles*& sp, VectorParticles*& vp,
 		 TensorParticles*& tp, PSet* pset,
 		 int scalar_type, bool have_sp,
 		 bool have_vp, bool have_tp, bool have_ids,
 		 Semaphore *sema, Mutex *smutex,
 		 Mutex *vmutex, Mutex *tmutex, Mutex *imutex):
-	pfe(pfe), archive(archive), r(r), sp(sp), vp(vp), tp(tp), pset(pset),
-	scalar_type(scalar_type), have_sp(have_sp), have_vp(have_vp),
-	have_tp(have_tp), have_ids(have_ids), sema(sema), smutex(smutex),
-        vmutex(vmutex), tmutex(tmutex), imutex(imutex){}
+	pfe(pfe), archive(archive), patch(patch), sp(sp), vp(vp), tp(tp),
+	pset(pset), scalar_type(scalar_type), have_sp(have_sp),
+	have_vp(have_vp), have_tp(have_tp), have_ids(have_ids), sema(sema),
+	smutex(smutex), vmutex(vmutex), tmutex(tmutex), imutex(imutex){}
       
       void  run();
     private:
       ParticleFieldExtractor *pfe;
       DataArchive&  archive;
-      Patch *r;
+      Patch *patch;
       ScalarParticles*& sp;
       VectorParticles*& vp;
       TensorParticles*& tp;
