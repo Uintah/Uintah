@@ -11,9 +11,12 @@
 #include <map>
 #include <string>
 #include <iosfwd>
+#include <vector>
 #include <mpi.h>
 
+
 using std::string;
+using std::vector;
 
 namespace Uintah {
 
@@ -53,7 +56,7 @@ class ProcessorGroup;
 
 class OnDemandDataWarehouse : public DataWarehouse {
 public:
-   OnDemandDataWarehouse( const ProcessorGroup* myworld, int generation, 
+   OnDemandDataWarehouse( const ProcessorGroup* myworld, int generation,
 			  DataWarehouseP& parent);
    virtual ~OnDemandDataWarehouse();
    
@@ -140,7 +143,6 @@ public:
    virtual void put(const PerPatchBase&, const VarLabel*,
 				 int matIndex, const Patch*);
 
-   //////////
    // Remove particles that are no longer relevant
    virtual void deleteParticles(ParticleSubset* delset);
 
@@ -252,8 +254,10 @@ private:
 
 //
 // $Log$
-// Revision 1.34  2000/07/28 03:01:54  rawat
-// modified createDatawarehouse and added getTop()
+// Revision 1.35  2000/07/28 22:45:15  jas
+// particle relocation now uses separate var labels for each material.
+// Addd <iostream> for ReductionVariable.  Commented out protected: in
+// Scheduler class that preceeded scheduleParticleRelocation.
 //
 // Revision 1.33  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler

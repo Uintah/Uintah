@@ -9,6 +9,7 @@
 #include <Uintah/Grid/Task.h>
 #include <vector>
 #include <map>
+using std::vector;
 
 namespace Uintah {
    class Task;
@@ -70,15 +71,15 @@ WARNING
 					      DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw,
 					      const VarLabel* old_posLabel,
-					      const vector<const VarLabel*>& old_labels,
+					      const vector<vector<const VarLabel*> >& old_labels,
 					      const VarLabel* new_posLabel,
-					      const vector<const VarLabel*>& new_labels,
+					      const vector<vector<const VarLabel*> >& new_labels,
 					      int numMatls);
    private:
       const VarLabel* reloc_old_posLabel;
-      std::vector<const VarLabel*> reloc_old_labels;
+      vector<vector<const VarLabel*> > reloc_old_labels;
       const VarLabel* reloc_new_posLabel;
-      std::vector<const VarLabel*> reloc_new_labels;
+      vector<vector<const VarLabel*> > reloc_new_labels;
       int reloc_numMatls;
 
       void scatterParticles(const ProcessorGroup*,
@@ -102,6 +103,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/07/28 22:45:15  jas
+// particle relocation now uses separate var labels for each material.
+// Addd <iostream> for ReductionVariable.  Commented out protected: in
+// Scheduler class that preceeded scheduleParticleRelocation.
+//
 // Revision 1.5  2000/07/28 03:01:54  rawat
 // modified createDatawarehouse and added getTop()
 //

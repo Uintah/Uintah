@@ -10,6 +10,7 @@
 #include <Uintah/Grid/Reductions.h>
 
 #include <iosfwd>
+#include <iostream>
 using namespace std;
 
 namespace Uintah {
@@ -148,6 +149,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/07/28 22:45:16  jas
+// particle relocation now uses separate var labels for each material.
+// Addd <iostream> for ReductionVariable.  Commented out protected: in
+// Scheduler class that preceeded scheduleParticleRelocation.
+//
 // Revision 1.10  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support
