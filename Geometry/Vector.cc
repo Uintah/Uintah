@@ -16,18 +16,6 @@ clString Vector::string() const
 		+to_string(_z)+clString("]");
 }
 
-double Vector::normalize()
-{
-    ASSERTL4(!uninit);
-    double l2=_x*_x+_y*_y+_z*_z;
-    double l=Sqrt(l2);
-    ASSERT(l>0.0);
-    _x/=l;
-    _y/=l;
-    _z/=l;
-    return l;
-}
-
 void Vector::find_orthogonal(Vector& v1, Vector& v2) const
 {
     ASSERTL4(!uninit);
@@ -76,13 +64,4 @@ int
 Vector::operator== ( const Vector& v ) const
 {
     return v._x == _x && v._y == _y && v._z == _z;
-}
-
-int
-Vector::IsNull( )
-{
-  if ( length() < 1.e-5 )
-    return 1;
-  else
-    return 0;
 }

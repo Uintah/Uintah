@@ -37,9 +37,6 @@ public:
     // checks if one vector is exactly the same as another
     int operator==(const Vector&) const;
 
-    // checks if the vector is close to the (0,0,0) vector
-    int IsNull();
-    
     Vector operator*(const double) const;
     Vector& operator*=(const double);
     Vector operator/(const double) const;
@@ -48,7 +45,7 @@ public:
     Vector operator-() const;
     Vector operator-(const Vector&) const;
     Vector& operator-=(const Vector&);
-    double normalize();
+    inline double normalize();
     Vector normal() const;
     friend inline Vector Cross(const Vector&, const Vector&);
     friend inline Vector Abs(const Vector&);

@@ -217,3 +217,17 @@ inline double Dot(const Vector& v, const Point& p)
     ASSERTL4(!v.uninit && !p.uninit);
     return v._x*p._x+v._y*p._y+v._z*p._z;
 }
+
+inline
+double Vector::normalize()
+{
+    ASSERTL4(!uninit);
+    double l2=_x*_x+_y*_y+_z*_z;
+    double l=Sqrt(l2);
+    ASSERT(l>0.0);
+    _x/=l;
+    _y/=l;
+    _z/=l;
+    return l;
+}
+
