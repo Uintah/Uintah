@@ -1103,7 +1103,9 @@ void SerialMPM::crackGrow(const ProcessorGroup*,
    for(int m = 0; m < d_sharedState->getNumMatls(); m++){
       Material* matl = d_sharedState->getMaterial(m);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      mpm_matl->getFractureModel()->crackGrow(patch, mpm_matl, old_dw, new_dw);
+      if(mpm_matl->getFractureModel()) {
+        mpm_matl->getFractureModel()->crackGrow(patch, mpm_matl, old_dw, new_dw);
+      }
    }
 }
 
@@ -1753,6 +1755,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.130  2000/09/06 20:15:45  tan
+// Fixed bugs in crackGrow.
+//
 // Revision 1.129  2000/09/06 19:35:46  jas
 // Changed new to scinew and fixed a memory leak introduced by the fracture
 // stuff.
