@@ -31,10 +31,7 @@
 
 #include <stdio.h>
 #include <iostream>
-using std::cerr;
-using std::ostream;
 #include <sstream>
-using std::ostringstream;
 
 #include <tcl.h>
 #include <tk.h>
@@ -45,6 +42,10 @@ using std::ostringstream;
 
 #include <Core/Malloc/Allocator.h>
 
+using std::cerr;
+using std::endl;
+using std::ostream;
+using std::ostringstream;
 
 namespace SCIRun {
 
