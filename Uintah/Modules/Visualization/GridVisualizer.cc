@@ -36,6 +36,7 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/CrowdMonitor.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Datatypes/ArchivePort.h>
 #include <Uintah/Datatypes/Archive.h>
 #include <Uintah/Grid/GridP.h>
@@ -43,6 +44,9 @@
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h> // Must be included after Patch.h
+#include <Uintah/Grid/CellIterator.h> // Must be included after Patch.h
+//#include <Uintah/Grid/FaceIterator.h> // Must be included after Patch.h
+#include <Uintah/Grid/TypeDescription.h>
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -63,7 +67,11 @@ using namespace std;
 
 #define GRID_COLOR 1
 #define NODE_COLOR 2
- 
+  // should match the values in the tcl code
+#define NC_VAR 0
+#define CC_VAR 1
+#define FC_VAR 2
+  
 class GridVisualizer : public Module {
 public:
   GridVisualizer(const clString& id);
@@ -78,6 +86,11 @@ private:
   GridP getGrid();
   void setupColors();
   MaterialHandle getColor(clString color, int type);
+  void setVars(GridP grid);
+  void graph(string varname, string material, string index);
+  string vector_to_string(vector< double > data);
+  string vector_to_string(vector< Vector > data);
+  string vector_to_string(vector< Matrix3 > data);
   
   ArchiveIPort* in;
   GeometryOPort* ogeom;
@@ -98,8 +111,11 @@ private:
   TCLstring level6_node_color;
   TCLint plane_on; // the selection plane
   TCLint node_select_on; // the nodes
+  TCLint var_orientation; // whether node center or cell centered
   TCLdouble radius;
   TCLint polygons;
+  TCLint nl;
+  TCLstring curr_var;
   
   CrowdMonitor widget_lock;
   FrameWidget *widget2d;
@@ -110,6 +126,13 @@ private:
   int need_2d;
   vector<int> old_id_list;
   vector<int> id_list;
+
+  IntVector currentNode;
+  vector< string > names;
+  vector< double > times;
+  vector< const TypeDescription *> types;
+  double time;
+  DataArchive* archive;
 };
 
 static clString widget_name("GridVisualizer Widget");
@@ -134,9 +157,13 @@ GridVisualizer::GridVisualizer(const clString& id)
   level6_node_color("level6_node_color",id, this),
   plane_on("plane_on",id,this),
   node_select_on("node_select_on",id,this),
+  var_orientation("var_orientation",id,this),
   radius("radius",id,this),
   polygons("polygons",id,this),
-  widget_lock("GridVusualizer widget lock")
+  nl("nl",id,this),
+  curr_var("curr_var",id,this),
+  widget_lock("GridVusualizer widget lock"),
+  init(1), need_2d(1)
 {
 
   // Create the input port
@@ -150,8 +177,6 @@ GridVisualizer::GridVisualizer(const clString& id)
 
   float INIT(0.1);
   widget2d = scinew FrameWidget(this, &widget_lock, INIT);
-  init = 1;
-  need_2d = 1;
 }
 
 GridVisualizer::~GridVisualizer()
@@ -168,11 +193,13 @@ GridP GridVisualizer::getGrid()
   }
 
   // access the grid through the handle and dataArchive
-  DataArchive& dataArchive = *((*(handle.get_rep()))());
-  vector< double > times;
+  archive = (*(handle.get_rep()))();
   vector< int > indices;
-  dataArchive.queryTimesteps( indices, times );
-  GridP grid = dataArchive.queryGrid(times[0]);
+  times.clear();
+  archive->queryTimesteps( indices, times );
+  int timestep = (*(handle.get_rep())).timestep();
+  time = times[timestep];
+  GridP grid = archive->queryGrid(time);
 
   return grid;
 }
@@ -251,6 +278,52 @@ MaterialHandle GridVisualizer::getColor(clString color, int type) {
 			   Color(.5,.5,.5), 20);
 }
 
+void GridVisualizer::setVars(GridP grid) {
+  names.clear();
+  types.clear();
+  archive->queryVariables(names, types);
+
+  string varNames("");
+  string matls("");
+  const Patch* patch = *(grid->getLevel(0)->patchesBegin());
+  
+  for(int i = 0; i< names.size(); i++) {
+    switch (types[i]->getType()) {
+    case TypeDescription::NCVariable:
+      if (var_orientation.get() == NC_VAR) {
+	varNames += " ";
+	varNames += names[i];
+	ostringstream mat;
+	mat << " " << archive->queryNumMaterials(names[i], patch, time);
+	matls += mat.str();
+      }
+      break;
+    case TypeDescription::CCVariable:
+      if (var_orientation.get() == CC_VAR) {
+	varNames += " ";
+	varNames += names[i];
+	ostringstream mat;
+	mat << " " << archive->queryNumMaterials(names[i], patch, time);
+	matls += mat.str();
+      }
+      break;
+    case TypeDescription::FCVariable:
+      if (var_orientation.get() == FC_VAR) {
+	varNames += " ";
+	varNames += names[i];
+	ostringstream mat;
+	mat << " " << archive->queryNumMaterials(names[i], patch, time);
+	matls += mat.str();
+      }
+      break;
+    }
+  }
+
+  cerr << "varNames = " << varNames << endl;
+  TCL::execute(id + " setVar_list " + varNames.c_str());
+  TCL::execute(id + " setMat_list " + matls.c_str());  
+}
+
 void GridVisualizer::execute()
 {
 
@@ -269,8 +342,19 @@ void GridVisualizer::execute()
     return;
   int numLevels = grid->numLevels();
 
-  // setup the colors
+  // setup the tickle stuff
   setupColors();
+  nl.set(numLevels);
+  setVars(grid);
+  clString visible;
+  TCL::eval(id + " isVisible", visible);
+  if ( visible == "1") {
+    TCL::execute(id + " destroyFrames");
+    TCL::execute(id + " build");
+
+    TCL::execute("update idletasks");
+    reset_vars();
+  }
   
   // setup widget
   cerr << "\t\tStarting widget stuff\n";
@@ -394,21 +478,46 @@ void GridVisualizer::execute()
       Box box = patch->getBox();
       addBoxGeometry(edges, box);
 
-      //------------------------------------
-      // for each node in the patch
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	nodes->add(patch->nodePosition(*iter), node_color[color_index]->diffuse);
-      }
-
-      //------------------------------------
-      // for each node in the patch that intersects the widget space
-      if(node_on) {
-	cerr << "\t\tradius = " << rad << "  nu= " << nu << "  nv= " << nv << endl;
-	cerr << "\t\tStarting sphere node iterations\n";
-	for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
-	  spheres->add(scinew GeomSphere(patch->nodePosition(*iter),rad,nu,nv,*iter));
+      switch (var_orientation.get()) {
+      case NC_VAR:
+	//------------------------------------
+	// for each node in the patch
+	for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
+	  nodes->add(patch->nodePosition(*iter),
+		     node_color[color_index]->diffuse);
 	}
-	cerr << "\t\tEnding sphere node iterations\n";
+	
+	//------------------------------------
+	// for each node in the patch that intersects the widget space
+	if(node_on) {
+	  for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
+	    spheres->add(scinew GeomSphere(patch->nodePosition(*iter),
+					   rad,nu,nv,*iter));
+	  }
+	}
+	break;
+
+      case CC_VAR:
+	//------------------------------------
+	// for each node in the patch
+	for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+	  nodes->add(patch->cellPosition(*iter),
+		     node_color[color_index]->diffuse);
+	}
+	
+	//------------------------------------
+	// for each node in the patch that intersects the widget space
+	if(node_on) {
+	  for(CellIterator iter = patch->getCellIterator(widget_box); !iter.done(); iter++){
+	    spheres->add(scinew GeomSphere(patch->cellPosition(*iter),
+					   rad,nu,nv,*iter));
+	  }
+	}
+	break;
+	
+      case FC_VAR:
+	// not implemented
+	break;
       }
     }
 
@@ -459,10 +568,97 @@ void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
     need_2d=3;
     want_to_execute();
   }
+  else if(args[1] == "graph") {
+    string varname(args[2]());
+    string matl(args[3]());
+    string index(args[4]());
+    cerr << "Graphing " << varname << " with material " << matl << endl;
+    graph(varname,matl,index);
+  }
   else {
     Module::tcl_command(args, userdata);
   }
 }
+
+string GridVisualizer::vector_to_string(vector< double > data) {
+  ostringstream ostr;
+  for(int i = 0; i < data.size(); i++) {
+      ostr << i << " " << data[i]  << " ";
+    }
+  return ostr.str();
+}
+
+string GridVisualizer::vector_to_string(vector< Vector > data) {
+  ostringstream ostr;
+  for(int i = 0; i < data.size(); i++) {
+      ostr << i << " " << data[i].length2() << " ";
+    }
+  return ostr.str();
+}
+
+string GridVisualizer::vector_to_string(vector< Matrix3 > data) {
+  ostringstream ostr;
+  for(int i = 0; i < data.size(); i++) {
+      ostr << i << " " << data[i].Norm() << " ";
+    }
+  return ostr.str();
+}
+
+void GridVisualizer::graph(string varname, string material, string index) {
+
+  /*
+    template<class T>
+    void query(std::vector<T>& values, const std::string& name, int matlIndex,
+               IntVector loc, double startTime, double endTime);
+  */
+  // archive->query(value, varname, material, currentNode, times[0], times[times.size()-1]);
+
+  // determine type
+  const TypeDescription *td;
+  for(int i = 0; i < names.size() ; i++)
+    if (names[i] == varname)
+      td = types[i];
+  
+  vector< double > valuesd;
+  vector< Vector > valuesv;
+  vector< Matrix3 > valuesm;
+  vector< Point > valuesp;
+  int matl = atoi(material.c_str());
+  const TypeDescription* subtype = td->getSubType();
+  switch ( subtype->getType() ) {
+  case TypeDescription::double_type:
+    cerr << "Graphing a double\n";
+    archive->query(valuesd, varname, matl, currentNode, times[0], times[times.size()-1]);
+    cerr << "Received data.  Size of data = " << valuesd.size() << endl;
+    TCL::execute(id + " graph_data " + index.c_str() + material.c_str() + " " +
+		 varname.c_str()+" "+vector_to_string(valuesd).c_str());
+    break;
+  case TypeDescription::Vector:
+    cerr << "Graphing a Vector\n";
+    archive->query(valuesv, varname, matl, currentNode, times[0], times[times.size()-1]);
+    cerr << "Received data.  Size of data = " << valuesv.size() << endl;
+    TCL::execute(id + " graph_data " + index.c_str() + material.c_str() + " " +
+		 varname.c_str()+" "+vector_to_string(valuesv).c_str());
+    break;
+  case TypeDescription::Matrix3:
+    cerr << "Graphing a Matrix3\n";
+    archive->query(valuesm, varname, matl, currentNode, times[0], times[times.size()-1]);
+    cerr << "Received data.  Size of data = " << valuesm.size() << endl;
+    TCL::execute(id + " graph_data " + index.c_str() + material.c_str() + " " +
+		 varname.c_str()+" "+vector_to_string(valuesm).c_str());
+    break;
+  case TypeDescription::Point:
+    cerr << "Error trying to graph a Point.  No valid representation for Points for 2d graph.\n";
+    //archive->query(valuesp, varname, matl, currentNode, times[0], times[times.size()-1]);
+    //cerr << "Received data.  Size of data = " << valuesp.size() << endl;
+    break;
+  default:
+    cerr<<"Unknown var type\n";
+  }// else { Tensor,Other}
+  
+}
+
+
 
 // if a pick event was received extract the id from the picked
 void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) {
@@ -472,8 +668,10 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   cerr << "User data = " << userdata << endl;
 #endif
   IntVector id;
-  if ( picked->getId( id ) )
+  if ( picked->getId( id ) ) {
     cerr<<"Id = "<< id <<endl;
+    currentNode = id;
+  }
   else
     cerr<<"Not getting the correct data\n";
 }
@@ -483,6 +681,10 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.4  2000/08/22 19:14:47  bigler
+// Added graphing of NCvar and CCvar variables accross time for selected node.
+// Can now also visualize cell centers.
+//
 // Revision 1.3  2000/08/14 17:29:04  bigler
 // Added node selectability
 //
