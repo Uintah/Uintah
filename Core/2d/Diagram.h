@@ -37,6 +37,8 @@
 #include <Core/2d/Widget.h>
 #include <stack>
 
+using std::stack;
+
 namespace SCIRun {
   
 class Polyline;
@@ -50,7 +52,7 @@ private:
   Array1<Polyline *> poly_;
   Array1<Widget *> widget_;
 
-  stack< int > zoom_stack_;
+  stack<int> zoom_stack_;
   BBox2d graphs_bounds_;
   string window_;
   int selected_;

@@ -20,12 +20,13 @@
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCL.h>
 
+#include <iostream>
 namespace SCIRun {
 
+  using std::cerr;
+  
 extern "C" Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
-
-
 
 OpenGLWindow::OpenGLWindow()
   : TclObj( "OpenGLWindow")

@@ -11,7 +11,7 @@
 #include <math.h>
 
 extern "C" {
-#include </usr/local/include/unuran.h>
+#include <unuran.h>
 
 #include <cvode/llnltyps.h>
 #include <cvode/cvode.h>
@@ -258,16 +258,17 @@ void Metropolis::metropolis()
 {
   // init Cholesky of proposal distribution covariance matrix
 
-  double A[nparms][nparms];
+  //double A[nparms][nparms];
 
+  Array2 <double> A(nparms,nparms);
   for (int i=0; i<nparms; i++) 
     for (int j=0; j<nparms; j++) 
-      A[i][j] = pd->sigma(i,j);
+      A(i,j) = pd->sigma(i,j);
   
   int info;
 
   char cmd = 'L';  // 'L' if fortran means 'U' in C
-  dpotrf_( cmd, nparms, (double *)A, nparms, info ); 
+  dpotrf_( cmd, nparms, (double *)A.get_dataptr(), nparms, info ); 
   if ( info != 0 ) {
     cerr << "Cholesky factorization error = " << info << endl;
     return;
@@ -277,9 +278,9 @@ void Metropolis::metropolis()
 
   double k2 = sqrt(kappa);
   for (int i=0; i<nparms; i++) {
-    lkappa(i,i) = A[i][i]*k2;
+    lkappa(i,i) = A(i,i)*k2;
     for (int j=i+1; j<nparms; j++) {
-      lkappa(j,i) = A[i][j]*k2;
+      lkappa(j,i) = A(i,j)*k2;
       lkappa(i,j) = 0;
     }
   }
@@ -326,7 +327,7 @@ void Metropolis::metropolis()
     
     // 
     if ( k > gui_burning.get()  
-	 && fmod(k-gui_burning.get(), gui_thin.get() ) == 0 ) 
+	 && fmod((double) k-gui_burning.get(), gui_thin.get() ) == 0 ) 
     {
       results->k_.add(k) ;
 
@@ -353,8 +354,8 @@ void Metropolis::metropolis()
 
 void Metropolis::pdsim( double theta[], double star[] )
 {
-  double r[nparms];
-
+  //double r[nparms];
+  Array1 <double> r(nparms);
   //   fscanf( rlog, "%lf %lf %lf %lf %lf", 
   // 	  &r[0], &r[1], &r[2], &r[3], &r[4] );
 
@@ -404,8 +405,11 @@ double
 Metropolis::loglike( double theta[] )
 {
   int neq = n_observations;
-  double ym1[neq];
-  double ym2[neq];
+  //double ym1[neq];
+  //double ym2[neq];
+
+  Array1 <double> ym1(neq);
+  Array1 <double> ym2(neq);
   double ymi[100];
   double dt = exp(theta[4]);
   

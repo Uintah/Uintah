@@ -34,6 +34,8 @@
 #include <string>
 #include <typeinfo>
 
+using std::string;
+
 namespace SCIRun {
   
 class PartInterface;

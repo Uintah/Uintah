@@ -29,11 +29,12 @@
  */
 
 #include <Packages/MIT/Dataflow/Modules/Metropolis/SamplerGui.h>
+#include <iostream>
 
 namespace MIT {
 
 using namespace SCIRun;
-
+using namespace std;
 
 SamplerGui::SamplerGui( const string &name, const string &script)
   : PartGui( name, script )

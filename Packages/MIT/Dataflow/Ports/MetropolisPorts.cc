@@ -55,6 +55,12 @@ PSECORESHARE OPort* make_ResultsOPort(Module* module, const string& name) {
 }
 }
 
+} // End namespace MIT
+
+namespace SCIRun {
+
+  using namespace MIT;
+  
 template<> string SimpleIPort<MeasurementsHandle>::port_type("Measurements");
 template<> string SimpleIPort<MeasurementsHandle>::port_color("yellow");
 
@@ -64,4 +70,4 @@ template<> string SimpleIPort<DistributionHandle>::port_color("green");
 template<> string SimpleIPort<ResultsHandle>::port_type("Results");
 template<> string SimpleIPort<ResultsHandle>::port_color("white");
 
-} // End namespace MIT
+} // End namespace SCIRun

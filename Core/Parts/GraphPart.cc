@@ -31,9 +31,14 @@
 #include <iostream>
 #include <typeinfo>
 #include <Core/Parts/GraphPart.h>
+#include <vector>
 
 namespace SCIRun {
   
+using std::vector;
+using std::cerr;
+using std::endl;
+
 GraphPart::GraphPart( PartInterface *parent, const string &name, 
 		      bool initialize) : 
   Part( parent, name, this ), 

@@ -30,9 +30,15 @@
 #include <Packages/MIT/Dataflow/Ports/MetropolisPorts.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 
+namespace SCIRun {
+
+using namespace MIT;
+template class GenericReader<ResultsHandle>;
+
+}
+
 namespace MIT {
 
-template class GenericReader<ResultsHandle>;
 
 class MetropolisReader : public GenericReader<ResultsHandle> {
 public:

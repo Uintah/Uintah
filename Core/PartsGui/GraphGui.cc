@@ -28,6 +28,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <iostream>
 #include <Core/2d/LockedPolyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Graph.h>
@@ -37,6 +38,8 @@
 #include <Core/PartsGui/GraphGui.h>
 
 namespace SCIRun {
+
+  using std::cerr;
 
 GraphGui::GraphGui( const string &name, const string &script)
   : PartGui( name, script )
