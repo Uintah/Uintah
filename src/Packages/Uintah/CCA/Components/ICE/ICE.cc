@@ -45,7 +45,7 @@ static int iterNum = 0;
 #define oldStyle_setBC 1
 #define newStyle_setBC 0
 #define setBC_FC 1
-#define setBC_FC_John 1
+#define setBC_FC_John 0
  /*==========TESTING==========`*/
 //#define ANNULUSICE
 #undef ANNULUSICE
@@ -765,6 +765,16 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 			     DataWarehouse*, 
                           DataWarehouse* new_dw)
 {
+#ifdef DOING
+ //__________________________________
+ //  dump patch limits to screen
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout<< "patch: "<<patch->getID()<<
+          patch->getCellLowIndex()  << 
+          patch->getCellHighIndex() << endl;
+  }
+#endif
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -816,20 +826,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
-#if 0
-      cerr << "Before BC application" << endl;
-      char description[50];
-      sprintf(description, "Initialization_Mat_patch_%d ", patch->getID());
-      printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
-#endif
-
       setBC(rho_top_cycle[m], "Density",      patch, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, indx);
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
-#if 0
-      cerr << "After BC application" << endl;
-      printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
-#endif
 
       //__________________________________
       //  Adjust pressure and Temp field if g != 0
@@ -1643,7 +1642,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       }
       #endif
       // Turn off the old way if setBC_FC_John is turned on.
-      #if 0
+      #if 1
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
@@ -1798,7 +1797,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //__________________________________
         //   Contributions from reactions
         //   to be filled in Be very careful with units
-        term1[*iter] += burnedMass[*iter]/(rho_micro_CC[m][*iter] * vol);
+        term1[*iter] += (burnedMass[*iter]/delT)/(rho_micro_CC[m][*iter] * vol);
 
         //__________________________________
         //   Divergence of velocity * face area
@@ -2276,7 +2275,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }
 
       new_dw->put(int_eng_source,lb->int_eng_source_CCLabel,indx,patch);
-    }
+    }  // matl loop
   }  // patch loop
 }
 
@@ -3059,25 +3058,17 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
     } else
       continue;
 
-    IntVector offset(1,0,0);  // so you hit the inside walls of the domain
+    IntVector offset(0,0,0);
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") {
-	if (comp == "x")
-	  variable.fillFace(face,new_bcs->getValue().x(),offset);
-	if (comp == "y")
-	  variable.fillFace(face,new_bcs->getValue().y());
-	if (comp == "z")
-	  variable.fillFace(face,new_bcs->getValue().z());
+	 if (comp == "x")
+	   variable.fillFace(patch, face,new_bcs->getValue().x(),offset);
       }
 
       
       if (new_bcs->getKind() == "Neumann") {
-	if (comp == "x")
-	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx,offset);
-	if (comp == "y")
-	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
-	if (comp == "z")
-	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx);
+	 if (comp == "x")
+	   variable.fillFaceFlux(patch, face,new_bcs->getValue().x(),dx,offset);
       }
     }
   }
@@ -3100,24 +3091,16 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
     } else
       continue;
  
-    IntVector offset(0,1,0);  // so you hit the inside walls of the domain
+    IntVector offset(0,0,0);
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") {
-	if (comp == "x")
-	  variable.fillFace(face,new_bcs->getValue().x());
-	if (comp == "y")
-	  variable.fillFace(face,new_bcs->getValue().y(),offset);
-	if (comp == "z")
-	  variable.fillFace(face,new_bcs->getValue().z());
+        if (comp == "y")
+	   variable.fillFace(patch, face,new_bcs->getValue().y(),offset);
       }
  
       if (new_bcs->getKind() == "Neumann") {
-	if (comp == "x")
-	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx);
-	if (comp == "y")
-	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx, offset);
-	if (comp == "z")
-	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx);
+	 if (comp == "y")
+	  variable.fillFaceFlux(patch, face,new_bcs->getValue().y(),dx, offset);
       }
     }
   }
@@ -3140,25 +3123,17 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
     } else
       continue;
 
-    IntVector offset(0,0,1);  // so you hit the inside walls of the domain
+    IntVector offset(0,0,0);
     if (new_bcs != 0) {
-      if (new_bcs->getKind() == "Dirichlet") {
-	if (comp == "x")
-	  variable.fillFace(face,new_bcs->getValue().x());
-	if (comp == "y")
-	  variable.fillFace(face,new_bcs->getValue().y());
-	if (comp == "z")
-	  variable.fillFace(face,new_bcs->getValue().z(),offset);
+      if (new_bcs->getKind() == "Dirichlet") {                         
+        if (comp == "z")
+	  variable.fillFace(patch, face,new_bcs->getValue().z(),offset);
       }
 
       
       if (new_bcs->getKind() == "Neumann") {
-	if (comp == "x")
-	  variable.fillFaceFlux(face,new_bcs->getValue().x(),dx);
-	if (comp == "y")
-	  variable.fillFaceFlux(face,new_bcs->getValue().y(),dx);
-	if (comp == "z")
-	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx,offset);
+	 if (comp == "z")
+	   variable.fillFaceFlux(patch, face,new_bcs->getValue().z(),dx,offset);
       }
     }
   }
@@ -3187,7 +3162,7 @@ void ICE::setBC(SFCXVariable<Vector>& variable, const  string& kind,
 
     if (sym_bcs != 0) {
       // First set the Neumann conditions for the non-normal faces
-      variable.fillFaceFlux(face,Vector(0.,0.,0.),dx,offset);
+      variable.fillFaceFlux(patch, face,Vector(0.,0.,0.),dx,offset);
       // Then zero out the component that is normal to the face, the
       // Neumann conditions will be retained.
       variable.fillFaceNormal(face,offset);
@@ -3195,10 +3170,10 @@ void ICE::setBC(SFCXVariable<Vector>& variable, const  string& kind,
       
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") 
-	variable.fillFace(face,new_bcs->getValue(),offset);
+	variable.fillFace(patch,face,new_bcs->getValue(),offset);
             
       if (new_bcs->getKind() == "Neumann") 
-	variable.fillFaceFlux(face,new_bcs->getValue(),dx,offset);
+	variable.fillFaceFlux(patch,face,new_bcs->getValue(),dx,offset);
 	
     }
   }
