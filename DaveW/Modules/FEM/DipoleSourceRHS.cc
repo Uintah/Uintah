@@ -86,8 +86,8 @@ void DipoleSourceRHS::execute()
      if ((!isource->get(mh) || !(mp=mh.get_rep())) &&
 	 (!isrcmat->get(mmh) || !(mmp=mmh.get_rep()))) return; 
      
-     if ((mp && mp->nrows()<6) || (mmp && mmp->nrows()<6)) {
-       cerr << "Error - dipole source must have at least six rows\n";
+     if ((mp && mp->nrows()<6) || (mmp && mmp->ncols()<6)) {
+       cerr << "Error - every dipole source must have at least six terms\n";
        return;
      }
 
@@ -192,6 +192,9 @@ void DipoleSourceRHS::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/10/31 00:43:37  dmw
+// fixed matrix-of-dipoles bug
+//
 // Revision 1.7  2000/10/17 15:38:37  dmw
 // Can now take a matrix of dipoles
 //
