@@ -287,6 +287,7 @@ public:
   bool d_stationarySolid;
   bool d_inviscid;
   bool d_restart;
+  bool fixCellType;
 
   enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};
