@@ -31,55 +31,63 @@ itcl::class SCIRun_DataIO_FieldReader {
 	set name FieldReader
     }
 
-    method ui {} {
-	global env
-	set w .ui[modname]
+    method ui {} 
+    method report {}
+}
 
-	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return;
-	}
-
-	toplevel $w
-	set initdir ""
+body SCIRun_DataIO_FieldReader::ui {} {
+    global env
+    set w .ui[modname]
+    
+    if {[winfo exists $w]} {
+	set child [lindex [winfo children $w] 0]
 	
-	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	
-	if {[info exists env(SCIRUN_DATA)]} {
-	    set initdir $env(SCIRUN_DATA)
-	} elseif {[info exists env(SCI_DATA)]} {
-	    set initdir $env(SCI_DATA)
-	} elseif {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
-	
-	#######################################################
-	# to be modified for particular reader
-
-	# extansion to append if no extension supplied by user
-	set defext ".fld"
-	set title "Open field file"
-	
-	# file types to appers in filter box
-	set types {
-	    {{Field File}     {.fld}      }
-	    {{All Files} {.*}   }
-	}
-	
-	######################################################
-	
-	makeOpenFilebox \
-	    -parent $w \
-	    -filevar [scope filename] \
-	    -command "$this-c needexecute; destroy $w" \
-	    -cancel "destroy $w" \
-	    -title $title \
-	    -filetypes $types \
-	    -initialdir $initdir \
-	    -defaultextension $defext
+	# $w withdrawn by $child's procedures
+	raise $child
+	return;
     }
+    
+    toplevel $w
+    set initdir ""
+    
+    # place to put preferred data directory
+    # it's used if $this-filename is empty
+    
+    if {[info exists env(SCIRUN_DATA)]} {
+	set initdir $env(SCIRUN_DATA)
+    } elseif {[info exists env(SCI_DATA)]} {
+	set initdir $env(SCI_DATA)
+    } elseif {[info exists env(PSE_DATA)]} {
+	set initdir $env(PSE_DATA)
+    }
+    
+    #######################################################
+    # to be modified for particular reader
+
+    # extansion to append if no extension supplied by user
+    set defext ".fld"
+    set title "Open field file"
+    
+    # file types to appers in filter box
+    set types {
+	{{Field File}     {.fld}      }
+	{{All Files} {.*}   }
+    }
+    
+    ######################################################
+    
+    makeOpenFilebox \
+	-parent $w \
+	-filevar [scope filename] \
+	-command "$this report; destroy $w" \
+	-cancel "destroy $w" \
+	-title $title \
+	-filetypes $types \
+	-initialdir $initdir \
+	-defaultextension $defext
+}
+
+body SCIRun_DataIO_FieldReader::report {} {
+    var-set filename $filename
+    $this-c needexecute
 }
