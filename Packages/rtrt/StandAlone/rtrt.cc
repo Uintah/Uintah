@@ -4,6 +4,7 @@
  */
 
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/BV2.h>
@@ -28,6 +29,7 @@ using namespace std;
 //static int nworkers=1;
 
 using SCIRun::Thread;
+using SCIRun::ThreadGroup;
 
 static void usage(char* progname)
 {
@@ -354,12 +356,15 @@ int main(int argc, char* argv[])
   }
   
   scene->logframes=logframes;
-  
+
+  //  ThreadGroup *group = new ThreadGroup("rtrt group");
+
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1,1.0,1.0,do_frameless==true);
   /* <<<< bigler >>>> */
   new Thread(dpy, "Display thread");
+  //new Thread(dpy, "Display thread", group);
 #if 0
   Dpy* dpy2=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1,1.0,1.0,do_frameless==true);
@@ -372,15 +377,19 @@ int main(int argc, char* argv[])
     sprintf(buf, "worker %d", i);
 #if 0
     new Thread(new Worker(dpy, scene, i,
-			     pp_size, scratchsize,
-			     ncounters, c0, c1), buf);
+			  pp_size, scratchsize,
+			  ncounters, c0, c1), buf);
 #endif
 #if 1
     new Thread(new Worker(dpy, scene, i,
-			     pp_size, scratchsize,
-			     ncounters, c0, c1), buf);
+			  pp_size, scratchsize,
+			  ncounters, c0, c1), buf);
+    //			     ncounters, c0, c1), buf, group);
 #endif
   }
+
+  //  group->join();
+  //  cout << "Threads exited" << endl;
   
 }
 
