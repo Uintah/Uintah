@@ -41,16 +41,25 @@
 #include <Core/Datatypes/NrrdString.h>
 #include <Core/Exceptions/Exception.h>
 
+#include <sci_defs/config_defs.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#include <fcntl.h>
+#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <string>
+#include <map>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 
 
 #include <stdio.h>
 
 using namespace SCIRun;
+using namespace std;
 
 namespace CardioWave {
 
@@ -114,10 +123,13 @@ class TimeDataFile {
     int         elemsize;
     int         ntype;
     int         dimension;
+    std::map<std::string,std::string> keyvalue;
+    
     
     bool        swapbytes;
     
     FILE*        datafile;
+    int          datafile_uni;
     
   };
   
