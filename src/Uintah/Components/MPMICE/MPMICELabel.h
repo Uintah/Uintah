@@ -18,6 +18,7 @@ namespace Uintah {
       const VarLabel* cMomentumLabel;
       const VarLabel* cVelocityMELabel;
       const VarLabel* cMassLabel;
+      const VarLabel* cVolumeLabel;
 
       const VarLabel* fVelocityLabel;
       const VarLabel* fMassLabel;
@@ -27,6 +28,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.3  2001/01/14 02:30:01  guilkey
+// CC momentum exchange now works from solid to fluid, still need to
+// add fluid to solid effects.
+//
 // Revision 1.2  2001/01/11 20:11:16  guilkey
 // Working on getting momentum exchange to work.  It doesnt' yet.
 //

@@ -18,15 +18,22 @@ MPMICELabel::MPMICELabel()
 			CCVariable<Vector>::getTypeDescription() );
   cMassLabel = scinew VarLabel( "c.mass",
 			CCVariable<double>::getTypeDescription() );
+  cVolumeLabel = scinew VarLabel( "c.volume",
+			CCVariable<double>::getTypeDescription() );
 } 
 
 MPMICELabel::~MPMICELabel()
 {
   delete cMomentumLabel;
   delete cMassLabel;
+  delete cVolumeLabel;
 }
 
 // $Log$
+// Revision 1.3  2001/01/14 02:30:01  guilkey
+// CC momentum exchange now works from solid to fluid, still need to
+// add fluid to solid effects.
+//
 // Revision 1.2  2001/01/11 20:11:16  guilkey
 // Working on getting momentum exchange to work.  It doesnt' yet.
 //
