@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <string>
+#include <values.h>
 
 using namespace Uintah;
 
