@@ -272,11 +272,84 @@ StructQuadSurfMesh::locate(Cell::index_type &loc, const Point &) const
   return false;
 }
 
+
+static double
+tri_area(const Point &a, const Point &b, const Point &c)
+{
+  return Cross(b-a, c-a).length();
+}
+
+
 void
 StructQuadSurfMesh::get_weights(const Point &p,
-				Node::array_type &locs, vector<double> &weights)
+				Node::array_type &locs, vector<double> &w)
 {
-  ASSERTFAIL("get_weights for nodes not implemented in StructQuadSurfMesh");
+  Face::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(locs, idx);
+    const Point &p0 = point(locs[0]);
+    const Point &p1 = point(locs[1]);
+    const Point &p2 = point(locs[2]);
+    const Point &p3 = point(locs[3]);
+
+    w.resize(4);
+    const double a0 = tri_area(p, p0, p1);
+    if (a0 < 1.0e-6)
+    {
+      const Vector v0 = p0 - p1;
+      const Vector v1 = p - p1;
+      w[0] = Dot(v0, v1) / Dot(v0, v0);
+      w[1] = 1.0 - w[0];
+      w[2] = 0.0;
+      w[3] = 0.0;
+      return;
+    }
+    const double a1 = tri_area(p, p1, p2);
+    if (a1 < 1.0e-6)
+    {
+      const Vector v0 = p1 - p2;
+      const Vector v1 = p - p2;
+      w[0] = 0.0;
+      w[1] = Dot(v0, v1) / Dot(v0, v0);
+      w[2] = 1.0 - w[1];
+      w[3] = 0.0;
+      return;
+    }
+    const double a2 = tri_area(p, p2, p3);
+    if (a2 < 1.0e-6)
+    {
+      const Vector v0 = p2 - p3;
+      const Vector v1 = p - p3;
+      w[0] = 0.0;
+      w[1] = 0.0;
+      w[2] = Dot(v0, v1) / Dot(v0, v0);
+      w[3] = 1.0 - w[2];
+      return;
+    }
+    const double a3 = tri_area(p, p3, p0);
+    if (a3 < 1.0e-6)
+    {
+      const Vector v0 = p3 - p0;
+      const Vector v1 = p - p0;
+      w[1] = 0.0;
+      w[2] = 0.0;
+      w[3] = Dot(v0, v1) / Dot(v0, v0);
+      w[0] = 1.0 - w[3];
+      return;
+    }
+
+    w[0] = tri_area(p0, p1, p2) / (a0 * a3);
+    w[1] = tri_area(p1, p2, p0) / (a1 * a0);
+    w[2] = tri_area(p2, p3, p1) / (a2 * a1);
+    w[3] = tri_area(p3, p0, p2) / (a3 * a2);
+
+    const double suminv = 1.0 / (w[0] + w[1] + w[2] + w[3]);
+    w[0] *= suminv;
+    w[1] *= suminv;
+    w[2] *= suminv;
+    w[3] *= suminv;
+  }
 }
 
 void
