@@ -48,7 +48,6 @@
 #include <iostream>
 #include <qiconset.h> 
 #include <qtoolbutton.h> 
-#include "/home/sci/kzhang/SCIRun/src/CCA/Components/Hello/Hello.h"
 
 
 using namespace std;
