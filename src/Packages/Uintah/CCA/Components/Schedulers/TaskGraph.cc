@@ -377,7 +377,8 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	}
       }
       if(count == 0 && (!req->matls || req->matls->size() > 0) 
-	 && (!req->patches || req->patches->size() > 0)){
+	 && (!req->patches || req->patches->size() > 0) &&
+	     !task->getTask()->assumesDataInNewDW()){
 	if(req->patches){
 	  cerr << req->patches->size() << "Patches: ";
 	  for(int i=0;i<req->patches->size();i++)
