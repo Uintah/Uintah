@@ -69,6 +69,8 @@ parse_lin_vec_data(ifstream &nodal_in, vector<Vector> &data_vals,
     for (int j=0; j<3; j++) 
       nodal_in >> x[j];
 
+    if (nodal_in.eof()) break;
+
     double f[3];
     for (int j=0; j<3; j++) 
       nodal_in >> f[j];
@@ -81,7 +83,34 @@ parse_lin_vec_data(ifstream &nodal_in, vector<Vector> &data_vals,
     nodal_in >> label >> n;
     hvm->add_point(Point(x[0],x[1],x[2]));
   }
-  cerr << "done adding " << npts << " points." << endl;
+  cerr << "done adding " << npts - 1 << " points." << endl;
+  return npts;
+}
+
+int
+parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals, 
+		      HexVolMesh *hvm) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+    int node_index;
+    nodal_in >> node_index;
+    double x[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> x[j];
+
+    if (nodal_in.eof()) break;
+    // 2nd order tensor
+    double eff;
+    nodal_in >> eff;
+    
+    //make a scalar field out of this for now.
+
+    data_vals.push_back(eff);
+    hvm->add_point(Point(x[0],x[1],x[2]));
+  }
+  cerr << "done adding " << npts - 1 << " points." << endl;
   return npts;
 }
 
@@ -98,6 +127,7 @@ parse_lin_strain_data(ifstream &nodal_in, vector<double> &data_vals,
     for (int j=0; j<3; j++) 
       nodal_in >> x[j];
 
+    if (nodal_in.eof()) break;
     // 2nd order tensor
     double t[6];
     for (int j=0; j<6; j++) 
@@ -113,7 +143,7 @@ parse_lin_strain_data(ifstream &nodal_in, vector<double> &data_vals,
     data_vals.push_back(t[0]);
     hvm->add_point(Point(x[0],x[1],x[2]));
   }
-  cerr << "done adding " << npts << " points." << endl;
+  cerr << "done adding " << npts - 1 << " points." << endl;
   return npts;
 }
 
@@ -127,6 +157,8 @@ parse_ho_data(ifstream &nodal_in, vector<Vector> &data_vals, HexVolMesh *hvm)
     for (int j=0; j<3; j++) 
       nodal_in >> x[j] >> xdx[j] >> xdy[j] >> xdxy[j] >> xdz[j] 
 		>> xdyz[j] >> xdxz[j] >> xdxyz[j];
+
+    if (nodal_in.eof()) break;
 
     double f[3], fdx[3], fdy[3], fdxy[3], fdz[3], fdyz[3], fdxz[3], fdxyz[3];
     for (int j=0; j<3; j++) 
@@ -216,6 +248,8 @@ main(int argc, char **argv) {
     npts = parse_ho_data(nodal_in, data_vals, hvm);
   } else if (cols == 13) {
     npts = parse_lin_strain_data(nodal_in, data_vals_scalar, hvm);
+  } else if (cols == 5) {
+    npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm);
   } else {
     cerr << "Dont know what to do with " << cols << " columns of data" << endl;
     return (1 << 1);
@@ -288,14 +322,14 @@ main(int argc, char **argv) {
     }
     
     hvm->add_hex(n1, n2, n4, n3, n5, n6, n8, n7);
-    cerr << "Added hex #"<< i << ": [" << n1 << " " << n2 << " " << n3 << " "
-	 << n4 << " " << n5 << " " << n6 << " " << n7 << " " << n8 << "]" 
-	 << endl;
+//     cerr << "Added hex #"<< i << ": [" << n1 << " " << n2 << " " << n3 << " "
+// 	 << n4 << " " << n5 << " " << n6 << " " << n7 << " " << n8 << "]" 
+// 	 << endl;
   }
   cerr << "done adding elements.\n";
 
   FieldHandle hvH;  
-  if (cols == 13) { 
+  if (cols == 13 || cols == 5) { 
     cerr << "loading in strain data" << endl;
     HexVolField<double> *hv = scinew HexVolField<double>(hvm, 1);
     hv->resize_fdata();
