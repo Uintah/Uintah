@@ -43,15 +43,6 @@ set MacroedModules ""
 global modules
 set modules ""
 
-global font_pixel_width
-set font_pixel_width 0.0
-
-global extra_ports
-set extra_ports 0
-
-global original_size
-set original_title_size 0
-
 
 itcl_class Module {
    
@@ -344,7 +335,7 @@ itcl_class Module {
 		"Show Status"
 
 	set $this-show_status 1
-
+	
 # Destroy selected items with a Ctrl-D press
 	bind all <Control-d> "moduleDestroySelected \
 		$canvas $minicanvas lightgray"
@@ -404,6 +395,16 @@ itcl_class Module {
 	    bind $p.inset <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	}
 	set made_icon 1
+	global $this-original_title_size
+	set $this-original_title_size 0
+
+	global $this-extra_ports
+	set $this-extra_ports 0
+
+	global font_pixel_width
+	set font_pixel_width [font measure $modname_font\
+		    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]
+	set font_pixel_width [expr $font_pixel_width/53.0]
     }
     method set_moduleDragged {  ModuleDragged } {
 	set mdragged $ModuleDragged
@@ -783,52 +784,49 @@ itcl_class Module {
     method module_grow {ports} { 
 	global maincanvas
 	global font_pixel_width
-	global extra_ports
-	global original_title_size
 	global modname_font
 	global port_spacing
 
 	set temp_spacing [expr $port_spacing+1]
-	set num_ports $ports
 	set mod_width [winfo width $maincanvas.module[modname] ]
 	
 	#initialize all values first time through
-	if {$original_title_size == 0} {
-	    set font_pixel_width [font measure $modname_font\
-		    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]
-	    set font_pixel_width [expr $font_pixel_width/53.0]
-	    set original_title_size [expr $font_pixel_width*[string length $name]]
+	if { [set $this-original_title_size] == 0} {
+	    set $this-original_title_size [font measure $modname_font $name]
 	}
-	
-	# determine if it needs more room
-	if { [expr $mod_width-[expr $num_ports*$temp_spacing] ] <= $temp_spacing } {
-	    incr extra_ports 1
-	    set title_width [expr $original_title_size+[expr $temp_spacing*$extra_ports]]
-	    set title_width [expr int([expr ceil([expr $title_width/$font_pixel_width])])]
-	    $maincanvas.module[modname].ff.title configure -width $title_width
-	}
-    }
 
-    method module_shrink {ports} {  
+	# thread problem - if mod_width=1, then
+	# module isn't done being created and it
+	# adds on too many extra_ports
+
+	if { [expr $mod_width-[expr $ports*$temp_spacing] ] <= \
+		    $temp_spacing } {
+		incr $this-extra_ports 1
+		set title_width [expr [set $this-original_title_size]+\
+			[expr $temp_spacing*[set $this-extra_ports]]]
+		set title_width [expr int(\
+			[expr ceil([expr $title_width/$font_pixel_width])])]
+		$maincanvas.module[modname].ff.title configure -width $title_width
+	    }
+	}
+    
+    method module_shrink {} {  
 	global maincanvas
 	global font_pixel_width
-	global extra_ports
-	global original_title_size
 	global port_spacing
 
 	set temp_spacing [expr $port_spacing+1]
-	set num_ports $ports
 	set mod_width [winfo width $maincanvas.module[modname] ]
 	set title_width [winfo width $maincanvas.module[modname].ff.title]
 	
-	#make sure it doesn't shrink smaller than original size
-	if { [expr $extra_ports-1] >=0 } {
-	    set extra_ports [expr $extra_ports-1]
+	if { [set $this-extra_ports] >=1 } {
+	    incr $this-extra_ports -1
 	}
-
+	
 	#determine if you have enough room to take a port size off
-	if { [expr $title_width-$temp_spacing] > $original_title_size } {
-	    set title_width [expr $original_title_size+[expr $extra_ports*$temp_spacing]]
+	if { [expr $title_width-$temp_spacing] > [set $this-original_title_size] } {
+	    set title_width [expr [set $this-original_title_size]+\
+		    [expr [set $this-extra_ports]*$temp_spacing]]
 	    set title_width [expr $title_width/$font_pixel_width]
 	    set title_width [expr int([expr ceil($title_width)])]
 	    $maincanvas.module[modname].ff.title configure -width $title_width
