@@ -477,11 +477,13 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
     tsk->requires(Task::OldDW, timelabels->maxabsu_in);
     tsk->requires(Task::OldDW, timelabels->maxabsv_in);
     tsk->requires(Task::OldDW, timelabels->maxabsw_in);
+    tsk->requires(Task::OldDW, timelabels->maxuxplus_in);
   }
   else {
     tsk->requires(Task::NewDW, timelabels->maxabsu_in);
     tsk->requires(Task::NewDW, timelabels->maxabsv_in);
     tsk->requires(Task::NewDW, timelabels->maxabsw_in);
+    tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
   }
 
   tsk->modifies(d_lab->d_reactscalarSPLabel);
@@ -512,22 +514,27 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
   double maxAbsU;
   double maxAbsV;
   double maxAbsW;
+  double maxUxplus;
   max_vartype mxAbsU;
   max_vartype mxAbsV;
   max_vartype mxAbsW;
+  max_vartype mxUxp;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(mxAbsU, timelabels->maxabsu_in);
     old_dw->get(mxAbsV, timelabels->maxabsv_in);
     old_dw->get(mxAbsW, timelabels->maxabsw_in);
+    old_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   else {
     new_dw->get(mxAbsU, timelabels->maxabsu_in);
     new_dw->get(mxAbsV, timelabels->maxabsv_in);
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
+    new_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   maxAbsU = mxAbsU;
   maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
+  maxUxplus = mxUxp;
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -598,7 +605,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     if (d_boundaryCondition->getOutletBC())
     d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
 				        &reactscalarVars, &constReactscalarVars,
-					delta_t, maxAbsU, maxAbsV, maxAbsW);
+					delta_t, maxUxplus, maxAbsV, maxAbsW);
 
     if (d_boundaryCondition->getPressureBC())
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
