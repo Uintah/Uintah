@@ -89,7 +89,7 @@ ScanlineMesh::get_min() const
 Array1<unsigned int>
 ScanlineMesh::get_dim() const
 {
-  Array1<unsigned int> array(2);
+  Array1<unsigned int> array(1);
 
   array[0] = ni_;
 
