@@ -13,8 +13,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/VS/Dataflow/Modules/Render
 
 SRCS     += \
-	$(SRCDIR)/ICUMonitor.cc \
-	$(SRCDIR)/ExecutiveState.cc
+	$(SRCDIR)/EinthovenLeads.cc \
+	$(SRCDIR)/ExecutiveState.cc \
+	$(SRCDIR)/ICUMonitor.cc     \
+
 
 #[INSERT NEW CODE FILE HERE]
 
