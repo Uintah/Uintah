@@ -41,7 +41,7 @@ public:
   MyGui():
     DpyBase("MyGui"),
 #ifdef GLUT_GLUI_THREAD
-    ggt(0), gg_dpy(0), gg_win(0),
+    ggt(0),
 #endif
     child(0), child_thread(0)
   {
@@ -57,10 +57,8 @@ public:
   }
 
 #ifdef GLUT_GLUI_THREAD
-  void setGlutGlui(GGT* new_ggt, Display* new_gg_dpy, Window new_gg_win) {
+  void setGlutGlui(GGT* new_ggt) {
     ggt = new_ggt;
-    gg_dpy = new_gg_dpy;
-    gg_win = new_gg_win;
   }
 
 protected:
@@ -268,10 +266,6 @@ public:
     win = __glutWindowList[mainWindowId-1][1];
     cerr << "initial win = "<<win<<"\n";
 
-    // Find the keycodes we are interested in
-    //    get_keycodes();
-    //    get_keycodes2();
-    
     // Setup callback functions
     glutDisplayFunc( GGT::display );
 
@@ -285,14 +279,6 @@ public:
     glutMainLoop();
   }
 
-  void get_keycodes2() {
-    cerr << "keycode of 'a' is "<<(int)XKeysymToKeycode(dpy, XK_a)<<"\n";
-    cerr << "keycode of 's' is "<<(int)XKeysymToKeycode(dpy, XK_s)<<"\n";
-    cerr << "keycode of 'd' is "<<(int)XKeysymToKeycode(dpy, XK_d)<<"\n";
-    cerr << "keycode of 'f' is "<<(int)XKeysymToKeycode(dpy, XK_f)<<"\n";
-    cerr << "keycode of 'g' is "<<(int)XKeysymToKeycode(dpy, XK_g)<<"\n";
-  }
-
   static void close(int mode) {
     cerr << "GGT::close("<<mode<<")\n";
     switch (mode) {
@@ -300,37 +286,9 @@ public:
       // We are just exiting ourselves
       
       // Tell the Gui that we've left.
-      if (activeGui->gui) activeGui->gui->setGlutGlui(0,0,0);
+      if (activeGui->gui) activeGui->gui->setGlutGlui(0);
       // This is internal, just shutdown the thread.
       Thread::exit();
-      break;
-    case 1:
-      {
-        // Generate a signal to the window to close
-        XEvent event;
-        event.type = KeyPress;
-        // You can't simply feed a value here, because the keycode
-        // changes from xserver to xserver.
-        event.xkey.keycode = XKeysymToKeycode(activeGui->dpy, XK_q);
-        event.xkey.x = 0;
-        event.xkey.y = -1;
-        event.xkey.window = activeGui->win;
-        // I've kind of reverse engineered these values, so I can't
-        // guarantee that they will work for every X server.
-        
-        // 16 is normal
-        // shift is 17             (0001 0001)
-        // control is 20           (0001 0100)
-        // alt is 24               (0001 1000)
-        // control-shift is 21     (0001 0101)
-        // control-shift-alt is 29 (0001 1101)
-        // shift-alt is 25         (0001 1001)
-        event.xkey.state = 16;
-        cerr << "external close generating an event\n";
-        if (DpyBase::useXThreads) XLockDisplay(activeGui->dpy);
-        XSendEvent(activeGui->dpy, activeGui->win, false, 0, &event);
-        if (DpyBase::useXThreads) XUnlockDisplay(activeGui->dpy);
-      }
       break;
     case 2:
       // Tell the GUI thread to go bye bye.  It would be nice if this
@@ -525,7 +483,7 @@ int main(int argc, char *argv[]) {
     gg_runner->setGui(gui);
     Thread* gg_thread = new Thread(gg_runner, "GG Thread");
     gg_thread->detach();
-    gui->setGlutGlui(gg_runner,0,0);
+    gui->setGlutGlui(gg_runner);
 #endif
   }
 #endif
