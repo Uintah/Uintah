@@ -4974,15 +4974,13 @@ class BioTensorApp {
     #############################
     # Specify a nrrd file, set the tuple axis to 0
     method load_nrrd_dwi {} {
-
 	global mods
-	#set theWindow [$mods(NrrdReader1) make_file_open_box]
+	# disable execute button and change behavior of execute command
 	$mods(NrrdReader1) initialize_ui
 	.ui$mods(NrrdReader1).f7.execute configure -state disabled
 
-	# tkwait window $theWindow
-	
-	# update idletasks
+	upvar #0 .ui$mods(NrrdReader1) data
+	set data(-command) "wm withdraw .ui$mods(NrrdReader1)"
     }
 
     #############################
@@ -4991,12 +4989,13 @@ class BioTensorApp {
     # Specify a T2 nrrd file and set tuple axis 0
     method load_nrrd_t2 {} {
 	global mods
-        #set theWindow [$mods(NrrdReader-T2) make_file_open_box]
+	# disable execute button and change behavior of execute command
 	$mods(NrrdReader-T2) initialize_ui
 	.ui$mods(NrrdReader-T2).f7.execute configure -state disabled
-	# tkwait window $theWindow
 
-	# update idletasks
+	upvar #0 .ui$mods(NrrdReader-T2) data
+	set data(-command) "wm withdraw .ui$mods(NrrdReader-T2)"
+
     } 
 
     method dicom_ui { m } {
