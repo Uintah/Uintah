@@ -3,6 +3,8 @@
  * Real time ray-tracer
  */
 
+#include <sci_defs.h> // For HAVE_OOGL
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Persistent/Pstreams.h>
@@ -46,12 +48,14 @@
 #endif
 
 
-#include "oogl/vec2.h"
-#include "oogl/basicTexture.h"
-#include "oogl/shader.h"
-#include "oogl/planarQuad.h"
-#include "oogl/shadedPrim.h"
-#include "oogl/renderPass.h"
+#if defined(HAVE_OOGL)
+#  include "oogl/vec2.h"
+#  include "oogl/basicTexture.h"
+#  include "oogl/shader.h"
+#  include "oogl/planarQuad.h"
+#  include "oogl/shadedPrim.h"
+#  include "oogl/renderPass.h"
+#endif
 
 /////////////////////////////////////////////////
 // OOGL stuff
@@ -126,8 +130,11 @@ static void mld_alloc(unsigned long size, int nmld,
 }
 #endif
 
+#if defined(HAVE_OOGL)
 Trigger * loadBottomGraphic();
 Trigger * loadLeftGraphic();
+#endif
+
 int       mainWindowId = -1;
 
 static void usage(char* progname)
@@ -260,7 +267,7 @@ main(int argc, char* argv[])
   printf("after glutInit\n");
 
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
-  bool use_usercamera;
+  bool use_usercamera = false;
   
   int scene_argc=-1;
   char** scene_argv=0;
@@ -590,8 +597,10 @@ main(int argc, char* argv[])
     scene->set_object( scene->get_object() );
   }
   
+#if defined(HAVE_OOGL)
   Trigger * bottomGraphicTrigger = NULL;
   Trigger * leftGraphicTrigger = NULL;
+
   if( fullscreen ) { // For Demo... and oogl stuff 
       xres = 512; // Start in low res mode.
       yres = 288;
@@ -600,6 +609,7 @@ main(int argc, char* argv[])
   } else {
     if( demo ) demo = false; // If not in full screen mode, no demo stuff.
   }
+#endif
 
   if(!scene->get_image(0)){
     Image* image0=new Image(xres, yres, false);
@@ -658,7 +668,6 @@ main(int argc, char* argv[])
   Gui::setActiveGui( gui );
   gui->setDpy( dpy );
 
-
   // Initialize GLUT and GLUI stuff.
   printf("start glut inits\n");
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
@@ -674,6 +683,7 @@ main(int argc, char* argv[])
     glutReshapeWindow( xres, yres );
   }
 
+#if defined(HAVE_OOGL)
   //////////////////////////////////////////////////////////////////
   // OOGL stuff
 
@@ -802,14 +812,14 @@ main(int argc, char* argv[])
     Shader * rtrtMidTopTexShader = new Shader( rtrtMidTopTex );
     rtrtMidTopTexQuad = new ShadedPrim( rtrtMidTopQuad, rtrtMidTopTexShader );
   }
-
+#endif // HAVE_OOGL
   // end OOGL stuff
   //////////////////////////////////////////////////////////////////
 
   // All non-sound triggers will be drawn to the blend quad...  let
   // them know about it.
   vector<Trigger*> & triggers = scene->getTriggers();
-  for( int cnt = 0; cnt < triggers.size(); cnt++ ) {
+  for( unsigned int cnt = 0; cnt < triggers.size(); cnt++ ) {
     Trigger * trigger = triggers[cnt];
     if( !trigger->isSoundTrigger() )
       {
@@ -823,12 +833,14 @@ main(int argc, char* argv[])
 	  }
       }
   }
+#if defined(HAVE_OOGL)
   if( demo ) { // Load the fancy dynamic graphics
     bottomGraphicTrigger = loadBottomGraphic();
     leftGraphicTrigger = loadLeftGraphic();
     gui->setBottomGraphic( bottomGraphicTrigger );
     gui->setLeftGraphic( leftGraphicTrigger );
   }
+#endif
 
   cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
 
@@ -892,6 +904,7 @@ main(int argc, char* argv[])
 }
 
 
+#if defined(HAVE_OOGL)
 // Returns first trigger in sequence.
 Trigger * 
 loadBottomGraphic()
@@ -967,3 +980,4 @@ loadLeftGraphic()
   cout << "Done Loading Left Graphics\n";
   return next;
 }
+#endif // HAVE_OOGL
