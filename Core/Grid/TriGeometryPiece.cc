@@ -73,8 +73,8 @@ void TriGeometryPiece::readPoints(const string& file)
     throw ProblemSetupException("ERROR: opening MPM Tri points file: \n The file must be in the same directory as sus");
   }
 
-  double n,x,y,z;
-  while (source >> n >> x >> y >> z) {
+  double x,y,z;
+  while (source >> x >> y >> z) {
     d_points.push_back(Point(x,y,z));
   }
 
@@ -102,8 +102,8 @@ void TriGeometryPiece::readTri(const string& file)
     throw ProblemSetupException("ERROR: opening MPM Tri file: \n The file must be in the same directory as sus");
   }
 
-  int n,x,y,z;
-  while (source >> n >> x >> y >> z) {
+  int x,y,z;
+  while (source >> x >> y >> z) {
     d_tri.push_back(IntVector(x,y,z));
   }
 
@@ -148,10 +148,9 @@ void TriGeometryPiece::makeTriBoxes()
 
 bool TriGeometryPiece::insideTriangle(const Point& q,int num) const
 {
-#if 1
   if (!(q == Max(q,d_boxes[num].lower()) && q == Min(q,d_boxes[num].upper())))
     return false;
-#endif       
+       
   Vector u[3],v[3],qvector = q.asVector();
   Point p[3];
   
