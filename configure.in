@@ -68,7 +68,8 @@ if test "$uintah" = "yes"; then
                   Uintah/Datatypes/Particles/Makefile \
                 Uintah/Modules/Makefile \
                   Uintah/Modules/MPMViz/Makefile \
-                  Uintah/Modules/Readers/Makefile
+                  Uintah/Modules/Readers/Makefile \
+		  Uintah/Modules/Writers/Makefile
 		  "
 fi
 
@@ -457,9 +458,9 @@ else
 fi
 
 AC_SUBST(ITCL_INCLUDE_DIR)
-AC_SUBST(ITCL_WIDGETS)
 AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
+AC_SUBST(ITCL_WIDGETS)
 
 ##-- Check for option to build new parallel (distributed memory) SCIRun ------
 
