@@ -16,6 +16,7 @@
 #define SCI_Classlib_FastHashTable_h 1
 
 #include <Classlib/Assert.h>
+#include <Tester/RigorousTest.h>
 
 #ifdef __GNUG__
 #pragma interface
@@ -56,6 +57,11 @@ public:
 
     // Returns how many items are stored in the FastHash table
     int size() const;
+
+
+    //////////
+    //Rigorous Tests
+    static void test_rigorous(RigorousTest* __test);
 };
 
 // Use this class for walking through a FastHashtable

@@ -168,3 +168,24 @@ Key* FastHashTableIter<Key>::get_key()
     ASSERT(current_key!=0);
     return current_key;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
