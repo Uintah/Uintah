@@ -99,10 +99,13 @@ set $m4-makeSymmetric {0}
 
 # Build up a simplistic standalone application.
 
+wm withdraw .
+
 toplevel .standalone
 wm title .standalone "SCIView"	 
 
-canvas .standalone.viewwindow -width 600 -height 460
+set eviewer [$m3 ui_embedded]
+$eviewer setWindow .standalone.draw
 
 frame .standalone.options -relief groove -borderwidth 2
 
@@ -111,4 +114,4 @@ entry .standalone.options.filename -textvariable $m0-filename
 
 pack .standalone.options.lfilename .standalone.options.filename -side top
 
-pack .standalone.viewwindow .standalone.options -side left -fill y
+pack .standalone.draw .standalone.options -side left -expand y -fill both
