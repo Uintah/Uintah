@@ -3223,7 +3223,10 @@ if test "$sci_required_qt" = "yes"; then
   _qt_inc="$with_qt/include"
   
   # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_qt_inc,qt-mt,$_sci_lib,,,optional)  
+  SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_qt_inc,qt-mt,$_sci_lib,,,optional)   
+  if test "$HAVE_QT_MT" = "no"; then
+    SCI_TRY_LINK(QT_MT,qt library,qcanvas.h,$_qt_inc,qt,$_sci_lib,,,optional)
+  fi
 
   QT_MOC_BIN=""
   AS_MESSAGE(checking for moc in $LIB_DIR_QT_MT/../bin...)
