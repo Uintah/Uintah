@@ -66,7 +66,7 @@ endif
 
 ifeq ($(CC),newmpxlc)
   LIBS := \
-        $(TCL_LIBRARY) $(TK_LIBRARY) $(ITCL_LIBRARY) $(ITK_LIBRARY)
+        $(TCL_LIBRARY) $(TK_LIBRARY) $(ITCL_LIBRARY) $(ITK_LIBRARY) \
 	$(BLT_LIBRARY) \
         $(XML_LIBRARY) \
         $(TAU_LIBRARY) \
