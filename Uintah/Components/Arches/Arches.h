@@ -12,16 +12,17 @@
 #include <Uintah/Parallel/ProcessorContext.h>
 
 namespace Uintah {
-    namespace Components {
-	using Uintah::Interface::CFDInterface;
-	using Uintah::Parallel::UintahParallelComponent;
-	using Uintah::Grid::ProblemSpecP;
-	using Uintah::Grid::GridP;
-	using Uintah::Grid::LevelP;
-	using Uintah::Grid::Region;
-	using Uintah::Interface::DataWarehouseP;
-	using Uintah::Interface::SchedulerP;
-	using Uintah::Parallel::ProcessorContext;
+namespace Components {
+  using Uintah::Interface::CFDInterface;
+  using Uintah::Parallel::UintahParallelComponent;
+  using Uintah::Grid::ProblemSpecP;
+  using Uintah::Grid::GridP;
+  using Uintah::Grid::LevelP;
+  using Uintah::Grid::Region;
+  using Uintah::Interface::DataWarehouseP;
+  using Uintah::Interface::SchedulerP;
+  using Uintah::Parallel::ProcessorContext;
+
 class NonlinearSolver;
 
 class Arches : public UintahParallelComponent, public CFDInterface {
@@ -51,8 +52,15 @@ private:
     NonlinearSolver* d_nlSolver;
 };
 
-    }
-}
+} // end namespace Components
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.7  2000/03/21 21:27:03  dav
+// namespace fixs
+//
+//
 
 #endif
 

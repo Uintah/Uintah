@@ -1,3 +1,5 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
@@ -9,6 +11,9 @@
 
 using Uintah::Components::Arches;
 using namespace Uintah::Grid;
+
+namespace Uintah {
+namespace Components {
 
 Arches::Arches()
 {
@@ -112,8 +117,17 @@ void Arches::advanceTimeStep(const ProcessorContext* pc,
 
    
 }
-
-
-
 #endif
+
+} // end namespace Components
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.6  2000/03/21 21:27:03  dav
+// namespace fixs
+//
+//
+
+
 
