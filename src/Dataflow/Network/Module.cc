@@ -158,7 +158,7 @@ Module::Module(const string& name, const string& id,
   : notes("notes", id, this),
     show_status("show_status", id, this),
     msgStream_("msgStream", id, this),
-    pid_("pid", id, this),
+    pid_(0),
     state(NeedData),
     helper(0),
     helper_done("Module helper finished flag"),
@@ -588,6 +588,8 @@ void Module::tcl_command(TCLArgs& args, void*)
 	    abort_flag=1;
 	    want_to_execute();
 	}
+    } else if(args[1] == "getpid"){
+      args.result(to_string(pid_));
     } else {
 	args.error("Unknown minor command for module: "+args[1]);
     }

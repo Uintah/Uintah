@@ -115,6 +115,7 @@ itcl_class Module {
     public group -1
     public selected 0
     public show_status 1
+
     method name {} {
 	return name
     }
@@ -751,7 +752,7 @@ itcl_class Module {
 	# create the window
 	toplevel $w
 	append t "Log for " [modname]
-	set t "$t -- pid=[set $this-pid]"
+	set t "$t -- pid=[$this-c getpid]"
 	wm title $w $t
 	
 	frame $w.log
