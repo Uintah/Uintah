@@ -33,29 +33,29 @@
 #include "ListPlotterForm.h"
 //namespace SCIRun {
   
-  class ImUIPort : public virtual gov::cca::ports::UIPort {
+  class ImUIPort : public virtual sci::cca::ports::UIPort {
 
   public:
-    void setServices(const gov::cca::Services::pointer &svc);
+    void setServices(const sci::cca::Services::pointer &svc);
     virtual ~ImUIPort(){}
     virtual int ui();
   private:
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 
-class ListPlotter : public gov::cca::Component{
+class ListPlotter : public sci::cca::Component{
                 
   public:
     ListPlotter();
     virtual ~ListPlotter();
 
-    virtual void setServices(const gov::cca::Services::pointer& svc);
+    virtual void setServices(const sci::cca::Services::pointer& svc);
   private:
 
     ListPlotter(const ListPlotter&);
     ListPlotter& operator=(const ListPlotter&);
     ImUIPort ui;
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 //}
 

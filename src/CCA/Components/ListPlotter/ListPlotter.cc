@@ -34,9 +34,9 @@
 #include "ListPlotter.h"
 #include "ListPlotterForm.h"
 
-extern "C" gov::cca::Component::pointer make_SCIRun_ListPlotter()
+extern "C" sci::cca::Component::pointer make_SCIRun_ListPlotter()
 {
-  return gov::cca::Component::pointer(new ListPlotter());
+  return sci::cca::Component::pointer(new ListPlotter());
 }
 
 
@@ -49,20 +49,20 @@ ListPlotter::~ListPlotter()
 {
 }
 
-void ListPlotter::setServices(const gov::cca::Services::pointer& svc)
+void ListPlotter::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   ui.setServices(svc);	
   //register provides ports here ...  
 
-  gov::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   ImUIPort::pointer uip(&ui);
 	ImUIPort::pointer gop(&ui);
-  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
   svc->registerUsesPort("listport","ZListPort", props);
 }
 
-void ImUIPort::setServices(const gov::cca::Services::pointer& svc)
+void ImUIPort::setServices(const sci::cca::Services::pointer& svc)
 {
 	services=svc;
 }
@@ -71,13 +71,13 @@ int ImUIPort::ui()
 {
   
   ListPlotterForm *w = new ListPlotterForm; 
-  gov::cca::Port::pointer pp=services->getPort("listport");	
+  sci::cca::Port::pointer pp=services->getPort("listport");	
   if(pp.isNull()){
     QMessageBox::warning(0, "ListPlotter", "listport is not available!");
     return 1;
   }  
-  gov::cca::ports::ZListPort::pointer lport=pidl_cast<gov::cca::ports::ZListPort::pointer>(pp);
-  SIDL::array1<double> data=lport->getList();	
+  sci::cca::ports::ZListPort::pointer lport=pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
+  SSIDL::array1<double> data=lport->getList();	
 
   services->releasePort("listport");
 
