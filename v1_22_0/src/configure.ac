@@ -2431,43 +2431,53 @@ if test "$sci_required_mpi" = "yes"; then
         # CXX="mp$CXX"
         # ;;
      *)
+        _sci_optional=optional
         if test "$with_mpi"; then
-           _sci_lib="$with_mpi/lib"
-           _sci_inc="$with_mpi/include"
-        else
-           _sci_lib="$sci_thirdparty_libs"
-           _sci_inc="$sci_thirdparty_includes"
+           if test "$with_mpi" = "yes"; then
+              _sci_optional=required
+           else
+              _sci_optional=specific
+              _sci_lib="$with_mpi/lib"
+              _sci_inc="$with_mpi/include"
+           fi
         fi
         # /usr/include/mpi is the standard location of mpi on some linux dists.
         SCI_TRY_LINK(MPI,mpi library and header-1,mpi.h,
                      $_sci_inc /usr/include/mpi,mpi lam util pmpi,$_sci_lib,,,optional)
 
         if test "$HAVE_MPI" != "yes"; then
-        # Try without pmpi (and with pthreads) (for the newer version
-	# of lam mpi.
-        SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-        $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,,,optional)
+          # Try without pmpi (and with pthreads) (for the newer version
+          # of lam mpi.
+          SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
+          $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,,,optional)
 
+          if test "$HAVE_MPI" != "yes"; then
+             SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
+             $_sci_inc /usr/include/mpi,mpi,$_sci_lib,,,optional)
 
-        if test "$HAVE_MPI" != "yes"; then
-           SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
-           $_sci_inc /usr/include/mpi,mpi,$_sci_lib,,,optional)
+             if test "$HAVE_MPI" != "yes"; then
+                SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
 
-           if test "$HAVE_MPI" != "yes"; then
-              SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
-              $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
-
-              if test "$HAVE_MPI" = "yes"; then
-  	        HAVE_MPICH="yes"
-#  	        LIB_DIR_MPI="$LIB_DIR_MPICH"
-#                MPI_LIB_FLAG="$MPICH_LIB_FLAG"
-#                MPI_LIB_DIR_FLAG="$MPICH_LIB_DIR_FLAG"
-              fi
-           fi
-        fi
+                if test "$HAVE_MPI" = "yes"; then
+                  HAVE_MPICH="yes"
+                fi
+             fi
+          fi
         fi
         
         if test "$HAVE_MPI" = "yes"; then
+
+           if test "$_sci_optional" = "specific"; then
+              # verify that it was found in the location requested.
+              if test ! -e $with_mpi/lib/libmpi.so &&
+                 test ! -e $with_mpi/lib/libmpi.a &&
+                 test ! -e $with_mpi/lib/libmpi.dylib; then
+                   echo
+                   AC_MSG_ERROR(Found libmpi but not in requested directory: $with_mpi/lib)
+              fi
+           fi
+
            if test "$HAVE_MPICH" = "yes"; then
              DEF_MPI="#define HAVE_MPICH 1"
            else
@@ -2782,16 +2792,16 @@ if test "$sci_required_xalan" ; then
   AC_MSG_CHECKING(for xalan-j.)
 
   if test "$with_xalan"; then
-	dir="$with_xalan"
+        dir="$with_xalan"
   else
-	dir="$sci_thirdparty_dir"
+        dir="$sci_thirdparty_dir"
   fi
   if test -a $dir/bin/xalan.jar -a $dir/bin/xml-apis.jar -a $dir/bin/xercesImpl.jar; then
-	AC_MSG_RESULT($dir)
-	XALAN_PATH="$dir/bin/xalan.jar:$dir/bin/xml-apis.jar:$dir/bin/xercesImpl.jar"
+        AC_MSG_RESULT($dir)
+        XALAN_PATH="$dir/bin/xalan.jar:$dir/bin/xml-apis.jar:$dir/bin/xercesImpl.jar"
         DEF_XALAN="#define XALAN 1"
-  else	
-	AC_MSG_RESULT(not found)
+  else  
+        AC_MSG_RESULT(not found)
   fi
 
   if test "$with_xalana" && test ! "$DEF_XALAN"; then
@@ -2828,7 +2838,7 @@ EOF
   cat > conftest-tau-makefile <<EOF
 include $with_tau
 all:
-	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
+        \$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
 EOF
 
   ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
@@ -3249,10 +3259,10 @@ AC_SUBST(MDSPLUS_LIB_DIR_FLAG)
 
 if test "$sci_required_hdf5" = "yes"; then 
   if test "$with_hdf5"; then
-    _sci_lib="$with_hdf5/lib"			# user defined directory
+    _sci_lib="$with_hdf5/lib"                   # user defined directory
     _sci_inc="$with_hdf5/include"
   else
-    _sci_lib="/usr/local/lib"			# default directory
+    _sci_lib="/usr/local/lib"                   # default directory
     _sci_inc="/usr/local/include"
   fi
 
@@ -3275,10 +3285,10 @@ if test "$sci_required_hdf5" = "yes"; then
   fi
 fi #end sci_required_hdf5
 
-AC_SUBST(DEF_HDF5)		# Place this var in the sci_testdefs.h.ina
-AC_SUBST(INC_HDF5_H)		# Place this var in the configVars.mk.in
-AC_SUBST(HDF5_LIB_FLAG)		# Place this var in the configVars.mk.in
-AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
+AC_SUBST(DEF_HDF5)              # Place this var in the sci_testdefs.h.ina
+AC_SUBST(INC_HDF5_H)            # Place this var in the configVars.mk.in
+AC_SUBST(HDF5_LIB_FLAG)         # Place this var in the configVars.mk.in
+AC_SUBST(HDF5_LIB_DIR_FLAG)     # Place this var in the configVars.mk.in
 
 ##  --  search for perfex  -----------------------------------------------
 
@@ -3630,11 +3640,11 @@ if test "$sci_required_uuid" = "yes"; then
                extern "C" {
                   #include <sys/uuid.h>
                }],
-  	[char* uuid_str;
-  	 uuid_t uuid;
-  	 uint_t status;
-  	 uuid_create(&uuid, &status);],
-  	[have_uuid=yes
+        [char* uuid_str;
+         uuid_t uuid;
+         uint_t status;
+         uuid_create(&uuid, &status);],
+        [have_uuid=yes
            AC_DEFINE(HAVE_SYS_UUID_H)], have_uuid=no)
   AC_MSG_RESULT($have_uuid)
   
@@ -3646,11 +3656,11 @@ if test "$sci_required_uuid" = "yes"; then
   extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
   #include <uuid/uuid.h>
   }],
-  	[uuid_t uuid;
-  	 char uuid_str[64];
-  	 uuid_generate(uuid);
-  	 uuid_unparse(uuid, uuid_str);],
-  	[have_uuid=yes
+        [uuid_t uuid;
+         char uuid_str[64];
+         uuid_generate(uuid);
+         uuid_unparse(uuid, uuid_str);],
+        [have_uuid=yes
            AC_DEFINE(HAVE_UUID_UUID_H)], have_uuid=no)
     AC_MSG_RESULT($have_uuid)
   fi
@@ -3677,7 +3687,7 @@ if test "$sci_required_uuid" = "yes"; then
   #error We need either sys/uuid.h or uuid/uuid.h
   #endif
   #endif
-  	], [
+        ], [
     uuid_t uuid;
   #if defined(UUID_CREATE)
     char* uuid_str;
@@ -3691,10 +3701,10 @@ if test "$sci_required_uuid" = "yes"; then
     uuid_unparse(uuid, uuid_str);
   #endif
   #endif
-  	], [
+        ], [
     UUID_LIB_FLAG=$i
     break
-  	])
+        ])
     done
     if test "$UUID_LIB_FLAG" != unknown; then
       if test "$UUID_LIB_FLAG"; then
@@ -3748,13 +3758,13 @@ AC_SUBST(BUILD_SCIRUN2)
 
   case $host in
     *aix*)
-	CC=`echo $CC | sed 's,x,mpx,g'`
-	CXX=`echo $CXX | sed 's,x,mpx,g'`
-	F77=`echo $F77 | sed 's,x,mpx,g'`
-	MPI_LIB_FLAG=""
-	MPI_LIB_DIR_FLAG=""
-	INC_MPI_H=""
-	;;
+        CC=`echo $CC | sed 's,x,mpx,g'`
+        CXX=`echo $CXX | sed 's,x,mpx,g'`
+        F77=`echo $F77 | sed 's,x,mpx,g'`
+        MPI_LIB_FLAG=""
+        MPI_LIB_DIR_FLAG=""
+        INC_MPI_H=""
+        ;;
   esac
 
 
@@ -3791,8 +3801,8 @@ alias pwd=$sci_pwd
 SCIEOF
 
 AC_CONFIG_COMMANDS_POST(sed -f sedscript < config.status > config_test.status;\
-			    mv config_test.status config.status ;\
-			    chmod 755 config.status)
+                            mv config_test.status config.status ;\
+                            chmod 755 config.status)
 
 
 AC_CONFIG_COMMANDS([do_stamp],[echo timestamp > stamp-h ])

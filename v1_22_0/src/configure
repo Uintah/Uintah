@@ -31962,12 +31962,15 @@ echo "$as_me: checking for required MPI components......" >&6;}
         # CXX="mp$CXX"
         # ;;
      *)
+        _sci_optional=optional
         if test "$with_mpi"; then
-           _sci_lib="$with_mpi/lib"
-           _sci_inc="$with_mpi/include"
-        else
-           _sci_lib="$sci_thirdparty_libs"
-           _sci_inc="$sci_thirdparty_includes"
+           if test "$with_mpi" = "yes"; then
+              _sci_optional=required
+           else
+              _sci_optional=specific
+              _sci_lib="$with_mpi/lib"
+              _sci_inc="$with_mpi/include"
+           fi
         fi
         # /usr/include/mpi is the standard location of mpi on some linux dists.
 
@@ -32443,8 +32446,8 @@ _sci_includes=''
 
 
         if test "$HAVE_MPI" != "yes"; then
-        # Try without pmpi (and with pthreads) (for the newer version
-	# of lam mpi.
+          # Try without pmpi (and with pthreads) (for the newer version
+          # of lam mpi.
 
 ##
 ## SCI_TRY_LINK (MPI):  mpi library and header-2
@@ -32917,8 +32920,7 @@ _sci_includes=''
 
 
 
-
-        if test "$HAVE_MPI" != "yes"; then
+          if test "$HAVE_MPI" != "yes"; then
 
 ##
 ## SCI_TRY_LINK (MPI):  mpi library and header-3
@@ -33391,7 +33393,7 @@ _sci_includes=''
 
 
 
-           if test "$HAVE_MPI" != "yes"; then
+             if test "$HAVE_MPI" != "yes"; then
 
 ##
 ## SCI_TRY_LINK (MPI):  mpich library and header
@@ -33864,17 +33866,27 @@ _sci_includes=''
 
 
 
-              if test "$HAVE_MPI" = "yes"; then
-  	        HAVE_MPICH="yes"
-#  	        LIB_DIR_MPI="$LIB_DIR_MPICH"
-#                MPI_LIB_FLAG="$MPICH_LIB_FLAG"
-#                MPI_LIB_DIR_FLAG="$MPICH_LIB_DIR_FLAG"
-              fi
-           fi
-        fi
+                if test "$HAVE_MPI" = "yes"; then
+                  HAVE_MPICH="yes"
+                fi
+             fi
+          fi
         fi
 
         if test "$HAVE_MPI" = "yes"; then
+
+           if test "$_sci_optional" = "specific"; then
+              # verify that it was found in the location requested.
+              if test ! -e $with_mpi/lib/libmpi.so &&
+                 test ! -e $with_mpi/lib/libmpi.a &&
+                 test ! -e $with_mpi/lib/libmpi.dylib; then
+                   echo
+                   { { echo "$as_me:$LINENO: error: Found libmpi but not in requested directory: $with_mpi/lib" >&5
+echo "$as_me: error: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+   { (exit 1); exit 1; }; }
+              fi
+           fi
+
            if test "$HAVE_MPICH" = "yes"; then
              DEF_MPI="#define HAVE_MPICH 1"
            else
@@ -36144,17 +36156,17 @@ if test "$sci_required_xalan" ; then
 echo $ECHO_N "checking for xalan-j.... $ECHO_C" >&6
 
   if test "$with_xalan"; then
-	dir="$with_xalan"
+        dir="$with_xalan"
   else
-	dir="$sci_thirdparty_dir"
+        dir="$sci_thirdparty_dir"
   fi
   if test -a $dir/bin/xalan.jar -a $dir/bin/xml-apis.jar -a $dir/bin/xercesImpl.jar; then
-	echo "$as_me:$LINENO: result: $dir" >&5
+        echo "$as_me:$LINENO: result: $dir" >&5
 echo "${ECHO_T}$dir" >&6
-	XALAN_PATH="$dir/bin/xalan.jar:$dir/bin/xml-apis.jar:$dir/bin/xercesImpl.jar"
+        XALAN_PATH="$dir/bin/xalan.jar:$dir/bin/xml-apis.jar:$dir/bin/xercesImpl.jar"
         DEF_XALAN="#define XALAN 1"
   else
-	echo "$as_me:$LINENO: result: not found" >&5
+        echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
   fi
 
@@ -36225,7 +36237,7 @@ EOF
   cat > conftest-tau-makefile <<EOF
 include $with_tau
 all:
-	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
+        \$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
 EOF
 
   ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
@@ -41546,10 +41558,10 @@ fi #end sci_required_mdsplus
 
 if test "$sci_required_hdf5" = "yes"; then
   if test "$with_hdf5"; then
-    _sci_lib="$with_hdf5/lib"			# user defined directory
+    _sci_lib="$with_hdf5/lib"                   # user defined directory
     _sci_inc="$with_hdf5/include"
   else
-    _sci_lib="/usr/local/lib"			# default directory
+    _sci_lib="/usr/local/lib"                   # default directory
     _sci_inc="/usr/local/include"
   fi
 
@@ -42044,10 +42056,10 @@ echo "$as_me: error: One or more of the HDF5 components is missing." >&2;}
   fi
 fi #end sci_required_hdf5
 
-		# Place this var in the sci_testdefs.h.ina
-		# Place this var in the configVars.mk.in
-		# Place this var in the configVars.mk.in
-	# Place this var in the configVars.mk.in
+              # Place this var in the sci_testdefs.h.ina
+            # Place this var in the configVars.mk.in
+         # Place this var in the configVars.mk.in
+     # Place this var in the configVars.mk.in
 
 ##  --  search for perfex  -----------------------------------------------
 
@@ -46827,9 +46839,9 @@ int
 main ()
 {
 char* uuid_str;
-  	 uuid_t uuid;
-  	 uint_t status;
-  	 uuid_create(&uuid, &status);
+         uuid_t uuid;
+         uint_t status;
+         uuid_create(&uuid, &status);
   ;
   return 0;
 }
@@ -46890,9 +46902,9 @@ int
 main ()
 {
 uuid_t uuid;
-  	 char uuid_str[64];
-  	 uuid_generate(uuid);
-  	 uuid_unparse(uuid, uuid_str);
+         char uuid_str[64];
+         uuid_generate(uuid);
+         uuid_unparse(uuid, uuid_str);
   ;
   return 0;
 }
@@ -47137,13 +47149,13 @@ fi
 
   case $host in
     *aix*)
-	CC=`echo $CC | sed 's,x,mpx,g'`
-	CXX=`echo $CXX | sed 's,x,mpx,g'`
-	F77=`echo $F77 | sed 's,x,mpx,g'`
-	MPI_LIB_FLAG=""
-	MPI_LIB_DIR_FLAG=""
-	INC_MPI_H=""
-	;;
+        CC=`echo $CC | sed 's,x,mpx,g'`
+        CXX=`echo $CXX | sed 's,x,mpx,g'`
+        F77=`echo $F77 | sed 's,x,mpx,g'`
+        MPI_LIB_FLAG=""
+        MPI_LIB_DIR_FLAG=""
+        INC_MPI_H=""
+        ;;
   esac
 
 
@@ -48660,8 +48672,8 @@ chmod +x $CONFIG_STATUS
 ac_clean_files=$ac_clean_files_save
 
 sed -f sedscript < config.status > config_test.status;\
-			    mv config_test.status config.status ;\
-			    chmod 755 config.status
+                            mv config_test.status config.status ;\
+                            chmod 755 config.status
 
 # configure is writing to config.log, and then calls config.status.
 # config.status does its own redirection, appending to config.log.
