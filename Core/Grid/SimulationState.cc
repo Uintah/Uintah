@@ -63,6 +63,13 @@ void SimulationState::finalizeMaterials()
   for(int i=0;i<(int)ice_matls.size();i++)
     tmp_ice_matls[i] = ice_matls[i]->getDWIndex();
   all_ice_matls->addAll(tmp_ice_matls);
+
+  all_matls = scinew MaterialSet();
+  all_matls->addReference();
+  vector<int> tmp_matls(matls.size());
+  for(int i=0;i<(int)matls.size();i++)
+    tmp_matls[i] = matls[i]->getDWIndex();
+  all_matls->addAll(tmp_matls);
 }
 
 int SimulationState::getNumVelFields() const {
@@ -96,4 +103,10 @@ const MaterialSet* SimulationState::allICEMaterials() const
 {
   ASSERT(all_ice_matls != 0);
   return all_ice_matls;
+}
+
+const MaterialSet* SimulationState::allMaterials() const
+{
+  ASSERT(all_matls != 0);
+  return all_matls;
 }
