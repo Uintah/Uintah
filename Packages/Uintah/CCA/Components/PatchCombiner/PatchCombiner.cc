@@ -55,8 +55,7 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
     superPatches = patchGrouper.getSuperPatches(0);
     ASSERT(superPatches != 0);
 
-    LevelP newLevel =
-      scinew Level(newGrid.get_rep(), level->getAnchor(), level->dCell());
+    LevelP newLevel = newGrid->addLevel(level->getAnchor(), level->dCell());
 
     SuperPatchContainer::const_iterator superIter;
     for (superIter = superPatches->begin(); superIter != superPatches->end();
@@ -80,7 +79,6 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
     }
     
     newLevel->finalizeLevel();
-    newGrid->addLevel(newLevel);
   }
     
   oldGrid_ = oldGrid;
