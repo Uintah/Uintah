@@ -56,10 +56,6 @@ public:
   //////////
   virtual ~ScalarFieldExtractor(); 
 
-  // GROUP: cloning and execution 
-  ////////// 
-  virtual void execute(); 
-
   //////////
   // overides tcl_command in base class Module
   //  void tcl_command( TCLArgs&, void* );
@@ -69,17 +65,6 @@ protected:
 			vector< const TypeDescription *>&);
   
 private:
-
-  GuiString tcl_status;
-
-  GuiString sVar;
-  GuiInt sMatNum;
-
-  const TypeDescription *type;
-
-  ArchiveIPort *in;
-  FieldOPort *sfout;
-  
   std::string positionName;
 
 }; //class 
