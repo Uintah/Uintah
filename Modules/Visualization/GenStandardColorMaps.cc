@@ -164,6 +164,37 @@ RainbowColorMap::RainbowColorMap()
   }
 }
 
+class InverseRainbow : public StandardColorMap
+{
+ public:
+  InverseRainbow();
+  virtual ~InverseRainbow(){}
+};
+
+InverseRainbow::InverseRainbow()
+{
+  int cols[][3] =  {{ 0, 0, 255},
+		   { 0, 102, 255},
+		   { 0, 204, 255},
+		   { 0, 255, 204},
+		   { 0, 255, 102},
+		   { 0, 255, 0},
+		   { 102, 255, 0},
+		   { 204, 255, 0},
+		   { 255, 234, 0},
+		   { 255, 204, 0},
+		   { 255, 102, 0},
+		   { 255, 0, 0} };
+  int ncolors =  12;
+  colors.setsize(ncolors);
+  for(int i = 0; i < ncolors; i++){
+    colors[i].r(cols[i][0]/255.0);
+    colors[i].g(cols[i][1]/255.0);
+    colors[i].b(cols[i][2]/255.0);
+  }
+}
+
+
 // ---------------------------------------------------------------------- // 
 class DarkHueColorMap : public StandardColorMap
 {
@@ -193,6 +224,44 @@ DarkHueColorMap::DarkHueColorMap()
 		   { 255, 231, 68 },
 		   { 251, 255, 121 },
 		   { 239, 253, 174 }};
+  int ncolors = 19;
+  colors.setsize(ncolors);
+  for(int i = 0; i < ncolors; i++){
+    colors[i].r(cols[i][0]/255.0);
+    colors[i].g(cols[i][1]/255.0);
+    colors[i].b(cols[i][2]/255.0);
+  }
+
+}
+// ---------------------------------------------------------------------- // 
+class InverseDarkHue : public StandardColorMap
+{
+ public:
+  InverseDarkHue();
+  virtual ~InverseDarkHue(){}
+};
+
+InverseDarkHue::InverseDarkHue()
+{
+  int cols[][3] =  {{ 239, 253, 174 },
+		   { 251, 255, 121 },
+		   { 255, 231, 68 },
+		   { 255, 175, 36 },
+		   { 246, 72,  1 },
+		   { 229, 30,  1 },
+		   { 220,  10, 10 },
+		   { 177,  1, 39 },
+		   { 158,  1, 72 },
+		   { 135,  0, 105 },
+		   { 108,  0, 114 },
+		   { 57,  1, 92 },
+		   { 32,  0, 85 },
+		   { 28,  0, 84 },
+		   { 1,  0, 76 },
+		   { 0, 15, 74 },
+		   { 0, 30, 55 },
+		   { 0, 28, 39 },
+		   { 0,  0,  0 } };
   int ncolors = 19;
   colors.setsize(ncolors);
   for(int i = 0; i < ncolors; i++){
@@ -288,12 +357,14 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
   resolution.set(2);
   minRes.set(2);
   mapType.set(0);
-  mapTypes.setsize(5);
+  mapTypes.setsize(7);
   mapTypes[0] = (StandardColorMap *)(scinew GrayColorMap());
   mapTypes[1] = (StandardColorMap *)(scinew InverseGrayColorMap());
   mapTypes[2] = (StandardColorMap *)(scinew RainbowColorMap());
-  mapTypes[3] = (StandardColorMap *)(scinew DarkHueColorMap());
-  mapTypes[4] = (StandardColorMap *)(scinew BlackBodyColorMap());
+  mapTypes[3] = (StandardColorMap *)(scinew InverseRainbow());
+  mapTypes[4] = (StandardColorMap *)(scinew DarkHueColorMap());
+  mapTypes[5] = (StandardColorMap *)(scinew InverseDarkHue());
+  mapTypes[6] = (StandardColorMap *)(scinew BlackBodyColorMap());
     
 } 
 
@@ -380,6 +451,9 @@ void GenStandardColorMaps::execute()
      cmap = mapTypes[mt]->genMap(res);
    }
 
+   cmap.detach();
+   cmap->ResetScale();
+     
    outport->send(cmap);
   
 } 

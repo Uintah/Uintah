@@ -14,26 +14,26 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = AddWells2.o  BB.o  BitVisualize.o  BoxClipSField.o  BoundGrid.o  \
-	ColorMapKey.o  CuttingPlane.o  CuttingPlaneTex.o  \
-	FastRender.o  FieldCage.o  \
-	GenAxes.o GenColorMap.o  GenFieldEdges.o GenTransferFunc.o  \
-	GenStandardColorMaps.o  Hedgehog.o  HedgehogLitLines.o  \
-	ImageViewer.o  IsoMask.o  IsoSurface.o  \
-	IsoSurfaceDW.o  IsoSurfaceMRSG.o  IsoSurfaceSP.o  \
-	OctIsoSurface.o  RenderRG.o  RescaleColorMap.o  \
-	SimpVolVis.o  Streamline.o  Ted.o  \
-	VectorSeg.o  VolVis.o  VolRendTexSlices.o  WidgetTest.o
+OBJS = AddWells.o AddWells2.o BB.o BitVisualize.o BoxClipSField.o \
+	BoundGrid.o ColorMapKey.o CuttingPlane.o CuttingPlaneTex.o \
+	FastRender.c  FieldCage.o \
+	GenAxes.o GenColorMap.o GenFieldEdges.o GenStandardColorMaps.o \
+	GenTransferFunc.o  Hedgehog.o HedgehogLitLines.o \
+	ImageViewer.o IsoMask.o IsoSurface.o \
+	IsoSurfaceDW.o IsoSurfaceMRSG.o IsoSurfaceSP.o \
+	OctIsoSurface.o RenderRG.o RescaleColorMap.o \
+	RescaleParticleColorMap.o SimpVolVis.o Streamline.o Ted.o \
+	VectorSeg.o VolVis.o VolRendTexSlices.o WidgetTest.o
 
-SRCS = AddWells2.cc BB.cc BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
-	ColorMapKey.cc CuttingPlane.cc CuttingPlaneTex.cc \
+SRCS = AddWells.cc AddWells2.cc BB.cc BitVisualize.cc BoxClipSField.cc \
+	BoundGrid.cc ColorMapKey.cc CuttingPlane.cc CuttingPlaneTex.cc \
 	FastRender.c  FieldCage.cc \
-	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenTransferFunc.cc \
-	GenStandardColorMaps.cc Hedgehog.cc HedgehogLitLines.cc \
+	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenStandardColorMaps.cc \
+	GenTransferFunc.cc  Hedgehog.cc HedgehogLitLines.cc \
 	ImageViewer.cc IsoMask.cc IsoSurface.cc \
 	IsoSurfaceDW.cc IsoSurfaceMRSG.cc IsoSurfaceSP.cc \
 	OctIsoSurface.cc RenderRG.cc RescaleColorMap.cc \
-	SimpVolVis.cc Streamline.cc Ted.cc \
+	RescaleParticleColorMap.cc SimpVolVis.cc Streamline.cc Ted.cc \
 	VectorSeg.cc VolVis.cc VolRendTexSlices.cc WidgetTest.cc
 
 LIBNAME = Visualization

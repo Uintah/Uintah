@@ -52,7 +52,8 @@ itcl_class GenStandardColorMaps {
 	
 	make_labeled_radio $w.f2.types "ColorMaps" $n  top \
 	    $this-mapType { {"Gray" 0} {"Inverse Gray" 1 } 
-		{"Rainbow" 2} {"Darkhue" 3} {"Blackbody" 4 }}
+		{"Rainbow" 2} {"Inverse Rainbow" 3} 
+		{"Darkhue" 4} {"Inverse Darkhue" 5} {"Blackbody" 6 }}
 
 	pack $w.f2.types -in $w.f2 -side left
 	frame $w.f2.f3 -relief groove -borderwidth 2	
