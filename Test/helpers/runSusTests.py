@@ -292,11 +292,9 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
     perf_msg  = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
-      
 
-  # actually run the test!
-  print "Command Line: %s %s" % (command, susinput)
-  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
+  # determine path of replace_msg in 2 places to not have 2 different msgs.
+  replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: "
 
   if do_restart == "yes":
     chdir("..")
@@ -305,7 +303,11 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     system("ln -s restart/*.uda .")
     chdir("restart")
   else:
-    replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
+    replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())      
+
+  # actually run the test!
+  print "Command Line: %s %s" % (command, susinput)
+  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
 
 
   if rc != 0:
@@ -315,8 +317,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     print sus_log_msg
     return 1
   else:
-    # determine path of replace_msg in 2 places to not have 2 different msgs.
-    replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: "
+    # Sus completed successfully - now do comp, mem, and perf tests
 
     # get the time from sus.log
     # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
