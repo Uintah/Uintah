@@ -1666,13 +1666,8 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
       //  so fields are thermodynamically consistent.
       StaticArray<constCCVariable<double> > placeHolder(0);
       
-      hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],press_CC);
-
-
-    
-    
-      setBC(press_CC,  rho_micro, placeHolder, d_surroundingMatl_indx,
-            "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+      hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],
+                                    press_CC);
 
       Patch::FaceType facePlaceHolder;
       ice_matl->getEOS()->computeTempCC(patch, "WholeDomain",
@@ -1823,17 +1818,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-/*`==========TESTING==========*/
-// This might be wrong.  Try 1/sp_vol -- Todd 11/22
-#if 0
-        rho_micro[m][c] = 
-         ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],cv[m][c],
-                                             Temp[m][c]); 
-#endif 
-#if 1
         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
-#endif
-/*==========TESTING==========`*/
 
         ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
                                             cv[m][c], Temp[m][c],
@@ -4193,13 +4178,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
   }  // patch loop
 }
 
-/* 
- ======================================================================*
+/*_____________________________________________________________________
  Function:  hydrostaticPressureAdjustment--
- Notes:      Material 0 is assumed to be the surrounding fluid and 
-            we compute the hydrostatic pressure using
-            
-            press_hydro_ = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance
+ Notes:     press_hydro_ = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance
 _______________________________________________________________________ */
 void ICE::hydrostaticPressureAdjustment(const Patch* patch,
                           const CCVariable<double>& rho_micro_CC,
@@ -4224,9 +4205,10 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
   //__________________________________
   //  X direction
   if (gravity.x() != 0.)  {
-    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+                                                             iter++) {
       IntVector c = *iter;
-      dist_from_p_ref  = fabs((double) (c.x() - press_ref_x)) * dx.x();
+      dist_from_p_ref  = (double) (c.x() - press_ref_x) * dx.x();
       press_hydro      = rho_micro_CC[c] * gravity.x() * dist_from_p_ref;
       press_CC[c] += press_hydro;
     }
@@ -4234,9 +4216,10 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
   //__________________________________
   //  Y direction
   if (gravity.y() != 0.)  {
-    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+                                                             iter++) {
       IntVector c = *iter;
-      dist_from_p_ref = fabs((double) (c.y() - press_ref_y)) * dx.y();
+      dist_from_p_ref = (double) (c.y() - press_ref_y) * dx.y();
       press_hydro     = rho_micro_CC[c] * gravity.y() * dist_from_p_ref;
       press_CC[c] += press_hydro;
     }
@@ -4244,9 +4227,10 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
   //__________________________________
   //  Z direction
   if (gravity.z() != 0.)  {
-    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+                                                             iter++) {
       IntVector c = *iter;
-      dist_from_p_ref   = fabs((double) (c.z() - press_ref_z)) * dx.z();
+      dist_from_p_ref   = (double) (c.z() - press_ref_z) * dx.z();
       press_hydro       = rho_micro_CC[c] * gravity.z() * dist_from_p_ref;
       press_CC[c] += press_hydro;
     }
