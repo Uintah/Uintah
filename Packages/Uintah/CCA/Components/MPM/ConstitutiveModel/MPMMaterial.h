@@ -12,7 +12,7 @@
 #include <vector>
 
 #define IMPLICIT
-#undef IMPLICIT
+//#undef IMPLICIT
 
 namespace SCIRun {
   class Point;
@@ -62,7 +62,7 @@ WARNING
 
       class MPMMaterial : public Material {
       public:
-	 MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27);
+	 MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27,string integrat);
 	 
 	 ~MPMMaterial();
 	 
@@ -117,9 +117,10 @@ WARNING
 				       ParticleVariable<Vector>& ptang1,
 				       ParticleVariable<Vector>& ptang2,
 				       ParticleVariable<Vector>& pnorm);
-
+#if 0
 	 int checkForSurface(const GeometryPiece* piece,
 				const Point p, const Vector dxpp);
+#endif
 
 
          //for HeatConductionModel
