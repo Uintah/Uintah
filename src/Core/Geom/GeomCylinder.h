@@ -34,7 +34,7 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomSave.h>
-#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
@@ -84,7 +84,7 @@ protected:
   int  nu_;
   int  nv_;
   vector <Point> points_;
-  vector <Color> colors_;
+  vector <MaterialHandle> colors_;
 
 public:
   GeomColoredCylinders();
@@ -94,7 +94,8 @@ public:
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
 
-  void add(const Point &p0, const Color &c0, const Point &p1, const Color &c1);
+  void add(const Point &p0, MaterialHandle c0,
+	   const Point &p1, MaterialHandle c1);
   void set_radius(double val) { radius_ = val; }
   void set_nu_nv(int nu, int nv);
 

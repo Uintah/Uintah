@@ -521,6 +521,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 				    const string &edge_display_type,
 				    double edge_scale) 
 {
+  //cerr << "rendering edgess" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
   const bool cyl = edge_display_type == "Cylinders";
@@ -538,7 +539,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   {
     edges = scinew GeomColoredCylinders;
     edges->set_radius(edge_scale);
-    edges->set_nu_nv(2*res_, 1); // Why is this 2*rez_ instead of rez?
+    edges->set_nu_nv(2*res_, 1);
     GeomDL *display_list = scinew GeomDL(edges);
     edge_switch_ = scinew GeomSwitch(display_list);
   }
@@ -561,11 +562,11 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	MaterialHandle m2 = choose_mat(false, nodes[1]);
 	if (cyl)
 	{
-	  edges->add(p1, m1->diffuse, p2, m2->diffuse);
+	  edges->add(p1, m1, p2, m2);
 	}
 	else
 	{
-	  cedges->add(p1, m1->diffuse, p2, m2->diffuse);
+	  cedges->add(p1, m1, p2, m2);
 	}
       }
       break;
@@ -574,11 +575,11 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	MaterialHandle m1 = choose_mat(false, *eiter);
 	if (cyl)
 	{
-	  edges->add(p1, m1->diffuse, p2, m1->diffuse);
+	  edges->add(p1, m1, p2, m1);
 	}
 	else
 	{
-	  cedges->add(p1, m1->diffuse, p2, m1->diffuse);
+	  cedges->add(p1, m1, p2, m1);
 	}
       }
       break;
@@ -589,11 +590,11 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	MaterialHandle m1 = choose_mat(true, 0);
 	if (cyl)
 	{
-	  edges->add(p1, m1->diffuse, p2, m1->diffuse);
+	  edges->add(p1, m1, p2, m1);
 	}
 	else
 	{
-	  cedges->add(p1, m1->diffuse, p2, m1->diffuse);
+	  cedges->add(p1, m1, p2, m1);
 	}
       }
       break;
