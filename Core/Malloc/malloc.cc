@@ -47,7 +47,7 @@
 // irix64 KCC stuff
 #include <strings.h>
 
-#if defined(__sun)
+#if defined(__sun) || defined(_WIN32)
 #include <string.h>
 #define bzero(p,sz)  memset(p,0, sz);
 #elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__)

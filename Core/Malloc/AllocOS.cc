@@ -40,13 +40,16 @@
  */
 
 #include <sci_defs/bits_defs.h>
+#include <sci_defs/malloc_defs.h>
 
 #include <Core/Malloc/AllocOS.h>
 #include <Core/Malloc/AllocPriv.h>
 #ifdef __APPLE__
 #include <sys/types.h>
 #endif
+#ifndef _WIN32
 #include <sys/mman.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -67,6 +70,7 @@ static int devzero_fd=-1;
 
 OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 {
+#ifndef DISABLE_SCI_MALLOC
     unsigned long offset = sizeof(OSHunk)%ALIGN;
     if(offset != 0)
       offset = ALIGN-offset;
@@ -138,10 +142,14 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
     hunk->alloc_len=asize;
     hunk->returnable=returnable;
     return hunk;
+#else
+    return NULL;
+#endif // DISABLE_SCI_MALLOC
 }
 
 void OSHunk::free(OSHunk* hunk)
 {
+#ifndef DISABLE_SCI_MALLOC
    if(!hunk->returnable){
       fprintf(stderr, "Attempt to return a non-returnable memory hunk!\n");
       abort();
@@ -163,6 +171,7 @@ void OSHunk::free(OSHunk* hunk)
 	    //abort();
 	}
     }
+#endif // DISABLE_SCI_MALLOC
 }
 
 } // End namespace SCIRun
