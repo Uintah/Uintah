@@ -23,6 +23,8 @@ namespace Uintah {
     double temperature;
     double density;
     double initialDensity;
+    double bulkModulus;
+    double initialBulkModulus;
     double shearModulus;
     double initialShearModulus;
     double meltingTemp;
