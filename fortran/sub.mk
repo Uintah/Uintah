@@ -92,7 +92,7 @@ PSELIBS := \
 	Core/Geometry                    \
 	Core/Exceptions
 
-LIBS := $(FLIBS) -lm
+LIBS := $(F_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
