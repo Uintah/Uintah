@@ -143,9 +143,12 @@ void processGEOMOBJECT(token_list* children1, unsigned loop1,
             Material *check = (*sub)[(*v6)[loop4]];
             if (check) mat = check;            
           }
+
+          bool valid = false;
+          ImageMaterial *img = dynamic_cast<ImageMaterial*>(mat);
+          if (img && img->valid()) valid=true;
           
-          if (v3 && v3->size() && v4 && v4->size() &&
-              ((ImageMaterial*)mat)->valid()) {
+          if (v3 && v3->size() && v4 && v4->size() && valid){
             index   = loop4*3;
             findex4 = (*v4)[index++]*3;
             findex5 = (*v4)[index++]*3;
