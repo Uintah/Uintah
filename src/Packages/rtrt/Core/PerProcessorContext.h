@@ -17,15 +17,14 @@ public:
     PerProcessorContext(int size, int scratchsize);
     ~PerProcessorContext();
 
-    inline char* get(int offset, int size) {
+    inline char* get(int offset, int IFASSERT(size)) {
         ASSERT(offset+size <= datasize);
 	return data+offset;
     }
-    inline char* getscratch(int size) {
+    inline char* getscratch(int IFASSERT(size)) {
         ASSERT(size <= scratchsize);
 	return scratch;
     }
-    Object* shadow_cache[200];
 };
 
 } // end namespace rtrt

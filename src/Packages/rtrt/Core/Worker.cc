@@ -63,9 +63,6 @@ Worker::Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
   stats[0]=new Stats(1000);
   stats[1]=new Stats(1000);
   ppc=new PerProcessorContext(pp_size, scratchsize);
-  attens.resize(100);
-  for(int i=0;i<MAXDEPTH;i++)
-    shadow_cache[i]=0;
 }
 
 Worker::~Worker()
@@ -157,9 +154,6 @@ void Worker::run()
       st->reset();
       barrier->wait(dpy->get_num_procs()+1);
       st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
-      for(int i=0;i<MAXDEPTH;i++){
-	shadow_cache[i]=0;
-      }
       Image* image=scene->get_image(rendering_scene);
       Camera* camera=scene->get_camera(rendering_scene);
       int xres=image->get_xres();
@@ -630,9 +624,6 @@ void Worker::run()
       //st->reset();
       //barrier->wait(dpy->get_num_procs()+1);
       //st->add(Thread::currentSeconds(), Color(1,0,0));
-      for(int i=0;i<MAXDEPTH;i++){
-	shadow_cache[i]=0;
-      }
 	
       double ixres=1./xres;
       double iyres=1./yres;
@@ -964,15 +955,19 @@ void Worker::traceRay(Color& result, const Ray& ray,
   }
 }
 
+#if 0
 bool Worker::lit(const Point& hitpos, Light* light,
 		 const Vector& light_dir, double dist, Color& atten,
 		 int depth, Context* cx)
 {
+#if 1
   if(scene->shadow_mode==0)
     return true;
+#endif
   HitInfo hit;
   Ray lightray(hitpos, light_dir);
   Object* obj=scene->get_shadow_object();
+#if 1
   if(shadow_cache[depth]){
     shadow_cache[depth]->light_intersect(light, lightray, hit, dist, atten,
 					 &cx->stats->ds[depth], ppc);
@@ -983,9 +978,13 @@ bool Worker::lit(const Point& hitpos, Light* light,
     shadow_cache[depth]=0;
     cx->stats->ds[depth].shadow_cache_miss++;
   }
+#endif
+#if 0
   if(scene->shadow_mode==1){
+#endif
     obj->light_intersect(light, lightray, hit, dist, atten,
 			 &cx->stats->ds[depth], ppc);
+#if 0
   } else if(scene->shadow_mode==2){
     obj->intersect(lightray, hit, &cx->stats->ds[depth], 0);
   } else if(scene->shadow_mode==3){
@@ -1032,13 +1031,17 @@ bool Worker::lit(const Point& hitpos, Light* light,
     atten = atten*(1.0/n);
     return true;
   }
+#endif
 
-  if(hit.was_hit && hit.min_t < dist){
+  if(hit.was_hit){
+#if 1
     shadow_cache[depth]=hit.hit_obj;
+#endif
     return false;
   }
+#if 1
   shadow_cache[depth]=0;
+#endif
   return true;
 }
-
-  
+#endif

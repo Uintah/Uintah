@@ -4,9 +4,9 @@
 
 //class ostream;
 #include <iostream>
-using namespace std;
 
 namespace rtrt {
+using namespace std;
 
 // This gets rid of compiler warnings on the SGI.
 #if defined(__sgi)

@@ -3,6 +3,7 @@
 #define HASH_H 1
 
 #include <Core/Util/Assert.h>
+#include <string>
 
 namespace rtrt {
 
@@ -24,6 +25,15 @@ inline unsigned int Hash(const unsigned long& k)
 inline unsigned int Hash(const void*& k)
 {
     return (unsigned int)(unsigned long)k;
+}
+
+inline unsigned int Hash(const std::string& k)
+{
+  using namespace std;
+  unsigned int sum=0;
+  for(string::const_iterator iter = k.begin(); iter != k.end(); iter++)
+    sum=(sum<<3)^(sum>>2)^(*iter<<1);
+  return sum;
 }
 
 } // end namespace rtrt

@@ -881,13 +881,6 @@ Vector MIPHVB16::normal(const Point&, const HitInfo& hit)
     return *n;
 }
 
-void MIPHVB16::light_intersect(Light*, const Ray& lightray,
-			  HitInfo& hit, double, Color&,
-			  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 void MIPHVB16::brickit(int proc)
 {
     int nynz=ny*nz;

@@ -93,6 +93,12 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     nx=(int)(fx+.5);
     ny=(int)(fy+.5);
     nz=(int)(fz+.5);
+    if(nx<2)
+	nx=2;
+    if(ny<2)
+	ny=2;
+    if(nz<2)
+	nz=2;
 
     int ngrid=nx*ny*nz;
     cerr << "Computing " << nx << 'x' << ny << 'x' << nz << " grid for " << ngrid << " cells (wanted " << ncells << ")\n";
@@ -347,11 +353,19 @@ void Grid::intersect(const Ray& ray, HitInfo& hit,
     }
 }
 
-void Grid::light_intersect(Light*, const Ray& lightray,
-			  HitInfo& hit, double, Color&,
-			  DepthStats* ds, PerProcessorContext* ppc)
+void Grid::light_intersect(const Ray& lightray, HitInfo& hit, Color&,
+			   DepthStats* ds, PerProcessorContext* ppc)
 {
-    intersect(lightray, hit, ds, ppc);
+  cerr << "Grid::light_intersect should be implemented properly! - Steve\n";
+  intersect(lightray, hit, ds, ppc);
+}
+
+void Grid::softshadow_intersect(Light*, const Ray& lightray,
+				HitInfo& hit, double, Color&,
+				DepthStats* ds, PerProcessorContext* ppc)
+{
+  cerr << "Grid::softshadow_intersect should be implemented properly! - Steve\n";
+  intersect(lightray, hit, ds, ppc);
 }
 
 void Grid::animate(double, bool&)

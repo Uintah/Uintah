@@ -19,17 +19,23 @@ TimeObj::~TimeObj()
 {
 }
 
-void TimeObj::light_intersect(Light* light, const Ray& ray, HitInfo& hit,
-			    double dist, Color& atten, DepthStats* st,
-			    PerProcessorContext* ppc)
-{
-    objs[cur]->light_intersect(light, ray, hit, dist, atten, st, ppc);
-}
-
 void TimeObj::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
     objs[cur]->intersect(ray, hit, st, ppc);
+}
+
+void TimeObj::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+			      DepthStats* st, PerProcessorContext* ppc)
+{
+  objs[cur]->light_intersect(ray, hit, atten, st, ppc);
+}
+
+void TimeObj::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+				   double dist, Color& atten, DepthStats* st,
+				   PerProcessorContext* ppc)
+{
+    objs[cur]->softshadow_intersect(light, ray, hit, dist, atten, st, ppc);
 }
 
 void TimeObj::multi_light_intersect(Light* light, const Point& orig,

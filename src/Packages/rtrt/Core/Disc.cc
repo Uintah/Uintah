@@ -45,20 +45,21 @@ Vector Disc::normal(const Point&, const HitInfo&)
     return n;
 }
 
-void Disc::light_intersect(Light*, const Ray& ray,
-			   HitInfo&, double, Color& atten,
+void Disc::light_intersect(const Ray& ray, HitInfo& hit, Color&,
 			   DepthStats*, PerProcessorContext*)
 {
-    Vector dir(ray.direction());
-    Point orig(ray.origin());
-    double dt=Dot(dir, n);
-    if(dt < 1.e-6 && dt > -1.e-6)
-	return;
-    double t=(d-Dot(n, orig))/dt;
-    Point p(orig+dir*t);
-    double l=(p-cen).length2();
-    if(l < radius*radius)
-	atten=Color(0,0,0);
+  Vector dir(ray.direction());
+  Point orig(ray.origin());
+  double dt=Dot(dir, n);
+  if(dt < 1.e-6 && dt > -1.e-6)
+    return;
+  double t=(d-Dot(n, orig))/dt;
+  if(t>hit.min_t)
+    return;
+  Point p(orig+dir*t);
+  double l=(p-cen).length2();
+  if(l < radius*radius)
+    hit.shadowHit(this, t);
 }
 
 void Disc::compute_bounds(BBox& bbox, double offset)

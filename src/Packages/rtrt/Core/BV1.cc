@@ -194,7 +194,7 @@ void BV1::make_tree(int nprims, Object** subprims, double* slabs, int which){
 	return;
     } else {
 	int split=(nprims+1)/2;
-#if 0
+#if 1
 	int i;	
 	// Sort by X...
 	my_qsort(&subprims[0], slabs, nprims, 0);
@@ -224,17 +224,17 @@ void BV1::make_tree(int nprims, Object** subprims, double* slabs, int which){
 	    zbox2.extend(&slabs[6*i]);
 
 	Point x1(Max(xbox1.min(), xbox2.min()));
-	Point x2(Min(xbox1.max(), xbox2.max()));
+	Point x2(Min(xbox2.max(), xbox2.max()));
 	Vector ox(x2-x1);
 	double overx=ox.minComponent();
 	
 	Point y1(Max(ybox1.min(), ybox2.min()));
-	Point y2(Min(ybox1.max(), ybox2.max()));
+	Point y2(Min(ybox2.max(), ybox2.max()));
 	Vector oy(y2-y1);
 	double overy=oy.minComponent();
 
 	Point z1(Max(zbox1.min(), zbox2.min()));
-	Point z2(Min(zbox1.max(), zbox2.max()));
+	Point z2(Min(zbox2.max(), zbox2.max()));
 	Vector oz(z2-z1);
 	double overz=oz.minComponent();
 
@@ -253,7 +253,6 @@ void BV1::make_tree(int nprims, Object** subprims, double* slabs, int which){
 	make_tree(nprims-split, subprims+split, slabs+split*6, (which +1)%3);
     }
 }
-
 
 inline void isect_bbox(const Point& orig, const Vector& idir,
 		       double* slabs, bool& lhit, bool& rhit,
@@ -353,6 +352,12 @@ inline void isect_bbox(const Point& orig, const Vector& idir,
     } else {
 	rhit=false;
     }
+#if 0
+    if(lhit)
+      cerr << "lhit\n";
+    if(rhit)
+      cerr << "rhit\n";
+#endif
 }
 
 void BV1::intersect(const Ray& ray, HitInfo& hit,
@@ -427,122 +432,173 @@ void BV1::intersect(const Ray& ray, HitInfo& hit,
     }
 }
 
-void BV1::light_intersect(Light* light, const Ray& lightray,
-			  HitInfo& hit, double dist, Color& atten,
+void BV1::light_intersect(const Ray& lightray,
+			  HitInfo& hit, Color& atten,
 			  DepthStats* st, PerProcessorContext* ppc)
 {
-    double* slabs=light_tree->slabs;
-    int primStart=light_tree->primStart;
-    Object** prims=&light_tree->prims[0];
-#if 0
-    if(shadow_cache){
-	shadow_cache->light_intersect(light, lightray, hit, dist, atten, st);
-	st->shadow_cache_try++;
-	if(atten.luminance()<1.e-6)
-	    return;
-	shadow_cache=0;
-	st->shadow_cache_miss++;
-    }
-    if(!soft_shadows){
-	intersect(obj, lightray, hit, st);
-	return;
-    }
-#endif
+  double* slabs=normal_tree->slabs;
+  int primStart=normal_tree->primStart;
+  Object** prims=&normal_tree->prims[0];
 
-     int idx=0;
-     int sp=0;
-     int bstack[BSTACK_SIZE];
-     Point orig(lightray.origin());
-     Vector dir(lightray.direction());
-     Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
-     for(;;){
-	 int L=2*idx+1;
-	 int R=L+1;
-	 bool lhit, rhit;
-	 isect_bbox(orig, idir, &slabs[L*6], lhit, rhit, hit.min_t);
-	 st->bv_total_isect_light+=2;
-	 if(lhit){
-	     if(rhit){
-		 if(L>=primStart){
-		     prims[L-primStart]->light_intersect(light, lightray, hit, dist, atten, st, ppc);
-		     st->bv_prim_isect_light++;
-#if 0
-		     if(atten.luminance()<1.e-6){
-			 shadow_cache=prims[L-primStart];
-			 break;
-		     }
-#endif
-		     prims[R-primStart]->light_intersect(light, lightray, hit, dist, atten, st, ppc);
-		     st->bv_prim_isect_light++;
-#if 0
-		     if(atten.luminance()<1.e-6){
-			 shadow_cache=prims[R-primStart];
-			 break;
-		     }
-#endif
-		     if(--sp<0)
-			 break;
-		     idx=bstack[sp];
-		 } else if(R>=primStart){
-		     prims[R-primStart]->light_intersect(light, lightray, hit, dist, atten, st, ppc);
-		     st->bv_prim_isect_light++;
-#if 0
-		     if(atten.luminance()<1.e-6){
-			 shadow_cache=prims[R-primStart];
-			 break;
-		     }
-#endif
-		     idx=L;
-		 } else {
-		     bstack[sp++]=R;
-		     st->bv_prim_isect_light++;
-		     if(sp>=BSTACK_SIZE){
-			 cerr << "BSTACK OVERFLOW!\n";
-			 Thread::exitAll(-1);
-		     }
-		     idx=L;
-		 }
-	     } else {
-		 if(L>=primStart){
-		     prims[L-primStart]->light_intersect(light, lightray, hit, dist, atten, st, ppc);
-		     st->bv_prim_isect_light++;
-#if 0
-		     if(atten.luminance()<1.e-6){
-			 shadow_cache=prims[L-primStart];
-			 break;
-		     }
-#endif
-		     if(--sp<0)
-			 break;
-		     idx=bstack[sp];
-		 } else {
-		     idx=L;
-		 }
-	     }
-	 } else {
-	     if(rhit){
-		 if(R>=primStart){
-		     prims[R-primStart]->light_intersect(light, lightray, hit, dist, atten, st, ppc);
-		     st->bv_prim_isect_light++;
-#if 0
-		     if(atten<1.e-6){
-			 shadow_cache=prims[R-primStart];
-			 break;
-		     }
-#endif
-		     if(--sp<0)
-			 break;
-		     idx=bstack[sp];
-		 } else {
-		     idx=R;
-		 }
-	     } else {
-		 if(--sp<0)
-		     break;
-		 idx=bstack[sp];
-	     }
-	 }
-     }
+  int idx=0;
+  int sp=0;
+  int bstack[BSTACK_SIZE];
+  Point orig(lightray.origin());
+  Vector dir(lightray.direction());
+  Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
+  for(;;){
+    int L=2*idx+1;
+    int R=L+1;
+    bool lhit, rhit;
+    isect_bbox(orig, idir, &slabs[L*6], lhit, rhit, hit.min_t);
+    st->bv_total_isect_light+=2;
+    if(lhit){
+      if(rhit){
+	if(L>=primStart){
+	  prims[L-primStart]->light_intersect(lightray, hit, atten, st, ppc);
+	  st->bv_prim_isect_light++;
+	  if(hit.was_hit)
+	    return;
+	  prims[R-primStart]->light_intersect(lightray, hit, atten, st, ppc);
+	  st->bv_prim_isect_light++;
+	  if(hit.was_hit)
+	    return;
+	  if(--sp<0)
+	    break;
+	  idx=bstack[sp];
+	} else if(R>=primStart){
+	  prims[R-primStart]->light_intersect(lightray, hit, atten, st, ppc);
+	  st->bv_prim_isect_light++;
+	  if(hit.was_hit)
+	    return;
+	  idx=L;
+	} else {
+	  bstack[sp++]=R;
+	  st->bv_prim_isect_light++;
+	  if(sp>=BSTACK_SIZE){
+	    cerr << "BSTACK OVERFLOW!\n";
+	    Thread::exitAll(-1);
+	  }
+	  idx=L;
+	}
+      } else {
+	if(L>=primStart){
+	  prims[L-primStart]->light_intersect(lightray, hit, atten, st, ppc);
+	  st->bv_prim_isect_light++;
+	  if(hit.was_hit)
+	    return;
+	  if(--sp<0)
+	    break;
+	  idx=bstack[sp];
+	} else {
+	  idx=L;
+	}
+      }
+    } else {
+      if(rhit){
+	if(R>=primStart){
+	  prims[R-primStart]->light_intersect(lightray, hit, atten, st, ppc);
+	  st->bv_prim_isect_light++;
+	  if(hit.was_hit)
+	    return;
+	  if(--sp<0)
+	    break;
+	  idx=bstack[sp];
+	} else {
+	  idx=R;
+	}
+      } else {
+	if(--sp<0)
+	  break;
+	idx=bstack[sp];
+      }
+    }
+  }
+}
+
+
+void BV1::softshadow_intersect(Light* light, const Ray& lightray,
+			       HitInfo& hit, double dist, Color& atten,
+			       DepthStats* st, PerProcessorContext* ppc)
+{
+  double* slabs=light_tree->slabs;
+  int primStart=light_tree->primStart;
+  Object** prims=&light_tree->prims[0];
+
+  int idx=0;
+  int sp=0;
+  int bstack[BSTACK_SIZE];
+  Point orig(lightray.origin());
+  Vector dir(lightray.direction());
+  Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
+  for(;;){
+    int L=2*idx+1;
+    int R=L+1;
+    bool lhit, rhit;
+    isect_bbox(orig, idir, &slabs[L*6], lhit, rhit, hit.min_t);
+    st->bv_total_isect_light+=2;
+    if(lhit){
+      if(rhit){
+	if(L>=primStart){
+	  prims[L-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
+	  if(hit.was_hit)
+	    return;
+	  st->bv_prim_isect_light++;
+	  prims[R-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
+	  if(hit.was_hit)
+	    return;
+	  st->bv_prim_isect_light++;
+	  if(--sp<0)
+	    break;
+	  idx=bstack[sp];
+	} else if(R>=primStart){
+	  prims[R-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
+	  if(hit.was_hit)
+	    return;
+	  st->bv_prim_isect_light++;
+	  idx=L;
+	} else {
+	  bstack[sp++]=R;
+	  st->bv_prim_isect_light++;
+	  if(sp>=BSTACK_SIZE){
+	    cerr << "BSTACK OVERFLOW!\n";
+	    Thread::exitAll(-1);
+	  }
+	  idx=L;
+	}
+      } else {
+	if(L>=primStart){
+	  prims[L-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
+	  if(hit.was_hit)
+	    return;
+	  st->bv_prim_isect_light++;
+	  if(--sp<0)
+	    break;
+	  idx=bstack[sp];
+	} else {
+	  idx=L;
+	}
+      }
+    } else {
+      if(rhit){
+	if(R>=primStart){
+	  prims[R-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
+	  if(hit.was_hit)
+	    return;
+	  st->bv_prim_isect_light++;
+	  if(--sp<0)
+	    break;
+	  idx=bstack[sp];
+	} else {
+	  idx=R;
+	}
+      } else {
+	if(--sp<0)
+	  break;
+	idx=bstack[sp];
+      }
+    }
+  }
 }
 
 

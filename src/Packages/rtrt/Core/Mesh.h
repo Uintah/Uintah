@@ -29,7 +29,7 @@ public:
     Point **getPts(Vector &, Vector &, Vector &);
 
     inline int get_scratchsize() {
-        return msize*nsize*sizeof(Point);
+      return (int)(msize*nsize*sizeof(Point));
     }
 
   inline void get_scratch(double* &thetau, double* &thetav,

@@ -58,14 +58,36 @@ void Rect::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     hit.hit(this, t);
 }
 
+void Rect::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+			   DepthStats* st, PerProcessorContext*)
+{
+    st->rect_isect++;
+    Vector dir(ray.direction());
+    Point orig(ray.origin());
+    double dt=Dot(dir, n);
+    if(dt < 1.e-6 && dt > -1.e-6)
+	return;
+    double t=(d-Dot(n, orig))/dt;
+    if(t>hit.min_t)
+	return;
+    Point p(orig+dir*t);
+    double a1=Dot(u, p)-d1;
+    if(a1 > 1 || a1 < -1)
+	return;
+    double a2=Dot(v, p)-d2;
+    if(a2 > 1 || a2 < -1)
+	return;
+    hit.shadowHit(this, t);
+}
+
 Vector Rect::normal(const Point&, const HitInfo&)
 {
     return n;
 }
 
-void Rect::light_intersect(Light* light, const Ray& ray,
-			   HitInfo&, double dist, Color& atten,
-			   DepthStats* st, PerProcessorContext*)
+void Rect::softshadow_intersect(Light* light, const Ray& ray,
+				HitInfo& hit, double dist, Color& atten,
+				DepthStats* st, PerProcessorContext*)
 {
     st->rect_light_isect++;
     Vector dir(ray.direction());
@@ -93,6 +115,7 @@ void Rect::light_intersect(Light* light, const Ray& ray,
     if(a1<du && a1>-du && a2<dv && a2>-dv){
 	atten=Color(0,0,0);
 	st->rect_light_hit++;
+	hit.hit(this, 1);
 	return;
     }
 

@@ -9,9 +9,8 @@
 #include <Packages/rtrt/Core/GridSpheresDpy.h>
 #include <string>
 
-using std::string;
-
 namespace rtrt {
+using std::string;
 
 struct GridSpheresTree;
 struct BoundedObject;
@@ -69,9 +68,6 @@ public:
 			 HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
-  virtual void light_intersect(Light* light, const Ray& ray,
-			       HitInfo& hit, double dist, Color& atten,
-			       DepthStats* st, PerProcessorContext*);
   virtual void animate(double t, bool& changed);
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual void compute_bounds(BBox&, double offset);

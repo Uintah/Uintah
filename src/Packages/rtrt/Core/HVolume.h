@@ -80,9 +80,6 @@ public:
   virtual ~HVolume();
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
-  virtual void light_intersect(Light* light, const Ray& ray,
-			       HitInfo& hit, double dist, Color& atten,
-			       DepthStats* st, PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
@@ -208,16 +205,14 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
 #ifndef __sgi
     ASSERTFAIL("Can't do direct io on non-sgi machines.");
 #else
-    struct dioattr s;
 #if 0
+    struct dioattr s;
     if(fcntl(bin, F_DIOINFO, &s) == 0 && s.d_mem>0)
       fprintf(stderr, "direct io: d_mem=%d, d_miniosz=%d, d_maxiosz=%d\n", s.d_mem, s.d_miniosz, s.d_maxiosz);
     else {
-#endif
       fprintf(stderr, "No direct io\n");
       s.d_maxiosz=16*1024*1024;
       s.d_mem=8;
-#if 0
     }
 #endif
     cerr << "Reading " << buf << "...";
@@ -1051,14 +1046,6 @@ Vector HVolume<T,A,B>::normal(const Point&, const HitInfo& hit)
 }
 
 template<class T, class A, class B>
-void HVolume<T,A,B>::light_intersect(Light*, const Ray& lightray,
-				     HitInfo& hit, double, Color&,
-				     DepthStats* ds, PerProcessorContext* ppc)
-{
-  intersect(lightray, hit, ds, ppc);
-}
-
-template<class T, class A, class B>
 void HVolume<T,A,B>::compute_hist(int nhist, int* hist,
 				  float datamin, float datamax)
 {
@@ -1129,7 +1116,7 @@ void HVolume<T,A,B>::compute_hist(int nhist, int* hist,
 }    
 
 template<class T, class A, class B>
-void HVolume<T,A,B>::brickit(int proc)
+void HVolume<T,A,B>::brickit(int /*proc*/)
 {
   int sx, ex;
   while(work->nextAssignment(sx, ex)){

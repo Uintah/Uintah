@@ -70,6 +70,43 @@ void Sphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     }	
 }
 
+// Maybe this could be improved - steve
+void Sphere::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+			     DepthStats* st, PerProcessorContext*)
+{
+  Vector OC=cen-ray.origin();
+  double tca=Dot(OC, ray.direction());
+  double l2oc=OC.length2();
+  double rad2=radius*radius;
+  st->sphere_light_isect++;
+  if(l2oc <= rad2){
+    // Inside the sphere
+    double t2hc=rad2-l2oc+tca*tca;
+    double thc=sqrt(t2hc);
+    double t=tca+thc;
+    hit.shadowHit(this, t);
+    st->sphere_light_hit++;
+    return;
+  } else {
+    if(tca < 0.0){
+      // Behind ray, no intersections...
+      return;
+    } else {
+      double t2hc=rad2-l2oc+tca*tca;
+      if(t2hc <= 0.0){
+	// Ray misses, no intersections
+	return;
+      } else {
+	double thc=sqrt(t2hc);
+	hit.shadowHit(this, tca-thc);
+	hit.shadowHit(this, tca+thc);
+	st->sphere_light_hit++;
+	return;
+      }
+    }
+  }	
+}
+
 Vector Sphere::normal(const Point& hitpos, const HitInfo&)
 {
     Vector n=hitpos-cen;
@@ -77,9 +114,9 @@ Vector Sphere::normal(const Point& hitpos, const HitInfo&)
     return n;
 }
 
-void Sphere::light_intersect(Light* light, const Ray& ray, HitInfo&,
-			     double dist, Color& atten, DepthStats* st,
-			     PerProcessorContext*)
+void Sphere::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+				  double dist, Color& atten, DepthStats* st,
+				  PerProcessorContext*)
 {
     Vector OC=cen-ray.origin();
     double tca=Dot(OC, ray.direction());
@@ -103,6 +140,7 @@ void Sphere::light_intersect(Light* light, const Ray& ray, HitInfo&,
     if(d2<Ri2){
 	atten=Color(0,0,0);
 	st->sphere_light_hit++;
+	hit.hit(this, 1);
 	return;
     }
 

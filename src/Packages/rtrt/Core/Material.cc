@@ -25,8 +25,43 @@ Material::~Material()
 {
 }
 
+#if 0
 Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& normal) const
 {
+    if(scene->ambient_hack){
+#if 0
+	Color B(scene->get_cup() );
+	Color C(scene->get_cdown());
+#endif
+
+        float cosine = scene->get_groundplane().cos_angle( normal );
+        float sine = fsqrt ( 1.F - cosine*cosine );
+        //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
+        float w0, w1;
+	if(cosine > 0){
+             w0= sine/2.F;
+	     w1= (1.F -  sine/2.F);
+	} else {
+             w1= sine/2.F;
+	     w0= (1.F -  sine/2.F);
+	}
+/*
+        double cons =  scene->get_groundplane().scaled_distance( p );
+        cons += 0.5*(1+cosine);
+        if (cons > 1) cons = 1;
+*/
+#if 0
+        double cons = 1;
+        Color D = B*C;
+        Color E = B*(1.F-w) + C*(w);
+        return cons*E + (1-cons)*D;
+#else
+        return scene->get_cup()*w1 + scene->get_cdown()*w0;
+#endif
+    } else {
+	return scene->get_average_bg( ) ;
+    }
+#if 0
     if(scene->ambient_hack){
       
       float cosine = scene->get_groundplane().cos_angle( normal );
@@ -39,7 +74,9 @@ Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& nor
     } else {
       return scene->get_average_bg( ) ;
     }
+#endif
 } 
+#endif
 
 //  Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& normal) const
 //  {
@@ -84,21 +121,15 @@ Vector Material::reflection(const Vector& v, const Vector n) const {
 }
 
 
-double Material::phong_term( const Vector& e, const Vector& l, const Vector& n, double ex) const {
-    Vector L = l;
-    L.normalize();
-    Vector E = e;
-    E.normalize();
-    Vector H= L - E;
-    H.normalize();
-    double cos_alpha= Dot(H, n );
-    if ( cos_alpha > 0 )
-        return pow( cos_alpha, ex );
-    else
-        return 0;
+double Material::phong_term( const Vector& E, const Vector& L, const Vector& n, double ex) const {
+  Vector H= L - E;
+  H.normalize();
+  double cos_alpha= Dot(H, n );
+  if ( cos_alpha > 0 )
+    return pow( cos_alpha, ex );
+  else
+    return 0;
 }
-
-
 
 void Material::phongshade(Color& result,
 			  const Color& amb,
@@ -112,60 +143,59 @@ void Material::phongshade(Color& result,
 			  double atten, const Color& accumcolor,
 			  Context* cx)
 {
-    double nearest=hit.min_t;
-    Object* obj=hit.hit_obj;
-    Point hitpos(ray.origin()+ray.direction()*nearest);
-    Vector normal(obj->normal(hitpos, hit));
-    double incident_angle=-Dot(normal, ray.direction());
-    if(incident_angle<0){
-	incident_angle=-incident_angle;
-	normal=-normal;
-    }
+  double nearest=hit.min_t;
+  Object* obj=hit.hit_obj;
+  Point hitpos(ray.origin()+ray.direction()*nearest);
+  Vector normal(obj->normal(hitpos, hit));
+  double incident_angle=-Dot(normal, ray.direction());
+  if(incident_angle<0){
+    incident_angle=-incident_angle;
+    normal=-normal;
+  }
     
-    Color difflight(0,0,0);
-    Color speclight(0,0,0);
-    int nlights=cx->scene->nlights();
-    cx->stats->ds[depth].nshadow+=nlights;
-    for(int i=0;i<nlights;i++){
-	Light* light=cx->scene->light(i);
-	Vector light_dir=light->get_pos()-hitpos;
-	double dist=light_dir.normalize();
-	Color shadowfactor(1,1,1);
-	if(cx->worker->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
-	    double cos_theta=Dot(light_dir, normal);
-	    if(cos_theta < 0){
-		cos_theta=-cos_theta;
-		light_dir=-light_dir;
-	    }
-	    difflight+=light->get_color()*(cos_theta*shadowfactor);
-	    if(spec_coeff > 0.0)
-		speclight+=light->get_color() * shadowfactor * phong_term( ray.direction(), light_dir,
-                                 normal, spec_coeff);
-	} else {
-	    cx->stats->ds[depth].inshadow++;
-	}
-    }
-    
-    Color surfcolor;
-    if(cx->scene->ambient_hack){
-	surfcolor=diffuse*(difflight+ambient_hack(cx->scene, hitpos, normal))
-	    +specular*speclight;
+  Color difflight(0,0,0);
+  Color speclight(0,0,0);
+  int nlights=cx->scene->nlights();
+  cx->stats->ds[depth].nshadow+=nlights;
+  for(int i=0;i<nlights;i++){
+    Light* light=cx->scene->light(i);
+    Vector light_dir=light->get_pos()-hitpos;
+    double dist=light_dir.normalize();
+    Color shadowfactor(1,1,1);
+    if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
+      double cos_theta=Dot(light_dir, normal);
+      if(cos_theta < 0){
+	cos_theta=-cos_theta;
+	light_dir=-light_dir;
+      }
+      //difflight+=light->get_color()*(cos_theta*shadowfactor);
+      difflight+=light->get_color()*cos_theta;
+      if(spec_coeff > 0.0){
+	Vector H=light_dir-ray.direction();
+	H.normalize();
+	double cos_alpha= Dot(H, normal);
+	if ( cos_alpha > 0 )
+	  speclight+=light->get_color() * /*shadowfactor * */pow( cos_alpha, spec_coeff);
+      }
     } else {
-	surfcolor=amb+diffuse*difflight+specular*speclight;
+      cx->stats->ds[depth].inshadow++;
     }
-    if (depth < cx->scene->maxdepth && (refl>0 )){
-
-	double thresh=cx->scene->base_threshold;
-	double ar=atten*refl;
-	if(ar>thresh){
-	    Vector refl_dir = reflection( ray.direction(), normal );
-	    Ray rray(hitpos, refl_dir);
-	    Color rcolor;
-	    cx->worker->traceRay(rcolor, rray, depth+1, ar,
-				 accumcolor+surfcolor*atten, cx);
-	    surfcolor+=rcolor*refl;
-	    cx->stats->ds[depth].nrefl++;
-	}
+  }
+    
+  Color surfcolor = amb+diffuse*difflight+specular*speclight;
+  if (depth < cx->scene->maxdepth && (refl>0 )){
+    
+    double thresh=cx->scene->base_threshold;
+    double ar=atten*refl;
+    if(ar>thresh){
+      Vector refl_dir = reflection( ray.direction(), normal );
+      Ray rray(hitpos, refl_dir);
+      Color rcolor;
+      cx->worker->traceRay(rcolor, rray, depth+1, ar,
+			   accumcolor+surfcolor*atten, cx);
+      surfcolor+=rcolor*refl;
+      cx->stats->ds[depth].nrefl++;
     }
-    result=surfcolor;
+  }
+  result=surfcolor;
 }

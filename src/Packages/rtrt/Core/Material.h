@@ -3,6 +3,8 @@
 #define MATERIAL_H 1
 
 #include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <math.h>
 
 namespace SCIRun {
   class Point;
@@ -40,7 +42,20 @@ public:
     virtual ~Material();
 
     //ambient color (irradiance/pi) at position with surface normal
-    Color ambient_hack(Scene* scene, const Point& position, const Vector& normal) const;
+  inline Color ambient_hack(Scene* scene, const Vector& normal) const {
+    float cosine = scene->get_groundplane().cos_angle( normal );
+    float sine = fsqrt ( 1.F - cosine*cosine );
+    //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
+    float w0, w1;
+    if(cosine > 0){
+      w0= sine/2.F;
+      w1= (1.F -  sine/2.F);
+    } else {
+      w1= sine/2.F;
+      w0= (1.F -  sine/2.F);
+    }
+    return scene->get_cup()*w1 + scene->get_cdown()*w0;
+  } 
 
     // reflection of v with respect to n
     Vector reflection(const Vector& v, const Vector n) const;

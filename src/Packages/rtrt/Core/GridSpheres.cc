@@ -36,7 +36,7 @@ namespace rtrt {
   };
 } // end namespace rtrt
 
-GridSpheres::GridSpheres(float* spheres, float* inmin, float* inmax,
+GridSpheres::GridSpheres(float* spheres, float* /*inmin*/, float* /*inmax*/,
 			 int nspheres, int ndata, int cellsize, int depth,
 			 float radius, int nmatls, Material** matls,
 			 string *var_names)
@@ -52,12 +52,14 @@ GridSpheres::GridSpheres(float* spheres, float* inmin, float* inmax,
   // if minimum data copy it over
   // otherwise compute it manually
   //  if(inmin){
+#if 0
   if(false){
     for(int i=0;i<ndata+3;i++){
       min[i]=inmin[i];
       max[i]=inmax[i];
     }
   } else {
+#endif
     cerr << "Recomputing min/max for GridSpheres\n";
     float* p=spheres;
     for(int j = 0; j < ndata+3; j++){
@@ -71,7 +73,9 @@ GridSpheres::GridSpheres(float* spheres, float* inmin, float* inmax,
       }
       p+=ndata+3;
     }
+#if 0
   }
+#endif
   iradius=1./radius;
   this->matls=new Material*[nmatls];
   for(int i=0;i<nmatls;i++)
@@ -1361,14 +1365,6 @@ void GridSpheres::isect(int depth, double t,
     }
   }
   //cerr << "Finished depth " << depth << '\n';
-}
-
-
-void GridSpheres::light_intersect(Light*, const Ray&,
-				  HitInfo&, double, Color&,
-				  DepthStats*, PerProcessorContext*)
-{
-  //  cerr << "GridSpheres::light_intersect not finished\n";
 }
 
 void GridSpheres::animate(double, bool& changed)

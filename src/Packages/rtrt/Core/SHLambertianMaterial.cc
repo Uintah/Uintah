@@ -26,7 +26,6 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Object.h>
-#include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/ppm.h>
 #include <Packages/rtrt/Core/prefilter.h>
@@ -126,7 +125,7 @@ SHLambertianMaterial::shade( Color& result, const Ray& ray,
 	Vector light_dir=light->get_pos()-hitpos;
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
-	if(cx->worker->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
+	if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
 	    double cos_theta=Dot(light_dir, normal);
 	    if(cos_theta < 0){
 		cos_theta=-cos_theta;

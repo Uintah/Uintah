@@ -162,13 +162,6 @@ public:
       }
     }*/
 
-    inline void light_intersect(Light*, const Ray& ray,
-                                 HitInfo& hit, double, Color&,
-                                 DepthStats* st, PerProcessorContext* ppc)
-      {
-	intersect(ray,hit,st,ppc);
-      }
-
     inline Vector normal(const Point&, const HitInfo& hit)
       {
 	// We computed the normal at intersect time and tucked it

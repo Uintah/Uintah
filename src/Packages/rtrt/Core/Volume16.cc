@@ -113,13 +113,6 @@ Vector Volume16::normal(const Point&, const HitInfo& hit)
     return *n;
 }
 
-void Volume16::light_intersect(Light*, const Ray& lightray,
-			     HitInfo& hit, double, Color&,
-			     DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 namespace rtrt {
 extern Vector GradientCell(const Point& pmin, const Point& pmax,
 			   const Point& p, float rho[2][2][2]);

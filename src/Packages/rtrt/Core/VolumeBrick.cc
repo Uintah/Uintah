@@ -167,13 +167,6 @@ Vector VolumeBrick::normal(const Point&, const HitInfo& hit)
     return *n;
 }
 
-void VolumeBrick::light_intersect(Light*, const Ray& lightray,
-				  HitInfo& hit, double, Color&,
-				  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 namespace rtrt {
 extern int HitCell(const Ray& r, const Point& pmin, const Point& pmax, 
 		   float rho[2][2][2], float iso, double tmin, double tmax, double& t);

@@ -868,13 +868,6 @@ Vector HVolumeBrick16::normal(const Point&, const HitInfo& hit)
     return *n;
 }
 
-void HVolumeBrick16::light_intersect(Light*, const Ray& lightray,
-			  HitInfo& hit, double, Color&,
-			  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 void HVolumeBrick16::compute_hist(int nhist, int* hist,
 				  float datamin, float datamax)
 {

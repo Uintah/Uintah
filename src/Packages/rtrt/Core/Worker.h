@@ -38,9 +38,7 @@ class Worker : public Runnable {
   int num;
   Stats* stats[2];
   Scene* scene;
-  Object* shadow_cache[MAXDEPTH];
   PerProcessorContext* ppc;
-  Array1<Color> attens;
   Counters* counters;
   int ncounters;
   int c0, c1;
@@ -58,9 +56,6 @@ public:
 		Context* cx, Object* obj);
   void traceRay(Color& result, const Ray& ray,
 		Point& hitpos, Object*& hitobj);
-  bool lit(const Point& hitpos, Light* light,
-	   const Vector& light_dir, double dist, Color& shadow_factor,
-	   int depth, Context* cx);
   Stats* get_stats(int i);
   inline Counters* get_counters() {
     return counters;

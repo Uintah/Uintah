@@ -97,13 +97,6 @@ Vector Cylinder::normal(const Point& hitpos, const HitInfo&)
     return v;
 }
 
-void Cylinder::light_intersect(Light*, const Ray& lightray, HitInfo& hit,
-			       double, Color&, DepthStats* ds,
-			       PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 void Cylinder::compute_bounds(BBox& bbox, double offset)
 {
     bbox.extend(bottom, radius+offset);

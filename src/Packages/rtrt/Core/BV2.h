@@ -22,9 +22,11 @@ public:
 			   HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
     virtual Vector normal(const Point&, const HitInfo& hit);
-    virtual void light_intersect(Light* light, const Ray& ray,
-				 HitInfo& hit, double dist, Color& atten,
-				 DepthStats* st, PerProcessorContext*);
+  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+			       DepthStats* st, PerProcessorContext* ppc);
+  virtual void softshadow_intersect(Light* light, const Ray& ray,
+				    HitInfo& hit, double dist, Color& atten,
+				    DepthStats* st, PerProcessorContext* ppc);
     virtual void animate(double t, bool& changed);
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
     virtual void compute_bounds(BBox&, double offset);

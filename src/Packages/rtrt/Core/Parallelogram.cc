@@ -75,9 +75,8 @@ Vector Parallelogram::normal(const Point&, const HitInfo&)
     return n;
 }
 
-void Parallelogram::light_intersect(Light*, const Ray& ray,
-			   HitInfo&, double dist, Color& atten,
-			   DepthStats* st, PerProcessorContext*)
+void Parallelogram::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+				    DepthStats* st, PerProcessorContext*)
 {
     st->rect_light_isect++;
     Vector dir(ray.direction());
@@ -87,14 +86,10 @@ void Parallelogram::light_intersect(Light*, const Ray& ray,
 	return;
     double t=(d-Dot(n, orig))/dt;
 
-
-    if(t<=1.e-6 || t>dist)
+    if(t<=1.e-6 || t>hit.min_t)
 	return;
 
     Point p(orig+dir*t);
-    //Vector pv(p-anchor);
-
-    //double delta=light->radius*t/dist;
 
     Vector vi(p-anchor);
     double a1 = Dot(un, vi);
@@ -103,40 +98,7 @@ void Parallelogram::light_intersect(Light*, const Ray& ray,
     double a2 = Dot(vn, vi);
     if (a2 < 0 || a2 > dv)
 	return; // miss
-    atten=Color(0,0,0);
-    return;
-#if 0
-    double a1=Dot(un, pv);
-    if(a1 > du+delta || a1 < -(du+delta))
-	return;
-    double a2=Dot(vn, pv);
-    if(a2 > dv+delta || a2 < -(dv+delta))
-	return;
-    if(a1<du && a1>-du && a2<dv && a2>-dv){
-	atten=Color(0,0,0);
-	st->rect_light_hit++;
-	return;
-    }
-
-    double t1;
-    double t2;
-    if(Abs(a1)>du){
-	t1=(Abs(a1)-du)/delta;
-    } else {
-	t1=0;
-    }
-    if(Abs(a2)>dv){
-	t2=(Abs(a2)-dv)/delta;
-    } else {
-	t2=0;
-    }
-
-    double g1=3*t1*t1-2*t1*t1*t1;
-    double g2=3*t2*t2-2*t2*t2*t2;
-    double g=1-(1-g1)*(1-g2);
-    st->rect_light_penumbra++;
-    atten=g<atten.luminance()?Color(g,g,g):atten;
-#endif
+    hit.shadowHit(this, t);
 }
 
 void Parallelogram::compute_bounds(BBox& bbox, double offset)

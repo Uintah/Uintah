@@ -46,13 +46,6 @@ class InstanceWrapperObject {
       obj->intersect(ray, hit, st,ppc);
     }
 
-  inline void light_intersect(Light* light, const Ray& ray,
-			      HitInfo& hit, double dist, Color& atten,
-			      DepthStats* st, PerProcessorContext* ppc)
-    {
-      obj->light_intersect(light,ray,hit,dist,atten,st,ppc);
-    }
-
   void compute_bounds(BBox& bbox, double offset)
     {
       if (!computed_bbox) {

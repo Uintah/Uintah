@@ -166,11 +166,17 @@ void BV2::intersect(const Ray& ray, HitInfo& hit,
     top->intersect(ray, orig, idir, hit, st, ppc);
 }
 
-void BV2::light_intersect(Light*, const Ray&,
-			  HitInfo&, double, Color&,
+void BV2::light_intersect(const Ray&, HitInfo&, Color&,
 			  DepthStats*, PerProcessorContext*)
 {
     cerr << "BV2::light_intersect not finished\n";
+}
+
+void BV2::softshadow_intersect(Light*, const Ray&,
+			  HitInfo&, double, Color&,
+			  DepthStats*, PerProcessorContext*)
+{
+    cerr << "BV2::softshadow_intersect not finished\n";
 }
 
 void BV2::animate(double t, bool& changed)

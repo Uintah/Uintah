@@ -118,13 +118,6 @@ Vector Volume::normal(const Point&, const HitInfo& hit)
     return *n;
 }
 
-void Volume::light_intersect(Light*, const Ray& lightray,
-			     HitInfo& hit, double, Color&,
-			     DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 namespace rtrt {
 extern Vector GradientCell(const Point& pmin, const Point& pmax,
 			   const Point& p, float rho[2][2][2]);
@@ -444,13 +437,6 @@ void aVolume::compute_bounds(BBox& bbox, double offset)
 Vector aVolume::normal(const Point& p, const HitInfo& hit)
 {
   return vols[ctime]->normal(p,hit);
-}
-
-void aVolume::light_intersect(Light* light, const Ray& lightray,
-			  HitInfo& hit, double dist, Color& atten,
-			  DepthStats* st, PerProcessorContext* ppc)
-{
-  vols[ctime]->light_intersect(light,lightray,hit,dist,atten,st,ppc);
 }
 
 void aVolume::intersect(const Ray& ray, HitInfo& hit,

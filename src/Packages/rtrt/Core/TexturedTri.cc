@@ -150,7 +150,7 @@ TexturedTri::set_texcoords(const Point& tx1,
 }
 
 void 
-TexturedTri::uv(UV& uv, const Point& p, const HitInfo& hit)
+TexturedTri::uv(UV& uv, const Point&, const HitInfo& hit)
 {
   Point tp = t1+((ntu*((double*)hit.scratchpad)[1])+
                  (ntv*((double*)hit.scratchpad)[0]));
@@ -190,6 +190,34 @@ void TexturedTri::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     }
 }
 
+void TexturedTri::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+				  DepthStats* st, PerProcessorContext*)
+{
+  st->tri_isect++;
+  Vector e1(p2-p1);
+  Vector e2(p3-p1);
+  Vector dir(ray.direction());
+  Vector o(p1-ray.origin());
+
+  Vector e1e2(Cross(e1, e2));
+  double det=Dot(e1e2, dir);
+  if(det>1.e-9 || det < -1.e-9){
+    double idet=1./det;
+    double t=Dot(e1e2, o)*idet;
+    if(t > hit.min_t)
+      return;
+    Vector DX(Cross(dir, o));
+    double A=-Dot(DX, e2)*idet;
+    if(A>0.0 && A<1.0){
+      double B=Dot(DX, e1)*idet;
+      if(B>0.0 && A+B<1.0){
+	hit.hit(this, t);
+	st->tri_hit++;
+      }
+    }
+  }
+}
+
 Vector TexturedTri::normal(const Point&, const HitInfo& hitinfo)
 {
   double *uv = (double *)hitinfo.scratchpad;
@@ -201,9 +229,9 @@ Vector TexturedTri::normal(const Point&, const HitInfo& hitinfo)
 
 // I changed epsilon to 1e-9 to avoid holes in the bunny! -- Bill
 
-void TexturedTri::light_intersect(Light* light, const Ray& ray,
-			  HitInfo&, double dist, Color& atten,
-			  DepthStats* st, PerProcessorContext*)
+void TexturedTri::softshadow_intersect(Light* light, const Ray& ray,
+				       HitInfo&, double dist, Color& atten,
+				       DepthStats* st, PerProcessorContext*)
 {
     st->tri_light_isect++;
     Vector dir(ray.direction());

@@ -775,9 +775,9 @@ Dpy::handle_keypress( XEvent & e )
     break;
   case XK_s:
     shadow_mode++;
-    if(shadow_mode>4)
+    if(shadow_mode>=scene->shadows.size())
       shadow_mode=0;
-    cerr << "Shadow mode = "<<shadow_mode<<"\n";
+    cerr << "Shadow mode = "<<shadow_mode<< " (" << scene->shadows[shadow_mode]->getName() << ")\n";
     break;
   case XK_h:
     scene->ambient_hack = !scene->ambient_hack;

@@ -19,6 +19,13 @@ public:
 	was_hit=false;
 	min_t=MAXDOUBLE;
     }
+  inline void shadowHit(Object* obj, double t) {
+    if(t>=1.e-4 && t<min_t){
+      was_hit=true;
+      min_t=t;
+      hit_obj=obj;
+    }
+  }
     inline bool hit(Object* obj, double t) {
 	if(t<1.e-4)
 	    return false;
