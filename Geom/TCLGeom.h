@@ -27,6 +27,7 @@ public:
 
     Color get();
     void set(const Color&);
+    virtual void emit(ostream& out);
 };
 
 class Material;
@@ -45,6 +46,7 @@ class TCLMaterial : public TCLvar {
    
     Material get();
     void set(const Material&);
+    virtual void emit(ostream& out);
 };
 
 #endif

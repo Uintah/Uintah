@@ -133,6 +133,7 @@ void GeomIndexedGroup::delObj(int id, int del)
 
     if (objs.lookup(id,obj)) {
 	objs.remove(id);
+	cerr << "Deleting, del=" << del << endl;
 	if(del)
 	    delete obj;
     }

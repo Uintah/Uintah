@@ -27,6 +27,13 @@ void TCLColor::set(const Color& p)
     b.set(p.b());
 }
 
+void TCLColor::emit(ostream& out)
+{
+    r.emit(out);
+    g.emit(out);
+    b.emit(out);
+}
+
 TCLMaterial::TCLMaterial(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl), ambient("ambient", str(), tcl),
   diffuse("diffuse", str(), tcl), specular("specular", str(), tcl),
@@ -61,4 +68,16 @@ void TCLMaterial::set(const Material& m)
     reflectivity.set(m.reflectivity);
     transparency.set(m.transparency);
     refraction_index.set(m.refraction_index);
+}
+
+void TCLMaterial::emit(ostream& out)
+{
+    ambient.emit(out);
+    diffuse.emit(out);
+    specular.emit(out);
+    shininess.emit(out);
+    emission.emit(out);
+    reflectivity.emit(out);
+    transparency.emit(out);
+    refraction_index.emit(out);
 }

@@ -245,22 +245,24 @@ int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
     }
 #endif
 
-    normals.add(n.x());
-    normals.add(n.y());
-    normals.add(n.z());
+    int idx=normals.size();
+    normals.grow(3);
+    normals[idx]=n.x();
+    normals[idx+1]=n.y();
+    normals[idx+2]=n.z();
 
-    points.add(p1.x());
-    points.add(p1.y());
-    points.add(p1.z());
 
-    points.add(p2.x());
-    points.add(p2.y());
-    points.add(p2.z());
-
-    points.add(p3.x());
-    points.add(p3.y());
-    points.add(p3.z());
-
+    idx=points.size();
+    points.grow(9);
+    points[idx]=p1.x();
+    points[idx+1]=p1.y();
+    points[idx+2]=p1.z();
+    points[idx+3]=p2.x();
+    points[idx+4]=p2.y();
+    points[idx+5]=p2.z();
+    points[idx+6]=p3.x();
+    points[idx+7]=p3.y();
+    points[idx+8]=p3.z();
     return 1;
 }
 

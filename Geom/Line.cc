@@ -104,3 +104,78 @@ bool GeomLine::saveobj(ostream&, const clString& format, GeomSave*)
     return false;
 }
 
+Persistent* make_GeomLines()
+{
+    return new GeomLines();
+}
+
+PersistentTypeID GeomLines::type_id("GeomLines", "GeomObj", make_GeomLines);
+
+GeomLines::GeomLines()
+{
+}
+
+GeomLines::GeomLines(const GeomLines& copy)
+: pts(copy.pts)
+{
+}
+
+GeomLines::~GeomLines()
+{
+}
+
+GeomObj* GeomLines::clone()
+{
+  return new GeomLines(*this);
+}
+
+void GeomLines::make_prims(Array1<GeomObj*>&,
+			    Array1<GeomObj*>&)
+{
+    // Nothing to do...
+}
+
+void GeomLines::get_bounds(BBox& bb)
+{
+  for(int i=0;i<pts.size();i++)
+    bb.extend(pts[i]);
+}
+
+void GeomLines::get_bounds(BSphere& bs)
+{
+  for(int i=0;i<pts.size();i++)
+    bs.extend(pts[i]);
+}
+
+void GeomLines::preprocess()
+{
+    NOT_FINISHED("GeomLines::preprocess");
+}
+
+void GeomLines::intersect(const Ray&, Material*,
+			 Hit&)
+{
+    NOT_FINISHED("GeomLines::intersect");
+}
+
+#define GEOMLINES_VERSION 1
+
+void GeomLines::io(Piostream& stream)
+{
+    stream.begin_class("GeomLines", GEOMLINES_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, pts);
+    stream.end_class();
+}
+
+bool GeomLines::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomLines::saveobj");
+    return false;
+}
+
+void GeomLines::add(const Point& p1, const Point& p2)
+{
+  pts.add(p1);
+  pts.add(p2);
+}

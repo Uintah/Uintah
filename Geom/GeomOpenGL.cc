@@ -615,6 +615,7 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	{
+#if 0
 	    if(!have_normals)
 		glNormal3d(w.x(), w.y(), w.z());
 	    Point rstart(corner);
@@ -646,6 +647,99 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 		}
 		glEnd();
 	    }
+#endif
+	    if(have_matls)
+	      di->set_matl(matls(0,0).get_rep());
+	    Point rstart(corner);
+	    if(have_normals && have_matls){
+	      for(int i=0;i<nu-1;i++){
+		Point p1(rstart);
+		Point p2(rstart+uu);
+		rstart=p2;
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int j=0;j<nv;j++){
+		  Point pp1(p1+w*verts(i, j));
+		  Point pp2(p2+w*verts(i+1, j));
+		  float c[4];
+		  matls(i,j)->diffuse.get_color(c);
+		  glColor3fv(c);
+		  Vector& normal(normals(i, j));
+		  glNormal3d(normal.x(), normal.y(), normal.z());
+		  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+		  
+		  matls(i+1, j)->diffuse.get_color(c);
+		  glColor3fv(c);
+		  Vector& normal2(normals(i+1, j));
+		  glNormal3d(normal2.x(), normal2.y(), normal2.z());
+		  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+		  p1+=vv;
+		  p2+=vv;
+		}
+		glEnd();
+	      }
+	    } else if(have_matls){
+	      glNormal3d(w.x(), w.y(), w.z());
+	      for(int i=0;i<nu-1;i++){
+		Point p1(rstart);
+		Point p2(rstart+uu);
+		rstart=p2;
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int j=0;j<nv;j++){
+		  Point pp1(p1+w*verts(i, j));
+		  Point pp2(p2+w*verts(i+1, j));
+		  float c[4];
+		  matls(i,j)->diffuse.get_color(c);
+		  glColor3fv(c);
+		  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+		  
+		  matls(i+1, j)->diffuse.get_color(c);
+		  glColor3fv(c);
+		  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+		  p1+=vv;
+		  p2+=vv;
+		}
+		glEnd();
+	      }
+	    } else if(have_normals){
+	      for(int i=0;i<nu-1;i++){
+		Point p1(rstart);
+		Point p2(rstart+uu);
+		rstart=p2;
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int j=0;j<nv;j++){
+		  Point pp1(p1+w*verts(i, j));
+		  Point pp2(p2+w*verts(i+1, j));
+		  Vector& normal(normals(i, j));
+		  glNormal3d(normal.x(), normal.y(), normal.z());
+		  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+		  Vector& normal2(normals(i+1, j));
+		  glNormal3d(normal2.x(), normal2.y(), normal2.z());
+		  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+		  p1+=vv;
+		  p2+=vv;
+		}
+		glEnd();
+	      }
+	    } else {
+	      glNormal3d(w.x(), w.y(), w.z());
+	      for(int i=0;i<nu-1;i++){
+		Point p1(rstart);
+		Point p2(rstart+uu);
+		rstart=p2;
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int j=0;j<nv;j++){
+		  Point pp1(p1+w*verts(i, j));
+		  Point pp2(p2+w*verts(i+1, j));
+		  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+		  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+		  p1+=vv;
+		  p2+=vv;
+		}
+		glEnd();
+	      }
+	    }
 	}
 	break;
     }
@@ -664,6 +758,18 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
+    glEnd();
+}
+
+void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    pre_draw(di, matl, 0);
+    di->polycount+=pts.size()/2;
+    glBegin(GL_LINES);
+    for(int i=0;i<pts.size();i++){
+      Point& pt=pts[i];
+      glVertex3d(pt.x(), pt.y(), pt.z());
+    }
     glEnd();
 }
 

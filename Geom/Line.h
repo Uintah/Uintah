@@ -50,4 +50,30 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
+class GeomLines : public GeomObj {
+public:
+  Array1<Point> pts;
+  GeomLines();
+  GeomLines(const GeomLines&);
+
+  void add(const Point&, const Point&);
+  virtual ~GeomLines();
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+  virtual void get_bounds(BSphere&);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  virtual void make_prims(Array1<GeomObj*>& free,
+			  Array1<GeomObj*>& dontfree);
+  virtual void preprocess();
+  virtual void intersect(const Ray& ray, Material*,
+			 Hit& hit);
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+};
+
 #endif /* SCI_Geom_Line_h */

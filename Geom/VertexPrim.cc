@@ -16,38 +16,99 @@
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
+#include <Classlib/TrivialAllocator.h>
+
+static TrivialAllocator GeomVertex_alloc(sizeof(GeomVertex));
+static TrivialAllocator GeomNVertex_alloc(sizeof(GeomNVertex));
+static TrivialAllocator GeomNMVertex_alloc(sizeof(GeomNMVertex));
+static TrivialAllocator GeomCVertex_alloc(sizeof(GeomCVertex));
+static TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));
+
+
+void* GeomVertex::operator new(size_t)
+{
+  return GeomVertex_alloc.alloc();
+}
+
+void GeomVertex::operator delete(void* rp, size_t)
+{
+  GeomVertex_alloc.free(rp);
+}
+
+void* GeomNVertex::operator new(size_t)
+{
+  return GeomNVertex_alloc.alloc();
+}
+
+void GeomNVertex::operator delete(void* rp, size_t)
+{
+  GeomNVertex_alloc.free(rp);
+}
+
+void* GeomNMVertex::operator new(size_t)
+{
+  return GeomNMVertex_alloc.alloc();
+}
+
+void GeomNMVertex::operator delete(void* rp, size_t)
+{
+  GeomNMVertex_alloc.free(rp);
+}
+
+void* GeomMVertex::operator new(size_t)
+{
+  return GeomVertex_alloc.alloc();
+}
+
+void GeomMVertex::operator delete(void* rp, size_t)
+{
+  GeomVertex_alloc.free(rp);
+}
+
+void* GeomCVertex::operator new(size_t)
+{
+  return GeomCVertex_alloc.alloc();
+}
+
+void GeomCVertex::operator delete(void* rp, size_t)
+{
+  GeomCVertex_alloc.free(rp);
+}
+
+
+
 
 static Persistent* make_GeomVertex()
 {
-    return scinew GeomVertex(Point(0,0,0));
+    return new GeomVertex(Point(0,0,0));
 }
 
 PersistentTypeID GeomVertex::type_id("GeomVertex", "Persistent", make_GeomVertex);
 
 static Persistent* make_GeomNVertex()
 {
-    return scinew GeomNVertex(Point(0,0,0),Vector(0,0,1));
+    return new GeomNVertex(Point(0,0,0),Vector(0,0,1));
 }
 
 PersistentTypeID GeomNVertex::type_id("GeomNVertex", "GeomVertex", make_GeomNVertex);
 
 static Persistent* make_GeomNMVertex()
 {
-    return scinew GeomNMVertex(Point(0,0,0), Vector(0,0,1), MaterialHandle(0));
+    return new GeomNMVertex(Point(0,0,0), Vector(0,0,1), MaterialHandle(0));
 }
 
 PersistentTypeID GeomNMVertex::type_id("GeomNMVertex", "GeomNVertex", make_GeomNMVertex);
 
 static Persistent* make_GeomMVertex()
 {
-    return scinew GeomMVertex(Point(0,0,0), MaterialHandle(0));
+    return new GeomMVertex(Point(0,0,0), MaterialHandle(0));
 }
 
 PersistentTypeID GeomMVertex::type_id("GeomMVertex", "GeomVertex", make_GeomMVertex);
 
 static Persistent* make_GeomCVertex()
 {
-    return scinew GeomCVertex(Point(0,0,0), Color(0,0,0));
+    return new GeomCVertex(Point(0,0,0), Color(0,0,0));
 }
 
 PersistentTypeID GeomCVertex::type_id("GeomCVertex", "GeomVertex", make_GeomCVertex);
@@ -140,7 +201,7 @@ GeomVertex::~GeomVertex()
 
 GeomVertex* GeomVertex::clone()
 {
-    return scinew GeomVertex(*this);
+    return new GeomVertex(*this);
 }
 
 #define GEOMVERTEX_VERSION 1
@@ -164,7 +225,7 @@ GeomNVertex::GeomNVertex(const GeomNVertex& copy)
 
 GeomVertex* GeomNVertex::clone()
 {
-    return scinew GeomNVertex(*this);
+    return new GeomNVertex(*this);
 }
 
 GeomNVertex::~GeomNVertex()
@@ -194,7 +255,7 @@ GeomNMVertex::GeomNMVertex(const GeomNMVertex& copy)
 
 GeomVertex* GeomNMVertex::clone()
 {
-    return scinew GeomNMVertex(*this);
+    return new GeomNMVertex(*this);
 }
 
 GeomNMVertex::~GeomNMVertex()
@@ -223,7 +284,7 @@ GeomMVertex::GeomMVertex(const GeomMVertex& copy)
 
 GeomVertex* GeomMVertex::clone()
 {
-    return scinew GeomMVertex(*this);
+    return new GeomMVertex(*this);
 }
 
 GeomMVertex::~GeomMVertex()
@@ -262,7 +323,7 @@ GeomCVertex::GeomCVertex(const GeomCVertex& copy)
 
 GeomVertex* GeomCVertex::clone()
 {
-    return scinew GeomCVertex(*this);
+    return new GeomCVertex(*this);
 }
 
 GeomCVertex::~GeomCVertex()
@@ -276,6 +337,8 @@ void Pio(Piostream& stream, GeomVertex*& obj)
     if(stream.reading())
 	obj=(GeomVertex*)tmp;
 }
+
+
 
 #ifdef __GNUG__
 

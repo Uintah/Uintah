@@ -86,6 +86,7 @@ void GeomArrows::get_bounds(BBox& bb)
     int n=positions.size();
     for(int i=0;i<n;i++){
 	bb.extend(positions[i]);
+	bb.extend(positions[i]+directions[i]);
     }
 }
 

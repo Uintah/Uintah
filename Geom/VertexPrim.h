@@ -19,6 +19,7 @@
 #include <Geom/Color.h>
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
+#include <stdlib.h>
 
 struct GeomVertex : public Persistent {
     Point p;
@@ -43,7 +44,7 @@ struct GeomVertex : public Persistent {
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-#if 0
+#if 1
     void* operator new(size_t);
     void operator delete(void*, size_t);
 #endif
@@ -62,7 +63,7 @@ struct GeomNVertex : public GeomVertex {
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-#if 0
+#if 1
     void* operator new(size_t);
     void operator delete(void*, size_t);
 #endif
@@ -82,7 +83,7 @@ struct GeomNMVertex : public GeomNVertex {
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-#if 0
+#if 1
     void* operator new(size_t);
     void operator delete(void*, size_t);
 #endif
@@ -100,7 +101,7 @@ struct GeomMVertex : public GeomVertex {
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-#if 0
+#if 1
     void* operator new(size_t);
     void operator delete(void*, size_t);
 #endif
@@ -118,7 +119,7 @@ struct GeomCVertex : public GeomVertex {
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-#if 0
+#if 1
     void* operator new(size_t);
     void operator delete(void*, size_t);
 #endif

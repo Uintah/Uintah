@@ -102,9 +102,9 @@ void GeomGrid::get_bounds(BBox& bb)
 	for(int j=0;j<nv;j++){
 	    Point pp(p+w*verts(i, j));
 	    bb.extend(pp);
-	    p+=uu;
+	    p+=vv;
 	}
-	rstart+=vv;
+	rstart+=uu;
     }
 }
 
