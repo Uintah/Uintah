@@ -54,13 +54,24 @@ WARNING
                                       double& cv, double& Temp,
                                       double& press, double& dp_drho, 
                                       double& dp_de) = 0;
-         //per patch                          
+                                                               
         virtual void computeTempCC(const Patch* patch,
+                                const string& comp_domain,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
 				    const double& cv,
                                 const CCVariable<double>& rho_micro, 
-                                CCVariable<double>& Temp)=0;
+                                CCVariable<double>& Temp,
+                                Patch::FaceType face=Patch::xplus) = 0;
+                                
+        virtual void hydrostaticTempAdjustment(Patch::FaceType face,
+                          const Patch* patch,
+                          Vector& gravity,
+                          const double& gamma,
+			     const double& cv,
+                          const Vector& dx,
+                          CCVariable<double>& Temp_CC) = 0;
+
         protected:
 
 	 ICELabel* lb;
