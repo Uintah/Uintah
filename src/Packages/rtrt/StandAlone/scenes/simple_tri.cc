@@ -21,6 +21,7 @@
 #include <string.h>
 
 using namespace rtrt;
+using namespace std;
 using namespace SCIRun;
 
 static const double SCALE = 1./3.;

@@ -14,6 +14,7 @@
 // This is a benchmark scene.  Please do not modify it... - Steve
 
 using namespace rtrt;
+using namespace std;
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)

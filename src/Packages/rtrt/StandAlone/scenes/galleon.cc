@@ -22,6 +22,7 @@
 #include <Packages/rtrt/Core/Box.h>
 
 using namespace rtrt;
+using namespace std;
 
 Array1<Point> points;
 Group *g;

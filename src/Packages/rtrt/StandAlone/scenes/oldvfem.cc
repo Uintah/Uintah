@@ -18,6 +18,7 @@
 #include <string.h>
 
 using namespace rtrt;
+using namespace std;
 using SCIRun::Thread;
 
 extern "C" 
