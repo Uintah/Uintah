@@ -807,6 +807,11 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
 
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->modifies(d_lab->d_scalarSPLabel);
+
+  if (d_carbon_balance)
+    for (int ii = 0; ii < d_numInlets; ii++) 
+      tsk->computes(d_flowInlets[ii].d_flowRate_label);
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -888,6 +893,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		   d_ramping_inlet_flowrate, actual_flow_rate);
 
 	d_flowInlets[indx].flowRate = actual_flow_rate;
+	new_dw->put(delt_vartype(actual_flow_rate),
+		    d_flowInlets[indx].d_flowRate_label);
 
         fort_profscalar(idxLo, idxHi, density, cellType,
 		        fi.calcStream.d_density, fi.d_cellTypeID,
@@ -2048,10 +2055,12 @@ BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
   // add cellId to distinguish different inlets
   d_area_label = VarLabel::create("flowarea"+cellID,
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_flowRate_label = VarLabel::create("flowRate"+cellID,
+   ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
 }
 
 BoundaryCondition::FlowInlet::FlowInlet():
-  d_cellTypeID(0), d_area_label(0)
+  d_cellTypeID(0), d_area_label(0), d_flowRate_label(0)
 {
   turb_lengthScale = 0.0;
   flowRate = 0.0;
@@ -2067,13 +2076,15 @@ BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
   streamMixturefraction(copy.streamMixturefraction),
   turb_lengthScale(copy.turb_lengthScale),
   calcStream(copy.calcStream),
-  d_area_label(copy.d_area_label)
+  d_area_label(copy.d_area_label),
+  d_flowRate_label(copy.d_flowRate_label)
 {
   for (vector<GeometryPiece*>::const_iterator it = copy.d_geomPiece.begin();
        it != copy.d_geomPiece.end(); ++it)
     d_geomPiece.push_back((*it)->clone());
 
   d_area_label->addReference();
+  d_flowRate_label->addReference();
 }
 
 BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const FlowInlet& copy)
@@ -2082,6 +2093,9 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   VarLabel::destroy(d_area_label);
   d_area_label = copy.d_area_label;
   d_area_label->addReference();
+  VarLabel::destroy(d_flowRate_label);
+  d_flowRate_label = copy.d_flowRate_label;
+  d_flowRate_label->addReference();
 
   d_cellTypeID = copy.d_cellTypeID;
   flowRate = copy.flowRate;
@@ -2099,6 +2113,7 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
 BoundaryCondition::FlowInlet::~FlowInlet()
 {
   VarLabel::destroy(d_area_label);
+  VarLabel::destroy(d_flowRate_label);
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
@@ -4432,8 +4447,13 @@ void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
 
   if (timelabels->integrator_last_step)
     tsk->computes(d_lab->d_uvwoutLabel);
-  if ((timelabels->integrator_last_step)&&(d_carbon_balance))
+  if ((timelabels->integrator_last_step)&&(d_carbon_balance)) {
+    for (int ii = 0; ii < d_numInlets; ii++) {
+      tsk->requires(Task::OldDW, d_flowInlets[ii].d_flowRate_label);
+      tsk->computes(d_flowInlets[ii].d_flowRate_label);
+    }
     tsk->computes(d_lab->d_carbonEfficiencyLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -4445,7 +4465,7 @@ void
 BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
 			      const PatchSubset* ,
 			      const MaterialSubset*,
-			      DataWarehouse*,
+			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw,
 			      const TimeIntegratorLabel* timelabels)
 {
@@ -4498,6 +4518,7 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
 
     sum_vartype sum_CO2FlowRate;
+    delt_vartype flowRate;
     double CO2FlowRate;
     double totalCarbonFlowRate = 0.0;
     double carbonEfficiency;
@@ -4506,6 +4527,10 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       CO2FlowRate = sum_CO2FlowRate;
       for (int indx = 0; indx < d_numInlets; indx++) {
 	FlowInlet fi = d_flowInlets[indx];
+        old_dw->get(flowRate, d_flowInlets[indx].d_flowRate_label);
+	d_flowInlets[indx].flowRate = flowRate;
+	fi.flowRate = flowRate;
+        new_dw->put(flowRate, d_flowInlets[indx].d_flowRate_label);
 	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
 	if (scalarValue > 0.0)
 	  totalCarbonFlowRate += fi.flowRate * fi.fcr;
