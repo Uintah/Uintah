@@ -8,6 +8,7 @@
 namespace rtrt {
 
 class CycleMaterial : public Material {
+protected:
   int current;
 public:
   Array1<Material *> members;
