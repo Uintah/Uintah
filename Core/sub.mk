@@ -26,6 +26,7 @@ SUBDIRS := \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
+	$(SRCDIR)/FieldIO \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/GeomInterface \
