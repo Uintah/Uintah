@@ -26,7 +26,8 @@
     <Grid>
     <BoundaryConditions>
       <!--________________Inside Nozzle_______________-->
-      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.04">
+      <!-- The Radius depends on resolution           -->
+      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.0375">
 	 <BCType id = "0"   label = "Pressure"      var = "Custom">
 			       <value> 0.0   </value>
 	 </BCType>
@@ -124,17 +125,22 @@
               <extraCells>   [1,1,1]                </extraCells>
               <patches>      [4,2,1]                </patches>
               <resolution>   [400,200,1]            </resolution>
+
             </Box>
        </Level>
        
     </Grid>
+
+    <!-- ___________________________________________________________________-->
+    <!-- If you change the resolution in the y direction you must also check-->
+    <!-- the nozzle radius                                                  -->
 
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>nozzle.uda</filebase>
-      <!--<outputTimestepInterval>1</outputTimestepInterval>-->
+      <!--<outputTimestepInterval>20</outputTimestepInterval> -->
       <outputInterval>1e-4</outputInterval>
       <save label = "press_equil_CC"/>
       <save label = "vol_frac_CC"/>
@@ -146,9 +152,8 @@
       <save label = "mach"/>  
       <save label = "p.x"/>
       <save label = "p.volume"/>
-      <save label = "p.velocity"/>
       <save label = "p.color"/>
-      <checkpoint cycle = "2" interval = "1e-4"/>
+      <checkpoint cycle = "4" interval = "1e-4"/>
       <compression> gzip </compression>
    </DataArchiver>
 
