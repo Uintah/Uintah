@@ -125,7 +125,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
 	 child = child->findNextBlock("debug")) {
       map<string,string> debug_attr;
       child->getAttributes(debug_attr);
-      if (debug_attr["label"] == "switchDebugInitialize")
+      if (debug_attr["label"]      == "switchDebugInitialize")
 	switchDebugInitialize            = true;
       else if (debug_attr["label"] == "switchDebug_equilibration_press")
 	switchDebug_equilibration_press  = true;
@@ -321,6 +321,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
         patch,  sched,  old_dw, new_dw);
   }
 }
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeEquilibrationPressure--
  Purpose~   Compute the equilibration pressure
@@ -343,6 +344,7 @@ void ICE::scheduleComputeEquilibrationPressure(
     task->requires(old_dw,lb->rho_CCLabel,       dwindex,patch,Ghost::None);
     task->requires(old_dw,lb->temp_CCLabel,      dwindex,patch,Ghost::None);
     task->requires(old_dw,lb->cv_CCLabel,        dwindex,patch,Ghost::None);
+
     task->computes(new_dw,lb->speedSound_CCLabel,dwindex, patch);
     task->computes(new_dw,lb->vol_frac_CCLabel,  dwindex, patch);
     task->computes(new_dw,lb->rho_micro_CCLabel, dwindex, patch);
@@ -353,7 +355,7 @@ void ICE::scheduleComputeEquilibrationPressure(
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::ComputeFaceCenteredVelocities--
+ Function~  ICE::scheduleComputeFaceCenteredVelocities--
  Purpose~   Compute the face-centered velocities
 _____________________________________________________________________*/
 void ICE::scheduleComputeFaceCenteredVelocities(
@@ -363,15 +365,27 @@ void ICE::scheduleComputeFaceCenteredVelocities(
   Task* task = scinew Task("ICE::computeFaceCenteredVelocities",
                         patch, old_dw, new_dw,this,
 			   &ICE::computeFaceCenteredVelocities);
-
+                        
+  int numALLMatls = d_sharedState->getNumMatls();
+  int dwindex;
   task->requires(new_dw,lb->press_equil_CCLabel,0,patch,Ghost::None);
-  //__________________________________
-  //     I C E
-  for (int m = 0; m < d_sharedState->getNumICEMatls(); m++)  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
+  
+
+  for (int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(ice_matl){                    // I C E
+      dwindex = ice_matl->getDWIndex();
+      task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
+      task->requires(old_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
+    }
+    if(mpm_matl){                    // M P M
+      dwindex = mpm_matl->getDWIndex();
+      task->requires(new_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
+      task->requires(new_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
+    } 
     task->requires(new_dw,lb->rho_micro_CCLabel,
                                              dwindex,patch,Ghost::None);
 
@@ -379,20 +393,6 @@ void ICE::scheduleComputeFaceCenteredVelocities(
     task->computes(new_dw,lb->vvel_FCLabel,  dwindex, patch);
     task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
   }
-  //__________________________________
-  //     M P M
-  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++)  {
-    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires(new_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
-    task->requires(new_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
-    task->requires(new_dw,lb->rho_micro_CCLabel,
-                                             dwindex,patch,Ghost::None);
-
-    task->computes(new_dw,lb->uvel_FCLabel,  dwindex, patch);
-    task->computes(new_dw,lb->vvel_FCLabel,  dwindex, patch);
-    task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
-  }  
   sched->addTask(task);
 }
 
@@ -534,10 +534,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(
   
   task->requires(new_dw,    lb->press_CCLabel,    0, patch, Ghost::None);
   task->requires(new_dw,    lb->delPress_CCLabel, 0, patch, Ghost::None);
-  int numMatls=d_sharedState->getNumICEMatls();
+  int numMatls=d_sharedState->getNumMatls();
   
   for (int m = 0; m < numMatls; m++)  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    Material* matl = d_sharedState->getMaterial(m);
     int dwindex = matl->getDWIndex();      
     task->requires( new_dw, lb->rho_micro_CCLabel, dwindex, patch,Ghost::None);
     task->requires( new_dw, lb->speedSound_CCLabel,dwindex, patch,Ghost::None);
@@ -550,6 +550,8 @@ void ICE::scheduleAccumulateEnergySourceSinks(
 /* ---------------------------------------------------------------------
  Function~  ICE:: scheduleComputeLagrangianValues--
  Purpose~   Schedule compute lagrangian mass momentum and internal energy
+ Note:      Only loop over ICE materials, mom_L for MPM is computed
+            prior to this function.  
 _____________________________________________________________________*/
 void ICE:: scheduleComputeLagrangianValues(
             const Patch* patch, SchedulerP&  sched,
@@ -568,13 +570,19 @@ void ICE:: scheduleComputeLagrangianValues(
     task->requires( old_dw, lb->temp_CCLabel,       dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->mom_source_CCLabel, dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->int_eng_source_CCLabel,
-		    dwindex,patch,Ghost::None);
+		                                      dwindex,patch,Ghost::None);
     
     task->computes( new_dw, lb->mom_L_CCLabel,      dwindex,patch);
     task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
     task->computes( new_dw, lb->mass_L_CCLabel,     dwindex,patch);
-    task->computes( new_dw, lb->rho_L_CCLabel,      dwindex,patch);
   }
+  // Use this data for comparing and contrasting with SA ICE
+  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++)  {
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires( new_dw, lb->mom_L_CCLabel,      dwindex,patch,Ghost::None);
+//    task->requires( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch,Ghost::None);
+ } 
   sched->addTask(task);
 }
 
@@ -1134,7 +1142,6 @@ void ICE::computeEquilibrationPressure(
     }
   }
  /*==========DEBUG============`*/
-  
 }
 
 /* ---------------------------------------------------------------------
@@ -1169,15 +1176,17 @@ void ICE::computeFaceCenteredVelocities(
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(ice_matl){
+      int dwindex = ice_matl->getDWIndex();
       old_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
       old_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, Ghost::None, 0);
     }
     if(mpm_matl){
+      int dwindex = mpm_matl->getDWIndex();
       new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
       new_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, Ghost::None, 0);
     }
     new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
-                                                            Ghost::None, 0);
+                                                           Ghost::None, 0);
  
     SFCXVariable<double> uvel_FC;
     SFCYVariable<double> vvel_FC;
@@ -1285,7 +1294,7 @@ void ICE::computeFaceCenteredVelocities(
     new_dw->put(wvel_FC, lb->wvel_FCLabel, dwindex, patch);
 /*`==========DEBUG============*/ 
     if (switchDebug_vel_FC ) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+    Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex(); 
     char description[50];
     sprintf(description, "bottom_of_vel_FC_Mat_%d ",dwindex);
@@ -1932,7 +1941,7 @@ void ICE::accumulateMomentumSourceSinks(
     /*`==========TESTING==========*/ 
     if (switchDebugSource_Sink) {
       char description[50];
-      sprintf(description, "sources/sinks, Mat. %d ",dwindex);
+      sprintf(description, "sources/sinks_Mat_%d",dwindex);
       printVector( patch, 1, description,    "xmom_source", 0, mom_source);
       printVector( patch, 1, description,    "ymom_source", 1, mom_source);
       printVector( patch, 1, description,    "zmom_source", 2, mom_source);
@@ -1956,7 +1965,7 @@ void ICE::accumulateEnergySourceSinks(
 {
   cout << "Doing actually step4b -- accumulate_energy_source_sinks" << endl;
 
-  int numMatls = d_sharedState->getNumICEMatls();
+  int numMatls = d_sharedState->getNumMatls();
 
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1973,8 +1982,8 @@ void ICE::accumulateEnergySourceSinks(
   new_dw->get(delPress,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
 
   for(int m = 0; m < numMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-    int dwindex       = matl->getDWIndex();                 
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex    = matl->getDWIndex();                 
     new_dw->get(rho_micro_CC,lb->rho_micro_CCLabel,dwindex,patch,
 		                                              Ghost::None, 0);                                            
     new_dw->get(speedSound,lb->speedSound_CCLabel,dwindex,patch,
@@ -1992,7 +2001,7 @@ void ICE::accumulateEnergySourceSinks(
       B = rho_micro_CC[*iter]   * speedSound[*iter] * speedSound[*iter];
       int_eng_source[*iter] = (A/B) * delPress[*iter];
     }
-/*`==========TESTING==========*/
+   /*`==========TESTING==========*/
     if (switchDebugSource_Sink) {
       char description[50];
       sprintf(description, "sources/sinks_Mat_%d ",dwindex);
@@ -2008,6 +2017,8 @@ void ICE::accumulateEnergySourceSinks(
  Purpose~
    This function calculates the The cell-centered, time n+1, 
    lagrangian mass momentum and energy
+ Note:      Only loop over ICE materials, mom_L for MPM is computed
+            prior to this function
  ---------------------------------------------------------------------  */
 void ICE::computeLagrangianValues(
             const ProcessorGroup*,  const Patch* patch,
@@ -2015,11 +2026,12 @@ void ICE::computeLagrangianValues(
 {
   cout << "Doing actually step5a -- calculate Lagrangian values for mass, momentum and energy" << endl;
 
-  int numMatls = d_sharedState->getNumICEMatls();
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
   Vector    dx = patch->dCell();
   
   // Compute the Lagrangian quantities
-  for(int m = 0; m < numMatls; m++) {
+  for(int m = 0; m < numICEMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
     CCVariable<double> rho_CC,cv_CC,temp_CC;
@@ -2027,19 +2039,19 @@ void ICE::computeLagrangianValues(
     CCVariable<double> int_eng_source;
     CCVariable<Vector> mom_source;
     CCVariable<Vector> mom_L;
-    CCVariable<double> int_eng_L, mass_L, rho_L;
+    CCVariable<double> int_eng_L, mass_L;
+
     old_dw->get(rho_CC,  lb->rho_CCLabel,     dwindex,patch,Ghost::None, 0);
     old_dw->get(vel_CC,  lb->vel_CCLabel,     dwindex,patch,Ghost::None, 0);
     old_dw->get(cv_CC,   lb->cv_CCLabel,      dwindex,patch,Ghost::None, 0);
     old_dw->get(temp_CC, lb->temp_CCLabel,    dwindex,patch,Ghost::None, 0);
     new_dw->get(mom_source,     lb->mom_source_CCLabel,dwindex,patch,
-		Ghost::None, 0);
+		                                              Ghost::None, 0);
     new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,dwindex,patch,
-		Ghost::None, 0);
+		                                              Ghost::None, 0);
     new_dw->allocate(mom_L,     lb->mom_L_CCLabel,     dwindex,patch);
     new_dw->allocate(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
     new_dw->allocate(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
-    new_dw->allocate(rho_L,     lb->rho_L_CCLabel,     dwindex,patch);
     
     double vol = dx.x()*dx.y()*dx.z();
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
@@ -2047,7 +2059,6 @@ void ICE::computeLagrangianValues(
       double mass = rho_CC[*iter] * vol;
       mass_L[*iter] = mass; 
       // +  mass_source[*iter];
-      rho_L[*iter]  = mass_L[*iter]/vol;
       
       mom_L[*iter] = vel_CC[*iter] * mass
 	//- vel_CC[*iter] * mass_source[*iter]
@@ -2060,18 +2071,24 @@ void ICE::computeLagrangianValues(
     new_dw->put(mom_L,     lb->mom_L_CCLabel,     dwindex,patch);
     new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
     new_dw->put(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
-  
- /*`==========DEBUG============*/ 
-    if (switchDebugLagrangianValues ) {
+   }
+  /*`==========DEBUG============*/ 
+  if (switchDebugLagrangianValues ) {
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int dwindex = matl->getDWIndex();
+      CCVariable<Vector> mom_L;
+//    new_dw->get(int_eng_L, lb->int_eng_L_CCLabel,dwindex,patch,Ghost::None,0);
+      new_dw->get(mom_L,     lb->mom_L_CCLabel,    dwindex,patch,Ghost::None,0);
       char description[50];
       sprintf(description, "Bot_Lagrangian_Values_Mat_%d ",dwindex);
       printVector( patch,1, description, "xmom_L_CC", 0, mom_L);
       printVector( patch,1, description, "ymom_L_CC", 1, mom_L);
       printVector( patch,1, description, "zmom_L_CC", 2, mom_L);
-      printData(   patch,1, description, "int_eng_L_CC",int_eng_L);
+//      printData(   patch,1, description, "int_eng_L_CC",int_eng_L);
     }
+  }
     /*==========DEBUG============`*/
-   }
 }
 
 /*---------------------------------------------------------------------
@@ -2138,7 +2155,8 @@ void ICE::addExchangeToMomentumAndEnergy(
   vector<CCVariable<Vector> > vel_CC(numMatls);
   vector<CCVariable<Vector> > mom_L_ME(numMatls);
   
-  vector<double> b(numMatls), mass(numMatls);
+  vector<double> b(numMatls);
+  vector<double> mass(numMatls);
   DenseMatrix beta(numMatls,numMatls),acopy(numMatls,numMatls);
   DenseMatrix K(numMatls,numMatls),H(numMatls,numMatls),a(numMatls,numMatls);
   beta.zero();
