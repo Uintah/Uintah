@@ -94,7 +94,7 @@ void StiffGas::computeSpeedSound(const Patch* patch,
   new_dw->allocate(speedSound,lb->speedSound_CCLabel,vfindex,patch);
 
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     double dp_drho = (gamma - 1.0) * cv[*iter] * temp[*iter];
     double dp_de   = (gamma - 1.0) * rho_micro[*iter];
     double press   = (gamma - 1.0) * rho_micro[*iter]*cv[*iter]*temp[*iter];
@@ -144,7 +144,7 @@ void StiffGas::computeRhoMicro(const Patch* patch,
 
   double gamma = matl->getGamma();
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     rho_micro[*iter] = press[*iter]/((gamma -1.)*cv[*iter]*temp[*iter]);
   }
 
@@ -173,7 +173,7 @@ void StiffGas::computePressEOS(const Patch* patch,
   new_dw->allocate(press,lb->rho_micro_CCLabel,vfindex,patch);
 
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     press[*iter] = (gamma - 1.)* rho_micro[*iter] * cv[*iter] * temp[*iter];
   }
 
@@ -183,6 +183,10 @@ void StiffGas::computePressEOS(const Patch* patch,
 
 
 //$Log$
+//Revision 1.2  2000/11/14 04:02:12  jas
+//Added getExtraCellIterator and things now appear to be working up to
+//face centered velocity calculations.
+//
 //Revision 1.1  2000/10/31 04:14:28  jas
 //Added stiff gas EOS type.  It is just a copy of IdealGas.
 //

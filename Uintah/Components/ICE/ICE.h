@@ -173,6 +173,11 @@ void after_each_step_wrapper(
 	     const Patch* p);
   void setBC(CCVariable<double>& variable,const std::string& type,
 	     const std::string& comp, const Patch* p);
+
+  void setBC(FCVariable<double>& variable,const std::string& type, 
+	     const Patch* p);
+  void setBC(FCVariable<double>& variable,const std::string& type,
+	     const std::string& comp, const Patch* p);
   
   void influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			   const FCVariable<double>& vvel_CC,
@@ -230,6 +235,7 @@ void after_each_step_wrapper(
  SimulationStateP d_sharedState;
  double d_SMALL_NUM;
  double d_pressure;
+ Vector d_K_mom, d_K_heat; // exchange coefficients -- off diagonal terms
  
  struct ic {
    Vector d_velocity;
@@ -282,6 +288,10 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.35  2000/11/14 04:02:11  jas
+// Added getExtraCellIterator and things now appear to be working up to
+// face centered velocity calculations.
+//
 // Revision 1.34  2000/11/02 21:33:06  jas
 // Added new bc implementation.  Things now work thru step 1b.  Neumann bcs
 // are now set correctly.

@@ -40,6 +40,9 @@ ICELabel::ICELabel()
      scinew VarLabel("cv_CC",         CCVariable<double>::getTypeDescription());
     rho_micro_CCLabel = 
      scinew VarLabel("rho_micro_CC",  CCVariable<double>::getTypeDescription());
+    rho_micro_equil_CCLabel = 
+      scinew VarLabel("rho_micro_equil_CC",  CCVariable<double>::getTypeDescription());
+
     speedSound_CCLabel = 
      scinew VarLabel("speedSound_CC", CCVariable<double>::getTypeDescription());
     speedSound_equiv_CCLabel = 
@@ -163,6 +166,10 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.13  2000/11/14 04:02:11  jas
+// Added getExtraCellIterator and things now appear to be working up to
+// face centered velocity calculations.
+//
 // Revision 1.12  2000/10/25 23:12:17  guilkey
 // Fixed step2, reorganized 6and7 just a little bit.
 //
