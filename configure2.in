@@ -1013,8 +1013,12 @@ SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
 AC_PROG_AWK
 AC_PROG_YACC
 AC_PROG_LEX
-AC_CHECK_PROG(PERL, perl, perl, 
-  echo configure: the required program \'perl\' was not found in your PATH.)
+if test "$uintah" = "yes" ; then
+  AC_CHECK_PROG(PERL, perl, perl, 
+    echo configure: error: perl was not found in your PATH.;exit)
+else
+  AC_CHECK_PROG(PERL, perl, perl)
+fi
 AC_CHECK_PROG(ETAGS, etags, etags)
 
 ##  Create the Packages/Uintah/tools dir for later use.
