@@ -42,7 +42,7 @@
 using namespace rtrt;
 
 extern "C"
-Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
+Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
   string name;
 
@@ -114,6 +114,7 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
   //////////////// LIVING ROOM ARCHITECTURE ////////////////////////
 
   names.add("livingroom");
+  names.add("phone");
 
   if( argc < 2 ) {
     cout << "Adding all furniture\n";
@@ -157,7 +158,6 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
     names.add("painting6");
     names.add("painting7");
     names.add("paintings");
-    names.add("phone");
     names.add("pipe");
     names.add("shelf_pictures");
     names.add("shell1");
@@ -248,85 +248,139 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 4;
 
-  //  if( argc < 2 ) {
+  if( argc > 1 && strcmp(argv[1],"-fast") ) {
     //////////////// TRIGGERS ////////////////////////
     // livingroom main_text
     Trigger * last;
     string ifpath = "/usr/sci/data/Geometry/interface/";
 
     PPMImage * ppm = new PPMImage(ifpath+"livingroom/main_text.ppm", true);
-    vector<Point> loc; loc.push_back(room_trans.project(Point(0,0,0)));
-    Trigger * trig = new Trigger( "Living Room", loc, 200, 20, ppm );
+    vector<Point> loc; loc.push_back(room_trans.project(Point(0,0,2)));
+    Trigger * trig = new Trigger( "Living Room", loc, 10, 200, ppm );
     scene->addTrigger( trig );
 
-    ppm = new PPMImage(ifpath+"livingroom/main_text.ppm" );
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
-    trig = new Trigger( "Living Room Flipped", loc, 7, 10, ppm );
+    ppm = new PPMImage(ifpath+"livingroom/livingroom_credits1.ppm", true);
+    loc.clear(); loc.push_back(room_trans.project(Point(0,1,2)));
+    trig = new Trigger( "Living Room", loc, 3, 30, ppm );
     trig->setBasePriority( Trigger::MediumTriggerPriority );
     scene->addTrigger( trig );
 
     // museum credits
     ppm = new PPMImage(ifpath+"museum/museum_credits11.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits11", loc, 0, 3, ppm, false );
     last = trig;
 
     ppm = new PPMImage(ifpath+"museum/museum_credits10.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits10", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits9.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits9", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits8.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits8", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits7.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits7", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits6.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits6", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits5.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits5", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits4.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits4", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits3.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits3", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits2.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(0,0,0));
     trig = new Trigger( "Museum Credits2", loc, 0,6,ppm,false,NULL,true,trig );
 
     ppm = new PPMImage(ifpath+"museum/museum_credits1.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
+    loc.clear(); loc.push_back(Point(-4,-6,2));
     trig = new Trigger( "Museum Credits", loc, 1,6,ppm,true,NULL,true,trig );
     scene->addTrigger( trig );
 
     last->setNext( trig );
 
-  // MAIN CREDITS TRIGGERS
-    ppm = new PPMImage(ifpath+"credits/personnel_credits6.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
-    trig = new Trigger( "Credits 6", loc, 0, 6, ppm, false );
+
+    // OTHER MUSEUM TRIGGERS
+
+    ///// Entrance room
+    ppm = new PPMImage(ifpath+"museum/intro.ppm", true);
+    loc.clear(); loc.push_back(Point(-4,16,2));
+    trig = new Trigger( "Museum Intro", loc, 2,10,ppm, true );
     last = trig;
 
-    ppm = new PPMImage(ifpath+"credits/personnel_credits5.ppm", true);
-    loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
-    trig = new Trigger( "Credits 5", loc, 0,6,ppm,false,NULL,true,trig );
+    ///// Modern room
+    ppm = new PPMImage(ifpath+"museum/museum_credits12.ppm", true);
+    loc.clear(); loc.push_back(Point(0,0,0));
+    trig = new Trigger( "Modern 4", loc, 0,6,ppm );
+    last = trig;
 
+    ppm = new PPMImage(ifpath+"museum/museum_credits13.ppm", true);
+    loc.clear(); loc.push_back(Point(0,0,0));
+    trig = new Trigger( "Modern 3", loc, 0,6,ppm,false,NULL,true,trig );
+
+    ppm = new PPMImage(ifpath+"museum/museum_credits14.ppm", true);
+    loc.clear(); loc.push_back(Point(0,0,0));
+    trig = new Trigger( "Modern 2", loc, 0,6,ppm,false,NULL,true,trig );
+
+    ppm = new PPMImage(ifpath+"museum/museum_credits15.ppm", true);
+    loc.clear(); loc.push_back(Point(0,0,0));
+    trig = new Trigger( "Modern 1", loc, 0,6,ppm,false,NULL,true,trig );
+
+    ppm = new PPMImage(ifpath+"museum/museum_credits16.ppm", true);
+    loc.clear(); loc.push_back(Point(-15,-4,2));
+    trig = new Trigger( "Modern Room", loc,4,6,ppm,true,NULL,true,trig );
+    scene->addTrigger( trig );
+    last->setNext( trig );
+
+    ///// FORD FIELD
+    ppm = new PPMImage(ifpath+"museum/museum_ford-field.ppm", true);
+    loc.clear(); loc.push_back(Point(-14,-10,1.5));
+    trig = new Trigger( "Ford Field", loc, 1,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+
+    ///// UNC OLD WELL 
+    ppm = new PPMImage(ifpath+"museum/museum_old-well.ppm", true);
+    loc.clear(); loc.push_back(Point(-18,-10,1.9));
+    trig = new Trigger( "Old Well", loc, 1,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+
+    ///// DAVID
+    ppm = new PPMImage(ifpath+"museum/museum_david_high.ppm", true);
+    loc.clear(); loc.push_back(Point(-16,-12,4));
+    trig = new Trigger( "David", loc, 4,100,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+
+    ///// DAVID HEAD
+    ppm = new PPMImage(ifpath+"museum/museum_david_head.ppm", true);
+    loc.clear(); loc.push_back(Point(-10,-11,1.5));
+    trig = new Trigger( "David Head", loc, 2,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+
+
+    // MAIN CREDITS TRIGGERS
     ppm = new PPMImage(ifpath+"credits/personnel_credits4.ppm", true);
     loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
-    trig = new Trigger( "Credits 4", loc, 0,6,ppm,false,NULL,true,trig );
+    trig = new Trigger( "Credits 4", loc, 0, 6, ppm, false );
+    last = trig;
 
     ppm = new PPMImage(ifpath+"credits/personnel_credits3.ppm", true);
     loc.clear(); loc.push_back(room_trans.project(Point(0,0,0)));
@@ -343,6 +397,70 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
 
     last->setNext( trig );
     //  }
+
+    // SCIENCE ROOM TRIGGERS
+    ///// INTRO
+    ppm = new PPMImage(ifpath+"scienceroom/intro.ppm", true);
+    loc.clear(); loc.push_back(Point(-8,8,1.9));
+    trig = new Trigger( "Science Intro", loc, 5,30,ppm,true );
+    scene->addTrigger( trig );
+    ///// WALL 1
+    ppm = new PPMImage(ifpath+"scienceroom/science_wall1.ppm", true);
+    loc.clear(); loc.push_back(Point(-11,8,1.9));
+    trig = new Trigger( "Science Wall 1", loc, 1,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+    ///// WALL 2
+    ppm = new PPMImage(ifpath+"scienceroom/science_wall2.ppm", true);
+    loc.clear(); loc.push_back(Point(-8,11,1.9));
+    trig = new Trigger( "Science Wall 2", loc, 1,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+    ///// VIS WOMEN
+    ppm = new PPMImage(ifpath+"scienceroom/science_vis-woman.ppm", true);
+    loc.clear(); loc.push_back(Point(-30,-30,1.9));
+    trig = new Trigger( "Visible Woman", loc, 1,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+    ///// GEOPHYSICS
+    ppm = new PPMImage(ifpath+"scienceroom/science_geophysics.ppm", true);
+    loc.clear(); loc.push_back(Point(-40,-40,1.9));
+    trig = new Trigger( "Geophysics", loc, 1,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+    ///// C-SAFE
+    ppm = new PPMImage(ifpath+"scienceroom/science_firespread.ppm", true);
+    loc.clear(); loc.push_back(Point(-50,-50,1.9));
+    trig = new Trigger( "C-SAFE Fire", loc, 1,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+
+
+    // GALAXY TRIGGERS
+    ///// Intro
+    ppm = new PPMImage(ifpath+"galaxy/intro.ppm", true);
+    loc.clear(); loc.push_back(Point(29,29,2.0));
+    trig = new Trigger( "Galaxy Intro", loc, 33,200,ppm,true );
+    scene->addTrigger( trig );
+
+    ///// jpl credit
+    ppm = new PPMImage(ifpath+"galaxy/galaxy_credits1.ppm", true);
+    loc.clear(); loc.push_back(Point(29,29,2.0));
+    trig = new Trigger( "Galaxy Intro", loc, 15,30,ppm,true );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
+    scene->addTrigger( trig );
+
+    // ATLANTIS TRIGGERS
+    ///// Intro
+    ppm = new PPMImage(ifpath+"atlantis/intro.ppm", true);
+    loc.clear(); 
+    loc.push_back(Point( -8, 10, 2));
+    loc.push_back(Point( 10,  6, 2));
+    loc.push_back(Point(  8, 10, 2));
+    loc.push_back(Point(-10, -6, 2));
+    trig = new Trigger( "Atlantis Intro", loc, 4,100,ppm,true );
+    scene->addTrigger( trig );
+  }
 
   //////////////// GLOBE INSTANCE ////////////////////////
   if( argc < 2 ) {
@@ -373,44 +491,44 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
 
 #if !defined(linux)
   {
-    string path = "/home/sci/dav/sounds/"; // piano
+    string path = "/usr/sci/data/Geometry/sounds/";
     vector<Point> loc;
-    loc.push_back(room_trans.project(Point(53,82,64)));
+    loc.push_back(room_trans.project(Point(53,82,64)));  // piano
     Sound * sound = new Sound( path+"player-piano-cd026_73.wav", "piano", 
 			       loc, 3, true );
     scene->addSound( sound );
-    loc.clear();
 
+    loc.clear();
     loc.push_back(room_trans.project(Point(0,0,0))); // harp back ground
     sound = new Sound( path+"harp-melodic-cd027_59.wav", "harp", loc,
 		       5, true, .5 );
     scene->addSound( sound );
-    loc.clear();
 
+    loc.clear();
     loc.push_back(room_trans.project(Point(-161,-121,67)));  // clock
     sound = new Sound( path+"ticking-clock-cd058_07.wav", "ticking", 
 		       loc, 2, true );
     scene->addSound( sound );
-    loc.clear();
 
+    loc.clear();
     loc.push_back(room_trans.project(Point(-161,-121,67)));  // clock
     sound = new Sound( path+"clock-tower-bells-cd025_75.wav", "chime",
 		       loc, 2, true );
     scene->addSound( sound );
-    loc.clear();
 
+    loc.clear();
     loc.push_back(room_trans.project(Point(-8,-91,31))); // fruit
     sound = new Sound( path+"music-box-cd074_96.wav", "music-box",
 		       loc, 2, true );
     scene->addSound( sound );
-    loc.clear();
 
+    loc.clear();
     loc.push_back(room_trans.project(Point(-121,453,62))); // outside
     sound = new Sound( path+"waves-ocean-shoreline-cd039_27.wav",
 		       "under water", loc, 4, true );
     scene->addSound( sound );
-    loc.clear();
 
+    loc.clear();
     loc.push_back(room_trans.project(Point(135,-126,60))); // books
     sound = new Sound( path+"cool_music.wav", "cool", loc, 2, true );
     scene->addSound( sound );
@@ -426,6 +544,22 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
     //loc.push_back(room_trans.project(Point(178,36,37))); // banjo
     //sound = new Sound( path+"cool_music.wav", "cool", loc, 1, true );
     //scene->addSound( sound );
+
+    // MUSEUM ROOM SOUND
+    loc.clear();
+    loc.push_back(Point(-12,-16,2)); // Center of Museum
+    sound = new Sound( path+"violinist-cd074_98.wav", "Violin", 
+		       loc, 12, true, 0.5 );
+    scene->addSound( sound );
+
+    // GALAXY ROOM SOUND
+    loc.clear();
+    loc.push_back(Point(29,29,2)); // Center of Museum
+    sound = new Sound( path+"eerie-sounds-deep-space-cd006_05.wav", "Space", 
+		       loc, 30, true, 0.5 );
+    scene->addSound( sound );
+
+
   }
 #endif
 
