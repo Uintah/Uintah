@@ -41985,14 +41985,20 @@ echo $ECHO_N "checking for $_sci_optional freetype... $ECHO_C" >&6
 
 found_freetype_config="no"
 
-if test -e $_sci_lib/../bin/freetype-config; then
+if test -z "$_sci_lib"; then
+   freetype_bin=/usr/bin
+else
+   freetype_bin=$_sci_lib/../bin
+fi
+
+if test -e $freetype_bin/freetype-config; then
     found_freetype_config="yes"
     echo
-    echo "$as_me:$LINENO: result: Using $_sci_lib/../bin/freetype-config to set freetype variables." >&5
-echo "${ECHO_T}Using $_sci_lib/../bin/freetype-config to set freetype variables." >&6
+    echo "$as_me:$LINENO: result: Using $freetype_bin/freetype-config to set freetype variables." >&5
+echo "${ECHO_T}Using $freetype_bin/freetype-config to set freetype variables." >&6
 
-    includes=`$_sci_lib/../bin/freetype-config --cflags`
-    FREETYPE_LIB_FLAG=`$_sci_lib/../bin/freetype-config --libs`
+    includes=`$freetype_bin/freetype-config --cflags`
+    FREETYPE_LIB_FLAG=`$freetype_bin/freetype-config --libs`
 
 
 ##
