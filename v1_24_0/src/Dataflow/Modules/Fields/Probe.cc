@@ -468,7 +468,7 @@ Probe::execute()
       break;
     }
     MatrixHandle cm = scinew ColumnMatrix(1);
-    cm->get(0, 0) = (double)index;
+    cm->put(0, 0, index);
     mp->send(cm);
   }
 }
