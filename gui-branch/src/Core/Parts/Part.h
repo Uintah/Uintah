@@ -36,6 +36,7 @@
 #include <vector>
 #include <stdio.h>
 
+
 #include <Core/GuiInterface/TCLArgs.h>
 #include <Core/Util/Signals.h>
 
@@ -59,6 +60,9 @@ protected:
   PartPort *port_;
   vector<Part*> children_;
   VarList vars_;
+
+public:
+  Signal1<PartPort *> has_child;
 
 public:
   Part( Part *parent=0, const string &name="", const string &type="",

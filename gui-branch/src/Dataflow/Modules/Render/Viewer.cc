@@ -66,8 +66,8 @@ Viewer::Viewer(const string& id)
   // Add a headlight
   lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
   
-  default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
-			       Color(.7,.7,.7), 50);
+  default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0), Color(.7,.7,.7),
+			       50);
   busy_bit=1;
   have_own_dispatch=1;
   
@@ -89,8 +89,8 @@ Viewer::Viewer(const string& id, const string& moduleName):
 {
   // Add a headlight
   lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
-  default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
-			       Color(.7,.7,.7), 50);
+  default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),Color(.7,.7,.7),
+			       50);
   busy_bit=1;
   have_own_dispatch=1;
   
@@ -140,12 +140,15 @@ void Viewer::do_execute()
 //----------------------------------------------------------------------
 int Viewer::process_event(int block)
 {
-  int ni=mailbox.numItems();
-  if(!block && ni==0)return 0;
-  if(!ni)busy_bit=0;
+  int ni = mailbox.numItems();
+
+  if ( !block && ni==0 ) return 0;
+  if (!ni) busy_bit=0;
+
   MessageBase* msg=mailbox.receive();
   busy_bit=1;
   GeometryComm* gmsg=(GeometryComm*)msg;
+
   switch(msg->type){
   case MessageTypes::GoAway:
     return 86;

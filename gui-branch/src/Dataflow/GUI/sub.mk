@@ -41,7 +41,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/EditField.tcl\
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
-	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldWriter.tcl \
 	$(SRCDIR)/FieldSetReader.tcl \
 	$(SRCDIR)/FieldSetWriter.tcl \
@@ -62,7 +61,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixSelectVector.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
-	$(SRCDIR)/Module.tcl \
 	$(SRCDIR)/PathReader.tcl \
 	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \
@@ -84,9 +82,11 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
+	$(SRCDIR)/TclStream.tcl \
+	$(SRCDIR)/FieldReader.tcl \
+	$(SRCDIR)/Module.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/ViewWindow.tcl \
-	$(SRCDIR)/TclStream.tcl \
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Dataflow/GUI
 

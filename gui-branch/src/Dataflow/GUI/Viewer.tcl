@@ -19,17 +19,19 @@
 
 itcl::class SCIRun_Render_Viewer {
     inherit ModuleGui
-
+    
     protected variable nextrid 0
-
+    
     public variable make_progress_graph 0
     public variable make_time 0
     public variable viewwindow ""
-
+    
     constructor {} {
 	set name Viewer
+	global global_viewer
+	set global_viewer $this
     }
-
+    
     destructor {
 	foreach rid $viewwindow {
 	    destroy .ui[$rid modname]
@@ -47,7 +49,7 @@ itcl::class SCIRun_Render_Viewer {
 	}
 	return $id
     }
-
+    
     method ui {{rid -1}} {
 	if {$rid == -1} {
 	    set rid [makeViewWindowID]

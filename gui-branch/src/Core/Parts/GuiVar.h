@@ -60,10 +60,10 @@ public:
   virtual ~GuiVar();
   
   const string &name() { return name_; }
-
   void update();
 
   virtual void string_set( const string & ) {}
+  virtual const string string_get() { return ""; }
   virtual void emit(std::ostream& out, string& midx)=0;
 
   // backward compatibility
@@ -85,6 +85,7 @@ public:
   const T &get() { return value_; }
   void set( const T &v ) { value_ = v; update(); }
   virtual void string_set( const string &v ) { cerr << "set_string ignored\n";}
+  virtual const string string_get() { return ""; }
   virtual void emit(std::ostream& out, string& midx) {
     out << "set " << midx << "-" << name_ << " {" << value_ << "}" << endl;
   }
@@ -98,16 +99,34 @@ GuiTypedVar<string>::string_set( const string &value )
   value_ = value;
 }
 
+template<> const string 
+GuiTypedVar<string>::string_get()
+{
+  return value_;
+}
+
 template<> void 
 GuiTypedVar<int>::string_set( const string &value )
 {
   string_to_int( value, value_ );
 }
 
+template<> const string
+GuiTypedVar<int>::string_get()
+{
+  return to_string( value_ );
+}
+
 template<> void
 GuiTypedVar<double>::string_set( const string &value )
 {
   string_to_double( value, value_ );
+}
+
+template<> const string 
+GuiTypedVar<double>::string_get()
+{
+  return to_string( value_ );
 }
 
 
@@ -129,9 +148,9 @@ class GuiTriple : public GuiVar
 public:
   GuiTriple(const string& name, Part* part) :
     GuiVar(name, part),
-    x_("x", part),
-    y_("y", part),
-    z_("z", part)
+    x_(name+"_x", part),
+    y_(name+"_y", part),
+    z_(name+"_z", part)
   {}
   virtual ~GuiTriple() {}
 
