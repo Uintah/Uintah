@@ -145,11 +145,12 @@ WARNING
     };
     vector<TableValue*> tablevalues;
 
-    int density_index;
-    int gamma_index;
-    int cv_index;
-    int viscosity_index;
-    int temp_index;
+    int d_density_index;
+    int d_sp_vol_index;
+    int d_gamma_index;
+    int d_cv_index;
+    int d_viscosity_index;
+    int d_temp_index;
   };
 }
 
