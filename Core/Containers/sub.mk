@@ -27,7 +27,7 @@ SRCS     += $(SRCDIR)/ConsecutiveRangeSet.cc \
 	    $(SRCDIR)/TrivialAllocator.cc \
 	    $(SRCDIR)/templates.cc
 
-PSELIBS := Core/Exceptions Core/Tester Core/Thread
+PSELIBS := Core/Exceptions Core/Thread
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

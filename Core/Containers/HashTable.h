@@ -59,8 +59,7 @@ template<class Key> inline int Hash(const Key& k, int hash_size)
 
 // Dd: Adding hash function for type "string".  Feel free to change
 // this to make it a good one...
-using std::string;
-inline int Hash(const string& s, int hash_size)
+inline int Hash(const std::string& s, int hash_size)
 {
   int val = 0;
   for( unsigned int pos = 0; pos < s.length(); pos++ )
