@@ -80,6 +80,9 @@ ICEMaterial::~ICEMaterial()
 
   delete d_eos;
   delete lb;
+  for (int i = 0; i< (int)d_geom_objs.size(); i++) {
+	delete d_geom_objs[i];
+  }
 }
 
 EquationOfState * ICEMaterial::getEOS() const
@@ -185,6 +188,9 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 }
 
 // $Log$
+// Revision 1.14  2001/01/20 00:39:03  jas
+// Remove some memory leaks.
+//
 // Revision 1.13  2001/01/11 22:38:50  guilkey
 // Get rid of requirement for velocity_field flag from ps.
 //
