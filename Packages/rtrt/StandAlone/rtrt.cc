@@ -3,11 +3,6 @@
  * Real time ray-tracer
  */
 
-#include <sci_defs/ogl_defs.h> // For HAVE_OOGL
-#if defined(HAVE_OOGL)
-#undef HAVE_OOGL
-#endif
-
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Persistent/Pstreams.h>
@@ -28,6 +23,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
+#include <Packages/rtrt/Core/DpyGui.h>
 
 #include <sys/stat.h>
 #include <sgi_stl_warnings_off.h>
@@ -53,40 +49,6 @@
 #pragma reset woff 1375
 #endif
 
-
-#if defined(HAVE_OOGL)
-#  include "oogl/vec2.h"
-#  include "oogl/basicTexture.h"
-#  include "oogl/shader.h"
-#  include "oogl/planarQuad.h"
-#  include "oogl/shadedPrim.h"
-#  include "oogl/renderPass.h"
-
-/////////////////////////////////////////////////
-// OOGL stuff
-extern BasicTexture * backgroundTex;
-extern ShadedPrim   * backgroundTexQuad;
-static ShadedPrim   * blendTexQuad;
-static BasicTexture * blendTex;
-extern Blend        * blend = NULL;
-
-static ShadedPrim   * bottomGraphicTexQuad;
-static BasicTexture * bottomGraphicTex;
-static ShadedPrim   * leftGraphicTexQuad;
-static BasicTexture * leftGraphicTex;
-
-extern BasicTexture * rtrtBotTex; // Bottom 512 pixels
-extern BasicTexture * rtrtTopTex; // Top 64 pixels
-extern ShadedPrim   * rtrtBotTexQuad;
-extern ShadedPrim   * rtrtTopTexQuad;
-
-extern BasicTexture * rtrtMidTopTex; // Medium Size RTRT Render Window (512x320)
-extern ShadedPrim   * rtrtMidTopTexQuad;
-extern BasicTexture * rtrtMidBotTex; // Medium Size RTRT Render Window (512x320)
-extern ShadedPrim   * rtrtMidBotTexQuad;
-
-/////////////////////////////////////////////////
-#endif
 
 using namespace rtrt;
 using namespace std;
@@ -137,11 +99,6 @@ static void mld_alloc(long size, int nmld,
     exit(1);
   }
 }
-#endif
-
-#if defined(HAVE_OOGL)
-Trigger * loadBottomGraphic();
-Trigger * loadLeftGraphic();
 #endif
 
 int       mainWindowId = -1;
@@ -198,7 +155,6 @@ static void usage(char* progname)
   cerr << "                    as a fraction of pixels per/proc\n";
   cerr << " -sound           - start sound thread\n";
   cerr << " -fullscreen      - run in full screen mode\n";
-  cerr << " -demo            - spiffy gratuitous border animations\n";
   cerr << " -jitter          - jittered masks - fixed table for now\n";
   cerr << " -stereo          - display in stereo mode\n";
   cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
@@ -248,7 +204,6 @@ namespace rtrt {
 #endif
 
 bool fullscreen = false;
-bool demo = false;
 
 int
 main(int argc, char* argv[])
@@ -287,7 +242,7 @@ main(int argc, char* argv[])
   bool serialize_scene = false;
   bool startSoundThread = false;
 
-  bool show_gui = true;
+  bool show_gui = false;
   bool rserver=false;
 
   Color bgcolor;
@@ -449,8 +404,6 @@ main(int argc, char* argv[])
       }
     } else if(strcmp(argv[i],"-fullscreen")==0) {
       fullscreen = true;
-    } else if(strcmp(argv[i],"-demo")==0) {
-      demo = true;
     } else if(strcmp(argv[i],"-jitter")==0) {
       rtrt_engine->do_jitter=1;
     } else if(strcmp(argv[i],"-sound")==0) {
@@ -687,20 +640,6 @@ main(int argc, char* argv[])
     scene->set_object( scene->get_object() );
   }
   
-#if defined(HAVE_OOGL)
-  Trigger * bottomGraphicTrigger = NULL;
-  Trigger * leftGraphicTrigger = NULL;
-
-  if( fullscreen ) { // For Demo... and oogl stuff 
-      xres = 512; // Start in low res mode.
-      yres = 288;
-//    xres = 1024; // Start in low res mode.
-//    yres = 576;
-  } else {
-    if( demo ) demo = false; // If not in full screen mode, no demo stuff.
-  }
-#endif
-
   if(!scene->get_image(0)){
     Image* image0=new Image(xres, yres, false);
     scene->set_image(0, image0);
@@ -747,339 +686,103 @@ main(int argc, char* argv[])
   scene->get_camera(1)->setWindowAspectRatio( aspectRatio );
 
   // Start up display thread...
-  Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
+  Dpy* dpy=new Dpy(scene, rtrt_engine, criteria1, criteria2,
+                   rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1, 1.0, 1.0, display_frames,
-		   pp_size, scratchsize, fullscreen, do_frameless==true, rserver,
-		   stereo );
+		   pp_size, scratchsize, fullscreen, do_frameless==true,
+                   rserver, stereo );
 
-  Gui * gui = new Gui();
-
-
-
-  Gui::setActiveGui( gui );
-  gui->setDpy( dpy );
-
-  // Initialize GLUT and GLUI stuff.
-  DpyBase::xlock();
-  printf("start glut inits\n");
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-
-  glutInitWindowPosition( 0, 0 );
-
-  mainWindowId = glutCreateWindow("RTRT");
-  DpyBase::xunlock();
-
-  if( fullscreen ) {
-    //glutFullScreen(); // only if full screen is 1280x1024
-    glutReshapeWindow( 1280, 1024 );
-  } else {
-    glutReshapeWindow( xres, yres );
-  }
-
-#if defined(HAVE_OOGL)
   //////////////////////////////////////////////////////////////////
-  // OOGL stuff
+  // Setup the DpyGui thread
 
-  if( fullscreen ) {
-    //// BACKGROUND QUAD STUFF
-
-    float z = 0.0;  
-    bool  genTexCoords = true;
-    Vec2f lowerLeft( 0, 0 );
-    Vec2f upperRight( 2048, 1024 );
-
-    PlanarQuad * backgroundQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    backgroundQuad->compile();
-
-    Vec2i texDimen(2048,1024);
-    backgroundTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
-			NULL, GL_FLOAT, NULL );
-
-    Shader * backgroundTexShader = new Shader( backgroundTex );
-    backgroundTexQuad = new ShadedPrim( backgroundQuad, backgroundTexShader );
-
-    //// BLEND QUAD STUFF
-
-    blend = new Blend( Vec4f(1.0, 1.0, 1.0, 0.5) );
-
-    lowerLeft.set( 127, 65 );
-    upperRight.set( 1150, 319 );
-    PlanarQuad * blendQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-
-    texDimen.set(1024,256);
-    blendTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
-			NULL, GL_FLOAT, NULL );
-
-    Shader * blendTexShader = new Shader( blendTex, blend );
-    blendTexQuad = new ShadedPrim( blendQuad, blendTexShader );
-
-    //// BOTTOM GRAPHIC QUAD STUFF
-
-    lowerLeft.set( 0, 0 );
-    upperRight.set( 2047, 63 );
-    PlanarQuad * bottomGraphicQuad =
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-
-    texDimen.set(2048,64);
-    bottomGraphicTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
-			NULL, GL_FLOAT, NULL );
-    Shader * bottomGraphicTexShader = new Shader( bottomGraphicTex );
-    bottomGraphicTexQuad = new ShadedPrim( bottomGraphicQuad, 
-					   bottomGraphicTexShader );
+  DpyGui* dpygui = new DpyGui();
+  dpygui->setDpy(dpy);
+  dpygui->setRTRTEngine(rtrt_engine);
+  (new Thread(dpygui, "DpyGui"))->detach();
   
-    //// LEFT GRAPHIC QUAD STUFF
-
-    lowerLeft.set( 0, 0 );
-    upperRight.set( 63, 1023 );
-    PlanarQuad * leftGraphicQuad =
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-
-    texDimen.set(64,1024);
-    leftGraphicTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
-			NULL, GL_FLOAT, NULL );
-    Shader * leftGraphicTexShader = new Shader( leftGraphicTex );
-    leftGraphicTexQuad = new ShadedPrim( leftGraphicQuad, 
-					 leftGraphicTexShader );
-  
-    //// RTRT QUAD STUFF -- NEED 2 QUADS (512 Tall + 64 Tall)
-
-    lowerLeft.set(   128, 328 );
-    upperRight.set( 1152, 840 );
-    PlanarQuad * rtrtBotQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    rtrtBotQuad->compile();
-
-    texDimen.set(1024,512);
-    rtrtBotTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
-
-    Shader * rtrtBotTexShader = new Shader( rtrtBotTex );
-    rtrtBotTexQuad = new ShadedPrim( rtrtBotQuad, rtrtBotTexShader );
-
-    lowerLeft.set( 128, 840 );
-    upperRight.set( 1152, 904 );
-
-    PlanarQuad * rtrtTopQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    rtrtTopQuad->compile();
-
-    texDimen.set(1024,64);
-    rtrtTopTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
-
-    Shader * rtrtTopTexShader = new Shader( rtrtTopTex );
-    rtrtTopTexQuad = new ShadedPrim( rtrtTopQuad, rtrtTopTexShader );
-
-    // MEDIUM RESOLUTION RTRT RENDER WINDOW
-    lowerLeft.set(   128, 328 );
-    upperRight.set( 1152, 840 );
-
-    PlanarQuad * rtrtMidBotQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    rtrtMidBotQuad->compile();
-
-    texDimen.set(512,256);
-    rtrtMidBotTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
-
-    Shader * rtrtMidBotTexShader = new Shader( rtrtMidBotTex );
-    rtrtMidBotTexQuad = new ShadedPrim( rtrtMidBotQuad, rtrtMidBotTexShader );
-
-    lowerLeft.set(   128, 840 );
-    upperRight.set( 1152, 904 );
-
-    PlanarQuad * rtrtMidTopQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    rtrtMidTopQuad->compile();
-
-    texDimen.set(512,32);
-    rtrtMidTopTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
-
-    Shader * rtrtMidTopTexShader = new Shader( rtrtMidTopTex );
-    rtrtMidTopTexQuad = new ShadedPrim( rtrtMidTopQuad, rtrtMidTopTexShader );
-  }
-#endif // HAVE_OOGL
-  // end OOGL stuff
   //////////////////////////////////////////////////////////////////
+  // This is the glut glui stuff
 
-  // All non-sound triggers will be drawn to the blend quad...  let
-  // them know about it.
-  vector<Trigger*> & triggers = scene->getTriggers();
-  for( unsigned int cnt = 0; cnt < triggers.size(); cnt++ ) {
-    Trigger * trigger = triggers[cnt];
-    if( !trigger->isSoundTrigger() )
-      {
-#if defined(HAVE_OOGL)
-	trigger->setDrawableInfo( blendTex, blendTexQuad, blend );
-	Trigger * next = trigger->getNext();
+  Gui * gui = 0;
+  
+  if (show_gui) {
+    gui = new Gui();
 
-	while( next != NULL && next != trigger )
-	  {
-	    next->setDrawableInfo( blendTex, blendTexQuad, blend );
-	    next = next->getNext();
-	  }
-#endif
-      }
+    Gui::setActiveGui( gui );
+    gui->setDpy( dpy );
+    
+    // Initialize GLUT and GLUI stuff.
+    DpyBase::xlock();
+    printf("start glut inits\n");
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+    
+    glutInitWindowPosition( 0, 0 );
+    
+    mainWindowId = glutCreateWindow("RTRT");
+    DpyBase::xunlock();
+    
+    if( fullscreen ) {
+      //glutFullScreen(); // only if full screen is 1280x1024
+      glutReshapeWindow( 1280, 1024 );
+    } else {
+      glutReshapeWindow( xres, yres );
+    }
+    
+    //////////////////////////////////////////////////////////////////
+    
+    cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
+    
+    glutKeyboardFunc( Gui::handleKeyPressCB );
+    glutSpecialFunc( Gui::handleSpecialKeyCB );
+    glutMouseFunc( Gui::handleMouseCB );
+    glutMotionFunc( Gui::handleMouseMotionCB );
+    glutSpaceballMotionFunc( Gui::handleSpaceballMotionCB );
+    glutSpaceballRotateFunc( Gui::handleSpaceballRotateCB );
+    glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
+    
+    glutReshapeFunc( Gui::handleWindowResizeCB );
+    glutDisplayFunc( Gui::redrawBackgroundCB );
+    
   }
-#if defined(HAVE_OOGL)
-  if( demo ) { // Load the fancy dynamic graphics
-    bottomGraphicTrigger = loadBottomGraphic();
-    leftGraphicTrigger = loadLeftGraphic();
-    gui->setBottomGraphic( bottomGraphicTrigger );
-    gui->setLeftGraphic( leftGraphicTrigger );
-  }
-#endif
 
-  cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
-
-  glutKeyboardFunc( Gui::handleKeyPressCB );
-  glutSpecialFunc( Gui::handleSpecialKeyCB );
-  glutMouseFunc( Gui::handleMouseCB );
-  glutMotionFunc( Gui::handleMouseMotionCB );
-  glutSpaceballMotionFunc( Gui::handleSpaceballMotionCB );
-  glutSpaceballRotateFunc( Gui::handleSpaceballRotateCB );
-  glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
-
-  glutReshapeFunc( Gui::handleWindowResizeCB );
-  glutDisplayFunc( Gui::redrawBackgroundCB );
-
- 
   /*  bigler */
   (new Thread(dpy, "Display thread"))->detach();
 
-  // Must do this after glut is initialized.
-  Gui::createMenus( mainWindowId, startSoundThread, show_gui);  
-
-  // Let the GUI know about the lights.
-  int cnt;
-  for( cnt = 0; cnt < scene->nlights(); cnt++ ) {
-    gui->addLight( scene->light( cnt ) );
+  if (show_gui) {
+    // Must do this after glut is initialized.
+    Gui::createMenus( mainWindowId, startSoundThread, show_gui);  
+    
+    // Let the GUI know about the lights.
+    int cnt;
+    for( cnt = 0; cnt < scene->nlights(); cnt++ ) {
+      gui->addLight( scene->light( cnt ) );
+    }
+    for( ; cnt < scene->nlights()+scene->nPerMatlLights(); cnt++ ) {
+      Light *light = scene->per_matl_light( cnt - scene->nlights() );
+      if( light->name_ != "" )
+        light->name_ = light->name_ + " (pm)";
+      gui->addLight( light );
+    }
+    
+    printf("end glut inits\n");
+    
+    /* Register the idle callback with GLUI, *not* with GLUT */
+    //GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
   }
-  for( ; cnt < scene->nlights()+scene->nPerMatlLights(); cnt++ ) {
-    Light *light = scene->per_matl_light( cnt - scene->nlights() );
-    if( light->name_ != "" )
-      light->name_ = light->name_ + " (pm)";
-    gui->addLight( light );
-  }
-
-  printf("end glut inits\n");
-
-  /* Register the idle callback with GLUI, *not* with GLUT */
-  //GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
-
   
   // Start up worker threads...
   for(int i=0;i<rtrt_engine->nworkers;i++){
     char buf[100];
     sprintf(buf, "worker %d", i);
-#if 0
-    Thread * thread = new Thread(new Worker(dpy, scene, i,
-					    pp_size, scratchsize,
-					    ncounters, c0, c1), buf);
-#endif
-#if 1
     Worker * worker = new Worker(dpy, scene, i,
 				 pp_size, scratchsize,
 				 ncounters, c0, c1);
     Thread * thread = new Thread( worker, buf );
     thread->detach();
-#endif
   } // end for (create workers)
 
-  //  group->join();
-  //  cout << "Threads exited" << endl;
-
-  if (!bench && display_frames) {
-    printf("start main loop\n");
-    glutMainLoop();
-  } else {
-    dpy->release(0);
-  }
- 
+  //  Thread::exit();
+  
+  return 0;
 }
 
-
-#if defined(HAVE_OOGL)
-// Returns first trigger in sequence.
-Trigger * 
-loadBottomGraphic()
-{
-  cout << "Loading Bottom Graphics\n";
-  vector<Point> locations;
-  locations.push_back(Point(0,0,0));
-
-  Trigger * next = NULL;
-  Trigger * ninety;
-
-  for( int frame = 90; frame >= 30; frame-- )
-    {
-      char name[256];
-      sprintf( name,
-         "/usr/sci/data/Geometry/interface/frames_bottom/interface00%d.ppm",
-	       frame );
-
-      PPMImage * ppm = new PPMImage( name, true );
-
-      Trigger * trig = 
-	new Trigger( "bottom bar", locations, 0, 0.02, ppm, false, NULL,
-		     false, next );
-
-      trig->setDrawableInfo( bottomGraphicTex, bottomGraphicTexQuad );
-      if( frame == 90 )
-	ninety = trig;
-
-      next = trig;
-    }
-
-  ninety->setNext( next );
-  ninety->setDelay( 5.0 );
-
-  cout << "Done Loading Bottom Graphics\n";
-  return next;
-}
-
-// Returns first trigger in sequence.
-Trigger * 
-loadLeftGraphic()
-{
-  cout << "Loading Left Graphics\n";
-  vector<Point> locations;
-  locations.push_back(Point(0,0,0));
-
-  Trigger * next = NULL;
-  Trigger * ninety;
-
-  for( int frame = 90; frame >= 30; frame-- )
-    {
-      char name[256];
-      sprintf( name,
-         "/usr/sci/data/Geometry/interface/frames_left_side/interface00%d.ppm",
-	       frame );
-
-      PPMImage * ppm = new PPMImage( name, true );
-
-      Trigger * trig = 
-	new Trigger( "bottom bar", locations, 0, 0.02, ppm, false, NULL,
-		     false, next );
-      trig->setDrawableInfo( leftGraphicTex, leftGraphicTexQuad );
-
-      if( frame == 90 )
-	ninety = trig;
-
-      next = trig;
-    }
-
-  ninety->setNext( next );
-  ninety->setDelay( 10.0 );
-
-  cout << "Done Loading Left Graphics\n";
-  return next;
-}
-#endif // HAVE_OOGL
