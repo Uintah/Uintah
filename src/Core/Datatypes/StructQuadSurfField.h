@@ -133,8 +133,8 @@ StructQuadSurfField<Data>::io(Piostream &stream)
     int i, j;
     for (i=0; i<fdata().dim1(); i++)
       for (j=0; j<fdata().dim2(); j++)
-	fdata()(i,j)=temp(j,i);
-  }  
+	fdata()(i,j)=temp(i,j);
+  } 
 }
 
 template <class Data>
