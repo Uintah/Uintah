@@ -98,6 +98,9 @@ Pio(Piostream& stream, map<Key, Data>& data) {
 // PIO for vectors
 #define STLVECTOR_VERSION 1
 
+template <> 
+SCICORESHARE void Pio(Piostream& stream, vector<bool>& data);
+
 template <class T> 
 SCICORESHARE void Pio(Piostream& stream, vector<T>& data)
 { 
@@ -110,14 +113,15 @@ SCICORESHARE void Pio(Piostream& stream, vector<T>& data)
   if(stream.reading()){
     data.resize(size);
   }
-  
-  vector<T>::iterator ii;
-  
-  for (ii=data.begin(); ii!=data.end(); ii++)
-    Pio(stream, *ii);
+
+  for (int i = 0; i < size; i++)
+  {
+    Pio(stream, data[i]);
+  }
 
   stream.end_class();  
 }
+
 
 //////////
 // PIO for lists

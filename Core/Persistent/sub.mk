@@ -21,7 +21,9 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Core/Persistent
 
-SRCS     += $(SRCDIR)/Persistent.cc $(SRCDIR)/Pstreams.cc
+SRCS     += $(SRCDIR)/Persistent.cc     \
+	    $(SRCDIR)/PersistentSTL.cc  \
+	    $(SRCDIR)/Pstreams.cc 
 
 PSELIBS := Core/Containers
 LIBS := $(GZ_LIBRARY)
