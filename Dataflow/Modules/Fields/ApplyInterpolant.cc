@@ -1,6 +1,6 @@
 /*
  *  ApplyInterpolant.cc:  Apply an interpolant field to project the data
- *                 from one field onto the data of another field.
+ *                 from one field onto the mesh of another field.
  *
  *  Written by:
  *   David Weinstein
@@ -11,10 +11,8 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/TriSurfMesh.h>
+#include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -29,12 +27,10 @@ public:
   virtual ~ApplyInterpolant();
   virtual void execute();
 private:
-  FieldIPort*      imesh_;
-  FieldIPort*    isurf_;
-  MatrixOPort*     omat_;
-  MatrixHandle     mat_handle_;
-  int              mesh_gen_;
-  int              surf_gen_;
+  FieldIPort  *source_field_;
+  FieldIPort  *dest_field_;
+  FieldIPort  *interp_field_;
+  FieldOPort  *output_field_;
 };
 
 extern "C" Module* make_ApplyInterpolant(const clString& id)
@@ -45,117 +41,45 @@ extern "C" Module* make_ApplyInterpolant(const clString& id)
 ApplyInterpolant::ApplyInterpolant(const clString& id)
   : Module("ApplyInterpolant", id, Filter)
 {
-  imesh_=scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
-  add_iport(imesh_);
-  isurf_=scinew FieldIPort(this, "Surface", FieldIPort::Atomic);
-  add_iport(isurf_);
+  // Create the input ports
+  source_field_ = scinew FieldIPort(this, "Source", FieldIPort::Atomic);
+  add_iport(source_field_);
+  dest_field_ = scinew FieldIPort(this, "Destination", FieldIPort::Atomic);
+  add_iport(dest_field_);
+  interp_field_ = scinew FieldIPort(this, "Interpolant", FieldIPort::Atomic);
+  add_iport(interp_field_);
+
   // Create the output port
-  omat_=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-  add_oport(omat_);
-  mesh_gen_=-1;
-  surf_gen_=-1;
+  output_field_ = scinew FieldOPort(this, "Output", FieldIPort::Atomic);
+  add_oport(output_field_);
 }
 
 ApplyInterpolant::~ApplyInterpolant()
 {
 }
 
-void sortpts(double *dist, int *idx) {
-  double tmpd;
-  int tmpi;
-  int i,j;
-  for (i=0; i<4; i++) {
-    for (j=i+1; j<4; j++) {
-      if (idx[j]<idx[i]) {
-	tmpd=dist[i]; dist[i]=dist[j]; dist[j]=tmpd;
-	tmpi=idx[i]; idx[i]=idx[j]; idx[j]=tmpi;
-      }
-    }
-  }
-}
-
 void ApplyInterpolant::execute()
 {
-  FieldHandle meshH;
-  if(!imesh_->get(meshH))
+  FieldHandle sourceH;
+  FieldHandle destH;
+  FieldHandle interpH;
+
+  if(!source_field_->get(sourceH))
+    return;
+  if(!dest_field_->get(destH))
+    return;
+  if(!interp_field_->get(interpH))
     return;
 
-  FieldHandle surfH;
-  if (!isurf_->get(surfH))
-    return;
+  FieldHandle outputH;
 
-  if (mesh_gen_ == meshH->generation && surf_gen_ == surfH->generation && 
-      mat_handle_.get_rep()) {
-    omat_->send(mat_handle_);
-    return;
-  }
+  // TODO: create the output field (clone dest Mesh), assign it to outputH
+  //   make sure the dimensions/locations of source/dest/interp all line up
+  //   map the data from source, through interp, into output
 
-  mesh_gen_ = meshH->generation;
-  surf_gen_ = surfH->generation;
+  // ...
 
-  //TriSurfMesh *ts = surfH.get_rep();  // FIXME
-  TriSurfMesh *ts = 0;
-  if (!ts) {
-    cerr << "Error - need a TriSurfMesh.\n";
-    return;
-  }
-
-// FIX_ME
-#if 0 
-  //int *rows=new int[ts->point_count()+1];
-  //int *cols=new int[ts->point_count()*4];
-  //double *a=new double[ts->point_count()*4];
-  SparseRowMatrix *mm=scinew SparseRowMatrix(ts->point_count(),
-					     meshH->nodesize(),
-					     rows, cols,
-					     ts->point_count()*4, a);
-  mat_handle_=mm;
-  int i,j;
-  int ix;
-  int nodes[4];
-  double dist[4];
-  double sum;
-  for (i=0; i<ts->point_count(); i++) {
-    rows[i]=i*4;
-    if (!meshH->locate(&ix, ts->point(i), 1.e-4, 1.e-4)) {
-      int foundIt=0;
-      for (j=0; j<meshH->nodesize(); j++) {
-	if ((meshH->point(j) - ts->point(i)).length2() < 0.001) {
-	  ix=meshH->node(j).elems[0];
-	  foundIt=1;
-	  break;
-	}
-      }
-      if (!foundIt) {
-	cerr << "Error - couldn't find point "<<ts->point(i)<<" in mesh.\n";
-	delete rows;
-	delete cols;
-	delete a;
-	return;
-      }
-    }
-    Element *e=meshH->element(ix);
-    for (sum=0,j=0; j<4; j++) {
-      nodes[j]=e->n[j];
-      dist[j]=(ts->point(i) - meshH->point(nodes[j])).length();
-      sum+=dist[j];
-    }
-    sortpts(dist, nodes);
-    for (j=0; j<4; j++) {
-      cols[i*4+j]=nodes[j];
-      a[i*4+j]=dist[j]/sum;
-    }
-    if (i==ts->point_count()-1 || i==0 || (!(i%(ts->point_count()/10)))) {
-      cerr << "i="<<i<<"\n";
-      for (j=0; j<4; j++) {
-	cerr << "a["<<i*4+j<<"]="<<a[i*4+j]<<" ";
-      }
-      cerr << "\n";
-    }
-  }
-  rows[i]=i*4;
-#endif 
-  omat_->send(mat_handle_);
+  output_field_->send(outputH);
 }
 
 } // End namespace SCIRun
