@@ -339,7 +339,7 @@ void AMRSimulationController::run()
 
        if (n > 3)
          cout << ", mean: " << mean << " +- " << stdDev;
-       cout << "\nMem Use = ";
+       cout << ", Mem Use = ";
        if (avg_memuse == max_memuse && avg_highwater == max_highwater){
 	 cout << avg_memuse;
 	 if(avg_highwater)
