@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
     Nrrd tab.  This will automatically allow BioImage to properly
     process the Nrrd datatype.  Please see the BioImage Reference
     Guide for more instruction on loading other types of data.  After
-    selecting the Nrrd tab, press the "Browse" button to open the File
+    selecting the Nrrd tab, used to load the the Nearly-Raw Raster Data type, press the "Browse" button to open the File
     Selection Dialog.  Navigate to the proper location and select the
     "tooth.nhdr" file.  After selecting the proper dataset, press the
     "Set" button to load the data.  After selecting the dataset,
@@ -64,11 +64,11 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>After loading the data into BioImage, the 4 view windows
-    will contain visualizations of the data.  The upper-left window
+    will contain visualizations of the data.  <xref linkend="fig.2dview"/> The upper-left window
     will contain a 3D reconstruction of the data, while the other
     three windows will present 3 different, orthogonal, slices of the
     data.  These three windows can be manipulated by the "Viewing
-    Cube."  The Viewing Cube, located in the Load Data window, allows
+    Cube."  The Viewing Cube, located in the Load Data window, <xref linkend="fig.cube"/> allows
     the user to change the orientation of the slices presented in the
     3 windows.  The orientation of each view can be changed by
     altering the abbreviation next to the proper arrow.  By default,
@@ -105,7 +105,7 @@ DEALINGS IN THE SOFTWARE.
   </section><!-- end:Loading Data -->
 
   <section>
-    <title>Dynamic Filters</title>
+    <title>Resampling and Cropping.</title>
     <para>BioImage focuses on data display, interaction, and
     manipulation.  This is all possible through the use of Dynamic
     Filters.  The various filters available are located at the top of
@@ -114,7 +114,7 @@ DEALINGS IN THE SOFTWARE.
     of the data displayed in the visualization windows.</para>
 
     <para>To add a Resample filter, click the "Resample" button.  A
-    new window will appear immediately below the Load Data window.
+    new window will appear immediately below the Load Data window.  <xfref linkend="fig.filter"/>
     This window allows for resampling in each dimension as well as a
     parameterized method for resampling.  To downsample this data set
     in each dimension, change the "x1" to "x0.5" in each dimension.
