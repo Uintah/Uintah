@@ -455,13 +455,49 @@ QuadSurfMesh::get_weights(const Point &p,
   }
 }
 
-void
-QuadSurfMesh::get_weights(const Point &/*p*/,
-			  Node::array_type &/*l*/, vector<double> &/*w*/)
+
+static double
+tri_area(const Point &a, const Point &b, const Point &c)
 {
-  ASSERTFAIL("get_weights for nodes not implemented in QuadSurfMesh");
+  return Cross(b-a, c-a).length();
 }
 
+
+void
+QuadSurfMesh::get_weights(const Point &p,
+			  Node::array_type &l, vector<double> &w)
+{
+  Face::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l, idx);
+#if 1
+    w.resize(4);
+    w[0] = 1.0;
+    w[1] = 0.0;
+    w[2] = 0.0;
+    w[3] = 0.0;
+#else
+    Point p0, p1, p2, p3;
+    get_center(p0, l[0]);
+    get_center(p1, l[1]);
+    get_center(p2, l[2]);
+    get_center(p3, l[3]);
+
+    w.resize(4);
+    w[0] = tri_area(p0, p1, p2) / (tri_area(p, p0, p1) * tri_area(p, p0, p3));
+    w[1] = tri_area(p1, p2, p0) / (tri_area(p, p1, p2) * tri_area(p, p1, p0));
+    w[2] = tri_area(p2, p3, p1) / (tri_area(p, p2, p3) * tri_area(p, p2, p1));
+    w[3] = tri_area(p3, p0, p2) / (tri_area(p, p3, p0) * tri_area(p, p3, p2));
+
+    const double suminv = 1.0 / (w[0] + w[1] + w[2] + w[3]);
+    w[0] *= suminv;
+    w[1] *= suminv;
+    w[2] *= suminv;
+    w[3] *= suminv;
+#endif
+  }
+}
 
 
 void
@@ -487,9 +523,10 @@ QuadSurfMesh::get_center(Point &p, Face::index_type idx) const
   Node::array_type::iterator nai = nodes.begin();
   get_point(p, *nai);
   ++nai;
+  Point pp;
   while (nai != nodes.end())
   {
-    Point pp;
+    get_point(pp, *nai);
     p.asVector() += pp.asVector();
     ++nai;
   }

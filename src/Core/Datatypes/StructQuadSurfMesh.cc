@@ -191,14 +191,16 @@ StructQuadSurfMesh::get_center(Point &p,
   Node::array_type::iterator nai = nodes.begin();
   get_point(p, *nai);
   ++nai;
+  Point pp;
   while (nai != nodes.end())
   {
-    Point pp;
+    get_point(pp, *nai);
     p.asVector() += pp.asVector();
     ++nai;
   }
   p.asVector() *= (1.0 / 4.0);
 }
+
 
 bool
 StructQuadSurfMesh::locate(Node::index_type &node, const Point &p) const
