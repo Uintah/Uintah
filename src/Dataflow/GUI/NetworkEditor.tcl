@@ -29,11 +29,13 @@ set time_font "-Adobe-Courier-Medium-R-Normal-*-12-120-75-*"
 
 set mainCanvasWidth    4500.0
 set mainCanvasHeight   4500.0
-set miniCanvasWidth     150.0
-set miniCanvasHeight    150.0
+
+set miniCanvasWidth    150.0
+set miniCanvasHeight   150.0
 
 set SCALEX [expr $mainCanvasWidth/$miniCanvasWidth]
 set SCALEY [expr $mainCanvasHeight/$miniCanvasHeight]
+
 
 # Records where the mouse was pressed to bring up the Modules Menu,
 # thus allowing the module to be create at (or near) that location.
@@ -251,7 +253,8 @@ proc makeNetworkEditor {} {
 	-tags bgRect 
 
     $maincanvas configure \
-	-xscrollcommand "updateCanvasX" -yscrollcommand "updateCanvasY"
+	-xscrollcommand "updateViewAreaBox; $botFrame.hscroll set" \
+	-yscrollcommand "updateViewAreaBox; $botFrame.vscroll set"
 
     scrollbar $botFrame.hscroll -relief sunken -orient horizontal \
 	-command "$maincanvas xview"
@@ -324,10 +327,10 @@ proc activate_file_submenus { } {
     ###################################################################
     # Bind all the actions after SCIRun has loaded everything...
     global maincanvas minicanvas
-
+    updateViewAreaBox
     bind $minicanvas <B1-Motion> "updateCanvases %x %y"
     bind $minicanvas <1> "updateCanvases %x %y"
-    bind $maincanvas <Configure> "handleResize %w %h"
+    bind $minicanvas <Configure> "handleResize"
     $maincanvas bind bgRect <3> "modulesMenu 0 %x %y"
     $maincanvas bind bgRect <1> "startBox $maincanvas %X %Y 0"
     $maincanvas bind bgRect <Control-Button-1> "startBox $maincanvas %X %Y 1"
@@ -364,60 +367,37 @@ proc modulesMenu { subnet x y } {
 	[expr $y + [winfo rooty $canvas]]
 }
 
-proc handleResize { w h } {
-    global minicanvas maincanvas SCALEX SCALEY
-    set ulx [lindex [$minicanvas coords viewAreaBox] 0]
-    set uly [lindex [$minicanvas coords viewAreaBox] 1]
-    set lrx [expr $ulx + [winfo width  $maincanvas]/$SCALEX]
-    set lry [expr $uly + [winfo height $maincanvas]/$SCALEY ]
-    $minicanvas coords viewAreaBox $ulx $uly $lrx $lry
+proc handleResize { } {
+    global SCALEX SCALEY minicanvas maincanvas mainCanvasWidth mainCanvasHeight
+    set w [expr [winfo width $minicanvas]-2]
+    set h [expr [winfo height $minicanvas]-2]
+    set SCALEX [expr $mainCanvasWidth/$w]
+    set SCALEY [expr $mainCanvasHeight/$h]
+    updateViewAreaBox
 }
 
-proc updateCanvasX { beg end } {
-    global maincanvas minicanvas SCALEX SCALEY miniCanvasWidth miniCanvasHeight
-    # Tell the scroll bar to update
-    global botFrame
-    $botFrame.hscroll set $beg $end
-    # Update the view area box 
-    set uly [lindex [$minicanvas coords viewAreaBox] 1]
-    set lry [lindex [$minicanvas coords viewAreaBox] 3]
-    set ulx [expr $beg * $miniCanvasWidth ]
-    set lrx [expr $ulx + [winfo width $maincanvas]/$SCALEX - 1 ]
-    $minicanvas coords viewAreaBox $ulx $uly $lrx $lry
-}
-
-proc updateCanvasY { beg end } {
-    global maincanvas minicanvas SCALEX SCALEY miniCanvasWidth miniCanvasHeight
-    # Tell the scroll bar to update
-    global botFrame
-    $botFrame.vscroll set $beg $end
-    # Update the view area box 
-    set ulx [lindex [$minicanvas coords viewAreaBox] 0]
-    set uly [expr $beg * $miniCanvasHeight ]
-    set lrx [lindex [$minicanvas coords viewAreaBox] 2]
-    set lry [expr $uly + [winfo height $maincanvas]/$SCALEY - 1 ]
+proc updateViewAreaBox { } {
+    global minicanvas maincanvas SCALEX SCALEY mainCanvasHeight mainCanvasWidth
+    set w [expr [winfo width $minicanvas]-2]
+    set h [expr [winfo height $minicanvas]-2]
+    set ulx [expr [lindex [$maincanvas xview] 0] * $w]
+    set lrx [expr [lindex [$maincanvas xview] 1] * $w]
+    set uly [expr [lindex [$maincanvas yview] 0] * $h]
+    set lry [expr [lindex [$maincanvas yview] 1] * $h]
     $minicanvas coords viewAreaBox $ulx $uly $lrx $lry
 }
 
 proc updateCanvases { x y } {
     global miniCanvasWidth miniCanvasHeight maincanvas minicanvas
-    # Find the width and height of the mini box.
-    set boxBbox [$minicanvas coords viewAreaBox]
-    # Store 1/2 Width and 1/2 Height of the mini box
-    set wid [expr ([lindex $boxBbox 2] - [lindex $boxBbox 0])/2]
-    set hei [expr ([lindex $boxBbox 3] - [lindex $boxBbox 1])/2]
-    if { $x < $wid } { set x $wid }
-    if { $x > ($miniCanvasWidth - $wid) } \
-	{ set x [expr $miniCanvasWidth - $wid - 1] }
-    if { $y < $hei } { set y $hei }
-    if { $y > ($miniCanvasHeight - $hei) } \
-         { set y [expr $miniCanvasHeight - $hei - 1] }
-    # Move the minibox to the new location
-    $minicanvas coords viewAreaBox \
-	[expr $x - $wid] [expr $y - $hei] [expr $x + $wid] [expr $y + $hei]
-    # Update the region displayed in the main canvas.
-    $maincanvas xview moveto [expr ($x - $wid)/$miniCanvasWidth]
-    $maincanvas yview moveto [expr ($y - $hei)/$miniCanvasHeight]
+    set x [expr $x/([winfo width $minicanvas]-2.0)]
+    set y [expr $y/([winfo height $minicanvas]-2.0)]
+    set xview [$maincanvas xview]
+    set yview [$maincanvas yview]
+    set x [expr $x-([lindex $xview 1]-[lindex $xview 0])/2]
+    set y [expr $y-([lindex $yview 1]-[lindex $yview 0])/2]
+    $maincanvas xview moveto $x
+    $maincanvas yview moveto $y
+    updateViewAreaBox
 }
 
 proc createPackageMenu {index} {
