@@ -1,3 +1,4 @@
+/*Based upon the version 1.140 of SerialMPM downloaded on 3/19/2003*/
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -387,7 +388,7 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->TotalMassLabel);
  
   // for Fracture
-  t->requires(Task::OldDW, lb->pX0Label,    gan, NGP);
+  t->requires(Task::OldDW, lb->pDispLabel,  gan, NGP);
   t->requires(Task::NewDW, lb->pgCodeLabel, gan, NGP);
 
   t->computes(lb->GMassLabel);
@@ -892,8 +893,8 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->GTemperatureNoBCLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->GSp_volLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->pgCodeLabel,            Ghost::None);
-  t->requires(Task::OldDW, lb->pX0Label,               Ghost::None);
-  t->computes(lb->pX0Label_preReloc);
+  t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
+  t->computes(lb->pDispLabel_preReloc);
 
   // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
   // it is determined by the damping rate if the artificial damping
@@ -1174,13 +1175,13 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Create arrays for the particle data
-      constParticleVariable<Point>  px,px0;
+      constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
-      constParticleVariable<Vector> pvelocity, pexternalforce,psize;
+      constParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                                       gan, NGP, lb->pXLabel);
-      old_dw->get(px0,            lb->pX0Label,            pset);
+                                                 gan, NGP, lb->pXLabel);
+      old_dw->get(pdisp,          lb->pDispLabel,          pset);
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
@@ -1312,7 +1313,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	  if(patch->containsNode(ni[k])) {
 	    S[k] *= pErosion[idx];
             if(pgCode[idx][k]==1) {   // for primary field
-              gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
+              gdisplacement[ni[k]]  += pdisp[idx] * pmass[idx]        * S[k];
               gmass[ni[k]]          += pmass[idx]                     * S[k];
               gvelocity[ni[k]]      += pvelocity[idx] * pmass[idx]    * S[k];
               gvolume[ni[k]]        += pvolume[idx]                   * S[k];
@@ -1323,7 +1324,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
               gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
             }
             else if(pgCode[idx][k]==2) {  // for additional field
-              Gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
+              Gdisplacement[ni[k]]  += pdisp[idx] * pmass[idx]        * S[k];
               Gmass[ni[k]]          += pmass[idx]                     * S[k];
               Gvolume[ni[k]]        += pvolume[idx]                   * S[k];
               Gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
@@ -2543,14 +2544,16 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
-      constParticleVariable<Point> px,px0;
-      ParticleVariable<Point> pxnew,px0new;
+      constParticleVariable<Point> px;
+      ParticleVariable<Point> pxnew;
       constParticleVariable<Vector> pvelocity, psize;
       ParticleVariable<Vector> pvelocitynew, psizeNew;
       constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
       ParticleVariable<double> pmassNew,pvolumeNew,pTempNew, pSp_volNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
+      constParticleVariable<Vector> pdisp;
+      ParticleVariable<Vector> pdispnew;
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
@@ -2561,7 +2564,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,                    lb->pXLabel,                     pset);
-      old_dw->get(px0,                   lb->pX0Label,                    pset);
+      old_dw->get(pdisp,                 lb->pDispLabel,                  pset);
       old_dw->get(pmass,                 lb->pMassLabel,                  pset);
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
       old_dw->get(pSp_vol,               lb->pSp_volLabel,                pset);
@@ -2571,7 +2574,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(px0new,       lb->pX0Label_preReloc,         pset);
+      new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
       new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
@@ -2581,7 +2584,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleSubset* delset = scinew ParticleSubset
 	(pset->getParticleSet(),false,dwi,patch);
 
-      px0new.copyData(px0); 
       pids_new.copyData(pids);
       if(d_8or27==27){
 	old_dw->get(psize,               lb->pSizeLabel,                 pset);
@@ -2698,6 +2700,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 	// Update the particle's position and velocity
 	pxnew[idx]           = px[idx] + vel * delT;
+        pdispnew[idx]        = pdisp[idx] + vel * delT;
 	pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
 	pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
 	pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
