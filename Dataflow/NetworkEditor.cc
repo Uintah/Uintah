@@ -14,6 +14,7 @@
 #include <Dataflow/NetworkEditor.h>
 
 #include <Classlib/NotFinished.h>
+#include <Classlib/Queue.h>
 #include <Comm/MessageBase.h>
 #include <Dataflow/Connection.h>
 #include <Dataflow/Module.h>
@@ -26,7 +27,7 @@
 
 NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),
-  first_schedule(1), mailbox(100)
+  first_schedule(1), mailbox(100), schedule(1)
 {
     // Create User interface...
     TCL::add_command("netedit", this, 0);
@@ -45,7 +46,7 @@ NetworkEditor::~NetworkEditor()
 int NetworkEditor::body(int)
 {
     // Go into Main loop...
-    do_scheduling();
+    do_scheduling(0);
     main_loop();
     return 0;
 }
@@ -58,8 +59,18 @@ void NetworkEditor::main_loop()
 	MessageBase* msg=mailbox.receive();
 	// Dispatch message....
 	switch(msg->type){
+	case MessageTypes::MultiSend:
+	    {
+		Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
+		multisend(mmsg->p1);
+		if(mmsg->p2)
+		    multisend(mmsg->p2);
+		// Do not re-execute sender
+		do_scheduling(mmsg->p1->get_module());
+	    }
+	    break;
 	case MessageTypes::ReSchedule:
-	    do_scheduling();
+	    do_scheduling(0);
 	    break;
 	default:
 	    cerr << "Unknown message type: " << msg->type << endl;
@@ -69,50 +80,101 @@ void NetworkEditor::main_loop()
     };
 }
 
-void NetworkEditor::do_scheduling()
+void NetworkEditor::multisend(OPort* oport)
 {
-    // Each Stream (Connection) has one of three properties
-    // Dormant - not needed this time
-    // New - Contains new data
-    // Repeat - Another copy of old data
-    //
-    // New's are propogated downstream - never blocked
-    // Repeats are propogated upstream - blocked by "sources"
-    //
-    // A module is considered 'New' if any of it's upstream modules are
-    // receiving new data
-    // A module is considered 'Repeat' if any of it's downstream modules
-    // are 'Repeat'
-    //
-    int nmodules=net->nmodules();
-#ifdef BROKEN
-    int changed=1;
-    int any_changed=1;
-    while(changed){
-	changed=0;
-	int nmodules=net->nmodules();
-	for(int i=0;i<nmodules;i++){
-	    Module* mod=net->module(i);
-	    changed |= mod->should_execute();
+    int nc=oport->nconnections();
+    for(int c=0;c<nc;c++){
+	Connection* conn=oport->connection(c);
+	IPort* iport=conn->iport;
+	Module* m=iport->get_module();
+	if(!m->need_execute){
+	    m->need_execute=1;
 	}
-	any_changed|=changed;
     }
-    if(first_schedule || any_changed){
-	// Do the scheduling...
-	for(int i=0;i<nmodules;i++){
-	    Module* module=net->module(i);
+}
 
-	    // Tell it to trigger...
-	    if(module->sched_state != Module::SchedDormant){
-		module->mailbox.send(scinew Scheduler_Module_Message);
+void NetworkEditor::do_scheduling(Module* exclude)
+{
+    if(!schedule)
+	return;
+    Queue<Module*> needexecute;
+    int nmodules=net->nmodules();
+    for(int i=0;i<nmodules;i++){
+	Module* module=net->module(i);
+	if(module->need_execute)
+	    needexecute.append(module);
+    }
+    if(needexecute.is_empty())
+	return;
 
-		// Reset the state...
-		module->sched_state=Module::SchedDormant;
+    // For all of the modules that need executing, execute the
+    // downstream modules and arrange for the data to be sent to them
+    Array1<Connection*> to_trigger;
+    while(!needexecute.is_empty()){
+	Module* module=needexecute.pop();
+	// Add oports
+	int no=module->noports();
+	for(int i=0;i<no;i++){
+	    OPort* oport=module->oport(i);
+	    int nc=oport->nconnections();
+	    for(int c=0;c<nc;c++){
+		Connection* conn=oport->connection(c);
+		IPort* iport=conn->iport;
+		Module* m=iport->get_module();
+		if(!m->need_execute){
+		    m->need_execute=1;
+		    needexecute.append(m);
+		    cerr << "OPORT - adding " << m->id << endl;
+		}
 	    }
 	}
-	first_schedule=0;
+
+	// Now, look upstream...
+	int ni=module->niports();
+	for(i=0;i<ni;i++){
+	    IPort* iport=module->iport(i);
+	    if(iport->nconnections()){
+		Connection* conn=iport->connection(0);
+		OPort* oport=conn->oport;
+		Module* m=oport->get_module();
+		if(module->sched_class != Module::SalmonSpecial
+		   && !m->need_execute && m != exclude){
+		    // If this oport already has the data, add it
+		    // to the to_trigger list...
+		    if(oport->have_data()){
+			to_trigger.add(conn);
+		    } else {
+			m->need_execute=1;
+			needexecute.append(m);
+			cerr << "IPORT - adding " << m->id << endl;
+		    }
+		}
+	    }
+	}
     }
-#endif
+
+    // Trigger the ports in the trigger list...
+    for(i=0;i<to_trigger.size();i++){
+	Connection* conn=to_trigger[i];
+	OPort* oport=conn->oport;
+	Module* module=oport->get_module();
+	if(module->need_execute){
+	    // Executing this module, don't actually trigger....
+	} else {
+	    cerr << "Triggering: " << module->id << endl;
+	    module->mailbox.send(scinew Scheduler_Module_Message(conn));
+	}
+    }
+
+    // Trigger any modules that need executing...
+    for(i=0;i<nmodules;i++){
+	Module* module=net->module(i);
+	if(module->need_execute)
+	    module->mailbox.send(scinew Scheduler_Module_Message);
+	module->need_execute=0;
+    }
+    
+#ifdef STUPID_SCHEDULER
     for(int i=0;i<nmodules;i++){
 	Module* module=net->module(i);
 
@@ -122,10 +184,16 @@ void NetworkEditor::do_scheduling()
 	// Reset the state...
 	module->sched_state=Module::SchedDormant;
     }
+#endif
 }
 
 Scheduler_Module_Message::Scheduler_Module_Message()
 : MessageBase(MessageTypes::ExecuteModule)
+{
+}
+
+Scheduler_Module_Message::Scheduler_Module_Message(Connection* conn)
+: MessageBase(MessageTypes::TriggerPort), conn(conn)
 {
 }
 
@@ -135,6 +203,11 @@ Scheduler_Module_Message::~Scheduler_Module_Message()
 
 Module_Scheduler_Message::Module_Scheduler_Message()
 : MessageBase(MessageTypes::ReSchedule)
+{
+}
+
+Module_Scheduler_Message::Module_Scheduler_Message(OPort* p1, OPort* p2)
+: MessageBase(MessageTypes::MultiSend), p1(p1), p2(p2)
 {
 }
 
@@ -334,6 +407,11 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    }
 	}
 	args.result(args.make_list(oports));
+    } else if(args[1] == "dontschedule"){
+	schedule=0;
+    } else if(args[1] == "scheduleok"){
+	schedule=1;
+	mailbox.send(new Module_Scheduler_Message());
     } else {
 	args.error("Unknown minor command for netedit");
     }

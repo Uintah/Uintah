@@ -1,7 +1,11 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Dataflow
+#ifdef SCI_MACHINE_Linux
+DLLIB = -ldl
+#else
+DLLIB =
+#endif
 
 OBJS = Connection.o  Module.o  ModuleHelper.o  ModuleList.o  \
 	Network.o  NetworkEditor.o  Port.o
@@ -12,15 +16,7 @@ LIBNAME = Dataflow
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lComm -lTCL -lClasslib -lMultitask \
-	-lMalloc SCI_CCLibs -ldl
+	-lMalloc SCI_CCLibs $(DLLIB)
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

@@ -123,7 +123,11 @@ void OPort::update_light()
 	break;
     case Off:
     default:
-	color="black";
+	if(have_data()){
+	    color="darkslateblue";
+	} else {
+	    color="black";
+	}
 	break;
     }
     char buf[1000];

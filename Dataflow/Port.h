@@ -77,6 +77,8 @@ protected:
     void turn_off();
 public:
     virtual ~OPort();
+    virtual int have_data()=0;
+    virtual void resend(Connection*)=0;
 };
 
 #endif /* SCI_project_Port_h */

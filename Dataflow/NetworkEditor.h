@@ -24,11 +24,14 @@ class Datatype;
 class MessageBase;
 class Module;
 class Network;
+class OPort;
 
 class NetworkEditor : public Task, public TCL {
     Network* net;
-    void do_scheduling();
+    void multisend(OPort*);
+    void do_scheduling(Module*);
     int first_schedule;
+    int schedule;
 public:
     Mailbox<MessageBase*> mailbox;
 
@@ -45,13 +48,18 @@ private:
 
 class Scheduler_Module_Message : public MessageBase {
 public:
+    Connection* conn;
     Scheduler_Module_Message();
+    Scheduler_Module_Message(Connection* conn);
     virtual ~Scheduler_Module_Message();
 };
 
 class Module_Scheduler_Message : public MessageBase {
 public:
+    OPort* p1;
+    OPort* p2;
     Module_Scheduler_Message();
+    Module_Scheduler_Message(OPort*, OPort*);
     virtual ~Module_Scheduler_Message();
 };
 

@@ -58,6 +58,7 @@ public:
 	Sink,
 	Source,
 	Filter,
+	SalmonSpecial,
     };
     Module(const clString& name, const clString& id, SchedClass);
     virtual ~Module();
@@ -103,17 +104,12 @@ public:
     int noports();
     IPort* iport(int);
     OPort* oport(int);
+    void multisend(OPort*, OPort* =0);
     void set_context(NetworkEditor*, Network*);
 
-    // For the scheduler
-    enum SchedState {
-	SchedDormant,
-	SchedRegenData,
-	SchedNewData,
-    };
-    SchedState sched_state;
+    int need_execute;
     SchedClass sched_class;
-    virtual int should_execute();
+    // virtual int should_execute();
 
     clString id;
     void tcl_command(TCLArgs&, void*);

@@ -15,7 +15,10 @@
 
 #include <Comm/MessageBase.h>
 #include <Comm/MessageTypes.h>
+#include <Dataflow/Connection.h>
 #include <Dataflow/Module.h>
+#include <Dataflow/NetworkEditor.h>
+#include <Dataflow/Port.h>
 
 #include <iostream.h>
 
@@ -40,6 +43,12 @@ int ModuleHelper::body(int)
 	    switch(msg->type){
 	    case MessageTypes::ExecuteModule:
 		module->do_execute();
+		break;
+	    case MessageTypes::TriggerPort:
+		{
+		    Scheduler_Module_Message* smsg=(Scheduler_Module_Message*)msg;
+		    smsg->conn->oport->resend(smsg->conn);
+		}
 		break;
 	    default:
 		cerr << "Illegal Message type: " << msg->type << endl;

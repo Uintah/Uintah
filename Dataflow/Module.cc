@@ -28,14 +28,14 @@
 Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
-  name(name), abort_flag(0), sched_state(SchedDormant),
+  name(name), abort_flag(0), need_execute(0),
   sched_class(sched_class), id(id), progress(0)
 {
 }
 
 Module::Module(const Module& copy, int)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
-  name(copy.name), abort_flag(0), sched_state(SchedDormant),
+  name(copy.name), abort_flag(0), need_execute(0),
   sched_class(copy.sched_class), id(copy.id)
 {
     NOT_FINISHED("Module copy CTOR");
@@ -147,8 +147,7 @@ int Module::niports()
 
 void Module::want_to_execute()
 {
-    sched_state=SchedNewData;
-    state=NeedData;
+    need_execute=1;
     netedit->mailbox.send(scinew Module_Scheduler_Message);
 }
 
@@ -211,6 +210,7 @@ void Module::error(const clString& string)
 }
 
 
+#if 0
 int Module::should_execute()
 {
     if(sched_state == SchedNewData)
@@ -260,6 +260,7 @@ int Module::should_execute()
     }
     return changed;
 }
+#endif
 
 void Module::do_execute()
 {
@@ -310,6 +311,11 @@ void Module::reconfigure_oports()
     TCL::execute("configureOPorts "+id);
 }
 
+void Module::multisend(OPort* p1, OPort* p2)
+{
+    netedit->mailbox.send(new Module_Scheduler_Message(p1, p2));
+}
+
 #ifdef __GNUG__
 // Template instantiations
 #include <Classlib/Array1.cc>
@@ -321,3 +327,4 @@ template class Array1<IPort*>;
 template class Mailbox<MessageBase*>;
 
 #endif
+
