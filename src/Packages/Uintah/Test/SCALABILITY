@@ -8,7 +8,7 @@ from helpers.modUPS import modUPS
 
 # last 6 args are start patches x,y,z and start res x,y,z
 # The 4th argument is the number of times to double the processor count
-TESTS = [ ("ice_scale_test", "scalabilityTest.ups", "", 8, "Linux","","ice",1,1,1,10,10,10)]
+TESTS = [ ("ice_scale_test", "scalabilityTest.ups", "", 8, "ALL","","ice",1,1,1,10,10,10)]
 
 def chemfile (test):
     return test[5]
