@@ -30,6 +30,17 @@ itcl_class DaveW_FEM_ErrorMetric {
 	set NITERS $ITERSBASE
 	global ITERSGROW
 	set ITERSGROW 50
+	global $this-pTCL
+	set $this-pTCL 1
+    }
+    method make_entry {w text v c} {
+        frame $w
+        label $w.l -text "$text"
+        pack $w.l -side left
+	global $v
+        entry $w.e -textvariable $v
+        bind $w.e <Return> $c
+        pack $w.e -side right
     }
     method ui {} {
         set w .ui[modname]
@@ -49,10 +60,11 @@ itcl_class DaveW_FEM_ErrorMetric {
                 $this-methodTCL \
                 {{"Correlation Coefficient" CC } \
                 {"Inverse Correlation Coefficient" CCinv} \
-                {"Root Mean Squared (RMS)" RMS} \
+                {"p Norm" RMS} \
                 {"Relative RMS" RMSrel}}
+	make_entry $w.top.e "p value:" $this-pTCL "$this-c needexecute"
         button $w.top.reset -text "Clear Graphs" -command "$this clear_graphs"
-        pack $w.top.method $w.top.reset -side top
+        pack $w.top.method $w.top.e $w.top.reset -side top
         frame $w.rms -relief groove -borderwidth 2
         blt::graph $w.rms.g -height 200 \
                 -plotbackground #CCCCFF
