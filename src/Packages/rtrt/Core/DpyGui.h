@@ -36,6 +36,9 @@ public:
   // charge of resizing everthing.
   virtual void set_resolution(const int width, const int height);
   
+  // Start up the default gui thread.
+  void startDefaultGui();
+  
 protected:
   Dpy* rtrt_dpy;
   RTRT* rtrt_engine;
@@ -44,7 +47,7 @@ protected:
 
   // Tells all the UIs to stop
   void stopUIs();
-  
+
   // Inherited from DpyBase
   virtual void run();
   virtual void init();

@@ -9,6 +9,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Image.h>
+#include <Packages/rtrt/Core/Gui.h>
 
 #include <Core/Thread/Thread.h>
 
@@ -111,13 +112,30 @@ void DpyGui::set_resolution(const int width, const int height) {
 
 void DpyGui::stopUIs() {
   ui_mutex.lock();
-  //  cerr << "DpyGui::stopUIs::calling stop on all guis\n";
+  cerr << "DpyGui::stopUIs::calling stop on all guis\n";
   for(size_t i = 0; i < ext_uis.size(); i++) {
     if (ext_uis[i])
       ext_uis[i]->stop();
   }
-  //  cerr << "DpyGui::stopUIs::finished\n";
+  cerr << "DpyGui::stopUIs::finished\n";
   ui_mutex.unlock();
+}
+
+void DpyGui::startDefaultGui() {
+  // I'm not decided on if I should stop all the guis and then start
+  // up the default one.  I think, I'll leave this upto the default
+  // gui to decide this.
+
+  if (GGT::getActiveGGT())
+    // A window already exists
+    return;
+  
+  GGT* ggt = new GGT();
+
+  ggt->setDpy( rtrt_dpy );
+  ggt->setDpyGui( this );
+  
+  (new Thread(ggt, "Glut Glui Thread"))->detach();
 }
 
 void DpyGui::run() {
@@ -232,7 +250,10 @@ void DpyGui::key_pressed(unsigned long key) {
     }
     break;
   case XK_g:
-    stopUIs();
+    if (shift_pressed)
+      startDefaultGui();
+    else
+      stopUIs();
     break;
   case XK_m:
     switch (rtrt_dpy->priv->dumpFrame) {
