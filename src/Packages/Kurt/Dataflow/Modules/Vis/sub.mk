@@ -11,6 +11,7 @@ SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/TexCuttingPlanes.cc \
 		$(SRCDIR)/TextureVolVis.cc \
 		$(SRCDIR)/VolVis.cc \
+		$(SRCDIR)/ArchiveReader.cc \
 		$(SRCDIR)/VisControl.cc \
 		$(SRCDIR)/RescaleColorMapForParticles.cc \
 		$(SRCDIR)/ParticleVis.cc
@@ -19,16 +20,19 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Thread SCICore/Persistent SCICore/Exceptions \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
         SCICore/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
-	SCICore/Geometry PSECore/Widgets \
+	SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
 	Kurt/Datatypes Kurt/DataArchive Kurt/Geom 
 
-LIBS := -lm
+LIBS := $(XML_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 
 #
 # $Log$
+# Revision 1.2  2000/05/21 01:19:20  kuzimmer
+# Added Archive Reader
+#
 # Revision 1.1  2000/05/20 02:30:09  kuzimmer
 # Multiple changes for new vis tools
 #

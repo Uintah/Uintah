@@ -12,13 +12,17 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/VisControl.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl \
-	$(SRCDIR)/ParticleVis.tcl
+	$(SRCDIR)/ParticleVis.tcl \
+	$(SRCDIR)/ArchiveReader.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.6  2000/05/21 01:19:18  kuzimmer
+# Added Archive Reader
+#
 # Revision 1.5  2000/05/20 02:31:50  kuzimmer
 # Multiple changes for new vis tools
 #
