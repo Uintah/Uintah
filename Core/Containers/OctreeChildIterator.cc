@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <Core/Datatypes/OctreeChildIterator.h>
+#include <Core/Containers/OctreeChildIterator.h>
 
 namespace SCIRun {
 

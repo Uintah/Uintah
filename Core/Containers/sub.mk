@@ -21,11 +21,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Containers
 
-SRCS     += $(SRCDIR)/Sort.cc \
+SRCS     += $(SRCDIR)/ConsecutiveRangeSet.cc \
+	    $(SRCDIR)/Sort.cc \
 	    $(SRCDIR)/StringUtil.cc \
 	    $(SRCDIR)/TrivialAllocator.cc \
-	    $(SRCDIR)/templates.cc \
-            $(SRCDIR)/ConsecutiveRangeSet.cc
+	    $(SRCDIR)/templates.cc
 
 PSELIBS := Core/Exceptions Core/Tester Core/Thread
 LIBS :=
