@@ -69,8 +69,8 @@ set $m2-card_mem {256}
 set $m3-alpha_scale {-0.796}
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
-set $m4-positionList {{0 40} {13 40} {19 21} {173 21} {193 5} {222 6} {241 20} {277 21} {285 40} {295 40}}
-set $m4-nodeList {257 258 259 791 2246 1057 526 260 261 262}
+set $m4-positionList {{0 40} {13 40} {19 21} {120 24} {173 5} {294 0}}
+set $m4-nodeList {257 258 259 791 2246 1057}
 set $m4-width {295}
 set $m4-height {40}
 
