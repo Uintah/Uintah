@@ -84,16 +84,24 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	      pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 	      pvelocity[start+count]=(*obj)->getInitialVelocity();
 	      ptemperature[start+count]=(*obj)->getInitialTemperature();
-	      pmass[start+count]=
-		matl->getInitialDensity() * pvolume[start+count];
+
+              // Calculate particle mass
+              double partMass = matl->getInitialDensity()*pvolume[start+count];
+	      pmass[start+count] = partMass;
+
+              // Apply the force BC if applicable
+              Vector pExtForce(0,0,0);
+              applyForceBC(dxpp, p, partMass, pExtForce);
+	      pexternalforce[start+count] = pExtForce;
+
 	      // Determine if particle is on the surface
-	      pexternalforce[start+count]=Vector(0,0,0); // for now
 	      short int& myCellNAPID = cellNAPID[cell_idx];
 	      pparticleID[start+count] = cellID | (long64)myCellNAPID;
 	      psize[start+count] = size;
 	      ASSERT(myCellNAPID < 0x7fff);
 	      myCellNAPID++;
 	      count++;
+
 	    }  // if inside
 	  }  // loop in z
 	}  // loop in y
@@ -102,9 +110,34 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     start += count;
   }
 
-  applyForceBC(start,pexternalforce,pmass,position);
 
   return subset;
+}
+
+void ParticleCreator::applyForceBC(const Vector& dxpp, 
+                                   const Point& pp,
+                                   const double& pMass, 
+				   Vector& pExtForce)
+{
+  for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
+        
+    //cout << " BC Type = " << bcs_type << endl;
+    if (bcs_type == "Force") {
+      ForceBC* bc = dynamic_cast<ForceBC*>
+			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+
+      const Box bcBox(bc->getLowerRange()-dxpp, bc->getUpperRange()+dxpp);
+      //cout << "BC Box = " << bcBox << endl;
+          
+      if(bcBox.contains(pp)) {
+        pExtForce = bc->getForceDensity() * pMass;
+        //cout << "External Force on Particle = " << pExtForce 
+        //     << " Force Density = " << bc->getForceDensity() 
+        //     << " Particle Mass = " << pMass << endl;
+      }
+    }
+  }
 }
 
 ParticleSubset* 
@@ -176,40 +209,6 @@ ParticleCreator::countParticles(GeometryObject* obj, const Patch* patch) const
    }
    
    return count;
-
-
-}
-
-void 
-ParticleCreator::applyForceBC(particleIndex particlesNum, 
-			      ParticleVariable<Vector>& pextforce,
-			      ParticleVariable<double>& pmass,
-			      ParticleVariable<Point>& position)
-{
-
-  for(particleIndex pIdx=0;pIdx<particlesNum;++pIdx) {
-     pextforce[pIdx] = Vector(0.0,0.0,0.0);
-
-     const Point& p( position[pIdx] );
-     
-     for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
-       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
-        
-       if (bcs_type == "Force") {
-         ForceBC* bc = dynamic_cast<ForceBC*>
-			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
-
-         const Point& lower( bc->getLowerRange() );
-         const Point& upper( bc->getUpperRange() );
-          
-         if(lower.x()<= p.x() && p.x() <= upper.x() &&
-            lower.y()<= p.y() && p.y() <= upper.y() &&
-            lower.z()<= p.z() && p.z() <= upper.z() ){
-               pextforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
-         }
-       }
-     }
-  }
 
 
 }
