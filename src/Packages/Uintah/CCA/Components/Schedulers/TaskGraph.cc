@@ -977,6 +977,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
       ostringstream desc;
       desc << "TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
            << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName()<<"\n\n";
+      desc << "task materials:" << *task->matls << "\n";
+      desc << "req materials: " << *req->matls << "\n";
+      desc << "domain materials: " << *matls.get_rep() << "\n";
+      desc << "task patches:" << *task->patches << "\n";
+      desc << "req patches: " << *req->patches << "\n";
+      desc << "domain patches: " << *patches.get_rep() << "\n";
       SCI_THROW(InternalError(desc.str())); 
     }
   }
