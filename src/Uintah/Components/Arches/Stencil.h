@@ -2,6 +2,9 @@
 // $Id$
 //
 
+#ifndef Uintah_Components_Arches_Stencil_h
+#define Uintah_Components_Arches_Stencil_h
+
 /**************************************
 CLASS
    Discretization
@@ -35,8 +38,6 @@ WARNING
 none
 ****************************************/
 
-#ifndef included_Discretization
-#define included_Discretization
 namespace Uintah {
 namespace ArchesSpace {
 
@@ -48,3 +49,10 @@ namespace ArchesSpace {
 }
 #endif  
   
+//
+// $Log$
+// Revision 1.5  2000/06/04 22:40:16  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
+//
