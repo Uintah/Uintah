@@ -49,9 +49,6 @@ public:
   void add_field(clString widget, clString path, FieldHandle field);
 
   void update_hiertable();
-
-  virtual void connection(Module::ConnectionMode, int, int);
-    
 };
 
 
@@ -165,13 +162,6 @@ ManageFieldSet::update_hiertable()
 
 
 
-void
-ManageFieldSet::connection(Module::ConnectionMode, int, int)
-{
-  update_hiertable();
-}
-
-
 static void
 split(list<string> &result, const string vals)
 {
@@ -189,7 +179,10 @@ split(list<string> &result, const string vals)
 void
 ManageFieldSet::execute()
 {
+#if 0
   update_state(NeedData);
+
+  update_hiertable();
 
   clString op_gui = op_gui_.get();
 
@@ -232,6 +225,7 @@ ManageFieldSet::execute()
   ofsp->send(ofsh);
 
   //FieldOPort *ofp = (FieldOPort *)get_oport(1);
+#endif
 }
 
 } // End namespace SCIRun
