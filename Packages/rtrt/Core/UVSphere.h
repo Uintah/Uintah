@@ -27,12 +27,16 @@ using namespace rtrt;
 using namespace SCIRun;
 
 class UVSphere : public Object, public UVMapping {
+
+ protected:
+
   Point  cen;
   Vector up;
   Vector right;
   double radius;
   Transform xform;
   Transform ixform;
+
  public:
   UVSphere(Material *m, Point c, double r, const Vector &up=Vector(0,0,1),
            const Vector &right=Vector(1,0,0));
@@ -62,6 +66,12 @@ class UVSphere : public Object, public UVMapping {
     VXV3(pu,norm,pv);
     VXV3(pv,norm,pu);
   }
+
+  Vector get_up() { return up; }
+  void set_up(const Vector &v) { up = v; }
+
+  Vector get_right() { return right; }
+  void set_right(const Vector &v) { right = v; } 
 };
  
 
