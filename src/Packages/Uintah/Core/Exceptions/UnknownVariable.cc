@@ -10,7 +10,8 @@ UnknownVariable::UnknownVariable(const std::string& varname,
 				 int matlIndex, const std::string& extramsg)
 {
    ostringstream s;
-   s << "Unknown variable: " << varname << " on patch " << patchNumber << "(" << patch << ")" << ", material index: " << matlIndex;
+   s << "Unknown variable: " << varname << " on patch " << patchNumber 
+     << "(" << patch << ")" << ", material index: " << matlIndex;
    if(extramsg != "")
       s << " (" << extramsg << ")";
    d_msg = s.str();
@@ -47,6 +48,9 @@ const char* UnknownVariable::type() const
 
 //
 // $Log$
+// Revision 1.5  2000/09/26 21:32:24  dav
+// Formatting
+//
 // Revision 1.4  2000/06/19 22:36:32  sparker
 // Improved message for Unknown variable
 //

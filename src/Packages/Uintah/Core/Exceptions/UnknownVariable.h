@@ -22,9 +22,11 @@
 namespace Uintah {
    class UnknownVariable : public SCICore::Exceptions::Exception {
    public:
-      UnknownVariable(const std::string& msg, int, const std::string&, int,
+      UnknownVariable(const std::string& varname, int patchNumber,
+		      const std::string& patch, int matlIndex,
 		      const std::string& extramsg = "");
-      UnknownVariable(const std::string& msg, const std::string& extramsg);
+      UnknownVariable(const std::string& varname,
+		      const std::string& extramsg);
       UnknownVariable(const UnknownVariable&);
       virtual ~UnknownVariable();
       virtual const char* message() const;
@@ -40,6 +42,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.4  2000/09/26 21:32:24  dav
+// Formatting
+//
 // Revision 1.3  2000/06/19 22:36:32  sparker
 // Improved message for Unknown variable
 //
