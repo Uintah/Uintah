@@ -326,7 +326,7 @@
         <xsl:if test="@package != 'SCIRun'">
           <xsl:text/>Packages/<xsl:value-of select="@package"/>/<xsl:text/>
         </xsl:if>
-        <xsl:text/>DataFlow/XML/<xsl:value-of select="@name"/>.html<xsl:text/>
+        <xsl:text/>Dataflow/XML/<xsl:value-of select="@name"/>.html<xsl:text/>
       </xsl:attribute>
       <xsl:choose>
         <xsl:when test="node()">
