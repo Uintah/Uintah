@@ -269,7 +269,19 @@ ConsecutiveRangeSet ConsecutiveRangeSet::unioned(const ConsecutiveRangeSet&
 string ConsecutiveRangeSet::toString() const
 {
    ostringstream stream;
-   stream << *this << '\0';
+   stream << *this;
+   return stream.str();
+}
+
+string ConsecutiveRangeSet::expandedString() const
+{
+   ostringstream stream;
+   iterator it = begin();
+   if (it != end()) {
+      stream << *it;
+      for (it++; it != end(); it++)
+	 stream << " " << *it;
+   }
    return stream.str();
 }
 
