@@ -8,6 +8,7 @@ SRCS     += \
 	$(SRCDIR)/GridVolVis.cc \
 	$(SRCDIR)/GridSliceVis.cc \
 	$(SRCDIR)/SCIRex.cc \
+	$(SRCDIR)/HarvardVis.cc \
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ParticleColorMapKey.cc \
 
