@@ -18,13 +18,18 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
   ps->require("name",d_file_name);
   ps->get("var1",d_var_name1);
   ps->get("var2",d_var_name2);
+  ps->get("var3",d_var_name3);
   d_var1_bool = false;
   d_var2_bool = false;
+  d_var3_bool = false;
   if(d_var_name1 == "p.volume"){
     d_var1_bool=true;
   }
   if(d_var_name2 == "p.externalforce"){
     d_var2_bool=true;
+  }
+  if(d_var_name3 == "p.fiberdir"){
+    d_var3_bool=true;
   }
 
   // We must first read in the min and max from file.0 so
@@ -85,7 +90,7 @@ void FileGeometryPiece::readPoints(int pid)
     throw ProblemSetupException("ERROR: opening MPM geometry file:  The file must be in the same directory as sus");
   }
 
-  double x,y,z,vol,fx,fy,fz;
+  double x,y,z,vol,fx,fy,fz,fibx,fiby,fibz;
   double minx,miny,minz,maxx,maxy,maxz;
   source >> minx >> miny >> minz >> maxx >> maxy >> maxz;
   Point min(minx,miny,minz),max(maxx,maxy,maxz);
@@ -94,19 +99,40 @@ void FileGeometryPiece::readPoints(int pid)
   max = max + fudge;
   d_box = Box(min,max);
 
-  if(d_var1_bool==true && d_var2_bool == false){
+  if(d_var1_bool==true && d_var2_bool == false && d_var3_bool == false){
     while(source >> x >> y >> z >> vol) {
       d_points.push_back(Point(x,y,z));
       d_volume.push_back(vol);
     }
   }
-  if(d_var1_bool==false && d_var2_bool == true){
+  if(d_var1_bool==false && d_var2_bool == true && d_var3_bool == false){
     while(source >> x >> y >> z >> fx >> fy >> fz) {
       d_points.push_back(Point(x,y,z));
       d_forces.push_back(Vector(-fx,-fy,-fz));
     }
   }
-  if(d_var1_bool==false && d_var2_bool == false){
+  if(d_var1_bool==false && d_var2_bool == true && d_var3_bool == true){
+    while(source >> x >> y >> z >> fx >> fy >> fz >> fibx >> fiby >> fibz) {
+      d_points.push_back(Point(x,y,z));
+      d_forces.push_back(Vector(-fx,-fy,-fz));
+      d_fiberdirs.push_back(Vector(fibx,fiby,fibz));
+    }
+  }
+  if(d_var1_bool==false && d_var2_bool == false && d_var3_bool == true){
+    while(source >> x >> y >> z >> fibx >> fiby >> fibz) {
+      d_points.push_back(Point(x,y,z));
+      d_fiberdirs.push_back(Vector(fibx,fiby,fibz));
+    }
+  }
+  if(d_var1_bool==true && d_var2_bool == true && d_var3_bool == true){
+    while(source >> x >> y >> z >> vol >> fx >> fy >> fz >> fibx >> fiby >> fibz) {
+      d_volume.push_back(vol);
+      d_points.push_back(Point(x,y,z));
+      d_forces.push_back(Vector(-fx,-fy,-fz));
+      d_fiberdirs.push_back(Vector(fibx,fiby,fibz));
+    }
+  }
+  if(d_var1_bool==false && d_var2_bool == false && d_var3_bool == false){
     while (source >> x >> y >> z) {
       d_points.push_back(Point(x,y,z));
     }
