@@ -22,23 +22,18 @@ using std::endl;
  ---------------------------------------------------------------------  */
 FirstOrderAdvector::FirstOrderAdvector() 
 {
-  OFS_CCLabel = 0;
 }
 
 
 FirstOrderAdvector::FirstOrderAdvector(DataWarehouse* new_dw, 
                                    const Patch* patch)
 {
-  OFS_CCLabel = VarLabel::create("OFS_CC",
-                             CCVariable<fflux>::getTypeDescription());
-                             
   new_dw->allocateTemporary(d_OFS,     patch, Ghost::AroundCells,1);
 }
 
 
 FirstOrderAdvector::~FirstOrderAdvector()
 {
-  VarLabel::destroy(OFS_CCLabel);
 }
 
 FirstOrderAdvector* FirstOrderAdvector::clone(DataWarehouse* new_dw,
