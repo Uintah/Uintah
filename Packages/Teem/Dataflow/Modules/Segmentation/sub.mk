@@ -41,7 +41,7 @@ PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
         Core/TkExtensions Packages/Teem/Core/Datatypes \
 	Packages/Teem/Dataflow/Ports
 
-LIBS := $(TEEM_LIBRARY) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

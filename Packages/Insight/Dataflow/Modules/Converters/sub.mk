@@ -68,7 +68,7 @@ PSELIBS := Packages/Insight/Core/Datatypes \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/GeomInterface Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

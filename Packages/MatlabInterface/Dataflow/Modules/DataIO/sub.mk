@@ -48,7 +48,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 	Packages/MatlabInterface/Core/Datatypes \
         Packages/MatlabInterface/Core/Util
 
-LIBS := $(TEEM_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
