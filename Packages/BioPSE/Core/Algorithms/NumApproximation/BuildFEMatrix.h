@@ -71,7 +71,7 @@ class BuildFEMatrix: public Datatype {
   
   void build_local_matrix(double lcl[4][4], TetVolMesh::cell_index);
   
-  void add_lcl_gbl(double lcl[4][4], TetVolMesh::cell_index, int, int);
+  void add_lcl_gbl(double lcl[4][4], TetVolMesh::cell_index, int, int, TetVolMesh::node_array&);
   
  
 public:
