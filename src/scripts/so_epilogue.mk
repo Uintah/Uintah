@@ -55,7 +55,7 @@ SONAMEFLAG =
 endif
 $(LIBNAME): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
 	rm -f $@
-	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #
 #  These will get removed on make clean
@@ -75,6 +75,9 @@ endif
 
 #
 # $Log$
+# Revision 1.7  2000/03/23 10:31:38  sparker
+# Fixed typo in rule so that lib/libSCICore_whatever.so is -lSCICore_whatever
+#
 # Revision 1.6  2000/03/21 04:30:06  sparker
 # Simplified rules for using -soname
 # Added a convenience target for subdirectories: "make here"
