@@ -29,6 +29,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Math/Rand48.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
