@@ -239,7 +239,7 @@ int MPMMaterial::nullGeomObject() const
   for (int obj = 0; obj <(int)d_geom_objs.size(); obj++) {
     GeometryPiece* piece = d_geom_objs[obj]->getPiece();
     NullGeometryPiece* null_piece = dynamic_cast<NullGeometryPiece*>(piece);
-    if (null_piece) 
+    if (null_piece)
       return obj;
   }
   return -1;
