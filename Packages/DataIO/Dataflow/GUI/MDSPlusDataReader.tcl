@@ -73,7 +73,6 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
         toplevel $w
 
 
-	iwidgets::scrolledframe $w.entries -hscrollmode none
 
 	frame $w.title
 	label $w.title.check  -text ""       -width  3 -relief groove
@@ -91,6 +90,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	    -side left 
 
 	pack $w.title  -fill x
+
+	iwidgets::scrolledframe $w.entries -hscrollmode none
 	pack $w.entries -side top -fill both -expand yes
 
 	create_entries
@@ -125,7 +126,6 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	label $search.box.title.tree   -text "Tree"   -width 12 -relief groove
 	label $search.box.title.shot   -text "Shot"   -width  8 -relief groove
 	label $search.box.title.signal -text "Signal" -width 32 -relief groove
-	label $search.box.title.blank  -text ""       -width 22
 
 	pack $search.box.title.server $search.box.title.tree \
 	    $search.box.title.shot $search.box.title.signal \
@@ -145,33 +145,27 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	pack $search.box.entry.server $search.box.entry.tree \
 	    $search.box.entry.shot $search.box.entry.signal \
-	    $search.box.title.blank \
 	    -side left 
 
 	pack $search.box.title $search.box.entry -side top \
-	     -fill both -expand yes
+	     -fill both
 
 
 	frame $search.options
 
-	frame $search.options.regexp
-
-	checkbutton $search.options.regexp.button -variable $this-search-regexp
-	label $search.options.regexp.label -text "Reg-Exp" -width 10 \
+	checkbutton $search.options.regexp -variable $this-search-regexp
+	label $search.options.label -text "Reg-Exp" -width 7 \
 	    -anchor w -just left
-	pack $search.options.regexp.button $search.options.regexp.label \
-	    -side left
-
 	button $search.options.search -text " Search " \
 	    -command "$this-c search"
 
-	pack $search.options.regexp $search.options.search -side top
+	pack $search.options.regexp -side left -padx 5
+	pack $search.options.label -side left
+	pack $search.options.regexp $search.options.search -padx 5 -side left
+	pack $search.box $search.options -side left
 
-	pack  $search.box $search.options -side left
 
-
-
-	pack $w.search -fill x -expand yes -side top
+	pack $w.search -side top -fill both -expand yes
 
 
 	iwidgets::labeledframe $w.dm -labeltext "Data Management"

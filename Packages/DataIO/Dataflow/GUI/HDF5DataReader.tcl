@@ -275,20 +275,29 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		-command [list $this SortColumn $column]
 	}
 
-	iwidgets::labeledframe $w.sel -labeltext "Search Selection"
-	set sel [$w.sel childsite]
+	iwidgets::labeledframe $w.search -labeltext "Search Selection"
+	set search [$w.search childsite]
 
 
-	iwidgets::entryfield $sel.name -textvariable $this-selectionString
+	iwidgets::entryfield $search.name -textvariable $this-selectionString
 
-	label $sel.label -text "Reg-Exp" -width 7 -anchor w -just left
-	checkbutton $sel.regexp -variable $this-regexp
-	button $sel.path -text "Full Path" -command "$this AddSelection 0"
-	button $sel.node -text "Terminal"  -command "$this AddSelection 1"
+	frame $search.options
 
-	pack $sel.node $sel.path $sel.label $sel.regexp -side right -padx 3
-	pack $sel.name -side left -fill x -expand yes
-	pack $w.sel -fill x -expand yes -side top
+	checkbutton $search.options.regexp -variable $this-regexp
+	label $search.options.label -text "Reg-Exp" -width 7 \
+	    -anchor w -just left
+	button $search.options.path -text "Full Path" \
+	    -command "$this AddSelection 0"
+	button $search.options.node -text "Terminal"  \
+	    -command "$this AddSelection 1"
+
+	pack $search.options.regexp -side left -padx 5
+	pack $search.options.label -side left
+	pack $search.options.path $search.options.node -padx 5 -side left
+	pack $search.options -side right
+
+	pack $search.name -side left -fill x -expand yes
+	pack $w.search -fill x -expand yes -side top
 
 
 
