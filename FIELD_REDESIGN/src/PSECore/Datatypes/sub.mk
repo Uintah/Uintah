@@ -16,8 +16,10 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/SurfacePort.cc $(SRCDIR)/VectorFieldPort.cc \
 	$(SRCDIR)/VoidStarPort.cc $(SRCDIR)/cMatrixPort.cc \
 	$(SRCDIR)/cVectorPort.cc $(SRCDIR)/SpanTree.cc \
-	$(SRCDIR)/SpanPort.cc $(SRCDIR)/templates.cc
-
+	$(SRCDIR)/SpanPort.cc $(SRCDIR)/templates.cc \
+	$(SRCDIR)/DomainPort.cc $(SRCDIR)/FieldWrapperPort.cc \
+	$(SRCDIR)/SFieldPort.cc $(SRCDIR)/AttribPort.cc \
+	$(SRCDIR)/GeomPort.cc
 
 PSELIBS := PSECore/Dataflow PSECore/Comm SCICore/Containers \
 	SCICore/Thread SCICore/Geom SCICore/Geometry SCICore/Exceptions \
@@ -28,6 +30,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.1  2000/06/07 17:34:14  kuehne
+# added variuos ports used by the new fields
+#
 # Revision 1.3  2000/03/21 03:01:24  sparker
 # Partially fixed special_get method in SimplePort
 # Pre-instantiated a few key template types, in an attempt to reduce
