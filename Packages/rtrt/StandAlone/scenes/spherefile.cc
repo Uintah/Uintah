@@ -51,6 +51,10 @@ public:
   float radius;
   Array1<float> mins;
   Array1<float> maxs;
+
+  ~SphereData() {
+    cerr << "Deleting SphereData with data = "<<data<<endl;
+  }
 };
 
 
@@ -304,6 +308,8 @@ GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
     for (int j = 0; j < ndata; j++) {
       data[index++] = data_group[g].data[j];
     }
+    // Delete the memory we don't use anymore
+    if (data_group[g].data) free(data_group[g].data);
   }
   if (index != total_spheres * numvars) {
     cerr << "Wrong number of vars copied: index = " << index << ", total_spheres * numvars = " << total_spheres * numvars << endl;
@@ -579,10 +585,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	cerr << " -griddepth [int]\n";
 	cerr << " -colordata [int]\n";
 	cerr << " -timevary [all or int]\n";
-	cerr << " -radiusfactor [float]";
-	cerr << " -radius [float]";
-	cerr << " -rate [float]";
-	cerr << " -numvars [int]";
+	cerr << " -radiusfactor [float]\n";
+	cerr << " -radius [float]\n";
+	cerr << " -rate [float]\n";
+	cerr << " -numvars [int]\n";
 	return 0;
       }
       file=argv[i];
@@ -617,12 +623,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	if (strcmp(file,"<TIMESTEP>") == 0) {
 	  cerr << "-------------Starting timestep----------\n";
 	  //timeblock = new Group();
-	  sphere_data.remove_all();
 	}
 	else if (strcmp(file,"</TIMESTEP>") == 0) {
 	  cerr << "=============Ending timestep============\n";
 	  GridSpheres* obj = create_GridSpheres(sphere_data, colordata,
 						gridcellsize, griddepth, cmap);
+	  sphere_data.remove_all();
 	  display->attach(obj);
 	  alltime->add((Object*)obj);
 	  //alltime->add(timeblock);
