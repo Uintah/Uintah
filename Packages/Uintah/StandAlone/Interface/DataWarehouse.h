@@ -7,6 +7,8 @@
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Grid/ParticleVariableBase.h>
+#include <Uintah/Grid/NCVariableBase.h>
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <iostream> // TEMPORARY
@@ -67,6 +69,15 @@ public:
   virtual void setGrid(const GridP&)=0;
 	 
   virtual void get(ReductionVariableBase&, const VarLabel*) const = 0;
+  virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
+  virtual void get(ParticleVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*, int numGhostCells) const = 0;
+  virtual void put(const ParticleVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*) = 0;
+  virtual void get(NCVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*, int numGhostCells) const = 0;
+  virtual void put(const NCVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*) = 0;
 #if 0
   virtual void get(ParticleVariableBase&, const VarLabel*,
 		   const Region* region) const;
@@ -159,6 +170,9 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/04/20 18:56:35  sparker
+// Updates to MPM
+//
 // Revision 1.9  2000/04/19 21:20:04  dav
 // more MPI stuff
 //
