@@ -401,13 +401,16 @@ void SurfToGeom::execute()
 			    int i3=ts->elements[i]->i3;
 			    if (nrm)
 				VPCgroup->add(ts->points[i1], 
-					      ts->normals[i*3], 
+//					      ts->normals[i*3], 
+					      ts->normals[i1], 
 					      mat1->diffuse,
 					      ts->points[i2], 
-					      ts->normals[i*3+1], 
+//					      ts->normals[i*3+1], 
+					      ts->normals[i2], 
 					      mat2->diffuse,
 					      ts->points[i3], 
-					      ts->normals[i*3+2], 
+//					      ts->normals[i*3+2], 
+					      ts->normals[i3], 
 					      mat3->diffuse);
 			    else
 				PCgroup->add(ts->points[i1], mat1->diffuse,
@@ -476,13 +479,16 @@ void SurfToGeom::execute()
 			}
 			if (nrm)
 			    VPCgroup->add(ts->points[i1], 
-					  ts->normals[i*3], 
+//					  ts->normals[i*3], 
+					  ts->normals[i1], 
 					  mat1,
 					  ts->points[i2], 
-					  ts->normals[i*3+1], 
+//					  ts->normals[i*3+1], 
+					  ts->normals[i2], 
 					  mat2,
 					  ts->points[i3], 
-					  ts->normals[i*3+2], 
+//					  ts->normals[i*3+2], 
+					  ts->normals[i3], 
 					  mat3);
 			else
 			    PCgroup->add(ts->points[i1], mat1,
@@ -497,9 +503,12 @@ void SurfToGeom::execute()
 		    int i2=ts->elements[i]->i2;
 		    int i3=ts->elements[i]->i3;
 		    if (nrm)
-			VPgroup->add(ts->points[i1], ts->normals[i*3],
-				     ts->points[i2], ts->normals[i*3+1],
-				     ts->points[i3], ts->normals[i*3+2]);
+//			VPgroup->add(ts->points[i1], ts->normals[i*3],
+//				     ts->points[i2], ts->normals[i*3+1],
+//				     ts->points[i3], ts->normals[i*3+2]);
+			VPgroup->add(ts->points[i1], ts->normals[i1],
+				     ts->points[i2], ts->normals[i2],
+				     ts->points[i3], ts->normals[i3]);
 		    else
 			Pgroup->add(ts->points[i1],
 				    ts->points[i2],
@@ -660,6 +669,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.10  2000/03/10 09:09:33  dmw
+// fixed SurfToGeom to create vertex normals (smooth surfaces), and IsoSurfaceDW to: autoupdate, generate surfaces for MC, and support log isovals
+//
 // Revision 1.9  2000/03/04 00:20:17  dmw
 // new bc in buildfematrix, fixed normals in surftogeom
 //
