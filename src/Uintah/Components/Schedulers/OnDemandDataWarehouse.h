@@ -170,19 +170,6 @@ public:
    
    virtual void finalize();
 
-   //////////
-   // Adds a variable to the save set
-   virtual void pleaseSave(const VarLabel* label, int number);
-       
-   // Adds a variable to the integrated quantities save set
-   virtual void pleaseSaveIntegrated(const VarLabel* label);
-
-   //////////
-   // Retrieves the saveset
-   virtual void getSaveSet(vector<const VarLabel*>&, vector<int>&) const;
-       
-   virtual void getIntegratedSaveSet(vector<const VarLabel*>&) const;
-       
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch) const;
 
@@ -238,16 +225,17 @@ private:
    // Internal VarLabel for the position of this DataWarehouse
    // ??? with respect to what ???? 
    //const VarLabel * d_positionLabel;
-
-   vector<const VarLabel*> d_saveset;
-   vector<const VarLabel*> d_saveset_integrated;
-   vector<int>             d_savenumbers;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.42  2000/12/07 01:22:07  witzel
+// Nixed the pleaseSave stuff (that is now handle in DataArchiver via
+// the problem specification), and also fixed the put method for reduction
+// variables (reduce variable when it already exists).
+//
 // Revision 1.41  2000/12/06 23:39:52  witzel
 // Changes to allow reduction variables to be specified for different
 // materials as well as globally.  Also, changed UnknownVariable throws

@@ -457,13 +457,15 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_reductionDB.exists(label, matlIndex, NULL))
-      throw InternalError("put: Reduction variable already exists: " +
-			  label->getName());
-
-   // Put it in the database
-   d_reductionDB.put(label, matlIndex, NULL, var.clone(), true);
-
+   if (!d_reductionDB.exists(label, matlIndex, NULL))
+      d_reductionDB.put(label, matlIndex, NULL, var.clone(), false);
+   else {
+      // Put it in the database
+      ReductionVariableBase* foundVar
+	= d_reductionDB.get(label, matlIndex, NULL);
+      foundVar->reduce(var);
+   }
+   
   d_lock.writeUnlock();
 }
 
@@ -1672,46 +1674,6 @@ OnDemandDataWarehouse::put(const SFCZVariableBase& var,
   d_lock.writeUnlock();
 }
 
-void
-OnDemandDataWarehouse::pleaseSave(const VarLabel* var, int number)
-{
-  d_lock.writeLock();
-   ASSERT(!d_finalized);
-
-   d_saveset.push_back(var);
-   d_savenumbers.push_back(number);
-  d_lock.writeUnlock();
-}
-
-void
-OnDemandDataWarehouse::pleaseSaveIntegrated(const VarLabel* var)
-{
-  d_lock.writeLock();
-   ASSERT(!d_finalized);
-
-   d_saveset_integrated.push_back(var);
-  d_lock.writeUnlock();
-}
-
-void
-OnDemandDataWarehouse::getSaveSet( vector<const VarLabel*>& vars,
-				   vector<int>& numbers) const
-{
-  d_lock.readLock();
-   vars=d_saveset;
-   numbers=d_savenumbers;
-  d_lock.readUnlock();
-}
-
-void
-OnDemandDataWarehouse::getIntegratedSaveSet
-				(vector<const VarLabel*>& vars) const
-{
-  d_lock.readLock();
-   vars=d_saveset_integrated;
-  d_lock.readUnlock();
-}
-
 bool
 OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 {
@@ -1849,6 +1811,11 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* /* delset */)
 
 //
 // $Log$
+// Revision 1.60  2000/12/07 01:22:07  witzel
+// Nixed the pleaseSave stuff (that is now handle in DataArchiver via
+// the problem specification), and also fixed the put method for reduction
+// variables (reduce variable when it already exists).
+//
 // Revision 1.59  2000/12/06 23:39:52  witzel
 // Changes to allow reduction variables to be specified for different
 // materials as well as globally.  Also, changed UnknownVariable throws
