@@ -64,11 +64,10 @@ class MatrixSelectVector : public Module {
   GuiInt    inc_amount_;
   GuiInt    send_amount_;
   int       inc_;
-  bool      stop_;
-  bool      restart_;
+  bool      loop_;
+  int       use_row_;
 
-  void send_selection(MatrixHandle mh, int which, int ncopy,
-		      bool use_row, bool last_p);
+  void send_selection(MatrixHandle mh, int which, int ncopy, bool cache);
   int increment(int which, int lower, int upper);
 
 public:
@@ -98,8 +97,8 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     inc_amount_(ctx->subVar("inc-amount")),
     send_amount_(ctx->subVar("send-amount")),
     inc_(1),
-    stop_(false),
-    restart_(false)
+    loop_(false),
+    use_row_(-1)
 {
 }
 
@@ -110,8 +109,8 @@ MatrixSelectVector::~MatrixSelectVector()
 
 
 void
-MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
-				   bool use_row, bool last_p)
+MatrixSelectVector::send_selection(MatrixHandle mh, int which,
+				   int ncopy, bool cache)
 {
   MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
   if (!ovec) {
@@ -125,18 +124,9 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
     return;
   }
 
-  current_.set(which);
-
   MatrixHandle matrix(0);
-  if (use_row)
-  {
-    if (which < 0 || which + ncopy > mh->nrows())
-    {
-      warning("Row out of range, skipping.");
-      return;
-    }
-    if (ncopy == 1)
-    {
+  if (use_row_) {
+    if (ncopy == 1) {
       ColumnMatrix *cm = scinew ColumnMatrix(mh->ncols());
       double *data = cm->get_data();
       for (int c = 0; c<mh->ncols(); c++)
@@ -144,65 +134,39 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
 	data[c] = mh->get(which, c);
       }
       matrix = cm;
-    }
-    else
-    {
+    } else {
       DenseMatrix *dm = scinew DenseMatrix(ncopy, mh->ncols());
       for (int i = 0; i < ncopy; i++)
-      {
 	for (int c = 0; c < mh->ncols(); c++)
-	{
 	  dm->put(i, c, mh->get(which + i, c));
-	}
-      }
+
       matrix = dm;
     }
-  }
-  else
-  {
-    if (which < 0 || which + ncopy > mh->ncols())
-    {
-      warning("Column out of range, skipping.");
-      return;
-    }
-    if (ncopy == 1)
-    {
+  } else {
+    if (ncopy == 1) {
       ColumnMatrix *cm = scinew ColumnMatrix(mh->nrows());
       double *data = cm->get_data();
       for (int r = 0; r<mh->nrows(); r++)
-      {
 	data[r] = mh->get(r, which);
-      }
       matrix = cm;
-    }
-    else
-    {
+    } else {
       DenseMatrix *dm = scinew DenseMatrix(mh->nrows(), ncopy);
       for (int r = 0; r < mh->nrows(); r++)
-      {
 	for (int i = 0; i < ncopy; i++)
-	{
 	  dm->put(r, i, mh->get(r, which + i));
-	}
-      }
+
       matrix = dm;
     }
   }	    
 
+  ovec->set_cache( cache );
+  ovec->send(matrix);
+
+
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
-  bool isIndependent = (dependence_.get()=="independent");
-
-  if( !last_p )
-    ovec->send_intermediate(matrix);
-  else
-    ovec->send(matrix);
-
-  if( !last_p & isIndependent )
-    osel->send_intermediate(MatrixHandle(selected));
-  else
-    osel->send(MatrixHandle(selected));
+  osel->send(MatrixHandle(selected));
 }
 
 
@@ -210,56 +174,38 @@ int
 MatrixSelectVector::increment(int which, int lower, int upper)
 {
   // Do nothing if no range.
-  if (upper == lower)
-  {
+  if (upper == lower) {
     if (playmode_.get() == "once")
-    {
-      stop_ = true;
-    }
+      execmode_.set( "stop" );
     return upper;
   }
   const int inc_amount = Max(1, Min(upper, inc_amount_.get()));
+
   which += inc_ * inc_amount;
 
-  if (which > upper)
-  {
-    if (playmode_.get() == "bounce1")
-    {
+  if (which > upper) {
+    if (playmode_.get() == "bounce1") {
       inc_ *= -1;
       return increment(upper, lower, upper);
-    }
-    else if (playmode_.get() == "bounce2")
-    {
+    } else if (playmode_.get() == "bounce2") {
       inc_ *= -1;
       return upper;
-    }
-    else
-    {
+    } else {
       if (playmode_.get() == "once")
-      {
-	stop_ = true;
-      }
+	execmode_.set( "stop" );
       return lower;
     }
   }
-  if (which < lower)
-  {
-    if (playmode_.get() == "bounce1")
-    {
+  if (which < lower) {
+    if (playmode_.get() == "bounce1") {
       inc_ *= -1;
       return increment(lower, lower, upper);
-    }
-    else if (playmode_.get() == "bounce2")
-    {
+    } else if (playmode_.get() == "bounce2") {
       inc_ *= -1;
       return lower;
-    }
-    else
-    {
+    } else {
       if (playmode_.get() == "once")
-      {
-	stop_ = true;
-      }
+	execmode_.set( "stop" );
       return upper;
     }
   }
@@ -278,6 +224,7 @@ MatrixSelectVector::execute()
     error("Unable to initialize iport 'Matrix'.");
     return;
   }
+
   MatrixHandle mh;
   if (!(imat->get(mh) && mh.get_rep()))
   {
@@ -287,99 +234,91 @@ MatrixSelectVector::execute()
   
   update_state(JustStarted);
   
-  const bool use_row = (row_or_col_.get() == "row");
   bool changed_p = false;
-  if (use_row)
-  {
+
+  bool use_row = (row_or_col_.get() == "row");
+
+  if( use_row_ != use_row ) {
+    use_row_ = use_row;
+    changed_p = true;
+  }
+
+  if (use_row_){
     string units("");
     //    if (!mh->get_property("row_units", units))
     //{
     //  units = "Units";
     //}
-    if (units != selectable_units_.get())
-    {
+    if (units != selectable_units_.get()) {
       selectable_units_.set(units);
       changed_p = true;
     }
 
     double minlabel;
     if (!mh->get_property("row_min", minlabel))
-    {
       minlabel = 0.0;
-    }
-    if (minlabel != selectable_min_.get())
-    {
+
+    if (minlabel != selectable_min_.get()) {
       selectable_min_.set(minlabel);
       changed_p = true;
     }
 
     double maxlabel;
     if (!mh->get_property("row_max", maxlabel))
-    {
       maxlabel = mh->nrows() - 1.0;
-    }
-    if (maxlabel != selectable_max_.get())
-    {
+
+    if (maxlabel != selectable_max_.get()) {
       selectable_max_.set(maxlabel);
       changed_p = true;
     }
 
     int increments = mh->nrows();
-    if (increments != selectable_inc_.get())
-    {
+    if (increments != selectable_inc_.get()) {
       selectable_inc_.set(increments);
       changed_p = true;
     }
-  }
-  else
-  {
+  } else {
     string units("");;
     //    if (!mh->get_property("col_units", units))
     //{
     //  units = "Units";
     // }
-    if (units != selectable_units_.get())
-    {
+    if (units != selectable_units_.get()) {
       selectable_units_.set(units);
       changed_p = true;
     }
 
     double minlabel;
     if (!mh->get_property("col_min", minlabel))
-    {
       minlabel = 0.0;
-    }
-    if (minlabel != selectable_min_.get())
-    {
+
+    if (minlabel != selectable_min_.get()) {
       selectable_min_.set(minlabel);
       changed_p = true;
     }
 
     double maxlabel;
     if (!mh->get_property("col_max", maxlabel))
-    {
       maxlabel = mh->ncols() - 1.0;
-    }
-    if (maxlabel != selectable_max_.get())
-    {
+
+    if (maxlabel != selectable_max_.get()) {
       selectable_max_.set(maxlabel);
       changed_p = true;
     }
 
     int increments = mh->ncols();
-    if (increments != selectable_inc_.get())
-    {
+    if (increments != selectable_inc_.get()) {
       selectable_inc_.set(increments);
       changed_p = true;
     }
   }
 
   if (changed_p)
-  {
     gui->execute(id + " update_range");
-  }
   
   reset_vars();
+
+  int which;
 
   // Specialized matrix multiply, with Weight Vector given as a sparse
   // matrix.  It's not clear what this has to do with MatrixSelectVector.
@@ -389,8 +328,7 @@ MatrixSelectVector::execute()
     return;
   }
   MatrixHandle weightsH;
-  if (ivec->get(weightsH) && weightsH.get_rep())
-  {
+  if (ivec->get(weightsH) && weightsH.get_rep()) {
     MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
     if (!ovec) {
       error("Unable to initialize oport 'Vector'.");
@@ -398,25 +336,20 @@ MatrixSelectVector::execute()
     }
 
     ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
-    if (w == 0)
-    {
+    if (w == 0)  {
       error("Weight Vector must be a column matrix.");
       return;
     }
     ColumnMatrix *cm;
-    if (use_row) 
-    {
+    if (use_row_) {
       cm = scinew ColumnMatrix(mh->ncols());
       cm->zero();
       double *data = cm->get_data();
-      for (int i = 0; i<w->nrows()/2; i++)
-      {
+      for (int i = 0; i<w->nrows()/2; i++) {
 	const int idx = (int)((*w)[i*2]);
 	double wt = (*w)[i*2+1];
 	for (int j = 0; j<mh->ncols(); j++)
-	{
 	  data[j]+=mh->get(idx, j)*wt;
-	}
       }
     }
     else
@@ -424,21 +357,18 @@ MatrixSelectVector::execute()
       cm = scinew ColumnMatrix(mh->nrows());
       cm->zero();
       double *data = cm->get_data();
-      for (int i = 0; i<w->nrows()/2; i++)
-      {
+      for (int i = 0; i<w->nrows()/2; i++) {
 	const int idx = (int)((*w)[i*2]);
 	double wt = (*w)[i*2+1];
 	for (int j = 0; j<mh->nrows(); j++)
-	{
 	  data[j]+=mh->get(j, idx)*wt;
-	}
       }
     }
     ovec->send(MatrixHandle(cm));
     return;
   }
 
-  const int maxsize = (use_row?mh->nrows():mh->ncols())-1;
+  const int maxsize = (use_row_?mh->nrows():mh->ncols())-1;
   const int send_amount = Max(1, Min(maxsize, send_amount_.get()));
 
   // If there is a current index matrix, use it.
@@ -449,92 +379,96 @@ MatrixSelectVector::execute()
   }
 
   MatrixHandle currentH;
-  if (icur->get(currentH) && currentH.get_rep())
-  {
-    send_selection(mh, (int)(currentH->get(0, 0)), send_amount,
-		   use_row, true);
-    return;
-  }
+  if (icur->get(currentH) && currentH.get_rep()) {
+    which = (int)(currentH->get(0, 0));
+    send_selection(mh, which, send_amount, true);
+  } else {
 
-  // Update the increment.
-  const int start = range_min_.get();
-  const int end = range_max_.get();
-  if (changed_p || playmode_.get() == "once" || playmode_.get() == "loop")
-  {
-    inc_ = (start>end)?-1:1;
-  }
+    // Cache var
+    bool cache = (playmode_.get() != "inc_w_exec");
 
-  // If the current value is invalid, reset it to the start.
-  int lower = start;
-  int upper = end;
-  if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
-  if (current_.get() < lower || current_.get() > upper)
-  {
-    current_.set(start);
-    inc_ = (start>end)?-1:1;
-  }
+    // Get the current start and end.
+    const int start = range_min_.get();
+    const int end = range_max_.get();
 
-  // Cash execmode and reset it in case we bail out early.
-  const string execmode = execmode_.get();
-  // If updating, we're done for now.
-  if (execmode == "update")
-  {
-  }
-  else if (execmode == "step")
-  {
-    const int which = increment(current_.get(), lower, upper);
-    send_selection(mh, which, send_amount, use_row, true);
-  }   
-  else if (execmode == "stepb")
-  {
-    inc_ *= -1;
-    const int which = increment(current_.get(), lower, upper);
-    inc_ *= -1;
-    send_selection(mh, which, send_amount, use_row, true);
-  }
-  else if (execmode == "play")
-  {
-    stop_ = false;
-    int which = current_.get();
-    if (which >= end && playmode_.get() == "once")
-    {
-      which = start;
+    int lower = start;
+    int upper = end;
+    if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
+
+
+    // Update the increment.
+    if (changed_p || playmode_.get() == "once" || playmode_.get() == "loop")
+      inc_ = (start>end)?-1:1;
+
+    // If the current value is invalid, reset it to the start.
+    if (current_.get() < lower || current_.get() > upper) {
+      current_.set(start);
+      inc_ = (start>end)?-1:1;
     }
-    const int delay = delay_.get();
-    int stop;
-    do {
-      int next = -1;
-      if (playmode_.get() == "once")
-      {
-	next = increment(which, lower, upper);
+
+    // Cash execmode and reset it in case we bail out early.
+    const string execmode = execmode_.get();
+
+    which = current_.get();
+
+    // If updating, we're done for now.
+    if (execmode == "update") {
+    
+    } else if (execmode == "step") {
+      which = increment(current_.get(), lower, upper);
+      send_selection(mh, which, send_amount, cache);
+
+    } else if (execmode == "stepb") {
+      inc_ *= -1;
+      which = increment(current_.get(), lower, upper);
+      inc_ *= -1;
+      send_selection(mh, which, send_amount, cache);
+
+    } else if (execmode == "play") {
+      if( !loop_ ) {
+	if (playmode_.get() == "once" && which >= end)
+	  which = start;
       }
-      stop = stop_ || restart_;
-      send_selection(mh, which, send_amount, use_row, stop);
-      if (!stop && delay > 0)
-      {
-	const unsigned int secs = delay / 1000;
-	const unsigned int msecs = delay % 1000;
-	if (secs)  { sleep(secs); }
-	if (msecs) { usleep(msecs * 1000); }
+
+      send_selection(mh, which, send_amount, cache);
+
+      // User may have changed the execmode to stop so recheck.
+      execmode_.reset();
+      if ( loop_ = (execmode_.get() == "play") ) {
+	const int delay = delay_.get();
+      
+	if( delay > 0) {
+	  const unsigned int secs = delay / 1000;
+	  const unsigned int msecs = delay % 1000;
+	  if (secs)  { sleep(secs); }
+	  if (msecs) { usleep(msecs * 1000); }
+	}
+    
+	int next = increment(which, lower, upper);    
+
+	// Incrementing may cause a stop in the execmode so recheck.
+	execmode_.reset();
+	if( loop_ = (execmode_.get() == "play") ) {
+	  which = next;
+
+	  want_to_execute();
+	}
       }
-      if (playmode_.get() == "once")
-      {
-	which = next;
-      }
-      else if (!stop)
-      {
+    } else {
+      if( execmode == "rewind" )
+	which = start;
+
+      else if( execmode == "fforward" )
+	which = end;
+    
+      send_selection(mh, which, send_amount, cache);
+    
+      if (playmode_.get() == "inc_w_exec") {
 	which = increment(which, lower, upper);
       }
-    } while (!stop);
+    }
   }
-  else
-  {
-    send_selection(mh, current_.get(), send_amount, use_row, true);
-  }
-  if (!restart_) {
-    execmode_.set("init");
-  }
-  restart_ = false;
+  current_.set(which);
 }
 
 
@@ -544,16 +478,7 @@ MatrixSelectVector::tcl_command(GuiArgs& args, void* userdata)
   if (args.count() < 2) {
     args.error("MatrixSelectVector needs a minor command");
     return;
-  }
-  if (args[1] == "stop")
-  {
-    stop_ = true;
-  }
-  else if (args[1] == "restart") 
-  {
-    restart_ = true;
-  }
-  else Module::tcl_command(args, userdata);
+  } else Module::tcl_command(args, userdata);
 }
 
 
