@@ -76,6 +76,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
     db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+    db->getWithDefault("opl",d_opl,3.0);
   }
   // read type of mixing model
   string mixModel;
@@ -1191,8 +1192,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
-	    // optical path length
-	    double opl = 3.0;
 	    if (d_mixingModel->getNumRxnVars()) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
@@ -1211,20 +1210,20 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      else 
 		sootFV[currCell] = 0.0;
 	    }
-	    absorption[currCell] = 0.01+ Min(0.5,(4.0/opl)*log(1.0+350.0*
-				   sootFV[currCell]*temperature[currCell]*opl));
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*d_opl));
 	  }
 	  // check if the density is greater than air...implement a better way
-          if (d_DORadiationCalc) {
-	   /* double cutoff_air_density = 1.1845;
+          /*if (d_DORadiationCalc) {
+	    double cutoff_air_density = 1.1845;
 	    double cutoff_temperature = 298.0;
 	    if ((scalar[0])[currCell] < 0.4) {
 	      if (local_den > cutoff_air_density) {
 	        local_den = cutoff_air_density;
 	        temperature[currCell] = cutoff_temperature;
 	      }
-	    }*/
-	  }
+	    }
+	  }*/
 
 	  if (d_MAlab) {
 	    denMicro[currCell] = local_den;
@@ -1474,16 +1473,14 @@ Properties::averageRKProps(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ);
           
           double predicted_density;
-//          predicted_density = (old_density[currCell] +
-//			       new_density[currCell])/2.0;
-//          predicted_density = rho1_density[currCell];
 	  if (old_density[currCell] > 0.0)
-            predicted_density = 1.0/((factor_old/old_density[currCell] +
-			       factor_new/new_density[currCell])/factor_divide);
+//            predicted_density = rho1_density[currCell];
+//            predicted_density = 1.0/((factor_old/old_density[currCell] +
+//			       factor_new/new_density[currCell])/factor_divide);
+            predicted_density = (factor_old*old_density[currCell] +
+			       factor_new*new_density[currCell])/factor_divide;
 	  else
 	    predicted_density = new_density[currCell];
-
-	  density_guess[currCell] = predicted_density;
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 	    (new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
@@ -1513,6 +1510,8 @@ Properties::averageRKProps(const ProcessorGroup*,
 	    new_enthalpy[currCell] = (factor_old*old_density[currCell]*
 		old_enthalpy[currCell] + factor_new*rho1_density[currCell]*
 		new_enthalpy[currCell])/(factor_divide*predicted_density);
+
+	  density_guess[currCell] = predicted_density;
 
 	}
       }
