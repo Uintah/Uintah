@@ -129,9 +129,9 @@ void Mesh3dReader::execute()
           (*cm2)[i] = attr;
        }
 
-       TetVolField<double> *tv = scinew TetVolField<double>(tvm, Field::NONE);
+       TetVolField<double> *tv = scinew TetVolField<double>(tvm, -1);
        handle_  = (Field *)tv;
-       TriSurfField<double> *ts = scinew TriSurfField<double>(tsm,Field::NONE);
+       TriSurfField<double> *ts = scinew TriSurfField<double>(tsm, -1);
        handle2_ = (Field *)ts;
        mhandle_ = (Matrix *)cm;
        mhandle2_ = (Matrix *)cm2;

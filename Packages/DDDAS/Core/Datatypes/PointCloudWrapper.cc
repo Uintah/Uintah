@@ -93,7 +93,7 @@ PCField PointCloudWrapper::create_field( string data_name )
 {
   // Create a new PCField
   PCField new_field =
-    scinew PointCloudField<double>(mesh_, Field::NODE); 
+    scinew PointCloudField<double>(mesh_, 0); 
 
   // Set the name of the field
   new_field->set_property( "name", data_name, false );
