@@ -14,8 +14,7 @@ itcl_class SCIRun_Render_SynchronizeGeometry {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -25,7 +24,8 @@ itcl_class SCIRun_Render_SynchronizeGeometry {
 	    -onvalue 1 -offvalue 0 -padx 5
 	pack $w.enforce
 	
-
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 
