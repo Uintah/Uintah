@@ -41,21 +41,36 @@
 namespace SCIRun {
 using std::cerr;
 
+
+map<string,GuiCreatorBase *> PartGui::table;
+
+
+GuiCreatorBase::GuiCreatorBase( const string &name )
+{
+  PartGui::table[name] = this;
+}
+
+
+static GuiCreator<GraphGui> graph_creator("GraphGui");
+static GuiCreator<PartManagerGui> part_manager_creator("PartManager");
+static GuiCreator<NullGui> null_creator("");
+
 void
 PartGui::add_child( PartInterface *child )
 {
-  static int n = 0;
-
   string type = child->type();
-  PartGui *gui = 0;
+  cerr <<"create gui: " << type<< endl;
 
-  if ( type == "GraphGui" ) {
-    gui = new GraphGui( name_+"-c"+to_string(n++) );
-  } else if ( type == "PartManager" ) {
-    gui = new PartManagerGui( name_+"-c"+to_string(n++) );
-  } else
-    gui = new NullGui(  name_+"-c"+to_string(n++) );
-  
+  map<string,GuiCreatorBase *>::iterator creator = table.find(type);
+
+  PartGui *gui;
+  if ( creator == table.end() ) {
+    gui = scinew NullGui( name_+"-c"+to_string(n_++) );
+    cerr << "use empty gui\n";
+  }
+  else 
+    gui = creator->second->create( name_+"-c"+to_string(n_++) );
+
   if ( gui ) {
     string child_window;
     tcl_eval( "new-child-window "+ child->name(), child_window );
