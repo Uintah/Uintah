@@ -1395,26 +1395,28 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
   // Data at edges, faces, or cells is only possible if the data
   // is of that dimension otherwise skip it and declare the data not usable
 	
-  if (fs.dims.isdense())
-  {
-    if ((fs.dims.getnumelements()==1) && (fs.basis_order != 1))
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for scanline)"));
-      return(0);
-    }
-    if ((fs.dims.getnumelements()==2) && (fs.basis_order!=1))
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for image)"));
-      return(0);
-    }
-    if ((fs.dims.getnumelements()==3) && (fs.basis_order != 1) &&
-	(fs.basis_order != 0))
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for latvol)"));
-      return(0);
-    }
-    \
-      }
+  // THIS WAS TO PREVENT WEIRD DATA CONVERSIONS, WITH THE NEW BASIS_ORDER
+  // WE DO NOT HAVE THESE WEIRD ONES	
+	
+  //if (fs.dims.isdense())
+  //{
+  //  if ((fs.dims.getnumelements()==1) && (fs.basis_order != 1))
+  //  {
+  //    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for scanline)"));
+  //    return(0);
+  //  }
+  //  if ((fs.dims.getnumelements()==2) && (fs.basis_order!=1))
+  //  {
+  //   postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for image)"));
+  //    return(0);
+  //  }
+  //  if ((fs.dims.getnumelements()==3) && (fs.basis_order != 1) &&
+  //	(fs.basis_order != 0))
+  //  {
+  //    postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for latvol)"));
+  //    return(0);
+  //  }
+  // }
 	
   // If it survived until here it should be translatable or not a regular mesh at all
 	
@@ -1530,21 +1532,24 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     // Disregard data at odd locations. The translation function for those is not straight forward
     // Hence disregard those data locations.
 
-    if ((numdims==1) && (fs.basis_order!=1))
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured curvemesh)"));
-      return(0);
-    }
-    if ((numdims==2)&&(fs.basis_order!= 1))
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured quadsurfmesh)"));
-      return(0);
-    }
-    if ((numdims==3)&&(fs.basis_order!=1)&&(fs.basis_order!=0))
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured hexvolmesh)"));
-      return(0);
-    }
+	// AGAIN THIS SECTION WAS TO PREVENT SURFACE DATA TO BE STUCK ON EDGE MESH
+	// IT IS NOW OBSOLETE 
+
+    //if ((numdims==1) && (fs.basis_order!=1))
+    //{
+    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured curvemesh)"));
+    //  return(0);
+    //}
+    //if ((numdims==2)&&(fs.basis_order!= 1))
+    //{
+    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured quadsurfmesh)"));
+    //  return(0);
+    //}
+    //if ((numdims==3)&&(fs.basis_order!=1)&&(fs.basis_order!=0))
+    //{
+    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured hexvolmesh)"));
+    //  return(0);
+    //}
 	
     if (fs.meshclass.isstring())
     {   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
@@ -1634,7 +1639,8 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     }
 		
     // Data at edges, faces, and cells is nonsense for point clouds 
-    if ((fs.basis_order!=1))
+	// THIS ONE IS STILL VALID, BUT -1 NEEDS TO BE ADDED FOR FUTURE ENHANCEMENTS
+    if ((fs.basis_order!=1)&&(fs.basis_order!=-1))
     {
       postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data can only be located at the nodes of a pointcloud)"));
       return(0);
@@ -1661,11 +1667,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     }
 
     // Data at faces, and cells is nonsense for  curves
-    if (fs.basis_order!=1)
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data cannot be located at faces or cells for a curvemesh)"));
-      return(0);
-    }	
+	// WE CAN DISREGARD THE NEXT TEST NOW, IT IS OBSOLETE
+    //if (fs.basis_order!=1)
+    //{
+    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data cannot be located at faces or cells for a curvemesh)"));
+    //  return(0);
+    //}	
 
     // Test whether someone made it into a line/surface/volume element type.
     // Since multiple connectivity matrices do not make sense (at least at this point)
@@ -1733,11 +1740,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,std::string &infost
     } 
 
     // Data at scells is nonsense for surface elements
-    if (fs.basis_order!=1)
-    {
-      postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the field is at the cell location for a surface mesh)"));
-      return(0);		
-    }
+    // THIS TEST IS OBSOLETE NOW
+	//if (fs.basis_order!=1)
+    //{
+    //  postmsg(module,std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the field is at the cell location for a surface mesh)"));
+    //  return(0);		
+    //}
 
     if ((m==3)||((n==3)&&(n!=4)))
     {
@@ -1991,6 +1999,8 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
       fs.dims.createlongvector(dims);	
     }
 		
+	// THIS IS A CORRECTION FOR THE DIMENSIONS OF THE DATA
+	// WE PROBABLY NEED TO ADD STUFF HERE FOR HIGHER ORDER ELEMENTS	
     if (fs.basis_order == 0)
     {
       std::vector<long> dims;
@@ -2134,6 +2144,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
   // Check the field information and preprocess the field information
 
   // detect whether there is data and where it is
+  // DEFAULT ONE, NO DATA
   int basis_order = -1;
 
   // The default location for data is at the nodes
@@ -2158,66 +2169,79 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
     {
       if (fs.field.getnumdims() == 2)
       {   
-	m = fs.field.getm();
-	n = fs.field.getn();
-	if ((m != 3)&&(n != 3)) 
-	{
-	  basis_order = -1;
-	}
-	else
-	{
-	  if (m != 3) fs.field.transpose();
-	}
+		m = fs.field.getm();
+		n = fs.field.getn();
+		if ((m != 3)&&(n != 3)) 
+		{
+			// THERE IS IN FACT NO VECTOR DATA
+			basis_order = -1;
+		}
+		else
+		{
+			if (m != 3) fs.field.transpose();
+		}
       }
       else
       {
-	basis_order = -1;
+			// THERE IS IN FACT NO VECTOR DATA
+			basis_order = -1;
       }
     }
     else if (valuetype == "Tensor")
     {
       if (fs.field.getnumdims() == 2)
       {
-	m = fs.field.getm();
-	n = fs.field.getn();
-	if ((m != 6)&&(n != 6)&&(m != 9)&&(n != 9))
-	{
-	  basis_order = -1;
-	}
-	else
-	{
-	  if ((m != 6)&&(m != 9)) fs.field.transpose();
-	}
+		m = fs.field.getm();
+		n = fs.field.getn();
+		if ((m != 6)&&(n != 6)&&(m != 9)&&(n != 9))
+		{
+			// THERE IS NO TENSOR DATA: SO THERE IS NO DATA
+			basis_order = -1;
+		}
+		else
+		{
+			if ((m != 6)&&(m != 9)) fs.field.transpose();
+		}
       }
       else
       {
-	basis_order = -1;
+		// THERE IS NO TENSOR DATA: SO THERE IS NO DATA
+		basis_order = -1;
       }
     }
     else
     {
       if (fs.field.getnumdims() == 2)
       { 
-	m = fs.field.getm();
-	n = fs.field.getn();
-	if ((m != 1)&&(n != 1)) 
-	{   // ignore the data and only load the mesh
-	  basis_order = -1;
-	}
-	else
-	{
-	  if (m != 1) fs.field.transpose();
-	}
+		m = fs.field.getm();
+		n = fs.field.getn();
+		if ((m != 1)&&(n != 1)) 
+		{   // ignore the data and only load the mesh
+			basis_order = -1;
+		}
+		else
+		{
+			if (m != 1) fs.field.transpose();
+		}
       }
       else
       {   // ignore the data and only load the mesh 
-	basis_order = -1;
+		 basis_order = -1;
       }	
     }
   }
   
   //There is no empty data atm so for now go minimal with constant
+  
+  ///VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  // THIS NEEDS TO BE CHANGED AS SOON AS WE
+  // HAVE NO_DATA AGAIN!!!
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  
+//>>>>>>>>>> CHANGE NEEDED HERE	  
   if (basis_order == -1) basis_order = 0;
+//>>>>>>>>>>>>>>  
+  
   fs.basis_order = basis_order;
 	
   // Decide what container to use and what the geometry is
@@ -2274,7 +2298,6 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle 
   if (fieldtype == "") throw matlabconverter_error();
 
   // NOW IT IS TIME TO INVOKE SOME DYNAMIC MAGIC ... 
-	
 	
   // A lot of work just to make a TypeDescription
   // This code is in a way a tricked version, since we do not yet have
@@ -2420,13 +2443,16 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 
   // old name was dataat but has been replaced with fieldat, since all other fields start with this one as well
   // FIELD LOCATION MATRIX
+  
+  // This field has been replaced by the basis order, which infact you can specify now as well
   index = ma.getfieldnameindexCI("dataat");			if (index > -1) fs.fieldlocation = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("fieldlocation");	if (index > -1) fs.fieldlocation = ma.getfield(0,index);
-  index = ma.getfieldnameindexCI("fieldat");			if (index > -1) fs.fieldlocation = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("fieldat");		if (index > -1) fs.fieldlocation = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("basisorder");		if (index > -1) fs.fieldlocation = ma.getfield(0,index);
 
   // fieldtype is the prefered name
   // FIELD TYPE MATRIX
-  index = ma.getfieldnameindexCI("datatype");			if (index > -1) fs.fieldtype = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("datatype");		if (index > -1) fs.fieldtype = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("fieldtype");		if (index > -1) fs.fieldtype = ma.getfield(0,index);
 
   // meshclass is now the prefered name
@@ -2448,17 +2474,32 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
   // Revised the design now only full affine transformation matrices are allowed
   index = ma.getfieldnameindexCI("transform"); if (index > -1) fs.transform = ma.getfield(0,index);
 	
+  // SET DEFAULT TO NONE
   fs.basis_order = -1;
 	
   if (!(fs.fieldlocation.isempty()))
   {   // converter table for the string in the field "fieldlocation" array
     // These are case insensitive comparisons.
-    if (!(fs.fieldlocation.isstring())) throw matlabconverter_error();
-    if (fs.fieldlocation.compareCI("node")||fs.fieldlocation.compareCI("pts")) fs.basis_order = 1;
-    //    if (fs.fieldlocation.compareCI("egde")||fs.fieldlocation.compareCI("line")) fs.basis_order = SCIRun::Field::EDGE;
-    //    if (fs.fieldlocation.compareCI("face")||fs.fieldlocation.compareCI("fac")) fs.basis_order = SCIRun::Field::FACE;
-    if (fs.fieldlocation.compareCI("cell")||fs.fieldlocation.compareCI("tet")
-	||fs.fieldlocation.compareCI("hex")||fs.fieldlocation.compareCI("prism")) fs.basis_order = 0;
+    if (fs.fieldlocation.isstring())
+	{
+		if (fs.fieldlocation.compareCI("node")||fs.fieldlocation.compareCI("pts")) fs.basis_order = 1;
+		// Anything on an element will be converted to basis on the cell level
+		if (fs.fieldlocation.compareCI("none")) fs.basis_order = -1;
+		if (fs.fieldlocation.compareCI("egde")||fs.fieldlocation.compareCI("line")) fs.basis_order = 0;
+		if (fs.fieldlocation.compareCI("face")||fs.fieldlocation.compareCI("fac")) fs.basis_order = 0;
+		if (fs.fieldlocation.compareCI("cell")||fs.fieldlocation.compareCI("tet") ||fs.fieldlocation.compareCI("hex")||fs.fieldlocation.compareCI("prism")) fs.basis_order = 0;
+	}
+	if (fs.fieldlocation.isdense())
+	{
+		if ((fs.fieldlocation.getm()*fs.fieldlocation.getn())==1)
+		{
+			std::vector<int> mat;
+			ma.getnumericarray(mat);
+			fs.basis_order = mat[0];
+			if (fs.basis_order < -1) fs.basis_order = -1;
+		}
+	}
+	
   }
 	
   return(fs);

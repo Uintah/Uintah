@@ -114,7 +114,8 @@ class matfile : public matfilebase {
 	
 
 	struct compressbuffer {
-			char	*buffer;	// buffer with uncompressed data
+			matfiledata mbuffer;	// Buffer with reference counting
+			// char	*buffer;	// buffer with uncompressed data
 			long	buffersize; // size of the buffer;
 			long	bufferoffset; // file offset of the buffer
 			};
@@ -138,6 +139,7 @@ class matfile : public matfilebase {
 			// fcmpcount_ counts the number of bytes read for the mfread and mfwrite calls
 			
 			char		*fcmpbuffer_;   // Compression buffer
+			matfiledata fcmpmbuffer_;   // Same buffer but wrapped with my memory management system
 			long		fcmpsize_;		// Size of the buffer
 			long		fcmpoffset_;	// Offset of the buffer
 			long		fcmpcount_;		// Counter to check where next to read data

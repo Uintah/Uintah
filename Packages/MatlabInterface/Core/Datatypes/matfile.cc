@@ -135,7 +135,7 @@ void matfile::mfread(void *buffer,long elsize,long size)
 	}
 	else
 	{   // Read from the decompressed buffer instead of the file
-		if ((m_->fcmpcount_) + (size*elsize) >= m_->fcmpsize_) throw io_error();
+		if ((m_->fcmpcount_) + (size*elsize) > m_->fcmpsize_) throw io_error();
 		memcpy(buffer,static_cast<void *>((m_->fcmpbuffer_)+m_->fcmpcount_),(size*elsize));
 		m_->fcmpcount_ += (size*elsize);
 		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);		
@@ -160,7 +160,7 @@ void matfile::mfread(void *buffer,long elsize,long size,long offset)
 	{   // Read from the decompressed buffer instead of the file
 		
 		m_->fcmpcount_ = offset-(m_->fcmpoffset_);
-		if ((m_->fcmpcount_) + (size*elsize) >= m_->fcmpsize_) throw io_error();
+		if ((m_->fcmpcount_) + (size*elsize) > m_->fcmpsize_)	throw io_error();
 		memcpy(buffer,static_cast<void *>((m_->fcmpbuffer_)+m_->fcmpcount_),(size*elsize));
 		m_->fcmpcount_ += (size*elsize);
 		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);	
@@ -373,13 +373,13 @@ void matfile::close()
         throw;
     }
 	
-	compressbuffer cmpbuffer;
-	while (m_->cmplist_.size())
-	{
-		cmpbuffer = m_->cmplist_.back();
-		if (cmpbuffer.buffer != 0) delete[] cmpbuffer.buffer;
-		m_->cmplist_.pop_back();
-	}
+//	compressbuffer cmpbuffer;
+//	while (m_->cmplist_.size())
+//	{
+//		cmpbuffer = m_->cmplist_.back();
+//		if (cmpbuffer.buffer != 0) delete[] cmpbuffer.buffer;
+//		m_->cmplist_.pop_back();
+//	}
 	
 }
 
@@ -501,7 +501,7 @@ bool matfile::opencompression()
 			// Yeah the job has already been done
 			// Enter the data of the block in the
 			// main file descriptor
-			m_->fcmpbuffer_ = cmpbuffer.buffer;
+			m_->fcmpbuffer_ = static_cast<char *>(cmpbuffer.mbuffer.databuffer());
 			m_->fcmpsize_ = cmpbuffer.buffersize;
 			m_->fcmpoffset_ = cmpbuffer.bufferoffset;
 			m_->fcmpcount_ = 0;
@@ -514,7 +514,7 @@ bool matfile::opencompression()
 	{   
 		// We need to decompress the buffer
 		char *sourcebuffer = 0;
-		char *destbuffer = 0;
+		matfiledata destbuffer;
 		long *destbufferheader = 0;
 		long destlen = 0;
 		
@@ -529,6 +529,7 @@ bool matfile::opencompression()
 			// first only read the header to find out how big the data segment should be	
 			// Only decompress the first 8 bytes. We need to know whether inside is a matrix
 			// and of what size this one is.
+
 			destlen = 8;
 			destbufferheader = new long[2];
 			// uncompress the first few bytes
@@ -549,13 +550,14 @@ bool matfile::opencompression()
 			destlen = destbufferheader[1]+8;
 					
 			// Uncompress the full thing including the previously read header		
-			destbuffer = new char[destlen];
-			uncompress(reinterpret_cast<Bytef *>(destbuffer),reinterpret_cast<uLongf *>(&destlen),reinterpret_cast<const Bytef *>(sourcebuffer),compressblocksize);
+			destbuffer.newdatabuffer(destlen,miUINT8);
+			//			destbuffer = new char[destlen];
+			uncompress(reinterpret_cast<Bytef *>(destbuffer.databuffer()),reinterpret_cast<uLongf *>(&destlen),reinterpret_cast<const Bytef *>(sourcebuffer),compressblocksize);
 			if (destlen != destbufferheader[1]+8) throw compression_error();
 			
 			// enter the information in the cmpbuffer structure
-			cmpbuffer.buffer = destbuffer;
-			destbuffer = 0;
+			cmpbuffer.mbuffer = destbuffer;
+			// destbuffer = 0;
 			cmpbuffer.buffersize = destlen;
 			cmpbuffer.bufferoffset = compressblockoffset;
 			
@@ -564,7 +566,7 @@ bool matfile::opencompression()
 			
 			// Now fill out the fcmpbuffer stuff to
 			// force reading in the buffer
-			m_->fcmpbuffer_ = cmpbuffer.buffer;
+			m_->fcmpbuffer_ = static_cast<char *>(cmpbuffer.mbuffer.databuffer());
 			m_->fcmpsize_ = cmpbuffer.buffersize;
 			m_->fcmpoffset_ = cmpbuffer.bufferoffset;
 			m_->fcmpcount_ = 0;
@@ -578,7 +580,7 @@ bool matfile::opencompression()
 		}	
 		catch(...)
 		{   // clean up
-			if (destbuffer != 0) delete[] destbuffer;
+			// if (destbuffer != 0) delete[] destbuffer;
 			if (sourcebuffer != 0) delete[] sourcebuffer;
 			sourcebuffer = 0;
 			if (destbufferheader != 0) delete[] destbufferheader;
@@ -586,7 +588,6 @@ bool matfile::opencompression()
 			throw;
 		}
 	}
-	
 	
     matfileptr childptr;
     childptr.hdrptr = m_->curptr_.datptr;
@@ -696,7 +697,6 @@ void matfile::readtag(matfiledata& md)
         }
         m_->curptr_.size = size;
 
-
         // If type still invalid then something else is going on
         // Throw an exception as we cannot read this field
         if (type >= miEND) throw unknown_type();
@@ -772,11 +772,14 @@ void matfile::writetag(matfiledata& md)
     if ((md.type() != miMATRIX)&&(md.bytesize() < 5))
     {	// write a compressed header
         short	csizetype[2];
-        csizetype[0] = static_cast<short>(md.bytesize());
-        csizetype[1] = static_cast<short>(md.type());
-        mfwrite(static_cast<void *>(&(csizetype[0])),sizeof(long),1,m_->curptr_.hdrptr);
+
+		csizetype[0] = static_cast<short>(md.bytesize());
+		csizetype[1] = static_cast<short>(md.type());
+
+		mfwrite(static_cast<void *>(&(csizetype[0])),sizeof(long),1,m_->curptr_.hdrptr);
         m_->curptr_.datptr = m_->curptr_.hdrptr+4;
         m_->curptr_.size = md.bytesize();
+	
     }
     else
     {   // write a normal header     
@@ -792,11 +795,18 @@ void matfile::writetag(matfiledata& md)
 void matfile::writedat(matfiledata& md)
 {
     writetag(md);
-    if (md.size() > 0) mfwrite(md.databuffer(),md.elsize(),md.size(),m_->curptr_.datptr);
 	
+	if (md.size() > 0)
+	{
+		mfwrite(md.databuffer(),md.elsize(),md.size(),m_->curptr_.datptr);
+	}
 	// fill the datablock with zeros until it is alligned with 8 byte boundary
-	long remsize = 0;
-	if (md.bytesize() > 0) remsize = ((((md.bytesize()-1)/8)+1)*8)-md.bytesize();
+	
+	// BUG FIX
+	long headersize = 8;
+	if ((md.type() != miMATRIX)&&(md.bytesize() < 5)) headersize = 4;
+	
+	long remsize = (((((md.bytesize()+headersize)-1)/8)+1)*8)-(md.bytesize()+headersize);
 	
 	if (remsize)
 	{   // fill up remaining bytes

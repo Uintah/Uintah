@@ -126,7 +126,7 @@ class matlabarray : public matfilebase {
                         
                         matfiledata prows_;	// data containers (pointers) to the row and column indices for sparse matrices
                         matfiledata pcols_;	 	
-                        
+
 					};
   
   private:

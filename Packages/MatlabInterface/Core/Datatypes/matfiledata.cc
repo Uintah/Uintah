@@ -58,20 +58,22 @@ namespace MatlabIO {
 
 // basic constructor
 matfiledata::matfiledata()
-    : m_(0) 
+    : m_(0), ptr_(0) 
 {
     m_ = new mxdata;
     m_->dataptr_ = 0; 
+	m_->owndata_ = false;
     m_->bytesize_ = 0;
     m_->type_ = miUNKNOWN;
     m_->ref_ = 1; 
 }
  
 matfiledata::matfiledata(matfiledata::mitype type)
-    : m_(0) 
+    : m_(0) , ptr_(0)
 {
     m_ = new mxdata;
     m_->dataptr_ = 0; 
+	m_->owndata_ = false;
     m_->bytesize_ = 0;
     m_->type_ = type;
     m_->ref_ = 1; 
@@ -88,7 +90,8 @@ matfiledata::~matfiledata()
 void matfiledata::clear()
 {
    if (m_ == 0) throw internal_error();
-   if (m_->dataptr_ != 0) delete[] static_cast<char *>(m_->dataptr_);
+   if ((m_->dataptr_ != 0)&&(m_->owndata_ = true)) delete[] static_cast<char *>(m_->dataptr_);
+   m_->owndata_ = false;
    m_->dataptr_ = 0;	
    m_->bytesize_ = 0;	
    m_->type_ = miUNKNOWN;
@@ -104,12 +107,14 @@ void matfiledata::clearptr()
         delete m_;
     }
     m_ = 0;
+	ptr_ = 0;
 }
 
 matfiledata::matfiledata(const matfiledata &mfd)
 {
 	m_ = 0;
 	m_ = mfd.m_;
+	ptr_ = mfd.ptr_;
     m_->ref_++;
 }
         
@@ -119,6 +124,7 @@ matfiledata& matfiledata::operator= (const matfiledata &mfd)
     {
         clearptr();
         m_ = mfd.m_;
+		ptr_ = mfd.ptr_;
         m_->ref_++;
     }
     return *this;
@@ -138,8 +144,10 @@ void matfiledata::newdatabuffer(long bytesize,mitype type)
 	  } 
    }
    m_->type_ = type; 	
-      
+   m_->owndata_ = true;
+   ptr_ = 0;   
 }
+
 
 matfiledata matfiledata::clone()
 {
@@ -147,6 +155,7 @@ matfiledata matfiledata::clone()
 	
 	mfd.newdatabuffer(bytesize(),type());
 	memcpy(mfd.databuffer(),databuffer(),bytesize());
+	mfd.ptr_ = ptr_;
 	return(mfd);
 }
 
@@ -154,6 +163,7 @@ void *matfiledata::databuffer()
 { 
     if (m_ == 0) throw internal_error();
 	
+	if (ptr_) return(ptr_);
 	return(m_->dataptr_); 
 }
 
@@ -166,6 +176,7 @@ void matfiledata::type(mitype type)
 long matfiledata::bytesize()
 { 
     if (m_ == 0) throw internal_error();
+	if(ptr_) return(m_->bytesize_ - static_cast<long>(static_cast<char *>(ptr_) - static_cast<char *>(m_->dataptr_)));
     return(m_->bytesize_); 
 }
 
@@ -309,13 +320,14 @@ void matfiledata::getdata(void *dataptr,long dbytesize)
 }
 
 
-void matfiledata::putdata(void *dataptr,long bytesize,mitype type)
+void matfiledata::putdata(void *dataptr,long dbytesize,mitype type)
 {
 	clear();
 	if (dataptr == 0) return;
 	
-	newdatabuffer(bytesize,type);
-	memcpy(databuffer(),dataptr,bytesize);
+	newdatabuffer(dbytesize,type);
+	if (dbytesize > bytesize()) dbytesize = bytesize();
+	memcpy(databuffer(),dataptr,dbytesize);
 }
 
 
@@ -400,7 +412,18 @@ matfiledata matfiledata::reorder(const std::vector<long> &newindices)
 	
 	return(newbuffer);
 }
+ 
+ 
+void matfiledata::ptrset(void *ptr)
+{
+	ptr_ = ptr;
+}
 
+void matfiledata::ptrclear()
+{
+	ptr_ = 0;
+} 
+ 
 // slightly different version using C style arguments
 
 matfiledata matfiledata::reorder(long *newindices,long dsize)
