@@ -91,7 +91,7 @@ static Transform prev_trans;
 #define MIN_SENSITIVITY      0.1
 #define MAX_SENSITIVITY    200.0
 
-#define MIN_FOV   10.0
+#define MIN_FOV   0.1
 #define MAX_FOV  160.0
 
 // Used for loading in routes.  (Is monotonicly increasing)
