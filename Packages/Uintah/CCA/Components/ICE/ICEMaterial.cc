@@ -13,8 +13,8 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/BurnFactory.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/BurnFactory.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Core/Util/NotFinished.h>
 
 #define SMALL_NUM 1.0e-100
