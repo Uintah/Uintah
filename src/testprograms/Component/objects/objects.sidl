@@ -17,12 +17,11 @@
 
 
 package objects_test {
-    interface Client;
-    interface RingMaster {
-	int registerClient(in Client a);
-    };
-    interface Client {
-	void notify(in Client a);
-	int ping(in int p);
-    };
+  interface RingMaster {
+    int registerClient(in Client a);
+  };
+  interface Client {
+    void notify(in Client a);
+    int ping(in int p);
+  };
 };

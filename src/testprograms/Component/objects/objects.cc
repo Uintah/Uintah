@@ -31,6 +31,7 @@
 #include <iostream>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <testprograms/Component/objects/objects_sidl.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <vector>
 
@@ -113,7 +114,7 @@ void usage(char* progname)
     cerr << "  -server  - server process\n";
     cerr << "  -client URL  - client process\n";
     cerr << "\n";
-    exit(1);
+    Thread::exitAll(1);
 }
 
 int main(int argc, char* argv[])
