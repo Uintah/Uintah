@@ -31,6 +31,8 @@
  *  Copyright (C) 1999 U of U
  */
 
+#define DESKTOP
+
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -44,13 +46,19 @@ using std::endl;
 
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
+#include <Dataflow/Framework/Framework.h>
 
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/Network/Services.h>
 #include <Dataflow/Resources/Resources.h>
-
-#include <UI/tcltk/GuiInterface/NetworkEditor.h>
 #include <UI/tcltk/GuiInterface/GuiManager.h>
+
+#ifdef DESKTOP
+#include <UI/tcltk/GuiInterface/Desktop.h>
+#else
+#include <UI/tcltk/GuiInterface/NetworkEditor.h>
+#endif
 
 #ifdef SCI_PARALLEL
 #include <Core/CCA/Component/PIDL/PIDL.h>
@@ -105,7 +113,7 @@ int
 main(int argc, char *argv[] )
 {
   parse_args( argc, argv );
-  
+ 
   global_argc=argc;
   global_argv=argv;
   
@@ -125,17 +133,35 @@ main(int argc, char *argv[] )
 #endif
   
 
+  // GuiManger
   gm = new TcltkManager;
-  Network* net=new Network(1);
-  Scheduler *scheduler = new Scheduler(net);
-  
-  NetworkEditor *gui = new NetworkEditor(net, scheduler,argc, argv);
 
+  // Network
+  Network* net=new Network(1);
+
+  // Scheduler
+  Scheduler *scheduler = new Scheduler(net);
   Thread* t2=new Thread(scheduler, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
 
+  Framework *f = new Framework( argc, argv );
+  f->set_network( net );
+  f->set_resources( &resources );
+  f->set_scheduler( scheduler );
+  f->set_services( &services );
+
+  framework = f;
+  framework->start();
+    
+  // Gui
+#ifndef DESKTOP
+  NetworkEditor *gui = new NetworkEditor(net, scheduler,argc, argv);
   gui->start();
+#else
+  Desktop *desktop = new Desktop( f );
+  desktop->start();
+#endif
 
   // exit
 
