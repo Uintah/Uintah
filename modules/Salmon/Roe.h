@@ -137,6 +137,7 @@ class Roe {
     double total_x;
     double total_y;
     int haveInheritMat;
+    double mtnScl;
     double inheritMat[16];
 
     int modifier_mask;
@@ -155,15 +156,15 @@ public:
     Array1<GeomItem *> geomItemA;
     DrawInfo* drawinfo;
     Roe(Salmon *s);
-    Roe(Salmon *s, double *m);
+    Roe(Salmon *s, double *m, double scl);
     Roe(const Roe&);
     ~Roe();
     void RoeInit(Salmon *s);
     void itemAdded(GeomObj*, char*);
     void itemDeleted(GeomObj*);
-    void rotate(double angle, Vector v);
+    void rotate(double angle, Vector v, Point p);
     void translate(Vector v);
-    void scale(Vector v);
+    void scale(Vector v, Point p);
     void addChild(Roe *r);
     void deleteChild(Roe *r);
     void SetParent(Roe *r);
