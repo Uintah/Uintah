@@ -23,8 +23,7 @@ SoundMixer::SoundMixer()
 {
     // Create the overall gain slider.
     overall_gain=1.0;
-    MUI_slider_real* slider=new MUI_slider_real("overall gain",
-						&overall_gain, 1.0);
+    MUI_slider_real* slider=new MUI_slider_real("overall gain", &overall_gain);
     add_ui(slider);
 
     // Create the output data handle and port
@@ -173,7 +172,7 @@ void SoundMixer::connection(ConnectionMode mode, int which_port,
 	pi=portinfo[which_port];
 	clString sname(clString("Gain (")+to_string(which_port)+clString(")"));
 	pi->gain=1.0;
-	MUI_slider_real* slider=new MUI_slider_real(sname, &pi->gain, 1.0);
+	MUI_slider_real* slider=new MUI_slider_real(sname, &pi->gain);
 	pi->interface=slider;
 	add_ui(slider);
 	reconfigure_ui();
