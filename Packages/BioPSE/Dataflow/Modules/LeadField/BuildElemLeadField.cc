@@ -170,7 +170,7 @@ void BuildElemLeadField::execute() {
     }
 
     if (counter<(nelecs-2)) {
-      rhs_oport->send_intermediate(rhs);
+      rhs_oport->send(rhs, true);
     } else {
       rhs_oport->send(rhs);
     }
