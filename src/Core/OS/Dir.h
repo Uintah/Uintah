@@ -36,6 +36,7 @@ namespace SCICore {
    class Dir {
    public:
       Dir();
+      Dir(const Dir&);
       Dir(const std::string&);
       ~Dir();
       Dir& operator=(const Dir&);
@@ -50,7 +51,6 @@ namespace SCICore {
 	 return d_name;
       }
    private:
-      Dir(const Dir&);
 
       std::string d_name;
    };
@@ -59,6 +59,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.3  2000/09/25 18:02:33  sparker
+// include errno.h instead of explicitly defining extern int errno
+//
 // Revision 1.2  2000/05/31 15:20:44  jehall
 // - Added ability to remove() directories
 //
