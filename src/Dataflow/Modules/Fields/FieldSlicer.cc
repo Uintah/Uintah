@@ -187,11 +187,11 @@ void FieldSlicer::execute(){
       jdim_ != jDim_.get() ||
       kdim_ != kDim_.get() )
   {
-    // Update the dims in the GUI.
-    ostringstream str;
-    str << id << " set_size " << dims << " " << idim_ << " " << jdim_ << " " << kdim_;
-
-    gui->execute(str.str().c_str());
+    // Dims has callback on it, so it must be set it after i j k.
+    iDim_.set(idim_);
+    jDim_.set(jdim_);
+    kDim_.set(kdim_);
+    Dims_.set(dims);
 
     updateAll = true;
   }

@@ -241,13 +241,13 @@ void FieldSubSample::execute(){
       wrap  != Wrap_.get() ||
       idim_ != iDim_.get() ||
       jdim_ != jDim_.get() ||
-      kdim_ != kDim_.get() ) {
-
-    // Update the dims in the GUI.
-    ostringstream str;
-    str << id << " set_size " << dims << " " << idim_ << " " << jdim_ << " " << kdim_ << " " << wrap;
-
-    gui->execute(str.str().c_str());
+      kdim_ != kDim_.get() )
+  {
+    iDim_.set(idim_);
+    jDim_.set(jdim_);
+    kDim_.set(kdim_);
+    Wrap_.set(wrap);
+    Dims_.set(dims);
 
     updateAll = true;
   }

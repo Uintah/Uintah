@@ -34,6 +34,7 @@ class MatrixSelectVector : public Module {
   GuiInt    delay_;
   GuiInt    inc_amount_;
   GuiInt    send_amount_;
+  GuiInt    update_function_;
   int       inc_;
   bool      stop_;
 
@@ -66,6 +67,7 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
     send_amount_(ctx->subVar("send-amount")),
+    update_function_(ctx->subVar("update-function")),
     inc_(1),
     stop_(false)
 {
@@ -344,9 +346,7 @@ MatrixSelectVector::execute()
 
   if (changed_p)
   {
-    std::ostringstream str;
-    str << id << " update";
-    gui->execute(str.str().c_str());
+    update_function_.set(1);
   }
   
   reset_vars();
