@@ -511,12 +511,12 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
     throw InternalError("Variable type is not ParticleVariable");
   // find the first timestep
   int ts = 0;
-  while ((ts < d_tstimes.size()) && (startTime > d_tstimes[ts]))
+  while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
     ts++;
   GridP grid = queryGrid( d_tstimes[ts] );
   Patch* patch = NULL;
   particleIndex idx;
-  for ( ; (ts < d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
+  for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
     double t = d_tstimes[ts];
 
     // figure out what patch contains the cell. As far as I can tell,
@@ -570,10 +570,10 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
     
     // find the first timestep
     int ts = 0;
-    while ((ts < d_tstimes.size()) && (startTime > d_tstimes[ts]))
+    while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
     	ts++;
 
-    for ( ; (ts < d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
+    for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
     	double t = d_tstimes[ts];
 
     	// figure out what patch contains the cell. As far as I can tell,
@@ -627,6 +627,9 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.14  2000/11/28 04:10:53  jas
+// Added X,Y,Z FCVariables and got rid of some compiler warnings.
+//
 // Revision 1.13  2000/11/02 19:19:21  kuzimmer
 // Added particleVariable  query function
 //

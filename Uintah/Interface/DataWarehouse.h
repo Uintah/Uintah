@@ -9,7 +9,9 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/NCVariableBase.h>
-#include <Uintah/Grid/FCVariableBase.h>
+#include <Uintah/Grid/XFCVariableBase.h>
+#include <Uintah/Grid/YFCVariableBase.h>
+#include <Uintah/Grid/ZFCVariableBase.h>
 #include <Uintah/Grid/SFCXVariableBase.h>
 #include <Uintah/Grid/SFCYVariableBase.h>
 #include <Uintah/Grid/SFCZVariableBase.h>
@@ -117,12 +119,29 @@ WARNING
       virtual void put(const CCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*) = 0;
 
-      // Face  Centered (FC) Variables
-      virtual void allocate(FCVariableBase&, const VarLabel*,
+      // Face  Centered (XFC) Variables
+      virtual void allocate(XFCVariableBase&, const VarLabel*,
 			    int matlIndex, const Patch*) = 0;
-      virtual void get(FCVariableBase&, const VarLabel*, int matlIndex,
+      virtual void get(XFCVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const FCVariableBase&, const VarLabel*,
+      virtual void put(const XFCVariableBase&, const VarLabel*,
+		       int matlIndex, const Patch*) = 0;
+
+      // Face  Centered (YFC) Variables
+      virtual void allocate(YFCVariableBase&, const VarLabel*,
+			    int matlIndex, const Patch*) = 0;
+      virtual void get(YFCVariableBase&, const VarLabel*, int matlIndex,
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void put(const YFCVariableBase&, const VarLabel*,
+		       int matlIndex, const Patch*) = 0;
+
+
+      // Face  Centered (ZFC) Variables
+      virtual void allocate(ZFCVariableBase&, const VarLabel*,
+			    int matlIndex, const Patch*) = 0;
+      virtual void get(ZFCVariableBase&, const VarLabel*, int matlIndex,
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void put(const ZFCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*) = 0;
 
       // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
@@ -202,6 +221,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.40  2000/11/28 04:10:53  jas
+// Added X,Y,Z FCVariables and got rid of some compiler warnings.
+//
 // Revision 1.39  2000/09/26 21:40:54  dav
 // made exists() const, removed registerOwnership and findMpiNode as they are not used anymore
 //
