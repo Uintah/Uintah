@@ -1190,11 +1190,30 @@ class LevelSetSegmenterApp {
 	    
 	    pack $smooth.blur.var $smooth.blur.err -side left	 
 
+	    # Smooth button
 	    button $smooth.button -text "Smooth" \
 		-background $execute_color \
 		-activebackground $execute_active_color \
 		-command "$this smooth_data" -width 10
-	    pack $smooth.button -side bottom -anchor n -padx 3 -pady 4 -ipadx 2   
+	    pack $smooth.button -side bottom -anchor n -padx 3 \
+		-pady 4 -ipadx 2   
+
+	    # ViewSlices toggle
+	    frame $smooth.toggle
+	    pack $smooth.toggle -side bottom -anchor n
+
+	    global $mods(ChooseNrrd-2D)-port-index
+	    radiobutton $smooth.toggle.orig -text "Show Original" \
+		-variable $mods(ChooseNrrd-2D)-port-index -value 0 \
+		-command "$this update_ViewSlices_input"
+
+	    radiobutton $smooth.toggle.smooth -text "Show Smoothed" \
+		-variable $mods(ChooseNrrd-2D)-port-index -value 1 \
+		-command "$this update_ViewSlices_input"
+
+	    pack $smooth.toggle.orig $smooth.toggle.smooth -side left
+
+
 
 	    # Next button
 	    button $step_tab.next -text "Next" \
@@ -3465,6 +3484,16 @@ class LevelSetSegmenterApp {
 	}
 	$mods(EditColorMap2D)-c toggle 0
 	$mods(EditColorMap2D)-c toggle 1
+    }
+
+    method update_ViewSlices_input {} {
+	global mods
+	
+	# execute ChooseNrrd-2D to send the new 
+	# input to ViewSlices
+	$mods(ChooseNrrd-2D)-c needexecute
+
+	# reconfigure windows width/level?
     }
 
     method make_entry {w text v {wi -1}} {
