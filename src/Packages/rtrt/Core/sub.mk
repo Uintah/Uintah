@@ -78,6 +78,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/MIPGroup.cc \
 	$(SRCDIR)/Context.cc  \
 	$(SRCDIR)/UVMapping.cc \
+	$(SRCDIR)/PPMImage.cc \
 	$(SRCDIR)/UVPlane.cc \
 	$(SRCDIR)/ImageMaterial.cc \
 	$(SRCDIR)/TileImageMaterial.cc \
