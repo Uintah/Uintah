@@ -34,8 +34,11 @@ public:
     friend inline double Dot(const Vector&, const Point&);
     Vector& operator=(const Vector&);
 
-    // Aleksandra
+    // checks if one vector is exactly the same as another
     int operator==(const Vector&) const;
+
+    // checks if the vector is close to the (0,0,0) vector
+    int IsNull();
     
     Vector operator*(const double) const;
     Vector& operator*=(const double);

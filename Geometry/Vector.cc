@@ -77,3 +77,12 @@ Vector::operator== ( const Vector& v ) const
 {
     return v._x == _x && v._y == _y && v._z == _z;
 }
+
+int
+Vector::IsNull( )
+{
+  if ( length() < 1.e-5 )
+    return 1;
+  else
+    return 0;
+}
