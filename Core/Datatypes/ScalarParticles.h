@@ -5,7 +5,6 @@
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 //#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
@@ -63,7 +62,7 @@ public:
   //////////
   // Constructor
   ScalarParticles(const vector<ShareAssignParticleVariable<double> >& scalars,
-		  PSet* pset );
+		  PSet* pset, LevelP level  );
 
   // GROUP: Destructors
   //////////
@@ -84,9 +83,13 @@ public:
   //////////  
   // Set the Scalars
   void Set(vector<ShareAssignParticleVariable<double> >& s){ scalars = s; }
+  //////////
+  // Set the Level
+  void Set( LevelP l){ level = l; }
+  //////////
+  // Are these particles from a new archive?
 
   void AddVar( const ParticleVariable<double>& parts );
-
 
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
@@ -98,6 +101,7 @@ public:
 
   void get_minmax(double& v0, double& v1);
   void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
+  LevelP get_level () const { return level; }
 
 protected:
   bool have_minmax;
@@ -107,7 +111,7 @@ protected:
 
 private:
   PSetHandle psetH;
-
+  LevelP level;
   string _varname;
   int _matIndex;
   vector<ShareAssignParticleVariable<double> >  scalars;

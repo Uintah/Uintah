@@ -63,7 +63,7 @@ public:
   //////////
   // Constructor
   TensorParticles(const vector<ShareAssignParticleVariable<Matrix3> >& tensors,
-		  PSet* pset );
+		  PSet* pset, LevelP level );
 
   // GROUP: Destructors
   //////////
@@ -84,6 +84,9 @@ public:
   //////////  
   // Set the Tensors
   void Set(vector<ShareAssignParticleVariable<Matrix3> >& s){ tensors = s; }
+  //////////
+  // Set the Level
+  void Set( LevelP l){ level = l; }
 
   void AddVar( const ParticleVariable<Matrix3>& parts );
 
@@ -107,7 +110,7 @@ protected:
 
 private:
   PSetHandle psetH;
-
+  LevelP level;
   string _varname;
   int _matIndex;
   vector<ShareAssignParticleVariable<Matrix3> >  tensors;

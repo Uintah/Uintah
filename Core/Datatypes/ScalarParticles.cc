@@ -32,8 +32,8 @@ ScalarParticles::ScalarParticles()
 
 ScalarParticles::ScalarParticles(
 		 const vector<ShareAssignParticleVariable<double> >& scalars,
-		 PSet* pset) :
-  have_minmax(false), psetH(pset), scalars(scalars)
+		 PSet* pset, LevelP l) :
+  have_minmax(false), psetH(pset), scalars(scalars), level(l)
 {
 }
 

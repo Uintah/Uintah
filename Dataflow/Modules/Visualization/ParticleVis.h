@@ -24,8 +24,10 @@ class ParticleVis : public Module {
     GuiInt isFixed;
     GuiDouble current_time;
     GuiDouble radius;
+    GuiInt auto_radius;
     GuiInt drawcylinders;
     GuiDouble length_scale;
+    GuiInt auto_length_scale;
     GuiDouble min_crop_length;
     GuiDouble max_crop_length;
     GuiDouble head_length;
