@@ -38,6 +38,9 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	global $this-rgbhsv
 	set $this-rgbhsv 1
 
+	global $this-resolution
+	set $this-resolution 256
+
 	trace variable $this-alphas_pickle w "$this-c unpickle"
 	trace variable $this-rgbhsv w "$this-c toggle-hsv"
     }
@@ -71,12 +74,23 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
             raise $w
         } else {
 	    set n "$this-c needexecute"
+
+	    # HSB/RGB switching
 	    make_labeled_radio $w.f.types "Color Space" $n left \
-		$this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
+		    $this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
 	    
-            # Initialize geometry and placement of the widget.
 	    pack $w.f.types -side top -anchor w
-            
+
+            # Resolution
+	    scale $w.f.s2 -from 2 -to 256 -state normal \
+		    -orient horizontal  -variable $this-resolution \
+		    -label "Resolution"
+	    pack $w.f.s2 -expand yes -fill x -pady 2 -padx 2
+
+	    Tooltip $w.f.s2 "Sets the number of unique colors used in the color map."
+
+	    bind $w.f.s2 <ButtonRelease> "$this-c needexecute"
+
 	    frame $w.f.gl1
 	    pack $w.f.gl1 -padx 2 -pady 2
 

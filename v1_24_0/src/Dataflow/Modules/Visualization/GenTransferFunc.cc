@@ -78,6 +78,7 @@ private:
   GuiString             rgb_points_pickle_;
   GuiString             hsv_points_pickle_;
   GuiString             alphas_pickle_;
+  GuiInt                gui_resolution_;
 
   vector< Color > rgbs_;   // actual line(s)
   vector< float > rgbT_;   // actual line(s)
@@ -160,6 +161,7 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
     rgb_points_pickle_(ctx->subVar("rgb_points_pickle")),
     hsv_points_pickle_(ctx->subVar("hsv_points_pickle")),
     alphas_pickle_(ctx->subVar("alphas_pickle")),
+    gui_resolution_(ctx->subVar("resolution")),
     hsv_mode_(0),
     activeLine(-1),
     selNode(-1),
@@ -504,7 +506,7 @@ GenTransferFunc::DrawGraphs( int flush)
   glXSwapBuffers(dpy[1],win1);
 
   // Update the colormap.
-  cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, 256);
+  cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, gui_resolution_.get());
 
   glXMakeCurrent(dpy[0],None,NULL);
   gui->unlock();
@@ -1016,10 +1018,13 @@ GenTransferFunc::execute()
     rgbT_ = newcmap->get_rgbT();
     alphas_ = newcmap->get_alphas();
     alphaT_ = newcmap->get_alphaT();
+
+    gui_resolution_.set(cmap->resolution());
   }
   else
   {
-    cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, 256);
+    cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_,
+			   gui_resolution_.get());
   }
   DrawGraphs(0);
 
