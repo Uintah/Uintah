@@ -2,6 +2,7 @@
 #ifndef UINTAH_HOMEBREW_BufferInfo_H
 #define UINTAH_HOMEBREW_BufferInfo_H
 
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 #include <vector>
 
