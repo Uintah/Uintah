@@ -608,6 +608,8 @@ void Transform::compute_imat()
   imat[3][1]=(a*j*o - a*k*n - i*b*o + i*c*n + m*b*k - m*c*j)/q;
   imat[3][2]=-(a*f*o - a*g*n - e*b*o + e*c*n + m*b*g - m*c*f)/q;
   imat[3][3]=(a*f*k - a*g*j - e*b*k + e*c*j + i*b*g - i*c*f)/q;
+  
+  inverse_valid=1;
 }
 
 void Transform::post_mulmat(double mmat[4][4])
