@@ -1,4 +1,3 @@
-
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
@@ -30,185 +29,103 @@ namespace Uintah {
       struct eflux { double d_eflux[12]; };         //edge flux
       struct cflux { double d_cflux[8]; };          //corner flux
       
-      virtual void problemSetup(
-                    const ProblemSpecP& params, 
-		      GridP& grid,
-		      SimulationStateP&);
+      virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+				SimulationStateP&);
       
-      virtual void scheduleInitialize(
-                    const LevelP& level,
-		      SchedulerP&,
-		      DataWarehouseP&);
+      virtual void scheduleInitialize(const LevelP& level, SchedulerP&,
+				      DataWarehouseP&);
       
-      virtual void scheduleComputeStableTimestep(
-                    const LevelP&,
-		      SchedulerP&,
-		      DataWarehouseP&);
+      virtual void scheduleComputeStableTimestep(const LevelP&,SchedulerP&,
+						 DataWarehouseP&);
       
-      virtual void scheduleTimeAdvance(
-                    double t, 
-		      double dt,
-		      const LevelP&,
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      virtual void scheduleTimeAdvance(double t, double dt,const LevelP&,
+				       SchedulerP&, DataWarehouseP&,
+				       DataWarehouseP&);
       
-      void scheduleStep1a(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep1a(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			  DataWarehouseP&);
       
-      void scheduleStep1b(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep1b(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			  DataWarehouseP&);
       
-      void scheduleStep1c(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep1c(const Patch* patch, SchedulerP&,DataWarehouseP&,
+			  DataWarehouseP&);
       
-      void scheduleStep1d(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep1d(const Patch* patch, SchedulerP&,DataWarehouseP&,
+			  DataWarehouseP&);
       
-      void scheduleStep2(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep2(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			 DataWarehouseP&);
       
-      void scheduleStep3(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep3(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			 DataWarehouseP&);
       
-      void scheduleStep4a(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep4a(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			  DataWarehouseP&);
       
-      void scheduleStep4b(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep4b(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			  DataWarehouseP&);
       
-      void scheduleStep5a(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep5a(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			  DataWarehouseP&);
       
-      void scheduleStep5b(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void scheduleStep5b(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			  DataWarehouseP&);
+      
+      void scheduleStep6and7(const Patch* patch, SchedulerP&, DataWarehouseP&,
+			     DataWarehouseP&);
 
-      void scheduleStep6and7(
-                    const Patch* patch, 
-		      SchedulerP&,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
-
-      void setICELabel(ICELabel* Ilb)
-	{
-	  lb = Ilb;
-	};
+      void setICELabel(ICELabel* Ilb) {
+	lb = Ilb;
+      };
       
     public:
       
-      void actuallyInitialize(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&  old_dw,
-		      DataWarehouseP& new_dw);
+      void actuallyInitialize(const ProcessorGroup*, const Patch* patch,
+			      DataWarehouseP&  old_dw, DataWarehouseP& new_dw);
       
-      void actuallyComputeStableTimestep(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyComputeStableTimestep(const ProcessorGroup*,
+					 const Patch* patch, DataWarehouseP&,
+					 DataWarehouseP&);
                   
       // compute speedSound
-      void actuallyStep1a(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep1a(const ProcessorGroup*, const Patch* patch,
+			   DataWarehouseP&,  DataWarehouseP&);
       
       // calculateEquilibrationPressure
-      void actuallyStep1b(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep1b(const ProcessorGroup*, const Patch* patch,
+			  DataWarehouseP&, DataWarehouseP&);
       
       // computeFCVelocity
-      void actuallyStep1c(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep1c(const ProcessorGroup*, const Patch* patch,
+			  DataWarehouseP&, DataWarehouseP&);
       
       // momentumExchangeFCVelocity
-      void actuallyStep1d(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep1d(const ProcessorGroup*, const Patch* patch,
+			  DataWarehouseP&, DataWarehouseP&);
       
       // computeExplicitDelPress
-      void actuallyStep2(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep2(const ProcessorGroup*,const Patch* patch,
+			 DataWarehouseP&, DataWarehouseP&);
       
       // computeFaceCenteredPressure
-      void actuallyStep3(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep3(const ProcessorGroup*, const Patch* patch,
+			 DataWarehouseP&, DataWarehouseP&);
       
-      void actuallyStep4a(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep4a(const ProcessorGroup*,const Patch* patch,
+			  DataWarehouseP&, DataWarehouseP&);
       
-      void actuallyStep4b(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep4b(const ProcessorGroup*,const Patch* patch,
+			  DataWarehouseP&, DataWarehouseP&);
       
-      void actuallyStep5a(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep5a( const ProcessorGroup*, const Patch* patch,
+			   DataWarehouseP&, DataWarehouseP&);
       
-      void actuallyStep5b(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep5b(const ProcessorGroup*,const Patch* patch,
+			  DataWarehouseP&, DataWarehouseP&);
       
-      void actuallyStep6and7(
-                    const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
+      void actuallyStep6and7(const ProcessorGroup*,const Patch* patch,
+			     DataWarehouseP&, DataWarehouseP&);
       
       
     private:
@@ -234,88 +151,73 @@ namespace Uintah {
       void setBC(SFCZVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
       
-      void influxOutfluxVolume(
-                    const SFCXVariable<double>& uvel_CC,
-		      const SFCYVariable<double>& vvel_CC,
-		      const SFCZVariable<double>& wvel_CC,
-		      const double& delT, const Patch* patch,
-		      CCVariable<fflux>& OFS, 
-                    CCVariable<eflux>& OFE,
-                    CCVariable<cflux>& OFC,
-		      CCVariable<fflux>& IFS, 
-                    CCVariable<eflux>& IFE,
-                    CCVariable<cflux>& IFC);
+      void influxOutfluxVolume(const SFCXVariable<double>& uvel_CC,
+			       const SFCYVariable<double>& vvel_CC,
+			       const SFCZVariable<double>& wvel_CC,
+			       const double& delT, const Patch* patch,
+			       CCVariable<fflux>& OFS, 
+			       CCVariable<eflux>& OFE,
+			       CCVariable<cflux>& OFC,
+			       CCVariable<fflux>& IFS, 
+			       CCVariable<eflux>& IFE,
+			       CCVariable<cflux>& IFC);
       
-      void outflowVolCentroid(
-                    const SFCXVariable<double>& uvel_CC,
-		      const SFCYVariable<double>& vvel_CC,
-		      const SFCZVariable<double>& wvel_CC,
-		      const double& delT, const Vector& dx,
-		      CCVariable<fflux>& r_out_x,
-		      CCVariable<fflux>& r_out_y,
-		      CCVariable<fflux>& r_out_z,
-		      CCVariable<eflux>& r_out_x_CF,
-		      CCVariable<eflux>& r_out_y_CF,
-		      CCVariable<eflux>& r_out_z_CF);
+      void outflowVolCentroid(const SFCXVariable<double>& uvel_CC,
+			      const SFCYVariable<double>& vvel_CC,
+			      const SFCZVariable<double>& wvel_CC,
+			      const double& delT, const Vector& dx,
+			      CCVariable<fflux>& r_out_x,
+			      CCVariable<fflux>& r_out_y,
+			      CCVariable<fflux>& r_out_z,
+			      CCVariable<eflux>& r_out_x_CF,
+			      CCVariable<eflux>& r_out_y_CF,
+			      CCVariable<eflux>& r_out_z_CF);
       
-      void advectQFirst(
-                    const CCVariable<double>& q_CC,
-		      const Patch* patch,
-		      const CCVariable<fflux>& OFS,
-		      const CCVariable<eflux>& OFE,
-                    const CCVariable<cflux>& OFC,
-		      const CCVariable<fflux>& IFS,
-		      const CCVariable<eflux>& IFE,
-                    const CCVariable<cflux>& IFC,
-		      CCVariable<fflux>& q_out,
-		      CCVariable<eflux>& q_out_EF,
-                    CCVariable<cflux>& q_out_CF,
-		      CCVariable<fflux>& q_in,
-		      CCVariable<eflux>& q_in_EF,
-                    CCVariable<cflux>& q_in_CF,
-		      CCVariable<double>& q_advected);
+      void advectQFirst(const CCVariable<double>& q_CC,
+			const Patch* patch,
+			const CCVariable<fflux>& OFS,
+			const CCVariable<eflux>& OFE,
+			const CCVariable<cflux>& OFC,
+			const CCVariable<fflux>& IFS,
+			const CCVariable<eflux>& IFE,
+			const CCVariable<cflux>& IFC,
+			CCVariable<fflux>& q_out,
+			CCVariable<eflux>& q_out_EF,
+			CCVariable<cflux>& q_out_CF,
+			CCVariable<fflux>& q_in,
+			CCVariable<eflux>& q_in_EF,
+			CCVariable<cflux>& q_in_CF,
+			CCVariable<double>& q_advected);
       
-      void qOutfluxFirst(
-                    const CCVariable<double>& q_CC,
-		      const Patch* patch,
-		      CCVariable<fflux>& q_out,
-		      CCVariable<eflux>& q_out_EF,
-                    CCVariable<cflux>& q_out_CF);
+      void qOutfluxFirst(const CCVariable<double>& q_CC,const Patch* patch,
+			 CCVariable<fflux>& q_out,
+			 CCVariable<eflux>& q_out_EF,
+			 CCVariable<cflux>& q_out_CF);
       
       
-      void qInflux(
-                    const CCVariable<fflux>& q_out,
-		      const CCVariable<eflux>& q_out_EF,
-                    const CCVariable<cflux>& q_out_CF, 
-		      const Patch* patch,
-		      CCVariable<fflux>& q_in,
-		      CCVariable<eflux>& q_in_EF,
-                    CCVariable<cflux>& q_in_CF);
+      void qInflux(const CCVariable<fflux>& q_out,
+		   const CCVariable<eflux>& q_out_EF,
+		   const CCVariable<cflux>& q_out_CF, 
+		   const Patch* patch,
+		   CCVariable<fflux>& q_in,
+		   CCVariable<eflux>& q_in_EF,
+		   CCVariable<cflux>& q_in_CF);
       
-      void qOutfluxSecond(
-                    CCVariable<fflux>& OFS,
-		      CCVariable<fflux>& IFS,
-		      CCVariable<fflux>& r_out_x,
-		      CCVariable<fflux>& r_out_y,
-		      CCVariable<fflux>& r_out_z,
-		      CCVariable<eflux>& r_out_x_CF,
-		      CCVariable<eflux>& r_out_y_CF,
-		      CCVariable<eflux>& r_out_z_CF,
-		      const Vector& dx);
-                       
-                       
-      void Message(   
-                    int     abort, 
-                    char    message1[],
-                    char    message2[],
-                    char    message3[]);
+      void qOutfluxSecond(CCVariable<fflux>& OFS,
+			  CCVariable<fflux>& IFS,
+			  CCVariable<fflux>& r_out_x,
+			  CCVariable<fflux>& r_out_y,
+			  CCVariable<fflux>& r_out_z,
+			  CCVariable<eflux>& r_out_x_CF,
+			  CCVariable<eflux>& r_out_y_CF,
+			  CCVariable<eflux>& r_out_z_CF,
+			  const Vector& dx);
+      
+      
+      void Message(int abort, char message1[],char message2[],char message3[]);
                         
-       void printData( 
-                    const  Patch* patch,
-                    int    include_GC,
-                    char   message1[],
-                    char   message2[],
-                    const  CCVariable<double>& q_CC);
+       void printData(const  Patch* patch,int include_GC,char message1[],
+		      char message2[], const  CCVariable<double>& q_CC);
       
       ICELabel* lb; 
       SimulationStateP d_sharedState;
@@ -323,8 +225,9 @@ namespace Uintah {
       double d_pressure;
       double d_initialDt;
       double d_CFL;
-     
-      vector<double> d_K_mom, d_K_heat; // exchange coefficients -- off diagonal terms
+
+     // exchange coefficients -- off diagonal terms
+      vector<double> d_K_mom, d_K_heat; 
       
       ICE(const ICE&);
       ICE& operator=(const ICE&);
@@ -389,6 +292,9 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.46  2001/01/04 00:06:48  jas
+// Formatting changes.
+//
 // Revision 1.45  2001/01/03 00:51:53  harman
 // - added cflux, OFC, IFC, q_in_CF, q_out_CF
 // - Advection operator now in 3D, not fully tested
