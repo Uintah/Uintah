@@ -45,6 +45,7 @@
 #include <iostream>
 
 #include <tcl.h>
+#include <tk.h>
 
 using namespace std;
 
@@ -151,6 +152,31 @@ void GuiManager::set(int& value, string varname, int &is_reset) {
   Tcl_SetVar(the_interp, ccast_unsafe(varname), buf, TCL_GLOBAL_ONLY);
   TCLTask::unlock();
   //cerr << "GuiInt set: " << varname << " to " << value << endl;
+}
+
+
+void GuiManager::execute(const string& str)
+{
+  TCLTask::lock();
+  int code = Tcl_Eval(the_interp, ccast_unsafe(str));
+  if(code != TCL_OK)
+    Tk_BackgroundError(the_interp);
+  TCLTask::unlock();
+}
+
+
+int GuiManager::eval(const string& str, string& result)
+{
+    TCLTask::lock();
+    int code = Tcl_Eval(the_interp, ccast_unsafe(str));
+    if(code != TCL_OK){
+	Tk_BackgroundError(the_interp);
+	result="";
+    } else {
+	result=string(the_interp->result);
+    }
+    TCLTask::unlock();
+    return code == TCL_OK;
 }
 
 

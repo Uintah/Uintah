@@ -60,6 +60,9 @@ class SCICORESHARE GuiManager {
         static int get(int& value, string varname, int& is_reset);
         static void set(int& value, string varname, int& is_reset);
 
+        static void execute(const string& str);
+        static int eval(const string& str, string& result);
+
 	static GuiManager& getGuiManager();
   
 };
