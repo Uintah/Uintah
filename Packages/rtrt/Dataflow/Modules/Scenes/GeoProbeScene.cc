@@ -53,7 +53,6 @@ private:
   int first_execute_;
   int cmap_generation_;
   string execute_string_;
-  GuiDouble isoval_;
   GuiDouble xa_;
   GuiDouble xb_;
   GuiDouble ya_;
@@ -61,9 +60,20 @@ private:
   GuiDouble za_;
   GuiDouble zb_;
   GuiString gpfilename_;
+  GuiDouble iso_min_;
+  GuiDouble iso_max_;
+  GuiDouble iso_val_;
 
+  // Colors for the isosurface
+  GuiDouble gui_color_r_;
+  GuiDouble gui_color_g_;
+  GuiDouble gui_color_b_;
+  
   Scene* make_scene(Object *obj);
   SceneContainerHandle sceneHandle_;
+
+  void update_isosurface_material() {}
+  void update_isosurface_value();
 };
 
 DECLARE_MAKER(GeoProbeScene)
@@ -74,14 +84,19 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     first_execute_(1),
     cmap_generation_(-1),
     execute_string_(""),
-    isoval_(ctx->subVar("isoval")),
     xa_(ctx->subVar("xa")),
     xb_(ctx->subVar("xb")),
     ya_(ctx->subVar("ya")),
     yb_(ctx->subVar("yb")),
     za_(ctx->subVar("za")),
     zb_(ctx->subVar("zb")),
-    gpfilename_(ctx->subVar("gpfilename"))
+    gui_color_r_(ctx->subVar("color-r")),
+    gui_color_g_(ctx->subVar("color-g")),
+    gui_color_b_(ctx->subVar("color-b")),
+    gpfilename_(ctx->subVar("gpfilename")),
+    iso_min_(ctx->subVar("iso_min")),
+    iso_max_(ctx->subVar("iso_max")),
+    iso_val_(ctx->subVar("iso_val"))
 {
 }
 
@@ -104,6 +119,9 @@ Scene* GeoProbeScene::make_scene(Object *obj)
   Scene* scene=new Scene(obj, cam, bgcolor, cdown, cup, groundplane,
 			 ambient_scale, Arc_Ambient);
 
+  // This object needs to be animated
+  scene->addObjectOfInterest(obj, true);
+  
   // add a named light
   Light *l = new Light(Point(5,-3,3), Color(1,1,.8)*2, 0);
   l->name_="Spot";
@@ -138,17 +156,35 @@ void GeoProbeScene::execute()
     return;
   }
 
+  cout << "Before first_execute_\n";
   if (first_execute_) {
+    cout << "Went into first_execute_\n";
     int nx, ny, nz;
     Point min, max;
     unsigned char datamin, datamax;
     Array3<unsigned char> data;
     cerr << "input file = "<<gpfilename_.get()<<"\n";
+#if 1
     if (!read_geoprobe(gpfilename_.get().c_str(), nx, ny, nz, min, max, 
 		       datamin, datamax, data)) {
       error("Could not read GeoProbe input file");
       return;
     }
+#else
+    nx = 335;
+    ny = 205;
+    nz = 945;
+    data.resize(nx,ny,nz);
+    min = Point(0,0,0);
+    max = Point(nx-1, ny-1, nz-1);
+    datamin = 0;
+    datamax = 255;
+#endif
+    printf("dim = (%d, %d, %d)\n", nx, ny, nz);
+    cout << "min = "<<min<<", max = "<<max<<"\n";
+    cout << "datamin = "<<(int)datamin<<", datamax = "<<(int)datamax<<"\n";
+    iso_min_.set(datamin);
+    iso_max_.set(datamax);
     double xa = xa_.get();
     double xb = xb_.get();
     double ya = ya_.get();
@@ -166,15 +202,24 @@ void GeoProbeScene::execute()
     ColorMap *cmap =new ColorMap("/opt/SCIRun/data/Geometry/volumes/vol_cmap");
     CutPlaneDpy *cpdpy = new CutPlaneDpy(Vector(1,0,0), Point(xa,0,0));
     Material *cutmat = new CutMaterial(surfmat, cmap, cpdpy);
-    CutVolumeDpy *cvdpy = new CutVolumeDpy(82.5, cmap);
-    vdpy = new VolumeDpy(isoval_.get());
+    iso_val_.set(82.5);
+    //    CutVolumeDpy *cvdpy = new CutVolumeDpy(iso_val_.get(), cmap);
+    vdpy = new VolumeDpy(iso_val_.get());
+    vdpy->set_minmax(datamin, datamax);
     HVolume<unsigned char, BrickArray3<unsigned char>, 
       BrickArray3<VMCell<unsigned char> > > *hvol = 
         new HVolume<unsigned char, BrickArray3<unsigned char>, 
                     BrickArray3<VMCell<unsigned char> > >
-                      (surfmat, vdpy, 3 /*depth*/, 1 /*np*/, nx, ny, nz, 
+                      (surfmat, vdpy, 3 /*depth*/, 2 /*np*/, nx, ny, nz, 
 	  	       min, max, datamin, datamax, data);
+    BBox temp;
+    hvol->compute_bounds(temp, 0);
+    cout <<"hvol.compte_bounds.min = "<<temp.min()<<", max = "<<temp.max()<<"\n";
+    //    cout <<"hvol.min = "<<hvol->min<<", datadiag = "<<hvol->datadiag<<"\n";
     g->add(hvol);
+    temp.reset();
+    g->compute_bounds(temp, 0);
+    cout <<"group.min = "<<temp.min()<<", max = "<<temp.max()<<"\n";
     Scene *scene = make_scene(g);
     SceneContainer *container = scinew SceneContainer();
     container->put_scene(scene);
@@ -187,7 +232,10 @@ void GeoProbeScene::execute()
     cmap_generation_ = cmH->generation;
     execute_string_ = "";
     return;
+  } else {
+    cout << "Didn't go into first_execute_\n";
   }
+
 
   if (cmH->generation != cmap_generation_) {
     // need to update the colormap
@@ -218,9 +266,21 @@ void GeoProbeScene::tcl_command(GuiArgs& args, void* userdata)
     return;
   } else if (args[1] == "update_plane") {
     want_to_execute();
+  } else if (args[1] == "update_isosurface_material") {
+    cout << "Updating isosurface color\n";
+    //    update_isosurface_color();
+  } else if (args[1] == "update_isosurface_value") {
+    //    cout << "Updating isosurface value\n";
+    update_isosurface_value();
   } else {
     Module::tcl_command(args, userdata);
   }
 }
+
+void GeoProbeScene::update_isosurface_value() {
+  reset_vars();
+  vdpy->change_isoval((float)(iso_val_.get()));
+}
+
 
 } // End namespace rtrt
