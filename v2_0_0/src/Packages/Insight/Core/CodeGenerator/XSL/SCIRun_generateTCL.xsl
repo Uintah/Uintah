@@ -578,6 +578,7 @@
   <xsl:param name="var"/>
 <xsl:variable name="widget">scale</xsl:variable>
 <xsl:variable name="path"><xsl:text>$w.</xsl:text><xsl:value-of select="$name"/></xsl:variable>
+<xsl:variable name="step"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/step"/></xsl:variable>
 
         frame <xsl:value-of select="$path"/><xsl:text>
         </xsl:text>
@@ -586,7 +587,8 @@
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/>
 <xsl:text> -label </xsl:text> &quot;<xsl:value-of select="$text"/>&quot; \
 <xsl:text>           -variable $this-</xsl:text><xsl:value-of select="$var"/> \
-           -from <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/min"/> -to <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/max"/> -orient horizontal<xsl:text>
+           -from <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/min"/> -to <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/max"/> -orient horizontal <xsl:if test="$step != ''"> \
+           -resolution <xsl:value-of select="$step"/></xsl:if><xsl:text>
         pack </xsl:text>
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/><xsl:text> -side left
         pack </xsl:text><xsl:value-of select="$path"/>
