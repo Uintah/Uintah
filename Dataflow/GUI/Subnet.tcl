@@ -833,6 +833,7 @@ proc scripted_ModuleInstance { args } {
 
 proc scripted_sourceSettingsFile { args } {
     renameSourceCommand
+    return "[netedit getenv SCIRUN_DATA] [netedit getenv SCIRUN_DATASET]"
 }
 
 proc addSubnetToDatabase { script } {
