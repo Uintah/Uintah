@@ -64,7 +64,7 @@ public:
   void extend(const Point& p);
   void extend(const Point& p, double radius);
   void extend(const BBox& b);
-  void extend_cylinder(const Point& cen, const Vector& normal, double r);
+  void extend_disc(const Point& cen, const Vector& normal, double r);
   Point center() const;
   double longest_edge();
   void translate(const Vector &v);

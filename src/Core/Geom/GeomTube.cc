@@ -70,7 +70,7 @@ void  GeomTube::get_bounds(BBox& bb)
 {
     for(int i=0;i<verts.size();i++)
     {
-	bb.extend_cylinder(verts[i]->p, directions[i], radii[i]);
+	bb.extend_disc(verts[i]->p, directions[i], radii[i]);
     }
 }
 
