@@ -47,16 +47,20 @@ public:
   virtual void		execute();
   virtual void		tcl_command(GuiArgs&, void*);
   GuiString		outputdatatype_;   // the out field type
+  GuiString		inputdatatype_;    // the input field type
+  GuiString		fldname_;          // the input field name
   int			generation_;
   string                last_data_type_;
   FieldHandle           outputfield_;
 };
 
-  DECLARE_MAKER(ChangeFieldDataType)
+DECLARE_MAKER(ChangeFieldDataType);
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
   : Module("ChangeFieldDataType", ctx, Filter, "Fields", "SCIRun"),
     outputdatatype_(ctx->subVar("outputdatatype")),
+    inputdatatype_(ctx->subVar("inputdatatype", false)),
+    fldname_(ctx->subVar("fldname", false)),
     generation_(-1),
     outputfield_(0)
 {
@@ -64,6 +68,8 @@ ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
 
 ChangeFieldDataType::~ChangeFieldDataType()
 {
+  fldname_.set("---");
+  inputdatatype_.set("---");
 }
 
 
@@ -89,7 +95,8 @@ ChangeFieldDataType::execute()
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
   {
-    gui->execute(string("set ")+id+"-inputdatatype \"---\"");
+    fldname_.set("---");
+    inputdatatype_.set("---");
     return;
   }
 
@@ -109,15 +116,17 @@ ChangeFieldDataType::execute()
   {
     generation_ = fh.get_rep()->generation;
     const string &tname = fh->get_type_description()->get_name();
-    gui->execute(string("set ")+id+"-inputdatatype \"" + tname + "\"");
+    inputdatatype_.set(tname);
 
     string fldname;
     if (fh->get_property("name",fldname))
-      gui->execute(string("set ")+id+"-fldname "+fldname);
+    {
+      fldname_.set(fldname);
+    }
     else
-      gui->execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
-
-    gui->execute(id+" copy_attributes; update idletasks");
+    {
+      fldname_.set("--- No Name ---");
+    }
   }
   else if (new_data_type == last_data_type_)
   {

@@ -55,13 +55,16 @@ public:
 ChangeFieldDataAt::ChangeFieldDataAt(GuiContext* ctx)
   : Module("ChangeFieldDataAt", ctx, Filter, "Fields", "SCIRun"),
     outputdataat_(ctx->subVar("outputdataat")),
-    inputdataat_(ctx->subVar("inputdataat")),
-    fldname_(ctx->subVar("fldname")),
+    inputdataat_(ctx->subVar("inputdataat", false)),
+    fldname_(ctx->subVar("fldname", false)),
     generation_(-1)
 {
 }
 
-ChangeFieldDataAt::~ChangeFieldDataAt(){
+ChangeFieldDataAt::~ChangeFieldDataAt()
+{
+  fldname_.set("---");
+  inputdataat_.set("---");
 }
 
 
