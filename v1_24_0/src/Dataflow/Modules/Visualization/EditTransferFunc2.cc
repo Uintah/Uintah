@@ -45,8 +45,7 @@
 #include <Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Geom/GeomOpenGL.h>
-#include <tcl.h>
-#include <tk.h>
+#include <Core/Geom/TkOpenGLContext.h>
 #include <stdio.h>
 #include <stack>
 #include <sstream>
@@ -56,9 +55,6 @@
 
 // tcl interpreter corresponding to this module
 extern Tcl_Interp* the_interp;
-
-// the OpenGL context structure
-extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 using std::stack;
 
@@ -111,9 +107,7 @@ public:
   void release(int x, int y, int button);
 
 private:
-  GLXContext                            ctx_;
-  Display*                              dpy_;
-  Window                                win_;
+  TkOpenGLContext *                     ctx_;
   int                                   width_;
   int                                   height_;
   bool                                  button_;
@@ -191,8 +185,6 @@ DECLARE_MAKER(EditTransferFunc2)
 EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   : Module("EditTransferFunc2", ctx, Filter, "Visualization", "SCIRun"),
     ctx_(0), 
-    dpy_(0), 
-    win_(0), 
     button_(0), 
     shader_factory_(0),
     pbuffer_(0), 
@@ -378,8 +370,19 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "redrawcmap") {
     cmap_dirty_ = true;
     redraw();
-  } else if (args[1] == "closewindow") {
-    ctx_ = 0;
+  } else if (args[1] == "destroygl") {
+    if (ctx_) {
+      delete ctx_;
+      ctx_ = 0;
+    }
+  } else if (args[1] == "setgl") {
+    ASSERT(args.count() == 3);
+    if (ctx_) {
+      delete ctx_;
+    }
+    ctx_ = scinew TkOpenGLContext(args[2], 0, 512, 256);
+    width_ = 512;
+    height_ = 256;
   } else if (!args[1].compare(0, 13, "color_change-")) {
     int n;
     string_to_int(args[1].substr(13), n);
@@ -893,31 +896,26 @@ EditTransferFunc2::make_current()
   // obtain rendering ctx 
   if(!ctx_) {
     const string myname(".ui" + id + ".f.gl.gl");
-    Tk_Window tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-                                      Tk_MainWindow(the_interp));
-    if(!tkwin) {
-      warning("Unable to locate window!");
-      gui->unlock();
-      return false;
-    }
-    dpy_ = Tk_Display(tkwin);
-    win_ = Tk_WindowId(tkwin);
-    ctx_ = OpenGLGetContext(the_interp, ccast_unsafe(myname));
-    width_ = Tk_Width(tkwin);
-    height_ = Tk_Height(tkwin);
-    // check if it was created
-    if(!ctx_) {
-      error("Unable to obtain OpenGL context!");
-      gui->unlock();
-      return false;
-    }
-    glXMakeCurrent(dpy_, win_, ctx_);
+    try {
+      ctx_ = scinew TkOpenGLContext(myname, 0, 512, 256);
+      width_ = 512;
+      height_ = 256;
 #ifdef HAVE_GLEW
-    sci_glew_init();
+      ctx_->make_current();
+      sci_glew_init();
 #endif
-  } else {
-    glXMakeCurrent(dpy_, win_, ctx_);
+    } catch (...) {
+    }
   } 
+
+  // check if it was created
+  if(!ctx_) {
+    gui->unlock();
+    return false;
+  }
+
+  ctx_->make_current();
+
   return true;
 }
 
@@ -1000,7 +998,7 @@ EditTransferFunc2::rasterize_widgets()
 
       glDisable(GL_BLEND);
       pbuffer_->swapBuffers();
-      glXMakeCurrent(dpy_, win_, ctx_);
+      ctx_->make_current();
       cmap_dirty_ = false;
     }
   } else {
@@ -1227,9 +1225,8 @@ EditTransferFunc2::redraw()
      glVertex2f( 0.0,  0.0);
   }
   glEnd();
-  
-  glXSwapBuffers(dpy_, win_);
-  glXMakeCurrent(dpy_, 0, 0);
+  ctx_->swap();
+  ctx_->release();
 
   gui->unlock();
 }
