@@ -14,9 +14,9 @@
 #define _HermiteSpline_h
 
 #include <vector>
-using namespace std;
 
 namespace Remote {
+using namespace std;
 template<class T>
 class HermiteSpline {
    vector<T> d; // The control points

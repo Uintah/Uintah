@@ -7,9 +7,9 @@
 #define _simpmesh_h
 
 #include <Packages/Remote/Tools/Model/Mesh.h>
-using namespace Remote::Tools;
 
 namespace Remote {
+using namespace Remote::Tools;
 class SimpMesh : public Mesh
 {
   vector<Edge *> Collapses;

@@ -18,10 +18,10 @@
 #include <math.h>
 #include <strings.h>
 
+namespace Phil {
 using namespace SCIRun;
 using namespace std;
 
-namespace Phil {
 struct VertexCL {
   float pos[3];
 };

@@ -6,9 +6,9 @@
 
 #include <string>
 #include <iostream>
-using namespace std;
 
 namespace Remote {
+using namespace std;
 // #define SCI_VEC_DEBUG
 #ifdef SCI_VEC_DEBUG
 #define ASSERTVEC(x) ASSERT0(x)

@@ -9,10 +9,9 @@
 
 #include <string.h>
 #include <string>
-using namespace std;
-
 
 namespace Remote {
+using namespace std;
 class HVector;
 
 class Matrix

@@ -12,9 +12,6 @@
 #include <stdlib.h>
 
 #include <iostream>
-using std::cerr;
-using std::endl;
-using std::ostream;
 
 #include <values.h>
 #include <ctype.h>

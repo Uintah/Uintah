@@ -5,12 +5,12 @@
 
 #include <iostream>
 #include <strings.h>
-using namespace std;
 
 #include <stdio.h>
 #include <stdlib.h>
 
 namespace Remote {
+using namespace std;
 typedef unsigned char byte;
 typedef long long INT64;
 

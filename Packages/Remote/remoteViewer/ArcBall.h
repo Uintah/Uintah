@@ -4,9 +4,9 @@
 #include <Packages/Remote/Tools/Math/Vector.h>
 #include <Packages/Remote/Tools/Math/Matrix44.h>
 
+namespace Remote {
 using namespace Remote::Tools;
 
-namespace Remote {
 struct ArcBall
 {
   Vector Axis;

@@ -18,9 +18,9 @@
 #include <limits.h>
 #include <strings.h>
 
+namespace Phil {
 using namespace SCIRun;
 
-namespace Phil {
 struct Tetra {
   int v[4];
 };  

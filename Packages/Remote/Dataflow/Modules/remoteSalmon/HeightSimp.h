@@ -9,9 +9,9 @@
 
 #include <Packages/Remote/Tools/macros.h>
 #include <Packages/Remote/Tools/Image/ZImage.h>
-using namespace Remote::Tools;
 
 namespace Remote {
+using namespace Remote::Tools;
 // C has the following bits:
 // 0 - Top vert edge exists.
 // 1 - Left horiz edge exists.
