@@ -110,10 +110,9 @@ of the data using the sliders.
 <p>
 Once the data has been read it can be merged into one output NRRD if
 it has the same dimensionality and data type. When the data is merged
-a new "Time" axis will be constructed. The time axis represents the
-number datasets merged together. Combining datasets is necessary when
-using the NrrdSelectTime to animate data.  If the data is not merged
-dataset will be outputed individually. The maximum outputs is six. 
+a new axis will be constructed. The new axis represents the
+number datasets merged together.If the data is not merged
+dataset will be outputed individually, The maximum outputs is eight.
 </p>
 <p>
 The "Assume Vector-Tensor data" will convert datasets that have the
