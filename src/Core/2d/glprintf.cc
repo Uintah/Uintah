@@ -31,16 +31,18 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#ifdef _WIN32
-#include <afxwin.h>
-#define vsnprintf _vsnprintf
-#endif
-#include <sci_gl.h>
-#include "glprintf.h"
-#include "asciitable.h"
 #include <string.h> /* for strlen() */
 #include <math.h>
-#include "texture.h"
+
+#ifdef _WIN32
+#  include <afxwin.h>
+#  define vsnprintf _vsnprintf
+#endif
+
+#include <sci_gl.h>
+#include <Core/2d/glprintf.h>
+#include <Core/2d/asciitable.h>
+#include <Core/2d/texture.h>
 
 Texture *Font = 0;
 double _gl_text_anchor_[3] = {0,0,0};

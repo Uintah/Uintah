@@ -29,8 +29,8 @@
 
 /**** BallMath.c - Essential routines for ArcBall.  ****/
 #include <math.h>
-#include "BallMath.h"
-#include "BallAux.h"
+#include <Dataflow/Modules/Render/BallMath.h>
+#include <Dataflow/Modules/Render/BallAux.h>
 
 
 /* Convert window coordinates to sphere coordinates. */
