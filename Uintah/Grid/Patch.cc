@@ -116,7 +116,8 @@ bool Patch::findCellAndWeights(const Point& pos,
    S[5] = fx * fy1 * fz;
    S[6] = fx * fy * fz1;
    S[7] = fx * fy * fz;
-   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
+   return true;
+//   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
 }
 
 
@@ -150,7 +151,8 @@ bool Patch::findCellAndShapeDerivatives(const Point& pos,
    d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
    d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
    d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
-   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
+   return true;
+//   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
 }
 
 ostream& operator<<(ostream& out, const Patch & r)
@@ -749,6 +751,11 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.29  2000/11/30 17:06:16  guilkey
+// Hardwired the findCellAndWeights and findCellAndShapeDerivatives to
+// always return true, as the logic that was previously used is no longer
+// necessary.  These should be changed from type bool to type void soon.
+//
 // Revision 1.28  2000/11/28 03:47:26  jas
 // Added FCVariables for the specific faces X,Y,and Z.
 //
