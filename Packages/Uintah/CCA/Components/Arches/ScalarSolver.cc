@@ -669,6 +669,9 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     
     d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
 				  &scalarVars);
+    if (d_boundaryCondition->getIntrusionBC())
+      d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
+					  &scalarVars);
     // apply multimaterial intrusion wallbc
     if (d_MAlab)
       d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
@@ -684,18 +687,6 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
-
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      // allocateAndPut instead:
-      /* new_dw->put(scalarVars.scalarCoeff[ii], 
-		  d_lab->d_scalCoefPredLabel, ii, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_scalDiffCoefPredLabel, ii, patch); */;
-    }
-    // allocateAndPut instead:
-    /* new_dw->put(scalarVars.scalarNonlinearSrc, 
-		d_lab->d_scalNonLinSrcPredLabel, matlIndex, patch); */;
 
   }
 }
