@@ -14,6 +14,7 @@ SRCDIR   := Packages/MIT/Dataflow/Modules/Bayer
 
 SRCS     += \
 	$(SRCDIR)/Metropolis.cc\
+	$(SRCDIR)/BayerAnalysis.cc\
         $(SRCDIR)/Bayer.cc\
         $(SRCDIR)/bayer.F\
         $(SRCDIR)/bnorm.F\

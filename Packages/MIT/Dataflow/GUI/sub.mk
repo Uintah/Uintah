@@ -14,6 +14,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Metropolis.tcl\
+	$(SRCDIR)/BayerAnalysis.tcl\
 	$(SRCDIR)/MeasurementsReader.tcl\
 	$(SRCDIR)/DistributionReader.tcl\
 #[INSERT NEW TCL FILE HERE]
