@@ -119,8 +119,7 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	    -showvalue true -orient horizontal -relief groove -length 200 \
 	    -command "$this maybeRestart"
         scale $w.cur -variable $this-current \
-	    -showvalue true -orient horizontal -relief groove -length 200 \
-	    -command "$this maybeRestart"
+	    -showvalue true -orient horizontal -relief groove -length 200
         scale $w.max -variable $this-range_max \
 	    -showvalue true -orient horizontal -relief groove -length 200 \
 	    -command "$this maybeRestart"
@@ -128,6 +127,7 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	    -showvalue true -orient horizontal -relief groove -length 200 \
 	    -command "$this maybeRestart"
 
+	bind $w.cur <ButtonRelease> -command "set $this-execmode init; $this-c needexecute"
 	update_range
 
 	# Restore range to pre-loaded value
