@@ -54,16 +54,16 @@ static Persistent* make_NrrdData() {
 
 PersistentTypeID NrrdData::type_id("NrrdData", "PropertyManager", make_NrrdData);
 
-vector<string> NrrdData::valid_tup_types_;
+//vector<string> NrrdData::valid_tup_types_;
 
 
 NrrdData::NrrdData(bool owned) : 
   nrrd(nrrdNew()),
   data_owned_(owned)
 {
-  if (valid_tup_types_.size() == 0) {
-    load_valid_tuple_types();
-  }
+  //if (valid_tup_types_.size() == 0) {
+  //load_valid_tuple_types();
+  //}
 }
 
 NrrdData::NrrdData(const NrrdData &copy) :
@@ -71,7 +71,7 @@ NrrdData::NrrdData(const NrrdData &copy) :
 {
   nrrd = nrrdNew();
   nrrdCopy(nrrd, copy.nrrd);
-  copy_sci_data(copy);
+  //copy_sci_data(copy);
 }
 
 NrrdData::~NrrdData() {
@@ -88,34 +88,34 @@ NrrdData::clone()
   return new NrrdData(*this);
 }
 
-void 
-NrrdData::load_valid_tuple_types() 
-{
-  valid_tup_types_.push_back("Scalar");
-  valid_tup_types_.push_back("Vector");
-  valid_tup_types_.push_back("Tensor");
-}
+// void 
+// NrrdData::load_valid_tuple_types() 
+// {
+//   valid_tup_types_.push_back("Scalar");
+//   valid_tup_types_.push_back("Vector");
+//   valid_tup_types_.push_back("Tensor");
+// }
 
-// This needs to parse axis 0 and see if the label is tuple as well...
-bool
-NrrdData::is_sci_nrrd() const 
-{
-  return (originating_field_.get_rep() != 0);
-}
+// // This needs to parse axis 0 and see if the label is tuple as well...
+// bool
+// NrrdData::is_sci_nrrd() const 
+// {
+//   return (originating_field_.get_rep() != 0);
+// }
 
-void 
-NrrdData::copy_sci_data(const NrrdData &cp)
-{
-  originating_field_ = cp.originating_field_;
-}
+// void 
+// NrrdData::copy_sci_data(const NrrdData &cp)
+// {
+//   originating_field_ = cp.originating_field_;
+// }
 
-int
-NrrdData::get_tuple_axis_size() const
-{
-  vector<string> elems;
-  get_tuple_indecies(elems);
-  return elems.size();
-}
+// int
+// NrrdData::get_tuple_axis_size() const
+// {
+//   vector<string> elems;
+//   get_tuple_indecies(elems);
+//   return elems.size();
+// }
 
 
 // This would be much easier to check with a regular expression lib
@@ -150,155 +150,155 @@ NrrdData::in_name_set(const string &s) const
   return true;
 }
 
-bool 
-NrrdData::in_type_set(const string &s) const
-{
-  // test against valid char set.
-  vector<string>::iterator iter = valid_tup_types_.begin();
-  while (iter != valid_tup_types_.end()) {
-    //cout << "comp " << s << " " << *iter << endl;
-    if (s == *iter) {
-      return true;
-    }
-    ++iter;
-  }
-  //cout << "in_type_set failing" << endl;
-  return false;
-}
+// bool 
+// NrrdData::in_type_set(const string &s) const
+// {
+//   // test against valid char set.
+//   vector<string>::iterator iter = valid_tup_types_.begin();
+//   while (iter != valid_tup_types_.end()) {
+//     //cout << "comp " << s << " " << *iter << endl;
+//     if (s == *iter) {
+//       return true;
+//     }
+//     ++iter;
+//   }
+//   //cout << "in_type_set failing" << endl;
+//   return false;
+// }
 
 
-bool
-NrrdData::verify_tuple_label(const string &s, vector<string> &elems) const
-{
+// bool
+// NrrdData::verify_tuple_label(const string &s, vector<string> &elems) const
+// {
 
-  // first char must be part of name set
-  string::size_type nm_idx = 0;
-  string::size_type type_idx = s.size();
+//   // first char must be part of name set
+//   string::size_type nm_idx = 0;
+//   string::size_type type_idx = s.size();
 
-  if (! s.size()) return false;
+//   if (! s.size()) return false;
 
-  //cout << "label is: " << s << endl;
-  for(string::size_type i = 0; i < s.size(); i++) {
-    //cout << s[i] << endl;
-    if (s[i] == ':') {
-      // substring up until here must be a name
-      string sub = s.substr(nm_idx, i - nm_idx);
-      if (! in_name_set(sub)) return false;
-      // set nm_idx to something invalid for now.
-      type_idx = i+1;
+//   //cout << "label is: " << s << endl;
+//   for(string::size_type i = 0; i < s.size(); i++) {
+//     //cout << s[i] << endl;
+//     if (s[i] == ':') {
+//       // substring up until here must be a name
+//       string sub = s.substr(nm_idx, i - nm_idx);
+//       if (! in_name_set(sub)) return false;
+//       // set nm_idx to something invalid for now.
+//       type_idx = i+1;
 
-    } else if (s[i] == ',' || (i == s.size() - 1)) {
-      int off = 0;
-      if (i == s.size() - 1) {
-	off = 1;
-      }
-      // substring up until here must be an elem
-      //cout << "sub from : " << type_idx << " to: " << i << endl;
-      string sub = s.substr(type_idx, i - type_idx + off);
-      if (! in_type_set(sub)) return false;
-      // the valid elem is from nm_idx to i-1
-      string elem = s.substr(nm_idx, i - nm_idx + off);
-      elems.push_back(elem);
+//     } else if (s[i] == ',' || (i == s.size() - 1)) {
+//       int off = 0;
+//       if (i == s.size() - 1) {
+// 	off = 1;
+//       }
+//       // substring up until here must be an elem
+//       //cout << "sub from : " << type_idx << " to: " << i << endl;
+//       string sub = s.substr(type_idx, i - type_idx + off);
+//       if (! in_type_set(sub)) return false;
+//       // the valid elem is from nm_idx to i-1
+//       string elem = s.substr(nm_idx, i - nm_idx + off);
+//       elems.push_back(elem);
 
-      // start looking for next valid elem
-      nm_idx = i+1;
-      // set type_idx to something invalid for now.
-      type_idx = s.size();
-    }
-  }
-  return true;
-}
+//       // start looking for next valid elem
+//       nm_idx = i+1;
+//       // set type_idx to something invalid for now.
+//       type_idx = s.size();
+//     }
+//   }
+//   return true;
+// }
 
 
-// return a comma separated list of just the type names along the tuple axis.
-string
-NrrdData::concat_tuple_types() const
-{
-  string rval;
-  const string s(nrrd->axis[0].label);
+// // return a comma separated list of just the type names along the tuple axis.
+// string
+// NrrdData::concat_tuple_types() const
+// {
+//   string rval;
+//   const string s(nrrd->axis[0].label);
 
-  // first char must be part of name set
-  string::size_type nm_idx = 0;
-  string::size_type type_idx = s.size();
+//   // first char must be part of name set
+//   string::size_type nm_idx = 0;
+//   string::size_type type_idx = s.size();
 
-  if (s.size()) {
+//   if (s.size()) {
 
-    //cout << "label is: " << s << endl;
-    for(string::size_type i = 0; i < s.size(); i++) {
-      //cout << s[i] << endl;
-      if (s[i] == ':') {
-	// substring up until here must be a name
-	string sub = s.substr(nm_idx, i - nm_idx);
+//     //cout << "label is: " << s << endl;
+//     for(string::size_type i = 0; i < s.size(); i++) {
+//       //cout << s[i] << endl;
+//       if (s[i] == ':') {
+// 	// substring up until here must be a name
+// 	string sub = s.substr(nm_idx, i - nm_idx);
 
-	// set nm_idx to something invalid for now.
-	if ( in_name_set(sub) )
-	  type_idx = i+1;
+// 	// set nm_idx to something invalid for now.
+// 	if ( in_name_set(sub) )
+// 	  type_idx = i+1;
 
-      } else if (s[i] == ',' || (i == s.size() - 1)) {
-	int off = 0;
+//       } else if (s[i] == ',' || (i == s.size() - 1)) {
+// 	int off = 0;
 
-	if (i == s.size() - 1)
-	  off = 1;
+// 	if (i == s.size() - 1)
+// 	  off = 1;
 
-	// substring up until here must be an elem
-	//cout << "sub from : " << type_idx << " to: " << i << endl;
-	string sub = s.substr(type_idx, i - type_idx + off);
+// 	// substring up until here must be an elem
+// 	//cout << "sub from : " << type_idx << " to: " << i << endl;
+// 	string sub = s.substr(type_idx, i - type_idx + off);
 
-	if (rval.size() == 0)
-	  rval = sub;
-	else
-	  rval += string(",") + sub;
+// 	if (rval.size() == 0)
+// 	  rval = sub;
+// 	else
+// 	  rval += string(",") + sub;
 
-	// start looking for next valid elem
-	nm_idx = i+1;
-	// set type_idx to something invalid for now.
-	type_idx = s.size();
-      }
-    }
-  }
+// 	// start looking for next valid elem
+// 	nm_idx = i+1;
+// 	// set type_idx to something invalid for now.
+// 	type_idx = s.size();
+//       }
+//     }
+//   }
 
-  return rval;
-}
+//   return rval;
+// }
 
-bool
-NrrdData::get_tuple_indecies(vector<string> &elems) const
-{
-  if (!nrrd) return false;
-  string tup(nrrd->axis[0].label);
-  return verify_tuple_label(tup, elems);
-}
+// bool
+// NrrdData::get_tuple_indecies(vector<string> &elems) const
+// {
+//   if (!nrrd) return false;
+//   string tup(nrrd->axis[0].label);
+//   return verify_tuple_label(tup, elems);
+// }
 
-bool 
-NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
-{
-  if (!nrrd || !nrrd->axis[0].label) return false;
-  string tup(nrrd->axis[0].label);
-  vector<string> elems;
-  get_tuple_indecies(elems);
+// bool 
+// NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
+// {
+//   if (!nrrd || !nrrd->axis[0].label) return false;
+//   string tup(nrrd->axis[0].label);
+//   vector<string> elems;
+//   get_tuple_indecies(elems);
 
-  if (tmin < 0 || tmin > (int)elems.size() - 1 || 
-      tmax < 0 || tmax > (int)elems.size() - 1 ) return false;
+//   if (tmin < 0 || tmin > (int)elems.size() - 1 || 
+//       tmax < 0 || tmax > (int)elems.size() - 1 ) return false;
 
-  min = 0;
-  max = 0;
-  for (int i = 0; i <= tmax; i++) {
+//   min = 0;
+//   max = 0;
+//   for (int i = 0; i <= tmax; i++) {
     
-    string &s = elems[i];
-    int inc = 0;
-    if (s.find(string("Scalar")) <= s.size() - 1) {
-      inc = 1;
-    } else if (s.find(string("Vector")) <= s.size() - 1) {
-      inc = 3;
-    } else if (s.find(string("Tensor")) <= s.size() - 1) {
-      inc = 7;
-    }
-    if (tmin > i) min+=inc;
-    if (tmax > i) max+=inc;
-    if (tmax == i) max+= inc - 1;
+//     string &s = elems[i];
+//     int inc = 0;
+//     if (s.find(string("Scalar")) <= s.size() - 1) {
+//       inc = 1;
+//     } else if (s.find(string("Vector")) <= s.size() - 1) {
+//       inc = 3;
+//     } else if (s.find(string("Tensor")) <= s.size() - 1) {
+//       inc = 7;
+//     }
+//     if (tmin > i) min+=inc;
+//     if (tmax > i) max+=inc;
+//     if (tmax == i) max+= inc - 1;
     
-  } 
-  return true;
-}
+//   } 
+//   return true;
+// }
 
 #define NRRDDATA_VERSION 3
 
@@ -342,7 +342,7 @@ void NrrdData::io(Piostream& stream) {
   }
   if (version > 1) {
     Pio(stream, data_owned_);
-    Pio(stream, originating_field_);
+    //Pio(stream, originating_field_);
   }
   stream.end_class();
 }
