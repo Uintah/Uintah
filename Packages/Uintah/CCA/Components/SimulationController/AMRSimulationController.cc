@@ -355,7 +355,8 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
 {
   double start = Time::currentSeconds();
-  GridP oldGrid = currentGrid;       
+  GridP oldGrid = currentGrid;      
+ 
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
   if (d_myworld->myrank() == 0) {
         cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
@@ -416,11 +417,14 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
 
     d_lb->possiblyDynamicallyReallocate(currentGrid, false); 
+    double scheduleTime = Time::currentSeconds();
     d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sharedState, d_sim);
+    scheduleTime = Time::currentSeconds() - scheduleTime;
 
     double time = Time::currentSeconds() - start;
     if(d_myworld->myrank() == 0)
-      cout << "done regridding (" << time << " seconds, regridding took " << regridTime << ")\n";
+      cout << "done regridding (" << time << " seconds, regridding took " << regridTime 
+           << ", scheduling and copying took " << scheduleTime << ")\n";
   }
 }
 
