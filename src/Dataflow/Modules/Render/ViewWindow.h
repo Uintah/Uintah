@@ -356,6 +356,11 @@ public:
   GuiView view;
   View homeview;
 
+  GuiInt light0;               // just cache out whether these are on or off
+  GuiInt light1;
+  GuiInt light2;
+  GuiInt light3;
+  
   GuiString lightColors;        // Colors for lights
   GuiString lightVectors;       // Viewing hemisphere, light direction vectors
 				// Background Color
