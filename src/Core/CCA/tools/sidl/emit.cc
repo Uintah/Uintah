@@ -1301,6 +1301,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  ::SCIRun::refList _refL;\n";
     e.out << "  ::SCIRun::refList::iterator iter;\n";
     e.out << "  _proxyGetReferenceList(_refL,false);\n";
+    e.out << "  ::SCIRun::Message** msgs = new ::SCIRun::Message*[_refL.size()];\n";
 #ifdef MxNDEBUG
     e.out << "  //Turn on debug to a file\n";
     e.out << "  std::ostringstream fname;\n";
@@ -1310,7 +1311,8 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  \n";
     e.out << "  iter = _refL.begin();\n";
     e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
-    e.out << "    ::SCIRun::Message* message = (*iter).chan->getMessage();\n";
+    e.out << "    msgs[i] = (*iter).chan->getMessage();\n";
+    e.out << "    ::SCIRun::Message* message = msgs[i];\n";
     e.out << "    message->createMessage();\n";
     e.out << "    //Marshal distribution name\n";
     e.out << "    int distname_s = distname.size();\n";
@@ -1336,7 +1338,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  //Gather from all callee objects\n";
     e.out << "  iter = _refL.begin();\n";
     e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
-    e.out << "    ::SCIRun::Message* message = (*iter).chan->getMessage();\n";
+    e.out << "    ::SCIRun::Message* message = msgs[i];\n";
     e.out << "    message->waitReply();\n";
     e.out << "    int _x_flag;\n";
     e.out << "    message->unmarshalInt(&_x_flag);\n";
@@ -1352,6 +1354,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    message->destroyMessage();\n";
     e.out << "    ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_ret,&(*iter));\n";
     e.out << "    d_sched->setCalleeRepresentation(distname,arep);\n";
+    e.out << "    delete message;\n";
     e.out << "  }\n";
     e.out << "  d_sched->print();\n";
 #ifdef MxNDEBUG
