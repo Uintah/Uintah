@@ -8,11 +8,17 @@ IncorrectAllocation::IncorrectAllocation(const VarLabel* expectedLabel,
 					 const VarLabel* actualLabel)
   : expectedLabel_(expectedLabel), actualLabel_(actualLabel)
 {
-  if (actualLabel_ == 0) {
-    d_msg = string("Variable Allocation Warning: putting into label ") + expectedLabel_->getName() + " but not allocated for any label";
+  d_msg = makeMessage(expectedLabel, actualLabel);
+}
+
+string IncorrectAllocation::makeMessage(const VarLabel* expectedLabel,
+					const VarLabel* actualLabel)
+{
+  if (actualLabel == 0) {
+    return string("Variable Allocation Warning: putting into label ") + expectedLabel->getName() + " but not allocated for any label";
   }
   else {
-    d_msg = string("Variable Allocation Warning: putting into label ") + expectedLabel_->getName() + " but allocated for " + actualLabel_->getName();
+    return string("Variable Allocation Warning: putting into label ") + expectedLabel->getName() + " but allocated for " + actualLabel->getName();
   }
 }
 
