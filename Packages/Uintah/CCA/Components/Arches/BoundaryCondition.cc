@@ -5062,7 +5062,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
     if (totalFlowRate > 0.0)
       scalarEfficiency = scalarFlowRate / totalFlowRate;
     else 
-      throw InvalidValue("No mixture fraction in the domain");
+      cout << "WARNING! No mixture fraction in the domain." << endl;
     new_dw->put(delt_vartype(scalarEfficiency), d_lab->d_scalarEfficiencyLabel);
 
     if (d_carbon_balance) {
