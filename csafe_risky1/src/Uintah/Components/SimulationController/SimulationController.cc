@@ -235,7 +235,6 @@ void SimulationController::run()
 	    double stdDev, mean;
 	    stdDev = stdDeviation(wallTimes, mean);
 	    ofstream timefile("avg_elapsed_walltime.txt");
-	    timefile << __DATE__ << " " << __TIME__ << endl;
 	    timefile << mean << " +- " << stdDev << endl;
 	  }
 	  prevWallTime = wallTime;
@@ -529,6 +528,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.47.4.5  2000/11/02 00:10:08  witzel
+// Don't output date/time for OUTPUT_AVG_ELAPSED_WALLTIME -- not needed
+//
 // Revision 1.47.4.4  2000/11/01 21:25:48  witzel
 // changed OUTPUT_AVE_ELLAPSED_WALLTIME to OUTPUT_AVG_ELAPSED_WALLTIME
 //
