@@ -20,7 +20,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorFieldOperator.tcl\
 	$(SRCDIR)/TensorParticlesOperator.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI
 
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
