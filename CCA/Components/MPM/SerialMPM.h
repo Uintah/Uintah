@@ -16,8 +16,6 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-class HeatConduction;
-class Fracture;
 class ThermalContact;
 
 /**************************************

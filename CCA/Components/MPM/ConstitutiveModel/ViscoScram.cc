@@ -74,49 +74,38 @@ void ViscoScram::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
-   // Put stuff in here to initialize each particle's
-   // constitutive model parameters and deformationMeasure
-   Matrix3 Identity, zero(0.);
-   Identity.Identity();
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
 
-   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-   ParticleVariable<StateData> statedata;
-   ParticleVariable<Matrix3> deformationGradient, pstress;
-   ParticleVariable<double> pCrackRadius;
-   ParticleVariable<double> pRand;
-   new_dw->allocateAndPut(statedata, p_statedata_label,            pset);
-   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocateAndPut(pstress, lb->pStressLabel,             pset);
-   new_dw->allocateAndPut(pCrackRadius, lb->pCrackRadiusLabel,        pset);
-   new_dw->allocateAndPut(pRand, pRandLabel,                   pset);
+  ParticleVariable<StateData> statedata;
+  ParticleVariable<Matrix3> deformationGradient, pstress;
+  ParticleVariable<double> pCrackRadius;
+  ParticleVariable<double> pRand;
+  new_dw->allocateAndPut(statedata,          p_statedata_label,           pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
+  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
+  new_dw->allocateAndPut(pCrackRadius,       lb->pCrackRadiusLabel,       pset);
+  new_dw->allocateAndPut(pRand,              pRandLabel,                  pset);
 
-   for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++) {
-      statedata[*iter].VolumeChangeHeating = 0.0;
-      statedata[*iter].ViscousHeating = 0.0;
-      statedata[*iter].CrackHeating = 0.0;
-      statedata[*iter].CrackRadius = d_initialData.InitialCrackRadius;
-      for(int imaxwell=0; imaxwell<5; imaxwell++){
-	statedata[*iter].DevStress[imaxwell] = zero;
-      }
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+     statedata[*iter].VolumeChangeHeating = 0.0;
+     statedata[*iter].ViscousHeating = 0.0;
+     statedata[*iter].CrackHeating = 0.0;
+     statedata[*iter].CrackRadius = d_initialData.InitialCrackRadius;
+     for(int imaxwell=0; imaxwell<5; imaxwell++){
+       statedata[*iter].DevStress[imaxwell] = zero;
+     }
 
       deformationGradient[*iter] = Identity;
       pstress[*iter] = zero;
       pCrackRadius[*iter] = 0.0;
 //      pRand[*iter] = drand48();
       pRand[*iter] = .5;
-   }
-   // allocateAndPut instead:
-   /* new_dw->put(statedata,           p_statedata_label); */;
-   // allocateAndPut instead:
-   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pstress,             lb->pStressLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pCrackRadius,        lb->pCrackRadiusLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pRand,               pRandLabel); */;
+  }
 
    computeStableTimestep(patch, matl, new_dw);
 }
@@ -144,9 +133,9 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
-  int matlindex = matl->getDWIndex();
+  int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
+  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   constParticleVariable<StateData> statedata;
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
@@ -204,9 +193,9 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-    int matlindex = matl->getDWIndex();
+    int dwi = matl->getDWIndex();
     // Create array for the particle position
-    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> deformationGradient_new;
@@ -219,27 +208,27 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pRand;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc,         pset);
-    new_dw->allocateAndPut(pstressnew, lb->pStressLabel_preReloc,     pset);
-    new_dw->allocateAndPut(pCrackRadius, lb->pCrackRadiusLabel_preReloc,pset);
-    new_dw->allocateAndPut(statedata, p_statedata_label_preReloc,         pset);
-    old_dw->copyOut(statedata, p_statedata_label,                   pset);    
-    new_dw->allocateAndPut(pRand, pRandLabel_preReloc,                    pset);
-    old_dw->copyOut(pRand, pRandLabel,                              pset);    
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                          lb->pDeformationMeasureLabel_preReloc,          pset);
+    new_dw->allocateAndPut(pstressnew,   lb->pStressLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pCrackRadius, lb->pCrackRadiusLabel_preReloc,  pset);
+    new_dw->allocateAndPut(statedata,     p_statedata_label_preReloc,     pset);
+    old_dw->copyOut(statedata,            p_statedata_label,              pset);
+    new_dw->allocateAndPut(pRand,         pRandLabel_preReloc,            pset);
+    old_dw->copyOut(pRand,                pRandLabel,                     pset);    
 
     ASSERTEQ(pset, statedata.getParticleSubset());
 
     constNCVariable<Vector> gvelocity;
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
-            Ghost::AroundCells, 1);
+    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, Ghost::AroundCells,1);
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
     constParticleVariable<Vector> psize;
@@ -588,19 +577,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 	delT_new = 100.0;
     }
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(pstressnew,            lb->pStressLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(statedata,             p_statedata_label_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(pRand,                 pRandLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(pvolume_deformed,      lb->pVolumeDeformedLabel); */;
   }
 }
 
