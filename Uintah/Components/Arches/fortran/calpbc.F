@@ -4,16 +4,11 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE calpbc(indexLow, indexHigh, NEL, NSP, PCELL,
-     &     PP,
-     &     UU, VV, WW,
-     &     DEN,
-     &     FF, GG, HH, ETA, GETA,
-     &     XX, YY, ZZ,
-     &     UINLT, VINLT, WINLT,
-     &     DTIME, TTIME,
-     &     FSC, ETASC, HSEC,
-     &     LPRTRB, LNORM, LCALH,
+      SUBROUTINE calpbc(domLoU, domHiU, UU,
+     &     domLoV, domHiV, VV,
+     &     domLoW, domHiW, WW,
+     &     domLo, domHi, idxLo, idxHi, PP, DEN, PCELL,
+     &     PFIELD, BndryPress,
      &     ierr)
 C-----------------------------------------------------------------------
 C
@@ -56,55 +51,34 @@ C-----------------------------------------------------------------------
       implicit none
 
 #include "param4.h"
-#include "pcell.h"
 
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer NEL
-      integer NSP
-      integer PCELL(indexLow(1):indexHigh(1), indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision PP(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision UU(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision VV(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision WW(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision DEN(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision FF(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision GG(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision HH(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision ETA(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision GETA(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision UINLT(indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision VINLT(indexLow(1):indexHigh(1), 
-     &     indexLow(3):indexHigh(3))
-      double precision WINLT(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2))
-      double precision XX(indexLow(1):indexHigh(1))
-      double precision YY(indexLow(2):indexHigh(2))
-      double precision ZZ(indexLow(3):indexHigh(3))
-      double precision DTIME, TTIME
-      double precision FSC, ETASC, HSEC
-      logical LPRTRB, LNORM, LCALH
+      integer domLoU(3), domHiU(3)
+      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+     &     domLoU(3):domHiU(3))
+      integer domLoV(3), domHiV(3)
+      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      integer domLoW(3), domHiW(3)
+      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
+     &     domLoW(3):domHiW(3))
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      double precision PP(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      double precision BndryPress
+      integer PFIELD
       integer ierr
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      logical LPRTRB
+      logical LNORM
       integer iBegGhost, jBegGhost, kBegGhost, NI, NJ, NK
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
@@ -118,57 +92,38 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      NI = indexHigh(1)
-      NJ = indexHigh(2)
-      NK = indexHigh(3)
+      iBegGhost = domLoU(1)
+      jBegGhost = domLoV(2)
+      kBegGhost = domLoW(3)
+      NI = domHiU(1) - 1
+      NJ = domHiV(2) - 1
+      NK = domHiW(3) - 1
 
-      IST = iBegGhost+1
-      JST = jBegGhost+1
-      KST = kBegGhost+1
-      IEND = NI-1
-      JEND = NJ-1
-      KEND = NK-1
+      IST = idxLo(1)
+      JST = idxLo(2)
+      KST = idxLo(3)
+      IEND = idxHi(1)
+      JEND = idxHi(2)
+      KEND = idxHi(3)
       
-      LPRTRB = .FALSE.
-      DXPRD = 0.2*(XX(NI)+YY(NJ)+ZZ(NK))/3.0
-      DTPRD = 25.*DTIME
-      DTPRD = 2.*DTIME
-      DPMAG = 10.
-      DPMAG = 1.
-      P0 = 0.0
       FACK = 1.0
-      URFBC = 0.5
+      URFBC = 1.0
+      LNORM = .TRUE.
 C     
 C       First define what will be the variables on INLETS
 C
-      FFF = FSC
-      GGG = 0.0
-      EEE = ETASC
-      GE = 0.0
-      HHH = HSEC
+
 C     
 C	Calculate pbc for I=1 (West) side of domain
 C
       I = iBegGhost
       DO 140 K=KST,KEND
          DO 130 J=JST,JEND
-            IF (PCELL(I,J,K) .EQ. PBCFLD) THEN
-                PPP = P0
-                if (LPRTRB) then
-                  xpos = mod(XX(I),DXPRD)/DXPRD
-                  ypos = mod(YY(J),DXPRD)/DXPRD
-                  zpos = mod(ZZ(K),DXPRD)/DXPRD
-                  xyzpos = (xpos+ypos+zpos)*DTPRD
-                  frac = mod(TTIME+xyzpos,DTPRD)/DTPRD
-                  dp = DPMAG*sin(2.0*PI*FRAC)
-                  PPP = PPP + dp
-                end if
+            IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                PPP = BndryPress
                 PP(I,J,K) = PPP
                 DENFACE = 0.5*(DEN(I,J,K)+DEN(I+1,J,K))
-                DELP = PPP - PP(I-1,J,K)
+                DELP = PPP - PP(I+1,J,K)
                 UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
                 UMAG = UMAG/SQRT(FACK)
                 UVEL = UU(I+2,J,K)
@@ -188,15 +143,9 @@ C
                 UU(I+1,J,K) = UVEL
                 UU(I,J,K) = UVEL
                 IF (UVEL.GT.0.0) THEN
-                  UU(I,J,K) = UVEL
                   VV(I,J,K) = VVEL
                   WW(I,J,K) = WVEL
                   PP(I,J,K) = PPP
-                  FF(I,J,K) = FFF
-                  GG(I,J,K) = GGG
-                  ETA(I,J,K) = EEE
-                  GETA(I,J,K) = GE
-                  IF (LCALH) HH(I,J,K) = HHH
                 END IF
 	      END IF
 130	    CONTINUE
@@ -207,17 +156,8 @@ C
           I = NI
 	  DO 190 K=KST,KEND
 	    DO 180 J=JST,JEND
-	      IF (PCELL(I,J,K) .EQ. PBCFLD) THEN
-                PPP = P0
-                if (LPRTRB) then
-                  xpos = mod(XX(i),DXPRD)/DXPRD
-                  ypos = mod(YY(j),DXPRD)/DXPRD
-                  zpos = mod(ZZ(k),DXPRD)/DXPRD
-                  xyzpos = (xpos+ypos+zpos)*DTPRD
-                  frac = mod(TTIME+xyzpos,DTPRD)/DTPRD
-                  dp = DPMAG*SIN(2.0*PI*frac)
-                  PPP = PPP + dp
-                end if
+	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                PPP = BndryPress
                 PP(I,J,K) = PPP
                 DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
                 DELP = PPP - PP(I-1,J,K)
@@ -236,19 +176,13 @@ C
                   VVEL = VVEL*ABS(UMAG)/UMAGINT
                   WVEL = WVEL*ABS(UMAG)/UMAGINT
                 END IF
-                UVEL = UVEL*URFBC + UINLT(J,K)*(1.0-URFBC)
+                UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
                 UU(NI,J,K) = UVEL
-                UINLT(J,K) = UVEL
+                UU(NI+1,J,K) = UVEL
                 IF (UVEL.LT.0.0) THEN
-                  UINLT(J,K) = UVEL
                   VV(I,J,K) = VVEL
                   WW(I,J,K) = WVEL
                   PP(I,J,K) = PPP
-                  FF(I,J,K) = FFF
-                  GG(I,J,K) = GGG
-                  ETA(I,J,K) = EEE
-                  GETA(I,J,K) = GE
-                  IF (LCALH) HH(I,J,K) = HHH
                 END IF
 	      END IF
 180	    CONTINUE
@@ -259,17 +193,8 @@ C
 	  J = jBegGhost
 	  DO 240 K=KST,KEND
 	    DO 230 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PBCFLD) THEN
-                PPP = P0
-                if (LPRTRB) then
-                  xpos = mod(XX(i),DXPRD)/DXPRD
-                  ypos = mod(YY(j),DXPRD)/DXPRD
-                  zpos = mod(ZZ(k),DXPRD)/DXPRD
-                  xyzpos = (xpos+ypos+zpos)*DTPRD
-                  frac = mod(TTIME+xyzpos,DTPRD)/DTPRD
-                  dp = DPMAG*SIN(2.0*PI*frac)
-                  PPP = PPP + dp
-                end if
+	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                PPP = BndryPress
                 PP(I,J,K) = PPP
                 DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J+1,K))
                 DELP = PPP - PP(I,J+1,K)
@@ -293,14 +218,8 @@ C
                 VV(I,J,K) = VVEL
                 IF (VVEL.GT.0.0) THEN
                   UU(I,J,K) = UVEL
-                  VV(I,J,K) = VVEL
                   WW(I,J,K) = WVEL
                   PP(I,J,K) = PPP
-                  FF(I,J,K) = FFF
-                  GG(I,J,K) = GGG
-                  ETA(I,J,K) = EEE
-                  GETA(I,J,K) = GE
-                  IF (LCALH) HH(I,J,K) = HHH
                 END IF
 	      END IF
 230	    CONTINUE
@@ -311,17 +230,8 @@ C
 	  J = NJ
 	  DO 290 K=KST,KEND
 	    DO 280 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PBCFLD) THEN
-                PPP = P0
-                if (LPRTRB) then
-                  xpos = mod(XX(i),DXPRD)/DXPRD
-                  ypos = mod(YY(j),DXPRD)/DXPRD
-                  zpos = mod(ZZ(k),DXPRD)/DXPRD
-                  xyzpos = (xpos+ypos+zpos)*DTPRD
-                  frac = mod(ttime+xyzpos,DTPRD)/DTPRD
-                  dp = DPMAG*SIN(2.0*PI*frac)
-                  PPP = PPP + dp
-                end if
+	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                PPP = BndryPress
                 PP(I,J,K) = PPP
                 DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))
                 DELP = PPP - PP(I,J-1,K)
@@ -340,18 +250,12 @@ C
                   VVEL = ABS(VVEL)*UMAG/UMAGINT
                   WVEL = WVEL*ABS(UMAG)/UMAGINT
                 END IF
-                VVEL = URFBC*VVEL + VINLT(I,K)*(1.0-URFBC)
+                VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0-URFBC)
                 VV(I,NJ,K) = VVEL
-                VINLT(I,K) = VVEL
+                VV(I,J+1,K) = VVEL
                 IF (VVEL.LT.0.0) THEN
                   UU(I,J,K) = UVEL
-                  VINLT(I,K) = VVEL
                   WW(I,J,K) = WVEL
-                  FF(I,J,K) = FFF
-                  GG(I,J,K) = GGG
-                  ETA(I,J,K) = EEE
-                  GETA(I,J,K) = GE
-                  IF (LCALH) HH(I,J,K) = HHH
                 END IF
 	      END IF
 280	    CONTINUE
@@ -362,17 +266,8 @@ C
 	  K = kBegGhost
 	  DO 340 J=JST,JEND
 	    DO 330 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PBCFLD) THEN
-                PPP = P0
-                if (LPRTRB) then
-                  xpos = mod(XX(i),DXPRD)/DXPRD
-                  ypos = mod(YY(j),DXPRD)/DXPRD
-                  zpos = mod(ZZ(k),DXPRD)/DXPRD
-                  xyzpos = (xpos+ypos+zpos)*DTPRD
-                  frac = mod(TTIME+xyzpos,DTPRD)/DTPRD
-                  dp = DPMAG*SIN(2.0*PI*frac)
-                  PPP = PPP + dp
-                end if
+	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                PPP = BndryPress
                 PP(I,J,K) = PPP
                 DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))
                 DELP = PPP - PP(I,J,K+1)
@@ -397,13 +292,7 @@ C
                 IF (WVEL.GT.0.0) THEN
                   UU(I,J,K) = UVEL
                   VV(I,J,K) = VVEL
-                  WW(I,J,K) = WVEL
                   PP(I,J,K) = PPP
-                  FF(I,J,K) = FFF
-                  GG(I,J,K) = GGG
-                  ETA(I,J,K) = EEE
-                  GETA(I,J,K) = GE
-                  IF (LCALH) HH(I,J,K) = HHH
                 END IF
 	      END IF
 330	    CONTINUE
@@ -414,17 +303,8 @@ C
 	  K = NK
 	  DO 390 J=JST,JEND
 	    DO 380 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PBCFLD) THEN
-                PPP = P0
-                if (LPRTRB) then
-                  xpos = mod(XX(i),DXPRD)/DXPRD
-                  ypos = mod(YY(j),DXPRD)/DXPRD
-                  zpos = mod(ZZ(k),DXPRD)/DXPRD
-                  xyzpos = (xpos+ypos+zpos)*DTPRD
-                  frac = mod(TTIME+xyzpos,DTPRD)/DTPRD
-                  dp = DPMAG*SIN(2.0*PI*frac)
-                  PPP = PPP + dp
-                end if
+	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                PPP = BndryPress
                 PP(I,J,K) = PPP
                 DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))
                 DELP = PPP - PP(I,J,K-1)
@@ -443,19 +323,13 @@ C
                   VVEL = VVEL*ABS(UMAG)/UMAGINT
                   WVEL = ABS(WVEL)*UMAG/UMAGINT
                 END IF
-                WVEL = URFBC*WVEL + WINLT(I,J)*(1.0-URFBC)
+                WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0-URFBC)
                 WW(I,J,NK) = WVEL
-                WINLT(I,J) = WVEL
+                WW(I,J,K+1) = WVEL
                 IF (WVEL.LT.0.0) THEN
                   UU(I,J,K) = UVEL
                   VV(I,J,K) = VVEL
-                  WINLT(I,J) = WVEL
                   PP(I,J,K) = PPP
-                  FF(I,J,K) = FFF
-                  GG(I,J,K) = GGG
-                  ETA(I,J,K) = EEE
-                  GETA(I,J,K) = GE
-                  IF (LCALH) HH(I,J,K) = HHH
                 END IF
 	      END IF
 380	    CONTINUE
@@ -467,6 +341,9 @@ C
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/07 23:07:47  rawat
+c added inlet bc's
+c
 c Revision 1.1  2000/04/12 20:31:44  rawat
 c modified PressureSolver and added fortran subroutines
 c

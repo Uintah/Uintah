@@ -159,7 +159,9 @@ Arches::scheduleInitialize(const LevelP& level,
   // require : densityCP, viscosityIN, [u,v,w]VelocitySP
   // compute : viscosityCTS
   d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
-
+  // Computes velocities at apecified pressure b.c's
+  if (d_boundaryCondition->getPressureBC()) 
+    d_boundaryCondition->sched_computePressureBC(level, sched, dw, dw);
   // NOTE : Sched pressure BC requires pressureCoeff. That has not been 
   // computed yet in this flow.
   //d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
@@ -335,6 +337,9 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.50  2000/07/07 23:07:44  rawat
+// added inlet bc's
+//
 // Revision 1.49  2000/06/30 06:29:41  bbanerje
 // Got Inlet Area to be calculated correctly .. but now two CellInformation
 // variables are being created (Rawat ... check that).

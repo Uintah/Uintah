@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Components/Arches/fortran
 
 SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F $(SRCDIR)/profv.F \
-	$(SRCDIR)/profscalar.F $(SRCDIR)/smagmodel.F \
+	$(SRCDIR)/profscalar.F  $(SRCDIR)/smagmodel.F $(SRCDIR)/calpbc.F \
 	$(SRCDIR)/inlbcs.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
@@ -43,6 +43,9 @@ FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conve
 
 #
 # $Log$
+# Revision 1.15  2000/07/07 23:07:48  rawat
+# added inlet bc's
+#
 # Revision 1.14  2000/07/03 05:30:22  bbanerje
 # Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 #

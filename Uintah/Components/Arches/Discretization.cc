@@ -193,26 +193,40 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   for (int ii = 0; ii < nofStencils; ii++) {
     switch(eqnType) {
     case PRESSURE:
-      new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
-      new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
-      new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
-      new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
-		       patch);
-      new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
-		       patch);
-      new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii, 
-		       patch);
+      if (index == 1) {
+	new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
+	new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
+			 patch);
+      }
+      else if (index == 2) {
+	new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
+	new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
+			 patch);
+      }
+      else if (index == 3) {
+	new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
+	new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii, 
+			 patch);
+      }
+      else
+	throw InvalidValue("Invalid index, should lie between {1,3]");
       break;
     case MOMENTUM:
-      new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
-      new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
-      new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
-      new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
-		       patch);
-      new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
-		       patch);
-      new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefMBLMLabel, ii, 
-		       patch);
+      if (index == 1) {
+	new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
+	new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
+			 patch);
+      }
+      else if (index == 2) {
+	new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
+	new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
+			 patch);
+      }
+      else {
+	new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
+	new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefMBLMLabel, ii, 
+			 patch);
+      }
       break;
     default:
       throw InvalidValue("EqnType in calcVelCoef should be 0 or 1");
@@ -236,8 +250,51 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   IntVector domHi = density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+#ifdef WONT_COMPILE_YET  
+  if (index == 1) {
+    FORT_UVELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
+		  idxLoU.get_pointer(), idxHiU.get_pointer(),
+		  uVelocity.getPointer(),
+		  uVelocityConvectCoeff[StencilMatrix::AE].getPointer(), 
+		  uVelocityConvectCoeff[StencilMatrix::AW].getPointer(), 
+		  uVelocityConvectCoeff[StencilMatrix::AN].getPointer(), 
+		  uVelocityConvectCoeff[StencilMatrix::AS].getPointer(), 
+		  uVelocityConvectCoeff[StencilMatrix::AT].getPointer(), 
+		  uVelocityConvectCoeff[StencilMatrix::AB].getPointer(), 
+		  uVelocityCoeff[StencilMatrix::AP].getPointer(), 
+		  uVelocityCoeff[StencilMatrix::AE].getPointer(), 
+		  uVelocityCoeff[StencilMatrix::AW].getPointer(), 
+		  uVelocityCoeff[StencilMatrix::AN].getPointer(), 
+		  uVelocityCoeff[StencilMatrix::AS].getPointer(), 
+		  uVelocityCoeff[StencilMatrix::AT].getPointer(), 
+		  uVelocityCoeff[StencilMatrix::AB].getPointer(), 
+		  domLoV.get_pointer(), domHiV.get_pointer(),
+		  vVelocity.getPointer(),
+		  domLoW.get_pointer(), domHiW.get_pointer(),
+		  wVelocity.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  density.getPointer(),
+		  viscosity.getPointer(),
+		  &delta_t,
+		  cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(),
+		  cellinfo->cwwu.get_objs(),
+		  cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
+		  cellinfo->css.get_objs(),
+		  cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
+		  cellinfo->cbb.get_objs(),
+		  cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
+		  cellinfo->stb.get_objs(),
+		  cellinfo->dxepu.get_objs(), cellinfo->dynp.get_objs(),
+		  cellinfo->dztp.get_objs(),
+		  cellinfo->dxpw.get_objs(), cellinfo->fac1u.get_objs(),
+		  cellinfo->fac2u.get_objs(),
+		  cellinfo->fac3u.get_objs(), cellinfo->fac4u.get_objs(),
+		  cellinfo->iesdu.get_objs(),
+		  cellinfo->iwsdu.get_objs(), cellinfo->enfac.get_objs(),
+		  cellinfo->sfac.get_objs(),
+		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
+  }
 
-#ifdef WONT_COMPILE_YET
 
   int ioff = 1;
   int joff = 0;
@@ -792,6 +849,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.22  2000/07/07 23:07:45  rawat
+// added inlet bc's
+//
 // Revision 1.21  2000/07/03 05:30:14  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -177,7 +177,7 @@ private:
       Vector d_pressRef;
 
       // const VarLabel* (required)
-      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_pressureSPBCLabel;
       const VarLabel* d_uVelocitySIVBCLabel;
       const VarLabel* d_vVelocitySIVBCLabel;
       const VarLabel* d_wVelocitySIVBCLabel;
@@ -213,6 +213,9 @@ private:
 
 //
 // $Log$
+// Revision 1.21  2000/07/07 23:07:45  rawat
+// added inlet bc's
+//
 // Revision 1.20  2000/07/03 05:30:15  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //
