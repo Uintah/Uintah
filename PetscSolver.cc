@@ -72,7 +72,7 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
 //  int argc = 2;
   int argc = 4;
   char** argv;
-  argv = new char*[2];
+  argv = new char*[argc];
   argv[0] = "PetscSolver::problemSetup";
   //argv[1] = "-on_error_attach_debugger";
   argv[1] = "-no_signal_handler";
@@ -198,8 +198,8 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
-    IntVector lowIndex = patch->getGhostCellLowIndex(1);
-    IntVector highIndex = patch->getGhostCellHighIndex(1);
+    IntVector lowIndex = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
+    IntVector highIndex = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalCells=0;
@@ -390,8 +390,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
-  IntVector lowIndex = patch->getGhostCellLowIndex(1);
-  IntVector highIndex = patch->getGhostCellHighIndex(1);
+  IntVector lowIndex = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector highIndex = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
