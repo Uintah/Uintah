@@ -2097,11 +2097,9 @@ BoundaryCondition::WallBdry::WallBdry(int cellID):
 //****************************************************************************
 BoundaryCondition::WallBdry::~WallBdry()
 {
-#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
-#endif
 }
 
 
@@ -2128,11 +2126,9 @@ BoundaryCondition::IntrusionBdry::IntrusionBdry(int cellID):
 //****************************************************************************
 BoundaryCondition::IntrusionBdry::~IntrusionBdry()
 {
-#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
-#endif
 }
 
 //****************************************************************************
@@ -2181,9 +2177,12 @@ BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
   streamMixturefraction(copy.streamMixturefraction),
   turb_lengthScale(copy.turb_lengthScale),
   calcStream(copy.calcStream),
-  d_geomPiece(copy.d_geomPiece),
   d_area_label(copy.d_area_label)
 {
+  for (vector<GeometryPiece*>::const_iterator it = copy.d_geomPiece.begin();
+       it != copy.d_geomPiece.end(); ++it)
+    d_geomPiece.push_back((*it)->clone());
+
   d_area_label->addReference();
 }
 
@@ -2209,11 +2208,9 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
 BoundaryCondition::FlowInlet::~FlowInlet()
 {
   VarLabel::destroy(d_area_label);
-#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
-#endif
 }
 
 //****************************************************************************
@@ -2277,11 +2274,9 @@ BoundaryCondition::PressureInlet::PressureInlet(int /*numMix*/, int cellID):
 //****************************************************************************
 BoundaryCondition::PressureInlet::~PressureInlet()
 {
-#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
-#endif
 }
 
 //****************************************************************************
@@ -2339,12 +2334,11 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int /*numMix*/, int cellID):
 //****************************************************************************
 BoundaryCondition::FlowOutlet::~FlowOutlet()
 {
-#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
-#endif
 }
+
 //****************************************************************************
 // Problem Setup for BoundaryCondition::FlowOutlet
 //****************************************************************************
