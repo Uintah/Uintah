@@ -92,9 +92,9 @@ void HexMC<Field>::reset( int n, bool build_trisurf )
   triangles_ = new GeomTrianglesP;
   triangles_->reserve_clear((int)(n*2.5));
   vertex_map_.clear();
-  nx_ = mesh_->get_nx();
-  ny_ = mesh_->get_ny();
-  nz_ = mesh_->get_nz();
+  nx_ = mesh_->get_ni();
+  ny_ = mesh_->get_nj();
+  nz_ = mesh_->get_nk();
   if (build_trisurf_)
     trisurf_ = new TriSurfMesh; 
   else 

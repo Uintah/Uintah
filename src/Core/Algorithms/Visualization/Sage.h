@@ -357,9 +357,9 @@ void Sage<F>::set_field( Field *gf )
 
     mesh = field->get_typed_mesh();
 
-    nx = mesh->get_nx()-1;
-    ny = mesh->get_ny()-1;
-    nz = mesh->get_nz()-1;
+    nx = mesh->get_ni()-1;
+    ny = mesh->get_nj()-1;
+    nz = mesh->get_nk()-1;
     
     Point bmin = mesh->get_min();
     Point bmax = mesh->get_max();
