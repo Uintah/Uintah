@@ -138,7 +138,7 @@ void TensorFieldExtractor::execute()
    archiveH = handle;
    DataArchive& archive = *((*(archiveH.get_rep()))());
   // get time, set timestep, set generation, update grid and update gui
-  double time = update(); // yeah it does all that
+  double time = field_update(); // yeah it does all that
 
   LevelP level = grid->getLevel( level_.get() );
   IntVector hi, low, range;
@@ -154,11 +154,11 @@ void TensorFieldExtractor::execute()
   if(var != ""){
     switch( type->getType() ) {
     case TypeDescription::NCVariable:
-//       if( mesh_handle_.get_rep() == 0 ){
+      if( mesh_handle_.get_rep() == 0 ){
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
-//       }
+      }
       switch ( subtype->getType() ) {
       case TypeDescription::Matrix3:
 	{	

@@ -71,8 +71,8 @@ using namespace SCIRun;
 				 const string& cat,
 				 const string& pack)
   : Module(name, ctx, Filter, cat, pack),
-    generation(-1),  timestep(-1), material(-1), grid(0), 
-    level_(ctx->subVar("level")),
+    generation(-1),  timestep(-1), material(-1), levelnum(0),
+    level_(ctx->subVar("level")), grid(0), 
     archiveH(0), mesh_handle_(0)
 { 
 
@@ -94,7 +94,7 @@ void FieldExtractor::build_GUI_frame()
 
 //------------------------------------------------------------- 
 // get time, set timestep, set generation, update grid and update gui
-double FieldExtractor::update()
+double FieldExtractor::field_update()
 {
    DataArchive& archive = *((*(archiveH.get_rep()))());
    // set the index for the correct timestep.
@@ -114,7 +114,11 @@ double FieldExtractor::update()
      mesh_handle_ = 0;
      archive.queryTimesteps( indices, times );
    }
-   
+
+   if( levelnum != level_.get() ){
+     mesh_handle_ = 0;
+     levelnum = level_.get();
+   }
    if (timestep != new_timestep) {
      time = times[new_timestep];
      grid = archive.queryGrid(time);
