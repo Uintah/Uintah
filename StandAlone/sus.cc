@@ -35,6 +35,7 @@
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Thread/Mutex.h>
@@ -464,6 +465,7 @@ main(int argc, char** argv)
 
     // Shutdown XML crap
     XMLPlatformUtils::Terminate();
+    Uintah::TypeDescription::deleteAll();
 
     /*
      * Finalize MPI
