@@ -116,4 +116,17 @@ public:
     void set(const Vector&);
 };
 
+class Color;
+class TCLColor : public TCLvar {
+    TCLdouble r;
+    TCLdouble g;
+    TCLdouble b;
+public:
+    TCLColor(const clString& name, const clString& id, TCL* tcl);
+    ~TCLColor();
+
+    Color get();
+    void set(const Color&);
+};
+
 #endif
