@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/OpenGLWindow.cc \
 	$(SRCDIR)/Point2d.cc \
 	$(SRCDIR)/Polyline.cc \
+	$(SRCDIR)/ParametricPolyline.cc \
 	$(SRCDIR)/LockedPolyline.cc \
 	$(SRCDIR)/ScrolledOpenGLWindow.cc \
 	$(SRCDIR)/Vector2d.cc \
