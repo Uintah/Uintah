@@ -28,6 +28,8 @@
 find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
+#ifdef __sgi
+
 #include <Dataflow/Ports/SimplePort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColorMap.h>
@@ -40,3 +42,4 @@ template class SimpleOPort<MatrixHandle>;
 template class SimpleIPort<ColorMapHandle>;
 template class SimpleOPort<ColorMapHandle>;
 
+#endif
