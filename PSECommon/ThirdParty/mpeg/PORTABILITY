@@ -1,0 +1,10 @@
+
+One user has compiled the P64 program on a P.C. using gcc with the
+fread/fwrite command modified to "rb" "wb" for the binary files.  The
+same modification should probably work for the MPEG program.
+
+For modification of the htable.lex and lexer.l file: Lex does not
+accept comments in the heading, unfortunately, the automatic header
+program puts that at the top.  Put the first comment (pvrg disclaimer,
+etc.) into the %{ %} body and all should be fine.
+
