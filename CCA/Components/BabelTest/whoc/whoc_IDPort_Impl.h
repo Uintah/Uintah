@@ -3,15 +3,15 @@
  * Symbol:        whoc.IDPort-v1.0
  * Symbol Type:   class
  * Babel Version: 0.7.4
- * SIDL Created:  20030305 18:50:10 MST
- * Generated:     20030305 18:50:23 MST
+ * SIDL Created:  20030227 09:45:24 MST
+ * Generated:     20030227 09:45:31 MST
  * Description:   Server-side implementation for whoc.IDPort
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
  * babel-version = 0.7.4
  * source-line   = 7
- * source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/whoc/whoc.sidl
+ * source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/whoc/whoc.sidl
  */
 
 #ifndef included_whoc_IDPort_Impl_h
