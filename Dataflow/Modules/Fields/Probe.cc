@@ -178,8 +178,19 @@ Probe::execute()
       bmax.z(bmax.z() + size_estimate);
     }
 
-    const Point center = bmin + Vector(bmax - bmin) * 0.5;
+    Point center = bmin + Vector(bmax - bmin) * 0.5;
     const double l2norm = (bmax - bmin).length();
+
+    // If the current location looks reasonable, use that instead
+    // of the center.
+    Point location(gui_locx_.get(), gui_locy_.get(), gui_locz_.get());
+    
+    if (location.x() >= bmin.x() && location.x() <= bmax.x() && 
+	location.y() >= bmin.y() && location.y() <= bmax.y() && 
+	location.z() >= bmin.z() && location.z() <= bmax.z())
+    {
+      center = location;
+    }
 
     widget_->SetScale(l2norm * 0.015);
     widget_->SetPosition(center);
@@ -207,6 +218,33 @@ Probe::execute()
   {
     const Point newloc(gui_locx_.get(), gui_locy_.get(), gui_locz_.get());
     widget_->SetPosition(newloc);
+    moved_p = true;
+  }
+  else if (moveto == "center")
+  {
+    Point bmin = bbox.min();
+    Point bmax = bbox.max();
+
+    // Fix degenerate boxes.
+    const double size_estimate = Max((bmax-bmin).length() * 0.01, 1.0e-5);
+    if (fabs(bmax.x() - bmin.x()) < 1.0e-6)
+    {
+      bmin.x(bmin.x() - size_estimate);
+      bmax.x(bmax.x() + size_estimate);
+    }
+    if (fabs(bmax.y() - bmin.y()) < 1.0e-6)
+    {
+      bmin.y(bmin.y() - size_estimate);
+      bmax.y(bmax.y() + size_estimate);
+    }
+    if (fabs(bmax.z() - bmin.z()) < 1.0e-6)
+    {
+      bmin.z(bmin.z() - size_estimate);
+      bmax.z(bmax.z() + size_estimate);
+    }
+
+    Point center = bmin + Vector(bmax - bmin) * 0.5;
+    widget_->SetPosition(center);
     moved_p = true;
   }
   else if (moveto != "")

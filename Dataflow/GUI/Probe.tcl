@@ -69,6 +69,11 @@ itcl_class SCIRun_Fields_Probe {
 	$this-c needexecute
     }
 
+    method move_center {} {
+	set $this-moveto "center"
+	$this-c needexecute
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -77,54 +82,62 @@ itcl_class SCIRun_Fields_Probe {
         }
         toplevel $w
 
-	frame $w.labels
-	frame $w.entries
-	frame $w.entries.loc
+	frame $w.f
+	frame $w.f.labels
+	frame $w.f.entries
+	frame $w.f.entries.loc
 
 
-	label $w.labels.location -text "Location" -just left
-	entry $w.entries.loc.locx -width 10 -textvariable $this-locx
-	entry $w.entries.loc.locy -width 10 -textvariable $this-locy
-	entry $w.entries.loc.locz -width 10 -textvariable $this-locz
+	label $w.f.labels.location -text "Location" -just left
+	entry $w.f.entries.loc.locx -width 10 -textvariable $this-locx
+	entry $w.f.entries.loc.locy -width 10 -textvariable $this-locy
+	entry $w.f.entries.loc.locz -width 10 -textvariable $this-locz
 
-	label $w.labels.value -text "Value" -just left
-	entry $w.entries.value -width 40 -state disabled -textvariable $this-value
+	label $w.f.labels.value -text "Value" -just left
+	entry $w.f.entries.value -width 40 -state disabled -textvariable $this-value
 
-	label $w.labels.node -text "Node" -just left
-	entry $w.entries.node -width 10 -textvariable $this-node
+	label $w.f.labels.node -text "Node" -just left
+	entry $w.f.entries.node -width 10 -textvariable $this-node
 
-	label $w.labels.edge -text "Edge" -just left
-	entry $w.entries.edge -width 10 -textvariable $this-edge
+	label $w.f.labels.edge -text "Edge" -just left
+	entry $w.f.entries.edge -width 10 -textvariable $this-edge
 
-	label $w.labels.face -text "Face" -just left
-	entry $w.entries.face -width 10 -textvariable $this-face
+	label $w.f.labels.face -text "Face" -just left
+	entry $w.f.entries.face -width 10 -textvariable $this-face
 
-	label $w.labels.cell -text "Cell" -just left
-	entry $w.entries.cell -width 10 -textvariable $this-cell
+	label $w.f.labels.cell -text "Cell" -just left
+	entry $w.f.entries.cell -width 10 -textvariable $this-cell
 
-	pack $w.labels.location $w.labels.value \
-		$w.labels.node $w.labels.edge \
-		$w.labels.face $w.labels.cell \
+	pack $w.f.labels.location $w.f.labels.value \
+		$w.f.labels.node $w.f.labels.edge \
+		$w.f.labels.face $w.f.labels.cell \
 		-side top -anchor w
 
-	pack $w.entries.loc.locx $w.entries.loc.locy $w.entries.loc.locz \
+	pack $w.f.entries.loc.locx $w.f.entries.loc.locy $w.f.entries.loc.locz \
 		-side left -anchor n -expand yes -fill x
 
-	pack $w.entries.loc -side top -expand yes -fill x
-	pack $w.entries.value \
-		$w.entries.node $w.entries.edge \
-		$w.entries.face $w.entries.cell \
+	pack $w.f.entries.loc -side top -expand yes -fill x
+	pack $w.f.entries.value \
+		$w.f.entries.node $w.f.entries.edge \
+		$w.f.entries.face $w.f.entries.cell \
 		-side top -anchor w
 
-	pack $w.labels $w.entries -side left
+	pack $w.f.labels $w.f.entries -side left
 
-	bind $w.entries.loc.locx <KeyPress-Return> "$this move_location"
-	bind $w.entries.loc.locy <KeyPress-Return> "$this move_location"
-	bind $w.entries.loc.locz <KeyPress-Return> "$this move_location"
-	bind $w.entries.node <KeyPress-Return> "$this move_node"
-	bind $w.entries.edge <KeyPress-Return> "$this move_edge"
-	bind $w.entries.face <KeyPress-Return> "$this move_face"
-	bind $w.entries.cell <KeyPress-Return> "$this move_cell"
+	bind $w.f.entries.loc.locx <KeyPress-Return> "$this move_location"
+	bind $w.f.entries.loc.locy <KeyPress-Return> "$this move_location"
+	bind $w.f.entries.loc.locz <KeyPress-Return> "$this move_location"
+	bind $w.f.entries.node <KeyPress-Return> "$this move_node"
+	bind $w.f.entries.edge <KeyPress-Return> "$this move_edge"
+	bind $w.f.entries.face <KeyPress-Return> "$this move_face"
+	bind $w.f.entries.cell <KeyPress-Return> "$this move_cell"
+
+	frame $w.controls
+	button $w.controls.reset -text "Reset" -command "$this move_center"
+	button $w.controls.close -text "Close" -command "destroy $w"
+	pack $w.controls.reset $w.controls.close -side left -expand yes -fill x
+
+	pack $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     }
 }
 
