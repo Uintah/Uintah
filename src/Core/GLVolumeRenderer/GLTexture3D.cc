@@ -150,8 +150,8 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   }
 
   BBox bbox = mesh->get_bounding_box();
-  minP_ = bbox.min();
-  maxP_ = bbox.max();
+  minP_ = Point(0,0,0); //bbox.min();
+  maxP_ = Point(mesh->get_nx(), mesh->get_ny(), mesh->get_nz()); //bbox.max();
   cerr <<"X_, Y_, Z_ = "<<X_<<", "<<Y_<<", "<<Z_<<endl;
   cerr << "use_minmax = "<<use_minmax<<"  min="<<min<<" max="<<max<<"\n";
   cerr << "    fieldminmax: min="<<minmax.first<<" max="<<minmax.second<<"\n";

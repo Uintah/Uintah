@@ -76,11 +76,14 @@ GLVolRenState::computeView(Ray& ray)
      2  6 10 14
      3  7 11 15 */
   
-//    GLTexture3DHandle tex = volren->get_tex3d_handle();
-//    Transform field_trans = tex->get_field_transform();
-//    mat.set(mvmat);
-//    mat.pre_trans(field_trans);
-//    mat.get(mvmat);
+  // transform the view vector opposite the transform that we draw polys with,
+  // so that polys are normal to the view post opengl draw.
+  GLTexture3DHandle tex = volren->get_tex3d_handle();
+  Transform field_trans = tex->get_field_transform();
+  field_trans.invert();
+  mat.set(mvmat);
+  mat.post_trans(field_trans);
+  mat.get_trans(mvmat);
 
   // this is the world space view direction
   view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
@@ -115,6 +118,19 @@ GLVolRenState::computeView(Ray& ray)
 void
 GLVolRenState::drawPolys( vector<Polygon *> polys )
 {
+
+  double mvmat[16];
+  GLTexture3DHandle tex = volren->get_tex3d_handle();
+  Transform field_trans = tex->get_field_transform();
+  // set double array transposed.  Our matricies are stored transposed 
+  // from OpenGL matricies.
+  field_trans.get_trans(mvmat);
+  
+  glMatrixMode(GL_MODELVIEW_MATRIX);
+  glPushMatrix();
+  glMultMatrixd(mvmat);
+
+
   unsigned int i;
   volren->di_->polycount += polys.size();
   for (i = 0; i < polys.size(); i++) {
@@ -169,6 +185,9 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
       break;
     }
   }
+
+  glMatrixMode(GL_MODELVIEW_MATRIX);
+  glPopMatrix();
 }
 
 void
