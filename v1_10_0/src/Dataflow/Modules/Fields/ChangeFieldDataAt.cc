@@ -61,11 +61,8 @@ ChangeFieldDataAt::~ChangeFieldDataAt(){
 }
 
 
-
-
-
-
-void ChangeFieldDataAt::update_input_attributes(FieldHandle f) 
+void
+ChangeFieldDataAt::update_input_attributes(FieldHandle f) 
 {
   switch(f->data_at())
   {
@@ -77,6 +74,8 @@ void ChangeFieldDataAt::update_input_attributes(FieldHandle f)
     gui->execute(string("set ")+id+"-inputdataat Faces"); break;
   case Field::CELL: 
     gui->execute(string("set ")+id+"-inputdataat Cells"); break;
+  case Field::NONE: 
+    gui->execute(string("set ")+id+"-inputdataat None"); break;
   default: ;
   }
 
@@ -89,6 +88,7 @@ void ChangeFieldDataAt::update_input_attributes(FieldHandle f)
   // copy valid settings to the un-checked output field attributes
   gui->execute(id+" copy_attributes; update idletasks");
 }
+
 
 void
 ChangeFieldDataAt::execute()
@@ -138,7 +138,10 @@ ChangeFieldDataAt::execute()
   {
     dataat = Field::CELL;
   }
-
+  else if (d == "None")
+  {
+    dataat = Field::NONE;
+  }
 
   if (dataat == fh->data_at())
   {
