@@ -173,7 +173,7 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    int svt_flag);
+					    int svt_flag, int svt2);
 };
 
 

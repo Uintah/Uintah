@@ -58,6 +58,15 @@
         the input matrix should be an Nx3 matrix where N is equal
         to the number of elements to be filled in.
       </p>
+      <p>
+        Feb 11, 2003:  The module now will try to preserve the scalar
+        type of the field, so if you pass it in a TetVolField<int> and
+        a row matrix, it will return a TetVolField<int>.  If the types
+        are not convertible then you will still get a default
+        Vector,Tensor, or double field as appropriate.  If you need
+        the old behavior use ChangeFieldDataType to convert the
+	input field to double type before passing it in.
+      </p>
     </description>
   </overview>
   <io>
