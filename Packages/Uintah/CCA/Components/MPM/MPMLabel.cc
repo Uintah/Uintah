@@ -15,298 +15,298 @@ MPMLabel::MPMLabel()
   // Particle Variables
 
   //non PermanentParticleState
-  pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
+  pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
-  pCrackEffectiveLabel = scinew VarLabel("p.crackEffective",
+  pCrackEffectiveLabel = VarLabel::create("p.crackEffective",
 			ParticleVariable<int>::getTypeDescription());
 
-  pConnectivityLabel = scinew VarLabel("p.connectivity",
+  pConnectivityLabel = VarLabel::create("p.connectivity",
 			ParticleVariable<int>::getTypeDescription());
 
-  pContactForceLabel = scinew VarLabel("p.contactForce",
+  pContactForceLabel = VarLabel::create("p.contactForce",
 			ParticleVariable<Vector>::getTypeDescription());
 
-  pXXLabel = scinew VarLabel("p.positionXX",
+  pXXLabel = VarLabel::create("p.positionXX",
 			ParticleVariable<Point>::getTypeDescription());
   
-  pStressLabel_afterFracture = scinew VarLabel(
+  pStressLabel_afterFracture = VarLabel::create(
                         "p.stress_afterFracture",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
-  pStressLabel_afterStrainRate = scinew VarLabel(
+  pStressLabel_afterStrainRate = VarLabel::create(
                         "p.stress_afterStrainRate",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
-  pVelocityLabel_afterFracture = scinew VarLabel(
+  pVelocityLabel_afterFracture = VarLabel::create(
                         "p.velocity_afterFracture",
 			ParticleVariable<Vector>::getTypeDescription());
 
-  pVelocityLabel_afterUpdate = scinew VarLabel(
+  pVelocityLabel_afterUpdate = VarLabel::create(
                         "p.velocity_afterUpdate",
 			ParticleVariable<Vector>::getTypeDescription());
 
-  pStrainEnergyLabel = scinew VarLabel("p.strainEnergy",
+  pStrainEnergyLabel = VarLabel::create("p.strainEnergy",
 			ParticleVariable<double>::getTypeDescription());
 
-  pRotationRateLabel = scinew VarLabel("p.rotationRate",
+  pRotationRateLabel = VarLabel::create("p.rotationRate",
 			ParticleVariable<Vector>::getTypeDescription());
 
-  pPressureLabel  = scinew VarLabel( "p.pressure",
+  pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
   
   //PermanentParticleState
-  pStressLabel = scinew VarLabel( "p.stress",
+  pStressLabel = VarLabel::create( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
-  pCrackRadiusLabel = scinew VarLabel( "p.CrackRadius",
+  pCrackRadiusLabel = VarLabel::create( "p.CrackRadius",
 			ParticleVariable<double>::getTypeDescription());
   
-  pVolumeLabel = scinew VarLabel( "p.volume",
+  pVolumeLabel = VarLabel::create( "p.volume",
 			ParticleVariable<double>::getTypeDescription());
   
-  pVolumeDeformedLabel = scinew VarLabel( "p.volumedeformed",
+  pVolumeDeformedLabel = VarLabel::create( "p.volumedeformed",
 			ParticleVariable<double>::getTypeDescription());
   
-  pMassLabel = scinew VarLabel( "p.mass",
+  pMassLabel = VarLabel::create( "p.mass",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pVelocityLabel = scinew VarLabel( "p.velocity", 
+  pVelocityLabel = VarLabel::create( "p.velocity", 
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pExternalForceLabel = scinew VarLabel( "p.externalforce",
+  pExternalForceLabel = VarLabel::create( "p.externalforce",
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pXLabel = scinew VarLabel("p.x",ParticleVariable<Point>::getTypeDescription(),
+  pXLabel = VarLabel::create("p.x",ParticleVariable<Point>::getTypeDescription(),
 			VarLabel::PositionVariable);
   
-  pTemperatureLabel = scinew VarLabel( "p.temperature",
+  pTemperatureLabel = VarLabel::create( "p.temperature",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pTemperatureGradientLabel = scinew VarLabel( "p.temperatureGradient",
+  pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pExternalHeatRateLabel = scinew VarLabel( "p.externalHeatRate",
+  pExternalHeatRateLabel = VarLabel::create( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pSurfLabel = scinew VarLabel( "p.surface",
+  pSurfLabel = VarLabel::create( "p.surface",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pIsBrokenLabel = scinew VarLabel( "p.isBroken",
+  pIsBrokenLabel = VarLabel::create( "p.isBroken",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pCrackNormalLabel = scinew VarLabel( "p.crackNormal",
+  pCrackNormalLabel = VarLabel::create( "p.crackNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pTipNormalLabel = scinew VarLabel( "p.tipNormal",
+  pTipNormalLabel = VarLabel::create( "p.tipNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pExtensionDirectionLabel = scinew VarLabel( "p.extensionDirection",
+  pExtensionDirectionLabel = VarLabel::create( "p.extensionDirection",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pToughnessLabel = scinew VarLabel( "p.toughness",
+  pToughnessLabel = VarLabel::create( "p.toughness",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pEnergyReleaseRateLabel = scinew VarLabel( "p.energyReleaseRate",
+  pEnergyReleaseRateLabel = VarLabel::create( "p.energyReleaseRate",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pCrackSurfacePressureLabel = scinew VarLabel( "p.crackSurfacePressure",
+  pCrackSurfacePressureLabel = VarLabel::create( "p.crackSurfacePressure",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pDisplacementLabel = scinew VarLabel( "p.displacement",
+  pDisplacementLabel = VarLabel::create( "p.displacement",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pParticleIDLabel = scinew VarLabel("p.particleID",
+  pParticleIDLabel = VarLabel::create("p.particleID",
 			ParticleVariable<long64>::getTypeDescription() );
 
-  pIsIgnitedLabel  = scinew VarLabel( "p.isIgnited",
+  pIsIgnitedLabel  = VarLabel::create( "p.isIgnited",
 			ParticleVariable<int>::getTypeDescription() );
   
-  pMassRateLabel  = scinew VarLabel( "p.massRate",
+  pMassRateLabel  = VarLabel::create( "p.massRate",
 			ParticleVariable<double>::getTypeDescription() );
   
   // Particle Variables 
-  pDeformationMeasureLabel_preReloc = scinew VarLabel("p.deformationMeasure+",
+  pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
   
-  pStressLabel_preReloc = scinew VarLabel( "p.stress+",
+  pStressLabel_preReloc = VarLabel::create( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
 
-  pCrackRadiusLabel_preReloc = scinew VarLabel( "p.CrackRadius+",
+  pCrackRadiusLabel_preReloc = VarLabel::create( "p.CrackRadius+",
 			ParticleVariable<double>::getTypeDescription());
   
-  pVolumeLabel_preReloc = scinew VarLabel( "p.volume+",
+  pVolumeLabel_preReloc = VarLabel::create( "p.volume+",
 			ParticleVariable<double>::getTypeDescription());
   
-  pMassLabel_preReloc = scinew VarLabel( "p.mass+",
+  pMassLabel_preReloc = VarLabel::create( "p.mass+",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pVelocityLabel_preReloc = scinew VarLabel( "p.velocity+", 
+  pVelocityLabel_preReloc = VarLabel::create( "p.velocity+", 
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pExternalForceLabel_preReloc = scinew VarLabel( "p.externalforce+",
+  pExternalForceLabel_preReloc = VarLabel::create( "p.externalforce+",
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pXLabel_preReloc = scinew VarLabel( "p.x+",
+  pXLabel_preReloc = VarLabel::create( "p.x+",
 			ParticleVariable<Point>::getTypeDescription(),
 			VarLabel::PositionVariable);
   
-  pTemperatureLabel_preReloc = scinew VarLabel( "p.temperature+",
+  pTemperatureLabel_preReloc = VarLabel::create( "p.temperature+",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pExternalHeatRateLabel_preReloc = scinew VarLabel( "p.externalHeatRate+",
+  pExternalHeatRateLabel_preReloc = VarLabel::create( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pSurfLabel_preReloc = scinew VarLabel( "p.surface+",
+  pSurfLabel_preReloc = VarLabel::create( "p.surface+",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pIsBrokenLabel_preReloc = scinew VarLabel( "p.isBroken+",
+  pIsBrokenLabel_preReloc = VarLabel::create( "p.isBroken+",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pCrackNormalLabel_preReloc = scinew VarLabel( "p.crackNormal+",
+  pCrackNormalLabel_preReloc = VarLabel::create( "p.crackNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pTipNormalLabel_preReloc = scinew VarLabel( "p.tipNormal+",
+  pTipNormalLabel_preReloc = VarLabel::create( "p.tipNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pExtensionDirectionLabel_preReloc = scinew VarLabel( "p.extensionDirection+",
+  pExtensionDirectionLabel_preReloc = VarLabel::create( "p.extensionDirection+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pToughnessLabel_preReloc = scinew VarLabel( "p.toughness+",
+  pToughnessLabel_preReloc = VarLabel::create( "p.toughness+",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pEnergyReleaseRateLabel_preReloc =scinew VarLabel("p.energyReleaseRate+",
+  pEnergyReleaseRateLabel_preReloc =VarLabel::create("p.energyReleaseRate+",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pCrackSurfacePressureLabel_preReloc = scinew 
-                        VarLabel( "p.crackSurfacePressure+",
+  pCrackSurfacePressureLabel_preReloc = 
+                        VarLabel::create( "p.crackSurfacePressure+",
                         ParticleVariable<double>::getTypeDescription() );
 
-  pDisplacementLabel_preReloc = scinew VarLabel( "p.displacement+",
+  pDisplacementLabel_preReloc = VarLabel::create( "p.displacement+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
+  pParticleIDLabel_preReloc = VarLabel::create("p.particleID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
-  pIsIgnitedLabel_preReloc  = scinew VarLabel( "p.isIgnited+",
+  pIsIgnitedLabel_preReloc  = VarLabel::create( "p.isIgnited+",
 			ParticleVariable<int>::getTypeDescription() );
   
-  pMassRateLabel_preReloc  = scinew VarLabel( "p.massRate+",
+  pMassRateLabel_preReloc  = VarLabel::create( "p.massRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
   // Node Centered Variables
   
-  gAccelerationLabel = scinew VarLabel( "g.acceleration",
+  gAccelerationLabel = VarLabel::create( "g.acceleration",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedAccelerationLabel = scinew VarLabel( "g.momexedacceleration",
+  gMomExedAccelerationLabel = VarLabel::create( "g.momexedacceleration",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMassLabel = scinew VarLabel( "g.mass",
+  gMassLabel = VarLabel::create( "g.mass",
 			NCVariable<double>::getTypeDescription() );
   
-  gVelocityLabel = scinew VarLabel( "g.velocity",
+  gVelocityLabel = VarLabel::create( "g.velocity",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedVelocityLabel = scinew VarLabel( "g.momexedvelocity",
+  gMomExedVelocityLabel = VarLabel::create( "g.momexedvelocity",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gExternalForceLabel = scinew VarLabel( "g.externalforce",
+  gExternalForceLabel = VarLabel::create( "g.externalforce",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gInternalForceLabel = scinew VarLabel( "g.internalforce",
+  gInternalForceLabel = VarLabel::create( "g.internalforce",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gVelocityStarLabel = scinew VarLabel( "g.velocity_star",
+  gVelocityStarLabel = VarLabel::create( "g.velocity_star",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gMomExedVelocityStarLabel = scinew VarLabel( "g.momexedvelocity_star",
+  gMomExedVelocityStarLabel = VarLabel::create( "g.momexedvelocity_star",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gTemperatureLabel = scinew VarLabel("g.temperature",
+  gTemperatureLabel = VarLabel::create("g.temperature",
 			NCVariable<double>::getTypeDescription());
 
-  gTemperatureNoBCLabel = scinew VarLabel("g.temperaturenobc",
+  gTemperatureNoBCLabel = VarLabel::create("g.temperaturenobc",
 			NCVariable<double>::getTypeDescription());
 
-  gTemperatureStarLabel = scinew VarLabel("g.temperatureStar",
+  gTemperatureStarLabel = VarLabel::create("g.temperatureStar",
 			NCVariable<double>::getTypeDescription());
 
-  gTemperatureRateLabel = scinew VarLabel("g.temperatureRate",
+  gTemperatureRateLabel = VarLabel::create("g.temperatureRate",
 			NCVariable<double>::getTypeDescription());
 
-  gInternalHeatRateLabel = scinew VarLabel("g.internalHeatRate",
+  gInternalHeatRateLabel = VarLabel::create("g.internalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
-  gExternalHeatRateLabel = scinew VarLabel("g.externalHeatRate",
+  gExternalHeatRateLabel = VarLabel::create("g.externalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
-  gThermalContactHeatExchangeRateLabel = scinew 
-     VarLabel("g.thermalContactHeatExchangeRate",
+  gThermalContactHeatExchangeRateLabel = 
+     VarLabel::create("g.thermalContactHeatExchangeRate",
      NCVariable<double>::getTypeDescription());
 
-  gNormTractionLabel = scinew VarLabel( "g.normtraction",
+  gNormTractionLabel = VarLabel::create( "g.normtraction",
                    NCVariable<double>::getTypeDescription() );
 
-  gSurfNormLabel = scinew VarLabel( "g.surfnorm",
+  gSurfNormLabel = VarLabel::create( "g.surfnorm",
                    NCVariable<Vector>::getTypeDescription() );
 
-  gStressLabel   = scinew VarLabel( "g.stress",
+  gStressLabel   = VarLabel::create( "g.stress",
                    NCVariable<Matrix3>::getTypeDescription() );
 
-  gStressForSavingLabel   = scinew VarLabel( "g.stressFS",
+  gStressForSavingLabel   = VarLabel::create( "g.stressFS",
                    NCVariable<Matrix3>::getTypeDescription() );
 
-  gVolumeLabel     = scinew VarLabel("g.volume",
+  gVolumeLabel     = VarLabel::create("g.volume",
 			NCVariable<double>::getTypeDescription());
 
-  gWeightLabel     = scinew VarLabel("g.weight",
+  gWeightLabel     = VarLabel::create("g.weight",
 			NCVariable<double>::getTypeDescription());
 
-  gradPAccNCLabel = scinew VarLabel("gradPAccNC",
+  gradPAccNCLabel = VarLabel::create("gradPAccNC",
 			NCVariable<Vector>::getTypeDescription());
 
-  dTdt_NCLabel     = scinew VarLabel("dTdt_NC",
+  dTdt_NCLabel     = VarLabel::create("dTdt_NC",
 			NCVariable<double>::getTypeDescription());
 
-  massBurnFractionLabel  = scinew VarLabel("massBurnFraction",
+  massBurnFractionLabel  = VarLabel::create("massBurnFraction",
 			NCVariable<double>::getTypeDescription());
 
-  AccArchesNCLabel = scinew VarLabel("AccArchesNC",
+  AccArchesNCLabel = VarLabel::create("AccArchesNC",
 			NCVariable<Vector>::getTypeDescription() );
 
-  frictionalWorkLabel = scinew VarLabel("frictionalWork",
+  frictionalWorkLabel = VarLabel::create("frictionalWork",
 			NCVariable<double>::getTypeDescription());
 
   // Reduction variables
-  partCountLabel = scinew VarLabel("particleCount",
+  partCountLabel = VarLabel::create("particleCount",
 				   sumlong_vartype::getTypeDescription());
 
-  delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
+  delTLabel = VarLabel::create( "delT", delt_vartype::getTypeDescription() );
 
-  StrainEnergyLabel = scinew VarLabel( "StrainEnergy",
+  StrainEnergyLabel = VarLabel::create( "StrainEnergy",
 			sum_vartype::getTypeDescription() );
 
-  KineticEnergyLabel = scinew VarLabel( "KineticEnergy",
+  KineticEnergyLabel = VarLabel::create( "KineticEnergy",
 			sum_vartype::getTypeDescription() );
 
-  TotalMassLabel = scinew VarLabel( "TotalMass",
+  TotalMassLabel = VarLabel::create( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
-  NTractionZMinusLabel = scinew VarLabel( "NTractionZMinus",
+  NTractionZMinusLabel = VarLabel::create( "NTractionZMinus",
 			sum_vartype::getTypeDescription() );
 
-  CenterOfMassPositionLabel = scinew VarLabel( "CenterOfMassPosition",
+  CenterOfMassPositionLabel = VarLabel::create( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
 
-  CenterOfMassVelocityLabel = scinew VarLabel( "CenterOfMassVelocity",
+  CenterOfMassVelocityLabel = VarLabel::create( "CenterOfMassVelocity",
 				 sumvec_vartype::getTypeDescription() );
 
   // for assigning particle ids
   pCellNAPIDLabel =
-    scinew VarLabel("cellNAPID", CCVariable<short int>::getTypeDescription());
+    VarLabel::create("cellNAPID", CCVariable<short int>::getTypeDescription());
 
-  doMechLabel = scinew VarLabel( "doMech", delt_vartype::getTypeDescription() );
+  doMechLabel = VarLabel::create( "doMech", delt_vartype::getTypeDescription() );
 
 } 
 
