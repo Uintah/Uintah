@@ -43,6 +43,10 @@ namespace Uintah {
     const VarLabel* int_eng_L_CCLabel;
     const VarLabel* mass_L_CCLabel;
     const VarLabel* rho_L_CCLabel;
+    const VarLabel* xmom_L_ME_CCLabel;
+    const VarLabel* ymom_L_ME_CCLabel;
+    const VarLabel* zmom_L_ME_CCLabel;
+    const VarLabel* int_eng_L_ME_CCLabel;
    
     // Face centered variables
     const VarLabel* uvel_FCLabel;
@@ -62,6 +66,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.9  2000/10/19 02:44:52  guilkey
+// Added code for step5b.
+//
 // Revision 1.8  2000/10/18 21:02:17  guilkey
 // Added code for steps 4 and 5.
 //
