@@ -171,10 +171,10 @@ Hedgehog::Hedgehog(const string& id)
   width_scale("width_scale", id, this),
   head_length("head_length", id, this),
   type("type", id, this),
+  exhaustive_flag("exhaustive_flag", id, this),
+  vector_default_color("vector_default_color", id, this),
   drawcylinders("drawcylinders", id, this),
   shaft_rad("shaft_rad", id, this),
-  vector_default_color("vector_default_color", id, this),
-  exhaustive_flag("exhaustive_flag", id, this),
   shaft(new Material(Color(0,0,0), Color(.6, .6, .6),
 		     Color(.6, .6, .6), 10)),
   head(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10)),
@@ -379,7 +379,7 @@ void Hedgehog::execute()
   double lenscale = length_scale.get(),
     widscale = width_scale.get(),
     headlen = head_length.get();
-  int exhaustive = exhaustive_flag.get();
+  //int exhaustive = exhaustive_flag.get();
   GeomArrows* arrows = new GeomArrows(widscale, 1.0-headlen, 
 				      drawcylinders.get(), shaft_rad.get() );
   for (int i = 0; i < u_num; i++)
@@ -392,7 +392,7 @@ void Hedgehog::execute()
 
 	// Query the vector field...
 	Vector vv;
-	int ii=0;
+	//int ii=0;
 	if ( interpolate( vfield, p, vv)){
 	  if(have_sfield){
 	    // get the color from cmap for p 	    
