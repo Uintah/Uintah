@@ -62,8 +62,7 @@ GENERAL INFORMATION
 
    NodeHedgehog
   
-   Author:  Steven G. Parker (sparker@cs.utah.edu)
-            James Bigler (bigler@cs.utah.edu)
+   Author:  James Bigler (bigler@cs.utah.edu)
             
             Department of Computer Science
             
@@ -313,10 +312,10 @@ private:
   
 static string module_name("NodeHedgehog");
 static string widget_name("NodeHedgehog Widget");
-  DECLARE_MAKER(NodeHedgehog)
+DECLARE_MAKER(NodeHedgehog)
 
-  NodeHedgehog::NodeHedgehog(GuiContext* ctx)
-: Module("NodeHedgehog", ctx, Filter, "Visualization", "Uintah"),
+NodeHedgehog::NodeHedgehog(GuiContext* ctx):
+  Module("NodeHedgehog", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("NodeHedgehog widget lock"),
   length_scale(ctx->subVar("length_scale")),
   min_crop_length(ctx->subVar("min_crop_length")),
@@ -382,11 +381,14 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
     if (info.have_sfield) {
       // query the scalar field
       double sf_value;
-      info.sf_interface->find_closest(sf_value, v_origin);
+      double minout = info.sf_interface->find_closest(sf_value, v_origin);
+      cout << "minout = "<<minout<<", sf_value = "<<sf_value<<", v_origin = "<<v_origin<<endl;
       arrow_color = info.cmap->lookup( sf_value );
     } else {
-      // grab a value from the color map
-      arrow_color = info.cmap->lookup( 0 );
+      // Grab a value from the color map.
+      // lookup2 is used, so we can indicate that we want the middle color.
+      // lookup2 takes a double from 0 to 1 and then indexes into the ColorMap.
+      arrow_color = info.cmap->lookup2( 0.5 );
     }
     arrows->add(v_origin, vf_value * info.arrow_length_scale,
 		arrow_color, arrow_color, arrow_color);
@@ -397,17 +399,19 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
 
 void NodeHedgehog::execute()
 {
+  cerr << "NodeHedgehog::execute: start\n";
   int old_geom_id = geom_id;
-  cout << "NodeHedgehog::execute:start\n";
 
-    // Create the input port
+  // Create the input port
   inscalarfield = (FieldIPort *) get_iport("Scalar Field");
   invectorfield = (FieldIPort *) get_iport("Vector Field");
   inColorMap = (ColorMapIPort *) get_iport("ColorMap");
 					
   // Create the output port
   ogeom = (GeometryOPort *) get_oport("Geometry"); 
+
   // Must have a vector field, otherwise exit
+  cerr << "NodeHedgehog::execute:attempting to extract vector field from port.\n";
   FieldHandle vfield;
   if (!invectorfield->get( vfield ))
     return;
@@ -446,6 +450,13 @@ void NodeHedgehog::execute()
   }
   ColorMapHandle cmap;
   int have_cmap=inColorMap->get( cmap );
+  if (have_cmap) {
+    if (cmap->IsScaled())
+      cout << "cmap is scaled.\n";
+    else 
+      cout << "cmap is not scaled.\n";
+    cout << "cmap.getMin() = "<<cmap->getMin()<<", getMax() = "<<cmap->getMax()<<endl;
+  }
   
   cout << "NodeHedgehog::execute:initializing phase\n";
   if (init == 1) {
@@ -712,22 +723,27 @@ void NodeHedgehog::execute()
   max_vector_x.set(max_vector.x());
   max_vector_y.set(max_vector.y());
   max_vector_z.set(max_vector.z());
-  cout << "NodeHedgehog::execute:end\n";
+
+  cerr << "NodeHedgehog::execute: end"<<endl;
 }
 
 void NodeHedgehog::widget_moved(bool last)
 {
+#if 0
   if(last && !abort_flag) {
     abort_flag=1;
     want_to_execute();
   }
+#endif
+  cerr << "NodeHedgehog::widget_moved: last = "<<last<<endl;
 }
 
 
 void NodeHedgehog::tcl_command(GuiArgs& args, void* userdata)
 {
+#if 1
   if(args.count() < 2) {
-    args.error("Streamline needs a minor command");
+    args.error("NodeHedgehog needs a minor command");
     return;
   }
   if(args[1] == "findxy") {
@@ -754,6 +770,11 @@ void NodeHedgehog::tcl_command(GuiArgs& args, void* userdata)
   else {
     Module::tcl_command(args, userdata);
   }
+#endif
+  cerr <<"NodeHedgehog::tcl_command: args\n";
+  for(int i = 0; i < args.count(); i++)
+    cerr << "args["<<i<<"] = "<<args[i]<<endl;
+  cerr << "NodeHedgehog::tcl_command: was called."<<endl;
 }
 
 } // End namespace Uintah
