@@ -365,7 +365,7 @@ void ParticleFieldExtractor::execute()
   ptout = (TensorParticlesOPort *) get_oport("Tensor Particles");
   ArchiveHandle handle;
    if(!in->get(handle)){
-     std::cerr<<"Didn't get a handle\n";
+     error("Didn't get a handle.");
      return;
    }
    
@@ -540,7 +540,7 @@ void PFEThread::run(){
       archive.query(pvp, pfe->positionName, matl, patch, pfe->time);
 
     if(pfe->particleIDs != ""){
-      cerr<<"paricleIDs = "<<pfe->particleIDs<<endl;
+      //cerr<<"paricleIDs = "<<pfe->particleIDs<<endl;
       have_ids = true;
       archive.query(pvi, pfe->particleIDs, matl, patch, pfe->time);
     }

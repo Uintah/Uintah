@@ -197,15 +197,15 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 
     method setParticleScalars { args } {
 	set psVarList $args;
-	puts "psVarList is now $psVarList";
+#	puts "psVarList is now $psVarList";
     }
     method setParticleVectors { args } {
 	set pvVarList $args;
-	puts "pvVarList is now $pvVarList";
+#	puts "pvVarList is now $pvVarList";
     }    
     method setParticleTensors { args } {
 	set ptVarList $args;
-	puts "ptVarList is now $ptVarList";
+#	puts "ptVarList is now $ptVarList";
     }    
  
     method buildPMaterials { ns } {

@@ -136,7 +136,7 @@ void ScalarFieldExtractor::execute()
   
   ArchiveHandle handle;
   if(!in->get(handle)){
-    std::cerr<<"ScalarFieldExtractor::execute() Didn't get a handle\n";
+    error("ScalarFieldExtractor::execute() Didn't get a handle.");
     grid = 0;
     return;
   }
@@ -160,8 +160,6 @@ void ScalarFieldExtractor::execute()
   BBox box;
   level->getSpatialRange(box);
 
-
-  cerr <<"Mesh size = "<<range<<endl;
 
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
@@ -212,7 +210,7 @@ void ScalarFieldExtractor::execute()
 	  return;
 	}
       default:
-	cerr<<"NCScalarField<?>  Unknown scalar type\n";
+	error("NCScalarField<?>  Unknown scalar type.");
 	return;
       }
     case TypeDescription::CCVariable:
@@ -261,7 +259,7 @@ void ScalarFieldExtractor::execute()
 	  return;
 	}
       default:
-	cerr<<"CCScalarField<?> Unknown scalar type\n";
+	error("CCScalarField<?> Unknown scalar type.");
 	return;
       }
     case TypeDescription::SFCXVariable:
@@ -313,7 +311,7 @@ void ScalarFieldExtractor::execute()
 	  return;
 	}
       default:
-	cerr<<"SFCXScalarField<?> Unknown scalar type\n";
+	error("SFCXScalarField<?> Unknown scalar type.");
 	return;
       }
     case TypeDescription::SFCYVariable:
@@ -365,7 +363,7 @@ void ScalarFieldExtractor::execute()
 	  return;
 	}
       default:
-	cerr<<"SFCYScalarField<?> Unknown scalar type\n";
+	error("SFCYScalarField<?> Unknown scalar type.");
 	return;
       }
     case TypeDescription::SFCZVariable:
@@ -417,11 +415,11 @@ void ScalarFieldExtractor::execute()
 	  return;
 	}
       default:
-	cerr<<"SFCZScalarField<?> Unknown scalar type\n";
+	error("SFCZScalarField<?> Unknown scalar type.");
 	return;
       }
     default:
-      cerr<<"Not a ScalarField\n";
+      error("Not a ScalarField.");
       return;
     }
   }
