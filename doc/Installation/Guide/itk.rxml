@@ -53,34 +53,30 @@ code distribution.</para>
 <para>The Insight toolkit must be installed before building &sr;.  The
 Insight toolkit and its installation instructions are available from
 the <ulink url="http://www.itk.org"><acronym>ITK</acronym> web
-site</ulink>.  <acronym>ITK</acronym> installation requires CMAKE, a
-open-source, cross-platform build tool.  CMAKE can be obtained from
-the <ulink url="http://www.cmake.org">CMAKE web site</ulink>.</para>
+site</ulink>.  <acronym>ITK</acronym> installation requires CMake, a
+open-source, cross-platform build tool.  CMake can be obtained from
+the <ulink url="http://www.cmake.org">CMake web site</ulink>.</para>
 
 <note>
-<title>Special Build Instructions</title>
-<para>Before configuring and building ITK the following
-environment variables must be set as shown.  For csh-type shells type:
-<literallayout class="monospaced">
-  setenv BUILD_SHARED_LIBS ON
-  setenv ITK_USE_SYSTEM_PNG ON
-</literallayout>
-For sh-type shells type:
-<literallayout class="monospaced">
-  BUILD_SHARED_LIBS=ON
-  ITK_USE_SYSTEM_PNG=ON
-  export BUILD_SHARED_LIBS ITK_USE_SYSTEM_PNG
-</literallayout>
-</para>
+<title>CMake Special Instructions</title>
+
+<para>The values of CMake variables
+<varname>BUILD_SHARED_LIBS</varname> and
+<varname>ITK_USE_SYSTEM_PNG</varname> must be set to
+<userinput>ON</userinput>.  Command <command>ccmake</command> is used
+to set CMake variables.  <command>Ccmake</command>must be in
+ its advanced mode to change the value of
+<varname>ITK_USE_SYSTEM_PNG</varname>.</para>
+
 </note>
 </section>
 
 <section>
 <title>Additional Software</title>
 
-<para>&sr; support for <acronym>ITK</acronym> requires 
-the xalan-j <acronym>XSLT</acronym> processor.  Xalan-j and its
-installation instructions are available from the <ulink
+<para>&sr; support for <acronym>ITK</acronym> requires the xalan-j
+(version 2.5.1 or later) <acronym>XSLT</acronym> processor.  Xalan-j
+and its installation instructions are available from the <ulink
 url="http://xml.apache.org/xalan-j/index.html">xalan
 website</ulink>.</para>
 
@@ -98,7 +94,9 @@ endterm="title.build-sr"/></citetitle>).
 <varlistentry>
 <term><option>--with-insight=<replaceable>path-to-insight</replaceable></option></term>
 <listitem>
-<para>Specifies the path to the <acronym>ITK</acronym> directory.
+<para>Specifies the path to the <acronym>ITK</acronym>
+<quote>build</quote> directory&mdash;the directory containing
+<acronym>ITK</acronym> executables and libraries.
 </para>
 </listitem>
 </varlistentry>
