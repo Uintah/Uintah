@@ -72,7 +72,6 @@ GridSpheres::GridSpheres(float* spheres, float* /*inmin*/, float* /*inmax*/,
 #if 0
   }
 #endif
-  iradius=1./radius;
   // Do we need to do anything for the color map??
 }
 
@@ -86,6 +85,15 @@ GridSpheres::io(SCIRun::Piostream&)
   ASSERTFAIL("Pio for GridSpheres not implemented");
 }
 
+// This function determines which cells a sphere will lie in.  The
+// indicies are based off the finest cell level.  If the indicies are
+// out of bounds an error message is reported and the entire program
+// is killed.
+//
+// Well it used to kill the program when the indices were out of
+// range.  I'm going to change it to just print out an error and clamp
+// the indicies, so you can still run the program.  Any spheres that
+// protrude from the grid will be cut off.
 static inline void calc_se(float* p, const BBox& bbox,
 			   const Vector& diag,
 			   float radius,
@@ -101,23 +109,47 @@ static inline void calc_se(float* p, const BBox& bbox,
   ex=(int)(e.x()*totalcells);
   ey=(int)(e.y()*totalcells);
   ez=(int)(e.z()*totalcells);
-  if(sx < 0 || ex >= totalcells){
-    cerr << "NX out of bounds!\n";
-    cerr << "sx=" << sx << ", ex=" << ex << '\n';
-    cerr << "e=" << e << '\n';
+  bool print_stats = false;
+  if (sx < 0) {
+    cerr << "sx is out of bounds!\n";
+    cerr << "sx = "<<sx<<"\n";
+    sx = 0;
+    print_stats = true;
+  }
+  if (ex >= totalcells) {
+    cerr << "ex is out of bounds!\n";
+    cerr << "ex = "<<ex<<"\n";
+    ex = totalcells - 1;
+    print_stats = true;
+  }
+  if (sy < 0) {
+    cerr << "sy is out of bounds!\n";
+    cerr << "sy = "<<sy<<"\n";
+    sy = 0;
+    print_stats = true;
+  }
+  if (ey >= totalcells) {
+    cerr << "ey is out of bounds!\n";
+    cerr << "ey = "<<ey<<"\n";
+    ey = totalcells - 1;
+    print_stats = true;
+  }
+  if (sz < 0) {
+    cerr << "sz is out of bounds!\n";
+    cerr << "sz = "<<sz<<"\n";
+    sz = 0;
+    print_stats = true;
+  }
+  if (ez >= totalcells) {
+    cerr << "ez is out of bounds!\n";
+    cerr << "ez = "<<ez<<"\n";
+    ez = totalcells - 1;
+    print_stats = true;
+  }
+  if (print_stats) {
+    cerr << "s=" << s << ", e=" << e << '\n';
     cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
     cerr << "diag=" << diag << '\n';
-    exit(1);
-  }
-  if(sy < 0 || ey >= totalcells){
-    cerr << "NY out of bounds!\n";
-    cerr << "sy=" << sy << ", ey=" << ey << '\n';
-    exit(1);
-  }
-  if(sz < 0 || ez >= totalcells){
-    cerr << "NZ out of bounds!\n";
-    cerr << "sz=" << sz << ", ez=" << ez << '\n';
-    exit(1);
   }
 }
 
@@ -165,9 +197,21 @@ void GridSpheres::preprocess(double, int&, int&)
   
   cerr << "min: " << min[0] << ", " << min[1] << ", " << min[2] << '\n';
   cerr << "max: " << max[0] << ", " << max[1] << ", " << max[2] << '\n';
+  // Need to determine the maximum radius
+  float max_radius;
+  if (dpy->radius_index > 0) {
+    max_radius = max[dpy->radius_index];
+    // We need a radius that is positive or bad things will happen
+    if (max_radius <= 0) {
+      cerr << "max_radius ("<<max_radius<<") <= 0, so setting to global radius ("<<radius<<")\n";
+      max_radius = radius;
+    }
+  } else {
+    max_radius = radius;
+  }
   bbox.reset();
-  bbox.extend(Point(min[0]-radius, min[1]-radius, min[2]-radius));
-  bbox.extend(Point(max[0]+radius, max[1]+radius, max[2]+radius));
+  bbox.extend(Point(min[0]-max_radius, min[1]-max_radius, min[2]-max_radius));
+  bbox.extend(Point(max[0]+max_radius, max[1]+max_radius, max[2]+max_radius));
   bbox.extend(bbox.min()-Vector(1.e-3, 1.e-3, 1.e-3));
   bbox.extend(bbox.max()+Vector(1.e-3, 1.e-3, 1.e-3));
   Vector diag(bbox.diagonal());
@@ -218,7 +262,19 @@ void GridSpheres::preprocess(double, int&, int&)
       itime=tnow;
     }
     int sx, sy, sz, ex, ey, ez;
-    calc_se(p, bbox, diag, radius, totalcells, sx, sy, sz, ex, ey, ez);
+    float current_radius;
+    if (dpy->radius_index > 0) {
+      current_radius = p[dpy->radius_index];
+      // We need a radius that is positive or bad things will happen.
+      // If the radius is <= 0, don't add it to the accelaration
+      // structure.
+      if (current_radius <= 0) {
+        continue;
+      }
+    } else {
+      current_radius = radius;
+    }
+    calc_se(p, bbox, diag, current_radius, totalcells, sx, sy, sz, ex, ey, ez);
     int idx_x=sx*tc2;
     for(int x=sx;x<=ex;x++){
       int idx_y=idx_x+sy*totalcells;
@@ -261,7 +317,19 @@ void GridSpheres::preprocess(double, int&, int&)
       itime=tnow;
     }
     int sx, sy, sz, ex, ey, ez;
-    calc_se(p, bbox, diag, radius, totalcells, sx, sy, sz, ex, ey, ez);
+    float current_radius;
+    if (dpy->radius_index > 0) {
+      current_radius = p[dpy->radius_index];
+      // We need a radius that is positive or bad things will happen.
+      // If the radius is <= 0, don't add it to the accelaration
+      // structure.
+      if (current_radius <= 0) {
+        continue;
+      }
+    } else {
+      current_radius = radius;
+    }
+    calc_se(p, bbox, diag, current_radius, totalcells, sx, sy, sz, ex, ey, ez);
     for(int x=sx;x<=ex;x++){
       for(int y=sy;y<=ey;y++){
 	int idx=x*totalcells*totalcells+y*totalcells+sz;
@@ -536,11 +604,26 @@ void GridSpheres::isect(int depth, double t,
 	    break;
 	}
 	if(j==n){
+          ////////////////////////////////
+          // Do the sphere intersection, since the sphere is within range
 	  st->sphere_isect++;
 	  Vector OC=Point(p[0], p[1], p[2])-ray.origin();
 	  double tca=Dot(OC, ray.direction());
 	  double l2oc=OC.length2();
-	  double rad2=radius*radius;
+	  double rad2;
+          if (dpy->radius_index > 0) {
+            float current_radius = p[dpy->radius_index];
+            rad2 = current_radius * current_radius;
+            // We need a radius that is positive or bad things will
+            // happen.  If the radius is <= 0, it shouldn't have been
+            // in the accelaration structure, and we should flag this.
+            if (current_radius <= 0) {
+              // This shouldn't ever happen
+              continue;
+            }
+          } else {
+            rad2=radius*radius;
+          }
 	  if(l2oc <= rad2){
 	    // Inside the sphere
 	    double t2hc=rad2-l2oc+tca*tca;
@@ -704,10 +787,22 @@ void GridSpheres::collect_prims(Array1<Object*>& prims)
 
 void GridSpheres::compute_bounds(BBox& bbox, double offset)
 {
-  bbox.extend(Point(min[0]-radius-offset, min[1]-radius-offset,
-		    min[2]-radius-offset));
-  bbox.extend(Point(max[0]+radius+offset, max[1]+radius+offset,
-		    max[2]+radius+offset));
+  // Need to determine the maximum radius
+  float max_radius;
+  if (dpy->radius_index > 0) {
+    max_radius = max[dpy->radius_index];
+    // We need a radius that is positive or bad things will happen
+    if (max_radius <= 0) {
+      cerr << "GridSpheres::compute_bounds:  max_radius ("<<max_radius<<") <= 0, so setting to global radius ("<<radius<<")\n";
+      max_radius = radius;
+    }
+  } else {
+    max_radius = radius;
+  }
+  bbox.extend(Point(min[0]-max_radius-offset, min[1]-max_radius-offset,
+		    min[2]-max_radius-offset));
+  bbox.extend(Point(max[0]+max_radius+offset, max[1]+max_radius+offset,
+		    max[2]+max_radius+offset));
 }
 
 Vector GridSpheres::normal(const Point& hitpos, const HitInfo& hit)
@@ -715,7 +810,20 @@ Vector GridSpheres::normal(const Point& hitpos, const HitInfo& hit)
   int cell=*(int*)hit.scratchpad;
   float* p=spheres+cell;
   Vector n=hitpos-Point(p[0], p[1], p[2]);
-  n*=1./radius;
+  float current_radius;
+  if (dpy->radius_index > 0) {
+    current_radius = p[dpy->radius_index];
+    // We need a radius that is positive or bad things will happen.
+    // If the radius is <= 0, it shouldn't have been in the
+    // accelaration structure to beging with.
+    if (current_radius <= 0) {
+      // This should never happen
+      current_radius = radius;
+    }
+  } else {
+    current_radius = radius;
+  }
+  n*=1./current_radius;
   return n;    
 }
 
