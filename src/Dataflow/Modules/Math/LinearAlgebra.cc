@@ -32,9 +32,8 @@
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Math/LinearAlgebra.h>
 #include <Core/Util/DynamicCompilation.h>
-
+#include <Core/Containers/HashTable.h>
 #include <iostream>
-#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -214,8 +213,7 @@ LinearAlgebraAlgo::get_compile_info(int argc,
 				    int hashoffset)
 
 {
-  hash<const char *> H;
-  unsigned int hashval = H(function.c_str()) + hashoffset;
+  unsigned int hashval = Hash(function, 0x7fffffff) + hashoffset;
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
