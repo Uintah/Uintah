@@ -177,9 +177,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    Box b2 = patch->getBox();
    Box b = b1.intersect(b2);
    
-   if(b.degenerate())
-      cerr << "b.degenerate" << endl;
-
    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/ppc;
    Vector dcorner = dxpp*0.5;
