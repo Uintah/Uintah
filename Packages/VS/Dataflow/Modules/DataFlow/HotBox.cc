@@ -186,12 +186,12 @@ HotBox::HotBox(GuiContext* ctx)
   boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
   injurylistdatasource_(ctx->subVar("injurylistdatasource")),
   currentselection_(ctx->subVar("currentselection")),
-  probeWidget_lock_("Probe widget lock"),
+  probeWidget_lock_("PointWidget lock"),
   gui_probeLocx_(ctx->subVar("gui_probeLocx")),
   gui_probeLocy_(ctx->subVar("gui_probeLocy")),
   gui_probeLocz_(ctx->subVar("gui_probeLocz")),
   gui_probe_scale_(ctx->subVar("gui_probe_scale")),
-  probeWidgetid_(0)
+  probeWidgetid_(-1)
 {
   // instantiate the HotBox-specific interaction structure
   VS_HotBoxUI = new VS_SCI_Hotbox();
@@ -211,7 +211,8 @@ HotBox::~HotBox(){
 }
 
 void
- HotBox::execute(){
+HotBox::execute()
+{
 
   // get input field port
   FieldIPort *inputFieldPort = (FieldIPort *)get_iport("Input Field");
@@ -432,7 +433,7 @@ void
   } // end else (num_injList != 0)
   // we now have the anatomy name corresponding to the label value at the voxel
   char *oqafma_relation[VH_LM_NUM_NAMES];
-  if(dataSource == VS_DATASOURCE_OQAFMA)
+  if(0)//dataSource == VS_DATASOURCE_OQAFMA)
   {
     fprintf(stderr, "dataSource = OQAFMA\n");
     ns1__processStruQLResponse resultStruQL;
@@ -781,7 +782,7 @@ void
      {
        if(oqafma_relation[i] != 0)
        {
-         free(oqafma_relation[i]);
+         //free(oqafma_relation[i]);
          oqafma_relation[i] = 0;
        }
      }
@@ -811,18 +812,22 @@ void
   HBoutGeomPort->flushViews();
 
   // set output geometry port -- Probe Widget
-  GeomGroup *probeWidget_group = scinew GeomGroup;
-  probeWidget_group->add(probeWidget_->GetWidget());
-  GeometryOPort *probeOutGeomPort = (GeometryOPort *)get_oport("Probe Widget");
-  if(!probeOutGeomPort)
+
+  if (probeWidgetid_ == -1) {
+    
+    GeomGroup *probeWidget_group = scinew GeomGroup;
+    probeWidget_group->add(probeWidget_->GetWidget());
+    GeometryOPort *probeOutGeomPort = (GeometryOPort *)get_oport("Probe Widget");
+    if(!probeOutGeomPort)
     {
       error("Unable to initialize Probe Widget output geometry port.");
-    return;
+      return;
+    }
+    probeWidgetid_ = probeOutGeomPort->addObj(probeWidget_group,
+					      "Probe Selection Widget",
+					      &probeWidget_lock_);
+    probeOutGeomPort->flushViews();
   }
-  probeWidgetid_ = probeOutGeomPort->addObj(probeWidget_group,
-                               "Probe Selection Widget",
-                               &probeWidget_lock_);
-  probeOutGeomPort->flushViews();
 
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
