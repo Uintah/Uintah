@@ -157,6 +157,7 @@ WARNING
 			 selectType&) const;
 
       bool containsPoint(const Point&) const;
+      bool containsPointInRealCells(const Point&) const;
 
       // IntVector whose elements are each 1 or 0 specifying whether there
       // are periodic boundaries in each dimension (1 means periodic).
