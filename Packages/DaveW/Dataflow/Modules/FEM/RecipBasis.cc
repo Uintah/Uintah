@@ -104,7 +104,9 @@ void RecipBasis::execute() {
 	for (i=0; i<nelems; i++)
 	    for (int j=0; j<3; j++)
 		(*bmat)[i][counter*3+j]=-(*sol_in.get_rep())[i][j];
+	cerr << "RecipBasis: "<<counter<<"/"<<nelecs-1<<"\n";
 	counter++;
+
     }
     
     basis_oport->send(bmat);
@@ -115,6 +117,9 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.7  1999/12/09 00:05:25  dmw
+// new modules
+//
 // Revision 1.6  1999/12/02 21:57:32  dmw
 // new camera path datatypes and modules
 //
