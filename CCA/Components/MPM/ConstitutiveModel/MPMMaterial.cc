@@ -179,21 +179,21 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
 
    ParticleVariable<int> pIsBroken;
-   ParticleVariable<int> pIsolated;
    ParticleVariable<Vector> pCrackNormal;
    ParticleVariable<Vector> pTipNormal;
    ParticleVariable<Vector> pExtensionDirection;
    ParticleVariable<double> pToughness;
    ParticleVariable<double> pCrackSurfacePressure;
+   ParticleVariable<Vector> pDisplacement;
    
    if(d_fracture) {
      new_dw->allocate(pIsBroken, lb->pIsBrokenLabel, subset);
-     new_dw->allocate(pIsolated, lb->pIsolatedLabel, subset);
      new_dw->allocate(pCrackNormal, lb->pCrackNormalLabel, subset);
      new_dw->allocate(pTipNormal, lb->pTipNormalLabel, subset);
      new_dw->allocate(pExtensionDirection, lb->pExtensionDirectionLabel, subset);
      new_dw->allocate(pToughness, lb->pToughnessLabel, subset);
      new_dw->allocate(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel, subset);
+     new_dw->allocate(pDisplacement, lb->pDisplacementLabel, subset);
    }
    
    particleIndex start = 0;
@@ -218,11 +218,11 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      
      if(d_fracture) {
 	pIsBroken[pIdx] = 0;
-	pIsolated[pIdx] = 0;
 	pCrackNormal[pIdx] = Vector(0.,0.,0.);
 	pTipNormal[pIdx] = Vector(0.,0.,0.);
 	pExtensionDirection[pIdx] = Vector(0.,0.,0.);
 	pCrackSurfacePressure[pIdx] = 0;
+	pDisplacement[pIdx] = Vector(0.,0.,0.);
      }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
@@ -250,109 +250,120 @@ void MPMMaterial::createParticles(particleIndex numParticles,
        }
 
        if(d_fracture) {
-       if (bcs_type == "Crack") {
-         CrackBC* bc = dynamic_cast<CrackBC*>
+       if( !pIsBroken[pIdx] && pTipNormal[pIdx].length2() < 0.5) {
+         if (bcs_type == "Crack") {
+           CrackBC* bc = dynamic_cast<CrackBC*>
 			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
 	 
-	 Vector d = p - bc->origin();
-	 double x = Dot(d,bc->e1());
-	 double y = Dot(d,bc->e2());
+	   Vector d = p - bc->origin();
+	   double x = Dot(d,bc->e1());
+	   double y = Dot(d,bc->e2());
 	 
-	 Matrix3 mat1(1, bc->x1(), bc->y1(),
-	              1, bc->x2(), bc->y2(),
-		      1,     x,        y  );
-         double mat1v = mat1.Determinant();
+	   Matrix3 mat1(1, bc->x1(), bc->y1(),
+	                1, bc->x2(), bc->y2(),
+		        1,     x,        y  );
+           double mat1v = mat1.Determinant();
 	 
-	 Matrix3 mat2(1, bc->x2(), bc->y2(),
-	              1, bc->x3(), bc->y3(),
-		      1,     x,        y  );
-         double mat2v = mat2.Determinant();
+  	   Matrix3 mat2(1, bc->x2(), bc->y2(),
+	                1, bc->x3(), bc->y3(),
+		        1,     x,        y  );
+           double mat2v = mat2.Determinant();
 
-	 Matrix3 mat3(1, bc->x3(), bc->y3(),
-	              1, bc->x4(), bc->y4(),
-		      1,     x,        y  );
-         double mat3v = mat3.Determinant();
+	   Matrix3 mat3(1, bc->x3(), bc->y3(),
+	                1, bc->x4(), bc->y4(),
+		        1,     x,        y  );
+           double mat3v = mat3.Determinant();
 
-	 Matrix3 mat4(1, bc->x4(), bc->y4(),
-	              1, bc->x1(), bc->y1(),
-		      1,     x,        y  );
-         double mat4v = mat4.Determinant();
+	   Matrix3 mat4(1, bc->x4(), bc->y4(),
+	                1, bc->x1(), bc->y1(),
+		        1,     x,        y  );
+           double mat4v = mat4.Determinant();
 
-	 bool inside;
-         if( mat1v<0 && mat2v<0 && mat3v<0 && mat4v<0 ||
-	     mat1v>0 && mat2v>0 && mat3v>0 && mat4v>0 ) inside = true;
-         else inside = false;
+	   bool inside;
+           if( mat1v<0 && mat2v<0 && mat3v<0 && mat4v<0 ||
+	       mat1v>0 && mat2v>0 && mat3v>0 && mat4v>0 ) inside = true;
+           else inside = false;
 	 
-	 double vdis = Dot( (p - bc->origin()), bc->e3() );
+	   double vdis = Dot( (p - bc->origin()), bc->e3() );
 
-	 double r = pow( 0.75*pvolume[pIdx]/M_PI, 1./3.);
+	   double r = pow(pvolume[pIdx], .333)*0.866;
 
-	 if(inside) {
-	   if(vdis > 0 && vdis < r) {
-	     pIsBroken[pIdx] = 1;
-	     pCrackNormal[pIdx] = - bc->e3();
-	     pCrackSurfacePressure[pIdx] = d_initialPressure;
+	   if(inside) {
+	     if(vdis > 0 && vdis < r) {
+	       pIsBroken[pIdx] = 1;
+	       pCrackNormal[pIdx] = - bc->e3();
+	       pCrackSurfacePressure[pIdx] = d_initialPressure;
+	     }
+	     else if(vdis <= 0 && vdis >= -r) {
+               pIsBroken[pIdx] = 1;
+	       pCrackNormal[pIdx] = bc->e3();
+	       pCrackSurfacePressure[pIdx] = d_initialPressure;
+	     }
 	   }
-	   else if(vdis <= 0 && vdis >= -r) {
-             pIsBroken[pIdx] = 1;
-	     pCrackNormal[pIdx] = bc->e3();
-	     pCrackSurfacePressure[pIdx] = d_initialPressure;
-	   }
-	 }
-	 else {
-	   if( fabs(vdis) < r ) {
-	     Point P1(bc->x1(),bc->y1(),0);
-	     Point P2(bc->x2(),bc->y2(),0);
-  	     Point P3(bc->x3(),bc->y3(),0);
-	     Point P4(bc->x4(),bc->y4(),0);
-	     Point Q(x,y,0);
+	   else {
+	     if( fabs(vdis) < r ) {
+	       Point P1(bc->x1(),bc->y1(),0);
+	       Point P2(bc->x2(),bc->y2(),0);
+  	       Point P3(bc->x3(),bc->y3(),0);
+	       Point P4(bc->x4(),bc->y4(),0);
+	       Point Q(x,y,0);
 	   
-	     Vector e12 = P2-P1; e12.normalize();
-	     Vector e23 = P3-P2; e23.normalize();
-	     Vector e34 = P4-P3; e34.normalize();
-	     Vector e41 = P1-P4; e41.normalize();
+	       Vector e12 = P2-P1; e12.normalize();
+	       Vector e23 = P3-P2; e23.normalize();
+	       Vector e34 = P4-P3; e34.normalize();
+	       Vector e41 = P1-P4; e41.normalize();
 	   
-	     Vector dis;
+	       Vector dis;
 	   
-	     dis = Q-P1;
-	     if( ( dis - e12*Dot(dis,e12) ).length() < r && mat4v*mat2v>0 ) 
-	     {
-	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
-	       else pTipNormal[pIdx] = bc->e3();
-	       pExtensionDirection[pIdx] = bc->e1() * e12[2] - bc->e2() * e12[1];
-	       if(mat1v>0) pExtensionDirection[pIdx] = -pExtensionDirection[pIdx];
-	     }
+	       dis = Q-P1;
+	       if( ( dis - e12*Dot(dis,e12) ).length() < r*2 && mat4v*mat2v>0 ) 
+	       {
+	         if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
+	         else pTipNormal[pIdx] = bc->e3();
+	         pExtensionDirection[pIdx] = bc->e1() * e12[2] - 
+		                             bc->e2() * e12[1];
+	         if(mat1v>0) pExtensionDirection[pIdx] = 
+		   -pExtensionDirection[pIdx];
+	       }
 
-	     dis = Q-P2;
-	     if( ( dis - e23*Dot(dis,e23) ).length() < r  && mat1v*mat3v>0 ) 
-	     {
-	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
-	       else pTipNormal[pIdx] = bc->e3();
-	       pExtensionDirection[pIdx] = bc->e1() * e23[2] - bc->e2() * e23[1];
-	       if(mat2v>0) pExtensionDirection[pIdx] = -pExtensionDirection[pIdx];
-	     }
+	       dis = Q-P2;
+	       if( ( dis - e23*Dot(dis,e23) ).length() < r*2  && mat1v*mat3v>0 ) 
+	       {
+	         if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
+	         else pTipNormal[pIdx] = bc->e3();
+	         pExtensionDirection[pIdx] = bc->e1() * e23[2] - 
+		                             bc->e2() * e23[1];
+	         if(mat2v>0) pExtensionDirection[pIdx] = 
+		   -pExtensionDirection[pIdx];
+	       }
 
-	     dis = Q-P3;
-	     if( ( dis - e34*Dot(dis,e34) ).length() < r && mat2v*mat4v>0 )
-	     {
+	       dis = Q-P3;
+	       if( ( dis - e34*Dot(dis,e34) ).length() < r*2 && mat2v*mat4v>0 )
+	       {
 	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
 	       else pTipNormal[pIdx] = bc->e3();
-	       pExtensionDirection[pIdx] = bc->e1() * e34[2] - bc->e2() * e34[1];
-	       if(mat3v>0) pExtensionDirection[pIdx] = -pExtensionDirection[pIdx];
-	     }
+	       pExtensionDirection[pIdx] = bc->e1() * e34[2] - 
+	                                   bc->e2() * e34[1];
+	       if(mat3v>0) pExtensionDirection[pIdx] = 
+	         -pExtensionDirection[pIdx];
+	       }
 
-	     dis = Q-P4;
-	     if( ( dis - e41*Dot(dis,e41) ).length() < r && mat3v*mat1v>0 )
-	     {
-	       if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
-	       else pTipNormal[pIdx] = bc->e3();
-	       pExtensionDirection[pIdx] = bc->e1() * e41[2] - bc->e2() * e41[1];
-	       if(mat4v>0) pExtensionDirection[pIdx] = -pExtensionDirection[pIdx];
+	       dis = Q-P4;
+	       if( ( dis - e41*Dot(dis,e41) ).length() < r*2 && mat3v*mat1v>0 )
+	       {
+	         if(vdis > 0) pTipNormal[pIdx] = -bc->e3();
+	         else pTipNormal[pIdx] = bc->e3();
+	         pExtensionDirection[pIdx] = bc->e1() * e41[2] - 
+		                             bc->e2() * e41[1];
+	         if(mat4v>0) pExtensionDirection[pIdx] = 
+		   -pExtensionDirection[pIdx];
+	       }
 	     }
 	   }
 	 }
        } //"Crack"
        } //fracture
+       //cout<<"initial TipNormal: "<<pTipNormal[pIdx]<<endl;
      }
    }
 
@@ -370,12 +381,12 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    
    if(d_fracture) {
      new_dw->put(pIsBroken, lb->pIsBrokenLabel);
-     new_dw->put(pIsolated, lb->pIsolatedLabel);
      new_dw->put(pCrackNormal, lb->pCrackNormalLabel);
      new_dw->put(pTipNormal, lb->pTipNormalLabel);
      new_dw->put(pExtensionDirection, lb->pExtensionDirectionLabel);
      new_dw->put(pToughness, lb->pToughnessLabel);
      new_dw->put(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel);
+     new_dw->put(pDisplacement, lb->pDisplacementLabel);
    }
 }
 
