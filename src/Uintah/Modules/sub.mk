@@ -7,15 +7,17 @@ SRCDIR := Uintah/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Readers\
-	$(SRCDIR)/Writers\
 	$(SRCDIR)/Visualization\
 #[INSERT NEW CATEGORY DIR HERE]
-#	$(SRCDIR)/MPMViz\
+
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.6  2000/12/07 18:47:00  kuzimmer
+# not building a writers directory since we currently have no writers.
+#
 # Revision 1.5  2000/12/06 21:50:57  kuzimmer
 # No longer compiling MPMVis
 #
