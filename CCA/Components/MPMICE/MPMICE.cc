@@ -304,7 +304,7 @@ void MPMICE::scheduleInterpolateNCToCC(SchedulerP& sched,
 
    const MaterialSubset* mss = mpm_matls->getUnion();
 
-   t->modifies(             Mlb->gVelocityStarLabel, mss, Ghost::AroundCells,1);
+   t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mss, Ghost::AroundCells,1);
    t->requires(Task::NewDW, Mlb->gMassLabel,              Ghost::AroundCells,1);
    t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   Ghost::AroundCells,1);
 
@@ -356,8 +356,8 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
 		  this, &MPMICE::interpolateCCToNC);
                 
   const MaterialSubset* mss = mpm_matls->getUnion();
-  t->modifies(             Mlb->gVelocityStarLabel, mss, Ghost::None);
-  t->modifies(             Mlb->gAccelerationLabel, mss, Ghost::None);
+  t->modifies(             Mlb->gVelocityStarLabel, mss);
+  t->modifies(             Mlb->gAccelerationLabel, mss);
   t->requires(Task::NewDW, MIlb->dTdt_CCLabel,           Ghost::AroundCells,1);
   t->requires(Task::NewDW, MIlb->dvdt_CCLabel,           Ghost::AroundCells,1);
 
