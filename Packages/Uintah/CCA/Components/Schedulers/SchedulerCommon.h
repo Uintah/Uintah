@@ -4,10 +4,10 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/LocallyComputedPatchVarMap.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
