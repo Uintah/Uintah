@@ -40,24 +40,18 @@
 <!-- *************************************************************** -->
 <!-- *************************************************************** -->
 
-<p class="title">Thirdparty Software Installation and Build Instructions</p>
-<p class="subtitle">(Unix version - Updated February 17, 2001)</p>
+<p class="title">Thirdparty Software Installation and Build Information</p>
+<p class="subtitle">(Unix version - April 3, 2001)</p>
 
 <p class="head">Table of contents</p>
 <ol class="toc">
       <LI><A HREF="#Prerequisites">Prerequisites</A></LI>
-      <LI><A HREF="#Auto">Installation of Thirdparty Software (automatic)</A>
-      <LI><A HREF="#Install">Installation Location of Thirdparty Software
-      (manual)</A>
-      </LI>
-      <LI><A HREF="#Configure">Configure Options for Thirdparty Software
-      (manual)</A></LI>
-      <LI><A HREF="#Environment">Environment Variables (automatic and manual)
-      </A></LI>
-      <LI><A HREF="#Gotchas">Known Issues (automatic and manual)</A></LI>
+      <LI><A HREF="#Auto">Automatic Installation of All Thirdparty Software</A>
+      <LI><A HREF="#Manual">Manual Installation of Required Thirdparty Software
+</A>
+      <LI><A HREF="#Gotchas">Known Issues</A></LI>
 </ol>
 
-<br><br><br>
 <p class="head"><a name="Prerequisites">Prerequisites</a></p>
     <p class="firstpara">
       Use of this document requires experience with the SGI
@@ -80,13 +74,12 @@
     </p>
 
     <p class="firstpara">
-      This section does not apply to the installation and upgrade of
+      This information does not apply to the installation and upgrade of
       the OS and build tools, as those topics are quite involved.
     </p>
 
-<br><br><br>
-<p class="head"><a name="Auto">Installation of Thirdparty Software (automatic)
-</a></p>
+<p class="head"><a name="Auto">Automatic Installation of All Thirdparty
+    Software</a></p>
     <p class="firstpara">
       Because of many bugs and gotchas in the thirdparty installation
       processes, the easiest and most dependable way to install the
@@ -97,8 +90,8 @@
     <p class="firstpara">
       However, if you want or need to install the third party software by
       hand, you can continue by following the instructions on this page
-      starting at <a href="#Install">Installation Location of Thirdparty
-      Software (manual)</a>.
+      starting at <a href="#Manual">Manual Installation of Required Thirdparty
+      Software</a>.
     </p>
 
     <p class="firstpara">
@@ -111,7 +104,9 @@
     </p>
 
     <p class="firstpara">
-      <b>1.  Download the install script tar ball from <a href="">here</a>.</b>
+      <b>1.  Download the install script tar ball from
+      <a href="http://ampano.cs.utah.edu/research/software/bundles/Thirdparty_install.tar.gz">
+      here</a>.</b>
     </p>
 
     <p class="firstpara">
@@ -129,12 +124,26 @@ tar xvf Thirdparty_install.tar</font></pre>
       <b>4.  Run the install script by typing:</b>
     </p>
 
-    <pre class="example"><font color=blue>python install</font></pre>
+    <pre class="example"><font color=blue>python install 32</font></pre>
 
     <p class="firstpara">
-      <b>5.  Continue on to <a href="#Environment">Environment Variables</a>
-      </b>.
+      For 32 bit binaries and libraries, or
     </p>
+
+    <pre class="example"><font color=blue>python install 64</font></pre>
+
+    <p class="firstpara">
+      for 64 bit binaries and libraries.  64 bit is available for SGI only.
+    </p>
+
+    <p class="firstpara">
+      you can also specify a faster parallel build by giving an 
+      integer which provides the "number of jobs" argument for GNU make
+      For example, to build 32 bit binaries and libraries using 12 jobs,
+      type the following:
+    </p>
+
+    <pre class="example"><font color=blue>python install 32 12</font></pre>
 
     <p class="firstpara">
       The install script will create a directory named SCIRun_Thirdparty_32 
@@ -144,63 +153,78 @@ tar xvf Thirdparty_install.tar</font></pre>
       for SCIRun (see step 2 of <a href="pseInstall.html#Building">Building
       SCIRun</a>).
     </p>
-      
-<br><br><br>
-<p class="head"><a name="Install">Installation Location of Third Party Software
-(manual)</a></p>
+
     <p class="firstpara">
-      SCIRun can easily be used with existing instances of the
-      required third party software, regardless of where it is
-      installed.  However, it is recommended that all the
-      required third party software be installed into a centralized and
-	  out of the way location, to prevent conflicts with other software,
-	  if it is not yet already installed.
+      The install script requires Python version 1.5 or greater
     </p>
-    
+      
+<p class="head"><a name="Manual">Manual Installation of Required Thirdparty
+    Software</a>
+</p>
+
+<p class="subhead"><a name="Buildtools">Recommended Tools For Building Thirdparty Software</a></p>
+
     <p class="firstpara">
-      For example, install all the third party software into the
-      directory called "/usr/local/SCIRun_Thirdparty_32" such that
-      after installing all the distributions, the 
-      /usr/local/SCIRun_Thirdparty_32 directory has the
-      following contents:
+      You should use the same build tools to build the third party software as
+      is required for building SCIRun itself.
     </p>
 
-    <pre class="example">/usr/local/SCIRun_Thirdparty_32/tcl8.3.2
-/usr/local/SCIRun_Thirdparty_32/tk8.3.2
-/usr/local/SCIRun_Thirdparty_32/itcl3.1.0
-/usr/local/SCIRun_Thirdparty_32/blt2.4u
-/usr/local/SCIRun_Thirdparty_32/xerces-c-src1_4_0
-/usr/local/SCIRun_Thirdparty_32/make-3.79.1
-/usr/local/SCIRun_Thirdparty_32/man
-/usr/local/SCIRun_Thirdparty_32/lib
-/usr/local/SCIRun_Thirdparty_32/bin
+<p class="subhead"><a name="Install">Recommended Installation Location of Third Party 
+    Software</a></p>
+    <p class="firstpara">
+      SCIRun uses the latest versions of all the software that it requires, and
+      can be configured to use those versions regardless of where that 
+      software is installed, whether
+      it is all installed in the same location or not.  However, if the target
+      install machine requires older versions of the same software (for other
+      programs) then it is recommended that all the required third
+      party software be installed into a centralized and out-of-the-way
+      directory rather than in a directory already occupied by older versions
+      of the third party software.
+    </p>
+
+    <p class="firstpara">
+      That said, if the target install machine only needs the latest versions
+      of software, or if it doesn't matter one way or the other, then it is
+      perfectly safe to install the required thirdparty software into any
+      directory including directories where older versions are already 
+      installed.
+    </p>
+
+    <p class="firstpara">
+      An example of a centralized and out-of-the-way location would be:
+      <b>/usr/local/SCIRun_Thirdparty_32</b> such that after installation
+      the contents of that directory would look like this (assuming that
+      the tarballs were unzipped and untarred in the /src directory inside
+      /usr/local/SCIRun_Thirdparty_32):
+    </p>
+
+    <pre class="example">/usr/local/SCIRun_Thirdparty_32/bin
 /usr/local/SCIRun_Thirdparty_32/include
+/usr/local/SCIRun_Thirdparty_32/lib
+/usr/local/SCIRun_Thirdparty_32/man
+/usr/local/SCIRun_Thirdparty_32/src/blt2.4u
+/usr/local/SCIRun_Thirdparty_32/src/itcl3.1.0
+/usr/local/SCIRun_Thirdparty_32/src/tcl8.3.2
+/usr/local/SCIRun_Thirdparty_32/src/tk8.3.2
+/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_4_0
     </pre>
 
-    <p class="firstpara">
-      Where all the executable binaries are in the /bin directory, all
-      the shared object binaries are in the /lib directory and all 
-      the header files are in the /include directory.
-    </p>
-        
-    <br><br><br>
-<p class="head"><a name="Configure">Configure Options for Third Party Software (manual)</a></p>
-      
-    <p class="firstpara">
-      The following represent the recommended configure
-      commands for the indicated software distributions.
-    </p>
+<p class="subhead"><a name="Configure"> Recommended Configure Options for Third Party Software</a></p>
 
     <p class="firstpara">
-      NOTE: <i><b><font color=green>INST_DIR</font></b></i> represents
+      <b><i>NOTE</b></i>: <i><b><font color=green>INST_DIR</font></b></i> 
+      represents
       the chosen installation directory for the indicated software
       distribution.  <i><b><font color=green>INST_DIR</font></b></i>
       would be "/usr/local/SCIRun_Thirdparty_32" for the example given
-      above. 
+      above.  Note that the <i><b><font color=green>INST_DIR</font></b></i>
+      does not have to be the same for each distribution, but can be if it
+      is desired as is demonstrated in the example.
     </p>
 
     <p class="firstpara">
-      <b>For Tcl, Tk, [incr Tcl/Tk] and GNU make</b>
+      <b>For Tcl, Tk and [incr Tcl/Tk]</b>
     </p>
 
     <pre class="example"><font color=blue>configure --prefix=</font><i><b><font
@@ -211,8 +235,7 @@ tar xvf Thirdparty_install.tar</font></pre>
       <b>For BLT</b>
     </p>
 
-    <pre class="example"><font color=blue>configure --with-cc=cc --prefix=</font><i><b><font
-	  color=green>INST_DIR</font></b></i>
+    <pre class="example"><font color=blue>configure --with-cc=cc --prefix=</font><i><b><font color=green>INST_DIR</font></b></i>
     </pre>
 
     <p class="firstpara">
@@ -220,72 +243,52 @@ tar xvf Thirdparty_install.tar</font></pre>
     </p>
 
     <p class="firstpara">
+      First, set the indicated environment variables listed below, then type:
+    </p>
+
+    <pre class="example"><font color=blue>configure --prefix=</font><i><b><font color=green>INST_DIR</font></b></i>
+    </pre>
+
+    <p class="firstpara">
       On SGI machines:
-    <p>
-    <pre class="example"><font color=blue>runConfigure -nfileonly -tnative -minmem \
-             -pirix -ccc -xCC -z-DAPP_NO_THREADS -P</font><i><b><font
-		 color=green>INST_DIR</font></b></i>
+    </p>
+
+    <pre class="example"><font color=blue>XERCESCROOT = <font color=green><b><i>XERCES_C_ROOT</i></b></font>
+TRANSCODER = NATIVE
+MESSAGELOADER = INMEM
+NETACCESSOR = FileOnly
+CC = cc
+CXX = CC 
+LDFLAGS = " -n32 "
+LIBS = " -n32 "
+CXXFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER -n32 -DAPP_NO_THREADS"
+CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER -n32 -DAPP_NO_THREADS"</font>
     </pre>
 
     <p class="firstpara">
       On Linux machines:
     </p>
-    <pre class="example"><font color=blue>runConfigure -nfileonly -tnative -minmem \
-             -plinux -cgcc -xg++ -rpthreads -P</font><i><b><font
-		 color=green>INST_DIR</font></b></i>
+
+    <pre class="example"><font color=blue>XERCESCROOT = <font color=green><b><i>XERCES_C_ROOT</i></b></font>
+TRANSCODER = NATIVE
+MESSAGELOADER = INMEM
+NETACCESSOR = FileOnly
+CC = gcc
+CXX = g++ 
+LIBS = " -lpthread "
+CXXFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
+CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
+      </font>
     </pre>
 
-<br><br><br>
-<p class="head"><a name="Environment">Environment Variables (automatic and manual)</a></p>
     <p class="firstpara">
-      Once the third party software is properly installed, set or edit 
-      environment variables to use those executables and libraries.
+      Where <font color=green><b><i>XERCES_C_ROOT</i></b></font> is the root
+      of the unzipped and untarred xerces 1.4.0 distribution.  For the example
+      given above, <font color=green><b><i>XERCES_C_ROOT</i></b></font> would
+      be "/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_4_0".
     </p>
 
-    <p class="firstpara">
-      Usually, depending on the startup shell being used, there are two
-      environment variables that may need to be edited: one defining the
-      search path for executables and the other defining the search path
-      for libraries.  Edit (or set) those variables, for the shell being
-      used, to include the third party executables located in the /bin
-      directory(s) and to include the the third party libraries located
-      in the /lib directory(s).
-    </p>
-
-    <p class="firstpara">
-      As before, <i><b><font color=green>INST_DIR</font></b></i> represents
-      the chosen installation directory.
-    </p>
-
-    <p class="firstpara">
-      For csh or tcsh:
-    </p>
-
-    <pre class="example">setenv PATH <i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
-    <pre class="example">setenv LD_LIBRARY_PATH <i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
-
-    <p class="firstpara">
-      For bash or ksh:
-    </p>
-
-    <pre class="example">export PATH=<i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
-    <pre class="example">export LD_LIBRARY_PATH=<i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
-
-    <p class="firstpara">
-      Note that if the PATH and LD_LIBRARY_PATH variables were not already set,
-      then the trailing :$PATH and/or :$LD_LIBRARY_PATH are not needed and may
-      cause the command to fail.
-    </p>
-
-    <p class="firstpara">
-      Also, for machines using rld (e.g. SGI machines) the environment 
-      variable named above as LD_LIBRARY_PATH may need to changed to
-      LD_LIBRARY32_PATH or LD_LIBRARY64_PATH depending upon the machine's
-      default ABI (Application Binary Interface).
-    </p>
-
-<br><br><br>
-<p class="head"><a name="Gotchas">Known Issues (automatic and manual)</a></p>
+<p class="head"><a name="Gotchas">Known Issues For Manual Builds</a></p>
     <p class="firstpara">
       This section describes known issues with installing and building the
       required third party software.  It also includes solutions when
@@ -312,11 +315,8 @@ tar xvf Thirdparty_install.tar</font></pre>
       the CFLAGS and LFLAGS macros have "-64" listed instead of "-n32".
       In the case of the tcl distributions, this means editing the
       makefiles (after configuring) by hand and replacing all instances of 
-      "-n32" with "-64".  Getting xerces to build in 64 bits is a little
-      more complicated: first start the runConfigure script as usual, then
-      (before making) type the export commands indicated at the conclusion
-      of the runConfigure script verbatim with the exception that you
-      insert "-64" into the CFLAGS and LFLAGS environment variables.
+      "-n32" with "-64".  For Xerces, this means changing the environment
+      variables listed above replacing all instances of  " -n32 " with " -64 ".
     </p>
 
 <p class="subhead">Building [incr Tcl/Tk]</p>
@@ -336,16 +336,16 @@ chmod a+x install-sh mkinstalldirs</font></pre>
 
 <p class="subhead">Building BLT</p>
     <p class="firstpara">
-      The BLT make files have bugs in them that prevent building the necessary
-      shared object libraries.  To build the necessary files type the following
-      , after configuring:
+      The BLT make files have bugs in them that cause apparent errors in the
+      building process.  To build without the apparent errors, type the
+      following (in the order shown!) after configuring:
     </p>
 
     <pre class="example"><font color=blue>cd blt2.4u
 make 
 cd src/shared
 make 
-cd blt2.4u
+cd ../..
 make -k install
 cd src/shared
 make -k install</font>
@@ -359,26 +359,21 @@ make -k install</font>
 
     <p class="firstpara">
       The configure scripts are bundled without execute permissions.  Before
-      attempting to configure or make Xerces-C, type the following commands:
+      attempting to configure, type the following commands:
     </p>
 
     <pre class="example"><font color=blue>cd xerces-c-src1_4_0/src
 chmod a+x configure runConfigure</font></pre>
 
     <p class="firstpara">
-      Then, proceed normally with the configure and make.
-    </p>
-
-    <p class="firstpara">
-      After typing "make", but before compilation begins, the make system
-      copies certain files around.  This copying is not specified in any
-      dependancy tree, so using a -j flag (use multiple threads) as a make
-      argument will cause the build to fail.
+      There is no dependancy tree for the copy phase of the xerces build,
+      so using a -j flag (number of jobs) as a GNU make argument will cause
+      the build to fail.
     </p>
 
     <p class="firstpara">
       There is no dependancy tree for the "install" target within the make
-      files, so passing install as an argument to the first time "make" is
+      files, so passing "install" as an argument to the first time "make" is
       typed will cause the build to fail.  Instead type "make" first, then
       "make install".
     </p>
