@@ -104,7 +104,7 @@ int getNumNonEmptyLines(char *fname) {
 int
 main(int argc, char **argv) {
   TriSurfMesh *tsm = new TriSurfMesh();
-  if (argc < 4 || argc > 7) {
+  if (argc < 4 || argc > 9) {
     cerr << "Usage: "<<argv[0]<<" pts tris TriSurfMesh [-noPtsCount] [-noTrisCount] [-oneBasedIndexing] [-binOutput] [-debug]\n";
     return 0;
   }
