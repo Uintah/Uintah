@@ -35,7 +35,7 @@ itcl_class IsoSurface {
 	}
 	toplevel $w
 	frame $w.f 
-	pack $w.f -padx 2 -pady 2
+	pack $w.f -padx 2 -pady 2 -expand 1 -fill x
 	set n "$this-c needexecute "
 
 	frame $w.f.seedpoint
