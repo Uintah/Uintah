@@ -62,12 +62,20 @@ namespace rtrt {
   
   public:
     struct voxel_valuepair {
-      int value;
-      int gradient;
+      float value;
+      float gradient;
     };
-    // maintains cutplane voxels being examined
+    // cutplane probe values
     vector<voxel_valuepair*> cp_voxels;
-
+    bool display_probe;
+    RectWidget* cp_probe;
+    
+    // Loads a widget configuration from a file for initialization
+    void loadWidgets( char* file );
+    // Deletes the cutplane widget probe
+    void delete_widget_probe(bool refresh);
+    // Places a widget on the histogram according to probed voxels
+    void create_widget_probe();
     // Deletes cutplane voxel information
     void delete_voxel_storage();
     // Called whenever the histogram borders need to be redrawn
@@ -164,6 +172,8 @@ namespace rtrt {
     float vmin, vmax;
     float gmin, gmax;
 
+    char *lastSaveState;
+    char *lastLoadState;
     // for user-defined histogram parameters
     bool hist_adjust;
     float current_vmin, current_vmax, selected_vmin, selected_vmax;
@@ -171,6 +181,7 @@ namespace rtrt {
 
     GLuint bgTextName;                 // histogram texture
     GLuint transFuncTextName;          // transfer function texture
+    GLuint widgetManipName;            // manipulated widget texture
     Texture <GLfloat> *bgTextImage;    // clean background texture
     Texture <GLfloat> *transTexture1;  // visible transfer functions
     Texture <GLfloat> *transTexture2;  // swapped to remove rendering "streaks"
