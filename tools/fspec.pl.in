@@ -47,7 +47,7 @@ LINE: while(<FILE>){
     $sep="";
     foreach $a (@args) {
 	print OUT $sep;
-	$sep=", ";
+	$sep=",\n";
 	($type, $tmpltype, $name) = &parsearg($a);
 	if(&simpletype($type)){
 	    print OUT "$type\* $name";
@@ -81,7 +81,7 @@ LINE: while(<FILE>){
     $sep="";
     foreach $a (@args){
 	print OUT $sep;
-	$sep=", ";
+	$sep=",\n";
 	($type, $tmpltype, $name) = &parsearg($a);
 	if($tmpltype ne ""){
 	    print OUT "$type<$tmpltype>& $name";
@@ -119,7 +119,7 @@ LINE: while(<FILE>){
     foreach $a (@args) {
 	($type, $tmpltype, $name) = &parsearg($a);
 	print OUT $sep;
-	$sep=", ";
+	$sep=",\n";
 	if(&simpletype($type)){
 	    print OUT "&$name";
 	} elsif(&knownvartype($type)){
