@@ -1,8 +1,8 @@
  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
  <HTML>
    <HEAD>
-     <TITLE>PSE Document Map (27-Jul-2000)</TITLE>
-     <!-- Changed by: TjD, 27-Jul-2000 -->
+     <TITLE>PSE Document Map (02-Aug-2000)</TITLE>
+     <!-- Changed by: TjD, 02-Aug-2000 -->
 
    </HEAD>  
 
@@ -97,18 +97,49 @@
 	 </P>
        </LI>
        
-       <LI><P>
+       <LI>
+	 <P>
 	     The SCI group has <A HREF="http://www.cs.utah.edu/sci/publications/">published</A> many other papers.
-	   </P></LI>
+	 </P>
+       </LI>
 
-       <LI>PSE's:
+       <LI>
+	 <P>
+	   Existing <EM>Problem Solving Environments</EM> (PSE):
+	 </P>
 	 <UL>
-	   <LI>SCIRun</LI>
+	   <LI>
+	     <P>
+	       <EM>SCIRun</EM> is a general purpose computational science
+	       problem solving environment developed by the
+	       <A HREF="http://www.cs.utah.edu/sci/">Scientific Computing and Imaging Institute</A>.
+	     </P>
+	   </LI>
 
-	   <LI>BioPSE</LI>
+	   <LI>
+	     <P>
+	       <EM>BioPSE</EM> is a PSE developed by the
+	       <A HREF="http://www.sci.utah.edu/ncrr/">NIH Center for Bioelectric
+		 Field Modeling, Simulation, and Visualization</A>.  BioPSE
+	       is designed to solve bioelectric field problems. 
+	     </P>
+	   </LI>
 	   
-	   <LI>Uintah </LI>
+	   <LI>
+	     <P>
+	       <EM>Uintah</EM> is developed by the Center for the
+	       <A HREF="http://www.csafe.utah.edu/">Simulation of Accidental
+	       Fires and Explosions</A> (C-SAFE).  This PSE is used to
+	       simulate fires involving a diverse range of accident
+	       scenarios including multiple high-energy devices, complex
+	       building/surroundings geometries and many fuel sources.
+	     </P>
+	   </LI>
 	 </UL>
+	 <P>
+	   All PSE's allow interaction between the modeling, computation,
+	   and visualization phases of a simulation.  All PSEs are extensible.
+	 </P>
        </LI>
 
        
@@ -185,63 +216,7 @@
      </P>
 
      <UL>
-       <LI>
-	 <P>
-	   <A HREF="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">
-	     Coding Standards</A> have been developed in order to provide a
-	   basis for consistent, easily reviewable, and maintainable code.
-	   Your source code must be commented (documented) according to the
-	   <A HREF="ReferenceGuide/cocoon.html">PSE standard</A>.
-	 </P>
-	 <LI>
-	   <P>
-	     <A HREF="../src/">Browse</A> PSE's source code (stuff from
-	     header files only).
-	   </P>
-	 </LI>
-       </LI>
-       <LI>
-	 <P>
-	   PSE source code, documentation, and other files, are managed
-	   by the
-	   <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
-		    Concurrent Versions System
-	   </A>
-	   software.
-	   Developers must be familiar with its
-	   <A HREF="ReferenceGuide/cvs_info.html">use</A>
-	   in the PSE project.  Also
-	   see the
-	   <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">cvs information</A>
-	   prepared by the <A HREF="http://www.csafe.utah.edu">Uintah</A>
-	   project.
-	 </P>
-       </LI>
-
-       <LI>
-	 <P>
-	   New modules are created with PSE's built in " <A
-							   HREF="ReferenceGuide/createANewModule.txt"> Module Maker </A>"
-	   software.
-	 </P>
-	 <P>
-	   Module writers must follow a <A
-					  HREF="ReferenceGuide/specProcedure.html">specification procedure</A>
-	   when writing new modules.  Modules which are not fully spec'ed
-	   will not be incorporated into "official" PSE releases.
-	 </P>
-	 <P>
-	   Your module code must be commented (documented) according to the
-	   <A HREF="ReferenceGuide/cocoon.html">PSE standard</A>.
-	 </P>
-       </LI>
-
-       <LI> Creating a Data Converter </LI>
-
-       <LI> Module Reference Guides </LI>
-
-       <LI> Data Type Reference Guides </LI>
-
+       
        <LI>
 	 <P>
 	   PSE is implemented using C++.  Here are a few C++ references:
@@ -281,6 +256,69 @@
 	 </P>
        </LI>
 
+       <LI>
+	 <P>
+	   <A HREF="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">
+	     Coding Standards</A> have been developed in order to provide a
+	   basis for consistent, easily reviewable, and maintainable code.
+	   Your source code must be commented (documented) according to the
+	   <A HREF="ReferenceGuide/cocoon.html">PSE standard</A>.
+	 </P>
+	 <LI>
+	   <P>
+	     <A HREF="../src/">Browse</A> PSE's source code (stuff from
+	     header files only).
+	   </P>
+	 </LI>
+       </LI>
+       <LI>
+	 <P>
+	   PSE source code, documentation, and other files, are managed
+	   by the
+	   <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
+		    Concurrent Versions System
+	   </A>
+	   software.
+	   Developers must be familiar with its
+	   <A HREF="ReferenceGuide/cvs_info.html">use</A>
+	   in the PSE project.  Also
+	   see the
+	   <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">cvs information</A>
+	   prepared by the <A HREF="http://www.csafe.utah.edu">Uintah</A>
+	   project.
+	 </P>
+       </LI>
+
+       <LI>
+	 <P>
+	   New modules are created with PSE's built in " <A
+							   HREF="ReferenceGuide/createANewModule.txt"> Module Maker </A>"
+	   software.
+	 </P>
+       </LI>
+       <LI>
+	 <P>
+	   Module writers must follow a <A
+					  HREF="ReferenceGuide/specProcedure.html">specification procedure</A>
+	   when writing new modules.  Modules which are not fully spec'ed
+	   will not be incorporated into "official" PSE releases.
+	 </P>
+       </LI>
+       <LI>
+	 <P>
+	   <A HREF="ReferenceGuide/convertingForeignData.html">Data converters</A> are standalone programs that convert
+	   "foreign" data to an existing PSE datatype (PSE datatypes
+	   are "persistant" - that is data objects can be saved to a
+	   file and can later be recreated from the content of the file).
+	 </P>
+       </LI>
+
+       <LI>Existing Data Sets</LI>
+
+       <LI> Module Reference Guides </LI>
+
+       <LI> Data Type Reference Guides </LI>
+
        <LI> Xml References </LI>
        
      </UL>
@@ -293,7 +331,7 @@
 
        <LI> <A HREF="ReferenceGuide/exceptions.html">PSE Exception Facility</A> </LI>
 
-       <LI> <A HREF="../src/PSECommon/Modules/Fields/doc/domainDesign.html">Domains, Attributes, and Geometries</A></LI>
+       <LI> <A HREF="../src/SCICore/Datatypes/doc/domainDesign.html">Domains, Attributes, and Geometries</A></LI>
      </UL>
 
 
