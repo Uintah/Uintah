@@ -38,6 +38,9 @@ MPMLabel::MPMLabel()
   
   pTemperatureGradientLabel = new VarLabel( "p.temperatureGradient",
 					    ParticleVariable<Vector>::getTypeDescription() );
+
+  pTemperatureRateLabel  = new VarLabel( "p.temperatureRate",
+				    ParticleVariable<double>::getTypeDescription() );
   
   //tan:
   //  pSurfaceNormalLabel is used to define the surface normal of a boundary particle.

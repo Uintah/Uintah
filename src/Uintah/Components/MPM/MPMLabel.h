@@ -27,6 +27,7 @@ namespace Uintah {
       const VarLabel* pSurfaceNormalLabel; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
+      const VarLabel* pTemperatureRateLabel; //for heat conduction
       
       const VarLabel* gMassLabel;
       const VarLabel* gAccelerationLabel;
@@ -52,6 +53,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.2  2000/05/30 04:27:33  tan
+// Added gTemperatureRateLabel for heat conduction computations.
+//
 // Revision 1.1  2000/05/26 21:37:30  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //
