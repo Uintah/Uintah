@@ -41,8 +41,11 @@
 
 #include <sys/stat.h>
 
+#include <fstream>
+
 #ifdef HAVE_HDF5
 #include "hdf5.h"
+#include "HDF5Dump.h"
 #endif
 
 namespace SCITeem {
@@ -298,7 +301,10 @@ void HDF5DataReader::execute() {
 		  break;
 		}
 	      }
-	      if (! in_set) { new_label.push_back(s[i]); }
+
+	      if (in_set) { new_label.push_back('X' ); }
+	      else        { new_label.push_back(s[i]); }
+
 	    }
 	    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
 	  } else {
@@ -317,8 +323,9 @@ void HDF5DataReader::execute() {
 
     for( int ic=0; ic<nHandles.size(); ic++ ) {
       for( int jc=0; jc<nHandles[ic].size(); jc++ ) {
-	nHandles_[cc++] = nHandles[ic][jc];
+	nHandles_[cc] = nHandles[ic][jc];
 
+	++cc;
 	if( cc == MAX_PORTS ) {
 	  warning( "Maximum number of ports reached" );
 	  break;
@@ -459,12 +466,12 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 
   /* Open the dataset in the file. */
   if( (ds_id = H5Dopen(g_id, dataset.c_str())) < 0 ) {
-    error( "Error opening file space. " );
+    error( "Error opening dataset. " );
   }
 
   /* Open the coordinate space in the file. */
   if( (file_space_id = H5Dget_space( ds_id )) < 0 ) {
-    error( "Error opening file space. " );
+    error( "Error getting file space. " );
   }
     
   /* Get the rank (number of dims) in the space. */
@@ -567,6 +574,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   hid_t mem_type_id;
 
   unsigned int nrrd_type;
+
+  int size = H5Tget_size(type_id);
 
   switch (H5Tget_class(type_id)) {
   case H5T_INTEGER:
@@ -972,33 +981,34 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       tmp_filename.append( new_filename, last, new_filename.length()-last );
       tmp_filename.append( ".dump" );
 
+      std::ofstream sPtr( tmp_filename.c_str() );
 
-      string command = HDF5_PATH;
-      command.append( "/h5dump -F " );
-      command.append( new_filename );
-      
-      command.append( " > " );
-      command.append( tmp_filename );
-
-      if( system( command.c_str() ) == EXIT_SUCCESS ) {
-
-	if (stat(tmp_filename.c_str(), &buf)) {
-	  error( string("File not found ") + tmp_filename );
-	  return;
-	}
-
-	// Update the treeview in the GUI.
-	ostringstream str;
-	str << id << " build_tree " << tmp_filename;
-      
-	gui->execute(str.str().c_str());
-
-	// Update the dims in the GUI.
-	gui->execute(id + " set_size 0 {}");
-
-      } else {
-	error( string("Could not create dump file: ") + tmp_filename );
+      if( !sPtr ) {
+	error( string("Unable to open output file: ") + tmp_filename );
+	return;
       }
+  
+      if( HDF5Dump_file( new_filename.c_str(), &sPtr ) < 0 ) {
+	error( string("Could not create dump file: ") + tmp_filename );
+	return;
+      }
+
+      sPtr.flush();
+      sPtr.close();
+
+      if (stat(tmp_filename.c_str(), &buf)) {
+	error( string("File not found ") + tmp_filename );
+	return;
+      } 
+
+      // Update the treeview in the GUI.
+      ostringstream str;
+      str << id << " build_tree " << tmp_filename;
+      
+      gui->execute(str.str().c_str());
+      
+      // Update the dims in the GUI.
+      gui->execute(id + " set_size 0 {}");
     }
 #else
     error( "No HDF5 availible." );

@@ -24,7 +24,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(HDF5_INCLUDE) -DHDF5_PATH='"$(HDF5_LIB_DIR)/../bin"'
+INCLUDES += $(HDF5_INCLUDE)
 
 SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/NrrdWriter.cc\
 	$(SRCDIR)/NrrdToField.cc\
 	$(SRCDIR)/HDF5DataReader.cc\
+	$(SRCDIR)/HDF5Dump.cc\
 
 #[INSERT NEW CODE FILE HERE]
 
