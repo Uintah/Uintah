@@ -864,7 +864,7 @@ OpenGL::redraw_frame()
 	  gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		    lookat.x(), lookat.y(), lookat.z(),
 		    up.x(), up.y(), up.z());
-	  if(do_hi_res_)
+	  if (do_hi_res_)
 	    setFrustumToWindowPortion();
 	}
 	
@@ -1865,12 +1865,25 @@ OpenGL::deriveFrustum()
   const double G = (pmat[10]-1)/(pmat[10]+1);
   frustum_.znear = -(pmat[14]*(G-1))/(2*G);
   frustum_.zfar = frustum_.znear*G;
-  frustum_.left = frustum_.znear*(pmat[8]-1)/pmat[0];
-  frustum_.right = frustum_.znear*(pmat[8]+1)/pmat[0];
-  frustum_.bottom = frustum_.znear*(pmat[9]-1)/pmat[5];
-  frustum_.top = frustum_.znear*(pmat[9]+1)/pmat[5];
-  frustum_.width = frustum_.right - frustum_.left;
-  frustum_.height = frustum_.top - frustum_.bottom;
+
+  if (view_window_->gui_ortho_view_.get())
+  {
+    frustum_.left = (pmat[8]-1)/pmat[0];
+    frustum_.right = (pmat[8]+1)/pmat[0];
+    frustum_.bottom = (pmat[9]-1)/pmat[5];
+    frustum_.top = (pmat[9]+1)/pmat[5];
+    frustum_.width = frustum_.right - frustum_.left;
+    frustum_.height = frustum_.top - frustum_.bottom;
+  }
+  else
+  {
+    frustum_.left = frustum_.znear*(pmat[8]-1)/pmat[0];
+    frustum_.right = frustum_.znear*(pmat[8]+1)/pmat[0];
+    frustum_.bottom = frustum_.znear*(pmat[9]-1)/pmat[5];
+    frustum_.top = frustum_.znear*(pmat[9]+1)/pmat[5];
+    frustum_.width = frustum_.right - frustum_.left;
+    frustum_.height = frustum_.top - frustum_.bottom;
+  }
 }
 
 
@@ -1880,11 +1893,22 @@ OpenGL::setFrustumToWindowPortion()
 {
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-  glFrustum(frustum_.left + frustum_.width / hi_res_.ncols * hi_res_.col,
+  if (view_window_->gui_ortho_view_.get())
+  {
+    glOrtho(frustum_.left + frustum_.width / hi_res_.ncols * hi_res_.col,
 	    frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
 	    frustum_.bottom + frustum_.height / hi_res_.nrows * hi_res_.row,
 	    frustum_.bottom + frustum_.height / hi_res_.nrows *(hi_res_.row+1),
-	    frustum_.znear, frustum_.zfar);
+	    znear_, zfar_);
+  }
+  else
+  {
+    glFrustum(frustum_.left + frustum_.width / hi_res_.ncols * hi_res_.col,
+	      frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
+	      frustum_.bottom + frustum_.height / hi_res_.nrows* hi_res_.row,
+	      frustum_.bottom + frustum_.height /hi_res_.nrows*(hi_res_.row+1),
+	      frustum_.znear_, frustum_.zfar_);
+  }
 }
 
 
