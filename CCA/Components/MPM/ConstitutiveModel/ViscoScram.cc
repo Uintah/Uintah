@@ -30,14 +30,13 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-static DebugStream dbg_vsl("VS_L", false);
+static DebugStream dbg("VS", false);
 
 ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, 
                                          MPMFlags* Mflag)
 {
   lb = Mlb;
   flag = Mflag;
-  d_useModifiedEOS = false;
   ps->require("PR",d_initialData.PR);
   d_initialData.CoefThermExp = 1.0e-5;
   ps->get("CoeffThermalExpansion", d_initialData.CoefThermExp);
@@ -61,6 +60,10 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
+  ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
+  d_random = false;
+  ps->get("randomize_parameters", d_random);
+  d_useModifiedEOS = false;
   ps->get("useModifiedEOS",d_useModifiedEOS);
 
   pVolChangeHeatRateLabel = VarLabel::create("p.volHeatRate",
@@ -75,6 +78,8 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel              = VarLabel::create("p.rand",
       ParticleVariable<double>::getTypeDescription() );
+  pStrainRateLabel        = VarLabel::create("p.strainRate",
+      ParticleVariable<double>::getTypeDescription() );
 
   pVolChangeHeatRateLabel_preReloc = VarLabel::create("p.volHeatRate+",
       ParticleVariable<double>::getTypeDescription());
@@ -87,7 +92,9 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
   pStatedataLabel_preReloc         = VarLabel::create("p.pStatedata_vs+",
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel_preReloc              = VarLabel::create("p.rand+",
-      ParticleVariable<double>::getTypeDescription() );
+      ParticleVariable<double>::getTypeDescription());
+  pStrainRateLabel_preReloc        = VarLabel::create("p.strainRate+",
+      ParticleVariable<double>::getTypeDescription());
 
   if(flag->d_8or27==8){
     NGN=1;
@@ -108,6 +115,7 @@ ViscoScram::ViscoScram(const ViscoScram* cm)
   flag = cm->flag;
   NGN = cm->NGN;
 
+  d_random = cm->d_random;
   d_useModifiedEOS = cm->d_useModifiedEOS ;
   d_initialData.PR = cm->d_initialData.PR;
   d_initialData.CoefThermExp = cm->d_initialData.CoefThermExp; 
@@ -144,6 +152,8 @@ ViscoScram::ViscoScram(const ViscoScram* cm)
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel              = VarLabel::create("p.rand",
       ParticleVariable<double>::getTypeDescription() );
+  pStrainRateLabel        = VarLabel::create("p.strainRate",
+      ParticleVariable<double>::getTypeDescription() );
 
   pVolChangeHeatRateLabel_preReloc = VarLabel::create("p.volHeatRate+",
       ParticleVariable<double>::getTypeDescription());
@@ -157,6 +167,8 @@ ViscoScram::ViscoScram(const ViscoScram* cm)
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel_preReloc              = VarLabel::create("p.rand+",
       ParticleVariable<double>::getTypeDescription() );
+  pStrainRateLabel_preReloc        = VarLabel::create("p.strainRate+",
+      ParticleVariable<double>::getTypeDescription());
 }
 
 ViscoScram::~ViscoScram()
@@ -168,6 +180,7 @@ ViscoScram::~ViscoScram()
   VarLabel::destroy(pCrackRadiusLabel);
   VarLabel::destroy(pStatedataLabel);
   VarLabel::destroy(pRandLabel);
+  VarLabel::destroy(pStrainRateLabel);
 
   VarLabel::destroy(pVolChangeHeatRateLabel_preReloc);
   VarLabel::destroy(pViscousHeatRateLabel_preReloc);
@@ -175,6 +188,7 @@ ViscoScram::~ViscoScram()
   VarLabel::destroy(pCrackRadiusLabel_preReloc);
   VarLabel::destroy(pStatedataLabel_preReloc);
   VarLabel::destroy(pRandLabel_preReloc);
+  VarLabel::destroy(pStrainRateLabel_preReloc);
 }
 
 void 
@@ -189,6 +203,7 @@ ViscoScram::addInitialComputesAndRequires(Task* task,
   task->computes(pCrackRadiusLabel,       matlset);
   task->computes(pStatedataLabel,         matlset);
   task->computes(pRandLabel,              matlset);
+  task->computes(pStrainRateLabel,        matlset);
 }
 
 void 
@@ -212,6 +227,7 @@ ViscoScram::initializeCMData(const Patch* patch,
   ParticleVariable<double>    pCrackRadius;
   ParticleVariable<StateData> pStatedata;
   ParticleVariable<double>    pRand;
+  ParticleVariable<double>    pStrainRate;
 
   new_dw->allocateAndPut(pVolChangeHeatRate, pVolChangeHeatRateLabel, pset);
   new_dw->allocateAndPut(pViscousHeatRate,   pViscousHeatRateLabel,   pset);
@@ -219,6 +235,7 @@ ViscoScram::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pCrackRadius,       pCrackRadiusLabel,       pset);
   new_dw->allocateAndPut(pStatedata,         pStatedataLabel,         pset);
   new_dw->allocateAndPut(pRand,              pRandLabel,              pset);
+  new_dw->allocateAndPut(pStrainRate,        pStrainRateLabel,        pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     particleIndex idx = *iter;
@@ -229,8 +246,9 @@ ViscoScram::initializeCMData(const Patch* patch,
     for(int imaxwell=0; imaxwell<5; imaxwell++){
       pStatedata[idx].DevStress[imaxwell] = zero;
     }
-    pRand[idx] = .5;
-    //pRand[idx] = drand48();
+    if (d_random) pRand[idx] = drand48();
+    else pRand[idx] = .5;
+    pStrainRate[idx] = 0.0;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -305,16 +323,9 @@ ViscoScram::addComputesAndRequires(Task* task,
   task->computes(pCrackRadiusLabel_preReloc,       matlset);
   task->computes(pStatedataLabel_preReloc,         matlset);
   task->computes(pRandLabel_preReloc,              matlset);
+  task->computes(pStrainRateLabel_preReloc,        matlset);
 }
 
-void 
-ViscoScram::addComputesAndRequires(Task* ,
-                                   const MPMMaterial* ,
-                                   const PatchSet*,
-                                   const bool ) const
-{
-}
-         
 void 
 ViscoScram::computeStressTensor(const PatchSubset* patches,
                                 const MPMMaterial* matl,
@@ -357,7 +368,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<Matrix3>   pDefGrad, pStress;
   constNCVariable<Vector>          gVelocity, Gvelocity;
 
-  ParticleVariable<double>    pVol_new, pIntHeatRate_new;;
+  ParticleVariable<double>    pVol_new, pIntHeatRate_new, pStrainRate_new;
   ParticleVariable<Matrix3>   pDefGrad_new, pStress_new;
   ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
   ParticleVariable<double>    pCrHeatRate_new, pCrackRadius_new;
@@ -423,6 +434,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                            pCrackHeatRateLabel_preReloc,          pset);
     new_dw->allocateAndPut(pCrackRadius_new, 
                            pCrackRadiusLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pStrainRate_new, 
+                           pStrainRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(pRand,        
                            pRandLabel_preReloc,                   pset);
     new_dw->allocateAndPut(pStatedata,   
@@ -476,7 +489,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       Matrix3 D = (pVelGrad + pVelGrad.Transpose())*.5;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
-      // Effective deviatoric strain rate
+      // Get effective strain rate and Effective deviatoric strain rate
+      pStrainRate_new[idx] = D.Norm();
+      dbg << "Total Strain Rate = " << pStrainRate_new[idx] << endl;
       double EDeff = sqrtopf*DPrime.Norm();
 
       // Sum of old deviatoric stresses
@@ -668,27 +683,35 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       pVol_new[idx] = Jinc*pVol[idx];
 
       // Update the internal heating rate 
-      double cpnew = Cp0 + d_initialData.DCp_DTemperature*pTemperature[idx];
-      double Cv = cpnew/(1+d_initialData.Beta*pTemperature[idx]);
-      double rhoCv = (pVol_new[idx]/pMass[idx])*Cv;
+      //double cpnew = Cp0 + d_initialData.DCp_DTemperature*pTemperature[idx];
+      //double Cv = cpnew/(1+d_initialData.Beta*pTemperature[idx]);
+      double Cv = Cp0;
+      double rhoCv = (pMass[idx]/pVol_new[idx])*Cv;
 
       // Update the Viscoelastic work rate
       double svedot = 0.;
       for(int imw=0;imw<5;imw++){
-        svedot += (pStatedata[idx].DevStress[imw].Norm()*
-                   pStatedata[idx].DevStress[imw].Norm())
-          /(2.*Gmw[imw])*d_initialData.RTau[imw] ;
+        svedot += pStatedata[idx].DevStress[imw].NormSquared()/(2.*Gmw[imw])
+                  *d_initialData.RTau[imw] ;
       }
       pVeHeatRate_new[idx] = svedot/rhoCv;
 
       // Update the cracking work rate
+      Matrix3 sovertau(0.0);
+      for (int imw = 0; imw < 5; ++imw) {
+        sovertau += pStatedata[idx].DevStress[imw]*d_initialData.RTau[imw];
+      }
       double coa3   = (crad*crad*crad)/arad3;
       double topc   = 3.*(coa3/crad)*cdot;
-      double odt    = 1./delT;
-      Matrix3 SRate = DevStress*odt;
+      double oocoa3 = 1.0/(1.0 + coa3);
+      Matrix3 SRate = (D*(2.0*G) - DevStress*topc - sovertau)*oocoa3;
       double scrdot = (DevStress.NormSquared()*topc + 
-                       DevStress.Contract(SRate)*coa3)/(2*G);
+                       DevStress.Contract(SRate)*coa3)/(2.0*G);
+      dbg << "SRate = " << endl << SRate << endl;
+      dbg << "Wdot_cr = " << scrdot << endl;
+      dbg << "rhoCv = " << rhoCv << endl;
       pCrHeatRate_new[idx] = scrdot/rhoCv;
+      dbg << "pCrHeatRate = " << pCrHeatRate_new[idx] << endl;
 
       // Update the volume change heat rate
       pVolHeatRate_new[idx] = d_initialData.Gamma*pTemperature[idx]*ekkdot;
@@ -739,6 +762,7 @@ ViscoScram::carryForward(const PatchSubset* patches,
     // Carry forward the data local to this constitutive model 
     ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
     ParticleVariable<double>    pCrHeatRate_new, pCrackRadius_new;
+    ParticleVariable<double>    pStrainRate_new;
     ParticleVariable<StateData> pStatedata;
     ParticleVariable<double>    pRand;
 
@@ -750,6 +774,8 @@ ViscoScram::carryForward(const PatchSubset* patches,
                            pCrackHeatRateLabel_preReloc,          pset);
     new_dw->allocateAndPut(pCrackRadius_new, 
                            pCrackRadiusLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pStrainRate_new,         
+                           pStrainRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(pStatedata,  
                            pStatedataLabel_preReloc,              pset);
     new_dw->allocateAndPut(pRand,         
@@ -764,6 +790,7 @@ ViscoScram::carryForward(const PatchSubset* patches,
       pVeHeatRate_new[idx]  = 0.0;
       pCrHeatRate_new[idx]  = 0.0;
       pCrackRadius_new[idx] = 0.0;
+      pStrainRate_new[idx] = 0.0;
     }
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
                 lb->delTLabel);
@@ -790,6 +817,7 @@ ViscoScram::allocateCMDataAddRequires(Task* task,
   task->requires(Task::NewDW, pViscousHeatRateLabel_preReloc,   matlset, gnone);
   task->requires(Task::NewDW, pCrackHeatRateLabel_preReloc,     matlset, gnone);
   task->requires(Task::NewDW, pCrackRadiusLabel_preReloc,       matlset, gnone);
+  task->requires(Task::NewDW, pStrainRateLabel_preReloc,        matlset, gnone);
   task->requires(Task::NewDW, pStatedataLabel_preReloc,         matlset, gnone);
   task->requires(Task::NewDW, pRandLabel_preReloc,              matlset, gnone);
 }
@@ -814,6 +842,7 @@ ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
   ParticleVariable<double>    pViscousHeatRate_add;
   ParticleVariable<double>    pCrackHeatRate_add;
   ParticleVariable<double>    pCrackRadius_add;
+  ParticleVariable<double>    pStrainRate_add;
   ParticleVariable<StateData> pStatedata_add;
   ParticleVariable<double>    pRand_add;
 
@@ -821,6 +850,7 @@ ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
   constParticleVariable<double>    pViscousHeatRate_del;
   constParticleVariable<double>    pCrackHeatRate_del;
   constParticleVariable<double>    pCrackRadius_del;
+  constParticleVariable<double>    pStrainRate_del;
   constParticleVariable<StateData> pStatedata_del;
   constParticleVariable<double>    pRand_del;
 
@@ -828,6 +858,7 @@ ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pViscousHeatRate_add,   addset);
   new_dw->allocateTemporary(pCrackHeatRate_add,     addset);
   new_dw->allocateTemporary(pCrackRadius_add,       addset);
+  new_dw->allocateTemporary(pStrainRate_add,        addset);
   new_dw->allocateTemporary(pStatedata_add,         addset);
   new_dw->allocateTemporary(pRand_add,              addset);
 
@@ -835,6 +866,7 @@ ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->get(pViscousHeatRate_del,   pViscousHeatRateLabel_preReloc,   delset);
   new_dw->get(pCrackHeatRate_del,     pCrackHeatRateLabel_preReloc,     delset);
   new_dw->get(pCrackRadius_del,       pCrackRadiusLabel_preReloc,       delset);
+  new_dw->get(pStrainRate_del,        pStrainRateLabel_preReloc,        delset);
   new_dw->get(pStatedata_del,         pStatedataLabel_preReloc,         delset);
   new_dw->get(pRand_del,              pRandLabel_preReloc,              delset);
 
@@ -848,6 +880,7 @@ ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
     pVolChangeHeatRate_add[addidx] = pViscousHeatRate_del[delidx];
     pCrackHeatRate_add[addidx] = pCrackHeatRate_del[delidx];
     pCrackRadius_add[addidx] = pCrackRadius_del[delidx];
+    pStrainRate_add[addidx] = pStrainRate_del[delidx];
     for(int imaxwell=0; imaxwell<5; imaxwell++){
       pStatedata_add[addidx].DevStress[imaxwell] = 
         pStatedata_del[delidx].DevStress[imaxwell];
@@ -859,6 +892,7 @@ ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[pViscousHeatRateLabel] = pViscousHeatRate_add.clone();
   (*newState)[pCrackHeatRateLabel] = pCrackHeatRate_add.clone();
   (*newState)[pCrackRadiusLabel] = pCrackRadius_add.clone();
+  (*newState)[pStrainRateLabel] = pStrainRate_add.clone();
   (*newState)[pStatedataLabel] = pStatedata_add.clone();
   (*newState)[pRandLabel] = pRand_add.clone();
 }
@@ -876,6 +910,7 @@ ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pViscousHeatRateLabel);
   from.push_back(pCrackHeatRateLabel);
   from.push_back(pCrackRadiusLabel);
+  from.push_back(pStrainRateLabel);
   from.push_back(pStatedataLabel);
   from.push_back(pRandLabel);
 
@@ -883,6 +918,7 @@ ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pViscousHeatRateLabel_preReloc);
   to.push_back(pCrackHeatRateLabel_preReloc);
   to.push_back(pCrackRadiusLabel_preReloc);
+  to.push_back(pStrainRateLabel_preReloc);
   to.push_back(pStatedataLabel_preReloc);
   to.push_back(pRandLabel_preReloc);
 }
@@ -904,9 +940,6 @@ double ViscoScram::computeRhoMicroCM(double pressure,
     double p_g_over_bulk = p_gauge/d_bulk;
     rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
   }
-//  else{                    // Standard EOS
-//    rho_cur = rho_orig/(1-p_g_over_bulk);
-//  }
   return rho_cur;
 
 }
@@ -933,12 +966,6 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
     dp_drho    = .5*d_bulk*(rho_orig/(rho_cur*rho_cur) + inv_rho_orig);
     tmp        = d_bulk/rho_cur;  // speed of sound squared
   }
-//  else{                       // STANDARD EOS
-//    double p_g =d_ bulk*(1.0 - rho_orig/rho_cur);
-//    pressure   = p_ref + p_g;  
-//    dp_drho    = d_bulk*rho_orig/(rho_cur*rho_cur);
-//    tmp        = dp_drho;       // speed of sound squared
-//  }
 }
 
 double ViscoScram::getCompressibility()

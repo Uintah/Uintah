@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/SymmMatrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/NodeIterator.h> // just added
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -18,6 +19,7 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Math/MinMax.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -28,6 +30,8 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
+
+static DebugStream dbg("VS_HS", false);
 
 ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, 
                                      MPMLabel* Mlb, 
@@ -146,7 +150,7 @@ ViscoSCRAMHotSpot::addInitialComputesAndRequires(Task* task,
   // Set up extra stuff needed for hotspot model
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::NewDW, lb->pTemperatureLabel, matlset, Ghost::None);
+  //task->requires(Task::NewDW, lb->pTemperatureLabel, matlset, Ghost::None);
 
   task->computes(pHotSpotT1Label,    matlset);
   task->computes(pHotSpotT2Label,    matlset);
@@ -168,8 +172,8 @@ ViscoSCRAMHotSpot::initializeCMData(const Patch* patch,
 
   // Need the initial temperature of the particles to initialize the
   // hotspot model
-  constParticleVariable<double> pTemperature;
-  new_dw->get(pTemperature, lb->pTemperatureLabel, pset);
+  //constParticleVariable<double> pTemperature;
+  //new_dw->get(pTemperature, lb->pTemperatureLabel, pset);
 
   // Allocate the history variables to be initialized
   ParticleVariable<double> pHotSpotT1, pHotSpotT2, pHotSpotPhi1, pHotSpotPhi2;
@@ -187,7 +191,8 @@ ViscoSCRAMHotSpot::initializeCMData(const Patch* patch,
     particleIndex idx = *iter;
 
     // Set the initial temperature
-    double T = pTemperature[idx];
+    //double T = pTemperature[idx];
+    double T = 294.0;
     pHotSpotT1[idx] = T;
     pHotSpotT2[idx] = T;
     pHotSpotPhi1[idx] = T;
@@ -269,7 +274,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<Matrix3>   pDefGrad_new, pSig_new;
   ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
   ParticleVariable<double>    pCrHeatRate_new, pChHeatRate_new;
-  ParticleVariable<double>    pCrackRadius_new;
+  ParticleVariable<double>    pCrackRadius_new, pStrainRate_new;
   ParticleVariable<double>    pHotSpotT1_new, pHotSpotT2_new;
   ParticleVariable<double>    pHotSpotPhi1_new, pHotSpotPhi2_new;
 
@@ -345,6 +350,8 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
                            pChemHeatRateLabel_preReloc,           pset);
     new_dw->allocateAndPut(pCrackRadius_new, 
                            pCrackRadiusLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pStrainRate_new, 
+                           pStrainRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(pHotSpotT1_new, 
                            pHotSpotT1Label_preReloc,              pset);
     new_dw->allocateAndPut(pHotSpotT2_new, 
@@ -404,6 +411,8 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       // Calculate rate of deformation, deviatoric rate of deformation
       // and the effective deviatoric strain rate
       pDefRate = (pVelGrad + pVelGrad.Transpose())*.5;
+      pStrainRate_new[idx] = pDefRate.Norm();
+      dbg << "Total strain rate = " << pStrainRate_new[idx] << endl;
       pDefRateDev = pDefRate - Id*(onethird*pDefRate.Trace());
       double edotnorm = sqrtopf*pDefRateDev.Norm();
       double vres = 
@@ -416,7 +425,20 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
 
       // Integrate the evolution equations for the cracks and the element
       // deviatoric stress (using a fourth-order Runge-Kutta scheme)
-      FVector Y_old(c_old, pState[idx].DevStress, numMw);
+      FVector Y_old(c_old, pState[idx].DevStress);
+
+      //Matrix3 sigDev_old(0.0);
+      //dbg << "Crack Radius (old) = " << c_old << endl;
+      //for (int ii = 0 ; ii < 5; ++ii) {
+      //  dbg << " Dev Stress (old) [" << ii << "] = " << endl
+      //       << pState[idx].DevStress[ii] << endl;
+      //  sigDev_old += pState[idx].DevStress[ii];
+      //}
+      //dbg << "Total Dev Stress (old) = " << endl
+      //    << sigDev_old << endl;
+      //dbg << " Mean Stress (old) = " << sig_m << endl;
+      //dbg << "Total Stress (old) = " << endl << sig_old << endl;
+
       double cdot_new = 0.0;
       FVector Y_new = integrateRateEquations(Y_old, pDefRateDev, sig_m, 
                                              Gmw, vres, delT, cdot_new);
@@ -438,6 +460,16 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       // Update the Cauchy stress
       pSig_new[idx] = sigDev_new + Id*sig_m_new;
 
+      //dbg << "Crack Radius (new) = " << c_new << endl;
+      //for (int ii = 0 ; ii < 5; ++ii) {
+      //  dbg << " Dev Stress (new) [" << ii << "] = " << endl
+      //       << pState[idx].DevStress[ii] << endl;
+      //}
+      //dbg << "Total Dev Stress (new) = " << endl
+      //    << sigDev_new << endl;
+      //dbg << " Mean Stress (new) = " << sig_m_new << endl;
+      //dbg << "Total Stress (new) = " << endl << pSig_new[idx] << endl;
+
       // Compute the deformation gradient increment using the time_step
       // velocity gradient (F_n^np1 = dudx * dt + Id)
       pDefGradInc = pVelGrad * delT + Id;
@@ -454,8 +486,9 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       // Determine the bulk temperature change at a material point
       // assuming adiabatic conditions
       double T_old = pTemp[idx];
-      double Cp = Cp_0 + d_initialData.DCp_DTemperature*(T_old - 273.15);
-      double Cv = Cp/(1+d_initialData.Beta*T_old);
+      //double Cp = Cp_0 + d_initialData.DCp_DTemperature*T_old;
+      //double Cv = Cp/(1+d_initialData.Beta*T_old);
+      double Cv = Cp_0;
       double rhoCv = rho_cur*Cv;
       double fac = d_matConst.Chi/rhoCv;
 
@@ -468,6 +501,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
                                                pState[idx].DevStress,
                                                pDefRateDev, sigDev_new, 
                                                Gmw, cdot_new);
+      dbg << "rhoCv = " << rhoCv << endl;
       
       // Compute bulk chemical heating rate
       double qdot_ch = computeChemicalHeatRate(rho_cur, T_old);
@@ -477,6 +511,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       double volHeatRate = d_initialData.Gamma*T_old*ekk;
       double veHeatRate = wdot_ve*fac;
       double crHeatRate = wdot_cr*fac;
+      dbg << "pCrHeatRate = " << crHeatRate << endl;
       double chHeatRate = d_matConst.vfHE*qdot_ch;
       pVolHeatRate_new[idx] = volHeatRate;
       pVeHeatRate_new[idx] = veHeatRate;
@@ -542,7 +577,7 @@ ViscoSCRAMHotSpot::carryForward(const PatchSubset* patches,
     // Carry forward the data local to this constitutive model 
     ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
     ParticleVariable<double>    pCrHeatRate_new, pChHeatRate_new;
-    ParticleVariable<double>    pCrackRadius_new;
+    ParticleVariable<double>    pCrackRadius_new, pStrainRate_new;
     ParticleVariable<double>    pHotSpotT1_new, pHotSpotT2_new;
     ParticleVariable<double>    pHotSpotPhi1_new, pHotSpotPhi2_new;
     ParticleVariable<StateData> pState;
@@ -558,6 +593,8 @@ ViscoSCRAMHotSpot::carryForward(const PatchSubset* patches,
                            pChemHeatRateLabel_preReloc,           pset);
     new_dw->allocateAndPut(pCrackRadius_new, 
                            pCrackRadiusLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pStrainRate_new, 
+                           pStrainRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(pHotSpotT1_new, 
                            pHotSpotT1Label_preReloc,              pset);
     new_dw->allocateAndPut(pHotSpotT2_new, 
@@ -581,6 +618,7 @@ ViscoSCRAMHotSpot::carryForward(const PatchSubset* patches,
       pCrHeatRate_new[idx]  = 0.0;
       pChHeatRate_new[idx]  = 0.0;
       pCrackRadius_new[idx] = 0.0;
+      pStrainRate_new[idx] = 0.0;
       pHotSpotT1_new[idx]  = 0.0;
       pHotSpotT2_new[idx]  = 0.0;
       pHotSpotPhi1_new[idx]  = 0.0;
@@ -776,7 +814,7 @@ ViscoSCRAMHotSpot::computeCdot(const Matrix3& s, double sig_m, double c,
   double K_I = computeK_I(c, sigEff);
   double K_prime = computeK_prime(c, sig_m);
 
-  // Solve for new crack length
+  // Solve for new cracking rate
   double cdot = 0.0;
   if (K_I < K_prime) {
     cdot = vres*pow((K_I/K_prime), m);
@@ -817,8 +855,8 @@ ViscoSCRAMHotSpot::computeSdot_mw(const Matrix3& edot, const Matrix3& s,
   // Compute total stress rate
   double theta = threeca3cdotoverc/onepca3;
   double psi = 2.0*G/onepca3;
-  Matrix3 lambda =  sovertau/threeca3cdotoverc;
-  Matrix3 sdot = edot*psi - (s + lambda)*theta;
+  Matrix3 lambda_theta =  sovertau/onepca3;
+  Matrix3 sdot = edot*psi - s*theta - lambda_theta;
 
   // Compute maxwell element stress rate
   Matrix3 term1 = edot*(2.0*G_n[mwelem]) - 
@@ -839,7 +877,7 @@ ViscoSCRAMHotSpot::evaluateRateEquations(const ViscoSCRAMHotSpot::FVector& Y,
                                          double sig_m, double* G_n, double vres)
 {
   // Get the data from Y ( c and s_n ) and compute total deviatoric stress
-  int numMaxwellElem = Y.numElem;
+  int numMaxwellElem = Y.nn;
   double c = Y.a;
   Matrix3 s_n[numMaxwellElem];
   Matrix3 s(0.0);
@@ -857,7 +895,7 @@ ViscoSCRAMHotSpot::evaluateRateEquations(const ViscoSCRAMHotSpot::FVector& Y,
   }
 
   // Push the rates into the FVector
-  FVector Z(cdot, sdot_n, numMaxwellElem);
+  FVector Z(cdot, sdot_n);
   return Z;
 }
 
@@ -888,7 +926,7 @@ ViscoSCRAMHotSpot::integrateRateEquations(const ViscoSCRAMHotSpot::FVector& Y0,
   Y = Y + f3*delT;
   ViscoSCRAMHotSpot::FVector f4 = 
     evaluateRateEquations(Y, edot, sig_m, G_n, vres);
-  cdot = (1/6.0)*(f1.a + 2.0*(f2.a + f3.a) + f4.a);
+  cdot = f4.a;
 
   ViscoSCRAMHotSpot::FVector Y_new = Y0 + (f1+(f2+f3)*2.0+f4)*(delT/6.0);
   return Y_new;
@@ -943,14 +981,17 @@ ViscoSCRAMHotSpot::computeCrackingWorkRate(int numElem, double c_new,
   }
 
   // Compute total stress rate
-  double theta = threeca3cdotoverc/onepca3;
+  double invonepca3 = 1.0/onepca3;
+  double theta = threeca3cdotoverc*invonepca3;
   double psi = 2.0*G/onepca3;
-  Matrix3 lambda =  sovertau/threeca3cdotoverc;
-  Matrix3 sdot = edot*psi - (s_new + lambda)*theta;
+  Matrix3 lambdaTheta =  sovertau*invonepca3;
+  Matrix3 sdot = edot*psi - s_new*theta - lambdaTheta;
+  dbg << "SRate = " << endl << sdot << endl;
 
   // Compute maxwell element stress rate
   double workrate = (threeca3cdotoverc*(s_new.NormSquared()) + 
                      ca3*s_new.Contract(sdot))/(2.0*G);
+  dbg << "Wdot_cr = " << workrate << endl;
   return workrate;
 }
 
@@ -1157,14 +1198,19 @@ ViscoSCRAMHotSpot::evaluateHotSpotModel(double sig_m, const Matrix3& sig,
   // For tensile states of stress, no heating is generated
   if (sig_m > 0) return;
 
+  // Compute the eigenvalues and eigenvectors of the deviatoric rate
+  // of deformation tensor
+  SymmMatrix3 defRateDev(edot);
+  Vector eigval(0.0, 0.0, 0.0);
+  Matrix3 eigvec(0.0);
+  defRateDev.eigen(eigval, eigvec);
+  
   // Compute maximum principal rate of deformation
-  double edotmax, e2, e3;
-  int numEigVal = edot.getEigenValues(edotmax, e2, e3);
-  ASSERT(numEigVal != 0);
+  double edotmax = eigval[0];
 
   // Get the eigenVector in this direction
-  vector<Vector> eigVec = edot.getEigenVectors(edotmax, edotmax);
-  Vector edotvec = eigVec[0];
+  Vector edotvec(eigvec(0,0), eigvec(1,0), eigvec(2,0));
+  dbg << " Max dev edot = " << edotmax << " Direction = " << edotvec << endl;
 
   // Compute the component of the shear stress in the plane of the "crack"
   // (the component sigCrack(2,3))
