@@ -39,21 +39,21 @@ using std::endl;
 namespace SCITeem {
 
 class NrrdPermute : public Module {
-  NrrdIPort* inrrd_;
-  NrrdOPort* onrrd_;
-  GuiInt axis0_;
-  GuiInt axis1_;
-  GuiInt axis2_;
-  int last_axis0_;
-  int last_axis1_;
-  int last_axis2_;
-  int last_generation_;
-  NrrdDataHandle last_nrrdH_;
 public:
   int valid_data(int* axes);
   NrrdPermute(GuiContext *ctx);
   virtual ~NrrdPermute();
   virtual void execute();
+private:
+  void load_gui();
+
+  NrrdIPort           *inrrd_;
+  NrrdOPort           *onrrd_;
+  GuiInt               dim_;
+  vector<GuiInt*>      axes_;
+  vector<int>          last_axes_;
+  int                  last_generation_;
+  NrrdDataHandle       last_nrrdH_;
 };
 
 } // End namespace SCITeem
@@ -61,27 +61,42 @@ public:
 using namespace SCITeem;
 DECLARE_MAKER(NrrdPermute)
 
-  NrrdPermute::NrrdPermute(GuiContext *ctx)
-  : Module("NrrdPermute", ctx, Filter, "Filters", "Teem"),
-    axis0_(ctx->subVar("axis0")), axis1_(ctx->subVar("axis1")),
-    axis2_(ctx->subVar("axis2")), last_axis0_(0), last_axis1_(0), 
-    last_axis2_(0), last_generation_(-1), last_nrrdH_(0)
+NrrdPermute::NrrdPermute(GuiContext *ctx) : 
+  Module("NrrdPermute", ctx, Filter, "Filters", "Teem"),
+  dim_(ctx->subVar("dim")),
+  last_generation_(-1), 
+  last_nrrdH_(0)
 {
+  // value will be overwritten at gui side initialization.
+  dim_.set(0);
 }
 
 NrrdPermute::~NrrdPermute() {
 }
 
+void
+NrrdPermute::load_gui() {
+  dim_.reset();
+  if (dim_.get() == 0) { return; }
 
-// check to see that the axes 0,1,2 are the entries (in some order) 
-// in the axes array
-int NrrdPermute::valid_data(int* axes) {
-  int exists[3];
-  exists[0]=exists[1]=exists[2]=0;
-  for (int a=0; a<3; a++) {
-    if (axes[a]>=0 && axes[a]<=2 && !exists[axes[a]])
-      exists[axes[a]]=1;
-    else {
+  last_axes_.resize(dim_.get(), -1);
+
+  for (int a = 0; a < dim_.get(); a++) {
+    ostringstream str;
+    str << "axis" << a;
+    axes_.push_back(new GuiInt(ctx->subVar(str.str())));
+  }
+}
+
+// check to see that the axes specified are in bounds, and not the tuple axis.
+int
+NrrdPermute::valid_data(int* axes) {
+
+  vector<int> exists(dim_.get(), 0);
+  for (int a = 1; a < dim_.get(); a++) {
+    if (axes[a] >= 1 && axes[a] < dim_.get() && !exists[axes[a]]) {
+      exists[axes[a]] = 1;
+    } else {
       error("Bad axis assignments!");
       return 0;
     }
@@ -106,7 +121,6 @@ NrrdPermute::execute()
     return;
   }
 
-
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {
@@ -114,34 +128,59 @@ NrrdPermute::execute()
     return;
   }
 
-  int axes[3];
-  axes[0]=axis0_.get();
-  axes[1]=axis1_.get();
-  axes[2]=axis2_.get();
-  if (last_generation_ == nrrdH->generation &&
-      last_axis0_ == axes[0] &&
-      last_axis1_ == axes[1] &&
-      last_axis2_ == axes[2] &&
-      last_nrrdH_.get_rep()) {
+  if (last_generation_ != nrrdH->generation) {
+    ostringstream str;
+    
+    if (last_generation_ != -1) {
+      last_axes_.clear();
+      vector<GuiInt*>::iterator iter = axes_.begin();
+      while(iter != axes_.end()) {
+	delete *iter;
+	++iter;
+      }
+      axes_.clear();
+      gui->execute(id.c_str() + string(" clear_axes"));
+    }
+
+    dim_.set(nrrdH->nrrd->dim);
+    dim_.reset();
+    load_gui();
+    gui->execute(id.c_str() + string(" init_axes"));
+
+  }
+  
+  if (dim_.get() == 0) { return; }
+
+  for (int a = 0; a < dim_.get(); a++) {
+    axes_[a]->reset();
+  }
+
+
+  bool same = true;
+  for (int i = 0; i < dim_.get(); i++) {
+    if (last_axes_[i] != axes_[i]->get()) {
+      same = false;
+      last_axes_[i] = axes_[i]->get();
+    }
+  }
+  
+  if (same && last_nrrdH_.get_rep()) {
     onrrd_->send(last_nrrdH_);
     return;
   }
 
-  if (!valid_data(axes)) return;
+  int* axp = &(last_axes_[0]);
+  if (!valid_data(axp)) return;
 
   last_generation_ = nrrdH->generation;
-  last_axis0_ = axes[0];
-  last_axis1_ = axes[1];
-  last_axis2_ = axes[2];
 
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
-  msgStream_ << "Permuting: 0->"<<axes[0]<<" 1->"<<
-    axes[1]<<" 2->"<<axes[2]<<endl;
 
-  nrrdPermuteAxes(nout, nin, axes);
+  nrrdPermuteAxes(nout, nin, axp);
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
+  nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }

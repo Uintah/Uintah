@@ -34,22 +34,67 @@ itcl_class Teem_Filters_NrrdPermute {
         set_defaults
     }
     method set_defaults {} {
-        global $this-axis0
-        global $this-axis1
-        global $this-axis2
-        set $this-axis0 0
-        set $this-axis1 1
-        set $this-axis2 2
+        global $this-dim
+
+        set $this-dim 0
     }
-    method make_entry {w text v c} {
+
+    # never permute the tuple axis (axis 0) so no interface for axis 0
+    method make_axes {} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+  
+	    if {[winfo exists $w.f.axisf.t]} {
+		destroy $w.f.axisf.t
+	    }
+	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+		#puts $i
+		if {! [winfo exists $w.f.axisf.a$i]} {
+		    make_entry $w.f.axisf.a$i "Axis $i <- " $this-axis$i
+		    pack $w.f.axisf.a$i -side top -expand 1 -fill x
+		}
+	    }
+	}
+    }
+    
+    # never permute the tuple axis (axis 0)
+    method init_axes {} {
+	for {set i 0} {$i < [set $this-dim]} {incr i} {
+	    #puts "init_axes----$i"
+
+	    if { [catch { set t [set $this-axis$i] } ] } {
+		set $this-axis$i $i
+	    }
+	}
+	make_axes
+    }
+
+    method clear_axes {} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+	    
+	    if {[winfo exists $w.f.axisf.t]} {
+		destroy $w.f.axisf.t
+	    }
+	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+		#puts $i
+		if {[winfo exists $w.f.axisf.a$i]} {
+		    destroy $w.f.axisf.a$i
+		}
+		unset $this-axis$i
+	    }
+	}
+    }
+
+    method make_entry {w text v} {
         frame $w
         label $w.l -text "$text"
         pack $w.l -side left
         global $v
         entry $w.e -textvariable $v -width 2
-        bind $w.e <Return> $c
         pack $w.e -side right
     }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -61,13 +106,16 @@ itcl_class Teem_Filters_NrrdPermute {
         wm minsize $w 100 80
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
-	global $this-axis0
-	global $this-axis1
-	global $this-axis2
-	make_entry $w.f.i "0 <- " $this-axis0 "$this-c needexecute"
-	make_entry $w.f.j "1 <- " $this-axis1 "$this-c needexecute"
-	make_entry $w.f.k "2 <- " $this-axis2 "$this-c needexecute"
+	frame $w.f.axisf
+
+	if {[set $this-dim] == 0} {
+	    label $w.f.axisf.t -text "Need Execute to know the number of Axes."
+	    pack $w.f.axisf.t
+	} else {
+	    init_axes 
+	}
+
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.i $w.f.j $w.f.k $w.f.b -side top -expand 1 -fill x
+	pack $w.f.axisf $w.f.b -side top -expand 1 -fill x
     }
 }
