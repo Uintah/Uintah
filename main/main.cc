@@ -324,6 +324,10 @@ main(int argc, char *argv[], char **environment) {
     } else if(strstr(argv[startnetno], "BioFEM")) {
       gui->eval("set splashImageFile $bioFEMSplashImageFile");
       gui->eval("showProgress 1 465 1");
+    } else if(strstr(argv[startnetno], "BioImage")) {
+      // need to make a BioImage splash screen
+      gui->eval("set splashImageFile $bioFEMSplashImageFile");
+      gui->eval("showProgress 1 310 1");
     }
 
   }
