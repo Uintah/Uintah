@@ -230,7 +230,7 @@ handle_event(const Event& event)
 bool load_timestep(int timestep, float prune_percent)
 {
   ostringstream timedir;
-  timedir << "/t" << setw(4) << setfill('0') << timestep;
+  timedir << "/t" << setw(5) << setfill('0') << timestep;
   cout << "Loading timestep " << timestep << "...\n";
   GV_TaskGraph* oldGraph = gGraph;
   gGraph = GV_TaskGraph::inflate(udaDir + timedir.str());
