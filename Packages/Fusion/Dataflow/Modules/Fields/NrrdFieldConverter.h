@@ -72,9 +72,9 @@ public:
 class RegularNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh) = 0;
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh) = 0;
 };
 
 
@@ -83,17 +83,17 @@ class RegularNrrdFieldConverterMeshAlgoT :
   public RegularNrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh);
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh);
 };
 
 template< class MESH, class PNTYPE, class CNTYPE >
 void
 RegularNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > mesh)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh)
 {
   Point minpt, maxpt;
 
@@ -184,9 +184,9 @@ execute(MeshHandle mHandle,
 class StructuredNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       int idim, int jdim, int kdim) = 0;
 };
 
@@ -197,9 +197,9 @@ class StructuredNrrdFieldConverterMeshAlgoT :
 {
 public:
 
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       int idim, int jdim, int kdim);
 };
 
@@ -207,9 +207,9 @@ public:
 template< class MESH, class PNTYPE, class CNTYPE >
 void
 StructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > mesh,
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
 	int idim, int jdim, int kdim)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -270,7 +270,7 @@ execute(MeshHandle mHandle,
 	  if( ptr[0] ) xVal = ptr[0][index];
 	  if( ptr[1] ) yVal = ptr[1][index];
 	  if( ptr[2] ) zVal = ptr[2][index];
-	
+
 	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
 
 	  ++inodeItr;
@@ -286,9 +286,9 @@ class UnstructuredNrrdFieldConverterMeshAlgo :
   public NrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       unsigned int connectivity) = 0;
 };
 
@@ -297,9 +297,9 @@ class UnstructuredNrrdFieldConverterMeshAlgoT :
   public UnstructuredNrrdFieldConverterMeshAlgo
 {
 public:
-  virtual void execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > mesh,
+  virtual void execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& mesh,
 		       unsigned int connectivity);
 };
 
@@ -307,9 +307,9 @@ public:
 template< class MESH, class PNTYPE, class CNTYPE >
 void
 UnstructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > mesh,
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
 	unsigned int connectivity)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -387,14 +387,14 @@ execute(MeshHandle mHandle,
 class NrrdFieldConverterFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data,
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data,
 			      int idim, int jdim, int kdim, int permute) = 0;
   
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data) = 0;
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data) = 0;
   
    //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mtd,
@@ -408,23 +408,23 @@ class NrrdFieldConverterFieldAlgoScalar : public NrrdFieldConverterFieldAlgo
 {
 public:
   //! virtual interface.
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data,
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data,
 			      int idim, int jdim, int kdim, int permute);
 
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data);  
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data);  
 };
 
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data,
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data,
 	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -464,9 +464,9 @@ execute(MeshHandle mHandle,
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data)
 
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -501,23 +501,23 @@ class NrrdFieldConverterFieldAlgoVector : public NrrdFieldConverterFieldAlgo
 {
 public:
   //! virtual interface.
-  virtual FieldHandle execute(MeshHandle mHandle,
-		       vector< NrrdDataHandle > nHandles,
-		       vector< int > data,
+  virtual FieldHandle execute(MeshHandle& mHandle,
+		       vector< NrrdDataHandle >& nHandles,
+		       vector< int >& data,
 		       int idim, int jdim, int kdim, int permute);
 
-  virtual FieldHandle execute(MeshHandle mHandle,
-			      vector< NrrdDataHandle > nHandles,
-			      vector< int > data);  
+  virtual FieldHandle execute(MeshHandle& mHandle,
+			      vector< NrrdDataHandle >& nHandles,
+			      vector< int >& data);  
 };
 
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data,
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data,
 	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -586,9 +586,9 @@ execute(MeshHandle mHandle,
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
-execute(MeshHandle mHandle,
-	vector< NrrdDataHandle > nHandles,
-	vector< int > data)
+execute(MeshHandle& mHandle,
+	vector< NrrdDataHandle >& nHandles,
+	vector< int >& data)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
