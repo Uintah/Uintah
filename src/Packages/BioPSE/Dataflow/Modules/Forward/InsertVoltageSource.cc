@@ -166,9 +166,9 @@ void InsertVoltageSource::execute() {
   Array1<TetVolMesh::Node::index_type> have_some;
 
   // for each surface data_at position/value...
-  for (int i=0; i<(int)sources.size(); i++) {
-    Point pt=sources[i];
-    double val=vals[i];
+  for (int s=0; s<(int)sources.size(); s++) {
+    Point pt=sources[s];
+    double val=vals[s];
 
     // find the tet nodes (nbrs) that it's closest to
     TetVolMesh::Cell::index_type tvm_cidx;
@@ -231,7 +231,9 @@ void InsertVoltageSource::execute() {
   imeshH->set_property("conductivity_table", conds, false);
   omesh->send(imeshH);
 }
+} // End namespace BioPSE
 
+namespace SCIRun {
 CompileInfo *
 InsertVoltageSourceGetPtBase::get_compile_info(const TypeDescription *mesh_td)
 {
@@ -272,4 +274,4 @@ InsertVoltageSourceGetPtsAndValsBase::get_compile_info(const TypeDescription *fi
   field_td->fill_compile_info(rval);
   return rval;
 }
-} // End namespace BioPSE
+} // End namespace SCIRun
