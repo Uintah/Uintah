@@ -154,7 +154,7 @@ void FloodFillNewValue::execute(){
     hvf->get_typed_mesh()->get_neighbors(nbrs, curr);
     HexVolMesh::Cell::array_type::iterator iter = nbrs.begin();
     while (iter != nbrs.end()) {
-      int nbr_val;
+      char nbr_val;
       if (mask_vol->value(nbr_val, *iter) && nbr_val == 1) {
 	hvf->set_value(new_val, *iter);
 	mask_vol->set_value(2, *iter);

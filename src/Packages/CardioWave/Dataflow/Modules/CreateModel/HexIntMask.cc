@@ -36,7 +36,7 @@
 #include <algorithm>
 
 
-namespace BioPSE {
+namespace CardioWave {
 
 using std::cerr;
 using std::endl;
@@ -168,4 +168,4 @@ HexIntMask::execute()
 }
 
 
-} // End namespace BioPSE
+} // End namespace CardioWave
