@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/JohnsonCookDamage.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HancockMacKenzieDamage.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -26,6 +27,8 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
    
    if (mat_type == "johnson_cook")
       return(scinew JohnsonCookDamage(child));
+   else if (mat_type == "hancock_mackenzie")
+      return(scinew HancockMacKenzieDamage(child));
    else 
       throw ProblemSetupException("Unknown Damage Model ("+mat_type+")");
 

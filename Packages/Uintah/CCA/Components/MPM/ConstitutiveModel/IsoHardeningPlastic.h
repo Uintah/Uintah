@@ -46,9 +46,13 @@ namespace Uintah {
 
     constParticleVariable<double> pAlpha;
     ParticleVariable<double> pAlpha_new;
+    constParticleVariable<double> pPlasticStrain;
+    ParticleVariable<double> pPlasticStrain_new;
 
     const VarLabel* pAlphaLabel;  // For Isotropic Hardening Plasticity
     const VarLabel* pAlphaLabel_preReloc;  // For Isotropic Hardening Plasticity
+    const VarLabel* pPlasticStrainLabel; 
+    const VarLabel* pPlasticStrainLabel_preReloc; 
 
   private:
 
@@ -91,6 +95,8 @@ namespace Uintah {
     virtual void updateElastic(const particleIndex idx);
 
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
+
+    double getUpdatedPlasticStrain(const particleIndex idx);
 
     /*! compute the flow stress*/
     virtual double computeFlowStress(const Matrix3& rateOfDeformation,

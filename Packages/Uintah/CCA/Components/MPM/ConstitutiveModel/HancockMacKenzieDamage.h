@@ -1,5 +1,5 @@
-#ifndef __JOHNSONCOOK_DAMAGE_MODEL_H__
-#define __JOHNSONCOOK_DAMAGE_MODEL_H__
+#ifndef __HANCOCKMACKENZIE_DAMAGE_MODEL_H__
+#define __HANCOCKMACKENZIE_DAMAGE_MODEL_H__
 
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>	
@@ -9,46 +9,36 @@ namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
-    \class JohnsonCookDamage
-    \brief Johnson-Cook Damage Model
+    \class HancockMacKenzieDamage
+    \brief HancockMacKenzie Damage Model
     \author Biswajit Banerjee \n
     C-SAFE and Department of Mechanical Engineering \n
     University of Utah \n
     Copyright (C) 2002 University of Utah
 
     References:
-    1) Johnson and Cook, 1985, Int. J. Eng. Fracture Mech., 21, 31-48.
+    1) Hancock and MacKenzie, 1976, Int. J. Mech. Phys. Solids, 24, 147-169.
 
     The damage evolution rule is given by \n
     \f$
-    \dot{D} = \dot{\epsilon_p}/\epsilon_p^f
+    \dot{D} = (1/1.65)\dot{\epsilon_p}\exp(3\sigma_h/2\sigma_{eq})
     \f$ \n
     where \n
     \f$ D \f$ = damage variable \n
-    where \f$ D \f$ = 0 for virgin material, 
-    \f$ D \f$ = 1 for fracture \n
-    \f$ \epsislon_p^f\f$  = value of fracture strain given by \n
-    \f$ 
-    \epsilon_p^f = (D1 + D2 \exp (D3 \sigma*)][1+\dot{p}^*]^(D4)[1+D5 T^*
-    \f$ \n 
-    where \f$ \sigma^*= 1/3*trace(\sigma)/\sigma_{eq} \f$ \n
-    \f$  D1, D2, D3, D4, D5\f$  are constants \n
-    \f$  T^* = (T-T_{room})/(T_{melt}-T_{room}) \f$
+    where \f$ D = 0 \f$ for virgin material, \n
+    \f$ \epsilon_p \f$ is the plastic strain, \n
+    \f$ \sigma_h = (1/3) Tr(\sigma) \n
+    \f$ \sigma_{eq} = \sqrt{(3/2) \sigma_{dev}:\sigma_{dev}}
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class JohnsonCookDamage : public DamageModel {
+  class HancockMacKenzieDamage : public DamageModel {
 
   public:
     // Create datatype for storing model parameters
     struct CMData {
       double D0; /*< Initial damage */
       double Dc; /*< Critical damage */
-      double D1;
-      double D2;
-      double D3;
-      double D4;
-      double D5;
     };	 
 
   private:
@@ -57,15 +47,15 @@ namespace Uintah {
 	 
     // Prevent copying of this class
     // copy constructor
-    JohnsonCookDamage(const JohnsonCookDamage &cm);
-    JohnsonCookDamage& operator=(const JohnsonCookDamage &cm);
+    HancockMacKenzieDamage(const HancockMacKenzieDamage &cm);
+    HancockMacKenzieDamage& operator=(const HancockMacKenzieDamage &cm);
 
   public:
     // constructors
-    JohnsonCookDamage(ProblemSpecP& ps); 
+    HancockMacKenzieDamage(ProblemSpecP& ps); 
 	 
     // destructor 
-    virtual ~JohnsonCookDamage();
+    virtual ~HancockMacKenzieDamage();
 	 
     //////////////////////////////////////////////////////////////////////////
     /*! 
@@ -90,16 +80,8 @@ namespace Uintah {
 				       const MPMMaterial* matl,
 				       const double& tolerance,
 				       const double& damage_old);
-  
-  protected:
-
-    double calcStrainAtFracture(const Matrix3& sig, 
-				const double& epdot,
-				const double& T,
-				const MPMMaterial* matl,
-				const double& tolerance);
   };
 
 } // End namespace Uintah
 
-#endif  // __JOHNSONCOOK_DAMAGE_MODEL_H__ 
+#endif  // __HANCOCKMACKENZIE_DAMAGE_MODEL_H__ 
