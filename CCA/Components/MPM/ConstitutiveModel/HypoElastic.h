@@ -107,9 +107,7 @@ namespace Uintah {
 //         const VarLabel* bElBarLabel_preReloc;
 
       };
-} // End namespace Uintah
-      
 
+} // End namespace Uintah
 
 #endif  // __HYPOELASTIC_CONSTITUTIVE_MODEL_H__ 
-

@@ -11,7 +11,7 @@
 #KEYWORDS
 #    ParticleGridReader, Material/Particle Method
 #AUTHOR
-#    Packages/Kurt Zimmerman
+#    Kurt Zimmerman
 #    Department of Computer Science
 #    University of Utah
 #    January 1999

@@ -3,21 +3,19 @@
 #ifndef __RIGID_BODY_H_
 #define __RIGID_BODY_H_
 
-#include <Uintah/Components/MPM/Contact/Contact.h>
-#include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Parallel/UintahParallelComponent.h>
-#include <Uintah/Interface/MPMInterface.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Interface/ProblemSpec.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Task.h>
-
-
+#include <Packages/Uintah/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Packages/Uintah/CCA/Ports/MPMInterface.h>
+#include <Packages/Uintah/CCA/Ports/ProblemSpecP.h>
+#include <Packages/Uintah/CCA/Ports/ProblemSpec.h>
+#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 
 namespace Uintah {
-   class VarLabel;
-   namespace MPM {
+
+class VarLabel;
 
 /**************************************
 
@@ -98,15 +96,6 @@ WARNING
                                              DataWarehouseP& new_dw) const;	 
       };
       
-   } // end namespace MPM
 } // end namespace Uintah
 
 #endif /* __RIGID_BODY_H_ */
-
-// $Log$
-// Revision 1.1  2001/01/17 21:29:27  dav
-// Added to new tree
-//
-// Revision 1.1  2001/01/11 03:31:31  guilkey
-// Created new contact model for rigid bodies.
-//

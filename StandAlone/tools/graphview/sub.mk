@@ -7,7 +7,12 @@ PROGRAM := $(SRCDIR)/graphview
 SRCS := $(SRCDIR)/graphview.cc	$(SRCDIR)/GV_TaskGraph.cc 	\
 	$(SRCDIR)/DaVinci.cc
 
-PSELIBS := Uintah/CCA/Ports Dataflow/XMLUtil Core/Exceptions Core/Thread 
+PSELIBS := \
+	Packages/Uintah/CCA/Ports \
+	Dataflow/XMLUtil \
+	Core/Exceptions  \
+	Core/Thread 
+
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk

@@ -31,6 +31,9 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
       else if (con_type == "friction")
 	 return(scinew FrictionContact(child,ss));
     
+      else if (con_type == "rigid")
+	 return(scinew RigidBodyContact(child,ss));
+    
       else {
 	 cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
 	 //      exit(1);

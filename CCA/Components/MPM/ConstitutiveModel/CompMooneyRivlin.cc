@@ -266,10 +266,11 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     double delT_new = WaveSpeed.minComponent();
     
     if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
-    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);    
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);    
     new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
+    //
     if( matl->getFractureModel() ) {
       new_dw->put(pRotationRate, lb->pRotationRateLabel);
       new_dw->put(pStrainEnergy, lb->pStrainEnergyLabel);
@@ -325,21 +326,21 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   int matlindex = mpm_matl->getDWIndex();
 
   // Create arrays for the particle data
-  ParticleVariable<Point>  pX;
+  ParticleVariable<Point>  pX_patchAndGhost;
   ParticleVariable<int>    pIsBroken;
-  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<Vector> pCrackNormal;
   ParticleVariable<double> pVolume;
 
   ParticleSubset* pset_patchAndGhost = old_dw->getParticleSubset(
-     matlindex, patch, Ghost::AroundNodes, 1, lb->pXLabel);
+     matlindex, patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-  old_dw->get(pX, lb->pXLabel, pset_patchAndGhost);
+  old_dw->get(pX_patchAndGhost, lb->pXLabel, pset_patchAndGhost);
   new_dw->get(pIsBroken, lb->pIsBrokenLabel_preReloc, pset_patchAndGhost);
-  new_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc, 
+  new_dw->get(pCrackNormal, lb->pCrackNormalLabel_preReloc, 
     pset_patchAndGhost);
   new_dw->get(pVolume, lb->pVolumeLabel_preReloc, pset_patchAndGhost);
 
-  Lattice lattice(pX);
+  Lattice lattice(pX_patchAndGhost);
   ParticlesNeighbor particles;
 
   ParticleSubset* pset_patchOnly = old_dw->getParticleSubset(
@@ -349,6 +350,14 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   new_dw->allocate(pCrackSurfaceContactForce,
      lb->pCrackSurfaceContactForceLabel, pset_patchOnly);
 
+  ParticleVariable<Point>  pX_patchOnly;
+  new_dw->get(pX_patchOnly, lb->pXXLabel, pset_patchOnly);
+
+  vector<int> particleIndexExchange( pset_patchOnly->numParticles() );
+  fit(pset_patchOnly,pX_patchOnly,
+      pset_patchAndGhost,pX_patchAndGhost,
+      particleIndexExchange);
+
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
           iter != pset_patchOnly->end(); iter++)
   {
@@ -356,71 +365,50 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   }
 
   IntVector cellIdx;
-  double C1 = ( d_initialData.C1 + d_initialData.C1 )/2;
-  double C2 = ( d_initialData.C2 + d_initialData.C2 )/2;
-  double C3 = .5*C1 + C2;
-  double PR = ( d_initialData.PR + d_initialData.PR )/2;
-  double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
+  double C1 = d_initialData.C1;
+  double C2 = d_initialData.C2;
 
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
           iter != pset_patchOnly->end(); iter++)
   {
     particleIndex pIdx = *iter;
-    patch->findCell(pX[pIdx],cellIdx);
+    particleIndex pIdx1 = particleIndexExchange[pIdx];
+
+    const Point& X1 = pX_patchOnly[pIdx];
+
+    patch->findCell(X1,cellIdx);
     particles.clear();
     particles.buildIn(cellIdx,lattice);
 
-    const Point& X1 = pX[pIdx];
-    double size1 = pow(pVolume[pIdx],0.3333);
+    double size1 = pow(pVolume[pIdx1],0.3333);
 
     //crack surface contact force
-    for(int pNeighbor=0; pNeighbor<particles.size(); ++pNeighbor)
+    for(int pNeighbor=0; pNeighbor<(int)particles.size(); ++pNeighbor)
     {
       particleIndex pContact = particles[pNeighbor];
-      if(pContact == pIdx) continue;
+      if(pContact == pIdx1) continue;
 
-      if(!particles.visible( pIdx,
-                            pX[pContact],
-		            pX,
+      if(!particles.visible( pContact,
+                            pIdx1,
+		            pX_patchAndGhost,
 		            pIsBroken,
-		            pCrackSurfaceNormal,
+		            pCrackNormal,
 		            pVolume) ) 
       {
-        const Point& X2 = pX[pContact];
+        const Point& X2 = pX_patchAndGhost[pContact];
 
         double size2 = pow(pVolume[pContact],0.3333);
         Vector N = X2-X1;
         double distance = N.length();
-        double l = (size1+size2) /2 * 0.8;
-        double delta = distance /l - 1;
+        double L = (size1+size2) /2 * 0.8;
+        double lambda = distance /L;
 	
-        if( delta < 0 ) {
+        if( lambda < 1 ) {
+  	  //cout<<"lambda"<<lambda<<endl;
           N /= distance;
-          Matrix3 deformationGradient = Identity;
-	  
-          for(int i=1;i<=3;++i)
-	  for(int j=1;j<=3;++j)
-	  deformationGradient(i,j) += N(i-1) * N(j-1) * delta;
-
-          // Compute the left Cauchy-Green deformation tensor
-          Matrix3 B = deformationGradient * deformationGradient.Transpose();
-
-          // Compute the invariants
-          double invar1 = B.Trace();
-          double invar2 = 0.5*((invar1*invar1) - (B*B).Trace());
-          double J = deformationGradient.Determinant();
-          double invar3 = J*J;
-
-          double w1 = C1;
-          double w2 = C2;
-          double w3 = -2.0*C3/(invar3*invar3*invar3) + 2.0*C4*(invar3 -1.0);
-
-          double w1pi1w2 = w1 + invar1*w2;
-          double i3w3 = invar3*w3;
-
-          Matrix3 stress = (B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
-	  double area = M_PI* l * l * fabs(delta) /2;
-          Vector F = stress * N * area;
+	  double stress = 2*(C1+C2/lambda)*(lambda-1/lambda/lambda);
+	  double area = M_PI* L * L;
+          Vector F = N * ( stress * area );
           pCrackSurfaceContactForce[pIdx] += F;
 	}
       }
@@ -431,31 +419,28 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
 
 
   //time step requirement
-  delt_vartype delT;
-  new_dw->get(delT, lb->delTAfterFractureLabel);
 
-  double delT_new = delT;
+  /*
+  double delT_new = 1.0e12;
 
   ParticleVariable<double> pMass;
   new_dw->get(pMass, lb->pMassLabel_preReloc, pset_patchOnly);
 
-  double tolerance = 0.001;
+  double tolerance = 0.01;
   
   Vector dx = patch->dCell();
   double dxLength = dx.length() * tolerance;
 
-  /*
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
-          iter != pset_patchOnly->end(); iter++)
-  {
+          iter != pset_patchOnly->end(); iter++) {
     double force = pCrackSurfaceContactForce[*iter].length();
     if(force > 0) {
       delT_new = Min(delT_new,sqrt(2*dxLength*pMass[*iter]/force));
     }
   }
-  */
 
-  new_dw->put(delt_vartype(delT_new), lb->delTAfterCrackSurfaceContactLabel);
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  */
 }
 
 void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
@@ -466,16 +451,17 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 					     DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
-  
+
   task->requires(old_dw, lb->pXLabel, idx,  patch,
-			Ghost::AroundNodes, 1 );
+			Ghost::AroundCells, 1 );
+  task->requires(new_dw, lb->pXXLabel, idx,  patch,
+			Ghost::None);
   task->requires(new_dw, lb->pVolumeLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
+			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pIsBrokenLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
-  task->requires(new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
-  task->requires(new_dw, lb->delTAfterFractureLabel );
+			Ghost::AroundCells, 1 );
+  task->requires(new_dw, lb->pCrackNormalLabel_preReloc, idx, patch,
+			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pMassLabel_preReloc, idx, patch, Ghost::None);
 		  
   task->computes(new_dw, lb->pCrackSurfaceContactForceLabel_preReloc, idx, patch );
@@ -486,8 +472,9 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 #pragma set woff 1209
 #endif
 
-#if 0
 namespace Uintah {
+
+#if 0
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*3);
@@ -505,6 +492,6 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
    }
    return td;   
 }
-} // end namespace Uintah
 #endif
 
+} // End namespace Uintah
