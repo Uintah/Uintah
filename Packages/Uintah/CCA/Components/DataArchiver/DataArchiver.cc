@@ -937,8 +937,6 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       
 void DataArchiver::executedTimestep()
 {
-  TAU_PROFILE("DataArchiver::executedTimestep()", "void ()" , TAU_USER);
-
   vector<Dir*> baseDirs;
   if (d_wasOutputTimestep)
     baseDirs.push_back(&d_dir);
