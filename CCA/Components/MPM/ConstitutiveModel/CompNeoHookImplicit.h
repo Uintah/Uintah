@@ -17,6 +17,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <vector>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 
 #ifdef HAVE_PETSC
 extern "C" {
@@ -68,6 +69,7 @@ namespace Uintah {
 #ifdef HAVE_PETSC
 						  Mat &A,
 						  map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
+						  Solver* solver,
 #endif
 						  const bool recursion);
 
