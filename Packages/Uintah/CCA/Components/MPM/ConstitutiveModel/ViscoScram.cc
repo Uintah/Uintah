@@ -48,7 +48,6 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb)
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
-  d_se=0;
 
   p_statedata_label          = VarLabel::create("p.statedata_vs",
                             ParticleVariable<StateData>::getTypeDescription());
@@ -78,7 +77,6 @@ void ViscoScram::initializeCMData(const Patch* patch,
    // constitutive model parameters and deformationMeasure
    Matrix3 Identity, zero(0.);
    Identity.Identity();
-   d_se=0;
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
@@ -180,6 +178,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
                                         DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
+    double se = 0;
     const Patch* patch = patches->get(p);
     //
     //  FIX  To do:  Obtain and modify particle temperature (deg K)
@@ -542,12 +541,12 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 
        // Compute the strain energy for all the particles
        OldStress = (pstressnew[idx] + OldStress)*.5;
-       d_se += (D(1,1)*OldStress(1,1) +
-	        D(2,2)*OldStress(2,2) +
-	        D(3,3)*OldStress(3,3) +
-	        2.*(D(1,2)*OldStress(1,2) +
-		    D(1,3)*OldStress(1,3) +
-		    D(2,3)*OldStress(2,3))) * pvolume_deformed[idx]*delT;
+       se += (D(1,1)*OldStress(1,1) +
+	      D(2,2)*OldStress(2,2) +
+	      D(3,3)*OldStress(3,3) +
+	      2.*(D(1,2)*OldStress(1,2) +
+		  D(1,3)*OldStress(1,3) +
+		  D(2,3)*OldStress(2,3))) * pvolume_deformed[idx]*delT;
 
        // Compute wave speed at each particle, store the maximum
        Vector pvelocity_idx = pvelocity[idx];
@@ -578,7 +577,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     new_dw->put(pstressnew,            lb->pStressLabel_afterStrainRate);
     new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
-    new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
+    new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     new_dw->put(statedata,             p_statedata_label_preReloc);
     new_dw->put(pRand,                 pRandLabel_preReloc);
     new_dw->put(pvolume_deformed,      lb->pVolumeDeformedLabel);
