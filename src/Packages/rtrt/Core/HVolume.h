@@ -175,7 +175,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   // .hdr is 4 characters long
   // .brick is 6 characters long
   // Just to be sure, we will pad it out a bit.
-  int filebase_size = strlen(filebase) + 20;
+  size_t filebase_size = strlen(filebase) + 20;
   char *buf = new char[filebase_size];
   snprintf(buf, filebase_size, "%s.hdr", filebase);
   ifstream in(buf);
@@ -1163,7 +1163,7 @@ void HVolume<T,A,B>::compute_hist(int nhist, int* hist,
   // The number will be 1 to at most 4 (know any displays with 10000
   //   horizontal pixels.
   // Just to be sure, we will pad it out a bit.
-  int size = strlen(filebase) + 20;
+  size_t size = strlen(filebase) + 20;
   char *buf = new char[size];
   if (filebase != NULL) {
     // Use snprintf to make sure we don't overstep our bounds, even
