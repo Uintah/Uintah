@@ -22,7 +22,7 @@
 # This GUI interface is for selecting a file name via the makeOpenFilebox
 # and other reading functions.
 
-itcl_class Fusion_DataIO_HDF5DataReader {
+itcl_class Teem_DataIO_HDF5DataReader {
     inherit Module
     constructor {config} {
         set name HDF5DataReader
