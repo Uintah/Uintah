@@ -55,7 +55,7 @@ void SelectableGroup::multi_light_intersect(Light* light, const Point& orig,
 void SelectableGroup::animate(double t, bool& changed)
 {
   //automatic cycling of child based on the clock passed in with t
-  if (autoswitch) {
+  if (autoswitch && (child >= 0)) {
     int sec = (int)(t/autoswitch_secs);
     int ochild = child;
     child = sec%objs.size(); //should probably watch for changes and then pass back changed

@@ -59,11 +59,11 @@ using namespace std;
 using SCIRun::Thread;
 
 #define ADD_BRICKBRACK
-//#define ADD_VIS_FEM
-//#define ADD_HEAD
-//#define ADD_CSAFE_FIRE
-//#define ADD_GEO_DATA
-//#define ADD_SHEEP
+#define ADD_VIS_FEM
+#define ADD_HEAD
+#define ADD_CSAFE_FIRE
+#define ADD_GEO_DATA
+#define ADD_SHEEP
 #define ADD_DTIGLYPH
 
 #ifdef ADD_DTIGLYPH
@@ -932,11 +932,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   holo_light3->name_ = "hololight3";
 
 #ifdef ADD_DTIGLYPH
+  Group *glyphg = new Group();
   Array1<Light *> pml;
   pml.add(holo_light1);
   pml.add(holo_light2);
   pml.add(holo_light3);
-  make_brain_glyphs(g, pml, argc, argv);
+  make_brain_glyphs(glyphg, pml, argc, argv);
 #endif
 
 #ifdef ADD_BRICKBRACK
@@ -963,19 +964,19 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   SpinningInstance *smw = make_dna(g);
 #endif
 
-  //CUTTING PLANE FOR THE HOLOGRAMS
-  CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
 
   //ADD THE VISIBLE FEMALE DATASET
 #ifdef ADD_VIS_FEM
+  CutPlaneDpy* vcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
+
   ColorMap *vcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/vfem",256);
   Material* vmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   vmat->my_lights.add(holo_light1);
   vmat->my_lights.add(holo_light2);
   vmat->my_lights.add(holo_light3);
 
-  Material *vcutmat = new CutMaterial(vmat, vcmap, cpdpy);
+  Material *vcutmat = new CutMaterial(vmat, vcmap, vcpdpy);
   vcutmat->my_lights.add(holo_light1);
   vcutmat->my_lights.add(holo_light2);
   vcutmat->my_lights.add(holo_light3);
@@ -1030,19 +1031,23 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   vinst->name_ = "Spinning Visible Woman";
 
-  CutGroup *vcut = new CutGroup(cpdpy);
+  CutGroup *vcut = new CutGroup(vcpdpy, true);
   vcut->add(vinst);
+
+  vinst->addCPDpy(vcpdpy);
 #endif
 
 #ifdef ADD_HEAD
   //ADD THE HEAD DATA SET
+  CutPlaneDpy* hcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
+
   ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/head",256);
   Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   hmat->my_lights.add(holo_light1);
   hmat->my_lights.add(holo_light2);
   hmat->my_lights.add(holo_light3);
 
-  Material *hcutmat = new CutMaterial(hmat, hcmap, cpdpy);
+  Material *hcutmat = new CutMaterial(hmat, hcmap, hcpdpy);
   hcutmat->my_lights.add(holo_light1);
   hcutmat->my_lights.add(holo_light2);
   hcutmat->my_lights.add(holo_light3);
@@ -1064,15 +1069,19 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   SpinningInstance *hinst = new SpinningInstance(hiw, htrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   
-  hinst->name_ = "Spinning Head";
+  hinst->name_ = "Spinning Brain";
 
-  CutGroup *hcut = new CutGroup(cpdpy);
+  CutGroup *hcut = new CutGroup(hcpdpy, true);
   hcut->add(hinst);
-  hcut->name_ = "Cutting Plane";
+  hcut->name_ = "Brain Cutting Plane";
+
+  hinst->addCPDpy(hcpdpy);
 #endif
 
 #ifdef ADD_CSAFE_FIRE
   //ADD THE CSAFE HEPTAINE POOL FIRE DATA SET
+  CutPlaneDpy* fcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
+
   Material* fmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   fmat->my_lights.add(holo_light1);
   fmat->my_lights.add(holo_light2);
@@ -1109,22 +1118,26 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   fire_trans->pre_translate(Vector(-8, 8, 1.75));
   fire_trans->pre_translate(Vector(0,0,-.00305));
   
-  SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,1.75), Vector(0,0,1), 0.5);
+  SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,1.75), Vector(0,0,1), 0.1);
   fire_inst->name_ = "Spinning CSAFE Fire";
 
-  CutGroup *fire_cut = new CutGroup(cpdpy);
+  CutGroup *fire_cut = new CutGroup(fcpdpy, true);
   fire_cut->add(fire_inst);
+
+  fire_inst->addCPDpy(fcpdpy);
 #endif
   
 #ifdef ADD_GEO_DATA
   //ADD THE GEOLOGY DATA SET
+  CutPlaneDpy* gcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
+
   ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/Seismic/geo",256);
   Material* gmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   gmat->my_lights.add(holo_light1);
   gmat->my_lights.add(holo_light2);
   gmat->my_lights.add(holo_light3);
 
-  Material *gcutmat = new CutMaterial(gmat, gcmap, cpdpy);
+  Material *gcutmat = new CutMaterial(gmat, gcmap, gcpdpy);
   gcutmat->my_lights.add(holo_light1);
   gcutmat->my_lights.add(holo_light2);
   gcutmat->my_lights.add(holo_light3);
@@ -1150,20 +1163,24 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   ginst->name_ = "Spinning Geology";
 
-  CutGroup *gcut = new CutGroup(cpdpy);
+  CutGroup *gcut = new CutGroup(gcpdpy, true);
   gcut->name_ = "Geology Cutting Plane";
   gcut->add(ginst);
+
+  ginst->addCPDpy(gcpdpy);
 #endif
 
 #ifdef ADD_SHEEP
   //ADD THE SHEEP HEART DATA SET
+  CutPlaneDpy* scpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
+
   ColorMap *scmap = new ColorMap("/usr/sci/data/Geometry/volumes2/sheep",256);
   Material *smat=new LambertianMaterial(Color(0.7,0.7,0.7));
   smat->my_lights.add(holo_light1);
   smat->my_lights.add(holo_light2);
   smat->my_lights.add(holo_light3);
 
-  Material *scutmat = new CutMaterial(smat, scmap, cpdpy);
+  Material *scutmat = new CutMaterial(smat, scmap, scpdpy);
   scutmat->my_lights.add(holo_light1);
   scutmat->my_lights.add(holo_light2);
   scutmat->my_lights.add(holo_light3);
@@ -1176,7 +1193,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   InstanceWrapperObject *siw = new InstanceWrapperObject(sheep);
 
   Transform *strans = new Transform();
-  strans->rotate(Vector(1,0,0), Vector(0,0,-1));
+  strans->rotate(Vector(0,0,1), Vector(0,0,-1));
   strans->pre_scale(Vector(6.02,6.02,6.02)); //scale to fit max
   strans->pre_translate(Vector(-8, 8, 1.75));
   strans->pre_translate(Vector(0,0,0.30112)); //place 1cm above table
@@ -1185,15 +1202,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   
   sinst->name_ = "Spinning Sheep Heart";
 
-  CutGroup *scut = new CutGroup(cpdpy);
+  CutGroup *scut = new CutGroup(scpdpy, true);
   scut->add(sinst);
   scut->name_ = "Sheep Heart Cutting Plane";
+  sinst->addCPDpy(scpdpy);
 #endif
 
-#if 0
   //PUT THE VOLUMES INTO A SWITCHING GROUP  
   SelectableGroup *sg = new SelectableGroup(60);
-#endif
 
 #ifdef ADD_VIS_FEM
   sg->add(vcut);
@@ -1210,11 +1226,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #ifdef ADD_SHEEP
   sg->add(scut);
 #endif
+#ifdef ADD_DTIGLYPH
+  sg->add(glyphg);
+#endif
 
-#if 0
   sg->name_ = "VolVis Selection";
   g->add(sg);
-#endif
 
   Color cdown(0.1, 0.1, 0.1);
   Color cup(0.1, 0.1, 0.1);
@@ -1249,19 +1266,20 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->add_light(science_room_light2);
   scene->animate=true;
 
-#if 0
   scene->addObjectOfInterest( sg, true );
-#endif
 
-#ifdef ADD_HEAD
-  scene->addObjectOfInterest( hcut, false );
-#endif
 #ifdef ADD_VIS_FEM
   scene->addObjectOfInterest( vinst, false );
   scene->attach_auxiliary_display(vcvdpy);
   vcvdpy->setName("Visible Female Volume");
   scene->attach_display(vcvdpy);
   (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
+
+  scene->addObjectOfInterest( vcut, false );
+  scene->attach_auxiliary_display(vcpdpy);
+  vcpdpy->setName("Visible Female Cutting Plane");
+  scene->attach_display(vcpdpy);
+  (new Thread(vcpdpy, "VFEM CutPlane Dpy"))->detach();
 #endif
 #ifdef ADD_HEAD
   scene->addObjectOfInterest( hinst, false );
@@ -1269,6 +1287,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   hcvdpy->setName("Brain Volume");
   scene->attach_display(hcvdpy);
   (new Thread(hcvdpy, "HEAD Volume Dpy"))->detach();
+
+  scene->addObjectOfInterest( hcut, false );
+  scene->attach_auxiliary_display(hcpdpy);
+  hcpdpy->setName("Brain Cutting Plane");
+  scene->attach_display(hcpdpy);
+  (new Thread(hcpdpy, "VFEM CutPlane Dpy"))->detach();
 #endif
 #ifdef ADD_CSAFE_FIRE
   scene->addObjectOfInterest( fire_time, false );
@@ -1277,6 +1301,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   firedpy->setName("CSAFE Fire Volume");
   scene->attach_display(firedpy);
   (new Thread(firedpy, "CSAFE Fire Volume Dpy"))->detach();
+
+  scene->addObjectOfInterest( fire_cut, false );
+  scene->attach_auxiliary_display(fcpdpy);
+  fcpdpy->setName("Fire Cutting Plane");
+  scene->attach_display(fcpdpy);
+  (new Thread(fcpdpy, "CSAFE Fire CutPlane Dpy"))->detach();
+
 #endif
 #ifdef ADD_GEO_DATA
   scene->addObjectOfInterest( ginst, false );
@@ -1284,6 +1315,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   gcvdpy->setName("Geological Volume");
   scene->attach_display(gcvdpy);
   (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
+
+  scene->addObjectOfInterest( gcut, false );
+  scene->attach_auxiliary_display(gcpdpy);
+  gcpdpy->setName("Geological Cutting Plane");
+  scene->attach_display(gcpdpy);
+  (new Thread(gcpdpy, "GEO CutPlane Dpy"))->detach();
+
 #endif
 #ifdef ADD_SHEEP
   scene->addObjectOfInterest( sinst, false );
@@ -1291,11 +1329,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scvdpy->setName("Sheep Heart Volume");
   scene->attach_display(scvdpy);
   (new Thread(scvdpy, "SHEEP Heart Volume Dpy"))->detach();
+
+  scene->addObjectOfInterest( scut, false );
+  scene->attach_auxiliary_display(scpdpy);
+  scpdpy->setName("Sheep Heart Cutting Plane");
+  scene->attach_display(scpdpy);
+  (new Thread(scpdpy, "SHEEP CutPlane Dpy"))->detach();
 #endif
-  scene->attach_auxiliary_display(cpdpy);
-  cpdpy->setName("Cutting Plane");
-  scene->attach_display(cpdpy);
-  (new Thread(cpdpy, "CutPlane Dpy"))->detach();
 
   scene->add_per_matl_light(holo_light1);
   scene->add_per_matl_light(holo_light2);

@@ -6,6 +6,8 @@ using namespace SCIRun;
 SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, Point cen, Vector _axis, double _rate) 
   : Instance(o, trans), cen(cen), dorotate(true), ctime(0)
 {
+  cpdpy = 0;
+
   rate = 2*_rate; //2rad = 1 revolution
   axis = _axis.normal();
 

@@ -7,7 +7,6 @@
 #include <Packages/rtrt/Core/FontString.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 
-#include <Core/Geometry/Transform.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
@@ -22,6 +21,7 @@
 #include <stdlib.h>
 #include <values.h>
 #include <stdio.h>
+#include <unistd.h>
 
 using namespace rtrt;
 using namespace std;
@@ -31,13 +31,14 @@ namespace rtrt {
   extern Mutex xlock;
 } // end namespace rtrt
 
-static Transform prev_trans;
 
 CutPlaneDpy::CutPlaneDpy(const Vector& n, const Point& cen)
   : PlaneDpy(n, cen), cen(cen)
 {
   on = true;
   dscale = 0.5;
+  doanimate = true;
+  set_resolution(150,150);
 }
 CutPlaneDpy::CutPlaneDpy(const Vector& n, const double d)
   : PlaneDpy(n, d)
@@ -45,6 +46,8 @@ CutPlaneDpy::CutPlaneDpy(const Vector& n, const double d)
   cen = Point(0,0,0)+n*d;
   on = true;
   dscale = 0.5;
+  doanimate = true;
+  set_resolution(150,150);
 }
 
 CutPlaneDpy::~CutPlaneDpy()
@@ -52,23 +55,25 @@ CutPlaneDpy::~CutPlaneDpy()
 }
 
 void CutPlaneDpy::init() {
+  sleep(3);
+
   glShadeModel(GL_FLAT);
   //setup the rotation ball
   //copy plane eqn before rotation
 
   ball = new BallData();
+  prev_trans = new Transform();
 
   double rad = 0.8;
   HVect center(0,0,0,1);
   Vector v1, v2;
   n.find_orthogonal(v1,v2);
   //n.normalize(); //has artifacts in "d" if enabled  
-  prev_trans.load_frame(Point(0,0,0), v1, v2, n );
+  prev_trans->load_frame(Point(0,0,0), v1, v2, n );
   ball->Init();
   ball->Place(center, rad);
 
   rotsphere = false;
-
 }
 
 void CutPlaneDpy::display() {
@@ -198,20 +203,14 @@ void CutPlaneDpy::key_pressed(unsigned long key) {
 
 void CutPlaneDpy::button_pressed(MouseButton button, const int x, const int y) {
   
+  prev_doanimate = doanimate;
+  doanimate = false;
+			       
   if (button == MouseButton1) {
     //set each ABCD for plane manually
     starty = y;
     move(x, y);
     redraw = true;
-
-    //reset the ball so that it rotates starting with this plane orientation
-    double rad = 0.8;
-    HVect center(0,0,0,1);
-    Vector v1, v2;
-    n.find_orthogonal(v1,v2);
-    prev_trans.load_frame(Point(0,0,0), v1, v2, n); //store pln normal to rotate
-    ball->Init(); //would be better to find a way to update orientation instead of reseting it
-    ball->Place(center, rad);
   }
 
   if (button == MouseButton2) {
@@ -255,7 +254,7 @@ void CutPlaneDpy::button_motion(MouseButton button, const int x, const int y) {
     HMatrix mNow;
     ball->Value(mNow);
     tmp_trans.set(&mNow[0][0]);    
-    Transform prv = prev_trans; //original plane eqn
+    Transform prv = *prev_trans; //original plane eqn
     prv.post_trans(tmp_trans); //apply the ball's transform to it
     HMatrix vmat;
     prv.get(&vmat[0][0]); 
@@ -273,10 +272,22 @@ void CutPlaneDpy::button_motion(MouseButton button, const int x, const int y) {
   
 }
 
-void CutPlaneDpy::button_released(MouseButton button, const int x, const int y){
+void CutPlaneDpy::button_released(MouseButton button, const int x, const int y)
+{
+  doanimate = prev_doanimate;
   if (button == MouseButton1) {
     starty=y;
     move(x, y);
+
+    //reset the ball so that it rotates starting with this plane orientation
+    double rad = 0.8;
+    HVect center(0,0,0,1);
+    Vector v1, v2;
+    n.find_orthogonal(v1,v2);
+    prev_trans->load_frame(Point(0,0,0), v1, v2, n); //store pln normal to rotate
+    ball->Init(); //would be better to find a way to update orientation instead of reseting it
+    ball->Place(center, rad);
+
     redraw=true;
   }
   if (button == MouseButton2) {
@@ -294,7 +305,7 @@ void CutPlaneDpy::button_released(MouseButton button, const int x, const int y){
     HMatrix mNow;
     ball->Value(mNow);
     tmp_trans.set(&mNow[0][0]);
-    Transform prv = prev_trans;
+    Transform prv = *prev_trans;
     prv.post_trans(tmp_trans);	  
     HMatrix vmat;
     prv.get(&vmat[0][0]);    
@@ -337,3 +348,27 @@ void CutPlaneDpy::move(int x, int y)
       d = Dot(n, cen);
     }
 }
+
+
+void CutPlaneDpy::animate(double t) {
+  if (doanimate) {
+    double rate = 2*0.1;
+    
+    Transform prv = *prev_trans; //original plane eqn
+    prv.pre_rotate(t*rate, Vector(0,0,1));
+    HMatrix vmat;
+    prv.get(&vmat[0][0]); 
+    Vector x_a(vmat[0][2],vmat[1][2],vmat[2][2]); //get x, where we stored the pln normal
+  
+    //store result into the plane
+    n.x(x_a.x());
+    n.y(x_a.y());
+    n.z(x_a.z());
+    
+    d = Dot(n, cen); //maintain d to center rotation around initial point  
+    redraw = true;
+  }
+}
+
+
+

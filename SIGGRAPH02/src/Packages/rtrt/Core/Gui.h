@@ -249,23 +249,6 @@ private:
   // objectWindow GLUI elements:
   //
 
-  GLUI_Listbox * objectList;
-  GLUI_Button  * attachKeypadBtn_;
-  int            keypadAttached_;
-
-
-  SelectableGroup * attachedSG_;
-  SpinningInstance * attachedSI_;
-  CutGroup * attachedCut_;
-
-  GLUI_Checkbox * SGAutoButton_;
-  GLUI_Button * SGCycleButton_;
-  GLUI_Checkbox * SIAutoButton_;
-  GLUI_Button * SIIncMagButton_;
-  GLUI_Button * SIDecMagButton_;
-  GLUI_Button * SIUpButton_;
-  GLUI_Button * SIDownButton_;
-  GLUI_Button * CutToggleButton_;
 
   ////////////////////////////////////////////////////////////////
   //
@@ -337,12 +320,15 @@ private:
   // Object Window Callbacks
   void createObjectWindow( GLUI * window );
   static void toggleObjectsWindowCB( int id );
-  static void updateObjectCB( int id );
-  static void attachKeypadCB( int id );
-  static void resetObjSelection();
-  static void SGChangeCB( int id );
-  static void SIChangeCB( int id );
-  static void CutToggleCB( int id );
+  static void SGAutoCycleCB( int id );
+  static void SGNextItemCB( int id );
+  static void SISpinCB( int id );
+  static void SIIncMagCB( int id );
+  static void SIDecMagCB( int id );
+  static void SISlideUpCB( int id );
+  static void SISlideDownCB( int id );
+  static void CGOnCB( int id );
+  static void CGSpinCB( int id );
 
   // Sounds Window Callbacks
   void createSoundsWindow( GLUI * window );
