@@ -115,6 +115,7 @@ public:
     State state;
     PortManager<OPort*> oports;
     PortManager<IPort*> iports;
+    int first_dynamic_port;
     char lastportdynamic;
     iport_maker dynamic_port_maker;
     clString lastportname;
