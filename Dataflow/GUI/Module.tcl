@@ -210,14 +210,6 @@ itcl_class Module {
 	    pack $p.ui -side left -ipadx 5 -ipady 2
 	    Tooltip $p.ui $ToolTipText(ModuleUI)
 	}
-	# Make the Subnet Button
-	if {$isSubnetModule} {
-	    button $p.subnet -text "Sub-Network" -borderwidth 2 \
-		-font $ui_font -anchor center \
-		-command "showSubnetWindow $subnetNumber"
-	    pack $p.subnet -side bottom -ipadx 5 -ipady 2
-	    Tooltip $p.ui $ToolTipText(ModuleSubnetBtn)
-	}
 
 	# Make the title
 	label $p.title -text "$name" -font $modname_font -anchor w
@@ -1457,11 +1449,11 @@ proc unsetIfExists { Varname } {
 
 
 proc notesTrace { ArrayName Index mode } {
-    global Subnet $Index-notes
-    networkHasChanged
-    # the next lines are to handle notes color and options
+    # the next lines are to handle notes $id-Color and $id-Position changes
     set pos [string last - $Index]
     if { $pos != -1 } { set Index [string range $Index 0 [expr $pos-1]] }
+    if { ![string length $Index] } return 
+    networkHasChanged
     drawNotes $Index
     return 1
 }
