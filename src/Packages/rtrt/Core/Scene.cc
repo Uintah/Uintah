@@ -32,16 +32,19 @@ Scene::Scene(Object* obj, const Camera& cam, Image* image0, Image* image1,
 	     double ambientscale)
     : obj(obj), camera0(camera0), image0(image0), image1(image1),
       groundplane(groundplane),
-      cup(cup), cdown(cdown),
-      ambientscale(ambientscale), work("frame tiles")
+      cup(cup), cdown(cdown), origCup_(cup), origCDown_(cdown),
+      work("frame tiles")
 {
+  origAmbientColor_ = Color(1,1,1) * ambientscale;
+  ambientColor_     = origAmbientColor_;
+
   init(cam, bgcolor);
 }
 
 void Scene::init(const Camera& cam, const Color& bgcolor)
 {
   work.refill(0,0,8);
-  shadow_mode=3;
+  shadow_mode = Hard_Shadows;
   camera0=new Camera(cam);
   camera1=new Camera(cam);
   maxdepth=2;
@@ -52,17 +55,18 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   background = new ConstantBackground( bgcolor );
   animate=true;
   hotspots=false;
-  logframes=false;
   frameno=0;
   frametime_fp=0;
   lasttime=0;
-  add_shadowmode("none", new NoShadows());
-  add_shadowmode("single", new SingleSampleSoftShadows());
-  add_shadowmode("hard", new HardShadows());
-  add_shadowmode("screwy", new ScrewyShadows());
-  add_shadowmode("multisample", new MultiSampleSoftShadows());
-  add_shadowmode("uncached", new UncachedHardShadows());
-  select_shadow_mode("hard");
+
+  add_shadowmode(ShadowBase::shadowTypeNames[0],new NoShadows());
+  add_shadowmode(ShadowBase::shadowTypeNames[1],new SingleSampleSoftShadows());
+  add_shadowmode(ShadowBase::shadowTypeNames[2],new HardShadows());
+  add_shadowmode(ShadowBase::shadowTypeNames[3],new ScrewyShadows());
+  add_shadowmode(ShadowBase::shadowTypeNames[4],new MultiSampleSoftShadows());
+  add_shadowmode(ShadowBase::shadowTypeNames[5],new UncachedHardShadows());
+
+  select_shadow_mode( Hard_Shadows );
 }
 
 void Scene::add_shadowmode(const char* name, ShadowBase* s)
@@ -71,14 +75,10 @@ void Scene::add_shadowmode(const char* name, ShadowBase* s)
   shadows.add(s);
 }
 
-bool Scene::select_shadow_mode(const char* name)
+void
+Scene::select_shadow_mode( ShadowType st )
 {
-  for(int i=0;i<shadows.size();i++)
-    if(strcmp(shadows[i]->getName(), name) == 0){
-      shadow_mode=i;
-      return true;
-    }
-  return false;
+  shadow_mode = st;
 }
 
 Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
@@ -88,10 +88,12 @@ Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
 	     double ambientscale)
     : obj(obj), camera0(camera0), image0(0), image1(0),
       groundplane(groundplane),
-      cdown(cdown),
-      cup(cup),
-      ambientscale(ambientscale), work("frame tiles")
+      cdown(cdown), cup(cup), origCup_(cup), origCDown_(cdown),
+      work("frame tiles")
 {
+  origAmbientColor_ = Color(1,1,1) * ambientscale;
+  ambientColor_     = origAmbientColor_;
+
   init(cam, bgcolor);
 }
 
@@ -106,11 +108,12 @@ Scene::~Scene()
 
 void Scene::refill_work(int which, int nworkers)
 {
-    int xres=get_image(which)->get_xres();
-    int yres=get_image(which)->get_yres();
-    int nx=(xres+xtilesize-1)/xtilesize;
-    int ny=(yres+ytilesize-1)/ytilesize;
-    int nass=nx*ny;
+    int xres = get_image(which)->get_xres();
+    int yres = get_image(which)->get_yres();
+    int nx   = (xres+xtilesize-1)/xtilesize;
+    int ny   = (yres+ytilesize-1)/ytilesize;
+    int nass = nx*ny;
+
     work.refill(nass, nworkers, 40);
 }
 
