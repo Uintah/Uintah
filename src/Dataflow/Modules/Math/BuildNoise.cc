@@ -16,7 +16,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Math/Expon.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Math/MusilRNG.h>
 #include <iostream>
 #include <sstream>

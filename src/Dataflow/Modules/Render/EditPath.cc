@@ -63,8 +63,8 @@ POSSIBLE REVISIONS
 #include <Core/Geom/View.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/HashTable.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Core/Parts/GuiVar.h>
+#include <Core/GuiInterface/GuiManager.h>
 #include <Core/Datatypes/Path.h>
 
 #include <Core/Util/Timer.h>
@@ -174,6 +174,7 @@ EditPath::EditPath(const string& id)
   widget_lock("EditPath module widget lock"),
   sem("EditPath Semaphore", 0)
 {
+  cerr << "EditPath" << endl;
   cross_widget =scinew CrosshairWidget(this, &widget_lock, 0.01);
   cross_widget->SetState(0);
   cross_widget->SetPosition(Point(0, 0, 0));
@@ -190,6 +191,7 @@ EditPath::EditPath(const string& id)
   need_execute=1;
   
   sem.up();
+  cerr <<"EditPath end\n";
 }
 
 EditPath::~EditPath()
@@ -692,6 +694,7 @@ bool EditPath::init_exist_path(PathHandle p){
 
 // setting tcl vars to initial state
 void EditPath::init_tcl_update(){
+  tcl_num_views.set(-1);
   tcl_num_views.set(curr_path_h->get_num_views());
   tcl_intrp_type.set(curr_path_h->get_path_t());
   tcl_acc_mode.set(curr_path_h->get_acc_t());
@@ -714,14 +717,15 @@ void EditPath::init_tcl_update(){
   tcl_curr_view.set(curr_view);
   
   if (UI_Init.get()){
-    TCLTask::lock();
-    TCL::execute(id+" refresh ");
-    TCLTask::unlock();
+    gm->lock();
+    tcl_execute(id+" refresh ");
+    gm->unlock();
   }
 }
 
-void EditPath::update_tcl_var(){
-  TCL::reset_vars();  
+void EditPath::update_tcl_var()
+{
+  reset_vars();  
   tcl_is_new.set(is_new);
   tcl_speed_val.set(speed_val);
   tcl_acc_val.set(acc_val);
@@ -731,18 +735,18 @@ void EditPath::update_tcl_var(){
   message="";
   
   if (UI_Init.get()){
-    TCLTask::lock();
-    TCL::execute(id+" refresh ");
-    TCLTask::unlock();
+    gm->lock();
+    tcl_execute(id+" refresh ");
+    gm->unlock();
   }
 }
 
 bool EditPath::Msg_Box(const string& title, const string& message){
   tcl_msg_box.set(0);
   if (UI_Init.get()){
-     TCLTask::lock();
-         TCL::execute(id+" EraseWarn "+ "\""+title +"\""+ " " + "\""+message+"\"");
-     TCLTask::unlock();
+     gm->lock();
+         tcl_execute(id+" EraseWarn "+ "\""+title +"\""+ " " + "\""+message+"\"");
+     gm->unlock();
   }
 
   if (tcl_msg_box.get()>0){

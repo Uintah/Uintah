@@ -63,7 +63,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MatrixSelectVector.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
 	$(SRCDIR)/Module.tcl \
-	$(SRCDIR)/NetworkEditor.tcl \
 	$(SRCDIR)/PathReader.tcl \
 	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \

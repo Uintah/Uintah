@@ -45,8 +45,8 @@ PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Datatypes Core/Persistent Core/Math \
 	Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes \
-	Core/Util Core/Geom Core/TkExtensions \
+	Core/Util Core/Geom \
 	Dataflow/Widgets
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm $(XML_LIBRARY) $(UNI_PETSC_LIBRARY)
+LIBS := $(GL_LIBS) -lm $(XML_LIBRARY) $(UNI_PETSC_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

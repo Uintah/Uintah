@@ -15,7 +15,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <iostream>
 #include <sstream>
 

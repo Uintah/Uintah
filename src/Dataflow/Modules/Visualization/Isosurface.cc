@@ -31,7 +31,7 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/MaskedTetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
@@ -115,10 +115,10 @@ void Isosurface::execute()
 
   update_state(JustStarted);
 
-  if( init ) {
-    initialize();
-    init = false;
-  }
+//   if( init ) {
+//     initialize();
+//     init = false;
+//   }
   
   if ( field->generation != last_generation ) {
     // new field
@@ -260,13 +260,13 @@ Isosurface::new_field( FieldHandle &field )
   // 1: field info
   ostringstream info;
   info << id << " set_info {" << type << "} " << field->generation;
-  TCL::execute(info.str().c_str());
+  tcl_execute(info.str().c_str());
 
   // 2: min/max
   if(minmax.first != prev_min || minmax.second != prev_max){
     ostringstream str;
     str << id << " set_minmax " << minmax.first << " " << minmax.second;
-    TCL::execute(str.str().c_str());
+    tcl_execute(str.str().c_str());
     prev_min = minmax.first;
     prev_max = minmax.second;
   }

@@ -144,7 +144,7 @@ void GenStandardColorMaps::execute()
    }
    
    string tclRes;
-   TCL::eval(id+" getColorMapString", tclRes);
+   tcl_eval(id+" getColorMapString", tclRes);
    if ( genMap(tclRes) ) 
      outport->send(cmap);
 } 

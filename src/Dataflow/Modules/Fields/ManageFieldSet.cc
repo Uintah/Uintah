@@ -30,7 +30,7 @@
 
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Datatypes/FieldSet.h>
 #include <Dataflow/Ports/FieldSetPort.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -96,7 +96,7 @@ ManageFieldSet::add_fieldset(string path, FieldSetHandle fs)
 {
   const string name = get_name(fs.get_rep());
   string newpath;
-  TCL::eval(id + " add_sitem " + path + " " + name, newpath);
+  tcl_eval(id + " add_sitem " + path + " " + name, newpath);
   const string sindex = newpath;
   fsidmap_[sindex] = fs;
 
@@ -126,7 +126,7 @@ ManageFieldSet::add_field(string path, FieldHandle f)
     " }";
 
   string index;
-  TCL::eval(id + " add_fitem " + path + " " +  name + " " + data, index);
+  tcl_eval(id + " add_fitem " + path + " " +  name + " " + data, index);
 
   const string sindex = index;
   fidmap_[sindex] = f;
@@ -137,8 +137,8 @@ void
 ManageFieldSet::update_hiertable()
 {
   string result;
-  TCL::eval(id + " ui", result);
-  TCL::eval(id + " clear_all", result);
+  tcl_eval(id + " ui", result);
+  tcl_eval(id + " clear_all", result);
 
   fsidmap_.clear();
   fidmap_.clear();
@@ -261,7 +261,7 @@ ManageFieldSet::execute()
     FieldSet *ofs = NULL;
 
     string result;
-    TCL::eval(".ui" + id + ".sel.h curselection", result);
+    tcl_eval(".ui" + id + ".sel.h curselection", result);
 
     list<string> selected;
     split(selected, result);

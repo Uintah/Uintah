@@ -32,7 +32,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Geometry/Point.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <iostream>
 
 namespace SCIRun {

@@ -13,7 +13,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <iostream>
 #include <sstream>
 
@@ -102,7 +102,7 @@ void MatrixSelectVector::execute() {
   if (changed) {
     std::ostringstream str;
     str << id << " update";
-    TCL::execute(str.str().c_str());
+    tcl_execute(str.str().c_str());
   }
   
   reset_vars();

@@ -18,7 +18,7 @@
 #ifndef GENSTANDARDCOLORMAPS_H
 #define GENSTANDARDCOLORMAPS_H 1
 
-#include <Core/GuiInterface/GuiVar.h> 
+#include <Core/Parts/GuiVar.h> 
 #include <Core/Geom/Color.h>
 #include <Dataflow/Network/Module.h> 
 #include <Dataflow/Ports/ColorMapPort.h>

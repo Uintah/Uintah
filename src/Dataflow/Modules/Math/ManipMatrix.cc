@@ -29,7 +29,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/share/share.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/StrX.h>
 #include <Core/Util/DebugStream.h>
@@ -622,7 +622,7 @@ ManipMatrix::load_ui()
     names += manipName + " ";
   }
 
-  TCL::execute(( id + " set_names " + "{" + names + "}" ).c_str());
+  tcl_execute(( id + " set_names " + "{" + names + "}" ).c_str());
 }
 
 
@@ -654,9 +654,9 @@ ManipMatrix::set_cur_manip( const string& name )
   const string libpath = vector_to_string( manipData.libpath_ );
   const string inc     = vector_to_string( manipData.inc_     );
 
-  TCL::execute((id + " set_cur_libs "    + "{" + libs    + "}").c_str());
-  TCL::execute((id + " set_cur_libpath " + "{" + libpath + "}").c_str());
-  TCL::execute((id + " set_cur_inc "     + "{" + inc     + "}").c_str());
+  tcl_execute((id + " set_cur_libs "    + "{" + libs    + "}").c_str());
+  tcl_execute((id + " set_cur_libpath " + "{" + libpath + "}").c_str());
+  tcl_execute((id + " set_cur_inc "     + "{" + inc     + "}").c_str());
 }
 
 

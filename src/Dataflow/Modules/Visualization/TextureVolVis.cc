@@ -32,7 +32,7 @@
 #include <Core/Geom/GeomTriangles.h>
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Widgets/PointWidget.h>

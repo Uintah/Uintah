@@ -21,17 +21,27 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Widgets
 
-SRCS     += $(SRCDIR)/ArrowWidget.cc $(SRCDIR)/BaseWidget.cc \
-	$(SRCDIR)/BoxWidget.cc $(SRCDIR)/CriticalPointWidget.cc \
-	$(SRCDIR)/CrosshairWidget.cc $(SRCDIR)/FrameWidget.cc \
-	$(SRCDIR)/GaugeWidget.cc $(SRCDIR)/LightWidget.cc \
-	$(SRCDIR)/PathWidget.cc $(SRCDIR)/PointWidget.cc \
-	$(SRCDIR)/RingWidget.cc $(SRCDIR)/ScaledBoxWidget.cc \
-	$(SRCDIR)/ScaledFrameWidget.cc $(SRCDIR)/ViewWidget.cc
+SRCS     += $(SRCDIR)/BaseWidget.cc \
+	$(SRCDIR)/GuiGeom.cc\
+	$(SRCDIR)/GuiView.cc\
+	$(SRCDIR)/ArrowWidget.cc \
+	$(SRCDIR)/BoxWidget.cc \
+	$(SRCDIR)/CriticalPointWidget.cc \
+	$(SRCDIR)/CrosshairWidget.cc \
+	$(SRCDIR)/FrameWidget.cc \
+	$(SRCDIR)/GaugeWidget.cc \
+	$(SRCDIR)/LightWidget.cc \
+	$(SRCDIR)/PathWidget.cc \
+	$(SRCDIR)/PointWidget.cc \
+	$(SRCDIR)/RingWidget.cc \
+	$(SRCDIR)/ScaledBoxWidget.cc \
+	$(SRCDIR)/ScaledFrameWidget.cc \
+	$(SRCDIR)/ViewWidget.cc \
 
-PSELIBS := Core/Datatypes Dataflow/Constraints Dataflow/Ports \
-	Core/Exceptions Core/Geom Core/Thread Core/GuiInterface \
-	Core/Containers Core/Geometry
+PSELIBS := \
+	Dataflow/Constraints Dataflow/Ports \
+	Core/Datatypes Core/Exceptions Core/Geom Core/Thread \
+	Core/GuiInterface Core/Containers Core/Geometry
 LIBS := -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -38,6 +38,7 @@
 #include <Core/Geom/HeadLight.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/FutureValue.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 using std::cerr;
@@ -583,7 +584,7 @@ void Viewer::insert_specific(const string& key, void* data)
 //----------------------------------------------------------------------
 void Viewer::emit_vars(ostream& out, string& midx)
 {
-  TCL::emit_vars(out, midx);
+  emit_vars(out, midx);
   string viewwindowstr;
   for(unsigned int i=0;i<viewwindow.size();i++){
     viewwindowstr=midx+string("-ViewWindow_")+to_string((int)i);

@@ -55,7 +55,6 @@
 #include <Core/Geom/View.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Datatypes/Image.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Render/Ball.h>

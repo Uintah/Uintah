@@ -50,65 +50,63 @@ using std::map;
 class Connection;
 
 class Module;
-class NetworkEditor;
+class Scheduler;
 
 class PSECORESHARE Network {
 public:
-    
-    typedef map<string, Connection*>	MapStringConnection;
-    typedef map<string, Module*>	MapStringModule;
-    typedef map<int, Connection*>	MapIntConnection;
-    typedef map<int, Module*>		MapIntModule;
-    
+  
+  typedef map<string, Connection*>	MapStringConnection;
+  typedef map<string, Module*>	MapStringModule;
+  typedef map<int, Connection*>	MapIntConnection;
+  typedef map<int, Module*>		MapIntModule;
+  
 private:
-    Mutex the_lock;
-    int read_file(const string&);
-
-    MapStringConnection conn_ids;
-    
-    NetworkEditor* netedit;
-    int first;
-    int nextHandle;
+  Mutex the_lock;
+  int read_file(const string&);
+  
+  MapStringConnection conn_ids;
+  
+  Scheduler *scheduler ;
+  int first;
+  int nextHandle;
 public:				// mm-hack to get direct access
-    vector<Connection*> connections;
-    vector<Module*> modules;
-    
-    MapStringModule module_ids;
-    MapIntModule mod_handles;
-    MapIntConnection conn_handles;
-    
-    int slave_socket;
-    int reschedule;
+  vector<Connection*> connections;
+  vector<Module*> modules;
+  
+  MapStringModule module_ids;
+  MapIntModule mod_handles;
+  MapIntConnection conn_handles;
+  
+  int slave_socket;
+  int reschedule;
 public:
-    Network(int first);
-    ~Network();
-
-    void initialize(NetworkEditor*);
-
-    void read_lock();
-    void read_unlock();
-    void write_lock();
-    void write_unlock();
-
-    int nmodules();
-    Module* module(int);
-
-    int getNextHandle()  { return ++nextHandle; }  // mm
-
-    int nconnections();
-    Connection* connection(int);
-    string connect(Module*, int, Module*, int);
-    int disconnect(const string&);
-    Connection* get_connect_by_handle (int handle); 	// mm
-    
-    Module* add_module(const string& packageName,
-                       const string& categoryName,
-                       const string& moduleName);
-    int delete_module(const string& name);
-
-    Module* get_module_by_id(const string& id); 	
-    Module* get_module_by_handle (int handle);		// mm
-
+  Network(int first);
+  ~Network();
+  
+  void initialize(Scheduler*);
+  
+  void read_lock();
+  void read_unlock();
+  void write_lock();
+  void write_unlock();
+  
+  int nmodules();
+  Module* module(int);
+  
+  int getNextHandle()  { return ++nextHandle; }  // mm
+  
+  int nconnections();
+  Connection* connection(int);
+  string connect(Module*, int, Module*, int);
+  int disconnect(const string&);
+  Connection* get_connect_by_handle (int handle); 	// mm
+  
+  void add_module( Module *);
+  int delete_module(const string& name);
+  
+  Module* get_module_by_id(const string& id); 	
+  Module* get_module_by_handle (int handle);		// mm
+  
 };
 
 } // End namespace SCIRun

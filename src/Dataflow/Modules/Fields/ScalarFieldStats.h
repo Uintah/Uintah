@@ -26,7 +26,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <algorithm>
 #include <vector>
 

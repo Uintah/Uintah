@@ -30,7 +30,6 @@ PortParser::startElement( const XMLCh * const uri,
     info_->package_ = package_->name_;
     info_->imaker_ = "make_" + name + "IPort";
     info_->omaker_ = "make_" + name + "OPort";
-    cerr << "Read port " << info_->type_ << endl;
     resources_->ports_[info_->type_] = info_;
   }
 

@@ -32,7 +32,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Tester/RigorousTest.h>
 
 #include <iostream>

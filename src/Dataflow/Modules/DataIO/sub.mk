@@ -41,11 +41,11 @@ SRCS     += \
 	$(SRCDIR)/PathWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Disclosure \
+PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/Widgets\
+	Core/Datatypes Core/Disclosure \
 	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes \
-	Core/Util Core/Geom Core/TkExtensions \
-	Dataflow/Widgets
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+	Core/Util Core/Geom 
+LIBS := $(GL_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -28,7 +28,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/ContourField.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Visualization/StreamLines.h>
 
 #include <iostream>

@@ -20,7 +20,7 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Containers/Array2.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Geometry/Point.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>

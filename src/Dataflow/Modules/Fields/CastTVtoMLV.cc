@@ -11,10 +11,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/MaskedLatticeVol.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Parts/GuiVar.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
 
 #include <Core/share/share.h>
