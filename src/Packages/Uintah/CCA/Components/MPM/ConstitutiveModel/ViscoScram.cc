@@ -161,14 +161,27 @@ void ViscoScram::initializeCMData(const Patch* patch,
 
 void ViscoScram::allocateCMDataAddRequires(Task* task,
 					   const MPMMaterial* matl,
-					   const PatchSet* patch,
+					   const PatchSet* ,
 					   MPMLabel* lb) const
 {
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW, p_statedata_label_preReloc, 
+                              matlset, Ghost::None);
+  task->requires(Task::NewDW, pRandLabel_preReloc,        
+                              matlset, Ghost::None);
+  task->requires(Task::NewDW, lb->pCrackRadiusLabel_preReloc,        
+                              matlset, Ghost::None);
+  task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
+                              Ghost::None);
+  task->requires(Task::NewDW, lb->pStressLabel_preReloc,             
+                              Ghost::None);
+  /*
   task->requires(Task::OldDW, p_statedata_label,            Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW, lb->pStressLabel,             Ghost::None);
   task->requires(Task::OldDW, lb->pCrackRadiusLabel,        Ghost::None);
   task->requires(Task::OldDW, pRandLabel,                   Ghost::None);
+  */
 }
 
 
@@ -177,7 +190,7 @@ void ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
 				   map<const VarLabel*,
                                    ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
-				   DataWarehouse* old_dw)
+				   DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -198,11 +211,18 @@ void ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pCrackRadius,addset);
   new_dw->allocateTemporary(pRand,addset);
 
+  new_dw->get(o_statedata,p_statedata_label_preReloc,delset);
+  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,delset);
+  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
+  new_dw->get(o_CrackRadius,lb->pCrackRadiusLabel_preReloc,delset);
+  new_dw->get(o_Rand,pRandLabel_preReloc,delset);
+  /*
   old_dw->get(o_statedata,p_statedata_label,delset);
   old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
   old_dw->get(o_stress,lb->pStressLabel,delset);
   old_dw->get(o_CrackRadius,lb->pCrackRadiusLabel,delset);
   old_dw->get(o_Rand,pRandLabel,delset);
+  */
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
