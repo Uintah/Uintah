@@ -6,6 +6,7 @@ Category: CFD
 Readtec
 PartToGeom
 cfdGridLines
+GatherTimeSteps
 
 Category: Contours
 LaceContours
@@ -21,6 +22,9 @@ DPLinearSolver
 
 Category: EEG
 Coregister
+
+Category: Examples
+GeomPortTest
 
 Category: FDM
 BuildFDField
@@ -109,6 +113,7 @@ Category: Readers
 ColumnMatrixReader
 ContourSetReader
 GeomReader
+GeometryReader
 ImageReader
 MatrixReader
 MeshReader
@@ -179,6 +184,7 @@ Category: Writers
 ColorMapWriter
 ColumnMatrixWriter
 ContourSetWriter
+GeometryWriter
 MatrixWriter
 MeshWriter
 MultiMeshWriter
