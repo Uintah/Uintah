@@ -259,7 +259,7 @@ SimpleSimulationController::run()
    }
    
    if(output)
-      output->finalizeTimestep(t, 0, grid, scheduler);
+      output->finalizeTimestep(t, 0, grid, scheduler, true);
 
    scheduler->compile(d_myworld);
    
@@ -436,31 +436,36 @@ SimpleSimulationController::run()
       sharedState->setElapsedTime(t);
       sharedState->incrementCurrentTopLevelTimeStep();
 
-      if(needRecompile(t, delt, grid, sim, output, lb) || first){
-       first=false;
-       if(d_myworld->myrank() == 0)
-         cout << "COMPILING TASKGRAPH...\n";
-       double start = Time::currentSeconds();
-       scheduler->initialize();
-
-       sim->scheduleTimeAdvance(level, scheduler, 0, 1);
-
-       if(output)
-         output->finalizeTimestep(t, delt, grid, scheduler);
       
-       // Begin next time step...
-       sim->scheduleComputeStableTimestep(level, scheduler);
-       scheduler->compile(d_myworld);
-
-       double dt=Time::currentSeconds()-start;
-       if(d_myworld->myrank() == 0)
-         cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
+      if(needRecompile(t, delt, grid, sim, output, lb) || first){
+        first=false;
+        if(d_myworld->myrank() == 0)
+          cout << "COMPILING TASKGRAPH...\n";
+        double start = Time::currentSeconds();
+        scheduler->initialize();
+        
+        sim->scheduleTimeAdvance(level, scheduler, 0, 1);
+        
+        if(output)
+          output->finalizeTimestep(t, delt, grid, scheduler, true);
+        
+        // Begin next time step...
+        sim->scheduleComputeStableTimestep(level, scheduler);
+        scheduler->compile(d_myworld);
+        
+        double dt=Time::currentSeconds()-start;
+        if(d_myworld->myrank() == 0)
+          cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
+      }
+      else {
+        if (output)
+          output->finalizeTimestep(t, delt, grid, scheduler, false);
       }
       // Execute the current timestep
-      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-      //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
-      //scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+      //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+      //scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       scheduler->execute(d_myworld);
       if(output)
        output->executedTimestep();

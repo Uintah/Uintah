@@ -191,7 +191,7 @@ void AMRSimulationController::run()
    }
 
    if(output)
-      output->finalizeTimestep(t, 0, grid, scheduler);
+      output->finalizeTimestep(t, 0, grid, scheduler, true);
 
    amrout << "Compiling initial schedule\n";
    scheduler->compile(d_myworld);
@@ -393,7 +393,7 @@ void AMRSimulationController::run()
 	 sim->scheduleComputeStableTimestep(grid->getLevel(i), scheduler);
        }
        if(output)
-	 output->finalizeTimestep(t, delt, grid, scheduler);
+	 output->finalizeTimestep(t, delt, grid, scheduler,true);
 
        scheduler->compile(d_myworld);
 
@@ -403,6 +403,10 @@ void AMRSimulationController::run()
        levelids.resize(grid->numLevels());
        for(int i=0;i<grid->numLevels();i++)
 	 levelids[i]=grid->getLevel(i)->getID();
+     }
+     else {
+       if (output)
+         output->finalizeTimestep(t, delt, grid, scheduler, false);
      }
 
      oldDW->override(delt_vartype(delt), sharedState->get_delt_label());
