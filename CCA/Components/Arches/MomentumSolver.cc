@@ -998,9 +998,14 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
   tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
 		Ghost::AroundCells, numGhostCells);
 #endif
-  if (d_MAlab)
+  if (d_MAlab) {
+
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
 		  Ghost::AroundCells, numGhostCells);
+
+    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, 
+		  Ghost::AroundCells, numGhostCells);
+  }
 
   switch (index) {
 
@@ -1013,17 +1018,6 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
 #else
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
 #endif
-
-    // for multimaterial
-
-    if (d_MAlab) {
-
-      tsk->requires(Task::NewDW, d_MAlab->d_uVel_mmLinSrcLabel,
-		    Ghost::None, zeroGhostCells);
-      tsk->requires(Task::NewDW, d_MAlab->d_uVel_mmNonlinSrcLabel,
-			Ghost::None, zeroGhostCells);
-
-    }
 
     break;
 
@@ -1038,13 +1032,6 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
 #else
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
 #endif
-    if (d_MAlab) {
-
-      tsk->requires(Task::NewDW, d_MAlab->d_vVel_mmLinSrcLabel,
-		    Ghost::None, zeroGhostCells);
-      tsk->requires(Task::NewDW, d_MAlab->d_vVel_mmNonlinSrcLabel,
-		    Ghost::None, zeroGhostCells);
-    }
 
     break;
 
@@ -1059,13 +1046,6 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
 #else
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
 #endif
-    if (d_MAlab) {
-
-      tsk->requires(Task::NewDW, d_MAlab->d_wVel_mmLinSrcLabel,
-		    Ghost::None, zeroGhostCells);
-      tsk->requires(Task::NewDW, d_MAlab->d_wVel_mmNonlinSrcLabel,
-		    Ghost::None, zeroGhostCells);
-    }
 
     break;
 
@@ -1138,10 +1118,18 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    if (d_MAlab)
+    if (d_MAlab) {
+
       new_dw->getCopy(velocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
-		  matlIndex, patch, 
-		  Ghost::AroundCells, numGhostCells);
+		      matlIndex, patch, 
+		      Ghost::AroundCells, numGhostCells);
+
+      new_dw->getCopy(velocityVars.cellType, d_lab->d_mmcellTypeLabel,
+		      matlIndex, patch, 
+		      Ghost::AroundCells, numGhostCells);
+
+    }
+
     switch (index) {
 
     case Arches::XDIR:
@@ -1155,17 +1143,6 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
       new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
-
-      if (d_MAlab) {
-
-	new_dw->getCopy(velocityVars.mmuVelSu, d_MAlab->d_uVel_mmNonlinSrcLabel,
-		    matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
-	new_dw->getCopy(velocityVars.mmuVelSp, d_MAlab->d_uVel_mmLinSrcLabel,
-		    matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
-
-      }
 
       break;
 
@@ -1184,17 +1161,6 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     // for multimaterial
 
-      if (d_MAlab) {
-
-	new_dw->getCopy(velocityVars.mmvVelSu, d_MAlab->d_vVel_mmNonlinSrcLabel,
-		    matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
-	new_dw->getCopy(velocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,
-		    matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
-
-      }
-      
       break;
 
     case Arches::ZDIR:
@@ -1210,17 +1176,6 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       // for multimaterial
-
-      if (d_MAlab) {
-
-	new_dw->getCopy(velocityVars.mmwVelSu, d_MAlab->d_wVel_mmNonlinSrcLabel,
-		    matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
-	new_dw->getCopy(velocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,
-		    matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
-
-      }
 
       break;
 
@@ -1239,9 +1194,23 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     }
 #endif
     
-    d_source->calculateVelocityPred(pc, patch, 
-				    delta_t, index,
-				    cellinfo, &velocityVars);
+    // Actual compute operations
+
+    if (d_MAlab) {
+      
+      d_boundaryCondition->calculateVelocityPred_mm(pc, patch, 
+						    delta_t, index,
+						    cellinfo, &velocityVars);
+
+    }
+    else {
+    
+      d_source->calculateVelocityPred(pc, patch, 
+				      delta_t, index,
+				      cellinfo, &velocityVars);
+
+    }
+
     switch (index) {
     case Arches::XDIR:
 #if 0
