@@ -127,6 +127,13 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
 					lb->d_particleState_preReloc[m]);
    }
+#ifdef HAVE_PETSC
+   int argc = 1;
+   char** argv;
+   argv = new char*[argc];
+   argv[0] = "ImpMPM::problemSetup";
+   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
+#endif
 }
 
 void ImpMPM::scheduleInitialize(const LevelP& level,
@@ -330,8 +337,13 @@ void ImpMPM::scheduleFormStiffnessMatrixI(SchedulerP& sched,
 					  const bool recursion)
 {
 
+#ifdef HAVE_PETSC
+  Task* t = scinew Task("ImpMPM::formStiffnessMatrixI",
+		    this, &ImpMPM::formStiffnessMatrixPetsc,recursion);
+#else
   Task* t = scinew Task("ImpMPM::formStiffnessMatrixI",
 		    this, &ImpMPM::formStiffnessMatrix,recursion);
+#endif
 
   t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
@@ -345,10 +357,13 @@ void ImpMPM::scheduleFormStiffnessMatrixR(SchedulerP& sched,
 					  const MaterialSet* matls,
 					  const bool recursion)
 {
-
+#ifdef HAVE_PETSC
+  Task* t = scinew Task("ImpMPM::formStiffnessMatrixR",
+		    this, &ImpMPM::formStiffnessMatrixPetsc,recursion);
+#else
   Task* t = scinew Task("ImpMPM::formStiffnessMatrixR",
 		    this, &ImpMPM::formStiffnessMatrix,recursion);
-
+#endif
   t->assumeDataInNewDW();
   t->requires(Task::OldDW,lb->gMassLabel, Ghost::None);
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
@@ -833,8 +848,13 @@ void ImpMPM::moveData(const ProcessorGroup*,
 void ImpMPM::scheduleFormQI(SchedulerP& sched,const PatchSet* patches,
 			   const MaterialSet* matls, const bool recursion)
 {
+#ifdef HAVE_PETSC
+  Task* t = scinew Task("ImpMPM::formQI", this, 
+			&ImpMPM::formQPetsc, recursion);
+#else
   Task* t = scinew Task("ImpMPM::formQI", this, 
 			&ImpMPM::formQ, recursion);
+#endif
 
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
   t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
@@ -852,8 +872,13 @@ void ImpMPM::scheduleFormQI(SchedulerP& sched,const PatchSet* patches,
 void ImpMPM::scheduleFormQR(SchedulerP& sched,const PatchSet* patches,
 			   const MaterialSet* matls,const bool recursion)
 {
+#ifdef HAVE_PETSC
   Task* t = scinew Task("ImpMPM::formQR", this, 
 			&ImpMPM::formQ,recursion);
+#else
+  Task* t = scinew Task("ImpMPM::formQR", this, 
+			&ImpMPM::formQ,recursion);
+#endif
   t->assumeDataInNewDW();
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
   t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
@@ -904,9 +929,13 @@ void ImpMPM::scheduleRemoveFixedDOFI(SchedulerP& sched,
 				     const MaterialSet* matls,
 				     const bool recursion)
 {
+#ifdef HAVE_PETSC
+  Task* t = scinew Task("ImpMPM::removeFixedDOFI", this, 
+			&ImpMPM::removeFixedDOFPetsc,recursion);
+#else
   Task* t = scinew Task("ImpMPM::removeFixedDOFI", this, 
 			&ImpMPM::removeFixedDOF,recursion);
-
+#endif
   t->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
 
   sched->addTask(t, patches, matls);
@@ -918,8 +947,13 @@ void ImpMPM::scheduleRemoveFixedDOFR(SchedulerP& sched,
 				     const MaterialSet* matls,
 				     const bool recursion)
 {
+#ifdef HAVE_PETSC
+  Task* t = scinew Task("ImpMPM::removeFixedDOFR", this, 
+			&ImpMPM::removeFixedDOFPetsc,recursion);
+#else
   Task* t = scinew Task("ImpMPM::removeFixedDOFR", this, 
 			&ImpMPM::removeFixedDOF,recursion);
+#endif
   t->assumeDataInNewDW();
   t->requires(Task::OldDW,lb->gMassLabel,Ghost::None,0);
 
@@ -933,8 +967,13 @@ void ImpMPM::scheduleSolveForDuCGI(SchedulerP& sched,
 				   const MaterialSet* matls,
 				   const bool recursion)
 {
+#ifdef HAVE_PETSC
+  Task* t = scinew Task("ImpMPM::solveForDuCGI", this, 
+			&ImpMPM::solveForDuCGPetsc,recursion);
+#else
   Task* t = scinew Task("ImpMPM::solveForDuCGI", this, 
 			&ImpMPM::solveForDuCG,recursion);
+#endif
   if (recursion)
     t->modifies(lb->dispIncLabel);
   else
@@ -950,8 +989,13 @@ void ImpMPM::scheduleSolveForDuCGR(SchedulerP& sched,
 				   const MaterialSet* matls,
 				   const bool recursion)
 {
+#ifdef HAVE_PETSC
+  Task* t = scinew Task("ImpMPM::solveForDuCGR", this, 
+			&ImpMPM::solveForDuCGPetsc,recursion);
+#else
   Task* t = scinew Task("ImpMPM::solveForDuCGR", this, 
 			&ImpMPM::solveForDuCG,recursion);
+#endif
   t->assumeDataInNewDW();
   if (recursion)
     t->computes(lb->dispIncLabel);
@@ -1405,11 +1449,17 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
 
 
   KK.clear();
+#ifdef HAVE_PETSC
+  PetscTruth exists;
+  PetscObjectExists((PetscObject)A,&exists);
+  if (exists == PETSC_TRUE)
+    MatDestroy(A);
+#endif
   
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK,
+    cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK,A,
 				    recursion);
   }
   
@@ -1427,6 +1477,12 @@ void ImpMPM::computeStressTensorOnly(const ProcessorGroup*,
 	     << "\n";
 
   KK.clear();
+#ifdef HAVE_PETSC
+  PetscTruth exists;
+  PetscObjectExists((PetscObject)A,&exists);
+  if (exists == PETSC_TRUE)
+    MatDestroy(A);
+#endif
   
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -1442,6 +1498,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
 				 const bool recursion)
+
 {
   // DONE
   if (!dynamic)
@@ -1492,6 +1549,77 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
       }
     } 
   }
+}
+
+void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
+				      const PatchSubset* patches,
+				      const MaterialSubset*,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw,
+				      const bool recursion)
+
+{
+  // DONE
+  if (!dynamic)
+    return;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing <<"Doing formStiffnessMatrixPetsc " << patch->getID()
+	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
+
+    IntVector nodes = patch->getNNodes();
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+   
+      constNCVariable<double> gmass;
+      if (recursion)
+	old_dw->get(gmass, lb->gMassLabel,matlindex,patch, Ghost::None,0);
+      else
+	new_dw->get(gmass, lb->gMassLabel,matlindex,patch, Ghost::None,0);
+      
+      delt_vartype dt;
+      old_dw->get(dt, d_sharedState->get_delt_label() );
+
+    
+            
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); 
+	   iter++) {
+	IntVector n = *iter;
+	int dof[3];
+	int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
+	  (nodes.x())*(n.z());
+	dof[0] = 3*node_num;
+	dof[1] = 3*node_num+1;
+	dof[2] = 3*node_num+2;
+#if 1
+	cout << "gmass[" << *iter << "]= " << gmass[*iter] << "\n";
+	cout << "KK[" << dof[0] << "][" << dof[0] << "]= " 
+	     << KK[dof[0]][dof[0]] << "\n";
+	cout << "KK[" << dof[1] << "][" << dof[1] << "]= " 
+	     << KK[dof[1]][dof[1]] << "\n";
+	cout << "KK[" << dof[2] << "][" << dof[2] << "]= " 
+	     << KK[dof[2]][dof[2]] << "\n";
+#endif
+	KK[dof[0]][dof[0]] = KK[dof[0]][dof[0]] + gmass[*iter]*(4./(dt*dt));
+	KK[dof[1]][dof[1]] = KK[dof[1]][dof[1]] + gmass[*iter]*(4./(dt*dt));
+	KK[dof[2]][dof[2]] = KK[dof[2]][dof[2]] + gmass[*iter]*(4./(dt*dt));
+#ifdef HAVE_PETSC
+	PetscScalar v[3];
+	v[0]=v[1]=v[2]= gmass[*iter]*(4./(dt*dt));
+	MatSetValues(A,3,dof,3,dof,v,ADD_VALUES);
+#endif
+
+      }
+    } 
+  }
+#ifdef HAVE_PETSC
+  MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+#endif
 }
 	    
 void ImpMPM::computeInternalForce(const ProcessorGroup*,
@@ -1585,9 +1713,125 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     double fodt = 4./dt;
 
     IntVector nodes = patch->getNNodes();
-    int num_nodes = (nodes.x())*(nodes.y())*(nodes.z());
-    valarray<double> temp2(0.,3*num_nodes);
-    Q.resize(3*num_nodes);
+    int num_nodes = (nodes.x())*(nodes.y())*(nodes.z()) * 3;
+    valarray<double> temp2(0.,num_nodes);
+    Q.resize(num_nodes);
+
+    int matlindex = 0;
+
+    constNCVariable<Vector> externalForce, internalForce;
+    constNCVariable<Vector> dispNew,velocity,accel;
+    constNCVariable<double> mass;
+    if (recursion) {
+      new_dw->get(internalForce,lb->gInternalForceLabel,matlindex,patch,
+		  Ghost::None,0);
+      old_dw->get(externalForce,lb->gExternalForceLabel,matlindex,patch,
+		  Ghost::None,0);
+      old_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::None,0);
+      old_dw->get(velocity,lb->gVelocityOldLabel,matlindex,patch,
+		  Ghost::None,0);
+      old_dw->get(accel,lb->gAccelerationLabel,matlindex,patch,
+		Ghost::None,0);
+      old_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
+    } else {
+      new_dw->get(internalForce,lb->gInternalForceLabel,matlindex,patch,
+		  Ghost::None,0);
+      new_dw->get(externalForce,lb->gExternalForceLabel,matlindex,patch,
+		  Ghost::None,0);
+      new_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::None,0);
+      new_dw->get(velocity,lb->gVelocityLabel,matlindex,patch,
+		  Ghost::None,0);
+      new_dw->get(accel,lb->gAccelerationLabel,matlindex,patch,
+		Ghost::None,0);
+      new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
+    }
+    
+    
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      IntVector n = *iter;
+      int dof[3];
+      int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
+	(nodes.x())*(n.z());
+      dof[0] = 3*node_num;
+      dof[1] = 3*node_num+1;
+      dof[2] = 3*node_num+2;
+
+      cout << "external force = " << externalForce[n] << " internal force = " 
+	   << internalForce[n] << "\n";
+      Q[dof[0]] = externalForce[n].x() + internalForce[n].x();
+      Q[dof[1]] = externalForce[n].y() + internalForce[n].y();
+      Q[dof[2]] = externalForce[n].z() + internalForce[n].z();
+
+
+      // temp2 = M*a^(k-1)(t+dt)
+      cout << "dispNew = " << dispNew[n] << "\n";
+      cout << "velocity = " << velocity[n] << "\n";
+      cout << "accel = " << accel[n] << "\n";
+
+      cout << "dispNew.x*fodts = " << dispNew[n].x() * fodts << "\n";
+      cout << "velocity.x*fodt = " << velocity[n].x() * fodt << "\n";
+      cout << "dispNew - velocity = " << dispNew[n].x() * fodts - 
+	velocity[n].x() * fodt << "\n";
+
+      temp2[dof[0]] = (dispNew[n].x()*fodts - velocity[n].x()*fodt -
+			accel[n].x())*mass[n];
+      temp2[dof[1]] = (dispNew[n].y()*fodts - velocity[n].y()*fodt -
+			accel[n].y())*mass[n];
+      temp2[dof[2]] = (dispNew[n].z()*fodts - velocity[n].z()*fodt -
+			accel[n].z())*mass[n];
+
+      cout << "temp2 = " << temp2[dof[0]] << " " << temp2[dof[1]] << " " <<
+	temp2[dof[2]] << "\n";
+
+    }
+    if (dynamic)
+      Q = Q - temp2;
+  }
+
+}
+
+void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
+			const MaterialSubset*, DataWarehouse* old_dw,
+			DataWarehouse* new_dw, const bool recursion)
+{
+  // DONE
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing <<"Doing formQPetsc on patch " << patch->getID()
+	       <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
+
+
+    delt_vartype dt;
+    old_dw->get(dt, d_sharedState->get_delt_label());
+    double fodts = 4./(dt*dt);
+    double fodt = 4./dt;
+
+    IntVector nodes = patch->getNNodes();
+    int num_nodes = (nodes.x())*(nodes.y())*(nodes.z()) * 3;
+    valarray<double> temp2(0.,num_nodes);
+    Q.resize(num_nodes);
+#ifdef HAVE_PETSC
+    PetscTruth exists;
+    PetscObjectExists((PetscObject)petscQ,&exists);
+    if (exists == PETSC_TRUE)
+      VecDestroy(petscQ);
+
+    PetscObjectExists((PetscObject)petscTemp2,&exists);
+    if (exists == PETSC_TRUE)
+      VecDestroy(petscTemp2);
+
+    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&petscQ);
+    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&petscTemp2);
+    PetscScalar v = 0.;
+    VecSet(&v,petscQ);
+    VecSet(&v,petscTemp2);
+    VecAssemblyBegin(petscQ);
+    VecAssemblyEnd(petscQ);
+    VecAssemblyBegin(petscTemp2);
+    VecAssemblyEnd(petscTemp2);
+#endif
     
     int matlindex = 0;
 
@@ -1634,6 +1878,15 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       Q[dof[1]] = externalForce[n].y() + internalForce[n].y();
       Q[dof[2]] = externalForce[n].z() + internalForce[n].z();
 
+#ifdef HAVE_PETSC
+      PetscScalar v[3];
+      v[0] = externalForce[n].x() + internalForce[n].x();
+      v[1] = externalForce[n].y() + internalForce[n].y();
+      v[2] = externalForce[n].z() + internalForce[n].z();
+
+      VecSetValues(petscQ,3,dof,v,INSERT_VALUES);
+#endif
+
       // temp2 = M*a^(k-1)(t+dt)
       cout << "dispNew = " << dispNew[n] << "\n";
       cout << "velocity = " << velocity[n] << "\n";
@@ -1651,12 +1904,37 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       temp2[dof[2]] = (dispNew[n].z()*fodts - velocity[n].z()*fodt -
 			accel[n].z())*mass[n];
 
+
+      v[0] = (dispNew[n].x()*fodts - velocity[n].x()*fodt -
+			accel[n].x())*mass[n];
+      v[1] = (dispNew[n].y()*fodts - velocity[n].y()*fodt -
+			accel[n].y())*mass[n];
+      v[2] = (dispNew[n].z()*fodts - velocity[n].z()*fodt -
+			accel[n].z())*mass[n];
+#ifdef HAVE_PETSC
+      VecSetValues(petscTemp2,3,dof,v,INSERT_VALUES);
+#endif
+
       cout << "temp2 = " << temp2[dof[0]] << " " << temp2[dof[1]] << " " <<
 	temp2[dof[2]] << "\n";
 
     }
-    if (dynamic)
+#ifdef HAVE_PETSC
+    VecAssemblyBegin(petscQ);
+    VecAssemblyEnd(petscQ);
+    VecAssemblyBegin(petscTemp2);
+    VecAssemblyEnd(petscTemp2);
+#endif
+    if (dynamic) {
       Q = Q - temp2;
+#ifdef HAVE_PETSC
+      PetscScalar minusone = -1.;
+      VecAXPY(&minusone,petscTemp2,petscQ);
+#endif
+    }
+#ifdef HAVE_PETSC
+    VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
+#endif
   }
 
 }
@@ -1850,6 +2128,165 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
 
 }
 
+void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*, 
+				 const PatchSubset* patches,
+				 const MaterialSubset*, 
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw,
+				 const bool recursion)
+{
+  // NOT DONE
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing <<"Doing removeFixedDOFPetsc on patch " << patch->getID()
+	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
+
+    // Just look on the grid to see if the gmass is 0 and then remove that
+
+    IntVector nodes = patch->getNNodes();
+    int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
+    
+    int matlindex = 0;
+
+    constNCVariable<double> mass;
+    if (recursion)
+      old_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
+    else
+      new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
+    set<int> fixedDOF;
+
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      IntVector n = *iter;
+      
+      int dof[3];
+      int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
+	(nodes.x())*(n.z());
+      dof[0] = 3*node_num;
+      dof[1] = 3*node_num+1;
+      dof[2] = 3*node_num+2;
+      
+      if (compare(mass[n],0.)) {
+	fixedDOF.insert(dof[0]);
+	fixedDOF.insert(dof[1]);
+	fixedDOF.insert(dof[2]);
+      }
+    }
+
+
+    for(Patch::FaceType face = Patch::startFace;
+	face <= Patch::endFace; face=Patch::nextFace(face)){
+      IntVector l,h;
+      patch->getFaceNodes(face,0,l,h);
+      for(NodeIterator it(l,h); !it.done(); it++) {
+	IntVector n = *it;
+	int dof[3];
+	int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
+	  (nodes.x())*(n.z());
+
+	dof[0] = 3*node_num;
+	dof[1] = 3*node_num+1;
+	dof[2] = 3*node_num+2;
+
+	fixedDOF.insert(dof[0]);
+	fixedDOF.insert(dof[1]);
+	fixedDOF.insert(dof[2]);
+      }
+    }
+
+#ifdef HAVE_PETSC
+    IS is;
+    int* indices;
+    int in = 0;
+    PetscMalloc(fixedDOF.size() * sizeof(int), &indices);
+    for (set<int>::iterator iter = fixedDOF.begin(); iter != fixedDOF.end(); 
+	 iter++) {
+      indices[in++] = *iter;
+    }    
+    ISCreateGeneral(PETSC_COMM_SELF,fixedDOF.size(),indices,&is);
+    PetscFree(indices);
+
+    PetscScalar one = 1.0;
+    MatZeroRows(A,is,&one);
+    MatTranspose(A,PETSC_NULL);
+    MatZeroRows(A,is,&one);
+    MatTranspose(A,PETSC_NULL);
+#endif
+    SparseMatrix<double,int> KKK(KK.Rows(),KK.Columns());
+    for (SparseMatrix<double,int>::iterator itr = KK.begin(); 
+	 itr != KK.end(); itr++) {
+      int i = KK.Index1(itr);
+      int j = KK.Index2(itr);
+      set<int>::iterator find_itr_j = fixedDOF.find(j);
+      set<int>::iterator find_itr_i = fixedDOF.find(i);
+
+      if (find_itr_j != fixedDOF.end() && i == j)
+	KKK[i][j] = 1.;
+
+      else if (find_itr_i != fixedDOF.end() && i == j)
+	KKK[i][j] = 1.;
+
+      else
+	KKK[i][j] = KK[i][j];
+    }
+    // Zero out the Q elements that have entries in the fixedDOF container
+
+    for (set<int>::iterator iter = fixedDOF.begin(); iter != fixedDOF.end(); 
+	 iter++) {
+      Q[*iter] = 0.;
+#ifdef HAVE_PETSC
+      PetscScalar v = 0.;
+      const int index = *iter;
+      VecSetValues(petscQ,1,&index,&v,INSERT_VALUES);
+#endif
+    }
+#ifdef HAVE_PETSC
+    VecAssemblyBegin(petscQ);
+    VecAssemblyEnd(petscQ);
+#endif
+    // Make sure the nodes that are outside of the material have values 
+    // assigned and solved for.  The solutions will be 0.
+
+#ifdef HAVE_PETSC
+    Vec diagonal;
+    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&diagonal);
+    MatGetDiagonal(A,diagonal);
+    PetscScalar* diag;
+    VecGetArray(diagonal,&diag);
+    for (int j = 0; j < num_nodes; j++) {
+      if (compare(diag[j],0.)) {
+	VecSetValues(diagonal,1,&j,&one,INSERT_VALUES);
+	PetscScalar v = 0.;
+	VecSetValues(petscQ,1,&j,&v,INSERT_VALUES);
+      }
+    }
+    VecRestoreArray(diagonal,&diag);
+#endif
+    for (int j = 0; j < num_nodes; j++) {
+      if (compare(KK[j][j],0.)) {
+	KKK[j][j] = 1.;
+	Q[j] = 0.;
+	
+      }
+    }
+#ifdef HAVE_PETSC
+    VecAssemblyBegin(petscQ);
+    VecAssemblyEnd(petscQ);
+    VecAssemblyBegin(diagonal);
+    VecAssemblyEnd(diagonal);
+    MatDiagonalSet(A,diagonal,INSERT_VALUES);
+#endif
+    KK.clear();
+    KK = KKK;
+    KKK.clear();
+
+  }
+
+}
+
+
+
 void ImpMPM::solveForDuCG(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* ,
@@ -1885,6 +2322,99 @@ void ImpMPM::solveForDuCG(const ProcessorGroup*,
       cout << "Q[" << i << "]= " << Q[i] << "\n";
     }
 #endif    
+    x = cgSolve(KK,Q,conflag);
+#if 1    
+    for (unsigned int i = 0; i < x.size(); i++) {
+      cout << "x[" << i << "]= " << x[i] << "\n";
+    }
+#endif
+    NCVariable<Vector> dispInc;
+#if 0
+    if (recursion)
+      new_dw->getModifiable(dispInc,lb->dispIncLabel,matlindex,patch);
+    else {
+#endif
+      new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
+      dispInc.initialize(Vector(0.,0.,0.));
+#if 0
+    }
+#endif
+    
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      IntVector n = *iter;
+      int dof[3];
+      int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
+	(nodes.x())*(n.z());
+      dof[0] = 3*node_num;
+      dof[1] = 3*node_num+1;
+      dof[2] = 3*node_num+2;
+      dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
+    }    
+  }
+
+}
+
+void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset* ,
+			       DataWarehouse*,
+			       DataWarehouse* new_dw,
+			       const bool /*recursion*/)
+
+{
+  // DONE
+  int conflag = 0;
+  for(int p = 0; p<patches->size();p++) {
+    const Patch* patch = patches->get(p);
+
+    cout_doing <<"Doing solveForDuCGPetsc on patch " << patch->getID()
+	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
+
+    IntVector nodes = patch->getNNodes();
+    int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
+
+    valarray<double> x(0.,num_nodes);
+    int matlindex = 0;
+
+#if 1    
+    for (SparseMatrix<double,int>::iterator itr = KK.begin(); 
+	 itr != KK.end(); itr++) {
+      int i = KK.Index1(itr);
+      int j = KK.Index2(itr);
+      cout << "KK[" << i << "][" << j <<"] = " << KK[i][j] << "\n";
+    }
+#endif
+#ifdef HAVE_PETSC
+    PetscViewerSetFormat(PETSC_VIEWER_STDOUT_SELF,PETSC_VIEWER_ASCII_INDEX );
+    MatView(A,PETSC_VIEWER_STDOUT_SELF);
+#endif
+#if 1    
+    for (unsigned int i = 0; i < Q.size(); i++) {
+      cout << "Q[" << i << "]= " << Q[i] << "\n";
+    }
+#endif    
+#ifdef HAVE_PETSC
+    
+    VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
+#endif
+#ifdef HAVE_PETSC
+    PC          pc;           
+    KSP         ksp;
+    SLESCreate(PETSC_COMM_WORLD,&sles);
+    SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);
+    SLESGetKSP(sles,&ksp);
+    SLESGetPC(sles,&pc);
+    KSPSetType(ksp,KSPCG);
+    PCSetType(pc,PCJACOBI);
+    KSPSetTolerances(ksp,1.e-7,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+
+    int its;
+    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&d_x);
+    SLESSolve(sles,petscQ,d_x,&its);
+    SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
+
+#endif
+
     x = cgSolve(KK,Q,conflag);
 #if 1    
     for (unsigned int i = 0; i < x.size(); i++) {

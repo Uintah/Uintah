@@ -270,6 +270,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 					      DataWarehouse* old_dw,
 					      DataWarehouse* new_dw,
 					      SparseMatrix<double,int>& KK,
+					      Mat &A,
 					      const bool recursion)
 
 {
@@ -339,6 +340,11 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     IntVector nodes = patch->getNNodes();
     int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
     KK.setSize(num_nodes,num_nodes);
+#ifdef HAVE_PETSC
+    MatCreateSeqAIJ(PETSC_COMM_WORLD,num_nodes,num_nodes,PETSC_DEFAULT,
+		    PETSC_NULL,&A);
+#endif
+
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
@@ -606,6 +612,10 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	  cout << "kgeo[" << I << "][" << J << "]= " << kgeo[I][J] << endl;
 #endif
 	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I,J) + kgeo(I,J));
+#ifdef HAVE_PETSC
+	  PetscScalar v = kmat(I,J) + kgeo(I,J);
+	  MatSetValues(A,1,&dofi,1,&dofj,&v,INSERT_VALUES);
+#endif
 #if 0
 	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
@@ -614,9 +624,11 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	}
       }
       
-      
     }
   }
+  MatAssemblyBegin(A,MAT_FLUSH_ASSEMBLY);
+  MatAssemblyEnd(A,MAT_FLUSH_ASSEMBLY);
+  
 }
 
 

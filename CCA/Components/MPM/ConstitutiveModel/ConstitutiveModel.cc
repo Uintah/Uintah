@@ -27,6 +27,9 @@ void ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
 						    DataWarehouse*,
 						    DataWarehouse*,
 						    SparseMatrix<double,int>&,
+#ifdef HAVE_PETSC
+						    Mat&,
+#endif
 						    const bool)
 {
 }
