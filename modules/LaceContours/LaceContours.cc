@@ -75,8 +75,8 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
 	row.add(curr);
 	curr+=contour->contours[i].size();
 	for (int j=0; j<contour->contours[i].size(); j++) {
-	    Point p(contour->contours[i][j]);
-	    p=Point(0,0,0)+contour->origin+contour->basis[0]*p.x()+contour->basis[1]*p.y()+
+	    Point p(contour->contours[i][j]-contour->origin);
+	    p=Point(0,0,0)+contour->basis[0]*p.x()+contour->basis[1]*p.y()+
 		contour->basis[2]*(p.z()*contour->space);
 	    surf->add_point(p);
 	}
