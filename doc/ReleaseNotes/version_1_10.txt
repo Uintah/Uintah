@@ -217,16 +217,22 @@ Module Enhancements
 Retired Modules (SCIRun, unless noted otherwise.)
 ---------------
 
-- CastField
-- ChangeCellType
-- FDMtoFEM (BioPSE)
-- LocateNbrhd
-- ManipFields
-- ManipMatrix
-- Rescale
-- SampleColorMap
-- TetVolFieldCellToNode
+- CastField: Replaced by EditField, which was subsequently split into
+             three separate modules: ChangeFieldBounds,
+             ChangeFieldDataType and ChangeFieldDataAt.
 
+- ChangeCellType: Replaced by HexToTet.
+
+- FDMtoFEM (BioPSE): Also replaced by HexToTet.
+
+- LocateNbrhd: Replaced by BuildInterpolant.
+
+- ManipFields and ManipMatrix: Never actually functional and so removed.
+
+- SampleColorMap and Rescale: Earlier version of what has now become
+                              GenStandardColorMaps and RescaleColorMap.
+
+- TetVolFieldCellToNode: Replaced by ChangeFieldDataAt.
 
 ---------------------------------------------------------------------------
 
@@ -241,8 +247,6 @@ Get info from Dave
 
 Developer
 ---------
-
-- Added mesh concept method:  bool get_dim(vector<unsigned int> &dims) const;
 
 - Introduce "Tuple" axis on all nrrds loaded into the Teem package.
   The tuple axis is used to store sets of data.  For example a vector,
@@ -266,6 +270,10 @@ Developer
 - Support to allow SCIRun to be run from users PATH.
 
 - Thorough implementation of meshes based on mesh concept.
+
+- Added mesh concept method:  bool get_dim(vector<unsigned int> &dims) const;
+  Mesh concept is described at: http://software.sci.utah.edu/doc/Developer/CodeViews/html/classSCIRun_1_1MeshConcept.html
+
 
 - Nicer quit function.  Clear so that module destructors are called
   (Matlab), asks for permission before killing scirun off.
