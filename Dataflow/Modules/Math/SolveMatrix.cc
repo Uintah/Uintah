@@ -181,6 +181,7 @@ public:
   GuiInt use_previous_soln;
   GuiInt emit_partial;
   GuiInt emit_iter;
+  GuiInt petsc_installed;
   bool ep;
   int epcount;
   GuiString status;
@@ -209,10 +210,12 @@ SolveMatrix::SolveMatrix(const string& id)
     use_previous_soln("use_previous_soln", id, this),
     emit_partial("emit_partial", id, this),
     emit_iter("emit_iter", id, this),
+    petsc_installed("petsc_installed", id, this),
     status("status",id,this),
     tcl_np("np", id, this)
 {
 #ifdef UNI_PETSC
+  petsc_installed.set(1);
   SLESCreate(PETSC_COMM_WORLD,&sles);
 #endif
 }
