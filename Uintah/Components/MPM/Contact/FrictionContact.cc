@@ -1,7 +1,5 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
-
-// Friction.cc
+//
+// $Id$
 //
 
 #include "FrictionContact.h"
@@ -547,6 +545,9 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.32  2000/09/25 20:23:20  sparker
+// Quiet g++ warnings
+//
 // Revision 1.31  2000/08/16 22:59:00  bard
 // Moved the varlabels to MPMLabel.
 //

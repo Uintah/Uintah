@@ -1,11 +1,12 @@
+//
+// $Id$
+//
+
 //Physical Models Interested:
 #include <Uintah/Components/MPM/Contact/ContactFactory.h>
 #include <Uintah/Components/MPM/HeatConduction/HeatConductionFactory.h>
 #include <Uintah/Components/MPM/Fracture/FractureFactory.h>
 #include <Uintah/Components/MPM/ThermalContact/ThermalContactFactory.h>
-
-/* REFERENCED */
-static char *id="@(#) $Id$";
 
 #include "MPMPhysicalModules.h"
 
@@ -32,6 +33,9 @@ void MPMPhysicalModules::build(const ProblemSpecP& prob_spec,
 
 //
 // $Log$
+// Revision 1.4  2000/09/25 20:23:13  sparker
+// Quiet g++ warnings
+//
 // Revision 1.3  2000/09/05 05:12:14  tan
 // Moved Fracture Model to MPMMaterial class.
 //

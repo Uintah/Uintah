@@ -313,7 +313,7 @@ stressRelease(const Patch* patch,
 	
 	if( (pX[idx] - pX[pNeighbor]).length() < range ) {
 	    Matrix3 stress;
-	    double s = Dot(pStress[pNeighbor]*N,N);
+	    // double s = Dot(pStress[pNeighbor]*N,N);
 	    for(int i=1;i<=3;++i)
 	    for(int j=1;j<=3;++j) {
 	      stress(i,j) = 0;
@@ -350,6 +350,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.51  2000/09/25 20:23:21  sparker
+// Quiet g++ warnings
+//
 // Revision 1.50  2000/09/22 07:18:57  tan
 // MPM code works with fracture in three point bending.
 //

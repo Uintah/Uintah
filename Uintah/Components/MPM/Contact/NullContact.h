@@ -14,7 +14,6 @@
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
 
-
 namespace Uintah {
   namespace MPM {
 
@@ -68,13 +67,14 @@ WARNING
       virtual void initializeContact(const Patch* patch,
 				     int vfindex,
 				     DataWarehouseP& new_dw);
-      
+
       // Basic contact methods
       virtual void exMomInterpolated(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
       
+
       virtual void exMomIntegrated(const ProcessorGroup*,
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
@@ -92,12 +92,16 @@ WARNING
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;
 
+
     };
     
   } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.11  2000/09/25 20:23:20  sparker
+// Quiet g++ warnings
+//
 // Revision 1.10  2000/06/17 07:06:38  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

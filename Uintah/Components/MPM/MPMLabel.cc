@@ -354,12 +354,12 @@ MPMLabel::~MPMLabel()
   delete CenterOfMassVelocityLabel;
   delete ppNAPIDLabel;
 
-  for (int i = 0; i<d_particleState.size(); i++)
-    for (int j = 0; j< d_particleState[i].size(); j++)
+  for (int i = 0; i<(int)d_particleState.size(); i++)
+    for (int j = 0; j< (int)d_particleState[i].size(); j++)
       delete d_particleState[i][j];
 
-  for (int i = 0; i<d_particleState_preReloc.size(); i++)
-    for (int j = 0; j< d_particleState_preReloc[i].size(); j++)
+  for (int i = 0; i<(int)d_particleState_preReloc.size(); i++)
+    for (int j = 0; j< (int)d_particleState_preReloc[i].size(); j++)
       delete d_particleState_preReloc[i][j];
 
 }
@@ -374,6 +374,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.41  2000/09/25 20:23:13  sparker
+// Quiet g++ warnings
+//
 // Revision 1.40  2000/09/22 07:14:06  tan
 // MPM code works with fracture in three point bending.
 //

@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -742,7 +743,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	    this,&SerialMPM::computeCrackSurfaceContactForce);
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
+	    // int idx = matl->getDWIndex();
 	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 	    if(mpm_matl->getFractureModel()) {
   	       mpm_matl->getConstitutiveModel()->
@@ -887,7 +888,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
    varweights.push_back(lb->pMassLabel_preReloc);
    gvars.push_back(lb->gStressForSavingLabel);
 
-   for(int i=0;i<vars.size();i++){
+   for(int i=0;i<(int)vars.size();i++){
      for(int m = 0; m < numMatls; m++){
         Material* matl = d_sharedState->getMaterial( m );
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -1233,7 +1234,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    gvelocity.fillFace(face,bc->getVelocity());
 	  }
 	  if (bcs_type == "Symmetric") {
-	    SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
+	      //SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
 	     gvelocity.fillFaceNormal(face);
 	  }
 	  if (bcs_type == "Temperature") {
@@ -1316,7 +1317,7 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 {
   for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
     Material* matl = d_sharedState->getMaterial(m);
-    int idx = matl->getDWIndex();
+    //int idx = matl->getDWIndex();
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
     int matlindex = matl->getDWIndex();
@@ -1824,7 +1825,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0));
 	  }
 	  if (bcs_type == "Symmetric") {
-	    SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
+	      //SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
 	     gvelocity_star.fillFaceNormal(face);
 	     gacceleration.fillFaceNormal(face);
 	  }
@@ -1873,8 +1874,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	    }
 	  }
 	  if (bcs_type == "Flux") {
-	    FluxThermalBoundCond* bc = 
-	      dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
+	      //FluxThermalBoundCond* bc = 
+	      //dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
 	    //cout << "bc value = " << bc->getFlux() << endl;
 	  }
 	}
@@ -2031,6 +2032,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.153  2000/09/25 20:23:13  sparker
+// Quiet g++ warnings
+//
 // Revision 1.152  2000/09/22 19:40:52  guilkey
 // Added a pxnew to interpolateToParticles... so that the data in
 // pXLabel doesn't get changed.

@@ -234,7 +234,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
       // time step and the velocity gradient and the material constants
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
-      double EDeff = sqrtopf*DPrime.Norm();
+      // double EDeff = sqrtopf*DPrime.Norm();
       Matrix3 DevStress =statedata[idx].DevStress[1]+statedata[idx].DevStress[2]
 	                +statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
 			+statedata[idx].DevStress[5];
@@ -572,6 +572,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.9  2000/09/25 20:23:19  sparker
+// Quiet g++ warnings
+//
 // Revision 1.8  2000/09/22 07:10:57  tan
 // MPM code works with fracture in three point bending.
 //

@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 // NullContact.cc
 //
@@ -25,7 +26,6 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
-
 using namespace Uintah::MPM;
 
 NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS)
@@ -158,6 +158,9 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
 
 
 // $Log$
+// Revision 1.16  2000/09/25 20:23:20  sparker
+// Quiet g++ warnings
+//
 // Revision 1.15  2000/07/05 23:43:36  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

@@ -137,7 +137,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
   int matlindex = matl->getDWIndex();
-  int vfindex = matl->getVFIndex();
 
   // Create array for the particle position
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
@@ -345,7 +344,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   Identity.Identity();
 
   int matlindex = mpm_matl->getDWIndex();
-  int vfindex = mpm_matl->getVFIndex();
 
   // Create arrays for the particle data
   ParticleVariable<Point>  pX;
@@ -463,7 +461,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   double tolerance = 0.00001;
   
   Vector dx = patch->dCell();
-  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
   double dxLength = dx.length() * tolerance;
 
   for(ParticleSubset::iterator iter = insidePset->begin();
@@ -538,6 +535,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.68  2000/09/25 20:23:19  sparker
+// Quiet g++ warnings
+//
 // Revision 1.67  2000/09/22 07:10:57  tan
 // MPM code works with fracture in three point bending.
 //
