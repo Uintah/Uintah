@@ -1,10 +1,6 @@
 // TODO
-// why does AverageF fluctuate?
-// clarify modifies/computes for transported variables f_src and heatLoss_src
 // track down tiny eloss - why????
-// Rename heatLoss to cumulativeEnergyRelease
 // Use cp directly instead of cv/gamma
-// cleanup unused variables
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
@@ -54,8 +50,8 @@ AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld,
 {
   d_matl_set = 0;
   lb  = scinew ICELabel();
-  heatLoss_CCLabel = VarLabel::create("heatLoss", CCVariable<double>::getTypeDescription());
-  heatLoss_src_CCLabel = VarLabel::create("heatLoss_src", CCVariable<double>::getTypeDescription());
+  cumulativeEnergyReleased_CCLabel = VarLabel::create("cumulativeEnergyReleased", CCVariable<double>::getTypeDescription());
+  cumulativeEnergyReleased_src_CCLabel = VarLabel::create("cumulativeEnergyReleased_src", CCVariable<double>::getTypeDescription());
 }
 
 
@@ -67,10 +63,9 @@ AdiabaticTable::~AdiabaticTable()
   }
   
   VarLabel::destroy(d_scalar->scalar_CCLabel);
-  VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
-  VarLabel::destroy(heatLoss_CCLabel);
-  VarLabel::destroy(heatLoss_src_CCLabel);
+  VarLabel::destroy(cumulativeEnergyReleased_CCLabel);
+  VarLabel::destroy(cumulativeEnergyReleased_src_CCLabel);
   delete lb;
   delete table;
   for(int i=0;i<(int)tablevalues.size();i++)
@@ -135,16 +130,14 @@ if (!oldStyleAdvect.active()){
     tablevalues.push_back(tv);
   }
   
-  d_temp_index      = table->addDependentVariable("Temp(K)");
-  d_density_index   = table->addDependentVariable("density (kg/m3)");
-  d_sp_vol_index    = table->addDependentVariable("specific volume(m3/kg)");
-  d_gamma_index     = table->addDependentVariable("gamma");
-  d_cv_index        = table->addDependentVariable("heat capacity Cv(j/kg-K)");
-  d_viscosity_index = table->addDependentVariable("viscosity");
-  d_initial_cp_index = table->addDependentVariable("initial heat capacity Cp(j/kg-K)");
-  d_initial_cv_index = table->addDependentVariable("initial heat capacity Cv(j/kg-K)");
+  d_temp_index          = table->addDependentVariable("Temp(K)");
+  d_density_index       = table->addDependentVariable("density (kg/m3)");
+  d_gamma_index         = table->addDependentVariable("gamma");
+  d_cv_index            = table->addDependentVariable("heat capacity Cv(j/kg-K)");
+  d_viscosity_index     = table->addDependentVariable("viscosity");
+  d_initial_cv_index    = table->addDependentVariable("initial heat capacity Cv(j/kg-K)");
   d_initial_gamma_index = table->addDependentVariable("initial gamma");
-  d_initial_temp_index = table->addDependentVariable("initial temp(K)");
+  d_initial_temp_index  = table->addDependentVariable("initial temp(K)");
   table->setup();
   
   //__________________________________
@@ -159,15 +152,13 @@ if (!oldStyleAdvect.active()){
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
   d_scalar->scalar_CCLabel =     VarLabel::create("scalar-f",       td_CCdouble);
   d_scalar->diffusionCoefLabel = VarLabel::create("scalar-diffCoef",td_CCdouble);
-  d_scalar->scalar_source_CCLabel = 
-                                 VarLabel::create("scalar-f_src",  td_CCdouble);  
   d_modelComputesThermoTransportProps = true;
   
   setup->registerTransportedVariable(d_matl_set->getSubset(0),
-                                     d_scalar->scalar_CCLabel,
-                                     d_scalar->scalar_source_CCLabel);  
+                                     d_scalar->scalar_CCLabel, 0);
   setup->registerTransportedVariable(d_matl_set->getSubset(0),
-                                     heatLoss_CCLabel, heatLoss_src_CCLabel);
+                                     cumulativeEnergyReleased_CCLabel,
+                                     cumulativeEnergyReleased_src_CCLabel);
   //__________________________________
   // Read in the constants for the scalar
    ProblemSpecP child = params->findBlock("scalar");
@@ -244,8 +235,8 @@ void AdiabaticTable::scheduleInitialize(SchedulerP& sched,
   t->modifies(lb->viscosityLabel);
   
   t->computes(d_scalar->scalar_CCLabel);
-  t->computes(heatLoss_CCLabel);
-  t->computes(heatLoss_src_CCLabel);
+  t->computes(cumulativeEnergyReleased_CCLabel);
+  t->computes(cumulativeEnergyReleased_src_CCLabel);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -262,17 +253,18 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int indx = d_matl->getDWIndex();
     
-    CCVariable<double>  f, cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
-    CCVariable<double> rho_micro, temp, heatLoss;
+    CCVariable<double>  f, eReleased;
+    CCVariable<double> cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
+    CCVariable<double> rho_micro, temp;
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
-    new_dw->allocateAndPut(heatLoss, heatLoss_CCLabel, indx, patch);
+    new_dw->allocateAndPut(eReleased, cumulativeEnergyReleased_CCLabel, indx, patch);
+    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
+    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
+    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
+    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
     new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
     new_dw->getModifiable(sp_vol,      lb->sp_vol_CCLabel,    indx,patch);
     new_dw->getModifiable(rho_micro,   lb->rho_micro_CCLabel, indx,patch);
-    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
-    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
-    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
-    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
     new_dw->getModifiable(temp, lb->temp_CCLabel, indx, patch);
     //__________________________________
     //  initialize the scalar field in a region
@@ -304,20 +296,16 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     table->interpolate(d_cv_index,        cv,       extraCellIterator,ind_vars);
     table->interpolate(d_viscosity_index, viscosity,extraCellIterator,ind_vars);
     table->interpolate(d_temp_index, temp, extraCellIterator, ind_vars);
-    CCVariable<double> initial_cp, initialTemp, initial_cv, initial_gamma;
-    new_dw->allocateTemporary(initial_cp, patch);
+    CCVariable<double> initialTemp, initial_cv, initial_gamma;
     new_dw->allocateTemporary(initial_cv, patch);
     new_dw->allocateTemporary(initial_gamma, patch);
     new_dw->allocateTemporary(initialTemp, patch);
-    table->interpolate(d_initial_cp_index, initial_cp, extraCellIterator, ind_vars);
     table->interpolate(d_initial_cv_index, initial_cv, extraCellIterator, ind_vars);
     table->interpolate(d_initial_gamma_index, initial_gamma, extraCellIterator, ind_vars);
     table->interpolate(d_initial_temp_index, initialTemp, extraCellIterator, ind_vars);
     
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();
-    double totalf=0;
-    double ntotal=0;
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       rho_micro[c] = rho_CC[c];
@@ -325,16 +313,10 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       thermalCond[c] = 0;
       double mass      = rho_CC[c]*volume;
       double cp        = gamma[c] * cv[c];
-      // double icp = initial_cp[c];
       double icp = initial_gamma[c] * initial_cv[c];
-      heatLoss[c] = temp[c] * cp * mass - initialTemp[c] * icp * mass;
-      totalf += f[c];
-      ntotal++;
+      eReleased[c] = temp[c] * cp * mass - initialTemp[c] * icp * mass;
     }
-    double avgf = totalf/ntotal;
-    vector<double> tmp(1);
-    tmp[0] = avgf;
-    cerr << "Average f: " << avgf << ", target temp=" << table->interpolate(d_temp_index, tmp) << '\n';
+    setBC(f,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
 
     //__________________________________
     //  Dump out a header for the probe point files
@@ -363,7 +345,6 @@ void AdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                                                    const LevelP& level,
                                                    const MaterialSet* /*ice_matls*/)
 {
-
   cout_doing << "ADIABATIC_TABLE::scheduleModifyThermoTransportProperties" << endl;
 
   Task* t = scinew Task("AdiabaticTable::modifyThermoTransportProperties", 
@@ -465,23 +446,15 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
-  t->requires(Task::OldDW, heatLoss_CCLabel,     gac,1); 
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
+  t->requires(Task::OldDW, cumulativeEnergyReleased_CCLabel, gn);
 
   t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
   t->requires(Task::NewDW, lb->gammaLabel,               gn);
-  t->requires(Task::NewDW, lb->sp_vol_CCLabel,           gn);
-  
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  MaterialSubset* press_matl = scinew MaterialSubset();
-  press_matl->add(0);
-  press_matl->addReference();
-  t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gn );
 
   t->modifies(mi->energy_source_CCLabel);
-  t->modifies(d_scalar->scalar_source_CCLabel);
-  t->modifies(heatLoss_src_CCLabel);
+  t->modifies(cumulativeEnergyReleased_src_CCLabel);
 
   // Interpolated table values
   for(int i=0;i<(int)tablevalues.size();i++){
@@ -513,52 +486,40 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       int matl = matls->get(m);
 
       // Get mixture fraction, and initialize source to zero
-      constCCVariable<double> f_old, rho_CC, press, oldTemp, cv, gamma;
-      constCCVariable<double> sp_vol_CC, heatLoss;
-      CCVariable<double> energySource, f_src, sp_vol_ref, flameTemp;
-      CCVariable<double> heatLoss_src;
-
-      new_dw->allocateTemporary(flameTemp, patch); 
-      new_dw->allocateTemporary(sp_vol_ref, patch);              
+      constCCVariable<double> f_old, rho_CC, oldTemp, cv, gamma;
+      constCCVariable<double> eReleased;
+      CCVariable<double> energySource, sp_vol_ref, flameTemp;
+      CCVariable<double> eReleased_src;
 
       old_dw->get(f_old,    d_scalar->scalar_CCLabel,   matl, patch, gn, 0);
       old_dw->get(rho_CC,   mi->density_CCLabel,        matl, patch, gn, 0);
       old_dw->get(oldTemp,  mi->temperature_CCLabel,    matl, patch, gn, 0);
-      new_dw->get(press,    lb->press_equil_CCLabel,    0,    patch, gn, 0);
-      new_dw->get(sp_vol_CC,lb->sp_vol_CCLabel,         matl, patch, gn,0);
+      old_dw->get(eReleased, cumulativeEnergyReleased_CCLabel,
+                                                        matl, patch, gn, 0);
       new_dw->get(cv,       lb->specific_heatLabel,     matl, patch, gn, 0);
       new_dw->get(gamma,    lb->gammaLabel,             matl, patch, gn, 0);
-      old_dw->get(heatLoss, heatLoss_CCLabel, matl, patch, gn, 0);
       new_dw->getModifiable(energySource,   mi->energy_source_CCLabel,  
-                                                        matl, patch);                      
-      new_dw->allocateAndPut(f_src,        d_scalar->scalar_source_CCLabel,
                                                         matl, patch);
-      f_src.initialize(0);
-      new_dw->allocateAndPut(heatLoss_src,        heatLoss_src_CCLabel,
-                                                        matl, patch);
-      heatLoss_src.initialize(0);
- 
+      new_dw->getModifiable(eReleased_src,  cumulativeEnergyReleased_src_CCLabel,
+                            matl, patch);
+      new_dw->allocateTemporary(flameTemp, patch); 
+      new_dw->allocateTemporary(sp_vol_ref, patch);
       
       //__________________________________
       //  grab values from the tables
       vector<constCCVariable<double> > ind_vars;
       ind_vars.push_back(f_old);
-      CellIterator extraCellIterator = patch->getExtraCellIterator();
-      table->interpolate(d_temp_index,  flameTemp,  extraCellIterator,ind_vars);
-      table->interpolate(d_sp_vol_index,sp_vol_ref, extraCellIterator,ind_vars);
-
+      CellIterator iter = patch->getCellIterator();
+      table->interpolate(d_temp_index,  flameTemp,  iter, ind_vars);
       CCVariable<double> initialTemp;
       new_dw->allocateTemporary(initialTemp, patch); 
-      table->interpolate(d_initial_temp_index, initialTemp, extraCellIterator, ind_vars);
-      CCVariable<double> initial_cp;
-      new_dw->allocateTemporary(initial_cp, patch); 
-      table->interpolate(d_initial_cp_index, initial_cp, extraCellIterator, ind_vars);
+      table->interpolate(d_initial_temp_index, initialTemp, iter, ind_vars);
       CCVariable<double> initial_cv;
       new_dw->allocateTemporary(initial_cv, patch); 
-      table->interpolate(d_initial_cv_index, initial_cv, extraCellIterator, ind_vars);
+      table->interpolate(d_initial_cv_index, initial_cv, iter, ind_vars);
       CCVariable<double> initial_gamma;
       new_dw->allocateTemporary(initial_gamma, patch); 
-      table->interpolate(d_initial_gamma_index, initial_gamma, extraCellIterator, ind_vars);
+      table->interpolate(d_initial_gamma_index, initial_gamma, iter, ind_vars);
 
       Vector dx = patch->dCell();
       double volume = dx.x()*dx.y()*dx.z();
@@ -586,7 +547,12 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         // double icp = initial_cp[c];
         double icp = initial_gamma[c] * initial_cv[c];
         double energyOrig = initialTemp[c] * icp * mass;
-        double erelease = (energyNew-energyOrig) - heatLoss[c];
+        double erelease = (energyNew-energyOrig) - eReleased[c];
+
+        // Add energy released to the cumulative total and hand it to ICE
+        // as a source
+        eReleased_src[c] += erelease;
+        energySource[c] += erelease;
 #if 0
         // Diagnostics
         if(erelease != 0){
@@ -606,16 +572,11 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         }
 #endif
 
-        // Add energy released to the cumulative total and hand it to ICE
-        // as a source
-        heatLoss_src[c] += erelease;
-        energySource[c] += erelease;
 
         //__________________________________
         // debugging
-        //        cerr << c << ", f=" << f_old[c] << ", flameTemp=" << flameTemp[c] << ", press=" << press[c] << ", newTemp=" << newTemp << ", oldTemp=" << oldTemp[c] << ", dtemp=" << newTemp-oldTemp[c] << '\n';
         totalEnergy += erelease;
-        fsum += f_old[c];
+        fsum += f_old[c] * mass;
         esum += oldTemp[c]*cp*mass;
         cpsum += cp;
         masssum += mass;
@@ -641,8 +602,8 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       double e = esum/ncells;
       double atemp = e/(mass*cp);
       vector<double> tmp(1);
-      tmp[0]=fsum/ncells;
-      cerr << "AverageTemp=" << atemp << ", AverageF=" << fsum/ncells << ", targetTemp=" << table->interpolate(d_temp_index, tmp) << '\n';
+      tmp[0]=fsum/masssum;
+      cerr << "AverageTemp=" << atemp << ", AverageF=" << fsum/masssum << ", targetTemp=" << table->interpolate(d_temp_index, tmp) << '\n';
 #if 0
       //__________________________________
       //  Tack on diffusion
@@ -682,7 +643,11 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         }  // time to dump
       } // if(probePts)  
       
-      // Compute miscellaneous table quantities           STEVE what does this do???
+      // Compute miscellaneous table quantities.  Users can request
+      // arbitrary quanitities to be interplated by adding an entry
+      // of the form: <tableValue>N2</tableValue> to the model section.
+      // This is useful for computing derived quantities such as species
+      // concentrations.
       for(int i=0;i<(int)tablevalues.size();i++){
         TableValue* tv = tablevalues[i];
         cerr << "interpolating " << tv->name << '\n';
