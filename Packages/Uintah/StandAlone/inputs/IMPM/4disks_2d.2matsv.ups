@@ -39,7 +39,7 @@
     <MPM>
 	<time_integrator>implicit</time_integrator>
         <dynamic>true</dynamic>
-        <solver>petsc</solver>
+        <solver>simple</solver>
         <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
     </MPM>
