@@ -133,10 +133,10 @@ TypeMap::getBool(const std::string& key, bool dflt)
 }
 
 // array1< int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1< int, 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< int>
-TypeMap::getIntArray(const std::string& key, const SSIDL::array1< int>& dflt)
-{
-  std::cerr<<"method not implemented" << std::endl;  
+::SSIDL::array1< int>
+TypeMap::getIntArray(const ::std::string& key, const ::SSIDL::array1< int>& dflt){
+  IntArrayMap::iterator found=intArrayMap.find(key);
+  if(found!=intArrayMap.end()) return found->second;
   return dflt;
 }
 
@@ -264,9 +264,8 @@ TypeMap::putBool(const std::string& key, bool value)
    
 // void .sci.cca.TypeMap.putIntArray(in string key, in array1< int, 1> value)
 void
-TypeMap::putIntArray(const std::string& key, const SSIDL::array1< int>& value)
-{
-  std::cerr<<"method not implemented" << std::endl;  
+TypeMap::putIntArray(const ::std::string& key, const ::SSIDL::array1< int>& value){
+  intArrayMap.insert(IntArrayMap::value_type(key, value));
   return;
 }
 
