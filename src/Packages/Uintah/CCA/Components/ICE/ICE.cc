@@ -113,6 +113,7 @@ ICE::ICE(const ProcessorGroup* myworld)
 
 ICE::~ICE()
 {
+  cout_doing << "Doing: ICE destructor " << endl;
   delete d_Lodi_variable_basket;
   delete lb;
   delete MIlb;
@@ -120,7 +121,15 @@ ICE::~ICE()
   if(d_Turb){
     delete d_turbulence;
   }
-
+  cout_doing << "Doing: destorying Model Machinery " << endl;
+  // delete transported Lagrangian variables
+  vector<TransportedVariable*>::iterator t_iter;
+  for( t_iter  = d_modelSetup->tvars.begin();
+       t_iter != d_modelSetup->tvars.end(); t_iter++){
+       TransportedVariable* tvar = *t_iter;
+    VarLabel::destroy(tvar->var_Lagrangian);
+  }
+  // delete models
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
       iter != d_models.end(); iter++) {
     delete *iter; 
@@ -604,7 +613,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           mpm_matls_sub, 
                                                           press_matl,
                                                           all_matls);
-                                                          
+
+  scheduleComputeLagrangian_Transported_Vars(sched, patches,
+                                                          all_matls);
+                                                       
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
   scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
                                                           maxMach_PSS);
@@ -1122,6 +1134,41 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
+
+/* ---------------------------------------------------------------------
+ Function~  ICE:: scheduleComputeTransportedLagrangianValues--
+ Purpose:   For each transported variable compute the lagrangian value
+            q_L_CC = (q_old + q_src) * mass_L
+ Note:      Be care
+_____________________________________________________________________*/
+void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
+                                                     const PatchSet* patches,
+                                                     const MaterialSet* matls)
+{
+  if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
+    cout_doing << "ICE::scheduleComputeLagrangian_Transported_Vars" << endl;
+    Task* t = scinew Task("ICE::computeLagrangian_Transported_Vars",
+                     this,&ICE::computeLagrangian_Transported_Vars);
+    Ghost::GhostType  gn  = Ghost::None;
+
+    t->requires(Task::NewDW,lb->mass_L_CCLabel, gn);
+    
+    // computes and requires for each transported variable
+    vector<TransportedVariable*>::iterator t_iter;
+    for( t_iter = d_modelSetup->tvars.begin();
+        t_iter != d_modelSetup->tvars.end(); t_iter++){
+      TransportedVariable* tvar = *t_iter;
+                         // require q_old
+      t->requires(Task::OldDW, tvar->var,   tvar->matls, gn, 0);
+
+      if(tvar->src){     // require q_src
+        t->requires(Task::NewDW, tvar->src, tvar->matls, gn, 0);
+      }
+      t->computes(tvar->var_Lagrangian, tvar->matls);
+    }
+    sched->addTask(t, patches, matls);
+  }
+}
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAddExchangeToMomentumAndEnergy--
 _____________________________________________________________________*/
@@ -1275,15 +1322,12 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
     vector<TransportedVariable*>::iterator iter;
     
     for(iter = d_modelSetup->tvars.begin();
-       iter != d_modelSetup->tvars.end(); iter++){
+        iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
-      task->requires(Task::OldDW, tvar->var, tvar->matls, gac, 2);
-      if(tvar->src)
-	task->requires(Task::NewDW, tvar->src, tvar->matls, gac, 2);
+      task->requires(Task::NewDW, tvar->var_Lagrangian, tvar->matls, gac, 2);
       task->computes(tvar->var,   tvar->matls);
     }
-  } 
-  
+  }  
   sched->addTask(task, patch_set, ice_matls);
 }
 /* ---------------------------------------------------------------------
@@ -3675,6 +3719,76 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
   }  // patch loop
 
 }
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::computeLagrangian_Transported_Vars--
+ ---------------------------------------------------------------------  */
+void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,  
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* /*matls*/,
+                                             DataWarehouse* old_dw, 
+                                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing << "Doing computeLagrangian_Transported_Vars on patch " 
+               << patch->getID() << "\t ICE" << endl;
+    Ghost::GhostType  gn  = Ghost::None;
+    int numMatls = d_sharedState->getNumICEMatls();
+    
+    // get mass_L for all ice matls
+    StaticArray<constCCVariable<double> > mass_L(numMatls);
+    for (int m = 0; m < numMatls; m++ ) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      new_dw->get(mass_L[m], lb->mass_L_CCLabel,indx, patch,gn,0);
+    }
+    
+    //__________________________________
+    //  hit all the transported variables
+    vector<TransportedVariable*>::iterator t_iter;
+    for( t_iter  = d_modelSetup->tvars.begin();
+         t_iter != d_modelSetup->tvars.end(); t_iter++){
+      TransportedVariable* tvar = *t_iter;
+      
+      for (int m = 0; m < numMatls; m++ ) {
+        Material* matl = d_sharedState->getMaterial( m );
+        int indx = matl->getDWIndex();
+       
+        if(tvar->matls->contains(indx)){  
+         
+          constCCVariable<double> q_old,q_src;
+          CCVariable<double> q_L_CC;
+          old_dw->get(q_old,             tvar->var, indx, patch, gn, 0);
+          new_dw->allocateAndPut(q_L_CC, tvar->var_Lagrangian, indx, patch);
+
+          // initialize q_L to q_old
+          q_L_CC.copyData(q_old);
+
+           // If there's a source tack it on.     
+          if(tvar->src){
+            new_dw->get(q_src,  tvar->src, indx, patch, gn, 0);
+            for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+              IntVector c = *iter;                            
+              q_L_CC[c]  += q_src[c];     // with source
+            }
+          }
+          // Set boundary conditions on q_L_CC
+          string Labelname = tvar->var_Lagrangian->getName();
+          setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
+
+          // multiply by mass so advection is conserved
+          for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){ 
+            IntVector c = *iter;                            
+            q_L_CC[c] *= mass_L[m][c];
+          }
+        }  // tvar matl
+      }  // ice matl loop
+    }  // tvar loop
+  }  // patch loop
+}
+
 /*---------------------------------------------------------------------
  Function~  ICE::addExchangeToMomentumAndEnergy--
    This task adds the  exchange contribution to the 
@@ -4487,59 +4601,26 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
 
       //__________________________________
       // Advect model variables 
-      if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+      if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
         vector<TransportedVariable*>::iterator t_iter;
         for( t_iter  = d_modelSetup->tvars.begin();
              t_iter != d_modelSetup->tvars.end(); t_iter++){
           TransportedVariable* tvar = *t_iter;
-          
           if(tvar->matls->contains(indx)){
-            constCCVariable<double> q_old,q_src;
-            CCVariable<double> q_L_CC, q_CC;
+            CCVariable<double> q_CC;
+            constCCVariable<double> q_L_CC;
+            new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
+            new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
             
-            old_dw->get(q_old,   tvar->var, indx, patch, gac, 2);         
-            if(tvar->src){
-              new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);
-            }
-            new_dw->allocateTemporary(q_L_CC, patch, gac, 2);
-            new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
-            //__________________________________
-            //  compute Lagrangian values for tvars
-            // - nothing is used from the extra cells
-            if(tvar->src){
-              for(CellIterator iter = patch->getExtraCellIterator(); 
-                                      !iter.done(); iter++) {
-                IntVector c = *iter;                            
-                q_L_CC[c]  = q_old[c] + q_src[c];     // with source
-              }
-            } else {
-              for(CellIterator iter = patch->getExtraCellIterator(); 
-                                      !iter.done(); iter++) {
-                IntVector c = *iter;                            
-                q_L_CC[c]  = q_old[c];                // no source
-              }
-            }
-
-            // Set boundary conditions on lagrangian values
-            string Labelname = tvar->var->getName();
-            setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
-
-            // multiply by mass so advection is conserved
-            for(CellIterator iter = patch->getExtraCellIterator(); 
-                                      !iter.done(); iter++) {
-              IntVector c = *iter;                            
-              q_L_CC[c] *= mass_L[c];
-            }
-
-            // now advect
             advector->advectQ(q_L_CC,patch,q_advected, new_dw);
 
-            update_q_CC<CCVariable<double>, double>
+            update_q_CC<constCCVariable<double>, double>
                  ("q_L_CC",q_CC, q_L_CC, q_advected, 
                   mass_L, mass_new, mass_advected, PH, PH2, patch);
-
-            //  Set Boundary Conditions again on the advected values
-            setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);
+                  
+            //  Set Boundary Conditions 
+            string Labelname = tvar->var->getName();
+            setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);            
           }
         }
       } 
@@ -4800,7 +4881,7 @@ void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls
   t->matls = matls;
   t->var = var;
   t->src = src;
-  t->Lvar = VarLabel::create(var->getName()+"-L", var->typeDescription());
+  t->var_Lagrangian = VarLabel::create(var->getName()+"_L", var->typeDescription());
   tvars.push_back(t);
 }
 
