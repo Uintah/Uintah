@@ -35,6 +35,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_8or27 = flags->d_8or27;
   d_useLoadCurves = flags->d_useLoadCurves;
   d_doErosion = flags->d_doErosion;
+  d_with_color = flags->d_with_color;
 
   registerPermanentParticleState(matl,lb);
 }
@@ -539,8 +540,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state.push_back(lb->pParticleIDLabel);
   particle_state_preReloc.push_back(lb->pParticleIDLabel_preReloc);
   
-  particle_state.push_back(lb->pColorLabel);
-  particle_state_preReloc.push_back(lb->pColorLabel_preReloc);
+  if (d_with_color){
+    particle_state.push_back(lb->pColorLabel);
+    particle_state_preReloc.push_back(lb->pColorLabel_preReloc);
+  }
 
   if (d_8or27 == 27) {
     particle_state.push_back(lb->pSizeLabel);

@@ -29,6 +29,8 @@ namespace Uintah {
     bool        d_createNewParticles; // Flag to decide whether to create
                                          // new particles after failure
     bool        d_doErosion; // Flag to decide whether to erode or not
+    bool        d_with_color;         // to turn on the color variable
+    
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 
     double      d_adiabaticHeating; // Flag adiabatic plastic heating on/off
