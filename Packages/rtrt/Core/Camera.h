@@ -15,12 +15,16 @@ class Ray;
 class Stealth;
 class Scene;
 class PerProcessorContext;
+class Dpy;
+class Gui;
 
 class Camera {
 
 protected:
 
   friend class Dpy;
+  friend class Gui;
+
   char pad1[128];
   Point eye;
   Point lookat;
