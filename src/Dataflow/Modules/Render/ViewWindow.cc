@@ -1538,22 +1538,29 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     //    renderer_->setvisual(args[2], idx, width, height);
   } else if(args[1] == "setgl") {
     int visualid = 0;
-    if ((args.count() >= 4) && !string_to_int(args[3], visualid))
-      args.error("setgl bad visual index: "+args[2]);
+    if (args.count() > 3)
+      string_to_int(args[3], visualid);
+
     int width = 640;
-    if(args.count() >= 5 && !string_to_int(args[4], width)){
-      width = 640;
-    }
+    if (args.count() > 4) 
+      string_to_int(args[4], width);
+
     int height = 480;
-    if(args.count() == 6 && !string_to_int(args[5], height)){
-      height = 480;
-    }
-    TCLTask::lock();
+    if (args.count() > 5) 
+      string_to_int(args[5], height);
+
     if (renderer_->tk_gl_context_) 
       delete renderer_->tk_gl_context_;
-    renderer_->tk_gl_context_ = scinew TkOpenGLContext(args[2], width, height, visualid);
+    renderer_->tk_gl_context_ = 
+      scinew TkOpenGLContext(args[2], visualid, width, height);
+    renderer_->old_tk_gl_context_ = 0;
     renderer_->myname_ = args[2];
-    TCLTask::unlock();
+  } else if(args[1] == "destroygl") {
+    ASSERT(args[2] == renderer_->myname_);
+    ASSERT(renderer_->tk_gl_context_);
+    delete renderer_->tk_gl_context_;
+    renderer_->tk_gl_context_ = 0;
+    renderer_->myname_ = "";
   } else if(args[1] == "centerGenAxes") { 
     // have to do this here, as well as in redraw() so the axes can be
     // turned on/off even while spinning with inertia
