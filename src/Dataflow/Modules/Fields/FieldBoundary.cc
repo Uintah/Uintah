@@ -42,6 +42,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
+#include <Dataflow/Modules/Fields/ApplyInterpMatrix.h>
 
 #include <iostream>
 
@@ -105,11 +106,14 @@ FieldBoundary::execute()
     error("Unable to initialize oport 'Interpolant'.");
     return;
   }
-  if (!infield_->get(input)) return;
-  if (!input.get_rep()) {
-    error("FieldBoundary Error: No input data.");
+
+  if (!(infield_->get(input) && input.get_rep()))
+  {
+    error("No input field data.");
     return;
-  } else if (infield_gen_ != input->generation) {
+  }
+  else if (infield_gen_ != input->generation)
+  {
     infield_gen_ = input->generation;
     MeshHandle mesh = input->mesh();
 
@@ -119,7 +123,33 @@ FieldBoundary::execute()
     if (!module_dynamic_compile(ci, algo)) return;
 
     algo->execute(this, mesh, tri_fh_, interp_mh_, input->data_at());
+
+    //
+    if (tri_fh_.get_rep() && interp_mh_.get_rep())
+    {
+      string actype = input->get_type_description(1)->get_name();
+      if (input->query_scalar_interface(this) != NULL) { actype = "double"; }
+      const TypeDescription *iftd = input->get_type_description();
+      const TypeDescription *iltd = input->data_at_type_description();
+      const TypeDescription *oftd = tri_fh_->get_type_description();
+      const TypeDescription *oltd = tri_fh_->data_at_type_description();
+      CompileInfoHandle ci =
+	ApplyInterpMatrixAlgo::get_compile_info(iftd, iltd,
+						oftd, oltd,
+						actype, false);
+      Handle<ApplyInterpMatrixAlgo> algo;
+      if (module_dynamic_compile(ci, algo))
+      {
+	algo->execute_aux(input, tri_fh_, interp_mh_);
+      }
+    }
   }
+
+  if (interp_mh_.get_rep())
+  {
+    warning("Interpolation for these particular field types and/or locations is not supported, use DirectInterpolate.");
+  }
+
   osurf_->send(tri_fh_);
   ointerp_->send(interp_mh_);
 }
