@@ -101,20 +101,20 @@ Time::initialize()
     orig_timer=0;
 
     if(timer_32bit){
-	for(;;){
+      //for(;;){
 	    unsigned high=0;
 	    unsigned low=*iotimer_addr32;
 	    orig_timer=((long long)(high&(~TOPBIT))<<32|(long long)low);
-	}
+	    //	}
     } else {
 #if _MIPS_ISA == _MIPS_ISA_MIPS1 || _MIPS_ISA ==  _MIPS_ISA_MIPS2
-	while (1) {
+      //	while (1) {
 	    unsigned high = *iotimer_addr;
 	    unsigned low = *(iotimer_addr + 1);
 	    if (high == *iotimer_addr) {
 		orig_timer=((long long)high<<32|(long long)low);
 	    }
-	}
+      //}
 #else
 	orig_timer=*iotimer_addr-orig_timer;
 #endif
@@ -259,6 +259,9 @@ Time::waitFor(SysClock time)
 
 //
 // $Log$
+// Revision 1.5  2000/09/29 03:34:39  samsonov
+// Fixes 32-bit hardware cycle counter
+//
 // Revision 1.4  1999/08/29 00:47:02  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
