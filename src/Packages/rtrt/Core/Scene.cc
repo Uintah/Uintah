@@ -227,16 +227,12 @@ void Scene::refill_work(int which, int nworkers)
 
 void Scene::add_light(Light* light)
 {
-  if( light->isMoodLight() ) light->turnOff();
-
   lightsGroup_->add( light->getSphere() );
   lights.add(light);
 }
 
 void Scene::add_per_matl_light( Light* light )
 {
-  if( light->isMoodLight() ) light->turnOff();
-
   lightsGroup_->add( light->getSphere() );
   per_matl_lights.add(light);
 }
@@ -364,7 +360,6 @@ Scene::turnOnAllLights()
       light = per_matl_lights[cnt-numLights];
 
     if( light->isMoodLight() ) {
-      light->turnOff();
       lights[cnt]->reset(); 
     } else {
       lights[cnt]->reset(); 
