@@ -106,12 +106,14 @@ void SimulationController::run()
       throw ProblemSetupException("Input file is not a Uintah specification");
 
    bool log_dw_mem=false;
+#ifndef DISABLE_SCI_MALLOC
    ProblemSpecP debug = ups->findBlock("debug");
    if(debug){
      ProblemSpecP log_mem = debug->findBlock("logmemory");
      if(log_mem)
        log_dw_mem=true;
    }
+#endif
    
    Output* output = dynamic_cast<Output*>(getPort("output"));
    output->problemSetup(ups);
@@ -283,9 +285,12 @@ void SimulationController::run()
       }
       
       if(log_dw_mem){
+	// Remember, this isn't logged if DISABLE_SCI_MALLOC is set
+	// (So usually in optimized mode this will not be run.)
 	scheduler->logMemoryUse();
 	ostringstream fn;
-	fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
+	fn << "alloc." << setw(5) << setfill('0') 
+	   << d_myworld->myrank() << ".out";
 	string filename(fn.str());
 	DumpAllocator(DefaultAllocator(), filename.c_str());
       }
