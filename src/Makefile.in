@@ -291,6 +291,39 @@ distclean:: clean
 	rm -f $(patsubst %,%/Makefile, $(ALLSUBDIRS))
 	rm -f sci_config.h sci_defs.h stamp-
 
+cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
+
+cleanai::
+	rm -f $(patsubst %,%/[a-i]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLSUBDIRS))
+cleanAI::
+	rm -f $(patsubst %,%/[A-I]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLSUBDIRS))
+cleanjs::
+	rm -f $(patsubst %,%/[j-s]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLSUBDIRS))
+cleanJS::
+	rm -f $(patsubst %,%/[J-S]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLSUBDIRS))
+cleantz::
+	rm -f $(patsubst %,%/[t-z]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLSUBDIRS))
+cleanTZ::
+	rm -f $(patsubst %,%/[T-Z]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLSUBDIRS))
+cleanrest::
+	rm -f $(patsubst %,%/*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLSUBDIRS))
+	-rmdir $(patsubst %,%/ii_files, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
+	rm -f $(LIBDIR)so_locations
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+
 objs: $(CLEANOBJS)
 
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
@@ -317,6 +350,9 @@ endif
 
 #
 # $Log$
+# Revision 1.30  2000/06/14 23:12:42  bbanerje
+# Added cleanall for ARCHES specific make clean (for CRSIM machines)
+#
 # Revision 1.29  2000/06/14 22:06:58  jehall
 # - Made 32bit/64bit configure setting available to makefiles
 #
