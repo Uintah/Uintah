@@ -108,6 +108,7 @@ using std::pair;
    private:
       struct SaveNameItem {
 	 string labelName;
+ 	 string compressionMode;
          ConsecutiveRangeSet matls;
       };
       struct SaveItem {
