@@ -15,6 +15,7 @@
 #define SCI_Geom_Point_h 1
 
 #include <Geom/Geom.h>
+#include <Geom/Color.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 
@@ -41,6 +42,20 @@ public:
 	scalars.add(v); // use this as well...
     }
 
+    inline void add(const Point& p, const Color &v) {
+	int s=pts.size();
+	pts.grow(3);
+ 	pts[s]=p.x();
+	pts[s+1]=p.y();
+	pts[s+2]=p.z();
+	
+	int ss=colors.size();
+	colors.grow(3);
+	colors[ss]=v.r();
+	colors[ss+1]=v.g();
+	colors[ss+2]=v.b();
+    }
+
     inline void add(const Point& p, const float &sv, const Vector& v) {
 	int s=pts.size();
 	pts.grow(3);
@@ -63,6 +78,7 @@ public:
 
     Array1<float>  scalars;  // change to something else???
     Array1<float>  normals;  // ditto?
+    Array1<float> colors;
 
     int list_pos; // posistion in the list...
 

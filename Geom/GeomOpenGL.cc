@@ -2053,9 +2053,19 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
     float* p=&pts[0];
 //    if (have_normal)
 //	glNormal3d(n.x(), n.y(), n.z());
-    for (int i=0; i<pts.size(); i+=3) {
-	glVertex3fv(p);
-	p+=3;
+    if(colors.size() > 0){
+	float* c=&colors[0];
+	for (int i=0; i<pts.size(); i+=3) {
+	    glColor3fv(c);
+	    glVertex3fv(p);
+	    p+=3;
+	    c+=3;
+	}
+    } else {
+	for (int i=0; i<pts.size(); i+=3) {
+	    glVertex3fv(p);
+	    p+=3;
+	}
     }
     glEnd();
 //    glPopAttrib();
