@@ -27,8 +27,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Inverse
 
 SRCS     += \
+	$(SRCDIR)/AttributeTrf.cc\
 	$(SRCDIR)/ConductivitySearch.cc\
 	$(SRCDIR)/DipoleSearch.cc\
+	$(SRCDIR)/Tikhonov.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/BioPSE/Core/Algorithms/NumApproximation \
