@@ -303,7 +303,7 @@ Scene::turnOffAllLights( double left )
   }
   // Scale down from current ambient level to minimum ambient of
   // 1/4th of original ambient.
-  setAmbientLevel( (beginScale*left) + (orig_ambientScale_ / 4.0) );
+  setAmbientLevel( (beginScale*left) + (orig_ambientScale_ / 2.0) );
 }
 
 void
@@ -415,3 +415,8 @@ Scene::addRouteName( const string & filename, const string & room )
   roomsForRoutes_.push_back( room );
 }
 
+void
+Scene::addTrigger( Trigger * trigger )
+{
+  triggers_.push_back( trigger );
+}

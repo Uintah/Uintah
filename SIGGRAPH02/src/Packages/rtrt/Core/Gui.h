@@ -24,10 +24,6 @@ class GLUI_Checkbox;
 
 namespace rtrt {
 
-// Because we have to use static functions, only one Gui object may be
-// active at a time.  (My guess is that there will only be one Gui
-// object at a time anyway...)
-
 class  Dpy;
 struct DpyPrivate;
 class  Stealth;
@@ -41,6 +37,11 @@ class  SelectableGroup;
 class  SpinningInstance;
 class  CutGroup;
 class  Sound;
+class  Trigger;
+
+// Because we have to use static functions, only one Gui object may be
+// active at a time.  (My guess is that there will only be one Gui
+// object at a time anyway...)
 
 class Gui {
 
@@ -106,8 +107,11 @@ private:
   Camera            * camera_;
   Stealth           * stealth_;
   Sound             * currentSound_;
-  
+
   int                 glutDisplayWindowId;
+
+  // List of triggers that have fired but have not finished.
+  std::vector<Trigger*>    activeTriggers_;
 
   // Gui Component Variables
 
@@ -115,6 +119,7 @@ private:
   int selectedRouteId_;
   int selectedObjectId_;
   int selectedSoundId_;
+  int selectedTriggerId_;
 
   char inputString_[ 1024 ];
 
@@ -124,6 +129,7 @@ private:
   GLUI         * lightsWindow;
   GLUI         * objectsWindow;
   GLUI         * soundsWindow;
+  GLUI         * triggersWindow_;
 
   GLUI_Button  * openSoundPanelBtn_;
 
@@ -133,6 +139,7 @@ private:
   bool lightsWindowVisible;
   bool objectsWindowVisible;
   bool soundsWindowVisible;
+  bool triggersWindowVisible;
   bool mainWindowVisible;
 
   bool enableSounds_;
@@ -274,6 +281,13 @@ private:
   GLUI_EditText * soundOriginZ_;
 
   ////////////////////////////////////////////////////////////////
+  //
+  // triggersWindow GLUI elements:
+  //
+
+  GLUI_Listbox  * triggerList_;
+
+  ////////////////////////////////////////////////////////////////
 
   // Returns "N", "NE", "E", etc, depending on facing.
   const std::string getFacingString() const;
@@ -336,8 +350,10 @@ private:
   static void startSoundThreadCB( int id );
   static void toggleSoundWindowCB( int id );
 
-  void loadAllRoutes();
-
+  // Triggers Window Callbacks
+  void createTriggersWindow( GLUI * window );
+  static void activateTriggerCB( int id );
+  static void toggleTriggersWindowCB( int id );
 
   ////////////////////////////////////////////////////////////////
 
@@ -366,6 +382,8 @@ private:
   void quit();
   void setupFonts();
   void updateSoundPanel();
+  void loadAllRoutes();
+
 
   // Functions to draw text, etc on GL window.
   void displayText(GLuint fontbase, double x, double y,

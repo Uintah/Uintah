@@ -37,7 +37,7 @@ class Material;
 class ShadowBase;
 class Group;
 class Scene;
-
+class Trigger;
 #if !defined(linux)
 class SoundThread;
 class Sound;
@@ -221,6 +221,9 @@ public:
   vector<Sound*> getSounds() { return sounds_; }
   int            soundVolume() const { return soundVolume_; }
 #endif
+
+  void                      addTrigger( Trigger * trigger );
+  inline vector<Trigger*> & getTriggers() { return triggers_; }
   
   void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   Array1<ShadowBase*> shadows;
@@ -301,6 +304,10 @@ private:
 #endif
   int              soundVolume_;
 
+  // List of triggers that we need to constantly check to see
+  // if they have fired.
+  vector<Trigger*> triggers_;
+  
   // Points to either mainGroup_ or mainGroupWithLights_;
   Object * obj;
 
