@@ -14,6 +14,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/BuildFEMatrix.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
+	$(SRCDIR)/ShowDipoles.tcl\
 	$(SRCDIR)/SurfaceToSurface.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI
