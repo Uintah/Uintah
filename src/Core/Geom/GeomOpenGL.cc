@@ -112,43 +112,44 @@ using std::endl;
 
 namespace SCIRun {
 
-int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
+int
+GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 {
   /* All primitives that get drawn must check the return value of this
      function to determine if they get drawn or not */
   if((!di->pickmode)||(di->pickmode&&di->pickchild)){
     if(lit && di->lighting && !di->currently_lit){
-	di->currently_lit=1;
-	glEnable(GL_LIGHTING);
-	switch(di->get_drawtype()) {
-	case DrawInfoOpenGL::WireFrame:
-	    gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
-	    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-	    break;
-	case DrawInfoOpenGL::Flat:
-	    gluQuadricNormals(di->qobj, (GLenum)GLU_FLAT);
-	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-	    break;
-	case DrawInfoOpenGL::Gouraud:
-	    gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
-	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-	    break;
-	}
-	
+      di->currently_lit=1;
+      glEnable(GL_LIGHTING);
+      switch(di->get_drawtype()) {
+      case DrawInfoOpenGL::WireFrame:
+	gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
+	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	break;
+      case DrawInfoOpenGL::Flat:
+	gluQuadricNormals(di->qobj, (GLenum)GLU_FLAT);
+	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	break;
+      case DrawInfoOpenGL::Gouraud:
+	gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
+	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	break;
+      }
+      
     }
     if((!lit || !di->lighting) && di->currently_lit){
-	di->currently_lit=0;
-	glDisable(GL_LIGHTING);
-	gluQuadricNormals(di->qobj, (GLenum)GLU_NONE);
-	switch(di->get_drawtype()) {
-	case DrawInfoOpenGL::WireFrame:
-	    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-	    break;
-	case DrawInfoOpenGL::Flat:
-	case DrawInfoOpenGL::Gouraud:
-	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-	    break;
-	}
+      di->currently_lit=0;
+      glDisable(GL_LIGHTING);
+      gluQuadricNormals(di->qobj, (GLenum)GLU_NONE);
+      switch(di->get_drawtype()) {
+      case DrawInfoOpenGL::WireFrame:
+	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	break;
+      case DrawInfoOpenGL::Flat:
+      case DrawInfoOpenGL::Gouraud:
+	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	break;
+      }
     }
     di->set_matl(matl);
 #if (_MIPS_SZPTR == 64) || defined(__digital__) || defined(_AIX)
@@ -167,168 +168,180 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
   else return 0;
 }
 
-int GeomObj::post_draw(DrawInfoOpenGL* di)
+int
+GeomObj::post_draw(DrawInfoOpenGL* di)
 {
-    if(di->pickmode && di->pickchild){
+  if(di->pickmode && di->pickchild){
 #if (_MIPS_SZPTR == 64)
-	glPopName();
-	glPopName();
+    glPopName();
+    glPopName();
 #else
-	glPopName();//pops the face index once the obj is rendered
+    glPopName();//pops the face index once the obj is rendered
 #endif
-	glPopName();
-    }
-
-	return 1;  // needed to quiet visual c++ 
+    glPopName();
+  }
+  return 1;  // needed to quiet visual c++ 
 }
 
-static void quad_error(GLenum code)
+static void
+quad_error(GLenum code)
 {
-    cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
+  cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
 }
 
 // May need to do this for really old GCC compilers?
 //typedef void (*gluQuadricCallbackType)(...);
 typedef void (*gluQuadricCallbackType)();
 
-DrawInfoOpenGL::DrawInfoOpenGL()
-  : lighting(1),
-    currently_lit(1),
-    pickmode(1),
-    pickchild(0),
-    fog(0),
-    cull(0),
-    current_matl(0)
+DrawInfoOpenGL::DrawInfoOpenGL() :
+  lighting(1),
+  currently_lit(1),
+  pickmode(1),
+  pickchild(0),
+  fog(0),
+  cull(0),
+  current_matl(0)
 {
-    for (int i=0; i < GEOM_FONT_COUNT; i++) {
-        fontstatus[i] = 0;
-        fontbase[i] = 0;
+  for (int i=0; i < GEOM_FONT_COUNT; i++) {
+    fontstatus[i] = 0;
+    fontbase[i] = 0;
+  }
+  
+  qobj=gluNewQuadric();
+  
+  if( !qobj )
+    {
+      printf( "Error in GeomOpenGL.cc: DrawInfoOpenGL(): gluNewQuadric()\n" );
     }
 
-    qobj=gluNewQuadric();
 #ifdef _WIN32
-	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
+  gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
 #else
-	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
+  gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
 #endif
 }
 
-void DrawInfoOpenGL::reset()
+void
+DrawInfoOpenGL::reset()
 {
-    polycount=0;
-    current_matl=0;
-    ignore_matl=0;
-    fog=0;
-    cull=0;
-    check_clip = 0;
-    pickmode =0;
-    pickchild =0;
-    npicks =0;
+  polycount=0;
+  current_matl=0;
+  ignore_matl=0;
+  fog=0;
+  cull=0;
+  check_clip = 0;
+  pickmode =0;
+  pickchild =0;
+  npicks =0;
 }
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
 {
-    gluDeleteQuadric(qobj);
+  gluDeleteQuadric(qobj);
 }
 
-void DrawInfoOpenGL::set_drawtype(DrawType dt)
+void
+DrawInfoOpenGL::set_drawtype(DrawType dt)
 {
-    drawtype=dt;
-    switch(drawtype){
+  drawtype=dt;
+  switch(drawtype){
+  case DrawInfoOpenGL::WireFrame:
+    gluQuadricDrawStyle(qobj, (GLenum)GLU_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    break;
+  case DrawInfoOpenGL::Flat:
+    gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
+    glShadeModel(GL_FLAT);
+    glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
+    break;
+  case DrawInfoOpenGL::Gouraud:
+    gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
+    glShadeModel(GL_SMOOTH);
+    glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
+    break;
+  }
+}
+
+void
+DrawInfoOpenGL::init_lighting(int use_light)
+{
+  if (use_light) {
+    glEnable(GL_LIGHTING);
+    switch(drawtype) {
     case DrawInfoOpenGL::WireFrame:
-	gluQuadricDrawStyle(qobj, (GLenum)GLU_LINE);
-	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-	break;
+      gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
+      break;
     case DrawInfoOpenGL::Flat:
-	gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
-	glShadeModel(GL_FLAT);
-	glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
-	break;
+      gluQuadricNormals(qobj, (GLenum)GLU_FLAT);
+      break;
     case DrawInfoOpenGL::Gouraud:
-	gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
-	glShadeModel(GL_SMOOTH);
-	glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
-	break;
+      gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
+      break;
     }
-    
+  }
+  else {
+    glDisable(GL_LIGHTING);
+    gluQuadricNormals(qobj,(GLenum)GLU_NONE);
+  }
+  if (fog)
+    glEnable(GL_FOG);
+  else
+    glDisable(GL_FOG);
+  if (cull)
+    glEnable(GL_CULL_FACE);
+  else
+    glDisable(GL_CULL_FACE);
 }
 
-void DrawInfoOpenGL::init_lighting(int use_light)
+void
+DrawInfoOpenGL::init_clip(void)
 {
-    if (use_light) {
-	glEnable(GL_LIGHTING);
- 	switch(drawtype) {
-	case DrawInfoOpenGL::WireFrame:
-	    gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
-	    break;
-	case DrawInfoOpenGL::Flat:
-	    gluQuadricNormals(qobj, (GLenum)GLU_FLAT);
-	    break;
-	case DrawInfoOpenGL::Gouraud:
-	    gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
-	    break;
-	}
+  int clps=clip_planes;
+  int i=0;
+  
+  while (i < 6) {
+    if (clps&1) {
+      if (check_clip)
+	glEnable((GLenum)(GL_CLIP_PLANE0+i));
+      else	
+	glDisable((GLenum)(GL_CLIP_PLANE0+i));
     }
-    else {
-	glDisable(GL_LIGHTING);
-	gluQuadricNormals(qobj,(GLenum)GLU_NONE);
-    }
-    if (fog)
-	glEnable(GL_FOG);
-    else
-	glDisable(GL_FOG);
-    if (cull)
-	glEnable(GL_CULL_FACE);
-    else
-	glDisable(GL_CULL_FACE);
+    i++;
+    clps >>= 1;
+  }
 }
 
-void DrawInfoOpenGL::init_clip(void)
+void
+DrawInfoOpenGL::set_matl(Material* matl)
 {
-    int clps=clip_planes;
-    int i=0;
-    
-    while (i < 6) {
-	if (clps&1) {
-	    if (check_clip)
-		glEnable((GLenum)(GL_CLIP_PLANE0+i));
-	    else	
-		glDisable((GLenum)(GL_CLIP_PLANE0+i));
-	}
-	i++;
-	clps >>= 1;
-    }
-}
-
-void DrawInfoOpenGL::set_matl(Material* matl)
-{
-    if(matl==current_matl || ignore_matl) {
-	return;	
-    }
-    float color[4];
-    (matl->ambient*ambient_scale_).get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-    (matl->diffuse*diffuse_scale_).get_color(color);
-    if (matl->transparency < 1.0)
+  if(matl==current_matl || ignore_matl) {
+    return;	
+  }
+  float color[4];
+  (matl->ambient*ambient_scale_).get_color(color);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+  (matl->diffuse*diffuse_scale_).get_color(color);
+  if (matl->transparency < 1.0)
     {
       color[3] = matl->transparency * matl->transparency;
       color[3] *= color[3];
     }
-    glColor4fv(color);
-    (matl->specular*specular_scale_).get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
-    (matl->emission*emission_scale_).get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
-    if (!current_matl || matl->shininess != current_matl->shininess) {
-      glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess*shininess_scale_);
-    }	
-    current_matl=matl;
+  glColor4fv(color);
+  (matl->specular*specular_scale_).get_color(color);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+  (matl->emission*emission_scale_).get_color(color);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+  if (!current_matl || matl->shininess != current_matl->shininess) {
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess*shininess_scale_);
+  }	
+  current_matl=matl;
 }
 
 // this is for transparent rendering stuff...
 
-void DrawInfoOpenGL::init_view(double /*znear*/, double /*zfar*/, 
-			  Point& /*eyep*/, Point& /*lookat*/)
+void
+DrawInfoOpenGL::init_view( double /*znear*/, double /*zfar*/, 
+			   Point& /*eyep*/, Point& /*lookat*/ )
 {
   double model_mat[16]; // this is the modelview matrix
   
