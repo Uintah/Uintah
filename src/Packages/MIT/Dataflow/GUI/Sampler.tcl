@@ -18,7 +18,7 @@
 
 catch {rename Sampler ""}
 
-package require Iwidgets 3.1
+package require Iwidgets 3.0
 
 itcl_class MIT_Metropolis_Sampler {
     inherit Module
