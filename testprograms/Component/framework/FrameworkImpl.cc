@@ -3,7 +3,7 @@
 #include <testprograms/Component/framework/SciServicesImpl.h>
 #include <testprograms/Component/framework/PortInfoImpl.h>
 #include <testprograms/Component/framework/ComponentIdImpl.h>
-#include <testprograms/Component/framework/ConnectionServicesImpl.h>
+#include <testprograms/Component/framework/BuilderServicesImpl.h>
 #include <testprograms/Component/framework/RegistryServicesImpl.h>
 #include <testprograms/Component/framework/Registry.h>
 
@@ -17,6 +17,7 @@ using std::cerr;
 FrameworkImpl::FrameworkImpl() 
   : ports_lock_("Framework Ports lock")
 {
+
   // get hostname
   struct utsname rec;
   uname( &rec );
@@ -34,11 +35,11 @@ FrameworkImpl::FrameworkImpl()
   //
 
   // connection
-  ConnectionServicesImpl *csi = new ConnectionServicesImpl;
+  BuilderServicesImpl *csi = new BuilderServicesImpl;
   csi->init( Framework(this) );
-  ConnectionServices cs = csi; 
+  BuilderServices cs = csi; 
 
-  ports_["ConnectionServices"] = cs;
+  ports_["BuilderServices"] = cs;
 
   // Registry
   RegistryServicesImpl *rsi = new RegistryServicesImpl;
@@ -53,6 +54,7 @@ FrameworkImpl::FrameworkImpl()
 
 FrameworkImpl::~FrameworkImpl()
 {
+  cerr <<"FrameworkImpl destructor\n";
 }
 
 Port
@@ -207,19 +209,23 @@ FrameworkImpl::unregisterComponent( const ComponentID &id )
 void
 FrameworkImpl::shutdown()
 {
+  // clear registry
   registry_->connections_.readLock();
   
   Registry::component_iterator iter = registry_->components_.begin();
 
-  for( ; iter != registry_->components_.end(); iter++ )
-    {
-      ComponentRecord * cr = (*iter).second;
-
-      cr->component_->setServices( 0 );
-      cr->component_ = 0;
-      cr->id_ = 0;
-    }
+  for( ; iter != registry_->components_.end(); iter++ ) {
+    ComponentRecord * cr = (*iter).second;
+    
+    cr->component_->setServices( 0 );
+    cr->component_ = 0;
+    cr->services_ = 0;
+    cr->id_ = 0;
+  }
   registry_->connections_.readUnlock();
+
+  // remove framework ports
+  ports_.clear();
 }
 
 } // namespace sci_cca

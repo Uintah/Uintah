@@ -1,7 +1,7 @@
 
 #include <testprograms/Component/framework/cca.h>
 #include <testprograms/Component/framework/Builders/Builder.h>
-#include <testprograms/Component/framework/ConnectionServicesImpl.h>
+#include <testprograms/Component/framework/BuilderServicesImpl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 
@@ -28,11 +28,7 @@ main( int argc, char *argv[] )
 
   b->ui(); // infinite ui loop (until ui quits)
 
-  cerr << "done\n";
   CCA::done();
-
-  cerr << "main done\n";
-
   return 0;
 }
 

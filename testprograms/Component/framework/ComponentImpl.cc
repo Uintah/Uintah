@@ -18,7 +18,6 @@ ComponentImpl::ComponentImpl()
 
 ComponentImpl::~ComponentImpl()
 {
-  cerr << "Component destructor\n";
 }
 
 void 
@@ -30,15 +29,12 @@ ComponentImpl::setServices( const Services &s )
   else {
     // Component shutdown
 
-    //    SciServicesImpl * ss = 
-    //      dynamic_cast<SciServicesImpl*>( services_.getPointer() );
-    //    ss->done();
+    //     ComponentIdImpl * ci = dynamic_cast<ComponentIdImpl*>(
+    // 				 services_->getComponentID().getPointer() );
+    
+    //     cerr << "Component (" << getpid() << "): " 
+    // 	 << ci->toString() << " told to Shutdown...\n";
 
-    ComponentIdImpl * ci = dynamic_cast<ComponentIdImpl*>(
-				 services_->getComponentID().getPointer() );
-
-    cerr << "Component (" << getpid() << "): " 
-	 << ci->toString() << " told to Shutdown...\n";
     /////
     //
     // If a component wishes to shut itself down, then it
@@ -47,6 +43,7 @@ ComponentImpl::setServices( const Services &s )
     //
     //services_->shutdown();
 
+    services_ = 0;
   }
 }
 

@@ -1,6 +1,6 @@
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/Registry.h>
-#include <testprograms/Component/framework/ConnectionServicesImpl.h>
+#include <testprograms/Component/framework/BuilderServicesImpl.h>
 #include <testprograms/Component/framework/FrameworkImpl.h>
 
 #include <iostream>
@@ -11,18 +11,18 @@ using namespace std;
 
 typedef Registry::component_iterator component_iterator;
 
-ConnectionServicesImpl::ConnectionServicesImpl() 
+BuilderServicesImpl::BuilderServicesImpl() 
 {
 }
 
 
-ConnectionServicesImpl::~ConnectionServicesImpl()
+BuilderServicesImpl::~BuilderServicesImpl()
 {
 }
 
 
 void 
-ConnectionServicesImpl::init( const Framework &f ) 
+BuilderServicesImpl::init( const Framework &f ) 
 { 
   framework_ = f; 
   
@@ -30,7 +30,7 @@ ConnectionServicesImpl::init( const Framework &f )
 }
 
 bool
-ConnectionServicesImpl::connect( const ComponentID &uses, 
+BuilderServicesImpl::connect( const ComponentID &uses, 
 				 const string &use_port, 
 				 const ComponentID &provider, 
 				 const string &provide_port)
@@ -88,21 +88,21 @@ ConnectionServicesImpl::connect( const ComponentID &uses,
   
 
 bool 
-ConnectionServicesImpl::disconnect( const ComponentID &, const string &, 
+BuilderServicesImpl::disconnect( const ComponentID &, const string &, 
 				    const ComponentID &, const string &)
 {
   return false;
 }
 
 bool 
-ConnectionServicesImpl::exportAs( const ComponentID &, const string &, 
+BuilderServicesImpl::exportAs( const ComponentID &, const string &, 
 				  const string &)
 {
   return false;
 }
 
 bool
-ConnectionServicesImpl::provideTo( const ComponentID &, const string&, 
+BuilderServicesImpl::provideTo( const ComponentID &, const string&, 
 				   const string &)
 {
   return false;

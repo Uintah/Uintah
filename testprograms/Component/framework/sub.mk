@@ -27,7 +27,7 @@ SRCS    := \
 	$(SRCDIR)/PortImpl.cc \
 	$(SRCDIR)/FrameworkImpl.cc \
 	$(SRCDIR)/SciServicesImpl.cc \
-	$(SRCDIR)/ConnectionServicesImpl.cc \
+	$(SRCDIR)/BuilderServicesImpl.cc \
 	$(SRCDIR)/RegistryServicesImpl.cc \
 	$(SRCDIR)/LocalFramework.cc \
 	$(SRCDIR)/TestPortImpl.cc 

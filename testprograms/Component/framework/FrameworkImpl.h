@@ -19,7 +19,7 @@ class UsePortRecord;
 class ProvidePortRecord;
 class Registry;
 
-class ConnectionServicesImpl;
+class BuilderServicesImpl;
 class RegistryServicesImpl;
 
 class FrameworkImpl : public Framework_interface {
@@ -38,9 +38,9 @@ public:
 				const PortInfo&);
   virtual void removeProvidesPort( const ComponentID &, const string &);
   virtual void releasePort( const ComponentID &, const string &);
+  void shutdown();
 
 private:
-  void shutdown();
 
   string hostname_;
   ComponentID id_;
@@ -51,7 +51,7 @@ private:
 
   typedef map<string, Port>::iterator port_iterator;
 
-  friend class ConnectionServicesImpl;
+  friend class BuilderServicesImpl;
   friend class RegistryServicesImpl;
 };
 
