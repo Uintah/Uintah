@@ -151,7 +151,7 @@ private:
 
   void addGraphingVars(long64 particleID, const list<VarInfo> &vars,
 		       string type);
-  int get_matl_from_particleID(long64 particleID);
+  int get_matl_from_particleID(long64 particleID, const ConsecutiveRangeSet& matls);
    
   //  void graph(string varname, vector<string> mat_list, string particleID);
 
