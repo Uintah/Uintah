@@ -107,25 +107,25 @@ private:
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib() :
-  Attrib(), nx(0), ny(0), nz(0), dim(0), defval(0)
+  Attrib(), nx(0), ny(0), nz(0), dim(0)
 {
 }
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(int ix) :
-  Attrib(), nx(ix), ny(0), nz(0), dim(1), defval(0)
+  Attrib(), nx(ix), ny(0), nz(0), dim(1)
 {
 }
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(int ix, int iy) :
-  Attrib(), nx(ix), ny(iy), nz(0), dim(2), defval(0)
+  Attrib(), nx(ix), ny(iy), nz(0), dim(2)
 {
 }
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(int ix, int iy, int iz) :
-  Attrib(), nx(ix), ny(iy), nz(iz), dim(3), defval(0)
+  Attrib(), nx(ix), ny(iy), nz(iz), dim(3)
 {
 }
 
