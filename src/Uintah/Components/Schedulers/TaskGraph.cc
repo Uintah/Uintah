@@ -177,7 +177,6 @@ void
 TaskGraph::topologicalSort(vector<Task*>& sortedTasks)
 {
    setupTaskConnections();
-   dumpDependencies();
 
    vector<Task*>::iterator iter;
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
@@ -274,6 +273,9 @@ Task* TaskGraph::getTask(int idx)
 
 //
 // $Log$
+// Revision 1.2  2000/06/27 14:59:53  jehall
+// - Removed extra call to dumpDependencies()
+//
 // Revision 1.1  2000/06/17 07:04:55  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup
