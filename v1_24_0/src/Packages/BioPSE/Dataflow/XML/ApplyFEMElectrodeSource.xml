@@ -33,18 +33,18 @@
 
 
 
-<component name="ApplyFEMCurrentSource" category="Forward">
+<component name="ApplyFEMElectrodeSource" category="Forward">
   <overview>
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Due to course current dipoles, the ApplyFEMCurrentSource module changes and recreates the right-hand side (RHS) for the Finite
+    <summary>Due to course current dipoles, the ApplyFEMElectrodeSource module changes and recreates the right-hand side (RHS) for the Finite
     Elements discretization approach.</summary>
     <description>
       <p>Version Date: March 2001</p><p>Version: 1.0</p>
       <orderedlist>
 	<listitem>
-	  <p>The ApplyFEMCurrentSource module creates and fills a new ColumnMatrix,
+	  <p>The ApplyFEMElectrodeSource module creates and fills a new ColumnMatrix,
 	  according to mesh and dipole parameters in situations where it does not locate a ColumnMatrix on its input
 	  that contains an RHS to modify, or when the module finds a ColumnMatrix of a 
 	  different size than the number of nodes in the mesh.</p>
@@ -100,6 +100,44 @@
 	<componentname>SetupFEMatrix</componentname>
 	<componentname>MatrixReader</componentname>
       </port>
+      <port>
+	<name>Current Pattern</name>
+	<description>
+	  <p>Takes handle to the matrix containing current pattern
+	  to apply when using the electrode set option</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+        <name>CurrentPatternIndex</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+	<name>Electrode Parameters</name>
+	<description>
+	  <p>Takes handle to the matrix containing electrode parameters
+	  for use with the electrode set option</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+	<name>Boundary</name>
+	<description>
+	  <p>Takes handle to the boundary field</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Boundary Transfer Matrix</name>
+	<description>
+	  <p>Takes a handle to a SparseRowMatrix relating boundary nodes to mesh nodes</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
     </inputs>
 
     <outputs>
@@ -114,7 +152,7 @@
 	<componentname>MatrixWriter</componentname>
       </port>
       <port>
-        <name>Output Weights</name>
+        <name>Mesh to Electrode Map</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
