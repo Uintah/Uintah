@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 
-#include <vector>
+#include <Core/Containers/Array1.h>
 
 namespace Uintah {
 
@@ -61,7 +61,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      std::vector<T> data;
+      Array1<T> data;
    };
    
    template<class T>
@@ -80,7 +80,7 @@ WARNING
       {
 	 if(idx != data.size())
 	   SCI_THROW(ParticleException("add, not at the end"));
-	 data.push_back(value);
+	 data.add(value);
       }
    
    template<class T>
