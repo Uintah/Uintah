@@ -301,22 +301,18 @@ note of this value.
 
 <listitem>
 <para>
-Run SCIRun's configure script.  This can be done from
-<filename>SCIRun/src</filename>:
-<literallayout class="monospaced">
-cd SCIRun/src
-./configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
---enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
-</literallayout>
-or from another directory:
+Run SCIRun's configure script.  Do this from a sub-directory of
+<filename>&sr;</filename> (but <emphasis>not</emphasis>
+<filename>&sr;/src</filename>) as follows:
+
 <literallayout class="monospaced">
 mkdir SCIRun/<replaceable>dir</replaceable>
 cd SCIRun/<replaceable>dir</replaceable>
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \ 
 --enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
 </literallayout>
-in which case SCIRun will be built in the directory
-<filename>SCIRun/<replaceable>dir</replaceable></filename>.  Above,
+&sr; will be built in the directory
+<filename>&sr;/<replaceable>dir</replaceable></filename>.  Above,
 <replaceable>third-party-dir</replaceable> is replaced by the name of
 the third party software installation directory and
 "<replaceable>package-name1 package-name2 &hellip;</replaceable>" is

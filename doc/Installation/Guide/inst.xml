@@ -399,14 +399,10 @@ deleted, and a fresh one installed.
 <listitem>
 
 <para>
-Run &sr;'s configure script.  This can be done from the
-<filename>&sr;/src</filename> directory:
-<literallayout class="monospaced">
-cd &sr;/src
-./configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
---enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
-</literallayout>
-or from another directory, for example a sub-directory of &sr;:
+Run &sr;'s configure script.    Do this from a sub-directory of
+<filename>&sr;</filename> (but <emphasis>not</emphasis>
+<filename>&sr;/src</filename>) as follows:
+
 <literallayout class="monospaced">
 mkdir &sr;/<replaceable>dir</replaceable>
 cd &sr;/<replaceable>dir</replaceable>
@@ -429,13 +425,13 @@ names , e.g. "BioPSE MatlabInterface".  For example:
 </literallayout>
 </para>
 
+<tip>
 <para>
-It is useful to run the configure script from directories other than
-<filename>&sr;/src</filename> so that you can build multiple
-versions of &sr; from a single source directory.  For example, you may
-wish to build a Linux version and 32 bit and 64 bit Irix versions.
-Assuming <filename>&sr;</filename> resides on a volume shared by
-all machines you may do this:
+It is possible to build versions of &sr; for multiple machine
+architectures.  For example, you may wish to build a Linux version and
+32 bit and 64 bit Irix versions.  Assuming the directory
+<filename>&sr;</filename> resides on a volume shared by all machines
+you may do this:
 <literallayout class="monospaced">
 mkdir &sr;/linux
 mkdir &sr;/sgi32
@@ -454,6 +450,7 @@ cd &sr;/sgi64
 ../src/configure --enable-64bit <replaceable>options</replaceable>
 </literallayout>
 </para>
+</tip>
 
 <para>
 There are many options to the configure command in addition to the
@@ -467,8 +464,10 @@ There are many options to the configure command in addition to the
 <listitem>
 <para>
 Run (GNU) make from the directory used previously when running
-configure (e.g. &sr;/linux, &sr;/sgi32, or &sr;/sgi64). Note
-that the <quote>configure</quote> directory will be called
+configure (e.g. <filename>&sr;/linux</filename>,
+<filename>&sr;/sgi32</filename>, or
+<filename>&sr;/sgi64</filename>).  Note that the
+<quote>configure</quote> directory will be called
 <replaceable>build_dir</replaceable> from now on.
 <literallayout class="monospaced">
 cd <replaceable>build_dir</replaceable>
