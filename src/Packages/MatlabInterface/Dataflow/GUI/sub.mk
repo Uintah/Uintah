@@ -38,7 +38,6 @@ SRCDIR := Packages/MatlabInterface/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/Matlab.tcl\
-	$(SRCDIR)/Matlab2.tcl\
 	$(SRCDIR)/MatlabDataReader.tcl\
 	$(SRCDIR)/MatlabDataWriter.tcl\
 	$(SRCDIR)/MatlabFieldsReader.tcl\
