@@ -136,8 +136,12 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
+  void applyExternalLoads(             const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* ,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   void interpolateParticlesToGrid(     const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -288,6 +292,9 @@ private:
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
 				    const MaterialSet*);
 
+  void scheduleApplyExternalLoads(             SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
@@ -346,6 +353,7 @@ private:
   double           d_conv_crit_disp;
   double           d_conv_crit_energy;
   double           d_initialDt;
+  double           d_forceIncrementFactor; // Increment in ForceBC applied force
   int              d_numIterations;
   bool             d_doGridReset;  // Default is true, standard MPM
   Vector           d_contact_dirs; // For rigid body contact
@@ -358,9 +366,10 @@ private:
   vector<SimpleSolver*> d_solver;
 #endif
 
-  bool dynamic;
+  bool d_dynamic;
   bool d_rigid_body;
   bool d_single_velocity;
+  bool d_useLoadCurves;
   
   IntegratorType d_integrator;
 
