@@ -129,7 +129,7 @@ DEALINGS IN THE SOFTWARE.
 	<listitem>
 	  <para>
 	    Browser download:
-	    <literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz</ulink>
+	    <literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/software_old/v2.1.6.petsc.tar.gz</ulink>
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -137,7 +137,7 @@ DEALINGS IN THE SOFTWARE.
 	  <para>
 	    Unpack:
 	    <literallayout class="monospaced">
-gunzip -c petsc.tar.gz | tar xvf -
+gunzip -c v2.1.6.petsc.tar.gz | tar xvf -
 	    </literallayout>
 	    creates the directory
 	    <filename>petsc-<replaceable>x.x.x</replaceable></filename> where
