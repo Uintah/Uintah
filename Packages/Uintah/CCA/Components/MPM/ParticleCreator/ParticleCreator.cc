@@ -1,4 +1,3 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
@@ -35,6 +34,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_8or27 = flags->d_8or27;
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
+  d_fracture = flags->d_fracture;
 
   registerPermanentParticleState(matl,lb);
 }
@@ -201,12 +201,13 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
     if (bcs_type == "Force") {
       ForceBC* bc = dynamic_cast<ForceBC*>
 	(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
-#ifdef FRACTURE
-      const Box bcBox(bc->getLowerRange(), bc->getUpperRange());
-#else
-      const Box bcBox(bc->getLowerRange()-dxpp, 
-                      bc->getUpperRange()+dxpp);
-#endif           
+
+      Box bcBox;
+      if (d_fracture)
+	bcBox = Box(bc->getLowerRange(), bc->getUpperRange());
+      else
+	bcBox = Box(bc->getLowerRange()-dxpp,bc->getUpperRange()+dxpp);
+
       //cerr << "BC Box = " << bcBox << " Point = " << pp << endl;
       if(bcBox.contains(pp)) {
         pExtForce = bc->getForceDensity() * pMass;
