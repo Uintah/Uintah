@@ -1,6 +1,5 @@
 // MPMICE.cc
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
@@ -10,6 +9,10 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 
@@ -22,7 +25,6 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 
-#include <Core/Util/NotFinished.h>
 #include <Core/Containers/StaticArray.h>
 #include <float.h>
 #include <stdio.h>
