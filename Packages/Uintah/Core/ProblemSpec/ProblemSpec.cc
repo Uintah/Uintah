@@ -579,6 +579,34 @@ bool ProblemSpec::get(long &value)
    return false;
 }
 
+bool ProblemSpec::get(double &value)
+{
+   for (DOMNode *child = d_node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = XMLString::transcode(child->getNodeValue());
+	 value = atof(s);
+	 delete [] s;
+	 return true;
+      }
+   }
+   return false;
+}
+
+bool ProblemSpec::get(string &value)
+{
+   for (DOMNode *child = d_node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = XMLString::transcode(child->getNodeValue());
+	 value = s;
+	 delete [] s;
+	 return true;
+      }
+   }
+   return false;
+}
+
 bool ProblemSpec::get(Vector &value)
 {
   std::string string_value;
