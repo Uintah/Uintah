@@ -262,6 +262,9 @@ int main(int argc, char** argv)
 		   time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::Vector:
+    printData<Vector>(archive, variable_name, material, var_id,
+		   time_step_lower, time_step_upper, *output_stream);
+    break;
   case Uintah::TypeDescription::Matrix3:
   case Uintah::TypeDescription::bool_type:
   case Uintah::TypeDescription::short_int_type:
