@@ -69,13 +69,13 @@ extern "C"
   // Hacked interface to cklen
   void mrhlen(int *leniwk, int *lenrwk, int *lencwk,
 	      int *linc, int *lout, char *cklinkfile,
-	      int namelength);
+	      int *namelength);
 
   // Hacked interface to ckinit
   void mrhinit(int *leniwk, int *lenrwk, int *lencwk,
 	       int *linc, int *lout, int *ickwrk,
 	       double *rckwrk, char *cckwrk, char *cklinkfile,
-	       int namelength);
+	       int *namelength);
 
   // Hacked interface to cksyms
   void mrhsyms(char *cckwrk, int *lout, char *kname, int *kerr);
@@ -143,6 +143,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.3  2002/02/07 22:16:35  borodai
+// Fixed the terminal output problem
+//
 // Revision 1.2  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
 //
