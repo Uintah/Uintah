@@ -36,11 +36,14 @@
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>
-#ifdef HAVE_EXC
-#include <libexc.h>
 #include <sstream>
 #include <string.h>
+#ifdef HAVE_EXC
+#include <libexc.h>
+#elif defined(__GNUC__) && defined(__linux)
+#include <execinfo.h>
 #endif
+
 
 #if defined(_AIX)
 // Needed for strcasecmp on aix 4.3 (on 5.1 we don't need this.)
@@ -54,10 +57,11 @@ using namespace std;
 
 Exception::Exception()
 {
-#ifdef HAVE_EXC
   ostringstream stacktrace;
-  // Use -lexc to print out a stack trace
   static const int MAXSTACK = 100;
+
+#ifdef HAVE_EXC
+  // Use -lexc to print out a stack trace
   static const int MAXNAMELEN = 1000;
   __uint64_t addrs[MAXSTACK];
   char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
@@ -74,10 +78,21 @@ Exception::Exception()
     for(int i=1;i<nframes;i++)
       stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
   }
-  stacktrace_ = strdup(stacktrace.str().c_str());
-#else
-  stacktrace_ = 0;
+#elif defined(__GNUC__) && defined(__linux)
+  static void *addresses[MAXSTACK];
+  int n = backtrace( addresses, MAXSTACK );
+  if (n < 2){
+    stacktrace << "Backtrace not available!\n";
+  } else {
+    stacktrace << "Backtrace:\n";
+    stacktrace.flags(ios::hex);
+    char **names = backtrace_symbols( addresses, n );
+    for ( int i = 2; i < n; i++ )
+      stacktrace << names[i] << '\n';
+    free(names);
+  }
 #endif
+  stacktrace_ = strdup(stacktrace.str().c_str());
 }
 
 Exception::~Exception()
