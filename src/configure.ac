@@ -398,13 +398,19 @@ SCI_ARG_WITH(audio,
   [with_audio="$withval"
    sci_required_audio=yes],
   [with_audio=""])
+SCI_ARG_WITH(freetype,
+  AC_HELP_STRING(--with-freetype=DIR,
+                 Use the Freetype2 installation in DIR),
+  [with_freetype="$withval"
+   sci_required_freetype=yes],
+  [with_freetype=""])
 SCI_ARG_WITH(ftgl,
   AC_HELP_STRING(--with-ftgl=DIR,
                  Use the Freetype GL installation in DIR),
   [with_ftgl="$withval"
-   sci_required_ftgl=yes],
+   sci_required_ftgl=yes
+   sci_required_freetype=yes],
   [with_ftgl=""])
-
 
 
 SCI_ARG_ENABLE(verbosity,
@@ -3231,8 +3237,73 @@ AC_SUBST(INC_GLEW_H)
 AC_SUBST(GLEW_LIB_FLAG)
 AC_SUBST(GLEW_LIB_DIR_FLAG)
 
-##  --  search for ftgl stuff  -------------------------------------------
+##  --  search for freetype stuff  -------------------------------------------
+# Default values:
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
 
+if test "$with_freetype" = "yes"; then
+  # If --with-freetype is specified without a parameter, then it makes it required
+  _sci_lib="/usr/lib"
+  _sci_inc="/usr/include"
+  _sci_optional=required
+elif test "$with_freetype"; then
+  # If --with-freetype has a parameter, then use it
+  _sci_lib="$with_freetype/lib"
+  _sci_inc="$with_freetype/include"
+  _sci_optional=specific
+else
+  _sci_lib="/usr/lib"
+  _sci_inc="/usr/include"
+fi
+
+AC_MSG_CHECKING(for $_sci_optional freetype)
+
+found_freetype_config="no"
+
+for dir in "" $_sci_lib; do
+
+   if test -e $dir/../bin/freetype-config; then
+       found_freetype_config="yes"
+       echo
+       AC_MSG_RESULT(Using $dir/../bin/freetype-config to set freetype variables.)
+
+       includes=`$dir/../bin/freetype-config --cflags`
+       FREETYPE_LIB_FLAG=`$dir/../bin/freetype-config --libs`
+
+       SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
+                    _sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,required)
+
+       INC_FREETYPE_H="$INC_FREETYPE_H $includes"
+
+       DEF_FREETYPE="#define HAVE_FREETYPE 1"
+       break
+    fi
+done
+
+if test "$found_freetype_config" = "no"; then
+   AC_MSG_RESULT(no.)
+   if test "$_sci_optional" != "optional"; then
+     echo
+     AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)
+     AC_MSG_WARN(This file usually resides in freetypelib_dir/../bin/freetype-config.)
+     AC_MSG_WARN(Please install freetype and then reconfigure.)
+   fi
+fi
+
+if test "$with_freetype" && test ! "$DEF_FREETYPE"; then
+  echo
+  AC_MSG_ERROR(One or more of the freetype components is missing.)
+fi
+
+AC_SUBST(FREETYPE_LIB_FLAG)
+AC_SUBST(FREETYPE_LIB_DIR_FLAG)
+AC_SUBST(DEF_FREETYPE)
+AC_SUBST(INC_FREETYPE_H)
+
+
+##  --  search for ftgl stuff  -------------------------------------------
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
@@ -3240,12 +3311,12 @@ _sci_optional=optional
 if test "$with_ftgl" = "yes"; then
   _sci_optional=required
 elif test "$with_ftgl"; then
-  _sci_lib="$with_ftgl/unix/src/.libs"
-  _sci_inc="$with_ftgl/include /usr/include/freetype2"
+  _sci_lib="$with_ftgl/lib"
+  _sci_inc="$with_ftgl/include/FTGL"
   _sci_optional=specific
 fi
 
-SCI_TRY_LINK(FTGL,FTGL library,FTGLTextureFont.h,$_sci_inc,freetype ftgl,$_sci_lib,,,$_sci_optional)
+SCI_TRY_LINK(FTGL,ftgl library,FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
 
 if test "$HAVE_FTGL" = "yes"; then
   DEF_FTGL="#define HAVE_FTGL 1"
@@ -3262,6 +3333,7 @@ AC_SUBST(DEF_FTGL)
 AC_SUBST(INC_FTGL_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/ogl_testdefs.h"
+
 
 ##  --  search for audio  -----------------------------------------------
 
