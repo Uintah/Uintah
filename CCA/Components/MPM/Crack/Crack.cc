@@ -118,8 +118,9 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
           cmax[m]=Max(p,cmax[m]);
           rectangles.push_back(thisRect);
           thisRect.clear();
-           
-          quad_ps->require("n12",n);  // n12, n23 are numbers of sub-cells
+          
+          // resolution of crack mesh 
+          quad_ps->require("n12",n); 
           n12.push_back(n);
           quad_ps->require("n23",n);
           n23.push_back(n);
@@ -168,44 +169,48 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   int numMatls=m;  // total number of materials
 
 #if 1  // output crack parameters
-  cout << "*** Crack Information ***" << endl;
+  cout << "*** Crack information ***" << endl;
   for(m=0; m<numMatls; m++) {
      if(crackType[m]=="NO_CRACK") {
-        cout << "\n--- material: " << m << ", no crack exists" << endl;
+        cout << "\nMaterial " << m << ": no crack exists" << endl;
      }
      else {
-        cout << " --- material: " << m << ", crack contact type: " 
+        cout << "\nMaterial " << m << ": crack contact type -- " 
              << "\'" << crackType[m] << "\'" << endl;
         if(crackType[m]=="frictional") {
-           cout << "    frictional coefficient: " << c_mu[m] << endl;
+          cout << "            frictional coefficient: " << c_mu[m] << endl;
         }
+        else 
+          cout << endl;
         if(separateVol[m]<0. || contactVol[m]<0.) {
-          cout  << "\nCheck crack contact by displacement criterion"
+          cout  << "Check crack contact by displacement criterion"
                 << endl;
         }
         else {
-          cout  << "\nCheck crack contact by volume criterion"
-                << ", separate volume = " << separateVol[m]
-                << ", contact volume = " << contactVol[m] << endl;
+          cout  << "Check crack contact by volume criterion with\n"
+                << "            separate volume = " 
+                << separateVol[m]
+                << "\n            contact volume = "
+                << contactVol[m] << endl;
         }
       
-        cout <<"\nCrack segments:" << endl;
+        cout <<"\nCrack geometry:" << endl;
         for(int i=0;i<(int)allRects[m].size();i++) {
-           cout << "\nRectangle " << i << ": meshed by [" << allN12[m][i] 
+           cout << "Rectangle " << i << ": meshed by [" << allN12[m][i] 
                 << ", " << allN23[m][i] << "]" << endl;
            for(int j=0;j<4;j++) {
               cout << "pt " << j << ": " << allRects[m][i][j] << endl;
            }
         } 
         for(int i=0;i<(int)allTris[m].size();i++) {
-           cout << "\nTriangle " << i << ": " << "ncell=" 
-                << allNCell[m][i] << endl;
+           cout << "Triangle " << i << ": meshed by " 
+                << allNCell[m][i] << " cells on each side" << endl;
            for(int j=0;j<3;j++) {
               cout << "pt " << j << ": " << allTris[m][i][j] << endl;
            }
         }
-        cout << "\ncrack extent: lower: " << cmin[m]
-             << ", upper: " << cmax[m] << endl << endl;
+        cout << "Crack extent: " << cmin[m] << "..." 
+             <<  cmax[m] << endl << endl;
      } // End of if(crackType...)
   } // End of loop over materials
 #endif 
@@ -225,14 +230,14 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  int cn,ce,id;
+  int cn,ce;
   int k,i,j,ni,nj,n1,n2,n3;
   int nstart0,nstart1,nstart2,nstart3;
   double w;
   Point p1,p2,p3,p4,pt,p_1,p_2;
 
   for(int p=0;p<patches->size();p++) {
-    const Patch* patch = patches->get(p);
+    //const Patch* patch = patches->get(p);
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){ 
@@ -385,7 +390,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
 
        numPts[m]=cn;     // number of crack points in this materials
        numElems[m]=ce;   // number of crack segments in this material 
- 
+
+#if 0 
        cout << "*** Crack elements information \n" << "MatID: " << m << endl;
        for(int mp=0; mp<numElems[m]; mp++) {
          n1=cElemNodes[m][mp].x();
@@ -394,7 +400,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
          cout << "   Elem " << mp 
               << ": " << n1 << cx[m][n1] << ", " << n2 << cx[m][n2]
               << ", " << n3 << cx[m][n3] << endl;
-       } 
+       }
+#endif 
+
      } // End of loop over matls
    } // End of loop over patches
 }
@@ -417,16 +425,14 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  //double time0, time1;
-  //time0 = clock();
-
+  enum {NO=0,YES};
+  enum {SAMESIDE=0,ABOVE_CRACK,BELOW_CRACK};
+ 
   for(int p=0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int numMatls = d_sharedState->getNumMPMMatls();
 
-    Ghost::GhostType  gan = Ghost::AroundNodes;
     Vector dx = patch->dCell(); 
-
     for(int m=0; m<numMatls; m++) {
 
       MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
@@ -447,95 +453,68 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
       GNumPatls.initialize(0);
       GCrackNorm.initialize(Vector(0,0,0));
 
+      ParticleSubset* psetWGCs = old_dw->getParticleSubset(dwi, patch, 
+                                      Ghost::AroundCells, NGN, lb->pXLabel);
+      constParticleVariable<Point> pxWGCs;
+      old_dw->get(pxWGCs, lb->pXLabel, psetWGCs);
+
       IntVector ni[MAX_BASIS];
 
-      if(numElems[m]==0) { // for materials wothout any carck
+      if(numElems[m]==0) {            // for materials with no carck
+        // set pgCode[idx][k]=1
         for(ParticleSubset::iterator iter=pset->begin();
                                      iter!=pset->end();iter++) {
-          particleIndex idx=*iter;
+          for(int k=0; k<d_8or27; k++) pgCode[*iter][k]=1;
+        }  
+
+        // get number of particles around nodes 
+        for(ParticleSubset::iterator itr=psetWGCs->begin();
+                           itr!=psetWGCs->end();itr++) {
           if(d_8or27==8)
-            patch->findCellNodes(px[idx], ni);
+            patch->findCellNodes(pxWGCs[*itr], ni);
           else if(d_8or27==27)
-            patch->findCellNodes27(px[idx], ni);
+            patch->findCellNodes27(pxWGCs[*itr], ni);
           for(int k=0; k<d_8or27; k++) {
-            pgCode[idx][k]=1;
-            gNumPatls[ni[k]]++;
+            if(patch->containsNode(ni[k])) 
+              gNumPatls[ni[k]]++;
           }
         } //End of loop over partls
-      } // End of if(numElems[m]==0
+      }
 
-      if(numElems[m]!=0) { // for materials with crack
+      else {                         // for materials with crack(s)
+
         //Step 1: determine if nodes in crack zone 
-        int nx, ny, nz;   
-        IntVector gmin, gmax, cellIdx;
+        Ghost::GhostType  gac = Ghost::AroundCells;
+        IntVector g_cmin, g_cmax, cell_idx;
         NCVariable<short> singlevfld;
-        new_dw->allocateTemporary(singlevfld, patch, // Ghost cells needed !
-                          Ghost::AroundCells, NGN);
+        new_dw->allocateTemporary(singlevfld, patch, gac, 2*NGN); 
         singlevfld.initialize(0);
-        //cout << "cmin=" << cmin[m] << ", cmax=" << cmax[m] << endl;
 
-        patch->findCell(cmin[m],cellIdx);
-        Point ptmp=patch->nodePosition(cellIdx+IntVector(1,1,1));
-        if(fabs(cmin[m].x()-ptmp.x())/dx.x()<1e-6) // ptmp.x()=cmin.x()
-          nx=NGN-1; 
-        else  
-          nx=NGN;
-        if(fabs(cmin[m].y()-ptmp.y())/dx.y()<1e-6) // ptmp.y()=cmin.y()
-          ny=NGN-1; 
-        else 
-          ny=NGN;
-        if(fabs(cmin[m].z()-ptmp.z())/dx.z()<1e-6) // ptmp.z()=cmin.z()
-          nz=NGN-1;
-        else
-          nz=NGN; 
-        gmin=cellIdx+IntVector(1-nx,1-ny,1-nz);
+        // get crack extent on grid (gmin->gmax)
+        patch->findCell(cmin[m],cell_idx);
+        Point ptmp=patch->nodePosition(cell_idx+IntVector(1,1,1));
+        IntVector offset=CellOffset(cmin[m],ptmp,dx);
+        g_cmin=cell_idx+IntVector(1-offset.x(),1-offset.y(),1-offset.z());
 
-        if(gmin.x()<patch->getNodeLowIndex().x()) 
-           gmin.x(patch->getNodeLowIndex().x());
-        if(gmin.y()<patch->getNodeLowIndex().y())
-           gmin.y(patch->getNodeLowIndex().y());
-        if(gmin.z()<patch->getNodeLowIndex().z())
-           gmin.z(patch->getNodeLowIndex().z());
-
-        patch->findCell(cmax[m],cellIdx);
-        ptmp=patch->nodePosition(cellIdx);
-        if(fabs(cmax[m].x()-ptmp.x())/dx.x()<1e-6) // ptmp.x()=cmax.x()
-          nx=NGN-1; 
-        else
-          nx=NGN;
-        if(fabs(cmax[m].y()-ptmp.y())/dx.y()<1e-6) // ptmp.y()=cmax.y()
-          ny=NGN-1;
-        else
-          ny=NGN;
-        if(fabs(cmax[m].z()-ptmp.z())/dx.z()<1e-6) // ptmp.z()=cmax.z()
-          nz=NGN-1;
-        else 
-          nz=NGN;
-        gmax=cellIdx+IntVector(nx,ny,nz);
-
-        if(gmax.x()>patch->getNodeHighIndex().x())    
-           gmax.x(patch->getNodeHighIndex().x());
-        if(gmax.y()>patch->getNodeHighIndex().y())
-           gmax.y(patch->getNodeHighIndex().y());
-        if(gmax.z()>patch->getNodeHighIndex().z())
-           gmax.z(patch->getNodeHighIndex().z());
-        //cout << "gmin=" << gmin << ", gmax=" << gmax << endl;
+        patch->findCell(cmax[m],cell_idx);
+        ptmp=patch->nodePosition(cell_idx);
+        g_cmax=cell_idx+CellOffset(cmax[m],ptmp,dx);
 
         for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
           IntVector c=*iter;
-          if(c.x()>=gmin.x() && c.x()<=gmax.x() && c.y()>=gmin.y() &&
-            c.y()<=gmax.y() && c.z()>=gmin.z() && c.z()<=gmax.z() )
-            singlevfld[c]=0; // in crack zone
+          if(c.x()>=g_cmin.x() && c.x()<=g_cmax.x() && c.y()>=g_cmin.y() &&
+             c.y()<=g_cmax.y() && c.z()>=g_cmin.z() && c.z()<=g_cmax.z() )
+            singlevfld[c]=NO;  // in crack zone, dual vfld
           else
-            singlevfld[c]=1; // in non-crack zone, single velocity field
-            //cout << "c=" << c << ", singlevfld=" << singlevfld[c] << endl;
+            singlevfld[c]=YES; // in non-crack zone, single vfld
         }
-            
-        // Step 2: Detect if particle is above, below or in the same side 
+
+        /* Step 2: Detect if particle is above, below or in the same side, 
+                   count number of particles around nodes */
         NCVariable<int> num0,num1,num2; 
-        new_dw->allocateTemporary(num0, patch, Ghost::AroundCells, 2*NGN);
-        new_dw->allocateTemporary(num1, patch, Ghost::AroundCells, 2*NGN);
-        new_dw->allocateTemporary(num2, patch, Ghost::AroundCells, 2*NGN);
+        new_dw->allocateTemporary(num0, patch, gac, 2*NGN);
+        new_dw->allocateTemporary(num1, patch, gac, 2*NGN);
+        new_dw->allocateTemporary(num2, patch, gac, 2*NGN);
         num0.initialize(0);
         num1.initialize(0);
         num2.initialize(0);
@@ -550,25 +529,30 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
              patch->findCellNodes27(px[idx], ni);
 
           for(int k=0; k<d_8or27; k++) {
-            //for nodes in non-crack zone of cracked materials
-            if(singlevfld[ni[k]]) {
+            if(singlevfld[ni[k]]) {          // for nodes in non-crack zone
               pgCode[idx][k]=0;
               num0[ni[k]]++;
             }
-            else { //for nodes in crack zone
-              enum   {NON_CRACK=0,ABOVE_CRACK,BELOW_CRACK};
-              short  cross=NON_CRACK;
+            else {                           // for nodes in crack zone
+              // detect if particles above, below or in same side with nodes 
+              short  cross=SAMESIDE;
               Vector norm=Vector(0.,0.,0.);
-              Point  gx=patch->nodePosition(ni[k]);
+
+              // get node position
+              Point gx=patch->nodePosition(ni[k]);
+
               for(int i=0; i<numElems[m]; i++) {  //loop over crack elements
-                Point n3,n4,n5; //three vertices of the triangular element
+                //three vertices of each element
+                Point n3,n4,n5;                  
                 n3=cx[m][cElemNodes[m][i].x()];
                 n4=cx[m][cElemNodes[m][i].y()];
                 n5=cx[m][cElemNodes[m][i].z()];
 
-                short position = NotSameSide(px[idx],gx,n3,n4,n5);
-                if(position==NON_CRACK) continue; // particle and node in same side
-                // three volumes for determining if p-g line crosses in crack elements
+                // if particle and node in same side, continue
+                short pPosition = Location(px[idx],gx,n3,n4,n5);
+                if(pPosition==SAMESIDE) continue; 
+
+                // three signed volumes to see if p-g crosses crack
                 double v3,v4,v5;
                 v3=Volume(gx,n3,n4,px[idx]);
                 v4=Volume(gx,n3,n5,px[idx]);
@@ -576,129 +560,116 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                 v5=Volume(gx,n4,n5,px[idx]);
                 if(v3*v5<0.) continue;
 
-                if(position==ABOVE_CRACK && v3>=0. && v4<=0. && v5>=0.) { //above crack
-                  if(cross==NON_CRACK || (cross!=NON_CRACK &&
+                // particle above crack
+                if(pPosition==ABOVE_CRACK && v3>=0. && v4<=0. && v5>=0.) { 
+                  if(cross==SAMESIDE || (cross!=SAMESIDE &&
                                 (v3==0.||v4==0.||v5==0.) ) ) {
                     cross=ABOVE_CRACK;
                     norm+=cElemNorm[m][i];
                   }
                   else { // no cross
-                    cross=NON_CRACK;
+                    cross=SAMESIDE;
                     norm=Vector(0.,0.,0.);
                   }
                 }
-
-                if(position==BELOW_CRACK && v3<=0. && v4>=0. && v5<=0.) { //below crack
-                  if(cross==NON_CRACK || (cross!=NON_CRACK &&
+                // particle below crack
+                if(pPosition==BELOW_CRACK && v3<=0. && v4>=0. && v5<=0.) { 
+                  if(cross==SAMESIDE || (cross!=SAMESIDE &&
                                 (v3==0.||v4==0.||v5==0.) ) ) {
                     cross=BELOW_CRACK;
                     norm+=cElemNorm[m][i];
                   }
                   else { // no cross
-                    cross=NON_CRACK;
+                    cross=SAMESIDE;
                     norm=Vector(0.,0.,0.);
                   }
                 }
-              } // End of loop over elements
+              } // End of loop over crack elements
 
               pgCode[idx][k]=cross;
-              if(cross==NON_CRACK)   num0[ni[k]]++;
+              if(cross==SAMESIDE)    num0[ni[k]]++;
               if(cross==ABOVE_CRACK) num1[ni[k]]++;
               if(cross==BELOW_CRACK) num2[ni[k]]++;
-              if(norm.length()>1.e-16) norm/=norm.length();
-              if(norm.length()>1.e-16) GCrackNorm[ni[k]]+=norm;
-            } //End of if(singlevfld)
+              if(patch->containsNode(ni[k]) && norm.length()>1.e-16) { 
+                norm/=norm.length();
+                GCrackNorm[ni[k]]+=norm;
+              }
+            } // End of if(singlevfld)
           } // End of loop over k
         } // End of loop over particles
- 
-        //Handle particles in GhostCells
-        ParticleSubset* psetWGCs= old_dw->getParticleSubset(dwi, patch,
-                                 Ghost::AroundCells, NGN, lb->pXLabel);
-        constParticleVariable<Point> pxWGCs;
-        old_dw->get(pxWGCs, lb->pXLabel, psetWGCs);
 
-        for(ParticleSubset::iterator iter=psetWGCs->begin();
-                                     iter!=psetWGCs->end();iter++) {
-          particleIndex idx=*iter;
- 
-          //Detect if particles in Ghost Cells
-          short pincell=1; //Particles in Ghost Cells
-          for(ParticleSubset::iterator iter1=pset->begin();
-                                     iter1!=pset->end();iter1++) {
-            particleIndex idx1=*iter1;
-            if(pxWGCs[idx]==px[idx1]) {
-              pincell=0;  //particles not in Ghost Cells
+        // Step 3: count particles around nodes in GhostCells
+        for(ParticleSubset::iterator itr=psetWGCs->begin();
+                                     itr!=psetWGCs->end();itr++) {
+          particleIndex idx=*itr;
+          short handled=NO;
+          for(ParticleSubset::iterator iter=pset->begin();
+                                     iter!=pset->end();iter++) {
+            if(pxWGCs[idx]==px[*iter]) {
+              handled=YES;
               break;
             }
           }
 
-          if(pincell) { //for particles in Ghost Cells
+          if(!handled) {               // particles in GhostCells
             if(d_8or27==8)
-              patch->findCellNodes(pxWGCs[idx], ni);
+               patch->findCellNodes(pxWGCs[idx], ni);
             else if(d_8or27==27)
-              patch->findCellNodes27(pxWGCs[idx], ni);
-        
+               patch->findCellNodes(pxWGCs[idx], ni);
+
             for(int k=0; k<d_8or27; k++) {
-              //for nodes in non-crack zone of cracked materials  
-              if(singlevfld[ni[k]]) 
+              Point gx=patch->nodePosition(ni[k]);
+              if(singlevfld[ni[k]]) {          // for nodes in non-crack zone
                 num0[ni[k]]++;
-              else { //for nodes in crack zone
-                enum   {NON_CRACK=0,ABOVE_CRACK,BELOW_CRACK};
-                short  cross=NON_CRACK;
-                Vector norm=Vector(0.,0.,0.);
-                Point  gx=patch->nodePosition(ni[k]);
+              }
+              else { 
+                short  cross=SAMESIDE; 
                 for(int i=0; i<numElems[m]; i++) {  //loop over crack elements
-                  Point n3,n4,n5; //three vertices of the triangular element
+                  //three vertices of each element
+                  Point n3,n4,n5;                
                   n3=cx[m][cElemNodes[m][i].x()];
                   n4=cx[m][cElemNodes[m][i].y()];
                   n5=cx[m][cElemNodes[m][i].z()];
-                          
-                  short position = NotSameSide(pxWGCs[idx],gx,n3,n4,n5);
-                  if(position==NON_CRACK) continue; // particle and node in same side 
-                  // three volumes for determining if p-g line crosses in crack elements  
+
+                  // if particle and node in same side, continue
+                  short pPosition = Location(pxWGCs[idx],gx,n3,n4,n5);
+                  if(pPosition==SAMESIDE) continue;
+
+                  // three signed volumes to see if p-g crosses crack
                   double v3,v4,v5;
                   v3=Volume(gx,n3,n4,pxWGCs[idx]);
                   v4=Volume(gx,n3,n5,pxWGCs[idx]);
                   if(v3*v4>0.) continue;
                   v5=Volume(gx,n4,n5,pxWGCs[idx]);
                   if(v3*v5<0.) continue;
-                                    
-                  if(position==ABOVE_CRACK && v3>=0. && v4<=0. && v5>=0.) { //above crack
-                    if(cross==NON_CRACK || (cross!=NON_CRACK && 
-                                  (v3==0.||v4==0.||v5==0.) ) ) {
+
+                  // particle above crack
+                  if(pPosition==ABOVE_CRACK && v3>=0. && v4<=0. && v5>=0.) {
+                    if(cross==SAMESIDE || (cross!=SAMESIDE &&
+                                  (v3==0.||v4==0.||v5==0.) ) ) 
                       cross=ABOVE_CRACK;
-                      norm+=cElemNorm[m][i];
-                    }
-                    else { // no cross
-                      cross=NON_CRACK;
-                      norm=Vector(0.,0.,0.);
-                    }
+                    else 
+                      cross=SAMESIDE;
                   }
-                                        
-                  if(position==BELOW_CRACK && v3<=0. && v4>=0. && v5<=0.) { //below crack
-                    if(cross==NON_CRACK || (cross!=NON_CRACK && 
-                                  (v3==0.||v4==0.||v5==0.) ) ) { 
+                  // particle below crack
+                  if(pPosition==BELOW_CRACK && v3<=0. && v4>=0. && v5<=0.) {
+                    if(cross==SAMESIDE || (cross!=SAMESIDE &&
+                                  (v3==0.||v4==0.||v5==0.) ) ) 
                       cross=BELOW_CRACK;
-                      norm+=cElemNorm[m][i];
-                    }
-                    else { // no cross
-                      cross=NON_CRACK;
-                      norm=Vector(0.,0.,0.);
-                    }
-                  } 
-                } // End of loop over elements
-                            
-                if(cross==NON_CRACK)   num0[ni[k]]++;
+                    else  
+                      cross=SAMESIDE;
+                  }
+                } // End of loop over crack elements
+
+                if(cross==SAMESIDE)    num0[ni[k]]++;
                 if(cross==ABOVE_CRACK) num1[ni[k]]++;
                 if(cross==BELOW_CRACK) num2[ni[k]]++;
-                if(norm.length()>1.e-16) norm/=norm.length();
-                if(norm.length()>1.e-16) GCrackNorm[ni[k]]+=norm;
-              } //End of if(singlevfld) 
-            } // End of loop over k 
-          } // End of if(pincell) 
+              } // End of if(singlevfld)
+            } // End of loop over k
+          } // End of if(!handled)
         } // End of loop over particles
-             
-        //Step 3: convert cross codes to field codes 
+
+        // Step 4: convert cross codes to field codes (0 to 1 or 2) 
         for(ParticleSubset::iterator iter=pset->begin();
                                      iter!=pset->end();iter++) {
            particleIndex idx=*iter;
@@ -708,19 +679,19 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               patch->findCellNodes27(px[idx], ni);
 
            for(int k=0; k<d_8or27; k++) {
-              if(pgCode[idx][k]==0) {
-                if((num1[ni[k]]+num2[ni[k]]==0) || num2[ni[k]]!=0) 
-                  pgCode[idx][k]=1;
-                else if(num1[ni[k]]!=0) 
-                  pgCode[idx][k]=2;
-                else {
-                  cout << "Three velocity fields found in " 
-                       << "Crack::ParticleVeloccityField for node: " << ni[k] << endl;
-                  exit(1);
-                } 
-
-              }
-           }// End of loop over k
+             if(pgCode[idx][k]==0) {
+               if((num1[ni[k]]+num2[ni[k]]==0) || num2[ni[k]]!=0) 
+                 pgCode[idx][k]=1;
+               else if(num1[ni[k]]!=0) 
+                 pgCode[idx][k]=2;
+               else {
+                 cout << "More than two velocity fields found in " 
+                      << "Crack::ParticleVeloccityField for node: " 
+                      << ni[k] << endl;
+                 exit(1);
+               } 
+             }
+           } // End of loop over k
          } // End of loop patls
 
         for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
@@ -748,7 +719,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
           }
         } // End of loop over NodeIterator
       } // End of if(numElem[m]!=0)
- 
+
 #if 0 // output particle velocity field code
       cout << "\n*** Particle velocity field generated "
            << "in Crack::ParticleVelocityField ***" << endl;
@@ -785,9 +756,6 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 
     } // End of loop numMatls
   } // End of loop patches
-  //time1=clock()-time0;
-  //time1/=CLOCKS_PER_SEC;
-  //cout << "***time for particleVelocityField (1+2) = " << time1 << endl;
 }
 
 void Crack::addComputesAndRequiresCrackAdjustInterpolated(Task* t,
@@ -822,8 +790,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  //double time0, time1;
-  //time0=clock();
+  enum {NO=0,YES};
 
   double mua,mub;
   double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
@@ -855,7 +822,6 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
     StaticArray<NCVariable<Vector> >      Gvelocity(numMatls);
     StaticArray<NCVariable<double> >      frictionWork(numMatls);
 
-    Ghost::GhostType  gan   = Ghost::AroundNodes;
     Ghost::GhostType  gnone = Ghost::None;
 
     for(int m=0;m<matls->size();m++){
@@ -880,6 +846,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
       frictionWork[m].initialize(0.);
 
       if(crackType[m]=="NO_CRACK") continue;  // no crack in this material
+    
       // loop over nodes to see if there is contact. If yes, adjust velocity field
       for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
         IntVector c = *iter;
@@ -895,15 +862,14 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
         mb=Gmass[m][c];
         vb=Gvelocity[m][c];
         vc=(va*ma+vb*mb)/(ma+mb);
-        short Contact=0;
+        short Contact=NO;
 
-        if(separateVol[m]<0. || contactVol[m] <0.) { 
+        if(separateVol[m]<0. || contactVol[m] <0.) { // use displacement criterion
           //use displacement criterion
           Vector u1=gdisplacement[m][c];
           Vector u2=Gdisplacement[m][c];
-          //cout << "Interpolated--node:" << c << ", u1=" << u1 << ", u2=" << u2 << endl;
           if(Dot((u2-u1),norm) >0. ) {
-            Contact=1;
+            Contact=YES;
           }
         }
         else { // use volume criterion
@@ -942,8 +908,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
           normVol=(gvolume[m][c]+Gvolume[m][c])/vol0;
           if(normVol>=contactVol[m] || 
             (normVol>separateVol[m] && Dot((vb-va),norm) > 0. )) {
-            Contact=1;
-            //cout << "Interpolated---node:" << c << ", normVol:" << normVol << endl;
+            Contact=YES;
           }
         }
 
@@ -1024,9 +989,6 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
       } //End of loop over nodes
     } //End of loop over materials
   }  //End of loop over patches
-  //time1=clock()-time0;
-  //time1/=CLOCKS_PER_SEC;
-  //cout << "***time for crackAdjustInterpolated = " << time1 << endl;
 }
 
 void Crack::addComputesAndRequiresCrackAdjustIntegrated(Task* t,
@@ -1060,8 +1022,7 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  //double time0, time1;
-  //time0=clock();
+  enum {NO=0,YES};
 
   double mua,mub;
   double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
@@ -1095,7 +1056,6 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
     // friction work
     StaticArray<NCVariable<double> >      frictionWork(numMatls);
    
-    Ghost::GhostType  gan   = Ghost::AroundNodes;
     Ghost::GhostType  gnone = Ghost::None;
 
     for(int m=0;m<matls->size();m++){
@@ -1128,7 +1088,7 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
       old_dw->get(delT, lb->delTLabel);
 
       if(crackType[m]=="NO_CRACK") continue; // no crack in this material
-                                             // nothing to do with it
+
       for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
         IntVector c = *iter;
 
@@ -1144,17 +1104,16 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
         vb=Gvelocity_star[m][c];
         ab=Gacceleration[m][c];
         vc=(va*ma+vb*mb)/(ma+mb);
-        short Contact=0;
+        short Contact=NO;
 
-        if(separateVol[m]<0. || contactVol[m] <0.) {
+        if(separateVol[m]<0. || contactVol[m] <0.) { // use displacement criterion
           //use displacement criterion
           Vector u1=gdisplacement[m][c];
           //+delT*gvelocity_star[m][c];
           Vector u2=Gdisplacement[m][c];
           //+delT*Gvelocity_star[m][c];
-          //cout << "Integrated--node:" << c << ", u1=" << u1 << ", u2=" << u2 << endl;
           if(Dot((u2-u1),norm) >0. ) {
-            Contact=1;
+            Contact=YES;
           } 
         }
         else { //use volume criterion
@@ -1193,8 +1152,7 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
 
           if(normVol>=contactVol[m] || 
              (normVol>separateVol[m] && Dot((vb-va),norm) > 0.)) {
-            Contact=1;
-            //cout << "Intergrated--node:" << c << ", normVol:" << normVol << endl;
+            Contact=YES;
           }
         }
 
@@ -1283,9 +1241,6 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
       } //End of loop over nodes
     } //End of loop over materials
   }  //End of loop over patches
-  //time1=clock()-time0;
-  //time1/=CLOCKS_PER_SEC;
-  //cout << "***time for crackAdjustIntegrated = " << time1 << endl;
 }
 
 void Crack::addComputesAndRequiresMoveCrack(Task* t,
@@ -1295,10 +1250,10 @@ void Crack::addComputesAndRequiresMoveCrack(Task* t,
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW, lb->gMassLabel,             gac,NGN);
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,     gac,NGN);
-  t->requires(Task::NewDW, lb->GMassLabel,             gac,NGN);
-  t->requires(Task::NewDW, lb->GVelocityStarLabel,     gac,NGN);
+  t->requires(Task::NewDW, lb->gMassLabel,         gac, 2*NGN);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel, gac, 2*NGN);
+  t->requires(Task::NewDW, lb->GMassLabel,         gac, 2*NGN);
+  t->requires(Task::NewDW, lb->GVelocityStarLabel, gac, 2*NGN);
 
   if(d_8or27==27)
    t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
@@ -1310,18 +1265,15 @@ void Crack::MoveCrack(const ProcessorGroup*,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
- //double time0, time1;
- //time0 = clock();
-
- //move crack position patch by patch
  int numMPMMatls=d_sharedState->getNumMPMMatls();
+
  for(int p=0; p<patches->size(); p++){
    const Patch* patch = patches->get(p);
    delt_vartype delT;
    old_dw->get(delT, d_sharedState->get_delt_label() );
 
-   IntVector l=patch->getNodeLowIndex();
-   IntVector h=patch->getNodeHighIndex();
+   IntVector l=patch->getCellLowIndex();
+   IntVector h=patch->getCellHighIndex();
    Point lp=patch->nodePosition(l);
    Point hp=patch->nodePosition(h);
 
@@ -1339,17 +1291,17 @@ void Crack::MoveCrack(const ProcessorGroup*,
      constNCVariable<double> Gmass;
      constNCVariable<Vector> gvelocity_star;
      constNCVariable<Vector> Gvelocity_star;
-     new_dw->get(gmass,         lb->gMassLabel,        dwi,patch,gac,NGP);
-     new_dw->get(gvelocity_star,lb->gVelocityStarLabel,dwi,patch,gac,NGP);
-     new_dw->get(Gmass,         lb->GMassLabel,        dwi,patch,gac,NGP);
-     new_dw->get(Gvelocity_star,lb->GVelocityStarLabel,dwi,patch,gac,NGP);
+     new_dw->get(gmass,         lb->gMassLabel,        dwi,patch,gac,2*NGN);
+     new_dw->get(gvelocity_star,lb->gVelocityStarLabel,dwi,patch,gac,2*NGN);
+     new_dw->get(Gmass,         lb->GMassLabel,        dwi,patch,gac,2*NGN);
+     new_dw->get(Gvelocity_star,lb->GVelocityStarLabel,dwi,patch,gac,2*NGN);
 
      //move crack points
-     for(int i=0; i<numPts[m]; i++) { //loop over crack points
-       if(cx[m][i].x()>=lp.x() && cx[m][i].x()<hp.x() &&
-          cx[m][i].y()>=lp.y() && cx[m][i].y()<hp.y() &&
-          cx[m][i].z()>=lp.z() && cx[m][i].z()<hp.z() ) { // in the patch
-                 
+     for(int i=0; i<numPts[m]; i++) { 
+        if(cx[m][i].x()>=lp.x() && cx[m][i].x()<hp.x() &&
+           cx[m][i].y()>=lp.y() && cx[m][i].y()<hp.y() &&
+           cx[m][i].z()>=lp.z() && cx[m][i].z()<hp.z() ) { // in the patch
+
          // move crack with centerofmass velocity field
          IntVector ni[MAX_BASIS];
          double S[MAX_BASIS];
@@ -1357,7 +1309,7 @@ void Crack::MoveCrack(const ProcessorGroup*,
            patch->findCellAndWeights(cx[m][i], ni, S);
          else if(d_8or27==27) 
            patch->findCellAndWeights27(cx[m][i], ni, S, psize[i]);
-                
+
          Vector vcm = Vector(0.0,0.0,0.0);
          for(int k = 0; k < d_8or27; k++) {
            double mg = gmass[ni[k]];
@@ -1367,7 +1319,6 @@ void Crack::MoveCrack(const ProcessorGroup*,
            vcm += (mg*vg+mG*vG)/(mg+mG)*S[k];
          }
          cx[m][i] += vcm*delT;
-         //cout << "i=" << i << ", cx=" << cx[m][i] << endl;
        } // End of if in patch p
      } // End of loop numPts[m]
 
@@ -1379,12 +1330,8 @@ void Crack::MoveCrack(const ProcessorGroup*,
        int n5=cElemNodes[m][i].z();
        cElemNorm[m][i]=TriangleNormal(cx[m][n3],cx[m][n4],cx[m][n5]);
      } // End of loop crack elements
-
    } //End of loop over matls
  } //End of loop over patches
-  //time1=clock()-time0;
-  //time1/=CLOCKS_PER_SEC;
-  //cout << "***time for moveCrack = " << time1 << endl;
 }
 
 
@@ -1416,7 +1363,7 @@ Vector Crack::TriangleNormal(const Point& p1,
 }
 
 //detect if two points are in same side of a plane
-short Crack::NotSameSide(const Point& p, const Point& g, 
+short Crack::Location(const Point& p, const Point& g, 
         const Point& n1, const Point& n2, const Point& n3) 
 { //p,g -- two points(particle and node)
   //n1,n2,n3 -- three points on the plane
@@ -1444,17 +1391,17 @@ short Crack::NotSameSide(const Point& p, const Point& g,
   
   if(fabs(dg)<1.e-16) { // node on crack plane
      if(dp>0.) 
-        cross=1;       // p above carck
+        cross=1;        // p above carck
      else
-        cross=2;       // p below crack
+        cross=2;        // p below crack
   }
   else {                // node not on crack plane
      if(dp*dg>0.) 
-        cross=0;       // p, g on same side
+        cross=0;        // p, g on same side
      else if(dp>0.) 
-        cross=1;       // p above, g below
+        cross=1;        // p above, g below
      else 
-        cross=2;       // p below, g above
+        cross=2;        // p below, g above
   }
   return cross;
 }
@@ -1479,4 +1426,21 @@ double Crack::Volume(const Point& p1, const Point& p2,
    else return(vol);
 }
   
+IntVector Crack::CellOffset(const Point& p1, const Point& p2, Vector dx)
+{
+  int nx,ny,nz;
+  if(fabs(p1.x()-p2.x())/dx.x()<1e-6) // p1.x()=p2.x()
+    nx=NGN-1;
+  else
+    nx=NGN;
+  if(fabs(p1.y()-p2.y())/dx.y()<1e-6) // p1.y()=p2.y()
+    ny=NGN-1;
+  else
+    ny=NGN;
+  if(fabs(p1.z()-p2.z())/dx.z()<1e-6) // p1.z()=p2.z()
+    nz=NGN-1;
+  else
+    nz=NGN;
 
+  return IntVector(nx,ny,nz);
+}
