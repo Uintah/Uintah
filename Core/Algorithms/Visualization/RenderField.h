@@ -889,7 +889,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
-  GeomGroup *texts = scinew GeomGroup;
+  GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   char buffer[256];
   char format[256];
@@ -916,7 +916,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
       {
 	m = choose_mat(use_default_material, *iter);
       }
-      texts->add(scinew GeomText(as_str, p, m->diffuse));
+      texts->add(as_str, p, m->diffuse);
     }
     ++iter;
   }
@@ -937,7 +937,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
   mesh->synchronize(Mesh::NODES_E);
   
-  GeomGroup *texts = scinew GeomGroup;
+  GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   char buffer[256];
   typename Fld::mesh_type::Node::iterator iter, end;
@@ -958,7 +958,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(scinew GeomText(as_str, p, m->diffuse));
+    texts->add(as_str, p, m->diffuse);
 
     ++iter;
   }
@@ -978,7 +978,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
   mesh->synchronize(Mesh::EDGES_E);
 
-  GeomGroup *texts = scinew GeomGroup;
+  GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   char buffer[256];
   typename Fld::mesh_type::Edge::iterator iter, end;
@@ -999,7 +999,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(scinew GeomText(as_str, p, m->diffuse));
+    texts->add(as_str, p, m->diffuse);
  
     ++iter;
   }
@@ -1018,7 +1018,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
   mesh->synchronize(Mesh::FACES_E);
 
-  GeomGroup *texts = scinew GeomGroup;
+  GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   char buffer[256];
   typename Fld::mesh_type::Face::iterator iter, end;
@@ -1039,7 +1039,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(scinew GeomText(as_str, p, m->diffuse));
+    texts->add(as_str, p, m->diffuse);
 
     ++iter;
   }
@@ -1058,7 +1058,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
   mesh->synchronize(Mesh::CELLS_E);
 
-  GeomGroup *texts = scinew GeomGroup;
+  GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
   char buffer[256];
   typename Fld::mesh_type::Cell::iterator iter, end;
@@ -1079,7 +1079,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
     {
       m = choose_mat(use_default_material, *iter);
     }
-    texts->add(scinew GeomText(as_str, p, m->diffuse));
+    texts->add(as_str, p, m->diffuse);
 
     ++iter;
   }

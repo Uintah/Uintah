@@ -83,20 +83,104 @@ void GeomText::reset_bbox()
 {
 }
 
-#define GEOMGROUP_VERSION 1
+#define GEOMTEXT_VERSION 2
 
-void GeomText::io(Piostream& stream)
+void
+GeomText::io(Piostream& stream)
 {
 
-    stream.begin_class("GeomText", GEOMGROUP_VERSION);
+    const int version = stream.begin_class("GeomText", GEOMTEXT_VERSION);
     // Do the base class first...
     GeomObj::io(stream);
     Pio(stream, at);
     Pio(stream, text);
+    if (version > 1)
+    {
+      Pio(stream, c);
+    }
     stream.end_class();
 }
 
 bool GeomText::saveobj(ostream&, const string&, GeomSave*)
+{
+  return 0;
+}
+
+
+
+static Persistent* make_GeomTexts()
+{
+    return scinew GeomTexts;
+}
+
+PersistentTypeID GeomTexts::type_id("GeomTexts", "GeomObj", make_GeomTexts);
+
+GeomTexts::GeomTexts()
+  : GeomObj()
+{
+}
+
+
+GeomTexts::GeomTexts(const GeomTexts& copy) :
+  GeomObj(copy),
+  text_(copy.text_),
+  location_(copy.location_),
+  color_(copy.color_)
+{
+}
+
+
+GeomTexts::~GeomTexts()
+{
+}
+
+
+GeomObj* GeomTexts::clone()
+{
+    return scinew GeomTexts(*this);
+}
+
+
+void
+GeomTexts::get_bounds(BBox& in_bb)
+{
+  for (unsigned int i = 0; i < location_.size(); i++)
+  {
+    in_bb.extend( location_[i] );
+  }
+}
+
+void
+GeomTexts::reset_bbox()
+{
+}
+
+
+void
+GeomTexts::add(const string &t, const Point &p, const Color &c)
+{
+  text_.push_back(t);
+  location_.push_back(p);
+  color_.push_back(c);
+}
+
+
+#define GEOMTEXTS_VERSION 1
+
+void
+GeomTexts::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomTexts", GEOMTEXTS_VERSION);
+    // Do the base class first...
+    GeomObj::io(stream);
+    Pio(stream, text_);
+    Pio(stream, location_);
+    Pio(stream, color_);
+    stream.end_class();
+}
+
+bool GeomTexts::saveobj(ostream&, const string&, GeomSave*)
 {
   return 0;
 }
