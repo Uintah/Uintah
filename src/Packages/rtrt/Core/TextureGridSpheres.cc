@@ -55,7 +55,7 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
 			      double /*atten*/, const Color& /*accumcolor*/,
 			      Context* cx)
 {
-  if (dpy->shade_method == 1) {
+  if (dpy->shade_method == 0) {
     // do diffuse shading
     lambertianshade(result, surface_color(hit), ray, hit, depth, cx);
     return;
