@@ -578,7 +578,7 @@ EditTransferFunc2::redraw()
   if(use_pbuffer_ || use_back_buffer_) {
     if(!shader_factory_) {
       shader_factory_ = new CM2ShaderFactory();
-      FragmentProgramARB dummy("ARBfp1.0\nMOV result.color, 0.0;\nEND");
+      FragmentProgramARB dummy("!!ARBfp1.0\nMOV result.color, 0.0;\nEND");
       if(dummy.create()) {
         dummy.destroy();
         use_pbuffer_ = false;
