@@ -44,7 +44,7 @@ namespace SCIRun {
     class SpanSpaceBase {
     public:
       SpanSpaceBase() {}
-      ~SpanSpaceBase() {}
+      virtual ~SpanSpaceBase() {}
     };
 
     template <class T>
