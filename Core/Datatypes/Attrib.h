@@ -38,10 +38,12 @@ class Attrib : public Datatype
 {
 public:
 
+  typedef enum Type { Normal, Temp} ;
+
   // GROUP:  Constructors/Destructor
   //////////
   //
-  Attrib();
+  Attrib( const string &name = string(""),  Type type = Attrib::Normal);
   virtual ~Attrib();
   
   // GROUP: Class interface functions
@@ -59,7 +61,7 @@ public:
   //////////
   // Get information about the attribute
   virtual string getInfo() = 0;
-  
+
   //////////
   // Returns type name:
   // 0 - the class name
@@ -76,11 +78,15 @@ public:
     return d_name;
   };
 
+  Type getType() { return d_type; }
+  void setType( Type type=Attrib::Normal ) { d_type = type; }
+  bool isTemp() { return d_type == Attrib::Temp; }
+
   // GROUP: Support of persistent representation
   //////////
   // Persistent IO
 
-  virtual void io(Piostream&);
+  void io(Piostream&);
   static  PersistentTypeID type_id;
   static  string typeName(int);
 
@@ -97,6 +103,7 @@ public:
   
 protected:
   string      d_name;
+  Type        d_type;
 };
 
 }  // end namespace SCIRun

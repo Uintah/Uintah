@@ -42,14 +42,15 @@ void Attrib::io(Piostream& stream){
   Pio(stream, d_date);
   Pio(stream, d_orgName);
   Pio(stream, d_unitName);
-
+  
   stream.end_class();
 }
 
 //////////
 // Constructor/Destructor
-Attrib::Attrib(){
+Attrib::Attrib( const string &name, Type type) : d_name(name), d_type(type) {
 }
+
 
 Attrib::~Attrib(){
 }
