@@ -306,6 +306,8 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 #endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
+    cout <<"Doing computeStressTensor on " << patch->getID()
+	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
 #ifdef HAVE_PETSC
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex();
@@ -326,6 +328,9 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    ParticleSubset* pset_ghost = old_dw->getParticleSubset(dwi, patch,
+							   Ghost::AroundNodes,1,
+							   lb->pXLabel);
     cout << "number of particles = " << pset->numParticles() << endl;
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
@@ -336,7 +341,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
     
-    old_dw->get(px,                  lb->pXLabel,                  pset);
+    old_dw->get(px,                  lb->pXLabel,                  pset_ghost);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
     if (recursion) {
@@ -397,10 +402,9 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       Vector d_S[8];
       
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-      int dof[24];
-      int ii = 0;
+      vector<int> dof(0);
       
-      for(int k = 0; k < 8; k++) {
+      for(int k = 0; k < 8 && patch->containsNode(ni[k]); k++) {
 	const Vector& disp = dispNew[ni[k]];
 #ifndef HAVE_PETSC 		
 	int node_num = ni[k].x() + (nodes.x())*ni[k].y() + (nodes.x())*
@@ -411,9 +415,10 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	dof[ii++] = 3*node_num+2;
 #else
 	int l2g_node_num = l2g[ni[k]];
-	dof[ii++] = l2g_node_num;
-	dof[ii++] = l2g_node_num+1;
-	dof[ii++] = l2g_node_num+2;
+	dof.push_back(l2g_node_num);
+	dof.push_back(l2g_node_num+1);
+	dof.push_back(l2g_node_num+2);
+
 #endif
 	
 	for (int j = 0; j<3; j++){
@@ -647,9 +652,9 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       kgeo.multiply(out1, Bnl);
       kgeo.multiply(volnew);
       cout.precision(16);
-      for (int I = 0; I < 24;I++) {
+      for (int I = 0; I < (int)dof.size();I++) {
 	int dofi = dof[I];
-	for (int J = 0; J < 24; J++) {
+	for (int J = 0; J < (int)dof.size(); J++) {
 	  int dofj = dof[J];
 #if 1
 #if 1
@@ -882,7 +887,7 @@ void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::AroundNodes,1);
   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeOldLabel, matlset, Ghost::None);
   if (recursion) {
