@@ -175,6 +175,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   ScalarTransform1D<float,Material*> *temp_to_trans_material = new
     ScalarTransform1D<float,Material*>(trans_matls);
   float min_temp, max_temp;
+  min_temp = FLT_MAX;
+  max_temp = -FLT_MAX;
+  bool temp_found = true;
   Object* obj;
   TimeObj* group = new TimeObj(rate);
   obj=group;
@@ -225,10 +228,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       }
     } else {
       cerr << "Temperature file( "<< temp_file << " not found\n";
+      temp_found = false;
       for (int n = 0; n < num_non_trans; n++)
-	hvol_matl[n] = matls[0];
+	hvol_matl[n] = (Material*)new
+	  HVolumeMaterial(dpys[n], 0, temp_to_material);
       for (int n = 0; n < num_trans; n++)
-	hvol_matl_trans[n] = trans_matls[0];
+	hvol_matl_trans[n] = (Material*)new
+	  HVolumeMaterial(dpys_trans[n], 0, temp_to_trans_material);
     }
     Group *timestep = new Group();
 #ifdef USE_BRICK
@@ -244,6 +250,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     for (int n = 0; n < num_trans; n++) {
       hvol = new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (hvol_matl_trans[n], dpys_trans[n], hvol);
       timestep->add(hvol);
+    }
+    if (!temp_found) {
+      float min, max;
+      hvol->get_minmax(min, max);
+      min_temp = Min(min_temp,min);
+      max_temp = Max(max_temp,max);
     }
 #endif
     group->add(timestep);
