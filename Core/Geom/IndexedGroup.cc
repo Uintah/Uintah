@@ -16,7 +16,7 @@
 #include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/Persistent/PersistentMap.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 #include <iostream>
 using std::cerr;
