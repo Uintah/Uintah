@@ -127,17 +127,17 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     string homerc = string(HOME)+"/.scirunrc";
     string cmd;
     if (gui->eval("validFile "+homerc) == "1") {
-      string backuprc = homerc+"."+string(SCIRUN_VERSION)+
-        string(SCIRUN_RCFILE_SUBVERSION);
+      string backuprc = homerc+"."+string(SCIRUN_VERSION)+"."+
+	string(SCIRUN_RCFILE_SUBVERSION);
       cmd = string("cp -f ")+homerc+" "+backuprc;
       std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
       if (sci_system(cmd.c_str())) {
 	std::cerr << "Error executing: " << cmd << std::endl;
       }
     }
-    
+
     cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
-    std::cout << "Copying default " << srcdir << "/scirunrc to " <<
+    std::cout << "Copying " << srcdir << "/scirunrc to " <<
       homerc << "...\n";
     if (sci_system(cmd.c_str())) {
       std::cerr << "Error executing: " << cmd << std::endl;
