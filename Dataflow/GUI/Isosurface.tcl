@@ -211,9 +211,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	
 	iwidgets::spinner $sel.f -labeltext "Number of evenly-spaced isovals: " \
 		-width 5 -fixed 5 \
-		-validate "$this set-iso-qunatity %P $this-isoval-quantity]" \
-		-decrement "$this spin-iso-qunatity -1 $sel.f $this-isoval-quantity" \
-		-increment "$this spin-iso-qunatity  1 $sel.f $this-isoval-quantity" 
+		-validate "$this set-quantity %P $this-isoval-quantity]" \
+		-decrement "$this spin-quantity -1 $sel.f $this-isoval-quantity" \
+		-increment "$this spin-quantity  1 $sel.f $this-isoval-quantity" 
 
 	$sel.f insert 1 [set $this-isoval-quantity]
 
@@ -323,7 +323,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	moveToCursor $w
     }
 
-    method set-iso-qunatity {new quantity} {
+    method set-quantity {new quantity} {
 	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $quantity]} {
 	    return 0
 	} elseif {$quantity < 1.0} {
@@ -334,7 +334,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	return 1
     }
 
-    method spin-iso-qunatity {step spinner quantity} {
+    method spin-quantity {step spinner quantity} {
 	set newquantity [expr [set $quantity] + $step]
 
 	if {$newquantity < 1.0} {
