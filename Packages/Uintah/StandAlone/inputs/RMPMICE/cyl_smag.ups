@@ -110,7 +110,7 @@
          <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "SecondOrderCE" />
+        <advection type = "SecondOrder" />
         <solution technique = "EqForm" />
 	 <turbulence model = "Smagorinsky">	    
 		<model_constant>0.1</model_constant>		

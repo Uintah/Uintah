@@ -141,7 +141,7 @@
          <cfl>0.1</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "SecondOrderCE" />
+        <advection type = "SecondOrder" />
         <solution technique = "EqForm" />
       </ICE>        
     </CFD>
