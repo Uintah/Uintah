@@ -80,8 +80,8 @@ itcl_class Kurt_Vis_VisControl {
  	pack $w.f -side top -expand yes -fill both
 
 	scale $w.time -orient horizontal -from 0 -to 1.0 \
-	    -resolution 0.01 -bd 2 -label "Time" \
-	    -tickinterval 0.5
+	    -resolution 0.01 -bd 2 -label "Time" -variable $this-time\
+	    -tickinterval 0.5 -command "$this-c needexecute"
 	button $w.b -text "Close" -command "wm withdraw $w"
 	pack $w.time $w.b -side top -fill x -padx 2 -pady 2
 	makeFrames $w.f
