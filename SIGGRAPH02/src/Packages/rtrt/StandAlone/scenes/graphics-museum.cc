@@ -1,20 +1,9 @@
 /* look from above:
 
-<<<<<<< graphics-museum.cc
-./rtrt -np 12 -pin -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/basic-sea 
-=======
+./rtrt -np 12 -pin -demo -fullscreen -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/basic-sea 
+
 ./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/sea-world
->>>>>>> 1.26.2.16
 
-./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/seaworld-tubes
-
-<<<<<<< graphics-museum.cc
-
-=======
-./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/basic-sea 
-
-
->>>>>>> 1.26.2.16
 rtrt -np 8 -eye -18.9261 -22.7011 52.5255 -lookat -7.20746 -8.61347 -16.643 -up 0.490986 -0.866164 -0.0932288 -fov 40 -scene scenes/graphics-museum 
 
 look from hallway:
@@ -92,7 +81,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/TrisReader.h>
 #include <Packages/rtrt/Core/GridTris.h>
-#include <Packages/rtrt/Core/MIPMaterial.h>
+//#include <Packages/rtrt/Core/MIPMaterial.h>
 // #include <Packages/rtrt/Core/Trigger.h>
 // #include <Packages/rtrt/Core/PPMImage.h>
 
@@ -112,7 +101,7 @@ using namespace SCIRun;
 #define INSERTHISTORYMODELS 1
 #define INSERTMULTIWALLLIGHTS 0
 
-#define INSERTHUGEMODELS 1
+#define INSERTHUGEMODELS 0
 
 #if INSERTMODERNMODELS
 
@@ -133,7 +122,7 @@ void add_image_on_wall (char *image_name, const Point &top_left,
 			 const Vector &right, const Vector &down,
 			 Group* wall_group) {
   Material* image_mat = 
-    new MIPMaterial(image_name,ImageMaterial::Clamp, ImageMaterial::Clamp,
+    new ImageMaterial(image_name,ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0); 
   Object* image_obj = 
     new Parallelogram(image_mat, top_left, right, down);
@@ -386,7 +375,7 @@ void add_pedestal_and_year (Group* obj_group,Group* glass_group,Group* fake_grou
 
 #if IMGSONWALL
   Group* solid_group = new Group();
-  Material* sign = new MIPMaterial(sign_name, ImageMaterial::Tile,
+  Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
 				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
   sign->my_lights.add(l1);
   sign->my_lights.add(l2);
@@ -456,7 +445,7 @@ void add_pedestal_and_label (Group* obj_group, Group* glass_group,Group* fake_gr
   ped_white->my_lights.add(l4);
 
 #if IMGSONWALL
-  Material* sign = new MIPMaterial(sign_name, ImageMaterial::Tile,
+  Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
 				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
   // signs on all sides
   const float part = 0.8;
@@ -525,7 +514,7 @@ void add_stadium_pedestal (Group* obj_group, Group* glass_group,Group* fake_grou
   ped_white->my_lights.add(l4);
 
 #if IMGSONWALL
-  Material* sign = new MIPMaterial(sign_name, ImageMaterial::Tile,
+  Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
 				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
   // signs on all sides
   const float part = 0.8;
@@ -1669,7 +1658,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
 				(copter_max.z()+copter_min.z())/2.)); // center copter over 0
   copterT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
   copterT.pre_rotate(5*M_PI_4,Vector(0,0,1));  // orient heli
-  double copter_scale = .4*2.*0.9/(sqrt(copter_diag.x()*copter_diag.x()+copter_diag.z()*copter_diag.z()));
+  double copter_scale = .4*2.*0.75/(sqrt(copter_diag.x()*copter_diag.x()+copter_diag.z()*copter_diag.z()));
   copterT.pre_scale(Vector(copter_scale,
 			  copter_scale,
 			  copter_scale));
@@ -1716,16 +1705,16 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   /* **************** David **************** */
 
   Light *l1, *l2, *l3, *l4;
-  l1 = (new Light(Point(-13,-22.25,6.5),Color (.4,.401,.4), 0));
+  l1 = (new Light(Point(-14.75,-20.75,6),Color (.4,.401,.4), 0));
   l1->name_ = "per David A";
   scene->add_per_matl_light (l1);
-  l2 = (new Light(Point(-17,-22.25,6),Color (.4,.402,.4), 0));
+  l2 = (new Light(Point(-13,-15.75,6.0),Color (.4,.402,.4), 0));
   l2->name_ = "per David B";
   scene->add_per_matl_light (l2);
-  l3 = (new Light(Point(-14.75,-20.75,1),Color (.4,.403,.4), 0));
+  l3 = (new Light(Point(-13,-21.25,5.5),Color (.4,.403,.4), 0));
   l3->name_ = "per David C";
   scene->add_per_matl_light (l3);
-  l4 = (new Light(Point(-17,-17.75,7.9),Color (.4,.404,.4), 0));
+  l4 = (new Light(Point(-12,-18.25,5),Color (.4,.404,.4), 0));
   l4->name_ = "per David D";
   scene->add_per_matl_light (l4);
   /*
@@ -1765,9 +1754,10 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   //  Color bone(0.9608, 0.8706, 0.7020);
   //  Material* david_white=new Phong(bone*.6, bone*.6, 100, 0);
   //  Material* david_white = new LambertianMaterial(Color(.8,.75,.7)); 
-  Material* david_white = new Phong(Color(.8,.75,.7),
+  Material* david_white = new LambertianMaterial(Color(.8,.8,.8));
+  /*  Material* david_white = new Phong(Color(.8,.75,.7),
   				    Color(.2,.2,.2),40); 
-
+  */
 #if INSERTHUGEMODELS
   GridTris* davidg = new GridTris(david_white, cells, depth,
                                   "/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm-grid");
@@ -1894,10 +1884,12 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   /* **************** image on West/East wall in David room **************** */
 
   Group *david_signs = new Group();
+
+#if INSERTVIDEO 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
 		      Point (-20+IMG_EPS,-20,3.1), Vector(0,2,0), Vector(0,0,-2),
 		      david_signs);
-
+#endif
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
 		      Point (-8.15-IMG_EPS,-20,3.1), Vector (0,-2,0), Vector(0,0,-2),
@@ -2299,8 +2291,8 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   t.pre_rotate(rot, Vector(0,0,1));
   t.pre_translate(torso_ped_top+Vector(0,0,0.3));
 
-  l1 = new Light(torso_ped_top.point()+Vector(1,2,1.5),Color(1.,1.,1.),0,0.7);
-  l2 = new Light(torso_ped_top.point()+Vector(-1,1,1),Color(1.,1.,1.),0,0.7);
+  l1 = new Light(torso_ped_top.point()+Vector(1,2,1.5),Color(1.,1.,1.),0,0.4);
+  l2 = new Light(torso_ped_top.point()+Vector(-1,1,1),Color(1.,1.,1.),0,0.4);
   l1->name_ = "Torso 1";
   l2->name_ = "Torso 2";
   scene->add_per_matl_light (l1);
@@ -2730,9 +2722,9 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   if (!readASEFile("/usr/sci/data/Geometry/models/stadium/newstadium.ase", stadiumt, stadiumg, 
 		   //  if (!readASEFile("/usr/sci/data/Geometry/models/stadium/fordfield3.ase", stadiumt, stadiumg, 
 		   ase_matls, env_map)) return;
-  l1 = new Light(stadium_centerpt+Vector(0,0,0.4),Color(1.,1.,1.),0,0.7);
-  l2 = new Light(stadium_centerpt+Vector(stadium_radius+.2,-stadium_radius-.2,.2),
-			Color(1.,1.,1.),0,0.7);
+  l1 = new Light(Point(-14.6,-9.7,1.3),Color(1.,1.,1.),0,0.4);
+  l2 = new Light(Point(-13,-10.2,3),
+			Color(1.,1.,1.),0,0.8);
   l1->name_ = "Stadium 1";
   l2->name_ = "Stadium 2";
   scene->add_per_matl_light (l1);
@@ -3245,12 +3237,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->animate=false;
 
   /* David room lights */
-  Light *DavL1 = new Light(Point(-14, -10, 4), Color(1.,1.,1.), 0, 0.2);
+  Light *DavL1 = new Light(Point(-18, -10, 4), Color(1.,1.,1.), 0, 0.2);
   DavL1->name_ = "David A";
   scene->add_per_matl_light(DavL1);
-  Light *DavL2 = new Light(Point(-11.3, -18.05, 4), Color(1.,1.,1.), 0, 0.2);
+  Light *DavL2 = new Light(Point(-19.3, -18.05, 4), Color(1.,1.,1.), 0, 0.2);
   DavL2->name_ = "David B";
   scene->add_per_matl_light(DavL2);
+
   /*  Light *DavL3 = new Light(Point(-17, -22, 1.4), Color(1.,1.,1.), 0, 0.2);
   DavL3->name_ = "David C";
   scene->add_per_matl_light(DavL3); */
