@@ -52,7 +52,7 @@ namespace Uintah {
                            StaticArray<CCVariable<double> >& var,
                            StaticArray<CCVariable<double> >& var_hat);
                                                                 
-    SmagorinskyModel d_smag;
+    Smagorinsky_Model d_smag;
     
     double filter_width;
     double d_test_filter_width;

@@ -26,7 +26,7 @@ Turbulence* TurbulenceFactory::create(ProblemSpecP& ps,
         throw ProblemSetupException("No model for turbulence"); 
     
       if (turbulence_model == "Smagorinsky") 
-        return(scinew SmagorinskyModel(child));    
+        return(scinew Smagorinsky_Model(child));    
       else if (turbulence_model == "Germano") 
         return(scinew DynamicModel(child));   
       else

@@ -8,15 +8,15 @@
 namespace Uintah {
 
 
-  class SmagorinskyModel : public Turbulence {
+  class Smagorinsky_Model : public Turbulence {
 
   public:
     //----- constructors
-    SmagorinskyModel(ProblemSpecP& ps);
-    SmagorinskyModel();
+    Smagorinsky_Model(ProblemSpecP& ps);
+    Smagorinsky_Model();
     
     //----- destructor
-    virtual ~SmagorinskyModel();
+    virtual ~Smagorinsky_Model();
     
     friend class DynamicModel;
     
