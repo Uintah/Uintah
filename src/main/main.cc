@@ -195,47 +195,50 @@ main(int argc, char *argv[] )
   t2->setDaemon(true);
   t2->detach();
 
-  bool foundrc=false;
-  cout << "Parsing .scirunrc... ";
+  {
+    ostringstream str;
+    
+    bool foundrc=false;
+    str << "Parsing .scirunrc... ";
   
-  // check the local directory
-  foundrc = RCParse(".scirunrc",SCIRun::scirunrc);
-  if (foundrc)
-    cout << "./.scirunrc" << endl;
-
-  // check the BUILD_DIR
-  if (!foundrc) {
-    foundrc = RCParse((string(OBJTOP) + "/.scirunrc").c_str(),
-                      SCIRun::scirunrc);
+    // check the local directory
+    foundrc = RCParse(".scirunrc",SCIRun::scirunrc);
     if (foundrc)
-      cout << OBJTOP << "/.scirunrc" << endl;
-  }
+      str << "./.scirunrc" << endl;
 
-  // check the user's home directory
-  if (!foundrc) {
-    char* HOME = getenv("HOME");
-  
-    if (HOME) {
-      string home(HOME);
-      home += "/.scirunrc";
-      foundrc = RCParse(home.c_str(),SCIRun::scirunrc);
+    // check the BUILD_DIR
+    if (!foundrc) {
+      foundrc = RCParse((string(OBJTOP) + "/.scirunrc").c_str(),
+			SCIRun::scirunrc);
       if (foundrc)
-        cout << home << endl;
+	str << OBJTOP << "/.scirunrc" << endl;
     }
-  }
 
-  // check the INSTALL_DIR
-  if (!foundrc) {
-    foundrc = RCParse((string(SRCTOP) + "/.scirunrc").c_str(),
-                      SCIRun::scirunrc);
-    if (foundrc)
-      cout << SRCTOP << "/.scirunrc" << endl;
-  }
-
-  if( !foundrc )
-    {
-      cout << "not found.  (Note: This is not an error.)\n";
+    // check the user's home directory
+    if (!foundrc) {
+      char* HOME = getenv("HOME");
+  
+      if (HOME) {
+	string home(HOME);
+	home += "/.scirunrc";
+	foundrc = RCParse(home.c_str(),SCIRun::scirunrc);
+	if (foundrc)
+	  str << home << endl;
+      }
     }
+
+    // check the INSTALL_DIR
+    if (!foundrc) {
+      foundrc = RCParse((string(SRCTOP) + "/.scirunrc").c_str(),
+			SCIRun::scirunrc);
+      if (foundrc)
+	str << SRCTOP << "/.scirunrc" << endl;
+    }
+
+    // Since the dot file is optional report only if it was found.
+    if( foundrc )
+      cout << str.str();
+  }
 
   // wait for the main window to display before continuing the startup.
   gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
