@@ -13,6 +13,7 @@
 
 #include <Nektar/Datatypes/NektarVectorFieldPort.h>
 #include <Nektar/share/share.h>
+#include <SCICore/Malloc/Allocator.h>
 
 //namespace Nektar {
 //namespace Datatypes {
@@ -23,11 +24,11 @@ using namespace Nektar::Datatypes;
 extern "C" {
   NektarSHARE IPort* make_NektarVectorFieldIPort(Module* module,
 						 const clString& name) {
-    return new SimpleIPort<NektarVectorFieldHandle>(module,name);
+    return scinew SimpleIPort<NektarVectorFieldHandle>(module,name);
   }
   NektarSHARE OPort* make_NektarVectorFieldOPort(Module* module, const 
 						 clString& name) {
-    return new SimpleOPort<NektarVectorFieldHandle>(module,name);
+    return scinew SimpleOPort<NektarVectorFieldHandle>(module,name);
   }
 }
 

@@ -13,6 +13,7 @@
  */
 
 #include <PSECore/Datatypes/VoidStarPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -21,10 +22,10 @@ using namespace SCICore::Datatypes;
 
 extern "C" {
 PSECORESHARE IPort* make_VoidStarIPort(Module* module, const clString& name) {
-  return new SimpleIPort<VoidStarHandle>(module,name);
+  return scinew SimpleIPort<VoidStarHandle>(module,name);
 }
 PSECORESHARE OPort* make_VoidStarOPort(Module* module, const clString& name) {
-  return new SimpleOPort<VoidStarHandle>(module,name);
+  return scinew SimpleOPort<VoidStarHandle>(module,name);
 }
 }
 
@@ -36,6 +37,9 @@ template<> clString SimpleIPort<VoidStarHandle>::port_color("gold1");
 
 //
 // $Log$
+// Revision 1.6  2000/11/29 09:49:37  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.5  2000/11/22 17:14:42  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).

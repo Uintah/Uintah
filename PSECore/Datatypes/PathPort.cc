@@ -13,6 +13,7 @@
  */
 
 #include <PSECore/Datatypes/PathPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -21,10 +22,10 @@ using namespace SCICore::Containers;
 
 extern "C" {
 PSECORESHARE IPort* make_PathIPort(Module* module, const clString& name) {
-  return new SimpleIPort<PathHandle>(module,name);
+  return scinew SimpleIPort<PathHandle>(module,name);
 }
 PSECORESHARE OPort* make_PathOPort(Module* module, const clString& name) {
-  return new SimpleOPort<PathHandle>(module,name);
+  return scinew SimpleOPort<PathHandle>(module,name);
 }
 }
 
@@ -36,6 +37,9 @@ template<> clString SimpleIPort<PathHandle>::port_color("chocolate4");
 
 //
 // $Log$
+// Revision 1.3  2000/11/29 09:49:36  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.2  2000/11/22 17:14:41  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).
