@@ -15,7 +15,8 @@ SRCS     += $(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/TensorFieldExtractor.cc \
 	$(SRCDIR)/ParticleFieldExtractor.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
-	$(SRCDIR)/ParticleVis.cc 
+	$(SRCDIR)/ParticleVis.cc \
+	$(SRCDIR)/EigenEvaluator.cc
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
@@ -32,6 +33,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/08/22 22:20:54  witzel
+# Added EigenEvaluator
+#
 # Revision 1.4  2000/07/31 17:45:46  kuzimmer
 # Added files and modules for Field Extraction from uda
 #
