@@ -49,4 +49,4 @@ for test in TESTS:
     	failcode = 1
     system("/bin/rm -rf %s.uda*" % testname)
 
-exit(0)
+exit(failcode)
