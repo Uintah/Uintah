@@ -77,8 +77,8 @@ ifeq ($(CC),newmpxlc)
         $(PETSC_LIBRARY) \
         -lld -lm
 else
-  LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) \
-        $(HYPRE_LIBRARY) $(PETSC_LIBRARY)
+  LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(F_LIBRARY) \
+        $(HYPRE_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) -lm
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
