@@ -74,8 +74,8 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc
 
-PSELIBS := Core/Persistent Core/Disclosure Core/Geometry \
-	Core/Exceptions Core/Math Core/Containers Core/Thread \
+PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
+	Core/Math Core/Containers Core/Thread \
 	Core/GuiInterface
 
 LIBS := $(GL_LIBS) -lm
