@@ -1,113 +1,113 @@
 
 #include "Thread.h"
 #include "ThreadGroup.h"
-#include "ThreadError.h"
-#include "ThreadEvent.h"
 #include "Parallel.h"
-#include "ThreadTopology.h"
-#include "ThreadListener.h"
+#include <Tester/RigorousTest.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <iostream.h>
 #include <errno.h>
+#include <stdio.h>
 
 
-
-Thread::~Thread() {
-    if(runner){
-        runner->mythread=0;
-        delete runner;
+Thread::~Thread()
+{
+    if(d_runner){
+        d_runner->d_myThread=0;
+        delete d_runner;
     }
 }
 
-Thread::Thread(ThreadGroup* g, char* name) {
-    group=g;
+Thread::Thread(ThreadGroup* g, const std::string& name)
+{
+    d_group=g;
     g->addme(this);
-    threadname=strdup(name);
-    daemon=false;
-    detached=false;
-    cpu=-1;
-    priority=5;
-    abort_handler=0;
-    runner=0;
+    d_threadname=name;
+    d_daemon=false;
+    d_detached=false;
+    d_cpu=-1;
+    d_priority=5;
+    d_runner=0;
 }
 
-int Thread::nlisteners;
-ThreadListener** Thread::listeners;
-void Thread::event(Thread* t, ThreadEvent event) {
-    for(int i=0;i<nlisteners;i++){
-        listeners[i]->send_event(t, event);
-    }
+void Thread::run_body()
+{
+    d_runner->run();
 }
 
-void Thread::run_body(){
-    runner->run();
-    //Thread::event(this, Thread::THREAD_DONE);
-}
-
-Thread::Thread(Runnable* runner, const char* name, ThreadGroup* group, bool stopped)
-      : runner(runner), threadname(strdup(name)), group(group) {
+Thread::Thread(Runnable* runner, const std::string& name,
+	       ThreadGroup* group, bool stopped)
+    : d_runner(runner), d_threadname(name), d_group(group)
+{
     if(group == 0){
-        if(!ThreadGroup::default_group)
-    	Thread::initialize();
-        group=ThreadGroup::default_group;
+        if(!ThreadGroup::s_defaultGroup)
+	    Thread::initialize();
+        group=ThreadGroup::s_defaultGroup;
     }
 
-    runner->mythread=this;
-    group->addme(this);
-    daemon=false;
-    detached=false;
-    cpu=-1;
-    priority=5;
+    d_runner->d_myThread=this;
+    d_group->addme(this);
+    d_daemon=false;
+    d_detached=false;
+    d_cpu=-1;
+    d_priority=5;
     os_start(stopped);
-    abort_handler=0;
 }
 
-ThreadGroup* Thread::threadGroup() {
-    return group;
+ThreadGroup* Thread::threadGroup()
+{
+    return d_group;
 }
 
-void Thread::setDaemon(bool to) {
-    daemon=to;
-    check_exit();
+void Thread::setDaemon(bool to)
+{
+    d_daemon=to;
+    checkExit();
 }
 
-int Thread::getPriority() const {
-    return priority;
+int Thread::getPriority() const
+{
+    return d_priority;
 }
 
-bool Thread::isDaemon() const {
-    return daemon;
+bool Thread::isDaemon() const
+{
+    return d_daemon;
 }
 
-bool Thread::isDetached() const {
-    return detached;
+bool Thread::isDetached() const
+{
+    return d_detached;
 }
 
-void Thread::error(char* error) {
-    fprintf(stderr, "\n\nThread Error: %s\n ", error);
+void Thread::error(const std::string& error)
+{
+    fprintf(stderr, "\n\nThread Error: %s\n ", error.c_str());
     Thread::niceAbort();
 }
 
-const char* Thread::threadName() const {
-    return threadname;
+const std::string& Thread::threadName() const
+{
+    return d_threadname;
 }
 
-Thread_private* Thread::getPrivate() const {
-    return priv;
+Thread_private* Thread::getPrivate() const
+{
+    return d_priv;
 }
 
 ThreadGroup* Thread::parallel(const ParallelBase& helper, int nthreads,
-				 bool block, ThreadGroup* threadGroup) {
+			      bool block, ThreadGroup* threadGroup)
+{
     ThreadGroup* newgroup=new ThreadGroup("Parallel group",
     				      threadGroup);
     for(int i=0;i<nthreads;i++){
         char buf[50];
         sprintf(buf, "Parallel thread %d of %d", i, nthreads);
         new Thread(new ParallelHelper(&helper, i), buf,
-    	       newgroup, true);
+		   newgroup, true);
     }
     newgroup->gangSchedule();
     newgroup->resume();
@@ -121,15 +121,18 @@ ThreadGroup* Thread::parallel(const ParallelBase& helper, int nthreads,
     return newgroup;
 }
 
-void Thread::niceAbort() {
+void Thread::niceAbort()
+{
     for(;;){
         char action;
         Thread* s=Thread::currentThread();
-        if(s->abort_handler){
-	    action=s->abort_handler->thread_abort(s);
+#if 0
+        if(s->d_abortHandler){
+	    //action=s->d_abortHandler->threadAbort(s);
         } else {
+#endif
 	    fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-	    fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname);
+	    fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname.c_str());
 	    fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
 	    fflush(stderr);
 	    char buf[100];
@@ -141,7 +144,9 @@ void Thread::niceAbort() {
 		}
 	    }
 	    action=buf[0];
+#if 0
         }
+#endif
         char command[500];
         switch(action){
         case 'r': case 'R':
@@ -166,3 +171,12 @@ void Thread::niceAbort() {
     }
 }
 
+#include <Thread/TestThreads.h>
+
+void Thread::test_rigorous(RigorousTest* __test)
+{
+    TestThreads tester(__test);
+    Thread::parallel(Parallel<TestThreads>(&tester, &TestThreads::test1),
+		     2, true);
+    TEST(tester.threads_seen==2);
+}

@@ -9,85 +9,93 @@
  * thread, and these sums are added together.
  */
 
-void Reducer::collective_resize(int proc) {
+void Reducer::collectiveResize(int proc)
+{
     // Extra barrier here to change the array size...
 
     // We must wait until everybody has seen the array size change,
     // or they will skip down too soon...
     wait();
     if(proc==0){
-        int n=threadGroup?threadGroup->nactive(true):nthreads;
-        delete[] join[0];
-        delete[] join[1];
-        join[0]=new join_array[n];
-        join[0]=new join_array[n];
-        delete[] p;
-        p=new pdata[n];
+        int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
+        delete[] d_join[0];
+        delete[] d_join[1];
+        d_join[0]=new joinArray[n];
+        d_join[0]=new joinArray[n];
+        delete[] d_p;
+        d_p=new pdata[n];
         for(int i=0;i<n;i++)
-    	p[i].buf=0;
-        arraysize=n;
+	    d_p[i].d_buf=0;
+        d_arraySize=n;
     }
     wait();
 }
 
-Reducer::Reducer(const char* name, int nthreads) : Barrier(name, nthreads) {
-    arraysize=nthreads;
-    join[0]=new join_array[nthreads];
-    join[1]=new join_array[nthreads];
-    p=new pdata[nthreads];
-    for(int i=0;i<nthreads;i++)
-        p[i].buf=0;
+Reducer::Reducer(const std::string& name, int numThreads)
+    : Barrier(name, numThreads)
+{
+    d_arraySize=numThreads;
+    d_join[0]=new joinArray[numThreads];
+    d_join[1]=new joinArray[numThreads];
+    d_p=new pdata[d_numThreads];
+    for(int i=0;i<d_numThreads;i++)
+        d_p[i].d_buf=0;
 }
 
-Reducer::Reducer(const char* name, ThreadGroup* group) : Barrier(name, nthreads) {
-    arraysize=group->nactive(true);
-    join[0]=new join_array[arraysize];
-    join[1]=new join_array[arraysize];
-    p=new pdata[arraysize];
-    for(int i=0;i<arraysize;i++)
-        p[i].buf=0;
+Reducer::Reducer(const std::string& name, ThreadGroup* group)
+    : Barrier(name, group)
+{
+    d_arraySize=group->numActive(true);
+    d_join[0]=new joinArray[d_arraySize];
+    d_join[1]=new joinArray[d_arraySize];
+    d_p=new pdata[d_arraySize];
+    for(int i=0;i<d_arraySize;i++)
+        d_p[i].d_buf=0;
 }
 
-Reducer::~Reducer() {
-    delete[] join[0];
-    delete[] join[1];
-    delete[] p;
+Reducer::~Reducer()
+{
+    delete[] d_join[0];
+    delete[] d_join[1];
+    delete[] d_p;
 }
 
-double Reducer::sum(int proc, double mysum) {
-    int n=threadGroup?threadGroup->nactive(true):nthreads;
-    if(n != arraysize){
-        collective_resize(proc);
+double Reducer::sum(int proc, double mysum)
+{
+    int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
+    if(n != d_arraySize){
+        collectiveResize(proc);
     }
 
-    int buf=p[proc].buf;
-    p[proc].buf=1-buf;
+    int buf=d_p[proc].d_buf;
+    d_p[proc].d_buf=1-buf;
 
-    join_array* j=join[buf];
-    j[proc].d.d=mysum;
+    joinArray* j=d_join[buf];
+    j[proc].d_d.d_d=mysum;
     wait();
     double sum=0;
     for(int i=0;i<n;i++)
-        sum+=j[i].d.d;
+        sum+=j[i].d_d.d_d;
     return sum;
 }
 
-double Reducer::max(int proc, double mymax) {
-    int n=threadGroup?threadGroup->nactive(true):nthreads;
-    if(n != arraysize){
-        collective_resize(proc);
+double Reducer::max(int proc, double mymax)
+{
+    int n=d_threadGroup?d_threadGroup->numActive(true):d_numThreads;
+    if(n != d_arraySize){
+        collectiveResize(proc);
     }
 
-    int buf=p[proc].buf;
-    p[proc].buf=1-buf;
+    int buf=d_p[proc].d_buf;
+    d_p[proc].d_buf=1-buf;
 
-    join_array* j=join[buf];
-    j[proc].d.d=mymax;
+    joinArray* j=d_join[buf];
+    j[proc].d_d.d_d=mymax;
     Barrier::wait();
-    double gmax=j[0].d.d;
+    double gmax=j[0].d_d.d_d;
     for(int i=1;i<n;i++)
-        if(j[i].d.d > gmax)
-    	gmax=j[i].d.d;
+        if(j[i].d_d.d_d > gmax)
+	    gmax=j[i].d_d.d_d;
     return gmax;
 }
 
