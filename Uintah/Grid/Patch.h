@@ -160,6 +160,12 @@ WARNING
       inline IntVector getNCells() const {
 	 return d_res;
       }
+
+      inline IntVector getNFaces() const {
+	// This is wrong for now
+	return d_res;
+      }
+
       inline IntVector getNNodes() const {
 	 return d_res+IntVector(1,1,1);
       }
@@ -283,6 +289,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.8  2000/06/14 21:59:36  jas
+// Copied CCVariable stuff to make FCVariables.  Implementation is not
+// correct for the actual data storage and iteration scheme.
+//
 // Revision 1.7  2000/06/14 19:58:03  guilkey
 // Added a different version of findCell.
 //

@@ -9,7 +9,8 @@ SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/CellIterator.cc $(SRCDIR)/CCVariableBase.cc \
-	$(SRCDIR)/Grid.cc \
+	$(SRCDIR)/FaceIterator.cc \
+	$(SRCDIR)/Grid.cc $(SRCDIR)/FCVariableBase.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
@@ -39,6 +40,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.19  2000/06/14 21:59:36  jas
+# Copied CCVariable stuff to make FCVariables.  Implementation is not
+# correct for the actual data storage and iteration scheme.
+#
 # Revision 1.18  2000/06/09 18:38:23  jas
 # Moved geometry piece stuff to Grid/ from MPM/GeometryPiece/.
 #
