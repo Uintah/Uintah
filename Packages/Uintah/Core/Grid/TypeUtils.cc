@@ -35,6 +35,16 @@ const TypeDescription* fun_getTypeDescription(int*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(short int*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::int_type,
+				  "short", true, MPI_SHORT);
+   }
+   return td;
+}
+
 const TypeDescription* fun_getTypeDescription(long*)
 {
    static TypeDescription* td;
