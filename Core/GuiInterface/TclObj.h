@@ -32,14 +32,13 @@
 #define SCI_TclObj_h 
 
 #include <sstream>
-using std::ostringstream;
 #include <Core/GuiInterface/TCL.h>
 
 namespace SCIRun {
   
 class SCICORESHARE TclObj : public TCL {
 public:
-  ostringstream tcl_;
+  std::ostringstream tcl_;
 private:
   string id_;
   string window_;
@@ -51,7 +50,7 @@ public:
 
   string id() { return id_; }
   string window() { return window_; }
-  ostream &to_tcl() { return tcl_; }
+  std::ostream &to_tcl() { return tcl_; }
   void command( const string &s);
   void tcl_exec();
   virtual void set_id( const string &);
