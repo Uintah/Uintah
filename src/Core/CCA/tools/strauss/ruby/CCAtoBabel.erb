@@ -1,0 +1,61 @@
+
+START HEADER
+#include <Core/CCA/spec/cca_sidl.h>
+#include <CCA/Components/BabelTest/<%= package%>/<%= package%>_<%= portname%>.hh>
+
+#include <SCIRun/Bridge/BridgeComponent.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+
+using namespace std;
+
+namespace SCIRun {
+
+  class <%= bridgeC%> : public BridgeComponent{
+  public:
+    <%= bridgeC%>();
+    virtual ~<%= bridgeC%>();
+    virtual void setServices(const BridgeServices* svc);
+  private:
+    <%= bridgeC%>(const <%= bridgeC%>&);
+    <%= bridgeC%>& operator=(const <%= bridgeC%>&);
+    BridgeServices* services;
+  };
+
+  class <%= portname%>: public sci::cca::ports::<%= portname%>{
+  public:
+    <%= portname%>(BridgeServices* svc) : mysvcs(svc) {}
+    ~<%= portname%>() {}
+    <%= methodret%> <%= methodname%>(<% outDefArgs(methodname,doc)%>);
+    BridgeServices* mysvcs;
+  };
+
+} //namespace SCIRun
+END HEADER
+
+using namespace SCIRun;
+using namespace <%= package%>;
+using namespace std;
+
+extern "C" BridgeComponent* make_Bridge_<%= makename%>()
+{
+  return static_cast<BridgeComponent*>(new <%= bridgeC%>());
+}
+
+<%= bridgeC%>::<%= bridgeC%>(){
+}
+
+<%= bridgeC%>::~<%= bridgeC%>(){
+}
+
+void <%= bridgeC%>::setServices(const BridgeServices* svc) {
+  services=const_cast<BridgeServices*>(svc);
+  <%= portname%>::pointer dp = <%= portname%>::pointer(new <%= portname%>(services));
+  services->addProvidesPort((void*)&dp,"pport","sci.cca.ports.<%= portname%>",CCA);
+  services->registerUsesPort("uport","gov.cca.ports.<%= portname%>",Babel);
+}
+
+<%= methodret%> SCIRun::<%= portname%>::<%= methodname%>(<% outDefArgs(methodname,doc)%>) {
+  <%= package%>::<%= portname%> pp = mysvcs->getBabelPort("uport"); //except builtins (eg IDPort)
+  return pp.<%= methodname%>(<% outCallArgs(methodname,doc)%>);
+}
+

@@ -1,3 +1,13 @@
+//Temp test (Bridge)
+interface IDPort extends sci.cca.Port
+{
+  collective string getID();
+}
+interface BridgeTestPort extends sci.cca.Port
+{
+  int m1(in int i);
+}
+
 
 //Port to SCIRun(1) scheduler interface
 interface DataflowScheduler extends sci.cca.Port
@@ -9,7 +19,7 @@ interface DataflowScheduler extends sci.cca.Port
 //abstract interface 
 interface StringPort extends sci.cca.Port
 {
-	collective string getString();
+  collective string getString();
 }
 
 

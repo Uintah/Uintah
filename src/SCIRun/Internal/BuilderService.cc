@@ -315,9 +315,30 @@ BuilderService::getFrameworkURL(){
 }
 
 std::string 
-BuilderService::generateBridge(const std::string& c1, const std::string& c2)
+BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
+			       const string& port1,
+			       const sci::cca::ComponentID::pointer& c2,
+			       const string& port2)
 {
-  return (autobr.execute(c1,c2));
+  ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
+  ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
+  if(!cid1 || !cid2){
+    throw CCAException("Cannot understand this ComponentID");
+  }
+  if(cid1->framework != framework || cid2->framework != framework){
+    throw CCAException("Cannot connect components from different frameworks");
+  }
+  ComponentInstance* comp1=framework->lookupComponent(cid1->name);
+  ComponentInstance* comp2=framework->lookupComponent(cid2->name);
+  PortInstance* pr1=comp1->getPortInstance(port1);
+  if(!pr1){
+    throw CCAException("Unknown port");
+  }
+  PortInstance* pr2=comp2->getPortInstance(port2);
+  if(!pr2){
+    throw CCAException("Unknown port");
+  }
+  return (autobr.genBridge(pr1->getModel(),cid1->name,pr2->getModel(),cid2->name));
 }
 
 int BuilderService::addLoader(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath )

@@ -5,10 +5,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Util/sci_system.h>
+#include <Core/OS/Dir.h>
 
 #ifdef __sgi
 #define IRIX
@@ -26,6 +28,8 @@
 
 using namespace SCIRun;
 using namespace std;
+
+#define COMPILEDIR std::string("on-the-fly-libs")
 
 string readMetaFile(string component, string ext) {
   // Initialize the XML4C system
@@ -93,17 +97,55 @@ string readMetaFile(string component, string ext) {
   } 
 }
 
-std::string AutoBridge::execute(std::string cFrom, std::string cTo) 
+AutoBridge::AutoBridge() 
+{
+  //populate oldB
+  Dir d(COMPILEDIR);
+  vector<string> files;
+  d.getFilenamesBySuffix(".so", files);
+  for(vector<string>::iterator iter = files.begin();
+      iter != files.end(); iter++){
+    string file = (*iter).substr(0,(*iter).size()-3);
+    //cerr << "Found FILE " << file << "\n";
+    oldB.insert(file);
+  }
+  
+}
+
+AutoBridge::~AutoBridge() 
+{
+}
+
+std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std::string modelTo, std::string cTo) 
 {
   int status = 0;
+  string cCCA; //Used so that we read xml data only from cca components
+ 
+  if(modelFrom == "babel") {
+    cFrom = cFrom.substr(0,cFrom.find(".")); //Babel xxx.Com 
+  } else if(modelFrom == "cca") {
+    cFrom = cFrom.substr(cFrom.find(".")+1); //CCA SCIRun.xxx
+    cCCA = cFrom;
+  }
+  else {}
+  
+  
+  if(modelTo == "babel") {
+    cTo = cTo.substr(0,cTo.find(".")); //Babel xxx.Com 
+  } else if(modelTo == "cca") {
+    cTo = cTo.substr(cTo.find(".")+1); //CCA SCIRun.xxx
+    cCCA = cTo;
+  }  
+  else {}
 
-  //Note: limited to (Babel2CCA)
-  cFrom = cFrom.substr(0,cFrom.find(".")); //Babel xxx.Com    
-  cTo = cTo.substr(cTo.find(".")+1); //CCA SCIRun.xxx
+  string name = cFrom+"__"+cTo;
+
+  //Check runtime cache
+  if(runC.find(name) != runC.end()) return name;
 
   //read cca file to find .sidl file
   cerr << "read cca file to find .sidl file -- " << cFrom << ".cca\n";
-  string sidlfile = readMetaFile(cTo,"cca");
+  string sidlfile = readMetaFile(cCCA,"cca");
   if(sidlfile=="") {cerr << "ERROR... exiting...\n"; return "";} 
 
   //use .sidl file in kwai to generate portxml
@@ -117,30 +159,45 @@ std::string AutoBridge::execute(std::string cFrom, std::string cTo)
 
   //determine right plugin
   string plugin;
+  if((modelFrom == "babel")&&(modelTo == "cca")) {
+    plugin = "../src/Core/CCA/tools/strauss/ruby/BabeltoCCA.erb";
+  } else if((modelFrom == "cca")&&(modelTo == "babel")) {
+    plugin = "../src/Core/CCA/tools/strauss/ruby/CCAtoBabel.erb";
+  }  
+  else {}
+
 
   //use portxml + plugin in strauss to generate bridge
   cerr << "use portxml + plugin in strauss to generate bridge\n";
-  plugin = "/home/sci/damevski/testprogs/rubytm/BabeltoCCA.erb";
-  string name = cFrom+"__"+cTo;
-  string straussout = "on-the-fly-libs/"+name;
-  execline = "strauss -p " + plugin + " -o " + straussout + " working.kwai";
-  cerr << execline << "\n";
-  status = sci_system(execline.c_str());
+  string straussout = COMPILEDIR+"/"+name;
+  Strauss* strauss = new Strauss(plugin,"working.kwai",straussout+".h",straussout+".cc");
+  status = strauss->emit();
   if(status!=0) {
     cerr << "**** strauss was unsuccessful\n";
     return "";
   }
+  //check if a copy exists in oldB, compare CRC to see if it is the right one
+  if(oldB.find(name) != oldB.end()) {
+    if(isSameFile(name,strauss)) 
+      return name;
+  }
+  //a new bridge, write into files
+  strauss->commitToFiles();
+  delete strauss;
 
   //compile bridge
   cerr << "compile bridge\n";
-  execline = "cd on-the-fly-libs && gmake && cd ..";
+  execline = "cd "+COMPILEDIR+" && gmake && cd ..";
   status = sci_system(execline.c_str());
   if(status!=0) {
-    execline = "rm -f on-the-fly-libs/"+name+".*"; 
-    //sci_system(execline.c_str());
+    execline = "rm -f "+COMPILEDIR+"/"+name+".*"; 
+    sci_system(execline.c_str());
     cerr << "**** gmake was unsuccessful\n";
     return "";
   }
+
+  //add to runtime cache table
+  runC.insert(name);
 
   return name; 
 }
@@ -155,3 +212,32 @@ bool AutoBridge::canBridge(PortInstance* pr1, PortInstance* pr2)
   return false;
 }
 
+bool AutoBridge::isSameFile(std::string name, Strauss* strauss)
+{
+  std::ostringstream impl_crc, hdr_crc;
+  impl_crc << strauss->getImplCRC();
+  hdr_crc << strauss->getHdrCRC();
+  
+  char* buf = new char[513];
+  string file = COMPILEDIR + "/" + name;
+
+  ifstream ccfile((file+".cc").c_str());
+  if(!ccfile) return false;
+  ccfile.getline(buf, 512);  
+  string cc_sbuf(buf);
+  cc_sbuf = cc_sbuf.substr(cc_sbuf.find("=")+1,cc_sbuf.size()-1);
+  
+  ifstream hfile((file+".h").c_str());
+  if(!hfile) return false;
+  hfile.getline(buf, 512);  
+  string h_sbuf(buf);
+  h_sbuf = h_sbuf.substr(h_sbuf.find("=")+1,h_sbuf.size()-1);
+  
+  delete buf;
+  cerr << "Comparing hdr old=" << h_sbuf << " new=" << hdr_crc.str() << "\n";
+  cerr << "Comparing impl old=" << cc_sbuf << " new=" << impl_crc.str() << "\n";
+  if((h_sbuf == hdr_crc.str())&&(cc_sbuf == impl_crc.str())) 
+    return true;
+  
+  return false;
+}

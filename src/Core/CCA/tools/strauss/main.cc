@@ -44,57 +44,51 @@ bool fileExists(const char* mFile)
   return false;
 }
 
-
 int main(int argc, char* argv[])
 {
- 
+  int status = 0; 
   string pluginSpec;
   string portSpec;
-
-  if(argc < 3) {
-    cerr << "Wrong parameters to strauss.\n";
-    cerr << "USAGE: strauss -p plugin.xml portspec.xml\n"; 
-    exit(1);
-  }
-
-
-  std::string arg(argv[1]);
-  if(arg == "-p") {
-    pluginSpec=argv[2];
-    if(!fileExists(pluginSpec.c_str())) {
-      cerr << "ERROR: " << pluginSpec << "... doesn't seem to exist... bye.\n";
-      exit(1);
-    }
-  } else {
-    cerr << "Unknown option: " << argv[1] << endl;
-    exit(1);
-  }
-
-  portSpec = argv[3];  
-  if(!fileExists(portSpec.c_str())) {
-    cerr << "ERROR: " << portSpec << "... doesn't seem to exist... bye.\n";
-    exit(1);
-  }
-
-  //Currently there is no option to specify output files in commandline, maybe add that later
   string header("Bridge.h");
   string impl("Bridge.cc");
 
-  try {
-    XMLPlatformUtils::Initialize();
+  if(argc < 3) {
+    cerr << "Wrong parameters to strauss.\n";
+    cerr << "USAGE: strauss -p plugin portspec.xml\n"; 
+    exit(1);
   }
-  catch (const XMLException& toCatch) {
-    char* message = XMLString::transcode(toCatch.getMessage());
-    cout << "Error during initialization of XERXES! :\n";
+
+  for(int i=1;i<argc;i++){
+    std::string arg(argv[i]);
+    if(arg == "-p") {
+      pluginSpec=argv[++i];
+      if(!fileExists(pluginSpec.c_str())) {
+        cerr << "ERROR: " << pluginSpec << "... doesn't seem to exist... bye.\n";
+        exit(1);
+      }
+    } else if(arg == "-o") {
+      header = std::string(argv[++i]) + ".h";
+      impl = std::string(argv[i]) + ".cc"; 
+    } else {
+      portSpec = argv[i];  
+      if(!fileExists(portSpec.c_str())) {
+        cerr << "ERROR: " << portSpec << "... doesn't seem to exist... bye.\n";
+        exit(1);
+      }
+    }
+  }
+
+  try {
+    Strauss* strauss = new Strauss(pluginSpec,portSpec,header,impl);
+    status = strauss->emit();
+    strauss->commitToFiles();
+    delete strauss;
+  }
+  catch (...) {
+    cerr << "Strauss: FAILED\n";
     return 1;
   }
 
-  
-  Strauss* strauss = new Strauss(pluginSpec,portSpec,header,impl);
-  strauss->emitHeader();
-  strauss->emitImpl();
-  delete strauss;
-
-  return 0;
+  return status;
 }
 

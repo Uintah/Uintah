@@ -86,7 +86,10 @@ namespace SCIRun {
 	        const sci::cca::ComponentID::pointer& c1,
 	        const std::string& port1,
 	        const sci::cca::ComponentID::pointer& c2);
-    virtual std::string generateBridge(const std::string& c1, const std::string& c2);
+    virtual std::string generateBridge(const sci::cca::ComponentID::pointer& c1,
+				       const string& port1,
+				       const sci::cca::ComponentID::pointer& c2,
+				       const string& port2);
 
     sci::cca::Port::pointer getService(const std::string&);
 
