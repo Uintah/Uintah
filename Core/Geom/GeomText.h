@@ -45,12 +45,18 @@ namespace SCIRun {
 class SCICORESHARE GeomText : public GeomObj {
 public:
   string text;
+  string fontsize;
   Point at;
   Color c;
 public:
   GeomText();
   GeomText(const GeomText&);
-  GeomText( const string &, const Point &, const Color &c = Color(1,1,1));
+
+  // note: possible strings for fontsize are "*", "0", "6", "8", 
+  // "10", "11", "12", "13", "14", "15", "16", "17" otherwise it will
+  // be set to "*"---Kurt Zimmerman
+  GeomText( const string &, const Point &, const Color &c = Color(1,1,1),
+	    const string& fontsize = "*");
   virtual ~GeomText();
   virtual GeomObj* clone();
 
