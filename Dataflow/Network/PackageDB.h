@@ -100,21 +100,16 @@ namespace SCIRun {
       string		getCategoryName(const string &packName,
 					const string &catName,
 					const string &modName);
-
-      // Doesnt belong here, this is the path to the TCL GUI splash screen
-      void		setSplashPath(const string &p);
-      void		setLoadingApp(bool b, const string &ses = "");
     private:
       LIBRARY_HANDLE	findLib(string);
       bool		findMaker(ModuleInfo* info);
       void		registerModule(ModuleInfo* info);
-      void		do_command(const string& cmd);
-      vector<string>	delayed_commands;
+      void		gui_exec(const string&);
+      void		printMessage(const string&);
+      vector<string>	delayed_commands_;
       Packages *        db_;
       vector<string>    packageList_;
-      GuiInterface *	gui;
-      string		splash_path_;
-      bool		loading_app_;
+      GuiInterface *	gui_;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break
