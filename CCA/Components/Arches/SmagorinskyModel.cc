@@ -288,7 +288,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //else {
@@ -434,7 +435,8 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //else {

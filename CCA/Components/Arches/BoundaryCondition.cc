@@ -346,7 +346,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
-  if (old_dw->exists(d_lab->d_cellInfoLabel, patch)) 
+  if (old_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
     old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   else {
     cellInfoP.setData(scinew CellInformation(patch));
@@ -714,6 +714,7 @@ BoundaryCondition::sched_calculateArea(const LevelP& level,
       int numGhostCells = 0;
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      tsk->computes(old_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
       for (int ii = 0; ii < d_numInlets; ii++) {
 	// make it simple by adding matlindex for reduction vars
 	tsk->computes(old_dw, d_flowInlets[ii].d_area_label);

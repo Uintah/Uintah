@@ -217,7 +217,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
   //           pressureIN. scalarIN
   // compute : densityRCP, viscosityRCTS, [u,v,w]VelocityMS,
   //           pressurePS, scalarSS 
-  /*int error_code = */d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
+  d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
 					      time, dt);
   //  if (!error_code) {
   //    old_dw = new_dw;

@@ -110,15 +110,15 @@ KD_Tree::DeleteItem(KD_Node*& x, int key[], int lev){
     return(true);
   }
   if(key[lev] > x->keys[lev]) {
-    DeleteItem(x->right,key,(lev+1)%d_dim);
+    return DeleteItem(x->right,key,(lev+1)%d_dim);
   }
   else {
-    DeleteItem(x->left, key,(lev+1)%d_dim);
+    return DeleteItem(x->left, key,(lev+1)%d_dim);
   }
 }
 
 void                                    
-KD_Tree::TreeDelete(KD_Node*& x, int key[]){
+KD_Tree::TreeDelete(KD_Node*& x, int* /* key[] */ ){
   vector<double> phi;
   KD_Node *z = new KD_Node;
   // If Node x is a leaf
@@ -175,6 +175,9 @@ KD_Tree::DestroyTree(KD_Node *x){
 
 //
 // $Log$
+// Revision 1.2  2001/02/02 01:54:34  rawat
+// cnges made for checkpointing to work
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //
