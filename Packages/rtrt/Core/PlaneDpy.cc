@@ -16,15 +16,18 @@
 using namespace rtrt;
 using namespace SCIRun;
 
-PlaneDpy::PlaneDpy(const Vector& n, const Point& pt)
-    : DpyBase("PlaneDpy"), n(n)
+PlaneDpy::PlaneDpy(const Vector& n, const Point& pt,
+		   bool active, bool use_material)
+  : DpyBase("PlaneDpy"), n(n), active(active), use_material(use_material) 
 {
     d=Dot(n, pt);
     xres=300;
     yres=300;
 }
-PlaneDpy::PlaneDpy(const Vector& n, const double d)
-  : DpyBase("PlaneDpy"), n(n), d(d)
+PlaneDpy::PlaneDpy(const Vector& n, const double d,
+		   bool active, bool use_material)
+  : DpyBase("PlaneDpy"), n(n), d(d),
+    active(active), use_material(use_material) 
 {
     xres=300;
     yres=300;
@@ -106,7 +109,20 @@ void PlaneDpy::resize(const int width, const int height) {
   }
 }
 
-void PlaneDpy::button_released(MouseButton button, const int x, const int y){
+void PlaneDpy::key_pressed(unsigned long key) {
+  switch (key) {
+  case XK_a:
+  case XK_A:
+    active = !active;
+    break;
+  case XK_m:
+  case XK_M:
+    use_material = !use_material;
+    break;
+  }
+}
+
+void PlaneDpy::button_pressed(MouseButton button, const int x, const int y){
   if (button==Button1) {
     starty = y;
     move(x, y);
