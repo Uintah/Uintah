@@ -54,8 +54,10 @@ void ParticleEigenEvaluator::execute(void) {
   vector< ShareAssignParticleVariable<Matrix3> >::const_iterator iter;
   for (iter = tensors.begin(); iter != tensors.end(); iter++) {
     ParticleSubset* subset = (*iter).getParticleSubset();
-    selectedEValues.copyPointer(ParticleVariable<double>(subset));
-    selectedEVectors.copyPointer(ParticleVariable<Vector>(subset));
+    ParticleVariable<double> pDoubles(subset);
+    ParticleVariable<Vector> pVectors(subset);
+    selectedEValues.copyPointer(pDoubles);
+    selectedEVectors.copyPointer(pVectors);
     for (ParticleSubset::iterator sub_iter = subset->begin();
 	 sub_iter != subset->end(); sub_iter++) {
       pM = &(*iter)[*sub_iter];
