@@ -213,7 +213,8 @@ setGlobal $m7-widgetscale {}
 setGlobal $m7-ringstate {}
 setGlobal $m7-framestate {}
 setGlobal $m7-numseeds {2500}
-setGlobal $m7-rngseed {11}
+setGlobal $m7-rngseed {10}
+setGlobal $m7-rnginc {0}
 setGlobal $m7-dist {uniscat}
 setGlobal $m7-whichtab {Random}
 
