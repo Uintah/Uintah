@@ -619,12 +619,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method process_group { tree parent fileId input } {
 
-	set name [process_name $input]
+	set gname [process_name $input]
 	set info(type) @blt::tv::normalOpenFolder
 	set info(Node-Type) ""
 	set info(Data-Type) ""
 	set info(Value) ""
-	set node [$tree insert $parent -tag "group" -label $name \
+	set node [$tree insert $parent -tag "group" -label $gname \
 		      -data [array get info]]
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
@@ -671,12 +671,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    append message $line
 	    $this-c error message
 	} else {
-	    set name [process_name $input]
+	    set aname [process_name $input]
 	    set info(type) ""
 	    set info(Node-Type) "Attribute"
 	    set info(Data-Type) ""
 	    set info(Value) $attr
-	    $tree insert $parent -tag "attribute" -label $name \
+	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
 	}
     }
@@ -712,12 +712,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    append message $line
 	    $this-c error message
 	} else {
-	    set name [process_name $input]
+	    set dsname [process_name $input]
 	    set info(type) ""
 	    set info(Node-Type) "DataSet"
 	    set info(Data-Type) $type
 	    set info(Value) $dims
-	    $tree insert $parent -tag "dataset" -label $name \
+	    $tree insert $parent -tag "dataset" -label $dsname \
 		-data [array get info]
 	}
     }
@@ -726,9 +726,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set start [string first "\"" $line]
 	set end   [string  last "\"" $line]
 
-	set name [string range $line [expr $start+1] [expr $end-1]]
-
-	return $name
+	return [string range $line [expr $start+1] [expr $end-1]]
     }
 
     method set_size {ndims dims} {
@@ -964,18 +962,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    foreach dataset $tmp {
 
-		set name $dataset
+		set dsname $dataset
 
 		if { [string length $ports] > 0 } {
 		    set port [string range $ports [expr $cc*4] [expr $cc*4+3]]
 
 		    if { [string length $port] > 0 } {
-			append name "   Port "
-			append name $port
+			append dsname "   Port "
+			append dsname $port
 		    }
 		}
 
-		$listbox.list insert end $name
+		$listbox.list insert end $dsname
 
 		incr cc
 	    }
