@@ -16,6 +16,7 @@ TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
     	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
 	    ("twomatburn.ups",		    ["dbg", "opt"]),	\
 	    ("sidecrack.ups",		    ["dbg", "opt"])
+	]
     	
 
 def input (test):
