@@ -5,6 +5,9 @@
 #include <sax/SAXParseException.hpp>
 #include <sax2/SAX2XMLReader.hpp>
 #include <sax2/XMLReaderFactory.hpp>
+#include <iostream>
+using std::cout;
+using std::endl;
 
 namespace SCIRun {
 
