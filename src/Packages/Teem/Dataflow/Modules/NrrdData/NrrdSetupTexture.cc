@@ -126,10 +126,10 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
         int k1 = k+1;
         if (i == 0)   { i0 = i; xscale = 1.0; }
         if (i1 == ni) { i1 = i; xscale = 1.0; }
-        if (j == 0)   { j0 = j; xscale = 1.0; }
-        if (j1 == nj) { j1 = j; xscale = 1.0; }
-        if (k == 0)   { k0 = k; xscale = 1.0; }
-        if (k1 == nk) { k1 = k; xscale = 1.0; }
+        if (j == 0)   { j0 = j; yscale = 1.0; }
+        if (j1 == nj) { j1 = j; yscale = 1.0; }
+        if (k == 0)   { k0 = k; zscale = 1.0; }
+        if (k1 == nk) { k1 = k; zscale = 1.0; }
 
         const double val = (double)nindata[i * njk + j * nk + k];
         const double x0 = nindata[i0 * njk + j * nk + k];
