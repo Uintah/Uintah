@@ -46,6 +46,7 @@ foreach $t (@scounts) {
     $p=int($p*10+0.5)/10.;
     print "$counts{$t}\t$p%\t$t ($lcount)\n";
     $sum+=$counts{$t};
-    $lsum+=$nfiles*$counts{$t};
+    $nlcounts{$t}=$lcount*$counts{$t};
+    $lsum+=$lcount*$counts{$t};
 }
 print "$sum total files included ($lsum total lines)\n";
