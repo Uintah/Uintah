@@ -78,27 +78,16 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
       if (!control_widget) return;
       Point w(control_widget->ReferencePoint());
       if (args[2] == "xplus") {
-	w+=ddx;
-      } else if (args[2] == "xminus") {
-	w-=ddx;
+	w+=ddx*atof(args[3].c_str());
       } else if (args[2] == "yplus") {
-	w+=ddy;
-      } else if (args[2] == "yminus") {
-	w-=ddy;
+	w+=ddy*atof(args[3].c_str());
       } else if (args[2] == "zplus") {
-	w+=ddz;
-      } else if (args[2] == "zminus"){
-	w-=ddz;
+	w+=ddz*atof(args[3].c_str());
       } else if (args[2] == "vplus"){
 	GeometryData* data = ogeom->getData( 0, 1);
 	Vector view = data->view->lookat() - data->view->eyep();
 	view.normalize();
-	w += view*ddview;
-      } else if (args[2] == "vminus"){
-	GeometryData* data = ogeom->getData( 0, 1);
-	Vector view = data->view->lookat() - data->view->eyep();
-	view.normalize();
-	w -= view*ddview;
+	w += view*ddview*atof(args[3].c_str());
       }
       control_widget->SetPosition(w);
       widget_moved(1);
