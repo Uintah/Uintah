@@ -888,42 +888,30 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
                                    DataWarehouse* /*old_dw*/,
                                    DataWarehouse* new_dw)
 {
-  
-  int numICEmatls = d_sharedState->getNumICEMatls();
-  int flag = -9;
-  double mass;
-  vector<Vector> mat_mom_xyz(numICEmatls,Vector(0.,0.,0.));
-  vector<double> mat_mass(numICEmatls,0.);
-  vector<double> mat_total_mom(numICEmatls,0.);
-  vector<double> mat_total_eng(numICEmatls,0.);
-  vector<double> mat_int_eng(numICEmatls,0.);
-  vector<double> mat_KE(numICEmatls,0.);
-  Vector total_mom_xyz(0.0, 0.0, 0.0);
-  
-  double total_momentum = 0.0;
-  double total_energy   = 0.0;
-  double total_mass     = 0.0;
-  double total_KE       = 0.0;
-  double total_int_eng  = 0.0; 
-  
-  static double initial_total_eng = 0.0;
-  static double initial_total_mom = 0.0;
-  static int n_passes;
-  
-  //__________________________________
-  //  Loop over all the patches
   for(int p=0; p<patches->size(); p++)  {
-    const Patch* patch = patches->get(p);
-    cout << "Doing printConservedQuantities on patch " << patch->getID()
-     << "\t\t ICE" << endl;
-    constCCVariable<Vector> vel_CC;
-    constCCVariable<double> rho_CC;
-    constCCVariable<double> Temp_CC;
-    constCCVariable<double> delP_Dilatate;
+    const Patch* patch = patches->get(p);  
     Vector dx       = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
-    new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,Ghost::None, 0);
+    double mass;
+            
+    int numICEmatls = d_sharedState->getNumICEMatls();
+    int numALLMatls = d_sharedState->getNumMatls();
+
+    static double initial_total_eng;
+    static Vector initial_total_mom;
+    static int n_passes = 0.0;
     
+    vector<Vector> mat_momentum(numICEmatls);
+    vector<double> mat_mass(numICEmatls);
+    vector<double> mat_total_eng(numICEmatls);
+    vector<double> mat_int_eng(numICEmatls);
+    vector<double> mat_KE(numICEmatls);
+      
+    constCCVariable<Vector> vel_CC, mom_L_CC, mom_L_ME_CC;
+    constCCVariable<double> rho_CC, int_eng_L_CC, eng_L_ME_CC;
+    constCCVariable<double> Temp_CC;
+   
+    Ghost::GhostType  gn  = Ghost::None;
     //__________________________________
     // Loop over all the ICE matls
     for (int m = 0; m < numICEmatls; m++ ) {
@@ -933,128 +921,116 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch,  Ghost::None, 0);
       new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch,  Ghost::None, 0);
       double cv = ice_matl->getSpecificHeat();   
-      
+      mat_momentum[m] = Vector(0.0, 0.0, 0.0);
+      mat_KE[m]       = 0.0;
+      mat_int_eng[m]  = 0.0;
+      mat_mass[m]     = 0.0;
       //__________________________________
       // Accumulate the momenta and energy
       for (CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-       mass            = rho_CC[*iter] * cell_vol;
-       mat_mom_xyz[m] += vel_CC[*iter]*rho_CC[*iter] * mass;
-       double vel_sq = vel_CC[*iter].length() * vel_CC[*iter].length();
-       mat_KE[m]      += 0.5 * mass * vel_sq;
-       mat_int_eng[m] += mass * cv * Temp_CC[*iter];
-       mat_mass[m]    += mass;
+        IntVector c = *iter;
+        mass            = rho_CC[c] * cell_vol;
+        mat_momentum[m] += vel_CC[c] * mass;
+        double vel_sq = vel_CC[c].length() * vel_CC[c].length();
+        mat_KE[m]      += 0.5 * mass * vel_sq;
+        mat_int_eng[m] += mass * cv * Temp_CC[c];
+        mat_mass[m]    += mass;        
       }
     }  // numICEmatls loop
 
-    if (switchTestConservation) {
+    //__________________________________
+    //  Now compute totals and the change in quantities
+    Vector total_momentum(0.0, 0.0, 0.0);
+    double total_energy   = 0.0;
+    double total_mass     = 0.0;
+    double total_KE       = 0.0;
+    double total_int_eng  = 0.0;
+
+    for (int m = 0; m < numICEmatls; m++ ) {
+      mat_total_eng[m]= mat_int_eng[m] + mat_KE[m];
+      total_energy   += mat_total_eng[m];
+      total_KE       += mat_KE[m];
+      total_int_eng  += mat_int_eng[m];
+      total_mass     += mat_mass[m];
+      total_momentum += mat_momentum[m];
+    }
+    //__________________________________
+    // Dump diagnostics if only one patch
+    const Level* level=patch->getLevel();
+    int numPatches = level->numPatches();
+    if( numPatches == 1 ){ 
+      cout.setf(ios::scientific,ios::floatfield);
+      cout.precision(8);
+      for (int m = 0; m < numICEmatls; m++ ) {
+        cout << " Mat " << m << endl;
+        cout << " mass        " <<  mat_mass[m] << endl;
+        cout << " momentum    " << mat_momentum[m]
+             << " length: " << mat_momentum[m].length() << endl;
+        cout << " Int Energy: " << mat_int_eng[m] 
+             << ", Kinetic: " << mat_KE[m] 
+             << " total: "    << mat_total_eng[m] << endl;
+      }
+   
       //__________________________________
-      // This grossness checks to see if delPress
-      // near a ghost cell is > 0  
-      IntVector low, hi;
+      //  set the inital values
+      if ( n_passes == 0) {
+        initial_total_eng = total_energy;
+        initial_total_mom = total_momentum;
+        n_passes ++;
+      } 
+
+      double change_total_mom =
+                  100.0 * (total_momentum.length() - initial_total_mom.length())/
+                  (initial_total_mom.length() + d_SMALL_NUM);
+      double change_total_eng =
+                  100.0 * (total_energy - initial_total_eng)/
+                  (initial_total_eng + d_SMALL_NUM);
+      cout << "Totals: \t mass " << total_mass 
+           << " \t\t momentum " << total_momentum 
+           << " \t\t energy   " << total_energy << endl;
+      cout << "Percent change in total mom.: " << change_total_mom 
+           << " \t  total eng: " << change_total_eng << endl;
       
-      low = delP_Dilatate.getLowIndex();
-      hi  = delP_Dilatate.getHighIndex();
-      // x_plus
-      for (int j = low.y(); j<hi.y(); j++) {
-       for (int k = low.z(); k<hi.z(); k++) {
-         if( fabs(delP_Dilatate[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
-           flag = 1;
-         }
-       }
-      }
-      // x_minus
-      for (int j = low.y(); j<hi.y(); j++) {
-       for (int k = low.z(); k<hi.z(); k++) {
-         if( fabs(delP_Dilatate[IntVector(low.x()+1,j,k)]) > 0.0 )  {
-           flag = 1;
-         }
-       }
-      }
-      // y_plus
-      for (int i = low.x(); i<hi.x(); i++) {
-       for (int k = low.z(); k<hi.z(); k++) {
-         if( fabs(delP_Dilatate[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
-           flag = 1;
-         }
-       }
-      }
-      // y_minus
-      for (int i = low.x(); i<hi.x(); i++) {
-       for (int k = low.z(); k<hi.z(); k++) {
-         if( fabs(delP_Dilatate[IntVector(i,low.y()+1,k)]) > 0.0 )  {
-           flag = 1;
-         }
-       }
-      }
-      // z_plus
-      for (int i = low.x(); i<hi.x(); i++) {
-       for (int j = low.y(); j<hi.y(); j++) {
-         if( fabs(delP_Dilatate[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
-           flag = 1;
-         }
-       }
-      }
-      // z_minus
-      for (int i = low.x(); i<hi.x(); i++) {
-       for (int j = low.y(); j<hi.y(); j++) {
-         if( fabs(delP_Dilatate[IntVector(i,j,low.z()+1)]) > 0.0 )   {
-           flag = 1;
-         }
-       }
-      }
-    } // end switchTestConservation
-  }  // patch loop
-  
-  //__________________________________
-  //  Now compute totals and the change in quantities
-  for (int m = 0; m < numICEmatls; m++ ) {
-    mat_total_mom[m]= mat_mom_xyz[m].x() + mat_mom_xyz[m].y() + mat_mom_xyz[m].z();
-    mat_total_eng[m]= mat_int_eng[m] + mat_KE[m];
-    total_momentum += mat_total_mom[m];
-    total_energy   += mat_total_eng[m];
-    total_KE       += mat_KE[m];
-    total_int_eng  += mat_int_eng[m];
-    total_mass     += mat_mass[m];
-    total_mom_xyz  += mat_mom_xyz[m];
-    if ( n_passes < numICEmatls) {
-      initial_total_eng += mat_total_eng[m];
-      initial_total_mom += mat_total_mom[m];
-      n_passes ++;
-    } 
+    }  // numPatrches==1
+
+    //__________________________________
+    //  Now check to see that momentum and energy
+    //  are being conserved during the exchange process
+    Vector sum_mom_L_CC     = Vector(0.0, 0.0, 0.0);
+    Vector sum_mom_L_ME_CC  = Vector(0.0, 0.0, 0.0);
+    double sum_int_eng_L_CC = 0.0;
+    double sum_eng_L_ME_CC  = 0.0;
     
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(4);
-    cerr << m << "Fluid mass " <<  mat_mass[m] << "\n";
-    cerr.setf(ios::fixed,ios::floatfield);
-    cerr << m << "Fluid momentum[ " << mat_mom_xyz[m].x() << ", " << 
-      mat_mom_xyz[m].y() << ", " << mat_mom_xyz[m].z() << "]\t";
-    cerr << "Components Sum: " << mat_total_mom[m] << "\n";
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr << m << "Fluid eng[internal " << mat_int_eng[m] <<  ", Kinetic: " 
-        << mat_KE[m] << "]: " << mat_total_eng[m] << "\n";
-  }
-  double change_total_mom =
-              100.0 * (total_momentum - initial_total_mom)/
-              (initial_total_mom + d_SMALL_NUM);
-  double change_total_eng =
-              100.0 * (total_energy - initial_total_eng)/
-              (initial_total_eng + d_SMALL_NUM);
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
 
-  cerr.setf(ios::scientific, ios::floatfield);
-  cerr.precision(4);
-  cerr << "Totals: \t mass " << total_mass << " \t\tmomentum " << 
-    total_momentum << " \t\t energy " << total_energy << "\n";
-  cerr.setf(ios::fixed,ios::floatfield);
-  cerr << "Percent change in total fluid mom.: " << change_total_mom <<
-    " \t fluid total eng: " << change_total_eng << "\n";
-  cerr.setf(ios::scientific, ios::floatfield);
-
-  if (flag == 1)  {
-    cout<< " D E L P R E S S   >   0   O N   B O U N D A R Y"<<endl;
-    cout<< "******* N O   L O N G E R   C O N S E R V I N G *******\n"<<endl;
-  }
-  new_dw->put(sum_vartype(total_mass),      lb->TotalMassLabel);
-  new_dw->put(sum_vartype(total_KE),        lb->KineticEnergyLabel);
-  new_dw->put(sum_vartype(total_int_eng),   lb->TotalIntEngLabel);
-  new_dw->put(sumvec_vartype(total_mom_xyz),  lb->CenterOfMassVelocityLabel);
+      new_dw->get(mom_L_CC,     lb->mom_L_CCLabel,     indx, patch,gn, 0);
+      new_dw->get(int_eng_L_CC, lb->int_eng_L_CCLabel, indx, patch,gn, 0);       
+      new_dw->get(mom_L_ME_CC,  lb->mom_L_ME_CCLabel,  indx, patch,gn, 0);       
+      new_dw->get(eng_L_ME_CC,  lb->eng_L_ME_CCLabel,  indx, patch,gn, 0); 
+      
+      for (CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+          sum_mom_L_CC     += mom_L_CC[c];     
+          sum_mom_L_ME_CC  += mom_L_ME_CC[c];  
+          sum_int_eng_L_CC += int_eng_L_CC[c]; 
+          sum_eng_L_ME_CC  += eng_L_ME_CC[c];  
+      }
+    }
+    Vector mom_exch_error = sum_mom_L_CC     - sum_mom_L_ME_CC;
+    double eng_exch_error = sum_int_eng_L_CC - sum_eng_L_ME_CC;
+    if( numPatches == 1 ) {
+      cout << "error in momentumExchange "<< mom_exch_error<< endl;
+      cout << "error in EnergyExchange   "<< eng_exch_error<< endl;
+      cout.setf(ios::scientific, ios::floatfield);
+    }
+      
+    new_dw->put(sumvec_vartype(mom_exch_error), lb->mom_exch_errorLabel);
+    new_dw->put(sum_vartype(eng_exch_error),    lb->eng_exch_errorLabel);      
+    new_dw->put(sum_vartype(total_mass),        lb->TotalMassLabel);
+    new_dw->put(sum_vartype(total_KE),          lb->KineticEnergyLabel);
+    new_dw->put(sum_vartype(total_int_eng),     lb->TotalIntEngLabel);
+    new_dw->put(sumvec_vartype(total_momentum), lb->CenterOfMassVelocityLabel);
+  }  // patch loop
 }
