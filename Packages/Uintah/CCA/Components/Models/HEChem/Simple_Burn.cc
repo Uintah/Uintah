@@ -63,6 +63,44 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
 {
   cout << "I'm in problem setup" << endl;
   d_sharedState = sharedState;
+  bool defaultActive=true;
+  params->getWithDefault("Active", d_active, defaultActive);
+  if(d_active){
+    matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
+    matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
+    params->require("ThresholdTemp",    d_thresholdTemp);
+    params->require("ThresholdPressure",d_thresholdPress);
+    params->require("Enthalpy",         d_Enthalpy);
+    params->require("BurnCoeff",        d_BurnCoeff);
+    params->require("refPressure",      d_refPress);
+
+    //__________________________________
+    //  define the materialSet
+    vector<int> m_tmp(2);
+    m_tmp[0] = matl0->getDWIndex();
+    m_tmp[1] = matl1->getDWIndex();
+    mymatls = new MaterialSet();            
+ 
+    if( m_tmp[0] != 0 && m_tmp[1] != 0){
+      vector<int> m(3);
+      m[0] = 0;    // needed for the pressure and NC_CCWeight 
+      m[1] = m_tmp[0];
+      m[2] = m_tmp[1];
+      mymatls->addAll(m);
+    }else{
+      vector<int> m(2);
+      m[0] = m_tmp[0];
+      m[1] = m_tmp[1];
+      mymatls->addAll(m);
+    }
+    mymatls->addReference();
+  }
+}
+void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
+			        ModelSetup*)
+{
+  cout << "I'm in problem setup" << endl;
+  d_active=true;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
   params->require("ThresholdTemp",    d_thresholdTemp);
@@ -70,17 +108,17 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
   params->require("Enthalpy",         d_Enthalpy);
   params->require("BurnCoeff",        d_BurnCoeff);
   params->require("refPressure",      d_refPress);
-
+                                                                              
   //__________________________________
   //  define the materialSet
   vector<int> m_tmp(2);
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
-  mymatls = new MaterialSet();            
- 
+  mymatls = new MaterialSet();
+                                                                              
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight 
+    m[0] = 0;    // needed for the pressure and NC_CCWeight
     m[1] = m_tmp[0];
     m[2] = m_tmp[1];
     mymatls->addAll(m);
@@ -91,6 +129,7 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
     mymatls->addAll(m);
   }
   mymatls->addReference();
+
 }
 //______________________________________________________________________
 //     
@@ -115,6 +154,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
 				                  const LevelP& level,
 				                  const ModelInfo* mi)
 {
+ if(d_active){
   Task* t = scinew Task("Simple_Burn::computeModelSources",this, 
                         &Simple_Burn::computeModelSources, mi);
   cout_doing << "SIMPLE_BURN::scheduleComputeModelSources "<<  endl;  
@@ -161,6 +201,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   if (one_matl->removeReference())
     delete one_matl;
+ }
 }
 
 //______________________________________________________________________
@@ -172,11 +213,9 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
 			                 DataWarehouse* new_dw,
 			                 const ModelInfo* mi)
 {
-
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
 
-//  ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
  
