@@ -313,10 +313,10 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
 //      cout << "R^T*R " << Check << endl;
 
-//    End of rotation computation
+//    End of rotation tensor computation
 
       T1[idx] = R*Vector(1,0,0);
-      T2[idx] = R*Vector(0,1,0);
+      T2[idx] = R*Vector(0,0,1);
 
 //      T1[idx] = Vector(4./sqrt(53.),   6./sqrt(53.),   1./sqrt(53.));
 //      T2[idx] = Vector(-3./sqrt(13.),  2./sqrt(13.),   0.);
@@ -326,17 +326,9 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
               -(T1[idx].x()*T2[idx].z() - T1[idx].z()*T2[idx].x()),
                 T1[idx].x()*T2[idx].y() - T1[idx].y()*T2[idx].x());
 
-//      cout << "T3" << endl;
-//      cout << T3 << endl;
-
       Matrix3 Q(Dot(T1[idx],I), Dot(T1[idx],J), Dot(T1[idx],K),
                 Dot(T2[idx],I), Dot(T2[idx],J), Dot(T2[idx],K),
                 Dot(T3     ,I), Dot(T3     ,J), Dot(T3     ,K));
-
-//      if(velGrad.Norm() > 0.01){
-//        cout << "Q" << endl;
-//        cout << Q << endl;
-//      }
 
 //      cout << Q << endl;
 //      getchar();
@@ -352,15 +344,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       L_ij_ip(3,1) = Dot(T3     , velGrad*T1[idx]);
       L_ij_ip(3,2) = Dot(T3     , velGrad*T2[idx]);
       L_ij_ip(3,3) = Dot(T3     , velGrad*T3     );
-
-//      if(velGrad.Norm() > 0.01){
-//        cout << "velGrad" << endl;
-//        cout <<  velGrad << endl;
-//      }
-//      if(velGrad.Norm() > 0.01){
-//        cout << "L_ij_ip" << endl;
-//        cout <<  L_ij_ip << endl;
-//      }
 
 //      cout << L_ij_ip << endl;
 //      getchar();
@@ -425,6 +408,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       // compute the total stress (volumetric + deviatoric)
       pstress_new[idx] = Identity*p + Shear/jvol;
       pstress_new[idx](3,3) = 0.;
+
+      pstress_new[idx] = Q.Transpose() * pstress_new[idx] * Q;
 
 //      cout << pstress_new[idx] << endl;
 //      getchar();
