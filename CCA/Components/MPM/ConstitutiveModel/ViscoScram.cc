@@ -426,9 +426,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pMass,               lb->pMassLabel,               pset);
     old_dw->get(pVol,                lb->pVolumeLabel,             pset);
     old_dw->get(pTemperature,        lb->pTemperatureLabel,        pset);
-    if(flag->d_8or27==27){
-      old_dw->get(pSize,             lb->pSizeLabel,               pset);
-    }
+    old_dw->get(pSize,             lb->pSizeLabel,               pset);
+
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pStress,             lb->pStressLabel,             pset);
