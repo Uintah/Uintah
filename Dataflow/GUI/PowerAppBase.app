@@ -1076,7 +1076,7 @@ class PowerAppBase {
     ###########################
     # Blocks a module connection
     method block_connection { modA portA modB portB } {
-	disableConnection "$modA $portA $modB $portB"
+	connectionDisable "$modA $portA $modB $portB"
     }
 
 
@@ -1086,7 +1086,7 @@ class PowerAppBase {
     ###########################
     # Unblocks a module connection
     method unblock_connection { modA portA modB portB } {
-	disableConnection "$modA $portA $modB $portB"
+	connectionEnable "$modA $portA $modB $portB"
     }
 
 

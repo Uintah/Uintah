@@ -56,11 +56,10 @@ proc regenConnectionMenu { menu_id conn } {
 	$menu_id add cascade -label "Insert Module" -menu $menu_id.insertModule
     }
     set connid [makeConnID $conn]
-    if { ![isaSubnet [oMod conn]] && ![isaSubnet [iMod conn]] } {
-	setIfExists disabled Disabled($connid) 0
-	set label [expr $disabled?"Enable":"Disable"]
-	$menu_id add command -command "disableConnection {$conn}" -label $label
-    }
+    setIfExists disabled Disabled($connid) 0
+    set label [expr $disabled?"Enable":"Disable"]
+    $menu_id add command -command "connection$label {$conn}" -label $label
+
     $menu_id add command -label "Notes" -command "notesWindow $connid"
     if {  [array exists ConnectionRoutes] && \
 	      [array names ConnectionRoutes $connid] != "" } {
@@ -303,14 +302,28 @@ proc disableConnectionID { connid state } {
     }
 }
 
-proc disableConnection { conn } {
+proc connectionEnable { conn } {
     global Disabled
     set connid [makeConnID $conn]
     setIfExists disabled Disabled($connid) 0
+    if { !$disabled } return
     # disabledTrace is called when Disabled is written to,
     # it does the actual disabling of the connection in the network
-    set Disabled($connid) [expr $disabled?0:1]
+    set Disabled($connid) 0
 }
+
+proc connectionDisable { conn } {
+    global Disabled
+    set connid [makeConnID $conn]
+    setIfExists disabled Disabled($connid) 0
+    if { $disabled } return
+    # disabledTrace is called when Disabled is written to,
+    # it does the actual disabling of the connection in the network
+    set Disabled($connid) 1
+}
+
+
+
 
 proc drawConnectionTrace { conn } {
     global Subnet Color TracedSubnets
