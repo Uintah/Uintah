@@ -221,7 +221,18 @@ Point Level::getCellPosition(const IntVector& v) const
 IntVector Level::getCellIndex(const Point& p) const
 {
    Vector v((p-d_anchor)/d_dcell);
-   return IntVector((int)v.x(), (int)v.y(), (int)v.z());
+   // This bit of funky looking code is designed to bypass rounding issues
+   // for negative numbers.  We need to always round down, but a -0.5 rounds
+   // to 0 instead of -1.  So by adding 10000 we get 9999.5, cast to int
+   // would be 9999.  Subtract the 10000 and you get -1.
+
+   //////////////////////////////////////////////////////////////////
+   // if any member of v gets less than -10000 than this code
+   // must be adjusted accordingly
+   //////////////////////////////////////////////////////////////////
+   return IntVector((int)(v.x()+10000.)-10000,
+		    (int)(v.y()+10000.)-10000,
+		    (int)(v.z()+10000.)-10000);
 }
 
 Point Level::positionToIndex(const Point& p) const
