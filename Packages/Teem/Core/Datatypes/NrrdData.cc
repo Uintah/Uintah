@@ -254,7 +254,7 @@ NrrdData::get_tuple_indecies(vector<string> &elems) const
 bool 
 NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
 {
-  if (!nrrd) return false;
+  if (!nrrd || !nrrd->axis[0].label) return false;
   string tup(nrrd->axis[0].label);
   vector<string> elems;
   get_tuple_indecies(elems);
