@@ -512,45 +512,45 @@ itcl_class VS_DataFlow_HotBox {
     if { [set $this-gui_is_injured(1)] == "1" } {
     button $w.f.row1.nw -background red -textvariable $this-gui_label(1) -command "$this set_selection 1"
     } else {
-    button $w.f.row1.nw  -textvariable $this-gui_label(1) -command "$this set_selection 1"
+    button $w.f.row1.nw -background gray -textvariable $this-gui_label(1) -command "$this set_selection 1"
     }
     if { [set $this-gui_is_injured(2)] == "1" } {
     button $w.f.row1.n -background red -textvariable $this-gui_label(2) -command "$this set_selection 2"
     } else {
-    button $w.f.row1.n   -textvariable $this-gui_label(2) -command "$this set_selection 2"
+    button $w.f.row1.n -background gray -textvariable $this-gui_label(2) -command "$this set_selection 2"
     }
     if { [set $this-gui_is_injured(3)] == "1" } {
     button $w.f.row1.ne -background red -textvariable $this-gui_label(3) -command "$this set_selection 3"
     } else {
-    button $w.f.row1.ne  -textvariable $this-gui_label(3) -command "$this set_selection 3"
+    button $w.f.row1.ne -background gray -textvariable $this-gui_label(3) -command "$this set_selection 3"
     }
     frame $w.f.row2
     if { [set $this-gui_is_injured(4)] == "1" } {
     button $w.f.row2.west -background red -textvariable $this-gui_label(4) -command "$this set_selection 4"
     } else {
-    button $w.f.row2.west -textvariable $this-gui_label(4) -command "$this set_selection 4"
+    button $w.f.row2.west -background gray -textvariable $this-gui_label(4) -command "$this set_selection 4"
     }
     button $w.f.row2.c  -background yellow  -textvariable $this-gui_label(5) -command "$this set_selection 5"
     if { [set $this-gui_is_injured(6)] == "1" } {
     button $w.f.row2.e  -background red -textvariable $this-gui_label(6) -command "$this set_selection 6"
     } else {
-    button $w.f.row2.e   -textvariable $this-gui_label(6) -command "$this set_selection 6"
+    button $w.f.row2.e -background gray -textvariable $this-gui_label(6) -command "$this set_selection 6"
     }
     frame $w.f.row3
     if { [set $this-gui_is_injured(7)] == "1" } {
     button $w.f.row3.sw -background red -textvariable $this-gui_label(7) -command "$this set_selection 7"
     } else {
-    button $w.f.row3.sw  -textvariable $this-gui_label(7) -command "$this set_selection 7"
+    button $w.f.row3.sw -background gray -textvariable $this-gui_label(7) -command "$this set_selection 7"
     }
     if { [set $this-gui_is_injured(8)] == "1" } {
     button $w.f.row3.s  -background red -textvariable $this-gui_label(8) -command "$this set_selection 8"
     } else {
-    button $w.f.row3.s   -textvariable $this-gui_label(8) -command "$this set_selection 8"
+    button $w.f.row3.s -background gray  -textvariable $this-gui_label(8) -command "$this set_selection 8"
     }
     if { [set $this-gui_is_injured(9)] == "1" } {
     button $w.f.row3.se -background red -textvariable $this-gui_label(9) -command "$this set_selection 9"
     } else {
-    button $w.f.row3.se  -textvariable $this-gui_label(9) -command "$this set_selection 9"
+    button $w.f.row3.se -background gray -textvariable $this-gui_label(9) -command "$this set_selection 9"
     }
 
     pack $w.f.row1 $w.f.row2 $w.f.row3 -side top -anchor w
@@ -576,7 +576,7 @@ itcl_class VS_DataFlow_HotBox {
     bind $w.probeUI.loc.locy <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
-    pack $w.probeUI.loc.locLabel $w.probeUI.loc.hotlist $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
+    pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz $w.probeUI.loc.hotlist \
                 -side left -anchor n -expand yes -fill x
 
     frame $w.probeUI.slideTime
