@@ -14,17 +14,69 @@
 
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Malloc/AllocPriv.h>
+#include <new>
 
 using namespace SCICore::Malloc;
 
-void* operator new(size_t size)
+#ifdef __sgi
+
+// This is ugly, but necessary, since --LANG:std remaps the mangling
+// of the global operator new.  This provides the "old" operator new,
+// since the compiler insists on generating both.
+//
+extern "C" {
+    void* __nw__GUi(size_t size)
+    {
+	if(!default_allocator)
+	    MakeDefaultAllocator();
+	return default_allocator->alloc(size, "unknown - operator new");
+    }
+
+    void* __nwa__GUi(size_t size)
+    {
+	if(!default_allocator)
+	    MakeDefaultAllocator();
+	return default_allocator->alloc(size, "unknown - operator new");
+    }
+}
+#endif
+
+void* operator new(size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
     return default_allocator->alloc(size, "unknown - operator new");
 }
 
-void operator delete(void* ptr)
+void* operator new[](size_t size) throw(std::bad_alloc)
+{
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    return default_allocator->alloc(size, "unknown - operator new[]");
+}
+
+void* operator new(size_t size, const std::nothrow_t&) throw()
+{
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    return default_allocator->alloc(size, "unknown - nothrow operator new");
+}
+
+void* operator new[](size_t size, const std::nothrow_t&) throw()
+{
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    return default_allocator->alloc(size, "unknown - nothrow operator new[]");
+}
+
+void operator delete(void* ptr) throw()
+{
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    default_allocator->free(ptr);
+}
+
+void operator delete[](void* ptr) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
@@ -56,6 +108,9 @@ void* operator new[](size_t size, Allocator* a, char* tag)
 
 //
 // $Log$
+// Revision 1.3  1999/08/31 23:26:13  sparker
+// Updates to fix operator new support on SGI with -LANG:std
+//
 // Revision 1.2  1999/08/17 06:39:31  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
