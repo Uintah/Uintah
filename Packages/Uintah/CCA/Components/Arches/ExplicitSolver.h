@@ -138,6 +138,11 @@ public:
 			      const MaterialSet* matls,
 			      const TimeIntegratorLabel* timelabels);
 
+      void sched_updatePressure(SchedulerP& sched,
+			      const PatchSet* patches,
+			      const MaterialSet* matls,
+			      const TimeIntegratorLabel* timelabels);
+
   
 protected :
 
@@ -192,6 +197,13 @@ private:
 			DataWarehouse* new_dw,
 			const TimeIntegratorLabel* timelabels);
 
+      void updatePressure(const ProcessorGroup* ,
+			const PatchSubset* patches,
+			const MaterialSubset*,
+			DataWarehouse* old_dw,
+			DataWarehouse* new_dw,
+			const TimeIntegratorLabel* timelabels);
+
 private:
       // const VarLabel*
       const ArchesLabel* d_lab;
@@ -228,6 +240,7 @@ private:
     TimeIntegratorLabel* nosolve_timelabels;
     int numTimeIntegratorLevels;
     bool nosolve_timelabels_allocated;
+    bool d_pressure_correction;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

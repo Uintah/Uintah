@@ -195,8 +195,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
-  d_conv_scheme = d_nlSolver->getConvectionSchemeType();
-  d_boundaryCondition->setConvectionSchemeType(d_conv_scheme);
 }
 
 // ****************************************************************************

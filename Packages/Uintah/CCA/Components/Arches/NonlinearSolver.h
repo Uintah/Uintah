@@ -92,14 +92,9 @@ public:
 	{
 	  return d_timeIntegratorType;
 	}
-      const int& getConvectionSchemeType() const
-	{
-	  return d_conv_scheme;
-	}
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;
-   int d_conv_scheme;
    // enthalpy solver
    EnthalpySolver* d_enthalpySolver;
 private:

@@ -34,6 +34,7 @@
 
 using namespace Uintah;
 using namespace std;
+#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
 
 //****************************************************************************
 // Default constructor for MomentumSolver
@@ -84,6 +85,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 //  else
 //    d_central = false;
   // make source and boundary_condition objects
+  db->getWithDefault("pressure_correction",d_pressure_correction,false);
 
   d_source = scinew Source(d_turbModel, d_physicalConsts);
 
@@ -164,8 +166,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->computes(timelabels->uvelocity_out);
 
-    if (d_conv_scheme > 0)
-      tsk->computes(timelabels->maxabsu_out);
+    tsk->computes(timelabels->maxabsu_out);
 
     break;
 
@@ -177,8 +178,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->computes(timelabels->vvelocity_out);
 
-    if (d_conv_scheme > 0)
-      tsk->computes(timelabels->maxabsv_out);
+    tsk->computes(timelabels->maxabsv_out);
 
     break;
 
@@ -190,8 +190,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->computes(timelabels->wvelocity_out);
 
-    if (d_conv_scheme > 0)
-      tsk->computes(timelabels->maxabsw_out);
+    tsk->computes(timelabels->maxabsw_out);
 
     break;
 
@@ -334,7 +333,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 						     delta_t, &velocityVars,
 						     &constVelocityVars);
 
-    if (d_conv_scheme > 0) {
     double maxAbsU = 0.0;
     double maxAbsV = 0.0;
     double maxAbsW = 0.0;
@@ -402,7 +400,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       break;
     default:
       throw InvalidValue("Invalid index in max abs velocity calculation");
-    }
     }
   }
 }
@@ -474,10 +471,25 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, timelabels->old_wvelocity_in,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-#ifdef do_pressure_correction
-  tsk->requires(Task::NewDW, timelabels->pressure_in, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#endif
+
+  if (d_pressure_correction)
+  if (timelabels->integrator_last_step)
+    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::OldDW, timelabels->pressure_guess, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    tsk->requires(Task::OldDW, timelabels->maxabsu_in);
+    tsk->requires(Task::OldDW, timelabels->maxabsv_in);
+    tsk->requires(Task::OldDW, timelabels->maxabsw_in);
+  }
+  else {
+    tsk->requires(Task::NewDW, timelabels->maxabsu_in);
+    tsk->requires(Task::NewDW, timelabels->maxabsv_in);
+    tsk->requires(Task::NewDW, timelabels->maxabsw_in);
+  }
   // required for computing div constraint
 #ifdef divergenceconstraint
   tsk->requires(Task::NewDW, timelabels->scalar_in, 
@@ -568,6 +580,26 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  max_vartype mxAbsU;
+  max_vartype mxAbsV;
+  max_vartype mxAbsW;
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    old_dw->get(mxAbsU, timelabels->maxabsu_in);
+    old_dw->get(mxAbsV, timelabels->maxabsv_in);
+    old_dw->get(mxAbsW, timelabels->maxabsw_in);
+  }
+  else {
+    new_dw->get(mxAbsU, timelabels->maxabsu_in);
+    new_dw->get(mxAbsV, timelabels->maxabsv_in);
+    new_dw->get(mxAbsW, timelabels->maxabsw_in);
+  }
+  maxAbsU = mxAbsU;
+  maxAbsV = mxAbsW;
+  maxAbsW = mxAbsW;
+
   for (int p = 0; p < patches->size(); p++) {
   TAU_PROFILE_START(input);
 
@@ -602,10 +634,15 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(constVelocityVars.old_wVelocity, timelabels->old_wvelocity_in, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-#ifdef do_pressure_correction
-    new_dw->get(constVelocityVars.pressure, timelabels->pressure_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-#endif
+
+    if (d_pressure_correction)
+    if (timelabels->integrator_last_step)
+      new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      old_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
 #ifdef divergenceconstraint
     new_dw->get(constVelocityVars.scalar, timelabels->scalar_in,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1102,6 +1139,44 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 					 &constVelocityVars);
       }
 
+  if (d_pressure_correction) {
+  int ioff, joff, koff;
+  IntVector idxLoU;
+  IntVector idxHiU;
+  switch(index) {
+  case Arches::XDIR:
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+    ioff = 1; joff = 0; koff = 0;
+    fort_computevel(idxLoU, idxHiU, velocityVars.uVelRhoHat, 
+		    constVelocityVars.pressure,
+		    constVelocityVars.new_density, delta_t,
+		    ioff, joff, koff, cellinfo->dxpw);
+    break;
+  case Arches::YDIR:
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+    ioff = 0; joff = 1; koff = 0;
+    fort_computevel(idxLoU, idxHiU, velocityVars.vVelRhoHat,
+		    constVelocityVars.pressure,
+		    constVelocityVars.new_density, delta_t,
+		    ioff, joff, koff, cellinfo->dyps);
+
+    break;
+  case Arches::ZDIR:
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+    ioff = 0; joff = 0; koff = 1;
+    fort_computevel(idxLoU, idxHiU, velocityVars.wVelRhoHat,
+		    constVelocityVars.pressure,
+		    constVelocityVars.new_density, delta_t,
+		    ioff, joff, koff, cellinfo->dzpb);
+    break;
+  default:
+    throw InvalidValue("Invalid index in MomentumSolver::addPressGrad");
+  }
+  }
+
 #ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for press coeff" << endl;
 #endif
@@ -1114,7 +1189,144 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo,
 					     &velocityVars, &constVelocityVars);
     d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
-					   &velocityVars, &constVelocityVars);
+					   &velocityVars, &constVelocityVars,
+					   maxAbsU, maxAbsV, maxAbsW);
+  if (d_pressure_correction) {
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int out_celltypeval = d_boundaryCondition->outletCellType();
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        if (constVelocityVars.cellType[xminusCell] == out_celltypeval) {
+           double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
+			            constVelocityVars.new_density[xminusCell]);
+
+           velocityVars.uVelRhoHat[currCell] -= 2.0*delta_t*
+		   		constVelocityVars.pressure[currCell]/
+				(cellinfo->sew[colX] * avdenlow);
+
+           velocityVars.uVelRhoHat[xminusCell] = velocityVars.uVelRhoHat[currCell];
+
+        }
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        IntVector xplusplusCell(colX+2, colY, colZ);
+        if (constVelocityVars.cellType[xplusCell] == out_celltypeval) {
+           double avden = 0.5 * (constVelocityVars.new_density[xplusCell] +
+			         constVelocityVars.new_density[currCell]);
+
+           velocityVars.uVelRhoHat[xplusCell] += 2.0*delta_t*
+				constVelocityVars.pressure[currCell]/
+				(cellinfo->sew[colX] * avden);
+
+           velocityVars.uVelRhoHat[xplusplusCell] = velocityVars.uVelRhoHat[xplusCell];
+        }
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+        if (constVelocityVars.cellType[yminusCell] == out_celltypeval) {
+           double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
+			            constVelocityVars.new_density[yminusCell]);
+
+           velocityVars.vVelRhoHat[currCell] -= 2.0*delta_t*
+		   		constVelocityVars.pressure[currCell]/
+				(cellinfo->sns[colY] * avdenlow);
+
+           velocityVars.vVelRhoHat[yminusCell] = velocityVars.vVelRhoHat[currCell];
+
+        }
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        IntVector yplusplusCell(colX, colY+2, colZ);
+        if (constVelocityVars.cellType[yplusCell] == out_celltypeval) {
+           double avden = 0.5 * (constVelocityVars.new_density[yplusCell] +
+			         constVelocityVars.new_density[currCell]);
+
+           velocityVars.vVelRhoHat[yplusCell] += 2.0*delta_t*
+		   		constVelocityVars.pressure[currCell]/
+				(cellinfo->sns[colY] * avden);
+
+           velocityVars.vVelRhoHat[yplusplusCell] = velocityVars.vVelRhoHat[yplusCell];
+
+        }
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        if (constVelocityVars.cellType[zminusCell] == out_celltypeval) {
+           double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
+			            constVelocityVars.new_density[zminusCell]);
+
+           velocityVars.wVelRhoHat[currCell] -= 2.0*delta_t*
+		   		constVelocityVars.pressure[currCell]/
+				(cellinfo->stb[colZ] * avdenlow);
+
+           velocityVars.wVelRhoHat[zminusCell] = velocityVars.wVelRhoHat[currCell];
+
+        }
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        IntVector zplusplusCell(colX, colY, colZ+2);
+        if (constVelocityVars.cellType[zplusCell] == out_celltypeval) {
+           double avden = 0.5 * (constVelocityVars.new_density[zplusCell] +
+			         constVelocityVars.new_density[currCell]);
+
+           velocityVars.wVelRhoHat[zplusCell] += 2.0*delta_t*
+		   		constVelocityVars.pressure[currCell]/
+				(cellinfo->stb[colZ] * avden);
+
+           velocityVars.wVelRhoHat[zplusplusCell] = velocityVars.wVelRhoHat[zplusCell];
+
+        }
+      }
+    }
+  }
+  }
 
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
