@@ -1622,13 +1622,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> pressure;
     CCVariable<double> delPress;
     CCVariable<double> press_CC;
-    const IntVector gc(1,1,1);
     vector<CCVariable<double>   > rho_micro_CC(numMatls);
-    vector<CCVariable<double>   > vol_frac(numMatls);
-    vector<CCVariable<double>   > speedSound(numMatls);
-    vector<SFCXVariable<double> > uvel_FC(numMatls);
-    vector<SFCYVariable<double> > vvel_FC(numMatls);
-    vector<SFCZVariable<double> > wvel_FC(numMatls);
+    const IntVector gc(1,1,1);
 
     new_dw->get(pressure,       lb->press_equil_CCLabel,0,patch,Ghost::None,0);
     new_dw->allocate(delPress,  lb->delPress_CCLabel,0, patch);
@@ -1652,27 +1647,32 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      new_dw->get(uvel_FC[m], lb->uvel_FCMELabel, indx,  patch,
+      CCVariable<double>   vol_frac;
+      CCVariable<double>   speedSound;
+      SFCXVariable<double> uvel_FC;
+      SFCYVariable<double> vvel_FC;
+      SFCZVariable<double> wvel_FC;
+      new_dw->get(uvel_FC, lb->uvel_FCMELabel, indx,  patch,
 		  Ghost::AroundCells, 2);
-      new_dw->get(vvel_FC[m], lb->vvel_FCMELabel, indx,  patch,
+      new_dw->get(vvel_FC, lb->vvel_FCMELabel, indx,  patch,
 		  Ghost::AroundCells, 2);
-      new_dw->get(wvel_FC[m], lb->wvel_FCMELabel, indx,  patch,
+      new_dw->get(wvel_FC, lb->wvel_FCMELabel, indx,  patch,
 		  Ghost::AroundCells, 2);
-      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx, patch,
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel,indx, patch,
 		  Ghost::AroundCells,1);
       new_dw->get(rho_micro_CC[m], lb->rho_micro_CCLabel,indx,patch,
 		  Ghost::None,0);
-      new_dw->get(speedSound[m],   lb->speedSound_CCLabel,indx,patch,
+      new_dw->get(speedSound,   lb->speedSound_CCLabel,indx,patch,
 		  Ghost::None,0);
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
-      influxOutfluxVolume(uvel_FC[m], vvel_FC[m], wvel_FC[m],
+      influxOutfluxVolume(uvel_FC, vvel_FC, wvel_FC,
                         delT, patch, OFS, OFE, OFC);
 
       for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
 	  iter++) {
-        q_CC[*iter] = vol_frac[m][*iter] * invvol;
+        q_CC[*iter] = vol_frac[*iter] * invvol;
       }
       //__________________________________
       //   First order advection of q_CC
@@ -1682,9 +1682,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       if (switchDebug_explicit_press ) {
         char description[50];
         sprintf(description, "middle_of_explicit_Pressure_Mat_%d ",indx);
-        printData_FC( patch,1, description, "uvel_FC", uvel_FC[m]);
-        printData_FC( patch,1, description, "vvel_FC", vvel_FC[m]);
-        printData_FC( patch,1, description, "wvel_FC", wvel_FC[m]);
+        printData_FC( patch,1, description, "uvel_FC", uvel_FC);
+        printData_FC( patch,1, description, "vvel_FC", vvel_FC);
+        printData_FC( patch,1, description, "wvel_FC", wvel_FC);
       }
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
@@ -1707,8 +1707,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //  190 of my Journal
         term2[*iter] -= q_advected[*iter];
 
-        term3[*iter] += vol_frac[m][*iter] /(rho_micro_CC[m][*iter] *
-				speedSound[m][*iter]*speedSound[m][*iter]);
+        term3[*iter] += vol_frac[*iter] /(rho_micro_CC[m][*iter] *
+				speedSound[*iter]*speedSound[*iter]);
       }  //iter loop
     }  //matl loop
 
