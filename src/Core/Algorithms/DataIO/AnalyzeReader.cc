@@ -126,7 +126,7 @@ int AnalyzeReader::read( AnalyzeImage & di )
 {
   if( file_ == "" ) 
   {
-    cerr << "(AnalyzeReader::read) Error: No file selected.\n";
+    cerr << "(AnalyzeReader::read) Error: No file selected." << endl;
     return -1;
   } 
 

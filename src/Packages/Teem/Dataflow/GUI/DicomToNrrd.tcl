@@ -83,33 +83,37 @@ itcl_class Teem_DataIO_DicomToNrrd {
         pack $w.row10 $w.row11 $w.row8 $w.which $w.listing \
         $w.row4 $w.row3 $w.sd $w.row9 -side top -e y -f both -padx 5 -pady 5
 
-	button $w.row10.browse_button -text " Browse " \
-	    -command "$this ChooseDir; $this UpdateSeriesUIDs"
+        # Directory selection mechanisms
 
-        # Directory selection mechanism
+        # Directory "Browse" button
+	button $w.row10.browse_button -text " Browse " \
+	    -command "$this choose_dir; $this update_series_uids"
+
+        # Directory text box
 	label $w.row10.dir_label -text "Directory  " 
 	entry $w.row10.dir -textvariable $this-dir -width 80
 
 	pack $w.row10.dir_label $w.row10.dir -side left
 	pack $w.row10.browse_button -side right
 
-	button $w.row11.load_button -text " Load " -command "$this UpdateSeriesUIDs"
+        # Directory "Load" button
+	button $w.row11.load_button -text " Load " -command "$this update_series_uids"
 
 	pack $w.row11.load_button -side right
 
         # Listboxes for series selection
-        set seriesuid [Scrolled_Listbox $listing.seriesuid -height 10 -selectmode single ]
+        set seriesuid [scrolled_listbox $listing.seriesuid -height 10 -selectmode single ]
 
-        set files [Scrolled_Listbox $listing.files -height 10 -selectmode extended]
+        set files [scrolled_listbox $listing.files -height 10 -selectmode extended]
 
         pack $listing.seriesuid $listing.files -side left -fill x -expand yes
 
         # Populate seriesuid listbox
-	UpdateSeriesUIDs
+	update_series_uids
 
         # Selecting in Series UID listbox causes text to appear in Files 
         # listbox
-        bind $seriesuid <ButtonRelease-1> "$this UpdateSeriesFiles %W $files"
+        bind $seriesuid <ButtonRelease-1> "$this update_series_files %W $files"
 
         # Text below Series UID and Files listboxes.  This text says how many
         # series' are in the Series ID listbox and how many files are in the
@@ -123,16 +127,16 @@ itcl_class Teem_DataIO_DicomToNrrd {
         pack $w.row4.num_series_label $w.row4.num_series $w.row4.num_files_label $w.row4.num_files -side left
 
         # Add button
-        button $w.row3.add -text "Add Data" -command "$this AddData"
+        button $w.row3.add -text "Add Data" -command "$this add_data"
 
         pack $w.row3.add -side top -expand true -fill both
 
         # Listbox for select series'
 
-	set selected [Scrolled_Listbox $sd.selected -width 100 -height 10 -selectmode single]
+	set selected [scrolled_listbox $sd.selected -width 100 -height 10 -selectmode single]
 
 	button $sd.delete -text "Remove Data" \
-	    -command "$this DeleteData"
+	    -command "$this delete_data"
 
 	pack $sd.selected $sd.delete -side top -fill x -expand yes
         pack $sd.selected -side top -fill x -expand yes
@@ -144,12 +148,22 @@ itcl_class Teem_DataIO_DicomToNrrd {
     }
 
 
-    method ChooseDir { } {	
+    method choose_dir { } {	
         set w .ui[modname]
 
 	if { [ expr [winfo exists $w] ] }  {
+
+            # Place to put preferred data directory
+	    # It's used if $this-file is empty or invalid
+            if { [string equal [set $this-dir] ""] || 
+                 ![file exists [set $this-dir]] } {
+	        set initdir [netedit getenv SCIRUN_DATA]
+  	    } else {
+                set initdir [set $this-dir]
+            }
+
 	    set $this-dir-tmp [ tk_chooseDirectory \
-  		          -initialdir [set $this-dir] \
+  		          -initialdir $initdir \
                           -parent $w \
                           -title "Choose Directory" \
                           -mustexist true ] 
@@ -161,7 +175,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
         
     }
 
-    method UpdateSeriesUIDs { } {
+    method update_series_uids { } {
 	global $this-dir
 	set w .ui[modname]
 	
@@ -200,7 +214,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
 		
 		# Select first line
 		$seriesuid.list selection set 0 0 
-		UpdateSeriesFiles $seriesuid.list $files.list
+		update_series_files $seriesuid.list $files.list
 		    
 	    } else {
 		$seriesuid.list insert end [set $this-messages]
@@ -210,7 +224,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	}
     }
 
-    method UpdateSeriesFiles { src dst } {
+    method update_series_files { src dst } {
 	global $this-dir
 	global $this-suid-sel
 
@@ -249,7 +263,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
         }
     }
 
-    method AddData { } {
+    method add_data { } {
 	global $this-dir
 	global $this-suid-sel
 
@@ -356,7 +370,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
         }
     } 
 
-    method AddSavedData { which } {
+    method add_saved_data { which } {
 	global $this-entry-dir$which
 	global $this-entry-suid$which
 	global $this-entry-files$which
@@ -396,7 +410,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
     }
 
  
-    method DeleteData { } {
+    method delete_data { } {
 	global $this-num-entries
 	set w .ui[modname]
 
@@ -438,19 +452,19 @@ itcl_class Teem_DataIO_DicomToNrrd {
     # Copied from Chapter 30 of Practical Programming in Tcl and Tk
     # by Brent B. Welch.Copyright 2000 Pentice Hall. 
 
-    method Scroll_Set {scrollbar geoCmd offset size} {
+    method scroll_set {scrollbar geoCmd offset size} {
 	if {$offset != 0.0 || $size != 1.0} {
 	    eval $geoCmd ;# Make sure it is visible
 	}
 	$scrollbar set $offset $size
     }
 
-    method Scrolled_Listbox { f args } {
+    method scrolled_listbox { f args } {
 	frame $f
 	listbox $f.list \
-		-xscrollcommand [list $this Scroll_Set $f.xscroll \
+		-xscrollcommand [list $this scroll_set $f.xscroll \
 			[list grid $f.xscroll -row 1 -column 0 -sticky we]] \
-		-yscrollcommand [list $this Scroll_Set $f.yscroll \
+		-yscrollcommand [list $this scroll_set $f.yscroll \
 			[list grid $f.yscroll -row 0 -column 1 -sticky ns]]
 	eval {$f.list configure} $args
 	scrollbar $f.xscroll -orient horizontal \
@@ -464,12 +478,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	return $f.list
     }  
 
-    method ListTransferSel { src dst } {
-        foreach i [$src curselection] {
-            $dst insert end [$src get $i]
-        }
-
-    }
     method darby {} {
 	set w .ui[modname]
 	puts [$w.listing.childsite.seriesuid.list curselection]
@@ -492,7 +500,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	#$w.listing.childsite.seriesuid.list selection clear 0 end
 	#$w.listing.childsite.seriesuid.list selection set $i $i
 	#$w.listing.childsite.seriesuid.list selection set [set $this-suid-sel] [set $this-suid-sel]
-	#$this UpdateSeriesFiles $w.listing.childsite.seriesuid.list $w.listing.childsite.files.list
+	#$this update_series_files $w.listing.childsite.seriesuid.list $w.listing.childsite.files.list
 
 	set sd [$w.sd childsite]
 	set selected $sd.selected
@@ -517,11 +525,11 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
  	    # add back in
  	    for {set i 0} {$i < $num} {incr i} {
- 		$this AddSavedData $i
+ 		$this add_saved_data $i
  	    }
 
 	    # update directory
-	    $this UpdateSeriesUIDs
+	    $this update_series_uids
  	} 
     }
 }

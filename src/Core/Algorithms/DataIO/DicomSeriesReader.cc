@@ -129,7 +129,7 @@ void DicomSeriesReader::set_files( const std::vector<std::string> files )
 {
   if( dir_ == "" )
   {
-    cerr << "(DicomSeriesReader::set_files) ERROR: No directory selected.\n";
+    cerr << "(DicomSeriesReader::set_files) ERROR: No directory selected." << endl;
     return; 
   }
 
@@ -155,7 +155,7 @@ const std::vector<std::string> DicomSeriesReader::get_files()
 {
   if( dir_ == "" )
   {
-    cerr << "(DicomSeriesReader::get_files) WARNING: No directory selected.\n";
+    cerr << "(DicomSeriesReader::get_files) WARNING: No directory selected." << endl;
   }
 
   // If specific files were set, return them.  Otherwise, return all the files
@@ -189,7 +189,7 @@ int DicomSeriesReader::read( DicomImage & di )
 {
   if( dir_ == "" ) 
   {
-    cerr << "(DicomSeriesReader::read) Error: No directory selected.\n";
+    cerr << "(DicomSeriesReader::read) Error: No directory selected." << endl;
     return -1;
   } 
 
@@ -210,7 +210,7 @@ int DicomSeriesReader::read( DicomImage & di )
   int num_files =  read_files.size();
   if( num_files == 1 ) 
   {
-    //cerr << "(DicomSeriesReader::read) Reading single file\n";
+    //cerr << "(DicomSeriesReader::read) Reading single file" << endl;
     itk::DicomImageIO::Pointer io = itk::DicomImageIO::New();
 
     // Create a new reader
@@ -277,7 +277,7 @@ int DicomSeriesReader::read( DicomImage & di )
   }
   else
   {
-    cerr << "(DicomSeriesReader::read) ERROR: No files selected.\n";
+    cerr << "(DicomSeriesReader::read) ERROR: No files selected." << endl;
     return -1;
   }
 
@@ -300,7 +300,7 @@ DicomSeriesReader::get_series_uids()
 {
   if( dir_ == "" )
   {
-    cerr << "(DicomSeriesReader::get_series_uids) Warning: No directory selected.\n";
+    cerr << "(DicomSeriesReader::get_series_uids) Warning: No directory selected." << endl;
   }
 
   return names_->GetSeriesUIDs(); 
@@ -322,7 +322,7 @@ DicomSeriesReader::get_file_names( const std::string& series_uid )
 {
   if( dir_ == "" )
   {
-    cerr << "(DicomSeriesReader::get_file_names) Warning: No directory selected.\n";
+    cerr << "(DicomSeriesReader::get_file_names) Warning: No directory selected." << endl;
   }
 
   return names_->GetFileNames( series_uid );
@@ -341,7 +341,7 @@ void DicomSeriesReader::set_sort_image_num()
 {
   if( dir_ == "" )
   {
-    cerr << "(DicomSeriesReader::set_sort_image_num) Warning: No directory selected.\n";
+    cerr << "(DicomSeriesReader::set_sort_image_num) Warning: No directory selected." << endl;
   }
 
   names_->SetFileNameSortingOrderToSortByImageNumber();
@@ -360,7 +360,7 @@ void DicomSeriesReader::set_sort_slice_loc()
 {
   if( dir_ == "" )
   {
-    cerr << "(DicomSeriesReader::set_sort_slice_loc) Warning: No directory selected.\n";
+    cerr << "(DicomSeriesReader::set_sort_slice_loc) Warning: No directory selected." << endl;
   }
 
   names_->SetFileNameSortingOrderToSortBySliceLocation();
@@ -381,7 +381,7 @@ void DicomSeriesReader::set_sort_pos_patient()
 {
   if( dir_ == "" )
   {
-    cerr << "(DicomSeriesReader::set_sort_pos_patient) Warning: No directory selected.\n";
+    cerr << "(DicomSeriesReader::set_sort_pos_patient) Warning: No directory selected." << endl;
   }
  
   names_->SetFileNameSortingOrderToSortByImagePositionPatient();

@@ -246,7 +246,7 @@ void AnalyzeToNrrd::tcl_command(GuiArgs& args, void* userdata)
 #ifdef HAVE_INSIGHT
 
     // Get the selected file to be deleted
-    string file_del = file_del_.get();
+    string file_del = args[2];
 
     // Find the matching entry in the all_files vector and remove it
     int num_files = all_files_.size();
@@ -266,6 +266,16 @@ void AnalyzeToNrrd::tcl_command(GuiArgs& args, void* userdata)
       iter++;
       iter2++;
     }
+
+    // Print out the contents of all_files_
+    cout << "(AnalyzeToNrrd::tcl_command) File " << file_del << " deleted" 
+         << endl;
+    num_files = all_files_.size();
+    for( int j = 0; j < num_files; j++ )
+    {
+      cout << "(AnalyzeToNrrd::tcl_command) all_files_[" << j << "] = " 
+           << all_files_[j] << endl;
+    }    
 
 #endif
   }
@@ -302,7 +312,7 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
   // Get the number of files to build nrrds from 
   int num_files = all_files_.size();
 
-  //cerr << "(AnalyzeToNrrd::build_nrrds) num_files = " << num_files << "\n";
+  //cerr << "(AnalyzeToNrrd::build_nrrds) num_files = " << num_files << endl;
 
   vector<Nrrd*> arr( num_files );
   AnalyzeReader reader;
@@ -436,7 +446,7 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
 NrrdData * AnalyzeToNrrd::join_nrrds( vector<Nrrd*> arr )
 {
   int num_nrrds = arr.size();
-  //cerr << "(AnalyzeToNrrd::join_nrrds) num_nrrds = " << num_nrrds << "\n";
+  //cerr << "(AnalyzeToNrrd::join_nrrds) num_nrrds = " << num_nrrds << endl;
 
   if( num_nrrds == 0 )
   {

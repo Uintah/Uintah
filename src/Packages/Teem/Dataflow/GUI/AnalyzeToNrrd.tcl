@@ -50,6 +50,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
         }
         toplevel $w
 
+        frame $w.row11
 	frame $w.row10
 	frame $w.row8
 	frame $w.row4
@@ -58,16 +59,31 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
        	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
 	set sd [$w.sd childsite]
 
-        pack $w.row8 $w.row10 $w.which \
-        $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 2
+        pack $w.row11 $w.row8 $w.row10 $w.which \
+        $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 5
 
-	button $w.row10.browse_button -text "Open Analyze File" \
-	    -command "$this ChooseFile"
+        # File selection mechanisms
+
+        # File text box
+	label $w.row11.file_label -text "File  " 
+	entry $w.row11.file -textvariable $this-file -width 80
+
+	pack $w.row11.file_label $w.row11.file -side left
+
+        # File "Browse" button
+	button $w.row11.browse_button -text " Browse " \
+	    -command "$this choose_file"
+
+	pack $w.row11.browse_button -side right
+
+        # Add selected file
+	button $w.row10.browse_button -text "Add Data" \
+	    -command "$this add_data"
 
 	pack $w.row10.browse_button -side right -fill x -expand yes
 
-	set selected [Scrolled_Listbox $sd.selected -width 100 -height 10 -selectmode single]
-	button $sd.delete -text "Remove Data" -command "$this DeleteData"
+	set selected [scrolled_listbox $sd.selected -width 100 -height 10 -selectmode single]
+	button $sd.delete -text "Remove Data" -command "$this delete_data"
 
 	pack $sd.selected $sd.delete -side top -fill x -expand yes -padx 4 -pady 4
         pack $sd.selected -side top -fill x -expand yes
@@ -79,26 +95,14 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
     }
 
 
-    method ChooseFile { } {
+    method choose_file { } {
         #set w .ui[modname]
 	set w [format "%s-fb" .ui[modname]]
-
-	if { [winfo exists $w] } {
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
-	    return
-	}
-	
-	#toplevel $w
-	toplevel $w -class TkFDialog
 
 	set defext ".hdr"
 
 	# place to put preferred data directory
-	# it's used if $this-filename is empty
+	# it's used if $this-file is empty
 	set initdir [netedit getenv SCIRUN_DATA]
 	
 	# File types to appers in filter box
@@ -106,12 +110,39 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 	    {{Analyze Header File}        {.hdr} }
 	}
 	
+	if { [winfo exists $w] } {
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
+
+            # The open file box has already been created.  Update the 
+            # configuration so that the default file will be updated to be the
+            # current value of $this-file, or $initdir if $this-file is empty.
+            
+            biopseFDialog_Config $w open \
+                [list -parent $w \
+	              -filevar $this-file \
+	              -cancel "wm withdraw $w" \
+	              -title "Open Analyze File" \
+	              -filetypes $types \
+	              -initialdir $initdir \
+	              -defaultextension $defext \
+	              -command "wm withdraw $w"]
+
+	    return
+	}
+	
+	#toplevel $w
+	toplevel $w -class TkFDialog
+
 # 	set $this-file [tk_getOpenFile  \
 # 			    -parent $w \
 # 			    -title "Open Analyze File" \
 # 			    -filetypes $types \
 # 			    -defaultextension $defext]
-	
+
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-file \
@@ -120,13 +151,14 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 	    -filetypes $types \
 	    -initialdir $initdir \
 	    -defaultextension $defext \
-	    -command "wm withdraw $w; $this AddData" \
+	    -command "wm withdraw $w" \
 
 	moveToCursor $w
 	wm deiconify $w	
+
     }
 
-    method AddData { } {
+    method add_data { } {
         set w .ui[modname]
   
 	if [ expr [winfo exists $w] ] {
@@ -135,20 +167,46 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 
             # Check to make sure there are files to add
             if { ![string equal [set $this-file] ""] } {
- 
+
                 # Check to make sure this is a unique entry
 
                 set list_sel [$selected.list get 0 end]
 
                 foreach cur_entry $list_sel {
                     #puts "entry = {$entry}"
-                    #puts "cur_entry = {$cur_entry}"
+                    #puts "(add_data) cur_entry = {$cur_entry}"
 
                     if { [string equal [set $this-file] $cur_entry] } {
                         # Duplicate entry 
                         #puts "duplicate entry"
                         return                    
                     }  
+                }
+
+                # Check to make sure this file exists, has a .hdr extension,
+                # and the corresponding .img file exists as well
+                  
+                set ext [file extension [set $this-file]]
+                set img_file [file rootname [set $this-file]]
+                set img_ext ".img"
+                set img_file $img_file$img_ext
+
+                if { ![string equal $ext ".hdr"] } {
+                    set answer [tk_messageBox -message \
+		    "'$ext' not valid Analyze header (.hdr) extension, please choose a valid header (.hdr) file." \
+                    -type ok -icon info -parent $w]
+                    return
+                }
+                if { ![file exists [set $this-file]] } {
+                    set answer [tk_messageBox -message \
+		    "Analyze header file [set $this-file] does not exist, please choose a valid header (.hdr) file." \
+                    -type ok -icon info -parent $w]
+	            return
+                } elseif { ![file exists $img_file] } {
+                    set answer [tk_messageBox -message \
+                    "Analyze image file $img_file does not exist, please choose a different header (.hdr) file or copy the corresponding .img file to the same directory as the .hdr file" \
+                    -type ok -icon info -parent $w]
+                    return
                 }
 
 		# initialize a filename variable and set it to the
@@ -172,7 +230,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
                 # structure.
 		global $this-file
                 $this-c add_data [set $this-file]
-           
+
                 # Now add entry to selected data
                 $selected.list insert end [set $this-file]
 
@@ -180,7 +238,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
         }
     } 
 
-    method DeleteData { } {
+    method delete_data { } {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
@@ -206,7 +264,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 
                 # Call the c++ function that deletes this data from its data 
                 # structure.
-                $this-c delete_data
+                $this-c delete_data [set $this-file-del]
 
             }
 
@@ -216,19 +274,19 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
     # Copied from Chapter 30 of Practical Programming in Tcl and Tk
     # by Brent B. Welch.Copyright 2000 Pentice Hall. 
 
-    method Scroll_Set {scrollbar geoCmd offset size} {
+    method scroll_set {scrollbar geoCmd offset size} {
 	if {$offset != 0.0 || $size != 1.0} {
 	    eval $geoCmd ;# Make sure it is visible
 	}
 	$scrollbar set $offset $size
     }
 
-    method Scrolled_Listbox { f args } {
+    method scrolled_listbox { f args } {
 	frame $f
 	listbox $f.list \
-		-xscrollcommand [list $this Scroll_Set $f.xscroll \
+		-xscrollcommand [list $this scroll_set $f.xscroll \
 			[list grid $f.xscroll -row 1 -column 0 -sticky we]] \
-		-yscrollcommand [list $this Scroll_Set $f.yscroll \
+		-yscrollcommand [list $this scroll_set $f.yscroll \
 			[list grid $f.yscroll -row 0 -column 1 -sticky ns]]
 	eval {$f.list configure} $args
 	scrollbar $f.xscroll -orient horizontal \
@@ -241,13 +299,6 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 	grid columnconfigure $f 0 -weight 1
 	return $f.list
     }  
-
-    method ListTransferSel { src dst } {
-        foreach i [$src curselection] {
-            $dst insert end [$src get $i]
-        }
-
-    }
 
     method sync_filenames {} {
 	set w .ui[modname]
@@ -286,11 +337,11 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 # 		    set $this-file $temp
 # 		    global $this-filenames$i
 # 		    set $this-filenames$i [set $this-file]
-# 		    $this AddData
+# 		    $this add_data
 # 		}
 		global $this-filenames$i
 		set $this-file [set $this-filenames$i]
-		$this AddData
+		$this add_data
 		
 	    }
 	} 
