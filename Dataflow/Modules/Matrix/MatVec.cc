@@ -81,9 +81,9 @@ int MatVec::somethingChanged(ColumnMatrixHandle icolH, MatrixHandle imatH,
 int MatVec::AtimesB() {
     ColumnMatrix *res = scinew ColumnMatrix(imatH_last->nrows());
     int dummy1, dummy2;
-    cerr << "Calling mult...\n";
+//    cerr << "Calling mult...\n";
     imatH_last->mult(*icolH_last.get_rep(), *res, dummy1, dummy2);
-    cerr << "Done!\n";
+//    cerr << "Done!\n";
     ocH=res;
     return 1;
 }
@@ -97,11 +97,11 @@ void MatVec::execute() {
     if (!imat->get(imatH) || !imatH.get_rep()) return;
     clString opS=opTCL.get();
 
-    cerr << "Starting MatVec!\n";
+//    cerr << "Starting MatVec!\n";
     update_state(JustStarted);
-    cerr << "Here we go...\n";
+//    cerr << "Here we go...\n";
     if (!somethingChanged(icolH, imatH, opS)) ocol->send(ocH);
-    cerr << "Doing great!\n";
+//    cerr << "Doing great!\n";
     if (opS == "AtimesB") {
 	if (AtimesB()) ocol->send(ocH);
     } else {
@@ -113,6 +113,9 @@ void MatVec::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/12/09 09:54:19  dmw
+// took out debug comments
+//
 // Revision 1.2  1999/10/07 02:06:52  sparker
 // use standard iostreams and complex type
 //
