@@ -32,13 +32,13 @@ char component_skeleton[] = \
 "#include <Dataflow/Network/Module.h>\n"
 "#include <Core/Malloc/Allocator.h>\n"
 "\n"
-"#include <Packages/%s/share/share.h>\n" /* package name */
+"#include <Dataflow/share/share.h>\n"
 "\n"
 "namespace %s {\n" /* package name */
 "\n"
 "using namespace SCIRun;\n"
 "\n"
-"class %sSHARE %s : public Module {\n" /* package name, component name */
+"class PSECORESHARE %s : public Module {\n" /* component name */
 "" 
 "public:\n"
 "  %s(GuiContext*);\n" /* component name */
@@ -164,7 +164,7 @@ char package_submk_skeleton[] = \
 char dataflow_submk_skeleton[] = \
 "include $(SCIRUN_SCRIPTS)/largeso_prologue.mk\n"
 "\n"
-"SRCDIR := Packages/%s/Dataflow\n" /* package name */
+"SRCDIR := %sDataflow\n" /* package dir */
 "\n"
 "SUBDIRS := \\\n"
 "        $(SRCDIR)/GUI \\\n"
@@ -182,7 +182,7 @@ char dataflow_submk_skeleton[] = \
 char core_submk_skeleton[] = \
 "include $(SCIRUN_SCRIPTS)/largeso_prologue.mk\n"
 "\n"
-"SRCDIR := Packages/%s/Core\n" /* package name */
+"SRCDIR := %sCore\n" /* package dir */
 "\n"
 "SUBDIRS := \\\n"
 "        $(SRCDIR)/Datatypes \\\n"
@@ -207,7 +207,7 @@ char modules_submk_skeleton[] = \
 "# if you want to edit this file by hand, see the \"Create A New Component\"\n"
 "# documentation on how to do it correctly.\n"
 "\n"
-"SRCDIR := Packages/%s/Dataflow/Modules\n" /* package name */
+"SRCDIR := %sDataflow/Modules\n" /* package dir */
 "\n"
 "SUBDIRS := \\\n"
 "#[INSERT NEW CATEGORY DIR HERE]\n"
@@ -229,7 +229,7 @@ char category_submk_skeleton[] = \
 "\n"
 "include $(SCIRUN_SCRIPTS)/smallso_prologue.mk\n"
 "\n"
-"SRCDIR   := Packages/%s/Dataflow/Modules/%s\n" /* package name, category name */
+"SRCDIR   := %sDataflow/Modules/%s\n" /* package dir, category name */
 "\n"
 "SRCS     += \\\n"
 "#[INSERT NEW CODE FILE HERE]\n"
@@ -258,7 +258,7 @@ char datatypes_submk_skeleton[] = \
 "\n"
 "include $(SCIRUN_SCRIPTS)/smallso_prologue.mk\n"
 "\n"
-"SRCDIR   := Packages/%s/Core/Datatypes\n" /* package name */
+"SRCDIR   := %sCore/Datatypes\n" /* package dir */
 "\n"
 "SRCS     += \\\n"
 "#[INSERT NEW CODE FILE HERE]\n"
@@ -281,14 +281,14 @@ char gui_submk_skeleton[] = \
 "# if you want to edit this file by hand, see the \"Create A New Component\"\n"
 "# documentation on how to do it correctly.\n"
 "\n"
-"SRCDIR := Packages/%s/Dataflow/GUI\n" /* package name */
+"SRCDIR := %sDataflow/GUI\n" /* package dir */
 "\n"
 "ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex\n"
 "\n"
 "$(SRCDIR)/tclIndex: \\\n"
 "#[INSERT NEW TCL FILE HERE]\n"
 "\t$(OBJTOP)/createTclIndex "
-"$(SRCTOP)/Packages/%s/Dataflow/GUI\n" /* package name */
+"$(SRCTOP)/%sDataflow/GUI\n" /* package dir */
 "\n"
 "CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex\n"
 "\n"
