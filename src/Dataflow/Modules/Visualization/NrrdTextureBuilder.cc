@@ -80,7 +80,7 @@ private:
 DECLARE_MAKER(NrrdTextureBuilder)
   
 NrrdTextureBuilder::NrrdTextureBuilder(GuiContext* ctx)
-  : Module("NrrdTextureBuilder", ctx, Source, "Visualization", "Volume"),
+  : Module("NrrdTextureBuilder", ctx, Source, "Visualization", "SCIRun"),
     gui_card_mem_(ctx->subVar("card_mem")),
     gui_card_mem_auto_(ctx->subVar("card_mem_auto")),
     card_mem_(video_card_memory_size()),

@@ -88,7 +88,7 @@ private:
 DECLARE_MAKER(TextureBuilder)
   
 TextureBuilder::TextureBuilder(GuiContext* ctx)
-  : Module("TextureBuilder", ctx, Source, "Visualization", "Volume"),
+  : Module("TextureBuilder", ctx, Source, "Visualization", "SCIRun"),
     texture_(new Texture),
     gui_vminval_(ctx->subVar("vmin")),
     gui_vmaxval_(ctx->subVar("vmax")),

@@ -102,7 +102,7 @@ private:
 
 DECLARE_MAKER(VolumeVisualizer)
 VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
-  : Module("VolumeVisualizer", ctx, Source, "Visualization", "Volume"),
+  : Module("VolumeVisualizer", ctx, Source, "Visualization", "SCIRun"),
     tex(0),
     cmap1_prevgen(0),
     cmap2_prevgen(0),

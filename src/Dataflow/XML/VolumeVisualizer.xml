@@ -68,7 +68,7 @@
     <inputs lastportdynamic="no">
       <port>
         <name> Texture</name>
-	<datatype>Volume::Texture</datatype>
+	<datatype>SCIRun::Texture</datatype>
       </port>
       <port>
         <name>ColorMap</name>
@@ -76,7 +76,7 @@
       </port>
       <port>
         <name>ColorMap2</name>
-	<datatype>Volume::Colormap2</datatype>
+	<datatype>SCIRun::Colormap2</datatype>
       </port>
     </inputs>
     <outputs>

@@ -145,7 +145,7 @@ public:
 DECLARE_MAKER(EditTransferFunc2)
 
 EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
-  : Module("EditTransferFunc2", ctx, Filter, "Visualization", "Volume"),
+  : Module("EditTransferFunc2", ctx, Filter, "Visualization", "SCIRun"),
     ctx_(0), dpy_(0), win_(0), button_(0), shader_factory_(0),
     pbuffer_(0), use_pbuffer_(true), use_back_buffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
