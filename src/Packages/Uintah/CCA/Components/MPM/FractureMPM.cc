@@ -944,6 +944,13 @@ void FractureMPM::scheduleCalculateFractureParameters(SchedulerP& sched,
   crackMethod->addComputesAndRequiresGetNodalSolutions(t,patches, matls);
   sched->addTask(t, patches, matls);
 
+  // Create crack-front segment subset
+  t = scinew Task("Crack::CrackFrontSegSubset", crackMethod,
+                        &Crack::CrackFrontSegSubset);
+  crackMethod->addComputesAndRequiresCrackFrontSegSubset(t,
+                                           patches, matls);
+  sched->addTask(t, patches, matls);
+
   // Compute fracture parameters (J, K,...)
   t = scinew Task("Crack::CalculateFractureParameters", crackMethod,
                         &Crack::CalculateFractureParameters);
@@ -951,14 +958,22 @@ void FractureMPM::scheduleCalculateFractureParameters(SchedulerP& sched,
                                                     patches, matls);
   sched->addTask(t, patches, matls);
 }
+
 // Do crack propgation
 void FractureMPM::scheduleDoCrackPropagation(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  Task* t = scinew Task("Crack::PropagateCracks", crackMethod,
-                         &Crack::PropagateCracks);
-  crackMethod->addComputesAndRequiresPropagateCracks(t, patches, matls);
+  // Propagate crack front and form the new crack nodes
+  Task* t = scinew Task("Crack::PropagateCrackFrontNodes", crackMethod,
+                         &Crack::PropagateCrackFrontNodes);
+  crackMethod->addComputesAndRequiresPropagateCrackFrontNodes(t, patches, matls);
+  sched->addTask(t, patches, matls);
+
+  // Construct the new crack front elements 
+  t = scinew Task("Crack::ConstructNewCrackFrontElems", crackMethod,
+                         &Crack::ConstructNewCrackFrontElems);
+  crackMethod->addComputesAndRequiresConstructNewCrackFrontElems(t, patches, matls);
   sched->addTask(t, patches, matls);
 }
 
@@ -966,7 +981,7 @@ void FractureMPM::scheduleMoveCracks(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  // Subset of crack points 
+  // cpset
   Task* t = scinew Task("Crack::CrackPointSubset", crackMethod,
                         &Crack::CrackPointSubset);
   crackMethod->addComputesAndRequiresCrackPointSubset(t, patches, matls);
