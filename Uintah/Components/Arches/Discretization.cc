@@ -66,43 +66,46 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   IntVector domLo = coeff_vars->density.getFortLowIndex();
   IntVector domHi = coeff_vars->density.getFortHighIndex();
 
-#ifdef DEBUG
-  cout << "Discretization.cc : Calculate Velocity Coefficients: " << endl;
-  for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-    cout << "Density for kk = " << kk << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	cout.width(7);
+#ifdef ARCHES_DEBUG
+  cout << "BEFORE VELCOEF" << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cout << "Density for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cout.width(10);
 	cout << coeff_vars->density[IntVector(ii,jj,kk)] << " " ; 
       }
       cout << endl;
     }
   }
-  for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-    cout << "U Velocity for kk = " << kk << endl;
-    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	cout.width(7);
+  cout << "BEFORE VELCOEF" << endl;
+  for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+    cout << "U Velocity for ii = " << ii << endl;
+    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+      for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	cout.width(10);
 	cout << coeff_vars->uVelocity[IntVector(ii,jj,kk)] << " " ; 
       }
       cout << endl;
     }
   }
-  for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-    cout << "V Velocity for kk = " << kk << endl;
-    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	cout.width(7);
+  cout << "BEFORE VELCOEF" << endl;
+  for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+    cout << "V Velocity for ii = " << ii << endl;
+    for (int jj = domLoV.x(); jj <= domHiV.x(); jj++) {
+      for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	cout.width(10);
 	cout << coeff_vars->vVelocity[IntVector(ii,jj,kk)] << " " ; 
       }
       cout << endl;
     }
   }
-  for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-    cout << "W Velocity for kk = " << kk << endl;
-    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	cout.width(7);
+  cout << "BEFORE VELCOEF" << endl;
+  for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+    cout << "W Velocity for ii = " << ii << endl;
+    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+      for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	cout.width(10);
 	cout << coeff_vars->wVelocity[IntVector(ii,jj,kk)] << " " ; 
       }
       cout << endl;
@@ -160,133 +163,157 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs(), 
 		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
 		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-#ifdef DEBUG
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Convection Coeff AE for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+#ifdef ARCHES_DEBUG
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AE Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityConvectCoeff[Arches::AE])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Convection Coeff AW for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AW Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityConvectCoeff[Arches::AW])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Convection Coeff AN for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AN Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityConvectCoeff[Arches::AN])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Convection Coeff AS for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AS Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityConvectCoeff[Arches::AS])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Convection Coeff AT for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AT Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityConvectCoeff[Arches::AT])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Convection Coeff AB for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AB Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityConvectCoeff[Arches::AB])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Coeff AE for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AP Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
+	  cout << (coeff_vars->uVelocityCoeff[Arches::AP])
+	    [IntVector(ii,jj,kk)] << " " ; 
+	}
+	cout << endl;
+      }
+    }
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AE Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityCoeff[Arches::AE])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Coeff AW for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AW Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityCoeff[Arches::AW])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Coeff AN for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AN Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityCoeff[Arches::AN])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Coeff AS for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AS Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityCoeff[Arches::AS])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Coeff AT for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AT Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityCoeff[Arches::AT])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-      cout << "U Velocity Coeff AB for kk = " << kk << endl;
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-	for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	  cout.width(7);
+    cout << "After UVELCOEF" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cout << "U Vel AB Coeff for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->uVelocityCoeff[Arches::AB])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -344,133 +371,157 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs(), 
 		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
 		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-#ifdef DEBUG
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Convection Coeff AE for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+#ifdef ARCHES_DEBUG
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AE Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityConvectCoeff[Arches::AE])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Convection Coeff AW for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AW Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityConvectCoeff[Arches::AW])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Convection Coeff AN for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AN Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityConvectCoeff[Arches::AN])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Convection Coeff AS for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AS Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityConvectCoeff[Arches::AS])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Convection Coeff AT for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AT Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityConvectCoeff[Arches::AT])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Convection Coeff AB for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AB Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityConvectCoeff[Arches::AB])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Coeff AE for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AP Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
+	  cout << (coeff_vars->vVelocityCoeff[Arches::AP])
+	    [IntVector(ii,jj,kk)] << " " ; 
+	}
+	cout << endl;
+      }
+    }
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AE Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityCoeff[Arches::AE])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Coeff AW for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AW Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityCoeff[Arches::AW])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Coeff AN for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AN Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityCoeff[Arches::AN])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Coeff AS for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AS Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityCoeff[Arches::AS])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Coeff AT for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AT Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityCoeff[Arches::AT])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-      cout << "V Velocity Coeff AB for kk = " << kk << endl;
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-	for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	  cout.width(7);
+    cout << "After VVELCOEF" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cout << "V Vel AB Coeff for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->vVelocityCoeff[Arches::AB])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -527,133 +578,157 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs(), 
 		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
 		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs());
-#ifdef DEBUG
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Convection Coeff AE for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+#ifdef ARCHES_DEBUG
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AE Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityConvectCoeff[Arches::AE])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Convection Coeff AW for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AW Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityConvectCoeff[Arches::AW])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Convection Coeff AN for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AN Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityConvectCoeff[Arches::AN])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Convection Coeff AS for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AS Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityConvectCoeff[Arches::AS])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Convection Coeff AT for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AT Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityConvectCoeff[Arches::AT])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Convection Coeff AB for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AB Convection Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityConvectCoeff[Arches::AB])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Coeff AE for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AP Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
+	  cout << (coeff_vars->wVelocityCoeff[Arches::AP])
+	    [IntVector(ii,jj,kk)] << " " ; 
+	}
+	cout << endl;
+      }
+    }
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AE Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityCoeff[Arches::AE])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Coeff AW for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AW Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityCoeff[Arches::AW])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Coeff AN for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AN Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityCoeff[Arches::AN])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Coeff AS for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AS Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityCoeff[Arches::AS])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Coeff AT for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AT Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityCoeff[Arches::AT])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
 	cout << endl;
       }
     }
-    for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-      cout << "W Velocity Coeff AB for kk = " << kk << endl;
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-	for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	  cout.width(7);
+    cout << "After WVELCOEF" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cout << "W Vel AB Coeff for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cout.width(10);
 	  cout << (coeff_vars->wVelocityCoeff[Arches::AB])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -962,6 +1037,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.37  2000/08/04 02:14:32  bbanerje
+// Added debug statements.
+//
 // Revision 1.36  2000/08/02 16:27:38  bbanerje
 // Added -DDEBUG to sub.mk and Discretization
 //
