@@ -17,6 +17,12 @@ DefaultParticleCreator::DefaultParticleCreator(MPMMaterial* matl, MPMLabel* lb,
 					       int n8or27) 
   : ParticleCreator(matl,lb,n8or27)
 {
+  
+  // Transfer to the lb's permanent particle state array of vectors
+
+  lb->d_particleState.push_back(particle_state);
+  lb->d_particleState_preReloc.push_back(particle_state_preReloc);
+  
 }
 
 DefaultParticleCreator::~DefaultParticleCreator()
