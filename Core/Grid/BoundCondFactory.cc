@@ -52,30 +52,38 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
        objs.setBCValues(mat_id,bc);
      }
      
-     else if (bc_attr["label"] == "Velocity") {
+     else if (bc_attr["label"] == "Velocity" && 
+             (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew VelocityBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
      
-     else if (bc_attr["label"] == "Temperature") {
+     else if (bc_attr["label"] == "Temperature" &&
+             (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
      
-     else if (bc_attr["label"] == "Pressure") {
+     else if (bc_attr["label"] == "Pressure" &&
+             (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew PressureBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
      
-     else if (bc_attr["label"] == "Density") {
+     else if (bc_attr["label"] == "Density" &&
+             (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew DensityBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
 
      else {
        cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
-	    << ")" << endl;
-       //	exit(1);
+	    << ")  " << bc_attr["label"]<<endl;
+       exit(1);
      }
    }
 }
