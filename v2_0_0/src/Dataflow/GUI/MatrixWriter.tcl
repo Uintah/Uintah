@@ -33,7 +33,6 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	set $this-filetype Binary
 	set $this-split 0
       	set $this-confirm 1
-	puts "conf is: $env(SCI_CONFIRM_OVERWRITE)"
 	if { [info exists env(SCI_CONFIRM_OVERWRITE)] && 
 	     ([string equal 0 $env(SCI_CONFIRM_OVERWRITE)] ||
 	      [string equal -nocase no $env(SCI_CONFIRM_OVERWRITE)]) } {
