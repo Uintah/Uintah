@@ -350,27 +350,24 @@ public:
   double get_size(Node::index_type idx) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
-    Node::array_type arr;
-    get_nodes(arr, idx);
-    Point p0, p1;
-    get_center(p0, arr[0]);
-    get_center(p1, arr[1]);
+    Node::array_type ra;
+    get_nodes(ra, idx);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
     return (p1.asVector() - p0.asVector()).length();
   }
   double get_size(Face::index_type idx) const
   {
     Node::array_type ra;
     get_nodes(ra,idx);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p2 = point(ra[2]);
 
     if( isTRI( idx % PRISM_NFACES ) )
       return (Cross(p0-p1,p2-p0)).length()*0.5;
     else if( isQUAD( idx % PRISM_NFACES ) ){
-      Point p3;
-      get_point(p3,ra[3]);
+      const Point &p3 = point(ra[3]);
       return ((Cross(p0-p1,p2-p0)).length()+
 	      (Cross(p0-p3,p2-p0)).length())*0.5;
 
@@ -380,13 +377,12 @@ public:
   {
     Node::array_type ra(PRISM_NNODES);
     get_nodes(ra,idx);
-    Point p0,p1,p2,p3,p4,p5;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    get_point(p3,ra[3]);
-    get_point(p4,ra[4]);
-    get_point(p5,ra[5]);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p2 = point(ra[2]);
+    const Point &p3 = point(ra[3]);
+    const Point &p4 = point(ra[4]);
+    const Point &p5 = point(ra[5]);
 
     return ((Dot(Cross(p1-p0,p2-p0),p4-p0)) +
 	    (Dot(Cross(p2-p0,p3-p0),p4-p0)) +
@@ -532,6 +528,8 @@ public:
   virtual int           dimensionality() const { return 3; }
 
 protected:
+  const Point &point(Node::index_type idx) const { return points_[idx]; }
+
   void			compute_node_neighbors();
   void			compute_edges();
   void			compute_faces();
