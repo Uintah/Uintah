@@ -27,71 +27,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Modules/DataIO/GenericWriter.h>
 
 namespace SCIRun {
 
-class MatrixWriter : public Module {
-  MatrixIPort* inport_;
-  GuiString filename_;
-  GuiString filetype_;
-  GuiInt split_;
+template class GenericWriter<MatrixHandle>;
+
+class MatrixWriter : public GenericWriter<MatrixHandle> {
 public:
   MatrixWriter(const string& id);
-  virtual ~MatrixWriter();
-  virtual void execute();
 };
+
 
 extern "C" Module* make_MatrixWriter(const string& id) {
   return new MatrixWriter(id);
 }
 
+
 MatrixWriter::MatrixWriter(const string& id)
-  : Module("MatrixWriter", id, Source, "DataIO", "SCIRun"),
-    filename_("filename", id, this),
-    filetype_("filetype", id, this), split_("split", id, this)
-{
-  // Create the output port
-  inport_=scinew MatrixIPort(this, "Persistent Data", MatrixIPort::Atomic);
-  add_iport(inport_);
-}
-
-MatrixWriter::~MatrixWriter()
+  : GenericWriter<MatrixHandle>("MatrixWriter", id, "DataIO", "SCIRun")
 {
 }
 
-void MatrixWriter::execute()
-{
-  // Read data from the input port
-  MatrixHandle handle;
-  if(!inport_->get(handle))
-    return;
-
-  // If no name is provided, return
-  const string fn(filename_.get());
-  if(fn == "") {
-    warning("No filename.");
-    return;
-  }
-
-  // Open up the output stream
-  Piostream* stream;
-  const string ft(filetype_.get());
-  if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn, Piostream::Write);
-  } else { // "ASCII"
-    stream=scinew TextPiostream(fn, Piostream::Write);
-  }
-
-  // Check whether the file should be split into header and data
-  handle->set_raw(split_.get());
-  
-  // Write the file
-  Pio(*stream, handle);
-  delete stream;
-}
 
 } // End namespace SCIRun

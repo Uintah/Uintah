@@ -27,24 +27,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <sys/stat.h>
+#include <Dataflow/Modules/DataIO/GenericReader.h>
 
 namespace SCIRun {
 
-class MatrixReader : public Module {
-  MatrixOPort* outport_;
-  GuiString filename_;
-  MatrixHandle handle_;
-  string old_filename_;
-  time_t old_filemodification_;
+template class GenericReader<MatrixHandle>;
+
+class MatrixReader : public GenericReader<MatrixHandle> {
 public:
   MatrixReader(const string& id);
-  virtual ~MatrixReader();
-  virtual void execute();
 };
 
 extern "C" Module* make_MatrixReader(const string& id) {
@@ -52,61 +44,8 @@ extern "C" Module* make_MatrixReader(const string& id) {
 }
 
 MatrixReader::MatrixReader(const string& id)
-  : Module("MatrixReader", id, Source, "DataIO", "SCIRun"),
-    filename_("filename", id, this),
-    old_filemodification_(0)
+  : GenericReader<MatrixHandle>("MatrixReader", id, "DataIO", "SCIRun")
 {
-  // Create the output port
-  outport_=scinew MatrixOPort(this, "Output Data", MatrixIPort::Atomic);
-  add_oport(outport_);
-}
-
-MatrixReader::~MatrixReader()
-{
-}
-
-void MatrixReader::execute()
-{
-  const string fn(filename_.get());
-
-  // Read the status of this file so we can compare modification timestamps
-  struct stat buf;
-  if (stat(fn.c_str(), &buf)) {
-    error("Couldn't get stats on file '" + fn + "'.");
-    return;
-  }
-
-  // If we haven't read yet, or if it's a new filename, 
-  //  or if the datestamp has changed -- then read...
-#ifdef __sgi
-  time_t new_filemodification = buf.st_mtim.tv_sec;
-#else
-  time_t new_filemodification = buf.st_mtime;
-#endif
-  if(!handle_.get_rep() || 
-     fn != old_filename_ || 
-     new_filemodification != old_filemodification_)
-  {
-    old_filemodification_ = new_filemodification;
-    old_filename_=fn;
-    Piostream* stream=auto_istream(fn);
-    if(!stream){
-      error("Error reading file '" + fn + "'.");
-      return;
-    }
-    
-    // Read the file
-    Pio(*stream, handle_);
-    if(!handle_.get_rep() || stream->error()){
-      error("Error reading Matrix from file " + fn + "'.");
-      delete stream;
-      return;
-    }
-    delete stream;
-  }
-  
-  // Send the data downstream
-  outport_->send(handle_);
 }
 
 } // End namespace SCIRun
