@@ -70,11 +70,15 @@ DEALINGS IN THE SOFTWARE.
     <h2>Teem Modules (Category in parentheses)</h2>
     <ul>
       <li>Upgraded many Unu and Tend modules to work with new Teem, 1.8.0.</li>
+      <li>NrrdToField (Converters) - Now handles PointCloud points only case.</li>
+      <li>UnuFlip (UnuAToM) - Maintains axis min/max for flipped axis.</li>
+      <li>UnuCmedian (UnuAToM) - Module now caches.</li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
     <ul>
-      <li></li>
+      <li>ImageToField (Converters) - Bounding box and number of samples now set correctly.</li>
+      <li>BinaryThresholdImageFilter (Filters) - Initialize lower threshold to be lower than upper threshold.</li>
     </ul>
 
     <h1> Deprecated Modules </h1>
@@ -84,10 +88,35 @@ DEALINGS IN THE SOFTWARE.
       <li></li>
     </ul>
 
+    <h1> Power App Enhancements </h1>
+
+    <h2>Power App (Package in parentheses)</h2> 
+    <ul>
+      <li>Help and about now work for all Power Apps.</li>
+      <li>BioTensor (Teem) - Now saves out glyph normalize scale.</li>
+      <li>BioTensor (Teem) - Autoviews correctly when loading tensors directly.</li>
+      <li>BioTensor (Teem) - Bug fixed when user selects Execute mutliple times during load process.</li>
+      <li>BioTensor (Teem) - Coloring planes, isosurfaces, glyphs and fibers and switching between all of these color methods now works.</li>
+      <li>BioImage (Teem) - Handles reseting of crops and resamples correctly when loading a saved sesssion as well as the filter type of a resample filter.</li>
+      <li>BioImage (Teem) - 'incr' call fixed when adding filters to the history.</li>
+      <li>BioImage (Teem) - Proper ViewSlices orientations now set when loading a session.</li>
+      <li>BioImage (Teem) - Progress indicator now works for loading large datasets.</li>
+      <li>BioImage (Teem) - Hide/Show icons reversed in filter history.</li>
+      <li>BioImage (Teem) - Uses correct paths to data directory.</li>
+      <li>BioImage (Teem) - References to Cmedain changed to Median Filtering.</li>
+      <li>BioImage (Teem) - Scroll wheel now works in history frame.</li>
+      <li>BioImage (Teem) - Now uses a RescaleColorMap module for volume rendering for machines that do not support shaders.</li>
+      <li>BioImage (Teem) - Now handles loading different datasets.</li>
+      <li>BioImage (Teem) - Allows user to turn 2D text on or off.</li>
+      <li>BioImage (Teem) - Updated tutorial figures.</li>
+      
+    </ul>
+
     <h1>Infrastructure Enhancements</h1>
     <ul>
       <li>Fixed how we build tensors from eigenvectors/eigenvalues
       (had been missing a transpose).</li>
+      <li>Add double and float types to PropertyManager sot hat all options in NrrdSetProperty work.</li>
     </ul>
 
     <h1>Environment Variables</h1>
