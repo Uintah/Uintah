@@ -251,7 +251,7 @@ public:
 int
 main(int argc, char *argv[], char **environment) {
   // Setup the SCIRun key/value environment
-  create_sci_environment(environment, argv[0]);
+  create_sci_environment(environment, 0);
   sci_putenv("SCIRUN_VERSION", SCIRUN_VERSION);
 
   // Parse the command line arguments to find a network to execute
