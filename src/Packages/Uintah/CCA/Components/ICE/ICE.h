@@ -173,6 +173,12 @@ using namespace SCIRun;
                           const MaterialSubset* matls,
                           DataWarehouse*,
                           DataWarehouse*);
+
+      template<class T> void computePressFace(int& numMatls,CellIterator it, 
+					      IntVector adj_offset,
+			    StaticArray<constCCVariable<double> >& rho_CC,
+					     constCCVariable<double>& press_CC,
+					      T& press_FC);
                    
       void accumulateMomentumSourceSinks(const ProcessorGroup*,
                                          const PatchSubset* patches,
