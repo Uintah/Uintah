@@ -64,6 +64,11 @@ DTPoint::getMessage(const DTMessageTag &tag){
   return dt->getMessage(tag);
 }
 
+DTMessage *
+DTPoint::getMsg(){
+  return dt->getMsg();
+}
+
 DTMessageTag
 DTPoint::putInitialMessage(DTMessage *msg){
   msg->sender=this;
@@ -75,6 +80,13 @@ DTPoint::putReplyMessage(DTMessage *msg){
   msg->sender=this;
   dt->putReplyMessage(msg);
 }
+
+void
+DTPoint::putMsg(DTMessage *msg){
+  msg->sender=this;
+  dt->putMsg(msg);
+}
+
 
 
 

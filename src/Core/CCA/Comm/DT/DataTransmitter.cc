@@ -111,6 +111,9 @@ DataTransmitter::DataTransmitter(){
   recv_sockmap_mutex=new Mutex("recv_sockmap_mutex");
 
   sendQ_cond=new ConditionVariable("sendQ_cond");
+
+  defaultSema=new Semaphore("semaphore for default message tag", 0);
+
   newMsgCnt=0;
   quit=false;
 }
@@ -157,6 +160,35 @@ DataTransmitter::putMessage(DTMessage *msg){
   }
   return newTag;
 }
+
+
+
+void 
+DataTransmitter::putMsg(DTMessage *msg){
+  msg->fr_addr=addr;
+  
+  DTMessageTag newTag=currentTag.defaultTag();
+  msg->tag=newTag;
+  /////////////////////////////////
+  // if the msg is sent to a local 
+  // address, process it right away.
+  if(isLocal(msg->to_addr)){
+    msg->autofree=true;
+    recvQ_mutex->lock();
+    recv_msgQ.push_back(msg);
+    defaultSema->up();
+    recvQ_mutex->unlock();
+  }
+  else{
+    msg->offset=0;
+    sendQ_mutex->lock();
+    send_msgQ.push_back(msg);
+    newMsgCnt++;
+    sendQ_mutex->unlock();
+    sendQ_cond->conditionSignal();
+  }
+}
+
 
 void
 DataTransmitter::putReplyMessage(DTMessage *msg){
@@ -215,6 +247,25 @@ DataTransmitter::getMessage(const DTMessageTag &tag){
   semamap.erase(tag);
   for(vector<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
     if( (*iter)->tag==tag){
+      msg=*iter;
+      recv_msgQ.erase(iter);
+      recvQ_mutex->unlock();
+      return msg;
+    }
+  }
+  throw CommError("Semaphore up but not message received",-1);
+  return NULL;
+}
+
+
+
+DTMessage *
+DataTransmitter::getMsg(){
+  recvQ_mutex->lock();
+  DTMessage *msg=NULL;
+  defaultSema->down();
+  for(vector<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
+    if( (*iter)->tag==currentTag.defaultTag()){
       msg=*iter;
       recv_msgQ.erase(iter);
       recvQ_mutex->unlock();
@@ -395,11 +446,15 @@ DataTransmitter::runRecvingThread(){
 	      pt->service(msg);
 	    }
 	    else{
-	      recvQ_mutex->lock();
-	      recv_msgQ.push_back(msg);
-	      SemaphoreMap::iterator found=semamap.find(msg->tag);
-	      if(found!=semamap.end()) found->second->up();
-	      recvQ_mutex->unlock();
+	      if(msg->tag==currentTag.defaultTag()){
+		defaultSema->up();
+	      }else{
+		recvQ_mutex->lock();
+		recv_msgQ.push_back(msg);
+		SemaphoreMap::iterator found=semamap.find(msg->tag);
+		if(found!=semamap.end()) found->second->up();
+		recvQ_mutex->unlock();
+	      }
 	    }
 	  }
 	}

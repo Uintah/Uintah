@@ -61,6 +61,10 @@ namespace SCIRun {
     //This method blocks until a message is available in the 
     //DataTransmitter and then return this message.
     DTMessage* getMessage(const DTMessageTag& tag);
+
+    //This method blocks until a message with the default tag is available in the 
+    //DataTransmitter and then return this message.
+    DTMessage* getMsg();
     
     ///////////
     //Put msg into the sending message queue.
@@ -71,6 +75,11 @@ namespace SCIRun {
     //Put msg into the sending message queue.
     //the sender field is filled by this method.
     void putReplyMessage(DTMessage *msg);
+
+    ///////////
+    //Put msg into the sending message queue with a default tag.
+    //the sender field is filled by this method.
+    void putMsg(DTMessage *msg);
 
     //callback function
     void (*service)(DTMessage *msg);
