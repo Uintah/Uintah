@@ -344,7 +344,7 @@ class ViewSlices : public Module
   
   RealDrawer *		runner_;
   Thread *		runner_thread_;
-
+  CrowdMonitor		slice_lock_;
 
   // Methods for drawing to the GL window
   void			redraw_all();
@@ -755,6 +755,7 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   font_size_(ctx->subVar("font_size"),15.0),
   runner_(0),
   runner_thread_(0),
+  slice_lock_("Slice lock"),
   fps_(0.0),
   current_layout_(0)
 {
@@ -845,9 +846,11 @@ void
 ViewSlices::send_all_geometry()
 {
   if (window_level_) return;
-
-  if (for_each(&ViewSlices::send_mip_textures) ||
-      for_each(&ViewSlices::send_slice_textures)) 
+  slice_lock_.writeLock();
+  int flush = for_each(&ViewSlices::send_mip_textures) +
+    for_each(&ViewSlices::send_slice_textures);
+  slice_lock_.writeUnlock();
+  if (flush) 
   {
     if (geom_flushed_())
       geom_oport_->flush();
@@ -2960,9 +2963,9 @@ ViewSlices::send_slice_textures(NrrdSlice &slice) {
   GeomHandle gobj = tobjs_[name];
   slice.geom_dirty_ = false;
   slice.do_unlock();
-  
+
   if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
-  gobjs_[name] = geom_oport_->addObj(gobj, name);
+  gobjs_[name] = geom_oport_->addObj(gobj, name, &slice_lock_);
   return 1;
 }
 
