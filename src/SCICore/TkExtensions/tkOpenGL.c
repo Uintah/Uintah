@@ -12,12 +12,8 @@
 #include <stdio.h>
 #include <tkPort.h>
 #include <tkInt.h>
-
-#ifdef _WIN32
-#define WINGDIAPI __declspec(dllimport)
-#define APIENTRY __stdcall
-#define CALLBACK APIENTRY
-#endif
+#include <tkWinInt.h>
+#include <tkWinPort.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -25,7 +21,6 @@
 
 #ifdef _WIN32
 #include <X11\XUtil.h>
-#include <tkWinInt.h>
 #define GLXContext HGLRC
 #endif
 
