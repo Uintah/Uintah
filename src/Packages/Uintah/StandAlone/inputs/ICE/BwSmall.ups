@@ -177,9 +177,7 @@
        <ICE>
          <material>
             <burn type = "null" />
-           <EOS type = "ideal_gas">
-              <gas_constant>188.92 </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            
            
            <viscosity>              0.0                   </viscosity>
