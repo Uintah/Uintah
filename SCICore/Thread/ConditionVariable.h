@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_ConditionVariable_h
 #define SCICore_Thread_ConditionVariable_h
 
+struct timespec;
+
 namespace SCICore {
     namespace Thread {
 	class ConditionVariable_private;
@@ -58,6 +60,15 @@ DESCRIPTION
 	    // used to guard access to the resource that the thread is
 	    // waiting for.
 	    void wait(Mutex& m);
+
+	    //////////
+	    // Wait for a condition.  This method atomically unlocks
+	    // <b>mutex</b>, and blocks.  The <b>mutex</b> is typically
+	    // used to guard access to the resource that the thread is
+	    // waiting for.  If the time abstime is reached before
+	    // the ConditionVariable is signaled, this will return
+	    // false.  Otherewise it will return true.
+	    bool timedWait(Mutex& m, const struct ::timespec* abstime);
     
 	    //////////
 	    // Signal a condition.  This will unblock one of the waiting
@@ -88,6 +99,12 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/22 19:10:28  sparker
+// Implemented timedWait method for ConditionVariable.  A default
+// implementation of CV is no longer possible, so the code is moved
+// to Thread_irix.cc.  The timedWait method for irix uses uspollsema
+// and select.
+//
 // Revision 1.7  1999/09/02 16:52:41  sparker
 // Updates to cocoon documentation
 //

@@ -59,14 +59,13 @@ extern "C" {
 #undef get_tid
 
 /*
- * The irix implementation uses the default version of ConditionVariable,
- * CrowdMonitor, and RecursiveMutex.  It provides native implementations
- * of AtomicCounter (using the Origin fetch&op counters if available),
+ * The irix implementation uses the default version of CrowdMonitor
+ * and RecursiveMutex.  It provides native implementations of
+ * AtomicCounter (using the Origin fetch&op counters if available),
  * Barrier, Mutex, and Semaphore.
  *
  */
 
-#include "ConditionVariable_default.cc"
 #include "CrowdMonitor_default.cc"
 #include "RecursiveMutex_default.cc"
 
@@ -1094,8 +1093,217 @@ AtomicCounter::set(int v)
     }
 }
 
+namespace SCICore {
+    namespace Thread {
+	struct ConditionVariable_private {
+	    int num_waiters;
+	    usema_t* semaphore;
+	    bool pollsema;
+	};
+    }
+}
+
+SCICore::Thread::ConditionVariable::ConditionVariable(const char* name)
+    : d_name(name)
+{
+    d_priv=new ConditionVariable_private();
+    d_priv->num_waiters=0;
+    d_priv->pollsema=false;
+    d_priv->semaphore=usnewsema(arena, 0);
+    if(!d_priv->semaphore)
+	throw ThreadError(std::string("usnewsema failed")
+			  +strerror(errno));
+}
+
+SCICore::Thread::ConditionVariable::~ConditionVariable()
+{
+    if(d_priv->semaphore){
+	if(d_priv->pollsema)
+	    usfreepollsema(d_priv->semaphore, arena);
+	else
+	    usfreesema(d_priv->semaphore, arena);
+    }
+    delete d_priv;
+}
+
+void
+SCICore::Thread::ConditionVariable::wait(Mutex& m)
+{
+    if(d_priv->pollsema){
+	if(!timedWait(m, 0)){
+	    throw ThreadError("timedWait with infinite timeout didn't wait");
+	}
+    } else {
+	d_priv->num_waiters++;
+	m.unlock();
+	Thread_private* p=Thread::self()->d_priv;
+	int oldstate=Thread::push_bstack(p, Thread::BLOCK_CONDITIONVARIABLE, d_name);
+	// Block until woken up by signal or broadcast
+	if(uspsema(d_priv->semaphore) == -1)
+	    throw ThreadError(std::string("uspsema failed")
+			      +strerror(errno));
+	Thread::couldBlockDone(oldstate);
+	m.lock();
+    }
+}
+
+/*
+ * pollable semaphores are strange beasts.  This code isn't meant
+ * to be understood.
+ */
+bool
+SCICore::Thread::ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
+{
+    if(!d_priv->pollsema){
+	// Convert to a pollable semaphore...
+	if(d_priv->num_waiters){
+	    // There would be much code for this case, so I hope it
+	    // never happens.
+	    throw ThreadError("Cannot convert to timedWait/pollable semaphore if regular wait is in effect");
+	} else {
+	    usfreesema(d_priv->semaphore, arena);
+	    d_priv->pollsema=true;
+	    d_priv->semaphore=usnewpollsema(arena, 0);
+	    if(!d_priv->semaphore)
+		throw ThreadError(std::string("usnewpollsema failed")
+				  +strerror(errno));
+	}
+    }
+
+    d_priv->num_waiters++;
+
+    /*
+     * Open the file descriptor before we unlock the mutex because
+     * it is required for the conditionSignal to call usvsema.
+     */
+    int pollfd = usopenpollsema(d_priv->semaphore, S_IRWXU);
+    if(pollfd == -1)
+	throw ThreadError(std::string("usopenpollsema failed")
+			  +strerror(errno));
+
+    m.unlock();
+
+    Thread_private* p=Thread::self()->d_priv;
+    int oldstate=Thread::push_bstack(p, Thread::BLOCK_CONDITIONVARIABLE, d_name);
+
+    // Block until woken up by signal or broadcast or timed out
+    bool success;
+
+    int ss = uspsema(d_priv->semaphore);
+    if(ss == -1){
+	throw ThreadError(std::string("uspsema failed")
+			  +strerror(errno));
+    } else if(ss == 0){
+	for(;;){
+	    struct timeval timeout;
+	    struct timeval* timeoutp;
+	    if(abstime){
+		struct timeval now;
+		if(gettimeofday(&now, 0) != 0)
+		    throw ThreadError(std::string("gettimeofday failed")
+				      +strerror(errno));
+		/* Compute the difference. */
+		timeout.tv_sec = abstime->tv_sec - now.tv_sec;
+		timeout.tv_usec = abstime->tv_nsec/1000 - now.tv_usec;
+		if(timeout.tv_usec < 0){
+		    int secs = (-timeout.tv_usec)/1000000+1;
+		    timeout.tv_sec-=secs;
+		    timeout.tv_usec+=secs*1000000;
+		}
+		if(timeout.tv_sec < 0){
+		    timeout.tv_sec=0;
+		    timeout.tv_usec=0;
+		}
+		timeoutp=&timeout;
+	    } else {
+		timeoutp=0;
+	    }
+
+	    fd_set fds;
+	    FD_ZERO(&fds);
+	    FD_SET(pollfd, &fds);
+	    int s = select(pollfd+1, &fds, 0, 0, timeoutp);
+	    if(s == -1){
+		if(errno == EINTR)
+		    continue;
+		throw ThreadError(std::string("select failed")
+				  +strerror(errno));
+	    } else if(s == 0){
+		// Timed out...
+		success = false;
+		break;
+	    } else {
+		// Got it
+		success=true;
+		break;
+	    }
+	}
+    } else {
+	// Semaphore available...
+	success=true;
+    }
+
+    // Lock now so that the usvsema below will not interfere
+    // with a poorly timed signal
+    m.lock();
+    if(!success){
+	// v the semaphore so that the next p will work
+	if(usvsema(d_priv->semaphore) == -1)
+	    throw ThreadError(std::string("usvsema failed")
+			      +strerror(errno));
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(pollfd, &fds);
+	timeval zerotimeout;
+	zerotimeout.tv_sec = 0;
+	zerotimeout.tv_usec = 0;
+	int s = select(pollfd+1, &fds, 0, 0, &zerotimeout);
+	if(s == -1){
+	    throw ThreadError(std::string("select failed")
+			      +strerror(errno));
+	} else if(s == 0){
+	    // Timed out...
+	    throw ThreadError("ConditionVariable timeout recover failed");
+	} else {
+	    // Got it
+	}
+    }
+    if(usclosepollsema(d_priv->semaphore) != 0)
+	throw ThreadError(std::string("usclosepollsema failed")
+			  +strerror(errno));
+    Thread::couldBlockDone(oldstate);
+    return success;
+}
+
+void
+SCICore::Thread::ConditionVariable::conditionSignal()
+{
+    if(d_priv->num_waiters > 0){
+        d_priv->num_waiters--;
+	if(usvsema(d_priv->semaphore) == -1)
+	    throw ThreadError(std::string("usvsema failed")
+			      +strerror(errno));
+    }
+}
+
+void
+SCICore::Thread::ConditionVariable::conditionBroadcast()
+{
+    while(d_priv->num_waiters > 0){
+        d_priv->num_waiters--;
+	if(usvsema(d_priv->semaphore) == -1)
+	    throw ThreadError(std::string("usvsema failed")
+			      +strerror(errno));
+    }
+}
 //
 // $Log$
+// Revision 1.11  1999/09/22 19:10:29  sparker
+// Implemented timedWait method for ConditionVariable.  A default
+// implementation of CV is no longer possible, so the code is moved
+// to Thread_irix.cc.  The timedWait method for irix uses uspollsema
+// and select.
+//
 // Revision 1.10  1999/09/05 05:58:33  sparker
 // Fixed bug in handling of stderr, where stderr would sometimes
 // not work.  In order to prevent extraneous print statements from

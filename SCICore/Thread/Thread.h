@@ -210,7 +210,8 @@ DESCRIPTION
 		BLOCK_ANY,
 		BLOCK_BARRIER,
 		BLOCK_MUTEX,
-		BLOCK_SEMAPHORE
+		BLOCK_SEMAPHORE,
+		BLOCK_CONDITIONVARIABLE
 	    };
 	    static const char* getStateString(ThreadState);
 	    static int push_bstack(Thread_private*, ThreadState s,
@@ -230,6 +231,12 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.12  1999/09/22 19:10:28  sparker
+// Implemented timedWait method for ConditionVariable.  A default
+// implementation of CV is no longer possible, so the code is moved
+// to Thread_irix.cc.  The timedWait method for irix uses uspollsema
+// and select.
+//
 // Revision 1.11  1999/09/03 19:51:16  sparker
 // Fixed bug where if Thread::parallel was called with block=false, the
 //   helper object could get destroyed before it was used.
