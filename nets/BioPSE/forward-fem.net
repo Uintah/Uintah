@@ -31,8 +31,8 @@ puts "*** Using SCIRUN_DATA $DATADIR"
 
 if {[llength [array get env SCIRUN_DATASET]] == 0} {
    puts ""
-   puts "*** Environment variable 'SCIRUN_DATASET' was not set -- 
-   puts "*** using 'sphere' as the default.
+   puts "*** Environment variable 'SCIRUN_DATASET' was not set -- "
+   puts "*** using 'sphere' as the default."
    puts ""
    set DATASET sphere
 } else {
