@@ -39,6 +39,13 @@ PACKAGE_PATH := @PACKAGE_PATH@
 BUILD_PARALLEL := @BUILD_PARALLEL@
 ifeq ($(BUILD_PARALLEL),yes)
 COMPONENT_DIRS := tools/sidl Component
+%_sidl.o: %_sidl.cc %_sidl.h
+
+%_sidl.cc: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -o $@ $<
+
+%_sidl.h: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -h -o $@ $<
 endif
 
 # These cannot be :=
@@ -236,6 +243,10 @@ endif
 
 #
 # $Log$
+# Revision 1.16  2000/03/21 06:13:30  sparker
+# Added pattern rule for .sidl files
+# Compile component testprograms
+#
 # Revision 1.15  2000/03/21 04:30:04  sparker
 # Simplified rules for using -soname
 # Added a convenience target for subdirectories: "make here"
