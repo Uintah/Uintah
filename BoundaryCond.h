@@ -192,7 +192,7 @@ void getIteratorBCValueBCKind( const Patch* patch,
    double K = density_bcs->getConstant();
 
    for (iter = bound.begin(); iter != bound.end(); iter++) {
-     var[*iter] = value + K*random()*value;
+     var[*iter] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
    }
    IveSetBC = true;
    delete bc;
