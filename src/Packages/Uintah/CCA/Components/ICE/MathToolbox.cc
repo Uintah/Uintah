@@ -339,10 +339,11 @@ void ICE::matrixSolver( int numMatls,
     double a10 = a[1][0], a11 = a[1][1];
     double b0 = b[0], b1 = b[1];
 
-    X[0] = a11*b0/(-(a01*a10) + a00*a11) - a01*b1/(-(a01*a10) + a00*a11);
-    X[1] = -(a10*b0/(-(a01*a10) + a00*a11)) + a00*b1/(-(a01*a10) + a00*a11);
+    double one_over_denom = 1./(a00*a11 - a01*a10);
+    X[0] = (a11*b0 - a01*b1)*one_over_denom;
+    X[1] = (a00*b1-a10*b0)*one_over_denom;
     
-    
+#if 0    
   double denom;
   DenseMatrix a_inverse(2,2);
   denom = a[0][0] * a[1][1] - a[0][1] * a[1][0];
@@ -353,6 +354,7 @@ void ICE::matrixSolver( int numMatls,
   a_inverse[1][1] =  a[0][0]/denom;
   X[0] = a_inverse[0][0] * b[0] + a_inverse[0][1] * b[1];
   X[1] = a_inverse[1][0] * b[0] + a_inverse[1][1] * b[1];
+#endif
   
   }   
   if (numMatls == 3) {   // 3 X 3 Matrix
