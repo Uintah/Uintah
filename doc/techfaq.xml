@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!-- <!DOCTYPE component SYSTEM "faq.dtd"> -->
 <?xml-stylesheet href="faq.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
@@ -99,8 +98,6 @@
         Some linux distributions are shipped with a version of the GCC
         compiler (e.g. 2.96, 2.97) that doesn't work for building SCIRun. 
         For more information, please visit 
-        <a href="http://www.gnu.org/software/gcc/gcc-2.96.html">the
-        GCC site</a> that addresses this problem.
       </p>
       <p>
         The solution to this problem is to update your compiler to version
@@ -169,6 +166,12 @@
     <answer>
       <p>
         The MIPSpro compiler on your target install machine is too old.
+        SCIRun requires version 7.3.1.1m at a minimum.
+      </p>
+    </answer>
+  </entry>
+</faq>
+   The MIPSpro compiler on your target install machine is too old.
         SCIRun requires version 7.3.1.1m at a minimum.
       </p>
       <img>images/research_menuheader.gif</img>
