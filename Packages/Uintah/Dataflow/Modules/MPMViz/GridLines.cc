@@ -32,6 +32,8 @@ DESCRIPTION
 
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGCC.h>
+#include <SCICore/Datatypes/VectorFieldRGCC.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/GeomLine.h>
 #include <SCICore/Geom/GeomGroup.h>
@@ -100,6 +102,8 @@ void GridLines::execute()
   int numx;
   int numy;
   int numz;
+
+  bool CC = false;
   
   ScalarFieldHandle sfield;
   Point min, max;
@@ -109,6 +113,10 @@ void GridLines::execute()
     ScalarFieldRG *rg = sfield->getRG();
     if( rg != 0 ){
       numx = rg->nx; numy = rg->ny; numz = rg->nz;
+      if( ScalarFieldRGCC *sfrgcc =
+	  dynamic_cast<ScalarFieldRGCC *> (sfield.get_rep())){
+	CC = true;
+      }
     } 
     haveit=true;
   }
@@ -118,6 +126,10 @@ void GridLines::execute()
     VectorFieldRG *rg = vfield->getRG();
     if( rg != 0 ){
       numx = rg->nx; numy = rg->ny; numz = rg->nz;
+      if( VectorFieldRGCC *vfrgcc =
+	  dynamic_cast<VectorFieldRGCC *> (vfield.get_rep())) {
+	CC = true;
+      }
     } 
     haveit=true;
   }
@@ -177,9 +189,15 @@ void GridLines::execute()
   }
   
   // deltas for drawing inside lines
-  dx /= (numx - 1);
-  dy /= (numy - 1);
-  dz /= (numz - 1);
+  if( CC ) { // cell centered data
+    dx /= numx;
+    dy /= numy;
+    dz /= numz;
+  } else {    
+    dx /= (numx - 1);
+    dy /= (numy - 1);
+    dz /= (numz - 1);
+  }
   if(dim.get() == 1 && ( m == 1 || m == 3 )){
     if ( m == 3 ){
       xsize = (max.x() - min.x()) / textSpace.get();
