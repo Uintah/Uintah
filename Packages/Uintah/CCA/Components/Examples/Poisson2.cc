@@ -182,10 +182,10 @@ void Poisson2::iterate(const ProcessorGroup*,
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
       new_dw->allocate(newphi, lb_->phi, matl, patch);
+      newphi.copyData(phi);
       double residual=0;
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex(); 
-      newphi.copy(phi, l, h);
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
 		     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
 		     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
