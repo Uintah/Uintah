@@ -21,7 +21,8 @@ def chemfile (test):
     return test[5]
 
 def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
-  symlink("%s/input.dtd" % (inputsdir), "input.dtd")
+
+  # if the cfile exists, then we can assume that there's an input.dtd as well
   cfile = chemfile(test)
   if cfile != "":    
     if platform[0:5] == "linux":
@@ -29,6 +30,7 @@ def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_par
     else:
       cfile = cfile + ".bin"
     symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
+    symlink("%s/input.dtd" % (inputsdir), "input.dtd")
 
 
 exit(runSusTests(argv, TESTS, "performance", chemfileCallback))
