@@ -59,14 +59,41 @@ TextPointCloudString_reader(const char *filename)
   vector<string> strings;
   char buffer[1024];
   double x, y, z;
+  char c;
   
   while (!ptsstream.eof())
   {
+    // Eat up spurious blank lines.
+    while (ptsstream.peek() == ' ' ||
+	   ptsstream.peek() == '\t' ||
+	   ptsstream.peek() == '\n')
+    {
+      ptsstream.get(c);
+    }
+
+    // Eat lines that start with #, they are comments.
+    if (ptsstream.peek() == '#')
+    {
+      ptsstream.getline(buffer, 1024);
+      continue;
+    }
+
+    // We're done at a clean breakpoint.
+    if (!ptsstream.good())
+    {
+      break;
+    }
+
     ptsstream >> x >> y >> z;
+
+    // Reading a point failed.
+    if (!ptsstream.good())
+    {
+      break;
+    }
     pcm->add_point(Point(x, y, z));
     
-    char c;
-    ptsstream.get(c); // Eat up the one whitespace.
+    ptsstream.get(c); // Eat up the one whitespace between z and the string.
     ptsstream.getline(buffer, 1024);
     strings.push_back(string(buffer));
   }
