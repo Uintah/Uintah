@@ -47,12 +47,20 @@ Object_interface::Object_interface()
 void Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
 {
     if(d_serverContext){
-	globus_nexus_endpoint_set_user_pointer(&d_serverContext->d_endpoint, ptr);
-	d_serverContext->d_typeinfo=typeinfo;
-	
+	// This happens because initializeServer gets called by
+	// all of the parent interfaces.  We have no way of knowing
+	// which one is the last, so we overwrite the old
+	// endpoint
+	if(int gerr=globus_nexus_endpoint_destroy(&d_serverContext->d_endpoint))
+	    throw GlobusError("endpoint_destroy", gerr);
+    } else {
+	d_serverContext=new ServerContext;
+	Wharehouse* wharehouse=PIDL::getWharehouse();
+	d_serverContext->d_objid=wharehouse->registerObject(this);
     }
-    d_serverContext=new ServerContext;
     d_serverContext->d_typeinfo=typeinfo;
+    d_serverContext->d_ptr=ptr;
+    d_serverContext->d_objptr=this;
     globus_nexus_endpointattr_t attr;
     if(int gerr=globus_nexus_endpointattr_init(&attr))
 	throw GlobusError("endpointattr_init", gerr);
@@ -67,12 +75,10 @@ void Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
     if(int gerr=globus_nexus_endpoint_init(&d_serverContext->d_endpoint,
 					   &attr))
 	throw GlobusError("endpoint_init", gerr);    
-    globus_nexus_endpoint_set_user_pointer(&d_serverContext->d_endpoint, ptr);
+    globus_nexus_endpoint_set_user_pointer(&d_serverContext->d_endpoint,
+					   (void*)d_serverContext);
     if(int gerr=globus_nexus_endpointattr_destroy(&attr))
 	throw GlobusError("endpointattr_destroy", gerr);
-
-    Wharehouse* wharehouse=PIDL::getWharehouse();
-    d_serverContext->d_objid=wharehouse->registerObject(this);
 }
 
 Object_interface::~Object_interface()
@@ -109,10 +115,17 @@ void Object_interface::_getReference(Reference& ref, bool copy) const
     }
     if(int gerr=globus_nexus_startpoint_bind(&ref.d_sp, &d_serverContext->d_endpoint))
 	throw GlobusError("startpoint_bind", gerr);
+    ref.d_vtable_base=TypeInfo::vtable_methods_start;
 }
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 06:12:59  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.3  1999/09/17 05:08:08  sparker
 // Implemented component model to work with sidl code generator
 //
