@@ -197,18 +197,18 @@ public:
 
   //! use these to build up a new contour mesh
   Node::index_type add_node(const Point &p)
-    { nodes_.push_back(p); return nodes_.size()-1; }
+    { nodes_.push_back(p); return static_cast<under_type>(nodes_.size()-1); }
   Node::index_type add_point(const Point &point) 
     { return add_node(point); }
   Edge::index_type add_edge(Node::index_type i1, Node::index_type i2)
     {
       edges_.push_back(index_pair_type(i1,i2));
-      return static_cast<Edge::index_type>(nodes_.size()-1);
+      return static_cast<under_type>(nodes_.size()-1);
     }
   Elem::index_type add_elem(Node::array_type a)
     {
       edges_.push_back(index_pair_type(a[0],a[1]));
-      return static_cast<Elem::index_type>(nodes_.size()-1);
+      return static_cast<under_type>(nodes_.size()-1);
     }
   void node_reserve(size_t s) { nodes_.reserve(s); }
   void elem_reserve(size_t s) { edges_.reserve(s*2); }
