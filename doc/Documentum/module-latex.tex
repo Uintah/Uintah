@@ -15,17 +15,9 @@
 
 \begin{document}
 
-\begin{rawhtml}
-  <script language="JavaScript">
-  var treetop="";
-  var path = location.pathname;
-  while (path.substr(path.lastIndexOf("/")+1) != "doc") {
-    treetop += "../";
-    path = path.substr(0, path.lastIndexOf("/"));
-  }
-  document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
-  </script>
-\end{rawhtml}
+\begin{htmlonly}
+\include{../Utilities/TeX/banner_top.tex}
+\end{htmlonly}
 
 % The title page
 \title{\LaTeX{} Module Descriptions (Explicated)}
@@ -39,16 +31,26 @@
 \section{Quick Start}
 
 \begin{enumerate}
-\item Make a copy of the template file
-  \htmladdnormallink{module-desc-template.tex}
-  {file://module-desc-template.tex} and rename it appropriately. 
-  This file will become your module description document.
+\item Create a directory for your module description in the cvs tree.  If your
+  description is part of the \sr{} package then create a directory for it
+  in \directory{src/Dataflow/TeX}.  If your description is part of another
+  package then create a directory for it in
+  \directory{src/Packages/\ab{package}/Dataflow/Tex} where \ab{package} is
+  the name of the appropriate package.  This directory should be named
+  after the module it describes.
+\item Copy the template file, \htmladdnormallink{module-desc-template.tex}
+  {file://module-desc-template.tex}, to the directory you just created.
+  Name this file after its parent directory and with an extension of
+  \filename{.tex}. 
+  This file is now your module description document.
+\item Put your document's figures in the directory created above.
 \item Look at the file \htmladdnormallink{\filename{scirun-doc.sty}}
   {file://../Utilities/scirun-doc.sty} and observe the markup
   commands recommended for use in your module description file.
 \item Flesh out your document by following the instructions in your
   module description document (the copy of the template).
-\item Send the result to the doc group.
+\item Notify the doc group of your new module description
+  (scirun-doc@sci.utah.edu)
 \item Refer to following sections for additional information.
 \end{enumerate}
 
@@ -282,11 +284,25 @@ referenced in your document.
 
 %\section{Example}
 
-\begin{rawhtml}
-  <script type="text/javascript">
-  // Include JavaScript code that produces the bottom banner.
-  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
-  </script>
-\end{rawhtml}
+\section{Location of Document}
+
+Your document will live in the \directory{src} side of the CVS tree.  If it
+describes a module in the \sr{} package then it will live in a
+sub-directory of the directory \directory{src/Dataflow/TeX}.  If it
+describes a module in another package then it will live in a sub-directory
+of the directory \directory{src/Packages/\ab{package}/Dataflow/Tex} where
+\ab{package} is the name of the appropriate package.
+
+Your document's file should be named after the name of the module it
+describes and with an extension of \filename{.tex}.  Your document's
+directory \emph{must} have the same name as the document itself sans the
+\filename{.tex} extension.
+
+Place figures in your document's directory.  Or you may create sub-directories
+for holding figures or other document sources.
+
+\begin{htmlonly}
+\include{../Utilities/TeX/banner_bottom.tex}
+\end{htmlonly}
 
 \end{document}

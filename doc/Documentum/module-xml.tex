@@ -15,17 +15,9 @@
 
 \begin{document}
 
-\begin{rawhtml}
-  <script type="text/javascript">
-  var treetop="";
-  var path = location.pathname;
-  while (path.substr(path.lastIndexOf("/")+1) != "doc") {
-    treetop += "../";
-    path = path.substr(0, path.lastIndexOf("/"));
-  }
-  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
-  </script>
-\end{rawhtml}
+\begin{htmlonly}
+\include{../Utilities/TeX/banner_top.tex}
+\end{htmlonly}
 
 % The title page
 \title{XML Module Descriptions (Explicated)}
@@ -54,9 +46,9 @@
 \newcommand{\elementitem}[1]{\item[\texttt{\ab{#1}}]}
 \newcommand{\psgmlurl}{http://www.lysator.liu.se/projects/about\_psgml.html}
 \newcommand{\Note}[1]{\emph{Note: #1}}
-\newcommand{\xmlvalidurl}{http://www.stg.brown.edu/service/xmlvalid/}
 \newcommand{\ytbd}{\emph{Yet to be done}}
 \newcommand{\doctitle}[1]{\textit{#1}}
+\newcommand{\xmlvalidurl}{http://eegah.cvrti.utah.edu/srvalidate.html}
 
 % Section title commands (I'm experimenting - bear with me.)
 \newcommand{\SECintro}{Introduction}
@@ -799,13 +791,10 @@ Note:
 
 You should  validate your component specification document to ensure that it
 is complete and correct.  Do this before committing it to CVS otherwise you
-may break \sr{} for yourself and others.  
+may break \sr{} for yourself and others.  You may wish to use the online \htmladdnormallinkfoot{Validation Tool for SCIRun XML Files}{\xmlvalidurl}.
 
-\begin{rawhtml}
-<script type="text/javascript">
-// Include JavaScript code that produces the bottom banner.
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
-</script>
-\end{rawhtml}
+\begin{htmlonly}
+\include{../Utilities/TeX/banner_bottom.tex}
+\end{htmlonly}
 
 \end{document}
