@@ -43,45 +43,52 @@ mesh and set of electrodes.
 
 "
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 30 104]
-set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 30 178]
-set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 399 15]
-set m3 [addModuleAtPosition "BioPSE" "LeadField" "BuildElemLeadField" 262 179]
-set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 244 263]
-set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 422 263]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 226 333]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 280 104]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 226 403]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 226 472]
-set m10 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 226 15]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 223 18]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 28 323]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 448 109]
+set m3 [addModuleAtPosition "BioPSE" "LeadField" "BuildElemLeadField" 259 323]
+set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 241 407]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 419 407]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 223 477]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 277 196]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 223 547]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 223 616]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataAt" 277 110]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "InterpolantToTransferMatrix" 277 259]
 
 addConnection $m1 0 $m4 0
 addConnection $m3 0 $m4 1
 addConnection $m3 1 $m5 0
 addConnection $m2 0 $m7 1
 addConnection $m4 0 $m6 1
-addConnection $m7 0 $m3 1
 addConnection $m6 0 $m8 0
 addConnection $m8 0 $m9 0
-addConnection $m9 1 $m3 2
-addConnection $m10 0 $m7 0
-addConnection $m10 0 $m3 0
-addConnection $m10 0 $m6 0
 addConnection $m0 0 $m1 0
+addConnection $m0 0 $m10 0
+addConnection $m10 0 $m7 0
+addConnection $m0 0 $m6 0
+addConnection $m0 0 $m3 0
+addConnection $m11 0 $m3 1
+addConnection $m7 0 $m11 0
+addConnection $m9 1 $m3 2
 
 set $m0-notes {TetVolField input is the finite element mesh -- data values at the elements are conductivity tensors.
 
 }
+set $m0-show_status {1}
 set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
 set $m1-notes {Using the zero'th node as a ground reference, we build the finite element stiffness matrix
 for the incoming TetVolField.  The TetVolField has a conductivity tensor at each element.
 
 }
-set $m1-UseCondTCL 1
-set $m1-BCFlag {GroundZero}
+set $m1-show_status {1}
+set $m1-UseCondTCL {1}
+set $m1-UseBasisTCL {0}
+set $m1-nprocs {auto}
 set $m2-notes {TetVolField specifying the electrode positions (no cells).
 
 }
+set $m2-show_status {1}
 set $m2-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m3-notes {Build the element-centered leadfield matrix for the input finite element mesh (port 1) and electrode
 interpolant Field (port 2).  We set the last electrode to ground, and iteratively pair it with
@@ -91,6 +98,7 @@ to a solve matrix module, the system is solved, the gradient is computed, and th
 is passed back to us and stored as one column in our lead-field matrix.
 
 }
+set $m3-show_status {1}
 set $m4-notes {Solve the: A x phi = flux
 linear system.  A is the stiffness matrix, with node 0 pinned to ground, the flux vector is all
 zeroes except for the TetVol source and sink node positions, which have a 1 and a -1 
@@ -98,35 +106,56 @@ respectively (unit current passed between them).  Solving for phi gives us the v
 everywhere at the nodes in the TetVolMesh.
 
 }
-set $m4-target_error 0.0001
-set $m4-orig_error 1
-set $m4-current_error {8.45361e-07}
+set $m4-show_status {1}
+set $m4-target_error {0.000001}
+set $m4-flops {           344578}
+set $m4-floprate {          24.1205}
+set $m4-memrefs {      6.15275e+06}
+set $m4-memrate {          430.693}
+set $m4-orig_error {                1}
+set $m4-current_error {9.82593e-05}
 set $m4-method {Conjugate Gradient & Precond. (SCI)}
 set $m4-precond {jacobi}
-set $m4-iteration 176
-set $m4-maxiter 2000
-set $m4-use_previous_soln 0
-set $m4-emit_partial 0
-set $m4-np 16
+set $m4-iteration {102}
+set $m4-maxiter {2000}
+set $m4-use_previous_soln {0}
+set $m4-emit_partial {0}
+set $m4-emit_iter {50}
+set $m4-status {}
+set $m4-np {16}
 set $m5-notes {Store the lead-field.  The size is nr=(# of electrodes - 1) x nc=(# of elements x 3).  Each
 row is stored [ex1 ey1 ez1 ex2 ey2 ez2 ex3 ey3 ez3 ... exn eyn ezn] where [exi eyi ezi] is 
 the electric field vector in element i.
  
 }
+set $m5-show_status {1}
 set $m5-filename $DATADIR/$DATASET/generated/$DATASET-leadfield.mat
 set $m5-filetype {ASCII}
-set $m5-split 0
+set $m5-split {1}
 set $m6-notes {Having solving for the voltages at the nodes of the TetVolMesh, we combine those scalar
 values with the TetVolMesh to produce a TetVolField of scalar double potentials at the
 nodes.
 
 }
+set $m6-show_status {1}
 set $m7-notes {Build the interpolant weights for the electrodes.  For each node in the electrode field (second input
 field port), we record the single nearest node from the finite element mesh and assign it a weight of 1.
 
 }
-set $m7-use_interp {0}
-
-set $m10-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+set $m7-show_status {1}
+set $m7-interpolation_basis {linear}
+set $m7-map_source_to_single_dest {0}
+set $m7-exhaustive_search {1}
+set $m7-exhaustive_search_max_dist {-1}
+set $m7-np {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-outputdataat {Nodes}
+set $m11-notes {}
+set $m11-show_status {1}
 
 ::netedit scheduleok

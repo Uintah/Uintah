@@ -68,9 +68,10 @@ set m21 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 701 212]
 set m22 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 852 515]
 set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 852 577]
 set m24 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 416 671]
-set m25 [addModuleAtPosition "BioPSE" "LeadField" "BuildMisfitField" 904 383]
-set m26 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 904 450]
-set m27 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 416 611]
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 909 501]
+set m26 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 416 611]
+set m27 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 909 436]
+set m28 [addModuleAtPosition "BioPSE" "LeadField" "BuildMisfitField" 927 373]
 
 addConnection $m4 1 $m3 0
 addConnection $m5 1 $m3 1
@@ -110,16 +111,17 @@ addConnection $m23 0 $m20 1
 addConnection $m23 0 $m24 1
 addConnection $m24 0 $m3 4
 addConnection $m0 0 $m1 0
-addConnection $m25 0 $m26 0
-addConnection $m26 1 $m3 5
-addConnection $m0 0 $m25 0
-addConnection $m12 0 $m25 1
-addConnection $m17 0 $m25 2
+addConnection $m25 1 $m3 5
 addConnection $m17 0 $m21 1
 addConnection $m19 0 $m24 2
-addConnection $m27 0 $m24 0
-addConnection $m19 0 $m27 0
-addConnection $m6 1 $m27 1
+addConnection $m26 0 $m24 0
+addConnection $m19 0 $m26 0
+addConnection $m6 1 $m26 1
+addConnection $m27 0 $m25 0
+addConnection $m28 0 $m27 1
+addConnection $m12 0 $m28 0
+addConnection $m17 0 $m28 1
+addConnection $m0 0 $m27 0
 
 set $m0-notes {}
 set $m0-show_status 1
@@ -385,34 +387,37 @@ set $m24-node-resolution {6}
 set $m24-edge-resolution {6}
 set $m24-data-resolution {20}
 set $m25-notes {}
-set $m25-show_status {0}
-set $m25-metric {invCC}
-set $m25-pvalue {1}
+set $m25-show_status {1}
+set $m25-isoval {0.03797}
+set $m25-isoval-min {3.4244525617954658e-16}
+set $m25-isoval-max {0.99919624266415186}
+set $m25-isoval-typed {0}
+set $m25-isoval-quantity {1}
+set $m25-quantity-range {colormap}
+set $m25-quantity-min {0}
+set $m25-quantity-max {100}
+set $m25-isoval-list {0}
+set $m25-extract-from-new-field {1}
+set $m25-algorithm {0}
+set $m25-build_trisurf {0}
+set $m25-np {1}
+set $m25-active-isoval-selection-tab {0}
+set $m25-active_tab {MC}
+set $m25-update_type {on release}
+set $m25-color-r {0.4}
+set $m25-color-g {0.2}
+set $m25-color-b {0.9}
 set $m26-notes {}
-set $m26-show_status {0}
-set $m26-isoval {0.096}
-set $m26-isoval-min {0}
-set $m26-isoval-max {99}
-set $m26-isoval-typed {0}
-set $m26-isoval-quantity {1}
-set $m26-quantity-range {colormap}
-set $m26-quantity-min {0}
-set $m26-quantity-max {100}
-set $m26-isoval-list {0}
-set $m26-extract-from-new-field {1}
-set $m26-algorithm {0}
-set $m26-build_trisurf {0}
-set $m26-np {1}
-set $m26-active-isoval-selection-tab {0}
-set $m26-active_tab {MC}
-set $m26-update_type {on release}
-set $m26-color-r {0.4}
-set $m26-color-g {0.2}
-set $m26-color-b {0.9}
+set $m26-show_status {1}
 set $m27-notes {}
 set $m27-show_status {1}
+set $m28-notes {}
+set $m28-show_status {1}
+set $m28-metric {invCC}
+set $m28-pvalue {1}
 $m1 initialize_ui
 $m2 initialize_ui
-$m26 initialize_ui
+$m10 initialize_ui
+$m25 initialize_ui
 
 ::netedit scheduleok
