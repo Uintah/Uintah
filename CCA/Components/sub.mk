@@ -37,22 +37,16 @@ ifeq ($(HAVE_QT),yes)
 SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
 	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
 	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
-	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/PLinSolver
-
-ifeq ($(HAVE_BABEL),yes)
-  SUBDIRS += $(SRCDIR)/HelloWorldBridge
-endif
+	$(SRCDIR)/TTClient $(SRCDIR)/World
 
 else
-SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
+SUBDIRS := $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello $(SRCDIR)/World
 endif
 
 
 ifeq ($(HAVE_MPI),yes)
-SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello  $(SRCDIR)/PLinSolver
+SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello  $(SRCDIR)/PLinSolver
 endif
-
-SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/PWorld $(SRCDIR)/PHello $(SRCDIR)/Hello $(SRCDIR)/World
 
 ifeq ($(HAVE_BABEL),yes)
 SUBDIRS+= $(SRCDIR)/BabelTest
