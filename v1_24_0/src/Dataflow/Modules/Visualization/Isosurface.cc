@@ -92,7 +92,7 @@ Isosurface::Isosurface(GuiContext* ctx) :
   cmGeneration_(-1),
   mGeneration_(-1),
 
-  geomID_(-1),
+  geomID_(0),
 
   error_(0)  
 {
@@ -381,7 +381,7 @@ Isosurface::execute()
 
   if( (build_field  && !fHandle_.get_rep()) ||
       (build_interp && !mHandle_.get_rep()) ||
-      (build_geom   && geomID_ == -1   ) ||
+      (build_geom   && geomID_ == 0   ) ||
       update ||
       error_ ) {
 
