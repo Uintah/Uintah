@@ -24,7 +24,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/Geom/GeomObj.h>
 #include <Core/Containers/Array3.h>
 #include <string.h>
 #include <vector>
