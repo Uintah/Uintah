@@ -31,18 +31,20 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  FieldMedianFilter.o  \
+OBJS = ClipField.o  DiffFields.o  ExtractSurfs.o  \
+	FieldCurl.o  FieldFilter.o  FieldMedianFilter.o  \
 	FieldGainCorrect.o  FieldSeed.o \
 	GenSigmaSet.o  Gradient.o  GradientMagnitude.o  MMeshToSFUG.o  \
-	MergeTensor.o  PadFldPow2.o  \
+	MergeTensor.o  PadFldPow2.o  PermuteField.o  \
 	SFRGfile.o  SFUGtoGeom.o  TracePath.o  \
 	TransformField.o  $(OPENGLOBJS)  \
 	$(TEMPLATE_OBJS)
 
-SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldMedianFilter.cc \
+SRCS = ClipField.cc DiffFields.cc ExtractSurfs.cc \
+	FieldCurl.cc FieldFilter.cc FieldMedianFilter.cc \
 	FieldGainCorrect.cc FieldSeed.cc \
 	GenSigmaSet.cc Gradient.cc GradientMagnitude.cc MMeshToSFUG.cc \
-	MergeTensor.cc PadFldPow2.cc \
+	MergeTensor.cc PadFldPow2.cc PermuteField.cc \
 	SFRGfile.cc SFUGtoGeom.cc TracePath.cc \
 	TransformField.cc $(OPENGLSRCS)  \
 	$(TEMPLATE_SRCS)

@@ -13,48 +13,82 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldRGdouble.h>
-#include <Datatypes/ScalarFieldRGfloat.h>
-#include <Datatypes/ScalarFieldRGint.h>
-#include <Datatypes/ScalarFieldRGshort.h>
-#include <Datatypes/ScalarFieldRGuchar.h>
+#include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
-#include <Malloc/Allocator.h>
-#include <Math/MiscMath.h>
-#include <TCL/TCLTask.h>
+#include <Geometry/BBox.h>
+#include <Math/Expon.h>
+#include <Math/MusilRNG.h>
+#include <Math/Trig.h>
 #include <TCL/TCLvar.h>
-#include <TCL/TCL.h>
-#include <tcl/tcl/tcl.h>
-#include <tcl/tk/tk.h>
 #include <iostream.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <Malloc/Allocator.h>
+
+static void buildRotateMatrix(double rm[][3], double angle, const Vector& axis) {
+    // From Foley and Van Dam, Pg 227
+    // NOTE: Element 0,1 is wrong in the text!
+    double sintheta=Sin(angle);
+    double costheta=Cos(angle);
+    double ux=axis.x();
+    double uy=axis.y();
+    double uz=axis.z();
+    rm[0][0]=ux*ux+costheta*(1-ux*ux);
+    rm[0][1]=ux*uy*(1-costheta)-uz*sintheta;
+    rm[0][2]=uz*ux*(1-costheta)+uy*sintheta;
+    rm[1][0]=ux*uy*(1-costheta)+uz*sintheta;
+    rm[1][1]=uy*uy+costheta*(1-uy*uy);
+    rm[1][2]=uy*uz*(1-costheta)-ux*sintheta;
+    rm[2][0]=uz*ux*(1-costheta)-uy*sintheta;
+    rm[2][1]=uy*uz*(1-costheta)+ux*sintheta;
+    rm[2][2]=uz*uz+costheta*(1-uz*uz);
+}
+
+static Vector rotateVector(const Vector& v_r, double rm[][3]) {
+    return Vector(v_r.x()*rm[0][0]+v_r.y()*rm[0][1]+v_r.z()*rm[0][2],
+		  v_r.x()*rm[1][0]+v_r.y()*rm[1][1]+v_r.z()*rm[1][2],
+		  v_r.x()*rm[2][0]+v_r.y()*rm[2][1]+v_r.z()*rm[2][2]);
+}
+
+// transform a pt by pushing it though a rotation matrix (M) and adding a
+// displacement Vector (v)
+static Point transformPt(double m[3][3], const Point& p, const Vector& v, double sx,
+		  double sy, double sz) {
+    return Point((p.x()*m[0][0]+p.y()*m[0][1]+p.z()*m[0][2])*sx+v.x(),
+		 (p.x()*m[1][0]+p.y()*m[1][1]+p.z()*m[1][2])*sy+v.y(),
+		 (p.x()*m[2][0]+p.y()*m[2][1]+p.z()*m[2][2])*sz+v.z());
+}
 
 class TransformField : public Module {
     ScalarFieldIPort *iport;
     ScalarFieldOPort *oport;
-    ScalarFieldHandle sfOH;		// output bitFld
-    ScalarFieldHandle last_sfIH;	// last input fld
-
-    TCLstring xmap;
-    TCLstring ymap;
-    TCLstring zmap;
-
-    int xxmap;
-    int yymap;
-    int zzmap;
-
-    int tcl_execute;
+    TCLdouble rx, ry, rz, th;
+    TCLdouble tx, ty, tz;
+    TCLdouble scale, scalex, scaley, scalez;
+    TCLint flipx, flipy, flipz;
+    TCLint origin;
+    ScalarFieldHandle osfh;
+    double last_rx;
+    double last_ry;
+    double last_rz;
+    double last_th;
+    double last_tx;
+    double last_ty;
+    double last_tz;
+    double last_scale;
+    double last_scalex;
+    double last_scaley;
+    double last_scalez;
+    int last_flipx;
+    int last_flipy;
+    int last_flipz;
+    int last_origin;
+    int generation;
 public:
     TransformField(const clString& id);
     TransformField(const TransformField&, int deep);
     virtual ~TransformField();
     virtual Module* clone(int deep);
     virtual void execute();
-    void set_str_vars();
-    void tcl_command( TCLArgs&, void * );
-    clString makeAbsMapStr();
 };
 
 extern "C" {
@@ -64,10 +98,22 @@ Module* make_TransformField(const clString& id)
 }
 }
 
+static clString module_name("TransformField");
+
 TransformField::TransformField(const clString& id)
-: Module("TransformField", id, Source), tcl_execute(0),
-  xmap("xmap", id, this), ymap("ymap", id, this), zmap("zmap", id, this),
-  xxmap(1), yymap(2), zzmap(3)
+: Module("TransformField", id, Source),
+  rx("rx", id, this), ry("ry", id, this), rz("rz", id, this), 
+  th("th", id, this),
+  tx("tx", id, this), ty("ty", id, this), tz("tz", id, this),
+  scalex("scalex", id, this), scaley("scaley", id, this), 
+  scalez("scalez", id, this), 
+  scale("scale", id, this),
+  flipx("flipx", id, this), flipy("flipy", id, this), 
+  flipz("flipz", id, this), origin("origin", id, this),
+  generation(-1), last_rx(0), last_ry(0), last_rz(0), last_th(0),
+  last_tx(0), last_ty(0), last_tz(0), last_scale(0),	
+  last_scalex(0), last_scaley(0), last_scalez(0),
+  last_flipx(0), last_flipy(0), last_flipz(0), last_origin(0)
 {
     // Create the input port
     iport = scinew ScalarFieldIPort(this, "SFRG", ScalarFieldIPort::Atomic);
@@ -77,9 +123,19 @@ TransformField::TransformField(const clString& id)
 }
 
 TransformField::TransformField(const TransformField& copy, int deep)
-: Module(copy, deep), tcl_execute(0),
-  xmap("xmap", id, this), ymap("ymap", id, this), zmap("zmap", id, this),
-  xxmap(1), yymap(2), zzmap(3)
+: Module(copy, deep),
+  rx("rx", id, this), ry("ry", id, this), rz("rz", id, this),
+  th("th", id, this),
+  tx("tx", id, this), ty("ty", id, this), tz("tz", id, this),
+  scalex("scalex", id, this), scaley("scaley", id, this), 
+  scalez("scalez", id, this), 
+  flipx("flipx", id, this), flipy("flipy", id, this), 
+  flipz("flipz", id, this), origin("origin", id, this),
+  scale("scale", id, this),
+  generation(-1), last_rx(0), last_ry(0), last_rz(0), last_th(0),
+  last_tx(0), last_ty(0), last_tz(0), last_scale(0),
+  last_scalex(0), last_scaley(0), last_scalez(0), 
+  last_flipx(0), last_flipy(0), last_flipz(0), last_origin(0)
 {
     NOT_FINISHED("TransformField::TransformField");
 }
@@ -98,347 +154,73 @@ void TransformField::execute()
     ScalarFieldHandle sfIH;
     iport->get(sfIH);
     if (!sfIH.get_rep()) return;
-    if (!tcl_execute && (sfIH.get_rep() == last_sfIH.get_rep())) return;
-    ScalarFieldRGBase *sfrgb;
-    if ((sfrgb=sfIH->getRGBase()) == 0) return;
+    ScalarFieldRG* isfrg=sfIH->getRG();
+    if (!isfrg) return;
 
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGshort *ifs, *ofs;
-    ScalarFieldRGuchar *ifc, *ofc;
+    double rxx=rx.get();
+    double ryy=ry.get();
+    double rzz=rz.get();
+    double rtt=th.get();
+    double txx=tx.get();
+    double tyy=ty.get();
+    double tzz=tz.get();
+    double new_scale=scale.get();
+    double s=pow(10.,new_scale);
+    double new_scalex=scalex.get();
+    double sx=pow(10.,new_scalex)*s;
+    double new_scaley=scaley.get();
+    double sy=pow(10.,new_scaley)*s;
+    double new_scalez=scalez.get();
+    double sz=pow(10.,new_scalez)*s;
+    int fx=flipx.get();
+    int fy=flipy.get();
+    int fz=flipz.get();
+    int orig=origin.get();
 
-    ScalarFieldRGBase *ofb;
-
-    ifd=sfrgb->getRGDouble();
-    iff=sfrgb->getRGFloat();
-    ifi=sfrgb->getRGInt();
-    ifs=sfrgb->getRGShort();
-    ifc=sfrgb->getRGUchar();
-
-    ofd=0;
-    off=0;
-    ofs=0;
-    ofi=0;
-    ofc=0;
-
-    if (sfIH.get_rep() != last_sfIH.get_rep()) {	// new field came in
-	int nx=sfrgb->nx;
-	int ny=sfrgb->ny;
-	int nz=sfrgb->nz;
-	Point min;
-	Point max;
-	sfrgb->get_bounds(min, max);
-	clString map=makeAbsMapStr();
-
-	int basex, basey, basez, incrx, incry, incrz;
-	if (xxmap>0) {basex=0; incrx=1;} else {basex=nx-1; incrx=-1;}
-	if (yymap>0) {basey=0; incry=1;} else {basey=ny-1; incry=-1;}
-	if (zzmap>0) {basez=0; incrz=1;} else {basez=nz-1; incrz=-1;}
-
- 	if (map=="123") {
-	    if (ifd) {
-		ofd=scinew ScalarFieldRGdouble(); 
-		ofd->resize(nx,ny,nz);
-		ofb=ofd;
-	    } else if (iff) {
-		off=scinew ScalarFieldRGfloat(); 
-		off->resize(nx,ny,nz);
-		ofb=off;
-	    } else if (ifi) {
-		ofi=scinew ScalarFieldRGint(); 
-		ofi->resize(nx,ny,nz);
-		ofb=ofi;
-	    } else if (ifs) {
-		ofs=scinew ScalarFieldRGshort(); 
-		ofs->resize(nx,ny,nz);
-		ofb=ofs;
-	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(nx,ny,nz);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
-	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
-		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
-		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(ii,jj,kk);
-			else if (off) off->grid(i,j,k)=iff->grid(ii,jj,kk);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(ii,jj,kk);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(ii,jj,kk);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(ii,jj,kk);
-	} else if (map=="132") {
-	    if (ifd) {
-		ofd=scinew ScalarFieldRGdouble(); 
-		ofd->resize(nx,nz,ny);
-		ofb=ofd;
-	    } else if (iff) {
-		off=scinew ScalarFieldRGfloat(); 
-		off->resize(nx,nz,ny);
-		ofb=off;
-	    } else if (ifi) {
-		ofi=scinew ScalarFieldRGint(); 
-		ofi->resize(nx,nz,ny);
-		ofb=ofi;
-	    } else if (ifs) {
-		ofs=scinew ScalarFieldRGshort(); 
-		ofs->resize(nx,nz,ny);
-		ofb=ofs;
-	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(nx,nz,ny);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
-	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
-		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
-		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(ii,kk,jj);
-			else if (off) off->grid(i,j,k)=iff->grid(ii,kk,jj);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(ii,kk,jj);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(ii,kk,jj);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(ii,kk,jj);
-	} else if (map=="213") {
-	    if (ifd) {
-		ofd=scinew ScalarFieldRGdouble(); 
-		ofd->resize(ny,nx,nz);
-		ofb=ofd;
-	    } else if (iff) {
-		off=scinew ScalarFieldRGfloat(); 
-		off->resize(ny,nx,nz);
-		ofb=off;
-	    } else if (ifi) {
-		ofi=scinew ScalarFieldRGint(); 
-		ofi->resize(ny,nx,nz);
-		ofb=ofi;
-	    } else if (ifs) {
-		ofs=scinew ScalarFieldRGshort(); 
-		ofs->resize(ny,nx,nz);
-		ofb=ofs;
-	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(ny,nx,nz);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
-	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
-		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
-		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(jj,ii,kk);
-			else if (off) off->grid(i,j,k)=iff->grid(jj,ii,kk);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(jj,ii,kk);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(jj,ii,kk);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(jj,ii,kk);
-	} else if (map=="231") {
-	    if (ifd) {
-		ofd=scinew ScalarFieldRGdouble(); 
-		ofd->resize(ny,nz,nx);
-		ofb=ofd;
-	    } else if (iff) {
-		off=scinew ScalarFieldRGfloat(); 
-		off->resize(ny,nz,nx);
-		ofb=off;
-	    } else if (ifi) {
-		ofi=scinew ScalarFieldRGint(); 
-		ofi->resize(ny,nz,nx);
-		ofb=ofi;
-	    } else if (ifs) {
-		ofs=scinew ScalarFieldRGshort(); 
-		ofs->resize(ny,nz,nx);
-		ofb=ofs;
-	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(ny,nz,nx);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
-	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
-		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
-		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(ii,jj,kk);
-			else if (off) off->grid(i,j,k)=iff->grid(jj,kk,ii);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(jj,kk,ii);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(jj,kk,ii);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(jj,kk,ii);
-	} else if (map=="312") {
-	    if (ifd) {
-		ofd=scinew ScalarFieldRGdouble(); 
-		ofd->resize(nz,nx,ny);
-		ofb=ofd;
-	    } else if (iff) {
-		off=scinew ScalarFieldRGfloat(); 
-		off->resize(nz,nx,ny);
-		ofb=off;
-	    } else if (ifi) {
-		ofi=scinew ScalarFieldRGint(); 
-		ofi->resize(nz,nx,ny);
-		ofb=ofi;
-	    } else if (ifs) {
-		ofs=scinew ScalarFieldRGshort(); 
-		ofs->resize(nz,nx,ny);
-		ofb=ofs;
-	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(nz,nx,ny);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
-	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
-		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
-		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(kk,ii,jj);
-			else if (off) off->grid(i,j,k)=iff->grid(kk,ii,jj);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(kk,ii,jj);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(kk,ii,jj);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(kk,ii,jj);
-	} else if (map=="321") {
-	    if (ifd) {
-		ofd=scinew ScalarFieldRGdouble(); 
-		ofd->resize(nz,ny,nx);
-		ofb=ofd;
-	    } else if (iff) {
-		off=scinew ScalarFieldRGfloat(); 
-		off->resize(nz,ny,nx);
-		ofb=off;
-	    } else if (ifi) {
-		ofi=scinew ScalarFieldRGint(); 
-		ofi->resize(nz,ny,nx);
-		ofb=ofi;
-	    } else if (ifs) {
-		ofs=scinew ScalarFieldRGshort(); 
-		ofs->resize(nz,ny,nx);
-		ofb=ofs;
-	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(nz,ny,nx);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
-	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
-		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
-		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(kk,jj,ii);
-			else if (off) off->grid(i,j,k)=iff->grid(kk,jj,ii);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(kk,jj,ii);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(kk,jj,ii);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(kk,jj,ii);
-
-//	    outFld->resize(nz,ny,nx);
-//	    outFld->grid(i,j,k)=sfrg->grid(kk,jj,ii);
-
-	} else {
-	    cerr << "ERROR: TransformField::execute() doesn't recognize map code: "<<map<<"\n";
-	}
-	sfOH=ofb;
+    if (generation == isfrg->generation && 
+	rxx==last_rx && ryy==last_ry && rzz==last_rz && rtt==last_th &&
+	txx==last_rx && tyy==last_ry && tzz==last_rz && 
+	fx==last_flipx && fy==last_flipy && fz==last_flipz && 
+	new_scale == last_scale && orig==last_origin) {
+	oport->send(osfh);
+	return;
     }
-    oport->send(sfOH);
-    tcl_execute=0;
-}
-	    
-void TransformField::set_str_vars() {
-    if (xxmap==1) xmap.set("x <- x+");
-    if (xxmap==-1) xmap.set("x <- x-");
-    if (xxmap==2) xmap.set("x <- y+");
-    if (xxmap==-2) xmap.set("x <- y-");
-    if (xxmap==3) xmap.set("x <- z+");
-    if (xxmap==-3) xmap.set("x <- z-");
-    if (yymap==1) ymap.set("y <- x+");
-    if (yymap==-1) ymap.set("y <- x-");
-    if (yymap==2) ymap.set("y <- y+");
-    if (yymap==-2) ymap.set("y <- y-");
-    if (yymap==3) ymap.set("y <- z+");
-    if (yymap==-3) ymap.set("y <- z-");
-    if (zzmap==1) zmap.set("z <- x+");
-    if (zzmap==-1) zmap.set("z <- x-");
-    if (zzmap==2) zmap.set("z <- y+");
-    if (zzmap==-2) zmap.set("z <- y-");
-    if (zzmap==3) zmap.set("z <- z+");
-    if (zzmap==-3) zmap.set("z <- z-");
-}
 
-clString TransformField::makeAbsMapStr() {
-    return to_string(Abs(xxmap))+to_string(Abs(yymap))+to_string(Abs(zzmap));
-}
+    last_rx = rxx;
+    last_ry = ryy;
+    last_rz = rzz;
+    last_th = rtt;
+    last_tx = txx;
+    last_ty = tyy;
+    last_tz = tzz;
+    last_scale = new_scale;
+    last_scalex = new_scalex;
+    last_scaley = new_scaley;
+    last_scalez = new_scalez;
+    last_flipx = fx;
+    last_flipy = fy;
+    last_flipz = fz;
+    last_origin = orig;
+    Vector axis(rxx,ryy,rzz);
+    if (!axis.length2()) axis.x(1);
+    axis.normalize();
 
-void TransformField::tcl_command(TCLArgs& args, void* userdata) {
-    if (args[1] == "send") {
-	tcl_execute=1;
-	want_to_execute();
-    } else if (args[1] == "flipx") {
-	reset_vars();
-	xxmap*=-1;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "flipy") {
-	reset_vars();
-	yymap*=-1;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "flipz") {
-	reset_vars();
-	zzmap*=-1;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "cyclePos") {
-	reset_vars();
-	int tmp=xxmap;
-	xxmap=yymap;
-	yymap=zzmap;
-	zzmap=tmp;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "cycleNeg") {
-	reset_vars();
-	int tmp=zzmap;
-	zzmap=yymap;
-	yymap=xxmap;
-	xxmap=tmp;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "reset") {
-	reset_vars();
-	xxmap=1;
-	yymap=2;
-	zzmap=3;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "swapXY") {
-	reset_vars();
-	int tmp=xxmap;
-	xxmap=yymap;
-	yymap=tmp;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "swapYZ") {
-	reset_vars();
-	int tmp=yymap;
-	yymap=zzmap;
-	zzmap=tmp;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else if (args[1] == "swapXZ") {
-	reset_vars();
-	int tmp=xxmap;
-	xxmap=zzmap;
-	zzmap=tmp;
-	set_str_vars();
-	last_sfIH=0;
-	want_to_execute();
-    } else {
-        Module::tcl_command(args, userdata);
-    }
+    // rotate about the center!
+
+    if (fx) sx*=-1;
+    if (fy) sy*=-1;
+    if (fz) sz*=-1;
+
+    Point min, max;
+    isfrg->get_bounds(min, max);
+    Point c(Interpolate(min, max, 0.5));
+    Vector v(c.vector());
+    Vector tr(txx,tyy,tzz);
+
+    double m[3][3];
+    buildRotateMatrix(m, rtt, axis);
+
+    // make the new ScalarField here!
+    oport->send(osfh);
+    return;
 }
