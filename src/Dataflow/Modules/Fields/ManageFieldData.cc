@@ -52,6 +52,7 @@ public:
 
 
 DECLARE_MAKER(ManageFieldData)
+
 ManageFieldData::ManageFieldData(GuiContext* ctx)
   : Module("ManageFieldData", ctx, Filter, "FieldsData", "SCIRun"),
     gui_preserve_scalar_type_(ctx->subVar("preserve-scalar-type"))
@@ -78,7 +79,7 @@ ManageFieldData::execute()
   }
   if (!(ifp->get(ifieldhandle) && (ifieldhandle.get_rep())))
   {
-    error( "No handle or representation." );
+    error( "No field available in the 'Input Field' port.");
     return;
   }
 
