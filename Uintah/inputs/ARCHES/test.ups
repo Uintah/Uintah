@@ -34,7 +34,7 @@
     <PhysicalConstants>
 	<gravity>[-9.8,0,0]</gravity>
 	<ideal_gas_constant>1.0</ideal_gas_constant>
-	<pressure>1.0</pressure>
+	<pressure>101325.2</pressure>
     </PhysicalConstants>
 
     <Grid>
@@ -59,20 +59,20 @@
     	    <turbulence_model>smagorinsky</turbulence_model>
 
 	    <Turbulence>
-		<cf>0.2</cf>
-		<fac_mesh>2.0</fac_mesh>
-		<filterl>0.01</filterl>
+		<cf>0.001</cf>
+		<fac_mesh>1.0</fac_mesh>
+		<filterl>0.000001</filterl>
 	    </Turbulence>
 
 	    <Properties>
-		<denUnderrelax>1</denUnderrelax>
+		<denUnderrelax>0.9</denUnderrelax>
 		<Stream>
-		    <density>0.1</density>
+		    <density>0.162059</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
 		<Stream>
-		    <density>0.5</density>
+		    <density>1.184344</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
@@ -80,14 +80,11 @@
 
 	    <BoundaryConditions>
 		<FlowInlet>
-		    <Flow_rate>1</Flow_rate>
+		    <Flow_rate>5.6e-5</Flow_rate>
 		    <MixtureFraction>
-			<Mixfrac>0.3</Mixfrac>
+			<Mixfrac>1.0</Mixfrac>
 	            </MixtureFraction>
-		    <MixtureFraction>
-			<Mixfrac>0.7</Mixfrac>
-	            </MixtureFraction>
-		    <TurblengthScale>1</TurblengthScale>
+		    <TurblengthScale>0.04</TurblengthScale>
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <box label="gp1">
@@ -107,13 +104,10 @@
 		<PressureBC>
 		    <flowRate>0</flowRate>
 		    <MixtureFraction>
-			<Mixfrac>0.3</Mixfrac>
+			<Mixfrac>0.0</Mixfrac>
 	            </MixtureFraction>
-		    <MixtureFraction>
-			<Mixfrac>0.7</Mixfrac>
-	            </MixtureFraction>
-		    <TurblengthScale>1</TurblengthScale>
-		    <RefPressure>1</RefPressure>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>101325.</RefPressure>
 		    <geom_object>
 		      <box label="gp21">
 			<min>[0,0,-5]</min>
@@ -136,12 +130,9 @@
 		<outletBC>
 		    <flowRate>0</flowRate>
 		    <MixtureFraction>
-			<Mixfrac>0</Mixfrac>
+			<Mixfrac>0.</Mixfrac>
 	            </MixtureFraction>
-		    <MixtureFraction>
-			<Mixfrac>0</Mixfrac>
-	            </MixtureFraction>
-		    <TurblengthScale>1</TurblengthScale>
+		    <TurblengthScale>0.04</TurblengthScale>
 		    <outletType>pressure</outletType>
 		    <geom_object>
 		      <box label="gp3">
@@ -154,8 +145,8 @@
 
 	    <PhysicalConstants>
 		<gravity>[-9.8,0,0]</gravity>
-		<pressure>1.0</pressure>
-		<viscosity>1.0</viscosity>
+		<pressure>101325.</pressure>
+		<viscosity>0.000020</viscosity>
 		<schmidtNo>0.7</schmidtNo>
 	    </PhysicalConstants>
 
@@ -165,13 +156,13 @@
 
 		<cal_pressure>true</cal_pressure>
 		<PressureSolver>
-		    <ref_point>[10,10,10]</ref_point>
+		    <ref_point>[5,5,5]</ref_point>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
-			<max_iter>50</max_iter>
-			<res_tol>0.0001</res_tol>
-		        <underrelax>0.9</underrelax>
+			<max_iter>75</max_iter>
+			<res_tol>0.0003</res_tol>
+		        <underrelax>0.97</underrelax>
 		    </LinearSolver>
 		</PressureSolver>
 
@@ -180,9 +171,9 @@
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
-			<max_iter>5</max_iter>
-			<res_tol>0.0001</res_tol>
-			<underrelax>0.8</underrelax>
+			<max_iter>8</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
 		    </LinearSolver>
 		</MomentumSolver>
 
@@ -191,8 +182,8 @@
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
-			<max_iter>5</max_iter>
-			<res_tol>0.0001</res_tol>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
 			<underrelax>0.9</underrelax>
 		    </LinearSolver>
 		</MixtureFractionSolver>
