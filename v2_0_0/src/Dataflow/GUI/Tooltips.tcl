@@ -36,6 +36,8 @@ global tooltipID
 set tooltipID 0
 global tooltipsOn
 set tooltipsOn 1
+global tooltipsDontShow
+set tooltipsDontShow 0
 
 
 # TooltipMultiline allows the caller to put the tool tip string on
@@ -103,6 +105,8 @@ proc canvasTooltip {canvas w msg} {
 
 # the following code is courtesy the TCLer's Wiki (http://mini.net/tcl/)
 proc balloon_aux {w x y msg} {
+    global tooltipsDontShow
+    if $tooltipsDontShow return
     set t .balloon_help
     catch {destroy $t}
     toplevel $t
@@ -134,3 +138,15 @@ proc balloon_aux {w x y msg} {
     bind $t <Leave> "catch {destroy .balloon_help}"
 }
 
+proc pressProc {} {
+    global tooltipsDontShow
+    set tooltipsDontShow 1
+}
+
+proc releaseProc {} {
+    global tooltipsDontShow
+    set tooltipsDontShow 0
+}
+
+bind all <ButtonPress> "+pressProc"
+bind all <ButtonRelease> "+releaseProc"
