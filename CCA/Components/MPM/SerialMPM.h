@@ -62,19 +62,19 @@ public:
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			    SimulationStateP&);
 	 
-  virtual void scheduleInitialize(const LevelP& level,
+  void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 	 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
+  void scheduleComputeStableTimestep(const LevelP& level,
 					     SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
-  virtual void scheduleTimeAdvance(const LevelP& level, 
+  void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
   void setSharedState(SimulationStateP& ssp);
@@ -122,7 +122,7 @@ protected:
 				    string integrator, bool haveLoadCurve,
 				    bool doErosion);
 	 
-  virtual void actuallyInitialize(const ProcessorGroup*,
+  void actuallyInitialize(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
 				  DataWarehouse* old_dw,
@@ -212,7 +212,7 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void computeInternalForce(const ProcessorGroup*,
+  virtual void computeInternalForce(const ProcessorGroup*,
 			    const PatchSubset* patches,
 			    const MaterialSubset* matls,
 			    DataWarehouse* old_dw,
@@ -236,11 +236,11 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void solveEquationsMotion(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+  virtual void solveEquationsMotion(const ProcessorGroup*,
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -307,7 +307,7 @@ protected:
 				       DataWarehouse* new_dw);
 
 
-  virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
+  void scheduleInterpolateParticlesToGrid(        SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
   void scheduleComputeHeatExchange(               SchedulerP&, const PatchSet*,
@@ -352,9 +352,9 @@ protected:
   void scheduleApplyExternalLoads(                SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
-  virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
-                                                       const PatchSet*,
-                                                       const MaterialSet*);
+  void scheduleInterpolateToParticlesAndUpdate(   SchedulerP&, 
+                                                  const PatchSet*,
+                                                  const MaterialSet*);
 
   void scheduleAddNewParticles( SchedulerP&, const PatchSet*,
 				const MaterialSet*);

@@ -42,20 +42,13 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
 #define MAX_BASIS 27
 
-#undef SHELL_MPM
-//#define SHELL_MPM
-
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
-#ifdef RIGID_MPM
-  d_mpm      = scinew RigidMPM(myworld);
-#else
   d_mpm      = scinew SerialMPM(myworld);
-#endif
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = d_ice->d_SMALL_NUM; 
   d_TINY_RHO  = d_ice->d_TINY_RHO;
@@ -72,10 +65,13 @@ MPMICE::MPMICE(const ProcessorGroup* myworld, MPMType mpmtype)
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
+  d_rigidMPM = false;
 
   switch(mpmtype) {
     case RIGID_MPMICE:
-      //d_mpm = scinew RigidMPM(myworld);
+      d_mpm = scinew RigidMPM(myworld);
+      d_rigidMPM = true;
+      cout << "RIGID_MPMICE" << endl;
       break;
     case SHELL_MPMICE:
       d_mpm = scinew ShellMPM(myworld);
@@ -1224,21 +1220,27 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       double dTdt_tmp;
       //__________________________________
       //  Take care of momentum and specific volume source
+     if(d_rigidMPM){
+      cout << "RIGID_MPMCCToNC" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        patch->findCellsFromNode(*iter,cIdx);
+        for(int in=0;in<8;in++){
+          gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
+        }
+      }
+     }
+     else{
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
         for(int in=0;in<8;in++){
           dvdt_tmp  = (mom_L_ME_CC[cIdx[in]] - old_mom_L_CC[cIdx[in]])
                     / (mass_L_CC[cIdx[in]] * delT); 
-#ifdef RIGID_MPM
-//        gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
-//        gacceleration[*iter] +=  dvdt_tmp*.125;
-#else
           gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
           gacceleration[*iter] +=  dvdt_tmp*.125;
-#endif
           gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
         }
-      }    
+      }
+     }    
       
       //__________________________________
       //  E Q  F O R M

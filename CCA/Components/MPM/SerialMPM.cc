@@ -538,10 +538,6 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
 						const PatchSet* patches,
 						const MaterialSet* matls)
 {  
-  /*
-   * computeInternalHeatRate
-   * out(G.INTERNALHEATRATE) */
-
   Task* t = scinew Task("MPM::computeInternalHeatRate",
 			this, &SerialMPM::computeInternalHeatRate);
 
@@ -1125,7 +1121,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gTemperatureNoBC;
       NCVariable<double> gnumnearparticles;
 
-      new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);   
+      new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
