@@ -681,9 +681,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::crackGrow);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
 			idx, patch, Ghost::None);
@@ -717,9 +716,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::stressRelease);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( old_dw, lb->pXLabel, 
 			idx, patch, Ghost::AroundNodes, 1 );
@@ -793,7 +791,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 }
          t->computes(new_dw, lb->delTAfterCrackSurfaceContactLabel);
 	 sched->addTask(t);
-      }      
+      }
       
       {
 	 /*
@@ -809,12 +807,12 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::carryForwardVariables);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	    int idx = mpm_matl->getDWIndex();
 	    
 	    //stress
-	    if(mpm_matl->getFractureModel()) {
+            if(d_fracture) {
+	    //if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pStressAfterFractureReleaseLabel,
 			idx, patch, Ghost::None);
 	      t->requires( new_dw, lb->delTAfterCrackSurfaceContactLabel);
@@ -824,10 +822,10 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			idx, patch, Ghost::None);			 
 	      t->requires( new_dw, lb->delTAfterConstitutiveModelLabel);
             }
-	    t->computes(new_dw, lb->pStressLabel_preReloc, idx, patch);
 
 	    //velocity
-	    if(mpm_matl->getFractureModel()) {
+            if(d_fracture) {
+	    //if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pVelocityAfterFractureLabel,
 			idx, patch, Ghost::None);
 	    }
@@ -835,9 +833,11 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	      t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
 			idx, patch, Ghost::None);			 
             }
+	    t->computes(new_dw, lb->pStressLabel_preReloc, idx, patch);
 	    t->computes(new_dw, lb->pVelocityLabel_preReloc, idx, patch);
 	 }
-	 t->computes(new_dw, d_sharedState->get_delt_label() );
+	 //t->computes(new_dw, d_sharedState->get_delt_label() );
+	 t->computes(new_dw, lb->delTLabel );
 	 sched->addTask(t);
       }
 
@@ -1328,12 +1328,9 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-  for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
-    Material* matl = d_sharedState->getMaterial(m);
-    //int idx = matl->getDWIndex();
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-
-    int matlindex = matl->getDWIndex();
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int matlindex = mpm_matl->getDWIndex();
         
     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
 
@@ -1345,7 +1342,6 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
     else {
       new_dw->get(pStress, lb->pStressAfterStrainRateLabel, pset);
     }
-    new_dw->put(pStress, lb->pStressLabel_preReloc);
 
     //stress
     ParticleVariable<Vector> pVelocity;
@@ -1355,7 +1351,6 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
     else {
       new_dw->get(pVelocity, lb->pVelocityAfterUpdateLabel, pset);
     }
-    new_dw->put(pVelocity, lb->pVelocityLabel_preReloc);
 
     //timestep
     delt_vartype delT;
@@ -1365,6 +1360,9 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
     else {
       new_dw->get(delT, lb->delTAfterConstitutiveModelLabel);
     }
+
+    new_dw->put(pStress, lb->pStressLabel_preReloc);
+    new_dw->put(pVelocity, lb->pVelocityLabel_preReloc);
     new_dw->put(delT, lb->delTLabel);
   }
 }
@@ -1374,8 +1372,8 @@ void SerialMPM::stressRelease(const ProcessorGroup*,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       if(mpm_matl->getFractureModel()) {
         mpm_matl->getFractureModel()->stressRelease(patch, mpm_matl,
 							old_dw, new_dw);
@@ -1767,7 +1765,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(px,        lb->pXLabel, pset);
       new_dw->allocate(pxnew,lb->pXLabel_preReloc, pset);
       old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-      new_dw->allocate(pvelocitynew, lb->pVelocityLabel_preReloc, pset);
+      new_dw->allocate(pvelocitynew, lb->pVelocityAfterUpdateLabel, pset);
       old_dw->get(pmass,     lb->pMassLabel, pset);
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
@@ -1972,6 +1970,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.164  2000/11/28 00:17:28  tan
+// Fixed a bug caused by unique-variable_lable_name-problem.
+//
 // Revision 1.163  2000/11/21 20:51:02  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major

@@ -329,7 +329,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
       ParticleVariable<Matrix3> pstress;
       NCVariable<Matrix3>       gstress;
-      new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
+      new_dw->get(pstress, lb->pStressAfterStrainRateLabel, pset);
       new_dw->allocate(gstress, lb->gStressLabel, matlindex, patch);
       gstress.initialize(Matrix3(0.0));
       
@@ -505,7 +505,7 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
                                              DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
-  t->requires( new_dw, lb->pStressLabel_preReloc, idx, patch,
+  t->requires( new_dw, lb->pStressAfterStrainRateLabel, idx, patch,
                         			   Ghost::AroundNodes, 1);
   t->requires(new_dw,  lb->gMassLabel,         idx, patch, Ghost::None);
   t->requires(new_dw,  lb->gVelocityStarLabel, idx, patch, Ghost::None);
@@ -519,6 +519,9 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.37  2000/11/28 00:17:32  tan
+// Fixed a bug caused by unique-variable_lable_name-problem.
+//
 // Revision 1.36  2000/11/15 18:51:29  guilkey
 // Reduced warnings.
 //
