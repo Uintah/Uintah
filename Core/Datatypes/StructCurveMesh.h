@@ -120,10 +120,10 @@ public:
     return (p1.asVector() - p0.asVector()).length();
   }  
   double get_size(Face::index_type idx) const { return 0.0; }
-  double get_size(Cell::index_type idx) const { return 0.0; };
-  double get_length(Edge::index_type idx) const { return get_size(idx); };
-  double get_area(Face::index_type idx) const { return get_size(idx); };
-  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_length(Edge::index_type idx) const { return get_size(idx); }
+  double get_area(Face::index_type idx) const { return get_size(idx); }
+  double get_volume(Cell::index_type idx) const { return get_size(idx); }
 
   int get_valence(Node::index_type idx) const 
   { return (idx == (unsigned int) 0 ||
@@ -170,7 +170,7 @@ private:
 
   // returns a StructCurveMesh
   static Persistent *maker() { return new StructCurveMesh(); }
-};
+}; // end class StructCurveMesh
 
 typedef LockingHandle<StructCurveMesh> StructCurveMeshHandle;
 
