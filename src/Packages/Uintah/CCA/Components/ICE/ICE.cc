@@ -3195,11 +3195,14 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //__________________________________
       //   Compute source from volume dilatation
       //   Exclude contribution from delP_MassX
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
-        B = speedSound[c] * speedSound[c];
-        int_eng_source[c] += (A/B) * delP_Dilatate[c];
+      bool includeFlowWork = matl->getIncludeFlowWork();
+      if(includeFlowWork){
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
+          B = speedSound[c] * speedSound[c];
+          int_eng_source[c] += (A/B) * delP_Dilatate[c];
+        }
       }
 
       //__________________________________
