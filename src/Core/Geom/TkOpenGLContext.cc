@@ -67,7 +67,6 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     id_(id)
     
 {
-  TCLTask::lock();
   mainwin_ = Tk_MainWindow(the_interp);
   display_ = Tk_Display(mainwin_);
   release();
@@ -81,12 +80,6 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   context_ = 0;
   vi_ = 0;
 
-  // bind <Destroy>
-  //  Tk_CreateEventHandler(OpenGLPtr->tkwin, 
-  //			StructureNotifyMask,
-  //			OpenGLEventProc, 
-  //			(ClientData) OpenGLPtr);
-  //  Tk_SetClass(tkwin, "OpenGL");
   if (valid_visuals_.empty())
     listvisuals();
   visualid_ = valid_visuals_[visualid];
@@ -169,36 +162,24 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   }
   context_ = glXCreateContext(display_, vi_, first_context, 1);
   if (!context_) throw scinew InternalError("Cannot create GLX Context");
-
-  TCLTask::unlock();
 }
+
 
 TkOpenGLContext::~TkOpenGLContext()
 {
   TCLTask::lock();
   release();
-  //  cerr << "context destroy " << (int)context_ << std::endl;
   glXDestroyContext(display_, context_);
-  //  Tk_DestroyWindow(tkwin_);
-  XSync(display_, 0);
+  XSync(display_, False);
   TCLTask::unlock();
 }
+
 
 bool
 TkOpenGLContext::make_current()
 {
-  TCLTask::lock();
-  if (!context_) 
-  {
-    XSync(display_, False);
-    context_ = glXCreateContext(display_, vi_, first_context, 1);
-    if (!first_context) first_context = context_;
-    
-    ASSERT(context_);
-  }
-
+  ASSERT(context_);
   const bool result = glXMakeCurrent(display_, x11_win_, context_);
-  TCLTask::unlock();
 
   if (!result)
   {
@@ -212,38 +193,28 @@ TkOpenGLContext::make_current()
 void
 TkOpenGLContext::release()
 {
-  TCLTask::lock();
   glXMakeCurrent(display_, None, NULL);
-  TCLTask::unlock();
 }
 
 
 int
 TkOpenGLContext::width()
 {
-  TCLTask::lock();
-  const int result = Tk_Width(tkwin_);
-  TCLTask::unlock();
-  return result;
+  return Tk_Width(tkwin_);
 }
 
 
 int
 TkOpenGLContext::height()
 {
-  TCLTask::lock();
-  const int result = Tk_Height(tkwin_);
-  TCLTask::unlock();
-  return result;
+  return Tk_Height(tkwin_);
 }
 
 
 void
 TkOpenGLContext::swap()
 {
-  TCLTask::lock();
   glXSwapBuffers(display_, x11_win_);
-  TCLTask::unlock();
 }
 
 
