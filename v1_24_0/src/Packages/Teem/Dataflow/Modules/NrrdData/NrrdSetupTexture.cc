@@ -107,13 +107,13 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
   // Compute the data.
   int i, j, k;
   //const unsigned int nk = nin->axis[0].size;
-  const unsigned int njk = nj * nk;
+  const unsigned int nji = nj * ni;
   const double dmaxplus = 255.0 / (dmax - dmin);
-  for (i = 0; i < ni; i++)
+  for (k = 0; k < nk; k++)
   {
     for (j = 0; j < nj; j++)
     {
-      for (k = 0; k < nk; k++)
+      for (i = 0; i < ni; i++)
       {
         double xscale = 0.5;
         double yscale = 0.5;
@@ -131,24 +131,24 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
         if (k == 0)   { k0 = k; zscale = 1.0; }
         if (k1 == nk) { k1 = k; zscale = 1.0; }
 
-        const double val = (double)nindata[i * njk + j * nk + k];
-        const double x0 = nindata[i0 * njk + j * nk + k];
-        const double x1 = nindata[i1 * njk + j * nk + k];
-        const double y0 = nindata[i * njk + j0 * nk + k];
-        const double y1 = nindata[i * njk + j1 * nk + k];
-        const double z0 = nindata[i * njk + j * nk + k0];
-        const double z1 = nindata[i * njk + j * nk + k1];
+        const double val = (double)nindata[k * nji + j * ni + i];
+        const double x0 = nindata[k * nji + j * ni + i0];
+        const double x1 = nindata[k * nji + j * ni + i1];
+        const double y0 = nindata[k * nji + j0 * ni + i];
+        const double y1 = nindata[k * nji + j1 * ni + i];
+        const double z0 = nindata[k0 * nji + j * ni + i];
+        const double z1 = nindata[k1 * nji + j * ni + i];
 
         const Vector g((x1 - x0)*xscale, (y1 - y0)*yscale, (z1 - z0)*zscale);
         Vector gradient = transform.project_normal(g);
         float gm = gradient.safe_normalize();
         if (gm < 1.0e-5) gm = 0.0;
 
-        nvoutdata[(i * njk + j * nk + k) * 4 + 0] = NtoUC(gradient.x());
-        nvoutdata[(i * njk + j * nk + k) * 4 + 1] = NtoUC(gradient.y());
-        nvoutdata[(i * njk + j * nk + k) * 4 + 2] = NtoUC(gradient.z());
-        nvoutdata[(i * njk + j * nk + k) * 4 + 3] = VtoUC(val, dmin, dmaxplus);
-        gmoutdata[i * njk + j * nk + k] = gm;
+        nvoutdata[(k * nji + j * ni + i) * 4 + 0] = NtoUC(gradient.x());
+        nvoutdata[(k * nji + j * ni + i) * 4 + 1] = NtoUC(gradient.y());
+        nvoutdata[(k * nji + j * ni + i) * 4 + 2] = NtoUC(gradient.z());
+        nvoutdata[(k * nji + j * ni + i) * 4 + 3] = VtoUC(val, dmin, dmaxplus);
+        gmoutdata[k * nji + j * ni + i] = gm;
       }
     }
   }
@@ -293,56 +293,56 @@ NrrdSetupTexture::execute()
   {
     compute_data((char *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeUChar)
   {
     compute_data((unsigned char *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeShort)
   {
     compute_data((short *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeUShort)
   {
     compute_data((unsigned short *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeInt)
   {
     compute_data((int *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeUInt)
   {
     compute_data((unsigned int *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeFloat)
   {
     compute_data((float *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeDouble)
   {
     compute_data((double *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
-                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
                  transform, minf, maxf);
   }
   else
