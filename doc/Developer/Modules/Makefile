@@ -51,16 +51,10 @@ define xmlhtmlfiles
 ${patsubst %.xml,%.html,${wildcard ${1}/*.xml}}
 endef
 
-# Produce list of tex files in subdirectories of the directory
-#  given by ${1}
-define texfiles
-${wildcard ${1}/*/*.tex}
-endef
-
 # Produce list of html directories which correspond to tex files in
 #  subdirectories of the directory given by ${1}
 define texhtmldirs
-${foreach n,${notdir ${wildcard ${1}/*}},${1}/${n}/${n}}
+${filter-out %/CVS,${foreach n,${notdir ${wildcard ${1}/*}},${1}/${n}/${n}}}
 endef
 
 # Return path of XML directory for package given by ${1}
@@ -136,6 +130,9 @@ ${SCIRun_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
 SCIRun_clean:
+	@echo $@
+
+SCIRun_veryclean:
 	-rm -f ${SCIRun_xml_html_files} ${SCIRun_tex_html_files}
 	-rm -rf ${SCIRun_tex_html_dirs}
 
@@ -157,6 +154,9 @@ ${BioPSE_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
 BioPSE_clean:
+	@echo $@
+
+BioPSE_veryclean: BioPSE_clean
 	-rm -f ${BioPSE_xml_html_files} ${BioPSE_tex_html_files}
 	-rm -rf ${BioPSE_tex_html_dirs}
 
@@ -178,6 +178,9 @@ ${Teem_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
 Teem_clean:
+	@echo $@
+
+Teem_veryclean:
 	-rm -f ${Teem_xml_html_files} ${Teem_tex_html_files}
 	-rm -rf ${Teem_tex_html_dirs}
 
@@ -199,6 +202,9 @@ ${VDT_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
 VDT_clean:
+	@echo $@
+
+VDT_veryclean:
 	-rm -f ${VDT_xml_html_files} ${VDT_tex_html_files}
 	-rm -rf ${VDT_tex_html_dirs}
 
@@ -220,6 +226,9 @@ ${MatlabInterface_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
 MatlabInterface_clean:
+	@echo $@
+
+MatlabInterface_veryclean: MatlabInterface_clean
 	-rm -f ${MatlabInterface_xml_html_files} ${MatlabInterface_tex_html_files}
 	-rm -rf ${MatlabInterface_tex_html_dirs}
 
@@ -241,13 +250,16 @@ ${Fusion_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
 Fusion_clean:
+	${call texclean ${MatlabInterface_tex_dir}}
+
+Fusion_veryclean:
 	-rm -f ${Fusion_xml_html_files} ${Fusion_tex_html_files}
 	-rm -rf ${Fusion_tex_html_dirs}
 
 # ########## Cleanage
-clean:
+clean: ${addsuffix _clean,${packages}}
 	@echo clean
 
-veryclean: clean ${addsuffix _clean,${packages}}
+veryclean: clean ${addsuffix _veryclean,${packages}}
 	-rm ${addsuffix .html,${packages}}
 
