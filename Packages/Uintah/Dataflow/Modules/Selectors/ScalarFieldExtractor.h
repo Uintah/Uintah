@@ -62,7 +62,7 @@ public:
 
 protected:
   virtual void get_vars(vector< string >&,
-			vector< const TypeDescription *>&);
+                        vector< const TypeDescription *>&);
   
 private:
 
