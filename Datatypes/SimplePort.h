@@ -56,7 +56,6 @@ public:
 
 template<class T>
 class SimpleOPort : public OPort {
-    SimpleIPort<T>* in;
     int sent_something;
 public:
     SimpleOPort(Module*, const clString& name, int protocol=SimpleIPort<T>::Atomic);

@@ -51,6 +51,7 @@ public:
     virtual Surface* clone()=0;
     virtual int inside(const Point& p)=0;
     virtual void construct_grid(int, int, int, const Point &, double)=0;
+    virtual void construct_grid()=0;
     virtual void destroy_grid();
     TriSurface* getTriSurface();
 

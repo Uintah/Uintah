@@ -50,6 +50,7 @@ public:
     void order_faces();
     inline int is_directed() {return directed;}
     virtual void construct_grid(int, int, int, const Point &, double);
+    virtual void construct_grid();
     virtual int inside(const Point& p);
     void add_point(const Point& p);
     int add_triangle(int i1, int i2, int i3, int cw=0);

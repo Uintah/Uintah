@@ -172,13 +172,13 @@ void TriSurface::remove_empty_index() {
 }
 
 void TriSurface::construct_grid(int xdim, int ydim, int zdim, 
-					const Point &min, double spacing) {
+				const Point &min, double spacing) {
     remove_empty_index();
     if (grid) delete grid;
     grid = new Grid(xdim, ydim, zdim, min, spacing);
     for (int i=0; i<elements.size(); i++)
-	grid->add_triangle(i, points[elements[i]->i1], points[elements[i]->i2],
-			   points[elements[i]->i3]);
+	grid->add_triangle(i, points[elements[i]->i1],
+			   points[elements[i]->i2], points[elements[i]->i3]);
 }
 
 
@@ -516,4 +516,21 @@ void Pio(Piostream& stream, TSElement*& data)
 Surface* TriSurface::clone()
 {
     return new TriSurface(*this);
+}
+
+void TriSurface::construct_grid()
+{
+    BBox bbox;
+    for(int i=0;i<points.size();i++){
+	bbox.extend(points[i]);
+    }
+    Vector d(bbox.diagonal());
+    double volume=d.x()*d.y()*d.z();
+    // Make it about 10000 elements...
+    int ne=10000;
+    double spacing=Cbrt(volume/ne);
+    int nx=RoundUp(d.x()/spacing);
+    int ny=RoundUp(d.y()/spacing);
+    int nz=RoundUp(d.z()/spacing);
+    construct_grid(nx, ny, nz, bbox.min(), spacing);
 }
