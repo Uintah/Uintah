@@ -167,26 +167,24 @@ void InsertVoltageSource::execute() {
     // for each nbr, see if this node is the closest of the bc nodes checked
     //   so far -- if so, store it
     unsigned int i;
+    double dmin=-1;
+    TetVolMesh::Node::index_type nmin;
+
     for (i=0; i<nbrs.size(); i++) {
       Point nbr_pt;
       TetVolMesh::Node::index_type nidx = nbrs[i];
       tvm->get_center(nbr_pt, nidx);
       double d = (pt - nbr_pt).length();
-      pair<double, double> p(d, val);
-//      if (!have_some[nidx]) {
-//	have_some[nidx]=1;
-//	bc_tet_nodes.add(nidx);
-//	closest[nidx]=p;
-//      } else if (closest[nidx].first < d) {
-//	closest[nidx]=p;
-//      }
-
-      if (!have_some[nidx]) {
-	have_some[nidx]=1;
-	bc_tet_nodes.add(nidx);
+      if (i==0 || d<dmin) {
+	nmin=nbrs[i];
+	dmin=d;
       }
-      closest[nidx].push_back(p);
-
+    }
+    if (dmin != -1 && !have_some[nmin]) {
+      pair<double, double> p(dmin, val);
+      have_some[nmin]=1;
+      bc_tet_nodes.add(nmin);
+      closest[nmin].push_back(p);
     }
   }
 
