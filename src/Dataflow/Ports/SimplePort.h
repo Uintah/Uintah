@@ -21,6 +21,10 @@
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/TclInterface/Remote.h>
+#include <iostream>
+
+using std::cerr;
+using std::endl;
 
 namespace PSECore {
 
@@ -429,6 +433,10 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.9  1999/11/17 23:17:42  moulding
+// added using SCICore::Datatypes::*Handle; to help the vc++ compiler
+// and added <iostream> and using std::cerr and using std::endl (to SimplePort.h)
+//
 // Revision 1.8  1999/11/10 23:24:32  dmw
 // added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
 //
