@@ -223,6 +223,7 @@ proc makeNetworkEditor {} {
     bind all <Control-y> "redo"
 
     setupMainSubnet
+    wm withdraw .
 }
 
 proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
@@ -1082,18 +1083,13 @@ proc licenseAccept { } {
     if { [string length $userData(first)] &&
 	 [string length $userData(last)] &&
 	 [string length $userData(email)] } {
-	puts "here"
-	catch "exec \"mail -n -s USERDATA mdavis@sci.utah.edu\""
-	puts "there"
 	set licenseResult accept
-	puts "everywhere"
 	catch {destroy .license}
 
     } else {
 	tk_messageBox -type ok -parent .license -icon error \
 	    -message "You must enter a First Name, Last Name, and E-Mail address to Accept."
     }
-    puts "but there"
 }
 
 # Removes the element at pos from a list without a set - similar to lappend
