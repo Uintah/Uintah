@@ -114,6 +114,12 @@ int Renderer::compute_depth(Roe* roe, const View& view,
 		znear=zfar*.001;
 	    }
 	}
+
+	if( znear == zfar){
+	  znear -= 1e-6;
+	  zfar += 1e-6;
+	}
+
 	return 1;
     } else {
 	return 0;

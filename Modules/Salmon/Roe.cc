@@ -562,11 +562,12 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 	    last_x=x;
 	    last_y=current_renderer->yres-y;
 	    current_renderer->get_pick(manager, this, x, y,
-				       pick_obj, pick_pick, pick_n);
+				       pick_obj, pick_pick, pick_index);
 
 	    if (pick_obj){
 		NOT_FINISHED("update mode string for pick");
-		pick_pick->pick(this,bs,pick_n);
+		pick_pick->set_index(pick_index);
+		pick_pick->pick(this,bs);
 		need_redraw=1;
 	    } else {
 		update_mode_string("pick: none");
@@ -616,7 +617,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 		if (Abs(total_z) < .0001) total_z=0;
 		need_redraw=1;
 		update_mode_string("picked someting...");
-		pick_pick->moved(prin_dir, dist, mtn, bs, pick_n);
+		pick_pick->moved(prin_dir, dist, mtn, bs);
 		need_redraw=1;
 	    } else {
 		update_mode_string("Bad direction...");
@@ -627,7 +628,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 	break;
     case MouseEnd:
 	if(pick_pick){
-	    pick_pick->release(bs, pick_n);
+	    pick_pick->release(bs);
 	    need_redraw=1;
 	}
 	pick_pick=0;

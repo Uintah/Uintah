@@ -90,7 +90,8 @@ public:
     virtual void redraw(Salmon*, Roe*, double tbeg, double tend,
 			int ntimesteps, double frametime);
     void real_get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&);
-    virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&);
+    virtual void get_pick(Salmon*, Roe*, int, int,
+			  GeomObj*&, GeomPick*&, int& );
     virtual void hide();
     virtual void dump_image(const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
@@ -114,7 +115,7 @@ public:
 
     GeomObj* ret_pick_obj;
     GeomPick* ret_pick_pick;
-    int ret_pick_n;
+    int ret_pick_index;
 
     virtual void listvisuals(TCLArgs&);
     virtual void setvisual(const clString&, int i, int width, int height);
@@ -273,7 +274,7 @@ void OpenGL::redraw_loop()
 		if(!send_mb.try_receive(r))
 		    break;
 		if(r == DO_PICK){
-		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_n);
+		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_index);
 		    recv_mb.send(PICK_DONE);
 		} else if(r== DO_GETDATA){
 		    GetReq req(get_mb.receive());
@@ -314,7 +315,7 @@ void OpenGL::redraw_loop()
 	    for(;;){
 		int r=send_mb.receive();
 		if(r == DO_PICK){
-		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_n);
+		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_index);
 		    recv_mb.send(PICK_DONE);
 		} else if(r== DO_GETDATA){
 		    GetReq req(get_mb.receive());
@@ -677,7 +678,8 @@ void OpenGL::hide()
 
 
 void OpenGL::get_pick(Salmon*, Roe*, int x, int y,
-		      GeomObj*& pick_obj, GeomPick*& pick_pick, int& pick_n)
+		      GeomObj*& pick_obj, GeomPick*& pick_pick,
+		      int& pick_index)
 {
     send_pick_x=x;
     send_pick_y=y;
@@ -689,17 +691,19 @@ void OpenGL::get_pick(Salmon*, Roe*, int x, int y,
 	} else {
 	    pick_obj=ret_pick_obj;
 	    pick_pick=ret_pick_pick;
-	    pick_n=ret_pick_n;
+	    pick_index=ret_pick_index;
 	    break;
 	}
     }
 }
 
 void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
-			   GeomObj*& pick_obj, GeomPick*& pick_pick, int& pick_n)
+			   GeomObj*& pick_obj, GeomPick*& pick_pick,
+			   int& pick_index)
 {
     pick_obj=0;
     pick_pick=0;
+    pick_index = -99;
     // Make ourselves current
     if(current_drawer != this){
 	current_drawer=this;
@@ -728,8 +732,10 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 #if (_MIPS_SZPTR == 64)
 	glPushName(0);
 	glPushName(0);
+	glPushName(-99);
 #else
 	glPushName(0);
+	glPushName(-99);
 #endif
 
 	glViewport(0, 0, xres, yres);
@@ -759,7 +765,9 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 #if (_MIPS_SZPTR == 64)
 	glPopName();
 	glPopName();
+	glPopName();
 #else
+	glPopName();
 	glPopName();
 #endif
 
@@ -773,10 +781,14 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	GLuint min_z;
 #if (_MIPS_SZPTR == 64)
 	unsigned long hit_obj=0;
+	GLuint hit_obj_index -99;
 	unsigned long hit_pick=0;
+	GLuint hit_pick_index = -99;  // need for object indexing
 #else
 	GLuint hit_obj=0;
+	GLuint hit_obj_index = -99;  // need for object indexing
 	GLuint hit_pick=0;
+	GLuint hit_pick_index = -99;  // need for object indexing
 #endif
 	cerr << "hits=" << hits << endl;
 	if(hits >= 1){
@@ -795,21 +807,20 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 		    unsigned int ho1=pick_buffer[idx++];
 		    unsigned int ho2=pick_buffer[idx++];
 		    hit_obj=((long)ho1<<32)|ho2;
-		    idx+=nnames-4; // Skip to the last one...
+		    hit_obj_index = pick_buffer[idx++];
+		    idx+=nnames-6; // Skip to the last one...
 		    unsigned int hp1=pick_buffer[idx++];
 		    unsigned int hp2=pick_buffer[idx++];
 		    hit_pick=((long)hp1<<32)|hp2;
+		    hit_pick_index = pick_buffer[idx++]
 #else
 		    hit_obj=pick_buffer[idx++];
-		    hit_pick = pick_buffer[idx++];
-		    if (nnames == 3) {
-			pick_n = pick_buffer[idx++];
-			cerr << "pick_n="<<pick_n<<"\n";
-		    } else {
-			pick_n = -1234;
-		    }
+		    hit_obj_index=pick_buffer[idx++];
+		    idx+=nnames-4; // Skip to the last one...
+		    hit_pick=pick_buffer[idx++];
+		    hit_pick_index=pick_buffer[idx++];
 #endif
-		    cerr << "new min... (obj=" << hit_obj << ", pick=" << hit_pick << "\n";
+		    cerr << "new min... (obj=" << hit_obj << ", pick=" << hit_pick << ", index = "<<hit_pick_index<<")\n";
 		} else {
 		    idx+=nnames+1;
 		}
@@ -817,7 +828,8 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	}
 	pick_obj=(GeomObj*)hit_obj;
 	pick_pick=(GeomPick*)hit_pick;
-	cerr << "pick_pick=" << pick_pick << endl;
+	pick_index=(int)hit_pick_index;
+	cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
     }
     salmon->geomlock.read_unlock();
 }
@@ -876,10 +888,14 @@ void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
     unsigned int o2=o&0xffffffff;
     glPopName();
     glPopName();
+    glPopName();
     glPushName(o1);
     glPushName(o2);
+    glPushName(-99);
 #else
+    glPopName();
     glLoadName((GLuint)obj);
+    glPushName(-99);
 #endif
     obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
 }

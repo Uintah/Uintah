@@ -89,7 +89,7 @@ protected:
     int rot_point_valid;
     GeomPick* pick_pick;
     GeomObj* pick_obj;
-    int pick_n;
+    int pick_index;
 
     void update_mode_string(const char*);
     char* modebuf;
