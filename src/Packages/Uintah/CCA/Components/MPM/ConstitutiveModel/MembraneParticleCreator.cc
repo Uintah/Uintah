@@ -10,9 +10,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/SphereMembraneGeometryPiece.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
+
 
 using namespace Uintah;
 
@@ -24,48 +22,38 @@ MembraneParticleCreator::~MembraneParticleCreator()
 {
 }
 
-void MembraneParticleCreator::createParticles(MPMMaterial* matl, 
+ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl, 
 					      particleIndex numParticles,
 					      CCVariable<short int>& cellNAPID,
 					      const Patch* patch,
 					      DataWarehouse* new_dw,
 					      MPMLabel* lb,
-					      std::vector<GeometryObject*>& d_geom_objs)
+					      vector<GeometryObject*>& d_geom_objs)
 {
   int dwi = matl->getDWIndex();
-  ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
-							patch);
-  ParticleVariable<Point> position;
-  ParticleVariable<Vector> pvelocity,pexternalforce,psize,pTang1,pTang2,pNorm;
-  ParticleVariable<double> pmass,pvolume,ptemperature;
-  ParticleVariable<long64> pparticleID;
-  
-  new_dw->allocateAndPut(position, lb->pXLabel, subset);
-  new_dw->allocateAndPut(pvelocity, lb->pVelocityLabel, subset); 
-  new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, subset);
+
+  ParticleSubset* subset =  ParticleCreator::allocateVariables(numParticles,
+							       dwi,lb,patch,
+							       new_dw);
+  ParticleVariable<Vector> pTang1,pTang2,pNorm;
   new_dw->allocateAndPut(pTang1, lb->pTang1Label, subset);
   new_dw->allocateAndPut(pTang2, lb->pTang2Label, subset);
   new_dw->allocateAndPut(pNorm, lb->pNormLabel,  subset);
-  new_dw->allocateAndPut(pmass, lb->pMassLabel, subset);
-  new_dw->allocateAndPut(pvolume, lb->pVolumeLabel, subset);
-  new_dw->allocateAndPut(ptemperature, lb->pTemperatureLabel, subset);
-  new_dw->allocateAndPut(pparticleID, lb->pParticleIDLabel, subset);
-  new_dw->allocateAndPut(psize, lb->pSizeLabel, subset);
-
-  particleIndex start = 0;
   
-  for (int i=0; i<(int)d_geom_objs.size();i++) {
+  particleIndex start = 0;
+
+  vector<GeometryObject*>::const_iterator obj;
+  for (obj = d_geom_objs.begin(); obj != d_geom_objs.end(); ++obj) {  
     particleIndex count = 0;
-    GeometryObject* obj = d_geom_objs[i];
-    GeometryPiece* piece = obj->getPiece();
+    GeometryPiece* piece = (*obj)->getPiece();
     Box b1 = piece->getBoundingBox();
     Box b2 = patch->getBox();
     Box b = b1.intersect(b2);
     if(b.degenerate())
       count = 0;
     
-    IntVector ppc = obj->getNumParticlesPerCell();
-    Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
+    IntVector ppc = (*obj)->getNumParticlesPerCell();
+    Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
     Vector dcorner = dxpp*0.5;
     // Size as a fraction of the cell size
     Vector size(1./((double) ppc.x()),
@@ -79,8 +67,8 @@ void MembraneParticleCreator::createParticles(MPMMaterial* matl,
       int numP = SMGP->createParticles(patch, position, pvolume,
 				       pTang1, pTang2, pNorm, psize, start);
       for(int idx=0;idx<(start+numP);idx++){
-	pvelocity[start+idx]=obj->getInitialVelocity();
-	ptemperature[start+idx]=obj->getInitialTemperature();
+	pvelocity[start+idx]=(*obj)->getInitialVelocity();
+	ptemperature[start+idx]=(*obj)->getInitialTemperature();
 	pmass[start+idx]=matl->getInitialDensity() * pvolume[start+idx];
 	// Determine if particle is on the surface
 	pexternalforce[start+idx]=Vector(0,0,0); // for now
@@ -119,8 +107,8 @@ void MembraneParticleCreator::createParticles(MPMMaterial* matl,
 	      if(piece->inside(p)){
 		position[start+count]=p;
 		pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
-		pvelocity[start+count]=obj->getInitialVelocity();
-		ptemperature[start+count]=obj->getInitialTemperature();
+		pvelocity[start+count]=(*obj)->getInitialVelocity();
+		ptemperature[start+count]=(*obj)->getInitialTemperature();
 		pmass[start+count]=matl->getInitialDensity() * pvolume[start+count];
 		// Determine if particle is on the surface
 		pexternalforce[start+count]=Vector(0,0,0); // for now
@@ -145,11 +133,12 @@ void MembraneParticleCreator::createParticles(MPMMaterial* matl,
   }
 
   ParticleCreator::applyForceBC(start,pexternalforce,pmass,position);
+  return subset;
 
 }
 
 particleIndex MembraneParticleCreator::countParticles(const Patch* patch,
-						      std::vector<GeometryObject*>& d_geom_objs) const
+						      vector<GeometryObject*>& d_geom_objs) const
 {
   return ParticleCreator::countParticles(patch,d_geom_objs);
 }
