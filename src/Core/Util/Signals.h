@@ -130,7 +130,7 @@ private:
 public:
   Slot( Caller *caller, void (Caller::*pmf)(), int priority=0 ) 
     : SlotBase(priority), caller_(caller), pmf_(pmf) {}
-  virtual void send() { (caller->*pmf)(); }
+  virtual void send() { (caller_->*pmf_)(); }
   bool operator==(const Slot &s) 
     { 
       return caller_ == s.caller_ && pmf_ == s.pmf_; 
