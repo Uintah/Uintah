@@ -133,19 +133,28 @@ MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
     {
       tess_[0]->extract( *cell, iso );
       ++cell;
-      geom_ = tess_[0]->get_geom();
     }
+    geom_ = tess_[0]->get_geom();
   }
   else {
     Thread::parallel( this,  
 		      &MarchingCubes<AI,Tesselator>::parallel_search, 
-		      np_, true, 
+		      np_, 
+		      true,    // block
 		      iso, 
 		      false ); // for now build_trisurf is off for parallel mc
     GeomGroup *group = new GeomGroup;
-    for (int i=0; i<np_; i++)
-      group->add( tess_[i]->get_geom() );
-    geom_ = group;
+    for (int i=0; i<np_; i++) {
+      Geom *obj = tess_[i]->get_geom();
+      if ( obj ) 
+	group->add( obj );
+    }
+    if ( group->size() > 0 )
+      geom_ = group;
+    else {
+      delete group;
+      geom = 0;
+    }
   }
 }
 
