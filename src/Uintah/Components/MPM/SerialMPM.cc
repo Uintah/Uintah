@@ -33,6 +33,7 @@ static char *id="@(#) $Id$";
 
 #include "GeometrySpecification/Problem.h"
 
+using namespace Uintah;
 using namespace Uintah::MPM;
 
 using SCICore::Geometry::Vector;
@@ -40,6 +41,7 @@ using SCICore::Geometry::Point;
 using SCICore::Math::Min;
 using SCICore::Math::Max;
 using namespace std;
+
 
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -489,6 +491,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
 
+      std::cerr << "allocating grid variables" << std::endl;
       new_dw->allocate(gmass,         gMassLabel, vfindex, region);
       new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region);
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region);
@@ -536,18 +539,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       // Apply grid boundary conditions to the velocity
       // before storing the data
       for(int face = 0; face<6; face++){
-	int bctype = region->getBCType(face);
-	switch(bctype){
-	  case NONE:
+	Region::FaceType f = Region::xplus;
+	switch(region->getBCType(f)){
+	case Region::None:
 	     // Do nothing
 	     break;
-	  case FIXED:
-	     gvelocity.fillFace(face,Vector(0.0,0.0,0.0));
-	     break;
-	  case SYMMETRY:
-	     gvelocity.fillFaceNormal(face);
-	     break;
-	  case NEIGHBOR:
+	case Region::Fixed:
+	     gvelocity.fillFace(f,Vector(0.0,0.0,0.0));
+	     break; 
+	case Region::Symmetry:
+	     gvelocity.fillFaceNormal(f);
+	     break; 
+	case Region::Neighbor:
 	     // Do nothing
 	     break;
 	}
@@ -779,20 +782,22 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
       for(int face = 0; face<6; face++){
-	int bctype = region->getBCType(face);
+	// Dummy holder until this is resolved
+	Region::FaceType f = Region::xplus;
+	Region::BCType bctype = region->getBCType(f);
 	switch(bctype){
-	  case NONE:
+	  case Region::None:
 	     // Do nothing
 	     break;
-	  case FIXED:
-	     gvelocity_star.fillFace(face,Vector(0.0,0.0,0.0));
-	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0));
+	  case Region::Fixed:
+	     gvelocity_star.fillFace(f,Vector(0.0,0.0,0.0));
+	     gacceleration.fillFace(f,Vector(0.0,0.0,0.0));
 	     break;
-	  case SYMMETRY:
-	     gvelocity_star.fillFaceNormal(face);
-	     gacceleration.fillFaceNormal(face);
+	  case Region::Symmetry:
+	     gvelocity_star.fillFaceNormal(f);
+	     gacceleration.fillFaceNormal(f);
 	     break;
-	  case NEIGHBOR:
+	  case Region::Neighbor:
 	     // Do nothing
 	     break;
 	}
@@ -868,6 +873,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 
 
 // $Log$
+// Revision 1.46  2000/05/09 03:27:55  jas
+// Using the enums for boundary conditions hack.
+//
 // Revision 1.45  2000/05/08 18:46:16  guilkey
 // Added call to initializeContact in SerialMPM's actuallyInitailize
 //
