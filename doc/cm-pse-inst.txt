@@ -54,13 +54,15 @@ Table of Contents
 
    BLT 2.4t +
      ftp://ftp.tcltk.com/aa004735/pub/blt/BLT2.4t.tar.gz
-     or see www.tcltk/com/blt for latest version
+     or see www.tcltk/com/blt for the latest version
 
    GNU make 3.76.1 +
      ftp://ftp.gnu.org/pub/gnu/make/make-3.76.1.tar.gz
 
    Xerces XML parser 1.1.0 +
      http://xml.apache.org/dist/xerces-c/stable/Xerces-C-src_1_1_0.tar.gz
+     see http://xml.apache.org/xerces-c/build.html#BuildUNIX for build
+     instructions
 
 
 3) Installing the PSE
