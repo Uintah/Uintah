@@ -18,7 +18,7 @@
 # Makefile for User directory.
 .PHONY: products
 
-PRODUCTS = Guide
+PRODUCTS = Guide FAQ
 
 default: index.html products
 
