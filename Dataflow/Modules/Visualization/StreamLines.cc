@@ -149,7 +149,7 @@ int
 StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
 			     const Point &p    /* previous point */,
 			     float s           /* current step size */,
-			     VectorField *vf)
+			     VectorField *vf   /* the field */)
 {
   typedef typename VectorField::mesh_type   vf_mesh_type;
   typedef typename vf_mesh_type::cell_index cell_index;
@@ -192,7 +192,7 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
 				 float t          /* error tolerance */,
 				 float s          /* initial step size */,
 				 int n            /* max number of steps */,
-				 VectorField *vf)
+				 VectorField *vf  /* the field */)
 {
   int loop;
   vector <Vector> terms;
@@ -293,8 +293,25 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
     get_gui_doublevar(id,"stepsize",stepsize);
     get_gui_intvar(id,"maxsteps",maxsteps);
 
+    // find the positive streamlines
     nodes.clear();
     FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vf);
+
+    node_iter = nodes.begin();
+    if (node_iter!=nodes.end())
+      n1 = cmesh_->add_node(*node_iter);
+    while (node_iter!=nodes.end()) {
+      ++node_iter;
+      if (node_iter!=nodes.end()) {
+	n2 = cmesh_->add_node(*node_iter);
+	cmesh_->add_edge(n1,n2);
+	n1 = n2;
+      }
+    }
+
+    // find the negative streamlines
+    nodes.clear();
+    FindStreamLineNodes(nodes,seed,tolerance,-stepsize,maxsteps,vf);
 
     node_iter = nodes.begin();
     if (node_iter!=nodes.end())
