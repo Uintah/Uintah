@@ -45,6 +45,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/AnalyzeNrrdReader.cc\
+	$(SRCDIR)/ColorMapToNrrd.cc\
 	$(SRCDIR)/ConvertToNrrd.cc\
 	$(SRCDIR)/DicomNrrdReader.cc\
 	$(SRCDIR)/FieldToNrrd.cc\
