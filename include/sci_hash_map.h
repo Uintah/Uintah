@@ -39,7 +39,7 @@
 #include <sci_defs/hashmap_defs.h>
 
 #define HAVE_HASH_MAP
-#ifdef HAVE_STD_HASHMAP
+#if defined(HAVE_STD_HASHMAP) && !defined(__ECC)  
 #include <hash_map>
 using std::hash_map;
 using std::hash_multimap;
