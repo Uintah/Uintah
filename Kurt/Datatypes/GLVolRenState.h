@@ -1,31 +1,31 @@
 #ifndef GLVOLRENSTATE_H
 #define GLVOLRENSTATE_H
 
+//#include "GLVolumeRenderer.h"
 #include <SCICore/Geometry/Ray.h>
 #include <vector>
 #include <GL/glu.h>
 
 namespace Kurt {
   namespace Datatypes {
-class Brick;
+  class Brick;
   }
 }
 
 namespace SCICore {
-namespace Geometry {
+  namespace Geometry {
   class Polygon;
-}
-namespace GeomSpace {
-
-class GLVolumeRenderer;
+  }
+  namespace GeomSpace {
+  
   //using namespace Kurt::Datatypes;
-using SCICore::Geometry::Ray;
-using SCICore::Geometry::Polygon;
-using std::vector;
-using namespace Kurt::Datatypes;
-
+  using SCICore::Geometry::Ray;
+  using SCICore::Geometry::Polygon;
+  using std::vector;
+  using namespace Kurt::Datatypes;
+  
 /**************************************
-
+					 
 CLASS
    GLVolRenState
    
@@ -53,6 +53,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+class GLVolumeRenderer;
 
 class GLVolRenState {
 public:
@@ -71,13 +72,13 @@ public:
   virtual void draw() = 0;
   // draw Wireframe
   virtual void drawWireFrame() = 0;
-
+  
   void Reload(){reload = (unsigned char *)1;}
-
+  
 protected:
 
   virtual void setAlpha(const Brick& brick) = 0;
-
+  
   void computeView(Ray&);
   void loadTexture( Brick& brick);
   void makeTextureMatrix(const Brick& brick);

@@ -28,7 +28,7 @@ FullRes::draw()
   Brick* brick;
   computeView(viewRay);
   
-  FullResIterator it( volren->tex, viewRay,  volren->controlPoint);
+  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   SliceTable st(volren->tex->min(),
 		volren->tex->max(), 
@@ -74,7 +74,7 @@ FullRes::drawWireFrame()
   Ray viewRay;
   computeView( viewRay );
   
-  FullResIterator it( volren->tex, viewRay,  volren->controlPoint);
+  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   const Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){

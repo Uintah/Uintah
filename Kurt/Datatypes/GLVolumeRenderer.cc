@@ -30,8 +30,8 @@ GLVolumeRenderer::GLVolumeRenderer(int id)
 
 
 GLVolumeRenderer::GLVolumeRenderer(int id, 
-				   const GLTexture3D* tex,
-				   ColorMap* map)
+				   GLTexture3DHandle tex,
+				   ColorMapHandle map)
  : GeomObj( id ), 
   tex(tex),  cmap(map->raw1d),
   controlPoint(Point(0,0,0)), slices(0),
@@ -57,7 +57,7 @@ GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
 
 GLVolumeRenderer::~GLVolumeRenderer()
 {
-  delete tex;
+
   delete cmap;
   delete _state;
   delete _gl_state;

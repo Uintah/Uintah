@@ -1,6 +1,6 @@
 //#include <SCICore/Utils/NotFinished.h>
 #include "FullResIterator.h"
-
+#include <iostream>
 
 namespace Kurt {
 namespace Datatypes {
@@ -14,16 +14,21 @@ FullResIterator::FullResIterator(const GLTexture3D* tex, Ray view,
     GLTextureIterator( tex, view, control)
 {
   const Octree< Brick* >* node = (tex->bontree);
+  std::cerr<<"Tex depth = "<< tex->depth() << std::endl;
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
     int child;
     do {
+      if( node == 0 )
+	std::cerr<<"Node is zero\n";
       order.push_back( traversal( node ));
       path.push_back( node );
       child = order.back()->front();
       order.back()->pop_front();
       node = (*node)[child];
+      if( node == 0 )
+	std::cerr<<"Node is zero\n";
     } while (node->type() == Octree<Brick* >::PARENT);
     
     next = (*node)();
