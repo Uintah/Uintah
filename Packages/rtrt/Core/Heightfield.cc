@@ -859,8 +859,8 @@ void Heightfield<A,B>::intersect(Ray& ray, HitInfo& hit,
     }
     if(t>1.e29)
 	return;
-    Point p(orig+dir*t);
-    Vector s((p-min)*ihierdiag);
+    Point start_p(orig+dir*t);
+    Vector s((start_p-min)*ihierdiag);
     int cx=xsize[depth-1];
     int cy=ysize[depth-1];
     int ix=(int)(s.x()*cx);
@@ -878,29 +878,46 @@ void Heightfield<A,B>::intersect(Ray& ray, HitInfo& hit,
     double dtdx, dtdy;
     double icx=ixsize[depth-1];
     double x=min.x()+hierdiag.x()*double(ix+ddx)*icx;
-    next_x=(x-orig.x())*xinv_dir;
+    next_x=(x-start_p.x())*xinv_dir;
     dtdx=dix_dx*hierdiag.x()*icx*xinv_dir;
     double icy=iysize[depth-1];
     double y=min.y()+hierdiag.y()*double(iy+ddy)*icy;
-    next_y=(y-orig.y())*yinv_dir;
+    next_y=(y-start_p.y())*yinv_dir;
     dtdy=diy_dy*hierdiag.y()*icy*yinv_dir;
 
     Vector cellsize(cx,cy,1);
-    Vector cellcorner((orig-min)*ihierdiag*cellsize);
+    Vector cellcorner((start_p-min)*ihierdiag*cellsize);
     Vector celldir(dir*ihierdiag*cellsize);
 
+    
+    // Make a new ray with the point start_p.  Be sure to offset t.
+    Ray new_ray(start_p, dir);
+    // Create a new HitInfo with the appropiate information
+    HitInfo new_hit;
+    if (hit.was_hit)
+      // Offset min_t by the t from our new_ray
+      new_hit.min_t = hit.min_t - t;
     if(dir.z() > 0)
-       isect_up(depth-1, t, dtdx, dtdy, next_x, next_y,
+       isect_up(depth-1, 0, dtdx, dtdy, next_x, next_y,
 		ix, iy, dix_dx, diy_dy,
 		0, 0,
 		cellcorner, celldir,
-		ray, hit, st, ppc);
+		new_ray, new_hit, st, ppc);
     else
-       isect_down(depth-1, t, dtdx, dtdy, next_x, next_y,
+       isect_down(depth-1, 0, dtdx, dtdy, next_x, next_y,
 		  ix, iy, dix_dx, diy_dy,
 		  0, 0,
 		  cellcorner, celldir,
-		  ray, hit, st, ppc);    
+		  new_ray, new_hit, st, ppc);    
+    if (new_hit.was_hit) {
+      // Since this would only be true if the intersection point was
+      // closer than min_t, we can be safe to assume that the current
+      // object is now the closest object and we should update hit.
+      
+      // We need to offset hit.min_t
+      hit = new_hit;
+      hit.min_t += t;
+    }
 }
 
 template<class A, class B>
