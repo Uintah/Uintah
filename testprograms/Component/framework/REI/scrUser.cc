@@ -66,4 +66,6 @@ scrUser::go()
 
   cout << "Returned values: " << flow << ", " << kmol_s_tot
        << ", " << kmol_s.size() << ", " << kmol_s[0] << "\n";
+
+  services_->releasePort( "scrUserIn0" );
 }
