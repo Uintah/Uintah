@@ -21,6 +21,12 @@ class GridSpheresDpy : public DpyBase {
   
   int* hist;
   int* histmax;
+  // This is the base size of the histogram.  Histograms are rescaled
+  // to fit the window as needed.
+  int nhist;
+  // These are the scaled histograms
+  int* scaled_hist;
+  int nscaled_hist;
   friend class GridSpheres;
   friend class TextureGridSpheres;
   friend class PCAGridSpheres;
@@ -47,10 +53,14 @@ class GridSpheresDpy : public DpyBase {
   char* in_file;
   
   void compute_hist(GLuint fid);
-  void draw_hist(GLuint fid, XFontStruct* font_struct, int& redraw_range);
-  void move(float* range, int x, int y, int& redraw_range);
-  void move_min_max(float* range, int x, int y, int& redraw_range);
-  void restore_min_max(int y, int &redraw_range);
+  void draw_hist(GLuint fid, XFontStruct* font_struct);
+  // This scales the histograms to match the min and max of the range
+  // as well as the horizontal resolution.
+  void compute_scaled_hist();
+  void compute_histmax();
+  void move(float* range, int x, int y);
+  void move_min_max(float* range, int x, int y);
+  void restore_min_max(int y);
   void compute_one_hist(int j);
   void changecolor(int y);
 
@@ -73,8 +83,6 @@ class GridSpheresDpy : public DpyBase {
 
   // Gui control variables
   bool need_hist;
-  int redraw_range;
-  
 public:
   GridSpheresDpy(int colordata, char *in_file=0);
   //  GridSpheresDpy(GridSpheres* grid);
