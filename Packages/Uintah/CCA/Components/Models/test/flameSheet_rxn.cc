@@ -64,8 +64,8 @@ flameSheet_rxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 {
   ps->require("scalar", initialScalar);
 }
-//__________________________________
-//
+//______________________________________________________________________
+//    Problem Setup
 void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
 			   ModelSetup* setup)
 {
@@ -82,44 +82,66 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
   Material* matl = sharedState->getMaterial( m[0] );
   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
   if (ice_matl){
-    d_cv = ice_matl->getSpecificHeat();
+    d_cp = ice_matl->getSpecificHeat();
   }   
+  
+  Scalar* scalar = new Scalar();
+  scalar->index = 0;
+  scalar->name  = "f";
+  string Sname     = "scalar-"+scalar->name;
+  string Ssrc_name = "scalarSource-"+scalar->name;
+  scalar->scalar_CCLabel = 
+      VarLabel::create(Sname,     CCVariable<double>::getTypeDescription());
+  scalar->scalar_source_CCLabel = 
+      VarLabel::create(Ssrc_name, CCVariable<double>::getTypeDescription());
 
-  int nscalars = 1;
-  for (int k = 0; k < nscalars; k++) {
-    Scalar* scalar = new Scalar();
-    scalar->index = k;
-    scalar->name = "f";
-    string Sname = "scalar-"+scalar->name;
-    string Ssrc_name = "scalarSource-"+scalar->name;
-    scalar->scalar_CCLabel = VarLabel::create(Sname, CCVariable<double>::getTypeDescription());
-    scalar->scalar_source_CCLabel = VarLabel::create(Ssrc_name, CCVariable<double>::getTypeDescription());
-
-    setup->registerTransportedVariable(mymatls->getSubset(0),
-				      scalar->scalar_CCLabel,
-				      scalar->scalar_source_CCLabel);
-    scalars.push_back(scalar);
-    names[scalar->name] = scalar;
-  }
+  setup->registerTransportedVariable(mymatls->getSubset(0),
+				    scalar->scalar_CCLabel,
+				    scalar->scalar_source_CCLabel);
+  scalars.push_back(scalar);
+  names[scalar->name] = scalar;
 
   if(scalars.size() == 0) {
-    throw ProblemSetupException("flameSheet_rxn specified with no scalars!");
+    throw ProblemSetupException("flameSheet_rxn: no scalar specifed!");
   }
 
   for (ProblemSpecP child = params->findBlock("scalar"); child != 0;
        child = child->findNextBlock("scalar")) {
+    ProblemSpecP child = params->findBlock("scalar");
     string name;
     child->getAttribute("name", name);
     map<string, Scalar*>::iterator iter = names.find(name);
     if(iter == names.end()) {
       throw ProblemSetupException("Scalar "+name+" species not found");
     }
+    //__________________________________
+    //  reaction constants
+    ProblemSpecP react_ps = child->findBlock("reaction_constants");
+    if(!react_ps) {
+      throw ProblemSetupException("Cannot find reaction_constants tag");
+    }
     
+    react_ps->getWithDefault("f_stoichometric",       d_f_stoic,       -9);  
+    react_ps->getWithDefault("delta_H_combustion",    d_del_h_comb,    -9);  
+    react_ps->getWithDefault("oxidizer_temp_infinity",d_T_oxidizer_inf,-9);          
+    react_ps->getWithDefault("initial_fuel_temp",     d_T_fuel_init,   -9);  
+    if( d_f_stoic == -9        ||  d_del_h_comb == -9 ||    // bulletproofing
+        d_T_oxidizer_inf == -9 ||  d_T_fuel_init == -9 ) {
+      ostringstream warn;
+      warn << " ERROR FlameSheet_rxn: Input variable(s) not specified \n" 
+           << "\n f_stoichometric        "<< d_f_stoic
+           << "\n delta_H_combustion     "<< d_del_h_comb
+           << "\n oxidizer_temp_infinity "<< d_T_oxidizer_inf
+           << "\n fuel_temp_init         "<< d_T_fuel_init << endl;
+      throw ProblemSetupException(warn.str());
+    }
+    
+    //__________________________________
+    //  geom objects
     Scalar* scalar = iter->second;
     for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-	 geom_obj_ps != 0;
-	 geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-      
+      geom_obj_ps != 0;
+      geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
       vector<GeometryPiece*> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
       
@@ -134,8 +156,9 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
 
       scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
     }
-    if(scalar->regions.size() == 0)
+    if(scalar->regions.size() == 0) {
       throw ProblemSetupException("Variable: "+scalar->name+" does not have any initial value regions");
+    }
   }
 }
 //______________________________________________________________________
@@ -218,7 +241,7 @@ void flameSheet_rxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->modifies(mi->energy_source_CCLabel);
   t->requires(Task::OldDW, mi->density_CCLabel,     Ghost::None);
   t->requires(Task::OldDW, mi->temperature_CCLabel, Ghost::None);
-  t->requires(Task::OldDW, mi->delT_Label);
+  
   for(vector<Scalar*>::iterator iter = scalars.begin();
       iter != scalars.end(); iter++){
     Scalar* scalar = *iter;
@@ -241,10 +264,6 @@ void flameSheet_rxn::react(const ProcessorGroup*,
 
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();
-
-    delt_vartype delT;
-    old_dw->get(delT, mi->delT_Label);
-    double dt = delT;
     Ghost::GhostType  gn = Ghost::None;   
     
     for(int m=0;m<matls->size();m++){
@@ -270,16 +289,10 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       }
       
       //__________________________________
-      //    H A R D W I R E D  variables  Methane + Air -> products
-      double tolerance = 1e-4;
-      double T_oxidizer_inf = 300.0;    // Oxidizer Temperature at infinity
-      double T_fuel_i       = 300.0;    // initial Fuel Temperature
-      double f_stoic        = 0.06207;
-      double nu             = (1.0/f_stoic) - 1.0;    
-      double MW             = 16.043;
-      double del_h_comb     = 1000.0* 74831.0;    // Enthalpy of combustion J/kg
-      double cp  = 716.0;               //Air @ J/kg-K  @ 300K
-      del_h_comb = 500.0 * cp/f_stoic;   //this is gross 
+      //   G R O S S N E S S
+      double nu             = (1.0/d_f_stoic) - 1.0;
+    //double d_del_h_comb   = 1000.0* 74831.0;    // Enthalpy of combustion J/kg
+      double del_h_comb = d_del_h_comb * d_cp/d_f_stoic;
       
       //__________________________________   
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -290,41 +303,40 @@ void flameSheet_rxn::react(const ProcessorGroup*,
 
         //__________________________________
         // compute the energy source
-        if (f_stoic < f && f <= 1.0 ){                // Inside the flame
-          Y_fuel     = (f - f_stoic)/(1.0 - f_stoic); // eqs 9.43a,b,c & 9.51a
+        if (d_f_stoic < f && f <= 1.0 ){                  // Inside the flame eqs
+          Y_fuel     = (f - d_f_stoic)/(1.0 - d_f_stoic); // 9.43a,b,c & 9.51a
           Y_oxidizer = 0.0;
-          Y_products = (1 - f)/(1-f_stoic);
+          Y_products = (1 - f)/(1-d_f_stoic);
           
-          double tmp = f_stoic * del_h_comb/((1.0 - f_stoic) * cp);
-          double A   = f * ( (T_fuel_i - T_oxidizer_inf) - tmp ); 
-          newTemp    =  A + T_oxidizer_inf + tmp;
+          double tmp = d_f_stoic * del_h_comb/((1.0 - d_f_stoic) * d_cp);
+          double A   = f * ( (d_T_fuel_init - d_T_oxidizer_inf) - tmp ); 
+          newTemp    =  A + d_T_oxidizer_inf + tmp;
         }
                 
-        if (fabs(f_stoic - f) < tolerance ){          // At the flame surface
-          Y_fuel     = 0.0;                           // eqs 9.45a,b,c & 9.51a
+        if (d_f_stoic == f ){                          // At the flame surface
+          Y_fuel     = 0.0;                            // eqs 9.45a,b,c & 9.51a
           Y_oxidizer = 0.0;                           
           Y_products = 1.0;
           
-          double A = f_stoic *( del_h_comb/cp + T_fuel_i - T_oxidizer_inf);
-          newTemp = A + T_oxidizer_inf;
+          double A = d_f_stoic *( del_h_comb/d_cp + d_T_fuel_init - d_T_oxidizer_inf);
+          newTemp = A + d_T_oxidizer_inf;
         }
       
-        if (0 <= f && f < f_stoic ){                 //outside the flame
-          Y_fuel     = 0.0;                          // eqs 9.46a,b,c & 9.51c
-          Y_oxidizer = 1.0 - f/f_stoic;
-          Y_products = f/f_stoic;
+        if (0 <= f && f < d_f_stoic ){                 //outside the flame
+          Y_fuel     = 0.0;                            // eqs 9.46a,b,c & 9.51c
+          Y_oxidizer = 1.0 - f/d_f_stoic;
+          Y_products = f/d_f_stoic;
           
-          double A = f *( del_h_comb/cp + T_fuel_i - T_oxidizer_inf);
-          newTemp  = A + T_oxidizer_inf;
+          double A = f *( (del_h_comb/d_cp) + d_T_fuel_init - d_T_oxidizer_inf);
+          newTemp  = A + d_T_oxidizer_inf;
         }       
-        new_f =Y_fuel + Y_products/(1.0 + nu);      // eqs 7.54
+        new_f =Y_fuel + Y_products/(1.0 + nu);        // eqs 7.54
                 
-	 double energyx =( newTemp - oldTemp) * cp * mass;
+	 double energyx =( newTemp - oldTemp) * d_cp * mass;
         energySource[c] += energyx;
         
-	 f_src[c] += new_f - f;  
+	 f_src[c] += new_f - f; 
       }  //iter
     }  // matl loop
   }
 }
-
