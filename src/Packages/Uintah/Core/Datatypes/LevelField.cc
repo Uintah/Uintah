@@ -45,10 +45,10 @@ bool LevelFieldSFI<double>::interpolate( double& result, const Point &p) const
 }
 
 template <>
-bool LevelFieldSFI<int>::interpolate( double& result, const Point &p) const
+bool LevelFieldSFI<float>::interpolate( double& result, const Point &p) const
 {
   bool success;
-  int result_;
+  float result_;
   success = fld_->interpolate( result_, p);
   if( success ) result = double(result_);
   return success;
@@ -62,4 +62,33 @@ bool LevelFieldSFI<long>::interpolate( double& result, const Point &p) const
   if( success ) result = double(result_);
   return success;
 }
+
+
+template <> ScalarFieldInterface *
+LevelField<double>::query_scalar_interface() const
+{
+  return scinew LevelFieldSFI<double>(this);
+}
+template <> ScalarFieldInterface *
+LevelField<float>::query_scalar_interface() const
+{
+  return scinew LevelFieldSFI<float >(this);
+}
+
+
+template <> ScalarFieldInterface *
+LevelField<long>::query_scalar_interface() const
+{
+  return scinew LevelFieldSFI<long>(this);
+}
+
+template <>
+VectorFieldInterface*
+LevelField<Vector>::query_vector_interface() const 
+{
+  return scinew VFInterface<LevelField<Vector> >(this);
+}
+
+
+
 } // end namespace Uintah
