@@ -320,8 +320,8 @@ Isosurface::new_field( FieldHandle &field )
   }
 
   // delete any algorithms created for the previous field.
-  if ( mc_alg ) { delete mc_alg; mc_alg = 0;}
-  if ( noise_alg ) { delete noise_alg; noise_alg = 0;}
+  if ( mc_alg ) { mc_alg->release(); mc_alg = 0;}
+  if ( noise_alg ) { noise_alg->release(); noise_alg = 0;}
 }
 
 
