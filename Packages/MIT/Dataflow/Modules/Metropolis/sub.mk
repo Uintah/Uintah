@@ -48,7 +48,7 @@ PSELIBS := \
         Core/Exceptions \
         Core/Geom Core/Geometry Core/Thread Core/GuiInterface
 
-LIBS := -L/usr/local/lib -L$(TCL_LIB_DIR) \
+LIBS := -L/usr/local/lib \
 	$(LAPACK_LIBRARY) \
 	 -lcvode -lunuran -lranlib -llinpack \
 	$(BLAS_LIBRARY) $(F_LIBRARY) -lm
