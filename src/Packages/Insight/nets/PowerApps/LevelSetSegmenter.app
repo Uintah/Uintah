@@ -99,8 +99,8 @@ set m45 [addModuleAtPosition "Insight" "Converters" "ImageToField" 768 1109]
 set m46 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 912 1108]
 set m47 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 768 1192]
 set m48 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 534 832]
-#set m49 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 357 1436]
-#set m50 [addModuleAtPosition "Insight" "Converters" "FieldToImage" 357 1505]
+set m49 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 1155 965]
+set m50 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 1185 1030]
 set m51 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 339 1576]
 #set m52 [addModuleAtPosition "Insight" "Converters" "Image2DToImage3D" 339 1309]
 set m53 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 339 1641]
@@ -117,7 +117,7 @@ set m59 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 512 2
 set m61 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 704 2501]
 set m62 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 554 2589]
 set m63 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 512 1766]
-#set m64 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 512 1826]
+set m64 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 731 2580]
 #set m65 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 512 1885]
 set m66 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 722 2302]
 set m67 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 722 2364]
@@ -192,7 +192,7 @@ set c34 [addConnection $m63 1 $m58 0]
 set c35 [addConnection $m27 0 $m43 1]
 set c36 [addConnection $m28 0 $m87 1]
 set c37 [addConnection $m59 0 $m62 0]
-set c38 [addConnection $m39 0 $m38 0]
+set c38 [addConnection $m49 0 $m38 0]
 set c39 [addConnection $m62 0 $m54 0]
 set c40 [addConnection $m63 1 $m69 2]
 set c41 [addConnection $m58 0 $m59 1]
@@ -223,7 +223,7 @@ set c65 [addConnection $m12 0 $m17 1]
 set c66 [addConnection $m40 0 $m25 0]
 set c67 [addConnection $m44 0 $m27 0]
 set c68 [addConnection $m46 0 $m29 0]
-set c69 [addConnection $m43 0 $m38 1]
+set c69 [addConnection $m50 0 $m38 1]
 set c70 [addConnection $m2 0 $m4 1]
 set c71 [addConnection $m5 0 $m6 1]
 set c72 [addConnection $m69 0 $m70 1]
@@ -233,15 +233,15 @@ set c75 [addConnection $m95 0 $m96 0]
 set c76 [addConnection $m68 0 $m61 1]
 set c77 [addConnection $m92 0 $m96 1]
 set c78 [addConnection $m13 0 $m17 2]
-set c79 [addConnection $m47 0 $m38 2]
+set c79 [addConnection $m39 0 $m38 2]
 set c80 [addConnection $m61 0 $m62 2]
 set c81 [addConnection $m34 0 $m36 2]
 set c82 [addConnection $m3 0 $m4 2]
 set c83 [addConnection $m4 0 $m7 2]
 set c84 [addConnection $m96 0 $m97 0]
 set c85 [addConnection $m41 0 $m25 1]
-set c86 [addConnection $m87 0 $m38 3]
-set c86 [addConnection $m19 0 $m38 4]
+set c86 [addConnection $m43 0 $m38 3]
+set c86 [addConnection $m47 0 $m38 4]
 set c87 [addConnection $m6 0 $m73 0]
 set c88 [addConnection $m32 0 $m73 1]
 set c89 [addConnection $m6 0 $m74 0]
@@ -258,44 +258,47 @@ set c98 [addConnection $m42 0 $m27 1]
 set c99 [addConnection $m86 0 $m28 1]
 set c100 [addConnection $m45 0 $m29 1]
 set c101 [addConnection $m79 0 $m90 0]
-set c102 [addConnection $m91 0 $m38 4]
+set c102 [addConnection $m87 0 $m38 5]
 set c103 [addConnection $m14 0 $m17 3]
+set c104 [addConnection $m64 0 $m54 1]
+set c105 [addConnection $m19 0 $m38 6]
+set c106 [addConnection $m91 0 $m38 7]
 
 
 # Set GUI variables
-set $m1-filename "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
-set $m5-uis {3}
+setGlobal $m1-filename "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
+setGlobal $m5-uis {3}
 
 
-set $m8-setdata 1
+setGlobal $m8-setdata 1
 trace variable $m8-args w "app update_histo_graph_callback"
 
-set $m12-time_step 0.0625
-set $m12-iterations 5
-set $m12-conductance 0.5
+setGlobal $m12-time_step 0.0625
+setGlobal $m12-iterations 5
+setGlobal $m12-conductance 0.5
 
-set $m13-time_step 0.0625
-set $m13-iterations 5
-set $m13-conductance 0.5
+setGlobal $m13-time_step 0.0625
+setGlobal $m13-iterations 5
+setGlobal $m13-conductance 0.5
 
 
-set $m16-uis {3}
-set $m16-num-dims {3}
+setGlobal $m16-uis {3}
+setGlobal $m16-num-dims {3}
 
-set $m15-isovalue {0.5}
-set $m15-curvature_scaling {1.0}
-set $m15-propagation_scaling {1.0}
-set $m15-edge_weight {1.0}
-set $m15-reverse_expansion_direction 0
-set $m15-smoothing_iterations 0
-set $m15-smoothing_conductance {0.5}
-set $m15-smoothing_time_step {0.1}
-set $m15-maximum_iterations {0}
+setGlobal $m15-isovalue {0.5}
+setGlobal $m15-curvature_scaling {1.0}
+setGlobal $m15-propagation_scaling {1.0}
+setGlobal $m15-edge_weight {1.0}
+setGlobal $m15-reverse_expansion_direction 0
+setGlobal $m15-smoothing_iterations 0
+setGlobal $m15-smoothing_conductance {0.5}
+setGlobal $m15-smoothing_time_step {0.1}
+setGlobal $m15-maximum_iterations {0}
 
-set $m18-lower_threshold 0.0
-set $m18-upper_threshold 100.0
-set $m18-inside_value {1}
-set $m18-outside_value {0}
+setGlobal $m18-lower_threshold 0.0
+setGlobal $m18-upper_threshold 100.0
+setGlobal $m18-inside_value {1}
+setGlobal $m18-outside_value {0}
 
 setGlobal $m19-num_seeds 0
 setGlobal $m19-probe_scale 10
@@ -304,37 +307,27 @@ setGlobal $m19-red 0.5
 setGlobal $m19-green 0.0
 setGlobal $m19-blue 0.0
 
-set $m20-inside_value {0}
-set $m20-outside_value {1}
+setGlobal $m20-inside_value {0}
+setGlobal $m20-outside_value {1}
 
-set $m21-copy {1}
+setGlobal $m21-copy {1}
 
-set $m22-uis {3}
+setGlobal $m22-uis {3}
 
-#set $m23-port-index {1} 
+setGlobal $m24-filename "/tmp/binary.mhd"
 
-set $m24-filename "/tmp/binary.mhd"
-
-set $m30-uis 3
+setGlobal $m30-uis 3
 
 setGlobal $m33-isFixed 1
 setGlobal $m33-min 0
 setGlobal $m33-max 1
 
-set $m34-width {552}
-set $m34-height {40}
-set $m34-mapName {Gray}
+setGlobal $m34-width {552}
+setGlobal $m34-height {40}
+setGlobal $m34-mapName {Gray}
 
 setGlobal $m35-min0 0
 setGlobal $m35-max0 0
-
-# set $m35-positionList {{0 40} {270 40} {279 1} {552 1}}
-# set $m35-nodeList {534 563 599 690}
-# set $m35-width {552}
-# set $m35-height {40}
-# set $m35-mapName {Don}
-# set $m35-resolution {2}
-# set $m35-realres {2}
 
 setGlobal $m36-crop_minPadAxis0 0
 setGlobal $m36-crop_maxPadAxis0 0
@@ -342,7 +335,8 @@ setGlobal $m36-crop_minPadAxis1 0
 setGlobal $m36-crop_maxPadAxis1 0
 setGlobal $m36-crop_minPadAxis2 0
 setGlobal $m36-crop_maxPadAxis2 0
-setGlobal $m36-show_text {0}
+setGlobal $m36-show_text {1}
+setGlobal $m36-anatomical_coordinates {0}
 
 setGlobal $m37-inside_value {0}
 setGlobal $m37-outside_value {1}
@@ -357,6 +351,8 @@ setGlobal $m38-ViewWindow_1-pos "z1_y1"
 
 setGlobal {$m38-ViewWindow_1-Transparent Faces (2)} 0
 setGlobal {$m38-ViewWindow_1-Transparent Faces (4)} 0
+setGlobal {$m38-ViewWindow_0-Title (2)} 0
+setGlobal {$m38-ViewWindow_1-Title (1)} 0
 
 
 setGlobal $m39-faces-on 1
@@ -365,9 +361,9 @@ setGlobal $m39-nodes-on 0
 setGlobal $m39-edges-on 0
 
 
-set $m40-width {552}
-set $m40-height {40}
-set $m40-mapName {Gray}
+setGlobal $m40-width {552}
+setGlobal $m40-height {40}
+setGlobal $m40-mapName {Gray}
 
 setGlobal $m41-copy 1
 setGlobal $m42-copy 1
@@ -378,22 +374,22 @@ setGlobal $m43-use-transparency 1
 setGlobal $m43-nodes-on 0
 setGlobal $m43-edges-on 0
 
-set $m44-positionList {{0 0} {273 00} {277 40} {552 40}}
-set $m44-nodeList {3 4 5 6}
-set $m44-width {552}
-set $m44-height {40}
-set $m44-mapName {BP Seismic}
-set $m44-resolution {2}
-set $m44-realres {2}
-set $m44-reverse {1}
+setGlobal $m44-positionList {{0 0} {273 00} {277 40} {552 40}}
+setGlobal $m44-nodeList {3 4 5 6}
+setGlobal $m44-width {552}
+setGlobal $m44-height {40}
+setGlobal $m44-mapName {BP Seismic}
+setGlobal $m44-resolution {2}
+setGlobal $m44-realres {2}
+setGlobal $m44-reverse {1}
 
 setGlobal $m45-copy 1
 
-set $m46-width {552}
-set $m46-height {40}
-set $m46-mapName {BP Seismic}
-set $m46-resolution {2}
-set $m46-realres {2}
+setGlobal $m46-width {552}
+setGlobal $m46-height {40}
+setGlobal $m46-mapName {BP Seismic}
+setGlobal $m46-resolution {2}
+setGlobal $m46-realres {2}
 
 setGlobal $m47-faces-on 1
 setGlobal $m47-use-transparency 1
@@ -401,79 +397,83 @@ setGlobal $m47-faces-usetexture 0
 setGlobal $m47-nodes-on 0
 setGlobal $m47-edges-on 0
 
-set $m51-uis {3}
+setGlobal $m49-bbox 0
+setGlobal $m49-showValue 0
+setGlobal $m49-format "Current Seeds and Segmentation"
+setGlobal $m49-location "Top Center"
 
-#set $m55-nbits {8}
-#set $m55-useinputmin {0}
-#set $m55-minf {0}
-#set $m55-useinputmax {0}
-#set $m55-maxf {6}
+setGlobal $m50-bbox 0
+setGlobal $m50-showValue 0
+setGlobal $m50-format "Speed Image"
+setGlobal $m50-location "Top Center"
 
-#set $m56-nbits {8}
+setGlobal $m51-uis {3}
 
-set $m58-nbits {8}
+setGlobal $m58-nbits {8}
 
-#set $m60-measure {9}
 
 # EDIT TO SHOW VALUES AROUND 0.0
 setGlobal $m61-on-0 {1}
 setGlobal $m61-on-1 {0}
-set $m61-panx {-0.02734375}
-set $m61-pany {-0.01171875}
-set $m61-scale_factor {1.0}
-set $m61-faux {1}
-set $m61-histo {0.5}
-set $m61-selected_widget {0}
-set $m61-selected_object {9}
-set $m61-name-0 {Generic}
-set $m61-0-color-r {0.8}
-set $m61-0-color-g {0.0}
-set $m61-0-color-b {0.0}
-set $m61-0-color-a {1.0}
-set $m61-state-0 {r 0 0.00390622 0.015625 0.537109 0.613281 0.25}
-set $m61-shadeType-0 {0}
-set $m61-name-1 {Rectangle}
-set $m61-1-color-r {0.0}
-set $m61-1-color-g {0.0}
-set $m61-1-color-b {0.8}
-set $m61-1-color-a {1.0}
-set $m61-state-1 {r 0 0.50304 0.0117188 0.459851 0.61407 0.737198}
-set $m61-shadeType-1 {0}
-set $m61-marker {end}
+setGlobal $m61-panx {-0.02734375}
+setGlobal $m61-pany {-0.01171875}
+setGlobal $m61-scale_factor {1.0}
+setGlobal $m61-faux {1}
+setGlobal $m61-histo {0.5}
+setGlobal $m61-selected_widget {0}
+setGlobal $m61-selected_object {9}
+setGlobal $m61-name-0 {Generic}
+setGlobal $m61-0-color-r {0.8}
+setGlobal $m61-0-color-g {0.0}
+setGlobal $m61-0-color-b {0.0}
+setGlobal $m61-0-color-a {1.0}
+setGlobal $m61-state-0 {r 0 0.00390622 0.015625 0.537109 0.613281 0.25}
+setGlobal $m61-shadeType-0 {0}
+setGlobal $m61-name-1 {Rectangle}
+setGlobal $m61-1-color-r {0.0}
+setGlobal $m61-1-color-g {0.0}
+setGlobal $m61-1-color-b {0.8}
+setGlobal $m61-1-color-a {1.0}
+setGlobal $m61-state-1 {r 0 0.50304 0.0117188 0.459851 0.61407 0.737198}
+setGlobal $m61-shadeType-1 {0}
+setGlobal $m61-marker {end}
 
-set $m62-alpha_scale {0.0}
-set $m62-shading {1}
-set $m62-specular {0.388}
-set $m62-shine {24}
+setGlobal $m62-alpha_scale {0.0}
+setGlobal $m62-shading {1}
+setGlobal $m62-specular {0.388}
+setGlobal $m62-shine {24}
 
 setGlobal $m63-useinputmin 0
 setGlobal $m63-useinputmax 0
 setGlobal $m63-minf 0
 setGlobal $m63-maxf 0
 
-set $m66-bins {3000}
-set $m66-sbins {1}
+setGlobal $m64-bbox {0}
+setGlobal $m64-showValue {0}
+setGlobal $m64-format "Volume Rendering"
+setGlobal $m64-location "Top Center"
 
-set $m67-gamma {0.5}
+setGlobal $m66-bins {3000}
+setGlobal $m66-sbins {1}
 
-set $m68-nbits {8}
+setGlobal $m67-gamma {0.5}
 
-set $m69-bins {512 256}
-set $m69-mins {0 nan}
-set $m69-maxs {6 nan}
-set $m69-type {nrrdTypeFloat}
+setGlobal $m68-nbits {8}
 
-set $m70-operator {+}
+setGlobal $m69-bins {512 256}
+setGlobal $m69-mins {0 nan}
+setGlobal $m69-maxs {6 nan}
+setGlobal $m69-type {nrrdTypeFloat}
 
-set $m71-operator {log}
+setGlobal $m70-operator {+}
 
-#set $m72-port-index {1}
+setGlobal $m71-operator {log}
 
-set $m78-axis 2
+setGlobal $m78-axis 2
 
-set $m80-axis 2
+setGlobal $m80-axis 2
 
-set $m83-filename "/tmp/float.mhd"
+setGlobal $m83-filename "/tmp/float.mhd"
 
 setGlobal $m86-copy 1
 
@@ -483,14 +483,14 @@ setGlobal $m87-use-transparency 1
 setGlobal $m87-nodes-on 0
 setGlobal $m87-edges-on 0
 
-set $m88-positionList {{0 0} {273 0} {277 40} {552 40}}
-set $m88-nodeList {3 4 5 6}
-set $m88-width {552}
-set $m88-height {40}
-set $m88-mapName {BP Seismic}
-set $m88-resolution {2}
-set $m88-realres {2}
-set $m88-reverse {1}
+setGlobal $m88-positionList {{0 0} {273 0} {277 40} {552 40}}
+setGlobal $m88-nodeList {3 4 5 6}
+setGlobal $m88-width {552}
+setGlobal $m88-height {40}
+setGlobal $m88-mapName {BP Seismic}
+setGlobal $m88-resolution {2}
+setGlobal $m88-realres {2}
+setGlobal $m88-reverse {1}
 
 setGlobal $m90-copy {1}
 
@@ -567,6 +567,7 @@ set mods(Unu2op-Max) $m94
 set mods(Unu2op-Min) $m96
 set mods(ChooseNrrd-Combine) $m93
 set mods(ChooseNrrd-Seeds) $m95
+set mods(GenTitle-Seg) $m49
 
 # 2D vis
 set mods(ChooseNrrd-2D) $m73
@@ -592,6 +593,8 @@ set mods(ShowField-Seg) $m43
 set mods(ShowField-Speed) $m47
 set mods(ShowField-Seed) $m87
 
+set mods(GenTitle-Speed) $m50
+
 
 # Binary/Float Segmented Volume
 set mods(PasteImageFilter-Binary) $m30
@@ -608,13 +611,14 @@ set mods(UnuMinmax-Vol) $m35
 set mods(RescaleColorMap-Vol) $m33
 set mods(UnuJhisto-Vol) $m69
 set mods(NrrdSetupTexture-Vol) $m63
+set mods(GenTitle-Vol) $m64
 
 
 
 global axis
 set axis 2
-set $m78-axis $axis
-set $m80-axis $axis
+setGlobal $m78-axis $axis
+setGlobal $m80-axis $axis
 
 global smooth_region
 set smooth_region vol
@@ -644,6 +648,9 @@ set updated_seg_icon [image create photo -file ${image_dir}/updated-seg.ppm]
 
 global vol_foreground
 set vol_foreground 1
+
+global show_seeds
+set show_seeds 1
 
 #######################################################
 # Build up a simplistic standalone application.
@@ -866,6 +873,12 @@ class LevelSetSegmenterApp {
 	    wm title .standalone "LevelSetSegmenter - [getFileName $saveFile]"
 	    $this load_session_data
 	}
+
+	# Execute GenTitle modules
+	$mods(GenTitle-Seg)-c needexecute
+	$mods(GenTitle-Speed)-c needexecute
+	$mods(GenTitle-Vol)-c needexecute
+	
     }
 
     #############################
@@ -1360,8 +1373,13 @@ class LevelSetSegmenterApp {
 
 	    pack $f.l $f.decr $f.e $f.incr -side left -anchor nw -expand yes -fill x
 
+	    global show_seeds
+	    checkbutton $seeds.points.toggle -text "Show Seeds" \
+		-variable show_seeds -command "$this seeds_changed 1 2 3"
+
 	    pack $seeds.points.pos $seeds.points.neg \
 		-side top -anchor ne
+	    pack $seeds.points.toggle -side top -anchor n
 
 	    button $seeds.generate -text "Update Initial Segmentation" \
 		-background $execute_color \
@@ -1991,14 +2009,14 @@ class LevelSetSegmenterApp {
 	    change_indicate_val 2
 	    # Turn off Current Segmentation in ViewWindow 1
 	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_1-Transparent Faces (2)\}\" 0; $mods(Viewer)-ViewWindow_1-c redraw"
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_1-Transparent Faces (6)\}\" 0; $mods(Viewer)-ViewWindow_1-c redraw"
  	} elseif {$which == $mods(ShowField-Speed) && $state == "JustStarted"} { 
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Speed) && $state == "Completed"} {
 	    change_indicate_val 2
 	    # Turn off Speed Image in ViewWindow 0
 	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (3)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (5)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(LevelSet) && $state == "JustStarted"} { 
 	    if {$updating_speed == 1} {
 		change_indicator_labels "Updating Speed Image..."
@@ -2038,8 +2056,7 @@ class LevelSetSegmenterApp {
 	} elseif {$which == $mods(VolumeVisualizer) && $state == "Completed"} { 
 	    if {$volren_has_autoviewed == 0} {
 		set volren_has_autoviewed 1
-		
-		after 100 "$mods(Viewer-VolRen)-ViewWindow_0-c autoview; $mods(Viewer-VolRen)-ViewWindow_0-c redraw"		
+		after 500 "$mods(Viewer-VolRen)-ViewWindow_0-c autoview; $mods(Viewer-VolRen)-ViewWindow_0-c redraw"		
 	    }
 	    change_indicate_val 2
 	    change_indicator_labels "Done Updating Volume Rendering"
@@ -2787,7 +2804,7 @@ class LevelSetSegmenterApp {
 
 	    # turn off speed, seed, and segmentation in Viewer 0
 	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (2)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (3)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (5)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (6)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	}
     }
 
@@ -2872,7 +2889,12 @@ class LevelSetSegmenterApp {
 
 	# Turn on seed in top viewer and segmentation off
 	after 100 \
-	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (2)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
+	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (6)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
+
+	# Turn seed point widgets back on
+	global show_seeds
+	set show_seeds 1
+	$this seeds_changed 1 2 3
 
 
 	if {$seed_method == "points"} {
@@ -3032,7 +3054,12 @@ class LevelSetSegmenterApp {
 
 	# Turn seed off and segmentation on
 	after 100 \
-	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (2)\}\" 1; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (3)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 1; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (5)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (6)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+
+	# Turn seeds off
+	global show_seeds
+	set show_seeds 0
+	$this seeds_changed 1 2 3 
 	
 	# execute Level Set
 	set segmenting 1
@@ -3134,7 +3161,7 @@ class LevelSetSegmenterApp {
 
 	# top window should just show original data
 	after 100 \
-	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (2)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (3)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (5)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (6)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	
 	# update speed image
 
@@ -3261,57 +3288,109 @@ class LevelSetSegmenterApp {
     }
 
     method seeds_changed {a b c} {
-	global mods
+	global mods show_seeds
 	global $mods(SampleField-Seeds)-num_seeds
 
 	global $mods(SampleField-Seeds)-num_seeds
+
+	set val 0
+	if {$show_seeds == 1} {
+	    set val 1
+	}
+
+	# Turn ViewWindow_0 seeds on/off depending on val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint0 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint1 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint2 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint3 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint4 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint5 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint6 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint7 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint8 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint9 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint10 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint11 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint12 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint13 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint14 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint15 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint16 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (7)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (7)} $val
+
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint0 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint1 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint2 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint3 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint4 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint5 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint6 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint7 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint8 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint9 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint10 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint11 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint12 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint13 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint14 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint15 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint16 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (8)} $val
+	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (8)} $val
+	
 
 	# Assume no more than 20 seeds - HACK
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint0 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint1 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint2 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint3 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint4 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint5 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint6 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint7 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint8 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint9 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint10 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint11 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint12 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint13 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint14 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint15 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint16 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint17 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (5)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (5)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint0 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint1 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint2 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint3 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint4 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint5 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint6 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint7 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint8 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint9 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint10 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint11 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint12 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint13 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint14 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint15 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint16 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint17 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (7)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (7)} 0
 
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint0 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint1 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint2 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint3 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint4 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint5 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint6 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint7 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint8 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint9 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint10 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint11 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint12 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint13 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint14 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint15 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint16 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint17 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (6)} 0
-	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint0 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint1 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint2 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint3 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint4 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint5 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint6 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint7 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint8 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint9 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint10 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint11 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint12 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint13 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint14 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint15 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint16 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint17 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (8)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (8)} 0
+
+	$mods(Viewer)-ViewWindow_0-c redraw
+	$mods(Viewer)-ViewWindow_1-c redraw
 
 
 #	for {set i 0} {$i < [set $mods(SampleField-Seeds)-num_seeds]} {incr i} {
-#	    setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint (5)} 0
+#	    setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint (5)} $val
 #	    upvar \#0 {$mods(Viewer)-ViewWindow_1-SeedPoint$i (5)} point
 #	    puts [set point]
 #	}
