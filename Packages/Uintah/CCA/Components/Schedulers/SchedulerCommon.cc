@@ -426,6 +426,8 @@ void
 SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* patches,
 		  const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
+  cout << "RANDY: SchedulerCommon::copyDataToNewGrid() BGN" << endl;
+
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
@@ -444,11 +446,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
   vector<VarLabelMatlPatch> variableInfo;
   oldDataWarehouse->getVarLabelMatlPatchTriples(variableInfo);
 
-  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() AAA" << endl;
-
   for ( unsigned int i = 0; i < variableInfo.size(); i++ ) {
-
-    cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR VAR BGN" << endl;
 
     VarLabelMatlPatch currentVar = variableInfo[i];
 
@@ -477,8 +475,6 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 	cout << "We are skipping patch " << newPatch->getID() << endl;
 	continue;
       }
-
-      cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH BGN" << endl;
 
       //      newDataWarehouse->checkPutAccess(currentVar.label_, currentVar.matlIndex_, currentVar.patch_, false);      
       switch(currentVar.label_->typeDescription()->getType()){
@@ -684,14 +680,11 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 	SCI_THROW(InternalError("Unknown variable type in transferFrom: "+currentVar.label_->getName()));
       }
 
-      cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH END" << endl;
-
     } // for ( int newPatchIndex = 0; newPatchIndex < neighbors.size(); newPatchIndex++) {
-
-    cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR VAR END" << endl;
 
   } // for ( unsigned int i = 0; i < variableInfo.size(); i++ ) {
 
-  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() END" << endl;
   // d_lock.writeUnlock(); Do we need this?
+
+  cout << "RANDY: SchedulerCommon::copyDataToNewGrid() END" << endl;
 }
