@@ -30,6 +30,7 @@
 //    Author : Kurt Zimmerman
 //    Date   : Sat Jul 10 21:55:08 2004
 
+#include <sci_defs/ogl_defs.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/ColorMap.h>
@@ -168,9 +169,27 @@ void VolumeSlicer::execute()
     return;
   }
   
-  ColorMapHandle cmap1;
-  ColorMap2Handle cmap2;
-  if(!icmap1_->get(cmap1) && !icmap2_->get(cmap2)) {
+  ColorMapHandle cmap1(0);
+  ColorMap2Handle cmap2(0);
+  bool c1 = icmap1_->get(cmap1);
+  bool c2 = icmap2_->get(cmap2);
+
+#ifndef HAVE_AVR_SUPPORT
+  warning("2D transfer functions are not supported by this build, ignoring.");
+  cmap2 = 0;
+  c2 = false;
+#else
+  if (tex_->nc() == 1)
+  {
+    warning("No gradient magnitude in texture, required for ColorMap2 usage.");
+    cmap2 = 0;
+    c2 = false;
+  }
+#endif
+  
+  if (!c1 && !c2)
+  {
+    error("No colormap available to render.  Nothing drawn.");
     return;
   }
 
