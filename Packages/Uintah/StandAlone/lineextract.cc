@@ -275,6 +275,8 @@ int main(int argc, char** argv)
     } else {
       //output_stream = cout;
     }
+  //__________________________________
+  //  print data
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     printData<double>(archive, variable_name, material, var_start, var_end,
@@ -289,6 +291,9 @@ int main(int argc, char** argv)
 		   time_step, *output_stream);
     break;
   case Uintah::TypeDescription::Vector:
+    printData<Vector>(archive, variable_name, material, var_start, var_end,
+		   time_step, *output_stream);    
+    break;
   case Uintah::TypeDescription::Matrix3:
   case Uintah::TypeDescription::bool_type:
   case Uintah::TypeDescription::short_int_type:
