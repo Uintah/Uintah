@@ -145,11 +145,12 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2001/11/28 23:54:13  spinti
+// Removed merge markers (<<<<).
+//
 // Revision 1.8  2001/11/28 23:51:03  spinti
 // Return stream class in inline function speciesStateSpace.
 //
-<<<<<<< ColdflowMixingModel.h
-=======
 // Revision 1.7  2001/11/28 23:43:10  jas
 // Commented out the return 0 in the speciesStateSpace since there is no
 // conversion from int to Stream.  This needs to be fixed by someone who
@@ -158,7 +159,6 @@ private:
 // Revision 1.6  2001/11/27 23:29:01  spinti
 // Added "return 0" to function speciesStateSpace.
 //
->>>>>>> 1.7
 // Revision 1.5  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc
 // 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
