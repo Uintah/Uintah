@@ -33,14 +33,17 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}06/19/03}
+\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}03/31/05}
 
 \begin{enumerate}
+\item \underline{Compute Thermodynamic/Transport Properties
+$c_v, k, \mu, \gamma$}
+
 %__________________________________
-\item Compute the equilibration pressure 
+\item \underline{Compute the equilibration pressure}
 $P_{eq}, c_m, \rhoM, \theta_m, \f$, such that $\SUM{m}\theta_m = 1$, see attached for details.
 %__________________________________
-\item Compute the face-centered velocities 
+\item \underline{Compute the face-centered velocities} 
 \[
     \vec{U_m}^{*^{f}} 
     = \B{<} \frac{ \rho_m \U_m }{\rho_m} \B{>}^{n^{f}}
@@ -58,11 +61,16 @@ $P_{eq}, c_m, \rhoM, \theta_m, \f$, such that $\SUM{m}\theta_m = 1$, see attache
 \]
 The exchange contribution involves a pointwise implicit solve, see attached for details.
 %__________________________________
-\item Compute the mass exchange between materials
-
+\item \underline{Compute the mass exchange between materials}
 $  \bigS{m_m},  \bigS{(m \U)_m}, \bigS{(m e)_m}, \bigS{(m v^o)_m }$
+
 %__________________________________
-\item Compute $\Delta P$ (eq 1.5) 
+\item \underline{Update the volume fraction}\\
+$V_{total} = \SUM{m}(\rho_m V v^o_m)$\\
+$V_m^{new} = \theta_m V_{total}  v^o_m + \bigS{(m v^o)_m}$\\
+$\theta_m = \frac{V_m^{new}}{V_{total}} $
+%__________________________________
+\item \underline{Compute $\Delta P$} 
 \[
      \Delta P = \Delta t 
                         \frac{   \SUM{r}  \bigS{(m v^o)_r}
@@ -71,7 +79,7 @@ $  \bigS{m_m},  \bigS{(m \U)_m}, \bigS{(m e)_m}, \bigS{(m v^o)_m }$
 \]
 where $P^{n+1} = P_{eq} + \Delta{P}$ and $\bigS{\theta_m} = \frac{ \bigS{(m v^o)}}{V}$ .
 %__________________________________
-\item Compute the face centered pressure.
+\item \underline{Compute the face centered pressure}
 \[
     P^{*^{f}} = \frac{\frac{P}{\SUM{m} \rho_m} + \frac{P_{adj}}{\SUM{m} \rho_{m, adj}}}
                      {\frac{1}{\SUM{m} \rho_m} + \frac{1}{\SUM{m} \rho_{m, adj}}}
@@ -79,22 +87,23 @@ where $P^{n+1} = P_{eq} + \Delta{P}$ and $\bigS{\theta_m} = \frac{ \bigS{(m v^o)
               =\frac{ {P \SUM{m} \rho_{m,adj}} + {P_{adj} \SUM{m} \rho_{m} }  }
                  { {\SUM{m} \rho_m} + {\SUM{m} \rho_{m, adj}  }  }
 \]
+\newpage
 %__________________________________
-\item Accumulate sources\\  
+\item \underline{Accumulate sources}\\  
  $\Delta(m\vec{U})_m = 
-    - \delt V \theta_m\delt \nabla{ P^{*^f}} 
+    - \delt V \theta_m \nabla{ P^{*^f}} 
     + \delt V \SUM{l} \theta_m \theta_l K_{ml}(\U_l^{{n+1}^L} - \U_m^{{n+1}^L} )
-    + \nabla{ \cdot (\theta_m \tau^{*^f}_m})
+    + \nabla{ \cdot (\theta^{*^f}_m \tau^{*^f}_m})
     + m_m \vec{g}\delt$
     
  $\Delta(me)_m =  
     (\frac{V} {\rhoM c^2_m}(\theta_m P \Delta P_{\text{Dilatate}})
-    - \nabla q_{m}^{*^f}
+    - \nabla (\theta^{*^f} q_{m}^{*^f})
     + \delt V \SUM{l}  \theta_m \theta_l R_{ml}(T_l^{{n+1}^L} - T_m^{{n+1}^L} )$ \\
-where $q^{*^f} = -\theta^f k^f \nabla T$ and $\theta^f = v^o \B{(}  \frac{2 \rho_R \rho_L}{\rho_R + \rho_L} \B{)}$
+where $q^{*^f} = - k^f \nabla T$ and $\theta^{*^f} = \text{ Computed during the advection of } \theta_m$
 %__________________________________
-\newpage
-\item Compute Lagrangian quantities\\
+
+\item \underline{Compute Lagrangian quantities}\\
     $m^L_m     = {\rho_m}V + \bigS{m_m} $ \\
     $(m\U)^L_m = (m\U)_m + \Delta(m\U)_m + \bigS{(m\U)_m}$ \\
     $(m e)^L_m = (m e)_m + \Delta(m e)_m + \bigS{(me)_m}$\\
@@ -107,7 +116,7 @@ where $q^{*^f} = -\theta^f k^f \nabla T$ and $\theta^f = v^o \B{(}  \frac{2 \rho
     Note $\delt \f V \nabla \cdot  \vec{U_m}^{*^{f}} = \theta_m \kappa_m V \Delta{p}$\\
    $\dot T_m =\frac{ (T_{\text{After Exchange Process}} - T_{\text{Top of the time step}})}{\delt} $
 %__________________________________
-\item Advect and Advance in time\\
+\item \underline{Advect and Advance in time}\\
 $
     m^{n+1}_m     = m^L_m 
                   - \delt\text{Advection}(m^L_m, \U_ m^{*^{f}})$\\
@@ -116,7 +125,10 @@ $
                    - \delt\text{Advection}((m \U)^L_m, \vec{U_m}^{*^{f}})$\\
 $
     (me)^{n+1}_m   = (me)^L_m       
-                   - \delt\text{Advection}((\rho  e)^L_m, \vec{U_m}^{*^{f}})
+                   - \delt\text{Advection}((\rho  e)^L_m, \vec{U_m}^{*^{f}})$ \\
+$
+    (mv^o)^{n+1}_m   = (mv^o)^L_m       
+                   - \delt\text{Advection}((\rho  v^o)^L_m, \vec{U_m}^{*^{f}})
 $
 
 \end{enumerate}
