@@ -81,7 +81,7 @@ StringSocket::StringSocket(int port)
   memset(&(my_addr.sin_zero), '\0', 8); // zero the rest of the struct
   
   if (::bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
-    if (errno = 98) 
+    if (errno == 98) 
       cerr << "Port " << port << " already in use. Exiting...\n";
     else
       cerr << "Error: " << errno << " opening socket.  Exiting...\n";
