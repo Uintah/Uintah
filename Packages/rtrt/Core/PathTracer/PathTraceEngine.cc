@@ -32,7 +32,8 @@ PathTraceContext::PathTraceContext(float luminance,
 				   int max_depth, bool dilate,
 				   int support, int use_weighted_ave,
 				   float threshold, Semaphore *sem) :
-  light(light), luminance(luminance), geometry(geometry),
+  light(light), luminance(luminance), compute_shadows(true),
+  compute_directlighting(true), geometry(geometry),
   background(background), num_sample_divs(num_sample_divs_in),
   max_depth(max_depth), dilate(dilate), support(support),
   use_weighted_ave(use_weighted_ave), threshold(threshold), sem(sem)
@@ -177,10 +178,10 @@ void PathTraceWorker::run() {
 	  {
 	    // range of (u+sx)/w [0,1]
 	    // range of 2*M_PI * (u+sx)/w [0, 2*M_PI]
-	    double phi=2*M_PI*inv_width*((u+sample_point.x()));
+            double phi=2*M_PI*inv_width*((u+sample_point.x()));
 	    // range of (v+sy)/h [0,1]
 	    // range of M_PI * (v+sy)/h [0, M_PI]
-	    double theta=M_PI*inv_height*((v+sample_point.y()));
+            double theta=M_PI*inv_height*((v+sample_point.y()));
 	    double x=cos(phi)*sin(theta);
 	    double z=sin(phi)*sin(theta);
 	    double y=cos(theta);
@@ -192,50 +193,56 @@ void PathTraceWorker::run() {
 	  float result=0;
 	  PathTraceLight* light=&(ptc->light);
 	  for (int depth=0;depth<=ptc->max_depth;depth++) {
+            if (ptc->compute_directlighting || ptc->compute_shadows) {
 #if 0
-	    // Compute direct illumination (assumes one light source)
-            Vector random_dir=light->random_vector(rng(),rng(),rng());
-	    Point random_point = light->point_from_normal(random_dir);
-	    
-	    // Shadow ray
-	    Vector sr_dir=random_point-origin;
-
-	    // Let's make sure the point on our light source is facing us
-
-	    // Compute the dot product of the shadow ray and light normal
-	    double light_norm_dot_sr = SCIRun::Dot(random_dir, -sr_dir);
-	    if (light_norm_dot_sr < 0) {
-	      // flip our random direction
-	      random_dir = -random_dir;
-	      // Update all the stuff that depended on it
-	      random_point = light->point_from_normal(random_dir);
-	      sr_dir = random_point - origin;
-	      light_norm_dot_sr = SCIRun::Dot(random_dir, -sr_dir);
-	    }
+              // Compute direct illumination (assumes one light source)
+              Vector random_dir=light->random_vector(rng(),rng(),rng());
+              Point random_point = light->point_from_normal(random_dir);
+              
+              // Shadow ray
+              Vector sr_dir=random_point-origin;
+              
+              // Let's make sure the point on our light source is facing us
+              
+              // Compute the dot product of the shadow ray and light normal
+              double light_norm_dot_sr = SCIRun::Dot(random_dir, -sr_dir);
+              if (light_norm_dot_sr < 0) {
+                // flip our random direction
+                random_dir = -random_dir;
+                // Update all the stuff that depended on it
+                random_point = light->point_from_normal(random_dir);
+                sr_dir = random_point - origin;
+                light_norm_dot_sr = SCIRun::Dot(random_dir, -sr_dir);
+              }
 #else
-	    
-	    double light_norm_dot_sr = 1;
-	    Vector sr_dir=light->center-origin;
+              
+              double light_norm_dot_sr = 1;
+              Vector sr_dir=light->center-origin;
 #endif
-	    
-	    double distance=sr_dir.normalize();
-	    double normal_dot_sr=SCIRun::Dot(sr_dir, normal);
-            if(normal_dot_sr>0.0) {
-	      Ray s_ray(origin, sr_dir);
-	      HitInfo s_hit;
-	      s_hit.min_t=distance;
-	      Color s_color(1,1,1);
-	      
-	      ptc->geometry->light_intersect(s_ray, s_hit, s_color,
-					     depth_stats, ppc);
-	      if (!s_hit.was_hit)
-		result +=
-		  ptc->luminance * light->luminance *
-		  light_norm_dot_sr *
-		  light->area *
-		  (normal_dot_sr/(distance*distance*M_PI));
-	    }
-			      
+              
+              double distance=sr_dir.normalize();
+              double normal_dot_sr=SCIRun::Dot(sr_dir, normal);
+              if(normal_dot_sr>0.0) {
+                Ray s_ray(origin, sr_dir);
+                HitInfo s_hit;
+
+                if (ptc->compute_shadows) {
+                  s_hit.min_t=distance;
+                  Color s_color(1,1,1);
+                  
+                  ptc->geometry->light_intersect(s_ray, s_hit, s_color,
+                                                 depth_stats, ppc);
+                }
+                
+                if (!s_hit.was_hit)
+                  result +=
+                    ptc->luminance * light->luminance *
+                    light_norm_dot_sr *
+                    light->area *
+                    (normal_dot_sr/(distance*distance*M_PI));
+              }
+            } // end if (compute_shadows || compute_directlighting)
+            
 	    // Pick a random direction on the hemisphere
 	    Vector v0(Cross(normal, Vector(1,0,0)));
 	    if(v0.length2()==0)
