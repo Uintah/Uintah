@@ -231,8 +231,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
                              deformationGradient[idx];
 
     // get the volume preserving part of the deformation gradient increment
-    fbar = deformationGradientInc *
-			pow(Jinc,-onethird);
+    fbar = deformationGradientInc * pow(Jinc,-onethird);
 
     // predict the elastic part of the volume preserving part of the left
     // Cauchy-Green deformation tensor
@@ -414,6 +413,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.34  2000/07/07 23:57:21  guilkey
+// Added volumetric dilation to particle volume.
+//
 // Revision 1.33  2000/07/07 23:52:09  guilkey
 // Removed some inefficiences in the way the deformed volume was allocated
 // and stored, and also added changing particle volume to CompNeoHookPlas.

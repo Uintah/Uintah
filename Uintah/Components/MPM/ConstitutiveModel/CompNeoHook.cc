@@ -139,7 +139,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
 {
   Matrix3 velGrad,Shear,fbar,deformationGradientInc;
   double J,p,IEl,muBar,U,W,se=0.;
-  double c_dil=0.0;
+  double c_dil=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
   Matrix3 Identity;
@@ -213,13 +213,14 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
     // F_n^np1 = dudx * dt + Identity
     deformationGradientInc = velGrad * delT + Identity;
 
+    Jinc = deformationGradientInc.Determinant();
+
     // Update the deformation gradient tensor to its time n+1 value.
     deformationGradient[idx] = deformationGradientInc *
                              deformationGradient[idx];
 
     // get the volume preserving part of the deformation gradient increment
-    fbar = deformationGradientInc *
-                      pow(deformationGradientInc.Determinant(),-onethird);
+    fbar = deformationGradientInc * pow(Jinc,-onethird);
 
     bElBar[idx] = fbar*bElBar[idx]*fbar.Transpose();
     IEl = onethird*bElBar[idx].Trace();
@@ -239,6 +240,8 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
     // Compute the strain energy for all the particles
     U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
     W = .5*shear*(bElBar[idx].Trace() - 3.0);
+
+    pvolume[idx]=Jinc*pvolume[idx];
 
     se += (U + W)*pvolume[idx];
 
@@ -362,6 +365,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.29  2000/07/07 23:57:21  guilkey
+// Added volumetric dilation to particle volume.
+//
 // Revision 1.28  2000/07/07 23:52:09  guilkey
 // Removed some inefficiences in the way the deformed volume was allocated
 // and stored, and also added changing particle volume to CompNeoHookPlas.
