@@ -213,6 +213,7 @@ void Image::draw_sils_on_image( float max_depth ) {
       int xlow = i>0?i-1:0;
       int xhigh = i<xres-1?i+1:xres-1;
 
+#if 0
       // Compute the first derivative
       float dx = 0
         - depth[j][xlow] - depth[j][xlow]
@@ -225,9 +226,9 @@ void Image::draw_sils_on_image( float max_depth ) {
         - depth[yhigh][xlow]
         - depth[yhigh][i] - depth[yhigh][i]
         - depth[yhigh][xhigh]
-        - depth[ylow][xlow]
-        - depth[ylow][i] - depth[ylow][i]
-        - depth[ylow][xhigh];
+        + depth[ylow][xlow]
+        + depth[ylow][i] + depth[ylow][i]
+        + depth[ylow][xhigh];
 
       // Threshold the second derivative
       float first_der = dx*dx + dy*dy;
@@ -240,7 +241,7 @@ void Image::draw_sils_on_image( float max_depth ) {
         val = 255;
       else
         val = 0;
-
+#endif
       //      if (val > 0) {
       if (true) {
         // Compute the laplacian
