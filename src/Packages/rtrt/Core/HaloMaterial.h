@@ -3,8 +3,17 @@
 #define HALOMATERIAL_H 1
 
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
+#include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <math.h>
+
+namespace rtrt {
+class HaloMaterial;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::HaloMaterial*&);
+}
 
 namespace rtrt {
 
@@ -22,6 +31,13 @@ class HaloMaterial : public Material
   HaloMaterial(Material *fg, double pow) 
     : transparent_(), fg_(fg), pow_(pow) {}
   virtual ~HaloMaterial() {}
+
+  HaloMaterial() : Material() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, HaloMaterial*&);
 
   virtual void shade(Color& result, const Ray& ray,
                      const HitInfo& hit, int depth,

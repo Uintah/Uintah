@@ -10,14 +10,14 @@ namespace rtrt {
 class EMBMaterial : public Material, public EnvironmentMapBackground
 {
 
- protected:
+protected:
 
- public:
+public:
 
   EMBMaterial(const string& filename) 
     : Material(), EnvironmentMapBackground((char*)filename.c_str()) {}
   virtual ~EMBMaterial() {}
-
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
   virtual void shade(Color& result, const Ray& ray,
                      const HitInfo& hit, int depth, 
                      double atten, const Color& accumcolor,

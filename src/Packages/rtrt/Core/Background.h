@@ -10,11 +10,15 @@
 namespace rtrt {
 class Background;
 class ConstantBackground;
+class LinearBackground;
+class EnvironmentMapBackground;
 }
 
 namespace SCIRun {
 void Pio(Piostream&, rtrt::Background*&);
 void Pio(Piostream&, rtrt::ConstantBackground*&);
+void Pio(Piostream&, rtrt::LinearBackground*&);
+void Pio(Piostream&, rtrt::EnvironmentMapBackground*&);
 }
 
 namespace rtrt {
@@ -80,10 +84,17 @@ protected:
   Color origC2_;
   Vector direction_to_C1;
 public:
-  LinearBackground( const Color& C1, const Color& C2,  const Vector& direction_to_C1);
+  LinearBackground( const Color& C1, const Color& C2,  
+		    const Vector& direction_to_C1);
 
   virtual ~LinearBackground();   
-    
+  LinearBackground() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, LinearBackground*&);
+
   virtual void color_in_direction(const Vector& v, Color& c) const ;
 
   virtual void updateAmbient( double scale ) {
@@ -94,9 +105,17 @@ public:
 
 class EnvironmentMapBackground : public Background {
 public:
-  EnvironmentMapBackground( char* filename, const Vector& up = Vector( 0.0, 0.0, 1.0 ) );
+  EnvironmentMapBackground( char* filename, 
+			    const Vector& up = Vector( 0.0, 0.0, 1.0 ) );
 
-  virtual ~EnvironmentMapBackground( void );
+  virtual ~EnvironmentMapBackground();
+
+  EnvironmentMapBackground() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, EnvironmentMapBackground*&);
 
   virtual void color_in_direction(const Vector& v, Color& c) const ;
 

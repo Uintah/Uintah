@@ -23,6 +23,7 @@ public:
   CutMaterial(Material *surfmat, ColorMap *cmap=0, CutPlaneDpy *dpy=0);
   CutMaterial(Material *surfmat, CutPlaneDpy *dpy=0, ColorMap *cmap=0);
   virtual ~CutMaterial() {};
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 
 		     double atten, const Color& accumcolor,

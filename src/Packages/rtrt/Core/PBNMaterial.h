@@ -19,16 +19,17 @@ class PBNMaterial : public Material
   typedef map<unsigned, Material*> mat_map;
   typedef mat_map::iterator        mat_iter;
 
- protected:
+protected:
 
   mat_map  material_map_;
   PPMImage pbnmap_;
 
- public:
+public:
 
   PBNMaterial(const string& s) : pbnmap_(s) {}
   virtual ~PBNMaterial() {}
 
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
   void insert(Material *m, unsigned n)
   {
     mat_iter i = material_map_.find(n);

@@ -160,6 +160,7 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
 
 Scene::~Scene()
 {
+  cerr << "Scene destroyed!\n";
     delete lightsGroup_;
     delete mainGroup_;
     delete mainGroupWithLights_;

@@ -70,6 +70,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/CubeRoot.cc \
 	$(SRCDIR)/VolumeBrick.cc \
 	$(SRCDIR)/GradientCell.cc \
+	$(SRCDIR)/HaloMaterial.cc \
 	$(SRCDIR)/HVolumeBrick.cc \
 	$(SRCDIR)/HVolumeBrick16.cc \
 	$(SRCDIR)/HVolumeBrickColor.cc \

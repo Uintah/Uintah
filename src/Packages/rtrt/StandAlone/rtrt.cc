@@ -394,6 +394,7 @@ main(int argc, char* argv[])
   }
   char scenefile[MAXPATHLEN];
   char pioscenefile[MAXPATHLEN];
+  SceneHandle sh;
 
   // test for pio'd version
   sprintf(pioscenefile, "./%s.scn", scenename);
@@ -401,7 +402,7 @@ main(int argc, char* argv[])
   struct stat buf;
   if (! stat(pioscenefile, &buf)) {
     cerr << "pio read: " << pioscenefile << endl;
-    SceneHandle sh(scene);
+    sh = scene;
     SCIRun::Piostream *str;
     str = new SCIRun::FastPiostream (pioscenefile, SCIRun::Piostream::Read);
     SCIRun::Pio(*str, sh);
@@ -443,8 +444,9 @@ main(int argc, char* argv[])
     str = new SCIRun::FastPiostream (scnfile,SCIRun::Piostream::Write);
 
     // Write it out.
-    SceneHandle sh(scene);
+    sh = scene;
     SCIRun::Pio(*str, sh);
+    delete str;
     cerr << "Saved scene to " << scenename << ".scn" << endl;
     exit(0);
   }
