@@ -134,6 +134,7 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
 extern "C" 
 Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 {
+  double lx=-0.25, ly=0.5, lz=-0.1;
   char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
   char *tex_basename="./sphere";
   int tex_res = -1;
@@ -169,6 +170,10 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 		  atof(argv[++i]));
     } else if (strcmp(argv[i], "-cmap") == 0) {
       cmap_file = argv[++i];
+    } else if(strcmp(argv[i], "-light_pos")==0) {
+      lx=atof(argv[++i]);
+      ly=atof(argv[++i]);
+      lz=atof(argv[++i]);
     } else if(strcmp(argv[i],"-display")==0)
       display=true;
     else {
@@ -184,6 +189,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       cerr<<"  -gdepth <int>        gdepth of grid cells (2)"<<endl;
       cerr<<"  -color <r> <g> <b>   surface color (1.0, 1.0, 1.0)"<<endl;
       cerr<<"  -cmap <filename>     defaults to inverse rainbow"<<endl;
+      cerr<<"  -light_pos <lx> <ly> <lz>   position of light source (-0.25, 0.5, -0.1)\n";
       cerr<<"  -display             use GridSpheresDpy display (false)"<<endl;
       exit(1);
     }
@@ -233,7 +239,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 
   Camera cam(Point(-0.25,-0.1,0.1), Point(0.1,0.075,0.2), Vector(0,0,-1), 15.0);
 
-  double ambient_scale=2;
+  double ambient_scale=0.7;
   Color bgcolor(0,0,0);
   Color cdown(1,1,1);
   Color cup(1,1,1);
@@ -253,7 +259,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   }
   scene->set_background_ptr(emap);
     
-  Light* mainLight = new Light(Point(-5,10,7.5), Color(1,1,1), 0.01);
+  Light* mainLight = new Light(Point(lx, ly, lz), Color(1,1,1), 0.01);
   mainLight->name_ = "main light";
   scene->add_light( mainLight );
   scene->turnOffAllLights( 0.0 ); 
