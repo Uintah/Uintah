@@ -349,6 +349,18 @@ bool Level::containsPoint(const Point& p) const
    return false;
 }
 
+bool Level::containsPointInRealCells(const Point& p) const
+{
+   // This sucks - it should be made faster.  -Steve
+   for(const_patchIterator iter=d_realPatches.begin();
+       iter != d_realPatches.end(); iter++){
+      const Patch* patch = *iter;
+      if(patch->containsPointInRealCells(p))
+	 return true;
+   }
+   return false;
+}
+
 void Level::finalizeLevel()
 {
   each_patch = scinew PatchSet();
