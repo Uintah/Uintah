@@ -123,11 +123,11 @@ ManageFieldSet::update_hiertable()
   fsidmap_.clear();
   fidmap_.clear();
 
-  dynamic_port_range range = get_iport("Input FieldSet");
+  dynamic_port_range range = get_iports("Input FieldSet");
   port_iter pi = range.first;
   while (pi != range.second)
   {
-    FieldSetIPort *port = (FieldSetIPort *)get_iport((*pi).second);
+    FieldSetIPort *port = (FieldSetIPort *)get_iport(pi->second);
 
     // Do something with port.
     FieldSetHandle h;
@@ -141,11 +141,11 @@ ManageFieldSet::update_hiertable()
     ++pi;
   }
 
-  range = get_iport("Input Field");
+  range = get_iports("Input Field");
   pi = range.first;
   while (pi != range.second)
   {
-    FieldIPort *port = (FieldIPort *)get_iport((*pi).second);
+    FieldIPort *port = (FieldIPort *)get_iport(pi->second);
 
     // Do something with port.
     FieldHandle h;
@@ -179,7 +179,6 @@ split(list<string> &result, const string vals)
 void
 ManageFieldSet::execute()
 {
-#if 0
   update_state(NeedData);
 
   update_hiertable();
@@ -225,7 +224,6 @@ ManageFieldSet::execute()
   ofsp->send(ofsh);
 
   //FieldOPort *ofp = (FieldOPort *)get_oport(1);
-#endif
 }
 
 } // End namespace SCIRun
