@@ -113,6 +113,8 @@ namespace Uintah {
     vector<const VarLabel* > particle_state, particle_state_preReloc;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Point> > geompoints;
     geompoints d_object_points;
+    typedef map<pair<const Patch*,GeometryObject*>,vector<double> > geomvols;
+    geomvols d_object_vols;
   };
 
 
