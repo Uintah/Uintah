@@ -100,6 +100,22 @@ public:
 template<class DataT, class MetaCT>
 class HVolumeVis: public VolumeVis<DataT> {
 protected:
+  //  template<class MetaCT>
+  class HVIsectContext {
+  public:
+    // These parameters could be modified and hold accumulating state
+    Color total;
+    float alpha;
+    // These parameters should not change
+    int dix_dx, diy_dy, diz_dz;
+    MetaCT transfunct;
+    double t_inc;
+    double t_min;
+    double t_max;
+    Ray ray;
+    Context *cx;
+  };
+  
 public:
   Vector datadiag;
   Vector sdiag;
@@ -117,17 +133,13 @@ public:
 
   void parallel_calc_mcell(int);
   void calc_mcell(int depth, int ix, int iy, int iz, MetaCT& mcell);
-  void isect(int depth, MetaCT &transfunct, double t,
+  void isect(int depth, double t_sample,
 	     double dtdx, double dtdy, double dtdz,
 	     double next_x, double next_y, double next_z,
 	     int ix, int iy, int iz,
-	     int dix_dx, int diy_dy, int diz_dz,
 	     int startx, int starty, int startz,
-	     Color &total, float &alpha,
-	     const double t_inc, const double t_min, const double t_max,
 	     const Vector& cellcorner, const Vector& celldir,
-	     const Ray& ray, const HitInfo& hit,
-	     Context *cx);
+	     HVIsectContext &isctx);
   HVolumeVis(BrickArray3<DataT>& data, DataT data_min, DataT data_max,
 	     int depth, Point min, Point max, VolumeVisDpy *dpy,
 	     double spec_coeff, double ambient,
@@ -374,20 +386,14 @@ void HVolumeVis<DataT,MetaCT>::parallel_calc_mcell(int)
 //#define BIGLER_DEBUG
 
 template<class DataT, class MetaCT>
-void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
-				     double t_sample,
+void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 				     double dtdx, double dtdy, double dtdz,
 				  double next_x, double next_y, double next_z,
 				     int ix, int iy, int iz,
-				     int dix_dx, int diy_dy, int diz_dz,
 				     int startx, int starty, int startz,
-				     Color &total, float &alpha,
-				     const double t_inc, const double t_min,
-				     const double t_max,
 				     const Vector& cellcorner,
 				     const Vector& celldir,
-				     const Ray& ray, const HitInfo& hit,
-				     Context *ctx)
+				     HVIsectContext &isctx)
 {
 #ifdef BIGLER_DEBUG
   cerr << "**************************  start depth: " << depth << "\n";
@@ -457,7 +463,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
 	
 	value = ly1 * (1 - x_weight_high) + ly2 * x_weight_high;
 	
-	float alpha_factor = dpy->lookup_alpha(value) * (1-alpha);
+	float alpha_factor = dpy->lookup_alpha(value) * (1-isctx.alpha);
 	if (alpha_factor > 0.001) {
 	  // the point is contributing, so compute the color
 	  
@@ -487,33 +493,33 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
 	    gradient = Vector(0,0,0);
 	  }
 	  
-	  Light* light=ctx->scene->light(0);
+	  Light* light=isctx.cx->scene->light(0);
 	  Vector light_dir;
-	  Point current_p = ray.origin() + ray.direction()*t_sample - min.vector();
+	  Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - min.vector();
 	  light_dir = light->get_pos()-current_p;
 	      
-	  Color temp = color(gradient, ray.direction(),
+	  Color temp = color(gradient, isctx.ray.direction(),
 			     light_dir.normal(), 
 			     *(dpy->lookup_color(value)),
 			     light->get_color());
-	  total += temp * alpha_factor;
-	  alpha += alpha_factor;
+	  isctx.total += temp * alpha_factor;
+	  isctx.alpha += alpha_factor;
 	}
 	
       }
 
       // This does early ray termination when we don't have anymore
       // color to collect.
-      if (alpha >= RAY_TERMINATION_THRESHOLD)
+      if (isctx.alpha >= RAY_TERMINATION_THRESHOLD)
 	break;
       
       // Update the new position
-      t_sample += t_inc;
+      t_sample += isctx.t_inc;
       bool break_forloop = false;
       while (t_sample > next_x) {
 	// Step in x...
 	next_x+=dtdx;
-	ix+=dix_dx;
+	ix+=isctx.dix_dx;
 	if(ix<0 || ix>=cx) {
 	  break_forloop = true;
 	  break;
@@ -521,7 +527,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
       }
       while (t_sample > next_y) {
 	next_y+=dtdy;
-	iy+=diy_dy;
+	iy+=isctx.diy_dy;
 	if(iy<0 || iy>=cy) {
 	  break_forloop = true;
 	  break;
@@ -529,7 +535,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
       }
       while (t_sample > next_z) {
 	next_z+=dtdz;
-	iz+=diz_dz;
+	iz+=isctx.diz_dz;
 	if(iz<0 || iz>=cz) {
 	  break_forloop = true;
 	  break;
@@ -556,7 +562,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
 #endif
       MetaCT& mcell=mcells(gx,gy,gz);
 /*        mcell.print(); */
-      if(mcell & transfunct){
+      if(mcell & isctx.transfunct){
 	// Do this cell...
 	int new_cx=xsize[depth-1];
 	int new_cy=ysize[depth-1];
@@ -584,7 +590,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
 	double new_dtdx=dtdx*ixsize[depth-1];
 	double new_dtdy=dtdy*iysize[depth-1];
 	double new_dtdz=dtdz*izsize[depth-1];
-	const Vector dir(ray.direction());
+	const Vector dir(isctx.ray.direction());
 	double new_next_x;
 	if(dir.x() > 0){
 	  new_next_x=next_x-dtdx+new_dtdx*(new_ix+1);
@@ -610,15 +616,13 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
 // 	cerr << "iz=" << iz << '\n';
 // 	cerr << "new_cz=" << new_cz << '\n';
 	Vector cellsize(new_cx, new_cy, new_cz);
-	isect(depth-1, transfunct, t_sample,
+	isect(depth-1, t_sample,
 	      new_dtdx, new_dtdy, new_dtdz,
 	      new_next_x, new_next_y, new_next_z,
 	      new_ix, new_iy, new_iz,
-	      dix_dx, diy_dy, diz_dz,
 	      new_startx, new_starty, new_startz,
-	      total, alpha, t_inc, t_min, t_max,
 	      (cellcorner-Vector(ix, iy, iz))*cellsize, celldir*cellsize,
-	      ray, hit, ctx);
+	      isctx);
       }
       // Now we need to step to the next cell and determine the next t_sample
 
@@ -632,15 +636,15 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
 	closest = next_z;
       }
 	
-      double step = ceil((closest - t_sample)/t_inc);
-      t_sample += t_inc * step;
+      double step = ceil((closest - t_sample)/isctx.t_inc);
+      t_sample += isctx.t_inc * step;
 
       // Update ix,iy,iz
       bool break_forloop = false;
       while (t_sample > next_x) {
 	// Step in x...
 	next_x+=dtdx;
-	ix+=dix_dx;
+	ix+=isctx.dix_dx;
 	if(ix<0 || ix>=cx) {
 	  break_forloop = true;
 	  break;
@@ -648,7 +652,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
       }
       while (t_sample > next_y) {
 	next_y+=dtdy;
-	iy+=diy_dy;
+	iy+=isctx.diy_dy;
 	if(iy<0 || iy>=cy) {
 	  break_forloop = true;
 	  break;
@@ -656,7 +660,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
       }
       while (t_sample > next_z) {
 	next_z+=dtdz;
-	iz+=diz_dz;
+	iz+=isctx.diz_dz;
 	if(iz<0 || iz>=cz) {
 	  break_forloop = true;
 	  break;
@@ -669,9 +673,9 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct,
       cerr <<"next_x/y/z = ("<<next_x<<", "<<next_y<<", "<<next_z<<")\n";
       cerr <<"ixyz = ("<<ix<<", "<<iy<<", "<<iz<<")\n";
 #endif
-      if (alpha >= RAY_TERMINATION_THRESHOLD)
+      if (isctx.alpha >= RAY_TERMINATION_THRESHOLD)
 	break;
-      if(t_sample >= t_max)
+      if(t_sample >= isctx.t_max)
 	break;
     }
   }
@@ -799,16 +803,27 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   Vector cellcorner((orig-min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
 
-  MetaCT transfunct;
-  transfunct.course_hash = dpy->course_hash;
-  //  transfunct.print();
+  HVIsectContext isctx;
+  isctx.total = total;
+  isctx.alpha = alpha;
+  isctx.dix_dx = dix_dx;
+  isctx.diy_dy = diy_dy;
+  isctx.diz_dz = diz_dz;
+  isctx.transfunct.course_hash = dpy->course_hash;
+  //  isctx.transfunct.print();
+  isctx.t_inc = dpy->t_inc;
+  isctx.t_min = t_min;
+  isctx.t_max = t_max;
+  isctx.ray = ray;
+  isctx.cx = ctx;
   
-  isect(depth-1, transfunct, t_min, dtdx, dtdy, dtdz, next_x, next_y, next_z,
-	ix, iy, iz, dix_dx, diy_dy, diz_dz,
-	0, 0, 0,
-	total, alpha, dpy->t_inc, t_min, t_max,
+  isect(depth-1, t_min, dtdx, dtdy, dtdz, next_x, next_y, next_z,
+	ix, iy, iz, 0, 0, 0,
 	cellcorner, celldir,
-	ray, hit, ctx);
+	isctx);
+
+  alpha = isctx.alpha;
+  total = isctx.total;
 
   } else {
     double x_weight_high, y_weight_high, z_weight_high;
