@@ -78,36 +78,52 @@ public:
 				   const LevelP& level, SchedulerP&);
 
                             
-  void scheduleInterpolateNCToCC_0(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+  void scheduleInterpolateNCToCC_0(SchedulerP&, 
+                                  const PatchSet*,
+				      const MaterialSet*);
 
-  void scheduleInterpolateVelIncFCToNC(SchedulerP&, const PatchSet*,
-				       const MaterialSet*);
+  void scheduleInterpolateVelIncFCToNC(SchedulerP&, 
+                                      const PatchSet*,
+				          const MaterialSet*);
 
-  void scheduleInterpolateNCToCC(SchedulerP&, const PatchSet*,
-				 const MaterialSet*);
+  void scheduleInterpolateNCToCC(SchedulerP&, 
+                                const PatchSet*,
+				    const MaterialSet*);
 
-  void scheduleCCMomExchange(SchedulerP&, const PatchSet*,
-			     const MaterialSet*);
+  void scheduleCCMomExchange(SchedulerP&, 
+                            const PatchSet*,
+                            const MaterialSubset*,
+                            const MaterialSubset*,
+			       const MaterialSet*);
 
   void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
 				 const MaterialSet*);
 
-  void scheduleComputeEquilibrationPressure(SchedulerP&, const PatchSet*,
-					    const MaterialSet*);
+  void scheduleComputeEquilibrationPressure(SchedulerP&, 
+                                            const PatchSet*,
+                                            const MaterialSubset*,
+                                            const MaterialSubset*,
+                                            const MaterialSubset*,
+					         const MaterialSet*);
 
 
-  void scheduleInterpolatePressCCToPressNC(SchedulerP&, const PatchSet*,
-					   const MaterialSet*);
+  void scheduleInterpolatePressCCToPressNC(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSubset*,
+					       const MaterialSet*);
 
-  void scheduleInterpolatePAndGradP(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
-                                
-  void  scheduleMassExchange(SchedulerP&, const PatchSet*,
-			     const MaterialSet*);
+  void scheduleInterpolatePAndGradP(SchedulerP&, 
+                                    const PatchSet*,
+                                    const MaterialSubset*,
+                                    const MaterialSubset*,
+				        const MaterialSet*);
 
-  void scheduleComputeMassBurnRate(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+  void scheduleComputeMassBurnRate(SchedulerP&, 
+                                  const PatchSet*,
+                                  const MaterialSubset*,
+                                  const MaterialSubset*,
+                                  const MaterialSubset*,
+				      const MaterialSet*);
   
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
