@@ -43,6 +43,10 @@ DESCRIPTION
 	    GlobusError(const std::string& msg, int code);
 
 	    //////////
+	    // Copy ctor
+	    GlobusError(const GlobusError&);
+
+	    //////////
 	    // Destructor
 	    virtual ~GlobusError();
 
@@ -64,6 +68,8 @@ DESCRIPTION
 	    //////////
 	    // The globus error code.
 	    int d_code;
+
+	    GlobusError& operator=(const GlobusError&);
 	};
     }
 }
@@ -72,6 +78,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.6  2000/03/23 20:43:06  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.5  2000/03/23 10:27:35  sparker
 // Added "name" method to match new Exception base class
 //

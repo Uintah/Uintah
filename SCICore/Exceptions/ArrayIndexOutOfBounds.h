@@ -22,6 +22,7 @@ namespace SCICore {
 	class ArrayIndexOutOfBounds : public Exception {
 	public:
 	    ArrayIndexOutOfBounds(long value, long lower, long upper);
+	    ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds&);
 	    virtual ~ArrayIndexOutOfBounds();
 	    virtual const char* message() const;
 	    virtual const char* type() const;
@@ -29,6 +30,8 @@ namespace SCICore {
 	private:
 	    long value, lower, upper;
 	    char* msg;
+
+	    ArrayIndexOutOfBounds& operator=(const ArrayIndexOutOfBounds);
 	};
     }
 }
@@ -37,6 +40,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.2  2000/03/23 20:43:09  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.1  2000/03/23 10:29:49  sparker
 // Part of new exceptions
 //

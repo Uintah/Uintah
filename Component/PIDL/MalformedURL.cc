@@ -23,6 +23,11 @@ MalformedURL::MalformedURL(const std::string& url,
     d_msg = "Malformed URL: "+d_url+" ("+d_error+")"; 
 }
 
+MalformedURL::MalformedURL(const MalformedURL& copy)
+    : d_url(copy.d_url), d_error(copy.d_error)
+{
+}
+
 MalformedURL::~MalformedURL()
 {
 }
@@ -39,6 +44,9 @@ const char* MalformedURL::type() const
 
 //
 // $Log$
+// Revision 1.4  2000/03/23 20:43:07  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.3  2000/03/23 10:27:36  sparker
 // Added "name" method to match new Exception base class
 //

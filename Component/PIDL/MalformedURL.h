@@ -42,6 +42,10 @@ DESCRIPTION
 	    MalformedURL(const std::string& url, const std::string& error);
 
 	    //////////
+	    // Copy ctor
+	    MalformedURL(const MalformedURL&);
+
+	    //////////
 	    // Destructor
 	    virtual ~MalformedURL();
 
@@ -65,6 +69,8 @@ DESCRIPTION
 	    //////////
 	    // The "complete" message
 	    std::string d_msg;
+
+	    MalformedURL& operator=(const MalformedURL&);
 	};
     }
 }
@@ -73,6 +79,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.7  2000/03/23 20:43:07  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.6  2000/03/23 10:27:36  sparker
 // Added "name" method to match new Exception base class
 //

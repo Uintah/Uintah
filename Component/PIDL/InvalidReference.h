@@ -40,6 +40,10 @@ DESCRIPTION
 	    InvalidReference(const std::string&);
 
 	    //////////
+	    // Copy ctor
+	    InvalidReference(const InvalidReference&);
+
+	    //////////
 	    // Destructor
 	    virtual ~InvalidReference();
 
@@ -55,6 +59,8 @@ DESCRIPTION
 	    //////////
 	    // The explanation string.
 	    std::string d_msg;
+
+	    InvalidReference& operator=(const InvalidReference&);
 	};
     }
 }
@@ -63,6 +69,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.6  2000/03/23 20:43:06  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.5  2000/03/23 10:27:36  sparker
 // Added "name" method to match new Exception base class
 //
