@@ -7,6 +7,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+#include <set>
 
 using namespace Uintah;
 
@@ -396,6 +397,51 @@ Task::Dependency::~Dependency()
     delete patches;
   if(matls && matls->removeReference())
     delete matls;
+}
+
+// MaterialSubset specialization
+template <>
+constHandle< MaterialSubset > Task::Dependency::
+getOtherLevelComputeSubset(Task::DomainSpec,
+			   const MaterialSubset*,
+			   const MaterialSubset*)
+{
+  // PatchSubset and MaterialSubset specializations are in Task.cc
+  throw InternalError("The DomainSpec for a Task::Dependency's MaterialSubset cannot be coarseLevel or FineLevel");
+}
+
+// PatcheSubset specialization
+template <>
+constHandle< PatchSubset > Task::Dependency::
+getOtherLevelComputeSubset(Task::DomainSpec dom,
+			   const PatchSubset* subset,
+			   const PatchSubset* domainSubset)
+{
+  constHandle<PatchSubset> myLevelSubset =
+    PatchSubset::intersection(subset, domainSubset);
+
+  int levelOffset = 0;
+  switch(dom){
+  case Task::CoarseLevel:
+    levelOffset = -1;
+    break;
+  case Task::FineLevel:
+    levelOffset = 1;
+    break;
+  default:
+    throw InternalError("Unhandled DomainSpec in Task::Dependency::getOtherLevelComputeSubset");
+  }
+
+  std::set<const Patch*, Patch::Compare> patches;
+  for (int p = 0; p < myLevelSubset->size(); p++) {
+    const Patch* patch = myLevelSubset->get(p);
+    Level::selectType somePatches;
+    patch->getOtherLevelPatches(levelOffset, somePatches);
+    patches.insert(somePatches.begin(), somePatches.end());
+  }
+
+  return constHandle<PatchSubset>(scinew
+				  PatchSubset(patches.begin(), patches.end()));
 }
 
 void
