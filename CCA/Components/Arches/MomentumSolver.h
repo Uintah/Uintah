@@ -41,9 +41,10 @@ WARNING
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 namespace Uintah {
+  class ArchesLabel;
+  class MPMArchesLabel;
+  class ProcessorGroup;
 class TurbulenceModel;
 class PhysicalConstants;
 class Discretization;

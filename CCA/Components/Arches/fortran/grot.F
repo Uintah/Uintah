@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/grot_fort.h>
+#else
       SUBROUTINE grot(NVAR,XX,INCX,YY,INCY,CC,SS)
 
       implicit none

@@ -3,46 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE outarea(domainLow, domainHigh,
-     &     indexLow, indexHigh, PCELL,
-     &     domLoDen, domHiDen, 
-     $     DEN, 
-     $     domainLowG, domainHighG,
-     &     SEW, SNS, STB, 
-     &     AREAOUT, PFIELD,
-     $     xminus, xplus, yminus, yplus, zminus, zplus) 
-C---------------------------------------------------------------------
-C     THIS SUBROUTINE WILL CALCULATE OUTLET
-C     AREAS FOR OUTLET
-C---------------------------------------------------------------------
-
-      implicit none
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/outarea_fort.h>
 #include "param4.h"
-
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), 
-     &     domainLow(3):domainHigh(3))
-      integer domLoDen(3), domHiDen(3)
-      double precision DEN(domLoDen(1):domHiDen(1), 
-     $     domLoDen(2):domHiDen(2), 
-     &     domLoDen(3):domHiDen(3))
-      integer domainLowG(3)
-      integer domainHighG(3)
-      double precision SEW(domainLowG(1):domainHighG(1)), 
-     &     SNS(domainLowG(2):domainHighG(2)), 
-     &     STB(domainLowG(3):domainHighG(3))
-      double precision AREAOUT
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
 
 c*********************************************************************
 c     Local Variables :

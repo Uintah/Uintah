@@ -1,57 +1,5 @@
-      subroutine mm_modify_prescoef(
-     $     dim_lo, dim_hi,
-     $     dim_lo_coef, dim_hi_coef,
-     $     ae, aw, an, as, at, ab,
-     $     epsg,
-     $     valid_lo, valid_hi)
-
-      implicit none
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
 #include "param4.h"
-
-      integer dim_lo(3)
-      integer dim_hi(3)
-
-      integer dim_lo_coef(3)
-      integer dim_hi_coef(3)
-
-      double precision ae(
-     $     dim_lo_coef(1):dim_hi_coef(1),
-     $     dim_lo_coef(2):dim_hi_coef(2),
-     $     dim_lo_coef(3):dim_hi_coef(3))
-
-      double precision aw(
-     $     dim_lo_coef(1):dim_hi_coef(1),
-     $     dim_lo_coef(2):dim_hi_coef(2),
-     $     dim_lo_coef(3):dim_hi_coef(3))
-
-      double precision an(
-     $     dim_lo_coef(1):dim_hi_coef(1),
-     $     dim_lo_coef(2):dim_hi_coef(2),
-     $     dim_lo_coef(3):dim_hi_coef(3))
-
-      double precision as(
-     $     dim_lo_coef(1):dim_hi_coef(1),
-     $     dim_lo_coef(2):dim_hi_coef(2),
-     $     dim_lo_coef(3):dim_hi_coef(3))
-
-      double precision at(
-     $     dim_lo_coef(1):dim_hi_coef(1),
-     $     dim_lo_coef(2):dim_hi_coef(2),
-     $     dim_lo_coef(3):dim_hi_coef(3))
-      
-      double precision ab(
-     $     dim_lo_coef(1):dim_hi_coef(1),
-     $     dim_lo_coef(2):dim_hi_coef(2),
-     $     dim_lo_coef(3):dim_hi_coef(3))
-
-      double precision epsg(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      integer valid_lo(3)
-      integer valid_hi(3)
 
 *     local variables
 

@@ -3,47 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE scalarvarmodel(domLoSc, domHiSc, Scalar,
-     &     domLoScVar, domHiScVar,
-     &     idxLo, idxHi, ScalarVar,
-     $     domLo, domHi,
-     &     dxpw, dyps, dzpb,
-     &     SEW, SNS, STB,
-     &     CFVar, FAC_MESH, FILTERL,
-     &     ierr)
-C--------------------------------------------------------------------
-C     THIS SUBROUTINE CALCULATES THE TURBULENT DIFFUSIVITY 
-C          ACCORDING TO THE PRANDTL MIXING LENGTH MODEL.  THE 
-C          MIXING LENGTH IS DETERMINED AS THE MINIMUM DISTANCE
-C          AMONG THE REACTOR HEIGHT, LENGTH, AND DEPTH.
-C--------------------------------------------------------------------
-
-      implicit none
-
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoSc(3)
-      integer domHiSc(3)
-      integer domLoScVar(3)
-      integer domHiScVar(3)
-      integer domLo(3)
-      integer domHi(3)
-      integer idxLo(3)
-      integer idxHi(3)
-      double precision Scalar(domLoSc(1):domHiSc(1), 
-     &     domLoSc(2):domHiSc(2),domLoSc(3):domHiSc(3))
-      double precision ScalarVar(domLoScVar(1):domHiScVar(1), 
-     &     domLoScVar(2):domHiScVar(2),domLoScVar(3):domHiScVar(3))
-      double precision dxpw(domLo(1):domHi(1))
-      double precision dyps(domLo(2):domHi(2))
-      double precision dzpb(domLo(3):domHi(3))
-      double precision SEW(domLo(1):domHi(1))
-      double precision SNS(domLo(2):domHi(2))
-      double precision STB(domLo(3):domHi(3))
-      double precision CFVar, FAC_MESH, FILTERL
-      integer ierr
+#include <Packages/Uintah/CCA/Components/Arches/fortran/scalarvarmodel_fort.h>
 
 c*********************************************************************
 c     Locals

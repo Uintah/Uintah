@@ -3,46 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE profv(domLoU, domHiU, idxLoU, idxHiU, UU,
-     &     domLoV, domHiV, idxLoV, idxHiV, VV,
-     &     domLoW, domHiW, idxLoW, idxHiW, WW,
-     &     domLo, domHi, idxLo, idxHi, PCELL,
-     &     AREAPR, PFIELD, FLOWPR, DENPR,
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     &     ierr)
-C---------------------------------------------------------------------
-C     THREE-DIMENSIONAL VERSION
-C     THIS SUBROUTINE WILL ASSIGN FLAT VELOCITY PROFILES
-C     AT THE APPROPRIATE BOUNDARY CONDITIONS
-C     SK, 3/25/95: also sets flat profiles for density here
-C     (instead of in profp.f - because if lrdpr density profiles are
-C     also read in.)
-C---------------------------------------------------------------------
-
-      implicit none
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
 #include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      double precision FLOWPR, DENPR
-      double precision AREAPR
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :
@@ -82,7 +44,7 @@ c      AVGVELP = 0.1
 C--------------------------------------------------------------------
 C     EAST AND/OR WEST INLETS
 C--------------------------------------------------------------------
-      if ((xminus).or.(xplus)) then
+      if (xminus.or.xplus) then
          DO 200 K = kst,kend
             DO 190 J = jst,jend
                if (xminus) then

@@ -1,41 +1,41 @@
 //----- Arches.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
-#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Grid/Array3Index.h>
+#include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Util/NotFinished.h>
 
 #include <iostream>
 using std::cerr;
@@ -43,6 +43,9 @@ using std::endl;
 
 using namespace Uintah;
 using namespace SCIRun;
+
+#include <Packages/Uintah/CCA/Components/Arches/fortran/initScal_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/init_fort.h>
 
 // ****************************************************************************
 // Actual constructor for Arches
@@ -70,7 +73,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
-
   d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);
   ArchesMaterial* mat= scinew ArchesMaterial();
@@ -81,9 +83,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->require("reacting_flow", d_reactingFlow);
   db->require("solve_enthalpy", d_calcEnthalpy);
 
+  // physical constant
   // physical constants
   d_physicalConsts = scinew PhysicalConstants();
 
+  // ** BB 5/19/2000 ** For now read the Physical constants from the
   // ** BB 5/19/2000 ** For now read the Physical constants from the 
   // CFD-ARCHES block
   // for gravity, read it from shared state 
@@ -95,6 +99,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
 
+  // read turbulence mode
   // read turbulence model
   string turbModel;
   db->require("turbulence_model", turbModel);
@@ -140,7 +145,6 @@ void
 Arches::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched)
 {
-  
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
@@ -221,14 +225,12 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   int zeroGhostCells = 0;
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",
 			   this, &Arches::computeStableTimeStep);
-#if 1
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, zeroGhostCells);
-#endif
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -248,7 +250,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     int zeroGhostCells = 0;
-#if 1
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
@@ -275,28 +276,26 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
-    int numGC = 1;
-    IntVector geomLow = patch->getGhostCellLowIndex(numGC);
     //    voidFraction.print(cerr);
   // set density for the whole domain
     double delta_t = d_deltaT; // max value allowed
-    double temp_t = 0;
+    //    double temp_t = 0;
     double small_num = 1e-30;
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
-	  double tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX-geomLow.x()])+
-	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY-geomLow.y()])+
-			  Abs(wVelocity[currCell])/(cellinfo->stb[colZ-geomLow.z()])+
+	  double tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+			  Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
                           small_num;
 	  delta_t=Min(1.0/tmp_time, delta_t);
 #if 0								  
-	  delta_t=Min(Abs(cellinfo->sew[colX-geomLow.x()]/
+	  delta_t=Min(Abs(cellinfo->sew[colX]/
 			  (uVelocity[currCell]+small_num)),delta_t);
-	  delta_t=Min(Abs(cellinfo->sns[colY-geomLow.y()]/
+	  delta_t=Min(Abs(cellinfo->sns[colY]/
 			  (vVelocity[currCell]+small_num)), delta_t);
-	  delta_t=Min(Abs(cellinfo->stb[colZ-geomLow.z()]/
+	  delta_t=Min(Abs(cellinfo->stb[colZ]/
 			  (wVelocity[currCell]+small_num)), delta_t);
 #endif
 	}
@@ -304,9 +303,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     }
     cerr << " min time step: " << delta_t << endl;
     new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
-#else
-    new_dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
-#endif
   }
 }
 
@@ -397,30 +393,18 @@ Arches::paramInit(const ProcessorGroup* ,
     double uVal = 0.0, vVal = 0.0, wVal = 0.0;
     double pVal = 0.0, denVal = 0.0;
     double visVal = d_physicalConsts->getMolecularViscosity();
-    FORT_INIT(domLoU.get_pointer(), domHiU.get_pointer(), 
-	      idxLoU.get_pointer(), idxHiU.get_pointer(),
-	      uVelocity.getPointer(), &uVal, 
-	      domLoV.get_pointer(), domHiV.get_pointer(), 
-	      idxLoV.get_pointer(), idxHiV.get_pointer(),
-	      vVelocity.getPointer(), &vVal, 
-	      domLoW.get_pointer(), domHiW.get_pointer(), 
-	      idxLoW.get_pointer(), idxHiW.get_pointer(),
-	      wVelocity.getPointer(), &wVal,
-	      domLo.get_pointer(), domHi.get_pointer(), 
-	      idxLo.get_pointer(), idxHi.get_pointer(),
-	      pressure.getPointer(), &pVal, 
-	      density.getPointer(), &denVal, 
-	      viscosity.getPointer(), &visVal);
+    fort_init(idxLoU, idxHiU, uVelocity, uVal, idxLoV, idxHiV,
+	      vVelocity, vVal, idxLoW, idxHiW, wVelocity, wVal,
+	      idxLo, idxHi, pressure, pVal, density, denVal,
+	      viscosity, visVal);
     for (int ii = 0; ii < d_nofScalars; ii++) {
       double scalVal = 0.0;
-      FORT_INIT_SCALAR(domLo.get_pointer(), domHi.get_pointer(),
-		       idxLo.get_pointer(), idxHi.get_pointer(), 
-		       scalar[ii].getPointer(), &scalVal);
+      fort_initscal(idxLo, idxHi, scalar[ii], scalVal);
     }
     new_dw->put(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->put(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
     new_dw->put(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
-    
+
     new_dw->put(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
     new_dw->put(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->put(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);

@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/intgrt_fort.h>
+#else
       SUBROUTINE intgrt(indexLow, indexHigh, PCELL,
      &     UU,VV,WW,
      &     DIR,PHI,H2O,AVGING,DRYING,XXX,NEND,

@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/gcopy_fort.h>
+#else
       SUBROUTINE gcopy(NVAR,XX,INCX,YY,INCY)
 
       implicit none

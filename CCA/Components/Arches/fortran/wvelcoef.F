@@ -3,123 +3,11 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE wvelcoef(domLoW, domHiW, domLoWng, domHiWng,
-     $     idxLoW, idxHiW, WW,
-     &     CESAV, CWSAV, CNSAV, CSSAV, CTSAV, CBSAV,
-     &     AP, AE, AW, AN, AS, AT, AB,
-c     &     DDW,
-     &     domLoU, domHiU, UU,
-     &     domLoV, domHiV, VV,
-     &     domLoeg, domHieg, domLo, domHi, DEN, VIS, 
-     &     DELTAT,
-     &     CEE, CWE, CWW, CNN, CSN, CSS, CTTW, CBTW, CBBW, 
-     &     SEW, SNS, STBW, STB,
-     &     DXEP, DXPW, DYNP, DYPS, DZTPW, DZPBW, DZPB,
-     &     FAC1W, FAC2W, FAC3W, FAC4W, 
-     &     KTSDW, KBSDW,
-     &     EFAC, WFAC, ENFAC, SFAC,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity
 C---------------------------------------------------------------------
-
-      implicit none
-
-c #include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
-      integer domLoWng(3), domHiWng(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      double precision AP(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision AE(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision AW(domLoWng(1):domHiWng(1), 
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision AN(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision AS(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision AT(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision AB(domLoWng(1):domHiWng(1), 
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision CESAV(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision CWSAV(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision CNSAV(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision CSSAV(domLoWng(1):domHiWng(1), 
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision CTSAV(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-      double precision CBSAV(domLoWng(1):domHiWng(1), 
-     $     domLoWng(2):domHiWng(2), 
-     &     domLoWng(3):domHiWng(3))
-c      double precision DDW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-c     &     domLoW(3):domHiW(3))
-      integer domLoU(3), domHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      integer domLoeg(3), domHieg(3)
-      integer domLo(3), domHi(3)
-      double precision DEN(domLoeg(1):domHieg(1), domLoeg(2):domHieg(2), 
-     &     domLoeg(3):domHieg(3))
-      double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      double precision DELTAT
-      double precision CEE(domLo(1):domHi(1))
-      double precision CWE(domLo(1):domHi(1))
-      double precision CWW(domLo(1):domHi(1))
-      double precision CNN(domLo(2):domHi(2))
-      double precision CSN(domLo(2):domHi(2))
-      double precision CSS(domLo(2):domHi(2))
-      double precision CTTW(domLo(3):domHi(3))
-      double precision CBTW(domLo(3):domHi(3))
-      double precision CBBW(domLo(3):domHi(3))
-      double precision SEW(domLo(1):domHi(1))
-      double precision SNS(domLo(2):domHi(2))
-      double precision STBW(domLo(3):domHi(3))
-      double precision STB(domLo(3):domHi(3))
-      double precision DXEP(domLo(1):domHi(1))
-      double precision DXPW(domLo(1):domHi(1))
-      double precision DYNP(domLo(2):domHi(2))
-      double precision DYPS(domLo(2):domHi(2))
-      double precision DZTPW(domLo(3):domHi(3))
-      double precision DZPBW(domLo(3):domHi(3))
-      double precision DZPB(domLo(3):domHi(3))
-      double precision FAC1W(domLo(3):domHi(3))
-      double precision FAC2W(domLo(3):domHi(3))
-      double precision FAC3W(domLo(3):domHi(3))
-      double precision FAC4W(domLo(3):domHi(3))
-      integer KTSDW(domLo(3):domHi(3))
-      integer KBSDW(domLo(3):domHi(3))
-      double precision EFAC(domLo(1):domHi(1))
-      double precision WFAC(domLo(1):domHi(1))
-      double precision ENFAC(domLo(2):domHi(2))
-      double precision SFAC(domLo(2):domHi(2))
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :
@@ -127,7 +15,7 @@ c*********************************************************************
       integer ISTW, JSTW, KSTW, IENDW, JENDW, KENDW
       integer i, j, k
 
-      logical L2UP, LSMPT, LCEND
+      logical*1 L2UP, LSMPT, LCEND
 
       double precision AREAN, AREAS, AREAEW, AREATB, VOL
       double precision GE, GEB, GW, GWB, GN, GNB, GS, GSB, GT, GPB, GB

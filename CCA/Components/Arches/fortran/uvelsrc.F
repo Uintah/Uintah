@@ -3,123 +3,12 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE uvelsrc(
-     $     domLoU, domHiU, 
-     $     domLoUng, domHiUng,
-     $     idxLoU, idxHiU, UU, old_UU,
-     &     SU, SP,
-     &     domLoV, domHiV, VV,
-     &     domLoW, domHiW, WW,
-     &     domLoeg, domHieg, domLo, domHi, den, vis,
-     $     domLong, domHing, old_den,
-     $     domLodenref, domHidenref, den_ref,
-     &     grav, deltat, 
-     &     CEEU, CWEU, CWWU, 
-     &     CNN, CSN, CSS,
-     &     CTT, CBT, CBB, 
-     &     SEWU, SEW, SNS, STB,
-     &     DXPW, 
-     &     FAC1U, FAC2U, FAC3U, FAC4U, 
-     &     IESDU, IWSDU,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
+#include "param4.h"
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity
 C---------------------------------------------------------------------
-
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
-      integer domLoUng(3), domHiUng(3)
-
-      double precision UU(
-     $     domLoU(1):domHiU(1), 
-     $     domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-
-      double precision old_UU(
-     $     domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-
-      double precision SU(
-     $     domLoUng(1):domHiUng(1), 
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-
-      double precision SP(
-     $     domLoUng(1):domHiUng(1), 
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-
-      integer domLoV(3), domHiV(3)
-
-      double precision VV(
-     $     domLoV(1):domHiV(1), 
-     $     domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-
-      integer domLoW(3), domHiW(3)
-
-      double precision WW(
-     $     domLoW(1):domHiW(1), 
-     $     domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-
-      integer domLoeg(3), domHieg(3)
-      integer domLo(3), domHi(3)
-
-      double precision DEN(
-     $     domLoeg(1):domHieg(1), 
-     $     domLoeg(2):domHieg(2), 
-     &     domLoeg(3):domHieg(3))
-
-      double precision VIS(
-     $     domLo(1):domHi(1), 
-     $     domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-
-      integer domLong(3), domHing(3)
-
-      double precision old_DEN(
-     $     domLong(1):domHing(1), 
-     $     domLong(2):domHing(2), 
-     &     domLong(3):domHing(3))
-
-      integer domLodenref(3), domHidenref(3)
-
-      double precision DEN_REF(
-     $     domLodenref(1):domHidenref(1), 
-     $     domLodenref(2):domHidenref(2), 
-     &     domLodenref(3):domHidenref(3))
-
-      double precision DELTAT, GRAV
-      double precision CEEU(domLo(1):domHi(1))
-      double precision CWEU(domLo(1):domHi(1))
-      double precision CWWU(domLo(1):domHi(1))
-      double precision CNN(domLo(2):domHi(2))
-      double precision CSN(domLo(2):domHi(2))
-      double precision CSS(domLo(2):domHi(2))
-      double precision CTT(domLo(3):domHi(3))
-      double precision CBT(domLo(3):domHi(3))
-      double precision CBB(domLo(3):domHi(3))
-      double precision SEWU(domLo(1):domHi(1))
-      double precision SEW(domLo(1):domHi(1))
-      double precision SNS(domLo(2):domHi(2))
-      double precision STB(domLo(3):domHi(3))
-      double precision DXPW(domLo(1):domHi(1))
-      double precision FAC1U(domLo(1):domHi(1))
-      double precision FAC2U(domLo(1):domHi(1))
-      double precision FAC3U(domLo(1):domHi(1))
-      double precision FAC4U(domLo(1):domHi(1))
-      integer IESDU(domLo(1):domHi(1))
-      integer IWSDU(domLo(1):domHi(1))
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :
@@ -146,10 +35,12 @@ c*********************************************************************
 c-----------------------------------------------------------------------
 c     assemble source coefficients
 c-----------------------------------------------------------------------
-      call ARRASS(SU,ZERO,
-     $     domLoUng, domHiUng, idxLoU, idxHiU)
-      call ARRASS(SP,ZERO,
-     $     domLoUng, domHiUng, idxLoU, idxHiU)
+      call ARRASS(PASS3A(SU)
+     & PASS3B(SU),
+     & ZERO,idxLoU, idxHiU)
+      call ARRASS(PASS3A(SP)
+     & PASS3B(SP),
+     & ZERO,idxLoU, idxHiU)
 
 c     viscous sources
 

@@ -24,28 +24,11 @@ c    None
 c   
 c*********************************************************************
 
-      SUBROUTINE celltypeinit(domainLow, domainHigh, 
-     &     indexLow, indexHigh, 
-     &     PCELL, CELLVAL)
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/celltypeInit_fort.h>
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     INITIALIZATION ROUTINE     
 C-----------------------------------------------------------------------
-
-      implicit none
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(domainLow(1):domainHigh(1),
-     &     domainLow(2):domainHigh(2),
-     &     domainLow(3):domainHigh(3))
-      integer CELLVAL
 
 c*********************************************************************
 c     Locals :

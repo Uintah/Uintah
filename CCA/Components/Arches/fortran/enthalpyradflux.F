@@ -1,46 +1,7 @@
 c
 c
-      subroutine enthalpyradflux(domLo, domHi, idxLo, idxHi,
-     $     qfluxe, qfluxw, qfluxn, qfluxs, qfluxt, qfluxb,
-     $     domLoT, domHiT, TG,
-     $     domLoA, domHiA, Absorp,
-     $     domLoG, domHiG,
-     &     dxep, dxpw, dynp, dyps, dztp, dzpb)
-
-      implicit none
-      INCLUDE 'param4.h'
-
-*     passed variables
-
-      integer domLo(3), domHi(3)
-      integer idxLo(3), idxHi(3)
-      double precision qfluxe(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxw(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxn(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxs(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxt(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxb(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      integer domLoT(3), domHiT(3)
-      double precision TG(domLoT(1):domHiT(1), 
-     $     domLoT(2):domHiT(2),
-     $     domLoT(3):domHiT(3))
-      integer domLoA(3), domHiA(3)
-      double precision Absorp(domLoA(1):domHiA(1), 
-     $     domLoA(2):domHiA(2),
-     $     domLoA(3):domHiA(3))
-      integer domLoG(3), domHiG(3)
-      double precision dxep(domLoG(1):domHiG(1))
-      double precision dxpw(domLoG(1):domHiG(1))
-      double precision dynp(domLoG(2):domHiG(2))
-      double precision dyps(domLoG(2):domHiG(2))
-      double precision dztp(domLoG(3):domHiG(3))
-      double precision dzpb(domLoG(3):domHiG(3))
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
+#include "param4.h"
       
 *     local variables
 
@@ -58,12 +19,24 @@ c
       KEND = idxHi(3)
 c-----------------------------------------------------------------------
 
-      CALL ARRASS(qfluxe,ZERO,domLo, domHi, idxLo, idxHi)
-      CALL ARRASS(qfluxw,ZERO,domLo, domHi, idxLo, idxHi)
-      CALL ARRASS(qfluxn,ZERO,domLo, domHi, idxLo, idxHi)
-      CALL ARRASS(qfluxs,ZERO,domLo, domHi, idxLo, idxHi)
-      CALL ARRASS(qfluxt,ZERO,domLo, domHi, idxLo, idxHi)
-      CALL ARRASS(qfluxb,ZERO,domLo, domHi, idxLo, idxHi)
+      CALL ARRASS(PASS3A(qfluxe)
+     & PASS3B(qfluxe),
+     & ZERO, idxLo, idxHi)
+      CALL ARRASS(PASS3A(qfluxw)
+     & PASS3B(qfluxw),
+     & ZERO, idxLo, idxHi)
+      CALL ARRASS(PASS3A(qfluxn)
+     & PASS3B(qfluxn),
+     & ZERO, idxLo, idxHi)
+      CALL ARRASS(PASS3A(qfluxs)
+     & PASS3B(qfluxs),
+     & ZERO, idxLo, idxHi)
+      CALL ARRASS(PASS3A(qfluxt)
+     & PASS3B(qfluxt),
+     & ZERO, idxLo, idxHi)
+      CALL ARRASS(PASS3A(qfluxb)
+     & PASS3B(qfluxb),
+     & ZERO, idxLo, idxHi)
 
       do 120 k = KST, KEND
          do 110 j = JST, JEND

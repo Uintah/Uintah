@@ -3,22 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE outletbc(domLoU, domHiU, UU,
-     &     domLoV, domHiV, VV,
-     &     domLoW, domHiW, WW,
-     $     domLoS, domHiS, FF,
-     $     domLoU_old, domHiU_old, old_UU,
-     &     domLoV_old, domHiV_old, old_VV,
-     &     domLoW_old, domHiW_old, old_WW,
-     $     domLoS_old, domHiS_old, old_FF,    
-     &     domLoCT, domHiCT,
-     $     idxLo, idxHi, PCELL,
-     &     PFIELD, uvwout,
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     $     delta_t,
-     $     domLoGeom, domHiGeom,
-     $     dxpwu, dxpw,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/outletbc_fort.h>
 C-----------------------------------------------------------------------
 C
 C     Routine to calculate outlet velocity at specified pressure b.c.'s
@@ -57,53 +42,6 @@ C               .FALSE. gets the direction from the first interior
 C               node.
 C
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3), domHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      integer domLoS(3), domHiS(3)
-      double precision FF(domLoS(1):domHiS(1), domLoS(2):domHiS(2), 
-     &     domLoS(3):domHiS(3))
-      integer domLoU_old(3), domHiU_old(3)
-      double precision old_UU(domLoU_old(1):domHiU_old(1), 
-     $     domLoU_old(2):domHiU_old(2), 
-     &     domLoU_old(3):domHiU_old(3))
-      integer domLoV_old(3), domHiV_old(3)
-      double precision old_VV(domLoV_old(1):domHiV_old(1), 
-     $     domLoV_old(2):domHiV_old(2), 
-     &     domLoV_old(3):domHiV_old(3))
-      integer domLoW_old(3), domHiW_old(3)
-      double precision old_WW(domLoW_old(1):domHiW_old(1),
-     $     domLoW_old(2):domHiW_old(2), 
-     &     domLoW_old(3):domHiW_old(3))
-      integer domLoS_old(3), domHiS_old(3)
-      double precision old_FF(domLoS_old(1):domHiS_old(1),
-     $     domLoS_old(2):domHiS_old(2), 
-     &     domLoS_old(3):domHiS_old(3))
-      integer domLoCT(3), domHiCT(3)
-      integer idxLo(3), idxHi(3)
-      integer PCELL(domLoCT(1):domHiCT(1), domLoCT(2):domHiCT(2), 
-     &     domLoCT(3):domHiCT(3))
-      double precision uvwout
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      double precision delta_t
-      integer domLoGeom(3), domHiGeom(3)
-      double precision dxpwu(domLoGeom(1):domHiGeom(1))
-      double precision dxpw(domLoGeom(1):domHiGeom(1))
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :

@@ -23,46 +23,11 @@ c WARNING
 c    Scalars initialized in initscal
 c   
 c*********************************************************************
-
-      SUBROUTINE init(domLoU, domHiU, idxLoU, idxHiU, UU, UVAL,
-     &     domLoV, domHiV, idxLoV, idxHiV, VV, VVAL,
-     &     domLoW, domHiW, idxLoW, idxHiW, WW, WVAL,
-     &     domLo, domHi, idxLo, idxHi, PP, PVAL,
-     &     DEN, DENVAL,
-     &     VIS, VISVAL)
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/init_fort.h>
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     INITIALIZATION ROUTINE     
 C-----------------------------------------------------------------------
-
-      implicit none
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
-     &     domLoU(3):domHiU(3))
-      double precision UVAL
-      integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
-     &     domLoV(3):domHiV(3))
-      double precision VVAL
-      integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
-     &     domLoW(3):domHiW(3))
-      double precision WVAL
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      double precision PP(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision PVAL
-      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision DENVAL
-      double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision VISVAL
 
 c*********************************************************************
 c     Locals :

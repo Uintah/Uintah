@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pprops_fort.h>
+#else
        SUBROUTINE pprops(indexLow, indexHigh, PCELL,
      &     FP, PT,
      &     DENP, VISP,

@@ -33,13 +33,11 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/Vector.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
-
+  using namespace SCIRun;
 class PhysicalConstants {
 
 public:

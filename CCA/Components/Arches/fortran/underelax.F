@@ -3,11 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE underelax(domLo, domHi, domLong, domHing, 
-     $     idxLo, idxHi,
-     &     PHI,
-     &     AP,SU,
-     &     urelax)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/underelax_fort.h>
 C-----------------------------------------------------------------------
 C     EXPLANATION OF SYMBOLS USED:
 C
@@ -20,26 +16,6 @@ C	PHI	Variable for which equation is being solved
 c       urelax  underrelaxation parameter for the PHI-equation
 C	SU	Source term for the PHI equation
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3)
-      integer domHi(3)
-      integer domLong(3)
-      integer domHing(3)
-      integer idxLo(3)
-      integer idxHi(3)
-      double precision PHI(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AP(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      double precision SU(domLong(1):domHing(1), 
-     &     domLong(2):domHing(2), domLong(3):domHing(3))
-      double precision urelax
 
 c*********************************************************************
 c     Local Variables :

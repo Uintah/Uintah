@@ -3,7 +3,10 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE solve(indexLow, indexHigh,
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/solve_fort.h>
+#else
+c      SUBROUTINE solve(indexLow, indexHigh,
      &     FF,FCOR,
      &     AE,AW,AN,AS,AT,AB,AP,SU,
      $     RESF,

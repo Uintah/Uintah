@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/assign_fort.h>
+#else
       SUBROUTINE assign(X,IST,JST,KST,IEND,JEND,KEND,LTEST,PCELL)
 C-----------------------------------------------------------------------
 C     clips the values of X if they are negative

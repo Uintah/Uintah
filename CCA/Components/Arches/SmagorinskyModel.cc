@@ -1,12 +1,12 @@
 //----- SmagorinksyModel.cc --------------------------------------------------
 
+#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/Core/Grid/Stencil.h>
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -30,6 +30,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/smagmodel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/scalarvarmodel_fort.h>
 
 //****************************************************************************
 // Default constructor for SmagorinkyModel
@@ -155,8 +156,8 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 void 
 SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse* old_dw,
+				      const MaterialSubset*,
+				      DataWarehouse*,
 				      DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -199,26 +200,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     //}
     CellInformation* cellinfo = cellinfop.get().get_rep();
     
-    //  DataWarehouseP top_dw = new_dw->getTop();
     // Get the patch details
-    IntVector domLoVelx = uVelocity.getFortLowIndex();
-    IntVector domHiVelx = uVelocity.getFortHighIndex();
-    IntVector domLoVely = vVelocity.getFortLowIndex();
-    IntVector domHiVely = vVelocity.getFortHighIndex();
-    IntVector domLoVelz = wVelocity.getFortLowIndex();
-    IntVector domHiVelz = wVelocity.getFortHighIndex();
-    
-    IntVector domLoDen = density.getFortLowIndex();
-    IntVector domHiDen = density.getFortHighIndex();
-    
-    IntVector domLoVis = viscosity.getFortLowIndex();
-    IntVector domHiVis = viscosity.getFortHighIndex();
     IntVector lowIndex = patch->getCellFORTLowIndex();
     IntVector highIndex = patch->getCellFORTHighIndex();
-    IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
-    // compatible with fortran index
-    IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
-                                                      IntVector(1,1,1);
 
     // get physical constants
     double mol_viscos; // molecular viscosity
@@ -270,10 +254,10 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 // Actual recompute 
 //****************************************************************************
 void 
-SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
+SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
+					const MaterialSubset*,
+					DataWarehouse*,
 					DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -326,26 +310,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     mol_viscos = d_physicalConsts->getMolecularViscosity();
     
     // Get the patch and variable details
-    IntVector domLoU = uVelocity.getFortLowIndex();
-    IntVector domHiU = uVelocity.getFortHighIndex();
-    IntVector idxLoU = patch->getSFCXFORTLowIndex();
-    IntVector idxHiU = patch->getSFCXFORTHighIndex();
-    IntVector domLoV = vVelocity.getFortLowIndex();
-    IntVector domHiV = vVelocity.getFortHighIndex();
-    IntVector idxLoV = patch->getSFCYFORTLowIndex();
-    IntVector idxHiV = patch->getSFCYFORTHighIndex();
-    IntVector domLoW = wVelocity.getFortLowIndex();
-    IntVector domHiW = wVelocity.getFortHighIndex();
-    IntVector idxLoW = patch->getSFCZFORTLowIndex();
-    IntVector idxHiW = patch->getSFCZFORTHighIndex();
-    IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
     // compatible with fortran index
-    IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
-                                                      IntVector(1,1,1);
-    IntVector domLoDen = density.getFortLowIndex();
-    IntVector domHiDen = density.getFortHighIndex();
-    IntVector domLoVis = viscosity.getFortLowIndex();
-    IntVector domHiVis = viscosity.getFortHighIndex();
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
 
@@ -438,10 +403,10 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
 
 
 void 
-SmagorinskyModel::computeScalarVariance(const ProcessorGroup* pc,
+SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
+					const MaterialSubset*,
+					DataWarehouse*,
 					DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -470,29 +435,14 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup* pc,
     //}
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
-    IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
     // compatible with fortran index
-    IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
-                                                      IntVector(1,1,1);
-    IntVector domLoScalar = scalar.getFortLowIndex();
-    IntVector domHiScalar = scalar.getFortHighIndex();
-    IntVector domLoScalarVar = scalarVar.getFortLowIndex();
-    IntVector domHiScalarVar = scalarVar.getFortHighIndex();
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     
-    FORT_SCALARVARMODEL(domLoScalar.get_pointer(), domHiScalar.get_pointer(), 
-			scalar.getPointer(),
-			domLoScalarVar.get_pointer(), domHiScalarVar.get_pointer(),
-			idxLo.get_pointer(), idxHi.get_pointer(), 
-			scalarVar.getPointer(),
-			domLo.get_pointer(), domHi.get_pointer(),
-			cellinfo->dxpw.get_objs(), cellinfo->dyps.get_objs(), 
-			cellinfo->dzpb.get_objs(), 
-			cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
-			cellinfo->stb.get_objs(),
-			&d_CFVar, &d_factorMesh, &d_filterl);
-    
+    fort_scalarvarmodel(scalar, idxLo, idxHi, scalarVar, cellinfo->dxpw,
+			cellinfo->dyps, cellinfo->dzpb, cellinfo->sew,
+			cellinfo->sns, cellinfo->stb, d_CFVar, d_factorMesh,
+			d_filterl);
 
     // Put the calculated viscosityvalue into the new data warehouse
     new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
@@ -502,12 +452,12 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup* pc,
 //****************************************************************************
 // Calculate the Velocity BC at the Wall
 //****************************************************************************
-void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
-					  const Patch* patch,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw,
-					  int index,
-					  int eqnType)
+void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
+					  const Patch*,
+					  DataWarehouseP&,
+					  DataWarehouseP&,
+					  int,
+					  int)
 {
 #ifdef WONT_COMPILE_YET
   int matlIndex = 0;
@@ -758,10 +708,10 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 //****************************************************************************
 // No source term for samgorinsky model
 //****************************************************************************
-void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
-					  const Patch* patch,
-					  const DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw,
-					  int index)
+void SmagorinskyModel::calcVelocitySource(const ProcessorGroup*,
+					  const Patch*,
+					  const DataWarehouseP&,
+					  DataWarehouseP&,
+					  int)
 {
 }

@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/ggemv_fort.h>
+#else
       SUBROUTINE ggemv(TRANS,MM,NN,ALPHA,AA,LDA,XX,INCX,BETA,YY,INCY)
 
       implicit none

@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/caleps_fort.h>
+#else
       SUBROUTINE caleps(indexLow, indexHigh, DENP,PDEN,I,J,K,EPSG)
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 15, 1996

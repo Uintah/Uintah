@@ -1,87 +1,17 @@
 c
 c
-      subroutine bcenthalpy(domLo, domHi,domLong, domHing, 
-     $     idxLo, idxHi, H,
-     &     ae,aw,an,as,at,ab,
-     &     su,sp,
-     &     den,
-     $     domLoU, domHiU, uu,
-     &     domLoV, domHiV, vv,
-     &     domLoW, domHiW, ww,
-c    &     uinlt,vinlt,winlt,
-     $     sew,sns,stb,
-     &     pcell, wall, symtry, pfield, presstype, ffield, sfield,
-     $     outletfield,
-     $     xminus, xplus, yminus, yplus, zminus, zplus)
-c    &     r,rv,ra,
-c    $     idxLo_ext, idxHi_ext, 
-c    $     ltest,lwrap,lsymb,loutsf,
-c    $     pcell)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/bcenthalpy_fort.h>
+#include "param4.h"
 C-----------------------------------------------------------------------
 C     THIS SUBROUTINE CALCULATES THE BOUNDARY CONDITONS FOR F
 C-----------------------------------------------------------------------
-      implicit none
 
-      include 'param4.h'
-*
-*     declare passed variables
-*
-      integer domLo(3), domHi(3), domLong(3), domHing(3),
-     $     idxLo(3), idxHi(3)
-c     integer idxLo_ext(3), idxHi_ext(3)
-      double precision H(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision ae(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision aw(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision an(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision as(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision at(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision ab(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision su(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision sp(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision den(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      integer domLoU(3), domHiU(3)
-      double precision uu(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
-     $     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision vv(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
-     $     domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3)
-      double precision ww(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
-     $     domLoW(3):domHiW(3))
-
-c     double precision uinlt(domLo(2):domHi(2),domLo(3):domHi(3))
-c     double precision vinlt(domLo(1):domHi(1),domLo(3):domHi(3))
-c     double precision winlt(domLo(1):domHi(1),domLo(2):domHi(2))
-
-      double precision sew(domLo(1):domHi(1))
-      double precision sns(domLo(2):domHi(2))
-      double precision stb(domLo(3):domHi(3))
-
-c     double precision r(domLo(2):domHi(2))
-c     double precision rv(domLo(2):domHi(2))
-c     double precision ra(domLo(2):domHi(2))
-      
-      integer pcell(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      integer wall, symtry, pfield, presstype, 
-     $        ffield, sfield, outletfield
-      integer xminus, xplus, yminus, yplus, zminus, zplus
 *
 *     declare local variables
 *
       double precision areaew, arean, areas, areatb
       integer i, j, k
-      logical lwrap, lsymb, ltest, loutsf, liflx, lprdjk, lprdkk
+      logical*1 lwrap, lsymb, ltest, loutsf, liflx, lprdjk, lprdkk
       
 
 *-----------------------------------------------------------------------
@@ -118,14 +48,40 @@ c---------------------------------------------------------------------
       loutsf = .false.
 
       if (lsymb) call symbcs(domLo, domHi, idxLo, idxHi,
-     $     h,ae,aw,an,as,at,ab,
-     $     pcell, symtry, lprdjk, lprdkk)
+     & PASS3A(h)
+     & PASS3B(h),
+     & PASS3A(ae)
+     & PASS3B(ae),
+     & PASS3A(aw)
+     & PASS3B(aw),
+     & PASS3A(an)
+     & PASS3B(an),
+     & PASS3A(as)
+     & PASS3B(as),
+     & PASS3A(at)
+     & PASS3B(at),
+     & PASS3A(ab)
+     & PASS3B(ab),
+     & PASS3A(pcell)
+     & PASS3B(pcell),
+     & symtry, lprdjk, lprdkk)
 
-C  WARNING - should be domLong, domHing - Steve
-      call wallbc(domLo, domHi, domLong, domHing, idxLo, idxHi, 
-     $     ae,aw,an,as,at,ab,
-     $     pcell, wall,
-     $     xminus, xplus, yminus, yplus, zminus, zplus)
+      call wallbc(idxLo, idxHi,
+     & PASS3A(ae)
+     & PASS3B(ae),
+     & PASS3A(aw)
+     & PASS3B(aw),
+     & PASS3A(an)
+     & PASS3B(an),
+     & PASS3A(as)
+     & PASS3B(as),
+     & PASS3A(at)
+     & PASS3B(at),
+     & PASS3A(ab)
+     & PASS3B(ab),
+     & PASS3A(pcell)
+     & PASS3B(pcell),
+     & wall, xminus, xplus, yminus, yplus, zminus, zplus)
 
       if (liflx.and..not.ltest) then
 c----------------------------------------------------------------------

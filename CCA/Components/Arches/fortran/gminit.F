@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/gminit_fort.h>
+#else
       SUBROUTINE gminit(indexLow, indexHigh,
      &     UU, VV, WW, PP, FF, TED, TKE,
      &     UP, VP, WP, PT, FP, 

@@ -3,51 +3,9 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE bcinout(domLoU, domHiU, UU,
-     &     domLoV, domHiV, VV,
-     &     domLoW, domHiW, WW,
-     &     domLoDen, domHiDen, 
-     $     idxLo, idxHi, DEN, 
-     $     domLo, domHi, PCELL,
-     &     PFIELD, deltat,
-     $     FLOWIN, FLOWOUT,
-     $     domLoGeom, domHiGeom,
-     $     SEW, SNS, STB,
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     &     ierr)
-C-----------------------------------------------------------------------
-      implicit none
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/bcinout_fort.h>
 #include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3), domHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      integer domLoDen(3), domHiDen(3)
-      integer idxLo(3), idxHi(3)
-      double precision DEN(domLoDen(1):domHiDen(1), 
-     $     domLoDen(2):domHiDen(2), 
-     &     domLoDen(3):domHiDen(3))
-      integer domLo(3), domHi(3)
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer domLoGeom(3), domHiGeom(3)
-      double precision SEW(domLoGeom(1):domHiGeom(1))
-      double precision SNS(domLoGeom(2):domHiGeom(2))
-      double precision STB(domLoGeom(3):domHiGeom(3))
-      double precision FLOWIN, FLOWOUT, deltat
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      integer ierr
+C-----------------------------------------------------------------------
 
 c*********************************************************************
 c     Local Variables :

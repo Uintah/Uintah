@@ -1,5 +1,6 @@
 void smagmodel(SFCXVariable<double> uu, SFCYVariable<double> vv,
      SFCZVariable<double> ww, CCVariable<double>  den,
      CCVariable<double> vis, IntVector domlo, IntVector domhi,
-     Array1<double> sew, Array1<double> sns, Array1<double> stb,
+     OffsetArray1<double> sew, OffsetArray1<double> sns,
+     OffsetArray1<double> stb,
      double viscos, double CF, double fac_mesh, double filterl);

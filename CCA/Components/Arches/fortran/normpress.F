@@ -3,9 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE normpress(domLo, domHi, idxLo, idxHi,
-     &     PRESS,
-     &     refPress)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/normpress_fort.h>
 C-----------------------------------------------------------------------
 C     EXPLANATION OF SYMBOLS USED:
 C
@@ -18,20 +16,6 @@ C	PHI	Variable for which equation is being solved
 c       urelax  underrelaxation parameter for the PHI-equation
 C	SU	Source term for the PHI equation
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3)
-      integer domHi(3)
-      integer idxLo(3)
-      integer idxHi(3)
-      double precision PRESS(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision refPress
 
 c*********************************************************************
 c     Local Variables :

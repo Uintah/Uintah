@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/clip_fort.h>
+#else
       SUBROUTINE clip(indexLow, indexHigh, PCELL,
      &     STEP, X, N, FMAX, FMIN, IJ, IK, NIJK, IGMTKE, IGMF, 
      &     LCALF,LTEST,LKETM,

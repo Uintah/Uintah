@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/bcpt_fort.h>
+#else
       SUBROUTINE bcpt(indexLow, indexHigh, PCELL,
      &     UP, VP, WP, 
      &     PT, 
