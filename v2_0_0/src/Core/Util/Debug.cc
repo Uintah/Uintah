@@ -32,7 +32,6 @@
 #include <iostream>
 using std::cerr;
 using std::ostream;
-
 #include <stdlib.h>
 #include <string.h>
 
