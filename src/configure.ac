@@ -3446,25 +3446,21 @@ AC_MSG_CHECKING(for $_sci_optional freetype)
 
 found_freetype_config="no"
 
-for dir in "" $_sci_lib; do
+if test -e $_sci_lib/../bin/freetype-config; then
+    found_freetype_config="yes"
+    echo
+    AC_MSG_RESULT(Using $_sci_lib/../bin/freetype-config to set freetype variables.)
 
-   if test -e $dir/../bin/freetype-config; then
-       found_freetype_config="yes"
-       echo
-       AC_MSG_RESULT(Using $dir/../bin/freetype-config to set freetype variables.)
+    includes=`$_sci_lib/../bin/freetype-config --cflags`
+    FREETYPE_LIB_FLAG=`$_sci_lib/../bin/freetype-config --libs`
 
-       includes=`$dir/../bin/freetype-config --cflags`
-       FREETYPE_LIB_FLAG=`$dir/../bin/freetype-config --libs`
+    SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
+                 $_sci_inc,$FREETYPE_LIB_FLAG,$_sci_lib,$includes,,$_sci_optional)
 
-       SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                    $_sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,$_sci_optional)
+    INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
-       INC_FREETYPE_H="$INC_FREETYPE_H $includes"
-
-       DEF_FREETYPE="#define HAVE_FREETYPE 1"
-       break
-    fi
-done
+    DEF_FREETYPE="#define HAVE_FREETYPE 1"
+fi
 
 if test "$found_freetype_config" = "no"; then
    AC_MSG_RESULT(no.)

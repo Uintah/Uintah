@@ -41985,16 +41985,14 @@ echo $ECHO_N "checking for $_sci_optional freetype... $ECHO_C" >&6
 
 found_freetype_config="no"
 
-for dir in "" $_sci_lib; do
+if test -e $_sci_lib/../bin/freetype-config; then
+    found_freetype_config="yes"
+    echo
+    echo "$as_me:$LINENO: result: Using $_sci_lib/../bin/freetype-config to set freetype variables." >&5
+echo "${ECHO_T}Using $_sci_lib/../bin/freetype-config to set freetype variables." >&6
 
-   if test -e $dir/../bin/freetype-config; then
-       found_freetype_config="yes"
-       echo
-       echo "$as_me:$LINENO: result: Using $dir/../bin/freetype-config to set freetype variables." >&5
-echo "${ECHO_T}Using $dir/../bin/freetype-config to set freetype variables." >&6
-
-       includes=`$dir/../bin/freetype-config --cflags`
-       FREETYPE_LIB_FLAG=`$dir/../bin/freetype-config --libs`
+    includes=`$_sci_lib/../bin/freetype-config --cflags`
+    FREETYPE_LIB_FLAG=`$_sci_lib/../bin/freetype-config --libs`
 
 
 ##
@@ -42034,7 +42032,7 @@ echo "${ECHO_T}Using $dir/../bin/freetype-config to set freetype variables." >&6
 ## arg 3 : ft2build.h
 ## arg 4 : $_sci_inc
 ## arg 5 : $FREETYPE_LIB_FLAG
-## arg 6 : $dir
+## arg 6 : $_sci_lib
 ## arg 7 : $includes
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
@@ -42170,9 +42168,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$dir"; then
+if test -n "$_sci_lib"; then
 
-   for path in "" $dir; do
+   for path in "" $_sci_lib; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -42208,12 +42206,12 @@ fi
 
 if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $dir (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $dir; do
+  for value in "" $_sci_lib; do
     if test "$value" = ""; then
       continue
     fi
@@ -42225,8 +42223,8 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for FREETYPE only one library path may be specified for arg 6 (you had: $dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for FREETYPE only one library path may be specified for arg 6 (you had: $dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for FREETYPE only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for FREETYPE only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -42323,7 +42321,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_FREETYPE='"$dir"'
+eval LIB_DIR_FREETYPE='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -42450,9 +42448,9 @@ echo "$as_me: error: Specifically requested FREETYPE include file '$_sci_inc/$i'
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $dir/lib$i.so && test ! -e $dir/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specifically requested FREETYPE library file '$dir/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested FREETYPE library file '$dir/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specifically requested FREETYPE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested FREETYPE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -42474,12 +42472,10 @@ _sci_includes=''
 
 
 
-       INC_FREETYPE_H="$INC_FREETYPE_H $includes"
+    INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
-       DEF_FREETYPE="#define HAVE_FREETYPE 1"
-       break
-    fi
-done
+    DEF_FREETYPE="#define HAVE_FREETYPE 1"
+fi
 
 if test "$found_freetype_config" = "no"; then
    echo "$as_me:$LINENO: result: no." >&5
