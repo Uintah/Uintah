@@ -1550,8 +1550,7 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
 
 	set confirm 1
 	if { [info exists data(-confirmvar)] &&
-	     [string length $data(-confirmvar)] && 
-	     ![set $data(-confirmvar)] } {
+	     [string length $data(-confirmvar)] } {
 	    set confirm 0
 	}
 	
