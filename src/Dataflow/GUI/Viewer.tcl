@@ -515,7 +515,7 @@ itcl_class ViewWindow {
 # AS: initialization of attachment
 	toplevel $w.detached
 	frame $w.detached.f
-	pack $w.detached.f -side top -anchor w -fill x
+	pack $w.detached.f -side top -anchor w -fill y -expand yes
 	
 	wm title $w.detached "VIEWWINDOW settings"
 	# This update messes up SCIRun2 - is it necessary? Steve
@@ -728,7 +728,7 @@ itcl_class ViewWindow {
 # 		$m.eframe.cull $m.eframe.dl $m.eframe.movie $m.eframe.mf \
 #	         $m.eframe.mn -in $m.eframe -side top -anchor w
 	
-	pack $m.eframe -anchor w -padx 2 -side left
+	pack $m.eframe -anchor n -padx 2 -side left
 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
 	    $m.eframe.cull $m.eframe.dl -in $m.eframe -side top -anchor w
 	  
@@ -746,7 +746,7 @@ itcl_class ViewWindow {
 	    #pack $m.shade -in $m.eframe -side top -anchor w
 
 	frame $m.objlist -relief groove -borderwidth 2
-	pack $m.objlist -side left -padx 2 -pady 2 -fill y
+	pack $m.objlist -side left -padx 2 -pady 2 -fill y -expand yes
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
 	canvas $m.objlist.canvas -width 370 -height 128 \
@@ -764,7 +764,7 @@ itcl_class ViewWindow {
 	scrollbar $m.objlist.yscroll -relief sunken -orient vertical \
 		-command "$m.objlist.canvas yview"
 	pack $m.objlist.yscroll -fill y -side left -padx 2 -pady 2
-	pack $m.objlist.canvas -side top -padx 2 -pady 2 -fill x -fill y
+	pack $m.objlist.canvas -side top -padx 2 -pady 2 -fill both -expand yes
 	pack $m.objlist.xscroll -fill x -side top  -padx 2 -pady 2
 	
         # CollabVis code begin
