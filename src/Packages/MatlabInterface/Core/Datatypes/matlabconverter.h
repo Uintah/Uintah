@@ -235,6 +235,15 @@ private:
 	template<class FIELDPTR> void addscalardata(FIELDPTR fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addvectordata(FIELDPTR fieldptr,matlabarray mlarray);
 	template<class FIELDPTR> void addtensordata(FIELDPTR fieldptr,matlabarray mlarray);
+
+	template<class FIELDPTR> void addscalardata2d(FIELDPTR fieldptr,matlabarray mlarray);
+	template<class FIELDPTR> void addvectordata2d(FIELDPTR fieldptr,matlabarray mlarray);
+	template<class FIELDPTR> void addtensordata2d(FIELDPTR fieldptr,matlabarray mlarray);
+
+	template<class FIELDPTR> void addscalardata3d(FIELDPTR fieldptr,matlabarray mlarray);
+	template<class FIELDPTR> void addvectordata3d(FIELDPTR fieldptr,matlabarray mlarray);
+	template<class FIELDPTR> void addtensordata3d(FIELDPTR fieldptr,matlabarray mlarray);
+
 	template<class MESH>   void addnodes(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 	template<class MESH>   void addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 	template<class MESH>   void addfaces(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
