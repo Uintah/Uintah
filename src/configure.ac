@@ -628,13 +628,6 @@ if test "$sci_required_unipetsc" = "yes"; then
    sci_required_lapack=yes
 fi
 
-# Set the subdir name in the bin tree for matlab engine.
-if test "$pkg_MatlabInterface" = "yes"; then
-  MATLAB_ENG=matlab
-fi
-
-AC_SUBST(MATLAB_ENG)
-
 # Set the collaborative vars.
 if test "$pkg_CollabVis" = "yes"; then
   DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
