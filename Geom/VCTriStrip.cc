@@ -53,12 +53,22 @@ void GeomVCTriStrip::get_bounds(BBox& bb)
 	bb.extend(pts[i]);
 }
 
+void GeomVCTriStrip::get_bounds(BSphere&)
+{
+    NOT_FINISHED("GeomVCTriStrip::get_bounds");
+}
+
 void GeomVCTriStrip::add(const Point& pt, const Vector& norm,
 			 const MaterialHandle& mm)
 {
     pts.add(pt);
     norms.add(norm);
     mmatl.add(mm);
+}
+
+void GeomVCTriStrip::preprocess()
+{
+    NOT_FINISHED("GeomVCTriStrip::preprocess");
 }
 
 void GeomVCTriStrip::intersect(const Ray&, Material*,

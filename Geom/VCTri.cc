@@ -48,11 +48,21 @@ void GeomVCTri::get_bounds(BBox& bb)
     bb.extend(p3);
 }
 
+void GeomVCTri::get_bounds(BSphere&)
+{
+    NOT_FINISHED("GeomVCTri::get_bounds");
+}
+
 void GeomVCTri::make_prims(Array1<GeomObj*>&,
 			  Array1<GeomObj*>& dontfree)
 {
     GeomVCTri* VCTri=this;
     dontfree.add(VCTri);
+}
+
+void GeomVCTri::preprocess()
+{
+    NOT_FINISHED("GeomVCTri::preprocess");
 }
 
 void GeomVCTri::intersect(const Ray&, Material*, Hit&)

@@ -19,6 +19,7 @@
 #include <variant.h>
 
 class BBox;
+class BSphere;
 class DrawInfoOpenGL;
 class DrawInfoX11;
 class Hit;
@@ -38,6 +39,7 @@ public:
 
     virtual void reset_bbox();
     virtual void get_bounds(BBox&) = 0;
+    virtual void get_bounds(BSphere&) = 0;
 
     // For OpenGL
 #ifdef SCI_OPENGL
@@ -56,9 +58,10 @@ public:
 			    Array1<GeomObj*>& dontfree) = 0;
 
     // For Raytracing
+    virtual void preprocess()=0;
     virtual void intersect(const Ray& ray, Material* matl,
 			   Hit& hit)=0;
-    virtual Vector normal(const Point& p);
+    virtual Vector normal(const Point& p, const Hit&);
 };
 
 #endif

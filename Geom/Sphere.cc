@@ -15,6 +15,7 @@
 #include <Geom/GeomRaytracer.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
+#include <Geometry/BSphere.h>
 #include <Geometry/Ray.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
@@ -63,6 +64,11 @@ void GeomSphere::get_bounds(BBox& bb)
     bb.extend(cen, rad);
 }
 
+void GeomSphere::get_bounds(BSphere& bs)
+{
+    bs.extend(cen, rad*1.000001);
+}
+
 void GeomSphere::make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>&)
 {
@@ -100,6 +106,11 @@ void GeomSphere::make_prims(Array1<GeomObj*>& free,
     }
 }
 
+void GeomSphere::preprocess()
+{
+    // Nothing to do...
+}
+
 void GeomSphere::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
     Vector OC(cen-ray.origin());
@@ -129,7 +140,8 @@ void GeomSphere::intersect(const Ray& ray, Material* matl, Hit& hit)
 	}
     }
 }
-Vector GeomSphere::normal(const Point& hitp)
+
+Vector GeomSphere::normal(const Point& hitp, const Hit&)
 {
     Vector normal(hitp-cen);
     normal.normalize();

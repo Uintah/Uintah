@@ -19,7 +19,7 @@ GeomContainer::GeomContainer(GeomObj* child)
 }
 
 GeomContainer::GeomContainer(const GeomContainer& copy)
-: GeomObj(copy), child(copy.child)
+: GeomObj(copy), child(copy.child->clone())
 {
 }
 
@@ -32,10 +32,20 @@ void GeomContainer::get_bounds(BBox& bbox)
     child->get_bounds(bbox);
 }
 
+void GeomContainer::get_bounds(BSphere& bsphere)
+{
+    child->get_bounds(bsphere);
+}
+
 void GeomContainer::make_prims(Array1<GeomObj*>& free,
 			       Array1<GeomObj*>& dontfree)
 {
     child->make_prims(free, dontfree);
+}
+
+void GeomContainer::preprocess()
+{
+    child->preprocess();
 }
 
 void GeomContainer::intersect(const Ray& ray, Material* matl,

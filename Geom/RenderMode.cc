@@ -18,12 +18,12 @@
 #include <Math/Trig.h>
 
 GeomRenderMode::GeomRenderMode(DrawType drawtype, GeomObj* child)
-: GeomObj(0), drawtype(drawtype), child(child)
+: GeomContainer(child), drawtype(drawtype)
 {
 }
 
 GeomRenderMode::GeomRenderMode(const GeomRenderMode& copy)
-: GeomObj(0), drawtype(copy.drawtype), child(copy.child->clone())
+: GeomContainer(copy), drawtype(copy.drawtype)
 {
 }
 
@@ -38,14 +38,8 @@ GeomObj* GeomRenderMode::clone()
     return new GeomRenderMode(*this);
 }
 
-void GeomRenderMode::get_bounds(BBox& bb)
-{
-    if(child)
-	child->get_bounds(bb);
-}
-
 void GeomRenderMode::make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree)
+				Array1<GeomObj*>& dontfree)
 {
     if(child)
 	child->make_prims(free, dontfree);

@@ -44,6 +44,11 @@ void GeomTetra::get_bounds(BBox& bb)
     bb.extend(p4);
 }
 
+void GeomTetra::get_bounds(BSphere&)
+{
+    NOT_FINISHED("GeomTetra::get_bounds");
+}
+
 void GeomTetra::make_prims(Array1<GeomObj*>& free,
 			   Array1<GeomObj*>&)
 {
@@ -61,9 +66,13 @@ void GeomTetra::make_prims(Array1<GeomObj*>& free,
     free.add(l4);
 }
 
+void GeomTetra::preprocess()
+{
+    NOT_FINISHED("GeomTetra::preprocess");
+}
+
 void GeomTetra::intersect(const Ray&, Material*,
 			  Hit&)
 {
     NOT_FINISHED("GeomTetra::intersect");
 }
-
