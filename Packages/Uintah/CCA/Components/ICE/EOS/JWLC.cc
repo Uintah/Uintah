@@ -155,6 +155,20 @@ void JWLC::hydrostaticTempAdjustment(Patch::FaceType,
                                     const Vector&,
                                     CCVariable<double>&)
 { 
-  throw InternalError( "ERROR:ICE:EOS:JWLC: hydrostaticTempAdj() \n"
-                       " has not been implemented" );
+  IntVector axes = patch->faceAxes(face);
+  int P_dir = axes[0];  // principal direction
+  double plusMinusOne = patch->faceDirection(face)[P_dir];
+  // On xPlus yPlus zPlus you add the increment
+  // on xminus yminus zminus you subtract the increment
+  double dx_grav = gravity[P_dir] * cell_dx[P_dir];
+                                                                                
+//  The following is commented out because this EOS is not temperature
+//  dependent, so I'm not adjusting the temperature.
+
+//   vector<IntVector>::const_iterator iter;
+//   for (iter=bound.begin(); iter != bound.end(); iter++) {
+//     IntVector c = *iter;
+//     Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] );
+//  }
+
 }
