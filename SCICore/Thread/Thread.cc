@@ -52,13 +52,14 @@ Thread::~Thread()
         d_runner->d_my_thread=0;
         delete d_runner;
     }
+    free(name);
 }
 
 Thread::Thread(ThreadGroup* g, const char* name)
 {
     d_group=g;
     g->addme(this);
-    d_threadname=name;
+    d_threadname=strdup(name);
     d_daemon=false;
     d_detached=false;
     d_runner=0;
@@ -87,7 +88,7 @@ Thread::run_body()
 
 Thread::Thread(Runnable* runner, const char* name,
 	       ThreadGroup* group, ActiveState state)
-    : d_runner(runner), d_threadname(name), d_group(group)
+    : d_runner(runner), d_threadname(strdup(name)), d_group(group)
 {
     if(d_group == 0){
         if(!ThreadGroup::s_default_group)
@@ -177,7 +178,7 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
     for(int i=0;i<nthreads;i++){
         char buf[50];
         sprintf(buf, "Parallel thread %d of %d", i, nthreads);
-        new Thread(new ParallelHelper(&helper, i), strdup(buf),
+        new Thread(new ParallelHelper(&helper, i), buf,
 		   newgroup, Thread::Stopped);
     }
     newgroup->gangSchedule();
@@ -303,6 +304,9 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.10  1999/09/03 19:52:53  sparker
+// strdup thread names instead of reyling on them to be static
+//
 // Revision 1.9  1999/09/03 19:51:16  sparker
 // Fixed bug where if Thread::parallel was called with block=false, the
 //   helper object could get destroyed before it was used.
