@@ -106,9 +106,9 @@ c-----------------------------------------------------------------------
 c     assemble source coefficients
 c-----------------------------------------------------------------------
       call ARRASS(SU,ZERO,
-     $     domLoV, domHiV, idxLoV, idxHiV)
+     $     domLoVng, domHiVng, idxLoV, idxHiV)
       call ARRASS(SP,ZERO,
-     $     domLoV, domHiV, idxLoV, idxHiV)
+     $     domLoVng, domHiVng, idxLoV, idxHiV)
 
 c     viscous sources
 
@@ -155,6 +155,9 @@ c     viscous sources
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/10/06 05:58:09  sparker
+c Fixed calls to ARRASS (pass in ng array bounds)
+c
 c Revision 1.4  2000/09/26 04:35:34  rawat
 c added some more multi-patch support
 c
