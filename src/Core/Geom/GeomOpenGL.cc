@@ -1182,7 +1182,7 @@ void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  if(!pre_draw(di, matl, 1)) return;
+    if(!pre_draw(di, matl, 1)) return;
 
     di->polycount += points_.size() * nu_ / 2;
 
@@ -1200,19 +1200,15 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
     const bool coloring = colors_.size() == points_.size() * 2;
     const bool use_local_radii = radii_.size() == points_.size()/2;
     
-    float nz = 1.0/6.0;
-    float nzm = 1.0/sqrt(1.0 + 1.0 + nz*nz);
-    nz *= nzm;
+    const float nz0 = 1.0/6.0;
+    const float nzm = 1.0/sqrt(1.0 + 1.0 + nz0*nz0);
+    const float nz = nz0 * nzm;
     float tabx[41];
     float taby[41];
-    float ntabx[40];
-    float ntaby[40];
     for (int j=0; j<nu_; j++)
     {
       tabx[j] = sin(2.0 * M_PI * j / nu_);
       taby[j] = cos(2.0 * M_PI * j / nu_);
-      ntabx[j] = sin(2.0 * M_PI * (j+0.5) / nu_) * nzm;
-      ntaby[j] = cos(2.0 * M_PI * (j+0.5) / nu_) * nzm;
     }
     tabx[nu_] = tabx[0];
     taby[nu_] = taby[0];
@@ -1257,17 +1253,12 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
       if (coloring) { glColor3ubv(&(colors_[i*2])); }
       if (texturing) { glTexCoord1f(indices_[i/2]); }
 
-      glBegin(GL_TRIANGLES);
-      for (int k = 0; k < nu_; k++)
+      glBegin(GL_QUAD_STRIP);
+      for (int k = 0; k <= nu_; k++)
       {
-	glNormal3f(ntabx[k], ntaby[k], nz);
-	glVertex3f(0.0, 0.0, 1.0);
-	
-	glNormal3f(tabx[k+1]*nzm, taby[k+1]*nzm, nz);
-	glVertex3f(tabx[k+1], taby[k+1], 0.0);
-
 	glNormal3f(tabx[k]*nzm, taby[k]*nzm, nz);
 	glVertex3f(tabx[k], taby[k], 0.0);
+	glVertex3f(0.0, 0.0, 1.0);
       }
       glEnd();
 
