@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/FlameletMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/StaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MeanMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
@@ -75,7 +76,6 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
     db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
-    db->getWithDefault("opl",d_opl,3.0);
   }
   // read type of mixing model
   string mixModel;
@@ -90,6 +90,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingModel = scinew FlameletMixingModel();
     d_flamelet = true;
   }
+  else if (mixModel == "StaticMixingTable")
+    d_mixingModel = scinew StaticMixingTable();
   else
     throw InvalidValue("Mixing Model not supported" + mixModel);
   d_mixingModel->problemSetup(db);
@@ -112,12 +114,12 @@ void
 Properties::computeInletProperties(const InletStream& inStream, 
 				   Stream& outStream)
 {
-  //inStream.d_initEnthalpy = true;  //Controls initialization of
-  // enthalpy field with adiabatic enthalpy. If flamelet model is
-  // used, this variable will need to be set
   if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
     d_mixingModel->computeProps(inStream, outStream);
   else if (dynamic_cast<const FlameletMixingModel*>(d_mixingModel)) {
+    d_mixingModel->computeProps(inStream, outStream);
+  }
+  else if (dynamic_cast<const StaticMixingTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
   else {
@@ -376,12 +378,12 @@ Properties::computeProps(const ProcessorGroup* pc,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = 0.0;
-	  inStream.d_initEnthalpy = true;
+          // This flag ensures properties for heatloss=0.0 during the initialization
+          inStream.d_initEnthalpy = true;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
 	  if (d_enthalpySolve)
 	    enthalpy[currCell] = outStream.getEnthalpy();
-	  //cout << "Properties H = " << enthalpy[currCell] << endl;
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    cp[currCell] = outStream.getCP();
@@ -405,6 +407,7 @@ Properties::computeProps(const ProcessorGroup* pc,
 
 
 	  }
+
 	  if (d_bc == 0)
 	    throw InvalidValue("BoundaryCondition pointer not assigned");
 
@@ -438,6 +441,7 @@ Properties::computeProps(const ProcessorGroup* pc,
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
   }
+cout<<"Computation of properties for the first time is completed:"<<endl;
 }
 
 //****************************************************************************
@@ -466,11 +470,9 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (d_radiationCalc) {
-    if (d_DORadiationCalc)
-      tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);    
-  }
+  if (d_DORadiationCalc)
+    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);    
 
   if (d_reactingFlow) {
     tsk->requires(Task::OldDW, d_lab->d_tempINLabel, 
@@ -615,11 +617,9 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> reactScalarSrc_new;
     constCCVariable<double> solidTemp;
 
-    if (d_radiationCalc) {
-      if (d_DORadiationCalc)
-	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
+    if (d_DORadiationCalc)
+      new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     if (d_reactingFlow) {
       old_dw->get(tempIN, d_lab->d_tempINLabel, matlIndex, patch,
@@ -781,11 +781,9 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 	  }
 	  else{
 	    density[currCell] = 0.0;
-	    if (d_radiationCalc) {
-	      if (d_DORadiationCalc)
-		tempIN_new[currCell] = solidTemp[currCell];
-	      //	        tempIN_new[currCell] = 298.0;
-	    }
+	    if (d_DORadiationCalc)
+	      tempIN_new[currCell] = solidTemp[currCell];
+	    //	      tempIN_new[currCell] = 298.0;
 	  }
 	}
       }
@@ -830,11 +828,9 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    if (d_radiationCalc) {
-      if (d_DORadiationCalc)
-	tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, Ghost::None,
-		      Arches::ZEROGHOSTCELLS);
-    }
+    if (d_DORadiationCalc)
+      tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, Ghost::None,
+		    Arches::ZEROGHOSTCELLS);
   }
 
   if (d_numMixStatVars > 0) {
@@ -1108,11 +1104,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
-      if (d_radiationCalc) {
-	if (d_DORadiationCalc)
-	  new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
-		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      }
+      if (d_DORadiationCalc)
+	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     IntVector indexLow = patch->getCellLowIndex();
@@ -1153,7 +1147,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    inStream.d_enthalpy = enthalpy[currCell];
 	  else
 	    inStream.d_enthalpy = 0.0;
-
+          inStream.d_initEnthalpy = false;
 
 	  if (d_flamelet) {
 	    if (colX >= 0)
@@ -1163,7 +1157,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  }
 
   TAU_PROFILE_START(mixing);
-          inStream.d_initEnthalpy = false;
 	  d_mixingModel->computeProps(inStream, outStream);
   TAU_PROFILE_STOP(mixing);
 
@@ -1192,11 +1185,14 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	  }
+	  
 
 	  if (d_radiationCalc) {
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
+	    // optical path length
+	    double opl = 3.0;
 	    if (d_mixingModel->getNumRxnVars()) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
@@ -1215,19 +1211,19 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      else 
 		sootFV[currCell] = 0.0;
 	    }
-	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
-				   sootFV[currCell]*temperature[currCell]*d_opl));
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*opl));
 	  }
 	  // check if the density is greater than air...implement a better way
           if (d_DORadiationCalc) {
-	    double cutoff_air_density = 1.1845;
+	   /* double cutoff_air_density = 1.1845;
 	    double cutoff_temperature = 298.0;
 	    if ((scalar[0])[currCell] < 0.4) {
 	      if (local_den > cutoff_air_density) {
 	        local_den = cutoff_air_density;
 	        temperature[currCell] = cutoff_temperature;
 	      }
-	    }
+	    }*/
 	  }
 
 	  if (d_MAlab) {
@@ -1256,10 +1252,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
       d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
 
-    if (d_MAlab && d_radiationCalc) {
-      if (d_DORadiationCalc)
-	d_bc->mmWallTemperatureBC(pc, patch, cellType, solidTemp, temperature);
-    }
+    if (d_MAlab && d_DORadiationCalc)
+      d_bc->mmWallTemperatureBC(pc, patch, cellType, solidTemp, temperature);
 
     if (pc->myrank() == 0)
       cerr << "Time in the Mixing Model: " << 
