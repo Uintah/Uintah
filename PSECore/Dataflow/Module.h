@@ -88,6 +88,7 @@ class PSECORESHARE Module : public TCL, public Pickable {
     // Added by Mohamed Dekhil for the CSAFE project
     TCLstring notes ;
     TCLint show_status;
+   unsigned long stacksize;
 public:
     enum State {
 	NeedData,
@@ -101,6 +102,7 @@ public:
     friend class ModuleHelper;
     virtual void do_execute();
     virtual void execute()=0;
+   void setStackSize(unsigned long stackSize);
 
     State state;
     Array1<OPort*> oports;
@@ -214,6 +216,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.13  2000/07/27 05:22:34  sparker
+// Added a setStackSize method to the module
+//
 // Revision 1.12  2000/07/23 19:34:22  yarden
 // move abort_flag back to private
 // provided an inline public get_abort()
