@@ -1,6 +1,6 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = project modules
+SUBDIRS = modules project
 
 SCISubdirs($(SUBDIRS))
