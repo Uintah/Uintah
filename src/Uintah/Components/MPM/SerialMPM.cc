@@ -228,6 +228,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
    	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
    	    }
 
 	    t->computes(new_dw, lb->gMassLabel, idx, patch );
@@ -547,6 +549,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
    	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
    	    }
 						
 	    t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
@@ -633,7 +637,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			 Ghost::None);
 	      t->requires( old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			 Ghost::None);
-	      t->requires( new_dw, lb->pDilatationalWaveSpeedLabel, idx, patch,
+	      t->requires( new_dw, lb->pDilationalWaveSpeedLabel, idx, patch,
 			 Ghost::None);
 			 
  	      t->requires(old_dw, d_sharedState->get_delt_label() );
@@ -675,6 +679,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
       }
     }
+    
     if(t + dt >= d_nextOutputTime)
     {
 	d_nextOutputTime += d_outputInterval;
@@ -751,7 +756,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
           int matlindex = matl->getDWIndex();
           int vfindex = matl->getVFIndex();
           ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
-                            Ghost::AroundNodes, 1, lb->pXpre_RelocLabel);
+                            Ghost::AroundNodes, 1, lb->pXLabel_preReloc);
 
           // Allocate storage & retrieve particle weighting and position
           ParticleVariable<double> weighting;
@@ -956,19 +961,22 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel, pset);
       
-      ParticleVariable<Vector> pCrackSurfaceNormal;
-      ParticleVariable<double> pMicrocrackSize;
-      ParticleVariable<int> pIsBroken;
       Lattice* lattice;
       BrokenCellShapeFunction* brokenCellShapeFunction;
       if(mpm_matl->getFractureModel()) {
+        ParticleVariable<Vector> pCrackSurfaceNormal;
+        ParticleVariable<double> pMicrocrackSize;
+        ParticleVariable<int> pIsBroken;
+	ParticleVariable<double> pVolume;
+	
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
 	old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
+	old_dw->get(pVolume, lb->pVolumeLabel, pset);
 	
         lattice = scinew Lattice(px);
 	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
+	   pVolume,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
       }
 
       // Create arrays for the grid data
@@ -1524,19 +1532,23 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,     lb->pMassLabel, pset);
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
 
-      ParticleVariable<Vector> pCrackSurfaceNormal;
-      ParticleVariable<double> pMicrocrackSize;
-      ParticleVariable<int> pIsBroken;
       Lattice* lattice;
       BrokenCellShapeFunction* brokenCellShapeFunction;
       if(mpm_matl->getFractureModel()) {
+
+        ParticleVariable<Vector> pCrackSurfaceNormal;
+        ParticleVariable<double> pMicrocrackSize;
+        ParticleVariable<int> pIsBroken;
+	ParticleVariable<double> pVolume;
+      
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
 	old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
+	old_dw->get(pVolume, lb->pVolumeLabel, pset);
 	
         lattice = scinew Lattice(px);
 	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
+	   pVolume,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
       }
 
       // Get the arrays of grid data on which the new particle values depend
@@ -1782,6 +1794,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.135  2000/09/08 20:27:59  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.134  2000/09/08 17:31:28  guilkey
 // Added interpolateParticlesForSaving task which interpolates particle
 // data, interpolates it to the grid using another particle scalar variable

@@ -17,7 +17,7 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
-  pDilatationalWaveSpeedLabel = scinew VarLabel("p.dilatationalWaveSpeed",
+  pDilationalWaveSpeedLabel = scinew VarLabel("p.dilationalWaveSpeed",
 			ParticleVariable<double>::getTypeDescription());
   
   pStressLabel = scinew VarLabel( "p.stress",
@@ -230,7 +230,7 @@ MPMLabel::MPMLabel()
 MPMLabel::~MPMLabel()
 {
   delete pDeformationMeasureLabel;
-  delete pDilatationalWaveSpeedLabel;
+  delete pDilationalWaveSpeedLabel;
   delete pStressLabel;
   delete pVolumeLabel;
   delete pVolumeDeformedLabel;
@@ -318,6 +318,10 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.31  2000/09/08 20:27:59  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.30  2000/09/08 17:31:28  guilkey
 // Added interpolateParticlesForSaving task which interpolates particle
 // data, interpolates it to the grid using another particle scalar variable
@@ -325,7 +329,7 @@ void MPMLabel::registerPermanentParticleState(int i,
 // interpolations only get done when it's time to save data to the uda.
 //
 // Revision 1.29  2000/09/08 01:47:34  tan
-// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// Added pDilationalWaveSpeedLabel for fracture and is saved as a
 // side-effect of computeStressTensor in each constitutive model class.
 //
 // Revision 1.28  2000/09/07 21:11:04  tan

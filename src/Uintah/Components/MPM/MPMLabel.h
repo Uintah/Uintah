@@ -23,7 +23,7 @@ namespace Uintah {
       const VarLabel* delTLabel;
       
       const VarLabel* pDeformationMeasureLabel;
-      const VarLabel* pDilatationalWaveSpeedLabel;
+      const VarLabel* pDilationalWaveSpeedLabel;
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeDeformedLabel;
@@ -103,6 +103,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.27  2000/09/08 20:27:59  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.26  2000/09/08 17:31:29  guilkey
 // Added interpolateParticlesForSaving task which interpolates particle
 // data, interpolates it to the grid using another particle scalar variable
@@ -110,7 +114,7 @@ namespace Uintah {
 // interpolations only get done when it's time to save data to the uda.
 //
 // Revision 1.25  2000/09/08 01:47:22  tan
-// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// Added pDilationalWaveSpeedLabel for fracture and is saved as a
 // side-effect of computeStressTensor in each constitutive model class.
 //
 // Revision 1.24  2000/09/07 21:11:04  tan
