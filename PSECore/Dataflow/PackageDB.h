@@ -39,7 +39,8 @@ namespace PSECore {
                                      const clString& categoryName) const;
 
       private:
-        void* _db;
+        void *             d_db;
+        Array1<clString>   d_packageList;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break

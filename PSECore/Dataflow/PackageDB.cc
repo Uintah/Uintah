@@ -33,8 +33,15 @@ typedef AVLTreeIter<clString,Package*> PackagesIter;
 
 PackageDB packageDB;
 
-PackageDB::PackageDB(void): _db((void*)new Packages) { }
-PackageDB::~PackageDB(void) { delete (Packages*)_db; }
+PackageDB::PackageDB(void) :
+  d_db((void*)new Packages), d_packageList(0)
+{
+}
+
+PackageDB::~PackageDB(void)
+  { 
+    delete (Packages*)d_db; 
+  }
 
 typedef void (*pkgInitter)(const clString& tclPath);
 
@@ -49,6 +56,7 @@ void PackageDB::loadPackage(const clString& packPath) {
   // A package path is a colon-separated list of package path elements.
 
   clString packagePath(packPath);     // Copy to deal with non-const methods
+
   while(packagePath!="") {
 
     // Strip off the first element, leave the rest in the path for the next
@@ -86,11 +94,15 @@ cerr << "After '" << packagePath << "'\n";
     }
 
     // Load the package
-
     {
       clString result;
       TCL::eval(clString(".top.errorFrame.text insert end \"Loading package '")
                 +soName+"' with TCLPath '"+tclPath+"'\\n\"",result);
+
+      // Tell Tcl where to find the .tcl files...
+      TCL::eval(clString("lappend auto_path ") + tclPath, result);
+printf("just tried to add %s to auto_path\n", tclPath());
+      TCL::eval("echo $auto_path", result);
     }
 
     //void* so=dlopen(soName(),RTLD_NOW);
@@ -126,11 +138,14 @@ void PackageDB::registerModule(const clString& packageName,
                                const clString& moduleName,
                                ModuleMaker moduleMaker,
                                const clString& tclUIFile) {
-  Packages* db=(Packages*)_db;
+  Packages* db=(Packages*)d_db;
 
   Package* package;
   if(!db->lookup(packageName,package))
-    db->insert(packageName,package=new Package);
+    {
+      db->insert(packageName,package=new Package);
+      d_packageList.add( packageName );
+    }
 
   Category* category;
   if(!package->lookup(categoryName,category))
@@ -152,7 +167,7 @@ Module* PackageDB::instantiateModule(const clString& packageName,
                                      const clString& categoryName,
                                      const clString& moduleName,
                                      const clString& instanceName) const {
-  Packages* db=(Packages*)_db;
+  Packages* db=(Packages*)d_db;
 
   Package* package;
   if(!db->lookup(packageName,package)) {
@@ -177,6 +192,9 @@ Module* PackageDB::instantiateModule(const clString& packageName,
 
   // Source the UI file if there is one and we haven't yet
 
+//This was and is again all handled through TCL...
+//
+#if 0
   if(moduleInfo->uiFile!="") {
     clString result;
     if(!TCL::eval(clString("source ")+moduleInfo->uiFile,result)) {
@@ -185,6 +203,7 @@ Module* PackageDB::instantiateModule(const clString& packageName,
     }
     moduleInfo->uiFile="";                       // Don't do it again
   }
+#endif
 
   Module *module = (moduleInfo->maker)(instanceName);
   module->packageName = packageName;
@@ -195,19 +214,18 @@ Module* PackageDB::instantiateModule(const clString& packageName,
 }
 
 Array1<clString> PackageDB::packageNames(void) const {
-  Packages* db=(Packages*)_db;
 
-  Array1<clString> result(db->size());
-  {
-    PackagesIter iter(db);
-    int i=0;
-    for(iter.first();iter.ok();++iter) result[i++]=iter.get_key();
-  }
-  return result;
+  // d_packageList is used to keep a list of the packages 
+  // that are in this PSE IN THE ORDER THAT THEY ARE SPECIFIED
+  // by the user in the Makefile (for main.cc) or in their
+  // environment.
+
+  return d_packageList;
 }
 
-Array1<clString> PackageDB::categoryNames(const clString& packageName) const {
-  Packages* db=(Packages*)_db;
+Array1<clString>
+PackageDB::categoryNames(const clString& packageName) const {
+  Packages* db=(Packages*)d_db;
 
   {
     PackagesIter iter(db);
@@ -228,10 +246,10 @@ Array1<clString> PackageDB::categoryNames(const clString& packageName) const {
   return result;
 }
 
-Array1<clString> PackageDB::moduleNames(const clString& packageName,
-                                        const clString& categoryName) const {
-  Packages* db=(Packages*)_db;
-
+Array1<clString>
+PackageDB::moduleNames(const clString& packageName,
+		       const clString& categoryName) const {
+  Packages* db=(Packages*)d_db;
   {
     PackagesIter iter(db);
     for(iter.first();iter.ok();++iter) if(iter.get_key()==packageName) {
@@ -264,6 +282,9 @@ Array1<clString> PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.11  1999/09/22 22:39:50  dav
+// updated to use tclIndex files
+//
 // Revision 1.10  1999/09/08 02:26:41  sparker
 // Various #include cleanups
 //

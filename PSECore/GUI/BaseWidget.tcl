@@ -15,8 +15,6 @@ if {[info commands BaseWidget] != ""} {
 	return
 }
 
-source $SCICoreTCL/MaterialEditor.tcl
-
 itcl_class BaseWidget {
     constructor {config} {
 	set name BaseWidget
