@@ -58,10 +58,6 @@ public:
   ////////// 
   virtual void execute(); 
 
-  //////////
-  // overides tcl_command in base class Module
-  //  void tcl_command( TCLArgs&, void* );
-
 protected:
   
 private:
@@ -81,7 +77,6 @@ private:
   
   ArchiveHandle archiveH;
   void setVars(ArchiveHandle ar);
-  virtual void tcl_command(GuiArgs& args, void* userdata);
  
 private:
   //! default color and material
