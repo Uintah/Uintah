@@ -26,6 +26,7 @@
 <article class="techreport">
 <title>&sr; Documentum</title>
 <subtitle>&sr; Documentation (Explicated)</subtitle>
+
 <articleinfo>
 <author>
 <firstname>Ted</firstname>
@@ -37,6 +38,8 @@
 <city>Salt Lake City</city>
 <state>UT</state>
 <postcode>84112</postcode>
+<email>dustman@cvrti.utah.edu</email>
+<phone>801-587-9513</phone>
 </address>
 </affiliation>
 </author>
@@ -44,9 +47,12 @@
 
 <section id="sec.intro">
 <title>Introduction</title>
+
 <para>This document is for those who wish to write or build (or
 both) &sr; documentation.</para>
+
 <para>It describes:
+
 <itemizedlist>
 <listitem>
 <para>The organization of the documentation tree.</para>
@@ -62,16 +68,22 @@ sources (and the tools needed to do this).</para>
 <para>How to edit documents.</para>
 </listitem>
 </itemizedlist>
+
 </para>
+
 </section>
 
 <section id="sec.overview">
 <title>Organization</title>
+
 <para><xref linkend="tbl.doc-tree"/> shows the organization of the
 doc tree.  It  shows only those directories and files that are part of CVS.
 Generated files (aka products) are 
-discussed in a <link linkend="sec.srcsprds">later</link> section.</para>
+discussed in a <link linkend="sec.srcsprds">later</link> section.
+</para>
+
 <para>
+
 <table id="tbl.doc-tree">
 <title>Doc Tree Organization</title>
 <tgroup cols="2">
@@ -109,7 +121,7 @@ mode), and XML related scripts.</para>
 </row>
 <row>
 <entry><filename>doc/Utilities/HTML</filename></entry>
-<entry><para>CSS style files, javascript sources, ans HTML related
+<entry><para>CSS style files, javascript sources, and HTML related
 scripts.</para></entry>
 </row>
 <row>
@@ -217,7 +229,9 @@ invokes sub-makes.  <filename>index.html</filename> is the cover page for
 </tbody>
 </tgroup>
 </table>
+
 </para>
+
 </section>
 
 <section id="sec.builddocs">
@@ -253,6 +267,7 @@ export CLASSPATH=/usr/local/lib/Saxon/saxon.jar
 export STYLESHEET_PATH=/usr/local/xsl/docbook/html/
 export WITH_CV=true
 </programlisting>
+
 </para>
 
 <para>Now to make (all) docs <command>cd</command> to the toplevel
@@ -396,9 +411,12 @@ repository.</para>
 <entry>
 <para>
 <filename>doc/User/Guide/usersguide.ps</filename> and
-<filename>doc/User/Guide/usersguide/</filename>.  Intermediate products
+<filename>doc/User/Guide/usersguide/</filename>.  
+</para> 
+<para>Intermediate products
 <filename>doc/User/Guide/userguide.dvi</filename>, <filename>*_modules.tex</filename> and
-<filename>srugmacros.sty</filename> are generated.</para> 
+<filename>srugmacros.sty</filename> are generated.
+</para>
 <para>EPS files on
 the <filename>src</filename> side of the tree generated from JPEG
 and GIF files.</para>
@@ -411,6 +429,120 @@ and GIF files.</para>
 
 </section>
 
+
+<section>
+<title>Publishing to SCI Web Sites</title>
+
+<para>&sr; documentation is published to 3 SCI web sites.  Each web site
+serves a different purpose.</para>
+
+<para>Documentation under development is
+published on the <ulink
+url="http://internal.sci.utah.edu/developer/SCIRun/doc">internal</ulink>
+site.
+Documentation being tested for release is published on the
+<ulink url="http://software2.sci.utah.edu/doc">test</ulink> site.
+Documentation for the current &sr; release is published on the
+<ulink url="http://software.sci.utah.edu/doc">external</ulink>
+site.
+</para>
+
+The following sections describe (approximately) how to publish
+documentation to these sites.
+
+<section>
+<title>Publishing to SCI's Internal Web Site</title>
+<para>&sr; documentation which is under development (from the
+trunk of the CVS tree) is published on
+SCI's internal web site.  To publish docs on the internal web site do
+this:
+<orderedlist>
+<listitem>
+<para>Update your &sr; CVS tree.</para>
+</listitem>
+<listitem>
+<para>Build the docs and create a doc tarball.</para>
+</listitem>
+<listitem>
+<para>Copy the tarball to
+<filename>/usr/sci/projects/SCIRun/docs</filename> and unpack it using
+GNU tar.</para>
+</listitem>
+<listitem>
+<para><command>Cd</command> to
+<filename>/usr/sci/projects/SCIRun/docs</filename> and remove the
+<filename>doc</filename> and <filename>src</filename> directories if
+they exist.</para>
+</listitem>
+<listitem>
+<para>Move the <filename>doc</filename> and <filename>src</filename>
+directories from inside the directory created by unpacking the tarball
+to <filename>/usr/sci/projects/SCIRun/docs</filename>.</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+<section>
+<title>Publishing to SCI's Test Web Site</title> 
+
+<para>SCI's test web
+site is <filename>http://software2.sci.utah.edu</filename>.  Use this
+site to test documentation (from the release branch of the CVS tree)
+prior to a software release.</para> 
+
+<para> To publish the docs on the
+test site follow the directions in the next section substituting
+<quote>dante.sci.utah.edu</quote> for
+<quote>virgil.sci.utah.edu</quote>.
+</para>
+
+</section>
+
+<section>
+
+<title>Publishing to SCI's External Web Site.</title>
+
+<para>&sr; documentation for the current &sr; release (from the
+current release branch of the CVS tree) is published to the external
+web site.</para>
+
+<para>To publish the docs on SCI's external web site do this:
+<orderedlist>
+<listitem>
+<para>Copy the doc tarball to the directory
+<filename>/w01/docs/scirun-biopse</filename> on
+<filename>virgil.sci.utah.edu</filename>.</para>
+</listitem>
+<listitem>
+<para>Unpack the tarball using GNU tar.</para>
+</listitem>
+<listitem>
+<para>Rename the resulting directory to an appropriate version number,
+e.g. 1.6.0.</para>
+</listitem>
+<listitem>
+<para><command>Cd</command> to
+<filename>/w01/sciweb/software</filename>.</para>
+</listitem>
+<listitem>
+<para>Remove the symbolic links <filename>doc</filename> and <filename>src</filename>.</para>
+</listitem>
+<listitem>
+<para>Create new symbolic links.  The link <filename>doc</filename>
+should point to
+<filename>../../docs/scirun-biopse/&lt;version-number&gt;/doc</filename>
+and <filename>src</filename>
+should point to
+<filename>../../docs/scirun-biopse/&lt;version-number&gt;/src</filename>
+where <filename>&lt;version-number&gt;</filename> is the name of
+directory created previously.</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+</section>
 
 <section id="sec.docmls">
 <title>Documents and Their Markup Languages</title> 
@@ -492,10 +624,14 @@ ML.</para>
 
 </section>
 
+<section>
+<title>Editing Documents</title>
+
+How to edit various documents.
 
 <section id="sec.xmlmode">
 <title>Editing XML Documents</title>
-<subtitle>(Using Emacs' XML Mode)</subtitle>
+<para>This section discusses the use of emacs to edit XML documents.</para>
 <para>
 An ordinary text editor may be used to edit XML document content.  However,
 it is easy to get lost in the noise of XML syntax.  Therefore, it is best
@@ -993,23 +1129,23 @@ in the <filename>src</filename> side of the tree should be based on
 <filename>doc/Documentum/src_template.html</filename>.</para>
 </section>
 
-<section id="sec.editltxdocs">
-<title>Editing &ltx; Documents</title>
-<para></para>
+<!-- <section id="sec.editltxdocs"> -->
+<!-- <title>Editing &ltx; Documents</title> -->
+<!-- <para></para> -->
+<!-- </section> -->
+
 </section>
 
 <section id="sec.tools">
 <title>Tools</title>
 
 <para>
-&sr; documents are written in number of <firstterm><link
-linkend="sec.docmls">markup</link></firstterm> languages: XML,
-&ltx;, HTML.  XML and &ltx; document sources must be "built" or transformed
-into other forms (e.g. HTML) for presentation.  The following tools are
+The following tools are
 needed to build &sr; documentation:
 <variablelist>
 <varlistentry>
-<term><ulink url="http://www.gnu.org/software/make/make.html">GNU Make</ulink></term>
+<term><ulink url="http://www.gnu.org/software/make/make.html">GNU
+Make</ulink> (3.79 or later)</term>
 <listitem>
 <para>GNU's version of the make utility.  Makefiles in the doc tree are
 incompatible with other versions of the make utility.
@@ -1017,21 +1153,22 @@ incompatible with other versions of the make utility.
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><ulink url="http://www.gnu.org/software/tar/tar.html">GNU Tar</ulink></term>
+<term><ulink url="http://www.gnu.org/software/tar/tar.html">GNU
+Tar</ulink> (1.12 or later)</term>
 <listitem>
-<para>GNU's version of tar.  Tar is used to package the documentation into
-a single file (tarball) for distribution.  GNU tar must be used to extract
-documentation from its tarball.</para>
+<para>GNU's version of tar.  Tar is used to package
+the documentation into a single file (tarball) for distribution.  GNU
+tar must be used to extract documentation from its tarball.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>Java</term>
+<term>Java (1.3 or later)</term>
 <listitem>
 <para>Saxon (see below) requires the Java runtime system and libraries.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><ulink url="http://saxon.sourceforge.net/">Saxon</ulink></term>
+<term><ulink url="http://saxon.sourceforge.net/">Saxon</ulink> (6.5.2 or later)</term>
 <listitem>
 <para>Saxon is an XSLT processor which applies XSL stylesheets to XML
 sources to translate them to other forms (e.g. HTML).  Saxon is written in
@@ -1061,7 +1198,8 @@ documentation from C++ source files.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><ulink url="http://docbook.sourceforge.net/">&dbk; Style Sheets</ulink></term>
+<term><ulink url="http://docbook.sourceforge.net/">&dbk; Style
+Sheets</ulink> (1.51.1 or later)</term>
 <listitem>
 <para>The &dbk; stylesheets translate &dbk; XML documents (Developers
 guide and Installation guide) to HTML.</para> 
@@ -1075,7 +1213,8 @@ distribution.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><ulink url="http://www.pragmaticprogrammer.com/ruby/">Ruby</ulink></term>
+<term><ulink url="http://www.pragmaticprogrammer.com/ruby/">Ruby</ulink> (1.6
+or later)</term>
 <listitem>
 <para>A number of scripts in the doc tree are written in the programming language Ruby.</para>
 </listitem>
@@ -1100,33 +1239,78 @@ printable version of the users guide.</para>
 
 <section id="to-do">
 <title>To Do</title>
-<para>This section presents a never ending list of things to be done
-(in no particular order).
+<para>The following sections present a never ending list of things to
+be done.</para>
+
+<section>
+<title>Installation Docs</title>
 <itemizedlist>
 <listitem>
-<para>Convert FAQs to DocBook Q and A Set documents.</para>
+<para>Needs update.</para>
+</listitem>
+</itemizedlist>
+</section>
+
+<section>
+<title>User Docs</title>
+<itemizedlist>
+<listitem>
+<para>Needs update.  See Blythes notes in doc-plan/srug.tex.</para>
+</listitem>
+</itemizedlist>
+</section>
+
+<section>
+<title>Developer Docs</title>
+<itemizedlist>
+<listitem>
+<para>Needs update.</para>
 </listitem>
 <listitem>
-<para>Update Users Guide.</para>
-</listitem>
-<listitem>
-<para>Update Installation Guide.</para>
-</listitem>
-<listitem>
-<para>Update Developers Guide.</para>
+<para>What to do with module docs that have xml and tex versions.
+Probably want to add a "See also" link to each doc.  How hard is this?</para>
 </listitem>
 <listitem>
 <para>Get missing figures for a few modules.</para>
 </listitem>
 <listitem>
+<para>Perhaps the <filename>Developer/Modules</filename> directory
+should be moved to the <filename>User</filename> directory?</para>
+</listitem>
+</itemizedlist>
+</section>
+
+<section>
+<title>Documentum</title>
+<itemizedlist>
+<listitem>
 <para>Should the <filename>Documentum</filename> directory be part of
 the <filename>Developer</filename> directory?</para>
 </listitem>
+</itemizedlist>
+</section>
+
+<section>
+<title>General</title>
+<itemizedlist>
 <listitem>
-<para>Produce truly printable Installation and Developer Guides.</para>
+<para>Produce truly printable Installation and Developer Guides (how
+good are the FOPs these days?).  We can always use jade and jadetex.
+This would require the installation of jade and the DocBook DSSSL
+stylesheets.</para>
+</listitem>
+<listitem>
+<para>Convert FAQs to DocBook QandA Set documents.  Doing this allows
+me to get rid of the FAQBook directory as each FAQ can be self
+contained  within its own article or as an appendix as part of a Book.</para>
+</listitem>
+<listitem>
+<para>Generate Makefiles via configure script.  Need to check that
+ the proper tools are installed, etc.</para>
 </listitem>
 </itemizedlist>
-</para>
+</section>
+
 </section>
 
 </article>
