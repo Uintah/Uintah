@@ -68,16 +68,17 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
   */
 
   // set up vertices
+  Point corner[8];
   const Point &pmin(bbox_.min());
   const Point &pmax(bbox_.max());
-  corner_[0] = pmin;
-  corner_[1] = Point(pmin.x(), pmin.y(), pmax.z());
-  corner_[2] = Point(pmin.x(), pmax.y(), pmin.z());
-  corner_[3] = Point(pmin.x(), pmax.y(), pmax.z());
-  corner_[4] = Point(pmax.x(), pmin.y(), pmin.z());
-  corner_[5] = Point(pmax.x(), pmin.y(), pmax.z());
-  corner_[6] = Point(pmax.x(), pmax.y(), pmin.z());
-  corner_[7] = pmax;
+  corner[0] = pmin;
+  corner[1] = Point(pmin.x(), pmin.y(), pmax.z());
+  corner[2] = Point(pmin.x(), pmax.y(), pmin.z());
+  corner[3] = Point(pmin.x(), pmax.y(), pmax.z());
+  corner[4] = Point(pmax.x(), pmin.y(), pmin.z());
+  corner[5] = Point(pmax.x(), pmin.y(), pmax.z());
+  corner[6] = Point(pmax.x(), pmax.y(), pmin.z());
+  corner[7] = pmax;
 
   // set up texture coordinates
   Point texture[8];
@@ -93,18 +94,18 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
   texture[7] = Point(tmax.x(), tmax.y(), tmax.z());
 
   // set up edges
-  edge_[0] = Ray(corner_[0], corner_[2] - corner_[0]);
-  edge_[1] = Ray(corner_[2], corner_[6] - corner_[2]);
-  edge_[2] = Ray(corner_[4], corner_[6] - corner_[4]);
-  edge_[3] = Ray(corner_[0], corner_[4] - corner_[0]);
-  edge_[4] = Ray(corner_[1], corner_[3] - corner_[1]);
-  edge_[5] = Ray(corner_[3], corner_[7] - corner_[3]);
-  edge_[6] = Ray(corner_[5], corner_[7] - corner_[5]);
-  edge_[7] = Ray(corner_[1], corner_[5] - corner_[1]);
-  edge_[8] = Ray(corner_[0], corner_[1] - corner_[0]);
-  edge_[9] = Ray(corner_[2], corner_[3] - corner_[2]);
-  edge_[10] = Ray(corner_[6], corner_[7] - corner_[6]);
-  edge_[11] = Ray(corner_[4], corner_[5] - corner_[4]);
+  edge_[0] = Ray(corner[0], corner[2] - corner[0]);
+  edge_[1] = Ray(corner[2], corner[6] - corner[2]);
+  edge_[2] = Ray(corner[4], corner[6] - corner[4]);
+  edge_[3] = Ray(corner[0], corner[4] - corner[0]);
+  edge_[4] = Ray(corner[1], corner[3] - corner[1]);
+  edge_[5] = Ray(corner[3], corner[7] - corner[3]);
+  edge_[6] = Ray(corner[5], corner[7] - corner[5]);
+  edge_[7] = Ray(corner[1], corner[5] - corner[1]);
+  edge_[8] = Ray(corner[0], corner[1] - corner[0]);
+  edge_[9] = Ray(corner[2], corner[3] - corner[2]);
+  edge_[10] = Ray(corner[6], corner[7] - corner[6]);
+  edge_[11] = Ray(corner[4], corner[5] - corner[4]);
 
   // set up texture coordinate edges
   tex_edge_[0] = Ray(texture[0], texture[2] - texture[0]);
@@ -140,10 +141,22 @@ TextureBrick::compute_polygons(const Ray& view, double dt,
 			       Array1<float>& vertex, Array1<float>& texcoord,
 			       Array1<int>& size) const
 {
+  const Point &pmin(bbox_.min());
+  const Point &pmax(bbox_.max());
+  Point corner[8];
+  corner[0] = pmin;
+  corner[1] = Point(pmin.x(), pmin.y(), pmax.z());
+  corner[2] = Point(pmin.x(), pmax.y(), pmin.z());
+  corner[3] = Point(pmin.x(), pmax.y(), pmax.z());
+  corner[4] = Point(pmax.x(), pmin.y(), pmin.z());
+  corner[5] = Point(pmax.x(), pmin.y(), pmax.z());
+  corner[6] = Point(pmax.x(), pmax.y(), pmin.z());
+  corner[7] = pmax;
+
   double t[8];
   for (int i=0; i<8; i++)
   {
-    t[i] = Dot(corner_[i]-view.origin(), view.direction());
+    t[i] = Dot(corner[i]-view.origin(), view.direction());
   }
   Sort(t, 8);
   double tmin = (floor(t[0]/dt) + 1)*dt;
