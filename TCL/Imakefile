@@ -2,7 +2,7 @@
 #include <config/sci.cf>
 
 SUBDIRS = sci
-TCLSUBDIRS = tcl tk itcl blt-1.7
+TCLSUBDIRS = tcl tk itcl blt-1.7 tkTable
 
 SCISubdirs3($(TCLSUBDIRS))
 Makefiles::

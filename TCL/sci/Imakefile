@@ -24,7 +24,7 @@ SRCS = tk3d2.c  tkAppInit.c  tkBevel.c  tkCanvBLine.c  \
 LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src $(OPENGL_INCLUDES)
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lBLT -ltk -litcl -ltcl $(OPENGL_LIBS) -lX11 -lc -lm
+SO_LDFLAGS = -L$(TOP)/lib -lBLT -lTkTable -ltk -litcl -ltcl $(OPENGL_LIBS) -lX11 -lc -lm
 
 LIBNAME = scitk
 

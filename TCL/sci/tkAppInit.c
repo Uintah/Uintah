@@ -110,6 +110,13 @@ Tcl_AppInit(interp)
     }
 
     /*
+     * Add the table extensions
+     */
+    if(Table_Init(interp) == TCL_ERROR) {
+       return TCL_ERROR ;
+     }
+
+    /*
      * Call Tcl_CreateCommand for application-specific commands, if
      * they weren't already created by the init procedures called above.
      */
