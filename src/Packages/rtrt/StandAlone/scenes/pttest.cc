@@ -364,7 +364,7 @@ TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      total_ntextures+=(int)(statbuf.st_size/3*sizeof(unsigned char));
+      total_ntextures+=(int)(statbuf.st_size/(tex_res*tex_res*3*sizeof(unsigned char)));
       
       // Close the texture data file
       close(in_fd);
@@ -419,6 +419,8 @@ TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
     }
   }
 
+  cout << "attempting to read "<<total_nspheres<<" spheres\n";
+  
   // Allocate memory for the necessary data structures
   sphere_data=new float[3*total_nspheres];
   if (!sphere_data) {
@@ -434,6 +436,9 @@ TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
       return 0;
     }
   }
+
+  cout << "attempting to read "<<total_ntextures<<" textures.\n";
+  
   if (tex_flag) {
     tex_data=new unsigned char[3*tex_res*tex_res*total_ntextures];
     if (!tex_data) {
@@ -442,6 +447,8 @@ TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
       return 0;
     }
   }
+
+  cout << "Done allocating sphere and texture data\n";
   
   // Second pass:  Populate the data structures
   // XXX - Ugly hack!  For some reason, simply repositioning the stream's get
