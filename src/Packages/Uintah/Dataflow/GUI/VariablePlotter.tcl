@@ -41,7 +41,6 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	set $this-nl 0
 
 	#plane selection
-	$this-c needexecute
 	global $this-var_orientation
 	set $this-var_orientation 0
 	global $this-index_l
