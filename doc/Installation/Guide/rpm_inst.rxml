@@ -107,7 +107,7 @@ DEALINGS IN THE SOFTWARE.
 	</listitem>
 	<listitem>
 	  <para>
-	    <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 	    (or
 	    <filename>FusionData.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 	    if also downloading the Fusion specific RPM).
@@ -168,7 +168,7 @@ rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-<replaceable>system</replaceable>
       </literallayout>
       and type:
       <literallayout class="monospaced">
-	gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+	gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
       This will create <filename>/usr/local/&sr;Data</filename>, the
       sample data sets directory.  Type <command>exit</command> to leave the
@@ -187,14 +187,14 @@ rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-<replaceable>system</replaceable>
       <command>cd</command> to the directory containing the compressed
       documentation tarball and type:
       <literallayout class="monospaced">
-	gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+	gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
-      This will create <filename>/usr/local/&sr;Docs</filename>, the
+      This will create <filename>/usr/local/&sr;Docs.<replaceable>x.x.x</replaceable></filename>, the
       &sr; documentation directory. Type <command>exit</command> to leave the
       root account.
     </para>
     <para>
-      Open <filename>/usr/local/&sr;Docs/doc/index.html</filename>
+      Open <filename>/usr/local/&sr;Docs.<replaceable>x.x.x</replaceable>/doc/index.html</filename>
       with a web browser to view &sr;'s online documentation.
     </para>
   </section>

@@ -90,12 +90,12 @@ DEALINGS IN THE SOFTWARE.
 	  </listitem>
 	  <listitem>
 	    <para>
-	      <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>, &sr; sample data sets, 
+	      <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename>, &sr; sample data sets, 
 	    </para>
 	  </listitem>
 	  <listitem>
 	    <para>
-	      <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>,
+	      <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>,
 	      &sr; documentation,
 	    </para>
 	  </listitem>
@@ -131,7 +131,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Unpack the sample datasets:
 	<literallayout class="monospaced">
-	  gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+	  gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory <filename>&sr;Data</filename>.
 	<filename>&sr;Data</filename> should be moved to a location accessible to all &sr; users, say
@@ -163,13 +163,15 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Unpack the documentation:
 	<literallayout class="monospaced">
-	  gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+	  gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory <filename>&sr;Docs</filename>. This
+	This creates the directory
+	<filename>&sr;Docs</filename>.<replaceable>x.x.x</replaceable>. This
 	directory can be moved to a new location, say
-	<filename>/usr/local</filename>, accessible to all &sr; users.  Point
-	a browser at <filename>&sr;Docs/doc/index.html</filename> to access
-	&sr;'s online documentation.
+	<filename>/usr/local</filename>, accessible to all &sr; users.
+	Point a browser at
+	<filename>&sr;Docs.<replaceable>x.x.x</replaceable>/doc/index.html</filename> to access &sr;'s
+	online documentation.
       </para>
     </listitem>
 
