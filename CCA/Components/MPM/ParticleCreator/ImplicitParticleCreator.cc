@@ -148,15 +148,7 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   r1 = find(particle_state.begin(), particle_state.end(),lb->pSp_volLabel);
   particle_state.erase(r1);
 
-  r3 = find(particle_state.begin(), particle_state.end(),lb->pDispLabel);
-  particle_state.erase(r3);
-
   r2 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
 	 lb->pSp_volLabel_preReloc);
   particle_state_preReloc.erase(r2);
-  
-  r4 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
-	 lb->pDispLabel_preReloc);
-  particle_state_preReloc.erase(r4);
-  
 }
