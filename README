@@ -8,25 +8,25 @@ For an optimized 64bit build, use:
 
 
 ______________________________________________________________________
-SUS_GOOD AND SUS_SUSPECT                      11/30/01 (Todd)
+SUS_GOOD AND SUS_SUSPECT                      07/17/02 (Todd)
  
 If you want to keep a "good" sus around to compare against while you 
-work on "suspect" code.
+work on "suspect" code.  
 
 - First build a "good" sus
 - mv sus sus_good
 - mkdir SCIRun/src/good_libs
 - cp -r SCIRun/src/lib/ SCIRun/src/good_libs/.
 - In a terminal that will ONLY be used to run sus_good
+    unsetenv LD_LIBRARY64_PATH
     setenv  LD_LIBRARY64_PATH /hd3/harman/SCIRun/src/good_libs:/usr/installed/SCIRun_Thirdparty_64/lib:/usr/lib:/usr/lib64
-    setenv _RLD64_ROOT junk
  
-and it should work
+and it should work.  I'd recommend that you put something like cout<< "SUSPECT CODE"<<endl;
+somewhere in your code just to be sure.
 
-_RLD64_ROOT essentially wipes out the original library path and LD_LIBRARY64_PATH
-sets the path where you want the executable to look.  Don't run any other
-applications from this terminal since you've wiped out their library paths.
-Compile and run your suspect code in a different terminal.
+Essentially LD_LIBRARY64_PATH sets the path where you want the executable to look.  
+Don't run any other applications from this terminal since you've wiped out their
+ library paths. Compile and run your suspect code in a different terminal.
 
 
 ______________________________________________________________________
