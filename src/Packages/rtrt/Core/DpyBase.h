@@ -52,6 +52,9 @@ protected:
   
   // This opens the window.
   int open_display(Window parent = 0, bool needevents = true);
+  // This opens a window that is set up for only events
+  int open_events_display(Window parent = 0);
+  
   // Closes the display
   int close_display(bool remove_from_cleanup_manager=true);
   // This is for global cleanups
@@ -96,6 +99,9 @@ protected:
   // Call this function if you want to redraw the window
   void post_redraw();
 
+  // This blocks until an even occurs and then handles all of them.
+  void wait_and_handle_events();
+  
   // State variables indicating if the control or shift buttons are
   // currently being pressed.
   bool control_pressed;
