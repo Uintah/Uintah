@@ -128,8 +128,10 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   quitAction->addTo(file);
   exitAction->addTo(file);
 
+  buildPackageMenus();
   menuBar()->insertSeparator();
   QPopupMenu * help = new QPopupMenu( this );
+
   help->insertTearOffHandle();
   menuBar()->insertItem( "&Help", help );
   help->insertItem( "&About", this, SLOT(about()), Key_F1 );
@@ -161,6 +163,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   e->setReadOnly(true);
   e->setUndoRedoEnabled(false);
 
+
   gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
@@ -180,7 +183,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   setCentralWidget( vsplit );
   statusBar()->message( "SCIRun 2.0.0 Ready");
 
-  buildPackageMenus();
+
 
   gov::cca::ports::ComponentEventService::pointer ces = pidl_cast<gov::cca::ports::ComponentEventService::pointer>(services->getPort("cca.ComponentEventService"));
   if(ces.isNull()){
@@ -218,9 +221,10 @@ void BuilderWindow::closeEvent( QCloseEvent* ce )
   }
 }
 
-MenuTree::MenuTree(BuilderWindow* builder)
+MenuTree::MenuTree(BuilderWindow* builder, const std::string &url)
   :  builder(builder)
 {
+  this->url=url;
 }
 
 MenuTree::~MenuTree()
@@ -243,7 +247,7 @@ void MenuTree::add(const vector<string>& name, int nameindex,
     const string& n = name[nameindex];
     map<string, MenuTree*>::iterator iter = child.find(n);
     if(iter == child.end())
-      child[n]=new MenuTree(builder);
+      child[n]=new MenuTree(builder, url);
     child[n]->add(name, nameindex+1, desc, fullname);
   }
 }
@@ -285,13 +289,13 @@ void MenuTree::populateMenu(QPopupMenu* menu)
 
 void MenuTree::instantiateComponent()
 {
-  cerr << "MenuTree::instantiate...\n";
-  builder->instantiateComponent(cd);
+  cerr << "MenuTree::instantiate...URL="<<url<<endl;
+  builder->instantiateComponent(cd, url);
 }
 
-void BuilderWindow::buildPackageMenus()
+void BuilderWindow::buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+					    const std::string &frameworkURL)
 {
-  gov::cca::ports::ComponentRepository::pointer reg = pidl_cast<gov::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
   if(reg.isNull()){
     cerr << "Cannot get component registry, not building component menus\n";
     return;
@@ -301,8 +305,45 @@ void BuilderWindow::buildPackageMenus()
   for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
       iter != list.end(); iter++){
     string model = (*iter)->getModelName();
+    if(model!="CCA") continue;
+    model=frameworkURL;
     if(menus.find(model) == menus.end())
-      menus[model]=new MenuTree(this);
+      menus[model]=new MenuTree(this, frameworkURL);
+    string name = (*iter)->getClassName();
+    vector<string> splitname = split_string(name, '.');
+    menus[model]->add(splitname, 0, *iter, name);
+  }
+  for(map<string, MenuTree*>::iterator iter = menus.begin();
+      iter != menus.end(); iter++)
+    iter->second->coalesce();
+
+  for(map<string, MenuTree*>::iterator iter = menus.begin();
+      iter != menus.end(); iter++){
+    QPopupMenu* menu = new QPopupMenu(this);
+    iter->second->populateMenu(menu);
+    menuBar()->insertItem(iter->first.c_str(), menu);
+  }
+}
+
+
+void BuilderWindow::buildPackageMenus()
+{
+  gov::cca::ports::ComponentRepository::pointer reg = pidl_cast<gov::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
+  if(reg.isNull()){
+    cerr << "Cannot get component registry, not building component menus\n";
+    return;
+  }
+
+  vector<gov::cca::ComponentClassDescription::pointer> list = reg->getAvailableComponentClasses();
+
+
+
+  map<string, MenuTree*> menus;
+  for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
+      iter != list.end(); iter++){
+    string model = (*iter)->getModelName();
+    if(menus.find(model) == menus.end())
+      menus[model]=new MenuTree(this,"");
     string name = (*iter)->getClassName();
     vector<string> splitname = split_string(name, '.');
     menus[model]->add(splitname, 0, *iter, name);
@@ -353,6 +394,7 @@ void BuilderWindow::addInfo()
 void BuilderWindow::exit()
 {
   cerr << "Exit should ask framework to shutdown instead!\n";
+  //should stop and close socket in CCACommunicator first
   Thread::exitAll(0);
 }
 
@@ -363,7 +405,8 @@ void BuilderWindow::about()
   (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
-void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd)
+void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd,
+					 const std::string &url)
 {
   cerr << "Should wait for component to be committed...\n";
   gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
@@ -373,7 +416,8 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   }
   cerr << "Should put properties on component before creating\n";
 
-  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0));
+ 
+  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0),url);
 
   CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
   CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);

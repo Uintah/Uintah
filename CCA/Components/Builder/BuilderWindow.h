@@ -43,7 +43,7 @@ namespace SCIRun {
   class MenuTree : public QObject {
     Q_OBJECT
   public:
-    MenuTree(BuilderWindow* builder);
+    MenuTree(BuilderWindow* builder, const std::string &url);
     virtual ~MenuTree();
     gov::cca::ComponentClassDescription::pointer cd;
     void add(const std::vector<std::string>& name, int nameindex,
@@ -54,6 +54,7 @@ namespace SCIRun {
   private:
     std::map<std::string, MenuTree*> child;
     BuilderWindow* builder;
+    std::string url;
   private slots:
     void instantiateComponent();
     
@@ -77,11 +78,14 @@ namespace SCIRun {
     BuilderWindow(const gov::cca::Services::pointer& services);
     virtual ~BuilderWindow();
 
-    void instantiateComponent(const gov::cca::ComponentClassDescription::pointer&);
+    void instantiateComponent(const gov::cca::ComponentClassDescription::pointer&,
+			      const std::string &url="");
 
     // From gov::cca::ComponentEventListener
     void componentActivity(const gov::cca::ports::ComponentEvent::pointer& e);
     void displayMsg(const char *); 
+    void buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+				 const std::string &frameworkURL);
   private:
     gov::cca::Services::pointer services;
     void buildPackageMenus();
