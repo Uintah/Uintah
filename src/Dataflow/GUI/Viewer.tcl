@@ -558,7 +558,7 @@ itcl_class ViewWindow {
 
         # To avoid Mac bizarro behavior of not sizing the window correctly
         # this hack is necessary when loading from a script.
-	if [string length [info script]] {
+	if { [envBool SCI_REGRESSION_TESTING] } {
            # The added benefit of this is that I can make the Viewer Window
            # appear after all the other windows and thus on systems without
            # pbuffers, we don't get the drawing window obscured.  Three seconds
