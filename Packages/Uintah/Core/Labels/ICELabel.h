@@ -35,6 +35,7 @@ namespace Uintah {
     const VarLabel* press_force_CCLabel;
     const VarLabel* mom_source_CCLabel;
     const VarLabel* int_eng_source_CCLabel;
+    const VarLabel* heatCond_src_CCLabel;
     const VarLabel* sp_vol_src_CCLabel;
     const VarLabel* mom_L_CCLabel;
     const VarLabel* int_eng_L_CCLabel;
@@ -42,10 +43,7 @@ namespace Uintah {
     const VarLabel* mass_L_CCLabel;
     const VarLabel* mom_L_ME_CCLabel;
     const VarLabel* eng_L_ME_CCLabel;
-    const VarLabel* burnedMass_CCLabel;
-    const VarLabel* int_eng_comb_CCLabel;
     const VarLabel* created_vol_CCLabel;
-    const VarLabel* mom_comb_CCLabel;
     const VarLabel* term2Label;
     const VarLabel* term3Label;
     const VarLabel* f_theta_CCLabel;
