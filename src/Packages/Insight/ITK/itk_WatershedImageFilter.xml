@@ -1,0 +1,43 @@
+<filter-itk name="itk::WatershedImageFilter">
+
+  <description>
+  A low-level image analysis algorithm that automatically produces 
+  a hierarchy of segmented, labeled images from a scalar-valued image input.
+  </description>
+  <templated>
+    <base>itk::Object</base>
+    <template>InputImageType</template>
+  </templated>
+
+  <inputs>
+    <input num="1">
+      <value>InputImageType</value>
+      <call>SetInput</call>
+      <name>InputImage</name>
+    </input>  
+  </inputs>
+  <outputs>
+    <output num="1">
+      <value>itk::Image<&lt; unsigned long, InputImageType::VImageDimension &gt;</value>
+      <call>GetOutput</call>
+      <name>OutputImage</name>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>threshold</name>
+      <type>double</type>
+      <call>SetThreshold</call>
+    </param>
+    <param>
+      <name>level</name>
+      <type>double</type>
+      <call>SetLevel</call>
+    </param>
+  </parameters>
+  <includes>
+    <include>itkWatershedImageFilter.h</include>
+  </includes>
+</filter-itk>
+

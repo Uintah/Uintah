@@ -1,0 +1,47 @@
+<filter-itk name="itk::watershed::Segmenter">
+  <description>
+This filter implements the first step in the N-d watershed segmentation algorithm. It produces a segmented, labeled image from a scalar-valued image input. This filter is used in conjunction with WatershedSegmentTreeGenerator and WatershedRelabeler to produce a final segmented image volume. See itk::WatershedImageFilter for an overview of the entire algorithm and notes on the terminology used in describing it.
+  </description>
+  <templated>
+    <base>itk::Object</base>
+    <template>InputImageType</template>
+  </templated>
+
+  <inputs>
+    <input num="1">
+      <value>InputImageType</value>
+      <call>SetInputImage</call>
+      <name>Scalar_Image</name>
+    </input>  
+  </inputs>
+  <outputs>
+    <output num="1">
+      <value>LabeledImageType</value>
+      <call>GetOutputImage</call>
+      <name>Labeled_Image</name>
+    </output>
+    <output num="2">
+      <value>SegmentTableType</value>
+      <call>GetSegmentTable</call>
+      <name>Segment_Table</name>
+    </output>
+    <output num="3">
+      <value>BoundaryType</value>
+      <call>GetBoundary</call>
+      <name>Boundary</name>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>threshold</name>
+      <type>double</type>
+      <call>SetThreshold</call>
+    </param>
+  </parameters>
+
+  <includes>
+    <include>itkWatershedSegmenter.h</include>
+  </includes>
+</filter-itk>
+
