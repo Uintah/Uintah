@@ -2227,6 +2227,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
     }
 
+    Material* reactant;
+    int RMI = -99;
+    reactant = d_sharedState->getMaterialByName("reactant");
+    if(reactant != 0){
+      RMI = reactant->getDWIndex();
+      combustion_problem=true;
+    }
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -2329,8 +2336,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       Vector d_S[MAX_BASIS];
 
       double rho_frac_min = 0.;
-      if(mpm_matl->getRxProduct() == Material::reactant){
-	combustion_problem=true;
+      if(m == RMI){
 	rho_frac_min = .1;
       }
       const Level* lvl = patch->getLevel();
@@ -2370,6 +2376,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	pxnew[idx]           = px[idx]    + vel*delT;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
 	pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
+//        if(pvelocitynew[idx].length() > 5000.0){
+//          pvelocitynew[idx] = .5*pvelocitynew[idx];
+//        }
 	pTempNew[idx]        = pTemperature[idx] + tempRate  * delT;
 	pSp_volNew[idx]      = pSp_vol[idx]      + sp_vol_dt * delT;
 
@@ -2393,8 +2402,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	CMV += pvelocitynew[idx]*pmass[idx];
       }
 
-      if(d_with_ice){  // Delete particles based on various criteria
-       if(mpm_matl->getRxProduct() == Material::reactant){
+      if(combustion_problem){  // Delete particles based on various criteria
+       if(m==RMI){
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
@@ -2419,7 +2428,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->deleteParticles(delset);      
     }
 
-    if(combustion_problem){
+    if(combustion_problem){  // Adjust the min. part. mass if dt gets small
       if(delT < 5.e-9){
 	if(delT < 1.e-10){
 	  d_min_part_mass = min(d_min_part_mass*2.0,5.e-9);

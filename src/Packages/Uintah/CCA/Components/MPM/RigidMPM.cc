@@ -1323,7 +1323,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
-    bool combustion_problem=false;
 
     // Artificial Damping 
     double alphaDot = 0.0;
@@ -1428,9 +1427,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       double S[MAX_BASIS];
       Vector d_S[MAX_BASIS];
 
-      if(mpm_matl->getRxProduct() == Material::reactant){
-	combustion_problem=true;
-      }
       const Level* lvl = patch->getLevel();
 
       // Loop over particles
@@ -1492,22 +1488,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       new_dw->deleteParticles(delset);      
-    }
-
-    if(combustion_problem){
-      if(delT < 5.e-9){
-	if(delT < 1.e-10){
-	  d_min_part_mass = min(d_min_part_mass*2.0,5.e-9);
-	  cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-	}
-	else{
-	  d_min_part_mass = min(d_min_part_mass*2.0,5.e-12);
-	  cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-	}
-      }
-      else if(delT > 2.e-8){
-	d_min_part_mass = max(d_min_part_mass/2.0,3.e-15);
-      }
     }
 
     // DON'T MOVE THESE!!!

@@ -2429,7 +2429,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
-    bool combustion_problem=false;
 
     // Artificial Damping 
     double alphaDot = 0.0;
@@ -2558,12 +2557,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       double S[MAX_BASIS];
       Vector d_S[MAX_BASIS];
 
-      double rho_frac_min = 0.;
-      if(mpm_matl->getRxProduct() == Material::reactant){
-	combustion_problem=true;
-	rho_frac_min = .1;
-      }
-
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
 	                           iter != pset->end(); 
@@ -2615,7 +2608,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 	double rho;
 	if(pvolume[idx] > 0.){
-	  rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
+	  rho = pmass[idx]/pvolume[idx];
 	}
 	else{
 	  rho = rho_init;
@@ -2626,7 +2619,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
 	pvolumeNew[idx]      = pmassNew[idx]/rho;
 	if(pmassNew[idx] <= d_min_part_mass ||
-	   (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
+	  (pvelocitynew[idx].length() > d_max_vel)){
 	  delset->addParticle(idx);
 	}
 	    
@@ -2637,22 +2630,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       new_dw->deleteParticles(delset);      
-    }
-
-    if(combustion_problem){
-      if(delT < 5.e-9){
-	if(delT < 1.e-10){
-	  d_min_part_mass = min(d_min_part_mass*2.0,5.e-9);
-	  cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-	}
-	else{
-	  d_min_part_mass = min(d_min_part_mass*2.0,5.e-12);
-	  cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-	}
-      }
-      else if(delT > 2.e-8){
-	d_min_part_mass = max(d_min_part_mass/2.0,3.e-15);
-      }
     }
 
     // DON'T MOVE THESE!!!

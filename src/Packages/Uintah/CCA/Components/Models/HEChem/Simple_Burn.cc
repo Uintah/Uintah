@@ -344,7 +344,7 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
         if(burnedMass > solidMass[c]){
           burnedMass = solidMass[c];
         }
-  
+
         //__________________________________
         // conservation of mass, momentum and energy                           
         mass_src_0[c] -= burnedMass;
