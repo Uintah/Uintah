@@ -59,7 +59,7 @@ GLVolRenState::computeView(Ray& ray)
 void
 GLVolRenState::drawPolys( vector<Polygon *> polys )
 {
-  int i;
+  unsigned int i;
   
   for (i = 0; i < polys.size(); i++) {
     switch (polys[i]->size() ) {
