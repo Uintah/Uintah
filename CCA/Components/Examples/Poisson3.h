@@ -67,12 +67,12 @@ WARNING
                 LevelP coarseLevel);
 
     virtual void scheduleRefineInterface(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& scheduler);
-    void Poisson3::refineInterface(const ProcessorGroup*,
-				   const PatchSubset* finePatches, 
-				   const MaterialSubset* matls,
-				   DataWarehouse* fineDW, 
-				   DataWarehouse* coarseDW,
-				   LevelP coarseLevel);
+    void refineInterface(const ProcessorGroup*,
+			 const PatchSubset* finePatches, 
+			 const MaterialSubset* matls,
+			 DataWarehouse* fineDW, 
+			 DataWarehouse* coarseDW,
+			 LevelP coarseLevel);
 
     virtual void scheduleCoarsen(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched);
     void coarsen(const ProcessorGroup* pg,
