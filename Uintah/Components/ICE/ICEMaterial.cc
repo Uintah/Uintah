@@ -15,6 +15,8 @@
 #include <iostream>
 #include <Uintah/Components/ICE/EOS/EquationOfStateFactory.h>
 
+
+#define d_SMALL_NUM 1.0e-100
 using namespace std;
 using namespace Uintah::ICESpace;
 using namespace Uintah;
@@ -174,28 +176,27 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
        }
      }
      
-     if( count > 0){
-       vel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity();
-       
-#if 0
-       cout << "velocity = " << vel_CC[*iter] <<  endl;
-#endif
+    if( count > 0)
+    {
+       vol_frac_CC[*iter]= count/totalppc;
+    }
+       vel_CC[*iter]     = d_geom_objs[i]->getInitialVelocity();
        speedSound[*iter] = d_speed_of_sound;
        visc_CC[*iter]    = d_viscosity;
        temp[*iter]       = d_geom_objs[i]->getInitialTemperature();
        cv[*iter]         = d_specificHeat;
        rho_micro[*iter]  = d_density;
-#if 0
-       cout << "rho_micro"<<*iter<<"="<<rho_micro[*iter] << endl;
-#endif
-       vol_frac_CC[*iter]= count/totalppc;
-       rho_CC[*iter]     = d_density*vol_frac_CC[*iter];
-     }
+       rho_CC[*iter]     = d_density*vol_frac_CC[*iter] + d_SMALL_NUM;
    }
   }
 }
 
 // $Log$
+// Revision 1.12  2001/01/11 00:22:06  harman
+// -remove if(count) conditional around, vel, cv, temp, cv, speedSound,visc_CC
+//  these need to be defined in everycell for every mat.
+// - added d_SMALL_NUM to rho_CC computation.
+//
 // Revision 1.11  2001/01/05 16:34:10  jas
 // Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
 // where CC velocities are used.
