@@ -17,6 +17,7 @@ namespace Uintah {
   class Patch;
   class ProcessorGroup;
   class DetailedTasks;
+  class DetailedTasks3;
   class Scheduler;
   class VarLabel;
 /****************************************
@@ -59,6 +60,7 @@ WARNING
     //! Uses the patchwise processor assignment. 
     //! @see getPatchwiseProcessorAssignment.
     virtual void assignResources(DetailedTasks& tg) = 0;
+    virtual void assignResources(DetailedTasks3& tg) = 0;
 
     //! Gets the processor that this patch will be assigned to.  
     //! This is different with the different load balancers.
