@@ -1944,6 +1944,39 @@ fi # end sci_required_tiff
 AC_SUBST(TIFF_LIB_FLAG)
 AC_SUBST(TIFF_LIB_DIR_FLAG)
 
+##  --  search for gzopen (and related)  ----------------------------------
+
+## Since variables create by this section are used to check for PNG
+## and TEEM stuff this section needs to preceed them.
+
+_sci_optional=required
+if test "$with_zlib"; then
+  _sci_lib="$with_zlib/lib"
+  _sci_inc="$with_zlib/include"
+  _sci_optional=specific
+else
+  _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_includes"
+fi
+
+SCI_TRY_LINK(Z,zlib library and header,zlib.h,$_sci_inc,z,$_sci_lib,,,$_sci_optional)
+
+if test "$HAVE_Z" = "yes"; then
+   DEF_Z="#define HAVE_ZLIB 1"
+fi
+
+if test "$with_zlib" && test ! "$DEF_Z"; then
+  echo
+  AC_MSG_ERROR(One or more of the GZOPEN components is missing.)
+  echo
+fi
+
+AC_SUBST(Z_LIB_FLAG)
+AC_SUBST(Z_LIB_DIR_FLAG)
+AC_SUBST(INC_Z_H)
+AC_SUBST(DEF_Z)
+sci_defs_files="$sci_defs_files include/sci_defs/z_testdefs.h"
+
 ##  --  search for png --------------------------------------
 
 # Default values:
@@ -2113,36 +2146,6 @@ AC_SUBST(INC_MAGICK_H)
 AC_SUBST(DEF_MAGICK)
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
-
-##  --  search for gzopen (and related)  ----------------------------------
-
-_sci_optional=required
-if test "$with_zlib"; then
-  _sci_lib="$with_zlib/lib"
-  _sci_inc="$with_zlib/include"
-  _sci_optional=specific
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
-fi
-
-SCI_TRY_LINK(Z,zlib library and header,zlib.h,$_sci_inc,z,$_sci_lib,,,$_sci_optional)
-
-if test "$HAVE_Z" = "yes"; then
-   DEF_Z="#define HAVE_ZLIB 1"
-fi
-
-if test "$with_zlib" && test ! "$DEF_Z"; then
-  echo
-  AC_MSG_ERROR(One or more of the GZOPEN components is missing.)
-  echo
-fi
-
-AC_SUBST(Z_LIB_FLAG)
-AC_SUBST(Z_LIB_DIR_FLAG)
-AC_SUBST(INC_Z_H)
-AC_SUBST(DEF_Z)
-sci_defs_files="$sci_defs_files include/sci_defs/z_testdefs.h"
 
 ##  --  search for unp --------------------------------------
 
