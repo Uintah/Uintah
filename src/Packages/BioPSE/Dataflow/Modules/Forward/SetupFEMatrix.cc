@@ -145,6 +145,19 @@ void SetupFEMatrix::execute(){
   //! finding conductivity tensor lookup table
   vector<pair<string, Tensor> > tens;
 
+  double unitsScale = 1;
+  string units;
+  if (uiUseCond_.get()==1 && hCondMesh->mesh()->get("units", units)) {
+    cerr << "units = "<<units<<"\n";
+    if (units == "mm") unitsScale = 1./1000;
+    else if (units == "cm") unitsScale = 1./100;
+    else if (units == "dm") unitsScale = 1./10;
+    else if (units == "m") unitsScale = 1./1;
+    else {
+      cerr << "SetupFEMatrix -- didn't recognize units of mesh: " << units << "\n";
+    }
+    cerr << "unitsScale = "<<unitsScale<<"\n";
+  }
   if (uiUseCond_.get()==1 && hCondMesh->get("conductivity_table", tens)){
     msgStream_ << "Using supplied conductivity tensors "  << endl;
   }
@@ -165,7 +178,7 @@ void SetupFEMatrix::execute(){
   }
   
   lastUseCond_ = uiUseCond_.get();
-  if(BuildFEMatrix::build_FEMatrix(hCondMesh, tens, hGblMtrx_)){
+  if(BuildFEMatrix::build_FEMatrix(hCondMesh, tens, hGblMtrx_, unitsScale)){
     msgStream_ << "Matrix is ready" << endl;
     msgStream_ << "Size: " << hGblMtrx_->nrows() << "-by-" << hGblMtrx_->ncols() << endl;
   };
