@@ -229,12 +229,6 @@ using namespace SCIRun;
 			const CCVariable<fflux>& IFS,
 			const CCVariable<eflux>& IFE,
 			const CCVariable<cflux>& IFC,
-			CCVariable<fflux>& q_out,
-			CCVariable<eflux>& q_out_EF,
-			CCVariable<cflux>& q_out_CF,
-			CCVariable<fflux>& q_in,
-			CCVariable<eflux>& q_in_EF,
-			CCVariable<cflux>& q_in_CF,
 			CCVariable<double>& q_advected);
       
       void qOutfluxFirst(const CCVariable<double>& q_CC,const Patch* patch,
@@ -243,14 +237,14 @@ using namespace SCIRun;
 			 CCVariable<cflux>& q_out_CF);
       
       
-      void qInflux(const CCVariable<fflux>& q_out,
-		   const CCVariable<eflux>& q_out_EF,
-		   const CCVariable<cflux>& q_out_CF, 
-		   const Patch* patch,
-		   CCVariable<fflux>& q_in,
-		   CCVariable<eflux>& q_in_EF,
-		   CCVariable<cflux>& q_in_CF);
-      
+      void qInfluxFirst(const CCVariable<fflux>& q_out,
+		        const CCVariable<eflux>& q_out_EF,
+		        const CCVariable<cflux>& q_out_CF, 
+		        const Patch* patch,
+		        CCVariable<fflux>& q_in,
+		        CCVariable<eflux>& q_in_EF,
+		        CCVariable<cflux>& q_in_CF);
+
       void qOutfluxSecond(CCVariable<fflux>& OFS,
 			  CCVariable<fflux>& IFS,
 			  CCVariable<fflux>& r_out_x,
