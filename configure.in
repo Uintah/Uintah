@@ -68,6 +68,7 @@ AC_CONFIG_HEADER(sci_config.h)
 SCI_ARG_WITH_LIST="--no-create --no-recursion"
 SCI_ARG_ENABLE_LIST=""
 
+## Pass on the echo flags to the other scripts.
 ECHO_N=$ac_n
 ECHO_C=$ac_c
 
@@ -2242,8 +2243,16 @@ case $host in
     PETSC_ARCH=linux
 
     # Necessary for linking blas and lapack with petsc on icebox
-    AC_MSG_WARN(Hard coded PGI libs.  May not work if you are not on icebox.)
-    PGI_STUFF="-L/uufs/icebox/sys/pgi/linux86/lib -lpgftnrtl -lpgc"
+    # AC_MSG_WARN(Hard coded PGI libs.  May not work if you are not on icebox.)
+    # PGI_STUFF="-L/uufs/icebox/sys/pgi/linux86/lib -lpgftnrtl -lpgc"
+
+    AC_MSG_WARN(CHPC ICEBOX USERS: PGI libs are no longer hard coded.)
+    AC_MSG_WARN(They use to be in the configure script, so if you want)
+    AC_MSG_WARN(them back, edit configure.in (look for this text) and)
+    AC_MSG_WARN(uncomment the above lines.  It is possible that you)
+    AC_MSG_WARN(can just add the follow line to the PETSC_LIBS var in)
+    AC_MSG_WARN(configVars.mk, but I have not tried it:)
+    AC_MSG_WARN( PGI_STUFF=\"-L/uufs/icebox/sys/pgi/linux86/lib -lpgftnrtl -lpgc\")
     ;;
   *)
     PETSC_ARCH=unknown
