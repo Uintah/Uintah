@@ -19,6 +19,7 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
+#include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Core/Geometry/Transform.h>
 #include <fstream>
@@ -154,13 +155,13 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
 }
 
 void addObjMaterial(Array1<Material*> &matl,
-		    const Color &Kd, const Color &/*Ks*/, double opacity,
+		    const Color &Kd, const Color &Ks, double opacity,
 		    double Ns, const string &name, Array1<string> &names,
 		    const string &tmap_name, const string &bmap_name,
 		    int has_tmap, int has_bmap, 
 		    Array1<int> &matl_has_tmap,
 		    Array1<int> &matl_has_bmap,
-		    bool is_glass, double n_in, double n_out,
+		    bool is_glass, bool is_metal, double n_in, double n_out,
 		    double R0, const Color &extinction_in,
 		    const Color &extinction_out, bool nothing_inside,
 		    double extinction_scale, double scale_bump) {
@@ -183,11 +184,13 @@ void addObjMaterial(Array1<Material*> &matl,
       m = new DielectricMaterial(n_in, n_out, R0, Ns, extinction_in, 
 				 extinction_out, nothing_inside, 
 				 extinction_scale);
+    } else if (is_metal) {
+      m = new MetalMaterial(Ks, Ns);
     } else if (Ns == 0)
       m = new LambertianMaterial(Kd);
     else {
       cerr << "Kd="<<Kd<<" opacity="<<opacity<<" R0="<<R0<<" Ns="<<Ns<<"\n";
-      m = new Phong(Kd, Color(1,1,1), Ns, R0);
+      m = new Phong(Kd, Ks, Ns, R0);
     }
   }
   if (has_bmap) {
@@ -224,10 +227,11 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    string tmap_name;
    string bmap_name;
    double n_in, n_out, R0, extinction_scale;
-   bool is_glass, nothing_inside;
+   bool is_glass, is_metal, nothing_inside;
    Color extinction_in, extinction_out;
    double scale_bump=1;
    is_glass=0;
+   is_metal=0;
 
    while(fgets(buf,4096,f)) {
      if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
@@ -235,10 +239,11 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
 			tmap_name, bmap_name, has_tmap, has_bmap,
 			matl_has_tmap, matl_has_bmap,
-			is_glass, n_in, n_out, R0, extinction_in, 
+			is_glass, is_metal, n_in, n_out, R0, extinction_in, 
 			extinction_out, nothing_inside, extinction_scale,
 			scale_bump);
 	 is_glass=0;
+	 is_metal=0;
 	 has_tmap=0;
 	 has_bmap=0;
 	 matl_complete=0;
@@ -270,6 +275,8 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 extinction_out=Color(scratch[6], scratch[7], scratch[8]);
 	 nothing_inside=scratch[9];
 	 extinction_scale=scratch[10];
+       } else if (strncmp(&buf[2], "metal", strlen("metal")) == 0) {
+	 is_metal=1;
        } else if (strncmp(&buf[2], "opacity", strlen("opacity")) == 0) {
 	 Get1d(&buf[10], scratch);
 	 opacity=scratch[0];
@@ -319,7 +326,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
      addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
 		    tmap_name, bmap_name, has_tmap, has_bmap,
 		    matl_has_tmap, matl_has_bmap,
-		    is_glass, n_in, n_out, R0, extinction_in, 
+		    is_glass, is_metal, n_in, n_out, R0, extinction_in, 
 		    extinction_out, nothing_inside, extinction_scale,
 		    scale_bump);
    }
