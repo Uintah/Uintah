@@ -7,6 +7,8 @@
 #include <Packages/rtrt/Core/texture.h>
 #include <Packages/rtrt/Core/widget.h>
 #include <vector>
+#include <Packages/rtrt/Core/VolumeVis2D.h>
+
 
 using std::vector;
 
@@ -53,15 +55,25 @@ namespace rtrt {
     virtual void button_pressed(MouseButton button, const int x, const int y);
     virtual void button_released(MouseButton button, const int x, const int y);
     virtual void button_motion(MouseButton button, const int x, const int y);
+    //
+    virtual void lookup( Voxel2D<float> voxel, Color &color, float &alpha );
+    virtual void attach( VolumeVis2D* volume );
   
   public:
+    float t_inc;
     vector<Widget*> widgets;           // collection of widgets to be controlled in any function
     int pickedIndex;                   // index of currently selected widget by frame
     int old_x;                         // saved most recent x-coordinate
     int old_y;                         // saved most recent y-coordinate
     float x_pixel_width;               // screenspace-to-worldspace x-dim ratio
     float y_pixel_width;               // screenspace-to-worldspace y-dim ratio
-    Volvis2DDpy();
+    float vmin, vmax, gmin, gmax;      // voxel minima/maxima
+    GLuint bgTextName;
+    GLuint transFuncTextName;
+    Texture <GLfloat> *bgTextImage;    // clean background texture
+    Texture <GLfloat> *transTexture;   // collection of widget textures painted onto background
+    vector<VolumeVis2D*> volumes;
+    Volvis2DDpy( float t_inc );
   };
 
 } // end namespace rtrt
