@@ -175,12 +175,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-          
-     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S)){
-	  cerr << "p=" << px[idx] << '\n';
-          cerr << "patch=" << patch << '\n';
-	  throw InternalError("Particle not in this patch?");
-     }
+
+     patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
      
      Visibility vis;
      if(matl->getFractureModel()) {
@@ -511,6 +507,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.74  2000/11/30 22:59:19  guilkey
+// Got rid of the if(! in front of all of the patch->findCellAnd...
+// since this is no longer needed.
+//
 // Revision 1.73  2000/11/21 20:51:04  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major

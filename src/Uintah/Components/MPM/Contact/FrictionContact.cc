@@ -343,8 +343,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
          // Get the node indices that surround the cell
          IntVector ni[8];
 	 double S[8];
-         if(!patch->findCellAndWeights(px[idx], ni, S))
-            continue;
+         patch->findCellAndWeights(px[idx], ni, S);
          // Add each particles contribution to the local mass & velocity
          // Must use the node indices
          for(int k = 0; k < 8; k++) {
@@ -519,6 +518,10 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.38  2000/11/30 22:59:21  guilkey
+// Got rid of the if(! in front of all of the patch->findCellAnd...
+// since this is no longer needed.
+//
 // Revision 1.37  2000/11/28 00:17:32  tan
 // Fixed a bug caused by unique-variable_lable_name-problem.
 //

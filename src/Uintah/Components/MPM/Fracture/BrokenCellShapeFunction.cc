@@ -30,9 +30,8 @@ findCellAndWeights( int partIdx,
                     bool visiable[8],
                     double S[8] ) const
 {
-  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
-     nodeIdx, S) )
-  return false;
+  d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
+     nodeIdx, S);
 
   for(int i=0;i<8;++i) {
     visiable[i] = getVisibility( partIdx,nodeIdx[i] );
@@ -47,9 +46,8 @@ findCellAndShapeDerivatives( int partIdx,
                              bool visiable[8],
                              Vector d_S[8] ) const
 {
-  if( !d_lattice.getPatch()->findCellAndShapeDerivatives(d_lattice.getpX()[partIdx], 
-     nodeIdx, d_S) )
-  return false;
+  d_lattice.getPatch()->findCellAndShapeDerivatives(d_lattice.getpX()[partIdx], 
+     nodeIdx, d_S);
   
   for(int i=0;i<8;++i) {
     visiable[i] = getVisibility( partIdx,nodeIdx[i] );
@@ -66,13 +64,11 @@ findCellAndWeightsAndShapeDerivatives( int partIdx,
 			     double S[8],
                              Vector d_S[8] ) const
 {
-  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
-     nodeIdx, S) )
-  return false;
+  d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
+     nodeIdx, S);
 
-  if( !d_lattice.getPatch()->findCellAndShapeDerivatives(d_lattice.getpX()[partIdx], 
-     nodeIdx, d_S) )
-  return false;
+  d_lattice.getPatch()->findCellAndShapeDerivatives(d_lattice.getpX()[partIdx], 
+     nodeIdx, d_S);
   
   for(int i=0;i<8;++i) {
     visiable[i] = getVisibility( partIdx,nodeIdx[i] );
@@ -103,6 +99,10 @@ getVisibility(int partIdx,const IntVector& nodeIdx) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.9  2000/11/30 22:59:23  guilkey
+// Got rid of the if(! in front of all of the patch->findCellAnd...
+// since this is no longer needed.
+//
 // Revision 1.8  2000/09/11 00:15:00  tan
 // Added calculations on random distributed microcracks in broken particles.
 //

@@ -217,8 +217,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
      IntVector ni[8];
      Vector d_S[8];
 
-     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-         continue;
+     patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
      Visibility vis;
      if(matl->getFractureModel()) {
@@ -440,6 +439,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::StateData*)
 }
 
 // $Log$
+// Revision 1.53  2000/11/30 22:59:20  guilkey
+// Got rid of the if(! in front of all of the patch->findCellAnd...
+// since this is no longer needed.
+//
 // Revision 1.52  2000/11/15 18:37:24  guilkey
 // Reduced warnings in constitutive models.
 //
