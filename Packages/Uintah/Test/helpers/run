@@ -1,11 +1,10 @@
 #!/bin/sh
 
-# $BUILD_DIR $BUILDROOT, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
+# $USER, $TEST_DATA, $BUILD_DIR $BUILDROOT, $WEEKLY, $mode, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
 
 mode=$1
-
 failed=0
-
+USER_FLAG=""
 if [ ! -d "$TEST_DATA" ]; then
     echo "TEST_DATA directory doesn't exist: $TEST_DATA"
     exit -1;
@@ -15,8 +14,9 @@ if [ ! -d "${TEST_DATA}/${mode}" ]; then
     mkdir "${TEST_DATA}/${mode}"
 fi
 
-
 cd "${BUILDROOT}/${mode}"
+
+# these should be links
 if [ ! -d TestScripts ]; then
     ln -s ../src/Packages/Uintah/Test TestScripts
 fi
@@ -26,31 +26,49 @@ fi
 if [ ! -d inputs ]; then
     ln -s ../src/Packages/Uintah/StandAlone/inputs inputs
 fi
-if [ ! -d goldStandard ]; then
-    ln -s "${TEST_DATA}/${mode}" goldStandard
+
+# remove this in case it points to the wrong place
+if [ -d goldStandard ]; then
+    rm -f goldStandard
 fi
+ln -s "${TEST_DATA}/${mode}" goldStandard
 
 summary_log="${BUILDROOT}/${mode}/summary_log"
 rm -f $summary_log
 
-echo ""
-
 cd TestScripts
 
-for test in *; do
+# select files desired by a particular user
+if [ "$USER" != "" ]; then
+    if [ ! -d users/$USER ]; then
+        echo "src/Packages/Uintah/Test/users/$USER does not exist."
+        echo "Please create and place tests there and run again."
+        exit 1
+    fi
+    # this line is so in the test file (which is a python script), it knows
+    # where to look for the helpers package (directory)
+    cd users/$USER
+    for file in *; do
+      cp $file ../../$file-$USER
+    done
+    USER_FLAG="-$USER"
+    cd ../..
+fi
 
+for test in *"$USER_FLAG"; do
 # match this test to being run in a daily or weekly context
+# also match to a user context - if no user is selected, USER is ""
     runThisTest=0;
     if [ "$WEEKLY" = "1" ]; then
       case "$test" in
-        *.wk) runThisTest=1
+        *.wk*) runThisTest=1
               ;;
         *)    runThisTest=0
               ;;
       esac
     else
       case "$test" in
-        *.wk) runThisTest=0
+        *.wk*) runThisTest=0
               ;;
         *)    runThisTest=1
               ;;
@@ -60,7 +78,7 @@ for test in *; do
       continue
     fi
     if [ -f "$test" -a -x "$test" ]; then
-	if [ $WithArches = "no" -a $test = "ARCHES" ]; then
+	if [ "$WithArches" = "no" -a "$test" = "ARCHES" ]; then
 	    echo ""
 	    echo "Skipping test \"${test}-${mode}\" at `date`"
 	    echo "(ARCHES did not compile)"
@@ -72,10 +90,12 @@ for test in *; do
 
 	cd "${BUILDROOT}/${mode}"
 	doTestScript="do${test}tests"
+        echo "$doTestScript"
 	echo "#!/bin/tcsh" > "$doTestScript"
 	echo "setenv PATH $PATH" >> "$doTestScript"
         echo "setenv OS $OS" >> "$doTestScript"
-	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+        
+        echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
 	rm -f "${BUILDROOT}/${mode}/${test}-short.log"
 	"$doTestScript" > "${test}.log"  2>&1

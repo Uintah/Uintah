@@ -4,9 +4,12 @@
 OS=`uname -s`
 
 BUILD_DIR=/local/csafe/raid1/tester/"$OS"
+USE_DEFAULT_BUILD="yes"
 SCRIPT_DIR=/local/csafe/raid1/tester/bin
 TEST_DATA=/usr/sci/projects/Uintah/tester/"$OS"-TestData
+USE_DEFAULT_TEST_DATA="yes"
 TEMP_DIR=/usr/sci/projects/Uintah/tester/"$OS"
+COMPILE="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
 SEND_MAIL_TO=""
@@ -20,6 +23,7 @@ NOTESTS="0"
 MONTHLYBACKUP="no"
 mallocstrict="no"
 LD_LIBRARY_PATH=""
+USER=""
 
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
@@ -71,6 +75,21 @@ while [ "$#" -gt 0 ]; do
 	    shift
 	    USE_TREE="$1"
 	fi
+        USE_DEFAULT_BUILD="no"
+	;;
+    -build_dir)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    BUILD_DIR="$1"
+	fi
+        USE_DEFAULT_BUILD="no"
+	;;
+    -test_data)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    TEST_DATA="$1"
+	fi
+        USE_DEFAULT_TEST_DATA="no"
 	;;
     -j)
 	if [ "$#" -gt 1 ]; then
@@ -88,12 +107,21 @@ while [ "$#" -gt 0 ]; do
     -monthlybackup)
         MONTHLYBACKUP="1"
         ;;
+    -no_compile)
+        COMPILE="no"
+        ;;
     -malloc_strict)
         mallocstrict="yes"
         ;;
-     -help)
+    -help)
 	show_help=1
 	;;
+    -user)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    USER="$1"
+	fi
+        ;;
      *)
 	echo "$1: Unknown option, -help for help"
 	exit 1
@@ -101,6 +129,12 @@ while [ "$#" -gt 0 ]; do
      esac
      shift
 done
+
+if [ "$USER" != "" ]; then
+  if [ "$USE_DEFAULT_BUILD" = "yes" -o "$USE_DEFAULT_TEST_DATA" = "yes" ]; then
+    show_help="1"
+  fi
+fi
 
 # usage string - exit
 if [ $show_help != "0" ]; then
@@ -115,8 +149,14 @@ if [ $show_help != "0" ]; then
 	    -use_tree "tree": Use the given tree instead of checking one out
 	    -use_prevtree: Use the previous (last_ran.lock) checkout and/or build
 	    -build_only:  Test the compilation only.  Don't run the tests.
+            -no_compile:  Run the tests only; assume the build is already done.
             -verbose: Display verbose output
             -weekly:  Run longer regression tests (meant for once a week)
+            -build_dir: Change the directory where SCIRun is downloaded to.
+            -test_data: Change the GoldStandard directory.
+            -user <user>: Run the tests in Test/users/<user>/ instead of Test/
+              You must use either the -use_tree or -build_dir options and
+              the -test_data option
 	    -help:    Display this option summary
 EOF
     exit 0
@@ -128,7 +168,7 @@ fi
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
 CVSROOT="/usr/sci/projects/cvsrepository"
-export PATH CVSROOT WEEKLY mallocstrict NOTESTS
+export PATH CVSROOT WEEKLY mallocstrict NOTESTS USER COMPILE
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
@@ -304,7 +344,7 @@ fi
 # set configure command options based on architecture
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
 	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
-	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
+	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
 else
 	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
 	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --disable-sci-malloc --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
@@ -330,8 +370,8 @@ fi
 runTests
 retval=$?
 
-chgrp -R csafe $BUILDROOT
-chmod -R g+w $BUILDROOT
+chgrp -R csafe $BUILDROOT > /dev/null 2>&1
+chmod -R g+w $BUILDROOT > /dev/null 2>&1
 
 
 if [ $VERBOSE == "yes" ]; then

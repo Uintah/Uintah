@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $BUILD_DIR $BUILDROOT, $HTMLLOG, $NOTESTS, $PARALLELISM, and $MAKE_PARALLELISM must be set
+# $BUILD_DIR $BUILDROOT, $HTMLLOG, $NOTESTS, $PARALLELISM, $COMPILE, and $MAKE_PARALLELISM must be set
 
 mode=$1 # dbg or opt
 CONFIGURE_ARGS=$2
@@ -20,12 +20,17 @@ echo "#!/bin/tcsh" > configure_command
 echo "../../src/configure $CONFIGURE_ARGS" >> configure_command
 chmod a+x configure_command
 
-build $mode "$CONFIGURE_ARGS"
-retval=$?
+retval="0"
 
-echo "Changing permissions in `pwd`"
-chgrp -R csafe .
-chmod -R g+rwX . 
+if [ "$COMPILE" = "yes" ]; then
+  build $mode "$CONFIGURE_ARGS"
+  retval=$?
+
+  echo "Changing permissions in `pwd`"
+  chgrp -R csafe .
+  chmod -R g+rwX . 
+
+fi
 
 if [ "$retval" = "0" -a "$NOTESTS" = "0" ]; then
   run $1
