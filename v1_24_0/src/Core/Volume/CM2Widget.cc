@@ -44,7 +44,10 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
-#include <limits>
+
+// This constant should be migrated to Math something...
+#define SCI_FLOAT_EPSILON 0.000001
+
 #include <sgi_stl_warnings_on.h>
 
 #include <math.h>
@@ -323,9 +326,9 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory,
   shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
   shader->setLocalParam(1, left_x, left_y, width, height);
 
-  if(offset_ < std::numeric_limits<float>::epsilon())
+  if(offset_ < SCI_FLOAT_EPSILON )
     shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
-  else if((1.0-offset_) < std::numeric_limits<float>::epsilon())
+  else if((1.0-offset_) < SCI_FLOAT_EPSILON )
     shader->setLocalParam(2, offset_, 1.0, 0.0, 0.0);
   else
     shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
