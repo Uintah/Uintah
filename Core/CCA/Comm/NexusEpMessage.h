@@ -64,6 +64,8 @@ namespace SCIRun {
     void marshalDouble(const double *d, int size = 1);
     void marshalLong(const long *l, int size = 1);
     void marshalSpChannel(SpChannel* channel);
+    void marshalOpaque(void **ptr, int size=1);
+
     void sendMessage(int handler);
     void waitReply();
     void unmarshalReply();
@@ -74,6 +76,7 @@ namespace SCIRun {
     void unmarshalDouble(double *d, int size = 1);
     void unmarshalLong(long *l, int size = 1);
     void unmarshalSpChannel(SpChannel* channel);
+    void unmarshalOpaque(void** ptr, int size = 1);
     void destroyMessage();
 
   private:

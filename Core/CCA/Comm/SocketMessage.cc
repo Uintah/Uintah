@@ -132,7 +132,7 @@ SocketMessage::marshalSpChannel(SpChannel* channel){
 }
 
 void 
-SocketMessage::marshalOpaque(const void **buf, int size){
+SocketMessage::marshalOpaque(void **buf, int size){
   marshalBuf(&(PIDL::getDT()->getAddress()), sizeof(DTAddress));
   marshalBuf(buf, size*sizeof(void*));
 }
