@@ -50,7 +50,7 @@ class StencilMatrix;
 
  class TurbulenceModel; 
 
-class BoundaryCondition : 
+class BoundaryCondition
 {
 public:
   // GROUP: Constructors:

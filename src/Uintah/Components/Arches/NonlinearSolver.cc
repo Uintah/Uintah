@@ -7,4 +7,6 @@ NonlinearSolver::NonlinearSolver()
 {
 }
 
-
+NonlinearSolver::~NonlinearSolver()
+{
+}

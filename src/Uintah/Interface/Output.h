@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_OUTPUT_H
 
 #include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/OutputP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
@@ -61,6 +60,10 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/04/11 07:10:53  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.4  2000/03/17 09:30:03  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

@@ -4,8 +4,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Parallel/ProcessorContext.h>
-#include <Uintah/Exceptions/SchedulerException.h>
 #include <Uintah/Grid/Task.h>
+#include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Thread/SimpleReducer.h>
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Thread/Time.h>
@@ -16,6 +16,7 @@ static char *id="@(#) $Id$";
 namespace Uintah {
 namespace Components {
 
+using SCICore::Exceptions::InternalError;
 using SCICore::Thread::SimpleReducer;
 using SCICore::Thread::Thread;
 using SCICore::Thread::Time;
@@ -171,7 +172,7 @@ BrainDamagedScheduler::execute(const ProcessorContext* pc)
 	    }
 	}
 	if(ncompleted == 0)
-	    throw SchedulerException("BrainDamagedScheduler stalled");
+	    throw InternalError("BrainDamagedScheduler stalled");
 	totalcompleted += ncompleted;
 	if(totalcompleted == d_tasks.size())
 	    break;
@@ -191,7 +192,7 @@ BrainDamagedScheduler::addTask(Task* t)
 }
 
 bool
-BrainDamagedScheduler::allDependenciesCompleted(TaskRecord* task) const
+BrainDamagedScheduler::allDependenciesCompleted(TaskRecord*) const
 {
     //cerr << "BrainDamagedScheduler::allDependenciesCompleted broken!\n";
     return true;
@@ -232,6 +233,10 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.4  2000/04/11 07:10:40  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.3  2000/03/17 01:03:16  dav
 // Added some cocoon stuff, fixed some namespace stuff, etc
 //

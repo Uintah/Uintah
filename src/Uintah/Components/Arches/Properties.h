@@ -31,8 +31,8 @@ public:
     void problemSetup(const ProblemSpecP& params,
 			      DataWarehouseP&);
     void sched_computeProps(const LevelP& level,
-			    SchedulerP&, DataWarehouseP& old,
-			    DataWarehouseP& new);
+			    SchedulerP&, DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
     const int getNumMixVars() const{
       return d_numMixingVars;
     }

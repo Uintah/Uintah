@@ -7,6 +7,7 @@
 
 namespace Uintah {
 namespace Grid {
+    using Uintah::Exceptions::TypeMismatchException;
 
 /**************************************
 
@@ -108,6 +109,10 @@ SoleVariable<T>::allocate(const Region*)
 
 //
 // $Log$
+// Revision 1.4  2000/04/11 07:10:50  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.3  2000/03/16 22:08:01  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

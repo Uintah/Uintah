@@ -2,12 +2,17 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/SimulationController/SimulationController.h>
+#include <Uintah/Exceptions/ProblemSetupException.h>
+#include <Uintah/Interface/ProblemSpecInterface.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <SCICore/Thread/Time.h>
 
 using SCICore::Thread::Time;
 
-namespace Uintah {
-namespace Components {
+using Uintah::Exceptions::ProblemSetupException;
+using Uintah::Interface::ProblemSpecInterface;
+using Uintah::Components::SimulationController;
 
 SimulationController::SimulationController()
 {
@@ -19,6 +24,15 @@ SimulationController::~SimulationController()
 
 void SimulationController::run()
 {
+    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(getPort("problem spec"));
+
+    // Get the problem specification
+    ProblemSpecP params = psi->readInputFile();
+    if(!params)
+	throw ProblemSetupException("Cannot read problem specification");
+
+    releasePort("problem spec");
+
 #if 0
     // Get the problem specification.  Hard-coded for now - create a 
     // component later
@@ -223,11 +237,12 @@ void SimulationController::timeAdvance(double t, double delt,
 #endif
 }
 
-} // end namespace Components
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.4  2000/04/11 07:10:42  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.3  2000/03/17 20:58:31  dav
 // namespace updates
 //

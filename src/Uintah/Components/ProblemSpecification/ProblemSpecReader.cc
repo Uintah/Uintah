@@ -1,5 +1,6 @@
 
 #include "ProblemSpecReader.h"
+#include <Uintah/Interface/ProblemSpec.h>
 #include <iostream>
 using namespace std;
 
@@ -10,7 +11,8 @@ ostream& operator<<(ostream& target, const DOMString& toWrite);
 ostream& operator<<(ostream& target, DOM_Node& toWrite);
 static bool     doEscapes       = true;
 
-ProblemSpecReader::ProblemSpecReader()
+ProblemSpecReader::ProblemSpecReader(const std::string& filename)
+    : filename(filename)
 {
 
 }
@@ -19,7 +21,7 @@ ProblemSpecReader::~ProblemSpecReader()
 {
 }
 
-ProblemSpecP ProblemSpecReader::readInputFile(const std::string name)
+ProblemSpecP ProblemSpecReader::readInputFile()
 {
   
   try {
@@ -41,8 +43,8 @@ ProblemSpecP ProblemSpecReader::readInputFile(const std::string name)
   // Parse the input file
   // No exceptions just yet, need to add
 
-  cout << "Parsing " << name << endl;
-  parser.parse(name.c_str());
+  cout << "Parsing " << filename << endl;
+  parser.parse(filename.c_str());
   cout << "Works after parsing . . ." << endl;
 
 

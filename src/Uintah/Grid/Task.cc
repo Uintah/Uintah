@@ -2,12 +2,12 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Exceptions/SchedulerException.h>
 #include <Uintah/Interface/DataWarehouse.h>
+#include <SCICore/Exceptions/InternalError.h>
 #include <iostream>
 
-namespace Uintah {
-namespace Grid {
+using Uintah::Grid::Task;
+using SCICore::Exceptions::InternalError;
 
 Task::ActionBase::~ActionBase()
 {
@@ -69,7 +69,7 @@ void Task::computes(const DataWarehouseP& ds, const std::string& name,
 void Task::doit(const ProcessorContext* pc)
 {
   if( d_completed )
-    throw SchedulerException("Task performed, but already completed");
+      throw InternalError("Task performed, but already completed");
   d_action->doit(pc, d_region, d_fromDW, d_toDW);
   //d_completed=true;
 }
@@ -107,11 +107,12 @@ void Task::addComps(std::vector<Dependency*>& to) const
     }
 }
 
-} // end namespace Grid
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.5  2000/04/11 07:10:50  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.4  2000/03/17 09:29:59  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
