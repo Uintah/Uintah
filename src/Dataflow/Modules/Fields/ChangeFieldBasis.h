@@ -215,11 +215,11 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
       typename FSRC::mesh_type::Cell::size_type nsize;
       mesh->size(nsize);
-      const int ncols = nsize;
+      const int ncols = (int)nsize;
 
       typename FSRC::mesh_type::Node::size_type osize;
       mesh->size(osize);
-      const int nrows = osize;
+      const int nrows = (int)osize;
 
       int *rr = scinew int[nrows + 1];
       vector<unsigned int> cctmp;
@@ -263,11 +263,11 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
       typename FSRC::mesh_type::Face::size_type nsize;
       mesh->size(nsize);
-      const int ncols = nsize;
+      const int ncols = (int)nsize;
 
       typename FSRC::mesh_type::Node::size_type osize;
       mesh->size(osize);
-      const int nrows = osize;
+      const int nrows = (int)osize;
 
       int *rr = scinew int[nrows + 1];
       vector<unsigned int> cctmp;
@@ -311,11 +311,11 @@ ChangeFieldBasisAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
 
       typename FSRC::mesh_type::Edge::size_type nsize;
       mesh->size(nsize);
-      const int ncols = nsize;
+      const int ncols = (int)nsize;
 
       typename FSRC::mesh_type::Node::size_type osize;
       mesh->size(osize);
-      const int nrows = osize;
+      const int nrows = (int)osize;
 
       int *rr = scinew int[nrows + 1];
       vector<unsigned int> cctmp;
