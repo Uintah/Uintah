@@ -33,9 +33,9 @@ namespace Uintah {
     virtual void registerPermanentParticleState(MPMMaterial* matl,
 						MPMLabel* lb);
 
-    particleIndex countParticles(const Patch*,
+    virtual particleIndex countParticles(const Patch*,
 				 std::vector<GeometryObject*>&) const;
-    particleIndex countParticles(GeometryObject* obj,
+    virtual particleIndex countParticles(GeometryObject* obj,
 				 const Patch*) const;
 
     
