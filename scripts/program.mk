@@ -41,7 +41,7 @@ $(PROGRAM)_LIBS := $(LIBS)
 #
 $(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
 	rm -f $@
-	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+	$(CXX) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #
 #  These will get removed on make clean
@@ -56,6 +56,9 @@ SRCS := INVALID_SRCS.cc
 
 #
 # $Log$
+# Revision 1.8  2000/03/20 21:56:22  yarden
+# Linux port: add support for so lib on linux
+#
 # Revision 1.7  2000/03/18 08:09:13  sparker
 # Fixed substitution for libraries
 #
