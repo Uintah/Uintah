@@ -518,7 +518,7 @@ void CompNeoHookImplicit::addInitialComputesAndRequires(Task*,
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
 						 const MPMMaterial* matl,
 						 const PatchSet* patches,
-						 const bool recursion)
+						 const bool recursion) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -558,7 +558,7 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
 
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
 						 const MPMMaterial* matl,
-						 const PatchSet*)
+						 const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
