@@ -34,62 +34,58 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCIRun {
-  class GeomPick;
-}
-
-namespace SCIRun {
-
-  //using GeomPick;
-
-
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
 
+
+namespace SCIRun {
+class GeomPick;
+
 class ArrowWidget : public BaseWidget {
 public:
-   ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale );
-   ArrowWidget( const ArrowWidget& );
-   virtual ~ArrowWidget();
+  ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  ArrowWidget( const ArrowWidget& );
+  virtual ~ArrowWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void redraw();
+  virtual void geom_moved(GeomPick*, int, double,
+			  const Vector&, int, const BState&);
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   void SetPosition( const Point& );
-   Point GetPosition() const;
+  void SetPosition( const Point& );
+  Point GetPosition() const;
    
-   void SetLength( double );
-   double GetLength();
+  void SetLength( double );
+  double GetLength();
    
-   void SetDirection( const Vector& v );
-   const Vector& GetDirection();
+  void SetDirection( const Vector& v );
+  const Vector& GetDirection();
 
-   virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( TCLArgs& );
 
-   // Variable indexs         
-   enum { PointVar, HeadVar, DistVar };
+  // Variable indexs         
+  enum { PointVar, HeadVar, DistVar };
 
-   // Material indexs
-   enum { PointMatl, ShaftMatl, HeadMatl, ResizeMatl };
+  // Material indexs
+  enum { PointMatl, ShaftMatl, HeadMatl, ResizeMatl };
 
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   Vector direction;
-   double length;
+  Vector direction;
+  double length;
 };
 
 } // End namespace SCIRun
 
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif

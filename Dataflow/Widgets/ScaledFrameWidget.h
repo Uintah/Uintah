@@ -34,69 +34,70 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCIRun {
-
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
 
+
+namespace SCIRun {
+
 class ScaledFrameWidget : public BaseWidget {
 public:
-   ScaledFrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
-   ScaledFrameWidget( const ScaledFrameWidget& );
-   virtual ~ScaledFrameWidget();
+  ScaledFrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  ScaledFrameWidget( const ScaledFrameWidget& );
+  virtual ~ScaledFrameWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
-   virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
+  virtual void redraw();
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   void SetPosition( const Point& center, const Point& R, const Point& D );
-   void GetPosition( Point& center, Point& R, Point& D );
+  void SetPosition( const Point& center, const Point& R, const Point& D );
+  void GetPosition( Point& center, Point& R, Point& D );
 
-   void SetPosition( const Point& center, const Vector& normal,
-		     const double size1, const double size2 );
-   void GetPosition( Point& center, Vector& normal,
-		     double& size1, double& size2 );
+  void SetPosition( const Point& center, const Vector& normal,
+		    const double size1, const double size2 );
+  void GetPosition( Point& center, Vector& normal,
+		    double& size1, double& size2 );
 
-   void SetRatioR( const double ratio );
-   double GetRatioR() const;
-   void SetRatioD( const double ratio );
-   double GetRatioD() const;
+  void SetRatioR( const double ratio );
+  double GetRatioR() const;
+  void SetRatioD( const double ratio );
+  double GetRatioD() const;
 
-   void SetSize( const double sizeR, const double sizeD );
-   void GetSize( double& sizeR, double& sizeD ) const;
+  void SetSize( const double sizeR, const double sizeD );
+  void GetSize( double& sizeR, double& sizeD ) const;
    
-   const Vector& GetRightAxis();
-   const Vector& GetDownAxis();
+  const Vector& GetRightAxis();
+  const Vector& GetDownAxis();
 
-   // Variable indexs
-   enum { CenterVar, PointRVar, PointDVar, DistRVar, DistDVar, HypoVar,
-	  SDistRVar, RatioRVar, SDistDVar, RatioDVar };
+  // Variable indexs
+  enum { CenterVar, PointRVar, PointDVar, DistRVar, DistDVar, HypoVar,
+	 SDistRVar, RatioRVar, SDistDVar, RatioDVar };
 
-   // Material indexs
-   enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl };
+  // Material indexs
+  enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl };
 
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   Vector oldrightaxis, olddownaxis;
-   Point rot_start_pt_;
-   Point rot_start_d_;
-   Point rot_start_r_;
-   Vector rot_start_ray_norm_;
-   Vector rot_curr_ray_;
+  Vector oldrightaxis, olddownaxis;
+  Point rot_start_pt_;
+  Point rot_start_d_;
+  Point rot_start_r_;
+  Vector rot_start_ray_norm_;
+  Vector rot_curr_ray_;
 };
+
 
 } // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif

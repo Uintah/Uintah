@@ -35,67 +35,68 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 #include <Core/Geom/View.h>
 
-namespace SCIRun {
-
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
 
+namespace SCIRun {
+
+
 class ViewWidget : public BaseWidget {
 public:
-   ViewWidget( Module* module, CrowdMonitor* lock, double widget_scale,
-	       double AspectRatio = 1.3333);
-   ViewWidget( const ViewWidget& );
-   virtual ~ViewWidget();
+  ViewWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+	      double AspectRatio = 1.3333);
+  ViewWidget( const ViewWidget& );
+  virtual ~ViewWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void redraw();
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   View GetView();
-   Vector GetUpVector();
-   double GetFOV() const;
+  View GetView();
+  Vector GetUpVector();
+  double GetFOV() const;
 
-   void SetView( const View& view );
+  void SetView( const View& view );
 
-   double GetAspectRatio() const;
-   void SetAspectRatio( const double aspect );
+  double GetAspectRatio() const;
+  void SetAspectRatio( const double aspect );
    
-   const Vector& GetEyeAxis();
-   const Vector& GetUpAxis();
-   Point GetFrontUL();
-   Point GetFrontUR();
-   Point GetFrontDR();
-   Point GetFrontDL();
-   Point GetBackUL();
-   Point GetBackUR();
-   Point GetBackDR();
-   Point GetBackDL();
+  const Vector& GetEyeAxis();
+  const Vector& GetUpAxis();
+  Point GetFrontUL();
+  Point GetFrontUR();
+  Point GetFrontDR();
+  Point GetFrontDL();
+  Point GetBackUL();
+  Point GetBackUR();
+  Point GetBackDR();
+  Point GetBackDL();
 
-   // Variable indexs
-   enum { EyeVar, ForeVar, LookAtVar, UpVar, UpDistVar, EyeDistVar, FOVVar };
+  // Variable indexs
+  enum { EyeVar, ForeVar, LookAtVar, UpVar, UpDistVar, EyeDistVar, FOVVar };
 
-   // Material indexs
-   enum { EyesMatl, ResizeMatl, ShaftMatl, FrustrumMatl };
+  // Material indexs
+  enum { EyesMatl, ResizeMatl, ShaftMatl, FrustrumMatl };
    
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   double ratio;
-   Vector oldaxis1;
-   Vector oldaxis2;
+  double ratio;
+  Vector oldaxis1;
+  Vector oldaxis2;
 };
+
+
+} // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
-} // End namespace SCIRun
-
 
 #endif

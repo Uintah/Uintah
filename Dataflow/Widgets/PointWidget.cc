@@ -59,19 +59,19 @@ enum { Pick };
  *      includes some consistency checking to ensure full initialization.
  */
 PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, "PointWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale)
+  : BaseWidget(module, lock, "PointWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale)
 {
-   variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
+  variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   geometries[GeomPoint] = scinew GeomSphere;
-   materials[PointMatl] = scinew GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
-   picks[Pick] = scinew GeomPick(materials[PointMatl], module, this, Pick);
-   picks[Pick]->set_highlight(DefaultHighlightMaterial);
-   CreateModeSwitch(0, picks[Pick]);
+  geometries[GeomPoint] = scinew GeomSphere;
+  materials[PointMatl] = scinew GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
+  picks[Pick] = scinew GeomPick(materials[PointMatl], module, this, Pick);
+  picks[Pick]->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(0, picks[Pick]);
 
-   SetMode(Mode0, Switch0);
+  SetMode(Mode0, Switch0);
    
-   FinishWidget();
+  FinishWidget();
 }
 
 
@@ -98,9 +98,11 @@ PointWidget::~PointWidget()
 void
 PointWidget::redraw()
 {
-   if (mode_switches[0]->get_state())
-      ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
-						 widget_scale);
+  if (mode_switches[0]->get_state())
+  {
+    ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
+					       widget_scale_);
+  }
 }
 
 
@@ -121,12 +123,13 @@ void
 PointWidget::geom_moved( GeomPick*, int /* axis */, double dist,
 			 const Vector& delta, int pick, const BState& )
 {
-   switch(pick){
-   case Pick:
-      MoveDelta(delta * dist);
-      break;
-   }
-   execute(0);
+  switch(pick)
+  {
+  case Pick:
+    MoveDelta(delta * dist);
+    break;
+  }
+  execute(0);
 }
 
 
@@ -139,9 +142,9 @@ PointWidget::geom_moved( GeomPick*, int /* axis */, double dist,
 void
 PointWidget::MoveDelta( const Vector& delta )
 {
-   variables[PointVar]->MoveDelta(delta);
+  variables[PointVar]->MoveDelta(delta);
 
-   execute(1);
+  execute(1);
 }
 
 
@@ -153,23 +156,23 @@ PointWidget::MoveDelta( const Vector& delta )
 Point
 PointWidget::ReferencePoint() const
 {
-   return variables[PointVar]->point();
+  return variables[PointVar]->point();
 }
 
 
 void
 PointWidget::SetPosition( const Point& p )
 {
-   variables[PointVar]->Move(p);
+  variables[PointVar]->Move(p);
 
-   execute(0);
+  execute(0);
 }
 
 
 Point
 PointWidget::GetPosition() const
 {
-   return variables[PointVar]->point();
+  return variables[PointVar]->point();
 }
 
 
@@ -181,47 +184,52 @@ PointWidget::GetPosition() const
 string
 PointWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<materials.size());
+  ASSERT(mindex<materials.size());
    
-   switch(mindex){
-   case 0:
-      return "Point";
-   default:
-      return "UnknownMaterial";
-   }
+  switch(mindex)
+  {
+  case 0:
+    return "Point";
+  default:
+    return "UnknownMaterial";
+  }
 }
 
 
 void
 PointWidget::widget_tcl( TCLArgs& args )
 {
-   if (args[1] == "translate"){
-      if (args.count() != 4) {
-	 args.error("point widget needs axis translation");
-	 return;
-      }
-      double trans;
-      if (!string_to_double(args[3], trans)) {
-	 args.error("point widget can't parse translation `"+args[3]+"'");
-	 return;
-      }
-      Point p(GetPosition());
-      switch (args[2][0]) {
-      case 'x':
-	 p.x(trans);
-	 break;
-      case 'y':
-	 p.y(trans);
-	 break;
-      case 'z':
-	 p.z(trans);
-	 break;
-      default:
-	 args.error("point widget unknown axis `"+args[2]+"'");
-	 break;
-      }
-      SetPosition(p);
-   }
+  if (args[1] == "translate")
+  {
+    if (args.count() != 4)
+    {
+      args.error("point widget needs axis translation");
+      return;
+    }
+    double trans;
+    if (!string_to_double(args[3], trans))
+    {
+      args.error("point widget can't parse translation `"+args[3]+"'");
+      return;
+    }
+    Point p(GetPosition());
+    switch (args[2][0])
+    {
+    case 'x':
+      p.x(trans);
+      break;
+    case 'y':
+      p.y(trans);
+      break;
+    case 'z':
+      p.z(trans);
+      break;
+    default:
+      args.error("point widget unknown axis `"+args[2]+"'");
+      break;
+    }
+    SetPosition(p);
+  }
 }
 
 } // End namespace SCIRun

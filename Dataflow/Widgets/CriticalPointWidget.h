@@ -34,62 +34,64 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCIRun {
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
 
+
+namespace SCIRun {
+
 class CriticalPointWidget : public BaseWidget {
 public:
-   // Critical types
-   enum CriticalType { Regular, AttractingNode, RepellingNode, Saddle,
-		       AttractingFocus, RepellingFocus, SpiralSaddle,
-		       NumCriticalTypes };
+  // Critical types
+  enum CriticalType { Regular, AttractingNode, RepellingNode, Saddle,
+		      AttractingFocus, RepellingFocus, SpiralSaddle,
+		      NumCriticalTypes };
 
-   CriticalPointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
-   CriticalPointWidget( const CriticalPointWidget& );
-   virtual ~CriticalPointWidget();
+  CriticalPointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  CriticalPointWidget( const CriticalPointWidget& );
+  virtual ~CriticalPointWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void redraw();
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
-   virtual void NextMode();
+  virtual void NextMode();
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   void SetCriticalType( const CriticalType crit );
-   Index GetCriticalType() const;
+  void SetCriticalType( const CriticalType crit );
+  Index GetCriticalType() const;
 
-   void SetPosition( const Point& );
-   Point GetPosition() const;
+  void SetPosition( const Point& );
+  Point GetPosition() const;
    
-   void SetDirection( const Vector& v );
-   const Vector& GetDirection() const;
+  void SetDirection( const Vector& v );
+  const Vector& GetDirection() const;
 
-   virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( TCLArgs& );
 
-   // Variable indexs
-   enum { PointVar };
+  // Variable indexs
+  enum { PointVar };
 
-   // Material indexs
-   enum { PointMaterial, ShaftMaterial, HeadMaterial, CylinderMatl, TorusMatl, ConeMatl };
+  // Material indexs
+  enum { PointMaterial, ShaftMaterial, HeadMaterial, CylinderMatl, TorusMatl, ConeMatl };
 
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   CriticalType crittype;
-   Vector direction;
+  CriticalType crittype;
+  Vector direction;
 };
 
 } // End namespace SCIRun
 
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif

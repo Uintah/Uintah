@@ -34,16 +34,18 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCIRun {
-
-enum LightType { DirectionalLight, PointLight, SpotLight, AreaLight, NumLightTypes };
-
-class FrameWidget;
-
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
+
+namespace SCIRun {
+
+enum LightType {
+  DirectionalLight, PointLight, SpotLight, AreaLight, NumLightTypes
+};
+
+class FrameWidget;
 
 class LightWidget : public BaseWidget {
 public:
@@ -81,11 +83,11 @@ private:
    Vector oldaxis;
 };
 
+
 } // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif

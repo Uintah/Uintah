@@ -40,8 +40,6 @@
 
 namespace SCIRun {
 
-
-
 const Index NumCons = 4;
 const Index NumVars = 6;
 const Index NumGeoms = 16;
@@ -68,100 +66,103 @@ enum { PickSphU, PickSphR, PickSphD, PickSphL, PickCyls,
  *      includes some consistency checking to ensure full initialization.
  */
 FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, "FrameWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
+  : BaseWidget(module, lock, "FrameWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+    oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
 {
-   double INIT = 5.0*widget_scale;
-   // Schemes 5/6 are used by the picks in GeomMoved!!
-   variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
-   variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
-   variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
-   variables[DistRVar] = scinew RealVariable("RDIST", solve, Scheme3, INIT);
-   variables[DistDVar] = scinew RealVariable("DDIST", solve, Scheme4, INIT);
-   variables[HypoVar] = scinew RealVariable("HYPO", solve, Scheme3, sqrt(2*INIT*INIT));
+  double INIT = 5.0*widget_scale;
+  // Schemes 5/6 are used by the picks in GeomMoved!!
+  variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
+  variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
+  variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
+  variables[DistRVar] = scinew RealVariable("RDIST", solve, Scheme3, INIT);
+  variables[DistDVar] = scinew RealVariable("DDIST", solve, Scheme4, INIT);
+  variables[HypoVar] = scinew RealVariable("HYPO", solve, Scheme3, sqrt(2*INIT*INIT));
 
-   constraints[ConstRD] = scinew DistanceConstraint("ConstRD",
-						 NumSchemes,
-						 variables[PointRVar],
-						 variables[PointDVar],
-						 variables[HypoVar]);
-   constraints[ConstRD]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[ConstRD]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[ConstRD]->VarChoices(Scheme3, 2, 2, 1);
-   constraints[ConstRD]->VarChoices(Scheme4, 2, 2, 0);
-   constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
-   constraints[ConstPyth] = scinew PythagorasConstraint("ConstPyth",
-						     NumSchemes,
-						     variables[DistRVar],
-						     variables[DistDVar],
-						     variables[HypoVar]);
-   constraints[ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[ConstPyth]->VarChoices(Scheme2, 1, 0, 0);
-   constraints[ConstPyth]->VarChoices(Scheme3, 2, 2, 1);
-   constraints[ConstPyth]->VarChoices(Scheme4, 2, 2, 0);
-   constraints[ConstPyth]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[ConstRC] = scinew DistanceConstraint("ConstRC",
-						 NumSchemes,
-						 variables[PointRVar],
-						 variables[CenterVar],
-						 variables[DistRVar]);
-   constraints[ConstRC]->VarChoices(Scheme1, 0, 0, 0);
-   constraints[ConstRC]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[ConstRC]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[ConstRC]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ConstDC] = scinew DistanceConstraint("ConstDC",
-					       NumSchemes,
-					       variables[PointDVar],
-					       variables[CenterVar],
-					       variables[DistDVar]);
-   constraints[ConstDC]->VarChoices(Scheme1, 0, 0, 0);
-   constraints[ConstDC]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[ConstDC]->VarChoices(Scheme3, 0, 0, 0);
-   constraints[ConstDC]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
+  constraints[ConstRD] = scinew DistanceConstraint("ConstRD",
+						   NumSchemes,
+						   variables[PointRVar],
+						   variables[PointDVar],
+						   variables[HypoVar]);
+  constraints[ConstRD]->VarChoices(Scheme1, 1, 1, 1);
+  constraints[ConstRD]->VarChoices(Scheme2, 0, 0, 0);
+  constraints[ConstRD]->VarChoices(Scheme3, 2, 2, 1);
+  constraints[ConstRD]->VarChoices(Scheme4, 2, 2, 0);
+  constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
+  constraints[ConstPyth] = scinew PythagorasConstraint("ConstPyth",
+						       NumSchemes,
+						       variables[DistRVar],
+						       variables[DistDVar],
+						       variables[HypoVar]);
+  constraints[ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
+  constraints[ConstPyth]->VarChoices(Scheme2, 1, 0, 0);
+  constraints[ConstPyth]->VarChoices(Scheme3, 2, 2, 1);
+  constraints[ConstPyth]->VarChoices(Scheme4, 2, 2, 0);
+  constraints[ConstPyth]->Priorities(P_Highest, P_Highest, P_Highest);
+  constraints[ConstRC] = scinew DistanceConstraint("ConstRC",
+						   NumSchemes,
+						   variables[PointRVar],
+						   variables[CenterVar],
+						   variables[DistRVar]);
+  constraints[ConstRC]->VarChoices(Scheme1, 0, 0, 0);
+  constraints[ConstRC]->VarChoices(Scheme2, 0, 0, 0);
+  constraints[ConstRC]->VarChoices(Scheme3, 2, 2, 2);
+  constraints[ConstRC]->VarChoices(Scheme4, 0, 0, 0);
+  constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
+  constraints[ConstDC] = scinew DistanceConstraint("ConstDC",
+						   NumSchemes,
+						   variables[PointDVar],
+						   variables[CenterVar],
+						   variables[DistDVar]);
+  constraints[ConstDC]->VarChoices(Scheme1, 0, 0, 0);
+  constraints[ConstDC]->VarChoices(Scheme2, 0, 0, 0);
+  constraints[ConstDC]->VarChoices(Scheme3, 0, 0, 0);
+  constraints[ConstDC]->VarChoices(Scheme4, 2, 2, 2);
+  constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
 
-   Index geom, pick;
-   GeomGroup* cyls = scinew GeomGroup;
-   for (geom = GeomSPointUL; geom <= GeomSPointDL; geom++) {
-      geometries[geom] = scinew GeomSphere;
-      cyls->add(geometries[geom]);
-   }
-   for (geom = GeomCylU; geom <= GeomCylL; geom++) {
-      geometries[geom] = scinew GeomCylinder;
-      cyls->add(geometries[geom]);
-   }
-   picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
-   picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-   materials[EdgeMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
-   CreateModeSwitch(0, materials[EdgeMatl]);
+  Index geom, pick;
+  GeomGroup* cyls = scinew GeomGroup;
+  for (geom = GeomSPointUL; geom <= GeomSPointDL; geom++)
+  {
+    geometries[geom] = scinew GeomSphere;
+    cyls->add(geometries[geom]);
+  }
+  for (geom = GeomCylU; geom <= GeomCylL; geom++)
+  {
+    geometries[geom] = scinew GeomCylinder;
+    cyls->add(geometries[geom]);
+  }
+  picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
+  picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
+  materials[EdgeMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+  CreateModeSwitch(0, materials[EdgeMatl]);
 
-   GeomGroup* pts = scinew GeomGroup;
-   for (geom = GeomPointU, pick = PickSphU;
-	geom <= GeomPointL; geom++, pick++) {
-      geometries[geom] = scinew GeomSphere;
-      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
-      picks[pick]->set_highlight(DefaultHighlightMaterial);
-      pts->add(picks[pick]);
-   }
-   materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
-   CreateModeSwitch(1, materials[PointMatl]);
+  GeomGroup* pts = scinew GeomGroup;
+  for (geom = GeomPointU, pick = PickSphU; geom <= GeomPointL; geom++, pick++)
+  {
+    geometries[geom] = scinew GeomSphere;
+    picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
+    picks[pick]->set_highlight(DefaultHighlightMaterial);
+    pts->add(picks[pick]);
+  }
+  materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
+  CreateModeSwitch(1, materials[PointMatl]);
    
-   GeomGroup* resizes = scinew GeomGroup;
-   for (geom = GeomResizeU, pick = PickResizeU;
-	geom <= GeomResizeL; geom++, pick++) {
-      geometries[geom] = scinew GeomCappedCylinder;
-      picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
-      picks[pick]->set_highlight(DefaultHighlightMaterial);
-      resizes->add(picks[pick]);
-   }
-   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
-   CreateModeSwitch(2, materials[ResizeMatl]);
+  GeomGroup* resizes = scinew GeomGroup;
+  for (geom = GeomResizeU, pick = PickResizeU;
+       geom <= GeomResizeL; geom++, pick++)
+  {
+    geometries[geom] = scinew GeomCappedCylinder;
+    picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
+    picks[pick]->set_highlight(DefaultHighlightMaterial);
+    resizes->add(picks[pick]);
+  }
+  materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
+  CreateModeSwitch(2, materials[ResizeMatl]);
 
-   SetMode(Mode0, Switch0|Switch1|Switch2);
-   SetMode(Mode1, Switch0);
+  SetMode(Mode0, Switch0|Switch1|Switch2);
+  SetMode(Mode1, Switch0);
 
-   FinishWidget();
+  FinishWidget();
 }
 
 
@@ -188,66 +189,82 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::redraw()
 {
-   double sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
-   Vector Right(GetRightAxis()*variables[DistRVar]->real());
-   Vector Down(GetDownAxis()*variables[DistDVar]->real());
-   Point Center(variables[CenterVar]->point());
-   Point UL(Center-Right-Down);
-   Point UR(Center+Right-Down);
-   Point DR(Center+Right+Down);
-   Point DL(Center-Right+Down);
-   Point U(Center-Down);
-   Point R(Center+Right);
-   Point D(Center+Down);
-   Point L(Center-Right);
+  const double sphererad(widget_scale_);
+  const double resizerad(0.5*widget_scale_);
+  const double cylinderrad(0.5*widget_scale_);
+  Vector Right(GetRightAxis()*variables[DistRVar]->real());
+  Vector Down(GetDownAxis()*variables[DistDVar]->real());
+  Point Center(variables[CenterVar]->point());
+  Point UL(Center-Right-Down);
+  Point UR(Center+Right-Down);
+  Point DR(Center+Right+Down);
+  Point DL(Center-Right+Down);
+  Point U(Center-Down);
+  Point R(Center+Right);
+  Point D(Center+Down);
+  Point L(Center-Right);
 
-   if (mode_switches[0]->get_state()) {
-      ((GeomCylinder*)geometries[GeomCylU])->move(UL, UR, cylinderrad);
-      ((GeomCylinder*)geometries[GeomCylR])->move(UR, DR, cylinderrad);
-      ((GeomCylinder*)geometries[GeomCylD])->move(DR, DL, cylinderrad);
-      ((GeomCylinder*)geometries[GeomCylL])->move(DL, UL, cylinderrad);
-      ((GeomSphere*)geometries[GeomSPointUL])->move(UL, cylinderrad);
-      ((GeomSphere*)geometries[GeomSPointUR])->move(UR, cylinderrad);
-      ((GeomSphere*)geometries[GeomSPointDR])->move(DR, cylinderrad);
-      ((GeomSphere*)geometries[GeomSPointDL])->move(DL, cylinderrad);
-   }
+  if (mode_switches[0]->get_state())
+  {
+    ((GeomCylinder*)geometries[GeomCylU])->move(UL, UR, cylinderrad);
+    ((GeomCylinder*)geometries[GeomCylR])->move(UR, DR, cylinderrad);
+    ((GeomCylinder*)geometries[GeomCylD])->move(DR, DL, cylinderrad);
+    ((GeomCylinder*)geometries[GeomCylL])->move(DL, UL, cylinderrad);
+    ((GeomSphere*)geometries[GeomSPointUL])->move(UL, cylinderrad);
+    ((GeomSphere*)geometries[GeomSPointUR])->move(UR, cylinderrad);
+    ((GeomSphere*)geometries[GeomSPointDR])->move(DR, cylinderrad);
+    ((GeomSphere*)geometries[GeomSPointDL])->move(DL, cylinderrad);
+  }
    
-   if (mode_switches[1]->get_state()) {
-      ((GeomSphere*)geometries[GeomPointU])->move(U, sphererad);
-      ((GeomSphere*)geometries[GeomPointR])->move(R, sphererad);
-      ((GeomSphere*)geometries[GeomPointD])->move(D, sphererad);
-      ((GeomSphere*)geometries[GeomPointL])->move(L, sphererad);
-   }
+  if (mode_switches[1]->get_state())
+  {
+    ((GeomSphere*)geometries[GeomPointU])->move(U, sphererad);
+    ((GeomSphere*)geometries[GeomPointR])->move(R, sphererad);
+    ((GeomSphere*)geometries[GeomPointD])->move(D, sphererad);
+    ((GeomSphere*)geometries[GeomPointL])->move(L, sphererad);
+  }
 
-   if (mode_switches[2]->get_state()) {
-      Vector resizeR(GetRightAxis()*1.5*widget_scale),
-	 resizeD(GetDownAxis()*1.5*widget_scale);
+  if (mode_switches[2]->get_state())
+  {
+    const Vector resizeR(GetRightAxis()*1.5*widget_scale_);
+    const Vector resizeD(GetDownAxis()*1.5*widget_scale_);
       
-      ((GeomCappedCylinder*)geometries[GeomResizeU])->move(U, U - resizeD, resizerad);
-      ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + resizeR, resizerad);
-      ((GeomCappedCylinder*)geometries[GeomResizeD])->move(D, D + resizeD, resizerad);
-      ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - resizeR, resizerad);
-   }
+    ((GeomCappedCylinder*)geometries[GeomResizeU])->move(U, U - resizeD, resizerad);
+    ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + resizeR, resizerad);
+    ((GeomCappedCylinder*)geometries[GeomResizeD])->move(D, D + resizeD, resizerad);
+    ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - resizeR, resizerad);
+  }
 
-   ((DistanceConstraint*)constraints[ConstRC])->SetMinimum(1.6*widget_scale);
-   ((DistanceConstraint*)constraints[ConstDC])->SetMinimum(1.6*widget_scale);
-   ((DistanceConstraint*)constraints[ConstRD])->SetMinimum(sqrt(2*1.6*1.6)*widget_scale);
+  ((DistanceConstraint*)constraints[ConstRC])->SetMinimum(1.6*widget_scale_);
+  ((DistanceConstraint*)constraints[ConstDC])->SetMinimum(1.6*widget_scale_);
+  ((DistanceConstraint*)constraints[ConstRD])->SetMinimum(sqrt(2*1.6*1.6)*widget_scale_);
 
-   Right.normalize();
-   Down.normalize();
-   Vector Norm(Cross(Right, Down));
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      if ((geom == PickResizeU) || (geom == PickResizeD))
-	 picks[geom]->set_principal(Down);
-      else if ((geom == PickResizeL) || (geom == PickResizeR))
-	 picks[geom]->set_principal(Right);
-      else if ((geom == PickSphL) || (geom == PickSphR))
-	 picks[geom]->set_principal(Down, Norm);
-      else if ((geom == PickSphU) || (geom == PickSphD))
-	 picks[geom]->set_principal(Right, Norm);
-      else
-	 picks[geom]->set_principal(Right, Down, Norm);
-   }
+  Right.normalize();
+  Down.normalize();
+  Vector Norm(Cross(Right, Down));
+  for (Index geom = 0; geom < NumPcks; geom++)
+  {
+    if ((geom == PickResizeU) || (geom == PickResizeD))
+    {
+      picks[geom]->set_principal(Down);
+    }
+    else if ((geom == PickResizeL) || (geom == PickResizeR))
+    {
+      picks[geom]->set_principal(Right);
+    }
+    else if ((geom == PickSphL) || (geom == PickSphR))
+    {
+      picks[geom]->set_principal(Down, Norm);
+    }
+    else if ((geom == PickSphU) || (geom == PickSphD))
+    {
+      picks[geom]->set_principal(Right, Norm);
+    }
+    else
+    {
+      picks[geom]->set_principal(Right, Down, Norm);
+    }
+  }
 }
 
 // if rotating, save the start position of the selected widget 
@@ -257,19 +274,24 @@ FrameWidget::geom_pick( GeomPick*, ViewWindow*, int pick, const BState& )
   Point c2=(variables[CenterVar]->point().vector()*2).point();
   rot_start_d_=variables[PointDVar]->point();
   rot_start_r_=variables[PointRVar]->point();
-  switch(pick){
+  switch(pick)
+  {
   case PickSphU:
     rot_start_pt_=(c2-rot_start_d_).point();
     break;
+
   case PickSphD:
     rot_start_pt_=rot_start_d_;
     break;
+
   case PickSphL:
     rot_start_pt_=(c2-rot_start_r_).point();
     break;
+
   case PickSphR:
     rot_start_pt_=rot_start_r_;
     break;
+
   default:
     return;
   }
@@ -296,66 +318,80 @@ void
 FrameWidget::geom_moved( GeomPick*, int axis, double dist,
 			 const Vector& delta, int pick, const BState& )
 {
-   Vector delt(delta);
-   double ResizeMin(1.5*widget_scale);
-   if (axis==1) dist = -dist;
+  Vector delt(delta);
+  double resize_min(1.5*widget_scale_);
+  if (axis==1) dist = -dist;
 
-   ((DistanceConstraint*)constraints[ConstRC])->SetDefault(GetRightAxis());
-   ((DistanceConstraint*)constraints[ConstDC])->SetDefault(GetDownAxis());
+  ((DistanceConstraint*)constraints[ConstRC])->SetDefault(GetRightAxis());
+  ((DistanceConstraint*)constraints[ConstDC])->SetDefault(GetDownAxis());
    
-   Transform trans;
-   Vector rot_curr_ray_norm;
-   double dot;
-   Vector rot_axis;
-   Point c(variables[CenterVar]->point());
-   switch(pick){
-   case PickSphU: case PickSphD: 
-   case PickSphL: case PickSphR: 
-     rot_curr_ray_ += delta;
-     rot_curr_ray_norm=rot_curr_ray_;
-     rot_curr_ray_norm.normalize();
-     rot_axis=Cross(rot_start_ray_norm_, rot_curr_ray_norm);
-     if (rot_axis.length2()<1.e-16) rot_axis=Vector(1,0,0);
-     else rot_axis.normalize();
-     dot=Dot(rot_start_ray_norm_, rot_curr_ray_norm);
+  Transform trans;
+  Vector rot_curr_ray_norm;
+  double dot;
+  Vector rot_axis;
+  Point c(variables[CenterVar]->point());
+  switch(pick)
+  {
+  case PickSphU: case PickSphD: 
+  case PickSphL: case PickSphR: 
+    rot_curr_ray_ += delta;
+    rot_curr_ray_norm=rot_curr_ray_;
+    rot_curr_ray_norm.normalize();
+    rot_axis=Cross(rot_start_ray_norm_, rot_curr_ray_norm);
+    if (rot_axis.length2()<1.e-16) { rot_axis=Vector(1,0,0); }
+    else { rot_axis.normalize(); }
+    dot=Dot(rot_start_ray_norm_, rot_curr_ray_norm);
 
-     trans.post_translate(c.vector());
-     trans.post_rotate(acos(dot), rot_axis);
-     trans.post_translate(-c.vector());
-     variables[PointDVar]->Move(trans.project(rot_start_d_));
-     variables[PointRVar]->Move(trans.project(rot_start_r_));
-     break;
-   case PickResizeU:
-      if ((variables[DistDVar]->real() - dist) < ResizeMin)
-	 delt = variables[CenterVar]->point() + GetDownAxis()*ResizeMin - variables[PointDVar]->point();
-      variables[PointRVar]->MoveDelta(delt/2.0);      
-      variables[CenterVar]->SetDelta(delt/2.0, Scheme4);
-      break;
-   case PickResizeR:
-      if ((variables[DistRVar]->real() + dist) < ResizeMin)
-	 delt = variables[CenterVar]->point() + GetRightAxis()*ResizeMin - variables[PointRVar]->point();
-      variables[CenterVar]->MoveDelta(delt/2.0);
-      variables[PointDVar]->MoveDelta(delt/2.0);      
-      variables[PointRVar]->SetDelta(delt, Scheme3);
-      break;
-   case PickResizeD:
-      if ((variables[DistDVar]->real() + dist) < ResizeMin)
-	 delt = variables[CenterVar]->point() + GetDownAxis()*ResizeMin - variables[PointDVar]->point();
-      variables[CenterVar]->MoveDelta(delt/2.0);
-      variables[PointRVar]->MoveDelta(delt/2.0);      
-      variables[PointDVar]->SetDelta(delt, Scheme4);
-      break;
-   case PickResizeL:
-      if ((variables[DistRVar]->real() - dist) < ResizeMin)
-	 delt = variables[CenterVar]->point() + GetRightAxis()*ResizeMin - variables[PointRVar]->point();
-      variables[PointDVar]->MoveDelta(delt/2.0);      
-      variables[CenterVar]->SetDelta(delt/2.0, Scheme3);
-      break;
-   case PickCyls:
-      MoveDelta(delta);
-      break;
-   }
-   execute(0);
+    trans.post_translate(c.vector());
+    trans.post_rotate(acos(dot), rot_axis);
+    trans.post_translate(-c.vector());
+    variables[PointDVar]->Move(trans.project(rot_start_d_));
+    variables[PointRVar]->Move(trans.project(rot_start_r_));
+    break;
+
+  case PickResizeU:
+    if ((variables[DistDVar]->real() - dist) < resize_min)
+    {
+      delt = variables[CenterVar]->point() + GetDownAxis()*resize_min - variables[PointDVar]->point();
+    }
+    variables[PointRVar]->MoveDelta(delt/2.0);      
+    variables[CenterVar]->SetDelta(delt/2.0, Scheme4);
+    break;
+
+  case PickResizeR:
+    if ((variables[DistRVar]->real() + dist) < resize_min)
+    {
+      delt = variables[CenterVar]->point() + GetRightAxis()*resize_min - variables[PointRVar]->point();
+    }
+    variables[CenterVar]->MoveDelta(delt/2.0);
+    variables[PointDVar]->MoveDelta(delt/2.0);      
+    variables[PointRVar]->SetDelta(delt, Scheme3);
+    break;
+
+  case PickResizeD:
+    if ((variables[DistDVar]->real() + dist) < resize_min)
+    {
+      delt = variables[CenterVar]->point() + GetDownAxis()*resize_min - variables[PointDVar]->point();
+    }
+    variables[CenterVar]->MoveDelta(delt/2.0);
+    variables[PointRVar]->MoveDelta(delt/2.0);      
+    variables[PointDVar]->SetDelta(delt, Scheme4);
+    break;
+
+  case PickResizeL:
+    if ((variables[DistRVar]->real() - dist) < resize_min)
+    {
+      delt = variables[CenterVar]->point() + GetRightAxis()*resize_min - variables[PointRVar]->point();
+    }
+    variables[PointDVar]->MoveDelta(delt/2.0);      
+    variables[CenterVar]->SetDelta(delt/2.0, Scheme3);
+    break;
+
+  case PickCyls:
+    MoveDelta(delta);
+    break;
+  }
+  execute(0);
 }
 
 
@@ -368,11 +404,11 @@ FrameWidget::geom_moved( GeomPick*, int axis, double dist,
 void
 FrameWidget::MoveDelta( const Vector& delta )
 {
-   variables[CenterVar]->MoveDelta(delta);
-   variables[PointRVar]->MoveDelta(delta);
-   variables[PointDVar]->MoveDelta(delta);
+  variables[CenterVar]->MoveDelta(delta);
+  variables[PointRVar]->MoveDelta(delta);
+  variables[PointDVar]->MoveDelta(delta);
 
-   execute(1);
+  execute(1);
 }
 
 
@@ -384,29 +420,29 @@ FrameWidget::MoveDelta( const Vector& delta )
 Point
 FrameWidget::ReferencePoint() const
 {
-   return variables[CenterVar]->point();
+  return variables[CenterVar]->point();
 }
 
 
 void
 FrameWidget::SetPosition( const Point& center, const Point& R, const Point& D )
 {
-   variables[PointRVar]->Move(R);
-   variables[PointDVar]->Move(D);
-   variables[DistRVar]->Move((R-center).length());
-   variables[DistDVar]->Move((D-center).length());
-   variables[CenterVar]->Set(center, Scheme3); // This should set Hypo...
+  variables[PointRVar]->Move(R);
+  variables[PointDVar]->Move(D);
+  variables[DistRVar]->Move((R-center).length());
+  variables[DistDVar]->Move((D-center).length());
+  variables[CenterVar]->Set(center, Scheme3); // This should set Hypo...
 
-   execute(0);
+  execute(0);
 }
 
 
 void
 FrameWidget::GetPosition( Point& center, Point& R, Point& D )
 {
-   center = variables[CenterVar]->point();
-   R = variables[PointRVar]->point();
-   D = variables[PointDVar]->point();
+  center = variables[CenterVar]->point();
+  R = variables[PointRVar]->point();
+  D = variables[PointDVar]->point();
 }
 
 
@@ -414,16 +450,16 @@ void
 FrameWidget::SetPosition( const Point& center, const Vector& normal,
 			  const double size1, const double size2 )
 {
-   Vector axis1, axis2;
-   normal.find_orthogonal(axis1, axis2);
+  Vector axis1, axis2;
+  normal.find_orthogonal(axis1, axis2);
    
-   variables[PointRVar]->Move(center+axis1*size1);
-   variables[PointDVar]->Move(center+axis2*size2);
-   variables[CenterVar]->Move(center);
-   variables[DistRVar]->Move(size1);
-   variables[DistDVar]->Set(size2); // This should set the Hypo...
+  variables[PointRVar]->Move(center+axis1*size1);
+  variables[PointDVar]->Move(center+axis2*size2);
+  variables[CenterVar]->Move(center);
+  variables[DistRVar]->Move(size1);
+  variables[DistDVar]->Set(size2); // This should set the Hypo...
 
-   execute(0);
+  execute(0);
 }
 
 
@@ -431,60 +467,68 @@ void
 FrameWidget::GetPosition( Point& center, Vector& normal,
 			  double& size1, double& size2 )
 {
-   center = variables[CenterVar]->point();
-   normal = Cross(GetRightAxis(), GetDownAxis());
-   size1 = variables[DistRVar]->real();
-   size2 = variables[DistDVar]->real();
+  center = variables[CenterVar]->point();
+  normal = Cross(GetRightAxis(), GetDownAxis());
+  size1 = variables[DistRVar]->real();
+  size2 = variables[DistDVar]->real();
 }
 
 
 void
 FrameWidget::SetSize( const double sizeR, const double sizeD )
 {
-   ASSERT((sizeR>=0.0)&&(sizeD>=0.0));
+  ASSERT((sizeR>=0.0)&&(sizeD>=0.0));
 
-   Point center(variables[CenterVar]->point());
-   Vector axisR(variables[PointRVar]->point() - center);
-   Vector axisD(variables[PointDVar]->point() - center);
-   double ratioR(sizeR/variables[DistRVar]->real());
-   double ratioD(sizeD/variables[DistDVar]->real());
+  Point center(variables[CenterVar]->point());
+  Vector axisR(variables[PointRVar]->point() - center);
+  Vector axisD(variables[PointDVar]->point() - center);
+  const double ratioR(sizeR/variables[DistRVar]->real());
+  const double ratioD(sizeD/variables[DistDVar]->real());
 
-   variables[PointRVar]->Move(center+axisR*ratioR);
-   variables[PointDVar]->Move(center+axisD*ratioD);
+  variables[PointRVar]->Move(center+axisR*ratioR);
+  variables[PointDVar]->Move(center+axisD*ratioD);
 
-   variables[DistRVar]->Move(sizeR);
-   variables[DistDVar]->Set(sizeD); // This should set the Hypo...
+  variables[DistRVar]->Move(sizeR);
+  variables[DistDVar]->Set(sizeD); // This should set the Hypo...
 
-   execute(0);
+  execute(0);
 }
 
 void
 FrameWidget::GetSize( double& sizeR, double& sizeD ) const
 {
-   sizeR = variables[DistRVar]->real();
-   sizeD = variables[DistDVar]->real();
+  sizeR = variables[DistRVar]->real();
+  sizeD = variables[DistDVar]->real();
 }
 
 
 const Vector&
 FrameWidget::GetRightAxis()
 {
-   Vector axis(variables[PointRVar]->point() - variables[CenterVar]->point());
-   if (axis.length2() <= 1e-6)
-      return oldrightaxis;
-   else
-      return (oldrightaxis = axis.normal());
+  Vector axis(variables[PointRVar]->point() - variables[CenterVar]->point());
+  if (axis.length2() <= 1e-6)
+  {
+    return oldrightaxis;
+  }
+  else
+  {
+    return (oldrightaxis = axis.normal());
+  }
 }
 
 
 const Vector&
 FrameWidget::GetDownAxis()
 {
-   Vector axis(variables[PointDVar]->point() - variables[CenterVar]->point());
-   if (axis.length2() <= 1e-6)
-      return olddownaxis;
-   else
-      return (olddownaxis = axis.normal());
+  Vector axis(variables[PointDVar]->point() - variables[CenterVar]->point());
+  if (axis.length2() <= 1e-6)
+  {
+    return olddownaxis;
+  }
+  else
+  {
+    return (olddownaxis = axis.normal());
+  }
 }
 
 
@@ -496,18 +540,19 @@ FrameWidget::GetDownAxis()
 string
 FrameWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<materials.size());
+  ASSERT(mindex<materials.size());
    
-   switch(mindex){
-   case 0:
-      return "Point";
-   case 1:
-      return "Edge";
-   case 2:
-      return "Resize";
-   default:
-      return "UnknownMaterial";
-   }
+  switch(mindex)
+  {
+  case 0:
+    return "Point";
+  case 1:
+    return "Edge";
+  case 2:
+    return "Resize";
+  default:
+    return "UnknownMaterial";
+  }
 }
 
 

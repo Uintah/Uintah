@@ -38,7 +38,6 @@
 namespace SCIRun {
 
 
-
 const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 4;
@@ -60,33 +59,33 @@ enum { Pick, PickAxes };
  *      includes some consistency checking to ensure full initialization.
  */
 CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, "CrosshairWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
+  : BaseWidget(module, lock, "CrosshairWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+    axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
 {
-   variables[CenterVar] = scinew PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
+  variables[CenterVar] = scinew PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
 
-   geometries[GeomCenter] = scinew GeomSphere;
-   materials[PointMatl] = scinew GeomMaterial(geometries[GeomCenter], DefaultPointMaterial);
-   picks[PickAxes] = scinew GeomPick(materials[PointMatl], module, this, PickAxes);
-   picks[PickAxes]->set_highlight(DefaultHighlightMaterial);
-   CreateModeSwitch(0, picks[PickAxes]);
+  geometries[GeomCenter] = scinew GeomSphere;
+  materials[PointMatl] = scinew GeomMaterial(geometries[GeomCenter], DefaultPointMaterial);
+  picks[PickAxes] = scinew GeomPick(materials[PointMatl], module, this, PickAxes);
+  picks[PickAxes]->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(0, picks[PickAxes]);
 
-   GeomGroup* axes = scinew GeomGroup;
-   geometries[GeomAxis1] = scinew GeomCappedCylinder;
-   axes->add(geometries[GeomAxis1]);
-   geometries[GeomAxis2] = scinew GeomCappedCylinder;
-   axes->add(geometries[GeomAxis2]);
-   geometries[GeomAxis3] = scinew GeomCappedCylinder;
-   axes->add(geometries[GeomAxis3]);
-   materials[AxesMatl] = scinew GeomMaterial(axes, DefaultEdgeMaterial);
-   picks[Pick] = scinew GeomPick(materials[AxesMatl], module, this, Pick);
-   picks[Pick]->set_highlight(DefaultHighlightMaterial);
-   CreateModeSwitch(1, picks[Pick]);
+  GeomGroup* axes = scinew GeomGroup;
+  geometries[GeomAxis1] = scinew GeomCappedCylinder;
+  axes->add(geometries[GeomAxis1]);
+  geometries[GeomAxis2] = scinew GeomCappedCylinder;
+  axes->add(geometries[GeomAxis2]);
+  geometries[GeomAxis3] = scinew GeomCappedCylinder;
+  axes->add(geometries[GeomAxis3]);
+  materials[AxesMatl] = scinew GeomMaterial(axes, DefaultEdgeMaterial);
+  picks[Pick] = scinew GeomPick(materials[AxesMatl], module, this, Pick);
+  picks[Pick]->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(1, picks[Pick]);
 
-   SetMode(Mode0, Switch0|Switch1);
-   SetMode(Mode1, Switch0);
+  SetMode(Mode0, Switch0|Switch1);
+  SetMode(Mode1, Switch0);
 
-   FinishWidget();
+  FinishWidget();
 }
 
 
@@ -113,27 +112,30 @@ CrosshairWidget::~CrosshairWidget()
 void
 CrosshairWidget::redraw()
 {
-   Point center(variables[CenterVar]->point());
+  Point center(variables[CenterVar]->point());
    
-   if (mode_switches[0]->get_state())
-      ((GeomSphere*)geometries[GeomCenter])->move(center, widget_scale);
+  if (mode_switches[0]->get_state())
+    ((GeomSphere*)geometries[GeomCenter])->move(center, widget_scale_);
 
-   if (mode_switches[1]->get_state()) {
-      const double axislen(100.0*widget_scale), axisrad(0.5*widget_scale);
-      ((GeomCappedCylinder*)geometries[GeomAxis1])->move(center - (axis1 * axislen),
-							 center + (axis1 * axislen),
-							 axisrad);
-      ((GeomCappedCylinder*)geometries[GeomAxis2])->move(center - (axis2 * axislen),
-							 center + (axis2 * axislen),
-							 axisrad);
-      ((GeomCappedCylinder*)geometries[GeomAxis3])->move(center - (axis3 * axislen),
-							 center + (axis3 * axislen),
-							 axisrad);
-   }
+  if (mode_switches[1]->get_state())
+  {
+    const double axislen(100.0*widget_scale_);
+    const double axisrad(0.5*widget_scale_);
+    ((GeomCappedCylinder*)geometries[GeomAxis1])->move(center - (axis1 * axislen),
+						       center + (axis1 * axislen),
+						       axisrad);
+    ((GeomCappedCylinder*)geometries[GeomAxis2])->move(center - (axis2 * axislen),
+						       center + (axis2 * axislen),
+						       axisrad);
+    ((GeomCappedCylinder*)geometries[GeomAxis3])->move(center - (axis3 * axislen),
+						       center + (axis3 * axislen),
+						       axisrad);
+  }
 
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      picks[geom]->set_principal(axis1, axis2, axis3);
-   }
+  for (Index geom = 0; geom < NumPcks; geom++)
+  {
+    picks[geom]->set_principal(axis1, axis2, axis3);
+  }
 }
 
 
@@ -154,13 +156,14 @@ void
 CrosshairWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 			     const Vector& delta, int pick, const BState& )
 {
-   switch(pick){
-   case Pick:
-   case PickAxes:
-      MoveDelta(delta);
-      break;
-   }
-   execute(0);
+  switch(pick)
+  {
+  case Pick:
+  case PickAxes:
+    MoveDelta(delta);
+    break;
+  }
+  execute(0);
 }
 
 
@@ -173,9 +176,9 @@ CrosshairWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 void
 CrosshairWidget::MoveDelta( const Vector& delta )
 {
-   variables[CenterVar]->MoveDelta(delta);
+  variables[CenterVar]->MoveDelta(delta);
 
-   execute(1);
+  execute(1);
 }
 
 
@@ -187,47 +190,48 @@ CrosshairWidget::MoveDelta( const Vector& delta )
 Point
 CrosshairWidget::ReferencePoint() const
 {
-   return variables[CenterVar]->point();
+  return variables[CenterVar]->point();
 }
 
 
 void
 CrosshairWidget::SetPosition( const Point& p )
 {
-   variables[CenterVar]->Move(p);
+  variables[CenterVar]->Move(p);
 
-   execute(0);
+  execute(0);
 }
 
 
 Point
 CrosshairWidget::GetPosition() const
 {
-   return variables[CenterVar]->point();
+  return variables[CenterVar]->point();
 }
 
 
 void
 CrosshairWidget::SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 )
 {
-   if ((v1.length2() > 1e-6)
-       && (v2.length2() > 1e-6)
-       && (v3.length2() > 1e-6)) {
-      axis1 = v1.normal();
-      axis2 = v2.normal();
-      axis3 = v3.normal();
+  if ((v1.length2() > 1e-6) &&
+      (v2.length2() > 1e-6) &&
+      (v3.length2() > 1e-6))
+  {
+    axis1 = v1.normal();
+    axis2 = v2.normal();
+    axis3 = v3.normal();
 
-      execute(0);
-   }
+    execute(0);
+  }
 }
 
 
 void
 CrosshairWidget::GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const
 {
-   v1 = axis1;
-   v2 = axis2;
-   v3 = axis3;
+  v1 = axis1;
+  v2 = axis2;
+  v3 = axis3;
 }
 
 
@@ -239,49 +243,53 @@ CrosshairWidget::GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const
 string
 CrosshairWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<materials.size());
+  ASSERT(mindex<materials.size());
    
-   switch(mindex){
-   case 0:
-      return "Point";
-   case 1:
-      return "Axes";
-   default:
-      return "UnknownMaterial";
-   }
+  switch(mindex){
+  case 0:
+    return "Point";
+  case 1:
+    return "Axes";
+  default:
+    return "UnknownMaterial";
+  }
 }
 
 
 void
 CrosshairWidget::widget_tcl( TCLArgs& args )
 {
-   if (args[1] == "translate"){
-      if (args.count() != 4) {
-	 args.error("crosshair widget needs axis translation");
-	 return;
-      }
-      double trans;
-      if (!string_to_double(args[3], trans)) {
-	 args.error("crosshair widget can't parse translation `"+args[3]+"'");
-	 return;
-      }
-      Point p(GetPosition());
-      switch (args[2][0]) {
-      case 'x':
-	 p.x(trans);
-	 break;
-      case 'y':
-	 p.y(trans);
-	 break;
-      case 'z':
-	 p.z(trans);
-	 break;
-      default:
-	 args.error("crosshair widget unknown axis `"+args[2]+"'");
-	 break;
-      }
-      SetPosition(p);
-   }
+  if (args[1] == "translate")
+  {
+    if (args.count() != 4)
+    {
+      args.error("crosshair widget needs axis translation");
+      return;
+    }
+    double trans;
+    if (!string_to_double(args[3], trans))
+    {
+      args.error("crosshair widget can't parse translation `"+args[3]+"'");
+      return;
+    }
+    Point p(GetPosition());
+    switch (args[2][0])
+    {
+    case 'x':
+      p.x(trans);
+      break;
+    case 'y':
+      p.y(trans);
+      break;
+    case 'z':
+      p.z(trans);
+      break;
+    default:
+      args.error("crosshair widget unknown axis `"+args[2]+"'");
+      break;
+    }
+    SetPosition(p);
+  }
 }
 
 } // End namespace SCIRun

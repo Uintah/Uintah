@@ -35,45 +35,45 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 #include <Core/Geom/Material.h>
 
-namespace SCIRun {
-
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
 
+namespace SCIRun {
+
 class PointWidget : public BaseWidget {
 public:
-   PointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
-   PointWidget( const PointWidget& );
-   virtual ~PointWidget();
+  PointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  PointWidget( const PointWidget& );
+  virtual ~PointWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void redraw();
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   void SetPosition( const Point& );
-   Point GetPosition() const;
+  void SetPosition( const Point& );
+  Point GetPosition() const;
 
-   virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( TCLArgs& );
 
-   // Variable indexs
-   enum { PointVar };
+  // Variable indexs
+  enum { PointVar };
 
-   // Material indexs
-   enum { PointMatl };
+  // Material indexs
+  enum { PointMatl };
    
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
 };
+
 
 } // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif

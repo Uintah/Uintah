@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -66,52 +66,52 @@ enum { ConstDist };
  */
 
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  direction(1, 0, 0)
+  : BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+    direction(1, 0, 0)
 {
-   length = 1;
-   variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
-   variables[HeadVar]  = scinew PointVariable("Head", solve, Scheme1, Point(length, 0, 0));
-   variables[DistVar]  = scinew RealVariable("Dist", solve,  Scheme1, length);
-   
-   constraints[ConstDist]=scinew DistanceConstraint("ConstDist",
-   						    NumSchemes,
-						    variables[PointVar],
-						    variables[HeadVar],
-						    variables[DistVar]);
-   constraints[ConstDist]->VarChoices(Scheme1, 0, 1, 0);
-   constraints[ConstDist]->VarChoices(Scheme2, 2, 2, 2);
-   constraints[ConstDist]->Priorities(P_Lowest, P_Lowest, P_Highest);
-   
-						    
-   geometries[GeomPoint] = scinew GeomSphere;
-   picks[PointP] = scinew GeomPick(geometries[GeomPoint], module, this, PointP);
-   picks[PointP]->set_highlight(DefaultHighlightMaterial);
-   materials[PointMatl] = scinew GeomMaterial(picks[PointP], DefaultPointMaterial);
-   CreateModeSwitch(0, materials[PointMatl]);
+  length = 1;
+  variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
+  variables[HeadVar]  = scinew PointVariable("Head", solve, Scheme1, Point(length, 0, 0));
+  variables[DistVar]  = scinew RealVariable("Dist", solve,  Scheme1, length);
 
-   geometries[GeomShaft] = scinew GeomCylinder;
-   picks[ShaftP] = scinew GeomPick(geometries[GeomShaft], module, this, ShaftP);
-   picks[ShaftP]->set_highlight(DefaultHighlightMaterial);
-   materials[ShaftMatl] = scinew GeomMaterial(picks[ShaftP], DefaultEdgeMaterial);
-   CreateModeSwitch(1, materials[ShaftMatl]);
+  constraints[ConstDist]=scinew DistanceConstraint("ConstDist",
+						   NumSchemes,
+						   variables[PointVar],
+						   variables[HeadVar],
+						   variables[DistVar]);
+  constraints[ConstDist]->VarChoices(Scheme1, 0, 1, 0);
+  constraints[ConstDist]->VarChoices(Scheme2, 2, 2, 2);
+  constraints[ConstDist]->Priorities(P_Lowest, P_Lowest, P_Highest);
 
-   geometries[GeomHead] = scinew GeomCappedCone;
-   picks[HeadP] = scinew GeomPick(geometries[GeomHead], module, this, HeadP);
-   picks[HeadP]->set_highlight(DefaultHighlightMaterial);
-   materials[HeadMatl] = scinew GeomMaterial(picks[HeadP], DefaultEdgeMaterial);
-   CreateModeSwitch(2, materials[HeadMatl]);
+						
+  geometries[GeomPoint] = scinew GeomSphere;
+  picks[PointP] = scinew GeomPick(geometries[GeomPoint], module, this, PointP);
+  picks[PointP]->set_highlight(DefaultHighlightMaterial);
+  materials[PointMatl] = scinew GeomMaterial(picks[PointP], DefaultPointMaterial);
+  CreateModeSwitch(0, materials[PointMatl]);
 
-   geometries[GeomResize] = scinew GeomCappedCylinder;
-   picks[ResizeP] = scinew GeomPick(geometries[GeomResize], module, this, ResizeP);
-   picks[ResizeP]->set_highlight(DefaultHighlightMaterial);
-   materials[ResizeMatl] = scinew GeomMaterial(picks[ResizeP], DefaultResizeMaterial);
-   CreateModeSwitch(3, materials[ResizeMatl]);
-   
-   SetMode(Mode0, Switch0|Switch1|Switch2);
-   SetMode(Mode1, Switch0|Switch1|Switch2|Switch3);
-   SetMode(Mode2, Switch0);
-   FinishWidget();
+  geometries[GeomShaft] = scinew GeomCylinder;
+  picks[ShaftP] = scinew GeomPick(geometries[GeomShaft], module, this, ShaftP);
+  picks[ShaftP]->set_highlight(DefaultHighlightMaterial);
+  materials[ShaftMatl] = scinew GeomMaterial(picks[ShaftP], DefaultEdgeMaterial);
+  CreateModeSwitch(1, materials[ShaftMatl]);
+
+  geometries[GeomHead] = scinew GeomCappedCone;
+  picks[HeadP] = scinew GeomPick(geometries[GeomHead], module, this, HeadP);
+  picks[HeadP]->set_highlight(DefaultHighlightMaterial);
+  materials[HeadMatl] = scinew GeomMaterial(picks[HeadP], DefaultEdgeMaterial);
+  CreateModeSwitch(2, materials[HeadMatl]);
+
+  geometries[GeomResize] = scinew GeomCappedCylinder;
+  picks[ResizeP] = scinew GeomPick(geometries[GeomResize], module, this, ResizeP);
+  picks[ResizeP]->set_highlight(DefaultHighlightMaterial);
+  materials[ResizeMatl] = scinew GeomMaterial(picks[ResizeP], DefaultResizeMaterial);
+  CreateModeSwitch(3, materials[ResizeMatl]);
+
+  SetMode(Mode0, Switch0|Switch1|Switch2);
+  SetMode(Mode1, Switch0|Switch1|Switch2|Switch3);
+  SetMode(Mode2, Switch0);
+  FinishWidget();
 }
 
 
@@ -138,29 +138,37 @@ ArrowWidget::~ArrowWidget()
 void
 ArrowWidget::redraw()
 {
-   Point P(variables[PointVar]->point()), H(variables[HeadVar]->point());
-   
-   if (mode_switches[0]->get_state()) {
-      ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale);
-      ((GeomCylinder*)geometries[GeomShaft])->move(P, H, 0.5*widget_scale);
-      ((GeomCappedCone*)geometries[GeomHead])->move(H, H +GetDirection()*widget_scale* 2.0, widget_scale, 0);
-   }
-   if (mode_switches[1]->get_state()) {
-      ((GeomCappedCylinder*)geometries[GeomResize])->move(H+GetDirection()*widget_scale*1.0,  H + GetDirection()*widget_scale*1.5, widget_scale);
-   }
+  Point P(variables[PointVar]->point()), H(variables[HeadVar]->point());
 
-   if (mode_switches[2]->get_state()) {
-       ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale);
-   }
+  if (mode_switches[0]->get_state())
+  {
+    ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale_);
+    ((GeomCylinder*)geometries[GeomShaft])->move(P, H, 0.5*widget_scale_);
+    ((GeomCappedCone*)geometries[GeomHead])->move(H, H +GetDirection()*widget_scale_* 2.0, widget_scale_, 0);
+  }
+  if (mode_switches[1]->get_state())
+  {
+    ((GeomCappedCylinder*)geometries[GeomResize])->move(H+GetDirection()*widget_scale_*1.0,  H + GetDirection()*widget_scale_*1.5, widget_scale_);
+  }
 
-   Vector v(GetDirection()), v1, v2;
-   v.find_orthogonal(v1,v2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-     if (geom==ResizeP)
-       picks[geom]->set_principal(v);
-     else
-       picks[geom]->set_principal(v, v1, v2);
-   }
+  if (mode_switches[2]->get_state())
+  {
+    ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale_);
+  }
+
+  Vector v(GetDirection()), v1, v2;
+  v.find_orthogonal(v1,v2);
+  for (Index geom = 0; geom < NumPcks; geom++)
+  {
+    if (geom==ResizeP)
+    {
+      picks[geom]->set_principal(v);
+    }
+    else
+    {
+      picks[geom]->set_principal(v, v1, v2);
+    }
+  }
 }
 
 
@@ -180,22 +188,23 @@ ArrowWidget::redraw()
 void
 ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 			 const Vector& delta, int pick, const BState& )
-{   
-    ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetDirection());
-    switch(pick){
-    case HeadP:
-      variables[HeadVar]->SetDelta(delta, Scheme1);
-      break;
-    case ResizeP:
-      variables[HeadVar]->SetDelta(delta, Scheme2);
-      break;
+{
+  ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetDirection());
+  switch(pick)
+  {
+  case HeadP:
+    variables[HeadVar]->SetDelta(delta, Scheme1);
+    break;
+  case ResizeP:
+    variables[HeadVar]->SetDelta(delta, Scheme2);
+    break;
 
-    case PointP: 
-    case ShaftP:
-	MoveDelta(delta);
-	break;
-    }
-    execute(0);
+  case PointP:
+  case ShaftP:
+    MoveDelta(delta);
+    break;
+  }
+  execute(0);
 }
 
 
@@ -208,10 +217,10 @@ ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 void
 ArrowWidget::MoveDelta( const Vector& delta )
 {
-   variables[PointVar]->MoveDelta(delta);
-   variables[HeadVar]->MoveDelta(delta);
+  variables[PointVar]->MoveDelta(delta);
+  variables[HeadVar]->MoveDelta(delta);
 
-   execute(1);
+  execute(1);
 }
 
 
@@ -223,112 +232,125 @@ ArrowWidget::MoveDelta( const Vector& delta )
 Point
 ArrowWidget::ReferencePoint() const
 {
-   return variables[PointVar]->point();
+  return variables[PointVar]->point();
 }
 
 
 void
 ArrowWidget::SetPosition( const Point& p )
 {
-   variables[HeadVar]->MoveDelta(p-(variables[PointVar]->point()));
-   variables[PointVar]->Move(p);
-   execute(0);
+  variables[HeadVar]->MoveDelta(p-(variables[PointVar]->point()));
+  variables[PointVar]->Move(p);
+  execute(0);
 }
 
 
 Point
 ArrowWidget::GetPosition() const
 {
-   return variables[PointVar]->point();
+  return variables[PointVar]->point();
 }
 
 
 void
 ArrowWidget::SetDirection( const Vector& v )
-{  
-  
+{
+
   // variables[Dist]*(v.norm()-direction.norm())
-   variables[HeadVar]->MoveDelta((v.normal()-direction.normal())*variables[DistVar]->real());
+  variables[HeadVar]->MoveDelta((v.normal()-direction.normal())*variables[DistVar]->real());
   //   variables[HeadVar]->SetDelta(v-direction, Scheme1);
-   direction = v;
-   execute(0);
+  direction = v;
+  execute(0);
 }
 
 // by AS: updates if nessesary direction and returns it
 const Vector&
 ArrowWidget::GetDirection()
-{ 
-   Vector dir(variables[HeadVar]->point() - variables[PointVar]->point());
-   if (dir.length2() <= 1e-6)
-      return direction;
-   else 
-      return (direction = dir.normal());
+{
+  Vector dir(variables[HeadVar]->point() - variables[PointVar]->point());
+  if (dir.length2() <= 1e-6)
+  {
+    return direction;
+  }
+  else
+  {
+    return (direction = dir.normal());
+  }
 }
 
-void ArrowWidget::SetLength( double new_length ){
+void
+ArrowWidget::SetLength( double new_length )
+{
   Vector delta=GetDirection()*(new_length-GetLength());
   variables[HeadVar]->SetDelta(delta, Scheme2);
   execute(0);
 }
 
-double ArrowWidget::GetLength() {
+double
+ArrowWidget::GetLength()
+{
   Vector dir(variables[HeadVar]->point() - variables[PointVar]->point());
   return (length=dir.length());
 }
 
 /***************************************************************************
  * This standard method returns a string describing the functionality of
- *      a widget's material property.  The string is used in the 
+ *      a widget's material property.  The string is used in the
  *      BaseWidget UI.
  */
 string
 ArrowWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<materials.size());
-   
-   switch(mindex){
-   case 0:
-      return "Point";
-   case 1:
-      return "Shaft";
-   case 2:
-      return "Head";
-   default:
-      return "UnknownMaterial";
-   }
+  ASSERT(mindex<materials.size());
+
+  switch(mindex)
+  {
+  case 0:
+    return "Point";
+  case 1:
+    return "Shaft";
+  case 2:
+    return "Head";
+  default:
+    return "UnknownMaterial";
+  }
 }
 
 
 void
 ArrowWidget::widget_tcl( TCLArgs& args )
 {
-   if (args[1] == "translate"){
-      if (args.count() != 4) {
-	 args.error("arrow widget needs axis translation");
-	 return;
-      }
-      double trans;
-      if (!string_to_double(args[3], trans)) {
-	 args.error("arrow widget can't parse translation `" + args[3] + "'");
-	 return;
-      }
-      Point p(GetPosition());
-      switch (args[2][0]) {
-      case 'x':
-	 p.x(trans);
-	 break;
-      case 'y':
-	 p.y(trans);
-	 break;
-      case 'z':
-	 p.z(trans);
-	 break;
-      default:
-	 args.error("arrow widget unknown axis `" + args[2] + "'");
-	 break;
-      }
-      SetPosition(p);
-   }
+  if (args[1] == "translate")
+  {
+    if (args.count() != 4)
+    {
+      args.error("arrow widget needs axis translation");
+      return;
+    }
+    double trans;
+    if (!string_to_double(args[3], trans))
+    {
+      args.error("arrow widget can't parse translation `" + args[3] + "'");
+      return;
+    }
+    Point p(GetPosition());
+    switch (args[2][0])
+    {
+    case 'x':
+      p.x(trans);
+      break;
+    case 'y':
+      p.y(trans);
+      break;
+    case 'z':
+      p.z(trans);
+      break;
+    default:
+      args.error("arrow widget unknown axis `" + args[2] + "'");
+      break;
+    }
+    SetPosition(p);
+  }
 }
 
 } // End namespace SCIRun

@@ -34,52 +34,52 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCIRun {
-
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
 
+namespace SCIRun {
+
 class CrosshairWidget : public BaseWidget {
 public:
-   CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale );
-   CrosshairWidget( const CrosshairWidget& );
-   virtual ~CrosshairWidget();
+  CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+  CrosshairWidget( const CrosshairWidget& );
+  virtual ~CrosshairWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void redraw();
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   void SetPosition( const Point& );
-   Point GetPosition() const;
+  void SetPosition( const Point& );
+  Point GetPosition() const;
 
-   // They should be orthogonal.
-   void SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 );
-   void GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const;
+  // They should be orthogonal.
+  void SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 );
+  void GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const;
 
-   virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( TCLArgs& );
 
-   // Variable indexs
-   enum { CenterVar };
+  // Variable indexs
+  enum { CenterVar };
 
-   // Material indexs
-   enum { PointMatl, AxesMatl };
+  // Material indexs
+  enum { PointMatl, AxesMatl };
    
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   Vector axis1, axis2, axis3;
+  Vector axis1, axis2, axis3;
 };
+
 
 } // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif
