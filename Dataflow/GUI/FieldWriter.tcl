@@ -28,8 +28,14 @@
 
 
 # FieldWriter.tcl
-# by Samsonov Alexei
-# October 2000 
+# Written by:
+#  Elisha R. Hughes
+#  CVRTI
+#  University of Utah
+#  December 2004
+# Based on:
+#  Samsonov Alexei
+#  October 2000 
 
 catch {rename SCIRun_DataIO_FieldWriter ""}
 
@@ -40,8 +46,13 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype $this-confirm
+	global $this-filetype 
+	global $this-increment
+	global $this-current
+	global $this-confirm
 	set $this-filetype Binary
+	set $this-increment 0
+	set $this-current 0
 	set $this-confirm 1
 	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
 	    set $this-confirm 0
@@ -103,6 +114,8 @@ itcl_class SCIRun_DataIO_FieldWriter {
 		-initialdir $initdir \
 		-defaultextension $defext \
 	        -confirmvar $this-confirm \
+			-incrementvar $this-increment \
+			-currentvar $this-current \
 	        -formatvar $this-filetype \
 	        -formats {None} \
 	        -selectedfiletype $this-exporttype
