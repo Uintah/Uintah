@@ -131,6 +131,9 @@ MPMLabel::MPMLabel()
   
   pStressLabel_preReloc = scinew VarLabel( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
+
+  pCrackRadiusLabel_preReloc = scinew VarLabel( "p.CrackRadius+",
+			ParticleVariable<double>::getTypeDescription());
   
   pVolumeLabel_preReloc = scinew VarLabel( "p.volume+",
 			ParticleVariable<double>::getTypeDescription());
