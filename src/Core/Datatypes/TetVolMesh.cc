@@ -453,14 +453,6 @@ TetVolMesh::unlocate(Point &result, const Point &p)
   result = p;
 }
 
-
-void
-TetVolMesh::get_point(Point &result, node_index index) const
-{
-  result = points_[index];
-}
-
-
 bool
 TetVolMesh::inside4_p(int i, const Point &p) const
 {
