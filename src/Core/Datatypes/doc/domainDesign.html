@@ -63,57 +63,64 @@ and functional overview of the various classes associated with fields.</font></f
 list of attributes and geometries.&nbsp; It provides methods to access
 and manage the attributes and geometries.&nbsp; The modules that allow
 the user to extract and register geometries and attributes associated with
-a domain are described below (see section 3).</font></font><b><font face="Arial,Helvetica"></font></b>
+a domain are described below (see section 3).</font></font>
 <p><b><font face="Arial,Helvetica">2.2 Class Attrib</font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The Attrib class holds sets
-of data, as well as various properties of that data.&nbsp;&nbsp; Each Attrib
-class provides its own method of data access.&nbsp; For example, FlatSAttrib
-allows the data to be accessed as a flat array (using the [int] operator).&nbsp;
-IndexedSAttrib allows the data to be accessed with 1, 2, or 3 integer indexes,
-depending on the dimensionality of the attribute.&nbsp; Therefore, the
-dimension of the field that an indexed attribute lives in must be specified
-when the attribute is created, which is not true of flat attributes.&nbsp;
-For more information on how data values are accessed in attributes and
-fields, see section 2.4.</font></font>
-<br><img SRC="Attrib.gif" height=245 width=779>
-<p><b><font face="Arial,Helvetica"><font size=+0>2.3 Class Geom</font></font></b>
+of data, as well as various properties of that data.&nbsp;&nbsp; The Attrib
+base class provides virtual methods to access data, while each child class
+of Attrib provides its own faster methods of access.&nbsp; The programmer
+can then decide whether to use virtual function calls or to cast to a particular
+type and use the faster access methods.&nbsp; The ComposedAttrib class
+is essentially a pointer to another Attrib of type A, and a function that
+maps from type D to type R.&nbsp; This class allows one attribute to be
+compsed from another.&nbsp; The IndexedAttrib class is used in situations
+where there is a relatively small group of values spread over the data
+set.&nbsp; To create an IndexedAttrib, two lists of values must first be
+constructed.&nbsp; One is an array of data values, and the other is an
+attriute that holds indexes in to the array.&nbsp; SparseAttrib provides
+methods optimized for sparsly populated data sets, and BrickAttib provides
+a bricked storage stategy that allows for quick traversal of sub-regions
+in the data set.&nbsp; The AnalytAttrib class uses a user specified function
+that takes a point&nbsp;P&nbsp;and returns a data value f(P)&nbsp;of type
+T.</font></font>
 <br>&nbsp;
-<br><font face="Arial,Helvetica"><font size=+0>The Geom class acts as an
+<br>&nbsp;
+<p><img SRC="Attrib.gif" height=238 width=779>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.3 Class Geom</font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>The Geom class acts as an
 abstract base class for one, two, and three dimensional geometries, both
-unstructured and structured.&nbsp;&nbsp; The unstructured geometries are
-represented by the derived classes ContourGeom, SurfaceGeom, and MeshGeom.&nbsp;
-These classes point to a NodesGeom class which holds the list of nodes
-in the geometry.&nbsp;&nbsp; Class NodesSharedGeom provides an indexed
-map which will allow access to shared nodes in the same way that regular
-nodes are accessed.&nbsp; The LatticeGeom class represents geometries that
-have orthagonal axes, such as RegularMeshGeom which is a geometry with
-regularly spaced nodes in each dimension.&nbsp;&nbsp;&nbsp;&nbsp;</font></font><img SRC="Geom.gif" height=346 width=779>
+unstructured and structured.&nbsp;&nbsp; The unstructured</font></font>
+<br><font face="Arial,Helvetica"><font size=+0>geometries are represented
+by the derived classes NodeGeom, ContourGeom, SurfaceGeom, and MeshGeom.&nbsp;
+Each of these is composed of groups of points, line segments, triangles,
+and tetrahedrals, respectively.&nbsp; The Lattice*Geom classes represent
+regular geometries based on orthaganol axes with regularly spaced grid
+lines. The Xform*Geom classes allow for a transformation frunction to applied
+to a grid, allowing it to be arbitrarily warped.&nbsp; The AnalytGeom classes
+provide analytical geometries such as spheres and cubes.</font></font>
+<br>&nbsp;
+<br>&nbsp;
+<p><img SRC="Geom.gif" height=525 width=549>
 <br>&nbsp;
 <p><b><font face="Arial,Helvetica"><font size=+0>2.4 Class Field</font></font></b>
 <p><font face="Arial,Helvetica"><font size=+0>Fields describe entities
 living in one, two, or three dimensions, including the space they live
 on as well as the values that exist over that space.&nbsp; General fields
-contain one geometry and one attribute.&nbsp; Derived fields represent
-fields whose values are derivations of other field's values.&nbsp; For
-example, a DerivedVField may be derived from a GeneralSField and represent
-the scalar field's gradient values.</font></font>
-<p><img SRC="Field.gif" height=241 width=779>
-<br>&nbsp;
-<p><b><font face="Arial,Helvetica"><font size=+0>2.5 Class TimeField</font></font></b>
-<br>&nbsp;
-<br>&nbsp;
-<p><img SRC="TimeField.gif" height=254 width=402>
+contain one geometry and one attribute, and provide methods that need information
+about both geometry and attribute values, such as interpolate.</font></font>
+<p><img SRC="Field.gif" height=173 width=552>
 <br>&nbsp;
 <p><b><font face="Arial,Helvetica"><font size=+0>2.6 Interfaces</font></font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The above classes use inherited
 interfaces to provide methods to the programmer.&nbsp; The interfaces used
 by fields are defined in PSECore/Datatypes/FieldInterface.h.&nbsp; Each
 field that uses one of the interfaces in this file, say SInterpolate, inherits
-from SInterpolate and implements a pure virtual function in SInterpolate,
+from SInterpolate and implements a pure svirtual function in SInterpolate,
 called sinterpolate (by convention, the pure virtual function in the interface
-has the same name as the class except in lowercase).&nbsp; The query_interface(string)&nbsp;function
-allows access to the sinterpolate function.&nbsp; For example, if a module
-wishes to call sinterpolate, then the following code could be used</font></font><font face="Arial,Helvetica"><font size=+0></font></font>
+has the same name as the class except in lowercase).&nbsp; The query_interface(string)
+function allows access to the sinterpolate function.&nbsp; For example,
+if a module wishes to call sinterpolate, then the following code could
+be used</font></font>
 <p><tt><font size=+0>// Get the field from the input port</font></tt>
 <br><tt><font size=+0>if(iport->get(myfield)){</font></tt>
 <br><tt><font size=+0>&nbsp;&nbsp;&nbsp; // Check to see if this field
@@ -125,8 +132,7 @@ supports a scalar interpolate function</font></tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; interp->sinterpolate(Point(1,2,3),
 retval);</tt>
 <br><tt>&nbsp;&nbsp;&nbsp; }</tt>
-<br><tt>}<br>
-</tt><font face="Arial,Helvetica"><font size=+0></font></font>
+<br><tt>}</tt>
 <p><b><font face="Arial,Helvetica"><font size=+0>2.6 Dependencies</font></font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The implementation of the
 above classes makes use of various components of STL, including maps, vectors,
