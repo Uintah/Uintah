@@ -149,7 +149,6 @@ class HexFace
 
     // Setup and query functions.
     
-    void set_corners (FourHexNodes & f);  // Allows the corner set to be changed.
     inline int get_corner (int i) { return corner.index[i%4]; }
     int is_corner (int i);	     // Returns true if the index matches a corner.
     int compare (FourHexNodes & f);  // Returns true if the corners match.

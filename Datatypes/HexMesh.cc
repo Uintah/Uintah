@@ -149,14 +149,13 @@ void Pio (Piostream & p, HexNode * & n)
 HexFace::HexFace (int i, int e, FourHexNodes & f, HexMesh * m)
 : my_index (i), my_contains_index (e), my_neighbor_index (0)
 {
-  // Use the helper function to set up this face.
-
-  set_corners (f);
+  // Make a copy of the corners.
   
-  if (Dot (my_normal, m->find_element (my_contains_index)->centroid()) + my_d < 0)
-  {
-    my_normal *= -1.0;
-  }
+  corner = f;
+
+  // Recalculate the normal, centroid, and planar adherence.
+  
+  calc_face ();  
 }
 
 
@@ -192,6 +191,7 @@ HexFace::HexFace ()
 void HexFace::calc_face ()
 {
   Vector n;
+  double d;
 
   // Find the centroid.  (Uses 4 points, even if points are duplicated.)
   
@@ -242,24 +242,12 @@ void HexFace::calc_face ()
   // Set d.
   
   my_d = - Dot (my_normal, my_centroid);
-}
-
-
-/*******************************************************************************
-* void HexFace::set_corners (FourHexNodes & f)
-*
-* 	This function re-initializes this face.
-*******************************************************************************/
-
-void HexFace::set_corners (FourHexNodes & f)
-{
-  // Make a copy of the corners.
   
-  corner = f;
-
-  // Recalculate the normal, centroid, and planar adherence.
+  // Reorient the normal.
   
-  calc_face ();
+  d = Dot (my_normal, m->find_element (my_contains_index)->centroid()) + my_d;
+  if (d < 0)
+    my_normal *= -1.0;  
 }
 
 
@@ -412,10 +400,6 @@ void HexFace::finish_read (HexMesh * m)
     corner.node[c] = m->find_node (corner.index[c]);
 
   calc_face ();
-  
-  d = Dot (my_normal, m->find_element (my_contains_index)->centroid()) + my_d;
-  if (d < 0)
-    my_normal *= -1.0;  
 }
 
 
