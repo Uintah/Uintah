@@ -26,6 +26,7 @@ SRCS     += \
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/mcube2.cc		\
 	$(SRCDIR)/Noise.cc		\
+	$(SRCDIR)/PrismMC.cc		\
 	$(SRCDIR)/QuadMC.cc		\
 	$(SRCDIR)/RenderField.cc	\
 	$(SRCDIR)/Sage.cc		\
