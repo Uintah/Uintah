@@ -78,6 +78,10 @@ ScaleSimilarityModel::sched_computeTurbSubmodel(const LevelP& level,
   Task* tsk = scinew Task("ScaleSimilarityModel::TurbSubmodel",
 			  this,
 			  &ScaleSimilarityModel::computeTurbSubmodel);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+
   // Computes
   tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_stressTensorMatl,
 		Task::OutOfDomain);
@@ -103,7 +107,11 @@ ScaleSimilarityModel::computeTurbSubmodel(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
 #ifdef PetscFilter
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    constCCVariable<int> cellType;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+ 
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -112,7 +120,7 @@ ScaleSimilarityModel::computeTurbSubmodel(const ProcessorGroup* pg,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    d_filter->setFilterMatrix(pg, patch, cellinfo);
+    d_filter->setFilterMatrix(pg, patch, cellinfo, cellType);
 #endif
     StencilMatrix<CCVariable<double> > stressTensorCoeff; //9 point tensor
 
