@@ -34,7 +34,7 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 
 
 using namespace SCIRun;
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1468
 #endif
 
@@ -164,7 +164,7 @@ template <> bool LatVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
 }
 
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif
 
