@@ -1,6 +1,6 @@
 Makefile Makefile.bak
 .~*
-so_locations
+so_locations ii_files
 ContourSetWriter.cc
 ContourSetWriter.tcl
 MeshWriter.cc
