@@ -157,12 +157,6 @@ public:
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
 
-  void computeNonEquilibrationPressure(const ProcessorGroup*,
-				       const PatchSubset* patch,
-				       const MaterialSubset* matls,
-				       DataWarehouse*, 
-				       DataWarehouse*);
-
   void computeEquilibrationPressure(const ProcessorGroup*,
 				    const PatchSubset* patch,
 				    const MaterialSubset* matls,
