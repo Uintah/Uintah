@@ -468,15 +468,16 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
-#if 0
         ostringstream desc;
         desc << "TOP_vel_FC_Mat_" << indx << "_patch_" << patch->getID(); 
-        printData(  patch, 1, desc.str(), "rho_CC",     rho_CC);
-        printData(  patch, 1, desc.str(), "sp_vol_CC",  sp_vol_CC);
-        printVector( patch,1, desc.str(), "uvel_CC", 0, vel_CC);
-        printVector( patch,1, desc.str(), "vvel_CC", 1, vel_CC);
-        printVector( patch,1, desc.str(), "wvel_CC", 2, vel_CC);
-#endif
+        printData(    patch,1, desc.str(), "rho_CC",     rho_CC);
+        printData(    patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);
+        printVector(  patch,1, desc.str(), "uvel_CC", 0, vel_CC);
+        printVector(  patch,1, desc.str(), "vvel_CC", 1, vel_CC);
+        printVector(  patch,1, desc.str(), "wvel_CC", 2, vel_CC);
+        printData_FC( patch,1, desc.str(), "p_dXFC",     p_dXFC);
+        printData_FC( patch,1, desc.str(), "p_dYFC",     p_dYFC);
+        printData_FC( patch,1, desc.str(), "p_dZFC",     p_dZFC);
       }
 
       SFCXVariable<double> uvel_FC;
