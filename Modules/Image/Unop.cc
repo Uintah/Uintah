@@ -31,9 +31,10 @@ class Unop : public Module {
   
   ScalarFieldRG* newgrid;
   ScalarFieldRG* rg;
-  
+    
   int mode;             // The number of the operation being preformed
   double min,max;       // Max and min values of the scalarfield
+  int *nonzero;
   
   TCLstring funcname;
   
@@ -94,24 +95,48 @@ Module* Unop::clone(int deep)
 
 void Unop::do_op(int proc)    // Do the operations in paralell
 {
-  int start = (newgrid->grid.dim2()-1)*proc/np;
-  int end   = (proc+1)*(newgrid->grid.dim2()-1)/np;
+  int start = (newgrid->grid.dim2())*proc/np;
+  int end   = (proc+1)*(newgrid->grid.dim2())/np;
 
   for(int z=0; z<newgrid->grid.dim3(); z++) 
     for(int x=start; x<end; x++) {
       for(int y=0; y<newgrid->grid.dim1(); y++) {
 	switch (mode) {
 	case 0:
-	  newgrid->grid(y,x,z) = abs(rg->grid(y,x,z));
+	  if (rg->grid(y,x,z)>0)
+	    newgrid->grid(y,x,z) = rg->grid(y,x,z); else
+	      newgrid->grid(y,x,z) = - rg->grid(y,x,z);
 	  break;
 	case 1:  
 	  newgrid->grid(y,x,z) = -rg->grid(y,x,z);
 	  break;
 	case 2:  
-	  newgrid->grid(y,x,z) = (max-min)-rg->grid(y,x,z);
+	  newgrid->grid(y,x,z) = max-rg->grid(y,x,z) + min;
 	  break;
 	case 3:
 	  newgrid->grid(y,x,z) = rg->grid(y,x,z);
+	  break;
+	case 4:
+	  newgrid->grid(y,x,z) = (rg->grid(y,x,0) + rg->grid(y,x,1) +
+	    rg->grid(y,x,2)) / 3;
+	  break;
+	case 5:
+	  newgrid->grid(y,x,z) = rg->grid(y,x,z)*rg->grid(y,x,z);
+	  break;
+	case 6:
+	  newgrid->grid(y,x,z) = sqrt(rg->grid(y,x,z));
+	  break;
+	case 7:
+	  newgrid->grid(y,x,z) = atan(rg->grid(y,x,z));
+	  break;
+	case 8:
+	  if (rg->grid(y,x,z)!=0) nonzero[proc]++;
+	  newgrid->grid(y,x,z)=rg->grid(y,x,z);
+	  break;	    
+      	case 9:
+	  if ((x<rg->grid.dim2()) && (y<rg->grid.dim1()))
+	    newgrid->grid(y,x,z)=rg->grid(y,x,z); else
+	      newgrid->grid(y,x,z)=0;
 	}
       }
     }
@@ -141,23 +166,50 @@ void Unop::execute()
 
     newgrid=new ScalarFieldRG;
     
-    newgrid->resize(rg->grid.dim1(),rg->grid.dim2(),rg->grid.dim3());
+    np = Task::nprocessors();
 
-    np = Task::nprocessors();    
-
+    
     clString ft(funcname.get());
 
     if (ft=="Abs") mode=0;
     if (ft=="Negative") mode=1;
     if (ft=="Invert") mode=2;
     if (ft=="Max/Min") mode=3;
-
+    if (ft=="Grayscale") mode=4;
+    if (ft=="A^2") mode=5;
+    if (ft=="Sqrt(A)") mode=6;
+    if (ft=="arctan") mode=7;
+    if (ft=="nonzero") {
+      mode=8;
+      nonzero = new int[np];
+      for (int i=0; i<np; i++) nonzero[i]=0;
+    }
+    if (ft=="resize-to-power-of-2") {
+      mode = 9;
+      int pow = 2;
+      while (pow<Max(rg->grid.dim1(),rg->grid.dim2()))
+	pow*=2;
+      newgrid->resize(pow,pow,rg->grid.dim3());
+    } else
+      if (mode==4)
+	newgrid->resize(rg->grid.dim1(),rg->grid.dim2(),1); else
+	  newgrid->resize(rg->grid.dim1(),rg->grid.dim2(),rg->grid.dim3());
+    
+    rg->compute_minmax();
     rg->get_minmax(min,max);
 
     cerr << "min/max : " << min << " " << max << "\n";
     
-    Task::multiprocess(np, start_op, this);
+    if ((mode==4) && (rg->grid.dim3()!=3))
+      cerr << "Can't convert non-RGB Image to grayscale.\n"; else
+	Task::multiprocess(np, start_op, this);
 
+    if (mode==8) {
+      int nz=0;
+      for (int i=0; i<np; i++)
+	nz+=nonzero[i];
+      cerr << "Non-Zero Pixels : " << nz << ".\n";
+    }
     outscalarfield->send( newgrid );
 }
 
