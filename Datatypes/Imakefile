@@ -6,15 +6,18 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  Image.o  ImagePort.o Interval.o IntervalPort.o \
 	ManhattanDist.o   Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  \
-	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  ScalarField.o  \
+	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  Pixel.o  \
+	ScalarField.o  \
 	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGshort.o  ScalarFieldRGint.o \
 	ScalarFieldRGfloat.o  ScalarFieldRGuchar.o \
 	ScalarFieldRGdouble.o  ScalarFieldUG.o  ScalarFieldZone.o  \
 	ScalarTriSurface.o   \
 	ScaledBoxWidgetData.o  ScaledBoxWidgetDataPort.o  \
+	SegFld.o  SegFldPort.o  \
 	SigmaSet.o  SigmaSetPort.o  \
-	SoundPort.o  SparseRowMatrix.o  SurfOctree.o  SurfOctreeTopPort.o  \
+	SoundPort.o  SparseRowMatrix.o  Spectrum.o  SurfOctree.o  \
+	SurfOctreeTopPort.o  \
 	SurfTree.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  VectorFieldOcean.o \
@@ -24,7 +27,7 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
 	cVector.o cVectorPort.o cMatrixPort.o \
 	ParticleSet.o ParticleSetPort.o \
-	cfdlibParticleSet.o SegFld.o SegFldPort.o
+	cfdlibParticleSet.o
 
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc \
@@ -36,7 +39,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	Datatype.cc DenseMatrix.cc \
 	GeometryPort.cc Image.cc ImagePort.cc Interval.cc IntervalPort.cc  \
 	ManhattanDist.cc Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc \
-	MultiMesh.cc MultiMeshPort.cc Octree.cc OctreePort.cc ScalarField.cc \
+	MultiMesh.cc MultiMeshPort.cc Octree.cc OctreePort.cc Pixel.cc \
+	ScalarField.cc \
 	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
 	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc ScalarFieldUG.cc ScalarFieldZone.cc \
@@ -44,8 +48,10 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	ScalarFieldUG.cc \
 	ScalarFieldZone.cc ScalarTriSurface.cc \
 	ScaledBoxWidgetData.cc  ScaledBoxWidgetDataPort.cc \
+	SegFld.cc  SegFldPort.cc \
 	SigmaSet.cc SigmaSetPort.cc \
-	SoundPort.cc SparseRowMatrix.cc SurfOctree.cc SurfOctreeTopPort.cc \
+	SoundPort.cc SparseRowMatrix.cc Spectrum.cc SurfOctree.cc \
+	SurfOctreeTopPort.cc \
 	SurfTree.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriDiagonalMatrix.cc TriSurface.cc \
 	VectorField.cc  VectorFieldOcean.cc \
@@ -118,5 +124,7 @@ ScalarFieldRG.cc: ScalarFieldRGdouble.cc
 	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.cc > ScalarFieldRG.cc
 
 ManhattanDist.o: ScalarFieldRGint.h ManhattanDist.cc
+
+SurfOctree.o: ScalarFieldRGint.h
 
 Octree.o: ScalarFieldRG.h Octree.cc

@@ -1,4 +1,3 @@
-
 Category: ASCI
 ChemVis
 
@@ -11,20 +10,34 @@ PartToGeom
 cfdGridLines
 GatherTimeSteps
 
+Category: CS684
+BldBRDF
+BldScene
+RTrace
+Radiosity
+RayMatrix
+RayTest
+XYZtoRGB
+
 Category: Contours
 LaceContours
 LaceContoursTemp
 TransformCS
 
-Category: DP
-DPNavierStokes
-DPGenGrid
-DPNonLinearSolver
-DPMakeSystem
-DPLinearSolver
-
 Category: EEG
+BldEEGMesh
 Coregister
+InvEEGSolve
+RescaleSegFld
+STreeExtractSurf
+SegFldOps
+SegFldToSurfTree
+SelectSurfNodes
+Taubin
+Thermal
+
+Category: EGI
+Anneal
 
 Category: Examples
 GeomPortTest
@@ -45,9 +58,22 @@ Category: Fields
 ClipField
 Downsample
 FieldFilter
+FieldGainCorrect
+FieldMedianFilter
 FieldSeed
 Gradient
+GradientMagnitude
+TracePath
+TrainSegment
+TrainSeg2
+TransformField
+
+Category: Haptics
+Endpoint
+Force
 Magnitude
+Position
+PositionToForce
 
 Category: HP
 ReadSonos
@@ -85,6 +111,12 @@ Unop
 ViewHist
 WhiteNoiseImage
 
+Category: MRA
+SiReAll
+SiReInput
+SiReOutput
+SiReCrunch
+
 Category: Matrix
 EditMatrix
 SolveMatrix
@@ -101,6 +133,7 @@ GenerateMesh
 HexMeshToGeom
 InsertDelaunay
 MakeScalarField
+MeshBoundary
 MeshReceiver
 MeshRender
 MeshSender
@@ -113,6 +146,7 @@ Category: Iterators
 MeshIterator
 
 Category: Readers
+ColorMapReader
 ColumnMatrixReader
 ContourSetReader
 GeomReader
@@ -124,6 +158,7 @@ MultimeshReader
 ParticleSetReader
 PointsReader
 ScalarFieldReader
+SegFldReader
 SigmaSetReader
 SurfaceReader
 TiffReader
@@ -149,9 +184,20 @@ VoiceRemover
 
 Category: Surface
 AugmentSurf
+ClipSurface
 ContoursToSurf
 GenSurface
+LabelSurface
+RescaleSurface
+RotateSurface
+SFUGtoSurf
+SimpSurface
+SurfExtractBCNodes
+SurfNewVals
 SurfToGeom
+SurfInterpVals
+TranslateSurface
+TransformSurf
 SurfGen
 SurfBust
 mySimpSurface
@@ -160,31 +206,35 @@ Category: Treat
 TreatFEM
 
 Category: Visualization
+AddWells2
 BB
 BitVisualize
 BoxClipSField
 Chuck
 ColorMapKey
 CuttingPlane
+CuttingPlaneTex
+FieldCage
 GenAxes
 GenColorMap
 GenTransferFunc
 GenFieldEdges
 Hedgehog
+HedgehogLitLines
 ImageViewer
 IsoMask
 IsoSurface
+IsoSurfaceDW
 IsoSurfaceSP
 OctIsoSurface
 RescaleColorMap
+SimpVolVis
 Streamline
 Ted
 VectorSeg
+VolRendTexSlices
 VolVis
 WidgetTest
-AddWells
-AddWells2
-FieldCage
 
 Category: Writers
 ColorMapWriter
@@ -196,6 +246,7 @@ MeshWriter
 MultiMeshWriter
 ParticleSetWriter
 ScalarFieldWriter
+SegFldWriter
 SigmaSetWriter
 SurfaceWriter
 TetraWriter

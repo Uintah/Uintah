@@ -20,8 +20,10 @@
 #include <Classlib/LockingHandle.h>
 #include <Datatypes/GeometryPort.h>
 
+namespace sci {
 struct Node;
-typedef LockingHandle<Node> NodeHandle;
+typedef LockingHandle<sci::Node> NodeHandle;
+}
 
 #include <Datatypes/Surface.h>
 #include <Geometry/Point.h>
@@ -31,9 +33,12 @@ typedef LockingHandle<Node> NodeHandle;
 #define STORE_ELEMENT_BASIS
 
 class GeomGroup;
-class Mesh;
 class RPoint;
 class BigRational;
+
+namespace sci {
+
+class Mesh;
 
 struct Element {
     int faces[4];
@@ -63,7 +68,6 @@ struct Element {
     void get_sphere2(RPoint& cen, BigRational& rad2);
     Point centroid();
 };
-void Pio(Piostream&, Element*&);
 
 struct DirichletBC {
     SurfaceHandle fromsurf;
@@ -91,7 +95,6 @@ struct Node : public Datatype {
 struct NodeVersion1 {
     Point p;
 };
-void Pio(Piostream& stream, NodeVersion1& node);
 
 struct ElementVersion1 {
     int n0;
@@ -99,7 +102,6 @@ struct ElementVersion1 {
     int n2;
     int n3;
 };
-void Pio(Piostream& stream, ElementVersion1& node);
 
 struct Face {
     Face* next;
@@ -124,7 +126,7 @@ struct Edge{
 };
 
 class Mesh;
-typedef LockingHandle<Mesh> MeshHandle;
+typedef LockingHandle<sci::Mesh> MeshHandle;
 
 class Mesh : public Datatype {
 public:
@@ -190,5 +192,11 @@ inline int Element::face(int i)
     }
     return faces[i];
 }
+
+}
+
+void Pio(Piostream&, sci::Element*&);
+void Pio(Piostream& stream, sci::NodeVersion1& node);
+void Pio(Piostream& stream, sci::ElementVersion1& node);
 
 #endif

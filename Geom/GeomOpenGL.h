@@ -53,6 +53,7 @@ public:
     int currently_lit;
     int pickmode;
     int fog;
+    int cull;
 
     int check_clip; // see if you should ignore clipping planes
     

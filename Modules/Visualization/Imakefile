@@ -2,10 +2,10 @@
 #include <config/sci.cf>
 
 #ifdef SCI_MESA
-OPENGLINCS = -I$(TOP)/Mesa/include -I/usr/openwin/include
+OPENGLINCS = -I$(TOP)/Mesa/include 
 OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
 #else
-OPENGLINCS =
+OPENGLINCS = 
 OPENGLLIBS = -lGLU -lGL -lXext -lX11
 #endif
 
@@ -14,25 +14,27 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = BitVisualize.o  BoxClipSField.o BoundGrid.o \
-	CuttingPlane.o FastRender.o    \
+OBJS = AddWells2.o  BB.o  BitVisualize.o  BoxClipSField.o  BoundGrid.o  \
+	ColorMapKey.o  CuttingPlane.o  CuttingPlaneTex.o  \
+	FastRender.o  FieldCage.o  \
 	GenAxes.o GenColorMap.o  GenFieldEdges.o GenTransferFunc.o  \
-	GenStandardColorMaps.o \
-	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o IsoSurfaceMRSG.o \
-	OctIsoSurface.o   CuttingPlaneTex.o  \
-	RescaleColorMap.o  Streamline.o  VectorSeg.o  VolVis.o   \
-	WidgetTest.o ImageViewer.o Ted.o FieldCage.o AddWells2.o \
-	ColorMapKey.o
-SRCS = BB.cc RenderRG.cc  BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
-	CuttingPlane.cc FastRender.c    \
+	GenStandardColorMaps.o  Hedgehog.o  HedgehogLitLines.o  \
+	ImageViewer.o  IsoMask.o  IsoSurface.o  \
+	IsoSurfaceDW.o  IsoSurfaceMRSG.o  IsoSurfaceSP.o  \
+	OctIsoSurface.o  RenderRG.o  RescaleColorMap.o  \
+	SimpVolVis.o  Streamline.o  Ted.o  \
+	VectorSeg.o  VolVis.o  VolRendTexSlices.o  WidgetTest.o
+
+SRCS = AddWells2.cc BB.cc BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
+	ColorMapKey.cc CuttingPlane.cc CuttingPlaneTex.cc \
+	FastRender.c  FieldCage.cc \
 	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenTransferFunc.cc \
-	GenStandardColorMaps.cc \
-	Hedgehog.cc IsoMask.cc  IsoSurface.cc IsoSurfaceSP.cc \
-	IsoSurfaceMRSG.cc\
-	 OctIsoSurface.cc   CuttingPlaneTex.cc \
-	RescaleColorMap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
-	WidgetTest.cc ImageViewer.cc Ted.cc AddWells.cc FieldCage.cc \
-	AddWells2.cc ColorMapKey.cc
+	GenStandardColorMaps.cc Hedgehog.cc HedgehogLitLines.cc \
+	ImageViewer.cc IsoMask.cc IsoSurface.cc \
+	IsoSurfaceDW.cc IsoSurfaceMRSG.cc IsoSurfaceSP.cc \
+	OctIsoSurface.cc RenderRG.cc RescaleColorMap.cc \
+	SimpVolVis.cc Streamline.cc Ted.cc \
+	VectorSeg.cc VolVis.cc VolRendTexSlices.cc WidgetTest.cc
 
 LIBNAME = Visualization
 

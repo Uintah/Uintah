@@ -19,6 +19,10 @@
 #include <Malloc/Allocator.h>
 #include <strings.h>
 
+#ifdef __sun
+#define bcopy(src,dest,n) memcpy(dest,src,n)
+#endif
+
 Persistent* make_TexGeomGrid()
 {
     return scinew TexGeomGrid(0,0,Point(0,0,0), Vector(1,0,0), Vector(0,0,1));

@@ -23,6 +23,13 @@
 #include <Malloc/Allocator.h>
 #include <Multitask/ITC.h>
 #include <Multitask/Task.h>
+#include <TCL/TCLvar.h>
+
+using sci::NodeHandle;
+using sci::Mesh;
+using sci::MeshHandle;
+using sci::DirichletBC;
+using sci::Element;
 
 class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
@@ -43,6 +50,8 @@ class BuildFEMatrix : public Module {
     Mesh* mesh;
     SymSparseRowMatrix* gbl_matrix;
     ColumnMatrix* rhs;
+    TCLint DirSubFlag;	// don't apply Dirichlet conditions, so we can do
+    int DirSub;	//  matrix decomposition and local regularization later
 public:
     void parallel(int);
     BuildFEMatrix(const clString& id);
@@ -68,7 +77,7 @@ Module* make_BuildFEMatrix(const clString& id)
 
 
 BuildFEMatrix::BuildFEMatrix(const clString& id)
-: Module("BuildFEMatrix", id, Filter)
+: Module("BuildFEMatrix", id, Filter), DirSubFlag("DirSubFlag", id, this)
 {
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -79,13 +88,10 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
     add_oport(outmatrix);
     rhsoport=scinew ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
     add_oport(rhsoport);
-
-    // Ask Dave about why this was different originally
-    // i.e. it was add_iport(scinew MeshIPort(this,"Geometry",...));
 }
 
 BuildFEMatrix::BuildFEMatrix(const BuildFEMatrix& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), DirSubFlag("DirSubFlag", id, this)
 {
     NOT_FINISHED("BuildFEMatrix::BuildFEMatrix");
 }
@@ -111,10 +117,10 @@ void BuildFEMatrix::parallel(int proc)
     Array1<int> mycols(0, 15*ndof);
     for(i=start_node;i<end_node;i++){
 	rows[r++]=mycols.size();
-	if(mesh->nodes[i]->bc){
+	if(mesh->nodes[i]->bc && DirSub) {
 	    mycols.add(i); // Just a diagonal term
 	} else {
-	    mesh->add_node_neighbors(i, mycols);
+	    mesh->add_node_neighbors(i, mycols, DirSub);
 	}
     }
     colidx[proc]=mycols.size();
@@ -179,7 +185,7 @@ void BuildFEMatrix::parallel(int proc)
 	}
     }
     for(i=start_node;i<end_node;i++){
-	if(mesh->nodes[i]->bc){
+	if(mesh->nodes[i]->bc && DirSub){
 	    // This is just a dummy entry...
 //	    (*gbl_matrix)[i][i]=1;
 	    int id=rows[i];
@@ -199,7 +205,9 @@ void BuildFEMatrix::execute()
      int nnodes=mesh->nodes.size();
      rows=scinew int[nnodes+1];
      np=Task::nprocessors();
+     np=1;
      colidx.resize(np+1);
+     DirSub = DirSubFlag.get();
 
      Task::multiprocess(np, do_parallel, this);
 
@@ -289,6 +297,12 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 				int el, const MeshHandle& mesh)
 {
 
+//    if (mesh->elems[el]->n[0] < 32 ||
+//	mesh->elems[el]->n[1] < 32 ||
+//	mesh->elems[el]->n[2] < 32 ||
+//	mesh->elems[el]->n[3] < 32) { 
+//	cerr << "\n\n\nn[0]="<<mesh->elems[el]->n[0]<<" n[1]="<<mesh->elems[el]->n[1]<<" n[2]="<<mesh->elems[el]->n[2]<<" n3="<<mesh->elems[el]->n[3]<<"\n";
+ //   }
      for (int i=0; i<4; i++) // this four should eventually be a
 	  // variable ascociated with each element that indicates 
 	  // how many nodes are on that element. it will change with 
@@ -296,11 +310,11 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
      {	  
 	  int ii = mesh->elems[el]->n[i];
 	  NodeHandle& n1=mesh->nodes[ii];
-	  if(!n1->bc){
+	  if (!n1->bc || !DirSub) {
 	      for (int j=0; j<4; j++) {
 		  int jj = mesh->elems[el]->n[j];
 		  NodeHandle& n2=mesh->nodes[jj];
-		  if(!n2->bc){
+		  if(!n2->bc || !DirSub){
 		      gbl_a[ii][jj] += lcl_a[i][j];
 		  } else {
 		      // Eventually look at nodetype...
@@ -325,11 +339,11 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 	  int ii = mesh->elems[el]->n[i];
 	  if(ii >= s && ii < e){
 	      NodeHandle& n1=mesh->nodes[ii];
-	      if(!n1->bc){
+	      if (!n1->bc || !DirSub) {
 		  for (int j=0; j<4; j++) {
 		      int jj = mesh->elems[el]->n[j];
 		      NodeHandle& n2=mesh->nodes[jj];
-		      if(!n2->bc){
+		      if(!n2->bc || !DirSub){
 			  gbl_a[ii][jj] += lcl_a[i][j];
 		      } else {
 			  // Eventually look at nodetype...

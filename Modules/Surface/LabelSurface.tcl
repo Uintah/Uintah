@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.2  1999/01/04 05:32:31  dmw
+ #  See Dave for details...
+ #
  #  Revision 1.1  1997/08/23 06:27:19  dweinste
  #  Some trivial modules that I needed...
  #
@@ -27,12 +30,8 @@ itcl_class LabelSurface {
     method set_defaults {} {
         global $this-numberf
 	global $this-namef
-        global $this-numberg
-	global $this-nameg
 	set $this-numberf 0
 	set $this-namef ""
-	set $this-numberg 0
-	set $this-nameg ""
     }
     method ui {} {
         set w .ui$this
@@ -56,18 +55,6 @@ itcl_class LabelSurface {
 	pack $w.f.num.l $w.f.num.e -side left
 	pack $w.f.name.l $w.f.name.e -side left
 	pack $w.f.num $w.f.name -padx 5 -side left -fill x
-	frame $w.g
-	global $this-numberf
-	global $this-namef
-	frame $w.g.num
-	label $w.g.num.l -text "Number:"
-	entry $w.g.num.e -relief sunken -width 3 -textvariable $this-numberg
-	frame $w.g.name
-	label $w.g.name.l -text "Name:"
-	entry $w.g.name.e -relief sunken -width 10 -textvariable $this-nameg
-	pack $w.g.num.l $w.g.num.e -side left
-	pack $w.g.name.l $w.g.name.e -side left
-	pack $w.g.num $w.g.name -padx 5 -side left -fill x
-        pack $w.f $w.g -side top -expand yes
+        pack $w.f -side top -expand yes
     }
 }

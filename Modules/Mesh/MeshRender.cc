@@ -26,6 +26,10 @@
 #include <Datatypes/Mesh.h>
 #include <TCL/TCLvar.h>
 
+using sci::MeshHandle;
+using sci::Edge;
+using sci::Element;
+
 class MeshRender : public Module {
     MeshIPort* imesh;
     GeometryOPort* ogeom;

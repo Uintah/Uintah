@@ -24,6 +24,7 @@ class SurfTree : public Surface {
 public:
     Array1<clString> surfNames;		// names of surfaces
     Array1<Array1<int> > surfEls;	// indices of elements in each surface
+    Array1<Array1<int> > surfOrient;	// is each element properly oriented
     Array1<TSElement*> elements;	// array of all elements
     Array1<Point> points;		// array of all points
     Array1<int> bcIdx;			// which nodes have boundary conditions
@@ -31,22 +32,45 @@ public:
     Array1<int> matl;			// segmented material type in each surf
     Array1<int> outer;			// idx of surface containing this surf
     Array1<Array1<int> > inner;		// indices of surfs withink this surf
+
     Array1<Array1<int> > typeSurfs;	// elements can be typed based on 
                                         //   which surfaces they're part of
     Array1<int> typeIds;		// type of each element
+
+    int haveNodeInfo;			// has node info (below) been built?
+    int haveNormals;
+    Array1<Array1<int> > nodeSurfs;	// which surfaces is a node part of
+    Array1<Array1<int> > nodeElems;	// which elements is a node part of
+    Array1<Array1<int> > nodeNbrs;	// which nodes are one neighbors
+    Array1<Array1<Vector> > nodeNormals;
+
+    Array1<BBox> bboxes;
+    int valid_bboxes;
 public:
     SurfTree(Representation r=STree);
     SurfTree(const SurfTree& copy, Representation r=STree);
     virtual ~SurfTree();
     virtual Surface* clone();
 
+    void compute_bboxes();
+    void distance(const Point &p, int &have_hit, double &distBest, 
+		  int &compBest, int &elemBest, int comp);
+    int inside(const Point &p, int &component);
+
     void SurfsToTypes();
     void TypesToSurfs();
 
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
-    virtual void get_surfnodes(Array1<NodeHandle>&);
-    void get_surfnodes(Array1<NodeHandle>&, clString name);
+    virtual void get_surfnodes(Array1<sci::NodeHandle>&);
+    virtual void set_surfnodes(const Array1<sci::NodeHandle>&);
+    void get_surfnodes(Array1<sci::NodeHandle>&, clString name);
+    void set_surfnodes(const Array1<sci::NodeHandle>&, clString name);
+    void bldNormals();
+    void bldNodeInfo();
+    void printNbrInfo();
+    int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int);
+
     virtual int inside(const Point& p);
     virtual void construct_hash(int, int, const Point &, double);
 

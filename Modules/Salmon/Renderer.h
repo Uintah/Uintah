@@ -44,7 +44,7 @@ public:
     virtual void redraw(Salmon*, Roe*, double tbeg, double tend,
 			int nframes, double framerate);
     virtual void get_pick(Salmon*, Roe*, int x, int y,
-			  GeomObj*&, GeomPick*&)=0;
+			  GeomObj*&, GeomPick*&, int&)=0;
     virtual void hide()=0;
     virtual void dump_image(const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1)=0;

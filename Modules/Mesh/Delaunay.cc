@@ -19,6 +19,11 @@
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
+using sci::Mesh;
+using sci::MeshHandle;
+using sci::Node;
+using sci::Element;
+
 class Delaunay : public Module {
     MeshIPort* iport;
     MeshOPort* oport;

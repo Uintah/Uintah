@@ -56,7 +56,7 @@ Roe::Roe(Salmon* s, const clString& id)
   do_stereo("do_stereo", id, this), drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   tracker_state("tracker_state", id, this),
-  id(id)
+  id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
 {
     inertia_mode=0;
     bgcolor.set(Color(0,0,0));
@@ -562,11 +562,11 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 	    last_x=x;
 	    last_y=current_renderer->yres-y;
 	    current_renderer->get_pick(manager, this, x, y,
-				       pick_obj, pick_pick);
+				       pick_obj, pick_pick, pick_n);
 
 	    if (pick_obj){
 		NOT_FINISHED("update mode string for pick");
-		pick_pick->pick(this,bs);
+		pick_pick->pick(this,bs,pick_n);
 		need_redraw=1;
 	    } else {
 		update_mode_string("pick: none");
@@ -616,7 +616,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 		if (Abs(total_z) < .0001) total_z=0;
 		need_redraw=1;
 		update_mode_string("picked someting...");
-		pick_pick->moved(prin_dir, dist, mtn, bs);
+		pick_pick->moved(prin_dir, dist, mtn, bs, pick_n);
 		need_redraw=1;
 	    } else {
 		update_mode_string("Bad direction...");
@@ -627,7 +627,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 	break;
     case MouseEnd:
 	if(pick_pick){
-	    pick_pick->release(bs);
+	    pick_pick->release(bs, pick_n);
 	    need_redraw=1;
 	}
 	pick_pick=0;
@@ -901,13 +901,17 @@ void Roe::autoview(const BBox& bbox)
 	// change this a little, make it so that the FOV must
 	// be 60 deg...
 
+	// I'm changing this to be 20 degrees - Dave
+
+	double myfov=20.0;
+
         Vector diag(bbox.diagonal());
 	double w=diag.length();
 	Vector lookdir(cv.lookat()-cv.eyep()); 
 	lookdir.normalize();
-	const double scale = 1.0/(2*Tan(DtoR(60.0/2.0)));
+	const double scale = 1.0/(2*Tan(DtoR(myfov/2.0)));
 	double length = w*scale;
-	cv.fov(60.0);
+	cv.fov(myfov);
 	cv.eyep(cv.lookat() - lookdir*length);
         animate_to_view(cv, 2.0);
 
@@ -1038,7 +1042,7 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
       ObjTag* vis;
       if(visible.lookup(si->name, vis)){
 	if(vis->visible->get()){
-	  if (strstr("TransParent",si->name())) { // delay drawing
+	  if (strstr(si->name(),"TransParent")) { // delay drawing
 	    transp_objs.add(si);
 	  } else {
 	    

@@ -9,9 +9,9 @@ if {[catch {set sci_root $env(SCI_WORK)}]} {
 source $sci_root/defaults.tcl
 source $sci_root/devices.tcl
 
-set modname_font "-Adobe-Helvetica-bold-R-Normal-*-120-75-*"
-set ui_font "-Adobe-Helvetica-medium-R-Normal-*-120-75-*"
-set time_font "-Adobe-Courier-Medium-R-Normal-*-100-75-*"
+set modname_font "-Adobe-Helvetica-bold-R-Normal-*-*-120-75-*"
+set ui_font "-Adobe-Helvetica-medium-R-Normal-*-*-120-75-*"
+set time_font "-Adobe-Helvetica-medium-R-Normal-*-*-120-75-*"
 
 proc resource {} {
 }

@@ -20,7 +20,7 @@
 
 class ScalarFieldUG : public ScalarField {
 public:
-    MeshHandle mesh;
+    sci::MeshHandle mesh;
     Array1<double> data;
 
     enum Type {
@@ -30,7 +30,7 @@ public:
     Type typ;
 
     ScalarFieldUG(Type typ);
-    ScalarFieldUG(const MeshHandle&, Type typ);
+    ScalarFieldUG(const sci::MeshHandle&, Type typ);
     virtual ~ScalarFieldUG();
     virtual ScalarField* clone();
 

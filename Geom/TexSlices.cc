@@ -28,7 +28,8 @@ PersistentTypeID GeomTexSlices::type_id("GeomTexSlices", "GeomObj", make_GeomTex
 
 GeomTexSlices::GeomTexSlices(int nx, int ny, int nz, const Point& min,
 			     const Point &max)
-: nx(nx), ny(ny), nz(nz), min(min), max(max), have_drawn(0)
+: nx(nx), ny(ny), nz(nz), min(min), max(max), have_drawn(0), accum(0.1),
+  bright(0.6)
 {
     Xmajor.newsize(nx, ny, nz);
     Ymajor.newsize(ny, nx, nz);

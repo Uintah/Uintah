@@ -16,6 +16,11 @@
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 
+using sci::MeshHandle;
+using sci::Element;
+using sci::Mesh;
+using sci::NodeHandle;
+
 static Persistent* maker()
 {
     return scinew ScalarFieldUG(ScalarFieldUG::NodalValues);

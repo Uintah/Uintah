@@ -53,7 +53,7 @@ public:
 				   const clString& height);
     virtual void old_redraw(Salmon* salmon, Roe* roe);
     virtual void get_pick(Salmon*, Roe*, int x, int y,
-			  GeomObj*&, GeomPick*&);
+			  GeomObj*&, GeomPick*&, int&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat);
     virtual void hide();
 };
@@ -271,7 +271,7 @@ void X11::hide()
     tkwin=0;
 }
 
-void X11::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
+void X11::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&)
 {
     NOT_FINISHED("X11::get_pick");
 }

@@ -1,2 +1,3 @@
 #!/bin/csh
-itcl_wish -f tclindex.tcl
+setenv LD_LIBRARY_PATH ~/sunwork/lib
+~/sunwork/tcl/itcl/src/itcl_wish -f tclindex.tcl

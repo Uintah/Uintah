@@ -16,7 +16,7 @@
 #define SCI_Classlib_HashTable_h 1
 
 #include <Classlib/Assert.h>
-
+class RigorousTest;
 
 #ifdef __GNUG__
 #pragma interface

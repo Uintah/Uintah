@@ -1,10 +1,8 @@
 
 #include <config/sci.cf>
 
-OBJS = AugEdge.o Mesh2d.o GenSimpObj.o Quadric.o \
-	SimpObj2d.o SimpObj1d.o SimpObj3d.o
-SRCS = AugEdge.cc Mesh2d.cc GenSimpObj.cc Quadric.cc \
-	SimpObj2d.cc SimpObj1d.cc SimpObj3d.cc
+OBJS = AugEdge.o Mesh2d.o Quadric.o
+SRCS = AugEdge.cc Mesh2d.cc Quadric.cc
 
 LIBNAME = Simplify
 

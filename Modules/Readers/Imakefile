@@ -7,24 +7,23 @@ OBJS = ColorMapReader.o   ColumnMatrixReader.o   ContourSetReader.o   \
 	MultiMeshReader.o   ScalarFieldReader.o  SigmaSetReader.o   \
 	SurfaceReader.o   VectorFieldReader.o VectorFieldOceanReader.o  \
 	PointsReader.o   VoidStarReader.o DukeRawRead.o ImageReader.o \
-	TiffReader.o
-# ParticleSetReader.o
+	SegFldReader.o  TiffReader.o
 GENSRCS = ColorMapReader.cc ColumnMatrixReader.cc ContourSetReader.cc  \
 	MatrixReader.cc   MeshReader.cc   \
 	MultiMeshReader.cc  ScalarFieldReader.cc   SigmaSetReader.cc \
 	SurfaceReader.cc  VectorFieldReader.cc  VoidStarReader.cc \
-        ParticleSetReader.cc
+	SegFldReader.cc  ParticleSetReader.cc
 SRCS = $(GENSRCS) GeomReader.cc PointsReader.cc GeometryReader.cc \
 	VectorFieldOceanReader.cc MultiSFRGReader.cc SigmaSetReader.cc \
 	DukeRawRead.cc ImageReader.cc TiffReader.cc 
 
 GENTCLS = ColorMapReader.tcl ColumnMatrixReader.tcl ContourSetReader.tcl \
 	MatrixReader.tcl MeshReader.tcl \
-	MultiMeshReader.tcl ScalarFieldReader.tcl SigmaSetReader.tcl \
+	MultiMeshReader.tcl ScalarFieldReader.tcl SegFldReader.tcl \
+	SigmaSetReader.tcl \
 	SurfaceReader.tcl VectorFieldReader.tcl VoidStarReader.tcl
 TCLS = $(GENTCLS) GeomReader.tcl PointsReader.tcl VectorFieldOceanReader.tcl \
 	TiffReader.tcl ParticleSetReader.tcl
-
 
 LIBNAME = Readers
 
@@ -87,6 +86,12 @@ ScalarFieldReader.cc: Reader.cc
 
 ScalarFieldReader.tcl: Reader.tcl
 	sed 's/TYPE/ScalarField/g' < Reader.tcl > ScalarFieldReader.tcl
+
+SegFldReader.cc: Reader.cc
+	sed 's/TYPE/SegFld/g' < Reader.cc > SegFldReader.cc
+
+SegFldReader.tcl: Reader.tcl
+	sed 's/TYPE/SegFld/g' < Reader.tcl > SegFldReader.tcl
 
 SigmaSetReader.cc: Reader.cc
 	sed 's/TYPE/SigmaSet/g' < Reader.cc > SigmaSetReader.cc

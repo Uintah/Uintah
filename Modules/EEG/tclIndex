@@ -8,6 +8,11 @@
 
 set auto_index(BldEEGMesh) "source $dir/BldEEGMesh.tcl"
 set auto_index(Coregister) "source $dir/Coregister.tcl"
+set auto_index(InvEEGSolve) "source $dir/InvEEGSolve.tcl"
 set auto_index(MRIsim) "source $dir/MRIsim.tcl"
+set auto_index(RescaleSegFld) "source $dir/RescaleSegFld.tcl"
+set auto_index(STreeExtractSurf) "source $dir/STreeExtractSurf.tcl"
 set auto_index(SegFldOps) "source $dir/SegFldOps.tcl"
+set auto_index(SelectSurfNodes) "source $dir/SelectSurfNodes.tcl"
 set auto_index(Taubin) "source $dir/Taubin.tcl"
+set auto_index(Thermal) "source $dir/Thermal.tcl"

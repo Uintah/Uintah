@@ -22,6 +22,8 @@
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
+using sci::MeshHandle;
+
 class MeshRefiner : public Module {
     ScalarFieldIPort* upbound_field;
     ScalarFieldIPort* lowbound_field;

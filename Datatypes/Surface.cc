@@ -28,7 +28,7 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
-: closed(copy.closed), rep(copy.rep)
+: closed(copy.closed), rep(copy.rep), name(copy.name)
 {
 //    NOT_FINISHED("Surface::Surface");
 }

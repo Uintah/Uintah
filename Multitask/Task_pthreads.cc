@@ -140,7 +140,6 @@ int Task::startup(int task_arg)
 	perror("pthread_setspecific");
 	exit(1);
     }
-    cerr << "Set specific for thread: " << pthread_self() << endl;
     int retval=body(task_arg);
     Task::taskexit(this, retval);
     return 0; // Never reached.
@@ -188,7 +187,7 @@ Task* Task::self()
 	//perror("pthread_getspecific");
 	//exit(1);
 	cerr << "self is 0?\n";
-	cerr << "pthread_self=" << pthread_self() << endl;
+        cerr << "selfkey=" << selfkey << endl;
 	return 0;
     }
     return t;
@@ -412,13 +411,11 @@ void Task::initialize(char* pn)
 #else
     pagesize=getpagesize();
 #endif
-    fprintf(stderr, "Open...\n");
     devzero_fd=open("/dev/zero", O_RDWR);
     if(devzero_fd == -1){
 	perror("open");
 	exit(-1);
     }
-    fprintf(stderr, "Done...\n");
     if(pthread_key_create(&selfkey, NULL) != 0){
 	perror("pthread_key_create\n");
 	exit(1);
@@ -432,7 +429,6 @@ void Task::initialize(char* pn)
 	perror("pthread_setspecific");
 	exit(1);
     }
-    cerr << "Set up self key for main thread: " << pthread_self() << endl;
 
 #ifdef __sgi
     // Set up the signal stack so that we will be able to 

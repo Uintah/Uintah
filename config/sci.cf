@@ -44,6 +44,10 @@ OTHERINCLUDES = -I$(CPPINCLUDES)
 .cpp.o:
 	$(CCC) $(CCFLAGS) -c $<
 
+.SUFFIXES: .cxx
+.cxx.o:
+        $(CCC) $(CCFLAGS) -c $<
+
 
 default: all
 

@@ -50,6 +50,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+using sci::Mesh;
+using sci::Element;
+using sci::Node;
+using sci::NodeHandle;
+using sci::Face;
+
+
 class IHP : public Module {
     ScalarFieldIPort* infield;
     ScalarFieldIPort* incolorfield;

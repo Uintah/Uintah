@@ -35,6 +35,26 @@ Persistent* make_GeomTrianglesP()
 
 PersistentTypeID GeomTrianglesP::type_id("GeomTrianglesP", "GeomObj", make_GeomTrianglesP);
 
+Persistent* make_GeomTrianglesPC()
+{
+    return scinew GeomTrianglesPC;
+}
+
+PersistentTypeID GeomTrianglesPC::type_id("GeomTrianglesPC", "GeomTrianglesP", make_GeomTrianglesPC);
+
+Persistent* make_GeomTrianglesVP()
+{
+    return scinew GeomTrianglesVP;
+}
+
+PersistentTypeID GeomTrianglesVP::type_id("GeomTrianglesVP", "GeomObj", make_GeomTrianglesVP);
+
+Persistent* make_GeomTrianglesVPC()
+{
+    return scinew GeomTrianglesVPC;
+}
+
+PersistentTypeID GeomTrianglesVPC::type_id("GeomTrianglesVPC", "GeomTrianglesVP", make_GeomTrianglesVPC);
 
 Persistent* make_GeomTrianglesPT1d()
 {
@@ -49,13 +69,6 @@ Persistent* make_GeomTranspTrianglesP()
 }
 
 PersistentTypeID GeomTranspTrianglesP::type_id("GeomTranspTrianglesP", "GeomObj", make_GeomTranspTrianglesP);
-
-Persistent* make_GeomTrianglesPC()
-{
-    return scinew GeomTrianglesPC;
-}
-
-PersistentTypeID GeomTrianglesPC::type_id("GeomTrianglesPC", "GeomTrianglesP", make_GeomTrianglesPC);
 
 GeomTriangles::GeomTriangles()
 {
@@ -215,152 +228,6 @@ void GeomTriangles::io(Piostream& stream)
 bool GeomTriangles::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTriangles::saveobj");
-    return false;
-}
-
-GeomTrianglesP::GeomTrianglesP()
-:has_color(0)
-{
-    // don't really need to do anythin...
-}
-
-GeomTrianglesP::~GeomTrianglesP()
-{
-
-}
-
-int GeomTrianglesP::size(void)
-{
-    return points.size()/9;
-}
-
-void GeomTrianglesP::reserve_clear(int n)
-{
-    points.setsize(n*9);
-    normals.setsize(n*3);
-
-    points.remove_all();
-    normals.remove_all();
-}
-
-int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
-{
-    Vector n(Cross(p2-p1, p3-p1));
-#ifndef SCI_NORM_OGL
-    if(n.length2() > 0){
-        n.normalize();
-    }   	
-    else {
-//	cerr << "degenerate triangle!!!\n" << endl;
-	return 0;
-    }
-#endif
-
-    int idx=normals.size();
-    normals.grow(3);
-    normals[idx]=n.x();
-    normals[idx+1]=n.y();
-    normals[idx+2]=n.z();
-
-
-    idx=points.size();
-    points.grow(9);
-    points[idx]=p1.x();
-    points[idx+1]=p1.y();
-    points[idx+2]=p1.z();
-    points[idx+3]=p2.x();
-    points[idx+4]=p2.y();
-    points[idx+5]=p2.z();
-    points[idx+6]=p3.x();
-    points[idx+7]=p3.y();
-    points[idx+8]=p3.z();
-    return 1;
-}
-
-// below is just a virtual function...
-
-int GeomTrianglesP::vadd(const Point& p1, const Point& p2, const Point& p3)
-{
-    Vector n(Cross(p2-p1, p3-p1));
-#ifndef SCI_NORM_OGL
-    if(n.length2() > 0){
-        n.normalize();
-    }   	
-    else {
-//	cerr << "degenerate triangle!!!\n" << endl;
-	return 0;
-    }
-#endif
-
-    int idx=normals.size();
-    normals.grow(3);
-    normals[idx]=n.x();
-    normals[idx+1]=n.y();
-    normals[idx+2]=n.z();
-
-
-    idx=points.size();
-    points.grow(9);
-    points[idx]=p1.x();
-    points[idx+1]=p1.y();
-    points[idx+2]=p1.z();
-    points[idx+3]=p2.x();
-    points[idx+4]=p2.y();
-    points[idx+5]=p2.z();
-    points[idx+6]=p3.x();
-    points[idx+7]=p3.y();
-    points[idx+8]=p3.z();
-    return 1;
-}
-
-GeomObj* GeomTrianglesP::clone()
-{
-    return new GeomTrianglesP(*this);
-}
-
-void GeomTrianglesP::get_bounds(BBox& box)
-{
-    for(int i=0;i<points.size();i+=3)
-	box.extend(Point(points[i],points[i+1],points[i+2]));
-}
-
-void GeomTrianglesP::get_bounds(BSphere& box)
-{
-    for(int i=0;i<points.size();i+=3)
-	box.extend(Point(points[i],points[i+1],points[i+2]));
-}
-
-
-void GeomTrianglesP::make_prims(Array1<GeomObj*>& /*free */,
-				Array1<GeomObj*>& /*dontfree*/)
-{
-    NOT_FINISHED("GeomTrianglesP::make_prims");
-}
-
-void GeomTrianglesP::preprocess()
-{
-    NOT_FINISHED("GeomTrianglesP::preprocess");
-}
-
-void GeomTrianglesP::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTrianglesP::intersect");
-}
-
-#define GEOMTRIANGLESP_VERSION 1
-
-void GeomTrianglesP::io(Piostream& stream)
-{
-    stream.begin_class("GeomTrianglesP", GEOMTRIANGLESP_VERSION);
-    GeomObj::io(stream);
-    Pio(stream, points);
-    Pio(stream, normals);
-    stream.end_class();
-}
-
-bool GeomTrianglesP::saveobj(ostream&, const clString&, GeomSave*)
-{
-    NOT_FINISHED("GeomTrianglesP::saveobj");
     return false;
 }
 
@@ -756,6 +623,152 @@ void GeomTranspTrianglesP::io(Piostream& stream)
     stream.end_class();
 }
 
+GeomTrianglesP::GeomTrianglesP()
+:has_color(0)
+{
+    // don't really need to do anythin...
+}
+
+GeomTrianglesP::~GeomTrianglesP()
+{
+
+}
+
+int GeomTrianglesP::size(void)
+{
+    return points.size()/9;
+}
+
+void GeomTrianglesP::reserve_clear(int n)
+{
+    points.setsize(n*9);
+    normals.setsize(n*3);
+
+    points.remove_all();
+    normals.remove_all();
+}
+
+int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
+{
+    Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
+    if(n.length2() > 0){
+        n.normalize();
+    }   	
+    else {
+//	cerr << "degenerate triangle!!!\n" << endl;
+	return 0;
+    }
+#endif
+
+    int idx=normals.size();
+    normals.grow(3);
+    normals[idx]=n.x();
+    normals[idx+1]=n.y();
+    normals[idx+2]=n.z();
+
+
+    idx=points.size();
+    points.grow(9);
+    points[idx]=p1.x();
+    points[idx+1]=p1.y();
+    points[idx+2]=p1.z();
+    points[idx+3]=p2.x();
+    points[idx+4]=p2.y();
+    points[idx+5]=p2.z();
+    points[idx+6]=p3.x();
+    points[idx+7]=p3.y();
+    points[idx+8]=p3.z();
+    return 1;
+}
+
+// below is just a virtual function...
+
+int GeomTrianglesP::vadd(const Point& p1, const Point& p2, const Point& p3)
+{
+    Vector n(Cross(p2-p1, p3-p1));
+#ifndef SCI_NORM_OGL
+    if(n.length2() > 0){
+        n.normalize();
+    }   	
+    else {
+//	cerr << "degenerate triangle!!!\n" << endl;
+	return 0;
+    }
+#endif
+
+    int idx=normals.size();
+    normals.grow(3);
+    normals[idx]=n.x();
+    normals[idx+1]=n.y();
+    normals[idx+2]=n.z();
+
+
+    idx=points.size();
+    points.grow(9);
+    points[idx]=p1.x();
+    points[idx+1]=p1.y();
+    points[idx+2]=p1.z();
+    points[idx+3]=p2.x();
+    points[idx+4]=p2.y();
+    points[idx+5]=p2.z();
+    points[idx+6]=p3.x();
+    points[idx+7]=p3.y();
+    points[idx+8]=p3.z();
+    return 1;
+}
+
+GeomObj* GeomTrianglesP::clone()
+{
+    return new GeomTrianglesP(*this);
+}
+
+void GeomTrianglesP::get_bounds(BBox& box)
+{
+    for(int i=0;i<points.size();i+=3)
+	box.extend(Point(points[i],points[i+1],points[i+2]));
+}
+
+void GeomTrianglesP::get_bounds(BSphere& box)
+{
+    for(int i=0;i<points.size();i+=3)
+	box.extend(Point(points[i],points[i+1],points[i+2]));
+}
+
+
+void GeomTrianglesP::make_prims(Array1<GeomObj*>& /*free */,
+				Array1<GeomObj*>& /*dontfree*/)
+{
+    NOT_FINISHED("GeomTrianglesP::make_prims");
+}
+
+void GeomTrianglesP::preprocess()
+{
+    NOT_FINISHED("GeomTrianglesP::preprocess");
+}
+
+void GeomTrianglesP::intersect(const Ray&, Material*, Hit&)
+{
+    NOT_FINISHED("GeomTrianglesP::intersect");
+}
+
+#define GEOMTRIANGLESP_VERSION 1
+
+void GeomTrianglesP::io(Piostream& stream)
+{
+    stream.begin_class("GeomTrianglesP", GEOMTRIANGLESP_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, points);
+    Pio(stream, normals);
+    stream.end_class();
+}
+
+bool GeomTrianglesP::saveobj(ostream&, const clString&, GeomSave*)
+{
+    NOT_FINISHED("GeomTrianglesP::saveobj");
+    return false;
+}
+
 GeomTrianglesPC::GeomTrianglesPC()
 {
     // don't really need to do anythin...
@@ -800,6 +813,227 @@ void GeomTrianglesPC::io(Piostream& stream)
 
 
 bool GeomTrianglesPC::saveobj(ostream& out, const clString& format,
+			      GeomSave* saveinfo)
+{
+    if(format == "vrml"){
+	saveinfo->start_sep(out);
+	saveinfo->start_node(out, "Coordinate3");
+	saveinfo->indent(out);
+	out << "point [";
+	int np=points.size()/3;
+	for(int i=0;i<np;i++){
+	    if(i>0)
+		out << ", ";
+	    int idx=i*3;
+	    out << " " << points[idx] << " " << points[idx+1] << " " << points[idx+2];
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "NormalBinding");
+	saveinfo->indent(out);
+	out << "value PER_VERTEX\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "Normal");
+	saveinfo->indent(out);
+	out << "vector [";
+	for(i=0;i<np;i+=3){
+	    if(i>0)
+		out << ", ";
+	    int idx=i;
+	    out << " " << normals[idx] << " " << normals[idx+1] << " " << normals[idx+2];
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "MaterialBinding");
+	saveinfo->indent(out);
+	out << "value PER_VERTEX\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "Material");
+	saveinfo->indent(out);
+	out << "diffuseColor [";
+	for(i=0;i<np;i++){
+	    if(i>0)
+		out << ", ";
+	    int idx=i*3;
+	    out << " " << colors[idx] << " " << colors[idx+1] << " " << colors[idx+2];
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "IndexedFaceSet");
+	saveinfo->indent(out);
+	out << "coordIndex [";
+	for(i=0;i<np;i++){
+	    if(i>0)
+		out << ", ";
+	    out << " " << i;
+	    if(i%3==2)
+		out << ", -1";
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->end_sep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomTrianglesPC::saveobj");
+	return false;
+    }
+}
+
+GeomTrianglesVP::GeomTrianglesVP()
+{
+    // don't really need to do anythin...
+}
+
+GeomTrianglesVP::~GeomTrianglesVP()
+{
+
+}
+
+int GeomTrianglesVP::size(void)
+{
+    return points.size()/9;
+}
+
+void GeomTrianglesVP::reserve_clear(int n)
+{
+    int np = points.size()/9;
+    int delta = n - np;
+
+    points.remove_all();
+    normals.remove_all();
+
+    if (delta > 0) {
+	points.grow(delta);
+	normals.grow(delta);
+    }
+	
+}
+
+int GeomTrianglesVP::add(const Point& p1, const Vector &v1,
+			 const Point& p2, const Vector &v2,	
+			 const Point& p3, const Vector &v3)
+{
+    int idx=normals.size();
+    normals.grow(9);
+    normals[idx]=v1.x();
+    normals[idx+1]=v1.y();
+    normals[idx+2]=v1.z();
+    normals[idx+3]=v2.x();
+    normals[idx+4]=v2.y();
+    normals[idx+5]=v2.z();
+    normals[idx+6]=v3.x();
+    normals[idx+7]=v3.y();
+    normals[idx+8]=v3.z();
+
+    idx=points.size();
+    points.grow(9);
+    points[idx]=p1.x();
+    points[idx+1]=p1.y();
+    points[idx+2]=p1.z();
+    points[idx+3]=p2.x();
+    points[idx+4]=p2.y();
+    points[idx+5]=p2.z();
+    points[idx+6]=p3.x();
+    points[idx+7]=p3.y();
+    points[idx+8]=p3.z();
+    return 1;
+}
+
+GeomObj* GeomTrianglesVP::clone()
+{
+    return new GeomTrianglesVP(*this);
+}
+
+void GeomTrianglesVP::get_bounds(BBox& box)
+{
+    for(int i=0;i<points.size();i+=3)
+	box.extend(Point(points[i],points[i+1],points[i+2]));
+}
+
+void GeomTrianglesVP::get_bounds(BSphere& box)
+{
+    for(int i=0;i<points.size();i+=3)
+	box.extend(Point(points[i],points[i+1],points[i+2]));
+}
+
+
+void GeomTrianglesVP::make_prims(Array1<GeomObj*>& /*free */,
+				Array1<GeomObj*>& /*dontfree*/)
+{
+    NOT_FINISHED("GeomTrianglesVP::make_prims");
+}
+
+void GeomTrianglesVP::preprocess()
+{
+    NOT_FINISHED("GeomTrianglesVP::preprocess");
+}
+
+void GeomTrianglesVP::intersect(const Ray&, Material*, Hit&)
+{
+    NOT_FINISHED("GeomTrianglesVP::intersect");
+}
+
+#define GEOMTRIANGLESVP_VERSION 1
+
+void GeomTrianglesVP::io(Piostream& stream)
+{
+    stream.begin_class("GeomTrianglesVP", GEOMTRIANGLESVP_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, points);
+    Pio(stream, normals);
+    stream.end_class();
+}
+
+bool GeomTrianglesVP::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTrianglesVP::saveobj");
+    return false;
+}
+
+GeomTrianglesVPC::GeomTrianglesVPC()
+{
+    // don't really need to do anythin...
+}
+
+GeomTrianglesVPC::~GeomTrianglesVPC()
+{
+
+}
+
+int GeomTrianglesVPC::add(const Point& p1, const Vector &v1, const Color& c1,
+			  const Point& p2, const Vector &v2, const Color& c2,
+			  const Point& p3, const Vector &v3, const Color& c3)
+{
+    if (GeomTrianglesVP::add(p1,v1,p2,v2,p3,v3)) {
+	colors.add(c1.r());
+	colors.add(c1.g());
+	colors.add(c1.b());
+
+	colors.add(c2.r());
+	colors.add(c2.g());
+	colors.add(c2.b());
+
+	colors.add(c3.r());
+	colors.add(c3.g());
+	colors.add(c3.b());
+	return 1;
+    }
+
+    return 0;
+}
+
+#define GEOMTRIANGLESVPC_VERSION 1
+
+void GeomTrianglesVPC::io(Piostream& stream)
+{
+    stream.begin_class("GeomTrianglesVPC", GEOMTRIANGLESVPC_VERSION);
+    GeomTrianglesVP::io(stream);
+    Pio(stream, colors);
+    stream.end_class();
+}
+
+
+bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
 			      GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv"){
@@ -861,7 +1095,7 @@ bool GeomTrianglesPC::saveobj(ostream& out, const clString& format,
 	saveinfo->end_sep(out);
 	return true;
     } else {
-	NOT_FINISHED("GeomTrianglesPC::saveobj");
+	NOT_FINISHED("GeomTrianglesVPC::saveobj");
 	return false;
     }
 }

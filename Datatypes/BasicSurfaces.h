@@ -18,6 +18,10 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 
+using sci::NodeHandle;
+using sci::Node;
+using sci::DirichletBC;
+
 class CylinderSurface : public Surface {
     Point p1;
     Point p2;
@@ -43,6 +47,7 @@ public:
     virtual Surface* clone();
     virtual int inside(const Point& p);
     virtual void get_surfnodes(Array1<NodeHandle>&);
+    virtual void set_surfnodes(const Array1<NodeHandle>&);
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
 
@@ -64,6 +69,7 @@ public:
     virtual Surface* clone();
     virtual int inside(const Point& p);
     virtual void get_surfnodes(Array1<NodeHandle>&);
+    virtual void set_surfnodes(const Array1<NodeHandle>&);
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
 
@@ -94,6 +100,7 @@ public:
     virtual ~SphereSurface();
     virtual Surface* clone();
     virtual int inside(const Point& p);
+    virtual void set_surfnodes(const Array1<NodeHandle>&);
     virtual void get_surfnodes(Array1<NodeHandle>&);
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
@@ -117,6 +124,7 @@ public:
     virtual Surface* clone();
     virtual int inside(const Point& p);
     virtual void get_surfnodes(Array1<NodeHandle>&);
+    virtual void set_surfnodes(const Array1<NodeHandle>&);
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
 

@@ -37,6 +37,8 @@ public:
     Point max() const;
     Vector diagonal() const;
 
+    inline int inside(const Point &p) const {return (have_some && p.x()>=cmin.x() && p.y()>=cmin.y() && p.z()>=cmin.z() && p.x()<=cmax.x() && p.y()<=cmax.y() && p.z()<=cmax.z());}
+
     // prepares for intersection by assigning the closest bbox corner
     // to extracmin and initializing an epsilon bigger bbox
     

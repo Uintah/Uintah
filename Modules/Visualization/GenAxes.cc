@@ -85,7 +85,7 @@ Module* GenAxes::clone(int deep)
 
 void GenAxes::execute()
 {
-   if (!size_changed) return;
+//   if (!size_changed) return;
    size_changed=0;
    ogeom->delAll();
    GeomGroup* xp = scinew GeomGroup;

@@ -9,16 +9,27 @@ SOBJS =
 SSRCS =
 #endif
 
+#if 0
 OBJS = CrossFader.o  SoundFFT.o  SoundFilter.o  SoundMixer.o  \
 	VoiceRemover.o  $(SOBJS)
 SRCS = CrossFader.cc SoundFFT.cc SoundFilter.cc SoundMixer.cc \
 	VoiceRemover.cc $(SSRCS)
+#endif
+
+OBJS = 
+SRCS = 
 
 LIBNAME = Sound
 
+#if 0
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
 	-lMalloc SCI_LAUDIO SCI_LM -lC -lc
+#endif
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
+	-lMalloc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

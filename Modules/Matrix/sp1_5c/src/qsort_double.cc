@@ -32,6 +32,8 @@
 // for MV++
 // by Andrew Lumsdaine
 
+#define _NON_TEMPLATE_COMPLEX
+
 #include "qsort_double.h"
 
 #ifdef sparc

@@ -39,6 +39,11 @@
 
 #include <stdio.h>
 
+using sci::Element;
+using sci::Node;
+using sci::Mesh;
+using sci::MeshHandle;
+
 class BuildMultiMesh : public Module {
     ScalarFieldIPort* isf;
     ColorMapIPort* icmap;

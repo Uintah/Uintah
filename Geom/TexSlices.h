@@ -23,10 +23,11 @@
 class GeomTexSlices : public GeomObj {
     Point min, max;
     int nx, ny, nz;
-    
     unsigned int texids[3];
     int have_drawn;
 public:
+    double accum;
+    double bright;
     Array3<char> Xmajor;
     Array3<char> Ymajor;
     Array3<char> Zmajor;

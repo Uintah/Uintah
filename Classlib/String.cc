@@ -178,7 +178,7 @@ clString clString::substr(int start, int length)
 int clString::hash(int hash_size) const
 {
     if(!p || !p->s)return 0;
-    char* pp=p->s;
+    unsigned char* pp=(unsigned char*)p->s;
     int sum=0;
     while(*pp){
 	sum=(sum << 2) ^ (sum >> 2) ^ *pp;

@@ -204,7 +204,7 @@ itcl_class SolveMatrix {
 	$w.graph element configure "Current Target" -data "0 $err" \
 		-symbol diamond
 
-#	pack $w.graph -fill x
+	pack $w.graph -fill x
     }
     protected error_selected false
     protected tmp_error

@@ -272,6 +272,16 @@ void TexGeomLines::add(const Point& p1, const Point& p2,double scale)
   tangents.add((p2-p1)*scale);
 } 
 
+void TexGeomLines::add(const Point& p1, const Vector& dir, const Colorub& c) {
+    pts.add(p1);
+    pts.add(p1+dir);
+
+    Vector v(dir);
+    v.normalize();
+    tangents.add(v);
+    colors.add(c);
+}
+
 // this is used by the streamline module...
 
 void TexGeomLines::batch_add(Array1<double>&, Array1<Point>& ps)

@@ -45,6 +45,7 @@ class CuttingPlane : public Module {
    TCLint num_contours;   
    TCLdouble offset;
    TCLdouble scale;
+   TCLdouble where;
    TCLint need_find;
    MaterialHandle outcolor;
    int grid_id;
@@ -74,7 +75,7 @@ CuttingPlane::CuttingPlane(const clString& id)
   cutting_plane_type("cutting_plane_type",id, this),
   need_find("need_find",id,this),
   scale("scale", id, this), offset("offset", id, this),
-  num_contours("num_contours", id, this)
+  num_contours("num_contours", id, this), where("where", id, this)
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
@@ -104,7 +105,7 @@ CuttingPlane::CuttingPlane(const CuttingPlane& copy, int deep)
 : Module(copy, deep), cutting_plane_type("cutting_plane_type",id, this),
   need_find("need_find",id,this),
   scale("scale", id, this), offset("offset", id, this),
-   num_contours("num_contours", id, this)
+   num_contours("num_contours", id, this), where("where", id, this)
 {
    NOT_FINISHED("CuttingPlane::CuttingPlane");
 }
@@ -137,8 +138,8 @@ void CuttingPlane::execute()
 	GeomObj *w = widget->GetWidget() ;
 	widget_id = ogeom->addObj( w, widget_name, &widget_lock );
 	widget->Connect( ogeom );
-	widget->SetRatioR( 0.2 );
-	widget->SetRatioD( 0.2 );
+	widget->SetRatioR( 0.4 );
+	widget->SetRatioD( 0.4 );
     }
     if (need_find.get() != find)
     {
@@ -146,30 +147,36 @@ void CuttingPlane::execute()
 	sfield->get_bounds( min, max );
 	Point center = min + (max-min)/2.0;
 	double max_scale;
-	if (need_find.get() == 1) {
-	  // Find the field and put in optimal place
-	  // in xy plane with reasonable frame thickness
-	  Point right( max.x(), center.y(), center.z());
-	  Point down( center.x(), min.y(), center.z());
-	  max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
-	  widget->SetScale( max_scale/30. );
-	  widget->SetPosition( center, right, down);
-	} else if (need_find.get() == 2) {
-	  // Find the field and put in optimal place
-	  // in yz plane with reasonable frame thickness
-	  Point right( center.x(), center.y(), max.z());
-	  Point down( center.x(), min.y(), center.z());	    
-	  max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
-	  widget->SetScale( max_scale/30. );
-	  widget->SetPosition( center, right, down);
-	} else  {
-	  // Find the field and put in optimal place
-	  // in xz plane with reasonable frame thickness
-	  Point right( max.x(), center.y(), center.z());
-	  Point down( center.x(), center.y(), min.z());	    
-	  max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
-	  widget->SetScale( max_scale/30. );
-	  widget->SetPosition( center, right, down);
+	double wh=where.get();
+	if (need_find.get() == 1)
+	{   // Find the field and put in optimal place
+	    // in xy plane with reasonable frame thickness
+	    center.z(min.z()*wh+max.z()*(1-wh));
+	    Point right( max.x(), center.y(), center.z());
+	    Point down( center.x(), min.y(), center.z());
+	    max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
+	    widget->SetScale( max_scale/30. );
+	    widget->SetPosition( center, right, down);
+	}
+	else if (need_find.get() == 2)
+	{   // Find the field and put in optimal place
+	    // in yz plane with reasonable frame thickness
+	    center.x(min.x()*wh+max.x()*(1-wh));
+	    Point right( center.x(), center.y(), max.z());
+	    Point down( center.x(), min.y(), center.z());	    
+	    max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
+	    widget->SetScale( max_scale/30. );
+	    widget->SetPosition( center, right, down);
+	}
+	else
+	{   // Find the field and put in optimal place
+	    // in xz plane with reasonable frame thickness
+	    center.y(min.y()*wh+max.y()*(1-wh));
+	    Point right( max.x(), center.y(), center.z());
+	    Point down( center.x(), center.y(), min.z());	    
+	    max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
+	    widget->SetScale( max_scale/30. );
+	    widget->SetPosition( center, right, down);
 	}
 	find = need_find.get();
     }

@@ -1,18 +1,28 @@
 
 #include <config/sci.cf>
 
-OBJS = AugmentSurf.o  ContoursToSurf.o  GenSurface.o  LabelSurface.o \
-	RescaleSurface.o  SurfToGeom.o  SurfGen.o mySimpSurface.o \
-	SurfBust.o
-SRCS = AugmentSurf.cc ContoursToSurf.cc GenSurface.cc LabelSurface.cc \
-	RescaleSurface.cc SurfToGeom.cc SurfGen.cc mySimpSurface.cc \
-	SurfBust.cc
+OBJS = AugmentSurf.o  ClipSurface.o  ContoursToSurf.o  GenSurface.o  \
+	LabelSurface.o \
+	RescaleSurface.o  RotateSurface.o  SFUGtoSurf.o  \
+	SurfExtractBCNodes.o  SurfNewVals.o  SurfInterpVals.o  \
+	SurfGen.o  SurfToGeom.o  \
+	TransformSurf.o  TranslateSurface.o 
+SRCS = AugmentSurf.cc ClipSurface.cc ContoursToSurf.cc GenSurface.cc \
+	LabelSurface.cc \
+	RescaleSurface.cc RotateSurface.cc SFUGtoSurf.cc \
+	SurfExtractBCNodes.cc SurfNewVals.cc SurfInterpVals.cc \
+	SurfGen.cc SurfToGeom.cc \
+	TransformSurf.cc TranslateSurface.cc
+
 
 LIBNAME = Surface
 
+LOCALINCLUDES = -I.
+
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lSimplify -lWidgets -lDatatypes -lDataflow \
+SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow \
 	-lGeom -lGeometry -lTCL -lClasslib -lMultitask -lMalloc -lm -lC -lc
 
+SCISubdirs( gfx qslim )
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

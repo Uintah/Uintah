@@ -47,6 +47,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+using sci::Element;
+using sci::Mesh;
+using sci::Node;
+using sci::NodeHandle;
+
 class IsoMask : public Module {
     ScalarFieldIPort* infield;
     ScalarFieldIPort* incolorfield;

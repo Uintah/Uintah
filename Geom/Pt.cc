@@ -40,16 +40,16 @@ PersistentTypeID GeomTimedParticles::type_id("GeomTimedParticles",
 					     make_GeomTimedParticles);
 
 GeomPts::GeomPts(const GeomPts &copy)
-: pts(copy.pts), have_normal(copy.have_normal), n(copy.n),cmap(0) {
+: pts(copy.pts), have_normal(copy.have_normal), n(copy.n), pickable(copy.pickable), cmap(0) {
 }
 
 GeomPts::GeomPts(int size)
-: pts(0, size*3), have_normal(0),cmap(0)
+: pts(0, size*3), have_normal(0), pickable(0), cmap(0)
 {
 }
 
 GeomPts::GeomPts(int size, const Vector &n)
-: pts(0, size*3), n(n), have_normal(1)
+: pts(0, size*3), n(n), have_normal(1), pickable(0)
 {
 }
 

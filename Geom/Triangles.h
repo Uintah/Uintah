@@ -186,4 +186,58 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
+class GeomTrianglesVP: public GeomObj {
+protected:
+    Array1<float> points;
+    Array1<float> normals;
+public:
+    GeomTrianglesVP();
+    virtual ~GeomTrianglesVP();
+
+    int size(void);
+
+    int add(const Point&, const Vector&, 
+	    const Point&, const Vector&, 
+	    const Point&, const Vector&);
+    
+    void reserve_clear(int);   // reserves storage... and clears
+
+    virtual GeomObj* clone();
+
+    virtual void get_bounds(BBox&);
+    virtual void get_bounds(BSphere&);
+
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+    virtual void make_prims(Array1<GeomObj*>& free,
+			    Array1<GeomObj*>& dontfree);
+    virtual void preprocess();
+    virtual void intersect(const Ray& ray, Material*,
+			   Hit& hit);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+};
+
+class GeomTrianglesVPC: public GeomTrianglesVP {
+    Array1<float> colors;
+public:
+    GeomTrianglesVPC();
+    virtual ~GeomTrianglesVPC();
+
+    int add(const Point&, const Vector&, const Color&,
+	    const Point&, const Vector&, const Color&,
+	    const Point&, const Vector&, const Color&);
+
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
+};
+
 #endif /* SCI_Geom_Triangles_h */

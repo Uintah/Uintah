@@ -1,20 +1,15 @@
 
 #include <config/sci.cf>
 
-#if defined(SCI_MACHINE_Solaris)
-XLIBDIR = -L/usr/openwin/lib
-XINCLUDE = -I/usr/openwin/include
-#endif
-
 #ifdef SCI_OPENGL
 OPENGLOBJS = OpenGL.o
 OPENGLSRCS = OpenGL.cc
 
 #ifdef SCI_MESA
-OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLINCS = $(XINCLUDE) -I$(TOP)/Mesa/include
 OPENGLLIBS = $(XLIBDIR) -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
 #else
-OPENGLINCS =
+OPENGLINCS = $(XINCLUDE)
 OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
 #endif
 #else
@@ -28,10 +23,10 @@ LOCALCFLAGS = -woff 835
 #endif
 
 OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o \
-	SalmonGeom.o Ball.o BallAux.o BallMath.o\
+	SalmonGeom.o Ball.o BallAux.o BallMath.o Tex.o \
 	$(OPENGLOBJS) $(IMGLIBOBJS)
 SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc \
-	SalmonGeom.cc Ball.cc BallAux.cc BallMath.cc\
+	SalmonGeom.cc Ball.cc BallAux.cc BallMath.cc Tex.cc \
 	$(OPENGLSRCS)
 
 LOCALINCLUDES = $(OPENGLINCS) $(XINCLUDE)

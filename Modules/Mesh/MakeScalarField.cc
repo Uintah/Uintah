@@ -19,6 +19,8 @@
 #include <Malloc/Allocator.h>
 #include <Geometry/Point.h>
 
+using sci::MeshHandle;
+
 class MakeScalarField : public Module {
     MeshIPort* inmesh;
     ColumnMatrixIPort* inrhs;

@@ -45,6 +45,7 @@ class GeomPick : public GeomContainer {
 
     GeomPick(const GeomPick&);
 public:
+    bool drawOnlyOnPick;
     GeomPick(GeomObj*, Module* module);
     GeomPick(GeomObj*, Module* module, BaseWidget*, int widget_data);
     GeomPick(GeomObj*, Module* module,
@@ -65,9 +66,9 @@ public:
     void set_module_data(void*);
     void set_widget_data(int);
 
-    void pick(Roe* roe, const BState& bs);
-    void moved(int axis, double distance, const Vector& delta, const BState& bs);
-    void release(const BState& bs);
+    void pick(Roe* roe, const BState& bs, int n);
+    void moved(int axis, double distance, const Vector& delta, const BState& bs, int n);
+    void release(const BState& bs, int n);
 
     void ignore_until_release();
 

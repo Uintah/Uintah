@@ -51,7 +51,7 @@ public:
 				   const clString& height);
     virtual void old_redraw(Salmon*, Roe*);
     virtual void get_pick(Salmon*, Roe*, int x, int y,
-			  GeomObj*&, GeomPick*&);
+			  GeomObj*&, GeomPick*&, int&);
     virtual void hide();
     virtual void put_scanline(int y, int width, Color* scanline, int repeat);
     double light_ray(const Point& from, const Point& to,

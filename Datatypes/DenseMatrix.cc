@@ -411,6 +411,21 @@ void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
     }
 }
 
+void Add(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
+{
+    ASSERTEQ(m1.ncols(), m2.ncols());
+    ASSERTEQ(out.ncols(), m2.ncols());
+    ASSERTEQ(m1.nrows(), m2.nrows());
+    ASSERTEQ(out.nrows(), m2.nrows());
+
+    int nr=out.nrows();
+    int nc=out.ncols();
+
+    for(int i=0;i<nr;i++)
+	for (int j=0; j<nc; j++)
+	    out[i][j]=m1.data[i][j]+m2.data[i][j];
+}
+
 void Mult_trans_X(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
 {
     ASSERTEQ(m1.nrows(), m2.nrows());

@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Group.h>
+#include <Geom/Pt.h>
 #include <Geom/Sphere.h>
 #include <Geom/Triangles.h>
 #include <Malloc/Allocator.h>
@@ -105,6 +106,10 @@ void CylinderSurface::add_node(Array1<NodeHandle>& nodes,
 	node->bc=scinew DirichletBC(this, value);
     }
     nodes.add(node);
+}
+
+void CylinderSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
+    NOT_FINISHED("CylinderSurface::set_surfnodes");
 }
 
 void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
@@ -337,6 +342,10 @@ void SphereSurface::add_node(Array1<NodeHandle>& nodes,
     nodes.add(node);
 }
 
+void SphereSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
+    NOT_FINISHED("SphereSurface::set_surfnodes");
+}
+
 void SphereSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 {
     char id[100];
@@ -525,6 +534,10 @@ void PointSurface::add_node(Array1<NodeHandle>& nodes,
     nodes.add(node);
 }
 
+void PointSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
+    NOT_FINISHED("PointSurface::set_surfnodes");
+}
+
 void PointSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 {
     char id[100];
@@ -561,10 +574,31 @@ void PointSurface::construct_grid()
     NOT_FINISHED("PointSurface::construct_grid");
 }
 
-GeomObj* PointSurface::get_obj(const ColorMapHandle&)
+GeomObj* PointSurface::get_obj(const ColorMapHandle& cmap)
 {
-    NOT_FINISHED("PointSurface::get_obj");
-    return 0;
+
+    GeomPts* pts=scinew GeomPts(1);
+    pts->pts[0] = pos.x();
+    pts->pts[1] = pos.y();
+    pts->pts[2] = pos.z();
+
+    if(boundary_type == None)
+	return pts;
+
+    Array1<NodeHandle> nodes;
+    get_surfnodes(nodes);
+
+    // This is here twice, since get_surfnodes may reduce back to 
+    // no BC's if there is an error...
+    if(boundary_type == None)
+	return pts;
+
+//    WE NEED TO BUILD A NODE IN OUR CONSTRUCTOR, RIGHT??
+
+    double v=nodes[0]->bc->value;
+    Color c(cmap->lookup(v)->diffuse);
+
+    return pts;
 }
 
 static Persistent* make_PointsSurface()
@@ -638,6 +672,17 @@ void PointsSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 	Node* node=new Node(pos[i]);
 	node->bc=scinew DirichletBC(this, val[i]);
 	nodes.add(node);
+    }
+}
+
+void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
+    pos.resize(nodes.size());
+    val.resize(nodes.size());
+    for (int i=0; i<val.size(); i++) {
+	pos[i]=nodes[i]->p;
+	if (nodes[i]->bc) {
+	    val[i]=nodes[i]->bc->value;
+	} else val[i]=0;
     }
 }
 

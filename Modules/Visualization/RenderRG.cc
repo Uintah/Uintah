@@ -205,12 +205,12 @@ RenderRGVolume::Process( ScalarFieldRG *sfield, ColorMapHandle cmap,
   double diff = smax - smin;
   
   Array1<int> xl;  // = *(cmap->rawRampAlphaT);
-  Array1<float> sv = *(cmap->rawRampAlpha);
+  Array1<float> sv = cmap->rawRampAlpha;
 
   // convert percentages to scalar values
   int j;
   for(j=0;j<sv.size();j++)
-    xl.add( (int)( (*(cmap->rawRampAlphaT))[j] * diff) );
+    xl.add( (int)(cmap->rawRampAlphaT[j] * diff) );
 
   //
   // make sure this works!

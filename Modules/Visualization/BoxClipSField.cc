@@ -29,6 +29,11 @@
 #include <Widgets/ScaledBoxWidget.h>
 #include <Malloc/Allocator.h>
 
+using sci::MeshHandle;
+using sci::Mesh;
+using sci::Node;
+using sci::Element;
+
 class BoxClipSField : public Module {
     ScalarFieldIPort* ifield;
     ScalarFieldOPort* ofield;

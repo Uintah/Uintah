@@ -6,7 +6,6 @@ XLIBDIR = -L/usr/openwin/lib
 XINCLUDE = -I/usr/openwin/include
 #endif
 
-
 #ifdef SCI_OPENGL
 OPENGLOBJS = GeomOpenGL.o
 OPENGLSRCS = GeomOpenGL.cc
@@ -37,6 +36,7 @@ OBJS = Arrows.o  BBoxCache.o Color.o  Cone.o  Container.o  Cylinder.o  \
 	Tube.o  TimeGrid.o QMesh.o \
 	VertexPrim.o  View.o  Box.o Text.o \
 	TCLGeom.o  TCLView.o  TexSquare.o Billboard.o Sticky.o \
+	TexSlices.o  \
 	$(OPENGLOBJS) $(X11OBJS)
 SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
 	Disc.cc \
@@ -48,6 +48,7 @@ SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
 	Tube.cc TimeGrid.cc QMesh.cc \
 	VertexPrim.cc View.cc Box.cc Text.cc \
 	TCLGeom.cc  TCLView.cc TexSquare.cc Billboard.cc Sticky.cc \
+	TexSlices.cc \
 	$(OPENGLSRCS) $(X11SRCS)
 LOCALINCLUDES = $(OPENGLINCS) $(XINCLUDE)
 SO_LIBS = 

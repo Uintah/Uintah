@@ -91,7 +91,9 @@ int Multiprocess::body(int)
 static Multiprocess* mpworkers;
 static Mutex workerlock;
 
+#ifdef __sgi
 #include <sys/sysmp.h>
+#endif
 
 void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
 			void* userdata, bool block)
@@ -131,7 +133,9 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
       w->userdata=userdata;
       w->processor=i;
       w->sema1.up();
+#ifdef __sgi
       sysmp(MP_MUSTRUN, i);
+#endif
       w=w->next;
     }
 

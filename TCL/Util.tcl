@@ -146,6 +146,14 @@ itcl_class expscale {
     }
     method setscales {} {
 	global $variable
+
+
+## DAVE HACK
+
+#	set exp 1
+
+
+
 	set value [set $variable]
 	set mag [expr pow(10, $exp)]
 	# Round the value down to get from...

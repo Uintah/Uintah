@@ -13,7 +13,7 @@ public:
 				   const clString& height);
     virtual void old_redraw(Salmon*, Roe*);
     virtual void get_pick(Salmon*, Roe*, int x, int y,
-			  GeomObj*&, GeomPick*&);
+			  GeomObj*&, GeomPick*&, int&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat);
     virtual void hide();
 };
@@ -56,7 +56,7 @@ void Postscript::hide()
 {
 }
 
-void Postscript::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
+void Postscript::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&)
 {
     NOT_FINISHED("Postscript::get_pick");
 }

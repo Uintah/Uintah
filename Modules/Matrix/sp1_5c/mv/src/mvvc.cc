@@ -28,6 +28,9 @@
 
 
                                  
+
+#define _NON_TEMPLATE_COMPLEX
+
 #include "mvv.h"
 
 

@@ -78,7 +78,7 @@ foreach t {Classlib Comm Constraints Dataflow Datatypes Devices Geom \
 frame .right -relief groove -borderwidth 2
 pack .right -side right -anchor nw -fill y -padx 2 -pady 2
 set i 0
-foreach t {Contours EEG FDM FEM Fields Matrix Mesh Readers \
+foreach t {CS684 Contours EEG FDM FEM Fields Haptics MRA Matrix Mesh Readers \
 	   Remote Salmon Sound Surface Visualization Writers} {
 	IndexDir .right.$i -text "Modules/$t: " -name DIR_Modules_$t \
 		-dir Modules/$t

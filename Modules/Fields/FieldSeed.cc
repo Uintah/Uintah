@@ -34,6 +34,8 @@
 
 #include <stdlib.h>
 
+using sci::Mesh;
+using sci::Node;
 
 class FieldSeed : public Module {
   ScalarFieldIPort *ifield;

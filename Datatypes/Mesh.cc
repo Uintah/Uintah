@@ -27,6 +27,16 @@
 #include <iostream.h>
 #include <fstream.h>
 
+using sci::Mesh;
+using sci::Node;
+using sci::Element;
+using sci::Face;
+using sci::NodeVersion1;
+using sci::ElementVersion1;
+using sci::NodeHandle;
+using sci::Edge;
+using sci::DirichletBC;
+
 static TrivialAllocator Element_alloc(sizeof(Element));
 static TrivialAllocator Node_alloc(sizeof(Node));
 static TrivialAllocator Face_alloc(sizeof(Face));

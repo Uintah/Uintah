@@ -22,6 +22,9 @@
 #include <TCL/TCLvar.h>
 #include <values.h>
 
+using sci::Element;
+using sci::Mesh;
+
 class FEMError : public Module {
     ScalarFieldIPort* infield;
     ScalarFieldOPort* upbound_field;

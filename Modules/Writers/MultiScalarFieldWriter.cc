@@ -111,7 +111,9 @@ void MultiScalarFieldWriter::execute()
       //stream->watch_progress(watcher, (void*)this);
       Pio(*stream, *temp_handle);
       delete stream;
+#ifdef NEEDAUGDATA
       RG = (ScalarFieldRG*)RG->next;
+#endif
       one = one + 1;
       if (one > '9') {
 	ten = ten + 1;

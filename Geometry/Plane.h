@@ -20,9 +20,9 @@ class Plane {
    Vector n;
    double d;
 public:
-   Plane();
     Plane(const Plane &copy);
     Plane(const Point &p1, const Point &p2, const Point &p3);
+    Plane();
     ~Plane();
     double eval_point(const Point &p);
     void flip();

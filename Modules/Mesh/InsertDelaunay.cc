@@ -27,7 +27,12 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/prctl.h>
+// #include <sys/prctl.h>
+
+using sci::Element;
+using sci::Mesh;
+using sci::MeshHandle;
+using sci::NodeHandle;
 
 class InsertDelaunay : public Module {
     MeshIPort* iport;

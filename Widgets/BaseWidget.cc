@@ -178,6 +178,8 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 return;
       }
       NextMode();
+   } else if (args[1] == "print") { 
+       print();
    } else if (args[1] == "defmaterials") {
       if (args.count() != 2) {
 	 args.error("widget doesn't need a minor command");

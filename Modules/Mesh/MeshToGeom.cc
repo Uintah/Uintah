@@ -25,6 +25,8 @@
 #include <Datatypes/Mesh.h>
 #include <Malloc/Allocator.h>
 
+using sci::MeshHandle;
+
 class MeshToGeom : public Module {
     MeshIPort* imesh;
     GeometryOPort* ogeom;
@@ -72,9 +74,11 @@ Module* MeshToGeom::clone(int deep)
 void MeshToGeom::execute()
 {
     MeshHandle mesh;
+    update_state(NeedData);
     if (!imesh->get(mesh))
 	return;
 
+    update_state(JustStarted);
 #if 0
     GeomGroup* groups[7];
     for(int i=0;i<7;i++) groups[i] = scinew GeomGroup;
@@ -83,6 +87,7 @@ void MeshToGeom::execute()
     for(int i=0;i<7;i++) groups[i] = scinew GeomTrianglesP;
 #endif
     for (i=0; i<mesh->elems.size(); i++) {
+	if (i%500 == 0) update_progress(i, mesh->elems.size());
 	if (mesh->elems[i]) {
 	    if ((mesh->nodes[mesh->elems[i]->n[0]].get_rep() == 0) ||
 		(mesh->nodes[mesh->elems[i]->n[1]].get_rep() == 0) ||
@@ -174,8 +179,7 @@ void MeshToGeom::execute()
 					   scinew Material(Color(0,0,0),
 							   Color(0,.6,0), 
 							   Color(.5,.5,.5), 
-							   20));
-#endif
+#endif							   20));
 //    ogeom->addObj(matl, "Mesh1");
-	
+
 }

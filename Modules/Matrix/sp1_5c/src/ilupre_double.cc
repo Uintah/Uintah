@@ -29,6 +29,9 @@
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 #include <stdlib.h>
+
+#define _NON_TEMPLATE_COMPLEX
+
 #include "ilupre_double.h"
 #include "qsort_double.h"
 

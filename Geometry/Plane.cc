@@ -17,6 +17,7 @@
 #include <iostream.h>
 
 Plane::Plane()
+: n(Vector(0,0,1)), d(0)
 {
 }
 

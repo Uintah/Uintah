@@ -23,6 +23,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+using sci::Mesh;
+using sci::MeshHandle;
+using sci::Node;
+using sci::NodeHandle;
+
 class PointsReader : public Module {
     MeshOPort* outport;
     TCLstring ptsname, tetname;   

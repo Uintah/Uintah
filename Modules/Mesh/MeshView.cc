@@ -50,6 +50,12 @@
 #define ADD 1
 #define DELETE 2
 
+using sci::Mesh;
+using sci::MeshHandle;
+using sci::Element;
+using sci::Edge;
+using sci::Node;
+
 class MeshView : public Module {
     MeshIPort* inport;
     ColorMapIPort* colorPort;

@@ -6,7 +6,6 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
-set auto_index(SigmaSetWriter) "source $dir/SigmaSetWriter.tcl"
 set auto_index(ColorMapWriter) "source $dir/ColorMapWriter.tcl"
 set auto_index(ColumnMatrixWriter) "source $dir/ColumnMatrixWriter.tcl"
 set auto_index(ContourSetWriter) "source $dir/ContourSetWriter.tcl"
@@ -16,6 +15,8 @@ set auto_index(MeshWriter) "source $dir/MeshWriter.tcl"
 set auto_index(MultiMeshWriter) "source $dir/MultiMeshWriter.tcl"
 set auto_index(MultiScalarFieldWriter) "source $dir/MultiScalarFieldWriter.tcl"
 set auto_index(ScalarFieldWriter) "source $dir/ScalarFieldWriter.tcl"
+set auto_index(SegFldWriter) "source $dir/SegFldWriter.tcl"
+set auto_index(SigmaSetWriter) "source $dir/SigmaSetWriter.tcl"
 set auto_index(SurfaceWriter) "source $dir/SurfaceWriter.tcl"
 set auto_index(TYPEWriter) "source $dir/Writer.tcl"
 set auto_index(TetraWriter) "source $dir/TetraWriter.tcl"

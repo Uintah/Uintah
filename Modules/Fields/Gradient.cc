@@ -27,6 +27,10 @@
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
 
+using sci::Mesh;
+using sci::Element;
+using sci::NodeHandle;
+
 class Gradient : public Module {
     ScalarFieldIPort* infield;
     VectorFieldOPort* outfield;
@@ -167,7 +171,7 @@ void Gradient::execute()
 //		    else if (sfru)
 //			vfrg->grid(i,j,k)=sfru->gradient(i,j,k);
 		    else {
-			cerr << "Unknown ScalarFieldBase in Gradient.\n";
+			cerr << "Unknown SFRG type in Gradient: "<<sfb->getType()<<".\n";
 			return;
 		    }
 		}

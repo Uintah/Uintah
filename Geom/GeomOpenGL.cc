@@ -117,7 +117,7 @@ static void quad_error(GLenum code)
 }
 
 DrawInfoOpenGL::DrawInfoOpenGL()
-: current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0)
+: current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0),cull(0)
 {
     qobj=gluNewQuadric();
     gluQuadricCallback(qobj, GLU_ERROR, (void (*)())quad_error);
@@ -129,6 +129,7 @@ void DrawInfoOpenGL::reset()
     current_matl=0;
     ignore_matl=0;
     fog=0;
+    cull=0;
     check_clip = 0;
 }
 
@@ -183,6 +184,10 @@ void DrawInfoOpenGL::init_lighting(int use_light)
 	glEnable(GL_FOG);
     else
 	glDisable(GL_FOG);
+    if (cull)
+	glEnable(GL_CULL_FACE);
+    else
+	glDisable(GL_CULL_FACE);
 }
 
 void DrawInfoOpenGL::init_clip(void)
@@ -1604,6 +1609,8 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 0);
     di->polycount+=pts.size()/2;
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glLineWidth(di->point_size);
     glBegin(GL_LINES);
     for(int i=0;i<pts.size();i++){
       Point& pt=pts[i];
@@ -1733,17 +1740,29 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
       SortVecs(); // creates sorted lists...
   } 
   
+  mutex.lock();
   if (alpha == 1.0) {
 
     glBegin(GL_LINES);
     if (tex_per_seg) {
-      for(int i=0;i<pts.size()/2;i++){
-	Point& pt=pts[i*2];
-	Point& pt2=pts[i*2+1];
-	glTexCoord3d(tangents[i].x(),tangents[i].y(),tangents[i].z());
-	glVertex3d(pt.x(), pt.y(), pt.z());
-	glVertex3d(pt2.x(), pt2.y(), pt2.z());
-      }
+	if (colors.size()) {
+	    for(int i=0;i<pts.size()/2;i++){
+		Point& pt=pts[i*2];
+		Point& pt2=pts[i*2+1];
+		glColor3ubv(colors[i].ptr());
+		glTexCoord3d(tangents[i].x(),tangents[i].y(),tangents[i].z());
+		glVertex3d(pt.x(), pt.y(), pt.z());
+		glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	    }
+	} else {
+	    for(int i=0;i<pts.size()/2;i++){
+		Point& pt=pts[i*2];
+		Point& pt2=pts[i*2+1];
+		glTexCoord3d(tangents[i].x(),tangents[i].y(),tangents[i].z());
+		glVertex3d(pt.x(), pt.y(), pt.z());
+		glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	    }
+	}
     } else {
       if (colors.size()) {
 	for(int i=0;i<pts.size()/2;i++){
@@ -1870,6 +1889,7 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glEnd();
     glDisable(GL_BLEND);
   }
+  mutex.unlock();
   
   glDisable(GL_TEXTURE_1D);
   glPopMatrix();
@@ -1883,6 +1903,7 @@ void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double tim
 
 void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
+    if(drawOnlyOnPick && !di->pickmode) return;
     if(di->pickmode){
 #if (_MIPS_SZPTR == 64)
 	unsigned long o=(unsigned long)this;
@@ -2002,6 +2023,7 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
 
 void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+
 //    if (have_normal) 
 //	pre_draw(di, matl, 1);
 //    else 
@@ -2010,6 +2032,23 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 //    glPushAttrib(GL_POINT_BIT);
     glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
     glPointSize(di->point_size);
+
+    if (di->pickmode) {
+	if (pickable) {
+	    glPushName(0);
+	    float* p=&pts[0];
+	    for (int i=0; i<pts.size(); i+=3) {
+		glLoadName(i/3);
+		glBegin(GL_POINTS);
+		glVertex3fv(p);
+		glEnd();
+		p+=3;
+	    }
+	    glPopName();
+	}
+	return;
+    }
+
     glBegin(GL_POINTS);
     float* p=&pts[0];
 //    if (have_normal)
@@ -2131,9 +2170,9 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
 
     // get GL stuff set up
 
-    glColor4f(1,1,1,0.2);
+    glColor4f(1,1,1,bright);
 
-    glAlphaFunc(GL_GEQUAL,0.0);  // this might be to large...
+    glAlphaFunc(GL_GEQUAL,accum);  // this might be to large...
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);    
@@ -2141,15 +2180,15 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     for (int outer=sort_start; outer != sort_end; outer += sort_dir) {
 	switch (which) {
 	case 0:	// x
-	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY8_EXT, ny, nz, 0, 
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY, ny, nz, 0, 
 			 GL_LUMINANCE, GL_UNSIGNED_BYTE, &(Xmajor(outer,0,0)));
 	    break;
 	case 1: // y
-	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY8_EXT, nx, nz, 0, 
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY, nx, nz, 0, 
 			 GL_LUMINANCE, GL_UNSIGNED_BYTE, &(Ymajor(outer,0,0)));
 	    break;
 	case 2: // y
-	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY8_EXT, nx, ny, 0, 
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY, nx, ny, 0, 
 			 GL_LUMINANCE, GL_UNSIGNED_BYTE, &(Zmajor(outer,0,0)));
 	    break;
 	}
@@ -2719,11 +2758,23 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
+
+// DAVE: Hack for 3d texture mapping
     pre_draw(di,matl,1);
+//    pre_draw(di,matl,0);
 
     di->polycount += size();
 
+// DAVE: Also a hack for 3d texture mapping
+//    glColor3f(1,1,1);
+
+
     if (di->currently_lit) {
+
+	
+// Dave Hack
+//    glEnable(GL_CULL_FACE);
+
 #ifdef SCI_NORM_OGL
 	glEnable(GL_NORMALIZE);
 #else
@@ -2754,6 +2805,8 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    break;
 	}
 	glEnable(GL_NORMALIZE);
+// Dave Hack
+//    glDisable(GL_CULL_FACE);
     }
     else { // lights are off, don't emit the normals
 	switch(di->get_drawtype()){
@@ -3233,6 +3286,170 @@ void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 		    glVertex3fv(pts);
 		    pts+=3;
 
+		    glColor3fv(clrs);
+		    clrs+=3;
+		    glVertex3fv(pts);
+		    pts+=3;
+		}
+		glEnd();
+	    }
+		
+	    break;
+	}
+	glEnable(GL_NORMALIZE);
+    }
+    else { // lights are off, don't emit the normals
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	case DrawInfoOpenGL::Flat:
+	case DrawInfoOpenGL::Gouraud:
+	    {	
+		float *pts = &points[0];
+		float *clrs = &colors[0];
+		int niter = size();
+		glBegin(GL_TRIANGLES);
+		while(niter--) {
+		    glColor3fv(clrs);
+		    clrs+=3;
+		    glVertex3fv(pts);
+		    pts += 3;
+
+		    glColor3fv(clrs);
+		    clrs+=3;
+		    glVertex3fv(pts);
+		    pts+=3;
+
+		    glColor3fv(clrs);
+		    clrs+=3;
+		    glVertex3fv(pts);
+		    pts+=3;
+		}
+		glEnd();
+	    }
+		
+	    break;
+	}
+
+    }
+}
+
+void GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    if(points.size() == 0)
+      return;
+    pre_draw(di,matl,1);
+
+    di->polycount += size();
+
+    if (di->currently_lit) {
+
+// Dave Hack
+//    glEnable(GL_CULL_FACE);
+
+#ifdef SCI_NORM_OGL
+	glEnable(GL_NORMALIZE);
+#else
+	glDisable(GL_NORMALIZE);
+#endif
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	case DrawInfoOpenGL::Flat:
+	case DrawInfoOpenGL::Gouraud:
+	    {	
+		float *pts = &points[0];
+		float *nrmls = &normals[0];
+		int niter = size();
+		glBegin(GL_TRIANGLES);
+		while(niter--) {
+		    glNormal3fv(nrmls);
+		    nrmls+=3;
+		    glVertex3fv(pts);
+		    pts += 3;
+		    glNormal3fv(nrmls);
+		    nrmls+=3;
+		    glVertex3fv(pts);
+		    pts+=3;
+		    glNormal3fv(nrmls);
+		    nrmls+=3;
+		    glVertex3fv(pts);
+		    pts+=3;
+		}
+		glEnd();
+	    }
+		
+	    break;
+	}
+	glEnable(GL_NORMALIZE);
+// Dave Hack
+//    glDisable(GL_CULL_FACE);
+    }
+    else { // lights are off, don't emit the normals
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	case DrawInfoOpenGL::Flat:
+	case DrawInfoOpenGL::Gouraud:
+	    {	
+		float *pts = &points[0];
+		int niter = size();
+		glBegin(GL_TRIANGLES);
+		while(niter--) {
+		    glVertex3fv(pts);
+		    pts += 3;
+		    glVertex3fv(pts);
+		    pts+=3;
+		    glVertex3fv(pts);
+		    pts+=3;
+		}
+		glEnd();
+	    }
+		
+	    break;
+	}
+
+    }
+}
+
+void GeomTrianglesVPC::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    if(points.size() == 0)
+      return;
+    pre_draw(di,matl,1);
+
+    di->polycount += size();
+
+    if (di->currently_lit) {
+#ifdef SCI_NORM_OGL
+	glEnable(GL_NORMALIZE);
+#else
+	glDisable(GL_NORMALIZE);
+#endif
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	case DrawInfoOpenGL::Flat:
+	case DrawInfoOpenGL::Gouraud:
+	    {	
+		float *pts = &points[0];
+		float *nrmls = &normals[0];
+		float *clrs = &colors[0];
+		int niter = size();
+		glBegin(GL_TRIANGLES);
+		while(niter--) {
+		    glNormal3fv(nrmls);
+		    nrmls+=3;
+		    glColor3fv(clrs);
+		    clrs+=3;
+		    glVertex3fv(pts);
+		    pts += 3;
+
+		    glNormal3fv(nrmls);
+		    nrmls+=3;
+		    glColor3fv(clrs);
+		    clrs+=3;
+		    glVertex3fv(pts);
+		    pts+=3;
+
+		    glNormal3fv(nrmls);
+		    nrmls+=3;
 		    glColor3fv(clrs);
 		    clrs+=3;
 		    glVertex3fv(pts);

@@ -75,12 +75,14 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     Array1<int> is(3), js(3), ks(3);
     is[0]=0; is[1]=1; is[2]=1;
     int i,j,k,ii,jj,kk;
+
+    // find out which components "touch" each other
     for (i=1; i<field.nx; i++, is[0]++, is[1]++, is[2]++) {
 	js[0]=1; js[1]=0; js[2]=1;
 	for (j=1; j<field.ny; j++, js[0]++, js[1]++, js[2]++) {
 	    ks[0]=1; ks[1]=1; ks[2]=0;
 	    for (k=1; k<field.nz; k++, ks[0]++, ks[1]++, ks[2]++) {
-		//tripleInt idx(i,j,k);
+//		tripleInt idx(i,j,k);
 		int comp=field.grid(i,j,k);
 		for (int nbr=0; nbr<3; nbr++) {
 		    ii=is[nbr]; jj=js[nbr]; kk=ks[nbr];
@@ -102,7 +104,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     cerr << "\n";
     for (i=0; i<touches.size(); i++) {
 	if (touches[i].size() != 0) {
-	    cerr << "Component "<<i<<" is bounded by: ";
+	    cerr << "Component "<<i<<" touches: ";
 	    for (int j=0; j<touches[i].size(); j++)
 		cerr << touches[i][j]<<" ";
 	    cerr << "\n";
@@ -113,9 +115,10 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     Array1<int> queued(field.comps.size());
     surf.inner.resize(field.comps.size());
     surf.outer.resize(field.comps.size());
+    surf.surfNames.resize(field.comps.size());
     surf.outer.initialize(-1);
     visited.initialize(0);
-    visited.initialize(0);
+    queued.initialize(0);
     for (i=0; i<touches.size(); i++) if (touches[i].size() == 0) visited[i]=1;
     Queue<int> q;
     Queue<int> kids;
@@ -125,23 +128,33 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     visited[air]=1;
     queued[air]=1;
 
+
+    // we'll enqueue each component index, along with which
+    // component is outside of it.
+
     for (i=0; i<touches[air].size(); i++) {
 	q.append(air);
 	q.append(touches[air][i]);
 	visited[touches[air][i]]=queued[touches[air][i]]=1;
     }
 
+    // go in one "level" at a time -- push everyone you touch into the
+    // "kids" queue.  when there isn't anyone else, move everyone from
+    // that queue into the main one.  continue till there's no one left.
+
     while (!q.is_empty()) {
 	while (!q.is_empty()) {
 	    int outer=q.pop();
 	    int inner=q.pop();
+	    cerr << "outer="<<outer<<"   inner="<<inner<<"\n";
 	    surf.outer[inner]=outer;
 	    for (i=0; i<touches[inner].size(); i++) {
-		// if another node it touches has been visited
+		// if another component it touches has been visited
 		int nbr=touches[inner][i];
 		if (!visited[nbr]) {
 		    if (queued[nbr]) {	// noone should have queued -- must be
 			                // crack-connected
+			cerr << "why am i here??\n";
 			q.append(outer);
 			q.append(nbr);
 			visited[nbr]=1;
@@ -181,6 +194,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     }
 
     surf.surfEls.resize(field.comps.size());
+    surf.surfOrient.resize(field.comps.size());
     int p1, p2, p3, p4, p5, p6, p7, bcomp;
     HashTable<int,int>* hash = new HashTable<int,int>;
     Point min, max;
@@ -189,6 +203,70 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     v.x(v.x()/(field.nx-1));
     v.y(v.y()/(field.ny-1));
     v.z(v.z()/(field.nz-1));
+
+
+#if 0
+    Array3<int> puncture;
+    punctures.resize(field.nx, field.ny, field,nz);
+    punctures.initialize(0);
+
+
+    // first, go through and find nodes that are puncture points or which
+    // lie along a diagonal crack between two voxels.  these would be the 
+    // following pairs:  	(0,7), (1,6), (2,5), (3,4) - punctures,
+    //      (0,3), (0,5), (0,6), (1,2), (1,4), (1,7),
+    //	    (2,4), (2,7), (3,5), (3,6), (4,7), (5,6) - cracks
+
+    // if those are the only voxels containing a certain component, split
+    // the node into two nodes, and for the elements surrounding one of the
+    // voxels, change them to point to the other (new) nodes.
+    
+    // for now, we'll just handle punctures...
+    // we have to fix the node info every time we do a split!
+    // PROBLEM: we make new triangles/tetras when we do a split -- gotta
+    //   think about this more...
+    
+    Array1<int> octCells[8];
+    Array1<int> same;
+    for (i=1; i<field.nx; i++)
+	for (j=1; j<field.ny; j++)
+	    for (k=1; k<field.nz; k++) {
+		octCells[0]=field.grid(i,j,k);
+		octCells[1]=field.grid(i+1,j,k);
+		octCells[2]=field.grid(i,j+1,k);
+		octCells[3]=field.grid(i+1,j+1,k);
+		octCells[4]=field.grid(i,j,k+1);
+		octCells[5]=field.grid(i+1,j,k+1);
+		octCells[6]=field.grid(i,j+1,k+1);
+		octCells[7]=field.grid(i+1,j+1,k+1);
+		same.inititalize(0);
+		if (octCells[0] == octCells[1]) same[0]=same[1]=1;
+		if (octCells[0] == octCells[2]) same[0]=same[2]=1;
+		if (octCells[0] == octCells[4]) same[0]=same[4]=1;
+		if (octCells[1] == octCells[3]) same[1]=same[3]=1;
+		if (octCells[1] == octCells[5]) same[1]=same[5]=1;
+		if (octCells[2] == octCells[3]) same[2]=same[3]=1;
+		if (octCells[2] == octCells[6]) same[2]=same[6]=1;
+		if (octCells[3] == octCells[7]) same[3]=same[7]=1;
+		if (octCells[4] == octCells[5]) same[4]=same[5]=1;
+		if (octCells[4] == octCells[6]) same[4]=same[6]=1;
+		if (octCells[5] == octCells[7]) same[5]=same[7]=1;
+		if (octCells[6] == octCells[7]) same[6]=same[7]=1;
+		int count=0;
+		for (int cc=0; cc<8; cc++) if (!same[i]) cc++;
+		if (cc>=2) {
+		    if (!same[0] && !same[7] && (octCells[0] == octCells[7]));
+		    else if (!same[1] && !same[6] && 
+			     (octCells[1] == octCells[6]));
+		    else if (!same[2] && !same[5] && 
+			     (octCells[2] == octCells[5]));
+		    else if (!same[3] && !same[4] && 
+			     (octCells[3] == octCells[4]));
+		}
+	    }
+#endif
+
+
     for (i=1; i<field.nx; i++)
 	for (j=1; j<field.ny; j++)
 	    for (k=1; k<field.nz; k++) {
@@ -224,14 +302,22 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		    int iii=surf.elements.size();
 		    surf.elements.add(new TSElement(p3, p1, p2));
 		    surf.elements.add(new TSElement(p2, p4, p3));
-		    if (surf.outer[comp]!=bcomp) {
+//		    if (surf.outer[comp]!=bcomp) {
 			surf.surfEls[bcomp].add(iii);
 			surf.surfEls[bcomp].add(iii+1);
-		    }
-		    if (surf.outer[bcomp]!=comp) {
+//			surf.surfOrient[bcomp].add(comp>bcomp);
+//			surf.surfOrient[bcomp].add(comp>bcomp);
+			surf.surfOrient[bcomp].add(1);
+			surf.surfOrient[bcomp].add(1);
+//		    }
+//		    if (surf.outer[bcomp]!=comp) {
 			surf.surfEls[comp].add(iii);
 			surf.surfEls[comp].add(iii+1);
-		    }
+//			surf.surfOrient[comp].add(bcomp>comp);
+//			surf.surfOrient[comp].add(bcomp>comp);
+			surf.surfOrient[comp].add(0);
+			surf.surfOrient[comp].add(0);
+//		    }
 		}
 		bcomp=field.grid(i,j-1,k);
 		if (bcomp != comp) {
@@ -261,16 +347,25 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 			surf.points.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    int iii=surf.elements.size();
-		    surf.elements.add(new TSElement(p3, p5, p6));
-		    surf.elements.add(new TSElement(p6, p4, p3));
-		    if (surf.outer[comp]!=bcomp) {
+		    surf.elements.add(new TSElement(p6, p5, p3));
+		    surf.elements.add(new TSElement(p3, p4, p6));
+
+//		    if (surf.outer[comp]!=bcomp) {
 			surf.surfEls[bcomp].add(iii);
 			surf.surfEls[bcomp].add(iii+1);
-		    }
-		    if (surf.outer[bcomp]!=comp) {
+//			surf.surfOrient[bcomp].add(comp>bcomp);
+//			surf.surfOrient[bcomp].add(comp>bcomp);
+			surf.surfOrient[bcomp].add(1);
+			surf.surfOrient[bcomp].add(1);
+//		    }
+//		    if (surf.outer[bcomp]!=comp) {
 			surf.surfEls[comp].add(iii);
 			surf.surfEls[comp].add(iii+1);
-		    }
+//			surf.surfOrient[comp].add(bcomp>comp);
+//			surf.surfOrient[comp].add(bcomp>comp);
+			surf.surfOrient[comp].add(0);
+			surf.surfOrient[comp].add(0);
+//		    }
 		}
 		bcomp=field.grid(i,j,k-1);
 		if (bcomp != comp) {
@@ -302,16 +397,25 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		    int iii=surf.elements.size();
 		    surf.elements.add(new TSElement(p3, p5, p7));
 		    surf.elements.add(new TSElement(p7, p1, p3));
-		    if (surf.outer[comp]!=bcomp) {
+//		    if (surf.outer[comp]!=bcomp) {
 			surf.surfEls[bcomp].add(iii);
 			surf.surfEls[bcomp].add(iii+1);
-		    }
-		    if (surf.outer[bcomp]!=comp) {
+//			surf.surfOrient[bcomp].add(comp>bcomp);
+//			surf.surfOrient[bcomp].add(comp>bcomp);
+			surf.surfOrient[bcomp].add(1);
+			surf.surfOrient[bcomp].add(1);
+//		    }
+//		    if (surf.outer[bcomp]!=comp) {
 			surf.surfEls[comp].add(iii);
 			surf.surfEls[comp].add(iii+1);
-		    }
+//			surf.surfOrient[comp].add(bcomp>comp);
+//			surf.surfOrient[comp].add(bcomp>comp);
+			surf.surfOrient[comp].add(0);
+			surf.surfOrient[comp].add(0);
+//		    }
 		}
 	    }
+
     surf.matl.resize(field.comps.size());
     int bigGreyIdx=-1;
     int bigGreySize=-1;
@@ -333,8 +437,13 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 	else surf.matl[i]=-1;
 	cerr << "surf.matl["<<i<<"]="<<surf.matl[i]<<"\n";
     }
+    if (surf.outer.size()>1 && surf.outer[1] == 0)
+        surf.surfNames[1]="scalpAll";
+    surf.surfNames[0]="scalp";
     if (bigGreyIdx != -1) {
+        surf.surfNames[bigGreyIdx]="cortex";
 	cerr << "**** Biggest grey matter (material 4) is region "<<bigGreyIdx<<"\n";
+
 	if (surf.inner[bigGreyIdx].size()) {
 	    cerr << "**** WARNING: this region contains inner regions!\n";
 	}
@@ -349,6 +458,11 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     } else {
 	cerr << "No white matter (material 5) found.\n";
     }
+    cerr << "BUILDING NODE INFORMATION...\n";
+    surf.bldNodeInfo();
+    cerr << "DONE!\n";
+
+
 }
 
 

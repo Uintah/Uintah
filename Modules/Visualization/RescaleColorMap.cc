@@ -82,13 +82,18 @@ void RescaleColorMap::execute()
 	    double min;
 	    double max;
 	    sfield->get_minmax(min, max);
-	    cmap.detach();
+	    //	    cmap.detach();
 	    cmap->min=min;
 	    cmap->max=max;
 
 	    cerr << "Rescale ColorMap " << min << " " << max << endl;
 	}
     }
+
+    cerr << "Rescale: " << cmap.get_rep() << endl;
+    cerr << cmap->colors.size() << " - Size\n";
+    cerr << cmap->min << " - " << cmap->max << endl;
+    
     omap->send(cmap);
 }
 

@@ -64,7 +64,7 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
 	Pio(stream, ny);
 	Pio(stream, nz);
     } else {
-	// Do the TYPE class first...
+	// Do the base class first...
 	ScalarFieldRGBase::io(stream);
     }
     Pio(stream, grid);

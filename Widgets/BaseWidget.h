@@ -51,6 +51,8 @@ public:
    BaseWidget( const BaseWidget& );
    virtual ~BaseWidget();
 
+   void *userdata;	// set this after construction if you want to use it
+
    void SetScale( const Real scale );
    double GetScale() const;
 

@@ -6,4 +6,5 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
+set auto_index(BuildFEMatrix) "source $dir/BuildFEMatrix.tcl"
 set auto_index(ErrorInterval) "source $dir/ErrorInterval.tcl"

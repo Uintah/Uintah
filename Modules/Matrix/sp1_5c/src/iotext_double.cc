@@ -35,6 +35,8 @@
 #include<stdio.h>
 #include<stdlib.h>
 
+#define _NON_TEMPLATE_COMPLEX
+
 #include "compcol_double.h"
 #include "comprow_double.h"
 #include "coord_double.h"

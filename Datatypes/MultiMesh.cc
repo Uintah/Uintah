@@ -15,6 +15,8 @@
 #include <Malloc/Allocator.h>
 #include <iostream.h>
 
+using sci::MeshHandle;
+
 static Persistent* make_MultiMesh()
 {
     return scinew MultiMesh;

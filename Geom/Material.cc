@@ -46,6 +46,15 @@ Material::Material(const Color& ambient, const Color& diffuse,
 {
 }
 
+Material::Material(const Color& diffuse)
+: ref_cnt(0), diffuse(diffuse), emission(0,0,0), reflectivity(0.5),
+  transparency(0), refraction_index(1)
+{
+    ambient=Color(.2,.2,.2);
+    specular=Color(.8,.8,.8);
+    shininess=20;
+}
+
 Material::Material(const Material& copy)
 : ref_cnt(0), ambient(copy.ambient), diffuse(copy.diffuse),
   specular(copy.specular), shininess(copy.shininess),

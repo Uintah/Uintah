@@ -13,7 +13,7 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldRGuchar.h>
+#include <Datatypes/ScalarFieldRGchar.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -41,7 +41,7 @@ class TrainSegment : public Module {
     ScalarFieldOPort *oport;
     ScalarFieldHandle sfOH;		// output bitFld
     ScalarFieldHandle last_sfIH;	// last input fld
-    ScalarFieldRGuchar* last_sfrg;		// just a convenience
+    ScalarFieldRGchar* last_sfrg;		// just a convenience
 
     TCLdouble bias;	// -1.0 - 1.0
     TCLdouble scale;	// -1.0 - 1.0
@@ -72,11 +72,11 @@ class TrainSegment : public Module {
     int z_win_max;
 
     int cleared;
-    Array3<unsigned char>* bitFld;	// bitFld that's being built
+    Array3<char>* bitFld;	// bitFld that's being built
 
-    Array3<unsigned char>* sagFld;	// a[x][y][z]
-    Array3<unsigned char>* corFld;	// a[y][x][z]
-    Array3<unsigned char>* axiFld;	// a[z][x][y]
+    Array3<char>* sagFld;	// a[x][y][z]
+    Array3<char>* corFld;	// a[y][x][z]
+    Array3<char>* axiFld;	// a[z][x][y]
 
     clString myid;
     Tk_Window tkwin;
@@ -154,8 +154,8 @@ void TrainSegment::execute()
     if (!tcl_execute && (sfIH.get_rep() == last_sfIH.get_rep())) return;
     ScalarFieldRGBase *sfrgb;
     if ((sfrgb=sfIH->getRGBase()) == 0) return;
-    ScalarFieldRGuchar *sfrg;
-    if ((sfrg=sfrgb->getRGUchar()) == 0) return;
+    ScalarFieldRGchar *sfrg;
+    if ((sfrg=sfrgb->getRGChar()) == 0) return;
     if (sfIH.get_rep() != last_sfIH.get_rep()) {	// new field came in
 	if (sagFld) {free(sagFld); sagFld=0;}
 	if (corFld) {free(corFld); corFld=0;}
@@ -167,16 +167,16 @@ void TrainSegment::execute()
 	if (bitFld) {
 	    free(bitFld); 
 	}
-	bitFld=scinew Array3<unsigned char>(nx,ny,nz);
+	bitFld=scinew Array3<char>(nx,ny,nz);
 	bitFld->initialize(0);
-	sagFld = (Array3<unsigned char>*) scinew Array3<unsigned char>(nx, nz, ny);
-	corFld = (Array3<unsigned char>*) scinew Array3<unsigned char>(ny, nz, nx);
-	axiFld = (Array3<unsigned char>*) scinew Array3<unsigned char>(nz, ny, nx);
+	sagFld = (Array3<char>*) scinew Array3<char>(nx, nz, ny);
+	corFld = (Array3<char>*) scinew Array3<char>(ny, nz, nx);
+	axiFld = (Array3<char>*) scinew Array3<char>(nz, ny, nx);
 	    
 	for (int i=0; i<nx; i++)
 	    for (int j=0; j<ny; j++)
 		for (int k=0; k<nz; k++) {
-		    unsigned char val=sfrg->grid(i,j,k);
+		    char val=sfrg->grid(i,j,k);
 		    (*sagFld)(i,k,j)=(*corFld)(j,k,i)=
 			(*axiFld)(k,j,i)=val;			
 		    if (i<2 && j<2 && k<2) {
@@ -208,7 +208,7 @@ void TrainSegment::execute()
     if (sfOH.get_rep()) {
         ScalarFieldRGBase* sssb=sfOH->getRGBase();
 	if (sssb) {
-	    ScalarFieldRGuchar* sss=sssb->getRGUchar();
+	    ScalarFieldRGchar* sss=sssb->getRGChar();
 	    if (sss) {
 	      cerr << "Output field non-zeros...\n";
 	      for (int i=0; i<sss->nx; i++) {
@@ -435,7 +435,7 @@ void TrainSegment::redraw_all() {
     if (xval != -1) {
 	glPixelZoom(y_pixel_size, z_pixel_size);
 	glRasterPos2i(34+y_win_min, 289-z_win_min);
-	unsigned char *pix=&((*sagFld)(xval,0,0));
+	char *pix=&((*sagFld)(xval,0,0));
 	glDrawPixels(nny, nnz, GL_LUMINANCE, GL_BYTE, pix);
     }
 
@@ -443,7 +443,7 @@ void TrainSegment::redraw_all() {
     if (yval != -1) {
 	glPixelZoom(x_pixel_size, z_pixel_size);
 	glRasterPos2i(310+x_win_min, 289-z_win_min);
-	unsigned char *pix=&((*corFld)(yval,0,0));
+	char *pix=&((*corFld)(yval,0,0));
 	glDrawPixels(nnx, nnz, GL_LUMINANCE, GL_BYTE, pix);
     }
 
@@ -451,7 +451,7 @@ void TrainSegment::redraw_all() {
     if (zval != -1) {
 	glPixelZoom(x_pixel_size, y_pixel_size);
 	glRasterPos2i(310+x_win_min, 565-y_win_min);
-	unsigned char *pix=&((*axiFld)(zval,0,0));
+	char *pix=&((*axiFld)(zval,0,0));
 	glDrawPixels(nnx, nny, GL_LUMINANCE, GL_BYTE, pix);
     }
 
@@ -629,7 +629,8 @@ void TrainSegment::addPoint(clString view, double w, double h) {
     reset_vars();
     int i,j,k;
     if (findVoxelFromPixel(view, w, h, i, j, k)) {
-	(*bitFld)(i,j,k)=(*bitFld)(i,j,k)|((char) tissue.get());
+//	(*bitFld)(i,j,k)=(*bitFld)(i,j,k)|((char) tissue.get());
+	(*bitFld)(i,j,k)=((char) tissue.get());
 	unique_add(bit_x, i);
 	unique_add(bit_y, j);
 	unique_add(bit_z, k);
@@ -654,8 +655,8 @@ void TrainSegment::tcl_command(TCLArgs& args, void* userdata) {
     } else if (args[1] == "send") {
 	if (last_sfIH.get_rep()) {
 	    sfOH=0;
-	    ScalarFieldRGuchar *sfrg=(ScalarFieldRGuchar*) scinew 
-		ScalarFieldRGuchar(*last_sfrg);
+	    ScalarFieldRGchar *sfrg=(ScalarFieldRGchar*) scinew 
+		ScalarFieldRGchar(*last_sfrg);
 	    sfOH=(ScalarField*)sfrg;
 	    int nx=sfrg->nx;
 	    int ny=sfrg->ny;

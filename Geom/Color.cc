@@ -60,6 +60,11 @@ Color Color::operator*(double w) const
     return Color(_r*w, _g*w, _b*w);
 }
 
+Color Color::operator/(double w) const
+{
+    return Color(_r/w, _g/w, _b/w);
+}
+
 Color Color::operator+(const Color& c) const
 {
     return Color(_r+c._r, _g+c._g, _b+c._b);
@@ -222,4 +227,13 @@ CharColor::operator!= ( const CharColor& c ) const
     return 1;
   else
     return 0;
+}
+
+void Pio(Piostream& stream, CharColor& p)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, p.red);
+    Pio(stream, p.green);
+    Pio(stream, p.blue);
+    stream.end_cheap_delim();
 }

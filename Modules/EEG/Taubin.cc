@@ -97,59 +97,43 @@ Module* Taubin::clone(int deep)
 }
 
 void Taubin::bldNbrs() {
-    int i,j;
-    for (i=0; i<nbrs.size(); i++) {
-	nbrs[i].resize(0);
-    }
-    nbrs.resize(st->points.size());
-    cerr << "building the neighbor lists...\n";
-    for (i=0; i<st->points.size(); i++) nbrs[i].add(i);
-    for (i=0; i<st->elements.size(); i++) {
-	int x=st->elements[i]->i1;
-	int y=st->elements[i]->i2;
-	int z=st->elements[i]->i3;
-	int found=0;
-	int a;
-	for (a=0; a<nbrs[x].size() && !found; a++)
-	    if (nbrs[x][a] == y) found=1;
-	if (!found) {
-	    nbrs[x].add(y);
-	    nbrs[y].add(x);
-	}
-	found=0;
-	for (a=0; a<nbrs[y].size() && !found; a++)
-	    if (nbrs[y][a] == z) found=1;
-	if (!found) {
-	    nbrs[y].add(z);
-	    nbrs[z].add(y);
-	}
-	found=0;
-	for (a=0; a<nbrs[z].size() && !found; a++)
-	    if (nbrs[z][a] == x) found=1;
-	if (!found) {
-	    nbrs[z].add(x);
-	    nbrs[x].add(z);
-	}
-	found=0;
-    }
-    cerr << "sorting the neighbor lists...\n";
-    int tmp;
-    for (i=0; i<nbrs.size(); i++) {
-	if (nbrs[i].size()) {
-	    int swapped=1;
-	    while (swapped) {
-		swapped=0;
-		for (j=0; j<nbrs[i].size()-1; j++) {
-		    if (nbrs[i][j]>nbrs[i][j+1]) {
-			tmp=nbrs[i][j];
-			nbrs[i][j]=nbrs[i][j+1];
-			nbrs[i][j+1]=tmp;
-			swapped=1;
-		    }
-		}
+    st->bldNodeInfo();
+    nbrs.resize(st->nodeNbrs.size());
+    for (int i=0; i<st->nodeNbrs.size(); i++) 
+	nbrs[i].resize(st->nodeNbrs[i].size()+1);
+//    st->nodeNbrs;
+//    st->printNbrInfo();
+    int j,k;
+    for (i=0; i<st->nodeNbrs.size(); i++) {
+//	cerr << "i="<<i<<"  nbrsSize="<<st->nodeNbrs[i].size();
+	for (j=0, k=0; j<st->nodeNbrs[i].size(); j++, k++) {
+	    if ((st->nodeNbrs[i][j]>i) && (j==k)) {
+		nbrs[i][k]=i;
+//		cerr << " "<<i;
+		k++;
 	    }
+	    nbrs[i][k]=st->nodeNbrs[i][j];
+//	    cerr << " "<<st->nodeNbrs[i][j];
 	}
+	if (j==k) {
+	    nbrs[i][k]=i;
+//	    cerr << " "<<i;
+	}
+//	cerr << "\n";
     }
+    // go in and remove neighbors for some non-manifold cases
+
+//    for (i=0; i<nbrs.size(); i++) {
+//	cerr << i << "  ( ";
+//	for (j=0; j<nbrs[i].size(); j++) {
+//	    cerr << nbrs[i][j]<<" ";
+//	}
+//	cerr << ")  ( ";
+//	for (j=0; j<st->nodeNbrs[i].size(); j++) {
+//	    cerr << st->nodeNbrs[i][j]<<" ";
+//	}
+//	cerr << ")\n";
+//    }
 }
 
 void Taubin::bldMatrices() {
@@ -270,7 +254,16 @@ void Taubin::execute()
 	}
 	smooth();
     }
-    osurf->send(sh);
+    SurfaceHandle sh2;
+    Array1<int> map, imap;
+    if (sh->getTriSurface()) {
+	TriSurface *ts=new TriSurface;
+	st->extractTriSurface(ts, map, imap, 0);
+	sh2=ts;
+    } else {
+	sh2=st;
+    }
+    osurf->send(sh2);
 }
 
 void Taubin::tcl_command(TCLArgs& args, void* userdata)

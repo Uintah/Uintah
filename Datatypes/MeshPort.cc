@@ -13,6 +13,8 @@
 
 #include <Datatypes/MeshPort.h>
 
+using sci::MeshHandle;
+
 clString SimpleIPort<MeshHandle>::port_type("Mesh");
 clString SimpleIPort<MeshHandle>::port_color("orange red");
 

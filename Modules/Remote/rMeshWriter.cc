@@ -19,6 +19,8 @@
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
+using sci::MeshHandle;
+
 class rMeshWriter : public Module {
     MeshIPort* inport;
     TCLstring filename;

@@ -50,7 +50,8 @@ itcl_class BaseWidget {
 	button $opts.close -text "Close" -command "destroy .ui$this"
 	button $opts.nextmode -text "NextMode" -command "$this-c nextmode"
 	button $opts.help -text "Help" -command "$this help"
-	pack $opts.close $opts.nextmode $opts.help -side left -padx 2 -pady 2 -anchor e
+	button $opts.print -text "Print" -command "$this-c print"
+	pack $opts.close $opts.nextmode $opts.help $opts.print -side left -padx 2 -pady 2 -anchor e
 	
 	frame $wid.scale
 	label $wid.scale.l -text "Scale"

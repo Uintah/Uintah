@@ -25,7 +25,9 @@ itcl_class CuttingPlane {
 	set $this-offset 0
 	global $this-num_contours
 	set $this-num_contours 20
-	$this-c needexecute
+	global $this-where
+	set $this-where 0.5
+#	$this-c needexecute
 
     }
     method ui {} {
@@ -68,6 +70,12 @@ itcl_class CuttingPlane {
                 -resolution 1 \
 		-variable $this-num_contours -command $n 
 	pack $w.num_contours -fill x -pady 2
+	scale $w.where -orient horizontal -label "Where:" \
+		-from 0 -to 1 -length 5c \
+                -showvalue true \
+                -resolution 0.01 \
+		-variable $this-where
+	pack $w.where -fill x -pady 2
 		
     }
 }

@@ -38,13 +38,13 @@ itcl_class RescaleSurface {
 	label $w.f.l -text "Log Scale: "
 	scale $w.f.s -variable $this-scale -orient horizontal \
 		-from -3.000 -to 3.000 -resolution .001 -showvalue true
-	set $this-scale 0
-	button $w.f.e -text "Rescale" -command "$this-c needexecute"
 	checkbutton $w.f.coreg -variable $this-coreg -text "Coreg Sized" \
 		-command "$this-c needexecute"
 	pack $w.f.l -side left
 	pack $w.f.s -side left -expand 1 -fill x
-	pack $w.f.e $w.f.coreg -side left
-	pack $w.f
+	button $w.e -text "Rescale" -command "$this-c needexecute"
+	pack $w.f.coreg -side left
+	pack $w.f -side top
+	pack $w.e -side top
     }	
 }

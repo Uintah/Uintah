@@ -302,7 +302,8 @@ int SimpleIPort<T>::special_get(T& data)
 	}
 	delete msg;
       } else {
-	sginap(1);
+	sleep(1);
+	// sginap(1);
       }
     }
 	

@@ -77,7 +77,8 @@ public:
     ScalarTriSurface* getScalarTriSurface();
     TriSurface* getTriSurface();
     PointsSurface* getPointsSurface();
-    virtual void get_surfnodes(Array1<NodeHandle>&)=0;
+    virtual void get_surfnodes(Array1<sci::NodeHandle>&)=0;
+    virtual void set_surfnodes(const Array1<sci::NodeHandle>&)=0;
     virtual GeomObj* get_obj(const ColorMapHandle&)=0;
 
     // Persistent representation...

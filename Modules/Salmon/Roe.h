@@ -89,6 +89,7 @@ protected:
     int rot_point_valid;
     GeomPick* pick_pick;
     GeomObj* pick_obj;
+    int pick_n;
 
     void update_mode_string(const char*);
     char* modebuf;
@@ -138,6 +139,10 @@ public:
     double total_scale;
     int prev_time[3]; // history for quaternions and time
     HVect prev_quat[3];
+
+    int doingMovie;
+    int curFrame;
+    clString curName;
 
     void LoadTexture1D(TexStruct1D*);
     void LoadTexture2D(TexStruct2D*);

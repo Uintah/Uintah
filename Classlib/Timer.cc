@@ -172,6 +172,6 @@ void TimeThrottle::wait_for_time(double endtime)
     }
     sginap(nticks);
 #else
-    NOT_FINISHED("TimeThrottle::wait_for_time");
+//    NOT_FINISHED("TimeThrottle::wait_for_time");
 #endif
 }

@@ -899,6 +899,7 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
     CPUTimer timer;
     timer.start();
     int np=Task::nprocessors();
+    if (np>4) np/=2;	// being nice -- only using half the processors...
     cerr << "np=" << np << endl;
     CGData* data=new CGData;
     data->module=this;

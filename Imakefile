@@ -4,7 +4,7 @@
 #ifdef SCI_MESA
 #ifdef SCI_MACHINE_Linux
 all::
-	cd Mesa && make linux-elf
+        cd Mesa && make linux-elf
 #endif
 #endif
 
@@ -34,17 +34,17 @@ SRCS = $(SR_SRCS)
 SCIDependTarget($(SRCS))
 
 World:
-	make Makefile
-	make Makefiles
-	make depend
-	make
+        make Makefile
+        make Makefiles
+        make depend
+        make
 
 update:
-	cvs update -d
-	make World
+        cvs update -d
+        make World
 
 clean::
-	rm -rf templates
+        rm -rf templates
 
 installtcl:
-	@(cd tcl && make installtcl)
+        @(cd tcl && make installtcl)

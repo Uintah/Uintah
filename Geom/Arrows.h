@@ -45,6 +45,7 @@ public:
     void add(const Point& pos, const Vector& dir,
 	     const MaterialHandle& shaft, const MaterialHandle& back,
 	     const MaterialHandle& head);
+    inline int size() { return positions.size(); }
 
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);

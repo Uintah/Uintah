@@ -18,6 +18,7 @@
 #include <Datatypes/LockArray3.h>
 
 typedef LockingHandle< LockArray3<Point> > Array3PointHandle;
+typedef unsigned char uchar;
 
 class ScalarFieldRGdouble;
 class ScalarFieldRGfloat;
@@ -34,8 +35,8 @@ public:
 	Int,
 	Short,
 	Char,
-	Void,
-	Uchar
+	Uchar,
+	Void
     };
     int nx;
     int ny;

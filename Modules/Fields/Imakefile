@@ -7,8 +7,8 @@ XINCLUDE = -I/usr/openwin/include
 #endif
 
 #ifdef SCI_OPENGL
-OPENGLOBJS = OpenGL_Ex.o  TrainSegment.o
-OPENGLSRCS = OpenGL_Ex.cc TrainSegment.cc
+OPENGLOBJS = OpenGL_Ex.o  TrainSegment.o  TrainSeg2.o
+OPENGLSRCS = OpenGL_Ex.cc TrainSegment.cc TrainSeg2.cc
 
 #ifdef SCI_MESA
 OPENGLINCS = -I$(TOP)/Mesa/include $(XINCLUDE)
@@ -22,12 +22,15 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  FieldSeed.o \
+OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  FieldMedianFilter.o  \
+	FieldGainCorrect.o  FieldSeed.o \
 	GenSigmaSet.o  Gradient.o  GradientMagnitude.o  MMeshToSFUG.o  \
-	MergeTensor.o  TransformField.o  $(OPENGLOBJS)
-SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldSeed.cc \
+	MergeTensor.o  TracePath.o  TransformField.o  $(OPENGLOBJS)
+
+SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldMedianFilter.cc \
+	FieldGainCorrect.cc FieldSeed.cc \
 	GenSigmaSet.cc Gradient.cc GradientMagnitude.cc MMeshToSFUG.cc \
-	MergeTensor.cc TransformField.cc $(OPENGLSRCS)
+	MergeTensor.cc TracePath.cc TransformField.cc $(OPENGLSRCS)
 
 LIBNAME = Fields
 

@@ -17,8 +17,8 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/Mesh.h>
 
-typedef Mailbox<SimplePortComm<MeshHandle>*> _cfront_bug_Mesh_;
-typedef SimpleIPort<MeshHandle> MeshIPort;
-typedef SimpleOPort<MeshHandle> MeshOPort;
+typedef Mailbox<SimplePortComm<sci::MeshHandle>*> _cfront_bug_Mesh_;
+typedef SimpleIPort<sci::MeshHandle> MeshIPort;
+typedef SimpleOPort<sci::MeshHandle> MeshOPort;
 
 #endif

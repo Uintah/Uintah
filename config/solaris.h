@@ -11,14 +11,22 @@
 #define SCI_NativeCCompiler cc
 #define SCI_NativeOptimizeCFlags -O2
 #define SCI_NativeDebugCFlags -g
-PIC = -Kpic
+PIC = -KPIC
 #define SCI_NativeOtherCFlags $(PIC)
 #define SCI_NativeCppCompiler CC -Dbool=int -Dtrue=1 -Dfalse=0
 #define SCI_NativeOptimizeCppFlags SCI_NativeOptimizeCFlags
 #define SCI_NativeDebugCppFlags SCI_NativeDebugCFlags
+<<<<<<< solaris.h
 #define SCI_NativeOtherCppFlags SCI_OtherCFlags +w -ptr$(TOP)/templates -pic
+
+/* at Harvard... */
+/* #define SCI_NativeCppIncludeLocation /d/morocco/sun/SUNWspro/SC4.2/include/CC */
+/* old Utah settings... */
+/* #define SCI_NativeCppIncludeLocation /opt/SUNWspro/SC4.0/include/CC */
+/* new Utah settings */
 #define SCI_NativeCppIncludeLocation /usr/include/CC
-#define SCI_NativeLinker CC
+
+#define SCI_NativeLinker time CC
 #define SCI_NativeLinkerFlags -ptv -pta
 #define SCI_NativeLinkerNeedsCppFlags
 #define SCI_NativeLinkerLib

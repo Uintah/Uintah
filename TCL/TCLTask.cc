@@ -38,26 +38,26 @@ static void do_lock()
   ASSERT(Task::self() != 0);
     if(owner == Task::self()){
       lock_count++;
-      //cerr << "Recursively locked, count=" << lock_count << endl;
+//      cerr << "Recursively locked, count=" << lock_count << endl;
 	return;
     }
     tlock->lock();
     lock_count=1;
     owner=Task::self();
-    //cerr << "Locked: owner=" << owner << ", count=" << lock_count << endl;
+//    cerr << "Locked: owner=" << owner << ", count=" << lock_count << endl;
 }
 
 static void do_unlock()
 {
     ASSERT(lock_count>0);
-    //cerr << "Self=" << Task::self() << ", owner=" << owner << endl;
+//    cerr << "Self=" << Task::self() << ", owner=" << owner << endl;
     ASSERT(Task::self() == owner);
     if(--lock_count == 0){
 	owner=0;
-	//cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Task::self() << endl;
+//	cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Task::self() << endl;
 	tlock->unlock();
     } else {
-      //cerr << "Recursively unlocked, count=" << lock_count << endl;
+//      cerr << "Recursively unlocked, count=" << lock_count << endl;
     }
 }
 
@@ -134,6 +134,7 @@ void TCLTask::mainloop_wait()
     // Wait for the main program to tell us that all initialization
     // has occurred...
     cont.down();
+
 }
 
 void TCLTask::lock()
@@ -158,7 +159,7 @@ int TCLTask::try_lock()
 //	cerr << "Locked (try): owner=" << owner << ", count=" << lock_count << endl;
 	return 1;
     } else {
-//	cerr << "Try Lock failed" << endl;
+	cerr << "Try Lock failed" << endl;
 	return 0;
     }
 }

@@ -15,7 +15,7 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldRGchar.h>
 #include <Geom/TexSlices.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
@@ -35,7 +35,11 @@ class VolRendTexSlices : public Module {
    int geom_id;
 
    int field_id; // id for the scalar field...
+   TCLdouble accum;
+   TCLdouble bright;
 
+   double ac;
+   double br;
 public:
    VolRendTexSlices(const clString& id);
    VolRendTexSlices(const VolRendTexSlices&, int deep);
@@ -54,7 +58,8 @@ Module* make_VolRendTexSlices(const clString& id)
 static clString module_name("VolRendTexSlices");
 
 VolRendTexSlices::VolRendTexSlices(const clString& id)
-: Module("VolRendTexSlices", id, Filter)
+: Module("VolRendTexSlices", id, Filter), accum("accum", id, this),
+  bright("bright", id, this), ac(.1), br(.6)
 {
     // Create the input ports
     ifield = scinew ScalarFieldIPort( this, "Scalar Field",
@@ -70,7 +75,7 @@ VolRendTexSlices::VolRendTexSlices(const clString& id)
 }
 
 VolRendTexSlices::VolRendTexSlices(const VolRendTexSlices& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), accum("accum", id, this), bright("bright", id, this)
 {
    NOT_FINISHED("VolRendTexSlices::VolRendTexSlices");
 }
@@ -91,25 +96,38 @@ void VolRendTexSlices::execute()
     if (!ifield->get(sfh))
 	return;
     if (!sfh.get_rep()) return;
+    
+    ScalarFieldRGBase *sfrgb = sfh->getRGBase();
+    if (!sfrgb) {
+	error("Needs to be a ScalarFieldRGchar!");
+	return;
+    }
 
-    ScalarFieldRG *sfield = sfh->getRG();
+    ScalarFieldRGchar *sfield = sfrgb->getRGChar();
+    if (!sfield) {
+	error("Needs to be a ScalarFieldRGchar!");
+	return;
+    }
 
     double minv,maxv,mmax;
-
     sfield->get_minmax(minv,maxv);
+    cerr <<"minv="<<minv<<" maxv="<<maxv<<"\n";
 
     mmax = 255.0/(maxv-minv);
 
     if (!sfield)
 	return;
 
-    if (!init || sfield->generation != field_id) {  // setup scalar field...
-	field_id = sfield->generation;
+    if (!init || sfield->generation != field_id ||
+	ac != accum.get() || br != bright.get()) {  // setup scalar field...
+      field_id = sfield->generation;
       init=1;
       Point min, max;
       sfield->get_bounds(min, max);
       GeomTexSlices *ts = scinew GeomTexSlices(sfield->nx, sfield->ny, 
 					       sfield->nz, min, max);
+      ts->accum=ac=accum.get();
+      ts->bright=br=bright.get();
       for (int i=0; i<sfield->nx; i++)
 	  for (int j=0; j<sfield->ny; j++)
 	      for (int k=0; k<sfield->nz; k++) {

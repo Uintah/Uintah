@@ -1,0 +1,16 @@
+
+#include <config/sci.cf>
+
+OBJS = SiReAll.o  SiReInput.o  SiReOutput.o  SiReCrunch.o
+SRCS = SiReAll.cc SiReInput.cc SiReOutput.cc SiReCrunch.cc
+
+LIBNAME = MRA
+
+SO_LIBS = 
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom \
+	-lGeometry -lTCL -lClasslib -lMultitask -lMalloc -lC -lc \
+	-l1sire -l1jarutil -l1signalib -l1gtiutil -l1structlib \
+	-lfftw_SGI -l1c34 -lm
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

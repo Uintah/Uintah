@@ -29,6 +29,7 @@ public:
 
     Color operator*(const Color&) const;
     Color operator*(double) const;
+    Color operator/(double) const;
     Color operator+(const Color&) const;
     Color& operator+=(const Color&);
 
@@ -137,6 +138,7 @@ public:
   CharColor operator= ( const CharColor& );
 
   int operator!= ( const CharColor& ) const;
+  friend void Pio(Piostream&, CharColor&);
 };
 
 

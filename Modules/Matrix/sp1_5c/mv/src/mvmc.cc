@@ -26,6 +26,9 @@
 //          Basic matrix class (COMPLEX precision)
 //
 
+
+#define _NON_TEMPLATE_COMPLEX
+
 #include "mvm.h"
 
 unsigned int MV_ColMat_COMPLEX::dim(int i) const 

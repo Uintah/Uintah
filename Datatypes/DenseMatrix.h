@@ -35,6 +35,7 @@ public:
     virtual int ncols() const;
     virtual double minValue();
     virtual double maxValue();
+    inline double* getData() { return dataptr;}
     virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
     virtual void solve(ColumnMatrix&);
     virtual void zero();
@@ -55,6 +56,7 @@ public:
     void mult(double s);
 
     friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
     friend void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
     friend void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 

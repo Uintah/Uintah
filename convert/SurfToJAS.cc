@@ -56,12 +56,12 @@ main(int argc, char **argv) {
        exit(-1);
     }
     fprintf(fout, "%d\n", ts->points.size());
-    fprintf(stderr, "%d\n", ts->points.size());
+//    fprintf(stderr, "%d\n", ts->points.size());
     for (int i=0; i<ts->points.size(); i++) {
 	fprintf(fout, "%lf %lf %lf\n", ts->points[i].x(), ts->points[i].y(),
 		ts->points[i].z());
-	fprintf(stderr, "%lf %lf %lf\n", ts->points[i].x(), ts->points[i].y(),
-		ts->points[i].z());
+//	fprintf(stderr, "%lf %lf %lf\n", ts->points[i].x(), ts->points[i].y(),
+//		ts->points[i].z());
     }
     fclose(fout);
 
@@ -72,5 +72,17 @@ main(int argc, char **argv) {
 		ts->elements[i]->i2+1, ts->elements[i]->i3+1);
     }
     fclose(fout);
+
+    if (ts->normType != TriSurface::None) {
+	sprintf(name, "%s.nrm", argv[1]);
+	fout=fopen(name, "wt");
+	fprintf(fout, "%d", ts->normals.size());
+	for (i=0; i<ts->normals.size(); i++) {
+	    fprintf(fout, "%lf %lf %lf\n", ts->normals[i].x(), 
+		    ts->normals[i].y(), ts->normals[i].z());
+	}
+	fclose(fout);
+    }
+	
     return 0;
 }    

@@ -33,6 +33,9 @@
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 #include <stdio.h>
+
+#define _NON_TEMPLATE_COMPLEX
+
 #include "vecdefs.h"
 #include VECTOR_H
 #include MATRIX_H

@@ -12,7 +12,7 @@
  *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   October 1997
+ *   August 1997
  *
  *  Copyright (C) 1997 SCI Group
  */
@@ -24,9 +24,9 @@
 #include <Classlib/Queue.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/ColumnMatrix.h>
+#include <Datatypes/ColumnMatrixPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/MeshPort.h>
-#include <Datatypes/SparseRowMatrix.h>
 #include <Datatypes/SegFld.h>
 #include <Datatypes/SegFldPort.h>
 #include <Datatypes/SurfTree.h>
@@ -36,12 +36,23 @@
 #include <Geometry/Point.h>
 #include <Classlib/Array1.h>
 #include <Classlib/Array2.h>
+#include <Classlib/Array3.h>
 #include <Malloc/Allocator.h>
 #include <Math/MusilRNG.h>
 #include <TCL/TCLvar.h>
 
 #include <iostream.h>
 #include <stdio.h>
+
+using sci::Mesh;
+using sci::NodeHandle;
+using sci::Node;
+using sci::Element;
+using sci::DirichletBC;
+
+int airCtr=0;
+int othrCtr=0;
+void dump_mesh(Mesh *m);
 
 /*
  * The values from Peters and DeMunck's 1991 papers:
@@ -62,8 +73,13 @@
 class BldEEGMesh : public Module {
     SegFldIPort* iseg;
     SurfaceIPort* istree;
-    SurfaceIPort* itrisurf;
     MeshOPort * omesh;
+    SurfaceOPort* ostree;
+    TCLint npts;
+    int AddBC;
+    TCLint ADDBC;
+    int NoBrain;
+    TCLint NOBRAIN;
 public:
     BldEEGMesh(const clString& id);
     BldEEGMesh(const BldEEGMesh&, int deep);
@@ -71,19 +87,22 @@ public:
     virtual Module* clone(int deep);
     virtual void execute();
 
-    void tess(const MeshHandle& mesh);
     void randomPointsInTetra(Array1<Point> &pts, const Point &v0, 
 			     const Point &v1,const Point &v2,const Point &v3);
-    void genPts(SegFldHandle sf, SurfTree *st, int num, MeshHandle mesh);
-    void classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st, int greyMatlIdx,
-			  int whiteMatlIdx);
-    void removeAirAndGreyMatlElems(Mesh *m, Array1<int>& bcCortex);
-    void applyScalpBCs(Mesh *m, TriSurface *ts, Array1<int>& bcScalp,
-		       const Array1<int>& bcCortex);
+    void genPtsAndTets(SegFldHandle sf, SurfTree *st, int num, 
+		       Mesh *mesh);
+    void classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st, 
+			  int greyMatlIdx, int whiteMatlIdx);
+    void removeAirAndGreyMatlElems(Mesh *m, Array1<int>& cortexBCMeshNodes);
+    void applyScalpBCs(Mesh *m, SurfTree *st, Array1<int>& scalpBCMeshNodes,
+ 		        const Array1<int>& cortexBCMeshNodes);
+    void findCortexNodesInSTree(Mesh *m, SurfTree* st, int startCNode,
+					const Array1<int>& cortexBCMeshNodes);
     int findLargestGreyMatterIdx(SegFldHandle sf);
     int findLargestWhiteMatterIdx(SegFldHandle sf);
-    void reorderPts(Mesh *m, const Array1<int>& bcScalp, 
-		    const Array1<int>& bcCortex);
+    void reorderPts(Mesh *m, const Array1<int>& scalpBCMeshNodes, 
+		    const Array1<int>& cortexBCMeshNodes);
+    void setConductivities(Mesh *m);
     MusilRNG mr;
 };
 
@@ -95,21 +114,22 @@ Module* make_BldEEGMesh(const clString& id)
 }
 
 BldEEGMesh::BldEEGMesh(const clString& id)
-: Module("BldEEGMesh", id, Filter)
+: Module("BldEEGMesh", id, Filter), npts("npts", id, this),
+  ADDBC("ADDBC", id, this), NOBRAIN("NOBRAIN", id, this)
 {
     iseg=new SegFldIPort(this, "SegIn", SegFldIPort::Atomic);
     add_iport(iseg);
     istree=new SurfaceIPort(this, "SurfTreeIn", SurfaceIPort::Atomic);
     add_iport(istree);
-    itrisurf=new SurfaceIPort(this, "TriSurfIn", SurfaceIPort::Atomic);
-    add_iport(itrisurf);
-    // Create the output port
     omesh=new MeshOPort(this, "MeshOut", MeshIPort::Atomic);
     add_oport(omesh);
+    ostree=new SurfaceOPort(this, "SurfTreeOut", SurfaceIPort::Atomic);
+    add_oport(ostree);
 }
 
 BldEEGMesh::BldEEGMesh(const BldEEGMesh& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), npts("npts", id, this),
+  ADDBC("ADDBC", id, this), NOBRAIN("NOBRAIN", id, this)
 {
 }
 
@@ -122,210 +142,148 @@ Module* BldEEGMesh::clone(int deep)
     return new BldEEGMesh(*this, deep);
 }
 
-void BldEEGMesh::tess(const MeshHandle& mesh)
-{
-    BBox bbox;
-    int nn=mesh->nodes.size();
-    Array1<int> swap(nn);
-    
-    for(int ii=0;ii<nn;ii++){
-	swap[ii]=ii;
-	Point p(mesh->nodes[ii]->p);
-	bbox.extend(p);
-    }
-
-    for (ii=0; ii<nn; ii++) {
-	int swapIdx=mr()*nn;
-	int tmp=swap[ii];
-	swap[ii]=swap[swapIdx];
-	swap[swapIdx]=tmp;
-    }
-	
-    double epsilon=.1*bbox.longest_edge();
-
-    // Extend by max-(eps, eps, eps) and min+(eps, eps, eps) to
-    // avoid thin/degenerate bounds
-    Point max(bbox.max()+Vector(epsilon, epsilon, epsilon));
-    Point min(bbox.min()-Vector(epsilon, epsilon, epsilon));
-
-    mesh->nodes.add(new Node(Point(min.x(), min.y(), min.z())));
-    mesh->nodes.add(new Node(Point(max.x(), min.y(), min.z())));
-    mesh->nodes.add(new Node(Point(max.x(), min.y(), max.z())));
-    mesh->nodes.add(new Node(Point(min.x(), min.y(), max.z())));
-    mesh->nodes.add(new Node(Point(min.x(), max.y(), min.z())));
-    mesh->nodes.add(new Node(Point(max.x(), max.y(), min.z())));
-    mesh->nodes.add(new Node(Point(max.x(), max.y(), max.z())));
-    mesh->nodes.add(new Node(Point(min.x(), max.y(), max.z())));
-
-    Element* el1=new Element(mesh.get_rep(), nn+0, nn+1, nn+4, nn+3);
-    Element* el2=new Element(mesh.get_rep(), nn+2, nn+1, nn+3, nn+6);
-    Element* el3=new Element(mesh.get_rep(), nn+7, nn+3, nn+6, nn+4);
-    Element* el4=new Element(mesh.get_rep(), nn+5, nn+6, nn+4, nn+1);
-    Element* el5=new Element(mesh.get_rep(), nn+1, nn+3, nn+4, nn+6);
-    el1->faces[0]=4; el1->faces[1]=-1; el1->faces[2]=-1; el1->faces[3]=-1;
-    el2->faces[0]=4; el2->faces[1]=-1; el2->faces[2]=-1; el2->faces[3]=-1;
-    el3->faces[0]=4; el3->faces[1]=-1; el3->faces[2]=-1; el3->faces[3]=-1;
-    el4->faces[0]=4; el4->faces[1]=-1; el4->faces[2]=-1; el4->faces[3]=-1;
-    el5->faces[0]=2; el5->faces[1]=3; el5->faces[2]=1; el5->faces[3]=0;
-    el1->orient();
-    el2->orient();
-    el3->orient();
-    el4->orient();
-    el5->orient();
-    mesh->elems.add(el1);
-    mesh->elems.add(el2);
-    mesh->elems.add(el3);
-    mesh->elems.add(el4);
-    mesh->elems.add(el5);
-
-    for(int node=0;node<nn;node++){
-//	cerr << "Adding node " << node << " " << mesh->nodes[node]->p << endl;
-	if(!mesh->insert_delaunay(swap[node], 0)){
-	    cerr << "Mesher failed!\n";
-	    exit(-1);
-	}
-	if((node+1)%500 == 0){
-	    mesh->pack_elems();
-	    cerr << node+1 << " nodes meshed (" << mesh->elems.size() << " elements)\r";
-	}
-    }
-    cerr << endl;
-    cerr << "Performing cleanup...\n";
-    mesh->compute_neighbors();
-    mesh->remove_delaunay(nn, 0);
-    mesh->remove_delaunay(nn+1, 0);
-    mesh->remove_delaunay(nn+2, 0);
-    mesh->remove_delaunay(nn+3, 0);
-    mesh->remove_delaunay(nn+4, 0);
-    mesh->remove_delaunay(nn+5, 0);
-    mesh->remove_delaunay(nn+6, 0);
-    mesh->remove_delaunay(nn+7, 0);
-    mesh->pack_all();
-    double vol=0;
-    cerr << "There are " << mesh->elems.size() << " elements" << endl;
-    for(int i=0;i<mesh->elems.size();i++){
-	double dv=mesh->elems[i]->volume();
-	if (dv<0.00000001) cerr << "Warning: elements with tiny volume!\n";
-	else vol+=dv;
-    }
-    cerr << "Total volume: " << vol << endl;
-}
-
-
-
-
-
 // Generate pts.size() random points in a tetra spanned by v0, v1, v2, v3.
 // Thanks to Peter-Pike, Dean, and Peter Shirley for the algorithm.
 void BldEEGMesh::randomPointsInTetra(Array1<Point> &pts, const Point &v0, 
 				     const Point &v1, const Point &v2, 
 				     const Point &v3) {
-    double s, t, u;
     double alpha, beta, gamma;
-    double p0, p1, p2, p3;
 
     for (int i=0; i<pts.size(); i++) {
-	s=mr();
-	t=mr();
-	u=mr();
-	alpha=1-pow(s, 0.33333333);
-	beta=1-sqrt(t);
-	gamma=u;
-	p0=1-alpha;
-	p1=beta*alpha*(1-gamma);
-	p2=alpha*(1-beta);
-	p3=beta*alpha*gamma;
-	pts[i]=AffineCombination(v0, p0, v1, p1, v2, p2, v3, p3);
+	alpha = pow(mr(),1.0/3.0);
+	beta = sqrt(mr());
+	gamma = mr();
+
+	// let the compiler do the sub-expression stuff...
+
+	pts[i]=AffineCombination(v0,1-alpha,
+				 v1,beta*alpha*(1-gamma),
+				 v2,alpha*(1-beta),
+				 v3,beta*alpha*gamma);
+	pts[i]=AffineCombination(v0,.25,
+				 v1,.25,
+				 v2,.25,
+				 v3,.25);
     }
 }
 
-
 // Generate num points randomly distributed through the SegFld.  Don't
 // put any points in air regions (type == 0).
-void BldEEGMesh::genPts(SegFldHandle sf, SurfTree *st, int num, 
-			MeshHandle mesh) {
-    mesh->nodes.resize(0);
-    sf->audit();
-    sf->printComponents();
-    //Array1<Point> pts;
+// Teselate these points by creating five tets from each cube.
+void BldEEGMesh::genPtsAndTets(SegFldHandle sf, SurfTree *st, int num, 
+			       Mesh* mesh) {
     BBox bb;
     for (int iii=0; iii<st->points.size(); iii++)
 	bb.extend(st->points[iii]);
     Point min, max;
     min = bb.min();
     max = bb.max();
-    Vector dv=max-min;
-    min = min-dv*.001;
-    max = max+dv*.001;
-//    sf->get_bounds(min, max);
+    int minaa, minbb, mincc, maxaa, maxbb, maxcc;
+    sf->locate(min, minaa, minbb, mincc);
+    sf->locate(max, maxaa, maxbb, maxcc); maxaa++; maxbb++; maxcc++;
+    if (minaa<0) {cerr << "Warning minaa was: "<<minaa<<"\n"; minaa=0;}
+    if (minbb<0) {cerr << "Warning minbb was: "<<minbb<<"\n"; minbb=0;}
+    if (mincc<0) {cerr << "Warning mincc was: "<<mincc<<"\n"; mincc=0;}
+    if (maxaa>sf->nx) {cerr << "Warning maxaa was: "<<maxaa<<"\n"; maxaa=sf->nx;}
+    if (maxbb>sf->ny) {cerr << "Warning maxbb was: "<<maxbb<<"\n"; maxbb=sf->ny;}
+    if (maxcc>sf->nz) {cerr << "Warning maxcc was: "<<maxcc<<"\n"; maxcc=sf->nz;}
+
+
+    double num_in=0;
+
+    for (int aa=minaa; aa<=maxaa; aa++)
+        for (int bb=minbb; bb<=maxbb; bb++)
+            for (int cc=mincc; cc<=maxcc; cc++) {
+		int type=sf->get_type(sf->comps[sf->grid(aa, bb, cc)]);
+		if (type != 0 && type != 4 && type != 5) num_in++;
+	    }
+    double density = num_in/((maxaa-minaa+1)*(maxbb-minbb+1)*(maxcc-mincc+1));
+    mesh->nodes.resize(0);
+    sf->audit();
+    sf->printComponents();
+    Array1<Point> pts;
     Vector v(max-min);
+    min = min+v*.001;
+    max = max-v*.001;
+    v*=1.002;
+
     double vol=v.x()*v.y()*v.z();
-    vol/=(3*num);
-    double side=pow(vol, 0.3333333);
-    Point curr;
-//    int pidx=0;
+    double numNodesRequired=num/density;
+    double numNodesPerSide=pow(numNodesRequired, 1./3.);
+    double numCellsPerSide=numNodesPerSide-1;
+    double numCells=numCellsPerSide*numCellsPerSide*numCellsPerSide;
+    double cellVolume=vol/numCells;
+    double lengthPerCellSide=pow(cellVolume, 1./3.);
 
-    int ci, cj, ck;
-    int inum=v.x()/side;
-    double dx=v.x()/inum;
-    int jnum=v.y()/side;
-    double dy=v.y()/jnum;
-    int knum=v.z()/side;
-    double dz=v.z()/knum;
+#if 0
+    int inum=15;
+    int jnum=15;
+    int knum=15;
+#endif
 
-    cerr <<" min="<<min<<" max="<<max<<"  dx="<<dx<<" dy="<<dy<<" dz="<<dz<<"\n";
-    cerr << "minx="<<min.x()+dx/2.<<"  maxx="<<min.x()+dx/2.+dx*inum<<"\n";
-    cerr << "miny="<<min.y()+dy/2.<<"  maxy="<<min.y()+dy/2.+dy*jnum<<"\n";
-    cerr << "minz="<<min.z()+dz/2.<<"  maxz="<<min.z()+dz/2.+dz*knum<<"\n";
+    int inum=v.x()/lengthPerCellSide+1;
+    int jnum=v.y()/lengthPerCellSide+1;
+    int knum=v.z()/lengthPerCellSide+1;
 
-//    cerr << "sf dims: "<<sf->grid.dim1()<<", "<<sf->grid.dim2()<<", "<<sf->grid.dim3()<<"\n";
-    Array3<char> visited(inum,jnum,knum);
-    visited.initialize(0);
+    double dx=v.x()/(inum-1);
+    double dy=v.y()/(jnum-1);
+    double dz=v.z()/(knum-1);
 
-    for (int ii=0; ii<st->points.size(); ii++) {
-	int i=(st->points[ii].x()-min.x())/dx;
-	int j=(st->points[ii].y()-min.y())/dy;
-	int k=(st->points[ii].z()-min.z())/dz;
-	if (!visited(i,j,k)) {
-	    mesh->nodes.add(NodeHandle(new Node(st->points[ii])));
-	    visited(i,j,k)=1;
-	}
-    }
-    curr.x(min.x()+dx/2.);
+    cerr << "minx="<<min.x()<<"  maxx="<<min.x()+dx*(inum-1)<<"\n";
+    cerr << "miny="<<min.y()<<"  maxy="<<min.y()+dy*(jnum-1)<<"\n";
+    cerr << "minz="<<min.z()<<"  maxz="<<min.z()+dz*(knum-1)<<"\n";
+    cerr << "inum="<<inum<<"  jnum="<<jnum<<"  knum="<<knum<<"  dx="<<dx<<"  dy="<<dy<<"  dz="<<dz<<"\n";
+
+    Point curr(min);
+    int currIdx=0;
+    Array3<int> nodes(inum, jnum, knum);
+
     for (int i=0; i<inum; i++, curr.x(curr.x()+dx)) {
-	curr.y(min.y()+dy/2.);
+	curr.y(min.y());
 	for (int j=0; j<jnum; j++, curr.y(curr.y()+dy)) {
-	    curr.z(min.z()+dz/2.);
+	    curr.z(min.z());
 	    for (int k=0; k<knum; k++, curr.z(curr.z()+dz)) {
-		if (!visited(i,j,k)) {
-		    Point p=curr+Vector((mr()-.5)*dx*.8, 
-					(mr()-.5)*dy*.8, 
-					(mr()-.5)*dz*.8);
-		    sf->locate(p, ci, cj, ck);
-//		cerr << ci<<" "<<cj<<" "<<ck<<"\n";
-		    if (sf->get_type(sf->comps[sf->grid(ci, cj, ck)]) == 0) 
-			continue;
-//		cerr << "Found a non-air point!\n";
-		    mesh->nodes.add(NodeHandle(new Node(p)));
-//		pts[pidx]=p;
-//		pidx++;
-		}
+		nodes(i,j,k)=currIdx++;
+		mesh->nodes.add(NodeHandle(new Node(curr)));
 	    }
 	}
     }
-//    cerr << "pidx="<<pidx<<"\n";
-//    pts.resize(pidx);
-//    char fpts[100];
-//    sprintf(fpts, "%s.pts", oname);
-//    cerr <<"Generated "<<pidx<<" points -- writing them to file: "<<fpts<<"\n";
-//    FILE *Fpts=fopen(fpts, "wt");
-//    fprintf(Fpts, "%d\n", pts.size());
-//    for (i=0; i<pts.size(); i++) {
-//	fprintf(Fpts, "%lf  %lf  %lf\n", pts[i]);
-//    }
-//    fclose(Fpts);
-}
 
+    Array1<Element *> e(5);
+    Array1<int> c(8);
+    for (i=0; i<inum-1; i++) {
+	for (int j=0; j<jnum-1; j++) {
+	    for (int k=0; k<knum-1; k++) {
+		c[0]=nodes(i,j,k);
+		c[1]=nodes(i+1,j,k);
+		c[2]=nodes(i+1,j+1,k);
+		c[3]=nodes(i,j+1,k);
+		c[4]=nodes(i,j,k+1);
+		c[5]=nodes(i+1,j,k+1);
+		c[6]=nodes(i+1,j+1,k+1);
+		c[7]=nodes(i,j+1,k+1);
+		if ((i+j+k)%2) {
+		    e[0]=new Element(mesh, c[0], c[1], c[2], c[5]);
+		    e[1]=new Element(mesh, c[0], c[2], c[3], c[7]);
+		    e[2]=new Element(mesh, c[0], c[2], c[5], c[7]);
+		    e[3]=new Element(mesh, c[0], c[4], c[5], c[7]);
+		    e[4]=new Element(mesh, c[2], c[5], c[6], c[7]);
+		} else {
+		    e[0]=new Element(mesh, c[1], c[0], c[3], c[4]);
+		    e[1]=new Element(mesh, c[1], c[3], c[2], c[6]);
+		    e[2]=new Element(mesh, c[1], c[3], c[4], c[6]);
+		    e[3]=new Element(mesh, c[1], c[5], c[4], c[6]);
+		    e[4]=new Element(mesh, c[3], c[4], c[7], c[6]);
+		}
+		mesh->elems.add(e[0]); 
+		mesh->elems.add(e[1]); 
+		mesh->elems.add(e[2]); 
+		mesh->elems.add(e[3]); 
+		mesh->elems.add(e[4]); 
+	    }
+	}
+    }
+}
 
 // For each element, sample it at npoint, see what material type is
 // there -- for the greyMatlIdx component (and those contained inside
@@ -333,9 +291,13 @@ void BldEEGMesh::genPts(SegFldHandle sf, SurfTree *st, int num,
 // label the element that type.
 void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st, 
 				  int greyMatlIdx, int whiteMatlIdx) {
+
+    Array1<int> scalp(m->nodes.size());
+    scalp.initialize(0);
+
     Array1<int> popularity(7);
-    Array1<Point> samples(10);
-    //Point v0, v1, v2, v3;
+    Array1<Point> samples(6);
+//    Point v0, v1, v2, v3;
     int ci, cj, ck;
     cerr << "These are the components(materials) interior to "<<greyMatlIdx<<"(4): ";
     for (int i=0; i<st->inner[greyMatlIdx].size(); i++) {
@@ -350,12 +312,15 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 	int type=sf->get_type(sf->comps[inComp]);
 	cerr <<inComp<<"("<<type<<") ";
     }
+
     cerr << "\n";
 //    cerr << "m->elems.size()="<<m->elems.size()<<"\n";
     for (i=0; i<m->elems.size(); i++) {
 //	cerr << "..."<<i <<"\n";
 	popularity.initialize(0);
 	Element *e=m->elems[i];
+
+	
 	int tied=1;
 	int mostPopIdx=0;
 	int n0, n1, n2, n3;
@@ -368,30 +333,35 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 		sf->locate(samples[j], ci, cj, ck);
 		int comp=sf->grid(ci,cj,ck);
 		int type=sf->get_type(sf->comps[comp]);
-		if (comp == greyMatlIdx || comp == whiteMatlIdx) {
-//		    cerr << "another of type 6, ";
-		    popularity[6] = popularity[6]+1;
-		} else {	
-		    for (int k=0; k<st->inner[greyMatlIdx].size(); k++) {
-			if (st->inner[greyMatlIdx][k] == comp) {
-			    break;
-			}
-		    }
-		    if (k != st->inner[greyMatlIdx].size()) {
-			popularity[6]=popularity[6]+1;
-//			cerr << "grey type 6, ";
-		    } else {
-			for (k=0; k<st->inner[whiteMatlIdx].size(); k++) {
-			    if (st->inner[whiteMatlIdx][k] == comp) {
+
+		if (NoBrain) {
+		    if (comp == greyMatlIdx || comp == whiteMatlIdx) {
+//		        cerr << "another of type 6, ";
+			popularity[6] = popularity[6]+1;
+		    } else {	
+			for (int k=0; k<st->inner[greyMatlIdx].size(); k++) {
+			    if (st->inner[greyMatlIdx][k] == comp) {
 				break;
 			    }
 			}
-			if (k != st->inner[whiteMatlIdx].size()) {
+			if (k != st->inner[greyMatlIdx].size()) {
 			    popularity[6]=popularity[6]+1;
+//			    cerr << "grey type 6, ";
 			} else {
-			    popularity[type]=popularity[type]+1;
+			    for (k=0; k<st->inner[whiteMatlIdx].size(); k++) {
+				if (st->inner[whiteMatlIdx][k] == comp) {
+				    break;
+				}
+			    }
+			    if (k != st->inner[whiteMatlIdx].size()) {
+				popularity[6]=popularity[6]+1;
+			    } else {
+				popularity[type]=popularity[type]+1;
+			    }
 			}
 		    }
+		} else {
+		    popularity[type]=popularity[type]+1;
 		}
 	    }
 	    tied=0;
@@ -409,11 +379,56 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 				     m->nodes[n1]->p, .25,
 				     m->nodes[n2]->p, .25,
 				     m->nodes[n3]->p, .25), ci, cj, ck);
+
+	if (sf->grid(ci,cj,ck) == 0) {airCtr++; m->elems[i]=0; scalp[n0]=1; scalp[n1]=1; scalp[n2]=1; scalp[n3]=1;} else {othrCtr++;
 //	int comp=sf->grid(ci,cj,ck);
 //	int type=sf->get_type(sf->comps[comp]);
 //	cerr << "centroid type is "<<type<<" mostPopIdx is "<<mostPopIdx<<"\n";
-	e->cond=mostPopIdx;
+	e->cond=mostPopIdx; }
     }
+    m->compute_neighbors();
+
+    Array1<int> scalp2;
+
+    // this is just pack_nodes, but we have to keep track of the scalp array
+    int nnodes=m->nodes.size();
+    int idx=0;
+    Array1<int> map(nnodes);
+    for(i=0;i<nnodes;i++){
+	NodeHandle& n=m->nodes[i];
+	if(n.get_rep() && n->elems.size()){
+	    map[i]=idx;
+	    scalp2.add(scalp[i]);
+	    m->nodes[idx++]=n;
+	} else {
+	    map[i]=-1234;
+	}
+    }
+    m->nodes.resize(idx);
+    
+    int nelems=m->elems.size();
+    for(i=0;i<nelems;i++){
+	Element* e=m->elems[i];
+	if(e){
+	    for(int j=0;j<4;j++){
+		if(map[e->n[j]]==-1234)
+		    cerr << "Warning: pointing to old node: " << e->n[j] << endl;
+		e->n[j]=map[e->n[j]];
+	    }
+	}
+    }
+    m->pack_elems();
+
+#if 0
+    int cnt=0;
+    for (i=0; i<scalp2.size(); i++) if (scalp2[i]) cnt++;
+    FILE *fout=fopen("/home/ari/scratch1/dweinste/data/new/head.bdry", "wt");
+    fprintf(fout, "%d\n", cnt);
+    for (i=0; i<scalp2.size(); i++) if (scalp2[i]) fprintf(fout, "%d\n", i+1);
+    cerr << "Outside error was "<<airCtr*100./(airCtr+othrCtr)<<" percent.\n";
+    fclose(fout);
+#endif
+
 }	
 
 // For all elements of type 6, set them to null, and store their
@@ -426,7 +441,9 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 // unattached nodes.
 // For all elements, renumber according to the mapping.  Do the same with
 // the BC cortex list.
-void BldEEGMesh::removeAirAndGreyMatlElems(Mesh *m, Array1<int>& bcCortex) {
+void BldEEGMesh::removeAirAndGreyMatlElems(Mesh *m, Array1<int>& cortexBCMeshNodes) {
+    cerr << "START:  m->nodes.size()="<<m->nodes.size()<<"\n";
+
     Array1<int> greyNodes(m->nodes.size());
     greyNodes.initialize(0);
     Array1<int> interiorNodes(m->nodes.size());
@@ -438,7 +455,14 @@ void BldEEGMesh::removeAirAndGreyMatlElems(Mesh *m, Array1<int>& bcCortex) {
 	    greyNodes[e->n[1]]=1;
 	    greyNodes[e->n[2]]=1;
 	    greyNodes[e->n[3]]=1;
-	    m->elems[i]=0;
+
+
+	    if (NoBrain) {
+	    // this will remove all of the brain!
+		m->elems[i]=0;
+	    }
+
+
 	} else if (e->cond == 0) { 
 	    m->elems[i]=0;
 	} else {
@@ -448,50 +472,71 @@ void BldEEGMesh::removeAirAndGreyMatlElems(Mesh *m, Array1<int>& bcCortex) {
 	    interiorNodes[e->n[3]]=1;
 	}
     }
-    Array1<int> map(m->nodes.size());
-    int cnt=0;
-    for (i=0; i<m->nodes.size(); i++) {
-	if (greyNodes[i] && interiorNodes[i]) bcCortex.add(cnt);
-	if (interiorNodes[i]) {
-	    m->nodes[cnt]->p = m->nodes[i]->p;
-	    map[i]=cnt;
-	    cnt++;
+
+    // basically, we want to do a "Mesh::pack_all()" here, but we need
+    // to keep track of the node mapping so we can put the cortical nodes
+    // into cortexBCMeshNodes.  so, instead we do a Mesh::compute_neighbors(), 
+    // we cut & paste Mesh::pack_nodes() with a couple extra lines to
+    // track cortex nodes, and then we call Mesh::pack_elems()
+
+    m->compute_neighbors();
+
+    int nnodes=m->nodes.size();
+    int idx=0;
+    Array1<int> map(nnodes);
+    for(i=0;i<nnodes;i++){
+	NodeHandle& n=m->nodes[i];
+//	if(n.get_rep()) {
+	if(n.get_rep() && n->elems.size()){
+	    map[i]=idx;
+	    m->nodes[idx]=n;
+
+	    // here's the extra code to track the cortex node numbers...
+
+	    if (greyNodes[i] && interiorNodes[i]) {
+                cortexBCMeshNodes.add(idx);
+//                cerr << "cortex point: "<<m->nodes[idx]->p<<"\n";
+            }
+	    idx++;
 	} else {
-	    map[i]=-32;
+	    map[i]=-1234;
 	}
     }
-    m->nodes.resize(cnt);
-    cnt=0;
-    for (i=0; i<m->elems.size(); i++) {
-	Element *e=m->elems[i];
-	if (e) {
-	    e->n[0]=map[e->n[0]];
-	    e->n[1]=map[e->n[1]];
-	    e->n[2]=map[e->n[2]];
-	    e->n[3]=map[e->n[3]];	    
-	    m->elems[cnt]=m->elems[i];
-	    cnt++;
+    m->nodes.resize(idx);
+    int nelems=m->elems.size();
+    for(i=0;i<nelems;i++){
+	Element* e=m->elems[i];
+	if(e){
+	    for(int j=0;j<4;j++){
+		if(map[e->n[j]]==-1234)
+		    cerr << "Warning: pointing to old node: " << e->n[j] << endl;
+		e->n[j]=map[e->n[j]];
+	    }
 	}
     }
-    m->elems.resize(cnt);
+
+    m->pack_elems();
+    cerr << "FINISH:  m->nodes.size()="<<m->nodes.size()<<"\n";
 }
 
-// Find the nearest node from the mesh to each of the electrodes.
-// For each, give that node a Dirichlet boundary condition, and save it
-// to the bcScalp array as well.
-void BldEEGMesh::applyScalpBCs(Mesh *m, TriSurface *ts, Array1<int>& bcScalp,
-			       const Array1<int>& bcCortex) {
-//    cerr << "locating "<<bcScalp.size()<<" electrode sites...\n";
+// surftree has the scalp bc's already
+// find the nearest mesh node, store its index in scalpBCMeshNodes and
+//    give that node a BC as well.
+
+void BldEEGMesh::applyScalpBCs(Mesh *m, SurfTree *st, 
+			       Array1<int>& scalpBCMeshNodes,
+			        const Array1<int>& cortexBCMeshNodes) {
     Array1<int> used(m->nodes.size());
     used.initialize(0);
-    for (int i=0; i<bcCortex.size(); i++) used[bcCortex[i]]=1;
-    for (i=0; i<ts->bcIdx.size(); i++) {
+    for (int i=0; i<cortexBCMeshNodes.size(); i++) 
+	used[cortexBCMeshNodes[i]]=1;
+    for (i=0; i<scalpBCMeshNodes.size(); i++) {
 	int invalid=1;
 	double dist;
 	int closest;
 	double bcVal;
-	Point bcPt(ts->points[ts->bcIdx[i]]);
-	bcVal=ts->bcVal[i];
+	Point bcPt(st->points[st->bcIdx[i]]);
+	bcVal=st->bcVal[i];
 	for (int j=0; j<m->nodes.size(); j++) {
 	    if (!used[j]) {
 		double d=(m->nodes[j]->p - bcPt).length2();
@@ -503,9 +548,54 @@ void BldEEGMesh::applyScalpBCs(Mesh *m, TriSurface *ts, Array1<int>& bcScalp,
 	    }
 	}
 	used[closest]=1;
-	bcScalp.add(closest);
-	m->nodes[closest]->bc = new DirichletBC(SurfaceHandle(ts), bcVal);
+	scalpBCMeshNodes[i]=closest;
+
+	if (AddBC) {
+	    m->nodes[closest]->bc = new DirichletBC(SurfaceHandle(0), bcVal);
+	}
     }
+}
+
+void BldEEGMesh::findCortexNodesInSTree(Mesh *m, SurfTree* st, int startCNode,
+					const Array1<int>& cortexBCMeshNodes){
+    Array1<int> isCortex(st->points.size());
+    isCortex.initialize(0);
+    int cortexIdx=-1;
+    for (int i=0; i<st->surfNames.size(); i++) {
+	if (st->surfNames[i] == "cortex") cortexIdx=i;
+    }
+    if (cortexIdx == -1) {
+	error("Error: no cortex in SurfTree!");
+	return;
+    }
+    for (i=0; i<st->surfEls[cortexIdx].size(); i++) {
+	TSElement *e=st->elements[st->surfEls[cortexIdx][i]];
+	isCortex[e->i1]=isCortex[e->i2]=isCortex[e->i3]=1;
+    }
+    Array1<int> ctxPts;
+    for (i=0; i<isCortex.size(); i++) if (isCortex[i]) {
+	ctxPts.add(i);
+//	cerr << "cortex point: "<<st->points[i]<<"\n";
+    }
+//    cerr << "NscalpPts="<<st->bcIdx.size();
+    for (i=0; i<cortexBCMeshNodes.size(); i++) {
+	Point p(m->nodes[cortexBCMeshNodes[i]]->p);
+//	cerr << "p="<<p<<"  ";
+	int idx=ctxPts[0];
+	double d=(p-st->points[idx]).length2();
+	for (int j=1; j<ctxPts.size(); j++) {
+	    double dd=(p-st->points[ctxPts[j]]).length2();
+	    if (dd<d) {
+		d=dd; 
+		idx=ctxPts[j];
+	    }
+	}
+//	cerr << "closest surface point is: "<<st->points[idx]<<"  d="<<d<<"\n";
+	st->bcIdx.add(idx);
+	st->bcVal.add(0);
+    }
+//    cerr << "NbdryPts="<<st->bcIdx.size();
+
 }
 
 int BldEEGMesh::findLargestGreyMatterIdx(SegFldHandle sf) {
@@ -544,31 +634,41 @@ int BldEEGMesh::findLargestWhiteMatterIdx(SegFldHandle sf) {
     return largestIdx;
 }
 
-void BldEEGMesh::reorderPts(Mesh *m, const Array1<int>& bcScalp, 
-			    const Array1<int>& bcCortex) {
+void BldEEGMesh::reorderPts(Mesh *m, const Array1<int>& scalpBCMeshNodes, 
+			    const Array1<int>& cortexBCMeshNodes) {
 
-    for (int ii=0; ii<bcScalp.size(); ii++) {
-	for (int jj=0; jj<bcCortex.size(); jj++) {
-	    if (bcScalp[ii] == bcCortex[jj]) {
-		cerr << "ERROR:  bcScalp["<<ii<<"] = bcCortex["<<jj<<"] = "<<bcCortex[jj]<<"\n";
+    Array1<int> map, invMap;
+    
+    cerr << "in reorder pts... scalpBCMeshNodes.size()="<<scalpBCMeshNodes.size()<<"  cortexBCMeshNodes.size()="<<cortexBCMeshNodes.size()<<"  m->nodes.size()="<<m->nodes.size()<<"\n";
+
+    for (int ii=0; ii<scalpBCMeshNodes.size(); ii++) {
+	for (int jj=0; jj<cortexBCMeshNodes.size(); jj++) {
+	    if (scalpBCMeshNodes[ii] == cortexBCMeshNodes[jj]) {
+		cerr << "ERROR:  scalpBCMeshNodes["<<ii<<"] = cortexBCMeshNodes["<<jj<<"] = "<<cortexBCMeshNodes[jj]<<"\n";
 	    }
 	}
     }
 
-    Array1<int> map(m->nodes.size());
-    Array1<int> invMap(m->nodes.size());
+    map.resize(m->nodes.size());
+    invMap.resize(m->nodes.size());
     map.initialize(-1);
 
-    for (int i=0; i<bcScalp.size(); i++) {
-	map[bcScalp[i]]=i;
-	invMap[i]=bcScalp[i];
+    for (int i=0; i<scalpBCMeshNodes.size(); i++) {
+//	cerr << "i="<<i<<"  scalpBCMeshNodes[i]="<<scalpBCMeshNodes[i]<<"\n";
+	map[scalpBCMeshNodes[i]]=i;
+	invMap[i]=scalpBCMeshNodes[i];
+        scalpBCMeshNodes[i]=i;
     }
-    int fromEnd=m->nodes.size()-bcCortex.size();
-    for (i=bcCortex.size()-1; i>=0; i--) {
-	map[bcCortex[i]]=fromEnd+i;
-	invMap[fromEnd+i]=bcCortex[i];
+    int fromEnd=m->nodes.size()-cortexBCMeshNodes.size();
+
+    for (i=0; i<cortexBCMeshNodes.size(); i++) {
+//	cerr << "i="<<i<<"   cortexBCMeshNodes[i]="<<cortexBCMeshNodes[i]<<"\n";
+	map[cortexBCMeshNodes[i]]=fromEnd+i;
+	m->nodes[cortexBCMeshNodes[i]]->fluxBC=1;
+	invMap[fromEnd+i]=cortexBCMeshNodes[i];
+        cortexBCMeshNodes[i]=fromEnd+i;
     }
-    int curr=bcScalp.size();
+    int curr=scalpBCMeshNodes.size();
     for (i=0; i<m->nodes.size(); i++) {
 	if (map[i] == -1) {
 	    map[i] = curr;
@@ -576,55 +676,17 @@ void BldEEGMesh::reorderPts(Mesh *m, const Array1<int>& bcScalp,
 	    curr++;
 	}
     }
-    
-    Array1<Point> p(m->nodes.size());
-    for (i=0; i<m->nodes.size(); i++) p[i]=m->nodes[invMap[i]]->p;
-    for (i=0; i<m->nodes.size(); i++) m->nodes[i]->p = p[i];
+    Array1<NodeHandle> nh(m->nodes.size());
+    for (i=0; i<m->nodes.size(); i++) nh[i]=m->nodes[invMap[i]];
+    for (i=0; i<m->nodes.size(); i++) m->nodes[i]=nh[i];
     for (i=0; i<m->elems.size(); i++) {
 	Element *e=m->elems[i];
 	for (int j=0; j<4; j++) e->n[j]=map[e->n[j]];
     }
 }
 
-void BldEEGMesh::execute()
-{
-    int numPts=10000;
-    
-    SegFldHandle sf;
-    if (!iseg->get(sf))
-	return;
-    if (!sf.get_rep()) {
-	cerr << "Error: empty seg fld\n";
-	return;
-    }
-    
-    SurfaceHandle sh;
-    if (!istree->get(sh))
-	return;
-    if (!sh.get_rep()) {
-	cerr << "Error: empty surftree\n";
-	return;
-    }
-    SurfTree *st=sh->getSurfTree();
-    if (!st) {
-	cerr << "Error: surface isn't a surftree\n";
-	return;
-    }
+void BldEEGMesh::setConductivities(Mesh *m) {
 
-    sh=0;
-    if (!itrisurf->get(sh))
-	return;
-    if (!sh.get_rep()) {
-	cerr << "Error: empty trisurf\n";
-	return;
-    }
-    TriSurface *ts=sh->getTriSurface();
-    if (!ts) {
-	cerr << "Error: surface isn't a trisurface\n";
-	return;
-    }
-
-    Mesh *m = new Mesh;
     m->cond_tensors.resize(6);
     m->cond_tensors[0].resize(6);
     m->cond_tensors[0].initialize(0);
@@ -649,62 +711,87 @@ void BldEEGMesh::execute()
     m->cond_tensors[5].resize(6);
     m->cond_tensors[5].initialize(0);
     m->cond_tensors[5][0]=m->cond_tensors[5][3]=m->cond_tensors[5][5]=WHITE_CONDUCTIVITY;
+}
+
+void BldEEGMesh::execute()
+{
+    int numPts=npts.get();
+    SegFldHandle sf;
+    NoBrain = NOBRAIN.get();
+    AddBC = ADDBC.get();
+    update_state(NeedData);
+    if (!iseg->get(sf))
+	return;
+    if (!sf.get_rep()) {
+	cerr << "Error: empty seg fld\n";
+	return;
+    }
     
-    MeshHandle mesh(m);
-    genPts(sf, st, numPts, mesh);
-    cerr << "Tesselating the points (thanks Steve!)...\n";
-    tess(mesh);
+    SurfaceHandle sh;
+    if (!istree->get(sh))
+	return;
+    if (!sh.get_rep()) {
+	cerr << "Error: empty surftree\n";
+	return;
+    }
+    SurfTree *st=sh->getSurfTree();
+    if (!st) {
+	cerr << "Error: surface isn't a surftree\n";
+	return;
+    }
+
+    update_state(JustStarted);
+    Mesh *m = new Mesh;
+
+    setConductivities(m);
+
+    Point min, max;
+    sf->get_bounds(min,max);
+    cerr << "SF (min,max) = "<<min<<" "<<max<<"\n";
+    
+    BBox bb;
+    for (int iii=0; iii<st->points.size(); iii++) bb.extend(st->points[iii]);
+    cerr << "Surf (min,max) = "<<bb.min()<<" "<<bb.max()<<"\n";
+
 
     int greyMatlIdx=findLargestGreyMatterIdx(sf);
     int whiteMatlIdx=findLargestWhiteMatterIdx(sf);
     cerr << "The largest grey matter component is: "<<greyMatlIdx<<"\n";
     cerr << "The largest white matter component is: "<<whiteMatlIdx<<"\n";
-    cerr << "Calling classify elements...\n";
+    cerr << "Generating points and tets...\n";
+    genPtsAndTets(sf, st, numPts, m);
+    cerr << "Calssifying elements...\n";
     classifyElements(sf, m, st, greyMatlIdx, whiteMatlIdx);
-    Array1<int> bcCortex;
-//    cerr << "Calling removeAirAndGreyMatlElems...\n";
-    removeAirAndGreyMatlElems(m, bcCortex);
-    // might want to output here first... ??
-    Array1<int> bcScalp;
-    cerr << "Calling applyScalpBCs...\n";
-    applyScalpBCs(m, ts, bcScalp, bcCortex);
-
-    FILE *f=fopen("/tmp/scalpPts", "wt");
-    fprintf(f, "%d\n", bcScalp.size());
-    for (int i=0; i<bcScalp.size(); i++) {
-	Point p(m->nodes[bcScalp[i]]->p);
-	fprintf(f, "%lf %lf %lf\n", p.x(), p.y(), p.z());
-    }
-    fclose(f);
+    cerr << "Done classifiying!\n";
     
-    f=fopen("/tmp/bc", "wt");
-    for (i=0; i<bcScalp.size(); i++) {
-	double v=m->nodes[bcScalp[i]]->bc->value;
-	fprintf(f, "%lf\n", v);
+#if 0
+    Piostream* stream = scinew BinaryPiostream(clString("/home/ari/scratch1/dweinste/data/new/head.mesh"), Piostream::Write);
+    Pio(*stream, MeshHandle(m));
+    delete stream;
+#endif
+
+    Array1<int> cortexBCMeshNodes;
+
+    // new we'll query a button on the interface for whether we want
+    // a volume or a surface-to-surface problem
+
+
+    removeAirAndGreyMatlElems(m, cortexBCMeshNodes);
+
+    Array1<int> scalpBCMeshNodes(st->bcIdx.size());
+    applyScalpBCs(m, st, scalpBCMeshNodes, cortexBCMeshNodes);
+    findCortexNodesInSTree(m, st, m->nodes.size()-cortexBCMeshNodes.size(),
+			   cortexBCMeshNodes);
+
+    reorderPts(m, scalpBCMeshNodes, cortexBCMeshNodes);
+
+    cerr << "Mesh has been built and output -- "<<m->nodes.size()<<" nodes, "<<m->elems.size()<<" elements.\n";
+    for (int i=0; i<m->elems.size(); i++) {
+	m->elems[i]->mesh = m;
+	m->elems[i]->orient();
+	m->elems[i]->compute_basis();
     }
-    fclose(f);
-
-    cerr << "\n\n\n***** Just wrote output file for inverse solver: "<<name<<"\n";
-    cerr <<       "      after running SCIRun to build the .matrix file, call:\n";
-    cerr <<       "      'MatrixToMat probName "<<bcScalp.size()<<" "<<m->nodes.size()-bcScalp.size()-bcCortex.size()<<" "<<bcCortex.size()<<"'\n";
-    cerr << 	  "      and then run 'solve probName'\n";
-
-    f=fopen("/tmp/cortexPts", "wt");
-    fprintf(f, "%d\n", bcCortex.size());
-    for (i=0; i<bcCortex.size(); i++) {
-	Point p(m->nodes[bcCortex[i]]->p);
-	fprintf(f, "%lf %lf %lf\n", p.x(), p.y(), p.z());
-    }
-    fclose(f);
-
-    reorderPts(m, bcScalp, bcCortex);
-    
-    // blow away the Dirich boundary conditions for building the inverse matrix
-    for (i=0; i<m->nodes.size(); i++) 
-	if (m->nodes[i]->bc != 0) m->nodes[i]->bc=0;
-
-    MeshHandle mh(m);
-    omesh->send(mh);
-    
-    cerr << "Mesh has been built and output -- "<<mesh->nodes.size()<<" nodes, "<<mesh->elems.size()<<" elements.\n";
+    m->compute_neighbors();
+    omesh->send(m);
+    ostree->send(st);
 }

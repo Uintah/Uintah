@@ -49,6 +49,7 @@ struct ColorPoint {
 
 class GenTransferFunc : public Module {
 
+  ColorMapIPort         *inport;  // input a ColorMap
   ColorMapOPort         *outport;  // outputs a ColorMap
   GeometryOPort         *ogeom;  
   TCLint		RGBorHSV; // which mode
@@ -78,12 +79,13 @@ class GenTransferFunc : public Module {
   Window		win2;
 
   ColorMapHandle	cmap;  // created once, first execute...
+  int cmap_generation;
 
 public:
   GenTransferFunc( const clString& id);
   GenTransferFunc( const GenTransferFunc&, int deep);
 
-  void DrawGraphs(void); // this function just blasts away...
+  void DrawGraphs(int flush=1); // this function just blasts away...
 
   void DoMotion(int win, int x, int y);
 
@@ -131,10 +133,15 @@ extern "C" {
 GenTransferFunc::GenTransferFunc( const clString& id)
 :Module("GenTransferFunc",id,Source),
  RGBorHSV("rgbhsv",id,this),lineVSspline("linespline",id,this),
- activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1)
+ activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1),
+ cmap_generation(-1)
 {
 
-  cmap = 0; // start as nothing...
+  cmap = scinew ColorMap; // start as nothing...
+
+  // Create the input port
+  inport = scinew ColorMapIPort(this,"ColorMap",ColorMapIPort::Atomic);
+  add_iport(inport);
 
   // Create the output port
   outport = scinew ColorMapOPort(this,"ColorMap",ColorMapIPort::Atomic);
@@ -148,20 +155,26 @@ GenTransferFunc::GenTransferFunc( const clString& id)
   ColorPoint p;
 
   p._t = 0.0;
-  p._rgb = Color(1,0,0);
+  p._rgb = Color(0,.05,.1);
   p._hsv = HSVColor(p._rgb);
 
   points.add(p);
 
   p._t = 1.0;
-  p._rgb = Color(0,0,1);
+  p._rgb = Color(1,.95,.9);
   p._hsv = HSVColor(p._rgb);
 
   points.add(p);
 
-  alphas.add(1);
-  alphas.add(1);
+  alphas.add(0);
+  alphas.add(0);
+  alphas.add(.5);
+  alphas.add(.8);
+  alphas.add(.8);
   aTimes.add(0);
+  aTimes.add(.25);
+  aTimes.add(.5);
+  aTimes.add(.75);
   aTimes.add(1);
 
   ctxs[0] = ctxs[1] = ctxs[2] = 0;
@@ -170,7 +183,8 @@ GenTransferFunc::GenTransferFunc( const clString& id)
 GenTransferFunc::GenTransferFunc(const GenTransferFunc& copy, int deep)
 : Module(copy,deep),
   RGBorHSV("rgbhsv",id,this),lineVSspline("linespline",id,this),
-  activeLine(-1),selNode(-1),graphStat(-1)
+  activeLine(-1),selNode(-1),graphStat(-1),
+  cmap_generation(-1)
 {
   NOT_FINISHED("GenTransferFunc copy constructor type thing");
 }
@@ -260,7 +274,7 @@ void GenTransferFunc::Resize(int win)
 
 }
 
-void GenTransferFunc::DrawGraphs()
+void GenTransferFunc::DrawGraphs( int flush)
 {
 
   static double  colors[] = { 1.,0.,0.,   0.,1.,0.,   0.,0.,1. };
@@ -383,13 +397,13 @@ void GenTransferFunc::DrawGraphs()
       times[i] = points[i]._t;
     }
     
-    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes);
+    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes,256);
 
     glXMakeCurrent(dpy[0],None,NULL);
 
     TCLTask::unlock();
-
-    ogeom->flushViews();
+    if ( flush )
+      ogeom->flushViews();
 
     return;
 
@@ -548,6 +562,7 @@ void GenTransferFunc::DoMotion(int, int x, int y)
 
   float val = GetVal(x,y);   // this remaps the Y coord!
 
+  cerr << "TF: " << time << "  " << val << "\n";
   // end conditions are special cases - can't change x!
 
   if (activeLine == 7) {
@@ -592,7 +607,7 @@ void GenTransferFunc::DoMotion(int, int x, int y)
 
   // now you just have to redraw this
 
-  DrawGraphs();
+  DrawGraphs(0);
 
 }
 
@@ -698,27 +713,69 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
   bdown = -1;
 
   DrawGraphs();
-
 }
 
 void GenTransferFunc::execute(void)
 {
+  
+  ColorMapHandle newcmap;
+    int c = inport->get(newcmap);
+
+  if ( c && newcmap->generation != cmap_generation ) {
+    cmap_generation = newcmap->generation;
+
+    if (!newcmap->raw1d) {
+      cerr << "Old version of color map!\n";
+      return;
+    }
+
+    cmap.get_rep()->SetRaw(newcmap->rawRampColor,
+			   newcmap->rawRampColorT,
+			   newcmap->rawRampAlpha,
+			   newcmap->rawRampAlphaT);
+
+    points.resize(newcmap->rawRampColor.size());
+    
+    for(int i=0;i<points.size();i++) {
+      points[i]._t = newcmap->rawRampColorT[i];
+      points[i]._rgb = newcmap->rawRampColor[i];
+    }
+
+    alphas = newcmap->rawRampAlpha;
+    aTimes = newcmap->rawRampAlphaT;
+
+    
+  } else
+
+    {
+
+    Array1<Color> ncolors(points.size());
+    Array1<float> times(points.size());
+    
+    for(int i=0;i<points.size();i++) {
+      ncolors[i] = points[i]._rgb;
+      times[i] = points[i]._t;
+    }
+    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
+
+    cerr << endl << "We are sending a cmap!\n" << endl << endl;
+    // Bad for Volume Rendering...
+    cmap = scinew ColorMap(ncolors,times,alphas,aTimes);
+    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
+    cerr << cmap.get_rep() << endl;
+
+    cerr << cmap->colors.size() << " - Size\n";
+    cerr << cmap->min << " - " << cmap->max << endl;
+    
+  }
+  
 #if 0  
   if (cmap.get_rep()) {
     delete cmap.get_rep();
   }
 #endif
-  
-  Array1<Color> ncolors(points.size());
-  Array1<float> times(points.size());
-  
-  for(int i=0;i<points.size();i++) {
-    ncolors[i] = points[i]._rgb;
-    times[i] = points[i]._t;
-  }
-  cmap = scinew ColorMap(ncolors,times,alphas,aTimes);
 
-  outport->send(cmap);
+   outport->send(cmap);
 }
 
 int GenTransferFunc::makeCurrent(void)

@@ -120,10 +120,19 @@ void RescaleSurface::execute()
     
     last_scale = new_scale;
 
+    // scale about the center!
+
+    Point c(0,0,0);
+    for (i=0; i<nodes.size(); i++)
+	c+=nodes[i]->p.vector();
+    c.x(c.x()/nodes.size());
+    c.y(c.y()/nodes.size());
+    c.z(c.z()/nodes.size());
+
     for (i=0; i<nodes.size(); i++) {
-	pts[i].x(nodes[i]->p.x()*s);
-	pts[i].y(nodes[i]->p.y()*s);
-	pts[i].z(nodes[i]->p.z()*s);
+	pts[i].x(c.x()+(nodes[i]->p.x()-c.x())*s);
+	pts[i].y(c.y()+(nodes[i]->p.y()-c.y())*s);
+	pts[i].z(c.z()+(nodes[i]->p.z()-c.z())*s);
     }
 	
     if (ps) {

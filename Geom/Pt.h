@@ -57,6 +57,7 @@ public:
 
     int have_normal;
     Vector n;
+    int pickable;	// hack so we don't draw non-pickable pts during a pick
 
     unsigned char* cmap; // color map - if you have scalar values...
 

@@ -38,12 +38,27 @@ public:
     Array1<TSElement*> elements;
     Array1<int> bcIdx;		// indices of any points w/ boundary conditions
     Array1<double> bcVal;		// the values at each boundary condition
+    int haveNodeInfo;
+
+    enum NormalsType {
+	PointType,	// one normal per point of the surface
+	VertexType,	// one normal for each vertex of each element
+	ElementType, 	// one normal for each element
+	None
+    };
+
+    NormalsType normType;
+
+    Array1<Array1<int> > nodeElems;	// which elements is a node part of
+    Array1<Array1<int> > nodeNbrs;	// which nodes are one neighbors
+
+    Array1<Vector> normals;
 private:
     int empty_index;
     int directed;	// are the triangle all ordered clockwise?
     double distance(const Point &p, int i, int *type, Point *pp=0);
     int find_or_add(const Point &p);
-    void add_node(Array1<NodeHandle>& nodes,
+    void add_node(Array1<sci::NodeHandle>& nodes,
 		  char* id, const Point& p, int n);
 public:
     TriSurface(Representation r=TriSurf);
@@ -53,9 +68,12 @@ public:
 
     // pass in allocated surfaces for conn and d_conn. NOTE: contents will be
     // overwritten
-    void separate(int idx, TriSurface* conn, TriSurface* d_conn);
+    void separate(int idx, TriSurface* conn, TriSurface* d_conn, int updateConnIndices=1, int updateDConnIndices=1);
 
     SurfTree* toSurfTree();
+
+    void bldNodeInfo();
+    void bldNormals(NormalsType);
 
     // NOTE: if elements have been added or removed from the surface
     // remove_empty_index() MUST be called before passing a TriSurface
@@ -65,13 +83,16 @@ public:
     inline int is_directed() {return directed;}
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
-    virtual void get_surfnodes(Array1<NodeHandle>&);
+    virtual void get_surfnodes(Array1<sci::NodeHandle>&);
+    virtual void set_surfnodes(const Array1<sci::NodeHandle>&);
     virtual int inside(const Point& p);
     virtual void construct_hash(int, int, const Point &, double);
     void add_point(const Point& p);
     int add_triangle(int i1, int i2, int i3, int cw=0);
     void remove_triangle(int i);
     double distance(const Point &p, Array1<int> &res, Point *pp=0);
+    
+    int intersect(const Point& origin, const Vector& dir, double &d, int &v, int face);
 
     // these two were implemented for isosurfacing btwn two surfaces
     // (MorphMesher3d module/class)

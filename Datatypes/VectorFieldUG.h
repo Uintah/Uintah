@@ -21,7 +21,7 @@
 
 class VectorFieldUG : public VectorField {
 public:
-    MeshHandle mesh;
+    sci::MeshHandle mesh;
     Array1<Vector> data;
 
     enum Type {
@@ -31,7 +31,7 @@ public:
     Type typ;
 
     VectorFieldUG(Type typ);
-    VectorFieldUG(const MeshHandle&, Type typ);
+    VectorFieldUG(const sci::MeshHandle&, Type typ);
     virtual ~VectorFieldUG();
     virtual VectorField* clone();
 

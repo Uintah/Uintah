@@ -24,13 +24,13 @@ typedef LockingHandle<MultiMesh> MultiMeshHandle;
 
 class MultiMesh : public Datatype {
 public:
-    Array1<MeshHandle> meshes;
+    Array1<sci::MeshHandle> meshes;
 
     MultiMesh();
     MultiMesh(const MultiMesh&);
     virtual MultiMesh *clone();
     virtual ~MultiMesh();
-    inline void add_mesh(const MeshHandle &m, int i) {
+    inline void add_mesh(const sci::MeshHandle &m, int i) {
 	meshes[i]=m->clone();
     }
     void clean_up();

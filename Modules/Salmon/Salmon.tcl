@@ -97,7 +97,7 @@ itcl_class Roe {
 	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
 	
 	set width 640
-	set height 512
+	set height 480
 	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
 
 	foreach i $r {
@@ -222,9 +222,23 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	checkbutton $m.eframe.clip -text "Use Clip" -variable $this-global-clip \
 		-command "$this-c redraw"
+	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
+		-command "$this-c redraw"
+	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
+	frame $m.eframe.mf
+	label $m.eframe.mf.lf -text "  Frame: "
+	entry $m.eframe.mf.vf -relief sunken -width 4 -textvariable $this-global-movieFrame
+	pack $m.eframe.mf.lf $m.eframe.mf.vf -side left
+	
+	frame $m.eframe.mn
+	label $m.eframe.mn.ln -text "  Name: "
+	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
+	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
+	
 	pack $m.eframe -anchor w -padx 2 -side left
-	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
-		-side top -anchor w
+	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
+		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
+		-in $m.eframe -side top -anchor w
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
 	pack $m.shade -in $m.eframe -side top -anchor w
@@ -235,13 +249,20 @@ itcl_class Roe {
 	global "$this-global-type"
 	global "$this-global-debug"
 	global "$this-global-clip"
-
+	global "$this-global-cull"
+	global "$this-global-movie"
+	global "$this-global-movieName"
+	global "$this-global-movieFrame"
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
 	set "$this-global-psize" 1
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
 	set "$this-global-clip" 0
+	set "$this-global-cull" 0
+	set "$this-global-movie" 0
+	set "$this-global-movieName" "/tmp/movie"
+	set "$this-global-movieFrame" 0
 
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
@@ -346,8 +367,8 @@ itcl_class Roe {
 	if {[winfo exists $w.wframe.draw]} {
 	    destroy $w.wframe.draw
 	}
-	$this-c switchvisual $w.wframe.draw $idx 640 512
-	puts "done: $this-c switchvisual $w.wframe.draw $idx 640 512"
+	$this-c switchvisual $w.wframe.draw $idx 640 480
+	puts "done: $this-c switchvisual $w.wframe.draw $idx 640 480"
 	if {[winfo exists $w.wframe.draw]} {
 	    bindEvents $w.wframe.draw
 	    pack $w.wframe.draw -expand yes -fill both
@@ -415,18 +436,22 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	$menun add checkbutton -label "Use Clip" -variable $this-$objid-clip \
 		-command "$this-c redraw"
+	$menun add checkbutton -label "Back Cull" -variable $this-$objid-cull \
+		-command "$this-c redraw"
 
 	global "$this-$objid-light"
 	global "$this-$objid-fog"
 	global "$this-$objid-type"
 	global "$this-$objid-debug"
 	global "$this-$objid-clip"
+	global "$this-$objid-cull"
 
 	set "$this-$objid-type" Default
 	set "$this-$objid-light" 1
 	set "$this-$objid-fog" 0
 	set "$this-$objid-debug" 0
 	set "$this-$objid-clip" 0
+	set "$this-$objid-cull" 0
 
 	set menuvar  $m.objlist.canvas.frame.menu2_$objid
 	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]

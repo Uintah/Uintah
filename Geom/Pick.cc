@@ -25,7 +25,7 @@ PersistentTypeID GeomPick::type_id("GeomPick", "GeomObj", make_GeomPick);
 
 GeomPick::GeomPick(GeomObj* obj, Module* module)
 : GeomContainer(obj), module(module), cbdata(0),
-  directions(6), widget(0), selected(0), ignore(0)
+  directions(6), widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=Vector(1,0,0);
     directions[1]=Vector(-1,0,0);
@@ -38,7 +38,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module)
 GeomPick::GeomPick(GeomObj* obj, Module* module,
 		   BaseWidget* widget, int widget_data)
 : GeomContainer(obj), module(module), cbdata(0),
-  directions(6), widget(widget), widget_data(widget_data), selected(0), ignore(0)
+  directions(6), widget(widget), widget_data(widget_data), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=Vector(1,0,0);
     directions[1]=Vector(-1,0,0);
@@ -50,7 +50,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module,
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1)
 : GeomContainer(obj), module(module), cbdata(0),directions(2), 
-  widget(0), selected(0), ignore(0)
+  widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -58,7 +58,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1)
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2)
 : GeomContainer(obj), module(module), cbdata(0), directions(4), 
-  widget(0), selected(0), ignore(0)
+  widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -69,7 +69,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector&
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2,
 		   const Vector& v3)
 : GeomContainer(obj), module(module), cbdata(0), directions(6), 
-  widget(0), selected(0), ignore(0)
+  widget(0), selected(0), ignore(0), drawOnlyOnPick(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -82,7 +82,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector&
 GeomPick::GeomPick(const GeomPick& copy)
 : GeomContainer(copy), module(copy.module), cbdata(copy.cbdata), 
   directions(copy.directions), widget(copy.widget),
-  selected(copy.selected),  ignore(copy.ignore), highlight(copy.highlight)
+  selected(copy.selected),  ignore(copy.ignore), highlight(copy.highlight), drawOnlyOnPick(0)
 {
 }
 
@@ -115,32 +115,32 @@ void GeomPick::ignore_until_release()
     ignore=1;
 }
 
-void GeomPick::pick(Roe* roe, const BState& bs)
+void GeomPick::pick(Roe* roe, const BState& bs, int n)
 {
     selected=1;
     ignore=0;
     if(widget)
 	widget->geom_pick(this, roe, widget_data, bs);
     if(module)
-	module->geom_pick(this, cbdata);
+	module->geom_pick(this, (void*)&n);
 }
 
-void GeomPick::release(const BState& bs)
+void GeomPick::release(const BState& bs, int n)
 {
     selected=0;
     if(widget)
 	widget->geom_release(this, widget_data, bs);
     if(module)
-	module->geom_release(this, cbdata);
+	module->geom_release(this, (void*)&n);
 }
 
-void GeomPick::moved(int axis, double distance, const Vector& delta, const BState& bs)
+void GeomPick::moved(int axis, double distance, const Vector& delta, const BState& bs, int n)
 {
     if(ignore) return;
     if(widget)
 	widget->geom_moved(this, axis, distance, delta, widget_data, bs);
     if(module)
-	module->geom_moved(this, axis, distance, delta, cbdata);
+      module->geom_moved(this, axis, distance, delta, (void*)&n);
 }
 
 int GeomPick::nprincipal() {

@@ -143,7 +143,7 @@ void Raytracer::hide()
 {
 }
 
-void Raytracer::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
+void Raytracer::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&)
 {
     NOT_FINISHED("Raytracer::get_pick");
 }

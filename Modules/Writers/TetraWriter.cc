@@ -21,6 +21,8 @@
 #include <fstream.h>
 #include <string.h>
 
+using sci::MeshHandle;
+
 class TetraWriter : public Module {
     MeshIPort* inport;
     TCLstring filename;

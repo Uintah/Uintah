@@ -335,8 +335,8 @@ void NetworkEditor::save_network(const clString& filename)
       return;
     out << "# SCI Network 1.0\n";
     out << "\n";
-    out << "netedit dontschedule\n";
-    out << "\n";
+//    out << "netedit dontschedule\n";
+//    out << "\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
@@ -416,10 +416,10 @@ void NetworkEditor::save_network(const clString& filename)
     }
     // Let it rip...
     out << "\n";
-    out << "proc ok {} {\n";
-    out << "    netedit scheduleok\n";
-    out << "}\n";
-    out << "\n";
+//    out << "proc ok {} {\n";
+//    out << "    netedit scheduleok\n";
+//    out << "}\n";
+//    out << "\n";
     net->read_unlock();
 }
 

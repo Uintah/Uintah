@@ -216,9 +216,9 @@ void FieldFilter::execute() {
 	range_max_z.set(maxk);
     }
     if (newFld) {
-	nx.set((int) (1./widget->GetRatioR()));
-	ny.set((int) (1./widget->GetRatioD()));
-	nz.set((int) (1./widget->GetRatioI()));
+//	nx.set((int) (1./widget->GetRatioR()));
+//	ny.set((int) (1./widget->GetRatioD()));
+//	nz.set((int) (1./widget->GetRatioI()));
     }
     // Put the widget in the right place
     int min_x=range_min_x.get()-1;
@@ -259,9 +259,9 @@ void FieldFilter::execute() {
     ox.set(isf->nx);
     oy.set(isf->ny);
     oz.set(isf->nz);
-    nMaxX.set(isf->nx*4);
-    nMaxY.set(isf->ny*4);
-    nMaxZ.set(isf->nz*4);
+    nMaxX.set(isf->nx*32);
+    nMaxY.set(isf->ny*32);
+    nMaxZ.set(isf->nz*32);
 
     reset_vars();
     lastX=nx.get();

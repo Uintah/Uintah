@@ -16,6 +16,9 @@
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 
+using sci::MeshHandle;
+using sci::Element;
+
 static Persistent* maker()
 {
     return scinew VectorFieldUG(VectorFieldUG::NodalValues);

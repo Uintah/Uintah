@@ -22,12 +22,13 @@
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <Malloc/Allocator.h>
+#include <Geometry/BBox.h>
 
 class LabelSurface : public Module {
     SurfaceIPort* iport;
     SurfaceOPort* oport;
-    TCLint numberf, numberg;
-    TCLstring namef, nameg;
+    TCLint numberf;
+    TCLstring namef;
     int generation;
     Array1<clString> origNames;
 public:
@@ -49,8 +50,7 @@ Module* make_LabelSurface(const clString& id)
 
 LabelSurface::LabelSurface(const clString& id)
 : Module("LabelSurface", id, Filter), generation(-1),
-  numberf("numberf", id, this), numberg("numberg", id, this),
-  namef("namef", id, this), nameg("nameg", id, this)
+  numberf("numberf", id, this), namef("namef", id, this)
 {
     // Create the input ports
     iport=new SurfaceIPort(this, "In Surf", SurfaceIPort::Atomic);
@@ -62,8 +62,7 @@ LabelSurface::LabelSurface(const clString& id)
 
 LabelSurface::LabelSurface(const LabelSurface& copy, int deep)
 : Module(copy, deep), generation(-1),
-  numberf("numberf", id, this), numberg("numberg", id, this),
-  namef("namef", id, this), nameg("nameg", id, this)
+  numberf("numberf", id, this), namef("namef", id, this)
 {
     NOT_FINISHED("LabelSurface::LabelSurface");
 }
@@ -84,27 +83,24 @@ void LabelSurface::execute()
     if(!iport->get(iSurf))
 	return;
     SurfTree* st=iSurf->getSurfTree();
-    if (!st) return;
-    if (st->generation != generation) {
+    TriSurface *ts=iSurf->getTriSurface();
+    if (st) {
+      if (st->generation != generation) {
 	if (st->surfNames.size() != st->surfEls.size()) 
-	    st->surfNames.resize(st->surfEls.size());
+	  st->surfNames.resize(st->surfEls.size());
 	origNames = st->surfNames;
-    }
-    int fnum=numberf.get();
-    clString fname=namef.get();
-    int gnum=numberg.get();
-    clString gname=nameg.get();
+      }
+      int fnum=numberf.get();
+      clString fname=namef.get();
 
-    st->surfNames=origNames;
-
-    if (fnum>0 && fnum<st->surfNames.size() && st->surfNames[fnum] != fname) {
+      st->surfNames=origNames;
+      
+      if (fnum>0 && fnum<st->surfNames.size() && st->surfNames[fnum] != fname) {
 	cerr << "Added label: "<<fname<<" to surface number: "<<fnum<<"\n";
 	st->surfNames[fnum]=fname;
+      }
+    } else if (ts) {
+      ts->name = namef.get();
     }
-    if (gnum>0 && gnum<st->surfNames.size() && st->surfNames[gnum] != gname) {
-	cerr << "Added label: "<<gname<<" to surface number: "<<gnum<<"\n";
-	st->surfNames[gnum]=gname;
-    }
-
     oport->send(iSurf);
 }	

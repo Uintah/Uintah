@@ -22,6 +22,8 @@
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
 
+using sci::MeshHandle;
+
 class rMeshReader : public Module {
     MeshOPort* outport;
     TCLstring filename;

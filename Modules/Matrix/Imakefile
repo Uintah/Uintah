@@ -5,11 +5,16 @@
 OPENGLOBJS = VisualizeMatrix.o
 OPENGLSRCS = VisualizeMatrix.cc
 
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
 #ifdef SCI_MESA
-OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLINCS = -I$(TOP)/Mesa/include $(XINCLUDE)
 OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
 #else
-OPENGLINCS =
+OPENGLINCS = -I/usr/openwin/include
 OPENGLLIBS = -lGLU -lGL -lXext -lX11
 #endif
 #else
@@ -44,9 +49,10 @@ SCISubdirs($(SPARSELIB))
 
 LOCALINCLUDES = $(OPENGLINCS) $(IML_INCLUDES)
 SO_LIBS =
+
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lMath \
-	-lTCL -lClasslib \
-	-lMultitask $(OPENGLLIBS) -lscitk -ltk -lMalloc $(IML_LDFLAGS) -lm -lC -lc
+	-lTCL -lClasslib -lMultitask $(OPENGLLIBS) -lscitk -ltk \
+	-lMalloc $(IML_LDFLAGS) -lm -lC -lc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

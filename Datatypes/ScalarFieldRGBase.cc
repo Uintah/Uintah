@@ -35,6 +35,8 @@ ScalarFieldRGBase::ScalarFieldRGBase(clString r)
 	rep = Short;
     else if (r=="char")
 	rep = Char;
+    else if (r=="uchar")
+	rep = Uchar;
     else if (r=="double")
 	rep = Double;
     else if (r=="uchar")

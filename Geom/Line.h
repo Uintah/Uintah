@@ -17,6 +17,7 @@
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
 #include <Geom/Color.h>
+#include <Multitask/ITC.h>
 
 #include <stdlib.h>	// For size_t
 
@@ -86,6 +87,7 @@ protected:
   int tex_per_seg;               // 0 if batched...
 
  public:
+  Mutex mutex;
   Array1<Point>   pts;
   Array1<Vector>  tangents;  // used in 1D illumination model...
   Array1<double>  times;
@@ -99,6 +101,7 @@ protected:
   TexGeomLines(const TexGeomLines&);
 
   void add(const Point&, const Point&, double scale); // for one 
+  void add(const Point&, const Vector&, const Colorub&); // for one 
   
   void batch_add(Array1<double>& t, Array1<Point>&); // adds a bunch
   // below is for when you also have color...

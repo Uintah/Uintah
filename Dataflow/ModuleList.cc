@@ -26,6 +26,9 @@ static HashTable<clString, void*>* dlhandles;
 
 ModuleDB* ModuleList::get_db()
 {
+
+    cerr << "top="<<top<<"\n";
+
     if(!top){
 	parse_db();
     }
@@ -129,6 +132,7 @@ void ModuleList::parse_db()
     char* home=getenv("SCI_WORK");
     if(!home)home=".";
     clString name(clString(home)+"/MODULES");
+
     ifstream in(name());
     if(!in){
 	cerr << "Cannot open the list of Modules: " << name << endl;

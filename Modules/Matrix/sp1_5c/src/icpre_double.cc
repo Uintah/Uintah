@@ -30,6 +30,9 @@
 
 #include <stdlib.h>
 #include <math.h>
+
+#define _NON_TEMPLATE_COMPLEX
+
 #include "icpre_double.h"
 #include "qsort_double.h"
 #include "qsort_int.h"

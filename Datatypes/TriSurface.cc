@@ -22,6 +22,9 @@
 #include <Math/MiscMath.h>
 #include <Malloc/Allocator.h>
 
+using sci::NodeHandle;
+using sci::Node;
+
 static TrivialAllocator TSElement_alloc(sizeof(TSElement));
 
 void* TSElement::operator new(size_t)
@@ -42,7 +45,7 @@ static Persistent* make_TriSurface()
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
 
 TriSurface::TriSurface(Representation r)
-: Surface(r, 0), empty_index(-1), directed(1)
+: Surface(r, 0), empty_index(-1), directed(1), haveNodeInfo(0), normType(None)
 {
 }
 
@@ -53,6 +56,10 @@ TriSurface::TriSurface(const TriSurface& copy, Representation)
     elements=copy.elements;
     bcIdx=copy.bcIdx;
     bcVal=copy.bcVal;
+    haveNodeInfo=copy.haveNodeInfo;
+    nodeNbrs=copy.nodeNbrs;
+    normType=copy.normType;
+    normals=copy.normals;
 }
 
 TriSurface::~TriSurface() {
@@ -74,6 +81,169 @@ void TriSurface::order_faces() {
 
 void TriSurface::add_point(const Point& p) {
     points.add(p);
+}
+
+void TriSurface::bldNormals(NormalsType nt) {
+
+    // build per vertex, per point or per element normals
+
+    // point->point     (return)                1
+    // point->element   x-product		
+    // point->vertex    copy			3
+    // point->none      (throw away)		2
+
+    // element->point	average			
+    // element->element (return)		1
+    // element->vertex  copy			4
+    // element->none    (throw away)		2
+    
+    // vertex->point    average			
+    // vertex->element  x-product		
+    // vertex->vertex   (return)		1
+    // vertex->none	(throw away)		2
+    
+    // none->point      x-products		
+    // none->element    x-products		
+    // none->vertex     average of x-products	
+    // none->none       (return)		1
+
+    if (normType==nt) return;						// 1
+    if (nt==None) {normals.resize(0); normType=nt; return;}		// 2
+    if (normType==PointType && nt==VertexType) {			// 3
+	// we want normals at the vertices, we have them at each point...
+	Array1<Vector> old(normals);
+	normals.resize(elements.size()*3);
+	for (int i=0; i<elements.size(); i++) {
+	    TSElement *e=elements[i];
+	    normals[i*3]=old[e->i1];
+	    normals[i*3+1]=old[e->i2];
+	    normals[i*3+2]=old[e->i3];
+	}
+	normType=VertexType;
+	return;
+    }
+    if (normType==ElementType && nt==VertexType) {			// 4
+	// we went normals at the vertices, we have them at the elements...
+	normals.resize(elements.size()*3);
+	for (int i=normals.size()/3; i>=0; i--) {
+	    normals[i]=normals[i/3];
+	}
+	normType=VertexType;
+    }
+
+    // store/compute the vertex normals in tmp, then we'll compute from those
+    Array1<Vector> tmp(elements.size()*3);
+    if (normType==VertexType && nt==PointType) {
+	tmp=normals;
+    } else if (normType==ElementType && nt==PointType) {
+	for (int i=0; i<tmp.size()*3; i++)
+	    tmp[i]=tmp[i+1]=tmp[i+2]=normals[i/3];
+    } else {
+	// for the rest of these we'll build a temp array of x-products at the
+	// elements
+	for (int i=0; i<elements.size(); i++) {
+	    TSElement *e=elements[i];
+	    Vector v(Cross((points[e->i1]-points[e->i2]), 
+			   (points[e->i1]-points[e->i3])));
+	    tmp[i]=tmp[i+1]=tmp[i+2]=v;
+	}
+    }
+
+    // now, for those that want them at the vertices, we copy;
+    // for those that want them at the elements, we grab one;
+    // and for those that want them at the points, we average.
+    if (nt==VertexType) {
+	normals=tmp;
+    } else if (nt==ElementType) {
+	normals.resize(elements.size());
+	for (int i=0; i<elements.size(); i++)
+	    normals[i]=tmp[i*3];
+    } else {
+	normals.resize(points.size());
+	normals.initialize(Vector(0,0,0));
+	for (int i=0; i<elements.size(); i++) {
+	    TSElement *e=elements[i];
+	    normals[e->i1]+=tmp[i*3];
+	    normals[e->i2]+=tmp[i*3+1];
+	    normals[e->i3]+=tmp[i*3+2];
+	}
+	for (i=0; i<points.size(); i++) {
+	    if (normals[i].length2()) normals[i].normalize();
+	    else {
+		cerr << "Error -- normalizing a zero vector to (1,0,0)\n";
+		normals[i].x(1);
+	    }
+	}
+    }
+    normType=nt;
+}
+
+void TriSurface::bldNodeInfo() {
+    if (haveNodeInfo) return;
+    haveNodeInfo=1;
+    nodeNbrs.resize(points.size());
+    nodeElems.resize(points.size());
+    for (int i=0; i<points.size(); i++) {
+	nodeElems[i].resize(0);
+	nodeNbrs[i].resize(0);
+    }
+
+    TSElement *e;
+    int i1, i2, i3;
+
+    for (int elemIdx=0; elemIdx<elements.size(); elemIdx++) {
+	e=elements[elemIdx];
+	i1=e->i1;
+	i2=e->i2;
+	i3=e->i3;
+	int found;
+	int k;
+	for (found=0, k=0; k<nodeElems[i1].size() && !found; k++)
+	    if (nodeElems[i1][k] == elemIdx) found=1;
+	if (!found) nodeElems[i1].add(elemIdx);
+	for (found=0, k=0; k<nodeElems[i2].size() && !found; k++)
+	    if (nodeElems[i2][k] == elemIdx) found=1;
+	if (!found) nodeElems[i2].add(elemIdx);
+	for (found=0, k=0; k<nodeElems[i3].size() && !found; k++)
+	    if (nodeElems[i3][k] == elemIdx) found=1;
+	if (!found) nodeElems[i3].add(elemIdx);
+	
+	for (found=0, k=0; k<nodeNbrs[i1].size() && !found; k++)
+	    if (nodeNbrs[i1][k] == i2) found=1;
+	if (!found) { 
+	    nodeNbrs[i1].add(i2);
+	    nodeNbrs[i2].add(i1);
+	}	
+	for (found=0, k=0; k<nodeNbrs[i2].size() && !found; k++)
+	    if (nodeNbrs[i2][k] == i3) found=1;
+	if (!found) { 
+	    nodeNbrs[i2].add(i3);
+	    nodeNbrs[i3].add(i2);
+	}
+	for (found=0, k=0; k<nodeNbrs[i1].size() && !found; k++)
+	    if (nodeNbrs[i1][k] == i3) found=1;
+	if (!found) { 
+	    nodeNbrs[i1].add(i3);
+	    nodeNbrs[i3].add(i1);
+	}	
+    }
+    int tmp;
+    for (i=0; i<nodeNbrs.size(); i++) {
+	if (nodeNbrs[i].size()) {
+	    int swapped=1;
+	    while (swapped) {
+		swapped=0;
+		for (int j=0; j<nodeNbrs[i].size()-1; j++) {
+		    if (nodeNbrs[i][j]>nodeNbrs[i][j+1]) {
+			tmp=nodeNbrs[i][j];
+			nodeNbrs[i][j]=nodeNbrs[i][j+1];
+			nodeNbrs[i][j+1]=tmp;
+			swapped=1;
+		    }
+		}
+	    }
+	}
+    }
 }
 
 int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
@@ -185,7 +355,7 @@ int TriSurface::add_triangle(int i1, int i2, int i3, int cw) {
     return temp;
 }
 
-void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn) {
+void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn, int updateConnIndices, int updateDConnIndices) {
     if (idx<0 || idx>points.size()) {
 	cerr << "Trisurface:separate() failed -- index out of range";
 	return;
@@ -195,12 +365,10 @@ void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn) {
     Array1<Array1<int> > nbr(points.size());
     Array1<int> newLocation(points.size());
     Array1<int> d_newLocation(points.size());
-    Array1<int> invLocation(points.size());
     Array1<int> visited(points.size());
-    Array1<int> d_visited(points.size());
     for (int i=0; i<points.size(); i++) {
-	invLocation[i]=newLocation[i]=d_newLocation[i]=-1;
-	visited[i]=d_visited[i]=0;
+	newLocation[i]=d_newLocation[i]=-1;
+	visited[i]=0;
     }
     for (i=0; i<points.size(); i++) {
 	nbr[i].resize(0);
@@ -216,13 +384,9 @@ void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn) {
     Queue<int> q;
     q.append(idx);
     visited[idx]=1;
-    int currLocation=0;
     while(!q.is_empty()) {
 	// enqueue non-visited neighbors
 	int c=q.pop();
-	newLocation[c] = currLocation;
-	invLocation[currLocation] = c;
-	currLocation++;
 	for (int j=0; j<nbr[c].size(); j++) {
 	    if (!visited[nbr[c][j]]) {
 		q.append(nbr[c][j]);
@@ -231,18 +395,27 @@ void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn) {
 	}
     }
 
-    conn->points.resize(currLocation);
-    for (i=0; i<currLocation; i++)
-	conn->points[i]=points[invLocation[i]];
-    d_conn->points.resize(points.size()-currLocation);
-    int d_currLocation=0;
-    for (i=0; i<points.size(); i++)
-	if (!visited[i]) {
-	    d_newLocation[i]=d_currLocation;
-	    d_conn->points[d_currLocation]=points[i];
-	    d_currLocation++;
-	}
+    if (updateConnIndices) conn->points.resize(0); else conn->points=points; 
+    if (updateDConnIndices)d_conn->points.resize(0);else d_conn->points=points;
 
+    int tmp;
+    if (updateConnIndices || updateDConnIndices) {
+	for (i=0; i<visited.size(); i++) {
+	    if (visited[i]) {
+		if (updateConnIndices) {
+		    tmp = conn->points.size();
+		    conn->points.add(points[i]);	
+		    newLocation[i] = tmp;
+		}
+	    } else {
+		if (updateDConnIndices) {
+		    tmp = d_conn->points.size();		
+		    d_conn->points.add(points[i]);
+		    d_newLocation[i] = tmp;
+		}
+	    }
+	}
+    }
 // GOOD CODE FOR STEVE'S TEST FUNCTIONS!
 //    for (i=0; i<points.size(); i++) {
 //	if (!visited[i]) {
@@ -255,18 +428,30 @@ void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn) {
 //	    }
 //	}
 //   }
-
-    for (i=0; i<elements.size(); i++) {
-	if (visited[elements[i]->i1])
-	    conn->elements.add(new TSElement(newLocation[elements[i]->i1],
+    for (i=0; i<elements.size(); i++)
+	if (visited[elements[i]->i1]) {
+	    if (updateConnIndices)
+		conn->elements.add(new 
+				   TSElement(newLocation[elements[i]->i1],
 					     newLocation[elements[i]->i2],
 					     newLocation[elements[i]->i3]));
-	else
-	    d_conn->elements.add(new TSElement(d_newLocation[elements[i]->i1],
-					       d_newLocation[elements[i]->i2],
-					       d_newLocation[elements[i]->i3]));
-    }
-}
+	    else
+		conn->elements.add(new TSElement(elements[i]->i1,
+						 elements[i]->i2,
+						 elements[i]->i3));
+	} else {
+	    if (updateDConnIndices)
+		d_conn->elements.add(new 
+			     TSElement(d_newLocation[elements[i]->i1],
+				       d_newLocation[elements[i]->i2],
+				       d_newLocation[elements[i]->i3]));
+	    else
+		d_conn->elements.add(new 
+				     TSElement(elements[i]->i1,
+					       elements[i]->i2,
+					       elements[i]->i3));
+	}
+}		    
 
 void TriSurface::remove_empty_index() {
     if (empty_index!=-1) {
@@ -595,7 +780,95 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
 	}
     return sign*theDist;
 }
+
+void orderNormal(int i[], const Vector& v) {
+    if (fabs(v.x())>fabs(v.y())) {
+        if (fabs(v.y())>fabs(v.z())) {  // x y z
+            i[0]=0; i[1]=1; i[2]=2;
+        } else if (fabs(v.z())>fabs(v.x())) {   // z x y
+            i[0]=2; i[1]=0; i[2]=1;
+        } else {                        // x z y
+            i[0]=0; i[1]=2; i[2]=1;
+        }
+    } else {
+        if (fabs(v.x())>fabs(v.z())) {  // y x z
+            i[0]=1; i[1]=0; i[2]=2;
+        } else if (fabs(v.z())>fabs(v.y())) {   // z y x
+            i[0]=2; i[1]=1; i[2]=0;
+        } else {                        // y z x
+            i[0]=1; i[1]=2; i[2]=0;
+        }
+    }
+}       
     
+int TriSurface::intersect(const Point& origin, const Vector& dir, double &d, int &v, int face) {
+    double P[3], t, alpha, beta;
+    double u0,u1,u2,v0,v1,v2;
+    int i[3];
+    double V[3][3];
+    int inter;
+
+    TSElement* e=elements[face];
+    Point p1(points[e->i1]);
+    Point p2(points[e->i2]);
+    Point p3(points[e->i3]);
+
+    Vector n(Cross(p2-p1, p3-p1));
+    n.normalize();
+    
+    double dis=-Dot(n,p1);
+    t=-(dis+Dot(n,origin))/Dot(n,dir);
+    if (t<0) return 0;
+    if (d!=-1 && t>d) return 0;
+
+    V[0][0]=p1.x();
+    V[0][1]=p1.y();
+    V[0][2]=p1.z();
+    
+    V[1][0]=p2.x();
+    V[1][1]=p2.y();
+    V[1][2]=p2.z();
+
+    V[2][0]=p3.x();
+    V[2][1]=p3.y();
+    V[2][2]=p3.z();
+
+    orderNormal(i,n);
+
+    P[0]= origin.x()+dir.x()*t;
+    P[1]= origin.y()+dir.y()*t;
+    P[2]= origin.z()+dir.z()*t;
+
+    u0=P[i[1]]-V[0][i[1]];
+    v0=P[i[2]]-V[0][i[2]];
+    inter=0;
+    u1=V[1][i[1]]-V[0][i[1]];
+    v1=V[1][i[2]]-V[0][i[2]];
+    u2=V[2][i[1]]-V[0][i[1]];
+    v2=V[2][i[2]]-V[0][i[2]];
+    if (u1==0) {
+        beta=u0/u2;
+        if ((beta >= 0.) && (beta <= 1.)) {
+            alpha = (v0-beta*v2)/v1;
+            if ((alpha>=0.) && ((alpha+beta)<=1.)) inter=1;
+        }       
+    } else {
+        beta=(v0*u1-u0*v1)/(v2*u1-u2*v1);
+        if ((beta >= 0.)&&(beta<=1.)) {
+            alpha=(u0-beta*u2)/u1;
+            if ((alpha>=0.) && ((alpha+beta)<=1.)) inter=1;
+        }
+    }
+    if (!inter) return 0;
+
+    if (alpha<beta && alpha<(1-(alpha+beta))) v=e->i1;
+    else if (beta<alpha && beta<(1-(alpha+beta))) v=e->i2;
+    else v=e->i3;
+    
+    d=t;
+    return (1);
+}
+
 void TriSurface::remove_triangle(int i) {
     // if there hasn't been a triangle added since the last one was deleted
     // then we need to start deleting.  Otherwise, we're probably merging
@@ -617,7 +890,7 @@ void TriSurface::remove_triangle(int i) {
     }
 }
 
-#define TRISURFACE_VERSION 2
+#define TRISURFACE_VERSION 4
 
 void TriSurface::io(Piostream& stream) {
     remove_empty_index();
@@ -626,6 +899,21 @@ void TriSurface::io(Piostream& stream) {
     if (version >= 2) {
 	Pio(stream, bcIdx);
 	Pio(stream, bcVal);
+    }
+    if (version >= 4) {
+	int* flag=(int*)&normType;
+	Pio(stream, *flag);
+	if (normType != None) 
+	    Pio(stream, normals);
+    } else if (version >= 3) {
+	int haveNormals;
+	Pio(stream, haveNormals);
+	if (haveNormals) {
+	    normType=VertexType;
+	    Pio(stream, normals);
+	} else {
+	    normType=None;
+	}
     }
     Pio(stream, points);
     Pio(stream, elements);
@@ -651,6 +939,7 @@ SurfTree* TriSurface::toSurfTree() {
     for (int i=0; i<elements.size(); i++) st->surfEls[0].add(i);
     st->inner.resize(1);
     st->matl.add(0);
+    st->surfNames.add(name);
     return st;
 }
 
@@ -680,6 +969,14 @@ void TriSurface::get_surfnodes(Array1<NodeHandle> &n)
 {
     for (int i=0; i<points.size(); i++) {
 	n.add(new Node(points[i]));
+    }
+}
+
+void TriSurface::set_surfnodes(const Array1<NodeHandle> &n)
+{
+    points.resize(n.size());
+    for (int i=0; i<points.size(); i++) {
+	points[i]=n[i]->p;
     }
 }
 

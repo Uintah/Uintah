@@ -26,6 +26,9 @@
 #include <math.h>
 #include <stdlib.h>
 
+
+#define _NON_TEMPLATE_COMPLEX
+
 #include "mvv.h"
 
 MV_Vector_COMPLEX& operator*=(MV_Vector_COMPLEX &x, const COMPLEX &a)

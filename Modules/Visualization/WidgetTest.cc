@@ -158,10 +158,12 @@ void WidgetTest::widget_moved(int last)
 
 void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 {
+#if 0
    if(args.count() < 2){
       args.error("WidgetTest needs a minor command");
       return;
    }
+#endif
    if (args[1] == "nextmode") {
       widgets[widget_type.get()]->NextMode();
    } else if(args[1] == "select"){

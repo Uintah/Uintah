@@ -89,8 +89,8 @@ public:
 				   const clString& height);
     virtual void redraw(Salmon*, Roe*, double tbeg, double tend,
 			int ntimesteps, double frametime);
-    void real_get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
-    virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
+    void real_get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&);
+    virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&);
     virtual void hide();
     virtual void dump_image(const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
@@ -114,7 +114,7 @@ public:
 
     GeomObj* ret_pick_obj;
     GeomPick* ret_pick_pick;
-    
+    int ret_pick_n;
 
     virtual void listvisuals(TCLArgs&);
     virtual void setvisual(const clString&, int i, int width, int height);
@@ -273,7 +273,7 @@ void OpenGL::redraw_loop()
 		if(!send_mb.try_receive(r))
 		    break;
 		if(r == DO_PICK){
-		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick);
+		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_n);
 		    recv_mb.send(PICK_DONE);
 		} else if(r== DO_GETDATA){
 		    GetReq req(get_mb.receive());
@@ -314,7 +314,7 @@ void OpenGL::redraw_loop()
 	    for(;;){
 		int r=send_mb.receive();
 		if(r == DO_PICK){
-		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick);
+		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_n);
 		    recv_mb.send(PICK_DONE);
 		} else if(r== DO_GETDATA){
 		    GetReq req(get_mb.receive());
@@ -484,7 +484,6 @@ void OpenGL::redraw_frame()
 	         glMatrixMode(GL_PROJECTION);
 	         glLoadIdentity();
 	         gluPerspective(fovy, aspect, znear, zfar);
-	    
 	         glMatrixMode(GL_MODELVIEW);
 	         glLoadIdentity();
 	         Point eyep(view.eyep());
@@ -633,6 +632,38 @@ void OpenGL::redraw_frame()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
 	    << " polygons/second\"" << " \"" << fps_whole << "."
 		<< fps_tenths << " frames/sec\""	<< '\0';
+    if (roe->doingMovie) {
+//      cerr << "Saving a movie!\n";
+      unsigned char movie[10];
+      int startDiv = 100;
+      int idx=0;
+      int fi = roe->curFrame;
+      while (startDiv >= 1) {
+	movie[idx] = '0' + fi/startDiv;
+	fi = fi - (startDiv)*(fi/startDiv);
+	startDiv /= 10;
+	idx++;
+      }
+      movie[idx] = 0;
+      clString segname(roe->curName);
+
+      int lasthash=-1;
+      for (int ii=0; ii<segname.len(); ii++) {
+	  if (segname()[ii] == '/') lasthash=ii;
+      }
+      clString pathname;
+      if (lasthash == -1) pathname = "./";
+      else pathname = segname.substr(0, lasthash+1);
+      clString fname = segname.substr(lasthash+1, -1);
+      fname = fname + ".raw";
+      clString framenum((char *)movie);
+      framenum = framenum + ".";
+      clString fullpath(pathname + framenum + fname);
+      cerr << "Dumping "<<fullpath<<"....  ";
+      dump_image(fullpath);
+      cerr << " done!\n";
+      roe->curFrame++;
+    }
     TCL::execute(str.str());
     TCLTask::unlock();
 }
@@ -646,7 +677,7 @@ void OpenGL::hide()
 
 
 void OpenGL::get_pick(Salmon*, Roe*, int x, int y,
-		      GeomObj*& pick_obj, GeomPick*& pick_pick)
+		      GeomObj*& pick_obj, GeomPick*& pick_pick, int& pick_n)
 {
     send_pick_x=x;
     send_pick_y=y;
@@ -658,13 +689,14 @@ void OpenGL::get_pick(Salmon*, Roe*, int x, int y,
 	} else {
 	    pick_obj=ret_pick_obj;
 	    pick_pick=ret_pick_pick;
+	    pick_n=ret_pick_n;
 	    break;
 	}
     }
 }
 
 void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
-			   GeomObj*& pick_obj, GeomPick*& pick_pick)
+			   GeomObj*& pick_obj, GeomPick*& pick_pick, int& pick_n)
 {
     pick_obj=0;
     pick_pick=0;
@@ -769,8 +801,13 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 		    hit_pick=((long)hp1<<32)|hp2;
 #else
 		    hit_obj=pick_buffer[idx++];
-		    idx+=nnames-2; // Skip to the last one...
-		    hit_pick=pick_buffer[idx++];
+		    hit_pick = pick_buffer[idx++];
+		    if (nnames == 3) {
+			pick_n = pick_buffer[idx++];
+			cerr << "pick_n="<<pick_n<<"\n";
+		    } else {
+			pick_n = -1234;
+		    }
 #endif
 		    cerr << "new min... (obj=" << hit_obj << ", pick=" << hit_pick << "\n";
 		} else {
@@ -790,6 +827,7 @@ void OpenGL::dump_image(const clString& name) {
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT,vp);
     int n=3*vp[2]*vp[3];
+    cerr << "Dumping: " << vp[2] << "x" << vp[3] << endl;
     unsigned char* pxl=scinew unsigned char[n];
     glReadBuffer(GL_FRONT);
     glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
@@ -859,9 +897,12 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
     clString type(tclID+"-"+"type");
     clString lighting(tclID+"-"+"light");
     clString fog(tclID+"-"+"fog");
+    clString cull(tclID+"-"+"cull");
     clString debug(tclID+"-"+"debug");
     clString psize(tclID+"-"+"psize");
-
+    clString movie(tclID+"-"+"movie");
+    clString movieName(tclID+"-"+"movieName");
+    clString movieFrame(tclID+"-"+"movieFrame");
     clString use_clip(tclID+"-"+"clip");
 
     if (!get_tcl_stringvar(id,type,val)) {
@@ -919,8 +960,36 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    drawinfo->check_clip = 0;
 	}
 
+	// only set with globals...
+	if (get_tcl_stringvar(id,movie,val)) {
+	    get_tcl_stringvar(id,movieName,curName);
+	    clString curFrameStr;
+	    get_tcl_stringvar(id,movieFrame,curFrameStr);
+//	    curFrameStr.get_int(curFrame);
+//	    cerr << "curFrameStr="<<curFrameStr<<"  curFrame="<<curFrame<<"\n";
+	    if (val == "0") {
+		doingMovie = 0;
+	    } else {
+
+		if (!doingMovie) {
+		    doingMovie = 1;
+		    curFrame=0;
+		}
+	    }
+	}
+
 	drawinfo->init_clip(); // set clipping 
 
+	if (get_tcl_stringvar(id,cull,val)) {
+	    if (val == "0")
+		drawinfo->cull = 0;
+	    else
+		drawinfo->cull = 1;
+	}	
+	else {
+	    cerr << "Error, no culling info\n";
+	    drawinfo->cull = 0;
+	}
 	if (!get_tcl_stringvar(id,lighting,val))
 	    cerr << "Error, no lighting!\n";
 	else {

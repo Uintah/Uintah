@@ -800,12 +800,12 @@ BB::Classify()
   double diff = smax - smin;
   
   Array1<int> xl;  // = *(aColorMapH->rawRampAlphaT);
-  Array1<float> sv = *(aColorMapH->rawRampAlpha);
+  Array1<float> sv = aColorMapH->rawRampAlpha;
 
   // convert percentages to scalar values
   int j;
   for(j=0;j<sv.size();j++)
-    xl.add( (int)( (*(aColorMapH->rawRampAlphaT))[j] * diff) );
+    xl.add( (int)( aColorMapH->rawRampAlphaT[j] * diff ) );
 
   // place the classification table in the rendering context
   vpres = vpSetClassifierTable(vpc, 0, VP__SCALAR_FIELD, scalarTable,

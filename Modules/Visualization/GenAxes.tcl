@@ -26,6 +26,7 @@ itcl_class GenAxes {
 		-orient horizontal -resolution 0.01 \
 		-digits 3 -variable $this-size \
 		-command "$this-c size_changed"
-	pack $w.f.slide -side top
+	button $w.f.b -text "Execute" -command $n
+	pack $w.f.slide $w.f.b -side top
     }
 }
