@@ -33,7 +33,7 @@
 <!ELEMENT why (p+)>
 
 <!-- phase 2 elements -->
-<!ELEMENT definition (term, p+)>
+<!ELEMENT definition (term, p, (p | code)+)>
 <!ELEMENT term (#PCDATA)>
 
 <!ELEMENT code (#PCDATA)>
