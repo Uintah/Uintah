@@ -30,7 +30,7 @@ static clString sound_color("aquamarine4");
 
 SoundIPort::SoundIPort(Module* module, const clString& portname, int protocol)
 : IPort(module, sound_type, portname, sound_color, protocol),
-  state(Begin), sample_buf(0), mailbox(10)
+  state(Begin), sample_buf(0), mailbox("Sound port FIFO", 10)
 {
 }
 
@@ -247,6 +247,9 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:32  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/25 03:48:23  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

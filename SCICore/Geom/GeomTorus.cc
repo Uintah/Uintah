@@ -166,7 +166,6 @@ void GeomTorusArc::get_bounds(BBox& bb)
 void GeomTorus::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
   
     stream.begin_class("GeomTorus", GEOMTORUS_VERSION);
     GeomObj::io(stream);
@@ -192,7 +191,6 @@ bool GeomTorus::saveobj(ostream&, const clString&, GeomSave*)
 void GeomTorusArc::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_class("GeomTorusArc", GEOMTORUSARC_VERSION);
     GeomTorus::io(stream);
@@ -214,6 +212,9 @@ bool GeomTorusArc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:42  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:27  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -283,9 +283,6 @@ GeomObj* GeomGrid::clone()
 void GeomGrid::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
-    using namespace SCICore::GeomSpace;
 
     stream.begin_class("GeomGrid", GEOMGRID_VERSION);
     GeomObj::io(stream);
@@ -468,6 +465,9 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:40  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:20  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

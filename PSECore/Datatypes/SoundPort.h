@@ -16,7 +16,7 @@
 
 #include <PSECore/share/share.h>
 #include <PSECore/Dataflow/Port.h>
-#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Thread/Mailbox.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -25,7 +25,7 @@ using PSECore::Dataflow::IPort;
 using PSECore::Dataflow::OPort;
 using PSECore::Dataflow::Module;
 using PSECore::Dataflow::Connection;
-using SCICore::Multitask::Mailbox;
+using SCICore::Thread::Mailbox;
 using SCICore::Containers::clString;
 
 struct SoundComm {
@@ -137,6 +137,9 @@ inline int SoundIPort::end_of_stream()
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:32  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/27 00:03:03  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

@@ -24,7 +24,7 @@ using SCICore::Geometry::Grid;
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
 Surface::Surface(Representation rep, int closed)
-: rep(rep), grid(0), closed(closed), pntHash(0), boundary_type(BdryNone)
+: monitor("Surface crowd monitor"), rep(rep), grid(0), closed(closed), pntHash(0), boundary_type(BdryNone)
 {
 }
 
@@ -35,7 +35,7 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
-: closed(copy.closed), rep(copy.rep), name(copy.name), grid(0)
+: monitor("Surface crowd monitor"), closed(copy.closed), rep(copy.rep), name(copy.name), grid(0)
 {
 //    NOT_FINISHED("Surface::Surface");
 }
@@ -127,6 +127,9 @@ void Surface::set_bc(const clString& bc_expr)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:36  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:42  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -22,7 +22,7 @@ namespace Containers {
 const int PAGESIZE = 64*1024-64;  // Leave some room for malloc's overhead
 
 TrivialAllocator::TrivialAllocator(unsigned int size)
-: freelist(0), chunklist(0), size(size)
+: freelist(0), chunklist(0), size(size), lock("TrivialAllocator lock")
 {
     nalloc=(PAGESIZE-sizeof(List))/size;
     alloc_size=nalloc*size+sizeof(List);
@@ -46,6 +46,9 @@ TrivialAllocator::~TrivialAllocator()
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:35  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:38:39  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

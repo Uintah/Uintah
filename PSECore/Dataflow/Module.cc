@@ -27,6 +27,9 @@
 #include <SCICore/Geom/GeomPick.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCL.h>
+#include <SCICore/Thread/Thread.h>
+
+using SCICore::Thread::Thread;
 
 #include <stdlib.h>
 
@@ -39,7 +42,8 @@ bool global_remote = false;
 
 Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class)
-: state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
+: state(NeedData), helper(0), have_own_dispatch(0),
+    mailbox("Module execution FIFO", 100),
   name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
   notes("notes", id, this)
@@ -157,7 +161,8 @@ void Module::set_context(NetworkEditor* _netedit, Network* _network)
 
     // Start up the event loop
     helper=scinew ModuleHelper(this);
-    helper->activate(0);
+    Thread* t=new Thread(helper, name());
+    t->detach();
 }
 
 OPort* Module::oport(int i)
@@ -443,6 +448,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:28  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/18 20:20:18  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

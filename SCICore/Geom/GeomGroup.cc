@@ -109,7 +109,6 @@ void GeomGroup::reset_bbox()
 void GeomGroup::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomGroup", GEOMGROUP_VERSION);
     // Do the base class first...
@@ -142,6 +141,9 @@ bool GeomGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:40  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/19 23:18:05  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -247,8 +247,6 @@ template<class T>
 void Pio(Piostream& stream, Containers::Array3<T>& data)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
-    using SCICore::Containers::Pio;
 
     /*int version=*/stream.begin_class("Array3", ARRAY3_VERSION);
     if(stream.reading()){
@@ -286,6 +284,9 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:34  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/24 06:24:00  dmw
 // Added in everything for the DaveW branch
 //

@@ -17,21 +17,21 @@
 #include <SCICore/share/share.h>
 
 #include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Thread/Mutex.h>
 
 namespace SCICore {
 namespace Datatypes {
 
 using SCICore::PersistentSpace::Persistent;
-using SCICore::Multitask::Mutex;
 using SCICore::Containers::clString;
 
 class SCICORESHARE Datatype : public Persistent {
 public:
     int ref_cnt;
-    Mutex lock;
+    SCICore::Thread::Mutex lock;
     int generation;
     Datatype();
+    Datatype(const Datatype&);
     virtual ~Datatype();
 };
 
@@ -40,6 +40,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:36  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:32  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

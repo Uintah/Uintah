@@ -102,8 +102,6 @@ void GeomPolylineTC::get_bounds(BBox& box)
 void GeomPolylineTC::io(Piostream& stream)
 {
   using SCICore::PersistentSpace::Pio;
-  using SCICore::Containers::Pio;
-  using SCICore::Geometry::Pio;
 
   Pio(stream, bbox);
   Pio(stream, data);
@@ -120,6 +118,9 @@ bool GeomPolylineTC::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:41  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:23  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -9,8 +9,6 @@
 #include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Containers/Queue.h>
-#include <SCICore/Multitask/AsyncReply.h>
-#include <SCICore/Multitask/Mailbox.h>
 #include <SCICore/Datatypes/cMatrix.h>
 #include <SCICore/Datatypes/cVector.h>
 #include <SCICore/Datatypes/Boolean.h>

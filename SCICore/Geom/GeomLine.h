@@ -17,14 +17,12 @@
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geom/Color.h>
-#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Thread/Mutex.h>
 
 #include <stdlib.h>	// For size_t
 
 namespace SCICore {
 namespace GeomSpace {
-
-using SCICore::Multitask::Mutex;
 
 class SCICORESHARE GeomLine : public GeomObj {
 public:
@@ -78,7 +76,7 @@ protected:
   int tex_per_seg;               // 0 if batched...
 
  public:
-  Mutex mutex;
+  SCICore::Thread::Mutex mutex;
   Array1<Point>   pts;
   Array1<Vector>  tangents;  // used in 1D illumination model...
   Array1<double>  times;
@@ -121,6 +119,9 @@ protected:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:40  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:22  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -485,10 +485,18 @@ HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
 template <class Key, class Data>
 void Pio(Piostream& stream, HashTable<Key, Data>& t)
 {
+#ifdef __GNUG__
+    using namespace SCICore::PersistentSpace;
+    using namespace SCICore::GeomSpace;
+    using namespace SCICore::Containers;
+    using namespace SCICore::Datatypes;
+#else
     using SCICore::PersistentSpace::Pio;
     using SCICore::GeomSpace::Pio;
     using SCICore::Containers::Pio;
     using SCICore::Datatypes::Pio;
+#endif
+
     stream.begin_class("HashTable", HASHTABLE_VERSION);
     Pio(stream, t.nelems);
     Pio(stream, t.hash_size);
@@ -535,6 +543,9 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.7  1999/08/28 17:54:34  sparker
+// Integrated new Thread library
+//
 // Revision 1.6  1999/08/25 03:48:29  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

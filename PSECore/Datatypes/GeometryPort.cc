@@ -21,7 +21,7 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Dataflow/Port.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/AsyncReply.h>
+#include <SCICore/Thread/FutureValue.h>
 
 #include <iostream.h>
 
@@ -69,7 +69,7 @@ void GeometryOPort::reset()
 	Module* mod=connection->iport->get_module();
 	outbox=&mod->mailbox;
 	// Send the registration message...
-	Mailbox<GeomReply> tmp(1);
+	Mailbox<GeomReply> tmp("Temporary GeometryOPort mailbox", 1);
 	outbox->send(scinew GeometryComm(&tmp));
 	GeomReply reply=tmp.receive();
 	portid=reply.portid;
@@ -170,7 +170,7 @@ void GeometryOPort::flushViews()
 void GeometryOPort::flushViewsAndWait()
 {
     turn_on();
-    Semaphore waiter(0);
+    Semaphore waiter("flushViewsAndWait wait semaphore", 0);
     GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, &waiter);
     if(outbox)
 	outbox->send(msg);
@@ -227,18 +227,18 @@ int GeometryOPort::getNRoe()
 {
     if(nconnections() == 0)
 	return 0;
-    AsyncReply<int> reply;
+    FutureValue<int> reply("Geometry getNRoe reply");
     outbox->send(new GeometryComm(MessageTypes::GeometryGetNRoe, portid, &reply));
-    return reply.wait();
+    return reply.receive();
 }
 
 GeometryData* GeometryOPort::getData(int which_roe, int datamask)
 {
     if(nconnections() == 0)
 	return 0;
-    AsyncReply<GeometryData*> reply;
+    FutureValue<GeometryData*> reply("Geometry getData reply");
     outbox->send(new GeometryComm(MessageTypes::GeometryGetData, portid, &reply, which_roe, datamask));
-    return reply.wait();
+    return reply.receive();
 }
 
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
@@ -270,7 +270,7 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno)
 }
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
-			   AsyncReply<GeometryData*>* datareply,
+			   FutureValue<GeometryData*>* datareply,
 			   int which_roe, int datamask)
 : MessageBase(type), portno(portno), datareply(datareply),
   which_roe(which_roe), datamask(datamask)
@@ -278,7 +278,7 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 }
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
-			   AsyncReply<int>* nreply)
+			   FutureValue<int>* nreply)
 : MessageBase(type), portno(portno), nreply(nreply)
 {
 }
@@ -327,6 +327,9 @@ GeometryData::Print()
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:31  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/25 03:48:20  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

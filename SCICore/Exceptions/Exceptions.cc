@@ -23,7 +23,7 @@ namespace ExceptionsSpace {
 
 // The exception subroutine...
 // Print an error and abort
-void Exception(const AllExceptions& exc, char* file, int line)
+void oldException(const AllExceptions& exc, char* file, int line)
 {
 	exc.print_error();
 	cerr << "At line " << line << " in " << file << endl;

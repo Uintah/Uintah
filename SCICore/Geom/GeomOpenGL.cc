@@ -72,7 +72,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#if !defined(LINUX) && !defined(_WIN32)
+#if !defined(__linux) && !defined(_WIN32)
 #include <GL/gls.h>
 #endif
 
@@ -104,7 +104,6 @@ void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    gluQuadricNormals(di->qobj, GLU_SMOOTH);
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
@@ -121,7 +120,6 @@ void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	    break;
 	case DrawInfoOpenGL::Flat:
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
 	}
@@ -176,7 +174,6 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	break;
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
 	gluQuadricDrawStyle(qobj, GLU_FILL);
 	glShadeModel(GL_SMOOTH);
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
@@ -197,7 +194,6 @@ void DrawInfoOpenGL::init_lighting(int use_light)
 	    gluQuadricNormals(qobj, GLU_FLAT);
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    gluQuadricNormals(qobj, GLU_SMOOTH);
 	    break;
 	}
@@ -411,7 +407,6 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	break;
     case DrawInfoOpenGL::Flat:
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
 	break;
     }
 
@@ -613,7 +608,6 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	break;
     case DrawInfoOpenGL::Flat:
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
 	break;
     }
 }
@@ -830,7 +824,6 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 //      break;
     case DrawInfoOpenGL::Flat:
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
       {
 	if (tmap_dlist == -1) {
 	  tmap_dlist = glGenLists(1);
@@ -890,7 +883,6 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
       break;
     case DrawInfoOpenGL::Flat:
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
       {
 	if (tmap_dlist == -1 || kernal_change) {
 	  if (tmap_dlist == -1)
@@ -988,7 +980,6 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
     break;
   case DrawInfoOpenGL::Flat:
   case DrawInfoOpenGL::Gouraud:
-  case DrawInfoOpenGL::Phong:
     {
       if (tmap_dlist[start] == 0) {
 	tmap_dlist[start] = glGenLists(1);
@@ -1127,7 +1118,6 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
     break;
   case DrawInfoOpenGL::Flat:
   case DrawInfoOpenGL::Gouraud:
-  case DrawInfoOpenGL::Phong:
     {
       // first blend two images together...
 
@@ -1314,7 +1304,6 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 	break;
     case DrawInfoOpenGL::Flat:
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
 	{
 	    for(int i=1;i<nv;i++){
 		float* p1=&data[vstride*(i-1)];
@@ -1454,7 +1443,6 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
         break;
     case DrawInfoOpenGL::Flat:
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
         {
 #if 0
             if(!have_normals)
@@ -2347,7 +2335,6 @@ void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    break;
 	case DrawInfoOpenGL::Flat:
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    {
 		// draw triangle strips
 		glBegin(GL_TRIANGLE_STRIP);
@@ -2457,7 +2444,6 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 	 * will switch to the tri-strip when I can test it, if it's faster
 	 */	
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
 	// this should be made into a tri-strip, but I couldn;t remember how...
 
 	/*
@@ -2638,7 +2624,6 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 	break;
     case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
 	for(v=0;v<nv-1;v++){
 	    double z1=tab2.cos(v);
 	    double rr1=tab2.sin(v);
@@ -2702,7 +2687,6 @@ void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glEnd();
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    glBegin(GL_TRIANGLES);
 	    glNormal3d(-n.x(), -n.y(), -n.z());
 	    verts[0]->emit_all(di);
@@ -2730,7 +2714,6 @@ void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glEnd();
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    // posible change to just material and point...
 	    glBegin(GL_TRIANGLES);
 	    verts[0]->emit_all(di);
@@ -2782,7 +2765,6 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    }
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    {
 		glBegin(GL_TRIANGLES);
 		for(int i=0;i<verts.size();i+=3){
@@ -2823,7 +2805,6 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    }
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    {
 		glDisable(GL_NORMALIZE);
 		glBegin(GL_TRIANGLES);
@@ -3715,34 +3696,6 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glEnd();
 	}
 	break;
-    case DrawInfoOpenGL::Phong:
-	for(v=0;v<nv-1;v++){
-	    double z1=tab2.cos(v);
-	    double rr1=tab2.sin(v);
-	    double z2=tab2.cos(v+1);
-	    double rr2=tab2.sin(v+1);
-	    double nr1=-tab2n.sin(v);
-	    double nr2=-tab2n.sin(v+1);
-	    double nz1=-tab2n.cos(v);
-	    double nz2=-tab2n.cos(v+1);
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(u=0;u<nu;u++){
-		double r1=rad1+rr1;
-		double r2=rad1+rr2;
-		double xx=tab1.sin(u);
-		double yy=tab1.cos(u);
-		double x1=xx*r1;
-		double y1=yy*r1;
-		double x2=xx*r2;
-		double y2=yy*r2;
-		glNormal3d(nr1*xx, nr1*yy, nz1);
-		glVertex3d(x1, y1, z1);
-		glNormal3d(nr2*xx, nr2*yy, nz2);
-		glVertex3d(x2, y2, z2);
-	    }
-	    glEnd();
-	}
-	break;	
     }
     glPopMatrix();
 }
@@ -3779,7 +3732,6 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    }
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    {
 		glBegin(GL_TRIANGLE_STRIP);
 		for(int i=0;i<verts.size();i++){
@@ -3822,7 +3774,6 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    }
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    {
 		glBegin(GL_TRIANGLE_STRIP);
 		for(int i=0;i<verts.size();i++){
@@ -3853,7 +3804,6 @@ void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
 	case DrawInfoOpenGL::WireFrame:
 	case DrawInfoOpenGL::Flat:
 	case DrawInfoOpenGL::Gouraud:
-	case DrawInfoOpenGL::Phong:
 	    {
 		int nstrips = strips.size();
 		int index=0;
@@ -4150,6 +4100,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:41  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/23 06:30:36  sparker
 // Linux port
 // Added X11 configuration options

@@ -23,17 +23,16 @@
 #include <SCICore/share/share.h>
 
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/Remote.h>
 #include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Thread/Runnable.h>
 
 namespace SCICore {
 namespace TclInterface {
 
-using SCICore::Multitask::Task;
 using SCICore::Containers::Array1;
 
-class SCICORESHARE GuiServer : public Task {
+class SCICORESHARE GuiServer : public SCICore::Thread::Runnable {
     private:
 	int gui_socket;
 	Array1<int> clients;
@@ -42,7 +41,7 @@ class SCICORESHARE GuiServer : public Task {
 	~GuiServer();
 
     private:
-	virtual int body (int);
+	virtual void run();
 	void getValue (char*, TCLMessage*);
 };
 
@@ -51,6 +50,9 @@ class SCICORESHARE GuiServer : public Task {
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:51  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:39:43  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

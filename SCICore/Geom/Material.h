@@ -16,9 +16,9 @@
 
 //#include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/GeomContainer.h>
-#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace Containers {
@@ -31,12 +31,11 @@ namespace GeomSpace {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::Containers::clString;
-using SCICore::Multitask::Mutex;
 
 class SCICORESHARE Material : public Persistent {
 public:
     int ref_cnt;
-    Mutex lock;
+    SCICore::Thread::Mutex lock;
 
     Color ambient;
     Color diffuse;

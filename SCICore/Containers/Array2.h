@@ -25,6 +25,10 @@ namespace DaveW {
 
 namespace SCICore {
 
+    namespace Datatypes {
+	void Pio();  // This is a dummy declaration to get things to compile.
+    }
+
 namespace Tester {
   class RigorousTest;
 }
@@ -226,11 +230,19 @@ Array2<T>& Array2<T>::operator=(const Array2<T> &copy)
 template<class T>
 void Pio(Piostream& stream, Containers::Array2<T>& data)
 {
+#ifdef __GNUG__
+    using namespace SCICore::PersistentSpace;
+    using namespace SCICore::Geometry;
+    using namespace SCICore::Containers;
+    using namespace SCICore::Datatypes;
+    using namespace DaveW::Datatypes;
+#else
     using SCICore::PersistentSpace::Pio;
     using SCICore::Containers::Pio;
-    using namespace SCICore::GeomSpace;
+    using SCICore::GeomSpace::Pio;
     using SCICore::Geometry::Pio;
     using DaveW::Datatypes::Pio;
+#endif
 
     stream.begin_class("Array2", Array2_VERSION);
     if(stream.reading()){
@@ -264,6 +276,9 @@ void Pio(Piostream& stream, Containers::Array2<T>*& data) {
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:34  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/24 06:24:00  dmw
 // Added in everything for the DaveW branch
 //

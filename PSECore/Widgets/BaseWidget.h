@@ -29,7 +29,7 @@
 #include <SCICore/TclInterface/TCLvar.h>
 
 namespace SCICore {
-  namespace Multitask {
+  namespace Thread {
     class CrowdMonitor;
   }
 }
@@ -59,7 +59,7 @@ namespace Widgets {
 
 using SCICore::TclInterface::TCL;
 using SCICore::TclInterface::TCLArgs;
-using SCICore::Multitask::CrowdMonitor;
+using SCICore::Thread::CrowdMonitor;
 using SCICore::Containers::clString;
 using SCICore::Containers::Array1;
 using SCICore::GeomSpace::GeomSwitch;
@@ -230,6 +230,9 @@ ostream& operator<<( ostream& os, BaseWidget& w );
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:33  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:28  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

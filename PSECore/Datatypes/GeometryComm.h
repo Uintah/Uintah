@@ -18,14 +18,14 @@
 
 #include <PSECore/Comm/MessageBase.h>
 #include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
   namespace GeomSpace {
     class GeomObj;
   }
-  namespace Multitask {
-    template<class T> class AsyncReply;
+  namespace Thread {
+    template<class T> class FutureValue;
+    class Semaphore;
   }
 }
 
@@ -34,8 +34,8 @@ namespace Datatypes {
 
 using PSECore::Comm::MessageBase;
 using PSECore::Comm::MessageTypes;
-using SCICore::Multitask::Semaphore;
-using SCICore::Multitask::AsyncReply;
+using SCICore::Thread::Semaphore;
+using SCICore::Thread::FutureValue;
 
 struct GeomReply {
     int portid;
@@ -52,10 +52,10 @@ public:
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
     GeometryComm(MessageTypes::MessageType, int portid,
-		 AsyncReply<GeometryData*>* reply,
+		 FutureValue<GeometryData*>* reply,
 		 int which_roe, int datamask);
     GeometryComm(MessageTypes::MessageType, int portid,
-		 AsyncReply<int>* reply);
+		 FutureValue<int>* reply);
     virtual ~GeometryComm();
 
     Mailbox<GeomReply>* reply;
@@ -71,8 +71,8 @@ public:
 
     int which_roe;
     int datamask;
-    AsyncReply<GeometryData*>* datareply;
-    AsyncReply<int>* nreply;
+    FutureValue<GeometryData*>* datareply;
+    FutureValue<int>* nreply;
 };
 
 } // End namespace Datatypes
@@ -80,6 +80,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:31  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/27 00:03:02  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

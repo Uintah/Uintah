@@ -69,7 +69,6 @@ void GeomIndexedGroup::get_bounds(BBox& bbox)
 void GeomIndexedGroup::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomIndexedGroup", GEOMINDEXEDGROUP_VERSION);
     // Do the base class first...
@@ -150,6 +149,9 @@ HashTable<int,GeomObj*>* GeomIndexedGroup::getHash(void)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:43  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:31  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

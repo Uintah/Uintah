@@ -39,8 +39,9 @@ using SCICore::TclInterface::setupConnect;
 using SCICore::TclInterface::acceptConnect;
 using SCICore::TclInterface::Message;
 
-Network::Network(int first):
-netedit(0), first(first), slave_socket(0), nextHandle(0)
+Network::Network(int first)
+  : netedit(0), first(first), slave_socket(0), nextHandle(0),
+    the_lock("Network lock")
 {
 }
 
@@ -401,6 +402,9 @@ int Network::delete_module(const clString& id)
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:29  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/26 23:59:56  moulding
 // added #include <io.h> for win32
 //

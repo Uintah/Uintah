@@ -140,8 +140,6 @@ void GeomPts::get_bounds(BBox& bb)
 void GeomPts::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     int version=stream.begin_class("GeomPts", GEOMPTS_VERSION);
     GeomObj::io(stream);
@@ -341,6 +339,9 @@ void GeomTimedParticles::draw(DrawInfoOpenGL*, Material*, double)
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:44  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/23 06:30:36  sparker
 // Linux port
 // Added X11 configuration options

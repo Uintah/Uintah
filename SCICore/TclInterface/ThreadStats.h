@@ -17,19 +17,9 @@
 #include <SCICore/TclInterface/TCL.h>
 
 namespace SCICore {
-  namespace Multitask {
-    struct TaskInfo;
-  }
-}
-
-namespace SCICore {
 namespace TclInterface {
 
-using SCICore::Multitask::TaskInfo;
-
 class SCICORESHARE ThreadStats : public TCL {
-    TaskInfo* info;
-    TaskInfo* oldinfo;
     int maxstacksize;
 public:
     ThreadStats();
@@ -44,6 +34,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:53  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:39:46  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

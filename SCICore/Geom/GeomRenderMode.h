@@ -25,8 +25,7 @@ public:
     enum DrawType {
         WireFrame,
         Flat,
-        Gouraud,
-        Phong
+        Gouraud
     };
 private:
     DrawType drawtype;
@@ -51,6 +50,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:42  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:24  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

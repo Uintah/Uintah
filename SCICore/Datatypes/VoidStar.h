@@ -24,7 +24,6 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace Datatypes {
@@ -54,6 +53,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:37  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:47  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

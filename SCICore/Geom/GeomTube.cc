@@ -110,7 +110,6 @@ void GeomTube::make_circle(int which, Array1<Point>& circle_pts,
 void GeomTube::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTube", GEOMTUBE_VERSION);
     GeomVertexPrim::io(stream);
@@ -131,6 +130,9 @@ bool GeomTube::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:43  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:29  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -22,7 +22,6 @@
 #include <SCICore/TclInterface/GuiServer.h>
 
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <string.h>
 #include <sys/types.h>
@@ -35,14 +34,17 @@ extern "C" Tcl_Interp* the_interp;
 namespace SCICore {
 namespace TclInterface {
 
-GuiServer::GuiServer() : Task("GuiServer"), gui_socket(0)
-{}
+GuiServer::GuiServer()
+    : gui_socket(0)
+{
+}
 
 GuiServer::~GuiServer()
-{}
+{
+}
 
-int
-GuiServer::body(int)
+void
+GuiServer::run()
 {
     char buf[BUFSIZE];
     fd_set readfds;
@@ -102,7 +104,7 @@ cerr << "GuiServer::getClients() read from clients["<<i<<"], socket = " <<
         	    bcopy ((char *) &msg, buf, sizeof (msg));
         	    if (write (clients[i], buf, sizeof(buf)) < 0) {
 	    	        perror ("writing to client socket");
-	    	        return -1;
+	    	        return;
 		    }
  		}
 
@@ -197,6 +199,9 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:51  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/23 06:30:39  sparker
 // Linux port
 // Added X11 configuration options

@@ -74,7 +74,6 @@ void GeomLine::get_bounds(BBox& bb)
 void GeomLine::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_class("GeomLine", GEOMLINE_VERSION);
     GeomObj::io(stream);
@@ -129,7 +128,6 @@ void GeomLines::get_bounds(BBox& bb)
 void GeomLines::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomLines", GEOMLINES_VERSION);
     GeomObj::io(stream);
@@ -162,12 +160,12 @@ Persistent* make_TexGeomLines()
 PersistentTypeID TexGeomLines::type_id("TexGeomLines", "GeomObj", make_TexGeomLines);
 
 TexGeomLines::TexGeomLines()
-:tmapid(0),alpha(1.0),tex_per_seg(1) // hedgehog is default...
+    : mutex("TexGeomLines mutex"), tmapid(0),alpha(1.0),tex_per_seg(1) // hedgehog is default...
 {
 }
 
 TexGeomLines::TexGeomLines(const TexGeomLines& copy)
-: pts(copy.pts)
+: mutex("TexGeomLines mutex"), pts(copy.pts)
 {
 }
 
@@ -191,7 +189,6 @@ void TexGeomLines::get_bounds(BBox& bb)
 void TexGeomLines::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("TexGeomLines", TexGeomLines_VERSION);
     GeomObj::io(stream);
@@ -395,6 +392,9 @@ void TexGeomLines::SortVecs()
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:40  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:21  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -14,7 +14,7 @@
 #define SCI_project_SimplePort_h 1
 
 #include <PSECore/Dataflow/Port.h>
-#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Thread/Mailbox.h>
 #include <SCICore/Util/Timer.h>
 
 namespace PSECore {
@@ -29,7 +29,6 @@ using PSECore::Dataflow::Module;
 using PSECore::Dataflow::IPort;
 using PSECore::Dataflow::OPort;
 using PSECore::Dataflow::Connection;
-using SCICore::Multitask::Mailbox;
 using SCICore::Containers::clString;
 
 template<class T>
@@ -52,7 +51,7 @@ public:
 
 public:
     friend class SimpleOPort<T>;
-    Mailbox<SimplePortComm<T>*> mailbox;
+    SCICore::Thread::Mailbox<SimplePortComm<T>*> mailbox;
 
     static clString port_type;
     static clString port_color;
@@ -126,7 +125,7 @@ template<class T>
 SimpleIPort<T>::SimpleIPort(Module* module, const clString& portname,
 			    int protocol)
 : IPort(module, port_type, portname, port_color, protocol),
-  mailbox(2)
+  mailbox("Port mailbox (SimpleIPort)", 2)
 {
 }
 
@@ -176,7 +175,6 @@ template<class T>
 void SimpleOPort<T>::finish()
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     // get timestamp here to measure communication time, print to screen
     timer1.stop();
@@ -216,7 +214,6 @@ template<class T>
 void SimpleOPort<T>::send(const T& data)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
 #ifdef DEBUG
     cerr << "Entering SimpleOPort<T>::send (data)\n";
@@ -288,7 +285,6 @@ template<class T>
 int SimpleIPort<T>::get(T& data)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
 #ifdef DEBUG
     cerr << "Entering SimpleIPort<T>::get (data)\n";
@@ -355,7 +351,6 @@ template<class T>
 int SimpleIPort<T>::special_get(T& data)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     using PSECore::Comm::MessageTypes;
     using PSECore::Dataflow::Demand_Message;
@@ -454,6 +449,9 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:32  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:23  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

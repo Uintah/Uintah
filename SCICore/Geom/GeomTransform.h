@@ -17,7 +17,6 @@
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geom/GeomContainer.h>
 #include <SCICore/Geometry/Transform.h>
-#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
 namespace GeomSpace {

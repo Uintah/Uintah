@@ -18,7 +18,7 @@
 
 // Do this until we get throw to work...
 #define EXCEPTION(exc) \
-        SCICore::ExceptionsSpace::Exception(exc, __FILE__, __LINE__)
+        SCICore::ExceptionsSpace::oldException(exc, __FILE__, __LINE__)
 
 namespace SCICore {
 namespace ExceptionsSpace {
@@ -30,9 +30,9 @@ public:
 };
 
 #ifdef _WIN32
-SCICORESHARE void Exception(const AllExceptions&, char*, int);
+SCICORESHARE void oldException(const AllExceptions&, char*, int);
 #else
-extern void Exception(const AllExceptions&, char*, int);
+extern void oldException(const AllExceptions&, char*, int);
 #endif
 
 class SCICORESHARE General : public AllExceptions {

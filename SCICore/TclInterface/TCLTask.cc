@@ -12,11 +12,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Exceptions/Exceptions.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Exceptions/Exceptions.h>
+#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Thread.h>
 
 #include <iostream.h>
 #include <tcl.h>
@@ -52,24 +53,25 @@ extern "C" Tcl_Interp* the_interp;
 namespace SCICore {
 namespace TclInterface {
 
-using SCICore::Multitask::Mutex;
+    using SCICore::Thread::Mutex;
+    using SCICore::Thread::Thread;
 
-static Mutex* tlock=0;
-static Task* owner;
+static Mutex tlock("TCL task lock");
+static Thread* owner;
 static int lock_count;
-static Task* tcl_task_id;
+static Thread* tcl_task_id;
 
 static void do_lock()
 {
-  ASSERT(Task::self() != 0);
-    if(owner == Task::self()){
+  ASSERT(Thread::self() != 0);
+    if(owner == Thread::self()){
       lock_count++;
 //      cerr << "Recursively locked, count=" << lock_count << endl;
 	return;
     }
-    tlock->lock();
+    tlock.lock();
     lock_count=1;
-    owner=Task::self();
+    owner=Thread::self();
 //    cerr << "Locked: owner=" << owner << ", count=" << lock_count << endl;
 }
 
@@ -77,11 +79,11 @@ static void do_unlock()
 {
     ASSERT(lock_count>0);
 //    cerr << "Self=" << Task::self() << ", owner=" << owner << endl;
-    ASSERT(Task::self() == owner);
+    ASSERT(Thread::self() == owner);
     if(--lock_count == 0){
 	owner=0;
 //	cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Task::self() << endl;
-	tlock->unlock();
+	tlock.unlock();
     } else {
 //      cerr << "Recursively unlocked, count=" << lock_count << endl;
     }
@@ -89,7 +91,7 @@ static void do_unlock()
 
 static int is_tcl_thread()
 {
-  return Task::self() == tcl_task_id;
+  return Thread::self() == tcl_task_id;
 }
 
 static int x_error_handler(Display* dpy, XErrorEvent* error)
@@ -106,22 +108,20 @@ static int x_error_handler(Display* dpy, XErrorEvent* error)
 static int exitproc(ClientData, Tcl_Interp*, int, char* [])
 {
 	printf("exitproc() {%s,%d}\n",__FILE__,__LINE__);
-    Task::exit_all(0);
+    Thread::exitAll(0);
     return TCL_OK; // not reached
 }
 
 TCLTask::TCLTask(int argc, char* argv[])
-: Task("TCLTask", 1), argc(argc), argv(argv), start(0), cont(0)
+: cont("TCLTask startup continue semaphore", 0),
+  start("TCLTask startup semaphore", 0),
+  argc(argc), argv(argv)
 {
     // Setup the error handler to catch errors...
     // The default one exits, and makes it very hard to 
     // track down errors.  We need core dumps!
     XSetErrorHandler(x_error_handler);
 
-    tcl_task_id=this;
-
-    if(!tlock)
-	tlock=scinew Mutex;
     Tcl_SetLock(do_lock, do_unlock);
     Tcl_SetIsTclThread(is_tcl_thread);
 }
@@ -136,14 +136,16 @@ void wait_func(void* thatp)
     that->mainloop_wait();
 }
 
-int TCLTask::body(int)
+void
+TCLTask::run()
 {
+    tcl_task_id=Thread::self();
+
     // Acquire the lock before we go into the Tcl/Tk main loop.
     // From now on, it will only get unlocked when the GUI blocks.
     do_lock();
 
     tkMain(argc, argv, wait_func, (void*)this);
-    return 0;
 }
 
 void TCLTask::mainloop_waitstart()
@@ -183,13 +185,13 @@ void TCLTask::unlock()
 
 int TCLTask::try_lock()
 {
-    if(owner == Task::self()){
+    if(owner == Thread::self()){
 	lock_count++;
 	return 1;
     }
-    if(tlock->try_lock()){
+    if(tlock.tryLock()){
 	lock_count=1;
-	owner=Task::self();
+	owner=Thread::self();
 //	cerr << "Locked (try): owner=" << owner << ", count=" << lock_count << endl;
 	return 1;
     } else {
@@ -198,7 +200,7 @@ int TCLTask::try_lock()
     }
 }
 
-Task* TCLTask::get_owner()
+Thread* TCLTask::get_owner()
 {
     return owner;
 }
@@ -208,6 +210,9 @@ Task* TCLTask::get_owner()
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:52  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:39:45  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -209,7 +209,6 @@ GeomObj* GeomTriangles::clone()
 void GeomTriangles::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTriangles", GEOMTRIANGLES_VERSION);
     GeomVertexPrim::io(stream);
@@ -248,7 +247,6 @@ int GeomTrianglesPT1d::add(const Point& p1,const Point& p2,const Point& p3,
 void GeomTrianglesPT1d::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTrianglesPT1d", GeomTrianglesPT1d_VERSION);
     GeomTrianglesP::io(stream);
@@ -616,12 +614,6 @@ void GeomTranspTrianglesP::MergeStuff(GeomTranspTrianglesP* other)
 void GeomTranspTrianglesP::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTranspTrianglesP", GeomTranspTrianglesP_VERSION);
     GeomTrianglesP::io(stream);
@@ -740,7 +732,6 @@ void GeomTrianglesP::get_bounds(BBox& box)
 void GeomTrianglesP::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTrianglesP", GEOMTRIANGLESP_VERSION);
     GeomObj::io(stream);
@@ -792,7 +783,6 @@ int GeomTrianglesPC::add(const Point& p1, const Color& c1,
 void GeomTrianglesPC::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTrianglesPC", GEOMTRIANGLESPC_VERSION);
     GeomTrianglesP::io(stream);
@@ -945,7 +935,6 @@ void GeomTrianglesVP::get_bounds(BBox& box)
 void GeomTrianglesVP::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTrianglesVP", GEOMTRIANGLESVP_VERSION);
     GeomObj::io(stream);
@@ -999,7 +988,6 @@ int GeomTrianglesVPC::add(const Point& p1, const Vector &v1, const Color& c1,
 void GeomTrianglesVPC::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTrianglesVPC", GEOMTRIANGLESVPC_VERSION);
     GeomTrianglesVP::io(stream);
@@ -1081,6 +1069,9 @@ bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:43  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/23 06:30:36  sparker
 // Linux port
 // Added X11 configuration options
