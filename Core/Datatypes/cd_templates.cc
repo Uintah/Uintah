@@ -86,7 +86,16 @@ const TypeDescription* get_type_description(TetVol<int>*);
 const TypeDescription* get_type_description(TetVol<short>*);
 const TypeDescription* get_type_description(TetVol<unsigned char>*);
 
+//Index types
+const TypeDescription* get_type_description(NodeIndex<int>*);
+const TypeDescription* get_type_description(EdgeIndex<int>*);
+const TypeDescription* get_type_description(FaceIndex<int>*);
+const TypeDescription* get_type_description(CellIndex<int>*);
 
+const TypeDescription* get_type_description(vector<NodeIndex<int> >*);
+const TypeDescription* get_type_description(vector<EdgeIndex<int> >*);
+const TypeDescription* get_type_description(vector<FaceIndex<int> >*);
+const TypeDescription* get_type_description(vector<CellIndex<int> >*);
 
 template class MaskedLatticeVol<Tensor>;
 template class MaskedLatticeVol<Vector>;
@@ -113,6 +122,14 @@ template class FData3d<double>;
 template class FData3d<int>;
 template class FData3d<short>;
 template class FData3d<unsigned char>;
+
+const TypeDescription* get_type_description(LatticeVol<Tensor>*);
+const TypeDescription* get_type_description(LatticeVol<Vector>*);
+const TypeDescription* get_type_description(LatticeVol<double>*);
+const TypeDescription* get_type_description(LatticeVol<int>*);
+const TypeDescription* get_type_description(LatticeVol<short>*);
+const TypeDescription* get_type_description(LatticeVol<unsigned char>*);
+
 
 template class TriSurf<Tensor>;
 template class TriSurf<Vector>;

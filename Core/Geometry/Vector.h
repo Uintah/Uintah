@@ -128,7 +128,13 @@ public:
   inline Point point() const;
     
   string get_string() const;
-    
+
+
+  static const string get_h_file_path() {
+    static string path(__FILE__);
+    return path;
+  }
+
   friend class Point;
   friend class Transform;
     
