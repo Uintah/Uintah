@@ -249,19 +249,18 @@ string GuiContext::getPrefix()
 
 
 string GuiContext::getMapKeyFromString(const string &varname) {
-
   ASSERT(stringIsaMap(varname));
   ASSERT(varname.size() >= 4); // smallest possible name: ie a(b) = 4 chars
   string::size_type open_paren = varname.find_first_of("(");
   string::size_type close_paren = varname.find_last_of(")");
   ASSERT(open_paren && close_paren);
-  string key = varname.substr(open_paren+1, close_paren-1);
+  string key = varname.substr(open_paren+1, close_paren-open_paren-1);
   if (stringIsaMap(key) || stringIsaListElement(key))
   {
     string new_key;
     if (!getString(key, new_key)) {
-      cerr << "Cannot figure value of key: " << key 
-	   << " of var: " << varname << std::endl;
+      //      cerr << "Cannot figure value of key: " << key 
+      //	   << " of var: " << varname << std::endl;
       return key;
     }
     key = new_key;
@@ -305,19 +304,17 @@ bool GuiContext::getString(const std::string& varname, std::string& value) {
 
     string list_contents;
     if (!getString(listname, list_contents)) {
-      cerr << "Cannot find list variable: " << listname;
+      //      cerr << "Cannot find list variable: " << listname;
       return false;
     }
     success = gui->extract_element_from_list (list_contents, indexes, value);
-    if (!success) 
-      cerr << "Cannont find List Element: " << varname << std::endl;
+    //    if (!success) cerr << "Cannont find List Element: " << varname << std::endl;
     return success;
   } else if (stringIsaMap(varname)) {
     success = gui->get_map(getMapNameFromString(varname), 
 			   getMapKeyFromString(varname), 
 			   value);
-    if (!success)
-      cerr << "Cannot find Map Element: " << varname << std::endl;
+    //    if (!success) cerr << "Cannot find Map Element: " << varname << std::endl;
     return success;
   }
   // else? just do a standard gui get
@@ -338,24 +335,22 @@ bool GuiContext::setString(const std::string& varname, const std::string& value)
 
     string list_contents;
     if (!getString(listname,list_contents)) {
-      cerr << "Cannot find list variable: " << listname;
+      //      cerr << "Cannot find list variable: " << listname;
       return false;
     }
     success = gui->set_element_in_list(list_contents, indexes, value);
-    if (!success) 
-      cerr << "Cannont find List Element: " << varname << std::endl;
+    //    if (!success) cerr << "Cannont find List Element: " << varname << std::endl;
     success = setString(listname, list_contents);
-    if (!success) 
-      cerr << "Cannont set list: " << listname 
-	   << " to " << list_contents << std::endl;
+    //    if (!success) 
+    //  cerr << "Cannont set list: " << listname 
+    //	   << " to " << list_contents << std::endl;
 
     return success;
   } else if (stringIsaMap(varname)) {
     success = gui->set_map(getMapNameFromString(varname), 
 			   getMapKeyFromString(varname), 
 			   value);
-    if (!success)
-      cerr << "Cannot set Map Element: " << varname << std::endl;
+    //    if (!success) cerr << "Cannot set Map Element: " << varname << std::endl;
     return success;
   }
   // else just do a standard gui set
@@ -364,14 +359,12 @@ bool GuiContext::setString(const std::string& varname, const std::string& value)
 }
 
 bool GuiContext::stringIsaListElement(const string &str) {
-  return false; // TODO: make this work with normal variables that contain []
   if (!str.length()) 
     return false;
   return (str[str.length()-1] == ']');
 }
 
 bool GuiContext::stringIsaMap(const string &str) {
-  return false; // TODO: make this work with normal variables that contain ()
   if (!str.length()) 
     return false;
   return (str[str.length()-1] == ')');
