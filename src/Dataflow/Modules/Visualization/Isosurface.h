@@ -110,7 +110,7 @@ public:
   virtual ~Isosurface();
   virtual void execute();
 
-  void initialize();
+  virtual void initialize();
   void new_field( FieldHandle & );
   void send_results();
 };
