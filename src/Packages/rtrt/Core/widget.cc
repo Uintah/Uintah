@@ -7,19 +7,6 @@
 
 using namespace rtrt;
 
-#define menuHeight 80
-#define borderSize 5
-#define worldWidth 500
-#define worldHeight 330
-
-// widget focus/unfocus colors
-#define focusR 0.0
-#define focusG 0.6
-#define focusB 0.85
-#define unfocusR 0.85
-#define unfocusG 0.6
-#define unfocusB 0.6
-
 //                    [-------width--------]
 //  
 //               ---> 0=========o==========0 <--(uboundRight->x,     ===
@@ -47,11 +34,11 @@ TriWidget::TriWidget( float x, float w, float h )
   lboundRight = new Vertex;
   uboundLeft = new Vertex;
   uboundRight = new Vertex;
-  base->x = x;	           base->y = menuHeight+borderSize;
-  lboundLeft->x = x-w/4;   lboundLeft->y = (2*(menuHeight+borderSize)+h)*0.5f;
-  uboundLeft->x = x-w/2;   uboundLeft->y = menuHeight+borderSize+h;
-  uboundRight->x = x+w/2;  uboundRight->y = menuHeight+borderSize+h;
-  lboundRight->x = x+w/4;  lboundRight->y = (2*(menuHeight+borderSize)+h)*0.5f;
+  base->x = x;	              base->y = menuHeight+borderSize;
+  lboundLeft->x = x-w*0.25;   lboundLeft->y = menuHeight+borderSize+h*0.5;
+  uboundLeft->x = x-w*0.5;    uboundLeft->y = menuHeight+borderSize+h;
+  uboundRight->x = x+w*0.5;   uboundRight->y = menuHeight+borderSize+h;
+  lboundRight->x = x+w*0.25;  lboundRight->y = menuHeight+borderSize+h*0.5;
   opac_x = x;
   color[0] = focusR;
   color[1] = focusG;
@@ -65,7 +52,7 @@ TriWidget::TriWidget( float x, float w, float h )
 			  focusR, focusG, focusB );
   opacityStar = new GLStar(opac_x, uboundLeft->y, 6.5,
 			   1-focusR, 1-focusG, 1-focusB );
-  transText = new Texture<GLfloat>( 133, 215 );
+  transText = new Texture<GLfloat>( 133, 215 ); // green texture
   genTransFunc();
 }
 
@@ -75,8 +62,8 @@ TriWidget::TriWidget( Widget* old_wid )
   color[0] = focusR;
   color[1] = focusG;
   color[2] = focusB;
-  float l = (old_wid->getTextLBound())->y;
-  float h = (old_wid->getTextUBound())->y;
+  float l = (old_wid->getTextLRBound())->y;
+  float h = (old_wid->getTextULBound())->y;
   float fHeight = (l-(menuHeight+borderSize))/(h-(menuHeight+borderSize));
   textureAlign = old_wid->textureAlign;
   drawFlag = Null;
@@ -225,6 +212,9 @@ TriWidget::adjustWidth( float x )
     x = (uboundLeft->x+uboundRight->x)*0.5+3;
   float dx = x - uboundRight->x;
 
+  if( uboundLeft->x - dx < borderSize )
+    dx = uboundLeft->x - borderSize;
+  
   uboundLeft->x -= dx;
   uboundRight->x += dx;
   float frac_dist = ((opac_x-uboundLeft->x)/
@@ -293,10 +283,10 @@ TriWidget::genTransFunc( void )
       transText->textArray[i][j][1] = transText->current_color[1];
       transText->textArray[i][j][2] = transText->current_color[2];
       transText->textArray[i][j][3] = opacity;
-      transText->textArray[i][textureWidth-j][0] = transText->current_color[0];
-      transText->textArray[i][textureWidth-j][1] = transText->current_color[1];
-      transText->textArray[i][textureWidth-j][2] = transText->current_color[2];
-      transText->textArray[i][textureWidth-j][3] = opacity;
+      transText->textArray[i][textureWidth-1-j][0]=transText->current_color[0];
+      transText->textArray[i][textureWidth-1-j][1]=transText->current_color[1];
+      transText->textArray[i][textureWidth-1-j][2]=transText->current_color[2];
+      transText->textArray[i][textureWidth-1-j][3]=opacity;
     }
 }
 
@@ -365,11 +355,11 @@ TriWidget::manipulate( float x, float y )
       drawFlag = Translate;
       translate( x, 0 );
     } // if()
-    // otherwise nothing pertinent was selected...
-    else {
-      drawFlag = Null;
-      return;
-    }
+//      // otherwise nothing pertinent was selected...
+//      else {
+//        drawFlag = Null;
+//        return;
+//      }
   } // else
 }
 
@@ -378,7 +368,7 @@ void
 TriWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 			   float master_opacity )
 {
-  // to prevent from excessive type casting
+  // to reduce excessive type casting
   float f_textureHeight = (float)textureHeight;
   float f_textureWidth = (float)textureWidth;
 
@@ -391,36 +381,42 @@ TriWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
   // casted values for array index use
   int starty = (int)startyf;
   int endy = (int)endyf;
+  if( starty == endy ) return;
 
-  float heightInverse = 1.0f/(endyf-startyf);
-  float heightFactor = f_textureHeight*heightInverse;
+  float heightFactor = f_textureHeight/(endyf-startyf);
   float fractionalHeight = ((lboundLeft->y-base->y)/
 			    (uboundLeft->y-base->y));
 
   // fractionalHeight iterative increment-step value
-  float fhInterval = (1.0f-fractionalHeight)*heightInverse;
+  float fhInterval = (1.0f-fractionalHeight)/(endyf-startyf);
   float opacity_offset = 2.0f*((opac_x-uboundLeft->x)/
 			       (uboundRight->x-uboundLeft->x))-1.0f;
 
-  for( int y = starty; y < endy; y++ ) {
-    int texture_y = (int)(((float)y-startyf)*heightFactor);
-    // higher precision values for intensity computation
-    float startxf = (base->x-5-(base->x-uboundLeft->x)*
-		     fractionalHeight)*f_textureWidth/490.0f;
-    float endxf = (base->x-5+(uboundRight->x-base->x)*
-		   fractionalHeight)*f_textureWidth/490.0f;
-    float widthFactor = f_textureWidth/(endxf-startxf);
+  // higher precision values for intensity computation
+  float startxf = (base->x-5-(base->x-uboundLeft->x)*
+		   fractionalHeight)*f_textureWidth/(worldWidth-2*borderSize);
+  float endxf = (base->x-5+(uboundRight->x-base->x)*
+		 fractionalHeight)*f_textureWidth/(worldWidth-2*borderSize);
     
+  // incremental values to speed up loop computation
+  float sx_inc = f_textureWidth*(uboundLeft->x - base->x)/
+    (worldWidth - 2*borderSize)*fhInterval;
+  float ex_inc = f_textureWidth*(uboundRight->x - base->x)/
+    (worldWidth - 2*borderSize)*fhInterval;
+
+  // finally...texture mapping
+  for( int y = starty; y < endy; y++ ) {
+    float widthFactor = f_textureWidth/(endxf-startxf);
     int startx = (int)startxf;
     int endx = (int)endxf;
     // paint one row of this widget's texture onto background texture
     if( textureAlign == Vertical )
       for( int x = startx; x < endx; x++ ) {
-	int texture_x = (int)(((float)x-startxf)*widthFactor);
-	if( texture_x < 0 )
-	  texture_x = 0;
+  	int texture_x = (int)(((float)x-startxf)*widthFactor);
+  	if( texture_x < 0 )
+  	  texture_x = 0;
 	else if( texture_x >= f_textureWidth )
-	  texture_x = textureWidth-1;
+  	  texture_x = textureWidth-1;
 	blend( dest[y][x], 
 	       transText->current_color[0], 
 	       transText->current_color[1], 
@@ -428,18 +424,21 @@ TriWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 	       (transText->textArray[0][texture_x][3]+opacity_offset), 
 	       master_opacity );
       } // for()
-    else
-      for( int x = startx; x < endx; x++ ) {
-	int texture_x = (int)(((float)x-startxf)*widthFactor);
+    else {
+      int texture_y = (int)(((float)y-startyf)*heightFactor);      
+      for( int x = startx; x < endx; x++ )
 	blend( dest[y][x], 
 	       transText->current_color[0],
 	       transText->current_color[1],
 	       transText->current_color[2],
 	       transText->textArray[0][texture_y][3]+opacity_offset,
 	       master_opacity );
-      }
+    }
+    // increment the values
     fractionalHeight += fhInterval;
-  } // for
+    startxf += sx_inc;
+    endxf += ex_inc;
+  } // y loop
 }
 
 
@@ -490,6 +489,8 @@ TriWidget::translate( float x, float /*y*/ )
 //                      0------------------0 <---(bottomRight->x,     ===
 //                                                 bottomRight->y)
 
+
+
 void
 RectWidget::adjustFocus( float x, float y )
 {
@@ -519,6 +520,9 @@ RectWidget::adjustOpacity( float x )
 void
 RectWidget::changeColor( float r, float g, float b )
 {
+  resizeStar->red = 0.0;
+  resizeStar->green = 1.0;
+  resizeStar->blue = 0.0;
   translateStar->red = r;
   translateStar->green = g;
   translateStar->blue = b;
@@ -727,6 +731,8 @@ RectWidget::translate( float x, float y )
 TentWidget::TentWidget( float x, float y, float w, float h, float c[3] )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   type = Tent;
   drawFlag = Probe;
@@ -741,6 +747,10 @@ TentWidget::TentWidget( float x, float y, float w, float h, float c[3] )
   opac_x = x;
   topLeft->x = x-w*0.5;
   topLeft->y = y+h*0.5;
+  topRight->x = x+w*0.5;
+  topRight->y = y+h*0.5;
+  bottomLeft->x = x-w*0.5;
+  bottomLeft->y = y-h*0.5;
   bottomRight->x = x+w*0.5;
   bottomRight->y = y-h*0.5;
 
@@ -763,15 +773,21 @@ TentWidget::TentWidget( float x, float y, float w, float h, float c[3] )
 TentWidget::TentWidget( Widget* old_wid )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   textureAlign = old_wid->textureAlign;
   drawFlag = Null;
   width = old_wid->width;
-  height = (old_wid->getTextUBound())->y - (old_wid->getTextLBound())->y;
-  topLeft->x = (old_wid->getTextUBound())->x;
-  topLeft->y = (old_wid->getTextUBound())->y;
-  bottomRight->x = topLeft->x + width;
-  bottomRight->y = (old_wid->getTextLBound())->y;
+  height = (old_wid->getTextULBound())->y - (old_wid->getTextLRBound())->y;
+  topLeft->x = (old_wid->getTextULBound())->x;
+  topLeft->y = (old_wid->getTextULBound())->y;
+  topRight->x = (old_wid->getTextURBound())->x;
+  topRight->y = (old_wid->getTextURBound())->y;
+  bottomLeft->x = (old_wid->getTextULBound())->x;
+  bottomLeft->y = (old_wid->getTextLLBound())->y;
+  bottomRight->x = (old_wid->getTextURBound())->x;
+  bottomRight->y = (old_wid->getTextLRBound())->y;
   color[0] = focusR;
   color[1] = focusG;
   color[2] = focusB;
@@ -805,6 +821,8 @@ TentWidget::TentWidget( float x, float y, float w, float h, float o_x,
   color[1] = focusG;
   color[2] = focusB;
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   textureAlign = tA;
   drawFlag = Null;
@@ -816,6 +834,10 @@ TentWidget::TentWidget( float x, float y, float w, float h, float o_x,
   opac_x = o_x;
   topLeft->x = x;
   topLeft->y = y;
+  topRight->x = x+w;
+  topRight->y = y;
+  bottomLeft->x = x;
+  bottomLeft->y = y-h;
   bottomRight->x = x+w;
   bottomRight->y = y-h;
   translateStar = new GLStar(topLeft->x, topLeft->y, 5.0,
@@ -904,19 +926,16 @@ TentWidget::genTransFunc( void )
   float intensity;
   float halfWidth = (float)textureWidth*0.5f;
   for( i = 0; i < textureHeight; i++ ) {
-    for( j = 0; j < halfWidth; j++ ) {
+    for( j = 0; j <= halfWidth; j++ ) {
       intensity = (float)j/halfWidth;
       transText->textArray[i][j][0] = transText->current_color[0];
       transText->textArray[i][j][1] = transText->current_color[1];
       transText->textArray[i][j][2] = transText->current_color[2];
       transText->textArray[i][j][3] = intensity;
-    }
-    for( j = halfWidth; j < textureWidth; j++ ) {
-      intensity = (float)(textureWidth-j)/halfWidth;
-      transText->textArray[i][j][0] = transText->current_color[0];
-      transText->textArray[i][j][1] = transText->current_color[1];
-      transText->textArray[i][j][2] = transText->current_color[2];
-      transText->textArray[i][j][3] = intensity;
+      transText->textArray[i][textureWidth-j-1][0]=transText->current_color[0];
+      transText->textArray[i][textureWidth-j-1][1]=transText->current_color[1];
+      transText->textArray[i][textureWidth-j-1][2]=transText->current_color[2];
+      transText->textArray[i][textureWidth-j-1][3] = intensity;
     }
   }
 }
@@ -928,6 +947,8 @@ TentWidget::genTransFunc( void )
 EllipWidget::EllipWidget( float x, float y, float w, float h, float c[3] )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   type = Ellipse;
   drawFlag = Probe;
@@ -942,6 +963,10 @@ EllipWidget::EllipWidget( float x, float y, float w, float h, float c[3] )
   opac_x = x;
   topLeft->x = x-w*0.5;
   topLeft->y = y+h*0.5;
+  topRight->x = x+w*0.5;
+  topRight->y = y+h*0.5;
+  bottomLeft->x = x-w*0.5;
+  bottomLeft->y = y-h*0.5;
   bottomRight->x = x+w*0.5;
   bottomRight->y = y-h*0.5;
 
@@ -967,14 +992,21 @@ EllipWidget::EllipWidget( float x, float y, float w, float h, float c[3] )
 EllipWidget::EllipWidget( Widget* old_wid )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   textureAlign = old_wid->textureAlign;
   drawFlag = Null;
   width = old_wid->width;
-  height = (old_wid->getTextUBound())->y - (old_wid->getTextLBound())->y;
-  topLeft->x = old_wid->getCenterX() - width*0.5;
-  topLeft->y = (old_wid->getTextUBound())->y;
-  bottomRight->x = topLeft->x + width;	bottomRight->y = topLeft->y - height;
+  height = (old_wid->getTextULBound())->y - (old_wid->getTextLRBound())->y;
+  topLeft->x = (old_wid->getTextULBound())->x;
+  topLeft->y = (old_wid->getTextULBound())->y;
+  topRight->x = (old_wid->getTextURBound())->x;
+  topRight->y = (old_wid->getTextURBound())->y;
+  bottomLeft->x = (old_wid->getTextULBound())->x;
+  bottomLeft->y = (old_wid->getTextLLBound())->y;
+  bottomRight->x = (old_wid->getTextLRBound())->x;
+  bottomRight->y = (old_wid->getTextLRBound())->y;
   color[0] = focusR;
   color[1] = focusG;
   color[2] = focusB;
@@ -1005,6 +1037,8 @@ EllipWidget::EllipWidget( float x, float y, float w, float h, float o_x,
 			  int cmap_y, TextureAlign tA )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   textureAlign = tA;
   drawFlag = Null;
@@ -1016,6 +1050,10 @@ EllipWidget::EllipWidget( float x, float y, float w, float h, float o_x,
   opac_x = o_x;
   topLeft->x = x;
   topLeft->y = y;
+  topRight->x = x+w;
+  topRight->y = y;
+  bottomLeft->x = x;
+  bottomLeft->y = y-h;
   bottomRight->x = x+w;
   bottomRight->y = y-h;
   color[0] = focusR;
@@ -1112,6 +1150,8 @@ EllipWidget::genTransFunc( void )
 RBowWidget::RBowWidget( float x, float y, float w, float h, float c[3] )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   type = Rainbow;
   drawFlag = Probe;
@@ -1126,6 +1166,10 @@ RBowWidget::RBowWidget( float x, float y, float w, float h, float c[3] )
   opac_x = x;
   topLeft->x = x-w*0.5;
   topLeft->y = y+h*0.5;
+  topRight->x = x+w*0.5;
+  topRight->y = y+h*0.5;
+  bottomLeft->x = x-w*0.5;
+  bottomLeft->y = y-h*0.5;
   bottomRight->x = x+w*0.5;
   bottomRight->y = y-h*0.5;
 
@@ -1151,14 +1195,21 @@ RBowWidget::RBowWidget( float x, float y, float w, float h, float c[3] )
 RBowWidget::RBowWidget( Widget* old_wid )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   textureAlign = old_wid->textureAlign;
   drawFlag = Null;
   width = old_wid->width;
-  height = (old_wid->getTextUBound())->y - (old_wid->getTextLBound())->y;
-  topLeft->x = old_wid->getCenterX() - width*0.5;
-  topLeft->y = (old_wid->getTextUBound())->y;
-  bottomRight->x = topLeft->x + width;	bottomRight->y = topLeft->y - height;
+  height = (old_wid->getTextULBound())->y - (old_wid->getTextLRBound())->y;
+  topLeft->x = (old_wid->getTextULBound())->x;
+  topLeft->y = (old_wid->getTextULBound())->y;
+  topRight->x = (old_wid->getTextURBound())->x;
+  topRight->y = (old_wid->getTextURBound())->y;
+  bottomLeft->x = (old_wid->getTextULBound())->x;
+  bottomLeft->y = (old_wid->getTextLLBound())->y;
+  bottomRight->x = (old_wid->getTextLRBound())->x;
+  bottomRight->y = (old_wid->getTextLRBound())->y;
   color[0] = focusR;
   color[1] = focusG;
   color[2] = focusB;
@@ -1189,6 +1240,8 @@ RBowWidget::RBowWidget( float x, float y, float w, float h, float o_x,
 			TextureAlign tA )
 {
   topLeft = new Vertex;
+  topRight = new Vertex;
+  bottomLeft = new Vertex;
   bottomRight = new Vertex;
   textureAlign = tA;
   drawFlag = Null;
@@ -1200,6 +1253,10 @@ RBowWidget::RBowWidget( float x, float y, float w, float h, float o_x,
   opac_x = o_x;
   topLeft->x = x;
   topLeft->y = y;
+  topRight->x = x+w;
+  topRight->y = y;
+  bottomLeft->x = x;
+  bottomLeft->y = y-h;
   bottomRight->x = x+w;
   bottomRight->y = y-h;
   color[0] = focusR;
@@ -1286,41 +1343,39 @@ RBowWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 void
 RBowWidget::genTransFunc( void )
 {
-  int i, j;
   float red = 1;
   float green = 0;
   float blue = 0;
   float hue_width = textureWidth/6;
   float color_step = 1/hue_width;
-  for( i = 0; i < textureHeight; i++ )
-    {
-      red = 1;
-      green = blue = 0;
-      for( j = 0; j < textureWidth; j++ ) {
-	if( j < hue_width )
-	  green += color_step;
-	else if( j < 2*hue_width )
-	  red -= color_step;
-	else if( j < 3*hue_width )
-	  blue += color_step;
-	else if( j < 4*hue_width )
-	  green -= color_step;
-	else if( j < 5*hue_width )
-	  red += color_step;
-	else if( j < 6*hue_width )
-	  blue -= color_step;
-	
-	if( red < 0.0f )
-	  red = 0.0f;
-	if( green < 0.0f )
-	  green = 0.0f;
-	if( blue < 0.0f )
-	  blue = 0.0f;
-	
-	transText->textArray[i][j][0] = red;
-	transText->textArray[i][j][1] = green;
-	transText->textArray[i][j][2] = blue;
-	transText->textArray[i][j][3] = 0.50f;
-      }
-    }			
+  for( int i = 0; i < textureHeight; i++ ) {
+    red = 1;
+    green = blue = 0;
+    for( int j = 0; j < textureWidth; j++ ) {
+      if( j < hue_width )
+	green += color_step;
+      else if( j < 2*hue_width )
+	red -= color_step;
+      else if( j < 3*hue_width )
+	blue += color_step;
+      else if( j < 4*hue_width )
+	green -= color_step;
+      else if( j < 5*hue_width )
+	red += color_step;
+      else
+	blue -= color_step;
+      
+      if( red < 0.0f )
+	red = 0.0f;
+      if( green < 0.0f )
+	green = 0.0f;
+      if( blue < 0.0f )
+	blue = 0.0f;
+      
+      transText->textArray[i][j][0] = red;
+      transText->textArray[i][j][1] = green;
+      transText->textArray[i][j][2] = blue;
+      transText->textArray[i][j][3] = 0.50f;
+    }
+  }			
 }
