@@ -15,9 +15,9 @@
 #define _assert_h
 
 #include <iostream>
-using namespace std;
 
 namespace Remote {
+using namespace std;
 // This assertion always causes a fatal error. It doesn't depend on debug mode.
 #define ASSERTERR(condition,msg) {if(!(condition)){cerr << "Fatal Error: (" << (#condition) << ") at " << __FILE__ <<":" << __LINE__ << " " << (#msg) << endl; exit(1);}}
 

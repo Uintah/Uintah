@@ -7,9 +7,9 @@
 
 #include <iostream>
 #include <fstream>
-using namespace std;
 
 namespace Remote {
+using namespace std;
 class ZImage : public Image
 {
 public:

@@ -8,9 +8,9 @@
 
 #include <Packages/Remote/Tools/Model/Object.h>
 #include <vector>
-using namespace std;
 
 namespace Remote {
+using namespace std;
 struct TexInfo
 {
   const char *TexFName;

@@ -14,9 +14,9 @@
 #define SCI_Math_CatmullRomSpline_h
 
 #include <vector>
-using namespace std;
 
 namespace Remote {
+using namespace std;
 template<class T>
 class CatmullRomSpline {
 	vector<T> d;

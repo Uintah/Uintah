@@ -20,9 +20,8 @@
 #include <math.h>
 #include <strings.h>
 
-using namespace SCIRun;
-
 namespace Phil {
+using namespace SCIRun;
 struct VertexCL {
   float pos[3];
 };

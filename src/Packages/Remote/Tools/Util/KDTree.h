@@ -17,9 +17,9 @@
 // friend inline bool lessFZ(const _Tp &a, const _Tp &b);
 
 #include <algorithm>
-using namespace std;
 
 namespace Remote {
+using namespace std;
 #define MAX_BOX_SIZE 64
 
 template<class _Tp>
