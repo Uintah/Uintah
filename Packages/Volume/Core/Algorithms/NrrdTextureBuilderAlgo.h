@@ -1,101 +1,67 @@
-/*
-  The contents of this file are subject to the University of Utah Public
-  License (the "License"); you may not use this file except in compliance
-  with the License.
-  
-  Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-  License for the specific language governing rights and limitations under
-  the License.
-  
-  The Original Source Code is SCIRun, released March 12, 2001.
-  
-  The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
-*/
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : NrrdTextureBuilderAlgo.h
+//    Author : Milan Ikits
+//    Date   : Fri Jul 16 02:48:14 2004
 
-/*
- *  GLTexture3DBuilder:
- *  Written by:
- *   Kurt Zimmerman
- *   SCI Institute
- *   University of Utah
- *   Jan 2004
- *
- *  Copyright (C) 2003 SCI Group
- */
+#ifndef Volume_NrrdTextureBuilderAlgo_h
+#define Volume_NrrdTextureBuilderAlgo_h
 
-
-#ifndef NrrdTextureBuilderAlgo_h
-#define NrrdTextureBuilderAlgo_h
-
+#include <vector>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Containers/BinaryTree.h>
-#include <Core/Thread/ThreadGroup.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Runnable.h>
-#include <sgi_stl_warnings_off.h>
-#include <sstream>
-#include <sgi_stl_warnings_on.h>
-
-#include <Core/Util/DynamicLoader.h>
+#include <Core/Malloc/Allocator.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
-#include <Packages/Volume/Core/Datatypes/TypedBrickData.h>
-#include <Packages/Volume/Core/Datatypes/BrickWindow.h>
-
+#include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 
-namespace Volume {
-
-using std::ostringstream;
-
-using SCIRun::Transform;
 using SCIRun::BBox;
 using SCITeem::NrrdData;
 using SCITeem::NrrdDataHandle;
-class BrickNode;
 
-class NrrdTextureBuilderAlgo {
+namespace Volume {
+
+class NrrdTextureBuilderAlgo
+{
 public:
   NrrdTextureBuilderAlgo();
   ~NrrdTextureBuilderAlgo();
 
-  Texture* build(NrrdDataHandle, NrrdDataHandle, int);
+  void build(TextureHandle texture,
+             NrrdDataHandle vnrrd, NrrdDataHandle gnrrd,
+             int card_mem);
 
 protected:
-  int ni_, nj_, nk_;
-  int nc_, nb_[2];
-  int vi_, vj_, vk_;
-  Transform transform_;
-  BBox bbox_;
-
-  void computeDivisions(int nx, int ny, int nz, int nb,
-                        int& max_tex, int& sx, int& sy, int& sz);
-  void buildBricks(BinaryTree<BrickNode *>*& tree,
-                   NrrdDataHandle nrrd, NrrdDataHandle nrrd,
-		   int max_tex, int sx, int sy, int sz, int nc, int* nb);
-  BinaryTree<BrickNode*>* buildTree(int& mi, int& mj, int& mk,
-                                    int& ni, int& nj, int& nk, int nc, int* nb,
-                                    BBox bbox,
-                                    int& mvi, int &mvj, int& mvk,
-                                    int& vi, int& vj, int& vk, BBox vbox,
-                                    const double& di, const double& dj,
-                                    const double& dk, const int& max_tex, 
-                                    int axis, int& index);
-  void fillTree(BinaryTree<BrickNode*>* tree,
-                NrrdDataHandle vfield,
-                NrrdDataHandle gfield);
-  void filldata(BrickData* bdata,
-                BrickWindow* bw,
-                NrrdDataHandle vfield,
-                NrrdDataHandle gfield);
+  void build_bricks(std::vector<Brick*>& bricks, int nx, int ny, int nz,
+                    int nc, int* nb, const BBox& bbox, int brick_mem);
+  void fill_brick(Brick* brick, Nrrd* nv_nrrd, Nrrd* gm_nrrd,
+                  int ni, int nj, int nk);
 };
 
-} // end namespace Volume
+} // namespace Volume
 
-#endif // NrrdTextureBuilderAlgo_h
+#endif // Volume_NrrdTextureBuilderAlgo_h

@@ -261,6 +261,7 @@ TextureRenderer::load_brick(Brick* brick)
   int nc = brick->nc();
   int idx[2];
   for(int c=0; c<nc; c++) {
+    glActiveTexture(GL_TEXTURE0+c);
     int nb = brick->nb(c);
     int nx = brick->nx();
     int ny = brick->ny();

@@ -122,7 +122,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
   vector<Brick*>& bricks = texture->bricks();
   if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
      || nc != texture->nc() || card_mem != texture->card_mem()) {
-    cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
+//     cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
     build_bricks(bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(), card_mem);
     texture->set_size(nx, ny, nz, nc, nb);
     texture->set_card_mem(card_mem);
@@ -197,14 +197,13 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<Brick*>& bricks, int nx, int 
   num_brick[0] = (int)ceil((double)(data_size[0]-1)/(brick_size[0]-1));
   num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
   num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
-  cerr << "Number of bricks: " << num_brick[0] << " x " << num_brick[1]
-       << " x " << num_brick[2] << endl;
+//   cerr << "Number of bricks: " << num_brick[0] << " x " << num_brick[1]
+//        << " x " << num_brick[2] << endl;
   // padded sizes of last bricks
   brick_pad[0] = NextPowerOf2(data_size[0] - (num_brick[0]-1)*(brick_size[0]-1));
   brick_pad[1] = NextPowerOf2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
   brick_pad[2] = NextPowerOf2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
   // delete previous bricks (if any)
-  cerr << "DELETING BRICKS" << endl;
   for(unsigned int i=0; i<bricks.size(); i++) delete bricks[i];
   bricks.resize(0);
   bricks.reserve(num_brick[0]*num_brick[1]*num_brick[2]);
@@ -264,9 +263,9 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<Brick*>& bricks, int nx, int 
           BBox(Point(tmin[0], tmin[1], tmin[2]),
                Point(tmax[0], tmax[1], tmax[2])),
           true);
-        cerr << "Adding brick: " << b->nx() << " " << b->ny() << " " << b->nz() << " | "
-             << b->ox() << " " << b->oy() << " " << b->oz() << " -> "
-             << b->mx() << " " << b->my() << " " << b->mz() << endl;
+//         cerr << "Adding brick: " << b->nx() << " " << b->ny() << " " << b->nz() << " | "
+//              << b->ox() << " " << b->oy() << " " << b->oz() << " -> "
+//              << b->mx() << " " << b->my() << " " << b->mz() << endl;
         bricks.push_back(b);
 
         // update x parameters                     
@@ -314,7 +313,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
 
   int nx = brick->nx();
   int ny = brick->ny();
-  //int nz = brick->nz();
+  int nz = brick->nz();
   int x0 = brick->ox();
   int y0 = brick->oy();
   int z0 = brick->oz();
@@ -322,12 +321,14 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
   int y1 = y0+brick->my();
   int z1 = z0+brick->mz();
 
-  cerr << x0 << " "
-       << y0 << " "
-       << z0 << " "
-       << x1 << " "
-       << y1 << " "
-       << z1 << endl;
+  int i, j, k, ii, jj, kk;
+    
+//   cerr << x0 << " "
+//        << y0 << " "
+//        << z0 << " "
+//        << x1 << " "
+//        << y1 << " "
+//        << z1 << endl;
     
   if(br && vfld && ((gfld && nc == 2) || nc == 1)) {
     typename FieldType::mesh_type* mesh = vfld->get_typed_mesh().get_rep();
@@ -335,39 +336,61 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
     if (!gfld) { // fill only values
       unsigned char* tex = br->data(0);
       if(vfield->data_at() == SCIRun::Field::CELL) {
-        cerr << "OK0" << endl;
         typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
                                                           x1, y1, z1);
-        typename FieldType::mesh_type::CellIter iter_end;
-        iter.end(iter_end);
-        for(int k=0, kk=z0; kk<z1; kk++, k++) {
-          for(int j=0, jj=y0; jj<y1; jj++, j++) {
-            for(int i=0, ii=x0; ii<x1; ii++, i++) {
+        for(k=0, kk=z0; kk<z1; kk++, k++) {
+          for(j=0, jj=y0; jj<y1; jj++, j++) {
+            for(i=0, ii=x0; ii<x1; ii++, i++) {
               double v = vfld->fdata()[*iter];
               tex[k*ny*nx+j*nx+i] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               ++iter;
             }
+            if(nx != brick->mx()) {
+              tex[k*ny*nx+j*nx+i] = 0;
+            }
+          }
+          if(ny != brick->my()) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              tex[k*ny*nx+j*nx+i] = 0;
+            }
           }
         }
-        cerr << "OK1" << endl;
+        if(nz != brick->mz()) {
+          for(j=0; j<Min(ny, brick->my()+1); j++) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              tex[k*ny*nx+j*nx+i] = 0;
+            }
+          }
+        }
       } else {
-        cerr << "OK0" << endl;
         typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                         x1, y1, z1);
-        typename FieldType::mesh_type::NodeIter iter_end;
-        iter.end(iter_end);
-        for(int k=0, kk=z0; kk<z1; kk++, k++) {
-          for(int j=0, jj=y0; jj<y1; jj++, j++) {
-            for(int i=0, ii=x0; ii<x1; ii++, i++) {
+                                                          x1, y1, z1);
+        for(k=0, kk=z0; kk<z1; kk++, k++) {
+          for(j=0, jj=y0; jj<y1; jj++, j++) {
+            for(i=0, ii=x0; ii<x1; ii++, i++) {
               double v = vfld->fdata()[*iter];
               tex[k*ny*nx+j*nx+i] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               ++iter;
             }
+            if(nx != brick->mx()) {
+              tex[k*ny*nx+j*nx+i] = 0;
+            }
+          }
+          if(ny != brick->my()) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              tex[k*ny*nx+j*nx+i] = 0;
+            }
           }
         }
-        cerr << "OK1" << endl;
+        if(nz != brick->mz()) {
+          for(j=0; j<Min(ny, brick->my()+1); j++) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              tex[k*ny*nx+j*nx+i] = 0;
+            }
+          }
+        }
       }
     } else { // fill values + gradient
       unsigned char* tex0 = br->data(0);
@@ -375,14 +398,12 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
       
       if(vfield->data_at() == SCIRun::Field::CELL) {
         typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
-                                                         x1, y1, z1);
-        typename FieldType::mesh_type::CellIter iter_end;
-        iter.end(iter_end);
-    
-        for(int k=0, kk=z0, idx=0; kk<z1; kk++, k++) {
-          for(int j=0, jj=y0; jj<y1; jj++, j++) {
-            for(int i=0, ii=x0; ii<x1; ii++, i++, idx++) {
+                                                          x1, y1, z1);
+        for(k=0, kk=z0; kk<z1; kk++, k++) {
+          for(j=0, jj=y0; jj<y1; jj++, j++) {
+            for(i=0, ii=x0; ii<x1; ii++, i++) {
               double v = vfld->fdata()[*iter];
+              int idx = k*ny*nx+j*nx+i;
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
@@ -396,18 +417,47 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
               tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
               ++iter;
+            }
+            if(nx != brick->mx()) {
+              int idx = k*ny*nx+j*nx+i;
+              tex0[idx*4+0] = 0;
+              tex0[idx*4+1] = 0;
+              tex0[idx*4+2] = 0;
+              tex0[idx*4+3] = 0;
+              tex1[idx] = 0;
+            }
+          }
+          if(ny != brick->my()) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              int idx = k*ny*nx+j*nx+i;
+              tex0[idx*4+0] = 0;
+              tex0[idx*4+1] = 0;
+              tex0[idx*4+2] = 0;
+              tex0[idx*4+3] = 0;
+              tex1[idx] = 0;
+            }
+          }
+        }
+        if(nz != brick->mz()) {
+          for(j=0; j<Min(ny, brick->my()+1); j++) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              int idx = k*ny*nx+j*nx+i;
+              tex0[idx*4+0] = 0;
+              tex0[idx*4+1] = 0;
+              tex0[idx*4+2] = 0;
+              tex0[idx*4+3] = 0;
+              tex1[idx] = 0;
             }
           }
         }
       } else {
         typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                         x1, y1, z1);
-        typename FieldType::mesh_type::NodeIter iter_end;
-        iter.end(iter_end);
-        for(int k=0, kk=z0, idx=0; kk<z1; kk++, k++) {
-          for(int j=0, jj=y0; jj<y1; jj++, j++) {
-            for(int i=0, ii=x0; ii<x1; ii++, i++, idx++) {
+                                                          x1, y1, z1);
+        for(k=0, kk=z0; kk<z1; kk++, k++) {
+          for(j=0, jj=y0; jj<y1; jj++, j++) {
+            for(i=0, ii=x0; ii<x1; ii++, i++) {
               double v = vfld->fdata()[*iter];
+              int idx = k*ny*nx+j*nx+i;
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
@@ -422,10 +472,40 @@ TextureBuilderAlgo<FieldType>::fill_brick(Brick* brick,
               tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
               ++iter;
             }
+            if(nx != brick->mx()) {
+              int idx = k*ny*nx+j*nx+i;
+              tex0[idx*4+0] = 0;
+              tex0[idx*4+1] = 0;
+              tex0[idx*4+2] = 0;
+              tex0[idx*4+3] = 0;
+              tex1[idx] = 0;
+            }
+          }
+          if(ny != brick->my()) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              int idx = k*ny*nx+j*nx+i;
+              tex0[idx*4+0] = 0;
+              tex0[idx*4+1] = 0;
+              tex0[idx*4+2] = 0;
+              tex0[idx*4+3] = 0;
+              tex1[idx] = 0;
+            }
+          }
+        }
+        if(nz != brick->mz()) {
+          for(j=0; j<Min(ny, brick->my()+1); j++) {
+            for(i=0; i<Min(nx, brick->mx()+1); i++) {
+              int idx = k*ny*nx+j*nx+i;
+              tex0[idx*4+0] = 0;
+              tex0[idx*4+1] = 0;
+              tex0[idx*4+2] = 0;
+              tex0[idx*4+3] = 0;
+              tex1[idx] = 0;
+            }
           }
         }
       }
-    }      
+    }    
   } else {
     cerr<<"Not a Lattice type---should not be here\n";
   }

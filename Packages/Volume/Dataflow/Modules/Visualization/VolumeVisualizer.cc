@@ -98,7 +98,7 @@ private:
   GuiInt gui_light_;
   GuiInt gui_blend_res_;
   
-  VolumeRenderer *volren_;
+  VolumeRenderer* volren_;
 };
 
 
@@ -108,6 +108,7 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     tex(0),
     cmap1_prevgen(0),
     cmap2_prevgen(0),
+    card_mem_(video_card_memory_size()),
     control_lock("VolumeVisualizer resolution lock"),
     control_widget(0),
     control_id(-1),
@@ -127,16 +128,14 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_light_(ctx->subVar("light")),
     gui_blend_res_(ctx->subVar("blend_res")),
     volren_(0)
-{
-  card_mem_ = video_card_memory_size();
-}
+{}
 
-VolumeVisualizer::~VolumeVisualizer(){
-}
+VolumeVisualizer::~VolumeVisualizer()
+{}
 
 void
-VolumeVisualizer::execute(){
-
+VolumeVisualizer::execute()
+{
   static Point oldmin(0,0,0), oldmax(0,0,0);
   static int oldni = 0, oldnj = 0, oldnk = 0;
   static GeomID geomID  = 0;
