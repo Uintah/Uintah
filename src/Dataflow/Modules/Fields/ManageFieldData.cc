@@ -56,8 +56,20 @@ public:
 
   void callback_tetvolvector(TetVol<Vector> *ifield);
   template <class F> void callback_scalar(F *ifield);
-  template <class IM, class OF> void callback_mesh(IM *m, OF *f);
+
+  template <class IM, class OF> void callback_mesh_scalar(IM *m, OF *f);
+  template <class IM, class OF> void callback_mesh_vector(IM *m, OF *f);
+  template <class IM, class OF> void callback_mesh_tensor(IM *m, OF *f);
   virtual void execute();
+
+  template <class Fld, class Loc>
+  MatrixHandle callback_scalar1(Fld *ifield, Loc *);
+
+  template <class Fld, class Loc>
+  MatrixHandle callback_vector1(Fld *ifield, Loc *);
+
+  template <class Fld, class Loc>
+  MatrixHandle callback_tensor1(Fld *ifield, Loc *);
 };
 
 
@@ -83,75 +95,30 @@ ManageFieldData::callback_tetvolvector(TetVol<Vector> *ifield)
   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Output Matrix");
   if (omatrix_port->nconnections() > 0)
   {
-    TetVolMeshHandle mesh = ifield->get_typed_mesh();
-    DenseMatrix *omatrix;
+    MatrixHandle omh;
     switch (ifield->data_at())
     {
     case Field::NODE:
       {
-	int index = 0;
-	omatrix = new DenseMatrix(mesh->nodes_size(), 3);
-	TetVolMesh::Node::iterator iter = mesh->node_begin();
-	while (iter != mesh->node_end())
-	{
-	  Vector val = ifield->value(*iter);
-	  (*omatrix)[index][0]=val.x();
-	  (*omatrix)[index][1]=val.y();
-	  (*omatrix)[index][2]=val.z();
-	  index++;
-	  ++iter;
-	}
+	omh = callback_vector1(ifield, (TetVolMesh::Node *)0);
       }
       break;
 
     case Field::EDGE:
       {
-	int index = 0;
-	omatrix = new DenseMatrix(mesh->edges_size(), 3);
-	TetVolMesh::Edge::iterator iter = mesh->edge_begin();
-	while (iter != mesh->edge_end())
-	{
-	  Vector val = ifield->value(*iter);
-	  (*omatrix)[index][0]=val.x();
-	  (*omatrix)[index][1]=val.y();
-	  (*omatrix)[index][2]=val.z();
-	  index++;
-	  ++iter;
-	}
+	omh = callback_vector1(ifield, (TetVolMesh::Edge *)0);
       }
       break;
 
     case Field::FACE:
       {
-	int index = 0;
-	omatrix = new DenseMatrix(mesh->faces_size(), 3);
-	TetVolMesh::Face::iterator iter = mesh->face_begin();
-	while (iter != mesh->face_end())
-	{
-	  Vector val = ifield->value(*iter);
-	  (*omatrix)[index][0]=val.x();
-	  (*omatrix)[index][1]=val.y();
-	  (*omatrix)[index][2]=val.z();
-	  index++;
-	  ++iter;
-	}
+	omh = callback_vector1(ifield, (TetVolMesh::Face *)0);
       }
       break;
 
     case Field::CELL:
       {
-	int index = 0;
-	omatrix = new DenseMatrix(mesh->cells_size(), 3);
-	TetVolMesh::Cell::iterator iter = mesh->cell_begin();
-	while (iter != mesh->cell_end())
-	{
-	  Vector val = ifield->value(*iter);
-	  (*omatrix)[index][0]=val.x();
-	  (*omatrix)[index][1]=val.y();
-	  (*omatrix)[index][2]=val.z();
-	  index++;
-	  ++iter;
-	}
+	omh = callback_vector1(ifield, (TetVolMesh::Cell *)0);
       }
       break;
 
@@ -160,10 +127,88 @@ ManageFieldData::callback_tetvolvector(TetVol<Vector> *ifield)
       return;
     }
     
-    MatrixHandle omatrix_handle(omatrix);
-    omatrix_port->send(omatrix_handle);
+    omatrix_port->send(omh);
   }
 }
+
+
+
+template <class Fld, class Loc>
+MatrixHandle
+ManageFieldData::callback_scalar1(Fld *ifield, Loc *)
+{
+  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
+  ColumnMatrix *omatrix =
+    scinew ColumnMatrix(mesh->tsize((typename Loc::size_type *)0));
+  int index = 0;
+  typename Loc::iterator iter = mesh->tbegin((typename Loc::iterator *)0);
+  typename Loc::iterator eiter = mesh->tend((typename Loc::iterator *)0);
+  while (iter != eiter)
+  {
+    typename Fld::value_type val = ifield->value(*iter);
+    omatrix->put(index++, (double)val);
+    ++iter;
+  }
+
+  return MatrixHandle(omatrix);
+}
+
+
+template <class Fld, class Loc>
+MatrixHandle
+ManageFieldData::callback_vector1(Fld *ifield, Loc *)
+{
+  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
+  DenseMatrix *omatrix =
+    scinew DenseMatrix(mesh->tsize((typename Loc::size_type *)0), 3);
+  int index = 0;
+  typename Loc::iterator iter = mesh->tbegin((typename Loc::iterator *)0);
+  typename Loc::iterator eiter = mesh->tend((typename Loc::iterator *)0);
+  while (iter != eiter)
+  {
+    typename Fld::value_type val = ifield->value(*iter);
+    (*omatrix)[index][0]=val.x();
+    (*omatrix)[index][1]=val.y();
+    (*omatrix)[index][2]=val.z();
+    index++;
+    ++iter;
+  }
+
+  return MatrixHandle(omatrix);
+}
+
+
+template <class Fld, class Loc>
+MatrixHandle
+ManageFieldData::callback_tensor1(Fld *ifield, Loc *)
+{
+  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
+  DenseMatrix *omatrix =
+    scinew DenseMatrix(mesh->tsize((typename Loc::size_type *)0), 9);
+  int index = 0;
+  typename Loc::iterator iter = mesh->tbegin((typename Loc::iterator *)0);
+  typename Loc::iterator eiter = mesh->tend((typename Loc::iterator *)0);
+  while (iter != eiter)
+  {
+    typename Fld::value_type val = ifield->value(*iter);
+    (*omatrix)[index][0]=val.mat_[0][0];
+    (*omatrix)[index][1]=val.mat_[0][1];
+    (*omatrix)[index][2]=val.mat_[0][2];;
+
+    (*omatrix)[index][3]=val.mat_[1][0];;
+    (*omatrix)[index][4]=val.mat_[1][1];;
+    (*omatrix)[index][5]=val.mat_[1][2];;
+
+    (*omatrix)[index][6]=val.mat_[2][0];;
+    (*omatrix)[index][7]=val.mat_[2][1];;
+    (*omatrix)[index][8]=val.mat_[2][2];;
+    index++;
+    ++iter;
+  }
+
+  return MatrixHandle(omatrix);
+}
+
 
 template <class F>
 void
@@ -172,63 +217,30 @@ ManageFieldData::callback_scalar(F *ifield)
   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Output Matrix");
   if (omatrix_port->nconnections() > 0)
   {
-    typename F::mesh_handle_type mesh = ifield->get_typed_mesh();
-    ColumnMatrix *omatrix;
+    MatrixHandle omh;
     switch (ifield->data_at())
     {
     case Field::NODE:
       {
-	int index = 0;
-	omatrix = new ColumnMatrix(mesh->nodes_size());
-	typename F::mesh_type::Node::iterator iter = mesh->node_begin();
-	while (iter != mesh->node_end())
-	{
-	  typename F::value_type val = ifield->value(*iter);
-	  omatrix->put(index++, (double)val);
-	  ++iter;
-	}
+	omh = callback_scalar1(ifield, (typename F::mesh_type::Node *)0);
       }
       break;
 
     case Field::EDGE:
       {
-	int index = 0;
-	omatrix = new ColumnMatrix(mesh->edges_size());
-	typename F::mesh_type::Edge::iterator iter = mesh->edge_begin();
-	while (iter != mesh->edge_end())
-	{
-	  typename F::value_type val = ifield->value(*iter);
-	  omatrix->put(index++, (double)val);
-	  ++iter;
-	}
+	omh = callback_scalar1(ifield, (typename F::mesh_type::Edge *)0);
       }
       break;
 
     case Field::FACE:
       {
-	int index = 0;
-	omatrix = new ColumnMatrix(mesh->faces_size());
-	typename F::mesh_type::Face::iterator iter = mesh->face_begin();
-	while (iter != mesh->face_end())
-	{
-	  typename F::value_type val = ifield->value(*iter);
-	  omatrix->put(index++, (double)val);
-	  ++iter;
-	}
+	omh = callback_scalar1(ifield, (typename F::mesh_type::Face *)0);
       }
       break;
 
     case Field::CELL:
       {
-	int index = 0;
-	omatrix = new ColumnMatrix(mesh->cells_size());
-	typename F::mesh_type::Cell::iterator iter = mesh->cell_begin();
-	while (iter != mesh->cell_end())
-	{
-	  typename F::value_type val = ifield->value(*iter);
-	  omatrix->put(index++, (double)val);
-	  ++iter;
-	}
+	omh = callback_scalar1(ifield, (typename F::mesh_type::Cell *)0);
       }
       break;
 
@@ -237,15 +249,14 @@ ManageFieldData::callback_scalar(F *ifield)
       return;
     }
     
-    MatrixHandle omatrix_handle(omatrix);
-    omatrix_port->send(omatrix_handle);
+    omatrix_port->send(omh);
   }
 }
 
 
 template <class IMesh, class OField>
 void
-ManageFieldData::callback_mesh(IMesh *imesh, OField *)
+ManageFieldData::callback_mesh_scalar(IMesh *imesh, OField *)
 {
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   if (ofield_port->nconnections() > 0)
@@ -263,9 +274,10 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     if (rows && rows == (unsigned int)imesh->nodes_size())
     {
       int index = 0;
-      ofield = new OField(imesh, Field::NODE);
+      ofield = scinew OField(imesh, Field::NODE);
       typename IMesh::Node::iterator iter = imesh->node_begin();
-      while (iter != imesh->node_end())
+      typename IMesh::Node::iterator eiter = imesh->node_end();
+      while (iter != eiter)
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);
 	++iter;
@@ -274,9 +286,10 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     else if (rows && rows == (unsigned int)imesh->edges_size())
     {
       int index = 0;
-      ofield = new OField(imesh, Field::EDGE);
+      ofield = scinew OField(imesh, Field::EDGE);
       typename IMesh::Edge::iterator iter = imesh->edge_begin();
-      while (iter != imesh->edge_end())
+      typename IMesh::Edge::iterator eiter = imesh->edge_end();
+      while (iter != eiter)
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);
 	++iter;
@@ -285,9 +298,10 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     else if (rows && rows == (unsigned int)imesh->faces_size())
     {
       int index = 0;
-      ofield = new OField(imesh, Field::FACE);
+      ofield = scinew OField(imesh, Field::FACE);
       typename IMesh::Face::iterator iter = imesh->face_begin();
-      while (iter != imesh->face_end())
+      typename IMesh::Face::iterator eiter = imesh->face_end();
+      while (iter != eiter)
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);
 	++iter;
@@ -296,9 +310,10 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
     else if (rows && rows == (unsigned int)imesh->cells_size())
     {
       int index = 0;
-      ofield = new OField(imesh, Field::CELL);
+      ofield = scinew OField(imesh, Field::CELL);
       typename IMesh::Cell::iterator iter = imesh->cell_begin();
-      while (iter != imesh->cell_end())
+      typename IMesh::Cell::iterator eiter = imesh->cell_end();
+      while (iter != eiter)
       {
 	ofield->set_value(imatrix->get(index++, 0), *iter);
 	++iter;
@@ -316,6 +331,227 @@ ManageFieldData::callback_mesh(IMesh *imesh, OField *)
 }
 
 
+template <class IMesh, class OField>
+void
+ManageFieldData::callback_mesh_vector(IMesh *imesh, OField *)
+{
+  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  if (ofield_port->nconnections() > 0)
+  {
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
+    MatrixHandle imatrix;
+    if (!imatrix_port->get(imatrix))
+    {
+      remark("No input matrix connected.");
+      return;
+    }
+
+    const unsigned int rows = imatrix->nrows();
+    OField *ofield;
+    if (rows && rows == (unsigned int)imesh->nodes_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::NODE);
+      typename IMesh::Node::iterator iter = imesh->node_begin();
+      typename IMesh::Node::iterator eiter = imesh->node_end();
+      while (iter != eiter)
+      {
+	Vector v(imatrix->get(index, 0),
+		 imatrix->get(index, 1),
+		 imatrix->get(index, 2));
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else if (rows && rows == (unsigned int)imesh->edges_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::EDGE);
+      typename IMesh::Edge::iterator iter = imesh->edge_begin();
+      typename IMesh::Edge::iterator eiter = imesh->edge_end();
+      while (iter != eiter)
+      {
+	Vector v(imatrix->get(index, 0),
+		 imatrix->get(index, 1),
+		 imatrix->get(index, 2));
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else if (rows && rows == (unsigned int)imesh->faces_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::FACE);
+      typename IMesh::Face::iterator iter = imesh->face_begin();
+      typename IMesh::Face::iterator eiter = imesh->face_end();
+      while (iter != eiter)
+      {
+	Vector v(imatrix->get(index, 0),
+		 imatrix->get(index, 1),
+		 imatrix->get(index, 2));
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else if (rows && rows == (unsigned int)imesh->cells_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::CELL);
+      typename IMesh::Cell::iterator iter = imesh->cell_begin();
+      typename IMesh::Cell::iterator eiter = imesh->cell_end();
+      while (iter != eiter)
+      {
+	Vector v(imatrix->get(index, 0),
+		 imatrix->get(index, 1),
+		 imatrix->get(index, 2));
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else
+    {
+      error("Matrix datasize does not match field geometry.");
+      return;
+    }
+
+    FieldHandle fh(ofield);
+    ofield_port->send(fh);
+  }
+}
+
+
+template <class IMesh, class OField>
+void
+ManageFieldData::callback_mesh_tensor(IMesh *imesh, OField *)
+{
+  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  if (ofield_port->nconnections() > 0)
+  {
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
+    MatrixHandle imatrix;
+    if (!imatrix_port->get(imatrix))
+    {
+      remark("No input matrix connected.");
+      return;
+    }
+
+    const unsigned int rows = imatrix->nrows();
+    OField *ofield;
+    if (rows && rows == (unsigned int)imesh->nodes_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::NODE);
+      typename IMesh::Node::iterator iter = imesh->node_begin();
+      typename IMesh::Node::iterator eiter = imesh->node_end();
+      while (iter != eiter)
+      {
+	Tensor v;
+	v.mat_[0][0] = imatrix->get(index, 0);
+	v.mat_[0][1] = imatrix->get(index, 1);
+	v.mat_[0][2] = imatrix->get(index, 2);
+
+	v.mat_[1][0] = imatrix->get(index, 3);
+	v.mat_[1][1] = imatrix->get(index, 4);
+	v.mat_[1][2] = imatrix->get(index, 5);
+
+	v.mat_[2][0] = imatrix->get(index, 6);
+	v.mat_[2][1] = imatrix->get(index, 7);
+	v.mat_[2][2] = imatrix->get(index, 8);
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else if (rows && rows == (unsigned int)imesh->edges_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::EDGE);
+      typename IMesh::Edge::iterator iter = imesh->edge_begin();
+      typename IMesh::Edge::iterator eiter = imesh->edge_end();
+      while (iter != eiter)
+      {
+	Tensor v;
+	v.mat_[0][0] = imatrix->get(index, 0);
+	v.mat_[0][1] = imatrix->get(index, 1);
+	v.mat_[0][2] = imatrix->get(index, 2);
+
+	v.mat_[1][0] = imatrix->get(index, 3);
+	v.mat_[1][1] = imatrix->get(index, 4);
+	v.mat_[1][2] = imatrix->get(index, 5);
+
+	v.mat_[2][0] = imatrix->get(index, 6);
+	v.mat_[2][1] = imatrix->get(index, 7);
+	v.mat_[2][2] = imatrix->get(index, 8);
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else if (rows && rows == (unsigned int)imesh->faces_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::FACE);
+      typename IMesh::Face::iterator iter = imesh->face_begin();
+      typename IMesh::Face::iterator eiter = imesh->face_end();
+      while (iter != eiter)
+      {
+	Tensor v;
+	v.mat_[0][0] = imatrix->get(index, 0);
+	v.mat_[0][1] = imatrix->get(index, 1);
+	v.mat_[0][2] = imatrix->get(index, 2);
+
+	v.mat_[1][0] = imatrix->get(index, 3);
+	v.mat_[1][1] = imatrix->get(index, 4);
+	v.mat_[1][2] = imatrix->get(index, 5);
+
+	v.mat_[2][0] = imatrix->get(index, 6);
+	v.mat_[2][1] = imatrix->get(index, 7);
+	v.mat_[2][2] = imatrix->get(index, 8);
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else if (rows && rows == (unsigned int)imesh->cells_size())
+    {
+      int index = 0;
+      ofield = scinew OField(imesh, Field::CELL);
+      typename IMesh::Cell::iterator iter = imesh->cell_begin();
+      typename IMesh::Cell::iterator eiter = imesh->cell_end();
+      while (iter != eiter)
+      {
+	Tensor v;
+	v.mat_[0][0] = imatrix->get(index, 0);
+	v.mat_[0][1] = imatrix->get(index, 1);
+	v.mat_[0][2] = imatrix->get(index, 2);
+
+	v.mat_[1][0] = imatrix->get(index, 3);
+	v.mat_[1][1] = imatrix->get(index, 4);
+	v.mat_[1][2] = imatrix->get(index, 5);
+
+	v.mat_[2][0] = imatrix->get(index, 6);
+	v.mat_[2][1] = imatrix->get(index, 7);
+	v.mat_[2][2] = imatrix->get(index, 8);
+	index++;
+	ofield->set_value(v, *iter);
+	++iter;
+      }
+    }
+    else
+    {
+      error("Matrix datasize does not match field geometry.");
+      return;
+    }
+
+    FieldHandle fh(ofield);
+    ofield_port->send(fh);
+  }
+}
+
 
 void
 ManageFieldData::execute()
@@ -329,43 +565,124 @@ ManageFieldData::execute()
     return;
   }
 
-  // Create a new Vector field with the same geometry handle as field.
-  const string geom_name = ifield->get_type_name(0);
-  if (geom_name == "TetVol")
+  if (ifieldhandle->query_scalar_interface())
   {
-    callback_mesh((TetVolMesh *)(ifield->mesh().get_rep()),
-		  (TetVol<double> *)0);
+    // Create a new Vector field with the same geometry handle as field.
+    const string geom_name = ifield->get_type_name(0);
+    if (geom_name == "TetVol")
+    {
+      callback_mesh_scalar((TetVolMesh *)(ifield->mesh().get_rep()),
+			   (TetVol<double> *)0);
+    }
+    else if (geom_name == "LatticeVol")
+    {
+      callback_mesh_scalar((LatVolMesh *)(ifield->mesh().get_rep()),
+			   (LatticeVol<double> *)0);
+    }
+    else if (geom_name == "TriSurf")
+    {
+      callback_mesh_scalar((TriSurfMesh *)(ifield->mesh().get_rep()),
+			   (TriSurf<double> *)0);
+    }
+    else if (geom_name == "ContourField")
+    {
+      callback_mesh_scalar((ContourMesh *)(ifield->mesh().get_rep()),
+			   (ContourField<double> *)0);
+    }
+    else if (geom_name == "PointCloud")
+    {
+      callback_mesh_scalar((PointCloudMesh *)(ifield->mesh().get_rep()),
+			   (PointCloud<double> *)0);
+    }
+    else
+    {
+      error("Cannot dispatch on mesh type '" + geom_name + "'.");
+      return;
+    }
+
+    dispatch_scalar1(ifieldhandle, callback_scalar);
   }
-  else if (geom_name == "LatticeVol")
+  else if (ifieldhandle->query_vector_interface())
   {
-    callback_mesh((LatVolMesh *)(ifield->mesh().get_rep()),
-		  (LatticeVol<double> *)0);
+    // Create a new Vector field with the same geometry handle as field.
+    const string geom_name = ifield->get_type_name(0);
+    if (geom_name == "TetVol")
+    {
+      callback_mesh_vector((TetVolMesh *)(ifield->mesh().get_rep()),
+			   (TetVol<Vector> *)0);
+    }
+    else if (geom_name == "LatticeVol")
+    {
+      callback_mesh_vector((LatVolMesh *)(ifield->mesh().get_rep()),
+			   (LatticeVol<Vector> *)0);
+    }
+    else if (geom_name == "TriSurf")
+    {
+      callback_mesh_vector((TriSurfMesh *)(ifield->mesh().get_rep()),
+			   (TriSurf<Vector> *)0);
+    }
+    else if (geom_name == "ContourField")
+    {
+      callback_mesh_vector((ContourMesh *)(ifield->mesh().get_rep()),
+			   (ContourField<Vector> *)0);
+    }
+    else if (geom_name == "PointCloud")
+    {
+      callback_mesh_vector((PointCloudMesh *)(ifield->mesh().get_rep()),
+			   (PointCloud<Vector> *)0);
+    }
+    else
+    {
+      error("Cannot dispatch on mesh type '" + geom_name + "'.");
+      return;
+    }
+
+    if (ifieldhandle->get_type_name(-1) == "TetVol<Vector>")
+    {
+      callback_tetvolvector(dynamic_cast<TetVol<Vector> *>(ifieldhandle.get_rep()));
+    }
   }
-  else if (geom_name == "TriSurf")
+  else if (ifieldhandle->query_tensor_interface())
   {
-    callback_mesh((TriSurfMesh *)(ifield->mesh().get_rep()),
-		  (TriSurf<double> *)0);
-  }
-  else if (geom_name == "ContourField")
-  {
-    callback_mesh((ContourMesh *)(ifield->mesh().get_rep()),
-		  (ContourField<double> *)0);
-  }
-  else if (geom_name == "PointCloud")
-  {
-    callback_mesh((PointCloudMesh *)(ifield->mesh().get_rep()),
-		  (PointCloud<double> *)0);
+    // Create a new Tensor field with the same geometry handle as field.
+    const string geom_name = ifield->get_type_name(0);
+    if (geom_name == "TetVol")
+    {
+      callback_mesh_tensor((TetVolMesh *)(ifield->mesh().get_rep()),
+			   (TetVol<Tensor> *)0);
+    }
+    else if (geom_name == "LatticeVol")
+    {
+      callback_mesh_tensor((LatVolMesh *)(ifield->mesh().get_rep()),
+			   (LatticeVol<Tensor> *)0);
+    }
+    else if (geom_name == "TriSurf")
+    {
+      callback_mesh_tensor((TriSurfMesh *)(ifield->mesh().get_rep()),
+			   (TriSurf<Tensor> *)0);
+    }
+    else if (geom_name == "ContourField")
+    {
+      callback_mesh_tensor((ContourMesh *)(ifield->mesh().get_rep()),
+			   (ContourField<Tensor> *)0);
+    }
+    else if (geom_name == "PointCloud")
+    {
+      callback_mesh_tensor((PointCloudMesh *)(ifield->mesh().get_rep()),
+			   (PointCloud<Tensor> *)0);
+    }
+    else
+    {
+      error("Cannot dispatch on mesh type '" + geom_name + "'.");
+      return;
+    }
   }
   else
   {
-    error("Cannot dispatch on mesh type '" + geom_name + "'.");
-    return;
-  }
-
-  dispatch_scalar1(ifieldhandle, callback_scalar);
-  if (ifieldhandle->get_type_name(-1) == "TetVol<Vector>") {
-    callback_tetvolvector(dynamic_cast<TetVol<Vector> *>(ifieldhandle.get_rep()));
+    error("Unable to classify size.");
   }
 }
+
+
 } // End namespace SCIRun
 
