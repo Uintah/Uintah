@@ -7,11 +7,25 @@
 \usepackage{vmargin}
 %\setpapersize{USletter}
 \setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0pt}{0mm}
-\newcommand{\B}[1]   {\biggr{#1}}
 %...................................................
 \usepackage{pslatex}
 \usepackage[ps2pdf]{}
-%.....................................................
+%..............................
+% Alias commands
+%..............................    
+\newcommand{\SUM}[1]    {\ensuremath{\sum \limits_{{#1}=1}^N }}
+\newcommand{\bigS}[1]   {\ensuremath{S^{r \leftrightarrow m}_{#1}}  } 
+\newcommand{\B}[1]      {\biggr{#1}}            
+\newcommand{\U}         {{\vec{U}}}                    
+\newcommand{\uo}        {\ensuremath{\vec{U}_o}}      
+\newcommand{\rhoM}      {\ensuremath{\rho^{o}_m}}                 
+\newcommand{\delt}      {\ensuremath{\Delta{t}} }                 
+\newcommand{\delx}      {\ensuremath{\Delta{x}} } 
+\newcommand{\f}         {\ensuremath{f^{\theta}_m} }
+\newcommand{\sv}[1]     {\ensuremath{v^o_{m_{#1}} }} 
+\newcommand{\dpdrho}    {\ensuremath{ \frac{dP}{d\rhoM}} }
+\newcommand{\compute}   {\ensuremath{\quad{\text{compute}\rightarrow}\quad}}
+ %.....................................................
 % This command is necessary so that the subscripts, some of which are
 % in capital letters come out
 %\DeclareMathSizes{10}{10}{6}{5}
@@ -19,99 +33,126 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}06/19/02}
+\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}06/19/03}
 
 \begin{enumerate}
 %__________________________________
 \item Compute the equilibration pressure 
-$P_{eq}, c_m, \rho^o_m, \theta_m$ such that $\sum\theta_m = 1$, see attached for details.
+$P_{eq}, c_m, \rhoM, \theta_m, \f$, such that $\SUM{m}\theta_m = 1$, see attached for details.
 %__________________________________
 \item Compute the face-centered velocities 
 \[
     \vec{U_m}^{*^{f}} 
-    = \biggl<\frac{\rho_m \vec{U_m}}{\rho_m}\biggr>^{n^{f}}
-    -\frac{\Delta{t}}{<\rho^o_m>^f} \nabla^{f}P_{eq}
-    + \sum_n\biggl<\frac{\Delta{t}\theta_n K_{n,m}}{\rho_m}\biggr>^f(\vec{U_n}^{*^{f}} - \vec{U_m}^{*^{f}})
-    + \Delta{t}\vec{g}
+    = \B{<} \frac{ \rho_m \U_m }{\rho_m} \B{>}^{n^{f}}
+%
+    - \frac{ \delt }{< \rhoM >^f} \nabla^{f} P_{eq}
+    + \SUM{n} \B{<} \frac{\delt \theta_n K_{n,m}}{\rho_m} \biggl{>}^f(\vec{U_n}^{*^{f}} - \vec{U_m}^{*^{f}})  
+    + \delt\vec{g}
 \]
 \[    
-   =\frac{(\rho \vec{U})_{m_R} + (\rho \vec{U})_{m_L}}{\rho_{m_R} + \rho_{m_L}}
-    -\Delta{t}\frac{2.0 (v^o_L v^o_R)}{v^o_L + v^o_R} (\frac{P_{eq_R} - P_{eq_L}}{\Delta x})
-    + \text{Exchange Contribution}
-    + \Delta{t}\vec{g}
+   =\frac{(\rho \U)_{m_R} + (\rho \U)_{m_L}}{\rho_{m_R} + \rho_{m_L}}
+%
+   -\delt \frac{2.0 (\sv{L} \sv{R})}  {\sv{L} + \sv{R}}  \B{(} \frac{P_{eq_R} - P_{eq_L}}{\Delta x}\B{)}
+   + \text{Exchange Contribution}
+   + \delt\vec{g}
 \]
 The exchange contribution involves a pointwise implicit solve, see attached for details.
 %__________________________________
 \item Compute the mass exchange between materials
 
-\item Compute $\Delta P$ (eq 1.5)  
+$  \bigS{m_m},  \bigS{(m \U)_m}, \bigS{(m e)_m}, \bigS{(m v^o)_m }$
+%__________________________________
+\item Compute $\Delta P$ (eq 1.5) 
 \[
-     \Delta P = \Delta t \frac{ \sum {\frac{\dot{m_m}}{V\rho^0_m}} -\sum\nabla \cdot \theta_m \vec{U_m}^{*^{f}}}
-     {\sum \frac{\theta_m}{\rho^o_m c^2_m}} 
-     =
-     \frac{\sum {\frac{\dot{m_m}}{V\rho^0_m}} -\text{Advection} (\theta_m\vec{U_m}^{*^{f}})}
-     {\sum \frac{\theta_m}{\rho^o_m c^2_m}} 
-    = \Delta{P_{\text{Mass Exchange}}} - \Delta{P_{\text{Dilatate}}}
+     \Delta P = \Delta t 
+                        \frac{   \SUM{r}  \bigS{(m v^o)_r}
+                      - \overbrace { \SUM{m} \nabla \cdot \theta_m \vec{U_m}^{*^{f}} } ^{\text{Advection}(\theta, \vec{U_m}^{*^{f}}) } }
+                       {\SUM{m}  \frac{\theta_m +\bigS{\theta_m}  } {\rhoM c^2_m}}
 \]
-where $P^{n+1} = P_{eq} + \Delta{P}$.
+where $P^{n+1} = P_{eq} + \Delta{P}$ and $\bigS{\theta_m} = \frac{ \bigS{(m v^o)}}{V}$ .
 %__________________________________
 \item Compute the face centered pressure.
 \[
-    P^{*^{f}} = \frac{\frac{P}{\sum\rho_m} + \frac{P_{adj}}{\sum\rho_{m, adj}}}
-                     {\frac{1}{\sum\rho_m} + \frac{1}{\sum\rho_{m, adj}}}
+    P^{*^{f}} = \frac{\frac{P}{\SUM{m} \rho_m} + \frac{P_{adj}}{\SUM{m} \rho_{m, adj}}}
+                     {\frac{1}{\SUM{m} \rho_m} + \frac{1}{\SUM{m} \rho_{m, adj}}}
+%
+              =\frac{ {P \SUM{m} \rho_{m,adj}} + {P_{adj} \SUM{m} \rho_{m} }  }
+                 { {\SUM{m} \rho_m} + {\SUM{m} \rho_{m, adj}  }  }
 \]
 %__________________________________
 \item Accumulate sources\\  
- $\Delta(m\vec{U})_m = -\Delta{t} V \theta_m\nabla{ P^{*^f}} 
-    + \Delta{t}V\sum_l\theta_m\theta_l K_{ml}(\vec{U_l}^{{n+1}^L} - \vec{U_m}^{{n+1}^L} )
-    + \nabla{ \cdot \tau^{*^f}_m}
-    + m_m \vec{g}\Delta{t}$
+ $\Delta(m\vec{U})_m = 
+    - \delt V \theta_m\delt \nabla{ P^{*^f}} 
+    + \delt V \SUM{l} \theta_m \theta_l K_{ml}(\U_l^{{n+1}^L} - \U_m^{{n+1}^L} )
+    + \nabla{ \cdot (\theta_m \tau^{*^f}_m})
+    + m_m \vec{g}\delt$
     
- $\Delta(me)_m =  (\frac{V}{\rho^o_m c^2_m}(\theta_m P \Delta P_{\text{Dilatate}})
-    + \Delta{t}V\sum_l\theta_m\theta_l R_{ml}(T_l^{{n+1}^L} - T_m^{{n+1}^L} )$
+ $\Delta(me)_m =  
+    (\frac{V} {\rhoM c^2_m}(\theta_m P \Delta P_{\text{Dilatate}})
+    - \nabla q_{m}^{*^f}
+    + \delt V \SUM{l}  \theta_m \theta_l R_{ml}(T_l^{{n+1}^L} - T_m^{{n+1}^L} )$ \\
+where $q^{*^f} = -\theta^f k^f \nabla T$ and $\theta^f = v^o \B{(}  \frac{2 \rho_R \rho_L}{\rho_R + \rho_L} \B{)}$
 %__________________________________
+\newpage
 \item Compute Lagrangian quantities\\
-    $\rho^L_m = \rho_m + (\frac{\Delta{m}}{V})_m$ \\
-    $(m \vec{U})^L_m = (m\vec{U})_m + \Delta(m\vec{U})_m + (\vec{U}\Delta{m})_m$ \\
-    $(m e)^L_m = (m e)_m + \Delta(m e)_m + \text{Released Heat}$\\
+    $m^L_m     = {\rho_m}V + \bigS{m_m} $ \\
+    $(m\U)^L_m = (m\U)_m + \Delta(m\U)_m + \bigS{(m\U)_m}$ \\
+    $(m e)^L_m = (m e)_m + \Delta(m e)_m + \bigS{(me)_m}$\\
     \text{Note this includes the pointwise implicit solve for the momentum and energy exchange}
+
+\text{\bf{Evolution of specific volume}}\\
+    $(mv^o)^L_m = (mv^o)_m + \delt \f V \nabla \cdot  \vec{U_m}^{*^{f}}
+                + \delt V [\theta_m \alpha_m \dot{T_m} 
+                - \f \SUM{s} {\theta_s \alpha_s \dot{T_s}}]  $ \quad where $\alpha = 0 (mpm) = 1/T (ice)$  \\
+    Note $\delt \f V \nabla \cdot  \vec{U_m}^{*^{f}} = \theta_m \kappa_m V \Delta{p}$\\
+   $\dot T_m =\frac{ (T_{\text{After Exchange Process}} - T_{\text{Top of the time step}})}{\delt} $
 %__________________________________
 \item Advect and Advance in time\\
 $
-    \rho^{n+1}_m     = \rho^L_m     - \Delta{t}\text{Advection}(\rho^L_m, \vec{U_m}^{*^{f}})$\\
+    m^{n+1}_m     = m^L_m 
+                  - \delt\text{Advection}(m^L_m, \U_ m^{*^{f}})$\\
 $
-    (m\vec{U})^{n+1}_m = (m\vec{U})^L_m - \Delta{t}\text{Advection}((\rho\vec{U})^L_m, \vec{U_m}^{*^{f}})$\\
+    (m \U)^{n+1}_m = (m \U)^L_m 
+                   - \delt\text{Advection}((m \U)^L_m, \vec{U_m}^{*^{f}})$\\
 $
-    (me)^{n+1}_m       = (me)^L_m       - \Delta{t}\text{Advection}((\rho  e)^L_m, \vec{U_m}^{*^{f}})
+    (me)^{n+1}_m   = (me)^L_m       
+                   - \delt\text{Advection}((\rho  e)^L_m, \vec{U_m}^{*^{f}})
 $
 
 \end{enumerate}
 %______________________________________________________________________
-
 \newpage
 \underline{Calculation of the equilibration pressure}
 
 \begin{algorithmic}
-\STATE Find the microscopic density from the equation of state $\rho^O_m = eos(T_m,P) $
-\STATE Compute the first guess for the volume fraction $\theta_m = \frac{\rho_m}{\rho^O_m}$
+\STATE Initial Guess \\
+  $eos(T_m, P)  \compute ,\rhoM$ \\
+  $\theta_m = \frac{\rho_m}{\rhoM}$  \\
+  $eos(T_m, \rhoM)  \compute P_{{eos}_m}, \dpdrho, \frac{dP}{de}$ \\ 
+  $c_m =  \sqrt{ \frac {\B{(} \dpdrho + \frac{dP}{de} * P_{{eos}_m } \B{)}} {\rho^{o^2}_m} }$
+%
 \WHILE{ $|1 - \sum{\theta_m}| <$ convergence criteria}
-    \STATE  $P_{eos}[m] = eos(T_m,\rho^0_m) = (\gamma_m -1) * c_{v_m} * T_m * \rho^O_m$
-    \STATE $\frac{dP}{d\rho^O}_m = (\gamma_m -1)*c_{v_m} * T_m$
-        \FOR{$m=1$ to nMaterials}
-        \STATE $Q[m] = P- P_{eos}[m]$
-        \STATE $y[m] = \frac{dP}{d\rho^O}_m \frac{\rho_m}{\theta_m^2}$
+    
+    \FOR{$m=1$ to All Matls}
+      \STATE  $eos(T_m,\rhoM{m})  \compute P_{eos_{m}}, \dpdrho$
+      \STATE $Q_m += P- P_{{eos}_m}$
+      \STATE $y_m  += \dpdrho \frac{\rho_m}{\theta_m^2}$
     \ENDFOR
-    \STATE $\Delta p = \frac{  \sum{\theta_m} - \theta_{closedpacked} - \sum{\frac{Q[m]}{y[m]}}  }{\sum{\frac{1}{y[m]}} } $
+
+    \STATE $\Delta p = \frac{  \sum{\theta_m} - \theta_{closedpacked} - \sum{\frac{Q_m}{y_m}}  }{\sum{\frac{1}{y_m}} } $
     \STATE $P_{eq}=P_{eq}+ \Delta p $
-    \STATE $\rho^O_m = eos(P, T_m) = \frac{P}{(\gamma_m - 1)*c_{v_m}*T_m} $ 
-    \FOR{$m=1$ to nMaterials}
-        \STATE $ \theta_m =  \frac{\rho_m}{\rho^O_m}$
+%
+    \FOR{$m=1$ to All Matls}
+      \STATE $ eos(P, T_m) \compute  \rhoM$ 
+      \STATE $ eos(\rhoM, T_m) \compute   P_{{eos}_m}, \dpdrho, \frac{dP}{de}$ 
+      \STATE $c_m = \sqrt{ \frac {\B{(}\dpdrho + \frac{dP}{de} * P_{{eos}_m } \B{)}} {\rho^{o^2}_m} }$
+      \STATE $ \theta_m =  \frac{\rho_m}{\rhoM}$
     \ENDFOR
+
 \ENDWHILE 
-\STATE Compute speed of sound $c_m$ at new pressure $P_{eq}$
-\STATE verify that $\sum \theta_m = 1$
-\STATE verify that $ \theta_m > 0$
-  
+\STATE BulletProofing$(P, \rhoM, \theta_m) $
+
+\STATE compute $  \f = \frac{\theta_m \kappa_m}{\SUM{s}{\theta_s \kappa_s}},  \quad\sv{} = \frac {1}{\rhoM}$
 \end{algorithmic}
 
 %______________________________________________________________________
@@ -121,22 +162,22 @@ $
 \begin{enumerate}
 %__________________________________
 \item Rearrange the starting momentum Equation in the x-direction \\
-$    (mu)^{n+1^{L}}_m 
+$  (mu)^{n+1^{L}}_m 
     = (m u)_m^{n}
     + \text{sources /Sinks}
-    + \Delta{t} V \sum_n \theta_m \theta_n K_{m,n} (u_n^{n+1^{L}} - u_m^{n+1^{L}})
+    + \delt V \sum_n \theta_m \theta_n K_{m,n} (u_n^{n+1^{L}} - u_m^{n+1^{L}})
 $\\
 Divide through by the mass\\
-$    u^{n+1^{L}}_m 
+$   u^{n+1^{L}}_m 
     = \frac{(m u)_m^{n} }{m^{n+1^{L}}_m}
     + \frac{\text{sources /Sinks} }{m^{n+1^{L}}_m}
-    + \frac{\Delta{t} V \sum_n \theta_m \theta_n K_{m,n} (u_n^{n+1^{L}} - u_m^{n+1^{L}})}{m^{n+1^{L}}_m}
+    + \frac{\delt V \sum_n \theta_m \theta_n K_{m,n} (u_n^{n+1^{L}} - u_m^{n+1^{L}})}{m^{n+1^{L}}_m}
 $\\ 
-Now assume that $m^{n+1^{L}}_m = m^{n}_m$ and using $\theta_m = \frac{\rho_m}{\rho^o_m}$\\
+Now assume that $m^{n+1^{L}}_m = m^{n}_m$ and using $\theta_m = \frac{\rho_m}{\rhoM}$\\
 $    u^{n+1^{L}}_m 
     = \underbrace{ u^{n}  }_a
     - \underbrace{\frac{\text{sources /Sinks} }{m^{n}_m}}_b
-    + \underbrace{\Delta{t}\sum_n \frac{\theta_n K_{m,n}}{\rho^o_m} }_\beta  (u_n^{n+1^{L}} - u_m^{n+1^{L}})
+    + \underbrace{\delt\sum_n \frac{\theta_n K_{m,n}}{\rhoM} }_\beta  (u_n^{n+1^{L}} - u_m^{n+1^{L}})
 $
 \[
     u^{n+1^{L}}_m 
@@ -191,23 +232,23 @@ $
 \item Rearrange the starting momentum Equation in the x-direction \\
 $    (mu)^{n+1^{*^{f}}}_m 
     = \B<(m u)_m\B>^{n^{f}}
-    -\Delta{t} V \theta_m \nabla^{f}P_{eq}
-    + \Delta{t} V \sum_n \B<\theta_m \theta_n K_{m,n}\B>^f (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
-    + \Delta{t} m_m \vec{g}
+    -\delt V \theta_m \nabla^{f}P_{eq}
+    + \delt V \sum_n \B<\theta_m \theta_n K_{m,n}\B>^f (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
+    + \delt m_m \vec{g}
 $\\
- where $\theta = \frac{\rho_m}{\rho^o_m}=\nu^o_m$ and $m_m = \rho_m V$ so \\
+ where $\theta = \frac{\rho_m}{\rhoM}=\nu^o_m$ and $m_m = \rho_m V$ so \\
 $    (mu)^{n+1^{*^{f}}}_m 
     = \B<(m u)_m\B>^{n^{f}}
-    -\Delta{t} \B<\frac{m_m}{\rho^o_m}\B>^f \nabla^{f}P_{eq}
-    + \Delta{t}\sum_n \B<\frac{m_m\theta_n K_{m,n}}{\rho^o_m} \B>^f (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
-    + \Delta{t} \B<m_m\B>^f \vec{g}
+    -\delt \B<\frac{m_m}{\rhoM}\B>^f \nabla^{f}P_{eq}
+    + \delt\sum_n \B<\frac{m_m\theta_n K_{m,n}}{\rhoM} \B>^f (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
+    + \delt \B<m_m\B>^f \vec{g}
 $\\ 
 Now assume that $(m)^{n+1^{*^{f}}}_m = \B<m\B>^{n^{*^{f}}}_m$ and divide through.\\
 $    (u)^{n+1^{*^{f}}}_m 
     = \underbrace{ \B<\frac{(\rho u)_m}{\rho_m}\B>^{n^{f}}  }_a
-    - \underbrace{\Delta{t} \B<\frac{1}{\rho^o_m}\B>^f}_b \nabla^{f}P_{eq}
-    + \underbrace{\Delta{t}\sum_n \B<\frac{\theta_n K_{m,n}}{\rho^o_m} \B>^f}_\beta  (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
-    + \underbrace{\Delta{t} \vec{g}}_c
+    - \underbrace{\delt \B<\frac{1}{\rhoM}\B>^f}_b \nabla^{f}P_{eq}
+    + \underbrace{\delt\sum_n \B<\frac{\theta_n K_{m,n}}{\rhoM} \B>^f}_\beta  (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
+    + \underbrace{\delt \vec{g}}_c
 $
 \[
     (u)^{n+1^{*^{f}}}_m 
