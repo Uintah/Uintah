@@ -572,14 +572,20 @@ if test "$9" = "specific"; then
   for i in "" $3; do
 #echo looking for $4/$i
     if test ! -e $4/$i; then
-     AC_MSG_ERROR(Specificly requested $1 include file '$4/$i' was not found)
+     AC_MSG_ERROR(Specifically requested $1 include file '$4/$i' was not found)
     fi
   done
   # Make sure the exact libraries were found
   for i in "" $5; do
-#echo looking for $6/$i
-    if test -n "$i" && test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
-     AC_MSG_ERROR(Specificly requested $1 library file '$6/$i' was not found)
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
+     AC_MSG_ERROR(Specifically requested $1 library file '$6/$i' (.so or .a) was not found)
     fi
   done
 fi
