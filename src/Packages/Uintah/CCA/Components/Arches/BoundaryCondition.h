@@ -620,6 +620,7 @@ private:
 	void problemSetup(ProblemSpecP& params);
 	// reduction variable label to get area
 	VarLabel* d_area_label;
+	VarLabel* d_flowRate_label;
       };
 
       ////////////////////////////////////////////////////////////////////////
