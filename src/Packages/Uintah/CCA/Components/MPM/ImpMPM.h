@@ -1,6 +1,10 @@
 #ifndef UINTAH_HOMEBREW_IMP_MPM_H
 #define UINTAH_HOMEBREW_IMP_MPM_H
 
+#include <sci_defs/petsc_defs.h>
+
+#include <Core/Geometry/Vector.h>
+
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
@@ -8,10 +12,10 @@
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>

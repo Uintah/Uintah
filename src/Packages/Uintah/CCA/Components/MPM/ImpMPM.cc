@@ -6,7 +6,6 @@
 #define _CPP_CMATH
 #endif
 
-#include <sci_defs/petsc_defs.h>
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
