@@ -64,6 +64,8 @@ public:
       //   [in] 
       //
       PDFMixingModel();
+      // Constructor with thermal NOx flag
+      PDFMixingModel(bool d_thermalNOx);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -188,6 +190,7 @@ private:
       std::vector<Stream> d_streams; 
       int d_tableDimension;
       bool d_dynamic; //If true, table is dynamic; if false, table is static
+      bool d_calcthermalNOx; // Flag for the thermal NOx
 
       // Data structure class that stores the table entries for state-space
       // variables as a function of independent variables.
