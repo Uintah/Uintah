@@ -58,25 +58,30 @@
 	    </Properties>
 
 	    <BoundaryConditions>
-		<numFlowInlets>1</numFlowInlets>
-		<Inlet>
-		    <flowRate>1</flowRate>
-		    <mixtureFrac>1</mixtureFrac>
-		    <lengthScale>1</lengthScale>
+		<FlowInlet>
+		    <Flow_rate>1</Flow_rate>
+		    <MixtureFraction>
+			<Mixfrac>1</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>1</TurblengthScale>
 		    <inletType>primary</inletType>
-		</Inlet>
-		<PressureType>
+		</FlowInlet>
+		<PressureBC>
 		    <flowRate>0</flowRate>
-		    <mixtureFrac>0</mixtureFrac>
-		    <lengthScale>1</lengthScale>
-		    <pressureType>pressure</pressureType>
-		</PressureType>
-		<Outlet>
+		    <MixtureFraction>
+			<Mixfrac>0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>1</TurblengthScale>
+		    <RefPressure>1</RefPressure>
+		</PressureBC>
+		<outletBC>
 		    <flowRate>0</flowRate>
-		    <mixtureFrac>0</mixtureFrac>
-		    <lengthScale>1</lengthScale>
+		    <MixtureFraction>
+			<Mixfrac>0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>1</TurblengthScale>
 		    <outletType>pressure</outletType>
-		</Outlet>
+		</outletBC>
 	    </BoundaryConditions>
 
 	    <PhysicalConstants>
