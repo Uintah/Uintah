@@ -161,7 +161,7 @@ rtrt::read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g)
 	  Point pt1 = tm->verts[p1];
 	  Point pt2 = tm->verts[p2];
 
-	  Vector n = Cross(pt1-pt0,pt2-pt0);
+	  Vector n = Cross(pt2-pt0,pt1-pt0);
 
 	  // remove "bad" triangles
 	  if (n.length() < 1.E-16)
@@ -212,7 +212,7 @@ rtrt::read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g)
 	  Point pt1 = tm->verts[idx1];
 	  Point pt2 = tm->verts[idx2];
 	  
-	  Vector n = Cross(pt1-pt0,pt2-pt0);
+	  Vector n = Cross(pt2-pt0,pt1-pt0);
 
 	  // remove "bad" triangles
 	  if (n.length() < 1.E-16)
