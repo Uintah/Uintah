@@ -26,9 +26,9 @@
 # 
 
 set name {Main}
-set bbox {11 8 551 683}
-set creationDate {Thu Jan 27 2005}
-set creationTime {14:59:12}
+set bbox {7 8 540 683}
+set creationDate {Mon Feb 07 2005}
+set creationTime {18:14:58}
 set runDate {}
 set runTime {}
 set notes {}
@@ -42,46 +42,38 @@ set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 214 639]
 # Create a SCIRun->FieldsData->TransformData Module
 set m3 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 38 79]
 
-# Create a SCIRun->FieldsData->NodeGradient Module
-set m4 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 247 166]
-
 # Create a SCIRun->Visualization->VolumeVisualizer Module
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 223 564]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 223 564]
 
 # Create a SCIRun->Visualization->EditColorMap2D Module
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 375 481]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 375 481]
 
 # Create a Teem->Converters->FieldToNrrd Module
-set m7 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 11 169]
+set m6 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 11 169]
 
 # Create a Teem->UnuNtoZ->UnuQuantize Module
-set m8 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 42 244]
+set m7 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 7 286]
 
 # Create a SCIRun->Visualization->NrrdTextureBuilder Module
-set m9 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 159 481]
-
-# Create a SCIRun->FieldsData->VectorMagnitude Module
-set m10 [addModuleAtPosition "SCIRun" "FieldsData" "VectorMagnitude" 331 236]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 159 481]
 
 # Create a Teem->UnuNtoZ->UnuQuantize Module
-set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 298 403]
+set m9 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 298 403]
 
-# Create a Teem->Converters->FieldToNrrd Module
-set m12 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 386 311]
+# Create a Teem->NrrdData->NrrdSetupTexture Module
+set m10 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 190 280]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m3 0]
-set c2 [addConnection $m4 0 $m10 0]
-set c3 [addConnection $m3 0 $m4 0]
-set c4 [addConnection $m3 0 $m7 0]
-set c5 [addConnection $m10 0 $m12 0]
-set c6 [addConnection $m9 0 $m5 0]
-set c7 [addConnection $m5 0 $m2 0]
-set c8 [addConnection $m7 2 $m8 0]
-set c9 [addConnection $m12 2 $m11 0]
-set c10 [addConnection $m8 0 $m9 0]
-set c11 [addConnection $m11 0 $m9 1]
-set c12 [addConnection $m6 0 $m5 2]
+set c2 [addConnection $m3 0 $m6 0]
+set c3 [addConnection $m8 0 $m4 0]
+set c4 [addConnection $m4 0 $m2 0]
+set c5 [addConnection $m6 2 $m10 0]
+set c6 [addConnection $m6 2 $m7 0]
+set c7 [addConnection $m10 1 $m9 0]
+set c8 [addConnection $m7 0 $m8 0]
+set c9 [addConnection $m9 0 $m8 1]
+set c10 [addConnection $m5 0 $m4 2]
 
 # Set GUI variables for the SCIRun->FieldsCreate->SampleLattice Module
 set $m1-sizex {64}
@@ -89,7 +81,7 @@ set $m1-sizey {64}
 set $m1-sizez {64}
 
 $m2 addViewer
-set $m2-ViewWindow_0-geometry 654x643+22+139
+set $m2-ViewWindow_0-geometry 654x642+198+84
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m2-ViewWindow_0-view-eyep-x {6.60573556843}
@@ -186,49 +178,53 @@ set $m3-function {result = sqrt(x*x + y*y + z*z);
 }
 
 # Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
-set $m5-shading {1}
-set $m5-ambient {0.5}
-set $m5-diffuse {0.5}
-set $m5-shine {30}
+set $m4-shading {1}
+set $m4-ambient {0.5}
+set $m4-diffuse {0.5}
+set $m4-shine {30}
 
 # Set GUI variables for the SCIRun->Visualization->EditColorMap2D Module
-set $m6-panx {0.0}
-set $m6-pany {0.0}
-set $m6-scale_factor {1.0}
-set $m6-histo {0.5}
-set $m6-name-0 {Generic}
-set $m6-0-color-r {1.0}
-set $m6-0-color-g {1.0}
-set $m6-0-color-b {1.0}
-set $m6-0-color-a {1.0}
-set $m6-state-0 {t 0.167969 0.278906 1.00391 0.0398437 0.5}
-set $m6-shadeType-0 {0}
-set $m6-on-0 {1}
-set $m6-name-1 {Generic}
-set $m6-1-color-r {1.0}
-set $m6-1-color-g {1.0}
-set $m6-1-color-b {0.699999988079}
-set $m6-1-color-a {1.0}
-set $m6-state-1 {r 0 0.638672 0.0546875 0.0703125 1.11719 0.5}
-set $m6-shadeType-1 {0}
-set $m6-on-1 {1}
-set $m6-marker {end}
+set $m5-panx {0.0}
+set $m5-pany {0.0}
+set $m5-scale_factor {1.0}
+set $m5-histo {0.5}
+set $m5-name-0 {Generic}
+set $m5-0-color-r {1.0}
+set $m5-0-color-g {1.0}
+set $m5-0-color-b {1.0}
+set $m5-0-color-a {1.0}
+set $m5-state-0 {t 0.167969 0.278906 1.00391 0.0398437 0.5}
+set $m5-shadeType-0 {0}
+set $m5-on-0 {1}
+set $m5-name-1 {Generic}
+set $m5-1-color-r {1.0}
+set $m5-1-color-g {1.0}
+set $m5-1-color-b {0.699999988079}
+set $m5-1-color-a {1.0}
+set $m5-state-1 {r 0 0.638672 0.0546875 0.0703125 1.11719 0.5}
+set $m5-shadeType-1 {0}
+set $m5-on-1 {1}
+set $m5-marker {end}
 
 # Open the SCIRun->Visualization->EditColorMap2D UI
-$m6 initialize_ui
+$m5 initialize_ui
 
 # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
-set $m8-realmin {0.0274928699614}
-set $m8-realmax {1.73205080757}
-set $m8-nbits {8}
+set $m7-realmin {0.0274928699614}
+set $m7-realmax {1.73205080757}
+set $m7-nbits {8}
 
 # Set GUI variables for the SCIRun->Visualization->NrrdTextureBuilder Module
-set $m9-card_mem {256}
+set $m8-card_mem {256}
 
 # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
-set $m11-realmin {0.686140661635}
-set $m11-realmax {0.999999423062}
-set $m11-nbits {8}
+set $m9-realmin {0.686140656471}
+set $m9-realmax {0.999999403954}
+set $m9-nbits {8}
+
+# Set GUI variables for the Teem->NrrdData->NrrdSetupTexture Module
+set $m10-realmin {0.0274928699614}
+set $m10-realmax {1.73205080757}
 
 
 ::netedit scheduleok
