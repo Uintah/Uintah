@@ -39,7 +39,7 @@ WARNING
    class SymmetryBoundCond : public BoundCond  {
    public:
       SymmetryBoundCond() {};
-      SymmetryBoundCond(ProblemSpecP& ps) {};
+      SymmetryBoundCond(ProblemSpecP&) {};
       virtual ~SymmetryBoundCond() {};
       virtual std::string getType() const {
 	return "Symmetry";
@@ -56,6 +56,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/10/14 17:09:59  sparker
+// Added get() method to PerPatch
+// Fixed warning in SymmetryBoundCond
+//
 // Revision 1.1  2000/06/27 22:31:50  jas
 // Grid boundary conditions that are stored at the patch level.
 //
