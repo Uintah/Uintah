@@ -149,7 +149,7 @@ public:
       0.1666666666666666;
   }
   double get_area(const Face::index_type &) { return 0; }
-  double get_element_size(const Cell::index_type &ci)
+  double get_element_size(const Elem::index_type &ci)
   { return get_volume(ci); }
 
   void get_random_point(Point &p, const Cell::index_type &ei) const;
