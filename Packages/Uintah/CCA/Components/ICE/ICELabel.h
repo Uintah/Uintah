@@ -32,6 +32,7 @@ namespace Uintah {
     const VarLabel* cv_CCLabel;
     const VarLabel* vol_frac_CCLabel;
     const VarLabel* viscosity_CCLabel;
+    const VarLabel* press_force_CCLabel;
     const VarLabel* mom_source_CCLabel;
     const VarLabel* int_eng_source_CCLabel;
     const VarLabel* spec_vol_source_CCLabel;
