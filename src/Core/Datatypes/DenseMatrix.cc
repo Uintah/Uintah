@@ -731,9 +731,7 @@ DenseMatrix::invert()
     if(row != i){
       // Switch rows.
       swap_rows(data[i], data[row]);
-      double* ntmp=newdata[i];
-      newdata[i]=newdata[row];
-      newdata[row]=ntmp;
+      swap_rows(newdata[i], newdata[row]);
     }
     double denom=1./data[i][i];
     double* r1=data[i];
