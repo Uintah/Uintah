@@ -46,22 +46,20 @@
 
 <h1>Introduction</h1>
 
-<p>C++ has a facility for handling errors called exceptions.  For more
-information about exceptions, see your favorite modern C++ textbook.</p>
+<p>C++ has a facility for handling errors called <i>exceptions</i>. For more information 
+  about exceptions, see your favorite modern C++ textbook.</p>
 
-<p>If you see keywords like <b>try</b>, <b>catch</b>, and <b>throw</b>,
-you are seeing exceptions.</p>
+<p>If you see keywords like <b>try</b>, <b>catch</b>, and <b>throw</b>--you are 
+  seeing exceptions.</p>
 
-<p><b>Warning:</b> exceptions are great, but they are also dangerous
-and can be misused.  If you want your program to continue running
-after catching an exception, you will need to be very careful to
-ensure that resources are cleaned up appropriately.  In current
-versions of SCIRun, we are primarily using SCIRun to indicate
-catastrophic or near-catastrophic failure.  In this mode, many of
-the more serious difficulties do not arise</p>
+<p><b>Warning:</b> Exceptions are great, but are also dangerous and can be misused. 
+  To continue running your program after catching an exception, you will need 
+  to carefully ensure that resources are appropriately cleaned up. In current 
+  versions of SCIRun, we primarily use SCIRun to indicate catastrophic or near-catastrophic 
+  failure. In this mode, many of the more serious difficulties do not arise.</p>
 
 
-<h1>Exception classes</h1>
+<h1>Exception Classes</h1>
 
 <p>All exceptions thrown in SCIRun should be derived from a common
 base class, SCIRun::Exceptions::Exception.  While this is not required
@@ -82,12 +80,12 @@ errors in your code:
 
 Other exception classes will be added in the future.<p></p>
 
-<p>A few others are used by other SCIRun facilities (described in the
-next two sections:
+<p>A few others are used by other SCIRun facilities (described in the next two 
+  sections): 
 <ul>
-  <li><b>ArrayIndexOutOfBounds</b>: Used by Array1, Array2 and Array3
-      to report that an array has been accessed outside of it's valid
-      range.  The index, lower bound and upper bound are reported.
+  <li><b>ArrayIndexOutOfBounds</b>: Used by Array1, Array2 and Array3 to report 
+    that an array has been accessed outside of its valid range. The index, lower 
+    bound and upper bound are reported. 
   <li><b>AssertionFailed</b>: Used by the ASSERT, ASSERTEQ and
       ASSERTRANGE macros to indicate a failed assertion.
 </ul>
@@ -159,7 +157,7 @@ throw(t)/dbx(d)/cvd(c)/abort(a)?
 
 <p>Inline functions will probably not show up in the stack backtrace.</p>
 
-<h1>ASSERT and friends</h1>
+<h1>ASSERT and Friends</h1>
 
 There is a macro in SCIRun called ASSERT (in SCICore/Util/Assert.h>,
 similar to the assert macro found in /usr/include/assert.h.  However,
@@ -168,13 +166,12 @@ there are several additional features:
 <ul>
   <li>It uses <b>SCI_THROW</b> (described above) to facilitate a more
       flexible handling of errors.
-  <li>There are several "levels" of assertions, <b>ASSERTL1</b>,
-      <b>ASSERTL2</b>, and <b>ASSERTL3</b>.  The intended use is that
-      higher numbers are more expensive checks that will be turned off
-      in production and optimized versions, are that lower numbers
-      are not expensive to check.  There is a configuration variable
-      that defines an assertion level: 
-      <ul>
+  <li>There are several "levels" of assertions, <b>ASSERTL1</b>, <b>ASSERTL2</b>, 
+    and <b>ASSERTL3</b>. Higher numbered assertions are more expensive to check 
+    and will be turned off in production. Optimized versions are lower numbers 
+    that are not expensive to check. There is a configuration variable that defines 
+    an assertion level: 
+    <ul>
         <li>Level 0 - all assertions are turned off.
 	<li>Level 1 - Only the macro <b>ASSERTL1</b> will be checked,
             all others are turned off.
