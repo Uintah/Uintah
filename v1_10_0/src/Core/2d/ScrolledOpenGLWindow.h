@@ -16,7 +16,7 @@
 #include <map>
 
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <GL/glx.h>
 
 #include <Core/2d/OpenGLWindow.h>

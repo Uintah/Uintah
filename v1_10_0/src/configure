@@ -5321,6 +5321,8 @@ echo "$as_me: error: GNU make not found." >&2;}
 fi
 
 
+
+
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
@@ -7582,8 +7584,18 @@ cat >conftest.$ac_ext <<_ACEOF
 #include "confdefs.h"
 
 #include<GL/gl.h>
+
+#ifndef GLAPIENTRY
+  #define GLAPIENTRY
+#endif
+
+#ifndef GLAPI
+  #define GLAPI
+#endif
+
 #include<GL/glu.h>
 #include<GL/glx.h>
+
 
 #ifdef F77_DUMMY_MAIN
 #  ifdef __cplusplus

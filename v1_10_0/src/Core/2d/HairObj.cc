@@ -39,7 +39,7 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/HairObj.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <GL/glx.h>
 
 

@@ -96,7 +96,7 @@ using std::cerr;
 using std::endl;
 
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #if !defined(__linux) && !defined(_WIN32) && !defined(__digital__) && !defined(_AIX) && !defined(__APPLE__)
 #include <GL/gls.h>
 #endif
