@@ -23,7 +23,7 @@ enum { CubeW_PointIUL, CubeW_PointIUR, CubeW_PointIDR, CubeW_PointIDL,
 
 class CubeWidget : public BaseWidget {
 public:
-   CubeWidget( Module* module );
+   CubeWidget( Module* module, double widget_scale );
    CubeWidget( const CubeWidget& );
    ~CubeWidget();
 

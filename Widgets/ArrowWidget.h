@@ -21,7 +21,7 @@ enum { ArrowW_Point };
 
 class ArrowWidget : public BaseWidget {
 public:
-   ArrowWidget( Module* module );
+   ArrowWidget( Module* module, double widget_scale );
    ArrowWidget( const ArrowWidget& );
    ~ArrowWidget();
 

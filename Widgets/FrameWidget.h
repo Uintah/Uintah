@@ -22,7 +22,7 @@ enum { FrameW_PointUL, FrameW_PointUR, FrameW_PointDR, FrameW_PointDL,
 
 class FrameWidget : public BaseWidget {
 public:
-   FrameWidget( Module* module );
+   FrameWidget( Module* module, double widget_scale );
    FrameWidget( const FrameWidget& );
    ~FrameWidget();
 

@@ -28,7 +28,8 @@ class BaseWidget {
 public:
    BaseWidget( Module* module,
 	       const Index vars, const Index cons,
-	       const Index geoms, const Index mats );
+	       const Index geoms, const Index mats,
+	       const double widget_scale );
    BaseWidget( const BaseWidget& );
    ~BaseWidget();
 

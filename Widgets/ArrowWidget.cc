@@ -28,8 +28,9 @@ const Index NumSchemes = 1;
 enum { ArrowW_Sphere, ArrowW_Cylinder, ArrowW_Cone };
 enum { ArrowW_PointMatl, ArrowW_EdgeMatl, ArrowW_HighMatl };
 
-ArrowWidget::ArrowWidget( Module* module )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls), direction(0, 0, 1)
+ArrowWidget::ArrowWidget( Module* module, double widget_scale )
+: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, widget_scale),
+  direction(0, 0, 1)
 {
    variables[ArrowW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
 
@@ -60,7 +61,7 @@ ArrowWidget::ArrowWidget( Module* module )
    geometries[ArrowW_Cone]->set_matl(materials[ArrowW_EdgeMatl]);
 
    widget = new GeomGroup;
-   for (Index geom = 0; geom <= NumGeoms; geom++) {
+   for (Index geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
    widget->set_pick(new GeomPick(module));
@@ -95,7 +96,7 @@ ArrowWidget::execute()
 					      1*widget_scale,
 					      0);
 
-   for (Index geom = 0; geom <= NumGeoms; geom++) {
+   for (Index geom = 0; geom < NumGeoms; geom++) {
       geometries[geom]->get_pick()->set_principal(direction);
    }
 }

@@ -45,11 +45,11 @@ HypotenousConstraint::Satisfy( const Index index )
    /* 2 * dist^2 = hypo^2 */
    switch (ChooseChange(index)) {
    case 0:
-      temp.x(sqrt(v0.Get().x() * v0.Get().x() / 2.0));
+      temp.x(sqrt(v1.Get().x() * v1.Get().x() / 2.0));
       v0.Assign(temp);
       break;
    case 1:
-      temp.x(sqrt(2.0 * v1.Get().x() * v1.Get().x()));
+      temp.x(sqrt(2.0 * v0.Get().x() * v0.Get().x()));
       v1.Assign(temp);
       break;
    default:

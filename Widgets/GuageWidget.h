@@ -21,7 +21,7 @@ enum { GuageW_PointL, GuageW_PointR, GuageW_Slider, GuageW_Dist };
 
 class GuageWidget : public BaseWidget {
 public:
-   GuageWidget( Module* module );
+   GuageWidget( Module* module, double widget_scale );
    GuageWidget( const GuageWidget& );
    ~GuageWidget();
 
