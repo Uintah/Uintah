@@ -263,6 +263,10 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
       fillFaceFlux(variable,face,Vector(0.,0.,0.),dx, 1.0, offset);
       fillFaceNormal(variable,patch,face,offset);
     }
+    
+    if (new_bcs != 0 && kind == "Neumann" ) {
+      fillFaceFlux(variable,face,Vector(0.,0.,0.),dx, 1.0, offset);
+    }
 
       
     if (new_bcs != 0 && kind == "Velocity") {
