@@ -591,9 +591,13 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
       subsched->execute();    
       
+      delt_vartype delT;
+      old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+      double delta_t = delT;
+      delta_t *= d_timeIntegratorLabels[curr_level]->time_multiplier;
       max_vartype nm;
       subsched->get_dw(3)->get(nm, d_lab->d_InitNormLabel);
-      norm = nm+d_u_norm+d_v_norm+d_w_norm;
+      norm = delta_t*nm+d_rho_norm+d_u_norm+d_v_norm+d_w_norm;
       if (nlIterations == 0) init_norm = norm;
       if(pg->myrank() == 0)
        cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
@@ -921,6 +925,8 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 // hat velocities are only interpolated for first substep, since they are
 // not really needed anyway
   tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
@@ -963,6 +969,7 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   tsk->computes(d_lab->d_uVelNormLabel);
   tsk->computes(d_lab->d_vVelNormLabel);
   tsk->computes(d_lab->d_wVelNormLabel);
+  tsk->computes(d_lab->d_rhoNormLabel);
   }
   else {
   tsk->modifies(d_lab->d_newCCVelocityLabel);
@@ -1011,6 +1018,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<double> div_residual;
     CCVariable<double> residual;
     constCCVariable<double> density;
+    constCCVariable<double> old_density;
     constCCVariable<double> drhodt;
     constCCVariable<double> div_constraint;
 
@@ -1047,6 +1055,8 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateAndPut(oldCCVel, d_lab->d_oldCCVelocityLabel,
 			   matlIndex, patch);
     new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel, 
@@ -1343,6 +1353,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     double u_norm = 0.0;
     double v_norm = 0.0;
     double w_norm = 0.0;
+    double rho_norm = 0.0;
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
@@ -1370,6 +1381,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
+	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1400,6 +1412,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
+	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1429,6 +1442,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
+	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1458,6 +1472,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
+	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1487,6 +1502,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
+	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1516,6 +1532,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
+	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1545,6 +1562,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
+	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1583,6 +1601,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       new_dw->put(sum_vartype(u_norm), d_lab->d_uVelNormLabel); 
       new_dw->put(sum_vartype(v_norm), d_lab->d_vVelNormLabel); 
       new_dw->put(sum_vartype(w_norm), d_lab->d_wVelNormLabel); 
+      new_dw->put(sum_vartype(rho_norm), d_lab->d_rhoNormLabel); 
     }
   }
 }
@@ -2099,11 +2118,12 @@ PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
 
   sum_vartype tke;
   new_dw->get(tke, timelabels->tke_out);
-  sum_vartype un,vn,wn;
+  sum_vartype un,vn,wn,rhon;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     new_dw->get(un, d_lab->d_uVelNormLabel);
     new_dw->get(vn, d_lab->d_vVelNormLabel);
     new_dw->get(wn, d_lab->d_wVelNormLabel);
+    new_dw->get(rhon, d_lab->d_rhoNormLabel);
   }
   double total_kin_energy = tke;
   int me = d_myworld->myrank();
@@ -2113,10 +2133,12 @@ PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
     d_u_norm=sqrt(un);
     d_v_norm=sqrt(vn);
     d_w_norm=sqrt(wn);
+    d_rho_norm=sqrt(rhon);
     if (me == 0) {
       cerr << "U norm " <<  d_u_norm << endl;
       cerr << "V norm " <<  d_v_norm << endl;
       cerr << "W norm " <<  d_w_norm << endl;
+      cerr << "Rho norm " <<  d_rho_norm << endl;
     }
   }
 }
