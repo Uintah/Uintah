@@ -58,6 +58,10 @@ private:
   enum { NONE = 0, MESH = 1, REALSPACE = 2, PERTURBED = 4 };
 
   GuiString datasetsStr_;
+  GuiInt nModes_;
+  GuiInt iMode_;
+
+  int mode_;
 
   vector< int > mesh_;
   vector< int > data_;
@@ -74,6 +78,8 @@ DECLARE_MAKER(NIMRODConverter)
 NIMRODConverter::NIMRODConverter(GuiContext* context)
   : Module("NIMRODConverter", context, Source, "Fields", "Fusion"),
     datasetsStr_(context->subVar("datasets")),
+    nModes_(context->subVar("nmodes")),
+    iMode_(context->subVar("mode")),
 
     error_(false)
 {
@@ -107,15 +113,72 @@ NIMRODConverter::execute(){
     }
 
     // Save the field handles.
-    if (inrrd_port->get(nHandle) && nHandle.get_rep())
-      nHandles.push_back( nHandle );
-    else if( pi != range.second ) {
+    if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
+      unsigned int tuples = nHandle->get_tuple_axis_size();
+
+      // Store only single nrrds
+      if( tuples == 1 ) {
+	nHandles.push_back( nHandle );
+      } else {
+
+	// Multiple nrrds
+	vector< string > dataset;
+	nHandle->get_tuple_indecies(dataset);
+	
+	int min[nHandle->nrrd->dim];
+	int max[nHandle->nrrd->dim];
+
+	// Keep the same dims except for the tuple axis.
+	for( int j=1; j<nHandle->nrrd->dim; j++) {
+	  min[j] = 0;
+	  max[j] = nHandle->nrrd->axis[j].size-1;
+	}
+
+	// Separtate via the tupple axis.
+	for( unsigned int i=0; i<tuples; i++ ) {
+
+	  Nrrd *nout = nrrdNew();
+
+	  // Translate the tuple index into the real offsets for a tuple axis.
+	  int tmin, tmax;
+	  if (! nHandle->get_tuple_index_info( i, i, tmin, tmax)) {
+	    error("Tuple index out of range");
+	    return;
+	  }
+	  
+	  min[0] = tmin;
+	  max[0] = tmax;
+
+	  // Crop the tupple axis.
+	  if (nrrdCrop(nout, nHandle->nrrd, min, max)) {
+
+	    char *err = biffGetDone(NRRD);
+	    error(string("Trouble resampling: ") + err);
+	    msgStream_ << "input Nrrd: nHandle->nrrd->dim="<<nHandle->nrrd->dim<<"\n";
+	    free(err);
+	  }
+
+	  // Form the new nrrd and store.
+	  NrrdData *nrrd = scinew NrrdData;
+	  nrrd->nrrd = nout;
+	  nout->axis[0].label = strdup(dataset[i].c_str());
+
+	  NrrdDataHandle handle = NrrdDataHandle(nrrd);
+
+	  // Copy the properties.
+	  *((PropertyManager *) handle.get_rep()) =
+	    *((PropertyManager *) nHandle.get_rep());
+
+	  nHandles.push_back( handle );
+	}
+      }
+    } else if( pi != range.second ) {
       error( "No handle or representation" );
       return;
     }
   }
 
-  if( nHandles.size() != 3 && nHandles.size() != 4 ){
+  if( nHandles.size() != 3 && nHandles.size() != 4 && nHandles.size() != 8 ){
     error( "Not enough or too many handles or representations" );
     return;
   }
@@ -145,40 +208,21 @@ NIMRODConverter::execute(){
     mesh_.resize(4);
     mesh_[0] = mesh_[1] = mesh_[2] = mesh_[3] = -1;
 
-    data_.resize(3);
-    data_[0] = data_[1] = data_[2] = -1;
-
     for( unsigned int ic=0; ic++; ic<nHandles.size() )
       nGenerations_[ic] = nHandles[ic]->generation;
 
     string datasetsStr;
 
     vector< string > datasets;
-    unsigned int modes = 0;
 
     // Get each of the dataset names for the GUI.
     for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
 
       nHandle = nHandles[ic];
 
+      // Get the tuple axis name - there is only one.
       vector< string > dataset;
-
-      int tuples = nHandle->get_tuple_axis_size();
-
-      if( tuples != 1 ) {
-	error( "Too many tuples listed in the tuple axis." );
-	error_ = true;
-	return;
-      }
-
       nHandle->get_tuple_indecies(dataset);
-
-      // Do not allow joined Nrrds
-      if( dataset.size() != 1 ) {
-	error( "Too many sets listed in the tuple axis." );
-	error_ = true;
-	return;
-      }
 
       // Save the name of the dataset.
       if( nHandles.size() == 1 )
@@ -211,20 +255,19 @@ NIMRODConverter::execute(){
 	      } else if( dataset[0].find( "K:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 2 ) {
 		conversion = PERTURBED;
-		mesh_[2] = ic;
-		modes = nHandle->nrrd->axis[1].size;
+		mesh_[3] = ic;
 	      } else {
 		error( dataset[0] + " is unknown NIMROD mesh data." );
 		error_ = true;
 		return;
 	      }
 	    } else {
-	      error( property + " is an unsupported coordinate system." );
+	      error( dataset[0] + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
 	  } else {
-	    error( "No coordinate system found." );
+	    error( dataset[0] + "No coordinate system found." );
 	    error_ = true;
 	    return;
 	  }
@@ -233,7 +276,10 @@ NIMRODConverter::execute(){
 
 	if( property.find( "REALSPACE" ) != string::npos ) {
 
-	  data_.resize(3);
+	  if( data_.size() == 0 ) {
+	    data_.resize(3);
+	    data_[0] = data_[1] = data_[2] = -1;
+	  }
 
 	  if( dataset[0].find( "R:Scalar" ) != string::npos &&
 	      nHandle->nrrd->dim == 4 ) {
@@ -252,21 +298,62 @@ NIMRODConverter::execute(){
 	    error_ = true;
 	    return;
 	  }
-	} else if( property.find( "PERTURBED.REAL" ) != string::npos ) {
-	  conversion = PERTURBED;
-	  data_[1] = ic;
+	} else if( property.find( "PERTURBED" ) != string::npos ) {
 
-	} else if( property.find( "PERTURBED.IMAG" ) != string::npos ) {
-	  conversion = PERTURBED;
-	  data_[2] = ic;
+	  if( nHandle->get_property( "DataSubspace", property ) ) {
+	    if( property.find( "REAL" ) != string::npos ||
+		property.find( "IMAGINARY" ) != string::npos ) {
 
-	} else {
-	  error( property + " Unsupported Data Space." );
+	      if( data_.size() == 0 ) {
+		data_.resize(6);
+		data_[0] = data_[1] = data_[2] = 
+		  data_[3] = data_[4] = data_[5] = -1;
+	      }
+
+	      int offset = 0;
+	      if( property.find( "REAL" ) != string::npos )
+		offset = 0;
+	      else if ( property.find( "IMAGINARY" ) != string::npos )
+		offset = 1;
+	      
+	      int index = 0;
+	      if( dataset[0].find( "R:Scalar" ) != string::npos &&
+		  nHandle->nrrd->dim == 4 ) {
+		conversion = PERTURBED;
+		index = 0 + 3 * offset;
+	      } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 4 ) {
+		conversion = PERTURBED;
+		index = 1 + 3 * offset;
+	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 4 ) {
+		index = 2 + 3 * offset;
+		conversion = PERTURBED;
+	      } else { // Scalar data
+		data_.resize(2);
+		conversion = PERTURBED;
+		index = 0 + 1 * offset;
+	      }
+
+	      data_[index] = ic;
+
+	    } else {
+	      error( dataset[0] + property + " Unsupported Data SubSpace." );
+	      error_ = true;
+	      return;
+	    }
+	  } else {
+	    error( dataset[0] + " No Data SubSpace property." );
+	    error_ = true;
+	    return;
+	  }
+	} else {	
+	  error( dataset[0] + property + " Unsupported Data Space." );
 	  error_ = true;
 	  return;
 	}
-      } else {	
-	error( dataset[0] + " Bad data input." );
+      } else {
+	error( dataset[0] + " No DataSpace property." );
 	error_ = true;
 	return;
       }
@@ -275,12 +362,16 @@ NIMRODConverter::execute(){
     if( datasetsStr != datasetsStr_.get() ) {
       // Update the dataset names and dims in the GUI.
       ostringstream str;
-      str << id << " set_names " << modes << " {" << datasetsStr << "}";
+      str << id << " set_names " << " {" << datasetsStr << "}";
       
       gui->execute(str.str().c_str());
     }
   }
 
+  unsigned int i = 0;
+  while( i<data_.size() && data_[i] != -1 )
+    i++;
+  
   if( conversion & MESH ) {
     if( mesh_[0] == -1 || mesh_[1] == -1 || mesh_[2] == -1 ) {
       error( "Not enough mesh data for the mesh conversion." );
@@ -288,15 +379,15 @@ NIMRODConverter::execute(){
       return;
     }
   } else if ( conversion & REALSPACE ) {
-    if( mesh_[2] == -1 || data_[0] == -1 || data_[1] == -1 || data_[2] == -1 ) {
-      error( "Not enough mesh data for the real conversion." );
+    if( mesh_[2] == -1 || i != data_.size() ) {
+      error( "Not enough data for the realspace conversion." );
       error_ = true;
       return;
     }
   } else if ( conversion & PERTURBED ) {
-    if( mesh_[3] == -1 || data_[1] == -1 || data_[2] == -1 ) {
-      error( "Not enough mesh data for the perturbed conversion." );
-      error( "No mesh present." );
+
+    if( mesh_[2] == -1 || mesh_[3] == -1 || i != data_.size() ) {
+      error( "Not enough data for the perturbed conversion." );
       error_ = true;
       return;
     }
@@ -305,13 +396,18 @@ NIMRODConverter::execute(){
   // If no data or data change, recreate the field.
   if( error_ ||
       !nHandle_.get_rep() ||
+      mode_ != iMode_.get() ||
       generation ) {
     
     error_ = false;
 
-    int idim, jdim, kdim;
+    mode_ = iMode_.get();
+
+    int idim=0, jdim=0, kdim=0;
 
     string convertStr;
+
+    nHandles[mesh_[2]]->get_property( "Coordinate System", property );
 
     if( conversion & MESH ) {
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
@@ -338,9 +434,9 @@ NIMRODConverter::execute(){
 	idim = nHandles[mesh_[2]]->nrrd->axis[1].size; // Phi
 
 	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	  if( nHandles[data_[0]]->nrrd->axis[1].size != jdim ||
-	      nHandles[data_[0]]->nrrd->axis[2].size != kdim ||
-	      nHandles[data_[0]]->nrrd->axis[3].size != idim ) {
+	  if( nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
+	      nHandles[data_[ic]]->nrrd->axis[2].size != kdim ||
+	      nHandles[data_[ic]]->nrrd->axis[3].size != idim ) {
 	    error( "Mesh dimension mismatch." );
 	    error_ = true;
 	    return;
@@ -349,7 +445,44 @@ NIMRODConverter::execute(){
       }
 
       convertStr = "RealSpace";
+
+    } else if( conversion & PERTURBED ) {
+      int nmodes = 0;
+
+      if( property.find("Cylindrical - NIMROD") != string::npos ) {
+	jdim   = nHandles[data_[0]]->nrrd->axis[1].size; // Radial
+	kdim   = nHandles[data_[0]]->nrrd->axis[2].size; // Theta
+	nmodes = nHandles[mesh_[3]]->nrrd->axis[1].size; // Modes
+
+	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
+	  if( nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
+	      nHandles[data_[ic]]->nrrd->axis[2].size != kdim ||
+	      nHandles[data_[ic]]->nrrd->axis[3].size != nmodes ) {
+	    error( "Mesh dimension mismatch." );
+	    error_ = true;
+	    return;
+	  }
+	}
+      }
+
+      if( nmodes != nModes_.get() ) {
+	// Update the dataset names and dims in the GUI.
+	ostringstream str;
+	str << id << " set_modes " << nmodes;
+      
+	gui->execute(str.str().c_str());
+
+	remark( "Select the mode for the calculation" );
+	error_ = true; // Not really an error but it so it will execute.
+	return;
+      } else {
+	// This is cheat for passing but it gets updated anyways.
+	idim = mode_;
+      }
+
+      convertStr = "Perturbed";
     }
+
 
     remark( "Converting the " + convertStr );
     

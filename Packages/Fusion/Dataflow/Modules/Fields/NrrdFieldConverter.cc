@@ -107,9 +107,66 @@ NrrdFieldConverter::execute(){
     }
 
     // Save the field handles.
-    if (inrrd_port->get(nHandle) && nHandle.get_rep())
-      nHandles.push_back( nHandle );
-    else if( pi != range.second ) {
+    if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
+      unsigned int tuples = nHandle->get_tuple_axis_size();
+
+      // Store only single nrrds
+      if( tuples == 1 ) {
+	nHandles.push_back( nHandle );
+      } else {
+
+	// Multiple nrrds
+	vector< string > dataset;
+	nHandle->get_tuple_indecies(dataset);
+	
+	int min[nHandle->nrrd->dim];
+	int max[nHandle->nrrd->dim];
+
+	// Keep the same dims except for the tuple axis.
+	for( int j=1; j<nHandle->nrrd->dim; j++) {
+	  min[j] = 0;
+	  max[j] = nHandle->nrrd->axis[j].size-1;
+	}
+
+	// Separtate via the tupple axis.
+	for( unsigned int i=0; i<tuples; i++ ) {
+
+	  Nrrd *nout = nrrdNew();
+
+	  // Translate the tuple index into the real offsets for a tuple axis.
+	  int tmin, tmax;
+	  if (! nHandle->get_tuple_index_info( i, i, tmin, tmax)) {
+	    error("Tuple index out of range");
+	    return;
+	  }
+	  
+	  min[0] = tmin;
+	  max[0] = tmax;
+
+	  // Crop the tupple axis.
+	  if (nrrdCrop(nout, nHandle->nrrd, min, max)) {
+
+	    char *err = biffGetDone(NRRD);
+	    error(string("Trouble resampling: ") + err);
+	    msgStream_ << "input Nrrd: nHandle->nrrd->dim="<<nHandle->nrrd->dim<<"\n";
+	    free(err);
+	  }
+
+	  // Form the new nrrd and store.
+	  NrrdData *nrrd = scinew NrrdData;
+	  nrrd->nrrd = nout;
+	  nout->axis[0].label = strdup(dataset[i].c_str());
+
+	  NrrdDataHandle handle = NrrdDataHandle(nrrd);
+
+	  // Copy the properties.
+	  *((PropertyManager *) handle.get_rep()) =
+	    *((PropertyManager *) nHandle.get_rep());
+
+	  nHandles.push_back( handle );
+	}
+      }
+    } else if( pi != range.second ) {
       error( "No handle or representation" );
       return;
     }
@@ -157,24 +214,9 @@ NrrdFieldConverter::execute(){
 
       nHandle = nHandles[ic];
 
+      // Get the tuple axis name - there is only one.
       vector< string > dataset;
-
-      int tuples = nHandle->get_tuple_axis_size();
-
-      if( tuples != 1 ) {
-	error( "Too many tuples listed in the tuple axis." );
-	error_ = true;
-	return;
-      }
-
       nHandle->get_tuple_indecies(dataset);
-
-      // Do not allow joined Nrrds
-      if( dataset.size() != 1 ) {
-	error( "Too many sets listed in the tuple axis." );
-	error_ = true;
-	return;
-      }
 
       // Save the name of the dataset.
       if( nHandles.size() == 1 )
@@ -198,7 +240,7 @@ NrrdFieldConverter::execute(){
 	      if( !(dataset[0].find( ":Scalar" ) != string::npos &&
 		    nHandle->nrrd->axis[ nHandle->nrrd->dim-1].size == 3) &&
 		  !(dataset[0].find( ":Vector" ) != string::npos) ) {
-		error( "Mesh dataset does not contain 3D points." );
+		error( dataset[0] + "Mesh dataset does not contain 3D points." );
 		error( dataset[0] );
 		error_ = true;
 		return;
@@ -216,13 +258,13 @@ NrrdFieldConverter::execute(){
 	      structured = true;
 
 	    } else {
-	      error( property + " is an unsupported coordinate system." );
+	      error( dataset[0] + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
 
 	  } else {
-	    error( "No coordinate system found." );
+	    error( dataset[0] + "No coordinate system found." );
 	    error_ = true;
 	    return;
 	  }
@@ -246,7 +288,7 @@ NrrdFieldConverter::execute(){
 
 		!(nHandle->nrrd->dim == 3 &&
 		  dataset[0].find( ":Scalar" ) != string::npos) ) {
-	      error( "Malformed connectivity list." );
+	      error( dataset[0] + "Malformed connectivity list." );
 	      error_ = true;
 	      return;
 	    }
@@ -268,7 +310,7 @@ NrrdFieldConverter::execute(){
 	    else if( property.find( "Quad" ) != string::npos )
 	      connectivity = 4;
 	    else {
-	      error( property + " Unsupported cell type." );
+	      error( dataset[0] + property + " Unsupported cell type." );
 	      error_ = true;
 	      return;
 	    }
@@ -285,7 +327,7 @@ NrrdFieldConverter::execute(){
 		!(connectivity == 6 &&
 		  dataset[0].find( ":Tensor" ) != string::npos ) ) {
 
-	      error( "Connectivity list set does not contain enough points." );
+	      error( dataset[0] + "Connectivity list set does not contain enough points." );
 	      error_ = true;
 	      return;
 	    }
@@ -309,8 +351,7 @@ NrrdFieldConverter::execute(){
 		  !(nHandle->nrrd->dim == 2 &&
 		    dataset[0].find( ":Vector" ) != string::npos) )
 		{
-		  error( "Mesh does not contain 3D points." );
-		  error( dataset[0] );
+		  error( dataset[0] + "Mesh does not contain 3D points." );
 		  error_ = true;
 		  return;
 		}
@@ -319,12 +360,12 @@ NrrdFieldConverter::execute(){
 	    
 	      unstructured = true;
 	    } else {
-	      error( property + " is an unsupported coordinate system." );
+	      error( dataset[0] + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
 	  } else {
-	    error( "Unknown unstructured mesh data found." );
+	    error( dataset[0] + "Unknown unstructured mesh data found." );
 	    error_ = true;
 	    return;
 	  }
@@ -492,29 +533,14 @@ NrrdFieldConverter::execute(){
       for( unsigned int ic=0; ic<data_.size(); ic++ ) {
 	nHandle = nHandles[data_[ic]];
 	
-	int tuples = nHandle->get_tuple_axis_size();
-	
-	if( tuples != 1 ) {
-	  error( "Too many tuples listed in the tuple axis." );
-	  error_ = true;
-	  return;
-	}
-
-	// Do not allow joined Nrrds
+	// Get the tuple axis name - there is only one.
 	vector< string > dataset;
-
 	nHandle->get_tuple_indecies(dataset);
-
-	if( dataset.size() != 1 ) {
-	  error( "Too many sets listed in the tuple axis." );
-	  error_ = true;
-	  return;
-	}
 
 	// If more than one dataset then all axii must be Scalar
 	if( data_.size() > 1 ) {
 	  if( dataset[0].find( ":Scalar" ) == string::npos ) {
-	    error( "Data type must be scalar. Found: " + dataset[0] );
+	    error( dataset[0] + "Data type must be scalar." );
 	    error_ = true;
 	    return;
 	  }
@@ -531,7 +557,7 @@ NrrdFieldConverter::execute(){
 
 	  for( unsigned int jc=0; jc<mdims.size(); jc++ ) {
 	    if( ddims[jc] != mdims[jc] ) {
-	      error( "Data and mesh sizes do not match." );
+	      error(  dataset[0] + "Data and mesh sizes do not match." );
 	      cerr << "Data and mesh sizes do not match. " << endl;
 
 	      for( unsigned int jc=0; jc<mdims.size(); jc++ )
@@ -548,7 +574,7 @@ NrrdFieldConverter::execute(){
 	    }
 	  }
 	} else {
-	  error( "Data and mesh are not of the same rank." );
+	  error( dataset[0] + "Data and mesh are not of the same rank." );
 
 	  cerr << "Data and mesh are not of the same rank. ";
 	  cerr << ddims.size() << "  " << mdims.size() << endl;
@@ -558,8 +584,9 @@ NrrdFieldConverter::execute(){
       }
 
       if( data_.size() == 1 ) { 
-	vector< string > dataset;
 
+	// Get the tuple axis name - there is only one.
+	vector< string > dataset;
 	nHandles[data_[0]]->get_tuple_indecies(dataset);
 
 	if( ddims.size() == mdims.size() ) {
@@ -570,8 +597,7 @@ NrrdFieldConverter::execute(){
 	  else if( dataset[0].find( ":Tensor" ) != string::npos )
 	    rank = 6;
  	  else {
-	    error( "Bad tuple axis - no data type must be scalar, vector, or tensor." );
-	    error( dataset[0] );
+	    error( dataset[0] + "Bad tuple axis - no data type must be scalar, vector, or tensor." );
 	    error_ = true;
 	    return;
 	  }
