@@ -16,7 +16,7 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
-# Revision 1.2.2.2  2000/10/26 13:42:51  moulding
+# Revision 1.2.2.3  2000/10/26 23:55:02  moulding
 # merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.4  2000/10/24 05:58:01  moulding

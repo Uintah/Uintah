@@ -22,6 +22,9 @@ namespace Uintah {
 #endif /*_EQUATION_OF_STATE_FACTORY_H_ */
 
 //$Log$
+//Revision 1.1.4.1  2000/10/26 23:52:44  moulding
+//merge HEAD into FIELD_REDESIGN
+//
 //Revision 1.1  2000/10/06 04:02:16  jas
 //Move into a separate EOS directory.
 //

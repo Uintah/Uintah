@@ -119,6 +119,9 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.5.4.1  2000/10/26 23:52:44  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.5  2000/10/14 02:49:50  jas
 // Added implementation of compute equilibration pressure.  Still need to do
 // the update of BCS and hydrostatic pressure.  Still some issues with

@@ -21,6 +21,9 @@ EquationOfState::~EquationOfState()
 }
 
 //$Log$
+//Revision 1.1.4.1  2000/10/26 23:52:43  moulding
+//merge HEAD into FIELD_REDESIGN
+//
 //Revision 1.1  2000/10/06 04:02:16  jas
 //Move into a separate EOS directory.
 //
