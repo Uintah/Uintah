@@ -42,7 +42,7 @@ Image::Image(int xres, int yres, bool stereo)
 Image::~Image()
 {
     if(image){
-	delete[] buf;
+	delete[] image_buf;
 	delete[] image;
     }
 }
@@ -50,19 +50,19 @@ Image::~Image()
 void Image::resize_image()
 {
     if(image){
-	delete[] buf;
+	delete[] image_buf;
 	delete[] image;
     }
     image=new Pixel*[yres*(stereo?2:1)];
     int linesize=128;
-    buf=new char[xres*yres*sizeof(Pixel)*(stereo?2:1)+linesize];
-    unsigned long b=(unsigned long)buf;
+    image_buf=new char[xres*yres*sizeof(Pixel)*(stereo?2:1)+linesize];
+    unsigned long b=(unsigned long)image_buf;
     int off=(int)(b%linesize);
     Pixel* p;
     if(off){
-	p=(Pixel*)(buf+linesize-off);
+	p=(Pixel*)(image_buf+linesize-off);
     } else {
-	p=(Pixel*)buf;
+	p=(Pixel*)image_buf;
     }
 
     int yr=stereo?2*yres:yres;
@@ -70,6 +70,26 @@ void Image::resize_image()
 	image[y]=p;
 	p+=xres;
     }
+  if(depth){
+    delete[] depth_buf;
+    delete[] depth;
+  }
+  depth=new float*[yres*(stereo?2:1)];
+  depth_buf=new float[xres*yres*(stereo?2:1)+linesize];
+  b=(unsigned long)depth_buf;
+  off=(int)(b%linesize);
+  float* f;
+  if(off){
+    f=(depth_buf+linesize-off);
+  } else {
+    f=depth_buf;
+  }
+  
+  for(int y=0;y<yr;y++){
+    depth[y]=f;
+    f+=xres;
+  }
+    
 }
 
 void Image::resize_image(const int new_xres, const int new_yres) {

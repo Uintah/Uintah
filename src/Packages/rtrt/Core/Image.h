@@ -106,8 +106,10 @@ struct Pixel {
 };
 
 class Image : public SCIRun::Persistent {
-  char* buf;
+  char* image_buf;
+  float* depth_buf;
   Pixel** image;
+  float** depth;
   int xres, yres;
   bool stereo;
 public:
@@ -136,6 +138,9 @@ public:
   }
   void set(int x, int y, const Color& value) {
     image[y][x].set(value);
+  }
+  void set_depth(int x, int y, float d) {
+    depth[y][x] = d;
   }
   void save(char* file);
   void save_ppm(char *filename);
