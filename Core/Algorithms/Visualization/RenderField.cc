@@ -268,7 +268,7 @@ void
 RenderVectorFieldBase::add_disk(const Point &p, const Vector &vin,
 				double scale, int resolution,
 				GeomGroup *g, MaterialHandle mh,
-				bool normalize)
+				bool normalize, bool colorify)
 {
   Vector v = vin;
   if (v.length2() * scale > 1.0e-10)
@@ -278,12 +278,14 @@ RenderVectorFieldBase::add_disk(const Point &p, const Vector &vin,
     v*=(scale / 6.0);
     GeomCappedCylinder *d =
       scinew GeomCappedCylinder(p + v, p - v, len, resolution, 1, 1);
-    g->add(scinew GeomMaterial(d, mh));
+    if (mh.get_rep()) { g->add(scinew GeomMaterial(d, mh)); }
+    else { g->add(d); }
   }
   else
   {
     GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-    g->add(scinew GeomMaterial(s, mh));
+    if (mh.get_rep()) { g->add(scinew GeomMaterial(s, mh)); }
+    else { g->add(s); }
   }
 }
 
@@ -292,7 +294,7 @@ void
 RenderVectorFieldBase::add_cone(const Point &p, const Vector &vin,
 				double scale, int resolution,
 				GeomGroup *g, MaterialHandle mh,
-				bool normalize)
+				bool normalize, bool colorify)
 {
   Vector v = vin;
   if (v.length2() * scale > 1.0e-10)
@@ -302,12 +304,14 @@ RenderVectorFieldBase::add_cone(const Point &p, const Vector &vin,
     v*=scale;
     GeomCone *c = scinew GeomCone(p, p + v, len/6.0, 0, resolution, 1);
 
-    g->add(scinew GeomMaterial(c, mh));
+    if (mh.get_rep()) { g->add(scinew GeomMaterial(c, mh)); }
+    else { g->add(c); }
   }
   else
   {
     GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-    g->add(scinew GeomMaterial(s, mh));
+    if (mh.get_rep()) { g->add(scinew GeomMaterial(s, mh)); }
+    else { g->add(s); }
   }
 }
 
