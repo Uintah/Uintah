@@ -262,7 +262,8 @@ void TriGeometryPiece::insideTriangle(Point& q,int num,int& NCS,
   Vector plane_normal = d_planes[num].normal();
   Vector plane_normal_abs = Abs(plane_normal);
   double largest = plane_normal_abs.maxComponent();
-  int dominant_coord;
+  // WARNING: if dominant_coord is not 1-3, then this code breaks...
+  int dominant_coord = -1;
   if (largest == plane_normal_abs.x()) dominant_coord = 1;
   else if (largest == plane_normal_abs.y()) dominant_coord = 2;
   else if (largest == plane_normal_abs.z()) dominant_coord = 3;
@@ -273,7 +274,7 @@ void TriGeometryPiece::insideTriangle(Point& q,int num,int& NCS,
   p[2] = d_points[d_tri[num].z()];
 
   Tri tri(p[0],p[1],p[2]);
-  bool inside = tri.inside(q);
+  //bool inside = tri.inside(q);
   //  cout << "inside = " << inside << endl;
 
   // Now translate the points that make up the vertices of the triangle.
