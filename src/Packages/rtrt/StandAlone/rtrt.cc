@@ -494,7 +494,7 @@ main(int argc, char* argv[])
   }
   for( ; cnt < scene->nlights()+scene->nPerMatlLights(); cnt++ ) {
     Light *light = scene->per_matl_light( cnt - scene->nlights() );
-    light->name_ = string("per material");
+    light->name_ = light->name_ + " (pm)";
     gui->addLight( light );
   }
   printf("end glut inits\n");
