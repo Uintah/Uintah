@@ -187,7 +187,6 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched, const PatchSet* patches
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->computes(d_lab->d_scalarSPLabel);  
 
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,

@@ -702,13 +702,6 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
   tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-
   int nofScalarVars = d_props->getNumMixStatVars();
   if (nofScalarVars > 0) {
     tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, 
@@ -1147,13 +1140,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCYVariable<double> vHatVel_FCY;
     constSFCZVariable<double> wHatVel_FCZ;      
 
-    int nofGhostCells = Arches::ONEGHOSTCELL;
     new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     
     // Get the low and high index for the Cell Centered Variables
     IntVector idxLo = patch->getCellLowIndex();
