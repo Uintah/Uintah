@@ -107,9 +107,8 @@ void Delaunay::execute()
 
     for(int node=0;node<nnodes;node++){
 	// Add this node...
-	cerr << "Adding node: " << node << " of " << nnodes << endl;
+	update_progress(node, nnodes);
 	Point p(mesh->nodes[node]->p);
-	cerr << "p=" << p << endl;
 
 	// Find which element this node is in
 	int in_element;
@@ -202,14 +201,10 @@ void Delaunay::execute()
 	for(fiter.first();fiter.ok();++fiter){
 	    Face f(fiter.get_key());
 	    Element* ne=new Element(mesh, node, f.n[0], f.n[1], f.n[2]);
+
+	    // If the new element is not degenerate, add it to the mix...
 	    if(ne->orient()){
 		mesh->elems.add(ne);
-	    } else {
-		cerr << "Degenerate element not added!" << endl;
-		cerr << "n0=" << mesh->nodes[node]->p << endl;
-		cerr << "n1=" << mesh->nodes[f.n[0]]->p << endl;
-		cerr << "n2=" << mesh->nodes[f.n[1]]->p << endl;
-		cerr << "n3=" << mesh->nodes[f.n[2]]->p << endl;
 	    }
 	}
 	mesh->compute_neighbors();
