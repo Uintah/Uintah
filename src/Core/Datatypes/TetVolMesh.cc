@@ -1013,6 +1013,30 @@ TetVolMesh::get_weights(const Point &p,
   }
 }
 
+
+// The volume x 6, used by get_weights to compute barycentric coordinates.
+static double
+tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
+{
+  const double x1=p1.x();
+  const double y1=p1.y();
+  const double z1=p1.z();
+  const double x2=p2.x();
+  const double y2=p2.y();
+  const double z2=p2.z();
+  const double x3=p3.x();
+  const double y3=p3.y();
+  const double z3=p3.z();
+  const double x4=p4.x();
+  const double y4=p4.y();
+  const double z4=p4.z();
+  const double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+  const double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+  const double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+  const double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+  return fabs(a1+a2+a3+a4);
+}
+
 void
 TetVolMesh::get_weights(const Point &p,
 			Node::array_type &l, vector<double> &w)
@@ -1027,10 +1051,10 @@ TetVolMesh::get_weights(const Point &p,
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
     get_point(p3,ra[3]);
-    const double vol0 = (Cross(Cross(p1-p,p2-p),p3-p)).length();
-    const double vol1 = (Cross(Cross(p0-p,p2-p),p3-p)).length();
-    const double vol2 = (Cross(Cross(p0-p,p1-p),p3-p)).length();
-    const double vol3 = (Cross(Cross(p0-p,p1-p),p2-p)).length();
+    const double vol0 = tet_vol6(p, p1, p2, p3);
+    const double vol1 = tet_vol6(p, p0, p2, p3);
+    const double vol2 = tet_vol6(p, p1, p0, p3);
+    const double vol3 = tet_vol6(p, p1, p2, p0);
     const double vol_sum = vol0+vol1+vol2+vol3;
     l.push_back(ra[0]);
     l.push_back(ra[1]);
@@ -1390,7 +1414,7 @@ TetVolMesh::volume(TetVolMesh::Cell::index_type ci)
   double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
   double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
   double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-  return (a1+a2+a3+a4)/6.;
+  return fabs(a1+a2+a3+a4)/6.0;
 }
 
 void

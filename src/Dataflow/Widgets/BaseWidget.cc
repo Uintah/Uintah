@@ -642,6 +642,7 @@ void
 BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
 		       int, const BState&, const Vector &/*pick_offset*/ )
 {
+  module_->widget_moved(false);
 }
 
 
