@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
@@ -77,6 +78,10 @@ public:
    
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const; 
   
+   // Returns a (const) pointer to the grid.  This pointer can then be
+   // used to (for example) get the number of levels in the grid.
+   virtual const Grid * getGrid() { return d_grid.get_rep(); }
+
    // Generic put and allocate, passing Variable as a pointer rather than
    // by reference to avoid ambiguity with other put overloaded methods.
    virtual void put(Variable*, const VarLabel*, int matlIndex,
