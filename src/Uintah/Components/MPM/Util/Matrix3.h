@@ -15,10 +15,14 @@
 #include <math.h>
 #include <assert.h>
 #include <iosfwd>
+#include <SCICore/Geometry/Vector.h>
+#include <vector>
+
 namespace Uintah {
    class TypeDescription;
 }
 
+using namespace SCICore::Geometry;
 
 class Matrix3 {
  private:
@@ -55,11 +59,11 @@ class Matrix3 {
   inline double & operator() (int i,int j);
 
   // multiply Matrix3 by a constant
-  inline Matrix3 operator * (const double value);
+  inline Matrix3 operator * (const double value) const;
 
   // divide Matrix3 by a constant
-  inline Matrix3 operator / (const double value);
-
+  inline Matrix3 operator / (const double value) const;
+ 
   // modify by adding right hand side
   inline void operator += (const Matrix3 &m3);
 
@@ -67,13 +71,16 @@ class Matrix3 {
   inline void operator -= (const Matrix3 &m3);
 
   // add two Matrix3s
-  inline Matrix3 operator + (const Matrix3 &m3);
+  inline Matrix3 operator + (const Matrix3 &m3) const;
 
   // multiply two Matrix3s
-  inline Matrix3 operator * (const Matrix3 &m3);
+  inline Matrix3 operator * (const Matrix3 &m3) const;
 
+   // multiply Vector by Matrix3
+  inline Vector operator * (const Vector& V) const;  
+  
   // subtract two Matrix3s
-  inline Matrix3 operator - (const Matrix3 &m3);
+  inline Matrix3 operator - (const Matrix3 &m3) const;
 
   // multiply by constant
   inline void operator *= (const double value);
@@ -82,23 +89,77 @@ class Matrix3 {
   inline void operator /= (const double value);
 
   //Determinant
-  inline double Determinant();
+  inline double Determinant() const;
 
   //Inverse
-  Matrix3 Inverse();
+  Matrix3 Inverse() const;
 
   //Trace
-  inline double Trace();
+  inline double Trace() const;
 
   //Norm, sqrt(M:M)
-  inline double Norm();
+  inline double Norm() const;
 
   //Identity
   inline void Identity();
 
   //Transpose
-  inline Matrix3 Transpose();
+  inline Matrix3 Transpose() const;
 
+  // Returns number of real eigen values and passes back
+  // the values.
+  int getEigenValues(double& e1, double& e2, double& e3) const;
+
+  // Returns an array of eigenvectors that form the basis
+  // of eigenvectors corresponding to the given eigenvalue.
+  // There may be 0 (if eigen_value is not a true eigen value),
+  // 1, 2, or 3 ({1,0,0},{0,1,0},{0,0,1}) of these eigenvectors
+  // (> 1 if eigen value has degeneracies I believe) and they
+  // will NOT necessarily be normalized.
+  inline std::vector<Vector> getEigenVectors(double eigen_value) const;
+
+  // Solves for a single particular solution (possible arbitrary) to
+  // the equation system: Ax = rhs where A is this Matrix.
+  // Returns false if there is no solution, otherwise a particular
+  // solution is passed back via xp.
+  inline bool solveParticular(Vector rhs, Vector& xp) const;
+  
+  // Solves for the space of solutions for Ax = 0 where A is this Matrix.
+  // The solution is any linear combination of the resulting array
+  // of vectors.  That is, if result = {xg1, xg2, ...}, then
+  // x = a*xg1 + b*xg2 + ... where a, b, etc. are arbitrary scalars.
+  //
+  // Result Possibilities:
+  // Single Solution: result.size() = 0, {0,0,0} is only solution
+  // Line of Solutions: result.size() = 1
+  // Plane of Solutions: result.size() = 2
+  // Solution everywhere: result = {{1,0,0},{0,1,0},{0,0,1}}
+  inline std::vector<Vector> solveHomogenous() const;
+
+  // Solves for the space of solutions for Ax = rhs where A is this Matrix.
+  // This is a more efficient combination of solveParticular and
+  // solveHomogenous (where the homogenous results are passed back via
+  // xg_basis).
+  inline bool solve(Vector rhs, Vector& xp,
+		    std::vector<Vector>& xg_basis) const;
+private:
+  // Reduce the matrix and rhs, representing the equation system:
+  // A*x = y = rhs, to a matrix in upper triangular form with
+  // corresponding rhs for an equivalent equation systme.
+  // The guarantee for this new matrix is that the first non-zero
+  // column of a row is to the right (greater) of the first non-zero
+  // column in the row above it and the first non-zero column of
+  // any row has zeroes in every other row and a one in that row.
+  // If rhs == NULL, then the rhs is assumed to be
+  // the zero vector and thus will not need to change.
+  static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows);
+
+  // solveHomogenous for a Matrix that has already by triangularReduced
+  std::vector<Vector> solveHomogenousReduced(int num_zero_rows) const;
+
+  // solveHomogenous for a Matrix that has already by triangularReduced
+  bool solveParticularReduced(const Vector& rhs, Vector& xp,
+			      int num_zero_rows) const;
 };
 
 std::ostream & operator << (std::ostream &out_file, const Matrix3 &m3);
@@ -106,7 +167,7 @@ namespace Uintah {
 const TypeDescription* fun_getTypeDescription(Matrix3*);
 }
 
-inline double Matrix3::Trace()
+inline double Matrix3::Trace() const
 {
   // Return the trace of a 3x3 matrix
 
@@ -173,9 +234,9 @@ inline Matrix3::~Matrix3()
   // Do nothing
 }
 
-inline double Matrix3::Norm()
+inline double Matrix3::Norm() const
 {
-  // Return the trace of a 3x3 matrix
+  // Return the norm of a 3x3 matrix
 
   double norm = 0.0;
 
@@ -189,7 +250,7 @@ inline double Matrix3::Norm()
 
 }
 
-inline Matrix3 Matrix3::Transpose()
+inline Matrix3 Matrix3::Transpose() const
 {
   // Return the transpose of a 3x3 matrix
 
@@ -268,7 +329,7 @@ inline void Matrix3::operator /= (const double value)
   }
 }
 
-inline Matrix3 Matrix3::operator * (const double value)
+inline Matrix3 Matrix3::operator * (const double value) const
 {
 //   Multiply a Matrix3 by a constant
 
@@ -277,7 +338,7 @@ inline Matrix3 Matrix3::operator * (const double value)
 		 mat3[2][0]*value,mat3[2][1]*value,mat3[2][2]*value); 
 }
 
-inline Matrix3 Matrix3::operator * (const Matrix3 &m3)
+inline Matrix3 Matrix3::operator * (const Matrix3 &m3) const
 {
 //   Multiply a Matrix3 by a Matrix3
 
@@ -294,7 +355,15 @@ inline Matrix3 Matrix3::operator * (const Matrix3 &m3)
                  mat3[2][0]*m3(1,3)+mat3[2][1]*m3(2,3)+mat3[2][2]*m3(3,3));
 }
 
-inline Matrix3 Matrix3::operator + (const Matrix3 &m3)
+inline Vector Matrix3::operator * (const Vector& V) const
+{
+  return Vector(mat3[0][0] * V(0) + mat3[0][1] * V(1) + mat3[0][2] * V(2),
+		mat3[1][0] * V(0) + mat3[1][1] * V(1) + mat3[1][2] * V(2),
+		mat3[2][0] * V(0) + mat3[2][1] * V(1) + mat3[2][2] * V(2));
+}
+
+
+inline Matrix3 Matrix3::operator + (const Matrix3 &m3) const
 {
 //   Add a Matrix3 to a Matrix3
 
@@ -303,7 +372,7 @@ inline Matrix3 Matrix3::operator + (const Matrix3 &m3)
 		 mat3[2][0] + m3(3,1),mat3[2][1] + m3(3,2),mat3[2][2] + m3(3,3));
 }
 
-inline Matrix3 Matrix3::operator - (const Matrix3 &m3)
+inline Matrix3 Matrix3::operator - (const Matrix3 &m3) const
 {
 //   Subtract a Matrix3 from a Matrix3
 
@@ -312,7 +381,7 @@ inline Matrix3 Matrix3::operator - (const Matrix3 &m3)
 		 mat3[2][0] - m3(3,1),mat3[2][1] - m3(3,2),mat3[2][2] - m3(3,3));
 }
 
-inline Matrix3 Matrix3::operator / (const double value)
+inline Matrix3 Matrix3::operator / (const double value) const
 {
 //   Divide a Matrix3 by a constant
 
@@ -324,7 +393,7 @@ inline Matrix3 Matrix3::operator / (const double value)
 		 mat3[2][0]*ivalue,mat3[2][1]*ivalue,mat3[2][2]*ivalue); 
 }
 
-inline double Matrix3::Determinant()
+inline double Matrix3::Determinant() const
 {
   // Return the determinant of a 3x3 matrix
 
@@ -355,6 +424,51 @@ inline double &Matrix3::operator () (int i, int j)
   return mat3[i-1][j-1];
 }
 
+inline std::vector<Vector> Matrix3::getEigenVectors(double eigen_value) const
+{
+  // A*x = e*x
+  // (A - e*I)*x = 0
+  Matrix3 A_sub_eI(mat3[0][0] - eigen_value, mat3[0][1], mat3[0][2],
+	       mat3[1][0], mat3[1][1] - eigen_value, mat3[1][2],
+	       mat3[2][0], mat3[2][1], mat3[2][2] - eigen_value);
+  int num_zero_rows;
+  triangularReduce(A_sub_eI, NULL, num_zero_rows);
+  return A_sub_eI.solveHomogenousReduced(num_zero_rows);
+}
+
+inline bool Matrix3::solveParticular(Vector rhs, Vector& xp) const
+{
+  int num_zero_rows;
+  Matrix3 A(*this);
+  triangularReduce(A, &rhs, num_zero_rows);
+  return A.solveParticularReduced(rhs, xp, num_zero_rows);
+}
+
+inline std::vector<Vector> Matrix3::solveHomogenous() const
+{
+  int num_zero_rows;
+  Matrix3 A(*this);
+  triangularReduce(A, NULL, num_zero_rows);
+  return A.solveHomogenousReduced(num_zero_rows);
+}
+
+inline bool Matrix3::solve(Vector rhs, Vector& xp,
+		  std::vector<Vector>& xg_basis) const
+{
+  int num_zero_rows;
+  Matrix3 A(*this);
+  triangularReduce(A, &rhs, num_zero_rows);
+  if (A.solveParticularReduced(rhs, xp, num_zero_rows)) {
+    xg_basis = A.solveHomogenousReduced(num_zero_rows);
+    return true;
+  }
+  xg_basis.resize(0);
+  return false;
+}
+
+// This is backwards: if the vector comes first then it should
+// multiply the matrix columnwise instead of rowwise.  For now,
+// I won't fix it because changing it may break other code. -- witzel
 #include <SCICore/Geometry/Vector.h>
 inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, const Matrix3& m3) {
   // Right multiply a Vector by a Matrix3
@@ -370,6 +484,11 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.5  2000/08/15 19:15:19  witzel
+// Added methods for finding eigenvalues, eigenvectors and solving
+// equation systems of the form Ax=b and Ax=0.  Also added M*v
+// operation (where M is a Matrix3 and v is a Vector).
+//
 // Revision 1.4  2000/05/20 08:09:12  sparker
 // Improved TypeDescription
 // Finished I/O
