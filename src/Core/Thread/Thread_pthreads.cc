@@ -763,22 +763,32 @@ ConditionVariable::wait(Mutex& m)
     Thread::pop_bstack(p, oldstate);
 }
 
-void
+bool
 ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 {
     Thread_private* p=Thread::self()->d_priv;
     int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, d_name);
+    bool success;
     if(abstime){
-	if(pthread_cond_timedwait(&d_priv->cond, &m.d_priv->mutex,
-				  abstime) != 0)
-	    throw ThreadError(std::string("pthread_cond_timedwait: ")
-			      +strerror(errno));
+	int err=pthread_cond_timedwait(&d_priv->cond, &m.d_priv->mutex,
+				       abstime);
+	if(err != 0){
+	    if(err == ETIMEDOUT)
+		success=false;
+	    else
+		throw ThreadError(std::string("pthread_cond_timedwait: ")
+				  +strerror(errno));
+	} else {
+	    success=true;
+	}
     } else {
 	if(pthread_cond_wait(&d_priv->cond, &m.d_priv->mutex) != 0)
 	    throw ThreadError(std::string("pthread_cond_wait: ")
 			      +strerror(errno));
+	success=true;
     }
     Thread::pop_bstack(p, oldstate);
+    return success;
 }
 
 void
@@ -798,6 +808,9 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.11  1999/10/13 21:01:38  sparker
+// Fixed timedWait for pthreads
+//
 // Revision 1.10  1999/10/07 02:08:06  sparker
 // use standard iostreams and complex type
 //
