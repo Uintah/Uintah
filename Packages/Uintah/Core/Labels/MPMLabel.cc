@@ -24,6 +24,10 @@ MPMLabel::MPMLabel()
   pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
   
+  // for thermal stress
+  pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
+                        ParticleVariable<double>::getTypeDescription() ); 
+    
   pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
 			ParticleVariable<Vector>::getTypeDescription() );
 
@@ -67,6 +71,10 @@ MPMLabel::MPMLabel()
   
   pTemperatureLabel = VarLabel::create( "p.temperature",
 			ParticleVariable<double>::getTypeDescription() );
+  
+  // for thermal stress
+  pTempPreviousLabel = VarLabel::create( "p.tempPrevious",
+		        ParticleVariable<double>::getTypeDescription() ); 
                      
   pSp_volLabel      = VarLabel::create( "p.sp_vol",
 			ParticleVariable<double>::getTypeDescription() ); 
@@ -156,6 +164,10 @@ MPMLabel::MPMLabel()
   
   pTemperatureLabel_preReloc = VarLabel::create( "p.temperature+",
 			ParticleVariable<double>::getTypeDescription() );
+    
+  // for thermal stress
+  pTempPreviousLabel_preReloc = VarLabel::create( "p.tempPrevious+",
+                        ParticleVariable<double>::getTypeDescription() ); 
 
   pSp_volLabel_preReloc = VarLabel::create( "p.Sp_vol+",
 			ParticleVariable<double>::getTypeDescription() );  
@@ -549,6 +561,7 @@ MPMLabel::~MPMLabel()
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
   VarLabel::destroy(pTemperatureGradientLabel);
+  VarLabel::destroy(pTempCurrentLabel); // for thermal stress
   VarLabel::destroy(p_qLabel);
   VarLabel::destroy(pXXLabel);
 
@@ -575,6 +588,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pXLabel_preReloc);
   VarLabel::destroy(pTemperatureLabel);
   VarLabel::destroy(pTemperatureLabel_preReloc);
+  VarLabel::destroy(pTempPreviousLabel); // for thermal stress
+  VarLabel::destroy(pTempPreviousLabel_preReloc); // for thermal stress
   VarLabel::destroy(pSp_volLabel); 
   VarLabel::destroy(pSp_volLabel_preReloc); 
   VarLabel::destroy(pInternalHeatRateLabel);
