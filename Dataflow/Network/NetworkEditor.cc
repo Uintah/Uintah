@@ -313,7 +313,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
       for (int i = 3; i < args.count(); i++) {
 	command = command + " " + args[i];
       }
-      sci_system(command.c_str());
+      args.result(to_string(sci_system(command.c_str())));
       return;
     } else if (args[1] == "getenv" && args.count() == 3){
       const char *result = sci_getenv( args[2] );
