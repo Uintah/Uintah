@@ -36,8 +36,6 @@ class ChangeFieldDataTypeAlgoCreate : public DynamicAlgoBase
 public:
 
   virtual FieldHandle execute(FieldHandle fsrc_h) = 0;
-  virtual void set_val_scalar(FieldHandle fout_h, 
-			      void *ind, double val) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -51,8 +49,6 @@ class ChangeFieldDataTypeAlgoCreateT : public ChangeFieldDataTypeAlgoCreate
 public:
 
   virtual FieldHandle execute(FieldHandle fsrc_h);
-  virtual void set_val_scalar(FieldHandle fout_h, 
-			      void *ind, double val);
 };
 
 
@@ -70,50 +66,6 @@ ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h)
 
   return fout;
 }
-
-template <class T>
-bool
-double_to_data_type(T &dat, double d);
-
-template <>
-bool
-double_to_data_type<Vector>(Vector &dat, double d)
-{
-  return false;
-
-}
-
-template <>
-bool
-double_to_data_type<Tensor>(Tensor &dat, double d)
-{
-  return false;
-}
-
-template <class T>
-bool
-double_to_data_type(T &dat, double d)
-{
-  dat = (T)d;
-  return true;
-}
-
-
-template <class FSRC, class FOUT>
-void
-ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::set_val_scalar(FieldHandle fout_h, 
-							   void* index, 
-							   double val)
-{
-  typename FOUT::value_type dat;
-  if (double_to_data_type(dat, val)) {
-    FOUT *fout = dynamic_cast<FOUT *>(fout_h.get_rep());
-    typedef typename FOUT::mesh_type::Node::index_type ni;
-    ni *ind = (ni*)index;
-    fout->set_value(dat, *ind);
-  }
-}
-
 
 class ChangeFieldDataTypeAlgoCopy : public DynamicAlgoBase
 {
