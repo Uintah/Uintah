@@ -1113,11 +1113,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   vtrans->pre_translate(Vector(0,0,-.00305)); //place at 1cm above surface
 
   SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
-  vinst->name_ = "Spinning Visible Woman";
+  vinst->set_name("Spinning Visible Woman");
 
   CutGroup *vcut = new CutGroup(vcpdpy, true);
   vcut->add(vinst);
-  vcut->name_ = "Visible Femarle Cut Plane";
+  vcut->set_name("Visible Femarle Cut Plane");
 
   vinst->addCPDpy(vcpdpy);
 #endif
@@ -1152,11 +1152,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   SpinningInstance *hinst = new SpinningInstance(hiw, htrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   
-  hinst->name_ = "Spinning Brain";
+  hinst->set_name("Spinning Brain");
 
   CutGroup *hcut = new CutGroup(hcpdpy, true);
   hcut->add(hinst);
-  hcut->name_ = "Brain Cutting Plane";
+  hcut->set_name("Brain Cutting Plane");
 
   hinst->addCPDpy(hcpdpy);
 #endif
@@ -1309,7 +1309,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   sg->add(glyphs);
 #endif
 
-  sg->name_ = "VolVis Selection";
+  sg->set_name("VolVis Selection");
   g->add(sg);
 
   Color cdown(0.1, 0.1, 0.1);

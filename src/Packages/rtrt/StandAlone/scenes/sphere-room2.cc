@@ -354,7 +354,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   sol->set_orb_speed(0);
   sol->set_rev_speed(1./table[0].rot_speed_*SYSTEM_TIME_SCALE1);
   table[0].self_ = sol;
-  cerr << sol->name_ << " = " << sol << endl;
+  cerr << sol->get_name() << " = " << sol << endl;
 
   // build the earth first (it has special texturing needs)
   radius = table[1].radius_*SYSTEM_SIZE_SCALE;
@@ -369,7 +369,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   earth->set_orb_speed(1./table[1].orb_speed_*SYSTEM_TIME_SCALE2);
   earth->set_rev_speed(1./table[1].rot_speed_*SYSTEM_TIME_SCALE1);
   table[1].self_ = earth;
-  cerr << earth->name_ << " = " << earth << endl;
+  cerr << earth->get_name() << " = " << earth << endl;
   bbox.reset();
   earth->compute_bounds(bbox,1E-6);
   galaxy_room->add( earth );
