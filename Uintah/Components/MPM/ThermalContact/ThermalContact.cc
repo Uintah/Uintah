@@ -35,6 +35,8 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
   int m, n, vfindex;
   Material* matl;
   MPMMaterial* mpm_matl;
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
   
   for(m = 0; m < numMatls; m++){
     matl = d_sharedState->getMaterial( m );
@@ -51,28 +53,38 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
     }
   }
 
-  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
-  {
-    for(n = 0; n < NVFs; n++)
-    {
-      double temprature_mass0 = gTemperature[n][*iter] * gmass[n][*iter];
+  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+    double numerator=0.0;
+    double denominator=0.0;
+    for(m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if(mpm_matl){
+        int n = matl->getVFIndex();
+        double Cp=mpm_matl->getSpecificHeat();
+        double K=mpm_matl->getThermalConductivity();
+        numerator   += gTemperature[n][*iter] * gmass[n][*iter] * Cp;
+        denominator += gmass[n][*iter] * Cp;
+      }
+    }
       
-      for(m = 0; m < numMatls; m++)
-      {
+    if( !compare(denominator,0.0) ) {
+      double contactTemperature = numerator/denominator;
+      for(m = 0; m < numMatls; m++) {
         matl = d_sharedState->getMaterial( m );
         mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         
         if(mpm_matl){
-          vfindex = matl->getVFIndex();
-          double temprature_mass = gTemperature[vfindex][*iter] * 
-             gmass[vfindex][*iter];
-          
-          if( !compare(temprature_mass,temprature_mass0) )
-          {
-            thermalContactHeatExchangeRate[n][*iter] += 
-               mpm_matl->getHeatTransferCoefficient() *
-                  ( temprature_mass - temprature_mass0 );
+          double Cp=mpm_matl->getSpecificHeat();
+          double K=mpm_matl->getThermalConductivity();
+          int n = matl->getVFIndex();
+	  if( !compare(gmass[n][*iter],0.0)){
+            thermalContactHeatExchangeRate[n][*iter] =
+		(contactTemperature - gTemperature[n][*iter])/delT;
           }
+	  else {
+	    thermalContactHeatExchangeRate[n][*iter] = 0.0;
+	  }
         }
       }
     }
@@ -108,6 +120,10 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.12  2000/07/20 19:43:28  guilkey
+// Changed the functionality of the ThermalContact to be similar to the
+// SingleVelocityField momentum contact algorithm.
+//
 // Revision 1.11  2000/07/05 23:43:38  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
