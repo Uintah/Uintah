@@ -344,6 +344,9 @@ build a default set of ITK filter-based modules.  Users can generate
 additional modules by writing XML descriptions. The process of
 generating modules based on ITK filters is described in
 \chref{Wrapping ITK Filters in \sr Modules}{ch:itk_mods}.
+See the \htmladdnormallinkfoot{Installation Guide}
+{\latexhtml{http://software.sci.utah.edu/doc/Installation/Guide/Linux/sec.itk_inst.html}{../../Installation/Guide/Linux/sec.itk_inst.html}}
+for information on compiling ITK and SCIRun.
 
 \subsection{PETSc}
 \index{PETSc}
@@ -425,11 +428,17 @@ The following Power Apps are available:
   \descitem{BioFEM} \index{BioFEM} A finite element simulation application. It is
   used, for example, to compute electric and potential fields from a
   discretized volume conductor and a current source.
+
+  \descitem{BioImage} \index{BioImage} An application for exploring 3D volume data.
+  See the \htmladdnormallinkfoot{BioImage tutorial}
+  {\latexhtml{http://software.sci.utah.edu/doc/User/Tutorials/BioImage/index.html}{../../Tutorials/BioImage/index.html}}
+  for more information.
+
 \end{description}
 
-Commands \command{BioTensor} and \command{BioFem} invoke these
+Commands \command{BioTensor}, \command{BioFem} and \command{BioImage} invoke these
 applications.  If \sr{} is installed from source code, commands
-\command{BioTensor} and \command{BioFem} are located in \sr{}'s build
+\command{BioTensor}, \command{BioFem} and \command{BioImage} are located in \sr{}'s build
 directory (alongside the \command{scirun} command).  If \sr{} is
 installed from RPMs these commands are located in
 \directory{/usr/local/SCIRun/bin}.
