@@ -101,6 +101,10 @@ ClippingPlane::execute()
 
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
+  if (!ifp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     datatype_ = SCALAR;
@@ -171,6 +175,10 @@ ClippingPlane::execute()
   ofh->mesh()->transform(trans);
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Clipping Plane");
+  if (!ofp) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   ofp->send(ofh);
 }
 
