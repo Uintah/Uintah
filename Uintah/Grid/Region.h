@@ -73,7 +73,7 @@ WARNING
       // Insert Documentation Here:
       bool findCellAndShapeDerivatives(const SCICore::Geometry::Point&/* pos*/,
 				       IntVector /*ni*/[8],
-				       SCICore::Geometry::Vector /*S*/[8]) const{ return false; }
+				       SCICore::Geometry::Vector /*S*/[8]) const;
 
       //////////
       // Insert Documentation Here:
@@ -150,6 +150,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.14  2000/05/02 20:30:59  jas
+// Fixed the findCellAndShapeDerivatives.
+//
 // Revision 1.13  2000/05/02 20:13:05  sparker
 // Implemented findCellAndWeights
 //
