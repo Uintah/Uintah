@@ -105,6 +105,8 @@ namespace Uintah {
 
     virtual double getCompressibility();
 
+    virtual Vector getInitialFiberDir();
+
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
 

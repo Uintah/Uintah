@@ -115,6 +115,8 @@ namespace Uintah {
 
     virtual double getCompressibility() = 0;
 
+    virtual Vector getInitialFiberDir();
+
     double computeRhoMicro(double press,double gamma,
 			   double cv, double Temp);
 	 
