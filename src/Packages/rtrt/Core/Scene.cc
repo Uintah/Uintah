@@ -144,32 +144,15 @@ void Scene::refill_work(int which, int nworkers)
     work.refill(nass, nworkers, 40);
 }
 
-static Material * flat_yellow = NULL;
-static Material * flat_orange = NULL;
-
 void Scene::add_light(Light* light)
 {
-    if( !flat_yellow )
-        flat_yellow = new LambertianMaterial(Color(.8,.8,.0));
-
-    // Create a yellow sphere that can be rendered in the location
-    // of the light.
-    Sphere * s = new Sphere( flat_yellow, light->get_pos(), 0.1 );
-    lightsGroup_->add( s );
-
+    lightsGroup_->add( light->getSphere() );
     lights.add(light);
 }
 
 void Scene::add_per_matl_light(Light* light)
 {
-    if( !flat_orange )
-        flat_orange = new LambertianMaterial(Color(1.0,.7,.0));
-
-    // Create a yellow sphere that can be rendered in the location
-    // of the light.
-    Sphere * s = new Sphere( flat_orange, light->get_pos(), 0.1 );
-    lightsGroup_->add( s );
-
+    lightsGroup_->add( light->getSphere() );
     per_matl_lights.add(light);
 }
 
