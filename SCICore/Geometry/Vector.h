@@ -64,6 +64,7 @@ public:
     inline Vector& operator*=(const double);
     inline Vector operator/(const double) const;
     inline Vector operator/(const Vector&) const;
+    inline Vector& operator/=(const double);
     inline Vector operator+(const Vector&) const;
     inline Vector& operator+=(const Vector&);
     inline Vector operator-() const;
@@ -261,6 +262,14 @@ inline Vector& Vector::operator*=(const double d)
     return *this;
 }
 
+inline Vector& Vector::operator/=(const double d)
+{
+    _x/=d;
+    _y/=d;
+    _z/=d;
+    return *this;
+}
+
 inline void Vector::x(double d)
 {
     _x=d;
@@ -359,6 +368,9 @@ inline Point Vector::asPoint() const {
 
 //
 // $Log$
+// Revision 1.8  2000/07/05 21:38:47  tan
+// Added /= operator.
+//
 // Revision 1.7  2000/06/15 20:43:19  sparker
 // Added "inline" statements in class file
 //
