@@ -20,9 +20,10 @@
 #include "SymbolTable.h"
 #include <iostream>
 
-using std::vector;
 using std::cerr;
 using std::map;
+using std::set;
+using std::vector;
 
 void SpecificationList::staticCheck()
 {
@@ -601,19 +602,38 @@ void ScopedName::bind(Symbol* s)
 
 void Enum::staticCheck(SymbolTable* names)
 {
+  set<int> occupied;
+  for(std::vector<Enumerator*>::iterator iter = list.begin();
+      iter != list.end(); iter++){
+    (*iter)->assignValues1(names, occupied);
+  }
   int nextvalue=0;
   for(std::vector<Enumerator*>::iterator iter = list.begin();
       iter != list.end(); iter++){
-    (*iter)->staticCheck(names, nextvalue);
+    (*iter)->assignValues2(names, occupied, nextvalue);
   }
 }
 
-void Enumerator::staticCheck(SymbolTable* names, int& nextvalue)
+void Enumerator::assignValues1(SymbolTable* names, set<int>& occupied)
 {
-  if(!have_value)
-    value=nextvalue++;
-  else
-    nextvalue=value+1;
+  if(have_value){
+    if(occupied.find(value) != occupied.end()){
+      cerr << curfile << ':' << lineno << ": (132) Enumerator (" << name << ") assigned to a duplicate value\n";
+      exit(1);
+    }
+    occupied.insert(value);
+  }
+}
+
+void Enumerator::assignValues2(SymbolTable* names, set<int>& occupied,
+			       int& nextvalue)
+{
+  if(!have_value){
+    while(occupied.find(nextvalue) != occupied.end())
+      nextvalue++;
+    value=nextvalue;
+    occupied.insert(nextvalue++);
+  }
 }
 
 void Enum::gatherSymbols(SymbolTable* names)

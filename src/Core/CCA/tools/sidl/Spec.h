@@ -19,9 +19,10 @@
 #ifndef SPEC_H
 #define SPEC_H 1
 
-#include <vector>
-#include <string>
 #include <iosfwd>
+#include <set>
+#include <string>
+#include <vector>
 
 class Symbol;
 class SymbolTable;
@@ -303,7 +304,8 @@ public:
 	     int value);
   ~Enumerator();
 
-  void staticCheck(SymbolTable*, int& nextvalue);
+  void assignValues1(SymbolTable*, std::set<int>& occupied);
+  void assignValues2(SymbolTable*, std::set<int>& occupied, int& nextvalue);
   void gatherSymbols(SymbolTable*);
   void emit(EmitState& out, bool first);
 public:
