@@ -60,13 +60,14 @@ for username in `cat trash/usernames`; do
 Subject: Cleanup needed for regression tester
 To: $sendto
 
+This is an automated e-mail.
 Please remove the following directories in order to clean out the regression tester.
 
 Under `pwd` on `hostname`:
 
 EOF
      find trash -user $username -prune -exec echo "rm -rf" {} \; >> trash/userRemoval    
-    /usr/lib/sendmail $sendto < trash/userRemoval
+    sendmail $sendto < trash/userRemoval
     rm trash/userRemoval
 done
 
