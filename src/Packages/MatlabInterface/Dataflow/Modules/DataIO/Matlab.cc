@@ -38,8 +38,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 
-#include <sci_defs/environment_defs.h> // for SCIRUN_OBJDIR 
 #include <Core/Util/sci_system.h>      // for sci_system call
+#include <Core/Util/Environmet.h>      // for SCIRUN_OBJDIR location
 
 #include <Packages/MatlabInterface/Core/Util/transport.h>
 
@@ -274,7 +274,8 @@ Matlab::execute()
       char cl[1024];
      
       strcpy(cl,"echo 'path('\\''"); 
-      strcat(cl,SCIRUN_OBJDIR);
+      ASSERT(sci_getenv("SCIRUN_OBJDIR"));
+      strcat(cl,sci_getenv("SCIRUN_OBJDIR"));
       strcat(cl,"/matlab/engine");
       strcat(cl,"'\\'',path); mlabengine(");
       sprintf(cl,"%s%i",cl,wordy-2);

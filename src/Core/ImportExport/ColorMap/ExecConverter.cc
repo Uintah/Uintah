@@ -42,13 +42,12 @@
 // Use a standalone converter to do the colormap conversion into a
 // temporary file, then read in that file.
 
-#include <sci_defs/environment_defs.h>
-
 #include <Core/Malloc/Allocator.h>
 #include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -226,8 +225,9 @@ Exec_writer(ProgressReporter *pr,
 ColorMapHandle
 TextColorMap_reader(ProgressReporter *pr, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToColorMap %f %t";
   return Exec_reader(pr, filename, command);
 }
@@ -236,8 +236,9 @@ bool
 TextColorMap_writer(ProgressReporter *pr,
 		    ColorMapHandle colormap, const char *filename)
 {
+  ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-    string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
+    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "ColorMapToText %f %t";
   return Exec_writer(pr, colormap, filename, command);
 }
