@@ -78,6 +78,9 @@ void Salmon::do_execute()
 	    }
 	    break;
 #endif
+	case MessageTypes::ExecuteModule:
+	    // We ignore these messages...
+	    break;
 	case MessageTypes::RoeRedraw:
 	    {
 		RedrawMessage* rmsg=(RedrawMessage*)msg;
@@ -159,28 +162,30 @@ void Salmon::flushViews()
 void Salmon::addObj(int portno, int serial, GeomObj *obj,
 		    const clString& name)
 {
-    HashTable<int, GeomObj*>* serHash;
+    HashTable<int, SceneItem*>* serHash;
     if (!portHash.lookup(portno, serHash)) {
 	// need to make this table
-	serHash = new HashTable<int, GeomObj*>;
+	serHash = new HashTable<int, SceneItem*>;
 	portHash.insert(portno, serHash);
     }
-    serHash->insert(serial, obj);
     clString pname(name+" ("+to_string(portno)+")");
-    for (int i=0; i<topRoe.size(); i++)
-	topRoe[i]->itemAdded(obj, pname);
+    SceneItem* si=new SceneItem(obj, pname);
+    serHash->insert(serial, si);
+    for (int i=0; i<roe.size(); i++)
+	roe[i]->itemAdded(si);
 }
 
 void Salmon::delObj(int portno, int serial)
 {
-    HashTable<int, GeomObj*>* serHash;
+    HashTable<int, SceneItem*>* serHash;
     if (portHash.lookup(portno, serHash)) {
-	GeomObj *g;
-	if(serHash->lookup(serial, g)){
+	SceneItem *si;
+	if(serHash->lookup(serial, si)){
 	    serHash->remove(serial);
-	    for (int i=0; i<topRoe.size(); i++)
-		topRoe[i]->itemDeleted(g);
-	    delete g;
+	    for (int i=0; i<roe.size(); i++)
+		roe[i]->itemDeleted(si);
+	    delete si->obj;
+	    delete si;
 	} else {
 	    cerr << "Error deleting object, object not in database...(serial=" << serial << ")" << endl;
 	}
@@ -192,19 +197,20 @@ void Salmon::delObj(int portno, int serial)
 void Salmon::delAll(int portno)
 {
 
-    HashTable<int, GeomObj*>* serHash;
+    HashTable<int, SceneItem*>* serHash;
     if (portHash.lookup(portno, serHash)) {
-	HashTableIter<int, GeomObj*> iter(serHash);
+	HashTableIter<int, SceneItem*> iter(serHash);
 	for (iter.first(); iter.ok();) {
-	    GeomObj* g=iter.get_data();
+	    SceneItem* si=iter.get_data();
 	    int serial=iter.get_key();
 	    ++iter; // We have to increment before we nuke the
 	            // current element...
 	    serHash->remove(serial);
-	    for (int i=0; i<topRoe.size(); i++) {
-		topRoe[i]->itemDeleted(g);
+	    for (int i=0; i<roe.size(); i++) {
+		roe[i]->itemDeleted(si);
 	    }
-	    delete g;
+	    delete si->obj;
+	    delete si;
 	}
     }
 }
@@ -267,7 +273,6 @@ void Salmon::tcl_command(TCLArgs& args, void* userdata)
 	Array1<clString> list;
 	AVLTreeIter<clString, make_Renderer> iter(Renderer::get_db());
 	for(iter.first();iter.ok();++iter){
-	    cerr << "Adding: " << iter.get_key() << endl;
 	    list.add(iter.get_key());
 	}
 	args.result(args.make_list(list));
@@ -278,7 +283,7 @@ void Salmon::tcl_command(TCLArgs& args, void* userdata)
 
 void Salmon::execute()
 {
-    NOT_FINISHED("Salmon::execute");
+    // Never gets called...
 }
 
 RedrawMessage::RedrawMessage(const clString& rid)
@@ -287,5 +292,14 @@ RedrawMessage::RedrawMessage(const clString& rid)
 }
 
 RedrawMessage::~RedrawMessage()
+{
+}
+
+SceneItem::SceneItem(GeomObj* obj, const clString& name)
+: obj(obj), name(name)
+{
+}
+
+SceneItem::~SceneItem()
 {
 }

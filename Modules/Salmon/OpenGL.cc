@@ -154,20 +154,20 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
 	clString shading(roe->shading.get());
 	if(shading == "wire"){
-	    drawinfo.drawtype=DrawInfoOpenGL::WireFrame;
+	    drawinfo.set_drawtype(DrawInfoOpenGL::WireFrame);
 	    drawinfo.lighting=0;
 	} else if(shading == "flat"){
-	    drawinfo.drawtype=DrawInfoOpenGL::Flat;
+	    drawinfo.set_drawtype(DrawInfoOpenGL::Flat);
 	    drawinfo.lighting=0;
 	} else if(shading == "gouraud"){
-	    drawinfo.drawtype=DrawInfoOpenGL::Gouraud;
+	    drawinfo.set_drawtype(DrawInfoOpenGL::Gouraud);
 	    drawinfo.lighting=1;
 	} else if(shading == "phong"){
-	    drawinfo.drawtype=DrawInfoOpenGL::Phong;
+	    drawinfo.set_drawtype(DrawInfoOpenGL::Phong);
 	    drawinfo.lighting=1;
 	} else {
 	    cerr << "Unknown shading(" << shading << "), defaulting to gouraud" << endl;
-	    drawinfo.drawtype=DrawInfoOpenGL::Gouraud;
+	    drawinfo.set_drawtype(DrawInfoOpenGL::Gouraud);
 	    drawinfo.lighting=1;
 	}
 	drawinfo.currently_lit=0;
@@ -179,24 +179,27 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
 	// Draw it all...
 	drawinfo.push_matl(salmon->default_matl.get_rep());
-	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&salmon->portHash);
+	HashTableIter<int,HashTable<int, SceneItem*>*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, GeomObj*>* serHash=iter.get_data();
-	    HashTableIter<int, GeomObj*> serIter(serHash);
+	    HashTable<int, SceneItem*>* serHash=iter.get_data();
+	    HashTableIter<int, SceneItem*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
-		GeomObj *geom=serIter.get_data();
+		SceneItem *si=serIter.get_data();
 
 		// Look up this object by name and see if it is supposed to be
 		// displayed...
-		geom->draw(&drawinfo);
-	    }
+		TCLvarint* vis;
+		if(roe->visible.lookup(si->name, vis)){
+		    if(vis->get())
+			si->obj->draw(&drawinfo);
+		} 
+ 	    }
 	}
 	drawinfo.pop_matl();
     }
 
     // Show the pretty picture
     glXSwapBuffers(dpy, win);
-    TCLTask::unlock();
 
     // Report statistics
     timer.stop();
@@ -206,6 +209,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	<< " seconds\" \"" << drawinfo.polycount/timer.time()
 	<< " polygons/second\"";
     TCL::execute(str.str());
+    TCLTask::unlock();
 }
 
 void OpenGL::hide()
@@ -265,23 +269,23 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 		  up.x(), up.y(), up.z());
 
 	drawinfo.lighting=0;
-	drawinfo.drawtype=DrawInfoOpenGL::Flat;
+	drawinfo.set_drawtype(DrawInfoOpenGL::Flat);
 	drawinfo.pickmode=1;
 
 	// Draw it all...
 	drawinfo.push_matl(salmon->default_matl.get_rep());
-	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&salmon->portHash);
+	HashTableIter<int,HashTable<int, SceneItem*>*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, GeomObj*>* serHash=iter.get_data();
-	    HashTableIter<int, GeomObj*> serIter(serHash);
+	    HashTable<int, SceneItem*>* serHash=iter.get_data();
+	    HashTableIter<int, SceneItem*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
-		GeomObj *geom=serIter.get_data();
+		SceneItem *si=serIter.get_data();
 
 		// Look up this object by name and see if it is supposed to be
 		// displayed...
-		if(geom->get_pick()){
-		    glLoadName((GLuint)geom);
-		    geom->draw(&drawinfo);
+		if(si->obj->get_pick()){
+		    glLoadName((GLuint)si->obj);
+		    si->obj->draw(&drawinfo);
 		}
 	    }
 	}

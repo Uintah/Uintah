@@ -28,6 +28,7 @@
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
 #include <Math/Trig.h>
+#include <TCL/TCLTask.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,11 +44,23 @@ Roe::Roe(Salmon* s, const clString& id)
 : id(id), manager(s), view("view", id, this), shading("shading", id, this),
   homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25)
 {
+    homeview=View(Point(500, 500, 500), Point(0,0,0), Vector(0,0,1), 60);
     view.set(homeview);
     TCL::add_command(id, this, 0);
     current_renderer=0;
     modebuf=new char[MODEBUFSIZE];
     modecommand=new char[MODEBUFSIZE];
+
+    // Fill in the visibility database...
+    HashTableIter<int,HashTable<int, SceneItem*>*> iter(&manager->portHash);
+    for (iter.first(); iter.ok(); ++iter) {
+	HashTable<int, SceneItem*>* serHash=iter.get_data();
+	HashTableIter<int, SceneItem*> serIter(serHash);
+	for (serIter.first(); serIter.ok(); ++serIter) {
+	    SceneItem *si=serIter.get_data();
+	    itemAdded(si);
+	}
+    }
 }
 
 #ifdef OLDUI
@@ -86,18 +99,27 @@ void Roe::perspCB(CallbackData*, void*) {
 
 #endif
 
-void Roe::itemAdded(GeomObj *g, const clString& name)
+void Roe::itemAdded(SceneItem* si)
 {
-    NOT_FINISHED("Roe::itemAdded");
+    TCLvarint* vis;
+    if(!visible.lookup(si->name, vis)){
+	// Make one...
+	vis=new TCLvarint(si->name, id, this);
+	vis->set(1);
+	visible.insert(si->name, vis);
+	NOT_FINISHED("Add items to TCL listbox...");
+    }
     // invalidate the bounding box
     bb.reset();
+    need_redraw=1;
 }
 
-void Roe::itemDeleted(GeomObj *g)
+void Roe::itemDeleted(SceneItem *si)
 {
     NOT_FINISHED("Roe::itemDeleted");
     // invalidate the bounding box
     bb.reset();
+    need_redraw=1;
 }
 
 // need to fill this in!   
@@ -182,15 +204,22 @@ void Roe::head1CB(CallbackData*, void*)
 
 void Roe::get_bounds(BBox& bbox)
 {
-    NOT_FINISHED("Roe::get_bounds");
     bbox.reset();
-    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+    HashTableIter<int,HashTable<int, SceneItem*>*> iter(&manager->portHash);
     for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, GeomObj*>* serHash=iter.get_data();
-	HashTableIter<int, GeomObj*> serIter(serHash);
+	HashTable<int, SceneItem*>* serHash=iter.get_data();
+	HashTableIter<int, SceneItem*> serIter(serHash);
 	for (serIter.first(); serIter.ok(); ++serIter) {
-	    GeomObj *geom=serIter.get_data();
-	    geom->get_bounds(bbox);
+	    SceneItem *si=serIter.get_data();
+	    // Look up the name to see if it should be drawn...
+	    TCLvarint* vis;
+	    if(visible.lookup(si->name, vis)){
+		if(vis->get())
+		    si->obj->get_bounds(bbox);
+	    } else {
+		cerr << "Warning: object " << si->name << " not in visibility database...\n";
+		si->obj->get_bounds(bbox);
+	    }
 	}
     }
 }
@@ -693,7 +722,11 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	// We need to dispatch this one to the remote thread
 	// We use an ID string instead of a pointer in case this roe
 	// gets killed by the time the redraw message gets dispatched.
-	manager->mailbox.send(new RedrawMessage(id));
+	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
+	    cerr << "Redraw event dropped, mailbox full!\n";
+	} else {
+	    manager->mailbox.send(new RedrawMessage(id));
+	}
     } else if(args[1] == "mtranslate"){
 	do_mouse(&Roe::mouse_translate, args);
     } else if(args[1] == "mrotate"){
@@ -739,7 +772,11 @@ void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
 	return;
     }
     // We have to send this to the salmon thread...
-    manager->mailbox.send(new RoeMouseMessage(id, handler, action, x, y));
+    if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
+	cerr << "Mouse event dropped, mailbox full!\n";
+    } else {
+	manager->mailbox.send(new RoeMouseMessage(id, handler, action, x, y));
+    }
 }
 
 void Roe::redraw()
@@ -751,8 +788,9 @@ void Roe::redraw()
 
 void Roe::update_mode_string(const char* msg)
 {
-    
-    NOT_FINISHED("Roe::update_mode_string");
+    ostrstream str(modecommand, MODEBUFSIZE);    
+    str << "updateMode " << id << " \"" << msg << "\"";
+    TCL::execute(str.str());
 }
 
 TCLView::TCLView(const clString& name, const clString& id, TCL* tcl)
@@ -768,15 +806,20 @@ TCLView::~TCLView()
 
 View TCLView::get()
 {
-    return View(eyep.get(), lookat.get(), up.get(), fov.get());
+    TCLTask::lock();
+    View v(eyep.get(), lookat.get(), up.get(), fov.get());
+    TCLTask::unlock();
+    return v;
 }
 
 void TCLView::set(const View& view)
 {
+    TCLTask::lock();
     eyep.set(view.eyep);
     lookat.set(view.lookat);
     up.set(view.up);
     fov.set(view.fov);
+    TCLTask::unlock();
 }
 
 RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,

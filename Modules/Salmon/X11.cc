@@ -162,12 +162,12 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     }
     Array1<GeomObj*> free;
     Array1<GeomObj*> dontfree;
-    HashTableIter<int, HashTable<int, GeomObj*>*> portiter(&salmon->portHash);
+    HashTableIter<int, HashTable<int, SceneItem*>*> portiter(&salmon->portHash);
     for(portiter.first();portiter.ok();++portiter){
-	HashTableIter<int, GeomObj*> objiter(portiter.get_data());
+	HashTableIter<int, SceneItem*> objiter(portiter.get_data());
 	for(objiter.first();objiter.ok();++objiter){
-	    GeomObj* obj=objiter.get_data();
-	    obj->make_prims(free, dontfree);
+	    SceneItem* si=objiter.get_data();
+	    si->obj->make_prims(free, dontfree);
 	}
     }
     int npolys=free.size()+dontfree.size();
@@ -222,7 +222,9 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     static clString q("\"");
     static clString s(" ");
     static clString c("updatePerf ");
+    TCLTask::lock();
     TCL::execute(c+roe->id+s+q+perf1+q+s+q+perf2+q);
+    TCLTask::unlock();
 }
 
 void X11::hide()

@@ -25,6 +25,14 @@
 class GeomReply;
 class Roe;
 
+struct SceneItem {
+    GeomObj* obj;
+    clString name;
+
+    SceneItem(GeomObj*, const clString&);
+    ~SceneItem();
+};
+
 class Salmon : public Module {
     Array1<Roe*> roe;
     int busy_bit;
@@ -55,7 +63,7 @@ public:
     void tcl_command(TCLArgs&, void*);
 
     // The scene...
-    HashTable<int, HashTable<int, GeomObj*>*> portHash;
+    HashTable<int, HashTable<int, SceneItem*>*> portHash;
 
     // Lighting
     Lighting lighting;

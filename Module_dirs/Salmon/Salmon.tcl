@@ -9,14 +9,12 @@ proc makeRoeID {modid} {
     global nextrid,$modid
     set n [set nextrid,$modid]
     set rid roe_$n,$modid
-    puts "rid is $rid"
     incr nextrid,$modid
     return $rid
 }
 
 proc spawnIndependentRoe {modid} {
     set rid [makeRoeID $modid]
-    puts "rid is $rid"
     makeRoe $modid $rid
 }
 
@@ -33,7 +31,6 @@ proc makeRoe {salmon rid} {
 	    -menu $w.menu.renderer.menu
     menu $w.menu.renderer.menu
     set r [$salmon listrenderers]
-    puts "r is $r"
     global renderer$rid
     # OpenGL is the preferred renderer, X11 the next best.
     # Otherwise just pick the first one
