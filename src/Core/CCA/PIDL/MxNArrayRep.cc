@@ -318,7 +318,7 @@ Index::Index(unsigned int first, unsigned int last, unsigned int stride, int loc
 
 void Index::print(std::ostream& dbg)
 {
-  dbg << myfirst << ", " << mylast << ", " << mystride << "\n";
+  dbg << "("<<myfirst << ", " << mylast << "] stride=" << mystride << "\n";
 }    
 
     
