@@ -694,8 +694,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       double cpsum = 0;
       double masssum=0;
 #endif
-      int numclip = 0;
-      double maxrelease = 0;
+
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
