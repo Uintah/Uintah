@@ -18,13 +18,15 @@ def chemfile (test):
     return test[5]
 
 def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
-  symlink("%s/input.dtd" % (inputsdir), "input.dtd")
+  ArchesInputsdir = "%s/../ARCHES" % inputsdir
+  symlink("%s/input.dtd" % (ArchesInputsdir), "input.dtd")
   cfile = chemfile(test)
   if platform[0:5] == "linux":
       cfile = cfile + ".linux.bin"
   else:
       cfile = cfile + ".bin"
-  symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
-
+  symlink("%s/%s" % (ArchesInputsdir, cfile), "chem.bin")
+  symlink("%s/betaTable" % inputsdir, "betaTable")
+                     
 exit(runSusTests(argv, TESTS, "mpmarches", chemfileCallback))
 
