@@ -721,8 +721,6 @@ void Viewer::append_port_msg(GeometryComm* gmsg)
 //----------------------------------------------------------------------
 void Viewer::flushPort(int portid)
 {
-  extern bool regression_testing_flag;
-
   // Look up the right port number
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
@@ -770,7 +768,7 @@ void Viewer::flushPort(int portid)
   }
   if (all)
   {
-    if (regression_testing_flag)
+    if (getenv("SCI_REGRESSION_TESTING"))
     {
       geomlock_.writeUnlock();
       for (unsigned int i = 0; i < view_window_.size(); i++)

@@ -56,8 +56,6 @@ using namespace SCIRun;
 
 namespace SCIRun {
 extern env_map scirunrc;             // contents of .scirunrc
-extern bool regression_testing_flag;
-extern bool sci_show_splash_flag;
 }
 
 #ifndef PSECORETCL
@@ -98,8 +96,6 @@ usage()
 int
 parse_args( int argc, char *argv[] )
 {
-  regression_testing_flag = false;
-
   int found = 0;
   for( int cnt = 1; cnt < argc; cnt++ )
   {
@@ -123,11 +119,11 @@ parse_args( int argc, char *argv[] )
     else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
 	      ( arg == "-r" ) ||  ( arg == "--r" ) )
     {
-      regression_testing_flag = true;
+      setenv("SCI_REGRESSION_TESTING", "TRUE", 1);
     }
     else if ( arg == "--nosplash" )
     {
-      sci_show_splash_flag = false;
+      setenv("SCI_NOSPLASH", "TRUE", 1);
     }
     else
     {
@@ -272,13 +268,13 @@ main(int argc, char *argv[] )
     string command = string( "loadnet " ) + argv[startnetno];
     gui->eval(command.c_str(), result);
 
-    if (execute_flag || regression_testing_flag)
+    if (execute_flag || getenv("SCI_REGRESSION_TESTING"))
     {
       gui->eval("ExecuteAll", result);
     }
   }
 
-  if (regression_testing_flag)
+  if (getenv("SCI_REGRESSION_TESTING"))
   {
     RegressionKiller *kill = scinew RegressionKiller();
     Thread *tkill = scinew Thread(kill, "Kill a hung SCIRun");

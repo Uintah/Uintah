@@ -609,8 +609,7 @@ OpenGL::render_and_save_image(int x, int y,
     tmp_row = 0;
   }
 
-  extern bool regression_testing_flag;
-  if (regression_testing_flag)
+  if (getenv("SCI_REGRESSION_TESTING"))
   {
     Thread::exitAll(0);
   }
