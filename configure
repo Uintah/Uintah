@@ -328,7 +328,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP DEF_CHROMIUM MATLAB_ENG build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI HAVE_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT XALAN_PATH TAU_MAKEFILE BABEL_BIN SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H HAVE_BABEL DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG INC_GLEW_H DEF_GLEW DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM HAVE_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS HAVE_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP DEF_CHROMIUM MATLAB_ENG build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPIUNI INC_MPIUNI_H MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1667,6 +1667,7 @@ echo "$as_me: error: The file or directory parameter ($mpi) specified for --with
 if test "${with_mpiuni+set}" = set; then
   withval="$with_mpiuni"
   with_mpiuni="$withval"
+   sci_check_mpiuni=yes
 else
   with_mpiuni=""
 fi;
@@ -1866,6 +1867,7 @@ echo "$as_me: error: The file or directory parameter ($qt) specified for --with-
 if test "${with_opengl+set}" = set; then
   withval="$with_opengl"
   with_opengl="$withval"
+   sci_check_opengl=yes
 else
   with_opengl=""
 fi;
@@ -1883,6 +1885,7 @@ echo "$as_me: error: The file or directory parameter ($opengl) specified for --w
 if test "${with_zlib+set}" = set; then
   withval="$with_zlib"
   with_zlib="$withval"
+   sci_check_zlib=yes
 else
   with_zlib=""
 fi;
@@ -1974,9 +1977,10 @@ echo "$as_me: error: The file or directory parameter ($mdsplus) specified for --
 # Check whether --with-hdf5 or --without-hdf5 was given.
 if test "${with_hdf5+set}" = set; then
   withval="$with_hdf5"
-  with_hdf5="$withval"
+  with_hdf5="$withval"		      # with_hdf5 is the directory var
    sci_check_hdf5=yes
 else
+  # flag to check for the libs
   with_hdf5=""
 fi;
   sci_arg_with_list="$sci_arg_with_list --with-hdf5 --without-hdf5"
@@ -1986,7 +1990,7 @@ echo "$as_me: error: The file or directory parameter ($hdf5) specified for --wit
    { (exit 1); exit 1; }; }
   fi
 
-
+		      # undefinded otherwise
 
 
 
@@ -2076,6 +2080,26 @@ fi;
 echo "$as_me: error: The file or directory parameter ($audio) specified for --with-audio does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
+
+
+
+
+# Check whether --with-ftgl or --without-ftgl was given.
+if test "${with_ftgl+set}" = set; then
+  withval="$with_ftgl"
+  with_ftgl="$withval"
+   sci_check_ftgl=yes
+else
+  with_ftgl=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-ftgl --without-ftgl"
+  if test -n "$ftgl" -a ! -e "$ftgl"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($ftgl) specified for --with-ftgl does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($ftgl) specified for --with-ftgl does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
 
 
 
@@ -2241,7 +2265,6 @@ case SCIRun2 in
     sci_check_tools=yes
   ;;
   Fusion)
-    sci_check_plplot=yes
   ;;
   DataIO)
     sci_check_mdsplus=yes
@@ -2263,21 +2286,11 @@ case SCIRun2 in
     sci_check_glui=yes
     sci_check_oogl=yes
     sci_check_audio=yes
-
-    # WARNING... You must add scripting to configure.ac to handle an "optional"
-    # test.  This has ONLY BEEN DONE FOR teem so far.  (It is fairly straightforward,
-    # taking about 3 or so lines.  See the "search for teem" section
-    # of configure.ac to see how it is done.  Dd.
-    #
-    # (We should make a function that does the following test for yes before
-    # setting to 'optional' so that you don't have to put in all three of these
-    # lines for each library that you want to be optional:)
-    if test "$sci_check_teem" != "yes"; then
-      sci_check_teem=optional
-    fi
+    sci_check_teem=yes
   ;;
   Insight)
     sci_check_insight=yes
+    sci_check_xalan=yes
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: No known dependencies for Package SCIRun2" >&5
@@ -2311,24 +2324,6 @@ else
   enable_chromium=${enable_rpath='no'}
 fi;
   sci_arg_enable_list="$sci_arg_enable_list --enable-chromium --disable-chromium"
-
-
-
-# Check whether --with-ftgl or --without-ftgl was given.
-if test "${with_ftgl+set}" = set; then
-  withval="$with_ftgl"
-  with_ftgl="$withval"
-   sci_check_ftgl=yes
-else
-  with_ftgl=""
-fi;
-  sci_arg_with_list="$sci_arg_with_list --with-ftgl --without-ftgl"
-  if test -n "$ftgl" -a ! -e "$ftgl"; then
-    { { echo "$as_me:$LINENO: error: The file or directory parameter ($ftgl) specified for --with-ftgl does not exist!  Please verify that the path and file are correct." >&5
-echo "$as_me: error: The file or directory parameter ($ftgl) specified for --with-ftgl does not exist!  Please verify that the path and file are correct." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-
 
 
 
@@ -2403,7 +2398,6 @@ case $i in
     sci_check_tools=yes
   ;;
   Fusion)
-    sci_check_plplot=yes
   ;;
   DataIO)
     sci_check_mdsplus=yes
@@ -2425,21 +2419,11 @@ case $i in
     sci_check_glui=yes
     sci_check_oogl=yes
     sci_check_audio=yes
-
-    # WARNING... You must add scripting to configure.ac to handle an "optional"
-    # test.  This has ONLY BEEN DONE FOR teem so far.  (It is fairly straightforward,
-    # taking about 3 or so lines.  See the "search for teem" section
-    # of configure.ac to see how it is done.  Dd.
-    #
-    # (We should make a function that does the following test for yes before
-    # setting to 'optional' so that you don't have to put in all three of these
-    # lines for each library that you want to be optional:)
-    if test "$sci_check_teem" != "yes"; then
-      sci_check_teem=optional
-    fi
+    sci_check_teem=yes
   ;;
   Insight)
     sci_check_insight=yes
+    sci_check_xalan=yes
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: No known dependencies for Package $i" >&5
@@ -4110,7 +4094,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4113:" \
+echo "$as_me:4097:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7365,18 +7349,18 @@ for i in $sci_thirdparty_dir; do
     continue
   fi
   # make sure there is no leading space in path
-  if test -z "$sci_thirdparty_libs"; then
+  if test "$sci_thirdparty_libs"; then
+    sci_thirdparty_libs="$sci_thirdparty_libs $i/lib"
+  else
     sci_thirdparty_libs="$i/lib"
     SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_libs"
     SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_libs -L$sci_thirdparty_libs"
-  else
-    sci_thirdparty_libs="$sci_thirdparty_libs $i/lib"
   fi
-  if test -z "$sci_thirdparty_includes"; then
+  if test "$sci_thirdparty_includes"; then
+    sci_thirdparty_includes="$sci_thirdparty_includes $i/include"
+  else
     sci_thirdparty_includes="$i/include"
     INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_includes"
-  else
-    sci_thirdparty_includes="$sci_thirdparty_includes $i/include"
   fi
 done
 
@@ -7620,12 +7604,12 @@ _sci_includes=''
 
 
 ##  --  search for X  ----------------------------------------------------
-if test -z "$with_X11_lib"; then
-  _x_lib_dir="/usr/X11R6/lib"
-  _x_inc_dir="/usr/X11R6/include"
-else
+if test "$with_X11_lib"; then
   _x_lib_dir="$with_X11_lib"
   _x_inc_dir="$with_X11_lib/../include"
+else
+  _x_lib_dir="/usr/X11R6/lib"
+  _x_inc_dir="/usr/X11R6/include"
 fi
 
 
@@ -8317,16 +8301,16 @@ echo "${ECHO_T}not found" >&6
 echo "$as_me: error: semaphore library(sem_post, sem_wait, etc) needed for pthreads" >&2;}
    { (exit 1); exit 1; }; }
       else
-        if test -z "$SEMAPHORE_LIB_FLAG"; then
-          echo "$as_me:$LINENO: result: none required" >&5
-echo "${ECHO_T}none required" >&6
-        elif test "$SEMAPHORE_LIB_FLAG" = "$THREAD_LIB_FLAG"; then
+        if test "$SEMAPHORE_LIB_FLAG" = "$THREAD_LIB_FLAG"; then
           echo "$as_me:$LINENO: result: already in thread library: $THREAD_LIB_FLAG" >&5
 echo "${ECHO_T}already in thread library: $THREAD_LIB_FLAG" >&6
           SEMAPHORE_LIB_FLAG=""
-        else
+        elif test "$SEMAPHORE_LIB_FLAG"; then
           echo "$as_me:$LINENO: result: $SEMAPHORE_LIB_FLAG" >&5
 echo "${ECHO_T}$SEMAPHORE_LIB_FLAG" >&6
+        else
+          echo "$as_me:$LINENO: result: none required" >&5
+echo "${ECHO_T}none required" >&6
         fi
       fi
       LIBS="$old_LIBS"
@@ -10330,12 +10314,12 @@ echo
 echo "$as_me: checking for required Tcl components......" >&6;}
 echo
 
-if test -z "$with_tcl"; then
-  _sci_inc="$sci_thirdparty_includes"
-  _sci_lib="$sci_thirdparty_libs"
-else
+if test "$with_tcl"; then
   _sci_inc="$with_tcl/include"
   _sci_lib="$with_tcl/lib"
+else
+  _sci_inc="$sci_thirdparty_includes"
+  _sci_lib="$sci_thirdparty_libs"
 fi
 
 if test -f "$_sci_lib/tclConfig.sh"; then
@@ -11342,812 +11326,6 @@ fi
 
 
 
-if test "$sci_check_plplot" = "yes"; then
-  if test "$with_plplot"; then
-    _sci_lib="$with_plplot/lib"
-    _sci_inc="$with_plplot/include"
-  else
-    _sci_lib="/usr/local/plplot/lib $sci_thirdparty_libs"
-    _sci_inc="/usr/local/plplot/include $sci_thirdparty_includes"
-  fi
-
-
-#  SCI_TRY_LINK(PLPLOTTCLTK,optimized plplottcltk library and headers,[
-#
-#  ],$_sci_inc,plplottcltk, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
-
-#  if test "$HAVE_PLPLOTTCLTK" = "no"; then
-#    SCI_TRY_LINK(PLPLOTTCLTK,debug plplottcltk library and headers,[
-#
-#    ],$_sci_inc,plplottcltkd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-#  fi
-
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_PLPLOT        => lib path
-##      PLPLOT_LIB_DIR_FLAG   => all the -L's
-##      PLPLOT_LIB_FLAG       => all the -l's
-##      HAVE_PLPLOT           => yes or no
-##      INC_PLPLOT_H          => all the -I's
-##      HAVE_PLPLOT_H         => yes or no
-
-
-
-echo "$as_me:$LINENO: checking for optimized plplot library and headers (optional)" >&5
-echo $ECHO_N "checking for optimized plplot library and headers (optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-for i in $_sci_inc; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-
-for i in plplot; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_sci_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG $LIBS"
-
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-  #include <plplot/plplot.h>
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_PLPLOT='"$_sci_lib"'
-
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval PLPLOT_LIB_DIR_FLAG=''
-else
-  eval PLPLOT_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
-
-eval PLPLOT_LIB_FLAG='"$_sci_libs"'
-eval HAVE_PLPLOT="yes"
-
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_PLPLOT_H=''
-else
-  eval INC_PLPLOT_H='"$_sci_includes"'
-fi
-
-eval HAVE_PLPLOT_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_PLPLOT=''
-eval PLPLOT_LIB_DIR_FLAG=''
-eval PLPLOT_LIB_FLAG=''
-eval HAVE_PLPLOT="no"
-eval INC_PLPLOT_H=''
-eval HAVE_PLPLOT_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "optional" = "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required PLPLOT failed.
-    To see the failed compile information, look in config.log,
-    search for PLPLOT. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required PLPLOT failed.
-    To see the failed compile information, look in config.log,
-    search for PLPLOT. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-
-  if test "$HAVE_PLPLOT" = "no"; then
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_PLPLOT        => lib path
-##      PLPLOT_LIB_DIR_FLAG   => all the -L's
-##      PLPLOT_LIB_FLAG       => all the -l's
-##      HAVE_PLPLOT           => yes or no
-##      INC_PLPLOT_H          => all the -I's
-##      HAVE_PLPLOT_H         => yes or no
-
-
-
-echo "$as_me:$LINENO: checking for debug plplot library and headers (optional)" >&5
-echo $ECHO_N "checking for debug plplot library and headers (optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-for i in $_sci_inc; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-
-for i in plplotd; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_sci_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $ITK_LIB_DIR_FLAG $ITK_LIB_FLAG $ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $LIBS"
-
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-    #include <plplot/plplot.h>
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_PLPLOT='"$_sci_lib"'
-
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval PLPLOT_LIB_DIR_FLAG=''
-else
-  eval PLPLOT_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
-
-eval PLPLOT_LIB_FLAG='"$_sci_libs"'
-eval HAVE_PLPLOT="yes"
-
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_PLPLOT_H=''
-else
-  eval INC_PLPLOT_H='"$_sci_includes"'
-fi
-
-eval HAVE_PLPLOT_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_PLPLOT=''
-eval PLPLOT_LIB_DIR_FLAG=''
-eval PLPLOT_LIB_FLAG=''
-eval HAVE_PLPLOT="no"
-eval INC_PLPLOT_H=''
-eval HAVE_PLPLOT_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "optional" = "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required PLPLOT failed.
-    To see the failed compile information, look in config.log,
-    search for PLPLOT. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required PLPLOT failed.
-    To see the failed compile information, look in config.log,
-    search for PLPLOT. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-  fi
-
-  if test "$HAVE_PLPLOT" = "yes"; then
-    DEF_PLPLOT="#define HAVE_PLPLOT 1"
-  fi
-
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_TCLMATRIX        => lib path
-##      TCLMATRIX_LIB_DIR_FLAG   => all the -L's
-##      TCLMATRIX_LIB_FLAG       => all the -l's
-##      HAVE_TCLMATRIX           => yes or no
-##      INC_TCLMATRIX_H          => all the -I's
-##      HAVE_TCLMATRIX_H         => yes or no
-
-
-
-echo "$as_me:$LINENO: checking for optimized tclMatrix library and headers (optional)" >&5
-echo $ECHO_N "checking for optimized tclMatrix library and headers (optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-for i in $_sci_inc; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-
-for i in tclmatrix; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_sci_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG $LIBS"
-
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-  #include <plplot/tclMatrix.h>
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_TCLMATRIX='"$_sci_lib"'
-
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval TCLMATRIX_LIB_DIR_FLAG=''
-else
-  eval TCLMATRIX_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
-
-eval TCLMATRIX_LIB_FLAG='"$_sci_libs"'
-eval HAVE_TCLMATRIX="yes"
-
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_TCLMATRIX_H=''
-else
-  eval INC_TCLMATRIX_H='"$_sci_includes"'
-fi
-
-eval HAVE_TCLMATRIX_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_TCLMATRIX=''
-eval TCLMATRIX_LIB_DIR_FLAG=''
-eval TCLMATRIX_LIB_FLAG=''
-eval HAVE_TCLMATRIX="no"
-eval INC_TCLMATRIX_H=''
-eval HAVE_TCLMATRIX_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "optional" = "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required TCLMATRIX failed.
-    To see the failed compile information, look in config.log,
-    search for TCLMATRIX. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required TCLMATRIX failed.
-    To see the failed compile information, look in config.log,
-    search for TCLMATRIX. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-
-  if test "$HAVE_TCLMATRIX" = "no"; then
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_TCLMATRIX        => lib path
-##      TCLMATRIX_LIB_DIR_FLAG   => all the -L's
-##      TCLMATRIX_LIB_FLAG       => all the -l's
-##      HAVE_TCLMATRIX           => yes or no
-##      INC_TCLMATRIX_H          => all the -I's
-##      HAVE_TCLMATRIX_H         => yes or no
-
-
-
-echo "$as_me:$LINENO: checking for debug tclMatrix library and headers (optional)" >&5
-echo $ECHO_N "checking for debug tclMatrix library and headers (optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-for i in $_sci_inc; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-
-for i in tclmatrixd; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_sci_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG $LIBS"
-
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-    #include <plplot/tclMatrix.h>
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_TCLMATRIX='"$_sci_lib"'
-
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval TCLMATRIX_LIB_DIR_FLAG=''
-else
-  eval TCLMATRIX_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
-
-eval TCLMATRIX_LIB_FLAG='"$_sci_libs"'
-eval HAVE_TCLMATRIX="yes"
-
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_TCLMATRIX_H=''
-else
-  eval INC_TCLMATRIX_H='"$_sci_includes"'
-fi
-
-eval HAVE_TCLMATRIX_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_TCLMATRIX=''
-eval TCLMATRIX_LIB_DIR_FLAG=''
-eval TCLMATRIX_LIB_FLAG=''
-eval HAVE_TCLMATRIX="no"
-eval INC_TCLMATRIX_H=''
-eval HAVE_TCLMATRIX_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "optional" = "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required TCLMATRIX failed.
-    To see the failed compile information, look in config.log,
-    search for TCLMATRIX. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required TCLMATRIX failed.
-    To see the failed compile information, look in config.log,
-    search for TCLMATRIX. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-  fi
-
-  if test "$HAVE_TCLMATRIX" = "yes"; then
-    DEF_TCLMATRIX="#define HAVE_TCLMATRIX 1"
-  fi
-fi #end sci_check_plplot
-
-#AC_SUBST(PLPLOTTCLTK_LIB_FLAG)
-#AC_SUBST(PLPLOTTCLTK_LIB_DIR_FLAG)
-
-
-
-
-
-
-
-
-
-
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
 CORRECT_ITCL_VERSION=no
@@ -12734,12 +11912,12 @@ fi
 
 ##  --  search for SGI'S traceback library  ------------------------------
 
-if test -z "$with_exc"; then
-  _sci_lib=
-  _sci_inc=
-else
+if test "$with_exc"; then
   _sci_lib="$with_exc"
   _sci_inc="$with_exc/../include"
+else
+  _sci_lib=
+  _sci_inc=
 fi
 
 
@@ -13392,7 +12570,6 @@ fi
 
 
 ##  --  search for png --------------------------------------
-
 
 if test "$with_png"; then
   _sci_lib="$with_png/lib"
@@ -14855,6 +14032,7 @@ _sci_includes=''
 fi
 
 
+
 ##  --  search for blas stuff  -------------------------------------------
 
 if test "$sci_check_blas" = "yes"; then
@@ -15582,6 +14760,15 @@ _sci_includes=''
   if test "$HAVE_BLAS" = "yes"; then
     DEF_BLAS="#define HAVE_BLAS 1"
   fi
+
+  if test "$with_blas" && test ! "$DEF_BLAS"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the BLAS components is missing." >&5
+echo "$as_me: error: One or more of the BLAS components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
 fi # end sci_check_blas
 
 
@@ -15791,8 +14978,16 @@ _sci_includes=''
   if test "$HAVE_FTGL" = "yes"; then
     DEF_BLAS="#define HAVE_FTGL 1"
   fi
-fi # end sci_check_blas
 
+  if test "$with_ftgl" && test ! "$DEF_FTGL"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the FTGL components is missing." >&5
+echo "$as_me: error: One or more of the FTGL components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
+fi # end sci_check_ftgl
 
 
 
@@ -16353,14 +15548,15 @@ echo "$as_me: WARNING: Using complib for lapack" >&2;}
   if test "$HAVE_LAPACK" = "yes"; then
     DEF_LAPACK="#define HAVE_LAPACK 1"
   fi
-fi
 
-if test "$with_lapack" && test ! "$DEF_LAPACK"; then
-  echo
-  { { echo "$as_me:$LINENO: error: One or more of the LAPACK components is missing." >&5
+  if test "$with_lapack" && test ! "$DEF_LAPACK"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the LAPACK components is missing." >&5
 echo "$as_me: error: One or more of the LAPACK components is missing." >&2;}
    { (exit 1); exit 1; }; }
-  echo
+    echo
+  fi
+
 fi
 
 
@@ -16993,6 +16189,15 @@ _sci_includes=''
              DEF_MPI="#define HAVE_MPI 1"
            fi
         fi
+
+        if test "$with_mpi" && test ! "$DEF_MPI"; then
+          echo
+          { { echo "$as_me:$LINENO: error: One or more of the MPI components is missing." >&5
+echo "$as_me: error: One or more of the MPI components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+          echo
+        fi
+
   esac
 
   if test ! "$DEF_MPI"; then
@@ -17030,6 +16235,7 @@ echo "$as_me: error: one or more of the MPI components is missing." >&2;}
 
   fi
 fi #end sci_check_mpi
+
 
 
 
@@ -17112,7 +16318,7 @@ esac
 
 # check for mpi-uni if either --with-unipetsc or --with-mpiuni,
 #   check here to look in petsc's subdirs.
-##  --  search for mpi-uni  --------------------------------------------
+#  --  search for mpi-uni  --------------------------------------------
 # Again required for the following uni-petsc checks, that attempt to support
 # the MatrixSolver module.
 
@@ -17529,6 +16735,14 @@ echo "$as_me: error: One or more of the MPIUNI components is missing." >&2;}
   echo
 fi
 
+if test "$with_unipetsc" && test ! "$DEF_MPIUNI"; then
+  echo
+  { { echo "$as_me:$LINENO: error: One or more of the MPIUNI components is missing." >&5
+echo "$as_me: error: One or more of the MPIUNI components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+  echo
+fi
+
 
 
 
@@ -17542,6 +16756,7 @@ echo "$as_me: error: PETSC_ARCH environment var is not set.  Please set." >&2;}
 fi
 
 
+#  --  search for mpi-uni  --------------------------------------------
 # Make sure we have either mpi or mpi-uni, blas, and lapack
 # It seems that under AIX and OSF, the libs that cover blas also cover lapack
 if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
@@ -17766,7 +16981,15 @@ _sci_includes=''
     DEF_PETSC="#define HAVE_PETSC 1"
   fi
 
-  # ---- now test for uni-petsc ---
+  if test "$with_petsc" && test ! "$DEF_PETSC"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the PETESC components is missing." >&5
+echo "$as_me: error: One or more of the PETESC components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
+  #  --  search for uni-petsc  --------------------------------------------
   _sci_lib=""
   _sci_inc=""
 
@@ -17964,10 +17187,17 @@ _sci_libs=''
 _sci_includes=''
 
 
+
   if test "$HAVE_PETSC_UNI" = "yes" ; then
     DEF_PETSC_UNI="#define PETSC_UNI 1"
-#    PETSC_UNI_LIB_FLAG="$PETSC_UNI_LIB_FLAG"
-#    PETSC_UNI_LIB_DIR_FLAG="$PETSC_UNI_LIB_DIR_FLAG"
+  fi
+
+  if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the UNI-PETSC components is missing." >&5
+echo "$as_me: error: One or more of the UNI-PETSC components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
   fi
 
 else
@@ -17985,14 +17215,6 @@ echo "$as_me: WARNING: HAVE_LAPACK: $HAVE_LAPACK" >&2;}
 echo "$as_me: WARNING: Not configuring PETSc." >&2;}
 fi
 
-if test "$with_petsc" && test ! "$DEF_PETSC"; then
-  echo
-  { { echo "$as_me:$LINENO: error: One or more of the PETSC components is missing." >&5
-echo "$as_me: error: One or more of the PETSC components is missing." >&2;}
-   { (exit 1); exit 1; }; }
-  echo
-fi
-
 
 
 
@@ -18007,40 +17229,50 @@ fi
 
 if test "$sci_check_insight" = "yes"; then
 
-   # Insight is a large distribution.
-   # we do not want to check all of it. We thus check only if the
-   # include and lib Insight dirs exist.
+  # Insight is a large distribution.
+  # we do not want to check all of it. We thus check only if the
+  # include and lib Insight dirs exist.
 
-   echo "$as_me:$LINENO: checking for Insight." >&5
+  echo "$as_me:$LINENO: checking for Insight." >&5
 echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
 
-   if test "$with_insight"; then
-      dir="$with_insight"
-   else
-      dir="/usr/local/lib/InsightToolkit"
-   fi
+  if test "$with_insight"; then
+    dir="$with_insight"
+  else
+    dir="/usr/local/lib/InsightToolkit"
+  fi
 
-   if test -a "$dir/ITKConfig.cmake"; then
-	INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`"
-        insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g'`"
-	INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -lz"
-	echo "have png is $HAVE_PNG"
-	if ! test "$HAVE_PNG" = "yes"; then
-	   echo "note: using libitkpng"
-	   INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkpng"
-	fi
-#	INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`"
+  if test -a "$dir/ITKConfig.cmake"; then
+    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`"
+    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g'`"
+    INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -lz"
 
-      DEF_INSIGHT="#define HAVE_INSIGHT"
-      HAVE_INSIGHT="yes"
+    if ! test "$HAVE_PNG" = "yes"; then
+      echo "note: using libitkpng"
+      INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkpng"
+    fi
 
-      echo "$as_me:$LINENO: result: $dir" >&5
+#    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`"
+
+    DEF_INSIGHT="#define HAVE_INSIGHT"
+    HAVE_INSIGHT="yes"
+
+    echo "$as_me:$LINENO: result: $dir" >&5
 echo "${ECHO_T}$dir" >&6
-   else
-      echo "$as_me:$LINENO: result: not found." >&5
+  else
+    echo "$as_me:$LINENO: result: not found." >&5
 echo "${ECHO_T}not found." >&6
-   fi
+  fi
+
+  if test "$with_insight" && test ! "$DEF_INSIGHT"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the INSIGHT components is missing." >&5
+echo "$as_me: error: One or more of the INSIGHT components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
 fi
 
 
@@ -18049,15 +17281,7 @@ fi
 
 
 
-## -- search for java xalan --
-
-## -- first, if any of the following packages are requested then we need xalan-j
-if test "$pkg_Insight" = "yes"; then
-	sci_check_xalan="yes"
-fi
-
-## -- second, if xalan-j is needed then check that the three .jar files are there.
-
+##  --  search for xalan  ---------------------------------------------------
 if test "$sci_check_xalan" ; then
   echo "$as_me:$LINENO: checking for xalan-j." >&5
 echo $ECHO_N "checking for xalan-j.... $ECHO_C" >&6
@@ -18071,18 +17295,28 @@ echo $ECHO_N "checking for xalan-j.... $ECHO_C" >&6
 	echo "$as_me:$LINENO: result: $dir" >&5
 echo "${ECHO_T}$dir" >&6
 	XALAN_PATH="$dir/bin/xalan.jar:$dir/bin/xml-apis.jar:$dir/bin/xercesImpl.jar"
+        DEF_XALAN="#define XALAN 1"
   else
 	echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
   fi
+
+  if test "$with_xalana" && test ! "$DEF_XALAN"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the XALAN components is missing." >&5
+echo "$as_me: error: One or more of the XALAN components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
 fi
 
 
 
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
-if test "$sci_check_tau" = "yes" && test "$with_tau"; then
-  if test ! -f "$with_tau" ; then
+if test "$sci_check_tau" = "yes"; then
+  if test "$with_xalan" && test ! -f "$with_tau" ; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -19018,8 +18252,7 @@ fi
 
 
 
- ##  --  search for glut, glui and oogl -----------------------------------
-
+##  --  search for glut  -----------------------------------------------
 if test "$sci_check_glut" = "yes"; then
 
    libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS_FLAG"
@@ -19221,21 +18454,23 @@ _sci_libs=''
 _sci_includes=''
 
 
+
+  if test "$GLUT_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+    { echo "$as_me:$LINENO: WARNING: \"$GLUT_LIB_DIR_FLAG\"" >&5
+echo "$as_me: WARNING: \"$GLUT_LIB_DIR_FLAG\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: \"flag for GLUT has been removed.\"" >&5
+echo "$as_me: WARNING: \"flag for GLUT has been removed.\"" >&2;}
+    GLUT_LIB_DIR_FLAG=""
+  fi
+
 fi #end sci_check_glut
 
-if test "$GLUT_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  { echo "$as_me:$LINENO: WARNING: \"$GLUT_LIB_DIR_FLAG\"" >&5
-echo "$as_me: WARNING: \"$GLUT_LIB_DIR_FLAG\"" >&2;}
-  { echo "$as_me:$LINENO: WARNING: \"flag for GLUT has been removed.\"" >&5
-echo "$as_me: WARNING: \"flag for GLUT has been removed.\"" >&2;}
-  GLUT_LIB_DIR_FLAG=""
-fi
 
 
 
 
 
-
+##  --  search for glui  -----------------------------------------------
 if test "$sci_check_glui" = "yes"; then
    if test "$with_glui"; then
      _sci_lib="$with_glui/$BASE_LIB_DIR"
@@ -19436,21 +18671,22 @@ _sci_includes=''
 
 
 
+  if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+    { echo "$as_me:$LINENO: WARNING: \"$GLUI_LIB_DIR_FLAG\"" >&5
+echo "$as_me: WARNING: \"$GLUI_LIB_DIR_FLAG\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: \"flag for GLUI has been removed.\"" >&5
+echo "$as_me: WARNING: \"flag for GLUI has been removed.\"" >&2;}
+    GLUI_LIB_DIR_FLAG=""
+  fi
+
 fi # end sci_check_glui
 
-if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  { echo "$as_me:$LINENO: WARNING: \"$GLUI_LIB_DIR_FLAG\"" >&5
-echo "$as_me: WARNING: \"$GLUI_LIB_DIR_FLAG\"" >&2;}
-  { echo "$as_me:$LINENO: WARNING: \"flag for GLUI has been removed.\"" >&5
-echo "$as_me: WARNING: \"flag for GLUI has been removed.\"" >&2;}
-  GLUI_LIB_DIR_FLAG=""
-fi
 
 
 
 
 
-
+##  --  search for oogl  -----------------------------------------------
 if test "$sci_check_oogl" = "yes"; then
   # Modify _sci_dirs to have correct path information:
   if test "$with_oogl"; then
@@ -19664,19 +18900,29 @@ _sci_includes=''
 
 
   fi
+
+  if test "$HAVE_OOGL" = "yes"; then
+    DEF_OOGL="#define HAVE_OOGL 1"
+  fi
+
+  if test "$with_oogl" && test ! "$DEF_OOGL"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the OOGL components is missing." >&5
+echo "$as_me: error: One or more of the OOGL components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
+  if test "$OOGL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+    { echo "$as_me:$LINENO: WARNING: \"$OOGL_LIB_DIR_FLAG\"" >&5
+echo "$as_me: WARNING: \"$OOGL_LIB_DIR_FLAG\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: \"flag for OOGL has been removed.\"" >&5
+echo "$as_me: WARNING: \"flag for OOGL has been removed.\"" >&2;}
+    OOGL_LIB_DIR_FLAG=""
+  fi
+
 fi # end sci_check_oogl
 
-if test "$HAVE_OOGL" = "yes"; then
-  DEF_OOGL="#define HAVE_OOGL 1"
-fi
-
-if test "$OOGL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  { echo "$as_me:$LINENO: WARNING: \"$OOGL_LIB_DIR_FLAG\"" >&5
-echo "$as_me: WARNING: \"$OOGL_LIB_DIR_FLAG\"" >&2;}
-  { echo "$as_me:$LINENO: WARNING: \"flag for OOGL has been removed.\"" >&5
-echo "$as_me: WARNING: \"flag for OOGL has been removed.\"" >&2;}
-  OOGL_LIB_DIR_FLAG=""
-fi
 
 
 
@@ -19684,10 +18930,9 @@ fi
 
 
 ##  --  search for glew  -----------------------------------------------
-
 if test "$sci_check_glew" = "yes"; then
   if test "$with_glew"; then
-    #first find the opengl headers and libraries
+    # first find the opengl headers and libraries
     if test "$with_opengl"; then
       _sci_lib="$with_glew/lib $with_opengl/lib"
       _sci_inc="$with_glew/include $with_opengl/include"
@@ -19904,19 +19149,29 @@ _sci_libs=''
 _sci_includes=''
 
 
+
   if test "$HAVE_GLEW" = "yes"; then
     DEF_GLEW="#define HAVE_GLEW 1"
   fi
+
+  if test "$with_glew" && test ! "$DEF_GLEW"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the GLEW components is missing." >&5
+echo "$as_me: error: One or more of the GLEW components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+
+  if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+    { echo "$as_me:$LINENO: WARNING: \"$GLEW_LIB_DIR_FLAG\"" >&5
+echo "$as_me: WARNING: \"$GLEW_LIB_DIR_FLAG\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: \"flag for GLEW has been removed.\"" >&5
+echo "$as_me: WARNING: \"flag for GLEW has been removed.\"" >&2;}
+    GLEW_LIB_DIR_FLAG=""
+  fi
+
 fi # end sci_check_glew
 
-
-if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  { echo "$as_me:$LINENO: WARNING: \"$GLEW_LIB_DIR_FLAG\"" >&5
-echo "$as_me: WARNING: \"$GLEW_LIB_DIR_FLAG\"" >&2;}
-  { echo "$as_me:$LINENO: WARNING: \"flag for GLEW has been removed.\"" >&5
-echo "$as_me: WARNING: \"flag for GLEW has been removed.\"" >&2;}
-  GLEW_LIB_DIR_FLAG=""
-fi
 
 
 
@@ -20126,7 +19381,7 @@ fi # end sci_check_audio
 
 ##  --  search for teem  -------------------------------------------------
 
-if test "$sci_check_teem" != "no"; then
+if test "$sci_check_teem" == "yes"; then
 
   if test "$with_teem"; then
     _sci_lib="$with_teem/lib"
@@ -20136,7 +19391,7 @@ if test "$sci_check_teem" != "no"; then
     _sci_inc="$sci_thirdparty_includes"
   fi
 
-  if test "$sci_check_teem" == "optional"; then
+  if test "$sci_check_rtrt" == "yes"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -20521,7 +19776,17 @@ _sci_includes=''
   if test "$HAVE_TEEM" = "yes"; then
      DEF_TEEM="#define HAVE_TEEM 1"
   fi
+
+  if test "$with_teem" && test ! "$DEF_TEEM"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the TEEM components is missing." >&5
+echo "$as_me: error: One or more of the TEEM components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
 fi
+
+
 
 
 
@@ -20539,7 +19804,7 @@ if test "$sci_check_mdsplus" = "yes"; then
     _sci_inc="/usr/local/mdsplus/include"
   fi
 
-# mdsplus is a C lib so it has to be checked as a C file not CC..
+# mdsplus is a C lib so it has to be checked as a C file not CC.
   cxx="$CXX"
   CXX="$CC"
 
@@ -20760,15 +20025,20 @@ fi #end sci_check_mdsplus
 
 ##  --  search for hdf5  -------------------------------------------------
 
+# The sci_check_hdf5 could have been set to yes when using the
+# with_hdf5 agument or from a package in the aclocal.m4 it.
+# These are the only two locations that the sci_check_* should be set.
+
 if test "$sci_check_hdf5" = "yes"; then
   if test "$with_hdf5"; then
-    _sci_lib="$with_hdf5/lib"
+    _sci_lib="$with_hdf5/lib"			# user defined directory
     _sci_inc="$with_hdf5/include"
   else
-    _sci_lib="/usr/local/lib"
+    _sci_lib="/usr/local/lib"			# default directory
     _sci_inc="/usr/local/include"
   fi
 
+  # Basic check for the header file.
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -20959,10 +20229,15 @@ _sci_includes=''
 
 
 
+  # Set the DEF_HDF5 var which is placed in the sci_testdefs.h.in
+  # Incude sci_defs.h in your code to optionally use the library.
   if test "$HAVE_HDF5" = "yes"; then
      DEF_HDF5="#define HAVE_HDF5 1"
   fi
 
+  # Since the library was searched for as "optional" in the SCI_TRY_LINK
+  # there will not be an error if it failed. As such, if the with_hdf5
+  # variable was used then a test for failure must be done.
   if test "$with_hdf5" && test ! "$DEF_HDF5"; then
     echo
     { { echo "$as_me:$LINENO: error: One or more of the HDF5 components is missing." >&5
@@ -20972,10 +20247,10 @@ echo "$as_me: error: One or more of the HDF5 components is missing." >&2;}
   fi
 fi #end sci_check_hdf5
 
-
-
-
-
+		# Place this var in the sci_testdefs.h.ina
+		# Place this var in the configVars.mk.in
+		# Place this var in the configVars.mk.in
+	# Place this var in the configVars.mk.in
 
 ##  --  search for perfex  -----------------------------------------------
 
@@ -21006,8 +20281,8 @@ if test "$sci_check_perfex" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for perfex library (optional)" >&5
-echo $ECHO_N "checking for perfex library (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for perfex library (not-optional)" >&5
+echo $ECHO_N "checking for perfex library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -21105,7 +20380,7 @@ eval INC_PERFEX_H=''
 eval HAVE_PERFEX_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "optional" = "not-optional"; then
+if test "not-optional" = "not-optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -21161,12 +20436,9 @@ _sci_includes=''
 
   if test "$HAVE_PERFEX" = "yes"; then
     DEF_PERFEX="#define HAVE_PERFEX 1"
-  else
-    { { echo "$as_me:$LINENO: error: One or more of the PERFEX components is missing." >&5
-echo "$as_me: error: One or more of the PERFEX components is missing." >&2;}
-   { (exit 1); exit 1; }; }
   fi
 fi
+
 
 
 
@@ -21792,10 +21064,10 @@ _sci_includes=''
 
   # If no with-globus on command line, but we have found globus, try
   # the one we found when doing the following AC_CHECK_FILES:
-  if test -z "$with_globus"; then
-    with_globus_lib=$LIB_DIR_GLOBUS/..
-  else
+  if test "$with_globus"; then
     with_globus_lib=$with_globus
+  else
+    with_globus_lib=$LIB_DIR_GLOBUS/..
   fi
 
   # These globus libs need SCIRun thread files to link.  Because we
@@ -22570,6 +21842,13 @@ _sci_includes=''
     fi
   done
 
+  if test "$with_vdt" && test ! "$DEF_VDT"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the VDT components is missing." >&5
+echo "$as_me: error: One or more of the VDT components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
 fi # end sci_check_vdt
 
 
@@ -22783,14 +22062,15 @@ _sci_includes=''
   if test "$HAVE_HYPRE" = "yes" ; then
     DEF_HYPRE="#define HAVE_HYPRE 1"
   fi
-fi
 
-if test "$with_hypre" && test ! "$DEF_HYPRE"; then
-  echo
-  { { echo "$as_me:$LINENO: error: One or more of the HYPRE components is missing." >&5
+  if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the HYPRE components is missing." >&5
 echo "$as_me: error: One or more of the HYPRE components is missing." >&2;}
    { (exit 1); exit 1; }; }
-  echo
+    echo
+  fi
+
 fi
 
 
@@ -23004,12 +22284,12 @@ fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
     done
     if test "$UUID_LIB_FLAG" != unknown; then
-      if test -z "$UUID_LIB_FLAG"; then
-        echo "$as_me:$LINENO: result: none required" >&5
-echo "${ECHO_T}none required" >&6
-      else
+      if test "$UUID_LIB_FLAG"; then
         echo "$as_me:$LINENO: result: $UUID_LIB_FLAG" >&5
 echo "${ECHO_T}$UUID_LIB_FLAG" >&6
+      else
+        echo "$as_me:$LINENO: result: none required" >&5
+echo "${ECHO_T}none required" >&6
       fi
     else
       echo "$as_me:$LINENO: result: not found" >&5
@@ -23896,14 +23176,6 @@ s,@BLT_LIB_DIR_FLAG@,$BLT_LIB_DIR_FLAG,;t t
 s,@INC_BLT_H@,$INC_BLT_H,;t t
 s,@DEF_COLLAB_VIS@,$DEF_COLLAB_VIS,;t t
 s,@HAVE_COLLAB_VIS@,$HAVE_COLLAB_VIS,;t t
-s,@PLPLOT_LIB_FLAG@,$PLPLOT_LIB_FLAG,;t t
-s,@PLPLOT_LIB_DIR_FLAG@,$PLPLOT_LIB_DIR_FLAG,;t t
-s,@INC_PLPLOT_H@,$INC_PLPLOT_H,;t t
-s,@DEF_PLPLOT@,$DEF_PLPLOT,;t t
-s,@TCLMATRIX_LIB_FLAG@,$TCLMATRIX_LIB_FLAG,;t t
-s,@TCLMATRIX_LIB_DIR_FLAG@,$TCLMATRIX_LIB_DIR_FLAG,;t t
-s,@INC_TCLMATRIX_H@,$INC_TCLMATRIX_H,;t t
-s,@DEF_TCLMATRIX@,$DEF_TCLMATRIX,;t t
 s,@TCL_PREFIX@,$TCL_PREFIX,;t t
 s,@TCL_VERSION@,$TCL_VERSION,;t t
 s,@TK_VERSION@,$TK_VERSION,;t t
@@ -23941,15 +23213,15 @@ s,@INC_FTGL_H@,$INC_FTGL_H,;t t
 s,@DEF_LAPACK@,$DEF_LAPACK,;t t
 s,@LAPACK_LIB_FLAG@,$LAPACK_LIB_FLAG,;t t
 s,@LAPACK_LIB_DIR_FLAG@,$LAPACK_LIB_DIR_FLAG,;t t
+s,@HAVE_MPI@,$HAVE_MPI,;t t
+s,@DEF_MPI@,$DEF_MPI,;t t
+s,@INC_MPI_H@,$INC_MPI_H,;t t
 s,@MPI_LIB_FLAG@,$MPI_LIB_FLAG,;t t
 s,@MPI_LIB_DIR_FLAG@,$MPI_LIB_DIR_FLAG,;t t
-s,@INC_MPI_H@,$INC_MPI_H,;t t
-s,@DEF_MPI@,$DEF_MPI,;t t
-s,@HAVE_MPI@,$HAVE_MPI,;t t
+s,@DEF_MPIUNI@,$DEF_MPIUNI,;t t
+s,@INC_MPIUNI_H@,$INC_MPIUNI_H,;t t
 s,@MPIUNI_LIB_FLAG@,$MPIUNI_LIB_FLAG,;t t
 s,@MPIUNI_LIB_DIR_FLAG@,$MPIUNI_LIB_DIR_FLAG,;t t
-s,@INC_MPIUNI_H@,$INC_MPIUNI_H,;t t
-s,@DEF_MPIUNI@,$DEF_MPIUNI,;t t
 s,@HAVE_PETSC@,$HAVE_PETSC,;t t
 s,@PETSC_LIB_FLAG@,$PETSC_LIB_FLAG,;t t
 s,@PETSC_LIB_DIR_FLAG@,$PETSC_LIB_DIR_FLAG,;t t
@@ -23960,18 +23232,18 @@ s,@PETSC_UNI_LIB_DIR_FLAG@,$PETSC_UNI_LIB_DIR_FLAG,;t t
 s,@DEF_PETSC_UNI@,$DEF_PETSC_UNI,;t t
 s,@INC_PETSC_UNI_H@,$INC_PETSC_UNI_H,;t t
 s,@HAVE_INSIGHT@,$HAVE_INSIGHT,;t t
+s,@DEF_INSIGHT@,$DEF_INSIGHT,;t t
+s,@INC_INSIGHT_H@,$INC_INSIGHT_H,;t t
 s,@INSIGHT_LIB_FLAG@,$INSIGHT_LIB_FLAG,;t t
 s,@INSIGHT_LIB_DIR_FLAG@,$INSIGHT_LIB_DIR_FLAG,;t t
-s,@INC_INSIGHT_H@,$INC_INSIGHT_H,;t t
-s,@DEF_INSIGHT@,$DEF_INSIGHT,;t t
 s,@XALAN_PATH@,$XALAN_PATH,;t t
 s,@TAU_MAKEFILE@,$TAU_MAKEFILE,;t t
 s,@BABEL_BIN@,$BABEL_BIN,;t t
-s,@SIDL_LIB_FLAG@,$SIDL_LIB_FLAG,;t t
-s,@SIDL_LIB_DIR_FLAG@,$SIDL_LIB_DIR_FLAG,;t t
-s,@INC_SIDL_H@,$INC_SIDL_H,;t t
 s,@HAVE_BABEL@,$HAVE_BABEL,;t t
 s,@DEF_BABEL@,$DEF_BABEL,;t t
+s,@INC_SIDL_H@,$INC_SIDL_H,;t t
+s,@SIDL_LIB_FLAG@,$SIDL_LIB_FLAG,;t t
+s,@SIDL_LIB_DIR_FLAG@,$SIDL_LIB_DIR_FLAG,;t t
 s,@JPEG_LIB_FLAG@,$JPEG_LIB_FLAG,;t t
 s,@JPEG_LIB_DIR_FLAG@,$JPEG_LIB_DIR_FLAG,;t t
 s,@TIFF_LIB_FLAG@,$TIFF_LIB_FLAG,;t t
@@ -23984,60 +23256,60 @@ s,@GLUT_LIB_DIR_FLAG@,$GLUT_LIB_DIR_FLAG,;t t
 s,@INC_GLUI_H@,$INC_GLUI_H,;t t
 s,@GLUI_LIB_FLAG@,$GLUI_LIB_FLAG,;t t
 s,@GLUI_LIB_DIR_FLAG@,$GLUI_LIB_DIR_FLAG,;t t
-s,@INC_OOGL_H@,$INC_OOGL_H,;t t
 s,@DEF_OOGL@,$DEF_OOGL,;t t
+s,@INC_OOGL_H@,$INC_OOGL_H,;t t
 s,@OOGL_LIB_FLAG@,$OOGL_LIB_FLAG,;t t
 s,@OOGL_LIB_DIR_FLAG@,$OOGL_LIB_DIR_FLAG,;t t
+s,@DEF_GLEW@,$DEF_GLEW,;t t
+s,@INC_GLEW_H@,$INC_GLEW_H,;t t
 s,@GLEW_LIB_FLAG@,$GLEW_LIB_FLAG,;t t
 s,@GLEW_LIB_DIR_FLAG@,$GLEW_LIB_DIR_FLAG,;t t
-s,@INC_GLEW_H@,$INC_GLEW_H,;t t
-s,@DEF_GLEW@,$DEF_GLEW,;t t
 s,@DEF_AUDIO@,$DEF_AUDIO,;t t
 s,@HAVE_AUDIO@,$HAVE_AUDIO,;t t
 s,@AUDIO_LIB_FLAG@,$AUDIO_LIB_FLAG,;t t
 s,@AUDIO_LIB_DIR_FLAG@,$AUDIO_LIB_DIR_FLAG,;t t
+s,@HAVE_TEEM@,$HAVE_TEEM,;t t
+s,@DEF_TEEM@,$DEF_TEEM,;t t
+s,@INC_TEEM_H@,$INC_TEEM_H,;t t
 s,@TEEM_LIB_FLAG@,$TEEM_LIB_FLAG,;t t
 s,@TEEM_LIB_DIR_FLAG@,$TEEM_LIB_DIR_FLAG,;t t
-s,@INC_TEEM_H@,$INC_TEEM_H,;t t
-s,@DEF_TEEM@,$DEF_TEEM,;t t
-s,@HAVE_TEEM@,$HAVE_TEEM,;t t
+s,@DEF_MDSPLUS@,$DEF_MDSPLUS,;t t
+s,@INC_MDSPLUS_H@,$INC_MDSPLUS_H,;t t
 s,@MDSPLUS_LIB_FLAG@,$MDSPLUS_LIB_FLAG,;t t
 s,@MDSPLUS_LIB_DIR_FLAG@,$MDSPLUS_LIB_DIR_FLAG,;t t
-s,@INC_MDSPLUS_H@,$INC_MDSPLUS_H,;t t
-s,@DEF_MDSPLUS@,$DEF_MDSPLUS,;t t
+s,@DEF_HDF5@,$DEF_HDF5,;t t
+s,@INC_HDF5_H@,$INC_HDF5_H,;t t
 s,@HDF5_LIB_FLAG@,$HDF5_LIB_FLAG,;t t
 s,@HDF5_LIB_DIR_FLAG@,$HDF5_LIB_DIR_FLAG,;t t
-s,@INC_HDF5_H@,$INC_HDF5_H,;t t
-s,@DEF_HDF5@,$DEF_HDF5,;t t
+s,@DEF_PERFEX@,$DEF_PERFEX,;t t
 s,@PERFEX_LIB_FLAG@,$PERFEX_LIB_FLAG,;t t
 s,@PERFEX_LIB_DIR_FLAG@,$PERFEX_LIB_DIR_FLAG,;t t
-s,@DEF_PERFEX@,$DEF_PERFEX,;t t
 s,@CRYPTO_LIB_FLAG@,$CRYPTO_LIB_FLAG,;t t
 s,@CRYPTO_LIB_DIR_FLAG@,$CRYPTO_LIB_DIR_FLAG,;t t
 s,@DEF_CRYPTO@,$DEF_CRYPTO,;t t
 s,@SSL_LIB_FLAG@,$SSL_LIB_FLAG,;t t
 s,@SSL_LIB_DIR_FLAG@,$SSL_LIB_DIR_FLAG,;t t
 s,@DEF_SSL@,$DEF_SSL,;t t
+s,@HAVE_GLOBUS@,$HAVE_GLOBUS,;t t
+s,@DEF_GLOBUS@,$DEF_GLOBUS,;t t
+s,@INC_GLOBUS_H@,$INC_GLOBUS_H,;t t
 s,@GLOBUS_LIB_FLAG@,$GLOBUS_LIB_FLAG,;t t
 s,@GLOBUS_LIB_DIR_FLAG@,$GLOBUS_LIB_DIR_FLAG,;t t
-s,@INC_GLOBUS_H@,$INC_GLOBUS_H,;t t
-s,@DEF_GLOBUS@,$DEF_GLOBUS,;t t
-s,@HAVE_GLOBUS@,$HAVE_GLOBUS,;t t
 s,@QT_MOC_BIN@,$QT_MOC_BIN,;t t
 s,@HAVE_QT@,$HAVE_QT,;t t
+s,@DEF_QT@,$DEF_QT,;t t
+s,@INC_QT_MT_H@,$INC_QT_MT_H,;t t
 s,@QT_MT_LIB_FLAG@,$QT_MT_LIB_FLAG,;t t
 s,@QT_MT_LIB_DIR_FLAG@,$QT_MT_LIB_DIR_FLAG,;t t
-s,@INC_QT_MT_H@,$INC_QT_MT_H,;t t
-s,@DEF_QT@,$DEF_QT,;t t
 s,@DEF_VDT@,$DEF_VDT,;t t
+s,@INC_VDT_H@,$INC_VDT_H,;t t
 s,@VDT_LIB_FLAG@,$VDT_LIB_FLAG,;t t
 s,@VDT_LIB_DIR_FLAG@,$VDT_LIB_DIR_FLAG,;t t
-s,@INC_VDT_H@,$INC_VDT_H,;t t
 s,@HAVE_HYPRE@,$HAVE_HYPRE,;t t
 s,@DEF_HYPRE@,$DEF_HYPRE,;t t
+s,@INC_HYPRE_H@,$INC_HYPRE_H,;t t
 s,@HYPRE_LIB_FLAG@,$HYPRE_LIB_FLAG,;t t
 s,@HYPRE_LIB_DIR_FLAG@,$HYPRE_LIB_DIR_FLAG,;t t
-s,@INC_HYPRE_H@,$INC_HYPRE_H,;t t
 s,@UUID_LIB_FLAG@,$UUID_LIB_FLAG,;t t
 s,@DEF_SCIRUN2@,$DEF_SCIRUN2,;t t
 s,@BUILD_SCIRUN2@,$BUILD_SCIRUN2,;t t
