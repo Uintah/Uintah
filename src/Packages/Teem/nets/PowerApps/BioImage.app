@@ -509,8 +509,7 @@ class BioImageApp {
  		    $history1.0.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
  		} else {
-		    tk_messageBox -type ok -icon info -parent .standalone \
-			-message "BioImage only supports 3D data.\nPlease load in a 3D dataset." 
+                    after 0 {tk_messageBox -type ok -icon info -parent .standalone -message "BioImage only supports 3D data.\nPlease load in a 3D dataset."}
  		}
 	    }	
 	} elseif {[string first "NrrdInfo" $which 0] != -1 && \
