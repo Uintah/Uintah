@@ -1,5 +1,4 @@
 #include "ImplicitParticleCreator.h"
-#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -14,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 
 using namespace Uintah;
+using std::vector;
 
 ImplicitParticleCreator::ImplicitParticleCreator()
 {
@@ -29,7 +29,7 @@ void ImplicitParticleCreator::createParticles(MPMMaterial* matl,
 					      const Patch* patch,
 					      DataWarehouse* new_dw,
 					      MPMLabel* lb,
-					     std::vector<GeometryObject*>& d_geom_objs)
+					      vector<GeometryObject*>& d_geom_objs)
 {
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
@@ -38,13 +38,14 @@ void ImplicitParticleCreator::createParticles(MPMMaterial* matl,
   ParticleVariable<Vector> pvelocity,pexternalforce,psize,pacceleration;
   ParticleVariable<double> pmass,pvolume,ptemperature,pvolumeold;
   ParticleVariable<long64> pparticleID;
-  ParticleVariable<Matrix3> bElBar;
   
   new_dw->allocateAndPut(position, lb->pXLabel, subset);
   new_dw->allocateAndPut(pvelocity, lb->pVelocityLabel, subset); 
   new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, subset);
+  new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
   new_dw->allocateAndPut(pmass, lb->pMassLabel, subset);
   new_dw->allocateAndPut(pvolume, lb->pVolumeLabel, subset);
+  new_dw->allocateAndPut(pvolumeold, lb->pVolumeOldLabel, subset);
   new_dw->allocateAndPut(ptemperature, lb->pTemperatureLabel, subset);
   new_dw->allocateAndPut(pparticleID, lb->pParticleIDLabel, subset);
   new_dw->allocateAndPut(psize, lb->pSizeLabel, subset);
@@ -93,7 +94,6 @@ void ImplicitParticleCreator::createParticles(MPMMaterial* matl,
 	      pvelocity[start+count]=obj->getInitialVelocity();
 	      pacceleration[start+count]=Vector(0.,0.,0.);
 	      pvolumeold[start+count]=pvolume[start+count];
-	      bElBar[start+count]=Matrix3(0.);
 	      ptemperature[start+count]=obj->getInitialTemperature();
 	      pmass[start+count]=
 		matl->getInitialDensity() * pvolume[start+count];
