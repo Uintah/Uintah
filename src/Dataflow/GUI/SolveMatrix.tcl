@@ -53,9 +53,13 @@ itcl_class SCIRun_Math_SolveMatrix {
 	global $this-method
 	set w .ui[modname]
 	set meth [set $this-method]
-	if {($meth == "conjugate_gradient_sci") || ($meth == "jacoby_sci") || ($meth == "bi_conjugate_gradient_sci")} {
+	if {($meth == "Conjugate Gradient & Precond. (SCI)") || \
+	    ($meth == "BiConjugate Gradient & Precond. (SCI)") || \
+	    ($meth == "Jacobi & Precond. (SCI)")} {
 	    pack forget $w.stat                  
 	    pack $w.converg $w.graph -side top -padx 2 -pady 2 -fill x
+	    $w.np.label configure -state normal
+	    $w.np.entry configure -state normal
 	    #foreach t [winfo children $w.precond] {
 		#if {[winfo class $t] == "Radiobutton"} {
 		 #   $t configure -state disabled
@@ -64,6 +68,8 @@ itcl_class SCIRun_Math_SolveMatrix {
         } else {
 #	    pack forget $w.graph $w.converg
 	    pack $w.stat  -side top -padx 2 -pady 2 -fill x
+	    $w.np.label configure -state disabled
+	    $w.np.entry configure -state disabled
 	    #foreach t [winfo children $w.precond] {
 		#if {[winfo class $t] == "Radiobutton"} {
 		    #$t configure -state normal
@@ -114,7 +120,7 @@ itcl_class SCIRun_Math_SolveMatrix {
                                -width 400 -height 200
         pack $w.tabs -side top
 	set methods [$w.tabs add -label "Methods"]
-	set precons [$w.tabs add -label "Preconditioners"]
+	set precons [$w.tabs add -label "Preconditioners (PETSc only)"]
 
         $w.tabs view 0
 
@@ -128,12 +134,11 @@ itcl_class SCIRun_Math_SolveMatrix {
 	set meth [$methods.f childsite]
 	set prec [$precons.f childsite]
 
-
 	make_labeled_radio $meth.f "" "$this switchmethod" \
 		top $this-method\
 		{{"Conjugate Gradient & Precond. (SCI)" "Conjugate Gradient & Precond. (SCI)"}\
 		{"BiConjugate Gradient & Precond. (SCI)" "BiConjugate Gradient & Precond. (SCI)"}\
-		{"Jacobi & Precond. (SCI)" "Jacoby & Precond. (SCI)"}
+		{"Jacobi & Precond. (SCI)" "Jacobi & Precond. (SCI)"}
 	        {"KSPRICHARDSON (PETSc)" "KSPRICHARDSON (PETSc)"}
 		{"KSPCHEBYCHEV (PETSc)" "KSPCHEBYCHEV (PETSc)"}
 		{"KSPCG (PETSc)" "KSPCG (PETSc)"}
@@ -146,14 +151,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 		{"KSPLSQR (PETSc)" "KSPLSQR (PETSc)"}
 		{"KSPBICG (PETSc)" "KSPBICG (PETSc)"}
 		{"KSPPREONLY (PETSc)" "KSPPREONLY (PETSc)"}}
-	
-	if { [$this-c petscenabled] == 0 } {
-            for {set i 3} {$i<15} {incr i} {
-	     $meth.f.$i configure -state disabled
-	    }
-        }
-	    
-
+		   
 	
 	make_labeled_radio $prec.f "" ""\
                 top $this-precond\
@@ -173,6 +171,16 @@ itcl_class SCIRun_Math_SolveMatrix {
 		{cholesky cholesky}
                 {ramg ramg}
 		{none none}}
+
+	if { [$this-c petscenabled] == 0 } {
+            for {set i 3} {$i<15} {incr i} {
+	     $meth.f.$i configure -state disabled
+	    }
+	    for {set i 0} {$i<16} {incr i} {
+	     $prec.f.$i configure -state disabled
+            }
+        }
+
         
 	pack $meth.f -side top -fill x -pady 2
 	pack $prec.f -side top -fill x -pady 2
