@@ -20,7 +20,7 @@
 
 <filter name="DiscreteGaussianImageFilter">
   <include href="ITK/itk_DiscreteGaussianImageFilter.xml"/>
-  <include href="Dataflow/Modules/Filters/XML/gui_DiscreteGuassianImageFilter_Yarden.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_DiscreteGuassianImageFilter.xml"/>
 
   <filter-sci name="DiscreteGaussianImageFilter">
     <package>Insight</package>

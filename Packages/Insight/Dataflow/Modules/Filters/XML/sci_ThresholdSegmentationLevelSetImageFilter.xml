@@ -20,7 +20,7 @@
 
 <filter name="ThresholdSegmentationLevelSetImageFilter">
   <include href="ITK/itk_ThresholdSegmentationLevelSetImageFilter.xml"/>
-  <include href="Dataflow/Modules/Filters/XML/gui_ThresholdSegmentationLevelSetImageFilter_Darby.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_ThresholdSegmentationLevelSetImageFilter.xml"/>
 
 <filter-sci name="ThresholdSegmentationLevelSetImageFilter">
   <package>Insight</package>
