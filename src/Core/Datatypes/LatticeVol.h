@@ -16,7 +16,7 @@ public:
  
   FData3d():Array3<Data>(){}
   virtual ~FData3d(){}
- 
+
   value_type operator[](typename LatVolMesh::cell_index idx) const
     { return operator()(idx.i_,idx.j_,idx.k_); } 
   value_type operator[](typename LatVolMesh::face_index idx) const
@@ -48,6 +48,9 @@ public:
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {};
   virtual ~LatticeVol(){};
 
+  virtual LatticeVol<Data> *clone() const 
+    { return new LatticeVol<Data>(*this); }
+ 
   static const string type_name(int );
   static PersistentTypeID type_id;
 };
