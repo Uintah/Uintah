@@ -110,7 +110,7 @@ GenericWriter<HType>::overwrite()
 
 template <class HType>
 bool
-GenericWriter<HType>::call_exporter(const string &filename)
+GenericWriter<HType>::call_exporter(const string &/*filename*/)
 {
   return false;
 }

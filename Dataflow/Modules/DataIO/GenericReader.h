@@ -92,7 +92,7 @@ GenericReader<HType>::~GenericReader()
 
 template <class HType>
 bool
-GenericReader<HType>::call_importer(const string &filename)
+GenericReader<HType>::call_importer(const string &/*filename*/)
 {
   return false;
 }

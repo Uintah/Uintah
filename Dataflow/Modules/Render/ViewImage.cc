@@ -533,7 +533,7 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
 }
 
 
-ViewImage::WindowLayout::WindowLayout(GuiContext *ctx) :  
+ViewImage::WindowLayout::WindowLayout(GuiContext */*ctx*/) :  
   opengl_(0),
   mouse_x_(0),
   mouse_y_(0),
