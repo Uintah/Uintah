@@ -217,12 +217,6 @@ WARNING
 		    nodePosition(getCellHighIndex()+IntVector(h,h,h)));
       }
       
-      /*
-         I need the following two functions.  --tan
-       */
-      IntVector getHighGhostCellIndex() const;
-      IntVector getLowGhostCellIndex() const;
-				 
       string toString() const;
 
       int getID() const {
@@ -285,6 +279,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.6  2000/06/07 18:30:50  tan
+// Requirement for getHighGhostCellIndex() and getLowGhostCellIndex()
+// cancelled.
+//
 // Revision 1.5  2000/06/05 19:25:02  tan
 // I need the following two functions,
 // (1) IntVector getHighGhostCellIndex() const;
