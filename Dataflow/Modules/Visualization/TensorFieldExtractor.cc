@@ -36,14 +36,14 @@ LOG
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/NCTensorField.h>
-#include <Packages/Uintah/Core/Datatypes/CCTensorField.h>
+#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
+#include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
- 
+#include <Core/Containers/ConsecutiveRangeSet.h> 
 
 #include <iostream> 
 #include <sstream>
@@ -55,6 +55,7 @@ using std::cerr;
 using std::endl;
 using std::vector;
 using std::string;
+using std::ostringstream;
 
 using namespace SCIRun;
 
@@ -72,7 +73,7 @@ TensorFieldExtractor::TensorFieldExtractor(const clString& id)
   // Create Ports
   in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
-  sfout=scinew TensorFieldOPort(this, "TensorField", TensorFieldIPort::Atomic);
+  sfout=scinew FieldOPort(this, "TensorField", FieldIPort::Atomic);
 
   // Add them to the Module
   add_iport(in);
@@ -137,7 +138,8 @@ void TensorFieldExtractor::setVars()
   GridP grid = archive.queryGrid(times[0]);
   LevelP level = grid->getLevel( 0 );
   Patch* r = *(level->patchesBegin());
-  int nMatls = archive.queryNumMaterials(sVar.get()(), r, times[0]);
+  ConsecutiveRangeSet matls = 
+    archive.queryMaterials(sVar.get()(), r, times[0]);
 
   clString visible;
   TCL::eval(id + " isVisible", visible);
@@ -145,8 +147,9 @@ void TensorFieldExtractor::setVars()
     TCL::execute(id + " destroyFrames");
     TCL::execute(id + " build");
     
-    TCL::execute(id + " buildMaterials " 
-		 + to_string(nMatls) );
+    TCL::execute(id + " buildMaterials " +  matls.expandedString().c_str());
+    archive.queryMaterials(sVar.get()(), r, times[0]);
+
 
     TCL::execute(id + " setTensors " + sNames.c_str());
     TCL::execute(id + " buildVarList");
@@ -204,58 +207,48 @@ void TensorFieldExtractor::execute()
   case TypeDescription::NCVariable:
     switch ( subtype->getType() ) {
     case TypeDescription::Matrix3:
-      {
-	NCTensorField *vfd  = scinew NCTensorField();
-	
-	if(var != ""){
-	  vfd->SetGrid( grid );
-	  vfd->SetLevel( level );
-	  vfd->SetName( var );
-	  vfd->SetMaterial( mat );
-	  // iterate over patches
-	  for(Level::const_patchIterator r = level->patchesBegin();
-	      r != level->patchesEnd(); r++ ){
-	    NCVariable< Matrix3 > vv;
-	    archive.query(vv, var, mat, *r, time);
-	    vfd->AddVar( vv );
-	  }
-	  sfout->send(vfd);
-	  return;
+      {	
+	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	LevelField<Matrix3> *sfd =
+	  scinew LevelField<Matrix3>( mesh, Field::NODE );
+	LevelField<Matrix3>::fdata_type &data = sfd->fdata();
+	  
+	for(Level::const_patchIterator r = level->patchesBegin();
+	    r != level->patchesEnd(); r++ ){
+	  NCVariable< Matrix3 > sv;
+	  archive.query(sv, var, mat, *r, time);
+	  data.push_back( sv );
 	}
-      } 
+	sfout->send(sfd);
+	return;
+      }
       break;
     default:
-      cerr<<"NCTensorField<?>  Unknown vector type\n";
+      cerr<<"NCVariable<?>  Unknown tensor type\n";
       return;
     }
     break;
   case TypeDescription::CCVariable:
     switch ( subtype->getType() ) {
     case TypeDescription::Matrix3:
-      {
-	CCTensorField *vfd  = scinew CCTensorField();
-	CCVariable< Matrix3 > vv;
-	
-	if(var != ""){
-	  vfd->SetGrid( grid );
-	  vfd->SetLevel( level );
-	  vfd->SetName( var );
-	      
-	  vfd->SetMaterial( mat );
-	  // iterate over patches
-	  for(Level::const_patchIterator r = level->patchesBegin();
-	      r != level->patchesEnd(); r++ ){
-	    CCVariable< Matrix3 > vv;
-	    archive.query(vv, var, mat, (*r), time);
-	    vfd->AddVar( vv );
-	  }
-	  sfout->send(vfd);
-	  return;
+      {	
+	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	LevelField<Matrix3> *sfd =
+	  scinew LevelField<Matrix3>( mesh, Field::CELL );
+	LevelField<Matrix3>::fdata_type &data = sfd->fdata();
+	  
+	for(Level::const_patchIterator r = level->patchesBegin();
+	    r != level->patchesEnd(); r++ ){
+	  CCVariable< Matrix3 > sv;
+	  archive.query(sv, var, mat, *r, time);
+	  data.push_back( sv );
 	}
-      } 
+	sfout->send(sfd);
+	return;
+      }
       break;
     default:
-      cerr<<"CCTensorField<?> Unknown vector type\n";
+      cerr<<"CCVariable<?> Unknown tensor type\n";
       return;
     }
     break;
