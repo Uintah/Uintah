@@ -29,6 +29,20 @@ Widget::blend( GLfloat dest[4], float r, float g, float b, float o, float m ) {
   dest[3] = o + (1-o)*dest[3];
 } // blend()
 
+void
+Widget::blend( GLfloat dest[4], float rgb[3], float o, float m ) {
+  if( o < 0 ) o = 0;
+  else if( o > 1 ) o = 1;
+  
+  o *= m;
+  if( o > 1 ) o = 1;
+  
+  dest[0] = o*rgb[0] + (1-o)*dest[0];
+  dest[1] = o*rgb[1] + (1-o)*dest[1];
+  dest[2] = o*rgb[2] + (1-o)*dest[2];
+  dest[3] = o + (1-o)*dest[3];
+} // blend()
+
 
 //                    [-------width--------]
 //  
@@ -994,14 +1008,13 @@ void
 TentWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 			    float master_opacity )
 {
-  float f_textureHeight = (float)textureHeight;
   float f_textureWidth = (float)textureWidth;
   float f_startx = (uboundLeft->x-5.0f)*f_textureWidth/490.0f;
   float f_endx = (lboundRight->x-5.0f)*f_textureWidth/490.0f;
   int startx = (int)f_startx;
   int endx = (int)f_endx;
-  float f_starty = f_textureHeight*(lboundRight->y-85.0f)/240.0f;
-  float f_endy = f_textureHeight*(uboundLeft->y-85.0f)/240.0f;
+  float f_starty = textureHeight*(lboundRight->y-85.0f)/240.0f;
+  float f_endy = textureHeight*(uboundLeft->y-85.0f)/240.0f;
   int starty = (int)f_starty;
   int endy = (int)f_endy;
   float midx = (f_endx+f_startx)*0.5f;
@@ -1010,37 +1023,39 @@ TentWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 			      (lboundRight->x-uboundLeft->x))-1.0f; 
   float height = f_endy-f_starty;
   float width = f_endx-f_startx;
-  float opacity_x_off = 2.0f*(focus_x-uboundLeft->x)/this->width-1.0f;
-  float opacity_y_off = 2.0f*(focus_y-lboundRight->y)/this->height-1.0f;
 
-  for( int y = starty; y < endy; y++ ) {
-    if( textureAlign == Vertical )
+  if( textureAlign == Vertical ) {
+    float opacity_x_off = 2.0f*(focus_x-uboundLeft->x)/this->width-1.0f;
+    for( int y = starty; y < endy; y++ ) {
       for( int x = startx; x < endx; x++ ) {
 	int texture_x = (int)(((float)x-f_startx)/width*f_textureWidth);
+	// Do bounds checks
 	if( texture_x >= textureWidth )
 	  texture_x = textureWidth-1;
 	else if( texture_x < 0 )
 	  texture_x = 0;
 	blend( dest[y][x], 
-	       transText->current_color[0],
-	       transText->current_color[1],
-	       transText->current_color[2],
+	       transText->current_color,
 	       (transText->textArray[0][texture_x][3]+opacStar_opacity_off+
 		opacity_x_off*((float)x-midx)/width),
 	       master_opacity );
-      } // for()
-    else if( textureAlign == Horizontal ) {
+      } // for(x)
+    } // for(y)
+  } else {
+    float opacity_y_off = 2.0f*(focus_y-lboundRight->y)/this->height-1.0f;
+    // We know that it is Horizontal
+    for( int y = starty; y < endy; y++ ) {
       float y_opacity = opacity_y_off*((float)y-midy)/height;
       for( int x = startx; x < endx; x++ ) {
 	int texture_x = (int)(((float)y-f_starty)/height*f_textureWidth);
+	// Do bounds checks
 	if( texture_x >= textureWidth )
 	  texture_x = textureWidth-1;
 	else if( texture_x < 0 )
 	  texture_x = 0;
+	// Calculate the color
 	blend( dest[y][x], 
-	       transText->current_color[0],
-	       transText->current_color[1],
-	       transText->current_color[2],
+	       transText->current_color,
 	       (transText->textArray[0][texture_x][3]+opacStar_opacity_off+
 		y_opacity), 
 	       master_opacity );
@@ -1048,6 +1063,7 @@ TentWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
     } // else
   } // for()
 }
+
 
 
 void
