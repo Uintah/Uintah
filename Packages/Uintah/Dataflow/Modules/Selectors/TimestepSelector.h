@@ -87,7 +87,8 @@ private:
   GuiDouble                def_color_b_;
   GuiDouble                def_color_a_;
   MaterialHandle           def_mat_handle_;
-
+  
+  GuiString                font_size_;
 
 }; //class 
 } // End namespace Uintah
