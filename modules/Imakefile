@@ -2,7 +2,7 @@
 #include <config/sci.cf>
 
 SUBDIRS = ApplyBC BuildFEMatrix CrossFader \
-	GenerateMesh GenSurface Gradient Hedgehog \
+	ExtractMeshSF GenerateMesh GenSurface Gradient Hedgehog \
 	IsoSurface LaceContours MakeScalarField MeshView Readers \
 	Salmon SolveMatrix SoundInput SoundFilter SoundMixer \
 	SoundOutput SoundReader Streamline Streamsurf SurfToGeom \
@@ -16,6 +16,7 @@ MODULES = \
 	ApplyBC/ApplyBC.o \
 	BuildFEMatrix/BuildFEMatrix.o \
 	CrossFader/CrossFader.o \
+	ExtractMeshSF/ExtractMeshSF.o \
 	GenerateMesh/GenerateMesh.o \
 	GenSurface/GenSurface.o \
 	Gradient/Gradient.o \
