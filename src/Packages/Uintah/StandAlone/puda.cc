@@ -317,9 +317,9 @@ getParticleStrains(DataArchive* da, string flag) {
                         cout.precision(4);
                         cout << time << " " << patchIndex << " " << matl
                              << " " << idx ;
-                        for (int ii = 1; ii < 4; ++ii) cout << " " << E(ii,ii);
-                        cout << " " << E(2,3); cout << " " << E(3,1);
-                        cout << " " << E(1,2);
+                        for (int ii = 0; ii < 3; ++ii) cout << " " << E(ii,ii);
+                        cout << " " << E(1,2); cout << " " << E(2,0);
+                        cout << " " << E(0,1);
                         cout << endl;
                       } else if (doEuler) {
                         // Calculate the Almansi-Hamel strain tensor
@@ -331,31 +331,31 @@ getParticleStrains(DataArchive* da, string flag) {
                         cout.precision(4);
                         cout << time << " " << patchIndex << " " << matl
                              << " " << idx ;
-                        for (int ii = 1; ii < 4; ++ii) cout << " " << e(ii,ii);
-                        cout << " " << e(2,3); cout << " " << e(3,1);
-                        cout << " " << e(1,2);
+                        for (int ii = 0; ii < 3; ++ii) cout << " " << e(ii,ii);
+                        cout << " " << e(1,2); cout << " " << e(2,0);
+                        cout << " " << e(0,1);
                         cout << endl;
                       } else {
                         //cout << "Deformation Gradient = \n" ;
                         //cout << "Right Stretch = \n";
                         //cout << "Rotation = \n";
                         cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 1; ii < 4; ++ii) {
-                          for (int jj = 1; jj < 4; ++jj) {
+                        for (int ii = 0; ii < 3; ++ii) {
+                          for (int jj = 0; jj < 3; ++jj) {
 			    cout << " " << deformGrad(ii,jj);
                           }
 			}
                         cout << endl;
                         cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 1; ii < 4; ++ii) {
-                          for (int jj = 1; jj < 4; ++jj) {
+                        for (int ii = 0; ii < 3; ++ii) {
+                          for (int jj = 0; jj < 3; ++jj) {
 			    cout << " " << stretch(ii,jj);
                           }
 			}
                         cout << endl;
                         cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 1; ii < 4; ++ii) {
-                          for (int jj = 1; jj < 4; ++jj) {
+                        for (int ii = 0; ii < 3; ++ii) {
+                          for (int jj = 0; jj < 3; ++jj) {
 			    cout << " " << rotation(ii,jj);
                           }
 			}
@@ -379,8 +379,8 @@ getParticleStrains(DataArchive* da, string flag) {
       for (unsigned int ii = 0; ii < volumeVector.size() ; ++ii) {
 	avVar += ((deformVector[ii]*volumeVector[ii])/totVol);
       }
-      for (int ii = 1; ii < 4; ++ii) {
-	for (int jj = 1; jj < 4; ++jj) {
+      for (int ii = 0; ii < 3; ++ii) {
+	for (int jj = 0; jj < 3; ++jj) {
 	  cout << avVar(ii,jj) << "  " ;
 	}
 	cout << endl;
@@ -503,12 +503,12 @@ getParticleStresses(DataArchive* da, string flag) {
 		      stressVector.push_back(value[*iter]);
 		    } else {
 		      Matrix3 stress = value[*iter];
-		      double sig11 = stress(1,1);
-		      double sig12 = stress(1,2);
-		      double sig13 = stress(1,3);
-		      double sig22 = stress(2,2);
-		      double sig23 = stress(2,3);
-		      double sig33 = stress(3,3);
+		      double sig11 = stress(0,0);
+		      double sig12 = stress(0,1);
+		      double sig13 = stress(0,2);
+		      double sig22 = stress(1,1);
+		      double sig23 = stress(1,2);
+		      double sig33 = stress(2,2);
 		      if (doEquiv) {
 			double s12 = sig11 - sig22;
 			double s23 = sig22 - sig33;
@@ -542,8 +542,8 @@ getParticleStresses(DataArchive* da, string flag) {
       for (unsigned int ii = 0; ii < volumeVector.size() ; ++ii) {
 	avVar += ((stressVector[ii]*volumeVector[ii])/totVol);
       }
-      for (int ii = 1; ii < 4; ++ii) {
-	for (int jj = 1; jj < 4; ++jj) {
+      for (int ii = 0; ii < 3; ++ii) {
+	for (int jj = 0; jj < 3; ++jj) {
 	  cout << avVar(ii,jj) << "  " ;
 	}
 	cout << endl;
@@ -690,8 +690,8 @@ void printParticleVariable(DataArchive* da,
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl ;
-                        for (int ii = 1; ii < 4; ++ii) {
-                          for (int jj = 1; jj < 4; ++jj) {
+                        for (int ii = 0; ii < 3; ++ii) {
+                          for (int jj = 0; jj < 3; ++jj) {
 			    cout << " " << value[*iter](ii,jj) ;
                           }
                         }
@@ -1351,12 +1351,12 @@ int main(int argc, char** argv)
 					outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
 						<< start.y() + dx.y()*(indexJ + 1) << " " 
 						<< start.z() + dx.z()*(indexK + 1) << " "   
-						<< (value[cellIndex])(1,1) << " " << (value[cellIndex])(1,2) << " " 
-						<< (value[cellIndex])(1,3) << " " 
-						<< (value[cellIndex])(2,1) << " " << (value[cellIndex])(2,2) << " "  
-						<< (value[cellIndex])(2,3) << " " 
-						<< (value[cellIndex])(3,1) << " " << (value[cellIndex])(3,2) << " " 
-						<< (value[cellIndex])(3,3) << endl;  
+						<< (value[cellIndex])(0,0) << " " << (value[cellIndex])(0,1) << " " 
+						<< (value[cellIndex])(0,2) << " " 
+						<< (value[cellIndex])(1,0) << " " << (value[cellIndex])(1,1) << " "  
+						<< (value[cellIndex])(1,2) << " " 
+						<< (value[cellIndex])(2,0) << " " << (value[cellIndex])(2,1) << " " 
+						<< (value[cellIndex])(2,2) << endl;  
 				      }
 				    }
 				  }
@@ -1370,8 +1370,8 @@ int main(int argc, char** argv)
 				      IntVector cellIndex(indexI, indexJ, 0);
 				      outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
 					      << start.y() + dx.y()*(indexJ + 1) << " "  
-					      << (value[cellIndex])(1,1) << " " << (value[cellIndex])(1,2) << " "
-					      << (value[cellIndex])(2,1) << " " << (value[cellIndex])(2,2) << " "
+					      << (value[cellIndex])(0,0) << " " << (value[cellIndex])(0,1) << " "
+					      << (value[cellIndex])(1,0) << " " << (value[cellIndex])(1,1) << " "
 					      << endl;
 				    }
 				  }
@@ -1383,7 +1383,7 @@ int main(int argc, char** argv)
 				    nodeIndex(indexI-Imin,0,0) = totalNode;
 				    IntVector cellIndex(indexI, 0, 0);
 				    outfile << start.x() + dx.x()*(indexI + 1) << " "  //assume the begining index is [-1,-1,-1]
-					    << (value[cellIndex])(1,1) << endl; 
+					    << (value[cellIndex])(0,0) << endl; 
 				  }
 				}//end of if(i_xd == "i_1d") 
 			      }
@@ -2288,6 +2288,26 @@ int main(int argc, char** argv)
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
+			partfile << (value[*iter])(0,0) << " " << endl;
+		      }
+		      partfile << endl;
+		      iter = pset->begin();
+		      for(;iter !=pset->end(); iter++){
+			partfile << (value[*iter])(0,1) << " " << endl;
+		      }
+		      partfile << endl;
+		      iter = pset->begin();
+		      for(;iter !=pset->end(); iter++){
+			partfile << (value[*iter])(0,2) << " " << endl;
+		      }
+		      partfile << endl;
+		      iter = pset->begin();
+		      for(;iter !=pset->end(); iter++){
+			partfile << (value[*iter])(1,0) << " " << endl;
+		      }
+		      partfile << endl;
+		      iter = pset->begin();
+		      for(;iter !=pset->end(); iter++){
 			partfile << (value[*iter])(1,1) << " " << endl;
 		      }
 		      partfile << endl;
@@ -2298,7 +2318,7 @@ int main(int argc, char** argv)
 		      partfile << endl;
 		      iter = pset->begin();
 		      for(;iter !=pset->end(); iter++){
-			partfile << (value[*iter])(1,3) << " " << endl;
+			partfile << (value[*iter])(2,0) << " " << endl;
 		      }
 		      partfile << endl;
 		      iter = pset->begin();
@@ -2309,26 +2329,6 @@ int main(int argc, char** argv)
 		      iter = pset->begin();
 		      for(;iter !=pset->end(); iter++){
 			partfile << (value[*iter])(2,2) << " " << endl;
-		      }
-		      partfile << endl;
-		      iter = pset->begin();
-		      for(;iter !=pset->end(); iter++){
-			partfile << (value[*iter])(2,3) << " " << endl;
-		      }
-		      partfile << endl;
-		      iter = pset->begin();
-		      for(;iter !=pset->end(); iter++){
-			partfile << (value[*iter])(3,1) << " " << endl;
-		      }
-		      partfile << endl;
-		      iter = pset->begin();
-		      for(;iter !=pset->end(); iter++){
-			partfile << (value[*iter])(3,2) << " " << endl;
-		      }
-		      partfile << endl;
-		      iter = pset->begin();
-		      for(;iter !=pset->end(); iter++){
-			partfile << (value[*iter])(3,3) << " " << endl;
 		      }
 		      partfile << endl;
 		    }
@@ -2459,11 +2459,11 @@ int main(int argc, char** argv)
 			NodeIterator iter = patch->getNodeIterator();
 			for(;!iter.done(); iter++){
 			  partfile << (*iter).x() << " " << (*iter).y() << " " << (*iter).z()
-				   << " " << (value[*iter])(1,1) << " " << (value[*iter])(1,2) << " " 
-				   << (value[*iter])(1,3) << " " << (value[*iter])(2,1) << " "
-				   << (value[*iter])(2,2) << " " << (value[*iter])(2,3) << " "
-				   << (value[*iter])(3,1) << " " << (value[*iter])(3,2) << " "
-                                   << (value[*iter])(3,3) << endl;
+				   << " " << (value[*iter])(0,0) << " " << (value[*iter])(0,1) << " " 
+				   << (value[*iter])(0,2) << " " << (value[*iter])(1,0) << " "
+				   << (value[*iter])(1,1) << " " << (value[*iter])(1,2) << " "
+				   << (value[*iter])(2,0) << " " << (value[*iter])(2,1) << " "
+                                   << (value[*iter])(2,2) << endl;
 			}
 		      }
 		    }
