@@ -23,7 +23,7 @@
 Grid::Grid(int x, int y, int z, const Point &m, double sp) 
 : spacing(sp), min(m) {
     e=new Array3<Array1<int> *>(x,y,z);
-    e->initialize(0);
+    e->initialize((Array1<int>*)0);
 }
 
 Grid::~Grid() {
