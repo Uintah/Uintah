@@ -303,6 +303,23 @@ VolumeRenderer::draw_volume()
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
 
+  // Blend mode for no texture palette support.
+#ifdef __APPLE__
+  if (!ShaderProgramARB::shaders_supported() && mode_ == MODE_OVER)
+  {
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Scale slice opacity (from build_colormap1)
+    double level_exponent = 0.0;  // used for multi-layer code
+    double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+    double alpha = pow(0.5, bp); // 0.5 as default global cmap alpha
+    alpha = 1.0 - pow((1.0 - alpha), imode_ ?
+                      1.0/irate_/pow(2.0, level_exponent) :
+                      1.0/sampling_rate_/pow(2.0, level_exponent) );
+    glColor4f(1.0, 1.0, 1.0, alpha);
+  }
+#endif
+
   //--------------------------------------------------------------------------
   // load colormap texture
   if(use_cmap2) {
@@ -771,6 +788,29 @@ VolumeRenderer::multi_level_draw()
       }
      
       bind_colormap1( cmaps[i]->tex_id_ );
+
+      // Blend mode for no texture palette support.
+#ifdef __APPLE__
+      if (!ShaderProgramARB::shaders_supported() && mode_ == MODE_OVER)
+      {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        // Scale slice opacity
+        double level_exponent = double(invert_opacity_  ? 
+                                       tan(1.570796327 * 
+                                           (0.5 - level_alpha_[levels - i-1])*
+                                           0.49999) : i);
+        double bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+        double alpha = pow(0.5, bp); // 0.5 as default global cmap alpha
+        alpha = 1.0 - pow((1.0 - alpha), imode_ ?
+                          1.0/irate_/pow(2.0, level_exponent) :
+                          1.0/sampling_rate_/pow(2.0, level_exponent) );
+
+        glColor4f(1.0, 1.0, 1.0, alpha);
+      }
+#endif
+
+
       vector<TextureBrickHandle>& bs  = blevels[i];
       for(unsigned int j =0; j < bs.size(); j++) {
 	TextureBrickHandle b = bs[j];
@@ -924,7 +964,7 @@ VolumeRenderer::draw_wireframe()
 
   for (unsigned int i=0; i<bricks.size(); i++)
   {
-    glColor4f(0.8, 0.8, 0.8, 1.0);
+    glColor4f(0.8*(i+1.0)/bricks.size(), 0.8*(i+1.0)/bricks.size(), 0.8, 1.0);
 
     TextureBrickHandle b = bricks[i];
     const Point &pmin(b->bbox().min());

@@ -57,6 +57,8 @@ public:
   // Call init_shaders_supported before shaders_supported queries!
   static void init_shaders_supported();
   static bool shaders_supported();
+  static int max_texture_size_1();
+  static int max_texture_size_4();
 
 protected:
   unsigned int mType;
@@ -65,7 +67,8 @@ protected:
 
   static bool mInit;
   static bool mSupported;
-
+  static int max_texture_size_1_;
+  static int max_texture_size_4_;
 };
 
 class VertexProgramARB : public ShaderProgramARB

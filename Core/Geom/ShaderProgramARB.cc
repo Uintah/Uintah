@@ -37,6 +37,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Environment.h>
 
 #include <iostream>
 using std::cerr;
@@ -101,6 +102,8 @@ namespace SCIRun {
 
 bool ShaderProgramARB::mInit = false;
 bool ShaderProgramARB::mSupported = false;
+int ShaderProgramARB::max_texture_size_1_ = 64;
+int ShaderProgramARB::max_texture_size_4_ = 64;
 static Mutex ShaderProgramARB_mInitMutex("ShaderProgramARB Init Lock");  
 
 ShaderProgramARB::ShaderProgramARB(const string& program)
@@ -129,35 +132,78 @@ ShaderProgramARB::init_shaders_supported()
     ShaderProgramARB_mInitMutex.lock();
     if (!mInit)
     {
-      // Create a test context.
-      TkOpenGLContext *context =
-        new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
-      context->make_current();
+      if (sci_getenv_p("SCIRUN_DISABLE_SHADERS")) {
+	mSupported = false;
+      } else {
+	// Create a test context.
+	TkOpenGLContext *context =
+	  new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
+	context->make_current();
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-      mSupported =
-        gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
-                          glGetString(GL_EXTENSIONS)) &&
-        gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
-                          glGetString(GL_EXTENSIONS)) &&
-        (glGenProgramsARB_SCI = (SCIPFNGLGENPROGRAMSARBPROC)
-         getProcAddress("glGenProgramsARB")) &&
-        (glDeleteProgramsARB_SCI = (SCIPFNGLDELETEPROGRAMSARBPROC)
-         getProcAddress("glDeleteProgramsARB")) &&
-        (glBindProgramARB_SCI = (SCIPFNGLBINDPROGRAMARBPROC) 
-         getProcAddress("glBindProgramARB")) &&
-        (glProgramStringARB_SCI = (SCIPFNGLPROGRAMSTRINGARBPROC)
-         getProcAddress("glProgramStringARB")) &&
-        (glIsProgramARB_SCI = (SCIPFNGLISPROGRAMARBPROC)
-         getProcAddress("glIsProgramARB")) &&
-        (glProgramLocalParameter4fARB_SCI = (SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC)
-         getProcAddress("glProgramLocalParameter4fARB"));
+#if defined(__sgi)
+        max_texture_size_1_ = 256; // TODO: Just a guess, should verify this.
+        max_texture_size_4_ = 256; // TODO: Just a guess, should verify this.
 #else
-      mSupported = false;
+        int i;
+
+        for (i = 128; i < 130000; i*=2)
+        {
+          glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_LUMINANCE, i, i, i, 0,
+                       GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+          GLint width;
+          glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0,
+                                   GL_TEXTURE_WIDTH, &width);
+          if (width == 0)
+          {
+            i /= 2;
+            break;
+          }
+        }
+        max_texture_size_1_ = i;
+
+        for (i = 128; i < 130000; i*=2)
+        {
+          glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, i, i, i, 0,
+                       GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+          GLint width;
+          glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0,
+                                   GL_TEXTURE_WIDTH, &width);
+          if (width == 0)
+          {
+            i /= 2;
+            break;
+          }
+        }
+        max_texture_size_4_ = i;
 #endif
 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+	mSupported =
+	  gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
+			    glGetString(GL_EXTENSIONS)) &&
+	  gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
+			    glGetString(GL_EXTENSIONS)) &&
+	  (glGenProgramsARB_SCI = (SCIPFNGLGENPROGRAMSARBPROC)
+	   getProcAddress("glGenProgramsARB")) &&
+	  (glDeleteProgramsARB_SCI = (SCIPFNGLDELETEPROGRAMSARBPROC)
+	   getProcAddress("glDeleteProgramsARB")) &&
+	  (glBindProgramARB_SCI = (SCIPFNGLBINDPROGRAMARBPROC) 
+	   getProcAddress("glBindProgramARB")) &&
+	  (glProgramStringARB_SCI = (SCIPFNGLPROGRAMSTRINGARBPROC)
+	   getProcAddress("glProgramStringARB")) &&
+	  (glIsProgramARB_SCI = (SCIPFNGLISPROGRAMARBPROC)
+	   getProcAddress("glIsProgramARB")) &&
+	  (glProgramLocalParameter4fARB_SCI = 
+	   (SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC)
+	   getProcAddress("glProgramLocalParameter4fARB"));
+#else
+	mSupported = false;
+#endif
+	delete context;
+      }
       mInit = true;
-      delete context;
     }
     ShaderProgramARB_mInitMutex.unlock();
   }
@@ -171,6 +217,18 @@ ShaderProgramARB::shaders_supported()
   return mSupported;
 }
 
+
+int
+ShaderProgramARB::max_texture_size_1()
+{
+  return max_texture_size_1_;
+}
+
+int
+ShaderProgramARB::max_texture_size_4()
+{
+  return max_texture_size_4_;
+}
 
 bool
 ShaderProgramARB::create()

@@ -90,6 +90,15 @@ public:
   inline bool valid() {
     return ctx->get(value_);
   }
+
+  inline bool changed() {
+    ctx->reset();
+    T temp;
+    ctx->get(temp);
+    ctx->reset();
+    return temp != value_;
+  }
+
 };
 
 typedef GuiSingle<string> GuiString;

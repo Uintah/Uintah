@@ -95,9 +95,9 @@ protected:
 };
 
 
- class SearchGridConstructor : public SearchGridBase
- {
-   friend class SearchGrid;
+class SearchGridConstructor : public SearchGridBase
+{
+  friend class SearchGrid;
   
 public:
   SearchGridConstructor(unsigned int x, unsigned int y, unsigned int z,

@@ -47,14 +47,14 @@
 #define Datatypes_FieldInterface_h
 
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   class Point;
-  class Vector;
-  class Tensor;
   using std::vector;
 
 class ScalarFieldInterface: public Datatype 

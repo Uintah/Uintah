@@ -120,10 +120,6 @@ public:
   inline double* getData() {
     return dataptr;
   }
-  
-  inline double** getData2D() {
-    return data; 
-  }
 
   //! return false if not invertable.
   bool invert();

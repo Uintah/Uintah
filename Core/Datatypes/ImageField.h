@@ -64,22 +64,22 @@ public:
   FData2d(const FData2d& data) { Array2<Data>::copy(data); }
   virtual ~FData2d();
   
-  const value_type &operator[](typename ImageMesh::Cell::index_type idx) const
+  const value_type &operator[](const ImageMesh::Cell::index_type &idx) const
   { return this->operator()(0, idx); } 
-  const value_type &operator[](typename ImageMesh::Face::index_type idx) const
+  const value_type &operator[](const ImageMesh::Face::index_type &idx) const
   { return this->operator()(idx.j_, idx.i_); }
-  const value_type &operator[](typename ImageMesh::Edge::index_type idx) const
+  const value_type &operator[](const ImageMesh::Edge::index_type &idx) const
   { return this->operator()(0, idx); }
-  const value_type &operator[](typename ImageMesh::Node::index_type idx) const
+  const value_type &operator[](const ImageMesh::Node::index_type &idx) const
   { return this->operator()(idx.j_, idx.i_); }
 
-  value_type &operator[](typename ImageMesh::Cell::index_type idx)
+  value_type &operator[](const ImageMesh::Cell::index_type &idx)
   { return this->operator()(0, idx); } 
-  value_type &operator[](typename ImageMesh::Face::index_type idx)
+  value_type &operator[](const ImageMesh::Face::index_type &idx)
   { return this->operator()(idx.j_, idx.i_); }
-  value_type &operator[](typename ImageMesh::Edge::index_type idx)
+  value_type &operator[](const ImageMesh::Edge::index_type &idx)
   { return this->operator()(0, idx); }
-  value_type &operator[](typename ImageMesh::Node::index_type idx)
+  value_type &operator[](const ImageMesh::Node::index_type &idx)
   { return this->operator()(idx.j_, idx.i_); }
 
   void resize(const ImageMesh::Node::size_type &size)

@@ -85,13 +85,13 @@ public:
 
   virtual ~MaskedTetVolField() {};
 
-  bool value(T &val, typename TetVolMesh::Node::index_type i) const
+  bool value(T &val, TetVolMesh::Node::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename TetVolMesh::Edge::index_type i) const
+  bool value(T &val, TetVolMesh::Edge::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename TetVolMesh::Face::index_type i) const
+  bool value(T &val, TetVolMesh::Face::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename TetVolMesh::Cell::index_type i) const
+  bool value(T &val, TetVolMesh::Cell::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
 
   void initialize_mask(char masked) {

@@ -3242,7 +3242,7 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     }
     
     Point pts[4];
-    Vector v;
+    Vector v(0, 0, 0);
     switch (which) {
     case 0:	// x
 	pts[0] = min;
