@@ -61,10 +61,10 @@ void CompNeoHookPlas::addParticleState(std::vector<const VarLabel*>& from,
 CompNeoHookPlas::~CompNeoHookPlas()
 {
   // Destructor 
-  delete p_statedata_label;
-  delete p_statedata_label_preReloc;
-  delete bElBarLabel;
-  delete bElBarLabel_preReloc;
+  VarLabel::destroy(p_statedata_label);
+  VarLabel::destroy(p_statedata_label_preReloc);
+  VarLabel::destroy(bElBarLabel);
+  VarLabel::destroy(bElBarLabel_preReloc);
   
 }
 

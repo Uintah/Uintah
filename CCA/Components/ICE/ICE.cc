@@ -109,18 +109,18 @@ ICE::ICE(const ProcessorGroup* myworld)
 ICE::~ICE()
 {
   delete lb;
-  delete IFS_CCLabel;
-  delete OFS_CCLabel;
-  delete IFE_CCLabel;
-  delete OFE_CCLabel;
-  delete IFC_CCLabel;
-  delete OFC_CCLabel;
-  delete q_outLabel;
-  delete q_out_EFLabel;
-  delete q_out_CFLabel;
-  delete q_inLabel;
-  delete q_in_EFLabel;
-  delete q_in_CFLabel;
+  VarLabel::destroy(IFS_CCLabel);
+  VarLabel::destroy(OFS_CCLabel);
+  VarLabel::destroy(IFE_CCLabel);
+  VarLabel::destroy(OFE_CCLabel);
+  VarLabel::destroy(IFC_CCLabel);
+  VarLabel::destroy(OFC_CCLabel);
+  VarLabel::destroy(q_outLabel);
+  VarLabel::destroy(q_out_EFLabel);
+  VarLabel::destroy(q_out_CFLabel);
+  VarLabel::destroy(q_inLabel);
+  VarLabel::destroy(q_in_EFLabel);
+  VarLabel::destroy(q_in_CFLabel);
 
 }
 /* ---------------------------------------------------------------------

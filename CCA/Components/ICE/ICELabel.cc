@@ -145,63 +145,63 @@ ICELabel::ICELabel()
 ICELabel::~ICELabel()
 {
     // Cell centered variables
-    delete press_CCLabel;
-    delete press_equil_CCLabel;
-    delete delP_DilatateLabel;
-    delete delP_MassXLabel;
-    delete rho_CCLabel;
-    delete rho_CC_top_cycleLabel;
-    delete temp_CCLabel;
-    delete vel_CCLabel;
-    delete cv_CCLabel;
-    delete rho_micro_CCLabel;
-    delete sp_vol_CCLabel;
-    delete sp_vol_equilLabel;
-    delete mass_CCLabel;
-    delete burnedMass_CCLabel;
-    delete releasedHeat_CCLabel;
-    delete created_vol_CCLabel;
-    delete speedSound_CCLabel;
-    delete div_velfc_CCLabel;
-    delete vol_frac_CCLabel;
-    delete viscosity_CCLabel;
-    delete mom_source_CCLabel;
-    delete int_eng_source_CCLabel;
-    delete mom_L_CCLabel;
-    delete int_eng_L_CCLabel;
-    delete mass_L_CCLabel;
-    delete mom_L_ME_CCLabel;
-    delete int_eng_L_ME_CCLabel;
-    delete q_CCLabel;
-    delete q_advectedLabel;
-    delete term1Label;
-    delete term2Label;
-    delete term3Label;
+    VarLabel::destroy(press_CCLabel);
+    VarLabel::destroy(press_equil_CCLabel);
+    VarLabel::destroy(delP_DilatateLabel);
+    VarLabel::destroy(delP_MassXLabel);
+    VarLabel::destroy(rho_CCLabel);
+    VarLabel::destroy(rho_CC_top_cycleLabel);
+    VarLabel::destroy(temp_CCLabel);
+    VarLabel::destroy(vel_CCLabel);
+    VarLabel::destroy(cv_CCLabel);
+    VarLabel::destroy(rho_micro_CCLabel);
+    VarLabel::destroy(sp_vol_CCLabel);
+    VarLabel::destroy(sp_vol_equilLabel);
+    VarLabel::destroy(mass_CCLabel);
+    VarLabel::destroy(burnedMass_CCLabel);
+    VarLabel::destroy(releasedHeat_CCLabel);
+    VarLabel::destroy(created_vol_CCLabel);
+    VarLabel::destroy(speedSound_CCLabel);
+    VarLabel::destroy(div_velfc_CCLabel);
+    VarLabel::destroy(vol_frac_CCLabel);
+    VarLabel::destroy(viscosity_CCLabel);
+    VarLabel::destroy(mom_source_CCLabel);
+    VarLabel::destroy(int_eng_source_CCLabel);
+    VarLabel::destroy(mom_L_CCLabel);
+    VarLabel::destroy(int_eng_L_CCLabel);
+    VarLabel::destroy(mass_L_CCLabel);
+    VarLabel::destroy(mom_L_ME_CCLabel);
+    VarLabel::destroy(int_eng_L_ME_CCLabel);
+    VarLabel::destroy(q_CCLabel);
+    VarLabel::destroy(q_advectedLabel);
+    VarLabel::destroy(term1Label);
+    VarLabel::destroy(term2Label);
+    VarLabel::destroy(term3Label);
 
     // Face centered variables
-    delete uvel_FCLabel;
-    delete vvel_FCLabel;
-    delete wvel_FCLabel;
-    delete uvel_FCMELabel;
-    delete vvel_FCMELabel;
-    delete wvel_FCMELabel;
-    delete pressX_FCLabel;
-    delete pressY_FCLabel;
-    delete pressZ_FCLabel;
-    delete tau_X_FCLabel;
-    delete tau_Y_FCLabel;
-    delete tau_Z_FCLabel;
+    VarLabel::destroy(uvel_FCLabel);
+    VarLabel::destroy(vvel_FCLabel);
+    VarLabel::destroy(wvel_FCLabel);
+    VarLabel::destroy(uvel_FCMELabel);
+    VarLabel::destroy(vvel_FCMELabel);
+    VarLabel::destroy(wvel_FCMELabel);
+    VarLabel::destroy(pressX_FCLabel);
+    VarLabel::destroy(pressY_FCLabel);
+    VarLabel::destroy(pressZ_FCLabel);
+    VarLabel::destroy(tau_X_FCLabel);
+    VarLabel::destroy(tau_Y_FCLabel);
+    VarLabel::destroy(tau_Z_FCLabel);
     // Misc labels
-    delete IveBeenHereLabel;
-    delete scratchLabel;
-    delete scratch_FCVectorLabel;
+    VarLabel::destroy(IveBeenHereLabel);
+    VarLabel::destroy(scratchLabel);
+    VarLabel::destroy(scratch_FCVectorLabel);
     
     // Reduction Variables
-    delete delTLabel;
-    delete TotalMassLabel;
-    delete KineticEnergyLabel;
-    delete CenterOfMassVelocityLabel;
-    delete TotalIntEngLabel;    
-    delete doMechLabel;
+    VarLabel::destroy(delTLabel);
+    VarLabel::destroy(TotalMassLabel);
+    VarLabel::destroy(KineticEnergyLabel);
+    VarLabel::destroy(CenterOfMassVelocityLabel);
+    VarLabel::destroy(TotalIntEngLabel);    
+    VarLabel::destroy(doMechLabel);
 }
 
