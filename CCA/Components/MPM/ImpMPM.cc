@@ -58,8 +58,10 @@ ImpMPM::~ImpMPM()
 {
   delete lb;
 
-  if(d_perproc_patches && d_perproc_patches->removeReference())
+  if(d_perproc_patches && d_perproc_patches->removeReference()) { 
     delete d_perproc_patches;
+    cout << "Freeing patches!!\n";
+  }
 
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
@@ -220,6 +222,11 @@ void
 ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 {
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
+  if (!d_perproc_patches) {
+    LoadBalancer* loadbal = sched->getLoadBalancer();
+    d_perproc_patches = loadbal->createPerProcessorPatchSet(level,d_myworld);
+    d_perproc_patches->addReference();
+  }
 
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
