@@ -25,7 +25,6 @@ class VarLabel;
 class GeometryObject;
 class GeometryPiece;
 class ConstitutiveModel;
-class HEBurn;
 class Burn;
 class Fracture;
 class EquationOfState;
@@ -70,7 +69,6 @@ WARNING
 	 ConstitutiveModel * getConstitutiveModel() const;
 
 	 // Return correct burn model pointer for this material
-	 HEBurn * getHEBurnModel() const;
 	 Burn * getBurnModel();
 
 	 // Return correct burn fracture pointer for this material
@@ -120,10 +118,9 @@ WARNING
 	 ConstitutiveModel *d_cm;
 
          // Burn model
-	 HEBurn *d_he_burn;
 	 Burn *d_burn;
 
-         // Burn model
+         // Fracture model
 	 Fracture *d_fracture;
 
 	 // EOS model
