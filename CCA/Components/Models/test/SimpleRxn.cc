@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -209,14 +210,18 @@ void SimpleRxn::scheduleInitialize(SchedulerP& sched,
 {
   cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
   Task* t = scinew Task("SimpleRxn::initialize", this, &SimpleRxn::initialize);
-  
+
   t->modifies(lb->sp_vol_CCLabel);
+  t->modifies(lb->rho_micro_CCLabel);
   t->modifies(lb->rho_CCLabel);
   t->modifies(lb->specific_heatLabel);
   t->modifies(lb->gammaLabel);
   t->modifies(lb->thermalCondLabel);
   t->modifies(lb->viscosityLabel);
+  t->modifies(lb->press_CCLabel);
+  
   t->computes(d_scalar->scalar_CCLabel);
+  
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -233,14 +238,17 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     int indx = d_matl->getDWIndex();
     
     CCVariable<double>  f, cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
+    CCVariable<double> press, rho_micro;
+    constCCVariable<double> Temp;
+    Ghost::GhostType  gn = Ghost::None;
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
     new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
     new_dw->getModifiable(sp_vol,      lb->sp_vol_CCLabel,    indx,patch);
+    new_dw->getModifiable(rho_micro,   lb->rho_micro_CCLabel, indx,patch);
     new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
     new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
     new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
     new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
-    
     //__________________________________
     //  initialize the scalar field in a region
     f.initialize(0);
@@ -248,23 +256,12 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
-
       for(CellIterator iter = patch->getExtraCellIterator();
           !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
         if(region->piece->inside(p)) {
           f[c] = region->initialScalar;
-
-          double oneMinus_f = 1.0 - f[c];       
-          cv[c]          = f[c] * d_cv_fuel          + oneMinus_f*d_cv_air;          
-          viscosity[c]   = f[c] * d_viscosity_fuel   + oneMinus_f*d_viscosity_air;   
-          thermalCond[c] = f[c] * d_thermalCond_fuel + oneMinus_f*d_thermalCond_air;
-          double R_mix   = f[c] * d_R_fuel           + oneMinus_f*d_R_air;
-          gamma[c]       = R_mix/cv[c]  + 1.0;
-          
-          rho_CC[c]      = d_rho_fuel * d_rho_air /( f[c] * d_rho_air + oneMinus_f * d_rho_fuel);
-          sp_vol[c]      = 1.0/rho_CC[c];
         }
       } // Over cells
     } // regions
@@ -285,6 +282,28 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                               placeHolder, placeHolder,  f,
                               f, FakeDiffusivity, fakedelT);
     }
+        
+    setBC(f,"scalar-f", patch, sharedState,indx); 
+    
+    //__________________________________
+    // compute thermo-transport-physical quantities
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
+      IntVector c = *iter;
+      if ( f[c] != 0) { 
+        double oneMinus_f = 1.0 - f[c];       
+        cv[c]          = f[c]*d_cv_fuel          + oneMinus_f*d_cv_air;           
+        viscosity[c]   = f[c]*d_viscosity_fuel   + oneMinus_f*d_viscosity_air;    
+        thermalCond[c] = f[c]*d_thermalCond_fuel + oneMinus_f*d_thermalCond_air; 
+        double R_mix   = f[c]*d_R_fuel           + oneMinus_f*d_R_air;           
+        gamma[c]       = R_mix/cv[c]  + 1.0;
+
+        rho_CC[c]      = d_rho_fuel * d_rho_air /
+                        ( f[c] * d_rho_air + oneMinus_f * d_rho_fuel);
+        rho_micro[c]   = rho_CC[c];
+        sp_vol[c]      = 1.0/rho_CC[c];
+      }
+    } // Over cells
+
     //__________________________________
     //  Dump out a header to the probe point files
     if (d_usingProbePts){
