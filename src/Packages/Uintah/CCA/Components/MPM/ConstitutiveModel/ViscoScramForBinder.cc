@@ -152,6 +152,52 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
 }
 
 void 
+ViscoScramForBinder::allocateCMData(DataWarehouse* new_dw,
+				    ParticleSubset* subset,
+				    map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 one, zero(0.0); one.Identity();
+
+
+  ParticleVariable<Statedata> pStatedata;
+  ParticleVariable<Matrix3> deformationGradient, pstress;
+
+  new_dw->allocateTemporary(pStatedata,subset);
+  new_dw->allocateTemporary(deformationGradient,subset);
+  new_dw->allocateTemporary(pstress,subset);
+
+  ParticleVariable<double> pCrackRadius;  
+  if (d_doCrack) {
+    new_dw->allocateTemporary(pCrackRadius,subset);
+    ParticleSubset::iterator iter = subset->begin();
+    for(;iter != subset->end();iter++) 
+      pCrackRadius[*iter] = d_initialData.initialRadius_Crack;
+  } 
+  ParticleSubset::iterator iter = subset->begin();
+  for(;iter != subset->end();iter++){
+    // Initialize state data
+    //pStatedata[*iter].numElements = d_initialData.numMaxwellElements;
+    //pStatedata[*iter].sigDev = new Matrix3[d_initialData.numMaxwellElements];
+    for(int ii = 0; ii < d_initialData.numMaxwellElements; ii++){
+      pStatedata[*iter].sigDev[ii] = zero;
+    }
+    // Initialize other stuff
+    deformationGradient[*iter] = one;
+    pstress[*iter] = zero;
+  }
+
+  (*newState)[pStatedataLabel]=pStatedata.clone();
+  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+  (*newState)[lb->pStressLabel]=pstress.clone();
+  if(d_doCrack)
+    (*newState)[lb->pCrackRadiusLabel]=pCrackRadius.clone();
+
+}
+
+
+void 
 ViscoScramForBinder::addParticleState(std::vector<const VarLabel*>& from,
 				      std::vector<const VarLabel*>& to)
 {

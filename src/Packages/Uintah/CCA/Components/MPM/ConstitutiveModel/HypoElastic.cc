@@ -84,6 +84,50 @@ void HypoElastic::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void HypoElastic::allocateCMData(DataWarehouse* new_dw,
+				 ParticleSubset* subset,
+				 map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
+
+  ParticleVariable<Matrix3> deformationGradient,pstress;
+  new_dw->allocateTemporary(deformationGradient,subset);
+  new_dw->allocateTemporary(pstress,subset);
+  // for J-Integral
+
+#ifdef FRACTURE
+  ParticleVariable<Matrix3> pdispGrads;
+  new_dw->allocateTemporary(pdispGrads, subset);
+  ParticleVariable<double>  pstrainEnergyDensity;
+  new_dw->allocateTemporary(pstrainEnergyDensity, , subset);
+#endif
+  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end();
+      iter++){
+     deformationGradient[*iter] = Identity;
+     pstress[*iter] = zero;
+#ifdef FRACTURE
+     pdispGrads[*iter] = zero;
+     pstrainEnergyDensity[*iter] = 0.0;
+#endif
+  }
+
+  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+  (*newState)[lb->pStressLabel]=pstress.clone();
+
+#ifdef FRACTURE
+  (*newState)[lb->lb->pDispGradsLabel]=pdispGrads.clone();
+  (*newState)[lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
+#endif
+
+
+}
+
+
+
+
 void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {

@@ -85,6 +85,35 @@ void Membrane::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void Membrane::allocateCMData(DataWarehouse* new_dw,
+			      ParticleSubset* subset,
+			      map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
+
+  ParticleVariable<Matrix3> deformationGradient, pstress, defGradIP;
+
+  new_dw->allocateTemporary(deformationGradient,subset);
+  new_dw->allocateTemporary(defGradIP,subset);
+  new_dw->allocateTemporary(pstress,subset);
+
+  for(ParticleSubset::iterator iter = subset->begin();
+          iter != subset->end(); iter++) {
+    deformationGradient[*iter] = Identity;
+    defGradIP[*iter] = Identity;
+    pstress[*iter] = zero;
+  }
+
+  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+  (*newState)[defGradInPlaneLabel]=defGradIP.clone();
+  (*newState)[lb->pStressLabel]=pstress.clone();
+
+}
+
+
 void Membrane::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {

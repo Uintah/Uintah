@@ -87,6 +87,45 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+
+void MWViscoElastic::allocateCMData(DataWarehouse* new_dw,
+				    ParticleSubset* subset,
+				    map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
+  
+  ParticleVariable<Matrix3> deformationGradient,pstress_e,pstress_ve_d,
+    pstress_e_d;
+  ParticleVariable<double> pstress_ve_v,pstress_e_v;
+  new_dw->allocateTemporary(deformationGradient,subset);
+  new_dw->allocateTemporary(pstress_e,subset);
+  new_dw->allocateTemporary(pstress_ve_v,subset);
+  new_dw->allocateTemporary(pstress_ve_d,subset);
+  new_dw->allocateTemporary(pstress_e_v,subset);
+  new_dw->allocateTemporary(pstress_e_d,subset);
+
+  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end();
+      iter++){
+    deformationGradient[*iter] = Identity;
+    pstress_e[*iter] = zero;
+    pstress_ve_v[*iter] = 0.0;
+    pstress_ve_d[*iter] = zero;
+    pstress_e_v[*iter] = 0.0;
+    pstress_e_d[*iter] = zero;
+  }
+
+  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+  (*newState)[lb->pStress_eLabel]=pstress_e.clone();
+  (*newState)[lb->pStress_ve_vLabel]=pstress_ve_v.clone();
+  (*newState)[lb->pStress_ve_dLabel]=pstress_ve_d.clone();
+  (*newState)[lb->pStress_e_vLabel]=pstress_e_v.clone();
+  (*newState)[lb->pStress_e_dLabel]=pstress_e_d.clone();
+
+}
+
 void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {

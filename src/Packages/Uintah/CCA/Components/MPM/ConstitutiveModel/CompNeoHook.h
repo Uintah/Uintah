@@ -74,6 +74,10 @@ namespace Uintah {
 				  const MPMMaterial* matl,
 				  DataWarehouse* new_dw);
 
+    virtual void allocateCMData(DataWarehouse* new_dw,
+				ParticleSubset* subset,
+				map<const VarLabel*, ParticleVariableBase*>* newState);
+
     virtual void addInitialComputesAndRequires(Task* task,
 					       const MPMMaterial* matl,
 					       const PatchSet* patches) const;

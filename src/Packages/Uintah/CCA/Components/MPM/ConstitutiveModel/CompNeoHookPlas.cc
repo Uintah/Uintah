@@ -109,6 +109,39 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void CompNeoHookPlas::allocateCMData(DataWarehouse* new_dw,
+				    ParticleSubset* subset,
+				    map<const VarLabel*, ParticleVariableBase*>* newState)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
+
+  ParticleVariable<StateData> statedata;
+  ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
+
+  new_dw->allocateTemporary(statedata,subset);
+  new_dw->allocateTemporary(deformationGradient,subset);
+  new_dw->allocateTemporary(pstress,subset);
+  new_dw->allocateTemporary(bElBar,subset);
+
+  for(ParticleSubset::iterator iter =subset->begin();iter != subset->end(); 
+      iter++){
+    statedata[*iter].Alpha = d_initialData.Alpha;
+    deformationGradient[*iter] = Identity;
+    bElBar[*iter] = Identity;
+    pstress[*iter] = zero;
+  }
+
+  (*newState)[p_statedata_label]=statedata.clone();
+  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+  (*newState)[lb->pStressLabel]=pstress.clone();
+  (*newState)[ bElBarLabel]=bElBar.clone();
+
+
+}
+
 void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
 					     const MPMMaterial* matl,
 					     DataWarehouse* new_dw)
