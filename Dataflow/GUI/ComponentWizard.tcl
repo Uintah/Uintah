@@ -47,7 +47,8 @@ proc ComponentWizard { {window .componentWizard} } {
     button $w.buttons.save -text "Save" -command "array set $d \[array get $tmpd\]"
     pack $w.buttons.save -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
-    button $w.buttons.create -text "Create" 
+    button $w.buttons.create -text "Create"  \
+        -command "array set $d \[array get $tmpd\]"
     pack $w.buttons.create -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
     button $w.buttons.cancel -text "Cancel" -command "destroy $w"  
@@ -63,15 +64,8 @@ proc ComponentWizard { {window .componentWizard} } {
     make_implementation_pane $implementation $tmpd
     
     set testing [$w.tabs add -label "Testing"]
-    frame $testing.f
-    pack $testing.f -side top -fill both -expand true
+    make_testing_pane $testing $tmpd
     
-    prompted_text $testing.f.testing_text "<Insert testing information>" "" \
-        -wrap word -yscrollcommand "$testing.f.sy set"
-    pack $testing.f.testing_text -side left -fill both -expand true
-    scrollbar $testing.f.sy -orient vert -command "$testing.f.testing_text yview"
-    pack $testing.f.sy -side right -fill y
-
     $w.tabs view "I/O and GUI"
 }
 
@@ -156,7 +150,9 @@ proc make_overview_pane {p d} {
             global $d;
             set ${d}(examplesr) \[get_prompted_entry $eexamplesr\];
         " 
-    set_prompted_entry $p.eexamplesr [set ${d}(examplesr)]
+    if [info exists ${d}(examplesr)] {
+        set_prompted_entry $p.eexamplesr [set ${d}(examplesr)]
+    }
 
     pack $authors -side top -fill both -expand true -padx .1c -pady .1c
     pack $summary -side top -anchor w -fill x -expand true -padx .1c -pady .1c
@@ -184,6 +180,15 @@ proc make_implementation_pane {p d} {
     pack $ccfiles -side top -fill both -expand true -padx .1c -pady .1c
     pack $cfiles -side top -fill both -expand true -padx .1c -pady .1c
     pack $ffiles -side top -fill both -expand true -padx .1c -pady .1c
+}
+
+proc make_testing_pane {p d} {
+    global $d
+
+    set testing $p.testing
+    create_text_entry $testing "Testing Info:" $d testing
+
+    pack $testing -side top -expand yes -fill both 
 }
 
 proc create_clb_entry {f label prompt array index} {
