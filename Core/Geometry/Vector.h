@@ -22,12 +22,12 @@
 #include <iosfwd>
 
 namespace SCICore {
-    namespace Containers {
-	class clString;
-    }
-    namespace PersistentSpace {
-	class Piostream;
-    }
+namespace Containers {
+class clString;
+}
+namespace PersistentSpace {
+class Piostream;
+}
 
 namespace Geometry {
 
@@ -37,103 +37,103 @@ using SCICore::PersistentSpace::Piostream;
 class Point;
 
 class SCICORESHARE Vector {
-    double _x,_y,_z;
+  double _x,_y,_z;
 public:
-    inline explicit Vector(const Point&);
-    inline Vector(double x, double y, double z): _x(x), _y(y), _z(z)
-	    { }
-    inline Vector(const Vector&);
-    inline Vector();
-    inline double length() const;
-    inline double length2() const;
-    friend SCICORESHARE inline double Dot(const Vector&, const Vector&);
-    friend SCICORESHARE inline double Dot(const Point&, const Vector&);
-    friend SCICORESHARE inline double Dot(const Vector&, const Point&);
-    inline Vector& operator=(const Vector&);
+  inline explicit Vector(const Point&);
+  inline Vector(double x, double y, double z): _x(x), _y(y), _z(z)
+  { }
+  inline Vector(const Vector&);
+  inline Vector();
+  inline double length() const;
+  inline double length2() const;
+  friend SCICORESHARE inline double Dot(const Vector&, const Vector&);
+  friend SCICORESHARE inline double Dot(const Point&, const Vector&);
+  friend SCICORESHARE inline double Dot(const Vector&, const Point&);
+  inline Vector& operator=(const Vector&);
 
-    inline double& operator()(int idx) {
-	// Ugly, but works
-	return (&_x)[idx];
+  inline double& operator()(int idx) {
+    // Ugly, but works
+    return (&_x)[idx];
+  }
+
+  inline double operator()(int idx) const {
+    // Ugly, but works
+    return (&_x)[idx];
+  }
+
+  // checks if one vector is exactly the same as another
+  int operator==(const Vector&) const;
+
+  inline Vector operator*(const double) const;
+  inline Vector operator*(const Vector&) const;
+  inline Vector& operator*=(const double);
+  inline Vector operator/(const double) const;
+  inline Vector operator/(const Vector&) const;
+  inline Vector& operator/=(const double);
+  inline Vector operator+(const Vector&) const;
+  inline Vector& operator+=(const Vector&);
+  inline Vector operator-() const;
+  inline Vector operator-(const Vector&) const;
+  inline Vector& operator-=(const Vector&);
+  inline double normalize();
+  Vector normal() const;
+  friend SCICORESHARE inline Vector Cross(const Vector&, const Vector&);
+  friend SCICORESHARE inline Vector Abs(const Vector&);
+  inline void x(double);
+  inline double x() const;
+  inline void y(double);
+  inline double y() const;
+  inline void z(double);
+  inline double z() const;
+
+  inline void u(double);
+  inline double u() const;
+  inline void v(double);
+  inline double v() const;
+  inline void w(double);
+  inline double w() const;
+
+  void rotz90(const int);
+  inline Point point() const;
+    
+  clString string() const;
+    
+  friend class Point;
+  friend class Transform;
+    
+  friend SCICORESHARE inline Vector Interpolate(const Vector&, const Vector&, double);
+    
+  void find_orthogonal(Vector&, Vector&) const;
+    
+  friend SCICORESHARE void Pio( Piostream&, Vector& );
+
+  inline Point asPoint() const;
+  inline double minComponent() const {
+    if(_x<_y){
+      if(_x<_z)
+	return _x;
+      else
+	return _z;
+    } else {
+      if(_y<_z)
+	return _y;
+      else
+	return _z;
     }
-
-    inline double operator()(int idx) const {
-	// Ugly, but works
-	return (&_x)[idx];
+  }
+  inline double maxComponent() const {
+    if(_x>_y){
+      if(_x>_z)
+	return _x;
+      else
+	return _z;
+    } else {
+      if(_y>_z)
+	return _y;
+      else
+	return _z;
     }
-
-    // checks if one vector is exactly the same as another
-    int operator==(const Vector&) const;
-
-    inline Vector operator*(const double) const;
-    inline Vector operator*(const Vector&) const;
-    inline Vector& operator*=(const double);
-    inline Vector operator/(const double) const;
-    inline Vector operator/(const Vector&) const;
-    inline Vector& operator/=(const double);
-    inline Vector operator+(const Vector&) const;
-    inline Vector& operator+=(const Vector&);
-    inline Vector operator-() const;
-    inline Vector operator-(const Vector&) const;
-    inline Vector& operator-=(const Vector&);
-    inline double normalize();
-    Vector normal() const;
-    friend SCICORESHARE inline Vector Cross(const Vector&, const Vector&);
-    friend SCICORESHARE inline Vector Abs(const Vector&);
-    inline void x(double);
-    inline double x() const;
-    inline void y(double);
-    inline double y() const;
-    inline void z(double);
-    inline double z() const;
-
-    inline void u(double);
-    inline double u() const;
-    inline void v(double);
-    inline double v() const;
-    inline void w(double);
-    inline double w() const;
-
-    void rotz90(const int);
-    inline Point point() const;
-    
-    clString string() const;
-    
-    friend class Point;
-    friend class Transform;
-    
-    friend SCICORESHARE inline Vector Interpolate(const Vector&, const Vector&, double);
-    
-    void find_orthogonal(Vector&, Vector&) const;
-    
-    friend SCICORESHARE void Pio( Piostream&, Vector& );
-
-    inline Point asPoint() const;
-    inline double minComponent() const {
-	if(_x<_y){
-	    if(_x<_z)
-		return _x;
-	    else
-		return _z;
-	} else {
-	    if(_y<_z)
-		return _y;
-	    else
-		return _z;
-	}
-    }
-    inline double maxComponent() const {
-	if(_x>_y){
-	    if(_x>_z)
-		return _x;
-	    else
-		return _z;
-	} else {
-	    if(_y>_z)
-		return _y;
-	    else
-		return _z;
-	}
-    }
+  }
 };
 
 SCICORESHARE std::ostream& operator<<(std::ostream& os, const Vector& p);
@@ -371,56 +371,5 @@ inline Point Vector::asPoint() const {
 } // End namespace Geometry
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.9  2000/07/06 00:05:06  tan
-// Made const works for operator()
-//
-// Revision 1.8  2000/07/05 21:38:47  tan
-// Added /= operator.
-//
-// Revision 1.7  2000/06/15 20:43:19  sparker
-// Added "inline" statements in class file
-//
-// Revision 1.6  2000/04/12 22:56:00  sparker
-// Added IntVector (a vector of you-guess-what)
-// Added explicit ctors from point to vector and vice-versa
-//
-// Revision 1.5  2000/01/26 01:32:52  sparker
-// Added new stuff for C-SAFE
-//
-// Revision 1.4  1999/10/07 02:07:57  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/04 06:01:53  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.2  1999/08/17 06:39:29  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:57  mcq
-// Initial commit
-//
-// Revision 1.6  1999/07/09 00:27:40  moulding
-// added SHARE support for win32 shared libraries (.dll's)
-//
-// Revision 1.5  1999/07/07 21:11:00  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.4  1999/06/21 23:52:32  dav
-// updated makefiles.main
-//
-// Revision 1.3  1999/05/06 19:56:17  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:19  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:27  dav
-// Import sources
-//
-//
 
 #endif

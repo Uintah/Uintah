@@ -1,6 +1,5 @@
 #
 # Makefile fragment for this subdirectory
-# $Id$
 #
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
@@ -39,30 +38,3 @@ LIBS := $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
-#
-# $Log$
-# Revision 1.6  2000/09/15 20:57:53  kuzimmer
-#  resurrected GeomEllipse from old code
-#
-# Revision 1.5  2000/07/28 21:13:18  yarden
-# GeomDL: Create and manage a display list for its child.
-# the user can select to ignore it via check buttons in Salmon
-#
-# Revision 1.4  2000/05/31 21:54:01  kuzimmer
-# Changes to make the ColorMapKey Module work properly
-#
-# Revision 1.3  2000/03/21 03:01:32  sparker
-# Partially fixed special_get method in SimplePort
-# Pre-instantiated a few key template types, in an attempt to reduce
-#   initial compile time and reduce code bloat.
-# Manually instantiated templates are in */*/templates.cc
-#
-# Revision 1.2  2000/03/20 19:37:40  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:28:25  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

@@ -211,6 +211,12 @@ void Current::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/12/15 06:24:18  mcole
+// merge branch back into trunk
+//
+// Revision 1.1.2.1  2000/10/31 02:22:41  dmw
+// Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
+//
 // Revision 1.1  2000/10/29 04:34:51  dmw
 // BuildFEMatrix -- ground an arbitrary node
 // SolveMatrix -- when preconditioning, be careful with 0's on diagonal

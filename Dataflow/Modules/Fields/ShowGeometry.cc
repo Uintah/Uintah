@@ -14,9 +14,10 @@
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/Lattice3Geom.h>
+#include <SCICore/Datatypes/LatticeGeom.h>
+#include <SCICore/Datatypes/TriSurfGeom.h>
 #include <SCICore/Datatypes/SField.h>
-#include <PSECore/Datatypes/SFieldPort.h>
+#include <PSECore/Datatypes/FieldPort.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/Switch.h>
@@ -51,8 +52,8 @@ class ShowGeometry : public Module
   
 
   DebugStream              d_dbg;  
-  SFieldIPort*             d_infield;
-  SFieldHandle             d_sfield;
+  FieldIPort*              d_infield;
+  FieldHandle              d_sfield;
   GeometryOPort           *d_ogeom;  
 
   // scene graph ID's
@@ -146,7 +147,7 @@ public:
     d_nodeSwitch(NULL)
   {
     // Create the input ports
-    d_infield = scinew SFieldIPort(this, "Field", SFieldIPort::Atomic);
+    d_infield = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
     add_iport(d_infield);
     
     // Create the output port
@@ -179,6 +180,8 @@ public:
   {
     // Check for generation number. FIX_ME
 
+    d_dbg << "SHOWGEOMETRY EXECUTING" << endl;
+
     // tell module downstream to delete everything we have sent it before.
     // This is typically salmon, it owns the scene graph memory we create here.
     d_ogeom->delAll(); 
@@ -187,8 +190,8 @@ public:
       return;
     }
 
-    d_dbg << d_sfield->get_attrib()->get_info();
-  
+    d_dbg << d_sfield->get_attrib()->getInfo();
+
     Gradient *gradient = d_sfield->query_interface((Gradient *)0);
     if(!gradient){
       error("Gradient not supported by input field");
@@ -201,7 +204,7 @@ public:
     }
 
     BBox bbox;
-    d_sfield->get_geom()->get_bbox(bbox);
+    d_sfield->get_geom()->getBoundingBox(bbox);
 
     d_dbg << bbox.min().x() << " " << bbox.min().y() << " " 
 	  << bbox.min().z() << " " << bbox.max().x() << " " << bbox.max().y() 
@@ -212,18 +215,18 @@ public:
 
     GeomGroup *verts = scinew GeomGroup;
     Geom *geom = d_sfield->get_geom();
-    Lattice3Geom* grid = dynamic_cast<Lattice3Geom*>(geom);
+
+    d_dbg << geom->getInfo();
+
+    LatticeGeom* grid = dynamic_cast<LatticeGeom*>(geom);
     //LatticeGeom *grid = geom->get_latticegeom();
+    TriSurfGeom* tsurf = dynamic_cast<TriSurfGeom*>(geom);
 
     if (grid) {
 
-      int nx = grid->get_nx();
-      int ny = grid->get_ny();
-      int nz = grid->get_nz();
-
-      d_dbg << "grid->nx" << nx << endl;
-      d_dbg << "grid->ny" << ny << endl;
-      d_dbg << "grid->nz" << nz << endl;
+      int nx = grid->getSizeX();
+      int ny = grid->getSizeY();
+      int nz = grid->getSizeZ();
 
       Vector xDir, yDir, zDir;
       double sx, sy, sz, aveScale;
@@ -248,6 +251,12 @@ public:
 	  }
 	}
       }
+    } else if (tsurf) {
+      d_dbg << "Writing out surface" << endl;
+      displaySurface(tsurf, verts);
+    } else if (true) {
+      d_dbg << "testing surface" << endl;
+      displaySurface((TriSurfGeom *)geom, verts);
     } else {
       d_dbg << "Not a LatticGeom!!" << endl;
     }
@@ -266,24 +275,58 @@ public:
 
   }
 
+
+  void displaySurface(TriSurfGeom *surf, GeomGroup *g)
+  {
+    BBox bbox;
+    surf->getBoundingBox(bbox);
+    
+    const double pointsize =
+      bbox.diagonal().length() / pow(surf->pointSize(), 0.33L) * 0.1;
+    
+    int i;
+    for (i = 0; i < surf->pointSize(); i++) {
+      const Point &p = surf->point(i);
+      g->add(scinew GeomSphere(p, pointsize, 8, 4));
+    }
+
+    for (i = 0; i < surf->triangleSize(); i++) {
+      const int p0i = surf->edge(i*3+0).pointIndex();
+      const int p1i = surf->edge(i*3+1).pointIndex();
+      const int p2i = surf->edge(i*3+2).pointIndex();
+
+      const Point &p0 = surf->point(p0i);
+      const Point &p1 = surf->point(p1i);
+      const Point &p2 = surf->point(p2i);
+
+      // draw three half edges
+      g->add(new GeomLine(p0, p1));
+      g->add(new GeomLine(p1, p2));
+      g->add(new GeomLine(p2, p0));
+      
+      // draw three connections.
+    }
+  }
+
+
   //////////
   // addConnections
   // 
   inline void addConnections(int i, int j, int k, 
 			     bool lastI, bool lastJ, bool lastK,
-			     Lattice3Geom *grid, GeomGroup *g) {
-    Point p0 = grid->get_point(i, j, k);
+			     LatticeGeom *grid, GeomGroup *g) {
+    Point p0 = grid->getPoint(i, j, k);
     Point p1;
     if (! lastI) {
-      p1 = grid->get_point(i + 1, j, k);
+      p1 = grid->getPoint(i + 1, j, k);
       g->add(new GeomLine(p0, p1));
     }
     if (! lastJ) {
-      p1 = grid->get_point(i, j + 1, k);
+      p1 = grid->getPoint(i, j + 1, k);
       g->add(new GeomLine(p0, p1));
     }
     if (! lastK) {
-      p1 = grid->get_point(i, j, k + 1);
+      p1 = grid->getPoint(i, j, k + 1);
       g->add(new GeomLine(p0, p1));
     }
 
@@ -292,10 +335,10 @@ public:
   //////////
   // addSphere
   // 
-  inline void addSphere(int i, int j, int k, Lattice3Geom *grid, 
+  inline void addSphere(int i, int j, int k, LatticeGeom *grid, 
 			GeomGroup *g, double size) {
 
-    Point p0 = grid->get_point(i, j, k);
+    Point p0 = grid->getPoint(i, j, k);
     g->add(scinew GeomSphere(p0, size, 8, 4));
   }
 
@@ -304,18 +347,24 @@ public:
   // 
   inline void addAxis(int i, int j, int k,
 		      Vector &x, Vector &y, Vector &z, 
-		      Lattice3Geom *grid, GeomGroup *g) {
+		      LatticeGeom *grid, GeomGroup *g) {
 
-    Point p0 = grid->get_point(i, j, k);
+    Point p0 = grid->getPoint(i, j, k);
     Point p1 = p0 + x;
     Point p2 = p0 - x;
-    g->add(new GeomLine(p1, p2));
+    GeomLine *l = new GeomLine(p1, p2);
+    l->setLineWidth(3.0);
+    g->add(l);
     p1 = p0 + y;
     p2 = p0 - y;
-    g->add(new GeomLine(p1, p2));
+    l = new GeomLine(p1, p2);
+    l->setLineWidth(3.0);
+    g->add(l);
     p1 = p0 + z;
     p2 = p0 - z;
-    g->add(new GeomLine(p1, p2));
+    l = new GeomLine(p1, p2);
+    l->setLineWidth(3.0);
+    g->add(l);
   }
 
   //////////
@@ -380,7 +429,7 @@ public:
   // 
   void setUpDirs(Vector &x, Vector &y, Vector &z, 
 		 double &sx, double &sy,  double &sz, 
-		 Lattice3Geom *grid, BBox &bbox) {
+		 LatticeGeom *grid, BBox &bbox) {
 
     sx = (bbox.max().x() - bbox.min().x()) * 0.2L;
     sy = (bbox.max().y() - bbox.min().y()) * 0.2L;
@@ -389,17 +438,17 @@ public:
     d_dbg << "sy: " << sy << endl;
     d_dbg << "sz: " << sz << endl;
 
-    int nx = grid->get_nx();
-    int ny = grid->get_ny();
-    int nz = grid->get_nz();
+    int nx = grid->getSizeX();
+    int ny = grid->getSizeY();
+    int nz = grid->getSizeZ();
 
     sx /= nx;
     sy /= ny;
     sz /= nz;
 
     if (nx > 0) {
-      Point p0 = grid->get_point(0, 0, 0);
-      Point p1 = grid->get_point(1, 0, 0);
+      Point p0 = grid->getPoint(0, 0, 0);
+      Point p1 = grid->getPoint(1, 0, 0);
       x = p1 - p0;
     } else {
       x.x(1.0L);
@@ -408,8 +457,8 @@ public:
     }
 
     if (ny > 0) {
-      Point p0 = grid->get_point(0, 0, 0);
-      Point p1 = grid->get_point(0, 1, 0);
+      Point p0 = grid->getPoint(0, 0, 0);
+      Point p1 = grid->getPoint(0, 1, 0);
       y = p1 - p0;
     } else {
       y.x(0.0L);
@@ -418,8 +467,8 @@ public:
     }
       
     if (nz > 0) {
-      Point p0 = grid->get_point(0, 0, 0);
-      Point p1 = grid->get_point(0, 0, 1);
+      Point p0 = grid->getPoint(0, 0, 0);
+      Point p1 = grid->getPoint(0, 0, 1);
       z = p1 - p0;
     } else {
       z.x(0.0L);

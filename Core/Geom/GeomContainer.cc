@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  Container.cc: Base class for container objects
  *
@@ -63,31 +61,3 @@ void GeomContainer::io(Piostream& stream)
 
 } // End namespace GeomSpace
 } // End namespace SCICore
-
-//
-// $Log$
-// Revision 1.5  2000/06/06 16:01:43  dahart
-// - Added get_triangles() to several classes for serializing triangles to
-// send them over a network connection.  This is a short term (hack)
-// solution meant for now to allow network transport of the geometry that
-// Yarden's modules produce.  Yarden has promised to work on a more
-// general solution to network serialization of SCIRun geometry objects. ;)
-//
-// Revision 1.4  1999/08/23 07:06:33  sparker
-// Fix IRIX build
-//
-// Revision 1.3  1999/08/17 23:50:19  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:06  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:38  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:19  dav
-// Import sources
-//
-//

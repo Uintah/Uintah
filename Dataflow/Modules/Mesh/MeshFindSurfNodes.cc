@@ -178,15 +178,3 @@ void MeshFindSurfNodes::execute()
 } // End namespace Modules
 } // End namespace SCIRun
 
-
-//
-// $Log$
-// Revision 1.2  2000/11/17 07:05:12  dmw
-// fixed bug
-//
-// Revision 1.1  2000/10/29 04:42:23  dmw
-// MeshInterpVals -- fixed a bug
-// MeshNodeComponent -- build a columnmatrix of the x/y/z position of the nodes
-// MeshFindSurfNodes -- the surface nodes in a mesh
-//
-//

@@ -56,17 +56,3 @@ Dir Dir::getSubdir(const string& sub)
    // This should probably do more
    return Dir(d_name+"/"+sub);
 }
-
-//
-// $Log$
-// Revision 1.3  2000/06/15 19:52:38  sparker
-// Removed chatter
-//
-// Revision 1.2  2000/05/31 15:20:44  jehall
-// - Added ability to remove() directories
-//
-// Revision 1.1  2000/05/15 19:28:12  sparker
-// New directory: OS for operating system interface classes
-// Added a "Dir" class to create and iterate over directories (eventually)
-//
-//

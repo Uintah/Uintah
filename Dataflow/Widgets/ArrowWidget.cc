@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  ArrowWidget.cc
  *
@@ -326,37 +324,3 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 
 } // End namespace Widgets
 } // End namespace PSECore
-
-//
-// $Log$
-// Revision 1.6  2000/10/29 04:44:18  dmw
-// arrows can now be dragged
-//
-// Revision 1.5  2000/06/27 07:58:40  samsonov
-// Added Get/SetLength member function
-//
-// Revision 1.4  2000/06/22 22:51:34  samsonov
-// Added resizing mode and rotation in respect to base point. Translational behavior is changed.
-//
-// Revision 1.3  1999/09/02 04:44:58  dmw
-// added a mode
-//
-// Revision 1.2  1999/08/17 06:38:27  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:04  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
-
-
-
-
-
-
-
-

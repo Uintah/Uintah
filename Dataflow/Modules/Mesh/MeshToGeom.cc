@@ -198,24 +198,3 @@ void MeshToGeom::execute()
 
 } // End namespace Modules
 } // End namespace SCIRun
-
-
-//
-// $Log$
-// Revision 1.5  2000/09/07 00:12:19  zyp
-// MakeScalarField.cc
-//
-// Revision 1.4  2000/03/17 09:29:13  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/12/09 09:52:44  dmw
-// supports more than 7 unique regions now
-//
-// Revision 1.2  1999/10/07 02:08:20  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/05 01:15:28  dmw
-// added all of the old SCIRun mesh modules
-//

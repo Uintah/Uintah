@@ -1,6 +1,5 @@
 #
 # Makefile fragment for this subdirectory
-# $Id$
 #
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
@@ -15,44 +14,84 @@ GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
 
 GENHDRS := $(patsubst %.cc,%.h,$(GENSRCS))
 
-SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
-	$(SRCDIR)/Boolean.cc $(SRCDIR)/ColorMap.cc \
-	$(SRCDIR)/ColumnMatrix.cc $(SRCDIR)/Datatype.cc \
-	$(SRCDIR)/DenseMatrix.cc $(SRCDIR)/HexMesh.cc \
-	$(SRCDIR)/Image.cc $(SRCDIR)/Interval.cc $(SRCDIR)/Matrix.cc \
-	$(SRCDIR)/Mesh.cc $(SRCDIR)/ScalarField.cc \
-	$(SRCDIR)/ScalarFieldHUG.cc $(SRCDIR)/ScalarFieldRGBase.cc \
-	$(SRCDIR)/ScalarFieldUG.cc $(SRCDIR)/ScalarFieldZone.cc \
-	$(SRCDIR)/SparseRowMatrix.cc $(SRCDIR)/Surface.cc \
-	$(SRCDIR)/SymSparseRowMatrix.cc $(SRCDIR)/TriDiagonalMatrix.cc \
-	$(SRCDIR)/VectorField.cc $(SRCDIR)/VectorFieldHUG.cc \
-	$(SRCDIR)/VectorFieldOcean.cc $(SRCDIR)/VectorFieldRG.cc \
-	$(SRCDIR)/VectorFieldUG.cc $(SRCDIR)/VectorFieldZone.cc \
-	$(SRCDIR)/VoidStar.cc $(SRCDIR)/cDMatrix.cc \
-	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
-	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
-	$(SRCDIR)/VectorFieldRGCC.cc  \
-	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc \
-         $(SRCDIR)/Brick.cc \
-         $(SRCDIR)/GLTexture3D.cc \
-         $(SRCDIR)/GLTextureIterator.cc \
-         $(SRCDIR)/GLTexRenState.cc \
-         $(SRCDIR)/GLOverOp.cc \
-         $(SRCDIR)/GLMIP.cc \
-         $(SRCDIR)/GLVolRenState.cc \
-         $(SRCDIR)/GLAttenuate.cc \
-         $(SRCDIR)/GLPlanes.cc \
-         $(SRCDIR)/FullRes.cc \
-         $(SRCDIR)/FullResIterator.cc \
-         $(SRCDIR)/LOS.cc \
-         $(SRCDIR)/LOSIterator.cc \
-         $(SRCDIR)/ROI.cc \
-         $(SRCDIR)/ROIIterator.cc \
-         $(SRCDIR)/TexPlanes.cc \
-         $(SRCDIR)/GLVolumeRenderer.cc \
-         $(SRCDIR)/Polygon.cc \
-         $(SRCDIR)/SliceTable.cc \
-         $(SRCDIR)/VolumeUtils.cc \
+
+SRCS += $(GENSRCS) \
+        $(SRCDIR)/Attrib.cc                 \
+        $(SRCDIR)/BasicSurfaces.cc	    \
+        $(SRCDIR)/Boolean.cc		    \
+	$(SRCDIR)/Brick.cc		    \
+        $(SRCDIR)/CameraView.cc		    \
+        $(SRCDIR)/ColorMap.cc		    \
+        $(SRCDIR)/ColumnMatrix.cc	    \
+        $(SRCDIR)/ContourGeom.cc	    \
+        $(SRCDIR)/Datatype.cc		    \
+        $(SRCDIR)/DenseMatrix.cc	    \
+        $(SRCDIR)/Domain.cc		    \
+        $(SRCDIR)/Field.cc		    \
+        $(SRCDIR)/FieldWrapper.cc	    \
+        $(SRCDIR)/GenFunction.cc	    \
+        $(SRCDIR)/Geom.cc		    \
+        $(SRCDIR)/HexMesh.cc		    \
+        $(SRCDIR)/Image.cc		    \
+        $(SRCDIR)/Interval.cc		    \
+        $(SRCDIR)/LatticeGeom.cc	    \
+        $(SRCDIR)/Matrix.cc		    \
+        $(SRCDIR)/Mesh.cc		    \
+        $(SRCDIR)/MeshGeom.cc		    \
+        $(SRCDIR)/Path.cc		    \
+        $(SRCDIR)/PointCloudGeom.cc	    \
+        $(SRCDIR)/SField.cc		    \
+        $(SRCDIR)/ScalarField.cc	    \
+        $(SRCDIR)/ScalarFieldHUG.cc	    \
+        $(SRCDIR)/ScalarFieldRGBase.cc      \
+        $(SRCDIR)/ScalarFieldRGCC.cc        \
+        $(SRCDIR)/ScalarFieldUG.cc	    \
+        $(SRCDIR)/ScalarFieldZone.cc	    \
+        $(SRCDIR)/SparseRowMatrix.cc	    \
+        $(SRCDIR)/StructuredGeom.cc	    \
+        $(SRCDIR)/SurfTree.cc		    \
+        $(SRCDIR)/Surface.cc		    \
+        $(SRCDIR)/SurfaceGeom.cc	    \
+        $(SRCDIR)/SymSparseRowMatrix.cc	    \
+        $(SRCDIR)/TField.cc		    \
+        $(SRCDIR)/TetMeshGeom.cc	    \
+        $(SRCDIR)/TriDiagonalMatrix.cc	    \
+        $(SRCDIR)/TriSurface.cc		    \
+        $(SRCDIR)/TriSurfaceGeom.cc	    \
+        $(SRCDIR)/UnstructuredGeom.cc	    \
+        $(SRCDIR)/VField.cc		    \
+        $(SRCDIR)/VectorField.cc	    \
+        $(SRCDIR)/VectorFieldHUG.cc	    \
+        $(SRCDIR)/VectorFieldOcean.cc	    \
+        $(SRCDIR)/VectorFieldRG.cc	    \
+        $(SRCDIR)/VectorFieldRGCC.cc	    \
+        $(SRCDIR)/VectorFieldUG.cc	    \
+        $(SRCDIR)/VectorFieldZone.cc	    \
+        $(SRCDIR)/VoidStar.cc		    \
+        $(SRCDIR)/cDMatrix.cc		    \
+        $(SRCDIR)/cMatrix.cc		    \
+        $(SRCDIR)/cSMatrix.cc		    \
+        $(SRCDIR)/cVector.cc		    \
+        $(SRCDIR)/templates.cc		    \
+	$(SRCDIR)/GLTexture3D.cc \
+	$(SRCDIR)/GLTextureIterator.cc \
+	$(SRCDIR)/GLTexRenState.cc \
+	$(SRCDIR)/GLOverOp.cc \
+	$(SRCDIR)/GLMIP.cc \
+	$(SRCDIR)/GLVolRenState.cc \
+	$(SRCDIR)/GLAttenuate.cc \
+	$(SRCDIR)/GLPlanes.cc \
+	$(SRCDIR)/FullRes.cc \
+	$(SRCDIR)/FullResIterator.cc \
+	$(SRCDIR)/LOS.cc \
+	$(SRCDIR)/LOSIterator.cc \
+	$(SRCDIR)/ROI.cc \
+	$(SRCDIR)/ROIIterator.cc \
+	$(SRCDIR)/TexPlanes.cc \
+	$(SRCDIR)/GLVolumeRenderer.cc \
+	$(SRCDIR)/Polygon.cc \
+	$(SRCDIR)/SliceTable.cc \
+	$(SRCDIR)/VolumeUtils.cc \
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
@@ -117,41 +156,3 @@ clean::
 	rm -f $(GENSRCS)
 	rm -f $(patsubst %.cc,%.h,$(GENSRCS))
 
-#
-# $Log$
-# Revision 1.10  2000/12/09 17:36:55  moulding
-# Port Kurt' volume rendering stuff to linux and move it to PSECommon.
-#
-# Revision 1.9  2000/08/20 04:19:50  samsonov
-# path to CameraView.cc
-#
-# Revision 1.8  2000/08/09 07:15:55  samsonov
-# final version and Cocoon comments
-#
-# Revision 1.7  2000/07/19 06:39:38  samsonov
-# Path datatype moved form DaveW
-#
-# Revision 1.6  2000/07/17 18:33:38  dmw
-# deleted ushort and added it to sub.mk
-#
-# Revision 1.5  2000/07/17 16:29:40  bigler
-# Removed reference to ScalarFieldRGushort.cc which did not exist.
-#
-# Revision 1.4  2000/07/12 15:45:11  dmw
-# Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
-#
-# Revision 1.3  2000/03/21 03:01:28  sparker
-# Partially fixed special_get method in SimplePort
-# Pre-instantiated a few key template types, in an attempt to reduce
-#   initial compile time and reduce code bloat.
-# Manually instantiated templates are in */*/templates.cc
-#
-# Revision 1.2  2000/03/20 19:37:35  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:28:19  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

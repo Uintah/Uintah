@@ -1,7 +1,6 @@
 
 /*
  *  ArrayIndexOutOfBounds.h: Exception to indicate a failed bounds check
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -49,16 +48,3 @@ const char* ArrayIndexOutOfBounds::type() const
     return "SCICore::Exceptions::ArrayIndexOutOfBounds";
 }
 
-//
-// $Log$
-// Revision 1.3  2000/09/25 17:58:57  sparker
-// Do not call variables errno due to #defines on some systems (linux)
-// Correctly implemented copy CTORs
-//
-// Revision 1.2  2000/03/23 20:43:09  sparker
-// Added copy ctor to all exception classes (for Linux/g++)
-//
-// Revision 1.1  2000/03/23 10:25:40  sparker
-// New exception facility - retired old "Exception.h" classes
-//
-//

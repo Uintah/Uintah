@@ -129,30 +129,4 @@ namespace PSECore {
    } // end namespace XMLUtil
 } // end namespace PSECore
 
-//
-// $Log$
-// Revision 1.6  2000/11/13 19:45:19  moulding
-// - improve error reporting for XML stuff in module maker
-// - edit module maker dialog:
-//   remove browse button
-//   clarify PSE path label
-// - add support for newer versions of xerces
-//
-// Revision 1.5  2000/10/21 18:36:52  moulding
-// removed some utility functions from PackageDB.cc and put them into XMLUtil.
-//
-// Revision 1.4  2000/10/15 04:34:32  moulding
-// more of Phase 1 for new module maker
-//
-// Revision 1.3  2000/06/27 17:08:24  bigler
-// Steve moved some functions around for me.
-//
-// Revision 1.2  2000/06/15 19:51:58  sparker
-// Added appendElement for Vector
-//
-// Revision 1.1  2000/05/20 08:04:28  sparker
-// Added XML helper library
-//
-//
-
 #endif

@@ -1741,10 +1741,15 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 0)) return;
     di->polycount++;
+    // Set line width. Set it 
+    glLineWidth(d_lineWidth);
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glEnd();
+    // HACK set line width back to default
+    // our scenegraph needs more graceful control of such state.
+    glLineWidth(1.0);
     post_draw(di);
 }
 
@@ -4277,102 +4282,3 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 } // End namespace GeomSpace
 } // End namespace SCICore
-
-//
-// $Log$
-// Revision 1.25  2000/10/29 04:47:55  dmw
-// trying to get linewidth to always work
-//
-// Revision 1.24  2000/09/25 17:59:54  sparker
-// Changed ifdef _USING_GPP to __GNUG__
-//
-// Revision 1.23  2000/09/15 20:57:53  kuzimmer
-//  resurrected GeomEllipse from old code
-//
-// Revision 1.22  2000/08/01 01:30:46  yarden
-// replace call to glNewList(dl, GL_COMPILE_AND_EXECUTE)
-// with a call using GL_COMPILE
-// it seems that the first call cause the display list to slower than
-// not using the display list at all !? using compile does improve performance
-// (at least on the linux side)
-//
-// Revision 1.21  2000/07/28 21:13:17  yarden
-// GeomDL: Create and manage a display list for its child.
-// the user can select to ignore it via check buttons in Salmon
-//
-// Revision 1.20  2000/07/06 19:34:07  yarden
-// fix GeomBox drawing.
-//
-// Revision 1.19  2000/05/31 21:54:00  kuzimmer
-// Changes to make the ColorMapKey Module work properly
-//
-// Revision 1.18  2000/03/11 00:41:31  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.17  2000/02/04 00:40:26  dmw
-// cleaning up leftover pushes on the name stack
-//
-// Revision 1.16  2000/02/01 05:02:39  sparker
-// Fixed 64 bit compile - untested
-//
-// Revision 1.15  1999/11/12 21:05:23  dav
-// type casted GLenums to be GLenums so that linux compiler would not complain
-//
-// Revision 1.14  1999/10/26 21:48:11  moulding
-// added "return 1;" to the end of GeomObj::post_draw to quiet the visual C++ compiler
-//
-// Revision 1.13  1999/10/21 22:39:07  ikits
-// Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
-//
-// Revision 1.12  1999/10/16 20:51:00  jmk
-// forgive me if I break something -- this fixes picking and sets up sci
-// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
-// gota getup to get down.
-//
-// Revision 1.11  1999/10/07 02:07:43  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.10  1999/10/06 23:22:58  yarden
-// GeomPts: add support for normals
-//
-// Revision 1.9  1999/09/23 01:09:41  moulding
-// removed the Cheesy hacks (VC++ doesn't need them anymore - I think)
-// and added a #ifdef for win32 for the call to gluQuadricCallback()
-//
-// Revision 1.8  1999/09/08 02:26:50  sparker
-// Various #include cleanups
-//
-// Revision 1.7  1999/09/05 05:32:28  dmw
-// updated and added Modules from old tree to new
-//
-// Revision 1.6  1999/09/04 06:01:49  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.5  1999/08/28 17:54:41  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/23 06:30:36  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.3  1999/08/17 23:50:22  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:09  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:41  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:51  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:21  dav
-// Import sources
-//
-//

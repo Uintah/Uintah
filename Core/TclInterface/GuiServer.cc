@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  GuiServer.cc: Server running on Master SCIRun to service remote GUI
  *   requests
@@ -199,41 +197,3 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
 } // End namespace TclInterface
 } // End namespace SCICore
 #endif // win32
-
-//
-// $Log$
-// Revision 1.7  2000/08/02 21:56:02  jas
-// Added missing iostream and changed some debugging so that fd_set would
-// not be printed out.
-//
-// Revision 1.6  1999/09/08 02:26:55  sparker
-// Various #include cleanups
-//
-// Revision 1.5  1999/08/28 17:54:51  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/23 06:30:39  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.3  1999/08/18 20:20:21  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:39:42  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:14  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

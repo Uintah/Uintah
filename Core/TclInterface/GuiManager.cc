@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  GuiManager.cc: Client side (slave) manager of a pool of remote GUI
  *   connections.
@@ -105,25 +103,3 @@ GuiManager::putConnection (int sock)
 } // End namespace SCICore
 
 #endif
-
-
-//
-// $Log$
-// Revision 1.4  2000/08/02 21:56:02  jas
-// Added missing iostream and changed some debugging so that fd_set would
-// not be printed out.
-//
-// Revision 1.3  1999/08/28 17:54:51  sparker
-// Integrated new Thread library
-//
-// Revision 1.2  1999/08/17 06:39:42  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:13  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

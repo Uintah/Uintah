@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
- 
 /*
  *  TCLvar.cc: Interface to TCL variables
  *
@@ -522,32 +520,3 @@ void TCLVector::emit(ostream& out)
 
 } // End namespace TclInterface
 } // End namespace SCICore
-
-//
-// $Log$
-// Revision 1.4  2000/07/07 03:15:50  samsonov
-// Added TCLvardouble::set(double) implementation
-//
-// Revision 1.3  1999/10/07 02:08:03  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:45  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:16  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:11:04  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/05/26 19:21:41  kuzimmer
-// Added global namespace ids (::) to the format_varname routine -Kurt
-//
-// Revision 1.2  1999/05/17 17:14:47  kuzimmer
-// Added the format_variable function from SCIRun
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  BaseWidget.cc : ?
  *
@@ -727,50 +725,3 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 } // End namespace Widgets
 } // End namespace PSECore
-
-//
-// $Log$
-// Revision 1.10  2000/08/11 15:44:44  bigler
-// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
-//
-// Revision 1.9  1999/11/12 01:38:32  ikits
-// Added ANL AVTC site visit modifications to make the demos work.
-// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
-// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
-//
-// Revision 1.8  1999/10/07 02:07:24  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.7  1999/09/08 02:26:43  sparker
-// Various #include cleanups
-//
-// Revision 1.6  1999/08/28 17:54:33  sparker
-// Integrated new Thread library
-//
-// Revision 1.5  1999/08/27 00:05:06  moulding
-// disabled a 'this' warning on win32
-//
-// Revision 1.4  1999/08/25 03:48:28  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/19 23:52:58  sparker
-// Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
-// problems.  May have broken KCC support.
-//
-// Revision 1.2  1999/08/17 06:38:27  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:05  mcq
-// Initial commit
-//
-// Revision 1.2  1999/05/13 18:27:45  dav
-// Added geom_moved methods to BaseWidget
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
-

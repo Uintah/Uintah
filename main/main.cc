@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  uintah.cc: 
  *
@@ -170,58 +168,3 @@ int main(int argc, char** argv)
     return 0;
 }
 
-//
-// $Log$
-// Revision 1.14  2000/11/28 22:39:41  moulding
-// force a wait for main window to display before system startup continues.
-// This mitigates the lengthy wait between typing "pse" and the window actually
-// appearing.
-//
-// Revision 1.13  2000/06/09 20:37:38  yarden
-// add a wait on a semaphore to prevent the system to start
-// deleting objects too soon.
-//
-// Revision 1.12  2000/03/17 09:30:48  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.11  1999/11/10 19:48:59  moulding
-// added some #ifdef's for win32
-//
-// Revision 1.10  1999/10/07 02:08:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.9  1999/09/08 02:27:09  sparker
-// Various #include cleanups
-//
-// Revision 1.8  1999/09/01 21:58:02  sparker
-// Restored the ITCL_WIDGETS configuration that somewhow got lost
-// Now the itk widgets should work
-//
-// Revision 1.7  1999/08/31 23:37:58  sparker
-// Put order of Package loading back to the way it was
-//
-// Revision 1.6  1999/08/31 23:26:51  sparker
-// Removed extraneous character in Makefile.in
-// Loaded packages before instantiating NetworkEditor
-//
-// Revision 1.5  1999/08/29 00:47:03  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:54  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 06:40:15  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:37  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:27  dav
-// Import sources
-//
-//

@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  String.cc: implementation of String utility class
  *
@@ -501,44 +499,3 @@ void clString::test_performance(PerfTest* __pt) {
 
 } // End namespace Containers
 } // End namespace SCICore
-
-//
-// $Log$
-// Revision 1.10  2000/09/25 19:45:53  sparker
-// Quiet warnings under g++
-//
-// Revision 1.9  2000/03/23 10:29:18  sparker
-// Use new exceptions/ASSERT macros
-// Fixed compiler warnings
-//
-// Revision 1.8  2000/03/17 08:27:51  sparker
-// Added const to substr
-//
-// Revision 1.7  1999/11/17 22:27:07  moulding
-// changed #include<iostream.h> to #include<iostream>
-//
-// Revision 1.6  1999/10/13 15:30:04  sparker
-// Fixed ifdef for redefining operator<<
-//
-// Revision 1.5  1999/10/07 02:07:28  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:46  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/09/04 06:01:42  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.2  1999/08/17 06:38:38  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:14  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
-

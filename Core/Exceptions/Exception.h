@@ -1,6 +1,3 @@
-
-// $Id$
-
 /*
  *  Exception.h: Base class for all SCI Exceptions
  *

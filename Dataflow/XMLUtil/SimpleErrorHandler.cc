@@ -58,13 +58,3 @@ void SimpleErrorHandler::warning(const SAXParseException& e)
 void SimpleErrorHandler::resetErrors()
 {
 }
-
-//
-// $Log$
-// Revision 1.2  2000/06/11 19:09:18  moulding
-// added #include <stdio.h> for sprintf()
-//
-// Revision 1.1  2000/05/20 08:04:28  sparker
-// Added XML helper library
-//
-//

@@ -92,6 +92,7 @@ void DebugStream::checkenv(string iname)
   // values in onstreams and offstreams
   if(!var.empty()){
     string name, file;
+    
     int commapos, colonpos, oldcomma;
     commapos = colonpos = oldcomma = 0;
     commapos = var.find(',', 0);

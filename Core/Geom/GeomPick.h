@@ -93,34 +93,5 @@ public:
 } // End namespace GeomSpace
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.5  2000/08/11 15:49:06  bigler
-// Removed the int index and replaced it with a GeomObj* picked_obj.
-// The index can be accessed though picked_obj->getID(int or IntVector).
-//
-// Revision 1.4  1999/10/07 02:07:43  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/28 17:54:41  sparker
-// Integrated new Thread library
-//
-// Revision 1.2  1999/08/17 06:39:10  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:42  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:06  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:59  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:20  dav
-// Import sources
-//
-//
 
 #endif /* SCI_Geom_Pick_h */

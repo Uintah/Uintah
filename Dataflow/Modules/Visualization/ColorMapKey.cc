@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  ColorMapKey.cc: create a key for colormap
  *
@@ -150,57 +148,3 @@ void ColorMapKey::execute() {
 
 } // End namespace Modules
 } // End namespace PSECommon
-
-//
-// $Log$
-// Revision 1.10  2000/06/13 20:31:19  kuzimmer
-// Modified RescaleColorMap to set the scaled flag in the color map.
-// Modified ColorMapKey so that it scales the colormap to the data if it
-// wasn't previously scaled.
-//
-// Revision 1.9  2000/06/01 16:40:25  kuzimmer
-// numbers were backwards on ColorMapKey
-//
-// Revision 1.8  2000/05/31 21:55:08  kuzimmer
-// Modified ColorMapKey, it works!
-//
-// Revision 1.7  2000/03/17 09:27:30  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  1999/10/07 02:07:05  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/25 03:48:05  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:55  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:20:03  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:47  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:11  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/27 22:57:56  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:33  dav
-// Import sources
-//
-//

@@ -207,28 +207,6 @@ inline void Path::set_arc_param(){
 } // End namespace Datatypes
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.4  2000/09/29 08:42:34  samsonov
-// Added camera speed support
-//
-// Revision 1.3  2000/09/28 05:57:56  samsonov
-// minor fix
-//
-// Revision 1.2  2000/08/09 07:15:55  samsonov
-// final version and Cocoon comments
-//
-// Revision 1.1  2000/07/19 06:40:05  samsonov
-// Path datatype moved form DaveW
-//
-// Revision 1.2  2000/07/14 23:36:32  samsonov
-// Rewriting to be used as Camera Path datatype in EditPath module
-//
-// Revision 1.1  1999/12/02 21:57:29  dmw
-// new camera path datatypes and modules
-//
-//
-
 #endif
 
 

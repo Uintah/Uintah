@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  Module.cc: Basic implementation of modules
  *
@@ -657,69 +655,3 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 } // End namespace Dataflow
 } // End namespace PSECore
-
-//
-// $Log$
-// Revision 1.17  2000/12/05 19:08:29  moulding
-// added support for dynamic ports to the auto port facility, although it is not
-// yet fully operational.
-//
-// Revision 1.16  2000/11/29 09:46:49  moulding
-// removed a debug print statement
-//
-// Revision 1.15  2000/11/29 09:37:08  moulding
-// fixed a nasty bug that caused certain machine types to catch fire when
-// using auto ports (nah - it just caused crashes :)
-//
-// Revision 1.14  2000/11/22 19:10:38  moulding
-// auto-port facility is now operational.
-//
-// Revision 1.13  2000/11/21 22:44:30  moulding
-// initial commit of auto-port facility (not yet operational).
-//
-// Revision 1.12  2000/08/11 15:44:43  bigler
-// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
-//
-// Revision 1.11  2000/07/27 05:22:34  sparker
-// Added a setStackSize method to the module
-//
-// Revision 1.10  1999/12/07 02:53:33  dmw
-// made show_status variable persistent with network maps
-//
-// Revision 1.9  1999/11/12 01:38:30  ikits
-// Added ANL AVTC site visit modifications to make the demos work.
-// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
-// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
-//
-// Revision 1.8  1999/11/10 23:24:30  dmw
-// added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
-//
-// Revision 1.7  1999/10/07 02:07:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/08/30 18:47:52  kuzimmer
-// Modified so that dataflow scripts can be read and written properly
-//
-// Revision 1.5  1999/08/28 17:54:28  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/18 20:20:18  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.3  1999/08/17 06:38:22  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:57  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

@@ -30,6 +30,7 @@ itcl_class PSECommon_Fields_ClipField {
 	global $this-y_max
 	global $this-z_min
 	global $this-z_max
+
 	toplevel $w
 	wm minsize $w 300 100
 	frame $w.f -width 400 -height 500

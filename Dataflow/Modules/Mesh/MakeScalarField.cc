@@ -95,21 +95,3 @@ void MakeScalarField::execute()
 } // End namespace Modules
 } // End namespace SCIRun
 
-
-//
-// $Log$
-// Revision 1.4  2000/09/07 00:12:19  zyp
-// MakeScalarField.cc
-//
-// Revision 1.3  2000/03/17 09:29:12  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  2000/03/11 00:41:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.1  1999/09/05 01:15:27  dmw
-// added all of the old SCIRun mesh modules
-//

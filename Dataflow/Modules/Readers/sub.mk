@@ -1,6 +1,5 @@
 #
 # Makefile fragment for this subdirectory
-# $Id$
 #
 
 # *** NOTE ***
@@ -41,32 +40,3 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Datatypes \
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
-
-#
-# $Log$
-# Revision 1.6  2000/10/24 05:57:36  moulding
-# new module maker Phase 2: new module maker goes online
-#
-# These changes clean out the last remnants of the old module maker and
-# bring the new module maker online.
-#
-# Revision 1.5  2000/07/18 23:12:57  samsonov
-# Added PathReader module
-#
-# Revision 1.4  2000/06/08 22:46:28  moulding
-# Added a comment note about not messing with the module maker comment lines,
-# and how to edit this file by hand.
-#
-# Revision 1.3  2000/06/07 00:11:39  moulding
-# made some modifications that will allow the module make to edit and add
-# to this file
-#
-# Revision 1.2  2000/03/20 19:37:02  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:27:14  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

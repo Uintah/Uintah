@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /************************************** 
 CLASS 
    GenStandardColorMaps

@@ -84,6 +84,7 @@ void TransformField::MatToTransform(MatrixHandle mH, Transform& t) {
 
 void TransformField::execute()
 {
+
     ScalarFieldHandle sfIH;
     iport->get(sfIH);
     if (!sfIH.get_rep()) return;
@@ -187,6 +188,15 @@ void TransformField::execute()
 
 //
 // $Log$
+// Revision 1.10  2000/12/15 06:24:20  mcole
+// merge branch back into trunk
+//
+// Revision 1.9.2.3  2000/11/01 23:02:55  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.9.2.1  2000/09/11 16:17:49  kuehne
+// updates to field redesign
+//
 // Revision 1.9  2000/03/17 09:27:01  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

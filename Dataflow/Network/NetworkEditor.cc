@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  NetworkEditor.cc: The network editor...
  *
@@ -381,7 +379,6 @@ void NetworkEditor::save_network(const clString& filename)
     out << "return\n";
     out << "######################\n";
     out << "::netedit dontschedule\n";
-    out << "\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
@@ -777,97 +774,3 @@ void postMessageNoCRLF(const clString& errmsg, bool err)
 
 } // End namespace Dataflow
 } // End namespace PSECore
-
-//
-// $Log$
-// Revision 1.22  2000/11/30 18:52:37  moulding
-// added cute little package load progress indicator to message window.
-//
-// Revision 1.21  2000/11/13 19:45:17  moulding
-// - improve error reporting for XML stuff in module maker
-// - edit module maker dialog:
-//   remove browse button
-//   clarify PSE path label
-// - add support for newer versions of xerces
-//
-// Revision 1.20  2000/11/11 04:20:35  moulding
-// try to handle failure of XML validation more gracefully.
-//
-// Revision 1.19  2000/11/02 21:47:20  dmw
-// fixed formatting
-//
-// Revision 1.18  2000/10/24 05:57:41  moulding
-// new module maker Phase 2: new module maker goes online
-//
-// These changes clean out the last remnants of the old module maker and
-// bring the new module maker online.
-//
-// Revision 1.17  2000/10/23 09:19:47  moulding
-// some changes to the new module maker.
-//
-// Revision 1.16  2000/10/21 18:35:10  moulding
-// more work for new module maker.
-//
-// Revision 1.15  2000/08/31 15:25:47  nbenson
-// modified save_network()
-//
-// Revision 1.14  2000/08/25 17:40:51  nbenson
-// Modified save_network() member function as part of module-loading bug
-// fix.  See /PSECore/GUI/NetworkEditor.tcl for more info.
-//
-// Revision 1.13  2000/06/07 00:02:32  moulding
-// removed the package maker, ane added the module maker
-//
-// Revision 1.12  2000/03/20 21:50:13  yarden
-// Linux port: replace the now defunct cuserid with getenv(LOGNAME)
-//
-// Revision 1.11  2000/03/18 00:17:38  moulding
-// Experimental automatic package maker added
-//
-// Revision 1.10  1999/11/12 01:38:30  ikits
-// Added ANL AVTC site visit modifications to make the demos work.
-// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
-// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
-//
-// Revision 1.9  1999/10/07 02:07:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.8  1999/09/08 02:26:41  sparker
-// Various #include cleanups
-//
-// Revision 1.7  1999/08/30 18:47:52  kuzimmer
-// Modified so that dataflow scripts can be read and written properly
-//
-// Revision 1.6  1999/08/29 00:46:50  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/28 17:54:30  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/23 06:30:33  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.3  1999/08/17 06:38:24  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:59  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:20  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/06/21 23:52:49  dav
-// updated makefiles.main
-//
-// Revision 1.2  1999/06/10 17:19:01  kuzimmer
-// modified the savefile function to insert ::netedit dontschedule at the beginning of the saved script and ::netedit scheduleok at the end.
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 /*----------------------------------------------------------------------
 CLASS
     Implementation of class Path
@@ -609,40 +608,3 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 } // End namespace Datatypes
 } // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.8  2000/10/11 00:39:28  dmw
-// Alexei's changes
-//
-// Revision 1.7  2000/10/08 00:42:24  samsonov
-// spline interpolation of fov and speed
-//
-// Revision 1.6  2000/10/07 23:46:02  samsonov
-// spline interpolation of lookat point and upvector
-//
-// Revision 1.5  2000/09/29 08:42:34  samsonov
-// Added camera speed support
-//
-// Revision 1.4  2000/09/28 05:57:56  samsonov
-// minor fix
-//
-// Revision 1.3  2000/08/22 07:18:33  moulding
-//
-//
-// changed   default:   to  default:   to appease the GCC on linux
-//           }                break;
-//                          }
-//
-// Revision 1.2  2000/08/09 07:15:55  samsonov
-// final version and Cocoon comments
-//
-// Revision 1.1  2000/07/19 06:40:05  samsonov
-// Path datatype moved form DaveW
-//
-// Revision 1.2  2000/07/14 23:36:32  samsonov
-// Rewriting to be used as Camera Path datatype in EditPath module
-//
-// Revision 1.1  1999/12/02 21:57:29  dmw
-// new camera path datatypes and modules
-//
-//
