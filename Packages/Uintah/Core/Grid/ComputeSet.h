@@ -252,6 +252,9 @@ namespace Uintah {
 
   // Note: sort is specialized in ComputeSet_special for const Patch*'s
   // to use Patch::Compare.
+  template<>
+  void ComputeSubset<const Patch*>::sort();
+
   template<class T>
   void ComputeSubset<T>::sort() {
     std::sort(items.begin(), items.end());
