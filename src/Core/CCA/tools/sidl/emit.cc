@@ -1176,7 +1176,7 @@ void CI::emit_interface(EmitState& e)
   e.out << "// subsetting method\n";
   e.out << "void " << fn << "::createSubset(int ssize)\n"; 
   e.out << "{\n";
-  e.out << "  Object::createSubset(ssize);\n";
+  e.out << "  ::SCIRun::Object::createSubset(ssize);\n";
   e.out << "}\n\n";
 
   e.out << fn << "::" << cn << "(bool initServer)\n";
