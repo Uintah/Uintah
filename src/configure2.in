@@ -608,7 +608,7 @@ SCI_ARG_ENABLE(largesos,
   [  --enable-largesos                 Build one .so per directory],
   [largesos="$enableval"],
   [largesos=${largesos='no'}])
-SCI_ARG_ENABLE(sci_malloc,
+SCI_ARG_ENABLE(sci-malloc,
   [  --enable-sci-malloc               Use SCI malloc checker],
   [enable_sci_malloc="$enableval"],
   [enable_sci_malloc=${enable_sci_malloc='yes'}])
