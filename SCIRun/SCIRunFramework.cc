@@ -151,12 +151,12 @@ SCIRunFramework::createComponentInstance(const std::string& name,
         std::cerr << "Error: failed to create ComponentInstance" << std::endl;
         return ComponentID::pointer(0);
     }
+    registerComponent(ci, name);
     sci::cca::ComponentID::pointer cid =
              ComponentID::pointer(new ComponentID(this, ci->instanceName));
-    emitComponentEvent(
-        new ComponentEvent(sci::cca::ports::InstantiatePending, cid, properties)
-    ); 
-    registerComponent(ci, name);
+    //emitComponentEvent(
+    //    new ComponentEvent(sci::cca::ports::InstantiatePending, cid, properties)
+    //); 
 
     //ComponentID::pointer()
     compIDs.push_back(cid);
