@@ -368,7 +368,7 @@ void Module::remove_iport(int which)
       TCL::execute(command);
     }
   }
-  TCL::execute(id+" module_shrink " +to_string(iports.size())); 
+  TCL::execute(id+" module_shrink"); 
   reconfigure_iports();
 }
 
