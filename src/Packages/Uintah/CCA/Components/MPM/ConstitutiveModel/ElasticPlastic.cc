@@ -35,8 +35,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-static DebugStream cout_CST("EP",false);
-static DebugStream cout_CST1("EP1",false);
+static DebugStream cout_EP("EP",false);
+static DebugStream cout_EP1("EP1",false);
 
 ElasticPlastic::ElasticPlastic(ProblemSpecP& ps, 
                                MPMLabel* Mlb, 
@@ -382,7 +382,7 @@ void ElasticPlastic::initializeCMData(const Patch* patch,
     pDamage[*iter] = d_damage->initialize();
     pPorosity[*iter] = d_porosity.f0;
     pLocalized[*iter] = 0;
-    if (flag->d_adiabaticHeating)
+    if (flag->d_adiabaticHeating == 0)
       pPlasticTemperature[*iter] = d_initialMaterialTemperature;
     else
       pPlasticTemperature[*iter] = 0.0;
@@ -588,7 +588,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
-  cout_CST << getpid() << "ComputeStressTensor: In : Matl = " << matl 
+  cout_EP << getpid() << "ComputeStressTensor: In : Matl = " << matl 
            << " id = " << matl->getDWIndex() <<  " patch = " 
            << (patches->get(0))->getID();
 
@@ -738,7 +738,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      //cerr << getpid() << " idx = " << idx << endl;
+      cout_EP << getpid() << " idx = " << idx 
+	      << " vel = " << pVelocity[idx] << endl;
       //-----------------------------------------------------------------------
       // Stage 1:
       //-----------------------------------------------------------------------
@@ -1054,6 +1055,14 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the total stress
       tensorSig = tensorS + tensorHy;
 
+      // If the particle has already failed, apply various erosion algorithms
+      if (flag->d_doErosion) {
+        if (pLocalized[idx]) {
+          if (d_allowNoTension && p > 0.0) tensorSig = tensorS;
+          else if (d_setStressToZero) tensorSig = zero;
+        }
+      }
+
       //-----------------------------------------------------------------------
       // Stage 3:
       //-----------------------------------------------------------------------
@@ -1113,22 +1122,20 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Find if the particle has failed/localized
       pLocalized_new[idx] = pLocalized[idx];
       bool isLocalized = false;
+      double tepla = 0.0;
 
       if (flag->d_doErosion) {
 
-        // Check 0: If the particle is already failed flag it
-        if (pLocalized[idx]) isLocalized = true;
-
         // Check 1: Look at the temperature
-        else if (melted) isLocalized = true;
+        if (melted) isLocalized = true;
 
         // Check 2 and 3: Look at TEPLA and stability
         else if (plastic) {
 
           // Check 2: Modified Tepla rule
           if (d_checkTeplaFailureCriterion) {
-            double tepla = pow(pPorosity_new[idx]/d_porosity.fc,2.0) + 
-              pow(pDamage_new[idx],2.0);
+            tepla = pow(pPorosity_new[idx]/d_porosity.fc,2.0) + 
+                    pow(pDamage_new[idx],2.0);
             if (tepla > 1.0) isLocalized = true;
           } 
 
@@ -1169,15 +1176,24 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Use erosion algorithms to treat localized particles
         if (isLocalized) {
 
-          // set the particle localization flag to true  
-          pLocalized_new[idx] = 1;
-          pDamage_new[idx] = 0.0;
-          pPorosity_new[idx] = 0.0;
+	  // If the localized particles fail again then set their stress to zero
+          if (pLocalized[idx]) {
+            pDamage_new[idx] = 0.0;
+            pPorosity_new[idx] = 0.0;
+	    tensorSig = zero;
+	  } else {
 
-          // Apply various erosion algorithms
-          if (d_allowNoTension && p > 0.0) tensorSig = tensorS;
-          else if (d_setStressToZero) tensorSig = zero;
-        } 
+            // set the particle localization flag to true  
+            pLocalized_new[idx] = 1;
+            pDamage_new[idx] = 0.0;
+            pPorosity_new[idx] = 0.0;
+
+            // Apply various erosion algorithms
+            if (d_allowNoTension && p > 0.0) tensorSig = tensorS;
+            else if (d_setStressToZero) tensorSig = zero;
+	  }
+
+        }
       }
 
       //-----------------------------------------------------------------------
@@ -1216,7 +1232,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
   }
-  cout_CST << getpid() << "... End." << endl;
+  cout_EP << getpid() << "... End." << endl;
 }
 
 void 
