@@ -57,15 +57,29 @@ public:
   // Destructor
   virtual ~FlatAttrib();
   
+
+  virtual void get1(T &result, int x);
+  virtual void get2(T &result, int x, int y);
+  virtual void get3(T &result, int x, int y, int z);
+
+  virtual T &get1(int x);
+  virtual T &get2(int x, int y);
+  virtual T &get3(int x, int y, int z);
+
+
   //////////
   // return the value at the given position
-  const T &get1(int) const;
-  const T &get2(int, int) const;
-  const T &get3(int, int, int) const;
+  T &fget1(int);
+  T &fget2(int, int);
+  T &fget3(int, int, int);
 
-  T &set1(int x, T &val);
-  T &set2(int x, int y, T &val);
-  T &set3(int x, int y, int z, T &val);
+  virtual void set1(int x, const T &val);
+  virtual void set2(int x, int y, const T &val);
+  virtual void set3(int x, int y, int z, const T &val);
+
+  void fset1(int x, const T &val);
+  void fset2(int x, int y, const T &val);
+  void fset3(int x, int y, int z, const T &val);
 
   // TODO: begin, end 
 
@@ -140,9 +154,8 @@ FlatAttrib<T>::~FlatAttrib()
 }
 
 
-
-template <class T> const T &
-FlatAttrib<T>::get1(int ix) const
+template <class T> T &
+FlatAttrib<T>::fget1(int ix)
 {
 #ifdef MIKE_DEBUG
   if (dim != 1) {
@@ -155,8 +168,8 @@ FlatAttrib<T>::get1(int ix) const
   return data[ix];  
 }
 
-template <class T> const T &
-FlatAttrib<T>::get2(int ix, int iy) const
+template <class T> T &
+FlatAttrib<T>::fget2(int ix, int iy)
 {
 #ifdef MIKE_DEBUG
   if (dim != 2) {
@@ -172,8 +185,8 @@ FlatAttrib<T>::get2(int ix, int iy) const
   return data[iy*(nx)+ix];  
 }
 
-template <class T> const T &
-FlatAttrib<T>::get3(int ix, int iy, int iz) const
+template <class T> T &
+FlatAttrib<T>::fget3(int ix, int iy, int iz)
 {
 #ifdef MIKE_DEBUG
   if (dim != 3) {
@@ -193,9 +206,49 @@ FlatAttrib<T>::get3(int ix, int iy, int iz) const
 }
 
 
+// Copy wrappers, no allocation of result.
+template <class T> void
+FlatAttrib<T>::get1(T &result, int ix)
+{
+  result = fget1(ix);
+}
 
-template <class T> T&
-FlatAttrib<T>::set1(int ix, T& val)
+template <class T> void
+FlatAttrib<T>::get2(T &result, int ix, int iy)
+{
+  result = fget2(ix, iy);
+}
+
+template <class T> void
+FlatAttrib<T>::get3(T &result, int ix, int iy, int iz)
+{
+  result = fget3(ix, iy, iz);
+}
+
+
+// Virtual wrappers for inline functions.
+template <class T> T &
+FlatAttrib<T>::get1(int ix)
+{
+  return fget1(ix);
+}
+
+template <class T> T &
+FlatAttrib<T>::get2(int ix, int iy)
+{
+  return fget2(ix, iy);
+}
+
+template <class T> T &
+FlatAttrib<T>::get3(int ix, int iy, int iz)
+{
+  return fget3(ix, iy, iz);
+}
+
+
+
+template <class T> void
+FlatAttrib<T>::fset1(int ix, const T& val)
 {
 #ifdef MIKE_DEBUG
   if (dim != 1) {
@@ -205,12 +258,12 @@ FlatAttrib<T>::set1(int ix, T& val)
     throw ArrayIndexOutOfBounds(ix, 0, nx);
   }
 #endif
-  return data[ix] = val;
+  data[ix] = val;
 }
 
 
-template <class T> T&
-FlatAttrib<T>::set2(int ix, int iy, T& val)
+template <class T> void
+FlatAttrib<T>::fset2(int ix, int iy, const T& val)
 {
 #ifdef MIKE_DEBUG
   if (dim != 2) {
@@ -223,12 +276,12 @@ FlatAttrib<T>::set2(int ix, int iy, T& val)
     throw ArrayIndexOutOfBounds(iy, 0, ny);
   }
 #endif
-  return data[iy*(nx)+ix] = val;
+  data[iy*(nx)+ix] = val;
 }
 
 
-template <class T> T&
-FlatAttrib<T>::set3(int ix, int iy, int iz, T& val)
+template <class T> void
+FlatAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 {
 #ifdef MIKE_DEBUG
   if (dim != 3) {
@@ -244,9 +297,28 @@ FlatAttrib<T>::set3(int ix, int iy, int iz, T& val)
     throw ArrayIndexOutOfBounds(iz, 0, nz);
   }
 #endif
-  return data[iz*(nx*ny)+iy*(nx)+ix] = val;
+  data[iz*(nx*ny)+iy*(nx)+ix] = val;
 }
 
+
+// Generic setters for Discrete type
+template <class T> void
+FlatAttrib<T>::set1(int x, const T &val)
+{
+  fset1(x, val);
+}
+
+template <class T> void
+FlatAttrib<T>::set2(int x, int y, const T &val)
+{
+  fset2(x, y, val);
+}
+
+template <class T> void
+FlatAttrib<T>::set3(int x, int y, int z, const T &val)
+{
+  fset3(x, y, z, val);
+}
 
 // template <class T> bool FlatAttrib<T>::compute_minmax(){
 //   has_minmax = 1;

@@ -43,11 +43,18 @@ public:
   // Destructor
   virtual ~Accel2Attrib();
   
+  virtual void get2(T &result, int x, int y);
+
+  virtual T &get2(int x, int y);
+
   //////////
   // return the value at the given position
-  const T& get2(int, int) const;
+  T& fget2(int, int);
 
-  T& set2(int, int, T& val);
+
+  virtual void set2(int, int, const T &val);
+
+  void fset2(int, int, const T &val);
 
   //////////
   // Resize the attribute to the specified dimensions
@@ -108,18 +115,40 @@ Accel2Attrib<T>::Accel2Attrib(const Accel2Attrib<T>& copy)
 
 
 template <class T>
-const T &
-Accel2Attrib<T>::get2(int ix, int iy) const
+T &
+Accel2Attrib<T>::fget2(int ix, int iy)
 {
   return accel[iy][ix];
 }
 
 
-template <class T>
-T&
-Accel2Attrib<T>::set2(int ix, int iy, T& val)
+template <class T> void
+Accel2Attrib<T>::fset2(int x, int y, const T& val)
 {
-  return accel[iy][ix] = val;
+  accel[y][x] = val;
+}
+
+
+template <class T> void
+Accel2Attrib<T>::set2(int x, int y, const T &val)
+{
+  fset2(x, y, val);
+}
+
+
+// Copy wrappers, no allocation of result.
+template <class T> void
+Accel2Attrib<T>::get2(T &result, int ix, int iy)
+{
+  result = fget2(ix, iy);
+}
+
+
+// Virtual wrappers for inline functions.
+template <class T> T &
+Accel2Attrib<T>::get2(int ix, int iy)
+{
+  return fget2(ix, iy);
 }
 
 

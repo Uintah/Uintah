@@ -48,9 +48,15 @@ public:
 
   virtual ~Attrib() { };
   
+
+  //virtual void get1(T &result, int x) = 0;
+  //virtual void get2(T &result, int x, int y) = 0;
+  //virtual void get3(T &result, int x, int y, int z) = 0;
+
+
   /////////
   // Cast down to specific type.
-  template <class A> A *downcast(A *);
+  template <class A> A *downcast(A *) { return dynamic_cast<A *>(this); }
   
   /////////
   // set (and get) the name of the attribute
@@ -64,13 +70,6 @@ public:
 protected:
   std::string name;
 };
-
-template <class A> A *
-Attrib::downcast(A *)
-{
-  return dynamic_cast<A *>(this);
-}
-
 
 }  // end Datatypes
 }  // end SCICore
