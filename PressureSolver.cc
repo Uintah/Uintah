@@ -1142,6 +1142,9 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   // differencing
   // computes all the components of velocity
 
+  // compute drhodt that goes in the rhs of the pressure equation
+  tsk->computes(d_lab->d_filterdrhodtLabel);
+
   tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
 
@@ -1211,6 +1214,10 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     int nofStencils = 7;
     // Get the reference density
     // Get the required data
+    new_dw->allocateAndPut(pressureVars.filterdrhodt, d_lab->d_filterdrhodtLabel,
+			   matlIndex, patch);
+    pressureVars.filterdrhodt.initialize(0.0);
+
 #ifdef correctorstep
     new_dw->getCopy(pressureVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1291,7 +1298,7 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     new_dw->allocateAndPut(pressureVars.pressNonlinearSrc, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
-    					  cellinfo, &pressureVars);
+    					  cellinfo, d_turbModel->getFilter(), &pressureVars);
 
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM
@@ -1619,7 +1626,7 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 #endif
-  
+  tsk->modifies(d_lab->d_filterdrhodtLabel);
   tsk->computes(d_lab->d_presCoefCorrLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
   tsk->computes(d_lab->d_presNonLinSrcCorrLabel);
@@ -1670,6 +1677,10 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     // Get the required data
     new_dw->getCopy(pressureVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->getModifiable(pressureVars.filterdrhodt, d_lab->d_filterdrhodtLabel,
+		          matlIndex, patch);
+    pressureVars.filterdrhodt.initialize(0.0);
+
   #ifdef Runge_Kutta_3d
     new_dw->getCopy(pressureVars.pressure, d_lab->d_pressureIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1759,7 +1770,7 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     pressureVars.pressLinearSrc.initialize(0.0);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
-				      cellinfo, &pressureVars);
+				      cellinfo, d_turbModel->getFilter(),&pressureVars);
 
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM
@@ -2932,7 +2943,7 @@ PressureSolver::buildLinearMatrixPressInterm(const ProcessorGroup* pc,
     pressureVars.pressLinearSrc.initialize(0.0);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
-				      cellinfo, &pressureVars);
+				      cellinfo, d_turbModel->getFilter(),&pressureVars);
 
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM

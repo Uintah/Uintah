@@ -82,6 +82,8 @@ namespace Uintah {
       StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
       CCVariable<double> pressLinearSrc;
       CCVariable<double> pressNonlinearSrc;
+      CCVariable<double> drhodt; //add to the RHS of the pressure eqn
+      CCVariable<double> filterdrhodt; //add to the RHS of the pressure eqn
       StencilMatrix<CCVariable<double> > scalarCoeff; //7 point stencil
       StencilMatrix<CCVariable<double> > scalarDiffusionCoeff; //7 point stencil
       StencilMatrix<CCVariable<double> > scalarConvectCoeff; //7 point stencil

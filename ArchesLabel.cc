@@ -70,6 +70,8 @@ ArchesLabel::ArchesLabel()
 				   CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = VarLabel::create("densityCP", 
 				  CCVariable<double>::getTypeDescription() );
+  d_filterdrhodtLabel = VarLabel::create("filterdrhodt", 
+				    CCVariable<double>::getTypeDescription() );
   d_drhodfCPLabel = VarLabel::create("drhodfCP", 
 				  CCVariable<double>::getTypeDescription() );
   d_drhodfPredLabel = VarLabel::create("drhodfPred", 
@@ -930,6 +932,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_enthalpyRes);
   VarLabel::destroy(d_densityINLabel);
   VarLabel::destroy(d_densityCPLabel);
+  VarLabel::destroy(d_filterdrhodtLabel);
   VarLabel::destroy(d_drhodfCPLabel);
   VarLabel::destroy(d_drhodfPredLabel);
   VarLabel::destroy(d_densitySPLabel);
