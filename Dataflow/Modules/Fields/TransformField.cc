@@ -60,9 +60,7 @@ public:
 
   void matrix_to_transform(MatrixHandle mH, Transform& t);
 
-  template <class F> void dispatch_tetvol(F *f, Transform &t);
-  template <class F> void dispatch_latticevol(F *f, Transform &t);
-  template <class F> void dispatch_trisurf(F *f, Transform &t);
+  template <class M> void dispatch(M *meshtype, Field *f, Transform &t);
 };
 
 
@@ -94,16 +92,16 @@ TransformField::matrix_to_transform(MatrixHandle mH, Transform& t)
 }
 
 
-template <class F>
+template <class M>
 void
-TransformField::dispatch_tetvol(F *ifield, Transform &trans)
+TransformField::dispatch(M *, Field *ifield, Transform &trans)
 {
-  F *ofield = (F *)ifield->clone();
+  Field *ofield = ifield->clone();
 
-  typename F::mesh_type *omesh =
-    (typename F::mesh_type *)ofield->get_typed_mesh()->clone();
+  ofield->mesh().detach();
+  M *omesh = (M *)(ofield->mesh().get_rep());
   
-  typename F::mesh_type::node_iterator ni = omesh->node_begin();
+  typename M::node_iterator ni = omesh->node_begin();
   while (ni != omesh->node_end())
   {
     Point p;
@@ -112,38 +110,6 @@ TransformField::dispatch_tetvol(F *ifield, Transform &trans)
     ++ni;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-  FieldHandle fh(ofield);
-  ofp->send(fh);
-}
-
-
-template <class F>
-void
-TransformField::dispatch_latticevol(F *ifield, Transform &trans)
-{
-  
-}
-
-
-template <class F>
-void
-TransformField::dispatch_trisurf(F *ifield, Transform &trans)
-{
-  F *ofield = (F *)ifield->clone();
-
-  typename F::mesh_type *omesh =
-    (typename F::mesh_type *)ofield->get_typed_mesh()->clone();
-
-  typename F::mesh_type::node_iterator ni = omesh->node_begin();
-  while (ni != omesh->node_end())
-  {
-    Point p;
-    omesh->get_point(p, *ni);
-    omesh->set_point(trans.project(p), *ni);
-    ++ni;
-  }
-    
   FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
   FieldHandle fh(ofield);
   ofp->send(fh);
@@ -176,75 +142,15 @@ TransformField::execute()
   const string data_name = ifield->get_type_name(1);
   if (geom_name == "TetVol")
   {
-    if (data_name == "double")
-    {
-      dispatch_tetvol((TetVol<double> *)ifield, transform);
-    }
-    else if (data_name == "int")
-    {
-      dispatch_tetvol((TetVol<int> *)ifield, transform);
-    }
-    else if (data_name == "short")
-    {
-      dispatch_tetvol((TetVol<short> *)ifield, transform);
-    }
-    else if (data_name == "char")
-    {
-      dispatch_tetvol((TetVol<char> *)ifield, transform);
-    }
-    else
-    {
-      // Don't know what to do with this field type.
-      // Signal some sort of error.
-    }
+    dispatch((TetVolMesh *)0, ifield, transform);
   }
   else if (geom_name == "LatticeVol")
   {
-    if (data_name == "double")
-    {
-      dispatch_latticevol((LatticeVol<double> *)ifield, transform);
-    }
-    else if (data_name == "int")
-    {
-      dispatch_latticevol((LatticeVol<int> *)ifield, transform);
-    }
-    else if (data_name == "short")
-    {
-      dispatch_latticevol((LatticeVol<short> *)ifield, transform);
-    }
-    else if (data_name == "char")
-    {
-      dispatch_latticevol((LatticeVol<char> *)ifield, transform);
-    }
-    else
-    {
-      // Don't know what to do with this field type.
-      // Signal some sort of error.
-    }
+    // Error cannot transform these yet.
   }
   else if (geom_name == "TriSurf")
   {
-    if (data_name == "double")
-    {
-      dispatch_trisurf((TriSurf<double> *)ifield, transform);
-    }
-    else if (data_name == "int")
-    {
-      dispatch_trisurf((TriSurf<int> *)ifield, transform);
-    }
-    else if (data_name == "short")
-    {
-      dispatch_trisurf((TriSurf<short> *)ifield, transform);
-    }
-    else if (data_name == "char")
-    {
-      dispatch_trisurf((TriSurf<char> *)ifield, transform);
-    }
-    else
-    {
-      // Don't know what to do with this field type.
-      // Signal some sort of error.
-    }
+    dispatch((TriSurfMesh *)0, ifield, transform);
   }
   else
   {
