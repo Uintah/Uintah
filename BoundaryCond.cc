@@ -61,8 +61,6 @@ bool insideOfObject(const int i,
   //  hard coded to only apply on yminus
   Patch::FaceType faceToApplyBC = Patch::yminus;
   
-  
-  
   IntVector low,hi;
   low = var.getLowIndex() + offset;
   hi = var.getHighIndex() - offset;
@@ -70,18 +68,11 @@ bool insideOfObject(const int i,
   //__________________________________
   // 
   int oneZero = 0;
-  if (typeid(V) == typeid(SFCXVariable<double>)){
+  if (typeid(V) == typeid(SFCXVariable<double>) ||
+      typeid(V) == typeid(SFCYVariable<double>) || 
+      typeid(V) == typeid(SFCZVariable<double>)){
     oneZero = 1;
   }
-
-  if (typeid(V) == typeid(SFCYVariable<double>)){
-    oneZero = 1;
-  }
-
-  if (typeid(V) == typeid(SFCZVariable<double>)){
-    oneZero = 1;
-  }
-
 
   if(face == faceToApplyBC) {
     switch (face) {
@@ -117,7 +108,7 @@ bool insideOfObject(const int i,
         for (int k = low.z(); k<hi.z(); k++) {
           if (insideOfObject(i, k,patch)) {
 	     var[IntVector(i,low.y() + oneZero,k)] = value;
-            cout << " I'm applying BC at "<< IntVector(i,low.y() + oneZero,k) << " " << value << endl;
+//            cout << " I'm applying BC at "<< IntVector(i,low.y() + oneZero,k) << " " << value << endl;
           }
         }
       }
@@ -345,6 +336,14 @@ void setBC(CCVariable<double>& variable, const string& kind,
         if (new_bcs->getKind() == "Neumann") {
          fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
         }
+/*`==========TESTING==========*/
+#if JET_BC
+//        cout << " I'm in density "<< face << endl;
+        double hardCodedDensity = 1.1792946927/1000.0;
+        AddSourceBC<CCVariable<double>,double >(variable, patch, face,
+                              hardCodedDensity, offset);  
+ #endif 
+/*==========TESTING==========`*/
       }
  
       //__________________________________
@@ -373,9 +372,9 @@ void setBC(CCVariable<double>& variable, const string& kind,
         }  // if(Neumann)
 /*`==========TESTING==========*/
 #if JET_BC
-        cout << " I'm in Temperature "<< endl;
+//        cout << " I'm in Temperature "<< face << endl;
         double hardCodedTemperature = 1000;
-        AddSourceBC<CCVariable<double> >(variable, patch, face,
+        AddSourceBC<CCVariable<double>, double >(variable, patch, face,
                                hardCodedTemperature, offset);  
  #endif 
 /*==========TESTING==========`*/ 
@@ -439,9 +438,9 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
       
 /*`==========TESTING==========*/
 #if JET_BC
-        cout << " I'm in VelocityBC "<< endl;
-        Vector hardCodedVelocity(0,10,0);
-        AddSourceBC<CCVariable<Vector> >(variable, patch, face, 
+//        cout << " I'm in VelocityBC "<< face <<endl;
+        Vector hardCodedVelocity(0,0.01,0);
+        AddSourceBC<CCVariable<Vector>,Vector >(variable, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
 /*==========TESTING==========`*/ 
@@ -680,9 +679,9 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
     }
 /*`==========TESTING==========*/
 #if JET_BC
-        cout << " I'm in SFCYVariable "<< endl;
-        double hardCodedVelocity = 10;
-        AddSourceBC<SFCYVariable<double> >(variable, patch, face, 
+//        cout << " I'm in SFCYVariable "<< endl;
+        double hardCodedVelocity = 0.01;
+        AddSourceBC<SFCYVariable<double>,double >(variable, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
 /*==========TESTING==========`*/ 
