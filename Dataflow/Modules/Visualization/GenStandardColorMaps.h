@@ -99,6 +99,8 @@ private:
   GuiInt mapType;
   GuiInt minRes;
   GuiInt resolution;
+  GuiDouble gamma;
+  GuiInt realres;
   ColorMapOPort  *outport;
   ColorMapHandle cmap;
   Array1< Color > colors;
