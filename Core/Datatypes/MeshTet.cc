@@ -113,7 +113,7 @@ MeshTet::cell_end() const
 
 
 void
-MeshTet::get_nodes_from_edge(node_array &array, edge_index idx) const
+MeshTet::get_nodes(node_array &array, edge_index idx) const
 {
   static int table[6][2] =
   {
@@ -125,8 +125,8 @@ MeshTet::get_nodes_from_edge(node_array &array, edge_index idx) const
     {2, 3}
   };
 
-  const int tet = idx / 6;
-  const int off = idx % 6;
+  const int tet = *idx / 6;
+  const int off = *idx % 6;
   const int node = tet * 4;
 
   array.push_back(tets_[node + table[off][0]]);
@@ -135,7 +135,7 @@ MeshTet::get_nodes_from_edge(node_array &array, edge_index idx) const
 
 
 void
-MeshTet::get_nodes_from_face(node_array &array, face_index idx) const
+MeshTet::get_nodes(node_array &array, face_index idx) const
 {
   static int table[4][3] =
   {
@@ -145,8 +145,8 @@ MeshTet::get_nodes_from_face(node_array &array, face_index idx) const
     {2, 1, 0}
   };
   
-  int tet = idx & 0xfffffffc;
-  int off = idx & 3;
+  int tet = *idx & 0xfffffffc;
+  int off = *idx & 3;
   array.push_back(tets_[tet + table[off][0]]);
   array.push_back(tets_[tet + table[off][1]]);
   array.push_back(tets_[tet + table[off][2]]);
@@ -155,17 +155,17 @@ MeshTet::get_nodes_from_face(node_array &array, face_index idx) const
 
 
 void
-MeshTet::get_nodes_from_cell(node_array &array, cell_index idx) const
+MeshTet::get_nodes(node_array &array, cell_index idx) const
 {
-  array.push_back(tets_[idx * 4 + 0]);
-  array.push_back(tets_[idx * 4 + 1]);
-  array.push_back(tets_[idx * 4 + 2]);
-  array.push_back(tets_[idx * 4 + 3]);
+  array.push_back(tets_[*idx * 4 + 0]);
+  array.push_back(tets_[*idx * 4 + 1]);
+  array.push_back(tets_[*idx * 4 + 2]);
+  array.push_back(tets_[*idx * 4 + 3]);
 }
 
 
 void
-MeshTet::get_edges_from_face(edge_array &array, face_index idx) const
+MeshTet::get_edges(edge_array &array, face_index idx) const
 {
   static int table[4][3] =
   {
@@ -175,8 +175,8 @@ MeshTet::get_edges_from_face(edge_array &array, face_index idx) const
     {0, 1, 3}
   };
 
-  int base = idx / 4 * 6;
-  int off = idx % 4;
+  int base = *idx / 4 * 6;
+  int off = *idx % 4;
 
   array.push_back(base + table[off][0]);
   array.push_back(base + table[off][1]);
@@ -186,35 +186,85 @@ MeshTet::get_edges_from_face(edge_array &array, face_index idx) const
 
 
 void
-MeshTet::get_edges_from_cell(edge_array &array, cell_index idx) const
+MeshTet::get_edges(edge_array &array, cell_index index) const
 {
+  cell_index::value_type idx = *index;
   idx *= 6;
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
   array.push_back(idx);
+  array.push_back(++idx);
+  array.push_back(++idx);
+  array.push_back(++idx);
+  array.push_back(++idx);
+  array.push_back(++idx);
 }
 
 
 void
-MeshTet::get_faces_from_cell(face_array &array, cell_index idx) const
+MeshTet::get_faces(face_array &array, cell_index index) const
 {
+  cell_index::value_type idx = *index;
   idx *= 4;
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
   array.push_back(idx);
+  array.push_back(++idx);
+  array.push_back(++idx);
+  array.push_back(++idx);
 }
 
 void
-MeshTet::get_neighbor_from_face(cell_index &neighbor, face_index idx) const
+MeshTet::get_neighbor(cell_index &neighbor, face_index idx) const
 {
-  neighbor = neighbors_[idx];
+  neighbor = neighbors_[*idx];
 }
 
+void 
+MeshTet::get_center(Point &p, node_index idx) const
+{
+  get_point(p, idx);
+}
 
+void 
+MeshTet::get_center(Point &p, edge_index idx) const
+{
+  const double s = 1./2.;
+  node_array arr;
+  get_nodes(arr, idx);
+  Point p1;
+  get_point(p, arr[0]);
+  get_point(p1, arr[1]);
+
+  p = ((Vector(p) + Vector(p1)) * s).asPoint();
+}
+
+void 
+MeshTet::get_center(Point &p, face_index idx) const
+{
+  const double s = 1./3.;
+  node_array arr;
+  get_nodes(arr, idx);
+  Point p1, p2;
+  get_point(p, arr[0]);
+  get_point(p1, arr[1]);
+  get_point(p2, arr[2]);
+
+  p = ((Vector(p) + Vector(p1) + Vector(p2)) * s).asPoint();
+}
+
+void 
+MeshTet::get_center(Point &p, cell_index idx) const
+{
+  const double s = 1./5.;
+  node_array arr;
+  get_nodes(arr, idx);
+  Point p1, p2, p3, p4;
+  get_point(p, arr[0]);
+  get_point(p1, arr[1]);
+  get_point(p2, arr[2]);
+  get_point(p3, arr[3]);
+  get_point(p4, arr[4]);
+
+  p = ((Vector(p) + Vector(p1) + Vector(p2) + 
+	Vector(p3) + Vector(p4)) * s).asPoint();
+}
 
 static double
 distance2(const Point &p0, const Point &p1)
@@ -227,7 +277,7 @@ distance2(const Point &p0, const Point &p1)
 
 
 void
-MeshTet::locate_node(node_index &node, const Point &p)
+MeshTet::locate(node_index &node, const Point &p)
 {
   // TODO: Use search structure instead of exaustive search.
   int min_indx;
@@ -257,13 +307,13 @@ MeshTet::locate_node(node_index &node, const Point &p)
 
 #if 0
 void
-MeshTet::locate_edge(edge_index &edge, const Point & /* p */)
+MeshTet::locate(edge_index &edge, const Point & /* p */)
 {
   edge = edge_end();
 }
 
 void
-MeshTet::locate_face(face_index &face, const Point & /* p */)
+MeshTet::locate(face_index &face, const Point & /* p */)
 {
   face = face_end();
 }
@@ -271,17 +321,17 @@ MeshTet::locate_face(face_index &face, const Point & /* p */)
 
 
 void
-MeshTet::locate_cell(cell_index &cell, const Point &p)
+MeshTet::locate(cell_index &cell, const Point &p)
 {
   for (int i=0; i < tets_.size(); i+=4)
   {
     if (inside4_p(i, p))
     {
-      cell = i >> 2;
+      *cell = i >> 2;
       return;
     }
   }
-  cell = cell_end();
+  *cell = cell_end();
 }
 
 
@@ -296,7 +346,7 @@ MeshTet::unlocate(Point &result, const Point &p)
 void
 MeshTet::get_point(Point &result, node_index index) const
 {
-  result = points_[index];
+  result = points_[*index];
 }
 
 
