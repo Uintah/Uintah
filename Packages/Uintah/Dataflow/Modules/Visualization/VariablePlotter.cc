@@ -128,6 +128,7 @@ int VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
 {
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
+  case TypeDescription::float_type:
   case TypeDescription::int_type:
     type_list += " scaler";
     break;
@@ -339,6 +340,32 @@ void VariablePlotter::extract_data(string display_mode, string varname,
 	cerr << "Cache miss.  Querying the data archive\n";
 	// query the value and then cache it
 	vector< double > values;
+	int matl = atoi(mat_list[i].c_str());
+	try {
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+	  return;
+	} 
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	material_data_list.cache_value(cache_key, values, data);
+      } else {
+	cerr << "Cache hit\n";
+      }
+      gui->execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
+    }
+    break;
+  case TypeDescription::float_type:
+    cerr << "Graphing a variable of type float\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < (int)mat_list.size(); i++) {
+      string data;
+      string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
+      if (!material_data_list.get_cached(cache_key,data)) {
+	cerr << "Cache miss.  Querying the data archive\n";
+	// query the value and then cache it
+	vector< float > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
 	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);

@@ -46,6 +46,16 @@ const TypeDescription* fun_getTypeDescription(double*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(float*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::float_type,
+				  "float", true, MPI_FLOAT);
+   }
+   return td;
+}
+
 const TypeDescription* fun_getTypeDescription(int*)
 {
    static TypeDescription* td;

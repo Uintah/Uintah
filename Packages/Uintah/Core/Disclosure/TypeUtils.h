@@ -27,6 +27,7 @@ const TypeDescription* fun_getTypeDescription(short int*);
 //const TypeDescription* fun_getTypeDescription(long*);
 const TypeDescription* fun_getTypeDescription(long64*);
 const TypeDescription* fun_getTypeDescription(double*);
+const TypeDescription* fun_getTypeDescription(float*);
 const TypeDescription* fun_getTypeDescription(Point*);
 const TypeDescription* fun_getTypeDescription(Vector*);
 const TypeDescription* fun_getTypeDescription(Matrix3*);

@@ -761,6 +761,9 @@ int main(int argc, char** argv)
       case Uintah::TypeDescription::double_type:
 	getVariable<double>(qinfo, low, range, box, filename);
 	break;
+      case Uintah::TypeDescription::float_type:
+	getVariable<float>(qinfo, low, range, box, filename);
+	break;
       case Uintah::TypeDescription::int_type:
 	getVariable<int>(qinfo, low, range, box, filename);
 	break;
