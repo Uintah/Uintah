@@ -30,10 +30,10 @@ itcl_class SCIRun_Math_Submatrix {
 	global $this-nrow
 	global $this-ncol
 
-	set $this-minrow "-1"
-	set $this-maxrow "9999999"
-	set $this-mincol "-1"
-	set $this-maxcol "9999999"
+	set $this-minrow "--"
+	set $this-maxrow "--"
+	set $this-mincol "--"
+	set $this-maxcol "--"
 	set $this-nrow "??"
 	set $this-ncol "??"
     }
