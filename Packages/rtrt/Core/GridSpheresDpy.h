@@ -46,6 +46,7 @@ class GridSpheresDpy : public Runnable {
   int ndata;
   int colordata, newcolordata;
   int shade_method, new_shade_method;
+  int radius_index, new_radius_index;
   char* in_file;
   
   void compute_hist(GLuint fid);
@@ -71,6 +72,16 @@ public:
   void set_var_names(std::string* in_var_names) { var_names = in_var_names; }
   virtual void run();
   void setup_vars();
+
+  // This is frame safe.  If you call this function before any
+  // GridSpheres are attached it will behave as expected.  If you call
+  // this function after you attach a GridSpheres, but before
+  // preprocess, then GridSpheres will pick up the change after the
+  // renderer has started and animate has been called.  If you call
+  // this after preprocess (i.e. during rendering) changes will be
+  // noticed after the next frame.
+  void set_radius_index(int new_ri);
+
   void animate(bool& changed);
 };
 
