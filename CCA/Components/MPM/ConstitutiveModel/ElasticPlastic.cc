@@ -103,6 +103,7 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,
   setErosionAlgorithm();
   getInitialPorosityData(ps);
   getInitialDamageData(ps);
+  getSpecificHeatData(ps);
   initializeLocalMPMLabels();
 
   switch(flag->d_8or27) {
@@ -148,6 +149,11 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm)
   d_scalarDam.D0_std = cm->d_scalarDam.D0_std ;
   d_scalarDam.Dc = cm->d_scalarDam.Dc ;
   d_scalarDam.scalarDamageDist = cm->d_scalarDam.scalarDamageDist ;
+
+  d_computeSpecificHeat = cm->d_computeSpecificHeat;
+  d_Cp.A = cm->d_Cp.A;
+  d_Cp.B = cm->d_Cp.B;
+  d_Cp.C = cm->d_Cp.C;
 
   d_yield = YieldConditionFactory::createCopy(cm->d_yield);
   d_stable = StabilityCheckFactory::createCopy(cm->d_stable);
@@ -258,6 +264,25 @@ ElasticPlastic::getInitialDamageData(ProblemSpecP& ps)
   ps->get("initial_std_scalar_damage",         d_scalarDam.D0_std);
   ps->get("critical_scalar_damage",            d_scalarDam.Dc);
   ps->get("initial_scalar_damage_distrib",     d_scalarDam.scalarDamageDist);
+}
+
+/*! Compute specific heat
+   double T = temperature;
+   C_p = 1.0e3*(A + B*T + C/T^2)
+   ** For steel **
+   C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
+*/
+void 
+ElasticPlastic::getSpecificHeatData(ProblemSpecP& ps)
+{
+  d_computeSpecificHeat = false;
+  ps->get("compute_specific_heat",d_computeSpecificHeat);
+  d_Cp.A = 0.09278;  // Constant A
+  d_Cp.B = 7.454e-4; // Constant B
+  d_Cp.C = 12404.0;  // Constant C
+  ps->get("Cp_constA", d_Cp.A);
+  ps->get("Cp_constB", d_Cp.B);
+  ps->get("Cp_constC", d_Cp.C);
 }
 
 void 
@@ -1051,20 +1076,19 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = 0.9;
         double C_p = matl->getSpecificHeat();
-
-        // ** WARNING ** Special for steel (remove for other materials)
-        //double T = temperature;
-        //C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
+        if (d_computeSpecificHeat) C_p = computeSpecificHeat(temperature);
 
         // Calculate Tdot (do not allow negative Tdot)
         double Tdot = 0.0;
         Tdot = tensorSig.Contract(tensorD)*(taylorQuinney/(rho_cur*C_p));
         Tdot = max(Tdot, 0.0);
+        double dT = Tdot*delT;
 
         // Update the plastic temperature
-        pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + Tdot*delT; 
-        pPlasticTempInc_new[idx] = Tdot*delT; 
-        temperature += pPlasticTempInc_new[idx];
+        if ((temperature + dT) > Tm_cur) dT = Max(Tm_cur - temperature, 0.0);
+        pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + dT;
+        pPlasticTempInc_new[idx] = dT;
+        temperature += dT;
       }
 
       //-----------------------------------------------------------------------
@@ -1462,6 +1486,12 @@ ElasticPlastic::voidNucleationFactor(double ep)
   double A = d_porosity.fn/(d_porosity.sn*sqrt(2.0*M_PI))*
     exp(-0.5*temp*temp);
   return A;
+}
+
+double 
+ElasticPlastic::computeSpecificHeat(double T)
+{
+  return 1.0e3*(d_Cp.A + d_Cp.B*T + d_Cp.C/(T*T));
 }
 
 double ElasticPlastic::computeRhoMicroCM(double pressure,
