@@ -267,14 +267,15 @@ DESCRIPTION
 	    bool detached_;
 	    bool activated_;
 	    void os_start(bool stopped);
-	    static void initialize();
 	    Thread(ThreadGroup* g, const char* name);
 
 	public:
+	    static void initialize();
 	    static void checkExit();
 	    int cpu_;
 	    ~Thread();
 	    Thread_private* priv_;
+	    static int id();
 	    void run_body();	    	    
 	    enum ThreadState {
 		STARTUP,
