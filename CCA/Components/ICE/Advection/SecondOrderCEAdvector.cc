@@ -405,7 +405,7 @@ template <class T, typename F>
          
     for(int f = TOP; f <= BACK; f++ )  {    
       double slab_vol = 0.0;
-      T q_slab_flux = 0.0;       
+      T q_slab_flux = T(0.0);
       
       //__________________________________
       //   S L A B S
@@ -420,7 +420,7 @@ template <class T, typename F>
 
       //__________________________________
       //   E D G E S  
-      T q_edge_flux = 0.0;
+      T q_edge_flux = T(0.0);
       double edge_vol = 0.0;
 
       for(int e = 0; e < 4; e++ ) {
@@ -438,7 +438,7 @@ template <class T, typename F>
 
       //__________________________________
       //   C O R N E R S
-      T q_corner_flux = 0.0;
+      T q_corner_flux = T(0.0);
       double corner_vol = 0.0;
 
       for(int crner = 0; crner < 4; crner++ ) {
@@ -460,7 +460,7 @@ template <class T, typename F>
        
     //__________________________________
     //  sum up all the contributions
-    q_advected[c] = 0.0;        
+    q_advected[c] = T(0.0);
     for(int f = TOP; f <= BACK; f++ )  {
       q_advected[c] += q_face_flux[f];
     }

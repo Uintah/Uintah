@@ -958,7 +958,7 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
 	    N.normalize();
 	  NN[idx]=N;
 	  vcforce[idx] = Cross(N, ccvorticity[idx])*dx*vorticity_confinement_scale_;
-	  maxforce=Max(maxforce, vcforce[idx].length());
+	  maxforce=Max(maxforce, Vector(vcforce[idx].length()));
 	}
 	cerr << "maxforce=" << maxforce << '\n';
 	double constant = 0.5*delT;
