@@ -24,7 +24,7 @@ set port_height 7
 
 global Color
 set Color(Selected) LightSkyBlue2
-set Color(Disabled) "\#555555"
+set Color(Disabled) black
 set Color(Compiling) "\#f0e68c"
 set Color(Trace) red
 
@@ -62,7 +62,6 @@ itcl_class Module {
 	# these live in parallel temporarily
 	global $this-notes Notes
 	if ![info exists $this-notes] { set $this-notes "" }
-	if ![info exists Notes([modname])] { set Notes([modname]) "" }
 
 	# messages should be accumulating
 	if {[info exists $this-msgStream]} {
@@ -346,11 +345,12 @@ itcl_class Module {
 	set m $maincanvas.module[modname]
 	$m configure -relief raised
 	set color $basecolor
+	if { [$this is_selected] } { set color $Color(Selected) }
 	if { $Disabled([modname]) } { 
-	    set color $Color(Disabled) 
+	    set color [blend $color $Color(Disabled)]
 	    $m configure -relief sunken
 	}
-	if { [$this is_selected] } { set color $Color(Selected) }
+
 	if { $compiling_p } {
 	    set color $Color(Compiling)
 	    set $args "COMPILING"
@@ -693,10 +693,14 @@ proc notesWindow { id done } {
     button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end"
     button .notes.b.cancel -text "Cancel" -command "destroy .notes"
 
-    set color white
-    if [info exists Color(Notes-$id)] { set color $Color(Notes-$id) }
-    button .notes.b.color -fg black -bg $color -text "Text Color" \
-	-command "colorNotes $id"
+    set rgb [expr [info exists Color($id)]?"$Color($id)":"white"]
+    button .notes.b.reset -fg black -text "Reset Color" -command \
+	"set Color(Notes-$id) $rgb; .notes.b.color configure -bg $rgb"
+
+    set rgb [expr [info exists Color(Notes-$id)]?"$Color(Notes-$id)":"$rgb"]
+    button .notes.b.color -fg black -bg $rgb -text "Text Color" -command \
+	"colorNotes $id"
+
     frame .notes.d -relief groove -borderwidth 2
     if {![info exists NotesPos($id)] } { set NotesPos($id) def }
     make_labeled_radio .notes.d.pos "Display:" "" left NotesPos($id) \
@@ -714,19 +718,16 @@ proc notesWindow { id done } {
     pack .notes.d -fill x -side top -padx 5 -pady 0
     pack .notes.d.pos
     pack .notes.b -fill y -side bottom -pady 3
-    pack .notes.b.done .notes.b.clear .notes.b.cancel .notes.b.color \
-	-side right -padx 5 -pady 5 -ipadx 3 -ipady 3
-
+    pack .notes.b.done .notes.b.clear .notes.b.cancel .notes.b.reset \
+	.notes.b.color -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
 	    
-
     if [info exists Notes($id)] {.notes.input insert 1.0 $Notes($id)}
 }
 
 proc colorNotes { id } {
-    global Color
-    tk_chooseColor -initialcolor [.notes.b.color cget -bg]
-    set Color(Notes-$id) [.notes.b.color cget -bg]
-    .notes.b.color configure -bg $Color(Notes-$id)
+    global Color    
+    .notes.b.color configure -bg [set Color(Notes-$id) \
+       [tk_chooseColor -initialcolor [.notes.b.color cget -bg]]]
 }
 
     
@@ -773,14 +774,14 @@ proc checkForDisabledModules { args } {
 }
 
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
-    global maincanvas minicanvas Color Notes Disabled HelpText
+    global maincanvas minicanvas Color Disabled HelpText
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     eval $maincanvas create bline $path -width 7 -borderwidth 2 \
 	-fill \"$portcolor\" -tags $connid
     eval $minicanvas create line [scalePath $path] -width 1 \
 	-fill \"$portcolor\" -tags $connid
     $minicanvas lower $connid
-    if ![info exists Notes($connid)] { set Notes($connid) "" }
+
     set Disabled($connid) 0
     set Color($connid) $portcolor
 
@@ -901,7 +902,7 @@ proc addConnection {omodid owhich imodid iwhich args } {
     }
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]    
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
-
+    if ![info exists Notes($connid)] { set Notes($connid) "" }
     global maincanvas
     $omodid configurePorts $maincanvas o
     $imodid configurePorts $maincanvas i
@@ -1409,24 +1410,18 @@ proc drawNotes { args } {
 
 	if { [canvasExists $id-notes] } {	
 	    if { $isModuleNotes } {
-		set opts [getModuleNotesOptions $id]
+		set opt [getModuleNotesOptions $id]
 	    } else {
-		set opts [getConnectionNotesOptions $id]
+		set opt [getConnectionNotesOptions $id]
 	    }
-	    $maincanvas coords $id-notes [lrange $opts 0 1]
-	    $maincanvas coords $id-notes-shadow [shadow [lrange $opts 0 1]]
-	    
-	    eval $maincanvas itemconfigure $id-notes \
-		[lrange $opts 2 end] \
-		-fill $Color(Notes-$id) \
-		-font $Font(Notes) \
-		-text \"$Notes($id)\"
-		
-	    eval $maincanvas itemconfigure $id-notes-shadow \
-		[lrange $opts 2 end] \
-		-fill $shadowCol \
-		-font $Font(Notes) \
-		-text \"$Notes($id)\"
+	    $maincanvas coords $id-notes [lrange $opt 0 1]
+	    $maincanvas coords $id-notes-shadow [shadow [lrange $opt 0 1]]    
+	    eval $maincanvas itemconfigure $id-notes [lrange $opt 2 end]
+	    eval $maincanvas itemconfigure $id-notes-shadow [lrange $opt 2 end]
+	    $maincanvas itemconfigure $id-notes	-fill $Color(Notes-$id) \
+		-font $Font(Notes) -text "$Notes($id)"
+	    $maincanvas itemconfigure $id-notes-shadow -fill $shadowCol \
+		-font $Font(Notes) -text "$Notes($id)"
 		
 	    if {!$isModuleNotes} {
 		$maincanvas bind $id-notes <ButtonPress-1> \
@@ -1598,8 +1593,18 @@ proc unselectAll {} {
 }
 
 # Courtesy of the Tcl'ers Wiki (http://mini.net/tcl)
-proc brightness color {
+proc brightness { color } {
     foreach {r g b} [winfo rgb . $color] break
     set max [lindex [winfo rgb . white] 0]
     expr {($r*0.3 + $g*0.59 + $b*0.11)/$max}
  } ;#RS, after [Kevin Kenny]
+
+proc blend { c1 c2 } {
+    foreach {r1 g1 b1} [winfo rgb . $c1] break
+    foreach {r2 g2 b2} [winfo rgb . $c2] break
+    set max [expr double([lindex [winfo rgb . white] 0])]
+    set r [expr int(((($r1/$max)+($r2/$max))/2)*255)]
+    set g [expr int(((($g1/$max)+($g2/$max))/2)*255)]
+    set b [expr int(((($b1/$max)+($b2/$max))/2)*255)]
+    return [format "\#%02x%02x%02x" $r $g $b]
+ } 
