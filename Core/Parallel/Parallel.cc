@@ -5,6 +5,8 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <stdio.h>
+
 #include <iostream>
 #include <mpi.h>
 
@@ -60,7 +62,7 @@ Parallel::noThreading()
 }
 
 void
-Parallel::initializeManager(int& argc, char**& argv)
+Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 {
    if( char * max = getenv( "PSE_MAX_THREADS" ) ){
       ::maxThreads = atoi( max );
@@ -87,24 +89,44 @@ Parallel::initializeManager(int& argc, char**& argv)
 	    ::usingMPI=true;
       }
    }
+
+   int provided = -1;
+   int required = MPI_THREAD_SINGLE;
+
    if(::usingMPI){	
 
-      int status;
-      const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
-      if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
-	 MpiError("MPI_Init", status);
-      worldComm=MPI_COMM_WORLD;
-      int worldSize;
-      if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
-	 MpiError("MPI_Comm_size", status);
-      int worldRank;
-      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
-	 MpiError("MPI_Comm_rank", status);
-      AllocatorSetDefaultTagMalloc(oldtag);
-      rootContext = scinew ProcessorGroup(0, worldComm, true,
-					  worldRank,worldSize);
+     if( scheduler == "MixedScheduler" ) {
+       required = MPI_THREAD_MULTIPLE;
+     }
+
+     int status;
+     const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
+
+     if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) )
+	                                                     != MPI_SUCCESS) {
+       MpiError("MPI_Init", status);
+     }
+
+     if( provided < required ){
+       char msg[ 128 ];
+       sprintf( msg, "Provided MPI parallel support of %d is "
+		"not enough for the required level of %d", provided, 
+		required );
+       throw InternalError( string( msg ) );
+     }
+
+     worldComm=MPI_COMM_WORLD;
+     int worldSize;
+     if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
+       MpiError("MPI_Comm_size", status);
+     int worldRank;
+     if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
+       MpiError("MPI_Comm_rank", status);
+     AllocatorSetDefaultTagMalloc(oldtag);
+     rootContext = scinew ProcessorGroup(0, worldComm, true,
+					 worldRank,worldSize);
    } else {
-      rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
+     rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
    }
 
    ProcessorGroup* world = getRootProcessorGroup();
@@ -115,6 +137,8 @@ Parallel::initializeManager(int& argc, char**& argv)
       if(::usingMPI)
 	 cerr << " (using MPI)";
       cerr << '\n';
+      cerr << "Parallel: MPI Level Required: " << required << ", provided: " 
+	   << provided << "\n";
    }
 }
 
