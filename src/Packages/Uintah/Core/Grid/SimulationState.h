@@ -110,10 +110,10 @@ public:
   Vector getGravity() const {
     return d_gravity;
   }
-  void setNeedAddMaterial(bool nAM) {
+  void setNeedAddMaterial(int nAM) {
     d_needAddMaterial = nAM;
   }
-  bool needAddMaterial() const {
+  int needAddMaterial() const {
     return d_needAddMaterial;
   }
 
@@ -176,7 +176,7 @@ private:
 
   double d_ref_press;
   double d_elapsed_time;
-  double d_needAddMaterial;
+  int    d_needAddMaterial;
 
   // The time step that the top level (w.r.t. AMR) is at during a
   // simulation.  Usually corresponds to the Data Warehouse generation
