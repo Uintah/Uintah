@@ -13,7 +13,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/FusionSlicePlot.cc\
 	$(SRCDIR)/NrrdFieldConverter.cc\
 	$(SRCDIR)/NIMRODConverter.cc\
 #[INSERT NEW CODE FILE HERE]
