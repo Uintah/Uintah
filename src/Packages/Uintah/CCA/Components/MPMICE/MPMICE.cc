@@ -299,7 +299,6 @@ void MPMICE::scheduleInterpolateNCToCC(SchedulerP& sched,
 		   this, &MPMICE::interpolateNCToCC);
 
    t->requires(Task::NewDW, Mlb->gVelocityStarLabel,   Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gAccelerationLabel,   Ghost::AroundCells, 1);
    t->requires(Task::NewDW, Mlb->gMassLabel,           Ghost::AroundCells, 1);
    t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,Ghost::AroundCells, 1);
 
@@ -326,9 +325,6 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
   t->computes(Ilb->int_eng_L_ME_CCLabel, ice_matls);
 
                                  // M P M
-  t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mpm_matls,Ghost::None);
-  t->requires(Task::NewDW, Mlb->gAccelerationLabel, mpm_matls,Ghost::None);
-  t->requires(Task::NewDW, MIlb->cMassLabel,        mpm_matls,Ghost::None);
   t->computes(MIlb->dTdt_CCLabel, mpm_matls);
   t->computes(MIlb->dvdt_CCLabel, mpm_matls);
 
@@ -746,15 +742,13 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 
        // Create arrays for the grid data
        NCVariable<double> gmass, gvolume,gtempstar;
-       NCVariable<Vector> gvelocity, gacc;
+       NCVariable<Vector> gvelocity;
        CCVariable<Vector> cmomentum;
        CCVariable<double> int_eng;
 
        new_dw->get(gmass,     Mlb->gMassLabel,           matlindex, patch,
 							 Ghost::AroundCells, 1);
        new_dw->get(gvelocity, Mlb->gVelocityStarLabel,   matlindex, patch,
-							 Ghost::AroundCells, 1);
-       new_dw->get(gacc,      Mlb->gAccelerationLabel,   matlindex, patch,
 							 Ghost::AroundCells, 1);
        new_dw->get(gtempstar, Mlb->gTemperatureStarLabel,matlindex, patch,
 							 Ghost::AroundCells, 1);
@@ -818,11 +812,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
-    vector<NCVariable<Vector> > gacceleration(numALLMatls);
-    vector<NCVariable<Vector> > gvelocity(numALLMatls);
-    vector<NCVariable<Vector> > gMEacceleration(numALLMatls);
-    vector<NCVariable<Vector> > gMEvelocity(numALLMatls);
-
     vector<CCVariable<double> > rho_CC(numALLMatls);
     vector<CCVariable<double> > Temp_CC(numALLMatls);  
     vector<CCVariable<double> > vol_frac_CC(numALLMatls);
@@ -830,7 +819,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
     vector<CCVariable<Vector> > mom_L(numALLMatls);
     vector<CCVariable<double> > int_eng_L(numALLMatls);
-    vector<CCVariable<double> > cmass(numALLMatls);
 
     // Create variables for the results
     vector<CCVariable<Vector> > mom_L_ME(numALLMatls);
@@ -864,12 +852,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int dwindex = matl->getDWIndex();
       if(mpm_matl){
-        new_dw->get(gvelocity[m],Mlb->gVelocityStarLabel, dwindex, patch,
-		    Ghost::None, 0);
-        new_dw->get(gacceleration[m],Mlb->gAccelerationLabel,dwindex, patch,
-		    Ghost::None, 0);
-        new_dw->get(cmass[m], MIlb->cMassLabel, dwindex, patch,
-		    Ghost::None, 0);
         new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel, dwindex, patch);
         new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
         cv[m] = mpm_matl->getSpecificHeat();
