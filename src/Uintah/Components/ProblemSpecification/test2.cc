@@ -71,6 +71,11 @@ int main()
     std::string material_type;
     mat_ps->require("material_type", material_type);
     cout << "material_type is " <<  material_type << endl;
+   
+  }
+  for (ProblemSpecP mat_ps = mpm_mat_ps->findBlock(); mat_ps != 0;
+       mat_ps = mat_ps->findNextBlock() ) {
+    cout << "name is " << mat_ps->getNodeName() << endl;
   }
   exit(1);
 }

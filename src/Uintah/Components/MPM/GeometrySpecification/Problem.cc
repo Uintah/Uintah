@@ -72,7 +72,7 @@ void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
     // Loop through all of the pieces in this geometry object
 
     int piece_num = 0;
-    for (ProblemSpecP geom_obj_ps = geom_obj_ps->findBlock("geom_object");
+    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
 	 geom_obj_ps != 0; 
 	 geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
@@ -133,6 +133,11 @@ void Problem::createParticles(const Region* region, DataWarehouseP& dw)
 #endif
 
 // $Log$
+// Revision 1.11  2000/04/20 23:57:01  jas
+// Fixed the findBlock() and findNextBlock() to iterate through all the
+// nodes.  Now we can go thru the MPM setup without an error.  There is
+// still the problem of where the <res> tag should go.
+//
 // Revision 1.10  2000/04/20 22:37:14  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

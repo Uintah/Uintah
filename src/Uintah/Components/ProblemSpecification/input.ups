@@ -310,7 +310,7 @@
 			<res>[2,2,2]</res>
 	            </geom_piece>
 		    <!-- Intersection operation create extrusion -->
-		    <object>gp1 & gp2</object>
+		    <object>gp1 + gp2</object>
  		</geom_object>
 		<velocity_field>1</velocity_field>
 	    </material>
@@ -333,7 +333,7 @@
 	</Region>
     </Grid>
 
-    <!-- Question -- how do we want to attach a bc to a region of the grid? -->
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
     <PhysicalBC>
     
 	<ICE>
