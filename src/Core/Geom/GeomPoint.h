@@ -64,7 +64,7 @@ public:
     points_.push_back(p.z());
   }
 
-  void add(const Point& p, MaterialHandle c);
+  void add(const Point& p, const MaterialHandle &c);
   void add(const Point& p, double index)
   {
     add(p);
