@@ -100,7 +100,7 @@ AC_DEFUN([BASE_LIB_PATH], [
 
 AC_DEFUN([SCI_TRY_LINK], [
 ##
-## SCI_TRY_LINK ($1):
+## SCI_TRY_LINK ($1):  $2
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -188,8 +188,10 @@ for inc in $4; do
      has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
      if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
-        echo
-        AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
+        if test "$debugging" = "yes"; then
+          echo
+          AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
+        fi
         continue
      fi
   fi
@@ -241,7 +243,10 @@ if test -n "$5"; then
 
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
-            AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
+            if test "$debugging" = "yes"; then
+              echo
+              AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
+            fi
             continue
          fi
       fi
@@ -275,7 +280,10 @@ if test -n "$6"; then
          has_minus_L=`echo $path | sed 's/-L.*//'`
          if test -n "$has_minus_L"; then
             # Has some other -?.
-            AC_MSG_WARN(Only -L options are allowed in arg 6 of $1 check (disregarding $path).)
+            if test "$debugging" = "yes"; then
+              echo
+              AC_MSG_WARN(Only -L options are allowed in arg 6 of $1 check (disregarding $path).)
+            fi
             continue
          fi
       fi
@@ -285,6 +293,7 @@ if test -n "$6"; then
       if test -d "$the_path"; then
          _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
       else
+         echo
          AC_MSG_WARN(The path given $the_path is not a valid directory... ignoring.)
       fi
    done
@@ -378,7 +387,7 @@ done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
 _final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
@@ -458,6 +467,10 @@ LIBS=$_sci_savelibs
 _sci_lib_path=''
 _sci_libs=''
 _sci_includes=''
+
+##
+## END of SCI_TRY_LINK ($1):  $2
+##
 
 ])
 
