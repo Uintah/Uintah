@@ -91,7 +91,12 @@ public:
       // Get the molecular viscosity
       double getMolecularViscosity() const; 
 
-      // GROUP: Action Computations :
+      ////////////////////////////////////////////////////////////////////////
+      // Get the Smagorinsky model constant
+      double getSmagorinskyConst() const {
+	return d_CF;
+      }
+       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Calculate the wall velocity boundary conditions
       //    [in] 
