@@ -221,7 +221,6 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 	iter != pset->end(); iter++){
        particleIndex idx = *iter;
 
-       velGrad.set(0.0);
        // Get the node indices that surround the cell
        IntVector ni[MAX_BASIS];
        Vector d_S[MAX_BASIS];
@@ -233,11 +232,13 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
         }
 
+       velGrad.set(0.0);
        for(int k = 0; k < d_8or27; k++) {
 	    const Vector& gvel = gvelocity[ni[k]];
 	    for (int j = 0; j<3; j++){
+               double d_SXoodx = d_S[k][j] * oodx[j];
 	       for (int i = 0; i<3; i++) {
-	          velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+		  velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
 	       }
 	    }
         }
@@ -307,7 +308,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       pstress[idx] = Identity*p + Shear/J;
 
       // Compute the strain energy for all the particles
-      U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
+      U = .5*bulk*(.5*(J*J - 1.0) - log(J));
       W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
 
       pvolume_deformed[idx]=(pmass[idx]/rho_orig)*J;
