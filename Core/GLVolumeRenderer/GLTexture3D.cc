@@ -494,6 +494,13 @@ GLTexture3D::compute_tree_depth()
 }
 
 
+void
+GLTexture3D::build_texture()
+{ build_texture( &my_reporter_); }
+
+void
+GLTexture3D::replace_texture()
+{ replace_texture( &my_reporter_); }
 
 bool
 GLTexture3D::set_max_brick_size(int maxBrick)
