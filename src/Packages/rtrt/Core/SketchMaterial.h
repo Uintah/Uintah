@@ -49,7 +49,8 @@ protected:
   int nx, ny, nz;
   BBox bbox;
   Vector inv_diag;
-  float ambient, specular, spec_coeff, diffuse;
+  float ambient, specular, diffuse;
+  int spec_coeff;
   // This is the array used for the silhouette edge lookup
   Array2<float> sil_trans_funct;
 
@@ -80,7 +81,7 @@ public:
 template<class ArrayType, class DataType>
 SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbox, Array2<float>& sil_trans, float sil_thickness):
   SketchMaterialBase(sil_thickness),
-  bbox(bbox), ambient(0.5f), specular(1), spec_coeff(64), diffuse(1)
+  bbox(bbox), ambient(0.5f), specular(1), spec_coeff(32), diffuse(1)
 {
   char me[] = "SketchMaterial::SketchMaterial";
   char *errS;
@@ -442,9 +443,9 @@ SketchMaterial<ArrayType, DataType>::color(const Vector &N, const Vector &V,
 #endif
   double spec;
   if (exponent > 0) {
-    spec = attenuation * specular * pow(exponent, spec_coeff*0.5);
+    spec = attenuation * specular * ipow(exponent, spec_coeff);
   } else {
-    spec = attenuation * specular * pow(-exponent, spec_coeff*0.5);
+    spec = attenuation * specular * ipow(-exponent, spec_coeff);
   }
   
   result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
@@ -457,7 +458,7 @@ SketchMaterial<ArrayType, DataType>::color(const Vector &N, const Vector &V,
     double attenuation = 1;
 
     Vector R = N * (2.0 * L_N_dot) - L;
-    double spec = attenuation * specular * pow(Max(Dot(R, V),0.0), spec_coeff*0.5);
+    double spec = attenuation * specular * ipow(Max(Dot(R, V),0.0), spec_coeff);
 
     result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
 			    + Color(spec, spec, spec));
