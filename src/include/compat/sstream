@@ -22,6 +22,7 @@ public:
 class istringstream : public istrstream {
 public:
    istringstream(string& s) : istrstream(s.c_str()){}
+   istringstream(const string& s) : istrstream(s.c_str()){}
    istringstream(const char * s) : istrstream(s){}
 };
 
