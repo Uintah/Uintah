@@ -1,6 +1,5 @@
 #include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
-#include <Packages/Uintah/share/share.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 
