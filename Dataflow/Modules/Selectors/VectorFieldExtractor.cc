@@ -156,6 +156,13 @@ void VectorFieldExtractor::execute()
   range = hi - low;
   BBox box;
   level->getSpatialRange(box);
+
+  if( mesh_handle_.get_rep() == 0 ){
+    mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+				    range.z(), box.min(),
+				    box.max());
+  }
+
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
@@ -169,11 +176,8 @@ void VectorFieldExtractor::execute()
 //  	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 //  	  LevelField<Vector> *vfd =
 //  	    scinew LevelField<Vector>( mesh, Field::NODE );
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( lvm, Field::NODE );
+	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
@@ -200,11 +204,8 @@ void VectorFieldExtractor::execute()
 //  	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 //  	  LevelField<Vector> *vfd =
 //  	    scinew LevelField<Vector>( mesh, Field::CELL );
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( lvm, Field::CELL );
+	    scinew LatVolField<Vector>( mesh_handle_, Field::CELL );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);

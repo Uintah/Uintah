@@ -111,6 +111,7 @@ double FieldExtractor::update()
      generation = new_generation;
      timestep = -1; // make sure old timestep is different from current
      times.clear();
+     mesh_handle_ = 0;
      archive.queryTimesteps( indices, times );
    }
    

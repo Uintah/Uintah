@@ -96,6 +96,7 @@ protected:
   int material;
   GridP grid;
   ArchiveHandle  archiveH;
+  LatVolMeshHandle mesh_handle_;
 }; //class 
 
 
