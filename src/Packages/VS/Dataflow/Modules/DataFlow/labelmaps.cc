@@ -646,14 +646,23 @@ bool VH_injury::iscomplete()
 
 void VH_injury::print()
 {
+  if(isPrimaryInjury) cout << "Primary injury: ";
+  else if(isSecondaryInjury) cout << "Secondary injury: ";
+  if(isAblate) cout << "Ablated ";
+  else if(isStun) cout << "Stunned ";
   cout << "fmaEntity: " << anatomyname;
   cout << " timeStamp: " << timeStamp;
-  cout << " spatialObject: " << geom_type << endl;
-  cout << " Axis start point: (";
-  cout << axisX0 << ", " << axisY0 << ", " << axisZ0 << ")";
-  cout << " Axis end point: (";
-  cout << axisX1 << ", " << axisY1 << ", " << axisZ1 << ")";
-  cout << " Diameter: " << rad0 << endl;
+  cout << " probability: " << probability;
+  if(isGeometry)
+  {
+    cout << " spatialObject: " << geom_type << endl;
+    cout << " Axis start point: (";
+    cout << axisX0 << ", " << axisY0 << ", " << axisZ0 << ")";
+    cout << " Axis end point: (";
+    cout << axisX1 << ", " << axisY1 << ", " << axisZ1 << ")";
+    cout << " Diameter: " << rad0;
+  }
+  cout << endl;
 } // end VH_injury::print()
 
 /******************************************************************************
