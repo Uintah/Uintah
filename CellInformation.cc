@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/Point.h>
@@ -16,9 +17,8 @@ using namespace SCIRun;
 
 CellInformation::CellInformation(const Patch* patch)
 {
-  int numGhostCells = 1;
-  IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
-  IntVector domHi = patch->getGhostCellHighIndex(numGhostCells);
+  IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex()+IntVector(1,1,1);
   IntVector idxLoU = patch->getSFCXFORTLowIndex();

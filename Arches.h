@@ -89,6 +89,8 @@ public:
       enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
       enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
       enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
+      enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
+			    THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
