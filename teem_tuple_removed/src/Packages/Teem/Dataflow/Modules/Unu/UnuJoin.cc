@@ -47,6 +47,8 @@ private:
   GuiInt            join_axis_;
   GuiInt            incr_dim_;
   GuiInt            dim_;
+  int               old_axis_;
+  int               old_incr_dim_;
 };
 
 } // End namespace SCITeem
@@ -61,7 +63,9 @@ UnuJoin::UnuJoin(SCIRun::GuiContext *ctx) :
   onrrd_type_(nrrdTypeLast),
   join_axis_(ctx->subVar("join-axis")),
   incr_dim_(ctx->subVar("incr-dim")),
-  dim_(ctx->subVar("dim"))
+  dim_(ctx->subVar("dim")),
+  old_axis_(0),
+  old_incr_dim_(0)
 {
 }
 
@@ -130,19 +134,29 @@ UnuJoin::execute()
     }
     ++pi; ++i;
   }
-  
+
   dim_.reset();
   if (max_dim != dim_.get()) {    
     dim_.set(max_dim);
     dim_.reset();
     gui->execute(id + " axis_radio");
   }
+
+  // re-join if old axis is different from new
+  // axis or incr_dim has changed
+  if (old_axis_ != join_axis_.get()) {
+    do_join = true;
+    old_axis_ = join_axis_.get();
+  }
+  if (old_incr_dim_ != incr_dim_.get()) {
+    do_join = true;
+    old_incr_dim_ = incr_dim_.get();
+  }
   
   
   vector<Nrrd*> arr(nrrds.size());
 
   if (do_join) {
-
     NrrdData *onrrd = new NrrdData(true);
     int i = 0;
     string new_label("");
@@ -152,11 +166,11 @@ UnuJoin::execute()
       ++iter;
 
       NrrdData* cur_nrrd = nh.get_rep();
-      if (i == 0) {
-	new_label += string(cur_nrrd->nrrd->axis[0].label);
-      } else {
-	new_label += string(",") + string(cur_nrrd->nrrd->axis[0].label);
-      }
+      //if (i == 0) {
+      //new_label += string(cur_nrrd->nrrd->axis[0].label);
+      //} else {
+      //new_label += string(",") + string(cur_nrrd->nrrd->axis[0].label);
+      //}
       // does it need conversion to the bigger type?
       if (cur_nrrd->nrrd->type != onrrd_type_) {
 	Nrrd* new_nrrd = nrrdNew();
@@ -170,9 +184,9 @@ UnuJoin::execute()
       } else {
 	arr[i] = cur_nrrd->nrrd;
       }
-      if (i == 0) {
-	onrrd->copy_sci_data(*cur_nrrd);
-      }
+      //if (i == 0) {
+      //onrrd->copy_sci_data(*cur_nrrd);
+      //}
       ++i;
     }
     
@@ -189,7 +203,7 @@ UnuJoin::execute()
     }
 
     // Take care of tuple axis label.
-    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
+    //onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
     onrrd_handle_ = onrrd;
   }
 

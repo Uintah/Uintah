@@ -45,14 +45,13 @@ itcl_class Teem_Unu_UnuResample {
 	set $this-dim 0
     }
 
-    # never resample the tuple axis (axis 0) so no interface for axis 0
     method make_min_max {} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
  	    if {[winfo exists $w.f.f.axesf.t]} {
 		destroy $w.f.f.axesf.t
 	    }
-	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+	    for {set i 0} {$i < [set $this-dim]} {incr i} {
 		#puts $i
 		if {! [winfo exists $w.f.f.axesf.a$i]} {
 		    make_entry $w.f.f.axesf.a$i "Axis$i :" $this-resampAxis$i
@@ -62,7 +61,6 @@ itcl_class Teem_Unu_UnuResample {
 	}
     }
     
-    # never resample the tuple axis (axis 0)
     method init_axes {} {
 	for {set i 0} {$i < [set $this-dim]} {incr i} {
 	    #puts "init_axes----$i"
@@ -82,7 +80,7 @@ itcl_class Teem_Unu_UnuResample {
 	    if {[winfo exists $w.f.f.axesf.t]} {
 		destroy $w.f.f.axesf.t
 	    }
-	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+	    for {set i 0} {$i < [set $this-dim]} {incr i} {
 		#puts $i
 		if {[winfo exists $w.f.f.axesf.a$i]} {
 		    destroy $w.f.f.axesf.a$i
@@ -130,14 +128,16 @@ itcl_class Teem_Unu_UnuResample {
 	frame $w.f.f.axesf
 
 	if {[set $this-dim] == 0} {
-	    label $w.f.f.axesf.t -text "Need Execute to know the number of Axes."
+	    label $w.f.f.axesf.t -text "Need to Execute to know the number of Axes."
 	    pack $w.f.f.axesf.t
 	} else {
 	    init_axes 
 	}
 
 	pack $w.f.f.l $w.f.f.axesf -side top -expand 1 -fill x
+
 	pack $w.f.t $w.f.s $w.f.e $w.f.f -side top -expand 1 -fill x
+
 	pack $w.f -expand 1 -fill x
 
 	makeSciButtonPanel $w $w $this

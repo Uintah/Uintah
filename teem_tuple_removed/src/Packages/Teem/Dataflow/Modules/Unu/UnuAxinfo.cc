@@ -92,7 +92,7 @@ void UnuAxinfo::load_gui() {
   if (dimension_.get() == 0) { return; }
   
   if(max_vectors_ != dimension_.get()) {
-    for(int a = max_vectors_+1; a <= dimension_.get(); a++) {
+    for(int a = max_vectors_; a <= dimension_.get(); a++) {
       ostringstream lab, cntr, sz, min, max, spac;
       lab << "label" << a;
       label_.push_back(new GuiString(ctx->subVar(lab.str())));
@@ -142,6 +142,7 @@ void UnuAxinfo::execute()
   if (!iport->get(nh) || !nh.get_rep())
   {
     clear_vals();
+    generation_ = -1;
     return;
   }
 
@@ -149,14 +150,15 @@ void UnuAxinfo::execute()
   
   if (generation_ != nh.get_rep()->generation) 
   {
+    generation_ = nh->generation;
     load_gui();
 
     // if the dimension, and sizes
     // don't clear
     bool do_clear = false;
     if(dimension_.get() == nh->nrrd->dim) {
-      for(int a = 1; a < dimension_.get(); a++) {
-	if(size_[a-1]->get() != nh->nrrd->axis[a].size) {
+      for(int a = 0; a < dimension_.get(); a++) {
+	if(size_[a]->get() != nh->nrrd->axis[a].size) {
 	  do_clear = true;
 	  break;
 	}
@@ -215,7 +217,7 @@ void UnuAxinfo::execute()
 
       
       // Tuple Axis information 
-      label0_.set(nh->nrrd->axis[0].label);
+      // label0_.set(nh->nrrd->axis[0].label);
 
       gui->execute(id.c_str() + string(" init_axes"));
 
@@ -253,25 +255,29 @@ void UnuAxinfo::execute()
 	type_.set("double");
 	break;
       }
-      for(int a = 1; a < dimension_.get(); a++) {
-	label_[a-1]->set(nh->nrrd->axis[a].label);
+      for(int a = 0; a < dimension_.get(); a++) {
+	if (nh->nrrd->axis[a].label == NULL || string(nh->nrrd->axis[a].label).length() == 0) {
+	  label_[a]->set("---");
+	  nh->nrrd->axis[a].label = "";
+	} else {
+	  label_[a]->set(nh->nrrd->axis[a].label);
+	}
 	switch (nh->nrrd->axis[a].center) {
 	case nrrdCenterUnknown :
-	  center_[a-1]->set("Unknown");
+	  center_[a]->set("Unknown");
 	  break;
 	case nrrdCenterNode :
-	  center_[a-1]->set("Node");
+	  center_[a]->set("Node");
 	  break;
 	case nrrdCenterCell :
-	  center_[a-1]->set("Cell");
+	  center_[a]->set("Cell");
 	  break;
 	}
-	size_[a-1]->set(nh->nrrd->axis[a].size);
-	spacing_[a-1]->set(nh->nrrd->axis[a].spacing);
-	min_[a-1]->set(nh->nrrd->axis[a].min);
-	max_[a-1]->set(nh->nrrd->axis[a].max);
+	size_[a]->set(nh->nrrd->axis[a].size);
+	spacing_[a]->set(nh->nrrd->axis[a].spacing);
+	min_[a]->set(nh->nrrd->axis[a].min);
+	max_[a]->set(nh->nrrd->axis[a].max);
       }
-      
     }
   }
   
@@ -289,8 +295,6 @@ void UnuAxinfo::execute()
     spacing_[a]->reset();
   }
 
-
-  generation_ = nh->generation;
   
   Nrrd *nin = nh->nrrd;
   Nrrd *nout = nrrdNew();
@@ -303,36 +307,28 @@ void UnuAxinfo::execute()
     free(err);
     return;
   }
-  
   int dimension = nh->nrrd->dim;
-  for(int i=1; i<dimension; i++) {
-    // the gui vectors are 1 off because the axes
-    // start with 0, with 0 being the tuple axis.
-    // The vectors only contain information for non-tuple
-    // axes.
-    int index = i-1;
-
-    if (strlen(label_[index]->get().c_str())) {
+  for(int i=0; i<dimension; i++) {
+    if (strlen(label_[i]->get().c_str())) {
       //AIR_FREE((void*)nout->axis[i].label);
       nout->axis[i].label = (char*)airFree(nout->axis[i].label);
-      nout->axis[i].label = airStrdup(const_cast<char*>(label_[index]->get().c_str()));
+      nout->axis[i].label = airStrdup(const_cast<char*>(label_[i]->get().c_str()));
 
-      if (AIR_EXISTS(min_[index]->get())) {
-	nout->axis[i].min = min_[index]->get();
+      if (AIR_EXISTS(min_[i]->get())) {
+	nout->axis[i].min = min_[i]->get();
       }
-      if (AIR_EXISTS(max_[index]->get())) {
-	nout->axis[i].max = max_[index]->get();
+      if (AIR_EXISTS(max_[i]->get())) {
+	nout->axis[i].max = max_[i]->get();
       }
-      if (AIR_EXISTS(spacing_[index]->get())) {
-	nout->axis[i].spacing = spacing_[index]->get();
+      if (AIR_EXISTS(spacing_[i]->get())) {
+	nout->axis[i].spacing = spacing_[i]->get();
       }
     }
   }
-
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nout->axis[0].label = strdup(nin->axis[0].label);
-  nrrd->copy_sci_data(*nh.get_rep());
+  // nout->axis[0].label = strdup(nin->axis[0].label);
+  //nrrd->copy_sci_data(*nh.get_rep());
 
   oport->send(NrrdDataHandle(nrrd));
 }

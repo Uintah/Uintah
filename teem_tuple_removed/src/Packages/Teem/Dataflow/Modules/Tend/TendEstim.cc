@@ -94,23 +94,23 @@ TendEstim::execute()
 //     return;
 //   }
 
-  Nrrd *sliced_bmat = 0;
+  //Nrrd *sliced_bmat = 0;
   if (inbmat_->get(bmat_handle)){
     if (!bmat_handle.get_rep()) {
       error("Empty input Bmat Nrrd.");
       return;
     }
-    sliced_bmat = nrrdNew();
+    //sliced_bmat = nrrdNew();
     // slice the tuple axis off to send to tendEstim
-    if (nrrdSlice(sliced_bmat, bmat_handle->nrrd, 0, 0)) {
-      char *err = biffGetDone(NRRD);
-      error(string("Error Slicing away bmat tuple axis: ") + err);
-      free(err);
-      return;
-    }
-  } else {
-    error("Empty input Bmat Port.");
-    return;
+//     if (nrrdSlice(sliced_bmat, bmat_handle->nrrd, 0, 0)) {
+//       char *err = biffGetDone(NRRD);
+//       error(string("Error Slicing away bmat tuple axis: ") + err);
+//       free(err);
+//       return;
+//     }
+    //} else {
+    //error("Empty input Bmat Port.");
+    //return;
   }
   if (!indwi_->get(dwi_handle))
     return;
@@ -132,9 +132,10 @@ TendEstim::execute()
 
   int knownB0 = knownB0_.get(); // TRUE for brains, FALSE for dog hearts
   Nrrd* dummy = nrrdNew();
-  if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, sliced_bmat, 
-			  knownB0, threshold, soft_.get(), 
-			  scale_.get()))
+  //if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, sliced_bmat, 
+  if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, 
+			  bmat_handle->nrrd, knownB0, threshold, 
+			  soft_.get(), scale_.get()))
   {
     char *err = biffGetDone(TEN);
     error(string("Error in epireg: ") + err);
@@ -143,11 +144,11 @@ TendEstim::execute()
   }
   nrrdNuke(dummy);
 
-  nrrdNuke(sliced_bmat);
+  //nrrdNuke(sliced_bmat);
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
-  output->copy_sci_data(*dwi_handle.get_rep());
-  output->nrrd->axis[0].label = strdup("Unknown:Tensor");
+  //output->copy_sci_data(*dwi_handle.get_rep());
+  //output->nrrd->axis[0].label = strdup("Unknown:Tensor");
   otens_->send(NrrdDataHandle(output));
   update_state(Completed);
 }

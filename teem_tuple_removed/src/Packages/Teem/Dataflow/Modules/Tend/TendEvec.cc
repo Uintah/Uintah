@@ -89,10 +89,15 @@ TendEvec::execute()
   Nrrd *nin = nrrd_handle->nrrd;
 
   int N, sx, sy, sz;
-  sx = nin->axis[1].size;
-  sy = nin->axis[2].size;
-  sz = nin->axis[3].size;
-  N = sx*sy*sz;
+  if (nin->dim > 3) {
+    sx = nin->axis[1].size;
+    sy = nin->axis[2].size;
+    sz = nin->axis[3].size;
+    N = sx*sy*sz;
+  } else {
+    error("Input Nrrd was not 4D");
+    return;
+  }
 
   int compLen=0;
   bool useComp[3];
@@ -132,20 +137,20 @@ TendEvec::execute()
     tdata += 7;
   }
   nrrdAxisInfoCopy(nout->nrrd, nin, NULL, NRRD_AXIS_INFO_SIZE_BIT);
-  string lname;
-  string enames[3] = {"Major", "Medium", "Minor"};
-  int init=false;
-  for (int i=2; i>=0; i--) {
-    if (useComp[i]) { 
-      if (init) 
-	lname += ",";
-      lname += enames[i];
-      lname += "Eigenvector:Vector";
-      init = true;
-    }
-  }
+//   string lname;
+//   string enames[3] = {"Major", "Medium", "Minor"};
+//   int init=false;
+//   for (int i=2; i>=0; i--) {
+//     if (useComp[i]) { 
+//       if (init) 
+// 	lname += ",";
+//       lname += enames[i];
+//       lname += "Eigenvector:Vector";
+//       init = true;
+//     }
+//   }
 
-  strcpy(nout->nrrd->axis[0].label, lname.c_str());
+//   strcpy(nout->nrrd->axis[0].label, lname.c_str());
   onrrd_->send(NrrdDataHandle(nout));
 }
 

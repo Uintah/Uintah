@@ -47,7 +47,7 @@ itcl_class Teem_Unu_UnuPad {
 	    if {[winfo exists $w.f.t]} {
 		destroy $w.f.t
 	    }
-	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+	    for {set i 0} {$i < [set $this-dim]} {incr i} {
 		#puts $i
 		if {! [winfo exists $w.f.a$i]} {
 		    add_axis $w.f.a$i $i $this-minAxis$i $this-maxAxis$i
@@ -81,7 +81,7 @@ itcl_class Teem_Unu_UnuPad {
 	    if {[winfo exists $w.f.mmf.t]} {
 		destroy $w.f.mmf.t
 	    }
-	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+	    for {set i 0} {$i < [set $this-dim]} {incr i} {
 		#puts $i
 		if {[winfo exists $w.f.mmf.a$i]} {
 		    destroy $w.f.mmf.a$i
@@ -130,13 +130,13 @@ itcl_class Teem_Unu_UnuPad {
 
 
 	if {[set $this-dim] == 0} {
-	    label $w.f.t -text "Need Execute to know the number of Axes."
+	    label $w.f.t -text "Need to Execute to know the number of Axes."
 	    pack $w.f.t
 	} else {
 	    init_axes 
 	}
 
-	button $w.fb.b -text "Execute" -command "$this-c needexecute"
-	pack $w.fb.b -side top -expand 1 -fill x
+        makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

@@ -59,13 +59,16 @@ NrrdInfo::~NrrdInfo(){
 void
 NrrdInfo::clear_vals() 
 {
+  gui->execute(string("set ") + id + "-type \"---\"");
+
   gui->execute(id + " delete_tabs");
+
 #if 0
   gui->execute(string("set ") + id + "-type \"---\"");
   gui->execute(string("set ") + id + "-dimension 0");
   gui->execute(string("set ") + id + "-label0 \"---\"");
 
-  for (int i = 1; i < nh->nrrd->dim; i++) {
+  for (int i = 0; i < nh->nrrd->dim; i++) {
     ostringstream str;
     
     str << "set " << id.c_str() << "-size" << i 
@@ -141,15 +144,16 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
   gui->execute(string("set ") + id + "-dimension " + to_string(nh->nrrd->dim));
 
   // Tuple Axis
-  gui->execute(string("set ") + id + "-label0 {" + 
-	       string(nh->nrrd->axis[0].label) + "}");
+//   gui->execute(string("set ") + id + "-label0 {" + 
+// 	       string(nh->nrrd->axis[0].label) + "}");
 
-  gui->execute(string("set ") + id + "-size0 " + 
-	       to_string(nh->nrrd->axis[0].size));
+//   gui->execute(string("set ") + id + "-size0 " + 
+// 	       to_string(nh->nrrd->axis[0].size));
 
-  gui->execute(id + " fill_tuple_tab");
+//   gui->execute(id + " fill_tuple_tab");
 
-  for (int i = 1; i < nh->nrrd->dim; i++) {
+  //for (int i = 1; i < nh->nrrd->dim; i++) {
+  for (int i = 0; i < nh->nrrd->dim; i++) {
     ostringstream sz, cntr, lab, spac, min, max;
     
     sz << "set " << id.c_str() << "-size" << i 
@@ -173,9 +177,15 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 
     gui->execute(cntr.str());
 
-    lab << "set " << id.c_str() << "-label" << i 
-	<< " {" << nh->nrrd->axis[i].label << "}";
-    gui->execute(lab.str());
+    if (nh->nrrd->axis[i].label == NULL || string(nh->nrrd->axis[i].label).length() == 0) {
+      lab << "set " << id.c_str() << "-label" << i 
+	  << " {" << "---" << "}";
+      gui->execute(lab.str());
+    } else {
+      lab << "set " << id.c_str() << "-label" << i 
+	  << " {" << nh->nrrd->axis[i].label << "}";
+      gui->execute(lab.str());
+    }
 
     spac << "set " << id.c_str() << "-spacing" << i 
 	 << " " << nh->nrrd->axis[i].spacing;
@@ -209,6 +219,7 @@ NrrdInfo::execute()
   if (!iport->get(nh) || !nh.get_rep())
   {
     clear_vals();
+    generation_ = -1;
     return;
   }
 

@@ -164,12 +164,14 @@ TendAnvol::execute()
 
   NrrdData *nrrd = scinew NrrdData;
 
-  Nrrd *ntup = nrrdNew();
-  nrrdAxesInsert(ntup, nout, 0);
-  ntup->axis[0].label = strdup("Aniso:Scalar");
+  //Nrrd *ntup = nrrdNew();
+  //nrrdAxesInsert(ntup, nout, 0);
+  //ntup->axis[0].label = strdup("Aniso:Scalar");
   //nrrd->copy_sci_data(*nrrd_handle.get_rep());
-  nrrdNuke(nout);
-  nrrd->nrrd = ntup;
+  //nrrdNuke(nout);
+  //nrrd->nrrd = ntup;
+  nrrd->nrrd = nout;
+  //nrrd->copy_sci_data(*nrrd_handle.get_rep()); 
   onrrd_->send(NrrdDataHandle(nrrd));
 }
 

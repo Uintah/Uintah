@@ -82,10 +82,6 @@ UnuSlice::execute()
   }
   reset_vars();
 
-  if (axis_.get() == 0) {
-    error("Cannot slice away the tuple axis, select another axis for slicing");
-  }
-
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
   
@@ -97,8 +93,7 @@ UnuSlice::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nout->axis[0].label = strdup(nin->axis[0].label);
-  nrrd->copy_sci_data(*nrrd_handle.get_rep());
+  //nrrd->copy_sci_data(*nrrd_handle.get_rep()); 
 
   onrrd_->send(NrrdDataHandle(nrrd));
 }
