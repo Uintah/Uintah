@@ -460,8 +460,7 @@ public:
       +x12*(1 + 2*x)*(-1 + y)*y2*z*(-2 + 3*z)*sdyz7
       -(x12*x*y2*(-3 + 2*y)*z*(-2 + 3*z))*sdxz7
       +x12*x*(-1 + y)*y2*z*(-2 + 3*z)*sdxyz7;
-  }
-  
+  }  
 
   //! return the parametric coordinates for value within the element.
   //! iterative solution...
@@ -469,12 +468,11 @@ public:
   void get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const;  
 
-  void blah(double (&arr)[7]);
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
 
-  //! add derivative values (sdx, sdy, sdz) for nodes.
-  void add_scalefactors(const vector<T> &p) { scalefactors__.push_back(p); }
+  //! add scale factors (sdx, sdy, sdz) for nodes.
+  void add_scalefactors(const vector<T> &p) { scalefactors_.push_back(p); }
 
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
@@ -491,7 +489,7 @@ protected:
   void next_guess(vector<double> &coords, const T &val, 
 		  const CellData &cd) const;
 
-  //! support data 
+  //! support data
   vector<vector<T> >          derivs_; 
   vector<vector<T> >          scalefactors_; 
 };
@@ -625,25 +623,14 @@ HexTricubicHmtScaleFactors<T>::get_coords(vector<double> &coords, const T& value
 //   }
 }
 
-const int HEXTRICUBICHMT_VERSION = 1;
+const int HEXTRICUBICHMTSCALEFACTORS_VERSION = 1;
 template <class T>
 void
 HexTricubicHmtScaleFactors<T>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), HEXTRICUBICHMT_VERSION);
-//   typename vector<T[7]>::size_type sz = derivs_.size();
-//   Pio(stream, sz);
-//   for(unsigned i = 0; i < sz; i++) {
-//     T (&arr)[7] = derivs_[i];
-//     Pio(stream, arr[0]);
-//     Pio(stream, arr[1]);
-//     Pio(stream, arr[2]);
-//     Pio(stream, arr[3]);
-//     Pio(stream, arr[4]);
-//     Pio(stream, arr[5]);
-//     Pio(stream, arr[6]);
-//   }
+  stream.begin_class(type_name(-1), HEXTRICUBICHMTSCALEFACTORS_VERSION);
   Pio(stream, derivs_);
+  Pio(stream, scalefactors_);
   stream.end_class();
 }
 

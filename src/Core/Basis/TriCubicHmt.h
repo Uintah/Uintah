@@ -116,11 +116,11 @@ protected:
 
   //! Additional support values.
 
-  //! Cubic Hermitian only needs additonal derivatives stored at each node
+  //! Cubic Hermitian needs additonal derivatives stored at each node
   //! in the topology.
   vector<T[2]>          derivs_; 
 
-  //! Quadratic Lagrangian only needs additional nodes stored for each edge
+  //! Cubic Lagrangian needs additional nodes stored for each edge
   //! in the topology.
   vector<T>          nodes_; 
 };
