@@ -118,6 +118,24 @@ gov::cca::Port BridgeComponentInstance::getBabelPort(const std::string& name)
   return pi->port;
 }
 
+Port* BridgeComponentInstance::getDataflowPort(const std::string& name)
+{
+  mutex->lock();
+  map<string, PortInstance*>::iterator iter = ports.find(name);
+  if(iter == ports.end())
+    return 0;
+  SCIRunPortInstance* pr = dynamic_cast<SCIRunPortInstance*>(iter->second);
+  if(pr == NULL)
+    return 0;
+  if(pr->porttype != SCIRunPortInstance::Output) {
+    throw InternalError("Cannot call getPort on an Input port");
+  }
+  SCIRunPortInstance *pi=dynamic_cast<SCIRunPortInstance*> (pr->getPeer());
+  mutex->unlock();
+  return pi->port;
+}
+
+
 void BridgeComponentInstance::releasePort(const std::string& name, const modelT model)
 {
   CCAPortInstance* cpr;
