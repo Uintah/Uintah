@@ -77,7 +77,7 @@ O3_NORMAL         =  '-O3 -G0 -OPT:div_split=OFF'
 -OPT:Olimit=0:roundoff=3' '--disable-sci-malloc'
 '--enable-assertion-level=0'
 
-BUILD - 12/16/2003 - best of 3
+BUILD - 12/16/2003 - best of 3            Steve
 performanceTest.ups[SecondOrder]
 
 0.751596 s - initial
@@ -87,4 +87,24 @@ performanceTest.ups[SecondOrder]
 0.664768 s - reduce [c] operators in qAverageFlux
 0.65881  s - more reduce [c] operators in qAverageFlux
 0.631359 s - reduce [c] operators in inFluxOutFluxVolume
-0.629109 s - reduce [c] operators in addExchangeToMomentumAndEnergy
+0.629641 s - replaced the face iterator and conditional with getBoundaryFaces iterator in qAverageFlux
+0.63201  s - replaced IntVector c = *iter with const IntVector& c = *iter;  Globally in ICE.cc (not committed)
+0.629128 s - reduced [c] operators in addExchangeToMomentumAndEnergy()
+
+performanceTest.ups[FirstOrder]          Todd (best of 3)
+0.47503  s   -initial
+0.443406 s  - reduced [c] operators in FirstOrder:advectSlabs and influxOutfluxVolume
+0.441607 s  - const IntVector& c = *iter
+
+performanceTest.ups[FirstOrderCE]
+0.873683 s  - intital
+0.831357 s - reduce [c] operators in FirstOrderCE:inFluxOutFluxVolume
+0.806311 s - reduce [c] operators in FirstOrderCE:advect
+
+
+peformanceTest.ups[SecondOrderCE]
+2.42356
+2.42139 s  - const IntVector& c = *iter
+2.38269 s - reduce [c] operators in SecondOrderCE:inFluxOutFluxVolume
+1.81267 s - d_OAFS from StaticArray to facedata
+1.7854  s - reduce further [c] operators in SecondOrderCE:inFluxOutFluxVolume
