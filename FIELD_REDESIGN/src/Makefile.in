@@ -150,7 +150,7 @@ sci_config.h: stamp-h
 stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \
 		${OBJTOP}/config.status
 	./config.status
-     
+
 config.status: ${SRCTOP}/configure
 	./config.status --recheck
 	./config.status
@@ -180,7 +180,9 @@ F77_DEPEND_REGEN = @F77_DEPEND_REGEN@
 .cc.o: $<
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 ifeq ($(CC_DEPEND_REGEN),-MD)
-	mv $(basename $(notdir $@)).d $(basename $@).d
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
 endif
 
 .F.o: $<
@@ -309,6 +311,9 @@ endif
 
 #
 # $Log$
+# Revision 1.24.2.1  2000/09/25 22:55:00  yarden
+# add rules for linux such that dependencies will work.
+#
 # Revision 1.24  2000/05/17 21:11:22  sparker
 # Added CFLAGS to SOFLAGS and LDFLAGS - necessary for -ipa and -Ofast
 #
