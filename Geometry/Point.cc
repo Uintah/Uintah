@@ -434,41 +434,89 @@ void Point::test_rigorous(RigorousTest* __test)
 		TEST(m_A_prime.y()==Yd);
 		TEST(m_A_prime.z()==Zd);
 	
-#if 0
-		//Point-Constant Tests
+		//Point operator- const Tests
 		
-		v1.x(x);
-		v1.y(y);
-		v1.z(z);
+		Point pt(x,y,z);
+		X = pt.x()-(2*pt.x());
+		Y = pt.y()-(2*pt.y());
+		Z = pt.z()-(2*pt.z());
 
-		v2.x(0);
-		v2.y(0);
-		v2.z(0);
+		pt = -pt;
+		
+		TEST(pt.x()==X);
+		TEST(pt.y()==Y);
+		TEST(pt.z()==Z);
+		
+	        //Dot Multiplication Tests
+		
+		Point a1(x,y,z);
+		Point a2(z,x,y);
+		
+		Vector b1(x,y,z);
+		Vector b2(z,x,y);
 
-		X = v1.x()-cnst;
-		Y = v1.y()-cnst;
-		Z = v1.z()-cnst;
+		TEST((a1.x()==x)&&(a1.y()==y)&&(a1.z()==z));
+		TEST((a2.x()==z)&&(a2.y()==x)&&(a2.z()==y));
+
+		TEST((b1.x()==x)&&(b1.y()==y)&&(b1.z()==z));
+		TEST((b2.x()==z)&&(b2.y()==x)&&(b2.z()==y));
 		
-		v2=v1-cnst;
+
+		//Dot(Point,Point) Test
+		TEST((Dot(a1,a2))==((a1.x()*a2.x())+(a1.y()*a2.y())+(a1.z()*a2.z())));
+
+		//Dot(Point,Vector) Test
+		TEST((Dot(a1,b2))==((a1.x()*b2.x())+(a1.y()*b2.y())+(a1.z()*b2.z())));
+
+		//Dot(Vector,Point) Test
+		TEST((Dot(b1,a2))==((b1.x()*a2.x())+(b1.y()*a2.y())+(b1.z()*a2.z())));
+
+		//Dot(Vector,Vector) Test
+		TEST((Dot(b1,b2))==((b1.x()*b2.x())+(b1.y()*b2.y())+(b1.z()*b2.z())));
 		
-		TEST(v2.x()==X);
-		TEST(v2.y()==Y);
-		TEST(v2.z()==Z);
-#endif	
+		//Vector() Tests
+		Point p(x,y,z);		
+		TEST((p+p.vector())==(p*2));	//Make sure p.vector() is a vector
 		
+		
+		//Min/Max Tests
+		Point pa(x,y,z);
+		Point pb(z,x,y);
+	       
+		Point max=Max(pa,pb);
+
+		if(pa.x()>=pb.x())
+		  TEST(max.x()==pa.x());
+		if(pa.x()<pb.x())
+		  TEST(max.x()==pb.x());
+
+		if(pa.y()>=pb.y())
+		  TEST(max.y()==pa.y());
+		if(pa.y()<pb.y())
+		  TEST(max.y()==pb.y());
+
+		if(pa.z()>=pb.z())
+		  TEST(max.z()==pa.z());
+		if(pa.z()<pb.z())
+		  TEST(max.z()==pb.z());
+	      
+
+		
+		   
+		
+		
+		
+		  
+
+		 
 	    }
 
 
 
 	}
 
-    }  
-
-
+    }
 }
-
-
-
 
 #endif
 
