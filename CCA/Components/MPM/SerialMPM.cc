@@ -1141,7 +1141,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
     }
 
-    cout << "Particle momentum before intToGrid = " << total_mom << endl;
+   //    cout << "Particle momentum before intToGrid = " << total_mom << endl;
 
       for(NodeIterator iter = patch->getNodeIterator();
 				!iter.done(); iter++) {
@@ -2020,7 +2020,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
   new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
 
-  cout << "Solid momentum after advection = " << total_mom << endl;
+  //  cout << "Solid momentum after advection = " << total_mom << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
 }
