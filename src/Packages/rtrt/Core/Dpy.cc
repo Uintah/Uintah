@@ -550,39 +550,38 @@ Dpy::checkGuiFlags()
   if (rtrt_engine->exit_engine) {
     numThreadsRequested_ = 0;
   }
-  
-  if( priv->showing_scene == 0 )
-    {
-      // Only create new threads if showing_scene is 0.  This will
-      // create them in sync with the Dpy thread.
-      int nworkers = rtrt_engine->nworkers;
-      if( nworkers != numThreadsRequested_ ) {
 
-	changeNumThreads_ = true;
-        // remove excess threads if need be;
-        int numToRemove = 0;
+  if( priv->showing_scene == 0 ) {
+    // Only create new threads if showing_scene is 0.  This will
+    // create them in sync with the Dpy thread.
+    int nworkers = rtrt_engine->nworkers;
+    if( nworkers != numThreadsRequested_ ) {
 
-	if( nworkers > numThreadsRequested_ )
-          numToRemove = nworkers - numThreadsRequested_;
+      changeNumThreads_ = true;
+      // remove excess threads if need be;
+      int numToRemove = 0;
 
-        int cnt;
-        // Tell the first bunch to just sync up
-	for( cnt = 0; cnt < nworkers-numToRemove; cnt++ ) {
-	  workers_[cnt]->syncForNumThreadChange( nworkers );
-	}
+      if( nworkers > numThreadsRequested_ )
+        numToRemove = nworkers - numThreadsRequested_;
 
-        // Tell the rest to exit after syncing up
-        for( ; cnt < nworkers; cnt++ ) {
-          Worker * worker = workers_[ cnt ];
-          workers_.pop_back();
-          cout << "worker " << cnt << " told to stop!\n";
-          // Tell the worker to stop.
-          worker->syncForNumThreadChange( nworkers, true );
-        }
-
-        if (numToRemove) cout << "done removing threads\n";
+      int cnt;
+      // Tell the first bunch to just sync up
+      for( cnt = 0; cnt < nworkers-numToRemove; cnt++ ) {
+        workers_[cnt]->syncForNumThreadChange( nworkers );
       }
-    } // end if showing_scene == 0 (thread number change code)
+
+      // Tell the rest to exit after syncing up
+      for( ; cnt < nworkers; cnt++ ) {
+        Worker * worker = workers_[ cnt ];
+        workers_.pop_back();
+        cout << "worker " << cnt << " told to stop!\n";
+        // Tell the worker to stop.
+        worker->syncForNumThreadChange( nworkers, true );
+      }
+
+      if (numToRemove) cout << "Done asking threads to die.\n";
+    }
+  }
 
   return changed;
 }
@@ -621,6 +620,11 @@ bool Dpy::should_close() {
 void
 Dpy::renderFrameless() {
 
+  int   & showing_scene = priv->showing_scene;
+  // only 1 buffer for frameless...
+  if (showing_scene != rendering_scene)
+    showing_scene = rendering_scene;
+
   // If we need to change the number of worker threads:
   if( changeNumThreads_ ) {
     //    cout << "changeNumThreads\n";
@@ -658,9 +662,55 @@ Dpy::renderFrameless() {
     changeNumThreads_ = false;
   }
 
-  int   & showing_scene = priv->showing_scene;
-  // only 1 buffer for frameless...
-  showing_scene = 0;
+  // Exit if you are supposed to.
+  if (rtrt_engine->nworkers == 0) {
+    cout << "Dpy has no more workers, going away\n";
+    return;
+  }
+  
+  Image * displayedImage = scene->get_image(showing_scene);
+
+  // This block of code needs to go after the changeNumThreads_ block,
+  // because we need to make sure we clear any waits before we cause
+  // another one to happen.
+  if( displayedImage->get_xres() != priv->xres ||
+      displayedImage->get_yres() != priv->yres ||
+      displayedImage->get_stereo() != priv->stereo) {
+//     cerr << "Dpy::rendering_scene: showing_scene = "<<showing_scene<<", rendering_scene = "<<rendering_scene<<"\n";
+//     cerr << "Dpy::renderFrameless: changing image resolution from ("<<displayedImage->get_xres()<<", "<<displayedImage->get_yres()<<") to ("<<priv->xres<<", "<<priv->yres<<")\n";
+
+    // We actually can't delete this buffer, because it is being used
+    // by the worker threads as we speak.  Intead delete the other
+    // buffer not being used and change showing_scene to point to that
+    // one when the workers and dpy sync up.
+    Image* otherBuffer = scene->get_image(1-showing_scene);
+    delete otherBuffer;
+    otherBuffer = new Image(priv->xres, priv->yres, priv->stereo);
+    scene->set_image(1-showing_scene, otherBuffer);
+    
+    if(rserver){
+      rserver->resize(priv->xres, priv->yres);
+    } else {
+      //      if (display_frames) XResizeWindow(dpy, win, priv->xres, priv->yres);
+      XResizeWindow(dpy, win, priv->xres, priv->yres);
+      resize(priv->xres, priv->yres);
+    }
+    
+    // Tell the workers to sync up.
+    int nworkers = rtrt_engine->nworkers;
+    if (frameless && frame > 5) {
+      for( int cnt = 0; cnt < nworkers; cnt++ ) {
+        workers_[cnt]->syncForNumThreadChange( nworkers );
+      }
+    }
+
+    // Ok, now switch the buffer
+    showing_scene = 1 - showing_scene;
+    rendering_scene = 1 - rendering_scene;
+
+    // Now wait until the workers are done blocking
+    addSubThreads_->wait( nworkers + 1 );
+  }
 
   // Time how long it takes to do the display, only if we are not
   // synched with the workers.
@@ -761,8 +811,6 @@ Dpy::renderFrameless() {
       fprintf(stderr, "\n\n");
     }
   }
-
-  Image * displayedImage = scene->get_image(showing_scene);
 
   bool swap=true;
 
@@ -882,24 +930,6 @@ Dpy::renderFrameless() {
     synch_frameless = priv->doing_frameless; // new ones always catch on 1st barrier...
   }
 #endif
-
-  // always have stereo - camera sychronization used to determine if
-  // stereo pixels are rendered...
-
-  if( displayedImage->get_xres() != priv->xres ||
-      displayedImage->get_yres() != priv->yres ||
-      displayedImage->get_stereo() != priv->stereo) {
-    delete displayedImage;
-    displayedImage = new Image(priv->xres, priv->yres, priv->stereo);
-    scene->set_image(showing_scene, displayedImage);
-    if(rserver){
-      rserver->resize(priv->xres, priv->yres);
-    } else {
-      //      if (display_frames) XResizeWindow(dpy, win, priv->xres, priv->yres);
-      XResizeWindow(dpy, win, priv->xres, priv->yres);
-      resize(priv->xres, priv->yres);
-    }
-  }
 
   //st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
   //rendering_scene=1-rendering_scene;
