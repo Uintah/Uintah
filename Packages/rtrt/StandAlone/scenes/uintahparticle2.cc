@@ -19,6 +19,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/TimeObj.h>
@@ -46,7 +47,7 @@
 //using SCICore::Exceptions::Exception;
 using namespace SCIRun;
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
@@ -157,6 +158,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "Usage: " << progname << " [options] <archive file>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
+    cerr << "  -cmap [file with rgb triples]\n";
     cerr << "  -PTvar\n";
     cerr << "  -ptonly (outputs only the point locations\n";
     cerr << "  -patch (outputs patch id with data)\n";
@@ -175,6 +177,43 @@ void usage(const std::string& badarg, const std::string& progname)
 are used in conjuntion with -PTvar.\n";
     
     return;
+}
+
+void get_material_cmap(rtrt::Array1<Material*> &matls, char *file) {
+  rtrt::Array1<Color> colors;
+  ifstream infile(file);
+  if (!infile) {
+    cerr << "Color map file, "<<file<<" cannot be opened for reading\n";
+    exit(0);
+  }
+
+  float r = 0;
+  infile >> r;
+  do {
+    // slurp up the colors
+    float g = 0;
+    float b = 0;
+    infile >> g >> b;
+    colors.add(Color(r,g,b));
+    cout << "Added: "<<colors[colors.size()-1]<<endl;
+    infile >> r;
+  } while(infile);
+
+  // Now to create the color map
+  ScalarTransform1D<int, Color> cmap(colors);
+  int ncolors = 5000;
+  cmap.scale(0, ncolors);
+  matls.resize(ncolors);
+  float Ka=.8;
+  float Kd=.8;
+  float Ks=.8;
+  float refl=0;
+  float specpow=40;
+  for(int i = 0; i < ncolors; i++) {
+    Color c(cmap.interpolate(i));
+    matls[i]=new Phong( c*Kd, c*Ks, specpow, refl);
+    //matls[i]=new LambertianMaterial(c*Kd);
+  }
 }
 
 void get_material(rtrt::Array1<Material*> &matls) {
@@ -351,7 +390,7 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
 
 GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
 				int colordata, int gridcellsize,
-				int griddepth) {
+				int griddepth, char *cmap_file) {
   // need from the group
   // 1. total number of spheres
   // 2. make sure the numvars is the same
@@ -409,7 +448,11 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
     cerr << "Wrong number of vars copied: index = " << index << ", total_spheres * numvars = " << total_spheres * numvars << endl;
   }
   rtrt::Array1<Material*> matls;
-  get_material(matls);
+  if (cmap_file)
+    get_material_cmap(matls, cmap_file);
+  else 
+    get_material(matls);
+  
   float *mins, *maxs;
   mins = (float*)malloc(numvars * sizeof(float));
   maxs = (float*)malloc(numvars * sizeof(float));
@@ -761,6 +804,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   char *dpy_config = 0;
   // Only use var_include if the size is greater than 0.
   vector<std::string> var_include;
+  char *cmap_file = 0; // Non zero when a file has been specified
 
   //------------------------------
   // Parse arguments
@@ -810,6 +854,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     } else if( (s == "--help") || (s == "-h") ) {
       usage( "", argv[0] );
       return(0);
+    } else if (s == "-cmap") {
+      cmap_file = argv[++i];
     } else if (s == "-i" || (s == "--include")) {
       if (var_include.size() == 0) {
 	// We are going to push back p.x right now, because we know we will
@@ -1208,7 +1254,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       thread_sema->down(rtrt::Min(nworkers,5));
       cout << "Adding timestep.\n";
       GridSpheres* obj = create_GridSpheres(sphere_data,colordata,
-					    gridcellsize,griddepth);
+					    gridcellsize,griddepth, cmap_file);
       thread_sema->up(rtrt::Min(nworkers,5));
       display->attach(obj);
       alltime->add((Object*)obj);
