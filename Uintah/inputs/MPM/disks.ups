@@ -17,7 +17,7 @@
    </Time>
    <DataArchiver>
         <filebase>disks.uda</filebase>
-	<outputInterval>100</outputInterval>
+	<outputInterval>1</outputInterval>
    </DataArchiver>
 
     <MPM>
@@ -36,6 +36,11 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
+                <burn>
+                  <type>simple</type>
+                  <a>.0004</a>
+                  <b>.2</b>
+                </burn>
 		<density>1000.0</density>
 		<comp_mooney_rivlin> 
 		   <he_constant_1>100000.0</he_constant_1>
