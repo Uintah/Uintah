@@ -153,20 +153,31 @@ private:
    DataArchive(const DataArchive&);
    DataArchive& operator=(const DataArchive&);
 
-   DOM_Node getTimestep(double time, XMLURL& url) const;
+   DOM_Node getTimestep(double time, XMLURL& url);
    
    std::string d_filebase;
    DOM_Document d_indexDoc;
    XMLURL d_base;
 
+   bool have_timesteps;
+   std::vector<int> d_tsindex;
+   std::vector<double> d_tstimes;
+   std::vector<DOM_Node> d_tstop;
+   std::vector<XMLURL> d_tsurl;
+
    DOM_Node findVariable(const string& name, const Region* region,
-			 int matl, double time, XMLURL& url) const;
+			 int matl, double time, XMLURL& url);
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.4  2000/05/21 08:19:11  sparker
+// Implement NCVariable read
+// Do not fail if variable type is not known
+// Added misc stuff to makefiles to remove warnings
+//
 // Revision 1.3  2000/05/20 08:09:36  sparker
 // Improved TypeDescription
 // Finished I/O
