@@ -1,6 +1,7 @@
 
 #include <Kurt/Datatypes/GLTexture3DPort.h>
 #include <Kurt/share/share.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -11,11 +12,11 @@ using namespace Kurt::Datatypes;
 extern "C" {
 KurtSHARE IPort* make_GLTexture3DIPort(Module* module,
 					 const clString& name) {
-  return new SimpleIPort<GLTexture3DHandle>(module,name);
+  return scinew SimpleIPort<GLTexture3DHandle>(module,name);
 }
 KurtSHARE OPort* make_GLTexture3DOPort(Module* module,
 					 const clString& name) {
-  return new SimpleOPort<GLTexture3DHandle>(module,name);
+  return scinew SimpleOPort<GLTexture3DHandle>(module,name);
 }
 }
 

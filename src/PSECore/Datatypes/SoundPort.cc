@@ -13,6 +13,7 @@
  */
 
 #include <PSECore/Datatypes/SoundPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Containers/String.h>
@@ -249,6 +250,9 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.11  2000/11/29 09:49:37  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.10  1999/12/07 02:53:35  dmw
 // made show_status variable persistent with network maps
 //

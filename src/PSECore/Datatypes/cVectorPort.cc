@@ -13,6 +13,7 @@
  */
 
 #include <PSECore/Datatypes/cVectorPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -21,10 +22,10 @@ using namespace SCICore::Datatypes;
 
 extern "C" {
 PSECORESHARE IPort* make_cVectorIPort(Module* module, const clString& name) {
-  return new SimpleIPort<cVectorHandle>(module,name);
+  return scinew SimpleIPort<cVectorHandle>(module,name);
 }
 PSECORESHARE OPort* make_cVectorOPort(Module* module, const clString& name) {
-  return new SimpleOPort<cVectorHandle>(module,name);
+  return scinew SimpleOPort<cVectorHandle>(module,name);
 }
 }
 
@@ -36,6 +37,9 @@ template<> clString SimpleIPort<cVectorHandle>::port_color("yellow");
 
 //
 // $Log$
+// Revision 1.6  2000/11/29 09:49:38  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.5  2000/11/22 17:14:42  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).

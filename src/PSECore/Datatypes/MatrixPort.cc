@@ -15,16 +15,17 @@
 #include <PSECore/share/share.h>
 
 #include <PSECore/Datatypes/MatrixPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
 
 extern "C" {
 PSECORESHARE IPort* make_MatrixIPort(Module* module, const clString& name) {
-  return new SimpleIPort<MatrixHandle>(module,name);
+  return scinew SimpleIPort<MatrixHandle>(module,name);
 }
 PSECORESHARE OPort* make_MatrixOPort(Module* module, const clString& name) {
-  return new SimpleOPort<MatrixHandle>(module,name);
+  return scinew SimpleOPort<MatrixHandle>(module,name);
 }
 }
 
@@ -38,6 +39,9 @@ template<> clString SimpleIPort<MatrixHandle>::port_color("dodger blue");
 
 //
 // $Log$
+// Revision 1.6  2000/11/29 09:49:36  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.5  2000/11/22 17:14:41  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).

@@ -33,10 +33,10 @@ namespace Datatypes {
 
 extern "C" {
 PSECORESHARE IPort* make_GeometryIPort(Module* module, const clString& name) {
-  return new GeometryIPort(module,name);
+  return scinew GeometryIPort(module,name);
 }
 PSECORESHARE OPort* make_GeometryOPort(Module* module, const clString& name) {
-  return new GeometryOPort(module,name);
+  return scinew GeometryOPort(module,name);
 }
 }
 
@@ -358,6 +358,9 @@ GeometryData::Print()
 
 //
 // $Log$
+// Revision 1.11  2000/11/29 09:49:36  moulding
+// changed all instances of "new" to "scinew"
+//
 // Revision 1.10  2000/11/22 17:14:41  moulding
 // added extern "C" make functions for input and output ports (to be used
 // by the auto-port facility).

@@ -17,6 +17,7 @@
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/BBox.h>
 #include <PSECore/Datatypes/SpanPort.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECore {
 namespace Datatypes {
@@ -26,11 +27,11 @@ using namespace SCICore::Datatypes;
 extern "C" {
 PSECORESHARE IPort* make_SpanUniverseIPort(Module* module,
 					   const clString& name) {
-  return new SimpleIPort<SpanUniverseHandle>(module,name);
+  return scinew SimpleIPort<SpanUniverseHandle>(module,name);
 }
 PSECORESHARE OPort* make_SpanUniverseOPort(Module* module,
 					   const clString& name) {
-  return new SimpleOPort<SpanUniverseHandle>(module,name);
+  return scinew SimpleOPort<SpanUniverseHandle>(module,name);
 }
 }
 
