@@ -20,7 +20,7 @@ using std::string;
 using std::ostringstream;
 
 #define THREADED_MPI_AVAILABLE
-#ifdef __digital__
+#if defined(__digital__) || defined(_AIX)
 #undef THREADED_MPI_AVAILABLE
 #endif
 
@@ -107,6 +107,12 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
     }
   }
   determinedIfUsingMPI = true;
+
+#if defined(_AIX)
+  // Hardcoded for AIX xlC for now...need to figure out how to do this 
+  // automagically.
+  ::usingMPI=true;
+#endif
 }
 
 void
