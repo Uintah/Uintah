@@ -189,11 +189,19 @@ VolumeRenderer::draw_volume()
 
   //--------------------------------------------------------------------------
 
-  int nc = bricks[0]->nc();
-  int nb0 = bricks[0]->nb(0);
-  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
-  bool use_shading = shading_ && nb0 == 4;
-  GLboolean use_fog = glIsEnabled(GL_FOG);
+  const int nc = bricks[0]->nc();
+  const int nb0 = bricks[0]->nb(0);
+  const bool use_cmap1 = cmap1_.get_rep();
+  const bool use_cmap2 =
+    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+  if(!use_cmap1 && !use_cmap2)
+  {
+    tex_->unlock_bricks();
+    return;
+  }
+
+  const bool use_shading = shading_ && nb0 == 4;
+  const GLboolean use_fog = glIsEnabled(GL_FOG);
   // glGetBooleanv(GL_FOG, &use_fog);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
@@ -501,11 +509,19 @@ VolumeRenderer::multi_level_draw()
   size.reserve(num_slices*6);
   //--------------------------------------------------------------------------
 
-  int nc = bricks[0]->nc();
-  int nb0 = bricks[0]->nb(0);
-  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
-  bool use_shading = shading_ && nb0 == 4;
-  GLboolean use_fog = glIsEnabled(GL_FOG);
+  const int nc = bricks[0]->nc();
+  const int nb0 = bricks[0]->nb(0);
+  const bool use_cmap1 = cmap1_.get_rep();
+  const bool use_cmap2 =
+    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+  if(!use_cmap1 && !use_cmap2)
+  {
+    tex_->unlock_bricks();
+    return;
+  }
+
+  const bool use_shading = shading_ && nb0 == 4;
+  const GLboolean use_fog = glIsEnabled(GL_FOG);
   // glGetBooleanv(GL_FOG, &use_fog);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
