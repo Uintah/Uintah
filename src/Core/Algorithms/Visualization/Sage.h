@@ -119,7 +119,7 @@ namespace PSECommon {
 
       public:
 	Sage<T,F,AI>( F *, AI *);
-	virtual ~Sage<T,F,AI>();
+	virtual ~Sage();
 	
 	virtual void search( double, GeomGroup*, GeomPts *);
 
