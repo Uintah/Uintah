@@ -388,6 +388,54 @@ Patch::getExtraCellIterator(const IntVector gc) const
 }
 
 
+//__________________________________
+//  Iterates over all interior facing cell faces
+CellIterator
+Patch::getSFCXIterator(const int offset) const
+{
+  IntVector low,hi; 
+  low = d_inLowIndex;
+  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:offset,
+		   getBCType(Patch::yminus)==Neighbor?0:0,
+		   getBCType(Patch::zminus)==Neighbor?0:0);
+  hi  = d_inHighIndex + IntVector(1,0,0);
+  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?1:offset,
+		   getBCType(Patch::yplus) ==Neighbor?0:0,
+		   getBCType(Patch::zplus) ==Neighbor?0:0);
+  return CellIterator(low, hi);
+}
+
+CellIterator
+Patch::getSFCYIterator(const int offset) const
+{
+  IntVector low,hi; 
+  low = d_inLowIndex;
+  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:0,
+		   getBCType(Patch::yminus)==Neighbor?0:offset,
+		   getBCType(Patch::zminus)==Neighbor?0:0);
+  hi  = d_inHighIndex + IntVector(0,1,0);
+  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?0:0,
+		   getBCType(Patch::yplus) ==Neighbor?1:offset,
+		   getBCType(Patch::zplus) ==Neighbor?0:0);
+  return CellIterator(low, hi);
+}
+
+CellIterator
+Patch::getSFCZIterator(const int offset) const
+{
+  IntVector low,hi; 
+  low = d_inLowIndex;
+  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:0,
+		   getBCType(Patch::yminus)==Neighbor?0:0,
+		   getBCType(Patch::zminus)==Neighbor?0:offset);
+  hi  = d_inHighIndex +   IntVector(0,0,1);
+  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?0:0,
+		   getBCType(Patch::yplus) ==Neighbor?0:0,
+		   getBCType(Patch::zplus) ==Neighbor?1:offset);
+  return CellIterator(low, hi);
+}
+
+
 CellIterator    
 Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
 { 
