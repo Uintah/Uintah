@@ -30,7 +30,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorFieldWriter.tcl \
 #	$(SRCDIR)/XYZtoRGB.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/DaveW/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/DaveW/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

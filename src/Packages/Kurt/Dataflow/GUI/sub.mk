@@ -15,7 +15,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SFRG.tcl
 
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/Kurt/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Kurt/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

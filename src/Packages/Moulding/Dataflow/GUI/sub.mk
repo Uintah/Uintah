@@ -13,10 +13,8 @@ SRCDIR := Packages/Moulding/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/VolumeRender.tcl\
-	$(SRCDIR)/StreamLines.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/Moulding/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Moulding/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

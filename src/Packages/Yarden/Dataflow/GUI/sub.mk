@@ -14,7 +14,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorFieldWriter.tcl \
 	$(SRCDIR)/ViewTensors.tcl \
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/Yarden/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Yarden/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

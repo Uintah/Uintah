@@ -32,7 +32,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/FieldConverters/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/FieldConverters/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

@@ -34,7 +34,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MatrixReceive.tcl\
 
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/MatlabInterface/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MatlabInterface/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

@@ -31,6 +31,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NrrdWriter.tcl\
 #[INSERT NEW TCL FILE HERE]
 
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/Teem/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Teem/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex

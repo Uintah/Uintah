@@ -78,6 +78,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TclStream.tcl \
 	$(SRCDIR)/Rescale.tcl \
 
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
