@@ -60,25 +60,9 @@ public:
   RenderFieldBase();
   virtual ~RenderFieldBase();
 
-  static const string& get_h_file_path();
-
-  static string dyn_file_name(const TypeDescription *td) {
-    // add no extension.
-    return template_class_name() + "." + td->get_filename() + ".";
-  }
-
-  static const string base_class_name() {
-    static string name("RenderFieldBase");
-    return name;
-  }
-
-  static const string template_class_name() {
-    static string name("RenderField");
-    return name;
-  }
-
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *td);
+  static CompileInfo *get_compile_info(const TypeDescription *ftd,
+				       const TypeDescription *ltd);
 
   GeomSwitch*              node_switch_;
   GeomSwitch*              edge_switch_;
@@ -91,7 +75,7 @@ public:
   ind_mat_t               *mats_;
 };
 
-template <class Fld>
+template <class Fld, class Loc>
 class RenderField : public RenderFieldBase
 {
 public:
@@ -140,12 +124,6 @@ private:
 		       GeomGroup *g, MaterialHandle mh_avg,
 		       bool cyl = true);
   
-  template <class Iter>
-  void render_data_at(const Fld *fld, Iter begin, Iter end, 
-		      const string &display_type, double scale, 
-		      bool normalize);
-
-
   inline  MaterialHandle choose_mat(bool def, int idx) {  
     if (def) return def_mat_handle_;
     ASSERT(mats_ != 0); 
@@ -211,15 +189,15 @@ bool
 add_data(const Point &, const Tensor &, GeomArrows *, 
 	 GeomSwitch *, MaterialHandle &, const string &, double, bool);
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::render(FieldHandle fh,  bool nodes, 
-			 bool edges, bool faces, bool data,
-			 MaterialHandle def_mat,
-			 bool def_col, ColorMapHandle color_handle,
-			 const string &ndt, const string &edt,
-			 double ns, double es, double vs, bool normalize, 
-			 int res, bool use_normals, bool use_transparency)
+RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes, 
+			      bool edges, bool faces, bool data,
+			      MaterialHandle def_mat,
+			      bool def_col, ColorMapHandle color_handle,
+			      const string &ndt, const string &edt,
+			      double ns, double es, double vs, bool normalize, 
+			      int res, bool use_normals, bool use_transparency)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -231,17 +209,20 @@ RenderField<Fld>::render(FieldHandle fh,  bool nodes,
 }
 
 
-template <class Fld> template <class Iter>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::render_data_at(const Fld *fld, Iter begin, Iter end, 
-				 const string &display_type, double scale, 
-				 bool normalize)
+RenderField<Fld, Loc>::render_data(const Fld *fld,
+				   const string &display_type,
+				   double scale, 
+				   bool normalize)
 {
   //cerr << "rendering data_at" << endl;
   double val = 0.0L;
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
-  Iter iter = begin;
+  typename Loc::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
   while (iter != end) {
     typename Fld::value_type tmp;
     if (fld->value(tmp, *iter)) {
@@ -250,7 +231,7 @@ RenderField<Fld>::render_data_at(const Fld *fld, Iter begin, Iter end,
       to_double(tmp, val);
       MaterialHandle m = choose_mat(false, *iter);
       add_data(p, tmp, vec_node_, data_switch_, 
-	        m, display_type, scale, normalize); 
+	       m, display_type, scale, normalize); 
     }
     ++iter;
   }
@@ -259,10 +240,10 @@ RenderField<Fld>::render_data_at(const Fld *fld, Iter begin, Iter end,
 
 // if a colormap exists, and we have data at a location, map the index to 
 // a materialhandle to be used by all the render passes.
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::render_materials(const Fld *sfld, 
-				   const string &node_display_type) 
+RenderField<Fld, Loc>::render_materials(const Fld *sfld, 
+					const string &node_display_type) 
 {
   //cerr << "rendering materials" << endl;
 
@@ -434,55 +415,12 @@ RenderField<Fld>::render_materials(const Fld *sfld,
   }
 }
 
-template <class Fld>
-void 
-RenderField<Fld>::render_data(const Fld *sfld, 
-			      const string &display_type,
-			      double scale, bool normalize)
-{
-  //cerr << "rendering data" << endl;
-  typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
-  // pass: over the data
-  switch (sfld->data_at()) {
-  case Field::NODE:
-    {
-      typename Fld::mesh_type::Node::iterator itb; mesh->begin(itb); 
-      typename Fld::mesh_type::Node::iterator ite; mesh->end(ite); 
-      render_data_at(sfld, itb, ite, display_type, scale, normalize);
-    }
-    break;
-  case Field::EDGE:      
-    {
-      typename Fld::mesh_type::Edge::iterator itb; mesh->begin(itb); 
-      typename Fld::mesh_type::Edge::iterator ite; mesh->end(ite); 
-      render_data_at(sfld, itb, ite, display_type, scale, normalize);
-    }
-    break;
-  case Field::FACE:
-    {
-      typename Fld::mesh_type::Face::iterator itb; mesh->begin(itb); 
-      typename Fld::mesh_type::Face::iterator ite; mesh->end(ite); 
-      render_data_at(sfld, itb, ite, display_type, scale, normalize);
-    }
-    break;
-  case Field::CELL:
-    {
-      typename Fld::mesh_type::Cell::iterator itb; mesh->begin(itb); 
-      typename Fld::mesh_type::Cell::iterator ite; mesh->end(ite); 
-      render_data_at(sfld, itb, ite, display_type, scale, normalize);
-    }
-    break;
-  case Field::NONE:
-    break;
-  }
-}
-
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::render_nodes(const Fld *sfld, 
-			       const string &node_display_type,
-			       double node_scale) 
+RenderField<Fld, Loc>::render_nodes(const Fld *sfld, 
+				    const string &node_display_type,
+				    double node_scale) 
 {
   //cerr << "rendering nodes" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -543,11 +481,11 @@ RenderField<Fld>::render_nodes(const Fld *sfld,
 }
 
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::render_edges(const Fld *sfld,
-			       const string &edge_display_type,
-			       double edge_scale) 
+RenderField<Fld, Loc>::render_edges(const Fld *sfld,
+				    const string &edge_display_type,
+				    double edge_scale) 
 {
   //cerr << "rendering edges" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -590,11 +528,11 @@ RenderField<Fld>::render_edges(const Fld *sfld,
   }
 }
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::render_faces(const Fld *sfld,
-			       bool use_normals,
-			       bool use_transparency)
+RenderField<Fld, Loc>::render_faces(const Fld *sfld,
+				    bool use_normals,
+				    bool use_transparency)
 {
   //cerr << "rendering faces" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -679,14 +617,14 @@ RenderField<Fld>::render_faces(const Fld *sfld,
   }
 }
 
-template <class Fld>
+template <class Fld, class Loc>
 void
-RenderField<Fld>::render_all(const Fld *fld, bool nodes, 
-			     bool edges, bool faces, bool data,
-			     bool data_at,
-			     const string &ndt, const string &edt,
-			     double ns, double es, double vs, bool normalize,
-			     bool use_normals, bool use_transparency)
+RenderField<Fld, Loc>::render_all(const Fld *fld, bool nodes, 
+				  bool edges, bool faces, bool data,
+				  bool data_at,
+				  const string &ndt, const string &edt,
+				  double ns, double es, double vs, bool normalize,
+				  bool use_normals, bool use_transparency)
 {
   if (data_at) render_materials(fld, ndt);
   if (nodes) render_nodes(fld, ndt, ns);
@@ -701,11 +639,11 @@ RenderField<Fld>::render_all(const Fld *fld, bool nodes,
 }
 
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::add_edge(const Point &p0, const Point &p1,  
-		    double scale, GeomGroup *g, MaterialHandle mh_avg,
-		    bool cyl) 
+RenderField<Fld, Loc>::add_edge(const Point &p0, const Point &p1,  
+				double scale, GeomGroup *g, MaterialHandle mh_avg,
+				bool cyl) 
 {
   if (cyl) {
     GeomCylinder *c = new GeomCylinder(p0, p1, scale, 2*res_);
@@ -717,25 +655,25 @@ RenderField<Fld>::add_edge(const Point &p0, const Point &p1,
   }
 }
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::add_sphere(const Point &p0, double scale, 
-		      GeomGroup *g, MaterialHandle mh) {
+RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale, 
+				  GeomGroup *g, MaterialHandle mh) {
   GeomSphere *s = scinew GeomSphere(p0, scale, res_, res_);
   g->add(scinew GeomMaterial(s, mh));
 }
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::add_disk(const Point &p, const Vector &vin, double scale, 
-			   GeomGroup *g, MaterialHandle mh) {
+RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin, double scale, 
+				GeomGroup *g, MaterialHandle mh) {
 
   Vector v = vin;
   if (v.length() > 0.00001) {
     v.safe_normalize();
     v*=scale/6;
     GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
-						    res_, 1, 1);
+						      res_, 1, 1);
     g->add(scinew GeomMaterial(d, mh));
   } else {
     GeomSphere *s = scinew GeomSphere(p, scale, res_, res_);
@@ -743,10 +681,10 @@ RenderField<Fld>::add_disk(const Point &p, const Vector &vin, double scale,
   }
 }
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::add_axis(const Point &p0, double scale, 
-		    GeomGroup *g, MaterialHandle mh) 
+RenderField<Fld, Loc>::add_axis(const Point &p0, double scale, 
+				GeomGroup *g, MaterialHandle mh) 
 {
   static const Vector x(1., 0., 0.);
   static const Vector y(0., 1., 0.);
@@ -769,9 +707,9 @@ RenderField<Fld>::add_axis(const Point &p0, double scale,
   g->add(scinew GeomMaterial(l, mh));
 }
 
-template <class Fld>
+template <class Fld, class Loc>
 void 
-RenderField<Fld>::add_point(const Point &p, GeomPts *pts, MaterialHandle mh) {
+RenderField<Fld, Loc>::add_point(const Point &p, GeomPts *pts, MaterialHandle mh) {
   pts->add(p, mh);
 }
 
