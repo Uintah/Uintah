@@ -156,11 +156,13 @@ VolumeRenderer::draw()
   else
     set_interactive_mode(false);
 
-  double rate = imode_ ? irate_ : sampling_rate_;
-  Vector diag = tex_->bbox().diagonal();
-  Vector cell_diag(diag.x()/tex_->nx(), diag.y()/tex_->ny(), diag.z()/tex_->nz());
-  double dt = cell_diag.length()/rate;
-  int num_slices = (int)(diag.length()/dt);
+  const double rate = imode_ ? irate_ : sampling_rate_;
+  const Vector diag = tex_->bbox().diagonal();
+  const Vector cell_diag(diag.x()/tex_->nx(),
+			 diag.y()/tex_->ny(),
+			 diag.z()/tex_->nz());
+  const double dt = cell_diag.length()/rate;
+  const int num_slices = (int)(diag.length()/dt);
   
   Array1<float> vertex(0, 100, num_slices*6);
   Array1<float> texcoord(0, 100, num_slices*6);
@@ -425,12 +427,28 @@ VolumeRenderer::draw_wireframe()
   glEnable(GL_DEPTH_TEST);
   GLboolean lighting = glIsEnabled(GL_LIGHTING);
   glDisable(GL_LIGHTING);
-  glColor4f(0.8, 0.8, 0.8, 1.0);
   vector<TextureBrick*> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
-  for(unsigned int i=0; i<bricks.size(); i++) {
-    const Point &pmin(bricks[i]->bbox().min());
-    const Point &pmax(bricks[i]->bbox().max());
+  
+  const double rate = imode_ ? irate_ : sampling_rate_;
+  const Vector diag = tex_->bbox().diagonal();
+  const Vector cell_diag(diag.x()/tex_->nx(),
+			 diag.y()/tex_->ny(),
+			 diag.z()/tex_->nz());
+  const double dt = cell_diag.length()/rate;
+  const int num_slices = (int)(diag.length()/dt);
+  
+  Array1<float> vertex(0, 100, num_slices*6);
+  Array1<float> texcoord(0, 100, num_slices*6);
+  Array1<int> size(0, 100, num_slices*6);
+
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    glColor4f(0.8, 0.8, 0.8, 1.0);
+
+    TextureBrick* b = bricks[i];
+    const Point &pmin(b->bbox().min());
+    const Point &pmax(b->bbox().max());
     Point corner[8];
     corner[0] = pmin;
     corner[1] = Point(pmin.x(), pmin.y(), pmax.z());
@@ -465,6 +483,16 @@ VolumeRenderer::draw_wireframe()
       glVertex3d(corner[6].x(), corner[6].y(), corner[6].z());
     }
     glEnd();
+
+    glColor4f(0.4, 0.4, 0.4, 1.0);
+
+    vertex.resize(0);
+    texcoord.resize(0);
+    size.resize(0);
+
+    // Scale out dt such that the slices are artificially further apart.
+    b->compute_polygons(view_ray, dt * 50, vertex, texcoord, size);
+    draw_polygons_wireframe(vertex, texcoord, size, false, false, 0);
   }
   if(lighting) glEnable(GL_LIGHTING);
   glMatrixMode(GL_MODELVIEW);

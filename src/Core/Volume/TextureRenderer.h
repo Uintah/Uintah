@@ -136,8 +136,12 @@ protected:
   
   Ray compute_view();
   void load_brick(TextureBrick* b);
-  void draw_polygons(Array1<float>& vertex, Array1<float>& texcoord, Array1<int>& poly,
+  void draw_polygons(Array1<float>& vertex, Array1<float>& texcoord,
+		     Array1<int>& poly,
                      bool normal, bool fog, Pbuffer* buffer);
+  void draw_polygons_wireframe(Array1<float>& vertex, Array1<float>& texcoord,
+			       Array1<int>& poly,
+			       bool normal, bool fog, Pbuffer* buffer);
 
   void build_colormap1();
   void build_colormap2();

@@ -68,9 +68,9 @@ public:
     b.extend(transform_.project(bbox_.max()));
   }
 
-  inline BBox bbox() const { return bbox_; }
+  inline const BBox &bbox() const { return bbox_; }
   inline void set_bbox(const BBox& bbox) { bbox_ = bbox; }
-  inline Transform transform() const { return transform_; }
+  inline const Transform &transform() const { return transform_; }
   inline void set_transform(Transform tform) { transform_ = tform; }
   
   void get_sorted_bricks(std::vector<TextureBrick*>& bricks, const Ray& view);
@@ -99,9 +99,9 @@ protected:
   int nx_, ny_, nz_; // data size
   int nc_;
   int nb_[2];
-  BBox bbox_; // data bbox
   Transform transform_; // data tform
   double vmin_, vmax_, gmin_, gmax_; //
+  BBox bbox_; // data bbox
   int card_mem_;
 };
 
