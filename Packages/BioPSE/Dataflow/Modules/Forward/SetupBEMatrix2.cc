@@ -53,6 +53,7 @@
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -72,6 +73,20 @@ class SetupBEMatrix2 : public Module
 {
 private:
   
+  bool ray_triangle_intersect(double &t,
+			      const Point &p,
+			      const Vector &v,
+			      const Point &p0,
+			      const Point &p1,
+			      const Point &p2) const;
+  void compute_intersections(vector<double> results,
+			     const TriSurfMeshHandle &mesh,
+			     const Point &p, const Vector &v) const;
+
+
+  int compute_ordering(const TriSurfMeshHandle &a,
+		       const TriSurfMeshHandle &b) const;
+
   bool compute_nesting(vector<int> &nesting, vector<TriSurfMeshHandle> meshes);
   
 public:
@@ -97,6 +112,60 @@ SetupBEMatrix2::SetupBEMatrix2(GuiContext *context):
 
 SetupBEMatrix2::~SetupBEMatrix2()
 {
+}
+
+
+bool
+SetupBEMatrix2::ray_triangle_intersect(double &t,
+				       const Point &p,
+				       const Vector &v,
+				       const Point &p0,
+				       const Point &p1,
+				       const Point &p2) const
+{
+  // do some math
+  return false;
+}
+
+void
+SetupBEMatrix2::compute_intersections(vector<double> results,
+				      const TriSurfMeshHandle &mesh,
+				      const Point &p, const Vector &v) const
+{
+  TriSurfMesh::Face::iterator itr, eitr;
+  mesh->begin(itr);
+  mesh->end(eitr);
+  double t;
+  while (itr != eitr)
+  {
+    TriSurfMesh::Node::array_type nodes;
+    mesh->get_nodes(nodes, *itr);
+    Point p0, p1, p2;
+    mesh->get_center(p0, nodes[0]);
+    mesh->get_center(p1, nodes[1]);
+    mesh->get_center(p2, nodes[2]);
+    if (ray_triangle_intersect(t, p, v, p0, p1, p2))
+    {
+      results.push_back(t);
+    }
+    ++itr;
+  }
+}
+
+
+int
+SetupBEMatrix2::compute_ordering(const TriSurfMeshHandle &a,
+				 const TriSurfMeshHandle &b) const
+{
+  // No overlap, return 0
+  if (!(a->get_bounding_box().Overlaps(b->get_bounding_box())))
+  {
+    return 0;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 
