@@ -45,6 +45,7 @@ class  Sound;
 class  Trigger;
 class  Object;
 class  Material;
+class  Scene;
 
 // Because we have to use static functions, only one Gui object may be
 // active at a time.  (My guess is that there will only be one Gui
@@ -110,6 +111,8 @@ public:
   // object to keep track of while a volume is selected
   Object* selected_obj;
 
+  // Get a pointer to the scene
+  Scene* scene();
 private:
 
   friend class Dpy;
@@ -222,6 +225,7 @@ private:
 
   GLUI_Spinner  * soundVolumeSpinner_;
   GLUI_Spinner  * glyphThresholdSpinner_;
+  GLUI_Spinner  * sceneDepthSpinner_;
 
   GLUI_Spinner  * fovSpinner_;
 
@@ -405,6 +409,7 @@ private:
 
   static void updateRayOffsetCB( int id );
 
+  static void updateSceneDepthCB( int id );
   static void updateDepthCB( int id );
 
   ////////////////////////////////////////////////////////////////
