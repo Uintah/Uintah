@@ -505,7 +505,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
   }
 
   // Set linear solver to stop at target error
-  KSPSetTolerances(ksp,1.0e-10, PETSc_max_err,10.0,maxiter.get());
+  KSPSetTolerances(ksp,1.0e-100, PETSc_max_err,10.0,maxiter.get());
 
   // Solve the linear system
   int its = maxiter.get();
