@@ -36,31 +36,51 @@ namespace Uintah {
    public:
       template<class T> class Min {
       public:
-	 T operator()(T a, T b) {
+	 T operator()(T a, T b) const {
 	    return a<b?a:b;
 	 }
+         T getBenignValue() const {
+           T tmp;
+           fun_getLargeValue(&tmp);
+           return tmp;
+         }
       };
 
       public:
       template<class T> class Max {
       public:
-	 T operator()(T a, T b) {
+	 T operator()(T a, T b) const {
 	    return a>b?a:b;
 	 }
+         T getBenignValue() const {
+           T tmp;
+           fun_getLargeValue(&tmp);
+           return tmp;
+         }
       };
 
       template<class T> class Sum {
       public:
-	 T operator()(T a, T b) {
+	 T operator()(T a, T b) const {
 	    return a+b;
 	 }
+         T getBenignValue() const {
+           T tmp;
+           fun_getLargeValue(&tmp);
+           return tmp;
+         }
       };
 
       template<class T> class And {
       public:
-	T operator()(T a, T b) {
+	T operator()(T a, T b) const {
 	  return a && b;
 	 }
+         T getBenignValue() const {
+           T tmp;
+           fun_getLargeValue(&tmp);
+           return tmp;
+         }
       };
 
    private:

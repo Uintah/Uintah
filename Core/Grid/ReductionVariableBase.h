@@ -58,6 +58,7 @@ WARNING
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(string& elems, unsigned long& totsize,
 			       void*& ptr) const = 0;
+      virtual void setBenignValue() = 0;
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();
