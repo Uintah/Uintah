@@ -2,8 +2,8 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = ContourSetReader.cc SegFldReader.cc SigmaSetReader.cc \
-	   TensorFieldReader.cc
+SRCS     = ContourSetReader.cc PathReader.cc SegFldReader.cc \
+	   SigmaSetReader.cc TensorFieldReader.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
