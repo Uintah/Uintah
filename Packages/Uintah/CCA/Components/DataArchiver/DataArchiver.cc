@@ -388,31 +388,32 @@ void DataArchiver::createIndexXML(Dir& dir)
 void DataArchiver::finalizeTimestep(double time, double delt,
 				    const LevelP& level, SchedulerP& sched)
 {
-  d_currentTime=time;
+  d_currentTime=time+delt;
   if (!d_wereSavesAndCheckpointsInitialized &&
       !(delt == 0) /* skip the initialization timestep for this
 		      because it needs all computes to be set
 		      to find the save labels */) {
-
+    
     // This assumes that the TaskGraph doesn't change after the second
     // timestep and will need to change if the TaskGraph becomes dynamic. 
     d_wereSavesAndCheckpointsInitialized = true;
-      
+    
     if (d_outputInterval != 0.0) {
       initSaveLabels(sched);
       indexAddGlobals(); /* add saved global (reduction)
 			    variables to index.xml */
     }
-      
+    
     if (d_checkpointInterval != 0)
       initCheckpoints(sched);
   }
-  
+
+  bool do_output=false;
   if (d_outputInterval != 0.0 && delt != 0) {
     // Schedule task to dump out reduction variables at every timestep
     Task* t = scinew Task("DataArchiver::outputReduction",
 			  this, &DataArchiver::outputReduction);
-
+    
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
       SaveItem& saveItem = d_saveReductionLabels[i];
       const VarLabel* var = saveItem.label;
@@ -425,26 +426,19 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     }
     
     sched->addTask(t, 0, 0);
-
+    
     dbg << "Created reduction variable output task" << endl;
-
-    if(time >= d_nextOutputTime) {
-      // output timestep
-      d_wasOutputTimestep = true;
-      outputTimestep(d_dir, d_saveLabels, time, delt, level, sched,
-		     &d_lastTimestepLocation);
-      d_nextOutputTime+=d_outputInterval;
+    if (d_outputInterval != 0 && time+delt >= d_nextOutputTime){
+      scheduleOutputTimestep(d_dir, d_saveLabels, level, sched);
+      do_output=true;
     }
-    else
-      d_wasOutputTimestep = false;
   }
-   
-  if (d_checkpointInterval != 0 && time >= d_nextCheckpointTime) {
+    
+  if (d_checkpointInterval != 0 && time+delt >= d_nextCheckpointTime) {
     // output checkpoint timestep
-    string timestepDir;
     Task* t = scinew Task("DataArchiver::outputCheckpointReduction",
 			  this, &DataArchiver::outputCheckpointReduction);
-
+    
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
       const VarLabel* var = saveItem.label;
@@ -455,12 +449,40 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       t->requires(Task::NewDW, var, matls) ;
     }
     sched->addTask(t, 0, 0);
-    d_wasCheckpointTimestep=true;
     
     dbg << "Created checkpoint reduction variable output task" << endl;
-    
+
+    scheduleOutputTimestep(d_checkpointsDir, d_checkpointLabels,
+			   level, sched);
+    do_output=true;
+  }
+  if(do_output && delt == 0)
+    beginOutputTimestep(time, delt, level);
+}
+
+
+void DataArchiver::beginOutputTimestep(double time, double delt,
+				       const LevelP& level)
+{
+  d_currentTime=time+delt;
+  dbg << "beginOutputTimestep called at time=" << d_currentTime << '\n';
+  if (d_outputInterval != 0.0 && delt != 0) {
+    if(d_currentTime >= d_nextOutputTime) {
+      // output timestep
+      d_wasOutputTimestep = true;
+      outputTimestep(d_dir, d_saveLabels, time, delt, level,
+		     &d_lastTimestepLocation);
+      d_nextOutputTime+=d_outputInterval;
+    }
+    else
+      d_wasOutputTimestep = false;
+  }
+  
+  if (d_checkpointInterval != 0 && d_currentTime >= d_nextCheckpointTime) {
+    d_wasCheckpointTimestep=true;
+    string timestepDir;
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
-		   level, sched, &timestepDir,
+		   level, &timestepDir,
 		   d_checkpointReductionLabels.size() > 0);
     
     string iname = d_checkpointsDir.getName()+"/index.xml";
@@ -504,7 +526,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 void DataArchiver::outputTimestep(Dir& baseDir,
 				  vector<DataArchiver::SaveItem>& saveLabels,
 				  double time, double delt,
-				  const LevelP& level, SchedulerP& sched,
+				  const LevelP& level,
 				  string* pTimestepDir /* passed back */,
 				  bool hasGlobals /* = false */)
 {
@@ -659,7 +681,12 @@ void DataArchiver::outputTimestep(Dir& baseDir,
     ofstream indexOut(iname.c_str());
     indexOut << indexDoc << endl;     
   }
-      
+}
+
+void DataArchiver::scheduleOutputTimestep(Dir& baseDir,
+				    vector<DataArchiver::SaveItem>& saveLabels,
+				    const LevelP& level, SchedulerP& sched)
+{
   // Schedule a bunch o tasks - one for each variable, for each patch
   // This will need to change for parallel code
   int n=0;
@@ -1160,25 +1187,40 @@ void  DataArchiver::initCheckpoints(SchedulerP& sched)
 #endif
 }
 
-bool DataArchiver::need_recompile(double time, double /* dt */,
-				  const LevelP& /* level */)
+bool DataArchiver::need_recompile(double time, double dt ,
+				  const LevelP& level )
 {
+  dbg << "DataArchiver::need_recompile called\n";
   d_currentTimestep++;
-  d_currentTime=time;
   bool recompile=false;
-  if (d_outputInterval != 0 && time >= d_nextOutputTime){
+  bool do_output=false;
+  if (d_outputInterval != 0 && time+dt >= d_nextOutputTime){
+    do_output=true;
     if(!d_wasOutputTimestep)
       recompile=true;
   } else {
     if(d_wasOutputTimestep)
       recompile=true;
   }
-  if (d_checkpointInterval != 0 && time >= d_nextCheckpointTime) {
+  if (d_checkpointInterval != 0 && time+dt >= d_nextCheckpointTime) {
+    do_output=true;
     if(!d_wasCheckpointTimestep)
       recompile=true;
   } else {
     if(d_wasCheckpointTimestep)
       recompile=true;
   }
+  if(do_output)
+    beginOutputTimestep(time, dt, level);
+  else
+    d_wasCheckpointTimestep=d_wasOutputTimestep=false;
+  dbg << "wasOutputTimestep=" << d_wasOutputTimestep << '\n';
+  dbg << "wasCheckpointTiemstep=" << d_wasCheckpointTimestep << '\n';
+  dbg << "time=" << time << '\n';
+  dbg << "dt=" << dt << '\n';
+  if(recompile)
+    dbg << "We do request recompile\n";
+  else
+    dbg << "We do not request recompile\n";
   return recompile;
 }

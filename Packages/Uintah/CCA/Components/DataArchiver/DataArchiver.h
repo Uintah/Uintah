@@ -128,9 +128,14 @@ using std::pair;
       // helper for finalizeTimestep
       void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
 			  double time, double delt,
-			  const LevelP& level, SchedulerP& sched,
+			  const LevelP& level,
 			  string* pTimestepDir /* passed back */,
 			  bool hasGlobals = false);
+
+      void scheduleOutputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
+				  const LevelP& level, SchedulerP& sched);
+     void beginOutputTimestep(double time, double delt,
+			      const LevelP& level);
 
       // helper for problemSetup
       void createIndexXML(Dir& dir);
