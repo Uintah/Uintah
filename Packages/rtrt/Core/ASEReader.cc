@@ -195,7 +195,6 @@ void handleGROUP(token_list* children1, unsigned loop1,
   token_list *children2 = (*children1)[loop1]->GetChildren();
   unsigned loop2,length2 = children2->size();
   for (loop2=0; loop2<length2; ++loop2) {
-    cerr << "loop2 = " << loop2 << endl;
     if ((*children2)[loop2]->GetMoniker() == "*GEOMOBJECT") {
       handleGEOMOBJECT(children2,loop2,ase_matls,t,objgroup);
     } else if ((*children2)[loop2]->GetMoniker() == "*GROUP") {
