@@ -76,10 +76,11 @@ ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
 IPort* FindAndAllocateIPortType(Module* mod, const clString& str,
 				const clString& name)
 {
-  char* package = scinew char[strlen(str())+1];
-  char* datatype = scinew char[strlen(str())+1];
-  char* libname = scinew char[strlen(package)+strlen(datatype)+15];
-  char* portname = scinew char[strlen(datatype)+11];
+  int strlength = strlen(str());
+  char* package = new char[strlength+1];
+  char* datatype = new char[strlength+1];
+  char* libname = new char[strlength*2+15];
+  char* portname = new char[strlength+11];
   LIBRARY_HANDLE so = 0;
   iport_maker maker = 0;
 
@@ -120,16 +121,22 @@ IPort* FindAndAllocateIPortType(Module* mod, const clString& str,
   std::cerr << "Module: Couldn't find input port for "
             << package << "::" << datatype << endl;
 
+  delete[] package;
+  delete[] datatype;
+  delete[] libname;
+  delete[] portname;
+
   return 0;
 }
 
 OPort* FindAndAllocateOPortType(Module* mod, const clString& str,
 				const clString& name)
 {
-  char* package = scinew char[strlen(str())+1];
-  char* datatype = scinew char[strlen(str())+1];
-  char* libname = scinew char[strlen(package)+strlen(datatype)+15];
-  char* portname = scinew char[strlen(datatype)+11];
+  int strlength = strlen(str());
+  char* package = new char[strlength+1];
+  char* datatype = new char[strlength+1];
+  char* libname = new char[strlength*2+15];
+  char* portname = new char[strlength+11];
   LIBRARY_HANDLE so = 0;
   oport_maker maker = 0;
 
@@ -170,6 +177,10 @@ OPort* FindAndAllocateOPortType(Module* mod, const clString& str,
   std::cerr << "Module: Couldn't find output port for "
             << package << "::" << datatype << endl;
 
+  delete[] package;
+  delete[] datatype;
+  delete[] libname;
+  delete[] portname;
 
   return 0;
 }
@@ -193,6 +204,8 @@ Module::Module(const clString& name, const clString& id,
 
   ModuleInfo* info = GetModuleInfo(moduleName,categoryName,packageName);
   if (info) {
+    std::cerr << moduleName << " " << categoryName << " " << packageName
+              << endl;
     for (iport_iter i1=info->iports->begin();
 	 i1!=info->iports->end();
 	 i1++) {
@@ -658,6 +671,10 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.15  2000/11/29 09:37:08  moulding
+// fixed a nasty bug that caused certain machine types to catch fire when
+// using auto ports (nah - it just caused crashes :)
+//
 // Revision 1.14  2000/11/22 19:10:38  moulding
 // auto-port facility is now operational.
 //
