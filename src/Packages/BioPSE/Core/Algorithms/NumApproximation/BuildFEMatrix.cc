@@ -110,8 +110,10 @@ void BuildFEMatrix::parallel(int proc)
   Array1<int> mycols(0, 15*ndof);
   
   if (proc==0){
-    hMesh_->compute_edges();
-    hMesh_->compute_nodes();
+    Mesh::synchronized_t sync;
+    sync.set(Mesh::EDGES_E);
+    sync.set(Mesh::NODE_NEIGHBORS_E);
+    hMesh_->synchronize(sync);
   }
 
   barrier_.wait(np_);

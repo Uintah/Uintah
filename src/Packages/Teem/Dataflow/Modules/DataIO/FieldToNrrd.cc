@@ -201,7 +201,7 @@ void FieldToNrrd::execute()
       warning("Input Field must contain a strictly scale/translate matrix.");
     }
   }
-
+#if 0
   BBox bbox = lvm->get_bounding_box();
   Point minP = bbox.min();
   Point maxP = bbox.max();
@@ -237,7 +237,7 @@ void FieldToNrrd::execute()
   } else if (data == "Tensor") {
     nout->nrrd->axis[0].label = strdup("t");
   }
-
+#endif
   NrrdDataHandle noutH(nout);
   onrrd->send(noutH);
 }

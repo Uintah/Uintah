@@ -199,7 +199,6 @@ HexIntMask::execute()
       }
       ++bni;
     }
-    clipped->flush_changes();
     
     if (elemmap.size() > 0)
     {
@@ -286,7 +285,6 @@ HexIntMask::execute()
       ++bci;
     }
 
-    clipped->flush_changes();
     
     // copy the field data - map it to the right nodes
     if (nodemap.size() > 0)

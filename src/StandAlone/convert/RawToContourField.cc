@@ -155,7 +155,6 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  cm->flush_changes();
   CurveField<double> *cfd = scinew CurveField<double>(cm, Field::NODE);
   FieldHandle cfdH(cfd);
 

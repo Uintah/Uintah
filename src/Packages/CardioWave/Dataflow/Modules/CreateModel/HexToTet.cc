@@ -127,7 +127,9 @@ HexToTet::execute()
     ++nbi;
   }
 
-  tvmesh->compute_nodes();
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::NODE_NEIGHBORS_E);
+  hvmesh->synchronize(sync);
 
   vector<HexVolMesh::Elem::index_type> elemmap;
 
@@ -233,7 +235,6 @@ HexToTet::execute()
     }
     ++bi;
   }
-  tvmesh->flush_changes();
 
 
   TetVolField<int> *tvfield = scinew TetVolField<int>(tvmesh, Field::CELL);

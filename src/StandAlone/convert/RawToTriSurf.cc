@@ -159,7 +159,6 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  tsm->flush_changes();
   TriSurfField<int> *ts = scinew TriSurfField<int>(tsm, Field::NODE);
   FieldHandle tsH(ts);
   
