@@ -56,29 +56,23 @@ public:
 
 private:
   GuiString datasetsStr_;
-  GuiString datadimsStr_;
-
-  GuiInt gridR_;
-  GuiInt gridZ_;
-  GuiInt gridPhi_;
 
   GuiInt iWrap_;
   GuiInt jWrap_;
   GuiInt kWrap_;
 
-
-  int gridr_;
-  int gridz_;
-  int gridphi_;
-  int data_;
-
   int iwrap_;
   int jwrap_;
   int kwrap_;
 
+  vector< int > grid_;
+  vector< int > data_;
+
   vector< int > nGenerations_;
 
   FieldHandle  fHandle_;
+
+  bool error_;
 };
 
 
@@ -86,25 +80,16 @@ DECLARE_MAKER(NIMRODNrrdConverter)
 NIMRODNrrdConverter::NIMRODNrrdConverter(GuiContext* context)
   : Module("NIMRODNrrdConverter", context, Source, "Fields", "Fusion"),
     datasetsStr_(context->subVar("datasets")),
-    datadimsStr_(context->subVar("datadims")),
 
     iWrap_(context->subVar("i-wrap")),
     jWrap_(context->subVar("j-wrap")),
     kWrap_(context->subVar("k-wrap")),
 
-    gridR_(context->subVar("gridR")),
-    gridZ_(context->subVar("gridZ")),
-    gridPhi_(context->subVar("gridPhi")),
-
     iwrap_(0),
     jwrap_(0),
     kwrap_(0),
 
-    gridr_(-1),
-    gridz_(-1),
-    gridphi_(-1),
-
-    data_(-1)
+    error_(false)
 {
 }
 
@@ -151,8 +136,12 @@ NIMRODNrrdConverter::execute(){
     return;
   }
 
-  if( nHandles.size() > 4 ) {
+  if( nHandles.size() != 3 &&
+      nHandles.size() != 4 &&
+      nHandles.size() != 6 &&
+      nHandles.size() != 9 ) {
     remark( "Too many inputs, ignoring extras." );
+    return;
   }
 
   int generation = 0;
@@ -173,13 +162,16 @@ NIMRODNrrdConverter::execute(){
   if( generation ) {
 
     nGenerations_.resize( nHandles.size() );
+    grid_.resize( 3 );
+    data_.clear();
+
+    grid_[0] = grid_[1] = grid_[2] = -1;
 
     for( int ic=0; ic++; ic<nHandles.size() ) {
       nGenerations_[ic] = nHandles[ic]->generation;
     }
 
     string datasetsStr;
-    string datadimsStr;
 
     vector< string > datasets;
 
@@ -194,6 +186,7 @@ NIMRODNrrdConverter::execute(){
 
       if( tuples != 1 ) {
 	error( "Too many tuples listed in the tuple axis." );
+	error_ = true;
 	return;
       }
 
@@ -203,6 +196,7 @@ NIMRODNrrdConverter::execute(){
       // Do not allow joined Nrrds
       if( dataset.size() != 1 ) {
 	error( "Too many sets listed in the tuple axis." );
+	error_ = true;
 	return;
       }
 
@@ -214,15 +208,15 @@ NIMRODNrrdConverter::execute(){
 
       if( dataset[0].find( "GRID-R" ) != std::string::npos &&
 	  nHandle->nrrd->dim == 3 ) 
-	gridr_ = ic;
+	grid_[0] = ic;
       else if( dataset[0].find( "GRID-Z" ) != std::string::npos && 
 	       nHandle->nrrd->dim == 3 ) 
-	gridz_ = ic; 
+	grid_[1] = ic; 
       else if( dataset[0].find( "GRID-PHI" ) != std::string::npos &&
 	       nHandle->nrrd->dim == 2 )
-	gridphi_ = ic;
-      else if( ic < 4 )
-	data_ = ic;
+	grid_[2] = ic;
+      else
+	data_.push_back( ic );
     }
 
     if( datasetsStr != datasetsStr_.get() ) {
@@ -235,34 +229,50 @@ NIMRODNrrdConverter::execute(){
   }
 
 
-  if( gridr_ == -1 || gridz_ == -1 || gridphi_ == -1 ) {
+  if( grid_.size() != 3 ||
+      grid_[0] == -1 || grid_[1] == -1 || grid_[2] == -1 ) {
     error( "Can not form the grid, missing components." );
+    error_ = true;
     return;
   }
 
   // If no data or data change, recreate the field.
-  if( !fHandle_.get_rep() ||
+  if( error_ ||
+      !fHandle_.get_rep() ||
       generation ||
       iwrap_ != iWrap_.get() ||
       jwrap_ != jWrap_.get() ||
       kwrap_ != kWrap_.get() ) {
  
+    error_ = false;
+
     iwrap_ = iWrap_.get();
     jwrap_ = jWrap_.get();
     kwrap_ = kWrap_.get();
 
 
-    int idim = nHandles[gridr_  ]->nrrd->axis[1].size;
-    int jdim = nHandles[gridz_  ]->nrrd->axis[2].size;
-    int kdim = nHandles[gridphi_]->nrrd->axis[1].size;
+    if( nHandles[grid_[0]]->nrrd->axis[1].size != 
+	nHandles[grid_[1]]->nrrd->axis[1].size ||
+	nHandles[grid_[0]]->nrrd->axis[2].size != 
+	nHandles[grid_[1]]->nrrd->axis[2].size ) {
+      error( "Grid dimension mismatch." );
+      error_ = true;
+      return;
+    }
+
+    int idim = nHandles[grid_[2]]->nrrd->axis[1].size;
+    int jdim = nHandles[grid_[0]]->nrrd->axis[1].size;
+    int kdim = nHandles[grid_[0]]->nrrd->axis[2].size;
 
     vector<unsigned int> mdims;
+
+    remark( "Creating the mesh." );
 
     // Create the mesh.
     if( idim > 1 && jdim > 1 && kdim > 1 ) {
       // 3D StructHexVol
       mHandle = scinew
-	StructHexVolMesh( idim+iwrap_, jdim+jwrap_, kdim+kwrap_ );
+	StructHexVolMesh( kdim+kwrap_, jdim+jwrap_, idim+iwrap_ );
 
       mdims.push_back( idim );
       mdims.push_back( jdim );
@@ -270,7 +280,7 @@ NIMRODNrrdConverter::execute(){
 
     } else if( idim >  1 && jdim >  1 && kdim == 1 ) {
       // 2D StructQuadSurf
-      mHandle = scinew StructQuadSurfMesh(idim+iwrap_, jdim+jwrap_ );
+      mHandle = scinew StructQuadSurfMesh(jdim+jwrap_, idim+iwrap_ );
 
       mdims.push_back( idim );
       mdims.push_back( jdim );
@@ -278,7 +288,7 @@ NIMRODNrrdConverter::execute(){
 
     } else if( idim >  1 && jdim == 1 && kdim  > 1 ) {
       // 2D StructQuadSurf
-      mHandle = scinew StructQuadSurfMesh(idim+iwrap_, kdim+kwrap_ );
+      mHandle = scinew StructQuadSurfMesh(kdim+kwrap_, idim+iwrap_ );
 
       mdims.push_back( idim );
       mdims.push_back( kdim );
@@ -286,7 +296,7 @@ NIMRODNrrdConverter::execute(){
 
     } else if( idim == 1 && jdim >  1 && kdim  > 1 ) {
       // 2D StructQuadSurf
-      mHandle = scinew StructQuadSurfMesh(jdim+jwrap_, kdim+kwrap_ );
+      mHandle = scinew StructQuadSurfMesh(kdim+kwrap_, jdim+jwrap_ );
 
       mdims.push_back( jdim );
       mdims.push_back( kdim );
@@ -315,6 +325,7 @@ NIMRODNrrdConverter::execute(){
 
     } else {
       error( "Grid dimensions do not make sense." );
+      error_ = true;
       return;
     }
     
@@ -327,8 +338,7 @@ NIMRODNrrdConverter::execute(){
       
     if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return;
 
-    algo_mesh->execute(mHandle, nHandles,
-		       gridr_, gridz_, gridphi_,
+    algo_mesh->execute(mHandle, nHandles, grid_,
 		       idim, jdim, kdim,
 		       iwrap_, jwrap_, kwrap_);
 
@@ -341,57 +351,110 @@ NIMRODNrrdConverter::execute(){
 
     vector<unsigned int> ddims;
     int rank = 0;
+    if( data_.size() == 0 ) {
+      nHandle = NULL;
+      rank = 1;
+    } else if( data_.size() == 1 || data_.size() == 3 || data_.size() == 6 ) {
 
-    if( data_ != -1 ) {
-      nHandle = nHandles[data_];
-
-      int tuples = nHandle->get_tuple_axis_size();
-
-      if( tuples != 1 ) {
-	error( "Too many tuples listed in the tuple axis." );
-	return;
-      }
-
-      // Do not allow joined Nrrds
-      vector< string > dataset;
-
-      nHandle->get_tuple_indecies(dataset);
-
-      if( dataset.size() != 1 ) {
-	error( "Too many sets listed in the tuple axis." );
-	return;
-      }
-
-      for( int ic=1; ic<nHandle->nrrd->dim; ic++ ) {
-
-	if( nHandle->nrrd->axis[ic].size != 1 )
-	  ddims.push_back( nHandle->nrrd->axis[ic].size );
-      }
-
-      if( ddims.size() == mdims.size() ||
-	  ddims.size() == mdims.size() + 1 ) {
+      for( int ic=0; ic<data_.size(); ic++ ) {
+	nHandle = nHandles[data_[ic]];
 	
-	for( int ic=0; ic<mdims.size(); ic++ ) {
-	  if( ddims[ic] != mdims[ic] ) {
-	    error( "Data and grid sizes do not match." );
+	int tuples = nHandle->get_tuple_axis_size();
+	
+	if( tuples != 1 ) {
+	  error( "Too many tuples listed in the tuple axis." );
+	  error_ = true;
+	  return;
+	}
+
+	// Do not allow joined Nrrds
+	vector< string > dataset;
+
+	nHandle->get_tuple_indecies(dataset);
+
+	if( dataset.size() != 1 ) {
+	  error( "Too many sets listed in the tuple axis." );
+	  error_ = true;
+	  return;
+	}
+
+	if( data_.size() == 3 || data_.size() == 6 ) {
+	  if( dataset[0].find( ":Scalar" ) == std::string::npos ) {
+	    error( "Bad tuple axis - data type must be scalar. Found:" );
+	    error( dataset[0] );
+	    error_ = true;
 	    return;
 	  }
 	}
+	    
+	for( int jc=1; jc<nHandle->nrrd->dim; jc++ )
+	  if( nHandle->nrrd->axis[jc].size != 1 )
+	    ddims.push_back( nHandle->nrrd->axis[jc].size );
 
-	if( ddims.size() == mdims.size() )
-	  rank = 1;
-	else if(ddims.size() == mdims.size() + 1)
-	  rank = ddims[mdims.size()];
-      } 
+	if( ddims.size() == mdims.size() ||
+	    ddims.size() == mdims.size() + 1 ) {
+	
+	  for( int jc=0; jc<mdims.size(); jc++ ) {
+	    if( ddims[jc] != mdims[jc] ) {
+	      error( "Data and grid sizes do not match." );
+	      error_ = true;
+	      return;
+	    }
+	  }
+	} 
+      }
 
-      if( rank != 1 && rank != 3 && rank != 6 ) {
-	error( "Bad data rank." );
-	return;
+      if( data_.size() == 1 ) { 
+	vector< string > dataset;
+
+	nHandle->get_tuple_indecies(dataset);
+
+	if( ddims.size() == mdims.size() ) {
+	  if( dataset[0].find( ":Scalar" ) != std::string::npos )
+	    rank = 1;
+	  else if( dataset[0].find( ":Vector" ) != std::string::npos )
+	    rank = 3;
+	  else if( dataset[0].find( ":Tensor" ) != std::string::npos )
+	    rank = 6;
+	  else {
+	    error( "Bad tuple axis - no data type must be scalar, vector, or tensor." );
+	    error( dataset[0] );
+	    error_ = true;
+	    return;
+	  }
+	}
+	else if(ddims.size() == mdims.size() + 1) {
+
+	  if( dataset[0].find( ":Scalar" ) != std::string::npos )
+	    rank = ddims[mdims.size()];
+	  else {
+	    error( "Bad tuple axis - data type must be scalar. Found:" );
+	    error( dataset[0] );
+	    error_ = true;
+	    return;
+	  }
+	} else {
+	  error( "Data and grid dimensions do not match." );
+	  error( dataset[0] );
+	  error_ = true;
+	}
+      } else {
+	rank = data_.size();
       }
     } else {
-      nHandle = NULL;
-      rank = 1;
+      error( "Impropper number of data handles." );
+      error_ = true;
+      return;
+
     }
+
+    if( rank != 1 && rank != 3 && rank != 6 ) {
+      error( "Bad data rank." );
+      error_ = true;
+      return;
+    }
+
+    remark( "Adding in the data." );
 
     // Add the data.
     if( ndims == 3 ) {
@@ -405,7 +468,11 @@ NIMRODNrrdConverter::execute(){
       } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructHexVolField< vector<float> >(mesh, Field::NODE);
+	  scinew StructHexVolField< Vector >(mesh, Field::NODE);
+      } else if( rank == 6 ) {
+	// Now after the mesh has been created, create the field.
+	fHandle_ =
+	  scinew StructHexVolField< Tensor >(mesh, Field::NODE);
       }
     } else if( ndims == 2 ) {
       // 2D StructQuadSurf
@@ -418,7 +485,11 @@ NIMRODNrrdConverter::execute(){
       } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructQuadSurfField< vector<float> >(mesh, Field::NODE);
+	  scinew StructQuadSurfField< Vector >(mesh, Field::NODE);
+      } else if( rank == 6 ) {
+	// Now after the mesh has been created, create the field.
+	fHandle_ =
+	  scinew StructQuadSurfField< Tensor >(mesh, Field::NODE);
       }
     } else if( ndims == 1 ) {
       // 1D StructCurve
@@ -431,14 +502,23 @@ NIMRODNrrdConverter::execute(){
       } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructCurveField< vector<float> >(mesh, Field::NODE);
+	  scinew StructCurveField< Vector >(mesh, Field::NODE);
+      } else if( rank == 6 ) {
+	// Now after the mesh has been created, create the field.
+	fHandle_ =
+	  scinew StructCurveField< Tensor >(mesh, Field::NODE);
       }
     } else {
       error( "Data dimensions do not make sense." );
+      error_ = true;
       return;
     }
 
-    if( data_ != -1 ) {
+    if( data_.size() ) {
+
+      // For vectors phi of the grid is needed.
+      data_.push_back( grid_[2] );
+
       const TypeDescription *ftd = fHandle_->get_type_description();
       
       CompileInfoHandle ci =
@@ -448,10 +528,10 @@ NIMRODNrrdConverter::execute(){
 
       if (!module_dynamic_compile(ci, algo)) return;
 
-      algo->execute(fHandle_, nHandle,
+      algo->execute(fHandle_, nHandles, data_,
 		    idim, jdim, kdim,
 		    iwrap_, jwrap_, kwrap_ );
-    } 
+    }
   }
 
 
