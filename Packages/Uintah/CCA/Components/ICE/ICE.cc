@@ -102,14 +102,14 @@ ICE::~ICE()
   delete q_inLabel;
   delete q_in_EFLabel;
   delete q_in_CFLabel;
-}
 
+}
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
  Purpose~  Read the inputfile 
 _____________________________________________________________________*/
-void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-		       SimulationStateP& sharedState)
+void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
+		       SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
   d_SMALL_NUM = 1.e-100;
@@ -124,40 +124,44 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       map<string,string> debug_attr;
       child->getAttributes(debug_attr);
       if (debug_attr["label"] == "switchDebugInitialize")
-	switchDebugInitialize = true;
+	switchDebugInitialize            = true;
       else if (debug_attr["label"] == "switchDebug_equilibration_press")
-	switchDebug_equilibration_press = true;
+	switchDebug_equilibration_press  = true;
       else if (debug_attr["label"] == "switchDebug_vel_FC")
-	switchDebug_vel_FC = true;
+	switchDebug_vel_FC               = true;
       else if (debug_attr["label"] == "switchDebug_Exchange_FC")
-	switchDebug_Exchange_FC = true;
+	switchDebug_Exchange_FC          = true;
       else if (debug_attr["label"] == "switchDebug_explicit_press")
-	switchDebug_explicit_press = true;
+	switchDebug_explicit_press       = true;
       else if (debug_attr["label"] == "switchDebug_PressFC")
-	switchDebug_PressFC = true;
+	switchDebug_PressFC              = true;
       else if (debug_attr["label"] == "switchDebugLagrangianValues")
-	switchDebugLagrangianValues = true;
+	switchDebugLagrangianValues      = true;
       else if (debug_attr["label"] == "switchDebugSource_Sink")
-	switchDebugSource_Sink = true;
+	switchDebugSource_Sink           = true;
       else if (debug_attr["label"] == "switchDebug_advance_advect")
-	switchDebug_advance_advect = true;
+	switchDebug_advance_advect       = true;
       else if (debug_attr["label"] == "switchDebug_advectQFirst")
-	switchDebug_advectQFirst = true;
+	switchDebug_advectQFirst         = true;
     }
   }
+  cerr << "Pulled out the debugging switches from input file" << endl;
 
+  // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   cfd_ps->require("cfl",d_CFL);
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
-
+  cerr << "Pulled out CFD-ICE block of the input file" << endl;
+    
+  // Pull out from Time section
   ProblemSpecP time_ps = prob_spec->findBlock("Time");
   time_ps->require("delt_init",d_initialDt);
- 
-    
-  // Search for the MaterialProperties block and then get the MPM section
-  ProblemSpecP mat_ps     =  prob_spec->findBlock("MaterialProperties");
-  ProblemSpecP ice_mat_ps = mat_ps->findBlock("ICE");  
+  cerr << "Pulled out Time block of the input file" << endl;
+
+  // Pull out Initial Conditions
+  ProblemSpecP mat_ps       =  prob_spec->findBlock("InitialConditions");
+  ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
 
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
@@ -166,17 +170,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      ICEMaterial *mat = scinew ICEMaterial(ps);
      sharedState->registerICEMaterial(mat);
   }     
-
+  cerr << "Pulled out InitialConditions block of the input file" << endl;
+  
   // Pull out the exchange coefficients
   ProblemSpecP exch_ps = ice_mat_ps->findBlock("exchange_coefficients");
-
   exch_ps->require("momentum",d_K_mom);
   exch_ps->require("heat",d_K_heat);
+  cerr << "Pulled out exchange coefficients of the input file" << endl;
 
-  ProblemSpecP ic_ps = prob_spec->findBlock("InitialConditions");
-  ProblemSpecP ice_ic_ps = ic_ps->findBlock("ICE");
-  ice_ic_ps->require("pressure",d_pressure); 
-
+//__________________________________
+//  Print out what I've found
   cout << "cfl = " << d_CFL << endl;
   cout << "max_iteration_equilibration " << d_max_iter_equilibration << endl;
   cout << "Initial dt = " << d_initialDt << endl;
@@ -188,7 +191,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   for (int i = 0; i<(int)d_K_heat.size(); i++)
     cout << "K_heat = " << d_K_heat[i] << endl;
 
-  // Print out the debugging switches
   if (switchDebugInitialize == true) 
     cout << "switchDebugInitialize is ON" << endl;
   if (switchDebug_equilibration_press == true) 
@@ -216,7 +218,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
  Purpose~  Initialize all the variables
 _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
-			     DataWarehouseP& dw)
+			     DataWarehouseP& dw)       
 {
   Level::const_patchIterator iter;
 
@@ -224,8 +226,8 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
     const Patch* patch=*iter;
     Task* t = scinew Task("ICE::actuallyInitialize", patch, dw, dw,this,
 			  &ICE::actuallyInitialize);
-    t->computes( dw, d_sharedState->get_delt_label() );
-
+    t->computes( dw,    d_sharedState->get_delt_label());
+    
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
       ICEMaterial*  matl = d_sharedState->getICEMaterial(m);
       int dwindex = matl->getDWIndex();
@@ -664,16 +666,9 @@ void ICE::actuallyComputeStableTimestep(
 	delt_CFL = std::min(B, delt_CFL);
 	delt_CFL = std::min(C, delt_CFL);
 	
-	A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(vel[*iter].x());
-	B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vel[*iter].y());
-	C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(vel[*iter].z());
-	
-	delt_stability = std::min(A, delt_stability);
-	delt_stability = std::min(B, delt_stability);
-	delt_stability = std::min(C, delt_stability);
       }
     }
-    dT = std::min(delt_stability, delt_CFL);
+    dT = delt_CFL;
   }
   cout << "new dT is " << dT << endl;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
@@ -689,23 +684,16 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
 			     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually Initialize" << endl;
-
-  CCVariable<double>    press;  
-  new_dw->allocate(press,lb->press_CCLabel, 0,patch);
-  press.initialize(d_pressure);
-  setBC(press,"Pressure",patch);
+  int numMatls = d_sharedState->getNumICEMatls();
+  CCVariable<double>    press_CC;  
+  new_dw->allocate(press_CC,lb->press_CCLabel, 0,patch);
   
-  
- //__________________________________
- //Hardwired to get the symetric problem working
-// IntVector hotpoint(4,4,4); big problem
-// IntVector hotpoint(2,2,2);
-// press[hotpoint] =  135266.03956476325000;
-   
-  
-  new_dw->put(press,    lb->press_CCLabel,  0,patch);
- 
-  for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
+//__________________________________
+// Note:
+// The press_CC isn't material dependent even though
+// we loop over numMatls below. This is done so we don't need additional
+// machinery to grab the pressure inside a geom_object
+  for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
     CCVariable<double> rho_micro,rho_CC,Temp_CC,cv,speedSound,visc_CC;
@@ -729,7 +717,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->allocate(wvel_FC,     lb->wvel_FCLabel,       dwindex,patch);
     
     ice_matl->initializeCells(rho_micro,rho_CC,Temp_CC,cv,speedSound,visc_CC,
-			      vol_frac_CC,vel_CC,patch,new_dw);
+			      vol_frac_CC,vel_CC,press_CC,numMatls,patch,new_dw);
 
     uvel_FC.initialize(0.);
     vvel_FC.initialize(0.);
@@ -791,7 +779,11 @@ if (switchDebugInitialize){
 } 
  /*==========TESTING==========`*/   
   }
-
+  setBC(press_CC,"Pressure",patch);
+  if (switchDebugInitialize){
+     printData(   patch, 1, "Initialization", "press_CC", press_CC);
+  }
+  new_dw->put(press_CC,    lb->press_CCLabel,  0,patch);
 }
 
 /* --------------------------------------------------------------------- 
@@ -856,8 +848,6 @@ void ICE::computeEquilibrationPressure(
     new_dw->allocate( vol_frac[m],     lb->vol_frac_CCLabel,  dwindex, patch); 
   }
   press_new = press;
-
-
   //__________________________________
   // Compute rho_micro, speedSound, and volfrac
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
@@ -896,8 +886,7 @@ void ICE::computeEquilibrationPressure(
     }
   }
  /*==========DEBUG============`*/
- 
-       press_new = press;
+   
 //______________________________________________________________________
 // Done with preliminary calcs, now loop over every cell
   int count, test_max_iter = 0;
