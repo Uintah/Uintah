@@ -22,6 +22,7 @@
 #include <Core/CCA/Component/Comm/EpChannel.h>
 
 namespace SCIRun {
+  class SocketMessage;
   class Message;
   class SpChannel;
   class SocketEpChannel : public EpChannel {
@@ -41,6 +42,7 @@ namespace SCIRun {
     void bind(SpChannel* spchan);
 
     void runAccept();
+    void runService(int new_fd);
 
   private:
   
@@ -57,7 +59,7 @@ namespace SCIRun {
     // Handler table size
     int table_size;
 
-    Message* msg; 
+    SocketMessage* msg; 
 
     void *object;
 

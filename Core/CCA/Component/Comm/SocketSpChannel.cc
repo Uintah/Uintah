@@ -37,16 +37,12 @@ using namespace std;
 using namespace SCIRun;
 
 SocketSpChannel::SocketSpChannel() { 
-  sockfd = 0;
+  sockfd = -1;
   msg = NULL;
 }
 
-SocketSpChannel::SocketSpChannel(const string &url) { 
-  ep_url=url;
-}
-
 SocketSpChannel::~SocketSpChannel(){
-  if(sockfd!=0) close(sockfd);
+  if(sockfd!=-1) close(sockfd);
   if(msg!=NULL) delete msg;
 }
 
@@ -70,51 +66,38 @@ void SocketSpChannel::openConnection(const URL& url) {
   memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
 
   if(connect(sockfd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
-    perror("connect");
     throw CommError("connect", errno);
   }
-
-  
-  
-  /*  if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-    perror("recv");
-    exit(1);
-  }
-
-  buf[numbytes] = '\0';
-  
-  printf("Received: %s",buf);
-  
-  return 0;
-  */
 }
 
 SpChannel* SocketSpChannel::SPFactory(bool deep) {
   //I am not sure about this yet.
+  SocketSpChannel *new_sp=new SocketSpChannel(); 
   if(deep){
-    return new SocketSpChannel(); 
+    new_sp->openConnection(ep_url);
   }
   else{
-    return this;
+    new_sp->ep_url=ep_url;
+    new_sp->sockfd=sockfd;
+    msg=NULL; // should I copy msg too?
   }
+  return new_sp;
 }
 
 void SocketSpChannel::closeConnection() {
+  if(msg==NULL)  msg = new SocketMessage(sockfd);
+  msg->createMessage();
+  msg->sendMessage(1);  //delete the reference
   close(sockfd);
 }
 
 Message* SocketSpChannel::getMessage() {
-  if (sockfd == 0)
-    return NULL;
-  if (msg == NULL)
-    msg = new SocketMessage(this);
+  if (msg == NULL){
+    msg = new SocketMessage(sockfd);
+    msg->setSocketSp(this);
+  }
   return msg;
 }
-
-
-
-
-
 
 
 

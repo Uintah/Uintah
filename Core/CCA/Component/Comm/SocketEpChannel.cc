@@ -33,6 +33,9 @@
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketThread.h>
+#include <Core/CCA/Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/ServerContext.h>
+
 #include <Core/Thread/Thread.h>
 
 using namespace std;
@@ -106,7 +109,7 @@ Message* SocketEpChannel::getMessage() {
   if (sockfd == 0)
     return NULL;
   if (msg == NULL)
-    msg = new SocketMessage(this);
+    throw CommError("SocketEpChannel::getMessage", -1);
   return msg;
 }
 
@@ -122,6 +125,7 @@ SocketEpChannel::registerHandler(int num, void* handle){
 
 void 
 SocketEpChannel::bind(SpChannel* spchan){
+  cerr<<"****bind is called *****"<<endl;
   spchan->openConnection(URL(getUrl()));
   //might save spchan for reference
 }
@@ -129,58 +133,81 @@ SocketEpChannel::bind(SpChannel* spchan){
 
 void 
 SocketEpChannel::runAccept(){
-  cerr<<"SocketAcceptThread is running\n";
+  //cerr<<"SocketAcceptThread is running\n";
   while(sockfd!=0){
     int new_fd;
     socklen_t sin_size = sizeof(struct sockaddr_in);
     sockaddr_in their_addr;
-    cerr<<"Waiting for socket connections...\n";
+    //cerr<<"Waiting for socket connections...\n";
     if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
 			 &sin_size)) == -1) {
       throw CommError("accept", errno);
     }
 
-    printf("server: got connection from %s\n",
-	   inet_ntoa(their_addr.sin_addr));
-
-    //should make a thread for each new_fd
-
-    int headerSize=sizeof(long)+sizeof(int);
-    void *buf=malloc(headerSize);
-    int numbytes;
-    if ((numbytes=recv(new_fd, buf, headerSize, 0)) == -1) {
-      throw CommError("recv", errno);
-    }
-    int msg_size;
-    int id;
-    memcpy(&msg_size, buf, sizeof(long));
-    memcpy(&id, (char*)buf+sizeof(long), sizeof(int));
-
-    buf=realloc(buf, msg_size-headerSize);
-    if ((numbytes=recv(new_fd, buf, msg_size-headerSize, 0)) == -1) {
-      throw CommError("recv", errno);
-    }
-
+    //printf("server: got connection from %s\n", inet_ntoa(their_addr.sin_addr));
+    if(object==NULL) throw CommError("Access Null object", -1);
+    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
+    _sc->d_objptr->addReference();
     
-    Thread* t = new Thread(new SocketThread(this, id), "SocketHandlerThread", 0, Thread::Activated);
+    Thread* t = new Thread(new SocketThread(this, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
     t->detach();
-    
-    cerr<<"server recv: msg_size="<<msg_size;
-    cerr<<"server recv: id="<<id;
 
-    //The SocketThread is responsible to free the buf.   
-
-    close(new_fd);  // parent doesn't need this
-
-    if(id==1) break;
-
+    //add some break condition
 
   }  
 }
 
 
+void 
+SocketEpChannel::runService(int new_fd){
+  //cerr<<"SocketServiceThread is running\n";
+  while(true){
+    int headerSize=sizeof(long)+sizeof(int);
+    void *buf=malloc(headerSize);
+    int numbytes=0;
+    while(numbytes==0){
+      if ((numbytes=recv(new_fd, buf, headerSize, MSG_WAITALL)) == -1) {
+	throw CommError("recv", errno);
+      }
+    }
 
+    if(numbytes!=headerSize){
+      //cerr<<"????? numbytes=, headerSize="<<numbytes<<", "<<headerSize<<endl;
+      CommError("numbytes!=headerSize",-1);
+    }
 
+    int msg_size;
+    int id;
+    memcpy(&msg_size, buf, sizeof(long));
+    memcpy(&id, (char*)buf+sizeof(long), sizeof(int));
 
+    //cerr<<"=======RECV(runService)   msg_size, id="<<msg_size<<", "<<id<<endl;
+
+    buf=realloc(buf, msg_size-headerSize);
+    numbytes=0;
+    while(numbytes==0 && msg_size-headerSize!=0){
+      if ((numbytes=recv(new_fd, buf, msg_size-headerSize, MSG_WAITALL)) == -1) {
+	throw CommError("recv", errno);
+      }
+    }
+    if(numbytes!=msg_size-headerSize) throw CommError("numbytes!=msg_size-headerSize",-1);
+
+    if(msg!=NULL) delete msg;
+    msg=new SocketMessage(new_fd, buf);
+    msg->setSocketEp(this);
+
+    Thread* t = new Thread(new SocketThread(this, id, new_fd), "SocketHandlerThread", 0, Thread::Activated);
+    t->detach();
+
+    //sleep(2); //avoid the synchornization
+
+    //The SocketHandlerThread is responsible to free the buf.   
+
+    if(id==1){
+      close(new_fd);
+      break;
+    }
+  }  
+}
 
 
