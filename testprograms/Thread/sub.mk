@@ -24,7 +24,7 @@ PSELIBS := Core
 else
 PSELIBS := Core/Thread
 endif
-LIBS := $(THREAD_LIBS)
+LIBS := $(THREAD_LIBS) $(XML_LIBRARY)
 
 PROGRAM := $(SRCDIR)/bps
 SRCS := $(SRCDIR)/bps.cc
