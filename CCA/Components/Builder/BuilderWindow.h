@@ -49,9 +49,9 @@ namespace SCIRun {
   public:
     MenuTree(BuilderWindow* builder, const std::string &url);
     virtual ~MenuTree();
-    gov::cca::ComponentClassDescription::pointer cd;
+    sci::cca::ComponentClassDescription::pointer cd;
     void add(const std::vector<std::string>& name, int nameindex,
-	     const gov::cca::ComponentClassDescription::pointer& desc,
+	     const sci::cca::ComponentClassDescription::pointer& desc,
 	     const std::string& fullname);
     void coalesce();
     void populateMenu(QPopupMenu*);
@@ -65,7 +65,7 @@ namespace SCIRun {
     
   };
 
-  class BuilderWindow : public QMainWindow, public gov::cca::ports::ComponentEventListener {
+  class BuilderWindow : public QMainWindow, public sci::cca::ports::ComponentEventListener {
     Q_OBJECT
   protected:
     void closeEvent( QCloseEvent* );
@@ -84,21 +84,21 @@ namespace SCIRun {
     void about();
 
   public:
-    BuilderWindow(const gov::cca::Services::pointer& services);
+    BuilderWindow(const sci::cca::Services::pointer& services);
     virtual ~BuilderWindow();
 
-    void instantiateComponent(const gov::cca::ComponentClassDescription::pointer&, const std::string &url="");
+    void instantiateComponent(const sci::cca::ComponentClassDescription::pointer&, const std::string &url="");
 
-    // From gov::cca::ComponentEventListener
-    void componentActivity(const gov::cca::ports::ComponentEvent::pointer& e);
+    // From sci::cca::ComponentEventListener
+    void componentActivity(const sci::cca::ports::ComponentEvent::pointer& e);
     void displayMsg(const char *); 
-    void buildRemotePackageMenus(const gov::cca::ports::ComponentRepository::pointer &reg, const std::string &frameworkURL);
+    void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg, const std::string &frameworkURL);
 
     std::vector<Module*> updateMiniView_modules;
 
   private:
     QString filename;
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
     void buildPackageMenus();
     BuilderWindow(const BuilderWindow&);
     BuilderWindow& operator=(const BuilderWindow&);

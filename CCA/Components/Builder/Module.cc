@@ -37,9 +37,9 @@
 using namespace std;
 
 Module::Module(NetworkCanvasView *parent, const string& moduleName,
-	       SIDL::array1<std::string> & up, SIDL::array1<std::string> &pp,
-	       const gov::cca::Services::pointer& services,
-	       const gov::cca::ComponentID::pointer& cid)
+	       SSIDL::array1<std::string> & up, SSIDL::array1<std::string> &pp,
+	       const sci::cca::Services::pointer& services,
+	       const sci::cca::ComponentID::pointer& cid)
   :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), up(up), services(services), cid(cid)
 {
   pd=10; //distance between two ports
@@ -62,17 +62,24 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
   setLineWidth(4);
 
   hasGoPort=hasUIPort=false;
-  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  bool isSciPort=false;
+  sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   } 
   else {
-    SIDL::array1<string> ports = builder->getProvidedPortNames(cid);
+    SSIDL::array1<string> ports = builder->getProvidedPortNames(cid);
     for(unsigned int i=0; i < ports.size(); i++){
       if(ports[i]=="ui") hasUIPort=true;
-      else if(ports[i]=="babel.ui") hasUIPort=true;
+      else if(ports[i]=="sci.ui"){
+	hasUIPort=true;
+	isSciPort=true;
+      }
       else if(ports[i]=="go") hasGoPort=true;
-      else if(ports[i]=="babel.go") hasGoPort=true;
+      else if(ports[i]=="sci.go"){
+	hasGoPort=true;
+	isSciPort=true;
+      }
       else this->pp.push_back(ports[i]); 
     }
   }
@@ -85,23 +92,23 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
 
       string instanceName = cid->getInstanceName();
       string uiPortName = instanceName+" uiPort";
-      services->registerUsesPort(uiPortName, "gov.cca.UIPort",
-				 gov::cca::TypeMap::pointer(0));
-      builder->connect(services->getComponentID(), uiPortName, cid, "ui");
+      services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort",
+				 sci::cca::TypeMap::pointer(0));
+      builder->connect(services->getComponentID(), uiPortName, cid, isSciPort?"sci.ui":"ui");
   }
 
   menu=new QPopupMenu(this);
 
   if(hasGoPort){
       menu->insertItem("Go",this, SLOT(go()) );
-      menu->insertItem("Stop",this,  SLOT(stop()) );
+      //menu->insertItem("Stop",this,  SLOT(stop()) );
       menu->insertSeparator();	
 
       string instanceName = cid->getInstanceName();
       string goPortName = instanceName+" goPort";
-      services->registerUsesPort(goPortName, "gov.cca.GoPort",
-				 gov::cca::TypeMap::pointer(0));
-      builder->connect(services->getComponentID(), goPortName, cid, "go");
+      services->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
+				 sci::cca::TypeMap::pointer(0));
+      builder->connect(services->getComponentID(), goPortName, cid,  isSciPort?"sci.go":"go");
   }
 
   if(hasUIPort || hasGoPort){
@@ -245,8 +252,8 @@ void Module::go()
 {
   string instanceName = cid->getInstanceName();
   string goPortName = instanceName+" goPort";
-  gov::cca::Port::pointer p = services->getPort(goPortName);
-  gov::cca::ports::GoPort::pointer goPort = pidl_cast<gov::cca::ports::GoPort::pointer>(p);
+  sci::cca::Port::pointer p = services->getPort(goPortName);
+  sci::cca::ports::GoPort::pointer goPort = pidl_cast<sci::cca::ports::GoPort::pointer>(p);
   if(goPort.isNull()){
     cerr << "goPort is not connected, cannot bring up Go!\n";
   } 
@@ -274,8 +281,8 @@ void Module::ui()
 {
   string instanceName = cid->getInstanceName();
   string uiPortName = instanceName+" uiPort";
-  gov::cca::Port::pointer p = services->getPort(uiPortName);
-  gov::cca::ports::UIPort::pointer uiPort = pidl_cast<gov::cca::ports::UIPort::pointer>(p);
+  sci::cca::Port::pointer p = services->getPort(uiPortName);
+  sci::cca::ports::UIPort::pointer uiPort = pidl_cast<sci::cca::ports::UIPort::pointer>(p);
   if(uiPort.isNull()){
     cerr << "uiPort is not connected, cannot bring up UI!\n";
   } 

@@ -44,9 +44,9 @@ class Module:public QFrame
 public:
   enum PortType{USES, PROVIDES}; 
   Module(NetworkCanvasView *parent, const std::string& name,
-	 SIDL::array1<std::string> & up, SIDL::array1<std::string> &pp,
-	 const gov::cca::Services::pointer& services,
-	 const gov::cca::ComponentID::pointer &cid);
+	 SSIDL::array1<std::string> & up, SSIDL::array1<std::string> &pp,
+	 const sci::cca::Services::pointer& services,
+	 const sci::cca::ComponentID::pointer &cid);
   QPoint usePortPoint(int num);
   QPoint posInCanvas();
   QPoint usePortPoint(const std::string &portname);
@@ -75,9 +75,9 @@ protected:
   QRect nameRect;
   //  std::string moduleName;
   std::string instanceName;
-  SIDL::array1<std::string> up, pp;
+  SSIDL::array1<std::string> up, pp;
 private:
-  gov::cca::Services::pointer services;
+  sci::cca::Services::pointer services;
   QPopupMenu *menu;
   int pd; //distance between two ports
   int pw; //port width
@@ -87,7 +87,7 @@ private:
   QProgressBar *progress;
   NetworkCanvasView * viewWindow;
 public:
-  gov::cca::ComponentID::pointer cid;
+  sci::cca::ComponentID::pointer cid;
 };
 
 #endif

@@ -26,10 +26,10 @@ using namespace SCIRun;
 class Connection:public QCanvasPolygon
 {
 public:
-  Connection(Module*, const std::string&, Module*, const std::string&, const gov::cca::ConnectionID::pointer &connID,  QCanvasView *cv);
+  Connection(Module*, const std::string&, Module*, const std::string&, const sci::cca::ConnectionID::pointer &connID,  QCanvasView *cv);
 	void resetPoints();
 	bool isConnectedTo(Module *);
-  gov::cca::ConnectionID::pointer getConnectionID();
+  sci::cca::ConnectionID::pointer getConnectionID();
 	void highlight();
 	void setDefault();
 	Module * getUsesModule();
@@ -37,7 +37,7 @@ public:
 	std::string getUsesPortName();
 	std::string getProvidesPortName();
 	// TEK 
-	gov::cca::ConnectionID::pointer connID;
+	sci::cca::ConnectionID::pointer connID;
 	// TEK
 protected:
 	void drawShape ( QPainter & );
