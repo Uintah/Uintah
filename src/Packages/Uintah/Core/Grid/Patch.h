@@ -121,6 +121,11 @@ WARNING
      }
      //Above for Fracture *************************************************
 
+     //////////
+     // Finalize the patch.  This is called crom Level::setBCTypes()
+     // which is called from Level::finalizeLevel()
+     void finalizePatch();
+
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
 					       bool mustExist);
      
@@ -442,6 +447,9 @@ WARNING
 		       IntVector& h) const;
 
      const vector<FaceType>* getBoundaryFaces() const { return &d_BoundaryFaces; }
+     //////////
+     // Return the list of corner cells for the given face.
+     const vector<IntVector>* getCornerCells(const Patch::FaceType face) const { return &(d_CornerCells[face]); }
 
      static const int MAX_PATCH_SELECT = 32;
      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
@@ -604,6 +612,11 @@ WARNING
      //////////
      // Keep track of faces on the edge of the domain
      vector<FaceType> d_BoundaryFaces;
+
+     //////////
+     // Keep track of cells on the corner of the domain
+     vector<IntVector> d_CornerCells[Patch::numFaces];
+     
    };
 
 } // End namespace Uintah

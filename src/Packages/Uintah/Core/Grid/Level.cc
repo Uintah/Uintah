@@ -532,6 +532,8 @@ void Level::setBCTypes()
 	patch->setBCType(face, Patch::Neighbor);
       }
     }
+
+    patch->finalizePatch();
   }
   
   d_finalized=true;
