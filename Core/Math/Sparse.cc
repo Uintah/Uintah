@@ -68,7 +68,8 @@ valarray<double> cgSolve(SparseMatrix<double, int>& A,
     residual -= alpha*q;
 
     // Check convergence
-    valarray<double> res = abs(residual);
+    valarray<double> res(residual.size());
+    res = abs(residual);
 
     double t = accumulate(&res[0],&res[res.size()],0.);
 
