@@ -78,7 +78,7 @@ class SimulationState;
     // Call this after all other tasks have been added to the scheduler
     virtual void finalizeTimestep(double t, double delt, const GridP&,
 				  SchedulerP&, bool recompile = false,
-                                  bool addMaterial = false) = 0;
+                                  int addMaterial = 0) = 0;
 
     //////////
     // Call this after a timestep restart to make sure we still
