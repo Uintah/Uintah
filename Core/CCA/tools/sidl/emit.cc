@@ -1305,7 +1305,7 @@ void CI::emit_proxy(EmitState& e)
 #ifdef MxNDEBUG
     e.out << "  //Turn on debug to a file\n";
     e.out << "  std::ostringstream fname;\n";
-    e.out << "  fname << distname << \"_\" << rm.localRank  << \".caller.out\";\n";
+    e.out << "  fname << distname << \"_\" << rm.getRank()  << \".caller.out\";\n";
     e.out << "  d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
 #endif
     e.out << "  \n";
@@ -1319,10 +1319,10 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    message->marshalInt(&distname_s, 1);\n";
     e.out << "    message->marshalChar((char*)distname.c_str(),distname_s);\n";
     e.out << "    //Marshal rank\n";
-    e.out << "    int rank = rm.localRank;\n";
+    e.out << "    int rank = rm.getRank();\n";
     e.out << "    message->marshalInt(&rank, 1);\n";
     e.out << "    //Marshal size\n";
-    e.out << "    int size = rm.localSize;\n";
+    e.out << "    int size = rm.getSize();\n";
     e.out << "    message->marshalInt(&size, 1);\n";
     e.out << "    //Marshal distribution representation array\n";
     e.out << "    int _rep_mdim[2];\n";
@@ -1410,7 +1410,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   /***********************************/
   if (isCollective) {
     e.out << leader2 << "int remoteSize = _rm->getRemoteSize();\n";
-    e.out << leader2 << "if(_rm->localRank >= remoteSize) {\n";
+    e.out << leader2 << "if(_rm->getRank() >= remoteSize) {\n";
     e.out << leader2 << "  /*NOCALLRET*/\n";
     string nocallret_ldr=e.out.push_leader();
 
@@ -1426,8 +1426,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
 e.out << leader2 << "//::std::cout << \" NOCALLRET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
-    e.out << leader2 << "int _numCalls = (_rm->localSize / remoteSize);\n";
-    e.out << leader2 << "((_rm->localSize % remoteSize) > _rm->localRank) ?_numCalls++ :0;\n";
+    e.out << leader2 << "int _numCalls = (_rm->getSize() / remoteSize);\n";
+    e.out << leader2 << "((_rm->getSize() % remoteSize) > _rm->getRank()) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
     e.out << leader2 << "// Send the message\n";
     e.out << leader2 << "int _handler=(_ref[0])->getVtableBase()+" << handlerOff << ";\n";
@@ -1547,8 +1547,8 @@ e.out << leader2 << "//::std::cout << \"CALLNORET sending _sessionID = '\" << _s
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
 e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
-    e.out << leader2 << "int _numCalls = (_rm->localSize / remoteSize);\n";
-    e.out << leader2 << "((_rm->localSize % remoteSize) > _rm->localRank) ?_numCalls++ :0;\n";
+    e.out << leader2 << "int _numCalls = (_rm->getSize() / remoteSize);\n";
+    e.out << leader2 << "((_rm->getSize() % remoteSize) > _rm->getRank()) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
   }
 
@@ -2285,7 +2285,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
 	e.out << leader2 << "  message->marshalChar(\"" << distarr->getName() << ".out\",namesize);\n";
 	e.out << leader2 << "  //Marshal the rank\n";
-	e.out << leader2 << "  int rank = _rm->localRank;\n";
+	e.out << leader2 << "  int rank = _rm->getRank();\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = _this_rep->Intersect(_rl_out[i]);\n"; 
@@ -2334,7 +2334,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "if (1) {\n";
 	string testleader = e.out.push_leader();
 	e.out << leader2 << "std::ostringstream fname;\n";
-	e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << rm.localRank << \".caller.out\";\n";
+	e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << rm.getRank() << \".caller.out\";\n";
 	e.out << leader2 << "d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
 	e.out << leader2 << "d_sched->dbg << \"Complete distribution received;\\n\";\n";
 	if (arr_t->dim == 1) {
@@ -2538,7 +2538,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
 	e.out << leader2 << "  message->marshalChar(\"" << distarr->getName() << ".in\",namesize);\n";
 	e.out << leader2 << "  //Marshal the rank\n";
-	e.out << leader2 << "  int rank = _rm->localRank;\n";
+	e.out << leader2 << "  int rank = _rm->getRank();\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = this_rep->Intersect(rl[i]);\n"; 

@@ -79,9 +79,9 @@ ReferenceMgr::~ReferenceMgr()
   }
 }
 
-Reference* ReferenceMgr::getIndependentReference()
+Reference* ReferenceMgr::getIndependentReference() const
 {
-  return &(d_ref[localRank % d_ref.size()]);
+  return (Reference*)(&(d_ref[localRank % d_ref.size()]));
 }
 
 ::std::vector<Reference*> ReferenceMgr::getCollectiveReference(callType tip)
@@ -122,6 +122,16 @@ void ReferenceMgr::insertReference(const Reference& ref)
 int ReferenceMgr::getRemoteSize()
 {
   return (d_ref.size());
+}
+
+int ReferenceMgr::getSize()
+{
+  return localSize;
+}
+
+int ReferenceMgr::getRank()
+{
+  return localRank;
 }
 
 void ReferenceMgr::createSubset(int ssize)

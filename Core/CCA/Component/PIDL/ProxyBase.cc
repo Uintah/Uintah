@@ -62,11 +62,14 @@ void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
       delete (ref.chan);
       ref.chan = NULL;
     }
-    ref = (rm.d_ref[0]);
-    ref.chan = (rm.d_ref[0].chan)->SPFactory(true);
+
+    Reference *d_ref;
+    d_ref = rm.getIndependentReference();
+    ref = *(d_ref);
+    ref.chan = (d_ref->chan)->SPFactory(true);
   }
   else {
-    ref = (rm.d_ref[0]);
+    ref = *(rm.getIndependentReference()); 
   }
 }
 
@@ -104,12 +107,12 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()
 ::std::string ProxyBase::getProxyUUID()
 {
   if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
-    if(rm.localRank == 0) {
+    if(rm.getRank() == 0) {
       proxy_uuid = getUUID(); 
     }
-    if(rm.localSize > 1) { 
+    if(rm.getSize() > 1) { 
       // Exchange component ID among all parallel processes
-      std::cout << rm.localRank << "='" << proxy_uuid.c_str() << "'=" << proxy_uuid.size() << "\n";
+      std::cout << rm.getRank() << "='" << proxy_uuid.c_str() << "'=" << proxy_uuid.size() << "\n";
       (rm.intracomm)->broadcast(0,const_cast<char*>(proxy_uuid.c_str()),36);
     }
   }
