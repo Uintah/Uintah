@@ -76,26 +76,30 @@ $stdout.print("#{root}/doc/index.html
 ")
 
 # Now do wildcards
-$stdout.print(Dir["
-#{root}/doc/User/FAQ/*.gif
-#{root}/doc/User/Nets/*.html
-#{root}/doc/User/Nets/*/*.jpg
-#{root}/doc/User/Nets/*/*.gif
-#{root}/doc/Documentum/*.html
-#{root}/doc/Documentum/*.pdf
-#{root}/doc/Installation/Guide/*.html
-#{root}/doc/Installation/Guide/*.gif
-#{root}/doc/Developer/Guide/*.html
-#{root}/doc/Developer/Modules/*.html
-#{root}/doc/Utilities/HTML/*.css
-#{root}/doc/Utilities/HTML/*.js
-#{root}/src/Dataflow/XML/*.html
-#{root}/src/Dataflow/Modules/*/doc/*.jpg
-#{root}/src/Dataflow/Modules/*/doc/*.gif
-#{root}/src/Packages/*/Dataflow/XML/*.html
-#{root}/src/Packages/*/Dataflow/TeX/*/*.jpg
-#{root}/src/Packages/*/Dataflow/TeX/*/*.gif
-#{root}/src/Packages/*/Dataflow/TeX/*/*/*
-#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.gif
-#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.jpg
-"].join(" "))
+globs = ["#{root}/doc/User/FAQ/*.gif",
+"#{root}/doc/User/Nets/*.html",
+"#{root}/doc/User/Nets/*/*.jpg",
+"#{root}/doc/User/Nets/*/*.gif",
+"#{root}/doc/Documentum/*.html",
+"#{root}/doc/Documentum/*.pdf",
+"#{root}/doc/Installation/Guide/*.html",
+"#{root}/doc/Installation/Guide/*.gif",
+"#{root}/doc/Developer/Guide/*.html",
+"#{root}/doc/Developer/Modules/*.html",
+"#{root}/doc/Utilities/HTML/*.css",
+"#{root}/doc/Utilities/HTML/*.js",
+"#{root}/src/Dataflow/XML/*.html",
+"#{root}/src/Dataflow/Modules/*/doc/*.jpg",
+"#{root}/src/Dataflow/Modules/*/doc/*.gif",
+"#{root}/src/Packages/*/Dataflow/XML/*.html",
+"#{root}/src/Packages/*/Dataflow/TeX/*/*.jpg",
+"#{root}/src/Packages/*/Dataflow/TeX/*/*.gif",
+"#{root}/src/Packages/*/Dataflow/TeX/*/*/*",
+"#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.gif",
+"#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.jpg"]
+
+globs.each do |glob|
+  Dir.glob(glob).each do |file|
+    $stdout.print(file, "\n") if file != ""
+  end
+end
