@@ -59,6 +59,10 @@ public:
   Tensor& operator=(const Tensor&);
   virtual ~Tensor();
   
+  // checks if one tensor is exactly the same as another
+  int operator==(const Tensor&) const;
+  int operator!=(const Tensor&) const;
+
   Tensor operator+(const Tensor&) const;
   Tensor& operator+=(const Tensor&);
   Tensor operator*(const double) const;

@@ -157,6 +157,26 @@ void Tensor::build_mat_from_eigens() {
     }
 }
 
+int Tensor::operator==(const Tensor& t) const
+{
+  for(int i=0;i<3;i++)
+    for(int j=0;j<3;j++)
+      if( mat_[i][j]!=t.mat_[i][j])
+	return false;
+
+  return true;
+}
+
+int Tensor::operator!=(const Tensor& t) const
+{
+  for(int i=0;i<3;i++)
+    for(int j=0;j<3;j++)
+      if( mat_[i][j]!=t.mat_[i][j])
+	return true;
+
+  return false;
+}
+
 Tensor& Tensor::operator=(const Tensor& copy)
 {
   for(int i=0;i<3;i++)
