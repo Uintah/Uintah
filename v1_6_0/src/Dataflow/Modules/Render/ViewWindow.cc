@@ -1886,11 +1886,11 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       Vector v(-1.0, 0.0, 0.0);
       df.up(v);
     } else if(position == "y1_z1") {
-      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
       Vector v(0.0, 0.0, 1.0);
       df.up(v);
     } else if(position == "y1_z0") {
-      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
       Vector v(0.0, 0.0, -1.0);
       df.up(v);
     } else if(position == "y0_x1") {
@@ -1926,7 +1926,7 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       Vector v(0.0, 1.0, 0.0);
       df.up(v);
     } else if(position == "z1_y0") {
-      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
       Vector v(0.0, -1.0, 0.0);
       df.up(v);
     } else if(position == "z0_x1") {
