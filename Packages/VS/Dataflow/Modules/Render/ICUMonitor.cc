@@ -761,25 +761,31 @@ ICUMonitor::draw_plots()
   const int cg = 25;
   float cur_x = gui_left_margin_.get();
   float cur_y = h - gui_top_margin_.get();
+  float yoff(0.0);
 
   glLineWidth(1.0);
 // type of stippling (dashed lines) - use  0xFFFF for solid line
 //  glLineStipple(3, 0x1001);
   glLineStipple(1, 0x0F0F);
   if (name_label && gui_show_name_.get()) { 
-    float yoff = name_label->tex_height_ * name_label->v_ * 1.5;
+    //float yoff = name_label->tex_height_ * name_label->v_ * 1.5;
+    yoff += name_label->tex_height_ * name_label->v_ * 1.5;
+    glColor4f(1.0, 1.0, 1.0, 1.0);
     name_label->draw(cur_x, h - yoff, sx, sy);
   }
   if (date_label && gui_show_date_.get()) { 
-    float yoff = date_label->tex_height_ * date_label->v_ * 1.5;
+    //float yoff = date_label->tex_height_ * date_label->v_ * 1.5;
+    yoff += date_label->tex_height_ * date_label->v_ * 1.5;
     //float xoff = 0;
     //if (name_label && gui_show_name_.get()) { 
      // xoff = name_label->tex_width_ * name_label->u_ + cg;
     //}
     //date_label->draw(cur_x + xoff, h - yoff, sx, sy);
-      float xoff = date_label->tex_width_ * date_label->u_;
+      //float xoff = date_label->tex_width_ * date_label->u_;
       //g.label_->draw(cur_x + w * cw, cur_y, sx, sy);
-      date_label->draw((cur_x + (w*cw)) - xoff, h - yoff, sx, sy);
+      glColor4f(1.0, 1.0, 1.0, 1.0);
+      //date_label->draw((cur_x + (w*cw)) - xoff, h - yoff, sx, sy);
+      date_label->draw(cur_x, h - yoff, sx, sy);
   }
 
   vector<Plot>::iterator iter = plots_.begin();
