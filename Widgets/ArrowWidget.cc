@@ -92,7 +92,7 @@ ArrowWidget::redraw()
       Vector direct(direction*widget_scale);
       ((GeomSphere*)geometries[GeomPoint])->move(center, widget_scale);
 
-      if (direct.length2() > 0) {
+      if (direct.length2() > 1.e-6) {
 	 ((GeomCylinder*)geometries[GeomShaft])->move(center,
 						      center + direct * 3.0,
 						      0.5*widget_scale);
@@ -104,9 +104,11 @@ ArrowWidget::redraw()
    }
 
    Vector v1, v2;
-   direction.find_orthogonal(v1, v2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      picks[geom]->set_principal(direction, v1, v2);
+   if(direction.length2() > 1.e-6){
+       direction.find_orthogonal(v1, v2);
+       for (Index geom = 0; geom < NumPcks; geom++) {
+	   picks[geom]->set_principal(direction, v1, v2);
+       }
    }
 }
 
