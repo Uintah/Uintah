@@ -35,10 +35,10 @@
 #include <iostream>
 #include <iomanip>
 
-#include <sys/param.h>
-#include <list>
-#include <fstream>
-#include <math.h>
+//#include <sys/param.h>
+//#include <list>
+//#include <fstream>
+//#include <math.h>
 
 #include <Core/Malloc/Allocator.h> // for memory leak tests...
 
@@ -76,32 +76,6 @@ void SimpleSimulationController::doCombinePatches(std::string fromDir)
 {
    d_combinePatches = true;
    d_fromDir = fromDir;
-}
-
-// use better stdDeviation formula below
-//double stdDeviation(list<double>& vals, double& mean)
-//{
-//  if (vals.size() < 2)
-//    return -1;
-
-//  list<double>::iterator it;
-
-//  mean = 0;
-//  double variance = 0;
-//  for (it = vals.begin(); it != vals.end(); it++)
-//    mean += *it;
-//  mean /= vals.size();
-
-//  for (it = vals.begin(); it != vals.end(); it++)
-//    variance += pow(*it - mean, 2);
-//  variance /= (vals.size() - 1);
-//  return sqrt(variance);
-//}
-
-double stdDeviation(double sum_of_x, double sum_of_x_squares, int n)
-{
-  // better formula for stdDev than above - less memory and quicker.
-  return sqrt((n*sum_of_x_squares - sum_of_x*sum_of_x)/(n*n));
 }
 
 void 
@@ -188,7 +162,7 @@ SimpleSimulationController::run()
    if(d_myworld->myrank() == 0)
      cout << "Compiling taskgraph...\n";
 
-   double start = Time::currentSeconds();
+   calcStartTime();
 
    scheduler->initialize();
    scheduler->advanceDataWarehouse(grid);
@@ -262,7 +236,8 @@ SimpleSimulationController::run()
    // Parse time struct
    /* SimulationTime timeinfo(ups); - done earlier */
    
-   double start_time = Time::currentSeconds();
+   //   calcStartTime();  // DONE EARLIER
+
    if (!d_restarting){
      t = timeinfo.initTime;
      sim->scheduleComputeStableTimestep(level,scheduler);
@@ -273,7 +248,7 @@ SimpleSimulationController::run()
 
    scheduler->compile();
    
-   double dt=Time::currentSeconds()-start;
+   double dt=Time::currentSeconds() - getStartTime();
    if(d_myworld->myrank() == 0)
      cout << "done taskgraph compile (" << dt << " seconds)\n";
    scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
@@ -282,20 +257,16 @@ SimpleSimulationController::run()
    if(output)
      output->executedTimestep(0);
 
-   // vars used to calculate standard deviation
-   int n = 0;
-   double prevWallTime = Time::currentSeconds();
-   double sum_of_walltime = 0; // sum of all walltimes
-   double sum_of_walltime_squares = 0; // sum all squares of walltimes
-   
+   initSimulationStatsVars();
+
    bool first=true;
    int  iterations = 0;
-   double delt;
+   double delt = 0;
    while( ( t < timeinfo.maxTime ) && 
          ( iterations < timeinfo.num_time_steps ) ) {
       iterations ++;
 
-      double wallTime = Time::currentSeconds() - start_time;
+      calcWallTime();
 
       delt_vartype delt_var;
       DataWarehouse* newDW = scheduler->get_dw(1);
@@ -364,141 +335,18 @@ SimpleSimulationController::run()
                      level);
       }
 
-      // get memory stats for output
-#ifndef DISABLE_SCI_MALLOC
-      size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
-       nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-       highwater_mmap;
-      
-      GetGlobalStats(DefaultAllocator(),
-                   nalloc, sizealloc, nfree, sizefree,
-                   nfillbin, nmmap, sizemmap, nmunmap,
-                   sizemunmap, highwater_alloc, highwater_mmap);
-      unsigned long memuse = sizealloc - sizefree;
-      unsigned long highwater = highwater_mmap;
-#else
-      unsigned long memuse = 0;
-      if ( ProcessInfo::IsSupported( ProcessInfo::MEM_RSS ) ) {
-	memuse = ProcessInfo::GetMemoryResident();
-      } else {
-	memuse = (char*)sbrk(0)-start_addr;
-      }
-      unsigned long highwater = 0;
-#endif
+      printSimulationStats( sharedState, delt, t );
 
-      // get memory stats for each proc if MALLOC_PERPROC is in the environent
-      if ( getenv( "MALLOC_PERPROC" ) ) {
-	ostream* mallocPerProcStream = NULL;
-	char* filenamePrefix = getenv( "MALLOC_PERPROC" );
-	if ( !filenamePrefix || strlen( filenamePrefix ) == 0 ) {
-	  mallocPerProcStream = &cout;
-	} else {
-	  char filename[MAXPATHLEN];
-	  sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
-	  if ( sharedState->getCurrentTopLevelTimeStep() == 0 ) {
-	    mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
-	  } else {
-	    mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
-	  }
-	  if ( !mallocPerProcStream ) {
-	    delete mallocPerProcStream;
-	    mallocPerProcStream = &cout;
-	  }
-	}
-	*mallocPerProcStream << "Proc "     << d_myworld->myrank()                       << "   ";
-	*mallocPerProcStream << "Timestep " << sharedState->getCurrentTopLevelTimeStep() << "   ";
-	*mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed()              << "   ";
-	*mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident()          << "   ";
-	*mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - start_addr               << "   ";
-#ifndef DISABLE_SCI_MALLOC
-	*mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse                        << "   ";
-	*mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
-#endif
-	*mallocPerProcStream << endl;
-	if ( mallocPerProcStream != &cout ) {
-	  delete mallocPerProcStream;
-	}
-      }
-
-      unsigned long avg_memuse = memuse;
-      unsigned long max_memuse = memuse;
-      unsigned long avg_highwater = highwater;
-      unsigned long max_highwater = highwater;
-      if (d_myworld->size() > 1) {
-        MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
-                   d_myworld->getComm());
-        if(highwater){
-          MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
-                     MPI_SUM, 0, d_myworld->getComm());
-        }
-        avg_memuse /= d_myworld->size(); // only to be used by processor 0
-        avg_highwater /= d_myworld->size();
-        MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
-                   d_myworld->getComm());
-        if(highwater){
-          MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
-                     MPI_MAX, 0, d_myworld->getComm());
-        }
-      }
-      
       if(log_dw_mem){
-       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
-       // (So usually in optimized mode this will not be run.)
-       scheduler->logMemoryUse();
-       ostringstream fn;
-       fn << "alloc." << setw(5) << setfill('0') 
-          << d_myworld->myrank() << ".out";
-       string filename(fn.str());
-       DumpAllocator(DefaultAllocator(), filename.c_str());
+	// Remember, this isn't logged if DISABLE_SCI_MALLOC is set
+	// (So usually in optimized mode this will not be run.)
+	scheduler->logMemoryUse();
+	ostringstream fn;
+	fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
+	string filename(fn.str());
+	DumpAllocator(DefaultAllocator(), filename.c_str());
       }
 
-       // calculate mean/std dev
-      double stdDev, mean;
-      if (n > 2) // ignore times 0,1,2
-      {
-        //wallTimes.push_back(wallTime - prevWallTime);
-        sum_of_walltime += (wallTime - prevWallTime);
-        sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
-      }
-      if (n > 3) {
-        // divide by n-2 and not n, because we wait till n>2 to keep track
-        // of our stats
-        stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
-        mean = sum_of_walltime / (n-2);
-        //         ofstream timefile("avg_elapsed_walltime.txt");
-        //         timefile << mean << " +- " << stdDev << endl;
-      }
-      
-      // output timestep statistics
-      if(d_myworld->myrank() == 0){
-//       cout << "Current Top Level Time Step: " 
-//            << sharedState->getCurrentTopLevelTimeStep() << "\n";
-
-       cout << "Time=" << t 
-            << " (timestep " << sharedState->getCurrentTopLevelTimeStep() 
-            << "), delT=" << delt << ", elap T = " << wallTime;
-
-       if (n > 3)
-         cout << ", mean: " << mean << " +- " << stdDev;
-       cout << ", Mem Use = ";
-       if (avg_memuse == max_memuse && avg_highwater == max_highwater){
-         cout << avg_memuse;
-         if(avg_highwater)
-           cout << "/" << avg_highwater;
-       } else {
-         cout << avg_memuse;
-         if(avg_highwater)
-           cout << "/" << avg_highwater;
-         cout << " (avg), " << max_memuse;
-         if(max_highwater)
-           cout << "/" << max_highwater;
-         cout << " (max)";
-       }
-       cout << endl;
-
-       prevWallTime = wallTime;
-       n++;
-      }
       scheduler->advanceDataWarehouse(grid);
 
       // Put the current time into the shared state so other components
@@ -524,7 +372,7 @@ SimpleSimulationController::run()
         sim->scheduleComputeStableTimestep(level, scheduler);
         scheduler->compile();
         
-        double dt=Time::currentSeconds()-start;
+        double dt=Time::currentSeconds() - start;
         if(d_myworld->myrank() == 0)
           cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
       }
