@@ -30,26 +30,27 @@
 
 #include "URL.h"
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <iostream>
 #include <sstream>
-
+using namespace std;
 using PIDL::URL;
 
-URL::URL(const std::string& protocol,
-		       const std::string& hostname,
-		       int portno, const std::string& spec)
+URL::URL(const string& protocol,
+	 const string& hostname,
+	 int portno, const string& spec)
     : d_protocol(protocol), d_hostname(hostname),
       d_portno(portno), d_spec(spec)
 {
 }   
 
-URL::URL(const std::string& str)
+URL::URL(const string& str)
 {
     // This is pretty simple minded, but it works for now
     int s=str.find("://");
     if(s == -1)
 	throw MalformedURL(str, "No ://");
     d_protocol=str.substr(0, s);
-    std::string rest=str.substr(s+3);
+    string rest=str.substr(s+3);
     s=rest.find(":");
     if(s == -1){
 	s=rest.find("/");
@@ -64,10 +65,10 @@ URL::URL(const std::string& str)
     } else {
 	d_hostname=rest.substr(0, s);
 	rest=rest.substr(s+1);
-	std::istringstream i(rest);
+	istringstream i(rest);
 	i >> d_portno;
 	if(!i)
-	    throw MalformedURL(str, "Error parsing port number");
+	  throw MalformedURL(str, "Error parsing port number");
 	s=rest.find("/");
 	if(s==-1){
 	    d_spec="";
@@ -81,9 +82,9 @@ URL::~URL()
 {
 }
 
-std::string URL::getString() const
+string URL::getString() const
 {
-    std::ostringstream o;
+    ostringstream o;
     o << d_protocol << "://" << d_hostname;
     if(d_portno > 0)
 	o << ":" << d_portno;
@@ -93,12 +94,12 @@ std::string URL::getString() const
     return o.str();
 }
 
-std::string URL::getProtocol() const
+string URL::getProtocol() const
 {
     return d_protocol;
 }
 
-std::string URL::getHostname() const
+string URL::getHostname() const
 {
     return d_hostname;
 }
@@ -108,7 +109,7 @@ int URL::getPortNumber() const
     return d_portno;
 }
 
-std::string URL::getSpec() const
+string URL::getSpec() const
 {
     return d_spec;
 }

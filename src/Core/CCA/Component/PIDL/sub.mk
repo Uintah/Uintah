@@ -36,7 +36,8 @@ SRCS     += \
 	$(SRCDIR)/TypeInfo.cc \
 	$(SRCDIR)/TypeInfo_internal.cc 
 
-PSELIBS := Core/Exceptions Core/Thread
+PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
+LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
