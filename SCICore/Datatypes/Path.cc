@@ -53,15 +53,10 @@ Path::Path(): sint(30)
 {
   upV=scinew Cubic3DPWI<Vector>();
   lookatP=scinew Cubic3DPWI<Point>();
-
-  //upV=scinew Linear3DPWI<Vector>();
-
-  fov=scinew LinearPWI();
-  //lookatP=scinew Linear3DPWI<Point>();
-  speed=scinew LinearPWI();
+  fov=scinew CubicPWI();
+  speed=scinew CubicPWI();
   eyeP=NULL;
   
-  // lookatP=NULL;
   reset();
 
   set_path_t(CUBIC);
@@ -615,6 +610,9 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
+// Revision 1.7  2000/10/08 00:42:24  samsonov
+// spline interpolation of fov and speed
+//
 // Revision 1.6  2000/10/07 23:46:02  samsonov
 // spline interpolation of lookat point and upvector
 //
