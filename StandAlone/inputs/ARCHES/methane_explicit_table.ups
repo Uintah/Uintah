@@ -246,8 +246,10 @@
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
+			<ksptype>cg</ksptype>
 			<pctype>jacobi</pctype>
-			<overlap>1</overlap>
+			<fill>1</fill>		!---for ilu preconditioner
+			<overlap>1</overlap>	!---for asm preconditioner
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
 		        <underrelax>0.97</underrelax>
