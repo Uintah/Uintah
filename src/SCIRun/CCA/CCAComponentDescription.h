@@ -45,26 +45,43 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
-  class CCAComponentModel;
-  class CCAComponentDescription : public ComponentDescription {
-  public:
-    CCAComponentDescription(CCAComponentModel* model);
-    virtual ~CCAComponentDescription();
 
-    virtual std::string getType() const;
-    virtual const ComponentModel* getModel() const;
-    virtual std::string getLoaderName() const;
-    void setLoaderName(const std::string& loaderName);
-  protected:
-    friend class CCAComponentModel;
-    friend class SCIRunLoader;
-    CCAComponentModel* model;
-    std::string type;
-    std::string loaderName;
-  private:
-    CCAComponentDescription(const CCAComponentDescription&);
-    CCAComponentDescription& operator=(const CCAComponentDescription&);
-  };
-}
+class CCAComponentModel;
+
+/**
+ * \class CCAComponentDescription
+ *
+ * A refinement of ComponentDescription for the CCA Component model.  See
+ * ComponentDescription for more information.
+ *
+ * \sa BabelComponentDescription ComponentDescription VtkComponentDescription
+ * \sa InternalComponentDescription
+ */
+class CCAComponentDescription : public ComponentDescription
+{
+public:
+  CCAComponentDescription(CCAComponentModel* model);
+  virtual ~CCAComponentDescription();
+
+  /** Returns the component type name (a string). */
+  virtual std::string getType() const;
+  /** Returns a pointer to the component model type. */
+  virtual const ComponentModel* getModel() const;
+  /** ? */
+  virtual std::string getLoaderName() const;
+  /** ? */
+  void setLoaderName(const std::string& loaderName);
+protected:
+  friend class CCAComponentModel;
+  friend class SCIRunLoader;
+  CCAComponentModel* model;
+  std::string type;
+  std::string loaderName;
+private:
+  CCAComponentDescription(const CCAComponentDescription&);
+  CCAComponentDescription& operator=(const CCAComponentDescription&);
+};
+
+} // end namespace SCIRun
 
 #endif

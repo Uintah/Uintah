@@ -49,55 +49,57 @@
 #include <map>
 
 namespace SCIRun {
-  class SCIRunFramework;
-  class CCAComponentDescription;
-  class CCAComponentInstance;
 
-  class CCAComponentModel : public ComponentModel {
-  public:
-    CCAComponentModel(SCIRunFramework* framework);
-    virtual ~CCAComponentModel();
+class SCIRunFramework;
+class CCAComponentDescription;
+class CCAComponentInstance;
 
-    sci::cca::Services::pointer createServices(const std::string& instanceName,
-					       const std::string& className,
-					       const sci::cca::TypeMap::pointer& properties);
-    virtual bool haveComponent(const std::string& type);
-    virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type,
-					      const sci::cca::TypeMap::pointer& properties);
+class CCAComponentModel : public ComponentModel
+{
+public:
+  CCAComponentModel(SCIRunFramework* framework);
+  virtual ~CCAComponentModel();
+  
+  sci::cca::Services::pointer createServices(const std::string& instanceName,
+                                             const std::string& className,
+                                             const sci::cca::TypeMap::pointer& properties);
+  virtual bool haveComponent(const std::string& type);
+  virtual ComponentInstance* createInstance(const std::string& name,
+                                            const std::string& type,
+                                            const sci::cca::TypeMap::pointer& properties);
+  
+  virtual bool destroyInstance(ComponentInstance *ci);
+  virtual std::string getName() const;
+  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
+                                     bool);
+  int addLoader(resourceReference *rr);
+  int removeLoader(const std::string &loaderName);
+  
+  /**
+   * Get/Set the directory path to the XML files describing CCA
+   * components. By default, sidlXMLPath is initialized to the
+   * environment variable SIDL_XML_PATH.
+   */
+  std::string getSidlXMLPath() const
+  { return sidlXMLPath; }
+  void setSidlXMLPath( const std::string& s)
+  { sidlXMLPath = s; }
+  
+private:
+  SCIRunFramework* framework;
+  typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
+  componentDB_type components;
+  std::string sidlXMLPath;
     
-    virtual bool destroyInstance(ComponentInstance *ci);
-    virtual std::string getName() const;
-    virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-				       bool);
-    int addLoader(resourceReference *rr);
-    int removeLoader(const std::string &loaderName);
-
-    /**
-     * Get/Set the directory path to the XML files describing CCA
-     * components. By default, sidlXMLPath is initialized to the
-     * environment variable SIDL_XML_PATH.
-     */
-    std::string getSidlXMLPath() const
-    { return sidlXMLPath; }
-    void setSidlXMLPath( const std::string& s)
-    { sidlXMLPath = s; }
-    
-  private:
-    SCIRunFramework* framework;
-    typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
-    componentDB_type components;
-    std::string sidlXMLPath;
-    
-    void destroyComponentList();
-    void buildComponentList();
-    void readComponentDescription(const std::string& file);
-    resourceReference *getLoader(std::string loaderName);
-    CCAComponentModel(const CCAComponentModel&);
-    CCAComponentModel& operator=(const CCAComponentModel&);
-
-    std::vector<resourceReference* > loaderList;
-  };
+  void destroyComponentList();
+  void buildComponentList();
+  void readComponentDescription(const std::string& file);
+  resourceReference *getLoader(std::string loaderName);
+  CCAComponentModel(const CCAComponentModel&);
+  CCAComponentModel& operator=(const CCAComponentModel&);
+  
+  std::vector<resourceReference* > loaderList;
+};
 }
 
 #endif
