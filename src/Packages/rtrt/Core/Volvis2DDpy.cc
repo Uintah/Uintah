@@ -53,7 +53,6 @@ Volvis2DDpy::createBGText( void )
 	      else if( x_index < 0 )
 		x_index = 0;
 
-	      float hist_elem = hist[y_index][x_index];
 	      hist[y_index][x_index] += 0.1f;
 	      data_max = max( data_max, hist[y_index][x_index] );
 	    } // for()
@@ -64,12 +63,16 @@ Volvis2DDpy::createBGText( void )
 	for( j = 0; j < textureWidth; j++ )
 	  {
 	    c = log10f( 1.0f + hist[i][j])*logmax;
+	    transTexture2->textArray[i][j][0] =
 	    transTexture1->textArray[i][j][0] = 
 	      bgTextImage->textArray[i][j][0] = c;
+	    transTexture2->textArray[i][j][1] =
 	    transTexture1->textArray[i][j][1] =  
 	      bgTextImage->textArray[i][j][1] = c;
+	    transTexture2->textArray[i][j][2] =
 	    transTexture1->textArray[i][j][2] =       
 	      bgTextImage->textArray[i][j][2] = c;
+	    transTexture2->textArray[i][j][3] = 0.0f;
 	    transTexture1->textArray[i][j][3] = 0.0f; 
 	    bgTextImage->textArray[i][j][3] = 1.0f;
 	  } // for()
@@ -85,24 +88,26 @@ Volvis2DDpy::loadCleanTexture( void )
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ )
       {
-	transTexture2->textArray[i][j][0] =
-	  transTexture1->textArray[i][j][0];
-	transTexture2->textArray[i][j][1] =
-	  transTexture1->textArray[i][j][1];
-	transTexture2->textArray[i][j][2] =
-	  transTexture1->textArray[i][j][2];
-	transTexture2->textArray[i][j][3] =
-	  transTexture1->textArray[i][j][3];
+	transTexture2->textArray[i][j][0] = 0.0f;
+	transTexture2->textArray[i][j][1] = 0.0f;
+	transTexture2->textArray[i][j][2] = 0.0f;
+	transTexture2->textArray[i][j][3] = 0.0f;
       }
-  whichTexture = 2;
+
+  bindWidgetTextures();
 
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ )
       {
-	transTexture1->textArray[i][j][0] = 0.0;
-	transTexture1->textArray[i][j][1] = 0.0;
-	transTexture1->textArray[i][j][2] = 0.0;
-	transTexture1->textArray[i][j][3] = 0.0;
+	if( transTexture2->textArray[i][j][3] == 0.0f )
+	  transTexture1->textArray[i][j][3] = 0.0f;
+	else
+	  {
+	    transTexture1->textArray[i][j][0] = transTexture2->textArray[i][j][0];
+	    transTexture1->textArray[i][j][1] = transTexture2->textArray[i][j][1];
+	    transTexture1->textArray[i][j][2] = transTexture2->textArray[i][j][2];
+	    transTexture1->textArray[i][j][3] = transTexture2->textArray[i][j][3];
+	  }
       }
 } // loadCleanTexture()
 
@@ -160,10 +165,11 @@ Volvis2DDpy::addWidget( int x, int y )
 void
 Volvis2DDpy::cycleWidgets( int type )
 {
+  int switchFlag;
   float alpha, left, top, width, height, opac_x, opac_y;
   float color[3];
   float *params[numWidgetParams];
-  widgets[widgets.size()-1]->returnParams( params );
+  widgets[pickedIndex]->returnParams( params );
   left = *params[0];
   top = *params[1];
   width = *params[2];
@@ -174,25 +180,26 @@ Volvis2DDpy::cycleWidgets( int type )
   alpha = *params[7];
   opac_x = *params[8];
   opac_y = *params[9];
-  Texture<GLfloat> *temp = widgets[widgets.size()-1]->transText;
+  switchFlag = widgets[pickedIndex]->switchFlag;
+  Texture<GLfloat> *temp = widgets[pickedIndex]->transText;
   widgets.pop_back();
   switch( (++type)%4 )
     {
     case 0:
       widgets.push_back( new TriWidget( left+width/2, width, top, top-height, color,
-					alpha, opac_x, opac_y, temp ) );
+					alpha, opac_x, opac_y, temp, switchFlag ) );
       break;
     case 1:   // elliptical
       widgets.push_back( new RectWidget( left, top, width, top-height, color, alpha, 
-					 1, opac_x, opac_y, temp ) );
+					 1, opac_x, opac_y, temp, switchFlag ) );
       break;
     case 2:   // one-dimensional
       widgets.push_back( new RectWidget( left, top, width, height, color, alpha,
-					 2, opac_x, opac_y, temp ) );
+					 2, opac_x, opac_y, temp, switchFlag ) );
       break;
     case 3:   // rainbow
       widgets.push_back( new RectWidget( left, top, width, height, color, alpha,
-					 3, opac_x, opac_y, temp ) );
+					 3, opac_x, opac_y, temp, switchFlag ) );
     } // switch()
   redraw = true;
 } // cycleWidgets()
@@ -218,7 +225,7 @@ void
 Volvis2DDpy::bindWidgetTextures( void )
 {
     for( int i = 0; i < widgets.size(); i++ )
-      widgets[i]->paintTransFunc( transTexture1->textArray, master_alpha );
+      widgets[i]->paintTransFunc( transTexture2->textArray, master_alpha );
   redraw = true;
 } // bindWidgetTextures()
 
@@ -312,8 +319,8 @@ void
 Volvis2DDpy::init()
 {
   // clamps ridiculously high gradient magnitudes
-  glViewport( 0, 0, 500, 250 );
   gmax = min( gmax, MAXFLOAT );
+  glViewport( 0, 0, 500, 250 );
   pickedIndex = -1;
   x_pixel_width = 1.0;
   y_pixel_width = 1.0;
@@ -354,8 +361,6 @@ Volvis2DDpy::display()
 {
   glClear( GL_COLOR_BUFFER_BIT );
   loadCleanTexture();
-  bindWidgetTextures();
-  whichTexture = 1;
   drawBackground();
   drawWidgets( GL_RENDER );
   glFlush();
@@ -418,6 +423,7 @@ Volvis2DDpy::key_pressed(unsigned long key)
     case XK_S:
       if( pickedIndex >= 0 )
 	widgets[pickedIndex]->reflectTrans();
+      redraw = true;
       break;
     case XK_Delete:
       if( widgets.size() != 0 )
@@ -535,9 +541,6 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y)
 	widgets[pickedIndex]->manipulate( x/x_pixel_width, (x-old_x)/x_pixel_width,
 					  250.0-y/y_pixel_width, (old_y-y)/y_pixel_width );
       
-      for( int i = 0; i < widgets.size(); i++ )  // paint widget textures onto the background
-      	widgets[i]->paintTransFunc( transTexture1->textArray, master_alpha );
-      
       old_x = x;       // updates old_x
       old_y = y;       // updates old_y
       redraw = true;
@@ -582,16 +585,8 @@ Volvis2DDpy::lookup( Voxel2D<float> voxel, Color &color, float &alpha )
       int x_index = (int)((voxel.v()-vmin)*linear_factor*(textureWidth-1));
       linear_factor = 1.0f/(gmax-gmin);
       int y_index = (int)((voxel.g()-gmin)*linear_factor*(textureHeight-1));
-      if( whichTexture == 1 )
-	{
 	  color = Color( transTexture1->textArray[y_index][x_index][0], transTexture1->textArray[y_index][x_index][1], transTexture1->textArray[y_index][x_index][2] );
 	  alpha = 1-powf( 1-transTexture1->textArray[y_index][x_index][3], t_inc/original_t_inc );
-	}
-      else if( whichTexture == 2 )
-	{
-	  color = Color( transTexture2->textArray[y_index][x_index][0], transTexture2->textArray[y_index][x_index][1], transTexture2->textArray[y_index][x_index][2] );
-	  alpha = 1-powf( 1-transTexture2->textArray[y_index][x_index][3], t_inc/original_t_inc );
-	}
     }
   else
     alpha = 0.0f;
@@ -691,6 +686,8 @@ Volvis2DDpy::saveUIState( unsigned long key )
 	  outfile << "\nWidgetTextureColormapOffset: "
 		  << widgets[i]->transText->colormap_x_offset << ' '
 		  << widgets[i]->transText->colormap_y_offset;
+	  outfile << "\nWidgetTextureAlignment: "
+		  << widgets[i]->switchFlag;
 	  outfile << "\n//TriWidget\n\n";
 	} // if()
       // if widget is a RectWidget...
@@ -721,6 +718,8 @@ Volvis2DDpy::saveUIState( unsigned long key )
 	  outfile << "\nWidgetColormapOffset: "
 		  << widgets[i]->transText->colormap_x_offset << ' '
 		  << widgets[i]->transText->colormap_y_offset;
+	  outfile << "\nWidgetTextureAlignment: "
+		  << widgets[i]->switchFlag;
 	  outfile << "\n//RectWidget\n\n";
 	} // else()
     } // for()
@@ -800,9 +799,9 @@ Volvis2DDpy::loadUIState( unsigned long key )
       if( token == "TriWidget" )
 	{
 	  float lV0, lV1, mLV0, mLV1, mRV0, mRV1, uLV0, uLV1, uRV0, uRV1, red, green, blue, alpha, opac_x, opac_y, text_red, text_green, text_blue;
-	  int text_x_off, text_y_off;
+	  int text_x_off, text_y_off, switchFlag;
 	  lV0 = lV1 = mLV0 = mLV1 = mRV0 = mRV1 = uLV0 = uLV1 = uRV0 = uRV1 = red = green = blue = alpha = opac_x = opac_y = text_red = text_green = text_blue = 0.0f;
-	  text_x_off = text_y_off = 0;
+	  text_x_off = text_y_off = switchFlag = 0;
 	  while( token != "//TriWidget" )
 	    {
 	      infile >> token;
@@ -851,20 +850,25 @@ Volvis2DDpy::loadUIState( unsigned long key )
 		  infile >> text_x_off >> text_y_off;
 		  infile >> token;
 		} // if()
+	      if( token == "WidgetTextureAlignment:" )
+		{
+		  infile >> switchFlag;
+		  infile >> token;
+		} // if()
 	    } // while()
 	  widgets.push_back( new TriWidget( lV0, mLV0, mLV1, mRV0, mRV1, uLV0, uLV1,
 					    uRV0, uRV1, red, green, blue, alpha, opac_x,
 					    opac_y, text_red, text_green,
-					    text_blue, text_x_off, text_y_off ) );
+					    text_blue, text_x_off, text_y_off, switchFlag ) );
 	} // if()
       // if widget is a RectWidget...
       else if( token == "RectWidget" )
 	{
 	  int type = -1;
 	  float left, top, width, height, red, green, blue, alpha, focus_x, focus_y, opac_x, opac_y, text_red, text_green, text_blue;
-	  int text_x_off, text_y_off;
+	  int text_x_off, text_y_off, switchFlag;
 	  left = top = width = height = red = green = blue = alpha = focus_x = focus_y = opac_x = opac_y = text_red = text_green = text_blue = 0.0f;
-	  text_x_off = text_y_off = 0;
+	  text_x_off = text_y_off = switchFlag = 0;
 	  while( token != "//RectWidget" )
 	    {
 	      infile >> token;
@@ -913,11 +917,16 @@ Volvis2DDpy::loadUIState( unsigned long key )
 		  infile >> text_x_off >> text_y_off;
 		  infile >> token;
 		} // if()
+	      if( token == "WidgetTextureAlignment:" )
+		{
+		  infile >> switchFlag;
+		  infile >> token;
+		} // if()
 	    } // else while()
 	  widgets.push_back( new RectWidget( type, left, top, width, height, red, green,
 					     blue, alpha, focus_x, focus_y, opac_x,
 					     opac_y, text_red, text_green,
-					     text_blue, text_x_off, text_y_off ) );
+					     text_blue, text_x_off, text_y_off, switchFlag ) );
 	} // else if()
     } // while()
   printf( "Loaded state %d successfully.\n", stateNum );
