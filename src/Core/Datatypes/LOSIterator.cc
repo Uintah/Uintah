@@ -32,7 +32,7 @@ LOSIterator::LOSIterator(const GLTexture3D* tex, Ray view,
 {
   Vector v = control - view.origin();
   Point p;
-  const Octree< Brick* >* node = (tex->bontree);
+  const Octree< Brick* >* node = (tex->bontree_);
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
