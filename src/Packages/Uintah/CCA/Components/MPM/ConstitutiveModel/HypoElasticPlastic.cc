@@ -145,7 +145,6 @@ void HypoElasticPlastic::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pDeformGrad, lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress, lb->pStressLabel, pset);
   new_dw->allocateAndPut(pDamage, pDamageLabel, pset);
-  new_dw->put(sum_vartype(0.0), lb->StrainEnergyLabel);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
 
@@ -241,11 +240,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double rho_0 = matl->getInitialDensity();
   double sqrtTwo = sqrt(2.0);
   double sqrtThree = sqrt(3.0);
+  double totalStrainEnergy = 0.0;
 
-  // Get the totalStrainEnergy from the old datawarehouse
-  sum_vartype strainEnergy;
-  old_dw->get(strainEnergy, lb->StrainEnergyLabel);
-  double totalStrainEnergy = (double) strainEnergy;
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -532,7 +528,6 @@ HypoElasticPlastic::addInitialComputesAndRequires(Task* task,
   task->computes(pLeftStretchLabel, matlset);
   task->computes(pRotationLabel, matlset);
   task->computes(pDamageLabel, matlset);
-  task->computes(lb->StrainEnergyLabel);
  
   // Add internal evolution variables computed by plasticity model
   d_plasticity->addInitialComputesAndRequires(task, matl, patch);
@@ -561,7 +556,6 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pLeftStretchLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pRotationLabel, matlset,Ghost::None);
   task->requires(Task::OldDW, pDamageLabel, matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->StrainEnergyLabel);
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
