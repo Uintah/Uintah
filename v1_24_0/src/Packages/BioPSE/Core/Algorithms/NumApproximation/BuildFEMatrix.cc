@@ -296,7 +296,7 @@ void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::Cell::index_type
     if (ii>=s && ii<e)          //! the row to update belongs to the process, proceed...
       for (int j=0; j<4; j++) {      
 	int jj = cell_nodes[j];
-	pA_->get(ii, jj) += lcl_a[i][j];
+	pA_->add(ii, jj, lcl_a[i][j]);
       }
   }
 }
