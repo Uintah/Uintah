@@ -478,11 +478,11 @@ public:
   unsigned get_faces(Face::array_type &, Edge::index_type) const
   { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
   unsigned get_cells(Cell::array_type &, Node::index_type)
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
+  { ASSERTFAIL("LatVolMesh::get_cells not implemented."); RETURN_0; }
   unsigned get_cells(Cell::array_type &, Edge::index_type)
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
+  { ASSERTFAIL("LatVolMesh::get_cells not implemented."); RETURN_0; }
   unsigned get_cells(Cell::array_type &, Face::index_type)
-  { ASSERTFAIL("LatVolMesh::get_faces not implemented."); RETURN_0; }
+  { ASSERTFAIL("LatVolMesh::get_cells not implemented."); RETURN_0; }
 
   //! return all cell_indecies that overlap the BBox in arr.
   void get_cells(Cell::array_type &arr, const BBox &box);
