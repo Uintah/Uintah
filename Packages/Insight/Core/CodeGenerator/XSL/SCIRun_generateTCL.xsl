@@ -75,7 +75,7 @@
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
-<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
 <!-- don't define globals for variables dependent on changing dimension -->
 <!-- this would be indicated by the attribute defined being empty string -->
 <xsl:if test="$const != 'yes'">
@@ -95,7 +95,7 @@
     method set_defaults {} {
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
-<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
@@ -106,13 +106,12 @@
 <xsl:variable name="default-radiobutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/radiobutton/default"/></xsl:variable>
 
 <xsl:variable name="itk_default"><xsl:value-of select="default"/></xsl:variable>
+<xsl:if test="$const != 'yes'">
 <xsl:choose>
 <xsl:when test="$default-text-entry != ''">
   <xsl:variable name="widget">text-entry</xsl:variable>
-  <xsl:if test="$const != 'yes'">
   <xsl:if test="$defined_object = 'no'">
          set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$default-text-entry"/>
-  </xsl:if>
   </xsl:if>
 </xsl:when>
 
@@ -159,6 +158,7 @@
 </xsl:choose>
 </xsl:otherwise>
 </xsl:choose>
+</xsl:if>
 
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
@@ -193,7 +193,7 @@
 -->  
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
-<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
 
 <xsl:variable name="gui"><xsl:call-template name="determine_widget"/></xsl:variable>
 <xsl:variable name="defined_object">
@@ -280,7 +280,7 @@
     method clear_gui {} {
         set w .ui[modname]
 <xsl:for-each select="/filter/filter-itk/parameters/param">
-<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
 <xsl:if test="$const != 'yes'">
 <xsl:variable name="path">$w.<xsl:value-of select="name"/>.<xsl:value-of select="name"/>$i</xsl:variable>
         for {set i 0} {$i &lt; [set $this-dimension]} {incr i} {
@@ -307,14 +307,13 @@
 -->
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
-<xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
+<xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
 <xsl:if test="$const!='yes'">
 <xsl:if test="$defined_object = 'yes'">
 <!-- here -->
-# here
 <xsl:variable name="default-text-entry"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/text-entry/default"/></xsl:variable>
 <xsl:variable name="default-checkbutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/checkbutton/default"/></xsl:variable>
 <xsl:variable name="default-scrollbar"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/default"/></xsl:variable>
@@ -665,6 +664,7 @@
 </xsl:choose>
 </xsl:template>
 
+
 <!-- Helper function to determine widget -->
 <xsl:template name="determine_widget">
 <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
@@ -679,6 +679,19 @@
 <xsl:when test="$radiobutton != ''">radiobutton</xsl:when>
 <xsl:otherwise>text-entry</xsl:otherwise>
 </xsl:choose>
+</xsl:template>
+
+
+<!-- Helper function to determine if a parameter has been defined as const in the gui filter xml file.  If it has, a specified value will always be set and no gui will be visible to the user.
+-->
+<xsl:template name="determine_if_const_parameter">
+<xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+<xsl:variable name="const"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/const/@value"/></xsl:variable>
+<xsl:choose>
+<xsl:when test="$const != ''">yes</xsl:when>
+<xsl:otherwise>no</xsl:otherwise>
+</xsl:choose>
+
 </xsl:template>
 
 

@@ -18,8 +18,11 @@
 <!ELEMENT filter-gui (param+)>
   <!ATTLIST filter-gui name CDATA #REQUIRED>
 
-<!ELEMENT param (text-entry | checkbutton | scrollbar | radiobutton)>
+<!ELEMENT param (const | text-entry | checkbutton | scrollbar | radiobutton)>
   <!ATTLIST param name CDATA #REQUIRED>
+
+<!ELEMENT const EMPTY>
+  <!ATTLIST const value CDATA #REQUIRED>
 
 <!ELEMENT text-entry (default)>
 

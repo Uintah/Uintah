@@ -28,7 +28,6 @@
 <!ELEMENT defaults (default*)>
 
 <!ELEMENT default (#PCDATA)>
-  <!ATTLIST default const (yes|no) "no">
 
 <!ELEMENT datatypes (datatype*)>
 
