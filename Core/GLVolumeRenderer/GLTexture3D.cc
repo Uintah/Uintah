@@ -242,44 +242,48 @@ GLTexture3D::build_texture()
 
   string type = texfld_->get_type_description(1)->get_name();
   cerr << "Type = " << type << endl;
+
+  const int minpx = (int)minP_.x();
+  const int minpy = (int)minP_.y();
+  const int minpz = (int)minP_.z();
   
   if (type == "double") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<double>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "float") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<float>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "int") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<int>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "unsigned_int") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<unsigned int>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "short") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<short>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "unsigned_short") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<unsigned short>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "char") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<char>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "unsigned_char") {
-    bontree_ = build_bon_tree(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
@@ -308,25 +312,28 @@ void GLTexture3D::replace_texture()
   tg = scinew ThreadGroup( group_name.c_str());
 
   string type = texfld_->get_type_description(1)->get_name();
-//   cerr << "Type = " << type << endl;
   
+  const int minpx = (int)minP_.x();
+  const int minpy = (int)minP_.y();
+  const int minpz = (int)minP_.z();
+
   if (type == "double") {
-    replace_bon_tree_data(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
 		  dynamic_cast<LatVolField<double>*>(texfld_.get_rep()),
 		  bontree_,  thread_sema, tg);
   } else if (type == "int") {
-    replace_bon_tree_data(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<int>*>(texfld_.get_rep()),
 	       bontree_, thread_sema, tg);
   } else if (type == "short") {
-    replace_bon_tree_data(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<short>*>(texfld_.get_rep()),
 	       bontree_, thread_sema, tg);
   } else if (type == "unsigned_char") {
-    replace_bon_tree_data(minP_, maxP_, minP_.x(), minP_.y(), minP_.z(),
+    replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
 	       dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep()),
 	       bontree_,  thread_sema, tg);
