@@ -11,6 +11,7 @@
 class Point;
 class clString;
 class Piostream;
+class ostream;
 
 class Vector {
     double _x,_y,_z;
@@ -63,6 +64,8 @@ public:
     
     friend void Pio(Piostream&, Vector&);
 };
+
+ostream& operator<<(ostream& os, Vector& p);
 
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>

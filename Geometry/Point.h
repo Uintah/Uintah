@@ -7,11 +7,11 @@
 #endif
 
 #include <Classlib/Assert.h>
-#include <iostream.h>
 
 class Vector;
 class clString;
 class Piostream;
+class ostream;
 
 class Point {
     double _x,_y,_z;
