@@ -131,7 +131,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 		top $this-method\
 		{{"Conjugate Gradient & Precond. (SCI)" "Conjugate Gradient & Precond. (SCI)"}\
 		{"BiConjugate Gradient & Precond. (SCI)" "BiConjugate Gradient & Precond. (SCI)"}\
-		{"Jacoby & Precond. (SCI)" "Jacoby & Precond. (SCI)"}
+		{"Jacobi & Precond. (SCI)" "Jacoby & Precond. (SCI)"}
 	        {"KSPRICHARDSON (PETSc)" "KSPRICHARDSON (PETSc)"}
 		{"KSPCHEBYCHEV (PETSc)" "KSPCHEBYCHEV (PETSc)"}
 		{"KSPCG (PETSc)" "KSPCG (PETSc)"}
