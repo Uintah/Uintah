@@ -154,7 +154,9 @@ private:
 private:
       // Looks for needed entry in table and returns that entry.  
       void tableLookUp(double mixfrac, double mixfracVars, double scalDisp, Stream& outStream); 
+      double chitableLookUp(double mixfrac, double mixfracVars);
       void readMixingTable(std::string inputfile);
+      void readChiTable();
       int d_numMixingVars;
       int d_numMixStatVars;
       int d_numRxnVars;
@@ -162,8 +164,12 @@ private:
       bool d_adiabatic;
       int d_tableDimension;
       std::vector <std::vector <double> > table;
+      std::vector <double> chitable;
       std::vector <std::string> tags;
       int d_scaldispcount, d_mixfraccount, d_mixvarcount,d_varcount;
+      // For chi table
+      int dc_mixfraccount, dc_mixvarcount;
+      double mixfrac_Div,mixvar_Div;
       int co2_index, h2o_index, c2h2_index;
       std::vector<double> meanMix;
       std::vector<double> scalarDisp;
