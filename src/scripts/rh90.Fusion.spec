@@ -22,25 +22,15 @@ URL:		http://www.sci.utah.edu
 Distribution:	%{distro}
 #Icon:		%{name}.xpm
 Vendor:		Scientific Computing & Imaging Institute at the University of Utah
-Packager:	McKay Davis <rpm@sci.utah.edu>
+Packager:	McKay Davis <scirun-users@sci.utah.edu>
 Provides: libBLT24.so libBLTlite24.so libCore_2d.so libCore_Algorithms_DataIO.so libCore_Algorithms_GLVolumeRenderer.so libCore_Algorithms_Geometry.so libCore_Algorithms_Visualization.so libCore_Containers.so libCore_Datatypes.so libCore_Exceptions.so libCore_GLVolumeRenderer.so libCore_Geom.so libCore_GeomInterface.so libCore_Geometry.so libCore_GuiInterface.so libCore_Malloc.so libCore_Math.so libCore_OS.so libCore_Persistent.so libCore_Process.so libCore_Thread.so libCore_TkExtensions.so libCore_Util.so libDataflow_Comm.so libDataflow_Constraints.so libDataflow_Modules_DataIO.so libDataflow_Modules_Fields.so libDataflow_Modules_Math.so libDataflow_Modules_Render.so libDataflow_Modules_Visualization.so libDataflow_Network.so libDataflow_Ports.so libDataflow_Widgets.so libDataflow_XMLUtil.so libPackages_DataIO_Core_ThirdParty.so libPackages_DataIO_Dataflow_Modules_Readers.so libPackages_Fusion_Dataflow_Modules_Fields.so libPackages_Fusion_Dataflow_Modules_Render.so libPackages_Teem_Core_Datatypes.so libPackages_Teem_Dataflow_Modules_DataIO.so libPackages_Teem_Dataflow_Modules_NrrdData.so libPackages_Teem_Dataflow_Modules_Tend.so libPackages_Teem_Dataflow_Modules_Unu.so libPackages_Teem_Dataflow_Ports.so libair.so libalan.so libbane.so libbiff.so libdye.so libecho.so libell.so libgage.so libhdf5.so.0 libhest.so libhoover.so libitcl3.1.so libitk3.1.so liblimn.so libmite.so libmoss.so libnrrd.so libtcl8.3.so libteem.so libten.so libtk8.3.so libunrrdu.so libxerces-c.so.21 perl(Image::Magick) = 5.43 perl(Turtle)
 Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(PartialHardlinkSets) <= 4.0.4-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1 rpmlib(VersionedDependencies) <= 3.0.3-1
-Requires: mdsplus /bin/bash /bin/csh /bin/sh /usr/bin/env /usr/bin/perl libBLT24.so libBLTlite24.so libCore_Algorithms_DataIO.so libCore_Algorithms_GLVolumeRenderer.so libCore_Algorithms_Geometry.so libCore_Algorithms_Visualization.so libCore_Containers.so libCore_Datatypes.so libCore_Exceptions.so libCore_GLVolumeRenderer.so libCore_Geom.so libCore_GeomInterface.so libCore_Geometry.so libCore_GuiInterface.so libCore_Malloc.so libCore_Math.so libCore_Persistent.so libCore_Thread.so libCore_TkExtensions.so libCore_Util.so libDataflow_Comm.so libDataflow_Constraints.so libDataflow_Modules_Render.so libDataflow_Network.so libDataflow_Ports.so libDataflow_Widgets.so libDataflow_XMLUtil.so libGL.so.1 libGLU.so.1 libPackages_DataIO_Core_ThirdParty.so libPackages_Teem_Core_Datatypes.so libPackages_Teem_Dataflow_Ports.so libX11.so.6 libXaw.so.7 libXext.so.6 libXi.so.6 libXmu.so.6 libXt.so.6 libbz2.so.1 libc.so.6 libc.so.6(GLIBC_2.0) libc.so.6(GLIBC_2.1) libc.so.6(GLIBC_2.1.1) libc.so.6(GLIBC_2.1.3) libc.so.6(GLIBC_2.2) libc.so.6(GLIBC_2.3) libdl.so.2 libdl.so.2(GLIBC_2.0) libdl.so.2(GLIBC_2.1) libfreetype.so.6 libgcc_s.so.1 libgcc_s.so.1(GCC_3.0) libgcc_s.so.1(GLIBC_2.0) libhdf5.so.0 libitcl3.1.so libitk3.1.so libjpeg.so.62 libm.so.6 libm.so.6(GLIBC_2.0) libnsl.so.1 libpng12.so.0 libpthread.so.0 libpthread.so.0(GLIBC_2.0) libpthread.so.0(GLIBC_2.1) libpthread.so.0(GLIBC_2.2) libpthread.so.0(GLIBC_2.3.2) libstdc++.so.5 libstdc++.so.5(CXXABI_1.2) libstdc++.so.5(GLIBCPP_3.2) libstdc++.so.5(GLIBCPP_3.2.2) libtcl8.3.so libteem.so libtiff.so.3 libtk8.3.so libxerces-c.so.21 libz.so.1 perl >= 0:5.002 perl(AutoLoader) perl(Carp) perl(DynaLoader) perl(Exporter) perl(strict) perl(vars)
+Requires: mdsplus  gcc-c++ >= %{gccver} /bin/bash /bin/csh /bin/sh /usr/bin/env /usr/bin/perl libBLT24.so libBLTlite24.so libCore_Algorithms_DataIO.so libCore_Algorithms_GLVolumeRenderer.so libCore_Algorithms_Geometry.so libCore_Algorithms_Visualization.so libCore_Containers.so libCore_Datatypes.so libCore_Exceptions.so libCore_GLVolumeRenderer.so libCore_Geom.so libCore_GeomInterface.so libCore_Geometry.so libCore_GuiInterface.so libCore_Malloc.so libCore_Math.so libCore_Persistent.so libCore_Thread.so libCore_TkExtensions.so libCore_Util.so libDataflow_Comm.so libDataflow_Constraints.so libDataflow_Modules_Render.so libDataflow_Network.so libDataflow_Ports.so libDataflow_Widgets.so libDataflow_XMLUtil.so libGL.so.1 libGLU.so.1 libPackages_DataIO_Core_ThirdParty.so libPackages_Teem_Core_Datatypes.so libPackages_Teem_Dataflow_Ports.so libX11.so.6 libXaw.so.7 libXext.so.6 libXi.so.6 libXmu.so.6 libXt.so.6 libbz2.so.1 libc.so.6 libc.so.6(GLIBC_2.0) libc.so.6(GLIBC_2.1) libc.so.6(GLIBC_2.1.1) libc.so.6(GLIBC_2.1.3) libc.so.6(GLIBC_2.2) libc.so.6(GLIBC_2.3) libdl.so.2 libdl.so.2(GLIBC_2.0) libdl.so.2(GLIBC_2.1) libfreetype.so.6 libgcc_s.so.1 libgcc_s.so.1(GCC_3.0) libgcc_s.so.1(GLIBC_2.0) libhdf5.so.0 libitcl3.1.so libitk3.1.so libjpeg.so.62 libm.so.6 libm.so.6(GLIBC_2.0) libnsl.so.1 libpng12.so.0 libpthread.so.0 libpthread.so.0(GLIBC_2.0) libpthread.so.0(GLIBC_2.1) libpthread.so.0(GLIBC_2.2) libpthread.so.0(GLIBC_2.3.2) libstdc++.so.5 libstdc++.so.5(CXXABI_1.2) libstdc++.so.5(GLIBCPP_3.2) libstdc++.so.5(GLIBCPP_3.2.2) libtcl8.3.so libteem.so libtiff.so.3 libtk8.3.so libxerces-c.so.21 libz.so.1 perl >= 0:5.002 perl(AutoLoader) perl(Carp) perl(DynaLoader) perl(Exporter) perl(strict) perl(vars)
 
 conflicts: SCIRun
 AutoReqProv:	NO
 
-
-#ExcludeArch:
-#ExclusiveArch: linux
-#ExcludeOS:
 ExclusiveOS:	linux
-
-
-#Prefix:	/usr/local/
-#%{_tmppath}/%{name}-buildroot
-#BuildRoot:     /usr/local/SCIRun
-
 
 source0:	Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}.tar.gz
 source1:	%{name}.%{version}.tar.gz
@@ -48,13 +38,7 @@ source2:	Teem.PKG.%{version}.tar.gz
 source3:	Fusion.PKG.%{version}.tar.gz
 source4:	DataIO.PKG.%{version}.tar.gz
 source5:	hdf5-1.6.1.tar.gz
-#source6:	SCIRun-otf-files.tar.gz	
-#source2:	BioPSE.PKG.%{version}.tar.gz
-#source3:	MatlabInterface.PKG.%{version}.tar.gz
-#source4:	Teem.PKG.%{version}.tar.gz
-#source5:	VDT.PKG.%{version}.tar.gz
-#Patch:
-#nopatch
+
 
 %description
 SCIRun is a Problem Solving Environment (PSE), and a computational steering software system. SCIRun allows a scientist or engineer to interactively steer a computation, changing parameters, recomputing, and then revisualizing--all within the same programming environment. The tightly integrated modular environment provided by SCIRun allows computational steering to be applied to the broad range of advanced scientific computations that are addressed by the SCI Institute.
@@ -98,9 +82,6 @@ rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
 /usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-hdf5="/usr/local/hdf5/1.6.1" --with-mdsplus="/usr/local/mdsplus"
-cd /usr/local/SCIRun/bin/on-the-fly-libs
-#tar -xvzf %{SOURCE4}
-#tar -xvzf %{SOURCE5}
 cd /usr/local/SCIRun/bin/
 gmake
 
