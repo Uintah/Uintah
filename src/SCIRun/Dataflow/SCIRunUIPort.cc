@@ -16,40 +16,34 @@
 */
 
 /*
- *  SCIRunComponentDescription.cc:
+ *  SCIRunUIPort.cc: CCA-style Interface to old TCL interfaces
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   October 2001
+ *   May 2002
  *
  */
 
-#include <SCIRun/Dataflow/SCIRunComponentDescription.h>
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
-#include <iostream>
-using namespace std;
+#include <SCIRun/Dataflow/SCIRunUIPort.h>
+#include <SCIRun/Dataflow/SCIRunComponentInstance.h>
+#include <Dataflow/Network/Module.h>
 using namespace SCIRun;
 
-SCIRunComponentDescription::SCIRunComponentDescription(SCIRunComponentModel* model,
-						       const std::string& package,
-						       const std::string& category,
-						       const std::string& module)
-  : model(model), package(package), category(category), module(module)
+SCIRunUIPort::SCIRunUIPort(SCIRunComponentInstance* component)
+  : component(component)
 {
 }
 
-SCIRunComponentDescription::~SCIRunComponentDescription()
+SCIRunUIPort::~SCIRunUIPort()
 {
 }
 
-string SCIRunComponentDescription::getType() const
+void SCIRunUIPort::ui()
 {
-  return package+"."+category+"."+module;
+  Module* module = component->getModule();
+  module->popupUI();
 }
 
-const ComponentModel* SCIRunComponentDescription::getModel() const
-{
-  return model;
-}
+

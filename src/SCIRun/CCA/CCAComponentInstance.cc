@@ -61,7 +61,13 @@ CCAComponentInstance::getPortInstance(const std::string& portname)
 
 gov::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
 {
-  gov::cca::Port::pointer svc = framework->getFrameworkService(name);
+  return getPortNonblocking(name);
+}
+
+gov::cca::Port::pointer
+CCAComponentInstance::getPortNonblocking(const std::string& name)
+{
+  gov::cca::Port::pointer svc = framework->getFrameworkService(name, instanceName);
   if(!svc.isNull())
     return svc;
 
@@ -73,20 +79,29 @@ gov::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
   if(pr->porttype != CCAPortInstance::Uses)
     throw CCAException("Cannot call getPort on a Provides port");
 
+  pr->incrementUseCount();
   if(pr->connections.size() != 1)
-	return gov::cca::Port::pointer(0); 
+    return gov::cca::Port::pointer(0); 
   return pr->connections[0]->port;
-}
-
-gov::cca::Port::pointer CCAComponentInstance::getPortNonblocking(const std::string& name)
-{
-  cerr << "getPortNonblocking not done, name=" << name << '\n';
-  return gov::cca::Port::pointer(0);
 }
 
 void CCAComponentInstance::releasePort(const std::string& name)
 {
-  cerr << "releasePort not done, name=" << name << '\n';
+  if(framework->releaseFrameworkService(name, instanceName))
+    return;
+
+  map<string, CCAPortInstance*>::iterator iter = ports.find(name);
+  if(iter == ports.end()){
+    cerr << "Released an unknown port: " << name << '\n';
+    throw CCAException("Released an unknown port: "+name);
+  }
+
+  CCAPortInstance* pr = iter->second;
+  if(pr->porttype != CCAPortInstance::Uses)
+    throw CCAException("Cannot call releasePort on a Provides port");
+
+  if(!pr->decrementUseCount())
+    throw CCAException("Port released without correspond get");
 }
 
 gov::cca::TypeMap::pointer CCAComponentInstance::createTypeMap()
@@ -103,8 +118,10 @@ void CCAComponentInstance::registerUsesPort(const std::string& portName,
   if(iter != ports.end()){
     if(iter->second->porttype == CCAPortInstance::Provides)
       throw CCAException("name conflict between uses and provides ports");
-    else
+    else {
+      cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
       throw CCAException("registerUsesPort called twice");
+    }
   }
   ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, CCAPortInstance::Uses)));
 }
@@ -144,45 +161,31 @@ gov::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
   return gov::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 
-std::vector<std::string> CCAComponentInstance::getProvidesPortNames()
+PortInstanceIterator* CCAComponentInstance::getPorts()
 {
-   std::map<std::string, CCAPortInstance*>::iterator portiter=ports.begin();
-   std::vector<std::string> v; 
-   while(portiter!=ports.end())
-   {
-      std::string name=portiter->first;  
-      if(portiter->second->porttype==CCAPortInstance::Provides)
-	 v.push_back(name);
-      portiter++; 
-   }
-   return v; 
+  return new Iterator(this);
 }
 
-std::vector<std::string> CCAComponentInstance::getUsesPortNames()
+CCAComponentInstance::Iterator::Iterator(CCAComponentInstance* comp)
+  :iter(comp->ports.begin()), comp(comp)
 {
-   std::map<std::string, CCAPortInstance*>::iterator portiter=ports.begin();
-   std::vector<std::string> v;
-   while(portiter!=ports.end())
-   {
-      std::string name=portiter->first;
-      if(portiter->second->porttype==CCAPortInstance::Uses)
-         v.push_back(name);
-      portiter++;
-   }
-   return v;
 }
 
-
-gov::cca::Port::pointer CCAComponentInstance::getUIPort()
+CCAComponentInstance::Iterator::~Iterator()
 {
-   std::map<std::string, CCAPortInstance*>::iterator portiter=ports.begin();
-   while(portiter!=ports.end())
-   {
-      std::string key=portiter->first;
-      if(portiter->first=="ui")
-	return portiter->second->port;
-      portiter++; 
-   }
-   return gov::cca::Port::pointer(0);	 
 }
 
+PortInstance* CCAComponentInstance::Iterator::get()
+{
+  return iter->second;
+}
+
+bool CCAComponentInstance::Iterator::done()
+{
+  return iter == comp->ports.end();
+}
+
+void CCAComponentInstance::Iterator::next()
+{
+  ++iter;
+}

@@ -30,6 +30,7 @@
 #define SCIRun_Framework_CCAComponentInstance_h
 
 #include <SCIRun/ComponentInstance.h>
+#include <SCIRun/PortInstanceIterator.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <map>
 #include <string>
@@ -64,11 +65,22 @@ namespace SCIRun {
     gov::cca::ComponentID::pointer getComponentID();
 
     // Methods from ComponentInstance
-    PortInstance* getPortInstance(const std::string& name);
-    std::vector<std::string> getProvidesPortNames();
-    std::vector<std::string> getUsesPortNames();
-    gov::cca::Port::pointer getUIPort();	
-  private:
+    virtual PortInstance* getPortInstance(const std::string& name);
+    virtual PortInstanceIterator* getPorts();
+ private:
+    class Iterator : public PortInstanceIterator {
+      std::map<std::string, CCAPortInstance*>::iterator iter;
+      CCAComponentInstance* comp;
+    public:
+      Iterator(CCAComponentInstance*);
+      virtual ~Iterator();
+      virtual PortInstance* get();
+      virtual bool done();
+      virtual void next();
+    private:
+      Iterator(const Iterator&);
+      Iterator& operator=(const Iterator&);
+    };
     std::map<std::string, CCAPortInstance*> ports;
     gov::cca::Component::pointer component;
 

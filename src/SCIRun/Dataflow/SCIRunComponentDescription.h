@@ -30,16 +30,7 @@
 #define SCIRun_Framework_SCIRunComponentDescription_h
 
 #include <SCIRun/ComponentDescription.h>
-
 #include <string>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
-#pragma set woff 1375
-#endif
-#include <dom/DOM_NamedNodeMap.hpp>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#endif
 
 namespace SCIRun {
   class ComponentModel;
@@ -47,23 +38,18 @@ namespace SCIRun {
   class SCIRunComponentDescription : public ComponentDescription {
   public:
     SCIRunComponentDescription(SCIRunComponentModel* model,
-			       const DOM_Node& xmlfile,
-			       const std::string& package);
+			       const std::string& package,
+			       const std::string& category,
+			       const std::string& module);
     virtual ~SCIRunComponentDescription();
 
     virtual std::string getType() const;
     virtual const ComponentModel* getModel() const;
-    bool valid() const {
-      return is_valid;
-    }
-    DOM_Node getNode() const {
-      return node;
-    }
   private:
     SCIRunComponentModel* model;
-    DOM_Node node;
-    bool is_valid;
-    std::string type;
+    std::string package;
+    std::string category;
+    std::string module;
 
     SCIRunComponentDescription(const SCIRunComponentDescription&);
     SCIRunComponentDescription& operator=(const SCIRunComponentDescription&);

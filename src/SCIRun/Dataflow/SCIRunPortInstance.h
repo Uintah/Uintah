@@ -16,7 +16,7 @@
 */
 
 /*
- *  CCAPortInstance.h: 
+ *  SCIRunPortInstance.h: 
  *
  *  Written by:
  *   Steven G. Parker
@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef SCIRun_CCA_CCAPortInstance_h
-#define SCIRun_CCA_CCAPortInstance_h
+#ifndef SCIRun_CCA_SCIRunPortInstance_h
+#define SCIRun_CCA_SCIRunPortInstance_h
 
 #include <SCIRun/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -36,40 +36,29 @@
 #include <vector>
 
 namespace SCIRun {
-  class CCAPortInstance : public PortInstance {
+  class Port;
+  class SCIRunComponentInstance;
+  class SCIRunPortInstance : public PortInstance {
   public:
     enum PortType {
-      Uses, Provides
+      Output, Input
     };
-    CCAPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap::pointer& properties,
-		    PortType porttype);
-    CCAPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap::pointer& properties,
-		    const gov::cca::Port::pointer& port,
-		    PortType porttype);
-    ~CCAPortInstance();
+    SCIRunPortInstance(SCIRunComponentInstance*, Port* port, PortType type);
+    ~SCIRunPortInstance();
+
     virtual bool connect(PortInstance*);
     virtual PortInstance::PortType portType();
     virtual std::string getUniqueName();
     virtual bool disconnect(PortInstance*);
-    virtual bool canConnectTo(PortInstance*);
+    virtual bool canConnectTo(PortInstance *);
 
-    std::string getName();
-    void incrementUseCount();
-    bool decrementUseCount();
   private:
-    friend class CCAComponentInstance;
-    std::string name;
-    std::string type;
-    gov::cca::TypeMap::pointer properties;
-    std::vector<CCAPortInstance*> connections;
-    gov::cca::Port::pointer port;
-    PortType porttype;
-    int useCount;
+    SCIRunPortInstance(const SCIRunPortInstance&);
+    SCIRunPortInstance& operator=(const SCIRunPortInstance&);
 
-    CCAPortInstance(const CCAPortInstance&);
-    CCAPortInstance& operator=(const CCAPortInstance&);
+    SCIRunComponentInstance* component;
+    Port* port;
+    PortType porttype;
   };
 }
 

@@ -35,7 +35,8 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
 				 const std::string& type,
 				 const gov::cca::TypeMap::pointer& properties,
 				 PortType porttype)
-  : name(name), type(type), properties(properties), porttype(porttype)
+  : name(name), type(type), properties(properties), porttype(porttype),
+    useCount(0)
 {
 }
 
@@ -45,7 +46,7 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
 				 const gov::cca::Port::pointer& port,
 				 PortType porttype)
   : name(name), type(type), properties(properties), port(port),
-    porttype(porttype)
+    porttype(porttype), useCount(0)
 {
 }
 
@@ -55,14 +56,11 @@ CCAPortInstance::~CCAPortInstance()
 
 bool CCAPortInstance::connect(PortInstance* to)
 {
+  if(!canConnectTo(to))
+    return false;
   CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
   if(!p2)
     return false;
-  cerr << "Must have better port type checking on connect!\n";
-  if(type != p2->type){
-    cerr << "connect type mismatch: " << type << " and " << p2->type << '\n';
-    return false;
-  }
   if(porttype == Uses && p2->porttype == Provides){
     connections.push_back(p2);
     return true;
@@ -71,6 +69,20 @@ bool CCAPortInstance::connect(PortInstance* to)
     return true;
   }
   return false;
+}
+
+PortInstance::PortType CCAPortInstance::portType()
+{
+  if(porttype == Uses)
+    return From;
+  else
+    return To;
+}
+
+string CCAPortInstance::getUniqueName()
+{
+  // CCA names are already guaranteed to be unique
+  return name;
 }
 
 bool CCAPortInstance::disconnect(PortInstance* to)
@@ -96,12 +108,30 @@ bool CCAPortInstance::disconnect(PortInstance* to)
 bool CCAPortInstance::canConnectTo(PortInstance* to)
 {
   CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
-  if( p2 && to && type==p2->type && porttype!=p2->porttype){
-    if(porttype==Uses && connections.size()>0)return false;
-    if(p2->porttype==Uses && p2->connections.size()>0) return false;
+  if( p2 && type==p2->type && porttype!=p2->porttype){
+    if(porttype==Uses && connections.size()>0)
+      return false;
+    if(p2->porttype==Uses && p2->connections.size()>0)
+      return false;
     return true;
-  }  
+  }
   return false;
 }
 
+string CCAPortInstance::getName()
+{
+  return name;
+}
 
+void CCAPortInstance::incrementUseCount()
+{
+  useCount++;
+}
+
+bool CCAPortInstance::decrementUseCount()
+{
+  if(useCount<=0)
+    return false;
+  useCount--;
+  return true;
+}

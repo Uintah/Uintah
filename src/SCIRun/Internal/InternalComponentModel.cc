@@ -39,11 +39,11 @@ using namespace SCIRun;
 InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
   : ComponentModel("internal"), framework(framework)
 {
-  addService(new InternalComponentDescription(this, "cca.builderService",
+  addService(new InternalComponentDescription(this, "cca.BuilderService",
 					      &BuilderService::create, true));
-  addService(new InternalComponentDescription(this, "cca.componentRepository",
+  addService(new InternalComponentDescription(this, "cca.ComponentRepository",
 					      &ComponentRegistry::create, true));
-  addService(new InternalComponentDescription(this, "cca.componentEventService",
+  addService(new InternalComponentDescription(this, "cca.ComponentEventService",
 					      &ComponentEventService::create, true));
 }
 
@@ -61,7 +61,9 @@ void InternalComponentModel::addService(InternalComponentDescription* svc)
   services[svc->serviceType]=svc;
 }
 
-gov::cca::Port::pointer InternalComponentModel::getFrameworkService(const std::string& type)
+gov::cca::Port::pointer
+InternalComponentModel::getFrameworkService(const std::string& type,
+					    const std::string& componentName)
 {
   map<string, InternalComponentDescription*>::iterator iter=services.find(type);
   if(iter == services.end())
@@ -69,18 +71,46 @@ gov::cca::Port::pointer InternalComponentModel::getFrameworkService(const std::s
 
   InternalComponentDescription* cd = iter->second;
   InternalComponentInstance* ci;
-  string cname = "internal: "+type;
   if(cd->isSingleton){
+    string cname = "internal: "+type;
     if(!cd->singleton_instance){
       cd->singleton_instance = (*cd->create)(framework, cname);
       framework->registerComponent(cd->singleton_instance, cname);
     }
     ci = cd->singleton_instance;
   } else {
+    string cname = "internal: "+type+" for "+componentName;
     ci = (*cd->create)(framework, cname);
     framework->registerComponent(ci, cname);
   }
-  return ci->getService(type);
+  ci->incrementUseCount();
+  gov::cca::Port::pointer ptr = ci->getService(type);
+  ptr->addReference();
+  return ptr;
+}
+
+bool
+InternalComponentModel::releaseFrameworkService(const std::string& type,
+						const std::string& componentName)
+{
+  map<string, InternalComponentDescription*>::iterator iter=services.find(type);
+  if(iter == services.end())
+    return false;
+
+  InternalComponentDescription* cd = iter->second;
+  InternalComponentInstance* ci;
+  if(cd->isSingleton){
+    string cname = "internal: "+type;
+    ci=cd->singleton_instance;
+  } else {
+    string cname = "internal: "+type+" for "+componentName;
+    ci = dynamic_cast<InternalComponentInstance*>(framework->lookupComponent(cname));
+    if(!ci)
+      throw InternalError("Cannot find Service component of type: "+type+" for component "+componentName);
+  }
+  if(!ci->decrementUseCount())
+    throw InternalError("Service released without correspond get");
+  return true;
 }
 
 bool InternalComponentModel::haveComponent(const std::string& name)

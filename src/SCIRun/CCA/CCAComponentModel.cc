@@ -76,7 +76,6 @@ void CCAComponentModel::destroyComponentList()
 
 void CCAComponentModel::buildComponentList()
 {
-  cerr<<"###buildCompoentList is called###\n";
   // Initialize the XML4C system
   try {
     XMLPlatformUtils::Initialize();
