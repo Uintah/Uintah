@@ -28,6 +28,8 @@
  */
 
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
@@ -54,17 +56,21 @@ SCICORESHARE Matrix *Add(Matrix *A, Matrix *B) {
   ASSERT(A->ncols() == B->ncols());
   ASSERTFAIL("Matrix addition not yet implemented.");
   return A;
-  /*
-  SparseMatrix *s;
-  DenseMatrix *d;
-  ColumnMatrix *c;
-  if (d=dynamic_cast<DenseMatrix *>(A)) return d->add(B->dense());
-  else if (d=dynamic_cast<DenseMatrix *>(B)) return d->add(A->dense());
-  else if (c=dynamic_cast<ColumnMatrix *>(A)) return c->add(B->column());
-  else if (c=dynamic_cast<ColumnMatrix *>(B)) return c->add(A->column());
-  else if (s=dynamic_cast<SparseRowMatrix *>(A)) return s->add(B->sparse());
-  else (s=dynamic_cast<SparseRowMatrix *>(B)) return s->add(A->sparse());
-  */
+     
+//    SparseRowMatrix *As = dynamic_cast<SparseRowMatrix *>(A);
+//    SparseRowMatrix *Bs = dynamic_cast<SparseRowMatrix *>(B);
+//    DenseMatrix *Ad     = dynamic_cast<DenseMatrix *>(A);
+//    DenseMatrix *Bd     = dynamic_cast<DenseMatrix *>(B);
+//    ColumnMatrix *Ac    = dynamic_cast<ColumnMatrix *>(A);
+//    ColumnMatrix *Bc    = dynamic_cast<ColumnMatrix *>(B);
+
+
+//    if (Ad) return Ad->add(B->dense());
+//    else if (Bd) return Bd->add(A->dense());
+//    else if (Ac) return c->add(B->column());
+//    else if (Bc) return c->add(A->column());
+//    else if (As) return s->add(B->sparse());
+//    else (Bs) return s->add(A->sparse());
 }
 
 SCICORESHARE Matrix *Mult(Matrix *A, Matrix *B) {
