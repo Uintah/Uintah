@@ -36,7 +36,7 @@ itcl_class SCIRun_Fields_SeedField {
 	set $this-maxseeds 15
 	set $this-dist impuni
 	set $this-numseeds 10
-	set $this-rngseed 1234
+	set $this-rngseed 1
 	set $this-whichtab Widget
     }
 
