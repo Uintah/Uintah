@@ -51,7 +51,21 @@ namespace Uintah {
     double evalYieldCondition(const double equivStress,
 			      const double flowStress,
 			      const double traceOfCauchyStress,
-			      const double porosity);
+			      const double porosity,
+                              double& sig);
+
+    /////////////////////////////////////////////////////////////////////////
+    /*! 
+      \brief Evaluate the derivative of the yield function \f$(\Phi)\f$
+      with respect to \f$\sigma_{ij}\f$.
+
+      This is for the associated flow rule.
+    */
+    /////////////////////////////////////////////////////////////////////////
+    void evalDerivOfYieldFunction(const Matrix3& stress,
+				  const double flowStress,
+				  const double porosity,
+				  Matrix3& derivative);
   };
 
 } // End namespace Uintah

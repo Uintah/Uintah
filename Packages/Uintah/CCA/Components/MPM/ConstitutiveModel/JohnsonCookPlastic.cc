@@ -58,9 +58,8 @@ JohnsonCookPlastic::initializeInternalVars(ParticleSubset* pset,
 				           DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel, pset);
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-    pPlasticStrain_new[*iter] = 0.0;
-  }
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++) pPlasticStrain_new[*iter] = 0.0;
 }
 
 void 
@@ -91,7 +90,6 @@ JohnsonCookPlastic::updatePlastic(const particleIndex idx, const double& )
 
 double 
 JohnsonCookPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
-                                      const Matrix3& ,
                                       const double& temperature,
                                       const double& delT,
                                       const double& tolerance,

@@ -1,6 +1,8 @@
 #ifndef __YIELD_CONDITION_H__
 #define __YIELD_CONDITION_H__
 
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+
 namespace Uintah {
 
   /*! \class YieldCondition
@@ -28,14 +30,37 @@ namespace Uintah {
     /*! Virtual to ensure correct behavior */
     virtual ~YieldCondition();
 	 
-    //! Evaluate the yield condition \f$(\Phi)\f$.
-    /*! If \f$\Phi \le 0\f$ the state is elastic.
+    /////////////////////////////////////////////////////////////////////////
+    /*! 
+      \brief Evaluate the yield function \f$(\Phi)\f$.
+
+      If \f$\Phi \le 0\f$ the state is elastic.
       If \f$\Phi > 0\f$ the state is plastic and a normal return 
-      mapping algorithm is necessary. */
+      mapping algorithm is necessary. 
+
+      Returns the appropriate value of sig(t+delT) that is on
+      the flow surface.
+    */
+    /////////////////////////////////////////////////////////////////////////
     virtual double evalYieldCondition(const double equivStress,
                                       const double flowStress,
                                       const double traceOfCauchyStress,
-                                      const double porosity) = 0;
+                                      const double porosity,
+                                      double& sig) = 0;
+
+    /////////////////////////////////////////////////////////////////////////
+    /*! 
+      \brief Evaluate the derivative of the yield function \f$(\Phi)\f$
+      with respect to \f$\sigma_{ij}\f$.
+
+      This is for the associated flow rule.
+    */
+    /////////////////////////////////////////////////////////////////////////
+    virtual void evalDerivOfYieldFunction(const Matrix3& stress,
+                                          const double flowStress,
+                                          const double porosity,
+                                          Matrix3& derivative) = 0;
+
   };
 } // End namespace Uintah
       

@@ -113,7 +113,6 @@ MTSPlastic::updatePlastic(const particleIndex idx, const double& )
 
 double 
 MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
-                              const Matrix3& ,
                               const double& T,
                               const double& delT,
                               const double& ,
