@@ -45,7 +45,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <tcl.h>
 #include <tk.h>
-
+#include <stack>
 #include <iostream>
 
 // tcl interpreter corresponding to this module
@@ -56,8 +56,24 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 using namespace SCIRun;
 using namespace SCITeem;
+using std::stack;
 
 namespace Volume {
+
+
+struct UndoItem
+{
+  int action_;
+  int selected_;
+  CM2Widget *widget_;
+
+  UndoItem(int a, int s, CM2Widget *w)
+    : action_(a), selected_(s), widget_(w)
+  {
+  }
+
+};
+
 
 class EditTransferFunc2 : public Module {
 
@@ -67,6 +83,7 @@ class EditTransferFunc2 : public Module {
   int width_, height_;
   bool button_;
   vector<CM2Widget*> widgets_;
+  stack<UndoItem> undo_stack_;
   CM2ShaderFactory* shader_factory_;
   Pbuffer* pbuffer_;
   Array3<float> array_;
@@ -96,9 +113,9 @@ public:
   virtual void execute();
 
   void tcl_command(GuiArgs&, void*);
-
-  bool create_histo();
   
+  void undo();
+
   void redraw();
 
   void push(int x, int y, int button);
@@ -122,7 +139,6 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
 {
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
-  //widget_.push_back(scinew RectangleCM2Widget());
 }
 
 
@@ -184,8 +200,66 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "closewindow") {
     //cerr << "EVENT: close" << endl;
     ctx_ = 0;
+  } else if (args[1] == "addtriangle") {
+    widgets_.push_back(scinew TriangleCM2Widget());
+    undo_stack_.push(UndoItem(3, widgets_.size()-1, NULL));
+    cmap_dirty_ = true;
+    redraw();
+  } else if (args[1] == "addrectangle") {
+    widgets_.push_back(scinew RectangleCM2Widget());
+    undo_stack_.push(UndoItem(3, widgets_.size()-1, NULL));
+    cmap_dirty_ = true;
+    redraw();
+  } else if (args[1] == "deletewidget") {
+    if (pick_widget_ != -1 && pick_widget_ < (int)widgets_.size())
+    {
+      // Delete widget.
+      undo_stack_.push(UndoItem(2, pick_widget_, widgets_[pick_widget_]));
+      widgets_.erase(widgets_.begin() + pick_widget_);
+      pick_widget_ = -1;
+      cmap_dirty_ = true;
+      redraw();
+    }
+  } else if (args[1] == "undowidget") {
+    undo();
   } else {
     Module::tcl_command(args, userdata);
+  }
+}
+
+
+
+void
+EditTransferFunc2::undo()
+{
+  if (!undo_stack_.empty())
+  {
+    const UndoItem &item = undo_stack_.top();
+    
+    switch (item.action_)
+    {
+    case 0: // select
+      pick_widget_ = item.selected_;
+      break;
+      
+    case 1: // move
+      delete widgets_[item.selected_];
+      widgets_[item.selected_] = item.widget_;
+      break;
+
+    case 2: // delete
+      widgets_.insert(widgets_.begin() + item.selected_, item.widget_);
+      break;
+      
+    case 3: // add
+      delete widgets_[pick_widget_];
+      widgets_.erase(widgets_.begin() + pick_widget_);
+      break;
+   
+    }
+    undo_stack_.pop();
+    cmap_dirty_ = true;
+    redraw();
   }
 }
 
@@ -232,7 +306,10 @@ EditTransferFunc2::push(int x, int y, int button)
       }
     }
   }
-  if(pick_widget_ != -1) {
+  if (pick_widget_ != -1)
+  {
+    undo_stack_.push(UndoItem(1, pick_widget_,
+			      widgets_[pick_widget_]->clone()));
     redraw();
   }
 }
