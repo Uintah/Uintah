@@ -4,14 +4,17 @@
 
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 namespace Uintah {
   using std::vector;
   using std::cerr;
+  using std::ostringstream;
 
   template<class T>
   class ComputeSubset : public RefCounted {
@@ -208,7 +211,9 @@ namespace Uintah {
     for(int i=1;i<s1->size();i++){
       T el = s1->get(i);
       if(el <= el1){
-	cerr << "Set not sorted: " << el1 << ", " << el << '\n';
+	ostringstream msgstr;
+	msgstr << "Set not sorted: " << el1 << ", " << el;
+	throw InternalError(msgstr.str());
       }
       el1=el;
     }
@@ -216,7 +221,9 @@ namespace Uintah {
     for(int i=1;i<s2->size();i++){
       T el = s2->get(i);
       if(el <= el2){
-	cerr << "Set not sorted: " << el2 << ", " << el << '\n';
+	ostringstream msgstr;
+	msgstr << "Set not sorted: " << el2 << ", " << el;
+	throw InternalError(msgstr.str()); 
       }
       el2=el;
     }
