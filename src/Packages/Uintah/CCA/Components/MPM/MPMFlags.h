@@ -53,6 +53,7 @@ namespace Uintah {
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2
     double      d_forceIncrementFactor;
     bool        d_canAddMPMMaterial;
+    double      d_addFrictionWork;     // 1 == add , 0 == do not add
 
     MPMFlags();
 
