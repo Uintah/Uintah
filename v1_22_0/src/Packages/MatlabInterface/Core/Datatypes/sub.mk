@@ -52,5 +52,7 @@ PSELIBS := Packages/Teem/Core/Datatypes \
 	 Core/Persistent Core/Geometry \
 	 Core/Util  
 
+LIBS := $(TEEM_LIBRARY)
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
