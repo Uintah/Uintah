@@ -226,6 +226,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
 	delete m_itr->second;
   }
 
+#if 0
   // Find the mat_id = "all" (-1) information and store it in each 
   // materials boundary condition section.
   BCDataArray::bcDataArrayType::const_iterator  mat_all_itr, bc_geom_itr;
@@ -244,8 +245,10 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
 					   (*itr)->clone());
 	}
       }
+    BCR_dbg << "Printing out bcDataArray after adding 'all' . . " << endl;
+    d_BCReaderData[face].print();
   }
-
+#endif
 
   // Need to take the individual boundary conditions and combine them into
   // a single different (side and the union of any holes (circles or
