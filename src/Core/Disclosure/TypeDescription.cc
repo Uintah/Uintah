@@ -225,11 +225,20 @@ const TypeDescription* get_type_description(int*)
   return td;
 }
 
+const TypeDescription* get_type_description(unsigned int*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("unsigned_int", "builtin", "builtin");
+  }
+  return td;
+}
+
 const TypeDescription* get_type_description(unsigned char*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("unsigned char", "builtin", "builtin");
+    td = scinew TypeDescription("unsigned_char", "builtin", "builtin");
   }
   return td;
 }
