@@ -33,15 +33,15 @@ static void circle_points(int x, int y, int x_center, int y_center);
 
 VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 			   int ncolors, float t_inc, char *in_file):
-  DpyBase("VolumeVis GUI"), hist(0), colors_index(matls), alpha_list(alphas),
-  ncolors(ncolors), nalphas(ncolors),
-  original_t_inc(0.01), current_t_inc(t_inc), t_inc(t_inc),
-  in_file(in_file), data_min(MAXFLOAT), data_max(-MAXFLOAT)
+  DpyBase("VolumeVis GUI"), hist(0), in_file(in_file), data_min(MAXFLOAT),
+  data_max(-MAXFLOAT), original_t_inc(0.01), current_t_inc(t_inc), 
+  t_inc(t_inc), colors_index(matls), alpha_list(alphas), ncolors(ncolors), 
+  nalphas(ncolors)
 {
   set_resolution(500,500);
   // need to allocate memory for alpha_transform and color_transform
   Array1<Color*> *c = new Array1<Color*>(ncolors);
-  for(unsigned int i = 0; i < ncolors; i++)
+  for(int i = 0; i < ncolors; i++)
     (*c)[i] = new Color();
   color_transform.set_results_ptr(c);
   alpha_transform.set_results_ptr(new Array1<float>(nalphas));
@@ -448,7 +448,7 @@ void VolumeVisDpy::draw_alpha_curve(GLuint /*fid*/, XFontStruct* /*font_struct*/
   // now draw the alpha curve
   glColor3f(1.0, 1.0, 1.0);
   glBegin(GL_LINE_STRIP);
-  for(unsigned int j = 0; j < alpha_list.size(); j++) {
+  for(int j = 0; j < alpha_list.size(); j++) {
     //    cout << "drawing a point at ("<<alpha_list[j].x<<", "<<alpha_list[j].val<<")\n";
     glVertex2i((int)(alpha_list[j].x*width), (int)(alpha_list[j].val*h));
   }
@@ -456,7 +456,7 @@ void VolumeVisDpy::draw_alpha_curve(GLuint /*fid*/, XFontStruct* /*font_struct*/
 
   glColor3f(1.0, 0.5, 1.0);
   int radius = (width/100)*3;
-  for(unsigned int k = 0; k < alpha_list.size(); k++) {
+  for(int k = 0; k < alpha_list.size(); k++) {
     draw_circle(radius, (int)(alpha_list[k].x*width),
 		(int)(alpha_list[k].val*h));
   }
@@ -472,7 +472,7 @@ void VolumeVisDpy::rescale_alphas(float new_t_inc) {
   //    d_2 : new sampling distance
   // a_2 = 1 - (1 - a_1)^(d_2/d_1)
   float d2_div_d1 = new_t_inc/current_t_inc;
-  for(unsigned int i = 0; i < alpha_transform.size(); i++) {
+  for(int i = 0; i < alpha_transform.size(); i++) {
     alpha_transform[i] = 1 - powf(1 - alpha_transform[i], d2_div_d1);
     //    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<", ";
   }
@@ -522,7 +522,7 @@ int VolumeVisDpy::select_point(int xpos, int ypos) {
   // now loop over the values and find the point closest
   float max_distance = FLT_MAX;
   int index = -1;
-  for(unsigned int i = 0; i < alpha_list.size(); i++) {
+  for(int i = 0; i < alpha_list.size(); i++) {
     // we don't really care about the actuall distance, just the relative
     // distance, so we don't have to square root this value.
     float distance = (x - alpha_list[i].x) * (x - alpha_list[i].x) +
@@ -557,7 +557,7 @@ int VolumeVisDpy::select_point(int xpos, int ypos) {
 void VolumeVisDpy::create_color_transfer() {
   ScalarTransform1D<unsigned int,Color> c_index(&colors_index);
   c_index.scale(0,color_transform.size()-1);
-  for(unsigned int i = 0; i < color_transform.size(); i++) {
+  for(int i = 0; i < color_transform.size(); i++) {
     Color *c = color_transform[i];
     *c = c_index.interpolate(i);
   }
