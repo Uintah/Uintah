@@ -88,14 +88,17 @@ public:
   static DynamicLoader& scirun_loader();
 
 private:
-  bool create_cc(const CompileInfo &info, ostream &serr);
-  bool create_empty_cc(const CompileInfo &info, ostream &serr);
-  bool compile_so(const string &file, ostream &serr);
+  bool create_cc(const CompileInfo &info, bool empty, ostream &serr);
+  bool compile_so(const CompileInfo &info, ostream &serr);
   void store( const string &, maker_fun);
   bool entry_exists(const string &entry);
   bool entry_is_null(const string &entry);
   bool wait_for_current_compile(const string &entry);
-
+  
+  bool copy_makefile_to(const string &dir);
+  const string &get_compile_dir();
+  bool validate_compile_dir(string &dir);
+  
   typedef map<string, maker_fun> map_type;
   map_type              algo_map_;
   
@@ -106,6 +109,8 @@ private:
 
   //! static vars.
   static DynamicLoader        *scirun_loader_;
+  static string		otf_dir_;
+  static bool		otf_dir_found_;
 };
 
 } // End namespace SCIRun
