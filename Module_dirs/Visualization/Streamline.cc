@@ -343,7 +343,7 @@ void Streamline::execute()
 void Streamline::geom_moved(int axis, double dist, const Vector& delta,
 			    void* cbdata)
 {
-    cerr << "Moved called..." << endl;
+    cerr << "Moved called, widgettype = " << widgettype.get() << endl;
     if(widgettype.get() == "Point"){
 	p1+=delta;
     } else if(widgettype.get() == "Line"){
@@ -376,9 +376,12 @@ void Streamline::geom_moved(int axis, double dist, const Vector& delta,
 	}
     } else if(widgettype.get() == "Square"){
 	NOT_FINISHED("Square widget");
+    } else {
+	error("Unknown widgettype in Streamline");
     }
     if(!abort_flag){
 	abort_flag=1;
+	cerr << "Asking to execute!!!\n";
 	want_to_execute();
     }
 }
