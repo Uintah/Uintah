@@ -1183,7 +1183,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 # biopseFDialog_SetPathSilently --
 # 	Sets data(selectPath) without invoking the trace procedure
 proc biopseFDialog_SetPathSilently {w path} {
-    upvar #0 $ data
+    upvar #0 $w data
     
     trace vdelete  data(selectPath) w "biopseFDialog_SetPath $w"
     set data(selectPath) $path
@@ -1239,7 +1239,7 @@ proc biopseFDialog_SetFormat { w format } {
 #	 flag = OK	: valid input
 #	      = PATTERN	: valid directory/pattern
 #	      = PATH	: the directory does not exist
-#	      = FILE	: the directory exists by the file doesn't
+#	      = FILE	: the directory exists but the file doesn't
 #			  exist
 #	      = CHDIR	: Cannot change to the directory
 #	      = ERROR	: Invalid entry
@@ -1259,9 +1259,12 @@ proc biopseFDialogResolveFile {context text defaultext} {
 	set path $path/
     }
 
-    # DMW: added second comparison so we can specify a directory
-    if {[file ext $path] == "" && [string index $path end] != "/"} {
+    # Only consider adding default extension if the file is not a directory
+    if {![file isdirectory $path]} {
+      # DMW: added second comparison so we can specify a directory
+      if {[file ext $path] == "" && [string index $path end] != "/"} {
 	set path "$path$defaultext"
+      }
     }
 
     if {[catch {file exists $path}]} {
@@ -1370,6 +1373,7 @@ proc biopseFDialog_ActivateEnt {w} {
 	    } else {
 		biopseFDialog_SetPathSilently $w $path
 		set data(selectFile) $file
+
 		biopseFDialog_Done $w
 	    }
 	}
@@ -1451,6 +1455,7 @@ proc biopseFDialog_OkCmd {w} {
     upvar #0 $w data
 
     set text [biopseIconList_Get $data(icons)]
+
     if {[string compare $text ""]} {
 	set file [biopseFDialog_JoinFile $data(selectPath) $text]
 	if {[file isdirectory $file]} {
@@ -1561,5 +1566,6 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
+
     eval $data(-command)
 }
