@@ -74,7 +74,8 @@ public:
   void attenuate(){ rs_ = ATTENUATE; }
 
 
-  void Build(){ mutex.lock();buildBrickGrid(); mutex.unlock();}
+  void Build(){ mutex.lock();buildBrickGrid();
+                gvr_->SetNewBricks(true); mutex.unlock();}
   // if the SetVol and or SetBrickSize SetRange are called, Build must 
   // be called before any other operations.
   void SetRange( double min, double max ){ min_val_ = min; max_val_ = max;}
