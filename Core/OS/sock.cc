@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <signal.h>
+#include <stdio.h>
 using namespace std;
 
 #include <SCICore/OS/sock.h>
