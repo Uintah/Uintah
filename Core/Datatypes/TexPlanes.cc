@@ -39,6 +39,12 @@ TexPlanes::draw()
   using std::cerr;
   using std::endl;
   
+  if( newbricks_ ){
+    glDeleteTextures( textureNames.size(), &(textureNames[0]));
+    textureNames.clear();
+    newbricks_ = false;
+  }
+
   Ray viewRay;
   Brick* brick;
   computeView(viewRay);
