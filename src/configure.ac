@@ -69,7 +69,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.22],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.24],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
@@ -1399,7 +1399,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.22
+  sci_tp_version=1.24
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -1745,9 +1745,9 @@ fi
 
 if test "$avr" = "yes"; then
   AC_MSG_WARN([
-  *** Will include the advance volume rendering code in compilation.  ***
-  *** configure can erroneously determine this platform can use avr.  ***
-  *** use --disable-advanced-volume-rendering if compilation fails.   ***
+  *** Including the Advance Volume Rendering (AVR) code in compilation.        ***
+  *** Note: configure can erroneously determine this platform can use AVR.     ***
+  *** use --disable-advanced-volume-rendering if compilation fails due to AVR. ***
   ])  
   COMPILE_AVR=1
   DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
@@ -2661,9 +2661,24 @@ if test "$sci_required_mpi" = "yes"; then
               _sci_inc="$with_mpi/include"
            fi
         fi
+
+	# After each attempt to locate mpi, we need to verify that the mpi it
+	# chose is in the path we specified.  This is because some machines
+	# have MPI installed in a standard location and sometimes will choose
+	# that one over the one we specified.
+	the_file=libmpi
+	
         # /usr/include/mpi is the standard location of mpi on some linux dists.
         SCI_TRY_LINK(MPI,mpi library and header-1,mpi.h,
                      $_sci_inc /usr/include/mpi,mpi lam util pmpi,$_sci_lib,,,optional)
+
+        if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+           test ! -e $with_mpi/lib/$the_file.so &&
+           test ! -e $with_mpi/lib/$the_file.a &&
+           test ! -e $with_mpi/lib/$the_file.dylib; then
+             AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+	     HAVE_MPI="no"
+        fi
 
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
@@ -2673,9 +2688,27 @@ if test "$sci_required_mpi" = "yes"; then
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
           $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
 
+          # verify that it was found in the location requested.
+          if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+             test ! -e $with_mpi/lib/$the_file.so &&
+             test ! -e $with_mpi/lib/$the_file.a &&
+             test ! -e $with_mpi/lib/$the_file.dylib; then
+             AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+	     HAVE_MPI="no"
+          fi
+
           if test "$HAVE_MPI" != "yes"; then
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
              $_sci_inc /usr/include/mpi,mpi,$_sci_lib,-DMPIPP_H,,optional)
+
+             # verify that it was found in the location requested.
+             if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+                test ! -e $with_mpi/lib/$the_file.so &&
+                test ! -e $with_mpi/lib/$the_file.a &&
+                test ! -e $with_mpi/lib/$the_file.dylib; then
+                AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+	        HAVE_MPI="no"
+             fi
 
              if test "$HAVE_MPI" != "yes"; then
                 SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
@@ -3394,17 +3427,12 @@ _sci_optional=optional
 
 if test "$with_freetype" = "yes"; then
   # If --with-freetype is specified without a parameter, then it makes it required
-  _sci_lib="/usr/lib"
-  _sci_inc="/usr/include"
   _sci_optional=required
 elif test "$with_freetype"; then
   # If --with-freetype has a parameter, then use it
   _sci_lib="$with_freetype/lib"
   _sci_inc="$with_freetype/include"
   _sci_optional=specific
-else
-  _sci_lib="/usr/lib"
-  _sci_inc="/usr/include"
 fi
 
 AC_MSG_CHECKING(for $_sci_optional freetype)
@@ -3422,7 +3450,7 @@ for dir in "" $_sci_lib; do
        FREETYPE_LIB_FLAG=`$dir/../bin/freetype-config --libs`
 
        SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                    _sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,required)
+                    $_sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,$_sci_optional)
 
        INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
@@ -3617,9 +3645,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/mdsplus_testdefs.h"
 # The sci_required_hdf5 could have been set to yes when using the
 # with_hdf5 agument or from a package in the aclocal.m4 it.
 # These are the only two locations that the sci_required_* should be set.
-
-_sci_lib="/usr/local/lib"			# default directory
-_sci_inc="/usr/local/include"
 
 if test "$sci_required_hdf5" = "yes"; then 
 
