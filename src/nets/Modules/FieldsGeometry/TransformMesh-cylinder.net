@@ -26,9 +26,9 @@
 # 
 
 set name {Main}
-set bbox {59 22 239 334}
-set creationDate {Sat Jan 22 2005}
-set creationTime {19:29:35}
+set bbox {59 22 490 446}
+set creationDate {Mon Jan 24 2005}
+set creationTime {21:49:30}
 set runDate {}
 set runTime {}
 set notes {}
@@ -37,18 +37,31 @@ set notes {}
 set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleStructHex" 59 22]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 71 197]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 61 332]
 
 # Create a SCIRun->Render->Viewer Module
-set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 59 290]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 59 402]
 
 # Create a SCIRun->FieldsGeometry->TransformMesh Module
-set m4 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformMesh" 74 111]
+set m4 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformMesh" 67 164]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 65 93]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 111 256]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 295 170]
 
 # Create the Connections between Modules
-set c1 [addConnection $m1 0 $m4 0]
-set c2 [addConnection $m4 0 $m2 0]
-set c3 [addConnection $m2 0 $m3 0]
+set c1 [addConnection $m1 0 $m5 0]
+set c2 [addConnection $m5 0 $m4 0]
+set c3 [addConnection $m4 0 $m2 0]
+set c4 [addConnection $m7 0 $m6 0]
+set c5 [addConnection $m2 0 $m3 0]
+set c6 [addConnection $m4 0 $m6 1]
+set c7 [addConnection $m6 0 $m2 1]
 
 # Set GUI variables for the SCIRun->FieldsCreate->SampleStructHex Module
 set $m1-sizex {8}
@@ -61,7 +74,7 @@ set $m2-has_scalar_data {1}
 set $m2-show_progress {}
 
 $m3 addViewer
-set $m3-ViewWindow_0-geometry 654x612+658+178
+set $m3-ViewWindow_0-geometry 654x611+663+200
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m3-ViewWindow_0-view-eyep-x {9.5709584142}
@@ -202,10 +215,19 @@ vv = r * sin(phi);
 result = Point(uu, vv, c);
 
 
+
 }
 
 # Open the SCIRun->FieldsGeometry->TransformMesh UI
 $m4 initialize_ui
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m5-function {result = x*x + y*y;
+}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m6-min {0.0408163265306}
+set $m6-max {2.0}
 
 
 ::netedit scheduleok
