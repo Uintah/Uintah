@@ -445,31 +445,36 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
   for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
     for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
       for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+	
+	IntVector idx(ii,jj,kk);
+	IntVector idxU(ii+1,jj,kk);
+	IntVector idxV(ii,jj+1,kk);
+	IntVector idxW(ii,jj,kk+1);
 
 	// old U velocity (linear interpolation)
-	double old_u = 0.5*(oldUVel[IntVector(ii,jj,kk)] + 
-			    oldUVel[IntVector(ii+1,jj,kk)]);
+	double old_u = 0.5*(oldUVel[idx] + 
+			    oldUVel[idxU]);
 	// new U velocity (linear interpolation)
-	double new_u = 0.5*(newUVel[IntVector(ii,jj,kk)] +
-			    newUVel[IntVector(ii+1,jj,kk)]);
+	double new_u = 0.5*(newUVel[idx] +
+			    newUVel[idxU]);
 
 	// old V velocity (linear interpolation)
-	double old_v = 0.5*(oldVVel[IntVector(ii,jj,kk)] +
-			    oldVVel[IntVector(ii,jj+1,kk)]);
+	double old_v = 0.5*(oldVVel[idx] +
+			    oldVVel[idxV]);
 	// new V velocity (linear interpolation)
-	double new_v = 0.5*(newVVel[IntVector(ii,jj,kk)] +
-			    newVVel[IntVector(ii,jj+1,kk)]);
+	double new_v = 0.5*(newVVel[idx] +
+			    newVVel[idxV]);
 
 	// old W velocity (linear interpolation)
-	double old_w = 0.5*(oldWVel[IntVector(ii,jj,kk)] +
-			    oldWVel[IntVector(ii,jj,kk+1)]);
+	double old_w = 0.5*(oldWVel[idx] +
+			    oldWVel[idxW]);
 	// new W velocity (linear interpolation)
-	double new_w = 0.5*(newWVel[IntVector(ii,jj,kk)] +
-			    newWVel[IntVector(ii,jj,kk+1)]);
+	double new_w = 0.5*(newWVel[idx] +
+			    newWVel[idxW]);
 
 	// Add the data to the CC Velocity Variables
-	oldCCVel[IntVector(ii,jj,kk)] = Vector(old_u,old_v,old_w);
-	newCCVel[IntVector(ii,jj,kk)] = Vector(new_u,new_v,new_w);
+	oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	newCCVel[idx] = Vector(new_u,new_v,new_w);
       }
     }
   }
@@ -515,6 +520,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.44  2000/08/18 05:39:08  bbanerje
+// Small bug removed.
+//
 // Revision 1.43  2000/08/18 05:06:57  bbanerje
 // Added interpolation from FC Var to CC Var for velocity viz in
 // Picard.
