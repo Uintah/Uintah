@@ -197,11 +197,11 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
     		  Ghost::AroundCells, numGhostCells);
 
@@ -288,11 +288,11 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     
     /// requires convection coeff because of the nodal
     // differencing
@@ -300,28 +300,28 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
 
     tsk->requires(Task::NewDW, d_lab->d_uVelCoefPBLMLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelCoefPBLMLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelCoefPBLMLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
 		   Task::OutOfDomain);
 
     tsk->requires(Task::NewDW, d_lab->d_uVelLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelNonLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelNonLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelNonLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
 
     if (d_MAlab) {
@@ -458,11 +458,11 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->getCopy(pressureVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #if 0
     old_dw->getCopy(pressureVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
@@ -719,11 +719,11 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     new_dw->getCopy(pressureVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells+1);
     new_dw->getCopy(pressureVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells+1);
     new_dw->getCopy(pressureVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells+1);
     // *** warning fix it
     old_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
@@ -733,24 +733,24 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->getCopy(pressureVars.uVelocityCoeff[ii], 
 		  d_lab->d_uVelCoefPBLMLabel, ii, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(pressureVars.vVelocityCoeff[ii], 
 		  d_lab->d_vVelCoefPBLMLabel, ii, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(pressureVars.wVelocityCoeff[ii], 
 		  d_lab->d_wVelCoefPBLMLabel, ii, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     }
     new_dw->getCopy(pressureVars.uVelNonlinearSrc, 
 		d_lab->d_uVelNonLinSrcPBLMLabel,
 		matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.vVelNonlinearSrc, 
 		d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelNonlinearSrc,
 		d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     
     // Calculate Pressure Coeffs
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
@@ -1123,11 +1123,11 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     //    tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
     //		  Ghost::None, zeroGhostCells);
     tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 
   // from new_dw
   // for new task graph to work
@@ -1139,11 +1139,11 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
     		  Ghost::AroundCells, numGhostCells);
 
@@ -1218,11 +1218,11 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 
     // from new_dw
 
@@ -1238,11 +1238,11 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     
     /// requires convection coeff because of the nodal
     // differencing
@@ -1250,35 +1250,35 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 
     tsk->requires(Task::NewDW, d_lab->d_uVelCoefPBLMLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelCoefPBLMLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelCoefPBLMLabel, 
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
 		   Task::OutOfDomain);
 
     tsk->requires(Task::NewDW, d_lab->d_uVelLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelNonLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelNonLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelNonLinSrcPBLMLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 
     tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
 
     if (d_MAlab) {
@@ -1352,18 +1352,18 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->getCopy(pressureVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #if 0
     old_dw->getCopy(pressureVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     old_dw->getCopy(pressureVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     old_dw->getCopy(pressureVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #endif
     new_dw->getCopy(pressureVars.old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
@@ -1651,17 +1651,17 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     new_dw->getCopy(pressureVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells+1);
     new_dw->getCopy(pressureVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells+1);
     new_dw->getCopy(pressureVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells+1);
     new_dw->getCopy(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     //**warning
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -1671,24 +1671,24 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->getCopy(pressureVars.uVelocityCoeff[ii], 
 		  d_lab->d_uVelCoefPBLMLabel, ii, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(pressureVars.vVelocityCoeff[ii], 
 		  d_lab->d_vVelCoefPBLMLabel, ii, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(pressureVars.wVelocityCoeff[ii], 
 		  d_lab->d_wVelCoefPBLMLabel, ii, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     }
     new_dw->getCopy(pressureVars.uVelNonlinearSrc, 
 		d_lab->d_uVelNonLinSrcPBLMLabel,
 		matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.vVelNonlinearSrc, 
 		d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelNonlinearSrc,
 		d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
     
     // Calculate Pressure Coeffs
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
@@ -2020,11 +2020,11 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 
     tsk->computes(d_lab->d_presCoefCorrLabel, d_lab->d_stencilMatl,
 		   Task::OutOfDomain);
@@ -2095,11 +2095,11 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
   
     new_dw->getCopy(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     
     // Calculate Pressure Coeffs
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
