@@ -29,7 +29,7 @@
 #include <Geom/View.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
-
+#include <Geometry/Plane.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
@@ -191,16 +191,77 @@ void GeomSphere::objdraw(DrawInfoOpenGL* di)
 
 void GeomTetra::objdraw(DrawInfoOpenGL* di) {
     di->polycount+=4;
-    glBegin(GL_LINE_STRIP);
-    glVertex3d(p1.x(), p1.y(), p1.z());
-    glVertex3d(p2.x(), p2.y(), p2.z());
-    glVertex3d(p3.x(), p3.y(), p3.z());
-    glVertex3d(p1.x(), p1.y(), p1.z());
-    glVertex3d(p4.x(), p4.y(), p4.z());
-    glVertex3d(p2.x(), p2.y(), p2.z());
-    glVertex3d(p3.x(), p3.y(), p3.z());
-    glVertex3d(p4.x(), p4.y(), p4.z());
-    glEnd();
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+	glBegin(GL_LINE_STRIP);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glEnd();
+	break;
+    case DrawInfoOpenGL::Flat:
+	// this should be made into a tri-strip, but I couldn;t remember how...
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	break;
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+	// this should be made into a tri-strip, but I couldn;t remember how...
+	{
+	    Plane PL1(p1,p2,p3); 
+	    glBegin(GL_TRIANGLES);
+	    glNormal3d(PL1.a, PL1.b, PL1.c);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glEnd();
+	    Plane PL2(p1,p2,p4); 
+	    glBegin(GL_TRIANGLES);
+	    glNormal3d(PL2.a, PL2.b, PL2.c);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glEnd();
+	    Plane PL3(p4,p2,p3); 
+	    glBegin(GL_TRIANGLES);
+	    glNormal3d(PL3.a, PL3.b, PL3.c);
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glEnd();
+	    Plane PL4(p1,p4,p3); 
+	    glBegin(GL_TRIANGLES);
+	    glNormal3d(PL4.a, PL4.b, PL4.c);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glEnd();
+	    break;
+	}
+    }
 }
 
 void GeomTri::objdraw(DrawInfoOpenGL* di) {
