@@ -34,18 +34,11 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_PR",d_initialData.PR);
-  p_cmdata_label = scinew VarLabel("p.cmdata",
-			ParticleVariable<CMData>::getTypeDescription());
-  p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
-			ParticleVariable<CMData>::getTypeDescription());
-
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
 {
   // Destructor
-  delete p_cmdata_label;
-  delete p_cmdata_label_preReloc;  
 }
 
 void CompMooneyRivlin::initializeCMData(const Patch* patch,
@@ -57,8 +50,6 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
    Matrix3 Identity, zero(0.);
    Identity.Identity();
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<CMData> cmdata;
-   new_dw->allocate(cmdata, p_cmdata_label, pset);
    ParticleVariable<Matrix3> deformationGradient;
    new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
    ParticleVariable<Matrix3> pstress;
@@ -66,11 +57,9 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
-	 cmdata[*iter] = d_initialData;
          deformationGradient[*iter] = Identity;
          pstress[*iter] = zero;
    }
-   new_dw->put(cmdata, p_cmdata_label);
    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
    new_dw->put(pstress, lb->pStressLabel);
 
@@ -87,8 +76,6 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
   int matlindex = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, pset);
   ParticleVariable<double> pmass;
   new_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
@@ -98,14 +85,13 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
 
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
+  double C1 = d_initialData.C1;
+  double C2 = d_initialData.C2;
+  double PR = d_initialData.PR;
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
-
-     double C1 = cmdata[idx].C1;
-     double C2 = cmdata[idx].C2;
-     double PR = cmdata[idx].PR;
 
      // Compute wave speed + particle velocity at each particle, 
      // store the maximum
@@ -151,8 +137,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   old_dw->get(pstress, lb->pStressLabel, pset);
 
   // Retrieve the array of constitutive parameters
-  ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, pset);
   ParticleVariable<double> pmass;
   old_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
@@ -173,6 +157,12 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
   }
+
+  double C1 = d_initialData.C1;
+  double C2 = d_initialData.C2;
+  double C3 = .5*C1 + C2;
+  double PR = d_initialData.PR;
+  double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -244,12 +234,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       J = deformationGradient[idx].Determinant();
       invar3 = J*J;
 
-      double C1 = cmdata[idx].C1;
-      double C2 = cmdata[idx].C2;
-      double C3 = .5*C1 + C2;
-      double PR = cmdata[idx].PR;
-      double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
-
       w1 = C1;
       w2 = C2;
       w3 = -2.0*C3/(invar3*invar3*invar3) + 2.0*C4*(invar3 -1.0);
@@ -292,8 +276,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
-    // This is just carried forward.
-    new_dw->put(cmdata, p_cmdata_label_preReloc);
     // Volume is currently just carried forward, but will be updated.
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
 }
@@ -301,8 +283,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
 					std::vector<const VarLabel*>& to)
 {
-   from.push_back(p_cmdata_label);
-   to.push_back(p_cmdata_label_preReloc);
 }
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
@@ -316,7 +296,6 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   //  const MPMLabel* lb = MPMLabel::getLabels();
    task->requires(old_dw, lb->pXLabel, idx, patch, Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, idx, patch, Ghost::None);
-   task->requires(old_dw, p_cmdata_label, idx,  patch, Ghost::None);
    task->requires(old_dw, lb->pMassLabel, idx,  patch, Ghost::None);
    task->requires(old_dw, lb->pVolumeLabel, idx,  patch, Ghost::None);
    task->requires(old_dw, lb->pStressLabel, idx,  patch, Ghost::None);
@@ -325,7 +304,6 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 
    task->computes(new_dw, lb->pStressAfterStrainRateLabel, idx,  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, idx, patch);
-   task->computes(new_dw, p_cmdata_label_preReloc, idx,  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, idx, patch);
    
    if(matl->getFractureModel()) {
@@ -350,7 +328,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   ParticleVariable<int>    pIsBroken;
   ParticleVariable<Vector> pCrackSurfaceNormal;
   ParticleVariable<double> pVolume;
-  ParticleVariable<CMData> cmdata;
 
   ParticleSubset* outsidePset = old_dw->getParticleSubset(matlindex, patch,
 	Ghost::AroundNodes, 1, lb->pXLabel);
@@ -359,7 +336,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   new_dw->get(pIsBroken, lb->pIsBrokenLabel_preReloc, outsidePset);
   new_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc, outsidePset);
   new_dw->get(pVolume, lb->pVolumeLabel_preReloc, outsidePset);
-  old_dw->get(cmdata, p_cmdata_label, outsidePset);
 
   ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Vector> pCrackSurfaceContactForce;
@@ -378,6 +354,12 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
 
 #if 0
   IntVector cellIdx;
+  double C1 = ( d_initialData.C1 + d_initialData.C1 )/2;
+  double C2 = ( d_initialData.C2 + d_initialData.C2 )/2;
+  double C3 = .5*C1 + C2;
+  double PR = ( d_initialData.PR + d_initialData.PR )/2;
+  double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
+
   for(ParticleSubset::iterator iter = insidePset->begin();
           iter != insidePset->end(); iter++)
   {
@@ -422,12 +404,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
           double invar2 = 0.5*((invar1*invar1) - (B*B).Trace());
           double J = deformationGradient.Determinant();
           double invar3 = J*J;
-
-          double C1 = ( cmdata[pIdx].C1 + cmdata[pContact].C1 )/2;
-          double C2 = ( cmdata[pIdx].C2 + cmdata[pContact].C2 )/2;
-          double C3 = .5*C1 + C2;
-          double PR = ( cmdata[pIdx].PR + cmdata[pContact].PR )/2;
-          double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
 
           double w1 = C1;
           double w2 = C2;
@@ -488,8 +464,6 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 			Ghost::AroundNodes, 1 );
   task->requires(new_dw, lb->pVolumeLabel_preReloc, idx, patch,
 			Ghost::AroundNodes, 1 );
-  task->requires(old_dw, p_cmdata_label, idx,  patch,
-			Ghost::AroundNodes, 1 );
   task->requires(new_dw, lb->pIsBrokenLabel_preReloc, idx, patch,
 			Ghost::AroundNodes, 1 );
   task->requires(new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch,
@@ -515,6 +489,7 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
 
 namespace Uintah {
    namespace MPM {
+#if 0
 static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*3);
@@ -532,10 +507,16 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
    }
    return td;   
 }
+#endif
    }
 }
 
 // $Log$
+// Revision 1.70  2000/10/11 01:30:28  guilkey
+// Made CMData no longer a per particle variable for these models.
+// None of them currently have anything worthy of being called StateData,
+// so no such struct was created.
+//
 // Revision 1.69  2000/09/26 17:08:35  sparker
 // Need to commit MPI types
 //
