@@ -483,3 +483,27 @@ ostream& operator<<(ostream& out, const Grid& grid)
   }
   return out;
 }
+
+bool Grid::operator==(const Grid& othergrid) 
+{
+  if (numLevels() != othergrid.numLevels())
+    return false;
+  for (int i = 0; i < numLevels(); i++) {
+    const Level* level = getLevel(i).get_rep();
+    const Level* otherlevel = othergrid.getLevel(i).get_rep();
+    if (level->numPatches() != otherlevel->numPatches())
+      return false;
+    Level::const_patchIterator iter = level->patchesBegin();
+    Level::const_patchIterator otheriter = otherlevel->patchesBegin();
+    for (; iter != level->patchesEnd(); iter++, otheriter++) {
+      const Patch* patch = *iter;
+      const Patch* otherpatch = *otheriter;
+      if (patch->getLowIndex() != otherpatch->getLowIndex() ||
+          patch->getHighIndex() != otherpatch->getHighIndex())
+        return false;
+    }
+      
+  }
+  return true;
+
+}

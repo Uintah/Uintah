@@ -86,6 +86,9 @@ WARNING
     void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg); 
     void problemSetupAMR(const ProblemSpecP& params, const ProcessorGroup *pg);
 
+    // For comparing grids - level and patch structure must be equal
+    bool operator==(const Grid& othergrid);
+
   private:
     std::vector<LevelP> d_levels;
     
