@@ -352,35 +352,38 @@ FrameWidget::redraw()
 
 // if rotating, save the start position of the selected widget 
 void
-FrameWidget::geom_pick( GeomPick*, ViewWindow*, int pick, const BState& )
+FrameWidget::geom_pick(GeomPick*p, ViewWindow*w, int pick, const BState& state)
 {
-  Point c2=(variables[CenterVar]->point().vector()*2).point();
-  rot_start_d_=variables[PointDVar]->point();
-  rot_start_r_=variables[PointRVar]->point();
+  BaseWidget::geom_pick(p, w, pick, state);
+
+  pick_centervar_ = variables[CenterVar]->point();
+  pick_pointdvar_ = variables[PointDVar]->point();
+  pick_pointrvar_ = variables[PointRVar]->point();
+
+  const Point c2 = (variables[CenterVar]->point().vector()*2).point();
+  Point start_point;
   switch(pick)
   {
   case PickSphU:
-    rot_start_pt_=(c2-rot_start_d_).point();
+    start_point = (c2 - pick_pointdvar_).point();
     break;
 
   case PickSphD:
-    rot_start_pt_=rot_start_d_;
+    start_point = pick_pointdvar_;
     break;
 
   case PickSphL:
-    rot_start_pt_=(c2-rot_start_r_).point();
+    start_point =(c2 - pick_pointrvar_).point();
     break;
 
   case PickSphR:
-    rot_start_pt_=rot_start_r_;
+    start_point = pick_pointrvar_;
     break;
 
   default:
     return;
   }
-  rot_start_ray_norm_=rot_start_pt_-variables[CenterVar]->point();
-  rot_curr_ray_ = rot_start_ray_norm_;
-  rot_start_ray_norm_.normalize();
+  rot_start_ray_ = start_point - pick_centervar_;
 }
 
 
@@ -417,20 +420,23 @@ FrameWidget::geom_moved( GeomPick*, int axis, double dist,
   switch(pick)
   {
   case PickSphU: case PickSphD: 
-  case PickSphL: case PickSphR: 
-    rot_curr_ray_ += delta;
-    rot_curr_ray_norm=rot_curr_ray_;
-    rot_curr_ray_norm.normalize();
-    rot_axis=Cross(rot_start_ray_norm_, rot_curr_ray_norm);
-    if (rot_axis.length2()<1.e-16) { rot_axis=Vector(1,0,0); }
-    else { rot_axis.normalize(); }
-    dot=Dot(rot_start_ray_norm_, rot_curr_ray_norm);
+  case PickSphL: case PickSphR:
+    {
+      Vector rot_start_ray_norm = rot_start_ray_;
+      rot_start_ray_norm.normalize();
+      Vector rot_current_ray_norm = rot_start_ray_ + pick_offset;
+      rot_current_ray_norm.normalize();
+      rot_axis=Cross(rot_start_ray_norm, rot_current_ray_norm);
+      if (rot_axis.length2()<1.e-16) { rot_axis=Vector(1,0,0); }
+      else { rot_axis.normalize(); }
 
-    trans.post_translate(c.vector());
-    trans.post_rotate(acos(dot), rot_axis);
-    trans.post_translate(-c.vector());
-    variables[PointDVar]->Move(trans.project(rot_start_d_));
-    variables[PointRVar]->Move(trans.project(rot_start_r_));
+      trans.post_translate(c.vector());
+      const double amount = pick_offset.length() / rot_start_ray_.length();
+      trans.post_rotate(amount, rot_axis);
+      trans.post_translate(-c.vector());
+      variables[PointDVar]->Move(trans.project(pick_pointdvar_));
+      variables[PointRVar]->Move(trans.project(pick_pointrvar_));
+    }
     break;
 
   case PickResizeU:
@@ -502,7 +508,10 @@ FrameWidget::geom_moved( GeomPick*, int axis, double dist,
     break;
 
   case PickCyls:
-    MoveDelta(delta);
+    variables[CenterVar]->Move(pick_centervar_);
+    variables[PointDVar]->Move(pick_pointdvar_);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    MoveDelta(pick_offset);
     break;
   default:
     break;

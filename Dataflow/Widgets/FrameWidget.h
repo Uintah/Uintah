@@ -85,11 +85,11 @@ private:
   bool is_slideable_;
 
   Vector oldrightaxis, olddownaxis;
-  Point rot_start_pt_;
-  Point rot_start_d_;
-  Point rot_start_r_;
-  Vector rot_start_ray_norm_;
-  Vector rot_curr_ray_;
+  Point pick_centervar_;
+  Point pick_pointrvar_;
+  Point pick_pointdvar_;
+
+  Vector rot_start_ray_;
 };
 
 
