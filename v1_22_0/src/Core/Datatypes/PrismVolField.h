@@ -208,7 +208,7 @@ PrismVolField<T>::get_type_description(int n) const
 template <class T>
 bool PrismVolField<T>::get_gradient(Vector &g, const Point &p) {
   PrismVolMesh::Cell::index_type ci;
-  if (get_typed_mesh()->locate(ci, p)) {
+  if (mesh_->locate(ci, p)) {
     g = cell_gradient(ci);
     return true;
   } else {
@@ -231,9 +231,9 @@ Vector PrismVolField<T>::cell_gradient(PrismVolMesh::Cell::index_type ci)
 
   // load up the indices of the nodes for this cell
   PrismVolMesh::Node::array_type nodes;
-  get_typed_mesh()->get_nodes(nodes, ci);
+  mesh_->get_nodes(nodes, ci);
   Vector gb0, gb1, gb2, gb3, gb4, gb5;
-  get_typed_mesh()->get_gradient_basis(ci, gb0, gb1, gb2, gb3, gb4, gb5);
+  mesh_->get_gradient_basis(ci, gb0, gb1, gb2, gb3, gb4, gb5);
 
   // we really want this for all scalars... 
   //  but for now, we'll just make doubles work

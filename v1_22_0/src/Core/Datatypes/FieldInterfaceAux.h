@@ -113,7 +113,7 @@ template <class F, class L>
 bool
 SFInterface<F, L>::finterpolate(double &result, const Point &p) const
 {
-  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
   double weights[MESH_WEIGHT_MAXSIZE];
@@ -230,7 +230,7 @@ double
 SFInterface<F, L>::find_closest(double &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
-  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
   Field::data_location d_at = field_->data_at();
   if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
   else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
@@ -314,7 +314,7 @@ template <class F, class L>
 bool
 VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
 {
-  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
   double weights[MESH_WEIGHT_MAXSIZE];
@@ -439,7 +439,7 @@ double
 VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
-  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
   Field::data_location d_at = field_->data_at();
   if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
   else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
@@ -517,7 +517,7 @@ template <class F, class L>
 bool
 TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
 {
-  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
   double weights[MESH_WEIGHT_MAXSIZE];
@@ -569,7 +569,7 @@ double
 TFInterface<F, L>::find_closest(Tensor &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
-  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
   Field::data_location d_at = field_->data_at();
   if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
   else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
