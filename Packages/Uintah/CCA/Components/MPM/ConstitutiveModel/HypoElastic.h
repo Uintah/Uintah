@@ -34,6 +34,7 @@ namespace Uintah {
     struct CMData {
       double G;
       double K;
+      double alpha; // Coefficient of thermal expansion for thermal stress
       // Fracture toughness at various velocities
       // in the format Vector(Vc,KIc,KIIc)
       vector<Vector> Kc; 
