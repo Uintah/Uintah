@@ -80,25 +80,40 @@ University of Utah. All Rights Reserved.
 -->
 <html>
 <head>
-<script language="JavaScript">
+<script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-while (path.substr(path.lastIndexOf("/")+1) != "doc") {
-treetop += "../";
-path = path.substr(0, path.lastIndexOf("/"));
+if (path.charAt(path.length-1) == "/") {
+  path += "bogus.html"
 }
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'>")
+var base = path.substr(path.lastIndexOf("/")+1);
+var roottag = "doc";
+while (base != roottag && base != "") {
+  treetop += "../";
+  path = path.substr(0, path.lastIndexOf("/"));
+  base = path.substr(path.lastIndexOf("/")+1);
+}
+var inDocTree = base == roottag;
+if (inDocTree) {
+  document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+}
 </script>
 <title></title>
 </head>
 <body>
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\\/script>');
+<script type="text/javascript">
+if (inDocTree) {
+  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\\/script>');
+}
 </script>
 EndOfString
 
-      # Generate page heading.
-      index.print("<p class='title'> #{packageName} Module Descriptions</p>\n")
+      # Generate page title and subtitle
+      index.print("<p class=\"title\"> #{packageName} Module Descriptions</p>\n")
+      version = File.open("../../edition.xml") do |f|
+        /<edition>(.*)<\/edition>/.match(f.read())[1]
+      end
+      index.print("<p class=\"subtitle\">(for SCIRun version #{version})</p>")
       index.print("<hr size='1'/>")
 
       # Generate index of modules.  Alphabetical order in 3 columns.
@@ -149,8 +164,10 @@ EndOfString
 
       # Generate end of file boilerplate.
       index.print <<EndOfString
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\\/script>');
+<script type="text/javascript">
+if (inDocTree) {
+  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\\/script>');
+}
 </script>
 </body>
 </html>
