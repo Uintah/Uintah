@@ -750,11 +750,12 @@ proc notesWindow { id {done ""} } {
 
     setIfExists rgb Color($id) white
     button $w.b.reset -fg black -text "Reset Color" -command \
-	"unset Notes($id-Color); $w.b.color configure -bg $rgb"
+	"set Notes($id-Color) $rgb; $w.b.color configure -bg $rgb"
 
     setIfExists rgb Notes($id-Color) $rgb
     button $w.b.color -fg black -bg $rgb -text "Text Color" -command \
 	"colorNotes $id"
+    setIfExists Notes($id-Color) Notes($id-Color) $rgb
 
     frame $w.d -relief groove -borderwidth 2
 
@@ -783,8 +784,11 @@ proc colorNotes { id } {
     global Notes
     set w .notes$id
     networkHasChanged
-    $w.b.color configure -bg [set Notes($id-Color) \
-       [tk_chooseColor -initialcolor [$w.b.color cget -bg]]]
+    set color [tk_chooseColor -initialcolor [$w.b.color cget -bg]]
+    if { [string length $color] } { 
+	set Notes($id-Color) $color
+	$w.b.color configure -bg $color
+    }
 }
 
 proc okNotesWindow {id {done  ""}} {
