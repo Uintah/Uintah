@@ -70,6 +70,8 @@ using std::vector;
       const VarLabel* pTang2Label_preReloc;
       const VarLabel* pNormLabel;
       const VarLabel* pNormLabel_preReloc;
+      const VarLabel* pFiberDirLabel;
+      const VarLabel* pFiberDirLabel_preReloc;
       
       const VarLabel* gMassLabel;
       const VarLabel* gAccelerationLabel;
