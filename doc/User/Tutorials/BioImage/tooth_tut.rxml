@@ -298,6 +298,71 @@ DEALINGS IN THE SOFTWARE.
 	    in data (ie is green high density?).
 	  </para>
         </section><!-- end:Changing slice colormaps -->
+	<section><title>Moving the slice planes with the center mouse button</title>
+          <para>
+	    The slice planes can be moved via the mouse. In each 2D viewer there
+	    are crosshairs which correspond to the two planes orthogonal to the
+	    current 2D view. Use the center mouse button to click and drag the cross
+	    hairs and change the location of the corresponding planes.
+	  </para>
+	</section><!-- end:Moving the slice planes with the mouse -->
+        <section><title>Using a "window width" and "level" to emphasize values in the dataset</title>
+          <para>
+	    The "window width" and "level" controls can be used to emphasise data values in Viewers. The default
+	    "level" (or center value) is the center value of the dataset, and the "range" (range of displayed values)
+	    is the whole dataset.
+	    With the default window and level, all values in the dataset are visible in the viewer. Chaning the 
+	    "window width" and "level" may allo us to view certain features of the dataset, like
+	    bone for example.
+	  </para>
+	  <para>
+	    The easiest way to change the "window width" and "level" is using the slider in the Planes pane (image here).
+	    There are two sliders which can be used to set the window width and level. It is also possible to type
+	    in a numerical value for the window with and level by clicking on the digit displayed next to the 
+	    slider and typing in a value.
+	  </para>
+	  <para>
+	    Using the left mouse button inside of the 2D viewer also changes the window and level. Left clicking 
+	    and dragging the mouse up and down inside of the 2D viewer changes the level.
+	    Left clicking and dragging the mouse side to side inside of the 2D viewer changes the window width. 
+	    Choosing a small window width would mean that only a small range of values would
+	    be visible at any given time in the viewer.
+	  </para>
+	  <para>
+	    The tooth dataset has data values ranging from 0 to 1300, and corresponding default level of 650, 
+	    and a default window width of 1300. If we set the window with to a very narrow 77, and 
+	    set the window level to 942, we see that the enamel becomes the only material visible in the viewer window.
+	  </para>
+	  <figure id="fig.window_level_control_enamel">
+	    <title>Window and Level Sliders</title>
+	    <mediaobject>
+	      <textobject>
+	        <phrase>Window and Level for enamel on tooth dataset.</phrase>
+	      </textobject>
+	      <imageobject>
+	      <imagedata fileref="Figures/enamel_window_level_control.eps" align="center" format="EPS"/>
+	      </imageobject>
+	      <imageobject>
+	      <imagedata fileref="Figures/enamel_window_level_control.jpg" align="center" format="JPG"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>
+	  <figure id="fig.window_level_control_enamel">
+	    <title>Enamel epmhasized with window and level</title>
+	    <mediaobject>
+	      <textobject>
+	        <phrase>Enamel emphasized wit window and level.</phrase>
+	      </textobject>
+	      <imageobject>
+	      <imagedata fileref="Figures/enamel_window_level_view.eps" align="center" format="EPS"/>
+	      </imageobject>
+	      <imageobject>
+	      <imagedata fileref="Figures/enamel_window_level_view.jpg" align="center" format="JPG"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>
+	  
+	</section>
       </section><!-- Slice Planes -->
     </section><!-- The 2D Viewers -->
     <section><title>Using the 3D viewer</title>
