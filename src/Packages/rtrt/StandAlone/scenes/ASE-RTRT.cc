@@ -24,11 +24,11 @@ using namespace std;
 
 Material *default_material = 
 (Material*) new ImageMaterial("/local/sci/raid0/moulding/stadium.ase-dir2/texture/Tex\ Cancha.raw",
-                              ImageMaterial::Clamp,
-                              ImageMaterial::Clamp,
+                              ImageMaterial::None,
+                              ImageMaterial::None,
                               Color(0,0,0),
                               1,
-                              Color(0,0,0), 100);
+                              Color(0,0,0), 0);
 
 Array1<Material*> ase_matls;
 
@@ -98,21 +98,21 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                                                           (*v1)[findex3+1],
                                                           (*v1)[findex3+2]) );
                 
-                index = loop4*3;
-                findex1 = (*v4)[index++]*3;
-                findex2 = (*v4)[index++]*3;
-                findex3 = (*v4)[index]*3;
+                //index = loop4*3;
+                //findex1 = (*v4)[index++]*3;
+                //findex2 = (*v4)[index++]*3;
+                //findex3 = (*v4)[index]*3;
                 tri->set_texcoords( Point((*v3)[findex1],
-                                         (*v3)[findex1+1],
-                                         (*v3)[findex2+2]),
-
-                                   Point((*v3)[findex2],
-                                         (*v3)[findex2+1],
-                                         (*v3)[findex2+2]),
-                                   
-                                   Point((*v3)[findex3],
-                                         (*v3)[findex3+1],
-                                         (*v3)[findex3+2]) );
+                                          (*v3)[findex1+1],
+                                          0),
+                                    
+                                    Point((*v3)[findex2],
+                                          (*v3)[findex2+1],
+                                          0),
+                                    
+                                    Point((*v3)[findex3],
+                                          (*v3)[findex3+1],
+                                          0) );
                 group->add(tri);
               } else {
                 Tri *tri = new Tri( ase_matls[matl_index],
@@ -125,7 +125,7 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                                           (*v1)[findex2+2]),
                                     
                                     Point((*v1)[findex3],
-                                             (*v1)[findex3+1],
+                                          (*v1)[findex3+1],
                                           (*v1)[findex3+2]) );
                 group->add(tri);
               }
