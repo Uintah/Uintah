@@ -36,10 +36,12 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	set name EditTransferFunc2
 	set_defaults
     }
+
     method set_defaults {} {
 	global $this-rgbhsv
 	set $this-rgbhsv 1
     }
+
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
@@ -48,9 +50,10 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	}
 	toplevel $w
 	frame $w.f
-	pack $w.f -padx 2 -pady 2
+	pack $w.f -padx 20 -pady 20
         create_gl
     }
+
     method create_gl {} {
         set w .ui[modname]
         if {[winfo exists $w.f.gl]} {

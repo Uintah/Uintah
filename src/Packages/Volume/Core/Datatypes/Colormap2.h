@@ -33,11 +33,14 @@
 #define Colormap2_h
 
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Containers/Array3.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
+#include <Packages/Volume/Core/Datatypes/CM2Widget.h>
+#include <vector>
 
 namespace Volume {
+
+using std::vector;
 
 class Colormap2 : public SCIRun::Datatype
 {
@@ -46,6 +49,8 @@ public:
   virtual ~Colormap2();
 
   SCIRun::Array3<float>& array();
+  vector<CM2Widget *> &widgets() { return widget_; }
+  
   bool dirty();
   void set_dirty(bool b);
 
@@ -59,10 +64,11 @@ protected:
   SCIRun::Array3<float> array_;
   bool dirty_;
   SCIRun::Mutex lock_;
+  vector<CM2Widget *> widget_;
 };
 
 typedef SCIRun::LockingHandle<Colormap2> Colormap2Handle;
 
 } // End namespace Volume
 
-#endif // Colormap_h
+#endif // Colormap2_h
