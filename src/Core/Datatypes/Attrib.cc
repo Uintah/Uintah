@@ -16,6 +16,22 @@ namespace SCIRun {
 using std::cout;
 using std::endl;
 
+//////////
+// PIO for NewmannBC objects
+void Pio(Piostream& stream, NewmannBC& nmn){
+  stream.begin_cheap_delim();
+  Pio(stream, nmn.dir);
+  Pio(stream, nmn.val);
+  stream.end_cheap_delim();
+}
+//////////
+//
+ostream& operator<<(ostream& ostr, NewmannBC& nmn){
+  ostr << "["<< nmn.dir << ", " << nmn.val << "]";
+  return ostr;
+}
+
+
 // GROUP: Implementation of Attrib class
 //////////
 // 
