@@ -30,8 +30,8 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>TransferFunction</name>
-	<datatype>Volume::ColorMap2</datatype>
+	<name>Input Colormap</name>
+	<datatype>Volume::Colormap2</datatype>
       </port>
       <port>
 	<name>Histogram</name>
@@ -40,7 +40,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>Colormap</name>
+        <name>Output Colormap</name>
         <datatype>Volume::Colormap2</datatype>
       </port>
     </outputs>

@@ -65,13 +65,20 @@ typedef void (GLAPIENTRY * PFNGLPROGRAMLOCALPARAMETER4FARBPROC) (GLenum target, 
 
 #endif /* GL_ARB_fragment_program */
 
+#if !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES)
+
+extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
+
+#endif /* GLX_ARB_get_proc_address */
+
+#define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
+
 static PFNGLGENPROGRAMSARBPROC glGenProgramsARB = 0;
 static PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB = 0;
 static PFNGLBINDPROGRAMARBPROC glBindProgramARB = 0;
 static PFNGLPROGRAMSTRINGARBPROC glProgramStringARB = 0;
 static PFNGLISPROGRAMARBPROC glIsProgramARB = 0;
 static PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB = 0;
-#define getProcAddress(x) ((*glXGetProcAddress)((const GLubyte*)x))
 
 #endif /* HAVE_GLEW */
 
