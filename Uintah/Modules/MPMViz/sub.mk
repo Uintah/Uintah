@@ -15,6 +15,7 @@ SRCS     += $(SRCDIR)/ParticleGridVisControl.cc $(SRCDIR)/PartToGeom.cc \
 ifeq ($(BUILD_PARALLEL),yes)
 SRCS += $(SRCDIR)/ParticleDB.cc $(SRCDIR)/ParticleDatabase.cc \
 	$(SRCDIR)/ParticleViz.cc $(SRCDIR)/RunSimulation.cc
+GENHDRS := Uintah/Datatypes/Particles/Particles_sidl.h
 endif
 
 PSELIBS := Uintah/Datatypes/Particles PSECore/Dataflow PSECore/Datatypes \
@@ -31,6 +32,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/23 11:18:16  sparker
+# Makefile tweaks for sidl files
+# Added GENHDRS to program.mk
+#
 # Revision 1.2  2000/03/20 19:38:42  sparker
 # Added VPATH support
 #

@@ -71,10 +71,15 @@ SRCS := INVALID_SRCS.cc
 ifneq ($(GENHDRS),)
 ALLGEN := $(ALLGEN) $(GENHDRS)
 $(OBJS): $(GENHDRS)
+GENHDRS :=
 endif
 
 #
 # $Log$
+# Revision 1.8  2000/03/23 11:18:18  sparker
+# Makefile tweaks for sidl files
+# Added GENHDRS to program.mk
+#
 # Revision 1.7  2000/03/23 10:31:38  sparker
 # Fixed typo in rule so that lib/libSCICore_whatever.so is -lSCICore_whatever
 #

@@ -54,8 +54,18 @@ CLEANPROGS := $(CLEANPROGS) $(PROGRAM)
 #
 SRCS := INVALID_SRCS.cc
 
+ifneq ($(GENHDRS),)
+ALLGEN := $(ALLGEN) $(GENHDRS)
+$(OBJS): $(GENHDRS)
+GENHDRS :=
+endif
+
 #
 # $Log$
+# Revision 1.9  2000/03/23 11:18:18  sparker
+# Makefile tweaks for sidl files
+# Added GENHDRS to program.mk
+#
 # Revision 1.8  2000/03/20 21:56:22  yarden
 # Linux port: add support for so lib on linux
 #
