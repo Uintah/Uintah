@@ -164,7 +164,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(new_dw, d_lab->d_pressureINLabel, matlIndex, patch, 
 		    Ghost::None, zeroGhostCells);
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
@@ -225,11 +225,11 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
 
       /// requires convection coeff because of the nodal
       // differencing
@@ -781,15 +781,15 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 	   cerr.width(10);
 	   cerr << "press"<<*iter << ": " << pressureVars.pressure[*iter] << "\n" ; 
 	 }
-       }
-	 normPressure(pg, patch, &pressureVars);
-	 cerr << "Done with normPressure for patch: " << patch->getID() << '\n';
+       	 normPressure(pg, patch, &pressureVars);
+	 cerr << "Done with normPressure for patch: " 
+	      << patch->getID() << '\n';
 	 // put back the results
 	 int matlIndex = 0;
 	 new_dw->put(pressureVars.pressure, d_lab->d_pressurePSLabel, 
 		     matlIndex, patch);
-
        }
+     }
     }
 
   // destroy matrix
@@ -833,54 +833,6 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   // apply underelaxation to eqn
   d_linearSolver->computePressUnderrelax(pc, patch, old_dw, new_dw,
 					 &pressureVars);
-    cerr << "After underrelax AE" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "AE"<< *iter << ": " << pressureVars.pressCoeff[Arches::AE][*iter] << "\n" ; 
-    }
-    cerr << "After underrelax AW" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "AW"<< *iter << ": " << pressureVars.pressCoeff[Arches::AW][*iter] << "\n" ; 
-    }
-    cerr << "After underrelax AN" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "AN"<< *iter << ": " << pressureVars.pressCoeff[Arches::AN][*iter] << "\n" ; 
-    }
-    cerr << "After underrelax AS" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "AS"<< *iter << ": " << pressureVars.pressCoeff[Arches::AS][*iter] << "\n" ; 
-    }
-    cerr << "After underrelax AT" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "AT"<< *iter << ": " << pressureVars.pressCoeff[Arches::AT][*iter] << "\n" ; 
-    }
-    cerr << "After underrelax AB" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "AB"<< *iter << ": " << pressureVars.pressCoeff[Arches::AB][*iter] << "\n" ; 
-    }
-    cerr << "After underrelax AP" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "AP"<< *iter << ": " << pressureVars.pressCoeff[Arches::AP][*iter] << "\n" ; 
-    }
-     cerr << "After underrelax" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << "SU"<< *iter << ": " << pressureVars.pressNonlinearSrc[*iter] << "\n" ; 
-    }
   // put back computed matrix coeffs and nonlinear source terms 
   // modified as a result of underrelaxation 
   // into the matrix datawarehouse
@@ -898,12 +850,6 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   d_linearSolver->setPressMatrix(pc, patch, old_dw, new_dw, &pressureVars, d_lab);
   //  d_linearSolver->pressLinearSolve();
 
-#if 0
-  normPressure(pc, patch, &pressureVars);
-  // put back the results
-  new_dw->put(pressureVars.pressure, d_lab->d_pressurePSLabel, 
-	      matlIndex, patch);
-#endif
 }
   
   
@@ -920,8 +866,8 @@ PressureSolver::normPressure(const ProcessorGroup*,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  //  double pressref = pressureVars.press_ref;
-  double pressref = 0.0;
+  double pressref = vars->press_ref;
+  //  double pressref = 0.0;
   FORT_NORMPRESS(domLo.get_pointer(),domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->pressure.getPointer(), 
@@ -929,10 +875,10 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Normalization : " << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     cerr << "pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 	cerr.width(10);
 	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
       }
@@ -944,6 +890,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.60  2000/10/09 17:06:25  rawat
+// modified momentum solver for multi-patch
+//
 // Revision 1.59  2000/10/08 18:56:35  rawat
 // fixed the solver for multi
 //

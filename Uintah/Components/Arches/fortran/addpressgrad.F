@@ -4,9 +4,10 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE addpressgrad(domLoU, domHiU, idxLoU, idxHiU, UU, 
+      SUBROUTINE addpressgrad(domLoU, domHiU, domLoUng, domHiUng,
+     $     idxLoU, idxHiU, UU, 
      &     SU, AP,
-     &     domLo, domHi, press, old_den,
+     &     domLo, domHi,domLong, domHing, press, old_den,
      &     deltat, ioff, joff, koff,
      &     SEWU, SNS, STB,
      &     DXPW, 
@@ -23,18 +24,23 @@ C---------------------------------------------------------------------
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
+      integer domLoU(3), domHiU(3), domLoUng(3), domHiUng(3)
+      integer idxLoU(3), idxHiU(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
-      double precision SU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
+      double precision SU(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AP(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
       integer domLo(3), domHi(3)
+      integer domLong(3), domHing(3)
       double precision PRESS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
-      double precision old_DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
+      double precision old_DEN(domLong(1):domHing(1), 
+     $     domLong(2):domHing(2), 
+     &     domLong(3):domHing(3))
       double precision DELTAT
       integer ioff, joff, koff
       double precision SEWU(domLo(1):domHi(1))
@@ -75,6 +81,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/10/09 17:06:30  rawat
+c modified momentum solver for multi-patch
+c
 c Revision 1.4  2000/09/20 16:56:19  rawat
 c added some petsc parallel stuff and fixed some bugs
 c

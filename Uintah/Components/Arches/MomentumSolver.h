@@ -141,7 +141,6 @@ private:
 
 private:
 
-      ArchesVariables* d_velocityVars;
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -168,6 +167,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/10/09 17:06:25  rawat
+// modified momentum solver for multi-patch
+//
 // Revision 1.13  2000/08/15 00:23:32  rawat
 // added explicit solve for momentum and scalar eqns
 //

@@ -691,6 +691,7 @@ PetscSolver::destroyMatrix()
   ierr = SLESDestroy(sles);CHKERRA(ierr); 
   ierr = VecDestroy(d_u);CHKERRA(ierr);
   ierr = VecDestroy(d_b);CHKERRA(ierr);
+  ierr = VecDestroy(d_x);CHKERRA(ierr);
   ierr = MatDestroy(A);CHKERRA(ierr);
 }
 
@@ -1387,6 +1388,7 @@ PetscSolver::velocityLisolve(const ProcessorGroup* pc,
 			    const ArchesLabel* lab)
 {
   // Get the patch bounds and the variable bounds
+#if 0
   IntVector domLo;
   IntVector domHi;
   IntVector idxLo;
@@ -1659,6 +1661,7 @@ PetscSolver::velocityLisolve(const ProcessorGroup* pc,
   default:
     throw InvalidValue("Invalid index in LinearSolver for velocity");
   }
+#endif
 }
 
 //****************************************************************************
@@ -1752,6 +1755,7 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 			  CellInformation* cellinfo,
 			  const ArchesLabel* lab)
 {
+#if 0
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->scalar.getFortLowIndex();
   IntVector domHi = vars->scalar.getFortHighIndex();
@@ -1844,11 +1848,14 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
     vars->residScalar = 1.0E-7;
     vars->truncScalar = 1.0;
-   
+#endif
 }
 
 //
 // $Log$
+// Revision 1.16  2000/10/09 17:06:25  rawat
+// modified momentum solver for multi-patch
+//
 // Revision 1.15  2000/10/08 18:56:35  rawat
 // fixed the solver for multi
 //

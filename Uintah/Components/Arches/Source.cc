@@ -762,35 +762,37 @@ Source::addPressureSource(const ProcessorGroup* ,
 			  ArchesVariables* vars)
 {
   // Get the patch and variable indices
-  IntVector domLoU = vars->uVelocity.getFortLowIndex();
-  IntVector domHiU = vars->uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector domLoV = vars->vVelocity.getFortLowIndex();
-  IntVector domHiV = vars->vVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector domLoW = vars->wVelocity.getFortLowIndex();
-  IntVector domHiW = vars->wVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLoU, domHiU;
+  IntVector domLoUng, domHiUng;
+  IntVector idxLoU, idxHiU;
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
+  IntVector domLong = vars->old_density.getFortLowIndex();
+  IntVector domHing = vars->old_density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   int ioff, joff, koff;
   switch(index) {
   case Arches::XDIR:
+    domLoU = vars->uVelocity.getFortLowIndex();
+    domHiU = vars->uVelocity.getFortHighIndex();
+    domLoUng = vars->uVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->uVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+
     ioff = 1;
     joff = 0;
     koff = 0;
     FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
 		      idxLoU.get_pointer(), idxHiU.get_pointer(),
 		      vars->uVelocity.getPointer(),
 		      vars->uVelNonlinearSrc.getPointer(), 
 		      vars->uVelocityCoeff[Arches::AP].getPointer(),
 		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
 		      vars->pressure.getPointer(),
 		      vars->old_density.getPointer(),
 		      &delta_t, &ioff, &joff, &koff,
@@ -800,17 +802,25 @@ Source::addPressureSource(const ProcessorGroup* ,
 		      cellinfo->dxpw.get_objs());
     break;
   case Arches::YDIR:
+    domLoU = vars->vVelocity.getFortLowIndex();
+    domHiU = vars->vVelocity.getFortHighIndex();
+    domLoUng = vars->vVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->vVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
     ioff = 0;
     joff = 1;
     koff = 0;
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    FORT_ADDPRESSGRAD(domLoV.get_pointer(), domHiV.get_pointer(),
-		      idxLoV.get_pointer(), idxHiV.get_pointer(),
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
 		      vars->vVelocity.getPointer(),
 		      vars->vVelNonlinearSrc.getPointer(), 
 		      vars->vVelocityCoeff[Arches::AP].getPointer(),
 		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
 		      vars->pressure.getPointer(),
 		      vars->old_density.getPointer(),
 		      &delta_t, &ioff, &joff, &koff,
@@ -820,17 +830,25 @@ Source::addPressureSource(const ProcessorGroup* ,
 		      cellinfo->dyps.get_objs());
     break;
   case Arches::ZDIR:
+    domLoU = vars->wVelocity.getFortLowIndex();
+    domHiU = vars->wVelocity.getFortHighIndex();
+    domLoUng = vars->wVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->wVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
     ioff = 0;
     joff = 0;
     koff = 1;
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    FORT_ADDPRESSGRAD(domLoW.get_pointer(), domHiW.get_pointer(),
-		      idxLoW.get_pointer(), idxHiW.get_pointer(),
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
 		      vars->wVelocity.getPointer(),
 		      vars->wVelNonlinearSrc.getPointer(), 
 		      vars->wVelocityCoeff[Arches::AP].getPointer(),
 		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
 		      vars->pressure.getPointer(),
 		      vars->old_density.getPointer(),
 		      &delta_t, &ioff, &joff, &koff,
@@ -847,6 +865,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.45  2000/10/09 17:06:25  rawat
+//modified momentum solver for multi-patch
+//
 //Revision 1.44  2000/10/08 18:56:35  rawat
 //fixed the solver for multi
 //
