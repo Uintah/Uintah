@@ -238,16 +238,15 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     nb[1] = gfield.get_rep() ? 1 : 0;
     Transform tform;
     mesh->get_canonical_transform(tform);
-    //
+
     texture->lock_bricks();
     texture->clear();
     vector<TextureBrickHandle>& bricks = texture->bricks();
     const BBox bbox(Point(0,0,0), Point(1,1,1)); 
     if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
        || nc != texture->nc() || card_mem != texture->card_mem() ||
-       bbox.min() != texture->bbox().min()) {
-
-//        build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+       bbox.min() != texture->bbox().min())
+    {
       build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
       texture->set_size(nx, ny, nz, nc, nb);
       texture->set_card_mem(card_mem);
