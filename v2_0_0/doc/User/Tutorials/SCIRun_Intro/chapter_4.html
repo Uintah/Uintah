@@ -61,8 +61,7 @@ used to visualize the utahtorso-lowres-voltage dataset. Chapter 4
 discusses a fourth visualization tool; isosurface extraction. This
 chapter also demonstrates merging all four visualization networks
 into one larger network that performs all visualizations
-concurrently. For details, see the User's Guide
-4.15, Navigating a Network.
+concurrently.
 
 <H2><A name="section-1">Isosurfacing</A></H2>
 
@@ -103,6 +102,7 @@ iso value, the <I>Quantity</I> tab can be used to select multiple
 evenly spaced isosufaces, or use the <I>List</I> tab to select a list
 of specific isosufaces.
 
+<br /><br />
 <A NAME="figure-4.1">
 <center>
 <img width="331" height="421" src="images/figures/4_3.gif"><br>
@@ -152,8 +152,10 @@ following items:
        network in <b>Figure 4.2</b>. This figure shows the combined net using
        the previous chapter's networks. Blue corresponds to 3A,
        orange to 3B, and yellow to 3C.</p>
-  <li> <p>Repeat all steps for creating 3A in Chapter 3.</p>
-  <li> <p>Do the same for 3B and 3C, but <b>reuse the
+  <li> <p>Repeat all steps for creating <a
+       href="chapter_3.html#section-1">3A</a> in Chapter 3.</p>
+  <li> <p>Do the same for <a href="chapter_3.html#section-2">3B</a>
+       and <a href="chapter_3.html#section-3">3C</a>, but <b>reuse the
        FieldReader and Viewer modules created for net 3A.</p></B>
   <P>
 </UL>
@@ -166,7 +168,7 @@ modules by
 right-clicking on each one, and selecting the <I>Destroy</I> option.  To
 destroy a connection between two modules, right-click on the pipe
 connecting the modules, and select <I>Delete</I>. These nets share the FieldReader module (in the upper left
-corner of <b> Figure 4.2</b>), which loads the
+corner of <a href="#figure-4.2"<b>Figure 4.2</b></a>), which loads the
 utahtorso-lowres-voltage.tvd.fld file. 
 Keep one FieldReader module that reads voltage
 data, and destroy the others.  Do not destroy the FieldReader module reading electrode
@@ -175,7 +177,7 @@ and one reading electrode data).
 <P>
 Note, <B>Figure 4.2</B> has been annotated to display the important
 user interface settings for each module.  If the image does not look
-similar to <b>Figure 4.3</b>, check the 
+similar to <a href="#figure-4.3>"<b>Figure 4.3</b></a>, check the 
 user interface settings.
 <p>
 <B>Grouping Modules</B>
