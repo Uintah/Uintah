@@ -11,7 +11,7 @@ def modUPS(directory, filename, changes):
     realdir = path.normpath(path.join(getcwd(), directory))
     tmpdir = path.normpath(path.join(realdir, "tmp"))
     origfilename = "%s/%s" % (realdir, filename)
-    newfilename = "%s/tmp/%s" % (realdir, filename)
+    newfilename = "%s/tmp/MOD-%s" % (realdir, filename)
     tempfilename = "%s/tmp/%s.tmp" % (realdir, filename)
 
     # see if filename exists in directory and create tmp
@@ -56,7 +56,8 @@ def modUPS(directory, filename, changes):
       system(command)
       command = "mv %s %s" % (tempfilename, newfilename)
       system(command)
-    return "tmp/%s" % filename
+    system("rm -f sedscript")
+    return "tmp/MOD-%s" % filename
 
 
 
