@@ -303,3 +303,21 @@ int MPMPetscSolver::getSolution(vector<double>& xPetsc)
   return begin;
 #endif
 }
+
+int MPMPetscSolver::getRHS(vector<double>& QPetsc)
+{
+#ifdef HAVE_PETSC
+  int nlocal,ierr,begin,end;
+  double* q;
+  VecGetLocalSize(d_B,&nlocal);
+  VecGetOwnershipRange(d_B,&begin,&end);
+  ierr = VecGetArray(d_B,&q);
+  if (ierr)
+    cerr << "VecGetArray failed" << endl;
+  for (int ii = 0; ii < nlocal; ii++) {
+    QPetsc.push_back(q[ii]);
+  }
+  VecRestoreArray(d_B,&q);
+  return begin;
+#endif
+}
