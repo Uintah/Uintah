@@ -16,7 +16,7 @@
     <outputs>
       <port>
         <name>Image</name>
-        <datatype>Insight::ITKImage</datatype>
+        <datatype>Insight::ITKDatatype</datatype>
       </port>
     </outputs>
   </io>
