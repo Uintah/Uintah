@@ -99,6 +99,7 @@ WARNING
 	 return d_anchor;
       }
       Point getNodePosition(const IntVector&) const;
+      Point getCellPosition(const IntVector&) const;
       IntVector getCellIndex(const Point&) const;
       Point positionToIndex(const Point&) const;
 
@@ -121,6 +122,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.20  2000/08/22 18:36:40  bigler
+// Added functionality to get a cell's position with the index.
+//
 // Revision 1.19  2000/07/11 19:32:16  kuzimmer
 // Added getPatchFromPoint(const Point& p)
 //

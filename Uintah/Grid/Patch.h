@@ -232,7 +232,11 @@ WARNING
      Point nodePosition(const IntVector& idx) const {
        return d_level->getNodePosition(idx);
      }
-     
+
+     Point cellPosition(const IntVector& idx) const {
+       return d_level->getCellPosition(idx);
+     }
+
      Box getGhostBox(const IntVector& lowOffset,
 		     const IntVector& highOffset) const;
      
@@ -279,6 +283,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.15  2000/08/22 18:36:40  bigler
+// Added functionality to get a cell's position with the index.
+//
 // Revision 1.14  2000/07/11 15:21:24  kuzimmer
 // Patch::getCellIterator()
 //

@@ -165,6 +165,11 @@ Point Level::getNodePosition(const IntVector& v) const
    return d_anchor+d_dcell*v;
 }
 
+Point Level::getCellPosition(const IntVector& v) const
+{
+   return d_anchor+d_dcell*v+d_dcell*0.5;
+}
+
 IntVector Level::getCellIndex(const Point& p) const
 {
    Vector v((p-d_anchor)/d_dcell);
@@ -273,6 +278,9 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.21  2000/08/22 18:36:40  bigler
+// Added functionality to get a cell's position with the index.
+//
 // Revision 1.20  2000/08/08 01:32:46  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
