@@ -150,7 +150,7 @@ ApplyFEMElectrodeSource::execute()
 
       for (int i=0; i < nsize; i++)
       {
-        rhs->put(i, hRhsIn->get(i, 1));
+        rhs->put(i, hRhsIn->get(i, 0));
       }
     }
     else
