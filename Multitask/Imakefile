@@ -11,8 +11,8 @@
 #define TASK_IMPLEMENTATION_CC Task_irix.cc
 LOCKS = lock_mips.o
 
-ASOPT = SCIBinFlace
-lock.o: lock_mips.s
+ASOPT = SCI_BinFlags
+lock_mips.o: lock_mips.s
 	as -o lock_mips.o lock_mips.s $(ASOPT)
 #endif
 
