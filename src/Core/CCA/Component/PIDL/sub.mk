@@ -53,7 +53,7 @@ PSELIBS := Core/Exceptions Core/Thread
 LIBS := $(UUID_LIB) $(M_LIBRARY)
 endif
 
-ifneq ($(HAVE_MPI),) 
+ifeq ($(HAVE_MPI),yes) 
 PSELIBS += Core/CCA/Component/Comm/Intra
 LIBS += $(MPI_LIBRARY)
 endif
