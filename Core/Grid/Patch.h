@@ -509,6 +509,8 @@ WARNING
      // get the index into the Level::d_patches array
      int getLevelIndex() const { return d_level_index; }
 
+     // get the index this patch would be if all levels were taken into account
+     int getGridIndex() const;
      void setLayoutHint(const IntVector& pos);
      bool getLayoutHint(IntVector& pos) const;
 
