@@ -1545,15 +1545,24 @@ if test $CC_DEPEND_MODE = unknown; then
       ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc -o configure-test-dir/configure-test.o >/dev/null 2>conftest.out"
       (eval $ac_try) 2>&5
       if test -f configure-test-dir/configure-test.$ext ; then
-        CC_DEPEND_MODE=normal
 	CC_DEPEND_REGEN=$flag
 	CC_DEPEND_EXT=$ext
-        break 2
+        if grep "^configure-test-dir/configure-test.o:" configure-test-dir/configure-test.$ext > /dev/null; then
+          CC_DEPEND_MODE=normal
+          break 2
+        elif grep "^configure-test.o:" configure-test-dir/configure-test.$ext > /dev/null; then
+          CC_DEPEND_MODE=modify
+          break 2
+        fi
       fi
       if test -f configure-test.$ext; then
-        CC_DEPEND_MODE=move
 	CC_DEPEND_REGEN=$flag
 	CC_DEPEND_EXT=$ext
+        if grep "^configure-test-dir/configure-test.o:" configure-test.$ext > /dev/null; then
+          CC_DEPEND_MODE=move
+        elif grep "^configure-test.o:" configure-test-dir/configure-test.$ext > /dev/null; then
+          CC_DEPEND_MODE=modify2
+        fi
         break 2
       fi
     done
