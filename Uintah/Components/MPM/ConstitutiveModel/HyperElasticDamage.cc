@@ -48,11 +48,6 @@ HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
 {
   // Constructor
   // Initialize deformationGradient
-  const DOM_Node root_node = ps->getNode().getOwnerDocument();
-  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
-  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
-  time_ps->require("timestep_multiplier",d_fudge);
-
   ps->require("bulk_modulus",d_Bulk);
   ps->require("shear_modulus",d_Shear);
   ps->require("alpha",d_Alpha);
@@ -434,6 +429,12 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.12  2000/06/16 05:03:05  sparker
+// Moved timestep multiplier to simulation controller
+// Fixed timestep min/max clamping so that it really works now
+// Implemented "override" for reduction variables that will
+//   allow the value of a reduction variable to be overridden
+//
 // Revision 1.11  2000/06/15 21:57:05  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

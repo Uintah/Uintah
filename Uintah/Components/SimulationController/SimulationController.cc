@@ -157,22 +157,19 @@ void SimulationController::run()
       old_ds->get(delt_var, sharedState->get_delt_label());
 
       double delt = delt_var;
+      delt *= timeinfo.delt_factor;
 
       if(delt < timeinfo.delt_min){
 	 cerr << "WARNING: raising delt from " << delt
 	      << " to minimum: " << timeinfo.delt_min << '\n';
-	 cerr << "AND IT DOESN'T WORK";
 	 delt = timeinfo.delt_min;
       }
       if(delt > timeinfo.delt_max){
 	 cerr << "WARNING: lowering delt from " << delt 
 	      << " to maxmimum: " << timeinfo.delt_max << '\n';
-	 cerr << "AND IT DOESN'T WORK";
 	 delt = timeinfo.delt_max;
       }
-      
-      // Needs to be fixed - steve
-      //old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
+      old_ds->override(delt_vartype(delt), sharedState->get_delt_label());
       cout << "Time=" << t << ", delt=" << delt 
 	   << ", elapsed time = " << wallTime << '\n';
 
@@ -458,6 +455,12 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.34  2000/06/16 05:03:09  sparker
+// Moved timestep multiplier to simulation controller
+// Fixed timestep min/max clamping so that it really works now
+// Implemented "override" for reduction variables that will
+//   allow the value of a reduction variable to be overridden
+//
 // Revision 1.33  2000/06/15 23:14:09  sparker
 // Cleaned up scheduler code
 // Renamed BrainDamagedScheduler to SingleProcessorScheduler

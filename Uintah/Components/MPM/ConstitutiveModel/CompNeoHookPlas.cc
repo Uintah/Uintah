@@ -23,11 +23,6 @@ using SCICore::Geometry::Vector;
 
 CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
 {
-  const DOM_Node root_node = ps->getNode().getOwnerDocument();
-  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
-  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
-  time_ps->require("timestep_multiplier",d_fudge);
-
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   ps->require("yield_stress",d_initialData.FlowStress);
@@ -131,7 +126,7 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
 		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
     WaveSpeed = dx/WaveSpeed;
-    double delT_new = d_fudge*WaveSpeed.minComponent();
+    double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -295,7 +290,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   }
 
   WaveSpeed = dx/WaveSpeed;
-  double delT_new = d_fudge*WaveSpeed.minComponent();
+  double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   new_dw->put(pstress, lb->pStressLabel_preReloc);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
@@ -407,6 +402,12 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.27  2000/06/16 05:03:04  sparker
+// Moved timestep multiplier to simulation controller
+// Fixed timestep min/max clamping so that it really works now
+// Implemented "override" for reduction variables that will
+//   allow the value of a reduction variable to be overridden
+//
 // Revision 1.26  2000/06/15 21:57:04  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

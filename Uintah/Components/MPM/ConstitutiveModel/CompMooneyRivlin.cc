@@ -24,11 +24,6 @@ using SCICore::Geometry::Vector;
 
 CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
 {
-  const DOM_Node root_node = ps->getNode().getOwnerDocument();
-  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
-  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
-  time_ps->require("timestep_multiplier",d_fudge);
-
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_constant_3",d_initialData.C3);
@@ -114,7 +109,7 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
     if(WaveSpeed < 1.e-12)
        delT_new = MAXDOUBLE;
     else
-       delT_new = d_fudge*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+       delT_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -241,7 +236,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     if(WaveSpeed < 1.e-12)
        delT_new = MAXDOUBLE;
     else
-       delT_new = d_fudge*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+       delT_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(pstress, lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
@@ -358,6 +353,12 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.43  2000/06/16 05:03:03  sparker
+// Moved timestep multiplier to simulation controller
+// Fixed timestep min/max clamping so that it really works now
+// Implemented "override" for reduction variables that will
+//   allow the value of a reduction variable to be overridden
+//
 // Revision 1.42  2000/06/15 21:57:03  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
