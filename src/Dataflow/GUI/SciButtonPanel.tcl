@@ -26,6 +26,9 @@ proc makeSciButtonPanel { parent close_window this args } {
   set make_exec_btn "true"
 
   set outside_pad 4
+  frame $parent.buttonPanel -bd 0
+  pack $parent.buttonPanel -fill x
+  set parent $parent.buttonPanel
 
   frame $parent.separator -height 2 -relief sunken -borderwidth 2
   pack  $parent.separator -fill x -pady 5
@@ -80,5 +83,6 @@ proc makeSciButtonPanel { parent close_window this args } {
 
   # Override the destroy window decoration and make it only close the window
   wm protocol $close_window WM_DELETE_WINDOW "wm withdraw $close_window"
+  return $parent
 }
 
