@@ -41,12 +41,13 @@ MPI=''
 
 #Set the default inputs directory
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
+input_file=
 
 #Set the test results directory
 results=TestResults
 if test ! -d $results
 	then
-	mkdir TestResults;
+    mkdir TestResults;
 fi
 
 do_mpm=0
@@ -191,10 +192,27 @@ REMOVE () {
     rm -rf $results;
 }
 
+num_proc () {
+	numproc=`grep patches $input_file | sed -e :a -e 's/<[^>]*>//g;/</N;//ba' | sed -e 's/\[//g' | sed 's/\]//g' | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+}
+
+
 run_test () {
     cd $results
-    echo; echo "Running $MPI ../sus $opts ../$INPUTS/$CASE/$n.ups"
-    $MPI ../sus $opts ../$INPUTS/$CASE/$n.ups &> $n.out
+    input_file=../$INPUTS/$CASE/$n.ups
+   
+    num_proc
+   
+    if test $numproc -gt 1;
+	then
+	MPI="mpirun -np $numproc"
+    else
+	MPI=""
+    fi
+
+    echo; echo "Running $MPI sus $opts $input_file"
+    $MPI ../sus $opts $input_file &> $n.out
+
     success=`grep "successfully" $n.out`
     if test -n "$success";
 	then 
@@ -206,6 +224,7 @@ run_test () {
 	continue;
     fi
 }
+
 
 compare_results () {
     cd $results
