@@ -48,7 +48,7 @@ class SinCosTable;
 
 namespace SCIRun {
 
-class SCICORESHARE GeomTube : public GeomVertexPrim {
+class GeomTube : public GeomVertexPrim {
     int nu;
     Array1<Vector> directions;
     Array1<double> radii;

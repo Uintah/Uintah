@@ -60,7 +60,7 @@ namespace SCIRun {
 class FreeTypeFace;
 class BBox;
 
-class SCICORESHARE FreeTypeLibrary {
+class FreeTypeLibrary {
 public:
   FreeTypeLibrary();
   virtual ~FreeTypeLibrary();
@@ -71,7 +71,7 @@ public:
 };
 
 
-class SCICORESHARE FreeTypeFace {
+class FreeTypeFace {
 public:
   FreeTypeFace(FreeTypeLibrary *, string);
   virtual ~FreeTypeFace();
@@ -94,7 +94,7 @@ private:
 };
 
 
-class SCICORESHARE FreeTypeGlyph {
+class FreeTypeGlyph {
 public:
   FreeTypeGlyph();
   virtual ~FreeTypeGlyph();
@@ -108,7 +108,7 @@ public:
 
 typedef vector<FreeTypeGlyph *> FreeTypeGlyphs;
 
-class SCICORESHARE FreeTypeText {
+class FreeTypeText {
 public:
   FreeTypeText(string text, FreeTypeFace *face, Point *pos = 0);
   virtual ~FreeTypeText();

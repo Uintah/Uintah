@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE TexSquare : public GeomObj {
+class TexSquare : public GeomObj {
   float tex_coords_[8];
   float pos_coords_[12];
   unsigned char *texture;

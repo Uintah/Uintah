@@ -48,7 +48,7 @@
 namespace SCIRun {
   class Color;
 
-  class SCICORESHARE GuiColor : public GuiVar {
+  class GuiColor : public GuiVar {
     GuiDouble r;
     GuiDouble g;
     GuiDouble b;
@@ -61,7 +61,7 @@ namespace SCIRun {
   };
 
   class Material;
-  class SCICORESHARE GuiMaterial : public GuiVar {
+  class GuiMaterial : public GuiVar {
     GuiColor ambient;
     GuiColor diffuse;
     GuiColor specular;

@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomTexRectangle : public GeomObj {
+class GeomTexRectangle : public GeomObj {
   float tex_coords_[8];
   float pos_coords_[12];
   float normal_[3];

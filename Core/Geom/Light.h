@@ -45,7 +45,6 @@
 
 #include <sci_defs/ogl_defs.h>
 
-#include <Core/share/share.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Persistent/Persistent.h>
@@ -61,7 +60,7 @@ class View;
 struct DrawInfoOpenGL;
 
 
-class SCICORESHARE Light : public Persistent {
+class Light : public Persistent {
 protected:
   Light(const string& name, bool on = true, bool tranformed = true);
     
@@ -77,7 +76,7 @@ public:
   virtual ~Light();
   virtual void io(Piostream&);
 
-  friend SCICORESHARE void Pio( Piostream&, Light*& );
+  friend void Pio( Piostream&, Light*& );
 
   void opengl_reset_light( int i );
 

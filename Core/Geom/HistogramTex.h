@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE HistogramTex : public GeomObj {
+class HistogramTex : public GeomObj {
   Point a, b, c, d;
   const int *buckets;
   int nbuckets, min, max;

@@ -50,7 +50,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE GeomSphere : public GeomObj {
+class GeomSphere : public GeomObj {
 public:
   Point cen;
   double rad;
@@ -83,7 +83,7 @@ public:
 };
 
 
-class SCICORESHARE GeomSuperquadric : public GeomObj {
+class GeomSuperquadric : public GeomObj {
   int axis_;
   double A_, B_;
   int nu_, nv_;
@@ -117,7 +117,7 @@ public:
 };
 
 
-class SCICORESHARE GeomSpheres : public GeomObj {
+class GeomSpheres : public GeomObj {
 private:
   vector<Point> centers_;
   vector<double> radii_;

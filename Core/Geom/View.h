@@ -43,8 +43,6 @@
 #ifndef SCI_Geom_View_h
 #define SCI_Geom_View_h 1
 
-#include <Core/share/share.h>
-  
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/Color.h>
@@ -52,7 +50,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE View {
+class View {
 protected:
     Point eyep_;
     Point lookat_;
@@ -92,7 +90,7 @@ public:
     double fov() const;	
     void fov(double);
 
-    friend SCICORESHARE void Pio (Piostream&, View&);
+    friend void Pio (Piostream&, View&);
 };
 
 
@@ -104,7 +102,7 @@ cc-1375 CC: REMARK File = ../../Core/Geom/View.h, Line = 71
 #pragma set woff 1375
 #endif
 
-class SCICORESHARE ExtendedView : public View
+class ExtendedView : public View
 {
   int xres_, yres_;
   Color bg_;
@@ -124,7 +122,7 @@ public:
   int yres() const;
   void yres(int);
 
-  friend SCICORESHARE void Pio( Piostream&, ExtendedView& );
+  friend void Pio( Piostream&, ExtendedView& );
   
   void Print();
   
