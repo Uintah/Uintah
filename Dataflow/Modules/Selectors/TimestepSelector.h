@@ -68,6 +68,7 @@ private:
   GuiInt animate;
   GuiInt anisleep;
   GuiInt time;
+  GuiInt max_time;
   GuiDouble timeval;
 
   ArchiveIPort *in;

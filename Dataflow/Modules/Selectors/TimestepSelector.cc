@@ -28,6 +28,7 @@ TimestepSelector::TimestepSelector(const string& id)
   : Module("TimestepSelector", id, Filter, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this), 
     time("time", id, this),
+    max_time("max_time", id, this),
     timeval("timeval", id, this),
     animate("animate",id, this),
     anisleep("anisleep", id, this),
@@ -89,7 +90,10 @@ void TimestepSelector::execute()
    timeval.set(times[idx]);
 
    if( animate.get() ){
+     DataArchive& archive = *((*(handle.get_rep()))());
      while( animate.get() && idx < (int)times.size() - 1){
+       //       archive.purgeTimestepCache( times[idx] );
+       DataArchive::cacheOnlyCurrentTimestep = true;
        idx++;
        tcl_status.set( to_string( times[idx] ));
        time.set( idx );
@@ -103,5 +107,6 @@ void TimestepSelector::execute()
    handle->SetTimestep( idx );
    out->send(handle);
    tcl_status.set("Done");
+   // DumpAllocator(default_allocator, "timedump.allocator");
 }
 } // End namespace Uintah
