@@ -60,7 +60,7 @@ public:
       //   [in] 
 
       Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-		 bool reactingFlow, bool enthalpySolver);
+		 bool reactingFlow, bool enthalpySolver, bool thermalNOx);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -248,6 +248,7 @@ private:
       bool d_enthalpySolve;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
+      bool d_thermalNOx;
       bool d_flamelet;
       bool d_steadyflamelet;
       bool d_filter_drhodt;

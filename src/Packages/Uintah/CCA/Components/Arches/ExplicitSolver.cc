@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ReactiveScalarSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/ThermalNOxSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
@@ -51,13 +52,14 @@ ExplicitSolver(const ArchesLabel* label,
 	       TurbulenceModel* turbModel,
 	       PhysicalConstants* physConst,
 	       bool calc_reactingScalar,
-	       bool calc_enthalpy,
+	       bool calc_enthalpy,bool calc_thermalnox,
 	       const ProcessorGroup* myworld): 
                NonlinearSolver(myworld),
 	       d_lab(label), d_MAlab(MAlb), d_props(props), 
 	       d_boundaryCondition(bc), d_turbModel(turbModel),
 	       d_reactingScalarSolve(calc_reactingScalar),
 	       d_enthalpySolve(calc_enthalpy),
+               d_thermalNOxSolve(calc_thermalnox),
 	       d_physicalConsts(physConst)
 {
   d_pressSolver = 0;
@@ -65,6 +67,7 @@ ExplicitSolver(const ArchesLabel* label,
   d_scalarSolver = 0;
   d_reactingScalarSolver = 0;
   d_enthalpySolver = 0;
+  d_thermalNOxSolver = 0;
   nosolve_timelabels_allocated = false;
 }
 
@@ -78,6 +81,8 @@ ExplicitSolver::~ExplicitSolver()
   delete d_scalarSolver;
   delete d_reactingScalarSolver;
   delete d_enthalpySolver;
+  //Added by P.desam
+  delete d_thermalNOxSolver;
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
     delete d_timeIntegratorLabels[curr_level];
   if (nosolve_timelabels_allocated)
@@ -136,6 +141,14 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					     d_physicalConsts);
     d_reactingScalarSolver->problemSetup(db);
   }
+  // Creating an instance of thermal NOx solver
+     if (d_thermalNOxSolve) {
+        d_thermalNOxSolver = scinew ThermalNOxSolver(d_lab, d_MAlab,
+                                                     d_turbModel, d_boundaryCondition,
+                                                     d_physicalConsts);
+        d_thermalNOxSolver->problemSetup(db);
+    }
+
   if (d_enthalpySolve) {
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
 					     d_turbModel, d_boundaryCondition,
@@ -283,6 +296,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //			   	      d_timeIntegratorLabels[curr_level]);
     d_props->sched_reComputeProps(sched, patches, matls,
 				  d_timeIntegratorLabels[curr_level], true);
+    // Solve for Thermal NOx 
+    if (d_thermalNOxSolve) {
+                  d_thermalNOxSolver->solve(sched, patches, matls,
+                                            d_timeIntegratorLabels[curr_level]);
+    }
+
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level]);
@@ -471,6 +490,12 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     if (d_timeIntegratorLabels[0]->multiple_steps)
       tsk->computes(d_lab->d_reactscalarTempLabel);
   }
+  if (d_thermalNOxSolve) {
+    tsk->computes(d_lab->d_thermalnoxSPLabel);
+    if (d_timeIntegratorLabels[0]->multiple_steps)
+      tsk->computes(d_lab->d_thermalnoxTempLabel);
+  }
+
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
     if (d_timeIntegratorLabels[0]->multiple_steps)
@@ -1540,6 +1565,23 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       }
     }
 
+    // Thermal NOx 
+    constCCVariable<double> thermalnox;
+    CCVariable<double> new_thermalnox;
+    CCVariable<double> temp_thermalnox;
+    if (d_thermalNOxSolve) {
+      old_dw->get(thermalnox, d_lab->d_thermalnoxSPLabel, matlIndex, patch,
+                                        Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(new_thermalnox, d_lab->d_thermalnoxSPLabel, matlIndex,
+                                   patch);
+      new_thermalnox.copyData(thermalnox);
+      if (d_timeIntegratorLabels[0]->multiple_steps) {
+              new_dw->allocateAndPut(temp_thermalnox, d_lab->d_thermalnoxTempLabel, matlIndex,
+                                     patch);
+              temp_thermalnox.copyData(thermalnox);
+      }
+    }
+
 
     CCVariable<double> new_enthalpy;
     CCVariable<double> temp_enthalpy;
@@ -1811,6 +1853,9 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched, const PatchSet* patches,
   if (d_reactingScalarSolve)
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_thermalNOxSolve)
+        tsk->requires(Task::NewDW, d_lab->d_thermalnoxSPLabel,
+                        Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_enthalpySolve)
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1819,6 +1864,8 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched, const PatchSet* patches,
   tsk->modifies(d_lab->d_scalarTempLabel);
   if (d_reactingScalarSolve)
     tsk->modifies(d_lab->d_reactscalarTempLabel);
+  if (d_thermalNOxSolve)
+    tsk->modifies(d_lab->d_thermalnoxTempLabel);
   if (d_enthalpySolve)
     tsk->modifies(d_lab->d_enthalpyTempLabel);
 
@@ -1860,6 +1907,13 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
 			  matlIndex, patch);
     new_dw->copyOut(temp_reactscalar, d_lab->d_reactscalarSPLabel,
 		     matlIndex, patch);
+    }
+    CCVariable<double> temp_thermalnox;
+    if (d_thermalNOxSolve) {
+    new_dw->getModifiable(temp_thermalnox, d_lab->d_thermalnoxTempLabel,
+                          matlIndex, patch);
+    new_dw->copyOut(temp_thermalnox, d_lab->d_thermalnoxSPLabel,
+                          matlIndex, patch);
     }
     if (d_enthalpySolve) {
     new_dw->getModifiable(temp_enthalpy, d_lab->d_enthalpyTempLabel,
