@@ -8,13 +8,13 @@ using namespace Uintah;
 
 ExamplesLabel::ExamplesLabel()
 {
-  phi = new VarLabel("phi", NCVariable<double>::getTypeDescription());
-  residual = new VarLabel("residual", sum_vartype::getTypeDescription());
+  phi = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
+  residual = VarLabel::create("residual", sum_vartype::getTypeDescription());
 }
 
 ExamplesLabel::~ExamplesLabel()
 {
-  delete phi;
-  delete residual;
+  VarLabel::destroy(phi);
+  VarLabel::destroy(residual);
 }
 
