@@ -192,6 +192,7 @@ itcl_class SubnetModule {
 
 	bindtags $p [linsert [bindtags $p] 1 $modframe]
 	bindtags $p.title [linsert [bindtags $p.title] 1 $modframe]
+	bindtags $p.type [linsert [bindtags $p.type] 1 $modframe]
 
 	# If we are NOT currently running a script... ie, not loading the net
 	# from a file
@@ -242,6 +243,26 @@ proc updateSubnetState { subnet_number name1 name2 op } {
     SubnetIcon$subnet_number setColorAndTitle
 }
 
+proc generateUniqueSubnetName {} {
+    global Subnet SubnetScripts
+    set taken ""
+    if { [info exists SubnetScripts] } {
+	eval lappend taken [array names SubnetScripts]
+    }
+    foreach namekey [array names Subnet *_Name] {
+	lappend taken $Subnet($namekey)
+    }
+    puts "taken $taken"
+    set num 1
+    set name "Sub-Network \#$num"
+    while { [lsearch $taken $name] != -1 } {
+	incr num
+	set name "Sub-Network \#$num"
+    }
+    return $name
+}
+    
+    
 
 
 # makeSubnetEditorWindow 
@@ -256,7 +277,7 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     incr Subnet(num)
     set subnet_id				$Subnet(num)
     set Subnet(Subnet${subnet_id})		${subnet_id}
-    set Subnet(Subnet${subnet_id}_Name)	"Sub-Network \#$subnet_id"
+    set Subnet(Subnet${subnet_id}_Name)	    [generateUniqueSubnetName]
     set Subnet(Subnet${subnet_id}_Instance) [generateInstanceName $Subnet(Subnet${subnet_id}_Name)]
     set Subnet(Subnet${subnet_id}_Modules)	""
     set Subnet(Subnet${subnet_id}_connections)	""
@@ -320,7 +341,9 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     # Make the Packages menu item
     menubutton $w.main_menu.packages -text "Packages" -underline 0 \
 	-menu $w.main_menu.packages.menu
-    menu $w.main_menu.packages.menu -tearoff false
+    menu $w.main_menu.packages.menu -tearoff false -postcommand \
+	"createModulesMenu $w.main_menu.packages.menu $subnet_id"
+#    createModulesMenu $w.main_menu.packages.menu $subnet_id
     pack $w.main_menu.packages -side left
 
     # Make the Subnet Name Entry Field
@@ -695,7 +718,7 @@ proc restoreLoadVars { key } {
 }
 
 proc loadSubnetFromDisk { name { x 0 } { y 0 } } {
-    return [loadSubnet ${name}.net $x $y]
+    return [loadSubnet $name $x $y]
 }
 
 proc loadSubnet { filename { x 0 } { y 0 } } {
@@ -708,6 +731,9 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     }
     set splitname [file split $filename]
     set netname [lindex $splitname end]
+    if { [string last .net $netname] != [expr [string length $netname]-4] } {
+	set netname ${netname}.net
+    }
     if { [llength $splitname] == 1 } {
 	set filename [file join [netedit getenv SCIRUN_SRCDIR] Subnets $netname]
 	if ![file exists $filename] {
@@ -724,7 +750,7 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     set subnetNumber [makeSubnetEditorWindow $subnet $x $y]
     set Subnet(Loading) $subnetNumber
     backupLoadVars $filename
-    uplevel \#0 source \{$filename\}
+    uplevel \#0 "source \{$filename\}"
     restoreLoadVars $filename
     set Subnet(Subnet$Subnet(Loading)_filename) "$filename"
     set Subnet(Subnet$Subnet(Loading)_State) ondisk
@@ -758,6 +784,9 @@ proc instanceSubnet { subnet_name { x 0 } { y 0 } { from 0 } } {
 	set y [expr $mouseY+[$Subnet(Subnet${from}_canvas) canvasy 0]]
 	set mouseX 10
 	set mouseY 10
+    }
+    if { $from == 0 } {
+	set from $Subnet(Loading)
     }
     set to [makeSubnetEditorWindow $from $x $y]
     set Subnet(Loading) $to
@@ -809,8 +838,15 @@ proc isaDefaultValue { module varname classname } {
 
 proc writeSubnetOnDisk { id } {
     global Subnet
-    set name $Subnet(Subnet${id}_Name)	    
-    writeNetwork ~/SCIRun/Subnets/${name}.net $id
+    set filename [file join ~ SCIRun Subnets $Subnet(Subnet${id}_Name).net]
+    if { [info exists Subnet(Subnet${id}_Filename)] } {
+	set filename $Subnet(Subnet${id}_Filename)
+    }
+    set dir [file join [lrange [file split $filename] 0 end-1]]
+    catch "file mkdir $dir"
+    if { [validDir $dir] } {
+	writeNetwork $filename $id
+    }
 }
 
 
@@ -829,7 +865,6 @@ proc writeSubnets { file subnet_ids } {
 		if { ($sub_id != 0) && \
 		     ([lsearch $alreadyWrittenToDisk $subname] == -1) } {
 		    lappend alreadyWrittenToDisk $subname
-		    lappend subnet_ids $sub_id
 		    
 		    writeSubnetOnDisk $sub_id
 		}
@@ -994,18 +1029,14 @@ proc resetScriptCount {} {
 }
     
 
-proc bla { args } { puts $args }
-
 proc addSubnetToDatabase { script } {
     set testing [interp create -safe]    
     foreach line [split $script "\n"] {
 	catch "$testing eval \{$line\}"
 	if { [$testing eval info exists Name] } {
 	    set name [$testing eval set Name]
-	    break
 	} elseif { [$testing eval info exists name] } {
 	    set name [$testing eval set name]
-	    break
 	}
     }
     interp delete $testing
@@ -1066,7 +1097,10 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	if { [isaSubnetIcon $module] } {
 	    set number $Subnet(${module}_num)
 	    set name $Subnet(Subnet${number}_Name)
-	    if { $Subnet(Subnet${number}_Instance) == "On Disk" } {
+	    if { $Subnet(Subnet${number}_State) == "ondisk" } {
+		if { [info exists Subnet(Subnet${number}_Filename)] } {
+		    set name $Subnet(Subnet${number}_Filename)
+		}
 		append script "${tab}\# Load $name Sub-Network from disk\n"
 		append script "${tab}set m$i \[loadSubnetFromDisk \"${name}\" "
 
@@ -1290,7 +1324,6 @@ proc loadSubnetScriptsFromDisk { } {
     global SubnetScripts
     set files [glob -nocomplain "[netedit getenv SCIRUN_SRCDIR]/Subnets/*.net"]
     eval lappend files [glob -nocomplain "[netedit getenv HOME]/SCIRun/Subnets/*.net"]
-
     foreach file $files {
 	set script ""
 	set handle [open $file RDONLY]
