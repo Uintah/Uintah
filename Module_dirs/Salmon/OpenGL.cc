@@ -198,6 +198,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 		// displayed...
 		ObjTag* vis;
 		if(roe->visible.lookup(si->name, vis)){
+		    cerr << "Drawing " << si->name << endl;
 		    if(vis->visible->get())
 			si->obj->draw(&drawinfo);
 		} 
