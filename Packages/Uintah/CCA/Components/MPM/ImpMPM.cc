@@ -35,10 +35,12 @@
 #include <iostream>
 #include <fstream>
 
+
 using namespace Uintah;
 using namespace SCIRun;
-
 using namespace std;
+
+#define PETSC_DEBUG
 
 static DebugStream cout_doing("IMPM_DOING_COUT", false);
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
@@ -160,12 +162,21 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->dispIncQNorm0);
   t->computes(lb->dispIncNormMax);
 
+  LoadBalancer* loadbal = sched->getLoadBalancer();
+  d_perproc_patches = loadbal->createPerProcessorPatchSet(level,d_myworld);
+
+  sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
+#if 0
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+#endif
 
   t = scinew Task("ImpMPM::printParticleCount",
 		  this, &ImpMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
+  sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
+#if 0
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+#endif
 }
 
 void ImpMPM::scheduleComputeStableTimestep(const LevelP&, SchedulerP&)
@@ -177,44 +188,51 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP&, SchedulerP&)
 void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 {
   //  const PatchSet* patches = level->eachPatch();
-  const PatchSet* patches = level->allPatches();
-  const MaterialSet* matls = d_sharedState->allMPMMaterials();
-
-  scheduleInterpolateParticlesToGrid(sched, patches, matls);
-
-  scheduleApplyBoundaryConditions(sched,patches,matls);
-
-  scheduleComputeStressTensorI(sched, patches, matls,false);
-
-  scheduleFormStiffnessMatrixI(sched,patches,matls,false);
-
-  scheduleComputeInternalForceI(sched, patches, matls,true);
-
-  scheduleFormQI(sched, patches, matls,false);
-
 #if 0
-  scheduleApplyRigidBodyConditionI(sched, patches,matls);
+  LoadBalancer* loadbal = sched->getLoadBalancer();
+  d_perproc_patches = loadbal->createPerProcessorPatchSet(level,d_myworld);
 #endif
 
-  scheduleRemoveFixedDOFI(sched, patches, matls,false);
+  const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-  scheduleSolveForDuCGI(sched, patches, matls,false);
+  scheduleInterpolateParticlesToGrid(sched,d_perproc_patches, matls);
 
-  scheduleUpdateGridKinematicsI(sched, patches, matls,false);
+  scheduleApplyBoundaryConditions(sched,d_perproc_patches,matls);
+#if 1
+  scheduleCreateMatrix(sched, d_perproc_patches, matls);
+#endif
 
-  scheduleCheckConvergenceI(sched,level, patches, matls, false);
+  scheduleComputeStressTensorI(sched, d_perproc_patches, matls,false);
 
-  scheduleIterate(sched,level,patches,matls);
+  scheduleFormStiffnessMatrixI(sched,d_perproc_patches,matls,false);
 
-  scheduleComputeStressTensorOnly(sched,patches,matls,false);
+  scheduleComputeInternalForceI(sched, d_perproc_patches, matls,true);
 
-  scheduleComputeInternalForceII(sched,patches,matls,false);
+  scheduleFormQI(sched, d_perproc_patches, matls,false);
 
-  scheduleComputeAcceleration(sched,patches,matls);
-
-  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 #if 0
-  scheduleInterpolateStressToGrid(sched,patches,matls);
+  scheduleApplyRigidBodyConditionI(sched, d_perproc_patches,matls);
+#endif
+
+  scheduleRemoveFixedDOFI(sched, d_perproc_patches, matls,false);
+
+  scheduleSolveForDuCGI(sched, d_perproc_patches, matls,false);
+
+  scheduleUpdateGridKinematicsI(sched, d_perproc_patches, matls,false);
+
+  scheduleCheckConvergenceI(sched,level, d_perproc_patches, matls, false);
+
+  scheduleIterate(sched,level,d_perproc_patches,matls);
+
+  scheduleComputeStressTensorOnly(sched,d_perproc_patches,matls,false);
+
+  scheduleComputeInternalForceII(sched,d_perproc_patches,matls,false);
+
+  scheduleComputeAcceleration(sched,d_perproc_patches,matls);
+
+  scheduleInterpolateToParticlesAndUpdate(sched, d_perproc_patches, matls);
+#if 0
+  scheduleInterpolateStressToGrid(sched,d_perproc_patches,matls);
 #endif
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
 				    lb->d_particleState_preReloc,
@@ -276,6 +294,16 @@ void ImpMPM::scheduleApplyBoundaryConditions(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+
+void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
+				  const PatchSet* patches,
+				  const MaterialSet* matls)
+{
+
+  Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix);
+  sched->addTask(t, patches, matls);
+
+}
 
 
 void ImpMPM::scheduleComputeStressTensorI(SchedulerP& sched,
@@ -506,11 +534,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::NewDW,lb->dispIncQNorm);
   task->requires(Task::NewDW,lb->dispIncNorm);
 
-
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level, 
-								   d_myworld);
-  sched->addTask(task,perproc_patches,d_sharedState->allMaterials());
+  sched->addTask(task,d_perproc_patches,d_sharedState->allMaterials());
 
   
 }
@@ -529,7 +553,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   // Create the tasks
 
-
+  
   scheduleComputeStressTensorR(subsched,level->eachPatch(),
 			      d_sharedState->allMPMMaterials(),
 			      true);
@@ -1192,10 +1216,10 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
 }
 
 void ImpMPM::printParticleCount(const ProcessorGroup* pg,
-				   const PatchSubset*,
-				   const MaterialSubset*,
-				   DataWarehouse*,
-				   DataWarehouse* new_dw)
+				const PatchSubset*,
+				const MaterialSubset*,
+				DataWarehouse*,
+				DataWarehouse* new_dw)
 {
   if(pg->myrank() == 0){
     static bool printed=false;
@@ -1432,6 +1456,154 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
   }
 }
 
+void ImpMPM::createMatrix(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* ,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw)
+
+{
+
+  KK.clear();
+#ifdef HAVE_PETSC
+  PetscTruth exists;
+  PetscObjectExists((PetscObject)A,&exists);
+  // Probably should zero out things instead of destroying it.
+  if (exists == PETSC_TRUE)
+    MatDestroy(A);
+#endif
+
+  int numProcessors = d_myworld->size();
+  vector<int> numNodes(numProcessors, 0);
+  vector<int> startIndex(numProcessors);
+  int totalNodes = 0;
+
+  for (int p = 0; p < d_perproc_patches->size(); p++) {
+    startIndex[p] = totalNodes;
+    int mytotal = 0;
+    const PatchSubset* patchsub = d_perproc_patches->getSubset(p);
+    for (int ps = 0; ps<patchsub->size(); ps++) {
+    cout_doing <<"Doing createMatrix " <<"\t\t\t\t\t IMPM"
+	       << "\n" << "\n";
+    const Patch* patch = patchsub->get(ps);
+    IntVector plowIndex = patch->getNodeLowIndex();
+    IntVector phighIndex = patch->getNodeHighIndex();
+
+    long nn = (phighIndex[0]-plowIndex[0])*
+	(phighIndex[1]-plowIndex[1])*
+	(phighIndex[2]-plowIndex[2])*3;
+    cout << "nn = " << nn << "\n";
+    d_petscGlobalStart[patch]=totalNodes;
+    totalNodes+=nn;
+    mytotal+=nn;
+    
+    }
+    numNodes[p] = mytotal;
+  }
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch=patches->get(p);
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex();
+    Array3<int> l2g(lowIndex, highIndex);
+    l2g.initialize(-1234);
+    long totalNodes=0;
+    const Level* level = patch->getLevel();
+    Level::selectType neighbors;
+    level->selectPatches(lowIndex, highIndex, neighbors);
+    for(int i=0;i<neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      
+      IntVector plow = neighbor->getNodeLowIndex();
+      IntVector phigh = neighbor->getNodeHighIndex();
+      IntVector low = Max(lowIndex, plow);
+      IntVector high= Min(highIndex, phigh);
+      
+      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+	  || ( high.z() < low.z() ) )
+	throw InternalError("Patch doesn't overlap?");
+      
+      int petscglobalIndex = d_petscGlobalStart[neighbor];
+      IntVector dnodes = phigh-plow;
+      IntVector start = low-plow;
+      petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*3
+	+start.y()*dnodes.x()*2 + start.x();
+#ifdef PETSC_DEBUG
+      cerr << "Looking at patch: " << neighbor->getID() << '\n';
+      cerr << "low=" << low << '\n';
+      cerr << "high=" << high << '\n';
+      cerr << "dnodes=" << dnodes << '\n';
+      cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
+      cerr << "globalIndex = " << petscglobalIndex << '\n';
+#endif
+      for (int colZ = low.z(); colZ < high.z(); colZ ++) {
+	int idx_slab = petscglobalIndex;
+	cerr << "idx_slab = " << idx_slab << "\n";
+	petscglobalIndex += dnodes.x()*dnodes.y()*3;
+	cerr << "petscglobalIndex = " << petscglobalIndex << "\n";
+	
+	for (int colY = low.y(); colY < high.y(); colY ++) {
+	  int idx = idx_slab;
+	  idx_slab += dnodes.x()*3;
+	  for (int colX = low.x(); colX < high.x(); colX ++) {
+	    l2g[IntVector(colX, colY, colZ)] = idx;
+	    idx += 3;
+	  }
+	}
+      }
+      IntVector d = high-low;
+      totalNodes+=d.x()*d.y()*d.z()*3;
+    }
+    d_petscLocalToGlobal[patch].copyPointer(l2g);
+#ifdef PETSC_DEBUG
+    {	
+      IntVector l = l2g.getWindow()->getLowIndex();
+      IntVector h = l2g.getWindow()->getHighIndex();
+      for(int z=l.z();z<h.z();z++){
+	for(int y=l.y();y<h.y();y++){
+	  for(int x=l.x();x<h.x();x++){
+	    IntVector idx(x,y,z);
+	    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
+	  }
+	}
+      }
+    }
+#endif
+  }
+
+  int me = d_myworld->myrank();
+  int numlrows = numNodes[me];
+  int numlcolumns = numlrows;
+  int globalrows = (int)totalNodes;
+  int globalcolumns = (int)totalNodes;
+
+#ifdef PETSC_DEBUG
+  cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
+#endif
+#if 0
+   MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+		   globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+
+   /* 
+     Create vectors.  Note that we form 1 vector from scratch and
+     then duplicate as needed.
+  */
+  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
+  if(ierr)
+    throw PetscError(ierr, "VecCreateMPI");
+  ierr = VecSetFromOptions(d_x);
+  if(ierr)
+    throw PetscError(ierr, "VecSetFromOptions");
+  ierr = VecDuplicate(d_x,&d_b);
+  if(ierr)
+    throw PetscError(ierr, "VecDuplicate(d_b)");
+  ierr = VecDuplicate(d_x,&d_u);
+  if(ierr)
+    throw PetscError(ierr, "VecDuplicate(d_u)");
+#endif
+
+}
+
 void ImpMPM::computeStressTensor(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset* ,
@@ -1563,7 +1735,6 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 {
   // DONE
 
-//  WRONG
   int nn = 0;
   IntVector nodes(0,0,0);
   cout << "nodes = " << nodes << endl;
