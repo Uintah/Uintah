@@ -109,29 +109,37 @@ namespace SCIRun {
     void* getArray();
 
     /////////
+    // Calculate the redistribution schedule given the current array
+    // representation this class has (if it had not been calculated
+    // before). Returns a the schedule. [CALLER ONLY]
+    descriptorList makeSchedule(); 
+    
+    /////////
     // It sets a new array pointer (for in arguments) to an array 
-    // of the appropriate size and dimension.
+    // of the appropriate size and dimension. [CALLEE ONLY]
     void setNewArray(void** a_ptr);
 
     /////////
-    // It sets a pointer (for out arguments) to the recieved array 
+    // It sets a pointer (for out arguments) to the recieved array
+    // [CALLEE ONLY]
     void setArray(void** a_ptr);
 
     //////////
     // Retrieves pointer to the actual array only if the array pointer
-    // does not equal NULL. 
+    // does not equal NULL. [CALLEE ONLY] 
     void* getArrayWait();
     
     /////////
     // Blocks until data redistribution is complete and placed
     // within the array. After that is complete we return the
-    // pointer to the array. 
+    // pointer to the array. [CALLEE ONLY]
     void* waitCompleteArray();
 
     /////////
     // This method is called when we have recieved the distribution
     // from a particular object denoted by its rank. It sets the 
     // recieve flag on that distribution in the caller's descriptorList.
+    // [CALLEE ONLY]
     void doReceive(int rank);
 
     ///////////
@@ -152,6 +160,14 @@ namespace SCIRun {
     // both the local and remote representations
     descriptorList caller_rep;
     descriptorList callee_rep;
+
+    /////////
+    // The computed distribution schedule.
+    descriptorList sched;
+
+    /////////
+    // Used to determine whether or not the schedule has been calculated
+    bool madeSched;
 
     ////////
     // A void pointer to the actual array. Used only if this object

@@ -290,7 +290,7 @@ MxNArrayRep* MxNArrayRep::Intersect(MxNArrayRep* arep)
   for(int i=1; i<=mydimno; i++) {
     intersectionArr[i-1] = Intersect(arep, i);
   }
-  return (new MxNArrayRep(mydimno,intersectionArr));
+  return (new MxNArrayRep(mydimno,intersectionArr,arep->getReference()));
 }
 
 void MxNArrayRep::print(std::ostream& dbg)
