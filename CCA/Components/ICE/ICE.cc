@@ -2508,7 +2508,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     
     //__________________________________
     // Advect mass and backout mass_CC and rho_CC
-    //for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
     for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
       q_CC[*iter] = mass_L[*iter] * invvol;
     }
@@ -2540,7 +2539,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
 
     //__________________________________
     // Advect internal energy and backout Temp_CC
-    //    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
     for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
       q_CC[*iter] = int_eng_L_ME[*iter] * invvol;
     }
