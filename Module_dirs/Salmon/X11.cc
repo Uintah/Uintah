@@ -34,12 +34,14 @@ class X11 : public Renderer {
 public:
     X11();
     virtual ~X11();
-    virtual clString create_window(const clString& name,
+    virtual clString create_window(Roe* roe,
+				   const clString& name,
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon* salmon, Roe* roe);
     virtual void get_pick(Salmon*, Roe*, int x, int y,
 			  GeomObj*&, GeomPick*&);
+    virtual void put_scanline(int y, int width, Color* scanline, int repeat);
     virtual void hide();
 };
 
@@ -48,7 +50,12 @@ static Renderer* make_X11()
     return new X11;
 }
 
-RegisterRenderer X11_renderer("X11", &make_X11);
+static int query_X11()
+{
+    return 1;
+}
+
+RegisterRenderer X11_renderer("X11", &query_X11, &make_X11);
 
 X11::X11()
 : tkwin(0), drawinfo(0), tkcolors(0)
@@ -66,7 +73,8 @@ X11::~X11()
     }
 }
 
-clString X11::create_window(const clString& name,
+clString X11::create_window(Roe*,
+			    const clString& name,
 			    const clString& width,
 			    const clString& height)
 {
@@ -247,4 +255,9 @@ void X11::hide()
 void X11::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
 {
     NOT_FINISHED("X11::get_pick");
+}
+
+void X11::put_scanline(int, int, Color*, int)
+{
+    NOT_FINISHED("X11::put_scanline");
 }

@@ -80,6 +80,7 @@ class Roe : public TCL {
 
     void animate_to_view(const View& v, double time);
 public:
+    Renderer* get_renderer(const clString&);
     clString id;
 
     Roe(Salmon *s, const clString& id);
@@ -117,6 +118,9 @@ public:
     // The Camera
     TCLView view;
     View homeview;
+
+    // Background Color
+    TCLColor bgcolor;
 
     // Shading parameters, etc.
     TCLstring shading;

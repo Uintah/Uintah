@@ -18,7 +18,7 @@
 #include <GL/glx.h>
 #include <strstream.h>
 
-const int STRINGSIZE=100;
+const int STRINGSIZE=200;
 
 class OpenGL : public Renderer {
     Tk_Window tkwin;
@@ -31,12 +31,14 @@ class OpenGL : public Renderer {
 public:
     OpenGL();
     virtual ~OpenGL();
-    virtual clString create_window(const clString& name,
+    virtual clString create_window(Roe* roe,
+				   const clString& name,
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon*, Roe*);
     virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
     virtual void hide();
+    virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
 };
 
 static OpenGL* current_drawer=0;
@@ -51,7 +53,16 @@ static Renderer* make_OpenGL()
     return new OpenGL;
 }
 
-RegisterRenderer OpenGL_renderer("OpenGL", &make_OpenGL);
+static int query_OpenGL()
+{
+    TCLTask::lock();
+    int have_opengl=glXQueryExtension(Tk_Display(Tk_MainWindow(the_interp)),
+				      NULL, NULL);
+    TCLTask::unlock();
+    return have_opengl;
+}
+
+RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
 : tkwin(0)
@@ -64,7 +75,8 @@ OpenGL::~OpenGL()
     delete[] strbuf;
 }
 
-clString OpenGL::create_window(const clString& name,
+clString OpenGL::create_window(Roe*,
+			       const clString& name,
 			       const clString& width,
 			       const clString& height)
 {
@@ -112,7 +124,8 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     TCLTask::lock();
 
     // Clear the screen...
-    glClearColor(0,0,0,1);
+    Color bg(roe->bgcolor.get());
+    glClearColor(bg.r(), bg.g(), bg.b(), 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Setup the view...
@@ -198,7 +211,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 		// displayed...
 		ObjTag* vis;
 		if(roe->visible.lookup(si->name, vis)){
-		    cerr << "Drawing " << si->name << endl;
 		    if(vis->visible->get())
 			si->obj->draw(&drawinfo);
 		} 
@@ -209,6 +221,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
     // Show the pretty picture
     glXSwapBuffers(dpy, win);
+    glXWaitGL();
 
     // Report statistics
     timer.stop();
@@ -328,4 +341,36 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 	pick_obj=(GeomObj*)hit_obj;
 	pick_pick=(GeomPick*)hit_pick;
     }
+}
+
+void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
+{
+    float* pixels=new float[width*3];
+    float* p=pixels;
+    for(int i=0;i<width;i++){
+	*p++=scanline[i].r();
+	*p++=scanline[i].g();
+	*p++=scanline[i].b();
+    }
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslated(-1, -1, 0);
+    glScaled(2./xres, 2./yres, 1.0);
+    glDepthFunc(GL_ALWAYS);
+    glDrawBuffer(GL_FRONT);
+    for(i=0;i<repeat;i++){
+	glRasterPos2i(0, y+i);
+	glDrawPixels(width, 1, GL_RGB, GL_FLOAT, pixels);
+    }
+    glDepthFunc(GL_LEQUAL);
+    glDrawBuffer(GL_BACK);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    delete[] pixels;
 }

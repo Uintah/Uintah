@@ -54,7 +54,8 @@ proc makeRoe {salmon rid} {
     $w.menu.edit.menu add command -label "Renderer..." -underline 0
     $w.menu.edit.menu add command -label "Materials..." -underline 0
     $w.menu.edit.menu add command -label "Light Sources..." -underline 0
-    $w.menu.edit.menu add command -label "Background..." -underline 0
+    $w.menu.edit.menu add command -label "Background..." -underline 0 \
+	    -command "makeBackgroundPopup $rid"
     $w.menu.edit.menu add command -label "Clipping Planes..." -underline 0
     menubutton $w.menu.spawn -text "Spawn" -underline 0 \
 	    -menu $w.menu.spawn.menu
@@ -225,6 +226,16 @@ proc makeViewPopup {rid} {
 	    -digits 3 \
 	    -command $c
     pack $w.f.fov -expand yes -fill x
+}
+
+proc makeBackgroundPopup {rid} {
+    set w .bg$rid
+    toplevel $w
+    wm title $w "Background"
+    wm iconname $w background
+    wm minsize $w 100 100
+    set c "$rid redraw "
+    makeColorPicker $w bgcolor,$rid $c ""
 }
 
 proc updateMode {rid msg} {

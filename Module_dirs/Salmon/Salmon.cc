@@ -57,7 +57,6 @@ Salmon::Salmon(const clString& id)
     pi->objs=new HashTable<int, SceneItem*>;
 
     // Fill it up with the defaults...
-    int serial=0;
     for(int i=0;i<lighting.lights.size();i++){
 	GeomObj* geom=lighting.lights[i]->geom();
 	if(geom)
@@ -276,7 +275,7 @@ void Salmon::tcl_command(TCLArgs& args, void* userdata)
 	roe.add(r);
     } else if(args[1] == "listrenderers"){
 	Array1<clString> list;
-	AVLTreeIter<clString, make_Renderer> iter(Renderer::get_db());
+	AVLTreeIter<clString, RegisterRenderer*> iter(Renderer::get_db());
 	for(iter.first();iter.ok();++iter){
 	    list.add(iter.get_key());
 	}

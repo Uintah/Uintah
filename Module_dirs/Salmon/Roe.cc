@@ -44,8 +44,10 @@ static DebugSwitch autoview_sw("Roe", "autoview");
 
 Roe::Roe(Salmon* s, const clString& id)
 : id(id), manager(s), view("view", id, this), shading("shading", id, this),
+  bgcolor("bgcolor", id, this),
   homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25)
 {
+    bgcolor.set(Color(0,0,0));
     view.set(homeview);
     TCL::add_command(id, this, 0);
     current_renderer=0;
@@ -233,7 +235,7 @@ void Roe::get_bounds(BBox& bbox)
     }
 }
 
-void Roe::rotate(double angle, Vector v, Point c)
+void Roe::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
 {
     NOT_FINISHED("Roe::rotate");
 #ifdef OLDUI
@@ -254,7 +256,7 @@ void Roe::rotate(double angle, Vector v, Point c)
     need_redraw=1;
 }
 
-void Roe::rotate_obj(double angle, const Vector& v, const Point& c)
+void Roe::rotate_obj(double /*angle*/, const Vector& /*v*/, const Point& /*c*/)
 {
     NOT_FINISHED("Roe::rotate_obj");
 #ifdef OLDUI
@@ -270,7 +272,7 @@ void Roe::rotate_obj(double angle, const Vector& v, const Point& c)
     need_redraw=1;
 }
 
-void Roe::translate(Vector v)
+void Roe::translate(Vector /*v*/)
 {
     NOT_FINISHED("Roe::translate");
 #ifdef OLDUI
@@ -289,7 +291,7 @@ void Roe::translate(Vector v)
     need_redraw=1;
 }
 
-void Roe::scale(Vector v, Point c)
+void Roe::scale(Vector /*v*/, Point /*c*/)
 {
     NOT_FINISHED("Roe::scale");
 #ifdef OLDUI
@@ -674,21 +676,15 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	    args.error("setrenderer needs a renderer name, etc");
 	    return;
 	}
-	// See if we already have one like that...
-	Renderer* r;
-	if(!renderers.lookup(args[2], r)){
-	    // Create it...
-	    r=Renderer::create(args[2]);
-	    if(!r){
-		args.error("Unknown renderer!");
-		return;
-	    }
-	    renderers.insert(args[2], r);
+	Renderer* r=get_renderer(args[2]);
+	if(!r){
+	    args.error("Unknown renderer!");
+	    return;
 	}
 	if(current_renderer)
 	    current_renderer->hide();
 	current_renderer=r;
-	args.result(r->create_window(args[3], args[4], args[5]));
+	args.result(r->create_window(this, args[3], args[4], args[5]));
     } else if(args[1] == "redraw"){
 	// We need to dispatch this one to the remote thread
 	// We use an ID string instead of a pointer in case this roe
@@ -841,9 +837,22 @@ RoeMouseMessage::~RoeMouseMessage()
 {
 }
 
-void Roe::animate_to_view(const View& v, double time)
+void Roe::animate_to_view(const View& v, double /*time*/)
 {
     NOT_FINISHED("Roe::animate_to_view");
     view.set(v);
     manager->mailbox.send(new RedrawMessage(id));
+}
+
+Renderer* Roe::get_renderer(const clString& name)
+{
+    // See if we already have one like that...
+    Renderer* r;
+    if(!renderers.lookup(name, r)){
+	// Create it...
+	r=Renderer::create(name);
+	if(r)
+	    renderers.insert(name, r);
+    }
+    return r;
 }
