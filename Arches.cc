@@ -590,20 +590,9 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (d_boundaryCondition->getOutletBC())
-    tsk->requires(Task::NewDW, d_lab->d_maxUxplus_label);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_MAlab->KStabilityULabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->KStabilityVLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->KStabilityWLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
 
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -626,13 +615,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     
-    double maxUxplus = 0.0;
-    if (d_boundaryCondition->getOutletBC()) {
-      max_vartype mxUxp;
-      new_dw->get(mxUxp, d_lab->d_maxUxplus_label);
-      maxUxplus = mxUxp;
-    }
-
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
@@ -640,10 +622,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constCCVariable<double> visc;
     constCCVariable<int> cellType;
 
-    constCCVariable<double> KStabilityU;
-    constCCVariable<double> KStabilityV;
-    constCCVariable<double> KStabilityW;
-    
     PerPatch<CellInformationP> cellInfoP;
 
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -684,17 +662,9 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if (d_MAlab) {
-      new_dw->get(KStabilityU, d_MAlab->KStabilityULabel,
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(KStabilityV, d_MAlab->KStabilityULabel,
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(KStabilityW, d_MAlab->KStabilityULabel,
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
 
     IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
+    IntVector indexHigh = patch->getCellFORTHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -712,25 +682,20 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     if ((zminus)&&((cellType[indexLow - IntVector(0,0,1)]==press_celltypeval)
 		 ||(cellType[indexLow - IntVector(0,0,1)]==out_celltypeval)))
      indexLow = indexLow - IntVector(0,0,1);
-    if ((xplus)&&((cellType[indexHigh - IntVector(0,1,1)]==press_celltypeval)
-		||(cellType[indexHigh - IntVector(0,1,1)]==out_celltypeval)))
+    if (xplus)
      indexHigh = indexHigh + IntVector(1,0,0);
-    if ((yplus)&&((cellType[indexHigh - IntVector(1,0,1)]==press_celltypeval)
-		||(cellType[indexHigh - IntVector(1,0,1)]==out_celltypeval)))
+    if (yplus)
      indexHigh = indexHigh + IntVector(0,1,0);
-    if ((zplus)&&((cellType[indexHigh - IntVector(1,1,0)]==press_celltypeval)
-		||(cellType[indexHigh - IntVector(1,1,0)]==out_celltypeval)))
+    if (zplus)
      indexHigh = indexHigh + IntVector(0,0,1);
-//    IntVector indexLow = patch->getCellLowIndex();
-//    IntVector indexHigh = patch->getCellHighIndex();
-  // set density for the whole domain
+
     double delta_t = d_deltaT; // max value allowed
     double small_num = 1e-30;
     double delta_t2 = delta_t;
 
-    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  double tmp_time;
 
@@ -788,23 +753,10 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 	      small_num;
 
 	  delta_t2=Min(1.0/tmp_time, delta_t2);
-#if 0								  
-	  delta_t2=Min(Abs(cellinfo->sew[colX]/
-			  (uVelocity[currCell]+small_num)),delta_t2);
-	  delta_t2=Min(Abs(cellinfo->sns[colY]/
-			  (vVelocity[currCell]+small_num)), delta_t2);
-	  delta_t2=Min(Abs(cellinfo->stb[colZ]/
-			  (wVelocity[currCell]+small_num)), delta_t2);
-#endif
 	}
       }
     }
 
-    if (d_boundaryCondition->getOutletBC()) {
-      double tmp_time;
-      tmp_time=Abs(maxUxplus)/(cellinfo->sew[indexHigh.x()-1])+small_num;
-      delta_t2=Min(1.0/tmp_time, delta_t2);
-    }
 
     if (d_variableTimeStep) {
       delta_t = delta_t2;
