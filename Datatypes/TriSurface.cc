@@ -11,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 #include <iostream.h>
-#include <Datatypes/TriSurface.h>
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/TrivialAllocator.h>
+#include <Datatypes/TriSurface.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
@@ -569,9 +569,11 @@ void TriSurface::construct_grid()
     construct_grid(nx, ny, nz, bbox.min(), spacing);
 }
 
-void TriSurface::get_surfnodes(Array1<NodeHandle>&)
+void TriSurface::get_surfnodes(Array1<NodeHandle> &n)
 {
-    NOT_FINISHED("TriSurface::get_surfpoints");
+    for (int i=0; i<points.size(); i++) {
+	n.add(new Node(points[i]));
+    }
 }
 
 GeomObj* TriSurface::get_obj(const ColormapHandle&)
