@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
@@ -25,6 +26,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
    refineFlag_label = VarLabel::create("refineFlag",
 				       CCVariable<int>::getTypeDescription());
+   refinePatchFlag_label = VarLabel::create("refinePatchFlag",
+				       PerPatch<int>::getTypeDescription());
    d_ref_press = 0.0;
    d_elapsed_time = 0.0;
 
@@ -127,6 +130,7 @@ SimulationState::~SimulationState()
 {
   VarLabel::destroy(delt_label);
   VarLabel::destroy(refineFlag_label);
+  VarLabel::destroy(refinePatchFlag_label);
   for (int i = 0; i < (int)matls.size(); i++)
     delete matls[i];
 
