@@ -24,7 +24,7 @@
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/SField.h>
-#include <SCICore/Datatypes/FlatSAttrib.h>
+#include <SCICore/Datatypes/FlatAttrib.h>
 
 namespace SCICore{
 namespace Datatypes{
@@ -34,7 +34,7 @@ using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
 
-template <class T, class G, class A=FlatSAttrib<T> > class SCICORESHARE GenSField:
+template <class T, class G, class A=FlatAttrib<T> > class SCICORESHARE GenSField:
 public SField,
 public SLInterpolate{
 public:
