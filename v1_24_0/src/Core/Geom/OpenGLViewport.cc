@@ -36,7 +36,7 @@
  */
 
 #include <Core/Geom/OpenGLViewport.h>
-#include <Core/Geom/OpenGLContext.h>
+#include <Core/Geom/TkOpenGLContext.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
@@ -63,21 +63,7 @@
 using namespace SCIRun;
 using namespace std;
 
-OpenGLViewport::OpenGLViewport(GuiInterface *gui, const string &tk_id,
-			       float x, float y, float w, float h)
-  : context_(scinew OpenGLContext(gui, tk_id)), // defaults to 0
-    x_(x), // defaults to 0
-    y_(y), // defaults to 0
-    width_(w), // defaults to -1
-    height_(h), // defaults to -1
-    current_level_(0)
-{
-  check_bounds();
-}
-
-  
-  
-OpenGLViewport::OpenGLViewport(OpenGLContext *ctx, 
+OpenGLViewport::OpenGLViewport(TkOpenGLContext *ctx, 
 			       float x, float y, float w, float h)
   : context_(ctx), // defaults to 0
     x_(x), // defaults to 0
@@ -114,30 +100,17 @@ OpenGLViewport::resize(float x, float y, float w, float h) {
   check_bounds();
 }
 
-
-#if 0
-void
-OpenGLViewport::resize(int x, int y, int w, int h) {
-  x_ = x;
-  y_ = y;
-  width_ = w;
-  height_ = h;
-  check_bounds();
-}
-#endif
-
-
 int
 OpenGLViewport::max_width() {
   if (context_)
-    return context_->xres();
+    return context_->width();
   else return 0;
 }
 
 int
 OpenGLViewport::max_height() {
   if (context_)
-    return context_->yres();
+    return context_->height();
   else return 0;
 }
 
@@ -192,12 +165,8 @@ OpenGLViewport::clear(float r, float g, float b, float a)
 bool
 OpenGLViewport::make_current()
 {
-  if (!context_ || !context_->gui()) return false;
-
   if (!current_level_++) {
-    context_->gui()->lock();
-    if (!context_->make_current(false)) {
-      context_->gui()->unlock();
+    if (!context_->make_current()) {
       current_level_--;
       return false;
     }
@@ -213,8 +182,7 @@ OpenGLViewport::make_current()
 void
 OpenGLViewport::swap()
 {
-  context_->swap(false);
-  //  context_->swap(this);
+  context_->swap();
 }
 
 
@@ -223,7 +191,6 @@ OpenGLViewport::release()
 {
   if (!--current_level_) {
     context_->release();
-    context_->gui()->unlock();
   }
 }
 

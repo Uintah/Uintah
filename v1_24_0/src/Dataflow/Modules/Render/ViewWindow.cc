@@ -72,6 +72,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
 #include <iostream>
@@ -1513,7 +1514,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       (MessageTypes::ViewWindowDumpObjects,id_,args[2],args[3],args[4],args[5]);
     viewer_->mailbox.send(msg);
   } else if(args[1] == "listvisuals") {
-    renderer_->listvisuals(args);
+    args.result(TkOpenGLContext::listvisuals());
   } else if(args[1] == "switchvisual") {
     if(args.count() != 6){
       args.error(args[0]+" needs a window id, visual index, width,and height");
@@ -1534,10 +1535,17 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       args.error("Bad height");
       return;
     }
-    renderer_->setvisual(args[2], idx, width, height);
+    //    renderer_->setvisual(args[2], idx, width, height);
   } else if(args[1] == "setgl") {
-    //    if (renderer_->context_) delete renderer_->context_;
-    //renderer_->context_ = scinew OpenGLContext(gui_, args[2]);
+    int visualid = 0;
+    if ((args.count() == 4) && !string_to_int(args[3], visualid))
+      args.error("setgl bad visual index: "+args[2]);
+    TCLTask::lock();
+    if (renderer_->tk_gl_context_) 
+      delete renderer_->tk_gl_context_;
+    renderer_->tk_gl_context_ = scinew TkOpenGLContext(args[2], visualid);
+    renderer_->myname_ = args[2];
+    TCLTask::unlock();
   } else if(args[1] == "centerGenAxes") { 
     // have to do this here, as well as in redraw() so the axes can be
     // turned on/off even while spinning with inertia

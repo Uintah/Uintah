@@ -91,6 +91,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/SpotLight.cc		    		\
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
+	$(SRCDIR)/TkOpenGLContext.cc	    		\
 	$(SRCDIR)/View.cc		    		\
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc

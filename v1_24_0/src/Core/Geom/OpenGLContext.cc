@@ -63,66 +63,26 @@
 using namespace SCIRun;
 using namespace std;
   
-extern "C" Tcl_Interp* the_interp;
-extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 OpenGLContext::OpenGLContext(GuiInterface* gui, const string &id)
-  : tk_clientdata_(0),
-    gui_(gui),
-    id_(id)
+  : tk_gl_context_(scinew TkOpenGLContext(id, 53)),
+    gui_(gui)
 {
+  ASSERT(tk_gl_context_);
 }
 
 OpenGLContext::~OpenGLContext()
 {
+  delete tk_gl_context_;
 }
 
-bool
-OpenGLContext::get_client_data() {
-  Tcl_CmdInfo info;
-  if(!Tcl_GetCommandInfo(the_interp, const_cast<char *>(id_.c_str()), &info))
-    return false;
-
-  tk_clientdata_=(OpenGLClientData*)info.clientData;
-  return tk_clientdata_;
-}
-
-  
 bool
 OpenGLContext::make_current(bool lock)
 {
   if (lock) gui_->lock();
 
-  if (!tk_clientdata_ && !get_client_data())
-    return false;
-
-  if (!tk_clientdata_->cx || !tk_clientdata_->glx_win)
-    OpenGLGetContext(the_interp, const_cast<char *>(id_.c_str()));
-  
-  if (!tk_clientdata_->cx) {
-    if (lock) gui_->unlock();
-    throw InternalError("OpenGLContext unable to get GL context id: "+id_);
-  }
-
-  if (!tk_clientdata_->glx_win) {
-    if (lock) gui_->unlock();
-    throw InternalError("OpenGLContext unable to get GLX Window id: "+id_);
-  }
-
-#if 0
-  if (!glXMakeContextCurrent(tk_clientdata_->display,
-			     tk_clientdata_->glx_win,
-			     tk_clientdata_->glx_win,
-			     tk_clientdata_->cx)) 
-#else
-  if (!glXMakeCurrent(tk_clientdata_->display,
-		      tk_clientdata_->x11_win,
-		      tk_clientdata_->cx)) 
-#endif
-    
+  if (!tk_gl_context_->make_current()) 
   {
-
-    std::cerr << id_ << " failed make current.\n";
     if (lock) gui_->unlock();
     return false;
   }
@@ -134,40 +94,23 @@ OpenGLContext::make_current(bool lock)
 void
 OpenGLContext::swap(bool do_release)
 {
-  if (!tk_clientdata_ && !get_client_data())
-    return;
-
-  ASSERT(tk_clientdata_->display);
-  ASSERT(tk_clientdata_->glx_win);
-  glXSwapBuffers(tk_clientdata_->display, tk_clientdata_->glx_win);
-  if (do_release) release();
+  tk_gl_context_->swap();
+  if (do_release) tk_gl_context_->release();
 }
 
 
 void
 OpenGLContext::release()
 {
-  if (!tk_clientdata_ && !get_client_data())
-    return;
-
-  ASSERT(tk_clientdata_->display);
-  glXMakeCurrent(tk_clientdata_->display, None, NULL);
+  tk_gl_context_->release();
 }
 
 int
 OpenGLContext::xres() {
-  if (!tk_clientdata_ && !get_client_data() || !tk_clientdata_->x11_win)
-    return 0;
-
-  ASSERT(tk_clientdata_);
-  return (Tk_Width(tk_clientdata_->tkwin));
+  return tk_gl_context_->width();
 }
 
 int
 OpenGLContext::yres() {
-  if (!tk_clientdata_ && !get_client_data() || !tk_clientdata_->x11_win)
-    return 0;
-
-  ASSERT(tk_clientdata_);
-  return (Tk_Height(tk_clientdata_->tkwin));
+  return tk_gl_context_->height();
 }
