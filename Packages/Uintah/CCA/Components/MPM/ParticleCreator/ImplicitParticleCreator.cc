@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <algorithm>
+#include <Packages/Uintah/Core/Grid/FileGeometryPiece.h>
 
 using namespace Uintah;
 using std::vector;
@@ -53,20 +54,6 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
   new_dw->allocateAndPut(pvolumeold,    lb->pVolumeOldLabel,    subset);
   new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
   
-//  Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
-
-#if 0
-  for(ParticleSubset::iterator iter =  subset->begin();
-                               iter != subset->end(); iter++){
-    particleIndex idx = *iter;
-
-    pacceleration[idx] = Vector(0.,0.,0.);
-//    pvolumeold[idx]    = dxpp.x()*dxpp.y()*dxpp.z();
-    pvolumeold[idx]    = 1.0;
-  }
-#endif
-
-#if 1  // Is there a better way to do this?
   particleIndex start = 0;
 
   vector<GeometryObject*>::const_iterator obj;
@@ -81,30 +68,67 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
       continue;
     }
 
-    IntVector ppc = (*obj)->getNumParticlesPerCell();
-    Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
-    Vector dcorner = dxpp*0.5;
-    
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      Point lower = patch->nodePosition(*iter) + dcorner;
-      for(int ix=0;ix < ppc.x(); ix++){
-	for(int iy=0;iy < ppc.y(); iy++){
-	  for(int iz=0;iz < ppc.z(); iz++){
-	    IntVector idx(ix, iy, iz);
-	    Point p = lower + dxpp*idx;
-	    IntVector cell_idx = iter.index();
-	    if(piece->inside(p)){
-	      pacceleration[start+count]=Vector(0.,0.,0.);
-	      pvolumeold[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
-	      count++;
-	    }  // if inside
-	  }  // loop in z
-	}  // loop in y
-      }  // loop in x
-    } // for
+    // Special case exception for FileGeometryPieces
+    FileGeometryPiece* fgp = dynamic_cast<FileGeometryPiece*>(piece);
+    if (fgp) {
+      Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
+      IntVector ppc = (*obj)->getNumParticlesPerCell();
+      Vector size(1./((double) ppc.x()),
+                  1./((double) ppc.y()),
+                  1./((double) ppc.z()));
+      vector<Point>::const_iterator itr;
+      vector<Point>* points = fgp->getPoints();
+      vector<double>* volumes = fgp->getVolume();
+      int i = 0;
+      for (itr = points->begin(); itr != points->end(); ++itr) {
+        if (b2.contains(*itr)) {
+          pacceleration[start+count]=Vector(0.,0.,0.);
+          if (volumes->empty())
+            pvolumeold[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
+          else
+          pvolume[start+count]     = (*volumes)[i];
+          count++;
+        }
+        i++;
+      }
+    } else {
+      IntVector ppc = (*obj)->getNumParticlesPerCell();
+      Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
+      Vector dcorner = dxpp*0.5;
+      // Size as a fraction of the cell size
+      Vector size(1./((double) ppc.x()),
+                  1./((double) ppc.y()),
+                  1./((double) ppc.z()));
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        Point lower = patch->nodePosition(*iter) + dcorner;
+        for(int ix=0;ix < ppc.x(); ix++){
+          for(int iy=0;iy < ppc.y(); iy++){
+            for(int iz=0;iz < ppc.z(); iz++){
+              IntVector idx(ix, iy, iz);
+              Point p = lower + dxpp*idx;
+              IntVector cell_idx = iter.index();
+              // If the assertion fails then we may just need to change
+              // the format of particle ids such that the cell indices
+              // have more bits.
+              ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
+                     && cell_idx.z() <= 0xffff);
+              long64 cellID = ((long64)cell_idx.x() << 16) |
+                ((long64)cell_idx.y() << 32) |
+                ((long64)cell_idx.z() << 48);
+              if(piece->inside(p)){
+                pacceleration[start+count]=Vector(0.,0.,0.);
+                pvolumeold[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
+                count++;
+
+              }  // if inside
+            }  // loop in z
+          }  // loop in y
+        }  // loop in x
+      } // for
+    } // end of else
     start += count;
   }
-#endif
 
   return subset;
 }
