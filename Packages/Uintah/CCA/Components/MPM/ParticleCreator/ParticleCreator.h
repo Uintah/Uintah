@@ -76,16 +76,6 @@ namespace Uintah {
 				    CCVariable<short int>& cellNAPI);
     
     //////////////////////////////////////////////////////////////////////////
-    /*! \brief Initialize non-geometric particle variables */
-    //////////////////////////////////////////////////////////////////////////
-    virtual void initNonGeomPartVar(particleIndex pidx,
-                                    const Patch* patch,
-                                    vector<GeometryObject*>::const_iterator obj,
-			            MPMMaterial* matl,
-                                    IntVector cell_idx,
-			            CCVariable<short int>& cellNAPI);
-
-    //////////////////////////////////////////////////////////////////////////
     /*! Get the LoadCurveID applicable for this material point */
     //////////////////////////////////////////////////////////////////////////
     int getLoadCurveID(const Point& pp, const Vector& dxpp);

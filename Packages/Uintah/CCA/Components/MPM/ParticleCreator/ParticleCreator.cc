@@ -49,7 +49,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 				 MPMLabel* lb,
 				 vector<GeometryObject*>& d_geom_objs)
 {
-  
   // Print the physical boundary conditions
   printPhysicalBCs();
 
@@ -72,59 +71,43 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();    
 
-    // If the object is a SmoothGeomPiece then use the particle
-    // creators in that class to do the creation, otherwise do the
-    // standard thing.  Another creation+count is done for SmoothGeomPiece
-    // unlike other geom pieces.
+    // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
-    if (sgp) {
-      particleIndex oldStart = start;
-      int numP = sgp->createParticles(patch, position, pvolume,
-                                      psize, start);
+    vector<double>* volumes = 0;
+    if (sgp) volumes = sgp->getVolume();
+
+    int i = 0;
+    vector<Point>::const_iterator itr;
+    geompoints::key_type key(patch,*obj);
+    for (itr=d_object_points[key].begin();itr!=d_object_points[key].end(); 
+	 ++itr) {
+      
       IntVector cell_idx;
-      for (int ii = 0; ii < numP ; ++ii) {
-        particleIndex pidx = oldStart + ii;
-        patch->findCell(position[pidx], cell_idx);
-	initNonGeomPartVar(pidx, patch, obj, matl, cell_idx, cellNAPID);
-      }
-    } else {
-      // Special case exception for FileGeometryPieces
-      FileGeometryPiece* fgp = dynamic_cast<FileGeometryPiece*>(piece);
-      vector<double>* volumes = 0;
-      if (fgp)
-	volumes = fgp->getVolume();
-    
-      int i = 0;
-      vector<Point>::const_iterator itr;
-      geompoints::key_type key(patch,*obj);
-      for (itr=d_object_points[key].begin();itr!=d_object_points[key].end(); 
-	   ++itr) {
+      if (!patch->findCell(*itr,cell_idx)) continue;
       
-	IntVector cell_idx;
-	patch->findCell(*itr,cell_idx);
+      particleIndex pidx = start+count;      
+      //cout << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
+ 
+      initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,
+			 cellNAPID);
       
-	particleIndex pidx = start+count;      
-	initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,
-			   cellNAPID);
+      if (volumes)
+	pvolume[pidx] = (*volumes)[i];
       
-	if (volumes)
-	  pvolume[pidx] = (*volumes)[i];
-      
-	// If the particle is on the surface and if there is
-	// a physical BC attached to it then mark with the 
-	// physical BC pointer
-	if (d_useLoadCurves) {
-	  if (checkForSurface(piece,*itr,dxpp)) {
-	    pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
-	  } else {
-	    pLoadCurveID[pidx] = 0;
-	  }
+      // If the particle is on the surface and if there is
+      // a physical BC attached to it then mark with the 
+      // physical BC pointer
+      if (d_useLoadCurves) {
+	if (checkForSurface(piece,*itr,dxpp)) {
+	  pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
+	} else {
+	  pLoadCurveID[pidx] = 0;
 	}
-	count++;
-	i++;
       }
-      start += count;
+      count++;
+      i++;
     }
+    start += count;
   }
   return subset;
 }
@@ -383,37 +366,22 @@ ParticleCreator::initializeParticle(const Patch* patch,
   pvolume[i] = dxpp.x()*dxpp.y()*dxpp.z();
   psize[i] = size;
 
-  initNonGeomPartVar(i, patch, obj, matl, cell_idx, cellNAPID);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Initialize extra non-geometric particle variables 
-//////////////////////////////////////////////////////////////////////////////
-void 
-ParticleCreator::initNonGeomPartVar(particleIndex pidx, 
-                                    const Patch* patch,
-                                    vector<GeometryObject*>::const_iterator obj,
-				    MPMMaterial* matl,
-                                    IntVector cell_idx,
-				    CCVariable<short int>& cellNAPID)
-{
-  pvelocity[pidx] = (*obj)->getInitialVelocity();
-  ptemperature[pidx] = (*obj)->getInitialTemperature();
-  psp_vol[pidx] = 1./matl->getInitialDensity();
-  pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
-  pdisp[pidx] = Vector(0.,0.,0.);
+  pvelocity[i] = (*obj)->getInitialVelocity();
+  ptemperature[i] = (*obj)->getInitialTemperature();
+  psp_vol[i] = 1./matl->getInitialDensity();
+  pmass[i] = matl->getInitialDensity()*pvolume[i];
+  pdisp[i] = Vector(0.,0.,0.);
 
   Vector pExtForce(0,0,0);
-  Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
-  ParticleCreator::applyForceBC(dxpp, position[pidx], pmass[pidx], pExtForce);
-  pexternalforce[pidx] = pExtForce;
+  ParticleCreator::applyForceBC(dxpp, p, pmass[i], pExtForce);
+  pexternalforce[i] = pExtForce;
 
   ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
 	 && cell_idx.z() <= 0xffff);
   long64 cellID = ((long64)cell_idx.x() << 16) | 
     ((long64)cell_idx.y() << 32) | ((long64)cell_idx.z() << 48);
   short int& myCellNAPID = cellNAPID[cell_idx];
-  pparticleID[pidx] = (cellID | (long64) myCellNAPID);
+  pparticleID[i] = (cellID | (long64) myCellNAPID);
   ASSERT(myCellNAPID < 0x7fff);
   myCellNAPID++;
 }
@@ -443,18 +411,24 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   Box b = b1.intersect(b2);
   if(b.degenerate()) return 0;
   
-  // If the object is a SmoothGeomPiece then use the particle creators in that 
-  // class to do the counting, otherwise do the standard thing
-  // (Note that d_object_points is not used at all for SmoothGeomPieces)
+  // If the object is a SmoothGeomPiece (e.g. FileGeometryPiece or
+  // SmoothCylGeomPiece) then use the particle creators in that 
+  // class to do the counting
   SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
-  if (sgp) return(sgp->returnParticleCount(patch));
-
-  // Special case exception for FileGeometryPiece
-  FileGeometryPiece* fgp = dynamic_cast<FileGeometryPiece*>(piece);
-  if (fgp)
-    d_object_points[key] = *(fgp->getPoints());
-  else
+  if (sgp) {
+    int numPts = sgp->returnPointCount();
+    vector<Point>* points = sgp->getPoints();
+    Point p;
+    IntVector cell_idx;
+    for (int ii = 0; ii < numPts; ++ii) {
+      p = points->at(ii);
+      if (patch->findCell(p,cell_idx)) {
+        d_object_points[key].push_back(p);
+      }
+    }
+  } else {
     createPoints(patch,obj);
+  }
   
   return d_object_points[key].size();
 }
