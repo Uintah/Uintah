@@ -181,9 +181,9 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
 	// Draw it all...
 	drawinfo.push_matl(salmon->default_matl.get_rep());
-	HashTableIter<int,HashTable<int, SceneItem*>*> iter(&salmon->portHash);
+	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, SceneItem*>* serHash=iter.get_data();
+	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
 	    HashTableIter<int, SceneItem*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
 		SceneItem *si=serIter.get_data();
@@ -276,9 +276,9 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 
 	// Draw it all...
 	drawinfo.push_matl(salmon->default_matl.get_rep());
-	HashTableIter<int,HashTable<int, SceneItem*>*> iter(&salmon->portHash);
+	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, SceneItem*>* serHash=iter.get_data();
+	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
 	    HashTableIter<int, SceneItem*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
 		SceneItem *si=serIter.get_data();
