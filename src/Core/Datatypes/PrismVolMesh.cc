@@ -164,8 +164,7 @@ PrismVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
 
   for( int i=0; i<PRISM_NNODES; i++ ) {
 
-    Point p0;
-    get_point(p0,ra[i]);
+    const Point &p0 = point(ra[i]);
 
     double w;
     if (seed) {
@@ -193,8 +192,7 @@ PrismVolMesh::get_bounding_box() const
   begin(ni);
   end(nie);
   while (ni != nie) {
-    Point p;
-    get_point(p, *ni);
+    const Point &p = point(*ni);
     result.extend(p);
     ++ni;
   }
@@ -898,8 +896,7 @@ PrismVolMesh::get_center(Point &p, Node::array_type& arr) const
   Vector v(0,0,0);
 
   for( int i=0; i<arr.size(); i++ ) {
-    Point p0;
-    get_point(p0, arr[i]);
+    const Point &p0 = point(arr[i]);
     v += p0.asVector();
   }
 
@@ -1110,6 +1107,11 @@ prism_area2(const Point &p1, const Point &p2, const Point &p3)
   return Cross(p1-p2,p3-p1).length();
 }
 
+/* This code is based on the article by
+   Mark Meyer, Haeyoung Lee, Alan Barr, and Mathieu Desbrun.
+   Generalized barycentric coordinates on irregular polygons.
+   Journal of graphics tools, 7(1):13-22, 2002
+*/
 void
 PrismVolMesh::get_weights(const Point &pt,
 			  Node::array_type &nodes, vector<double> &w)
@@ -1396,8 +1398,6 @@ PrismVolMesh::add_prism(Node::index_type a, Node::index_type b,
   cells_.push_back(d);
   cells_.push_back(e);
   cells_.push_back(f);
-
-  orient( prism );
 
   if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(prism);
   if (synchronized_ & EDGES_E) create_cell_edges(prism);
