@@ -454,7 +454,7 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   } else if (!seeds.get_rep()) {
     warning("Empty seeds handle.");
     valid_data=0;
-  } else if (seeds->get_type_name(-1) != "PointCloudField<double>") {
+  } else if (seeds->get_type_name(-1) != "PointCloudField<double> ") {
     warning("Seeds typename should have been PointCloudField<double>.");
     valid_data=0;
   } else {

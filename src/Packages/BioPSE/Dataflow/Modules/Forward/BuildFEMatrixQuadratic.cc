@@ -120,17 +120,17 @@ BuildFEMatrixQuadratic::execute()
 
   if(!mesh.get_rep())
   {
-    warning("No Data in port 1 field.");
+    error("No Data in port 1 field.");
     return;
   }
-  else if (mesh->get_type_name(-1) != "QuadraticTetVolField<int>")
+  else if (mesh->get_type_name(-1) != "QuadraticTetVolField<int> ")
   {
-    error("input must be a TetVol type, not a "+mesh->get_type_name(-1));
+    error("Input must be a TetVol type, not a '"+mesh->get_type_name(-1)+"'.");
     return;
   }
 
   time_t current_time = time(NULL);
-  printf("Beginning simulation: %s\n",ctime(&current_time));
+  remark(string("Beginning simulation: ") + ctime(&current_time) + ".");
 
   if (mesh->generation == gen && gbl_matrixH.get_rep() && rhsH.get_rep() &&
       lastBCFlag == BCFlag.get())
@@ -146,7 +146,7 @@ BuildFEMatrixQuadratic::execute()
   qtv = dynamic_cast<QuadraticTetVolField<int>*>(mesh.get_rep());
   if (!qtv)
   {
-    error("failed dynamic cast to QuadraticTetVolField<int>*");
+    error("Failed dynamic cast to QuadraticTetVolField<int>*");
     return;
   }
   QuadraticTetVolMeshHandle mesh_handle;
@@ -216,7 +216,7 @@ BuildFEMatrixQuadratic::execute()
 
 
   current_time = time(NULL);
-  printf("End simulation: %s\n",ctime(&current_time));
+  remark(string("End simulation: ") + ctime(&current_time) + ".");
 
   outmatrix = (MatrixOPort *)get_oport("FEMMatrix");
   rhsoport = (MatrixOPort *)get_oport("RHS");
