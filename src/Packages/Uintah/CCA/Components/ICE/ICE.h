@@ -720,6 +720,8 @@ namespace Uintah {
       bool d_usingLODI;
       Lodi_variable_basket* d_Lodi_variable_basket;
       
+      bool d_usingNG_hack;
+      
       Advector* d_advector;
       std::string d_advect_type;
       Turbulence* d_turbulence;
