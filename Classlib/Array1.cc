@@ -124,7 +124,7 @@ void Array1<T>::remove_all()
 template<class T>
 void Pio(Piostream& stream, Array1<T>& array)
 {
-    int version=stream.begin_class("Array1", ARRAY1_VERSION);
+    /* int version= */stream.begin_class("Array1", ARRAY1_VERSION);
     int size=array._size;
     Pio(stream, size);
     if(stream.reading()){
