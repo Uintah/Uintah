@@ -71,7 +71,8 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
       else if (go_type == "null")
 	objs.push_back(new NullGeometryPiece(child));
 
-      else if (go_type == "res" || go_type == "velocity" || go_type == "temperature") {
+      else if (go_type == "res" || go_type == "velocity" || 
+               go_type == "temperature") {
 	 // Ignore...
       
       } else {
