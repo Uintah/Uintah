@@ -1,5 +1,5 @@
 
-#include "DefaultHypoElasticEOS.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DefaultHypoElasticEOS.h>
 #include <math.h>
 
 using std::cerr;

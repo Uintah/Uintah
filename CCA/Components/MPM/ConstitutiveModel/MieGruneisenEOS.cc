@@ -1,5 +1,5 @@
 
-#include "MieGruneisenEOS.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MieGruneisenEOS.h>
 #include <math.h>
 
 using std::cerr;
