@@ -2,8 +2,8 @@
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
-#include <Packages/Uintah/Core/Variables/Stencil7.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Packages/Uintah/CCA/Components/ICE/customInitialize.h>
 #include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
@@ -18,6 +18,7 @@
 #include <Packages/Uintah/Core/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
@@ -753,6 +754,7 @@ namespace Uintah {
       //__________________________________
       // Misc
       customBC_var_basket* d_customBC_var_basket;
+      customInitialize_basket* d_customInitialize_basket;
       
       Advector* d_advector;
       bool d_useCompatibleFluxes;
