@@ -18,9 +18,8 @@ INCLUDES += $(MDSPLUS_INCLUDE) $(HDF5_INCLUDE) -DHDF5_PATH='"$(HDF5_LIB_DIR)/../
 
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
-	$(SRCDIR)/PPPLHDF5FieldReader.cc\
+	$(SRCDIR)/FusionFieldSetReader.cc\
 	$(SRCDIR)/MDSPlusFieldReader.cc\
-	$(SRCDIR)/MDSPlusDataReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -31,7 +30,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 	Packages/Fusion/Core/ThirdParty \
 	Packages/Teem/Core/Datatypes
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY)  $(HDF5_LIBRARY) $(M_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

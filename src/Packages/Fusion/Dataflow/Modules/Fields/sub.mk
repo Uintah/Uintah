@@ -14,7 +14,10 @@ SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
 	$(SRCDIR)/FusionSlicePlot.cc\
+	$(SRCDIR)/TransCoorSys.cc\
 	$(SRCDIR)/RadialGridDifferent.cc\
+	$(SRCDIR)/PPPLNrrdConverter.cc\
+#	$(SRCDIR)/ReactionDiffusion.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
