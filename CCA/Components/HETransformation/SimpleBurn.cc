@@ -34,7 +34,7 @@ void SimpleBurn::computeBurn(double gasTemperature,
 			       double &burnedMass,
 			       double &releasedHeat)
 {
-  if ((gasTemperature > thresholdTemp) || (gasPressure > thresholdPressure)) 
+  if ((gasTemperature > thresholdTemp) && (gasPressure > thresholdPressure)) 
     {
       burnedMass = BurnCoeff * pow(gasPressure,0.778);
       releasedHeat = burnedMass * Enthalpy;
