@@ -96,6 +96,9 @@ WARNING
       TaskGraph graph;
       // id of datawarehouse
       int d_generation;
+
+      const VarLabel* delt;
+      bool firstTime;
    };
 } // End namespace Uintah
    
