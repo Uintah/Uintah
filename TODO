@@ -1,76 +1,110 @@
-DONE Rework Geometry
-Fix Salmon
-   DONE Fix interaction
-   Picking
-   Children windows...
-   lighting
-   Bounding box interactions
-   Axis objects
-   Object selection
-   Camera objects
-   Light source objects
-   Light source editor
-   Fix camera editor popup - use thumbwheels???
-   Orthographic projections
-   Material Editor
-   Fix bargraph on networkeditor icon
-   Before reporting that a renderer is available, make sure that it is supported (OpenGL) 
-   Renderer properties popup
-   Hookup dials - more control
-   Mode widget
-   Background editor
-   Clipping plane editor
-   Raytracer
-   Postscript renderer
-   X11 renderer
-     Verify transformations
-     TrueColor support
-     Fix mouse motions - backwards
-     Move bounding boxes only
-     Handle overlapping polygons
-TCL/TK:
-   Better data structure handling
-   Scheme?
-   Thumbwheel 2D widget
-   DONE File browser box
-   Fix portlights
-   Fix backward connections in NetworkEditor
-   Fix one to many connections
-   DONE Implement Quit button
-   Color Editor
-   DONE Import SCI_WORK so that we can run from other directories
-   Right titles on windows
-Ports:
-   RS/6000 Port
-   DEC port
-   Freedom board port
-Bugs:
-   DONE sluggish on Reality engine.... (3)
-   Finish fixing MeshView
-   Annoying flashing on startup.
-   Lock I/O
-Optimizations:
-   Better locks for Irix
-   DONE Use gluSphere/cylinder/etc
-   Better view interface to TCL
-   Don't always disable all light sources
-   Optimizations for Unstructured Grids
-   Make SurfToGeom use TriStrip's
-Progress:
+Finish and FIX:
+   Icons
+   Window Titles
+   Delete modules
+   Disconnect
+   Salmon:
+      New node types:
+         Material
+         Pick
+         Handle
+         Rendermode
+      Fix picking motion
+      Children windows...
+      More lighting
+      Bounding box interactions
+      Axis objects
+      Camera objects
+      Light source objects
+      Light source editor
+      Fix camera editor popup - use thumbwheels???
+      Orthographic projections
+      Material Editor
+      Fix bargraph on networkeditor icon
+      Before reporting that a renderer is available, make sure \
+               that it is supported (OpenGL) 
+      Renderer properties popup
+      Hookup dials - more control
+      Mode widget
+      Background editor
+      Clipping plane editor
+      Raytracer
+      Postscript renderer
+      X11 renderer
+         Verify transformations
+         TrueColor support
+         Fix mouse motions - backwards
+         Move bounding boxes only
+         Handle overlapping polygons
+
+Features/improvements:
+   Make progress, time, etc run off of TCL variables
+   TCL variables for slider min/max, etc
+   Ranger slider
+   Better Memory allocators
+      strict
+      fast
    Remote modules
    Save/Load Networks
    Scheduler visualization?
    Manual scheduling
+   Better locks for Irix
+   Make SurfToGeom use TriStrip's
+   Better threads for IRIX
+   Optimize/finish threads on Linux
+   Dynamically loadable modules
+   Stand alone modules
+   Parallelism
+
+Applications:
+   General PDE solver w/ multiple variables
+   Defibrillator
+   Dad's physics stuff
+   Heat flow
+   CFD
+   Alpha1 collaboration
+   Brown stuff
+
+Fun:
+   Image painting
+   Sound
+
+Ports:
+   RS/6000 Port
+   Freedom board port
+   Sun Port
+
+Datatypes:
+   Image
+   2D mesh
+   Better meshes - compound and regular meshes
+   Boundary condition types/region types/node types
+
+Software Engineering Issues:
+   Configuration interface
+   System libraries
+   Compile @checkin
+   show diffs on checkin
+
+TCL/TK:
+   Better data structure handling
+   Thumbwheel 2D widget
+   Fix backward connections in NetworkEditor
+   Color Editor (done?)
+   Right titles on windows
+
+Bugs:
+   Annoying flashing on startup.
+   Lock I/O
+
 Modules that need work:
    ApplyBC - implement
    BuildFEMatrix - implement
    CrossFader - UI
-   GenSurface - implement
+   GenSurface - UI/finish
    GenerateMesh - implement
    Hedgehog - implement
    IsoSurface - UI
-   MeshView - test/optimize/UI
-   SolveMatrix - implement
    SoundFFT - implemennt
    SoundFilter - finish
    SoundInput - UI/finish

@@ -44,3 +44,7 @@ typedef Array1<double> hack14;
 
 #include <Datatypes/Colormap.h>
 typedef ColormapHandle hack15;
+
+#include <Datatypes/ColumnMatrix.h>
+typedef ColumnMatrixHandle hack16;
+
