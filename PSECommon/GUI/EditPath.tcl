@@ -10,13 +10,9 @@
  #  Copyright (C) 1999, 2000  SCI Group
  #
  ##
-
-#catch {rename EditPath ""}
-
 itcl_class PSECommon_Salmon_EditPath {
     inherit Module
-    protected df ef
-
+   
     constructor {config} {
         set name EditPath
         set_defaults
@@ -27,16 +23,16 @@ itcl_class PSECommon_Salmon_EditPath {
 	global $this-tcl_curr_view
 	global $this-tcl_num_views
 	global $this-tcl_intrp_type
-	global $this-tcl_speed_mode
 	global $this-tcl_acc_mode
 	global $this-tcl_is_looped
 	global $this-tcl_msg_box
 	global $this-tcl_curr_roe
-	global $this-tcl_acc_pat
 	global $this-tcl_step_size
 	global $this-tcl_speed_val
 	global $this-tcl_acc_val
 	global $this-tcl_msg_box
+	global $this-tcl_stop
+	global $this-tcl_widget_show
     }
     method ui {} {
         set w .ui[modname]
@@ -44,95 +40,154 @@ itcl_class PSECommon_Salmon_EditPath {
             raise $w
             return;
         }
-	
-	set $this-UI_Init 1
 
         toplevel $w
 	wm title $w "Edit Camera Path"
         wm minsize $w 300 80
 
-        set  df  [frame $w.drv]
-	set  ef [frame $w.editor]
+        set  df  [frame $w.drv -relief groove]
+	set  ef  [frame $w.editor -relief groove]
 	pack $df $ef -side top -fill both -padx 5 -pady 5
 	
+	#**************************************************************
+	# editor frame
+	#
+
 	frame $ef.fsb
 	frame $ef.btn
-	frame $ef.info
 	frame $ef.sw
-	pack  $ef.btn $ef.fsb $ef.info $ef.sw -side top -fill both -pady 3
+	frame $ef.mkc
+	pack  $ef.btn $ef.fsb $ef.mkc $ef.sw -side top -fill both -pady 3
 	
 	scale $ef.fsb.fr -variable $this-tcl_curr_view -from 0 -to [set $this-tcl_num_views] \
-		-orient horizontal -width 15 -length 150 -command "$this-c get_to_view" -label "Current View:"
-	scale $ef.fsb.fsm -variable $this-tcl_step_size -digits 6 -from 0.000001 -to 0.01 \
-		-resolution 0.00001 -orient horizontal -width 7 -length 150 -command "$this-c set_step_size" -label "Smoothness:"
+		-orient horizontal -width 15 -command "$this-c get_to_view" -label "Current View:"
+	scale $ef.fsb.fsm -variable $this-tcl_step_size -digits 6 -from 0.01 -to 1 \
+		-resolution 0.01 -orient horizontal -width 7 -label "Path Step:"
 	pack $ef.fsb.fr $ef.fsb.fsm -side top -fill x -padx 2
 
 	button $ef.btn.add -text "Add View" -command "$this-c add_vp" -anchor w
 	button $ef.btn.del -text "Del View" -command "$this-c rem_vp" -anchor w
 	button $ef.btn.ins -text "Ins View" -command "$this-c ins_vp" -anchor w
-	button $ef.btn.next -text "Next View" -command "$this-c get_to_view" -anchor w
-	pack  $ef.btn.add $ef.btn.del $ef.btn.ins $ef.btn.next -side left -fill both -padx 2
+	button $ef.btn.rpl -text "Rpl View" -command "$this-c rpl_vp" -anchor w
+	button $ef.btn.prev -text "Prev View" -command "$this-c prev_view" -anchor w
+	button $ef.btn.next -text "Next View" -command "$this-c next_view" -anchor w	
+	pack  $ef.btn.add $ef.btn.del $ef.btn.ins $ef.btn.rpl $ef.btn.prev $ef.btn.next -side left -fill both -padx 2
 
-	checkbutton $ef.sw.lp -text "Looped" -variable $this-tcl_is_looped -command "$this-c switch_loop" -anchor w
-	checkbutton $ef.sw.bk -text "Reversed" -variable $this-tcl_is_backed -command "$this-c switch_dir" -anchor w
-	pack $ef.sw.lp $ef.sw.bk -side top
+	button $ef.mkc.make -text "Make Circle" -command "$this-c mk_circle_path" -anchor w
+	checkbutton $ef.mkc.ws -text "Center-Widget" -command "$this-c w_show" -variable $this-tcl_widg_show -onvalue 1 -offvalue 0 -padx 5
+	pack $ef.mkc.make $ef.mkc.ws -side left -fill both -padx 4 -pady 4
 	
+	frame $ef.sw.int -relief ridge
+	frame $ef.sw.spd -relief ridge
+	frame $ef.sw.info -relief ridge
+	pack $ef.sw.int $ef.sw.spd $ef.sw.info -side left -padx 10 -anchor n
+
 	
+	label $ef.sw.spd.lb -text "Acceleration:" -anchor w
+	radiobutton $ef.sw.spd.sm -text "Smooth Start/End" -variable $this-tcl_acc_mode  -anchor w -value 1 
+	radiobutton $ef.sw.spd.no -text "No acceleration " -variable $this-tcl_acc_mode  -anchor w -value 0
+	# radiobutton $ef.sw.spd.us -text "User Defined" -variable $this-tcl_acc_mode  -anchor w -value 2 -state disabled
+	pack $ef.sw.spd.lb $ef.sw.spd.no $ef.sw.spd.sm -side top -pady 3 -padx 2 -anchor w
+	
+	label $ef.sw.int.lb -text "Interpolation Type:" -anchor w
+	radiobutton $ef.sw.int.lin -text "Linear" -variable $this-tcl_intrp_type  -anchor w -value 1
+	radiobutton $ef.sw.int.kf -text "None" -variable $this-tcl_intrp_type  -anchor w -value 0
+	radiobutton $ef.sw.int.cub -text "Cubic" -variable $this-tcl_intrp_type  -anchor w -value 2
+	pack $ef.sw.int.lb $ef.sw.int.kf $ef.sw.int.lin $ef.sw.int.cub -side top -pady 3 -padx 2 -anchor w
+	
+
+	#***************************************************************
+	# driver frame
+	#
 	frame $df.ftest
-	frame $df.info
+	frame $df.info -relief sunken
 	frame $df.modes
-	pack  $df.ftest $df.info $df.modes -side top -fill both -pady 3
-	
-	button $df.ftest.runviews -text "Test Views" -command "$this-c test_views" -anchor w
+	frame $df.sw
+	pack  $df.ftest $df.info $df.modes $df.sw -side top -fill both -pady 3 -padx 3
+
+#	button $df.ftest.runviews -text "Test Views" -command "$this-c test_views" -anchor w
 	button $df.ftest.run -text "Run" -command "$this-c test_path" -anchor w
-	button $df.ftest.stop -text "Stop" -command "$this-c stop_test" -anchor w
+	button $df.ftest.stop -text "Stop" -command "set $this-tcl_stop 1"  -anchor w
 	button $df.ftest.save -text "Save" -command "$this-c save_path" -anchor w
 	
-	scale  $df.ftest.sbrate -variable $this-tcl_rate -digits 3 -from 0.01 -to 1 \
-		-resolution 0.05 -orient horizontal -width 7 -length 150 -command "$this-c set_rate"
+	scale  $df.ftest.sbrate -variable $this-tcl_rate -digits 4 -from 0.05 -to 5 \
+		-resolution 0.05 -orient horizontal -width 7 -length 150
 	
-	label  $df.ftest.sblabel -text "Rate: " -anchor w
-	pack   $df.ftest.runviews $df.ftest.run $df.ftest.stop $df.ftest.save \
+	label  $df.ftest.sblabel -text "Rate: " -anchor s
+	pack   $df.ftest.run $df.ftest.stop $df.ftest.save \
 	       $df.ftest.sblabel $df.ftest.sbrate -side left -padx 2
 
 	frame $df.info.speed 
-	frame $df.info.acc 
-	frame $df.info.nstep
-	pack $df.info.speed $df.info.acc $df.info.nstep -side top -anchor w -fill x -pady 1
+	frame $df.info.acc
+	frame $df.info.nv
+	frame $df.info.msg -relief raised
+	pack $df.info.speed $df.info.acc  $df.info.nv $df.info.msg -side top -anchor w -fill x -pady 1
 	
-	label $df.info.speed.head -text "Speed:\t\t"
-	label $df.info.speed.val -textvariable $this-speed_val
+	label $df.info.speed.head -text "Speed:\t"
+	label $df.info.speed.val -textvariable $this-tcl_speed_val
 	pack $df.info.speed.head $df.info.speed.val -side left -anchor w -padx 2
 	
 	label $df.info.acc.head -text "Acceleration:\t"
-	label $df.info.acc.val -textvariable $this-acc_val
+	label $df.info.acc.val -textvariable $this-tcl_acc_val
 	pack $df.info.acc.head $df.info.acc.val -side left -anchor w -padx 2
 	
+	label $df.info.nv.a -text "# of key frames:"  -anchor w
+	label $df.info.nv.b -textvariable $this-tcl_num_views  -anchor w
+	pack $df.info.nv.a $df.info.nv.b -side left -padx 2
+
+	label $df.info.msg.h -text "--\t" -anchor w
+	label $df.info.msg.b -textvariable $this-tcl_info -anchor w
+	pack $df.info.msg.h $df.info.msg.b -side left -padx 2 -pady 2
+
 	label $df.modes.head -text "Modes: "
 	radiobutton $df.modes.new -text "New Path" -variable $this-tcl_is_new -value 1 -command "$this-c init_new"
 	radiobutton $df.modes.exist -text "Existing Path" -variable $this-tcl_is_new -value 0 -command "$this-c init_exist"
-	pack $df.modes.head $df.modes.new $df.modes.exist -side left -padx 2 
+	pack $df.modes.head $df.modes.new $df.modes.exist -side left -padx 2
+	
+	checkbutton $df.sw.lp -text "Looped" -variable $this-tcl_is_looped  -anchor w
+	checkbutton $df.sw.bk -text "Reversed" -variable $this-tcl_is_backed  -anchor w
+	pack $df.sw.lp $df.sw.bk -side left -anchor w
+	
+	refresh
+	set $this-UI_Init 1
     }
 
     method EraseWarn {t m} {
 	set w .ui[modname]
-	#set temp [tk_messageBox -title "Modified Path Exist Warning" -parent $w -message "There is modified camera path. Are you sure you want to discard it?" -type okcancel -icon question]
+
 	set temp [tk_messageBox -title $t -parent $w -message $m -type okcancel -icon question]
 	case $temp {
-	    ok {set $this-tcl_msg_box 1} 
+	    ok {set $this-tcl_msg_box 1}
 	    cancel {set $this-tcl_msg_box 0}
 	}
     }
     
     method refresh {} {
-	set w .ui[modname]
 	update
+	set w .ui[modname]
 	set nv [expr [set $this-tcl_num_views]]
 	set len [$w.editor.fsb.fr cget -length]
 	if { $nv > 0} {
-	    $w.editor.fsb.fr configure -state normal -from 1 -to $nv -sliderlength [expr $len/$nv]
+	    $w.editor.fsb.fr configure -state normal -from 0 -to [expr $nv-1] -showvalue 1 
 	} else {
-	    $w.editor.fsb.fr configure -state disabled -from 0 -to 0 -sliderlength $len
+	    $w.editor.fsb.fr configure -state disabled -from 0 -to 0  -showvalue 0
 	}
+	update_tcl
+    }
+
+    method update_tcl {} {
+	set w .ui[modname]
+	set df $w.drv
+	set ef $w.editor
+	$df.modes.new configure -variable $this-tcl_is_new
+	$df.modes.exist configure -variable $this-tcl_is_new
+	$ef.sw.int.lin configure -variable $this-tcl_intrp_type
+	$ef.sw.int.kf configure -variable $this-tcl_intrp_type
+	$ef.sw.int.cub configure -variable $this-tcl_intrp_type
+	$ef.sw.spd.sm configure -variable $this-tcl_acc_mode
+	$ef.sw.spd.no configure -variable $this-tcl_acc_mode
+	update
     }
 }
+
+
