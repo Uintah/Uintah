@@ -781,7 +781,7 @@ TetVolMesh::compute_grid()
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
   int s = (int)ceil(pow((double)csize , one_third));
-  s = s/10 + 2;
+  s = s/3 + 2;
   const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
