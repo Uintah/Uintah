@@ -172,11 +172,17 @@ void Crack::TrimLineSegmentWithBox(const Point& p1, Point& p2,
   // find the intersection between the line-segment (p1->p2) and the box,
   // and store the intersection in p2.
 	
+  Vector v;
+  double l,m,n;	   
   // Make sure p1!=p2
   if(p1==p2) {
     cout << "*** p1=p2=" << p1 << " in Crack::TrimLineSegmentWithBox(...)."
          << " Program is terminated." << endl;
     exit(1);
+  }
+  else {
+    v=TwoPtsDirCos(p1,p2);
+    l=v.x(); m=v.y(); n=v.z();
   }
 	                      	
   double xl=lp.x(), yl=lp.y(), zl=lp.z();
@@ -205,9 +211,6 @@ void Crack::TrimLineSegmentWithBox(const Point& p1, Point& p2,
   if(x2>xl-d && x2<xh+d && y2>yl-d && y2<yh+d && z2>zl-d && z2<zh+d) p2Outside=NO;
     
   while(p2Outside) {
-    Vector v=TwoPtsDirCos(p1,p2);
-    double l=v.x(),m=v.y(),n=v.z();
-
     if(x2>xh || x2<xl) {
       if(x2>xh) x2=xh;
       if(x2<xl) x2=xl;
@@ -589,15 +592,20 @@ Vector Crack::TwoPtsDirCos(const Point& p1,const Point& p2)
 {
   Vector v=Vector(0.,0.,0.);
 
-  double l12=(p1-p2).length();
-  if(l12>1.e-32) { // p1!=p2 
+  if(p1!=p2) { 
+    double l12=(p1-p2).length();	  
     double dx,dy,dz;
     dx=p2.x()-p1.x();
     dy=p2.y()-p1.y();
     dz=p2.z()-p1.z();
     v=Vector(dx/l12,dy/l12,dz/l12);
   }  
-
+  else {
+    cout << " !!! p1=p2="<< p1 << " in Crack::TwoPtsDirCos()." 
+	 << " Program terminated."  << endl; 	  
+    exit(1);
+  }	  
+  
   return v;
 }
 
@@ -643,6 +651,7 @@ short Crack::PointInTriangle(const Point& p,const Point& pt1,
 
   area_p123=fabs(x1*z2+x2*z3+x3*z1-x1*z3-x2*z1-x3*z2);
 
+  // Set the area zero if relatively error less than 0.1%
   if(fabs(area_p1p2p)/area_p123<1.e-3) area_p1p2p=0.;
   if(fabs(area_p2p3p)/area_p123<1.e-3) area_p2p3p=0.;
   if(fabs(area_p3p1p)/area_p123<1.e-3) area_p3p1p=0.;
@@ -1176,7 +1185,7 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
   for(int k=0; k<cfNodeSize; k++) {
     int node=cfSegNodes[mm][k];	  
     Point pt=cx[mm][node];
-    
+
     int preIdx=cfSegPreIdx[mm][k];
     if(preIdx<0) {// Not operated
       int minIdx=cfSegMinIdx[mm][k];
@@ -1209,11 +1218,13 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
         node2=cfSegNodes[mm][k2];
       }
       Point pt2=cx[mm][node2];
-      
+
       // Weighting tangential vector between pt1->pt->pt2
       double l1=(pt1-pt).length();
       double l2=(pt-pt2).length();
-      Vector v3T=(l1*TwoPtsDirCos(pt1,pt)+l2*TwoPtsDirCos(pt,pt2))/(l1+l2);
+      Vector v1 = (l1==0.? Vector(0.,0.,0.):TwoPtsDirCos(pt1,pt));
+      Vector v2 = (l2==0.? Vector(0.,0.,0.):TwoPtsDirCos(pt,pt2));
+      Vector v3T=(l1*v1+l2*v2)/(l1+l2);
       cfSegV3[mm][k]=-v3T/v3T.length();
     }
     else { // calculated
@@ -1294,7 +1305,7 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
         }
       } // End of loop over crack elems
 
-      if(totalArea!=0.) {
+      if(totalArea!=0.)	{
 	v2T/=totalArea;
       }	
       else {
