@@ -51,12 +51,13 @@
   <LI><A HREF="#figure_7">Figure 7: Registration Improvement</A>
   <LI><A HREF="#figure_8">Figure 8: Final Processing Stage</A>
   <LI><A HREF="#figure_9">Figure 9: Cutting Plane Visualization</A>
-  <LI><A HREF="#figure_10">Figure 10: Iso-Surface Visualization</A>
-  <LI><A HREF="#figure_11">Figure 11: Glyph Box Visualization</A>
-  <LI><A HREF="#figure_12">Figure 12: Superquadric Glyph Visualization</A>
-  <LI><A HREF="#figure_13">Figure 13: Fiber Visualization</A>
-  <LI><A HREF="#figure_14">Figure 14: Single Fiber</A>
-  <LI><A HREF="#figure_15">Figure 15: Planes and Fibers</A>
+  <LI><A HREF="#figure_10">Figure 10: Isosurface Visualization</A>
+  <LI><A HREF="#figure_11">Figure 11: Clipped Plane Visualization</A>
+  <LI><A HREF="#figure_12">Figure 12: Glyph Box Visualization</A>
+  <LI><A HREF="#figure_13">Figure 13: Superquadric Glyph Visualization</A>
+  <LI><A HREF="#figure_14">Figure 14: Fiber Visualization</A>
+  <LI><A HREF="#figure_15">Figure 15: Single Fiber</A>
+  <LI><A HREF="#figure_16">Figure 16: Planes and Fibers</A>
 </UL>
 
 <H2><A NAME="section_1"> Section 1 -- Introduction </H2>
@@ -208,7 +209,7 @@ as a set of DICOM image volumes.
 <A NAME="figure_5">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-load-browse.gif"><br>
+<P><IMG BORDER=1 SRC="figures/biotensor-load-browse.jpg"><br>
 <B>Figure 5: File Load Dialog.</b>
 </CENTER>
 
@@ -226,6 +227,10 @@ big array), and the B0 volume would have dimensions 90x128x256.  A
 similar format is expected for Analyze data.  For DICOM data the
 you must identify a collection of sequences (directories) which make
 up the DWI and reference volumes.
+<P>
+<em>Note: The 1.20.0 version of BioTensor does <b>not</b> have support
+for loading diffusion weighted data without also specifying a B0
+reference dataset.  This will be fixed in version 1.20.1.</em>
 <P>
 Note: if your already have diffusion tensor (DT) data (rather than
 DWI data and reference volumes), you can bypss the registration and
@@ -266,7 +271,7 @@ is controlled by the "Perform Global EPI Registration" checkbox.
 <A NAME="figure_6">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-processing.gif"><br>
+<P><IMG BORDER=1 SRC="figures/biotensor-processing.jpg"><br>
 <B>Figure 6: Registration Tab.</b>
 </CENTER>
 
@@ -365,7 +370,7 @@ of the brain.
 <A NAME="figure_7">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-registration-done.gif"><br>
+<P><IMG BORDER=1 SRC="figures/biotensor-registration-done.jpg"><br>
 <B>Figure 7: Registration Improvement.</b>
 </CENTER>
 
@@ -380,7 +385,7 @@ of additional parameters.
 <A NAME="figure_8">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-build.gif"><br>
+<P><IMG BORDER=1 SRC="figures/biotensor-build.jpg"><br>
 <B>Figure 8: Final Processing Stage.</b>
 </CENTER>
 
@@ -407,6 +412,12 @@ automatically find this threshold by histogram analysis.  NOTE:
 tensors will be computed for all voxels; the DWI masking produces a
 separate scalar field which BioTensor uses for controlling
 visualization, but which does not scale the tensors themselves.
+<P>
+<em>Note: The 1.20.0 version of BioTensor has a bug, which causes the
+automatic threshold button for the Masking Threshold to be ignored.
+Instead, the specified threshold is <b>always</b> used, so please
+unselect the Automatic checkbox and take care in specifying this value.
+This bug will be fixed in the 1.20.1 release.</em>
 <P>
 B-Matrix: In order to estimate tensors from DWIs, the relationship
 between each DWI and the diffusion tensor must be known.  The B-matrix
@@ -499,7 +510,7 @@ section.
 <A NAME="figure_9">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-planes.gif"><br>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-planes.jpg"><br>
 <B>Figure 9: Cutting Plane Visualization (Default).</b>
 </CENTER>
 
@@ -511,13 +522,39 @@ HREF="#figure_10">Figure 10</A> you can:
 
 <UL> 
    <LI> Choose whether or not to show the isosurface.
+   <LI> Select which derived metric the isosurface is being computed for
+ (e.g. Fractional Anisotropy).
+   <LI> Selcted an isovalue.
+   <LI> Color the isosurface based on a) the principle eigenvector
+ direction (and again desaturated or colored black as described for
+ the planes, above); b) another scalar metric (in which case the
+ radio buttons for the colormap swatches are activated); or c) using a
+ constant color (chosen using the "Color" button).
+   <LI> Use the planes as clipping planes to clip the isosurface; the
+ orientation of each clipping plane can be toggled using the Flip
+ buttons.
 </UL>
 
 <A NAME="figure_10">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-isosurf.gif"><br>
-<B>Figure 10: Iso-Surface Visualization.</b>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-isosurf.jpg"><br>
+<B>Figure 10: Isosurface Visualization.</b>
+</CENTER>
+
+Just as the planes can be used to clip the isosurface, the isosurface
+can also be used to clip the planes.  An example of this is shown in
+<A
+HREF="#figure_11">Figure 11</A>.  We have set the
+isosurface value very low (0.01), have turned off the "Show
+Isosurface" button, and on the Planes tab have selected the Clip to
+Isosurface button.
+
+<A NAME="figure_11">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-clipped-planes.jpg"><br>
+<B>Figure 11: Clipped Planes Visualization.</b>
 </CENTER>
 
 <BR><H3><A NAME="section_6_4"> 6.4 Glyph Visualization </H3>
@@ -526,9 +563,9 @@ Under the Glyphs tab, you can select the type, placement, and coloring
 of tensor glyphs within the volume.  The default setting is to render
 box glyphs, seeded on the planes of the planes, colored based on the
 principle eigenvector direction (as above) as shown in <A
-HREF="#figure_11">Figure 11</A>.  A zoomed-in figure of the
+HREF="#figure_12">Figure 12</A>.  A zoomed-in figure of the
 superquadric glyphs rendered on the cutting planes is shown in <A
-HREF="#figure_12">Figure 12</A>.  In addition to colored-box glyphs,
+HREF="#figure_13">Figure 13</A>.  In addition to colored-box glyphs,
 the tensors can be rendered as RGB boxes, ellipsoids, or superquadric
 glyphs.  With the controls at the top of the panel, you can select the
 discretization level used for the round glyph shapes (which are
@@ -543,18 +580,18 @@ select and move widgets), seeded along a line specified by a rake
 widget, seeded on the visible cutting planes, or seeded at the grid
 point located within the prescribed isovolume.
 
-<A NAME="figure_11">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-boxes.gif"><br>
-<B>Figure 11: Glyph Box Visualization.</b>
-</CENTER>
-
 <A NAME="figure_12">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-sqg.gif" width=600><br>
-<B>Figure 12: Superquadric Glyph Visualization.</b>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-boxes.jpg"><br>
+<B>Figure 12: Glyph Box Visualization.</b>
+</CENTER>
+
+<A NAME="figure_13">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-sqg.jpg"><br>
+<B>Figure 13: Superquadric Glyph Visualization.</b>
 </CENTER>
 
 <BR><H3><A NAME="section_6_5"> 6.5 Fiber Visualization </H3>
@@ -564,8 +601,8 @@ point located within the prescribed isovolume.
 
 As with the tensor glyphs, you can select seed locations and
 colorization options for rendering fibers within the brain.  A variety
-of these options are shown in <A HREF="#figure_13">Figure 13</A>, <A
-HREF="#Figure_14"> Figure 14, and <A HREF="#figure_15">Figure 15</A>.
+of these options are shown in <A HREF="#figure_14">Figure 14</A>, <A
+HREF="#Figure_15"> Figure 15, and <A HREF="#figure_16">Figure 16</A>.
 Additionally, you can set a number of parameters that control the
 fiber tracing algorithm.  These parameters include:
 
@@ -587,25 +624,25 @@ fiber tracing algorithm.  These parameters include:
        (either Linear Anisotropy or Fractional Anisotropy).
 </UL>
 
-<A NAME="figure_13">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-fibers.gif"><br>
-<B>Figure 13: Fiber Visualization.</b>
-</CENTER>
-
 <A NAME="figure_14">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-single-fiber.gif" width=600><br>
-<B>Figure 14: Single Fiber.</b>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-fibers.jpg"><br>
+<B>Figure 14: Fiber Visualization.</b>
 </CENTER>
 
 <A NAME="figure_15">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-planes-fibers.gif" width=600><br>
-<B>Figure 15: Planes and Fibers.</b>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-single-fiber.jpg"><br>
+<B>Figure 15: Single Fiber.</b>
+</CENTER>
+
+<A NAME="figure_16">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-planes-fibers.jpg"><br>
+<B>Figure 16: Planes and Fibers.</b>
 </CENTER>
 
 
