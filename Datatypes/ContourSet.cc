@@ -65,7 +65,8 @@ void ContourSet::build_bbox() {
     if (bbox.valid()) return;
     for (int i=0; i<contours.size(); i++)
 	for (int j=0; j<contours[i].size(); j++)
-	    bbox.extend(contours[i][j]);
+	    for (int k=0; k<contours[i][j].size(); k++)
+	    bbox.extend(contours[i][j][k]);
 }
 
 // translate will rebuild the bbox if it's invalid, and then translate

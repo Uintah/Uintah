@@ -28,6 +28,7 @@ public:
 
 
     TensorField(int in_slices, int in_width, int in_height); /*Default Constructor*/
+    TensorField(int in_slices, int in_width, int in_height, float *data);
     TensorField(const TensorField&); /*Deep Copy Constructor*/
 
     virtual ~TensorField(); /*Destructor*/

@@ -201,20 +201,16 @@ VectorField* VectorFieldOcean::clone()
 {
     return scinew VectorFieldOcean(*this);
 }
-#if 0
 static MaterialHandle black=scinew Material(Color(0,0,0), Color(0,0,0),
 					    Color(0,0,0), 0);
 static MaterialHandle white=scinew Material(Color(0,0,0), Color(.6, .6, .6),
 					    Color(.6, .6, .6), 20);
-#endif
 
-GeomObj* VectorFieldOcean::makesurf(int /*downsample*/)
+GeomObj* VectorFieldOcean::makesurf(int downsample)
 {
-#if 0
-  GeomGrid* grid=0;
-new GeomGrid(1280/downsample, 896/downsample,
-			      Point(0,0,0), Vector(1280,0,0), Vector(0,896,0),
-			      GeomGrid::WithNormAndMatl);
+  GeomGrid* grid=new GeomGrid(1280/downsample, 896/downsample,
+			      Point(0,0,0), Vector(1280,0,0), Vector(0,896,0));
+  cerr << "In MAKESURF for OcenaData.  Downsample="<<downsample<<"\n";
   for(int j=0;j<896;j+=downsample){
     for(int i=0;i<1280;i+=downsample){
       int deep=depth[j*nx+i];
@@ -232,7 +228,7 @@ new GeomGrid(1280/downsample, 896/downsample,
     }
   }
   return grid;
-#else
+#if 0
   return 0;
 #endif
 }

@@ -67,8 +67,8 @@ int TensorFieldBase::get_type(void)
 }
 
 void TensorFieldBase::get_bounds(Point &min, Point &max) {
-    bmin=min;
-    bmax=max;
+    min = bmin;
+    max = bmax;
 }
 
 void TensorFieldBase::set_bounds(const Point& min, const Point& max) {

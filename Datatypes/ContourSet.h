@@ -28,14 +28,14 @@ typedef LockingHandle<ContourSet> ContourSetHandle;
 
 class ContourSet : public Datatype {
 public:
-    Array1<Array1<Point> > contours;
-    Array1<double> conductivity;
+    Array1<Array1<Array1<Point> > > contours;
+    Array1<Array1<double> > conductivity;
     int bdry_type;
     Vector basis[3];
     Vector origin;
     BBox bbox;
     double space;
-    clString name;
+    Array1<clString> name;
 
     ContourSet();
     ContourSet(const ContourSet &copy);

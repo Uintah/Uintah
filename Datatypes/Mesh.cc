@@ -1308,7 +1308,8 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	return 0;
       }
     }
-
+    
+    int conductivity = elems[in_element]->cond;	
 
     Array1<int> to_remove;
     to_remove.add(in_element);
@@ -1388,6 +1389,8 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	DFace* f=fiter.get_key();
 	Element* ne=new Element(this, node, f->n[0], f->n[1], f->n[2]);
 	
+	ne->cond = conductivity;
+
 	// If the new element is not degenerate, add it to the mix...
 	if(ne->orient()){
 	    int nen=elems.size();

@@ -15,7 +15,7 @@
 
 static Persistent* maker()
 {
-    return scinew TensorField<short>(0,0,0);
+    return scinew TensorField<double>(0,0,0);
 }
 
 template<class DATA>
@@ -46,6 +46,55 @@ TensorField<DATA>::TensorField(int in_slices, int in_width, int in_height)
 }
 
 template<class DATA>
+TensorField<DATA>::TensorField(int in_width, int in_height, int in_slices,
+			       float *data)
+{
+  m_width = in_width;
+  m_height = in_height;
+  m_slices = in_slices;
+
+  int ii;
+
+  /* Set up the arrays for the tensors*/
+  m_tensor_field.resize(TENSOR_ELEMENTS);
+  
+  for (ii = 0; ii < TENSOR_ELEMENTS; ii ++)
+      m_tensor_field[ii].newsize(m_width, m_height, m_slices);
+  
+  /* Set up the arrays for the eigenvectors*/
+  m_e_vectors.resize(EVECTOR_ELEMENTS);
+    
+  /* Set up the arrays for the eigenvalues*/
+  m_e_values.resize(EVECTOR_ELEMENTS);
+
+  for (ii = 0; ii < EVECTOR_ELEMENTS; ii ++) {
+      m_e_vectors[ii].resize(m_width, m_height, m_slices);
+      m_e_values[ii].resize(m_width, m_height, m_slices);
+  }
+
+  float *p=&(data[0]);
+  for (int z=0; z<in_slices; z++) {
+      for (int y=0; y<in_height; y++) {
+	  for (int x=0; x<in_width; x++) {
+	      for (int w=0; w<TENSOR_ELEMENTS; w++)
+		  (m_tensor_field[w])(x,y,z)=*p++;
+	      for (int v=0; v<3; v++) {
+		  Vector vec;
+		  vec.x(*p++);
+		  vec.y(*p++);
+		  vec.z(*p++);
+		  double vl=vec.length();
+		  if (vl>0.000000001) vec.normalize();
+		  m_e_vectors[v].grid(x,y,z)=vec;
+		  m_e_values[v].grid(x,y,z)=vl;
+	      }
+	  }
+      }
+  }
+  m_tensorsGood = m_vectorsGood = m_valuesGood = 1;
+}
+
+template<class DATA>
 int TensorField<DATA>::interpolate(const Point& p, double t[][3], int &, int) 
 {
     return interpolate(p, t);
@@ -55,9 +104,9 @@ int TensorField<DATA>::interpolate(const Point& p, double t[][3], int &, int)
 template<class DATA>
 int TensorField<DATA>::interpolate(const Point& p, double t[][3])
 {
-    int nx=m_slices;
-    int ny=m_width;
-    int nz=m_height;
+    int nx=m_width;
+    int ny=m_height;
+    int nz=m_slices;
     Vector pn=p-bmin;
     double dx=diagonal.x();
     double dy=diagonal.y();
@@ -125,7 +174,7 @@ int TensorField<DATA>::AddSlice(int in_slice, int in_tensor_component, FILE* in_
    as such this function should actually copy all the data in t.x to this.x
    in a deep fashion */
 template<class DATA>
-TensorField<DATA>::TensorField(const TensorField<DATA>& t)
+TensorField<DATA>::TensorField(const TensorField<DATA>&)
 {
   /*NOTE - IMPEMENT ME!*/
     NOT_FINISHED("TensorField copy ctor\n");

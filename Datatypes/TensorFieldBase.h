@@ -27,7 +27,10 @@
 
 #define TENSOR_ELEMENTS 6 /*Number of elements in the 3x3 tensor we car about*/
 #define EVECTOR_ELEMENTS 3 /*Number of eigen vectors produced by the tensor matrix*/
-
+/* The order in which vectors and elements area stored in the array of EVECTOR_ELEMENTS */ 
+#define PRIMARY 0 
+#define SECONDARY 1
+#define TERIARY 2 
 enum {CHAR, UCHAR, SHORT, USHORT, INT, UINT, LONG, ULONG,  FLOAT, DOUBLE};
 
 class TensorFieldBase;
