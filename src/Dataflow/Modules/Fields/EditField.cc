@@ -35,6 +35,14 @@ public:
   GuiDouble minx_,miny_,minz_;
   GuiDouble maxx_,maxy_,maxz_;
 
+  GuiInt cfldname_;
+  GuiInt ctypename_;
+  GuiInt cdatamin_;
+  GuiInt cdatamax_;
+  GuiInt cnumelems_;
+  GuiInt cdataat_;
+  GuiInt cdataminmax_;
+
   EditField(const string& id);
 
   virtual ~EditField();
@@ -66,7 +74,14 @@ EditField::EditField(const string& id)
     minz_("minz2", id, this),
     maxx_("maxx2", id, this),
     maxy_("maxy2", id, this),
-    maxz_("maxz2", id, this)
+    maxz_("maxz2", id, this),
+    cfldname_("cfldname", id, this),
+    ctypename_("ctypename", id, this),
+    cdatamin_("cdatamin", id, this),
+    cdatamax_("cdatamax", id, this),
+    cnumelems_("cnumelems", id, this),
+    cdataat_("cdataat", id, this),
+    cdataminmax_("cdataminmax", id, this)
 {
 }
 

@@ -51,6 +51,13 @@ itcl_class SCIRun_Fields_EditField {
 	global $this-maxx2
 	global $this-maxy2
 	global $this-maxz2
+	global $this-cfldname
+	global $this-ctypename
+	global $this-cdataminmax
+	global $this-cbboxmin
+	global $this-cbboxmax
+	global $this-cnumelems
+	global $this-cdataat
 	set $this-fldname2 ""
 	set $this-typename2 ""
 	set $this-datamin2 ""
@@ -63,6 +70,13 @@ itcl_class SCIRun_Fields_EditField {
 	set $this-maxx2 ""
 	set $this-maxy2 ""
 	set $this-maxz2 ""
+	set $this-cfldname 0
+	set $this-ctypename 0
+	set $this-cdataminmax 0
+	set $this-cbboxmin 0
+	set $this-cbboxmax 0
+	set $this-cnumelems 0
+	set $this-cdataat 0
     }
 
     method ui {} {
@@ -106,15 +120,21 @@ itcl_class SCIRun_Fields_EditField {
 	pack $w.edit 
 	set edit [$w.edit childsite]
 	
-	labelentry $edit.l1 "Name" $this-fldname2
-	labelcombo $edit.l2 "Typename" "[set $this-typename2]"
-	labelentry3 $edit.l3 "BBox min" $this-minx2 $this-miny2 $this-minz2
-	labelentry3 $edit.l4 "BBox max" $this-maxx2 $this-maxy2 $this-maxz2
-	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2
+	labelentry $edit.l1 "Name" $this-fldname2 $this-cfldname
+	labelcombo $edit.l2 "Typename" \
+		   "[possible_typenames [set $this-typename2]]" \
+                   $this-typename2 $this-ctypename
+	labelentry3 $edit.l3 "BBox min" $this-minx2 $this-miny2 $this-minz2 \
+		    $this-cbboxmin
+	labelentry3 $edit.l4 "BBox max" $this-maxx2 $this-maxy2 $this-maxz2 \
+                    $this-cbboxmax
+	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2 \
+		    $this-cdataminmax
 	labeloption $edit.l8 "# Elements" "[set $this-numelems2]" "0" \
-		    $this-numelems2
+		    $this-numelems2 $this-cnumelems 
 	labelcombo $edit.l9 "Data at" {Field::CELL Field::FACE Field::EDGE \
-		                       Field::NODE Field::NONE}
+		                       Field::NODE Field::NONE} \
+		   $this-dataat2 $this-cdataat
 	pack $edit.l1 $edit.l2 $edit.l3 $edit.l4 $edit.l5 \
 	     $edit.l8 $edit.l9 -side top 
     }
@@ -130,21 +150,23 @@ itcl_class SCIRun_Fields_EditField {
 	pack $win.l1 $win.colon $win.l2 -side left
     } 
 
-    method labelentry { win text1 text2 } {
+    method labelentry { win text1 text2 var } {
 	frame $win 
 	pack $win -side top -padx 5
+	checkbutton $win.b -var $var
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	entry $win.l2 -width 40 -just left \
 		-fore darkred -text $text2
-	pack $win.l1 $win.colon -side left
+	pack $win.b $win.l1 $win.colon -side left
 	pack $win.l2 -padx 5 -side left
     }
 
-    method labelentry2 { win text1 text2 text3 } {
+    method labelentry2 { win text1 text2 text3 var } {
 	frame $win 
 	pack $win -side top -padx 5
+	checkbutton $win.b -var $var
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
@@ -153,13 +175,14 @@ itcl_class SCIRun_Fields_EditField {
 	entry $win.l3 -width 10 -just left \
 		-fore darkred -text $text3
 	label $win.l4 -width 40
-	pack $win.l1 $win.colon -side left
+	pack $win.b $win.l1 $win.colon -side left
 	pack $win.l2 $win.l3 $win.l4 -padx 5 -side left
     }
 
-    method labelentry3 { win text1 text2 text3 text4 } {
+    method labelentry3 { win text1 text2 text3 text4 var } {
 	frame $win 
 	pack $win -side top -padx 5
+	checkbutton $win.b -var $var
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
@@ -170,17 +193,18 @@ itcl_class SCIRun_Fields_EditField {
 	entry $win.l4 -width 10 -just left \
 		-fore darkred -text $text4
 	label $win.l5 -width 40
-	pack $win.l1 $win.colon -side left
+	pack $win.b $win.l1 $win.colon -side left
 	pack $win.l2 $win.l3 $win.l4 $win.l5 -padx 5 -side left
     }
 
-    method labelcombo { win text1 arglist } {
+    method labelcombo { win text1 arglist var var2} {
 	frame $win 
 	pack $win -side top -padx 5
+	checkbutton $win.b -var $var2
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left
-	iwidgets::optionmenu $win.c -foreground darkred
+	iwidgets::optionmenu $win.c -foreground darkred 
 	set i 0
 	set length [llength $arglist]
 	for {set elem [lindex $arglist $i]} {$i<$length} \
@@ -188,19 +212,22 @@ itcl_class SCIRun_Fields_EditField {
 	    $win.c insert end $elem
 	}
 	label $win.l2 -text "" -width 40 -anchor w -just left
-	pack $win.l1 $win.colon $win.c $win.l2 -side left	
+	pack $win.b $win.l1 $win.colon -side left
+	pack $win.c $win.l2 -side left	
     }
 
-    method labeloption { win text1 text2 text3 var } {
+    method labeloption { win text1 text2 text3 var var2} {
 	frame $win 
 	pack $win -side top -padx 5
+	checkbutton $win.b -var $var2
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
                       -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	radiobutton $win.l2 -text $text2 -var $var -val $text2 -fore darkred
 	radiobutton $win.l3 -text $text3 -var $var -val $text3 -fore darkred
 	label $win.l4 -width 40
-	pack $win.l1 $win.colon $win.l2 $win.l3 $win.l4 -side left
+	pack $win.b $win.l1 $win.colon -side left
+        pack $win.l2 $win.l3 $win.l4 -side left
     }
 
     method update_attributes {} {
