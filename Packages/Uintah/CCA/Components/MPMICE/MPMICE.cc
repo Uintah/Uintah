@@ -430,13 +430,15 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
    /* interpolateNCToCC */
    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
                  this, &MPMICE::interpolateNCToCC_0);
-
+   const MaterialSubset* mss = mpm_matls->getUnion();
    t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
    t->requires(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
    t->requires(Task::NewDW, Mlb->gVelocityLabel,   Ghost::AroundCells, 1); 
    t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
+   t->requires(Task::NewDW, Mlb->gSp_volLabel,     Ghost::AroundCells, 1);
    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
                                                    Ghost::AroundCells, 1);
+   t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
    t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
    t->requires(Task::OldDW, MIlb->vel_CCLabel,     Ghost::None, 0);
     
@@ -444,7 +446,8 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
    t->computes(MIlb->cVolumeLabel);
    t->computes(MIlb->vel_CCLabel);
    t->computes(MIlb->temp_CCLabel);
-
+   t->computes(Ilb->sp_vol_CCLabel, mss);
+   
    sched->addTask(t, patches, mpm_matls);
 }
 
@@ -498,15 +501,19 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   Task* t=scinew Task("MPMICE::interpolateCCToNC",
                 this, &MPMICE::interpolateCCToNC);               
   const MaterialSubset* mss = mpm_matls->getUnion();
-  t->modifies(             Mlb->gVelocityStarLabel, mss);
-  t->modifies(             Mlb->gAccelerationLabel, mss);
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
-  t->requires(Task::NewDW, Ilb->mass_L_CCLabel,      Ghost::AroundCells,1);
-  t->requires(Task::NewDW, Ilb->mom_L_CCLabel,       Ghost::AroundCells,1);   
-  t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,   Ghost::AroundCells,1);   
-  t->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel,    Ghost::AroundCells,1);
-  t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,    Ghost::AroundCells,1);
+  Ghost::GhostType  gac = Ghost::AroundCells;
 
+  t->requires(Task::OldDW, d_sharedState->get_delt_label());
+  t->requires(Task::NewDW, Ilb->mass_L_CCLabel,         gac,1);
+  t->requires(Task::NewDW, Ilb->mom_L_CCLabel,          gac,1);  
+  t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gac,1);  
+  t->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel,       gac,1);
+  t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,       gac,1);
+  t->requires(Task::NewDW, Ilb->spec_vol_source_CCLabel,gac,1); 
+  
+  t->modifies(Mlb->gVelocityStarLabel, mss);             
+  t->modifies(Mlb->gAccelerationLabel, mss);             
+  t->computes(Mlb->gSp_vol_srcLabel);
   t->computes(Mlb->dTdt_NCLabel);
 
   sched->addTask(t, patches, mpm_matls);
@@ -542,6 +549,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,MIlb->temp_CCLabel,        mpm_matls, Ghost::None);
   t->requires(Task::NewDW,MIlb->cVolumeLabel,        mpm_matls, Ghost::None);
   t->requires(Task::NewDW,MIlb->cMassLabel,          mpm_matls, Ghost::None);
+  t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,       mpm_matls, Ghost::None);
  
   if (d_ice->d_EqForm) {      // E Q   F O R M
     t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, Ghost::None);
@@ -554,12 +562,13 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
     t->computes(Ilb->matl_press_CCLabel);
   }
   t->computes(Ilb->f_theta_CCLabel);
+
   t->computes(Ilb->speedSound_CCLabel); 
-  t->computes(Ilb->sp_vol_CCLabel);
   t->computes(Ilb->vol_frac_CCLabel);
   t->computes(Ilb->rho_CCLabel);
   t->computes(Ilb->press_equil_CCLabel, press_matl);
-
+  t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls); 
+  t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   sched->addTask(t, patches, all_matls);
 }
 /* ---------------------------------------------------------------------
@@ -905,17 +914,18 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       int indx = mpm_matl->getDWIndex();
 
       // Create arrays for the grid data
-      constNCVariable<double> gmass, gvolume, gtemperature;
+      constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
       constNCVariable<Vector> gvelocity;
-      CCVariable<double> cmass, cvolume,Temp_CC;
+      CCVariable<double> cmass, cvolume,Temp_CC, sp_vol_CC;
       CCVariable<Vector> vel_CC;
-      constCCVariable<double> Temp_CC_ice;
-      constCCVariable<Vector> vel_CC_ice; 
+      constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
+      constCCVariable<Vector> vel_CC_ice;
 
-      new_dw->allocateAndPut(cmass,   MIlb->cMassLabel,   indx, patch);    
-      new_dw->allocateAndPut(cvolume, MIlb->cVolumeLabel, indx, patch);
-      new_dw->allocateAndPut(vel_CC,  MIlb->vel_CCLabel,  indx, patch);    
-      new_dw->allocateAndPut(Temp_CC, MIlb->temp_CCLabel, indx, patch);   
+      new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
+      new_dw->allocateAndPut(cvolume,  MIlb->cVolumeLabel,   indx, patch);  
+      new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
+      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
+      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
 
       double rho_orig = mpm_matl->getInitialDensity();
       double very_small_mass = d_TINY_RHO * cell_vol;
@@ -926,6 +936,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
       new_dw->get(gvelocity,    Mlb->gVelocityLabel,    indx, patch,gac, 1);
       new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
+      new_dw->get(gSp_vol,      Mlb->gSp_volLabel,      indx, patch,gac, 1);
+      old_dw->get(sp_vol_CC_ice,Ilb->sp_vol_CCLabel,    indx, patch,gn, 0); 
       old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
       old_dw->get(vel_CC_ice,   MIlb->vel_CCLabel,      indx, patch,gn, 0);
       IntVector nodeIdx[8];
@@ -948,19 +960,23 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         IntVector c = *iter;
         patch->findNodesFromCell(*iter,nodeIdx);
  
-        double Temp_CC_mpm = 0.0;       
+        double Temp_CC_mpm = 0.0;  
+        double sp_vol_mpm = 0.0;   
         Vector vel_CC_mpm  = Vector(0.0, 0.0, 0.0);
         
         for (int in=0;in<8;in++){
           cmass[c]    += NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
           cvolume[c]  += NC_CCweight[nodeIdx[in]] * gvolume[nodeIdx[in]];
+          sp_vol_mpm  += gSp_vol[nodeIdx[in]] *
+                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
           vel_CC_mpm  += gvelocity[nodeIdx[in]] *
                             NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
           Temp_CC_mpm += gtemperature[nodeIdx[in]] *
                             NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
         } 
         vel_CC_mpm  /= cmass[c];    
-        Temp_CC_mpm /= cmass[c]; 
+        Temp_CC_mpm /= cmass[c];
+        sp_vol_mpm  /= cmass[c];
         
         //__________________________________
         // set *_CC = to either vel/Temp_CC_ice or vel/Temp_CC_mpm
@@ -969,26 +985,29 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         // If you change this you must also change 
         // MPMICE::computeLagrangianValuesMPM
         double one_or_zero = (cmass[c] - very_small_mass)/cmass[c];
-        Temp_CC[c] = (1.0-one_or_zero)*Temp_CC_ice[c] + one_or_zero*Temp_CC_mpm;
-        vel_CC[c]  = (1.0-one_or_zero)*vel_CC_ice[c]  + one_or_zero*vel_CC_mpm;   
-      }
 
+        Temp_CC[c]   = (1.0-one_or_zero)*Temp_CC_ice[c] + one_or_zero*Temp_CC_mpm;
+        vel_CC[c]    = (1.0-one_or_zero)*vel_CC_ice[c]  + one_or_zero*vel_CC_mpm;
+        sp_vol_CC[c] = (1.0-one_or_zero)*sp_vol_CC_ice[c] + one_or_zero*sp_vol_mpm;   
+      }
       //  Set BC's
       setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
       setBC(vel_CC,  "Velocity",   patch, indx);
       //  Set if symmetric Boundary conditions
-      setBC(cmass,   "set_if_sym_BC",patch, d_sharedState, indx);
-      setBC(cvolume, "set_if_sym_BC",patch, d_sharedState, indx);
+      setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx);
+      setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx);
+      setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx); 
       
      //---- P R I N T   D A T A ------
      if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
             <<  patch->getID();
+        d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
         d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
         d_ice->printData(   indx, patch, 1,desc.str(), "cvolume",   cvolume);
         d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
-        d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0,vel_CC);
+        d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
       } 
     }
   }  //patches
@@ -1194,10 +1213,10 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
       NCVariable<Vector> gacceleration, gvelocity;
-      NCVariable<double> dTdt_NC;
-      constCCVariable<double> mass_L_CC;
+      NCVariable<double> dTdt_NC, gSp_vol_src;
+      constCCVariable<double> mass_L_CC, sp_vol_src;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
-      constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC;
+      constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
       
       new_dw->getModifiable(gvelocity,    Mlb->gVelocityStarLabel,indx,patch);
       new_dw->getModifiable(gacceleration,Mlb->gAccelerationLabel,indx,patch);
@@ -1207,16 +1226,21 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
       new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
-      new_dw->get(eng_L_ME_CC, Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
+      new_dw->get(eng_L_ME_CC,     Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
+      new_dw->get(sp_vol_src,      Ilb->spec_vol_source_CCLabel,    
+                                                             indx,patch,gac,1);
+                                                             
       double cv = mpm_matl->getSpecificHeat();     
 
-      new_dw->allocateAndPut(dTdt_NC, Mlb->dTdt_NCLabel,        indx, patch);
+      new_dw->allocateAndPut(dTdt_NC,     Mlb->dTdt_NCLabel,    indx, patch);
+      new_dw->allocateAndPut(gSp_vol_src, Mlb->gSp_vol_srcLabel,indx, patch);      
       dTdt_NC.initialize(0.0);
+      gSp_vol_src.initialize(0.0);
       IntVector cIdx[8];
       Vector dvdt_tmp;
       double dTdt_tmp;
       //__________________________________
-      //  Take care of momentum
+      //  Take care of momentum and specific volume source
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
         for(int in=0;in<8;in++){
@@ -1224,7 +1248,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
                     / (mass_L_CC[cIdx[in]] * delT); 
                     
           gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
-          gacceleration[*iter] +=  dvdt_tmp*.125; 
+          gacceleration[*iter] +=  dvdt_tmp*.125;
+          gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
         }
       }    
       
@@ -1345,8 +1370,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp;
-    
+    CCVariable<double> press_new, delPress_tmp;    
     Ghost::GhostType  gn = Ghost::None;
     //  P R E S S 
     new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
@@ -1370,6 +1394,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(mat_vol[m],  MIlb->cVolumeLabel, indx,patch,gn,0);
         new_dw->get(mass_CC[m],  MIlb->cMassLabel,   indx,patch,gn,0);
         new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
+        new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
         cv[m] = mpm_matl->getSpecificHeat();
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
@@ -1419,9 +1444,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   #ifdef EOSCM
 /*`==========TESTING==========*/
 // This might be wrong.  Try 1/sp_vol -- Todd 11/22
-          rho_micro[m][c] =  
+           rho_micro[m][c] =  
             mpm_matl->getConstitutiveModel()->
             computeRhoMicroCM(press_new[c],press_ref, mpm_matl); 
+            
+            rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
 /*==========TESTING==========`*/
             
           mat_volume[m] = mass_CC[m][c]/rho_micro[m][c]; 
