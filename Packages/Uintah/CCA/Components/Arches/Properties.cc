@@ -408,8 +408,13 @@ Properties::computeProps(const ProcessorGroup* pc,
 #endif
 	  }
 	  
-	  if (cellType[currCell] != d_bc->wallCellType()) 
+//	  if (cellType[currCell] != d_bc->wallCellType()) 
 	    density[currCell] = local_den;
+// d_denRef is usually [-1,-1,-1] so if not do the following, den_ref
+// will be messed up since it will be set to 0 because of the condition above
+// This error doesn't matter to much unless density underrelaxation is used
+//	  if ((patch->containsCell(d_denRef))&&(currCell==d_denRef))
+//	    density[currCell] = local_den;
 	}
       }
     }

@@ -136,7 +136,7 @@ $(SRCDIR)/explicit_vel.o: $(SRCDIR)/explicit_vel_fort.h
 $(SRCDIR)/explicit_velocity.o: $(SRCDIR)/explicit_velocity_fort.h
 $(SRCDIR)/init.o: $(SRCDIR)/init_fort.h
 $(SRCDIR)/initScal.o: $(SRCDIR)/initScal_fort.h
-$(SRCDIR)/inlbcs.o: $(SRCDIR)/inlbcs_fort.h
+$(SRCDIR)/inlbcs.o: $(SRCDIR)/inlbcs_fort.h $(SRCDIR)/ramping.h
 $(SRCDIR)/linegs.o: $(SRCDIR)/linegs_fort.h
 $(SRCDIR)/mascal.o: $(SRCDIR)/mascal_fort.h
 $(SRCDIR)/mascal_scalar.o: $(SRCDIR)/mascal_scalar_fort.h
@@ -164,7 +164,7 @@ $(SRCDIR)/pressrccorr.o: $(SRCDIR)/pressrccorr_fort.h
 $(SRCDIR)/pressrcpred.o: $(SRCDIR)/pressrcpred_fort.h
 $(SRCDIR)/pressrcpred_var.o: $(SRCDIR)/pressrcpred_var_fort.h
 $(SRCDIR)/profscalar.o: $(SRCDIR)/profscalar_fort.h
-$(SRCDIR)/profv.o: $(SRCDIR)/profv_fort.h
+$(SRCDIR)/profv.o: $(SRCDIR)/profv_fort.h $(SRCDIR)/ramping.h
 $(SRCDIR)/rescal.o: $(SRCDIR)/rescal_fort.h
 $(SRCDIR)/rmean.o: $(SRCDIR)/rmean_fort.h
 $(SRCDIR)/scalarvarmodel.o: $(SRCDIR)/scalarvarmodel_fort.h

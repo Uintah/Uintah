@@ -1964,7 +1964,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  //     calculate the local Smagorinsky coefficient
 	  //     perform "clipping" in case MLij is negative...
     double factor = 1.0;
-#if 1
+#if 0
     if (time < 2.0)
       factor = (time+0.000001)*0.5;
 #endif

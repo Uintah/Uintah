@@ -23,14 +23,14 @@ c*********************************************************************
       JEND = idxHi(2)
       KEND = idxHi(3)
       if (xminus) then
-         I = ist -1
+         I = ist
          DO 140 K=KST,KEND
             DO 130 J=JST,JEND
-               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  flowin = flowin + den(I,J,K)*sns(j)*stb(k)*
-     $                 max(0.0D0,uu(i,j,k))
-                  flowout = flowout - pt5*(den(I,J,K)+den(i+1,j,k))*
-     $                 sns(j)*stb(k)*min(0.0D0,uu(i+1,j,k))
+               IF (PCELL(I-1,J,K) .EQ. PFIELD) THEN
+                  flowin = flowin + pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                     sns(j)*stb(k)*max(0.0D0,uu(i,j,k))
+                  flowout = flowout - pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                      sns(j)*stb(k)*min(0.0D0,uu(i,j,k))
                endif
  130        CONTINUE
  140     CONTINUE
@@ -39,11 +39,11 @@ c*********************************************************************
          I = iend+1
          DO 190 K=KST,KEND
             DO 180 J=JST,JEND
-               IF (PCELL(iend+1,J,K) .EQ. PFIELD) THEN
-                  flowin = flowin - den(I,J,K)*sns(j)*stb(k)*
-     $                 min(0.0D0,uu(i+1,j,k))
-                  flowout = flowout + pt5*(den(I,J,K)+den(i-1,j,k))
-     $                 *sns(j)*stb(k)*max(0.0D0,uu(i,j,k))
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  flowin = flowin - pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                     sns(j)*stb(k)*min(0.0D0,uu(i,j,k))
+                  flowout = flowout + pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                      sns(j)*stb(k)*max(0.0D0,uu(i,j,k))
                END IF
  180        CONTINUE
  190     CONTINUE
@@ -52,14 +52,14 @@ C
 C	Compute PBC for J=1 (South) side of domain
 C
       if (yminus) then
-         J = jst-1
+         J = jst
          DO 240 K=KST,KEND
             DO 230 I=IST,IEND
-               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  flowin = flowin + den(I,J,K)*sew(i)*stb(k)*
-     $                 max(0.0D0,vv(i,j,k))
-                  flowout = flowout - pt5*(den(I,J,K)+den(i,j+1,k))*
-     $                 sew(i)*stb(k)*min(0.0D0,vv(i,j+1,k))
+               IF (PCELL(I,J-1,K) .EQ. PFIELD) THEN
+                  flowin = flowin + pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                     sew(i)*stb(k)*max(0.0D0,vv(i,j,k))
+                  flowout = flowout - pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                      sew(i)*stb(k)*min(0.0D0,vv(i,j,k))
                END IF
  230        CONTINUE
  240     CONTINUE
@@ -70,12 +70,12 @@ C
       if (yplus) then
          J = jend+1
          DO 290 K=KST,KEND
-	    DO 280 I=IST,IEND
+            DO 280 I=IST,IEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  flowin = flowin - den(I,J,K)*sew(i)*stb(k)*
-     $                 min(0.0D0,vv(i,j+1,k))
-                  flowout = flowout + pt5*(den(I,J,K)+den(i,j-1,k))
-     $                 *sew(i)*stb(k)*max(0.0D0,vv(i,j,k))
+                  flowin = flowin - pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                     sew(i)*stb(k)*min(0.0D0,vv(i,j,k))
+                  flowout = flowout + pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                      sew(i)*stb(k)*max(0.0D0,vv(i,j,k))
                END IF
  280        CONTINUE
  290     CONTINUE
@@ -85,14 +85,14 @@ C
 C	Calculate PBC for K=1 (Bottom) side of domain
 C
       if (zminus) then
-         K = kst-1
+         K = kst
          DO 340 J=JST,JEND
-	    DO 330 I=IST,IEND
-               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  flowin = flowin + den(I,J,K)*sew(i)*sns(j)*
-     $                 max(0.0D0,ww(i,j,k))
-                  flowout = flowout - pt5*(den(I,J,K)+den(i,j,k+1))*
-     $                 sew(i)*sns(j)*min(0.0D0,ww(i,j,k+1))
+            DO 330 I=IST,IEND
+               IF (PCELL(I,J,K-1) .EQ. PFIELD) THEN
+                  flowin = flowin + pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                     sew(i)*sns(j)*max(0.0D0,ww(i,j,k))
+                  flowout = flowout - pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                      sew(i)*sns(j)*min(0.0D0,ww(i,j,k))
                END IF
  330        CONTINUE
  340     CONTINUE
@@ -103,12 +103,12 @@ C
       if (zplus) then
          K = kend+1
          DO 390 J=JST,JEND
-	    DO 380 I=IST,IEND
+            DO 380 I=IST,IEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  flowin = flowin - den(I,J,K)*sew(i)*sns(j)*
-     $                 min(0.0D0,ww(i,j,k+1))
-                  flowout = flowout + pt5*(den(I,J,K)+den(i,j,k-1))
-     $                 *sew(i)*sns(j)*max(0.0D0,ww(i,j,k))
+                  flowin = flowin - pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                     sew(i)*sns(j)*min(0.0D0,ww(i,j,k))
+                  flowout = flowout + pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                      sew(i)*sns(j)*max(0.0D0,ww(i,j,k))
                END IF
  380        CONTINUE
  390     CONTINUE
