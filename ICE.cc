@@ -2,7 +2,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/ICE/LODI.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
@@ -100,10 +99,12 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_modelSetup = 0;
   
   d_usingLODI = false;
+  d_Lodi_user_inputs = scinew Lodi_user_inputs();
 }
 
 ICE::~ICE()
 {
+  delete d_Lodi_user_inputs;
   delete lb;
   delete MIlb;
   delete d_advector;
@@ -152,11 +153,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
     throw InternalError("ICE:couldn't get solver port");
-  } 
-
+  }
+      
   //__________________________________
-  //  Find if we're using LODI bcs
-  d_usingLODI = using_LODI_BC(prob_spec);
+  //  Read LODI user inputs
+  d_usingLODI = read_LODI_BC_inputs(prob_spec,d_Lodi_user_inputs);
   
   //__________________________________
   // Find the switches
@@ -3976,6 +3977,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
                                  DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
  
@@ -4063,6 +4065,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
         lodi_vars->cv   = cv;
         lodi_vars->delT = delT;
         lodi_vars->speedSound = speedSound;
+        lodi_vars->user_inputs = d_Lodi_user_inputs;
         lodi_bc_preprocess( patch, lodi_vars, lb, indx, old_dw, new_dw,
                             d_sharedState);
       }
