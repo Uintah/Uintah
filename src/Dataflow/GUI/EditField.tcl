@@ -18,12 +18,12 @@ itcl_class SCIRun_Fields_EditField {
 	global $this-numnodes
 	global $this-numelems
 	global $this-dataat
-	global $this-minx
-	global $this-miny
-	global $this-minz
-	global $this-maxx
-	global $this-maxy
-	global $this-maxz
+        global $this-cx
+        global $this-cy
+        global $this-cz
+        global $this-sizex
+        global $this-sizey
+        global $this-sizez
 	set $this-fldname "---"
 	set $this-typename "---"
 	set $this-datamin "---"
@@ -31,12 +31,12 @@ itcl_class SCIRun_Fields_EditField {
 	set $this-numnodes "---"
 	set $this-numelems "---"
 	set $this-dataat "---"
-	set $this-minx "---"
-	set $this-miny "---"
-	set $this-minz "---"
-	set $this-maxx "---"
-	set $this-maxy "---"
-	set $this-maxz "---"
+        set $this-cx "---"
+        set $this-cy "---"
+        set $this-cz "---"
+        set $this-sizex "---"
+        set $this-sizey "---"
+        set $this-sizez "---"
 
 	# these will be saved
 	global $this-fldname2
@@ -47,15 +47,15 @@ itcl_class SCIRun_Fields_EditField {
 	global $this-cfldname
 	global $this-ctypename
 	global $this-cdataminmax
-	global $this-cbbox
+        global $this-cgeom
 	global $this-cnumelems
 	global $this-cdataat
-	global $this-minx2
-	global $this-miny2
-	global $this-minz2
-	global $this-maxx2
-	global $this-maxy2
-	global $this-maxz2
+        global $this-cx2
+        global $this-cy2
+        global $this-cz2
+        global $this-sizex2
+        global $this-sizey2
+        global $this-sizez2
 	set $this-fldname2 ""
 	set $this-typename2 "--- No typename ---"
 	set $this-datamin2 0
@@ -64,15 +64,15 @@ itcl_class SCIRun_Fields_EditField {
 	set $this-cfldname 0
 	set $this-ctypename 0
 	set $this-cdataminmax 0
-	set $this-cbbox 0
+        set $this-cgeom 0
 	set $this-cnumelems 0
 	set $this-cdataat 0
-	set $this-minx2 1
-	set $this-miny2 1
-	set $this-minz2 1
-	set $this-maxx2 0
-	set $this-maxy2 0
-	set $this-maxz2 0
+        set $this-cx2 0
+        set $this-cy2 0
+        set $this-cz2 0
+        set $this-sizex2 0
+        set $this-sizey2 0
+        set $this-sizez2 0
     }
 
     method ui {} {
@@ -94,10 +94,10 @@ itcl_class SCIRun_Fields_EditField {
 	
 	labelpair $att.l1 "Name" $this-fldname
 	labelpair $att.l2 "Typename" $this-typename
-	labelpairmulti $att.l3 "BBox min" "[set $this-minx], \
-		               [set $this-miny], [set $this-minz]"
-	labelpairmulti $att.l4 "BBox max" "[set $this-maxx], \
-                               [set $this-maxy], [set $this-maxz]"
+        labelpairmulti $att.l3 "Center (x,y,z)" "[set $this-cx], \
+                               [set $this-cy], [set $this-cz]"
+        labelpairmulti $att.l4 "Size (x,y,z)" "[set $this-sizex], \
+                               [set $this-sizey] [set $this-sizez]" 
 	labelpairmulti $att.l5 "Data min,max" "[set $this-datamin], \
 		                          [set $this-datamax]"
 	labelpair $att.l7 "# Nodes" $this-numnodes
@@ -120,10 +120,10 @@ itcl_class SCIRun_Fields_EditField {
 	labelcombo $edit.l2 "Typename" \
 		   "[possible_typenames [set $this-typename2]]" \
                    $this-typename2 $this-ctypename
-	labelentry3 $edit.l3 "BBox min" $this-minx2 $this-miny2 \
-		    $this-minz2 $this-cbbox "$this-c update_widget"
-	labelentry3 $edit.l4 "BBox max" $this-maxx2 $this-maxy2 $this-maxz2 \
-		    $this-cbbox "$this-c update_widget"
+        labelentry3 $edit.l3 "Center (x,y,z)" $this-cx2 $this-cy2 $this-cz2 \
+                    $this-cgeom "$this-c update_widget"
+        labelentry3 $edit.l4 "Size (x,y,z)" $this-sizex2 $this-sizey2 \
+                    $this-sizez2 $this-cgeom "$this-c update_widget"
 	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2 \
 		    $this-cdataminmax
 	labelcombo $edit.l9 "Data at" {Nodes Edges Faces Cells} \
@@ -144,10 +144,10 @@ itcl_class SCIRun_Fields_EditField {
 	    return
 	}
 	set att [$w.att childsite]
-	$att.l3.l2 configure -text "[set $this-minx], [set $this-miny], \
-		                  [set $this-minz]"
-	$att.l4.l2 configure -text "[set $this-maxx], [set $this-maxy], \
-		                  [set $this-maxz]"
+	$att.l3.l2 configure -text "[set $this-cx], [set $this-cy], \
+		                  [set $this-cz]"
+	$att.l4.l2 configure -text "[set $this-sizex], [set $this-sizey], \
+		                  [set $this-sizez]"
 	$att.l5.l2 configure -text "[set $this-datamin], [set $this-datamax]"
     }
 
@@ -303,13 +303,13 @@ itcl_class SCIRun_Fields_EditField {
 	  set $this-datamin2 [set $this-datamin]
 	  set $this-datamax2 [set $this-datamax]
         }
-        if {"[set $this-cbbox]"!="1"} {
-	  set $this-minx2 [set $this-minx]
-	  set $this-miny2 [set $this-miny]
-	  set $this-minz2 [set $this-minz]
-	  set $this-maxx2 [set $this-maxx]
-	  set $this-maxy2 [set $this-maxy]
-	  set $this-maxz2 [set $this-maxz]
+        if {"[set $this-cgeom]"!="1"} {
+          set $this-cx2 [set $this-cx]
+          set $this-cy2 [set $this-cy]
+          set $this-cz2 [set $this-cz]
+          set $this-sizex2 [set $this-sizex]
+          set $this-sizey2 [set $this-sizey]
+          set $this-sizez2 [set $this-sizez]
         }
         if {"[set $this-typename]"!="1"} {
 	  config_labelcombo $edit.l2 [possible_typenames \
@@ -397,5 +397,7 @@ itcl_class SCIRun_Fields_EditField {
 	}
     }
 }
+
+
 
 
