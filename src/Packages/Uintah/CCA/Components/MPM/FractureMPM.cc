@@ -56,11 +56,10 @@ static DebugStream cout_doing("MPM", false);
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
 
-FractureMPM::FractureMPM(const ProcessorGroup* myworld) :
-  UintahParallelComponent(myworld)
+FractureMPM::FractureMPM(const ProcessorGroup* myworld) 
+  : SerialMPM(myworld)
 {
-  lb = scinew MPMLabel();
-  flags = scinew MPMFlags();
+  
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   d_with_ice    = false;
@@ -76,88 +75,26 @@ FractureMPM::FractureMPM(const ProcessorGroup* myworld) :
 
 FractureMPM::~FractureMPM()
 {
-  delete lb;
-  delete flags;
-  delete contactModel;
-  delete thermalContactModel;
-  MPMPhysicalBCFactory::clean();
 }
 
-void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
-			     SimulationStateP& sharedState)
+void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+			       SimulationStateP& sharedState)
 {
-   d_sharedState = sharedState;
+  SerialMPM::problemSetup(prob_spec,grid,sharedState);
    
-   dataArchiver = dynamic_cast<Output*>(getPort("output"));
-   if(dataArchiver == 0){
-     cout<<"dataArchiver in FMPM is null now exiting; "<<endl;
-     exit(1);
-   } 
-
-   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
-
-   if(mpm_soln_ps) {
-     mpm_soln_ps->get("nodes8or27", flags->d_8or27);
-     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
-     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
-     mpm_soln_ps->get("artificial_damping_coeff", flags->d_artificialDampCoeff);
-     mpm_soln_ps->get("artificial_viscosity", flags->d_artificial_viscosity);
-     mpm_soln_ps->get("accumulate_strain_energy", flags->d_accStrainEnergy);
-     mpm_soln_ps->get("use_load_curves", flags->d_useLoadCurves);
-   }
-
-   if(flags->d_8or27==8){
-     NGP=1;
-     NGN=1;
-   } else if(flags->d_8or27==MAX_BASIS){
-     NGP=2;
-     NGN=2;
-   }
-
-  //__________________________________
-  // Grab time_integrator, default is explicit
-   string integrator_type = "explicit";
-   d_integrator = Explicit;
-   if (mpm_soln_ps ) {
-     mpm_soln_ps->get("time_integrator",flags->d_integrator_type);
-     if (flags->d_integrator_type == "implicit"){
-       d_integrator = Implicit;
-     }
-     if (flags->d_integrator_type == "explicit") {
-       d_integrator = Explicit;
-     }
-     if (flags->d_integrator_type == "fracture") {
-       d_integrator = Fracture;
-       flags->d_fracture = true;
-     }
-   }
-   
-   MPMPhysicalBCFactory::create(prob_spec);
-
-   contactModel = ContactFactory::create(prob_spec,sharedState, lb,flags);
-   thermalContactModel =
-     ThermalContactFactory::create(prob_spec, sharedState,lb,flags);
-
-   // for Fracture 
-   crackMethod = scinew Crack(prob_spec,sharedState,dataArchiver,lb,flags);
+  dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(dataArchiver == 0){
+    cout<<"dataArchiver in FMPM is null now exiting; "<<endl;
+    exit(1);
+  } 
   
-   ProblemSpecP p = prob_spec->findBlock("DataArchiver");
-   if(!p->get("outputInterval", d_outputInterval))
-      d_outputInterval = 1.0;
+  ProblemSpecP p = prob_spec->findBlock("DataArchiver");
+  if(!p->get("outputInterval", d_outputInterval))
+    d_outputInterval = 1.0;
+  
+  // for Fracture 
+  crackMethod = scinew Crack(prob_spec,sharedState,dataArchiver,lb,flags);
 
-   //Search for the MaterialProperties block and then get the MPM section
-
-   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
-
-   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-
-   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags);
-
-     //register as an MPM material
-     sharedState->registerMPMMaterial(mat);
-   }
 }
 
 void FractureMPM::scheduleInitialize(const LevelP& level,
@@ -213,10 +150,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
-  t = scinew Task("FractureMPM::printParticleCount",
-		  this, &FractureMPM::printParticleCount);
-  t->requires(Task::NewDW, lb->partCountLabel);
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  SerialMPM::schedulePrintParticleCount(level,sched);
     
   // Descritize crack plane into triangular elements
   t = scinew Task("Crack:CrackDiscretization",
@@ -231,41 +165,10 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
 
   if (flags->d_useLoadCurves) {
     // Schedule the initialization of pressure BCs per particle
-    scheduleInitializePressureBCs(level, sched);
+    SerialMPM::scheduleInitializePressureBCs(level, sched);
   }
 }
 
-void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
-				              SchedulerP& sched)
-{
-  MaterialSubset* loadCurveIndex = scinew MaterialSubset();
-  int nofPressureBCs = 0;
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") loadCurveIndex->add(nofPressureBCs++);
-  }
-  if (nofPressureBCs > 0) {
-
-    // Create a task that calculates the total number of particles
-    // associated with each load curve.  
-    Task* t = scinew Task("FractureMPM::countMaterialPointsPerLoadCurve",
-		  this, &FractureMPM::countMaterialPointsPerLoadCurve);
-    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
-    t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
-                Task::OutOfDomain);
-    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-
-    // Create a task that calculates the force to be associated with
-    // each particle based on the pressure BCs
-    t = scinew Task("FractureMPM::initializePressureBC",
-		  this, &FractureMPM::initializePressureBC);
-    t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel);
-    t->modifies(lb->pExternalForceLabel);
-    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-  }
-}
 
 void FractureMPM::scheduleComputeStableTimestep(const LevelP&,
 					      SchedulerP&)
@@ -971,24 +874,6 @@ void FractureMPM::scheduleUpdateCrackFront(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-void FractureMPM::printParticleCount(const ProcessorGroup* pg,
-				   const PatchSubset*,
-				   const MaterialSubset*,
-				   DataWarehouse*,
-				   DataWarehouse* new_dw)
-{
-  sumlong_vartype pcount;
-  new_dw->get(pcount, lb->partCountLabel);
-  
-  if(pg->myrank() == 0){
-    static bool printed=false;
-    if(!printed){
-      cerr << "Created " << (long) pcount << " total particles\n";
-      printed=true;
-    }
-  }
-}
-
 void FractureMPM::computeAccStrainEnergy(const ProcessorGroup*,
 				    const PatchSubset*,
 				    const MaterialSubset*,
@@ -1007,47 +892,6 @@ void FractureMPM::computeAccStrainEnergy(const ProcessorGroup*,
    double totalStrainEnergy = 
      (double) accStrainEnergy + (double) incStrainEnergy;
    new_dw->put(max_vartype(totalStrainEnergy), lb->AccStrainEnergyLabel);
-}
-
-// Calculate the number of material points per load curve
-void FractureMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
-						const PatchSubset* patches,
-						const MaterialSubset*,
-						DataWarehouse* ,
-						DataWarehouse* new_dw)
-{
-  // Find the number of pressure BCs in the problem
-  int nofPressureBCs = 0;
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") {
-      nofPressureBCs++;
-
-      // Loop through the patches and count
-      for(int p=0;p<patches->size();p++){
-	const Patch* patch = patches->get(p);
-	int numMPMMatls=d_sharedState->getNumMPMMatls();
-	int numPts = 0;
-	for(int m = 0; m < numMPMMatls; m++){
-	  MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-	  int dwi = mpm_matl->getDWIndex();
-
-	  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-	  constParticleVariable<int> pLoadCurveID;
-	  new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-
-	  ParticleSubset::iterator iter = pset->begin();
-	  for(;iter != pset->end(); iter++){
-	    particleIndex idx = *iter;
-	    if (pLoadCurveID[idx] == (nofPressureBCs)) ++numPts;
-	  }
-	} // matl loop
-	new_dw->put(sumlong_vartype(numPts), lb->materialPointsPerLoadCurveLabel                                             , 0, nofPressureBCs-1);
-        //new_dw->put(sumlong_vartype(numPts), lb->materialPointsPerLoadCurveLabel);// for MPI
-
-      }  // patch loop
-    }
-  }
 }
 
 // Calculate the number of material points per load curve
@@ -2584,37 +2428,4 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   }
 }
 
-void 
-FractureMPM::setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
-				      ParticleSubset* pset,
-				      DataWarehouse* new_dw,
-				      double val)
-{
-  ParticleVariable<double>  temp;
-  new_dw->allocateTemporary(temp,  pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end();iter++){
-    temp[*iter]=val;
-  }
-  pvar = temp; 
-}
-
-void 
-FractureMPM::setParticleDefault(ParticleVariable<double>& pvar,
-			      const VarLabel* label, 
-			      ParticleSubset* pset,
-			      DataWarehouse* new_dw,
-                              double val)
-{
-  new_dw->allocateAndPut(pvar, label, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for (; iter != pset->end(); iter++) {
-    pvar[*iter] = val;
-  }
-}
-
-void FractureMPM::setSharedState(SimulationStateP& ssp)
-{
-  d_sharedState = ssp;
-}
 
