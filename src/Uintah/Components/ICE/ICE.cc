@@ -29,6 +29,11 @@
 #include <Uintah/Grid/VarTypes.h>
 #include <SCICore/Datatypes/DenseMatrix.h>
 #include <vector>
+#include <Uintah/Grid/BoundCond.h>
+#include <Uintah/Grid/KinematicBoundCond.h>
+#include <Uintah/Grid/SymmetryBoundCond.h>
+#include <Uintah/Grid/TempThermalBoundCond.h>
+#include <Uintah/Grid/FluxThermalBoundCond.h>
 
 using std::vector;
 using std::max;
@@ -876,7 +881,43 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   // Put Boundary condition stuff in here
   //
   //
-
+  // Apply grid boundary conditions to the velocity
+  // before storing the data
+  
+  //      cout << "Patch id = " << patch->getID() << endl;
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCond* > bcs;
+    bcs = patch->getBCValues(face);
+    //cout << "number of bcs on face " << face << " = " 
+    //	     << bcs.size() << endl;
+    
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      string bcs_type = bcs[i]->getType();
+      if (bcs_type == "Kinematic") {
+	KinematicBoundCond* bc = 
+	  dynamic_cast<KinematicBoundCond*>(bcs[i]);
+	//	    cout << "bc value = " << bc->getVelocity() << endl;
+	//gvelocity.fillFace(face,bc->getVelocity());
+      }
+      if (bcs_type == "Symmetric") {
+	//SymmetryBoundCond* bc =
+	dynamic_cast<SymmetryBoundCond*>(bcs[i]);
+	//gvelocity.fillFaceNormal(face);
+      }
+      if (bcs_type == "Temperature") {
+	// TempThermalBoundCond* bc = 
+	//  dynamic_cast<TempThermalBoundCond*>(bcs[i]);
+	//cout << "bc value = " << bc->getTemp() << endl;
+      }
+      if (bcs_type == "Flux") {
+	// FluxThermalBoundCond* bc = 
+	//  dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
+	//cout << "bc value = " << bc->getFlux() << endl;
+      }
+    }
+  }
+  
   // Put the result in the datawarehouse
   for(int m = 0; m < NVFs; m++){
       new_dw->put(uvel_FCME[m], lb->uvel_FCMELabel, m, patch);
@@ -1086,6 +1127,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.37  2000/10/17 04:33:35  jas
+// Copied grid bcs into ice for initial testing.
+//
 // Revision 1.36  2000/10/17 04:13:25  jas
 // Implement hydrostatic pressure adjustment as part of step 1b.  Still need
 // to implement update bcs.
