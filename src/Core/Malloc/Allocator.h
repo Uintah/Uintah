@@ -48,7 +48,7 @@ void MakeDefaultAllocator();
 void PrintTag(void*);
 
 // these functions are for use in tracking down memory leaks
-//   int the MALLOC_STATS file, unfreed memory will be listed with
+//   in the MALLOC_STATS file, unfreed memory will be listed with
 //   the specified tag
 const char* AllocatorSetDefaultTagMalloc(const char* tag);
 const char* AllocatorSetDefaultTagNew(const char* tag);
