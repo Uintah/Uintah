@@ -40,7 +40,7 @@
  
    3) Prototypes to use (instead of bring.h):
 */
-      char *bring(int wordy,int flag,char *hostport,int lbuf,char *buf);
+      char *bring(int wordy,int flag, const char *hostport,int lbuf,char *buf);
       void endiswap(int lbuf, char *buf,int num);
       int  endian(void);
 /*
@@ -81,12 +81,12 @@
   /* 5 - CLOSE */
 
 void fatalerr(char *msg);
-void server(int wordy,char *hostport, int *asout,int *msout);
-int  client(int wordy,char *hostport);
+void server(int wordy,const char *hostport, int *asout,int *msout);
+int  client(int wordy,const char *hostport);
 int  rcvsnd(int wordy,int flag,int sock, int lbuf, char *buf);
 void sockclose(int wordy, int as);
 
-char *bring(int wordy,int flag,char *hostport,int lbuf,char *buf)
+char *bring(int wordy,int flag,const char *hostport,int lbuf,char *buf)
 {
   time_t t1=time(NULL);
   static int as,ms,status_flag=0; 
@@ -165,7 +165,7 @@ char *bring(int wordy,int flag,char *hostport,int lbuf,char *buf)
 /*******************************************************************************/
 
 
-void server(int wordy,char *hostport, int *asout,int *msout)
+void server(int wordy,const char *hostport, int *asout,int *msout)
 {
    int    as,ms;
 
@@ -212,7 +212,7 @@ void server(int wordy,char *hostport, int *asout,int *msout)
 
 /*******************************************************************/
 
-int client(int wordy,char *hostport)
+int client(int wordy, const char *hostport)
 {
    int    as;
 

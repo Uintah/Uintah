@@ -18,8 +18,6 @@ namespace MatlabInterface {
 
 using namespace SCIRun;
 
-MatrixHandle transport(int wordy,int flag,char *hport,MatrixHandle mh);
-void         transport(int wordy,int flag,char *hport,char *cmd);
 
 class MatlabInterfaceSHARE Matlab : public Module 
 {

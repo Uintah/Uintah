@@ -7,11 +7,11 @@
 namespace MatlabInterface {
 using namespace SCIRun;
 
-void transport(int wordy,int flag,char *hport,char *cmd)
+void transport(int wordy, int flag, const char *hport, char *cmd)
 {
   if((flag==4)||(flag==5)) /* OPEN AND CLOSE CLIENT */ 
   {
-   bring(wordy-2,flag,(char*)hport,0,NULL);
+   bring(wordy-2, flag, hport, 0, NULL);
    return;
   }
 
@@ -21,8 +21,8 @@ void transport(int wordy,int flag,char *hport,char *cmd)
     char cb[128];
     int  lcb=sizeof(cb);
     sprintf(cb,"%i %i %i %i %i\n",lbuf,1,endian(),1,lbuf);
-    bring(wordy-2,2,(char*)hport,lcb,cb);
-    bring(wordy-2,2,(char*)hport,lbuf,cmd);
+    bring(wordy-2, 2, hport, lcb, cb);
+    bring(wordy-2, 2, hport, lbuf, cmd);
     return;
   }
   fprintf(stderr,"transport char: wrong flag value %i\n",flag);
@@ -32,7 +32,7 @@ void transport(int wordy,int flag,char *hport,char *cmd)
   Send and receive MatrixHandle object
 *************************************************************************************/
 
-MatrixHandle transport(int wordy,int flag,char *hport,MatrixHandle mh)
+MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
 { 
  char cb[128];
  int  lcb=sizeof(cb);
@@ -45,7 +45,8 @@ MatrixHandle transport(int wordy,int flag,char *hport,MatrixHandle mh)
  if(flag==1) /* RECEIVE OPERATION */
  {
   int    endi,lbuf,sd;
-  sscanf(bring(wordy,1,(char*)hport,lcb,cb),"%i %i %i %i %i",&lbuf,&sd,&endi,&nr,&nc);
+  sscanf(bring(wordy, 1, hport, lcb, cb),
+	 "%i %i %i %i %i",&lbuf,&sd,&endi,&nr,&nc);
 
   if(sd==9) 
   {
@@ -56,15 +57,15 @@ MatrixHandle transport(int wordy,int flag,char *hport,MatrixHandle mh)
    int *cols=scinew int(nnz);
    db=scinew double(nnz);
 
-   bring(wordy,1,(char*)hport,nnz*4,(char*)cols);
-   bring(wordy,1,(char*)hport,(nc+1)*4,(char*)rows);
-   bring(wordy,1,(char*)hport,nnz*8,(char*)db);
+   bring(wordy, 1, hport, nnz*4, (char*)cols);
+   bring(wordy, 1, hport, (nc+1)*4, (char*)rows);
+   bring(wordy, 1, hport, nnz*8, (char*)db);
 
    if(endi!=endian())
    {
-     endiswap(nnz*8,(char*)db,8);
-     endiswap((nc+1)*4,(char*)rows,4);
-     endiswap(nnz*4,(char*)cols,4);
+     endiswap(nnz*8, (char*)db, 8);
+     endiswap((nc+1)*4, (char*)rows, 4);
+     endiswap(nnz*4, (char*)cols, 4);
    }
 
    smatr=scinew SparseRowMatrix(nr,nc,rows,cols,nnz,db);
@@ -91,8 +92,8 @@ MatrixHandle transport(int wordy,int flag,char *hport,MatrixHandle mh)
 
     if(db==NULL) lbuf=0;
 
-    bring(wordy,1,(char*)hport,lbuf,(char*)db);
-    if(endi!=endian()) endiswap(lbuf,(char*)db,sd);
+    bring(wordy, 1, hport, lbuf, (char*)db);
+    if(endi!=endian()) endiswap(lbuf, (char*)db, sd);
     return(mh);
   }
 
@@ -127,12 +128,12 @@ MatrixHandle transport(int wordy,int flag,char *hport,MatrixHandle mh)
     }
 
     sprintf(cb,"%i %i %i %i %i\n",nnz,9,endian(),nr,nc);
-    bring(wordy-2,2,(char *)hport,lcb,cb);
+    bring(wordy-2, 2, hport, lcb, cb);
 
-    if(bring(wordy-2,2,(char*)hport,nnz*4,(char*)cols)==NULL)
+    if(bring(wordy-2, 2, hport, nnz*4, (char*)cols)==NULL)
        fprintf(stderr,"Not enough memory on receiving side");
-    bring(wordy-2,2,(char*)hport,(nc+1)*4,(char*)rows);
-    bring(wordy-2,2,(char*)hport,nnz*8,(char*)db);
+    bring(wordy-2, 2, hport, (nc+1)*4, (char*)rows);
+    bring(wordy-2, 2, hport, nnz*8, (char*)db);
     return mh;
   }
 
@@ -157,9 +158,9 @@ MatrixHandle transport(int wordy,int flag,char *hport,MatrixHandle mh)
 
    sprintf(cb,"%i %i %i %i %i\n",nr*nc*8,8,endian(),nr,nc);
    if(wordy>1) fprintf(stderr,"sending buffer: %i %s\n",lcb,cb);
-   bring(wordy-2,2,(char *)hport,lcb,cb);
+   bring(wordy-2, 2, hport, lcb, cb);
 
-   if(bring(wordy-2,2,(char*)hport,nr*nc*8,(char*)db)==NULL)
+   if(bring(wordy-2, 2, hport, nr*nc*8, (char*)db)==NULL)
       fprintf(stderr,"Not enough memory on receiving side");
 
    return mh;
