@@ -69,6 +69,10 @@ WARNING
                                     const Patch*,
                                     DataWarehouse*,
                                     const int);
+                                    
+   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                      SchedulerP& sched);
+                                      
   private:
     ICELabel* lb;
                                                 
@@ -90,6 +94,13 @@ WARNING
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
                              const ModelInfo* mi);
+                             
+    void errorEstimate(const ProcessorGroup* pg,
+    		         const PatchSubset* patches,
+			  const MaterialSubset* matl,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+                       bool initial);
 
     PassiveScalar(const PassiveScalar&);
     PassiveScalar& operator=(const PassiveScalar&);
@@ -114,10 +125,12 @@ WARNING
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
+      VarLabel* scalar_gradLabel;
       VarLabel* diffusionCoefLabel;
       
       vector<Region*> regions;
       double diff_coeff;
+      double refineCriteria;
       int  initialize_diffusion_knob;
     };
     
@@ -131,8 +144,11 @@ WARNING
     PassiveScalarLabel* Slb;
     Scalar* d_scalar;
     
-    SimulationStateP sharedState;
+    SimulationStateP d_sharedState;
     Output* dataArchiver;
+    
+    //__________________________________
+    // global constants
     vector<Vector> d_probePts;
     vector<string> d_probePtsNames;
     bool d_usingProbePts;
