@@ -46,15 +46,15 @@ else
     elif [ $percent -lt "0" ]; then
 	let percent_improvement=-$percent;
 	
-	if [ $percent -lt "-5" ]; then
-	    echo "Highwater memory usage passed with some improvement!!"
-	    echo " -- memory usage improved by %$percent_improvement, replacing malloc_stats" > $TMPDIR/highwater_shortmessage.txt
-	    cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
-	    chgrp csafe $COMPARISON_MALLOC_STATS
-	    chmod g+rw $COMPARISON_MALLOC_STATS
-	else
+#	if [ $percent -lt "-5" ]; then
+#	    echo "Highwater memory usage passed with some improvement!!"
+#	    echo " -- memory usage improved by %$percent_improvement, replacing malloc_stats" > $TMPDIR/highwater_shortmessage.txt
+#	    cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
+#	    chgrp csafe $COMPARISON_MALLOC_STATS
+#	    chmod g+rw $COMPARISON_MALLOC_STATS
+#	else
 	    echo " -- memory usage improved by %$percent_improvement" > $TMPDIR/highwater_shortmessage.txt
-	fi
+#	fi
     else
 	echo "" > $TMPDIR/highwater_shortmessage.txt
 	echo "Highwater memory usage check passed!"
