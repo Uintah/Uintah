@@ -69,7 +69,7 @@ using namespace SCIRun;
  * making it easier to adapt to future changes. The separation of matlab
  * and SCIRun data management has the advantage that the matlab side can be
  * further enhanced to deal with different future matlab fileformats, without
- * having to comb through the conversion modules. Though there is a little 
+ * having to comb through the conversion prs. Though there is a little 
  * memory overhead. Especially with the V7 compressed files, more memory
  * is needed to maintain the integrity of the matlab reader. Some changes 
  * in this converter may be needed to enhance performance. Currently the
@@ -159,11 +159,12 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
       if (proparray.isempty()) return;
                 
       numfields = proparray.getnumfields();
-        
+            
       for (long p=0; p<numfields; p++)
         {
           subarray = proparray.getfield(0,p);
           mclass = subarray.getclass();
+
           if (mclass == matlabarray::mlSTRING)
             {   // only string arrays are converted
               propname = proparray.getfieldname(p);
@@ -189,10 +190,10 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
                  handle->set_property(propname,nrrd,false);         
                  continue;              
               }
-                 propname = proparray.getfieldname(p);
-                 mlArrayTOsciMatrix(subarray,matrix,0);
-                 handle->set_property(propname,matrix,false);         
-                 continue;           
+               propname = proparray.getfieldname(p);
+               mlArrayTOsciMatrix(subarray,matrix,0);
+               handle->set_property(propname,matrix,false);         
+               continue;           
             }
           }
           if (sciNrrdDataCompatible(subarray,dummyinfo,0))
@@ -255,7 +256,7 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
 // the program knows how to convert 
 // the matlabarray into a scirun matrix
 
-long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Module *module)
+long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, ProgressReporter *pr)
 {
   infotext = "";
   if (ma.isempty()) return(0);
@@ -274,12 +275,12 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
       dims = ma.getdims();
       if (dims.size() > 2)
         {   
-          postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
+          postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
           return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
         }
       if (ma.getnumelements() == 0)
           {   
-          postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (0x0 matrix)"));
+          postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (0x0 matrix)"));
           return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
         }      
             
@@ -317,7 +318,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
       if (index == -1) index = ma.getfieldnameindexCI("tensorfield");
       if (index == -1) 
         {
-          postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (cannot find a field with data: create a .data field)"));
+          postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (cannot find a field with data: create a .data field)"));
           return(0); // incompatible
         }
                 
@@ -325,7 +326,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
       numel = ma.getnumelements();
       if (numel > 1) 
         {
-          postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (the struct matrix is not 1x1: do not define more than one matrix)"));
+          postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (the struct matrix is not 1x1: do not define more than one matrix)"));
           return(0); // incompatible  
         }
       matlabarray subarray;
@@ -335,14 +336,14 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
         
       if (subarray.isempty()) 
         {
-          postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (no data: matrix is empty)"));
+          postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (no data: matrix is empty)"));
           return(0); // not compatible
         }
       vector<long> dims;        
       dims = subarray.getdims();
       if (dims.size() > 2)
         {   
-          postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
+          postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (dimensions > 2)"));
           return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
         }
         
@@ -355,9 +356,9 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
       // Any integer array can be dealt with as well
         
       // doubles are most likely to be the data wanted by the users
-      if (type == matlabarray::miDOUBLE) return(3);
+      if (type == matlabarray::miDOUBLE) return(4);
       // though singles should work as well
-      if (type == matlabarray::miSINGLE) return(2);
+      if (type == matlabarray::miSINGLE) return(3);
       // all other numeric formats should be integer types, which
       // can be converted using a simple cast
       return(1);                        
@@ -365,14 +366,14 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
   default:
     break;
   }
-  postmsg(module,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (matrix is not struct, dense or sparse array)"));
+  postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun Matrix (matrix is not struct, dense or sparse array)"));
   return (0);
 }
                 
 
 
 
-void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, Module *module)
+void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, ProgressReporter *pr)
 {
   matlabarray::mlclass mclass = ma.getclass();
         
@@ -505,7 +506,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, M
                                 
         matlabarray subarray;
         subarray = ma.getfield(0,dataindex);
-        mlArrayTOsciMatrix(subarray,handle,module);
+        mlArrayTOsciMatrix(subarray,handle,pr);
                                 
         if (propertyindex != -1)
           {
@@ -572,7 +573,7 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
 }
 
 
-void matlabconverter::sciMatrixTOmlArray(MatrixHandle &scimat,matlabarray &mlmat, Module *module)
+void matlabconverter::sciMatrixTOmlArray(MatrixHandle &scimat,matlabarray &mlmat, ProgressReporter *pr)
 {
   if (numericarray_ == true)
     {
@@ -630,7 +631,7 @@ bool matlabconverter::isvalidmatrixname(string name)
 // in case it is compatible return a positive value and write
 // out an infostring with a summary of the contents of the matrix
 
-long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infostring, Module *module)
+long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infostring, ProgressReporter *pr)
 {
   infostring = "";
   if (mlarray.isempty()) return(0);
@@ -640,7 +641,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
   mclass = mlarray.getclass();
         
   // parse matrices are dealt with in a separate 
-  // module as the the data needs to be divided over
+  // pr as the the data needs to be divided over
   // three separate Nrrds
 
  
@@ -665,7 +666,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
 
       if (fieldnameindex == -1) 
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (cannot find field with data: create a .data field)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (cannot find field with data: create a .data field)"));
           return(0);
         }
                 
@@ -673,7 +674,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
         
       if (subarray.isempty()) 
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (field with data is empty)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (field with data is empty)"));
           return(0);
         }
                                 
@@ -686,19 +687,19 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
                 
       if ((mclass != matlabarray::mlDENSE)&&(mclass != matlabarray::mlSPARSE)) 
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is not dense or structured array)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is not dense or structured array)"));
           return(0);
         }
                 
       if (subarray.getnumdims() > 10)    
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix dimension is larger than 10)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix dimension is larger than 10)"));
           return(0);    
         }
       
       if (subarray.getnumelements() == 0)
         {   
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (0x0 matrix)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (0x0 matrix)"));
           return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
         }      
                 
@@ -717,7 +718,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
         
   if ((mclass != matlabarray::mlDENSE))
     {
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (the data is not dense matrix or a structured array)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (the data is not dense matrix or a structured array)"));
       return(0); // incompatible for the moment, no converter written for this type yet
     }
 
@@ -728,13 +729,13 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
         
   if (mlarray.isempty()) 
     {
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is empty)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (matrix is empty)"));
       return(0);
     }
         
   if (mlarray.getnumelements() == 0)
       {   
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (0x0 matrix)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Nrrd Object (0x0 matrix)"));
       return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
     }      
                     
@@ -798,7 +799,7 @@ matlabarray::mitype matlabconverter::convertnrrdtype(int type)
     }
 }
 
-void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &scinrrd, Module *module)
+void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &scinrrd, ProgressReporter *pr)
 {
   // Depending on the matlabclass there are several converters
   // for converting the data from matlab into a SCIRun Nrrd object
@@ -902,7 +903,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                 throw matlabconverter_error();
               }
         
-            // set some info on the axis as not all SCIRun modules check whether there is any
+            // set some info on the axis as not all SCIRun prs check whether there is any
             // data and may crash if there is no label
                         
             // Nrrd lib is C and needs a list with pointers to C-style strings
@@ -983,7 +984,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
             throw matlabconverter_error();
           }
                                 
-        mlArrayTOsciNrrdData(subarray,scinrrd,module);
+        mlArrayTOsciNrrdData(subarray,scinrrd,pr);
                                 
         if (scinrrd == 0)
           {
@@ -1327,7 +1328,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
 }
 
 
-void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray &mlarray, Module */*module*/)
+void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray &mlarray, ProgressReporter* /*pr*/)
 {
 
   if (numericarray_ == true)
@@ -1428,7 +1429,7 @@ void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray 
 //   LatVol
 //   any suggestions for other types that need support ??
 
-long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring, Module *module)
+long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring, ProgressReporter *pr)
 {
 
   infostring = "";
@@ -1469,9 +1470,10 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
 
   if (!mlarray.isstruct())
     { 
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the matrix is not structured nor dense (2D or 3D))"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the matrix is not structured nor dense (2D or 3D))"));
       return(0); // not compatible if it is not structured data
     }
+  
   fieldstruct fs = analyzefieldstruct(mlarray); // read the main structure of the object
         
   // Check what kind of field has been supplied
@@ -1486,7 +1488,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
   // instead of specifying vectorfield as a field, it is now allowed and recommended to use
   // two fields: .field describing the data and .fieldtype for the type of data
   // The next piece of code translates the new notation back to the old one.
-        
+  
   if (!(fs.fieldtype.isempty()))
     {
       if ((fs.fieldtype.compareCI("vector"))&&(fs.vectorfield.isempty())&&(fs.scalarfield.isdense()))
@@ -1519,12 +1521,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     {
       if (fs.transform.getnumdims() != 2) 
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 2D)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 2D)"));
           return(0);
         }
       if ((fs.transform.getn() != 4)&&(fs.transform.getm() != 4))
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 4x4)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (transformation matrix is not 4x4)"));
           return(0);
         }
     }
@@ -1560,29 +1562,6 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
   // Data at edges, faces, or cells is only possible if the data
   // is of that dimension otherwise skip it and declare the data not usable
         
-  // THIS WAS TO PREVENT WEIRD DATA CONVERSIONS, WITH THE NEW BASIS_ORDER
-  // WE DO NOT HAVE THESE WEIRD ONES ANYMORE    
-        
-  //if (fs.dims.isdense())
-  //{
-  //  if ((fs.dims.getnumelements()==1) && (fs.basis_order != 1))
-  //  {
-  //    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for scanline)"));
-  //    return(0);
-  //  }
-  //  if ((fs.dims.getnumelements()==2) && (fs.basis_order!=1))
-  //  {
-  //   postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for image)"));
-  //    return(0);
-  //  }
-  //  if ((fs.dims.getnumelements()==3) && (fs.basis_order != 1) &&
-  //    (fs.basis_order != 0))
-  //  {
-  //    postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (specified data location is not supported for latvol)"));
-  //    return(0);
-  //  }
-  // }
-        
   // If it survived until here it should be translatable or not a regular mesh at all
         
   if (fs.dims.isdense())
@@ -1600,18 +1579,18 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
             {   // explicitly stated type: (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
               if ((fs.meshclass.compareCI("scanline"))&&(size!=1))
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (scanline needs only one dimension)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (scanline needs only one dimension)"));
                   return(0);
                 }
               if ((fs.meshclass.compareCI("image"))&&(size!=2)) 
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (an image needs two dimensions)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (an image needs two dimensions)"));
                   return(0);
                 }
 
               if ((fs.meshclass.compareCI("latvolmesh"))&&(size!=3))
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (a latvolmesh needs three dimensions)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (a latvolmesh needs three dimensions)"));
                   return(0);
                 }
 
@@ -1634,7 +1613,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         }
       else
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of dimensions (.dims field) needs to 1, 2, or 3)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (number of dimensions (.dims field) needs to 1, 2, or 3)"));
           return(0);
         }
         
@@ -1651,12 +1630,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       long numdims = fs.x.getnumdims();
       if (fs.y.getnumdims() != numdims) 
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
           return(0);
         }
       if (fs.z.getnumdims() != numdims) 
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
           return(0);
         }
                 
@@ -1669,12 +1648,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         {
           if(dimsx[p] != dimsy[p]) 
             {
-              postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
+              postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
               return(0);
             }
           if(dimsx[p] != dimsz[p]) 
             {
-              postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
+              postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
               return(0);
             }
         }
@@ -1697,40 +1676,22 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // Disregard data at odd locations. The translation function for those is not straight forward
       // Hence disregard those data locations.
 
-      // AGAIN THIS SECTION WAS TO PREVENT SURFACE DATA TO BE STUCK ON EDGE MESH
-      // IT IS NOW OBSOLETE 
-
-      //if ((numdims==1) && (fs.basis_order!=1))
-      //{
-      //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured curvemesh)"));
-      //  return(0);
-      //}
-      //if ((numdims==2)&&(fs.basis_order!= 1))
-      //{
-      //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured quadsurfmesh)"));
-      //  return(0);
-      //}
-      //if ((numdims==3)&&(fs.basis_order!=1)&&(fs.basis_order!=0))
-      //{
-      //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (improper data location for a structured hexvolmesh)"));
-      //  return(0);
-      //}
         
       if (fs.meshclass.isstring())
         {   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
           if ((fs.meshclass.compareCI("structcurve"))&&(numdims!=1))
             {
-              postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+              postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
               return(0);
             }
           if ((fs.meshclass.compareCI("structquadsurf"))&&(numdims!=2)) 
             {
-              postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+              postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
               return(0);
             }
           if ((fs.meshclass.compareCI("structhexvol"))&&(numdims!=3)) 
             {
-              postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
+              postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for x, y, and z matrix)"));
               return(0);
             }
         }           
@@ -1747,7 +1708,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
           oss << "[STRUCTURED HEXVOLMESH (" << dimsx[0] << "x" << dimsx[1] << "x" << dimsx[2] << " nodes) - " << fieldtype << "]";
           break;
         default:
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions)"));
           return(0);  // matrix is not compatible
         }
       infostring = oss.str();
@@ -1756,15 +1717,16 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         
   // check for unstructured meshes
 
+
   if (fs.node.isempty()) 
     {
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (no node matrix for unstructured mesh, create a .node field)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (no node matrix for unstructured mesh, create a .node field)"));
       return(0); // a node matrix is always required
     }
         
   if (fs.node.getnumdims() > 2) 
     {
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for node matrix)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions for node matrix)"));
       return(0); // Currently N dimensional arrays are not supported here
     }
   // Check the dimensions of the NODE array supplied only [3xM] or [Mx3] are supported
@@ -1777,17 +1739,18 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         
   if ((n==0)||(m==0)) 
     {
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (node matrix is empty)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (node matrix is empty)"));
       return(0); //empty matrix, no nodes => no mesh => no field......
     }
   if ((n != 3)&&(m != 3)) 
     {
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of node matrix needs to be 3)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of node matrix needs to be 3)"));
       return(0); // SCIRun is ONLY 3D data, no 2D, or 1D
     }
   numpoints = n;
   if ((m!=3)&&(n==3)) numpoints = m;
-        
+  
+                      
   if ((fs.edge.isempty())&&(fs.face.isempty())&&(fs.cell.isempty()))
     {
       // This has no connectivity data => it must be a pointcloud ;)
@@ -1798,7 +1761,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         {   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
           if (!(fs.meshclass.compareCI("pointcloud"))) 
             {
-              postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data has to be of the pointcloud class)"));
+              postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data has to be of the pointcloud class)"));
               return(0);
             }
         }
@@ -1807,7 +1770,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // THIS ONE IS STILL VALID, BUT -1 NEEDS TO BE ADDED FOR FUTURE ENHANCEMENTS
       if ((fs.basis_order!=1)&&(fs.basis_order!=-1))
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data can only be located at the nodes of a pointcloud)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data can only be located at the nodes of a pointcloud)"));
           return(0);
         }
                 
@@ -1835,7 +1798,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // WE CAN DISREGARD THE NEXT TEST NOW, IT IS OBSOLETE
       //if (fs.basis_order!=1)
       //{
-      //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data cannot be located at faces or cells for a curvemesh)"));
+      //  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (data cannot be located at faces or cells for a curvemesh)"));
       //  return(0);
       //} 
 
@@ -1844,7 +1807,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // we do not allow them to be used, hence they are not compatible
       if ((!fs.face.isempty())||(!fs.cell.isempty()))
         {   // a matrix with multiple connectivities is not yet allowed
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (multiple connectivity matrices defined)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (multiple connectivity matrices defined)"));
           return(0);
         }
                   
@@ -1852,7 +1815,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // Connectivity should be 2D
       if (fs.edge.getnumdims() > 2)
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (edge connectivity matrix should be 2D)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (edge connectivity matrix should be 2D)"));
           return(0);                
         } 
                                 
@@ -1863,7 +1826,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
                 
       if ((n!=2)&&(m!=2))
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of edge needs to be of size 2)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (one of the dimensions of edge needs to be of size 2)"));
           return(0);                
         } 
 
@@ -1889,7 +1852,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // The connectivity data should be 2D
       if (fs.face.getnumdims() > 2)
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the face connection matrix needs to be 2D)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the face connection matrix needs to be 2D)"));
           return(0);                
         } 
                 
@@ -1900,7 +1863,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // we do not support at the moment.
       if((!fs.cell.isempty()))
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (both a face and a cell matrix are defined)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (both a face and a cell matrix are defined)"));
           return(0);                
         } 
 
@@ -1908,7 +1871,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       // THIS TEST IS OBSOLETE NOW
       //if (fs.basis_order!=1)
       //{
-      //  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the field is at the cell location for a surface mesh)"));
+      //  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the field is at the cell location for a surface mesh)"));
       //  return(0);              
       //}
 
@@ -1919,7 +1882,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
             {   // explicitly stated type 
               if (!(fs.meshclass.compareCI("trisurf")))
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be trisurf)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be trisurf)"));
                   return(0);
                 }
             }
@@ -1945,7 +1908,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
             {   // explicitly stated type 
               if (!(fs.meshclass.compareCI("quadsurf"))) 
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be quadsurf)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (meshclass should be quadsurf)"));
                   return(0);
                 }
             }
@@ -1964,7 +1927,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
           return(1+ret);
         }
                 
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (matrix is of an unknown surface mesh class: the .face field does not have a dimension of size 3 or 4)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (matrix is of an unknown surface mesh class: the .face field does not have a dimension of size 3 or 4)"));
       return(0);
     }
 
@@ -1976,7 +1939,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
                 
       if (fs.cell.getnumdims() > 2)
         {
-          postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the cell connection matrix should be 2D)"));
+          postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the cell connection matrix should be 2D)"));
           return(0);
         }
       m = fs.cell.getm();
@@ -1990,7 +1953,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
             {   // explicitly stated type 
               if (!(fs.meshclass.compareCI("tetvol")))
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be tetvol)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be tetvol)"));
                   return(0);
                 }
             } 
@@ -2014,7 +1977,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
             {   // explicitly stated type 
               if (!(fs.meshclass.compareCI("hexvol"))) 
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be hexvol)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be hexvol)"));
                   return(0);                    
                 }
             } 
@@ -2037,7 +2000,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
             {   // explicitly stated type 
               if (!(fs.meshclass.compareCI("prismvol"))) 
                 {
-                  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be prismvol)"));
+                  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the mesh class should be prismvol)"));
                   return(0);                    
                 }
             } 
@@ -2055,17 +2018,17 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
           return(1+ret);            
         }
                 
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cell connection matrix dimensions do not match any of the supported mesh classes: the .cell field does not have a dimension of size 4, 6, or 8)"));             
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cell connection matrix dimensions do not match any of the supported mesh classes: the .cell field does not have a dimension of size 4, 6, or 8)"));             
       return(0);
     }
         
-  postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cannot match the matlab structure with any of the supported mesh classes)"));
+  postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (cannot match the matlab structure with any of the supported mesh classes)"));
   return(0);
 }
 
 
 
-void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifield,Module *module)
+void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifield,ProgressReporter *pr)
 {
   // The first part of the converter is NOT dynamic and is concerned with figuring out what the data
   // represents. We construct information string for the final dynamic phase 
@@ -2432,14 +2395,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
   
   //There is no empty data atm so for now go minimal with constant
   
-  ///VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-  // THIS NEEDS TO BE CHANGED AS SOON AS WE
-  // HAVE NO_DATA AGAIN!!!
-  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-  
-  //>>>>>>>>>> CHANGE NEEDED HERE   
-  // if (basis_order == -1) basis_order = 0;
-  //>>>>>>>>>>>>>>  
+
   
   fs.basis_order = basis_order;
         
@@ -2504,10 +2460,8 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
   // for managing this. It's ugly.... 
 
 
-  string fielddesc = "" + fieldtype +"<" + valuetype + "> ";
-  string fielddesc2 = fieldtype +"<" + valuetype + "> ";
-  string fieldname = DynamicAlgoBase::to_filename(fielddesc2);
-  //TypeDescription scifieldtype(fdesc,TypeDescription::cc_to_h(__FILE__),"SCIRun");
+  string fielddesc = fieldtype +"<" + valuetype + "> ";
+  string fieldname = DynamicAlgoBase::to_filename(fielddesc);
         
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("MatlabFieldReaderAlgoT");
@@ -2534,11 +2488,13 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         
   // Do the magic, internally algo will now refer to the proper dynamic class, which will be
   // loaded by this function as well
-  if (!module->module_dynamic_compile(cinfo, algo)) 
+  if (!pr) return;
+  
+  if (!(SCIRun::DynamicCompilation::compile(cinfo, algo, pr))) 
     {
       // Dynamic compilation failed
       scifield = 0;
-      module->error("matlabconverter::mlArrayTOsciField: Dynamic compilation failed\n");
+      pr->error("matlabconverter::mlArrayTOsciField: Dynamic compilation failed\n");
       return;
     }
         
@@ -2552,9 +2508,9 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     {
       // The algorithm has an builtin sanity check. If a specific converter cannot be built
       // it will create an algorithm that returns a false. Hence instead of failing at the
-      // compiler level a proper description will be issued to the user of the module
+      // compiler level a proper description will be issued to the user of the pr
       scifield = 0;
-      module->error("matlabconverter::mlArrayTOsciField: The dynamically compiled matlabconverter does not function properly; most probably some specific mesh or field converters are missing or have not yet been implemented\n");
+      pr->error("matlabconverter::mlArrayTOsciField: The dynamically compiled matlabconverter does not function properly; most probably some specific mesh or field converters are missing or have not yet been implemented\n");
       return;
     }
 
@@ -2583,9 +2539,17 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
           scifield->set_property("name",mlarray.getname(),false);
         }
     }
+    
+    
+//  if (fs.interp.isnumeric())
+//  {
+//    addinterp(scifield,fs.interp);
+//  }
   return;
 }
         
+
+
 
 matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma)
 {
@@ -2595,7 +2559,8 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
   // The last name in each list is the recommended name. When multiple fields are 
   // defined which suppose to have the same contents, the last one is chosen, which
   // is the recommended name listed in the documentation.
-        
+ 
+                    
   fieldstruct           fs;
   long                  index;
         
@@ -2674,7 +2639,12 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
         
   // Revised the design now only full affine transformation matrices are allowed
   index = ma.getfieldnameindexCI("transform"); if (index > -1) fs.transform = ma.getfield(0,index);
-        
+  
+  // Added support for mapping files
+  index = ma.getfieldnameindexCI("channels");        if (index > -1) fs.interp = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("mapping");        if (index > -1) fs.interp = ma.getfield(0,index);
+  index = ma.getfieldnameindexCI("interp");        if (index > -1) fs.interp = ma.getfield(0,index);
+                                                              
   // SET DEFAULT TO NONE
   fs.basis_order = -1;
         
@@ -2694,7 +2664,7 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
         {
           if ((fs.fieldlocation.getm()*fs.fieldlocation.getn())==1)
             {
-              std::vector<int> mat;
+              std::vector<int> mat(1);
               fs.fieldlocation.getnumericarray(mat);
               fs.basis_order = mat[0];
               if (fs.basis_order < -1) fs.basis_order = -1;
@@ -2702,7 +2672,7 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
         }
         
     }
-        
+     
   return(fs);
 }
 
@@ -3637,11 +3607,11 @@ MatlabFieldWriterAlgo::get_compile_info(const TypeDescription *fieldTD)
 }
 
 // This function invokes the sciField to matlab array converter, the top function
-// does deal with the dynamic compilation and assures that the module using this
+// does deal with the dynamic compilation and assures that the pr using this
 // functionality gets called to report compilation progress and as well reports
 // errors directly to the user
 
-void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarray,Module *module)
+void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarray,ProgressReporter *pr)
 {
   // Get the type information of the field for which we have to compile a converter
   const TypeDescription *fieldTD = scifield->get_type_description();
@@ -3651,10 +3621,12 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
   Handle<MatlabFieldWriterAlgo> algo;
   // Do the magic, internally algo will now refer to the proper dynamic class, which will be
   // loaded by this function as well
-  if (!module->module_dynamic_compile(cinfo, algo)) 
+  if (!pr) return;
+  
+  if (!(SCIRun::DynamicCompilation::compile(cinfo, algo, pr))) 
     {
       // Dynamic compilation failed
-      module->error("matlabconverter::sciFieldTOmlArray: Dynamic compilation failed\n");
+      pr->error("matlabconverter::sciFieldTOmlArray: Dynamic compilation failed\n");
       return;
     }
   // The function takes the matlabconverter pointer again, which we need to re-enter the object, which we will
@@ -3670,15 +3642,15 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
     {
       // The algorithm has an builtin sanity check. If a specific converter cannot be built
       // it will create an algorithm that returns a false. Hence instead of failing at the
-      // compiler level a proper description will be issued to the user of the module
+      // compiler level a proper description will be issued to the user of the pr
       mlarray.clear();
-      module->error("matlabconverter::sciFieldTOmlArray: The dynamically compiled matlabconverter does not function properly; most probably some specific mesh or field converters are missing or have not yet been implemented\n");
+      pr->error("matlabconverter::sciFieldTOmlArray: The dynamically compiled matlabconverter does not function properly; most probably some specific mesh or field converters are missing or have not yet been implemented\n");
       return;
     }
   if (mlarray.isempty())
     {
       // Apparently my sanity check did not work, we did not get a matlab object
-      module->error("matlabconverter::sciFieldTOmlArray: Converter did not result in a useful translation, something went wrong, giving up\n");
+      pr->error("matlabconverter::sciFieldTOmlArray: Converter did not result in a useful translation, something went wrong, giving up\n");
       return;
     }
         
@@ -3716,7 +3688,7 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
 // Bundle code
 #ifdef HAVE_BUNDLE
 
-long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostring, Module *module)
+long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostring, ProgressReporter *pr)
 {
   infostring = "";
   if (!mlarray.isstruct()) return(0);
@@ -3733,19 +3705,19 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
   for (long p = 0; p < nfields; p++)
     {
       subarray = mlarray.getfield(0,p);
-      if (prefer_bundles)  {if (sciBundleCompatible(subarray,dummyinfo,module)) { numbundles++; continue; } }
-      int score = sciFieldCompatible(subarray,dummyinfo,module);
+      if (prefer_bundles)  {if (sciBundleCompatible(subarray,dummyinfo,pr)) { numbundles++; continue; } }
+      int score = sciFieldCompatible(subarray,dummyinfo,pr);
       if (score > 1)  { numfields++; continue; }
-      if (prefer_nrrds) { if (sciNrrdDataCompatible(subarray,dummyinfo,module))   { numnrrds++; continue; } }
-      if (sciMatrixCompatible(subarray,dummyinfo,module)) { nummatrices++; continue; }
-      if (!prefer_nrrds) { if (sciNrrdDataCompatible(subarray,dummyinfo,module))   { numnrrds++; continue; } }
+      if (prefer_nrrds) { if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   { numnrrds++; continue; } }
+      if (sciMatrixCompatible(subarray,dummyinfo,pr)) { nummatrices++; continue; }
+      if (!prefer_nrrds) { if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   { numnrrds++; continue; } }
       if (score) { numfields++; continue; }
-      if (sciBundleCompatible(subarray,dummyinfo,module)) { numbundles++; continue; }
+      if (sciBundleCompatible(subarray,dummyinfo,pr)) { numbundles++; continue; }
     }
   
   if (numfields+nummatrices+numnrrds+numbundles == 0) 
     {
-      postmsg(module,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Bundle (none of the fields matches a SCIRun object)"));
+      postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Bundle (none of the fields matches a SCIRun object)"));
       return(0);
     }
   
@@ -3755,7 +3727,7 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
   return(1);
 }
 
-void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scibundle, Module *module)
+void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scibundle, ProgressReporter *pr)
 {
   if (!mlarray.isstruct()) throw matlabconverter_error();
   if (mlarray.getnumelements()==0) throw matlabconverter_error();
@@ -3764,7 +3736,7 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
   scibundle = new Bundle;
   if (scibundle.get_rep() == 0)
   {
-    module->error("Could not allocate bundle");
+    pr->error("Could not allocate bundle");
     return;
   }
   
@@ -3779,47 +3751,47 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
       {
         if (prefer_bundles == true)
         {
-          if (sciBundleCompatible(subarray,dummyinfo,module))
+          if (sciBundleCompatible(subarray,dummyinfo,pr))
           {
             BundleHandle subbundle;
-            mlArrayTOsciBundle(subarray,subbundle,module);
+            mlArrayTOsciBundle(subarray,subbundle,pr);
             scibundle->setBundle(fname,subbundle);
             continue;
           }
         }
       }
       
-      int score = sciFieldCompatible(subarray,dummyinfo,module);
+      int score = sciFieldCompatible(subarray,dummyinfo,pr);
       if (score > 1)  
         { 
           FieldHandle field;
-          mlArrayTOsciField(subarray,field,module);
+          mlArrayTOsciField(subarray,field,pr);
           scibundle->setField(fname,field);
           continue;
         }
       if (prefer_nrrds) 
         { 
-          if (sciNrrdDataCompatible(subarray,dummyinfo,module))   
+          if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   
             { 
               NrrdDataHandle nrrd;
-              mlArrayTOsciNrrdData(subarray,nrrd,module);
+              mlArrayTOsciNrrdData(subarray,nrrd,pr);
               scibundle->setNrrd(fname,nrrd);
               continue; 
             } 
         }
-      if (sciMatrixCompatible(subarray,dummyinfo,module)) 
+      if (sciMatrixCompatible(subarray,dummyinfo,pr)) 
         {
           MatrixHandle  matrix;
-          mlArrayTOsciMatrix(subarray,matrix,module);
+          mlArrayTOsciMatrix(subarray,matrix,pr);
           scibundle->setMatrix(fname,matrix);
           continue; 
         }
       if (!prefer_nrrds)
         {
-          if (sciNrrdDataCompatible(subarray,dummyinfo,module))   
+          if (sciNrrdDataCompatible(subarray,dummyinfo,pr))   
             { 
               NrrdDataHandle nrrd;
-              mlArrayTOsciNrrdData(subarray,nrrd,module);
+              mlArrayTOsciNrrdData(subarray,nrrd,pr);
               scibundle->setNrrd(fname,nrrd);
               continue; 
             } 
@@ -3827,21 +3799,21 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
       if (score) 
         { 
           FieldHandle field;
-          mlArrayTOsciField(subarray,field,module);
+          mlArrayTOsciField(subarray,field,pr);
           scibundle->setField(fname,field);
           continue;
         }
-      if (sciBundleCompatible(subarray,dummyinfo,module))
+      if (sciBundleCompatible(subarray,dummyinfo,pr))
       {
         BundleHandle subbundle;
-        mlArrayTOsciBundle(subarray,subbundle,module);
+        mlArrayTOsciBundle(subarray,subbundle,pr);
         scibundle->setBundle(fname,subbundle);
         continue;
       }
     }
 }
 
-void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &mlmat,Module *module)
+void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &mlmat,ProgressReporter *pr)
 {
   int numhandles = scibundle->getNumHandles();
   LockingHandle<PropertyManager> handle;
@@ -3865,7 +3837,7 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
           matlabarray subarray;
           bool numericarray = numericarray_;
           numericarray_ = false;
-          sciFieldTOmlArray(fhandle,subarray,module);
+          sciFieldTOmlArray(fhandle,subarray,pr);
           mlmat.setfield(0,name,subarray);
           numericarray_ = numericarray;
         }
@@ -3874,7 +3846,7 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
         {
           MatrixHandle  fhandle = matrix;
           matlabarray subarray;
-          sciMatrixTOmlArray(fhandle,subarray,module);
+          sciMatrixTOmlArray(fhandle,subarray,pr);
           mlmat.setfield(0,name,subarray);
         }
       nrrd = dynamic_cast<NrrdData *>(handle.get_rep());
@@ -3882,7 +3854,7 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
         {
           NrrdDataHandle  fhandle = nrrd;
           matlabarray subarray;
-          sciNrrdDataTOmlArray(fhandle,subarray,module);
+          sciNrrdDataTOmlArray(fhandle,subarray,pr);
           mlmat.setfield(0,name,subarray);
         }
       bundle = dynamic_cast<Bundle *>(handle.get_rep());
@@ -3890,7 +3862,7 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
         {
           BundleHandle fhandle = bundle;
           matlabarray subarray;
-          sciBundleTOmlArray(fhandle,subarray,module);
+          sciBundleTOmlArray(fhandle,subarray,pr);
           mlmat.setfield(0,name,subarray);
         }
     }
@@ -3901,11 +3873,11 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
 
 // FUNCTIONS FOR RETURNING MESSAGES TO THE USER FOR DEBUGGING PURPOSES
 
-void matlabconverter::postmsg(Module *ptr,string msg)
+void matlabconverter::postmsg(ProgressReporter *pr,string msg)
 {
-  if (ptr) {
+  if (pr) {
     if (postmsg_)
-      ptr->remark(msg);
+      pr->remark(msg);
   }
 }
 
