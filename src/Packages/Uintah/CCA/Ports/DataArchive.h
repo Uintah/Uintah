@@ -366,9 +366,8 @@ private:
     GridP grid = queryGrid( d_tstimes[ts] );
     Patch* patch = NULL;
     particleIndex idx;
-    for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
+    for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
       double t = d_tstimes[ts];
-      
       // figure out what patch contains the cell. As far as I can tell,
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
@@ -424,7 +423,7 @@ private:
     while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
       ts++;
     
-    for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
+    for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
       double t = d_tstimes[ts];
       
       // figure out what patch contains the cell. As far as I can tell,
