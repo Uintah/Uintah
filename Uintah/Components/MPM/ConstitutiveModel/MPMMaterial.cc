@@ -24,6 +24,7 @@
 
 #include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Uintah/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Uintah/Components/MPM/PhysicalBC/CrackBC.h>
 
 using namespace std;
 using namespace Uintah::MPM;
@@ -219,6 +220,9 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
 
      //applyPhysicalBCToParticles
+     
+     const Point& p( position[pIdx] );
+     
      for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ ) {
        string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
         
@@ -229,12 +233,62 @@ void MPMMaterial::createParticles(particleIndex numParticles,
          const Point& lower( bc->getLowerRange() );
          const Point& upper( bc->getUpperRange() );
           
-         if(lower.x()<= position[pIdx].x() && position[pIdx].x() <= upper.x() &&
-            lower.y()<= position[pIdx].y() && position[pIdx].y() <= upper.y() &&
-            lower.z()<= position[pIdx].z() && position[pIdx].z() <= upper.z() ){
+         if(lower.x()<= p.x() && p.x() <= upper.x() &&
+            lower.y()<= p.y() && p.y() <= upper.y() &&
+            lower.z()<= p.z() && p.z() <= upper.z() ){
                pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
                //cout << pexternalforce[pIdx] << endl;
          }
+       }
+
+       if (bcs_type == "Crack") {
+         CrackBC* bc = dynamic_cast<CrackBC*>
+			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+	 
+	 Vector d = p - bc->origin();
+	 double x = Dot(d,bc->e1());
+	 double y = Dot(d,bc->e2());
+	 
+	 {
+	   Matrix3 mat(1, bc->x1(), bc->y1(),
+	               1, bc->x2(), bc->y2(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+
+	 {
+	   Matrix3 mat(1, bc->x2(), bc->y2(),
+	               1, bc->x3(), bc->y3(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+	 
+	 {
+	   Matrix3 mat(1, bc->x3(), bc->y3(),
+	               1, bc->x4(), bc->y4(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+
+	 {
+	   Matrix3 mat(1, bc->x4(), bc->y4(),
+	               1, bc->x1(), bc->y1(),
+		       1,     x,        y  );
+           if( mat.Determinant() < 0 ) continue;
+	 }
+	 
+	 double vdis = Dot( (p - bc->origin()), bc->e3() );
+
+	 double particle_half_size = pow( pvolume[pIdx], 1./3.) /2;
+
+	 if(vdis > 0 && vdis < particle_half_size) {
+	   pIsBroken[pIdx] = 1;
+	   pCrackSurfaceNormal[pIdx] = - bc->e3();
+	 }
+	 else if(vdis < 0 && vdis > -particle_half_size) {
+	   pIsBroken[pIdx] = 1;
+	   pCrackSurfaceNormal[pIdx] = bc->e3();
+	 }
        }
      }
    }
@@ -430,6 +484,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.56  2000/12/30 05:08:09  tan
+// Fixed a problem concerning patch and ghost in fracture computations.
+//
 // Revision 1.55  2000/12/10 09:06:07  sparker
 // Merge from csafe_risky1
 //

@@ -268,11 +268,11 @@ void SerialMPM::scheduleComputeNodeVisibility(const Patch* patch,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
     int idx = matl->getDWIndex();
-    t->requires(old_dw, lb->pXLabel,        idx, patch, Ghost::AroundNodes, 1);
-    t->requires(old_dw, lb->pVolumeLabel,   idx, patch, Ghost::AroundNodes, 1);
-    t->requires(old_dw, lb->pIsBrokenLabel, idx, patch, Ghost::AroundNodes, 1);
+    t->requires(old_dw, lb->pXLabel,        idx, patch, Ghost::AroundCells, 1);
+    t->requires(old_dw, lb->pVolumeLabel,   idx, patch, Ghost::AroundCells, 1);
+    t->requires(old_dw, lb->pIsBrokenLabel, idx, patch, Ghost::AroundCells, 1);
     t->requires(old_dw, lb->pCrackSurfaceNormalLabel,
-					    idx, patch, Ghost::AroundNodes, 1);
+					    idx, patch, Ghost::AroundCells, 1);
 
     t->computes(new_dw, lb->pVisibilityLabel, idx, patch);
   }
@@ -762,13 +762,13 @@ void SerialMPM::scheduleStressRelease(const Patch* patch,
 
     if(mpm_matl->getFractureModel()) {
       t->requires( old_dw, lb->pXLabel, 
-			idx, patch, Ghost::AroundNodes, 1 );
+			idx, patch, Ghost::AroundCells, 1 );
       t->requires( new_dw, lb->pIsNewlyBrokenLabel,
-			idx, patch, Ghost::AroundNodes, 1 );
+			idx, patch, Ghost::AroundCells, 1 );
       t->requires( new_dw, lb->pNewlyBrokenSurfaceNormalLabel,
-			idx, patch, Ghost::AroundNodes, 1 );
+			idx, patch, Ghost::AroundCells, 1 );
       t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-			idx, patch, Ghost::AroundNodes, 1 );
+			idx, patch, Ghost::AroundCells, 1 );
 
       //explosive fracture type
       t->requires( old_dw, lb->pImageVelocityLabel, idx, patch, Ghost::None);
@@ -1304,6 +1304,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          Visibility vis;
          vis = pVisibility[idx];
          vis.modifyShapeDerivatives(d_S);
+      	 vis.modifyWeights(S);
 
          for (int k = 0; k < 8; k++){
 	   if(patch->containsNode(ni[k]) && vis.visible(k)){
@@ -2074,6 +2075,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.178  2000/12/30 05:08:04  tan
+// Fixed a problem concerning patch and ghost in fracture computations.
+//
 // Revision 1.177  2000/12/27 23:08:44  guilkey
 // Eat me.
 //
