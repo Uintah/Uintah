@@ -298,6 +298,7 @@ GeomTextTexture::GeomTextTexture(const string &fontfile)
 #ifdef HAVE_FTGL
     ,font_(scinew GeomFTGLFontRenderer(fontfile.c_str()))
 #endif
+    ,up_hack_(false)
 {
 }
 
@@ -318,6 +319,7 @@ GeomTextTexture::GeomTextTexture( const string &fontfile,
 #ifdef HAVE_FTGL
     ,font_(scinew GeomFTGLFontRenderer(fontfile.c_str()))
 #endif
+    ,up_hack_(false)
 {
 }
 
@@ -336,7 +338,8 @@ GeomTextTexture::GeomTextTexture( GeomFTGLFontRendererHandle font,
     color_(c),
     anchor_(sw),
     own_font_(false),
-    font_(font)
+    font_(font),
+    up_hack_(false)
 {
 }
 #endif
@@ -445,6 +448,7 @@ GeomTextTexture::build_transform(Transform &modelview) {
     //Up *= -1.; 
     scale.y(-1.0);
   }
+  if(up_hack_) scale.y(scale.y()*-1.0);
   /*
   std::cerr << text_ << "n: " << transnormal.asPoint() 
 	    << "up: " << up_ 
@@ -551,11 +555,13 @@ static Persistent* make_GeomFTGLFontRenderer()
 
 PersistentTypeID GeomFTGLFontRenderer::type_id("GeomFTGLFontRenderer", "GeomObj", make_GeomFTGLFontRenderer);
 
-GeomFTGLFontRenderer::GeomFTGLFontRenderer(const string &fontfile)
+GeomFTGLFontRenderer::GeomFTGLFontRenderer(const string &fontfile, 
+					   double ptSize,
+					   int screenRez)
 {
   font_ = scinew FTGLTextureFont(fontfile.c_str());
-  font_->FaceSize(72,72);
   font_->CharMap(ft_encoding_unicode);
+  set_resolution(ptSize,screenRez);
 }
 
 GeomFTGLFontRenderer::GeomFTGLFontRenderer(const GeomFTGLFontRenderer& copy)
@@ -566,6 +572,17 @@ GeomFTGLFontRenderer::GeomFTGLFontRenderer(const GeomFTGLFontRenderer& copy)
 GeomObj* GeomFTGLFontRenderer::clone()
 {
     return scinew GeomFTGLFontRenderer(*this);
+}
+
+void
+GeomFTGLFontRenderer::set_resolution(double ptSize, int screenRez)
+{
+  int ptRez = int(ptSize*screenRez);
+  if (screenRez_ != screenRez || ptRez_ != ptRez) {
+    ptRez_ = ptRez;
+    screenRez_ = screenRez;
+    font_->FaceSize(ptRez_, screenRez_);
+  }
 }
 
 void GeomFTGLFontRenderer::get_bounds(BBox& in_bb)
@@ -589,6 +606,7 @@ void GeomFTGLFontRenderer::get_bounds(BBox& in_bb, const string &text)
 
 GeomFTGLFontRenderer::~GeomFTGLFontRenderer()
 {
+  //  delete font_;
 }
 
 void
