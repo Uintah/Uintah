@@ -35,12 +35,6 @@ template class LockingHandle<Mesh>;
 template class LockingHandle<Surface>;
 
 
-#include <Core/Datatypes/FieldRG.h>
-template class FieldRG<double>;
-
-#include <Core/Datatypes/FieldTet.h>
-template class FieldTet<double>;
-
 #ifdef __sgi
 #pragma reset woff 1468
 #endif
