@@ -450,9 +450,10 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
       // that it has what is needed (nothing).
       batch->received();
 #ifdef USE_PACKING
-      // otherwise, it will be deleted after it receives and unpacks
+      // otherwise, these will be deleted after it receives and unpacks
       // the data.
       delete p_mpibuff;
+      delete pBatchRecvHandler;
 #endif	        
     }
   } // end for
