@@ -121,6 +121,9 @@ DaVinci::~DaVinci()
 void
 DaVinci::setGraph(const TaskGraph* graph)
 {
+  if (graph == NULL)
+    return;
+  
   ostringstream graph_str;    
 
   graph_str << "graph(new_placed([";
