@@ -15,7 +15,6 @@
 
 #include <Classlib/Persistent.h>
 #include <Classlib/LockingHandle.h>
-#include <Datatypes/DenseMatrix.h>
 #include <Geom/Container.h>
 #include <Geometry/Transform.h>
 #include <Multitask/ITC.h>

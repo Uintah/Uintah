@@ -375,7 +375,6 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 		       GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv"){    
-	return;
 	int nu=verts.dim1();
 	int nv=verts.dim2();
 	Vector uu(u/(nu-1));
