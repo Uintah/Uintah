@@ -107,7 +107,7 @@ HistObj::compute()
     data_[pos]++;
   }
 
-  for (int i=0; i<data_.size(); i++)
+  for (unsigned int i=0; i<data_.size(); i++)
     data_[i] /= ref_.size();
 
   compute_minmax();

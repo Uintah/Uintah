@@ -340,7 +340,7 @@ void GeomTexVolRender::SetQuantStuff(vector< Vector > &vecs, int *v, int sz)
 #endif
   }
 
-  for(int i=0;i<vecs.size();i++) {
+  for(unsigned int i=0;i<vecs.size();i++) {
     quantnrms[i] = vecs[i];
   }
 
