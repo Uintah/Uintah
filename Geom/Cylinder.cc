@@ -66,10 +66,15 @@ void GeomCylinder::adjust()
     v2*=rad;
 
     Vector z(0,0,1);
-    zrotaxis=Cross(axis, z);
-    zrotaxis.normalize();
-    double cangle=Dot(z, zrotaxis);
-    zrotangle=-Acos(cangle);
+    if(Abs(axis.y()) < 1.e-5){
+	// Only in x-z plane...
+	zrotaxis=Vector(0,1,0);
+    } else {
+	zrotaxis=Cross(axis, z);
+	zrotaxis.normalize();
+    }
+    double cangle=Dot(z, axis)/height;
+    zrotangle=Acos(cangle);
 }
 
 GeomObj* GeomCylinder::clone()

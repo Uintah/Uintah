@@ -70,11 +70,16 @@ void GeomCone::adjust()
 	axis.find_orthogonal(v1, v2);
     }
     tilt=(bot_rad-top_rad)/axis.length2();
-    Vector z(0,0,1);
-    zrotaxis=Cross(axis, z);
-    zrotaxis.normalize();
+    Vector z(0,0,1);	
+    if(Abs(axis.y()) < 1.e-5){
+	// Only in x-z plane...
+	zrotaxis=Vector(0,1,0);
+    } else {
+	zrotaxis=Cross(axis, z);
+	zrotaxis.normalize();
+    }
     double cangle=Dot(z, axis)/height;
-    zrotangle=-Acos(cangle);
+    zrotangle=Acos(cangle);
 }
 
 void GeomCone::get_bounds(BBox& bb)

@@ -66,10 +66,15 @@ void GeomDisc::adjust()
     }
     normal.normalize();
     Vector z(0,0,1);
-    zrotaxis=Cross(normal, z);
-    zrotaxis.normalize();
-    double cangle=Dot(z, zrotaxis);
-    zrotangle=-Acos(cangle);
+    if(Abs(normal.y()) < 1.e-5){
+	// Only in x-z plane...
+	zrotaxis=Vector(0,1,0);
+    } else {
+	zrotaxis=Cross(normal, z);
+	zrotaxis.normalize();
+    }
+    double cangle=Dot(z, normal);
+    zrotangle=Acos(cangle);
 }
 
 void GeomDisc::get_bounds(BBox& bb)
