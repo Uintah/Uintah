@@ -294,11 +294,11 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method set_update_type { name1 name2 op } {
-	puts stdout "set update type"
-	puts stdout $name1
-	puts stdout $name2
-	puts stdout $op
-	puts stdout [set $this-update_type]
+#	puts stdout "set update type"
+#	puts stdout $name1
+#	puts stdout $name2
+#	puts stdout $op
+#	puts stdout [set $this-update_type]
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set opt [$window.f.opt childsite]
@@ -312,7 +312,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-update_type
 
 	set $this-update_type [$w get]
-	puts "update to $this-update_type current is [set $this-continuous]"
+#	puts "update to $this-update_type current is [set $this-continuous]"
 	if { [set $this-update_type] == "Auto" } {
 	    set $this-continuous 1
 	} else {
