@@ -75,7 +75,7 @@ DEALINGS IN THE SOFTWARE.
   </section>
   
   <section>
-    <title>CMedian</title>
+    <title>Median Filtering</title>
     <para>
       Apply a median type filter to the data.  The median filter can
       be used to remove "streaks," "salt-and-pepper" noise, and

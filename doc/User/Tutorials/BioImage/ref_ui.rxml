@@ -182,13 +182,12 @@ DEALINGS IN THE SOFTWARE.
 	<section>
 	  <title>Currently Viewed Data - The Eye</title>
 	  <para>
-	    The radiobuttons to the left of the filters indicate the currenlty viewed data
-	    or the eye.  For example, if the radiobutton next to a crop filter is 
-	    selected, the cropped image will be shown in the Visualization Pane. As filters
+	    The radiobuttons to the left of the insert bars indicate the currenlty viewed data
+	    or the eye.  Changing the eye allows the user to view input and output data to a filter. For example, if the radiobutton below a crop filter is 
+	    selected, the cropped image will be shown in the Visualization Pane.  If the radiobutton above a crop filter is selected, the un-cropped dataset will be shown.  As filters
 	    are added or inserted, the eye will update to be the set to the output of the
 	    new filter.  It is especially helpful when editing Crop value to have the eye
-	    selected for the Crop filter being edited. Note: If a filter hasn't been 
-	    executed yet, the last generated output will be shown. 
+	    selected for the Crop filter being edited.  
 	  </para>
 	</section> <!-- End of Currently Viewed Data section-->
       </section> <!-- End of Dynamic Filters Section -->
@@ -196,7 +195,7 @@ DEALINGS IN THE SOFTWARE.
     <section>
       <title>Update Button</title>
       <para>
-	Anytime a filter parameter has changed, or the eye has been moved, the user
+	Anytime a filter parameter has changed, the user
 	must click the green Update button located towards the bottom of the
 	Processing Pane to see the results. The Update button is only enabled
 	when a change has been made which requires re-execution.
@@ -224,7 +223,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	The upper window is the 3D volume pane. The volume pane can 
 	display slice planes of the axial, sagittal and coronal planes oriented 
-	relative to each other in 3-space, maximum intensity projectsions,
+	relative to each other in 3-space, maximum intensity projections,
 	and a view a full 3D volume rendering of the data.
 	The volume pane is manipulated using the mouse. Please see the SCIRun Userguide for
 	more information on navigating inside of the volume pane's Viewer Window.
@@ -326,8 +325,15 @@ DEALINGS IN THE SOFTWARE.
 	clip out any points in the volume less than or equal to the threshold.
       </para>
       <para>
+	The Font Controls (labeled 6) control the text in the 2D slice panes.
+	Turn the text on/off using the Show 2D Window Text toggle and ajust the
+	text size using the corresponding slider. Users can also change the 
+	text color using the color selection widget in the Font Controls frame.
+      </para>
+      <para>
 	The Show Guidelines checkbox allows the user to toggle the slice panes 
-	guidelines on or off.
+	guidelines on or off. When on, guidelines will appear in the current
+	2D slice pane.
       </para>
       <para>
 	The Filter 2D Textures checkbox forces BioImage to linearally
@@ -336,6 +342,11 @@ DEALINGS IN THE SOFTWARE.
 	either the volume or slice panes then each pixel is represented as a 
 	little square, with it on, each pixel is linearally interpolated 
 	for a smoother appearance.
+      </para>
+      <para>
+	The Anatomical Coordinates checkbox (labeled 9) changes between using
+	anatomical labels such as superior, anterior, etc. with a standard
+	X, Y, Z coordinate system.
       </para>
       <para>
 	The Color Planes By frame allows the user to change the planes
@@ -353,7 +364,6 @@ DEALINGS IN THE SOFTWARE.
       </para>
       <para>
 	<!-- Edit Transfer Function... -->
-	<!-- Resolution... -->
 	<!-- Shading... -->
 	<!-- Lights... -->
 	The Mode allows the selection of standard (Over Operator), 
@@ -361,12 +371,13 @@ DEALINGS IN THE SOFTWARE.
       </para>
       <para>
 	The Sampling frame controls the rendering quality. 
-	Increasing the value of the Sampling Rate improve rendering
+	Increasing the value of the Final Rate improves rendering
 	quality. The Interactive Sampling Rate controls the number
 	of samples while translating, rotating, or zomming into the
 	volume and when decreased allows for faster interaction.
 	<!-- Global Opacity... -->
 	<!-- Window/level controls... -->
+	<!-- Gradient Threshold -->
       </para>
     </section> <!-- End of Volume Rendering Tab section -->
     <section>
