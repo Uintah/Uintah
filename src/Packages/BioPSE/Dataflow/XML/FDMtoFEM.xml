@@ -24,13 +24,13 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Change a finite difference model into a finite element
-    model</summary>
+    <summary>The FDMtoFEM module changes a finite difference model into a finite element
+    model.</summary>
     <description>
       <p>Version Date: April 2001</p>
       <p>Version: 1.1</p>
       <p>Given a finite difference model as input (conductivity
-      tensors at cell centers on a LatVolField), build a finite
+      tensors at cell centers on a LatVolField), this module builds a finite
       element model that represents the same system.  The finite
       element model is a TetVolField of ints, where the ints are indices
       into a lookup table of conductivity tensors stored in the
