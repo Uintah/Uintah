@@ -1804,6 +1804,16 @@ proc init_DATADIR_and_DATASET {} {
     
 
 proc writeNetwork { filename { subnet 0 } } {
+    # if the file already exists, back it up to "#filename"
+    if { [file exists $filename] } {
+	set src  "[file split [pwd]] [file split ${filename}]"
+	set src [eval file join $src]
+	set parts [file split $src]
+	set parts [lreplace $parts end end \#[lindex $parts end]]
+	set dest [eval file join $parts]
+	catch [file rename -force $src $dest]
+    }
+
     set out [open $filename {WRONLY CREAT TRUNC}]
     puts $out "\# SCIRun Network v[netedit getenv SCIRUN_VERSION]\n"
     maybeWriteTCLStyleCopyright $out
