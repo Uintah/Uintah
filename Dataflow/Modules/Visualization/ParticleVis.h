@@ -6,7 +6,7 @@
 #include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 
 namespace Uintah {
@@ -19,17 +19,17 @@ class ParticleVis : public Module {
     TensorParticlesIPort* tpin;
     ColorMapIPort *cin;
     GeometryOPort* ogeom;
-    TCLdouble current_time;
-    TCLdouble radius;
-    TCLint drawcylinders;
-    TCLdouble length_scale;
-    TCLdouble head_length;
-    TCLdouble width_scale;
-    TCLdouble shaft_rad;
-    TCLint show_nth;
-    TCLint drawVectors;
-    TCLint drawspheres;
-    TCLint polygons; // number of polygons used to represent
+    GuiDouble current_time;
+    GuiDouble radius;
+    GuiInt drawcylinders;
+    GuiDouble length_scale;
+    GuiDouble head_length;
+    GuiDouble width_scale;
+    GuiDouble shaft_rad;
+    GuiInt show_nth;
+    GuiInt drawVectors;
+    GuiInt drawspheres;
+    GuiInt polygons; // number of polygons used to represent
     // a sphere: [minPolys, MAX_POLYS]
     const int MIN_POLYS;    // polys, nu, and nv must correlate
     const int MAX_POLYS;  // MIN_NU*MIN_NV = MIN_POLYS

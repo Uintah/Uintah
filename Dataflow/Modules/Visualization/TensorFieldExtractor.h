@@ -34,7 +34,7 @@ LOG
 #include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/TensorFieldPort.h>
 #include <Dataflow/Network/Module.h> 
-#include <Core/TclInterface/TCLvar.h> 
+#include <Core/GuiInterface/GuiVar.h> 
 #include <string>
 #include <vector>
 
@@ -66,10 +66,10 @@ protected:
   
 private:
 
-  TCLstring tcl_status;
+  GuiString tcl_status;
 
-  TCLstring sVar;
-  TCLint sMatNum;
+  GuiString sVar;
+  GuiInt sMatNum;
 
   const TypeDescription *type;
 

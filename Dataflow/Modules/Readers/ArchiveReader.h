@@ -33,7 +33,7 @@ LOG
 #include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
 #include <Core/Util/NotFinished.h> 
 #include <Dataflow/Network/Module.h> 
-#include <Core/TclInterface/TCLvar.h> 
+#include <Core/GuiInterface/GuiVar.h> 
 
 namespace Uintah {
 
@@ -43,8 +43,8 @@ class ArchiveReader : public Module {
   
 public: 
   
-  TCLstring tcl_status;
-  TCLstring filebase; 
+  GuiString tcl_status;
+  GuiString filebase; 
   ////////// Constructors
   ArchiveReader(const clString& id); 
   virtual ~ArchiveReader(); 

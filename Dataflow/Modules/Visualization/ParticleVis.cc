@@ -31,7 +31,7 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Dataflow/Modules/Visualization/ParticleFieldExtractor.h>
