@@ -113,6 +113,10 @@ using std::endl;
 
 #include <stdio.h>
 
+/// Uncomment this define and recompile if you're having problems with
+/// an ATI card where the polygons flicker in and out.
+//#define NEED_ATI_CARD_FIX
+
 #define MAX_MATL_STACK 100
 
 namespace SCIRun {
