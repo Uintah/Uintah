@@ -71,8 +71,8 @@ void ColorMapWriter::execute()
 
   // If no name is provided, return
   string fn(filename_.get());
-  if(fn == "") {
-    error("Warning: no filename in ColorMapWriter");
+  if (fn == "") {
+    error("No filename in ColorMapWriter.");
     return;
   }
    

@@ -44,8 +44,6 @@
 #include <algorithm>
 #include <Core/Datatypes/VolumeUtils.h>
 
-using std::cerr;
-using std::endl;
 using std::hex;
 using std::dec;
 

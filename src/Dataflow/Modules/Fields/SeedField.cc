@@ -213,7 +213,7 @@ SeedField::execute_gui()
     }
     else
     {
-      error("Unsupported input field type, no cells\n");
+      error("Unsupported input field type, no cells.");
       return;
     }
   }
@@ -259,7 +259,7 @@ SeedField::execute_rake()
   
   Vector dir(max-min);
   int num_seeds = (int)(rake_.GetRatio()*15);
-  std::cerr << "num_seeds = " << num_seeds << endl;
+  remark("num_seeds = " + to_string(num_seeds));
   dir*=1./(num_seeds-1);
 
   PointCloudMesh* mesh = scinew PointCloudMesh;

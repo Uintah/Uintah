@@ -39,7 +39,6 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {

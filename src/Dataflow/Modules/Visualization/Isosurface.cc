@@ -29,7 +29,6 @@
 
 #include <map>
 #include <iostream>
-using std::cerr;
 using std::cin;
 using std::endl;
 #include <sstream>
@@ -148,9 +147,9 @@ void Isosurface::execute()
   switch ( use_algorithm.get() ) {
   case 0:  // Marching Cubes
     if ( !mc_alg ) {
-      string type = "MC::" + field->get_type_name();
+      const string type = "MC::" + field->get_type_name();
       if ( !loader.get( type, mc_alg ) ) {
-	error( "Marching Cubes can not work with this field\n");
+	error( "Marching Cubes can not work with this field.");
 	return;
       }
     }
@@ -165,12 +164,12 @@ void Isosurface::execute()
 
     break;
   case 1:  // Noise
-    //error("Noise not implemented\n");
+    //error("Noise not implemented.");
     if ( !noise_alg ) {
-      string type = "Noise::" + field->get_type_name();
-      cerr <<"look for alg = " << type << endl;
+      const string type = "Noise::" + field->get_type_name();
+      remark("look for alg = " + type);
       if ( !loader.get( type, noise_alg ) ) {
-	error( "NOISE can not work with this field\n");
+	error( "NOISE can not work with this field.");
 	return;
       }
       noise_alg->set_field( field.get_rep() );
@@ -179,9 +178,9 @@ void Isosurface::execute()
     break;
   case 2:  // View Dependent
     if ( !sage_alg ) {
-      string type = "Sage::" + field->get_type_name();
+      const string type = "Sage::" + field->get_type_name();
       if ( !loader.get( type, sage_alg ) ) {
-	error( "SAGE can not work with this field\n");
+	error( "SAGE can not work with this field.");
 	return;
       }
       sage_alg->set_field( field.get_rep() );
@@ -194,7 +193,7 @@ void Isosurface::execute()
     }
     break;
   default: // Error
-    error("Unknow Algorithm requested\n");
+    error("Unknow Algorithm requested.");
     return;
   }
 
@@ -244,22 +243,22 @@ Isosurface::send_results()
 void
 Isosurface::new_field( FieldHandle &field )
 {
-  string type = field->get_type_name();
+  const string type = field->get_type_name();
 
   if ( !field->is_scalar() ) {
-    cerr << "Isosurface: not a scalar field\n";
+    error("Not a scalar input field.");
     return;
   }
 
   MinmaxFunctor *functor;
   if ( !minmax_loader.get( type, functor ) ) {
-    cerr << "isosurface module: can not compute minmax for field\n";
+    error("Can not compute minmax for input field.");
     return;
   }
 
   pair<double, double> minmax;
   if ( !functor->get( field.get_rep(), minmax ) ) {
-    cerr << "field does not have minmax\n";
+    error("Field does not have minmax.");
     return;
   }
   

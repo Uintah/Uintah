@@ -273,7 +273,7 @@ ChangeCellType::execute()
   if (!input_->get(input_handle))
     return;
   if (!input_handle.get_rep()) {
-    error("Error: empty field\n");
+    error("Empty field.");
     return;
   }
     
@@ -313,7 +313,7 @@ ChangeCellType::execute()
       output_->send(FieldHandle(tvol));
     } 
   } else {
-    error("Error: field must be a LatticeVol\n");
+    error("Field must be a LatticeVol.");
     return;
   }
 }

@@ -94,7 +94,7 @@ ScaleFieldData::execute()
   if (data_name == "Vector" && geom_name == "PointCloud") {
     PointCloud<Vector> *pc = dynamic_cast<PointCloud<Vector> *>(ifieldhandle.get_rep());
     if (rows != pc->fdata().size()) {
-      error("Error -- different size data vectors.\n");
+      error("Different size data vectors.");
       return;
     }
     PointCloud<Vector> *pcs = pc->clone();
@@ -105,7 +105,7 @@ ScaleFieldData::execute()
     FieldHandle ofieldhandle(pcs);
     ofield_port->send(ofieldhandle);
   } else {
-    error("ScaleFieldData -- sorry, I only know how to scale vectors.\n");
+    error("I only know how to scale vectors.");
     return;
   }
 }

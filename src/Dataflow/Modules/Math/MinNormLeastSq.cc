@@ -42,42 +42,10 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-using std::cerr;
 #include <sstream>
 #include <math.h>
 
 namespace SCIRun {
-
-double det_3x3(double* p1, double* p2, double* p3){
-  double D = p1[0]*p2[1]*p3[2]-p1[0]*p2[2]*p3[1]-p1[1]*p2[0]*p3[2]+p2[0]*p1[2]*p3[1]+p3[0]*p1[1]*p2[2]-p1[2]*p2[1]*p3[0];
-  return(D);
-} 
-
-int solve_3x3(double a[3][3], double b[3],double x[3]){
-  double D = det_3x3(a[0],a[1],a[2]);
-  double D1 = det_3x3(b,a[1],a[2]);
-  double D2 = det_3x3(a[0],b,a[2]);
-  double D3 = det_3x3(a[0],a[1],b);
-  if ( D!=0){ 
-    x[0] = D1/D;
-    x[1] = D2/D; 
-    x[2] = D3/D; 
-  } else {
-    cerr << "ERROR, DET = 0!"<< endl;
-    x[0] = 1;
-    x[1] = 0; 
-    x[2] = 0;
-    return(-1);
-  }
-  return(0);
-}
-
-double error_norm( double* x1, double* x2,int  n){
-  double err= 0;
-  for (int i=0;i<n;i++)
-    err = err + (x1[i]-x2[i])*(x1[i]-x2[i]);
-  return(sqrt(err));
-}
 
 class MinNormLeastSq : public Module {
   MatrixIPort* v0_imat_;
@@ -86,6 +54,11 @@ class MinNormLeastSq : public Module {
   MatrixIPort* b_imat_;
   MatrixOPort* w_omat_;
   MatrixOPort* x_omat_;
+
+  double det_3x3(double* p1, double* p2, double* p3);
+  int solve_3x3(double a[3][3], double b[3],double x[3]);
+  double error_norm(double* x1, double* x2, int n);
+
 public:
   MinNormLeastSq(const string& id);
   virtual ~MinNormLeastSq();
@@ -121,7 +94,47 @@ MinNormLeastSq::~MinNormLeastSq()
 {
 }
 
-void MinNormLeastSq::execute() {
+double
+MinNormLeastSq::det_3x3(double* p1, double* p2, double* p3)
+{
+  return p1[0]*p2[1]*p3[2]-p1[0]*p2[2]*p3[1]-p1[1]*p2[0]*p3[2]+p2[0]*p1[2]*p3[1]+p3[0]*p1[1]*p2[2]-p1[2]*p2[1]*p3[0];
+} 
+
+int
+MinNormLeastSq::solve_3x3(double a[3][3], double b[3],double x[3])
+{
+  const double D = det_3x3(a[0],a[1],a[2]);
+  const double D1 = det_3x3(b,a[1],a[2]);
+  const double D2 = det_3x3(a[0],b,a[2]);
+  const double D3 = det_3x3(a[0],a[1],b);
+  if ( D!=0){ 
+    x[0] = D1/D;
+    x[1] = D2/D; 
+    x[2] = D3/D; 
+  } else {
+    error("DET = 0!");
+    x[0] = 1;
+    x[1] = 0; 
+    x[2] = 0;
+    return(-1);
+  }
+  return(0);
+}
+
+double 
+MinNormLeastSq::error_norm( double* x1, double* x2,int  n)
+{
+  double err= 0;
+  for (int i=0;i<n;i++)
+  {
+    err = err + (x1[i]-x2[i])*(x1[i]-x2[i]);
+  }
+  return(sqrt(err));
+}
+
+void
+MinNormLeastSq::execute()
+{
   int i,j;
   Array1<MatrixHandle> in(4);
   if (!v0_imat_->get(in[0])) return;
@@ -191,4 +204,6 @@ void MinNormLeastSq::execute() {
   MatrixHandle x_vecH(x_vec);
   x_omat_->send(x_vecH);
 }    
+
+
 } // End namespace SCIRun

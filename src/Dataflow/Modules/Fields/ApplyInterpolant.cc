@@ -189,7 +189,7 @@ ApplyInterpolant::callback(FSRC *fsrc, FITP *fitp, FOUT *)
     break;
 
   default:
-    error("No data in interpolant field.\n");
+    error("No data in interpolant field.");
     return;
   }
 
@@ -213,7 +213,7 @@ case Field::NODE:\
 	}\
 	else\
 	{\
-	  error("Incorrect field types dispatched\n");\
+	  error("Incorrect field types dispatched");\
 	}\
   }\
   break;\
@@ -229,7 +229,7 @@ case Field::EDGE:\
 	}\
 	else\
 	{\
-	  error("Incorrect field types dispatched\n");\
+	  error("Incorrect field types dispatched");\
 	}\
   }\
   break;\
@@ -245,7 +245,7 @@ case Field::FACE:\
 	}\
 	else\
 	{\
-	  error("Incorrect field types dispatched\n");\
+	  error("Incorrect field types dispatched");\
 	}\
   }\
   break;\
@@ -261,13 +261,13 @@ case Field::CELL:\
 	}\
 	else\
 	{\
-	  error("Incorrect field types dispatched\n");\
+	  error("Incorrect field types dispatched");\
 	}\
   }\
   break;\
 \
 default:\
-  error("No data location to dispatch on.\n");\
+  error("No data location to dispatch on.");\
   return;\
 }
 
@@ -294,11 +294,6 @@ ApplyInterpolant::execute()
   const string src_geom_name = src_field->get_type_name(0);
   const string src_data_name = src_field->get_type_name(1);
   const string itp_geom_name = itp_field->get_type_name(0);
-
-  cout << "src geom " << src_geom_name << '\n';
-  cout << "src data " << src_data_name << '\n';
-  cout << "itp geom " << itp_geom_name << '\n';
-  cout << "itp type " << itp_field->get_type_name() << '\n';
 
   if (src_geom_name == "TetVol")
   {
@@ -343,7 +338,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else if (itp_geom_name == "LatticeVol")
@@ -386,7 +381,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
 #endif
@@ -430,7 +425,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else if (itp_geom_name == "ContourField")
@@ -473,7 +468,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else if (itp_geom_name == "PointCloud")
@@ -516,12 +511,12 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else
     {
-      error("Bad interp field type.\n");
+      error("Bad interp field type.");
     }
   }
 #if 0
@@ -567,7 +562,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else if (itp_geom_name == "LatticeVol")
@@ -610,7 +605,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else if (itp_geom_name == "TriSurf")
@@ -653,7 +648,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else if (itp_geom_name == "ContourField")
@@ -696,7 +691,7 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else if (itp_geom_name == "PointCloud")
@@ -739,18 +734,18 @@ ApplyInterpolant::execute()
       }
       else
       {
-	error("Non-interpable source field type\n");
+	error("Non-interpable source field type");
       }
     }
     else
     {
-      error("Bad interp field type.\n");
+      error("Bad interp field type.");
     }
   }
 #endif
   else
   {
-    error("Bad source field type.\n");
+    error("Bad source field type.");
   }
 }
 

@@ -69,7 +69,6 @@ POSSIBLE REVISIONS:
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-using std::cerr;
 #include <sstream>
 using std::ostringstream;
 
@@ -98,9 +97,9 @@ private:
   MatrixIPort* ivec1P_;
   MatrixIPort* ivec2P_;
   MatrixOPort* errorP_;
-  GuiInt haveUI_;
-  GuiString methodTCL_;
-  GuiString pTCL_;
+  GuiInt       haveUI_;
+  GuiString    methodTCL_;
+  GuiString    pTCL_;
 }; 
 
 
@@ -141,17 +140,17 @@ void ErrorMetric::execute()
      if (!ivec2P_->get(ivec2H) || !(ivec2=dynamic_cast<ColumnMatrix*>(ivec2H.get_rep()))) return;
      
      if (ivec1->nrows() != ivec2->nrows()) {
-         cerr << "Error - can't compute error on vectors of different lengths!\n";
-         cerr << "vec1 length="<<ivec1->nrows();
-         cerr << "vec2 length="<<ivec2->nrows();
+         error("Can't compute error on vectors of different lengths!");
+         error("vec1 length = " + to_string(ivec1->nrows()));
+	 error("vec2 length = " + to_string(ivec2->nrows()));
          return;
      }
 
      int ne=ivec2->nrows();
 
-     ColumnMatrix* error=scinew ColumnMatrix(1);
-     double *val=error->get_rhs();
-     MatrixHandle errorH(error);
+     ColumnMatrix* errorM = scinew ColumnMatrix(1);
+     double *val=errorM->get_rhs();
+     MatrixHandle errorH(errorM);
 
      // compute CC
      
@@ -199,11 +198,10 @@ void ErrorMetric::execute()
 	 for (iterate=0; iterate<ne; iterate++)
 	     str << iterate << " " << (*ivec2)[iterate] << " ";
 	 str << "\" ; update idletasks";
-	 //     cerr << "str="<<str.str()<<"\n";
 	 TCL::execute(str.str().c_str());
      }
 
-     string meth=methodTCL_.get();
+     const string meth=methodTCL_.get();
      if (meth == "CC") {
          *val=cc;
      } else if (meth == "CCinv") {
@@ -213,12 +211,11 @@ void ErrorMetric::execute()
      } else if (meth == "RMSrel") {
          *val=rmsRel;
      } else {
-         cerr << "Unknown ErrorMetric::methodTCL_ - "<<meth<<"\n";
+         error("Unknown ErrorMetric::methodTCL_ - " + meth);
          *val=0;
      }
-//     cerr << "Error="<<*val<<"\n";
      errorP_->send(errorH);
-} // End namespace SCIRun
 }
 
+} // End namespace SCIRun
 
