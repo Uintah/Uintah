@@ -56,13 +56,15 @@ WARNING
     SFCYVariable(const SFCYVariable<T>&);
     virtual ~SFCYVariable();
      
-    virtual void rewindow(const IntVector& low, const IntVector& high);
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
      
     virtual void copyPointer(const SFCYVariableBase&);
-     
+
+    virtual void rewindow(const IntVector& low, const IntVector& high)
+    { Array3<T>::rewindow(low, high); }
+
     //////////
     // Insert Documentation Here:
     virtual SFCYVariableBase* clone() const;
@@ -75,10 +77,11 @@ WARNING
     virtual void allocate(const Patch* patch)
     { allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex()); }
 
-    virtual void copyPatch(SFCYVariableBase* src,
+    virtual void copyPatch(const SFCYVariableBase* src,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex);
-    SFCYVariable<T>& operator=(const SFCYVariable<T>&);
+    void copyPatch(const SFCYVariable<T>& src)
+    { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
      
     virtual void* getBasePointer();
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -324,6 +327,8 @@ WARNING
       return getWindow();
     }
   private:
+    SFCYVariable<T>& operator=(const SFCYVariable<T>&);
+
     static Variable* maker();
   };
    
@@ -369,19 +374,9 @@ WARNING
     const SFCYVariable<T>* c = dynamic_cast<const SFCYVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in SFCY variable");
-    *this = *c;
+    Array3<T>::copyPointer(*c);
   }
 
-  template<class T>
-  SFCYVariable<T>&
-  SFCYVariable<T>::operator=(const SFCYVariable<T>& copy)
-  {
-    if(this != &copy){
-      Array3<T>::operator=(copy);
-    }
-    return *this;
-  }
-   
   template<class T>
   SFCYVariable<T>::SFCYVariable()
   {
@@ -403,6 +398,7 @@ WARNING
 			  "is apparently already allocated!");
     resize(lowIndex, highIndex);
   }
+/*
   template<class T>
   void SFCYVariable<T>::rewindow(const IntVector& low,
 				 const IntVector& high) {
@@ -412,9 +408,10 @@ WARNING
     resize(low, high);
     Array3<T>::operator=(newdata);
   }
+*/
   template<class T>
   void
-  SFCYVariable<T>::copyPatch(SFCYVariableBase* srcptr,
+  SFCYVariable<T>::copyPatch(const SFCYVariableBase* srcptr,
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex)
   {

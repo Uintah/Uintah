@@ -59,10 +59,12 @@ WARNING
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
-     
-    virtual void rewindow(const IntVector& low, const IntVector& high);
+
     virtual void copyPointer(const SFCXVariableBase&);
-     
+
+    virtual void rewindow(const IntVector& low, const IntVector& high)
+    { Array3<T>::rewindow(low, high); }
+      
     //////////
     // Insert Documentation Here:
     virtual SFCXVariableBase* clone() const;
@@ -75,10 +77,11 @@ WARNING
     virtual void allocate(const Patch* patch)
     { allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex()); }
       
-    virtual void copyPatch(SFCXVariableBase* src,
+    virtual void copyPatch(const SFCXVariableBase* src,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex);
-    SFCXVariable<T>& operator=(const SFCXVariable<T>&);
+    void copyPatch(const SFCXVariable<T>& src)
+    { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
      
     virtual void* getBasePointer();
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -323,6 +326,8 @@ WARNING
       return getWindow();
     }
   private:
+    SFCXVariable<T>& operator=(const SFCXVariable<T>&);
+    
     static Variable* maker();
   };
    
@@ -360,16 +365,7 @@ WARNING
   {
     return scinew SFCXVariable<T>(*this);
   }
-   
-  template<class T>
-  void SFCXVariable<T>::rewindow(const IntVector& low,
-				 const IntVector& high) {
-    Array3<T> newdata;
-    newdata.resize(low, high);
-    newdata.copy(*this, low, high);
-    resize(low, high);
-    Array3<T>::operator=(newdata);
-  }
+
   template<class T>
   void
   SFCXVariable<T>::copyPointer(const SFCXVariableBase& copy)
@@ -377,19 +373,9 @@ WARNING
     const SFCXVariable<T>* c = dynamic_cast<const SFCXVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in SFCX variable");
-    *this = *c;
+    Array3<T>::copyPointer(*c);   
   }
 
-  template<class T>
-  SFCXVariable<T>&
-  SFCXVariable<T>::operator=(const SFCXVariable<T>& copy)
-  {
-    if(this != &copy){
-      Array3<T>::operator=(copy);
-    }
-    return *this;
-  }
-   
   template<class T>
   SFCXVariable<T>::SFCXVariable()
   {
@@ -413,7 +399,7 @@ WARNING
   }
   template<class T>
   void
-  SFCXVariable<T>::copyPatch(SFCXVariableBase* srcptr,
+  SFCXVariable<T>::copyPatch(const SFCXVariableBase* srcptr,
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex)
   {

@@ -60,7 +60,7 @@ WARNING
       virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
-      virtual void copyPatch(SFCZVariableBase* src,
+      virtual void copyPatch(const SFCZVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       void getMPIBuffer(BufferInfo& buffer,
