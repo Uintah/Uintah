@@ -58,7 +58,8 @@ WARNING
       // Call this when restarting from a checkpoint after calling
       // problemSetup.
       virtual void restartSetup(Dir& restartFromDir, int timestep,
-				double time, bool removeOldDir) = 0;
+				double time, bool fromScratch,
+				bool removeOldDir) = 0;
 
      virtual bool need_recompile(double time, double delt,
 				 const LevelP& level) = 0;
