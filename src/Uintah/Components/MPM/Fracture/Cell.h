@@ -4,7 +4,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Grid/ParticleSet.h>
 
-#include <list>
+#include <vector>
 
 namespace Uintah {
 
@@ -12,11 +12,10 @@ namespace MPM {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
-using std::list;
 
 class Cell {
 public:
-  list<particleIndex> particleList;
+  std::vector<particleIndex> particles;
   
   void  insert(const particleIndex& p);
 private:
@@ -28,6 +27,9 @@ private:
 #endif //__CELL_H__
 
 // $Log$
+// Revision 1.3  2000/06/23 16:49:46  tan
+// Added LeastSquare Approximation and Lattice for neighboring algorithm.
+//
 // Revision 1.2  2000/06/05 22:31:14  tan
 // Added function to insert particle index into a cell.
 //
