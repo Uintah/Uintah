@@ -228,10 +228,10 @@ namespace Uintah {
 
     void add(DetailedTask* task);
     int numTasks() const {
-      return (int)tasks.size();
+      return (int)tasks_.size();
     }
     DetailedTask* getTask(int i) {
-      return tasks[i];
+      return tasks_[i];
     }
 
 
@@ -254,11 +254,11 @@ namespace Uintah {
     
     void computeLocalTasks(int me);
     int numLocalTasks() const {
-      return (int)localtasks.size();
+      return (int)localtasks_.size();
     }
 
     DetailedTask* localTask(int idx) {
-      return localtasks[idx];
+      return localtasks_[idx];
     }
 
     void emitEdges(ProblemSpecP edgesElement, int rank);
@@ -274,7 +274,7 @@ namespace Uintah {
     { return currentDependencyGeneration_; }
 
     const TaskGraph* getTaskGraph() const {
-      return taskgraph;
+      return taskgraph_;
     }
     void setScrubCount(const VarLabel* var, int matlindex,
 		       const Patch* patch, int dw,
@@ -284,7 +284,7 @@ namespace Uintah {
 
     void internalDependenciesSatisfied(DetailedTask* task);
     SchedulerCommon* getSchedulerCommon() {
-      return sc;
+      return sc_;
     }
   private:
     void initializeBatches();
@@ -296,17 +296,17 @@ namespace Uintah {
     bool getScrubCount(const VarLabel* var, int matlindex,
 		       const Patch* patch, int dw, int& count);
 
-    SchedulerCommon* sc;
+    SchedulerCommon* sc_;
     const ProcessorGroup* d_myworld;
-    vector<DetailedTask*> tasks;
+    vector<DetailedTask*> tasks_;
 #if 0
-    vector<DetailedReq*> initreqs;
+    vector<DetailedReq*> initreqs_;
 #endif
-    const TaskGraph* taskgraph;
-    vector<Task*> stasks;
-    vector<DetailedTask*> localtasks;
-    vector<DependencyBatch*> batches;
-    DetailedDep* initreq;
+    const TaskGraph* taskgraph_;
+    vector<Task*> stasks_;
+    vector<DetailedTask*> localtasks_;
+    vector<DependencyBatch*> batches_;
+    DetailedDep* initreq_;
     
     // True for mixed scheduler which needs to keep track of internal
     // depedencies.

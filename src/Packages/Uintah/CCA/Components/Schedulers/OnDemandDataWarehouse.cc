@@ -286,7 +286,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	int* maxtag, found;
 	MPI_Attr_get(world->getComm(), MPI_TAG_UB, &maxtag, &found);
 	ASSERT(found);
-	ASSERTRANGE((PARTICLESET_TAG|batch->messageTag), 0, 1+(*maxtag));
+	ASSERT((PARTICLESET_TAG|batch->messageTag) <= (*maxtag));
 #endif
         ASSERT(batch->messageTag >= 0);
         MPI_Bsend(&numParticles, 1, MPI_INT, dest,

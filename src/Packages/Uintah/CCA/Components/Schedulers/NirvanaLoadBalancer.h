@@ -44,16 +44,17 @@ namespace Uintah {
      virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
      virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
-     virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*);
+     virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
+				    const Scheduler*);
      virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
      virtual bool inNeighborhood(const Patch*);
 
      virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
 							const ProcessorGroup* resources);
    private:
-      NirvanaLoadBalancer(const NirvanaLoadBalancer&);
-      NirvanaLoadBalancer& operator=(const NirvanaLoadBalancer&);
-      IntVector layout;
+     NirvanaLoadBalancer(const NirvanaLoadBalancer&);
+     NirvanaLoadBalancer& operator=(const NirvanaLoadBalancer&);
+     IntVector layout;
      int npatches;
      int numhosts;
      int numProcs;
@@ -61,7 +62,7 @@ namespace Uintah {
      int patches_per_processor;
      IntVector d;
 
-     std::set<const Patch*> neighbors;
+     std::set<const Patch*> d_neighbors;
    };
 } // End namespace Uintah
 
