@@ -170,13 +170,16 @@ void PartToGeom::execute()
     posid = part->position_vector();
     part->get(timestep, posid, pos);
 
-    vid = part->find_vector( mpvps->getVectorId());
-    part->get(timestep, vid, vectors);
+    if( mpvps->getVectorId() != "") {
+      vid = part->find_vector( mpvps->getVectorId());
+      part->get(timestep, vid, vectors);
+    }
     
+    if( mpvps->getScalarId() != ""){
+      sid = part->find_scalar( mpvps->getScalarId());
+      part->get(timestep, sid, scalars);
+    }
 
-    sid = part->find_scalar( mpvps->getScalarId());
-    part->get(timestep, sid, scalars);
-    
     cbClass = mpvps->getCallbackClass(); // hack need a better way.
   } else {
     cbClass = 0;
@@ -227,7 +230,7 @@ void PartToGeom::execute()
   }   
 
   //--------------------------------------
-  if( drawspheres.get() == 1 ) {
+  if( drawspheres.get() == 1 && scalars.size()) {
     float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
     int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
     int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
@@ -271,7 +274,7 @@ void PartToGeom::execute()
     GeomPick *pick = new GeomPick( obj, this);
     ogeom->delAll();
     ogeom->addObj(pick, "Particles");      
-  } else { // Particles
+  } else if( scalars.size() ) { // Particles
     GeomGroup *obj = new GeomGroup;
     GeomPts *pts = new GeomPts(pos.size());
     pts->pickable = 1;
@@ -340,6 +343,9 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.11  2000/01/27 04:52:17  kuzimmer
+// changes necessary to make MaterialParticle files work with only Grids or only Particles
+//
 // Revision 1.10  1999/12/28 21:11:44  kuzimmer
 // modified so that picking works again
 //

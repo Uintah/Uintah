@@ -94,7 +94,11 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
     if(pgrh.get_rep() == 0){
       return;
     }
-    result = (pgrh->GetGrid( 0 ))->getName();
+    if( pgrh->GetNGrids() == 0 )
+      result = "";
+    else
+      result = (pgrh->GetGrid( 0 ))->getName();
+    
     for(i = 1; i < pgrh->GetNGrids(); i++){
       result += clString(" " + (pgrh->GetGrid( i ))->getName());
     }
@@ -164,6 +168,8 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	    ps->list_scalars( vars );
 	    if ( vars.size() > 0)
 	      result = vars[0];
+	    else
+	      result = "";
 	    for( j = 1; j < vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
@@ -186,6 +192,8 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	    ps->list_scalars( vars );
 	    if ( vars.size() > 0)
 	      result = vars[0];
+	    else
+	      result = "";
 	    for( j = 1; j < vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
@@ -220,6 +228,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	    result = "";
 	    if ( vars.size() > 1)
 	      result = vars[1];
+	    else
 	    for( j = 2; j < vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
@@ -323,7 +332,6 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
       for(i = 0; i < pgr->GetNGrids(); i++){
 	if(pgr->GetGrid( i )->getName() == name){
 	  pgr->GetGrid( i )->getVectorNames( vars );
-	  cerr<<"vars size = "<<vars.size()<<endl;
 	  result = "";
 	  if ( vars.size() > 0)
 	    result = vars[0];
@@ -342,7 +350,6 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
       for(i = 0; i < pgr->GetNGrids(); i++){
 	if(pgr->GetGrid( i )->getName() == name){
 	  pgr->GetGrid( i )->getVectorNames( vars );
-	  cerr<<"vars size = "<<vars.size()<<endl;
 	  result = "";
 	  if ( vars.size() > 0)
 	    result = vars[0];
@@ -377,6 +384,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 //
 void VizControl::setVars(ParticleGridReaderHandle reader)
 {
+  clString command;
   if(MPParticleGridReader *r =
      dynamic_cast<MPParticleGridReader*> (reader.get_rep())){
 
@@ -390,8 +398,8 @@ void VizControl::setVars(ParticleGridReaderHandle reader)
       ParticleSetHandle psh = r->GetParticleSet(i);
       if(MPVizParticleSet * ps = 
 	 dynamic_cast<MPVizParticleSet*> (psh.get_rep())){
-	TCL::execute(id + " addName particleSet "
-		     + ps->getName());
+	command = id + " addName particleSet " + ps->getName();
+	TCL::execute(command);
       }
     }
     
@@ -425,7 +433,7 @@ void VizControl::checkVars(ParticleGridReaderHandle reader)
 	setVars(reader);
 	return;
       }
-	
+      
       for( i = 0; i < rGrids; i++){
 	if( r->GetGrid(i)->getName() !=
 	    pgr->GetGrid(i)->getName() ){
@@ -559,7 +567,6 @@ void VizControl::graph(clString idx, clString var)
   int i;
   if( MPParticleGridReader *tpr = dynamic_cast<MPParticleGridReader*> (pgrh.get_rep())){
 
-    cerr<< "ntimesteps = "<< tpr->GetNTimesteps()<<endl;
     Array1<double> values;
     if( tpr->GetNTimesteps() ){
       int varId = tpr->GetParticleSet(pName.get())->find_scalar( var );
@@ -620,6 +627,7 @@ void VizControl::execute()
        std::cerr<<"Vectorfield name is "<<gvVar.get()<<endl;
      }
    }
+
    if(psVar.get() != "" || pvVar.get() != "" ){
      ParticleSetHandle psh = pgrh->GetParticleSet( pName.get() );
      if( MPVizParticleSet *mpvps =
@@ -630,7 +638,7 @@ void VizControl::execute()
      }
      if( psh.get_rep() ){
 	 std::cerr<<"ParticleSet vars are " <<  psVar.get()<<" and  "<<
-	 pvVar.get()<<endl;
+	   pvVar.get()<<endl;
        psout->send(psh);
      }
    }
