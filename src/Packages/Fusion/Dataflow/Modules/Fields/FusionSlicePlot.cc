@@ -85,7 +85,7 @@ void FusionSlicePlot::execute(){
 
   // Get a handle to the input field port.
   FieldIPort* ifield_port =
-    (FieldIPort *)	get_iport("Input Field");
+    (FieldIPort *) get_iport("Input Field");
 
   if (!ifield_port) {
     error( "Unable to initialize "+name+"'s iport" );
