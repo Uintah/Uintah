@@ -11,6 +11,9 @@
 #include <string>
 #include <vector>
 
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/MouseCallBack.h>
+
 // Foward declare GLUI objects
 class GLUI;
 class GLUI_Listbox;
@@ -99,6 +102,9 @@ public:
   //   sound thread will fill in this information (instead of us being
   //   able to query it) 
   //void    setSoundInformation();
+
+  // object to keep track of while a volume is selected
+  Object* selected_obj;
 
 private:
 
