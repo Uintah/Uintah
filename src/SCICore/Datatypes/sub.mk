@@ -5,6 +5,7 @@
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
+
 SRCDIR   := SCICore/Datatypes
 
 GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
@@ -33,7 +34,6 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
 	$(SRCDIR)/Geom.cc $(SRCDIR)/Attrib.cc \
 	$(SRCDIR)/Field.cc $(SRCDIR)/SField.cc \
-	$(SRCDIR)/GenSField.cc \
 	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
 	$(SRCDIR)/SField.cc $(SRCDIR)/VField.cc \
 	$(SRCDIR)/TField.cc $(SRCDIR)/Lattice3Geom.cc \
@@ -100,6 +100,11 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.9  2000/09/25 21:52:08  yarden
+# move GenSField.cc into GenSField.h
+# (template implementation should be in .h file
+# for portablity)
+#
 # Revision 1.3.2.8  2000/09/22 17:31:23  michaelc
 # Cleanup data members, rearrange LatticeGeom
 #
