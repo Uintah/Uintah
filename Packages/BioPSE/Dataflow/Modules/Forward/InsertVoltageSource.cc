@@ -134,7 +134,7 @@ void InsertVoltageSource::execute() {
   tvm->size(tvm_ncells);
   tvm->synchronize(Mesh::LOCATE_E);
 
-  TetVolMesh::Node::array_type nbrs(4);
+  TetVolMesh::Node::array_type nbrs;
 
   Array1<vector<pair<double, double> > > closest(tvm_nnodes); 
                                      // store the dist/val
@@ -160,8 +160,8 @@ void InsertVoltageSource::execute() {
     if (tvm->locate(tvm_cidx, pt)) {
       tvm->get_nodes(nbrs, tvm_cidx);
     } else if (outside) {
-      tvm->locate(nbrs[0], pt);
       nbrs.resize(1);
+      tvm->locate(nbrs[0], pt);
     } else continue;
   
     // for each nbr, see if this node is the closest of the bc nodes checked
