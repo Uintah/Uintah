@@ -61,8 +61,11 @@ Barrier_private::~Barrier_private()
 Barrier::Barrier(const char* name)
     : name_(name)
 {
-  if(!Thread::isInitialized())
+  if(!Thread::isInitialized()){
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "Barrier: %s\n", name);
     Thread::initialize();
+  }
   priv_=new Barrier_private;
 }
 
