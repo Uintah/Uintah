@@ -246,6 +246,7 @@ private:
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
+      double d_sootFactor;
       bool d_3d_periodic;
       bool d_inverse_density_average;
 #ifdef PetscFilter
