@@ -58,6 +58,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > f_theta(numALLMatls);
     StaticArray<CCVariable<double> > matl_press(numALLMatls);
 
+    StaticArray<constCCVariable<double> > placeHolder(0);
     StaticArray<constCCVariable<double> > Temp(numALLMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
     StaticArray<constCCVariable<double> > mat_vol(numALLMatls);
@@ -245,13 +246,15 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     } 
     
     //__________________________________
-    //  Update boundary conditions
-    // implicit pressure calc. needs two copies of the pressure
+    // - update Boundary conditions
+    //   Don't set Lodi bcs, we already compute Press
+    //   in all the extra cells.
+    // - make copy of press for implicit calc.
     for (int m = 0; m < numALLMatls; m++)   {
-      setBC(matl_press[m],rho_micro[SURROUND_MAT],
+      setBC(matl_press[m],rho_micro, placeHolder,
            "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
     }  
-    setBC(press_new, rho_micro[SURROUND_MAT], 
+    setBC(press_new, rho_micro, placeHolder,
           "rho_micro", "Pressure", patch, d_sharedState, 0,  new_dw);
           
     press_copy.copyData(press_new);

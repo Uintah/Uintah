@@ -661,7 +661,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       setBC(rho_CC,    "Density",      patch, d_sharedState, indx);    
       setBC(rho_micro, "Density",      patch, d_sharedState, indx);    
       setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx);    
-      setBC(vel_CC,    "Velocity",     patch, indx);                   
+      setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx);                   
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
@@ -942,7 +942,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       //  Set BC's
       setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
       setBC(rho_CC,  "Density",    patch, d_sharedState, indx);
-      setBC(vel_CC,  "Velocity",   patch, indx);
+      setBC(vel_CC,  "Velocity",   patch, d_sharedState, indx);
       //  Set if symmetric Boundary conditions
       setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx);
       setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx);
@@ -1122,7 +1122,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        
        //__________________________________
        //  Set Boundary conditions
-       setBC(cmomentum, "set_if_sym_BC",patch, indx);
+       setBC(cmomentum, "set_if_sym_BC",patch, d_sharedState, indx);
        setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx);
        setBC(rho_CC,    "Density",      patch, d_sharedState, indx);  
 
@@ -1323,6 +1323,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > speedSound(numALLMatls);
     StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
     StaticArray<CCVariable<double> > f_theta(numALLMatls);
+    StaticArray<constCCVariable<double> > placeHolder(0);
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls); 
     StaticArray<constCCVariable<double> > Temp(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
@@ -1611,10 +1612,18 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
 
     //__________________________________
-    // update Boundary conditions
-    // make copy of press for implicit calc.    
-    setBC(press_new,rho_micro[SURROUND_MAT],
-          "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+    // - update Boundary conditions
+    //   Don't set Lodi bcs, we already compute Press
+    //   in all the extra cells.
+    // - make copy of press for implicit calc.
+    Lodi_vars_pressBC* lv = 0;
+    if(d_ice->d_usingLODI) {
+      lv = new Lodi_vars_pressBC(0);
+      lv->setLodiBcs = false;
+    }
+    setBC(press_new,   rho_micro, placeHolder,
+          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
+          
     press_copy.copyData(press_new);   
      
     //__________________________________
