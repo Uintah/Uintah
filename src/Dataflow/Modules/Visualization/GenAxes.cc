@@ -34,6 +34,7 @@
 #include <Core/Geometry/BBox.h>
 
 #include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomCull.h>
@@ -259,7 +260,7 @@ GenAxes::generateLines(const Point  start,
 		       const double num)
 {
   GeomLines *lines = scinew GeomLines();
-  for (int i = 0; i <= int(round(num)); i++) {
+  for (int i = 0; i <= Round(num); i++) {
     const Point pos = start + delta*i;    
     lines->add(pos, pos + dir);
   }
@@ -340,17 +341,16 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     primary[axisup] = 0.0;
     primary[axisnormal] = 0.0;
 
-    if (primary[axisleft] < 0.0000001) return group;
-
     const Vector left = primary * (1.0/primary.length());
 
     Vector secondary(bbox_.diagonal());
     secondary[axisleft] = 0.0;
     secondary[axisnormal] = 0.0;
 
+    if (secondary.length() < 10e-6) return group;
+
     const Vector up = secondary * (1.0/secondary.length());
     
-
     Vector tertiary(bbox_.diagonal());
     tertiary[axisleft] = 0.0;
     tertiary[axisup] = 0.0;
@@ -421,7 +421,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     squash[axisleft] = 
       get_GuiDouble(base+"valuesquash")*get_GuiDouble("squash");
     
-    for (int i = 0; i <= int(round(divisions)); i++) {
+    for (int i = 0; i <= Round(divisions); i++) {
       GeomTransform *ttick = scinew GeomTransform(tilted_tick);
       ttick->translate(delta*i);
       ticks->add(ttick);
@@ -484,7 +484,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     ticks = scinew GeomGroup();    
     values = scinew GeomGroup();
 
-    for (int i = 0; i <= int(round(divisions)); i++) {
+    for (int i = 0; i <= Round(divisions); i++) {
       GeomTransform *ttick = scinew GeomTransform(tilted_tick);
       ttick->translate(delta*i);
       ticks->add(ttick);
@@ -519,7 +519,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
 
 #if 0
     ticks = scinew GeomGroup();
-    for (int i = 0; i <= int(round(divisions)); i++) {
+    for (int i = 0; i <= Round(divisions); i++) {
       GeomTransform *ttick = scinew GeomTransform(tick);
       tick->rotate(M_PI,primary);
       ttick->translate((origin+delta*i).asVector());
