@@ -52,6 +52,7 @@
 // Standard lib includes
 #include <iostream>
 #include <assert.h>
+#include <limits>
 
 namespace SCIRun {
 
@@ -59,7 +60,7 @@ namespace SCIRun {
 // **************************** Class: DicomImage *****************************
 // ****************************************************************************
 
-typedef unsigned short PixelType;
+typedef int PixelType;
 typedef itk::Image<PixelType, 3> ImageNDType;
 
 class DicomImage
@@ -81,7 +82,7 @@ public:
   std::string get_id();
   int get_num_pixels();
   PixelType * get_pixel_buffer();
-  //void get_data_type();
+  std::string get_data_type();
   int get_dimension();
   int get_size( int i );
   double get_origin( int i );
@@ -92,7 +93,7 @@ public:
 private:
   unsigned long num_pixels_;
   PixelType * pixel_buffer_;
-  // ??? data_type;
+  std::string data_type_;
   int dim_;
   int * size_;
   double * origin_;
