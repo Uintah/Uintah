@@ -1936,10 +1936,6 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
-    set boo [array names data]
-    puts $boo
-
-    puts "$data(md_ent)"
 
     if {$whichBtn == "set"} {
         eval $data(-setcmd)
