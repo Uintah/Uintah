@@ -6,6 +6,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Sphere.h>
 
 namespace rtrt {
 
@@ -35,6 +36,10 @@ public:
   inline void turnOn() { isOn_ = true; }
   inline void turnOff() { isOn_ = false; }
 
+  void updatePosition( const Point & newPos );
+
+  Sphere * getSphere() const { return sphere_; }
+
 protected:
 
   // Parameters for changing light value:
@@ -48,6 +53,8 @@ protected:
   int index;
 
   bool isOn_;
+
+  Sphere * sphere_; // sphere that will be rendered to represent this light.
 
 };
 
