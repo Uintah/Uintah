@@ -38,7 +38,7 @@ namespace SCIRun {
     SCIRunUIPort(SCIRunComponentInstance* component);
     virtual ~SCIRunUIPort();
 
-    virtual void ui();
+    virtual int ui();
   private:
     SCIRunComponentInstance* component;
     SCIRunUIPort(const SCIRunUIPort&);
