@@ -33,6 +33,7 @@ itcl_class Teem_NrrdData_NrrdSetProperty {
         set name NrrdSetProperty
         set_defaults
     }
+
     method set_defaults {} {
         global $this-num-entries
         set $this-num-entries 0
