@@ -75,7 +75,7 @@ extern int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
 				     Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
 
-// this calls Thread::exitAll(int);
+/* this calls Thread::exitAll(int); */
 extern void exit_all_threads(int rv);
 
 #ifdef _WIN32 
