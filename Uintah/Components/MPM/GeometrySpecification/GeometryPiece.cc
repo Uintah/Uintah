@@ -46,12 +46,20 @@ void GeometryPiece::setInitialConditions(Vector icv)
   d_init_cond_vel = icv;
 }
 
-Vector GeometryPiece::getInitVel() { 
+Vector GeometryPiece::getInitVel() 
+{  
   return d_init_cond_vel;; 
 
 }
 
+int GeometryPiece::getInPiece() 
+{
+  return d_in_piece;
+}
 // $Log$
+// Revision 1.3  2000/04/14 03:45:40  jas
+// Added getInPiece method.
+//
 // Revision 1.2  2000/04/14 02:05:45  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the
