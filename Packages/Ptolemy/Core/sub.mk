@@ -32,12 +32,10 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Packages/Ptolemy/Core
 
 SUBDIRS := \
-        $(SRCDIR)/jni
+        $(SRCDIR)/jni \
+        $(SRCDIR)/PtolemyInterface
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := 
-LIBS :=
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 
