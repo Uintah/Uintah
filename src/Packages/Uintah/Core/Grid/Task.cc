@@ -208,7 +208,26 @@ Task::display( ostream & out ) const
     }
     out << "}";
   } else {
-    out << "(No Patch), ";
+    out << "(No Patch)";
+  }
+  out << ", ";
+  if( matl_set != 0 ){
+    out << "Matls: {";
+    for(int i=0;i< matl_set->size();i++){
+      const MaterialSubset* ms = matl_set->getSubset(i);
+      if(i != 0)
+	out << ", ";
+      out << "{";
+      for(int j=0;j<ms->size();j++){
+	if(j != 0)
+	  out << ",";
+	out << ms->get(j);
+      }
+      out << "}";
+    }
+    out << "}";
+  } else {
+    out << "(No Matls)";
   }
   out << "]";
 }
