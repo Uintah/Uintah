@@ -135,7 +135,8 @@ private:
   GLuint                                cmap_tex_;
   
   // Which widget is selected.
-  int                                   pick_widget_; 
+  int                                   pick_widget_;
+  int					pick_widget_on_execute_;
   // The part of the widget that is selected.
   int                                   pick_object_; 
   // Push on undo when motion occurs, not on select.
@@ -187,6 +188,8 @@ private:
   string                                old_filename_;
   time_t 	                        old_filemodification_;
   GuiString *				end_marker_;
+  double				value_offset_;
+  double				value_scale_;
   bool					make_swatch_;
   unsigned char *			swatch_buffer_;
 };
@@ -210,6 +213,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     cmap_dirty_(true), 
     cmap_tex_(0),
     pick_widget_(-1), 
+    pick_widget_on_execute_(-1),
     pick_object_(0), 
     first_motion_(true),
     save_ppm_(false),
@@ -225,6 +229,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     filename_(ctx->subVar("filename")),
     old_filemodification_(0),
     end_marker_(0),
+    value_offset_(0.0),
+    value_scale_(1.0),
     make_swatch_(false)
 {
   pan_x_.set(0.0);
@@ -406,6 +412,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 
     gui_num_entries_.reset();
     resize_gui();
+
     gui_color_r_[n]->reset();
     gui_color_g_[n]->reset();
     gui_color_b_[n]->reset();
@@ -414,6 +421,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     const double g = gui_color_g_[n]->get();
     const double b = gui_color_b_[n]->get();
     const double a = gui_color_a_[n]->get();
+    pick_widget_on_execute_ = n;
     Color c(widgets_[n]->color());
     if (r != c.r() || g != c.g() || b != c.b() || a != widgets_[n]->alpha())
     {
@@ -886,44 +894,41 @@ EditTransferFunc2::execute()
     ColorMap2Handle icmap_handle;
     cmap_iport->get(icmap_handle);
 
-    bool no_input = ! icmap_handle.get_rep();
-    bool new_input = ! no_input && icmap_handle->generation != icmap_gen_;
+    bool no_input = !icmap_handle.get_rep();
+    bool new_input = !no_input && icmap_handle->generation != icmap_gen_;
 
-    if ((new_input || no_input) && widgets_[0]->is_empty()) {
-      widgets_.erase(widgets_.begin());
-    }
-    if (icmap_handle.get_rep() && icmap_handle->generation != icmap_gen_) {
-      // add the input widgets to our existing set.
-      widgets_.insert(widgets_.begin(), icmap_handle->widgets().begin(), 
-		      icmap_handle->widgets().end());
+    if (new_input) {
+      widgets_ = icmap_handle->widgets();
       icmap_gen_ = icmap_handle->generation;
       cmap_dirty_ = true;
-      redraw();
+      if (icmap_handle->selected() != -1) 
+	pick_widget_ = icmap_handle->selected();
     }
   }
-
+  if (pick_widget_on_execute_ > 0 && pick_widget_on_execute_ < widgets_.size())
+  {
+    pick_widget_ = pick_widget_on_execute_;
+    pick_widget_on_execute_ = -1;
+  }
+      
   gui_num_entries_.reset();
   if ((unsigned)gui_num_entries_.get() != widgets_.size()) {  
     resize_gui();
     update_to_gui();
   }
 
+  NrrdDataHandle h = 0;
   NrrdIPort* histo_port = (NrrdIPort*)get_iport("Histogram");
-  if(histo_port) {
-    NrrdDataHandle h;
+  if(histo_port)
     histo_port->get(h);
-    if(h.get_rep()) {
-      if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
-        error("Invalid input dimension.");
-      }
-      if(histo_ != h->nrrd) {
-        histo_ = h->nrrd;
-        histo_dirty_ = true;
-      }
-    } else {
-      if(histo_ != 0)
-        histo_dirty_ = true;
-      histo_ = 0;
+
+  if(h.get_rep()) {
+    if(h->nrrd->dim != 2 && h->nrrd->dim != 3) {
+      error("Invalid input dimension.");
+    }
+    if(histo_ != h->nrrd) {
+      histo_ = h->nrrd;
+      histo_dirty_ = true;
     }
   } else {
     if(histo_ != 0)
@@ -931,14 +936,15 @@ EditTransferFunc2::execute()
     histo_ = 0;
   }
 
-  if(histo_dirty_) {
+  if (histo_dirty_ || cmap_dirty_) {
     redraw();
   }
   
   ColorMap2OPort* cmap_port = (ColorMap2OPort*)get_oport("Output Colormap");
   if (cmap_port) {
-    ColorMap2Handle cmap(scinew ColorMap2(widgets_, updating_, gui_faux_.get()));
-    cmap_port->send(cmap);
+    ColorMap2 *cm2 = scinew ColorMap2(widgets_, updating_, gui_faux_.get());
+    cm2->selected() = pick_widget_;
+    cmap_port->send(ColorMap2Handle(cm2));
   }
 }
 
@@ -1030,6 +1036,7 @@ EditTransferFunc2::rasterize_widgets()
     
       // Rasterize widgets
       for (unsigned int i=0; i<widgets_.size(); i++) {
+	widgets_[i]->set_value_range(value_offset_, value_scale_);
         widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
       }
 
@@ -1057,6 +1064,7 @@ EditTransferFunc2::rasterize_widgets()
       // rasterize widgets
       for (unsigned int i=0; i<widgets_.size(); i++) {
 	if (! widgets_[i]->is_empty()) {
+	  widgets_[i]->set_value_range(value_offset_, value_scale_);
 	  widgets_[i]->rasterize(array_, gui_faux_.get());
 	}
       }
@@ -1172,6 +1180,7 @@ EditTransferFunc2::draw_colormap()
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     for(unsigned int i=0; i<widgets_.size(); i++) {
       if (! widgets_[i]->is_empty()) {
+	widgets_[i]->set_value_range(value_offset_, value_scale_);
 	widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
       }
     }
@@ -1269,6 +1278,23 @@ EditTransferFunc2::update_histo()
                  axis_size[histo_->dim-1], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
                  histo_->data);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    value_offset_ = 0.0;
+    value_scale_ = 1.0;
+    if (histo_->kvp) {
+      const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_min");
+      const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_max");
+      const char *new_min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_min");
+      const char *new_max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_max");
+      double dmin, dmax, new_dmin, new_dmax;
+      if (min && max && new_min && new_max && 
+	  string_to_double(min, dmin) && string_to_double(max, dmax) &&
+	  string_to_double(new_min, new_dmin) && string_to_double(new_max, new_dmax)) {
+	value_offset_ = (new_dmin - dmin) / (dmax - dmin);
+	value_scale_ = (new_dmax - new_dmin) / (dmax - dmin);
+      }
+    }
+    cmap_dirty_ = true;
     histo_dirty_ = false;
   }
 }
@@ -1280,8 +1306,8 @@ EditTransferFunc2::redraw()
 
   if (! make_current()) { gui->unlock(); return; }
   init_pbuffer();
-  rasterize_widgets();
   update_histo();
+  rasterize_widgets();
   
   //----------------------------------------------------------------
   // draw
