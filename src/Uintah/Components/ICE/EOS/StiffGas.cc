@@ -85,7 +85,7 @@ void StiffGas::computeSpeedSound(const Patch* patch,
   CCVariable<double> cv;
   CCVariable<double> speedSound;
 
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
   double gamma = matl->getGamma();
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
@@ -135,7 +135,7 @@ void StiffGas::computeRhoMicro(const Patch* patch,
   CCVariable<double> cv;
   CCVariable<double> press;
   
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
   old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
@@ -159,7 +159,7 @@ void StiffGas::computePressEOS(const Patch* patch,
                                DataWarehouseP& new_dw)
 {
 
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
   CCVariable<double> rho_micro;
   CCVariable<double> temp;
   CCVariable<double> cv;
@@ -183,6 +183,9 @@ void StiffGas::computePressEOS(const Patch* patch,
 
 
 //$Log$
+//Revision 1.3  2001/01/11 21:00:07  guilkey
+//Replaced getVFIndex with getDWIndex.
+//
 //Revision 1.2  2000/11/14 04:02:12  jas
 //Added getExtraCellIterator and things now appear to be working up to
 //face centered velocity calculations.
