@@ -29,7 +29,7 @@ using namespace SCIRun;
       
       virtual void problemSetup(const ProblemSpecP& params, 
                                 GridP& grid,
-				    SimulationStateP&);
+                                SimulationStateP&);
       
       virtual void scheduleInitialize(const LevelP& level, 
                                       SchedulerP&);
@@ -41,12 +41,12 @@ using namespace SCIRun;
       
       virtual void scheduleTimeAdvance(
                                       const LevelP&,
-				          SchedulerP&);
+                                      SchedulerP&);
                                                      
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
                                    const MaterialSubset*,
-				       const MaterialSet*);
+                                   const MaterialSet*);
                                    
       void scheduleComputeFCPressDiffRF(SchedulerP& sched,
                                         const PatchSet*,
@@ -64,30 +64,30 @@ using namespace SCIRun;
       
       void scheduleAddExchangeContributionToFCVel(SchedulerP&, 
                                             const PatchSet*,
-						  const MaterialSet*);
+                                            const MaterialSet*);
       
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&, 
                                              const PatchSet*,
                                              const MaterialSubset*, 
                                              const MaterialSubset*,
                                              const MaterialSubset*,
-						   const MaterialSet*);
+                                             const MaterialSet*);
       
       void scheduleComputePressFC(SchedulerP&, 
                               const PatchSet*,
                               const MaterialSubset*,
-				  const MaterialSet*);
+                              const MaterialSet*);
       
       void scheduleAccumulateMomentumSourceSinks(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
                                             const MaterialSubset*,
-						  const MaterialSet*);
+                                            const MaterialSet*);
       
       void scheduleAccumulateEnergySourceSinks(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
-					         const MaterialSet*);
+                                            const MaterialSet*);
       
       void scheduleComputeLagrangianValues(SchedulerP&, 
                                           const PatchSet*,
@@ -106,19 +106,19 @@ using namespace SCIRun;
       
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
-					       const MaterialSet*);
+                                          const MaterialSet*);
 
       void scheduleMassExchange(SchedulerP&, 
                                 const PatchSet*,
-				    const MaterialSet*);
+                                const MaterialSet*);
                              
       void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
-					    const MaterialSubset*,
-					    const MaterialSet*);
+                                       const MaterialSubset*,
+                                       const MaterialSet*);
       
       void setICELabel(ICELabel* Ilb) {
-	delete lb;
-	lb = Ilb;
+       delete lb;
+       lb = Ilb;
       };
       
     public:
@@ -126,7 +126,7 @@ using namespace SCIRun;
       void actuallyInitialize(const ProcessorGroup*, 
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
-			         DataWarehouse*, 
+                              DataWarehouse*, 
                               DataWarehouse* new_dw);
       
       void actuallyComputeStableTimestep(const ProcessorGroup*, 
@@ -207,16 +207,16 @@ using namespace SCIRun;
 *   NOW
 *__________________________________*/                               
      void computeRateFormPressure(const ProcessorGroup*,
-				       const PatchSubset* patch,
-				       const MaterialSubset* matls,
-				       DataWarehouse*, 
-				       DataWarehouse*);
+                                   const PatchSubset* patch,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*, 
+                                   DataWarehouse*);
                                    
      void computeFCPressDiffRF(const ProcessorGroup*,
-				 const PatchSubset* patch,
-				 const MaterialSubset* matls,
-				 DataWarehouse*,
-				 DataWarehouse*);
+                             const PatchSubset* patch,
+                             const MaterialSubset* matls,
+                             DataWarehouse*,
+                             DataWarehouse*);
                              
       void computeFaceCenteredVelocitiesRF(const ProcessorGroup*, 
                                          const PatchSubset* patch,
@@ -240,42 +240,42 @@ using namespace SCIRun;
                                     DataWarehouse*);
             
       void setBC(CCVariable<double>& variable,const std::string& type, 
-		 const Patch* p, const int mat_id);
+               const Patch* p, const int mat_id);
                
       void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
                const std::string& type, const Patch* p, const int mat_id);
 
       void setBC(CCVariable<Vector>& variable,const std::string& type,
-		 const Patch* p, const int mat_id);
+               const Patch* p, const int mat_id);
                
       void setBC(SFCXVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p, const int mat_id);
+               const std::string& comp, const Patch* p, const int mat_id);
                
       void setBC(SFCYVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p, const int mat_id);
+               const std::string& comp, const Patch* p, const int mat_id);
                
       void setBC(SFCZVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p, const int mat_id);   
+               const std::string& comp, const Patch* p, const int mat_id);   
 
       void setBC(SFCXVariable<Vector>& variable,const std::string& type,
-		 const Patch* p, const int mat_id);   
+               const Patch* p, const int mat_id);   
 
       void printData(const  Patch* patch,int include_GC,const string& message1,
-		     const string& message2, const  CCVariable<int>& q_CC);
+                   const string& message2, const  CCVariable<int>& q_CC);
                    
       void printData(const  Patch* patch,int include_GC,const string& message1,
-		     const string& message2, const  CCVariable<double>& q_CC); 
+                   const string& message2, const  CCVariable<double>& q_CC); 
 
       void printVector(const  Patch* patch,int include_GC,
-		       const string& message1,
-		       const string& message2, int component, 
-		       const CCVariable<Vector>& q_CC);
+                     const string& message1,
+                     const string& message2, int component, 
+                     const CCVariable<Vector>& q_CC);
                    
       void Message(int abort, const string& message1, const string& message2,
-		   const string& message3);
+                 const string& message3);
 
       void readData(const Patch* patch, int include_GC, const string& filename,
-		    const string& var_name, CCVariable<double>& q_CC);
+                  const string& var_name, CCVariable<double>& q_CC);
                  
       void hydrostaticPressureAdjustment(const Patch* patch, 
                       const CCVariable<double>& rho_micro_CC, 
@@ -350,19 +350,19 @@ using namespace SCIRun;
                           SFCZVariable<Vector>& tau_Z_FC);
                    
        void printData_FC(const  Patch* patch,int include_GC,
-			 const string& message1,
-			 const string& message2, 
-			 const SFCXVariable<double>& q_FC);
+                      const string& message1,
+                      const string& message2, 
+                      const SFCXVariable<double>& q_FC);
                     
        void printData_FC(const  Patch* patch,int include_GC,
-			 const string& message1,
-			 const string& message2, 
-			 const SFCYVariable<double>& q_FC);
+                      const string& message1,
+                      const string& message2, 
+                      const SFCYVariable<double>& q_FC);
                     
        void printData_FC(const  Patch* patch,int include_GC,
-			 const string& message1,
-			 const string& message2, 
-			 const SFCZVariable<double>& q_FC);
+                      const string& message1,
+                      const string& message2, 
+                      const SFCZVariable<double>& q_FC);
       
       ICELabel* lb; 
       MPMICELabel* MIlb;

@@ -23,23 +23,23 @@ namespace Uintah {
     virtual ~FirstOrderAdvector();
 
     virtual FirstOrderAdvector* clone(DataWarehouse* new_dw, 
-				      const Patch* patch);
+                                  const Patch* patch);
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_CC,
-				     const SFCYVariable<double>& vvel_CC,
-				     const SFCZVariable<double>& wvel_CC,
-				     const double& delT, 
-				     const Patch* patch);
+                                 const SFCYVariable<double>& vvel_CC,
+                                 const SFCZVariable<double>& wvel_CC,
+                                 const double& delT, 
+                                 const Patch* patch);
 
 
     virtual void advectQ(const CCVariable<double>& q_CC,
-			 const Patch* patch,
-			 CCVariable<double>& q_advected);
+                      const Patch* patch,
+                      CCVariable<double>& q_advected);
     
     virtual void advectQ(const CCVariable<Vector>& q_CC,
-			 const Patch* patch,
-			 CCVariable<Vector>& q_advected);
+                      const Patch* patch,
+                      CCVariable<Vector>& q_advected);
     
     enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
     struct fflux { double d_fflux[6]; };    // face flux
@@ -53,8 +53,8 @@ namespace Uintah {
 
   private:
     template<class T> void advect(const CCVariable<T>& q_CC,
-				  const Patch* patch,
-				  CCVariable<T>& q_advected);
+                              const Patch* patch,
+                              CCVariable<T>& q_advected);
   };
 
   

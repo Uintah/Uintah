@@ -7,7 +7,7 @@ using namespace Uintah;
 
 GeometryObject2::GeometryObject2(ICEMaterial* ice_matl,
                                GeometryPiece* piece,
-			       ProblemSpecP& ps)
+                            ProblemSpecP& ps)
    : d_piece(piece)
 {
    ps->require("res",         d_resolution);

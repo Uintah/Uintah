@@ -27,7 +27,7 @@ double IdealGas::getGasConstant() const
 //__________________________________
 //
 double IdealGas::computeRhoMicro(double press, double gamma,
-				 double cv, double Temp)
+                             double cv, double Temp)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
@@ -39,7 +39,7 @@ void IdealGas::computeTempCC(const Patch* patch,
                                 const string& comp_domain,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
-				    const double& cv,
+                                const double& cv,
                                 const CCVariable<double>& rho_micro, 
                                 CCVariable<double>& Temp,
                                 Patch::FaceType face)
@@ -62,8 +62,8 @@ void IdealGas::computeTempCC(const Patch* patch,
 //__________________________________
 //
 void IdealGas::computePressEOS(double rhoM, double gamma,
-			       double cv, double Temp,
-			       double& press, double& dp_drho, double& dp_de)
+                            double cv, double Temp,
+                            double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
   press   = (gamma - 1.0)*rhoM*cv*Temp;
@@ -84,7 +84,7 @@ void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face,
                           const Patch* patch,
                           Vector& grav,
                           const double& gamma,
-			     const double& cv,
+                          const double& cv,
                           const Vector& dx,
                           CCVariable<double>& Temp_CC)
   { 

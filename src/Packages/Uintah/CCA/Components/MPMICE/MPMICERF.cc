@@ -5,10 +5,10 @@
             Interaction Dynamics
 _____________________________________________________________________*/
 void MPMICE::computeRateFormPressure(const ProcessorGroup*,
-			 		     const PatchSubset* patches,
-					     const MaterialSubset* ,
-					     DataWarehouse* old_dw,
-					     DataWarehouse* new_dw)
+                                         const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -56,9 +56,9 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       if(ice_matl){                    // I C E
         old_dw->get(Temp[m],   Ilb->temp_CCLabel, dwindex, patch,Ghost::None,0);
         old_dw->get(rho_top[m],Ilb->rho_CC_top_cycleLabel,
-						  dwindex, patch,Ghost::None,0);
+                                            dwindex, patch,Ghost::None,0);
         old_dw->get(sp_vol_CC[m],
-			       Ilb->sp_vol_CCLabel,dwindex,patch,Ghost::None,0);
+                            Ilb->sp_vol_CCLabel,dwindex,patch,Ghost::None,0);
         cv[m]    = ice_matl->getSpecificHeat();
         gamma[m] = ice_matl->getGamma();
       }
@@ -88,36 +88,36 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
         if(ice_matl){                // I C E
-	  rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
-	  ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
-					      cv[m],Temp[m][*iter],
-					      press_eos[m],dp_drho[m],dp_de[m]);
-	  
-	  compressibility[m]=
-			ice_matl->getEOS()->getCompressibility(press_eos[m]);
+         rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+         ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
+                                         cv[m],Temp[m][*iter],
+                                         press_eos[m],dp_drho[m],dp_de[m]);
+         
+         compressibility[m]=
+                     ice_matl->getEOS()->getCompressibility(press_eos[m]);
 
           mat_mass[m]   = rho_top[m][*iter] * cell_vol;
-	  mat_volume[m] = mat_mass[m] * sp_vol_CC[m][*iter];
+         mat_volume[m] = mat_mass[m] * sp_vol_CC[m][*iter];
 
-	  tmp = dp_drho[m] + dp_de[m] * 
-	    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+         tmp = dp_drho[m] + dp_de[m] * 
+           (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
         } 
 
         if(mpm_matl){                //  M P M
-	   rho_micro[m][*iter] = mass_CC[m][*iter]/mat_vol[m][*iter];
+          rho_micro[m][*iter] = mass_CC[m][*iter]/mat_vol[m][*iter];
            mat_mass[m]   = mass_CC[m][*iter];
 
-	   compressibility[m]=
-		mpm_matl->getConstitutiveModel()->getCompressibility();
+          compressibility[m]=
+              mpm_matl->getConstitutiveModel()->getCompressibility();
 
-	   mpm_matl->getConstitutiveModel()->
-	     computePressEOSCM(rho_micro[m][*iter],press_eos[m], press_ref,
+          mpm_matl->getConstitutiveModel()->
+            computePressEOSCM(rho_micro[m][*iter],press_eos[m], press_ref,
                               dp_drho[m], tmp,mpm_matl);
 
-	   mat_volume[m] = mat_vol[m][*iter];
+          mat_volume[m] = mat_vol[m][*iter];
         }              
 
-	matl_press[m][*iter] = press_eos[m];
+       matl_press[m][*iter] = press_eos[m];
         total_mat_vol += mat_volume[m];
         speedSound_new[m][*iter] = sqrt(tmp);
 
@@ -127,12 +127,12 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
        for (int m = 0; m < numALLMatls; m++) {
          vol_frac[m][*iter] = mat_volume[m]/total_mat_vol;
          rho_CC[m][*iter] = vol_frac[m][*iter]*rho_micro[m][*iter];
-	 f_theta_denom += vol_frac[m][*iter]*compressibility[m];
+        f_theta_denom += vol_frac[m][*iter]*compressibility[m];
        }
        for (int m = 0; m < numALLMatls; m++) {
-	f_theta[m][*iter] = vol_frac[m][*iter]*compressibility[m]/f_theta_denom;
-	press_new[*iter] += f_theta[m][*iter]*matl_press[m][*iter];
-	rho_CC[m][*iter]  = mat_mass[m]/cell_vol;
+       f_theta[m][*iter] = vol_frac[m][*iter]*compressibility[m]/f_theta_denom;
+       press_new[*iter] += f_theta[m][*iter]*matl_press[m][*iter];
+       rho_CC[m][*iter]  = mat_mass[m]/cell_vol;
        }
     } // for(CellIterator...)
 

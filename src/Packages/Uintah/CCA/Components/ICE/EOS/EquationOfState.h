@@ -42,11 +42,11 @@ WARNING
 
       class EquationOfState {
       public:
-	 
-	 EquationOfState();
-	 virtual ~EquationOfState();
-	 
-	 // Per cell
+        
+        EquationOfState();
+        virtual ~EquationOfState();
+        
+        // Per cell
          virtual double computeRhoMicro(double press,double gamma,
                                         double cv, double Temp) =0;
 
@@ -59,7 +59,7 @@ WARNING
                                 const string& comp_domain,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
-				    const double& cv,
+                                const double& cv,
                                 const CCVariable<double>& rho_micro, 
                                 CCVariable<double>& Temp,
                                 Patch::FaceType face=Patch::xplus) = 0;
@@ -68,7 +68,7 @@ WARNING
                           const Patch* patch,
                           Vector& gravity,
                           const double& gamma,
-			     const double& cv,
+                          const double& cv,
                           const Vector& dx,
                           CCVariable<double>& Temp_CC) = 0;
 
@@ -76,7 +76,7 @@ WARNING
 
         protected:
 
-	 ICELabel* lb;
+        ICELabel* lb;
       };
 } // End namespace Uintah
       

@@ -48,10 +48,10 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = high.y()-1; j >= low.y(); j--) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %6.5E  ",
-		  i,j,k, q_NC[idx]);
-	  /*  fprintf(stderr,"\n"); */
+         IntVector idx(i, j, k);
+         fprintf(stderr,"[%d,%d,%d]~ %6.5E  ",
+                i,j,k, q_NC[idx]);
+         /*  fprintf(stderr,"\n"); */
         }
         fprintf(stderr,"\n");
       }
@@ -99,11 +99,11 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
-	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		  i,j,k, q_NC[idx](component));
+         IntVector idx(i, j, k);
+         fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
+                i,j,k, q_NC[idx](component));
 
-	  /*  fprintf(stderr,"\n"); */
+         /*  fprintf(stderr,"\n"); */
         }
         fprintf(stderr,"\n");
       }
