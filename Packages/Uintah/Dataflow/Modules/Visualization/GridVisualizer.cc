@@ -195,8 +195,11 @@ void GridVisualizer::update_widget() {
     Point min, max;
     BBox gridBB;
     grid->getSpatialRange(gridBB);
-    min = gridBB.min();
-    max = gridBB.max();
+    // Need to extend the BBox just a smidgen to correct for floating
+    // point error.
+    Point offset(1e-12, 1e-12, 1e-12);
+    min = (gridBB.min()-offset).asPoint();
+    max = (gridBB.max()+offset).asPoint();
     
     Point center = min + (max-min)/2.0;
     double max_scale;
@@ -250,7 +253,11 @@ Box GridVisualizer::get_widget_boundary() {
   else {
     BBox gridBB;
     grid->getSpatialRange(gridBB);
-    return Box(gridBB.min(),gridBB.max());
+    // Need to extend the BBox just a smidgen to correct for floating
+    // point error.
+    Point offset(1e-12, 1e-12, 1e-12);
+    return Box((gridBB.min()-offset).asPoint(),
+	       (gridBB.max()+offset).asPoint());
   }
 }
 
