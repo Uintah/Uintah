@@ -21,7 +21,7 @@
 
    <DataArchiver>
      <filebase>test_sphere_shell_compress.uda</filebase>
-     <outputTimestepInterval> 10 </outputTimestepInterval>
+     <outputTimestepInterval> 5 </outputTimestepInterval>
      <save label = "KineticEnergy"/>
      <save label = "TotalMass"/>
      <save label = "StrainEnergy"/>
