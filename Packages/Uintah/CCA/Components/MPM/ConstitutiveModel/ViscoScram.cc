@@ -1,6 +1,11 @@
-#include "ConstitutiveModelFactory.h"
-#include "ViscoScram.h"
-#include <Core/Malloc/Allocator.h>
+
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
+
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
@@ -8,14 +13,12 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Math/MinMax.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -691,7 +694,9 @@ double ViscoScram::getCompressibility()
 
 namespace Uintah {
 
-static MPI_Datatype makeMPI_CMData()
+static
+MPI_Datatype
+makeMPI_CMData()
 {
    ASSERTEQ(sizeof(ViscoScram::StateData), sizeof(double)*49);
    MPI_Datatype mpitype;
@@ -700,19 +705,18 @@ static MPI_Datatype makeMPI_CMData()
    return mpitype;
 }
 
-const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
+const Uintah::TypeDescription*
+fun_getTypeDescription(ViscoScram::StateData*)
 {
-   static TypeDescription* td = 0;
+   static Uintah::TypeDescription* td = 0;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = scinew Uintah::TypeDescription(TypeDescription::Other,
 			       "ViscoScram::StateData", true, &makeMPI_CMData);
    }
    return td;
 }
 
 } // End namespace Uintah
-
-#include <Core/Util/Endian.h>
 
 namespace SCIRun {
 void swapbytes( Uintah::ViscoScram::StateData& d)
