@@ -530,9 +530,21 @@ proc addModuleAtMouse { pack cat mod subnet_id } {
     return $ret
 }
 
+
+proc findMovedModulePath { packvar catvar modvar } {
+    set xlat "{Fusion Fields NrrdFieldConverter} {Teem DataIO NrrdToField}"
+    upvar 1 $packvar package $catvar category $modvar module
+    set newpath [string map $xlat "$package $category $module"]
+    set package  [lindex $newpath 0]
+    set category [lindex $newpath 1]
+    set module   [lindex $newpath 2]
+}	        
+
+
 proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     # Look up the real category for a module.  This allows networks to
     # be read in if the modules change categories.
+    findMovedModulePath package category module
     set category [netedit getCategoryName $package $category $module]
     set modid [netedit addmodule "$package" "$category" "$module"]
 
