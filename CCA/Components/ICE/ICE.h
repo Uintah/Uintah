@@ -255,7 +255,26 @@ using namespace SCIRun;
                           const StaticArray<constCCVariable<Vector> >& vel_CC);
                              
       void getExchangeCoefficients( DenseMatrix& K,
-                                    DenseMatrix& H );  
+                                    DenseMatrix& H ); 
+
+      void matrixInverse(  int numMatls,
+                           DenseMatrix& a,
+                           DenseMatrix& aInverse);
+                          
+      void matrixSolver( int numMatls,
+                         DenseMatrix& a, 
+                         vector<double>& b, 
+                         vector<double>& X  );
+                         
+      void multiplyMatrixAndVector( int numMatls,
+                                    DenseMatrix& a, 
+                                    vector<double>& b, 
+                                    vector<double>& X  );
+                                                             
+      double conditionNumber( const int numMatls,
+                              const DenseMatrix& a);
+
+
                                         
       // Debugging switches
       bool switchDebugInitialize;
@@ -427,8 +446,8 @@ using namespace SCIRun;
 
 #define RIGHT_BK            8               /* edge along right back of cell*/
 #define RIGHT_FR            9               /* edge along right front of cell  */
-#define LEFT_FR             10              /* edge along left front of cell*/
-#define LEFT_BK             11              /* edge alone left back of cell  */
+#define LEFT_BK             10              /* edge alone left back of cell  */
+#define LEFT_FR             11              /* edge along left front of cell*/
      
             //__________________________________
             //   C O R N E R   F L U X E S
