@@ -11,10 +11,13 @@ namespace Uintah {
     FractureParticleCreator();
     virtual ~FractureParticleCreator();
 
-    virtual void createParticles(MPMMaterial* matl, particleIndex numParticles,
-				 CCVariable<short int>& cellNAPID,
-				 const Patch*, DataWarehouse* new_dw,
-				 MPMLabel* lb, std::vector<GeometryObject*>&);
+    virtual ParticleSubset* createParticles(MPMMaterial* matl,
+					    particleIndex numParticles,
+					    CCVariable<short int>& cellNAPID,
+					    const Patch*, 
+					    DataWarehouse* new_dw,
+					    MPMLabel* lb, 
+					    vector<GeometryObject*>&);
 
     virtual particleIndex countParticles(const Patch*,
 					 std::vector<GeometryObject*>&) const;

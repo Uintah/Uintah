@@ -14,6 +14,7 @@ namespace Uintah {
   class DataWarehouse;
   class MPMLabel;
   class MPMMaterial;
+  class ParticleSubset;
 
   class ParticleCreator {
   public:
@@ -21,20 +22,35 @@ namespace Uintah {
     ParticleCreator();
     virtual ~ParticleCreator();
 
-    virtual void createParticles(MPMMaterial* matl,particleIndex numParticles,
-				 CCVariable<short int>& cellNAPID,
-				 const Patch*,DataWarehouse* new_dw,
-				 MPMLabel* lb,std::vector<GeometryObject*>&);
+    virtual ParticleSubset* createParticles(MPMMaterial* matl,
+					    particleIndex numParticles,
+					    CCVariable<short int>& cellNAPID,
+					    const Patch*,DataWarehouse* new_dw,
+					    MPMLabel* lb,
+					    vector<GeometryObject*>&);
 
     particleIndex countParticles(const Patch*,
 				 std::vector<GeometryObject*>&) const;
     particleIndex countParticles(GeometryObject* obj,
 				 const Patch*) const;
 
+  protected:
+    
     void applyForceBC(particleIndex start, 
 		      ParticleVariable<Vector>& pextforce,
 		      ParticleVariable<double>& pmass, 
 		      ParticleVariable<Point>& position);
+    
+    ParticleSubset* allocateVariables(particleIndex numParticles,
+					      int dwi, MPMLabel* lb, 
+					      const Patch* patch,
+					      DataWarehouse* new_dw);
+
+    ParticleVariable<Point> position;
+    ParticleVariable<Vector> pvelocity, pexternalforce, psize;
+    ParticleVariable<double> pmass, pvolume, ptemperature;
+    ParticleVariable<long64> pparticleID;
+
     
   };
 
