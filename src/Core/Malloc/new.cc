@@ -15,10 +15,11 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Malloc/AllocPriv.h>
 #include <new>
+#include <sci_defs.h>
 
 using namespace SCICore::Malloc;
 
-#if 1
+#ifndef DISABLE_SCI_MALLOC
 
 #ifdef __sgi
 
@@ -126,6 +127,9 @@ void* operator new[](size_t size, Allocator* a, char* tag)
 
 //
 // $Log$
+// Revision 1.5  2000/09/14 15:34:21  sparker
+// Use --disable-sci-malloc configure flag
+//
 // Revision 1.4  2000/02/24 06:04:55  sparker
 // 0xffff5a5a (NaN) is now the fill pattern
 // Added #if 1 to malloc/new.cc to make it easier to turn them on/off
