@@ -17,11 +17,6 @@
    <DataArchiver>
         <filebase>const_test_tih_impm_y_dir.uda</filebase>
 	<outputInterval>0.01</outputInterval>
-<!--
-        <save label = "NTractionZMinus"/>
-
-	<save label = "StrainEnergy"/>
--->
 	<save label = "p.x"/>
 	<save label = "p.velocity"/>
 	<save label = "p.volume"/>
@@ -32,6 +27,7 @@
 	<save label = "g.stressFS"/>
 	<save label = "p.deformationMeasure"/>
 	<save label = "p.particleID"/>
+        <save label = "BndyForce_yminus"/>
 	<checkpoint cycle = "2" interval = "0.1"/>
    </DataArchiver>
 
@@ -41,6 +37,7 @@
         <solver>simple</solver>
         <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
+        <boundary_traction_faces>[yminus]</boundary_traction_faces>
     </MPM>
 
     <PhysicalConstants>
