@@ -236,7 +236,7 @@
 			<radius>           0.0125          </radius>
 		    </cylinder>
                  </difference>
-                  <res>                 [1,1,1]         </res>
+                  <res>                 [2,2,1]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300             </temperature>
                 </geom_object>
@@ -270,7 +270,7 @@
 			<radius>           0.0015875       </radius>
 		    </cylinder>
                  </difference>
-                  <res>                 [1,1,1]         </res>
+                  <res>                 [2,2,1]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300             </temperature>
                 </geom_object>
