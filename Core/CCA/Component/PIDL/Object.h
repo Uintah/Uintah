@@ -126,6 +126,8 @@ public:
   // collective calls.
   void createSubset(int ssize);
 
+
+  int getRefCount();
 protected:
   //////////
   // Constructor.  Initializes d_serverContext to null,

@@ -198,3 +198,7 @@ void Object::createSubset(int ssize)
   }  
 }
 
+int Object::getRefCount(){
+
+  return ref_cnt;
+}
