@@ -366,7 +366,7 @@ void BuilderWindow::setupClusterActions()
     addClusterAction->addTo(clusters);
 
     // RmCluster
-    rmClusterAction = new QAction("Remove Cluster", "&Remove Cluster", CTRL+Key_R, this, "Remove Cluster");
+    rmClusterAction = new QAction("Remove Cluster", "&Remove Cluster", CTRL+Key_D, this, "Remove Cluster");
     connect(rmClusterAction, SIGNAL( activated() ), this, SLOT( rmCluster() ));
     rmClusterAction->addTo(clusters);
 
