@@ -40,7 +40,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <string.h>
+#include <string>
 
 #include <map>
 #include <vector>
@@ -55,11 +55,9 @@
 #include <Core/Geom/View.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Datatypes/Image.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Render/Ball.h>
-#include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Core/Thread/FutureValue.h>
@@ -90,7 +88,7 @@ using std::vector;
 
 
 class OpenGLHelper;
-int query_OpenGL();
+  class GuiArgs;
 
 /* #define DO_REDRAW 0 */
 /* #define DO_PICK 1 */
@@ -137,9 +135,13 @@ struct HiRes {
   int resy;
 };
 
-class OpenGL : public Renderer {
+class OpenGL {
   
 protected:
+  GuiInterface* gui;
+  bool compute_depth(ViewWindow* viewwindow, const View& view, double& near, double& far);
+  int xres, yres;
+  Runnable *helper;
     Tk_Window tkwin;
     Window win;
     Display* dpy;
@@ -180,21 +182,19 @@ protected:
 #endif // MPEG
 
 public:
-    OpenGL();
-    virtual ~OpenGL();
-    virtual string create_window(ViewWindow* viewwindow, const string& name,
-      const string& width, const string& height);
-    virtual void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
+  static bool query(GuiInterface* gui);
+    OpenGL(GuiInterface* gui);
+     ~OpenGL();
+     void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
       int ntimesteps, double frametime);
     void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&, GeomPick*&, int&);
-    virtual void get_pick(Viewer*, ViewWindow*, int, int,
+     void get_pick(Viewer*, ViewWindow*, int, int,
       GeomObj*&, GeomPick*&, int& );
-    virtual void hide();
-    virtual void dump_image(const string& fname,
+     void dump_image(const string& fname,
 			    const string& type = "raw");
-    virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
+     void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
-  virtual void saveImage(const string& fname,
+   void saveImage(const string& fname,
 			 const string& type = "ppm", int x=640, int y=512);
   void render_and_save_image(int x, int y,
 			     const string& fname,
@@ -211,11 +211,11 @@ GLint    get_depth_view[4];
 
     // compute world space point under cursor (x,y).  If successful,
     // set 'p' to that value & return true.  Otherwise, return false.
-    virtual int    pick_scene(int x, int y, Point *p);
-    virtual void kill_helper();
+     int    pick_scene(int x, int y, Point *p);
+     void kill_helper();
 
     string myname;
-    virtual void redraw_loop();
+     void redraw_loop();
     Mailbox<int> send_mb;
     Mailbox<int> recv_mb;
     Mailbox<GetReq> get_mb;
@@ -239,8 +239,8 @@ GLint    get_depth_view[4];
     GeomPick* ret_pick_pick;
     int ret_pick_index;
 
-    virtual void listvisuals(TCLArgs&);
-    virtual void setvisual(const string&, int i, int width, int height);
+     void listvisuals(GuiArgs&);
+     void setvisual(const string&, int i, int width, int height);
 
     View lastview;
     double znear, zfar;
@@ -259,16 +259,14 @@ GLint    get_depth_view[4];
     // these functions were added to clean things up a bit...
 
 //protected:
-    virtual void getData(int datamask,
+     void getData(int datamask,
       FutureValue<GeometryData*>* result);
   
 protected:
     
-    virtual void real_getData(int datamask,
+     void real_getData(int datamask,
       FutureValue<GeometryData*>* result);
   
-    void initState(void);
-
 };
 
 } // End namespace SCIRun

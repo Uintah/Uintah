@@ -34,7 +34,6 @@
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::cerr;

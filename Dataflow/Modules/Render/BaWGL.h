@@ -35,7 +35,6 @@
 
 #include <GL/gl.h>
 #include <fstream>
-using namespace std;
 
 #include <Dataflow/Modules/Render/SharedMemory.h>
 #include <Dataflow/Modules/Render/Tracker.h>
@@ -118,6 +117,7 @@ using namespace std;
 #define CMDLEN 256
 
 namespace SCIRun {
+using namespace std;
 
 class BaWGL {
 

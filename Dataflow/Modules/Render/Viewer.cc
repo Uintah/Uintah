@@ -28,17 +28,17 @@
  */
 
 #include <Dataflow/Modules/Render/Viewer.h>
-#include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Comm/MessageTypes.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/ModuleHelper.h>
 #include <Core/Geom/GeomObj.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
+#include <Dataflow/Modules/Render/OpenGL.h>
 #include <Core/Geom/HeadLight.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/FutureValue.h>
-
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 using std::cerr;
@@ -54,13 +54,10 @@ namespace SCIRun {
 
 
 //----------------------------------------------------------------------
-extern "C" Module* make_Viewer(const string& id) {
-  return new Viewer(id);
-}
-
+DECLARE_MAKER(Viewer)
 //----------------------------------------------------------------------
-Viewer::Viewer(const string& id)
-  : Module("Viewer", id, ViewerSpecial,"Render","SCIRun"),
+Viewer::Viewer(GuiContext* ctx)
+  : Module("Viewer", ctx, ViewerSpecial,"Render","SCIRun"),
     geomlock_("Viewer geometry lock"),
     max_portno_(0)
 {
@@ -420,7 +417,7 @@ void Viewer::delete_viewwindow(ViewWindow* delviewwindow)
 }
 
 //----------------------------------------------------------------------
-void Viewer::tcl_command(TCLArgs& args, void* userdata)
+void Viewer::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -434,24 +431,13 @@ void Viewer::tcl_command(TCLArgs& args, void* userdata)
       args.error("addviewwindow must have a RID");
       return;
     }
-    view_window_.push_back(scinew ViewWindow(this, args[2]));
-  }
-  else if(args[1] == "listrenderers")
-  {
-    vector<string> rlist;
-    AVLTreeIter<string, RegisterRenderer*> iter(Renderer::get_db());
-    for(iter.first();iter.ok();++iter)
-    {
-      rlist.push_back(iter.get_key());
-    }
-    args.result(args.make_list(rlist));
+    view_window_.push_back(scinew ViewWindow(this, gui, gui->createContext(args[2])));
   }
   else
   {
     Module::tcl_command(args, userdata);
   }
 }
-
 //----------------------------------------------------------------------
 void Viewer::execute()
 {
@@ -576,7 +562,7 @@ void Viewer::flushPort(int portid)
 //----------------------------------------------------------------------
 void Viewer::emit_vars(ostream& out, string& midx)
 {
-  TCL::emit_vars(out, midx);
+  ctx->emit(out, midx);
   string viewwindowstr;
   for(unsigned int i=0;i<view_window_.size();i++)
   {
