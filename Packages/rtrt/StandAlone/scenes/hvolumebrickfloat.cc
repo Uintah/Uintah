@@ -1,8 +1,15 @@
+#define GROUP_IN_TIMEOBJ 1
+
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Cylinder.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Group.h>
+#ifdef USE_BRICK
 #include <Packages/rtrt/Core/HVolumeBrick.h>
+#else
+#include <Packages/rtrt/Core/HVolume.h>
+#include <Packages/rtrt/Core/BrickArray3.h>
+#endif
 #include <Packages/rtrt/Core/HVolumeBrickColor.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
@@ -16,6 +23,10 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
+#include <Packages/rtrt/Core/Array1.cc>
+#ifdef GROUP_IN_TIMEOBJ
+#include <Packages/rtrt/Core/TimeObj.h>
+#endif
 #include <Core/Thread/Thread.h>
 #include <iostream>
 #include <math.h>
@@ -36,6 +47,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     bool yzslice=false;
     Array1<char*> files;
     bool cut=false;
+#ifdef GROUP_IN_TIMEOBJ
+    double rate=3;
+#endif
     for(int i=1;i<argc;i++){
 	if(strcmp(argv[i], "-depth")==0){
 	    i++;
@@ -53,6 +67,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	    yzslice=true;
 	} else if(strcmp(argv[i], "-cut")==0){
 	    cut=true;
+#ifdef GROUP_IN_TIMEOBJ
+	} else if(strcmp(argv[i], "-rate")==0){
+	  rate = atof(argv[++i]);
+#endif
 	} else if(argv[i][0] != '-'){
 	    files.add(argv[i]);
 	} else {
@@ -111,15 +129,27 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     VolumeDpy* dpy=new VolumeDpy(779);
     Object* obj;
     if(files.size()==0 && !showgrid){
+#ifdef USE_BRICK
 	obj=new HVolumeBrick(matl0, dpy, files[0],
 			       depth, nworkers);
+#else
+	obj=new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (matl0, dpy, files[0], depth, nworkers);
+#endif
     } else {
+#ifdef GROUP_IN_TIMEOBJ
+	TimeObj* group = new TimeObj(rate);
+#else
 	Group* group=new Group();
+#endif
 	obj=group;
 	for(int i=0;i<files.size();i++){
-	    HVolumeBrick* hvol=new HVolumeBrick(matl0, dpy, files[i],
-						    depth, nworkers);
-	    group->add(hvol);
+#ifdef USE_BRICK
+	  HVolumeBrick* hvol=new HVolumeBrick(matl0, dpy, files[i],
+					      depth, nworkers);
+#else
+	  HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > * hvol = new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (matl0, dpy, files[i], depth, nworkers);
+#endif
+	  group->add(hvol);
 	    if(showgrid){
 		// This is lame - it only works for one data file...
 #if 0
@@ -128,9 +158,15 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		Material* cylmatl=new DielectricMaterial(1,1,.1,100,Color(.45,.97,.7), Color(1,1,1));
 #endif
 		Material* cylmatl=new LambertianMaterial( Color(0.3,0.3,0.3) );
+#ifdef USE_BRICK
 		int nx=hvol->get_nx();
 		int ny=hvol->get_ny();
 		int nz=hvol->get_nz();
+#else
+		int nx=hvol->nx;
+		int ny=hvol->ny;
+		int nz=hvol->nz;
+#endif
 		BBox bbox;
 		hvol->compute_bounds(bbox, 0);
 		Point min(bbox.min());
