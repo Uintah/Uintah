@@ -20,7 +20,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
     constructor {config} {
         set name AnalyzeToNrrd
         set_defaults
-    }
+    } 
 
     method set_defaults {} {
 	global $this-file
