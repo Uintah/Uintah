@@ -37,12 +37,15 @@ WARNING
 none
 ****************************************/
 
-#include <Uintah/Components/Arches/ArchesLabel.h>
+//#include <Uintah/Components/Arches/StencilMatrix.h>
+//#include <Uintah/Grid/CCVariable.h>
+//#include <Uintah/Grid/FCVariable.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Components/Arches/ArchesVariables.h>
 
 #include <SCICore/Containers/Array1.h>
 
@@ -89,7 +92,10 @@ public:
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
 				  double delta_t,
-				  int eqnType, int labID);
+				  int index,
+				  int eqnType,
+				  CellInformation* cellinfo,
+				  ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -101,7 +107,9 @@ public:
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
-				  double delta_t); 
+				  double delta_t, 
+				  CellInformation* cellinfo,
+				  ArchesVariables* vars); 
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -114,7 +122,9 @@ public:
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
 				double delta_t,
-				int Index);
+				int Index,
+				CellInformation* cellinfo,
+				ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -124,7 +134,8 @@ public:
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
-				int eqnType, int labID);
+				int index,
+				int eqnType, ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -133,7 +144,7 @@ public:
       void calculatePressDiagonal(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw);
+				  DataWarehouseP& new_dw, ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -143,7 +154,7 @@ public:
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
-				   int Index);
+				   int Index, ArchesVariables* vars);
 protected:
 
 private:
@@ -157,9 +168,6 @@ private:
       // coefficients for all the scalar components
       //StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
-      // const VarLabel*
-      const ArchesLabel* d_lab;
-
 }; // end class Discretization
 } // end namespace ArchesSpace
 } // end namespace Uintah
@@ -168,16 +176,9 @@ private:
   
 //
 // $Log$
-// Revision 1.27  2000/07/19 06:30:01  bbanerje
-// ** MAJOR CHANGES **
-// If you want to get the old code go two checkins back.
-//
-// Revision 1.26  2000/07/18 22:33:51  bbanerje
-// Changes to PressureSolver for put error. Added ArchesLabel.
-//
-// Revision 1.25  2000/07/14 05:23:50  bbanerje
-// Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
-// in Kumar's code.
+// Revision 1.28  2000/07/28 02:30:59  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
 //
 // Revision 1.24  2000/07/08 23:42:54  bbanerje
 // Moved all enums to Arches.h and made corresponding changes.

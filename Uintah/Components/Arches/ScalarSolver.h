@@ -41,6 +41,8 @@ WARNING
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Components/Arches/ArchesVariables.h>
+#include <Uintah/Components/Arches/ArchesLabel.h>
 
 namespace Uintah {
    class ProcessorGroup;
@@ -67,7 +69,8 @@ public:
       // POSTCONDITIONS
       //   A linear level solver is partially constructed.  
       //
-      ScalarSolver(TurbulenceModel* turb_model, 
+      ScalarSolver(const ArchesLabel* label, 
+		   TurbulenceModel* turb_model, 
 		   BoundaryCondition* bndry_cond,
 		   PhysicalConstants* physConst);
 
@@ -130,7 +133,7 @@ private:
 			     double delta_t, const int index);
 
 private:
-
+      ArchesVariables* d_scalarVars;
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -145,20 +148,8 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel* (required)
-      const VarLabel* d_scalarSPLabel;
-      const VarLabel* d_uVelocityMSLabel;
-      const VarLabel* d_vVelocityMSLabel;
-      const VarLabel* d_wVelocityMSLabel;
-      const VarLabel* d_densityCPLabel;
-      const VarLabel* d_viscosityCTSLabel;
+      const ArchesLabel* d_lab;
 
-      // const VarLabel* (computed)
-      const VarLabel* d_scalCoefSBLMLabel;
-      const VarLabel* d_scalLinSrcSBLMLabel;
-      const VarLabel* d_scalNonLinSrcSBLMLabel;
-
-      // DataWarehouse generation
-      int d_generation;
 
 }; // End class ScalarSolver
 
@@ -169,6 +160,10 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.12  2000/07/03 05:30:16  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

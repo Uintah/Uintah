@@ -16,7 +16,7 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/PressureSolver.cc $(SRCDIR)/MomentumSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc $(SRCDIR)/RBGSSolver.cc \
 	$(SRCDIR)/Source.cc $(SRCDIR)/CellInformation.cc \
-	$(SRCDIR)/ArchesLabel.cc
+	$(SRCDIR)/ArchesLabel.cc $(SRCDIR)/ArchesVariables.cc
 
 
 SUBDIRS := $(SRCDIR)/fortran
@@ -32,8 +32,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.18  2000/07/18 22:33:52  bbanerje
-# Changes to PressureSolver for put error. Added ArchesLabel.
+# Revision 1.19  2000/07/28 02:31:00  rawat
+# moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+# coeffecients
 #
 # Revision 1.17  2000/07/13 04:51:33  bbanerje
 # Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)

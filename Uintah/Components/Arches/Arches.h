@@ -43,6 +43,7 @@ WARNING
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
+#include <Uintah/Components/Arches/ArchesLabel.h>
 
 #include <SCICore/Geometry/Vector.h>
 
@@ -190,16 +191,7 @@ private:
       BoundaryCondition* d_boundaryCondition;
       SimulationStateP d_sharedState;
       // Variable labels that are used by the simulation controller
-      // 
-      //    const VarLabel* d_deltLabel;
-      const VarLabel* d_densityINLabel;
-      const VarLabel* d_pressureINLabel;
-      const VarLabel* d_scalarINLabel;
-      const VarLabel* d_uVelocityINLabel;
-      const VarLabel* d_vVelocityINLabel;
-      const VarLabel* d_wVelocityINLabel;
-      const VarLabel* d_viscosityINLabel;
-      const VarLabel* d_cellTypeLabel;
+      const ArchesLabel* d_lab;
 
 }; // end class Arches
 
@@ -208,6 +200,10 @@ private:
 
 //
 // $Log$
+// Revision 1.34  2000/07/28 02:30:59  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.33  2000/07/09 00:23:58  bbanerje
 // Made changes to calcVelocitySource .. still getting seg violation here.
 //

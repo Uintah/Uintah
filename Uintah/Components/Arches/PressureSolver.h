@@ -35,18 +35,18 @@ WARNING
 
 ************************************************************************/
 
-#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/VarLabel.h>
 #include <SCICore/Geometry/Vector.h>
-
+#include <Uintah/Components/Arches/ArchesLabel.h>
 namespace Uintah {
 class ProcessorGroup;
 namespace ArchesSpace {
-
+class ArchesVariables;
 class TurbulenceModel;
 class PhysicalConstants;
 class Discretization;
@@ -68,7 +68,7 @@ public:
       // POSTCONDITIONS
       //   A linear level solver is partially constructed.  
       //
-      PressureSolver(int nDim,
+      PressureSolver(const ArchesLabel* label,
 		     TurbulenceModel* turb_model, 
 		     BoundaryCondition* bndry_cond,
 		     PhysicalConstants* physConst);
@@ -108,14 +108,18 @@ public:
 				   DataWarehouseP& new_dw,
 				   double delta_t);
  
+      void sched_pressureLinearSolve(const LevelP& level, 
+				     SchedulerP& sched, 
+				     DataWarehouseP& new_dw,
+				     DataWarehouseP& matrix_dw);
       ///////////////////////////////////////////////////////////////////////
       //
       // Schedule the creation of the .. more documentation here
       //
-      //void sched_normPressure(const LevelP& level,
-	//		      SchedulerP& sched,
-	//		      DataWarehouseP& old_dw,
-	//		      DataWarehouseP& new_dw);  
+      void sched_normPressure(const LevelP& level,
+			      SchedulerP& sched,
+			      DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw);  
 
 protected:
 
@@ -135,25 +139,34 @@ private:
       //    [in] 
       //        add documentation here
       //
-      //void buildLinearMatrix(const ProcessorGroup* pc,
-	//		     const Patch* patch,
-	//		     DataWarehouseP& old_dw,
-	//		     DataWarehouseP& new_dw,
-	//		     double delta_t);
+      void buildLinearMatrix(const ProcessorGroup* pc,
+			     const Patch* patch,
+			     DataWarehouseP& new_dw,
+			     DataWarehouseP& matrix_dw,
+			     double delta_t);
 
+      void pressureLinearSolve(const ProcessorGroup* pc,
+			       const Patch* patch,
+			       DataWarehouseP& new_dw,
+			       DataWarehouseP& matrix_dw);
+      
       ///////////////////////////////////////////////////////////////////////
       //
       // Actually do normPressure
       //    [in] 
       //        add documentation here
       //
-      //void normPressure(const Patch* patch,
-	//		SchedulerP& sched,
-	//		const DataWarehouseP& old_dw,
-	//		DataWarehouseP& new_dw);
+      void normPressure(const Patch* patch,
+			SchedulerP& sched,
+			const DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw);
 
-private:
+  
 
+ private:
+      // stores the variables used by different functions
+      ArchesVariables* d_pressureVars;
+      
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -167,8 +180,6 @@ private:
       // physical constants
       PhysicalConstants* d_physicalConsts;
 
-      // Whether the analysis is 2d or 3d
-      int d_NDIM;
       // Maximum number of iterations to take before stopping/giving up.
       int d_maxIterations;
       // underrealaxation parameter, read from an input database
@@ -176,41 +187,8 @@ private:
       //reference points for the solvers
       Vector d_pressRef;
 
-      // The VarLabels
-      ArchesLabel* d_lab;
-
       // const VarLabel* (required)
-      //const VarLabel* d_cellTypeLabel;
-      //const VarLabel* d_pressureINLabel;
-      //const VarLabel* d_pressureSPBCLabel;
-      //const VarLabel* d_uVelocitySPBCLabel;
-      //const VarLabel* d_vVelocitySPBCLabel;
-      //const VarLabel* d_wVelocitySPBCLabel;
-      //const VarLabel* d_uVelocitySIVBCLabel;
-      //const VarLabel* d_vVelocitySIVBCLabel;
-      //const VarLabel* d_wVelocitySIVBCLabel;
-      //const VarLabel* d_densityCPLabel;
-      //const VarLabel* d_viscosityCTSLabel;
-
-      // const VarLabel* (computed)
-      //const VarLabel* d_uVelConvCoefPBLMLabel;
-      //const VarLabel* d_vVelConvCoefPBLMLabel;
-      //const VarLabel* d_wVelConvCoefPBLMLabel;
-      //const VarLabel* d_uVelCoefPBLMLabel;
-      //const VarLabel* d_vVelCoefPBLMLabel;
-      //const VarLabel* d_wVelCoefPBLMLabel;
-      //const VarLabel* d_uVelLinSrcPBLMLabel;
-      //const VarLabel* d_vVelLinSrcPBLMLabel;
-      //const VarLabel* d_wVelLinSrcPBLMLabel;
-      //const VarLabel* d_uVelNonLinSrcPBLMLabel;
-      //const VarLabel* d_vVelNonLinSrcPBLMLabel;
-      //const VarLabel* d_wVelNonLinSrcPBLMLabel;
-      //const VarLabel* d_presCoefPBLMLabel;
-      //const VarLabel* d_presLinSrcPBLMLabel;
-      //const VarLabel* d_presNonLinSrcPBLMLabel;
-
-      // DataWarehouse generation
-      int d_generation;
+      const ArchesLabel* d_lab;
 
 }; // End class PressureSolver
 
@@ -221,8 +199,9 @@ private:
 
 //
 // $Log$
-// Revision 1.25  2000/07/18 22:33:52  bbanerje
-// Changes to PressureSolver for put error. Added ArchesLabel.
+// Revision 1.26  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
 //
 // Revision 1.24  2000/07/13 06:32:10  bbanerje
 // Labels are once more consistent for one iteration.

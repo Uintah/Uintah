@@ -34,14 +34,14 @@ WARNING
    none
 
 ************************************************************************/
-#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
-
+#include <Uintah/Components/Arches/ArchesVariables.h>
+#include <Uintah/Components/Arches/ArchesLabel.h>
 namespace Uintah {
    class ProcessorGroup;
 namespace ArchesSpace {
@@ -67,7 +67,7 @@ public:
       // POSTCONDITIONS
       //   A linear level solver is partially constructed.  
       //
-      MomentumSolver(TurbulenceModel* turb_model, 
+      MomentumSolver(const ArchesLabel* label, TurbulenceModel* turb_model, 
 		     BoundaryCondition* bndry_cond,
 		     PhysicalConstants* physConst);
 
@@ -105,6 +105,11 @@ public:
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
 				   double delta_t, int index);
+ 
+      void sched_velocityLinearSolve(const LevelP& level,
+				     SchedulerP& sched,
+				     DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw, int index);
 
 protected: 
 
@@ -126,9 +131,16 @@ private:
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
 			     double delta_t, int index);
+   
+      void velocityLinearSolve(const ProcessorGroup* pc,
+			       const Patch* patch,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw,
+			       int index);
 
 private:
 
+      ArchesVariables* d_velocityVars;
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -145,8 +157,6 @@ private:
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
 
-      // DataWarehouse generation
-      int d_generation;
 
 }; // End class MomentumSolver
 
@@ -157,9 +167,9 @@ private:
 
 //
 // $Log$
-// Revision 1.11  2000/07/19 06:30:01  bbanerje
-// ** MAJOR CHANGES **
-// If you want to get the old code go two checkins back.
+// Revision 1.12  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
 //
 // Revision 1.10  2000/07/03 05:30:15  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.

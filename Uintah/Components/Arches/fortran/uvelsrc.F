@@ -111,33 +111,33 @@ c     viscous sources
          do 110 j = JSTU,JENDU
             do 100 i = ISTU,IENDU
                VOL = SEWU(I)*SNS(J)*STB(K)
-               VISE = FAC1U(I)*VIS(I,J,K)+FAC2U(I)*VIS(I+IESDU(I),J,K)
-               VISW = FAC3U(I)*VIS(I-1,J,K)+FAC4U(I)*
-     $              VIS(I+IWSDU(I),J,K)
-               VISN = PT25*(VIS(I,J,K)+VIS(I,J+1,K)+
-     &              VIS(I-1,J,K)+VIS(I-1,J+1,K))
-               VISS = PT25*(VIS(I,J,K)+VIS(I,J-1,K)+
-     &              VIS(I-1,J,K)+VIS(I-1,J-1,K))
-               VIST = PT25*(VIS(I,J,K)+VIS(I,J,K+1)+
-     &              VIS(I-1,J,K)+VIS(I-1,J,K+1))
-               VISB = PT25*(VIS(I,J,K)+VIS(I,J,K-1)+
-     &              VIS(I-1,J,K)+VIS(I-1,J,K-1))  
-               DUDXE  = (UU(I+1,J,K)-UU(I,J,K))/SEW(I)
-               DUDXW  = (UU(I,J,K)-UU(I-1,J,K))/SEW(I-1)
-               VISEI = CEEU(I)*VISE + CWEU(I)*VISW
-               VISWI = CWWU(I)*VISW - CWEU(I)*VISE
+c               VISE = FAC1U(I)*VIS(I,J,K)+FAC2U(I)*VIS(I+IESDU(I),J,K)
+c               VISW = FAC3U(I)*VIS(I-1,J,K)+FAC4U(I)*
+c     $              VIS(I+IWSDU(I),J,K)
+c               VISN = PT25*(VIS(I,J,K)+VIS(I,J+1,K)+
+c     &              VIS(I-1,J,K)+VIS(I-1,J+1,K))
+c               VISS = PT25*(VIS(I,J,K)+VIS(I,J-1,K)+
+c     &              VIS(I-1,J,K)+VIS(I-1,J-1,K))
+c               VIST = PT25*(VIS(I,J,K)+VIS(I,J,K+1)+
+c     &              VIS(I-1,J,K)+VIS(I-1,J,K+1))
+c               VISB = PT25*(VIS(I,J,K)+VIS(I,J,K-1)+
+c     &              VIS(I-1,J,K)+VIS(I-1,J,K-1))  
+c               DUDXE  = (UU(I+1,J,K)-UU(I,J,K))/SEW(I)
+c               DUDXW  = (UU(I,J,K)-UU(I-1,J,K))/SEW(I-1)
+c               VISEI = CEEU(I)*VISE + CWEU(I)*VISW
+c               VISWI = CWWU(I)*VISW - CWEU(I)*VISE
 c              SU(I,J,K) = SU(I,J,K)+(VISEI*DUDXE-VISWI*DUDXW)/
 c    &              SEWU(I)*VOL
-               DVDXN  = (VV(I,J+1,K)-VV(I-1,J+1,K))/DXPW(I)
-               DVDXS  = (VV(I,J,K)-VV(I-1,J,K))/DXPW(I)
-               VISNI = CNN(J)*VISN + CSN(J)*VISS
-               VISSI = CSS(J)*VISS - CSN(J)*VISN
+c               DVDXN  = (VV(I,J+1,K)-VV(I-1,J+1,K))/DXPW(I)
+c               DVDXS  = (VV(I,J,K)-VV(I-1,J,K))/DXPW(I)
+c               VISNI = CNN(J)*VISN + CSN(J)*VISS
+c               VISSI = CSS(J)*VISS - CSN(J)*VISN
 c              SU(I,J,K) = SU(I,J,K)+(VISNI*DVDXN-
 c    &              VISSI*DVDXS)/SNS(J)*VOL
-               DWDXT = (WW(I,J,K+1)-WW(I-1,J,K+1))/DXPW(I)
-               DWDXB = (WW(I,J,K)-WW(I-1,J,K))/DXPW(I)
-               VISTI = CTT(K)*VIST + CBT(K)*VISB
-               VISBI = CBB(K)*VISB - CBT(K)*VIST
+c               DWDXT = (WW(I,J,K+1)-WW(I-1,J,K+1))/DXPW(I)
+c               DWDXB = (WW(I,J,K)-WW(I-1,J,K))/DXPW(I)
+c              VISTI = CTT(K)*VIST + CBT(K)*VISB
+c               VISBI = CBB(K)*VISB - CBT(K)*VIST
 c              SU(I,J,K) = SU(I,J,K)+(VISTI*DWDXT-VISBI*DWDXB)/
 c    &              STB(K)*VOL
 c     transient
@@ -150,10 +150,10 @@ c
 c   Add all the source terms at one go (don't need as many array searches)
 c
                SU(I,J,K) = SU(I,J,K)+
-     &              ((VISEI*DUDXE-VISWI*DUDXW)/SEWU(I) +
-     &              (VISNI*DVDXN-VISSI*DVDXS)/SNS(J)   +
-     &              (VISTI*DWDXT-VISBI*DWDXB)/STB(K)   +
-     &              old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/DELTAT +
+c     &              ((VISEI*DUDXE-VISWI*DUDXW)/SEWU(I) +
+c     &              (VISNI*DVDXN-VISSI*DVDXS)/SNS(J)   +
+c     &              (VISTI*DWDXT-VISBI*DWDXB)/STB(K)   +
+     &              (old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/DELTAT +
      &              (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-DEN_REF)*GRAV)*VOL 
  100        continue
  110     continue
@@ -164,6 +164,10 @@ c
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/07/28 02:31:04  rawat
+c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+c coeffecients
+c
 c Revision 1.3  2000/07/12 05:14:27  bbanerje
 c Added vvelsrc and wvelsrc .. some changes to uvelsrc.
 c Rawat :: Labels are getting hopelessly muddled unless we can do something

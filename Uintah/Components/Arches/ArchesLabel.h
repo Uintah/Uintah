@@ -40,169 +40,191 @@ namespace Uintah {
       ~ArchesLabel();
 
       // Cell Information
-      const VarLabel* cellInfoLabel;
+      // for old_dw, perpatch var
+      const VarLabel* d_cellInfoLabel;
 
       // Cell type
-      const VarLabel* cellTypeLabel;
+      const VarLabel* d_cellTypeLabel;//computed for old_dw in cellTypeInit
 
       // Density Labels
-      const VarLabel* densityINLabel;
-      const VarLabel* densityCPLabel;
-      const VarLabel* densitySPLabel;
+      //computed for old_dw in paramInit
+      // computed for new_dw in setInitialGuess
+      const VarLabel* d_densityINLabel;
+      // for old_dw in computeProps
+      const VarLabel* d_densityCPLabel;
+      // computed for old_dw in setProfile
+      const VarLabel* d_densitySPLabel;
 
       // Viscosity Labels
-      const VarLabel* viscosityINLabel;
-      const VarLabel* viscosityCTSLabel;
+      // computed for old_dw in paramInit
+      // computed for new_dw in setInitialGuess
+      const VarLabel* d_viscosityINLabel; 
+      // for old_dw in computeTurbModel
+      const VarLabel* d_viscosityCTSLabel;
 
       // Pressure Labels
-      const VarLabel* pressureINLabel;
-      const VarLabel* pressureSPBCLabel;
-      const VarLabel* pressureCPBCLabel;
-      const VarLabel* pressurePSLabel;
+      //computed for old_dw in paramInit
+      // computed for new_dw in setInitialGuess
+      const VarLabel* d_pressureINLabel;  
+      // for old_dw in computePressureBC
+      const VarLabel* d_pressureSPBCLabel;
+      // for new_dw in linearSolver
+      const VarLabel* d_pressurePSLabel;
 
       // Pressure Coeff Labels
-      const VarLabel* presCoefP0Label;
-      const VarLabel* presCoefP1Label;
-      const VarLabel* presCoefPBLMLabel;
+      // for new_dw in pressuresolver::linearizeMatrix
+      const VarLabel* d_presCoefPBLMLabel;
 
       // Pressure Linear Src Labels
-      const VarLabel* presLinSrcP0Label;
-      const VarLabel* presLinSrcPBLMLabel;
+      // in pressureSolver::linearizeMatrix
+      const VarLabel* d_presLinSrcPBLMLabel;
 
       // Pressure Non Linear Src Labels
-      const VarLabel* presNonLinSrcP0Label;
-      const VarLabel* presNonLinSrcPBLMLabel;
+      // in pressureSolver::linearizeMatrix
+      const VarLabel* d_presNonLinSrcPBLMLabel;
 
       // U-Velocity Labels
-      const VarLabel* uVelocityINLabel;
-      const VarLabel* uVelocitySPLabel;
-      const VarLabel* uVelocitySPBCLabel;
-      const VarLabel* uVelocitySIVBCLabel;
-      const VarLabel* uVelocityCPBCLabel;
-      const VarLabel* uVelocityMSLabel;
+      //computed for old_dw in paramInit
+      // computed for new_dw in setInitialGuess
+      const VarLabel* d_uVelocityINLabel; 
+      // computed for old_dw in setProfile
+      const VarLabel* d_uVelocitySPLabel;
+      // for old_dw in computePressureBC and for new_dw in linearsolve
+      const VarLabel* d_uVelocitySPBCLabel;
+      // for new_dw in inletvelocitybc
+      const VarLabel* d_uVelocitySIVBCLabel;
+      const VarLabel* d_uVelocityCPBCLabel;
 
       // U-Velocity Coeff Labels
-      const VarLabel* uVelCoefP0Label;
-      const VarLabel* uVelCoefP1Label;
-      const VarLabel* uVelCoefPBLMLabel;
-      const VarLabel* uVelCoefM0Label[3];
-      const VarLabel* uVelCoefM1Label[3];
-      const VarLabel* uVelCoefMBLMLabel[3];
+      // matrix_dw in pressuresolver and momentum solver
+      const VarLabel* d_uVelCoefPBLMLabel;
 
-      // U-Velocity Convection Coeff Labels
-      const VarLabel* uVelConvCoefPBLMLabel;
-      const VarLabel* uVelConvCoefMBLMLabel[3];
+      // U-Velocity Convection Coeff Labels computed in pressuresolver and momentumsolver
+      const VarLabel* d_uVelConvCoefPBLMLabel;
 
       // U-Velocity Linear Src Labels
-      const VarLabel* uVelLinSrcP0Label;
-      const VarLabel* uVelLinSrcP1Label;
-      const VarLabel* uVelLinSrcPBLMLabel;
-      const VarLabel* uVelLinSrcM0Label[3];
-      const VarLabel* uVelLinSrcM1Label[3];
-      const VarLabel* uVelLinSrcMBLMLabel[3];
-
+      const VarLabel* d_uVelLinSrcPBLMLabel;
       // U-Velocity Non Linear Src Labels
-      const VarLabel* uVelNonLinSrcP0Label;
-      const VarLabel* uVelNonLinSrcP1Label;
-      const VarLabel* uVelNonLinSrcPBLMLabel;
-      const VarLabel* uVelNonLinSrcM0Label[3];
-      const VarLabel* uVelNonLinSrcM1Label[3];
-      const VarLabel* uVelNonLinSrcM2Label[3];
-      const VarLabel* uVelNonLinSrcMBLMLabel[3];
+      const VarLabel* d_uVelNonLinSrcPBLMLabel;
+      // matrix_dw in pressuresolver and momentum solver
+      const VarLabel* d_uVelCoefMBLMLabel;
+
+      // U-Velocity Convection Coeff Labels computed in pressuresolver and momentumsolver
+      const VarLabel* d_uVelConvCoefMBLMLabel;
+
+      // U-Velocity Linear Src Labels
+      const VarLabel* d_uVelLinSrcMBLMLabel;
+      // U-Velocity Non Linear Src Labels
+      const VarLabel* d_uVelNonLinSrcMBLMLabel;
 
       // V-Velocity Labels
-      const VarLabel* vVelocityINLabel;
-      const VarLabel* vVelocitySPLabel;
-      const VarLabel* vVelocitySPBCLabel;
-      const VarLabel* vVelocitySIVBCLabel;
-      const VarLabel* vVelocityCPBCLabel;
-      const VarLabel* vVelocityMSLabel;
+      //computed for old_dw in paramInit
+      // computed for new_dw in setInitialGuess
+      const VarLabel* d_vVelocityINLabel; 
+      // computed for old_dw in setProfile
+      const VarLabel* d_vVelocitySPLabel;
+      // for old_dw in computePressureBC
+      const VarLabel* d_vVelocitySPBCLabel;
+      // for new_dw in inletvelocitybc
+      const VarLabel* d_vVelocitySIVBCLabel;
+      const VarLabel* d_vVelocityCPBCLabel;
 
       // V-Velocity Coeff Labels
-      const VarLabel* vVelCoefP0Label;
-      const VarLabel* vVelCoefP1Label;
-      const VarLabel* vVelCoefPBLMLabel;
-      const VarLabel* vVelCoefM0Label[3];
-      const VarLabel* vVelCoefM1Label[3];
-      const VarLabel* vVelCoefMBLMLabel[3];
+      const VarLabel* d_vVelCoefMBLMLabel;
+
 
       // V-Velocity Convection Coeff Labels
-      const VarLabel* vVelConvCoefPBLMLabel;
-      const VarLabel* vVelConvCoefMBLMLabel[3];
+      const VarLabel* d_vVelConvCoefMBLMLabel;
 
       // V-Velocity Linear Src Labels
-      const VarLabel* vVelLinSrcP0Label;
-      const VarLabel* vVelLinSrcP1Label;
-      const VarLabel* vVelLinSrcPBLMLabel;
-      const VarLabel* vVelLinSrcM0Label[3];
-      const VarLabel* vVelLinSrcM1Label[3];
-      const VarLabel* vVelLinSrcMBLMLabel[3];
+      const VarLabel* d_vVelLinSrcMBLMLabel;
 
       // V-Velocity Non Linear Src Labels
-      const VarLabel* vVelNonLinSrcP0Label;
-      const VarLabel* vVelNonLinSrcP1Label;
-      const VarLabel* vVelNonLinSrcPBLMLabel;
-      const VarLabel* vVelNonLinSrcM0Label[3];
-      const VarLabel* vVelNonLinSrcM1Label[3];
-      const VarLabel* vVelNonLinSrcM2Label[3];
-      const VarLabel* vVelNonLinSrcMBLMLabel[3];
+      const VarLabel* d_vVelNonLinSrcMBLMLabel;
+      // V-Velocity Coeff Labels
+      const VarLabel* d_vVelCoefPBLMLabel;
+
+
+      // V-Velocity Convection Coeff Labels
+      const VarLabel* d_vVelConvCoefPBLMLabel;
+
+      // V-Velocity Linear Src Labels
+      const VarLabel* d_vVelLinSrcPBLMLabel;
+
+      // V-Velocity Non Linear Src Labels
+      const VarLabel* d_vVelNonLinSrcPBLMLabel;
 
       // W-Velocity Labels
-      const VarLabel* wVelocityINLabel;
-      const VarLabel* wVelocitySPLabel;
-      const VarLabel* wVelocitySPBCLabel;
-      const VarLabel* wVelocitySIVBCLabel;
-      const VarLabel* wVelocityCPBCLabel;
-      const VarLabel* wVelocityMSLabel;
+      //computed for old_dw in paramInit
+      // computed for new_dw in setInitialGuess
+      const VarLabel* d_wVelocityINLabel; 
+      // computed for old_dw in setProfile
+      const VarLabel* d_wVelocitySPLabel;
+      // for old_dw in computePressureBC
+      const VarLabel* d_wVelocitySPBCLabel;
+      // for new_dw in inletvelocitybc
+      const VarLabel* d_wVelocitySIVBCLabel;
+      const VarLabel* d_wVelocityCPBCLabel;
 
       // W-Velocity Coeff Labels
-      const VarLabel* wVelCoefP0Label;
-      const VarLabel* wVelCoefP1Label;
-      const VarLabel* wVelCoefPBLMLabel;
-      const VarLabel* wVelCoefM0Label[3];
-      const VarLabel* wVelCoefM1Label[3];
-      const VarLabel* wVelCoefMBLMLabel[3];
+      const VarLabel* d_wVelCoefPBLMLabel;
 
       // W-Velocity Convection Coeff Labels
-      const VarLabel* wVelConvCoefPBLMLabel;
-      const VarLabel* wVelConvCoefMBLMLabel[3];
-
+      const VarLabel* d_wVelConvCoefPBLMLabel;
       // W-Velocity Linear Src Labels
-      const VarLabel* wVelLinSrcP0Label;
-      const VarLabel* wVelLinSrcP1Label;
-      const VarLabel* wVelLinSrcPBLMLabel;
-      const VarLabel* wVelLinSrcM0Label[3];
-      const VarLabel* wVelLinSrcM1Label[3];
-      const VarLabel* wVelLinSrcMBLMLabel[3];
+      const VarLabel* d_wVelLinSrcPBLMLabel;
 
       // W-Velocity Non Linear Src Labels
-      const VarLabel* wVelNonLinSrcP0Label;
-      const VarLabel* wVelNonLinSrcP1Label;
-      const VarLabel* wVelNonLinSrcPBLMLabel;
-      const VarLabel* wVelNonLinSrcM0Label[3];
-      const VarLabel* wVelNonLinSrcM1Label[3];
-      const VarLabel* wVelNonLinSrcM2Label[3];
-      const VarLabel* wVelNonLinSrcMBLMLabel[3];
+      const VarLabel* d_wVelNonLinSrcPBLMLabel;
+      // W-Velocity Coeff Labels
+      const VarLabel* d_wVelCoefMBLMLabel;
+
+      // W-Velocity Convection Coeff Labels
+      const VarLabel* d_wVelConvCoefMBLMLabel;
+      // W-Velocity Linear Src Labels
+      const VarLabel* d_wVelLinSrcMBLMLabel;
+
+      // W-Velocity Non Linear Src Labels
+      const VarLabel* d_wVelNonLinSrcMBLMLabel;
 
       // Scalar Labels
-      const VarLabel* scalarINLabel;
-      const VarLabel* scalarSPLabel;
+      //computed for old_dw in paramInit
+      // computed for new_dw in setInitialGuess
+      const VarLabel* d_scalarINLabel;  
+      // computed for old_dw in setProfile
+      const VarLabel* d_scalarSPLabel;
 
       // Scalar Coef
-      const VarLabel* scalCoefSBLMLabel;
+      const VarLabel* d_scalCoefSBLMLabel;
 
       // Scalar Conv Coef
-      const VarLabel* scalConvCoefSBLMLabel;
+      const VarLabel* d_scalConvCoefSBLMLabel;
 
       // Scalar Linear Src
-      const VarLabel* scalLinSrcSBLMLabel;
+      const VarLabel* d_scalLinSrcSBLMLabel;
 
       // Scalar NonLinear Src
-      const VarLabel* scalNonLinSrcSBLMLabel;
+      const VarLabel* d_scalNonLinSrcSBLMLabel;
+
+      // labels for nonlinear residuals
+      const VarLabel* d_presResidPSLabel;
+      const VarLabel* d_presTruncPSLabel;
+      const VarLabel* d_uVelResidPSLabel;
+      const VarLabel* d_uVelTruncPSLabel;
+      const VarLabel* d_vVelResidPSLabel;
+      const VarLabel* d_vVelTruncPSLabel;
+      const VarLabel* d_wVelResidPSLabel;
+      const VarLabel* d_wVelTruncPSLabel;
+      const VarLabel* d_scalarResidPSLabel;
+      const VarLabel* d_scalarTruncPSLabel;
 
       // Not sure what these labels are for
-      const VarLabel* DUPBLMLabel;
-
+      const VarLabel* d_DUPBLMLabel;
+      const VarLabel* d_DVPBLMLabel;
+      const VarLabel* d_DWPBLMLabel;
+      const VarLabel* d_DUMBLMLabel;
+      const VarLabel* d_DVMBLMLabel;
+      const VarLabel* d_DWMBLMLabel;
     }; // End class ArchesLabel
 
   }  // End namespace ArchesSpace
@@ -212,6 +234,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.3  2000/07/28 02:30:59  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.2  2000/07/19 06:30:01  bbanerje
 // ** MAJOR CHANGES **
 // If you want to get the old code go two checkins back.

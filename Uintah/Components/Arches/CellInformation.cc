@@ -13,116 +13,116 @@ CellInformation::CellInformation(const Patch* patch)
   IntVector indexHigh = patch->getCellHighIndex();
   int xLo = indexLow.x(); int yLo = indexLow.y(); int zLo = indexLow.z();
   int xHi = indexHigh.x(); int yHi = indexHigh.y(); int zHi = indexHigh.z();
-  int xSize = xHi-xLo; 
-  int ySize = yHi-yLo;
-  int zSize = zHi-zLo;
-  IntVector domainLow(-1, -1, -1);
-  IntVector domainHigh(xSize, ySize, zSize);
-  ++xSize; ++ySize; ++zSize;
+  IntVector domainLow = indexLow;
+  IntVector domainHigh = indexHigh;
+  IntVector Size = indexHigh - indexLow;
 
   // cell information
-  xx.resize(xSize); yy.resize(ySize); zz.resize(zSize);
+  xx.resize(Size.x()); yy.resize(Size.y()); zz.resize(Size.z());
 
   // cell grid information, for nonuniform grid it will be more
   // complicated
   xx[0] = (patch->getBox().lower()).x()+0.5*(patch->dCell()).x();
-  for (int ii = 1; ii < xSize-1; ii++) {
+  for (int ii = 1; ii < Size.x()-1; ii++) {
     xx[ii] = xx[ii-1]+patch->dCell().x();
   }
-  xx[xSize-1] = (patch->getBox().upper()).x();
+  xx[Size.x()-1] = (patch->getBox().upper()).x();
   yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
-  for (int ii = 1; ii < ySize-1; ii++) {
+  for (int ii = 1; ii < Size.y()-1; ii++) {
     yy[ii] = yy[ii-1]+patch->dCell().y();
   }
-  yy[ySize-1] = (patch->getBox().upper()).y();
+  yy[Size.y()-1] = (patch->getBox().upper()).y();
   zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
-  for (int ii = 1; ii < zSize-1; ii++) {
+  for (int ii = 1; ii < Size.z()-1; ii++) {
     zz[ii] = zz[ii-1]+patch->dCell().z();
   }
-  zz[zSize-1] = (patch->getBox().upper()).z();
+  zz[Size.z()-1] = (patch->getBox().upper()).z();
 
   cout << "Lower x = " << patch->getBox().lower().x() << endl;
-  for (int ii = 0; ii < xSize; ii++) {
+  for (int ii = 0; ii < Size.x(); ii++) {
     cout << "xx[" << ii <<"] = " << xx[ii] << endl;
   }
   cout << "Upper x = " << patch->getBox().upper().x() << endl;
   cout << "Lower y = " << patch->getBox().lower().y() << endl;
-  for (int ii = 0; ii < ySize; ii++) {
+  for (int ii = 0; ii < Size.y(); ii++) {
     cout << "yy[" << ii <<"] = " << yy[ii] << endl;
   }
   cout << "Upper y = " << patch->getBox().upper().y() << endl;
   cout << "Lower z = " << patch->getBox().lower().z() << endl;
-  for (int ii = 0; ii < zSize; ii++) {
+  for (int ii = 0; ii < Size.z(); ii++) {
     cout << "zz[" << ii <<"] = " << zz[ii] << endl;
   }
   cout << "Upper z = " << patch->getBox().upper().z() << endl;
   
   //  allocate memory for x-dim arrays
-  dxep.resize(xSize);
-  dxpw.resize(xSize);
-  sew.resize(xSize);
-  xu.resize(xSize);
-  dxpwu.resize(xSize);
-  dxepu.resize(xSize);
-  sewu.resize(xSize);
-  cee.resize(xSize);
-  cww.resize(xSize);
-  cwe.resize(xSize);
-  ceeu.resize(xSize);
-  cwwu.resize(xSize);
-  cweu.resize(xSize);
-  efac.resize(xSize);
-  wfac.resize(xSize);
-  fac1u.resize(xSize);
-  fac2u.resize(xSize);
-  iesdu.resize(xSize);
-  fac3u.resize(xSize);
-  fac4u.resize(xSize);
-  iwsdu.resize(xSize);
+  dxep.resize(Size.x());
+  dxpw.resize(Size.x());
+  sew.resize(Size.x());
+  xu.resize(Size.x());
+  dxpwu.resize(Size.x());
+  dxepu.resize(Size.x());
+  sewu.resize(Size.x());
+  cee.resize(Size.x());
+  cww.resize(Size.x());
+  cwe.resize(Size.x());
+  ceeu.resize(Size.x());
+  cwwu.resize(Size.x());
+  cweu.resize(Size.x());
+  efac.resize(Size.x());
+  wfac.resize(Size.x());
+  fac1u.resize(Size.x());
+  fac2u.resize(Size.x());
+  iesdu.resize(Size.x());
+  fac3u.resize(Size.x());
+  fac4u.resize(Size.x());
+  iwsdu.resize(Size.x());
   // allocate memory for y-dim arrays
-  dynp.resize(ySize);
-  dyps.resize(ySize);
-  sns.resize(ySize);
-  yv.resize(ySize);
-  dynpv.resize(ySize);
-  dypsv.resize(ySize);
-  snsv.resize(ySize);
-  cnn.resize(ySize);
-  css.resize(ySize);
-  csn.resize(ySize);
-  cnnv.resize(ySize);
-  cssv.resize(ySize);
-  csnv.resize(ySize);
-  enfac.resize(ySize);
-  sfac.resize(ySize);
-  fac1v.resize(ySize);
-  fac2v.resize(ySize);
-  jnsdv.resize(ySize);
-  fac3v.resize(ySize);
-  fac4v.resize(ySize);
-  jssdv.resize(ySize);
+  dynp.resize(Size.y());
+  dyps.resize(Size.y());
+  sns.resize(Size.y());
+  yv.resize(Size.y());
+  dynpv.resize(Size.y());
+  dypsv.resize(Size.y());
+  snsv.resize(Size.y());
+  cnn.resize(Size.y());
+  css.resize(Size.y());
+  csn.resize(Size.y());
+  cnnv.resize(Size.y());
+  cssv.resize(Size.y());
+  csnv.resize(Size.y());
+  enfac.resize(Size.y());
+  sfac.resize(Size.y());
+  fac1v.resize(Size.y());
+  fac2v.resize(Size.y());
+  jnsdv.resize(Size.y());
+  fac3v.resize(Size.y());
+  fac4v.resize(Size.y());
+  jssdv.resize(Size.y());
   //allocate memory for z-dim arrays
-  dztp.resize(zSize);
-  dzpb.resize(zSize);
-  stb.resize(zSize);
-  zw.resize(zSize);
-  dztpw.resize(zSize);
-  dzpbw.resize(zSize);
-  stbw.resize(zSize);
-  ctt.resize(zSize);
-  cbb.resize(zSize);
-  cbt.resize(zSize);
-  cttw.resize(zSize);
-  cbbw.resize(zSize);
-  cbtw.resize(zSize);
-  tfac.resize(zSize);
-  bfac.resize(zSize);
-  fac1w.resize(zSize);
-  fac2w.resize(zSize);
-  ktsdw.resize(zSize);
-  fac3w.resize(zSize);
-  fac4w.resize(zSize);
-  kbsdw.resize(zSize);
+  dztp.resize(Size.z());
+  dzpb.resize(Size.z());
+  stb.resize(Size.z());
+  zw.resize(Size.z());
+  dztpw.resize(Size.z());
+  dzpbw.resize(Size.z());
+  stbw.resize(Size.z());
+  ctt.resize(Size.z());
+  cbb.resize(Size.z());
+  cbt.resize(Size.z());
+  cttw.resize(Size.z());
+  cbbw.resize(Size.z());
+  cbtw.resize(Size.z());
+  tfac.resize(Size.z());
+  bfac.resize(Size.z());
+  fac1w.resize(Size.z());
+  fac2w.resize(Size.z());
+  ktsdw.resize(Size.z());
+  fac3w.resize(Size.z());
+  fac4w.resize(Size.z());
+  kbsdw.resize(Size.z());
+  // for fortran
+  indexHigh = indexHigh - IntVector(1,1,1);
+  domainHigh = domainHigh - IntVector(1,1,1);
 
   // for computing geometry parameters
   FORT_CELLG(domainLow.get_pointer(), domainHigh.get_pointer(), 

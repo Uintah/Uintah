@@ -1,5 +1,9 @@
 c
 c $Log$
+c Revision 1.3  2000/07/28 02:31:04  rawat
+c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+c coeffecients
+c
 c Revision 1.2  2000/07/12 19:55:45  bbanerje
 c Added apcal stuff in calcVelDiagonal
 c
@@ -75,6 +79,15 @@ C     (IEND,JEND,KEND).
 c-----------------------------------------------------------------------
 c     executable statements
 c-----------------------------------------------------------------------
+      do 350 k = dim_lo(3), dim_hi(3)
+         do 250 j = dim_lo(2), dim_hi(2)
+            do 150 i = dim_lo(1), dim_hi(1)
+
+               ap(i,j,k) = 1.0
+
+ 150        continue
+ 250     continue
+ 350  continue
 
       do 300 k = valid_lo(3), valid_hi(3)
          do 200 j = valid_lo(2), valid_hi(2)

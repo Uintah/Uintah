@@ -33,6 +33,7 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Grid/Patch.h>
@@ -53,7 +54,7 @@ public:
       // Constructor taking
       //   [in] 
       //
-      Properties();
+      Properties(const ArchesLabel* label);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -158,10 +159,7 @@ private:
       std::vector<Stream> d_streams; 
 
       // Variable labels used by simulation controller
-      const VarLabel* d_densitySPLabel;   // Input density
-      const VarLabel* d_densityCPLabel;   // Output density
-      const VarLabel* d_densityRCPLabel;   // Output density
-      const VarLabel* d_scalarSPLabel;
+      const ArchesLabel* d_lab;
 }; // end class Properties
 
 } // end namespace ArchesSpace
@@ -171,6 +169,10 @@ private:
 
 //
 // $Log$
+// Revision 1.15  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.14  2000/07/03 05:30:15  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

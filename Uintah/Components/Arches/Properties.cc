@@ -19,16 +19,8 @@ using namespace Uintah::ArchesSpace;
 //****************************************************************************
 // Default constructor for Properties
 //****************************************************************************
-Properties::Properties()
+Properties::Properties(const ArchesLabel* label):d_lab(label)
 {
-  d_scalarSPLabel = scinew VarLabel("scalarSP", 
-				    CCVariable<double>::getTypeDescription() );
-  d_densitySPLabel = scinew VarLabel("densitySP",
-				   CCVariable<double>::getTypeDescription() );
-  d_densityCPLabel = scinew VarLabel("densityCP",
-				   CCVariable<double>::getTypeDescription() );
-  d_densityRCPLabel = scinew VarLabel("densityRCP",
-				   CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -102,12 +94,12 @@ Properties::sched_computeProps(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
       // requires scalars
-      tsk->requires(old_dw, d_densitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_densitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       for (int ii = 0; ii < d_numMixingVars; ii++) 
-	tsk->requires(old_dw, d_scalarSPLabel, ii, patch, Ghost::None,
+	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 			 numGhostCells);
-      tsk->computes(new_dw, d_densityCPLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
   }
@@ -133,9 +125,9 @@ Properties::sched_reComputeProps(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
       // requires scalars
-      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->computes(new_dw, d_densityRCPLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
   }
@@ -155,11 +147,11 @@ Properties::computeProps(const ProcessorGroup*,
   std::vector<CCVariable<double> > scalar(d_numMixingVars);
   int matlIndex = 0;
   int nofGhostCells = 0;
-  old_dw->get(density, d_densitySPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_lab->d_densitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-
+  cerr << "number of mixing vars" << d_numMixingVars << endl;
   for (int ii = 0; ii < d_numMixingVars; ii++)
-    old_dw->get(scalar[ii], d_scalarSPLabel, ii, patch, Ghost::None,
+    old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
 
   //CCVariable<double> new_density;
@@ -198,7 +190,7 @@ Properties::computeProps(const ProcessorGroup*,
 	     << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
   
   // Write the computed density to the new data warehouse
-  new_dw->put(density, d_densityCPLabel, matlIndex, patch);
+  new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -211,31 +203,48 @@ Properties::reComputeProps(const ProcessorGroup*,
 			   DataWarehouseP& new_dw)
 {
   // Get the CCVariable (density) from the old datawarehouse
+  // just write one function for computing properties
   CCVariable<double> density;
+  std::vector<CCVariable<double> > scalar(d_numMixingVars);
   int matlIndex = 0;
   int nofGhostCells = 0;
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(density, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
-  // Create the CCVariable for storing the computed density
-  CCVariable<double> new_density;
-  new_dw->allocate(new_density, d_densityRCPLabel, matlIndex, patch);
+  for (int ii = 0; ii < d_numMixingVars; ii++)
+    new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
+		nofGhostCells);
 
-#ifdef WONT_COMPILE_YET
-  // Get the low and high index for the patch
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
-  // Calculate the properties
-  // this calculation will be done by MixingModel class
-  // for more complicated cases...this will only work for
-  // helium plume
-  FORT_COLDPROPS(new_density, density,
-		 lowIndex, highIndex, d_denUnderrelax);
-#endif
-
+  //CCVariable<double> new_density;
+  //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
+  IntVector indexLow = patch->getCellLowIndex();
+  IntVector indexHigh = patch->getCellHighIndex();
+  // set density for the whole domain
+  for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+    for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+      for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	// for combustion calculations mixingmodel will be called
+	// this is similar to prcf.f
+	double local_den = 0.0;
+	double mixFracSum = 0.0;
+	for (int ii = 0; ii < d_numMixingVars; ii++ ) {
+	  local_den += 
+	    (scalar[ii])[IntVector(colX, colY, colZ)]/d_streams[ii].d_density;
+	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
+	}
+	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars-1].d_density;
+	std::cerr << "local_den " << local_den << endl;
+	if (local_den <= 0.0)
+	  throw InvalidValue("Computed zero density in props" );
+	else
+	  local_den = (1.0/local_den);
+	density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
+                 	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
+      }
+    }
+  }
   // Write the computed density to the new data warehouse
-  new_dw->put(new_density, d_densityRCPLabel, matlIndex, patch);
+  new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -257,6 +266,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.24  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.23  2000/07/12 23:59:22  rawat
 // added wall bc for u-velocity
 //

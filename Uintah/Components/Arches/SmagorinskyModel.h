@@ -35,6 +35,7 @@ WARNING
 ****************************************/
 
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
@@ -52,7 +53,7 @@ public:
       //
       // Blank constructor for SmagorinskyModel.
       //
-      SmagorinskyModel(PhysicalConstants* phyConsts);
+      SmagorinskyModel(const ArchesLabel* label, PhysicalConstants* phyConsts);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -166,40 +167,7 @@ private:
       double d_filterl; // prescribed filter length scale
 
       // const VarLabel* variables 
-      // for computeTurbulenceSubmodel
-      const VarLabel* d_cellInfoLabel;
-      const VarLabel* d_uVelocitySPLabel;
-      const VarLabel* d_vVelocitySPLabel;
-      const VarLabel* d_wVelocitySPLabel;
-      const VarLabel* d_densityCPLabel;
-      const VarLabel* d_viscosityINLabel;
-      const VarLabel* d_cellTypeLabel;
-      const VarLabel* d_viscosityCTSLabel;
-      const VarLabel* d_uVelocityMSLabel;
-      const VarLabel* d_vVelocityMSLabel;
-      const VarLabel* d_wVelocityMSLabel;
-      const VarLabel* d_densityRCPLabel;
-      const VarLabel* d_viscosityRCTSLabel;
-
-      // for calcVelocityWallBC
-      const VarLabel* d_uVelocitySIVBCLabel;
-      const VarLabel* d_vVelocitySIVBCLabel;
-      const VarLabel* d_wVelocitySIVBCLabel;
-      const VarLabel* d_uVelocityCPBCLabel;
-      const VarLabel* d_vVelocityCPBCLabel;
-      const VarLabel* d_wVelocityCPBCLabel;
-      const VarLabel* d_uVelLinSrcPBLMLabel;
-      const VarLabel* d_vVelLinSrcPBLMLabel;
-      const VarLabel* d_wVelLinSrcPBLMLabel;
-      const VarLabel* d_uVelNonLinSrcPBLMLabel;
-      const VarLabel* d_vVelNonLinSrcPBLMLabel;
-      const VarLabel* d_wVelNonLinSrcPBLMLabel;
-      const VarLabel* d_uVelLinSrcMBLMLabel;
-      const VarLabel* d_vVelLinSrcMBLMLabel;
-      const VarLabel* d_wVelLinSrcMBLMLabel;
-      const VarLabel* d_uVelNonLinSrcMBLMLabel;
-      const VarLabel* d_vVelNonLinSrcMBLMLabel;
-      const VarLabel* d_wVelNonLinSrcMBLMLabel;
+      const ArchesLabel* d_lab;
 
 }; // End class SmagorinkyModel
   

@@ -666,7 +666,7 @@ extern "C"
     FORT_ADDPRESSGRAD(const int* domLoU, const int* domHiU,
 		      const int* idxLo, const int* idxHiU,
 		      const double* uVelocity,
-		      double* nlsource,
+		      double* nlsource, double* velcoeff_AP,
 		      const int* domLo, const int* domHi,
 		      const double* pressure,
 		      const double* old_density,
@@ -719,6 +719,10 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.24  2000/07/28 02:30:59  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.23  2000/07/17 22:06:57  rawat
 // modified momentum source
 //

@@ -37,40 +37,17 @@ PicardNonlinearSolver::PicardNonlinearSolver():NonlinearSolver()
 //****************************************************************************
 // Default constructor for PicardNonlinearSolver
 //****************************************************************************
-PicardNonlinearSolver::PicardNonlinearSolver(Properties* props, 
+PicardNonlinearSolver::PicardNonlinearSolver(const ArchesLabel* label, Properties* props, 
 					     BoundaryCondition* bc,
 					     TurbulenceModel* turbModel,
 					     PhysicalConstants* physConst):
                                                 NonlinearSolver(),
-                                                d_props(props), 
+                                                d_lab(label), 
+						d_props(props), 
                                                 d_boundaryCondition(bc), 
                                                 d_turbModel(turbModel),
-                                                d_physicalConsts(physConst),
-						d_generation(0)
+                                                d_physicalConsts(physConst)
 {
-  d_pressureINLabel = scinew VarLabel("pressureIN",
-				   CCVariable<double>::getTypeDescription() );
-  d_uVelocitySPLabel = scinew VarLabel("uVelocitySP",
-				    SFCXVariable<double>::getTypeDescription() );
-  d_vVelocitySPLabel = scinew VarLabel("vVelocitySP",
-				    SFCYVariable<double>::getTypeDescription() );
-  d_wVelocitySPLabel = scinew VarLabel("wVelocitySP",
-				    SFCZVariable<double>::getTypeDescription() );
-  // used by setInitial guess
-  d_uVelocitySPBCLabel = scinew VarLabel("uVelocitySPBC", 
-				    SFCXVariable<double>::getTypeDescription() );
-  d_vVelocitySPBCLabel = scinew VarLabel("vVelocitySPBC", 
-				    SFCYVariable<double>::getTypeDescription() );
-  d_wVelocitySPBCLabel = scinew VarLabel("wVelocitySPBC", 
-				    SFCZVariable<double>::getTypeDescription() );
-  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC", 
-				   CCVariable<double>::getTypeDescription() );
-  d_scalarSPLabel = scinew VarLabel("scalarSP",
-				  CCVariable<double>::getTypeDescription() );
-  d_densityCPLabel = scinew VarLabel("densityCP",
-				   CCVariable<double>::getTypeDescription() );
-  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
-				   CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -98,7 +75,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
-    d_pressSolver = scinew PressureSolver(nDim,
+    d_pressSolver = scinew PressureSolver(d_lab,
 					  d_turbModel, d_boundaryCondition,
 					  d_physicalConsts);
     d_pressSolver->problemSetup(db);
@@ -106,14 +83,14 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   bool calMom;
   db->require("cal_momentum", calMom);
   if (calMom) {
-    d_momSolver = scinew MomentumSolver(d_turbModel, d_boundaryCondition,
+    d_momSolver = scinew MomentumSolver(d_lab, d_turbModel, d_boundaryCondition,
 				     d_physicalConsts);
     d_momSolver->problemSetup(db);
   }
   bool calScalar;
   db->require("cal_mixturescalar", calScalar);
   if (calScalar) {
-    d_scalarSolver = scinew ScalarSolver(d_turbModel, d_boundaryCondition,
+    d_scalarSolver = scinew ScalarSolver(d_lab, d_turbModel, d_boundaryCondition,
 				      d_physicalConsts);
     d_scalarSolver->problemSetup(db);
   }
@@ -132,78 +109,69 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   // set initial guess
   // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
   //                     viscosityCTS
-  // compute : new_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
-  //                     viscosityCTS
+  // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
+  //                     viscosityIN
   sched_setInitialGuess(level, sched, old_dw, new_dw);
 
   int nlIterations = 0;
   double nlResidual = 2.0*d_resTol;;
   do{
-    //create a new data warehouse to store new values during the
-    // non-linear iteration, if the iteration is succesful then
-    // it copies the dw to new_dw
-    //DataWarehouseP nonlinear_dw = sched->createDataWarehouse(d_generation);
-    //++d_generation;
-
     //correct inlet velocities to account for change in properties
-    // require : densityCP, [u,v,w]VelocitySPBC
+    // require : densityIN, [u,v,w]VelocityIN (new_dw)
     // compute : [u,v,w]VelocitySIVBC
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, new_dw);
 
     // linearizes and solves pressure eqn
-    // require : pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC,
-    //           [u,v,w]VelocitySIVBC
+    // require : pressureIN, densityIN, viscosityIN,
+    //           [u,v,w]VelocitySIVBC (new_dw)
+    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
     // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM,
-    //           presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
-    //           presLinSrcPS (** WARNING ** lin src not done yet)
-    //           (instead we have presLinSrcPBLM)
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
+    //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
+    //           pressurePS (new_dw)
     d_pressSolver->solve(level, sched, old_dw, new_dw, time, delta_t);
 
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
-    // compute : [u,v,w]VelocityCPBC, pressureCPBC
+    // compute : [u,v,w]VelocityCPBC, pressureSPBC
     d_boundaryCondition->sched_recomputePressureBC(level, sched, old_dw,
 						 new_dw);
 
     // Momentum solver
-    // require : pressurePS, [u,v,w]VelocityCPBC, densityCP, viscosityCTS
-    // compute : [u,v,w]VelCoefMBLM, [u,v,w]VelConvCoefMBLM
-    //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
+    // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
+    // viscosityIN (new_dw)
+    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+    // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
     //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
-    //           [u,v,w]VelocityMS
-    for (int index = 0; index < Arches::NDIM; ++index) {
+    //           [u,v,w]VelocitySPBC
+    for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
     
     // equation for scalars
-    // require : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
+    // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
+    //           scalarSP, densityCP (old_dw)
     // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
     //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
     for (int index = 0;index < d_props->getNumMixVars(); index ++) {
       // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve different scalars
+      // the same subroutine can be used to solve multiple scalars
       d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
 
     // update properties
-    // require : densityCP
-    // compute : densityRCP
+    // require : densityIN
+    // compute : densityCP
     d_props->sched_reComputeProps(level, sched, old_dw, new_dw);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
-    // require : densityRCP, viscosityCTS, [u,v,w]VelocityMS
-    // compute : viscosityRCTS
+    // require : densityCP, viscosityIN, [u,v,w]VelocitySPBC
+    // compute : viscosityCTS
     d_turbModel->sched_reComputeTurbSubmodel(level, sched, old_dw, new_dw);
-
-#ifdef WONT_COMPILE_YET
-    // not sure...but we need to execute tasks somewhere
-    ProcessorGroup* pc = ProcessorGroup::getRootContext();
-    sched->execute(pc);
-#endif
 
     ++nlIterations;
 
@@ -235,34 +203,34 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
 			   &PicardNonlinearSolver::setInitialGuess);
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       int nofScalars = d_props->getNumMixVars();
       for (int ii = 0; ii < nofScalars; ii++) {
-	tsk->requires(old_dw, d_scalarSPLabel, ii, patch, Ghost::None,
+	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		      numGhostCells);
       }
-      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
-      tsk->computes(new_dw, d_pressureSPBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelocitySPBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelocitySPBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelocitySPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch);
       for (int ii = 0; ii < nofScalars; ii++) {
-	tsk->computes(new_dw, d_scalarSPLabel, ii, patch);
+	tsk->computes(new_dw, d_lab->d_scalarINLabel, ii, patch);
       }
-      tsk->computes(new_dw, d_densityCPLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_viscosityCTSLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_densityINLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -283,74 +251,74 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   int nofGhostCells = 0;
 
   CCVariable<double> pressure;
-  old_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   SFCXVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   SFCYVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   SFCZVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   int nofScalars = d_props->getNumMixVars();
   vector<CCVariable<double> > scalar(nofScalars);
   for (int ii = 0; ii < nofScalars; ii++) {
-    old_dw->get(scalar[ii], d_scalarSPLabel, ii, patch, Ghost::None,
+    old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
   }
 
   CCVariable<double> density;
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
 
   // Create vars for new_dw
   CCVariable<double> pressure_new;
-  new_dw->allocate(pressure_new, d_pressureSPBCLabel, matlIndex, patch);
+  new_dw->allocate(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
   pressure_new = pressure; // copy old into new
 
   SFCXVariable<double> uVelocity_new;
-  new_dw->allocate(uVelocity_new, d_uVelocitySPBCLabel, matlIndex, patch);
+  new_dw->allocate(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
   uVelocity_new = uVelocity; // copy old into new
   SFCYVariable<double> vVelocity_new;
-  new_dw->allocate(vVelocity_new, d_vVelocitySPBCLabel, matlIndex, patch);
+  new_dw->allocate(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
   vVelocity_new = vVelocity; // copy old into new
   SFCZVariable<double> wVelocity_new;
-  new_dw->allocate(wVelocity_new, d_wVelocitySPBCLabel, matlIndex, patch);
+  new_dw->allocate(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
   wVelocity_new = wVelocity; // copy old into new
 
   vector<CCVariable<double> > scalar_new(nofScalars);
   for (int ii = 0; ii < nofScalars; ii++) {
-    new_dw->allocate(scalar_new[ii], d_scalarSPLabel, ii, patch);
+    new_dw->allocate(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
     scalar_new[ii] = scalar[ii]; // copy old into new
   }
 
   CCVariable<double> density_new;
-  new_dw->allocate(density_new, d_densityCPLabel, matlIndex, patch);
+  new_dw->allocate(density_new, d_lab->d_densityINLabel, matlIndex, patch);
   density_new = density; // copy old into new
 
   CCVariable<double> viscosity_new;
-  new_dw->allocate(viscosity_new, d_viscosityCTSLabel, matlIndex, patch);
+  new_dw->allocate(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
   viscosity_new = viscosity; // copy old into new
 
   // Copy the variables into the new datawarehouse
-  new_dw->put(pressure_new, d_pressureSPBCLabel, matlIndex, patch);
-  new_dw->put(uVelocity_new, d_uVelocitySPBCLabel, matlIndex, patch);
-  new_dw->put(vVelocity_new, d_vVelocitySPBCLabel, matlIndex, patch);
-  new_dw->put(wVelocity_new, d_wVelocitySPBCLabel, matlIndex, patch);
+  new_dw->put(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
+  new_dw->put(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
+  new_dw->put(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
+  new_dw->put(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
   for (int ii = 0; ii < nofScalars; ii++) {
-    new_dw->put(scalar_new[ii], d_scalarSPLabel, ii, patch);
+    new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
   }
-  new_dw->put(density_new, d_densityCPLabel, matlIndex, patch);
-  new_dw->put(viscosity_new, d_viscosityCTSLabel, matlIndex, patch);
+  new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
+  new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -389,6 +357,10 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.37  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.36  2000/07/13 06:32:10  bbanerje
 // Labels are once more consistent for one iteration.
 //
