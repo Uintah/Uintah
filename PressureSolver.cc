@@ -1021,7 +1021,7 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
   }
   if(d_pressRefProc == me){
     CCVariable<double> pressure;
-    pressure = pressureVars.pressure;
+    pressure.copyPointer(pressureVars.pressure);
     pressureVars.press_ref = pressure[d_pressRef];
     cerr << "press_ref for norm: " << pressureVars.press_ref << " " <<
       d_pressRefProc << endl;
