@@ -1119,7 +1119,8 @@ IntVector Patch::faceDirection(FaceType face) const
   }
 }
 
-string Patch::getFaceName(FaceType face) const
+string
+Patch::getFaceName(FaceType face)
 {
   switch(face) {
   case xminus:
