@@ -15,7 +15,13 @@ if ( !(-e $out) ) then
     echo "Couldn't find your file $out"
   exit(1)
 endif 
+
 unalias rm
+#__________________________________
+# remove your droppings and make a copy of the output file
+rm -f gp .data .plotStats_tmp
+cp $out .plotStats_tmp
+
 #__________________________________
 # extract the data
 echo "Now extracting the data"
@@ -25,18 +31,19 @@ echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
 echo "?">>.meanTime
 echo "?">>.meanTime
 
-grep elap $out | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
-grep mean $out | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
-grep elap $out | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
-grep delT $out | cut -d"=" -f3 | cut -d"," -f1 >& .delT
-#grep delT $out | cut -d"=" -f5 | cut -d" " -f1 >& .memUse
-grep delT $out | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f1 > .memUse1
-grep delT $out | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f2 > .memUse2
-grep delT $out | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f1 > .memUse3
-grep delT $out | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f2 > .memUse4
+grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
+grep mean .plotStats_tmp | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
+grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
+grep delT .plotStats_tmp | cut -d"=" -f3 | cut -d"," -f1 >& .delT
+
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f1 > .memUse1
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f2 > .memUse2
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f1 > .memUse3
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f2 > .memUse4
 paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3 .memUse4>& .data
 
 rm -f .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3  .memUse4 
+rm -f .plotStats_tmp
 #__________________________________
 # generate the  plot script
 cat > gp << fin
@@ -79,9 +86,9 @@ fin
 # plot it up
 gnuplot gp
 
+
 #__________________________________
 # clean up
 rm -f gp .data
-
 
 exit(1)
