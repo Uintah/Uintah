@@ -230,7 +230,7 @@ void GeomTriangles::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriangles::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTriangles::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTriangles::saveobj");
     return false;
@@ -269,7 +269,7 @@ void GeomTrianglesPT1d::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTrianglesPT1d::saveobj(ostream& out, const clString& format,
+bool GeomTrianglesPT1d::saveobj(ostream& out, const string& format,
 				GeomSave* saveinfo)
 {
 #if 0
@@ -759,7 +759,7 @@ void GeomTrianglesP::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTrianglesP::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTrianglesP::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTrianglesP::saveobj");
     return false;
@@ -809,7 +809,7 @@ void GeomTrianglesPC::io(Piostream& stream)
 }
 
 
-bool GeomTrianglesPC::saveobj(ostream& out, const clString& format,
+bool GeomTrianglesPC::saveobj(ostream& out, const string& format,
 			      GeomSave* saveinfo)
 {
     if(format == "vrml"){
@@ -961,7 +961,7 @@ void GeomTrianglesVP::io(Piostream& stream)
 }
 
 bool GeomTrianglesVP::saveobj(ostream&, 
-			      const clString& /*format*/,
+			      const string& /*format*/,
 			      GeomSave*)
 {
     NOT_FINISHED("GeomTrianglesVP::saveobj");
@@ -1012,7 +1012,7 @@ void GeomTrianglesVPC::io(Piostream& stream)
 }
 
 
-bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
+bool GeomTrianglesVPC::saveobj(ostream& out, const string& format,
 			      GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv"){

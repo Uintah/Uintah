@@ -55,7 +55,7 @@ GeomText::GeomText()
 {
 }
 
-GeomText::GeomText( const clString &text, const Point &at, const Color &c)
+GeomText::GeomText( const string &text, const Point &at, const Color &c)
 : GeomObj(), text(text), at(at), c(c)
 {
 }
@@ -102,7 +102,7 @@ void GeomText::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomText::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomText::saveobj(ostream&, const string&, GeomSave*)
 {
   return 0;
 }

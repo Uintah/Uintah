@@ -80,7 +80,7 @@ void GeomRenderMode::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomRenderMode::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomRenderMode::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomRenderMode::saveobj");
     return false;

@@ -72,7 +72,7 @@ void GeomPolyline::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomPolyline::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomPolyline::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomPolyline::saveobj");
     return false;
@@ -123,7 +123,7 @@ void GeomPolylineTC::io(Piostream& stream)
   Pio(stream, data);
 }
 
-bool GeomPolylineTC::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomPolylineTC::saveobj(ostream&, const string&, GeomSave*)
 {
   NOT_FINISHED("GeomPolylineTC::saveobj");
   return false;

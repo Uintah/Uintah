@@ -86,7 +86,7 @@ void GeomBillboard::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomBillboard::saveobj(ostream& out, const clString& format,
+bool GeomBillboard::saveobj(ostream& out, const string& format,
 			    GeomSave* saveinfo)
 {
     return child->saveobj(out, format, saveinfo);

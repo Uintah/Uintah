@@ -643,7 +643,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 #endif
 }
 
-bool GeomTexVolRender::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTexVolRender::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTexVolRender::savObj");
   return 0;

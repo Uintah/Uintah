@@ -135,7 +135,7 @@ void GeomTube::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTube::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTube::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTube::saveobj");
     return false;

@@ -98,7 +98,7 @@ void GeomQMesh::io(Piostream&)
 
 }    
 
-bool GeomQMesh::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomQMesh::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomQMesh::saveobj");
     return false;

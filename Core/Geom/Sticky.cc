@@ -77,7 +77,7 @@ void GeomSticky::io(Piostream& stream) {
   stream.end_class();
 }
 
-bool GeomSticky::saveobj(ostream&, const clString&, GeomSave*) {
+bool GeomSticky::saveobj(ostream&, const string&, GeomSave*) {
   NOT_FINISHED("GeomSticky::saveobj");
   return false;
 }

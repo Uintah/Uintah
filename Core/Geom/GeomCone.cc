@@ -148,7 +148,7 @@ void GeomCone::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomCone::saveobj(ostream& out, const clString& format,
+bool GeomCone::saveobj(ostream& out, const string& format,
 		       GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv"){
@@ -218,7 +218,7 @@ void GeomCappedCone::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomCappedCone::saveobj(ostream& out, const clString& format,
+bool GeomCappedCone::saveobj(ostream& out, const string& format,
 			   GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv" ){

@@ -113,7 +113,7 @@ void GeomTransform::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTransform::saveobj(ostream&, const clString&,
+bool GeomTransform::saveobj(ostream&, const string&,
 			   GeomSave*)
 {
     cerr << "don't know how to output a transform matrix!\n";

@@ -148,7 +148,7 @@ void GeomTimeGroup::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTimeGroup::saveobj(ostream& out, const clString& format,
+bool GeomTimeGroup::saveobj(ostream& out, const string& format,
 			    GeomSave* saveinfo)
 {
     static int cnt = 0;

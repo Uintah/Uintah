@@ -136,7 +136,7 @@ public:
   virtual void get_bounds(BBox& bb){ tex->get_bounds( bb ); }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 
   void setup();
   void preDraw(){ _gl_state->preDraw(); }

@@ -42,7 +42,7 @@ namespace SCIRun {
 class SCICORESHARE HeadLight : public Light {
     Color c;
 public:
-    HeadLight(const clString& name, const Color&);
+    HeadLight(const string& name, const Color&);
     virtual ~HeadLight();
 
     virtual void io(Piostream&);

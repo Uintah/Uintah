@@ -86,7 +86,7 @@ void GeomSwitch::get_bounds(BBox& bbox)
 }
 
 
-bool GeomSwitch::saveobj(ostream& out, const clString& format,
+bool GeomSwitch::saveobj(ostream& out, const string& format,
 			 GeomSave* saveinfo)
 {
     cerr << "saveobj Switch ";
@@ -142,7 +142,7 @@ void GeomTimeSwitch::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTimeSwitch::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTimeSwitch::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTimeSwitch::saveobj");
     return false;

@@ -52,9 +52,9 @@ struct DrawInfoOpenGL;
 
 class SCICORESHARE Light : public Persistent {
 protected:
-    Light(const clString& name);
+    Light(const string& name);
 public:
-    clString name;
+    string name;
     virtual ~Light();
     virtual void io(Piostream&);
 

@@ -41,7 +41,7 @@ class SCICORESHARE PointLight : public Light {
     Point p;
     Color c;
 public:
-    PointLight(const clString& name, const Point&, const Color&);
+    PointLight(const string& name, const Point&, const Color&);
     virtual ~PointLight();
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

@@ -157,7 +157,7 @@ void GeomGrid::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool GeomGrid::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomGrid::saveobj(ostream&, const string& format, GeomSave*)
 {
     NOT_FINISHED("GeomGrid::saveobj");
     return false;
@@ -313,7 +313,7 @@ void GeomGrid::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool GeomGrid::saveobj(ostream& out, const clString& format,
+bool GeomGrid::saveobj(ostream& out, const string& format,
 		       GeomSave* saveinfo)
 {
 	int i,j;

@@ -72,9 +72,9 @@ void GeomScene::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomScene::save(const clString& filename, const clString& format)
+bool GeomScene::save(const string& filename, const string& format)
 {
-    ofstream out(filename());
+    ofstream out(filename.c_str());
     if(!out)
 	return false;
     if(format == "vrml" || format == "iv"){

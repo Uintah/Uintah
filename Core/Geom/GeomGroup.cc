@@ -138,7 +138,7 @@ void GeomGroup::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomGroup::saveobj(ostream& out, const clString& format,
+bool GeomGroup::saveobj(ostream& out, const string& format,
 			GeomSave* saveinfo)
 {
     static int cnt = 0;

@@ -330,7 +330,7 @@ void Viewer::addObj(GeomViewerPort* port, int serial, GeomObj *obj,
 {
     clString pname(name+" ("+to_string(port->portno)+")");
     // SceneItem* si=scinew SceneItem(obj, pname, lock);
-    GeomViewerItem* si = scinew GeomViewerItem(obj, pname, lock);
+    GeomViewerItem* si = scinew GeomViewerItem(obj, pname(), lock);
     port->addObj(si,serial);
     // port->objs->insert(serial, si);
     for (int i=0; i<viewwindow.size(); i++) {

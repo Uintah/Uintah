@@ -197,7 +197,7 @@ void GeomTorus::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTorus::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTorus::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTorus::saveobj");
     return false;
@@ -217,7 +217,7 @@ void GeomTorusArc::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTorusArc::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTorusArc::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTorusArc::saveobj");
     return false;

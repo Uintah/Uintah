@@ -34,6 +34,11 @@
 #include <Core/share/share.h>
 
 #include <Core/Containers/String.h>
+#include <string>
+
+
+using std::string;
+
 
 namespace SCIRun {
   class Vector;

@@ -85,7 +85,7 @@ void GeomDL::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomDL::saveobj(ostream& out, const clString& format,
+bool GeomDL::saveobj(ostream& out, const string& format,
 			    GeomSave* saveinfo)
 {
   if ( child )
