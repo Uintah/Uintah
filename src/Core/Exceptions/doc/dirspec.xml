@@ -51,25 +51,13 @@
     </p>
   </fit>
   <use>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
-        Exceptions are the preffered method of error handling in SCIRun.
-        A developer is likely to use this code in two possible ways.  One is
-        to use a predefined exception that we provide here in this directory.
-        The other is to inherit from Exception to create a new exception 
-        specific to the developers code.
-      </p>
-    </why>
     <when>
     <!-- Discuss when or where to use the functions and classes in
          this directory: From within modules?, when a certain event
 	 occurs? -->
       <p>
         A developer is likely to use this code from within written modules 
-        as well as within new datatypes. Anywhere that flexible error 
-        handling is preffered.
+        as well as within new datatypes. 
       </p>
 
       <p>
@@ -84,10 +72,50 @@
          they are caught (uses -lexc).
       </p>
     </when>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+        Exceptions in SCIRun, are only to be used for exceptional cases. 
+        General error handling should use another mechanism. Exceptions are
+        expensive, and as such should only be used in cases that warrant it.
+        One of the most common uses in this directory are ASSERT, and 
+        ASSERTFAIL.
+      </p>
+    </why>
   </use>
   <definition>
-    <term></term>
-    <p></p>
+    <term>ASSERT</term>
+    <p>
+       This is used to verify that some condition is true before continuing.
+       if the expression geven evaluates to false, the exception is thrown, 
+       which will eventually abort scirun.
+    </p>
+    <p>This macro expands to nothing in an optimized build.</p>
+    <code>
+       myClass *p = get_my_class();
+       ASSERT(p != 0);
+       p->do_something();
+    </code>
+  </definition>
+  <definition>
+    <term>ASSERTFAIL</term>
+    <p>
+       This is used to abort with a nice message when something is wrong.
+    </p>
+    <p>This macro expands to nothing in an optimized build.</p>
+    <code>
+       switch(var) {
+         case NICE:
+         ...
+         break;
+        case EVEN_NICER:
+         ...
+         break;
+        default:
+         ASSERTFAIL("Unknown case, what happened?");
+       }
+    </code>
   </definition>
 </dir>
 
