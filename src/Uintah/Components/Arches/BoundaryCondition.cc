@@ -2139,7 +2139,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     }
     if (d_pressBoundary) {
       double scalarValue = d_pressureBdry->streamMixturefraction[indx];
-      cerr << "Scalar Value = " << scalarValue << endl;
       FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		      domLoCT.get_pointer(), domHiCT.get_pointer(),
 		      idxLo.get_pointer(), idxHi.get_pointer(),
@@ -2417,6 +2416,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.69  2000/10/13 19:48:02  sparker
+// Commenting out chatter
+//
 // Revision 1.68  2000/10/12 20:08:32  sparker
 // Made multipatch work for several timesteps
 // Cleaned up print statements
