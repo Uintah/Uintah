@@ -31,18 +31,12 @@ using namespace Uintah::ArchesSpace;
 using SCICore::Geometry::Vector;
 
 //****************************************************************************
-// Constructor that is private
-//****************************************************************************
-SmagorinskyModel::SmagorinskyModel(): TurbulenceModel()
-{
-}
-
-//****************************************************************************
 // Default constructor for SmagorinkyModel
 //****************************************************************************
-SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label, PhysicalConstants* phyConsts):
-                                                 TurbulenceModel(), 
-                                                 d_lab(label), d_physicalConsts(phyConsts)
+SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label, 
+				   PhysicalConstants* phyConsts):
+                                    TurbulenceModel(), 
+                                    d_lab(label), d_physicalConsts(phyConsts)
 {
 }
 
@@ -228,12 +222,20 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 		 cellinfo->stb.get_objs(), &mol_viscos,
 		 &d_CF, &d_factorMesh, &d_filterl);
   
-  cout << "Viscosity calculated by smagmodel\n";
-  for (int kk = domLoVis.z(); kk <= domHiVis.z(); kk++) 
-    for (int jj = domLoVis.y(); jj <= domHiVis.y(); jj++) 
-      for (int ii = domLoVis.x(); ii <= domHiVis.x(); ii++) 
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " VIS = " << viscosity[IntVector(ii,jj,kk)] << endl;
+#ifdef ARCHES_DEBUG
+  // Testing if correct values have been put
+  cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
+  for (int ii = domLoVis.x(); ii <= domHiVis.x(); ii++) {
+    cerr << "Density for ii = " << ii << endl;
+    for (int jj = domLoVis.y(); jj <= domHiVis.y(); jj++) {
+      for (int kk = domLoVis.z(); kk <= domHiVis.z(); kk++) {
+	cerr.width(10);
+	cerr << viscosity[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+#endif
 
   // Create the new viscosity variable to write the result to 
   // and allocate space in the new data warehouse for this variable
@@ -624,6 +626,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.28  2000/08/04 03:02:01  bbanerje
+// Add some inits.
+//
 // Revision 1.27  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

@@ -125,7 +125,7 @@ c*********************************************************************
       integer iBegGhost, jBegGhost, kBegGhost
       integer iEndGhost, jEndGhost, kEndGhost
       integer IST, JST, KST, IEND, JEND, KEND
-      integer i, j, k
+      integer i, j, k, ii, jj, kk
       double precision ESD, PESD, WSD, WWSD
       double precision SSD, PNSD, RNSD, SSSD
       double precision TSD, BSD, PTSD, BBSD
@@ -147,7 +147,77 @@ c*********************************************************************
       KEND = indexHigh(3)-1
 
 C-----------------------------------------------------------------------
+c     INIT to ZERO
 C-----------------------------------------------------------------------
+      do 10 ii = iBegGhost, iEndGhost
+         dxep(ii) = 0.0
+         dxpw(ii) = 0.0
+         sew(ii) = 0.0
+         xu(ii) = 0.0
+         dxpwu(ii) = 0.0
+         dxepu(ii) = 0.0
+         sewu(ii) = 0.0
+         cee(ii) = 0.0
+         cww(ii) = 0.0
+         cwe(ii) = 0.0
+         ceeu(ii) = 0.0
+         cwwu(ii) = 0.0
+         cweu(ii) = 0.0
+         efac(ii) = 0.0
+         wfac(ii) = 0.0
+         fac1u(ii) = 0.0
+         fac2u(ii) = 0.0
+         iesdu(ii) = 0
+         fac3u(ii) = 0.0
+         fac4u(ii) = 0.0
+         iwsdu(ii) = 0
+ 10   continue
+      do 20 jj = jBegGhost, jEndGhost
+         dynp(jj) = 0.0
+         dyps(jj) = 0.0
+         sns(jj) = 0.0
+         yv(jj) = 0.0
+         dynpv(jj) = 0.0
+         dypsv(jj) = 0.0
+         snsv(jj) = 0.0
+         cnn(jj) = 0.0
+         css(jj) = 0.0
+         csn(jj) = 0.0
+         cnnv(jj) = 0.0
+         cssv(jj) = 0.0
+         csnv(jj) = 0.0
+         nfac(jj) = 0.0
+         sfac(jj) = 0.0
+         fac1v(jj) = 0.0
+         fac2v(jj) = 0.0
+         jnsdv(jj) = 0
+         fac3v(jj) = 0.0
+         fac4v(jj) = 0.0
+         jssdv(jj) = 0
+ 20   continue
+      do 30 kk = kBegGhost, kEndGhost
+         dztp(kk) = 0.0
+         dzpb(kk) = 0.0
+         stb(kk) = 0.0
+         zw(kk) = 0.0
+         dztpw(kk) = 0.0
+         dzpbw(kk) = 0.0
+         stbw(kk) = 0.0
+         ctt(kk) = 0.0
+         cbb(kk) = 0.0
+         cbt(kk) = 0.0
+         cttw(kk) = 0.0
+         cbbw(kk) = 0.0
+         cbtw(kk) = 0.0
+         tfac(kk) = 0.0
+         bfac(kk) = 0.0
+         fac1w(kk) = 0.0
+         fac2w(kk) = 0.0
+         ktsdw(kk) = 0
+         fac3w(kk) = 0.0
+         fac4w(kk) = 0.0
+         kbsdw(kk) = 0
+ 30   continue
 
 C-----------------------------------------------------------------------
 C     CYLINDRICAL METRICS
@@ -430,6 +500,9 @@ C$DIR NO_RECURRENCE
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/08/04 03:02:02  bbanerje
+c Add some inits.
+c
 c Revision 1.5  2000/07/28 02:31:04  rawat
 c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 c coeffecients

@@ -273,6 +273,10 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 #ifdef ARCHES_DEBUG
   // Testing if correct values have been put
   cerr << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
+  cerr.setf(ios_base::right, ios_base::adjustfield);
+  //cerr.setf(ios_base::showpoint);
+  cerr.precision(3);
+  cerr.setf(ios_base::scientific, ios_base::floatfield);
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Celltypes for ii = " << ii << endl;
     for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
@@ -2082,6 +2086,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.50  2000/08/04 03:02:01  bbanerje
+// Add some inits.
+//
 // Revision 1.49  2000/08/04 02:14:32  bbanerje
 // Added debug statements.
 //

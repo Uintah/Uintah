@@ -42,17 +42,17 @@ CellInformation::CellInformation(const Patch* patch)
 #ifdef ARCHES_DEBUG
   cerr << "Lower x = " << patch->getBox().lower().x() << endl;
   cerr << "xx = [" ;
-  for (int ii = 0; ii < Size.x(); ii++) cerr << xx[ii] ;
+  for (int ii = 0; ii < Size.x(); ii++) cerr << xx[ii] << " " ;
   cerr << "]" << endl;
   cerr << "Upper x = " << patch->getBox().upper().x() << endl;
   cerr << "Lower y = " << patch->getBox().lower().y() << endl;
   cerr << "yy = [" ;
-  for (int ii = 0; ii < Size.y(); ii++) cerr << yy[ii] ;
+  for (int ii = 0; ii < Size.y(); ii++) cerr << yy[ii]  << " ";
   cerr << "]" << endl;
   cerr << "Upper y = " << patch->getBox().upper().y() << endl;
   cerr << "Lower z = " << patch->getBox().lower().z() << endl;
   cerr << "zz = [" ;
-  for (int ii = 0; ii < Size.z(); ii++) cerr << zz[ii] ;
+  for (int ii = 0; ii < Size.z(); ii++) cerr << zz[ii]  << " ";
   cerr << "]" << endl;
   cerr << "Upper z = " << patch->getBox().upper().z() << endl;
 #endif
