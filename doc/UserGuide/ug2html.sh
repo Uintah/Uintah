@@ -7,10 +7,10 @@ echo "Making the HTML files from srug sources."
 
 # THis version has navigation and section numbers
 
-latex2html -split 3 -no_white -link 3 -bottom_navigation \
--nomath -html_version 3.2,math  -show_section_numbers usersguide
+latex2html -split 4 -no_white -link 1 -bottom_navigation \
+-html_version 3.2,math  -show_section_numbers -local_icons usersguide
 
 # THis version has section numbers but no navigation icons
 
 #latex2html -split 3 -no_white -link 3  -show_section_numbers \
-#-nomath -html_version 3.2,math usersguide 
+#-math -html_version 3.2,math usersguide 
