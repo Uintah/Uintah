@@ -188,8 +188,45 @@ SCICore::Thread::Thread::couldBlockDone(int restore)
     pop_bstack(p, restore);
 }
 
+/*
+ * Return the statename for p
+ */
+const char*
+SCICore::Thread::Thread::getStateString(ThreadState state)
+{
+    switch(state) {
+    case STARTUP:
+	return "startup";
+    case RUNNING:
+	return "running";
+    case IDLE:
+	return "idle";
+    case SHUTDOWN:
+	return "shutting down";
+    case BLOCK_SEMAPHORE:
+	return "blocking on semaphore";
+    case PROGRAM_EXIT:
+	return "waiting for program exit";
+    case JOINING:
+	return "joining with thread";
+    case BLOCK_MUTEX:
+	return "blocking on mutex";
+    case BLOCK_ANY:
+	return "blocking";
+    case DIED:
+	return "died";
+    case BLOCK_BARRIER:
+	return "spinning in barrier";
+    default:
+	return "UNKNOWN";
+    }
+}
+
 //
 // $Log$
+// Revision 1.5  1999/08/25 22:36:01  sparker
+// More thread library updates - now compiles
+//
 // Revision 1.4  1999/08/25 19:00:51  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

@@ -3,7 +3,8 @@ SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
 SRCS     = Guard.cc ParallelBase.cc Reducer.cc \
-	   Runnable.cc Thread.cc ThreadError.cc ThreadGroup.cc \
+	   Runnable.cc Thread.cc ThreadError.cc \
+	   Thread_unix.cc ThreadGroup.cc \
 	   WorkQueue.cc @THREAD_IMPL@ @TIME_IMPL@
 
 INCLUDES = -I$(OBJTOP)
