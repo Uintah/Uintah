@@ -49,6 +49,7 @@ public:
   NrrdOPort*   ndata_;
   NrrdOPort*   nrows_;
   NrrdOPort*   ncols_;
+  int          matrix_generation_;
 
   MatrixToNrrd(GuiContext*);
 
@@ -67,7 +68,9 @@ public:
 
 DECLARE_MAKER(MatrixToNrrd)
 MatrixToNrrd::MatrixToNrrd(GuiContext* ctx)
-  : Module("MatrixToNrrd", ctx, Source, "DataIO", "Teem")
+  : Module("MatrixToNrrd", ctx, Source, "DataIO", "Teem"),
+    imat_(0), ndata_(0), nrows_(0), ncols_(0),
+    matrix_generation_(-1)
 {
 }
 
@@ -98,21 +101,24 @@ void
     error("Unable to initialize oport 'Columns'.");
     return;
   }
-  
+
   // Determine if it is a Column, Dense or Sparse matrix
   MatrixHandle matH;
   if (!imat_->get(matH)) {
     return;
   }
 
-  Matrix* matrix = matH.get_rep();
-  
-  if (matrix->is_column()) {
-    create_and_send_column_matrix_nrrd(matH);
-  } else if (matrix->is_dense()) {
-    create_and_send_dense_matrix_nrrd(matH);
-  } else {
-    create_and_send_sparse_matrix_nrrd(matH);
+  if (matrix_generation_ != matH->generation) {
+    matrix_generation_ = matH->generation;
+    Matrix* matrix = matH.get_rep();
+    
+    if (matrix->is_column()) {
+      create_and_send_column_matrix_nrrd(matH);
+    } else if (matrix->is_dense()) {
+      create_and_send_dense_matrix_nrrd(matH);
+    } else {
+      create_and_send_sparse_matrix_nrrd(matH);
+    }
   }
 }
 
@@ -136,6 +142,7 @@ MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH) {
   }
 
   // send the data nrrd
+  nd->nrrd->axis[0].label = "column-data";
   NrrdDataHandle dataH(nd);
   ndata_->send(dataH);  
 }
@@ -165,6 +172,8 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   }
 
   // send the data nrrd
+  nd->nrrd->axis[0].label = "dense-columns";
+  nd->nrrd->axis[1].label = "dense-rows";
   NrrdDataHandle dataH(nd);
   ndata_->send(dataH);  
 }
@@ -172,8 +181,57 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
 void
 MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
   SparseRowMatrix* matrix = dynamic_cast<SparseRowMatrix*>(matH.get_rep());
+
+  int nnz = matrix->get_nnz();
+  int rows = matrix->nrows();
+
+  // create 3 nrrds (data, rows, cols)
+  NrrdData *data_n = scinew NrrdData();
+  nrrdAlloc(data_n->nrrd, nrrdTypeDouble, 1, nnz);
+  data_n->nrrd->axis[0].kind = nrrdKindDomain;
+
+  NrrdData *rows_n = scinew NrrdData();
+  nrrdAlloc(rows_n->nrrd, nrrdTypeInt, 1, rows+1);
+  rows_n->nrrd->axis[0].kind = nrrdKindDomain;
+
+  NrrdData *cols_n = scinew NrrdData();
+  nrrdAlloc(cols_n->nrrd, nrrdTypeInt, 1, nnz);
+  cols_n->nrrd->axis[0].kind = nrrdKindDomain;
+
+  // pointers to nrrds
+  double *data_p = (double*)data_n->nrrd->data;
+  int *rows_p = (int*)rows_n->nrrd->data;
+  int *cols_p = (int*)cols_n->nrrd->data;
+
+  // points to matrix arrays
+  int *rr = matrix->get_row();
+  int *cc = matrix->get_col();
+  double *d = matrix->get_val();
+
+  // copy data and cols (size nnz)
+  int i = 0;
+  for (i=0; i<nnz; i++) {
+    data_p[i] = d[i];
+    cols_p[i] = cc[i];
+  }
+
+  // copy rows (size rows+1)
+  for (i=0; i<rows+1; i++) {
+    rows_p[i] = rr[i];
+  }
+
   
-  error("Not implemented for Sparse Matrices yet.");
+  // send nrrds
+  data_n->nrrd->axis[0].label = "sparse-data";
+  rows_n->nrrd->axis[0].label = "sparse-rows";
+  cols_n->nrrd->axis[0].label = "sparse-columns";
+  NrrdDataHandle dataH(data_n);
+  NrrdDataHandle rowsH(rows_n);
+  NrrdDataHandle colsH(cols_n);
+  
+  ndata_->send(dataH);
+  nrows_->send(rowsH);
+  ncols_->send(colsH);
 }
 
 

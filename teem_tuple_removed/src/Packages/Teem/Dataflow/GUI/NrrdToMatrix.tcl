@@ -30,9 +30,29 @@ itcl_class Teem_DataIO_NrrdToMatrix {
     }
 
     method set_defaults {} {
-	global $this-nnz
+	global $this-cols
+	global $this-entry
+	global $this-which
 
-	set $this-nnz 0
+	set $this-cols {-1}
+	set $this-entry 3
+	set $this-which 0
+
+	trace variable $this-entry w "$this entry_changed"
+    }
+
+    method entry_changed {name1 name2 op} {
+	update_which
+    }
+
+    method update_which {} {
+	if {[set $this-which] == 1} {
+	    # user specifies columns
+	    set $this-cols [set $this-entry]
+	} else {
+	    # auto
+	    set $this-cols {-1}
+	}
     }
 
     method ui {} {
@@ -43,11 +63,18 @@ itcl_class Teem_DataIO_NrrdToMatrix {
 
         toplevel $w
 
-	frame $w.nonzero
-	pack $w.nonzero -side top -anchor nw -padx 3 -pady 3
-	label $w.nonzero.l -text "Number of non-zero entries (for Sparse Matrix):"
-	entry $w.nonzero.e -textvariable $this-nnz
-	pack $w.nonzero.l $w.nonzero.e -side left -anchor nw -padx 3 -pady 3
+	frame $w.cols
+	pack $w.cols -side top -anchor nw -padx 3 -pady 3
+	radiobutton $w.cols.auto -text "Auto" \
+	    -variable $this-which \
+	    -value 0 \
+	    -command "$this update_which"
+	radiobutton $w.cols.spec -text "Columns (for Sparse Row Matrix): " \
+	    -variable $this-which \
+	    -value 1 \
+	    -command "$this update_which"
+	entry $w.cols.e -textvariable $this-entry 
+	pack $w.cols.auto $w.cols.spec $w.cols.e -side left -anchor nw -padx 3 -pady 3
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
