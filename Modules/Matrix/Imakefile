@@ -17,8 +17,8 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = EditMatrix.o  SolveMatrix.o  $(OPENGLOBJS)
-SRCS = EditMatrix.cc SolveMatrix.cc $(OPENGLSRCS)
+OBJS = EditMatrix.o  SolveMatrix.o  $(OPENGLOBJS) cConjGrad.o  cPhase.o
+SRCS = EditMatrix.cc SolveMatrix.cc $(OPENGLSRCS) cConjGrad.cc cPhase.cc
 
 LIBNAME = Matrix
 

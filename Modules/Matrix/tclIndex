@@ -8,4 +8,6 @@
 
 set auto_index(SolveMatrix) "source $dir/SolveMatrix.tcl"
 set auto_index(EditMatrix) "source $dir/EditMatrix.tcl"
+set auto_index(cConjGrad) "source $dir/cConjGrad.tcl"
+set auto_index(cPhase) "source $dir/cPhase.tcl"
 set auto_index(VisualizeMatrix) "source $dir/VisualizeMatrix.tcl"

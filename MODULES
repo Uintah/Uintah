@@ -45,6 +45,8 @@ Category: Matrix
 EditMatrix
 SolveMatrix
 VisualizeMatrix
+cConjGrad
+cPhase
 
 Category: Mesh
 BuildMultiMesh
