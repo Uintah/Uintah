@@ -14,6 +14,10 @@
 #ifndef SCI_Containers_AVLTree_h
 #define SCI_Containers_AVLTree_h 1
 
+#ifdef _WIN32
+#pragma warning(disable:4786)
+#endif
+
 namespace SCICore {
 namespace Containers {
 
@@ -532,6 +536,9 @@ void AVLTree<Key, Data>::remove_all()
 
 //
 // $Log$
+// Revision 1.3  1999/08/31 16:30:18  moulding
+// added a #pragma for win32 to disable a debug info warning
+//
 // Revision 1.2  1999/08/17 06:38:34  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
