@@ -41,7 +41,7 @@ Persistent* make_HeadLight()
 PersistentTypeID HeadLight::type_id("HeadLight", "Light", make_HeadLight);
 
 HeadLight::HeadLight(const string& name, const Color& c, bool on)
-: Light(name,on), c(c)
+: Light(name,on,false), c(c)
 {
 }
 

@@ -161,7 +161,7 @@ protected:
 #pragma reset woff 1424  // shut up sgi compiler.  
 #endif
 
-  enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
+  enum {Mode0=0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
   vector<long>        modes;
   vector<GeomSwitch*> mode_switches;
 

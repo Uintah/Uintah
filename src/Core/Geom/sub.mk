@@ -71,6 +71,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/Pt.cc			    		\
+	$(SRCDIR)/SpotLight.cc		    		\
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
 	$(SRCDIR)/View.cc		    		\

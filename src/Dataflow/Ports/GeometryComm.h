@@ -54,7 +54,10 @@ public:
     GeometryComm(Mailbox<GeomReply>*);
     GeometryComm(int, GeomID, GeomHandle,
 		 const string&, CrowdMonitor* lock);
+    GeometryComm(int, LightID, LightHandle,
+		 const string&, CrowdMonitor* lock);
     GeometryComm(int, GeomID);
+    GeometryComm(int, LightID);
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
     GeometryComm(MessageTypes::MessageType, int, int, View);
@@ -70,6 +73,8 @@ public:
     int portno;
     GeomID serial;
     GeomHandle obj;
+    LightID lserial;
+    LightHandle light;
     string name;
     CrowdMonitor* lock;
     Semaphore* wait;

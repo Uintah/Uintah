@@ -28,6 +28,7 @@ SRCDIR := Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
+	$(SRCDIR)/AddLight.tcl \
 	$(SRCDIR)/AppendMatrix.tcl \
 	$(SRCDIR)/ArrowWidget.tcl \
 	$(SRCDIR)/BaseWidget.tcl \

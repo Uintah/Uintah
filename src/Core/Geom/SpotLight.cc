@@ -17,7 +17,7 @@
 
 
 /*
- *  PointLight.cc:  A Point light source
+ *  SpotLight.cc:  A Spot light source
  *
  *  Written by:
  *   Steven G. Parker
@@ -28,38 +28,41 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Geom/PointLight.h>
+#include <Core/Geom/SpotLight.h>
 #include <Core/Geom/GeomSphere.h>
 
 namespace SCIRun {
 
-Persistent* make_PointLight()
+Persistent* make_SpotLight()
 {
-    return new PointLight("", Point(0,0,0), Color(0,0,0));
+    return new SpotLight("", Point(0,0,0),
+			 Vector(0,0,-1), 45, Color(0,0,0));
 }
 
-PersistentTypeID PointLight::type_id("PointLight", "Light", make_PointLight);
+PersistentTypeID SpotLight::type_id("SpotLight", "Light", make_SpotLight);
 
-PointLight::PointLight(const string& name,
-		       const Point& p, const Color& c, 
-		       bool on, bool transformed )
-: Light(name, on, transformed), p(p), c(c)
+SpotLight::SpotLight(const string& name, const Point& p,
+		     const Vector& v, float co, const Color& c,
+		     bool on, bool transformed)
+: Light(name, on, transformed), p(p), v(v), cutoff(co), c(c)
 {
 }
 
-PointLight::~PointLight()
+SpotLight::~SpotLight()
 {
 }
 
 #define POINTLIGHT_VERSION 1
 
-void PointLight::io(Piostream& stream)
+void SpotLight::io(Piostream& stream)
 {
 
-    stream.begin_class("PointLight", POINTLIGHT_VERSION);
+    stream.begin_class("SpotLight", POINTLIGHT_VERSION);
     // Do the base class first...
     Light::io(stream);
     Pio(stream, p);
+    Pio(stream, v);
+    Pio(stream, cutoff);
     Pio(stream, c);
     stream.end_class();
 }

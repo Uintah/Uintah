@@ -48,6 +48,7 @@
 namespace SCIRun {
 
 using std::vector;
+using std::map;
 
 class ViewWindow;
 
@@ -63,6 +64,8 @@ public:
 
   MaterialHandle      default_material_;
   Lighting            lighting_;
+  map<int, map<LightID, int> > pli_;  // port->light->index
+
   CrowdMonitor        geomlock_;
   GeomIndexedGroup    ports_;
 

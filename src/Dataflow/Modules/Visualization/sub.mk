@@ -29,6 +29,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Visualization
 
 SRCS     += \
+	$(SRCDIR)/AddLight.cc\
 	$(SRCDIR)/GLTextureBuilder.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\

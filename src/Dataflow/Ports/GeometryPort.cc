@@ -79,7 +79,7 @@ void GeometryIPort::finish()
 
 GeometryOPort::GeometryOPort(Module* module, const string& portname)
   : OPort(module, Geometry_type, portname, Geometry_color),
-    serial_(1),
+    serial_(1), lserial_(4),
     dirty_(false)
 {
 }
@@ -148,6 +148,33 @@ GeometryOPort::addObj(GeomHandle obj, const string& name, CrowdMonitor* lock)
   return id;
 }
 
+LightID
+GeometryOPort::addLight(LightHandle obj, 
+			const string& name, CrowdMonitor* lock)
+{
+  static LightID next_id = 1;
+  if (module->showStats()) turn_on();
+  LightID id = lserial_++;;
+//   if( next_id > lserial_ ){
+//     id = next_id++;
+//     lserial_ = next_id;
+//   } else {
+//     id = lserial_++;
+//     next_id = lserial_;
+//   }
+
+  for (unsigned int i = 0; i < outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(portid_[i], id, obj, name, lock);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(0, id, obj, name, lock);
+  save_msg(msg);
+  dirty_ = true;
+  if (module->showStats()) turn_off();
+  return id;
+}
+
 
 
 bool
@@ -180,6 +207,22 @@ GeometryOPort::forward(GeometryComm* msg0)
 
 void
 GeometryOPort::delObj(GeomID id, int del)
+{
+  if (module->showStats()) turn_on();
+
+  for (unsigned int i=0; i < outbox_.size(); i++)
+  {
+    GeometryComm* msg = scinew GeometryComm(portid_[i], id);
+    outbox_[i]->send(msg);
+  }
+  GeometryComm* msg = scinew GeometryComm(0, id);
+  save_msg(msg);
+  dirty_ = true;
+  if (module->showStats()) turn_off();
+}
+
+void
+GeometryOPort::delLight(LightID id, int del)
 {
   if (module->showStats()) turn_on();
 
@@ -272,6 +315,24 @@ GeometryOPort::save_msg(GeometryComm* msg)
 	++itr0;
 	if ((*itr)->type == MessageTypes::GeometryAddObj &&
 	    (*itr)->serial == msg->serial)
+	{
+	  delete *itr;
+	  saved_msgs_.erase(itr);
+	}
+      }
+      delete msg;
+    }
+    break;
+  case MessageTypes::GeometryDelLight:
+    // Delete the object from the message queue.
+    {
+      list<GeometryComm *>::iterator itr0 = saved_msgs_.begin();
+      while (itr0 != saved_msgs_.end())
+      {
+	list<GeometryComm *>::iterator itr  = itr0;
+	++itr0;
+	if ((*itr)->type == MessageTypes::GeometryAddLight &&
+	    (*itr)->lserial == msg->lserial)
 	{
 	  delete *itr;
 	  saved_msgs_.erase(itr);
@@ -483,7 +544,6 @@ GeometryOPort::setView(int which_viewer, int which_viewwindow, View view)
 }
 
 
-
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
   : MessageBase(MessageTypes::GeometryInit),
     reply(reply)
@@ -501,12 +561,29 @@ GeometryComm::GeometryComm(int portno, GeomID serial, GeomHandle obj,
     lock(lock)
 {
 }
+GeometryComm::GeometryComm(int portno, LightID serial, LightHandle light,
+			   const string& name, CrowdMonitor* lock)
+  : MessageBase(MessageTypes::GeometryAddLight),
+    portno(portno),
+    lserial(serial),
+    light(light),
+    name(name),
+    lock(lock)
+{
+}
 
 
 GeometryComm::GeometryComm(int portno, GeomID serial)
   : MessageBase(MessageTypes::GeometryDelObj),
     portno(portno),
     serial(serial)
+{
+}
+
+GeometryComm::GeometryComm(int portno, LightID serial)
+  : MessageBase(MessageTypes::GeometryDelLight),
+    portno(portno),
+    lserial(serial)
 {
 }
 
@@ -564,6 +641,8 @@ GeometryComm::GeometryComm(const GeometryComm &copy)
     portno(copy.portno),
     serial(copy.serial),
     obj(copy.obj),
+    lserial(copy.lserial),
+    light(copy.light),
     name(copy.name),
     lock(0),
     wait(0),

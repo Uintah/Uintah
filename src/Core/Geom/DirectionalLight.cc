@@ -41,8 +41,9 @@ Persistent* make_DirectionalLight()
 PersistentTypeID DirectionalLight::type_id("DirectionalLight", "Light", make_DirectionalLight);
 
 DirectionalLight::DirectionalLight(const string& name,
-		       const Vector& v, const Color& c, bool on)
-: Light(name, on), v(v), c(c)
+				   const Vector& v, const Color& c, 
+				   bool on, bool transformed)
+: Light(name, on, transformed), v(v), c(c)
 {
 }
 

@@ -48,7 +48,7 @@ public:
   // Dd: Lighting was a struct... don't know why the following
   //     were made private... things don't compile that way...
   // private:
-    Array1<Light*> lights;
+    Array1<LightHandle> lights;
     Color amblight;
 
     friend SCICORESHARE void Pio( Piostream&, Lighting& );

@@ -36,6 +36,7 @@
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Light.h>
 #include <string>
 #include <vector>
 #include <list>
@@ -52,6 +53,7 @@ class DepthImage;
 class GeometryComm;
 
 typedef int GeomID;
+typedef short LightID;
 
 class PSECORESHARE GeometryIPort : public IPort {
 public:
@@ -101,6 +103,7 @@ class PSECORESHARE GeometryOPort : public OPort {
 private:
 
   GeomID serial_;
+  LightID lserial_;
   bool dirty_;
 
   std::list<GeometryComm* > saved_msgs_;
@@ -115,7 +118,9 @@ public:
   virtual ~GeometryOPort();
 
   GeomID addObj(GeomHandle, const string& name, CrowdMonitor* lock=0);
+  LightID addLight(LightHandle, const string& name, CrowdMonitor* lock=0);
   void delObj(GeomID, int del=1);
+  void delLight(LightID, int del = 1);
   void delAll();
   void flush();
   void flushViews();

@@ -54,6 +54,8 @@ public:
 	GeometryDetach,
 	GeometryAddObj,
 	GeometryDelObj,
+	GeometryAddLight,
+	GeometryDelLight,
 	GeometryDelAll,
 	GeometryFlush,
 	GeometryFlushViews,
