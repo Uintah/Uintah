@@ -8,7 +8,7 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
-//#include <Uintah/Components/ICELabel.h>
+#include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/FCVariable.h>
 #include <SCICore/Geometry/Vector.h>
@@ -205,57 +205,11 @@ void after_each_step_wrapper(
                         double  ****wvel_CC);
 			  
    
-                        private:
- // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
+ private:
+ ICELabel* lb; 
  
- // Cell centered variables
-#if 0
-    const VarLabel* delTLabel;
 
-    const VarLabel* press_CCLabel;
-    const VarLabel* press_CCLabel_0;
-    const VarLabel* press_CCLabel_1;
-    const VarLabel* press_CCLabel_2;
-    const VarLabel* press_CCLabel_3;
-    const VarLabel* press_CCLabel_4;
-    const VarLabel* press_CCLabel_5;
-    const VarLabel* press_CCLabel_6_7;
-    
-    const VarLabel* rho_CCLabel;
-    const VarLabel* rho_CCLabel_0;
-    const VarLabel* rho_CCLabel_1;
-    const VarLabel* rho_CCLabel_2;
-    const VarLabel* rho_CCLabel_3;
-    const VarLabel* rho_CCLabel_4;
-    const VarLabel* rho_CCLabel_5;
-    const VarLabel* rho_CCLabel_6_7;
-    
-    const VarLabel* temp_CCLabel;
-    const VarLabel* temp_CCLabel_0;
-    const VarLabel* temp_CCLabel_1;
-    const VarLabel* temp_CCLabel_2;
-    const VarLabel* temp_CCLabel_3;
-    const VarLabel* temp_CCLabel_4;
-    const VarLabel* temp_CCLabel_5;
-    const VarLabel* temp_CCLabel_6_7;
-    
-    const VarLabel* vel_CCLabel;
-    const VarLabel* vel_CCLabel_0;
-    const VarLabel* vel_CCLabel_1;
-    const VarLabel* vel_CCLabel_2;
-    const VarLabel* vel_CCLabel_3;
-    const VarLabel* vel_CCLabel_4;
-    const VarLabel* vel_CCLabel_5;
-    const VarLabel* vel_CCLabel_6_7;
-    
-    const VarLabel* cv_CCLabel;
-    const VarLabel* div_velfc_CCLabel;
-
-// Face centered variables
-    const VarLabel* vel_FCLabel;
-    const VarLabel* press_FCLabel;
-    const VarLabel* tau_FCLabel;
-#endif
+ 
    int  i,j,k,m,   
         xLoLimit,                       /* x array lower limits             */
         yLoLimit,                       /* y array lower limits             */
@@ -410,6 +364,9 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.22  2000/10/04 20:19:03  jas
+// Get rid of Labels.  Now in ICELabel.
+//
 // Revision 1.21  2000/10/04 19:26:46  jas
 // Changes to get ICE into UCF conformance.  Only skeleton for now.
 //
