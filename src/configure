@@ -328,7 +328,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 build build_cpu build_vendor build_os host host_cpu host_vendor host_os HAVE_OSX SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC FLEX LEX LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG MAGICK_EXTRA_LIB_FLAG MAGICK_EXTRA_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI HAVE_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT XALAN_LIB_FLAG XALAN_LIB_DIR_FLAG INC_XALAN_H TAU_MAKEFILE BABEL_BIN HAVE_BABEL SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS HAVE_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 build build_cpu build_vendor build_os host host_cpu host_vendor host_os HAVE_OSX SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG MAGICK_EXTRA_LIB_FLAG MAGICK_EXTRA_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI HAVE_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT XALAN_LIB_FLAG XALAN_LIB_DIR_FLAG INC_XALAN_H TAU_MAKEFILE BABEL_BIN HAVE_BABEL SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS HAVE_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -5896,46 +5896,11 @@ if test "$YACC" = "nobison"; then
   exit
 fi
 
-LEX_LIB_FLAG="-lfl"
-# Extract the first word of "flex", so it can be a program name with args.
-set dummy flex; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_prog_FLEX+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  if test -n "$FLEX"; then
-  ac_cv_prog_FLEX="$FLEX" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH /usr/bin
+
+for ac_prog in flex lex
 do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_FLEX="flex"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  test -z "$ac_cv_prog_FLEX" && ac_cv_prog_FLEX="notfound"
-fi
-fi
-FLEX=$ac_cv_prog_FLEX
-if test -n "$FLEX"; then
-  echo "$as_me:$LINENO: result: $FLEX" >&5
-echo "${ECHO_T}$FLEX" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-if test "$FLEX" = "notfound"; then
-  # Extract the first word of "lex", so it can be a program name with args.
-set dummy lex; ac_word=$2
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
 if test "${ac_cv_prog_LEX+set}" = set; then
@@ -5945,20 +5910,19 @@ else
   ac_cv_prog_LEX="$LEX" # Let the user override the test.
 else
 as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH /usr/bin
+for as_dir in $PATH
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
   for ac_exec_ext in '' $ac_executable_extensions; do
   if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_LEX="lex"
+    ac_cv_prog_LEX="$ac_prog"
     echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
 done
 done
 
-  test -z "$ac_cv_prog_LEX" && ac_cv_prog_LEX="notfound"
 fi
 fi
 LEX=$ac_cv_prog_LEX
@@ -5970,19 +5934,222 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-  LEX_LIB_FLAG="-ll"
-  if test "$LEX" = "notfound"; then
-    echo "configure: error: flex or lex is required, and was not found in your PATH."
-    echo "                  Please add it to your PATH, or set the environment"
-    echo "                  variable LEX to the appropriate lex executable,"
-    echo "                  then run configure again."
-    exit
-  fi
+  test -n "$LEX" && break
+done
+test -n "$LEX" || LEX=":"
+
+if test -z "$LEXLIB"
+then
+  echo "$as_me:$LINENO: checking for yywrap in -lfl" >&5
+echo $ECHO_N "checking for yywrap in -lfl... $ECHO_C" >&6
+if test "${ac_cv_lib_fl_yywrap+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-LEX=$FLEX
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lfl  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char yywrap ();
+int
+main ()
+{
+yywrap ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_fl_yywrap=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_fl_yywrap=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_fl_yywrap" >&5
+echo "${ECHO_T}$ac_cv_lib_fl_yywrap" >&6
+if test $ac_cv_lib_fl_yywrap = yes; then
+  LEXLIB="-lfl"
+else
+  echo "$as_me:$LINENO: checking for yywrap in -ll" >&5
+echo $ECHO_N "checking for yywrap in -ll... $ECHO_C" >&6
+if test "${ac_cv_lib_l_yywrap+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ll  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char yywrap ();
+int
+main ()
+{
+yywrap ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_l_yywrap=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_l_yywrap=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_l_yywrap" >&5
+echo "${ECHO_T}$ac_cv_lib_l_yywrap" >&6
+if test $ac_cv_lib_l_yywrap = yes; then
+  LEXLIB="-ll"
 fi
 
+fi
 
+fi
+
+if test "x$LEX" != "x:"; then
+  echo "$as_me:$LINENO: checking lex output file root" >&5
+echo $ECHO_N "checking lex output file root... $ECHO_C" >&6
+if test "${ac_cv_prog_lex_root+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  # The minimal lex program is just a single line: %%.  But some broken lexes
+# (Solaris, I think it was) want two %% lines, so accommodate them.
+cat >conftest.l <<_ACEOF
+%%
+%%
+_ACEOF
+{ (eval echo "$as_me:$LINENO: \"$LEX conftest.l\"") >&5
+  (eval $LEX conftest.l) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }
+if test -f lex.yy.c; then
+  ac_cv_prog_lex_root=lex.yy
+elif test -f lexyy.c; then
+  ac_cv_prog_lex_root=lexyy
+else
+  { { echo "$as_me:$LINENO: error: cannot find output from $LEX; giving up" >&5
+echo "$as_me: error: cannot find output from $LEX; giving up" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+fi
+echo "$as_me:$LINENO: result: $ac_cv_prog_lex_root" >&5
+echo "${ECHO_T}$ac_cv_prog_lex_root" >&6
+rm -f conftest.l
+LEX_OUTPUT_ROOT=$ac_cv_prog_lex_root
+
+echo "$as_me:$LINENO: checking whether yytext is a pointer" >&5
+echo $ECHO_N "checking whether yytext is a pointer... $ECHO_C" >&6
+if test "${ac_cv_prog_lex_yytext_pointer+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  # POSIX says lex can declare yytext either as a pointer or an array; the
+# default is implementation-dependent. Figure out which it is, since
+# not all implementations provide the %pointer and %array declarations.
+ac_cv_prog_lex_yytext_pointer=no
+echo 'extern char *yytext;' >>$LEX_OUTPUT_ROOT.c
+ac_save_LIBS=$LIBS
+LIBS="$LIBS $LEXLIB"
+cat >conftest.$ac_ext <<_ACEOF
+`cat $LEX_OUTPUT_ROOT.c`
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_prog_lex_yytext_pointer=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_save_LIBS
+rm -f "${LEX_OUTPUT_ROOT}.c"
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_prog_lex_yytext_pointer" >&5
+echo "${ECHO_T}$ac_cv_prog_lex_yytext_pointer" >&6
+if test $ac_cv_prog_lex_yytext_pointer = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define YYTEXT_POINTER 1
+_ACEOF
+
+fi
+
+fi
+LEX_LIB_FLAG="$LEXLIB"
+
+
+if test "$LEX" != "flex" -a "$LEX" != "lex"; then
+  echo "configure: error: flex or lex is required, and was not found in your PATH."
+  echo "                  Please add it to your PATH, or set the environment"
+  echo "                  variable LEX to the appropriate lex executable,"
+  echo "                  then run configure again."
+  exit
+fi
 
 # Extract the first word of "etags", so it can be a program name with args.
 set dummy etags; ac_word=$2
@@ -6145,7 +6312,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ##  ----------  See if this is a 64 bit machine --------------------------
 
 MY_TEMP=$CPPFLAGS
-
 
 
 echo "$as_me:$LINENO: checking for egrep" >&5
@@ -21627,8 +21793,9 @@ s,@GMAKE@,$GMAKE,;t t
 s,@MAKE@,$MAKE,;t t
 s,@AWK@,$AWK,;t t
 s,@YACC@,$YACC,;t t
-s,@FLEX@,$FLEX,;t t
 s,@LEX@,$LEX,;t t
+s,@LEXLIB@,$LEXLIB,;t t
+s,@LEX_OUTPUT_ROOT@,$LEX_OUTPUT_ROOT,;t t
 s,@LEX_LIB_FLAG@,$LEX_LIB_FLAG,;t t
 s,@ETAGS@,$ETAGS,;t t
 s,@PERL@,$PERL,;t t
