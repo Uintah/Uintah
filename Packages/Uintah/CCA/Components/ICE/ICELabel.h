@@ -65,6 +65,9 @@ namespace Uintah {
     const VarLabel* tau_X_FCLabel;
     const VarLabel* tau_Y_FCLabel;
     const VarLabel* tau_Z_FCLabel;
+    const VarLabel* press_diffX_FCLabel;
+    const VarLabel* press_diffY_FCLabel;
+    const VarLabel* press_diffZ_FCLabel;
     
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
