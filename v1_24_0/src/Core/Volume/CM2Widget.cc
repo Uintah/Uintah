@@ -1730,7 +1730,7 @@ PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
   a = alpha_;
 
   for (int y = y0-wid; y <= y0+wid; ++y)
-    if (y >= y && y < data.dim2()) {
+    if (y >= 0 && y < data.dim2()) {
       
       if (shadeType_ != CM2_SHADE_FLAT)
 	a = Max(data(x0, y, 3),
