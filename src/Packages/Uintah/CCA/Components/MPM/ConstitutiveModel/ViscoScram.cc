@@ -610,14 +610,21 @@ double ViscoScram::computeRhoMicroCM(double pressure,
                                      const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
- // double p_ref=101325.0;
   double p_gauge = pressure - p_ref;
   double rho_cur;
   double G = d_initialData.G[0] + d_initialData.G[1] +
  	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
-  rho_cur = rho_orig/(1-p_gauge/bulk);
+
+  rho_cur = rho_orig*exp(p_gauge/bulk);
+
+//  if(p_gauge < .5*bulk){
+//     rho_cur = rho_orig/(1-p_gauge/bulk);
+//  }
+//  else{
+//     rho_cur = 4.*rho_orig*p_gauge/bulk;
+//  }
 
   return rho_cur;
 
@@ -637,9 +644,19 @@ void ViscoScram::computePressEOSCM(const double rho_cur,double& pressure,
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
   double rho_orig = matl->getInitialDensity();
 
-  double p_g = bulk*(1.0 - rho_orig/rho_cur);
+  double p_g = bulk*log(rho_cur/rho_orig);
+  dp_drho    = bulk/rho_cur;
+
+//  if(rho_cur/rho_orig < 2.0){
+//    p_g = bulk*(1.0 - rho_orig/rho_cur);
+//    dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
+//  }
+//  else {
+//    p_g = (bulk/(4*rho_orig))*rho_cur;
+//    dp_drho  = bulk/(4*rho_orig);
+//  }
+
   pressure = p_ref + p_g;
-  dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
   tmp = sqrt((bulk + 4.*G/3.)/rho_cur);  // speed of sound squared
 
 #if 0
