@@ -32,7 +32,7 @@
 		<lower>[0,0,0]</lower>
 		<upper>[1.0,1.0,1.0]</upper>
 	        <resolution>[10,10,10]</resolution>
-		<patches>[1,1,1]</patches>
+		<patches>[2,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
