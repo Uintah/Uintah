@@ -684,7 +684,8 @@ proc regenModuleMenu {modid menu_id} {
     }
 
     global env
-    if [boolToInt $env(SCIRUN_GUI_UseGuiFetch)] {
+    if { [info exists env(SCIRUN_GUI_UseGuiFetch)] &&
+	 [boolToInt $env(SCIRUN_GUI_UseGuiFetch)] } {
         $menu_id add separator
 	$menu_id add command -label "Fetch UI"  -command "$modid fetch_ui"
 	$menu_id add command -label "Return UI" -command "$modid return_ui"
@@ -1763,9 +1764,10 @@ proc selectAll { { subnet 0 } } {
 
 # Courtesy of the Tcl'ers Wiki (http://mini.net/tcl)
 proc brightness { color } {
+    puts "brightness: $color"
     foreach {r g b} [winfo rgb . $color] break
     set max [lindex [winfo rgb . white] 0]
-    expr {($r*0.3 + $g*0.59 + $b*0.11)/$max}
+    return [expr {($r*0.3 + $g*0.59 + $b*0.11)/$max}]
  } ;#RS, after [Kevin Kenny]
 
 proc blend { c1 c2 { alpha 0.5 } } {

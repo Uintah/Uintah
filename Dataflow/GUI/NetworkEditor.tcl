@@ -14,6 +14,8 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 #  University of Utah. All Rights Reserved.
 #
+
+
 global SCIRUN_SRCDIR
 source $SCIRUN_SRCDIR/Dataflow/GUI/defaults.tcl
 
@@ -89,12 +91,12 @@ trace variable env r neteditGetenv
 # Warns user if not a valid boolean string.
 proc boolToInt { val } {
     if [string equal $val ""] {
-	error "Boolean value is empty!"
-	return true; # follows the C convention of any non-zero value equals true
+	puts "TCL boolToInt: Boolean value is empty!"
+	return 1; # follows the C convention of any non-zero value equals true
     }
     if ![string is boolean $val] {
-	error "Cannot determine boolean value: $val."
-	return true; # follows the C convention of any non-zero value equals true
+	puts "TCL boolToInt: Cannot determine boolean value: $val."
+	return 1; # follows the C convention of any non-zero value equals true
     }
     return [string is true $val]
 }
