@@ -74,7 +74,13 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 void
 MPIScheduler::problemSetup(const ProblemSpecP& prob_spec)
 {
-   log.problemSetup(prob_spec);
+  log.problemSetup(prob_spec);
+  ProblemSpecP params = prob_spec->findBlock("Scheduler");
+  if(params){
+    params->getWithDefault("logTimes", d_logTimes, false);
+  } else {
+    d_logTimes = false;
+  }
 }
 
 MPIScheduler::~MPIScheduler()
@@ -658,9 +664,11 @@ MPIScheduler::execute()
   dts_->initializeScrubs(dws);
   dts_->initTimestep();
 
-  d_labels.clear();
-  d_times.clear();
-  emitTime("time since last execute");
+  if(d_logTimes){
+    d_labels.clear();
+    d_times.clear();
+    emitTime("time since last execute");
+  }
   if( ss_ )
     delete ss_;
   ss_ = scinew SendState;
@@ -782,27 +790,28 @@ MPIScheduler::execute()
     cerrLock.unlock();
   }
 
-  emitTime("MPI send time", mpi_info_.totalsendmpi);
-  emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
-  emitTime("Total send time", 
-	   mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
-  emitTime("MPI recv time", mpi_info_.totalrecvmpi);
-  emitTime("MPI wait time", mpi_info_.totalwaitmpi);
-  emitTime("Total recv time", 
-	   mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
-  emitTime("Total task time", mpi_info_.totaltask);
-  emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
-  emitTime("Total reduction time", 
-	   mpi_info_.totalreduce - mpi_info_.totalreducempi);
+  if(d_logTimes){
+    emitTime("MPI send time", mpi_info_.totalsendmpi);
+    emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
+    emitTime("Total send time", 
+             mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
+    emitTime("MPI recv time", mpi_info_.totalrecvmpi);
+    emitTime("MPI wait time", mpi_info_.totalwaitmpi);
+    emitTime("Total recv time", 
+             mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
+    emitTime("Total task time", mpi_info_.totaltask);
+    emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
+    emitTime("Total reduction time", 
+             mpi_info_.totalreduce - mpi_info_.totalreducempi);
 
-  double time      = Time::currentSeconds();
-  double totalexec = time - d_lasttime;
+    double time      = Time::currentSeconds();
+    double totalexec = time - d_lasttime;
+    
+    d_lasttime = time;
 
-  d_lasttime = time;
-
-  emitTime("Other excution time", totalexec - mpi_info_.totalsend -
-	   mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
-
+    emitTime("Other excution time", totalexec - mpi_info_.totalsend -
+             mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
+  }
 
   if( dbg.active() ) {
     cerrLock.lock();
@@ -813,7 +822,16 @@ MPIScheduler::execute()
   // Don't need to lock sends 'cause all threads are done at this point.
   sends_.waitall(d_myworld);
   ASSERT(sends_.numRequests() == 0);
-  emitTime("final wait");
+  if(d_logTimes)
+    emitTime("final wait");
+  if(restartable){
+    // Copy the restart flag to all processors
+    int restart = dws[dws.size()-1]->timestepRestarted();
+    MPI_Allreduce(&restart, &restart, 1, MPI_INT, MPI_LOR,
+                  d_myworld->getComm());
+    if(restart)
+      dws[dws.size()-1]->restartTimestep();
+  }
 
   finalizeTimestep();
 
@@ -824,29 +842,31 @@ MPIScheduler::execute()
     MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
   log.finishTimestep();
-  emitTime("finalize");
-  vector<double> d_totaltimes(d_times.size());
-  MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
-	     MPI_SUM, 0, d_myworld->getComm());
-  if(me == 0){
-    double total=0;
-    for(int i=0;i<(int)d_totaltimes.size();i++)
-      total+= d_totaltimes[i];
-    for(int i=0;i<(int)d_totaltimes.size();i++){
-      timeout << "MPIScheduler: " << d_labels[i] << ": ";
-      int len = (int)(strlen(d_labels[i])+strlen("MPIScheduler: ")+strlen(": "));
-      for(int j=len;j<55;j++)
-	timeout << ' ';
-      double percent=d_totaltimes[i]/total*100;
-      timeout << d_totaltimes[i] << " seconds (" << percent << "%)\n";
+  if(d_logTimes){
+    emitTime("finalize");
+    vector<double> d_totaltimes(d_times.size());
+    MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
+               MPI_SUM, 0, d_myworld->getComm());
+    if(me == 0){
+      double total=0;
+      for(int i=0;i<(int)d_totaltimes.size();i++)
+        total+= d_totaltimes[i];
+      for(int i=0;i<(int)d_totaltimes.size();i++){
+        timeout << "MPIScheduler: " << d_labels[i] << ": ";
+        int len = (int)(strlen(d_labels[i])+strlen("MPIScheduler: ")+strlen(": "));
+        for(int j=len;j<55;j++)
+          timeout << ' ';
+        double percent=d_totaltimes[i]/total*100;
+        timeout << d_totaltimes[i] << " seconds (" << percent << "%)\n";
+      }
+      double time = Time::currentSeconds();
+      double rtime=time-d_lasttime;
+      d_lasttime=time;
+      timeout << "MPIScheduler: TOTAL                                    "
+              << total << '\n';
+      timeout << "MPIScheduler: time sum reduction (one processor only): " 
+              << rtime << '\n';
     }
-    double time = Time::currentSeconds();
-    double rtime=time-d_lasttime;
-    d_lasttime=time;
-    timeout << "MPIScheduler: TOTAL                                    "
-	    << total << '\n';
-    timeout << "MPIScheduler: time sum reduction (one processor only): " 
-	    << rtime << '\n';
   }
 
   dbg << me << " MPIScheduler finished\n";
