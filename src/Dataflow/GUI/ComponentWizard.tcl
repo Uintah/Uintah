@@ -149,7 +149,7 @@ proc make_io_gui_pane {p d} {
     entry $p.cp.cat.category -textvar ${d}(category) -width 30
     label $p.cp.pack.packagel -text "Package: " -width 20 -anchor e
     entry $p.cp.pack.package -textvar ${d}(package) -width 30
-    label $p.cp.path.pathl -text "Path to SCIRun source: " -width 20 -anchor e
+    label $p.cp.path.pathl -text "Path to SCIRun: " -width 20 -anchor e
     entry $p.cp.path.path -textvar ${d}(path) -width 30
 
     set uiinfo $p.uiinfo
