@@ -20,9 +20,8 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/QuadSurfField.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
@@ -465,6 +464,7 @@ HotBox::execute()
      !inputXFormMatrixHandle.get_rep()))
   {
     remark("No data on input Transform matrix port.");
+    inputTransform_.load_identity();
   }
   else
   {
@@ -2082,7 +2082,7 @@ HotBox::executeHighlight()
   string selectGeomFilename = geometryPath;
   selectGeomFilename += "/";
   selectGeomFilename += filePrefix;
-  selectGeomFilename += ".fld";
+  selectGeomFilename += ".ts.fld";
 
   cerr << "executeHighlight: selection " << selectGeomFilename << endl;
 
@@ -2266,37 +2266,24 @@ HotBox::executeProbe() {
     gui_probeLocz_.set(probeLoc_.z());
   }
 
-  const TypeDescription *
-  meshTypeDescr = InputFieldHandle_->mesh()->get_type_description();
-  CompileInfoHandle ci = ProbeLocateAlgo::get_compile_info(meshTypeDescr);
-  Handle<ProbeLocateAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  typedef LatVolField<unsigned short> FLD;
 
-  string nodestr, edgestr, facestr, cellstr;
-  
-  // use probe defaults show-node=1 show-edge=0 show-face=0 show-cell=1
-  algo->execute(InputFieldHandle_->mesh(), probeLoc_,
-                  1, nodestr,
-                  0, edgestr,
-                  0, facestr,
-                  1, cellstr);
-  //algo->execute populates nodestr with mesh node index
+  FLD *labels = dynamic_cast<FLD*>(InputFieldHandle_.get_rep());
 
-  ScalarFieldInterfaceHandle sfi = 0;
-  if ((sfi = InputFieldHandle_->query_scalar_interface(this)).get_rep())
-  {
-    double result;
-    if (!sfi->interpolate(result, probeLoc_))
-    {
-      sfi->find_closest(result, probeLoc_);
-    }
-    labelIndexVal_ = (int)result;
-  } // end if(ifieldhandle->query_scalar_interface(this)).get_rep())
-  else
-  {
-    remark("HotBox::executeProbe(): No data on input field port.");
+  if (! labels) {
+    error("HotBox::executeProbe(): Expected LatVolField<unsigned short>!");
+    return;
   }
-
+  LatVolMesh::Node::index_type index;
+  LatVolMeshHandle lvmh = labels->get_typed_mesh();
+  if (!lvmh->locate(index, probeLoc_)) {
+    warning("Probe is outside of label volume.");
+    labelIndexVal_ = 0;
+    return;
+  }
+  unsigned short val;
+  labels->value(val, index);
+  labelIndexVal_ = val;
 } // end HotBox::executeProbe()
 
 void
