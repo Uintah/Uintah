@@ -4,8 +4,8 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <math.h>
-#define textureHeight 128
-#define textureWidth 128
+#define textureHeight 256
+#define textureWidth 256
 
 namespace rtrt {
   
