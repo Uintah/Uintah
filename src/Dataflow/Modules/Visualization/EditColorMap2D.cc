@@ -111,7 +111,7 @@ private:
   void				set_window_cursor(int x, int y);
   void				select_widget(int, int);
   void				screen_val(int &x, int &y);
-  pair<double, double>		normalized_val(int x, int y);
+  pair<double, double>		rescaled_val(int x, int y);
   //! functions for panning.
   void				translate_start(int x, int y);
   void				translate_motion(int x, int y);
@@ -249,6 +249,7 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     end_marker_(0),
     value_range_(0.0, -1.0)
 {
+  // Mac OSX requires 512K of stack space for GL context rendering threads
   setStackSize(1024*512);
   pan_x_.set(0.0);
   pan_y_.set(0.0);
@@ -346,9 +347,12 @@ EditColorMap2D::screen_val(int &x, int &y)
 
 
 pair<double, double>
-EditColorMap2D::normalized_val(int x, int y)
+EditColorMap2D::rescaled_val(int x, int y)
 {
   double xx = x/double(width_);
+  double range = value_range_.second - value_range_.first;
+  if (range > 0.0)
+    xx = xx * range + value_range_.first;
   y = height_ - y - 1;
   double yy = y/double(height_);
   return make_pair(xx, yy);
@@ -558,6 +562,7 @@ EditColorMap2D::add_triangle_widget()
 {
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.back()->set_faux(gui_faux_.get());
+  widgets_.back()->set_value_range(value_range_);
   undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
   update_to_gui();
   select_widget(widgets_.size()-1, 1);
@@ -571,6 +576,7 @@ EditColorMap2D::add_rectangle_widget()
 {
   widgets_.push_back(scinew RectangleCM2Widget());
   widgets_.back()->set_faux(gui_faux_.get());
+  widgets_.back()->set_value_range(value_range_);
   undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
   update_to_gui();
   select_widget(widgets_.size()-1, 1);
@@ -583,6 +589,7 @@ EditColorMap2D::add_paint_widget()
 {
   widgets_.push_back(scinew PaintCM2Widget());
   widgets_.back()->set_faux(gui_faux_.get());
+  widgets_.back()->set_value_range(value_range_);
   undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
   update_to_gui();
   select_widget(widgets_.size()-1, 1);
@@ -873,7 +880,7 @@ EditColorMap2D::push(int x, int y, int button)
       dynamic_cast<PaintCM2Widget *>(widgets_[mouse_widget_].get_rep());
     if (paint_widget_) {
       paint_widget_->add_stroke();
-      paint_widget_->add_coordinate(normalized_val(x,y));
+      paint_widget_->add_coordinate(rescaled_val(x,y));
     }
   }
 
@@ -921,7 +928,7 @@ EditColorMap2D::motion(int x, int y)
   }
 
   if (button_ == 1 && paint_widget_) {
-    paint_widget_->add_coordinate(normalized_val(x,y));
+    paint_widget_->add_coordinate(rescaled_val(x,y));
   } else {
     const int selected = gui_selected_widget_.get();
     if (selected >= 0 && selected < (int)widgets_.size())
