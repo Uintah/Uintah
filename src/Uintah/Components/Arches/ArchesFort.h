@@ -645,8 +645,8 @@ extern "C"
     void
     FORT_PRESSOURCE(const int* domLo, const int* domHi,
 		    const int* idxLo, const int* idxHi,
-		    double* pressureLinSrc,
 		    double* pressureNonLinSrc,
+		    double* pressureLinSrc,
 		    const double* density, const double* old_density,
 		    const int* domLoU, const int* domHiU,
 		    const double* uVelocity,
@@ -885,6 +885,10 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.34  2000/08/20 22:52:33  bbanerje
+// Fixed PressureSource bug .. domHi, domLo were not being assigned
+// correctly in the wrapper.
+//
 // Revision 1.33  2000/08/19 16:36:34  rawat
 // fixed some bugs in scalarcoef calculations
 //
