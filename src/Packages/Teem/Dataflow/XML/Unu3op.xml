@@ -18,26 +18,34 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="Unu2op" category="Unu">
+<component name="Unu3op" category="Unu">
   <overview>
     <author>Darby Van Uitert
     </author>
-    <summary>Binary operation on two nrrds, or on a nrrd and a constant. Either
-the first or second operand can be a float constant, but not both. To perform the operation on two nrrds, connect both input ports.  To have one Nrrd on the left hand side of the operator, connect to the first port and vice versa for the right hand side.</summary>
+    <summary>Ternary operation on three nrrds or constants. Can have one,
+     two, or three nrrds, but not zero. </summary>
     <description>
     <p>Operator: Binary operator. Possibilities include:</p>
-    <p>    +, -, x, / : add, subtract, multiply, divide</p>
-    <p>    ^ : exponentiation (pow)</p>
-    <p>    % : integer modulo</p>
-    <p>    fmod : same as fmod() in C</p>
-    <p>     atan2 : same as atan2() in C</p>
-    <p>    min, max: minimum, maximum</p>
-     <p>   lt, lte, gt, gte : same as C's less than, less than or equal to, greater than, greater than or equal to</p>
-    <p>    eq, neq : same as C's == and !=</p>
-    <p>    comp : -1, 0, or 1 if 1st value is less than, equal to, or
-           geater than 2nd value</p>
-    <p>    exists : if 1st value exists, use it, else use 2nd value</p>
-     <p>Float Input : This value is used in the operation and can be on the left or right side of the operator depending on which Nrrd port is connected. If both nrrds ports are connected, this value will be ignored.</p>
+    <p>    +, x, : sum or product of three values</p>
+    <p>min, max : minimum, maximum</p>
+    <p>clamp : second value is clamped to range between the first
+    and the third</p>
+    <p>ifelse : if 1st value non-zero, then 2nd value, else 3rd
+    value</p>
+    <p>lerp : linear interpolation between the 2nd and 3rd values,
+    as the 1st value varies between 0.0 and 1.0, respectively</p>
+    <p>exists : if the first value exists, use the second value,
+    otherwise use the third</p>
+    <p>in_op : 1 iff second value is is greater than first and less than 
+    the second second, 0 otherwise</p>
+    <p>in_cl : 1 iff second value is greater than or equal to the first 
+    and less than or equal to second, 0 otherwise</p>
+    <p>Float Input 1: This value is the first float value and will only
+    be used if the first nrrd port isn't connected.</p>
+    <p>Float Input 2: This value is the second float value and will only
+    be used if the second nrrd port isn't connected.</p>
+    <p>Float Input 3: This value is the third float value and will only
+    be used if the third nrrd port isn't connected.</p>
     </description>
   </overview>
   <implementation>
@@ -50,6 +58,10 @@ the first or second operand can be a float constant, but not both. To perform th
       </port>
       <port>
         <name>InputNrrd2</name>
+        <datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>InputNrrd3</name>
         <datatype>Teem::Nrrd</datatype>
       </port>
     </inputs>
@@ -69,4 +81,3 @@ the first or second operand can be a float constant, but not both. To perform th
   <testing>
   </testing>
 </component>
-

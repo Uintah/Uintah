@@ -18,24 +18,32 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="Unu1op" category="Unu">
+<component name="UnuCCmerge" category="Unu">
   <overview>
     <author>Darby Van Uitert
     </author>
-    <summary>Unary operation on a nrrd.
+    <summary>Merge CCs with their neighbors, under various contraints. This
+operates on the output of "ccfind". Merging of a CC is always done into its
+largest neighbor. Whether or not to merge can be constrained by one or more
+of: CC size (-s), original CC value being brighter or darker (-d), and
+number of neighbors (-n). 
     </summary>
     <description>
-    <p>Operator: Unary operator.  Posibilities include:</p>
-    <p>- : negative (multiply by -1.0)</p>
-    <p>r : reciprocal (1.0/value)</p>
-    <p>sin, cos, tan, asin, acos, atan : same as in C</p>
-    <p>exp, log, log10, log1p : same as in C</p>
-    <p>sqrt, cbrt, ceil, floor : same as in C</p>
-    <p>erf : error function (integral of Gaussian)</p>
-    <p>rup, rdn : round up or down to integral value</p>
-    <p>abs : absolute value</p>
-    <p>sgn : -1, 0, 1 if value is  less than 0, ==0, or  greater than 0</p>
-    <p>exists : 1 iff not NaN or +/-Inf, 0 otherwise.</p>
+    <p>Value Driven Merging : do value-driven merging. Using 1 says that
+    dark islands get merged with bright surrounds, while -1
+    says the opposite. A value of 0 indicates merging can go either way.</p>
+    <p>Max Size : a cap on the CC size that will be absorbed into its
+    surround. CCs larger than this are deemed too significant
+    to mess with. Or, a value of 0 removes any such restriction
+    on merging.</p>
+    <p>Max Neighbors : a cap on the number of neighbors that a CC may have 
+    if it is to be be merged. A value of 1 allows only islands to be merged,
+    a value of 2 does merging with bigger of two neighbors, etc, while
+    a value of 0 says that number of neighbors is no constraint.</p>
+    <p>Connectivity : what kind of connectivity to use: the number of
+    coordinates that vary in order to traverse the
+    neighborhood of a given sample. In 2D: 1 : 4-connected,
+    2 : 8-connected</p>
     </description>
   </overview>
   <implementation>
