@@ -224,23 +224,12 @@ using namespace SCIRun;
                                          DataWarehouse*,
                                          DataWarehouse*);
                    
-      void accumulateMomentumSourceSinksRF(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse*,
-                                         DataWarehouse*);
-      
-      void accumulateEnergySourceSinksRF(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse*,
-                                       DataWarehouse*);
-      
       void computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse*,
                                            DataWarehouse*);  
+
 /*__________________________________
 * END OF RF TASKS
 *__________________________________*/                                
