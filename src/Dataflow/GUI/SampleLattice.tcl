@@ -50,7 +50,7 @@ itcl_class SCIRun_Fields_SampleLattice {
 	frame $w.row4
 	frame $w.which -relief groove -borderwidth 2
 
-	pack $w.which $w.row1 $w.row2 $w.row3 $w.row31 $w.row4 -side top \
+	pack $w.row1 $w.row2 $w.row3 $w.row31 $w.which $w.row4 -side top \
 		-e y -f both -padx 5 -pady 5
 	
 	label $w.row1.xsize_label -text "X Size   "
@@ -60,7 +60,7 @@ itcl_class SCIRun_Fields_SampleLattice {
 	label $w.row3.zsize_label -text "Z Size   "
 	entry $w.row3.zsize -textvariable $this-sizez
 
-	label $w.row31.zsize_label -text "Pad Size Percentage"
+	label $w.row31.zsize_label -text "Pad Percentage"
 	entry $w.row31.zsize -textvariable $this-padpercent
 
 	pack $w.row1.xsize_label $w.row1.xsize -side left
@@ -74,10 +74,17 @@ itcl_class SCIRun_Fields_SampleLattice {
 	label $w.which.l -text "Data at Location"
 	radiobutton $w.which.node -text "Nodes" \
 		-variable $this-data-at -value Nodes
-	radiobutton $w.which.element -text "Cells" \
+	radiobutton $w.which.edge -text "Edges" \
+		-variable $this-data-at -value Edges
+	radiobutton $w.which.face -text "Faces" \
+		-variable $this-data-at -value Faces
+	radiobutton $w.which.cell -text "Cells" \
 		-variable $this-data-at -value Cells
+	radiobutton $w.which.none -text "None" \
+		-variable $this-data-at -value None
 	pack $w.which.l -side top
-	pack $w.which.node $w.which.element -anchor nw
+	pack $w.which.node $w.which.edge $w.which.face $w.which.cell \
+	    $w.which.none -anchor nw
     }
 }
 

@@ -51,6 +51,8 @@ private:
   GuiInt size_x_;
   GuiInt size_y_;
   GuiInt axis_;
+  GuiDouble padpercent_;
+  GuiString data_at_;
 
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
 };
@@ -62,7 +64,10 @@ SamplePlane::SamplePlane(GuiContext* ctx)
   : Module("SamplePlane", ctx, Filter, "Fields", "SCIRun"),
     size_x_(ctx->subVar("sizex")),
     size_y_(ctx->subVar("sizey")),
-    axis_(ctx->subVar("axis"))
+    axis_(ctx->subVar("axis")),
+    padpercent_(ctx->subVar("padpercent")),
+    data_at_(ctx->subVar("data-at"))
+  
 {
 }
 
@@ -156,23 +161,38 @@ SamplePlane::execute()
   // Create blank mesh.
   unsigned int sizex = Max(2, size_x_.get());
   unsigned int sizey = Max(2, size_y_.get());
-  const Point minb(0.0, 0.0, 0.0);
-  const Point maxb(1.0, 1.0, 1.0);
+  Point minb(0.0, 0.0, 0.0);
+  Point maxb(1.0, 1.0, 1.0);
+  Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
+  minb -= diag;
+  maxb += diag;
+
+
   ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
+
+  Field::data_location data_at;
+  if (data_at_.get() == "Nodes") data_at = Field::NODE;
+  else if (data_at_.get() == "Edges") data_at = Field::EDGE;
+  else if (data_at_.get() == "Faces") data_at = Field::FACE;
+  else if (data_at_.get() == "None") data_at = Field::NONE;
+  else {
+    error("Unsupported data_at location " + data_at_.get() + ".");
+    return;
+  }
 
   // Create Image Field.
   FieldHandle ofh;
   if (datatype == VECTOR)
   {
-    ofh = scinew ImageField<Vector>(imagemesh, Field::NODE);
+    ofh = scinew ImageField<Vector>(imagemesh, data_at);
   }
   else if (datatype == TENSOR)
   {
-    ofh = scinew ImageField<Tensor>(imagemesh, Field::NODE);
+    ofh = scinew ImageField<Tensor>(imagemesh, data_at);
   }
   else
   {
-    ofh = scinew ImageField<double>(imagemesh, Field::NODE);
+    ofh = scinew ImageField<double>(imagemesh, data_at);
   }
 
   // Transform field.

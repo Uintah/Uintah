@@ -120,16 +120,19 @@ SampleLattice::execute()
   unsigned int sizez = Max(2, size_z_.get());
   LatVolMeshHandle mesh = scinew LatVolMesh(sizex, sizey, sizez, minb, maxb);
 
-  // Create Image Field.
-  FieldHandle ofh;
   Field::data_location data_at;
   if (data_at_.get() == "Nodes") data_at = Field::NODE;
+  else if (data_at_.get() == "Edges") data_at = Field::EDGE;
+  else if (data_at_.get() == "Faces") data_at = Field::FACE;
   else if (data_at_.get() == "Cells") data_at = Field::CELL;
+  else if (data_at_.get() == "None") data_at = Field::NONE;
   else {
     error("Unsupported data_at location " + data_at_.get() + ".");
     return;
   }
 
+  // Create Image Field.
+  FieldHandle ofh;
   if (datatype == SCALAR)
   {
     ofh = scinew LatVolField<double>(mesh, data_at);
@@ -148,6 +151,7 @@ SampleLattice::execute()
     error("Unable to initialize oport 'Output Sample Field'.");
     return;
   }
+
   ofp->send(ofh);
 }
 
