@@ -604,21 +604,21 @@ if test "$scirun" = "no" -a "$uintah" = "no" -a "$davew" = "no"; then
 fi
 
 PACKAGE_DIRS=""
-PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/libPSECommon.so\(\$(SRCTOP_ABS)/PSECommon/TCL\)"
+PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/libPSECommon.so\(\$(SRCTOP_ABS)/PSECommon/GUI\)"
 
 if test "$scirun" = "yes"; then
 #  PACKAGE_DIRS=$PACKAGE_DIRS" SCIRun"
-#  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/TCL\)"
+#  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/GUI\)"
   EXENAME="scirun"
 fi
 if test "$uintah" = "yes"; then
   PACKAGE_DIRS=$PACKAGE_DIRS" Uintah"
-  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Uintah/libUintah.so\(\$(SRCTOP_ABS)/Uintah/TCL\)"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Uintah/libUintah.so\(\$(SRCTOP_ABS)/Uintah/GUI\)"
   EXENAME="uintah"
 fi
 if test "$davew" = "yes"; then
   PACKAGE_DIRS=$PACKAGE_DIRS" DaveW"
-  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/GUIs\)"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/GUI\)"
   EXENAME="davew"
 fi
 
@@ -2891,6 +2891,7 @@ trap 'rm -fr `echo "Makefile \
                 SCICore/TclInterface/Makefile \
                 SCICore/TkExtensions/Makefile \
                 SCICore/Tester/Makefile \
+		SCICore/Thread/Makefile \
                 SCICore/Util/Makefile \
               PSECore/Makefile \
                 PSECore/Comm/Makefile \
@@ -3077,6 +3078,7 @@ CONFIG_FILES=\${CONFIG_FILES-"Makefile \
                 SCICore/TclInterface/Makefile \
                 SCICore/TkExtensions/Makefile \
                 SCICore/Tester/Makefile \
+		SCICore/Thread/Makefile \
                 SCICore/Util/Makefile \
               PSECore/Makefile \
                 PSECore/Comm/Makefile \
