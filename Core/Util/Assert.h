@@ -82,7 +82,7 @@
      }
 #  define CHECKARRAYBOUNDS(value, lower, upper) \
      if(value < lower || value >= upper){ \
-        SCI_THROW(SCIRun::ArrayIndexOutOfBounds(value, lower, upper)); \
+        SCI_THROW(SCIRun::ArrayIndexOutOfBounds((long)value, (long)lower, (long)upper)); \
      }
 #else
 #  define ASSERTL3(condition)
