@@ -289,7 +289,6 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   bool result = false;
   if (fld_handle->query_scalar_interface(this).get_rep() != 0)
   {
-//    cout << "Scalar\n";
     if (! has_scalar_data_.get())
     {
       has_scalar_data_.set(1);
@@ -298,7 +297,6 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   }
   else if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
-//    cout << "Vector\n";
     if (! has_vector_data_.get())
     { 
       has_vector_data_.set(1); 
@@ -311,7 +309,6 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   }
   else if (fld_handle->query_tensor_interface(this).get_rep() != 0)
   {
-//    cout << "Tensor\n";
     if (! has_tensor_data_.get())
     {
       has_tensor_data_.set(1);
@@ -659,7 +656,7 @@ ShowField::execute()
 
     renderer_->render(fld_handle, 
 		      do_nodes, do_edges, do_faces,
-		      def_mat_handle_, color_handle,
+		      color_handle, def_mat_handle_,
 		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
 		      faces_normals_.get(),
@@ -752,7 +749,9 @@ ShowField::execute()
 					       text_color_g_.get(),
 					       text_color_b_.get()));
       GeomSwitch *text =
-	renderer_->render_text(fld_handle, text_use_default_color_.get(), m,
+	renderer_->render_text(fld_handle,
+			       color_handle,
+			       text_use_default_color_.get(), m,
 			       text_backface_cull_.get(),
 			       text_fontsize_.get(),
 			       text_precision_.get(),
