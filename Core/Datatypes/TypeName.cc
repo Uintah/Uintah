@@ -38,6 +38,7 @@ namespace SCIRun{
 using std::string;
 
 class Vector;
+class IntVector;
 class Point;
 
 //////////
@@ -140,6 +141,12 @@ template<> const string find_type_name(bool*)
 template<> const string find_type_name(Vector*)
 {
   static const string name = "Vector";
+  return name;
+}
+
+template<> const string find_type_name(IntVector*)
+{
+  static const string name = "IntVector";
   return name;
 }
 
