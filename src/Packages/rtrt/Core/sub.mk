@@ -149,6 +149,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/CutVolumeDpy.cc \
 	$(SRCDIR)/CutPlaneDpy.cc \
 	$(SRCDIR)/ColorMap.cc \
+	$(SRCDIR)/RegularColorMap.cc \
 	$(SRCDIR)/AirBubble.cc \
 	$(SRCDIR)/SeaLambertian.cc \
 	$(SRCDIR)/TimeVaryingCheapCaustics.cc \
