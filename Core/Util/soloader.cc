@@ -43,7 +43,8 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   
 #ifdef _WIN32
   LibraryHandle = LoadLibrary(libname);
-#elif defined(__APPLE__)
+  //#elif defined(__APPLE__)
+#else
   ASSERT(SCIRun::sci_getenv("SCIRUN_OBJDIR"));
   string name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" + 
     string(libname);
@@ -54,8 +55,8 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
     // If so, if we try again without the path, then maybe it will succeed...
     LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
   }
-#else
-  LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
+  //#else
+  //LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
   
   if (LibraryHandle == 0) {
@@ -82,7 +83,8 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 {
 #ifdef _WIN32
   return LoadLibrary(libname);
-#elif defined(__APPLE__)
+  //#elif defined(__APPLE__)
+#else  
   string name;
   if ( libname[0] == '/' )
     name = libname;
@@ -100,8 +102,8 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
     lh = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
   }
   return lh;
-#else
-  return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
+  //#else
+  //return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
 }
 
