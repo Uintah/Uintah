@@ -108,6 +108,18 @@ public:
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
  private:
+   void setFlatProfile(const ProcessorContext* pc,
+		       const Region* region,
+		       const DataWarehouseP& old_dw,
+		       DataWarehouseP& new_dw);
+   void setInletVelocityBC(const ProcessorContext* pc,
+			   const Region* region,
+			   const DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
+   void calculatePressBC(const ProcessorContext* pc,
+			 const Region* region,
+			 const DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw);
    void velocityBC(const ProcessorContext* pc,
 		   const Region* region,
 		   const DataWarehouseP& old_dw,
@@ -122,11 +134,48 @@ public:
 		 const DataWarehouseP& old_dw,
 		 DataWarehouseP& new_dw,
 		 const int index);
- // used for calculating wall boundary conditions
+   // used for calculating wall boundary conditions
    TurbulenceModel* d_turb_model;
-
-
-
+   // Diff BC types
+   struct FlowInlet {
+     // define enum for cell type
+     CellTypeInfo inletType; 
+     // input vars
+     double flowRate;
+     // array of size numMixingVars -1
+     Array1<double> streamMixturefraction;
+     double turb_lengthScale;
+     // calculated values
+     double density;
+     // inlet area
+     double area;
+     // need a constructor
+     FlowInlet(int numMix);
+     problemSetup(ProblemSpecP& params,
+		  DataWarehouseP& dw);
+   };
+   struct PressureInlet {
+     CellTypeInfo pressureType;
+     // array of size numMixingVars -1
+     Array1<double> streamMixturefraction;
+     double turb_lengthScale;
+     double density;
+     double refPressure;
+     PressureInlet(int numMix);
+     problemSetup(ProblemSpecP& params,
+		  DataWarehouseP& dw);
+   };
+   struct FlowOutlet {
+     CellTypeInfo outletType;
+     // imp for convergence
+     Array1<double> streamMixturefraction;
+     double turb_lengthScale;
+     double density;
+     double area;
+     FlowOutlet(int numMix);
+     problemSetup(ProblemSpecP& params,
+		  DataWarehouseP& dw);
+   };
 };
 }
 }
