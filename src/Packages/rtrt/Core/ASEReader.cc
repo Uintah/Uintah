@@ -352,6 +352,8 @@ void processMATERIAL(token_list* children2, unsigned loop2,
       }
     }
   }
+  ase_matls[token->GetIndex()]->SetScale(token->GetTMapUTiling(),
+                                         token->GetTMapVTiling());
 }
 
 void processMATERIAL_LIST(token_list* children1, unsigned loop1,

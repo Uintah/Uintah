@@ -17,7 +17,7 @@
 
 using namespace rtrt;
 
-Material::Material() : local_ambient_mode(Global_Ambient)
+Material::Material() : local_ambient_mode(Global_Ambient), uscale(1), vscale(1)
 {
 }
 

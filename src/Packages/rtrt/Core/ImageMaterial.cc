@@ -94,8 +94,8 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
     Point hitpos(ray.origin()+ray.direction()*hit.min_t);
     map->uv(uv, hitpos, hit);
     Color diffuse;
-    double u=uv.u();
-    double v=uv.v();
+    double u=uv.u()*uscale;
+    double v=uv.v()*vscale;
     switch(umode){
     case None:
 	if(u<0 || u>1){
