@@ -91,6 +91,15 @@ public:
     } else return intersect_nontrivial(ray, min_t);
   }
 
+  inline bool contains_point(const Point &p) const {
+    return (cmin.x()<=p.x() && p.x()<=cmax.x() &&
+	    cmin.y()<=p.y() && p.y()<=cmax.y() &&
+	    cmin.z()<=p.z() && p.z()<=cmax.z());
+  }
+  inline bool contains_point(const Ray &ray, double &t) const {
+    return contains_point(ray.eval(t));
+  }
+  
   Point center() const;
   double longest_edge();
   inline Point min() const {
