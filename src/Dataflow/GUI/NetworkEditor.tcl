@@ -69,19 +69,20 @@ set NetworkChanged 0
 #  (Non-existent environment variables are treated as 'false'.)
 #
 # This function is case insensitive.
-# Warns user if not a valid boolean string.
 #
-proc boolToInt { val } {
-
-    if { ! [info exists env($val)] } {
+proc boolToInt { var } {
+    global env
+    if { ! [info exists env($var)] } {
        return 0
     }
+
+    set val $env($var)
 
     if [string equal $val ""] {
 	return 0; # blank value is taken to mean false
     }
     if ![string is boolean $val] {
-	puts "TCL boolToInt: Cannot determine boolean value: $val."
+	puts "TCL boolToInt: Cannot determine boolean value of env: ${var}=${val}"
 	return 1; # follows the C convention of any non-zero value equals true
     }
     return [string is true $val]
