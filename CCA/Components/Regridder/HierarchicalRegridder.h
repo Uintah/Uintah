@@ -42,6 +42,11 @@ WARNING
 
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid, SchedulerP sched);
+
+  private:
+    void MarkPatches( const GridP& origGrid, int levelIdx  ); 
+    void ExtendPatches( const GridP& origGrid, int levelIdx  ); 
+    inline IntVector StartCellToLattice ( SCIRun::IntVector startCell, int levelIdx );
   };
 
 } // End namespace Uintah
