@@ -36,7 +36,7 @@ using namespace SCIRun;
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 
-static DebugStream dbg("MPIScheduler", true);
+static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
 
 Mutex sendsLock( "sendsLock" );
