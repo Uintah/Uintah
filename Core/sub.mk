@@ -31,7 +31,8 @@ include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := 
 LIBS := $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
-	$(ITK_LIBRARY) $(GL_LIBS) $(GLOBUS_COMMON) $(THREAD_LIBS) -lm -lz
+	$(ITK_LIBRARY) $(GL_LIBS) $(GLOBUS_COMMON) $(THREAD_LIBS) \
+	$(GZ_LIBRARY) -lm 
 
 include $(SRCTOP)/scripts/largeso_epilogue.mk
 
