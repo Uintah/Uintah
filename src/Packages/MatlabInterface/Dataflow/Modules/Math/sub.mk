@@ -23,7 +23,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions
 
-LIBS := $(BLAS_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(FLIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
