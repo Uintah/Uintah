@@ -46,36 +46,6 @@ struct TaskInfo
     ~TaskInfo();
 };
 
-// Task control
-class TaskManager {
-public:
-    // Task scheduling control
-    static void kill_task(Task*);
-    static void suspend_task(Task*);
-    static void continue_task(Task*);
-
-    static void coredump(Task*);
-    static void debug(Task*);
-
-    // System interface for thread concurrency control
-    static void set_concurrency();
-    static void get_concurrency();
-    static int nprocessors();
-
-    // Keys used below for Task specific data
-    static TaskKey make_key();
-    static free_key(TaskKey);
-
-    static void exit_all(int code);
-    
-    // Used only by main()
-    static void initialize(char* progname);
-    static void main_exit();
-
-    static TaskInfo* get_taskinfo();
-};
-
-
 // Basic Task class.  Inherit to provide the body()
 class Task {
 protected:
@@ -115,10 +85,6 @@ public:
     int set_priority(int);
     int get_priority(); // Returns old priority;
 
-    // Stuff for thread specific data, based on keys
-    void* set_specific(TaskKey, void*);
-    void* get_specific(TaskKey);
-
     // Give up control to another thread
     static void yield();
 
@@ -130,6 +96,24 @@ public:
 
     // Interface to select...
     static int mtselect(int, fd_set*, fd_set*, fd_set*, struct timeval*);
+
+    // O/S Interface
+    static void coredump(Task*);
+    static void debug(Task*);
+
+    // System interface for thread concurrency control
+    static void set_concurrency();
+    static void get_concurrency();
+    static int nprocessors();
+
+    static void exit_all(int code);
+    
+    // Used only by main()
+    static void initialize(char* progname);
+    static void main_exit();
+
+    // Statistics
+    static TaskInfo* get_taskinfo();
 };
 
 #endif
