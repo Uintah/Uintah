@@ -97,7 +97,7 @@ WARNING
         virtual void computeTemp_CC(const Patch* patch,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
-				    const CCVariable<double>& cv,
+				    const double& cv,
                                 const CCVariable<double>& rho_micro, 
                                 CCVariable<double>& Temp);
 
