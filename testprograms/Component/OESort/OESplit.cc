@@ -57,7 +57,7 @@ void usage(char* progname)
     exit(1);
 }
 
-void init(CIA::array1<int>& a, int s)
+void init(SIDL::array1<int>& a, int s)
 {
   a.resize(s);
   a[0] = 1;
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     using OESort_ns::OESplit;
     using OESort_ns::OESort;
 
-    CIA::array1<int> arr;
+    SIDL::array1<int> arr;
    
     int myrank = 0;
     int mysize = 0;

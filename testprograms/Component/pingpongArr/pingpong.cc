@@ -54,7 +54,7 @@ void usage(char* progname)
     exit(1);
 }
 
-void init(CIA::array1<int>& a, int s, int f)
+void init(SIDL::array1<int>& a, int s, int f)
 {
   a.resize(f-s);
   for(int i=s;i<f;i++)
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     using PingPong_ns::PingPong_impl;
     using PingPong_ns::PingPong;
 
-    CIA::array1<int> arr;
+    SIDL::array1<int> arr;
 
     int myrank = 0;
     int mysize = 0;

@@ -49,7 +49,7 @@ using argtest::TestEnum;
 using argtest::Foo;
 using argtest::Bar;
 
-using CIA::array1;
+using SIDL::array1;
 using std::istringstream;
 using std::ostringstream;
 

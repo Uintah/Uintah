@@ -52,7 +52,7 @@ LUFactor_impl::~LUFactor_impl()
 {
 }
 
-int LUFactor_impl::LUFactorize(const CIA::array2<double>& A)
+int LUFactor_impl::LUFactorize(const SIDL::array2<double>& A)
 {
 
   int SIZE = A.size1();

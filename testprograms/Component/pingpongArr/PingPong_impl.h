@@ -39,7 +39,7 @@ namespace PingPong_ns {
     public:
 	PingPong_impl();
 	virtual ~PingPong_impl();
-	virtual int pingpong(const CIA::array1<int>& );
+	virtual int pingpong(const SIDL::array1<int>& );
     };
 } // End namespace pingpong
 

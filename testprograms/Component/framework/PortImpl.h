@@ -6,7 +6,7 @@
 
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/URL.h>
-#include <Core/CCA/Component/CIA/array.h>
+#include <Core/CCA/Component/SIDL/array.h>
 
 #include <Core/Exceptions/InternalError.h>
 
@@ -16,7 +16,7 @@
 namespace sci_cca {
 
 using std::string;
-using CIA::array1;
+using SIDL::array1;
 
 class PortImpl : public Port {
 public:

@@ -62,7 +62,7 @@ void usage(char* progname)
     exit(1);
 }
 
-void initialize(CIA::array2<double>& t){
+void initialize(SIDL::array2<double>& t){
   unsigned int i, j;
   
   for( i=0; i<t.size1(); i++ )       
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     using Jacobi_ns::Jacobi_impl;
     using Jacobi_ns::Jacobi;
 
-    CIA::array2<double> t;
+    SIDL::array2<double> t;
     t.resize(NXI,NYI); 
 
     int myrank = 0;
