@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-
 <!--
 
   This is supposed to be a valid xhtml file!  Please visit
@@ -69,7 +67,7 @@
     <div class="body">
       <center>
 	<img src="images/biofem-banner-main.gif" alt="BioFEM Banner"
-	  usemap="#femt-banner-main" border="0" alt="Top Banner"/> 
+	  usemap="#femt-banner-main" border="0"/> 
       </center>
 
       <map id="femt-banner-main" name="femt-banner-main">
@@ -277,13 +275,13 @@ setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/on-the-fly-libs
       </p>
       
       <p>
-	for csh-like shells type:
+	For csh-like shells type:
       </p>
 
       <pre>
 limit descriptors unlimited
       </pre>
-      <p>for sh-like shells type:</p>
+      <p>For sh-like shells type:</p>
       <pre>
 ulimit -n unlimited
       </pre>
@@ -641,8 +639,8 @@ cd /usr/local/SCIRun/bin
 	left mouse button are pressed while dragging a component of
 	the rake.  Drag the rake's blue bar to translate the rake.
 	Drag one of the rake's blue spheres to rotate the rake.  Drag
-	one of the rakes green ends to resize the rake.  The
-	streamlines are redrawn after the rake is
+	one of the rakes green ends to resize the rake. 
+	Streamlines are redrawn after the rake is
 	moved.
       </p>
 
@@ -661,6 +659,16 @@ cd /usr/local/SCIRun/bin
 	computation method interpolates between the different cells in
 	the mesh and can thus walk over discontinuities better and
 	makes for a smoother streamline appearance.
+      </p>
+
+      <p>
+	Streamlines are computed using a fast or an adaptive
+	algorithm.  Radio buttons labeled "Fast" and "Adaptive" select
+	an algorithm.  The fast method walks a mesh directly.  The
+	fast method's accuracy is determined by a model's accuracy.
+	Because the adaptive (slower) method interpolates between
+	cells in a model, it can better walk over discontinuities,
+	producing a smoother streamline appearance.
       </p>
 
       <br />
