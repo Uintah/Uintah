@@ -390,7 +390,7 @@ void PackageDB::loadPackage(bool resolve)
   }
   if (gui && !getenv("SCI_NOSPLASH"))
   {
-    gui->execute("showSplash ""[file join main scisplash.ppm]"" " + to_string(mod_count));
+    gui->execute("showSplash ""[file join " + SCIRUN_SRCTOP + " " + splash_path_ + "]"" " + to_string(mod_count));
   }
   int index = 0;
   int numreg;
@@ -761,6 +761,10 @@ ModuleInfo* PackageDB::GetModuleInfo(const string& name, const string& catname,
   if (category->lookup(name,info))
     return info;
   return 0;
+}
+
+void PackageDB::setSplashPath(string p) {
+  splash_path_ = p;
 }
 
 
