@@ -19,11 +19,13 @@
 #include <Uintah/Components/MPM/Burn/HEBurnFactory.h>
 #include <Uintah/Components/MPM/Burn/HEBurn.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
+
+#include <Uintah/Components/MPM/MPMPhysicalModules.h>
+
 using namespace std;
 using namespace Uintah::MPM;
 using namespace Uintah;
 using namespace SCICore::Geometry;
-
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
@@ -142,12 +144,27 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(ptemperature, lb->pTemperatureLabel, subset);
    ParticleVariable<long> pparticleID;
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
-
+   
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++){
       start += createParticles( d_geom_objs[i], start, position,
 				pvelocity,pexternalforce,pmass,pvolume,
 				pissurf,ptemperature,pparticleID,NAPID,patch);
+   }
+
+   if(MPMPhysicalModules::heatConductionModel) {
+     particleIndex partclesNum = start;
+
+     ParticleVariable<Vector> ptemperatureGradient;
+     ParticleVariable<double> pexternalHeatRate;
+
+     for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
+       ptemperatureGradient[pIdx] = Vector(0.,0.,0.);
+       pexternalHeatRate[pIdx] = 0.;
+     }
+
+     new_dw->put(ptemperatureGradient, lb->pTemperatureGradientLabel);
+     new_dw->put(pexternalHeatRate, lb->pExternalHeatRateLabel);
    }
 
    new_dw->put(position, lb->pXLabel);
@@ -291,6 +308,10 @@ int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
 }
 
 // $Log$
+// Revision 1.36  2000/06/23 21:44:12  tan
+// Initialize particle data of ptemperatureGradient and pexternalHeatRate for
+// heat conduction.
+//
 // Revision 1.35  2000/06/23 01:26:16  tan
 // Moved material property toughness to Fracture class.
 //
