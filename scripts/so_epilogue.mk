@@ -50,8 +50,12 @@ $(LIBNAME)_LIBS := $(LIBS)
 #
 $(LIBNAME): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
 	rm -f $@
+ifeq ($(NEED_SONAME),yes)
+	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ -Wl,-soname,$(notdir $@) $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+else
 	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
-
+endif
+#	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ -Wl,-soname -Wl,$(notdir $@) $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 #
 #  These will get removed on make clean
 #
@@ -70,6 +74,9 @@ endif
 
 #
 # $Log$
+# Revision 1.5  2000/03/20 21:56:22  yarden
+# Linux port: add support for so lib on linux
+#
 # Revision 1.4  2000/03/17 10:40:17  sparker
 # Fixed rule to remove file - use $@ instead of $(PROGRAM)
 #
