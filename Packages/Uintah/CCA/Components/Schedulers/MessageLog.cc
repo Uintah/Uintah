@@ -13,6 +13,9 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+// From sus.cc:  Used for syncing cerr'ing so it is easier to read.
+extern Mutex cerrLock;
+
 MessageLog::MessageLog(const ProcessorGroup* myworld, Output* oport)
    : d_enabled(false), d_myworld(myworld), d_oport(oport)
 {
@@ -67,7 +70,9 @@ void MessageLog::logSend(const DetailedReq* dep, int bytes,
       else
 	 out << "-";
 #else
+      cerrLock.lock()
       NOT_FINISHED("new task stuff");
+      cerrLock.unlock()
 #endif
    } else {
       out << "-\t-\t-\t-\t-";

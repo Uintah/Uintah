@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -27,29 +28,54 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
 }
 
 void
+SingleProcessorScheduler::verifyChecksum()
+{
+  // Not used in SingleProcessorScheduler
+}
+
+void
+SingleProcessorScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
+{
+  if(dts_)
+    delete dts_;
+
+  if( useInternalDeps() )
+    dts_ = graph.createDetailedTasks( pg, true );
+  else
+    dts_ = graph.createDetailedTasks( pg, false );
+
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  lb->assignResources(*dts_, d_myworld);
+  releasePort("load balancer");
+  dts_->computeLocalTasks(pg->myrank());
+  dts_->createScrublists(init_timestep);
+}
+
+void
 SingleProcessorScheduler::execute(const ProcessorGroup * pg)
 {
-  ASSERT(dt != 0);
-  int ntasks = dt->numTasks();
+  ASSERT(dts_ != 0);
+  int ntasks = dts_->numTasks();
   if(ntasks == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";
   }
   dbg << "Executing " << ntasks << " tasks\n";
 
-  makeTaskGraphDoc(dt);
+  makeTaskGraphDoc( dts_ );
 
   for(int i=0;i<ntasks;i++){
     double start = Time::currentSeconds();
-    DetailedTask* task = dt->getTask(i);
-    task->doit(pg, dw[Task::OldDW], dw[Task::NewDW]);
-    double dt = Time::currentSeconds()-start;
+    DetailedTask* task = dts_->getTask( i );
+    task->doit(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+    double delT = Time::currentSeconds()-start;
     dbg << "Completed task: " << task->getTask()->getName()
-	<< " (" << dt << " seconds)\n";
+	<< " (" << delT << " seconds)\n";
     scrub(task);
-    emitNode(task, start, dt);
+    emitNode( task, start, delT );
   }
 
-  dw[1]->finalize();
+  dws_[ Task::NewDW ]->finalize();
   finalizeNodes();
 }
 

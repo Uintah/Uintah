@@ -1,11 +1,11 @@
 
-
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/DebugStream.h>
 
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
@@ -33,6 +33,14 @@ using std::vector;
 using namespace SCIRun;
 
 using namespace Uintah;
+
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)  From sus.cc:
+extern Mutex cerrLock;
+extern DebugStream mixedDebug;
+
+Mutex getMPIBuffLock( "getMPIBuffLock" );
+Mutex ssLock( "send state lock" );
 
 #define PARTICLESET_TAG		0x1000000
 #define DAV_DEBUG 0
@@ -69,13 +77,17 @@ bool OnDemandDataWarehouse::isFinalized() const
 
 void OnDemandDataWarehouse::finalize()
 {
+  d_lock.writeLock();
+
    d_ncDB.cleanForeign();
    d_ccDB.cleanForeign();
    d_particleDB.cleanForeign();
    d_sfcxDB.cleanForeign();
    d_sfcyDB.cleanForeign();
    d_sfczDB.cleanForeign();
-  d_finalized=true;
+   d_finalized=true;
+
+  d_lock.writeUnlock();
 }
 
 void
@@ -176,31 +188,55 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 			      "in sendMPI");
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
 
-      int dest = batch->toTask->getAssignedResourceIndex();
+      int dest = batch->toTasks.front()->getAssignedResourceIndex();
+
+      ssLock.lock();  // Dd: ??
       ParticleSubset* sendset = ss.find_sendset(patch, matlIndex, dest);
+      ssLock.unlock();  // Dd: ??
+
       if(!sendset){
+
+	cerr << "sendset is NULL\n";
+
 	ParticleSubset* pset = var->getParticleSubset();
+	ssLock.lock();  // Dd: ??
 	sendset = scinew ParticleSubset(pset->getParticleSet(),
 					false, -1, 0);
+	ssLock.unlock();  // Dd: ??
 	ParticleVariable<Point> pos;
 	old_dw->get(pos, pos_var, pset);
 	Box box=pset->getPatch()->getLevel()->getBox(dep->low, dep->high);
 	for(ParticleSubset::iterator iter = pset->begin();
 	    iter != pset->end(); iter++){
 	  particleIndex idx = *iter;
-	  if(box.contains(pos[idx]))
+	  if(box.contains(pos[idx])) {
+	    ssLock.lock();  // Dd: ??
 	    sendset->addParticle(idx);
+	    ssLock.unlock();  // Dd: ??
+	  }
 	}
+	ssLock.lock();  // Dd: ??
 	int numParticles = sendset->numParticles();
+	ssLock.unlock();  // Dd: ??
 
 	ASSERT(batch->messageTag >= 0);
 	MPI_Bsend(&numParticles, 1, MPI_INT, dest,
 		  PARTICLESET_TAG|batch->messageTag, world->getComm());
+	ssLock.lock();  // Dd: ??	
 	ss.add_sendset(patch, matlIndex, dest, sendset);
+	ssLock.unlock();  // Dd: ??
       }
 	
-      if(sendset->numParticles() > 0){
+      ssLock.lock();  // Dd: ??	
+      int numParticles = sendset->numParticles();
+      ssLock.unlock(); // Dd: ??
+
+      cerr << "sendset has " << numParticles << " particles\n";
+
+      if( numParticles > 0){
+	getMPIBuffLock.lock(); // Dd: ??
 	 var->getMPIBuffer(buffer, sendset);
+	getMPIBuffLock.unlock(); // Dd: ??
 	 buffer.addSendlist(var->getRefCounted());
 	 buffer.addSendlist(var->getParticleSubset());
       }
@@ -212,7 +248,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -222,7 +260,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -232,7 +272,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -242,7 +284,9 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -252,8 +296,10 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
       buffer.addSendlist(var->getRefCounted());
+	getMPIBuffLock.unlock(); // Dd: ??
     }
     break;
   default:
@@ -302,6 +348,8 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       }
       ParticleSubset* pset = old_dw->getParticleSubset(matlIndex, patch);
 
+      getMPIBuffLock.lock(); // Dd: ??
+
       Variable* v = label->typeDescription()->createInstance();
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
       ASSERT(var != 0);
@@ -310,7 +358,12 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       if(pset->numParticles() > 0){
 	var->getMPIBuffer(buffer, pset);
       }
+
+      getMPIBuffLock.unlock(); // Dd: ??
+
+      d_lock.writeLock();
       d_particleDB.put(label, matlIndex, patch, var, true);
+      d_lock.writeUnlock();
     }
     break;
   case TypeDescription::NCVariable:
@@ -326,8 +379,12 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->allocate(dep->low, dep->high);
       var->setForeign();
       
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
+      d_lock.writeLock();
       d_ncDB.put(label, matlIndex, patch, var, true);
+      d_lock.writeUnlock();
     }
     break;
   case TypeDescription::CCVariable:
@@ -342,8 +399,12 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->allocate(dep->low, dep->high);
       var->setForeign();
       
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
+      d_lock.writeLock();
       d_ccDB.put(label, matlIndex, patch, var, true);
+      d_lock.writeUnlock();
     }
     break;
   case TypeDescription::SFCXVariable:
@@ -358,8 +419,12 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->allocate(dep->low, dep->high);
       var->setForeign();
 
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
+      d_lock.writeLock();
       d_sfcxDB.put(label, matlIndex, patch, var, true);
+      d_lock.writeUnlock();
     }
     break;
   case TypeDescription::SFCYVariable:
@@ -374,8 +439,12 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->allocate(dep->low, dep->high);
       var->setForeign();
       
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
+      d_lock.writeLock();
       d_sfcyDB.put(label, matlIndex, patch, var, true);
+      d_lock.writeUnlock();
     }
     break;
   case TypeDescription::SFCZVariable:
@@ -390,8 +459,12 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->allocate(dep->low, dep->high);
       var->setForeign();
       
+	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
+	getMPIBuffLock.unlock(); // Dd: ??
+      d_lock.writeLock();
       d_sfczDB.put(label, matlIndex, patch, var, true);
+      d_lock.writeUnlock();
     }
     break;
   default:
@@ -426,21 +499,38 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   int sendcount;
   MPI_Datatype senddatatype;
   MPI_Op sendop;
+	getMPIBuffLock.lock(); // Dd: ??
   var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
+	getMPIBuffLock.unlock(); // Dd: ??
   ReductionVariableBase* tmp = var->clone();
   void* recvbuf;
   int recvcount;
   MPI_Datatype recvdatatype;
   MPI_Op recvop;
+	getMPIBuffLock.lock(); // Dd: ??
   tmp->getMPIBuffer(recvbuf, recvcount, recvdatatype, recvop);
+	getMPIBuffLock.unlock(); // Dd: ??
   ASSERTEQ(recvcount, sendcount);
   ASSERTEQ(senddatatype, recvdatatype);
   ASSERTEQ(recvop, sendop);
       
+  if( mixedDebug.active() ) {
+    cerrLock.lock(); mixedDebug << "calling MPI_Allreduce\n";
+    cerrLock.unlock();
+  }
+
   int error = MPI_Allreduce(sendbuf, recvbuf, recvcount,
 			    recvdatatype, recvop, world->getComm());
+
+  if( mixedDebug.active() ) {
+    cerrLock.lock(); mixedDebug << "done with MPI_Allreduce\n";
+    cerrLock.unlock();
+  }
+
   if( error ){
+    cerrLock.lock();
     cerr << "reduceMPI: MPI_Allreduce error: " << error << "\n";
+    cerrLock.unlock();
     throw InternalError("reduceMPI: MPI error");     
   }
 
@@ -766,7 +856,9 @@ OnDemandDataWarehouse::allocate(NCVariableBase& var,
 
   // Error checking
   if(d_ncDB.exists(label, matlIndex, patch)){
+    cerrLock.lock();
     cerr << "allocate: NC var already exists!\n";
+    cerrLock.unlock();
     throw InternalError( "allocate: NC variable already exists: " +
 			 label->getName() + patch->toString() );
   }
@@ -1389,6 +1481,8 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
 void
 OnDemandDataWarehouse::scrub(const VarLabel* var)
 {
+  d_lock.writeLock();
+
   switch(var->typeDescription()->getType()){
   case TypeDescription::NCVariable:
     d_ncDB.scrub(var);
@@ -1417,6 +1511,7 @@ OnDemandDataWarehouse::scrub(const VarLabel* var)
   default:
     throw InternalError("Scrubbing variable of unknown type: "+var->getName());
   }
+  d_lock.writeUnlock();
 }
 
 void OnDemandDataWarehouse::logMemoryUse(ostream& out, const std::string& tag)

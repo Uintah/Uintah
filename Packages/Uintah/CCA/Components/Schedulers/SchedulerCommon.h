@@ -59,7 +59,7 @@ WARNING
     // Insert Documentation Here:
     virtual void initialize();
        
-    virtual void compile( const ProcessorGroup * pc, bool init_timestep );
+    virtual void compile( const ProcessorGroup * pc, bool init_timestep ) = 0;
 
     //////////
     // Insert Documentation Here:
@@ -91,11 +91,17 @@ WARNING
     void finalizeNodes(int process=0);
     void scrub(const DetailedTask* dt);
     
+    virtual void verifyChecksum() = 0;
+    virtual bool useInternalDeps();
+
     TaskGraph graph;
-    int d_generation;
-    OnDemandDataWarehouse* dw[2];
-    DetailedTasks* dt;
+    int       d_generation;
+
+    OnDemandDataWarehouse * dws_[2];
+    DetailedTasks         * dts_;
+
   private:
+
     SchedulerCommon(const SchedulerCommon&);
     SchedulerCommon& operator=(const SchedulerCommon&);
 
