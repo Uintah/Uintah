@@ -262,7 +262,7 @@ void getIteratorBCValueBCKind( const Patch* patch,
  return IveSetBC;
 }
 
-
+#ifdef JOHNS_BC
 /* --------------------------------------------------------------------- 
  Function~  setNeumanDirichletBC_FC--
  Purpose~   does the actual work of setting the BC for face-centered 
@@ -437,6 +437,8 @@ void setBC(T& vel_FC,
     }  // Children loop
   }  // face loop
 }
+
+#endif
   
 } // End namespace Uintah
 #endif
