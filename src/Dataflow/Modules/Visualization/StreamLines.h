@@ -175,37 +175,63 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
       }
     }
     // Append the positive streamlines.
-    if( d->direction >= 1 )
-    {
+    if( d->direction >= 1 ){
       FindNodes(nodes, seed, tolerance2, d->stepsize, d->maxsteps,
 		d->vfi, d->rcp, d->met);
     }
 
+    double length = 0;
+
+    Point p1;
+
+    if( d->color == 3) {
+      node_iter = nodes.begin();
+      if (node_iter != nodes.end()) {
+	p1 = *node_iter;	
+	++node_iter;
+
+	while (node_iter != nodes.end()) {
+	  length += Vector( *node_iter-p1 ).length();
+	  p1 = *node_iter;
+	  ++node_iter;
+	}
+      }
+    }
+
     node_iter = nodes.begin();
 
-    if (node_iter != nodes.end())
-    {
+    if (node_iter != nodes.end()) {
       d->lock.lock();
       n1 = d->cf->get_typed_mesh()->add_node(*node_iter);
+      p1 = *node_iter;
+
       d->cf->resize_fdata();
-      if( d->color )
+
+      if( d->color == 0 )
+	d->cf->set_value((double)(*seed_iter), n1);
+      else if( d->color == 1)
 	d->cf->set_value((double)abs(cc), n1);
       else
-	d->cf->set_value((double)(*seed_iter), n1);
+	d->cf->set_value( length, n1);
 
       ++node_iter;
 
       cc++;
 
-      while (node_iter != nodes.end())
-      {
+      while (node_iter != nodes.end()) {
 	n2 = d->cf->get_typed_mesh()->add_node(*node_iter);
 	d->cf->resize_fdata();
 
-	if( d->color )
-	  d->cf->set_value((double)abs(cc), n2);
-	else
+	if( d->color == 0 )
 	  d->cf->set_value((double)(*seed_iter), n2);
+	else if( d->color == 1)
+	  d->cf->set_value((double)abs(cc), n2);
+	else if( d->color == 2) {
+	  length += Vector( *node_iter-p1 ).length();
+	  d->cf->set_value( length, n2);
+	  p1 = *node_iter;
+	} else if( d->color == 3)
+	  d->cf->set_value( length, n2);
 
 	d->cf->get_typed_mesh()->add_edge(n1, n2);
 
