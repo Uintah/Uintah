@@ -35,6 +35,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/share/share.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 
 #include <Teem/Core/Datatypes/NrrdData.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
@@ -43,8 +45,7 @@
 namespace SCIRun {
 using namespace SCITeem;
 
-class VISVector;
-class VISMatrix;
+class ColumnMatrix;
 
 class MRITissueClassifier : public Module
 {
@@ -91,12 +92,12 @@ protected:
   void Accumulate1DHistogramWithLabel  (float *upperlims, int *hist, int n, int m,
                                         int lx, int ly, int lz, int hx, int hy, int hz, int label);
   
-  float *EM_CSF_GM_WM (VISVector &CSF_mean, VISMatrix &CSF_cov, float *CSF_prior,
-                       VISVector &GM_mean, VISMatrix &GM_cov, float *GM_prior,
-                       VISVector &WM_mean, VISMatrix &WM_cov, float *WM_prior,
+  float *EM_CSF_GM_WM (ColumnMatrix &CSF_mean, DenseMatrix &CSF_cov, float *CSF_prior,
+                       ColumnMatrix &GM_mean, DenseMatrix &GM_cov, float *GM_prior,
+                       ColumnMatrix &WM_mean, DenseMatrix &WM_cov, float *WM_prior,
                        int label);
-  float *EM_Muscle_Fat (VISVector &Muscle_mean, VISMatrix &Muscle_cov, float *Muscle_prior,
-                        VISVector &Fat_mean, VISMatrix &Fat_cov, float *Fat_prior,
+  float *EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatrix &Muscle_cov, float *Muscle_prior,
+                        ColumnMatrix &Fat_mean, DenseMatrix &Fat_cov, float *Fat_prior,
                         int l, int dim);
   float* EM1DWeighted (float *data, float *weight, int n,
                        int c, float *mean, float *prior, float *var);
@@ -111,6 +112,21 @@ protected:
   void	closing();
   void	floodFill();
   void	floodFill3d();
+  // 3d nrrds
+  int get_nrrd_int(NrrdDataHandle, int, int, int);
+  float get_nrrd_float(NrrdDataHandle, int, int, int);
+  void set_nrrd_int(NrrdDataHandle, int, int, int, int);
+  void set_nrrd_float(NrrdDataHandle, float, int, int, int);
+  // 2d nrrds
+  int get_nrrd_int(NrrdDataHandle, int, int);
+  float get_nrrd_float(NrrdDataHandle, int, int);
+  void set_nrrd_int(NrrdDataHandle, int, int, int);
+  void set_nrrd_float(NrrdDataHandle, float, int, int);
+
+
+
+  ColumnMatrix get_m_Data(int, int, int);
+
 
 
   NrrdDataHandle	m_Data;			// volume of vectors     
@@ -124,6 +140,9 @@ protected:
   int m_width, m_height, m_depth; // data volume dimensions
   int m_FatSat;                   // 1 if we have a fatsat image, 0 otherwise
   char m_OutputPrefix[100];       // prefix to output file names
+
+
+
   int m_MaxIteration;             // max iterations for EM algorithms
   float m_MinChange;              // min change to decide convergence for EM
   int m_Top;                      // top of the head in axial (z) direction (0
@@ -144,6 +163,12 @@ protected:
   int m_TopTemporalSlice;
   float m_EyePosition[2][3];
   int *m_brainlim;
+
+
+  //  GuiInt	m_MaxIteration;
+  //GuiDouble	m_MinChange;
+  
+
 };
 
 } // namespace SCIRun
