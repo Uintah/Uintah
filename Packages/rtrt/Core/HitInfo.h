@@ -3,7 +3,7 @@
 #ifndef HITINFO_H
 #define HITINFO_H 1
 
-#include <values.h>
+#include <sci_values.h>
 
 namespace rtrt {
   

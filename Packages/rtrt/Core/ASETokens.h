@@ -10,7 +10,7 @@
 #ifdef _WIN32
 #include <float.h>
 #else
-#include <values.h>
+#include <sci_values.h>
 #endif
 #include <sys/stat.h>
 #include <stdio.h>

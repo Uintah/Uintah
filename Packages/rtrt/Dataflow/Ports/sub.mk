@@ -7,7 +7,8 @@ SRCDIR := Packages/rtrt/Dataflow/Ports
 SRCS     += $(SRCDIR)/ScenePort.cc
 
 PSELIBS := \
-	Core/Containers
+	Core/Containers Core/Thread Core/Persistent Core/Datatypes \
+	Dataflow/Network Dataflow/Ports
 
 LIBS := 
 

@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <X11/keysym.h>
 #ifdef __GNUG__
-#include <values.h>
+#include <sci_values.h>
 #endif
 
 using namespace rtrt;

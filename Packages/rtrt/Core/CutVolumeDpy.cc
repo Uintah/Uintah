@@ -19,7 +19,7 @@
 #include <iostream>
 
 #include <stdlib.h>
-#include <values.h>
+#include <sci_values.h>
 #include <stdio.h>
 #include <unistd.h>
 

@@ -12,6 +12,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#ifdef __APPLE__
+#include <sys/stat.h>
+#endif
+
 using namespace std;
 using namespace rtrt;
 using namespace SCIRun;

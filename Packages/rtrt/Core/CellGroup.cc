@@ -1,7 +1,7 @@
 #include <Packages/rtrt/Core/CellGroup.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <iostream>
-#include <values.h>
+#include <sci_values.h>
 
 using namespace rtrt;
 

@@ -38,7 +38,7 @@ class ShadowBase;
 class Group;
 class Scene;
 class Trigger;
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
 class SoundThread;
 class Sound;
 #endif
@@ -216,7 +216,7 @@ public:
   void refill_work(int which, int nworkers);
   void waitForEmpty(int which);
 
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   // Used mainly by make_scene to register sounds with the application.
   void             addSound( Sound * sound ) { sounds_.push_back( sound ); }
   vector<Sound*> & getSounds() { return sounds_; }
@@ -344,7 +344,7 @@ private:
   friend class Dpy;
   friend class Gui;
 
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   // This is just used as a pass through so the make_scene can get
   // sounds to the sound thread;
   vector<Sound*>   sounds_;

@@ -8,7 +8,7 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/CutPlaneDpy.h>
 #include <iostream>
-#include <values.h>
+#include <sci_values.h>
 
 using namespace rtrt;
 using namespace SCIRun;

@@ -7,8 +7,9 @@
 
 #include <GL/glx.h>
 #include <GL/glu.h>
-
+#include <sci_values.h>
 #include <sgi_stl_warnings_off.h>
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -18,7 +19,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <values.h>
 
 using std::vector;
 using namespace rtrt;

@@ -30,7 +30,8 @@
 #include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
 #include <Packages/rtrt/Core/MouseCallBack.h>
-#if !defined(linux)
+
+#if !defined(linux) && !defined(__APPLE__)
 #  include <Packages/rtrt/Sound/SoundThread.h>
 #  include <Packages/rtrt/Sound/Sound.h>
 #endif
@@ -1523,7 +1524,7 @@ Gui::updateRouteCB( int /*id*/ )
 void
 Gui::updateSoundCB( int /*id*/ )
 {
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   activeGui->currentSound_ = activeGui->sounds_[ activeGui->selectedSoundId_ ];
 
   Point & location = activeGui->currentSound_->locations_[0];
@@ -1802,7 +1803,7 @@ Gui::createSoundsWindow( GLUI * window )
 
   currentSound_ = sounds_[0];
 
-#ifndef linux
+#if !defined(linux) && !defined(__APPLE__)
   sounds_ = dpy_->scene->getSounds();
   for( int num = 0; num < sounds_.size(); num++ )
     {
@@ -1889,7 +1890,7 @@ Gui::activateTriggerCB( int /* id */ )
 void
 Gui::startSoundThreadCB( int /*id*/ )
 {
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   activeGui->startSoundThreadBtn_->disable();
   activeGui->startSoundThreadBtn_->set_name( "Starting Sounds" );
 
@@ -2277,7 +2278,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->soundVolumeSpinner_->set_speed( 0.01 );
   activeGui->soundVolumeSpinner_->set_int_limits( 0, 100 );
   activeGui->soundVolumeSpinner_->disable();
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   //adding in the start sounds button after volume spinner
   //disabled if no sounds or sounds selected in beginning
   activeGui->startSoundThreadBtn_ = activeGui->mainWindow->
@@ -2602,7 +2603,7 @@ Gui::checkBackgroundWindow()
 void
 Gui::updateSoundPanel()
 {
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   if( soundsWindowVisible )
     {
       double right, left;

@@ -18,11 +18,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#ifndef __linux
+#if !defined(__linux) && !defined(__APPLE__)
 #include <bstring.h>
 #endif
 
-#ifdef __sgi
+#if defined(__sgi) || defined(__APPLE__)
 #define SWAP
 #endif
 #ifdef __i386__

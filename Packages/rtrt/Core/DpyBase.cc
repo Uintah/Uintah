@@ -19,9 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <X11/keysym.h>
-#ifdef __GNUG__
-#  include <values.h>
-#endif
+#include <sci_values.h>
 
 using namespace rtrt;
 using SCIRun::Mutex;
@@ -70,10 +68,14 @@ int DpyBase::open_display(Window parent, bool needevents) {
   //     : "sb, max rgb" - single buffered, max color depth for rgb
   char* criteria;
   if (window_mode & BufferModeMask == DoubleBuffered)
-    criteria = strdup("db, max rgba");
+    criteria = strdup("db");
   else
-    criteria = strdup("sb, max rgba");
+    criteria = strdup("sb");
     
+#if !defined(__APPLE__)
+  creteria = strcat(creteria, ", max rgba");
+#endif
+
   if(!visPixelFormat(criteria)){
     cerr << "Error setting pixel format for visinfo\n";
     cerr << "Syntax error in criteria: " << criteria << '\n';

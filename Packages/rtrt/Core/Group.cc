@@ -2,7 +2,7 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <iostream>
-#include <values.h>
+#include <sci_values.h>
 
 using namespace rtrt;
 using namespace std;
