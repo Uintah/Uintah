@@ -333,6 +333,18 @@ using namespace SCIRun;
                                           DataWarehouse*,
                                           DataWarehouse*); 
 
+      template< class V, class T>
+      void update_q_CC(const std::string& desc,
+                      CCVariable<T>& q_CC,
+                      V& q_Lagrangian,
+                      const CCVariable<T>& q_advected,
+                      constCCVariable<double>& mass_L,
+                      const CCVariable<double>& mass_new,
+                      const CCVariable<double>& mass_advected,
+                      constCCVariable<double>& cv,
+                      const CCVariable<double>& cv_new,
+                      const Patch* patch); 
+                      
       void advectAndAdvanceInTime(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -641,7 +653,6 @@ using namespace SCIRun;
        const VarLabel* src;
        const VarLabel* Lvar;
       };
-      
       
       class ICEModelSetup : public ModelSetup {
       public:
