@@ -102,11 +102,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	 global $color
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
-	     raise $window.color
-	     wm deiconify $window.color
+	     SciRaise $window.color
 	     return
 	 } else {
-	     toplevel $window.color
 	     makeColorPicker $window.color $color \
 		     "$this setColor $swatch $color" \
 		     "destroy $window.color"
@@ -124,7 +122,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	 set window .ui[modname]
 	 $swatch config -background [format #%04x%04x%04x $ir $ig $ib]
-	 destroy $window.color
     }
 
     method addColorSelection {frame color} {

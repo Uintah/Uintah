@@ -154,8 +154,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	 global $color
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
-	     raise $window.color
-	     wm deiconify $window.color
+	     SciRaise $window.color
 	     return
 	 } else {
 	     # makeColorPicker now creates the $window.color toplevel.
