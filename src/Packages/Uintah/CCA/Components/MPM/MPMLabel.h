@@ -55,6 +55,8 @@ using std::vector;
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
+      const VarLabel* pSp_volLabel; 
+      const VarLabel* pSp_volLabel_preReloc;
       const VarLabel* pExternalHeatRateLabel; //for heat conduction
       const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
       const VarLabel* pParticleIDLabel;
@@ -80,6 +82,8 @@ using std::vector;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
+      const VarLabel* gSp_volLabel;          // specific volume 
+      const VarLabel* gSp_vol_srcLabel;      // specific volume 
       const VarLabel* gTemperatureNoBCLabel; //for heat conduction
       const VarLabel* gTemperatureStarLabel; //for heat conduction
       const VarLabel* gInternalHeatRateLabel;
