@@ -94,6 +94,14 @@ void ScalarField::get_bounds(Point& min, Point& max)
     min=bmin;
 }
 
+void ScalarField::set_bounds(const Point& min, const Point& max)
+{
+  bmax=max;
+  bmin=min;
+  have_bounds=1;
+  diagonal=bmax-bmin;
+}
+
 // stuff for random distributions
 
 void ScalarField::compute_samples(int nsamp)

@@ -30,14 +30,14 @@ ScalarFieldUG::ScalarFieldUG(Type typ)
 
 ScalarFieldUG::ScalarFieldUG(const MeshHandle& mesh, Type typ)
   : ScalarField(UnstructuredGrid), mesh(mesh),
-    data(mesh->nodes.size()), typ(typ)
+    typ(typ)
 {
   switch(typ){
   case NodalValues:
-    ASSERTEQ(mesh->nodes.size(), data.size());
+    data.resize(mesh->nodes.size());
     break;
   case ElementValues:
-    ASSERTEQ(mesh->elems.size(), data.size());
+    data.resize(mesh->elems.size());
     break;
   }
 }

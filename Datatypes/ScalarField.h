@@ -83,6 +83,7 @@ public:
     ScalarFieldHUG* getHUG();
     void get_minmax(double&, double&);
     void get_bounds(Point&, Point&);
+    void set_bounds(const Point&, const Point&);
     double longest_dimension();
     virtual Vector gradient(const Point&)=0;
     virtual int interpolate(const Point&, double&, double epsilon1=1.e-6, double epsilon2=1.e-6)=0;
