@@ -41,7 +41,7 @@ PersistentTypeID Scene::type_id("Scene", "Persistent", scene_maker);
 
 Scene::Scene() : 
   work("frame tiles"),
-  maxdepth(0),
+  maxdepth(-1),
   base_threshold(0),
   full_threshold(0),
   xoffset(0),
@@ -73,7 +73,7 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
 	     double ambientscale,
 	     AmbientType ambient_mode) :     
   work("frame tiles"),
-  maxdepth(0),
+  maxdepth(-1),
   base_threshold(0),
   full_threshold(0),
   xoffset(0),
