@@ -566,8 +566,6 @@ TriangleCM2Widget::tcl_unpickle(const string &p)
   s >> top_y_;
   s >> width_;
   s >> bottom_;
-
-  cout << "Triangle unpickled, " << base_ << " " << top_x_ << " " << top_y_ << " " << width_ << " " << bottom_ << "\n";
 }
 
 
