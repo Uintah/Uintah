@@ -33,10 +33,10 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <unistd.h> // For read and close of files.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h> // For read and close of files.
 
 // #ifdef WRITE_SHPEREDATA
 // #  undef WRITE_SPHEREDATA
@@ -51,10 +51,10 @@ size_t work_load_max = 1000;
 int tex_size = 16;
 double radius = 0;
 double radius_factor = 1.0;
-size_t total_num_spheres = 0;
+int total_num_spheres = 0;
 Array1<float *> spheredata;
 Array1<char *> deleteme;
-Array1<size_t> spheredatasize;
+Array1<int> spheredatasize;
 float* alldata = 0;
 size_t next_sphere = 0;
 #define NUM_DATA 3
