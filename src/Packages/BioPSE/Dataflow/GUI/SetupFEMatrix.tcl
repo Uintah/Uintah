@@ -36,8 +36,10 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
     method set_defaults {} {
 	global $this-UseCondTCL
 	global $this-UseBasisTCL
+	global $this-nprocs
 	set $this-UseCondTCL 1
 	set $this-UseBasisTCL 0
+	set $this-nprocs "auto"
     }
     method ui {} {
         set w .ui[modname]
@@ -45,18 +47,21 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
             raise $w
             return;
         }
+	global $this-UseCondTCL
+	global $this-UseBasisTCL
+	global $this-nprocs
 
         toplevel $w
-        wm minsize $w 150 20
-        frame $w.f
-        pack $w.f -padx 2 -pady 2 -side top -expand yes
-	global $this-UseCondTCL
-	checkbutton $w.f.c -text "Use Conductivities" \
+
+	frame $w.np
+	label $w.np.l -text "Number of Threads"
+	entry $w.np.e -width 4 -textvariable $this-nprocs
+	pack $w.np.l $w.np.e -side left
+
+	checkbutton $w.c -text "Use Conductivities" \
 	    -variable $this-UseCondTCL
-	global $this-UseBasisTCL
-	checkbutton $w.f.b -text "Use Conductivity Basis Matrices" \
+	checkbutton $w.b -text "Use Conductivity Basis Matrices" \
 	    -variable $this-UseBasisTCL
-	pack $w.f.c $w.f.b -side top -expand 1 -fill x
-	pack $w.f -expand 1 -fill x
+	pack $w.np $w.c $w.b -side top -anchor w
     }
 }
