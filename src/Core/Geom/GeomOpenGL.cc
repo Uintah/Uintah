@@ -1798,6 +1798,8 @@ void GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     glEnd();
 
+    glLineWidth(1.0);
+
     post_draw(di);
 }
 
