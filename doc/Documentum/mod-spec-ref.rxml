@@ -19,8 +19,7 @@ University of Utah. All Rights Reserved.
 
 <!--% require("../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
-<!--% doc.insertDocType("book") %-->
-
+<!--% doc.insertDocType("book", {"tfec"=>"The following elements contain"}) %-->
 <book>
   <title><acronym>XML</acronym> Module Specification Language (v <!--%= doc.edition %-->)</title>
 
@@ -229,8 +228,8 @@ auto-mode-alist))
 
       <sect1>
 	<title>Creating a Module Specification</title>
-	<para>To create a new module specification follow these
-	steps:</para>
+	<para>To create a new module specification (using nxml mode)
+	follow these steps:</para>
 	<orderedlist>
 	  <listitem>
 	    <para></para>
@@ -292,7 +291,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">author</sgmltag>: <link
 	  linkend="refentry.authors"><sgmltag
 	  class="element">authors</sgmltag></link></para>
@@ -319,10 +318,37 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">authors</sgmltag>: <link
 	  linkend="refentry.overview"><sgmltag
 	  class="element">overview</sgmltag></link></para>
+	</refsect1>
+      </refentry>
+
+      <!--===== caption -->
+      <refentry id="refentry.caption">
+	<refnamediv>
+	  <refname>caption</refname>
+	  <refpurpose>A description of an image</refpurpose>
+	</refnamediv>
+	<refsect1>
+	  <title>Synopsis</title>
+	  <refsect2>
+	    <title>Content Model</title>
+	    <synopsis><sgmltag class="element">caption</sgmltag> ::= <link linkend="refentry.firstterm"><sgmltag class="element">firstterm</sgmltag></link>|<link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link>|<link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link>|<link linkend="abbr"><sgmltag class="element">abbr</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link>|<link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link>|<link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>|<link linkend="refentry.rlink"><sgmltag class="element">rlink</sgmltag></link>|<link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link>|<link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link>|<link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link>|<link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link>|<link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link>|<link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
+	  </refsect2>
+	</refsect1>
+	<refsect1>
+	  <title>Description</title>
+	  <para>Element <sgmltag class="element">caption</sgmltag>
+	  is a description of an image.</para>
+	  <para>Arguably, <sgmltag class="element">caption</sgmltag>
+	  should allow paragraphs and other block-level
+	  elements.</para>
+	</refsect1>
+	<refsect1>
+	  <title>Parents</title>
+	  <para>&tfec; <sgmltag class="element">caption</sgmltag>: <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link>, <link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -346,7 +372,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">ccfile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
 	  class="element">implementation</sgmltag></link></para>
 	</refsect1>
@@ -372,7 +398,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">cfile</sgmltag>: <link linkend="refentry.implentation"><sgmltag
 	  class="element">implementation</sgmltag></link></para>
 	</refsect1>
@@ -466,7 +492,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">datatype</sgmltag>: <link linkend="refentry"><sgmltag class="element">file</sgmltag></link>, <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link>, <link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">datatype</sgmltag>: <link linkend="refentry"><sgmltag class="element">file</sgmltag></link>, <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link>, <link linkend="refentry.port"><sgmltag class="element">port</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -533,7 +559,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain
+	  <para>&tfec;
 	  <sgmltag>description</sgmltag>: <simplelist type="inline">
 	  <member><link linkend="refentry.device"><sgmltag class="element">device</sgmltag></link></member>
 	  <member><link linkend="refentry.file"><sgmltag class="element">file</sgmltag></link></member>
@@ -573,7 +599,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">developer</sgmltag>: <link
 	  linkend="refentry.description"><sgmltag
 	  class="element">description</sgmltag></link>, <link
@@ -611,7 +637,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">examplesr</sgmltag>: <link
 	  linkend="refentry.overview"><sgmltag
 	  class="element">overview</sgmltag></link></para>
@@ -638,7 +664,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">ffile</sgmltag>: <link linkend="refentry.implementation"><sgmltag
 	  class="element">implementation</sgmltag></link></para>
 	</refsect1>
@@ -703,7 +729,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">figure</sgmltag>: <link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>,<link linkend="refentry.desclistdef"><sgmltag class="element">desclistdef</sgmltag></link>,<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>,<link linkend="refentry.listitem"><sgmltag class="element">listitem</sgmltag></link>,<link linkend="refentry.net"><sgmltag class="element">net</sgmltag></link>,<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>,<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>,<link linkend="refentry.step"><sgmltag class="element">step</sgmltag></link>,<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>,<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">figure</sgmltag>: <link linkend="refentry.description"><sgmltag class="element">description</sgmltag></link>,<link linkend="refentry.desclistdef"><sgmltag class="element">desclistdef</sgmltag></link>,<link linkend="refentry.developer"><sgmltag class="element">developer</sgmltag></link>,<link linkend="refentry.listitem"><sgmltag class="element">listitem</sgmltag></link>,<link linkend="refentry.net"><sgmltag class="element">net</sgmltag></link>,<link linkend="refentry.note"><sgmltag class="element">note</sgmltag></link>,<link linkend="refentry.section"><sgmltag class="element">section</sgmltag></link>,<link linkend="refentry.step"><sgmltag class="element">step</sgmltag></link>,<link linkend="refentry.tip"><sgmltag class="element">tip</sgmltag></link>,<link linkend="refentry.warning"><sgmltag class="element">warning</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -727,7 +753,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">file</sgmltag>: <link linkend="refentry.inputs"><sgmltag class="element">inputs</sgmltag></link>,<link linkend="refentry.outputs"><sgmltag class="element">outputs</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">file</sgmltag>: <link linkend="refentry.inputs"><sgmltag class="element">inputs</sgmltag></link>,<link linkend="refentry.outputs"><sgmltag class="element">outputs</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -762,8 +788,34 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">gui</sgmltag>: <link
+	  <para>&tfec; <sgmltag class="element">gui</sgmltag>: <link
 	  linkend="refentry.component"><sgmltag class="element">component</sgmltag></link></para>
+	</refsect1>
+      </refentry>
+
+      <!--===== img -->
+      <refentry id ="refentry.img">
+	<refnamediv>
+	  <refname>img</refname>
+	  <refpurpose>The pathname of an image file</refpurpose>
+	</refnamediv>
+	<refsect1>
+	  <title>Synopsis</title>
+	  <refsect2>
+	    <title>Content Model</title>
+	    <synopsis><sgmltag class="element">img</sgmltag> ::= (#PCDATA)</synopsis>
+	  </refsect2>
+	</refsect1>
+	<refsect1>
+	  <title>Description</title>
+	  <para>Element <sgmltag class="element">img</sgmltag> is the
+	  pathname of a file containing an image suitable for online
+	  presentation (e.g. <acronym>jpg</acronym>,
+	  <acronym>gif</acronym>, <acronym>png</acronym>, etc.</para>
+	</refsect1>
+	<refsect1>
+	  <title>Parents</title>
+	  <para>&tfec; <sgmltag class="element">img</sgmltag>: <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link>, <link linkend="refentry.figure"><sgmltag class="element">figure</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -771,13 +823,13 @@ auto-mode-alist))
       <refentry id="refentry.implementation">
 	<refnamediv>
 	  <refname><sgmltag class="element">implementation</sgmltag></refname>
-	  <refpurpose>Lists a module's c++, c, and fortran source files</refpurpose>
+	  <refpurpose>A list of a module's c++, c, and fortran source files</refpurpose>
 	</refnamediv>
 	<refsect1>
 	  <title>Synopsis</title>
 	  <refsect2>
 	    <title>Content Model</title>
-	    <synopsis><sgmltag class="element">implementation</sgmltag> ::= (<link linkend="refentry.ccfile"><sgmltag class="element">ccfile</sgmltag></link> | <link linkend="refentry.cfile"><sgmltag class="element">cfile</sgmltag></link> | <link linkend="refentry.ffile"><sgmltag class="element">ffile</sgmltag></link>)+</synopsis>
+	    <synopsis><sgmltag class="element">implementation</sgmltag> ::= (<link linkend="refentry.ccfile"><sgmltag class="element">ccfile</sgmltag></link>|<link linkend="refentry.cfile"><sgmltag class="element">cfile</sgmltag></link>|<link linkend="refentry.ffile"><sgmltag class="element">ffile</sgmltag></link>)+</synopsis>
 	  </refsect2>
 	</refsect1>
 	<refsect1>
@@ -786,7 +838,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain
+	  <para>&tfec;
 	  <sgmltag class="element">implementation</sgmltag>: <link
 	  linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
 	</refsect1>
@@ -855,7 +907,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">inputs</sgmltag>: <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">inputs</sgmltag>: <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -881,7 +933,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">label</sgmltag>: <link
 	  linkend="refentry.parameter"><sgmltag
 	  class="element">parameter</sgmltag></link></para>
@@ -959,7 +1011,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">modref</sgmltag>: <link
 	  linkend="refentry.title"><sgmltag
 	  class="element">title</sgmltag></link>, <link
@@ -995,7 +1047,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">outputs</sgmltag>: <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">outputs</sgmltag>: <link linkend="refentry.io"><sgmltag class="element">io</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -1018,7 +1070,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">io</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
+	  <para>&tfec; <sgmltag class="element">io</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
 	</refsect1>
       </refentry>
 
@@ -1105,7 +1157,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">nets</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">nets</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -1130,7 +1182,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">overview</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
+	  <para>&tfec; <sgmltag class="element">overview</sgmltag>: <link linkend="refentry.component"><sgmltag class="element">component</sgmltag></link>.</para>
 	</refsect1>
       </refentry>
 
@@ -1179,7 +1231,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">parameter</sgmltag>: <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">parameter</sgmltag>: <link linkend="refentry.gui"><sgmltag class="element">gui</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -1208,7 +1260,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain element <sgmltag
+	  <para>&tfec; element <sgmltag
 	  class="element">plan</sgmltag>: <link
 	  linkend="refentry.testing"><sgmltag
 	  class="element">testing</sgmltag></link></para>
@@ -1283,7 +1335,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">section</sgmltag>: <link
 	  linkend="refentry.description"><sgmltag
 	  class="element">description</sgmltag></link>, <link
@@ -1320,7 +1372,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">step</sgmltag>: <link linkend="refentry.plan"><sgmltag
 	  class="element">plan</sgmltag></link></para>
 	</refsect1>
@@ -1336,8 +1388,8 @@ auto-mode-alist))
 	  <title>Synopsis</title>
 	  <refsect2>
 	    <title>Content Model</title>
-	    <synopsis><sgmltag class="element">summary</sgmltag> ::= #PCDATA | <link linkend="refentry.firstterm"><sgmltag class="element">firstterm</sgmltag></link> | <link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link> | <link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link> | <link linkend="refentry.abbr"><sgmltag class="element">abbr</sgmltag></link> | <link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link> | <link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link> | <link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link> | 
-	    <link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link> | <link linkend="refentry.rlink"><sgmltag class="element">rlink</sgmltag></link> | <link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link> | <link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link> |  <link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link> | <link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link> | <link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link> | <link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
+	    <synopsis><sgmltag class="element">summary</sgmltag> ::= #PCDATA|<link linkend="refentry.firstterm"><sgmltag class="element">firstterm</sgmltag></link>|<link linkend="refentry.keyword"><sgmltag class="element">keyword</sgmltag></link>|<link linkend="refentry.userinput"><sgmltag class="element">userinput</sgmltag></link>|<link linkend="refentry.abbr"><sgmltag class="element">abbr</sgmltag></link>|<link linkend="refentry.latex"><sgmltag class="element">latex</sgmltag></link>|<link linkend="refentry.path"><sgmltag class="element">path</sgmltag></link>|<link linkend="refentry.emph"><sgmltag class="element">emph</sgmltag></link>|
+	    <link linkend="refentry.quote"><sgmltag class="element">quote</sgmltag></link>|<link linkend="refentry.rlink"><sgmltag class="element">rlink</sgmltag></link>|<link linkend="refentry.slink"><sgmltag class="element">slink</sgmltag></link>|<link linkend="refentry.ulink"><sgmltag class="element">ulink</sgmltag></link>| <link linkend="refentry.modref"><sgmltag class="element">modref</sgmltag></link>|<link linkend="refentry.xref"><sgmltag class="element">xref</sgmltag></link>|<link linkend="refentry.email"><sgmltag class="element">email</sgmltag></link>|<link linkend="refentry.cite"><sgmltag class="element">cite</sgmltag></link></synopsis>
 	  </refsect2>
 	</refsect1>
 	<refsect1>
@@ -1346,7 +1398,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag class="element">summary</sgmltag>: <link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link></para>
+	  <para>&tfec; <sgmltag class="element">summary</sgmltag>: <link linkend="refentry.overview"><sgmltag class="element">overview</sgmltag></link></para>
 	</refsect1>
       </refentry>
 
@@ -1370,7 +1422,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">testing</sgmltag>: <link
 	  linkend="refentry.component"><sgmltag
 	  class="element">component</sgmltag></link></para>
@@ -1434,7 +1486,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">ulink</sgmltag>: <link
 	  linkend="refentry.title"><sgmltag
 	  class="element">title</sgmltag></link>, <link
@@ -1470,7 +1522,7 @@ auto-mode-alist))
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">widget</sgmltag>: <link linkend="refentry.parameter"><sgmltag class="element">parameter</sgmltag></link></para>
 	</refsect1>
       </refentry>
@@ -1513,7 +1565,10 @@ auto-mode-alist))
 	<refsect1>
 	  <title>Description</title>
 	  <para>Element <sgmltag class="element">xref</sgmltag> is an
-	  intra-document cross-reference.  <sgmltag class="element">Xref</sgmltag>'s <sgmltag class="attribute">target</sgmltag> attribute provides the id of the cross-referenced element.</para>
+	  intra-document cross-reference.  <sgmltag
+	  class="element">Xref</sgmltag>'s <sgmltag
+	  class="attribute">target</sgmltag> attribute provides the id
+	  of the cross-referenced element.</para>
 	</refsect1>
 	<refsect1>
 	  <title>Attributes</title>
@@ -1521,14 +1576,16 @@ auto-mode-alist))
 	    <varlistentry>
 	      <term><sgmltag class="attribute">target</sgmltag></term>
 	      <listitem>
-		<para>Attribute <sgmltag class="attribute">target</sgmltag> specifies the id of the cross-referenced element.</para>
+		<para>Attribute <sgmltag
+		class="attribute">target</sgmltag> specifies the id of
+		the cross-referenced element.</para>
 	      </listitem>
 	    </varlistentry>
 	  </variablelist>
 	</refsect1>
 	<refsect1>
 	  <title>Parents</title>
-	  <para>The following elements contain <sgmltag
+	  <para>&tfec; <sgmltag
 	  class="element">modref</sgmltag>: <link
 	  linkend="refentry.title"><sgmltag
 	  class="element">title</sgmltag></link>, <link
