@@ -32,7 +32,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ThreadStats.tcl $(SRCDIR)/Util.tcl \
 	$(SRCDIR)/VTRDial.tcl\
 	$(SRCDIR)/Graph.tcl \
-	$(SRCDIR)/Diagram.tcl\
+	$(SRCDIR)/Diagram.tcl \
+	$(SRCDIR)/Hairline.tcl \
 	$(SRCDIR)/OpenGLWindow.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Core/GUI

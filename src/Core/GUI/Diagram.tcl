@@ -33,10 +33,12 @@ class Diagram {
     variable parent
     variable n
     variable initialized
-    
+    variable last
+
     constructor { args } {
 	set initialized 0
 	set val(0) 1
+	set last 0
     }
 
     destructor {
@@ -130,5 +132,14 @@ class Diagram {
 
     method getbinds {} {
 	return DiagramTags
+    }
+
+    method new-opt {} {
+	set w $opt.$last
+	frame $w
+	pack $w -side left
+	
+	set last [expr $last + 1]
+	return $w
     }
 }
