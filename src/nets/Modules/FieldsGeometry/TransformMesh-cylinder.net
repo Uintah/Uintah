@@ -1,0 +1,233 @@
+# SCIRun Network v1.24.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+set name {Main}
+set bbox {59 22 490 446}
+set creationDate {Mon Jan 24 2005}
+set creationTime {21:49:30}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->FieldsCreate->SampleStructHex Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleStructHex" 59 22]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 61 332]
+
+# Create a SCIRun->Render->Viewer Module
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 59 402]
+
+# Create a SCIRun->FieldsGeometry->TransformMesh Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformMesh" 67 164]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 65 93]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 111 256]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 295 170]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m5 0]
+set c2 [addConnection $m5 0 $m4 0]
+set c3 [addConnection $m4 0 $m2 0]
+set c4 [addConnection $m7 0 $m6 0]
+set c5 [addConnection $m2 0 $m3 0]
+set c6 [addConnection $m4 0 $m6 1]
+set c7 [addConnection $m6 0 $m2 1]
+
+# Set GUI variables for the SCIRun->FieldsCreate->SampleStructHex Module
+set $m1-sizex {8}
+set $m1-sizey {8}
+set $m1-sizez {8}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m2-normalize-vectors {}
+set $m2-has_scalar_data {1}
+set $m2-show_progress {}
+
+$m3 addViewer
+set $m3-ViewWindow_0-geometry 654x611+663+200
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m3-ViewWindow_0-view-eyep-x {9.5709584142}
+set $m3-ViewWindow_0-view-eyep-y {2.77998800208}
+set $m3-ViewWindow_0-view-eyep-z {6.31572812445}
+set $m3-ViewWindow_0-view-lookat-x {}
+set $m3-ViewWindow_0-view-lookat-y {}
+set $m3-ViewWindow_0-view-lookat-z {}
+set $m3-ViewWindow_0-view-up-x {-0.21298800701}
+set $m3-ViewWindow_0-view-up-y {0.971415740271}
+set $m3-ViewWindow_0-view-up-z {-0.104821602851}
+set $m3-ViewWindow_0-view-fov {20}
+set $m3-ViewWindow_0-view-eyep_offset-x {}
+set $m3-ViewWindow_0-view-eyep_offset-y {}
+set $m3-ViewWindow_0-view-eyep_offset-z {}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ortho-view {0}
+set $m3-ViewWindow_0-trackViewWindow0 {1}
+set $m3-ViewWindow_0-raxes {1}
+set $m3-ViewWindow_0-ambient-scale {1.0}
+set $m3-ViewWindow_0-diffuse-scale {1.0}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m3-ViewWindow_0-emission-scale {1.0}
+set $m3-ViewWindow_0-shininess-scale {1.0}
+set $m3-ViewWindow_0-polygon-offset-factor {1.0}
+set $m3-ViewWindow_0-polygon-offset-units {0.0}
+set $m3-ViewWindow_0-point-size {1.0}
+set $m3-ViewWindow_0-line-width {1.0}
+set $m3-ViewWindow_0-sbase {0.4}
+set $m3-ViewWindow_0-bgcolor-r {0}
+set $m3-ViewWindow_0-bgcolor-g {0}
+set $m3-ViewWindow_0-bgcolor-b {0}
+set $m3-ViewWindow_0-fogusebg {1}
+set $m3-ViewWindow_0-fogcolor-r {0.0}
+set $m3-ViewWindow_0-fogcolor-g {0.0}
+set $m3-ViewWindow_0-fogcolor-b {1.0}
+set $m3-ViewWindow_0-fog-start {0.0}
+set $m3-ViewWindow_0-fog-end {0.714265}
+set $m3-ViewWindow_0-fog-visibleonly {1}
+set $m3-ViewWindow_0-currentvisual {0}
+set $m3-ViewWindow_0-caxes {1}
+set $m3-ViewWindow_0-pos {}
+set $m3-ViewWindow_0-clip-num {}
+set $m3-ViewWindow_0-clip-visible {}
+set $m3-ViewWindow_0-clip-selected {}
+set $m3-ViewWindow_0-clip-visible-1 {}
+set $m3-ViewWindow_0-clip-normal-x-1 {}
+set $m3-ViewWindow_0-clip-normal-y-1 {}
+set $m3-ViewWindow_0-clip-normal-z-1 {}
+set $m3-ViewWindow_0-clip-normal-d-1 {}
+set $m3-ViewWindow_0-clip-visible-2 {}
+set $m3-ViewWindow_0-clip-normal-x-2 {}
+set $m3-ViewWindow_0-clip-normal-y-2 {}
+set $m3-ViewWindow_0-clip-normal-z-2 {}
+set $m3-ViewWindow_0-clip-normal-d-2 {}
+set $m3-ViewWindow_0-clip-visible-3 {}
+set $m3-ViewWindow_0-clip-normal-x-3 {}
+set $m3-ViewWindow_0-clip-normal-y-3 {}
+set $m3-ViewWindow_0-clip-normal-z-3 {}
+set $m3-ViewWindow_0-clip-normal-d-3 {}
+set $m3-ViewWindow_0-clip-visible-4 {}
+set $m3-ViewWindow_0-clip-normal-x-4 {}
+set $m3-ViewWindow_0-clip-normal-y-4 {}
+set $m3-ViewWindow_0-clip-normal-z-4 {}
+set $m3-ViewWindow_0-clip-normal-d-4 {}
+set $m3-ViewWindow_0-clip-visible-5 {}
+set $m3-ViewWindow_0-clip-normal-x-5 {}
+set $m3-ViewWindow_0-clip-normal-y-5 {}
+set $m3-ViewWindow_0-clip-normal-z-5 {}
+set $m3-ViewWindow_0-clip-normal-d-5 {}
+set $m3-ViewWindow_0-clip-visible-6 {}
+set $m3-ViewWindow_0-clip-normal-x-6 {}
+set $m3-ViewWindow_0-clip-normal-y-6 {}
+set $m3-ViewWindow_0-clip-normal-z-6 {}
+set $m3-ViewWindow_0-clip-normal-d-6 {}
+set $m3-ViewWindow_0-global-light0 {1}
+set $m3-ViewWindow_0-global-light1 {0}
+set $m3-ViewWindow_0-global-light2 {0}
+set $m3-ViewWindow_0-global-light3 {0}
+set $m3-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m3-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m3-ViewWindow_0-global-light {1}
+set $m3-ViewWindow_0-global-fog {0}
+set $m3-ViewWindow_0-global-debug {0}
+set $m3-ViewWindow_0-global-clip {1}
+set $m3-ViewWindow_0-global-cull {0}
+set $m3-ViewWindow_0-global-dl {0}
+set $m3-ViewWindow_0-global-type {Gouraud}
+set "$m3-ViewWindow_0-Nodes (1)" {1}
+set "$m3-ViewWindow_0-Edges (1)" {1}
+set "$m3-ViewWindow_0-Faces (1)" {1}
+
+# Set GUI variables for the SCIRun->FieldsGeometry->TransformMesh Module
+set $m4-function {double phi, r, uu, vv;
+
+const double a = p.x();
+const double b = p.y();
+const double c = p.z();
+  
+if (a > -b)
+{
+  if (a > b)
+  {
+    r = a;
+    phi = (M_PI/4.0) * b/a;
+  }
+  else
+  {
+    r = b;
+    phi = (M_PI/4.0) * (2 - a/b);
+  }
+}
+else
+{
+  if (a < b)
+  {
+    r = -a;
+    phi = (M_PI/4.0) * (4 + (b/a));
+  }
+  else
+  {
+    r = -b;
+    if (b != 0)
+    {
+      phi = (M_PI/4.0) * (6 - a/b);
+    }
+    else
+    {
+      phi = 0;
+    }
+  }
+}
+
+uu = r * cos(phi);
+vv = r * sin(phi);
+  
+result = Point(uu, vv, c);
+
+
+
+}
+
+# Open the SCIRun->FieldsGeometry->TransformMesh UI
+$m4 initialize_ui
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m5-function {result = x*x + y*y;
+}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m6-min {0.0408163265306}
+set $m6-max {2.0}
+
+
+::netedit scheduleok

@@ -31,10 +31,8 @@
 #ifndef Datatypes_CurveField_h
 #define Datatypes_CurveField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/CurveMesh.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/Array3.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>

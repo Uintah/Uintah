@@ -118,9 +118,11 @@ Timer::Timer()
 
 Timer::~Timer()
 {
+#if SCI_ASSERTION_LEVEL >=1  
     if(state != Stopped){
 	cerr << "Warning: Timer destroyed while it was running" << endl;
     }
+#endif
 }
 
 void Timer::start()

@@ -58,114 +58,155 @@
  * 9/95  Added nonZero flag to indicate whether min and max must be distinct
  */
 
-#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
-
 #include "tkPort.h"
 #include "default.h"
 #include "tkInt.h"
 #include "tclMath.h"
 #include "tkRange.h"
 
-static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_BORDER, "-activebackground", "activeBackground", "Foreground",
-	DEF_RANGE_ACTIVE_BG_COLOR, Tk_Offset(TkRange, activeBorder),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_BORDER, "-activebackground", "activeBackground", "Foreground",
-	DEF_RANGE_ACTIVE_BG_MONO, Tk_Offset(TkRange, activeBorder),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_BORDER, "-background", "background", "Background",
-	DEF_RANGE_BG_COLOR, Tk_Offset(TkRange, bgBorder),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_BORDER, "-background", "background", "Background",
-	DEF_RANGE_BG_MONO, Tk_Offset(TkRange, bgBorder),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_DOUBLE, "-bigincrement", "bigIncrement", "BigIncrement",
-	DEF_RANGE_BIG_INCREMENT, Tk_Offset(TkRange, bigIncrement), 0},
-    {TK_CONFIG_SYNONYM, "-bd", "borderWidth", (char *) NULL,
-	(char *) NULL, 0, 0},
-    {TK_CONFIG_SYNONYM, "-bg", "background", (char *) NULL,
-	(char *) NULL, 0, 0},
-    {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_RANGE_BORDER_WIDTH, Tk_Offset(TkRange, borderWidth), 0},
-    {TK_CONFIG_STRING, "-command", "command", "Command",
-	DEF_RANGE_COMMAND, Tk_Offset(TkRange, command), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_ACTIVE_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_RANGE_CURSOR, Tk_Offset(TkRange, cursor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_INT, "-digits", "digits", "Digits",
-	DEF_RANGE_DIGITS, Tk_Offset(TkRange, digits), 0},
-    {TK_CONFIG_SYNONYM, "-fg", "foreground", (char *) NULL,
-	(char *) NULL, 0, 0},
-    {TK_CONFIG_FONT, "-font", "font", "Font",
-	DEF_RANGE_FONT, Tk_Offset(TkRange, tkfont),
-	0},
-    {TK_CONFIG_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_RANGE_FG_COLOR, Tk_Offset(TkRange, textColorPtr),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_RANGE_FG_MONO, Tk_Offset(TkRange, textColorPtr),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_DOUBLE, "-from", "from", "From",
-	DEF_RANGE_FROM, Tk_Offset(TkRange, fromValue), 0},
-    {TK_CONFIG_COLOR, "-highlightbackground", "highlightBackground",
-	"HighlightBackground", DEF_RANGE_HIGHLIGHT_BG,
-	Tk_Offset(TkRange, highlightBgColorPtr), 0},
-    {TK_CONFIG_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_RANGE_HIGHLIGHT, Tk_Offset(TkRange, highlightColorPtr), 0},
-    {TK_CONFIG_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness",
-	DEF_RANGE_HIGHLIGHT_WIDTH, Tk_Offset(TkRange, highlightWidth), 0},
-    {TK_CONFIG_STRING, "-label", "label", "Label",
-	DEF_RANGE_LABEL, Tk_Offset(TkRange, label), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_PIXELS, "-length", "length", "Length",
-	DEF_RANGE_LENGTH, Tk_Offset(TkRange, length), 0},
-    {TK_CONFIG_UID, "-orient", "orient", "Orient",
-	DEF_RANGE_ORIENT, Tk_Offset(TkRange, orientUid), 0},
-    {TK_CONFIG_BOOLEAN, "-nonzero", "nonZero", "NonZero",
-        DEF_RANGE_NON_ZERO, Tk_Offset(TkRange, nonZero), 0},
-    {TK_CONFIG_RELIEF, "-relief", "relief", "Relief",
-	DEF_RANGE_RELIEF, Tk_Offset(TkRange, relief), 0},
-    {TK_CONFIG_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
-	DEF_RANGE_REPEAT_DELAY, Tk_Offset(TkRange, repeatDelay), 0},
-    {TK_CONFIG_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
-	DEF_RANGE_REPEAT_INTERVAL, Tk_Offset(TkRange, repeatInterval), 0},
-    {TK_CONFIG_DOUBLE, "-resolution", "resolution", "Resolution",
-	DEF_RANGE_RESOLUTION, Tk_Offset(TkRange, resolution), 0},
-    {TK_CONFIG_BOOLEAN, "-showvalue", "showValue", "ShowValue",
-	DEF_RANGE_SHOW_VALUE, Tk_Offset(TkRange, showValue), 0},
-    {TK_CONFIG_PIXELS, "-sliderlength", "sliderLength", "SliderLength",
-	DEF_RANGE_SLIDER_LENGTH, Tk_Offset(TkRange, sliderLength), 0},
-    {TK_CONFIG_RELIEF, "-sliderrelief", "sliderRelief", "SliderRelief",
-	DEF_RANGE_SLIDER_RELIEF, Tk_Offset(TkRange, sliderRelief),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_UID, "-state", "state", "State",
-	DEF_RANGE_STATE, Tk_Offset(TkRange, state), 0},
-    {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_RANGE_TAKE_FOCUS, Tk_Offset(TkRange, takeFocus),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_DOUBLE, "-tickinterval", "tickInterval", "TickInterval",
-	DEF_RANGE_TICK_INTERVAL, Tk_Offset(TkRange, tickInterval), 0},
-    {TK_CONFIG_DOUBLE, "-to", "to", "To",
-	DEF_RANGE_TO, Tk_Offset(TkRange, toValue), 0},
-    {TK_CONFIG_COLOR, "-troughcolor", "troughColor", "Background",
-	DEF_RANGE_TROUGH_COLOR, Tk_Offset(TkRange, troughColorPtr),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_COLOR, "-troughcolor", "troughColor", "Background",
-	DEF_RANGE_TROUGH_MONO, Tk_Offset(TkRange, troughColorPtr),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_COLOR, "-rangecolor", "rangeColor", "RangeColor",
-	DEF_RANGE_RANGE_COLOR, Tk_Offset(TkRange, rangeColorPtr),
-	TK_CONFIG_COLOR_ONLY},
-    {TK_CONFIG_COLOR, "-rangecolor", "rangeColor", "RangeColor",
-	DEF_RANGE_TROUGH_MONO, Tk_Offset(TkRange, rangeColorPtr),
-	TK_CONFIG_MONO_ONLY},
-    {TK_CONFIG_STRING, "-var_min", "var_min", "Var_min",
-	DEF_RANGE_VARIABLE, Tk_Offset(TkRange, min_varName), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_STRING, "-var_max", "var_max", "Var_max",
-	DEF_RANGE_VARIABLE, Tk_Offset(TkRange, max_varName), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_PIXELS, "-width", "width", "Width",
-	DEF_RANGE_WIDTH, Tk_Offset(TkRange, width), 0},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+
+#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
+
+
+/*
+ * The following table defines the legal values for the -orient option.
+ * It is used together with the "enum orient" declaration in tkRange.h.
+ */
+
+static char *orientStrings[] = {
+    "horizontal", "vertical", (char *) NULL
+};
+
+/*
+ * The following table defines the legal values for the -state option.
+ * It is used together with the "enum state" declaration in tkRange.h.
+ */
+
+static char *stateStrings[] = {
+    "active", "disabled", "normal", (char *) NULL
+};
+
+static Tk_OptionSpec optionSpecs[] = {
+    {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
+	DEF_RANGE_ACTIVE_BG_COLOR, -1, Tk_Offset(TkRange, activeBorder),
+	0, (ClientData) DEF_RANGE_ACTIVE_BG_MONO, 0},
+    {TK_OPTION_BORDER, "-background", "background", "Background",
+	DEF_RANGE_BG_COLOR, -1, Tk_Offset(TkRange, bgBorder),
+	0, (ClientData) DEF_RANGE_BG_MONO, 0},
+    {TK_OPTION_DOUBLE, "-bigincrement", "bigIncrement", "BigIncrement",
+        DEF_RANGE_BIG_INCREMENT, -1, Tk_Offset(TkRange, bigIncrement), 
+        0, 0, 0},
+    {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+    {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
+    {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
+	DEF_RANGE_BORDER_WIDTH, -1, Tk_Offset(TkRange, borderWidth), 
+        0, 0, 0},
+    {TK_OPTION_STRING, "-command", "command", "Command",
+	DEF_RANGE_COMMAND, -1, Tk_Offset(TkRange, command),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
+	DEF_RANGE_CURSOR, -1, Tk_Offset(TkRange, cursor),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_INT, "-digits", "digits", "Digits", 
+	DEF_RANGE_DIGITS, -1, Tk_Offset(TkRange, digits), 
+        0, 0, 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
+	(char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+    {TK_OPTION_FONT, "-font", "font", "Font",
+	DEF_RANGE_FONT, -1, Tk_Offset(TkRange, tkfont), 0, 0, 0},
+    {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
+	DEF_RANGE_FG_COLOR, -1, Tk_Offset(TkRange, textColorPtr), 0, 
+        (ClientData) DEF_RANGE_FG_MONO, 0},
+    {TK_OPTION_COLOR, "-rangecolor", "rangeColor", "Foreground",
+	DEF_RANGE_RANGE_COLOR, -1, Tk_Offset(TkRange, rangeColorPtr), 0, 
+        (ClientData) DEF_RANGE_RANGE_MONO, 0},
+    {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_RANGE_FROM, -1, 
+        Tk_Offset(TkRange, fromValue), 0, 0, 0},
+    {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
+	"HighlightBackground", DEF_RANGE_HIGHLIGHT_BG_COLOR,
+	-1, Tk_Offset(TkRange, highlightBorder), 
+        0, (ClientData) DEF_RANGE_HIGHLIGHT_BG_MONO, 0},
+    {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
+	DEF_RANGE_HIGHLIGHT, -1, Tk_Offset(TkRange, highlightColorPtr),
+	0, 0, 0},
+    {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
+	"HighlightThickness", DEF_RANGE_HIGHLIGHT_WIDTH, -1, 
+	Tk_Offset(TkRange, highlightWidth), 0, 0, 0},
+    {TK_OPTION_STRING, "-label", "label", "Label",
+	DEF_RANGE_LABEL, -1, Tk_Offset(TkRange, label),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-length", "length", "Length",
+	DEF_RANGE_LENGTH, -1, Tk_Offset(TkRange, length), 0, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
+        DEF_RANGE_ORIENT, -1, Tk_Offset(TkRange, orient), 
+        0, (ClientData) orientStrings, 0},
+    {TK_OPTION_BOOLEAN, "-nonzero", "nonZero", "NonZero",
+        DEF_RANGE_NON_ZERO, -1, Tk_Offset(TkRange, nonZero),
+        0, 0, 0},
+    {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
+	DEF_RANGE_RELIEF, -1, Tk_Offset(TkRange, relief), 0, 0, 0},
+    {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
+        DEF_RANGE_REPEAT_DELAY, -1, Tk_Offset(TkRange, repeatDelay),
+        0, 0, 0},
+    {TK_OPTION_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
+        DEF_RANGE_REPEAT_INTERVAL, -1, Tk_Offset(TkRange, repeatInterval),
+        0, 0, 0},
+    {TK_OPTION_DOUBLE, "-resolution", "resolution", "Resolution",
+        DEF_RANGE_RESOLUTION, -1, Tk_Offset(TkRange, resolution),
+        0, 0, 0},
+    {TK_OPTION_BOOLEAN, "-showvalue", "showValue", "ShowValue",
+        DEF_RANGE_SHOW_VALUE, -1, Tk_Offset(TkRange, showValue),
+        0, 0, 0},
+    {TK_OPTION_PIXELS, "-sliderlength", "sliderLength", "SliderLength",
+        DEF_RANGE_SLIDER_LENGTH, -1, Tk_Offset(TkRange, sliderLength),
+        0, 0, 0},
+    {TK_OPTION_RELIEF, "-sliderrelief", "sliderRelief", "SliderRelief",
+	DEF_RANGE_SLIDER_RELIEF, -1, Tk_Offset(TkRange, sliderRelief), 
+        0, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-state", "state", "State",
+        DEF_RANGE_STATE, -1, Tk_Offset(TkRange, state), 
+        0, (ClientData) stateStrings, 0},
+    {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
+	DEF_RANGE_TAKE_FOCUS, Tk_Offset(TkRange, takeFocusPtr), -1,
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_DOUBLE, "-tickinterval", "tickInterval", "TickInterval",
+        DEF_RANGE_TICK_INTERVAL, -1, Tk_Offset(TkRange, tickInterval),
+        0, 0, 0},
+    {TK_OPTION_DOUBLE, "-to", "to", "To",
+        DEF_RANGE_TO, -1, Tk_Offset(TkRange, toValue), 0, 0, 0},
+    {TK_OPTION_COLOR, "-troughcolor", "troughColor", "Background",
+        DEF_RANGE_TROUGH_COLOR, -1, Tk_Offset(TkRange, troughColorPtr),
+        0, (ClientData) DEF_RANGE_TROUGH_MONO, 0},
+    {TK_OPTION_STRING, "-varmin", "varMin", "VarMin",
+	DEF_RANGE_VARIABLE, Tk_Offset(TkRange, minVarNamePtr), -1,
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-varmax", "varMax", "VarMax",
+	DEF_RANGE_VARIABLE, Tk_Offset(TkRange, maxVarNamePtr), -1,
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-width", "width", "Width",
+	DEF_RANGE_WIDTH, -1, Tk_Offset(TkRange, width), 0, 0, 0},
+    {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
+	(char *) NULL, 0, -1, 0, 0, 0}
+};
+
+/*
+ * The following tables define the range widget commands and map the 
+ * indexes into the string tables into a single enumerated type used 
+ * to dispatch the range widget command.
+ */
+
+static char *commandNames[] = {
+  "cget", "configure", "coordsMin", "coordsMax", "from", "to", "sliderLength",
+  "get", "getMin", "getMax", "identify", "setMin", "setMax", "setMinMax", (char *) NULL
+};
+
+enum command {
+    COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_COORDSMIN, COMMAND_COORDSMAX, 
+    COMMAND_FROM, COMMAND_TO, COMMAND_SLIDERLENGTH,
+    COMMAND_GET, COMMAND_GETMIN, COMMAND_GETMAX,
+    COMMAND_IDENTIFY, COMMAND_SETMIN, COMMAND_SETMAX, COMMAND_SETMINMAX
 };
 
 /*
@@ -175,9 +216,11 @@ static Tk_ConfigSpec configSpecs[] = {
 static void		ComputeFormat _ANSI_ARGS_((TkRange *rangePtr));
 static void		ComputeRangeGeometry _ANSI_ARGS_((TkRange *rangePtr));
 static int		ConfigureRange _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkRange *rangePtr, int argc, char **argv,
-			    int flags));
+			    TkRange *rangePtr, int objc,
+			    Tcl_Obj *CONST objv[]));
 static void		DestroyRange _ANSI_ARGS_((char *memPtr));
+static void		RangeCmdDeletedProc _ANSI_ARGS_((
+			    ClientData clientData));
 static void		RangeEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
 static char *		RangeVarMinProc _ANSI_ARGS_((ClientData clientData,
@@ -186,12 +229,16 @@ static char *		RangeVarMinProc _ANSI_ARGS_((ClientData clientData,
 static char *		RangeVarMaxProc _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, char *name1, char *name2,
 			    int flags));
-static int		RangeWidgetCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+static int		RangeWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 static void		RangeWorldChanged _ANSI_ARGS_((
 			    ClientData instanceData));
+static void		RangeSetMinVariable _ANSI_ARGS_((TkRange *rangePtr));
+static void		RangeSetMaxVariable _ANSI_ARGS_((TkRange *rangePtr));
+
 /*
- * The structure below defines scale class behavior by means of procedures
+ * The structure below defines range class behavior by means of procedures
  * that can be invoked from generic window code.
  */
 
@@ -205,7 +252,7 @@ static TkClassProcs rangeClass = {
 /*
  *--------------------------------------------------------------
  *
- * Tk_RangeCmd --
+ * Tk_RangeObjCmd --
  *
  *	This procedure is invoked to process the "range" Tcl
  *	command.  See the user documentation for details on what
@@ -221,28 +268,49 @@ static TkClassProcs rangeClass = {
  */
 
 int
-Tk_RangeCmd(clientData, interp, argc, argv)
-    ClientData clientData;		/* Main window associated with
-				 * interpreter. */
+Tk_RangeObjCmd(clientData, interp, objc, objv)
+    ClientData clientData;	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument values. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
     register TkRange *rangePtr;
-    Tk_Window new;
+    Tk_OptionTable optionTable;
+    Tk_Window tkwin;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " pathName ?options?\"", (char *) NULL);
+    optionTable = (Tk_OptionTable) clientData;
+    if (optionTable == NULL) {
+	Tcl_CmdInfo info;
+	char *name;
+
+	/*
+	 * We haven't created the option table for this widget class
+	 * yet.  Do it now and save the table as the clientData for
+	 * the command, so we'll have access to it in future
+	 * invocations of the command.
+	 */
+
+	optionTable = Tk_CreateOptionTable(interp, optionSpecs);
+	name = Tcl_GetString(objv[0]);
+	Tcl_GetCommandInfo(interp, name, &info);
+	info.objClientData = (ClientData) optionTable;
+	Tcl_SetCommandInfo(interp, name, &info);
+	}
+
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
 	return TCL_ERROR;
     }
 
-    new = Tk_CreateWindowFromPath(interp, tkwin, argv[1], (char *) NULL);
-    if (new == NULL) {
+    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
+				    Tcl_GetString(objv[1]), (char *) NULL);
+
+    if (tkwin == NULL) {
 	return TCL_ERROR;
     }
-    rangePtr = TkpCreateRange(new);
+
+    Tk_SetClass(tkwin, "Range");
+    rangePtr = TkpCreateRange(tkwin);
 
     /*
      * Initialize fields that won't be initialized by ConfigureRange,
@@ -250,80 +318,85 @@ Tk_RangeCmd(clientData, interp, argc, argv)
      * (e.g. resource pointers).
      */
 
-    rangePtr = (TkRange *) ckalloc(sizeof(TkRange));
-    rangePtr->tkwin = new;
-    rangePtr->display = Tk_Display(new);
-    rangePtr->interp = interp;
-    rangePtr->orientUid = NULL;
-    rangePtr->vertical = 0;
-    rangePtr->width = 0;
-    rangePtr->length = 0;
-    rangePtr->min_value = 0;
-    rangePtr->max_value = 0;
-    rangePtr->min_varName = NULL;
-    rangePtr->max_varName = NULL;
-    rangePtr->fromValue = 0;
-    rangePtr->toValue = 0;
-    rangePtr->tickInterval = 0;
-    rangePtr->resolution = 1;
-    rangePtr->bigIncrement = 0.0;
-    rangePtr->command = NULL;
-    rangePtr->repeatDelay = 0;
-    rangePtr->repeatInterval = 0;
-    rangePtr->label = NULL;
-    rangePtr->labelLength = 0;
-    //    rangePtr->state = tkNormalUid;
-    rangePtr->borderWidth = 0;
-    rangePtr->bgBorder = NULL;
-    rangePtr->activeBorder = NULL;
-    rangePtr->troughColorPtr = NULL;
-    rangePtr->rangeColorPtr = NULL;
-    rangePtr->troughGC = None;
-    rangePtr->rangeGC = None;
-    rangePtr->copyGC = None;
-    rangePtr->tkfont = NULL;
-    rangePtr->textColorPtr = NULL;
-    rangePtr->textGC = None;
-    rangePtr->relief = TK_RELIEF_FLAT;
-    rangePtr->highlightWidth = 0;
-    rangePtr->highlightColorPtr = NULL;
-    rangePtr->highlightGC = None;
-    rangePtr->inset = 0;
-    rangePtr->sliderLength = 0;
-    rangePtr->showValue = 0;
-    rangePtr->nonZero = 0;
-    rangePtr->horizLabelY = 0;
-    rangePtr->horizValueY = 0;
-    rangePtr->horizTroughY = 0;
-    rangePtr->horizTickY = 0;
-    rangePtr->vertTickRightX = 0;
-    rangePtr->vertValueRightX = 0;
-    rangePtr->vertTroughX = 0;
-    rangePtr->vertLabelX = 0;
-    rangePtr->cursor = None;
-    rangePtr->flags = NEVER_SET;
+    rangePtr->tkwin		= tkwin;
+    rangePtr->display		= Tk_Display(tkwin);
+    rangePtr->interp		= interp;
+    rangePtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+	    Tk_PathName(rangePtr->tkwin), RangeWidgetObjCmd,
+	    (ClientData) rangePtr, RangeCmdDeletedProc);
+    rangePtr->optionTable	= optionTable;
+    rangePtr->orient		= ORIENT_VERTICAL;
+    rangePtr->width		= 0;
+    rangePtr->length		= 0;
+    rangePtr->minvalue		= 0.0;
+    rangePtr->maxvalue		= 0.0;
+    rangePtr->minVarNamePtr	= NULL;
+    rangePtr->maxVarNamePtr	= NULL;
+    rangePtr->fromValue		= 0.0;
+    rangePtr->toValue		= 0.0;
+    rangePtr->tickInterval	= 0.0;
+    rangePtr->resolution	= 1.0;
+    rangePtr->digits		= 0;
+    rangePtr->bigIncrement	= 0.0;
+    rangePtr->command		= NULL;
+    rangePtr->repeatDelay	= 0;
+    rangePtr->repeatInterval	= 0;
+    rangePtr->label		= NULL;
+    rangePtr->labelLength	= 0;
+    rangePtr->state		= STATE_NORMAL;
+    rangePtr->borderWidth	= 0;
+    rangePtr->bgBorder		= NULL;
+    rangePtr->activeBorder	= NULL;
+    rangePtr->sliderRelief	= TK_RELIEF_RAISED;
+    rangePtr->troughColorPtr	= NULL;
+    rangePtr->troughGC		= None;
+    rangePtr->copyGC		= None;
+    rangePtr->tkfont		= NULL;
+    rangePtr->textColorPtr	= NULL;
+    rangePtr->rangeColorPtr	= NULL;
+    rangePtr->textGC		= None;
+    rangePtr->rangeGC		= None;
+    rangePtr->relief		= TK_RELIEF_FLAT;
+    rangePtr->highlightWidth	= 0;
+    rangePtr->highlightBorder	= NULL;
+    rangePtr->highlightColorPtr	= NULL;
+    rangePtr->inset		= 0;
+    rangePtr->sliderLength	= 0;
+    rangePtr->showValue		= 0;
+    rangePtr->nonZero           = 0;
+    rangePtr->horizLabelY	= 0;
+    rangePtr->horizValueY	= 0;
+    rangePtr->horizTroughY	= 0;
+    rangePtr->horizTickY	= 0;
+    rangePtr->vertTickRightX	= 0;
+    rangePtr->vertValueRightX	= 0;
+    rangePtr->vertTroughX	= 0;
+    rangePtr->vertLabelX	= 0;
+    rangePtr->fontHeight	= 0;
+    rangePtr->cursor		= None;
+    rangePtr->takeFocusPtr	= NULL;
+    rangePtr->flags		= NEVER_SET;
 
-    Tk_SetClass(rangePtr->tkwin, "Range");
     TkSetClassProcs(rangePtr->tkwin, &rangeClass, (ClientData) rangePtr);
     Tk_CreateEventHandler(rangePtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    RangeEventProc, (ClientData) rangePtr);
-    if (ConfigureRange(interp, rangePtr, argc-2, argv+2, 0) != TCL_OK) {
-	goto error;
+
+    if ((Tk_InitOptions(interp, (char *) rangePtr, optionTable, tkwin) != TCL_OK) ||
+	(ConfigureRange(interp, rangePtr, objc - 2, objv + 2) != TCL_OK)) {
+      Tk_DestroyWindow(rangePtr->tkwin);
+      return TCL_ERROR;
     }
 
-    interp->result = Tk_PathName(rangePtr->tkwin);
+    Tcl_SetResult(interp, Tk_PathName(rangePtr->tkwin), TCL_STATIC);
     return TCL_OK;
-
-    error:
-    Tk_DestroyWindow(rangePtr->tkwin);
-    return TCL_ERROR;
 }
-
+
+
 /*
  *--------------------------------------------------------------
  *
- * RangeWidgetCmd --
+ * RangeWidgetObjCmd --
  *
  *	This procedure is invoked to process the Tcl command
  *	that corresponds to a widget managed by this module.
@@ -339,237 +412,290 @@ Tk_RangeCmd(clientData, interp, argc, argv)
  */
 
 static int
-RangeWidgetCmd(clientData, interp, argc, argv)
+RangeWidgetObjCmd(clientData, interp, objc, objv)
     ClientData clientData;		/* Information about range
 					 * widget. */
     Tcl_Interp *interp;			/* Current interpreter. */
-    int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+    int objc;				/* Number of arguments. */
+    Tcl_Obj *CONST objv[];		/* Argument strings. */
 {
-    register TkRange *rangePtr = (TkRange *) clientData;
-    int result = TCL_OK;
-    size_t length;
-    int c;
+    TkRange *rangePtr = (TkRange *) clientData;
+    Tcl_Obj *objPtr;
+    int index, result;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " option ?arg arg ...?\"", (char *) NULL);
+    if (objc < 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) rangePtr);
-    c = argv[1][0];
-    length = strlen(argv[1]);
-    if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)
-	    && (length >= 2)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " cget option\"",
-		    (char *) NULL);
-	    goto error;
-	}
-	result = Tk_ConfigureValue(interp, rangePtr->tkwin, configSpecs,
-		(char *) rangePtr, argv[2], 0);
-    } else if ((c == 'c') && (strncmp(argv[1], "configure", length) == 0)
-	    && (length >= 3)) {
-	if (argc == 2) {
-	    result = Tk_ConfigureInfo(interp, rangePtr->tkwin, configSpecs,
-		    (char *) rangePtr, (char *) NULL, 0);
-	} else if (argc == 3) {
-	    result = Tk_ConfigureInfo(interp, rangePtr->tkwin, configSpecs,
-		    (char *) rangePtr, argv[2], 0);
-	} else {
-	    result = ConfigureRange(interp, rangePtr, argc-2, argv+2,
-		    TK_CONFIG_ARGV_ONLY);
-	}
-    } else if ((c == 'c') && (strncmp(argv[1], "coordsMin", length) == 0)
-	    && (length >= 3)) {
-	int x, y ;
-	double value;
-
-	if ((argc != 2) && (argc != 3)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " coordsMin ?value?\"", (char *) NULL);
-	    goto error;
-	}
-	if (argc == 3) {
-	    if (Tcl_GetDouble(interp, argv[2], &value) != TCL_OK) {
-		goto error;
-	    }
-	} else {
-	    value = rangePtr->min_value;
-	}
-	if (rangePtr->vertical) {
-	    x = rangePtr->vertTroughX + rangePtr->width/2
-		    + rangePtr->borderWidth;
-	    y = TkpRangeValueToPixel(rangePtr, value);
-	} else {
-	    x = TkpRangeValueToPixel(rangePtr, value);
-	    y = rangePtr->horizTroughY + rangePtr->width/2
-		    + rangePtr->borderWidth;
-	}
-	sprintf(interp->result, "%d %d", x, y);
-    } else if ((c == 'c') && (strncmp(argv[1], "coordsMax", length) == 0)
-	    && (length >= 3)) {
-	int x, y ;
-	double value;
-
-	if ((argc != 2) && (argc != 3)) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " coordsMax ?value?\"", (char *) NULL);
-	    goto error;
-	}
-	if (argc == 3) {
-	    if (Tcl_GetDouble(interp, argv[2], &value) != TCL_OK) {
-		goto error;
-	    }
-	} else {
-	    value = rangePtr->max_value;
-	}
-	if (rangePtr->vertical) {
-	    x = rangePtr->vertTroughX + rangePtr->width/2
-		    + rangePtr->borderWidth;
-	    y = TkpRangeValueToPixel(rangePtr, value);
-	} else {
-	    x = TkpRangeValueToPixel(rangePtr, value);
-	    y = rangePtr->horizTroughY + rangePtr->width/2
-		    + rangePtr->borderWidth;
-	}
-	sprintf(interp->result, "%d %d", x, y);
-    } else if ((c == 'f') && (strncmp(argv[1], "from", length) == 0)) {
-	double value;
-
-	if (argc != 2) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " from\"", (char *) NULL);
-	    goto error;
-	}
-	value = rangePtr->fromValue;
-	sprintf(interp->result, rangePtr->format, value);
-    } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
-	double value;
-	int x, y;
-
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " get x y\"", (char *) NULL);
-	    goto error;
-	}
-	if ((Tcl_GetInt(interp, argv[2], &x) != TCL_OK)
-	    || (Tcl_GetInt(interp, argv[3], &y) != TCL_OK)) {
-	    return TCL_ERROR;
-	}
-	value = TkRangePixelToValue(rangePtr, x, y);
-	sprintf(interp->result, rangePtr->format, value);
-    } else if ((c == 'g') && (strncmp(argv[1], "getMin", length) == 0)) {
-	double value;
-
-	if (argc != 2) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " getMin\"", (char *) NULL);
-	    goto error;
-	}
-	value = rangePtr->min_value;
-	sprintf(interp->result, rangePtr->format, value);
-    } else if ((c == 'g') && (strncmp(argv[1], "getMax", length) == 0)) {
-	double value;
-
-	if (argc != 2) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " getMax\"", (char *) NULL);
-	    goto error;
-	}
-	value = rangePtr->max_value;
-	sprintf(interp->result, rangePtr->format, value);
-    } else if ((c == 'i') && (strncmp(argv[1], "identify", length) == 0)) {
-	int x, y, thing;
-
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " identify x y\"", (char *) NULL);
-	    goto error;
-	}
-	if ((Tcl_GetInt(interp, argv[2], &x) != TCL_OK)
-		|| (Tcl_GetInt(interp, argv[3], &y) != TCL_OK)) {
-	    return TCL_ERROR;
-	}
-	thing = TkpRangeElement(rangePtr, x,y);
-	switch (thing) {
-	    case TROUGH1:	interp->result = "trough1";	break;
-	    case RANGE:		interp->result = "range";	break;
-	    case TROUGH2:	interp->result = "trough2";	break;
-	    case MIN_SLIDER:    interp->result = "min_slider";  break;
-	    case MAX_SLIDER:    interp->result = "max_slider";  break;	    
-	 }
-    } else if ((c == 's') && (strncmp(argv[1], "setMin", length) == 0)) {
-	double value;
-
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " setMin value\"", (char *) NULL);
-	    goto error;
-	}
-	if (Tcl_GetDouble(interp, argv[2], &value) != TCL_OK) {
-	    goto error;
-	}
-	if (rangePtr->state != tkDisabledUid) {
-	    TkpSetRangeMinValue(rangePtr, value, 1, 1);
-	}
-    } else if ((c == 's') && (strncmp(argv[1], "setMax", length) == 0)) {
-	double value;
-
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " setMax value\"", (char *) NULL);
-	    goto error;
-	}
-	if (Tcl_GetDouble(interp, argv[2], &value) != TCL_OK) {
-	    goto error;
-	}
-	if (rangePtr->state != tkDisabledUid) {
-	    TkpSetRangeMaxValue(rangePtr, value, 1, 1);
-	}
-    } else if ((c == 's') && (strncmp(argv[1], "setMinMax", length) == 0)) {
-	double val1;
-	double val2;
-
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " setMinMax valMin valMax\"", (char *) NULL);
-	    goto error;
-	}
-	if (Tcl_GetDouble(interp, argv[2], &val1) != TCL_OK) {
-	    goto error;
-	}
-	if (Tcl_GetDouble(interp, argv[3], &val2) != TCL_OK) {
-	    goto error;
-	}
-	if (rangePtr->state != tkDisabledUid) {
-	    TkpSetRangeMinValue(rangePtr, val1, 1, 1);
-	    TkpSetRangeMaxValue(rangePtr, val2, 1, 1);
-	}
-    } else if ((c == 's') && (strncmp(argv[1], "sliderLength", length) == 0)) {
-	sprintf(interp->result, "%d", rangePtr->sliderLength/2);
-    } else if ((c == 't') && (strncmp(argv[1], "to", length) == 0)) {
-	double value;
-
-	if (argc != 2) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " to\"", (char *) NULL);
-	    goto error;
-	}
-	value = rangePtr->toValue;
-	sprintf(interp->result, rangePtr->format, value);
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be cget, configure, coords, get, identify, or set",
-		(char *) NULL);
-	goto error;
+    result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
+            "option", 0, &index);
+    if (result != TCL_OK) {
+	return result;
     }
-    Tk_Release((ClientData) rangePtr);
+    Tcl_Preserve((ClientData) rangePtr);
+
+    switch (index) {
+        case COMMAND_CGET: {
+  	    if (objc != 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "cget option");
+		goto error;
+	    }
+	    objPtr = Tk_GetOptionValue(interp, (char *) rangePtr,
+		    rangePtr->optionTable, objv[2], rangePtr->tkwin);
+	    if (objPtr == NULL) {
+		 goto error;
+	    } else {
+		Tcl_SetObjResult(interp, objPtr);
+	    }
+	    break;
+	}
+        case COMMAND_CONFIGURE: {
+	    if (objc <= 3) {
+		objPtr = Tk_GetOptionInfo(interp, (char *) rangePtr,
+			rangePtr->optionTable,
+			(objc == 3) ? objv[2] : (Tcl_Obj *) NULL,
+			rangePtr->tkwin);
+		if (objPtr == NULL) {
+		    goto error;
+		} else {
+		    Tcl_SetObjResult(interp, objPtr);
+		}
+	    } else {
+		result = ConfigureRange(interp, rangePtr, objc-2, objv+2);
+	    }
+	    break;
+	}
+        case COMMAND_COORDSMIN: {
+	    int x, y ;
+	    double value;
+	    char buf[TCL_INTEGER_SPACE * 2];
+
+	    if ((objc != 2) && (objc != 3)) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "coords ?value?");
+		goto error;
+	    }
+	    if (objc == 3) {
+	        if (Tcl_GetDoubleFromObj(interp, objv[2], &value) 
+                        != TCL_OK) {
+		    goto error;
+		}
+	    } else {
+	        value = rangePtr->minvalue;
+	    }
+	    if (rangePtr->orient == ORIENT_VERTICAL) {
+	        x = rangePtr->vertTroughX + rangePtr->width/2
+		        + rangePtr->borderWidth;
+		y = TkRangeValueToPixel(rangePtr, value);
+	    } else {
+	        x = TkRangeValueToPixel(rangePtr, value);
+		y = rangePtr->horizTroughY + rangePtr->width/2
+                        + rangePtr->borderWidth;
+	    }
+	    sprintf(buf, "%d %d", x, y);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+            break;
+        }
+        case COMMAND_COORDSMAX: {
+	    int x, y ;
+	    double value;
+	    char buf[TCL_INTEGER_SPACE * 2];
+
+	    if ((objc != 2) && (objc != 3)) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "coords ?value?");
+		goto error;
+	    }
+	    if (objc == 3) {
+	        if (Tcl_GetDoubleFromObj(interp, objv[2], &value) 
+                        != TCL_OK) {
+		    goto error;
+		}
+	    } else {
+	        value = rangePtr->maxvalue;
+	    }
+	    if (rangePtr->orient == ORIENT_VERTICAL) {
+	        x = rangePtr->vertTroughX + rangePtr->width/2
+		        + rangePtr->borderWidth;
+		y = TkRangeValueToPixel(rangePtr, value);
+	    } else {
+	        x = TkRangeValueToPixel(rangePtr, value);
+		y = rangePtr->horizTroughY + rangePtr->width/2
+                        + rangePtr->borderWidth;
+	    }
+	    sprintf(buf, "%d %d", x, y);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+            break;
+        }
+        case COMMAND_FROM: {
+	    double value;
+	    char buf[TCL_DOUBLE_SPACE];
+
+	    if ((objc != 2)) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "from");
+		goto error;
+	    }
+	    value = rangePtr->fromValue;
+
+	    sprintf(buf, rangePtr->format, value);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);	  
+	  break;
+	}
+        case COMMAND_TO: {
+	    double value;
+	    char buf[TCL_DOUBLE_SPACE];
+
+	    if ((objc != 2)) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "to");
+		goto error;
+	    }
+	    value = rangePtr->toValue;
+
+	    sprintf(buf, rangePtr->format, value);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);	 	  
+	  break;
+	}
+        case COMMAND_SLIDERLENGTH: {
+	  char buf[TCL_DOUBLE_SPACE];
+	    sprintf(buf, rangePtr->format, rangePtr->sliderLength/2);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	  break;
+	}
+        case COMMAND_GET: {
+	    double value;
+	    int x, y;
+	    char buf[TCL_DOUBLE_SPACE];
+
+	    if (objc != 4) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "get x y");
+		goto error;
+	    }
+	    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
+		|| (Tcl_GetIntFromObj(interp, objv[3], &y) 
+		    != TCL_OK)) {
+	      goto error;
+	    }
+	    value = TkRangePixelToValue(rangePtr, x, y);
+
+	    sprintf(buf, rangePtr->format, value);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+            break;
+        }
+        case COMMAND_GETMIN: {
+	    double value;
+	    char buf[TCL_DOUBLE_SPACE];
+
+	    if (objc != 2) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "getMin");
+		goto error;
+	    }
+
+	    value = rangePtr->minvalue;
+
+	    sprintf(buf, rangePtr->format, value);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+            break;
+        }
+        case COMMAND_GETMAX: {
+	    double value;
+	    char buf[TCL_DOUBLE_SPACE];
+
+	    if (objc != 2) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "getMax");
+		goto error;
+	    }
+
+	    value = rangePtr->maxvalue;
+
+	    sprintf(buf, rangePtr->format, value);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+            break;
+        }
+        case COMMAND_IDENTIFY: {
+	    int x, y, thing;
+
+	    if (objc != 4) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "identify x y");
+		goto error;
+	    }
+	    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
+                    || (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
+	        goto error;
+	    }
+	    thing = TkpRangeElement(rangePtr, x,y);
+	    switch (thing) {
+	    case TROUGH1:
+	      Tcl_SetResult(interp, "trough1", TCL_STATIC);
+	      break;
+	    case RANGE:
+	      Tcl_SetResult(interp, "range", TCL_STATIC);
+	      break;
+	    case TROUGH2:
+	      Tcl_SetResult(interp, "trough2", TCL_STATIC);
+	      break;
+	    case MIN_SLIDER:
+	      Tcl_SetResult(interp, "min_slider", TCL_STATIC);
+	      break;
+	    case MAX_SLIDER:
+	      Tcl_SetResult(interp, "max_slider", TCL_STATIC);
+	      break;
+	    }
+            break;
+        }
+        case COMMAND_SETMIN: {
+	    double value;
+
+	    if (objc != 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "setMin value");
+		goto error;
+	    }
+	    if (Tcl_GetDoubleFromObj(interp, objv[2], &value) != TCL_OK) {
+	        goto error;
+	    }
+	    if (rangePtr->state != STATE_DISABLED) {
+	      TkRangeSetMinValue(rangePtr, value, 1, 1);
+	    }
+	    break;
+        } 
+        case COMMAND_SETMAX: {
+	    double value;
+
+	    if (objc != 3) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "setMax value");
+		goto error;
+	    }
+	    if (Tcl_GetDoubleFromObj(interp, objv[2], &value) != TCL_OK) {
+	        goto error;
+	    }
+	    if (rangePtr->state != STATE_DISABLED) {
+	      TkRangeSetMaxValue(rangePtr, value, 1, 1);
+	    }
+	    break;
+        } 
+        case COMMAND_SETMINMAX: {
+	    double minvalue;
+	    double maxvalue;
+
+	    if (objc != 4) {
+	        Tcl_WrongNumArgs(interp, 1, objv, "setMinMax min max");
+		goto error;
+	    }
+	    if (Tcl_GetDoubleFromObj(interp, objv[2], &minvalue) != TCL_OK) {
+	        goto error;
+	    }
+	    if (Tcl_GetDoubleFromObj(interp, objv[3], &maxvalue) != TCL_OK) {
+	        goto error;
+	    }
+	    if (rangePtr->state != STATE_DISABLED) {
+	      TkRangeSetMinValue(rangePtr, minvalue, 1, 1);
+	      TkRangeSetMaxValue(rangePtr, maxvalue, 1, 1);
+	    }
+	    break;
+        } 
+    }
+    Tcl_Release((ClientData) rangePtr);
     return result;
 
     error:
-    Tk_Release((ClientData) rangePtr);
+    Tcl_Release((ClientData) rangePtr);
     return TCL_ERROR;
 }
 
@@ -578,7 +704,7 @@ RangeWidgetCmd(clientData, interp, argc, argv)
  *
  * DestroyRange --
  *
- *	This procedure is invoked by Tk_EventuallyFree or Tk_Release
+ *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release
  *	to clean up the internal structure of a button at a safe time
  *	(when no-one is using it anymore).
  *
@@ -597,27 +723,31 @@ DestroyRange(memPtr)
 {
     register TkRange *rangePtr = (TkRange *) memPtr;
 
+    rangePtr->flags |= RANGE_DELETED;
+
+    Tcl_DeleteCommandFromToken(rangePtr->interp, rangePtr->widgetCmd);
+    if (rangePtr->flags & REDRAW_PENDING) {
+	Tcl_CancelIdleCall(TkpDisplayRange, (ClientData) rangePtr);
+    }
+
     /*
      * Free up all the stuff that requires special handling, then
      * let Tk_FreeOptions handle all the standard option-related
      * stuff.
      */
 
-    if (rangePtr->min_varName != NULL) {
-	Tcl_UntraceVar(rangePtr->interp, rangePtr->min_varName,
+    if (rangePtr->minVarNamePtr != NULL) {
+	Tcl_UntraceVar(rangePtr->interp, Tcl_GetString(rangePtr->minVarNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		RangeVarMinProc, (ClientData) rangePtr);
     }
-    if (rangePtr->max_varName != NULL) {
-	Tcl_UntraceVar(rangePtr->interp, rangePtr->max_varName,
+    if (rangePtr->maxVarNamePtr != NULL) {
+	Tcl_UntraceVar(rangePtr->interp, Tcl_GetString(rangePtr->maxVarNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		RangeVarMaxProc, (ClientData) rangePtr);
     }
     if (rangePtr->troughGC != None) {
 	Tk_FreeGC(rangePtr->display, rangePtr->troughGC);
-    }
-    if (rangePtr->rangeGC != None) {
-	Tk_FreeGC(rangePtr->display, rangePtr->rangeGC);
     }
     if (rangePtr->copyGC != None) {
 	Tk_FreeGC(rangePtr->display, rangePtr->copyGC);
@@ -625,11 +755,13 @@ DestroyRange(memPtr)
     if (rangePtr->textGC != None) {
 	Tk_FreeGC(rangePtr->display, rangePtr->textGC);
     }
-    if (rangePtr->highlightGC != None) {
-	Tk_FreeGC(rangePtr->display, rangePtr->highlightGC);
+    if (rangePtr->rangeGC != None) {
+	Tk_FreeGC(rangePtr->display, rangePtr->rangeGC);
     }
-    Tk_FreeOptions(configSpecs, (char *) rangePtr, rangePtr->display, 0);
-    ckfree((char *) rangePtr);
+    Tk_FreeConfigOptions((char *) rangePtr, rangePtr->optionTable,
+	    rangePtr->tkwin);
+    rangePtr->tkwin = NULL;
+    TkpDestroyRange(rangePtr);
 }
 
 /*
@@ -643,7 +775,7 @@ DestroyRange(memPtr)
  *
  * Results:
  *	The return value is a standard Tcl result.  If TCL_ERROR is
- *	returned, then interp->result contains an error message.
+ *	returned, then the interp's result contains an error message.
  *
  * Side effects:
  *	Configuration information, such as colors, border width,
@@ -654,150 +786,179 @@ DestroyRange(memPtr)
  */
 
 static int
-ConfigureRange(interp, rangePtr, argc, argv, flags)
+ConfigureRange(interp, rangePtr, objc, objv)
     Tcl_Interp *interp;		/* Used for error reporting. */
     register TkRange *rangePtr;	/* Information about widget;  may or may
 				 * not already have values for some fields. */
-    int argc;			/* Number of valid entries in argv. */
-    char **argv;		/* Arguments. */
-    int flags;			/* Flags to pass to Tk_ConfigureWidget. */
+    int objc;			/* Number of valid entries in objv. */
+    Tcl_Obj *CONST objv[];	/* Argument values. */
 {
-    XGCValues gcValues;
-    GC newGC;
-    size_t length;
+    Tk_SavedOptions savedOptions;
+    Tcl_Obj *errorResult = NULL;
+    int error;
+    double oldMinValue = rangePtr->minvalue;
+    double oldMaxValue = rangePtr->maxvalue;
 
     /*
      * Eliminate any existing trace on a variable monitored by the range.
      */
-
-    if (rangePtr->min_varName != NULL) {
-	Tcl_UntraceVar(interp, rangePtr->min_varName, 
+    if (rangePtr->minVarNamePtr != NULL) {
+	Tcl_UntraceVar(interp, Tcl_GetString(rangePtr->minVarNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		RangeVarMinProc, (ClientData) rangePtr);
     }
-    if (rangePtr->max_varName != NULL) {
-	Tcl_UntraceVar(interp, rangePtr->max_varName, 
+
+    if (rangePtr->maxVarNamePtr != NULL) {
+	Tcl_UntraceVar(interp, Tcl_GetString(rangePtr->maxVarNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		RangeVarMaxProc, (ClientData) rangePtr);
     }
 
-    if (Tk_ConfigureWidget(interp, rangePtr->tkwin, configSpecs,
-	    argc, argv, (char *) rangePtr, flags) != TCL_OK) {
-	return TCL_ERROR;
-    }
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    /*
+	     * First pass: set options to new values.
+	     */
+	    if (Tk_SetOptions(interp, (char *) rangePtr,
+		    rangePtr->optionTable, objc, objv,
+		    rangePtr->tkwin, &savedOptions, (int *) NULL) != TCL_OK) {
+		continue;
+	    }
+	} else {
+	    /*
+	     * Second pass: restore options to old values.
+	     */
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
+	    Tk_RestoreSavedOptions(&savedOptions);
+	}
 
-    /*
-     * If the range is tied to the value of a variable, then set up
-     * a trace on the variable's value and set the range's value from
-     * the value of the variable, if it exists.
-     */
+	/*
+	 * If the range is tied to the value of a variable, then set 
+	 * the range's value from the value of the variable, if it exists
+	 * and it holds a valid double value.
+	 */
+	if (rangePtr->minVarNamePtr != NULL) {
+	    double value;
+	    Tcl_Obj *valuePtr;
 
-    if (rangePtr->min_varName != NULL) {
-	char *stringValue, *end;
-	double value;
-
-	stringValue = Tcl_GetVar(interp, rangePtr->min_varName, TCL_GLOBAL_ONLY);
-	if (stringValue != NULL) {
-	    value = strtod(stringValue, &end);
-	    if ((end != stringValue) && (*end == 0)) {
-		rangePtr->min_value = value;
+	    valuePtr = Tcl_ObjGetVar2(interp, rangePtr->minVarNamePtr, NULL,
+		    TCL_GLOBAL_ONLY);
+	    if ((valuePtr != NULL) &&
+		    (Tcl_GetDoubleFromObj(NULL, valuePtr, &value) == TCL_OK)) {
+		rangePtr->minvalue = TkRangeRoundToResolution(rangePtr, value);
 	    }
 	}
-	Tcl_TraceVar(interp, rangePtr->min_varName,
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		RangeVarMinProc, (ClientData) rangePtr);
-    }
-    if (rangePtr->max_varName != NULL) {
-	char *stringValue, *end;
-	double value;
 
-	stringValue = Tcl_GetVar(interp, rangePtr->max_varName, TCL_GLOBAL_ONLY);
-	if (stringValue != NULL) {
-	    value = strtod(stringValue, &end);
-	    if ((end != stringValue) && (*end == 0)) {
-		rangePtr->max_value = value;
+	if (rangePtr->maxVarNamePtr != NULL) {
+	    double value;
+	    Tcl_Obj *valuePtr;
+
+	    valuePtr = Tcl_ObjGetVar2(interp, rangePtr->maxVarNamePtr, NULL,
+		    TCL_GLOBAL_ONLY);
+	    if ((valuePtr != NULL) &&
+		    (Tcl_GetDoubleFromObj(NULL, valuePtr, &value) == TCL_OK)) {
+		rangePtr->maxvalue = TkRangeRoundToResolution(rangePtr, value);
 	    }
 	}
-	Tcl_TraceVar(interp, rangePtr->max_varName,
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		RangeVarMaxProc, (ClientData) rangePtr);
+
+	/*
+	 * Several options need special processing, such as parsing the
+	 * orientation and creating GCs.
+	 */
+
+	rangePtr->fromValue = TkRangeRoundToResolution(rangePtr, 
+                rangePtr->fromValue);
+	rangePtr->toValue = TkRangeRoundToResolution(rangePtr, rangePtr->toValue);
+	rangePtr->tickInterval = TkRangeRoundToResolution(rangePtr,
+	        rangePtr->tickInterval);
+
+	/*
+	 * Make sure that the tick interval has the right sign so that
+	 * addition moves from fromValue to toValue.
+	 */
+
+	if ((rangePtr->tickInterval < 0)
+		^ ((rangePtr->toValue - rangePtr->fromValue) <  0)) {
+	  rangePtr->tickInterval = -rangePtr->tickInterval;
+	}
+
+	ComputeFormat(rangePtr);
+
+	rangePtr->labelLength = rangePtr->label ? strlen(rangePtr->label) : 0;
+
+	Tk_SetBackgroundFromBorder(rangePtr->tkwin, rangePtr->bgBorder);
+
+	if (rangePtr->highlightWidth < 0) {
+	    rangePtr->highlightWidth = 0;
+	}
+	rangePtr->inset = rangePtr->highlightWidth + rangePtr->borderWidth;
+	break;
     }
 
-    /*
-     * Several options need special processing, such as parsing the
-     * orientation and creating GCs.
-     */
-
-    length = strlen(rangePtr->orientUid);
-    if (strncmp(rangePtr->orientUid, "vertical", length) == 0) {
-	rangePtr->vertical = 1;
-    } else if (strncmp(rangePtr->orientUid, "horizontal", length) == 0) {
-	rangePtr->vertical = 0;
-    } else {
-	Tcl_AppendResult(interp, "bad orientation \"", rangePtr->orientUid,
-		"\": must be vertical or horizontal", (char *) NULL);
-	return TCL_ERROR;
-    }
-
-    /*
-     * Make sure that the resolution is always positive and non-zero.
-     */
-
-    if (rangePtr->resolution <= 0) {
-	rangePtr->resolution = 1;
-    }
-
-    rangePtr->fromValue = TkRoundToResolution(rangePtr, rangePtr->fromValue);
-    rangePtr->toValue = TkRoundToResolution(rangePtr, rangePtr->toValue);
-    if (rangePtr->toValue == rangePtr->fromValue)
-	rangePtr->toValue+=rangePtr->resolution;
-    rangePtr->tickInterval = TkRoundToResolution(rangePtr,
-	    rangePtr->tickInterval);
-
-    /*
-     * Make sure that the tick interval has the right sign so that
-     * addition moves from fromValue to toValue.
-     */
-
-    if ((rangePtr->tickInterval < 0)
-	    ^ ((rangePtr->toValue - rangePtr->fromValue) <  0)) {
-	rangePtr->tickInterval = -rangePtr->tickInterval;
+    if (!error) {
+        Tk_FreeSavedOptions(&savedOptions);
     }
 
     /*
      * Set the range value to itself;  all this does is to make sure
      * that the range's value is within the new acceptable range for
-     * the range and reflect the value in the associated variable,
-     * if any.
+     * the range.  We don't set the var here because we need to make
+     * special checks for possibly changed varNamePtr.
      */
 
-    ComputeFormat(rangePtr);
-    TkpSetRangeMinValue(rangePtr, rangePtr->min_value, 1, 1);
-    TkpSetRangeMaxValue(rangePtr, rangePtr->max_value, 1, 1);
+    TkRangeSetMinValue(rangePtr, rangePtr->minvalue, 0, 1);
+    TkRangeSetMaxValue(rangePtr, rangePtr->maxvalue, 0, 1);
 
-    if (rangePtr->label != NULL) {
-	rangePtr->labelLength = strlen(rangePtr->label);
-    } else {
-	rangePtr->labelLength = 0;
+    /*
+     * Reestablish the variable trace, if it is needed.
+     */
+    if (rangePtr->minVarNamePtr != NULL) {
+	Tcl_Obj *valuePtr;
+
+	/*
+	 * Set the associated variable only when the new value differs
+	 * from the current value, or the variable doesn't yet exist
+	 */
+	valuePtr = Tcl_ObjGetVar2(interp, rangePtr->minVarNamePtr, NULL,
+		TCL_GLOBAL_ONLY);
+	if ((valuePtr == NULL) || (rangePtr->minvalue != oldMinValue)
+		|| (Tcl_GetDoubleFromObj(NULL, valuePtr, &oldMinValue) != TCL_OK)
+		|| (rangePtr->minvalue != oldMinValue)) {
+	    RangeSetMinVariable(rangePtr);
+	}
+        Tcl_TraceVar(interp, Tcl_GetString(rangePtr->minVarNamePtr),
+	        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	        RangeVarMinProc, (ClientData) rangePtr);
     }
 
-/*     if ((rangePtr->state != tkNormalUid) */
-/* 	    && (rangePtr->state != tkDisabledUid) */
-/* 	    && (rangePtr->state != tkActiveUid)) { */
-/* 	Tcl_AppendResult(interp, "bad state value \"", rangePtr->state, */
-/* 		"\":  must be normal, active, or disabled", (char *) NULL); */
-/* 	rangePtr->state = tkNormalUid; */
-/* 	return TCL_ERROR; */
-/*     } */
+    if (rangePtr->maxVarNamePtr != NULL) {
+	Tcl_Obj *valuePtr;
 
-    Tk_SetBackgroundFromBorder(rangePtr->tkwin, rangePtr->bgBorder);
-
-    if (rangePtr->highlightWidth < 0) {
-	rangePtr->highlightWidth = 0;
+	/*
+	 * Set the associated variable only when the new value differs
+	 * from the current value, or the variable doesn't yet exist
+	 */
+	valuePtr = Tcl_ObjGetVar2(interp, rangePtr->maxVarNamePtr, NULL,
+		TCL_GLOBAL_ONLY);
+	if ((valuePtr == NULL) || (rangePtr->maxvalue != oldMaxValue)
+		|| (Tcl_GetDoubleFromObj(NULL, valuePtr, &oldMaxValue) != TCL_OK)
+		|| (rangePtr->maxvalue != oldMaxValue)) {
+	    RangeSetMaxVariable(rangePtr);
+	}
+        Tcl_TraceVar(interp, Tcl_GetString(rangePtr->maxVarNamePtr),
+	        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	        RangeVarMaxProc, (ClientData) rangePtr);
     }
-    rangePtr->inset = rangePtr->highlightWidth + rangePtr->borderWidth;
+
     RangeWorldChanged((ClientData) rangePtr);
-    return TCL_OK;
+    if (error) {
+        Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	return TCL_OK;
+    }
 }
 
 /*
@@ -842,6 +1003,13 @@ RangeWorldChanged(instanceData)
 	Tk_FreeGC(rangePtr->display, rangePtr->textGC);
     }
     rangePtr->textGC = gc;
+
+    gcValues.foreground = rangePtr->rangeColorPtr->pixel;
+    gc = Tk_GetGC(rangePtr->tkwin, GCForeground, &gcValues);
+    if (rangePtr->rangeGC != None) {
+	Tk_FreeGC(rangePtr->display, rangePtr->rangeGC);
+    }
+    rangePtr->rangeGC = gc;
 
     if (rangePtr->copyGC == None) {
 	gcValues.graphics_exposures = False;
@@ -895,16 +1063,20 @@ ComputeFormat(rangePtr)
     x = fabs(rangePtr->toValue);
     if (x > maxValue) {
 	maxValue = x;
-	if (maxValue == 0) {
-	    maxValue = 1;
-	}
     }
-    mostSigDigit = floor(log10(maxValue));
+    if (maxValue == 0) {
+	maxValue = 1;
+    }
+    mostSigDigit = (int) floor(log10(maxValue));
 
     /*
      * If the number of significant digits wasn't specified explicitly,
-     * compute it (it's the difference between the most significant
-     * digit overall and the most significant digit of the resolution).
+     * compute it. It's the difference between the most significant
+     * digit needed to represent any number on the range and the
+     * most significant digit of the smallest difference between
+     * numbers on the range.  In other words, display enough digits so
+     * that at least one digit will be different between any two adjacent
+     * positions of the range.
      */
 
     numDigits = rangePtr->digits;
@@ -992,24 +1164,26 @@ ComputeRangeGeometry(rangePtr)
     int tmp, valuePixels, x, y, extraSpace;
     Tk_FontMetrics fm;
 
+    Tk_GetFontMetrics(rangePtr->tkfont, &fm);
+    rangePtr->fontHeight = fm.linespace + SPACING;
+
     /*
      * Horizontal ranges are simpler than vertical ones because
      * all sizes are the same (the height of a line of text);
      * handle them first and then quit.
      */
 
-    Tk_GetFontMetrics(rangePtr->tkfont, &fm);
-    if (!rangePtr->vertical) {
+    if (rangePtr->orient == ORIENT_HORIZONTAL) {
 	y = rangePtr->inset;
 	extraSpace = 0;
 	if (rangePtr->labelLength != 0) {
 	    rangePtr->horizLabelY = y + SPACING;
-	    y += fm.linespace + SPACING;
+	    y += rangePtr->fontHeight;
 	    extraSpace = SPACING;
 	}
 	if (rangePtr->showValue) {
 	    rangePtr->horizValueY = y + SPACING;
-	    y += fm.linespace + SPACING;
+	    y += rangePtr->fontHeight;
 	    extraSpace = SPACING;
 	} else {
 	    rangePtr->horizValueY = y;
@@ -1019,7 +1193,7 @@ ComputeRangeGeometry(rangePtr)
 	y += rangePtr->width + 2*rangePtr->borderWidth;
 	if (rangePtr->tickInterval != 0) {
 	    rangePtr->horizTickY = y + SPACING;
-	    y += fm.linespace + 2*SPACING;
+	    y += rangePtr->fontHeight + SPACING;
 	}
 	Tk_GeometryRequest(rangePtr->tkwin,
 		rangePtr->length + 2*rangePtr->inset, y + rangePtr->inset);
@@ -1072,8 +1246,8 @@ ComputeRangeGeometry(rangePtr)
     } else {
 	rangePtr->vertLabelX = x + fm.ascent/2;
 	x = rangePtr->vertLabelX + fm.ascent/2
-		+ Tk_TextWidth(rangePtr->tkfont, rangePtr->label,
-			rangePtr->labelLength);
+	    + Tk_TextWidth(rangePtr->tkfont, rangePtr->label,
+		    rangePtr->labelLength);
     }
     Tk_GeometryRequest(rangePtr->tkwin, x + rangePtr->inset,
 	    rangePtr->length + 2*rangePtr->inset);
@@ -1108,14 +1282,7 @@ RangeEventProc(clientData, eventPtr)
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawRange(rangePtr, REDRAW_ALL);
     } else if (eventPtr->type == DestroyNotify) {
-	if (rangePtr->tkwin != NULL) {
-	    rangePtr->tkwin = NULL;
-	    Tcl_DeleteCommandFromToken(rangePtr->interp, rangePtr->widgetCmd);
-	}
-	if (rangePtr->flags & REDRAW_ALL) {
-	    Tcl_CancelIdleCall(TkpDisplayRange, (ClientData) rangePtr);
-	}
-	Tcl_EventuallyFree((ClientData) rangePtr, DestroyRange);
+	DestroyRange((char *) clientData);
     } else if (eventPtr->type == ConfigureNotify) {
 	ComputeRangeGeometry(rangePtr);
 	TkEventuallyRedrawRange(rangePtr, REDRAW_ALL);
@@ -1135,6 +1302,7 @@ RangeEventProc(clientData, eventPtr)
 	}
     }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1168,8 +1336,8 @@ RangeCmdDeletedProc(clientData)
      * destroys the widget.
      */
 
-    if (tkwin != NULL) {
-	rangePtr->tkwin = NULL;
+    if (!(rangePtr->flags & RANGE_DELETED)) {
+	rangePtr->flags |= RANGE_DELETED;
 	Tk_DestroyWindow(tkwin);
     }
 }
@@ -1203,16 +1371,59 @@ TkEventuallyRedrawRange(rangePtr, what)
 	    || !Tk_IsMapped(rangePtr->tkwin)) {
 	return;
     }
-    if ((rangePtr->flags & REDRAW_ALL) == 0) {
-	Tk_DoWhenIdle(TkpDisplayRange, (ClientData) rangePtr);
+    if (!(rangePtr->flags & REDRAW_PENDING)) {
+	rangePtr->flags |= REDRAW_PENDING;
+	Tcl_DoWhenIdle(TkpDisplayRange, (ClientData) rangePtr);
     }
     rangePtr->flags |= what;
 }
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkRangeRoundToResolution --
+ *
+ *	Round a given floating-point value to the nearest multiple
+ *	of the range's resolution.
+ *
+ * Results:
+ *	The return value is the rounded result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
 
+double
+TkRangeRoundToResolution(rangePtr, value)
+    TkRange *rangePtr;		/* Information about range widget. */
+    double value;		/* Value to round. */
+{
+    double rem, new, tick;
+
+    if (rangePtr->resolution <= 0) {
+	return value;
+    }
+    tick = floor(value/rangePtr->resolution);
+    new = rangePtr->resolution * tick;
+    rem = value - new;
+    if (rem < 0) {
+	if (rem <= -rangePtr->resolution/2) {
+	    new = (tick - 1.0) * rangePtr->resolution;
+	}
+    } else {
+	if (rem >= rangePtr->resolution/2) {
+	    new = (tick + 1.0) * rangePtr->resolution;
+	}
+    }
+    return new;
+}
+
 /*
  *----------------------------------------------------------------------
  *
- * RangeVarMinProc --
+ * RangeVarProc --
  *
  *	This procedure is invoked by Tcl whenever someone modifies a
  *	variable associated with a range widget.
@@ -1229,6 +1440,7 @@ TkEventuallyRedrawRange(rangePtr, what)
  */
 
     /* ARGSUSED */
+
 static char *
 RangeVarMinProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
@@ -1238,8 +1450,10 @@ RangeVarMinProc(clientData, interp, name1, name2, flags)
     int flags;			/* Information about what happened. */
 {
     register TkRange *rangePtr = (TkRange *) clientData;
-    char *stringValue, *end, *result;
+    char *resultStr;
     double value;
+    Tcl_Obj *valuePtr;
+    int result;
 
     /*
      * If the variable is unset, then immediately recreate it unless
@@ -1248,17 +1462,17 @@ RangeVarMinProc(clientData, interp, name1, name2, flags)
 
     if (flags & TCL_TRACE_UNSETS) {
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_TraceVar2(interp, name1, name2,
+	    Tcl_TraceVar(interp, Tcl_GetString(rangePtr->minVarNamePtr),
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    RangeVarMinProc, clientData);
 	    rangePtr->flags |= NEVER_SET;
-	    TkpSetRangeMinValue(rangePtr, rangePtr->min_value, 1, 0);
+	    TkRangeSetMinValue(rangePtr, rangePtr->minvalue, 1, 0);
 	}
 	return (char *) NULL;
     }
 
     /*
-     * If we came here because we updated the variable (in SetRangeMinValue),
+     * If we came here because we updated the variable (in TkRangeSetMinValue),
      * then ignore the trace.  Otherwise update the range with the value
      * of the variable.
      */
@@ -1266,49 +1480,31 @@ RangeVarMinProc(clientData, interp, name1, name2, flags)
     if (rangePtr->flags & SETTING_VAR) {
 	return (char *) NULL;
     }
-    result = NULL;
-    stringValue = Tcl_GetVar(interp, rangePtr->min_varName, TCL_GLOBAL_ONLY);
-    if (stringValue != NULL) {
-	value = strtod(stringValue, &end);
-	if ((end == stringValue) || (*end != 0)) {
-	    result = "can't assign non-numeric value to range variable";
-	} else {
-	    rangePtr->min_value = TkRoundToResolution(rangePtr, value);
-	}
+    resultStr = NULL;
+    valuePtr = Tcl_ObjGetVar2(interp, rangePtr->minVarNamePtr, NULL, 
+            TCL_GLOBAL_ONLY);
+    result = Tcl_GetDoubleFromObj(interp, valuePtr, &value);
+    if (result != TCL_OK) {
+        resultStr = "can't assign non-numeric value to range variable";
+	RangeSetMinVariable(rangePtr);
+    } else {
+	rangePtr->minvalue = TkRangeRoundToResolution(rangePtr, value);
 
 	/*
 	 * This code is a bit tricky because it sets the range's value before
-	 * calling SetRangeMinValue.  This way, SetRangeMinValue won't bother to
-	 * set the variable again or to invoke the -command.  However, it
+	 * calling TkRangeSetMinValue.  This way, TkRangeSetMinValue won't bother 
+	 * to set the variable again or to invoke the -command.  However, it
 	 * also won't redisplay the range, so we have to ask for that
 	 * explicitly.
 	 */
 
-	TkpSetRangeMinValue(rangePtr, rangePtr->min_value, 1, 0);
-	TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
+	TkRangeSetMinValue(rangePtr, rangePtr->minvalue, 1, 0);
     }
-    return result;
-}
-/*
- *----------------------------------------------------------------------
- *
- * RangeVarMaxProc --
- *
- *	This procedure is invoked by Tcl whenever someone modifies a
- *	variable associated with a range widget.
- *
- * Results:
- *	NULL is always returned.
- *
- * Side effects:
- *	The value displayed in the range will change to match the
- *	variable's new value.  If the variable has a bogus value then
- *	it is reset to the value of the range.
- *
- *----------------------------------------------------------------------
- */
+    TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
 
-    /* ARGSUSED */
+    return resultStr;
+}
+
 static char *
 RangeVarMaxProc(clientData, interp, name1, name2, flags)
     ClientData clientData;	/* Information about button. */
@@ -1318,8 +1514,10 @@ RangeVarMaxProc(clientData, interp, name1, name2, flags)
     int flags;			/* Information about what happened. */
 {
     register TkRange *rangePtr = (TkRange *) clientData;
-    char *stringValue, *end, *result;
+    char *resultStr;
     double value;
+    Tcl_Obj *valuePtr;
+    int result;
 
     /*
      * If the variable is unset, then immediately recreate it unless
@@ -1328,17 +1526,17 @@ RangeVarMaxProc(clientData, interp, name1, name2, flags)
 
     if (flags & TCL_TRACE_UNSETS) {
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_TraceVar2(interp, name1, name2,
+	    Tcl_TraceVar(interp, Tcl_GetString(rangePtr->maxVarNamePtr),
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    RangeVarMaxProc, clientData);
 	    rangePtr->flags |= NEVER_SET;
-	    TkpSetRangeMaxValue(rangePtr, rangePtr->max_value, 1, 0);
+	    TkRangeSetMaxValue(rangePtr, rangePtr->maxvalue, 1, 0);
 	}
 	return (char *) NULL;
     }
 
     /*
-     * If we came here because we updated the variable (in SetRangeMaxValue),
+     * If we came here because we updated the variable (in TkRangeSetMaxValue),
      * then ignore the trace.  Otherwise update the range with the value
      * of the variable.
      */
@@ -1346,27 +1544,266 @@ RangeVarMaxProc(clientData, interp, name1, name2, flags)
     if (rangePtr->flags & SETTING_VAR) {
 	return (char *) NULL;
     }
-    result = NULL;
-    stringValue = Tcl_GetVar(interp, rangePtr->max_varName, TCL_GLOBAL_ONLY);
-    if (stringValue != NULL) {
-	value = strtod(stringValue, &end);
-	if ((end == stringValue) || (*end != 0)) {
-	    result = "can't assign non-numeric value to range variable";
-	} else {
-	    rangePtr->max_value = TkRoundToResolution(rangePtr, value);
-	}
+    resultStr = NULL;
+    valuePtr = Tcl_ObjGetVar2(interp, rangePtr->maxVarNamePtr, NULL, 
+            TCL_GLOBAL_ONLY);
+    result = Tcl_GetDoubleFromObj(interp, valuePtr, &value);
+    if (result != TCL_OK) {
+        resultStr = "can't assign non-numeric value to range variable";
+	RangeSetMaxVariable(rangePtr);
+    } else {
+	rangePtr->maxvalue = TkRangeRoundToResolution(rangePtr, value);
 
 	/*
 	 * This code is a bit tricky because it sets the range's value before
-	 * calling SetRangeMaxValue.  This way, SetRangeMaxValue won't bother to
-	 * set the variable again or to invoke the -command.  However, it
+	 * calling TkRangeSetMaxValue.  This way, TkRangeSetMaxValue won't bother 
+	 * to set the variable again or to invoke the -command.  However, it
 	 * also won't redisplay the range, so we have to ask for that
 	 * explicitly.
 	 */
 
-	TkpSetRangeMaxValue(rangePtr, rangePtr->max_value, 1, 0);
-	TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
+	TkRangeSetMaxValue(rangePtr, rangePtr->maxvalue, 1, 0);
+    }
+    TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
+
+    return resultStr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkRangeSetValue --
+ *
+ *	This procedure changes the value of a range and invokes
+ *	a Tcl command to reflect the current position of a range
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A Tcl command is invoked, and an additional error-processing
+ *	command may also be invoked.  The range's slider is redrawn.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkRangeSetMinValue(rangePtr, value, setVar, invokeCommand)
+    register TkRange *rangePtr;	/* Info about widget. */
+    double value;		/* New value for range.  Gets adjusted
+				 * if it's off the range. */
+    int setVar;			/* Non-zero means reflect new value through
+				 * to associated variable, if any. */
+    int invokeCommand;		/* Non-zero means invoked -command option
+				 * to notify of new value, 0 means don't. */
+{
+    value = TkRangeRoundToResolution(rangePtr, value);
+    if ((value < rangePtr->fromValue)
+	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
+	value = rangePtr->fromValue;
+    }
+    if ((value > rangePtr->toValue)
+	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
+	value = rangePtr->toValue;
+    }
+    if (rangePtr->flags & NEVER_SET) {
+	rangePtr->flags &= ~NEVER_SET;
+    } else if (rangePtr->minvalue == value) {
+	return;
+    }
+    rangePtr->minvalue = value;
+    if (invokeCommand) {
+	rangePtr->flags |= INVOKE_COMMAND;
+    }
+    TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
+
+    if (setVar && rangePtr->minVarNamePtr) {
+	RangeSetMinVariable(rangePtr);
+    }
+}
+
+void
+TkRangeSetMaxValue(rangePtr, value, setVar, invokeCommand)
+    register TkRange *rangePtr;	/* Info about widget. */
+    double value;		/* New value for range.  Gets adjusted
+				 * if it's off the range. */
+    int setVar;			/* Non-zero means reflect new value through
+				 * to associated variable, if any. */
+    int invokeCommand;		/* Non-zero means invoked -command option
+				 * to notify of new value, 0 means don't. */
+{
+    value = TkRangeRoundToResolution(rangePtr, value);
+    if ((value < rangePtr->fromValue)
+	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
+	value = rangePtr->fromValue;
+    }
+    if ((value > rangePtr->toValue)
+	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
+	value = rangePtr->toValue;
+    }
+    if (rangePtr->flags & NEVER_SET) {
+	rangePtr->flags &= ~NEVER_SET;
+    } else if (rangePtr->maxvalue == value) {
+	return;
+    }
+    rangePtr->maxvalue = value;
+    if (invokeCommand) {
+	rangePtr->flags |= INVOKE_COMMAND;
+    }
+    TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
+
+    if (setVar && rangePtr->maxVarNamePtr) {
+	RangeSetMaxVariable(rangePtr);
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RangeSetVariable --
+ *
+ *	This procedure sets the variable associated with a range, if any.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Other write traces on the variable will trigger.
+ *
+ *--------------------------------------------------------------
+ */
+
+
+static void
+RangeSetMinVariable(rangePtr)
+    register TkRange *rangePtr;	/* Info about widget. */
+{
+    if (rangePtr->minVarNamePtr != NULL) {
+	char string[PRINT_CHARS];
+	sprintf(string, rangePtr->format, rangePtr->minvalue);
+	rangePtr->flags |= SETTING_VAR;
+	Tcl_ObjSetVar2(rangePtr->interp, rangePtr->minVarNamePtr, NULL,
+		Tcl_NewStringObj(string, -1), TCL_GLOBAL_ONLY);
+	rangePtr->flags &= ~SETTING_VAR;
+    }
+}
+
+static void
+RangeSetMaxVariable(rangePtr)
+    register TkRange *rangePtr;	/* Info about widget. */
+{
+    if (rangePtr->maxVarNamePtr != NULL) {
+	char string[PRINT_CHARS];
+	sprintf(string, rangePtr->format, rangePtr->maxvalue);
+	rangePtr->flags |= SETTING_VAR;
+	Tcl_ObjSetVar2(rangePtr->interp, rangePtr->maxVarNamePtr, NULL,
+		Tcl_NewStringObj(string, -1), TCL_GLOBAL_ONLY);
+	rangePtr->flags &= ~SETTING_VAR;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkRangePixelToValue --
+ *
+ *	Given a pixel within a range window, return the range
+ *	reading corresponding to that pixel.
+ *
+ * Results:
+ *	A double-precision range reading.  If the value is outside
+ *	the legal range for the range then it's rounded to the nearest
+ *	end of the range.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkRangePixelToValue(rangePtr, x, y)
+    register TkRange *rangePtr;		/* Information about widget. */
+    int x, y;				/* Coordinates of point within
+					 * window. */
+{
+    double value, pixelRange;
+
+    if (rangePtr->orient == ORIENT_VERTICAL) {
+	pixelRange = Tk_Height(rangePtr->tkwin) - rangePtr->sliderLength
+		- 2*rangePtr->inset - 2*rangePtr->borderWidth;
+	value = y;
+    } else {
+	pixelRange = Tk_Width(rangePtr->tkwin) - rangePtr->sliderLength
+		- 2*rangePtr->inset - 2*rangePtr->borderWidth;
+	value = x;
     }
 
-    return result;
+    if (pixelRange <= 0) {
+	/*
+	 * Not enough room for the slider to actually slide:  just return
+	 * the range's current value.
+	 */
+
+	return rangePtr->minvalue;
+    }
+    value -= rangePtr->sliderLength/2 + rangePtr->inset
+		+ rangePtr->borderWidth;
+    value /= pixelRange;
+    if (value < 0) {
+	value = 0;
+    }
+    if (value > 1) {
+	value = 1;
+    }
+    value = rangePtr->fromValue +
+		value * (rangePtr->toValue - rangePtr->fromValue);
+    return TkRangeRoundToResolution(rangePtr, value);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkRangeValueToPixel --
+ *
+ *	Given a reading of the range, return the x-coordinate or
+ *	y-coordinate corresponding to that reading, depending on
+ *	whether the range is vertical or horizontal, respectively.
+ *
+ * Results:
+ *	An integer value giving the pixel location corresponding
+ *	to reading.  The value is restricted to lie within the
+ *	defined range for the range.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkRangeValueToPixel(rangePtr, value)
+    register TkRange *rangePtr;		/* Information about widget. */
+    double value;			/* Reading of the widget. */
+{
+    int y, pixelRange;
+    double valueRange;
+
+    valueRange = rangePtr->toValue - rangePtr->fromValue;
+    pixelRange = ((rangePtr->orient == ORIENT_VERTICAL)
+	    ? Tk_Height(rangePtr->tkwin) : Tk_Width(rangePtr->tkwin))
+	- rangePtr->sliderLength - 2*rangePtr->inset - 2*rangePtr->borderWidth;
+    if (valueRange == 0) {
+	y = 0;
+    } else {
+	y = (int) ((value - rangePtr->fromValue) * pixelRange
+		  / valueRange + 0.5);
+	if (y < 0) {
+	    y = 0;
+	} else if (y > pixelRange) {
+	    y = pixelRange;
+	}
+    }
+    y += rangePtr->sliderLength/2 + rangePtr->inset + rangePtr->borderWidth;
+    return y;
 }
