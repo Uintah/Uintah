@@ -41,7 +41,6 @@ using namespace sci::cca;
 #define VERSION "2.0.0" // this needs to be synced with the contents of
                         // SCIRun/doc/edition.xml
 
-
 int
 main(int argc, char *argv[] )
 {
