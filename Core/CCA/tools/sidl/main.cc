@@ -68,7 +68,7 @@ char* find_builtin()
 #ifndef SIDL_BUILTINS
 #error SIDL_BUILTINS should point to the directory containing cia.sidl
 #endif
-  return SIDL_BUILTINS "CIA.sidl";
+  return SIDL_BUILTINS "sidl.sidl";
 }
 
 int main(int argc, char* argv[])
