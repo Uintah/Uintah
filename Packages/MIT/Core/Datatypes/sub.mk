@@ -17,7 +17,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Disclosure Core/Exceptions Core/Containers \
-	Core/Util
+	Core/Util Core/Datatypes Core/Geom
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

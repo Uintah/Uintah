@@ -29,8 +29,9 @@ PSELIBS := Packages/MIT/Core/Datatypes \
 	Core/Parts \
 	Core/PartsGui \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions 
-        Core/Geom Core/Datatypes Core/Geometry \
+        Core/Exceptions \
+        Core/Geom Core/Geometry Core/Thread Core/GuiInterface
+
 LIBS := -L/usr/local/lib \
 	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) -lcvode -lunuran $(FLIBS) -lm
 
