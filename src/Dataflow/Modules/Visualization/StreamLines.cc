@@ -108,8 +108,8 @@ static const double rkf_a[] =
   {16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
 static const double rkf_ab[] =
   {1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
-static const double rkf_c[] =
-  {0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
+//static const double rkf_c[] =
+//  {0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; // Not used, keep for reference.
 static const double rkf_d[][5]=
   {{0, 0, 0, 0, 0},
    {1.0/4, 0, 0, 0, 0},

@@ -342,8 +342,8 @@ QuadSurfMesh::locate(Node::index_type &loc, const Point &p) const
 bool
 QuadSurfMesh::locate(Edge::index_type &loc, const Point &) const
 {
-  ASSERT("Locate Edge not implemented in QuadSurfMesh");
   loc = 0;
+  ASSERTFAIL("Locate Edge not implemented in QuadSurfMesh");
   return false;
 }
 
@@ -351,8 +351,8 @@ QuadSurfMesh::locate(Edge::index_type &loc, const Point &) const
 bool
 QuadSurfMesh::locate(Face::index_type &loc, const Point &) const
 {
-  ASSERT("Locate Face not implemented in QuadSurfMesh");
   loc = 0;
+  ASSERTFAIL("Locate Face not implemented in QuadSurfMesh");
   return false;
 }
 
@@ -360,8 +360,8 @@ QuadSurfMesh::locate(Face::index_type &loc, const Point &) const
 bool
 QuadSurfMesh::locate(Cell::index_type &loc, const Point &) const
 {
-  ASSERT("Locate Cell not implemented in QuadSurfMesh");
   loc = 0;
+  ASSERTFAIL("Locate Cell not implemented in QuadSurfMesh");
   return false;
 }
 
@@ -382,7 +382,7 @@ void
 QuadSurfMesh::get_weights(const Point &/*p*/,
 			  Node::array_type &/*l*/, vector<double> &/*w*/)
 {
-  ASSERT("get_weights for nodes not implemented in QuadSurfMesh");
+  ASSERTFAIL("get_weights for nodes not implemented in QuadSurfMesh");
 }
 
 

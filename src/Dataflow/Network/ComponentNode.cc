@@ -1143,9 +1143,9 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename,
   
   DOMDocument *doc = parser.getDocument();
   DOMNodeList *list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
-  int nlist = list->getLength();
+  unsigned long nlist = list->getLength();
   if (nlist == 0) return 0;
-  for (int i = 0;i < nlist; i++) {
+  for (unsigned long i = 0;i < nlist; i++) {
     DOMNode* node = list->item(i);
     if (!node) {
       std::cerr << "Error: NULL node at top level component" << std::endl;

@@ -807,8 +807,16 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
   if ( !child_.get_rep() ) return;
 
   if ( !pre_draw(di, m, 0) ) return;
-  
-  if ( true ) //!di->dl ) 
+
+#if 1
+  // Disable display lists until they are associated with the
+  // correct contexts rather than with the objects.  Delete
+  // does not work as the context is not correct when the object
+  // is destroyed.  Also, the lists are not shared among contexts
+  // if there are multiple viewers.
+  child_->draw(di, m, time);
+#else
+  if ( di->dl ) 
   {
     child_->draw(di,m,time);  // do not use display list
   }
@@ -852,6 +860,7 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
       di->polycount += polygons_;
     }
   }
+#endif
 
   post_draw(di);
 }
@@ -1932,17 +1941,16 @@ void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-  unsigned int i;
-  for (i=0; i<objs.size() && (start_times[i] <= time); i++) 
+  int i;
+  for (i=0; i<(int)(objs.size()) && (start_times[i] <= time); i++) 
     ;
   if (i) { // you can go...
 
-    if (i > objs.size()-1) i = objs.size()-1;
+    if (i > (int)(objs.size()-1)) { i = (int)(objs.size()-1); }
 
-    if (start_times[i] > time)
-      --i;
+    if (start_times[i] > time) { --i; }
 
-    if (i < 0) i = 0;
+    if (i < 0) { i = 0; }
 
     objs[i]->draw(di,matl,time); // run with it...
   }

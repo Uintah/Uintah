@@ -24,6 +24,7 @@ SRCDIR   := Core/Algorithms/Visualization
 SRCS     += \
         $(SRCDIR)/HexMC.cc		\
 	$(SRCDIR)/MarchingCubes.cc	\
+	$(SRCDIR)/mcube2.cc		\
 	$(SRCDIR)/Noise.cc		\
 	$(SRCDIR)/QuadMC.cc		\
 	$(SRCDIR)/RenderField.cc	\
