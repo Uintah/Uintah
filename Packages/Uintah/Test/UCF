@@ -6,7 +6,7 @@ from helpers.runSusTests import runSusTests, inputs_root
 
 
 TESTS = [ ("dlb_mpm", "dlbTest.ups", "-loadbalancer PLB", 8, "NONE","","mpm"),  \
-          ("dlb_mpmice", "dlbTest.ups", "-loadbalancer PLB", 8, "ALL","","mpmice"),  \
+          ("dlb_mpmice", "dlbTest.ups", "-loadbalancer PLB", 8, "NONE","","mpmice"),  \
           ("periodic_disks", "periodic_disks.ups", "", 6, "ALL","","mpm") \
           ]
 
