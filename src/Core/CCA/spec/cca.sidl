@@ -268,6 +268,18 @@ interface AbstractFramework
    */
    AbstractFramework createEmptyFramework() ;
 
+   /** start to share the CCA components with other CCA frameworks by
+      1. broadcasting its own framework URL
+      2. listening to other frameworks' broadcasting
+      3. query the CCA components set availabe in other framewors.	 				
+   */	
+   void share(in gov.cca.Services svc);
+ 
+   /** This one is in test for distributed computing
+      
+   */	 
+   string createComponent(in string name, in string type);
+
 }  // end interface AbstractFramework
 
 
@@ -1169,7 +1181,8 @@ interface BuilderService  extends gov.cca.Port
               the returned ID does not destroy the component; 
               see destroyInstance instead.
    */
-   gov.cca.ComponentID createInstance(in string className, in string instanceName, in gov.cca.TypeMap properties) throws gov.cca.CCAException ; 
+   gov.cca.ComponentID createInstance(in string className, in string instanceName,
+		 in gov.cca.TypeMap properties, in string frameworkURL) throws gov.cca.CCAException ; 
 
   /** Get component list.
       @return a ComponentID for each component currently created.
@@ -1316,6 +1329,9 @@ interface BuilderService  extends gov.cca.Port
    array<string> getCompatiblePortList(in gov.cca.ComponentID c1,
 				       in string port1,
 				       in gov.cca.ComponentID c2);
+
+   void registerFramework(in string frameworkURL); 	
+   void registerServices(in gov.cca.Services svc);
    AbstractFramework getFramework();
    // END Proposed sparker
 
@@ -1360,6 +1376,20 @@ interface UIPort extends gov.cca.Port
 	//return 0 for success, -1 for fatal error, other values for others errors
 	int ui();
 }
+
+//abstract interface 
+interface BuilderPort extends gov.cca.Port
+{
+	/** The builder port is designed for the Builder only
+	 *  There is only one port for convenience.
+	 *  All final modification should be done through 
+	 *  the BuilderService and the BuilderService will tranverse
+	 *  each Builder
+	 */
+	void buildRemotePackageMenus(in gov.cca.ports.ComponentRepository reg, in string frameworkURL); 	
+
+}
+
 
 //abstract interface
 interface ZListPort extends gov.cca.Port
