@@ -29,13 +29,13 @@ void Cylinder::preprocess(double, int&, int&)
     xform.pre_translate(-bottom.asVector());
     xform.rotate(axis, Vector(0,0,1));
     xform.pre_scale(Vector(1./radius, 1./radius, 1./height));
-    print(cerr);
-    xform.print();
+//    print(cerr);
+//    xform.print();
     ixform.load_identity();
     ixform.pre_scale(Vector(radius, radius, height));
     ixform.rotate(Vector(0,0,1), axis);
     ixform.pre_translate(bottom.asVector());
-    ixform.print();
+//    ixform.print();
     
 }
 
