@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 19 22]
 set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 189 688]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 19 246]
@@ -21,11 +18,12 @@ set m12 [addModuleAtPosition "SCIRun" "Fields" "Unstructure" 713 181]
 set m13 [addModuleAtPosition "SCIRun" "Fields" "TransformField" 713 262]
 set m14 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 856 182]
 set m15 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 789 500]
-set m16 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 966 112]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 966 285]
 set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 966 489]
 set m18 [addModuleAtPosition "SCIRun" "Fields" "HexToTet" 789 351]
 set m19 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 568 503]
 set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 568 588]
+set m21 [addModuleAtPosition "SCIRun" "Fields" "HexToTet" 964 111]
 
 addConnection $m2 0 $m1 0
 addConnection $m3 0 $m1 1
@@ -44,7 +42,6 @@ addConnection $m13 0 $m11 0
 addConnection $m14 0 $m13 1
 addConnection $m11 1 $m15 0
 addConnection $m15 0 $m1 3
-addConnection $m9 0 $m16 0
 addConnection $m16 0 $m17 0
 addConnection $m17 0 $m1 4
 addConnection $m9 0 $m18 0
@@ -53,6 +50,8 @@ addConnection $m11 1 $m19 1
 addConnection $m0 0 $m19 0
 addConnection $m19 0 $m20 0
 addConnection $m20 0 $m1 5
+addConnection $m9 0 $m21 0
+addConnection $m21 0 $m16 0
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -95,12 +94,6 @@ set $m1-ViewWindow_0-resx {991}
 set $m1-ViewWindow_0-resy {853}
 set $m1-ViewWindow_0-aspect {1}
 set $m1-ViewWindow_0-aspect_ratio {}
-set $m1-ViewWindow_0-unused {0}
-set $m1-ViewWindow_0-unused {0}
-set $m1-ViewWindow_0-unused {0}
-set $m1-ViewWindow_0-unused {0}
-set $m1-ViewWindow_0-unused {1}
-set $m1-ViewWindow_0-unused {1}
 set $m2-notes {}
 set $m2-show_status {1}
 set $m2-nodes-on {0}
@@ -131,7 +124,8 @@ set $m2-edge_scale {1.0}
 set $m2-vectors_scale {0.05}
 set $m2-show_progress {-2147483647}
 set $m2-interactive_mode {Interactive}
-set $m2-resolution {4}
+set $m2-node-resolution {6}
+set $m2-edge-resolution {6}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m3-nodes-on {0}
@@ -162,7 +156,8 @@ set $m3-edge_scale {0.03}
 set $m3-vectors_scale {0.05}
 set $m3-show_progress {-2147483647}
 set $m3-interactive_mode {Interactive}
-set $m3-resolution {4}
+set $m3-node-resolution {6}
+set $m3-edge-resolution {6}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-e2.lvv.fld}
@@ -209,7 +204,8 @@ set $m8-edge_scale {0.015}
 set $m8-vectors_scale {0.30}
 set $m8-show_progress {}
 set $m8-interactive_mode {Interactive}
-set $m8-resolution {4}
+set $m8-node-resolution {6}
+set $m8-edge-resolution {6}
 set $m9-notes {}
 set $m9-show_status {1}
 set $m9-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-clipped-mono-reordered.hvt.fld}
@@ -285,7 +281,8 @@ set $m15-edge_scale {0.015}
 set $m15-vectors_scale {0.30}
 set $m15-show_progress {}
 set $m15-interactive_mode {Interactive}
-set $m15-resolution {4}
+set $m15-node-resolution {6}
+set $m15-edge-resolution {6}
 set $m16-notes {}
 set $m16-show_status {1}
 set $m17-notes {}
@@ -318,7 +315,8 @@ set $m17-edge_scale {0.015}
 set $m17-vectors_scale {0.30}
 set $m17-show_progress {}
 set $m17-interactive_mode {Interactive}
-set $m17-resolution {4}
+set $m17-node-resolution {6}
+set $m17-edge-resolution {6}
 set $m18-notes {}
 set $m18-show_status {1}
 set $m19-notes {}
@@ -356,6 +354,9 @@ set $m20-edge_scale {0.015}
 set $m20-vectors_scale {0.05}
 set $m20-show_progress {}
 set $m20-interactive_mode {Interactive}
-set $m20-resolution {4}
+set $m20-node-resolution {6}
+set $m20-edge-resolution {6}
+set $m21-notes {}
+set $m21-show_status {1}
 
 ::netedit scheduleok
