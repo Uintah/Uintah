@@ -299,6 +299,8 @@ MPMLabel::MPMLabel()
   TotalMassLabel = VarLabel::create( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
+  NeedAddMPMMaterialLabel = VarLabel::create("NeedAddMPMMaterial",
+                                 sum_vartype::getTypeDescription());
   for(int iside=0;iside<6;iside++) {
       string label_name = Patch::getFaceName( (Patch::FaceType) iside ); // FIXME: assumes face indices
       
@@ -637,6 +639,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
+  VarLabel::destroy(NeedAddMPMMaterialLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);
   for(int iside=0;iside<6;iside++) {
       VarLabel::destroy(BndyContactAreaLabel[iside]);
