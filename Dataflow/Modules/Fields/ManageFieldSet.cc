@@ -143,8 +143,8 @@ ManageFieldSet::update_hiertable()
   fsidmap_.clear();
   fidmap_.clear();
 
-  dynamic_port_range range = get_iports("Input FieldSet");
-  port_map::iterator pi = range.first;
+  port_range_type range = get_iports("Input FieldSet");
+  port_map_type::iterator pi = range.first;
   while (pi != range.second)
   {
     FieldSetIPort *port = (FieldSetIPort *)get_iport(pi->second);
