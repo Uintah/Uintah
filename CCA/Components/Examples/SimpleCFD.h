@@ -11,11 +11,14 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
+  class SolverInterface;
+  class SolverParameters;
 
 /**************************************
 
@@ -46,15 +49,6 @@ WARNING
   
 ****************************************/
 
-  struct Stencil7 {
-    double p;
-    double e,w,n,s,t,b;
-    Stencil7() {
-      p=n=s=w=e=0;
-    }
-  };
-  const TypeDescription* fun_getTypeDescription(Stencil7*);
-
   class SimpleCFD : public UintahParallelComponent, public SimulationInterface {
   public:
     SimpleCFD(const ProcessorGroup* myworld);
@@ -68,6 +62,15 @@ WARNING
 					       SchedulerP&);
     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
   private:
+    void scheduleDiffuseScalar(SchedulerP& sched, const LevelP& level,
+			       const string& name,
+			       const VarLabel* scalar,
+			       const VarLabel* scalar_matrix,
+			       const VarLabel* scalar_rhs,
+			       double rate,
+			       SolverInterface* solver,
+			       const SolverParameters* solverparams);
+
     void initialize(const ProcessorGroup*,
 		    const PatchSubset* patches, const MaterialSubset* matls,
 		    DataWarehouse* old_dw, DataWarehouse* new_dw);
@@ -80,23 +83,36 @@ WARNING
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
 			DataWarehouse* old_dw, DataWarehouse* new_dw);
+    void applyForces(const ProcessorGroup*,
+		     const PatchSubset* patches,
+		     const MaterialSubset* matls,
+		     DataWarehouse* old_dw, DataWarehouse* new_dw);
     void applyViscosity(const ProcessorGroup*,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw);
+			DataWarehouse* old_dw, DataWarehouse* new_dw,
+			int dir);
     void projectVelocity(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw);
+			 const PatchSubset* patches,
+			 const MaterialSubset* matls,
+			 DataWarehouse* old_dw, DataWarehouse* new_dw);
+    void applyProjection(const ProcessorGroup*,
+			 const PatchSubset* patches,
+			 const MaterialSubset* matls,
+			 DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     void advectScalars(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
 		       DataWarehouse* old_dw, DataWarehouse* new_dw);
-    void diffuseScalars(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw);
+    void diffuseScalar(const ProcessorGroup*,
+		       const PatchSubset* patches,
+		       const MaterialSubset* matls,
+		       DataWarehouse* old_dw, DataWarehouse* new_dw,
+		       string varname, const VarLabel* scalar,
+		       const VarLabel* scalar_matrix,
+		       const VarLabel* scalar_rhs,
+		       double rate);
     void dissipateScalars(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
@@ -106,6 +122,10 @@ WARNING
 		   const PatchSubset* patches,
 		   const MaterialSubset* matls,
 		   DataWarehouse* old_dw, DataWarehouse* new_dw);
+    void interpolateVelocities(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls,
+			       DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     void advect(Array3<double>& q, const Array3<double>& qold,
 		CellIterator iter,
@@ -117,27 +137,37 @@ WARNING
 		Condition<double>* cbc);
     void applybc(const IntVector& idx, const IntVector& l, const IntVector& h,
 		 const IntVector& h2,
-		 Array3<double>& field, double delt,
+		 const Array3<double>& field, double delt,
 		 const Vector& inv_dx2, double diff,
 		 constNCVariable<int>& bctype, Condition<double>* scalar_bc,
 		 Condition<double>* xflux_bc, Condition<double>* yflux_bc,
 		 Condition<double>* zflux_bc,
-		 const IntVector& FN, const IntVector& FS,
 		 const IntVector& FW, const IntVector& FE,
+		 const IntVector& FS, const IntVector& FN,
+		 const IntVector& FB, const IntVector& FT,
 		 Array3<Stencil7>& A, Array3<double>& rhs);
 
     ExamplesLabel* lb_;
     SimulationStateP sharedState_;
     double delt_multiplier_;
     double density_diffusion_;
-    double density_diffusion_tolerance_;
+    SolverParameters* diffusion_params_;
     double density_dissipation_;
+    double thermal_conduction_;
+    SolverParameters* conduction_params_;
     double viscosity_;
-    double viscosity_tolerance_;
-    double correction_tolerance_;
+    SolverParameters* viscosity_params_;
+    SolverParameters* pressure_params_;
     double advection_tolerance_;
     IntVector pin_;
+    int maxadvect_;
     SimpleMaterial* mymat_;
+    double buoyancy_;
+    double vorticity_confinement_scale;
+    bool keep_pressure;
+    bool old_initial_guess;
+    bool do_thermal;
+    Vector random_initial_velocities;
 
     RegionDB regiondb;
     BoundaryConditions bcs;
@@ -145,12 +175,7 @@ WARNING
 
     SimpleCFD(const SimpleCFD&);
     SimpleCFD& operator=(const SimpleCFD&);
-	 
   };
 }
-
-namespace SCIRun {
-  void swapbytes( Uintah::Stencil7& );
-} // namespace SCIRun
 
 #endif
