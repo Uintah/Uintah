@@ -106,6 +106,7 @@ if (!oldStyleAdvect.active()){
   string tablename = "testtable";
   table = TableFactory::readTable(params, tablename);
   table->addIndependentVariable("mix. frac.");
+  
 
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
@@ -118,7 +119,7 @@ if (!oldStyleAdvect.active()){
   }
   temp_index = table->addDependentVariable("Temp(K)");
   table->setup();
-  
+
   //__________________________________
   // - create Label names
   // - Let ICE know that this model computes the 
