@@ -4,9 +4,8 @@
 <Uintah_specification>
 
    <Meta>
-       <title> Flow through a nozzle </title>
+       <title>  </title>
    </Meta>
-
 
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -18,7 +17,7 @@
        <delt_max>            1.0         </delt_max>
        <delt_init>           1.0e-8      </delt_init>
        <max_delt_increase>   1.0         </max_delt_increase>
-       <!-- <max_iterations>      10000          </max_iterations>-->
+        <!--<max_iterations>      100          </max_iterations>-->
        <timestep_multiplier> 0.8         </timestep_multiplier>
    </Time>
 
@@ -28,7 +27,9 @@
     <Grid>
     <BoundaryConditions>
       <!--________________Inside Nozzle_______________-->
-      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.03875">
+      <!-- The Radius depends on resolution           -->
+      <!-- 0.03863                                    -->
+      <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.039">
 	 <BCType id = "0"   label = "Pressure"      var = "Custom">
 			       <value> 0.0   </value>
 	 </BCType>
@@ -38,7 +39,7 @@
 	 <BCType id = "1" label = "Temperature"      var = "Custom">
 			       <value> 0.0  </value>
 	 </BCType>
-	 <BCType id = "1" label = "Density"	   var = "Custom">
+	 <BCType id = "1" label = "Density"	    var = "Custom">
 			       <value> 0.0 </value>
 	 </BCType>
        </Face>
@@ -122,34 +123,46 @@
        <Level>
            <Box label = "1">
               <lower>        [0.0,0.0,-0.005]       </lower>
-              <upper>        [1.0,0.50,0.005]       </upper>
+              <!--<upper>    [0.5,0.25,0.005]       </upper> -->
+              <upper>        [0.5,0.50,0.005]       </upper>
               <extraCells>   [1,1,1]                </extraCells>
-              <patches>      [8,4,1]                </patches>
-              <resolution>   [400,400,1]            </resolution>
+              <patches>      [4,8,1]                </patches>
+              <!--<resolution>   [400,400,1]            </resolution> -->
             </Box>
+            <spacing>        [0.001,0.001,0.01]    </spacing>
+
        </Level>
        
     </Grid>
+
+    <!-- ___________________________________________________________________-->
+    <!-- If you change the resolution in the y direction you must also check-->
+    <!-- the nozzle radius                                                  -->
 
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>StageSeparation.uda</filebase>
-      <!--<outputTimestepInterval>1</outputTimestepInterval> -->
+      <filebase>imp_stage_NG_BCs.uda</filebase>
+      <!--<outputTimestepInterval>10</outputTimestepInterval> -->
       <outputInterval>1e-4</outputInterval>
       <save label = "press_equil_CC"/>
+      <save label = "speedSound_CC"/>
+      <save label = "delP_Dilatate"/>
       <save label = "vol_frac_CC"/>
+      <save label = "sp_vol_src_CC"/>
       <save label = "sp_vol_CC"/>
       <save label = "vel_CC"/>
       <save label = "mom_L_CC"/>
       <save label = "rho_CC"/>
-      <save label = "temp_CC"/>  
+      <save label = "temp_CC"/>
+      <save label = "Tdot"/>  
       <save label = "mach"/>  
       <save label = "p.x"/>
+      <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.color"/>
-      <checkpoint cycle = "2" interval = "1e-4"/>
+      <checkpoint cycle = "4" interval = "1e-4"/>
       <compression> gzip </compression>
    </DataArchiver>
 
@@ -184,12 +197,42 @@
         <max_iteration_equilibration> 100</max_iteration_equilibration>
         <advection type = "SecondOrder"/>
         <solution technique = "EqForm"/>
+<!--
+        <TimeStepControl>
+          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  1.0            </knob_for_speedSound>
+        </TimeStepControl>
+-->
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-5 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 8 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+	     <!-- Common options -->
+              <tolerance>1.e-7    </tolerance>
+
+	     <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+	     <!-- Hypre options -->
+	     <solver>         hybrid  </solver>
+	     <preconditioner> pfmg    </preconditioner>
+	     <maxiterations>  7500    </maxiterations>
+	     <npre>           1       </npre>
+	     <npost>          1       </npost>
+	     <skip>           0       </skip>
+	     <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
        </ICE>        
     </CFD>
     <MPM>
-        <time_integrator>         explicit           </time_integrator>
-        <nodes8or27>              8                  </nodes8or27>
-        <withColor>               true               </withColor>
+        <time_integrator>         explicit    </time_integrator>
+        <nodes8or27>              8           </nodes8or27>
+        <withColor>               true        </withColor>
+        <create_new_particles>    false       </create_new_particles>
+        <erosion algorithm = "none"/>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -207,27 +250,13 @@
     <MaterialProperties>
        <MPM>
           <material>
-            <includeFlowWork>       false          </includeFlowWork>
-            <burn type = "null"/>
-            <EOS type = "ideal_gas">
-                <gas_constant>      287             </gas_constant>
-            </EOS>
-            <density>               8900.0         </density>
-            <constitutive_model type = "comp_neo_hook_plastic">
-                <useModifiedEOS>     true          </useModifiedEOS>
-                <bulk_modulus>      117.0e9        </bulk_modulus>
-                <shear_modulus>      43.8e9        </shear_modulus>
-                <yield_stress>       70.0e6        </yield_stress>
-                <hardening_modulus>  43.8e5        </hardening_modulus>
-                <alpha>               0.0          </alpha>
-                <strain_limit>       3.05          </strain_limit>
-                <reduction_factor>   1.0           </reduction_factor>
-            </constitutive_model>
-            <toughness>               10.e6         </toughness>
-            <thermal_conductivity>    400.0         </thermal_conductivity>
-            <specific_heat>           386.0         </specific_heat>
-            <gamma>                   1.4           </gamma>   
-
+        <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
+        <constitutive_model type="hypo_elastic">
+          <useModifiedEOS>            false          </useModifiedEOS>
+          <G>80.0e9   </G>
+          <K>173.33e9 </K>
+        </constitutive_model>
+            <gamma>                   1.4           </gamma> 
             <geom_object>
                <tri label = "2ndStage">
                  <name>2ndStage</name>
