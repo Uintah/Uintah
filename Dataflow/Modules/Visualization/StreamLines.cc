@@ -70,6 +70,7 @@ private:
   GuiInt                        color_;
   GuiInt                        remove_colinear_;
   GuiInt                        method_;
+  GuiInt                        np_;
 };
 
 DECLARE_MAKER(StreamLines)
@@ -84,7 +85,8 @@ StreamLines::StreamLines(GuiContext* ctx) :
   direction_(ctx->subVar("direction")),
   color_(ctx->subVar("color")),
   remove_colinear_(ctx->subVar("remove-colinear")),
-  method_(ctx->subVar("method"))
+  method_(ctx->subVar("method")),
+  np_(ctx->subVar("np"))
 {
 }
 
@@ -437,7 +439,7 @@ StreamLines::execute()
   oport_->send(algo->execute(sf_->mesh(), vfi,
 			     tolerance, stepsize, maxsteps, direction, color,
 			     remove_colinear_.get(),
-			     method_.get()));
+			     method_.get(), np_.get()));
 }
 
 
