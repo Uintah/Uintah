@@ -556,7 +556,7 @@ Viewer::delObj(GeomViewerPort* port, int serial)
   else
   {
     error("Error deleting object, object not in database...(serial=" +
-	  to_string(serial));
+	  to_string(serial) + ")" );
   }
 }
 
