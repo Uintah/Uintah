@@ -40,6 +40,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Core/Geometry                    \
 	Core/Containers                  \
 	Core/Thread                      \
