@@ -59,6 +59,7 @@ void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
   params->require("D",    d_D);
   params->require("E0",   d_E0);
   params->require("rho0", d_rho0);
+  params->getWithDefault("react_mixed_cells", d_react_mixed_cells,true);
 
   // if point  ignition is desired, direction_if_plane = (0.,0.,0)
   // if planar ignition is desired, direction_if_plane is normal in
@@ -257,7 +258,11 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       double dist_straight = (pos - d_start_place).length();
       double dist = dist_plane*plane + dist_straight*(1.-plane);
       double t_b = dist/d_D; 
-      if(vol_frac_rct[c] + vol_frac_prd[c] > .99){
+      double VF_SUM = 0.;
+      if(!d_react_mixed_cells){
+        VF_SUM = .99;
+      }
+      if((vol_frac_rct[c] + vol_frac_prd[c]) > VF_SUM){
         if (time >= t_b && rctRho[c] > d_TINY_RHO){
           Fr[c] = (time - t_b)/delta_L;
           if(Fr[c] > .96) Fr[c] = 1.0;
