@@ -87,10 +87,15 @@ C-----------------------------------------------------------------------
       DO 310 K = kBeg,kEnd
          DO 210 J = jBeg,jEnd
             DO 110 I = iBeg,iEnd
+
                if (VOIDFRAC(i,j,k).le.cutoff) then
+
                   PCELL(I,J,K) = MMWALLID
                   VOIDFRAC(I,J,K) = 0.0
+c                  print*, 'location of mmwallid = ',i,j,k
+
                end if
+
  110        CONTINUE
  210     CONTINUE
  310  CONTINUE

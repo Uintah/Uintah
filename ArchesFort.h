@@ -85,6 +85,7 @@ WARNING
 #define FORT_MMBCVELOCITY mmbcvelocity_
 #define FORT_MMWALLBC mmwallbc_
 #define FORT_MMCELLTYPEINIT mmcelltypeinit_
+#define FORT_MM_MODIFY_PRESCOEF mm_modify_prescoef_
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
 
@@ -1016,6 +1017,24 @@ extern "C"
 		double* nlsource, double* linsource,
 		const int* pcell,
 		const int* mmwallid);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Modify pressure equation coefficients to account for voidage effects
+
+  void 
+  FORT_MM_MODIFY_PRESCOEF(
+			  const int* dim_lo, const int* dim_hi,
+			  const int* dim_lo_coef, const int* dim_hi_coef,
+			  double* ae, 
+			  double* aw,
+			  double* an,
+			  double* as,
+			  double* at,
+			  double* ab,
+			  double* epsg,
+			  const int* valid_lo,
+			  const int* valid_hi);
+
 }
 
 #endif
