@@ -27,7 +27,9 @@ namespace Uintah {
       const VarLabel* velInc_NCLabel;
 
       const VarLabel* burnedMass_CCLabel;
-      const VarLabel* releasedHeat_CCLabel;  // for computeMassBurnRate
+      const VarLabel* releasedHeat_CCLabel;
+      const VarLabel* sumBurnedMassLabel;
+      const VarLabel* sumReleasedHeatLabel;  // for computeMassBurnRate
 
     };
 
