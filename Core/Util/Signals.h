@@ -358,7 +358,7 @@ public:
     {
       lock_.lock();
       for (unsigned i=0; i<slot_.size(); i++)
-	static_cast<SlotBase2<Arg1,Arg2>*>(s)->send(a,b);
+	static_cast<SlotBase2<Arg1,Arg2>*>(slot_[i])->send(a,b);
       lock_.unlock();
     }
 };
