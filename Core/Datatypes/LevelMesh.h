@@ -38,6 +38,8 @@ using std::vector;
 
 namespace Uintah {
 
+class LevelMesh;
+typedef LockingHandle<LevelMesh> LevelMeshHandle;
   
 class SCICORESHARE LevelMesh : public MeshBase
 {
@@ -45,13 +47,12 @@ public:
   struct LevelIndex
   {
     public:
-    LevelIndex(const LevelMesh *m,
-	       unsigned i, unsigned j, unsigned k);
+    LevelIndex(const LevelMesh* m, unsigned i, unsigned j, unsigned k);
+    unsigned i_, j_, k_;
     const LevelMesh *mesh_;
     const Patch* patch_;
-    unsigned i_, j_, k_;
     protected:
-    LevelIndex(){}  
+    LevelIndex(){}   
   };
   
   struct CellIndex : public LevelIndex
@@ -70,8 +71,8 @@ public:
   
   struct LevelIter : public LevelIndex
   {
-    LevelIter(const LevelMesh *m, unsigned i, unsigned j, unsigned k ) :
-      LevelIndex(m,i,j,k){}
+    LevelIter(const LevelMesh *m,unsigned i, unsigned j, unsigned k ) :
+      LevelIndex(m,i,j,k) {}
     
     const LevelIndex &operator *() { return *this; }
     
@@ -85,7 +86,6 @@ public:
     {
       return !(*this == a);
     }
-    
   };
   
   
@@ -158,25 +158,105 @@ public:
     }
   };
   
+  struct UnfinishedIndex
+  {
+  public:
+    UnfinishedIndex() : i_(0) {}
+    UnfinishedIndex(unsigned i) : i_(i) {}
+
+    operator const unsigned() const { return i_; }
+
+    unsigned i_;
+  };
+
+  struct EdgeIndex : public UnfinishedIndex
+  {
+    EdgeIndex() : UnfinishedIndex() {}
+    EdgeIndex(unsigned i) : UnfinishedIndex(i) {}
+  };
+
+  struct FaceIndex : public UnfinishedIndex
+  {
+    FaceIndex() : UnfinishedIndex() {}
+    FaceIndex(unsigned i) : UnfinishedIndex(i) {}
+  };
+
+  struct UnfinishedIter : public UnfinishedIndex
+  {
+    UnfinishedIter(const LevelMesh *m, unsigned i) 
+      : UnfinishedIndex(i), mesh_(m) {}
+    
+    const UnfinishedIndex &operator *() { return *this; }
+    
+    bool operator ==(const UnfinishedIter &a) const
+    {
+      return i_ == a.i_ && mesh_ == a.mesh_;
+    }
+    
+    bool operator !=(const UnfinishedIter &a) const
+    {
+      return !(*this == a);
+    }
+    
+    const LevelMesh *mesh_;
+  };
+
+  struct EdgeIter : public UnfinishedIter
+  {
+    EdgeIter(const LevelMesh *m, unsigned i) 
+      : UnfinishedIter(m, i) {}
+    
+    const EdgeIndex &operator *() const { return (const EdgeIndex&)(*this); }
+
+    EdgeIter &operator++() { return *this; }
+
+  private:
+
+    EdgeIter operator++(int)
+    {
+      EdgeIter result(*this);
+      operator++();
+      return result;
+    }
+  };
+
+  struct FaceIter : public UnfinishedIter
+  {
+    FaceIter(const LevelMesh *m, unsigned i) 
+      : UnfinishedIter(m, i) {}
+    
+    const FaceIndex &operator *() const { return (const FaceIndex&)(*this); }
+
+    FaceIter &operator++() { return *this; }
+
+  private:
+
+    FaceIter operator++(int)
+    {
+      FaceIter result(*this);
+      operator++();
+      return result;
+    }
+  };  
+
   typedef LevelIndex index_type;
   
   //! Index and Iterator types required for Mesh Concept.
   typedef NodeIndex       node_index;
   typedef NodeIter        node_iterator;
+  typedef NodeIndex       node_size_type;
+
+  typedef EdgeIndex       edge_index;     
+  typedef EdgeIter        edge_iterator;
+  typedef EdgeIndex       edge_size_type;
  
-  //typedef EdgeIndex       edge_index;     
-  //typedef EdgeIterator    edge_iterator;
-  typedef int             edge_index;
-  typedef int             edge_iterator;
- 
-  //typedef FaceIndex       face_index;
-  //typedef FaceIterator    face_iterator;
-  typedef unsigned        face_index;
-  typedef unsigned        face_iterator;
+  typedef FaceIndex       face_index;
+  typedef FaceIter        face_iterator;
+  typedef FaceIndex       face_size_type;
  
   typedef CellIndex       cell_index;
   typedef CellIter        cell_iterator;
-
+  typedef CellIndex       cell_size_type;
   // storage types for get_* functions
   typedef vector<node_index>  node_array;
   typedef vector<edge_index>  edge_array;
@@ -186,24 +266,42 @@ public:
 
   friend class NodeIter;
   friend class CellIter;
+  friend class EdgeIter;
+  friend class FaceIter;
 
   // For now we must create a Level Mesh for each level of the Level
-  LevelMesh( GridP  g, int level);
+  LevelMesh() : grid_(0), level_(0) {}
+  // if the above constructor is used a Grid and level must be added before
+  // we can use the LevelMesh;
+  void SetMesh( GridP g, int l){ grid_ = g; level_ = l; init(); }
+  void init();
+  // remaining constructors
+  LevelMesh( GridP  g, int l) : grid_(g), level_(l) { init();}
   LevelMesh(const LevelMesh &copy) :
     grid_(copy.grid_), level_(copy.level_), idxLow_(copy.idxLow_),
     nx_(copy.nx_), ny_(copy.ny_), nz_(copy.nz_), min_(copy.min_),
     max_(copy.max_) {}
-  virtual MeshBase *clone(){ return new LevelMesh(*this); }
+  virtual LevelMesh *clone(){ return new LevelMesh(*this); }
   virtual ~LevelMesh() {}
 
   node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
-  node_iterator node_end() const { return node_iterator(this, 0, 0, nz_); }
-  edge_iterator edge_begin() const { return 0; }
-  edge_iterator edge_end() const { return 0; }
-  face_iterator face_begin() const { return 0; }
-  face_iterator face_end() const { return 0; }
+  node_iterator node_end() const { return node_iterator(this,0, 0, nz_); }
+  node_size_type nodes_size() const {
+    return node_size_type(this, nx_, ny_, nz_);
+  }
+  edge_iterator edge_begin() const { return edge_iterator(this, 0); }
+  edge_iterator edge_end() const  { return edge_iterator(this, 0); }
+  edge_size_type edges_size() const { return edge_size_type(0); }
+
+  face_iterator face_begin() const { return face_iterator(this,0); }
+  face_iterator face_end() const { return face_iterator(this,0); }
+  face_size_type faces_size() const { return face_size_type(0); }
+
   cell_iterator cell_begin() const { return cell_iterator(this, 0, 0, 0); }
   cell_iterator cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
+  cell_size_type cells_size() const {
+    return cell_size_type(this, nx_-1, ny_-1, nz_-1);
+  }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
@@ -247,6 +345,7 @@ public:
   void get_center(Point &, face_index) const {}
   void get_center(Point &result, cell_index idx) const;
 
+
   bool locate(node_index &node, const Point &p) const;
   bool locate(edge_index &, const Point &) const { return false; }
   bool locate(face_index &, const Point &) const { return false; }
@@ -271,8 +370,6 @@ private:
   IntVector idxLow_; // cache the low index
 
 
-  LevelMesh(){} // can't initialize without a Grid
-
   //! the node_index space extents of a LevelMesh (min=0, max=n-1)
   unsigned nx_, ny_, nz_;
 
@@ -283,7 +380,6 @@ private:
   static Persistent *maker() { return new LevelMesh(); }
 };
 
-typedef LockingHandle<LevelMesh> LevelMeshHandle;
 
 
 
