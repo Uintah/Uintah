@@ -250,6 +250,7 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
       tsk->requires(old_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->computes(new_dw, d_lab->d_cellTypeLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch);
@@ -350,15 +351,24 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 	      Ghost::None, nofGhostCells);
 
 
-  // Create vars for new_dw
+  // Create vars for new_dw ***warning changed new_dw to old_dw...check
   CCVariable<int> cellType_new;
   new_dw->allocate(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
   cellType_new = cellType;
     // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
+  if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  else {
+    cellInfoP.setData(scinew CellInformation(patch));
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  }
+
+#if 0
+  PerPatch<CellInformationP> cellInfoP;
   cellInfoP.setData(scinew CellInformation(patch));
   new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
+#endif
   CCVariable<double> pressure_new;
   new_dw->allocate(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
   pressure_new = pressure; // copy old into new
