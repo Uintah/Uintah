@@ -21,8 +21,15 @@ StanjanEquilibriumReactionModel::StanjanEquilibriumReactionModel(bool adiabatic)
   ReactionModel(), DynamicTable(), d_adiabatic(adiabatic)
 {
   d_reactionData = new ChemkinInterface();
+  d_calcthermalNOx=false;
 }
-
+// Constructor with thermal NOx
+StanjanEquilibriumReactionModel::StanjanEquilibriumReactionModel(bool adiabatic, bool d_thermalNOx):
+  ReactionModel(), DynamicTable(), d_adiabatic(adiabatic)
+{
+  d_reactionData = new ChemkinInterface();
+  d_calcthermalNOx=d_thermalNOx;
+}
 StanjanEquilibriumReactionModel::~StanjanEquilibriumReactionModel() 
 {
 }
@@ -37,6 +44,8 @@ StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& params,
   int numRxnVars =  d_mixModel->getNumRxnVars();
   //d_depStateSpaceVars = NUM_DEP_VARS + d_reactionData->getNumSpecies();
   d_depStateSpaceVars = NUM_DEP_VARS + 4; // Only printing out four species
+  if(d_calcthermalNOx)
+  	d_depStateSpaceVars +=3; // Need three more species for thermal NOx 
   d_lsoot = false;
   d_rxnTableDimension = numMixVars + numRxnVars + !(d_adiabatic);
   d_indepVars = vector<double>(d_rxnTableDimension);
@@ -182,6 +191,8 @@ StanjanEquilibriumReactionModel::computeRxnStateSpace(const Stream& unreactedMix
   vector<double>::iterator junk;
   junk = equilStateSpace.d_speciesConcn.begin();
   junk += 4;
+  if(d_calcthermalNOx)// Need three more species for thermal NOx
+	junk += 3;
   equilStateSpace.d_speciesConcn.erase(junk,equilStateSpace.d_speciesConcn.end());
   //ostream_iterator<double> ofile(cout, " ");
   //copy(equilStateSpace.d_speciesConcn.begin(), equilStateSpace.d_speciesConcn.end(),
@@ -296,6 +307,15 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
   int lout = d_reactionData->getOutFile();
   // Convert vector of species mass fractions to array of mole fractions
   vector<double> Xequil = d_reactionData->convertMasstoMoles(initMassFract);
+ //Variables for NOx: Added by P.Desam
+  double OH_con=0.0; // OH concentration
+  double NOxrate_forward=0.0; //NO from only forward reactions
+  double fr_1=0.0;   // Forward rate for reaction 1
+  double br_1=0.0;   // Backward rate for reaction 2
+  double fr_2=0.0;   // Forward rate for reaction 2
+  double br_2=0.0;   // Backward rate for reaction 2
+  double fr_3=0.0;   // Forward rate for reaction 3
+
   // Compute equilibrium using Stanjan
   equil(&lout, &lprnt, &lsave, &leqst, &lcntue, d_reactionData->d_ickwrk,
 	d_reactionData->d_rckwrk, &lenieq, ieqwrk, &lenreq, reqwrk, 
@@ -318,6 +338,18 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     //?? put zeros in vector if mass fractions 
     // within ATOL of zero??
     //Kluge to print out only 4 species to table: CO2, H2O, O2, CO
+
+    equilSoln.d_pressure *= 1.01325e+05; // atm -> Pa
+    equilSoln.d_enthalpy *= 1.e-4; // Units of J/kg
+    equilSoln.d_density = 1./equilVol*1.e+3; // Units of kg/m^3
+    equilSoln.d_cp = d_reactionData->getMixSpecificHeat(equilSoln.getTemperature(),
+                                                        yeq); // Units of J/(kg-K)
+    // Reaction rates for NOx
+    fr_1=1.8*pow(10.0,8.0)*exp(-38370.0/equilSoln.getTemperature()); // Units of m^3/mol-s
+    br_1=3.8*pow(10.0,7.0)*exp(-425.0/equilSoln.getTemperature());
+    fr_2=1.8*pow(10.0,4.0)*equilSoln.getTemperature()*exp(-4680.0/equilSoln.getTemperature());
+    br_2=3.8*pow(10.0,3.0)*equilSoln.getTemperature()*exp(-20820.0/equilSoln.getTemperature());
+    fr_3=7.1*pow(10.0,7.0)*exp(-450.0/equilSoln.getTemperature());
     
     int index;
     index = d_reactionData->getSpeciesIndex("CO2");
@@ -328,12 +360,26 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     equilSoln.d_speciesConcn[2] = yeq[index];
     index = d_reactionData->getSpeciesIndex("CO");
     equilSoln.d_speciesConcn[3] = yeq[index];
+    // Added by P.Desam
+    if(d_calcthermalNOx){
+    	index = d_reactionData->getSpeciesIndex("N2");
+    	equilSoln.d_speciesConcn[4] = yeq[index]*equilSoln.d_density*1000.0/28.0134; //N2 concentration (mol/m^3)
+    	// O atom concentration: Fluent doc source: (mol/m^3)
+    	equilSoln.d_speciesConcn[5] = 36.64*pow(equilSoln.getTemperature(),0.5)*pow((equilSoln.d_speciesConcn[2]*equilSoln.d_density*1000.0/31.9988),0.5)*exp(-27123/equilSoln.getTemperature());
+    	// NOx rate from forward reactions(mol/m^3-sec):2*k1*[O][N2]
+    	NOxrate_forward = 2.0*fr_1*equilSoln.d_speciesConcn[5]*equilSoln.d_speciesConcn[4];
+    	// NOx forward rate in massfraction (kg/m^3-sec)
+    	equilSoln.d_speciesConcn[6]=NOxrate_forward*30.0061/1000.0;
+    	// Equilibrium NOx (mass fraction)
+    	//index = d_reactionData->getSpeciesIndex("NO");
+    	//equilSoln.d_speciesConcn[6] = yeq[index];
+    	// NOx source term
+    	//equilSoln.d_noxrxnRate=equilSoln.d_speciesConcn[6];
+    	//cout<<"Nox source term from equilsoln.d_noxrxnrate is:"<<equilSoln.d_noxrxnRate<<endl;
+     }
+    //cout<<"Mixture molecular weight is:"<<equilSoln.d_moleWeight<<endl;
+    //cout<<"Equilibrium solution is successful"<<endl;
     //equilSoln.d_speciesConcn = yeq;
-    equilSoln.d_pressure *= 1.01325e+05; // atm -> Pa
-    equilSoln.d_enthalpy *= 1.e-4; // Units of J/kg
-    equilSoln.d_density = 1./equilVol*1.e+3; // Units of kg/m^3
-    equilSoln.d_cp = d_reactionData->getMixSpecificHeat(equilSoln.getTemperature(), 
-							yeq); // Units of J/(kg-K)
     //equilSoln.d_cp = 1.0;
     // store mass fraction
     equilSoln.d_mole = false;
@@ -344,6 +390,13 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     equilSoln.d_pressure = initPress;
     equilSoln.d_temperature = initTemp;
     equilSoln.d_mole = false;
+    equilSoln.d_density = d_reactionData->getMassDensity(initPress, initTemp,
+                                                         initMassFract);
+    equilSoln.d_enthalpy = d_reactionData->getMixEnthalpy(initTemp,
+                                                          initMassFract);
+    equilSoln.d_moleWeight = d_reactionData->getMixMoleWeight(initMassFract);
+    equilSoln.d_cp = d_reactionData->getMixSpecificHeat(initTemp, initMassFract);
+    //equilSoln.d_cp = 1.0;
     //Kluge to print out only 4 species to table: CO2, H2O, O2, CO
     int index;
     index = d_reactionData->getSpeciesIndex("CO2");
@@ -354,15 +407,24 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     equilSoln.d_speciesConcn[2] = initMassFract[index];
     index = d_reactionData->getSpeciesIndex("CO");
     equilSoln.d_speciesConcn[3] = initMassFract[index];
-
+    // Added by P.Desam
+    if(d_calcthermalNOx){
+    	index = d_reactionData->getSpeciesIndex("N2");
+        // N2 concentration (mol/m^3);
+    	equilSoln.d_speciesConcn[4] = initMassFract[index]*equilSoln.d_density*1000.0/28.0134;
+    	// O atom concentration: Fluent doc source: (mol/m^3)
+    	equilSoln.d_speciesConcn[5] = 36.64*pow(equilSoln.getTemperature(),0.5)*pow((equilSoln.d_speciesConcn[2]*equilSoln.d_density*1000.0/31.9988),0.5)*exp(-27123/equilSoln.getTemperature());
+    	// NOx rate from forward reactions (mol/m^3-sec)
+    	NOxrate_forward = 0.0;
+    	//NOxrate_forward = 2.0*1.8*pow(10.0,8.0)*exp(-38370.0/equilSoln.getTemperature())*equilSoln.d_speciesConcn[5]*equilSoln.d_speciesConcn[4];
+    	// NOx forward rate in massfraction (1/sec)
+    	equilSoln.d_speciesConcn[6]=NOxrate_forward*30.0061/(equilSoln.d_density*1000.0);
+    	// Equilibrium NOx in mass fraction
+    	//index = d_reactionData->getSpeciesIndex("NO");
+    	//equilSoln.d_speciesConcn[6] = initMassFract[index];
+    }
     //equilSoln.d_speciesConcn = initMassFract;
-    equilSoln.d_density = d_reactionData->getMassDensity(initPress, initTemp,
-							 initMassFract);
-    equilSoln.d_enthalpy = d_reactionData->getMixEnthalpy(initTemp, 
-							  initMassFract);
-    equilSoln.d_moleWeight = d_reactionData->getMixMoleWeight(initMassFract);
-    equilSoln.d_cp = d_reactionData->getMixSpecificHeat(initTemp, initMassFract);
-    //equilSoln.d_cp = 1.0;
+    cout<<"Failure of equilibrium:Using the initial mass fractions"<<endl;
 #if 0
     cerr << "equilibrium failed for: " << endl;
     for (int ii = 0; ii < initMassFract.size(); ii++) {

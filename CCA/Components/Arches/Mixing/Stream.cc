@@ -30,6 +30,7 @@ Stream::Stream()
   d_mole = false;
   d_numMixVars = 0;
   d_numRxnVars = 0;
+  d_noxrxnRate=0.0;
 }
 
 Stream::Stream(int numSpecies,  int numElements)
@@ -56,6 +57,7 @@ Stream::Stream(int numSpecies,  int numElements)
   d_depStateSpaceVars = NUM_DEP_VARS + numSpecies;
   d_CO2index = 0;
   d_H2Oindex = 0;
+  d_noxrxnRate=0.0;
 }
 
 
@@ -95,6 +97,7 @@ Stream::Stream(int numSpecies, int numElements, int numMixVars,
     + 3*d_numRxnVars;
   d_CO2index = 0;
   d_H2Oindex = 0;
+  d_noxrxnRate=0.0;
 }
 
 
@@ -553,6 +556,9 @@ Stream::print_oneline(std::ofstream& out) {
 
 //
 // $Log$
+// Revision 1.27  2003/12/30 23:43:37  desam
+//      Added capabilities to compute thermalNOx
+//
 // Revision 1.26  2003/10/23 19:01:25  borodai
 // Bug fixes
 //
