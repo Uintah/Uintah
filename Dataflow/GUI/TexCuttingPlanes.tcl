@@ -76,30 +76,30 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 		-side top -fill x
 
 	frame $w.f.x
-	button $w.f.x.plus -text "+" -command "$this-c MoveWidget xplus; $n"
+	button $w.f.x.plus -text "+" -command "$this-c MoveWidget xplus 1; $n"
 	label $w.f.x.label -text " X "
-	button $w.f.x.minus -text "-" -command "$this-c MoveWidget xminus; $n"
+	button $w.f.x.minus -text "-" -command "$this-c MoveWidget xplus -1; $n"
 	pack $w.f.x.plus $w.f.x.label $w.f.x.minus -side left -fill x -expand 1
 	pack $w.f.x -side top -fill x -expand 1
 
 	frame $w.f.y
-	button $w.f.y.plus -text "+" -command "$this-c MoveWidget yplus; $n"
+	button $w.f.y.plus -text "+" -command "$this-c MoveWidget yplus 1; $n"
 	label $w.f.y.label -text " Y "
-	button $w.f.y.minus -text "-" -command "$this-c MoveWidget yminus; $n"
+	button $w.f.y.minus -text "-" -command "$this-c MoveWidget yplus -1; $n"
 	pack $w.f.y.plus $w.f.y.label $w.f.y.minus -side left -fill x -expand 1
 	pack $w.f.y -side top -fill x -expand 1
 
 	frame $w.f.z
-	button $w.f.z.plus -text "+" -command "$this-c MoveWidget zplus; $n"
+	button $w.f.z.plus -text "+" -command "$this-c MoveWidget zplus 1; $n"
 	label $w.f.z.label -text " Z "
-	button $w.f.z.minus -text "-" -command "$this-c MoveWidget zminus; $n"
+	button $w.f.z.minus -text "-" -command "$this-c MoveWidget zplus -1; $n"
 	pack $w.f.z.plus $w.f.z.label $w.f.z.minus -side left -fill x -expand 1
 	pack $w.f.z -side top -fill x -expand 1
 
 	frame $w.f.v
-	button $w.f.v.plus -text "+" -command "$this-c MoveWidget vplus; $n"
+	button $w.f.v.plus -text "+" -command "$this-c MoveWidget vplus 1; $n"
 	label $w.f.v.label -text " V "
-	button $w.f.v.minus -text "-" -command "$this-c MoveWidget vminus; $n"
+	button $w.f.v.minus -text "-" -command "$this-c MoveWidget vplus -1; $n"
 	pack $w.f.v.plus $w.f.v.label $w.f.v.minus -side left -fill x -expand 1
 	pack $w.f.v -side top -fill x -expand 1
 
