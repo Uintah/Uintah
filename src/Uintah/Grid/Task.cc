@@ -140,10 +140,11 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 }
 
 void
-Task::computes(const DataWarehouseP& ds, const VarLabel* var)
+Task::computes(const DataWarehouseP& ds, const VarLabel* var,
+	       int matlIndex /* = -1 */)
 {
    ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(scinew Dependency(ds, var, -1, d_patch, this));
+   d_comps.push_back(scinew Dependency(ds, var, matlIndex, d_patch, this));
 }
 
 void
@@ -259,6 +260,10 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.26  2000/12/09 06:27:52  witzel
+// Added material index argument to one of the overloaded computes
+// methods for material specific reduction variables.
+//
 // Revision 1.25  2000/12/07 01:29:27  witzel
 // Added material index argument to one of the overloaded require
 // methods for material specific reduction variables.

@@ -456,7 +456,8 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void computes(const DataWarehouseP& ds, const VarLabel*);
+      void computes(const DataWarehouseP& ds, const VarLabel*,
+		    int matlIndex=-1);
       
       //////////
       // Insert Documentation Here:
@@ -564,6 +565,10 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.27  2000/12/09 06:27:52  witzel
+// Added material index argument to one of the overloaded computes
+// methods for material specific reduction variables.
+//
 // Revision 1.26  2000/12/07 01:29:27  witzel
 // Added material index argument to one of the overloaded require
 // methods for material specific reduction variables.
