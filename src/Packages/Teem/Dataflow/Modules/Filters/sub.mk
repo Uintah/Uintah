@@ -30,6 +30,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Filters
 SRCS     += \
 	$(SRCDIR)/NrrdConvert.cc\
 	$(SRCDIR)/NrrdCrop.cc\
+	$(SRCDIR)/NrrdJoin.cc\
 	$(SRCDIR)/NrrdPad.cc\
 	$(SRCDIR)/NrrdPermute.cc\
 	$(SRCDIR)/NrrdQuantize.cc\
