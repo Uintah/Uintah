@@ -13,7 +13,6 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
         set_defaults 
 	buildColorMaps
 	SetColorMap
-	$this-c setColors [join $colorMap]
     } 
     
     method set_defaults {} { 
@@ -23,7 +22,9 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	global $this-minRes
 	global $this-nodeList
 	global $this-positionList
-	set $this-mapType 4
+	global $this-width
+	global $this-height
+	set $this-mapType 3
 	set $this-resolution 12
 	set $this-minRes 12
 	set exposed 0
@@ -31,6 +32,8 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	set selected -1
 	set $this-nodeList {}
 	set $this-positionList {}
+	set $this-width 1
+	set $this-height 1
     }   
     
     method buildColorMaps {} {
@@ -139,7 +142,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	pack $w.f.f1 -side right -padx 2 -pady 2 -expand yes -fill x
 
 
-	canvas $w.f.f1.canvas -bg "#ffffff" -height 40 -width 360
+	canvas $w.f.f1.canvas -bg "#ffffff" -height 40 
 	pack $w.f.f1.canvas -anchor w -expand yes -fill x
 
 
@@ -326,10 +329,14 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
     method update { } {
 	$this SetColorMap
 	$this redraw
-	$this-c setColors [join $colorMap]
 	set selected -1
     }
     
+    method getColorMapString { } {
+        $this SetColorMap
+        return [join $colorMap]
+    }
+
     method close {} {
 	set w .ui[modname]
 	set exposed 0
@@ -354,13 +361,17 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
     }
     
     method redraw {} {
+	global $this-width
+	global $this-height
 	set w .ui[modname]
 	
 	set n [llength $colorMap]
 	set canvas $w.f.f1.canvas
 	$canvas delete map
 	set cw [winfo width $canvas]
+	set $this-width $cw
 	set ch [winfo height $canvas]
+	set $this-height $ch
 	set dx [expr $cw/double($n)] 
 	set x 0
 	for {set i 0} {$i < $n} {incr i 1} {
@@ -420,17 +431,11 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
     method getAlpha { index } {
 	global nodeList
 	global $this-positionList
+	global $this-width
+	global $this-height
 
-	set cw 360
-	set ch 40
-
-	set w .ui[modname]
-	if {[winfo exists $w]} { 
-	    set canvas $w.f.f1.canvas
-	    set cw [winfo width $canvas]
-	    set ch [winfo height $canvas]
-	} 
-
+	set cw [set $this-width]
+	set ch [set $this-height]
 	set m [llength [set $this-nodeList]]
 	set dx [expr $cw/double([set $this-resolution])] 
 	set xpos [expr int($index*$dx) + 0.5 * $dx]
