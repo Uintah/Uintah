@@ -117,8 +117,8 @@ JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
     ASSERT(converterMod);
 
     if (type == JNIUtils::TYPE_DOUBLE) {
-        Array2<double> points(ptsNum, ptsDim);
-        Array2<double> connections(connNum, connDim);
+        converterMod->sendJNIData(ptsNum, connNum, ptsDim, connDim);
+
         fidPts = env->GetFieldID(cls, "pts", "[[D");
         ASSERT(fidPts);
 
@@ -130,13 +130,17 @@ JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
         for (int i = 0; i < ptsNum; i++) {
             jdoubleArray dArr = (jdoubleArray) env->GetObjectArrayElement(pts, i);
             ASSERT(dArr);
-            double *d = new double[ptsDim];
-            env->GetDoubleArrayRegion(dArr, 0, ptsDim, d);
+            // jdouble is double
+            double *d = (double *) env->GetPrimitiveArrayCritical(dArr, NULL);
             for (int j = 0; j < ptsDim; j++) {
-                points(i, j) = d[j];
-                //std::cerr << "points("<< i << ", " << j << ")=" << points(i, j) << std::endl;
+                converterMod->points(i, j) = d[j];
             }
-            delete [] d;
+
+            // JNI_ABORT - free the buffer without copying back the possible changes
+            // in the carray buffer
+            // see http://java.sun.com/docs/books/jni/html/functions.html#70415
+            // for more details on JNI interface
+            env->ReleasePrimitiveArrayCritical(dArr, d, JNI_ABORT);
         }
 
         fidConn = env->GetFieldID(cls, "connections", "[[D");
@@ -150,16 +154,12 @@ JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
         for (int i = 0; i < connNum; i++) {
             jdoubleArray dArr = (jdoubleArray) env->GetObjectArrayElement(conn, i);
             ASSERT(dArr);
-            double *d = new double[connDim];
-            env->GetDoubleArrayRegion(dArr, 0, connDim, d);
+            double *d = (double *) env->GetPrimitiveArrayCritical(dArr, NULL);
             for (int j = 0; j < connDim; j++) {
-                connections(i, j) = d[j];
-                //std::cerr << "connections("<< i << ", " << j << ")=" << connections(i, j) << std::endl;
+                converterMod->connections(i, j) = d[j];
             }
-            delete [] d;
+            env->ReleasePrimitiveArrayCritical(dArr, d, JNI_ABORT);
         }
-
-        converterMod->sendJNIData(ptsNum, connNum, ptsDim, connDim, points, connections);
 
         SignalExecuteReady *dataThread = new SignalExecuteReady();
         Thread *t = new Thread(dataThread, "send Ptolemy data", 0, Thread::NotActivated);

@@ -24,15 +24,13 @@ public:
 
     virtual void execute();
     // see JNIUtils::scirunData
-    bool sendJNIData(int np, int nc, int pDim, int cDim, const Array2<double> &p, const Array2<double> &c);
-    void fillPointsArray();
-    void fillConnectionsArray();
+    bool sendJNIData(int np, int nc, int pDim, int cDim);
 
+    Array2<double> points;
+    Array2<double> connections;
 //     virtual void tcl_command(GuiArgs&, void*);
 
 private:
-    void getDataFromFile();
-
     NrrdOPort *outportPoints;
     NrrdOPort *outportConns;
 
@@ -40,16 +38,12 @@ private:
     NrrdDataHandle points_handle_, connections_handle_;
     //NrrdDataHandle data_handle_;
 
-    Array2<double> points;
-    Array2<double> connections;
-
     int nPts;
     int nConn;
     int ptsDim;
     int connDim;
     int nrrdType;
     int nrrdDim;
-    bool got_data;
 
     const static int UNSTRUCTURED_REGULAR_NRRD_DIM = 2;
     const static int DEFAULT_NUM_POINTS = 100;
