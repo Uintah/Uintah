@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <sci_config.h>
 
-#ifdef SCI_PTHREADS
+#ifdef SCI_PTHREAD
 #include <pthread.h>
 #endif
 
@@ -189,7 +189,7 @@ inline AllocBin* Allocator::get_bin(size_t size)
     }
 }
 
-#ifdef SCI_PTHREADS
+#ifdef SCI_PTHREAD
 
 pthread_mutex_t thelock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1190,6 +1190,9 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.9  1999/10/13 05:59:52  sparker
+// Fixed pthreads configuration problem in Malloc for non x86 linux boxen
+//
 // Revision 1.8  1999/10/07 02:07:58  sparker
 // use standard iostreams and complex type
 //

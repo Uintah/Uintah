@@ -278,10 +278,11 @@ if test "$threads" = "unknown"; then
 fi
 case $threads in
   pthreads*) THREAD_LIBS="-lpthread"
-
+	     THREAD_DEFINE="#define SCI_PTHREAD"
   ;;
   irix)     THREAD_LIBS="-lfetchop"
 	    CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
+	    THREAD_DEFINE=""
   ;;  
   *)
     echo "Unknown thread implementation: $threads"
@@ -289,6 +290,7 @@ case $threads in
   ;;
 esac
 AC_SUBST(THREAD_LIBS)
+AC_SUBST(THREAD_DEFINE)
 THREAD_IMPL="Thread_"$threads
 
 ##-- Find a C Compiler -------------------------------------------------------
