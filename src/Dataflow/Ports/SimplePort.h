@@ -93,11 +93,6 @@ private:
   T handle_;
 };
 
-} // End namespace SCIRun
-
-extern char** global_argv;
-
-namespace SCIRun {
 
 
 template<class T>
