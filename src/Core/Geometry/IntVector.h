@@ -36,11 +36,11 @@ public:
     return *this;	
   }
 
-  inline bool operator==(const IntVector& a) {
+  inline bool operator==(const IntVector& a) const {
     return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2];
   }
 
-  inline bool operator!=(const IntVector& a) {
+  inline bool operator!=(const IntVector& a) const {
     return value_[0] != a.value_[0] || value_[1] != a.value_[1] || value_[2] != a.value_[2];
   }
 
