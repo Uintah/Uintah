@@ -1949,12 +1949,16 @@ if test "$DEF_HASHMAP" = "None"; then
                  [DEF_HASHMAP=HAVE_GNU_HASHMAP])
 fi
 if test "$DEF_HASHMAP" = "None"; then
-  AC_MSG_ERROR("Cannot find hash_map")
+  DEF_HASHMAP=
+  AC_MSG_RESULT(not found)
+  AC_MSG_WARN([Cannot find hash_map, will use map instead])
+else
+  AC_MSG_RESULT(found: $DEF_HASHMAP)
+  DEF_HASHMAP="#define $DEF_HASHMAP"
 fi
-AC_MSG_RESULT(found: $DEF_HASHMAP)
-DEF_HASHMAP="#define $DEF_HASHMAP"
 AC_SUBST(DEF_HASHMAP)
 
+AC_CHECK_HEADERS(ext/algorithm)
 
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
