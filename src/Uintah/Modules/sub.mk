@@ -5,12 +5,16 @@
 
 SRCDIR := Uintah/Modules
 
-SUBDIRS := $(SRCDIR)/MPMViz $(SRCDIR)/Readers $(SRCDIR)/Writers
+SUBDIRS := $(SRCDIR)/MPMViz $(SRCDIR)/Readers \
+	$(SRCDIR)/Writers $(SRCDIR)/Visualization
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/20 17:57:16  kuzimmer
+# Moved GridVisualizer to Uintah
+#
 # Revision 1.2  2000/03/20 19:38:40  sparker
 # Added VPATH support
 #
