@@ -9,8 +9,6 @@ SRCS += \
 	$(SRCDIR)/BuildBEMatrix.cc \
 	$(SRCDIR)/BuildHexFEMatrix.cc \
 	$(SRCDIR)/ReferenceElement.cc \
-	$(SRCDIR)/BuildHexFERhs.cc \
-	$(SRCDIR)/BuildFDMatrix.cc \
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
