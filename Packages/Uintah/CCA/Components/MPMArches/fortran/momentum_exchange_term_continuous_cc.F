@@ -394,6 +394,8 @@ c         print*, 'printing drag forces'
 
 c     end debug, sk, April 14, 2001
 
+#if 0
+
       do 120 k = valid_lo(3), valid_hi(3)
          do 110 j = valid_lo(2), valid_hi(2)
             do 100 i = valid_lo(1), valid_hi(1)
@@ -449,6 +451,8 @@ c     later we will get discrete fraction from mpm to input here.
  100        continue
  110     continue
  120  continue
+
+#endif
 
 c
 c     part 2:
