@@ -49,77 +49,63 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
-
-/**************************************
-				       
-  CLASS
-    resourceReference
-   
-  DESCRIPTION
-    A reference to a slave resource from the master framework. This
-    reference contains various methods and fields that are used by
-    the master framework to manage the slave resource.
-
-****************************************/
-
 namespace SCIRun {
+
+/**
+ * \class resourceReference
+ *
+ * A reference to a slave resource from the master framework. This
+ * reference contains various methods and fields that are used by
+ * the master framework to manage the slave resource.
+ *
+ */
+class resourceReference
+{
+public:
   
-  class resourceReference {
-  public:
+  /** Constructor which takes the name of the resource, the number
+      of parallel slave frameworks it represents, and the URLs to
+      each of the slave frameworks */
+  resourceReference(const std::string& slaveFwkName,
+                    const ::SSIDL::array1< ::std::string>& URLs);
 
-    ////////////////
-    // Constructor which takes the name of the resource, the number
-    // of parallel slave frameworks it represents, and the URLs to 
-    // each of the slave frameworks
-    resourceReference(const std::string& slaveFwkName, const ::SSIDL::array1< ::std::string>& URLs);
+  /** Destructor */
+  virtual ~resourceReference();
 
-    ///////////////
-    // Destructor
-    virtual ~resourceReference();
-
-    ///////////////    
-    // Returns a smart pointer to all of the slave framework(s) 
-    sci::cca::Loader::pointer getPtrToAll();
-
-    ///////////////
-    // Returns the total number of parallel slave framework(s) 
-    int getSize();
-
-    ///////////
-    // Prints this class to a stream.
-    void print(std::ostream& dbg = std::cout);
-
-
-    //////////
-    // List all component types on this resource
-    void listAllComponentTypes(::SSIDL::array1<std::string> &typeList);
-
-    //////////
-    // shutdown loader
-    int shutdown(float timeout);
-
-    std::string getName();
-
-    sci::cca::Component::pointer createInstance(const std::string& name,
-			       const std::string& type,
-			       std::vector<int> nodes);
-
-
-    sci::cca::Loader::pointer node(int i);
-
-  private:
-    
-    std::string name;
-
-    int size;
-
-    std::vector<URL> URLs;
-
-    sci::cca::Loader::pointer ploader;
-
-  };
+  /** Returns a smart pointer to all of the slave framework(s) */
+  sci::cca::Loader::pointer getPtrToAll();
   
-} // End namespace SCIRun
+  /** Returns the total number of parallel slave framework(s) */
+  int getSize();
+  
+  /** Prints this class to a stream. */
+  void print(std::ostream& dbg = std::cout);
+
+  /** List all component types on this resource */
+  void listAllComponentTypes(::SSIDL::array1<std::string> &typeList);
+
+  /** Shutdown the loader. */
+  int shutdown(float timeout);
+
+  /** ? */
+  std::string getName();
+
+  /** ? */
+  sci::cca::Component::pointer createInstance(const std::string& name,
+                                              const std::string& type,
+                                              std::vector<int> nodes);
+
+  /** ? */
+  sci::cca::Loader::pointer node(int i);
+  
+private:
+  std::string name;
+  int size;
+  std::vector<URL> URLs;
+  sci::cca::Loader::pointer ploader;
+};
+
+} // end namespace SCIRun
 
 #endif
 

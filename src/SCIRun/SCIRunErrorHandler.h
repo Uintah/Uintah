@@ -51,24 +51,30 @@
 #endif
 #include <string>
 
-namespace SCIRun {
-  class SCIRunErrorHandler : public ErrorHandler {
-  public:
-    bool foundError;
+namespace SCIRun
+{
+/**
+ * \class SCIRunErrorHandler
+ *
+ */
+class SCIRunErrorHandler : public ErrorHandler {
+public:
+  bool foundError;
   
-    SCIRunErrorHandler();
-    ~SCIRunErrorHandler();
+  SCIRunErrorHandler();
+  ~SCIRunErrorHandler();
   
-    void warning(const SAXParseException& e);
-    void error(const SAXParseException& e);
-    void fatalError(const SAXParseException& e);
-    void resetErrors();
+  void warning(const SAXParseException& e);
+  void error(const SAXParseException& e);
+  void fatalError(const SAXParseException& e);
+  void resetErrors();
   
-  private:
-    void postMessage(const std::string& message);
-    SCIRunErrorHandler(const SCIRunErrorHandler&);
-    void operator=(const SCIRunErrorHandler&);
-  };
-} // End namespace SCIRun
+private:
+  void postMessage(const std::string& message);
+  SCIRunErrorHandler(const SCIRunErrorHandler&);
+  void operator=(const SCIRunErrorHandler&);
+};
+
+} // end namespace SCIRun
 
 #endif
