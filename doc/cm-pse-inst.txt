@@ -1,8 +1,8 @@
 		 Installation and Build Instructions for the PSE
-                      (for developers without CVS access)
+                              (Unix/non-CVS version)
 			
-                         last modified on June 15, 2000
-				 Chris Moulding
+                          last modified on July 3, 2000
+				  Chris Moulding
 
 
 Table of Contents
@@ -53,8 +53,7 @@ Table of Contents
      ftp://ftp.tcltk.com/tcltk/pub/itcl/itcl3.0.1.tar.gz
 
    BLT 2.4t +
-     ftp://ftp.tcltk.com/aa004735/pub/blt/BLT2.4t.tar.gz
-     or see www.tcltk/com/blt for the latest version
+     see www.tcltk/com/blt for the latest version
 
    GNU make 3.76.1 +
      ftp://ftp.gnu.org/pub/gnu/make/make-3.76.1.tar.gz
@@ -149,7 +148,7 @@ Table of Contents
    Additional Documentation about the PSE can be obtained on
    the web at:
 
-   http://www.cs.utah.edu/sci/scirun/
+     http://www.cs.utah.edu/sci/scirun/
 
 
 7) Getting Help
@@ -159,16 +158,16 @@ Table of Contents
    the PSE or to get help with resolving a problem.  To subscribe to
    the mailing list, send email to:
 
-   majordomo@cs.utah.edu
+     majordomo@cs.utah.edu
 
    with the following in the body of the message:
 
-   subscribe scirun-develop
+     subscribe scirun-develop
 
    To use the mailing list, simply send your question or problem
    as an email to the list:
 
-   scirun-develop@cs.utah.edu
+     scirun-develop@cs.utah.edu
 
    To aid in problem resolution, include a verbatim copy of the error(s) 
    displayed (if any).  Also include a short description of what you
@@ -364,6 +363,4 @@ Table of Contents
 
       Then your environment variables seem to be correct, and the
       build most likely worked.
-
-
 
