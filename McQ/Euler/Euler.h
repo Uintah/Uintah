@@ -1,5 +1,5 @@
-#ifndef __PSE_EULER_H__
-#define __PSE_EULER_H__
+#ifndef __MCQ_EULER_H__
+#define __MCQ_EULER_H__
 
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
@@ -33,4 +33,4 @@ namespace McQ {
 
 }
 
-#endif // __PSE_EULER_H__
+#endif // __MCQ_EULER_H__
