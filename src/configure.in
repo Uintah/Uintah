@@ -62,7 +62,7 @@ AC_CONFIG_AUX_DIR(scripts)
 IFS=' '
 
 ##  initialize the recognized argument lists
-SCI_ARG_WITH_LIST="--no-create --no-recursion"
+SCI_ARG_WITH_LIST=""
 SCI_ARG_ENABLE_LIST=""
 
 ##  ---------------------------------------------------------------------
@@ -121,13 +121,6 @@ AC_DEFUN(SCI_CHECK_LIB,
 EOF
 
     rm -f conftest.out a.out
-    echo
-    echo $ac_link
-    echo $CFLAGS
-    echo $CXXFLAGS
-    echo $CPPFLAGS
-    echo $LDFLAGS
-    echo
     ac_try="$ac_link -L$1 -l$2 $6 >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -660,9 +653,15 @@ for i in $myargs; do
     FOUND_ARG=no
     continue
   else
-    echo
-    AC_MSG_ERROR(unknown (or mis-spelled) argument: $i.  exiting.)
-    echo
+    if test "$i" = "--no-create"; then
+      echo
+      AC_MSG_ERROR('$i' is not supported by this configure script.)
+      echo
+    else
+      echo
+      AC_MSG_ERROR(unknown (or mis-spelled) argument: $i.)
+      echo
+    fi
   fi
 done
 
@@ -716,7 +715,6 @@ else
 fi
 
 export MAKE_PARALLELISM
-AC_SUBST(MAKE_PARALLELISM)
 
 ##  --------------------------------------------------------------------
 ##  ----------------------  set variable defaults  ---------------------
@@ -811,7 +809,6 @@ AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
 AC_SUBST(TEMPLATE_TAG)
 AC_SUBST(TEMPLATE_BOX)
-AC_SUBST(LDRUN_PREFIX)
 
 ##  ----------------------------------------------------------------------
 ##  ----------------  set host specific build tools  ---------------------
@@ -1047,7 +1044,6 @@ AC_SUBST(F77)
 AC_SUBST(CXX)
 AC_SUBST(AS)
 AC_SUBST(LD)
-AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(FFLAGS)
@@ -1117,10 +1113,6 @@ fi
 if test "$FOUND_ALL_MATH" != "yes"; then
   AC_MSG_ERROR(one or more math components is missing. exiting.)
 fi
-
-AC_SUBST(GL_INCLUDE_FLAG)
-AC_SUBST(LIBGL)
-AC_SUBST(INCGL_H)
 
 ##  --  search for X  ----------------------------------------------------
 AC_PATH_X
@@ -1208,22 +1200,28 @@ AC_SUBST(CFLAGS)
 
 ##  --  search for OpenGL  -----------------------------------------------
 
-SCI_CHECK_LIB(/usr/lib,GL,main,HAVE_LIBGL=yes,,)
-SCI_CHECK_LIB(/usr/lib,GLU,main,HAVE_LIBGLU=yes,,-lGL)
+FOUND_ALL_GL=no
+for i in /usr/lib /usr/X11R6/lib; do
+  if test ! -d "$i"; then 
+    continue
+  fi
+  SCI_CHECK_LIB($i,GL,main,HAVE_LIBGL=yes,,)
+  SCI_CHECK_LIB($i,GLU,main,HAVE_LIBGLU=yes,,-lGL)
+  
+  if test "$HAVE_LIBGL" &&
+     test "$HAVE_LIBGLU"; then
+    FOUND_ALL_GL=yes
+    break
+  fi
+done
+
 SCI_CHECK_HEADERS(/usr/include,GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no)
 
-if test "$HAVE_LIBGL" &&
-   test "$HAVE_LIBGLU" &&
-   test "$HAVE_GL_H" != "no"; then
-  FOUND_ALL_GL=yes
-  break
-fi
-
-if test "$FOUND_ALL_GL" != "yes"; then
+if test "$HAVE_GL_H" = "no" ||
+   test "$FOUND_ALL_GL" = "no";  then
   AC_MSG_ERROR(one or more OpenGL components is missing. exiting.)
 fi
 
-AC_SUBST(GL_INCLUDE_FLAG)
 AC_SUBST(LIBGL)
 AC_SUBST(INCGL_H)
 
