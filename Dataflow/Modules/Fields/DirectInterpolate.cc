@@ -31,15 +31,17 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/LatticeVol.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/Dispatch1.h>
+//#include <Core/Datatypes/Field.h>
+//#include <Core/Datatypes/Field.h>
+//#include <Core/Datatypes/TetVol.h>
+//#include <Core/Datatypes/LatticeVol.h>
+//#include <Core/Datatypes/TriSurf.h>
+//#include <Core/Datatypes/ContourField.h>
+//#include <Core/Datatypes/PointCloud.h>
+//#include <Core/Datatypes/ImageField.h>
+//#include <Core/Datatypes/ScanlineField.h>
+//#include <Core/Datatypes/Dispatch1.h>
+#include <Dataflow/Modules/Fields/DirectInterpolateAlgo.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -56,7 +58,6 @@ class DirectInterpolate : public Module
   FieldIPort *src_port_;
   FieldIPort *dst_port_;
   FieldOPort *ofp_; 
-  ScalarFieldInterface *sfi_;
   GuiString   interp_op_gui_;
 
 public:
@@ -84,110 +85,6 @@ DirectInterpolate::~DirectInterpolate()
 }
 
 
-template <class Fld>
-void
-DirectInterpolate::callback1(Fld *fld2)
-{
-
-  Fld *fld = fld2->clone();
-  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
-
-  switch (fld->data_at())
-  {
-  case Field::NODE:
-    {
-      typedef typename Fld::mesh_type::Node::iterator Itr;
-      Itr itr = mesh->node_begin();
-      Itr itr_end = mesh->node_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi_->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
-    }
-    break;
-
-  case Field::EDGE:
-    {
-      typedef typename Fld::mesh_type::Edge::iterator Itr;
-      Itr itr = mesh->edge_begin();
-      Itr itr_end = mesh->edge_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi_->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
-    }
-    break;
-
-  case Field::FACE:
-    {
-      typedef typename Fld::mesh_type::Face::iterator Itr;
-      Itr itr = mesh->face_begin();
-      Itr itr_end = mesh->face_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi_->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
-    }
-    break;
-
-  case Field::CELL:
-    {
-      typedef typename Fld::mesh_type::Cell::iterator Itr;
-      Itr itr = mesh->cell_begin();
-      Itr itr_end = mesh->cell_end();
-      while (itr != itr_end)
-      {
-	Point p;
-	mesh->get_center(p, *itr);
-
-	double val;
-	if (sfi_->interpolate(val, p))
-	{
-	  fld->set_value((typename Fld::value_type)val, *itr);
-	}
-
-	++itr;
-      }
-    }
-    break;
-
-  default:
-    break;
-  }
-
-  FieldHandle ofh(fld);
-  ofp_->send(ofh);
-}
-
-
-
 void
 DirectInterpolate::execute()
 {
@@ -205,15 +102,32 @@ DirectInterpolate::execute()
     return;
   }
 
-  ofp_ = (FieldOPort *)get_oport("Interpolant");
-
-  if (!(sfi_ = sfieldhandle->query_scalar_interface()))
+  ScalarFieldInterface *sfi;
+  if (!(sfi = sfieldhandle->query_scalar_interface()))
   {
     warning("Source not a scalar field.");
     return;
   }
 
-  dispatch1(dfieldhandle, callback1);
+  ofp_ = (FieldOPort *)get_oport("Interpolant");
+
+  const TypeDescription *td = dfieldhandle->get_type_description();
+  CompileInfo *ci = DirectInterpAlgoBase::get_compile_info(td);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    error("Could not compile algorithm.");
+    return;
+  }
+
+  DirectInterpAlgoBase *algo = 
+    dynamic_cast<DirectInterpAlgoBase *>(algo_handle.get_rep());
+  if (algo == 0) 
+  {
+    error("Could not get algorithm.");
+    return;
+  }
+  ofp_->send(algo->execute(dfieldhandle, sfi));
 }
 
 } // End namespace SCIRun

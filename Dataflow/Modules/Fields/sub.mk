@@ -32,6 +32,7 @@ SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
+	$(SRCDIR)/DirectInterpolateAlgo.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
