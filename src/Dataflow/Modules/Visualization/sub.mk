@@ -32,6 +32,7 @@ SRCS     += \
 	$(SRCDIR)/AddLight.cc\
 	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/GLTextureBuilder.cc\
+	$(SRCDIR)/GenAxes.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/Isosurface.cc\
@@ -42,8 +43,7 @@ SRCS     += \
 	$(SRCDIR)/StreamLines.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
-#	$(SRCDIR)/TransformGeometry.cc\
-[INSERT NEW CODE FILE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 
 
