@@ -17,20 +17,11 @@ using namespace Uintah;
  ---------------------------------------------------------------------  */
 SecondOrderCEAdvector::SecondOrderCEAdvector()
 {
-  OFS_CCLabel = 0;
-  OFE_CCLabel = 0;
-  OFC_CCLabel = 0;
 }
 
 SecondOrderCEAdvector::SecondOrderCEAdvector(DataWarehouse* new_dw, 
                                              const Patch* patch)
 {
-  OFS_CCLabel = VarLabel::create("OFS_CC",
-                             CCVariable<fflux>::getTypeDescription());
-  OFE_CCLabel = VarLabel::create("OFE_CC",
-                             CCVariable<eflux>::getTypeDescription());
-  OFC_CCLabel = VarLabel::create("OFC_CC",
-                             CCVariable<cflux>::getTypeDescription());
   Ghost::GhostType  gac = Ghost::AroundCells;                           
   new_dw->allocateTemporary(d_OFS,      patch, gac,1);
   new_dw->allocateTemporary(d_OFE,      patch, gac,1);
@@ -48,9 +39,6 @@ SecondOrderCEAdvector::SecondOrderCEAdvector(DataWarehouse* new_dw,
 
 SecondOrderCEAdvector::~SecondOrderCEAdvector()
 {
-  VarLabel::destroy(OFS_CCLabel);
-  VarLabel::destroy(OFE_CCLabel);
-  VarLabel::destroy(OFC_CCLabel);
 }
 
 SecondOrderCEAdvector* SecondOrderCEAdvector::clone(DataWarehouse* new_dw,

@@ -16,15 +16,12 @@ using namespace std;
 
 SecondOrderAdvector::SecondOrderAdvector()
 {
-  OFS_CCLabel = 0;
 }
 
 
 SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw, 
                                          const Patch*  patch) 
 {
-  OFS_CCLabel = VarLabel::create("OFS_CC",
-                                 CCVariable<fflux>::getTypeDescription());
   Ghost::GhostType  gac = Ghost::AroundCells;
   new_dw->allocateTemporary(d_OFS,    patch, gac, 1);
   new_dw->allocateTemporary(r_out_x,  patch, gac, 1); 
@@ -35,7 +32,6 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
 
 SecondOrderAdvector::~SecondOrderAdvector()
 {
-  VarLabel::destroy(OFS_CCLabel);
 }
 SecondOrderAdvector* SecondOrderAdvector::clone(DataWarehouse* new_dw,
                                                 const Patch* patch)

@@ -51,7 +51,6 @@ namespace Uintah {
     
   private:
     CCVariable<fflux> d_OFS;
-    const VarLabel* OFS_CCLabel;
     
     friend class FirstOrderCEAdvector;
 
