@@ -60,15 +60,25 @@ types, ports, properties, and property editing GUI dialogs.
 \label{sec:itk_mods:approach}
 
 ITK filters are mapped onto \sr{} modules via XML description files.
-Two  XML files are required for each filter.  A third  file can be created
-if a filter requires a custom module GUI.
+Up to three XML files are required for each filter:
 
-Software in the \sr{} build
-system translates these XML files to \sr{} modules.  The three XML
-files are described in \secref{ITK Filter
-  Description}{sec:itk_mods:itk_filter_desc}, \secref{\sr{} Filter
-  Description}{sec:itk_mods:sr_filter_desc}, and \secref{\sr{} GUI
-  Description}{sec:itk_mods:sr_gui_desc}, respectively.
+\begin{description}
+\descitem[ITK Filter Description] Description of a filter.  Contains
+no \sr{} specific information.  Filter descriptions may exist in the
+ITK distribution.
+\descitem[\sr{} Filter Description] Contains \sr{} specific
+information and include a reference to an ITK filter description file
+and an optional reference to a GUI description file.
+\descitem[GUI Description File] This file is optional.  It describes a
+filter's GUI.  A default GUI will be create if this file does not exist.
+\end{description}
+
+Software in the \sr{} build system automatically translates these XML
+files to \sr{} modules.   XML files are described in
+\secref{ITK Filter Description}{sec:itk_mods:itk_filter_desc},
+\secref{\sr{} Filter Description}{sec:itk_mods:sr_filter_desc}, and
+\secref{\sr{} GUI Description}{sec:itk_mods:sr_gui_desc},
+respectively.
 
 
 \section{ITK Filter Description}
@@ -243,10 +253,10 @@ attribute specifies a C++ built-in type, and a corresponding
   </templated>
 \end{alltt}
 
-A \sr{} filter module knows all possible filter instantiations.
-When executed at runtime, a module uses the filter instantiation whith 
-data input and output types matching data types passing through 
-the module's input and output ports.
+A \sr{} filter module knows all possible filter instantiations.  When
+executed at runtime, a module uses the filter instantiation with data
+input and output types matching data types passing through the
+module's input and output ports.
 
 \subsection{Element \xmlstarttag{datatypes}}
 
@@ -433,7 +443,7 @@ Element \xmlstarttag{call} specifies the member function (commonly
 \function{GetOutput}) that establishes an output port connection.  If
 \xmlstarttag{call} element's value is a member function returning a
 constant pointer, \xmlstarttag{call}'s \xmlattrname{const} attribute
-must be set to the value ``yes'':
+must be set to the value ``yes'', for example:
 
 \begin{alltt}
   <call const="yes">GetSpeedImage</call>
@@ -450,7 +460,7 @@ describes a filter's parameters:
   <parameters>
     <param>
       <name>\replaceable{parameter\_name}</name>
-n      <type>\replaceable{c++\_builtin\_type}</type>
+      <type>\replaceable{c++\_builtin\_type}</type>
       <call>\replaceable{member\_function}</call>
       <default>\replaceable{initial\_value}</default>
     </param>
@@ -863,14 +873,16 @@ parameter and the user cannot change the value of the parameter.
 To build \sr{} modules from ITK filters:
 
 \begin{enumerate}
+\item Ensure that \sr{} is Configured with support for the Insight
+  package.  See the \sr{} Installation Guide for details.
 \item Place ITK filter description files in
   \directory{SCIRun/src/Packages/Insight/ITK}
 \item Place \sr{} filter description files in
   \directory{SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML}
 \item Place \sr{} GUI description files in
   \directory{SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML}
-\item Build \sr{}'s with support for the Insight package.
-  See the \sr{} Installation Guide for details.
+\item Invoke \command{gnumake} to build \sr{} (see the \sr{}
+  Installation Guide for details)
 \end{enumerate}
 
 After building \sr{}, ITK filter modules can be created by selecting
