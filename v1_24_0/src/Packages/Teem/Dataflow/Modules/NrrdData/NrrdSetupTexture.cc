@@ -35,6 +35,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Geometry/Transform.h>
 
 namespace SCITeem {
 
@@ -59,11 +60,76 @@ NrrdSetupTexture::~NrrdSetupTexture() {
 
 
 static inline
-unsigned char NtoUC(double a)
+unsigned char
+NtoUC(double a)
 {
   return (unsigned char)(a * 127.5 + 127.5);
 }
 
+
+static inline
+unsigned char
+VtoUC(double v, double dmin, double dmaxplus)
+{
+  return (unsigned char)((v - dmin) * dmaxplus);
+}
+
+
+template <class T>
+void
+compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
+             const int ni, const int nj, const int nk, Transform &transform,
+             double dmin, double dmax)
+{    
+  // Compute the data.
+  int i, j, k;
+  //const unsigned int nk = nin->axis[0].size;
+  const unsigned int njk = nj * nk;
+  const double dmaxplus = (dmax - dmin) * 255.0;
+  for (i = 0; i < ni; i++)
+  {
+    for (j = 0; j < nj; j++)
+    {
+      for (k = 0; k < nk; k++)
+      {
+        double xscale = 0.5;
+        double yscale = 0.5;
+        double zscale = 0.5;
+        int i0 = i-1;
+        int i1 = i+1;
+        int j0 = j-1;
+        int j1 = j+1;
+        int k0 = k-1;
+        int k1 = k+1;
+        if (i == 0)   { i0 = i; xscale = 1.0; }
+        if (i1 == ni) { i1 = i; xscale = 1.0; }
+        if (j == 0)   { j0 = j; xscale = 1.0; }
+        if (j1 == nj) { j1 = j; xscale = 1.0; }
+        if (k == 0)   { k0 = k; xscale = 1.0; }
+        if (k1 == nk) { k1 = k; xscale = 1.0; }
+
+        const double val = (double)nindata[i * njk + j * nk + k];
+        const double x0 = nindata[i0 * njk + j * nk + k];
+        const double x1 = nindata[i1 * njk + j * nk + k];
+        const double y0 = nindata[i * njk + j0 * nk + k];
+        const double y1 = nindata[i * njk + j1 * nk + k];
+        const double z0 = nindata[i * njk + j * nk + k0];
+        const double z1 = nindata[i * njk + j * nk + k1];
+
+        const Vector g((x1 - x0)*xscale, (y1 - y0)*yscale, (z1 - z0)*zscale);
+        //const Vector gradient = transform.project_normal(g);
+        Vector gradient = g;
+        const float gm = gradient.safe_normalize();
+
+        nvoutdata[(i * njk + j * nk + k) * 4 + 0] = NtoUC(gradient.x());
+        nvoutdata[(i * njk + j * nk + k) * 4 + 1] = NtoUC(gradient.y());
+        nvoutdata[(i * njk + j * nk + k) * 4 + 2] = NtoUC(gradient.z());
+        nvoutdata[(i * njk + j * nk + k) * 4 + 3] = VtoUC(val, dmin, dmaxplus);
+        gmoutdata[i * njk + j * nk + k] = gm;
+      }
+    }
+  }
+}
 
 void 
 NrrdSetupTexture::execute()
@@ -159,58 +225,47 @@ NrrdSetupTexture::execute()
   }
 
   // Build the transform here.
+  Transform transform;
 
-  unsigned char *nindata = (unsigned char *)nin->data;
-  unsigned char *nvoutdata = (unsigned char *)nvout->data;
-  float *gmoutdata = (float *)gmout->data;
-  // Compute the data.
-  int i, j, k;
-  const unsigned int nk = nin->axis[0].size;
-  const unsigned int njk = nin->axis[1].size * nin->axis[0].size;
-  for (i = 0; i < nin->axis[2].size; i++)
+  NrrdRange *range = nrrdRangeNewSet(nin, nrrdBlind8BitRangeState);
+  const double dmin = range->min;
+  const double dmax = range->max;
+  delete range;
+
+  if (nin->type == nrrdTypeUChar)
   {
-    for (j = 0; j < nin->axis[1].size; j++)
-    {
-      for (k = 0; k < nin->axis[0].size; k++)
-      {
-        double xscale = 0.5;
-        double yscale = 0.5;
-        double zscale = 0.5;
-        int i0 = i-1;
-        int i1 = i+1;
-        int j0 = j-1;
-        int j1 = j+1;
-        int k0 = k-1;
-        int k1 = k+1;
-        if (i == 0) { i0 = i; xscale = 1.0; }
-        if (i1 == nin->axis[2].size) { i1 = i; xscale = 1.0; }
-        if (j == 0) { j0 = j; xscale = 1.0; }
-        if (j1 == nin->axis[1].size) { j1 = j; xscale = 1.0; }
-        if (k == 0) { k0 = k; xscale = 1.0; }
-        if (k1 == nin->axis[0].size) { k1 = k; xscale = 1.0; }
-
-        const unsigned int val = nindata[i * njk + j * nk + k];
-        const double x0 = nindata[i0 * njk + j * nk + k];
-        const double x1 = nindata[i1 * njk + j * nk + k];
-        const double y0 = nindata[i * njk + j0 * nk + k];
-        const double y1 = nindata[i * njk + j1 * nk + k];
-        const double z0 = nindata[i * njk + j * nk + k0];
-        const double z1 = nindata[i * njk + j * nk + k1];
-
-        const Vector g((x1 - x0)*xscale, (y1 - y0)*yscale, (z1 - z0)*zscale);
-        //const Vector gradient = transform.project_normal(g);
-        Vector gradient = g;
-        const float gm = gradient.safe_normalize();
-
-        nvoutdata[(i * njk + j * nk + k) * 4 + 0] = NtoUC(gradient.x());
-        nvoutdata[(i * njk + j * nk + k) * 4 + 1] = NtoUC(gradient.y());
-        nvoutdata[(i * njk + j * nk + k) * 4 + 2] = NtoUC(gradient.z());
-        nvoutdata[(i * njk + j * nk + k) * 4 + 3] = val;
-        gmoutdata[i * njk + j * nk + k] = gm;
-      }
-    }
+    compute_data((unsigned char *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, dmin, dmax);
   }
-
+  else if (nin->type == nrrdTypeUShort)
+  {
+    compute_data((unsigned short *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, dmin, dmax);
+  }
+  else if (nin->type == nrrdTypeFloat)
+  {
+    compute_data((float *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, dmin, dmax);
+  }
+  else if (nin->type == nrrdTypeDouble)
+  {
+    compute_data((double *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, dmin, dmax);
+  }
+  else
+  {
+    error("Unsupported input type.");
+    return;
+  }
+  
   // Create SCIRun data structure wrapped around nout
   NrrdData *nvnd = scinew NrrdData;
   nvnd->nrrd = nvout;
