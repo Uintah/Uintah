@@ -73,12 +73,11 @@ ManageFieldData::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  Field *ifield;
   if (!ifp) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!(ifp->get(ifieldhandle) && (ifield = ifieldhandle.get_rep())))
+  if (!(ifp->get(ifieldhandle) && (ifieldhandle.get_rep())))
   {
     return;
   }
