@@ -878,7 +878,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                traceOfTrialStress, 
                                                porosity, sig);
       // Compute the deviatoric stress
-      if (Phi <= 0.0) {
+      if (Phi <= 0.0 || flowStress <= 0.0) {
 
         // Do the standard hypoelastic-plastic stress update
         // Calculate the updated hydrostatic stress

@@ -127,10 +127,9 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
     strainRatePart = pow((1.0 + epdot),d_CM.C);
   else
     strainRatePart = 1.0 + d_CM.C*log(epdot);
-  ASSERT(T < Tm);
   d_CM.TRoom = Tr;  d_CM.TMelt = Tm;
   double m = d_CM.m;
-  double Tstar = (T-Tr)/(Tm-Tr);
+  double Tstar = (T > Tm) ? 1.0 : ((T-Tr)/(Tm-Tr)); 
   double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
   return (strainPart*strainRatePart*tempPart);
 }
@@ -217,7 +216,7 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
+  double Tstar = (T > Tm) ? 1.0 : (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
   double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
 
   double D = strainRatePart*tempPart;
@@ -264,7 +263,7 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
+  double Tstar = (T > Tm) ? 1.0 : (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
 
   double F = strainPart*strainRatePart;
   double deriv = - m*F*pow(Tstar,m)/(T-d_CM.TRoom);
@@ -286,7 +285,7 @@ JohnsonCookPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
 
   // Calculate temperature part
   double m = d_CM.m;
-  double Tstar = (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
+  double Tstar = (T > Tm) ? 1.0 : (T-d_CM.TRoom)/(Tm-d_CM.TRoom);
   double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
 
   double E = strainPart*tempPart;
