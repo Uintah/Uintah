@@ -26,7 +26,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-<chapter>
+<chapter id="chap.filters">
   <title>Filters</title>
   <para>
     Any number of filters can be added or inserted to the processing pipeline that BioImage uses.  In order to set up a filter, add the filter as was done in the tutorial, and choose the values it will use in the filter's UI.  The filters will be applied starting at the top of the list and progressing downward.  
