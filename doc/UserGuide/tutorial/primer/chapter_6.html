@@ -49,45 +49,42 @@
 									<div align="left">
 
 										
-                <p>A) Chapter introduction-DMW<br>
-                  B) ManageFieldData-Michael (see rough text from Dave's outline)
-                <p>This module performs two simultanious operations. First<br>
-                  the &quot;Input Field&quot; is split into it's mesh part it's 
-                  data<br>
-                  values. The data values are packaged up and passed to<br>
-                  the &quot;Output Matrix&quot; port. Second the input field<br>
-                  geometry is joined with the data from the Input Matrix,<br>
-                  and the result is passed out on the &quot;Output Field&quot; 
-                  port.<br>
-                  If the input matrix is not present, then the second<br>
-                  operation is not performed and the Output Field is the<br>
-                  same as the Input Field.<br>
-                  &lt;/p&gt;<br>
-                  &lt;p&gt;<br>
-                  The format of the &quot;Output Matrix&quot; will be a column 
-                  matrix<br>
-                  if the nput field was of scalar type. It will be an Nx3<br>
-                  matrix if the input field contained vectors. If the<br>
-                  field contained tensors it will be Nx9 matrix, where the<br>
-                  tensor is flattened out in left to right, top to bottom<br>
-                  order. Column 0 contains (0, 0), column 1 contains (0,<br>
-                  1), column 2 contains (0,2), column 3 contains (1, 0),<br>
-                  etc.<br>
-                  &lt;/p&gt;<br>
-                  &lt;p&gt;<br>
-                  The &quot;Input Matrix&quot; should have the same number of 
-                  values<br>
-                  as the field where the values are to be stored. The type<br>
-                  of the Iutput Field is preserved in the Output field as<br>
-                  well. So for instance if the input field is a vector<br>
-                  field, the Output Field will also be a vector field, and<br>
-                  the input matrix should be an Nx3 matrix where N is equal<br>
-                  to the number of elements to be filled in.<br>
-                  &lt;/p&gt;<br>
-                <p><br>
-                  C) Put nets from chs. 4 and 5 together with ManageFielddata 
-                  module-DMW<br>
-                  <br>
+                <p>&lt;subhead:Chapter overview&gt;<br>
+
+		<p>(Need text here.)
+
+                <p>&lt;subhead:ManageFieldData&gt;<br>
+
+                <p>This module performs two simultanious
+                operations. First the &quot;Input Field&quot; is split
+                into it's mesh part it's data values. The data values
+                are packaged up and passed to the &quot;Output
+                Matrix&quot; port. Second the input field geometry is
+                joined with the data from the Input Matrix, and the
+                result is passed out on the &quot;Output Field&quot;
+                port.  If the input matrix is not present, then the
+                second operation is not performed and the Output Field
+                is the same as the Input Field.  The format of the
+                &quot;Output Matrix&quot; will be a column matrix if
+                the nput field was of scalar type. It will be an Nx3
+                matrix if the input field contained vectors. If the
+                field contained tensors it will be Nx9 matrix, where
+                the tensor is flattened out in left to right, top to
+                bottom order. Column 0 contains (0, 0), column 1
+                contains (0, 1), column 2 contains (0,2), column 3
+                contains (1, 0), etc.  The &quot;Input Matrix&quot;
+                should have the same number of values as the field
+                where the values are to be stored. The type of the
+                Iutput Field is preserved in the Output field as
+                well. So for instance if the input field is a vector
+                field, the Output Field will also be a vector field,
+                and the input matrix should be an Nx3 matrix where N
+                is equal to the number of elements to be filled in.
+
+                <p>&lt;subhead:Combining simulation and visualization&gt;<br>
+
+		<p>(Need text here.)
+                  
               </div>
 
 								</td>

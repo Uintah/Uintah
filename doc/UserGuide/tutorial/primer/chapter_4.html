@@ -49,103 +49,49 @@
 									<div align="left">
 
 										
-                <p>A) Put A/B/C from chpater 3 together, Isosurface module-MCole
-                <p>Now lets do all of the A,B,C work in a single network. The 
-                  procedure <br>
-                  here is to share the FieldReader, and Viewer modules across 
-                  the A,B, and <br>
-                  C networks created in the last chapter. Repeat all of the steps 
-                  for <br>
-                  creating A. Now do the same for B and C, but use the FieldReader, 
-                  and <br>
-                  Viewer from A. <br>
-                  <br>
-                  At this point all of the visualization from the previous chapter 
-                  exists <br>
-                  in one network. Now lets add in isosurface visualization. <br>
-                  <br>
-                  From the SCIRun/Visualization menu, add in the Isosurface module. 
-                  <br>
-                  Connect the output from the field reader to the Isosurface modules 
-                  <br>
-                  yellow Field input (named Field), and the pink Geometry output 
-                  to the <br>
-                  Viewer module. Now as soon as Isosurface executes you will get 
-                  see this <br>
-                  surface show up in the viewer.
-                <p><br>
-                  B) Describe Isosurface module-<br>
-                  The isosurface module provides the interface to isosurface creation. 
-                  It <br>
-                  takes a volume field in, and can output a surface field or scene 
-                  graph <br>
-                  data to be directly visualized with or without a color map.<br>
-                  <br>
-                  The first thing to set in the UI for the isosurface is the Iso 
-                  Value. <br>
-                  As you might expect, this determines where the surface is created 
-                  <br>
-                  throught the volume. You can have the module update the visualization 
-                  as <br>
-                  you change the value with the slider, only when you release 
-                  your mouse <br>
-                  button over the slider, or only when you press the extract button.<br>
-                  <br>
-                  Just as in the ShowField Module, you can set a default color 
-                  for the <br>
-                  Isosurface, or if it has a color map input to it, the color 
-                  map is used <br>
-                  to visualize the data values.<br>
-                  <br>
-                  You can choose the which method for extracting the isosurface, 
-                  and how <br>
-                  many threads you would like the algorithm to use. (how many 
-                  processors <br>
-                  to use).<br>
-                  <br>
-                  By default a Marching Cubes algorithm is used, but you can also 
-                  use the <br>
-                  NOISE algorithm.<br>
-                  <br>
-                  <br>
-                  The isosurface module provides the interface to isosurface creation. 
-                  It <br>
-                  takes a volume field in, and can output a surface field or scene 
-                  graph <br>
-                  data to be directly visualized with or without a color map.<br>
-                  <br>
-                  The first thing to set in the UI for the isosurface is the Iso 
-                  Value. <br>
-                  As you might expect, this determines where the surface is created 
-                  <br>
-                  throught the volume. You can have the module update the visualization 
-                  as <br>
-                  you change the value with the slider, only when you release 
-                  your mouse <br>
-                  button over the slider, or only when you press the extract button.<br>
-                  <br>
-                  Just as in the ShowField Module, you can set a default color 
-                  for the <br>
-                  Isosurface, or if it has a color map input to it, the color 
-                  map is used <br>
-                  to visualize the data values.<br>
-                  <br>
-                  You can choose the which method for extracting the isosurface, 
-                  and how <br>
-                  many threads you would like the algorithm to use. (how many 
-                  processors <br>
-                  to use).<br>
-                  <br>
-                  By default a Marching Cubes algorithm is used, but you can also 
-                  use the <br>
-                  NOISE algorithm.<br>
-                  <br>
-                  &lt;need more from dave to describe what noise stands for, what 
-                  type of <br>
-                  data to use with MC vs. NOISE&gt;<br>
-                  <br>
-                  <br>
-                  <br>
+                <p>&lt;subhead:Putting the nets together&gt;<br>
+
+                <p>Now lets do all of the A, B, C work in a single
+                network. The procedure here is to share the
+                FieldReader, and Viewer modules across the A, B, and
+                C networks created in the last chapter. Repeat all
+                of the steps for creating A. Now do the same for B
+                and C, but use the FieldReader, and Viewer from A.
+                  
+                <p>At this point all of the visualization from the
+                previous chapter exists in one network. Now lets add
+                in isosurface visualization.  From the
+                SCIRun/Visualization menu, add in the Isosurface
+                module.  Connect the output from the field reader to
+                the Isosurface modules yellow Field input (named
+                Field), and the pink Geometry output to the Viewer
+                module. Now as soon as Isosurface executes you will
+                get see this surface show up in the viewer.
+
+                <p>&lt;subhead:Isosurface&gt;<br>
+
+                <p>The isosurface module provides the interface to
+                isosurface creation.  It takes a volume field in, and
+                can output a surface field or scene graph data to be
+                directly visualized with or without a color map.  The
+                first thing to set in the UI for the isosurface is the
+                Iso Value.  As you might expect, this determines where
+                the surface is created throught the volume. You can
+                have the module update the visualization as you change
+                the value with the slider, only when you release your
+                mouse button over the slider, or only when you press
+                the extract button.
+                  
+                <p>Just as in the ShowField Module, you can set a
+                default color for the Isosurface, or if it has a color
+                map input to it, the color map is used to visualize
+                the data values.  You can choose the which method for
+                extracting the isosurface, and how many threads you
+                would like the algorithm to use. (how many processors
+                to use).  By default a Marching Cubes algorithm is
+                used, but you can also use the NOISE algorithm.
+                  
+                  
               </div>
 
 								</td>
