@@ -16,9 +16,11 @@
  *           the generation process.)
  */
 
+#include <string.h>
 #include <SCICore/Datatypes/ScalarFieldRGTYPE.h>
 //#include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iostream>
 
 namespace SCICore {
@@ -50,7 +52,7 @@ void ScalarFieldRGTYPE::resize(int x, int y, int z) {
     grid.newsize(x,y,z);
 }
 
-#define ScalarFieldRGTYPE_VERSION 2
+#define ScalarFieldRGTYPE_VERSION 3
 
 void ScalarFieldRGTYPE::io(Piostream& stream)
 {
@@ -79,9 +81,85 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
 	// Do the base class first...
 	ScalarFieldRGBase::io(stream);
     }
-    Pio(stream, grid);
+
+    if ( stream.reading() ) {
+      cerr << "reading...version " << version << endl;
+      if  ( version > 2 )
+        Pio(stream, separate_raw);
+      else
+        separate_raw = 0;
+
+      if ( separate_raw == 1) {
+        Pio(stream,raw_filename);
+        Pio(stream, grid, raw_filename);
+	cerr << "reading... rawfile=" << raw_filename <<endl;
+      }
+      else 
+        Pio(stream,grid);
+    }
+    else { // writing
+      clString filename = raw_filename;
+      int split = separate_raw ;
+      if ( split == 1) {
+	cerr << "SF: split \n";
+        if ( filename == "" ) {
+          if ( stream.file_name() ) { 
+            char *tmp=strdup(stream.file_name());
+            char *dot = strrchr( tmp, '.' );
+            if (!dot ) dot = strrchr( tmp, 0);
+            
+            filename = stream.file_name.substr(0,dot-tmp)+clString(".raw");
+            delete tmp;
+          }
+          else 
+            split = 0;
+        }
+      }
+
+      cerr << "Filename = " << filename << endl;
+      if ( split == 1 ) {
+        Pio(stream, split);
+        Pio(stream, filename);
+        Pio(stream, grid, filename );
+      }
+      else {
+        Pio(stream, split);
+        Pio(stream, grid);
+      }
+    }
     stream.end_class();
 }
+
+// void ScalarFieldRGTYPE::io(Piostream& stream)
+// {
+//     using SCICore::PersistentSpace::Pio;
+//     using SCICore::Containers::Pio;
+//     using SCICore::Geometry::Pio;
+
+//     int version=stream.begin_class("ScalarFieldRGTYPE", ScalarFieldRGTYPE_VERSION);
+//     if(version == 1){
+// 	// From before, when the ScalarFieldRGBase didn't exist...
+// 	ScalarField::io(stream);
+
+// 	// Save these since the ScalarField doesn't
+// 	Pio(stream, bmin);
+// 	Pio(stream, bmax);
+// 	if(stream.reading()){
+// 	    have_bounds=1;
+// 	    diagonal=bmax-bmin;
+// 	}
+
+// 	// Save the rest..
+// 	Pio(stream, nx);
+// 	Pio(stream, ny);
+// 	Pio(stream, nz);
+//     } else {
+// 	// Do the base class first...
+// 	ScalarFieldRGBase::io(stream);
+//     }
+//     Pio(stream, grid);
+//     stream.end_class();
+//}
 
 void ScalarFieldRGTYPE::compute_minmax()
 {
@@ -326,6 +404,18 @@ void ScalarFieldRGTYPE::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.5  2000/02/04 00:19:31  yarden
+// enable to store the grid part of a ScalarField in a seperate file.
+// a flag (sererate_raw) signal if this ScalarField was read from a split
+// input file or should be writen as two. raw_filename specify the secondary
+// file name. if no filename is given during writing, the output routines
+// will try to extract the name from the output stream and attach a '.raw'
+// extension to the binary portion.
+//
+// replaced ScalarFieldRGxxx with ScalarFieldRGTYPE. it also replaces
+// the ScalarFieldRG files (i.e. the old RG with no type specification
+// which defaults to 'double'
+//
 // Revision 1.4  1999/10/07 02:07:33  sparker
 // use standard iostreams and complex type
 //
