@@ -108,7 +108,7 @@ TendEvec::execute()
   NrrdData *nout = new NrrdData();
 
   nrrdAlloc(nout->nrrd, nrrdTypeFloat, 4, 3*compLen, sx, sy, sz);
-  if (tenTensorCheck(nin, nrrdTypeFloat, AIR_TRUE)) {
+  if (tenTensorCheck(nin, nrrdTypeFloat, AIR_TRUE, AIR_TRUE)) {
     error("Input Nrrd was not a Tensor field of floats");
     return;
   }
