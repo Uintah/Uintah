@@ -23,6 +23,9 @@ SRCS += \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/TaskGraph.cc \
 	$(SRCDIR)/ThreadPool.cc \
+	$(SRCDIR)/GhostOffsetVarMap.cc \
+	$(SRCDIR)/DeniedAccess.cc \
+	$(SRCDIR)/IncorrectAllocation.cc \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := \
