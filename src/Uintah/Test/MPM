@@ -14,8 +14,9 @@ TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
 	    ("heatcond.ups",		    ["dbg", "opt"]),	\
 	    ("heatcond2mat.ups",	    ["dbg", "opt"]),	\
     	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
-	    ("twomatburn.ups",		    ["dbg", "opt"])	\
-    	]
+	    ("twomatburn.ups",		    ["dbg", "opt"]),	\
+	    ("sidecrack.ups",		    ["dbg", "opt"])
+    	
 
 def input (test):
     return test[0]
@@ -32,6 +33,7 @@ mode = argv[1]
 
 mkdir("%s/MPM-%s" % (environ['BUILDROOT'], mode))
 
+failcode = 0
 for test in TESTS:
     if mode not in modes(test):
     	continue
@@ -43,5 +45,7 @@ for test in TESTS:
     rc = system("./sus -mpm inputs/MPM/%s > %s/ 2>&1" % (input(test), testlog))
     if rc != 0:
     	print "MPM-%s: Test %s failed with code %d" % (mode, testname, rc)
-    	exit(1)
+    	failcode = 1
     system("/bin/rm -rf %s.uda*" % testname)
+
+exit(failcode)
