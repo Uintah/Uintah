@@ -97,15 +97,15 @@ class ConductivitySearch : public Module {
   void read_mesh_and_cond_param_ports(int &valid_data, int &new_data);
 public:
   GuiInt seed_gui_;
-  ConductivitySearch(const string& id);
+  ConductivitySearch(GuiContext *context);
   virtual ~ConductivitySearch();
   virtual void execute();
   void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_ConductivitySearch(const string& id) {
-  return new ConductivitySearch(id);
-}
+
+DECLARE_MAKER(ConductivitySearch)
+
 
 int ConductivitySearch::NDIM_ = 3;
 int ConductivitySearch::NSEEDS_ = 4;
@@ -114,10 +114,10 @@ int ConductivitySearch::MAX_EVALS_ = 100;
 double ConductivitySearch::CONVERGENCE_ = 0.001;
 double ConductivitySearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
-ConductivitySearch::ConductivitySearch(const string& id)
-  : Module("ConductivitySearch", id, Filter, "Inverse", "BioPSE"), 
+ConductivitySearch::ConductivitySearch(GuiContext *context)
+  : Module("ConductivitySearch",context, Filter, "Inverse", "BioPSE"), 
   mylock_("pause lock for ConductivitySearch"), 
-  seed_gui_("seed_gui", id, this)
+  seed_gui_(context->subVar("seed_gui"))
 {
   mylock_.unlock();
   state_ = "SEEDING";

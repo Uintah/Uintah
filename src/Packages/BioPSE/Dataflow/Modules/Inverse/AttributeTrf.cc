@@ -43,7 +43,7 @@ class BioPSESHARE AttributeTrf : public Module {
 public:
 
   // CONSTRUCTOR
-  AttributeTrf(const string& id);
+  AttributeTrf(GuiContext *context);
 
   // DESTRUCTOR
   virtual ~AttributeTrf();
@@ -60,13 +60,12 @@ public:
   //  virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" BioPSESHARE Module* make_AttributeTrf(const string& id) {
-  return scinew AttributeTrf(id);
-}
+DECLARE_MAKER(AttributeTrf)
+
 
 // CONSTRUCTOR
-AttributeTrf::AttributeTrf(const string& id)
-  : Module("AttributeTrf", id, Source, "Inverse", "BioPSE")
+AttributeTrf::AttributeTrf(GuiContext *context)
+  : Module("AttributeTrf", context, Source, "Inverse", "BioPSE")
 {
 }
 

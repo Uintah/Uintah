@@ -35,7 +35,7 @@ using namespace SCIRun;
 
 class BioPSESHARE RawToDenseMatrix : public Module {
 public:
-  RawToDenseMatrix(const string& id);
+  RawToDenseMatrix(GuiContext *context);
 
   virtual ~RawToDenseMatrix();
 
@@ -55,16 +55,16 @@ private:
   MatrixHandle handle_;
 };
 
-extern "C" BioPSESHARE Module* make_RawToDenseMatrix(const string& id) {
-  return scinew RawToDenseMatrix(id);
-}
 
-RawToDenseMatrix::RawToDenseMatrix(const string& id) : 
-  Module("RawToDenseMatrix", id, Source, "DataIO", "BioPSE"),
-  units_("units", id, this),
-  filename_("filename", id, this),
-  start_("min", id, this),
-  end_("max", id, this),
+DECLARE_MAKER(RawToDenseMatrix)
+
+
+RawToDenseMatrix::RawToDenseMatrix(GuiContext *context) : 
+  Module("RawToDenseMatrix", context, Source, "DataIO", "BioPSE"),
+  units_(context->subVar("units")),
+  filename_(context->subVar("filename")),
+  start_(context->subVar("min")),
+  end_(context->subVar("max")),
   oport_(0),
   old_filename_("bogus"),
   old_filemodification_(0),
@@ -120,7 +120,7 @@ void RawToDenseMatrix::execute(){
       //then the filename was saved in a net, not entered into the gui.
       //trigger the list of file names to parse.
       string dummy;
-      TCL::eval(id + " working_files " + filename_.get(), dummy);
+      gui->eval(id + " working_files " + filename_.get(), dummy);
     }
 
     DenseMatrix* mat = scinew DenseMatrix(rows, potfiles_.size());

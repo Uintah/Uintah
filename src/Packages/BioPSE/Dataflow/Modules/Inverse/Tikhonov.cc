@@ -53,7 +53,7 @@ namespace BioPSE
 
   public:
     // CONSTRUCTOR
-    Tikhonov(const string& id);
+    Tikhonov(GuiContext *context);
 
     // DESTRUCTOR
     virtual ~Tikhonov();
@@ -70,18 +70,16 @@ namespace BioPSE
   };
 	
   // MODULE MAKER
-  extern "C" BioPSESHARE Module* make_Tikhonov(const string& id) 
-  {
-    return scinew Tikhonov(id);
-  }
+  DECLARE_MAKER(Tikhonov)
+
 
   // CONSTRUCTOR
-  Tikhonov::Tikhonov(const string& id)
-    : Module("Tikhonov", id, Source, "Inverse", "BioPSE"),
-      lambda_fix_("lambda_fix", id, this),
-      lambda_sld_("lambda_sld", id, this),
-      haveUI_("haveUI", id, this),
-      reg_method_("reg_method", id, this)
+  Tikhonov::Tikhonov(GuiContext *context)
+    : Module("Tikhonov", context, Source, "Inverse", "BioPSE"),
+      lambda_fix_(context->subVar("lambda_fix")),
+      lambda_sld_(context->subVar("lambda_sld")),
+      haveUI_(context->subVar("haveUI")),
+      reg_method_(context->subVar("reg_method"))
   {
   }
 
@@ -429,7 +427,7 @@ namespace BioPSE
 	  str << rho[lambda_index] << " " << eta[lambda_index] << " ";
 	  str << rho[lambda_index] << " " << lower_y << " \" ";
 	  str << lambda << " ; update idletasks";
-	  TCL::execute(str.str().c_str());
+	  gui->execute(str.str().c_str());
 	}
 
       } // END  else if (reg_method_.get() == "lcurve")

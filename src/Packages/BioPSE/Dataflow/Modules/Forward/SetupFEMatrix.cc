@@ -75,20 +75,20 @@ class SetupFEMatrix : public Module {
 public:
   
   //! Constructor/Destructor
-  SetupFEMatrix(const string& id);
+  SetupFEMatrix(GuiContext *context);
   virtual ~SetupFEMatrix();
 
   //! Public methods
   virtual void execute();
 };
 
-extern "C" Module* make_SetupFEMatrix(const string& id) {
-  return new SetupFEMatrix(id);
-}
 
-SetupFEMatrix::SetupFEMatrix(const string& id): 
-  Module("SetupFEMatrix", id, Filter, "Forward", "BioPSE"), 
-  uiUseCond_("UseCondTCL", id, this),
+DECLARE_MAKER(SetupFEMatrix)
+
+
+SetupFEMatrix::SetupFEMatrix(GuiContext *context) : 
+  Module("SetupFEMatrix", context, Filter, "Forward", "BioPSE"), 
+  uiUseCond_(context->subVar("UseCondTCL")),
   lastUseCond_(1)
 {
   gen_=-1;

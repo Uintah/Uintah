@@ -50,21 +50,19 @@ public:
   GuiString bcFlag_; // "none", "GroundZero", or "DirSub"
 
   //! Constructor/Destructor
-  ApplyFEMVoltageSource(const string& id);
+  ApplyFEMVoltageSource(GuiContext *context);
   virtual ~ApplyFEMVoltageSource();
   
   //! Public methods
   virtual void execute();
 };
 
-extern "C" Module* make_ApplyFEMVoltageSource(const string& id)
-{
-  return scinew ApplyFEMVoltageSource(id);
-}
+DECLARE_MAKER(ApplyFEMVoltageSource)
 
-ApplyFEMVoltageSource::ApplyFEMVoltageSource(const string& id)
-  : Module("ApplyFEMVoltageSource", id, Filter, "Forward", "BioPSE"),
-    bcFlag_("bcFlag", id, this)
+
+ApplyFEMVoltageSource::ApplyFEMVoltageSource(GuiContext *context)
+  : Module("ApplyFEMVoltageSource", context, Filter, "Forward", "BioPSE"),
+    bcFlag_(context->subVar("bcFlag"))
 {
 }
 

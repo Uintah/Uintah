@@ -73,20 +73,21 @@ class BuildElemLeadField : public Module {
   int last_mesh_generation_;
   int last_interp_generation_;
 public:
-  BuildElemLeadField(const string& id);
+  BuildElemLeadField(GuiContext *context);
   virtual ~BuildElemLeadField();
   virtual void execute();
 };
 
 
-extern "C" Module* make_BuildElemLeadField(const string& id) {
-  return new BuildElemLeadField(id);
-}
+DECLARE_MAKER(BuildElemLeadField)
+
 
 //---------------------------------------------------------------
-BuildElemLeadField::BuildElemLeadField(const string& id)
-  : Module("BuildElemLeadField", id, Filter, "LeadField", "BioPSE"), leadfield_(0),
-    last_mesh_generation_(-1), last_interp_generation_(-1)
+BuildElemLeadField::BuildElemLeadField(GuiContext *context)
+  : Module("BuildElemLeadField", context, Filter, "LeadField", "BioPSE"),
+    leadfield_(0),
+    last_mesh_generation_(-1),
+    last_interp_generation_(-1)
 {
 }
 

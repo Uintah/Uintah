@@ -167,7 +167,7 @@ class SurfaceToSurface : public Module {
     Mutex mutex;
 public:
     void parallel(int);
-    SurfaceToSurface(const string& id);
+    SurfaceToSurface(GuiContext *context);
     virtual ~SurfaceToSurface();
     virtual void execute();
     void getBW(double **a, int n, int *m1, int *m2);
@@ -185,16 +185,18 @@ public:
     void jacobi_sci(Matrix*,ColumnMatrix& , ColumnMatrix&);
 };
 
-extern "C" Module* make_SurfaceToSurface(const string& id)
-{
-    return new SurfaceToSurface(id);
-}
 
-SurfaceToSurface::SurfaceToSurface(const string& id)
-: Module("SurfaceToSurface", id, Filter), status("status", id, this),
-  maxiter("maxiter", id, this), target_error("target_error", id, this),
-  iteration("iteration", id, this), current_error("current_error", id, this),
-  mutex("SurfaceToSurface mutex")
+DECLARE_MAKER(SurfaceToSurface)
+
+
+SurfaceToSurface::SurfaceToSurface(GuiContext *context)
+  : Module("SurfaceToSurface", context, Filter),
+    status(context->subVar("status")),
+    maxiter(context->subVar("maxiter")),
+    target_error(context->subVar("target_error")),
+    iteration(context->subVar("iteration")),
+    current_error(context->subVar("current_error")),
+    mutex("SurfaceToSurface mutex")
 {
     imatrix=new MatrixIPort(this, "MatrixIn", MatrixIPort::Atomic);
     add_iport(imatrix);

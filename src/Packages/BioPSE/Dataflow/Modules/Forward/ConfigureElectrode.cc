@@ -25,19 +25,17 @@ class ConfigureElectrode : public Module {
   GuiInt flip_;
   GuiDouble voltage_;
 public:
-  ConfigureElectrode(const string& id);
+  ConfigureElectrode(GuiContext *context);
   virtual ~ConfigureElectrode();
   virtual void execute();
 };
 
-extern "C" Module* make_ConfigureElectrode(const string& id)
-{
-    return new ConfigureElectrode(id);
-}
+DECLARE_MAKER(ConfigureElectrode)
 
-ConfigureElectrode::ConfigureElectrode(const string& id)
-  : Module("ConfigureElectrode", id, Filter, "Forward", "BioPSE"),
-    flip_("flip", id, this), voltage_("voltage", id, this)
+ConfigureElectrode::ConfigureElectrode(GuiContext *context)
+  : Module("ConfigureElectrode", context, Filter, "Forward", "BioPSE"),
+    flip_(context->subVar("flip")),
+    voltage_(context->subVar("voltage"))
 {
 }
 

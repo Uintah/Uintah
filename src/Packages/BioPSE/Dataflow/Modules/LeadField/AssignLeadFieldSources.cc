@@ -55,19 +55,17 @@ class AssignLeadFieldSources : public Module
   FieldOPort *ofp3;
   FieldOPort *ofp4;
 public:
-  AssignLeadFieldSources(const string& id);
+  AssignLeadFieldSources(GuiContext *context);
   virtual ~AssignLeadFieldSources();
   virtual void execute();
 };
 
 
-extern "C" Module* make_AssignLeadFieldSources(const string& id)
-{
-  return new AssignLeadFieldSources(id);
-}
+DECLARE_MAKER(AssignLeadFieldSources)
 
-AssignLeadFieldSources::AssignLeadFieldSources(const string& id)
-  : Module("AssignLeadFieldSources", id, Filter, "LeadField", "BioPSE")
+
+AssignLeadFieldSources::AssignLeadFieldSources(GuiContext *context)
+  : Module("AssignLeadFieldSources", context, Filter, "LeadField", "BioPSE")
 {
 }
 

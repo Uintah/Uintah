@@ -50,7 +50,7 @@ class BioPSESHARE ShowDipoles : public Module {
   string execMsg_;
   Array1<GeomSwitch *> widget_switch_;
 public:
-  ShowDipoles(const string& id);
+  ShowDipoles(GuiContext *context);
   virtual ~ShowDipoles();
   virtual void execute();
   CrowdMonitor widget_lock_;
@@ -65,16 +65,16 @@ public:
   unsigned int nDips_;
 };
 
-extern "C" BioPSESHARE Module* make_ShowDipoles(const string& id) {
-  return scinew ShowDipoles(id);
-}
 
-ShowDipoles::ShowDipoles(const string& id) :
-  Module("ShowDipoles", id, Filter, "Visualization", "BioPSE"),
-  widgetSizeGui_("widgetSizeGui_", id, this),
-  scaleModeGui_("scaleModeGui_", id, this),
-  showLastVecGui_("showLastVecGui_", id, this),
-  showLinesGui_("showLinesGui_", id, this),
+DECLARE_MAKER(ShowDipoles)
+
+
+ShowDipoles::ShowDipoles(GuiContext *context) :
+  Module("ShowDipoles", context, Filter, "Visualization", "BioPSE"),
+  widgetSizeGui_(context->subVar("widgetSizeGui_")),
+  scaleModeGui_(context->subVar("scaleModeGui_")),
+  showLastVecGui_(context->subVar("showLastVecGui_")),
+  showLinesGui_(context->subVar("showLinesGui_")),
   widget_lock_("ShowDipoles widget lock")
 {
   lastGen_=-1;

@@ -20,13 +20,12 @@ using namespace SCIRun;
 
 class BioPSESHARE ShowLeads : public Module {
 public:
-  ShowLeads(const string& id);
+  ShowLeads(GuiContext *context);
 
   virtual ~ShowLeads();
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
 private:
   MatrixIPort *iport_;
 
@@ -37,16 +36,16 @@ private:
   int gen_;
 };
 
-extern "C" BioPSESHARE Module* make_ShowLeads(const string& id) {
-  return scinew ShowLeads(id);
-}
 
-ShowLeads::ShowLeads(const string& id) : 
-  Module("ShowLeads", id, Source, "Visualization", "BioPSE"),
+DECLARE_MAKER(ShowLeads)
+
+
+ShowLeads::ShowLeads(GuiContext *context) : 
+  Module("ShowLeads", context, Source, "Visualization", "BioPSE"),
   iport_(0),
-  units_("time-units", id, this),
-  tmin_("time-min", id, this),
-  tmax_("time-max", id, this),
+  units_(context->subVar("time-units")),
+  tmin_(context->subVar("time-min")),
+  tmax_(context->subVar("time-max")),
   gen_(-1)
 {
 }
@@ -91,7 +90,7 @@ void ShowLeads::execute(){
     ystr << "}";
     cmmd << xstr.str();
     cmmd << ystr.str();
-    TCL::execute(cmmd.str().c_str());
+    gui->execute(cmmd.str().c_str());
   }
 
   // set params from properties before drawing leads
@@ -111,12 +110,7 @@ void ShowLeads::execute(){
 
   ostringstream cmmd;
   cmmd << id << " draw_leads";
-  TCL::execute(cmmd.str().c_str());
-}
-
-void ShowLeads::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  gui->execute(cmmd.str().c_str());
 }
 
 } // End namespace BioPSE

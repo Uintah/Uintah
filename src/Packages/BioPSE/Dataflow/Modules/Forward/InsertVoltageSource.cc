@@ -32,20 +32,20 @@ class InsertVoltageSource : public Module {
   GuiInt averaging_;
   GuiInt groundfirst_;
 public:
-  InsertVoltageSource(const string& id);
+  InsertVoltageSource(GuiContext *context);
   virtual ~InsertVoltageSource();
   virtual void execute();
 };
 
-extern "C" Module* make_InsertVoltageSource(const string& id)
-{
-    return new InsertVoltageSource(id);
-}
 
-InsertVoltageSource::InsertVoltageSource(const string& id)
-  : Module("InsertVoltageSource", id, Filter, "Forward", "BioPSE"),
-    outside_("outside", id, this), averaging_("averaging", id, this),
-    groundfirst_("groundfirst", id, this)
+DECLARE_MAKER(InsertVoltageSource)
+
+
+InsertVoltageSource::InsertVoltageSource(GuiContext *context)
+  : Module("InsertVoltageSource", context, Filter, "Forward", "BioPSE"),
+    outside_(context->subVar("outside")),
+    averaging_(context->subVar("averaging")),
+    groundfirst_(context->subVar("groundfirst"))
 {
 }
 
