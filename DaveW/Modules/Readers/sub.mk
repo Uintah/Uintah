@@ -19,7 +19,6 @@ SRCDIR   := DaveW/Modules/Readers
 
 SRCS     += \
 	$(SRCDIR)/ContourSetReader.cc\
-	$(SRCDIR)/PathReader.cc\
 	$(SRCDIR)/SegFldReader.cc\
 	$(SRCDIR)/SigmaSetReader.cc\
 	$(SRCDIR)/TensorFieldReader.cc\
@@ -34,6 +33,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/19 06:25:13  samsonov
+# PathReader moved in PSECommon
+#
 # Revision 1.4  2000/06/08 22:46:19  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
