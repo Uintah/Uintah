@@ -61,6 +61,9 @@ AC_CONFIG_AUX_DIR(scripts)
 ##  set the autoconf list delimiter
 IFS=' '
 
+##  set the output header to "sci_config.h"
+AC_CONFIG_HEADER(sci_config.h)
+
 ##  initialize the recognized argument lists
 SCI_ARG_WITH_LIST="--no-create --no-recursion"
 SCI_ARG_ENABLE_LIST=""
@@ -1643,19 +1646,6 @@ AC_SUBST(DEF_EXC)
 
 ##  --  globus nexus  ----------------------------------------------------
 
-case $host in
-  *-irix*)
-    if test "$is_64bit" = "yes"; then
-      LIBDIR=lib64
-    else
-      LIBDIR=lib32
-    fi
-    ;;
-  *)
-    LIBDIR=lib
-    ;;
-esac
-
 FOUND_ALL_GLOBUS=no
 GLOBUS_INCLUDE=""
 GLOBUS_LIB=""
@@ -1663,18 +1653,18 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
     continue
   fi
-  AC_CHECKING(in $i/$LIBDIR)
-  SCI_CHECK_LIB($i/$LIBDIR,globus_dc,main,,continue,)
-#  SCI_CHECK_LIB($i/$LIBDIR,globus_utp,main,,continue,
+  AC_CHECKING(for globus libraries in $i/lib)
+  SCI_CHECK_LIB($i/lib,globus_dc,main,,continue,)
+#  SCI_CHECK_LIB($i/lib,globus_utp,main,,continue,
 #    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
-#  SCI_CHECK_LIB($i/$LIBDIR,globus_mp,main,,continue,
+#  SCI_CHECK_LIB($i/lib,globus_mp,main,,continue,
 #    -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
-#  SCI_CHECK_LIB($i/$LIBDIR,globus_gss_assist,main,,continue,
+#  SCI_CHECK_LIB($i/lib,globus_gss_assist,main,,continue,
 #    -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
-#  SCI_CHECK_LIB($i/$LIBDIR,globus_gss,main,,continue,
+#  SCI_CHECK_LIB($i/lib,globus_gss,main,,continue,
 #    -lglobus_gss_assist -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl \
 #    $CRYPTO_LIBRARY -lcrypto)
-#  SCI_CHECK_LIB($i/$LIBDIR,globus_gaa,main,,continue,
+#  SCI_CHECK_LIB($i/lib,globus_gaa,main,,continue,
 #    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp \
 #    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
   ##
@@ -1702,6 +1692,89 @@ AC_SUBST(GLOBUS_EXTRA_DIRS)
 AC_SUBST(GLOBUS_INCLUDE)
 AC_SUBST(GLOBUS_LIB)
 AC_SUBST(DEF_GLOBUS)
+
+##  --  search for uuid functions, either uuid_create or uuid_generate ----
+
+# This is typical on SGI and ??
+AC_MSG_CHECKING(for uuid_create in sys/uuid.h)
+AC_TRY_COMPILE([#include <sys/types.h>
+             extern "C" {
+                #include <sys/uuid.h>
+             }],
+	[char* uuid_str;
+	 uuid_t uuid;
+	 uint_t status;
+	 uuid_create(&uuid, &status);],
+	[have_uuid=yes
+         AC_DEFINE(HAVE_SYS_UUID_H)], have_uuid=no)
+AC_MSG_RESULT($have_uuid)
+
+if test "$have_uuid" != "yes"; then
+  # This is typical on linux and ??
+  AC_MSG_CHECKING(for uuid_generate in uuid/uuid.h)
+  AC_TRY_COMPILE([#include <uuid/uuid.h>],
+	[char* uuid_str;
+	 uuid_t uuid;
+	 char uuid_str[64];
+	 uuid_generate(uuid);
+	 uuid_unparse(uuid, uuid_str);],
+	[have_uuid=yes
+         AC_DEFINE(HAVE_UUID_UUID_H)], have_uuid=no)
+  AC_MSG_RESULT($have_uuid)
+fi
+
+AC_MSG_CHECKING(for uuid library)
+old_LIBS=$LIBS
+found_uuidlib=no
+for i in "" -luuid; do
+  LIBS="$old_LIBS $i"
+  AC_TRY_LINK([
+#if HAVE_SYS_UUID_H
+#include <sys/types.h>
+extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
+#include <sys/uuid.h>
+}
+#define UUID_CREATE
+#else
+#if HAVE_UUID_UUID_H
+#include <uuid/uuid.h>
+#define UUID_GENERATE
+#else
+#error We need either sys/uuid.h or uuid/uuid.h
+#endif
+#endif
+	], [
+  char* uuid_str;
+  uuid_t uuid;
+#if defined(UUID_CREATE)
+  uint_t status;
+  uuid_create(&uuid, &status);
+  uuid_to_string(&uuid, &uuid_str, &status);
+#else
+#if defined( UUID_GENERATE)
+  char uuid_str[64];
+  uuid_generate( uuid );
+  uuid_unparse(uuid, uuid_str);
+#endif
+#endif
+	], [
+  UUID_LIB=$i
+  found_uuidlib=yes
+  break
+	])
+done
+if test "$found_uuidlib" = yes; then
+  if test -z "$UUID_LIB"; then
+    AC_MSG_RESULT(none required)
+  else
+    AC_MSG_RESULT($UUID_LIB)
+  fi
+else
+  AC_MSG_RESULT(not found)
+  have_uuid=no
+fi
+
+AC_SUBST(UUID_LIB)
 
 ##  --  search for Qt  ----------------------------------------------------
 
@@ -1744,6 +1817,17 @@ if test "$enable_scirun2" = "yes"; then
     else
       AC_MSG_ERROR(Globus not found required for scirun2)
     fi
+    exit 1
+  fi
+  if test "$have_uuid" != "yes"; then
+    case $host in
+      *linux*)
+        AC_MSG_ERROR(uuid_generate function and libuuid not found, must install ext2fs development tools)
+        ;;
+      *)
+        AC_MSG_ERROR(Cannot find uuid_generate or uuid_create, required for SCIRun2)
+        ;;
+    esac
     exit 1
   fi
 # Do not require Qt for SCIRun2 yet: 
@@ -2010,9 +2094,6 @@ esac
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
-
-##  set the output header to "sci_config.h"
-AC_CONFIG_HEADER(sci_config.h)
 
 abs_conftop_dir=`pwd`;
 AC_SUBST(abs_conftop_dir)
