@@ -252,6 +252,18 @@ namespace Uintah {
       double d_CFL;
       int d_max_iter_equilibration;
 
+      // Debugging switches
+      bool switchDebugInitialize;
+      bool switchDebug_equilibration_press;
+      bool switchDebug_vel_FC;
+      bool switchDebug_Exchange_FC;
+      bool switchDebug_explicit_press;
+      bool switchDebug_PressFC;
+      bool switchDebugLagrangianValues;
+      bool switchDebugSource_Sink;
+      bool switchDebug_advance_advect;
+      bool switchDebug_advectQFirst;
+
      // exchange coefficients -- off diagonal terms
       vector<double> d_K_mom, d_K_heat; 
       
@@ -317,6 +329,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.53  2001/01/11 20:17:19  jas
+// Added debug switches to the input file specification.
+// #if 0 the hard wired exchange coefficients.
+//
 // Revision 1.52  2001/01/11 14:13:12  harman
 // -changed step names:
 //     step1b  ComputeEquilibrationPressure

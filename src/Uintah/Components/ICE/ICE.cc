@@ -31,6 +31,7 @@
 #include <Uintah/Grid/DensityBoundCond.h>
 #include <iomanip>
 
+#if 0
 //______________________________________________________________________
 //  DEBUGGING SWITCHES
 #define  todd_debug                         1       // TURN THIS OFF
@@ -44,7 +45,7 @@
 #define  switchDebugSource_Sink             0
 #define  switchDebug_advance_advect         1
 #define  switch_Debug_advectQFirst          0
-
+#endif
 
 using std::vector;
 using std::max;
@@ -87,6 +88,18 @@ ICE::ICE(const ProcessorGroup* myworld)
   q_in_CFLabel = scinew VarLabel("q_in_CF",
                                 CCVariable<cflux>::getTypeDescription());
 
+  // Turn off all the debuging switches
+  switchDebugInitialize = false;
+  switchDebug_equilibration_press = false;
+  switchDebug_vel_FC = false;
+  switchDebug_Exchange_FC = false;
+  switchDebug_explicit_press = false;
+  switchDebug_PressFC = false;
+  switchDebugLagrangianValues = false;
+  switchDebugSource_Sink = false;
+  switchDebug_advance_advect = false;
+  switchDebug_advectQFirst = false;
+  
 }
 
 ICE::~ICE()
@@ -114,6 +127,35 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
   d_SMALL_NUM = 1.e-100;
 
   cerr << "In the preprocessor . . ." << endl;
+
+  // Find the debug switches
+  ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
+  for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
+       child = child->findNextBlock("debug")) {
+    map<string,string> debug_attr;
+    child->getAttributes(debug_attr);
+    if (debug_attr["label"] == "switchDebugInitialize")
+      switchDebugInitialize = true;
+    else if (debug_attr["label"] == "switchDebug_equilibration_press")
+      switchDebug_equilibration_press = true;
+    else if (debug_attr["label"] == "switchDebug_vel_FC")
+      switchDebug_vel_FC = true;
+    else if (debug_attr["label"] == "switchDebug_Exchange_FC")
+      switchDebug_Exchange_FC = true;
+    else if (debug_attr["label"] == "switchDebug_explicit_press")
+      switchDebug_explicit_press = true;
+    else if (debug_attr["label"] == "switchDebug_PressFC")
+      switchDebug_PressFC = true;
+    else if (debug_attr["label"] == "switchDebugLagrangianValues")
+      switchDebugLagrangianValues = true;
+    else if (debug_attr["label"] == "switchDebugSource_Sink")
+      switchDebugSource_Sink = true;
+    else if (debug_attr["label"] == "switchDebug_advance_advect")
+      switchDebug_advance_advect = true;
+    else if (debug_attr["label"] == "switchDebug_advectQFirst")
+      switchDebug_advectQFirst = true;
+  }
+
 
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   cfd_ps->require("cfl",d_CFL);
@@ -157,7 +199,29 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
     cout << "K_mom = " << d_K_mom[i] << endl;
   for (int i = 0; i<(int)d_K_heat.size(); i++)
     cout << "K_heat = " << d_K_heat[i] << endl;
-  
+
+  // Print out the debugging switches
+  if (switchDebugInitialize == true) 
+    cout << "switchDebugInitialize is ON" << endl;
+  if (switchDebug_equilibration_press == true) 
+    cout << "switchDebug_equilibration_press is ON" << endl;
+  if (switchDebug_vel_FC == true) 
+    cout << "switchDebug_vel_FC is ON" << endl;
+  if (switchDebug_Exchange_FC == true) 
+    cout << "switchDebug_Exchange_FC is ON" << endl;
+  if (switchDebug_explicit_press == true) 
+    cout << "switchDebug_explicit_press is ON" << endl;
+  if (switchDebug_PressFC == true) 
+    cout << "switchDebug_PressFC is ON" << endl;
+  if (switchDebugLagrangianValues == true) 
+    cout << "switchDebugLagrangianValues is ON" << endl;
+  if (switchDebugSource_Sink == true) 
+    cout << "switchDebugSource_Sink is ON" << endl;
+  if (switchDebug_advance_advect == true) 
+    cout << "switchDebug_advance_advect is ON" << endl;
+  if (switchDebug_advectQFirst == true) 
+    cout << "switchDebug_advectQFirst is ON" << endl;
+
 }
 
 void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
@@ -734,42 +798,42 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   
   
 /*`==========TESTING==========*/ 
-#if (todd_debug && switchDebugInitialize)
-  cout << " Initial Conditions" << endl;
-  
-  IntVector lowIndex     = patch->getInteriorCellLowIndex();
-  IntVector highIndex    = patch->getInteriorCellHighIndex();
-  cout << "\n\t xLoLimit   = "<<lowIndex.x()<< 
-    "\t yLoLimit   is "<<lowIndex.y()<<
-    "\t zLoLimit   is "<<lowIndex.z()<< endl;
-  cout << "\t xHiLimit   is "<<highIndex.x()<< 
-    "\t yHiLimit   is "<<highIndex.y()<<
-    "\t zHiLimit   is "<<highIndex.z()<< endl;
-  
-  IntVector loIndex   = patch->getCellLowIndex();
-  IntVector hiIndex   = patch->getCellHighIndex();
-  cout << "\n\txLo_GC   is "<<loIndex.x()<< 
-    "\t yLo_GC   is "<<loIndex.y()<<
-    "\t zLo_GC   is "<<loIndex.z()<< endl;
-  cout << "\t xHi_GC   is "<<hiIndex.x()<< 
-    "\t yHi_GC   is "<<hiIndex.y()<<
-    "\t zHi_GC   is "<<hiIndex.z()<< endl;
-  
-  Vector dx = patch->dCell();
-  cout << "\n\tdx     is "<< dx.x() << 
-    "\tdy     is "<< dx.y() << 
-    "\tdz     is"<< dx.z() << endl;
-    
-  char description[50];
-  sprintf(description, "Initialization, Mat. %d ",m);
-  printData(   patch, 1, description, "rho_CC",         rho_CC);
-  printData(   patch, 1, description, "rho_micro_CC",   rho_micro);
-  printData(   patch, 1, description, "Temp_CC",        Temp_CC);
-  printData(   patch, 1, description, "vol_frac_CC",    vol_frac_CC);
-  printVector( patch, 1, description, "uvel_CC", 0,  vel_CC);
-  printVector( patch, 1, description, "vvel_CC", 1,  vel_CC);
-  printVector( patch, 1, description, "wvel_CC", 2,  vel_CC);
-#endif 
+    if (switchDebugInitialize) {
+      cout << " Initial Conditions" << endl;
+      
+      IntVector lowIndex     = patch->getInteriorCellLowIndex();
+      IntVector highIndex    = patch->getInteriorCellHighIndex();
+      cout << "\n\t xLoLimit   = "<<lowIndex.x()<< 
+	"\t yLoLimit   is "<<lowIndex.y()<<
+	"\t zLoLimit   is "<<lowIndex.z()<< endl;
+      cout << "\t xHiLimit   is "<<highIndex.x()<< 
+	"\t yHiLimit   is "<<highIndex.y()<<
+	"\t zHiLimit   is "<<highIndex.z()<< endl;
+      
+      IntVector loIndex   = patch->getCellLowIndex();
+      IntVector hiIndex   = patch->getCellHighIndex();
+      cout << "\n\txLo_GC   is "<<loIndex.x()<< 
+	"\t yLo_GC   is "<<loIndex.y()<<
+	"\t zLo_GC   is "<<loIndex.z()<< endl;
+      cout << "\t xHi_GC   is "<<hiIndex.x()<< 
+	"\t yHi_GC   is "<<hiIndex.y()<<
+	"\t zHi_GC   is "<<hiIndex.z()<< endl;
+      
+      Vector dx = patch->dCell();
+      cout << "\n\tdx     is "<< dx.x() << 
+	"\tdy     is "<< dx.y() << 
+	"\tdz     is"<< dx.z() << endl;
+      
+      char description[50];
+      sprintf(description, "Initialization, Mat. %d ",m);
+      printData(   patch, 1, description, "rho_CC",         rho_CC);
+      printData(   patch, 1, description, "rho_micro_CC",   rho_micro);
+      printData(   patch, 1, description, "Temp_CC",        Temp_CC);
+      printData(   patch, 1, description, "vol_frac_CC",    vol_frac_CC);
+      printVector( patch, 1, description, "uvel_CC", 0,  vel_CC);
+      printVector( patch, 1, description, "vvel_CC", 1,  vel_CC);
+      printVector( patch, 1, description, "wvel_CC", 2,  vel_CC);
+    }
  /*==========TESTING==========`*/   
   }
 
@@ -883,19 +947,19 @@ void ICE::computeEquilibrationPressure(
 		0);
   }
   /*`==========DEBUG============*/ 
-#if ( todd_debug && switchDebug_equilibration_press)
+  if (switchDebug_equilibration_press) {
 
     printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
-              
-   for (int m = 0; m < numMatls; m++)  {
-     char description[50];
-     sprintf(description, "TOP_equilibration, Mat. %d ",m);
-     printData( patch, 1, description, "rho_CC",          rho[m]);
-     printData( patch, 1, description, "speedSound",      speedSound_old[m]);
-     printData( patch, 1, description, "Temp_CC",         Temp[m]);
+    
+    for (int m = 0; m < numMatls; m++)  {
+      char description[50];
+      sprintf(description, "TOP_equilibration, Mat. %d ",m);
+      printData( patch, 1, description, "rho_CC",          rho[m]);
+      printData( patch, 1, description, "speedSound",      speedSound_old[m]);
+      printData( patch, 1, description, "Temp_CC",         Temp[m]);
     }
-#endif
- /*==========DEBUG============`*/
+  }
+    /*==========DEBUG============`*/
   press_new = press;
  
   int count, test_max_iter = 0;
@@ -1113,17 +1177,17 @@ void ICE::computeEquilibrationPressure(
   
   
 /*`==========DEBUG============*/ 
-#if ( todd_debug && switchDebug_equilibration_press)
+  if (switchDebug_equilibration_press) {
     printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
-              
-   for (int m = 0; m < numMatls; m++)  {
-     char description[50];
-     sprintf(description, "BOT_equilibration, Mat. %d ",m);
-     printData( patch, 1, description, "rho_CC",          rho[m]);
-     printData( patch, 1, description, "speedSound",      speedSound_old[m]);
-     printData( patch, 1, description, "Temp_CC",         Temp[m]);
+    
+    for (int m = 0; m < numMatls; m++)  {
+      char description[50];
+      sprintf(description, "BOT_equilibration, Mat. %d ",m);
+      printData( patch, 1, description, "rho_CC",          rho[m]);
+      printData( patch, 1, description, "speedSound",      speedSound_old[m]);
+      printData( patch, 1, description, "Temp_CC",         Temp[m]);
     }
-#endif
+  }
  /*==========DEBUG============`*/
   
 }
@@ -1267,13 +1331,13 @@ void ICE::computeFaceCenteredVelocities(
     new_dw->put(vvel_FC, lb->vvel_FCLabel, dwindex, patch);
     new_dw->put(wvel_FC, lb->wvel_FCLabel, dwindex, patch);
 /*`==========DEBUG============*/ 
-#if (todd_debug && switchDebug_vel_FC )
+    if (switchDebug_vel_FC ) {
      char description[50];
      sprintf(description, "bottom of vel_FC, Mat. %d ",m);
     printData_FC( patch,1, description, "uvel_FC", uvel_FC);
     printData_FC( patch,1, description, "vvel_FC", vvel_FC);
     printData_FC( patch,1, description, "wvel_FC", wvel_FC);
-#endif
+    }
  /*==========DEBUG============`*/
   }
 }
@@ -1342,16 +1406,21 @@ void ICE::addExchangeContributionToFCVel(
   vector<double> b(numMatls);
   DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls),
     K(numMatls,numMatls);
+  beta.zero();
+  a.zero();
+  K.zero();
+
   for (int i = 0; i < numMatls; i++ )  {
     K[numMatls-1-i][i] = d_K_mom[i];
   }
-  
-//__________________________________
-//    H A R D W I R E   E X C H A N G E   
-  K[0][0] = 0.0;
-  K[0][1] = 1.e10;
-  K[1][0] = 1.e10;
-  K[1][1] = 0.0;
+
+#if 0  
+  for (int i = 0; i < numMatls; i++) {
+    for (int j = 0; j < numMatls; j++) {
+      cout << "K["<<i<<"]["<<j<<"]="<<K[i][j] << endl;
+    }
+  }
+#endif
   
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
@@ -1518,16 +1587,16 @@ void ICE::addExchangeContributionToFCVel(
     setBC(wvel_FCME[m],"Velocity","z",patch);
   }
    /*`==========DEBUG============*/ 
-#if (todd_debug && switchDebug_Exchange_FC )
-  for (int m = 0; m < numMatls; m++)  {
-    char description[50];
-    sprintf(description, "Exchange FC before BC, Mat. %d ",m);
-    printData_FC( patch,1, description, "uvel_FCME", uvel_FCME[m]);
-    printData_FC( patch,1, description, "vvel_FCME", vvel_FCME[m]);
-    printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
+  if (switchDebug_Exchange_FC ) {
+    for (int m = 0; m < numMatls; m++)  {
+      char description[50];
+      sprintf(description, "Exchange FC before BC, Mat. %d ",m);
+      printData_FC( patch,1, description, "uvel_FCME", uvel_FCME[m]);
+      printData_FC( patch,1, description, "vvel_FCME", vvel_FCME[m]);
+      printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
+    }
   }
-#endif
- /*==========DEBUG============`*/
+  /*==========DEBUG============`*/
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
@@ -1626,7 +1695,7 @@ void ICE::computeDelPressAndUpdatePressCC(
     advectQFirst(q_CC, patch,OFS,OFE,OFC,IFS,IFE,IFC,q_out,q_out_EF,q_out_CF,
 		 q_in,q_in_EF,q_in_CF,q_advected);
 /*`==========DEBUG============*/ 
-#if (todd_debug && switchDebug_explicit_press )
+    if (switchDebug_explicit_press ) {
 #if 1
     char description[50];
     sprintf(description, "middle of explicit Pressure, Mat. %d ",m);
@@ -1634,7 +1703,7 @@ void ICE::computeDelPressAndUpdatePressCC(
     printData_FC( patch,1, description, "vvel_FC", vvel_FC);
     printData_FC( patch,1, description, "wvel_FC", wvel_FC);
 #endif
-#endif
+    }
  /*==========DEBUG============`*/
     for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++) {
       //__________________________________
@@ -1670,10 +1739,10 @@ void ICE::computeDelPressAndUpdatePressCC(
   new_dw->put(press_CC, lb->press_CCLabel,    0, patch);
   
 /*`==========DEBUG============*/ 
-#if (todd_debug && switchDebug_explicit_press)
+  if (switchDebug_explicit_press) {
     printData( patch, 1, "Bottom of explicit Pressure ", "delPress_CC",  delPress);
     printData( patch, 1, " ",                            "Press_CC",     press_CC);
-#endif
+  }
  /*==========DEBUG============`*/
 }
 
@@ -1771,12 +1840,12 @@ void ICE::computePressFC(
   new_dw->put(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
   
 /*`==========TESTING==========*/ 
-#if (todd_debug && switchDebug_PressFC)
-  printData_FC( patch,1,"press_FC",   "press_FC_RIGHT", pressX_FC);
-  printData_FC( patch,1,"press_FC",   "press_FC_TOP",   pressY_FC);
-  printData_FC( patch,1,"press_FC",   "press_FC_FRONT", pressZ_FC);
-#endif
- /*==========TESTING==========`*/
+  if (switchDebug_PressFC) {
+    printData_FC( patch,1,"press_FC",   "press_FC_RIGHT", pressX_FC);
+    printData_FC( patch,1,"press_FC",   "press_FC_TOP",   pressY_FC);
+    printData_FC( patch,1,"press_FC",   "press_FC_FRONT", pressZ_FC);
+  }
+  /*==========TESTING==========`*/
 }
 
 /* ---------------------------------------------------------------------
@@ -1901,14 +1970,14 @@ void ICE::accumulateMomentumSourceSinks(
 
     new_dw->put(mom_source, lb->mom_source_CCLabel, dwindex, patch);
  /*`==========TESTING==========*/ 
-#if (todd_debug && switchDebugSource_Sink)
-    char description[50];
-    sprintf(description, "sources/sinks, Mat. %d ",m);
-    printVector( patch, 1, description,    "xmom_source", 0, mom_source);
-    printVector( patch, 1, description,    "ymom_source", 1, mom_source);
-    printVector( patch, 1, description,    "zmom_source", 2, mom_source);
-#endif
- /*==========TESTING==========`*/
+    if (switchDebugSource_Sink) {
+      char description[50];
+      sprintf(description, "sources/sinks, Mat. %d ",m);
+      printVector( patch, 1, description,    "xmom_source", 0, mom_source);
+      printVector( patch, 1, description,    "ymom_source", 1, mom_source);
+      printVector( patch, 1, description,    "zmom_source", 2, mom_source);
+    }
+    /*==========TESTING==========`*/
   }
 }
 
@@ -1972,12 +2041,12 @@ void ICE::accumulateEnergySourceSinks(
       int_eng_source[*iter] = (A/B) * delPress[*iter];
     }
 /*`==========TESTING==========*/
-#if (todd_debug && switchDebugSource_Sink)
-    char description[50];
-    sprintf(description, "sources/sinks, Mat. %d ",m);
-    printData( patch, 1, description,    "int_eng_source",  int_eng_source);
-#endif
-/*==========TESTING==========`*/
+    if (switchDebugSource_Sink) {
+      char description[50];
+      sprintf(description, "sources/sinks, Mat. %d ",m);
+      printData( patch, 1, description,    "int_eng_source",  int_eng_source);
+    }
+    /*==========TESTING==========`*/
     new_dw->put(int_eng_source,lb->int_eng_source_CCLabel,dwindex,patch);
   }
 }
@@ -2041,15 +2110,15 @@ void ICE::computeLagrangianValues(
     new_dw->put(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
   
  /*`==========DEBUG============*/ 
-#if (todd_debug && switchDebugLagrangianValues )
-    char description[50];
-    sprintf(description, "Bot Lagrangian Values, Mat. %d ",m);
-    printVector( patch,1, description, "xmom_L_CC", 0, mom_L);
-    printVector( patch,1, description, "ymom_L_CC", 1, mom_L);
-    printVector( patch,1, description, "zmom_L_CC", 2, mom_L);
-    printData(   patch,1, description, "int_eng_L_CC",int_eng_L);
-#endif
- /*==========DEBUG============`*/
+    if (switchDebugLagrangianValues ) {
+      char description[50];
+      sprintf(description, "Bot Lagrangian Values, Mat. %d ",m);
+      printVector( patch,1, description, "xmom_L_CC", 0, mom_L);
+      printVector( patch,1, description, "ymom_L_CC", 1, mom_L);
+      printVector( patch,1, description, "zmom_L_CC", 2, mom_L);
+      printData(   patch,1, description, "int_eng_L_CC",int_eng_L);
+    }
+    /*==========DEBUG============`*/
    }
 }
 
@@ -2116,6 +2185,11 @@ void ICE::addExchangeToMomentumAndEnergy(
   vector<double> mass(numMatls);
   DenseMatrix beta(numMatls,numMatls),acopy(numMatls,numMatls);
   DenseMatrix K(numMatls,numMatls),H(numMatls,numMatls),a(numMatls,numMatls);
+  beta.zero();
+  acopy.zero();
+  K.zero();
+  H.zero();
+  a.zero();
 
   for(int m = 0; m < numMatls; m++)  {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
@@ -2138,12 +2212,22 @@ void ICE::addExchangeToMomentumAndEnergy(
       H[numMatls-1-i][i] = d_K_heat[i];
   }
 
+#if 1  
+  for (int i = 0; i < numMatls; i++) {
+    for (int j = 0; j < numMatls; j++) {
+      cout << "K["<<i<<"]["<<j<<"]="<<K[i][j] << endl;
+      cout << "H["<<i<<"]["<<j<<"]="<<H[i][j] << endl;
+    }
+  }
+#endif
+#if 0
 //__________________________________
 //    H A R D W I R E   E X C H A N G E   
   K[0][0] = 0.0;        H[0][0] = 0.0;
   K[0][1] = 1.e10;      H[0][1] = 0.0;
   K[1][0] = 1.e10;      H[1][0] = 0.0;
   K[1][1] = 0.0;        H[1][1] = 0.0;
+#endif
       
   // Set (*)mom_L_ME = (*)mom_L
   // if you have only 1 mat then there is no exchange
@@ -2431,19 +2515,19 @@ void ICE::advectAndAdvanceInTime(
     setBC(vel_CC,   "Velocity",             patch);
 
     /*`==========DEBUG============*/  
-#if (todd_debug && switchDebug_advance_advect )
-    char description[50];
-    sprintf(description, "AFTER Advection after BC's, Mat. %d ",m);
-    printData( patch,1, description,   "rho_CC",      rho_CC);
-    printData( patch,1, description,   "Temp_CC",temp);
-    printVector( patch,1, description, "uvel_CC", 0, vel_CC);
-    printVector( patch,1, description, "vvel_CC", 1, vel_CC);
-    printVector( patch,1, description, "wvel_CC", 2, vel_CC);
-    printVector( patch,1, description, "xmom_L_CC", 0, mom_L_ME);
-    printVector( patch,1, description, "ymom_L_CC", 1, mom_L_ME);
-    printVector( patch,1, description, "zmom_L_CC", 2, mom_L_ME);
-    printData( patch,1, description,   "int_eng_L_CC",int_eng_L_ME);
-#endif
+    if (switchDebug_advance_advect ) {
+      char description[50];
+      sprintf(description, "AFTER Advection after BC's, Mat. %d ",m);
+      printData( patch,1, description,   "rho_CC",      rho_CC);
+      printData( patch,1, description,   "Temp_CC",temp);
+      printVector( patch,1, description, "uvel_CC", 0, vel_CC);
+      printVector( patch,1, description, "vvel_CC", 1, vel_CC);
+      printVector( patch,1, description, "wvel_CC", 2, vel_CC);
+      printVector( patch,1, description, "xmom_L_CC", 0, mom_L_ME);
+      printVector( patch,1, description, "ymom_L_CC", 1, mom_L_ME);
+      printVector( patch,1, description, "zmom_L_CC", 2, mom_L_ME);
+      printData( patch,1, description,   "int_eng_L_CC",int_eng_L_ME);
+    }
     /*==========DEBUG============`*/
     
     new_dw->put(rho_CC, lb->rho_CCLabel,  dwindex,patch);
@@ -3816,6 +3900,10 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.88  2001/01/11 20:17:19  jas
+// Added debug switches to the input file specification.
+// #if 0 the hard wired exchange coefficients.
+//
 // Revision 1.87  2001/01/11 14:13:12  harman
 // -changed step names:
 //     step1b  ComputeEquilibrationPressure
