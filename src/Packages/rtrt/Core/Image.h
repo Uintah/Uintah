@@ -12,6 +12,11 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 
+// This is for the ppm stream
+#include <sgi_stl_warnings_off.h>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
+
 #if defined(HAVE_OOGL)
 
 ///////////////////////////////////////////
@@ -112,6 +117,9 @@ class Image : public SCIRun::Persistent {
   float** depth;
   int xres, yres;
   bool stereo;
+
+  static std::ofstream ppm_streamR;
+  static std::ofstream ppm_streamL;
 public:
   Image(int xres, int yres, bool stereo);
   ~Image();
@@ -145,6 +153,10 @@ public:
   void save(char* file);
   void save_ppm(char *filename, bool draw_sils = false, float max_depth=0);
   void save_depth(char *filename);
+
+  bool start_ppm_stream(char *filename);
+  void save_to_ppm_stream();
+  void end_ppm_stream();
 };
 #if 0
 class ImageTile;
