@@ -41,8 +41,11 @@
 #include <sci_gl.h>
 #include <GL/glu.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
+#include <limits>
+#include <sgi_stl_warnings_on.h>
 
 #include <math.h>
 
@@ -230,8 +233,8 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
   int size_y = array.dim1();
-  float top_left = top_x_ - abs(width_)/2;
-  float top_right = top_x_ + abs(width_)/2;
+  float top_left = top_x_ - fabs(width_)/2;
+  float top_right = top_x_ + fabs(width_)/2;
   int lb = (int)(bottom_*top_y_*size_y);
   int le = (int)(top_y_*size_y);
   int ilb = Clamp(lb, 0, size_y-1);
