@@ -72,7 +72,7 @@ PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ):
 #ifdef HAVE_PBUFFER
 
 bool
-PBuffer::create(Display* dpy, int screen,
+PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
 		int width, int height, int colorBits, int depthBits)
 {
   dpy_ = dpy;
@@ -145,7 +145,7 @@ PBuffer::create(Display* dpy, int screen,
       return false;
     }
 
-    cx_ = glXCreateNewContext( dpy, *fbc_, GLX_RGBA_TYPE, NULL, True);
+    cx_ = glXCreateNewContext( dpy, *fbc_, GLX_RGBA_TYPE, sharedcontext, True);
     if( !cx_ ){
       //cerr<<"Cannot create Pbuffer context\n";
       return false;
@@ -193,8 +193,9 @@ PBuffer::is_current()
 #else // ifdef HAVE_PBUFFER
 
 bool
-PBuffer::create(Display* /*dpy*/, int /*screen*/, int /*width*/,
-                int /*height*/, int /*colorBits*/, int /*depthBits*/)
+PBuffer::create(Display* /*dpy*/, int /*screen*/, GLXContext /*shared*/,
+		int /*width*/, int /*height*/,
+		int /*colorBits*/, int /*depthBits*/)
 {
   return false;
 }

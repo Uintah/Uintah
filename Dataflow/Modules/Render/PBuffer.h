@@ -59,7 +59,7 @@ public:
   ~PBuffer() {}
 
   // Returns false if the creation fails.
-  bool create( Display* dpy, int screen,
+  bool create( Display* dpy, int screen, GLXContext sharedcontext,
 	       int width, int height, 
 	       int colorBits, int depthBits /* 8, 16 */);
   void destroy();

@@ -708,9 +708,13 @@ OpenGL::redraw_frame()
   if( xres_ != pbuffer_->width() || yres_ != pbuffer_->height() ){
     //cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer_->destroy();
-    if( !pbuffer_->create( x11_dpy_, screen, xres_, yres_, 8, 8 ) ) {
+    cout << "x11_gl_context_ = " << x11_gl_context_ << "\n";
+    if( !pbuffer_->create( x11_dpy_, screen, x11_gl_context_,
+			   xres_, yres_, 8, 8 ) )
+    {
       //  printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
-    } else {
+    } else
+    {
       have_pbuffer_ = true;
     }
   }
