@@ -194,87 +194,6 @@ WARNING
 
     };
 
-    // Set the Neumann BC condition using a 1st order approximation
-    void fillFaceFlux(const Patch* patch, Patch::FaceType face, 
-                      const T& value, const Vector& dx,
-		        IntVector offset = IntVector(0,0,0))
-    { 
-      //__________________________________
-      // Add (1,0,0) to low index when no 
-      // neighbor patches are present
-      IntVector low,hi;  
-      int numGC = 0;
-      low = patch->getCellLowIndex();
-      low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:1,
-		       patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
-		       patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
-      low-= offset;
-      hi  = patch->getCellHighIndex();
-      hi +=IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
-		       patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
-		       patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
-      hi += offset;
-      // cout<< "fillFaceflux: SFCXVariable.h"<<endl;
-      // cout<< "low: "<<low<<endl;
-      // cout<< "hi:  "<<hi <<endl;     
-
-      switch (face) {
-      case Patch::xplus:
-	for (int j = low.y(); j<hi.y(); j++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
-	    (*this)[IntVector(hi.x()-1,j,k)] = 
-	      (*this)[IntVector(hi.x()-2,j,k)] + value*dx.x();
-	  }
-	}
-	break;
-      case Patch::xminus:
-	for (int j = low.y(); j<hi.y(); j++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
-	    (*this)[IntVector(low.x(),j,k)] = 
-	      (*this)[IntVector(low.x()+1,j,k)] - value * dx.x();
-	  }
-	}
-	break;
-      case Patch::yplus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
-	    (*this)[IntVector(i,hi.y()-1,k)] = 
-	      (*this)[IntVector(i,hi.y()-2,k)] + value * dx.y();
-	  }
-	}
-	break;
-      case Patch::yminus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
-	    (*this)[IntVector(i,low.y(),k)] = 
-	      (*this)[IntVector(i,low.y()+1,k)] - value * dx.y();
-	  }
-	}
-	break;
-      case Patch::zplus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int j = low.y(); j<hi.y(); j++) {
-	    (*this)[IntVector(i,j,hi.z()-1)] = 
-	      (*this)[IntVector(i,j,hi.z()-2)] + value * dx.z();
-	  }
-	}
-	break;
-      case Patch::zminus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int j = low.y(); j<hi.y(); j++) {
-	    (*this)[IntVector(i,j,low.z())] = 
-	      (*this)[IntVector(i,j,low.z()+1)] -  value * dx.z();
-	  }
-	}
-	break;
-      case Patch::numFaces:
-	break;
-      case Patch::invalidFace:
-	break;
-      }
-
-    };
-
     // Use to apply symmetry boundary conditions.  On the
     // indicated face, replace the component of the vector
     // normal to the face with 0.0
@@ -352,7 +271,6 @@ WARNING
     return td;
   }
    
-
   // Use to apply symmetry boundary conditions.  On the
   // indicated face, replace the component of the vector
   // normal to the face with 0.0
