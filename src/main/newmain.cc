@@ -111,7 +111,7 @@ main(int argc, char *argv[] )
     }
 
     if(gui){
-      ComponentID::pointer gui_id=builder->createInstance("gui", "cca:SCIRun.Builder", gov::cca::TypeMap::pointer(0));
+      ComponentID::pointer gui_id=builder->createInstance("gui", "cca:SCIRun.Builder", gov::cca::TypeMap::pointer(0),"");
       if(gui_id.isNull()){
 	cerr << "Cannot create GUI component\n";
 	Thread::exitAll(1);
@@ -119,8 +119,17 @@ main(int argc, char *argv[] )
     }
     main_services->releasePort("cca.BuilderService");
     cerr << "SCIRun " << VERSION << " started...\n";
+
+    //broadcast, listen to URL periodically
+    sr->share(main_services);
+
     PIDL::serveObjects();
     cerr << "serveObjects done!\n";
+
+
+
+
+
   } catch(const Exception& e) {
     cerr << "Caught exception:\n";
     cerr << e.message() << '\n';
