@@ -54,13 +54,13 @@ void FloodFillNewValue::execute(){
   }
   FieldHandle volH;
   if (!ivol->get(volH) || !volH.get_rep()) {
-    cerr << "Error - not a valid "<<pname<<" field.\n";
+    error("Not a valid field in '" + pname + "'.");
     return;
   }
   HexVolField<int> *hvf =
     dynamic_cast<HexVolField<int> *>(volH.get_rep());
   if (!hvf) {
-    cerr << "Error - input was not a valid HexVolField<int>.\n";
+    error("Input was not a valid HexVolField<int>.");
     return;
   }
 
@@ -72,17 +72,17 @@ void FloodFillNewValue::execute(){
   }
   FieldHandle ptH;
   if (!ipt->get(ptH) || !ptH.get_rep()) {
-    cerr << "Error - not a valid "<<pname<<" field.\n";
+    error("Not a valid field in '" + pname + "'.");
     return;
   }
   PointCloudField<double> *pcf =
     dynamic_cast<PointCloudField<double> *>(ptH.get_rep());
   if (!pcf) {
-    cerr << "Error - input was not a PointCloudField<double>.\n";
+    error("Input was not a PointCloudField<double>.");
     return;
   }
   if (pcf->fdata().size() == 0) {
-    cerr << "Error - input point cloud was empty.\n";
+    error("Input point cloud was empty.");
   }
 
   pname="FloodFilled Volume";
@@ -106,7 +106,7 @@ void FloodFillNewValue::execute(){
     int new_val = pcf->fdata()[0];
     int old_val;
     if (!hvf->value(old_val, loc)) {
-      cerr << "Error - for some reason there's no datavalue in the HexVol at this location, even though the call to locate() succeeded.\n";
+      error("There's no datavalue in the HexVol at this location, even though the call to locate() succeeded.");
       return;
     }
     
@@ -180,7 +180,7 @@ void FloodFillNewValue::execute(){
     int new_val = pcf->fdata()[0];
     int old_val;
     if (!hvf->value(old_val, loc)) {
-      cerr << "Error - for some reason there's no datavalue in the HexVol at this location, even though the call to locate() succeeded.\n";
+      error("There's no datavalue in the HexVol at this location, even though the call to locate() succeeded.");
       return;
     }
     

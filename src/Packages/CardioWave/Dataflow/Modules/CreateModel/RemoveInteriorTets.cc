@@ -13,6 +13,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Containers/StringUtil.h>
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
@@ -45,9 +46,9 @@ RemoveInteriorTets::RemoveInteriorTets(GuiContext *context)
 RemoveInteriorTets::~RemoveInteriorTets(){
 }
 
-void RemoveInteriorTets::execute(){
+void RemoveInteriorTets::execute()
+{
   double threshold = atof(threshold_.get().c_str());
-  cerr << "threshold = "<<threshold<<"\n";
 
   // must find ports and have valid data on inputs
   FieldIPort *imesh = (FieldIPort*)get_iport("TetsIn");
@@ -68,13 +69,15 @@ void RemoveInteriorTets::execute(){
     return;
 
   TetVolField<Vector> *tv_old = dynamic_cast<TetVolField<Vector> *>(meshH.get_rep());
-  if (!tv_old) {
-    cerr << "Error -- input field wasn't a TetVolField<Vector>\n";
+  if (!tv_old)
+  {
+    error("Input field wasn't a TetVolField<Vector>.");
     return;
   }
   
-  if (tv_old->data_at() != Field::NODE && tv_old->data_at() != Field::NONE) {
-    cerr << "Error -- must be at the nodes in order for us to remove elements.\n";
+  if (tv_old->data_at() != Field::NODE && tv_old->data_at() != Field::NONE)
+  {
+    error("Must be at the nodes in order for us to remove elements.");
     return;
   }
 
@@ -135,7 +138,8 @@ void RemoveInteriorTets::execute(){
   }
 
   if (count != nnodes) {
-    cerr << "\n\nWARNING: RemoveInteriorTets threshold was too large -- "<<nnodes-count<<" of "<<nnodes<<" were removed.\n\n\n";
+    warning("Threshold was too large -- " + to_string(nnodes-count) + 
+	    " of " + to_string(nnodes) + " were removed.");
   }
 
   // add the valid tets to the new mesh
@@ -150,7 +154,7 @@ void RemoveInteriorTets::execute(){
     }
     ++cb;
   }
-  cerr << "\n\nRemoveInteriorTets: ncells="<<count<<"\n\n\n";
+  msgStream_ << "RemoveInteriorTets: ncells="<<count<<"\n";
 
   // copy the fdata for valid nodes
   TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(new_mesh, Field::NODE);

@@ -73,20 +73,21 @@ void SetupFVM2::execute(){
 
   FieldHandle fldH;
   if (!ifld->get(fldH) || 
-      !fldH.get_rep()) {
-    cerr << "Error - empty field.\n";
+      !fldH.get_rep())
+  {
+    error("Empty input field.");
     return;
   }
 
   HexVolField<int> *fld = dynamic_cast<HexVolField<int> *>(fldH.get_rep());
   if (!fld) {
-    cerr << "SetupFVM2 Error -- input field wasn't a HexVolField<int>\n";
+    error("Input field wasn't a HexVolField<int>.");
     return;
   }
   
   vector<pair<string, Tensor> > tens;
   if (!fld->get_property("conductivity_tensors", tens)) {
-    cerr << "Error - no tensor vector associated with the input field.\n";
+    error("No tensor vector associated with the input field.");
     return;
   }
   
@@ -96,7 +97,7 @@ void SetupFVM2::execute(){
   m->size(nnodes);
   m->size(ncells);
 
-  cerr << "\n\nSetupFVM2: nnodes="<<nnodes<<" ncells="<<ncells<<"\n\n\n";
+  msgStream_ << "nnodes="<<nnodes<<" ncells="<<ncells<<"\n";
 
   MESH *mesh = new MESH;
   mesh->vtx = new VERTEX[nnodes];

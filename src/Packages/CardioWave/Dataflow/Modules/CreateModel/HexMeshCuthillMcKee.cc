@@ -40,8 +40,6 @@
 
 namespace CardioWave {
 
-using std::cerr;
-using std::endl;
 using std::priority_queue;
 
 using namespace SCIRun;
@@ -170,7 +168,7 @@ HexMeshCuthillMcKee::execute()
     ++nbi;
   }
 
-  cerr << "Cuthill McKee - bandwidth before re-ordering: "<<max_half_bw*2+1<<"\n";
+  msgStream_ << "Bandwidth before re-ordering: "<<max_half_bw*2+1<<"\n";
 
   // visit each separate component
   while(curr_new_idx != -1) {
@@ -230,7 +228,7 @@ HexMeshCuthillMcKee::execute()
   int ii=0;
   for (ii=0; ii<nnodes; ii++) {
     if (!visited[ii]) {
-      cerr << "Error - somehow not all of the nodes were visited!\n";
+      error("Somehow not all of the nodes were visited!");
       ASSERTFAIL("not all nodes were visited");
     }
   }
@@ -240,7 +238,7 @@ HexMeshCuthillMcKee::execute()
   
   for (ii=0; ii<nnodes; ii++)
     if (visited[ii] != 2) {
-      cerr << "Error!!\n";
+      error("Bad visited list.");
       ASSERTFAIL("Bad place to be.\n");
     }
 
@@ -249,7 +247,7 @@ HexMeshCuthillMcKee::execute()
   
   for (ii=0; ii<nnodes; ii++)
     if (visited[ii] != 3) {
-      cerr << "Error!!\n";
+      error("Bat Visited list.");
       ASSERTFAIL("Bad place to be.\n");
     }
 
@@ -302,7 +300,7 @@ HexMeshCuthillMcKee::execute()
     ++nbi;
   }
 
-  cerr << "Cuthill McKee - bandwidth after re-ordering: "<<new_max_half_bw*2+1<<"\n";
+  msgStream_ << "Bandwidth after re-ordering: "<<new_max_half_bw*2+1<<"\n";
 
   *(PropertyManager *)bwfield = *(PropertyManager *)hvfield;
   bwfieldH = bwfield;

@@ -116,8 +116,9 @@ void SetupFVMatrix::execute(){
   
 #if 0
   if (primFiberOrientH->mesh()->generation != cellTypeH->mesh()->generation ||
-      secFiberOrientH->mesh()->generation != cellTypeH->mesh()->generation) {
-    cerr << "SetupFVMatrix Error -- input fields have to have the same mesh.\n";
+      secFiberOrientH->mesh()->generation != cellTypeH->mesh()->generation)
+  {
+    error("Input fields have to have the same mesh.");
     return;
   }
 #endif
@@ -127,15 +128,15 @@ void SetupFVMatrix::execute(){
   HexVolField<int> *ct = dynamic_cast<HexVolField<int> *>(cellTypeH.get_rep());
 
   if (!fo1) {
-    cerr << "SetupFVMatrix Error -- PrimFiberOrientation field wasn't a HexVolField<Vector>\n";
+    error("PrimFiberOrientation field wasn't a HexVolField<Vector>.");
     return;
   }
   if (!fo2) {
-    cerr << "SetupFVMatrix Error -- SecFiberOrientation field wasn't a HexVolField<Vector>\n";
+    error("SecFiberOrientation field wasn't a HexVolField<Vector>.");
     return;
   }
   if (!ct) {
-    cerr << "SetupFVMatrix Error -- CellType field wasn't a HexVolField<int>\n";
+    error("CellType field wasn't a HexVolField<int>.");
     return;
   }
 
@@ -145,8 +146,6 @@ void SetupFVMatrix::execute(){
   HexVolMesh::Cell::size_type ncells;
   m->size(nnodes);
   m->size(ncells);
-
-  cerr << "\n\nSetupFVMatrix: nnodes="<<nnodes<<" ncells="<<ncells<<"\n\n\n";
 
   MESH *mesh = new MESH;
   mesh->vtx = new VERTEX[nnodes];

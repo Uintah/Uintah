@@ -36,10 +36,14 @@ VectorFieldsToTensorField::VectorFieldsToTensorField(GuiContext *context)
 {
 }
 
-VectorFieldsToTensorField::~VectorFieldsToTensorField(){
+
+VectorFieldsToTensorField::~VectorFieldsToTensorField()
+{
 }
 
-void VectorFieldsToTensorField::execute(){
+void
+VectorFieldsToTensorField::execute()
+{
   FieldIPort *iev1 = (FieldIPort*)get_iport("Major Eigenvectors");
   if (!iev1) {
     error("Unable to initialize iport 'Major Eigenvectors'.");
@@ -47,7 +51,7 @@ void VectorFieldsToTensorField::execute(){
   }
   FieldHandle ev1H;
   if (!iev1->get(ev1H) || !ev1H.get_rep()) {
-    cerr << "Error - no valid major eigenvector field.\n";
+    error("No valid major eigenvector field.");
     return;
   }
 
@@ -58,7 +62,7 @@ void VectorFieldsToTensorField::execute(){
   }
   FieldHandle ev2H;
   if (!iev2->get(ev2H) || !ev2H.get_rep()) {
-    cerr << "Error - no valid median eigenvector field.\n";
+    error("No valid median eigenvector field.");
     return;
   }
 
@@ -71,28 +75,29 @@ void VectorFieldsToTensorField::execute(){
   LatVolField<Vector> *ev1 = 
     dynamic_cast<LatVolField<Vector> *>(ev1H.get_rep());
   if (!ev1) {
-    cerr << "Error - major eigenvector field isn't a LatVolField<Vector>\n";
+    error("Major eigenvector field isn't a LatVolField<Vector>.");
     return;
   }
 
   LatVolField<Vector> *ev2 = 
     dynamic_cast<LatVolField<Vector> *>(ev2H.get_rep());
   if (!ev2) {
-    cerr << "Error - median eigenvector field isn't a LatVolField<Vector>\n";
+    error("Median eigenvector field isn't a LatVolField<Vector>.");
     return;
   }
 
   LatVolMeshHandle ev1mesh = ev1->get_typed_mesh();
   LatVolMeshHandle ev2mesh = ev1->get_typed_mesh();
   if (ev1->data_at() != ev2->data_at()) {
-    cerr << "Error - vector fields must have the same data_at\n";
+    error("Vector fields must have the same data_at.");
     return;
   }
 
   if (ev1mesh->get_nx() != ev2mesh->get_nx() ||
       ev1mesh->get_ny() != ev2mesh->get_ny() ||
-      ev1mesh->get_nz() != ev2mesh->get_nz()) {
-    cerr << "Error - fields must be the same size.\n";
+      ev1mesh->get_nz() != ev2mesh->get_nz())
+  {
+    error("Fields must be the same size.");
     return;
   }
 
