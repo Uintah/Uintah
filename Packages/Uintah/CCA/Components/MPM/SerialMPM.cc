@@ -424,7 +424,8 @@ void SerialMPM::scheduleComputeHeatExchange(SchedulerP& sched,
    *   the temperature differences)
    *   out(G.EXTERNAL_HEAT_RATE) */
 
-
+  cout_doing << getpid() << " Doing MPM::ThermalContact::computeHeatExchange "
+             << endl;
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
                         thermalContactModel,
                         &ThermalContact::computeHeatExchange);
@@ -2576,8 +2577,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
-        double tempRate = 0;
-        double burnFraction = 0;
+        double tempRate = 0.0;
+        double burnFraction = 0.0;
         double sp_vol_dt = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
