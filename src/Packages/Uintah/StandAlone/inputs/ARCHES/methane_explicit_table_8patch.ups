@@ -74,7 +74,7 @@
             <solve_enthalpy>true</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
-		<cf>0.01</cf>
+		<cf>0.1</cf>
 		<fac_mesh>1.0</fac_mesh>
 		<filterl>0.000001</filterl>
 	        <var_const>0.1</var_const>

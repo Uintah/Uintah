@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-	<maxTime>10.0</maxTime>
+	<maxTime>2.5</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
@@ -74,7 +74,7 @@
             <solve_enthalpy>true</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
-		<cf>0.01</cf>
+		<cf>0.1</cf>
 		<fac_mesh>1.0</fac_mesh>
 		<filterl>0.000001</filterl>
 	        <var_const>0.1</var_const>
