@@ -57,6 +57,9 @@ public:
   LockingHandle(const LockingHandle<T>&);
   LockingHandle<T>& operator=(const LockingHandle<T>&);
   LockingHandle<T>& operator=(T*);
+  bool operator==(const LockingHandle<T>&) const;
+  bool operator!=(const LockingHandle<T>&) const;
+
   ~LockingHandle();
 
   void detach();
@@ -147,6 +150,18 @@ LockingHandle<T>& LockingHandle<T>::operator=(T* crep)
 	rep=crep;
     }
     return *this;
+}
+
+template<class T>
+bool LockingHandle<T>::operator==(const LockingHandle<T>& crep) const
+{
+  return (get_rep() == crep.get_rep());
+}
+
+template<class T>
+bool LockingHandle<T>::operator!=(const LockingHandle<T>& crep) const
+{
+  return (get_rep() != crep.get_rep());
 }
 
 template<class T>
