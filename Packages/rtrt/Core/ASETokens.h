@@ -114,11 +114,19 @@ class MaterialToken : public Token
   string   bmap_filename_;
   string   omap_filename_;
   string   imap_filename_;
+  double   tmap_uoffset_;
+  double   tmap_voffset_;
+  double   tmap_utiling_;
+  double   tmap_vtiling_;
 
  public:
 
   MaterialToken(const string &s="*MATERIAL") : Token(s) {
     num_submtls_ = 0;
+    tmap_uoffset_ = 0;
+    tmap_voffset_ = 0;
+    tmap_utiling_ = 1;
+    tmap_vtiling_ = 1;
     AddChildMoniker("*MATERIAL_NAME");
     AddChildMoniker("*MATERIAL_CLASS");
     AddChildMoniker("*MATERIAL_AMBIENT");
@@ -209,6 +217,18 @@ class MaterialToken : public Token
 
   double GetShine() { return shine_; } 
   void SetShine(double s) { shine_ = s; } 
+
+  double GetTMapUOffset() { return tmap_uoffset_; } 
+  void SetTMapUOffset(double s) { tmap_uoffset_ = s; } 
+
+  double GetTMapVOffset() { return tmap_voffset_; } 
+  void SetTMapVOffset(double s) { tmap_voffset_ = s; } 
+
+  double GetTMapUTiling() { return tmap_utiling_; } 
+  void SetTMapUTiling(double s) { tmap_utiling_ = s; } 
+
+  double GetTMapVTiling() { return tmap_vtiling_; } 
+  void SetTMapVTiling(double s) { tmap_vtiling_ = s; } 
 
   double GetTransparency() { return transparency_; }
   void SetTransparency(double s) { transparency_ = s; }
@@ -488,6 +508,58 @@ class MaterialTransparencyToken : public Token
 
 
 
+class UVWUOffsetToken : public Token
+{
+
+ public:
+    
+  UVWUOffsetToken() : Token("*UVW_U_OFFSET") { nargs_ = 1; }
+  virtual ~UVWUOffsetToken() { destroy_children(); }
+
+  virtual Token *MakeToken() { return new UVWUOffsetToken(); }
+};
+
+
+
+class UVWVOffsetToken : public Token
+{
+
+ public:
+    
+  UVWVOffsetToken() : Token("*UVW_V_OFFSET") { nargs_ = 1; }
+  virtual ~UVWVOffsetToken() { destroy_children(); }
+
+  virtual Token *MakeToken() { return new UVWVOffsetToken(); }
+};
+
+
+
+class UVWUTilingToken : public Token
+{
+
+ public:
+    
+  UVWUTilingToken() : Token("*UVW_U_TILING") { nargs_ = 1; }
+  virtual ~UVWUTilingToken() { destroy_children(); }
+
+  virtual Token *MakeToken() { return new UVWUTilingToken(); }
+};
+
+
+
+class UVWVTilingToken : public Token
+{
+
+ public:
+    
+  UVWVTilingToken() : Token("*UVW_V_TILING") { nargs_ = 1; }
+  virtual ~UVWVTilingToken() { destroy_children(); }
+
+  virtual Token *MakeToken() { return new UVWVTilingToken(); }
+};
+
+
+
 class MapDiffuseToken : public Token
 {
 
@@ -495,14 +567,33 @@ class MapDiffuseToken : public Token
   
   MapDiffuseToken() : Token("*MAP_DIFFUSE") {
     AddChildMoniker("*BITMAP");
+    AddChildMoniker("*UVW_U_OFFSET");
+    AddChildMoniker("*UVW_V_OFFSET");
+    AddChildMoniker("*UVW_U_TILING");
+    AddChildMoniker("*UVW_V_TILING");
   }
   virtual ~MapDiffuseToken() { destroy_children(); }
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
-    if (children_.size()>0) {
-      string name = (*(children_[0]->GetArgs()))[0];
-      ((MaterialToken*)parent_)->SetTMapFilename(name);
+    unsigned length = children_.size();
+    for (unsigned loop=0; loop<length; ++loop) {
+      if (children_[loop]->GetMoniker() == "*BITMAP") {
+        string name = (*(children_[0]->GetArgs()))[0];
+        ((MaterialToken*)parent_)->SetTMapFilename(name);
+      } else if (children_[loop]->GetMoniker() == "*UVW_U_OFFSET") {
+        double uoffset = atof((*(children_[loop]->GetArgs()))[0].c_str());
+        ((MaterialToken*)parent_)->SetTMapUOffset(uoffset);
+      } else if (children_[loop]->GetMoniker() == "*UVW_V_OFFSET") {
+        double voffset = atof((*(children_[loop]->GetArgs()))[0].c_str());
+        ((MaterialToken*)parent_)->SetTMapVOffset(voffset);
+      } else if (children_[loop]->GetMoniker() == "*UVW_U_TILING") {
+        double utiling = atof((*(children_[loop]->GetArgs()))[0].c_str());
+        ((MaterialToken*)parent_)->SetTMapUTiling(utiling);
+      } else if (children_[loop]->GetMoniker() == "*UVW_V_TILING") {
+        double vtiling = atof((*(children_[loop]->GetArgs()))[0].c_str());
+        ((MaterialToken*)parent_)->SetTMapVTiling(vtiling);
+      }
     }
     return true;
   }
@@ -1336,6 +1427,10 @@ class ASEFile : public Token
   MapSelfIllumToken PP;
   MaterialClassToken QQ;
   NumSubMtlsToken RR;
+  UVWUOffsetToken SS;
+  UVWVOffsetToken TT;
+  UVWUTilingToken UU;
+  UVWVTilingToken VV;
 
   bool is_open_;
   ifstream str_;

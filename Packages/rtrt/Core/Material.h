@@ -25,6 +25,10 @@ class  Worker;
 
 class Material {
 protected:
+
+    double uscale;
+    double vscale;
+
     // For a simple implementation of material, use this function.  Just
     // pass in diffuse, specular colors, as well as the specular
     // exponent (spec_coeff), the reflectivity (refl),
@@ -76,6 +80,8 @@ public:
       scene->get_ambient_environment_map_color(normal, c);
       return c;
     }
+
+    void SetScale(double u, double v) { uscale = u; vscale = v; }
 
     // reflection of v with respect to n
     Vector reflection(const Vector& v, const Vector n) const;
