@@ -108,6 +108,8 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
   int mn_idx, mx_idx;
   nrd->get_tuple_index_info(0, 0, mn_idx, mx_idx);
   
+  cerr << "mx_idx="<<mx_idx<<"\n";
+
   switch (mx_idx) {
   case 0:
     switch (n->type) {
@@ -815,20 +817,31 @@ void NrrdToField::execute()
     // the NrrdData has a stored MeshHandle which from the originating field.
     FieldHandle fh = ninH->get_orig_field();
     const TypeDescription *td = fh->get_type_description();
-    // manipilate the type to match the nrrd.
-    const TypeDescription *sub = get_new_td(n->type);
+//    // manipilate the type to match the nrrd.
+//    const TypeDescription *sub = get_new_td(n->type);
 
-    TypeDescription::td_vec *v = td->get_sub_type();
-    v->clear();
-    v->push_back(sub);
+//    TypeDescription::td_vec *v = td->get_sub_type();
+//    v->clear();
+//    v->push_back(sub);
 
-    CompileInfoHandle ci = ConvertToFieldBase::get_compile_info(td);
-    Handle<ConvertToFieldBase> algo;
-    if ((module_dynamic_compile(ci, algo)) && 
-	(algo->convert_to_field(fh, ninH, ofield_handle))) 
-    {
-      remark("Creating a Field from original mesh in input nrrd");
-      dim_based_convert = false;
+    if (build_eigens_.get() && n->type == nrrdTypeFloat) {
+      CompileInfoHandle ci = ConvertToFieldEigenBase::get_compile_info(td);
+      Handle<ConvertToFieldEigenBase> algo;
+      if ((module_dynamic_compile(ci, algo)) &&
+	  (algo->convert_to_field(fh, ninH, ofield_handle)))
+	{
+	  remark("Creating a Field from original mesh in input nrrd");
+	  dim_based_convert = false;
+	}
+    } else {
+      CompileInfoHandle ci = ConvertToFieldBase::get_compile_info(td);
+      Handle<ConvertToFieldBase> algo;
+      if ((module_dynamic_compile(ci, algo)) && 
+	  (algo->convert_to_field(fh, ninH, ofield_handle))) 
+	{
+	  remark("Creating a Field from original mesh in input nrrd");
+	  dim_based_convert = false;
+	}
     }
     // if compilation fails or the algo cant match the data to the mesh,
     // do a standard dimemsion based convert.
