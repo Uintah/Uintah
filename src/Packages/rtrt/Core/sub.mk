@@ -120,9 +120,13 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/CutPlaneDpy.cc \
 	$(SRCDIR)/ColorMap.cc \
 	$(SRCDIR)/SpinningInstance.cc \
-	$(SRCDIR)/plyfile.c
+	$(SRCDIR)/plyfile.c \
+#	$(SRCDIR)/LumiDpy.cc \
+#	$(SRCDIR)/LumiCamera.cc \
 
-SUBDIRS := $(SRCDIR)/Shadows
+SUBDIRS := $(SRCDIR)/Shadows \
+#	   $(SRCDIR)/LightField \
+
 include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS :=  \

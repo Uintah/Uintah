@@ -4,6 +4,7 @@
 
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Array2.h>
+#include <string>
 
 namespace rtrt { 
 
@@ -27,17 +28,18 @@ private:
     Mode umode, vmode;
     Color outcolor;
 
-    void read_image(char* texfile);
-    void read_hdr_image(char* texfile);
+    void read_image(const string &texfile);
+    void read_hdr_image(const string &texfile);
 public:
-    ImageMaterial(int /* oldstyle */, char* filename, Mode umode, Mode vmode,
+    ImageMaterial(int /* oldstyle */, const string &filename, 
+		  Mode umode, Mode vmode,
 		  double Kd, const Color& specular,
 		  double specpow, double refl=0);
-    ImageMaterial(char* filename, Mode umode, Mode vmode,
+    ImageMaterial(const string &filename, Mode umode, Mode vmode,
 		  double Kd, const Color& specular,
 		  double specpow, double refl, 
 		  double transp=0);
-    ImageMaterial(char* filename, Mode umode, Mode vmode,
+    ImageMaterial(const string &filename, Mode umode, Mode vmode,
 		  double Kd, const Color& specular,
 		  double specpow, double refl=0);
     virtual ~ImageMaterial();

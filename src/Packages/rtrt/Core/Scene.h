@@ -235,6 +235,7 @@ public:
   int shadow_mode;
 private:
 
+//  friend class LumiDpy;
   friend class Dpy;
   friend class Gui;
 

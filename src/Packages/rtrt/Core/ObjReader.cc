@@ -78,7 +78,8 @@ char * GetNum(char *str, int &num)
 }
 
 void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml, 
-	     Array1<Point> &tex, Group *g, Material *mat, const Transform &t)
+	     Array1<Point> &tex, Group *g, Material *mat, Transform &t,
+	     int has_texture)
 {
   static Array1<int> fis;
   static Array1<int> uvis;
@@ -129,64 +130,116 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
     Point p1 = pts[fis[s0]];
     Point p2 = pts[fis[s1]];
     Point p3 = pts[fis[s2]];
-//    TexturedTri *tri = 
-//      new TexturedTri(mat, t.project(p1), t.project(p2), t.project(p3), 
-//		      t.project(nml[nrmis[s0]]), t.project(nml[nrmis[s1]]), 
-//		      t.project(nml[nrmis[s2]]));
-//    tri->set_texcoords(tex[uvis[s0]], tex[uvis[s1]], tex[uvis[s2]]);
-    Tri *tri = 
-      new Tri(mat, t.project(p1), t.project(p2), t.project(p3));
-
-    g->add(tri);
+    if (has_texture) {
+      TexturedTri *tri = 
+	new TexturedTri(mat, t.project(p1), t.project(p2), t.project(p3), 
+			t.project_normal(nml[nrmis[s0]]), 
+			t.project_normal(nml[nrmis[s1]]), 
+			t.project_normal(nml[nrmis[s2]]));
+      tri->set_texcoords(tex[uvis[s0]], tex[uvis[s1]], tex[uvis[s2]]);
+      g->add(tri);
+    } else {
+      Tri *tri = 
+	new Tri(mat, t.project(p1), t.project(p2), t.project(p3), 
+		t.project_normal(nml[nrmis[s0]]), 
+		t.project_normal(nml[nrmis[s1]]), 
+		t.project_normal(nml[nrmis[s2]]));
+      g->add(tri);
+    }
   }
 
 }
 
 bool
 rtrt::readObjFile(const string geom_fname, const string matl_fname, 
-		  const Transform t, Group *g) {
+		  Transform &t, Group *g) {
+   Array1<int> matl_has_texture;
    Array1<Material *> mtl;
    FILE *f=fopen(matl_fname.c_str(),"r");
    if (!f) {
-     cerr << matl_fname << " -- failed to find/ead input materials file\n";
+     cerr << matl_fname << " -- failed to find/read input materials file\n";
      return false;
    }
+
    char buf[4096];
    Point scrtchP;
    Array1<string> names;
+   int have_matl=0;
+   Color Ka, Kd, Ks;
+   double opacity;
+   double Ns;
+   string name;
+
    while(fgets(buf,4096,f)) {
-     switch(buf[0]) {
-     case 'n': // newmatl
-       {
-	 names.add(string(&buf[7]));
-	 cerr << "adding material "<<&(buf[7])<<"\n";
-	 fgets(buf,4096,f);
-	 Get3d(&buf[5], scrtchP);
-	 Color Ka(scrtchP.x(), scrtchP.y(), scrtchP.z());
-
-	 fgets(buf,4096,f);
-	 Get3d(&buf[5], scrtchP);
-	 Color Kd(scrtchP.x(), scrtchP.y(), scrtchP.z());
-
-	 fgets(buf,4096,f);
-	 Get3d(&buf[5], scrtchP);
-	 Color Ks(scrtchP.x(), scrtchP.y(), scrtchP.z());
-
-	 fgets(buf,4096,f);
-	 Get1d(&buf[8], scrtchP);
-	 double illum(scrtchP.x());
-
-	 fgets(buf,4096,f);
-	 Get1d(&buf[5], scrtchP);
-      	 double Ns(scrtchP.x());
-	 cerr << "Ka="<< Ka<<"  Kd="<<Kd<<"  Ks="<<Ks<<"  illum="<<illum<<"  Ns="<<Ns<<"\n";
-	 if (Ks.red() == 1.0)
-	   mtl.add(new PhongMaterial(Kd, 1, 0.3, 30, 1));
+     if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
+       if (have_matl) {
+	 names.add(name);
+	 matl_has_texture.add(0);
+	 if (opacity < 1)
+	   mtl.add(new DielectricMaterial(1.25, 0.8, 0.04, 400.0, Kd, 
+					  Color(1,1,1), false));
+	 else if (Ks.red() == 1.0 && Ks.green() == 1.0 && Ks.blue() == 1.0)
+	   mtl.add(new PhongMaterial(Kd, 1.0, 0.3, Ns, 1));
 	 else 
 	   mtl.add(new LambertianMaterial(Kd));
-	 break;
+	 have_matl=0;
+	 cerr << "adding material "<<name<<"\n";
+	 cerr << "Ka="<< Ka<<"  Kd="<<Kd<<"  Ks="<<Ks<<"  illum/opacity="<<opacity<<"  Ns="<<Ns<<"\n";
        }
-     } 
+       
+       name=string(&buf[7]);
+       fgets(buf,4096,f);
+       Get3d(&buf[5], scrtchP);
+       Ka=Color(scrtchP.x(), scrtchP.y(), scrtchP.z());
+       
+       fgets(buf,4096,f);
+       Get3d(&buf[5], scrtchP);
+       Kd=Color(scrtchP.x(), scrtchP.y(), scrtchP.z());
+       
+       fgets(buf,4096,f);
+       Get3d(&buf[5], scrtchP);
+       Ks=Color(scrtchP.x(), scrtchP.y(), scrtchP.z());
+       
+       fgets(buf,4096,f);
+       if (strncmp(&buf[8], "opacity", strlen("opacity"))) {
+	 Get1d(&buf[8], scrtchP);
+	 opacity=scrtchP.x();
+	 if (opacity>1) opacity=1;
+       } else opacity=1;
+       
+       fgets(buf,4096,f);
+       Get1d(&buf[5], scrtchP);
+       Ns=scrtchP.x();
+       have_matl=1;
+     } else if (strncmp(&buf[0], "map_Kd", strlen("map_Kd")) == 0) {
+       names.add(name);
+       matl_has_texture.add(1);
+       if (!have_matl) continue;
+       int last = strlen(&buf[7]);
+       buf[7+last-2]='\0';
+       string fname(&buf[7]);
+       cerr << "FNAME=>>"<<fname<<"<<\n";
+       mtl.add(new ImageMaterial(fname, ImageMaterial::Clamp,
+				 ImageMaterial::Clamp, 1, Color(0,0,0), 0));
+       have_matl=0;
+     } else {
+       cerr << "Ignoring mtl line: "<<buf<<"\n";
+     }
+   }
+
+   if (have_matl) {
+     names.add(name);
+     matl_has_texture.add(0);
+     if (opacity < 1)
+       mtl.add(new DielectricMaterial(1.25, 0.8, 0.04, 400.0, Kd, 
+				      Color(1,1,1), false));
+     else if (Ks.red() == 1.0 && Ks.green() == 1.0 && Ks.blue() == 1.0)
+       mtl.add(new PhongMaterial(Kd, 1.0, 0.3, Ns, 1));
+     else 
+       mtl.add(new LambertianMaterial(Kd));
+     have_matl=0;
+     cerr << "adding material "<<name<<"\n";
+     cerr << "Ka="<< Ka<<"  Kd="<<Kd<<"  Ks="<<Ks<<"  illum/opacity="<<opacity<<"  Ns="<<Ns<<"\n";
    }
    fclose(f);
 
@@ -201,6 +254,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    Array1<Point> pts;
    Array1<Vector> nml;
    Array1<Point> tex;
+   int curr_matl_has_texture=0;
    while(fgets(buf,4096,f)) {
      switch(buf[0]) {
      case 'v': // see wich type of vertex...
@@ -225,7 +279,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        }
      case 'f': // see which type of face...
        // Add tri to g
-       GetFace(&buf[2], pts, nml, tex, g, curr_mtl, t);
+       GetFace(&buf[2], pts, nml, tex, g, curr_mtl, t, curr_matl_has_texture);
        break;
      case 'u': // usemtl
        string matl_str(&buf[7]);
@@ -233,6 +287,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        for (i=0; i<names.size(); i++)
 	 if (names[i] == matl_str) break;
        if (i<names.size()) {
+	 curr_matl_has_texture=matl_has_texture[i];
 	 curr_mtl = mtl[i];
        } else {
 	 cerr << "Error - couldn't find material: "<<matl_str<<"\n";
