@@ -45,8 +45,8 @@ Ports:
    DEC port
    Freedom board port
 Bugs:
-   DONE sluggish on Reality engine....
-   DONE Salmon deadlocks on ONYX - make unbounded mailboxes
+   DONE sluggish on Reality engine.... (3)
+   Finish fixing MeshView
    Annoying flashing on startup.
    Lock I/O
 Optimizations:
