@@ -189,13 +189,45 @@ main(int argc, char *argv[] )
   t2->setDaemon(true);
   t2->detach();
 
-  char* HOME = getenv("HOME");
+  bool foundrc=false;
+  cout << "Parsing .scirunrc... ";
   
-  if (HOME) {
-    string home(HOME);
-    home += "/.scirunrc";
-    RCParse(home.c_str(),SCIRun::scirunrc);
+  // check the local directory
+  foundrc = RCParse(".scirunrc",SCIRun::scirunrc);
+  if (foundrc)
+    cout << "./.scirunrc" << endl;
+
+  // check the BUILD_DIR
+  if (!foundrc) {
+    foundrc = RCParse((SCIRUN_OBJTOP + "/.scirunrc").c_str(),
+                      SCIRun::scirunrc);
+    if (foundrc)
+      cout << SCIRUN_OBJTOP + "/.scirunrc" << endl;
   }
+
+  // check the user's home directory
+  if (!foundrc) {
+    char* HOME = getenv("HOME");
+  
+    if (HOME) {
+      string home(HOME);
+      home += "/.scirunrc";
+      foundrc = RCParse(home.c_str(),SCIRun::scirunrc);
+      if (foundrc)
+        cout << home << endl;
+    }
+  }
+
+  // check the INSTALL_DIR
+  if (!foundrc) {
+    foundrc = RCParse((SCIRUN_SRCTOP + "/.scirunrc").c_str(),
+                      SCIRun::scirunrc);
+    if (foundrc)
+      cout << SCIRUN_SRCTOP + "/.scirunrc" << endl;
+  }
+
+  if (!foundrc)
+    cout << "not found" << endl;
 
   // wait for the main window to display before continuing the startup.
   TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
