@@ -26,6 +26,11 @@ C-----------------------------------------------------------------------
      &                 as(i,j,k),at(i,j,k),ab(i,j,k),su(i,j,k),
      &                 sp(i,j,k),one)
                end if
+C               if ((i.eq.0).and.(j.eq.8).and.(k.eq.8)) then
+C                  print*, 'Nonlinear source inside bcenthalpy!'
+C                  print*, su(i,j,k)
+C                  print*,'end bcenthalpy'
+C               endif
  105        continue
  205     continue
  305  continue

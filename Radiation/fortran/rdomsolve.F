@@ -65,9 +65,9 @@ c      logical plusX, plusY, plusZ
       areatb(ii) = sew(ii) * sns(jj)
       if (pcell(ii,jj,kk).ne.ffield) then
 c  call fixval assume abskg to be one but change it in props calculation
-         print*,'Printing value of temperature in non-ffield cell'
-         print*,'At location ',ii,jj,kk
-         print*,'Temperature = ',tg(ii,jj,kk)
+c         print*,'Printing value of temperature in non-ffield cell'
+c         print*,'At location ',ii,jj,kk
+c         print*,'Temperature = ',tg(ii,jj,kk)
          val = SIG*PI1*tg(ii,jj,kk)**4
          factor = 1.d0
          call fixradval(val,aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
@@ -140,6 +140,17 @@ c  call fixval assume abskg to be one but change it in props calculation
          ap(ii,jj,kk) =  abs(omu(l))*areaew + abs(oeta(l))*arean(ii) + 
      &        abs(oxi(l))*areatb(ii) + abskg(ii,jj,kk)*
      &        volume(ii,jj,kk)
+
+c         if ((ii.eq.0).and.(jj.eq.8).and.(kk.eq.8)) then
+c            print*,'printing source term values in rdomsolve'
+c            print*,'su (0,8,8) = ',su(ii,jj,kk)
+c            print*,'ap (0,8,8) = ',ap(ii,jj,kk)
+c         endif
+c         if ((ii.eq.6).and.(jj.eq.8).and.(kk.eq.9)) then
+c            print*,'printing source term values in rdomsolve'
+c            print*,'su (6,8,9) = ',su(ii,jj,kk)
+c            print*,'ap (6,8,9) = ',ap(ii,jj,kk)
+c         endif
          
       endif
 10    continue
