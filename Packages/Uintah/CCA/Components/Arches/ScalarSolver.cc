@@ -754,7 +754,7 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		Ghost::AroundCells, numGhostCells+1);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
+  tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, numGhostCells);
@@ -823,7 +823,7 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->getCopy(scalarVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarPredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
