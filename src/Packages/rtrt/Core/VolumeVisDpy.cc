@@ -164,7 +164,34 @@ void VolumeVisDpy::run() {
 	  cout << "current_t_inc = " << current_t_inc << endl;
 	  break;
 	case XK_w:
-	case XK_W:
+	  if (!shift_pressed) {
+	    
+	    // Print out the transfer function with color and alpha information
+	    ScalarTransform1D<float,Color*> colors(color_transform.get_results_ptr());
+	    printf("NRRD0001\n");
+	    printf("type: float\n");
+	    printf("dimension: 2\n");
+	    printf("sizes: 5 %d\n", alpha_list.size());
+	    printf("encoding: ascii\n\n");
+	    for(int i = 0; i < alpha_list.size(); i++) {
+	      // Print out the color
+	      Color *c=colors.lookup(alpha_list[i].x);
+	      printf("%g %g %g ", c->red(), c->green(), c->blue());
+	      printf("%g %g\n", alpha_list[i].val, alpha_list[i].x);
+	    }
+	    fflush(stdout);
+	  } else {
+	    // Print out the transfer function with only the alpha information
+	    printf("NRRD0001\n");
+	    printf("type: float\n");
+	    printf("dimension: 2\n");
+	    printf("sizes: 2 %d\n", alpha_list.size());
+	    printf("encoding: ascii\n\n");
+	    for(int i = 0; i < alpha_list.size(); i++) {
+	      printf("%g %g\n", alpha_list[i].val, alpha_list[i].x);
+	    }
+	    fflush(stdout);
+	  }
 	  break;
 	}
 	break;
