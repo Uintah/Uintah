@@ -20,7 +20,7 @@ string LatticeGeom::typeName(int){
 }
 
 static Persistent* maker(){
-  return new LatticeGeom();
+  return new LatticeGeom(0, 0, 0);
 }
 
 PersistentTypeID LatticeGeom::type_id(LatticeGeom::typeName(0), 
@@ -41,11 +41,6 @@ LatticeGeom::io(Piostream& stream)
   stream.end_class();
 }
 
-
-LatticeGeom::LatticeGeom() :
-  d_dim(0), d_nx(1), d_ny(1), d_nz(1)
-{
-}
 
 LatticeGeom::LatticeGeom(int ix)
 {

@@ -75,7 +75,6 @@ public:
   void collapse_points();
 
   // TODO: remove this crap from GenField
-  bool resize(int, int, int) { return false;}
   void interp(Attrib *, const Point &, double &) {}
 
 protected:

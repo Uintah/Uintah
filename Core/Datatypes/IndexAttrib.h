@@ -20,7 +20,6 @@ namespace SCIRun {
 template <class T, class I, class A=AccelAttrib<I> > class IndexAttrib : public DiscreteAttrib<T>
 {
 public:
-  IndexAttrib();
   IndexAttrib(int x);
   IndexAttrib(int x, int y);
   IndexAttrib(int x, int y, int z);
@@ -75,11 +74,6 @@ public:
   // Implement begin()
   // Implement end()
   
-  // Resize the attribute to the specified dimensions
-  virtual void resize(int, int, int);
-  virtual void resize(int, int);
-  virtual void resize(int);
-
   virtual string getInfo();  
   virtual string getTypeName(int=0);
 
@@ -124,7 +118,7 @@ IndexAttrib<T, I, A>::typeName(int n){
 
 template <class T, class I, class A> 
 Persistent* IndexAttrib<T, I, A>::maker(){
-   return new IndexAttrib<T, I, A>();
+   return new IndexAttrib<T, I, A>(0);
 }
 
 template <class T, class I, class A> PersistentTypeID 
@@ -145,15 +139,6 @@ IndexAttrib<T, I, A>::io(Piostream& stream)
   Pio(stream, index);
 
   stream.end_class();
-}
-
-//////////
-// Constructors/Destructor
-template <class T, class I, class A>
-IndexAttrib<T, I, A>::IndexAttrib() :
-  DiscreteAttrib<T>(),
-  iattrib()
-{
 }
 
 template <class T, class I, class A>
@@ -329,30 +314,6 @@ IndexAttrib<T, I, A>::tset(int x, const T &val)
 //     return true;
 //   }
 // }
-
-template <class T, class I, class A> void
-IndexAttrib<T, I, A>::resize(int x, int y, int z)
-{
-  DiscreteAttrib<T>::resize(x, y, z);
-  iattrib.resize(x, y, z);
-}
-
-
-template <class T, class I, class A> void
-IndexAttrib<T, I, A>::resize(int x, int y)
-{
-  DiscreteAttrib<T>::resize(x, y);
-  iattrib.resize(x, y);
-}
-
-
-template <class T, class I, class A> void
-IndexAttrib<T, I, A>::resize(int x)
-{
-  DiscreteAttrib<T>::resize(x);
-  iattrib.resize(x);
-}
-
 
 template <class T, class I, class A> int
 IndexAttrib<T, I, A>::iterate(AttribFunctor<T> &func)

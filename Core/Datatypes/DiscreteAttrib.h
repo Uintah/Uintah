@@ -40,7 +40,6 @@ template <class T> class DiscreteAttrib : public Attrib
 public:
   typedef T value_type;
 
-  DiscreteAttrib();
   DiscreteAttrib(int x);
   DiscreteAttrib(int x, int y);
   DiscreteAttrib(int x, int y, int z);
@@ -71,11 +70,6 @@ public:
   
   // Implement begin()
   // Implement end()
-  
-  // Resize the attribute to the specified dimensions
-  virtual void resize(int, int, int);
-  virtual void resize(int, int);
-  virtual void resize(int);
   
   int size() const;
   
@@ -176,7 +170,7 @@ string DiscreteAttrib<T>::typeName(int n=0){
 
 template <class T> Persistent*
 DiscreteAttrib<T>::maker(){
-  return new DiscreteAttrib<T>();
+  return new DiscreteAttrib<T>(0);
 }
 
 #ifdef __sgi
@@ -226,14 +220,6 @@ DiscreteAttrib<T>::io(Piostream& stream)
 
 //////////
 // Constructors/Destructor
-template <class T>
-DiscreteAttrib<T>::DiscreteAttrib() :
-  Attrib(), d_nx(0), d_ny(0), d_nz(0), 
-  d_dim(0),
-  d_pValidBits(0)
-{
-}
-
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(int ix) :
   Attrib(), d_nx(ix), d_ny(0), d_nz(0), d_dim(1)
@@ -400,36 +386,6 @@ DiscreteAttrib<T>::set3(int x, int y, int z, const T &val)
 //     return true;
 //   }
 // }
-
-template <class T> void
-DiscreteAttrib<T>::resize(int x, int y, int z)
-{
-  d_nx = x;
-  d_ny = y;
-  d_nz = z;
-  d_dim = 3;
-}
-
-
-template <class T> void
-DiscreteAttrib<T>::resize(int x, int y)
-{
-  d_nx = x;
-  d_ny = y;
-  d_nz = 0;
-  d_dim = 2;
-}
-
-
-template <class T> void
-DiscreteAttrib<T>::resize(int x)
-{
-  d_nx = x;
-  d_ny = 0;
-  d_nz = 0;
-  d_dim = 1;
-}
-
 
 template <class T> int
 DiscreteAttrib<T>::iterate(AttribFunctor<T> &func)
