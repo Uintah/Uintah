@@ -157,36 +157,44 @@ void VectorFieldExtractor::execute()
   vfout = (FieldOPort *) get_oport("Vector Field");
   
   ArchiveHandle handle;
-   if(!in->get(handle)){
-     std::cerr<<"Didn't get a handle\n";
-     return;
-   }
-   
-   if (archiveH.get_rep()  == 0 ){
-     string visible;
-     TCL::eval(id + " isVisible", visible);
-     if( visible == "0" ){
-       TCL::execute(id + " buildTopLevel");
-     }
-   }
-
-   archiveH = handle;
-   DataArchive& archive = *((*(archiveH.get_rep()))());
-   cerr << "Calling setVars\n";
-   setVars();
-   cerr << "done with setVars\n";
-
-
-
-
-   // what time is it?
-   vector< double > times;
-   vector< int > indices;
-   archive.queryTimesteps( indices, times );
-   
-   // set the index for the correct timestep.
-   int idx = handle->timestep();
-
+  if(!in->get(handle)){
+    std::cerr<<"VectorFieldExtractor::execute:Didn't get a handle\n";
+    return;
+  }
+  
+  if (archiveH.get_rep()  == 0 ){
+    string visible;
+    TCL::eval(id + " isVisible", visible);
+    if( visible == "0" ){
+      TCL::execute(id + " buildTopLevel");
+    }
+  }
+  
+  archiveH = handle;
+  DataArchive& archive = *((*(archiveH.get_rep()))());
+  cerr << "Calling setVars\n";
+  setVars();
+  cerr << "done with setVars\n";
+  
+  
+  
+  
+  // what time is it?
+  vector< double > times;
+  vector< int > indices;
+  archive.queryTimesteps( indices, times );
+  
+  // set the index for the correct timestep.
+  int idx = handle->timestep();
+  double dt = -1;
+  if (idx < times.size() - 1)
+    dt = times[idx+1] - times[idx];
+  else if (times.size() > 1)
+    dt = times[idx] - times[idx-1];
+  
+  // set the generation of the grid
+  int generation = (*(archiveH.get_rep())).generation;
+  
   int max_workers = Max(Thread::numProcessors()/2, 8);
   Semaphore* thread_sema = scinew Semaphore( "vector extractor semahpore",
 					     max_workers); 
@@ -224,8 +232,15 @@ void VectorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
+	// set the generation and timestep in the field
+	vfd->store("varname",string(var));
+	vfd->store("generation",generation);
+	vfd->store("timestep",idx);
+	vfd->store("delta_t",dt);
+	// do timer stuff
 	timer.add( my_timer.time() );
 	my_timer.stop();
+	// send the field out to the port
 	vfout->send(vfd);
 	return;
       }
@@ -261,8 +276,15 @@ void VectorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
+	// set the generation and timestep in the field
+	vfd->store("varname",string(var));
+	vfd->store("generation",generation);
+	vfd->store("timestep",idx);
+	vfd->store("delta_t",dt);
+	// do timer stuff
 	timer.add( my_timer.time() );
 	my_timer.stop();
+	// send the field out to the port
 	vfout->send(vfd);
 	return;
       }
