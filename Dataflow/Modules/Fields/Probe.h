@@ -198,10 +198,10 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 class ProbeCenterAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void get_node(MeshHandle mesh_h, const string &index, Point &p) = 0;
-  virtual void get_edge(MeshHandle mesh_h, const string &index, Point &p) = 0;
-  virtual void get_face(MeshHandle mesh_h, const string &index, Point &p) = 0;
-  virtual void get_cell(MeshHandle mesh_h, const string &index, Point &p) = 0;
+  virtual bool get_node(MeshHandle mesh_h, const string &index, Point &p) = 0;
+  virtual bool get_edge(MeshHandle mesh_h, const string &index, Point &p) = 0;
+  virtual bool get_face(MeshHandle mesh_h, const string &index, Point &p) = 0;
+  virtual bool get_cell(MeshHandle mesh_h, const string &index, Point &p) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc);
@@ -212,67 +212,95 @@ template <class MESH>
 class ProbeCenterAlgoT : public ProbeCenterAlgo
 {
 public:
-  virtual void get_node(MeshHandle mesh_h, const string &index, Point &p);
-  virtual void get_edge(MeshHandle mesh_h, const string &index, Point &p);
-  virtual void get_face(MeshHandle mesh_h, const string &index, Point &p);
-  virtual void get_cell(MeshHandle mesh_h, const string &index, Point &p);
+  virtual bool get_node(MeshHandle mesh_h, const string &index, Point &p);
+  virtual bool get_edge(MeshHandle mesh_h, const string &index, Point &p);
+  virtual bool get_face(MeshHandle mesh_h, const string &index, Point &p);
+  virtual bool get_cell(MeshHandle mesh_h, const string &index, Point &p);
 };
 
 
 template <class MESH>
-void
+bool
 ProbeCenterAlgoT<MESH>::get_node(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
-  istringstream strm(indexstr);
-  typename MESH::Node::index_type index;
-  index << strm;
-  
-  mesh->get_center(p, index);
+  unsigned int i = atoi(indexstr.c_str());
+  typename MESH::Node::index_type index(i);
+
+  typename MESH::Node::size_type size;
+  mesh->size(size);
+
+  if (index < size)
+  {
+    mesh->get_center(p, index);
+    return true;
+  }
+  return false;
 }
 
 template <class MESH>
-void
+bool
 ProbeCenterAlgoT<MESH>::get_edge(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
-  istringstream strm(indexstr);
-  typename MESH::Edge::index_type index;
-  index << strm;
+  unsigned int i = atoi(indexstr.c_str());
+  typename MESH::Edge::index_type index(i);
   
-  mesh->get_center(p, index);
+  typename MESH::Edge::size_type size;
+  mesh->size(size);
+
+  if (index < size)
+  {
+    mesh->get_center(p, index);
+    return true;
+  }
+  return false;
 }
 
 template <class MESH>
-void
+bool
 ProbeCenterAlgoT<MESH>::get_face(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
-  istringstream strm(indexstr);
-  typename MESH::Face::index_type index;
-  index << strm;
+  unsigned int i = atoi(indexstr.c_str());
+  typename MESH::Face::index_type index(i);
   
-  mesh->get_center(p, index);
+  typename MESH::Face::size_type size;
+  mesh->size(size);
+
+  if (index < size)
+  {
+    mesh->get_center(p, index);
+    return true;
+  }
+  return false;
 }
 
 template <class MESH>
-void
+bool
 ProbeCenterAlgoT<MESH>::get_cell(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
-  istringstream strm(indexstr);
-  typename MESH::Cell::index_type index;
-  index << strm;
+  unsigned int i = atoi(indexstr.c_str());
+  typename MESH::Cell::index_type index(i);
   
-  mesh->get_center(p, index);
+  typename MESH::Cell::size_type size;
+  mesh->size(size);
+
+  if (index < size)
+  {
+    mesh->get_center(p, index);
+    return true;
+  }
+  return false;
 }
 
 

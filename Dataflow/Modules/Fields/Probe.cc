@@ -202,11 +202,12 @@ Probe::execute()
   }
 
   const string &moveto = gui_moveto_.get();
+  bool moved_p = false;
   if (moveto == "location")
   {
     const Point newloc(gui_locx_.get(), gui_locy_.get(), gui_locz_.get());
     widget_->SetPosition(newloc);
-    gui_moveto_.set("");
+    moved_p = true;
   }
   else if (moveto != "")
   {
@@ -228,27 +229,49 @@ Probe::execute()
     if (moveto == "node")
     {
       Point newloc = widget_->GetPosition();
-      algo->get_node(ifieldhandle->mesh(), gui_node_.get(), newloc);
-      widget_->SetPosition(newloc);
+      if (algo->get_node(ifieldhandle->mesh(), gui_node_.get(), newloc))
+      {
+	widget_->SetPosition(newloc);
+	moved_p = true;
+      }
     }
     else if (moveto == "edge")
     {
       Point newloc = widget_->GetPosition();
-      algo->get_edge(ifieldhandle->mesh(), gui_edge_.get(), newloc);
-      widget_->SetPosition(newloc);
+      if (algo->get_edge(ifieldhandle->mesh(), gui_edge_.get(), newloc))
+      {
+	widget_->SetPosition(newloc);
+	moved_p = true;
+      }
     }
     else if (moveto == "face")
     {
       Point newloc = widget_->GetPosition();
-      algo->get_face(ifieldhandle->mesh(), gui_face_.get(), newloc);
-      widget_->SetPosition(newloc);
+      if (algo->get_face(ifieldhandle->mesh(), gui_face_.get(), newloc))
+      {
+	widget_->SetPosition(newloc);
+	moved_p = true;
+      }
     }
     else if (moveto == "cell")
     {
       Point newloc = widget_->GetPosition();
-      algo->get_cell(ifieldhandle->mesh(), gui_cell_.get(), newloc);
-      widget_->SetPosition(newloc);
+      if (algo->get_cell(ifieldhandle->mesh(), gui_cell_.get(), newloc))
+      {
+	widget_->SetPosition(newloc);
+	moved_p = true;
+      }
     }
+  }
+  if (moved_p)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->flushViews();
     gui_moveto_.set("");
   }
 
