@@ -68,7 +68,6 @@ public:
 
   //! Required interfaces from field base.
   virtual interp_type* query_interpolate() const;
-//  virtual InterpolateToScalar* query_interpolate_to_scalar() const;
 
   virtual bool is_scalar() const;
 
