@@ -174,7 +174,8 @@ public:
   int prev_time[3];		// history for quaternions and time
   HVect prev_quat[3];
   
-  int doingMovie;
+  bool doingMovie;
+  bool makeMPEG;
   int curFrame;
   clString curName;
   
@@ -258,9 +259,6 @@ public:
   
   TCLint drawimg;
 
-  TCLstring saveFile;  // image file name
-  TCLstring saveType;  // image file type
-  
   TCLstring saveprefix;
   
 				// Object processing utility routines
@@ -296,6 +294,9 @@ public:
 
 //
 // $Log$
+// Revision 1.15  2000/06/09 17:50:18  kuzimmer
+// Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
+//
 // Revision 1.14  2000/06/07 20:59:27  kuzimmer
 // Modifications to make the image save menu item work on SGIs
 //

@@ -46,12 +46,17 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 	SCICore/Geom SCICore/Thread SCICore/Containers \
 	SCICore/TclInterface SCICore/TkExtensions SCICore/Util \
 	SCICore/TkExtensions SCICore/Datatypes
+
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) -lm
+
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/06/09 17:50:19  kuzimmer
+# Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
+#
 # Revision 1.6  2000/06/08 22:46:29  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.

@@ -58,7 +58,12 @@
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
+#if (_MIPS_SZPTR == 64)
 #include "imagelib.h"
+#else
+#include "imagelib.h"
+#include <dmedia/cl.h>
+#endif
 #endif
 
 namespace PSECommon {
@@ -136,9 +141,17 @@ protected:
     SCICore::Containers::Array1<XVisualInfo*> visuals;
 
    /* Call this each time an mpeg frame is generated. */
-   void addMpegFrame();
-   MpegEncoder mpEncoder;
-   bool encoding_mpeg;
+  void StartMpeg(const clString& fname);
+  void AddMpegFrame();
+  void EndMpeg();
+#ifdef __sgi
+  CLhandle compressorHdl;
+  int compressedBufferSize;
+  CLbufferHdl compressedBufferHdl;
+  ofstream os;
+#endif
+  MpegEncoder mpEncoder;
+  bool encoding_mpeg;
 
 public:
     OpenGL();
