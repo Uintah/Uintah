@@ -46,7 +46,7 @@ WARNING
     // low index to high index order.
     class iterator {
     public:
-      iterator(const Array3<T>* array3, IntVector index)
+      iterator(Array3<T>* array3, IntVector index)
 	: d_index(index), d_array3(array3) { }
       iterator(const iterator& iter)
 	: d_index(iter.d_index), d_array3(iter.d_array3) { }
@@ -61,7 +61,10 @@ WARNING
       inline bool operator!=(const iterator& it2) const
       { return (d_index != it2.d_index) || (d_array3 != it2.d_array3); }
       
-      inline T& operator*() const
+      inline T& operator*()
+      { return (*d_array3)[d_index]; }
+
+      inline const T& operator*() const
       { return (*d_array3)[d_index]; }
 
       inline iterator& operator++()
@@ -106,9 +109,53 @@ WARNING
       { return d_index; }
     private:
       IntVector d_index;
-      const Array3<T>* d_array3;
+      Array3<T>* d_array3;
     };
+
+    class const_iterator : private iterator
+    {
+      const_iterator(const Array3<T>* array3, IntVector index)
+	: iterator(const_cast<Array3<T>*>(array3), index) { }
+      const_iterator(const const_iterator& iter)
+	: iterator(iter.d_array3, iter.index) { }
+      ~const_iterator() {}
+
+      const_iterator& operator=(const const_iterator& it2)
+      { ::operator=(it2); return *this; }
+
+      inline bool operator==(const iterator& it2) const
+      { return ::operator==(it2); }
       
+      inline bool operator!=(const iterator& it2) const
+      { return ::operator!=(it2); }
+      
+      inline const T& operator*() const
+      { return ::operator*(); }
+
+      inline const_iterator& operator++()
+      { ::operator++(); return *this }
+
+      inline const_iterator& operator--()
+      { ::operator--(); return *this }
+
+      inline const_iterator operator++(int)
+      {
+	const_iterator oldit(*this);
+	++(*this);
+	return oldit;
+      }
+      
+      inline const_iterator operator--(int)
+      {
+	const_iterator oldit(*this);
+	--(*this);
+	return oldit;
+      }
+
+      IntVector getIndex() const
+      { return ::getIndex(); }
+    };    
+
   public:
     Array3() {
       d_window = 0;
@@ -121,12 +168,17 @@ WARNING
       d_window = 0;
       resize(lowIndex,highIndex);
     }
-    virtual ~Array3();
     Array3(const Array3& copy)
       : d_window(copy.d_window)
     {
       if(d_window)
 	d_window->addReference();
+    }
+    virtual ~Array3()
+    {
+      if(d_window && d_window->removeReference()){
+	delete d_window;
+      }
     }
 
     void copyPointer(const Array3& copy) {
@@ -215,7 +267,7 @@ WARNING
 	delete oldWindow;
     }
     
-    inline T& operator[](const IntVector& idx) const {
+    inline const T& operator[](const IntVector& idx) const {
       return d_window->get(idx);
     }
       
@@ -234,11 +286,17 @@ WARNING
       return d_window->getHighIndex();
     }
 
-    iterator begin() const {
-      return iterator(this, getLowIndex());
+    const_iterator begin() const
+    { return const_iterator(this, getLowIndex()); }
+
+    iterator begin()
+    { return iterator(this, getLowIndex()); }
+
+    const_iterator end() const {
+      return const_iterator(this, IntVector(getLowIndex().x(), getLowIndex().y(), getHighIndex().z()));
     }
 
-    iterator end() const {
+    iterator end() {
       return iterator(this, IntVector(getLowIndex().x(), getLowIndex().y(), getHighIndex().z()));
     }
 
@@ -310,7 +368,6 @@ WARNING
       }
     }
 
-	 
   protected:
     Array3& operator=(const Array3& copy);
 
@@ -318,14 +375,6 @@ WARNING
     Array3Window<T>* d_window;
   };
    
-  template<class T>
-  Array3<T>::~Array3()
-  {
-    if(d_window && d_window->removeReference()){
-      delete d_window;
-    }
-  }
-
 } // End namespace Uintah
 
 #endif
