@@ -339,7 +339,7 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     pack $w.can.can -fill both -expand yes -pady 8
     set Subnet(Subnet${subnet_id}_canvas) "$w.can.can.canvas"
     set canvas $Subnet(Subnet${subnet_id}_canvas)
-    canvas $canvas -bg $Color(SubnetEditor) \
+    canvas $canvas -bg $Color(SubnetEditor) -takefocus 1 \
         -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight"
     pack $canvas -expand yes -fill both
 
@@ -406,7 +406,7 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     # Keybinding to bring up the Packages Menu
     $canvas bind bgRect <3> "modulesMenu ${subnet_id} %x %y"
     # Keybindings for Select Operations
-    $canvas bind bgRect <1> "startBox $canvas %X %Y 0"
+    $canvas bind bgRect <1> "focus $canvas; startBox $canvas %X %Y 0"
     $canvas bind bgRect <Control-Button-1> "startBox $canvas %X %Y 1"
     $canvas bind bgRect <B1-Motion> "makeBox $canvas %X %Y"
     $canvas bind bgRect <ButtonRelease-1> "$canvas delete tempbox"
@@ -416,10 +416,11 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     bind $w <ButtonPress-5>  "canvasScroll $canvas 0.0 0.01"
     bind $w <ButtonPress-4>  "canvasScroll $canvas 0.0 -0.01"
     # Bindings for SubCanvas movement on arrow keys press
-    $canvas bind <KeyPress-Down>  "canvasScroll $canvas 0.0 0.01"
-    $canvas bind <KeyPress-Up>    "canvasScroll $canvas 0.0 -0.01"
-    $canvas bind <KeyPress-Left>  "canvasScroll $canvas -0.01 0.0"
-    $canvas bind <KeyPress-Right> "canvasScroll $canvas 0.01 0.0" 
+    bind $w.can.can.canvas <KeyPress-Down>  "canvasScroll $canvas 0.0 0.01"
+    bind $w.can.can.canvas <KeyPress-Up>    "canvasScroll $canvas 0.0 -0.01"
+    bind $w.can.can.canvas <KeyPress-Left>  "canvasScroll $canvas -0.01 0.0"
+    bind $w.can.can.canvas <KeyPress-Right> "canvasScroll $canvas 0.01 0.0"
+#    $canvas bind <KeyPress-Right> "canvasScroll $canvas 0.01 0.0" 
     # Other misc. SubCanvas key bindings
     bind $w <Control-d> "moduleDestroySelected"
     bind $w <Control-l> "ClearCanvas 1 ${subnet_id}"
