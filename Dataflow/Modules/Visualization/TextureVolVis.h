@@ -85,6 +85,8 @@ private:
   GuiInt render_style;
   GuiDouble alpha_scale;
   GuiInt interp_mode;
+  
+  CrowdMonitor geom_lock_;
   GLVolumeRenderer *volren;
 
 
