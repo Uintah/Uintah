@@ -58,7 +58,7 @@ Slice<T,A,B>::Slice(VolumeDpy* dpy, PlaneDpy* pdpy,
     for(int i=0;i<ncolors;i++){
 	float frac=float(i)/(ncolors-1);
 	Color c(spline(frac));
-	matls[i]=new Phong(c*Ka, c*Kd, c*Ks, specpow, refl);
+	matls[i]=new Phong(c*Kd, c*Ks, specpow, refl);
     }
 }
 
