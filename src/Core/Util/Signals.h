@@ -164,18 +164,13 @@ void connect( Signal &s, T &t, void (T::*fun)(), int priority=0)
   s.add( new Slot<T>(&t, fun, priority) );
 }
 
-
 template<class T>
 void connect( Signal &s, T *t, void (T::*fun)(), int priority=0)
 {
   s.add( new Slot<T>(t, fun, priority) );
 }
 
-inline
-void connect( Signal &s, void (*fun)(), int priority=0 )
-{
-  s.add ( new StaticSlot( fun, priority ) );
-}
+//void connect( Signal &s, void (*fun)(), int priority=0 );
 
 /*
  * Disconnect (void)
@@ -193,11 +188,7 @@ bool disconnect( Signal &s, T *t, void (T::*fun)())
   return s.rem(Slot<T>(t, fun));
 }
 
-inline
-bool disconnect( Signal &s, void (*fun)() )
-{
-  return s.rem( StaticSlot( fun ) );
-}
+//bool disconnect( Signal &s, void (*fun)() );
   
 //
 // ****************** single arg
@@ -264,21 +255,21 @@ public:
  * Connect (arg)
  */
 
-template<class T, class Arg>
-void connect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg), int priority=0)
+template<class T, class Arg1>
+void connect( Signal1<Arg1> &s, T &t, void (T::*fun)(Arg1), int priority=0)
 {
-  s.add( new Slot1<T,Arg>(&t, fun, priority) );
+  s.add( new Slot1<T,Arg1>(&t, fun, priority) );
 }
 
-template<class T, class Arg>
-void connect( Signal1<Arg> &s, T *t, void (T::*fun)(Arg), int priority=0)
+template<class T, class Arg1>
+void connect( Signal1<Arg1> &s, T *t, void (T::*fun)(Arg1), int priority=0)
 {
-  s.add( new Slot1<T,Arg>(t, fun, priority) );
+  s.add( new Slot1<T,Arg1>(t, fun, priority) );
 }
 
 
 template<class Arg1>
-void connect( Signal &s, void (*fun)(Arg1), int priority=0 )
+void connect( Signal1<Arg1> &s, void (*fun)(Arg1), int priority=0 )
 {
   s.add( new StaticSlot1<Arg1>( fun, priority ));
 }
@@ -287,22 +278,22 @@ void connect( Signal &s, void (*fun)(Arg1), int priority=0 )
  * Disconnect (Arg)
  */
 
-template<class T, class Arg>
-bool disconnect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg))
+template<class T, class Arg1>
+bool disconnect( Signal1<Arg1> &s, T &t, void (T::*fun)(Arg1))
 {
-  return s.rem(Slot1<T,Arg>(&t, fun));
+  return s.rem(Slot1<T,Arg1>(&t, fun));
 }
 
-template<class T, class Arg>
-bool disconnect( Signal1<Arg> &s, T *t, void (T::*fun)(Arg))
+template<class T, class Arg1>
+bool disconnect( Signal1<Arg1> &s, T *t, void (T::*fun)(Arg1))
 {
-  return s.rem(Slot1<T,Arg>(t, fun));
+  return s.rem(Slot1<T,Arg1>(t, fun));
 }
 
-template<class Arg>
-bool disconnect( Signal1<Arg> &s, void (*fun)(Arg) )
+template<class Arg1>
+bool disconnect( Signal1<Arg1> &s, void (*fun)(Arg1) )
 {
-  return s.rem( StaticSlot1<Arg>( fun ) );
+  return s.rem( StaticSlot1<Arg1>( fun ) );
 }
 
 //
@@ -358,7 +349,7 @@ public:
   void operator()(Arg1 a, Arg2 b )
     {
       lock_.lock();
-      cerr << "num connections: " << slot_.size() << endl;
+      //cerr << "num connections: " << slot_.size() << endl;
       for (unsigned i=0; i<slot_.size(); i++)
 	static_cast<SlotBase2<Arg1,Arg2>*>(slot_[i])->send(a,b);
       lock_.unlock();
@@ -384,7 +375,7 @@ void connect( Signal2<Arg1,Arg2> &s, T *t, void (T::*fun)(Arg1,Arg2),
 }
 
 template<class Arg1, class Arg2>
-void connect( Signal &s, void (*fun)(Arg1,Arg2), int priority=0 )
+void connect( Signal2<Arg1,Arg2> &s, void (*fun)(Arg1,Arg2), int priority=0 )
 {
   s.add( new StaticSlot2<Arg1,Arg2>( fun, priority ) );
 }
@@ -411,6 +402,232 @@ bool disconnect( Signal2<Arg1, Arg2> &s, void (*fun)(Arg1, Arg2) )
   return s.rem( StaticSlot2<Arg1, Arg2>( fun ) );
 }
 
+//
+// ***************** three args
+//
+
+/*
+ * Slot(arg,arg,arg)
+ */
+
+template<class Arg1,class Arg2,class Arg3>
+class SlotBase3 :  public SlotBase {
+public:
+  SlotBase3(int priority=0) : SlotBase(priority) {}
+  virtual void send(Arg1,Arg2,Arg3) {}
+};
+
+template<class Caller, class Arg1, class Arg2, class Arg3>
+class Slot3 : public SlotBase3<Arg1,Arg2,Arg3> {
+private:
+  Caller *caller_;
+  void (Caller::*pmf_)(Arg1,Arg2,Arg3);
+public:
+  Slot3( Caller *caller, void (Caller::*pmf)(Arg1,Arg2,Arg3),int priority=0 )
+    : SlotBase3<Arg1,Arg2,Arg3>(priority), caller_(caller), pmf_(pmf) {}
+  void send(Arg1 a, Arg2 b, Arg3 c) { (caller_->*pmf_)(a,b,c); }
+};
+
+/*
+ * Static Slot(arg,arg,arg)
+ */
+
+template<class Arg1, class Arg2, class Arg3>
+class StaticSlot3 : public SlotBase3<Arg1,Arg2,Arg3> {
+private:
+  void (*fun_)(Arg1,Arg2,Arg3);
+public:
+  StaticSlot3( void (*fun)(Arg1,Arg2,Arg3), int priority ) 
+    : SlotBase3<Arg1,Arg2,Arg3>(priority), fun_(fun) {}
+  
+  virtual void send(Arg1 a, Arg2 b, Arg3 c) { (*fun_)(a,b,c); }
+};
+
+
+/*
+ * Signal3(arg,arg,arg)
+ */
+
+template<class Arg1,class Arg2,class Arg3>
+class Signal3 : public SignalBase {
+public:
+  void add( SlotBase3<Arg1,Arg2,Arg3> *s) { SignalBase::add( s ); }
+  void operator()(Arg1 a, Arg2 b, Arg3 c)
+    {
+      lock_.lock();
+      //cerr << "num connections: " << slot_.size() << endl;
+      for (unsigned i=0; i<slot_.size(); i++)
+	static_cast<SlotBase3<Arg1,Arg2,Arg3>*>(slot_[i])->send(a,b,c);
+      lock_.unlock();
+    }
+};
+
+/*
+ * Connect (arg1, arg2, arg3)
+ */
+
+template<class T, class Arg1, class Arg2, class Arg3>
+void connect( Signal3<Arg1,Arg2,Arg3> &s, T &t, void (T::*fun)(Arg1,Arg2,Arg3),
+	      int priority=0)
+{
+  s.add( new Slot3<T,Arg1,Arg2,Arg3>(&t, fun, priority) );
+}
+
+template<class T, class Arg1, class Arg2, class Arg3>
+void connect( Signal3<Arg1,Arg2,Arg3> &s, T *t, void (T::*fun)(Arg1,Arg2,Arg3),
+	      int priority=0)
+{
+  s.add( new Slot3<T,Arg1,Arg2,Arg3>(t, fun, priority) );
+}
+
+template<class Arg1, class Arg2, class Arg3>
+void connect( Signal3<Arg1,Arg2,Arg3> &s, void (*fun)(Arg1,Arg2,Arg3), 
+	      int priority=0 )
+{
+  s.add( new StaticSlot3<Arg1,Arg2,Arg3>( fun, priority ) );
+}
+
+
+/*
+ * Disconnect (Arg1, Arg2, Arg3)
+ */
+
+template<class T, class Arg1, class Arg2, class Arg3>
+bool disconnect( Signal3<Arg1, Arg2, Arg3> &s, T &t, 
+                 void (T::*fun)(Arg1, Arg2, Arg3))
+{
+  return s.rem(Slot3<T,Arg1, Arg2, Arg3>(&t, fun));
+}
+
+template<class T, class Arg1, class Arg2, class Arg3>
+bool disconnect( Signal3<Arg1, Arg2, Arg3> &s, T *t, 
+                 void (T::*fun)(Arg1, Arg2, Arg3))
+{
+  return s.rem(Slot3<T,Arg1, Arg2, Arg3>(t, fun));
+}
+
+template<class Arg1, class Arg2, class Arg3>
+bool disconnect( Signal3<Arg1, Arg2, Arg3> &s, void (*fun)(Arg1, Arg2, Arg3) )
+{
+  return s.rem( StaticSlot3<Arg1, Arg2, Arg3>( fun ) );
+}
+
+//
+// ***************** Four args
+//
+
+/*
+ * Slot(arg,arg,arg,arg)
+ */
+
+template<class Arg1,class Arg2,class Arg3, class Arg4>
+class SlotBase4 :  public SlotBase {
+public:
+  SlotBase4(int priority=0) : SlotBase(priority) {}
+  virtual void send(Arg1,Arg2,Arg3,Arg4) {}
+};
+
+template<class Caller, class Arg1, class Arg2, class Arg3, class Arg4>
+class Slot4 : public SlotBase4<Arg1,Arg2,Arg3,Arg4> {
+private:
+  Caller *caller_;
+  void (Caller::*pmf_)(Arg1,Arg2,Arg3,Arg4);
+public:
+  Slot4( Caller *caller, void (Caller::*pmf)(Arg1,Arg2,Arg3,Arg4),
+	 int priority=0 )
+    : SlotBase4<Arg1,Arg2,Arg3,Arg4>(priority), caller_(caller), pmf_(pmf) {}
+  void send(Arg1 a, Arg2 b, Arg3 c, Arg4 d) { (caller_->*pmf_)(a,b,c,d); }
+};
+
+/*
+ * Static Slot(arg,arg,arg,arg)
+ */
+
+template<class Arg1, class Arg2, class Arg3, class Arg4>
+class StaticSlot4 : public SlotBase4<Arg1,Arg2,Arg3,Arg4> {
+private:
+  void (*fun_)(Arg1,Arg2,Arg3,Arg4);
+public:
+  StaticSlot4( void (*fun)(Arg1,Arg2,Arg3,Arg4), int priority ) 
+    : SlotBase4<Arg1,Arg2,Arg3,Arg4>(priority), fun_(fun) {}
+  
+  virtual void send(Arg1 a, Arg2 b, Arg3 c, Arg4 d) { (*fun_)(a,b,c,d); }
+};
+
+
+/*
+ * Signal3(arg,arg,arg,arg)
+ */
+
+template<class Arg1,class Arg2,class Arg3,class Arg4>
+class Signal4 : public SignalBase {
+public:
+  void add( SlotBase4<Arg1,Arg2,Arg3,Arg4> *s) { SignalBase::add( s ); }
+  void operator()(Arg1 a, Arg2 b, Arg3 c, Arg4 d)
+    {
+      lock_.lock();
+      //cerr << "num connections: " << slot_.size() << endl;
+      for (unsigned i=0; i<slot_.size(); i++)
+	static_cast<SlotBase4<Arg1,Arg2,Arg3,Arg4>*>(slot_[i])->send(a,b,c,d);
+      lock_.unlock();
+    }
+};
+
+/*
+ * Connect (arg1, arg2, arg3, arg4)
+ */
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+void connect( Signal4<Arg1,Arg2,Arg3,Arg4> &s, T &t, 
+	      void (T::*fun)(Arg1,Arg2,Arg3,Arg4), int priority=0)
+{
+  s.add( new Slot4<T,Arg1,Arg2,Arg3,Arg4>(&t, fun, priority) );
+}
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+void connect( Signal4<Arg1,Arg2,Arg3,Arg4> &s, T *t, 
+	      void (T::*fun)(Arg1,Arg2,Arg3,Arg4), int priority=0)
+{
+  s.add( new Slot4<T,Arg1,Arg2,Arg3,Arg4>(t, fun, priority) );
+}
+
+template<class Arg1, class Arg2, class Arg3, class Arg4>
+void connect( Signal4<Arg1,Arg2,Arg3,Arg4> &s, 
+	      void (*fun)(Arg1,Arg2,Arg3,Arg4), int priority=0 )
+{
+  s.add( new StaticSlot4<Arg1,Arg2,Arg3,Arg4>( fun, priority ) );
+}
+
+
+/*
+ * Disconnect (Arg1, Arg2, Arg3, Arg4)
+ */
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+bool disconnect( Signal4<Arg1, Arg2, Arg3, Arg4> &s, T &t, 
+                 void (T::*fun)(Arg1, Arg2, Arg3, Arg4))
+{
+  return s.rem(Slot4<T,Arg1, Arg2, Arg3, Arg4>(&t, fun));
+}
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+bool disconnect( Signal4<Arg1, Arg2, Arg3, Arg4> &s, T *t, 
+                 void (T::*fun)(Arg1, Arg2, Arg3, Arg4))
+{
+  return s.rem(Slot4<T,Arg1, Arg2, Arg3, Arg4>(t, fun));
+}
+
+template<class Arg1, class Arg2, class Arg3, class Arg4>
+bool disconnect( Signal4<Arg1, Arg2, Arg3, Arg4> &s, 
+		 void (*fun)(Arg1, Arg2, Arg3) )
+{
+  return s.rem( StaticSlot4<Arg1, Arg2, Arg3, Arg4>( fun ) );
+}
+
 }; // namespace SCIRun
 
 #endif // Signals_h
+
+
+
+
