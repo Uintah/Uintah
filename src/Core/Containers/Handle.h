@@ -104,9 +104,6 @@ public:
     return rep;
   }
 
-  template <typename type>
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream, 
-					     Handle<type>& data);
 };
 
 } // End namespace SCIRun
@@ -182,12 +179,10 @@ template<class T>
 void Pio(Piostream& stream, Handle<T>& data)
 {
     stream.begin_cheap_delim();
-    Persistent* trep=data.rep;
+    Persistent* trep=data.get_rep();
     stream.io(trep, T::type_id);
     if(stream.reading()){
-	data.rep=(T*)trep;
-	if(data.rep)
-	    data.rep->ref_cnt++;
+	data =(T*)trep;
     }
     stream.end_cheap_delim();
 }
