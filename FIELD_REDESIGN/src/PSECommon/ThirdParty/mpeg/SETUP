@@ -1,0 +1,56 @@
+MPEG Version 1.2
+
+1) Printing documentation:
+
+Documentation is in the PostScript file doc.ps. It is about 50 pages
+long.
+
+2) Making the program.
+
+The makefile should be setup for most UNIX systems as is.  Simply type
+"make" in the source code directory.
+
+3) Testing the program.
+
+A short test sequence is in short.mpg (and the coding is described in
+short.trace).  If you wish to extract image sequence files from
+short.mpg, type
+
+mpeg -d -s short.mpg short
+
+The resulting files should be in 
+
+short0.Y, short0.U, short0.V
+short1.Y, short1.U, short1.V
+short2.Y, short2.U, short2.V
+short3.Y, short3.U, short3.V
+short4.Y, short4.U, short4.V
+short5.Y, short5.U, short5.V
+short6.Y, short6.U, short6.V
+
+These files are raw raster-scan component files 352x240 for the Y,
+176x120 for the U and V.
+
+4) Displaying the decompressed files.
+
+The decompressed *.Y *.U *.V files may be displayed through the
+program "cv" which may be obtained by anonymous ftp from
+havefun.stanford.edu:pub/cv/CVv1.1.tar.Z.  If the program is in your
+current directory search-path, type
+
+cv -a 0 -b 6 short
+
+5) Recompressing the short sequence files.
+
+To use the default settings, and to put the output in short2.mpg, type
+
+mpeg -a 0 -b 6 short -s short2.mpg
+
+See the documentation for more details on other parameters.
+
+
+6) Some short interpreted programs for the encoder: (See Chapter 4 of
+the documentation).
+
+test.intra test.pred test.rc test.pframe 
+

@@ -1,0 +1,13 @@
+#$Id$
+# There are no cocoon customization options for Thread
+customize
+end_customize
+#
+# $Log$
+# Revision 1.1  1999/09/24 20:03:40  sparker
+# Added cocoon documentation
+#
+# Revision 1.1  1999/09/02 16:52:46  sparker
+# Updates to cocoon documentation
+#
+#

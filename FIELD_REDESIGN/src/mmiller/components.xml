@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the mmiller package -->
+
+<package name="mmiller">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="dmatmul.cc">
+  <soNames>
+    <soName>libmmiller_Modules_dmatmul.cc.so</soName>
+    <soName>libmmiller.so</soName>
+  </soNames>
+
+  <dataflow-component name="">
+    <meta>
+      <authors>
+        <author>Dorian Arnold</author>
+      </authors>
+      <version-date>April 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="SolveMatrix.cc">
+  <soNames>
+    <soName>libmmiller_Modules_SolveMatrix.cc.so</soName>
+    <soName>libmmiller.so</soName>
+  </soNames>
+
+  <dataflow-component name="">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="dbuildmat.cc">
+  <soNames>
+    <soName>libmmiller_Modules_dbuildmat.cc.so</soName>
+    <soName>libmmiller.so</soName>
+  </soNames>
+
+  <dataflow-component name="">
+    <meta>
+      <authors>
+        <author>Dorian Arnold</author>
+      </authors>
+      <version-date>April 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+</package>
