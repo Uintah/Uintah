@@ -44,7 +44,7 @@ PSELIBS := Uintah
 else
 PSELIBS := Uintah/Exceptions Uintah/Grid Uintah/Interface \
 	PSECore/XMLUtil SCICore/Exceptions SCICore/Geometry \
-	SCICore/Thread
+	SCICore/Thread SCICore/OS
 endif
 LIBS 	:= $(XML_LIBRARY)
 
@@ -52,6 +52,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.11  2000/06/08 21:01:42  bigler
+# Added SCICore/OS lib to puda build
+#
 # Revision 1.10  2000/05/30 18:25:50  dav
 # added XML_LIBRARY to sus build
 #
