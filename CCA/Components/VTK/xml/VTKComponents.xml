@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<!DOCTYPE metacomponentmodel SYSTEM "metacomponentmodel.dtd">
+
+<metacomponentmodel name = "vtk">
+  <library name="libCCA_Components_VTK_IO.so">
+    <component name="Vtk.ImageReader" />
+    <component name="Vtk.StructuredPointsReader" />
+    <component name="Vtk.JPEGReader" />
+  </library>
+  <library name="libCCA_Components_VTK_Rendering.so">
+    <component name="Vtk.PolyDataMapper" />
+    <component name="Vtk.Actor" />
+    <component name="Vtk.Renderer" />
+  </library>
+  <library name="libCCA_Components_VTK_Graphics.so">
+    <component name="Vtk.ContourFilter" />
+  </library>
+</metacomponentmodel>
