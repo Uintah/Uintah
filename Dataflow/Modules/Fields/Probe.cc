@@ -33,6 +33,8 @@
 #include <Core/Geometry/Tensor.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Datatypes/PointCloudField.h>
@@ -394,6 +396,32 @@ Probe::execute()
     return;
   }
   ofp->send(ofield);
+
+  MatrixOPort *mp = (MatrixOPort *)get_oport("Element Index");
+  if (!mp)
+  {
+    postMessage("Unable to initialize " + name + "'s oport\n");
+    return;
+  }
+  unsigned int index = 0;
+  switch (ifieldhandle->data_at())
+  {
+  case Field::NODE:
+    index = atoi(nodestr.c_str());
+    break;
+  case Field::EDGE:
+    index = atoi(edgestr.c_str());
+    break;
+  case Field::FACE:
+    index = atoi(facestr.c_str());
+    break;
+  case Field::CELL:
+    index = atoi(cellstr.c_str());
+    break;
+  }
+  MatrixHandle cm = scinew ColumnMatrix(1);
+  cm->get(0, 0) = (double)index;
+  mp->send(cm);
 }
 
 
