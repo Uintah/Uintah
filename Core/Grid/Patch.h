@@ -330,6 +330,7 @@ WARNING
      BCType d_bctypes[numFaces];
      vector<vector<BoundCondBase*> > d_bcs;
      friend class NodeIterator;
+     bool in_database;
    };
 
 } // End namespace Uintah
