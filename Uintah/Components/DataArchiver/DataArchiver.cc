@@ -50,12 +50,14 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    ProblemSpecP p = params->findBlock("DataArchiver");
    p->require("filebase", d_filebase);
    if(!p->get("outputInterval", d_outputInterval))
-      d_outputInterval = 1;
+      d_outputInterval = 1.0;
 
    d_currentTimestep = 0;
 
-   if (d_outputInterval == 0) 
+   if (d_outputInterval == 0.0) 
 	return;
+
+   d_nextOutputTime=0.0;
 
    d_dir = makeVersionedDir(d_filebase);
 
@@ -88,7 +90,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 				    DataWarehouseP& new_dw)
 {
   
-   if (d_outputInterval == 0)
+   if (d_outputInterval == 0.0)
       return;
  
    int timestep = d_currentTimestep;
@@ -107,8 +109,14 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
    sched->addTask(t);
 
-   if((d_currentTimestep++ % d_outputInterval) != 0)
+   d_currentTimestep++;
+   if(time<d_nextOutputTime)
       return;
+
+//   if((d_currentTimestep++ % d_outputInterval) != 0)
+//      return;
+
+   d_nextOutputTime+=d_outputInterval;
 
    ostringstream tname;
    tname << "t" << setw(4) << setfill('0') << timestep;
@@ -268,7 +276,7 @@ void DataArchiver::output(const ProcessorContext*,
 			  const VarLabel* var,
 			  int matlIndex)
 {
-   if (d_outputInterval == 0)
+   if (d_outputInterval == 0.0)
       return;
 
    cerr << "output called on patch: " << patch->getID() << ", variable: " << var->getName() << ", material: " << matlIndex << " at time: " << timestep << "\n";
@@ -543,6 +551,10 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.10  2000/06/14 21:50:54  guilkey
+// Changed DataArchiver to create uda files based on a per time basis
+// rather than a per number of timesteps basis.
+//
 // Revision 1.9  2000/06/05 20:46:32  jehall
 // - Removed special case for first output dir -- it is now <base>.000
 // - Added symlink generation from <base> to latest output dir, e.g.
