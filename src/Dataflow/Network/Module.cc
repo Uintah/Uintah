@@ -218,7 +218,9 @@ void Module::update_state(State st)
     break;
   }
   double time = timer.time();
-  time = Min(fabs(time), 1.0e10); // Clamp NaN
+  if(time<0)
+    time=0;
+  time = Min(time, 1.0e10); // Clamp NaN
   gui->execute(id+" set_state " + s + " " + to_string(time));
 }
 
