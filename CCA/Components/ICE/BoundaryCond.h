@@ -359,11 +359,13 @@ void setBC(T& vel_FC,
         }
         //__________________________________
         //  debugging
-        BC_dbg <<whichVel<< " Face: "<< face <<" I've set BC " << IveSetBC
+        if( BC_dbg.active() ) {
+          BC_dbg <<whichVel<< " Face: "<< face <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< value
                <<"\t bound limits = " <<*bound.begin()<<" "<< *(bound.end()-1)
-	        << endl;               
+	        << endl;
+        }              
       }  // Children loop
     }  // bcKind != notSet
   }  // face loop

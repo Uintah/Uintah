@@ -15,6 +15,8 @@
 #include <Core/Exceptions/InternalError.h>
 
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
+ // Note:  cout_dbg doesn't work if the iterator bound is
+ //        not defined
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
 
@@ -389,11 +391,13 @@ void setBC(CCVariable<double>& press_CC,
         }  // with gravity
         //__________________________________
         //  debugging
-        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
 	        << endl;
+        }
       }  // if bcKind != notSet
     }  // child loop
   }  // faces loop
@@ -503,11 +507,13 @@ void setBC(CCVariable<double>& var_CC,
         }
         //__________________________________
         //  debugging
-        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
 	        << endl;
+        }
       }  // if bc_kind != notSet  
     }  // child loop
   }  // faces loop
@@ -586,11 +592,13 @@ void setBC(CCVariable<Vector>& var_CC,
         }
         //__________________________________
         //  debugging
-        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = " <<*bound.begin()<<" "<< *(bound.end()-1)
 	        << endl;
+        }
       }  // if (bcKind != "notSet"    
     }  // child loop
   }  // faces loop
