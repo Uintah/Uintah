@@ -556,7 +556,16 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 
 
 
-class TensorFieldInterface {
+class TensorFieldInterface
+{
+public:
+  TensorFieldInterface() {}
+  TensorFieldInterface(const TensorFieldInterface&) {}
+  virtual ~TensorFieldInterface() {}
+
+  virtual bool interpolate(Tensor &result, const Point &p) const = 0;
+  virtual bool interpolate_many(vector<Tensor> &results,
+				const vector<Point> &points) const = 0;
 };
 
 
@@ -567,10 +576,141 @@ public:
   TFInterface(const F *fld) :
     fld_(fld)
   {}
+
+  virtual bool interpolate(Tensor &result, const Point &p) const;
+  virtual bool interpolate_many(vector<Tensor> &results,
+				const vector<Point> &points) const;
   
 private:
+  bool finterpolate(Tensor &result, const Point &p) const;
+
   const F        *fld_;
 };
+
+
+template <class F>
+bool
+TFInterface<F>::finterpolate(Tensor &result, const Point &p) const
+{
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch(fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::array_type locs;
+      vector<double> weights;
+      mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
+      result = 0;
+      for (unsigned int i = 0; i < locs.size(); i++)
+      {
+	typename F::value_type tmp;
+	if (fld_->value(tmp, locs[i]))
+	{
+	  result += tmp * weights[i];
+	}
+      }
+    }
+    break;
+
+  case F::NONE:
+    return false;
+  }
+  return true;
+}
+
+
+
+template <class F>
+bool
+TFInterface<F>::interpolate(Tensor &result, const Point &p) const
+{
+  return finterpolate(result, p);
+}
+
+
+template <class F>
+bool
+TFInterface<F>::interpolate_many(vector<Tensor> &results,
+				 const vector<Point> &points) const
+{
+  bool all_interped_p = true;
+  results.resize(points.size());
+  unsigned int i;
+  for (i=0; i < points.size(); i++)
+  {
+    all_interped_p &=  interpolate(results[i], points[i]);
+  }
+  return all_interped_p;
+}
+
+
 
 
 } // end namespace SCIRun
