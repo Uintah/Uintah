@@ -65,7 +65,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-nodes-as-disks 0
 	set $this-edges-on 1
 	set $this-faces-on 1
-	set $this-text-on 1
+	set $this-text-on 0
 	set $this-vectors-on 0
 	set $this-normalize_vectors 0
 	set $this-resolution 4
@@ -377,6 +377,8 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	scale $res.scale -orient horizontal -variable $this-resolution \
 		-from 3 -to 20 -showvalue true -resolution 1
+	
+	bind $res.scale <ButtonRelease> "$this-c resolution_scale"
 
 	# execute policy
 	make_labeled_radio $window.control.exc_policy \
