@@ -32,13 +32,13 @@
 %% View of the extended viewer window
 %begin{latexonly}
   \newcommand{\extendedwindow}%
-  {\centerline{\epsfig{file=Figures/viewwindow-ext.eps.gz,height=4in,
-  bbllx=16, bblly=310, bburx=600, bbury=703}}}
+  {\centerline{\epsfig{file=Figures/viewbottom.eps.gz,height=4in,
+  bbllx=0, bblly=0, bburx=654, bbury=293}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\extendedwindow}{%
   \htmladdimg[align=top,width=649,alt="extended view window"]
-  {../Figures/viewwindow-ext.jpg}}
+  {../Figures/viewbottom.gif}}
 \end{htmlonly}
 
 %% Gauge widget image
@@ -87,6 +87,18 @@
   \newcommand{\ringwidget}{%
   \htmladdimg[align=top,width=508,alt="ringwidget"]
   {../Figures/widget-ring.gif}}
+\end{htmlonly}
+
+%% Record movie dialog window
+%begin{latexonly}
+  \newcommand{\recordmoviewin}%
+  {\centerline{\epsfig{file=Figures/record_movie_win.eps.gz,
+  bbllx=0, bblly=0, bburx=257, bbury=175}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\recordmoviewin}{%
+  \htmladdimg[align=top,alt="Movie Recording Dialog"]
+  {../Figures/record_movie_win.gif}}
 \end{htmlonly}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -169,8 +181,13 @@ and \menu{Visual} menus.
   \menudesc{File} The \menu{File} menu contains the following items:
 
   \begin{description}
-    \menuitemdesc{Save image file...} Saves the
-    contents of the \viewer{} window as an image to a file.
+    \menuitemdesc{Save Image...} Saves the contents of the \viewer{}
+    window as an image to a file.  A dialog prompts the user for a
+    file name, an image format, and an image size.
+    
+    \menuitemdesc{Record Movie...} Saves the contents of the \viewer{}
+    window as a movie.  See \secref{Recording
+      Movies}{sec:recordmovies} for more information.
   \end{description}
   
   % All of the items below need further explication.
@@ -204,6 +221,48 @@ and \menu{Visual} menus.
   graphics hardware settings that are available on the workstation.
   The list is ordered heuristically from most to least useful.
 \end{description}
+
+\section{Recording Movies}
+\label{sec:recordmovies} 
+\index{movies}
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \recordmoviewin
+  \caption{\label{fig:recordmoviewin} Movie Recording Window}
+\end{figure}
+
+The \viewer{}'s recording control window controls movie recording.  See
+Figure~\ref{fig:recordmoviewin}.  Select \menuitem{Record Movie\dots} from
+the \viewer{} window's \menu{File} menu to show the movie control window.
+
+\sr{} records a movie by saving the content of the \viewer{} window to
+a file each time the \viewer{} window is redrawn.
+
+Two formats are supported, Silicon Graphic's RGB (``raw frames'') and
+MPEG.
+
+When recorded as raw frames, a movie will be saved as a series of RGB
+files.  Each file is named as follows:
+\filename{\replaceable{ddd}.\replaceable{name}.raw}, where
+\replaceable{ddd} is a 3 digit frame number and \replaceable{name} is
+the name typed into the control window's text entry field.
+
+When recorded in the MPEG format all frames of a movie will be saved
+in a file named \filename{\replaceable{name}.mpg}.
+
+The width and height of each frame is the same size as the width and
+height of the \viewer{} control window.  The width and height of each
+frame may be changed by clicking button \guibutton{Resize} and typing
+width and height values into the resize text boxes---this must be done
+before recording the movie.
+
+Click button \guibutton{Raw Frames} to begin a raw frames recording.
+Click button \guibutton{Mpeg} to begin an MPEG recording.  Each new
+\viewer{} window frame will be recorded.  Click button \guibutton{Stop
+\ Recording} to end a movie.
+
 
 \section{Mouse Control in the \viewer{} Window}
 \label{sec:view-mouse} 
@@ -378,27 +437,6 @@ with the display, so visibility in each eye coincides with the
 display of the appropriate view.  The ``Fusion Scale'' control provides a
 means of setting the eye separation, and thus setting the view that is most
 suited to facial anatomy and distance from the screen.
-
-\subsection{Making Movies}
-\label{sec:view-movies} 
-\index{movies}
-
-The \SR{} \viewer{} window has simple controls for capturing sequences
-of images into animations or movies.  Below is a description of how this works.
-
-In the left column of the extended \viewer{} window, there are controls for
-selecting movie type, and initiating and stopping the acquisition of
-individual frames in the movie.
-
-\SR{} sends a frame to the movie after each ``redraw'' operation (
-\ie{} each time something moves in the display or visualization
-parameters change).  If the MPEG package is available, an option is
-available for saving the animations as MPEG movies (see the
-\htmladdnormallink{Installation Manual}{\installguideurl} for
-details).
-
-There is also a button that forces the size of the graphical window to be
-352x240 pixels in size, which is a standard format well suited to MPEG.
 
 \section{Control Widgets}
 \label{sec:view-widgets} 
