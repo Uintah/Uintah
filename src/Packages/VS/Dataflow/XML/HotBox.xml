@@ -104,9 +104,30 @@
       </port>
       <port>
         <description>
+          <p>Simple field which dynamically changes with Injury List.</p>
+        </description>
+        <name>Injury 0 Highlight</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Simple field which dynamically changes with Injury List.</p>
+        </description>
+        <name>Injury 1 Highlight</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
           <p>Simple field showing injury icon geometry.</p>
         </description>
-        <name>Injury Icon</name>
+        <name>Ablated Injury Icon</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Simple field showing injury icon geometry.</p>
+        </description>
+        <name>Stunned Injury Icon</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
