@@ -45,8 +45,16 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
       const Stencil7* caa = &A[IntVector(0,y,z)];
       double* cbb = &B[IntVector(0,y,z)];
       const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx1;
+      if(y > l.y())
+	cx1 = &X[IntVector(0,y-1,z)];
+      else
+	cx1 = 0;
+      const double* cx2;
+      if(y < h1.y())
+	cx2 = &X[IntVector(0,y+1,z)];
+      else
+	cx2 = 0;
       const double* cx4 = &X[IntVector(0,y,z+1)];
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
@@ -165,8 +173,16 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
       const Stencil7* caa = &A[IntVector(0,y,z)];
       double* cbb = &B[IntVector(0,y,z)];
       const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx1;
+      if(y > l.y())
+	cx1 = &X[IntVector(0,y-1,z)];
+      else
+	cx1 = 0;
+      const double* cx2;
+      if(y < h1.y())
+	cx2 = &X[IntVector(0,y+1,z)];
+      else
+	cx2 = 0;
       const double* cx3 = &X[IntVector(0,y,z-1)];
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
@@ -226,8 +242,16 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
       const Stencil7* caa = &A[IntVector(0,y,z)];
       double* cbb = &B[IntVector(0,y,z)];
       const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx1;
+      const double* cx2;
+      if(y > l.y())
+	cx1 = &X[IntVector(0,y-1,z)];
+      else
+	cx1 = 0;
+      if(y < h1.y())
+	cx2 = &X[IntVector(0,y+1,z)];
+      else
+	cx2 = 0;
       const double* cx4 = &X[IntVector(0,y,z+1)];
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
@@ -352,8 +376,16 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
       const Stencil7* caa = &A[IntVector(0,y,z)];
       double* cbb = &B[IntVector(0,y,z)];
       const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx1;
+      if(y > l.y())
+	cx1 = &X[IntVector(0,y-1,z)];
+      else
+	cx1 = 0;
+      const double* cx2;
+      if(y < h1.y())
+	cx2 = &X[IntVector(0,y+1,z)];
+      else
+	cx2 = 0;
       const double* cx3 = &X[IntVector(0,y,z-1)];
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
