@@ -324,10 +324,10 @@ Dpy::checkGuiFlags()
   }
 
   if ( _HOLO_STATE_<1 && !holoToggle_) {
-    _HOLO_STATE_ += .05;
+    _HOLO_STATE_ += SCIRun::Time::currentSeconds()*.005;
     if (_HOLO_STATE_>1) _HOLO_STATE_=1;
   } else if ( _HOLO_STATE_>0 && holoToggle_ ) {
-    _HOLO_STATE_ -= .005;
+    _HOLO_STATE_ -= SCIRun::Time::currentSeconds()*.0005;
     if (_HOLO_STATE_<0) _HOLO_STATE_=0;
   }
 
