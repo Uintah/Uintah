@@ -244,7 +244,7 @@ void NrrdToImage::create_image() {
   // is really dim+1.  When iterating over the nrrd to copy it
   // we need to skip the initial tuple axis.
   if (remove_tuple_) {
-    for(int i=0; i<n->axis[0].size; i++) {
+    for(int j=0; j<n->axis[0].size; j++) {
       type *&i = (type*&)p;
       // increment pointer
       ++i;
