@@ -23,8 +23,6 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/2d/DrawGui.h>
@@ -46,14 +44,14 @@ private:
   ConditionVariable has_work_;
 
 public:
-  Graph( const string & );
+  Graph(GuiInterface* gui, const string & );
   virtual ~Graph() {}
 
-  void lock() { TCLTask::lock(); }
-  void unlock() { TCLTask::unlock(); }
+  void lock();
+  void unlock();
 
   void add( const string &, DrawGui *);
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   virtual void set_window( const string &);
   void update();
 

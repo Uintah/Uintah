@@ -17,27 +17,23 @@
 
 #include <Core/2d/OpenGLWindow.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
 #include <iostream>
-namespace SCIRun {
-
-  using std::cerr;
+using namespace SCIRun;
+using namespace std;
   
 extern "C" Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
-OpenGLWindow::OpenGLWindow()
-  : TclObj( "OpenGLWindow")
+OpenGLWindow::OpenGLWindow(GuiInterface* gui)
+  : TclObj(gui, "OpenGLWindow")
 {
   lock_ = scinew Mutex("OpenGLWindow");
   initialized_ = false;
   bg_ = Color( 0.8, 0.8, 0.8 );
   fg_ = Color( 0.0, 0.8, 0.0 );
 }
- 
-
 
 void
 OpenGLWindow::clear()
@@ -47,7 +43,7 @@ OpenGLWindow::clear()
 }
 
 void
-OpenGLWindow::tcl_command(TCLArgs& args, void* userdata)
+OpenGLWindow::tcl_command(GuiArgs& args, void* userdata)
 {
   if ( args[1] == "map" ) {
     if ( !initialized_ ) 
@@ -58,14 +54,14 @@ OpenGLWindow::tcl_command(TCLArgs& args, void* userdata)
 bool
 OpenGLWindow::init( const string &window_name)
 {
-  TCLTask::lock();
+  gui->lock();
 
   Tk_Window tkwin=Tk_NameToWindow(the_interp,
 				  const_cast<char *>(window_name.c_str()),
 				  Tk_MainWindow(the_interp));
   if(!tkwin){
     cerr << "Unable to locate window!\n";
-    TCLTask::unlock();
+    gui->unlock();
     return false;
   }
   dpy=Tk_Display(tkwin);
@@ -73,7 +69,7 @@ OpenGLWindow::init( const string &window_name)
   cx=OpenGLGetContext(the_interp, const_cast<char *>(window_name.c_str()));
   if(!cx){
     cerr << "Unable to create OpenGL Context!\n";
-    TCLTask::unlock();
+    gui->unlock();
     return false;
   }
   //    }
@@ -85,7 +81,7 @@ OpenGLWindow::init( const string &window_name)
 
   initialized_ = true;
   
-  TCLTask::unlock();
+  gui->unlock();
 
   report_init();
   return true;
@@ -95,7 +91,7 @@ OpenGLWindow::init( const string &window_name)
 void 
 OpenGLWindow::pre()
 {
-  TCLTask::lock();
+  gui->lock();
 
   if (!glXMakeCurrent(dpy, win, cx))
     cerr << "*glXMakeCurrent failed.\n";
@@ -116,7 +112,7 @@ OpenGLWindow::post( bool swap)
 
   glXMakeCurrent(dpy, None, NULL);
 
-  TCLTask::unlock();
+  gui->unlock();
 }
 
 
@@ -199,6 +195,16 @@ OpenGLWindow::sub_window( int l, int r, int t, int b )
   return 0; // scinew OpenGLSubWindow( *this, l, r, t, b );
 }
 
-} // End namespace SCIRun
+void OpenGLWindow::report_init()
+{
+}
 
+void OpenGLWindow::lock()
+{
+  gui->lock();
+}
 
+void OpenGLWindow::unlock()
+{
+  gui->unlock();
+}

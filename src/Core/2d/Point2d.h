@@ -37,9 +37,9 @@
 
 #include <iosfwd>
 
+namespace SCIRun {
 using std::string;
     
-namespace SCIRun {
 
 class TypeDescription;
 class RigorousTest;

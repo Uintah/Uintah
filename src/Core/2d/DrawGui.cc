@@ -37,8 +37,8 @@ namespace SCIRun {
 
   //PersistentTypeID DrawGui::type_id("DrawGUI", "DrawObj", make_DrawGui);
 
-DrawGui::DrawGui( const string &name, const string& script)
-  : TclObj(script), DrawObj(name)
+DrawGui::DrawGui(GuiInterface* gui, const string &name, const string& script)
+  : TclObj(gui, script), DrawObj(name)
 {
 }
 

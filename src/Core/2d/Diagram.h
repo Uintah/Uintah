@@ -38,9 +38,8 @@
 #include <Core/2d/Widget.h>
 #include <stack>
 
-using std::stack;
-
 namespace SCIRun {
+  using std::stack;
   
 class ScrolledOpenGLWindow;
 
@@ -70,9 +69,10 @@ private:
   DrawMode draw_mode_;
   OperateMode operate_mode_;
   bool changed_;
+  GuiContext* ctx;
 
 public:
-  Diagram( const string &name="" );
+  Diagram(GuiInterface* gui, const string &name="" );
   virtual ~Diagram();
 
   void add( DrawObj * );
@@ -82,7 +82,7 @@ public:
   virtual void reset_bbox();
   virtual void get_bounds(BBox2d&);
 
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   virtual void set_id( const string &);
   virtual void set_windows( const string &menu, const string &tb,
 			    const string &ui, const string &ogl);

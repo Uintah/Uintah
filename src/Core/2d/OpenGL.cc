@@ -52,9 +52,8 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-namespace SCIRun {
-
-  using std::cerr;
+using namespace std;
+using namespace SCIRun;
 
 void 
 Polyline::draw( bool )
@@ -431,9 +430,6 @@ Zoom::draw( bool )
 {
   cerr << "ZoomObj draw" << endl;
 }
-
-
-} // End namespace SCIRun
 
 
 

@@ -45,8 +45,8 @@ private:
 
 public:
   
-  Zoom() : TclObj( "zoom"), BoxObj() {}
-  Zoom( Diagram *, const string &name="zoom" );
+  Zoom(GuiInterface* gui) : TclObj(gui, "zoom"), BoxObj() {}
+  Zoom(GuiInterface* gui, Diagram *, const string &name="zoom" );
   virtual ~Zoom();
 
 

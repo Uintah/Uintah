@@ -42,18 +42,18 @@ using std::ostringstream;
 #include <Core/2d/Diagram.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/LockedPolyline.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
-namespace SCIRun {
-
+using namespace SCIRun;
 Persistent* make_Hairline()
 {
-  return scinew Hairline;
+  return scinew Hairline(GuiInterface::getSingleton());
 }
 
 PersistentTypeID Hairline::type_id("Hairline", "HairObj", make_Hairline);
 
-Hairline::Hairline( Diagram *p, const string &name)
-  : TclObj( "Hairline" ), HairObj(name), parent_(p)
+Hairline::Hairline(GuiInterface* gui, Diagram *p, const string &name)
+  : TclObj(gui, "Hairline" ), HairObj(name), parent_(p)
 {
 }
 
@@ -136,8 +136,3 @@ Hairline::io(Piostream& stream)
   Widget::io(stream);
   stream.end_class();
 }
-
-
-} // namespace SCIRun
-
-  

@@ -46,8 +46,8 @@ private:
 
 public:
   
-  Hairline() : TclObj( "hairline"), HairObj("Hairline") {}
-  Hairline( Diagram *, const string &name="Hairline" );
+  Hairline(GuiInterface* gui) : TclObj(gui, "hairline"), HairObj("Hairline") {}
+  Hairline(GuiInterface* gui, Diagram *, const string &name="Hairline" );
   virtual ~Hairline();
 
   void update();
