@@ -120,6 +120,9 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   } else if(getenv("LAMWORLD") || getenv("LAMRANK")){
     // Look for LAM-MPI
     ::usingMPI=true;
+  } else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")){
+    // Look for ALC's MPI
+    ::usingMPI=true;
   } else {
     // Look for mpich
     for(int i=0;i<argc;i++){
