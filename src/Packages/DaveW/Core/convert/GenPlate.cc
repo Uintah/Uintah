@@ -19,7 +19,7 @@ using namespace SCICore::PersistentSpace;
 using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 
-void main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     double z=4;
     if (argc != 2) {
 	cerr << "Usage: "<<argv[0]<<" numCells\n";
@@ -61,4 +61,5 @@ void main(int argc, char *argv[]) {
     BinaryPiostream stream2(name, Piostream::Write);
     SurfaceHandle sh(ts);
     Pio(stream2, sh);
+    return 1;
 }

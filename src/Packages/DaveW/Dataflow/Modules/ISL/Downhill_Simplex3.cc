@@ -1053,6 +1053,9 @@ void Downhill_Simplex3::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.1.2.1  2000/10/31 02:14:48  dmw
+// merging DaveW HEAD changes into FIELD_BRANCH
+//
 // Revision 1.1  2000/10/29 04:02:47  dmw
 // cleaning up DaveW tree
 //

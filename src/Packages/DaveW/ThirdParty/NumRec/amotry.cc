@@ -2,7 +2,7 @@
 #include "nrutil.h"
 
 double* amotry(double **p, double  y[], double  psum[], int ndim,
-	       double *(*funk)(double []), int ihi, double fac, int extra)
+	       double *(*funk)(int), int ihi, double fac, int extra)
 {
     int j;
     double  fac1,fac2,*ytry,*ptry;
@@ -38,7 +38,7 @@ double* amotry(double **p, double  y[], double  psum[], int ndim,
     }
 #endif
 
-    ytry=(*funk)(ptry);
+    ytry=(*funk)(ndim+2);
 
 #if 0
     cerr << "Here are the dipoles (from in amotry2):\n";
