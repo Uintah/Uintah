@@ -633,10 +633,10 @@ TetVolMesh::is_face(Node::index_type n0,Node::index_type n1,
 void
 TetVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
-  array.clear();
+  array.resize(2);
   pair<Edge::index_type, Edge::index_type> edge = Edge::edgei(idx);
-  array.push_back(cells_[edge.first]);
-  array.push_back(cells_[edge.second]);
+  array[0] = cells_[edge.first];
+  array[1] = cells_[edge.second];
 }
 
 
@@ -661,9 +661,11 @@ TetVolMesh::get_nodes(Node::array_type &a, Face::index_type idx) const
 void
 TetVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
-  array.clear();
-  for (int n = idx*4; n < idx*4+4; ++n)
-    array.push_back(cells_[n]);
+  array.resize(4);
+  for (int i = 0; i < 4; i++)
+  {
+    array[i] = cells_[idx*4+i];
+  }
 }
 
 void
@@ -717,10 +719,10 @@ TetVolMesh::get_edges(Edge::array_type &/*array*/, Face::index_type /*idx*/) con
 void
 TetVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
 {
-  array.clear();
-  for (int e = idx * 6; e < idx * 6 + 6; e++)
+  array.resize(6);
+  for (int i = 0; i < 6; i++)
   {
-    array.push_back(e);
+    array[i] = idx * 6 + i;
   }
 }
 
@@ -742,9 +744,11 @@ TetVolMesh::get_faces(Face::array_type &/*array*/, Edge::index_type /*idx*/) con
 void
 TetVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 {
-  array.clear();
-  for (int f = idx * 4; f < idx * 4 + 4; f++)
-    array.push_back(f);
+  array.resize(4);
+  for (int i = 0; i < 4; i++)
+  {
+    array[i] = idx * 4 + i;
+  }
 }
 
 void
