@@ -12,8 +12,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 
-#include <Packages/Uintah/CCA/Ports/PatchDataAnalyze.h>
-
 namespace Uintah {
 
 using namespace SCIRun;
@@ -88,8 +86,6 @@ public:
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
-
-  void setAnalyze(PatchDataAnalyze* analyze);
 
 private:
   //////////
@@ -331,8 +327,6 @@ private:
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
-
-  PatchDataAnalyze*  d_analyze;
 };
       
 } // end namespace Uintah
