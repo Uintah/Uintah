@@ -16,10 +16,12 @@ class PortalMaterial : public Material
 
   Transform portal_;
   bool      valid_;
+  bool      attached_;
 
  public:
 
-  PortalMaterial() : valid_(false) { portal_.load_identity(); }
+  PortalMaterial() : valid_(false), attached_(false) 
+    { portal_.load_identity(); }
   virtual ~PortalMaterial() {}
 
   virtual void shade(Color& result, const Ray& ray,
@@ -34,15 +36,20 @@ class PortalMaterial : public Material
     Color diffuse;
     double u=uv.u();
     double v=uv.v();
-    if (valid_ && (u>.02 && u<.98) && (v>.02 && v<.98)) {
+    if (attached_ && (u>.02 && u<.98) && (v>.02 && v<.98)) {
       Ray pray(portal_.project(hitpos), portal_.project(ray.direction()));
       
       cx->worker->traceRay(result, pray, depth+1,  atten,
                            accumcolor, cx);
     } else {
-      result = Color(.6,0,.6);
+      result = Color(.1,.1,.65);
     }
   }
+
+  Transform *get_portal() { return &portal_; }
+  bool valid() { return valid_; }
+  bool attached() { return attached_; }
+  void attached(bool a) { attached_ = a; }
 
   Point project(const Point &p) 
   {
@@ -54,22 +61,37 @@ class PortalMaterial : public Material
     return Vector(portal_.project(v));
   }
 
-  void set(const Point &a, const Vector &au, const Vector &av,
-           const Point &b, const Vector &bu, const Vector &bv)
+  void print() { portal_.print(); }
+
+  void set(const Point &a, const Vector &au, const Vector &av)
   {
-    // a is local coordinates, b is opposite end coordinates
     portal_.load_identity();
-    //portal_.rotate(au,bu);
-    //portal_.rotate(av,bv);
-    portal_.pre_translate(b-a);
-    portal_.pre_scale( Vector(au.length()/bu.length(), 
-                              av.length()/bv.length(), 
-                              1) );
+    Vector aw(Cross(au,av));
+    portal_.load_basis(a,au,av,aw/aw.length());
     valid_ = true;
-    portal_.print();
+    attached_ = false;
+  }
+
+  void attach(PortalMaterial *mat)
+  {
+    if (mat->valid()) {
+      Transform temp(portal_);
+      Transform *other_end = mat->get_portal();
+      portal_.change_basis(*other_end);
+      other_end->change_basis(temp);
+
+      portal_.print();
+      other_end->print();
+      
+      mat->attached(true);
+      attached_ = true;
+    }
   }
 };
 
 } // end namespace
 
 #endif
+
+
+
