@@ -33,7 +33,7 @@ PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/ProblemSpecification \
 	SCICore/Exceptions Uintah/Interface SCICore/Thread
 endif
-LIBS :=
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
@@ -52,6 +52,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.10  2000/05/30 18:25:50  dav
+# added XML_LIBRARY to sus build
+#
 # Revision 1.9  2000/05/21 08:19:04  sparker
 # Implement NCVariable read
 # Do not fail if variable type is not known
