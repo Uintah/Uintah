@@ -1,0 +1,173 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<appendix id="appendix">
+<title>Configure Options</title>
+<para>
+The following table contains descriptions of the options
+available for configuring SCIRun.
+</para>
+<table>
+<title>Configure Options</title>
+<tgroup cols="2"><tbody>
+<row>
+<entry>--enable-package</entry><entry>Compile the listed packages.  SCIRun
+modules are compiled automatically.  To also build the BioPSE and
+Uintah modules, use:
+--enable-package="BioPSE Uintah".</entry>
+</row>
+<row>
+<entry>--enable-exename</entry>
+<entry>Overrides the default executable name
+for SCIRun.  The default is scirun.</entry>
+</row>
+<row>
+<entry>--enable-threads</entry>
+<entry>Threads are always enabled, but this
+allows one to use a different implementation.  On the SGI,
+--enable-threads=pthreads and --enable-threads=sproc (default) are
+supported.  On other platforms, only --enable-threads=pthreads is
+supported.</entry>
+</row>
+<row>
+<entry>--enable-debug</entry>
+<entry>Turn on debugging.  To simply use "-g",
+just use --enable-debug.  To use flags other than "-g", use
+--enable-debug="-myflags".</entry>
+</row>
+<row>
+<entry>--enable-optimize</entry>
+<entry>Turn on optimization.
+To simply use "-O2",
+just use --enable-optimize.  To use flags other than "-O2", use
+--enable-optimize="-myflags".</entry>
+</row>
+<row>
+<entry>--enable-largesos</entry>
+<entry>Instead of building a shared object
+per subdirectory, build a few "large" shared objects for the top level
+subdirectories.  This is more appropriate for distribution, and
+--disable-largesos (the default) is more appropriate for
+development.</entry>
+</row>
+<row>
+<entry>--enable-64bit</entry>
+<entry>Compile in 64 bit mode.  Currently
+supported only on the SGI.</entry>
+</row>
+<row>
+<entry>--enable-assertion-level=N</entry>
+<entry>Set the level of assertions
+to the level N.  0 means no assertions are caught, and level 3 (the
+default) performs extensive checking (including array bounds
+checks).</entry>
+</row>
+<row>
+<entry>--enable-parallel</entry>
+<entry>Enable the "distributed memory"
+parallel SCIRun.  This requires the globus library (see the next
+flag).</entry>
+</row>
+<row>
+<entry>--with-globus=GLOBUS_DIR</entry>
+<entry>Uses the globus libraries in
+GLOBUS_DIR.</entry>
+</row>
+<row>
+<entry>--with-thirdparty=INST_DIR</entry>
+<entry>INST_DIR = the directory
+containing the /bin, /lib, /include and directories for all the required
+thirdparty software.</entry>
+</row>
+<row>
+<entry>--with-tcl=INST_DIR</entry>
+<entry>INST_DIR = the directory containing
+the /bin, /lib, and /include directories for the Tcl distribution.</entry>
+</row>
+<row>
+<entry>--with-tk=INST_DIR</entry>
+<entry>INST_DIR = the directory containing
+the /bin, /lib, and /include directories for the Tk distribution.
+defaults to value given by --with-tcl.</entry>
+</row>
+<row>
+<entry>--with-itcl=INST_DIR</entry>
+<entry>INST_DIR = the directory containing
+the /bin, /lib, and /include directories for the [incr Tcl/Tk]
+distributions.  defaults to value given by --with-tcl.</entry>
+</row>
+<row>
+<entry>--with-blt=INST_DIR</entry>
+<entry>INST_DIR = the directory containing
+the /bin, /lib, and /include directories for the BLT distribution.
+defaults to value given by --with-tcl.</entry>
+</row>
+<row>
+<entry>--with-xerces=INST_DIR</entry>
+<entry>INST_DIR = the directory
+containing the /bin, /lib, and /include directories for the Xerces-C
+distribution. </entry>
+</row>
+<row>
+<entry>--with-mpeg[=INST_DIR]</entry>
+<entry>INST_DIR = an optional
+argument for specifying the directory containing the /lib and
+/include directories for the mpeg_encode distribution.  If an
+INST_DIR is not specified, then the default SCIRun_Thirdparty
+directory will be assumed.  If the required header and library
+files are not found, or if this option is not specified, the
+Viewer rendering module will not have support for saving out
+MPEG movies. </entry>
+</row>
+<row>
+<entry>--with-nrrd=INST_DIR</entry>
+<entry>INST_DIR = the directory
+containing the /lib and /include directories for Gordon
+Kindlmann's Nrrd (Nearly Raw Raster Data) distribution.  This
+optional flag is only valid if the Nrrd pacakge has been enabled
+(using --enable-package).  If it has, this flag is only
+necessary to specify a location other than the default
+SCIRun_Thirdparty directory.  The Nrrd package contains modules
+for converting between SCIRun Fields and Nrrds, for reading and
+writing Nrrds, and wrappers for invoking Nrrd raster processing
+algorithms. </entry>
+</row>
+<row>
+<entry>--with-unipetsc=INST_DIR</entry>
+<entry>INST_DIR = the 
+directory containing the /lib and /include directories for PETSc 2.1.1 
+compiled using the uni-processor MPI libraries.  This directory is 
+the same one PETSC_DIR is set to when compiling PETSc.  
+The uniMPI PETSc code is used in the SolveMatrix Module as an alternate
+linear equation solver.  It provides many preconditioners and 
+solving methods.
+If found and configured correctly, the Solvematrix module will hilight 
+the PETSc solve methods in the UI.</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</appendix>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

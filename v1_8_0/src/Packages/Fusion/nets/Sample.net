@@ -1,0 +1,425 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 226 114]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 208 386]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 19 679]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 247 287]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 392 10]
+set m5 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 18 104]
+set m6 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 444 385]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 444 497]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 444 89]
+set m9 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 462 173]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 444 253]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 618 388]
+set m12 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 10]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 44 253]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 418]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 18 334]
+set m16 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 208 198]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 725 474]
+set m18 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 725 156]
+set m19 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 805 217]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 787 300]
+set m21 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 987 133]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 987 333]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 969 555]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 1017 228]
+set m25 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 969 429]
+
+addConnection $m0 0 $m1 1
+addConnection $m0 0 $m3 1
+addConnection $m1 0 $m2 0
+addConnection $m3 1 $m2 1
+addConnection $m4 0 $m0 0
+addConnection $m6 0 $m7 0
+addConnection $m7 1 $m2 2
+addConnection $m8 0 $m10 0
+addConnection $m8 1 $m9 0
+addConnection $m9 0 $m10 1
+addConnection $m10 0 $m6 0
+addConnection $m10 0 $m11 1
+addConnection $m4 0 $m11 0
+addConnection $m11 0 $m7 1
+addConnection $m12 0 $m5 0
+addConnection $m12 0 $m0 1
+addConnection $m5 0 $m13 0
+addConnection $m0 0 $m14 1
+addConnection $m14 0 $m2 3
+addConnection $m13 0 $m15 1
+addConnection $m15 0 $m14 0
+addConnection $m12 2 $m8 0
+addConnection $m5 0 $m15 0
+addConnection $m16 0 $m3 0
+addConnection $m16 0 $m1 0
+addConnection $m12 0 $m16 0
+addConnection $m18 0 $m17 0
+addConnection $m17 0 $m2 4
+addConnection $m19 0 $m20 1
+addConnection $m4 0 $m20 0
+addConnection $m20 0 $m17 1
+addConnection $m24 0 $m22 1
+addConnection $m21 0 $m22 0
+addConnection $m21 0 $m24 0
+addConnection $m12 2 $m21 0
+addConnection $m24 1 $m2 5
+addConnection $m23 0 $m2 6
+addConnection $m22 0 $m25 1
+addConnection $m25 0 $m23 0
+addConnection $m12 0 $m25 0
+addConnection $m12 3 $m18 0
+addConnection $m12 3 $m19 0
+addConnection $m0 0 $m23 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-isFixed {0}
+set $m0-min {       -0.0253156}
+set $m0-max {         0.726126}
+set $m0-makeSymmetric {0}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-nodes-on {1}
+set $m1-nodes-as-disks {0}
+set $m1-edges-on {0}
+set $m1-faces-on {0}
+set $m1-use-normals {0}
+set $m1-use-transparency {0}
+set $m1-vectors-on {0}
+set $m1-normalize-vectors {0}
+set $m1-has_vec_data {0}
+set $m1-bidirectional {0}
+set $m1-arrow-heads-on {1}
+set $m1-def-color-r {0.5}
+set $m1-def-color-g {0.5}
+set $m1-def-color-b {0.5}
+set $m1-def-color-a {0.5}
+set $m1-node_display_type {Points}
+set $m1-edge_display_type {Lines}
+set $m1-active_tab {Nodes}
+set $m1-node_scale {0.03}
+set $m1-edge_scale {0.03}
+set $m1-vectors_scale {0.03}
+set $m1-show_progress {0}
+set $m1-interactive_mode {Interactive}
+set $m1-resolution {4}
+set $m2-notes {}
+set $m2-show_status {1}
+$m2 ui
+set $m2-ViewWindow_0-pos {}
+set $m2-ViewWindow_0-caxes {0}
+set $m2-ViewWindow_0-iaxes {}
+set $m2-ViewWindow_0-view-eyep-x {          2.41057}
+set $m2-ViewWindow_0-view-eyep-y {           19.883}
+set $m2-ViewWindow_0-view-eyep-z {         0.550569}
+set $m2-ViewWindow_0-view-lookat-x {     -1.29594e-07}
+set $m2-ViewWindow_0-view-lookat-y {      7.31482e-12}
+set $m2-ViewWindow_0-view-lookat-z {                0}
+set $m2-ViewWindow_0-view-up-x {       -0.0268494}
+set $m2-ViewWindow_0-view-up-y {        -0.024417}
+set $m2-ViewWindow_0-view-up-z {         0.999341}
+set $m2-ViewWindow_0-view-fov {          16.2164}
+set $m2-ViewWindow_0-view-eyep_offset-x {}
+set $m2-ViewWindow_0-view-eyep_offset-y {}
+set $m2-ViewWindow_0-view-eyep_offset-z {}
+set $m2-ViewWindow_0-bgcolor-r {0}
+set $m2-ViewWindow_0-bgcolor-g {0}
+set $m2-ViewWindow_0-bgcolor-b {0}
+set $m2-ViewWindow_0-shading {}
+set $m2-ViewWindow_0-do_stereo {0}
+set $m2-ViewWindow_0-ambient-scale {1.0}
+set $m2-ViewWindow_0-diffuse-scale {1.0}
+set $m2-ViewWindow_0-specular-scale {0.4}
+set $m2-ViewWindow_0-emission-scale {1.0}
+set $m2-ViewWindow_0-shininess-scale {1.0}
+set $m2-ViewWindow_0-sbase {0.40}
+set $m2-ViewWindow_0-sr {1}
+set $m2-ViewWindow_0-do_bawgl {0}
+set $m2-ViewWindow_0-drawimg {}
+set $m2-ViewWindow_0-saveprefix {}
+set $m2-ViewWindow_0-resx {}
+set $m2-ViewWindow_0-resy {}
+set $m2-ViewWindow_0-aspect {}
+set $m2-ViewWindow_0-aspect_ratio {}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {0}
+set $m2-ViewWindow_0-unused {0}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-isoval {0.269}
+set $m3-isoval-min {-0.0181344}
+set $m3-isoval-max {0.726126}
+set $m3-isoval-typed {0}
+set $m3-isoval-quantity {1}
+set $m3-extract-from-new-field {1}
+set $m3-algorithm {0}
+set $m3-build_trisurf {0}
+set $m3-np {1}
+set $m3-active-isoval-selection-tab {0}
+set $m3-active_tab {MC}
+set $m3-update_type {Auto}
+set $m3-color-r {0.4}
+set $m3-color-g {0.2}
+set $m3-color-b {0.9}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-tcl_status {Calling GenStandardColorMaps!}
+set $m4-positionList {{0 8} {296 8}}
+set $m4-nodeList {13 14}
+set $m4-width {296}
+set $m4-height {40}
+set $m4-mapType {3}
+set $m4-minRes {12}
+set $m4-resolution {32}
+set $m4-realres {32}
+set $m4-gamma {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-idim {145}
+set $m5-jdim {84}
+set $m5-kdim {40}
+set $m5-istart {0}
+set $m5-jstart {0}
+set $m5-kstart {0}
+set $m5-idelta {144}
+set $m5-jdelta {84}
+set $m5-kdelta {20}
+set $m5-iskip {5}
+set $m5-jskip {2}
+set $m5-kskip {1}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-idim {145}
+set $m6-jdim {84}
+set $m6-kdim {40}
+set $m6-istart {0}
+set $m6-jstart {0}
+set $m6-kstart {0}
+set $m6-idelta {144}
+set $m6-jdelta {84}
+set $m6-kdelta {40}
+set $m6-iskip {10}
+set $m6-jskip {5}
+set $m6-kskip {2}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-isoval {-0.}
+set $m7-isoval-min {-0.416856}
+set $m7-isoval-max {0.263455}
+set $m7-isoval-typed {0}
+set $m7-isoval-quantity {1}
+set $m7-extract-from-new-field {1}
+set $m7-algorithm {0}
+set $m7-build_trisurf {0}
+set $m7-np {1}
+set $m7-active-isoval-selection-tab {0}
+set $m7-active_tab {MC}
+set $m7-update_type {Auto}
+set $m7-color-r {0.4}
+set $m7-color-g {0.2}
+set $m7-color-b {0.9}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {0}
+set $m9-row_or_col {col}
+set $m9-selectable_min {0}
+set $m9-selectable_max {                2}
+set $m9-selectable_inc {3}
+set $m9-selectable_units {Units}
+set $m9-range_min {2}
+set $m9-range_max {2}
+set $m9-playmode {once}
+set $m9-current {2}
+set $m9-execmode {init}
+set $m9-delay {0}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-isFixed {0}
+set $m11-min {        -0.424769}
+set $m11-max {         0.263653}
+set $m11-makeSymmetric {0}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107_02.mds}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m14-notes {}
+set $m14-show_status {1}
+set $m14-nodes-on {0}
+set $m14-nodes-as-disks {0}
+set $m14-edges-on {0}
+set $m14-faces-on {1}
+set $m14-use-normals {0}
+set $m14-use-transparency {1}
+set $m14-vectors-on {0}
+set $m14-normalize-vectors {}
+set $m14-has_vec_data {0}
+set $m14-bidirectional {0}
+set $m14-arrow-heads-on {1}
+set $m14-def-color-r {0.5}
+set $m14-def-color-g {0.5}
+set $m14-def-color-b {0.5}
+set $m14-def-color-a {0.5}
+set $m14-node_display_type {Spheres}
+set $m14-edge_display_type {Lines}
+set $m14-active_tab {Faces}
+set $m14-node_scale {0.03}
+set $m14-edge_scale {0.015}
+set $m14-vectors_scale {0.30}
+set $m14-show_progress {}
+set $m14-interactive_mode {Interactive}
+set $m14-resolution {4}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m15-use_interp {1}
+set $m15-use_closest {1}
+set $m15-closeness_distance {1.0e15}
+set $m16-notes {}
+set $m16-show_status {1}
+set $m16-idim {145}
+set $m16-jdim {84}
+set $m16-kdim {40}
+set $m16-istart {0}
+set $m16-jstart {0}
+set $m16-kstart {0}
+set $m16-idelta {144}
+set $m16-jdelta {84}
+set $m16-kdelta {40}
+set $m16-iskip {10}
+set $m16-jskip {5}
+set $m16-kskip {1}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m17-nodes-on {0}
+set $m17-nodes-as-disks {1}
+set $m17-edges-on {0}
+set $m17-faces-on {0}
+set $m17-use-normals {0}
+set $m17-use-transparency {0}
+set $m17-vectors-on {1}
+set $m17-normalize-vectors {0}
+set $m17-has_vec_data {1}
+set $m17-bidirectional {0}
+set $m17-arrow-heads-on {1}
+set $m17-def-color-r {0.5}
+set $m17-def-color-g {0.5}
+set $m17-def-color-b {0.5}
+set $m17-def-color-a {0.5}
+set $m17-node_display_type {Spheres}
+set $m17-edge_display_type {Lines}
+set $m17-active_tab {Vectors}
+set $m17-node_scale {0.03}
+set $m17-edge_scale {0.015}
+set $m17-vectors_scale {0.0002}
+set $m17-show_progress {}
+set $m17-interactive_mode {Interactive}
+set $m17-resolution {4}
+set $m18-notes {}
+set $m18-show_status {1}
+set $m18-idim {145}
+set $m18-jdim {84}
+set $m18-kdim {40}
+set $m18-istart {0}
+set $m18-jstart {0}
+set $m18-kstart {0}
+set $m18-idelta {144}
+set $m18-jdelta {84}
+set $m18-kdelta {40}
+set $m18-iskip {14}
+set $m18-jskip {8}
+set $m18-kskip {1}
+set $m19-notes {}
+set $m19-show_status {1}
+set $m20-notes {}
+set $m20-show_status {1}
+set $m20-isFixed {0}
+set $m20-min {          1.00825}
+set $m20-max {          2680.16}
+set $m20-makeSymmetric {0}
+set $m21-notes {}
+set $m21-show_status {1}
+set $m21-idim {145}
+set $m21-jdim {84}
+set $m21-kdim {40}
+set $m21-istart {0}
+set $m21-jstart {0}
+set $m21-kstart {0}
+set $m21-idelta {144}
+set $m21-jdelta {84}
+set $m21-kdelta {40}
+set $m21-iskip {10}
+set $m21-jskip {5}
+set $m21-kskip {1}
+set $m22-notes {}
+set $m22-show_status {1}
+set $m22-stepsize {0.05}
+set $m22-tolerance {0.0001}
+set $m22-maxsteps {25000}
+set $m22-direction {0}
+set $m22-color {1}
+set $m22-remove-colinear {1}
+set $m22-method {4}
+set $m23-notes {}
+set $m23-show_status {1}
+set $m23-nodes-on {0}
+set $m23-nodes-as-disks {0}
+set $m23-edges-on {1}
+set $m23-faces-on {0}
+set $m23-use-normals {0}
+set $m23-use-transparency {0}
+set $m23-vectors-on {0}
+set $m23-normalize-vectors {25277570}
+set $m23-has_vec_data {0}
+set $m23-bidirectional {0}
+set $m23-arrow-heads-on {1}
+set $m23-def-color-r {0.5}
+set $m23-def-color-g {0.5}
+set $m23-def-color-b {0.5}
+set $m23-def-color-a {0.5}
+set $m23-node_display_type {Spheres}
+set $m23-edge_display_type {Cylinders}
+set $m23-active_tab {Edges}
+set $m23-node_scale {0.04}
+set $m23-edge_scale {0.02}
+set $m23-vectors_scale {0.3}
+set $m23-show_progress {39848618}
+set $m23-interactive_mode {Interactive}
+set $m23-resolution {4}
+set $m24-notes {}
+set $m24-show_status {1}
+set $m24-endpoints {1}
+set $m24-endpoint0x {          2.00018}
+set $m24-endpoint0y {         0.402312}
+set $m24-endpoint0z {       -0.0502489}
+set $m24-endpoint1x {          2.00109}
+set $m24-endpoint1y {          0.42013}
+set $m24-endpoint1z {        -0.036502}
+set $m24-widgetscale {0.103313}
+set $m24-maxseeds {1}
+set $m24-numseeds {10}
+set $m24-rngseed {1}
+set $m24-rnginc {1}
+set $m24-clamp {0}
+set $m24-autoexecute {0}
+set $m24-type {}
+set $m24-dist {impuni}
+set $m24-whichtab {Widget}
+set $m25-notes {}
+set $m25-show_status {1}
+set $m25-use_interp {1}
+set $m25-use_closest {1}
+set $m25-closeness_distance {1.0e15}
+
+::netedit scheduleok

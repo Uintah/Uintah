@@ -1,0 +1,5 @@
+void intrusion_computevel(Array3<double> uu,
+		int ioff, int joff, int koff,
+		constCCVariable<int> pcell,
+		IntVector idxlo_u, IntVector idxhi_u,
+		int mmwallid);

@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# $BUILD_DIR $BUILDROOT, $PARALLELISM, and $MAKE_PARALLELISM must be set
+
+mode=$1 # dbg or opt
+CONFIGURE_ARGS=$2 # configure command line arguments
+
+if [ ! -d "${BUILDROOT}/${mode}" ]; then
+  mkdir "${BUILDROOT}/${mode}"
+fi
+
+cd "${BUILDROOT}/${mode}"
+
+echo ""
+echo "Configuring ${mode} build at `date` using these arguments"
+echo "  $CONFIGURE_ARGS"
+echo "../src/configure $CONFIGURE_ARGS" > configure_command
+chmod a+x configure_command
+./configure_command > "$BUILDROOT"/configure_${mode}.log 2>&1
+ retval=$?
+if [ $retval != "0" ]; then
+  echo "*** Configure failed with code $retval"
+  echo ""
+  echo "Showing configure log:"
+  cat "${BUILDROOT}/configure_${mode}.log"
+
+  cd "${BUILD_DIR}"
+  exit 1
+fi
+
+echo ""
+echo "Starting $mode build at `date`"
+
+cd "${BUILDROOT}/${mode}"
+    
+rm -f "../make_${mode}.log"
+
+nice gmake -k -j$MAKE_PARALLELISM >> ../make_${mode}.log 2>&1
+retval=$?
+if [ $retval != "0" ]; then
+  # try it again -- it may not go all the way the first time
+  echo "Failed first compile, try again"
+  nice gmake -k -j$MAKE_PARALLELISM >> ../make_${mode}.log 2>&1
+  retval=$?
+fi
+
+if [ $retval != "0" ]; then
+  # last try
+  nice gmake -k -j$MAKE_PARALLELISM > ../remake_${mode}.log 2>&1
+  retval=$?
+  if [ $retval != "0" ]; then
+    echo "*** Make failed with code $retval"
+    echo ""
+    echo "Showing make errors:"
+    # show the compile errors (just the stuff it can't compile)
+    cat ../remake_${mode}.log
+    echo ""
+    exit 1
+  fi
+fi
+
+echo "Successfully compiled in ${mode} mode"
+
+exit 0
+

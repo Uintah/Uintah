@@ -1,0 +1,1 @@
+0 22 * * * /usr/sci/projects/Uintah/tester/bin/startTester -j 8 -sendmail

@@ -1,0 +1,6 @@
+void add_mm_enth_src(
+	CCVariable<double> su,
+	CCVariable<double> sp,
+	constCCVariable<double> mm_su,
+	constCCVariable<double> mm_sp,
+	IntVector valid_lo, IntVector valid_hi);

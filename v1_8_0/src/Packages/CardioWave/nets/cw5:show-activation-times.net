@@ -1,0 +1,176 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+if {[llength [array get env CWDATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the CWDATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv CWDATA /scratch/data/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set CWDATA $env(CWDATA)
+puts "*** Using CWDATA $CWDATA"
+
+if {[llength [array get env CWRES]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the CWRES enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv CWRES 128)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set CWRES $env(CWRES)
+puts "*** Using CWRES $CWRES"
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Thu  Aug 23 2001"
+
+global runTime
+set runTime " 19:49:3"
+
+set bbox {77.0 40.0 521 390}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 77 40]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 308 346]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 252 41]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 187 123]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 308 275]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 326 206]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 326 123]
+
+addConnection $m3 0 $m4 0
+addConnection $m6 0 $m5 0
+addConnection $m5 0 $m4 1
+addConnection $m3 0 $m5 1
+addConnection $m4 0 $m1 0
+addConnection $m2 0 $m3 1
+addConnection $m0 0 $m3 0
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-filename $CWDATA/sr-data/2cm/0.1.$CWRES.hvs.fld
+set $m1-notes {}
+set $m1-show_status 1
+$m1 ui
+set $m1-ViewWindow_0-pos {}
+set $m1-ViewWindow_0-caxes 0
+set $m1-ViewWindow_0-iaxes -2147483647
+set $m1-ViewWindow_0-view-eyep-x -1.11291
+set $m1-ViewWindow_0-view-eyep-y -0.850124
+set $m1-ViewWindow_0-view-eyep-z -1.01653
+set $m1-ViewWindow_0-view-lookat-x 0.0446354
+set $m1-ViewWindow_0-view-lookat-y 0.0232859
+set $m1-ViewWindow_0-view-lookat-z -0.0206903
+set $m1-ViewWindow_0-view-up-x -0.723719
+set $m1-ViewWindow_0-view-up-y 0.209433
+set $m1-ViewWindow_0-view-up-z 0.657547
+set $m1-ViewWindow_0-view-fov 18.9669
+set $m1-ViewWindow_0-view-eyep-x -1.11291
+set $m1-ViewWindow_0-view-eyep-y -0.850124
+set $m1-ViewWindow_0-view-eyep-z -1.01653
+set $m1-ViewWindow_0-view-eyep-x -1.11291
+set $m1-ViewWindow_0-view-eyep-y -0.850124
+set $m1-ViewWindow_0-view-eyep-z -1.01653
+set $m1-ViewWindow_0-view-lookat-x 0.0446354
+set $m1-ViewWindow_0-view-lookat-y 0.0232859
+set $m1-ViewWindow_0-view-lookat-z -0.0206903
+set $m1-ViewWindow_0-view-lookat-x 0.0446354
+set $m1-ViewWindow_0-view-lookat-y 0.0232859
+set $m1-ViewWindow_0-view-lookat-z -0.0206903
+set $m1-ViewWindow_0-view-up-x -0.723719
+set $m1-ViewWindow_0-view-up-y 0.209433
+set $m1-ViewWindow_0-view-up-z 0.657547
+set $m1-ViewWindow_0-view-up-x -0.723719
+set $m1-ViewWindow_0-view-up-y 0.209433
+set $m1-ViewWindow_0-view-up-z 0.657547
+set $m1-ViewWindow_0-view-fov 18.9669
+set $m1-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m1-ViewWindow_0-bgcolor-r 0
+set $m1-ViewWindow_0-bgcolor-g 0
+set $m1-ViewWindow_0-bgcolor-b 0
+set $m1-ViewWindow_0-bgcolor-r 0
+set $m1-ViewWindow_0-bgcolor-g 0
+set $m1-ViewWindow_0-bgcolor-b 0
+set $m1-ViewWindow_0-shading {}
+set $m1-ViewWindow_0-do_stereo 0
+set $m1-ViewWindow_0-sbase 1
+set $m1-ViewWindow_0-sr 1
+set $m1-ViewWindow_0-do_bawgl 0
+set $m1-ViewWindow_0-drawimg -2147483647
+set $m1-ViewWindow_0-saveprefix {}
+set $m1-ViewWindow_0-unused 1
+set $m1-ViewWindow_0-unused 1
+set $m1-ViewWindow_0-unused 1
+set $m2-notes {}
+set $m2-show_status 1
+set $m2-filename $CWDATA/sr-data/2cm/0.1.$CWRES.act.mat
+set $m3-notes {}
+set $m3-show_status 1
+set $m4-notes {}
+set $m4-show_status 1
+set $m4-nodes-on 1
+set $m4-edges-on 1
+set $m4-faces-on 1
+set $m4-vectors-on 0
+set $m4-normalize-vectors -2147483647
+set $m4-has_vec_data 0
+set $m4-def-color-r 0.5
+set $m4-def-color-g 0.5
+set $m4-def-color-b 0.5
+set $m4-node_display_type {Points}
+set $m4-edge_display_type {Lines}
+set $m4-active_tab {Nodes}
+set $m4-node_scale 0.005
+set $m4-edge_scale 0.005
+set $m4-vectors_scale 0.005
+set $m4-show_progress -2147483647
+set $m4-resolution 4
+set $m5-notes {}
+set $m5-show_status 1
+set $m5-isFixed 1
+set $m5-min 0
+set $m5-max 12
+set $m6-notes {}
+set $m6-show_status 1
+set $m6-tcl_status {Calling GenStandardColorMaps!}
+set $m6-positionList {}
+set $m6-nodeList {}
+set $m6-width 366
+set $m6-height 40
+set $m6-mapType 2
+set $m6-minRes 12
+set $m6-resolution 128
+$m4 initialize_ui
+$m5 initialize_ui
+$m6 initialize_ui
+
+::netedit scheduleok

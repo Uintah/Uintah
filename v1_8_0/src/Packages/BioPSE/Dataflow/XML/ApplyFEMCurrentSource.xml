@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ApplyFEMCurrentSource" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Due to course current dipoles, the ApplyFEMCurrentSource module changes and recreates the right-hand side (RHS) for the Finite
+    Elements discretization approach.</summary>
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <orderedlist>
+	<listitem>
+	  <p>The ApplyFEMCurrentSource module creates and fills a new ColumnMatrix,
+	  according to mesh and dipole parameters in situations where it does not locate a ColumnMatrix on its input
+	  that contains an RHS to modify, or when the module finds a ColumnMatrix of a 
+	  different size than the number of nodes in the mesh.</p>
+	</listitem>
+	<listitem>
+	  <p>We assume the mesh to be a TetVolField(int) type,
+	  containing indices to the conductivity tensor lookup table.
+	  The documentation for BioPSE::Forward::SetupFEMatrix module provides further documentation about this mesh.</p>
+	</listitem>
+	<listitem>
+	  <p>Dipoles are represented as nodes in TetVolMesh. The
+	  corresponding value are vectors representing dipole
+	  moments. Thus, the module expects dipoles as TetVolField(Vector) field</p>
+	</listitem>
+      </orderedlist>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Mesh</name>
+	<description>
+	  <p>Takes handle to the field containing condictivity mesh</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Dipole Sources</name>
+	<description>
+	  <p>Takes handle to the field containing dipole positions and
+	  their moment values</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Interpolant</name>
+	<description>
+	  <p>Maps electrode indices to mesh indices</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Input RHS</name>
+	<description>
+	  <p>Takes handle to the matrix containing RHS for FE
+	  discretization obtained from SetupFEMatrix</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>SetupFEMatrix</componentname>
+	<componentname>MatrixReader</componentname>
+      </port>
+    </inputs>
+
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Output RHS</name>
+	<description>
+	  <p>Sends handle to Matrix containing dipole terms to downstream modules</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>SolveMatrix</componentname>
+	<componentname>MatrixWriter</componentname>
+      </port>
+      <port>
+        <name>Output Weights</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ApplyFEMVoltageSource" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>The module changes/creates the right-hand side (RHS) and 
+    forward matrices for voltgage (Dirichlet) boundary conditions.</summary>
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <p>The module has the following behaviour:</p>
+      <orderedlist>
+	<listitem>
+	  <p>The ApplyFEMCurrentSource module creates and fills a new ColumnMatrix, 
+	  according to mesh and dipole parameters in situations where it does not 
+	  locate a ColumnMatrix on its input that contains an RHS to modify, 
+	  or when the module finds a ColumnMatrix of a different size than 
+	  the number of nodes in the mesh.</p>
+	</listitem>
+	<listitem>
+	  <p>We assume the mesh to be a TetVolField(int) type, containing 
+	  indices to the conductivity tensor lookup table. The documentation 
+	  for BioPSE::Forward::SetupFEMatrix module provides further information about this mesh.
+
+</p>
+	</listitem>
+      </orderedlist>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Mesh</name>
+	<description>
+	  <p>FEM conductivity mesh</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Stiffness Matrix</name>
+	<description>
+	  <p>FEM Stiffness Matrix</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+	<name>RHS</name>
+	<description>
+	  <p>FEM Right Hand Side (b) Vector</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+    </inputs>
+
+    <outputs>
+      <port>
+	<name>Forward Matrix</name>
+	<description>
+	  <p>FEM Forward (A) Matrix</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+	<name>RHS</name>
+	<description>
+	  <p>FEM Right Hand Side (b) Vector</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+    </outputs>
+  </io>
+  
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,373 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter id="inst">
+<title>SCIRun Installation and Build Instructions</title>
+
+<section>
+<para>
+This chapter provides detailed instructions for installing and
+building SCIRun and it's packages.
+</para>
+</section>
+
+<section>
+<title>Prerequisites</title>
+<para>
+Use of this document requires experience with the SGI
+Irix operating system and/or the Linux operating system.
+Knowledge of file systems, programming in C/C++, building
+software from tarball distributions and shell scripting will
+be useful if not required.  The installation or upgrade of
+core system components (such as the OS and compilers) may be
+required.  As such, a system administrator's assistance may
+be warranted.
+</para>
+</section>
+
+<section>
+<title>Minimum System and Software Requirements</title>
+
+<para>
+SCIRun is officially compatible with two platforms: SGI and Linux.
+<xref linkend="minsysrec"/> lists the recommened system requirements.
+</para>
+
+<para>&recommendations;</para>
+
+<para>
+<xref linkend="reqosbldtools"/>, <xref linkend="reqthirdparty"/>, and
+<xref linkend="optthirdparty"/> describe the minimum software
+requirements for SCIRun.
+</para>
+
+<para>
+Click on the links in the tables to get information about (software
+column) or to download (version column) the software.
+</para>
+
+<para>
+Refer to <xref linkend="thirdparty"/> for instructions on installing
+required software.
+</para>
+
+<para>&requirements;</para>
+
+</section>
+
+<section>
+<title>Installing SCIRun and Packages</title>
+
+<para>
+<orderedlist>
+<listitem>
+<para>
+Obtain the source trees for SCIRun and any desired
+packages.
+</para>
+<para>          
+If you have access to the SCIRun CVS repository (i.e. you are
+a student or staff member of the SCI Institute), then contact a
+member of the senior staff for information regarding CVS access.
+</para>
+<para>
+Otherwise, go to the SCIRun <ulink url="http://software.sci.utah.edu/archive_entry.html">download page</ulink>.
+</para>
+</listitem>
+<listitem>
+<para>
+Unzip the SCIRun source tree into a directory of your
+choosing.
+</para>
+<para>
+The chosen directory will be referred to as 
+<replaceable>INSTALL_DIR</replaceable> from now on.
+</para>
+<para>
+SCIRun can be installed into any directory, within a user 
+home directory or a system application directory. There is
+no "make install" step in the build process, so SCIRun
+will be installed in the chosen directory. 
+</para> 
+<para>
+For example, if you choose to install SCIRun into user Bob's home
+directory, then 
+</para>
+
+<para>
+<replaceable>INSTALL_DIR</replaceable> = /home/bob
+</para>
+
+<para>
+Depending on how SCIRun was obtained, either 
+</para>
+
+<para>
+a) unzip and untar the SCIRun source tree:
+</para>
+
+<literallayout>
+cd <replaceable>INSTALL_DIR</replaceable>
+gunzip SCIRun<replaceable>.x.x.x.</replaceable>tar.gz
+tar xvf SCIRun<replaceable>.x.x.x.</replaceable>tar
+</literallayout>
+
+<para>
+or
+</para>
+
+<para>
+b) checkout the SCIRun source tree from the CVS repository:
+</para>
+
+<literallayout>
+cd <replaceable>INSTALL_DIR</replaceable>
+cvs checkout SCIRun
+</literallayout>
+
+<para>
+After installing, the <replaceable>INSTALL_DIR</replaceable>
+directory will have a sub directory named SCIRun.
+</para>
+
+</listitem>
+<listitem>
+<para>
+Unzip the packages (if any) into
+<replaceable>INSTALL_DIR</replaceable>/SCIRun/src/Packages.
+</para>
+<para>
+For example, if installing the BioPSE package:
+</para>
+<literallayout>
+cd <replaceable>INSTALL_DIR</replaceable>/SCIRun/src/Packages
+gunzip BioPSE.PKG.x.x.x.tar.gz
+tar xvf BioPSE.PKG.x.x.x.tar
+</literallayout>
+</listitem>
+</orderedlist>
+</para> 
+
+<note>
+<title>Aside</title>
+<para>For those of you who download the sources from the
+&sr; site, <xref linkend="lsrcvs"/> discusses a method for putting the
+downloaded &sr; sources under control of the CVS version control
+system.  This is useful if you will be writing modules or other &sr;
+code.  This is <emphasis>not</emphasis> a requirement for installing
+&sr; though!</para>
+</note>
+
+</section>
+
+<section>
+<title>Building SCIRun and Packages</title>
+
+<para>
+<orderedlist>
+<listitem>
+<para>
+Ensure that the target install machine matches the above 
+system requirements.
+</para>
+
+<para>
+See <xref linkend="thirdparty"/> for more information.
+</para>
+
+</listitem>
+<listitem>
+<para>
+Run configure from a directory of your choosing.
+</para>
+<para>
+The chosen directory will be referred to as
+<replaceable>build dir</replaceable> from now on.
+</para>
+<para>
+An example of a typical configure command (please 
+excuse the line wrap):
+</para>
+
+<literallayout>
+cd <replaceable>INSTALL_DIR</replaceable>/SCIRun/src
+./configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \
+--enable-package="<replaceable>PACKNAME_1</replaceable> <replaceable>PACKNAME_2</replaceable> ..."
+</literallayout>
+
+<para>
+Where <replaceable>PACKNAME_X</replaceable> is the name of a SCIRun package
+installed above.
+</para>
+
+<para>
+There are many options for configuring SCIRun with location 
+as the chief option.  SCIRun can be configured from within
+the <replaceable>INSTALL_DIR</replaceable>/SCIRun/src 
+directory, as is commonly done, which yields the following:
+</para>
+
+<section>
+<para>
+<replaceable>build dir</replaceable> = <replaceable>INSTALL_DIR</replaceable>/SCIRun/src
+</para>
+</section>
+
+<para>
+However, SCIRun can also be configured from locations other 
+than the source directory which allows for having multiple
+builds for different platforms, or for for different ABI's
+(Applications Binary Interface) while still sharing a single 
+source directory: 
+</para>
+
+<literallayout>
+cd <replaceable>INSTALL_DIR</replaceable>/SCIRun
+mkdir linux
+mkdir sgi32
+mkdir sgi64
+cd linux
+../src/configure <replaceable>configure options</replaceable>
+cd ../sgi32
+../src/configure <replaceable>configure options</replaceable>
+cd ../sgi64
+../src/configure --enable-64bit <replaceable>configure options</replaceable>
+</literallayout>
+
+<para>
+In addition to the configure location, there are several 
+options that may be invoked at configure time by supplying
+the configure command with arguments. <xref linkend="appendix"/>
+lists configure options.
+</para>
+</listitem>
+<listitem>
+<para>
+Run GNU make in the <replaceable>build dir</replaceable> directory.
+</para>
+<para>
+To run GNU make, simply type "make" or "gmake", depending
+on how the command for GNU make is spelled on the target
+install machine:
+</para>
+
+<literallayout>
+cd <replaceable>build dir</replaceable>
+gmake
+</literallayout>
+
+<para>
+Just like configure, GNU make has some useful options.  The 
+"number of jobs" option, is the most commonly used option
+for building SCIRun : 
+</para>
+
+<literallayout>
+gmake -j <replaceable>num jobs</replaceable>
+</literallayout>
+
+<para>
+Where <replaceable>num jobs</replaceable> is an integer. If the target
+install machine has multiple processors, setting
+<replaceable>num jobs</replaceable> to the number of processors
+available uses all the processors to build SCIRun 
+in parallel, often significantly speeding up the time to
+build SCIRun. 
+</para>
+
+<para>
+Additional options for GNU make can be found on this website
+<ulink url="http://www.gnu.org/manual/make/html_mono/make.html#SEC92">http://www.gnu.org/manual/make/html_mono/make.html#SEC92</ulink>
+</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+<section>
+<title>Running SCIRun</title>
+<para>
+After a successful build, there will be an executable in
+the <replaceable>build dir</replaceable> directory named "scirun".  Running
+this will open the SCIRun network editor window and start a
+console (called the SCIRun console) in the shell where scirun
+was started from. 
+</para>   
+<para>
+If the window does not appear, note any errors
+displayed in the SCIRun console and see the getting
+help section below.  Of course, it might just be
+hiding behind other windows on the desktop!
+</para>
+</section>
+
+<section>
+<title>Additional Documentation</title>
+<para>
+Additional Documentation about SCIRun can be obtained
+<ulink url="http://software.sci.utah.edu/software/doc/index.html">
+online.</ulink>
+</para>
+</section>
+
+<section>
+<title>Getting Help</title>
+<para>
+There is a mailing list available for asking questions about
+using or installing SCIRun or to get help with resolving a problem.
+To subscribe to the mailing list, send email to:
+</para>
+
+<para>
+<email>majordomo@sci.utah.edu</email>
+</para>
+
+<para>
+with the following in the body of the message (no subject):
+</para>
+
+<literallayout>
+subscribe scirun-users
+</literallayout>
+
+<para>
+To use the mailing list, simply send your question or problem
+as an email to the list:
+</para>
+
+<para>
+<email>scirun-users@sci.utah.edu</email>
+</para>
+
+<para>
+To aid in problem resolution, include a verbatim (cut and paste) copy of
+the errors displayed (if any).  Also include a short description of
+what you we're doing (running a network, building the tree, etc.) and
+which version of SCIRun you have.
+</para>
+</section>
+
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

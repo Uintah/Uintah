@@ -1,0 +1,74 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+package argtest {
+    interface ref {
+      int test();
+    };
+    enum TestEnum {
+      Foo, Bar,
+    };
+    interface Server {
+	int return_int();
+	void in_int(in int a);
+	void out_int(out int a);
+	void inout_int(inout int a);
+
+	TestEnum return_enum();
+	void in_enum(in TestEnum a);
+	void out_enum(out TestEnum a);
+	void inout_enum(inout TestEnum a);
+
+	string return_string();
+	void in_string(in string a);
+	void out_string(out string a);
+	void inout_string(inout string a);
+
+	ref return_ref();
+	void in_ref(in ref a);
+	void out_ref(out ref a);
+	void inout_ref(inout ref a);
+
+	array<int> return_array();
+	void in_array(in array<int, 1> a);
+	void out_array(out array<int> a);
+	void inout_array(inout array<int> a);
+
+	array<bool> return_arraybool();
+	void in_arraybool(in array<bool, 1> a);
+	void out_arraybool(out array<bool> a);
+	void inout_arraybool(inout array<bool> a);
+
+	array<string> return_arraystring();
+	void in_arraystring(in array<string, 1> a);
+	void out_arraystring(out array<string> a);
+	void inout_arraystring(inout array<string> a);
+
+	array<array<int> > return_arrayarray();
+	void in_arrayarray(in array<array<int, 1> > a);
+	void out_arrayarray(out array<array<int> > a);
+	void inout_arrayarray(inout array<array<int> > a);
+
+	array<ref> return_arrayref();
+	void in_arrayref(in array<ref, 1> a);
+	void out_arrayref(out array<ref> a);
+	void inout_arrayref(inout array<ref> a);
+
+	bool getSuccess();
+    };
+};

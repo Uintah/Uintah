@@ -1,0 +1,9 @@
+void calpbc(SFCXVariable<double> uu, SFCYVariable<double> vv,
+     SFCZVariable<double> ww, IntVector idxLo, IntVector idxHi,
+     CCVariable<double> pp, constCCVariable<double> den,
+     constCCVariable<double> vis,
+     constCCVariable<int> pcell, int pfield, double bndrypress,
+     OffsetArray1<double> dxepu, OffsetArray1<double> dynpv,
+     OffsetArray1<double> dztpw, 
+     bool xminus, bool xplus, bool yminus, bool yplus, bool zminus,
+     bool zplus);

@@ -1,0 +1,52 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+MiscMath.h provides simple math utility functions that don't really
+fit anywhere else.
+
+The following functions have been implemented:
+
+// Absolute value
+double Abs(double);
+int Abs(int);
+
+// Signs
+double Sign(double);
+int Sign(int);
+
+// Clamp a number to a specific range
+double Clamp(double, double, double);
+int Clamp(int, int, int);
+
+// Generate a step between min and max.
+// return:   min - if d<=min
+//	     max - if d>=max
+//	     hermite curve if d>min && d<max
+double SmoothStep(double d, double min, double max);
+
+// Interpolation:
+double Interpolate(double d1, double d2, double weight)
+
+// Integer/double conversions
+double Fraction(double d)
+int RoundDown(double d)
+int Round(double d)
+int Floor(double d)
+int Ceil(double d)
+int Tile(int tile, int tf)
+

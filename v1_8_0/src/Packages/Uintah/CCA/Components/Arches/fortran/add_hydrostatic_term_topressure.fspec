@@ -1,0 +1,8 @@
+void add_hydrostatic_term_topressure(CCVariable<double> p_plus_hydro,
+     constCCVariable<double> prel, constCCVariable<double> den_micro,
+     double gx, double gy, double gz, OffsetArray1<double> xx,
+     OffsetArray1<double> yy, OffsetArray1<double> zz,
+     IntVector valid_lo, IntVector valid_hi,
+     constCCVariable<int> pcell, int wall);
+
+     

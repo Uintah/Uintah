@@ -1,0 +1,258 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+
+<head>
+
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+   <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; IRIX64 6.5 IP28) [Netscape]">
+
+   <meta name="Author" content="Martin Cole">
+
+   <LINK TITLE="default style" TYPE="text/css" REL="STYLESHEET" HREF="style.css">
+
+   <title>Specification Procedure</title>
+   <!-- Changed by: Ted Dustman, 22-Mar-2002 -->
+
+</head>
+
+<!--<BODY BGCOLOR="#FFFFCC" TEXT="#000000" LINK=#CC0000 VLINK=#6666CC ALINK=#FF0000>-->
+
+
+
+<center>
+
+<h2>
+
+Specification procedure</h2></center>
+
+
+
+<p><br>Our goal is to have complete specifications for each module we release.
+
+To achieve this goal you will need to create and completely populate a
+
+.xml file that lives next to the .cc file associated with a module. 
+
+
+
+<br>&nbsp;</br>
+
+<dt>
+
+<b>spec.xml</b></dt>
+
+
+
+<dd>
+
+Combined with the documentation extracted via Cocoon, spec.xml defines
+
+a complete specification for a module. It contains information the compile
+
+needs, as well as various levels of documentation targeted at different
+
+user levels. Documentation will be extracted from the module's .xml file, and the
+
+.xml file is intended to be maintained just as the C++ code is.</dd>
+
+
+
+<h3>
+
+User levels</h3>
+
+
+
+<dt>
+
+<b>user</b></dt>
+
+
+
+<dd>
+
+User who works with a predefined network map of modules. This level of user is
+
+not relevant for module level specifications, and nothing in the spec.xml is 
+
+targeted toward this kind of user. These users will have a unique User
+
+Guide for the specific PSE network(s) they use.</dd>
+
+<br>&nbsp;</br>
+
+
+
+<dt>
+
+<b>builder</b></dt>
+
+
+
+<dd>
+
+User will do the above as well as building and editing their own maps,
+
+but will write no code. Some of the information in the spec.xml is
+
+germane to this type of user. </dd>
+
+<br>&nbsp;</br>
+
+
+
+<dt>
+
+<b>developer</b></dt>
+
+
+
+<dd>
+
+User will write modules they need as well as all of the above. Much of
+
+the information in the spec.xml is important to this type of user.</dd>
+
+<br>&nbsp;</br>
+
+
+
+<center>
+
+<h3>
+
+Steps:</h3></center>
+
+
+
+<ol>
+
+<li>
+
+Start with .cc file.&nbsp; Make sure it conforms to the <a href="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">coding
+
+standard</a>.</li>
+
+<br>&nbsp;</br>
+
+<li>
+
+If there isn't one there already, create a ./doc subdirectory in the directory where the module lives.
+
+All the files you generate besides <i>module_name</i>.xml belong in the doc directory so that
+
+the source tree doesn't get too cluttered.</li>
+
+<br>&nbsp;</br>
+
+<li>
+
+Update/enhance <a href="http://www.csafe.utah.edu/development_environment/cocoon/index.html">cocoon
+
+style comments</a>.</li>
+
+<br>&nbsp;</br>
+
+<li>
+
+Take a screen shot of the gui (if it has one) and convert to gif format.
+
+This should be placed in ./doc and needs a particular name:
+
+Name the image <i>module_name</i>Gui.gif. 
+
+<br>&nbsp;</br>
+
+use xv for generating grabbing the image,
+
+it will grab the whole GUI popup dialog, and just the dialog.&nbsp; If you need more
+
+than one window in the grab, and you are on an SGI use snapshot, then xv
+
+to convert to gif format.</li>
+
+<br>&nbsp;</br>
+
+
+
+<li>
+
+Write <i>module_name</i>.xml.&nbsp; It should live in the same dir as the .cc file. See
+
+the <a href="anotSpec.html">annotated spec.xml </a>to understand what each
+
+tag is for. 
+
+<br>&nbsp;</br>
+
+We recommend that you use emacs to edit the .xml file. If you are using 
+
+emacs, there is an xml mode you can use which knows about xml and enforces the 
+
+syntax so you can't mess up as easily. <a href="psgml.html">obtain the xml editing 
+
+mode for emacs</a>, and <a href="spec.dtd">obtain the spec.dtd file</a> that 
+
+makes this editing mode useful.</li>
+
+<br>&nbsp;</br>
+
+<a name="bugzilla">Bugzilla! One part of the spec is listing the bugs associated with this module.
+
+To find the known bugs for this module, go to the 
+
+<a href="http://www.csafe.utah.edu/bugzilla/query.cgi">Bugzilla bug reporting page</a>, 
+
+On the upper left choose <br><b> Status</b> =NEW or ASSIGNED or REOPENED (highlight all 3). 
+
+Scroll to the bottom and
+
+choose <br><b> Program</b> =PSECommon (assuming your Module is located in PSECommon), 
+
+<br><b> Version</b> =1.0, <br><b> Component</b> =PSE, 
+
+<br><b> Description </b> = <i>module_name</i> <br>Leave the rest of the fields blank
+
+(they serve to limit the query further). Then submit the query. All
+
+unresolved bugs are game. To double check the status of a bug (since bugzilla tends to be somewhat
+
+out of date), send the bug owner an email (and tell them to please update bugzilla while you're
+
+at it).    </a></li>
+
+<br>&nbsp;</br>
+
+<li>
+
+The current plan is to gmake docs: generate Specification in the various
+
+formats (xml, html, latex) This is not currently implemented, so <b><u><font color="#993300">do
+
+not do this step.</font></u></b>.</li>
+
+<br>&nbsp;</br>
+
+<li>
+
+Update the repository. Commit the changes you made to the .h, .cc, and .tcl files for this
+
+module. Add the files you created to the cvs repository
+
+ (<i>module_name</i>.xml  and all the other <i>module_name</i>*.*
+
+files in the ./doc directory). If you had to create the ./doc directory, you will also have to 
+
+create it in the cvs source tree before checking in the files underneath it. 
+
+<a href="cvs_info.html">checking things into cvs</a></li>
+
+</ol>
+
+
+
+</body>
+
+</html>
+

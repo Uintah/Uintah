@@ -1,0 +1,36 @@
+Gui and Help files have moved to a common location:
+
+Dataflow/
+	*.tcl
+	help/
+		*.html
+
+A number of files in Geom have been renames to make the file name
+match the class name. 
+
+eg:
+
+   Geom   ->  GeomObj
+   Arrows ->  GeomArrows
+   Text   ->  GeomText
+
+
+
+A number of often used routines have been moved from Classlib to:
+
+Util:
+	NotFinished 
+
+TCL has been renamed TclInterface.
+
+Most namespace names are the same as the directory where the files
+reside.  However, there are a few exceptions due to class/namespace
+name conflicts:
+
+   Persistent -> PersistentSpace
+   Geom       -> GeomSpace
+
+
+Datatypes has been renamed:  CommonDatatypes
+
+Template .cc files are to be moved into their .h file.

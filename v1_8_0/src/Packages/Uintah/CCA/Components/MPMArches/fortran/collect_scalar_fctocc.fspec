@@ -1,0 +1,6 @@
+void collect_scalar_fctocc(
+	CCVariable<double> su_enth_cc, CCVariable<double> sp_enth_cc,
+        constSFCXVariable<double> su_enth_fcx, constSFCXVariable<double> sp_enth_fcx,
+        constSFCYVariable<double> su_enth_fcy, constSFCYVariable<double> sp_enth_fcy,
+        constSFCZVariable<double> su_enth_fcz, constSFCZVariable<double> sp_enth_fcz,
+        IntVector valid_lo, IntVector valid_hi);

@@ -1,0 +1,1047 @@
+! Date: Tue, 19 Jan 1999 11:38:35 -0800 (PST)
+! From: "Nick M. Marinov" <marinov1@llnl.gov>
+! reference:
+! Marinov, N. M., Pitz, W. J., Westbrook, C. K., Vincitore, A. M.,
+! Castaldi, M. J., Senkan, S. M. "Aromatic and Polycyclic Aromatic
+! Hydrocarbon Formation in a Laminar Premixed n-Butane Flame"
+! Combustion and Flame 114 192-213 (1998).
+! add reactions for i-C8 from Pitsch H., Peters N., Seshadri K.,
+! XXVI Symposium p.763
+
+ELEMENTS
+H               O               C               AR              N
+END
+SPECIES
+H2              H               O2              O               OH 
+HO2             H2O2            H2O             CO2             CO
+CH4             CH3             CH2             CH              CH2O 
+HCO             CH2(S)          CH2OH           CH3O            C 
+HCOH            CH3OH           C2H             HCCO            C2H2
+C2H3            C2H4            C2H5            C2H6            HCCOH 
+CH2CO           C2              C2O             CH2HCO          CH3CO 
+CH3HCO          CHOCHO          H2CCCH          C3H2            C3H6 
+AC3H5           PC3H5           SC3H5           CH2CHCHO        PC3H4 
+AC3H4           CH2CHCO         CH3CHCO         C3H8            IC3H7
+NC3H7           C4H2            CH2CHCCH        HCCHCCH         H2CCCCH 
+CH2CHCHCH       CH2CHCCH2       CH3CHCCH        CH3CH2CCH       CH3CHO 
+H2C4O           CH2CHCHCH2      C4H10           PC4H9           SC4H9 
+C4H8-1          C4H8-2          C4H7            IC4H7           IC4H8 
+IC4H9           CH3CHCCH2       CH3CCCH2        C4H9-1          BC4H7 
+TC4H9           C5H2            C5H3            C-C5H5          C-C5H5O 
+C-C5H6          C-C5H4OH        C-C5H4O         C5H11-1         C5H10-1 
+C5H9            C6H2            C6H5            C6H6            C6H5O 
+C6H5OH          C6H11           C4H6-13         C6H12-1 
+
+NC7H16          C7H15-1         C7H15-2         C7H15-3         C7H15-4 
+C7H14-1         C7H14-2         C7H14-3 
+
+I-C8H18         A-C8H17         C-C8H17 
+
+C6H5CH2         C6H5CH3         C6H5C2H5        C6H4C2H3        C6H4C2H 
+C6H5C2H3        C6H5C2H         C6H5CHO         C6H5CO          HOC6H4CH3 
+C6H5CH2OH       OC6H4O          OC6H4CH3        CH3C6H4CH3      CH3C6H4CH2 
+CH3C6H4C2H3     CH3C6H4C2H5     C10H8           C10H10          C10H9 
+C10H7           C10H7O          C10H7CH2        C10H7CH3        INDENE 
+INDENYL         ACENPHTHLN      PHNTHRN         PHNTHRYL-1      PHNTHRYL-9 
+FLRNTHN         C-2*4C6H6O      C-C5H7          L-C5H8          L-C5H7 
+C10H7C2H5       C10H7C2H3       C10H7OH         C6H5CCO         C6H5CHCH 
+C6H5CCH2        C10H7CCH2       C10H7CCH        C10H6CCH        ANTHRACN 
+CH3INDENE       CH3INDENYL      CH3PHNTHRN      A4              FLUORYL 
+FLUORENE        H2CCCCH2        CHCHCHO         HCCCHO          HCCCO 
+HC4-P(DEF)PTHN  HC4-P(DEF)PTHYL PHNTHROXY-1     PHNTHROXY-9     BZ(A)NDENE 
+BZ(A)NDNYL      PHNTHROL-1      PHNTHROL-9      BIPHENYL        BZ(A)PHNTHRN 
+BZ(GHI)FLN      FULVENE         CH3CY24PD       CH3CY24PD1      CH3DCY24PD 
+CYC6H7          FULVENYL        AR              N2
+M0$ M1$ M2$ M3$ M4$ M5$
+END    
+REACTIONS
+   OH+H2=H+H2O             2.14E+08  1.52  3449.0 !MARINOV 1995A
+!  OH+H2=H+H2O            1.0E+08   1.6   3301.4 !PETERS, 1996
+   O+OH=O2+H               2.02E+14  -0.4     0.0 !MARINOV 1995A
+!  O2+H=OH+O               2.00E+14   0.0 16818.2 !PETERS, 1996
+   O+H2=OH+H               5.06E+04  2.67  6290.0 !MARINOV 1995A=PETERS
+!  H+O2(+M)=HO2(+M)        4.52E+13  0.0      0.0 !MARINOV 1995A
+!  LOW /  1.05E+19  -1.257  0.0 /                 !MARINOV 1995A
+!!   H2O/0.0/ H2/0.0/ CH4/10.0/ CO2/3.8/ CO/1.9/
+   H+O2(+M)=>HO2(+M)        2.3E+18  -0.80      0.0 !PETERS,1996
+    LOW /  1.05E+19  -1.257  0.0 /                !MARINOV 1995A
+       I-C8H18/3.0/ H2/1.0/ N2/0.4/ H2O/6.5/ CO/0.75/ O2/0.4/ 
+   H+O2(+N2)=HO2(+N2)      4.52E+13  0.0      0.0 !MARINOV 1995A
+   LOW / 2.03E+20  -1.59    0.0  /                !MARINOV 1995A
+   H+O2(+H2)=HO2(+H2)      4.52E+13  0.0      0.0 !MARINOV 1995A
+   LOW / 1.52E+19  -1.133   0.0 /                 !MARINOV 1995A
+   H+O2(+H2O)=HO2(+H2O)    4.52E+13  0.0      0.0 !MARINOV 1995A
+   LOW / 2.10E+23  -2.437   0.0 /                 !MARINOV 1995A
+   OH+HO2=H2O+O2           2.13E+28 -4.827 3500.0 !HIPPLER 1995
+!   DUP
+!   OH+HO2=H2O+O2          9.10E+14  0.0  10964.0 !HIPPLER 1995  
+!    DUP
+!  OH+HO2=>H2O+O2          6.0E+13  0.0      0.0 !PETERS, 1996  
+   H+HO2=OH+OH             1.50E+14  0.0  1000.0  !MARINOV 1995A
+!  H+HO2=>OH+OH            1.50E+14  0.0  1000.0  !PETERS, 1996
+   H+HO2=H2+O2             8.45E+11  0.65 1241.0  !MARINOV 1995A
+   H+HO2=O+H2O             3.01E+13  0.0  1721.0  !MARINOV 1995A
+   O+HO2=O2+OH             3.25E+13  0.0     0.0  !MARINOV 1995A
+   OH+OH=O+H2O             3.57E+04  2.4  -2112.0  !MARINOV 1995A
+!  OH+OH=O+H2O             1.50E+09  1.14  100.5  !PETERS, 1996
+   H+H+M=H2+M              1.00E+18 -1.0     0.0  !MARINOV 1995A
+   H2O/0.0/ H2/0.0/     
+   H+H+H2=H2+H2            9.20E+16 -0.6     0.0  !MARINOV 1995A
+   H+H+H2O=H2+H2O          6.00E+19 -1.25    0.0  !MARINOV 1995A
+!   H+OH+M=H2O+M            2.21E+22 -2.0     0.0  !MARINOV 1995A  
+!    H2O/6.4/
+   H+OH+M=H2O+M            2.21E+22 -2.0     0.0  !PETERS, 1996  
+    I-C8H18/3.0/ H2/1.0/ N2/0.4/ H2O/6.5/ CO/0.75/ O2/0.4/ 
+   H+O+M=OH+M              4.71E+18 -1.0     0.0  !MARINOV 1995A 
+    H2O/6.4/
+   O+O+M=O2+M              1.89E+13  0.0 -1788.0  !MARINOV 1995A
+   HO2+HO2=H2O2+O2         4.20E+14  0.0 11982.0  !MARINOV 1995A
+!  DUP
+!  HO2+HO2=H2O2+O2         1.30E+11  0.0 -1629.0  !MARINOV 1995A
+!  DUP
+   OH+OH(+M)=H2O2(+M)      1.24E+14 -0.37    0.0  !MARINOV 1995A
+   LOW /  3.04E+30   -4.63   2049.0 /             !MARINOV 1995A
+    TROE / 0.470   100.0   2000.0  1.0E+15/
+   H2O2+H=HO2+H2           1.98E+06  2.0  2435.0  !MARINOV 1995A
+   H2O2+H=OH+H2O           3.07E+13  0.0  4217.0  !MARINOV 1995A
+   H2O2+O=OH+HO2           9.55E+06  2.0  3970.0  !MARINOV 1995A
+   H2O2+OH=H2O+HO2         2.40E+00 4.042 -2162.0 !MARINOV 1995A
+   CH3+CH3(+M)=C2H6(+M)    9.22E+16 -1.174 636.0  !WALTER  1990
+   LOW / 1.14E+36 -5.246 1705.0/                  !WALTER  1990  
+   TROE/ 0.405  1120.0   69.6    1.0E+15/
+    H2O/5.0/ H2/2.0/ CO2/3.0/ CO/2.0/
+   CH3+H(+M)=CH4(+M)       2.14E+15 -0.4    0.0   !TSANG 1986 
+   LOW/  3.31E+30   -4.0  2108.0 /                ! (A)
+   TROE / 0.0   1.0E-15   1.0E-15   40.0/
+   H2O/5.0/ H2/2.0/ CO2/3.0/ CO/2.0/    
+   CH4+H=CH3+H2            2.20E+04 3.0   8750.0  !MILLER 1992
+   CH4+OH=CH3+H2O          4.19E+06 2.0   2547.0  !MARINOV 1995
+   CH4+O=CH3+OH            6.92E+08 1.56  8485.0  !MARINOV 1995
+   CH4+HO2=CH3+H2O2        1.12E+13 0.0   24640.0 !MARINOV 1995
+   CH3+HO2=CH3O+OH         7.00E+12 0.0      0.0  !TROE  1993
+   CH3+HO2=CH4+O2          3.00E+12 0.0      0.0  !MARINOV 1995
+   CH3+O=CH2O+H            8.00E+13   0.0    0.0  !MARINOV 1995
+!   CH3+O=>CH2O+H          5.319E+13  0.0    0.0  !PETERS 1996
+   CH3+O2=CH3O+O                 1.45E+13 0.0   29209.0 !KLATT 1991
+   CH3+O2=CH2O+OH          2.51E+11 0.0   14640.0 !MARINOV 1995
+!  CH3+O2=>CH2O+OH         3.30E+11 0.0   8947.37 !PETERS 1996
+   CH3O+H=CH3+OH           1.00E+14 0.0      0.0  !MILLER 1992
+   CH3+OH=CH2(S)+H2O       2.65E+13 0.0   2186.0  !HUMPFER 1994
+   CH3+OH=CH2+H2O          3.00E+06 2.0   2500.0  !MARINOV 1996
+   CH3+OH=HCOH+H2          5.48E+13 0.0   2981.0  !HUMPFER 1994
+   CH3+OH=CH2O+H2          2.25E+13 0.0   4300.0  ! (B)
+   CH3+H=CH2+H2            9.00E+13 0.0   15100.0 !MILLER 1992
+   CH3+M=CH+H2+M           6.90E+14 0.0   82469.0 !MARKUS 1992
+   CH3+M=CH2+H+M           1.90E+16 0.0   91411.0 !MARKUS 1992
+   CH3+OH(+M)=CH3OH(+M)    5.65E+13 0.1      0.0  !FAGERSTROM 1993
+   LOW/ 5.75E+41   -7.4   626.0 /                 ! (C) 
+   TROE /  0.025   1.0E-15   8000.0   3000.0/
+   H2O /16.0/  H2/2.0/ CO2/3.0/ CO/2.0/
+   CH3OH(+M)=HCOH+H2(+M)   4.15E+16 -0.15 92285.0 ! (D)
+   LOW /  4.23E+44   -7.65     92911.0 /
+   TROE / 0.025  1.0E-15   8000.0   3000.0/
+   H2O/16.0/ H2/2.0/ CO2/3.0/ CO/2.0/
+   CH3OH+OH=CH2OH+H2O      2.61E+05 2.182 -1344.0   !TSANG  1987
+   CH3OH+OH=CH3O+H2O       2.62E+06 2.056   916.0   !TSANG  1987
+   CH3OH+O=CH2OH+OH        3.88E+05 2.5    3080.0   !TSANG  1987
+   CH3OH+H=CH2OH+H2        1.70E+07 2.1    4868.0   !TSANG  1987
+   CH3OH+H=CH3O+H2         4.24E+06 2.1    4868.0   !TSANG  1987
+   CH3OH+HO2=CH2OH+H2O2    9.64E+10 0.0    12578.0  !TSANG  1987
+   CH3O+M=CH2O+H+M         5.45E+13 0.0    13497.0  !CHOUDHURY1990
+   CH2OH+M=CH2O+H+M        1.00E+14 0.0    25000.0  !MILLER 1992
+   CH3O+H=CH2O+H2          2.00E+13 0.0       0.0   !MILLER 1992
+   CH2OH+H=CH2O+H2         2.00E+13 0.0       0.0   !MILLER 1992
+   CH3O+OH=CH2O+H2O        1.00E+13 0.0       0.0   !MILLER 1992
+   CH2OH+OH=CH2O+H2O       1.00E+13 0.0       0.0   !MILLER 1992
+   CH3O+O=CH2O+OH          1.00E+13 0.0       0.0   !MILLER 1992
+   CH2OH+O=CH2O+OH         1.00E+13 0.0       0.0   !MILLER 1992
+   CH3O+O2=CH2O+HO2        6.30E+10 0.0    2600.0   !MILLER 1992
+   CH2OH+O2=CH2O+HO2       1.57E+15 -1.0      0.0   !BAULCH 1992
+ !   DUP
+!   CH2OH+O2=CH2O+HO2       7.23E+13  0.0   3577.0   !BAULCH 1992
+!    DUP
+   HCOH+OH=HCO+H2O         2.00E+13  0.0      0.0   !MARINOV 1996
+   HCOH+H=CH2O+H           2.00E+14  0.0      0.0   !MARINOV 1996
+   HCOH+O=CO2+H+H          5.00E+13  0.0      0.0   !MARINOV 1996
+   HCOH+O=CO+OH+H          3.00E+13  0.0      0.0   !MARINOV 1996
+   HCOH+O2=CO2+H+OH        5.00E+12  0.0      0.0   ! (E)
+   HCOH+O2=CO2+H2O         3.00E+13  0.0      0.0   ! (E)
+   CH2+H=CH+H2             1.00E+18  -1.56    0.0   !MILLER 1992
+   CH2+OH=CH+H2O           1.13E+07  2.0   3000.0   !MILLER 1992 
+   CH2+OH=CH2O+H           2.50E+13  0.0      0.0   !MILLER 1992
+   CH2+CO2=CH2O+CO         1.10E+11  0.0   1000.0   !MILLER 1992
+   CH2+O=CO+H+H            5.00E+13  0.0      0.0   !MILLER 1992
+   CH2+O=CO+H2             3.00E+13  0.0      0.0   !MILLER 1992
+   CH2+O2=CH2O+O           3.29E+21 -3.3   2868.0   ! (F)
+!   CH2+O2=CO2+H+H          3.29E+21 -3.3   2868.0   ! (F)
+   CH2+O2=>CO+OH+H         1.30E+13  0.0   1483.2   !PETERS, 1996
+!   CH2+O2=CO2+H2           1.01E+21 -3.3   1508.0   ! (F)
+   CH2+O2=>CO2+H2          1.20E+13  0.0   1483.2   !PETERS,1996
+   CH2+O2=CO+H2O           7.28E+19 -2.54  1809.0   ! (F)
+   CH2+O2=HCO+OH           1.29E+20 -3.3    284.0   ! (F)
+   CH2+CH3=C2H4+H          4.00E+13  0.0      0.0   ! MILLER 1992
+   CH2+CH2=C2H2+H+H        4.00E+13  0.0      0.0   ! MILLER 1992
+   CH2+HCCO=C2H3+CO        3.00E+13  0.0      0.0   ! MILLER 1992
+   CH2+C2H2=H2CCCH+H       1.20E+13  0.0   6600.0   ! MILLER 1992
+   CH2(S)+M=CH2+M          1.00E+13  0.0      0.0   ! MILLER 1992
+   H /12.0/ C2H2 /4.0/ H2O/3.0/
+   CH2(S)+CH4=CH3+CH3      4.00E+13  0.0      0.0   ! MILLER 1992
+   CH2(S)+C2H6=CH3+C2H5    1.20E+14  0.0      0.0   ! MILLER 1992
+   CH2(S)+O2=CO+OH+H       7.00E+13  0.0      0.0   ! MILLER 1992
+   CH2(S)+H2=CH3+H         7.00E+13  0.0      0.0   ! MILLER 1992
+   CH2(S)+C2H2=H2CCCH+H    1.50E+14  0.0      0.0   ! CANOSA-MAS85
+   CH2(S)+C2H4=AC3H5+H     1.30E+14  0.0      0.0   ! CANOSA-MAS85
+   CH2(S)+O=CO+H+H         3.00E+13  0.0      0.0   ! MILLER 1992
+   CH2(S)+OH=CH2O+H        3.00E+13  0.0      0.0   ! MILLER 1992
+   CH2(S)+H=CH+H2          3.00E+13  0.0      0.0   ! MILLER 1992
+   CH2(S)+CO2=CH2O+CO      3.00E+12  0.0      0.0   ! MILLER 1992
+   CH2(S)+CH3=C2H4+H       2.00E+13  0.0      0.0   ! MILLER 1992
+   CH2(S)+CH2CO=C2H4+CO    1.60E+14  0.0      0.0   ! MILLER 1992
+   CH+O2=HCO+O             3.30E+13  0.0      0.0   ! MILLER 1992
+   CH+O=CO+H               5.70E+13  0.0      0.0   ! MILLER 1992
+   CH+OH=HCO+H             3.00E+13  0.0      0.0   ! MILLER 1992
+   CH+OH=C+H2O             4.00E+07  2.0   3000.0   ! MILLER 1992
+   CH+CO2=HCO+CO           3.40E+12  0.0    690.0   ! MILLER 1992
+   CH+H=C+H2               1.50E+14  0.0      0.0   ! MILLER 1992
+   CH+H2O=CH2O+H           1.17E+15  -0.75    0.0   ! MILLER 1992
+   CH+CH2O=CH2CO+H         9.46E+13  0.0   -515.0   ! MILLER 1992
+   CH+C2H2=C3H2+H          1.00E+14  0.0      0.0   ! MILLER 1992
+   CH+CH2=C2H2+H           4.00E+13  0.0      0.0   ! MILLER 1992
+   CH+CH3=C2H3+H           3.00E+13  0.0      0.0   ! MILLER 1992
+   CH+CH4=C2H4+H           6.00E+13  0.0      0.0   ! MILLER 1992
+   C+O2=CO+O               2.00E+13  0.0      0.0   ! MILLER 1992
+   C+OH=CO+H               5.00E+13  0.0      0.0   ! MILLER 1992
+   C+CH3=C2H2+H            5.00E+13  0.0      0.0   ! MILLER 1992
+   C+CH2=C2H+H             5.00E+13  0.0      0.0   ! MILLER 1992
+   CH2O+OH=HCO+H2O         3.43E+09  1.18  -447.0   ! MILLER 1992
+   CH2O+H=HCO+H2           2.19E+08  1.77  3000.0   ! MILLER 1992
+!   CH2O+H=>HCO+H2          2.30E+10  1.05  3277.5   ! PETERS 1996
+   CH2O+M=HCO+H+M          3.31E+16  0.0   81000.0  ! MILLER 1992
+   CH2O+O=HCO+OH           1.80E+13  0.0   3080.0   ! MILLER 1992
+   HCO+O2=HO2+CO           7.58E+12  0.0    410.0   ! TIMONEN 1988
+!   HCO+M=H+CO+M            1.86E+17  -1.0 17000.0   ! TIMONEN 1987
+!   H2O/5.0/ H2/1.87/ CO2/3.0/ CO/1.87/ CH4/2.81/
+   HCO+M=>CO+H+M           1.80E+14   0.0  15765.5  !PETERS, 1996
+    I-C8H18/3.0/ H2/1.0/ N2/0.4/ H2O/6.5/ CO/0.75/ O2/0.4/ 
+   HCO+OH=>H2O+CO          1.00E+14  0.0     0.0    ! MILLER,92
+!  HCO+OH=>H2O+CO          1.00E+14  0.0     0.0    ! PETERS,96
+   HCO+H=CO+H2             1.19E+13  0.25    0.0    ! MILLER 1992
+!  HCO+H=>CO+H2             1.80E+14  0.0     0.0    ! PETERS,1996
+   HCO+O=CO+OH                   3.00E+13  0.0     0.0    ! MILLER 1992
+   HCO+O=CO2+H             3.00E+13  0.0     0.0    ! MILLER 1992
+   CO+OH=CO2+H             9.42E+03  2.25  -2351.0   ! (G)
+!  CO+OH=CO2+H             6.00E+06  1.5   -741.6   ! PETERS, 1996
+   CO+O+M=CO2+M            6.17E+14  0.0   3000.0   ! MILLER 1992
+   CO+O2=CO2+O             2.53E+12  0.0  47688.0   ! MILLER 1992
+   CO+HO2=CO2+OH           5.80E+13  0.0  22934.0   ! MILLER 1992
+   C2H6+CH3=C2H5+CH4       5.50E-01  4.0   8300.0   ! MILLER 1992
+   C2H6+H=C2H5+H2          5.40E+02  3.5   5210.0   ! MILLER 1992
+   C2H6+O=C2H5+OH          3.00E+07  2.0   5115.0   ! MILLER 1992
+   C2H6+OH=C2H5+H2O        7.23E+06  2.0    864.0   ! BAULCH 1992
+   C2H5+H=C2H4+H2          1.25E+14  0.0   8000.0   ! MARINOV 1995
+   C2H5+H=CH3+CH3          3.00E+13  0.0      0.0   ! WARNATZ 1984
+   C2H5+H=C2H6             1.00E+14  0.0      0.0   ! MARINOV 1996
+   C2H5+OH=C2H4+H2O        4.00E+13  0.0      0.0   ! MARINOV 1995
+   C2H5+O=CH3+CH2O         1.00E+14  0.0      0.0   ! HERRON 1988
+   C2H5+HO2=CH3+CH2O+OH    3.00E+13  0.0      0.0   ! MARINOV 1995
+   C2H5+O2=C2H4+HO2        3.00E+20 -2.86  6760.0   ! MARINOV 1995
+   C2H4+H=C2H3+H2          3.36E-07  6.0   1692.0   ! DAGAUT 1990
+!   C2H4+H=C2H3+H2         1.70E+15  0.0   15047.8   ! PETERS 1996
+   C2H4+OH=C2H3+H2O        2.02E+13  0.0   5936.0   ! MILLER 1992
+   C2H4+O=CH3+HCO          1.02E+07  1.88   179.0   ! BAULCH 1994
+   C2H4+O=CH2HCO+H         3.39E+06  1.88   179.0   ! BAULCH 1994
+   C2H4+CH3=C2H3+CH4       6.62E+00  3.7   9500.0   ! MARINOV 1995
+   C2H4+H (+M)=C2H5(+M)    1.08E+12  0.454 1822.0   ! FENG  1993
+   LOW / 1.112E+34  -5.0    4448.0 /                !  (H)
+   TROE / 1.0   1.0E-15   95.0  200.0 /
+   H2O /5.0/ H2/2.0/ CO2/3.0/ CO/2.0/
+   C2H4(+M)=C2H2+H2(+M)    1.8E+13   0.0    76000.  ! TOWELL 1961 
+   LOW / 1.5E+15  0.0  55443. /                     ! KIEFER 1983
+   C2H4(+M)=C2H3+H(+M)     2.00E+16  0.0   110000.  ! DEAN  1985
+   LOW / 1.4E+15  0.0  81833. /                     ! KIEFER 1983
+   C2H3+H=C2H2+H2          4.00E+13  0.0      0.0   ! MILLER 1992
+   C2H3+O=CH2CO+H          3.00E+13  0.0      0.0   ! MILLER 1992
+   C2H3+O2=CH2O+HCO        1.70E+29 -5.312  6500.   ! MARINOV 1998
+!   C2H3+O2=>CH2O+HCO        5.42E+12  0.0     0.0   ! PETERS,1996
+   C2H3+O2=CH2HCO+O        3.50E+14 -0.611  5260.   ! MARINOV 1998
+   C2H3+O2=C2H2+HO2        2.12E-06  6.0   9484.0   ! CFM/NMM 1996
+!   C2H3+O2=>C2H2+HO2        1.21E+11  0.0      0.0   ! PETERS, 1996
+   C2H3+OH=C2H2+H2O        2.00E+13  0.0      0.0   ! MILLER 1992
+   C2H3+C2H=C2H2+C2H2      3.00E+13  0.0      0.0   ! MILLER 1992
+   C2H3+CH=CH2+C2H2        5.00E+13  0.0      0.0   ! MILLER 1992
+   C2H3+CH3=AC3H5+H        4.73E+02  3.7   5677.0   ! (I)
+   C2H3+CH3=C3H6           4.46E+56 -13.0 13865.0   ! (I)
+   C2H3+CH3=C2H2+CH4       2.00E+13  0.0      0.0   ! FAHR  1991
+   C2H3+C2H2=CH2CHCCH+H    2.00E+12  0.0   5000.0   ! MILLER 1992
+   C2H3+C2H4=CH2CHCHCH2+H  5.00E+11  0.0   7304.0   ! TSANG 1986
+   C2H3+C2H3=CH2CHCCH2+H   7.00E+13  0.0      0.0   ! FAHR  1991
+   C2H3+C2H3=C2H4+C2H2     1.45E+13  0.0      0.0   ! FAHR  1991
+   C2H2+OH=C2H+H2O         3.37E+07  2.0  14000.0   ! MILLER 1992
+   C2H2+OH=HCCOH+H         5.04E+05  2.3  13500.0   ! MILLER 1992
+   C2H2+OH=CH2CO+H         2.18E-04  4.5  -1000.0   ! MILLER 1992
+!   DUP
+!   C2H2+OH=CH2CO+H         2.00E+11  0.0      0.0   ! VANDOOREN 1977
+!   DUP
+   C2H2+OH=CH3+CO          4.83E-04  4.0  -2000.0   ! MILLER 1992
+   HCCOH+H=CH2CO+H         1.00E+13  0.0      0.0   ! MILLER 1992
+   C2H2+O=CH2+CO           6.12E+06  2.0   1900.0   !   (J)
+!   C2H2+O=>CH2+CO          3.44E+04  2.8    502.4   ! PETERS,1996
+   C2H2+O=HCCO+H           1.43E+07  2.0   1900.0   !   (J)
+   C2H2+O=C2H+OH           3.16E+15 -0.6   15000.0  ! MILLER 1992
+   C2H2+CH3=C2H+CH4        1.81E+11  0.0   17289.0  ! TSANG  1986
+   C2H2+O2=HCCO+OH         4.00E+07  1.5   30100.   ! MARINOV 1998
+   C2H2+M=C2H+H+M          4.20E+16  0.0  107000.0  ! MILLER 1992
+   C2H2+H (+M)=C2H3(+M)    3.11E+11  0.58   2589.0  ! KNYAZEV 1995
+   LOW / 2.25E+40  -7.269   6577.0 /                !   (K)
+   TROE /1.0 1.0E-15  675.0 1.0E+15 /
+   H2O /5.0/ H2/2.0/ CO2/3.0/ CO/2.0/
+   CH3HCO+OH=CH3CO+H2O     5.37E+10  0.73  -1110.0  ! MARINOV 1995
+   CH3HCO+H=CH3CO+H2       4.09E+09  1.16   2400.0  ! MARINOV 1995
+   CH3HCO+O=CH3CO+OH       5.89E+12  0.0    1810.0  ! MARINOV 1995
+   CH3HCO+HO2=CH3CO+H2O2   1.70E+12  0.0   10700.0  ! MARINOV 1995
+   CH3HCO+O2=CH3CO+HO2     2.00E+13  0.5   42200.0  ! MARINOV 1995
+   CH3HCO+CH3=CH3CO+CH4    2.00E-06  5.64   2464.0  ! MARINOV 1996
+   CH2HCO+H=CH2CO+H2       4.00E+13  0.0       0.0  ! MARINOV 1996
+   CH2HCO+O=CH2O+HCO       1.00E+14  0.0       0.0  ! MARINOV 1996
+   CH2HCO+OH=CH2CO+H2O     3.00E+13  0.0       0.0  ! MARINOV 1996
+   CH2HCO+O2=CH2O+CO+OH    3.00E+10  0.0       0.0  ! BAULCH  1992
+   CH2HCO+CH3=>C2H5+CO+H   4.90E+14 -0.50      0.0  !   (L)
+   CH2HCO=CH2CO+H          3.95E+38 -7.649 45115.0  ! MARINOV 1995
+   CHOCHO(+M)=CH2O+CO(+M)  4.27E+12  0.0   50600.0  ! MARINOV 1995
+   LOW /  8.91E+16    0.0    49200.0 /              ! MARINOV 1995
+   CHOCHO=CO+CO+H2         4.07E+42 -8.5   69278.0  !   (M)
+   CHOCHO+OH=HCO+CO+H2O    1.00E+13  0.0       0.0  ! MARINOV 1995
+   CHOCHO+O=HCO+CO+OH      7.24E+12  0.0    1970.0  ! MARINOV 1995
+   CHOCHO+H=CH2O+HCO       1.00E+12  0.0       0.0  ! MARINOV 1995
+   CHOCHO+HO2=HCO+CO+H2O2  1.70E+12  0.0   10700.0  ! MARINOV 1995
+   CHOCHO+CH3=HCO+CO+CH4   1.74E+12  0.0    8440.0  ! MARINOV 1995
+   CHOCHO+O2=HCO+CO+HO2    1.00E+14  0.0   37000.0  ! MARINOV 1995
+   CH3CO(+M)=CH3+CO(+M)    3.00E+12  0.0   16722.0  ! WARNATZ 1984  
+   LOW / 1.20E+15    0.0     12518.0 /              ! WARNATZ 1984
+   CH2CO+O=CO2+CH2         1.75E+12  0.0    1350.0  ! MARINOV 1995
+   CH2CO+H=CH3+CO          7.00E+12  0.0    3011.0  ! WARNATZ 1984
+   CH2CO+H=HCCO+H2         2.00E+14  0.0    8000.0  !   (N)
+   CH2CO+O=HCCO+OH         1.00E+13  0.0    8000.0  ! MILLER 1992
+   CH2CO+OH=HCCO+H2O       1.00E+13  0.0    2000.0  ! MILLER 1992 (O)
+   CH2CO+OH=CH2OH+CO       3.73E+12  0.0   -1013.0  ! BROWN 1989
+   CH2CO(+M)=CH2+CO(+M)    3.00E+14  0.0   70980.0  ! MILLER 1992   
+   LOW /  3.60E+15    0.0    59270.0 /              ! MILLER 1992
+   C2H+H2=C2H2+H           4.09E+05  2.39    864.3  ! MILLER 1992
+   C2H+O=CH+CO             5.00E+13  0.0       0.0  ! MILLER 1992
+   C2H+OH=HCCO+H           2.00E+13  0.        0.0  ! MILLER 1992
+   C2H+OH=C2+H2O           4.00E+07  2.0    8000.0  ! MILLER 1992
+   C2H+O2=CO+CO+H          9.04E+12  0.0    -457.0  ! OPANSKY 1993
+   C2H+C2H2=C4H2+H         9.64E+13  0.0       0.0  ! FARHAT 1993
+   C2H+C2H4=CH2CHCCH+H     1.20E+13  0.0       0.0  ! TSANG 1986 
+   HCCO+C2H2=H2CCCH+CO     1.00E+11  0.0    3000.0  ! MILLER 1992
+   HCCO+H=CH2(S)+CO        1.00E+14  0.0       0.0  ! MILLER 1992
+   HCCO+O=H+CO+CO          8.00E+13  0.0       0.0  ! PEETERS 1995
+   HCCO+O=CH+CO2           2.95E+13  0.0    1113.0  ! PEETERS 1995
+   HCCO+O2=HCO+CO+O        2.50E+08  1.0       0.0  ! MARINOV 1998
+   HCCO+O2=CO2+HCO         2.40E+11  0.0    -854.0  ! MARINOV 1998
+   HCCO+CH=C2H2+CO         5.00E+13  0.0       0.0  ! MILLER 1992
+   HCCO+HCCO=C2H2+CO+CO    1.00E+13  0.0       0.0  ! MILLER 1992
+   HCCO+OH=C2O+H2O         3.00E+13  0.0       0.0  ! MILLER 1992
+   C2O+H=CH+CO             1.00E+13  0.0       0.0  ! MILLER 1992
+   C2O+O=CO+CO             5.00E+13  0.0       0.0  ! MILLER 1992
+   C2O+OH=CO+CO+H          2.00E+13  0.0       0.0  ! MILLER 1992
+   C2O+O2=CO+CO+O          2.00E+13  0.0       0.0  ! MILLER 1992
+   C2+H2=C2H+H             4.00E+05  2.4    1000.0  ! MILLER 1992
+   C2+O2=CO+CO             5.00E+13  0.0       0.0  ! MILLER 1992
+   C2+OH=C2O+H             5.00E+13  0.0       0.0  ! MILLER 1992
+   C3H8(+M)=C2H5+CH3(+M)   7.90E+22 -1.8   88629.0  ! TSANG 1988
+   LOW / 7.237E+27 -2.88 67448.0 /                  ! AL-ALAMI 1983
+   TROE /1.0 1.0E-15 1500.0 1.0E+15/
+   H2O/5.0/ CO2/3.0/ CO/2.0/ H2/2.0/
+   C3H8+O2=IC3H7+HO2       4.00E+13  0.0   48610.0  ! TSANG 1988
+   C3H8+O2=NC3H7+HO2       4.00E+13  0.0   51360.0  ! TSANG 1988
+   C3H8+HO2=NC3H7+H2O2     4.76E+04  2.55  16492.0  ! TSANG 1988
+   C3H8+HO2=IC3H7+H2O2     9.64E+03  2.6   13909.0  ! TSANG 1988
+   C3H8+OH=NC3H7+H2O       3.16E+07  1.8     934.0  ! COHEN 1991
+   C3H8+OH=IC3H7+H2O       7.08E+06  1.9    -159.0  ! COHEN 1991
+   C3H8+O=NC3H7+OH         3.73E+06  2.4    5504.0  ! COHEN 1986
+   C3H8+O=IC3H7+OH         5.48E+05  2.5    3139.0  ! COHEN 1986
+   C3H8+H=IC3H7+H2         1.30E+06  2.4    4471.0  ! TSANG 1988
+   C3H8+H=NC3H7+H2         1.33E+06  2.54   6756.0  ! TSANG 1988
+   C3H8+CH3=NC3H7+CH4      9.04E-01  3.65   7153.0  ! TSANG 1988
+   C3H8+CH3=IC3H7+CH4      1.51E+00  3.46   5480.0  ! TSANG 1988
+   C3H8+C2H3=IC3H7+C2H4    1.00E+03  3.1    8830.0  ! TSANG 1988
+   C3H8+C2H3=NC3H7+C2H4    6.00E+02  3.3   10500.0  ! TSANG 1988
+   C3H8+C2H5=IC3H7+C2H6    1.51E+00  3.46   7470.0  ! TSANG 1988
+   C3H8+C2H5=NC3H7+C2H6    9.03E-01  3.65   9140.0  ! TSANG 1988
+   C3H8+AC3H5=C3H6+NC3H7   2.35E+02  3.3   19842.0  ! TSANG 1988
+   C3H8+AC3H5=C3H6+IC3H7   7.83E+01  3.3   18169.0  ! TSANG 1988
+   NC3H7(+M)=C2H4+CH3(+M)  1.23E+13  -0.1  30202.0  ! BENCSURA 1992
+   LOW / 5.485E+49  -10.0  35766.0 /                ! BENCSURA 1992
+   TROE / 2.17   1.0E-15   251.0   1185.0 /
+   H2O /5.0/ H2/2.0/ CO2/3.0/ CO/2.0/
+   NC3H7+O2=C3H6+HO2      3.58E+09   0.0   -3532.0  ! DAGAUT 1992
+   IC3H7+O2=C3H6+HO2      6.10E+20   -2.86  7910.0  !   (P)
+   C3H6+H(+M)=IC3H7(+M)   5.70E+09   1.16    874.0  ! SEAKINS 1993
+   LOW / 1.64E+54   -11.1   9364.0 /                ! MARINOV 1996            
+   TROE / 1.0   1.0E-15   260.0   3000.0 /
+   H2O /5.0/ H2/2.0/ CO2/3.0/ CO/2.0/
+   IC3H7+H=C2H5+CH3       5.00E+13   0.0       0.0  ! TSANG 1988
+   NC3H7+H=C2H5+CH3       1.00E+14   0.0       0.0  ! TSANG 1988
+   C3H6=PC3H5+H           7.58E+14   0.0  101300.0  ! DAGAUT 1992
+   C3H6=SC3H5+H           1.45E+15   0.0   98060.0  ! DAGAUT 1992
+   C3H6=C2H2+CH4          2.50E+12   0.0   70000.0  ! HIDAKA 1992
+   C3H6=AC3H4+H2          3.00E+13   0.0   80000.0  ! HIDAKA 1992
+   C3H6+HO2=AC3H5+H2O2    9.64E+03   2.6   13910.0  ! TSANG 1991
+   C3H6+OH+O2=CH3HCO+CH2O+OH 3.00E+10  0.0 -8280.0  ! DAGAUT 1992
+   C3H6+OH=AC3H5+H2O      3.12E+06   2.0    -298.0  ! TSANG 1991
+   C3H6+OH=SC3H5+H2O      1.11E+06   2.0    1451.0  ! TSANG 1991
+   C3H6+OH=PC3H5+H2O      2.11E+06   2.0    2778.0  ! TSANG 1991
+   C3H6+O=CH3CHCO+H+H     5.01E+07   1.76     76.0  ! TSANG 1991
+   C3H6+O=C2H5+HCO        1.58E+07   1.76  -1216.0  ! TSANG 1991
+   C3H6+O=AC3H5+OH        5.24E+11   0.7    5884.0  ! TSANG 1991
+   C3H6+O=PC3H5+OH        1.20E+11   0.7    8959.0  ! TSANG 1991
+   C3H6+O=SC3H5+OH        6.03E+10   0.7    7632.0  ! TSANG 1991
+   C3H6+H=C2H4+CH3        7.23E+12   0.0    1302.0  ! TSANG 1991
+   C3H6+H=AC3H5+H2        1.73E+05   2.5    2492.0  ! TSANG 1991
+   C3H6+H=SC3H5+H2        4.09E+05   2.5    9794.0  ! TSANG 1991
+   C3H6+H=PC3H5+H2        8.04E+05   2.5   12284.0  ! TSANG 1991
+   C3H6+O2=PC3H5+HO2      2.00E+13   0.0   47600.0  ! DAGAUT 1992
+   C3H6+O2=SC3H5+HO2      2.00E+13   0.0   44000.0  ! DAGAUT 1992
+   C3H6+O2=AC3H5+HO2      2.29E+12   0.0   39200.0  ! DAGAUT 1992
+   C3H6+CH3=AC3H5+CH4     2.22E+00   3.5    5675.0  ! TSANG 1991
+   C3H6+CH3=SC3H5+CH4     8.43E-01   3.5   11656.0  ! TSANG 1991
+   C3H6+CH3=PC3H5+CH4     1.35E+00   3.5   12848.0  ! TSANG 1991
+   C3H6+HCO=AC3H5+CH2O    1.08E+07   1.9   17010.0  ! TSANG 1991
+   CH3CHCO+OH=CH2CHCO+H2O 4.00E+06   2.0      0.0   !   (Q)
+   CH3CHCO+O=CH2CHCO+OH   7.60E+08   1.5   8500.0   !   (Q)
+   CH3CHCO+H=CH2CHCO+H2   2.00E+05   2.5   2500.0   !   (Q)
+   CH3CHCO+H=C2H5+CO      2.00E+13   0.0   2000.0   !   (R)
+   CH3CHCO+O=CH3+HCO+CO   3.00E+07   2.0      0.0   !   (S)
+   CH2CHCHO+OH=CH2CHCO+H2O 1.00E+13  0.0      0.0   !   (T)
+   CH2CHCHO+O=CH2CHCO+OH  7.24E+12   0.0   1970.0   !   (T)
+   CH2CHCHO+O=CH2CO+HCO+H 5.01E+07   1.76    76.0   !   (S)
+   CH2CHCHO+H=CH2CHCO+H2  3.98E+13   0.0   4200.0   !   (T)
+   CH2CHCHO+H=C2H4+HCO    2.00E+13   0.0   3500.0   !   (R)
+   CH2CHCHO+O2=CH2CHCO+HO2 3.00E+13  0.0  36000.0   !   (U)
+   CH2CHCO=C2H3+CO        1.00E+14   0.0  34000.0   !   (V)
+   CH2CHCO+O=C2H3+CO2     1.00E+14   0.0      0.0   !   (W)
+   AC3H5+O2=CH2CHCHO+OH   1.82E+13  -0.41 22859.0   ! BOZZELLI 1993
+   AC3H5+O2=AC3H4+HO2     4.99E+15  -1.4  22428.0   ! BOZZELLI 1993
+   AC3H5+O2=CH2HCO+CH2O   1.06E+10  0.34  12838.0   ! BOZZELLI 1993
+   AC3H5+O2=C2H2+CH2O+OH  2.78E+25  -4.8  15468.0   ! BOZZELLI 1993
+   AC3H5+HO2=CH2CHCHO+H+OH 1.00E+13 0.0       0.0   ! TSANG 1991
+   AC3H5+OH=AC3H4+H2O     1.00E+13  0.0       0.0   ! TSANG 1991
+   AC3H5+H=AC3H4+H2       5.00E+13  0.0       0.0   ! TSANG 1991 (X)
+   AC3H5+H=C3H6           1.88E+26  -3.6   5468.0   !   (Y)
+   AC3H5+O=CH2CHCHO+H     1.81E+14  0.0       0.0   ! SLAGLE 1992
+   AC3H5+CH3=AC3H4+CH4    3.02E+12  -0.32  -131.0   ! TSANG 1991
+   AC3H5+C2H2=C-C5H6+H    2.95E+32  -5.83 25733.0   !   (Y)
+   AC3H5+CH3=C4H8-1       1.76E+50  -11.0 18600.0   !   (Y)
+   AC3H5+C2H3=C-C5H6+H+H  1.59E+65  -14.0 61265.0   !   (Y)
+   PC3H5+O2=CH3HCO+HCO    1.09E+23  -3.29  3892.0   !   (Z)
+   PC3H5+O2=CH3CHCO+H+O   1.60E+15  -0.78  3135.0   !   (Z)
+   PC3H5+O=CH3CHCO+H      1.00E+14   0.0      0.0   !   (AA)
+   PC3H5+H=PC3H4+H2       2.00E+13   0.0      0.0   !   (AA)
+   PC3H5+OH=PC3H4+H2O     1.00E+13   0.0      0.0   !   (AA)
+   PC3H5+H=AC3H5+H        1.00E+14   0.0      0.0   ! MARINOV 1996
+   SC3H5+H=AC3H5+H        1.00E+14   0.0      0.0   ! MARINOV 1996
+   SC3H5+O2=CH3CO+CH2O    1.09E+22  -3.29  3892.0   !   (Z)
+   SC3H5+O=CH2CO+CH3      1.00E+14   0.0      0.0   !   (AA)
+   SC3H5+H=PC3H4+H2       4.00E+13   0.0      0.0   !   (AA)
+   SC3H5+OH=PC3H4+H2O     2.00E+13   0.0      0.0   !   (AA)
+   AC3H4+H=H2CCCH+H2      2.00E+07   2.0   5000.0   ! MARINOV 1998
+   AC3H4+O=C2H4+CO        1.34E+07   1.88   179.0   !   (BB)
+   AC3H4+OH=H2CCCH+H2O    1.00E+07   2.0   1000.0   ! MARINOV 1998
+   AC3H4+CH3=H2CCCH+CH4   1.50E+00   3.5   5600.0   ! MARINOV 1998
+   AC3H4=PC3H4            1.48E+13   0.0   60401.   ! LIFSHITZ 1975
+   PC3H4+H=H2CCCH+H2      2.00E+07   2.0   5000.0   ! MARINOV 1998
+   PC3H4+O=C2H4+CO        1.50E+13   0.0   2102.0   ! WARNATZ84 (CC)
+   PC3H4+OH=H2CCCH+H2O    1.00E+07   2.0   1000.0   ! MARINOV 1998
+!   C3H4+OH=>HCO+C2H4      2.00E+12   0.0      0.0   ! PETERS 1996
+!  NOT INCLUDED BECAUSE WHICH C3H4 IS??   
+   PC3H4+CH3=H2CCCH+CH4   1.50E+00   3.5   5600.0   ! MARINOV 1998
+   PC3H4+H=CH3+C2H2       5.12E+10   1.0   2060.0   ! MARINOV 1998 
+   PC3H4+H(+M)=SC3H5(+M)  6.50E+12   0.0   2000.0   ! WAGNER 1972
+   LOW / 8.45E+39  -7.27    6577.0 /                !  (DD)
+   AC3H4+H(+M)=AC3H5(+M)  1.20E+11   0.69  3007.0   ! TSANG 1992        
+   LOW / 5.56E+33   -5.0    4448.0 /                !  (EE)
+   AC3H4+H(+M)=SC3H5(+M)  8.49E+12   0.0   2000.0   ! WAGNER 1972
+   LOW / 1.11E+34   -5.0    4448.0 /                !  (EE)
+!  I DON'T KNOW WHICH COMPOUNDS ARE..
+!  C3H5=C3H4+H           3.00E+11  0.84  59808.6     !PETERS, 1996
+!  C3H5+H=>C3H4+H2       1.00E+13  0.0      0.0      !PETERS, 1996
+!  C3H5+O2=>C3H4+HO2      6.00E+11   0.0   10023.93  !PETERS, 1996
+   H2CCCH+O2=CH2CO+HCO    3.00E+10 0.0     2868.0   ! MILLER 1992
+   H2CCCH+O=CH2O+C2H      2.00E+13 0.0        0.0   ! MILLER 1992
+   H2CCCH+H=C3H2+H2       5.00E+13 0.0     3000.0   ! MILLER 1992
+   H2CCCH+OH=C3H2+H2O     2.00E+13 0.0        0.0   ! MILLER 1992
+   H2CCCH+C2H3=C-C5H5+H   9.63E+40 -7.8   28820.0   ! MARINOV 1996 
+   H2CCCH+CH3=CH3CHCCH2   5.00E+12 0.0        0.0   ! WU 1987
+   H2CCCH+CH3=CH3CH2CCH   5.00E+12 0.0        0.0   ! WU 1987
+   H2CCCH+CH=HCCHCCH+H    7.00E+13 0.0        0.0   ! MILLER 1992
+   H2CCCH+CH=H2CCCCH+H    7.00E+13 0.0        0.0   ! MILLER 1992
+   H2CCCH+H(+M)=AC3H4(+M) 1.66E+15 -0.37      0.0   !  (FF)
+   LOW / 3.36E+45 -8.52  6293.0  /                  ! KIEFER 1995 (GG)
+   H2O/5.0/ H2/2.0/ CO2/3.0/ CO/2.0/ O2/2.0/ C2H2/2.0/
+   H2CCCH+H(+M)=PC3H4(+M) 1.66E+15 -0.37      0.0   !  (FF)
+   LOW / 8.78E+45 -8.9   7974.0 /                   ! KIEFER 1995 (GG)
+   H2O /5.0/ H2/2.0/ CO2/3.0/ CO/2.0/ O2/2.0/ C2H2/2.0/
+   H2CCCH+H2CCCH=C6H6     5.562E20  -2.535  1692.0  ! MARINOV 1998 
+   H2CCCH+AC3H5=FULVENE+H+H 5.562E20 -2.535 1692.0  ! MARINOV 1998
+   H2CCCH+H2CCCH=C6H5+H   2.00E12  0.0        0.0   ! MARINOV 1998
+   C3H2+O2=HCCO+CO+H     5.00E+13  0.0        0.0   ! MILLER 1992
+   C3H2+OH=C2H2+HCO      5.00E+13  0.0        0.0   ! MILLER 1992
+   CHCHCHO+O2=HCO+CHOCHO 3.00E+12  0.0        0.0   !  (HH)
+   CHCHCHO=C2H2+HCO      1.00E+14  0.0    33000.0   !  (II)
+   CHCHCHO+H=CH2CHCO+H   1.00E+14  0.0        0.0   ! MARINOV 1996
+   CHCHCHO+OH=HCCCHO+H2O 1.00E+13  0.0        0.0   !  (AA)
+   CHCHCHO+H=HCCCHO+H2   2.00E+13  0.0        0.0   !  (AA)
+   HCCCHO+H=C2H2+HCO     1.00E+14  0.0     3000.0   !  (JJ)
+   HCCCHO+OH=HCCCO+H2O   1.00E+13  0.0        0.0   !  (T)
+   HCCCHO+H=HCCCO+H2     4.00E+13  0.0     4200.0   !  (T)
+   HCCCO+O2=HCO+CO+CO    1.40E+09  1.0        0.0   !  (KK)
+   HCCCO+H=C2H2+CO       1.00E+14  0.0        0.0   !  (KK)
+   IC4H7=>AC3H4+CH3      1.00E+13   0.0   51196.2   !PETERS, 1996
+   IC4H8=>SC3H5+CH3      5.00E+18  -1.0  73444.9   ! PETERS,1996
+   IC4H8+H=>IC4H7+H2     1.00E+13  0.0     3803.8   ! PETERS 1996
+   IC4H8+O=>OH+IC4H7     2.50E+05  2.6    -1124.4   ! PETERS 1996
+!
+! THE FOLLOWING REACTIONS HAVE BEEN INTRODUCED BECAUSE OF THE PRESENCE 
+! OF IC4H7 
+!   
+!   IC4H8+SC3H5 = IC4H7+C3H6  7.940E+11   0.00  2.050E+04
+!                       REV / 5.592E+20  -1.27  8.017E+04 /
+   IC4H8+PC3H5 = IC4H7+C3H6  7.940E+11   0.00  2.050E+04
+                       REV / 5.592E+20  -1.27  8.217E+04 /
+!   IC4H7 = AC3H4+CH3         1.000E+13   0.00  5.100E+04
+!                       REV / 2.000E+11   0.00  7.500E+03 /
+ !  IC4H8+CH3 = IC4H7+CH4     6.000E+11   0.00  8.900E+03
+ !                      REV / 6.000E+11   0.00  2.990E+04 /
+   IC4H8+HO2 = IC4H7+H2O2    2.000E+13   0.00  2.000E+04
+                       REV / 1.000E+12   0.00  7.500E+03 /
+   IC4H8+AC3H5 = IC4H7+C3H6 7.940E+11   0.00  2.050E+04
+                       REV / 4.400E+20  -1.33  6.061E+04 /
+   IC4H8+O2 = IC4H7+HO2   3.900E+12   0.00  3.908E+04
+                       REV / 7.350E+12   0.00  1.310E+03 /
+   IC4H8+H = C3H6+CH3     1.720E+13   0.00  3.597E+03
+                       REV / 5.177E+13  -0.70  1.675E+04 /
+   IC4H8=IC4H7+H        1.000E+17   0.00  8.800E+04
+ !                      REV / 2.00E+13   0.00    0.00
+   IC4H8+O = C3H6+CH2O    4.700E+12      0.00    0.0
+                       REV / 6.000E+13   0.00  8.67E+04 /
+   IC4H8+OH = IC4H7+H2O   9.600E+12   0.00  1.230E+03
+                       REV / 4.772E+12   0.00  2.647E+04 /
+   IC4H8+O = IC3H7+HCO    7.230E+05   2.34 -1.050E+03
+                       REV / 2.000E+05   2.34  8.028E+04 /
+   IC4H8+OH = IC3H7+CH2O  1.500E+12   0.00  0.000E+00
+                       REV / 1.940E+13   0.00  1.323E+04 /
+!
+   IC4H9=>IC4H8+H         2.00E+13  0.0   36124.4   ! PETERS, 1996
+   TC4H9=>IC4H8+H         3.16E+15  0.0   43779.9   ! PETERS, 1996
+   TC4H9+O2=>IC4H8+HO2    1.17E+11  0.0       0.0   ! PETERS, 1996
+!   
+   IC4H9 = C3H6+CH3       6.003E+13  -0.40  2.978E+04
+                     REV / 8.500E+10   0.00  9.200E+03 /
+   IC4H9+O2 = IC4H8+HO2       2.000E-18   0.00  5.000E+03
+                     REV / 2.000E-19   0.00  1.750E+04 /
+   TC4H9 = C3H6+CH3         1.016E+16  -0.74  3.650E+04
+                     REV / 8.500E+10   0.00  9.200E+03 /
+!
+! FROM PETERS FOR IC8 SCHEME   
+
+  A-C8H17 => IC4H8 + IC4H9        2.60E+13    0.0   29665 !PETERS,96
+  C-C8H17 => IC4H8 + TC4H9      1.00E+13    0.0   28947 !PETERS,96
+  I-C8H18 => TC4H9 + IC4H9      4.00E+16    0.0   78229.7 !PETERS,96
+  I-C8H18 + H => A-C8H17+H2     8.44E+07    2.0  7703.35 !PETERS,96
+  I-C8H18 + H => C-C8H17 + H2   1.26E+14    0.0  7320.57 !PETERS,96
+  I-C8H18 + OH => A-C8H17 + H2O   1.29E+10    1.10  1818.18 !PETERS,96
+  I-C8H18 + OH => C-C8H17 + H2O   1.96E+12    0.0  454.54 !PETERS,96
+
+   C4H10=C2H5+C2H5       2.00E+16  0.0    81300.0   ! PITZ 1991
+   C4H10=NC3H7+CH3       1.74E+17  0.0    85700.0   ! PITZ 1991
+   C4H10=PC4H9+H         1.00E+14  0.0   100000.0   ! PITZ 1991
+   C4H10=SC4H9+H         1.00E+14  0.0   100000.0   ! PITZ 1991
+   C4H10+O2=PC4H9+HO2    2.50E+13  0.0    49000.0   ! PITZ 1991
+   C4H10+O2=SC4H9+HO2    4.00E+13  0.0    47600.0   ! PITZ 1991
+   C4H10+AC3H5=PC4H9+C3H6  7.94E+11 0.0   20500.0   ! PITZ 1991
+   C4H10+AC3H5=SC4H9+C3H6  3.16E+11 0.0   16400.0   ! PITZ 1991
+   C4H10+CH3=PC4H9+CH4   5.00E+11  0.0    13600.0   ! MARINOV 1998
+   C4H10+CH3=SC4H9+CH4   4.30E+11  0.0    10500.0   ! MARINOV 1998
+   C4H10+H=PC4H9+H2      2.84E+05  2.54    6050.0   ! MARINOV 1998
+   C4H10+H=SC4H9+H2      5.68E+05  2.40    3765.0   ! MARINOV 1998
+   C4H10+OH=PC4H9+H2O    4.13E+07  1.73    753.0    ! PITZ 1991
+   C4H10+OH=SC4H9+H2O    7.23E+07  1.64   -247.0    ! PITZ 1991
+   C4H10+O=PC4H9+OH      1.13E+14  0.0     7850.0   ! PITZ 1991
+   C4H10+O=SC4H9+OH      5.62E+13  0.0     5200.0   ! PITZ 1991
+   C4H10+HO2=PC4H9+H2O2  1.70E+13  0.0    20460.0   ! PITZ 1991
+   C4H10+HO2=SC4H9+H2O2  1.12E+13  0.0    17700.0   ! PITZ 1991
+   SC4H9(+M)=C3H6+CH3(+M) 2.14E+12 0.65   30856.0   ! KNYAZEV 1996
+   LOW /6.323E58 -12.85 35567./
+   H2O/5./ H2/2./ CO2/3./ CO/2./
+   SC4H9=C4H8-1+H        2.00E+13  0.0    40400.0   ! PITZ 1991
+   SC4H9=C4H8-2+H        5.01E+12  0.0    37900.0   ! PITZ 1991
+   PC4H9(+M)=C2H5+C2H4(+M) 1.06E13 0.0    27828.0   ! KNYAZEV 1996 
+   LOW / 1.897E55 -11.91 32263./
+   H2O/5./ H2/2.0/ CO2/3.0/ CO/2.0/
+   PC4H9=C4H8-1+H        1.26E+13  0.0    38600.0   ! PITZ 1991
+   C4H8-1=C2H3+C2H5      1.00E+19  -1.0   96770.0   ! PITZ 1991
+   C4H8-1=H+C4H7         4.11E+18  -1.0   97350.0   ! PITZ 1991
+   C4H8-1+CH3=C4H7+CH4   1.00E+11  0.0     7300.0   ! PITZ 1991
+   C4H8-1+H=C4H7+H2      5.00E+13  0.0     3900.0   ! PITZ 1991
+   C4H8-1+O=NC3H7+HCO    1.80E+05  2.5    -1029.0   ! PITZ 1991
+   C4H8-1+O=CH2CHCHO+CH3+H 9.67E+04 2.5   -1029.0   ! PITZ 1991
+   C4H8-1+OH=C4H7+H2O    2.25E+13  0.0     2217.0   ! PITZ 1991 
+   C4H8-1+AC3H5=C4H7+C3H6 7.90E+10  0.0   12400.0   ! PITZ 1991
+   C4H8-1+O2=C4H7+HO2   4.00E+12   0.0    33200.0   ! PITZ 1991
+   C4H8-2=H+C4H7        4.11E+18  -1.0    97350.0   ! PITZ 1991
+   C4H8-2+CH3=C4H7+CH4  1.00E+11   0.0     8200.0   ! PITZ 1991
+   C4H8-2+H=C4H7+H2     5.00E+13   0.0     3800.0   ! PITZ 1991
+   C4H8-2+O=IC3H7+HCO   2.79E+06   2.12   -1775.0   ! PITZ 1991
+   C4H8-2+OH=C4H7+H2O   3.90E+13   0.0     2217.0   ! PITZ 1991
+   C4H8-2+O=CH3CO+C2H5  1.53E+07   1.87   -1476.0   ! ADUSEI 1994
+   C4H8-2+O=CH3+CH3CHCO+H 8.22E+06 1.87   -1476.0   ! ADUSEI 1994
+   C4H8-2+O2=C4H7+HO2   8.00E+13   0.0    37400.0   ! PITZ 1991
+   C4H7=CH2CHCHCH2+H    1.00E+14   0.0    55000.0   ! PITZ 1991
+   C4H7+OH=CH2CHCHCH2+H2O 1.00E+13 0.0        0.0   ! PITZ 1991
+   C4H7+CH3=CH2CHCHCH2+CH4 8.00E+12 0.0       0.0   ! PITZ 1991
+   C4H7+AC3H5=C3H6+CH2CHCHCH2 6.31E+12 0.0    0.0   ! PITZ 1991
+   C4H7+O2=CH2CHCHCH2+HO2 1.00E+09 0.0        0.0   ! PITZ 1991
+   C4H7+H=CH2CHCHCH2+H2  3.16E+13  0.0        0.0   ! PITZ 1991
+   CH2CHCHCH2+OH=CH2CHCHCH+H2O  2.00E+07 2.0 5000.0 ! MILLER 1992
+   CH2CHCHCH2+OH=CH2CHCCH2+H2O  2.00E+07 2.0 2000.0 ! MILLER 1992
+   CH2CHCHCH2+O=HCO+AC3H5     6.02E+08  1.45 -858.0 ! ADUSEI 1993
+   CH2CHCHCH2+O=CH2HCO+C2H3   1.00E+12  0.0     0.0 ! PITZ 1991 
+   CH2CHCHCH2+H=CH2CHCHCH+H2  3.00E+07  2.0 13000.0 ! MILLER 1992
+   CH2CHCHCH2+H=CH2CHCCH2+H2  3.00E+07  2.0  6000.0 ! MILLER 1992
+   CH3CH2CCH+OH=CH3CHCCH+H2O  1.00E+07  2.0  2000.0 !  (Q)
+   CH3CH2CCH+H=C2H5+C2H2      1.00E+14  0.0  3000.0 !  (JJ)
+   CH3CHCCH2+OH=CH2CHCCH2+H2O 2.00E+07  2.0  1000.0 !  (Q)
+   CH3CHCCH2+OH=CH3CCCH2+H2O  1.00E+07  2.0  2000.0 !  (LL)
+   CH3CHCCH2+OH=CH3CHCCH+H2O  2.00E+07  2.0  2500.0 !  (LL)
+   CH3CHCCH2+H=CH2CHCCH2+H2   5.00E+07  2.0  5000.0 !  (Q)
+   CH3CHCCH2+H=CH3CCCH2+H2    1.50E+07  2.0  6000.0 !  (LL)
+   CH3CHCCH2+H=CH3CHCCH+H2    3.00E+07  2.0  6500.0 !  (LL)
+   CH3CHCCH2+H=CH3+AC3H4      2.00E+13  0.0  2000.0 !  (R)
+   CH3CHCCH+H=CH3+H2CCCH      1.00E+14  0.0     0.0 ! MARINOV 1996
+   CH3CHCCH+O2=CH3CHCO+HCO    4.16E+10  0.0  2510.0 ! SLAGLE 1992
+   CH3CHCCH+OH=CH2CHCCH+H2O   3.00E+13  0.0     0.0 !  (MM)
+   CH2CHCCH2+H=CH3+H2CCCH     1.00E+14  0.0     0.0 !  (NN)
+   CH2CHCCH2+H=CH3CCCH2+H     3.00E+13  0.0     0.0 !  (NN)
+   CH2CHCCH2+C2H2=C6H6+H      3.00E+11  0.0 14900.0 ! MARINOV 1996
+   CH3CCCH2+H=CH3+H2CCCH      1.00E+14  0.0     0.0 ! MARINOV 1996
+   CH3CCCH2+O2=CH3CO+CH2CO    4.16E+10  0.0  2510.0 ! MARINOV 1996
+   CH3CCCH2+H=H2CCCCH2+H2     1.00E+14  0.0  8000.0 !  (MM)
+   CH3CCCH2+OH=H2CCCCH2+H2O   1.00E+13  0.0     0.0 !  (MM)
+   CH2CHCHCH+H=CH2CHCCH2+H    1.00E+14  0.0     0.0 ! MILLER 1992 
+   CH2CHCHCH+OH=CH2CHCCH+H2O  2.00E+07  2.0  1000.0 ! MILLER 1992
+   CH2CHCHCH+H=CH2CHCCH+H2    3.00E+07  2.0  1000.0 ! MILLER 1992
+   CH2CHCHCH+C2H2=C6H6+H      1.60E+16 -1.33 5400.0 ! WANG 1994
+   CH3CHCCH(+M)=CH2CHCCH+H(+M) 1.00E+13 0.0 49000.0 !   (PP)
+   LOW / 2.00E+14    0.0    41000.0 /               !   (PP)
+   CH3CCCH2(+M)=H2CCCCH2+H(+M)  1.00E+13 0.0 56000.0! MARINOV 1996
+    LOW / 2.00E14  0.0  48000.0/                    ! MARINOV 1996
+   CH2CHCCH2(+M)=CH2CHCCH+H(+M) 1.00E+14 0.0 50000.0 ! MILLER 1992   
+   LOW / 2.00E+15    0.0    42000.0 /               ! MILLER 1992
+   CH2CHCHCH(+M)=CH2CHCCH+H(+M) 1.00E+14 0.0 37000.0 ! MILLER 1992
+   LOW / 1.00E+14    0.0    30000.0 /               ! MILLER 1992
+   CH2CHCHCH+O2=CHCHCHO+CH2O   1.00E+12 0.0     0.0 !   (QQ)
+   CH2CHCHCH+O2=CH2CHCCH+HO2   1.00E+07 2.0 10000.0 !   (RR)
+   CH3CCCH2+H2CCCH=C6H5CH2+H   3.00E+12 0.0     0.0 ! MARINOV 1996
+   CH3CHCCH+H2CCCH=C6H5CH2+H   3.00E+12 0.0     0.0 ! MARINOV 1996
+   CH3CCCH2+CH3CCCH2=CH3C6H4CH2+H 3.00E+12 0.0  0.0 ! MARINOV 1996
+   CH3CHCCH+CH3CHCCH=CH3C6H4CH2+H 3.00E+12 0.0  0.0 ! MARINOV 1996
+   H2CCCCH2+OH=H2CCCCH+H2O     2.00E+07 2.0  2000.0 ! (SS)
+   H2CCCCH2+H=H2CCCCH+H2       3.00E+07 2.0  6000.0 ! (SS)
+   CH2CHCCH+OH=HCCHCCH+H2O     7.50E+06 2.0  5000.0 ! MILLER 1992
+   CH2CHCCH+H=HCCHCCH+H2       2.00E+07 2.0 15000.0 ! MILLER 1992
+   CH2CHCCH+OH=H2CCCCH+H2O     1.00E+07 2.0  2000.0 ! MILLER 1992
+   CH2CHCCH+H=H2CCCCH+H2       3.00E+07 2.0  5000.0 ! MILLER 1992
+   HCCHCCH+H=H2CCCCH+H         1.00E+14 0.0     0.0 ! MILLER 1992
+   HCCHCCH+C2H2=C6H5           9.60E+70 -17.77 31300.! WANG   1994
+   HCCHCCH+O2=HCCCHO+HCO       3.00E+12 0.0     0.0 !   (TT)
+   H2CCCCH+O2=CH2CO+HCCO       1.00E+12 0.0     0.0 ! MILLER 1992
+   H2CCCCH+OH=C4H2+H2O         3.00E+13 0.0     0.0 ! MILLER 1992
+   H2CCCCH+O=CH2CO+C2H         2.00E+13 0.0     0.0 ! MILLER 1992
+   H2CCCCH+O=H2C4O+H           2.00E+13 0.0     0.0 ! MILLER 1992
+   H2CCCCH+H=C4H2+H2           5.00E+13 0.0     0.0 ! MILLER 1992
+   H2CCCCH+CH2=AC3H4+C2H       2.00E+13 0.0     0.0 ! MILLER 1992
+   H2CCCCH+C2H2=C6H5           3.00E+11 0.0 14900.0 !   (UU)
+   H2CCCCH(+M)=C4H2+H(+M)      1.00E+14 0.0 47000.0 ! MARINOV 1998
+   LOW / 2.0E+15 0.0 40000.0/                       ! MARINOV 1998
+   HCCHCCH(+M)=C4H2+H(+M)      1.00E+14 0.0 36000.0 ! MILLER 1992
+   LOW / 1.00E+14    0.0    30000.0  /              ! MILLER 1992
+   C4H2+CH2=C5H3+H             1.30E+13 0.0  4326.0 ! MILLER 1992
+   C4H2+CH=C5H2+H              1.00E+14 0.0     0.0 ! MILLER 1992
+   C4H2+CH2(S)=C5H3+H          3.00E+13 0.0     0.0 ! MILLER 1992
+   C4H2+C2H=C6H2+H             9.60E+13 0.0     0.0 ! MARINOV 1996
+   C4H2+OH=H2C4O+H             6.66E+12 0.0  -410.0 ! MILLER 1992
+   C4H2+O=C3H2+CO              1.20E+12 0.0     0.0 ! MILLER 1992
+   H2C4O+H=C2H2+HCCO           5.00E+13 0.0  3000.0 ! MILLER 1992
+   H2C4O+OH=CH2CO+HCCO         1.00E+07 2.0  2000.0 ! MILLER 1992
+!
+! HEPTANE SCHEME BY EL BAKALI A., DELFAU J-L.,
+!
+   NC7H16=NC3H7+C4H9-1          3.16E+16        0       81004.78 ![28]
+   NC7H16=C2H5+C5H11-1          6.50E+16        0       82000      ![1]
+   NC7H16+H= H2 + C7H15-1               5.60E+07        2       7700.95  ![51]
+   NC7H16 +O= OH+C7H15-1                4.35E+06        2.4     5500       ![51]
+   NC7H16 +OH=H2O+C7H15-1               1.04E+10        0.97    1590.91  ![51]
+   NC7H16+CH3=CH4+C7H15-1               1.28E+12        0       11600.48 ![51]   
+   NC7H16+H=H2+C7H15-2                1.83E+07  2       5000     !
+   NC7H16+O=C7H15-2+OH                6.20E+05  2.5     2229.66     
+   NC7H16 +OH=H2O+C7H15-2               9.38E+07        1.6   -40.7  ![51]
+   NC7H16 +CH3=CH4+C7H15-2              7.98E+11        0.0   9500  ![51]
+   NC7H16+H=C7H15-3+H2                1.83E+07  2       5000       ![51]
+   NC7H16+O=C7H15-3+OH                6.20E+05  2.5     2229.66     
+   NC7H16 +OH=H2O+C7H15-3               9.38E+07        1.6   -40.7  ![51]
+   NC7H16 +CH3=CH4+C7H15-3              7.98E+11        0.0   9500  ![51]
+   NC7H16 +H=C7H15-4+H2         9.14E+06        2       5000       ![51]
+   NC7H16+O=C7H15-4+OH                6.20E+05  2.5     2229.66     
+   NC7H16+OH=C7H15-4+H2O                4.69E+07        1.61    -40.67   ![51]
+   NC7H16+CH3 = C7H15-4+CH4             3.99E+11        0       9500       ![51]
+   C7H15-1=>C7H15-3             2.00E+11        0       11100.48 ![28]
+   C7H15-3=>C7H15-1             3.00E+11        0       14102.87 ![28]
+   C7H15-1=>C7H15-4             2.00E+11        0       18102.87 ![28]
+   C7H15-4=>C7H15-1             6.00E+11        0       21102.87 ![28]
+   C7H15-2=>C7H15-3             2.00E+11        0       18102.87 ![28]
+   C7H15-3=>C7H15-2             2.00E+11        0       18102.87 ![28]
+   C7H15-1=>C7H15-2             2.00E+11        0       18102.87 ![28]
+   C7H15-2=>C7H15-1             3.00E+11        0       21102.87 ![28]
+   C7H15-1+O2=C7H14-1+HO2               3.00E+12        0       2000       ![28]X3
+   C7H15-2+O2=C7H14-1+HO2               3.00E+12        0       4500       ![28]X3
+   C7H15-2+O2=C7H14-2+HO2               6.00E+12        0       4251.19  ![28]X3
+   C7H15-3+O2=C7H14-2+HO2               6.00E+12        0       4251.19  ![28]X3
+   C7H15-3+O2=C7H14-3+HO2               6.00E+12        0       4251.19  ![28]
+   C7H15-4+O2=C7H14-3+HO2               4.00E+12        0       4251.19  ![28]
+   C5H11-1+O2=C5H10-1+HO2               1.00E+12        0       2000       ![28]
+   C4H9-1+O2=C4H8-1+HO2         1.00E+12        0       2000       ![60]
+!   NC3H7+O2=C3H6+HO2           1.00E+12        0       5000       ![11]
+   C7H15-1=C5H11-1+C2H4         2.50E+13        0       28799.04 ![39]
+   C7H15-2=C4H9-1+C3H6          1.60E+13        0       28299.04 ![39]
+   C7H15-3=C4H8-1+NC3H7         1.50E+13        0       29100.48 ![18]
+   C7H15-3=C6H12-1+CH3          7.94E+13        0       33000      ![39]
+   C7H15-4=C5H10-1+C2H5         1.00E+13        0       28000      ![53]
+   C5H11-1=C2H4+NC3H7           3.20E+13        0       28399.52 ![39]
+   C4H9-1=C2H5+C2H4             2.50E+13        0       28799.04 ![8]
+   NC3H7=CH3+C2H4               1.20E+13        0       30330.14 ![38]
+   C7H14-2+H=>C5H10-1+C2H3+H2           8.00E+06        2       5000       ![22]
+   C7H14-1+H=>C5H10-1+C2H3+H2           8.00E+06        2       5000       ![28]
+   C7H14-1+H=C2H5+C5H10-1               2.27E+13        0       1873.20  ![18]
+   C7H14-1+H=>C3H6+BC4H7+H2             9.14E+06        2       5000       ![18]
+   C7H14-2+H=>C3H6+C4H7+H2              9.14E+06        2       5000       ![*]
+   C7H14-1+O=>C2H3+C5H10-1+OH           2.82E+13        0       5200.95  ![28]
+   C7H14-1+O=>AC3H5+C4H8-1+OH           2.82E+13        0       5200.95  ![28]
+   C7H14-1+O=>BC4H7+C3H6+OH             2.82E+13        0       5200.95  ![28]
+   C7H14-1+O=>C5H9+C2H4+OH              5.00E+13        0       7851.67  ![28]
+   C7H14-2+O=>C2H3+C5H10-1+OH           2.82E+13        0       5200.95  ![28
+   C7H14-2+O=>AC3H5+C4H8-1+OH           2.82E+13        0       5200.95  ![28]
+   C7H14-2+O=>C4H7+C3H6+OH              2.82E+13        0       5200.95  ![28]
+   C7H14-2+O=>C5H9+C2H4+OH              5.00E+13        0       7851.67  ![28]
+   C7H14-3+O=>C5H9+C2H4+OH              5.00E+13        0       7851.67  ![28]
+   C7H14-1+OH=>C4H8-1+AC3H5+H2O         1.30E+09        1.25    703.35   ![18]
+   C7H14-1+OH=>C5H10-1+C2H3+H2O         1.30E+09        1.25    700.96   ![28]
+   C7H14-1+OH=>BC4H7+C3H6+H2O           1.30E+09        1.25    700.96   ![28]
+   C7H14-1+OH=>C5H9+C2H4+H2O            4.27E+09        1.05    1811.00  ![28]
+   C7H14-2+OH=>C4H8-1+AC3H5+H2O         1.30E+09        1.25    703.35   ![28]
+   C7H14-2+OH=>C5H10-1+C2H3+H2O         1.30E+09        1.25    700.96   ![28]
+   C7H14-2+OH=>C4H7+C3H6+H2O            1.30E+09        1.25    700.96   ![28]
+   C7H14-2+OH=>C5H9+C2H4+H2O            4.27E+09        1.05    1811.00  ![28]
+   C7H14-3+OH=>C5H9+C2H4+H2O            4.27E+09        1.05    700.96   ![28]
+   C6H12-1+H =>C2H4+BC4H7+H2            2.80E+07        2       7700.96  ![18]
+   C6H12-1+OH=>C2H4+BC4H7+H2O           5.21E+09        0.97    1590.91  ![181
+   C6H12-1+O=>C2H4+BC4H7+OH             2.17E+06        2.4     5500       ![18]
+   C5H10-1+H=>C2H4+ AC3H5+H2            2.80E+07        2       7700.96  ![181
+   C5H10-1+H=>C3H6+ C2H3+H2             9.14E+06        2       5000       ![18]
+   C5H10-1+OH=>C2H4+AC3H5+H2O           5.21E+09        0.97    1590.91  ![18]
+   C5H10-1+OH=>C3H6+C2H3+H2O            4.69E+07        1.61    -40.67   ![18]
+   C5H10-1+O=>C2H4+AC3H5+OH             2.17E+06        2.4     5500       ![18]
+   C5H10-1+O=>C3H6+C2H3+OH              3.10E+05        2.5     2229.66  ![18]
+   C4H8-1+H=BC4H7+H2            2.80E+07        2       7700.96  ![18]
+   C4H8-1+OH=BC4H7+H2O          5.21E+09        0.97    1590.91  ![18]
+   C4H8-1+O=BC4H7+OH            2.17E+06        2.4     5500       ![18]
+   C7H14-1=C4H9-1+AC3H5         2.50E+16        0       71339.71 ![281
+   C7H14-2=NC3H7+C4H7           1.60E+16        0       69299.04
+   C7H14-3=C2H5+C5H9            1.60E+16        0       69299.04
+   C7H14-1=>CH3+C4H6-13+C2H5            5.30E+16        0       73000      ![41]
+ !  C4H8-1=AC3H5+CH3            1.00E+19        -1      73401.91 ![28]
+   C5H10-1=AC3H5+C2H5           1.00E+19        -1      73401.91
+   C6H12-1=NC3H7+AC3H5          2.50E+16        0       71100.48 ![28]
+   C5H11-1=C5H10-1+H            1.30E+13        0       38600.48 ![28]
+   C6H12-1+H=C6H11+H2           8.02E+13        0       3399.52  ![51]
+   C6H12-1+O=C6H11+OH           4.00E+13        0       4000       ![51]
+   C6H12-1+OH=C6H11+H2O         2.00E+13        0       2600.48  ![51]
+   C6H12-1+CH3 =C6H11+CH4               2.00E+11        0       6799.04  ![51]
+   C5H10-1+H=>C4H6-13+CH3+H2            1.73E+05        2.5     2495.21  ![18]
+   C5H10-1+OH=>C4H6-13+CH3+H2O          3.12E+06        2       -299.04  ![181
+   C5H10-1+O=C4H6-13+CH3 + OH           1.75E+11        0.7     5887.56  ![18]
+!  C4H8-1+H=C4H7+H2             1.73E+05        2.5     2495.21  ![18]
+!  C4H8-1+OH=C4H7+H2O           3.12E+06        2       -299.04  ![18]
+   C4H8-1+O=C4H7+OH             1.75E+11        0.7     5887.56  ![181
+   C5H10-1+H=C2H5+C3H6          2.27E+13        0       1870.81  ![18]
+   C5H10-1+H=NC3H7+C2H4         2.27E+13        0       3569.38  ![18]
+   C6H12-1+H=NC3H7+C3H6         2.27E+13        0       1870.81  ![18]
+   C6H12-1+H=C4H9-1+C2H4                2.27E+13        0       3569.38  ![18]
+   C4H8-1+H=C3H6+CH3            2.27E+13        0       1861.24  ![521
+   C4H8-1+H=C2H4+C2H5           2.27E+13        0       3569.38  ![18]
+   C6H12-1+O=>C5H10-1+CH2O              7.23E+05        2.34    -1050.24 ![18]
+   C6H12-1+O=>CH3CHO+C4H8-1             1.29E+13        0       849.28   ![18]
+   C6H12-1+O=>CH3+CO+C4H9-1             1.29E+13        0       849.28   ![18]
+   C6H12-1+OH=C5H11-1+CH2O              1.50E+12        0       0          ![18]
+   C6H12-1+OH=C4H9-1+CH3CHO             1.00E+11        0       0          ![18]
+   C6H12-1+OH=>CH3 +CO+C4H10            1.00E+10        0       0          ![18]
+   C5H10-1+O=>CH2O+C4H8-1               7.23E+05        2.34    -1050.24 ![18]
+   C5H10-1+O=>CH3CHO+C3H6               1.29E+13        0.0     849.28   ![18]
+   C5H10-1+O=>CH3+CO+NC3H7              1.29E+13        0.0     849.28   ![18]
+   C5H10-1+OH=CH2O+C4H9-1               1.50E+12        0.00     0.00      !
+   C5H10-1+OH=NC3H7+CH3CHO              1.00E+11        0.00   0.00        ![28]
+   C5H10-1+OH=>CH3+CO+C3H8              1.00E+10        0.0      0.0       ![18]
+   C4H8-1+O=>C3H6+CH2O                  7.23E+05        2.34    -1050.24 ![43]
+   C4H8-1+O=>CH3CHO+C2H4                1.29E+13        0       849.28   ![43]
+   C4H8-1+O=>CH3+CO+C2H5                1.29E+13        0       849.28   ![43]
+   C4H8-1+OH=C2H5+CH3CHO                1.00E+11        0       0          ![57]
+   C4H8-1+OH=>CH3+CO+C2H6               1.00E+10        0       0          ![57]
+   C4H8-1+OH=NC3H7+CH2O         1.50E+12        0       0          ![57]
+   C5H9+O2=L-C5H8+HO2           1.00E+11        0       0          ![18]
+   C6H11=C2H3+C4H8-1            2.50E+13        0       30000      ![*]
+   C6H11=C3H6+AC3H5             2.52E+11        0       30000      ![28]
+   C6H11=C2H5+C4H6-13           1.00E+13        0       32000      ![53]
+   C5H9=C2H4+AC3H5              3.31E+13        0       22521.53 ![54]
+   C5H9=C2H4+SC3H5              6.99E+12        0       31842.10 ![18]
+   C5H9=CH3 +C4H6-13            1.26E+13        0       38236.84 ![55]
+   C5H9=NC3H7+C2H2              1.26E+13        0       33430.62 ![18]
+   C4H7+O2=C4H6-13+HO2          6.03E+11        0       10000      ![18]
+!  C4H7+H =C4H8-1               2.00E+14        0       0          ![18]
+   C4H7=C4H6-13+H               1.00E+14        0       38000      ![28]
+   C4H7+H =>C4H6-13+H2          3.16E+12        0       0          ![57]
+   C2H2 +C2H5=C4H7              2.61E+46        -9.82   36952.15 ![18]
+   BC4H7+O2=C4H6-13+HO2         2.00E+12        0       5004.78  ![18]
+   BC4H7+H=C4H8-1               2.00E+14        0       0          ![18]
+   BC4H7=C4H6-13+H              3.16E+13        0       34832.53 ![56]
+   BC4H7+H=>C4H6-13+H2          3.16E+12        0       0          ![57]
+   C2H3+C2H4=BC4H7              2.00E+11        0       2000       ![56]
+! 
+! AROMATICS
+!
+   L-C5H8+OH=L-C5H7+H2O        7.00E+06 2.0     0.0 !     (Q)
+   L-C5H8+H=L-C5H7+H2          7.00E+06 2.0  5000.0 !     (Q)
+   L-C5H8+H=AC3H5+C2H4         3.35E+08 1.5  2000.0 !     (R)
+   C-C5H7=C-C5H6+H             3.16E+15 0.0 36000.0 ! ARENDS 1993
+   C-C5H7=L-C5H7               3.16E+15 0.0 39500.0 ! ARENDS 1993
+   L-C5H7+O=CH2CHCHO+C2H3      2.00E+14 0.0     0.0 ! MARINOV 1996
+   L-C5H7+H=L-C5H8             1.00E+14 0.0     0.0 ! MARINOV 1996
+   C-C5H6+O2=C-C5H5+HO2        5.00E+13 0.0 35400.0 !    (VV)
+   C-C5H6+HO2=C-C5H5+H2O2      1.99E+12 0.0 11660.0 ! EMDEE 1992 
+   C-C5H6+OH=C-C5H5+H2O        3.43E+09 1.18 -447.0 ! EMDEE 1992
+   C-C5H6+O=C-C5H5+OH          1.81E+13 0.0  3080.0 ! EMDEE 1992
+   C-C5H6+H=C-C5H5+H2          2.19E+08 1.77 3000.0 ! EMDEE 1992
+   C-C5H6+CH3=C-C5H5+CH4       3.11E+11 0.0  5500.0 !   (WW)
+   C-C5H6+C2H3=C-C5H5+C2H4     6.00E+12 0.0     0.0 ! EMDEE 1992
+   C-C5H6+CH2CHCHCH=C-C5H5+CH2CHCHCH2  6.00E+12 0.0   0.0 ! EMDEE 1992
+   C-C5H6+C6H5O=C-C5H5+C6H5OH  3.16E+11 0.0  8000.0 ! EMDEE 1992
+   C-C5H5+H=C-C5H6             2.00E+14 0.0     0.0 ! MARINOV 1996
+   C-C5H5+O=C-C5H4O+H          1.00E+14 0.0     0.0 ! MARINOV 1996
+   C-C5H5+HO2=C-C5H5O+OH       3.00E+13 0.0     0.0 ! EMDEE 1992
+   C-C5H5+OH=C-C5H4OH+H        3.00E+13 0.0     0.0 ! EMDEE 1992        
+   C-C5H5+C-C5H5=C10H8+H+H     2.00E+13 0.0  8000.0 ! MARINOV 1998
+   C-C5H5O=CH2CHCHCH+CO        2.51E+11 0.0 43900.0 ! EMDEE 1992        
+   C-C5H4OH=C-C5H4O+H          2.10E+13 0.0 48000.0 ! EMDEE 1992
+   C-C5H4O=CO+C2H2+C2H2        1.00E+15 0.0 78000.0 ! EMDEE 1992
+   C6H6+O2=C6H5+HO2            6.30E+13 0.0 60000.0 ! EMDEE 1992
+   C6H6+OH=C6H5+H2O            1.63E+08 1.42 1454.0 ! BAULCH 1992
+   C6H6+OH=C6H5OH+H            6.70E+12 0.0 10592.0 ! HE 1988 (XX)
+   C6H6+O=C6H5O+H              2.40E+13 0.0  4670.0 ! LEIDREITER 1989
+   C6H6+H=C6H5+H2              3.03E+02 3.3  5690.0 !   (YY)
+   C6H5+H=C6H6                 8.00E+13 0.0     0.0 ! BAULCH 1992
+   C6H5+C2H4=C6H5C2H3+H        7.23E+01 3.5  8345.0 ! YU  1994
+   C6H5+C2H2=C6H5C2H+H         3.98E+13 0.0 10099.0 ! STEIN 1989
+   C6H5+OH=C6H5O+H             5.00E+13 0.0     0.0 ! MILLER 1992
+   C6H5+O=C-C5H5+CO            1.00E+14 0.0     0.0 ! FRANK 1994
+   C6H5+O2=C6H5O+O             2.60E+13 0.0  6120.0 ! FRANK 1994
+   C6H5+O2=OC6H4O+H            3.00E+13 0.0  8981.0 ! FRANK 1994
+   C6H5+C6H5=BIPHENYL          5.00E+12 0.0     0.0 ! FAHR 1989
+   C6H5+C6H6=BIPHENYL+H        4.00E+11 0.0  4000.0 ! FAHR 1989
+   OC6H4O=C-C5H4O+CO           1.00E+15 0.0 78000.0 ! MARINOV 1996
+   C6H5O=CO+C-C5H5             7.40E+11 0.0 43850.0 ! FRANK 1994
+   C6H5O+H=C6H5OH              1.00E+14 0.0     0.0 ! ARENDS 1993
+   C6H5O+H=C-2*4C6H6O          1.00E+14 0.0     0.0 ! ARENDS 1993
+   C6H5OH+OH=C6H5O+H2O         2.95E+06 2.0 -1310.0 ! KNISPEL 1990
+   C6H5OH+CH3=C6H5O+CH4        1.81E+11 0.0  7716.0 ! MULCAHY 1965
+   C6H5OH+H=C6H5O+H2           1.58E+13 0.0  6100.0 ! ARENDS 1993
+   C6H5OH+O=C6H5O+OH           2.81E+13 0.0  7352.0 ! EMDEE 1992
+   C6H5OH+C2H3=C2H4+C6H5O      6.00E+12 0.0     0.0 ! EMDEE 1992
+   C6H5OH+C6H5=C6H6+C6H5O      4.91E+12 0.0  4400.0 ! EMDEE 1992
+   C-2*4C6H6O+H=C-C5H7+CO      2.51E+13 0.0  4700.0 ! ARENDS 1993
+   C6H5CH3=C6H5+CH3            1.40E+16 0.0 99800.0 ! EMDEE 1992
+   C6H5CH3+O2=C6H5CH2+HO2      2.00E+12 0.0 39080.0 ! INGRAM 1994
+   C6H5CH3+OH=C6H5CH2+H2O      1.26E+13 0.0 2583.0  ! EMDEE 1992        
+   C6H5CH3+O=C6H5CH2+OH        5.00E+08 1.5 8000.0  ! EMDEE 1992
+   C6H5CH3+H=C6H5CH2+H2        3.98E+02 3.44 3120.0 ! EMDEE 1992
+   C6H5CH3+H=C6H6+CH3          1.20E+13 0.0 5148.0  ! EMDEE 1992
+   C6H5CH3+O=OC6H4CH3+H        1.63E+13 0.0 3418.0  ! EMDEE 1992
+   C6H5CH3+CH3=CH4+C6H5CH2     3.16E+11 0.0 9500.0  ! EMDEE 1992
+   C6H5CH3+C6H5=C6H6+C6H5CH2   2.10E+12 0.0 4400.0  ! EMDEE 1992
+   C6H5CH2+H=C6H5CH3           1.80E+14 0.0    0.0  ! EMDEE 1992
+   C6H5CH2+C6H5OH=C6H5O+C6H5CH3 1.05E+11 0.0 9500.0 ! EMDEE 1992
+   C6H5CH2+HOC6H4CH3=OC6H4CH3+C6H5CH3 1.05E+11 0.0 9500.0 ! EMDEE 1992
+   C6H5CH2+O=C6H5CHO+H         2.50E+14 0.0    0.0  ! EMDEE 1992
+   C6H5CH2+O=C6H5+CH2O         8.00E+13 0.0    0.0  ! EMDEE 1992
+   C6H5CH2+HO2=C6H5CHO+H+OH    2.50E+14 0.0    0.0  ! EMDEE 1992
+   C6H5CH2+HO2=C6H5+CH2O+OH    8.00E+13 0.0    0.0  ! EMDEE 1992
+   C6H5CH2+CH3=C6H5C2H5        1.19E+13 0.0  221.0  ! BRAND  1990
+   C6H5CH2+H2CCCH=C10H10       1.00E+10 0.0    0.0  !  (ZZ)
+   C6H5CH2+C2H2=INDENE+H       3.20E+11 0.0 7000.0  !  (AAA)
+   C6H5CH2+C6H5CHO=C6H5CH3+C6H5CO 2.77E+03 2.81 5773.0 ! EMDEE 1992
+   C6H5CH2+OH=C6H5CH2OH        6.00E+13 0.0    0.0  ! EMDEE 1992
+   C6H5CH2OH+OH=C6H5CHO+H2O+H  8.43E+12 0.0 2583.0  ! EMDEE 1992
+   C6H5CH2OH+H=C6H5CHO+H2+H    8.00E+13 0.0 8235.0  ! EMDEE 1992
+   C6H5CH2OH+H=C6H6+CH2OH      1.20E+13 0.0 5148.0  ! EMDEE 1992
+   C6H5CH2OH+C6H5CH2=C6H5CHO+C6H5CH3+H 2.11E+11 0.0  9500. ! EMDEE92
+   C6H5CH2OH+C6H5=C6H5CHO+C6H6+H 1.40E+12 0.0 4400.0 ! EMDEE 1992
+   C6H5CHO+O2=C6H5CO+HO2       1.02E+13 0.0 38950.0 ! EMDEE 1992
+   C6H5CHO+OH=C6H5CO+H2O       1.71E+09 1.18 -447.0 ! EMDEE 1992
+   C6H5CHO+H=C6H5CO+H2         5.00E+13 0.0  4928.0 ! EMDEE 1992
+   C6H5CHO+H=C6H5+CH2O         2.00E+13 0.0  2000.0 !  (R)
+   C6H5CHO+H=C6H6+HCO          1.20E+13 0.0  5148.0 ! EMDEE 1992
+   C6H5CHO+O=C6H5CO+OH         9.04E+12 0.0  3080.0 ! EMDEE 1992
+   C6H5CHO+CH3=CH4+C6H5CO      2.77E+03 2.81 5773.0 ! EMDEE 1992
+   C6H5CHO+C6H5=C6H6+C6H5CO    7.01E+11 0.0  4400.0 ! EMDEE 1992
+   C6H5CO=C6H5+CO              3.98E+14 0.0 29400.0 ! EMDEE 1992
+   OC6H4CH3+H=HOC6H4CH3        2.50E+14 0.0     0.0 ! EMDEE 1992
+   OC6H4CH3=C6H6+H+CO          2.51E+11 0.0 43900.0 ! EMDEE 1992
+   HOC6H4CH3+OH=OC6H4CH3+H2O   6.00E+12 0.0     0.0 ! EMDEE 1992
+   HOC6H4CH3+H=OC6H4CH3+H2     1.15E+14 0.0 12400.0 ! EMDEE 1992
+   HOC6H4CH3+H=C6H5CH3+OH      2.21E+13 0.0  7910.0 ! EMDEE 1992
+   HOC6H4CH3+H=C6H5OH+CH3      1.20E+13 0.0  5148.0 ! EMDEE 1992
+   C6H5C2H5+OH=C6H5C2H3+H2O+H  8.43E+12 0.0  2583.  ! EMDEE 1992
+   C6H5C2H5+H=C6H5C2H3+H2+H    8.00E+13 0.0  8235.0 ! EMDEE 1992
+   C6H5C2H3+OH=C6H4C2H3+H2O    1.63E+08 1.42 1454.0 ! MARINOV 1996
+   C6H5C2H3+H=C6H4C2H3+H2      3.03E+02 3.3  5690.0 ! MARINOV 1996
+   C6H5C2H3+OH=C6H5CCH2+H2O    1.00E+07 2.0  2000.0 ! MARINOV 1996
+   C6H5C2H3+H=C6H5CCH2+H2      2.00E+07 2.0  6000.0 ! MARINOV 1996
+   C6H5CHCH+H=C6H5CCH2+H       1.00E+14 0.0     0.0 ! MARINOV 1996
+   C6H5CCH2+OH=C6H5C2H+H2O     2.00E+13 0.0     0.0 ! MARINOV 1996
+   C6H5CCH2+H=C6H5C2H+H2       5.00E+13 0.0     0.0 ! MARINOV 1996
+   C6H5C2H+O=C6H5CCO+H         4.80E+09 1.0     0.0 !  (BBB)
+   C6H5CCO+O2=C6H5CO+CO2       1.00E+12 0.0     0.0 !  (CCC)
+   C6H5C2H+OH=C6H4C2H+H2O      1.63E+08 1.42 1454.0 ! MARINOV 1996
+   C6H5C2H+H=C6H4C2H+H2        3.03E+02 3.3  5690.0 ! MARINOV 1996
+   C6H5C2H+CH3=C6H4C2H+CH4     1.67E+12 0.0 15057.0 ! MARINOV 1996
+   C6H4C2H+C2H2=C10H7          1.068E+04 2.324 -657.3 !TOTAL WANG 94
+   C6H4C2H3+CH3=INDENE+H+H     2.00E+13 0.0     0.0 !   (EEE)
+   CH3C6H4CH3+OH=CH3C6H4CH2+H2O 2.95E+13 0.0 2623.0 ! MARINOV 1996
+   CH3C6H4CH3+O=CH3C6H4CH2+OH  5.00E+08 1.5  8000.0 ! MARINOV 1996
+   CH3C6H4CH3+H=CH3C6H4CH2+H2  3.98E+02 3.44 3120.0 ! MARINOV 1996
+   CH3C6H4CH2+C2H2=C10H10+H    3.20E+11 0.0  7000.0 ! MARINOV 1996
+   CH3C6H4CH2+C2H2=CH3INDENE+H 3.20E+11 0.0  7000.0 ! MARINOV 1996
+   CH3C6H4CH2+H=CH3C6H4CH3     7.46E+13 0.0    78.0 ! BRAND   1990
+   CH3C6H4CH2+CH3=CH3C6H4C2H5  6.00E+12 0.0   221.0 ! MARINOV 1996
+   INDENE+OH=INDENYL+H2O       3.43E+09 1.18 -447.0 ! MARINOV 1996
+   INDENE+O=INDENYL+OH         1.81E+13 0.0  3080.0 ! MARINOV 1996
+   INDENE+H=INDENYL+H2         2.19E+08 1.77 3000.0 ! MARINOV 1996
+   INDENYL+H=INDENE            2.00E+14 0.0     0.0 ! MARINOV 1996
+   INDENYL+O=C6H5CHCH+CO       1.00E+14 0.0     0.0 ! MARINOV 1996
+   INDENYL+HO2=C6H5CHCH+CO+OH  1.00E+13 0.0     0.0 ! MARINOV 1996
+   INDENYL+C-C5H5=PHNTHRN+H+H  1.00E+13 0.0   8000.0 ! MARINOV 1998
+   CH3C6H4C2H5+OH=CH3C6H4C2H3+H2O+H 8.43E+12  0.0  2583.0 ! MARINOV 1996
+   CH3C6H4C2H5+H=CH3C6H4C2H3+H2+H   8.00E+13  0.0  8235.0 ! MARINOV 1996
+   CH3C6H4C2H3+OH=INDENE+H+H2O      1.26E+13  0.0  2583.0 ! MARINOV 1996
+   CH3C6H4C2H3+H=INDENE+H+H2        3.98E+02  3.44 3120.0 ! MARINOV 1996
+   CH3INDENE+OH=CH3INDENYL+H2O      3.43E+09  1.18 -447.0 ! MARINOV 1996
+   CH3INDENE+O=CH3INDENYL+OH        1.81E+13  0.0  3080.0 ! MARINOV 1996
+   CH3INDENE+H=CH3INDENYL+H2        2.19E+08  1.77 3000.0 ! MARINOV 1996
+   CH3INDENE+H=INDENE+CH3           1.20E+13  0.0  5200.0 ! MARINOV 1996
+   CH3INDENYL+H=CH3INDENE           2.00E+14  0.0     0.0 ! MARINOV 1996
+   CH3INDENYL+C-C5H5=CH3PHNTHRN+H+H 1.00E+13  0.0  8000.0 ! MARINOV 1998
+   C10H10+OH=C10H9+H2O              5.00E+06  2.0     0.0 ! MARINOV 1996
+   C10H10+O=C10H9+OH                7.00E+11  0.7  6000.0 ! MARINOV 1996
+   C10H10+H=C10H9+H2                2.00E+05  2.5  2500.0 ! MARINOV 1996
+   C10H9+H=C10H10                   1.00E+14  0.0     0.0 ! MARINOV 1996
+   C10H8+H=C10H9                    5.00E+14  0.0  5000.0 ! SAUER 1970
+   C10H8+OH=C10H7+H2O               2.44E+08  1.42 1454.0 ! MARINOV 1996
+   C10H8+OH=C10H7OH+H               9.00E+12  0.0 10592.0 ! MARINOV 1996
+   C10H8+O=C10H7O+H                 1.40E+13  0.0  1792.0 ! FRERICHS1990
+   C10H8+H=C10H7+H2                 4.55E+02  3.3  5690.0 ! MARINOV 1996
+   C10H7+H=C10H8                    1.00E+14  0.0     0.0 ! MARINOV 1996
+   C10H7+O2=C10H7O+O                1.00E+13  0.0     0.0 !  (FFF)
+   C10H7+OH=C10H7O+H                5.00E+13  0.0     0.0 ! MARINOV 1996
+   C10H7+CH3=C10H7CH2+H             2.00E+13  0.0     0.0 !  (EEE)
+   C10H7+C2H2=ACENPHTHLN+H          1.00E+20 -2.08 12000.0 ! WANG 1994    
+   C10H7+C2H2=C10H7CCH+H            1.17E-7  5.248 -9482.0!TOTALWANG1994
+   C10H7+C6H5=FLRNTHN+H+H           5.00E+12  0.0     0.0 !  (GGG)
+   C10H7+C6H6=FLRNTHN+H+H2          4.00E+11  0.0  4000.0 !  (HHH)
+   C10H7O+H=C10H7OH                 1.00E+14  0.0     0.0 ! MARINOV 1996
+   C10H7OH+OH=C10H7O+H2O            2.95E+06  2.0 -1312.0 ! MARINOV 1996
+   C10H7OH+H=C10H7O+H2              1.58E+13  0.0  6100.0 ! MARINOV 1996
+   C10H7O=INDENYL+CO                7.40E+11  0.0 43850.0 ! MARINOV 1996
+   C10H7CH3+OH=C10H7CH2+H2O         1.27E+13  0.0  2583.0 ! MARINOV 1996
+   C10H7CH3+O=C10H7CH2+OH           5.00E+08  1.5  8000.0 ! MARINOV 1996
+   C10H7CH3+H=C10H7CH2+H2           3.98E+02  3.44 3120.0 ! MARINOV 1996
+   C10H7CH3+H=C10H8+CH3             1.20E+13  0.0  5148.0 ! MARINOV 1996
+   C10H7CH2+H=C10H7CH3              1.00E+14  0.0     0.0 ! MARINOV 1996
+   C10H7CH2+O=C10H7+CH2O            1.00E+14  0.0     0.0 ! MARINOV 1996
+   C10H7CH2+HO2=>C10H7+CH2O+OH      1.00E+13  0.0     0.0 ! MARINOV 1996
+   C10H7CH2+C2H2=BZ(A)NDENE+H       3.20E+11  0.0  7000.0 ! MARINOV 1996
+   C10H7CH2+CH3=C10H7C2H5           1.19E+13  0.0   221.0 ! MARINOV 1996
+   C10H7C2H5+OH=C10H7C2H3+H2O+H     8.44E+12  0.0  2583.0 ! MARINOV 1996
+   C10H7C2H5+H=C10H7C2H3+H2+H       8.00E+13  0.0  8235.0 ! MARINOV 1996
+   C10H7C2H3+OH=C10H7CCH2+H2O       1.00E+07  2.0  2000.0 ! MARINOV 1996
+   C10H7C2H3+H=C10H7CCH2+H2         2.00E+07  2.0  6000.0 ! MARINOV 1996
+   C10H7CCH2+OH=C10H7CCH+H2O        2.00E+13  0.0     0.0 ! MARINOV 1996
+   C10H7CCH2+H=C10H7CCH+H2          5.00E+13  0.0     0.0 ! MARINOV 1996
+   C10H7CCH+OH=C10H6CCH+H2O         1.63E+08  1.42 1454.0 ! MARINOV 1996
+   C10H7CCH+H=C10H6CCH+H2           3.03E+02  3.3  5690.0 ! MARINOV 1996
+   C10H7CCH+H=ACENPHTHLN+H       8.459E+21  -2.614 7062.6 !TOTALWANG1994
+   C10H6CCH+C2H2=PHNTHRYL-1      1.068E+04 2.324 -657.3!TOTALWANG1994
+   FLUORENE+OH=FLUORYL+H2O       3.43E+09  1.18   -447.0 !MARINOV1996
+   FLUORENE+O=FLUORYL+OH         1.81E+13  0.0    3080.0 ! MARINOV 1996
+   FLUORENE+H=FLUORYL+H2         2.19E+08  1.77   3000.0 ! MARINOV 1996
+   FLUORYL+H=FLUORENE            2.00E+14  0.0       0.0 ! MARINOV 1996
+   BZ(A)NDNYL+H=BZ(A)NDENE       2.00E+14  0.0       0.0 ! MARINOV 1996
+   BZ(A)NDENE+OH=BZ(A)NDNYL+H2O  3.43E+09  1.18   -447.0 ! MARINOV 1996
+   BZ(A)NDENE+O=BZ(A)NDNYL+OH    1.81E+13  0.0    3080.0 ! MARINOV 1996
+   BZ(A)NDENE+H=BZ(A)NDNYL+H2    2.19E+08  1.77   3000.0 ! MARINOV 1996
+   BZ(A)NDNYL+C-C5H5=BZ(A)PHNTHRN+H+H 1.00E+13 0.0   8000.0 ! NMM 1996
+   PHNTHRN+OH=PHNTHRYL-1+H2O      2.17E+08  1.42   1454.0 ! MARINOV 1996
+   PHNTHRN+OH=PHNTHRYL-9+H2O      5.43E+07  1.42   1454.0 ! MARINOV 1996
+   PHNTHRN+OH=PHNTHROL-1+H        9.00E+12  0.0   10592.0 ! MARINOV 1996
+   PHNTHRN+OH=PHNTHROL-9+H        9.00E+12  0.0   10592.0 ! MARINOV 1996
+   PHNTHRN+H=PHNTHRYL-1+H2        4.04E+02  3.3    5690.0 ! MARINOV 1996
+   PHNTHRN+H=PHNTHRYL-9+H2        1.01E+02  3.3    5690.0 ! MARINOV 1996
+   ANTHRACN=PHNTHRN               8.00E+12  0.0   65000.0 ! COLKET 1994
+   PHNTHRYL-1+H=PHNTHRN           8.00E+13  0.0       0.0 ! MARINOV 1996
+   PHNTHRYL-9+H=PHNTHRN           8.00E+13  0.0       0.0 ! MARINOV 1996
+   PHNTHRYL-1+O2= PHNTHROXY-1+O     1.00E+13  0.0       0.0 !    (FFF)
+   PHNTHRYL-9+O2= PHNTHROXY-9+O     1.00E+13  0.0       0.0 !    (FFF)
+   PHNTHROL-1+OH=PHNTHROXY-1+H2O  2.95E+06  2.0   -1310.0 ! MARINOV 1996
+   PHNTHROL-1+H=PHNTHROXY-1+H2    1.59E+13  0.0    6100.0 ! MARINOV 1996
+   PHNTHROXY-1+H=PHNTHROL-1       1.00E+14  0.0       0.0 ! MARINOV 1996
+   PHNTHROL-9+OH=PHNTHROXY-9+H2O  2.95E+06  2.0   -1310.0 ! MARINOV 1996
+   PHNTHROL-9+H=PHNTHROXY-9+H2    1.59E+13  0.0    6100.0 ! MARINOV 1996
+   PHNTHROXY-9+H=PHNTHROL-9       1.00E+14  0.0       0.0 ! MARINOV 1996
+   PHNTHROXY-1=BZ(A)NDNYL+CO      7.40E+11  0.0   43850.0 ! MARINOV 1996
+   PHNTHROXY-9=FLUORYL+CO         7.40E+11  0.0   43850.0 ! MARINOV 1996   
+   PHNTHRYL-1+C2H2=A4+H       3.492E+10 0.557  5658.0 !TOTALWANG1996
+   PHNTHRYL-1+CH3=HC4-P(DEF)PTHN+H+H      2.00E+13 0.0      0.0 !  (EEE)
+   CH3PHNTHRN+OH=HC4-P(DEF)PTHN+H2O+H   1.27E+13 0.0   2583.0 ! NMM 1996
+   CH3PHNTHRN+H=HC4-P(DEF)PTHN+H2+H     3.98E+02 3.44  3120.0 ! NMM 1996
+   CH3PHNTHRN+H=PHNTHRN+CH3           1.20E+13 0.0   5148.0 !MARINOV1996
+   HC4-P(DEF)PTHN+OH=HC4-P(DEF)PTHYL+H2O   3.43E+09   1.18 -447.0 !NMM96
+   HC4-P(DEF)PTHN+O=HC4-P(DEF)PTHYL+OH     1.81E+13   0.0  3080.0 !NMM96 
+   HC4-P(DEF)PTHN+H=HC4-P(DEF)PTHYL+H2     2.19E+08   1.77 3000.0 !NMM96
+   HC4-P(DEF)PTHYL+H=HC4-P(DEF)PTHN   2.00E+14   0.0   0.0 !MARINOV 1996
+   BZ(A)PHNTHRN+H=BZ(GHI)FLN+H2+H   3.03E+02   3.3  5690.0 !MARINOV 1996
+   BZ(A)PHNTHRN+OH=BZ(GHI)FLN+H2O+H 1.63E+08   1.42 1454.0 !MARINOV 1996 
+   H2CCCH+CH2=CH2CHCCH+H             4.00E+13   0.0     0.0 !MILLER 1992 
+   C-C5H5+CH3=CH3CY24PD              1.76E+50 -11.0  18600. !RITTER 1990
+   CH3CY24PD+H=C-C5H6+CH3            1.00E+13   0.0  1300.0 !RITTER 1990 
+   C6H6+H=CH3CY24PD1                 2.39E+27 -3.92  29200. !RITTER 1990
+   CYC6H7=CH3CY24PD1                 5.00E+12   0.0  38100. !RITTER 1990
+   CH3CY24PD1+H=CH3CY24PD           1.00E+14   0.0     0.0 !MARINOV 1998
+   CH3CY24PD1+H=C-C5H5+CH3          1.00E+14   0.0     0.0 !MARINOV 1998
+   CYC6H7=CH3DCY24PD                5.50E+10   0.0  23500. !RITTER 1990
+   C6H6+H=CYC6H7                    4.87E+56 -12.73 26800. !RITTER 1990
+   CH3DCY24PD+H2=CH3CY24PD+H        4.00E+12   0.0  15000. !RITTER 1990
+   FULVENE=C6H6                    9.84E+37  -7.4  76979. !SHANDROSS1996
+   FULVENE+H=C6H6+H                 3.00E+12   0.5  2000.0 !MARINOV 1998
+   FULVENE+H=FULVENYL+H2            3.03E+2    3.3   5690. !MARINOV 1998
+   FULVENE+OH=FULVENYL+H2O         1.63E+8   1.42   1454. !MARINOV 1998
+   FULVENYL+H=C6H5+H               1.00E+14   0.0   0.0   !MARINOV 1998
+   FULVENYL+O2=C-C5H4O+HCO         1.00E+12   0.0   0.0   !MARINOV 1998 
+END
+

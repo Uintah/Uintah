@@ -1,0 +1,67 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+
+HashTable is a parameterized type (template class) that implements a
+Key/Data interface to a hash table.
+
+The hash table in accessed through the following methods:
+
+// Inserts the key/data pair into the hash table
+void insert(const Key& key, const Data& data);
+
+// Looks up key in the hashtable.  Returns 0 if not found.
+// Returns 1, and places the data item in data if it is found.
+// If more than one of "key" exist, it is undefined which it
+// will return.
+int lookup(const Key& key, Data& data);
+
+// Removes all items with key "key" from the hash table.
+// Returns the number actually removed
+int remove(const Key& key);
+
+// Empties the hash table
+void remove_all();
+
+// Returns how many items are stored in the hash table
+int size() const;
+
+
+In addition, the hash table may be walked through using the
+HashTableIter class.  The order in which the items are accessed is not
+defined and may change drasticly as items are added.  Removing
+and adding items while iterating through a hash table may produce
+unpredictable results.
+
+// Build a hash table iterator for a specific hash table
+HashTableIter(HashTable<Key, Data>*);
+
+// Reset the iterator to the first item
+void first();
+
+// Does the iterator point to a valid item?
+int ok();
+
+// Advance to the next item
+void operator++();
+
+// Get the key from the current item
+Key& get_key();
+
+// Get the data from the current item
+Data& get_data();
