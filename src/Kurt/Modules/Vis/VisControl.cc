@@ -185,24 +185,33 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
       if( subtype->getType() == TypeDescription::double_type){
 	 gsNames += " ";
 	gsNames += names[i];
+	if( gsVar.get() == "" ){ gsVar.set( names[i].c_str() ); }
       }	else if(subtype->getType() == TypeDescription::Vector) {
 	 gvNames += " ";
 	gvNames += names[i];
+	if( gvVar.get() == "" ){ gvVar.set( names[i].c_str() ); }
       } // else {Point,Tensor,Other}
     } else if(td->getType() ==  TypeDescription::ParticleVariable){
        const TypeDescription* subtype = td->getSubType();
       if( subtype->getType() == TypeDescription::double_type){
 	 psNames += " ";
 	psNames += names[i];
+	if( psVar.get() == "" ){ psVar.set( names[i].c_str() ); }
 	cerr << "Added scalar: " << names[i] << '\n';
       }	else if(subtype->getType() == TypeDescription::Vector) {
 	 pvNames += " ";
 	pvNames += names[i];
+	if( pvVar.get() == "" ){ pvVar.set( names[i].c_str() ); }
 	cerr << "Added vector: " << names[i] << '\n';
       } else if(subtype->getType() ==  TypeDescription::Point){
 	positionName = names[i];
       }// else { Tensor,Other}
     }
+  }
+  clString visible;
+  TCL::eval(id + " isVisible", visible);
+  cerr<<"isVisible = "<<visible<<endl;
+  if( visible == "1"){
     TCL::execute(id + " destroyFrames");
     TCL::execute(id + " build");
     
@@ -221,6 +230,7 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
     reset_vars();
   }
 }
+
 
 
 void VisControl::callback( int index)
@@ -280,28 +290,28 @@ void VisControl::graph(clString idx, clString var)
 //----------------------------------------------------------------
 void VisControl::execute() 
 { 
-   tcl_status.set("Calling VisControl!"); 
-
-#if 0
-   ArchiveHandle handle;
+  tcl_status.set("Calling VisControl!"); 
+  
+  ArchiveHandle handle;
    if(!in->get(handle)){
      std::cerr<<"Didn't get a handle\n";
      return;
    }
-#else
-   cerr << "Creating DataArchive\n";
-   ArchiveHandle handle = new Archive(new DataArchive("Uintah/disks.uda"));
-   cerr << "done\n";
-#endif
-  
+   
    cerr << "Calling setVars\n";
    if ( handle.get_rep() != archive.get_rep() ) {
-       
+     
      if (archive.get_rep()  == 0 ){
-       setVars( handle );
+       clString visible;
+       TCL::eval(id + " isVisible", visible);
+       if( visible == "0" ){
+	 TCL::execute(id + " ui");
+       }
      }
+     setVars( handle );
      archive = handle;
    }       
+     
    cerr << "done with setVars\n";
    DataArchive& archive = *((*(handle.get_rep()))());
    double t = time.get();
