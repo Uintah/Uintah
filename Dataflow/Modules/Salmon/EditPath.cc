@@ -38,8 +38,10 @@ POSSIBLE REVISIONS
     Adding support of PathWidget
 ----------------------------------------------------------------------*/
 
+
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/PathPort.h>
+#include <PSECore/Datatypes/CameraViewPort.h>
 #include <PSECore/Widgets/CrosshairWidget.h>
 
 #include <SCICore/Geom/View.h>
@@ -82,16 +84,16 @@ using PSECore::Widgets::CrosshairWidget;
 using SCICore::Thread::Semaphore;
 using SCICore::Thread::Mutex;
 using SCICore::Thread::Time;
-
-class EditPath : public Module {
-
+  
+  class EditPath : public Module {
+  
     enum ExecMsg { Default=1, add_vp, rem_vp, ins_vp, rpl_vp, init_new, 
 		   init_exist, test_path, save_path, get_to_view, 
 		   prev_view, next_view, set_step_size, mk_circle_path, w_show, 
 		   set_acc_mode, set_path_t};
     
     TCLint     tcl_num_views, tcl_is_looped, tcl_is_backed, tcl_auto_start;
-
+    
     TCLint    tcl_curr_roe;   
     TCLdouble tcl_step_size, tcl_speed_val, tcl_acc_val, tcl_rate;
     TCLint    UI_Init;
@@ -105,19 +107,22 @@ class EditPath : public Module {
     ExecMsg      exec_msg;
     View         c_view;
     clString     message;
-
+    
     CrosshairWidget* cross_widget;
     CrowdMonitor     widget_lock;
     GeomID           cross_id;
-
+    
     Semaphore    sem;
     Mutex        exec_lock;
-  
+    
     PathIPort*   ipath;
     PathOPort*   opath;
+    CameraViewOPort* ocam_view;
     GeometryOPort* ogeom;
     PathHandle   ext_path_h, new_path_h, curr_path_h;
-    
+    CameraViewHandle cv_h;
+    CameraView       camv;
+
 public:
     EditPath(const clString& id);
     virtual ~EditPath();
@@ -167,7 +172,8 @@ EditPath::EditPath(const clString& id)
   widget_lock("EditPath module widget lock"),
   sem("EditPath Semaphore", 0),
   exec_lock("exec_lock"),
-  message("")
+  message(""),
+  camv()
 {
   ipath=scinew PathIPort(this, "Path", PathIPort::Atomic);
   add_iport(ipath);
@@ -175,6 +181,10 @@ EditPath::EditPath(const clString& id)
   add_oport(opath);
   ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
+  ocam_view=scinew CameraViewOPort(this, "Camera View",  CameraViewIPort::Atomic);
+  add_oport(ocam_view);
+
+  cv_h=&camv;
 
   cross_widget =scinew CrosshairWidget(this, &widget_lock, 0.01);
   cross_widget->SetState(0);
@@ -320,9 +330,12 @@ void EditPath::execute()
 	data=ogeom->getData(0, 1);
     
 	if (data && data->view){
-	  if (curr_path_h->add_keyF(*(data->view))){
+	  c_view=*(data->view);
+	  if (curr_path_h->add_keyF(c_view)){
 	    curr_view=(curr_path_h->get_num_views()-1);
 	    is_changed=true;
+	    cv_h->set_view(c_view);
+	    ocam_view->send(cv_h);
 	    message="Key frame added";
 	  }
 	  else {
@@ -346,8 +359,12 @@ void EditPath::execute()
 	    if (curr_view==curr_path_h->get_num_views())  // last view deleted
 	      curr_view--;
 	    
-	    if (curr_path_h->get_keyF(curr_view, c_view))
+	    if (curr_path_h->get_keyF(curr_view, c_view)){
 	      ogeom->setView(0, c_view);
+	      cv_h->set_view(c_view);
+	      ocam_view->send(cv_h);
+	    }
+	      
 	    is_changed=true;
 	    message="Key frame removed";
 	  }
@@ -367,6 +384,8 @@ void EditPath::execute()
 	data=ogeom->getData(0, 1);
 	if (data && data->view){
 	  if (curr_path_h->ins_keyF(curr_view, *(data->view))){
+	    cv_h->set_view(*(data->view));
+            ocam_view->send(cv_h);
 	    is_changed=true;
 	    message="Key frame inserted";
 	  }
@@ -406,6 +425,8 @@ void EditPath::execute()
 	    }
 	    curr_path_h->get_keyF(curr_view, c_view);
 	    ogeom->setView(0, c_view);
+	    cv_h->set_view(c_view);
+            ocam_view->send(cv_h);
 	    is_changed=true;
 	  }
 	  else{ 
@@ -437,10 +458,12 @@ void EditPath::execute()
 	}
 					 
 	if (!tcl_stop.get()){
-	  cout << "moving ahead! tcl_stop is" << tcl_stop.get() << endl;
 	  double olds=speed_val;
 	  is_next=curr_path_h->get_nextPP(c_view, cv, speed_val, acc_val);  
 	  ogeom->setView(0, c_view);
+	  cv_h->set_view(c_view);
+	  ocam_view->send(cv_h);
+
 	  speed_val/=(rate=tcl_rate.get());
 	  acc_val=is_next?((speed_val-olds)/rate):0;
 
@@ -458,7 +481,6 @@ void EditPath::execute()
 	    return;
 	  }
 	  else {
-	    cout << "stopped!" << endl;
 	    curr_path_h->seek_start();
 	    curr_view=cv;
 	    update_tcl_var();
@@ -485,10 +507,15 @@ void EditPath::execute()
 	if (curr_path_h->get_keyF(cv, c_view)){
 	  curr_view=cv;
 	  ogeom->setView(0, c_view);
+	  cv_h->set_view(c_view);
+	  ocam_view->send(cv_h);
 	}
 	else {
-	  if (curr_path_h->get_keyF(curr_view, c_view))
+	  if (curr_path_h->get_keyF(curr_view, c_view)){
 	      ogeom->setView(0, c_view);
+	      cv_h->set_view(c_view);
+	      ocam_view->send(cv_h);
+	  }
 	}
 	update_tcl_var();
 	break;
@@ -499,10 +526,15 @@ void EditPath::execute()
 	if (curr_path_h->get_keyF(cv, c_view)){
 	  curr_view=cv;
 	  ogeom->setView(0, c_view);
+	  cv_h->set_view(c_view);
+	  ocam_view->send(cv_h);
 	}
 	else {
-	  if (curr_path_h->get_keyF(curr_view, c_view))
+	  if (curr_path_h->get_keyF(curr_view, c_view)){
 	      ogeom->setView(0, c_view);
+	      cv_h->set_view(c_view);
+	      ocam_view->send(cv_h);
+	  }
 	}
 	update_tcl_var();
 	break;
@@ -747,6 +779,9 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
 
 //
 // $Log$
+// Revision 1.5  2000/08/20 04:24:20  samsonov
+// added CameraView outport
+//
 // Revision 1.4  2000/08/09 08:01:45  samsonov
 // final version
 //
