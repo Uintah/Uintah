@@ -26,7 +26,7 @@ using namespace SCIRun;
 int
 main(int argc, char **argv) {
   if (argc != 3) {
-    printf("Usage: %s ElectrodeToContour electrod CurveField\n", argv[0]);
+    printf("Usage: %s ElectrodeToContour electrode CurveField\n", argv[0]);
     exit(0);
   }
   FILE *fin = fopen(argv[1], "rt");
@@ -49,11 +49,11 @@ main(int argc, char **argv) {
     exit(0);
   }
   cm->add_node(Point(x,y,0)); // handle
-  cm->add_node(Point(x,y,10)); // handle
-  cm->add_node(Point(x+10,y,10)); // handle
-  cm->add_node(Point(x-10,y,10)); // handle
-  cm->add_node(Point(x,y+10,10)); // handle
-  cm->add_node(Point(x,y-10,10)); // handle
+  cm->add_node(Point(x,y,0.10)); // handle
+  cm->add_node(Point(x+0.10,y,0.10)); // handle
+  cm->add_node(Point(x-0.10,y,0.10)); // handle
+  cm->add_node(Point(x,y+0.10,0.10)); // handle
+  cm->add_node(Point(x,y-0.10,0.10)); // handle
   cm->add_edge(0,1);
   cm->add_edge(2,3);
   cm->add_edge(4,5);
