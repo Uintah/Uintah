@@ -2143,6 +2143,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
                                                 DataWarehouse*,
                                                 DataWarehouse* new_dw)
 {
+  new_dw->unfinalize();
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
     cout_doing << "Doing actuallyInitializeAddedMPMMaterial on patch "
@@ -2178,4 +2179,5 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
       speedSound[c] = sqrt(tmp);
     }
   }
+  new_dw->refinalize();
 }
