@@ -127,8 +127,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   //Grid2 *solar_system = new Grid2(galaxy_room,8);
 
   //galaxy_room->add( solar_system );
-  BV1 *room_grid = new BV1();
-  room_grid->add(galaxy_room);
+  BV1 *room_grid = new BV1(galaxy_room);
 
   Camera cam( Point(10,0,1.8), 
               Point(9,ROOMRADIUS,1.8), 
