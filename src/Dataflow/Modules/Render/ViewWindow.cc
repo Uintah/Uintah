@@ -1376,6 +1376,9 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // TODO: Pointer works as well as tag, just need to verify it's
     // still valid. - MIKE
     // TODO: Make mailbox send that discards redundant messages.
+#ifdef __APPLE__
+    if (args.count() > 2) renderer_->apple_wait_a_second_=true;
+#endif
     if(!viewer_->mailbox.trySend(scinew ViewerMessage(id_)))
     {
       //cerr << "Redraw event dropped, mailbox full!\n";
@@ -1557,6 +1560,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
 
     if (renderer_->tk_gl_context_) 
       delete renderer_->tk_gl_context_;
+
     renderer_->tk_gl_context_ = 
       scinew TkOpenGLContext(args[2], visualid, width, height);
     renderer_->old_tk_gl_context_ = 0;
