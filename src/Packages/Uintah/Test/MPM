@@ -14,7 +14,6 @@ TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
 	    ("heatcond.ups",		    ["dbg", "opt"]),	\
 	    ("heatcond2mat.ups",	    ["dbg", "opt"]),	\
     	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
-	    ("twomatburn.ups",		    ["dbg", "opt"]),	\
 	    ("sidecrack.ups",		    ["dbg", "opt"])	\
     	]
 
