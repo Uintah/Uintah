@@ -58,8 +58,6 @@ itcl_class Fusion_Fields_EditFusionField {
 	global $this-jskip2
 	global $this-kskip2
 
-	global $this-reduce
-
 	set $this-idim 1
 	set $this-jdim 1
 	set $this-kdim 1
@@ -87,8 +85,6 @@ itcl_class Fusion_Fields_EditFusionField {
 	set $this-iskip2 "10"
 	set $this-jskip2 "5"
 	set $this-kskip2 "1"
-
-	set $this-reduce 1
     }
 
     method ui {} {
@@ -202,11 +198,8 @@ itcl_class Fusion_Fields_EditFusionField {
 
 	frame $w.misc
 
-	checkbutton $w.misc.cb -text "Reduce Nodes" -variable $this-reduce
-
 	button $w.misc.b -text "Execute" -command "$this-c needexecute"
 
-	pack $w.misc.cb -side left
 	pack $w.misc.b  -side left -padx 25
 
         pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
