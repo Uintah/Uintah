@@ -30,7 +30,7 @@
 
 #include <Core/CCA/Component/PIDL/PIDL.h>
 
-#include "argtest_sidl.h"
+#include <testprograms/Component/argtest/argtest_sidl.h>
 
 #include <Core/Thread/Time.h>
 
