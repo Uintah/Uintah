@@ -66,9 +66,8 @@ the <ulink url="http://www.cmake.org">CMake web site</ulink>.</para>
 <title>CMake Special Instructions</title>
 
 <para>CMake is a program that generates Makefiles that build ITK.
-CMake must be "configured" before it is run.  CMake's configuration
-variables determine how ITK will be built.  Command
-<command>ccmake</command> is used to configure variables that
+CMake's configuration variables determine how ITK will be built.
+Command <command>ccmake</command> is used to configure variables that
 determine the type of ITK build.  In particular, the values of CMake
 variables <varname>ITK_USE_SYSTEM_PNG</varname> and
 <varname>BUILD_SHARED_LIBS</varname> must be explicitly set.  Note
