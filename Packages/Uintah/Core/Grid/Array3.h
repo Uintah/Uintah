@@ -241,10 +241,12 @@ WARNING
     }
       
     IntVector getLowIndex() const {
+      ASSERT(d_window != 0);
       return d_window->getLowIndex();
     }
 
     IntVector getHighIndex() const {
+      ASSERT(d_window != 0);
       return d_window->getHighIndex();
     }
 
