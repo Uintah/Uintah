@@ -27,10 +27,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-//#define EOSCM
-#undef EOSCM
-#define IDEAL_GAS
-//#undef IDEAL_GAS
+#define EOSCM
+//#undef EOSCM
+//#define IDEAL_GAS
+#undef IDEAL_GAS
 /*`==========TESTING==========*/ 
 // KEEP THIS AROUND UNTIL
 // I'M SURE OF THE NEW STYLE OF SETBC -Todd
@@ -1665,9 +1665,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           sprintf(warning, 
           " cell[%d][%d][%d], mat %d, iter %d, n_passes %d,Now exiting ",
           i,j,k,m,count,n_passes);
-	  cout << rho_micro[m][*iter] << " " << vol_frac[m][*iter] << " "
-               << Temp[m][*iter] << " " << press_new[*iter] << " "
-	       << mat_vol[m][*iter] << endl;
+          cout << "r_m " << rho_micro[m][*iter] << endl;
+          cout << "v_f " << vol_frac[m][*iter]  << endl;
+          cout << "tmp " << Temp[m][*iter]      << endl;
+          cout << "p_n " << press_new[*iter]    << endl;
+          cout << "m_v " << mat_volume[m]       << endl;
           d_ice->Message(1," calc_equilibration_press:", 
               " rho_micro < 0 || vol_frac < 0", warning);
       }
@@ -1870,8 +1872,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 	  if (gasVolumeFraction[*iter] < 1.e-5 ||
 	      absGradRho < 1.e-5) doTheBurn = 0;
 
-	  if (doTheBurn)
-	    {
+	  if (doTheBurn) {
 
 	      normalX = gradRhoX/absGradRho;
 	      normalY = gradRhoY/absGradRho;
@@ -1883,13 +1884,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 	      TmpY = normalY*delY;
 	      TmpZ = normalZ*delZ;
 
-	      if (TmpX<0) TmpX = -TmpX;
-	      if (TmpY<0) TmpY = -TmpY;
-	      if (TmpZ<0) TmpZ = -TmpZ;
-	      
+	      TmpX = fabs(TmpX);
+	      TmpY = fabs(TmpY);
+	      TmpZ = fabs(TmpZ);
+
 	      surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
 	      	  
-	  // For clarity, this should be renamed computeBurnRate
 	      matl->getBurnModel()->computeBurn(gasTemperature[*iter],
 						gasPressure[*iter],
 						solidMass[*iter],
@@ -1987,7 +1987,7 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 	   massBurnFraction[*iter]         = 0.0;
 	   for (int in=0;in<8;in++){
 	     massBurnFraction[*iter] +=
-				(fabs(burnedMassCC[cIdx[in]])/massCC[cIdx[in]])*.125;
+			(fabs(burnedMassCC[cIdx[in]])/massCC[cIdx[in]])*.125;
 
           }
         }
@@ -1996,27 +1996,3 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     }  //ALLmatls  
   }  //patches
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
