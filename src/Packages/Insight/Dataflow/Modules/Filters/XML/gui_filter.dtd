@@ -15,22 +15,32 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!ELEMENT filter-gui (parameters*)>
+<!ELEMENT filter-gui (param+)>
   <!ATTLIST filter-gui name CDATA #REQUIRED>
 
-<!ELEMENT parameters (param*)>
-
-<!ELEMENT param (gui, min?, max?, values?, default)>
+<!ELEMENT param (text-entry | checkbutton | scrollbar | radiobutton)>
   <!ATTLIST param name CDATA #REQUIRED>
 
-<!ELEMENT gui (#PCDATA)>
+<!ELEMENT text-entry (default)>
+
+
+<!ELEMENT checkbutton (default)>
+
+
+<!ELEMENT scrollbar (min, max, default)>
 
 <!ELEMENT min (#PCDATA)>
 
 <!ELEMENT max (#PCDATA)>
 
-<!ELEMENT values (val+)>
+<!ELEMENT radiobutton (button+, default)>
 
-<!ELEMENT val (#PCDATA)>
+<!ELEMENT button (label, value)>
+
+<!ELEMENT label (#PCDATA)>
+
+<!ELEMENT value (#PCDATA)>
+
+
 
 <!ELEMENT default (#PCDATA)>

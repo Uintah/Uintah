@@ -99,21 +99,67 @@
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
-<xsl:variable name="gui_default"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/default"/></xsl:variable>
+<!-- here -->
+<xsl:variable name="default-text-entry"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/text-entry/default"/></xsl:variable>
+<xsl:variable name="default-checkbutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/checkbutton/default"/></xsl:variable>
+<xsl:variable name="default-scrollbar"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/default"/></xsl:variable>
+<xsl:variable name="default-radiobutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/radiobutton/default"/></xsl:variable>
+
 <xsl:variable name="itk_default"><xsl:value-of select="default"/></xsl:variable>
-<xsl:if test="$const != 'yes'">
-<xsl:if test="$defined_object = 'no'">
 <xsl:choose>
-<xsl:when test="$gui_default!=''">
-         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$gui_default"/></xsl:when>
+<xsl:when test="$default-text-entry != ''">
+  <xsl:variable name="widget">text-entry</xsl:variable>
+  <xsl:if test="$const != 'yes'">
+  <xsl:if test="$defined_object = 'no'">
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$default-text-entry"/>
+  </xsl:if>
+  </xsl:if>
+</xsl:when>
+
+
+<xsl:when test="$default-checkbutton != ''">
+  <xsl:variable name="widget">checkbutton</xsl:variable>
+  <xsl:if test="$const != 'yes'">
+  <xsl:if test="$defined_object = 'no'">
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$default-checkbutton"/>
+  </xsl:if>
+  </xsl:if>
+</xsl:when>
+
+
+<xsl:when test="$default-scrollbar != ''">
+  <xsl:variable name="widget">scrollbar</xsl:variable>
+  <xsl:if test="$const != 'yes'">
+  <xsl:if test="$defined_object = 'no'">
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$default-scrollbar"/>
+  </xsl:if>
+  </xsl:if>
+</xsl:when>
+
+
+<xsl:when test="$default-radiobutton != ''">
+  <xsl:variable name="widget">radiobuttonbutton</xsl:variable>
+  <xsl:if test="$const != 'yes'">
+  <xsl:if test="$defined_object = 'no'">
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$default-radiobutton"/>
+  </xsl:if>
+  </xsl:if>
+</xsl:when>
+
+
+<xsl:otherwise>
+<xsl:choose>
 <xsl:when test="$itk_default !=''">
          set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$itk_default"/>
 </xsl:when>
 <xsl:otherwise>
-         set $this-<xsl:value-of select="name"/> 0</xsl:otherwise>
+         set $this-<xsl:value-of select="name"/><xsl:text> 0 
+</xsl:text>
+</xsl:otherwise>
 </xsl:choose>
-</xsl:if>
-</xsl:if>
+</xsl:otherwise>
+</xsl:choose>
+
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
          set $this-dimension 0</xsl:if>
@@ -148,7 +194,8 @@
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
 <xsl:variable name="const"><xsl:value-of select="default/@const"/></xsl:variable>
-<xsl:variable name="gui"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/gui"/></xsl:variable>
+
+<xsl:variable name="gui"><xsl:call-template name="determine_widget"/></xsl:variable>
 <xsl:variable name="defined_object">
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
@@ -266,9 +313,18 @@
 </xsl:variable>
 <xsl:if test="$const!='yes'">
 <xsl:if test="$defined_object = 'yes'">
-<xsl:variable name="gui_default"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/default"/></xsl:variable>
+<!-- here -->
+# here
+<xsl:variable name="default-text-entry"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/text-entry/default"/></xsl:variable>
+<xsl:variable name="default-checkbutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/checkbutton/default"/></xsl:variable>
+<xsl:variable name="default-scrollbar"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/default"/></xsl:variable>
+<xsl:variable name="default-radiobutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/radiobutton/default"/></xsl:variable>
+
 <xsl:variable name="itk_default"><xsl:value-of select="default"/></xsl:variable>
 <xsl:variable name="path"><xsl:value-of select="$name"/>.<xsl:value-of select="name"/></xsl:variable>
+
+<xsl:choose>
+<xsl:when test="$default-text-entry != ''">
     method init_<xsl:value-of select="$name"/>_dimensions {} {
      	set w .ui[modname]
         if {[winfo exists $w]} {
@@ -287,10 +343,156 @@
 		if {! [winfo exists $w.<xsl:value-of select="$path"/>$i]} {
 		    # create widget for this dimension
                     global $this-<xsl:value-of select="$name"/>$i
-<xsl:choose>
-<xsl:when test="$gui_default!=''">
-                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$gui_default"/>
+
+                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$default-text-entry"/>
+
+<xsl:variable name="temp1"><xsl:value-of select="$path"/>$i</xsl:variable>
+<xsl:variable name="temp2"><xsl:value-of select="$name"/> in $i</xsl:variable>
+<xsl:variable name="temp3"><xsl:value-of select="$name"/>$i</xsl:variable>
+<xsl:call-template name="create_text_entry">
+    <xsl:with-param name="name" select="$temp1"/>
+    <xsl:with-param name="text" select="$temp2"/>
+    <xsl:with-param name="var" select="$temp3"/>
+ </xsl:call-template>
+                }
+            }
+        }
+    }
 </xsl:when>
+
+
+<xsl:when test="$default-checkbutton != ''">
+    method init_<xsl:value-of select="$name"/>_dimensions {} {
+     	set w .ui[modname]
+        if {[winfo exists $w]} {
+
+            # destroy label explaining need to execute in case
+            # it wasn't previously destroyed
+	    if {[winfo exists $w.<xsl:value-of select="$name"/>.label]} {
+	       destroy $w.<xsl:value-of select="$name"/>.label
+            }
+
+	    # pack new widgets for each dimension
+            label $w.<xsl:value-of select="$name"/>.label -text &quot;<xsl:value-of select="name"/> (by dimension):"
+            pack $w.<xsl:value-of select="$name"/>.label -side top -padx 5 -pady 5 -anchor n
+
+            for	{set i 0} {$i &lt; [set $this-dimension]} {incr i} {
+		if {! [winfo exists $w.<xsl:value-of select="$path"/>$i]} {
+		    # create widget for this dimension
+                    global $this-<xsl:value-of select="$name"/>$i
+
+                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$default-checkbutton"/>
+
+<xsl:variable name="temp1"><xsl:value-of select="$path"/>$i</xsl:variable>
+<xsl:variable name="temp2"><xsl:value-of select="$name"/> in $i</xsl:variable>
+<xsl:variable name="temp3"><xsl:value-of select="$name"/>$i</xsl:variable>
+<xsl:call-template name="create_text_entry">
+    <xsl:with-param name="name" select="$temp1"/>
+    <xsl:with-param name="text" select="$temp2"/>
+    <xsl:with-param name="var" select="$temp3"/>
+ </xsl:call-template>
+                }
+            }
+        }
+    }
+</xsl:when>
+
+
+<xsl:when test="$default-scrollbar != ''">
+    method init_<xsl:value-of select="$name"/>_dimensions {} {
+     	set w .ui[modname]
+        if {[winfo exists $w]} {
+
+            # destroy label explaining need to execute in case
+            # it wasn't previously destroyed
+	    if {[winfo exists $w.<xsl:value-of select="$name"/>.label]} {
+	       destroy $w.<xsl:value-of select="$name"/>.label
+            }
+
+	    # pack new widgets for each dimension
+            label $w.<xsl:value-of select="$name"/>.label -text &quot;<xsl:value-of select="name"/> (by dimension):"
+            pack $w.<xsl:value-of select="$name"/>.label -side top -padx 5 -pady 5 -anchor n
+
+            for	{set i 0} {$i &lt; [set $this-dimension]} {incr i} {
+		if {! [winfo exists $w.<xsl:value-of select="$path"/>$i]} {
+		    # create widget for this dimension
+                    global $this-<xsl:value-of select="$name"/>$i
+
+                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$default-scrollbar"/>
+
+<xsl:variable name="temp1"><xsl:value-of select="$path"/>$i</xsl:variable>
+<xsl:variable name="temp2"><xsl:value-of select="$name"/> in $i</xsl:variable>
+<xsl:variable name="temp3"><xsl:value-of select="$name"/>$i</xsl:variable>
+<xsl:call-template name="create_text_entry">
+    <xsl:with-param name="name" select="$temp1"/>
+    <xsl:with-param name="text" select="$temp2"/>
+    <xsl:with-param name="var" select="$temp3"/>
+ </xsl:call-template>
+                }
+            }
+        }
+    }
+</xsl:when>
+
+
+<xsl:when test="$default-radiobutton != ''">
+    method init_<xsl:value-of select="$name"/>_dimensions {} {
+     	set w .ui[modname]
+        if {[winfo exists $w]} {
+
+            # destroy label explaining need to execute in case
+            # it wasn't previously destroyed
+	    if {[winfo exists $w.<xsl:value-of select="$name"/>.label]} {
+	       destroy $w.<xsl:value-of select="$name"/>.label
+            }
+
+	    # pack new widgets for each dimension
+            label $w.<xsl:value-of select="$name"/>.label -text &quot;<xsl:value-of select="name"/> (by dimension):"
+            pack $w.<xsl:value-of select="$name"/>.label -side top -padx 5 -pady 5 -anchor n
+
+            for	{set i 0} {$i &lt; [set $this-dimension]} {incr i} {
+		if {! [winfo exists $w.<xsl:value-of select="$path"/>$i]} {
+		    # create widget for this dimension
+                    global $this-<xsl:value-of select="$name"/>$i
+
+                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$default-radiobutton"/>
+
+<xsl:variable name="temp1"><xsl:value-of select="$path"/>$i</xsl:variable>
+<xsl:variable name="temp2"><xsl:value-of select="$name"/> in $i</xsl:variable>
+<xsl:variable name="temp3"><xsl:value-of select="$name"/>$i</xsl:variable>
+<xsl:call-template name="create_text_entry">
+    <xsl:with-param name="name" select="$temp1"/>
+    <xsl:with-param name="text" select="$temp2"/>
+    <xsl:with-param name="var" select="$temp3"/>
+ </xsl:call-template>
+                }
+            }
+        }
+    }
+</xsl:when>
+
+
+<xsl:otherwise>
+    method init_<xsl:value-of select="$name"/>_dimensions {} {
+     	set w .ui[modname]
+        if {[winfo exists $w]} {
+
+            # destroy label explaining need to execute in case
+            # it wasn't previously destroyed
+	    if {[winfo exists $w.<xsl:value-of select="$name"/>.label]} {
+	       destroy $w.<xsl:value-of select="$name"/>.label
+            }
+
+	    # pack new widgets for each dimension
+            label $w.<xsl:value-of select="$name"/>.label -text &quot;<xsl:value-of select="name"/> (by dimension):"
+            pack $w.<xsl:value-of select="$name"/>.label -side top -padx 5 -pady 5 -anchor n
+
+            for	{set i 0} {$i &lt; [set $this-dimension]} {incr i} {
+		if {! [winfo exists $w.<xsl:value-of select="$path"/>$i]} {
+		    # create widget for this dimension
+                    global $this-<xsl:value-of select="$name"/>$i
+
+<xsl:choose>
 <xsl:when test="$itk_default !=''">
                     set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$itk_default"/>
 </xsl:when>
@@ -311,7 +513,8 @@
             }
         }
     }
-
+</xsl:otherwise>
+</xsl:choose>
  </xsl:if>
 </xsl:if>
 </xsl:for-each>
@@ -331,8 +534,8 @@
         frame $w.buttons
         button $w.buttons.execute -text &quot;Execute&quot; -command &quot;$this-c needexecute&quot;
         button $w.buttons.close -text &quot;Close&quot; -command &quot;destroy $w&quot;
-        pack $w.buttons.execute $w.buttons.close -side left
-	pack $w.buttons -side top -padx 5 -pady 5
+        pack $w.buttons.execute $w.buttons.close -side left -padx 3 -pady 8
+	pack $w.buttons -side top 
 </xsl:text>
 </xsl:template>
 
@@ -385,7 +588,7 @@
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/>
 <xsl:text> -label </xsl:text> &quot;<xsl:value-of select="$text"/>&quot; \
 <xsl:text>           -variable $this-</xsl:text><xsl:value-of select="$var"/> \
-           -from <xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/min"/> -to <xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/max"/> -orient horizontal<xsl:text>
+           -from <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/min"/> -to <xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/max"/> -orient horizontal<xsl:text>
         pack </xsl:text>
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/><xsl:text> -side left
         pack </xsl:text><xsl:value-of select="$path"/>
@@ -432,14 +635,14 @@
         frame </xsl:text><xsl:value-of select="$path"/>
         label <xsl:value-of select="$path"/>.label -text <xsl:value-of select="$text"/>
         pack <xsl:value-of select="$path"/>.label
-<xsl:for-each select="/filter/filter-gui/parameters/param[@name=$name]/values/val">
+<xsl:for-each select="/filter/filter-gui/param[@name=$name]/radiobutton/button">
 <xsl:text>
         </xsl:text>
 <xsl:value-of select="$widget"/><xsl:text> </xsl:text>
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="position()"/> \
-           -text &quot;<xsl:value-of select="."/>&quot; \
+           -text &quot;<xsl:value-of select="label"/>&quot; \
 <xsl:text>           -variable $this-</xsl:text><xsl:value-of select="$var"/> \
-           -value <xsl:value-of select="."/>
+           -value <xsl:value-of select="value"/>
         pack <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="position()"/><xsl:text> -side left
 </xsl:text>
 </xsl:for-each>
@@ -459,6 +662,22 @@
 <xsl:when test="$type='double'">no</xsl:when>
 <xsl:when test="$type='bool'">no</xsl:when>
 <xsl:otherwise>yes</xsl:otherwise>
+</xsl:choose>
+</xsl:template>
+
+<!-- Helper function to determine widget -->
+<xsl:template name="determine_widget">
+<xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+<xsl:variable name="text-entry"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/text-entry/default"/></xsl:variable>
+<xsl:variable name="checkbutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/checkbutton/default"/></xsl:variable>
+<xsl:variable name="scrollbar"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/scrollbar/default"/></xsl:variable>
+<xsl:variable name="radiobutton"><xsl:value-of select="/filter/filter-gui/param[@name=$name]/radiobutton/default"/></xsl:variable>
+<xsl:choose>
+<xsl:when test="$text-entry != ''">text-entry</xsl:when>
+<xsl:when test="$checkbutton != ''">checkbutton</xsl:when>
+<xsl:when test="$scrollbar != ''">scrollbar</xsl:when>
+<xsl:when test="$radiobutton != ''">radiobutton</xsl:when>
+<xsl:otherwise>text-entry</xsl:otherwise>
 </xsl:choose>
 </xsl:template>
 

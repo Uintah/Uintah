@@ -19,24 +19,25 @@
 -->
 
 <filter-gui name="GradientAnistotropicDiffusionImageFilter">
-  <parameters>
+
     <param name="time_step">
-      <gui>text-entry</gui>
-      <default>0.25</default>
+      <text-entry>
+        <default>0.25</default>
+      </text-entry>
     </param>
 
     <param name="iterations">
-      <gui>scrollbar</gui>
-      <min>0</min>
-      <max>100</max>
-      <default>10</default>
+      <scrollbar>
+        <min>0</min>
+        <max>100</max>
+        <default>10</default>
+      </scrollbar>
     </param>
 
     <param name="conductance_parameter">
-      <gui>text-entry</gui>
-      <default>1</default>
+      <text-entry>
+        <default>1</default>
+      </text-entry>
     </param>
-
-  </parameters>
 
 </filter-gui>

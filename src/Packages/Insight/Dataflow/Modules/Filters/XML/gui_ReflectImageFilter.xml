@@ -19,11 +19,11 @@
 -->
 
 <filter-gui name="ReflectImageFilter">
-  <parameters>
+
     <param name="direction">
-      <gui>text-entry</gui>
-      <default>0</default>
+      <text-entry>
+        <default>0</default>
+      </text-entry>
     </param>
-  </parameters>
 
 </filter-gui>
