@@ -10,7 +10,7 @@ using namespace rtrt;
 using namespace SCIRun;
 
 Background::Background(const Color& avg)
-: avg(avg)
+  : avg(avg), origAvg_( avg )
 {
 }
 
@@ -20,7 +20,8 @@ Background::~Background() {}
 // *****************************************************************
 //     ConstantBackground members
 
-ConstantBackground::ConstantBackground(const Color& C) : Background(C), C(C) {}
+ConstantBackground::ConstantBackground(const Color& C) : 
+  Background(C), C(C), origC_(C) {}
 
 ConstantBackground::~ConstantBackground() {}
 
@@ -35,12 +36,17 @@ void ConstantBackground::color_in_direction( const Vector&, Color& result) const
 
 LinearBackground::~LinearBackground() {}
 
-LinearBackground::LinearBackground( const Color& C1, const Color& C2,  const Vector& direction_to_C1) :
-    Background(C1),
-    C1(C1), C2(C2),  direction_to_C1(direction_to_C1) {}
+LinearBackground::LinearBackground( const Color& C1, 
+				    const Color& C2,
+				    const Vector& direction_to_C1) :
+  Background(C1), C1(C1), C2(C2), origC1_(C1), origC2_(C2),
+  direction_to_C1(direction_to_C1)
+{
+}
 
-    
-void LinearBackground::color_in_direction(const Vector& v, Color& result) const {
+void LinearBackground::color_in_direction(const Vector& v, 
+					  Color& result) const 
+{
     double t = 0.5* (1 + Dot(v, direction_to_C1 ) );
     result=t*C1 + (1-t)*C2;
 }
@@ -74,7 +80,8 @@ EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
     _height( 0 ),
     _aspectRatio( 1.0 ),
     _text( 0 ),
-    _up( up )
+    _up( up ),
+    ambientScale_( 1.0 )
 {
   //
   // Built an orthonormal basis
@@ -130,7 +137,8 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     //double v = (DIR.x()+1)/2.;
     //double u = (DIR.z()+1)/2.;
 
-    result = _image( int( v*( _width - 1 ) ), int( u*( _height - 1 ) ) );
+    result = _image( int( v*( _width - 1 ) ), int( u*( _height - 1 ) ) ) *
+      ambientScale_;
 }
 
 static void eat_comments_and_whitespace(ifstream &str)
