@@ -27,7 +27,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUNDLIBS)
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY) $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUNDLIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -38,7 +38,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 #nrrd2brick
 SRCS := $(SRCDIR)/nrrd2brick.cc
-LIBS := $(FASTM_LIBRARY) -lnrrd -lbiff -lair -lm $(THREAD_LIBS) $(X11_LIBS) -lXi -lXmu 
+LIBS := $(FASTM_LIBRARY) $(TEEM_LIBRARY) $(THREAD_LIBRARY) $(X11_LIBRARY) -lm
 PROGRAM := Packages/rtrt/StandAlone/nrrd2brick
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -97,7 +97,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) -lm -lXmu $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) -lm $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
