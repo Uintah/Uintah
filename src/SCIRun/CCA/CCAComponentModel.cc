@@ -36,7 +36,7 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/resourceReference.h>
 #include <string>
 
@@ -102,7 +102,6 @@ void CCAComponentModel::buildComponentList()
       component_path="";
     }
     Dir d(dir);
-    cerr << "Looking at directory: " << dir << '\n';
     vector<string> files;
     d.getFilenamesBySuffix(".cca", files);
     for(vector<string>::iterator iter = files.begin();
@@ -115,7 +114,6 @@ void CCAComponentModel::buildComponentList()
 
 void CCAComponentModel::readComponentDescription(const std::string& file)
 {
-  cerr << "Reading file " << file << '\n';
   // Instantiate the DOM parser.
   XercesDOMParser parser;
   parser.setDoValidation(false);
@@ -203,8 +201,6 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     string lastname=type.substr(type.find('.')+1);  
     string so_name("lib/libCCA_Components_");
     so_name=so_name+lastname+".so";
-    cerr<<"type="<<type<<" soname="<<so_name<<endl;
-    
     LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
     if(!handle){
       cerr << "Cannot load component " << type << '\n';
@@ -228,38 +224,17 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
   }
   else{ 
     //use loader to load the component
-    cerr<<"getLoader..."<<endl;
     resourceReference* loader=getLoader(loaderName);
-    cerr<<"loader="<<loader<<endl;
     std::vector<int> nodes;
     nodes.push_back(0);
-
-    cerr<<"loader->createInstance...."<<endl;
     Object::pointer comObj=loader->createInstance(name, type, nodes);
-    /*std::string comURL=loader->createInstance(name, type, nodes);
-
-    cerr<<"comURL="<<comURL<<endl;
-    Object::pointer comObj=PIDL::objectFrom(comURL);
-    cerr<<"objectFrom done="<<comURL<<endl;
-    
-    if(comObj.isNull()){
-      cerr<<"got null obj(Component) from "<<comURL<<endl;
-      return 0;
-    }
-    cerr<<"object is not null"<<comURL<<endl;    
-    */
     component=pidl_cast<sci::cca::Component::pointer>(comObj);
   }
   CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
 						      sci::cca::TypeMap::pointer(0),
 						      component);
-  cerr<<"new CCAComponentInstance doen"<<endl;
   ci->addReference(); //what is this for?
-  cerr<<"ci->addReference done"<<endl;
-  cerr<<"component->setServices...";
   component->setServices(sci::cca::Services::pointer(ci));
-  cerr<<"Done"<<endl;
-  //This statement causes a deadlock?
   return ci;
 }
 
@@ -286,31 +261,6 @@ void CCAComponentModel::listAllComponentTypes(vector<ComponentDescription*>& lis
       iter != components.end(); iter++){
     list.push_back(iter->second);
   }
-
-  //list all remote components here
-  /*
-  ::SSIDL::array1<std::string> typeList;
-  ifstream f("loader.url");
-  std::string s;
-  f>>s;
-  f.close();
-  //slaveURLs[0].getString();
-  cout<<"calling objectFrom $"<<s<<"$"<<endl;
-  Object::pointer obj=PIDL::objectFrom(s);//.getString());
-  if(obj.isNull()){
-    cerr<<"Cannot get loader from url="<<s<<endl;
-    return;
-  }
-  cout<<"Loader obj obtained"<<endl;
-  sci::cca::Loader::pointer node0=pidl_cast<sci::cca::Loader::pointer>(obj);
-  cout<<"Loader obj casted"<<endl;
-  cout<<"Calling node0->listAllComponents"<<endl;
-  node0->listAllComponents(typeList);
-  cout<<"Component Type List from Loader "<<endl;//slaveFwkName<<endl;
-  for(int i=0; i<typeList.size();i++){
-    cout<<"Component Type "<<i<<": "<<typeList[i]<<endl;
-  }
-  */
 
   for(int i=0; i<loaderList.size(); i++){
     ::SSIDL::array1<std::string> typeList;

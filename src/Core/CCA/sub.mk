@@ -24,7 +24,9 @@ SRCDIR := Core/CCA
 SUBDIRS := \
 	$(SRCDIR)/spec \
 	$(SRCDIR)/tools \
-	$(SRCDIR)/Component
+	$(SRCDIR)/Comm \
+	$(SRCDIR)/PIDL \
+	$(SRCDIR)/SSIDL
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -53,7 +53,7 @@ $(SRCDIR)/parser.h: $(SRCDIR)/parser.y
 # parser.cc and parser.h at the same time
 $(SRCDIR)/parser.cc: $(SRCDIR)/parser.h
 
-SIDL_BUILTINS := $(SRCTOP_ABS)/Core/CCA/Component/SSIDL/
+SIDL_BUILTINS := $(SRCTOP_ABS)/Core/CCA/SSIDL/
 CFLAGS_SIDLMAIN   := $(CFLAGS) -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"
 
 $(SRCDIR)/main.o:       $(SRCDIR)/main.cc

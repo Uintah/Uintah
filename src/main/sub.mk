@@ -41,16 +41,16 @@ ifeq ($(BUILD_SCIRUN2),yes)
 SRCS      := $(SRCDIR)/newmain.cc
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Core/CCA/Component
+  PSELIBS := Core/CCA
 else
 ifeq ($(HAVE_GLOBUS),yes)	
-  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
-        Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
-	SCIRun Core/CCA/Component/SSIDL Core/Thread
+  PSELIBS := Core/Exceptions Core/CCA/Comm\
+        Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
+	SCIRun Core/CCA/SSIDL Core/Thread
 else
-  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
-        Core/CCA/Component/PIDL Core/CCA/spec \
-	SCIRun Core/CCA/Component/SSIDL Core/Thread
+  PSELIBS := Core/Exceptions Core/CCA/Comm\
+        Core/CCA/PIDL Core/CCA/spec \
+	SCIRun Core/CCA/SSIDL Core/Thread
 endif
 
 endif
@@ -67,13 +67,13 @@ ifeq ($(LARGESOS),yes)
 else
 
 ifeq ($(HAVE_GLOBUS),yes)
-  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
-        Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
-	SCIRun Core/CCA/Component/SSIDL Core/Thread 
+  PSELIBS := Core/Exceptions Core/CCA/Comm Core/CCA/Comm/DT \
+        Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
+	SCIRun Core/CCA/SSIDL Core/Thread 
 else
-  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
-        Core/CCA/Component/PIDL Core/CCA/spec \
-	SCIRun Core/CCA/Component/SSIDL Core/Thread 
+  PSELIBS := Core/Exceptions Core/CCA/Comm\
+        Core/CCA/PIDL Core/CCA/spec \
+	SCIRun Core/CCA/SSIDL Core/Thread 
 endif
 endif
 

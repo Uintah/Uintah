@@ -145,7 +145,6 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
 					   const sci::cca::TypeMap::pointer& properties)
 {
   map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
-  cerr<<"CCAComponentInstance::addProvidesPort: "<<portName<<"/"<<portType<<endl;
   if(iter != ports.end()){
     if(iter->second->porttype == CCAPortInstance::Provides)
       throw CCAException("name conflict between uses and provides ports");
@@ -153,7 +152,11 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
       throw CCAException("addProvidesPort called twice");
   }
   ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, port, CCAPortInstance::Provides)));
-  cerr<<"CCAComponentInstance::addProvidesPort Done:"<<portName<<"/"<<portType<<endl;
+  if(portType=="sci.cca.ports.UIPort"){
+    cerr<<"Runing ui->ui() from CCAComponentInstance::addProvidesPort\n";
+    sci::cca::ports::UIPort::pointer ui=pidl_cast<sci::cca::ports::UIPort::pointer>(port);
+    ui->ui();
+  }
 }
 
 void CCAComponentInstance::removeProvidesPort(const std::string& name)

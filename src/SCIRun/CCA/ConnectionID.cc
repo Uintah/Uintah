@@ -28,7 +28,7 @@
 
 #include <SCIRun/CCA/ComponentID.h>
 #include <SCIRun/SCIRunFramework.h>
-#include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/PIDL/URL.h>
 #include <SCIRun/CCA/ConnectionID.h>
 #include <iostream>
 using namespace SCIRun;

@@ -3,8 +3,8 @@
 // Symbol:        hello.GoPort-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030306 10:46:11 MST
-// Generated:     20030306 10:46:16 MST
+// SIDL Created:  20030618 13:12:33 MDT
+// Generated:     20030618 13:12:40 MDT
 // Description:   Server-side implementation for hello.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved

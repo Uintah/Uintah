@@ -34,7 +34,7 @@
 #include <qpopmenu.h>
 #include <qprogressbar.h>
 #include "Core/CCA/spec/cca_sidl.h"
-#include "Core/CCA/Component/PIDL/PIDL.h"
+#include "Core/CCA/PIDL/PIDL.h"
 class NetworkCanvasView;
 
 class Module:public QFrame
