@@ -519,6 +519,8 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
   tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
 
+  tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
+
   /*
   if (nofScalarVars > 0) {
     for (int ii = 0; ii < nofScalarVars; ii++) {
@@ -530,6 +532,8 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_maxAbsU_label);
   tsk->computes(d_lab->d_maxAbsV_label);
   tsk->computes(d_lab->d_maxAbsW_label);
+
+  tsk->computes(d_lab->d_maxUxplus_label);
 
   sched->addTask(tsk, patches, matls);  
   
@@ -1553,12 +1557,16 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
   max_vartype mxAbsU;
   max_vartype mxAbsV;
   max_vartype mxAbsW;
+  max_vartype mxUxplus;
   old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
   old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
   old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
+  old_dw->get(mxUxplus, d_lab->d_maxUxplus_label);
+
   new_dw->put(mxAbsU, d_lab->d_maxAbsU_label);
   new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
   new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
+  new_dw->put(mxUxplus, d_lab->d_maxUxplus_label);
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
