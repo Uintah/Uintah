@@ -15,18 +15,8 @@
 #include <Math/MinMax.h>
 #include <Classlib/Persistent.h>
 
-Color::Color()
-: _r(0), _g(0), _b(0)
-{
-}
-
 Color::Color(float _r, float _g, float _b)
 : _r(_r), _g(_g), _b(_b)
-{
-}
-
-Color::Color(const Color& c)
-: _r(c._r), _g(c._g), _b(c._b)
 {
 }
 
@@ -36,10 +26,6 @@ Color& Color::operator=(const Color& c)
     _g=c._g;
     _b=c._b;
     return *this;
-}
-
-Color::~Color()
-{
 }
 
 void Color::get_color(float color[4])
@@ -55,11 +41,6 @@ Color Color::operator*(const Color& c) const
     return Color(_r*c._r, _g*c._g, _b*c._b);
 }
 
-Color Color::operator*(float w) const
-{
-    return Color(_r*w, _g*w, _b*w);
-}
-
 Color Color::operator+(const Color& c) const
 {
     return Color(_r+c._r, _g+c._g, _b+c._b);
@@ -72,14 +53,6 @@ void Pio(Piostream& stream, Color& p)
     Pio(stream, p._g);
     Pio(stream, p._b);
     stream.end_cheap_delim();
-}
-
-Color& Color::operator+=(const Color& c)
-{
-    _r+=c._r;
-    _g+=c._g;
-    _b+=c._b;
-    return *this;
 }
 
 Color::Color(const HSVColor& hsv)

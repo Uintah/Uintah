@@ -21,6 +21,7 @@ class Color {
     float _r, _g, _b;
 public:
     Color();
+
     Color(float, float, float);
     Color(const Color&);
     Color& operator=(const Color&);
@@ -54,6 +55,41 @@ public:
     int Overlap( double, double, double );
 
 };
+
+inline
+Color::Color()
+: _r(0), _g(0), _b(0)
+{
+}
+
+inline
+Color::Color(const Color& c)
+: _r(c._r), _g(c._g), _b(c._b)
+{
+}
+
+inline
+Color::~Color()
+{
+}
+
+inline
+Color
+Color::operator*(float w) const
+{
+    return Color(_r*w, _g*w, _b*w);
+}
+
+inline
+Color&
+Color::operator+=(const Color& c)
+{
+    _r+=c._r;
+    _g+=c._g;
+    _b+=c._b;
+    return *this;
+}
+
 
 class HSVColor {
     float _hue;
