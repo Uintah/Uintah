@@ -99,6 +99,30 @@ void FusionSlicePlot::execute(){
     return;
   }
 
+  if (fHandle->query_scalar_interface(this) == 0)
+  {
+    error("This module only works on scalar fields.");
+    return;
+  }
+
+  if (fHandle->data_at() != Field::NODE) {
+    error("This module only works for fields with data at nodes.");
+    return;
+  }
+
+  const TypeDescription *ftd = fHandle->get_type_description();
+
+  string sname = ftd->get_name("", "");
+  if (sname.find("TetVolField") == string::npos &&
+      sname.find("HexVolField") == string::npos &&
+      sname.find("TriSurfField") == string::npos &&
+      sname.find("QuadSurfField") == string::npos &&
+      sname.find("CurveField") == string::npos &&
+      sname.find("PointCloudField") == string::npos) {
+    error("Can not change coordinates of this field (mesh) type.");
+    return;
+  }
+
   // If no data or a changed recreate the mesh.
   if( !fHandle_.get_rep() ||
       fGeneration_ != fHandle->generation ||
@@ -107,10 +131,7 @@ void FusionSlicePlot::execute(){
     fGeneration_  = fHandle->generation;
     scale_ = Scale_.get();
 
-    const TypeDescription *ftd = fHandle->get_type_description(0);
-    const TypeDescription *ttd = fHandle->get_type_description(1);
-
-    CompileInfoHandle ci = FusionSlicePlotAlgo::get_compile_info(ftd, ttd);
+    CompileInfoHandle ci = FusionSlicePlotAlgo::get_compile_info(ftd);
     Handle<FusionSlicePlotAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
@@ -138,8 +159,7 @@ void FusionSlicePlot::execute(){
 }
 
 CompileInfoHandle
-FusionSlicePlotAlgo::get_compile_info(const TypeDescription *ftd,
-				      const TypeDescription *ttd)
+FusionSlicePlotAlgo::get_compile_info(const TypeDescription *ftd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -148,12 +168,10 @@ FusionSlicePlotAlgo::get_compile_info(const TypeDescription *ftd,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       ftd->get_filename() + "." +
-		       ttd->get_filename() + ".",
+		       ftd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       ftd->get_name() + ", " +
-		       ttd->get_name());
+                       ftd->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
