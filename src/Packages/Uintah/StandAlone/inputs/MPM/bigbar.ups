@@ -87,7 +87,7 @@
 		<upper>[  22.5, 2.0, 1.5]</upper>
 <!--            <resolution>[22,20,1]</resolution> -->
 	        <resolution>[100,36,8]</resolution>
-		<patches>[2,1,1]</patches>
+		<patches>[4,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
