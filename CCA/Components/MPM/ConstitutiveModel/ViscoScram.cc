@@ -633,7 +633,16 @@ double ViscoScram::computeRhoMicroCM(double pressure,
  	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
-  rho_cur = rho_orig*exp(p_gauge/bulk);
+//  rho_cur = rho_orig*exp(p_gauge/bulk);
+
+  if(p_gauge > 0.){
+    rho_cur = rho_orig/(1-p_gauge/bulk);
+  }
+  else{
+    double A = p_ref;
+    double n = p_ref/bulk;
+    rho_cur = rho_orig*pow(pressure/A,n);
+  }
 
 //  if(p_gauge < .5*bulk){
 //     rho_cur = rho_orig/(1-p_gauge/bulk);
@@ -644,10 +653,6 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
   return rho_cur;
 
-#if 0
-  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR ViscoScram"
-       << endl;
-#endif
 }
 
 void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
@@ -660,8 +665,26 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
   double rho_orig = matl->getInitialDensity();
 
+#if 0
   double p_g = bulk*log(rho_cur/rho_orig);
   dp_drho    = bulk/rho_cur;
+  pressure = p_ref + p_g;
+  tmp = bulk/rho_cur;  // speed of sound squared
+#endif
+
+  if(rho_cur > rho_orig){
+    double p_g = bulk*(1.0 - rho_orig/rho_cur);
+    pressure = p_ref + p_g;
+    dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
+    tmp = dp_drho;  // speed of sound squared
+  }
+  else{
+    double A = p_ref;
+    double n = bulk/p_ref;
+    pressure = A*pow(rho_cur/rho_orig,n);
+    dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
+    tmp = dp_drho;  // speed of sound squared
+  }
 
 //  if(rho_cur/rho_orig < 2.0){
 //    p_g = bulk*(1.0 - rho_orig/rho_cur);
@@ -672,12 +695,6 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
 //    dp_drho  = bulk/(4*rho_orig);
 //  }
 
-  pressure = p_ref + p_g;
-  tmp = bulk/rho_cur;  // speed of sound squared
-
-#if 0
-  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR ViscoScram" << endl;
-#endif
 }
 
 double ViscoScram::getCompressibility()
