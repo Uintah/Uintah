@@ -65,7 +65,7 @@ public:
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw) = 0;
   
-  virtual void problemSetup(ProblemSpecP& db) = 0;
+  virtual void problemSetup(const ProblemSpecP& db) = 0;
 
 private:
 
