@@ -11,8 +11,8 @@ c     Local Variables :
 c*********************************************************************
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
-      double precision FLOW, RHO, AVGVELP, AVGVELS
-      double precision YR, ZR, YVR, ZWR, factor
+      double precision FLOW, RHO, AVGVELP
+      double precision factor
 
 c*********************************************************************
 c     Start :
@@ -39,23 +39,8 @@ C---------------------------------------------------------------------
         AVGVELP = FLOW/(RHO*AREAPR)
       ENDIF
       endif
-      factor = 1.0d0
-      if (time .lt. 2.0d0) then
-         factor = (time+0.01d0)*0.5d0
-         if (time.lt.0.02d0) then
-            factor = 0.000001d0*factor
-         elseif (time.lt.0.1d0) then
-            factor = 0.001d0*factor
-         elseif (time.lt.0.2d0) then
-            factor = 0.01d0*factor
-         elseif (time.lt.0.3d0) then
-            factor = 0.1d0*factor
-         elseif (time.lt.0.4d0) then
-            factor = 0.5d0*factor
-         elseif (time.lt.1.0d0) then
-            factor = 0.8d0*factor
-         endif
-      endif
+
+      include 'ramping.h'
 c
 c     debug to try pure diffusion case: if we don't do this, then
 c     since den = 0.0, avgvelp = nan.

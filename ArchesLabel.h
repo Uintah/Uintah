@@ -316,6 +316,7 @@ namespace Uintah {
 //      const VarLabel* d_velocityDivergenceLabel;
 //      const VarLabel* d_velocityDivergenceBCLabel;
 
+      const VarLabel* d_InitNormLabel;
 // labels for max(abs(velocity)) for Lax-Friedrichs flux
       const VarLabel* d_maxAbsU_label;
       const VarLabel* d_maxAbsV_label;

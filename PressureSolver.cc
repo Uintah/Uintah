@@ -12,6 +12,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
 #ifdef HAVE_HYPRE
 #include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
@@ -398,6 +399,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 #endif
 
   tsk->computes(timelabels->pressure_out);
+  tsk->computes(d_lab->d_InitNormLabel);
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << "Adding computes on patch: " << patch->getID() << '\n';
@@ -459,6 +461,8 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     }
     throw InternalError("pressure solver is diverging");
   }
+  double init_norm = d_linearSolver->getInitNorm();
+  new_dw->put(max_vartype(init_norm), d_lab->d_InitNormLabel);
   if(d_pressRefProc == me){
     CCVariable<double> pressure;
     pressure.copyPointer(pressureVars.pressure);
