@@ -114,8 +114,8 @@ template<class T>
 SCICore::Thread::Reducer<T>::~Reducer()
 {
     if(d_p){
-	delete[] d_join[0]-1;
-	delete[] d_p-1;
+	delete[] (void*)(d_join[0]-1);
+	delete[] (void*)(d_p-1);
     }
 }
 
@@ -129,8 +129,8 @@ SCICore::Thread::Reducer<T>::collectiveResize(int proc, int n)
     // or they will skip down too soon...
     wait(n);
     if(proc==0){
-	delete[] d_join[0]-1;
-	delete[] d_p-1;
+	delete[] (void*)(d_join[0]-1);
+	delete[] (void*)(d_p-1);
 	allocate(n);
 	d_array_size=n;
     }
@@ -163,6 +163,9 @@ SCICore::Thread::Reducer<T>::reduce(int proc, int n, const T& myresult)
 
 //
 // $Log$
+// Revision 1.9  2000/12/13 23:21:53  moulding
+// Add caste to void* for arguments to delete[].
+//
 // Revision 1.8  1999/09/02 16:52:43  sparker
 // Updates to cocoon documentation
 //
