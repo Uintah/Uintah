@@ -19,8 +19,7 @@
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
-#define PRINT
-#undef PRINT
+
 using namespace Uintah;
 namespace Uintah {
 
@@ -892,748 +891,265 @@ bool are_We_Using_LODI_BC(const Patch* patch,
 
 
 
-
+//______________________________________________________________________
+//______________________________________________________________________
+//______________________________________________________________________
+//______________________________________________________________________
+//______________________________________________________________________
 //______________________________________________________________________
 //                  J O H N ' S   B C
 
 #ifdef JOHNS_BC
-// Takes care of Pressure_CC
+
+/* --------------------------------------------------------------------- 
+ Function~  setBC--
+ Purpose~   Takes care Pressure_CC
+ ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& press_CC,
-              const CCVariable<double>& rho_micro,
-              const string& which_Var,
-              const string& kind, 
-              const Patch* patch,
-              SimulationStateP& sharedState, 
-              const int mat_id,
-              DataWarehouse* new_dw)
+           const CCVariable<double>& rho_micro,
+           const string& which_Var,
+           const string& kind, 
+           const Patch* patch,
+           SimulationStateP& sharedState, 
+           const int mat_id,
+           DataWarehouse* new_dw)
 {
-  BC_doing << "Johns setBC (press_CC) "<< kind <<" " << which_Var<< " mat_id = " << mat_id << endl;
-  Vector dx = patch->dCell();
-  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-       face=Patch::nextFace(face)) {
-    double spacing;
-    double gravity;
-    determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
+  BC_doing << "Johns setBC (press_CC) "<< kind <<" " << which_Var
+           << " mat_id = " << mat_id << endl;
+  Vector cell_dx = patch->dCell();
 
-    if (patch->getBCType(face) == Patch::None) {
-#ifdef PRINT
-      cout << "Face = " << face << endl;
-#endif
-      // find the correct BC
-      // check its type (symmetric, neumann, dirichlet)
-      // do the fill face
-      
-      // fill face
-      // as iterate over the values, need to check what the proper value
-      // should be,  need a inside function for getValue(), since
-      // the BC value could be different -- union, difference, etc.
 
-      // For a given Intvector boundary, find the appropriate bc, determine if
-      // it is symmetric, neumann, dirichlet, and its value,
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
-      for (int child = 0;  child < numChildren; child++) {
-       vector<IntVector> bound,inter,nbound;
-       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							 kind,bound,inter,
-							 nbound, child);
-       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							     "Symmetric",
-							     bound,inter,
-							     nbound, child);
-#ifdef PRINT
-       if (bc == 0)
-	 cout << "Didn't get the array bc values" << endl;
-       else {
-	 cout << "Found the array bc values" << endl;
-	 cout << "bc = " << bc->getType() << endl;
-	 cout << "bctype = " << typeid(*bc).name() << endl;
-	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
-	      << endl;
-       }
-#endif
-#if 0
-       if (sym_bc == 0)
-	 cout << "Didn't get the symmetric array bc values" << endl;
-#endif
-     
-       const BoundCond<double> *new_bcs = 
-         dynamic_cast<const BoundCond<double> *>(bc);       
-       double bc_value=0;
-       string bc_kind="";
-       if (new_bcs != 0) {
-         bc_value = new_bcs->getValue();
-         bc_kind = new_bcs->getKind();
-#ifdef PRINT
-         cout << "BC kind = " << bc_kind << endl;
-         cout << "BC value = " << bc_value << endl;
-#endif
-       }
-       
-       // Apply the boundary conditions
-       vector<IntVector>::const_iterator boundary,interior;
-         
-       if (bc_kind == "Dirichlet")
-         for (boundary=bound.begin(); boundary != bound.end(); 
-              boundary++) 
-           press_CC[*boundary] = bc_value;
-       
-       if (bc_kind == "Neumann") {
-         for (boundary=bound.begin(),interior=inter.begin(); 
-              boundary != bound.end();   boundary++,interior++) {
-           press_CC[*boundary] = press_CC[*interior] - bc_value*spacing;
-         }
-       }
-         
-       
-       if (sym_bc != 0)
-         for (boundary=bound.begin(),interior=inter.begin(); 
-              boundary != bound.end(); boundary++,interior++) 
-           press_CC[*boundary] = press_CC[*interior];
-       
-       // If we have gravity, need to apply hydrostatic condition
-       if ((sharedState->getGravity()).length() > 0.) {
-         if (which_Var == "sp_vol") {
-           for (boundary=bound.begin(),interior=inter.begin();
-               boundary != bound.end(); boundary++,interior++) 
-             press_CC[*boundary] = press_CC[*interior] + 
-              gravity*spacing/rho_micro[*interior];
-         }
-         if (which_Var == "rho_micro") {
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             press_CC[*boundary] = press_CC[*interior] +
-              gravity*spacing*rho_micro[*interior];
-         }
-       }
-       delete bc;
-       delete sym_bc;
-      }
-    }
-  }
-}
-//______________________________________________________________________
-//
-void determineSpacingAndGravity(Patch::FaceType face, 
-                            Vector& dx,SimulationStateP& sharedState,
-                            double& spacing, double& gravity)
-{
-  if (face == Patch::xminus || face == Patch::xplus) spacing = dx.x();
-  if (face == Patch::yminus || face == Patch::yplus) spacing = dx.y();
-  if (face == Patch::zminus || face == Patch::zplus) spacing = dx.z();
+  // Iterate over the faces encompassing the domain
+  // only set BC on Boundariesfaces
+  vector<Patch::FaceType>::const_iterator iter;
   
-  if (face == Patch::xminus) gravity = -(sharedState->getGravity().x());
-  if (face == Patch::xplus) gravity = (sharedState->getGravity().x());
-  if (face == Patch::yminus) gravity = -(sharedState->getGravity().y());
-  if (face == Patch::yplus) gravity = (sharedState->getGravity().y());
-  if (face == Patch::zminus) gravity = -(sharedState->getGravity().z());
-  if (face == Patch::zplus) gravity = (sharedState->getGravity().z());
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+    
+    IntVector dir= patch->faceAxes(face);
+    double dx = cell_dx[dir[0]];
+    bool IveSetBC = false;
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      getIterator_BCValue_BCKind<double>( patch, face, child, kind, mat_id,
+                                          bc_value, bound, bc_kind); 
+      if(bc_kind != "NotSet" ) {
+        // define what a symmetric  pressure BC means
+        if( bc_kind == "symmetric"){
+          bc_kind = "zeroNeumann";
+        }
+
+        int p_dir = patch->faceAxes(face)[0];     // principal  face direction
+        Vector gravity = sharedState->getGravity(); 
+        //__________________________________
+        // Apply the boundary condition
+        if (gravity[p_dir] == 0) { 
+          IveSetBC = 
+                setNeumanDirichletBC<double> (patch, face, press_CC,bound, 
+                                              bc_kind, bc_value, cell_dx);
+        }
+        //__________________________________
+        // With Gravity
+        // change gravity sign according to the face direction
+        if (gravity[p_dir] != 0) {  
+
+          Vector faceDir = patch->faceDirection(face).asVector();
+          double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
+          IntVector oneCell = patch->faceDirection(face);
+          vector<IntVector>::const_iterator iter;
+
+          int plusMinusOne = 1;
+          if(which_Var == "sp_vol") {
+            plusMinusOne = -1;
+          }
+          for (iter=bound.begin();iter != bound.end(); iter++) { 
+            IntVector adjCell = *iter - oneCell;
+            press_CC[*iter] = press_CC[adjCell] 
+                            + grav * dx * pow(rho_micro[adjCell],plusMinusOne);
+          }
+          IveSetBC = true;
+        }  // with gravity
+        //__________________________________
+        //  debugging
+        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	        << endl;
+      }  // if bcKind != notSet
+    }  // if face == none
+  }  // faces loop
 }
-
-
-//______________________________________________________________________
-// Take care of the Density Temperature and MassFraction
-void setBC(CCVariable<double>& variable, const string& kind, 
-              const Patch* patch,  SimulationStateP& sharedState,
-              const int mat_id)
+/* --------------------------------------------------------------------- 
+ Function~  setBC--
+ Purpose~   Takes care any CC variable
+ ---------------------------------------------------------------------  */
+void setBC(CCVariable<double>& var_CC,
+           const string& desc, 
+           const Patch* patch,
+           SimulationStateP& sharedState, 
+           const int mat_id)
 {
-  BC_doing << "Johns setBC (Temp, Density) "<< kind << " mat_id = " << mat_id
-	   << endl;
-  Vector dx = patch->dCell();
-  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-       face=Patch::nextFace(face)) {
-    double spacing;
-    double gravity;
-    determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
+  BC_doing << "Johns setBC (double) "<< desc << " mat_id = " << mat_id << endl;
+  Vector cell_dx = patch->dCell();
+  
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  // not the faces between neighboring patches.
+  vector<Patch::FaceType>::const_iterator iter;
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+          
+    bool IveSetBC = false;
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
-    if (patch->getBCType(face) == Patch::None) {
-#ifdef PRINT
-      cout << "Face = " << face << endl;
-#endif
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
-      for (int child = 0; child < numChildren; child++) {
-       vector<IntVector> bound,inter,nbound;
-       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							 kind, bound,inter,
-							 nbound,child);
-      
-       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							     "Symmetric",
-							     bound,inter,
-							     nbound, child);
-#ifdef PRINT
-       if (bc == 0)
-	 cout << "Didn't get the array bc values" << endl;
-       else {
-	 cout << "Found the array bc values" << endl;
-	 cout << "bc = " << bc->getType() << endl;
-	 cout << "bctype = " << typeid(*bc).name() << endl;
-	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
-	      << endl;
-       }
-#endif
-#if 0       
-       if (sym_bc == 0)
-	 cout << "Didn't get the symmetric array bc values" << endl;
-#endif
-       const BoundCond<double> *new_bcs = 
-         dynamic_cast<const BoundCond<double> *>(bc);       
-       
-       double bc_value=0;
-       string bc_kind="";
-       if (new_bcs != 0) {
-         bc_value = new_bcs->getValue();
-         bc_kind = new_bcs->getKind();
-#ifdef PRINT
-         cout << "BC kind = " << bc_kind << endl;
-         cout << "BC value = " << bc_value << endl;
-#endif
-       }
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      getIterator_BCValue_BCKind<double>( patch, face, child, desc, mat_id,
+                                          bc_value, bound, bc_kind); 
+      if (bc_kind != "NotSet" ) {
+        //__________________________________
+        // LOGIC
+        // Any CC Variable
+        if (desc == "set_if_sym_BC" && bc_kind == "symmetric"){
+          bc_kind = "zeroNeumann";
+        }
+        if (desc == "zeroNeumann" || bc_kind == "symmetric"){
+          bc_kind = "zeroNeumann";
+        }
 
+        // mass Fraction/scalar have a zeroNeumann default BC
+        bool defaultZeroNeumann = false;
+        string::size_type pos1 = desc.find ("massFraction");
+        string::size_type pos2 = desc.find ("scalar");
+        string::size_type pos3 = desc.find ("mixtureFraction");
+        string::size_type found = std::string::npos;
+        if ( pos1 != found || pos2 !=  found || pos3 != found){
+          defaultZeroNeumann = true;
+        }
+        if (defaultZeroNeumann || bc_kind == "NotSet") {
+          bc_kind == "zeroNeumann";
+        }      
 
-       
-       // Apply the "zeroNeumann"
-       vector<IntVector>::const_iterator boundary,interior;
-       if (kind == "zeroNeumann")
-         for (boundary=bound.begin(),interior=inter.begin(); 
-              boundary != bound.end(); boundary++,interior++) 
-           variable[*boundary] = variable[*interior];
-       
-       if (sym_bc != 0) {
-         if (kind == "Density" || kind == "Temperature" 
-             || kind == "set_if_sym_BC")
-         for (boundary=bound.begin(),interior=inter.begin(); 
-              boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior];
-       }
-   
-       if (kind == "Density") {
-         if (bc_kind == "Dirichlet")
-           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-             variable[*boundary] = bc_value;
-         if (bc_kind == "Neumann")
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] =  variable[*interior] - bc_value*spacing;
-       }
-       
+        //__________________________________
+        // Apply the boundary condition
+        IveSetBC =  setNeumanDirichletBC<double>
+                       (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx);
 
-       //__________________________________
-       //  mass Fraction/scalar BCs
-       bool massFractionBC = false;   // check for massFraction BC
-       string::size_type pos1 = kind.find ("massFraction");
-       string::size_type pos2 = kind.find ("scalar");
-       string::size_type pos3 = kind.find ("mixtureFraction");
-       if ( pos1 != std::string::npos || pos2 !=  std::string::npos
-	    || pos3 != std::string::npos){
-         massFractionBC = true;
-       }
-       if (massFractionBC) {
-         if (bc_kind == "Dirichlet"){
-            for (boundary=bound.begin(); boundary != bound.end(); boundary++){ 
-              variable[*boundary] = bc_value;
-            }
-          }else if(bc_kind == "Neumann"){
-            for (boundary=bound.begin(),interior=inter.begin(); 
-                boundary != bound.end(); boundary++,interior++){
-              variable[*boundary] =  variable[*interior] - bc_value*spacing;
-            }
-          }else{   // if it hasn't been specified then assume it's zeroNeumann
-            for (boundary=bound.begin(),interior=inter.begin(); 
-                boundary != bound.end(); boundary++,interior++){
-              variable[*boundary] =  variable[*interior];
-            }
+        //__________________________________
+        // Temperature and Gravity and ICE Matls
+        // --change gravity sign according to the face direction
+        int p_dir = patch->faceAxes(face)[0];     // principal  face direction
+        Vector gravity = sharedState->getGravity();                             
+        Material *matl = sharedState->getMaterial(mat_id);
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+
+        if (gravity[p_dir] != 0 && desc == "Temperature" && ice_matl) {  
+
+          Vector faceDir = patch->faceDirection(face).asVector();
+          double grav  = gravity[p_dir] * (double)faceDir[p_dir]; 
+          double cv    = ice_matl->getSpecificHeat();
+          double gamma = ice_matl->getGamma();
+          double dx    = cell_dx[p_dir];
+
+          vector<IntVector>::const_iterator iter;  
+          for (iter=bound.begin(); iter != bound.end(); iter++) { 
+            var_CC[*iter] += grav * dx/((gamma - 1.)*cv);
           }
         }
         //__________________________________
-        //  Temperature
-        if (kind == "Temperature") {
-         if (bc_kind == "Dirichlet")
-           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-             variable[*boundary] = bc_value;
-         if (bc_kind == "Neumann") {
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior] - bc_value*spacing;
-           // We have gravity
-           if ((sharedState->getGravity()).length() > 0.) {
-             // Do the hydrostatic temperature adjustment
-             Material *matl = sharedState->getMaterial(mat_id);
-             ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-             if (ice_matl) {
-              double cv = ice_matl->getSpecificHeat();
-              double gamma = ice_matl->getGamma();
-              for (boundary=bound.begin(); boundary != bound.end(); 
-                   boundary++) 
-                variable[*boundary] += gravity*spacing/((gamma-1.)*cv);
-             }
-           }
-         }
-	}
-	delete bc;
-	delete sym_bc;
-      }
-    } 
-    
-  }
+        //  debugging
+        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	        << endl;
+      }  // if bc_kind != notSet  
+    }  // child loop
+  }  // faces loop
 }
-
 
 /* --------------------------------------------------------------------- 
- Function~  setBC--        
- Purpose~   Takes care of Velocity_CC Boundary conditions
+ Function~  setBC--
+ Purpose~   Takes care vector boundary condition
  ---------------------------------------------------------------------  */
-void setBC(CCVariable<Vector>& variable, const string& kind, 
-              const Patch* patch, const int mat_id) 
+void setBC(CCVariable<Vector>& var_CC,
+           const string& desc,
+           const Patch* patch, 
+           const int mat_id)
 {
-  BC_doing << "Johns setBC (Vector) "<< kind << " mat_id = " << mat_id << endl;
-  Vector dx = patch->dCell();
-  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-       face=Patch::nextFace(face)) {
+  BC_doing <<"Johns setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
+  Vector cell_dx = patch->dCell();
+  
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  // not the faces between neighboring patches.
+  vector<Patch::FaceType>::const_iterator iter;
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
     
-    Vector sign;
-    double spacing=0.0;
-    if (face == Patch::xminus || face == Patch::xplus) {
-      sign=Vector(-1.,1.,1.);
-      spacing = dx.x();
-    }
-    if (face == Patch::yminus || face == Patch::yplus) {
-      sign=Vector(1.,-1.,1.);
-      spacing = dx.y();
-    }
-    if (face == Patch::zminus || face == Patch::zplus) {
-      sign=Vector(1.,1.,-1.);
-      spacing = dx.z();
-    }
+    IntVector oneCell = patch->faceDirection(face);
+    bool IveSetBC = false;
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
-    if (patch->getBCType(face) == Patch::None) {
-#ifdef PRINT
-      cout << "Face = " << face << endl;
-#endif
-      for (int child = 0; 
-          child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
-	   child++) {
-       vector<IntVector> bound,inter,nbound;
-       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							 kind,bound,inter,
-							 nbound,child);
-      
-       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							     "Symmetric",
-							     bound,inter,
-							     nbound,child);
-#ifdef PRINT
-       if (bc == 0)
-	 cout << "Didn't get the array bc values" << endl;
-       else {
-	 cout << "Found the array bc values" << endl;
-	 cout << "bc = " << bc->getType() << endl;
-	 cout << "bctype = " << typeid(*bc).name() << endl;
-	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
-	      << endl;
-       }
-#endif
-#if 0
-       if (sym_bc == 0)
-	 cout << "Didn't get the symmetric array bc values" << endl;
-#endif
+    for (int child = 0;  child < numChildren; child++) {
+      Vector bc_value = Vector(-9,-9,-9);
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      getIterator_BCValue_BCKind<Vector>( patch, face, child, desc, mat_id,
+                                          bc_value, bound, bc_kind);
+     
+      if (bc_kind != "NotSet" ) {
+        //__________________________________
+        // Apply the boundary condition
+        IveSetBC =  setNeumanDirichletBC<Vector>
+                       (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx);
 
-       const BoundCond<Vector> *new_bcs = 
-         dynamic_cast<const BoundCond<Vector> *>(bc);       
-       
-       Vector bc_value(0.,0.,0.);
-       string bc_kind="";
-       if (new_bcs != 0) {
-         bc_value = new_bcs->getValue();
-         bc_kind = new_bcs->getKind();
-#ifdef PRINT
-         cout << "BC kind = " << bc_kind << endl;
-         cout << "BC value = " << bc_value << endl;
-#endif
-       }
-       vector<IntVector>::const_iterator boundary,interior;
-       if (sym_bc != 0 && (kind == "Velocity" || kind == "set_if_sym_BC")) {
-         for (boundary=bound.begin(),interior=inter.begin(); 
-              boundary != bound.end(); boundary++,interior++) {
-           variable[*boundary] = variable[*interior];  
-           variable[*boundary] = sign*variable[*interior];
-         }
-       }
-       
-       if (bc_kind == "Neumann") 
-         for (boundary=bound.begin(),interior=inter.begin(); 
-              boundary != bound.end(); boundary++,interior++) 
-           variable[*boundary] = variable[*interior];
-       
-       if (kind == "Velocity") {
-         if (bc_kind == "Dirichlet")
-           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-             variable[*boundary] = bc_value;
-         
-         if (bc_kind == "Neumann")
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior] - bc_value*spacing;
-       }
-       delete bc;
-       delete sym_bc;
-      }
-    }
-  }
+        //__________________________________
+        //  Tangent components Neumann = 0
+        //  Normal components = -variable[Interior]
+        //  It's negInterior since it's on the opposite side of the
+        //  plane of symetry  
+        if ( bc_kind == "symmetric" &&
+            (desc == "Velocity" || desc == "set_if_sym_BC" ) ) {
+          int P_dir = patch->faceAxes(face)[0];  // principal direction
+          IntVector sign = IntVector(1,1,1);
+          sign[P_dir] = -1;
+          vector<IntVector>::const_iterator iter;
+
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector adjCell = *iter - oneCell;
+            var_CC[*iter] = sign.asVector() * var_CC[adjCell];
+          }
+          IveSetBC = true;
+          bc_value = Vector(0,0,0); // so the debugging output is accurate
+        }
+        //__________________________________
+        //  debugging
+        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = " <<*bound.begin()<<" "<< *(bound.end()-1)
+	        << endl;
+      }  // if (bcKind != "notSet"    
+    }  // child loop
+  }  // faces loop
 }
+#endif // end of #if John'sBC
 //______________________________________________________________________
-//
-void determineSpacingAndSign(Patch::FaceType face, Vector& dx,double& spacing,
-                          double& sign)
-{
-  if (face == Patch::xminus || face == Patch::xplus) {
-      spacing = dx.x();
-  }
-  if (face == Patch::yminus || face == Patch::yplus) {
-    spacing = dx.y();
-  }
-  if (face == Patch::zminus || face == Patch::zplus) {
-    spacing = dx.z();
-  }
-  
-  if (face == Patch::xminus || face == Patch::yminus || 
-      face == Patch::zminus) sign = -1.;
-  
-  if (face == Patch::xplus || face == Patch::yplus || 
-      face == Patch::zplus) sign = 1.;
-  
-}
-
-/* --------------------------------------------------------------------- 
- Function~  setBC--      
- Purpose~   Takes care of vel_FC.x()
- Note:      Neumann BC values are not set on xminus or xplus, 
-            hey are computed in AddExchangeContributionToFCVel.
- ---------------------------------------------------------------------  */
-void setBC(SFCXVariable<double>& variable, const  string& kind, 
-              const string& comp, const Patch* patch, const int mat_id) 
-{
-  BC_doing << "Johns setBC (SFCXVariable) "<< kind << " mat_id = " << mat_id 
-	   <<endl;
-  Vector dx = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){
-    double spacing,sign;
-    determineSpacingAndSign(face,dx,spacing,sign);
-
-    if (patch->getBCType(face) == Patch::None) {
-#ifdef PRINT
-      cout << "Face = " << face << endl;
-#endif
-      for (int child = 0; 
-          child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
-	   child++) {
-       vector<IntVector> bound,inter,nbound;
-       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							 bound,inter,
-							 nbound,child);
-       
-       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							     "Symmetric",
-							     bound,inter,
-							     nbound,child);
-#ifdef PRINT
-       if (bc == 0)
-	 cout << "Didn't get the array bc values" << endl;
-       else {
-	 cout << "Found the array bc values" << endl;
-	 cout << "bc = " << bc->getType() << endl;
-	 cout << "bctype = " << typeid(*bc).name() << endl;
-	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
-	      << endl;
-       }
-#endif
-#if 0
-       if (sym_bc == 0)
-	 cout << "Didn't get the symmetric array bc values" << endl;
-#endif  
-
-       const BoundCond<Vector>* new_bcs  = 
-         dynamic_cast<const BoundCond<Vector> *>(bc);
-    
-       Vector bc_value(0.,0.,0.);
-       string bc_kind="";
-       if (new_bcs != 0) {
-         bc_value = new_bcs->getValue();
-         bc_kind = new_bcs->getKind();
-#ifdef PRINT
-         cout << "BC kind = " << bc_kind << endl;
-         cout << "BC value = " << bc_value << endl;
-#endif
-       }
-       vector<IntVector>::const_iterator boundary,interior;
-       //__________________________________
-       //  Symmetry boundary conditions
-       //  -set Neumann = 0 on all walls
-       if (sym_bc != 0) {
-         // Since this is for the SFCXVariable, only set things on the 
-         // y and z faces  -- set the tangential components
-         if (face == Patch::yminus || face == Patch::yplus || 
-             face == Patch::zminus || face == Patch::zplus)
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior];
-         
-         // Set normal component = 0
-         if(face == Patch::xplus || face == Patch::xminus ) 
-           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-             variable[*boundary] = 0.;
-        }
-         
-       //__________________________________
-       // Neumann or Dirichlet
-       if (bc_kind == "Dirichlet") {
-	 // Add an offset of (1,0,0) for xminus face.
-         // Use the boundary index for the xplus face
-	 if (face == Patch::xminus) {
-	   for (boundary=bound.begin(); boundary != bound.end();  boundary++) 
-	     variable[*boundary + IntVector(1,0,0)] = bc_value.x();
-	 } else {
-	   for (boundary=bound.begin(); boundary != bound.end();  boundary++) 
-	     variable[*boundary] = bc_value.x();
-	 }
-       }
-       if (bc_kind == "Neumann") {
-         if (face == Patch::yminus || face == Patch::yplus || 
-             face == Patch::zminus || face == Patch::zplus)
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior] + 
-              bc_value.x()*spacing*sign;
-       }
-       delete bc;
-       delete sym_bc;
-      }
-    }
-  }
-}
-
-/* --------------------------------------------------------------------- 
- Function~  setBC--      
- Purpose~   Takes care of vel_FC.y()
- Note:      Neumann BC values are not set on yminus or yplus, 
-            hey are computed in AddExchangeContributionToFCVel.
- ---------------------------------------------------------------------  */
-void setBC(SFCYVariable<double>& variable, const  string& kind, 
-              const string& comp, const Patch* patch, const int mat_id) 
-{
-  BC_doing << "Johns setBC (SFCYVariable) "<< kind << " mat_id = " << mat_id 
-	   << endl;
-  Vector dx = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){
-    double spacing,sign;
-    determineSpacingAndSign(face,dx,spacing,sign);
-
-    if (patch->getBCType(face) == Patch::None) {
-#ifdef PRINT
-      cout << "Face = " << face << endl;
-#endif
-      for (int child = 0; 
-          child < patch->getBCDataArray(face)->getNumberChildren(mat_id); 
-	   child++) {
-       vector<IntVector> bound,inter,nbound;
-       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							 bound,inter,
-							 nbound,child);
-       
-       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							     "Symmetric",
-							     bound,inter,
-							     nbound,child);
-#ifdef PRINT
-       if (bc == 0)
-	 cout << "Didn't get the array bc values" << endl;
-       else {
-	 cout << "Found the array bc values" << endl;
-	 cout << "bc = " << bc->getType() << endl;
-	 cout << "bctype = " << typeid(*bc).name() << endl;
-	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
-	      << endl;
-       }
-#endif
-#if 0
-       if (sym_bc == 0)
-	 cout << "Didn't get the symmetric array bc values" << endl;
-#endif
-
-       const BoundCond<Vector>* new_bcs  = 
-         dynamic_cast<const BoundCond<Vector> *>(bc);
-    
-       Vector bc_value(0.,0.,0.);
-       string bc_kind="";
-       if (new_bcs != 0) {
-         bc_value = new_bcs->getValue();
-         bc_kind = new_bcs->getKind();
-#ifdef PRINT
-         cout << "BC kind = " << bc_kind << endl;
-         cout << "BC value = " << bc_value << endl;
-#endif
-       }
-       vector<IntVector>::const_iterator boundary,interior;
-       //__________________________________
-       //  Symmetry boundary conditions
-       //  -set Neumann = 0 on all walls
-       if (sym_bc != 0) {
-         // Since this is for the SFCYVariable, only set things on the 
-         // x and z faces  -- set the tangential components
-         if (face == Patch::xminus || face == Patch::xplus || 
-             face == Patch::zminus || face == Patch::zplus)
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior];
-         
-         // Set normal component = 0
-         if( face == Patch::yplus || face == Patch::yminus ) 
-           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-             variable[*boundary] = 0.;
-        }
-         
-       //__________________________________
-       // Neumann or Dirichlet
-       if (bc_kind == "Dirichlet") {
-	 if (face == Patch::yminus) {
-	   // Add an offset of (0,1,0) for yminus face.
-	   for (boundary=bound.begin();boundary != bound.end();boundary++) 
-	     variable[*boundary + IntVector(0,1,0)] = bc_value.y();
-	 } else {
-	   for (boundary=bound.begin();boundary != bound.end();boundary++) 
-	     variable[*boundary] = bc_value.y();
-	 }
-       }
-       
-       if (bc_kind == "Neumann") {
-         if (face == Patch::xminus || face == Patch::xplus || 
-             face == Patch::zminus || face == Patch::zplus)
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior] + 
-              bc_value.y()*spacing*sign;
-       }
-       delete bc;
-       delete sym_bc;
-      }
-    }
-  }
-}
-
-/* --------------------------------------------------------------------- 
- Function~  setBC--      
- Purpose~   Takes care of vel_FC.z()
- Note:      Neumann BC values are not set on zminus or zplus, 
-            hey are computed in AddExchangeContributionToFCVel.
- ---------------------------------------------------------------------  */
-void setBC(SFCZVariable<double>& variable, const  string& kind, 
-              const string& comp, const Patch* patch, const int mat_id) 
-{
-  BC_doing << "Johns setBC (SFCZVariable) "<< kind << " mat_id = " << mat_id 
-	   << endl;
-  Vector dx = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){
-    double spacing,sign;
-    determineSpacingAndSign(face,dx,spacing,sign);
-
-    if (patch->getBCType(face) == Patch::None) {
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
-#ifdef PRINT
-      cout << "Face = " << face << endl;
-#endif
-      for (int child = 0;  child < numChildren; child++) {
-       vector<IntVector> bound,inter,nbound;
-       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							 bound,inter,
-							 nbound,child);
-       
-       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							     "Symmetric",
-							     bound,inter,
-							     nbound,child);
-#ifdef PRINT 
-       if (bc == 0)
-	 cout << "Didn't get the array bc values" << endl;
-       else {
-	 cout << "Found the array bc values" << endl;
-	 cout << "bc = " << bc->getType() << endl;
-	 cout << "bctype = " << typeid(*bc).name() << endl;
-	 cout << "bound limits = " << *bound.begin() << " " << *(bound.end()-1)
-	      << endl;
-       }
-#endif
-#if 0
-       if (sym_bc == 0)
-	 cout << "Didn't get the symmetric array bc values" << endl;
-#endif
-
-       const BoundCond<Vector>* new_bcs  = 
-         dynamic_cast<const BoundCond<Vector> *>(bc);
-    
-       Vector bc_value(0.,0.,0.);
-       string bc_kind="";
-       if (new_bcs != 0) {
-         bc_value = new_bcs->getValue();
-         bc_kind = new_bcs->getKind();
-#ifdef PRINT
-         cout << "BC kind = " << bc_kind << endl;
-         cout << "BC value = " << bc_value << endl;
-#endif
-       }
-       vector<IntVector>::const_iterator boundary,interior;
-       //__________________________________
-       //  Symmetry boundary conditions
-       //  -set Neumann = 0 on all walls
-       if (sym_bc != 0) {
-         // Since this is for the SFCZVariable, only set things on the 
-         // x and y faces  -- set the tangential components
-         if (face == Patch::xminus || face == Patch::xplus || 
-             face == Patch::yminus || face == Patch::yplus)
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior];
-         
-         // Set normal component = 0
-         if( face == Patch::zplus || face == Patch::zminus ) 
-           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-             variable[*boundary] = 0.;
-        }
-         
-       //__________________________________
-       // Neumann or Dirichlet
-       if (bc_kind == "Dirichlet") 
-	 // Add an offset of (0,0,1) for zminus face
-	 if (face == Patch::zminus) {
-	   for (boundary=bound.begin();boundary != bound.end(); boundary++)
-	     variable[*boundary+IntVector(0,0,1)] = bc_value.z();
-	 } else {
-	   for (boundary=bound.begin();boundary != bound.end(); boundary++)
-	     variable[*boundary] = bc_value.z();
-	 }
-       
-       if (bc_kind == "Neumann") {
-         if (face == Patch::xminus || face == Patch::xplus || 
-             face == Patch::yminus || face == Patch::yplus)
-           for (boundary=bound.begin(),interior=inter.begin(); 
-               boundary != bound.end(); boundary++,interior++) 
-             variable[*boundary] = variable[*interior] + 
-              bc_value.z()*spacing*sign;
-       }
-       delete bc;
-       delete sym_bc;
-      }
-    }
-  }
-}
-#endif
-
-
-
 //______________________________________________________________________
-
-///______________________________________________________________________
+//______________________________________________________________________
+//______________________________________________________________________
+//______________________________________________________________________
 //
 #ifdef LODI_BCS
 
@@ -2034,8 +1550,8 @@ void computeNu(CCVariable<Vector>& nu,
   // only set DI on Boundariesfaces that are LODI
   vector<Patch::FaceType>::const_iterator iter;
   
-  for (iter = patch->getBoundaryFaces()->begin(); 
-                            iter != patch->getBoundaryFaces()->end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face[face] ) {
@@ -2070,7 +1586,7 @@ void computeNu(CCVariable<Vector>& nu,
       vector<Patch::FaceType>::const_iterator iter;
       
       for (iter = patch->getBoundaryFaces()->begin(); 
-                                iter != patch->getBoundaryFaces()->end(); ++iter){
+           iter != patch->getBoundaryFaces()->end(); ++iter){
       
         Patch::FaceType face0 = *iter;
         //__________________________________
@@ -2180,7 +1696,7 @@ void  setBCPress_LODI(CCVariable<double>& press_CC,
   //  the other faces and BC's wipe out what
   //  LODI set in the corners and edges
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
+                      face <= Patch::endFace; face=Patch::nextFace(face)){
     const BoundCondBase *bcs;
     const BoundCond<double> *new_bcs;
     if (patch->getBCType(face) == Patch::None) {
