@@ -164,7 +164,7 @@ Module::Module(const string& name, GuiContext* ctx,
     for (oport_iter i2=info->oports->begin();
 	 i2!=info->oports->end();
 	 i2++) {
-      int strlength = strlen(((*i2).second)->datatype.c_str());
+      unsigned long strlength = ((*i2).second)->datatype.length();
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
       sscanf(((*i2).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
@@ -183,7 +183,7 @@ Module::Module(const string& name, GuiContext* ctx,
     for (iport_iter i1=info->iports->begin();
 	 i1!=info->iports->end();
 	 i1++) {
-      int strlength = strlen(((*i1).second)->datatype.c_str());
+      unsigned long strlength = ((*i1).second)->datatype.length();
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
       sscanf(((*i1).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
