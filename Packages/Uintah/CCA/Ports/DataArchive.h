@@ -468,7 +468,9 @@ private:
 	query(var, name, matlIndex, patch, t);
 	values.push_back(var[loc]);
       } break;
-
+      default:
+	// Dd: Is this correct?  Error here?
+	break;
       }
     }
     
