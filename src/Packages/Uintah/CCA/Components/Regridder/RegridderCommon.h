@@ -16,7 +16,6 @@ namespace Uintah {
 class DataWarehouse;
 class Patch;
 
-typedef vector<SCIRun::IntVector> IndexList;
 typedef vector<SCIRun::IntVector> SizeList;
 
 /**************************************
@@ -57,8 +56,6 @@ WARNING
     RegridderCommon(const ProcessorGroup* pg);
     virtual ~RegridderCommon();
 
-    virtual GridP Regrid (const GridP& origGrid, DataWarehouse* dw);
-
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params,
 			      const GridP& grid,
@@ -74,15 +71,19 @@ WARNING
       FILTER_BOX
     };
 
-  private:
+  protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
 
     // input parameters from ups file
-    SizeList d_cellRefinementRatio;
-    int d_cellCreationDilation;
-    int d_cellDeletionDilation;
-    int d_minBoundaryCells; //! min # of cells to be between levels' boundaries
+    SizeList  d_cellRefinementRatio;
+    IntVector d_cellCreationDilation;
+    IntVector d_cellDeletionDilation;
+    IntVector d_minBoundaryCells; //! min # of cells to be between levels' boundaries
     int d_filterType;
+
+    vector< CCVariable<int>* > d_flaggedCells;
+    vector< CCVariable<int>* > d_dilatedCellsCreated;
+    vector< CCVariable<int>* > d_dilatedCellsDeleted;
 
     //! ratio to divide each patch (inner vector is for x,y,z ratio, 
     //! outer vector is a subsequent value per level)
@@ -90,22 +91,22 @@ WARNING
     int d_maxLevels;
 
     // these are structures derived from the code
-    SizeList cell_num;
-    SizeList patch_num;
-    SizeList patch_size;
+    SizeList d_cellNum;
+    SizeList d_patchNum;
+    SizeList d_patchSize;
 
 
-    vector<IndexList> patch_active;
-    vector<IndexList> patch_created;
-    vector<IndexList> patch_deleted;
+    vector< CCVariable<int>* > d_patchActive;
+    vector< CCVariable<int>* > d_patchCreated;
+    vector< CCVariable<int>* > d_patchDeleted;
 
-    vector<int> num_created;
-    vector<int> num_deleted;
+    vector<int> d_numCreated;
+    vector<int> d_numDeleted;
 
-    bool newGrid;
+    bool d_newGrid;
 
 
-    bool flagCellsExist(DataWarehouse* dw, Patch* patch);
+    bool flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector low, IntVector high);
     SCIRun::IntVector calculateNumberOfPatches(SCIRun::IntVector& cell_num, SCIRun::IntVector& patch_size);
 
     IntVector Less    (const IntVector& a, const IntVector& b);
@@ -114,7 +115,8 @@ WARNING
     IntVector Mod     (const IntVector& a, const IntVector& b);
     IntVector Ceil    (const Vector& a);
 
-    void Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, int filterType, int depth );
+    void Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, int filterType, IntVector depth );
+    void GetFlaggedCells ( const GridP& origGrid, int levelIdx, DataWarehouse* dw );
   };
 
 } // End namespace Uintah
