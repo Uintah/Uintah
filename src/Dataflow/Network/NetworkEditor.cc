@@ -694,15 +694,13 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	save_network(args[2]);
-    } else if (args[1] == "load_component_spec"){
-      int check=0;
-      char buff[100]="\0";
-      if (args.count()!=3) {
-	args.error("load_component_spec needs 1 argument");
-	return;
+    } else if (args[1] == "create_pac_cat_mod"){
+      if (args.count()!=7) {
+          args.error("create_pac_cat_mod needs 5 arguments");
+          return;
       }
       component_node* n = CreateComponentNode(1);
-      check = ReadComponentNodeFromFile(n,args[2].c_str());
+      int check = ReadComponentNodeFromFile(n,args[6].c_str());
       if (check!=1) {
 	args.error("NetworkEditor: XML file did not pass validation: " + 
 		   args[2] + ".  Please see the messages window for details.");
@@ -714,48 +712,63 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 		   "  category: " + args[2]);
 	return;
       }
-      sprintf(buff,"%ld",(long)n);
-      TCL::execute(string("GetPathAndPackage {")+buff+"} {"+
-		   n->name+"} {"+n->category+"}");
-    } else if (args[1] == "create_pac_cat_mod"){
-        if (args.count()!=7) {
-          args.error("create_pac_cat_mod needs 5 arguments");
-          return;
-        }
-	if (!(GenPackage((char*)args[3].c_str(),(char*)args[2].c_str()) &&
-	      GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
-			  (char*)args[2].c_str()) &&
-	      GenComponent((component_node*)atol(args[6].c_str()),
-			   (char*)args[3].c_str(),(char*)args[2].c_str()))) {
-          args.error("Unable to create new package, category or module."
-		     "  Check your paths and names and try again.");
-          return;
-        }
+      if (!(GenPackage((char*)args[3].c_str(),(char*)args[2].c_str()) &&
+	    GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
+			(char*)args[2].c_str()) &&
+	    GenComponent(n, (char*)args[3].c_str(),(char*)args[2].c_str()))) {
+        args.error("Unable to create new package, category or module."
+		   "  Check your paths and names and try again.");
+	return;
+      }
     } else if (args[1] == "create_cat_mod"){
-        if (args.count()!=7) {
-          args.error("create_cat_mod needs 3 arguments");
-          return;
-        }
-	
-	if (!(GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
-			  (char*)args[2].c_str()) &&
-	      GenComponent((component_node*)atol(args[6].c_str()),
-			   (char*)args[3].c_str(),(char*)args[2].c_str()))) {
-          args.error("Unable to create new category or module."
-		     "  Check your paths and names and try again.");
-	  return;
-	}
+      if (args.count()!=7) {
+	args.error("create_cat_mod needs 3 arguments");
+	return;
+      }
+      component_node* n = CreateComponentNode(1);
+      int check = ReadComponentNodeFromFile(n,args[6].c_str());
+      if (check!=1) {
+	args.error("NetworkEditor: XML file did not pass validation: " + 
+		   args[2] + ".  Please see the messages window for details.");
+	return;
+      }
+      if (n->name==NOT_SET||n->category==NOT_SET) {
+	args.error("NetworkEditor: XML file does not define"
+		   " a component name and/or does not define a"
+		   "  category: " + args[2]);
+	return;
+      }
+      
+      if (!(GenCategory((char*)args[4].c_str(),(char*)args[3].c_str(),
+			(char*)args[2].c_str()) &&
+	    GenComponent(n, (char*)args[3].c_str(),(char*)args[2].c_str()))) {
+        args.error("Unable to create new category or module."
+		   "  Check your paths and names and try again.");
+	return;
+      }
     } else if (args[1] == "create_mod"){
-        if (args.count()!=7) {
+      if (args.count()!=7) {
           args.error("create_mod needs 3 arguments");
-          return;
-        }
-	if (!(GenComponent((component_node*)atol(args[6].c_str()),
-			   (char*)args[3].c_str(),(char*)args[2].c_str()))) {
+        return;
+      }
+      component_node* n = CreateComponentNode(1);
+      int check = ReadComponentNodeFromFile(n,args[6].c_str());
+      if (check!=1) {
+	args.error("NetworkEditor: XML file did not pass validation: " + 
+		   args[2] + ".  Please see the messages window for details.");
+	return;
+      }
+      if (n->name==NOT_SET||n->category==NOT_SET) {
+	args.error("NetworkEditor: XML file does not define"
+		   " a component name and/or does not define a"
+		   "  category: " + args[2]);
+	return;
+      }
+      if (!(GenComponent(n, (char*)args[3].c_str(),(char*)args[2].c_str()))) {
           args.error("Unable to create new module."
 		     "  Check your paths and names and try again.");
-	  return;
-	}
+	return;
+      }
     } else if (args[1] == "set_group") {
 	if (args.count()!=3) {
 	    args.error("create_mod needs 1 argument");	

@@ -48,6 +48,7 @@ proc ComponentWizard { {window .componentWizard} } {
     global time_font
     
     toplevel $w -width [concat $MAIN_WIDTH i] -height [concat $MAIN_HEIGHT i]
+    wm geometry $w 505x642+228+102
     wm title $w "Component Wizard"
     wm resizable $w 0 0
 
@@ -58,14 +59,14 @@ proc ComponentWizard { {window .componentWizard} } {
     frame $w.buttons
     pack $w.buttons -ipadx $PADi -ipady $PADi -fill both -expand yes -side top
 
-    button $w.buttons.open -text "Open" 
-    pack $w.buttons.open -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
+#    button $w.buttons.open -text "Open" 
+#    pack $w.buttons.open -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
-    button $w.buttons.save -text "Save" -command "array set $d \[array get $tmpd\]"
-    pack $w.buttons.save -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
+#    button $w.buttons.save -text "Save" -command "array set $d \[array get $tmpd\]"
+#    pack $w.buttons.save -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
     button $w.buttons.create -text "Create"  \
-        -command "array set $d \[array get $tmpd\]"
+        -command "array set $d \[array get $tmpd\]; generateXML $d"
     pack $w.buttons.create -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
     button $w.buttons.cancel -text "Cancel" -command "destroy $w"  
@@ -91,7 +92,7 @@ proc make_io_gui_pane {p d} {
     set PADi [concat $PAD i]
     global $d
 
-    canvas $p.c -relief sunken -borderwidth 3 -background #038
+    canvas $p.c -relief sunken -borderwidth 3 -background #036
     place $p.c -x .125i -y .125i -width 3.25i -height 2.75i
 
     if [info exists ${d}(hasgui)] {
@@ -138,8 +139,18 @@ proc make_io_gui_pane {p d} {
     configPorts $modframe "i" $d
     configPorts $modframe "o" $d
 
-    set guidescript $p.guidescript
-    create_text_entry $guidescript "Description:" $d guidescript
+#    set guidescript $p.guidescript
+#    create_text_entry $guidescript "Description:" $d guidescript
+    frame $p.cp
+    frame $p.cp.pack
+    frame $p.cp.cat
+    frame $p.cp.path
+    label $p.cp.cat.categoryl -text "Category: " -width 20 -anchor e
+    entry $p.cp.cat.category -textvar ${d}(category) -width 30
+    label $p.cp.pack.packagel -text "Package: " -width 20 -anchor e
+    entry $p.cp.pack.package -textvar ${d}(package) -width 30
+    label $p.cp.path.pathl -text "Path to SCIRun source: " -width 20 -anchor e
+    entry $p.cp.path.path -textvar ${d}(path) -width 30
 
     set uiinfo $p.uiinfo
     create_text_entry $uiinfo "GUI Info:" $d uiinfo
@@ -157,10 +168,16 @@ proc make_io_gui_pane {p d} {
     pack $p.cmds.add_odev -padx $PADi -pady $PADi \
         -ipady $PADi -expand yes -side top -anchor nw -fill x
 
-    pack $guidescript -fill x -side bottom -anchor sw \
-        -padx $PADi 
     pack $uiinfo -fill x -side bottom -anchor sw \
         -padx $PADi 
+    pack $p.cp -fill x -side bottom -anchor sw -padx $PADi -pady $PADi
+    pack $p.cp.pack $p.cp.cat $p.cp.path -side top -pady $PADi
+    pack $p.cp.cat.categoryl $p.cp.cat.category -side left
+    pack $p.cp.pack.packagel $p.cp.pack.package -side left
+    pack $p.cp.path.pathl $p.cp.path.path -side left
+    
+#    pack $guidescript -fill x -side bottom -anchor sw \
+#        -padx $PADi 
     pack $p.cmds -expand no -side right -anchor ne -padx $PADi -pady $PADi
 }
 
@@ -176,10 +193,10 @@ proc make_overview_pane {p d} {
     create_text_entry $descript "Description:" $d descript
 
     set lexamplesr $p.lexamplesr
-    label $lexamplesr -text "Example Source: "
+    label $lexamplesr -text "Example network: "
 
     set eexamplesr $p.eexamplesr
-    prompted_entry $eexamplesr "<enter example source filename>" "
+    prompted_entry $eexamplesr "<enter example network filename>" "
             global $d;
             set ${d}(examplesr) \[get_prompted_entry $eexamplesr\];
         " 
@@ -307,10 +324,10 @@ proc make_icon {canvas modx mody {gui 0} d} {
     } else {
         set ${d}(title) ""
     }
-    prompted_entry $p.title "<click to edit title>" "
+    prompted_entry $p.title "<click to edit name>" "
             global $p.title.real_text;
             set ${d}(title) \[set $p.title.real_text\];
-        " -relief flat -justify center -width 16 -font $modname_font 
+        " -relief flat -justify left -width 17 -font $modname_font 
     set_prompted_entry $p.title [set ${d}(title)]
 
     # Make the time label
@@ -414,6 +431,7 @@ proc edit_port {portnum} {
     }
 
     toplevel $w
+    wm geometry $w 374x368+294+333
 
     set f $w.f
     global $f
@@ -460,8 +478,8 @@ proc edit_port {portnum} {
     set sydescript $fdescript.sy
     global $sydescript
     prompted_text $edescript "<description information in HTML>" "" \
-        -wrap word -yscrollcommand "$sydescript set"
-    pack $edescript -side left -fill both -expand true
+        -wrap word -yscrollcommand "$sydescript set" -height 5 -width 50
+    pack $edescript -side left -fill x -expand true
     if [info exists ${portnum}(descript)] {
         set_prompted_text $edescript [set ${portnum}(descript)]
     }
@@ -536,4 +554,285 @@ proc remove_port {icon portnum type d} {
         configPorts $icon $type $d
     }
 }
+
+proc generateXML { d } {
+    global $d
+    set id [open cwmmtemp.xml {WRONLY CREAT TRUNC}]
+    if {[expr ![info exists ${d}(title)] || \
+	      ![llength [set ${d}(title)]] || \
+              ![info exists ${d}(category)] || \
+	      ![llength [set ${d}(category)]] || \
+              ![info exists ${d}(package)] || \
+	      ![llength [set ${d}(package)]] || \
+              ![info exists ${d}(path)] || \
+              ![llength [set ${d}(path)]]]} {
+      puts "Please give the module a valid Name, Package, Category and Source path"
+      return
+    } 
+    puts $id "<component name=\"[set ${d}(title)]\" category=\"[set ${d}(category)]\">"
+    puts $id "  <overview>"
+    if {[info exists ${d}(authors)]} {
+      puts $id "    <authors>"
+      foreach name [set ${d}(authors)] { 
+        puts $id "      <author>$name</author>"
+      }
+      puts $id "    </authors>"
+    }
+    puts $id "    <summary>"
+    puts $id "    </summary>"
+    puts $id "    <description>"
+    puts $id "    </description>"
+    if {[info exists ${d}(examplesr)]} {
+      if {[llength [set ${d}(examplesr)]]} {
+        puts $id "    <examplesr>"
+        puts $id "      [set ${d}(examplesr)]"
+        puts $id "    </examplesr>"
+      }
+    }
+    puts $id "  </overview>"
+    puts $id "  <implementation>"
+    puts $id "  </implementation>"
+    puts $id "  <io>"
+    if {[expr [info exists ${d}(dynamicport)] && \
+              [set ${d}(dynamicport)]] } {
+      puts $id "    <inputs lastportdynamic=\"yes\">"
+    } else {
+      puts $id "    <inputs lastportdynamic=\"no\">"
+    }
+    if {[info exists ${d}(iports)]} {
+      foreach port [set ${d}(iports)] {
+        global $port
+	if {[expr ![info exists ${port}(name)] || \
+                  ![llength [set ${port}(name)]] || \
+                  ![info exists ${port}(datatype)] || \
+                  ![llength [set ${port}(datatype)]]]} {
+          puts "please provide all the ports with names and datatypes"
+          return
+	}
+	puts $id "      <port>"
+        puts $id "        <name>[set ${port}(name)]</name>"
+        puts $id "        <datatype>[set ${port}(datatype)]</datatype>"
+        puts $id "      </port>"
+      }
+    }
+    puts $id "    </inputs>"
+    puts $id "    <outputs>"
+    if {[info exists ${d}(oports)]} {
+      foreach port [set ${d}(oports)] {
+        global $port
+	if {[expr ![info exists ${port}(name)] || \
+                  ![llength [set ${port}(name)]] || \
+                  ![info exists ${port}(datatype)] || \
+                  ![llength [set ${port}(datatype)]]]} {
+          puts "please provide all the ports with names and datatypes"
+          return
+	}
+	puts $id "      <port>"
+        puts $id "        <name>[set ${port}(name)]</name>"
+        puts $id "        <datatype>[set ${port}(datatype)]</datatype>"
+        puts $id "      </port>"
+      }
+    }
+    puts $id "    </outputs>"
+    puts $id "  </io>"
+    if {[set ${d}(hasgui)]} {
+      puts $id "  <gui>"
+      puts $id "    <parameter>"
+      puts $id "      <widget>Label</widget>"
+      puts $id "      <label>Autogenerated GUI explanation</label>"
+      puts $id "    </parameter>"
+      puts $id "  </gui>"
+    }
+    puts $id "  <testing>"
+    puts $id "  </testing>"
+    puts $id "</component>"
+    close $id
+
+    CreateNewModule [set ${d}(package)] [set ${d}(category)] [set ${d}(path)] \
+	            [set ${d}(title)]
+}
+
+proc CreateNewModule { packname catname psepath compname } {
+#    netedit load_component_spec cwmmtemp.xml $package $category $path
+
+    set xmlname "cwmmtemp.xml"
+
+    if {$psepath=="" || $compname=="" || $packname=="" || $catname==""} {
+	messagedialog "ERROR"\
+                      "One or more of the entries was left blank.\
+                       All entries must be filled in."
+	return
+    }
+
+    if {![file exists $psepath]} {
+	messagedialog "The path \"$psepath\" does not exist. \
+		       Please choose another path."
+	return
+    }
+
+    if {![file isdirectory $psepath]} {
+	messagedialog "The path \"$psepath\" is already in use\
+		       by a non-directory file"
+	return
+    }
+
+    if {![file exists $psepath/src/Packages/$packname]} {
+	yesnodialog "PACKAGE NAME WARNING" \
+                    "Package \"$psepath/src/Packages/$packname\" \
+		    does not exist. \
+                     Create it now? \n \
+                     (If yes, the category \"$psepath/src/Packages/ \
+		     $packname/$catname\"\
+                     will also be created.)" \
+		    "netedit create_pac_cat_mod $psepath $packname\
+		    $catname $compname $xmlname; destroy .componentWizard; \
+                    newpackagemessage $packname"
+	return
+    }
+
+    if {![file isdirectory $psepath/src/Packages/$packname]} {
+	messagedialog "PACKAGE NAME ERROR" 
+                      "The name \"$psepath/src/Packages/$packname\" \
+		      is already in use\
+                       by a non-package file"
+	return
+    }
+
+    if {![expr \
+           [file exists $psepath/src/Packages/$packname/Dataflow] &&\
+	   [file isdirectory $psepath/src/Packages/$packname/Dataflow] &&\
+	   [file exists $psepath/src/Packages/$packname/Core] &&\
+	   [file isdirectory $psepath/src/Packages/$packname/Core] &&\
+	   [file exists $psepath/src/Packages/$packname/sub.mk] &&\
+           [file exists $psepath/src/Packages/$packname/Dataflow/Modules] && \
+           [file isdirectory \
+	     $psepath/src/Packages/$packname/Dataflow/Modules] && \
+           [file exists $psepath/src/Packages/$packname/Dataflow/XML] && \
+           [file isdirectory $psepath/src/Packages/$packname/Dataflow/XML] && \
+           ![file isdirectory $psepath/src/Packages/$packname/sub.mk]]} {
+	messagedialog "PACKAGE ERROR" \
+                      "The file \"$psepath/src/Packages/$packname\" \
+		      does not appear\
+                       to be a valid package or is somehow corrupt.\
+                       The module \"$compname\" will not be added.\n\n\
+                       See the \"Create A New Module\" documentation for\
+                       more information."
+	return
+    }
+             
+    if {![file exists \
+	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname]} {
+	yesnodialog "CATEGORY NAME WARNING" \
+                    "Category \
+		    \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname\"\
+		    does not exist.  Create it now?" \
+		    "netedit create_cat_mod $psepath $packname\
+		    $catname $compname $xmlname; destroy .componentWizard; \
+		    newmodulemessage $compname"
+	return
+    }
+
+    if {![file isdirectory \
+	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname]} {
+	messagedialog "CATEGORY NAME ERROR" \
+                      "The name \
+		      \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname\"\
+                       is already in use by a non-category file"
+	return	
+    }
+
+    if {![file exists \
+	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname/sub.mk]} {
+	messagedialog "CATEGORY ERROR" \
+                      "The file \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname\"\
+                       does not appear to be a valid category or is\
+                       somehow corrupt.  The Module \"$compname\" will\
+                       not be added.\n\n\
+                       See the \"Create A New Module\" documentation for\
+                       more information."
+	return
+    }
+
+    if {[file exists \
+	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname/$compname.cc]} {
+	messagedialog "MODULE NAME ERROR" \
+		      "The name \
+		      \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname/$compname\"\
+                      is already in use by another file"
+	return
+    }
+
+    netedit create_mod $psepath $packname $catname $compname $xmlname
+    destroy .componentWizard
+    
+    newmodulemessage $compname
+}
+
+proc newpackagemessage {pac} {
+    messagedialog "FINISHED CREATING NEW MODULE"\
+                  "In order to use the newly created package \
+                   you will first have to close, \
+                   reconfigure (i.e. configure --enable-package=\"$pac\"), \
+                   and rebuild the PSE."
+}
+
+proc newmodulemessage {mod} {
+    messagedialog "FINISHED CREATING NEW MODULE"\
+	          "In order to use \"$mod\" you will first have to\
+                   close, and then rebuild, the PSE."
+}
+                   
+proc CreateNewModuleCancel {} {
+    destroy .newmoduledialog
+}
+
+proc messagedialog {title message} {
+    set w .errordialog
+    if {[winfo exists $w]} {
+	destroy $w
+    }
+
+    toplevel $w 
+    wm title $w $title
+    wm geometry $w 350x150+150+100
+    text $w.message -width 60 -height 10 -wrap word -relief flat
+    $w.message insert 0.1 $message
+    button $w.ok -text "Ok" -command "destroy $w"
+    pack $w.message $w.ok -side top -padx 5 -pady 5
+    focus $w.ok
+    grab set $w
+    tkwait window $w
+}
+
+proc yesnodialog {title message command} {
+    set w .yesnodialog
+    if {[winfo exists $w]} {
+	destroy $w
+    }
+
+    toplevel $w
+    wm title $w $title
+    wm geometry $w 350x150+150+100
+    frame $w.top
+    frame $w.bot
+    text $w.top.message -width 60 -height 10 -wrap word -relief flat
+    $w.top.message insert 0.1 $message
+    button $w.bot.yes -text "Yes" -command "destroy $w; $command"
+    button $w.bot.no -text "no" -command "destroy $w"
+    pack $w.top $w.bot
+    pack $w.top.message -padx 5 -pady 5
+    pack $w.bot.yes $w.bot.no -side left -padx 5 -pady 5 
+    focus $w
+    grab set $w
+    tkwait window $w
+}
+
+
+
+
+
+
+
+
+
 
