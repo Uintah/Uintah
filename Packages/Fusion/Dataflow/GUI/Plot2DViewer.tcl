@@ -152,6 +152,24 @@ itcl_class Fusion_Render_Plot2DViewer {
 	needexecute 1 0
     }
 
+    method set_color { w plt dat } {
+	global $w
+	global $this-color-$plt-$dat
+
+	switch -- [$w get] {
+	    "Red"    { set $this-color-$plt-$dat 1 }
+	    "Yellow" { set $this-color-$plt-$dat 2 }
+	    "Green"  { set $this-color-$plt-$dat 3 }
+	    "Cyan"   { set $this-color-$plt-$dat 4 }
+	    "Gray"   { set $this-color-$plt-$dat 7 }
+	    "Blue"   { set $this-color-$plt-$dat 9 }
+	    "Purple" { set $this-color-$plt-$dat 10 }
+	    "Orange" { set $this-color-$plt-$dat 14 }
+	    "White"  { set $this-color-$plt-$dat 15 }
+	    default  { set $this-color-$plt-$dat 0 }
+	}
+    }
+
     method update_type { w } {
 	global $w
 	global $this-updateType
@@ -196,6 +214,10 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 	incr nTabs -1
 
+	$this-c remove_GUIVar "title-$plt"
+	$this-c remove_GUIVar "abscissa-$plt"
+	$this-c remove_GUIVar "ordinate-$plt"
+
 	$this-c remove_GUIVar "dims-$plt"
 	$this-c remove_GUIVar "style-$plt"
 	$this-c remove_GUIVar "slice-$plt"
@@ -232,13 +254,24 @@ itcl_class Fusion_Render_Plot2DViewer {
     
     method add_tab_gui {w plt} {
 
+	global $this-title-$plt
+	global $this-abscissa-$plt
+	global $this-ordinate-$plt
+
 	global $this-dims-$plt
 	global $this-style-$plt
 
-	$this-c add_GUIVar "dims-$plt" 2
-	$this-c add_GUIVar "style-$plt" 0 
-	$this-c add_GUIVar "altitude-$plt" 60
-	$this-c add_GUIVar "azimuth-$plt" 120
+	$this-c add_GUIVar_String "title-$plt" "Plot $plt"
+	$this-c add_GUIVar_String "abscissa-$plt" X 
+	$this-c add_GUIVar_String "ordinate-$plt" Y
+
+	$this-c add_GUIVar_Int "style-$plt" 0 
+	$this-c add_GUIVar_Int "altitude-$plt" 60
+	$this-c add_GUIVar_Int "azimuth-$plt" 120
+
+ 	set $this-title-$plt "Plot $plt"
+ 	set $this-abscissa-$plt X
+ 	set $this-ordinate-$plt Y
 
  	set $this-dims-$plt 2
  	set $this-style-$plt 0
@@ -247,37 +280,56 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 	frame $w.plot
 
-	frame $w.plot.r
+	frame $w.plot.style
 
-	make_labeled_radio $w.plot.r.d "Plot dimension:" "" left $this-dims-$plt \
-	    {{"2D" 2} {"3D" 3}}
+	frame $w.plot.style.r
 
-	make_labeled_radio $w.plot.r.s "Plot style:" "" top $this-style-$plt \
+	make_labeled_radio $w.plot.style.r.d "Plot dimension:" "" top $this-dims-$plt \
+	    {{"1D" 1} {"2D" 2} {"3D" 3}}
+
+	make_labeled_radio $w.plot.style.r.s "Plot style:" "" top $this-style-$plt \
 	    {{"Points" 0} {"Edges" 1} {"Edges - Culled" 2} {"Faces" 3} }
 
-	pack $w.plot.r.d $w.plot.r.s -side left -padx 10 -pady 5
+	pack $w.plot.style.r.d $w.plot.style.r.s -side left -padx 10 -pady 5 -fill y
 
-	frame $w.plot.s
 
-	iwidgets::spinner $w.plot.s.alt -labeltext "Altitude:" \
+	frame $w.plot.style.s
+
+	iwidgets::spinner $w.plot.style.s.alt -labeltext "Altitude:" \
 	    -width 10 -fixed 10 \
-	    -validate  "$this spin_in   $w.plots.s $this-altitude-$plt %P 0 90" \
-	    -decrement "$this spin_incr $w.plots.s $w.plot.s.alt $this-altitude-$plt -5 0 90" \
-	    -increment "$this spin_incr $w.plots.s $w.plot.s.alt $this-altitude-$plt +5 0 90" 
+	    -validate  "$this spin_in   $w.plots.style.s $this-altitude-$plt %P 0 90" \
+	    -decrement "$this spin_incr $w.plots.style.s $w.plot.style.s.alt $this-altitude-$plt -5 0 90" \
+	    -increment "$this spin_incr $w.plots.style.s $w.plot.style.s.alt $this-altitude-$plt +5 0 90" 
 	
-	$w.plot.s.alt insert 0 [set $this-altitude-$plt]
+	$w.plot.style.s.alt insert 0 [set $this-altitude-$plt]
 
-	iwidgets::spinner $w.plot.s.az -labeltext "Azimuth:" \
+	iwidgets::spinner $w.plot.style.s.az -labeltext "Azimuth:" \
 	    -width 10 -fixed 10 \
-	    -validate  "$this spin_in   $w.plot.s $this-azimuth-$plt %P 0 360" \
-	    -decrement "$this spin_incr $w.plot.s $w.plot.s.az $this-azimuth-$plt -5 0 360" \
-	    -increment "$this spin_incr $w.plot.s $w.plot.s.az $this-azimuth-$plt +5 0 360" 
+	    -validate  "$this spin_in   $w.plot.style.s $this-azimuth-$plt %P 0 360" \
+	    -decrement "$this spin_incr $w.plot.style.s $w.plot.style.s.az $this-azimuth-$plt -5 0 360" \
+	    -increment "$this spin_incr $w.plot.style.s $w.plot.style.s.az $this-azimuth-$plt +5 0 360" 
 	
-	$w.plot.s.az insert 0 [set $this-azimuth-$plt]
+	$w.plot.style.s.az insert 0 [set $this-azimuth-$plt]
 
-	pack $w.plot.s.alt $w.plot.s.az -side left -padx 10 -pady 5
+	pack $w.plot.style.s.alt $w.plot.style.s.az -side top -padx 10 -pady 5
 
-	pack $w.plot.r $w.plot.s -side top -padx 10 -pady 5
+
+	pack $w.plot.style.r $w.plot.style.s -side left -padx 10 -pady 5
+
+
+	frame $w.plot.title
+
+	labelEntry $w.plot.title.main     "Title"    5 $this-title-$plt    25
+
+	frame $w.plot.title.axis
+	labelEntry $w.plot.title.axis.abscissa "Abscissa" 8 $this-abscissa-$plt 15
+	labelEntry $w.plot.title.axis.ordinate "Ordinate" 8 $this-ordinate-$plt 15
+	pack $w.plot.title.axis.abscissa $w.plot.title.axis.ordinate -side left -padx 10 -pady 5
+
+	pack $w.plot.title.main $w.plot.title.axis -side top -pady 2 -fill x
+
+
+	pack $w.plot.style $w.plot.title -side top -padx 10 -pady 5
 
 # Create a frame for the field data.
   	frame $w.data -relief groove -borderwidth 2
@@ -312,11 +364,10 @@ itcl_class Fusion_Render_Plot2DViewer {
 	for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
 
 	    global $this-kdim-$dat
-
 	    add_datum $plt $dat 0 [expr [set $this-kdim-$dat] - 1]
 	}
 
- 	pack $w.plot $w.data -side top -padx 10 -pady 5
+ 	pack $w.data $w.plot -side bottom -padx 10 -pady 5
     }
 
     method data_size { ndata } {
@@ -346,9 +397,9 @@ itcl_class Fusion_Render_Plot2DViewer {
     method add_data { dat idim jdim kdim } {
 	for {set i 0} {$i < [set $this-nPlots]} {incr i} {
 
-	    $this-c add_GUIVar "idim-$dat" $idim
-	    $this-c add_GUIVar "jdim-$dat" $jdim
-	    $this-c add_GUIVar "kdim-$dat" $kdim
+	    $this-c add_GUIVar_Int "idim-$dat" $idim
+	    $this-c add_GUIVar_Int "jdim-$dat" $jdim
+	    $this-c add_GUIVar_Int "kdim-$dat" $kdim
 
 	    global $this-idim-$dat
 	    global $this-jdim-$dat
@@ -370,16 +421,27 @@ itcl_class Fusion_Render_Plot2DViewer {
 		
 	    global data-$plt
 
-	    $this-c add_GUIVar "active-$plt-$dat" 0
-	    $this-c add_GUIVar "slice-$plt-$dat" 0
+	    $this-c add_GUIVar_Int "active-$plt-$dat" 0
+	    $this-c add_GUIVar_Int "slice-$plt-$dat" 0
+	    $this-c add_GUIVar_Int "skip-$plt-$dat" 1
 
 	    global $this-active-$plt-$dat
+	    global $this-color-$plt-$dat
+
 	    global $this-slice-$plt-$dat
 	    global $this-slice2-$plt-$dat
+
+	    global $this-skip-$plt-$dat
+	    global $this-skip2-$plt-$dat
 	    
 	    set $this-active-$plt-$dat 0
+	    set $this-color-$plt-$dat 0
+
 	    set $this-slice-$plt-$dat 0
 	    set $this-slice2-$plt-$dat "0"
+
+	    set $this-skip-$plt-$dat 1
+	    set $this-skip2-$plt-$dat "1"
 
 	    set w [set data-$plt]
 
@@ -388,24 +450,54 @@ itcl_class Fusion_Render_Plot2DViewer {
 	    } else {
 		frame $w.data$dat
 
+		label $w.data$dat.title -text "Field $dat"
+
 		checkbutton $w.data$dat.active -text "" \
 		    -variable $this-active-$plt-$dat
 
-		frame $w.data$dat.slider
+		# Skip slider
+		frame $w.data$dat.skip
 
-		label $w.data$dat.slider.title \
-		    -text "Field $dat Poloidal Slice:"  \
-		    -width 25 -anchor w -just left
+		label $w.data$dat.skip.title \
+		    -text "Skip:"  \
+		    -width 5 -anchor w -just left
 
-		scaleEntry2 $w.data$dat.slider.index \
-		    $start $stop  200 \
-		    $this-slice-$plt-$dat $this-slice2-$plt-$dat
+		scaleEntry2 $w.data$dat.skip.index \
+		    1 25 50 \
+		    $this-skip-$plt-$dat $this-skip2-$plt-$dat
+
+		pack $w.data$dat.skip.title -side left
+		pack $w.data$dat.skip.index -side left
+
+
+		frame $w.data$dat.slice
+
+		# Slice slider
+		if { $start != $stop } {
+		    label $w.data$dat.slice.title \
+			-text "Slice:"  \
+			-width 6 -anchor w -just left
+
+		    scaleEntry2 $w.data$dat.slice.index \
+			$start $stop  200 \
+			$this-slice-$plt-$dat $this-slice2-$plt-$dat
+
+		    pack $w.data$dat.slice.title -side left
+		    pack $w.data$dat.slice.index -side left
+		}
+
+		# Color Menu
+		iwidgets::optionmenu $w.data$dat.color -labeltext "Color:" \
+		    -labelpos w \
+		    -command "$this set_color $w.data$dat.color $plt $dat"
+	    
+		$w.data$dat.color insert end Variable Red Green Blue Orange Yellow Purple Cyan White Gray
+		$w.data$dat.color select [set $this-color-$plt-$dat]
+
+		pack $w.data$dat.title $w.data$dat.active $w.data$dat.color \
+		    $w.data$dat.skip $w.data$dat.slice -side left
 		
-		pack $w.data$dat.slider.title $w.data$dat.slider.index -side top
-		
-		pack $w.data$dat.active $w.data$dat.slider -side left
-		
-		pack $w.data$dat -side top
+		pack $w.data$dat -side top -fill x
 	    }
 	}
     }
@@ -438,21 +530,14 @@ itcl_class Fusion_Render_Plot2DViewer {
 	    global $this-dims-$plt
 	    global $this-style-$plt
 
-	    for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
-
-		global $this-active-$plt-$dat
-
-		if { [set $this-active-$plt-$dat] == 1 } {
-		    if { [set $this-dims-$plt] == 2 } {
-			plot2D $w.plw $plt $dat [set $this-style-$plt]
-		    } else {
-			plot3D $w.plw $plt $dat [set $this-style-$plt]
-		    }
-
-		    set dat [set $this-nData]
-		}
+	    if { [set $this-dims-$plt] == 1 } {
+		plot1D $w.plw $plt [set $this-style-$plt]
+	    } elseif { [set $this-dims-$plt] == 2 } {
+		plot2D $w.plw $plt [set $this-style-$plt]
+	    } else {
+		plot3D $w.plw $plt [set $this-style-$plt]
 	    }
-	}
+	}    
 
 	#	x01 $w.plw
 	#	x08 $w.plw
@@ -487,6 +572,15 @@ itcl_class Fusion_Render_Plot2DViewer {
 	update_tabs $w
     }
 
+    method labelEntry { win text1 l1 text2 l2 } {
+	frame $win 
+	pack $win -side top -padx 5 -pady 5
+	label $win.l -text $text1  -width $l1 -anchor w -just left
+	label $win.c  -text ":" -width 1 -anchor w -just left 
+	entry $win.e -text $text2 -width $l2 -just left -fore darkred
+	pack $win.l $win.c -side left
+	pack $win.e -padx 5 -side left
+    }
 
     method scaleEntry2 { win start stop length var1 var2 } {
 	frame $win 
@@ -536,26 +630,30 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 	for {set plt 0} {$plt < [set $this-nPlots]} {incr plt} {
 
-	    global $this-slice-$plt-$dat
-	    global $this-slice2-$plt-$dat
+	    if { 0 < [expr $kdim - 1] } {
 
-	    # Reset all of the slider values to the index values.
-	    set w .ui[modname]
- 	    if [ expr [winfo exists $w] ] {
-		
-		global data-$plt
-	    
-		set w [set data-$plt]
+		global $this-slice-$plt-$dat
+		global $this-slice2-$plt-$dat
 
-		# Update the sliders to have the new end values.
-		$w.data$dat.slider.index.s \
-		    configure -from 0 -to [expr $kdim - 1]
+		# Reset all of the slider values to the index values.
+		set w .ui[modname]
+		if [ expr [winfo exists $w] ] {
+		    
+		    global data-$plt
+		    
+		    set w [set data-$plt]
 
-		bind $w.data$dat.slider.index.e <Return> "$this manualSliderEntry 0 [expr $kdim - 1] $this-slice-$plt-$dat $this-slice2-$plt-$dat"
+		    # Update the sliders to have the new end values.
+		    $w.data$dat.slice.index.s \
+			configure -from 0 -to [expr $kdim - 1]
+
+		    bind $w.data$dat.slice.index.e \
+			<Return> "$this manualSliderEntry 0 [expr $kdim - 1] $this-slice-$plt-$dat $this-slice2-$plt-$dat"
+		}
+
+		# Update the text values.
+		set $this-slice2-$plt-$dat [set $this-slice-$plt-$dat]
 	    }
-
-	    # Update the text values.
-	    set $this-slice2-$plt-$dat [set $this-slice-$plt-$dat]
 	}
     }
 
@@ -564,15 +662,192 @@ itcl_class Fusion_Render_Plot2DViewer {
     # dat = the field port number
     # fill = the plotting style
 
-    method plot2D {{w loopback} plt dat fill } {
+    method plot1D {{w loopback} plt fill } {
+
+	global $this-xmin
+	global $this-xmax
+	global $this-ymin
+	global $this-ymax
+	global $this-zmin
+	global $this-zmax
+
+	set xmin  10000000.0
+	set xmax -10000000.0
+	set ymin  10000000.0
+	set ymax -10000000.0
+	set zmin  10000000.0
+	set zmax -10000000.0
+
+	set plotSomething 0
+
+	for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
+	    
+	    global $this-active-$plt-$dat
+	    global $this-idim-$dat
+
+	    # Make sure the data is active and there is data.
+	    if { [set $this-active-$plt-$dat] == 1 &&
+		 [set $this-idim-$dat] >= 1 } {
+
+		global $this-idim-$dat
+		global $this-jdim-$dat
+
+		global haveData
+
+		set haveData 0
+
+# Matrices with the xy cordinates plus the value at that coordinate.
+		matrix x-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix y-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
+		matrix v-$dat float [set $this-idim-$dat] [set $this-jdim-$dat]
+
+# Get the values from the c++ code.
+		$this-c vertex_coords $dat $this-slice-$plt-$dat \
+		    x-$dat y-$dat v-$dat
+
+# Make sure the data was retrived properly.
+		if { $haveData != 1 } return
+
+# Get the min max for this data set.
+		if { $xmin > [set $this-xmin] } { set xmin [set $this-xmin] }
+		if { $xmax < [set $this-xmax] } { set xmax [set $this-xmax] }
+		if { $ymin > [set $this-ymin] } { set ymin [set $this-ymin] }
+		if { $ymax < [set $this-ymax] } { set ymax [set $this-ymax] }
+		if { $zmin > [set $this-zmin] } { set zmin [set $this-zmin] }
+		if { $zmax < [set $this-zmax] } { set zmax [set $this-zmax] }
+
+		set plotSomething 1
+	    }
+	}
+
+	if { $plotSomething == 0 } return
+
+#Create a rainbow color map.
+	rainbow_cmap1 $w 36 1
+	set cOffset [expr 1.0/($zmax-$zmin)]
+
+# Select color 1 from colormap 0
+	$w cmd plcol0 1
+
+# Set the plotting envelope i.e. the min-max of the plot.
+	$w cmd plenv $xmin $xmax $ymin $ymax 0 0
+
+	global $this-title-$plt
+	global $this-abscissa-$plt
+	global $this-ordinate-$plt
+
+# Select color 2 from colormap 0
+	$w cmd plcol0 5
+	$w cmd pllab [set $this-abscissa-$plt] [set $this-ordinate-$plt] [set $this-title-$plt]
+
+# Draw a point for each node
+
+	matrix xPt float 1
+	matrix yPt float 1
+
+	matrix xPoly float 2
+	matrix yPoly float 2
+
+	for {set dat 0} {$dat < [set $this-nData]} {incr dat} {
+	    
+	    global $this-active-$plt-$dat
+	    global $this-idim-$dat
+
+	    # Make sure the data is active and there is data.
+	    if { [set $this-active-$plt-$dat] == 1 &&
+		 [set $this-idim-$dat] >= 1 } {
+
+		global $this-idim-$dat
+		global $this-jdim-$dat
+
+# Set the increment ammount
+		global $this-skip-$plt-$dat
+		set inc [set $this-skip-$plt-$dat]
+
+		if { $fill == 0 } {
+
+		    for {set i 0} {$i < [set $this-idim-$dat]} {incr i $inc} {
+			
+			xPt 0 = [x-$dat $i 0]
+			yPt 0 = [v-$dat $i 0]
+
+			if { [set $this-color-$plt-$dat] == 0 } {
+
+			    set col [expr ([v-$dat $i 0]-$zmin)*$cOffset]
+			    
+			    if { 1.0 < $col } { set col 1.0 }
+			    if { $col < 0.0 } { set col 0.0 }
+			    
+			    $w cmd plcol1 $col
+			} else {
+
+			    $w cmd plcol0 [set $this-color-$plt-$dat]
+			}
+# Plot a symbol 
+			$w cmd plpoin 1 xPt yPt 1
+		    }
+		} else {
+# Draw a line.
+		    for {set i $inc} {$i < [set $this-idim-$dat]} {incr i $inc} {
+
+			# Create a polygon for this index.
+			set i1 [expr $i-$inc]
+			
+			xPoly 0 = [x-$dat $i1 0]
+			yPoly 0 = [y-$dat $i1 0]
+
+			xPoly 1 = [x-$dat $i 0]
+			yPoly 1 = [y-$dat $i 0]
+
+			if { [set $this-color-$plt-$dat] == 0 } {
+
+			    set col [expr ([v-$dat $i 0]-[set $this-zmin])*$cOffset]
+			    
+			    if { 1.0 < $col } { set col 1.0 }
+			    if { $col < 0.0 } { set col 0.0 }
+			    
+			    $w cmd plcol1 $col
+			} else {
+
+			    $w cmd plcol0 [set $this-color-$plt-$dat]
+			}
+
+			if { $fill == 1 || $fill == 2 } {
+			    $w cmd plline 2 xPoly yPoly
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    # {w loopback} = the plplot window
+    # plt = the plot number
+    # dat = the field port number
+    # fill = the plotting style
+
+    method plot2D {{w loopback} plt fill } {
+
+	set dat 0
+
+	global $this-xmin
+	global $this-xmax
+	global $this-ymin
+	global $this-ymax
+	global $this-zmin
+	global $this-zmax
 
 	global $this-idim-$dat
 	global $this-jdim-$dat
 
-# Make sure there is data for this data.
-	if { [set $this-idim-$dat] > 1 &&
-	     [set $this-jdim-$dat] > 1 } {
+	if { [set $this-idim-$dat] >= 1 &&
+	     [set $this-jdim-$dat] == 1 } {
+	    plot1D $w $plt $fill
 
+# Make sure there is data for this data.
+	} elseif { [set $this-idim-$dat] >= 1 &&
+		   [set $this-jdim-$dat] >= 1 } {
+	    
 	    global haveData
 
 	    set haveData 0
@@ -592,20 +867,22 @@ itcl_class Fusion_Render_Plot2DViewer {
 	    rainbow_cmap1 $w 36 1
 	    set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
 
-# Create the title and lable the axis.
-	    set title "Plot "
-	    append title $plt
-
 # Select color 1 from colormap 0
 	    $w cmd plcol0 1
 # Set the plotting envelope i.e. the min-max of the plot.
 	    $w cmd plenv [set $this-xmin] [set $this-xmax] \
 		         [set $this-ymin] [set $this-ymax] 0 0
-# Select color 2 from colormap 0
-	    $w cmd plcol0 2
-	    $w cmd pllab "R" "Z" $title
 
-	    set inc 5
+	    global $this-title-$plt
+	    global $this-abscissa-$plt
+	    global $this-ordinate-$plt
+
+# Select color 2 from colormap 0
+	    $w cmd plcol0 5
+	    $w cmd pllab [set $this-abscissa-$plt] [set $this-ordinate-$plt] [set $this-title-$plt]
+
+# Set the increment ammount
+	    set inc [set $this-skip-$plt-$dat]
 
 # Draw a point for each node
 
@@ -619,12 +896,17 @@ itcl_class Fusion_Render_Plot2DViewer {
 			xPt 0 = [x $i $j]
 			yPt 0 = [y $i $j]
 
-			set col [expr ([v $i $j]-[set $this-zmin])*$cOffset]
+			if { [set $this-color-$plt-$dat] == 0 } {
 
-			if { 1.0 < $col } { set col 1.0 }
-			if { $col < 0.0 } { set col 0.0 }
-
-			$w cmd plcol1 $col
+			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]
+			    
+			    if { 1.0 < $col } { set col 1.0 }
+			    if { $col < 0.0 } { set col 0.0 }
+			    
+			    $w cmd plcol1 $col
+			} else {
+			    $w cmd plcol0 [set $this-color-$plt-$dat]
+			}
 # Plot a symbol 
 			$w cmd plpoin 1 xPt yPt 1
 		    }
@@ -658,17 +940,22 @@ itcl_class Fusion_Render_Plot2DViewer {
 			xPoly 4 = [x $i1 $j1]
 			yPoly 4 = [y $i1 $j1]
 
-			set col [expr ([v $i $j]-[set $this-zmin])*$cOffset]
+			if { [set $this-color-$plt-$dat] == 0 } {
 
-			if { 1.0 < $col } { set col 1.0 }
-			if { $col < 0.0 } { set col 0.0 }
-
-			$w cmd plcol1 $col
-
-			if { $fill == 1 } {
-			    $w cmd plline 5 xPoly yPoly
+			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]
+			    
+			    if { 1.0 < $col } { set col 1.0 }
+			    if { $col < 0.0 } { set col 0.0 }
+			    
+			    $w cmd plcol1 $col
 			} else {
-			    $w cmd plfill 5 xPoly yPoly
+			    $w cmd plcol0 [set $this-color-$plt-$dat]
+			}
+
+			if { $fill == 1 || $fill == 2 } {
+			    $w cmd plline 5 xPoly yPoly
+			} elseif { $fill == 3 } {
+			    $w cmd plfill 4 xPoly yPoly
 			}
 		    }
 		}
@@ -682,11 +969,19 @@ itcl_class Fusion_Render_Plot2DViewer {
     # dat = the field port number
     # fill = the plotting style
 
-    method plot3D {{w loopback} plt dat fill} {
+    method plot3D {{w loopback} plt fill} {
 
+	set dat 0
 # For some reason we have to advance to the next plot with 3D plots.
 # This is notthe case with 2D plots.
 	$w cmd pladv 0
+
+	global $this-xmin
+	global $this-xmax
+	global $this-ymin
+	global $this-ymax
+	global $this-zmin
+	global $this-zmax
 
 	global $this-altitude-$plt
 	global $this-azimuth-$plt
@@ -695,8 +990,8 @@ itcl_class Fusion_Render_Plot2DViewer {
 	global $this-jdim-$dat
 
 # Make sure there is data for this data.
-	if { [set $this-idim-$dat] > 1 &&
-	     [set $this-jdim-$dat] > 1 } {
+	if { [set $this-idim-$dat] >= 1 &&
+	     [set $this-jdim-$dat] >= 1 } {
 
 	    global haveData
 
@@ -743,7 +1038,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 		    "bnstu" "Z" 0.0 0 \
 		    "bcdmnstuv" "Pressure" 0.0 0
 
-	    set inc 5
+	    set inc [set $this-skip-$plt-$dat]
 
 # Draw a point for each node
 
@@ -759,10 +1054,17 @@ itcl_class Fusion_Render_Plot2DViewer {
 			yPt 0 = [y $i $j]
 			zPt 0 = [z $i $j]
 
-			set col [expr ([z $i $j]-[set $this-zmin])*$cOffset]
+			if { [set $this-color-$plt-$dat] == 0 } {
 
-			if { 1.0 < $col } { set col 1.0 }
-			if { $col < 0.0 } { set col 0.0 }
+			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]
+			    
+			    if { 1.0 < $col } { set col 1.0 }
+			    if { $col < 0.0 } { set col 0.0 }
+			    
+			    $w cmd plcol1 $col
+			} else {
+			    $w cmd plcol0 [set $this-color-$plt-$dat]
+			}
 
 			$w cmd plcol1 $col
 			$w cmd plpoin3 1 xPt yPt zPt 1
@@ -775,6 +1077,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 		matrix xPoly float 5
 		matrix yPoly float 5
 		matrix zPoly float 5
+		matrix zzPoly float 5 5
 		matrix draw int 4 = { 1, 1, 1, 1 }
 
 		for {set j $inc} {$j < [set $this-jdim-$dat]} {incr j $inc} {
@@ -804,19 +1107,28 @@ itcl_class Fusion_Render_Plot2DViewer {
 			yPoly 4 = [y $i1 $j1]
 			zPoly 4 = [z $i1 $j1]
 
+			for {set k 0} {$j < 5} {incr j 1} {
+
+			    zzPoly 0 $k = [z $i1 $j1]
+			    zzPoly 1 $k = [z $i1 $j]
+			    zzPoly 2 $k = [z $i $j]
+			    zzPoly 3 $k = [z $i $j1]
+			    zzPoly 4 $k = [z $i1 $j1]
+			}
+
 			set col [expr ([z $i $j]-[set $this-zmin])*$cOffset]
 
 			if { 1.0 < $col } { set col 1.0 }
 			if { $col < 0.0 } { set col 0.0 }
 
 			$w cmd plcol1 $col
-			
+
 			if { $fill == 1 } {
 			    $w cmd plline3 5 xPoly yPoly zPoly
 			} elseif { $fill == 2 } {
 			    $w cmd plpoly3 5 xPoly yPoly zPoly draw
 			} elseif { $fill == 3 } {
-			    $w cmd plfill3 5 xPoly yPoly zPoly
+			    $w cmd plfill3 4 xPoly yPoly zPoly
 			}
 		    }
 		}
