@@ -82,7 +82,11 @@ public:
 
   void send(const T&);
   void send_intermediate(const T&);
-  void set_dont_cache() { dont_cache_ = true; }
+  void set_cache( bool cache = true ){
+    cache_ = cache;
+    if( !cache )
+      handle_ = 0;
+  }
 
   virtual bool have_data();
   virtual void resend(Connection* conn);
@@ -90,7 +94,7 @@ private:
   void do_send(const T&);
   void do_send_intermediate(const T&);
 
-  bool dont_cache_;
+  bool cache_;
   bool sent_something_;
   T handle_;
 };
@@ -115,7 +119,7 @@ SimpleOPort<T>::SimpleOPort(Module* module,
 			    const string& portname)
   : OPort(module, SimpleIPort<T>::port_type_, portname,
 	  SimpleIPort<T>::port_color_),
-    dont_cache_(false),
+    cache_(true),
     sent_something_(false),
     handle_(0)
 {
@@ -184,9 +188,11 @@ void SimpleOPort<T>::send(const T& data)
 template<class T>
 void SimpleOPort<T>::do_send(const T& data)
 {
-  if (!dont_cache_) {
+  if (cache_)
     handle_ = data;
-  }
+  else
+    handle_ = 0;
+
   if (num_unblocked_connections() == 0) { return; }
 
   // Change oport state and colors on screen.
@@ -217,9 +223,11 @@ void SimpleOPort<T>::send_intermediate(const T& data)
 template<class T>
 void SimpleOPort<T>::do_send_intermediate(const T& data)
 {
-  if (!dont_cache_) {
+  if (cache_)
     handle_ = data;
-  }
+  else
+    handle_ = 0;
+
   if(num_unblocked_connections() == 0) { return; }
 
   if (module->showStats()) { turn_on(); }
