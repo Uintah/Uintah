@@ -581,7 +581,7 @@ ShowMatrix::execute()
   
   ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
   if (!imap->get(cmap_)) { 
-    warning("No input color map.");
+    error("No input color map. Aborting execution.");
     return;
   }
   
