@@ -42,12 +42,8 @@ else
 
 endif
 
-ifneq ($(PETSC_DIR),)
-  MORE_DIRS := -lm -lblas -lX11 -lfortran -lffio -lsma
-endif
-
 LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) $(FLIBS) \
-	$(MORE_DIRS)
+	$(PETSC_LIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
