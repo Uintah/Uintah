@@ -155,11 +155,19 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 //  port* models = dynamic_cast<port*>(getPort("modelmaker"));
   if(models){  // of there are models then push the port down to ICE
     d_ice->attachPort("modelmaker",models);
-  } 
+  }
   
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
 
+
+  if(models){  // some models may need to have access to MPMLabels
+    for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
+       iter != d_ice->d_models.end(); iter++){
+      (*iter)->setMPMLabel(Mlb);
+    }
+  }
+  
 //  Need to add some means of checking whether or not this is a
 //  restart, and if it is, execute the following
 //  d_mpm->addMaterial(prob_spec, grid, d_sharedState);
