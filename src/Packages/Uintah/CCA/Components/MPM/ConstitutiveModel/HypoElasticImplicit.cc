@@ -463,12 +463,12 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
-      double e = (D(1,1)*AvgStress(1,1) +
+      double e = (D(0,0)*AvgStress(0,0) +
+	          D(1,1)*AvgStress(1,1) +
 	          D(2,2)*AvgStress(2,2) +
-	          D(3,3)*AvgStress(3,3) +
-              2.*(D(1,2)*AvgStress(1,2) +
-                  D(1,3)*AvgStress(1,3) +
-                  D(2,3)*AvgStress(2,3))) * pvolume_deformed[idx]*delT;
+              2.*(D(0,1)*AvgStress(0,1) +
+                  D(0,2)*AvgStress(0,2) +
+                  D(1,2)*AvgStress(1,2))) * pvolume_deformed[idx]*delT;
 
       se += e;
     }
