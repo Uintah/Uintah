@@ -236,7 +236,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 #	option add *TreeView.Column.titleFont { Helvetica 12 bold }
 	option add *TreeView.Column.font { Courier 12 }
 
-#	iwidgets::scrolledframe $w.treeview
 	iwidgets::labeledframe $w.treeview -labeltext "File Treeview"
 
 	set treeframe [$w.treeview childsite]
@@ -245,7 +244,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set tree [blt::tree create]    
 
 	set treeview [Scrolled_Treeview $treeframe.tree \
-			  -width 0 \
+			  -width 600 -height 225 \
 			  -selectmode multiple \
 			  -selectcommand [list $this SelectNotify] \
 			  -tree $tree]
@@ -296,7 +295,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
 	set sd [$w.sd childsite]
 
-	set listbox [Scrolled_Listbox $sd.listbox -width 100 -height 10 -selectmode extended]
+	set listbox [Scrolled_Listbox $sd.listbox \
+			 -width 100 -height 8 \
+			 -selectmode extended]
 
 	if { [string first "\{" $datasets] == 0 } {
 	    set tmp $datasets
