@@ -70,6 +70,7 @@ private:
   GuiString filename_;
   GuiString datasets_;
   GuiString dumpname_;
+  GuiString ports_;
 
   GuiInt nDims_;
 
@@ -84,6 +85,10 @@ private:
   string old_filename_;
   string old_datasets_;
   time_t old_filemodification_;
+
+  string tmp_filename_;
+  string tmp_datasets_;
+  time_t tmp_filemodification_;
 
   int mergedata_;
   int assumesvt_;

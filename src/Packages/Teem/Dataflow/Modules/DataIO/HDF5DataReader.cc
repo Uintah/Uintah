@@ -59,6 +59,7 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     filename_(context->subVar("filename")),
     datasets_(context->subVar("datasets")),
     dumpname_(context->subVar("dumpname")),
+    ports_(context->subVar("ports")),
 
     nDims_(context->subVar("ndims")),
 
@@ -97,9 +98,10 @@ HDF5DataReader::~HDF5DataReader() {
 bool
 HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
 {
-  if( (*((PropertyManager *) h1.get_rep()) !=
-       *((PropertyManager *) h2.get_rep())) ) return false;
-
+  if( mergedata_ != 2 ) 
+    if( (*((PropertyManager *) h1.get_rep()) !=
+	 *((PropertyManager *) h2.get_rep())) ) return false;
+  
   if( h1->concat_tuple_types() != h2->concat_tuple_types() ) return false;
 
   Nrrd* n1 = h1->nrrd;
@@ -107,6 +109,7 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
 
   if (n1->type != n2->type) return false;
   if (n1->dim  != n2->dim)  return false;
+
   for (int i=1; i<n1->dim; i++)
     if (n1->axis[i].size != n2->axis[i].size) return false;
 
@@ -154,6 +157,10 @@ void HDF5DataReader::execute() {
     old_filemodification_ = new_filemodification;
     old_filename_         = new_filename;
     old_datasets_         = new_datasets;
+
+    tmp_filemodification_ = new_filemodification;
+    tmp_filename_         = new_filename;
+    tmp_datasets_         = new_datasets;
 
     updateFile = true;
   }
@@ -204,40 +211,52 @@ void HDF5DataReader::execute() {
 
     vector< string > paths;
     vector< string > datasets;
+    vector< int > ports;
 
     parseDatasets( new_datasets, paths, datasets );
 
     vector< vector<NrrdDataHandle> > nHandles;
+    vector< vector<int> > ids;
     
     for( unsigned int ic=0; ic<paths.size(); ic++ ) {
 
-      NrrdDataHandle nHandle = readDataset(new_filename, paths[ic], 
-					   datasets[ic]);
+      ports.push_back( -1 );
 
-      bool inserted = false;
-      vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
-      while (iter != nHandles.end()) {
+      NrrdDataHandle nHandle =
+	readDataset(new_filename, paths[ic], datasets[ic]);
 
-	vector<NrrdDataHandle> &vec = *iter;
-	++iter;
+      if( nHandle != NULL ) {
+	bool inserted = false;
+	vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
+	vector<vector<int> >::iterator iditer = ids.begin();
+	
+	while (iter != nHandles.end()) {
 
-	if (vec.size() == 0) {
-	  vec.push_back(nHandle);
-	  inserted = true;
-	  break;
-	} else if(is_mergeable(nHandle, vec[0])) {
+	  vector<NrrdDataHandle> &vec = *iter;
+	  vector<int> &idvec = *iditer;
 
-	  vec.push_back(nHandle);
-	  inserted = true;
-	  break;
+	  ++iter;
+	  ++iditer;
+
+	  if(is_mergeable(nHandle, vec[0])) {
+	    vec.push_back(nHandle);
+	    idvec.push_back(ic);
+	    inserted = true;
+	    break;
+	  }
 	}
-      }
 
-      if (! inserted) {
-	vector<NrrdDataHandle> nrrdSet;
-	nrrdSet.push_back( nHandle );
-	nHandles.push_back( nrrdSet );
-      }
+	if (! inserted) {
+	  vector<NrrdDataHandle> nrrdSet;
+	  nrrdSet.push_back( nHandle );
+	  nHandles.push_back( nrrdSet );
+
+	  vector<int> idSet;
+	  idSet.push_back( ic );
+	  ids.push_back( idSet );
+	}
+      } else
+	return;
     }
 
     // Merge the like datatypes together.
@@ -249,7 +268,7 @@ void HDF5DataReader::execute() {
 	vector<NrrdDataHandle> &vec = *iter;
 	++iter;
 
-	if (vec.size() > 1) {
+	if (mergedata_ == 2 || vec.size() > 1) {
 	  
 	  NrrdData* onrrd = new NrrdData(true);
 	  string new_label("");
@@ -335,8 +354,11 @@ void HDF5DataReader::execute() {
     unsigned int cc = 0;
 
     for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
-      for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
 
+      for( unsigned int jc=0; jc<ids[ic].size(); jc++ )
+	ports[ids[ic][jc]] = cc + (nHandles[ic].size() == 1 ? 0 : jc);
+
+      for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
 	if( cc < MAX_PORTS )
 	  nHandles_[cc] = nHandles[ic][jc];
 
@@ -344,13 +366,27 @@ void HDF5DataReader::execute() {
       }
     }
 
+    char *portStr = scinew char[paths.size()*4 + 2 ];
+
+    portStr[0] = '\0';
+
+    for( unsigned int ic=0; ic<paths.size(); ic++ )
+      sprintf( portStr, "%s %3d", portStr, ports[ic] );
+      
+    {
+      // Update the dims in the GUI.
+      ostringstream str;
+      str << id << " updateSelection {" << portStr << "}";
+      
+      gui->execute(str.str().c_str());
+    }
+
     if( cc > MAX_PORTS )
       warning( "More data than availible ports." );
 
     for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
       nHandles_[ic] = NULL;
-  }
-  else {
+  } else {
     remark( "Already read the file " +  new_filename );
   }
 
@@ -386,8 +422,8 @@ void HDF5DataReader::execute() {
 
 
 void HDF5DataReader::parseDatasets( string new_datasets,
-				   vector<string>& paths,
-				   vector<string>& datasets )
+				    vector<string>& paths,
+				    vector<string>& datasets )
 {
   int open = 0;
 
@@ -1278,7 +1314,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     string new_filename(filename_.get());
     string new_datasets(datasets_.get());
 
-    if( new_filename.length() == 0 ||  new_datasets.length() == 0 )
+    if( new_filename.length() == 0 || new_datasets.length() == 0 )
       return;
 
     // Read the status of this file so we can compare modification timestamps
@@ -1296,9 +1332,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     time_t new_filemodification = buf.st_mtime;
 #endif
 
-    if( new_filename         != old_filename_ || 
-	new_filemodification != old_filemodification_ ||
-	new_datasets         != old_datasets_ ) {
+    if( new_filename         != tmp_filename_ || 
+	new_filemodification != tmp_filemodification_ ||
+	new_datasets         != tmp_datasets_ ) {
+
+      tmp_filemodification_ = new_filemodification;
+      tmp_filename_         = new_filename;
+      tmp_datasets_         = new_datasets;
 
       vector<string> paths;
       vector<string> datasets;
@@ -1335,10 +1375,12 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 	}
       }
 
+      nDims_.reset();
       bool set = (ndims != (unsigned int) nDims_.get());
 
       if( !set ) {
 	for( unsigned int ic=0; ic<ndims; ic++ ) {
+	  gDims_[ic]->reset();
 	  if( dims_[ic] != gDims_[ic]->get() ) {
 	    set = true;
 	  }
@@ -1359,8 +1401,6 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 	}
 
 	dimstr += " }";
-
-	cerr << "updating set_size from update_selection" << endl;
 
 	// Update the dims in the GUI.
 	ostringstream str;
