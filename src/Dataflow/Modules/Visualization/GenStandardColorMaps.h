@@ -91,7 +91,6 @@ public:
 
 private:
 
-  GuiString tcl_status; 
   GuiString positionList;
   GuiString nodeList;
   GuiInt width;
