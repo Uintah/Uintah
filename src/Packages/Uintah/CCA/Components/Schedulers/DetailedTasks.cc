@@ -264,7 +264,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(getMaterials());
 	for(int i=0;i<patches->size();i++){
 	  const Patch* patch = patches->get(i);
-	  Level::selectType neighbors;
+	  Patch::selectType neighbors;
 	  IntVector low, high;
 	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
 					req->var->getBoundaryLayer(),
@@ -402,7 +402,7 @@ void DetailedTasks::createScrubCounts()
       if(req->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
 	for(int i=0;i<patches->size();i++){
 	  const Patch* patch = patches->get(i);
-	  Level::selectType neighbors;
+	  Patch::selectType neighbors;
 	  IntVector low, high;
 	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
 					req->var->getBoundaryLayer(),

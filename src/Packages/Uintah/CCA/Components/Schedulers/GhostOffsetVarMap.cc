@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
 #include <iostream>
 

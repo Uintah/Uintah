@@ -213,7 +213,7 @@ void Poisson3::refine(const ProcessorGroup*,
     IntVector low = finePatch->getNodeLowIndex();
     IntVector high = finePatch->getNodeHighIndex();
     // Find the overlapping regions...
-    Level::selectType coarsePatches;
+    Patch::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
 
     for(int m = 0; m < matls->size(); m++){
@@ -311,7 +311,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 	  IntVector coarseHigh = fineLevel->mapNodeToCoarser(high);
 
 	  // Find the overlapping regions...
-	  Level::selectType coarsePatches;
+	  Patch::selectType coarsePatches;
 	  coarseLevel->selectPatches(coarseLow, coarseHigh, coarsePatches);
 
 	  int total_fine = 0;
@@ -387,7 +387,7 @@ void Poisson3::coarsen(const ProcessorGroup*,
     IntVector fine_high = coarseLevel->mapNodeToFiner(high);
 
     // Find the overlapping regions...
-    Level::selectType finePatches;
+    Patch::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
 
     // For all materials

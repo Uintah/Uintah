@@ -8,7 +8,7 @@ using namespace Uintah;
 class PatchRangeQuerier
 {
 public:
-  typedef Level::selectType ResultContainer;
+  typedef Patch::selectType ResultContainer;
 public:
   PatchRangeQuerier(const Level* level, set<const Patch*>& patches)
     : level_(level), patches_(patches) {}

@@ -174,7 +174,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     const Level* level = patch->getLevel();
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];

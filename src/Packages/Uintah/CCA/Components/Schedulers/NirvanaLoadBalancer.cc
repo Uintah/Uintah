@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 
@@ -176,7 +177,7 @@ NirvanaLoadBalancer::createNeighborhood(const GridP& grid,
 	iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;
       if(getPatchwiseProcessorAssignment(patch, group) == me){
-	Level::selectType n;
+	Patch::selectType n;
 	IntVector lowIndex, highIndex;
 	patch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
 				      Ghost::AroundCells, maxGhost, n,

@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/InternalError.h>
@@ -556,7 +557,7 @@ getOtherLevelComputeSubset(Task::DomainSpec dom,
   std::set<const Patch*, Patch::Compare> patches;
   for (int p = 0; p < myLevelSubset->size(); p++) {
     const Patch* patch = myLevelSubset->get(p);
-    Level::selectType somePatches;
+    Patch::selectType somePatches;
     patch->getOtherLevelPatches(levelOffset, somePatches);
     patches.insert(somePatches.begin(), somePatches.end());
   }
