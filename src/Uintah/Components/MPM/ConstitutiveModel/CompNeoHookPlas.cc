@@ -96,24 +96,30 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
   new_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolume;
   new_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
+  ParticleVariable<Vector> pvelocity;
+  new_dw->get(pvelocity, lb->pVelocityLabel, matlindex, patch, Ghost::None, 0);
 
   ParticleSubset* pset = pmass.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
+  ASSERT(pset == pvelocity.getParticleSubset());
 
-  double c_dil = 0.0,c_rot = 0.0;
+  double c_dil = 0.0;
+  Vector WaveSpeed(0.0,0.0,0.0);
+
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
 
      // Compute wave speed at each particle, store the maximum
      double mu = cmdata[idx].Shear;
-     double lambda = cmdata[idx].Bulk -.6666666667*cmdata[idx].Shear;
-     c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
-     c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+     double bulk = cmdata[idx].Bulk;
+     c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
+     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
-    double WaveSpeed = sqrt(Max(c_rot,c_dil));
-    // Fudge factor of .8 added, just in case
-    double delT_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+    WaveSpeed = dx/WaveSpeed;
+    double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -130,7 +136,8 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   double onethird = (1.0/3.0);
   double sqtwthds = sqrt(2.0/3.0);
   Matrix3 Identity;
-  double WaveSpeed = 0.0,c_dil = 0.0,c_rot = 0.0,se = 0.;
+  double c_dil = 0.0,se = 0.;
+  Vector WaveSpeed(0.0,0.0,0.0);
   double U,W;
 
   Identity.Identity();
@@ -161,6 +168,8 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   old_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolume;
   old_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
+  ParticleVariable<Vector> pvelocity;
+  old_dw->get(pvelocity, lb->pVelocityLabel, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolumedef;
   new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, matlindex, patch);
 
@@ -176,6 +185,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   ASSERT(pset == deformationGradient.getParticleSubset());
   ASSERT(pset == pmass.getParticleSubset());
   ASSERT(pset == pvolume.getParticleSubset());
+  ASSERT(pset == pvelocity.getParticleSubset());
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -221,9 +231,10 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     // predict the elastic part of the volume preserving part of the left
     // Cauchy-Green deformation tensor
     bElBarTrial = fbar*bElBar[idx]*fbar.Transpose();
+    IEl = onethird*bElBarTrial.Trace();
 
     // shearTrial is equal to the shear modulus times dev(bElBar)
-    shearTrial = (bElBarTrial - Identity*onethird*bElBarTrial.Trace())*shear;
+    shearTrial = (bElBarTrial - Identity*IEl)*shear;
 
     // get the volumetric part of the deformation
     J = deformationGradient[idx].Determinant();
@@ -234,15 +245,13 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     // Compute ||shearTrial||
     sTnorm = shearTrial.Norm();
 
+    muBar = IEl * shear;
+
     // Check for plastic loading
     fTrial = sTnorm - sqtwthds*(K*alpha + flow);
 
     if(fTrial > 0.0){
 	// plastic
-
-	IEl = onethird*bElBarTrial.Trace();
-
-	muBar = IEl * shear;
 
 	delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
 
@@ -263,26 +272,25 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     }
 
     // compute the total stress (volumetric + deviatoric)
-    pstress[idx] = Identity*J*p + Shear;
-
-    // Compute wave speed at each particle, store the maximum
-    double mu = cmdata[idx].Shear;
-    double lambda = cmdata[idx].Bulk -.6666666667*cmdata[idx].Shear;
-
-    c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
-    c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+    pstress[idx] = Identity*p + Shear/J;
 
     // Compute the strain energy for all the particles
     U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
     W = .5*shear*(bElBar[idx].Trace() - 3.0);
 
     se += (U + W)*pvolume[idx];
+
+    // Compute wave speed at each particle, store the maximum
+
+    c_dil = sqrt((bulk + 4.*muBar/3.)*pvolume[idx]/pmass[idx]);
+    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     pvolumedef[idx]=pvolume[idx];
   }
 
-  WaveSpeed = sqrt(Max(c_rot,c_dil));
-  // Fudge factor of .8 added, just in case
-  double delT_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+  WaveSpeed = dx/WaveSpeed;
+  double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   new_dw->put(pstress, lb->pStressLabel, matlindex, patch);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
@@ -395,6 +403,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.23  2000/06/08 22:00:29  bard
+// Added Time Step control to reflect finite deformations and material velocities.
+// Removed fudge factors.
+//
 // Revision 1.22  2000/06/08 16:50:52  guilkey
 // Changed some of the dependencies to account for what goes on in
 // the burn models.
