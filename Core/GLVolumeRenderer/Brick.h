@@ -121,6 +121,8 @@ public:
   int padY() const { return pady; }
   int padZ() const { return padz; }
 
+  Point get_center(){ return corner[0] + 0.5*(corner[7] - corner[0]);}
+
 protected:
 
   typedef struct {
