@@ -24,9 +24,9 @@ Stylesheet for doc/index.html
 @import url(common.css);
 @import url(indexcommon.css);
 
-table { 
-margin-top: 1em;
-margin-bottom: 1em;}
+table.topics { 
+margin-top: 2em;
+margin-bottom: 2em;}
 
 th.mainheader {
 background-color: #003333;
