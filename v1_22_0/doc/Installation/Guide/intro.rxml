@@ -177,6 +177,7 @@ DEALINGS IN THE SOFTWARE.
   <section id="sec.osx_notes">
     <title>&osx; Prerequisites</title>
 
+    <para>&sr; is supported on &osx; 10.3 (Panther).</para>
     <para>Apple's X11 server software, Xcode developer tools, and X11
     software development kit must be installed before installing &sr;.
     Apple's X11 server software, Xcode developer tools, and X11 SDK
@@ -188,7 +189,9 @@ DEALINGS IN THE SOFTWARE.
     the hard drive, the &osx; installation CDs or DVD.
     <filename>Developer.mpkg</filename> and
     <filename>X11SDK.pkg</filename> are part of the Xcode
-    distribution.</para>
+    distribution.</para> <para>To use &sr;'s MatlabInterface package,
+    Matlab version Matlab 6.5.1 (MathWorks Relase 13, Service Pack
+    1) must be installed.</para>
   </section>
 
   <section id="intro.nvidia_notes">
