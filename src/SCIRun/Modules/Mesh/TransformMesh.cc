@@ -89,11 +89,10 @@ void TransformMesh::execute()
     Transform t;
     MatToTransform(mIH, t);
 
+    MeshHandle mmm=meshIH;
     meshIH.detach();
-    for (int i=0; i<meshIH->nodes.size(); i++) {
+    for (int i=0; i<meshIH->nodes.size(); i++)
 	meshIH->nodes[i]->p = t.project(meshIH->nodes[i]->p);
-    }
-
     oport->send(meshIH);
 }
 
@@ -102,6 +101,12 @@ void TransformMesh::execute()
 
 //
 // $Log$
+// Revision 1.2.2.1  2000/09/28 02:55:02  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.3  2000/09/07 16:14:42  dmw
+// removed MeshNodeComponent from sub.mk -- it wasnt ready to be committed yet...
+//
 // Revision 1.2  2000/03/17 09:29:14  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
