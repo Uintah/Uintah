@@ -51,6 +51,8 @@
 
 #include <Teem/Core/Datatypes/NrrdData.h>
 
+#include <teem/ten.h>
+
 namespace SCITeem {
 
 using namespace SCIRun;
@@ -281,10 +283,12 @@ class NrrdFieldConverterFieldAlgo : public DynamicAlgoBase
 public:
   virtual FieldHandle execute(MeshHandle& mHandle,
 			      NrrdDataHandle dataH,
+			      int build_eigens,
 			      int idim, int jdim, int kdim, int permute) = 0;
   
   virtual FieldHandle execute(MeshHandle& mHandle,
-			      NrrdDataHandle dataH) = 0;
+			      NrrdDataHandle dataH,
+			      int build_eigens) = 0;
   
    //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mtd,
@@ -300,10 +304,12 @@ public:
   //! virtual interface.
   virtual FieldHandle execute(MeshHandle& mHandle,
 			      NrrdDataHandle dataH,
+			      int build_eigens,
 			      int idim, int jdim, int kdim, int permute);
 
   virtual FieldHandle execute(MeshHandle& mHandle,
-			      NrrdDataHandle dataH);  
+			      NrrdDataHandle dataH,
+			      int build_eigens);  
 };
 
 
@@ -312,9 +318,9 @@ FieldHandle
 NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
+	int build_eigens,
 	int idim, int jdim, int kdim, int permute)
 {
-  cerr << "Inside i,j,k execute\n";
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
   
@@ -330,7 +336,6 @@ execute(MeshHandle& mHandle,
     else
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
 
-    cerr << "has data!\n";
     typename FIELD::mesh_type::Node::iterator inodeItr;
     
     imesh->begin( inodeItr );
@@ -367,10 +372,10 @@ template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
-	NrrdDataHandle dataH)
+	NrrdDataHandle dataH,
+	int build_eigens)
 
 {
-  cerr << "Inside NORMAL execute\n";
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
 
@@ -386,7 +391,6 @@ execute(MeshHandle& mHandle,
     else
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
 
-    cerr << "has data...\n";
     typename FIELD::mesh_type::Node::iterator inodeItr, end;
     
     imesh->begin( inodeItr );
@@ -417,11 +421,13 @@ class NrrdFieldConverterFieldAlgoVector : public NrrdFieldConverterFieldAlgo
 public:
   //! virtual interface.
   virtual FieldHandle execute(MeshHandle& mHandle,
-		       NrrdDataHandle dataH,
-		       int idim, int jdim, int kdim, int permute);
+			      NrrdDataHandle dataH,
+			      int build_eigens,
+			      int idim, int jdim, int kdim, int permute);
 
   virtual FieldHandle execute(MeshHandle& mHandle,
-			      NrrdDataHandle dataH);  
+			      NrrdDataHandle dataH,
+			      int build_eigens);  
 };
 
 
@@ -430,6 +436,7 @@ FieldHandle
 NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
+	int build_eigens,
 	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -482,8 +489,10 @@ template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
-	NrrdDataHandle dataH)
+	NrrdDataHandle dataH,
+	int build_eigens)
 {
+
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
 
@@ -508,9 +517,13 @@ execute(MeshHandle& mHandle,
     NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
     int i = 0;
     while (inodeItr != end) {
-      ifield->set_value( Vector( ptr[i*3],
-				 ptr[i*3+1],
-				 ptr[i*3+2]),
+      NTYPE x = *ptr;
+      ++ptr;
+      NTYPE y = *ptr;
+      ++ptr;
+      NTYPE z = *ptr;
+      ++ptr;
+      ifield->set_value( Vector( x, y, z ),
 			 *inodeItr);
       ++inodeItr;
       i++;
@@ -531,11 +544,13 @@ class NrrdFieldConverterFieldAlgoTensor : public NrrdFieldConverterFieldAlgo
 public:
   //! virtual interface.
   virtual FieldHandle execute(MeshHandle& mHandle,
-		       NrrdDataHandle dataH,
-		       int idim, int jdim, int kdim, int permute);
+			      NrrdDataHandle dataH,
+			      int build_eigens,
+			      int idim, int jdim, int kdim, int permute);
 
   virtual FieldHandle execute(MeshHandle& mHandle,
-			      NrrdDataHandle dataH);  
+			      NrrdDataHandle dataH,
+			      int build_eigens);  
 };
 
 
@@ -544,6 +559,7 @@ FieldHandle
 NrrdFieldConverterFieldAlgoTensor<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
+	int build_eigens,
 	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
@@ -561,14 +577,15 @@ execute(MeshHandle& mHandle,
     else
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
 
-    typename FIELD::mesh_type::Node::iterator inodeItr;
+    typename FIELD::mesh_type::Node::iterator iter, end;
 
-    imesh->begin( inodeItr );
+    imesh->begin( iter );
+    imesh->end( end );
 
     register int i, j, k, index;
-				  
+      
     NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
-
+      
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
@@ -576,67 +593,221 @@ execute(MeshHandle& mHandle,
 	    index = (k * jdim + j) * idim + i;
 	  else 
 	    index = (i * jdim + j) * kdim + k;
-	
+	  
 	  Tensor tmp;
+
 	  if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 6) {
 	    // 3D symmetric tensor
-	    tmp.mat_[0][0] = ptr[index*3];
-	    tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
-	    tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
-	    tmp.mat_[1][1] = ptr[index*3+3];
-	    tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
-	    tmp.mat_[2][2] = ptr[index*3+5];
-	    ifield->set_value( tmp, *inodeItr);
+
+	    if (build_eigens == 1) {
+	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
+	      tenEigensolve(eval, evec, ptr);
+	      
+	      //float scl = ptr[0] > 0.5;
+	      float scl = 1.0;
+	      for (int cc=0; cc<3; cc++) {
+		ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
+		eval_scl[cc] = scl*eval[cc];
+	      }
+	      Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
+	      Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
+	      Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
+
+	      tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
+	      tmp.mat_[0][0] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[0][1] = (*ptr); 
+	      tmp.mat_[1][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[0][2] = (*ptr); 
+	      tmp.mat_[2][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[1][1] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[1][2] = (*ptr); 
+	      tmp.mat_[2][1] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[2][2] = (*ptr); 
+	      ++ptr;
+	      ifield->set_value( tmp, *iter);
+	    } else {
+// 	      tmp.mat_[0][0] = ptr[index*3];
+// 	      tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
+// 	      tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
+// 	      tmp.mat_[1][1] = ptr[index*3+3];
+// 	      tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
+// 	      tmp.mat_[2][2] = ptr[index*3+5];
+	      tmp.mat_[0][0] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[0][1] = (*ptr); 
+	      tmp.mat_[1][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[0][2] = (*ptr); 
+	      tmp.mat_[2][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[1][1] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[1][2] = (*ptr); 
+	      tmp.mat_[2][1] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[2][2] = (*ptr); 
+	      ++ptr;
+	      ifield->set_value( tmp, *iter);
+	    }
 	  } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 7) {
 	    // 3D symmetric tensor with mask
-	    // if mask < 0.5, all tensor values are 0
-	    if (ptr[index*3] < 0.5) {
-	      for (int x=0; x<3; x++) 
-		for (int y=0; y<3; y++)
-		  tmp.mat_[x][y]=0;
 
+	    if (build_eigens == 1) {
+	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
+	      tenEigensolve(eval, evec, ptr);
+	      
+	      float scl = ptr[0] > 0.5;
+	      for (int cc=0; cc<3; cc++) {
+		ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
+		eval_scl[cc] = scl*eval[cc];
+	      }
+	      Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
+	      Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
+	      Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
+
+	      tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
+	      ++ptr; // skip first value (confidence)
+	      tmp.mat_[0][0] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[0][1] = (*ptr); 
+	      tmp.mat_[1][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[0][2] = (*ptr); 
+	      tmp.mat_[2][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[1][1] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[1][2] = (*ptr); 
+	      tmp.mat_[2][1] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[2][2] = (*ptr); 
+	      ++ptr;
+	      ifield->set_value( tmp, *iter);
 	    } else {
-	      // skip mask
-	      tmp.mat_[0][0] = ptr[index*3+1];
-	      tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
-	      tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
-	      tmp.mat_[1][1] = ptr[index*3+4];
-	      tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
-	      tmp.mat_[2][2] = ptr[index*3+6];	      
+	      // if mask < 0.5, all tensor values are 0
+	      if (ptr[index*3] < 0.5) {
+		for (int x=0; x<3; x++) 
+		  for (int y=0; y<3; y++)
+		    tmp.mat_[x][y]=0;
+		
+	      } else {
+// 		// skip mask
+// 		tmp.mat_[0][0] = ptr[index*3+1];
+// 		tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
+// 		tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
+// 		tmp.mat_[1][1] = ptr[index*3+4];
+// 		tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
+// 		tmp.mat_[2][2] = ptr[index*3+6];
+		++ptr; // skip first value (confidence)
+		tmp.mat_[0][0] = (*ptr); 
+		++ptr;
+		tmp.mat_[0][1] = (*ptr); 
+		tmp.mat_[1][0] = (*ptr);
+		++ptr;
+		tmp.mat_[0][2] = (*ptr); 
+		tmp.mat_[2][0] = (*ptr);
+		++ptr;
+		tmp.mat_[1][1] = (*ptr); 
+		++ptr;
+		tmp.mat_[1][2] = (*ptr); 
+		tmp.mat_[2][1] = (*ptr);
+		++ptr;
+		tmp.mat_[2][2] = (*ptr); 
+		++ptr;
+	      }
+	      ifield->set_value( tmp, *iter);
 	    }
-	    ifield->set_value( tmp, *inodeItr);
 	  } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) {
 	    // not symmetric, do a straight across copy
-	    tmp.mat_[0][0] = ptr[index*3];
-	    tmp.mat_[0][1] = ptr[index*3+1];
-	    tmp.mat_[0][2] = ptr[index*3+2];
-	    tmp.mat_[1][0] = ptr[index*3+3];
-	    tmp.mat_[1][1] = ptr[index*3+4];
-	    tmp.mat_[1][2] = ptr[index*3+4];
-	    tmp.mat_[2][0] = ptr[index*3+5];
-	    tmp.mat_[2][1] = ptr[index*3+6];
-	    tmp.mat_[2][2] = ptr[index*3+7];
+
+	    if (build_eigens == 1) {
+	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
+	      tenEigensolve(eval, evec, ptr);
+	      
+	      //float scl = ptr[0] > 0.5;
+	      float scl = 1.0;
+	      for (int cc=0; cc<3; cc++) {
+		ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
+		eval_scl[cc] = scl*eval[cc];
+	      }
+	      Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
+	      Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
+	      Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
+
+	      tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
+	      tmp.mat_[0][0] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[0][1] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[0][2] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[1][0] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[1][1] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[1][2] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[2][0] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[2][1] = (*ptr); 
+	      ++ptr;
+	      tmp.mat_[2][2] = (*ptr); 
+	      ++ptr;
+	      ifield->set_value( tmp, *iter);
+	    } else {
+// 	      tmp.mat_[0][0] = ptr[index*3];
+// 	      tmp.mat_[0][1] = ptr[index*3+1];
+// 	      tmp.mat_[0][2] = ptr[index*3+2];
+// 	      tmp.mat_[1][0] = ptr[index*3+3];
+// 	      tmp.mat_[1][1] = ptr[index*3+4];
+// 	      tmp.mat_[1][2] = ptr[index*3+4];
+// 	      tmp.mat_[2][0] = ptr[index*3+5];
+// 	      tmp.mat_[2][1] = ptr[index*3+6];
+// 	      tmp.mat_[2][2] = ptr[index*3+7];
+	      tmp.mat_[0][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[0][1] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[0][2] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[1][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[1][1] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[1][2] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[2][0] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[2][1] = (*ptr);
+	      ++ptr;
+	      tmp.mat_[2][2] = (*ptr);
+	      ++ptr;
+	      ifield->set_value( tmp, *iter);
+	    }
 	  } else {
 	    return FieldHandle( ifield );
 	  }
-	
-	  ++inodeItr;
+	  ++iter;
 	}
       }
     }
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
   }
-
   return FieldHandle( ifield );
-  
 }
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
 NrrdFieldConverterFieldAlgoTensor<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
-	NrrdDataHandle dataH)
+	NrrdDataHandle dataH,
+	int build_eigens)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
@@ -653,57 +824,201 @@ execute(MeshHandle& mHandle,
     else
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
 
-    typename FIELD::mesh_type::Node::iterator inodeItr, end;
+    typename FIELD::mesh_type::Node::iterator iter, end;
     
-    imesh->begin( inodeItr );
+    imesh->begin( iter );
     imesh->end( end );
     
     NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
     int i = 0;
-    while (inodeItr != end) {
+    while (iter != end) {
       Tensor tmp;
       if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 6) {
 	// 3D symmetric tensor
-	tmp.mat_[0][0] = ptr[index*3];
-	tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
-	tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
-	tmp.mat_[1][1] = ptr[index*3+3];
-	tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
-	tmp.mat_[2][2] = ptr[index*3+5];
-	ifield->set_value( tmp, *inodeItr);
+
+	if (build_eigens == 1) {
+	  float eval[3], evec[9], eval_scl[3], evec_scl[9];
+	  tenEigensolve(eval, evec, ptr);
+	  
+	  //float scl = ptr[0] > 0.5;
+	  float scl = 1.0;
+	  for (int cc=0; cc<3; cc++) {
+	    ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
+	    eval_scl[cc] = scl*eval[cc];
+	  }
+	  Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
+	  Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
+	  Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
+	  
+	  tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
+	}
+	tmp.mat_[0][0] = (*ptr); 
+	++ptr;
+	tmp.mat_[0][1] = (*ptr); 
+	tmp.mat_[1][0] = (*ptr);
+	++ptr;
+	tmp.mat_[0][2] = (*ptr); 
+	tmp.mat_[2][0] = (*ptr);
+	++ptr;
+	tmp.mat_[1][1] = (*ptr); 
+	++ptr;
+	tmp.mat_[1][2] = (*ptr); 
+	tmp.mat_[2][1] = (*ptr);
+	++ptr;
+	tmp.mat_[2][2] = (*ptr); 
+	++ptr;
+	ifield->set_value( tmp, *iter);
+	//} else {
+	// 	  tmp.mat_[0][0] = ptr[index*3];
+	// 	  tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+1];
+	// 	  tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+2];
+	// 	  tmp.mat_[1][1] = ptr[index*3+3];
+	// 	  tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+4];
+	// 	  tmp.mat_[2][2] = ptr[index*3+5];
+	// 	  ifield->set_value( tmp, *iter);
+	
+	//ifield->set_value( tmp, *iter);
+	//}
       } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 7) {
 	// 3D symmetric tensor with mask
-	// if mask < 0.5, all tensor values are 0
-	if (ptr[index*3] < 0.5) {
-	  for (int x=0; x<3; x++) 
-	    for (int y=0; y<3; y++)
-	      tmp.mat_[x][y]=0;
+	
+	if (build_eigens == 1) {
+	  float eval[3], evec[9], eval_scl[3], evec_scl[9];
+	  tenEigensolve(eval, evec, ptr);
 	  
+	  float scl = ptr[0] > 0.5;
+	  for (int cc=0; cc<3; cc++) {
+	    ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
+	    eval_scl[cc] = scl*eval[cc];
+	  }
+	  Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
+	  Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
+	  Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
+	  
+	  tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
+
+	  ++ptr; // skip mask
+	  tmp.mat_[0][0] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[0][1] = (*ptr); 
+	  tmp.mat_[1][0] = (*ptr);
+	  ++ptr;
+	  tmp.mat_[0][2] = (*ptr); 
+	  tmp.mat_[2][0] = (*ptr);
+	  ++ptr;
+	  tmp.mat_[1][1] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[1][2] = (*ptr); 
+	  tmp.mat_[2][1] = (*ptr);
+	  ++ptr;
+	  tmp.mat_[2][2] = (*ptr); 
+	  ++ptr;
+	  ifield->set_value( tmp, *iter);
 	} else {
-	  // skip mask
-	  tmp.mat_[0][0] = ptr[index*3+1];
-	  tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
-	  tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
-	  tmp.mat_[1][1] = ptr[index*3+4];
-	  tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
-	  tmp.mat_[2][2] = ptr[index*3+6];	      
+	  // if mask < 0.5, all tensor values are 0
+	  if (*ptr < 0.5) {
+	    for (int x=0; x<3; x++) 
+	      for (int y=0; y<3; y++)
+		tmp.mat_[x][y]=0;
+	    
+	  } else {
+	    // skip mask
+// 	    tmp.mat_[0][0] = ptr[index*3+1];
+// 	    tmp.mat_[0][1] = tmp.mat_[1][0] = ptr[index*3+2];
+// 	    tmp.mat_[0][2] = tmp.mat_[2][0] = ptr[index*3+3];
+// 	    tmp.mat_[1][1] = ptr[index*3+4];
+// 	    tmp.mat_[1][2] = tmp.mat_[2][1] = ptr[index*3+5];
+// 	    tmp.mat_[2][2] = ptr[index*3+6];
+	    ++ptr; // skip mask
+	    tmp.mat_[0][0] = (*ptr); 
+	    ++ptr;
+	    tmp.mat_[0][1] = (*ptr); 
+	    tmp.mat_[1][0] = (*ptr);
+	    ++ptr;
+	    tmp.mat_[0][2] = (*ptr); 
+	    tmp.mat_[2][0] = (*ptr);
+	    ++ptr;
+	    tmp.mat_[1][1] = (*ptr); 
+	    ++ptr;
+	    tmp.mat_[1][2] = (*ptr); 
+	    tmp.mat_[2][1] = (*ptr);
+	    ++ptr;
+	    tmp.mat_[2][2] = (*ptr); 
+	    ++ptr;
+	  }
+	  ifield->set_value( tmp, *iter);
 	}
-	ifield->set_value( tmp, *inodeItr);
       } else if (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) {
 	// not symmetric, do a straight across copy
-	tmp.mat_[0][0] = ptr[index*3];
-	tmp.mat_[0][1] = ptr[index*3+1];
-	tmp.mat_[0][2] = ptr[index*3+2];
-	tmp.mat_[1][0] = ptr[index*3+3];
-	tmp.mat_[1][1] = ptr[index*3+4];
-	tmp.mat_[1][2] = ptr[index*3+4];
-	tmp.mat_[2][0] = ptr[index*3+5];
-	tmp.mat_[2][1] = ptr[index*3+6];
-	tmp.mat_[2][2] = ptr[index*3+7];
+
+	if (build_eigens == 1) {
+	  float eval[3], evec[9], eval_scl[3], evec_scl[9];
+	  tenEigensolve(eval, evec, ptr);
+	  
+	  //float scl = ptr[0] > 0.5;
+	  float scl = 1.0;
+	  for (int cc=0; cc<3; cc++) {
+	    ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
+	    eval_scl[cc] = scl*eval[cc];
+	  }
+	  Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
+	  Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
+	  Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
+	  
+	  tmp.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
+	  tmp.mat_[0][0] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[0][1] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[0][2] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[1][0] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[1][1] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[1][2] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[2][0] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[2][1] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[2][2] = (*ptr); 
+	  ++ptr;
+	  ifield->set_value( tmp, *iter);
+	} else {
+// 	  tmp.mat_[0][0] = ptr[index*3];
+// 	  tmp.mat_[0][1] = ptr[index*3+1];
+// 	  tmp.mat_[0][2] = ptr[index*3+2];
+// 	  tmp.mat_[1][0] = ptr[index*3+3];
+// 	  tmp.mat_[1][1] = ptr[index*3+4];
+// 	  tmp.mat_[1][2] = ptr[index*3+4];
+// 	  tmp.mat_[2][0] = ptr[index*3+5];
+// 	  tmp.mat_[2][1] = ptr[index*3+6];
+// 	  tmp.mat_[2][2] = ptr[index*3+7];
+	  tmp.mat_[0][0] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[0][1] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[0][2] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[1][0] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[1][1] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[1][2] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[2][0] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[2][1] = (*ptr); 
+	  ++ptr;
+	  tmp.mat_[2][2] = (*ptr); 
+	  ++ptr;
+	  ifield->set_value( tmp, *iter);
+	}
       } else {
 	return FieldHandle( ifield );
       }
-      ++inodeItr;
+      ++iter;
       i++;
     }    
   } else {
