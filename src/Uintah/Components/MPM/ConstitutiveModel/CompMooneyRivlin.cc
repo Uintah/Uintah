@@ -106,7 +106,8 @@ void CompMooneyRivlin::computeStableTimestep(const Region* region,
      c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
     }
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
-    double delt_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    // Fudge factor of .8 added, just in case
+    double delt_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
     new_dw->put(delt_vartype(delt_new), deltLabel);
 }
 
@@ -200,8 +201,6 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       double C3 = cmdata[idx].C3;
       double C4 = cmdata[idx].C4;
 
-      cerr << C1 << " " << C2 << std::endl;
-
       w1 = C1;
       w2 = C2;
       w3 = -2.0*C3/(invar3*invar3*invar3) + 2.0*C4*(invar3 -1.0);
@@ -217,7 +216,6 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       double PR = (2.*C1 + 5.*C2 + 2.*C4)/
 		(4.*C4 + 5.*C1 + 11.*C2);
       double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
-      cerr << "mass=" << pmass[idx] << ", volume=" << pvolume[idx] << '\n';
       c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
       c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
     }
@@ -324,6 +322,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.21  2000/05/02 22:57:50  guilkey
+// Added fudge factor to timestep calculation
+//
 // Revision 1.20  2000/05/02 20:13:00  sparker
 // Implemented findCellAndWeights
 //
