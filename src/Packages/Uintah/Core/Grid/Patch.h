@@ -259,6 +259,7 @@ WARNING
      inline int getID() const {
        return d_id;
      }
+     static const Patch* getByID(int);
      inline const Level* getLevel() const {
        return d_level;
      }
