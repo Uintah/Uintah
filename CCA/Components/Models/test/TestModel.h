@@ -67,6 +67,9 @@ WARNING
                                     const Patch*,
                                     DataWarehouse*,
                                     const int);
+                                    
+   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                      SchedulerP& sched);
 
   private:    
     void computeModelSources(const ProcessorGroup*, 
