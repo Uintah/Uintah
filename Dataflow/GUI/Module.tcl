@@ -251,7 +251,7 @@ itcl_class Module {
 	# Make the title
 	label $p.title -text $name -font $modname_font -anchor w
 	pack $p.title -side top -padx 2 -anchor w
-
+		
 	# Make the time label
 	if {$make_time} {
 	    label $p.time -text "00.00" -font $time_font
@@ -779,7 +779,8 @@ itcl_class Module {
 	# triggering stream flush
 	set $varName
     }
-    method module_grow {ports} {  
+    
+    method module_grow {ports} { 
 	global maincanvas
 	global font_pixel_width
 	global extra_ports
@@ -833,6 +834,7 @@ itcl_class Module {
 	    $maincanvas.module[modname].ff.title configure -width $title_width
 	}
     }
+
 }   
 proc popup_menu {x y canvas minicanvas modid} {
     global CurrentlySelectedModules
@@ -1135,8 +1137,7 @@ proc startOPortConnection {omodid owhich x y} {
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     set minipath ""
-    set color $portcolor
-
+    set temp "a"
     global SCALEX SCALEY
     set doingX 1
     foreach point $path {
@@ -1156,22 +1157,27 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     $netedit_canvas bind $connid <ButtonPress-3> \
 	    "destroyConnection $connid $omodid $imodid"
 
-    $netedit_canvas bind $connid <ButtonPress-1> {
-	$netedit_canvas itemconfigure current -fill red
-    }
-
+    $netedit_canvas bind $connid <ButtonPress-1> \
+	    "lightPipe $temp $omodid $owhich $imodid $iwhich"
+    
     $netedit_canvas bind $connid <ButtonRelease-1> \
-	    "resetPipe $portcolor"
+	    "resetPipe $temp"
 	
     eval $netedit_mini_canvas create line $minipath -width 1 \
 	-fill \"$portcolor\" -tags $connid
 
     $netedit_mini_canvas lower $connid
 }
-
-proc resetPipe {portcolor} {
+proc lightPipe {temp omodid owhich imodid iwhich} {
     global netedit_canvas
-    $netedit_canvas itemconfigure current -fill $portcolor
+    set path [routeConnection $omodid $owhich $imodid $iwhich]
+    eval $netedit_canvas create bline $path -width 7 \
+	-borderwidth 2 -fill red  -tags $temp
+}
+
+proc resetPipe {temp} {
+    global netedit_canvas
+    $netedit_canvas delete $temp
 }
 
 proc destroyConnection {connid omodid imodid} { 
