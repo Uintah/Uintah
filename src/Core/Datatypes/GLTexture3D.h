@@ -303,7 +303,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
     thread_sema->down();
 
 
-    Thread *t = 
+    //Thread *t = 
       scinew Thread(new GLTexture3D::run_make_brick_data<T>(this, 
 							    thread_sema, 
 							    newx,newy,newz,
