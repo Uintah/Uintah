@@ -18,12 +18,17 @@ SRCDIR := SCIRun/Modules
 SUBDIRS := \
 	$(SRCDIR)/Image\
 	$(SRCDIR)/Mesh\
+	$(SRCDIR)/Writers\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.6  2000/12/01 01:34:08  moulding
+# TiffWriter requires the TIFF library (go figure).  added #if for TIFF_LIB
+# which will presumably be defined by configure one day.
+#
 # Revision 1.5  2000/10/24 05:57:51  moulding
 # new module maker Phase 2: new module maker goes online
 #

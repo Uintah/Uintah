@@ -18,7 +18,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#if TIFF_LIB
 #include "tiffio.h"
+#endif
 
 namespace PSECore {
 namespace Modules {
@@ -33,7 +35,11 @@ class TiffWriter : public Module {
     TCLstring filename;
 
     clString old_filename;
+#if TIFF_LIB
     TIFF *tif;
+#else
+    void* tif;
+#endif
     unsigned long imagelength;
     unsigned char *buf;
     unsigned short *buf16;
@@ -70,6 +76,7 @@ TiffWriter::~TiffWriter()
 
 void TiffWriter::execute()
 {
+#if TIFF_LIB
     clString fn(filename.get());
  //   if(!handle.get_rep() || fn != old_filename){
 
@@ -100,8 +107,9 @@ void TiffWriter::execute()
 	                                    // was thinking here.. max?
 	
         old_filename=fn;
-
+ 
 	tif = TIFFOpen(fn(), "w");
+
 	if (!tif) {
 	  error("Something is wrong with your filename.\n");
 	  return;
@@ -143,7 +151,7 @@ void TiffWriter::execute()
 	  bps=16;
 	  spp=1;
 	}
-	
+
 	TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, xdim);
 	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, ydim);
 	TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bps);
@@ -193,7 +201,7 @@ void TiffWriter::execute()
 	cerr << "--ENDTiffWriter--\n";
        
     }
-
+#endif
 }
 
 } // End namespace Modules
@@ -201,6 +209,10 @@ void TiffWriter::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/12/01 01:34:14  moulding
+// TiffWriter requires the TIFF library (go figure).  added #if for TIFF_LIB
+// which will presumably be defined by configure one day.
+//
 // Revision 1.6  2000/03/17 09:29:20  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
