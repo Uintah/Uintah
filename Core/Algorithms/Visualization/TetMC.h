@@ -24,6 +24,7 @@ template<class Field>
 class TetMC
 {
 public:
+  typedef Field                         field_type;
   typedef typename Field::mesh_type::cell_index  cell_index;
   typedef typename Field::value_type             value_type;
   typedef typename Field::mesh_type              mesh_type;
