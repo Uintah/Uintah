@@ -37,10 +37,12 @@ XMLS :=  \
         sci_GradientAnisotropicDiffusionImageFilter.xml \
         sci_GradientMagnitudeImageFilter.xml \
 	sci_WatershedRelabeler.xml \
-	sci_WatershedSegmentTreeGenerator.xml \
 	sci_WatershedSegmenter.xml \
-	sci_CannySegmentationLevelSetImageFilter.xml \
 	sci_ThresholdSegmentationLevelSetImageFilter.xml \
+	sci_BinaryThresholdImageFilter.xml \
+	sci_ReflectImageFilter.xml \
+	sci_CannySegmentationLevelSetImageFilter.xml \
+	sci_WatershedSegmentTreeGenerator.xml \
 #[INSERT NEW CODE FILE HERE]
 
 INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
