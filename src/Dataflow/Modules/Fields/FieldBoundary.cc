@@ -106,25 +106,25 @@ find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/)
 {
   
   // Walk all the cells in the mesh.
-  Mesh::cell_iterator citer = mesh.cell_begin();
+  typename Mesh::cell_iterator citer = mesh.cell_begin();
   while (citer != mesh.cell_end()) {
-    Mesh::cell_index ci = *citer;
+    typename Mesh::cell_index ci = *citer;
     ++citer;
     // Get all the faces in the cell.
-    Mesh::face_array faces;
+    typename Mesh::face_array faces;
     mesh->get_faces(faces, ci);
     // Check each face for neighbors
-    Mesh::face_array::iterator fiter = faces.begin();
+    typename Mesh::face_array::iterator fiter = faces.begin();
     while (fiter != faces.end()) {
-      Mesh::cell_index nci
-      Mesh::face_index fi = *fiter;
+      typename Mesh::cell_index nci;
+      typename Mesh::face_index fi = *fiter;
       if (! mesh->get_neighbor_cell(fi, nci)) {
 	// Faces with no neighbors are on the boundary, build a tri.
-	Mesh::node_array nodes;
+	typename Mesh::node_array nodes;
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
 	Point p1, p2, p3;
-	Mesh::node_array::iterator niter = nodes.begin();
+	typename Mesh::node_array::iterator niter = nodes.begin();
 	mesh->get_point(p1, *niter);
 	++niter;
 	mesh->get_point(p2, *niter);
