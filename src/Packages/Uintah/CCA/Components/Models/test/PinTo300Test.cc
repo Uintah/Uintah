@@ -59,8 +59,9 @@ PinTo300Test::~PinTo300Test()
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void PinTo300Test::problemSetup(GridP&, SimulationStateP& in_state,
-                        ModelSetup* setup)
+void
+PinTo300Test::problemSetup(GridP&, SimulationStateP& in_state,
+                           ModelSetup* /*setup*/)
 {
 /*`==========TESTING==========*/
 if (!oldStyleAdvect.active()){
@@ -152,9 +153,10 @@ void PinTo300Test::initialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________     
-void PinTo300Test::scheduleModifyThermoTransportProperties(SchedulerP& sched,
-                                                   const LevelP& level,
-                                                   const MaterialSet* /*ice_matls*/)
+void
+PinTo300Test::scheduleModifyThermoTransportProperties(SchedulerP& /*sched*/,
+                                                      const LevelP& /*level*/,
+                                                      const MaterialSet* /*ice_matls*/)
 {
   // Nothing
 }
@@ -163,10 +165,11 @@ void PinTo300Test::scheduleModifyThermoTransportProperties(SchedulerP& sched,
 // Purpose:  Compute the specific heat at time.  This gets called immediately
 //           after (f) is advected
 //  TO DO:  FIGURE OUT A WAY TO ONLY COMPUTE CV ONCE
-void PinTo300Test::computeSpecificHeat(CCVariable<double>& cv_new,
-                                    const Patch* patch,
-                                    DataWarehouse* new_dw,
-                                    const int indx)
+void
+PinTo300Test::computeSpecificHeat(CCVariable<double>& /*cv_new*/,
+                                  const Patch* patch,
+                                  DataWarehouse* /*new_dw*/,
+                                  const int indx)
 { 
   cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t PINTO300TEST" << endl;
 

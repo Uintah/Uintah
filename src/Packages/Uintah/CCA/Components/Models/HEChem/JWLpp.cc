@@ -203,12 +203,13 @@ void JWLpp::scheduleCheckNeedAddMaterial(SchedulerP& sched,
       delete one_matl;
 }
 
-void JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const ModelInfo* mi)
+void
+JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* /*old_dw*/,
+                            DataWarehouse* new_dw,
+                            const ModelInfo* /*mi*/)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  

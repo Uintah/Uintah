@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
+
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
@@ -17,11 +18,13 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <iostream>
+
 #include <Core/Util/DebugStream.h>
 
+#include <iostream>
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 //__________________________________
 //  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
@@ -109,12 +112,13 @@ void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, con
 
 //______________________________________________________________________
 //  
-void Steady_Burn::initialize(const ProcessorGroup*, 
-			     const PatchSubset* patches, 
-			     const MaterialSubset* matls, 
-			     DataWarehouse*, 
-			     DataWarehouse* new_dw){
-
+void
+Steady_Burn::initialize(const ProcessorGroup*, 
+                        const PatchSubset* patches, 
+                        const MaterialSubset* /*matls*/, 
+                        DataWarehouse*, 
+                        DataWarehouse* new_dw){
+  
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;         
@@ -212,13 +216,14 @@ void Steady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*, DataWar
 
 //______________________________________________________________________
 //
-void Steady_Burn::computeModelSources(const ProcessorGroup*, 
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw,
-			       const ModelInfo* mi){
-
+void
+Steady_Burn::computeModelSources(const ProcessorGroup*, 
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* /*matls*/,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 const ModelInfo* mi){
+  
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
 
