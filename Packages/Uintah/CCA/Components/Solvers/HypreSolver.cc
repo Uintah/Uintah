@@ -487,8 +487,7 @@ public:
       } else {
 	throw InternalError("Unknown solver type: "+params->solvertype);
       }
-
-      if(final_res_norm > params->tolerance)
+      if(final_res_norm > params->tolerance || finite(final_res_norm) == 0)
 	throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
 				 num_iterations, final_res_norm,
 				 params->tolerance);
