@@ -48,9 +48,9 @@ using std::string;
   
 class TriApprox {  
 public:
-  static double vertices[3][2];
-  static double edges[3][2];
-  static double faces[1][3];
+  static double UnitVertices[3][2];
+  static int UnitEdges[3][2];
+  static int UnitFaces[1][3];
 
   TriApprox() {}
   virtual ~TriApprox() {}
@@ -62,8 +62,8 @@ public:
   {
     coords.resize(div_per_unit+1);
 
-    const double *v0 = vertices[(int)edges[edge][0]];
-    const double *v1 = vertices[(int)edges[edge][1]];
+    const double *v0 = UnitVertices[UnitEdges[edge][0]];
+    const double *v1 = UnitVertices[UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -112,22 +112,24 @@ public:
 template <class T>
 class TriLinearLgn : public TriApprox {
 public:
+  static int GaussianNum;
+  static double GaussianPoints[3][2];
+  static double GaussianWeights[3];
+
   TriLinearLgn() {}
   virtual ~TriLinearLgn() {}
   
-  int polynomial_order() const { return 1; }
- 
   virtual void approx_edge(const unsigned edge, 
 			   const unsigned /* div_per_unit */,
 			   vector<vector<double> > &coords) const
   {
     coords.resize(2);
     vector<double> &tmp = coords[0];
-    tmp[0] = vertices[(int)edges[edge][0]][0];
-    tmp[1] = vertices[(int)edges[edge][0]][1];
+    tmp[0] = UnitVertices[UnitEdges[edge][0]][0];
+    tmp[1] = UnitVrtices[UnitEdges[edge][0]][1];
     tmp = coords[1];
-    tmp[0] = vertices[(int)edges[edge][1]][0];
-    tmp[1] = vertices[(int)edges[edge][1]][1];
+    tmp[0] = UnitVertices[UnitEdges[edge][1]][0];
+    tmp[1] = UnitVertices[UnitEdges[edge][1]][1];
   }
 
   virtual void approx_face(const unsigned /* face */, 

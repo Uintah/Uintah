@@ -48,9 +48,9 @@ using std::string;
 
 class PrismApprox {  
 public:
-  static double vertices[6][3];
-  static double edges[9][3];
-  static double faces[5][4];
+  static double UnitVertices[6][3];
+  static int UnitEdges[9][3];
+  static int UnitFaces[5][4];
 
   PrismApprox() {}
   virtual ~PrismApprox() {}
@@ -63,8 +63,8 @@ public:
 
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = vertices[(int)edges[edge][0]];
-    const double *v1 = vertices[(int)edges[edge][1]];
+    const double *v0 = UnitVertices[UnitEdges[edge][0]];
+    const double *v1 = UnitVertices[UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -88,20 +88,20 @@ public:
 			   vector<vector<vector<double> > > &coords) const
   {	
 #if 0
-    int fe = (vertices[(int)faces[face][4] != -1 ? 2 : 1);
+    int fe = (UnitVertices[UnitFaces[face][4] != -1 ? 2 : 1);
     coords.resize(fe * div_per_unit);
 	
     for(int f = 0; f<2; f++) {
       double *v0, *v1, *v2;
 
       if (f==0) {
-	v0 = vertices[(int)faces[face][0]];
-	v1 = vertices[(int)faces[face][1]];
-	v2 = vertices[(int)faces[face][3]];
+	v0 = UnitVertices[UnitFaces[face][0]];
+	v1 = UnitVertices[UnitFaces[face][1]];
+	v2 = UnitVertices[UnitFaces[face][3]];
       } else {
-	v0 = vertices[(int)faces[face][2]];
-	v1 = vertices[(int)faces[face][3]];
-	v2 = vertices[(int)faces[face][1]];
+	v0 = UnitVertices[UnitFaces[face][2]];
+	v1 = UnitVertices[UnitFaces[face][3]];
+	v2 = UnitVertices[UnitFaces[face][1]];
       }
 
       const double d = 1. / div_per_unit;
@@ -134,12 +134,12 @@ public:
 template <class T>
 class PrismLinearLgn : public PrismApprox {
 public:
-  typedef T value_type;
-
+  static int GaussianNum;
+  static double GaussianPoints[6][2];
+  static double GaussianWeights[6];
+  
   PrismLinearLgn() {}
   virtual ~PrismLinearLgn() {}
-
-  int polynomial_order() const { return 1; }
 
   // Value at coord
   template <class ElemData>

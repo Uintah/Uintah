@@ -40,13 +40,13 @@ template <class T>
   class CrvQuadraticLgn : public CrvApprox<T>
 {
 public:
-  typedef T value_type;
+  static int GaussianNum;
+  static double GaussianPoints[2][1];
+  static double GaussianWeights[2];
 
   CrvQuadraticLgn() {}
   virtual ~CrvQuadraticLgn() {}
   
-  int polynomial_order() const { return 2; }
-
   // Value at coord
   template <class CellData>
   T interpolate(const vector<double> &coords, const CellData &cd) const

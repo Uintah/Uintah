@@ -48,9 +48,9 @@ using std::string;
 
 class TetApprox {  
 public:
-  static double vertices[4][3];
-  static double edges[6][3];
-  static double faces[4][3];
+  static double UnitVertices[4][3];
+  static int UnitEdges[6][3];
+  static int UnitFaces[4][3];
 
   TetApprox() {}
   virtual ~TetApprox() {}
@@ -62,8 +62,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = vertices[(int)edges[edge][0]];
-    const double *v1 = vertices[(int)edges[edge][1]];
+    const double *v0 = UnitVertices[UnitEdges[edge][0]];
+    const double *v1 = UnitVertices[UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -87,9 +87,9 @@ public:
 			   const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {
-    const double *v0 = vertices[(int)faces[face][0]];
-    const double *v1 = vertices[(int)faces[face][1]];
-    const double *v2 = vertices[(int)faces[face][2]];
+    const double *v0 = UnitVertices[UnitFaces[face][0]];
+    const double *v1 = UnitVertices[UnitFaces[face][1]];
+    const double *v2 = UnitVertices[UnitFaces[face][2]];
 	
     coords.resize(div_per_unit);
     const double d = 1. / div_per_unit;
@@ -123,12 +123,12 @@ public:
 template <class T>
 class TetLinearLgn : public TetApprox {
 public:
-  typedef T value_type;
-
+  static int GaussianNum=4;
+  static double GaussianPoints[4][2];
+  static double GaussianWeights[4];
+  
   TetLinearLgn() {}
   virtual ~TetLinearLgn() {}
-
-  int polynomial_order() const { return 1; }
 
   // Value at coord
   template <class ElemData>

@@ -27,18 +27,15 @@
 //  
 //    File   : CrvLinearLgn.cc
 //    Author : Martin Cole, Frank B. Sachse
-//    Date   : Dec 04 2004
+//    Date   : Dec 21 2004
 
-#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/CrvQuadraticrLgn.h>
 
 namespace SCIRun {
 
-  double CrvApprox::UnitVertices[1][2] = {{0,1}};
-  int CrvApprox::UnitEdges[1][2] = {{0,1}};
-
-  int CrvLinearLgn::GaussianNum=1;
-  double CrvLinearLgn::GaussianPoints[1][1] = {{0.5}};
-  double CrvLinearLgn::GaussianWeights[1] = {1.};
+  int CrvQuadraticLgn::GaussianNum=1;
+  double CrvQuadraticLgn::GaussianPoints[2][1] = {{0.211324865405}, {0.788675134595}};
+  double CrvQuadraticLgn::GaussianWeights[2] = {.5, .5};
 
 } //namespace SCIRun
 
