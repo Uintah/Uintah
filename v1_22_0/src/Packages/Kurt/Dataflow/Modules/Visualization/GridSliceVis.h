@@ -61,7 +61,7 @@ public:
   GridSliceVis(SCIRun::GuiContext *ctx);
 
   virtual ~GridSliceVis();
-  virtual void widget_moved(int last);    
+  virtual void widget_moved(int last, BaseWidget*);
   virtual void execute();
   void tcl_command( SCIRun::GuiArgs&, void* );
 
