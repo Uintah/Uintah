@@ -74,6 +74,8 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_massExchange = false;
   d_RateForm     = false;
   d_EqForm       = false;
+  d_dbgVar1      = 0;     //inputs for debugging
+  d_dbgVar2      = 0;
   d_SMALL_NUM    = 1.0e-100; 
   d_TINY_RHO     = 1.0e-100;// also defined ICEMaterial.cc and MPMMaterial.cc
 }
@@ -109,7 +111,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     d_dbgBeginIndx = IntVector(0,0,0);
     d_dbgEndIndx   = IntVector(0,0,0);
     d_dbgSigFigs   = 5;
-     
+
+    debug_ps->get("dbg_var1",          d_dbgVar1);   
+    debug_ps->get("dbg_var2",          d_dbgVar2);  
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
     debug_ps->get("dbg_timeStop",      d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
@@ -157,7 +161,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   cout_norm<< "  debugging starting time "  <<d_dbgStartTime<<endl;
   cout_norm<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
   cout_norm<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
- 
+  cout_norm<< "  debugging variable 1 "     <<d_dbgVar1<<endl;
+  cout_norm<< "  debugging variable 2 "     <<d_dbgVar2<<endl; 
   //__________________________________
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
@@ -3492,7 +3497,7 @@ IntVector ICE::upwindCell_Y(const IntVector& c,
                             const double& var,              
                             double is_logical_R_face )     
 {
-  double  plus_minus_half = (var + d_SMALL_NUM)/2.0*fabs(var + d_SMALL_NUM);
+  double  plus_minus_half = 0.5 * (var + d_SMALL_NUM)/fabs(var + d_SMALL_NUM);
   int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
   IntVector tmp = c + IntVector(0,one_or_zero,0);
   return tmp;
@@ -3502,7 +3507,7 @@ IntVector ICE::upwindCell_Z(const IntVector& c,
                             const double& var,              
                             double is_logical_R_face )     
 {
-  double  plus_minus_half = (var + d_SMALL_NUM)/2.0*fabs(var + d_SMALL_NUM);
+  double  plus_minus_half = 0.5 * (var + d_SMALL_NUM)/fabs(var + d_SMALL_NUM);
   int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
   IntVector tmp = c + IntVector(0,0,one_or_zero);
   return tmp;
