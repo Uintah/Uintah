@@ -12,7 +12,6 @@
 // TODO:  Interpolation could be a lot faster
 // TODO: parentheses in expressions, other ops in expressions
 using namespace std;
-
 using namespace Uintah;
 
 ArchesTable::ArchesTable(ProblemSpecP& params)
@@ -140,6 +139,7 @@ ArchesTable::Expr* ArchesTable::parse_sign(string::iterator& begin,
       return child;
     }
   }
+  return 0;
 }
 
 ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
@@ -190,7 +190,7 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
 int ArchesTable::addDependentVariable(const string& name)
 {
   ASSERT(!file_read);
-  for(unsigned int i=0;i<deps.size();i++){
+  for(int i=0;i<static_cast<int>(deps.size());i++){
     Dep* dep = deps[i];
     if(dep->name == name)
       return i;
@@ -224,148 +224,97 @@ void ArchesTable::setup()
   cerr << "Reading " << nvars << " variables : ";
 
   vector<Ind*> in_inds(nvars);
+  vector<int> axis_sizes(nvars);
+
+  // Read the names.
   for(int i=0;i<nvars;i++){
     Ind* ind = new Ind;
     ind->name = getString(in);
     in_inds[i] = ind;
   }
+
+  // Read the size of each axis
   for(int i=0;i<nvars;i++){
-    Ind* ind = in_inds[i];
-    ind->uniform = getBool(in);
-  }
-  for(int i=0;i<nvars;i++){
-    Ind* ind = in_inds[i];
     int num = getInt(in);
+    axis_sizes[i] = num;
     if(num <= 2)
       throw InternalError("Table must have at least size 2 in each dimension");
-    ind->weights.resize(num);
   }
+
   for(int i=0;i<nvars;i++)
-    cerr << in_inds[i]->weights.size() << " ";
+    cerr << axis_sizes[i] << " ";
   cerr << '\n';
-  long size = 1;
-  for(int i=0;i<nvars;i++)
-    size *= in_inds[i]->weights.size();
+
+  // Set up the axes.
+  // The first variable may have different weights for each dependent
+  // variable
+  vector<InterpAxis*> in_axes(nvars);
+  long stride = axis_sizes[0];
+  in_axes[0] = 0;
+  for(int i=1;i<nvars;i++){
+    in_axes[i] = new InterpAxis(axis_sizes[i], stride);
+    stride *= axis_sizes[i];
+  }
+  long size = stride;
 
   int ndeps = getInt(in);
   vector<Dep*> in_deps(ndeps);
-  for(int i=0;i<ndeps;i++){
+  for(int j=0;j<ndeps;j++){
     Dep* dep = new Dep(Dep::TableValue);
     
     dep->name = getString(in);
     dep->data = new double[size];
-    in_deps[i] = dep;
+    // Add the first (typically masss fraction) axis with stride 1
+    dep->addAxis(scinew InterpAxis(axis_sizes[0], 1));
+    for(int i=1;i<nvars;i++)
+      dep->addAxis(in_axes[i]);
+    in_deps[j] = dep;
   }
 
-  long stride = 1;
-  for(int s=nvars-1;s>=0;s--){
-    Ind* ind = in_inds[s];
-    int n = ind->weights.size();
-    ind->offset.resize(n);
+  // Next, read units
+  for(int j=0;j<ndeps;j++){
+    Dep* dep = in_deps[j];
+    dep->units = getString(in);
+  }
+
+  // Next, read the axis weights for everything but the first axis
+  for(int i=1;i<nvars;i++){
+    InterpAxis* axis = in_axes[i];
+    int n=axis_sizes[i];
     for(int i=0;i<n;i++)
-      ind->offset[i] = stride*i;
-    stride *= n;
+      axis->weights[i] = getDouble(in);
   }
-
-  vector<int> n(nvars);
-  for(int i=0;i<nvars;i++)
-    n[i]=0;
-  int size2 = 1;
-  for(int i=0;i<nvars-1;i++)
-    size2 *= in_inds[i]->weights.size();
-  int size3 = in_inds[nvars-1]->weights.size();
-  for(int i=0;i<size2;i++){
-    // Read n-1 vars...
-    for(int i=0;i<nvars-1;i++){
-      double tmp = getDouble(in);
-      bool first=true;
-      for(int j=0;j<i;j++){
-	if(n[j] != 0){
-	  first=false;
-	  break;
-	}
-      }
-      int idx = n[i];
-      if(first){
-	in_inds[i]->weights[idx] = tmp;
-      } else {
-	if(in_inds[i]->weights[idx] != tmp){
-	  throw InternalError("Inconsistent table (1)\n");
-	}
-      }
+  int sizefirst = axis_sizes[0];
+  for(int idep=0;idep<ndeps;idep++){
+    Dep* dep = in_deps[idep];
+    for(int i=0;i<sizefirst;i++){
+      // Read axis weights
+      double weight = getDouble(in);
+      dep->axes[0]->weights[i] = weight;
     }
-    for(int i=0;i<size3;i++){
-      // Read last var ndep times
-      double last = getDouble(in);
-      for(int i=0;i<ndeps-1;i++){
-	double tmp = getDouble(in);
-	if(tmp != last){
-	  throw InternalError("Inconsistent table(2)\n");
-	}
-      }
-      bool first=true;
-      for(int j=0;j<nvars-1;j++){
-	if(n[j] != 0){
-	  first=false;
-	  break;
-	}
-      }
-      if(first){
-	in_inds[nvars-1]->weights[n[nvars-1]] = last;
-      } else {
-	if(in_inds[nvars-1]->weights[n[nvars-1]] != last)
-	  throw InternalError("Iconsistent table(3)\n");
-      }
-
-      // Read deps
-      int index=0;
-      for(int i=0;i<nvars;i++)
-	index += in_inds[i]->offset[n[i]];
-      for(int i=0;i<ndeps;i++){
-	double value = getDouble(in);
-	in_deps[i]->data[index] = value;
-      }
-      int s = nvars-1;
-      while(s >= 0 && ++n[s] >= (int)in_inds[s]->weights.size()){
-	n[s]=0;
-	s--;
-      }
+    for(int i=0;i<size;i++){
+      // Read values for this dependent variable
+      double value = getDouble(in);
+      dep->data[i] = value;
     }
   }
 
-  // Verify uniformness...
-  for(int i=0;i<nvars;i++){
-    Ind* ind = in_inds[i];
-    if(ind->uniform){
-      int n = ind->weights.size();
-      double dx = (ind->weights[n-1]-ind->weights[0])/(n-1);
-      if(dx <= 0)
-	throw InternalError("Backwards table not supported");
-      ind->dx = dx;
-      for(int i=1;i<n;i++){
-	double dd = ind->weights[i]-ind->weights[i-1];
-	if(Abs(dd-dx)/dx > 1.e-5){
-	  cerr << "dx0=" << dx << ", dx[" << i << "]=" << dd << '\n';
-	  cerr << "weights[" << i << "]=" << ind->weights[i] << ", weights[" << i-1 << "]=" << ind->weights[i] << '\n';
-	  cerr << "difference: " << dd-dx << '\n';
-	  cerr << "relative difference: " << Abs(dd-dx)/dx << '\n';
-	  throw InternalError("Table labeled as uniform, but non-uniform spacing found");
-	}
-      }
-    }
-  }
+  // finalize axes
+  for(int i=1;i<nvars;i++)
+    in_axes[i]->finalize();
+  for(int i=0;i<ndeps;i++)
+    in_deps[i]->axes[0]->finalize();
 
-  // Verify that independent/dependent variables are available
-  vector<int> input_indices(inds.size());
-  for(unsigned int i=0;i<inds.size();i++)
-    input_indices[i] = -1;
-  for(unsigned int i=0;i<inds.size();i++){
+  // Map the desired variables to the input variables
+  vector<int> axis_map(inds.size(), -1);
+  for(int i=0;i<static_cast<int>(inds.size());i++){
     Ind* ind = inds[i];
+    // Look in the alias map
     bool found = false;
-    for(unsigned int j=0;j<in_inds.size();j++){
+    for(int j=0;j<static_cast<int>(in_inds.size());j++){
       if(in_inds[j]->name == ind->name){
 	found=true;
-	input_indices[i] = j;
+	axis_map[i] = j;
 	break;
       }
     }
@@ -373,70 +322,114 @@ void ArchesTable::setup()
       throw InternalError(string("Independent variable: ")+ind->name+" not found");
   }
 
-  // Convert the input indeps
-  long newstride=1;
-  for(unsigned int i=0;i<inds.size();i++){
-    Ind* ind = inds[i];
-    Ind* input_ind = in_inds[input_indices[i]];
-    ind->name = input_ind->name;
-    ind->weights = input_ind->weights;
-    ind->uniform = input_ind->uniform;
-    ind->dx = input_ind->dx;
-    cerr << i << ", input " << input_indices[i] << ", name=" << ind-> name << ", dx=" << ind->dx << '\n';
-    ind->offset.resize(ind->weights.size());
-    for(unsigned int i=0;i<ind->weights.size();i++)
-      ind->offset[i] = i*newstride;
-    newstride *= ind->weights.size();
+  // Create the new axes
+  vector<InterpAxis*> new_axes(inds.size());
+  long newstride = 1;
+  long firststride = 0;
+  for(int i=0;i<static_cast<int>(inds.size());i++){
+    if(axis_map[i] == 0){
+      // This is the first "special" axis - treat it specially
+      firststride = newstride;
+      new_axes[i] = 0;
+    } else {
+      InterpAxis* in_axis = in_axes[axis_map[i]];
+      new_axes[i] = scinew InterpAxis(in_axis, newstride);
+    }
+    newstride *= axis_sizes[axis_map[i]];
   }
   long newsize = newstride;
-  // Down-slice the table if necessary
 
+  // Down-slice the table if necessary
   int dim_diff = in_inds.size()-inds.size();
   long interp_size = 1<<dim_diff;
   long* idx = new long[interp_size];
   double* w = new double[interp_size];
-  for(int j=0;j<interp_size;j++){
-    idx[j] = 0;
-    w[j] = 1;
-  }
 
-  // Find the axes to be eliminated
-  long s = 1;
-  for(unsigned int i=0;i<in_inds.size();i++){
-    bool found=false;
-    for(unsigned int j=0;j<inds.size();j++){
-      if(in_inds[i]->name == inds[j]->name){
-	found=true;
+  for(int idep=0;idep<static_cast<int>(deps.size());idep++){
+    Dep* dep = deps[idep];
+    if(dep->type != Dep::TableValue)
+      continue;
+    Dep* inputdep = 0;
+    for(int j=0;j<static_cast<int>(in_deps.size());j++){
+      if(in_deps[j]->name == dep->name){
+	inputdep = in_deps[j];
 	break;
       }
     }
-    if(!found){
+    if(!inputdep)
+      throw InternalError(string("Dependent variable: ")+dep->name+" not found");
+    cerr << "Downslicing: " << dep->name << '\n';
+    dep->data = new double[newsize];
+
+    // Build the axes
+    for(int i=0;i<static_cast<int>(inds.size());i++){
+      if(new_axes[i]) {
+        // Use as is
+        dep->addAxis(new_axes[i]);
+      } else {
+        // Need a new axis here. Look at all of the previous deps
+        // and see if we can find an axis that we can rob
+        InterpAxis* newAxis = 0;
+        for(int d=0;d<idep-1;d++){
+          if(deps[d]->type == Dep::TableValue){
+            InterpAxis* a = deps[d]->axes[i];
+            if(a->sameAs(inputdep->axes[axis_map[i]])){
+              newAxis = a;
+              break;
+            }
+          }
+        }
+        if(!newAxis)
+          newAxis = scinew InterpAxis(inputdep->axes[axis_map[i]],
+                                      firststride);
+        dep->addAxis(newAxis);
+      }
+    }
+  
+    // Find the axes to be eliminated...
+    for(int j=0;j<interp_size;j++){
+      idx[j] = 0;
+      w[j] = 1;
+    }
+    long s = 1;
+    for(int i=0;i<static_cast<int>(in_inds.size());i++){
+      bool found=false;
+      for(int j=0;j<static_cast<int>(inds.size());j++){
+        if(in_inds[i]->name == inds[j]->name){
+          found=true;
+          break;
+        }
+      }
+      if(found)
+        continue;
+
       // Find the default value...
-      bool found = false;
-      double value;
-      for(unsigned int j=0;j<defaults.size();j++){
-	if(in_inds[i]->name == defaults[j]->name){
-	  found=true;
-	  value=defaults[j]->value;
-	}
+      found = false;
+      double value = 0;
+      for(int j=0;j<static_cast<int>(defaults.size());j++){
+        if(in_inds[i]->name == defaults[j]->name){
+          found=true;
+          value=defaults[j]->value;
+        }
       }
       if(!found)
-	throw InternalError("Default value for "+in_inds[i]->name+" not found");
-      Ind* ind = in_inds[i];
+        throw InternalError("Default value for "+in_inds[i]->name+" not found");
+
+      InterpAxis* axis = inputdep->axes[i];
       int l=0;
-      int h=ind->weights.size()-1;
-      if(value < ind->weights[l] || value > ind->weights[h])
+      int h=axis->weights.size()-1;
+      if(value < axis->weights[l] || value > axis->weights[h])
 	throw InternalError("Interpolate outside range of table");
       while(h > l+1){
 	int m = (h+l)/2;
-	if(value < ind->weights[m])
+	if(value < axis->weights[m])
 	  h=m;
 	else
 	  l=m;
       }
-      long i0 = ind->offset[l];
-      long i1 = ind->offset[h];
-      double w0 = (value-ind->weights[l])/(ind->weights[h]-ind->weights[l]);
+      long i0 = axis->offset[l];
+      long i1 = axis->offset[h];
+      double w0 = (value-axis->weights[l])/(axis->weights[h]-axis->weights[l]);
       double w1 = 1-w0;
       for(int j=0;j<interp_size;j++){
 	if(j&s){
@@ -448,75 +441,93 @@ void ArchesTable::setup()
 	}
       }
     }
-  }
-  for(unsigned int i=0;i<deps.size();i++){
-    Dep* dep = deps[i];
-    if(dep->type != Dep::TableValue)
-      continue;
-    Dep* inputdep = 0;
-    for(unsigned int j=0;j<in_deps.size();j++){
-      if(in_deps[j]->name == dep->name){
-	inputdep = in_deps[j];
-	break;
-      }
-    }
-    if(!inputdep)
-      throw InternalError(string("Dependent variable: ")+dep->name+" not found");
-    cerr << "Downslicing: " << dep->name << '\n';
-    dep->data = new double[newsize];
 
-    for(unsigned int i=0;i<inds.size();i++)
-      n[i]=0;
-
+    // Interpolate...
+    vector<int> n(inds.size(), 0);
     for(int i=0;i<newsize;i++){
       double sum = 0;
       long iidx = 0;
-      for(unsigned int j=0;j<inds.size();j++){
-	Ind* ind = in_inds[input_indices[j]];
-	iidx += ind->offset[n[j]];
+      // Determine the source indices...
+      for(int j=0;j<static_cast<int>(inds.size());j++){
+	InterpAxis* in_axis = inputdep->axes[axis_map[j]];
+	iidx += in_axis->offset[n[j]];
       }
 
+      // Interpolate
       for(int j=0;j<interp_size;j++){
 	long index = iidx+idx[j];
         sum += w[j]*inputdep->data[index];
       }
 
+      // Determine the output index
       long oidx = 0;
-      for(unsigned int j=0;j<inds.size();j++){
-	oidx += inds[j]->offset[n[j]];
+      for(int j=0;j<static_cast<int>(inds.size());j++){
+	oidx += dep->axes[j]->offset[n[j]];
       }
       dep->data[oidx] = sum;
       int s = inds.size()-1;
-      while(s >= 0 && ++n[s] >= (int)inds[s]->weights.size()){
+      while(s >= 0 && ++n[s] >= (int)dep->axes[s]->weights.size()){
 	n[s]=0;
 	s--;
       }
       
     }
   }
-  for(unsigned int i=0;i<deps.size();i++){
+  
+  for(int i=0;i<static_cast<int>(deps.size());i++){
     Dep* dep = deps[i];
     if(dep->type != Dep::DerivedValue)
       continue;
 
     cerr << "Evaluating: " << dep->name << '\n';
     dep->data = new double[newsize];
-    evaluate(dep->expression, dep->data, newsize);
+    vector<InterpAxis*> axes;
+    evaluate(dep->expression, axes, dep->data, newsize);
+    for(int i=0;i<static_cast<int>(axes.size());i++)
+      dep->addAxis(axes[i]);
   }
   file_read = true;
   double dt = Time::currentSeconds()-start;
   cerr << "Read and interpolated table in " << dt << " seconds\n";
 }
 
-void ArchesTable::evaluate(Expr* expr, double* data, int size)
+void ArchesTable::checkAxes(const vector<InterpAxis*>& a,
+                            const vector<InterpAxis*>& b,
+                            vector<InterpAxis*>& out_axes)
+{
+  // If either of the axes are empty, use the ohter one...
+  if(a.size() == 0){
+    if(b.size() != 0)
+      out_axes=b;
+    return;
+  } else {
+    if(b.size() == 0)
+      out_axes=a;
+    return;
+  }
+  if(a.size() != b.size())
+    throw InternalError("Cannot compute a derived quantity on variables with different dimension");
+  for(int i=0;i<static_cast<int>(a.size());i++){
+    if(!a[i]->sameAs(b[i]))
+      throw InternalError("Cannot compute a derived quantity on variables with different axes");
+  }
+  // They are the same, okay...
+  out_axes=a;
+}
+
+void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
+                      double* data, int size)
 {
   switch(expr->op){
   case '+':
     {
+      vector<InterpAxis*> axes1;
+      vector<InterpAxis*> axes2;
       double* data1 = new double[size];
       double* data2 = new double[size];
-      evaluate(expr->child1, data1, size);
-      evaluate(expr->child2, data2, size);
+      evaluate(expr->child1, axes1, data1, size);
+      evaluate(expr->child2, axes2, data2, size);
+      checkAxes(axes1, axes2, out_axes);
       for(int i=0;i<size;i++)
         data[i] = data1[i] + data2[i];
       delete[] data1;
@@ -525,10 +536,13 @@ void ArchesTable::evaluate(Expr* expr, double* data, int size)
     break;
   case '-':
     {
+      vector<InterpAxis*> axes1;
+      vector<InterpAxis*> axes2;
       double* data1 = new double[size];
       double* data2 = new double[size];
-      evaluate(expr->child1, data1, size);
-      evaluate(expr->child2, data2, size);
+      evaluate(expr->child1, axes1, data1, size);
+      evaluate(expr->child2, axes2, data2, size);
+      checkAxes(axes1, axes2, out_axes);
       for(int i=0;i<size;i++)
         data[i] = data1[i] - data2[i];
       delete[] data1;
@@ -537,10 +551,13 @@ void ArchesTable::evaluate(Expr* expr, double* data, int size)
     break;
   case '*':
     {
+      vector<InterpAxis*> axes1;
+      vector<InterpAxis*> axes2;
       double* data1 = new double[size];
       double* data2 = new double[size];
-      evaluate(expr->child1, data1, size);
-      evaluate(expr->child2, data2, size);
+      evaluate(expr->child1, axes1, data1, size);
+      evaluate(expr->child2, axes2, data2, size);
+      checkAxes(axes1, axes2, out_axes);
       for(int i=0;i<size;i++)
         data[i] = data1[i] * data2[i];
       delete[] data1;
@@ -549,10 +566,13 @@ void ArchesTable::evaluate(Expr* expr, double* data, int size)
     break;
   case '/':
     {
+      vector<InterpAxis*> axes1;
+      vector<InterpAxis*> axes2;
       double* data1 = new double[size];
       double* data2 = new double[size];
-      evaluate(expr->child1, data1, size);
-      evaluate(expr->child2, data2, size);
+      evaluate(expr->child1, axes1, data1, size);
+      evaluate(expr->child2, axes2, data2, size);
+      checkAxes(axes1, axes2, out_axes);
       for(int i=0;i<size;i++)
         data[i] = data1[i] / data2[i];
       delete[] data1;
@@ -570,6 +590,7 @@ void ArchesTable::evaluate(Expr* expr, double* data, int size)
       double* from = deps[expr->dep]->data;
       for(int i=0;i<size;i++)
         data[i] = from[i];
+      out_axes = deps[expr->dep]->axes;
     }
     break;
   default:
@@ -593,7 +614,7 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
   case Dep::TableValue:
   case Dep::DerivedValue:
     {
-      int ni = inds.size();
+      int ni = dep->axes.size();
       ASSERT(ni < MAXINDEPENDENTS);
       double w[MAXINDEPENDENTS];
       long idx0[MAXINDEPENDENTS];
@@ -602,52 +623,52 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
 
       for(CellIterator iter = in_iter; !iter.done(); iter++){
         for(int i=0;i<ni;i++){
-          Ind* ind = inds[i];
+          InterpAxis* axis = dep->axes[i];
           double value = independents[i][*iter];
-          if(ind->uniform){
-            double index = (value-ind->weights[0])/ind->dx;
+          if(axis->uniform){
+            double index = (value-axis->weights[0])/axis->dx;
             int idx = (int)index;
-            if(index < 0 || index >= ind->weights.size()){
-              if(value == ind->weights[ind->weights.size()-1]){
+            if(index < 0 || index >= axis->weights.size()){
+              if(value == axis->weights[axis->weights.size()-1]){
                 idx--;
               } else if(index < 0 || index > -1.e-10){
                 index=0;
                 idx=0;
               } else {
                 cerr.precision(17);
-                cerr << "value=" << value << ", start=" << ind->weights[0] << ", dx=" << ind->dx << '\n';
+                cerr << "value=" << value << ", start=" << axis->weights[0] << ", dx=" << axis->dx << '\n';
                 cerr << "index=" << index << ", fraction=" << index-idx << '\n';
-                cerr << "last value=" << ind->weights[ind->weights.size()-1] << '\n';
+                cerr << "last value=" << axis->weights[axis->weights.size()-1] << '\n';
                 throw InternalError("Interpolate outside range of table");
               }
             }
             w[i] = index-idx;
-            idx0[i] = ind->offset[idx];
-            idx1[i] = ind->offset[idx+1];
+            idx0[i] = axis->offset[idx];
+            idx1[i] = axis->offset[idx+1];
           } else {
             int l=0;
-            int h=ind->weights.size()-1;
-            if(value < ind->weights[l] || value > ind->weights[h]){
-              if(value < ind->weights[l] && value > ind->weights[l]-1.e-1)
-                value = ind->weights[l];
-              else if(value > ind->weights[h] && value < ind->weights[h]+1.e-1)
-                value = ind->weights[h];
+            int h=axis->weights.size()-1;
+            if(value < axis->weights[l] || value > axis->weights[h]){
+              if(value < axis->weights[l] && value > axis->weights[l]-1.e-1)
+                value = axis->weights[l];
+              else if(value > axis->weights[h] && value < axis->weights[h]+1.e-1)
+                value = axis->weights[h];
               else {
                 cerr.precision(17);
-                cerr << *iter << ", value=" << value << ", low=" << ind->weights[l] << ", high=" << ind->weights[h] << "\n";
+                cerr << *iter << ", value=" << value << ", low=" << axis->weights[l] << ", high=" << axis->weights[h] << "\n";
                 throw InternalError("Interpolate outside range of table");
               }
             }
             while(h > l+1){
               int m = (h+l)/2;
-              if(value < ind->weights[m])
+              if(value < axis->weights[m])
                 h=m;
               else
                 l=m;
             }
-            idx0[i] = ind->offset[l];
-            idx1[i] = ind->offset[h];
-            w[i] = (value-ind->weights[l])/(ind->weights[h]-ind->weights[l]);
+            idx0[i] = axis->offset[l];
+            idx1[i] = axis->offset[h];
+            w[i] = (value-axis->weights[l])/(axis->weights[h]-axis->weights[l]);
           }
         }
         // Do the interpolation
@@ -677,7 +698,7 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
 double ArchesTable::interpolate(int index, vector<double>& independents)
 {
   Dep* dep = deps[index];
-  int ni = inds.size();
+  int ni = dep->axes.size();
   ASSERT(ni < MAXINDEPENDENTS);
   double w[MAXINDEPENDENTS];
   long idx0[MAXINDEPENDENTS];
@@ -685,34 +706,34 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
   long ninterp = 1<<ni;
 
   for(int i=0;i<ni;i++){
-    Ind* ind = inds[i];
+    InterpAxis* axis = dep->axes[i];
     double value = independents[i];
-    if(ind->uniform){
-      double index = (value-ind->weights[0])/ind->dx;
-      if(index < 0 || index >= ind->weights.size()){
-        cerr << "value=" << value << ", start=" << ind->weights[0] << ", dx=" << ind->dx << '\n';
+    if(axis->uniform){
+      double index = (value-axis->weights[0])/axis->dx;
+      if(index < 0 || index >= axis->weights.size()){
+        cerr << "value=" << value << ", start=" << axis->weights[0] << ", dx=" << axis->dx << '\n';
         cerr << "index=" << index << '\n';
         throw InternalError("Interpolate outside range of table");
       }
       int idx = (int)index;
       w[i] = index-idx;
-      idx0[i] = ind->offset[idx];
-      idx1[i] = ind->offset[idx+1];
+      idx0[i] = axis->offset[idx];
+      idx1[i] = axis->offset[idx+1];
     } else {
       int l=0;
-      int h=ind->weights.size()-1;
-      if(value < ind->weights[l] || value > ind->weights[h])
+      int h=axis->weights.size()-1;
+      if(value < axis->weights[l] || value > axis->weights[h])
         throw InternalError("Interpolate outside range of table");
       while(h > l+1){
         int m = (h+l)/2;
-        if(value < ind->weights[m])
+        if(value < axis->weights[m])
           h=m;
         else
           l=m;
       }
-      idx0[i] = ind->offset[l];
-      idx1[i] = ind->offset[h];
-      w[i] = (value-ind->weights[l])/(ind->weights[h]-ind->weights[l]);
+      idx0[i] = axis->offset[l];
+      idx1[i] = axis->offset[h];
+      w[i] = (value-axis->weights[l])/(axis->weights[h]-axis->weights[l]);
     }
   }
   // Do the interpolation
@@ -801,7 +822,26 @@ string ArchesTable::getString(istream& in)
   eatWhite(in);
   for(;;){
     int c = in.get();
-    if(c == ',' || c == '\n')
+    if(c == ' ' || c == '\t' || c == '\n' || !in)
+      break;
+    result.push_back(c);
+  }
+  result.erase(result.find_last_not_of(" \t\n")+1);
+  return result;
+}
+
+string ArchesTable::getLine(istream& in)
+{
+  eatWhite(in);
+  if(startline)
+    skipComments(in);
+  eatWhite(in);
+
+  string result;
+  eatWhite(in);
+  for(;;){
+    int c = in.get();
+    if(c == '\n')
       break;
     result.push_back(c);
   }
@@ -845,3 +885,63 @@ void ArchesTable::eatWhite(istream& in)
   in.unget();
 }
 
+void ArchesTable::Dep::addAxis(InterpAxis* newAxis)
+{
+  newAxis->useCount++;
+  axes.push_back(newAxis);
+}
+
+ArchesTable::Dep::~Dep()
+{
+  for(int i=0;i<static_cast<int>(axes.size());i++)
+    if(!--axes[i]->useCount)
+      delete axes[i];
+}
+
+ArchesTable::InterpAxis::InterpAxis(int size, int stride)
+  : weights(size), offset(size), useCount(0)
+{
+  for(int i=0;i<size;i++)
+    offset[i] = i*stride;
+}
+
+ArchesTable::InterpAxis::InterpAxis(const InterpAxis* copy, int newStride)
+  : weights(copy->weights), offset(copy->offset.size()),
+    uniform(copy->uniform), dx(copy->dx), useCount(0)
+{
+  int size = weights.size();
+  for(int i=0;i<size;i++)
+    offset[i] = i*newStride;
+}
+
+bool ArchesTable::InterpAxis::sameAs(const InterpAxis* b) const
+{
+  if(this == b)
+    return true;
+  if(weights.size() != b->weights.size() || dx != b->dx || uniform != b->uniform)
+    return false;
+  for(int i=0;i<static_cast<int>(weights.size());i++)
+    if(weights[i] != b->weights[i])
+      return false;
+  return true;
+}
+
+void ArchesTable::InterpAxis::finalize()
+{
+  int n = weights.size();
+  dx = (weights[n-1]-weights[0])/(n-1);
+  if(dx <= 0)
+    throw InternalError("Backwards table not supported");
+  uniform = true;
+  for(int i=1;i<n;i++){
+    double dd = weights[i]-weights[i-1];
+    if(dd<0){
+      throw InternalError("Backwards table not supported(2)");
+    }
+    if(Abs(dd-dx)/dx > 1.e-5){
+      uniform = false;
+      dx = 0;
+      break;
+    }
+  }
+}
