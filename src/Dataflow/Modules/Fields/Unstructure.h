@@ -163,6 +163,19 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
   node_hash_type nodemap;
   elem_hash_type elemmap;
   mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+
+  typename FSRC::mesh_type::Node::iterator bn, en;
+  mesh->begin(bn); mesh->end(en);
+  while (bn != en)
+  {
+    ASSERT(nodemap.find(*bn) == nodemap.end());
+    Point np;
+    mesh->get_center(np, *bn);
+    nodemap[*bn] = outmesh->add_point(np);
+    ++bn;
+  }
+
+
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
@@ -174,12 +187,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
     for (unsigned int i=0; i<onodes.size(); i++)
     {
-      if (nodemap.find(onodes[i]) == nodemap.end())
-      {
-	Point np;
-	mesh->get_center(np, onodes[i]);
-	nodemap[onodes[i]] = outmesh->add_point(np);
-      }
+      ASSERT(nodemap.find(onodes[i]) != nodemap.end());
       nnodes[i] = nodemap[onodes[i]];
     }
 
