@@ -251,6 +251,8 @@ void Roe::initCB(CallbackData*, void*) {
     // Create a GLX context
     evl->lock();
     cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_TRUE);
+    make_current();
+    glEnable(GL_COLOR_MATERIAL);
     evl->unlock();
     doneInit=1;
 }

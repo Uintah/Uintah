@@ -66,6 +66,7 @@ public:
     void addObj(int portno, GeomID serial, GeomObj *obj);
     void delObj(int portno, GeomID serial);
     void delAll(int portno);
+    void flushViews();
     void addTopRoe(Roe *r);
     void delTopRoe(Roe *r);
     void spawnIndCB(CallbackData*, void*);

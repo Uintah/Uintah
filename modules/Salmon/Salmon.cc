@@ -19,6 +19,7 @@
 
 #include <Salmon/Salmon.h>
 #include <Salmon/Roe.h>
+#include <CallbackCloners.h>
 #include <Connection.h>
 #include <MessageTypes.h>
 #include <ModuleHelper.h>
@@ -85,6 +86,9 @@ void Salmon::do_execute()
 	    break;
 	case MessageTypes::GeometryDelAll:
 	    delAll(gmsg->portno);
+	    break;
+	case MessageTypes::GeometryFlush:
+	    flushViews();
 	    break;
 	default:
 	    cerr << "Salomon: Illegal Message type: " << msg->type << endl;
@@ -156,6 +160,13 @@ void Salmon::initPort(Mailbox<int>* reply)
     reply->send(max_portno++);
 }
 
+void Salmon::flushViews()
+{
+    for (int i=0; i<topRoe.size(); i++) {
+	topRoe[i]->redrawAll();
+    }
+}
+
 void Salmon::addObj(int portno, int serial, GeomObj *obj)
 {
     cerr << "I'm adding an Object!\n";
@@ -166,9 +177,6 @@ void Salmon::addObj(int portno, int serial, GeomObj *obj)
 	portHash.insert(portno, serHash);
     }
     serHash->insert(serial, obj);
-    for (int i=0; i<topRoe.size(); i++) {
-	topRoe[i]->redrawAll();
-    }
 }
 
 void Salmon::delObj(int portno, int serial)
@@ -176,9 +184,6 @@ void Salmon::delObj(int portno, int serial)
     HashTable<int, GeomObj*>* serHash;
     if (portHash.lookup(portno, serHash)) {
 	serHash->remove(serial);
-    }
-    for (int i=0; i<topRoe.size(); i++) {
-	topRoe[i]->redrawAll();
     }
 }
 
@@ -201,10 +206,6 @@ void Salmon::delAll(int portno)
     if (portHash.lookup(portno, serHash)) {
 	serHash->remove_all();
     }
-    for (int i=0; i<topRoe.size(); i++) {
-	topRoe[i]->redrawAll();
-    }
-
 }
 
 void Salmon::addTopRoe(Roe *r)
