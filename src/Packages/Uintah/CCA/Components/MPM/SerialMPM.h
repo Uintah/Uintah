@@ -117,6 +117,15 @@ private:
 
   //////////
   // Insert Documentation Here:
+  void computeCrackExtension(
+                   const ProcessorGroup*,
+		   const PatchSubset* patches,
+		   const MaterialSubset* ,
+		   DataWarehouse* old_dw,
+		   DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   void computeFracture(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
@@ -269,6 +278,9 @@ private:
 		  DataWarehouse* new_dw);
 
   void scheduleSetPositions(SchedulerP&, const PatchSet*, const MaterialSet*);
+
+  void scheduleComputeCrackExtension(SchedulerP&, const PatchSet*,
+			       const MaterialSet*);
 
   void scheduleComputeFracture(SchedulerP&, const PatchSet*,
 			       const MaterialSet*);

@@ -43,14 +43,24 @@ public:
                const Point& B,
 	       const Point& O,const Vector& N,double size2) const;
 
-  bool computeEnergyReleaseRate(
+  double computeEnergyReleaseRate(
         particleIndex tipIndex,
-        const Vector& nx,
-	Vector& ny,
-	double stress,
+        const Matrix3& stress,
 	const ParticleVariable<Point>& pX,
 	const ParticleVariable<double>& pVolume,
-	double& G) const;
+	const ParticleVariable<int>& pIsBroken,
+	double& sigmaN,
+	Vector& Ny,
+	Vector& Nx) const;
+
+  double computeCrackClosureIntegral(
+        const Point& pTip,
+	double R,
+	const Vector& nx,
+	const Vector& ny,
+        double sigma,
+	const ParticleVariable<Point>& pX,
+	const ParticleVariable<double>& pVolume ) const;
 
 private:
 

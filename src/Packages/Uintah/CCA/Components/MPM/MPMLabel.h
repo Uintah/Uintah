@@ -51,6 +51,8 @@ using std::vector;
       const VarLabel* pSurfLabel;
       const VarLabel* pIsBrokenLabel; //for fracture
       const VarLabel* pCrackNormalLabel; //for fracture
+      const VarLabel* pTipNormalLabel; //for fracture
+      const VarLabel* pExtensionDirectionLabel; //for fracture
       const VarLabel* pToughnessLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
@@ -70,6 +72,8 @@ using std::vector;
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pIsBrokenLabel_preReloc; //for fracture
       const VarLabel* pCrackNormalLabel_preReloc; //for fracture
+      const VarLabel* pTipNormalLabel_preReloc; //for fracture
+      const VarLabel* pExtensionDirectionLabel_preReloc; //for fracture
       const VarLabel* pToughnessLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
