@@ -590,7 +590,7 @@ set $m36-active-isoval-selection-tab {2}
 set $m36-active_tab {}
 
 # Set GUI variables for the SCIRun->FieldsOther->ChooseField Module
-set $m37-port-index {1}
+set $m37-port-index {0}
 set $m37-usefirstvalid {0}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
@@ -1518,7 +1518,7 @@ class FusionViewerApp {
 	    
             bind $vis.indicator <Button> {app display_module_error} 
 	    
-            label $vis.indicatorL -text "Press Execute to Load Data..."
+            label $vis.indicatorL -text "Press Execute to update visualization ..."
             pack $vis.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
 	    
