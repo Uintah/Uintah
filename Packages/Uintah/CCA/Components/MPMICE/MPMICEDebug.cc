@@ -46,7 +46,7 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n"; 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);
+    cerr.precision(d_dbgSigFigs);
         
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
@@ -99,7 +99,7 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
     cerr << "$" << message2 << "\n"; 
     
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);
+    cerr.precision(d_dbgSigFigs);
         
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {

@@ -244,6 +244,7 @@ protected:
   double d_dbgOldTime;
   IntVector d_dbgBeginIndx;
   IntVector d_dbgEndIndx; 
+  int d_dbgSigFigs;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
