@@ -15,7 +15,7 @@
 #include <fstream.h>
 #include <stdlib.h>
 #include <Classlib/String.h>
-
+#include <Classlib/Pstreams.h>
 #include <ContourSet.h>
 #include <Geometry/Point.h>
 #include <Classlib/Array1.h>
@@ -27,7 +27,7 @@ main(int argc, char **argv) {
 	cerr << "Need name of set (ie axial/scalp)\n";
 	exit(0);
     }
-    ContourSet* set=new ContourSet;
+    ContourSetHandle set=new ContourSet;
     char hdrname[100];
     sprintf(hdrname, "/home/sci/data1/MRI/brain/contours/%s/header", argv[1]);
     ifstream hdrstream(hdrname);
@@ -53,8 +53,11 @@ main(int argc, char **argv) {
 	    instream >> x >> y >> z;
 	    temp.add(Point(x,y,i));
 	}
+	temp.remove(temp.size()-1);
+	temp.remove(temp.size()-1);
 	set->contours.add(temp);
     }
+    set->build_bbox();
     TextPiostream stream("contourSet.out", Piostream::Write);
-    set->io(stream);
+    Pio(stream, set);
 }
