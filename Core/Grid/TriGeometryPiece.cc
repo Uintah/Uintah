@@ -35,10 +35,11 @@ bool TriGeometryPiece::inside(const Point &p) const
   // of crossings is odd, the point is inside, else it 
   // is outside.
 
-  Vector infinity(-1e10,0,0);
-  
-  int crossings = 0;
+  Vector infinity = Vector(-1e10,0.,0.) - p.asVector();
+  // cerr << "Testing point " << p << endl;
+  int crossings = 0, NES = 0;
   for (int i = 0; i < (int) d_planes.size(); i++) {
+    int NCS = 0;
     Point hit;
     Plane plane = d_planes[i];
     int hit_me = plane.Intersect(p,infinity,hit);
@@ -47,9 +48,23 @@ bool TriGeometryPiece::inside(const Point &p) const
       // Look to see if total angle is 0 or 2PI.  If
       // the point is interior, then angle will be 2PI,
       // else it will be zero.
-      bool in = insideTriangle(hit,i);
-      if (in)
+      //  cerr << "Hit me" << endl;
+      // Need to check that the dot product of the intersection pt - p
+      // and infinity - p is greater than 0.  This means that the 
+      // intersection point is NOT behind the p.
+      Vector int_ray = hit.asVector() - p.asVector();
+      double cos_angle = Dot(infinity,int_ray)/
+	(infinity.length()*int_ray.length());
+      //cerr << "cos_angle = " << cos_angle << endl;
+      if (cos_angle < 0.)
+	continue;
+
+      insideTriangle(hit,i,NCS,NES);
+      // cerr << "in = " << in << endl;
+      if (NCS % 2 != 0)
 	crossings++;
+      if (NES != 0)
+	crossings -= NES/2;
     } else
       continue;
   }
@@ -144,31 +159,150 @@ void TriGeometryPiece::makeTriBoxes()
 
 }
 
-
-
-bool TriGeometryPiece::insideTriangle(const Point& q,int num) const
+void TriGeometryPiece::insideTriangle(const Point& q,int num,int& NCS,
+				      int& NES) const
 {
-  if (!(q == Max(q,d_boxes[num].lower()) && q == Min(q,d_boxes[num].upper())))
-    return false;
-       
-  Vector u[3],v[3],qvector = q.asVector();
-  Point p[3];
+  // Check if the point is inside the bounding box of the triangle.
+  if (!(q == Max(q,d_boxes[num].lower()) && q == Min(q,d_boxes[num].upper()))){
+    NCS = NES = 0;
+    return;
+  }
+
+  // Pulled from makemesh.77.c
+  //  Now we have to do the pt_in_pgon test to determine if ri is
+  //  inside or outside the triangle.  Use Eric Haines idea in
+  //  Essential Ray Tracing Algorithms, pg 53.  Don't have to worry
+  //  about whether the intersection point is on the edge or vertex,
+  //  cause the edge and/or vertex will be defined away.
+  //
   
+  // Now we project the ri and the vertices of the triangle onto
+  // the dominant coordinate, i.e., the plane's normal largest 
+  // magnitude.  
+  //
+   
+
+  Vector plane_normal = d_planes[num].normal();
+  Vector plane_normal_abs = Abs(plane_normal);
+  double largest = plane_normal_abs.maxComponent();
+  int dominant_coord;
+  if (largest == plane_normal_abs.x()) dominant_coord = 1;
+  else if (largest == plane_normal_abs.y()) dominant_coord = 2;
+  else if (largest == plane_normal_abs.z()) dominant_coord = 3;
+
+  Point p[3];
   p[0] = d_points[d_tri[num].x()];
   p[1] = d_points[d_tri[num].y()];
   p[2] = d_points[d_tri[num].z()];
-  
-  double anglesum = 0.;
-  double TWOPI = 6.283185307179586476925287;
-  for (int i = 0; i < 3; i++) {
-    u[i] = Vector(p[i]) - qvector;
-    v[i] = Vector(p[(i+1)%3]) - qvector;
-    anglesum += acos(Dot(u[i],v[i])/(u[i].length() * v[i].length()));
-  }
-  if (anglesum == TWOPI)
-    return true;
-  else
-    return false;
-}
 
- 
+  // Now translate the points that make up the vertices of the triangle.
+  Point trans_pt, trans_vt[3];
+
+  if (dominant_coord == 1) {
+    trans_pt.x(q.y());
+    trans_pt.y(q.z());
+    for (int i = 0; i < 3; i++) {
+      trans_vt[i].x(p[i].y());
+      trans_vt[i].y(p[i].z());
+    }
+  } else if (dominant_coord == 2) {
+    trans_pt.x(q.x());
+    trans_pt.y(q.z());
+    for (int i = 0; i < 3; i++) {
+      trans_vt[i].x(p[i].x());
+      trans_vt[i].y(p[i].z());
+    }
+  } else if (dominant_coord == 3 ) {
+    trans_pt.x(q.x());
+    trans_pt.y(q.y());
+    for (int i = 0; i < 3; i++) {
+      trans_vt[i].x(p[i].x());
+      trans_vt[i].y(p[i].y());
+    }
+  }
+
+  // Now translate the intersecting point to the origin and the vertices
+  // as well.
+
+  for (int i = 0; i < 3; i++) 
+    trans_vt[i] -= trans_pt.asVector();
+
+  int SH = 0, NSH = 0;
+  double out_edge = 0.;
+
+  if (trans_vt[0].y() < 0.0) 
+    SH = -1;
+  else
+    SH = 1;
+
+  if (trans_vt[1].y() < 0.0)
+    NSH = -1;
+  else
+    NSH = 1;
+
+  if (SH != NSH) {
+    if ( (trans_vt[0].x() > 0.0) && (trans_vt[1].x() > 0.0) )
+      NCS += 1;
+    else if ( (trans_vt[0].x() > 0.0) || (trans_vt[1].x() > 0.0) ) {
+      out_edge = (trans_vt[0].x() - trans_vt[0].y() * 
+		  (trans_vt[1].x() - trans_vt[0].x())/
+		  (trans_vt[1].y() - trans_vt[0].y()) );
+      if (out_edge == 0.0) {
+	NES += 1;
+	NCS += 1;
+      }
+      if (out_edge > 0.0)
+	NCS += 1;
+    }
+    SH = NSH;
+  }
+
+  if (trans_vt[2].y() < 0.0)
+    NSH = -1;
+  else
+    NSH = 1;
+
+  if (SH != NSH) {
+    if ( (trans_vt[1].x() > 0.0) && (trans_vt[2].x() > 0.0) )
+      NCS += 1;
+    else if ( (trans_vt[1].x() > 0.0) || (trans_vt[2].x() >0.0) ) {
+      out_edge = (trans_vt[1].x() - trans_vt[1].y() * 
+		  (trans_vt[2].x() -  trans_vt[1].x())/
+		  (trans_vt[2].y() - trans_vt[1].y()) );
+      if (out_edge == 0.0){
+	NES += 1;
+	NCS += 1;
+      }
+      if (out_edge > 0.0)
+	NCS +=1;
+    }
+    SH = NSH;
+  }
+
+  if (trans_vt[0].y() < 0.0)
+    NSH = -1;
+  else
+    NSH = 1;
+  
+  
+  if ( SH != NSH) {
+    if ( (trans_vt[2].x() > 0.0) && (trans_vt[0].x() > 0.0) )
+      NCS += 1;
+    
+    else if ( (trans_vt[2].x() > 0.0) || (trans_vt[0].x() >0.0) ) {
+      out_edge =  (trans_vt[2].x() - trans_vt[2].y() * 
+		   (trans_vt[0].x() - trans_vt[2].x())/
+		   (trans_vt[0].y() - trans_vt[2].y()) );
+      if (out_edge == 0.0) {
+	NES +=1;
+	NCS +=1;
+      }
+      if (out_edge > 0.0)
+	NCS += 1;
+    }
+    SH = NSH;
+  }
+  
+  
+  
+}
