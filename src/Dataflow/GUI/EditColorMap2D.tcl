@@ -32,6 +32,8 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     protected highlighted
     protected frames
     protected close
+    protected swatches
+    protected swatchpath
     constructor {config} {
         set name EditColorMap2D
 	set highlighted -1
@@ -39,6 +41,14 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         set_defaults
 	set pix [netedit getenv SCIRUN_SRCDIR]/pixmaps/powerapp-close.ppm
 	set close [image create photo -file $pix]
+	set swatches 0
+        set swatchpath "[netedit getenv HOME]/SCIRun/Colormaps"
+	if { ![validDir $swatchpath] } {
+	    file mkdir $swatchpath
+	}
+	if { ![validDir $swatchpath] } {
+	    set swatchpath ""
+	}
     }
     
     method set_defaults {} {
@@ -47,8 +57,6 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         setGlobal $this-num-entries 2
         setGlobal $this-filename "MyTransferFunction"
         setGlobal $this-filetype Binary
-        setGlobal $this-row 0
-        setGlobal $this-col 0
 	setGlobal $this-selected_widget -1
 	setGlobal $this-selected_object -1
 	global $this-selected_widget
@@ -71,7 +79,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	}
 	# makeColorPicker now creates the $window.color toplevel.
 	makeColorPicker $windowname $color \
-	    "$this set_color $button $color $module_command" \
+	    "$this set_color $button $color \{$module_command\}" \
 	    "destroy $windowname"
     }
     
@@ -82,7 +90,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 			[expr int($g * 65535)] [expr int($b * 65535)]]
 	$button config -background $colstr -activebackground $colstr
 	if { [string length $module_command] } {
-	    $this-c $module_command
+	    eval $this-c $module_command
 	}
     }
     
@@ -155,16 +163,16 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 		entry $e.name -textvariable $this-name-$i -width 13 -bd 0
 		bind $e.name <ButtonPress> "+$this select_widget $i"
 		button $e.color -width 4 \
-		    -command "$this select_widget $i; $this raise_color $frame.e-$i.color $this-$i-color color_change-$i"
+		    -command "$this select_widget $i; $this raise_color $frame.e-$i.color $this-$i-color \"color $i\""
 
 		checkbutton $e.shade -text "" -padx 15 -justify center \
 		    -relief flat -variable $this-shadeType-$i \
 		    -onvalue 1 -offvalue 0 -anchor w \
-		    -command "$this-c shadewidget-$i; $this select_widget $i"
+		    -command "$this-c shade $i; $this select_widget $i"
 
 		checkbutton $e.on -text "" -padx 15 -justify center \
 		    -relief flat -variable $this-on-$i -onvalue 1 -offvalue 0 \
-		    -anchor w -command "$this-c toggleon-$i"
+		    -anchor w -command "$this-c toggle $i"
 		frame $e.fill -width 500
 		bind $e.fill <ButtonPress> "$this select_widget $i"
 		pack $e.x $e.name $e.color $e.shade $e.on $e.fill -side left \
@@ -183,238 +191,102 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     }
 
     method file_save {} {
-        global $this-filename
-        set ws [format "%s-fbs" .ui[modname]]
-
+        set ws .ui[modname]-fbs
         if {[winfo exists $ws]} { 
-          if {[winfo ismapped $ws] == 1} {
-            raise $ws
-          } else {
-            wm deiconify $ws
-          }
-          return 
+	    SciRaise $ws
+	    return 
         }
-
-        toplevel $ws -class TkFDialog
-        set initdir "~/"
-
-        # place to put preferred data directory
-        # it's used if $this-filename is empty
-    
-        #######################################################
-        # to be modified for particular reader
-
-        # extansion to append if no extension supplied by user
-        set defext ".cmap2"
-
-        # name to appear initially
-        set defname "TransferFunc01"
-        set title "Save Transfer Function"
-
         # file types to appers in filter box
-        set types {
-            {{All Files}       {.cmap .cmap2}   }
-        }
-
-        ######################################################
-
+        set types { { {SCIRun 2D Transfer Function} {.cmap .cmap2} } }
         makeSaveFilebox \
-                -parent $ws \
-                -filevar $this-filename \
-                -setcmd "wm withdraw $ws" \
-                -command "$this-c save; wm withdraw $ws" \
-                -cancel "wm withdraw $ws" \
-                -title $title \
-                -filetypes $types \
-                -initialfile $defname \
-                -initialdir $initdir \
-                -defaultextension $defext \
-                -formatvar $this-filetype
-                #-splitvar $this-split
-
+	    -parent [toplevel $ws -class TkFDialog] \
+	    -filevar $this-filename \
+	    -setcmd "wm withdraw $ws" \
+	    -command "$this-c save; wm withdraw $ws" \
+	    -cancel "wm withdraw $ws" \
+	    -title "Save SCIRun 2D Transfer Function" \
+	    -filetypes $types \
+	    -initialfile TransferFunc01 \
+	    -initialdir ~/ \
+	    -defaultextension .cmap2 \
+	    -formatvar $this-filetype
+	SciRaise $ws
     }
     
     method file_load {} {
-        global $this-filename
-
-        set wl [format "%s-fbl" .ui[modname]]
+        set wl .ui[modname]-fbl
         if {[winfo exists $wl]} {
-            if {[winfo ismapped $wl] == 1} {
-                raise $wl
-            } else {
-                wm deiconify $wl
-            }
+	    SciRaise $wl
             return
         }
-        toplevel $wl -class TkFDialog
-        set initdir "~/"
-        #######################################################
-        # to be modified for particular reader
-
-        # extansion to append if no extension supplied by user
-        set defext ".cmap2"
-        set title "Open SCIRun Transfer Function file"
-
         # file types to appers in filter box
-        set types {
-            {{SCIRun Transfer Function}     {.cmap .cmap2}      }
-            {{All Files} {.*}   }
-        }
-
-        ######################################################
-
+        set types { 
+	    { {SCIRun 2D Transfer Function} {.cmap .cmap2} }
+	    { {All Files} {.*} }
+	}
         makeOpenFilebox \
-                -parent $wl \
-                -filevar $this-filename \
-                -command "$this-c load;  wm withdraw $wl" \
-                -cancel "wm withdraw $wl" \
-                -title $title \
-                -filetypes $types \
-                -initialdir $initdir \
-                -defaultextension $defext
+	    -parent [toplevel $wl -class TkFDialog] \
+	    -filevar $this-filename \
+	    -command "$this-c load;  wm withdraw $wl" \
+	    -cancel "wm withdraw $wl" \
+	    -title "Open SCIRun 2D Transfer Function" \
+	    -filetypes $types \
+	    -initialdir ~/ \
+	    -defaultextension .cmap2
+	SciRaise $wl
     }
 
     method create_swatches {} {
-        global $this-filename
-
-        set path "[netedit getenv HOME]/SCIRun"
-	if { ! [file isdirectory $path] } {
-	    file mkdir $path
+        set swatches 0
+	foreach file [glob -nocomplain ${swatchpath}/*.cmap2] {
+	    $this add_swatch $file
 	}
-        set curdir [pwd]
-        cd $path
-        set res [glob -nocomplain  *.ppm]
-        cd $curdir
-        set w .ui[modname]
-        
-        # use globals to keep track of where you are
-        # when adding new buttons
-        set row [set $this-row]
-        set col [set $this-col]
-        if {[winfo exists $w.swatchpicker]} {
-          set f [$w.swatchpicker childsite]
-
-            # Create row 0
-            frame $f.swatchFrame$row
-            pack $f.swatchFrame$row
-
-            foreach r $res {
-                # Every 4 buttons, create new row and reset col
-                if {$col == 4} {
-                    incr row
-                    frame $f.swatchFrame$row
-                    pack $f.swatchFrame$row -side top -anchor nw
-                    set col 0
-                }
-                
-                set num [lindex [split $r "."] 0]
-                image create photo img-$r -format "ppm" -file $path/$num.ppm
-                #Load in the image to diplay on the button and do that.
-                button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/$num.ppm.cmap2; $this swatch_load $num"
-                grid configure $f.swatchFrame$row.swatch$num -row $row -col $col -sticky "nw"
-                incr col
-          }
-        }
-        set $this-row $row
-        set $this-col $col
     }
 
-    method update_swatches {file} {
-        set row [set $this-row]
-        set col [set $this-col]
- 
-        set w .ui[modname]
-        if {[winfo exists $w.swatchpicker]} {
-            set f [$w.swatchpicker childsite]
-
-            if {$col == 4} {
-                incr row
-                frame $f.swatchFrame$row
-                pack $f.swatchFrame$row -side top -anchor nw
-                set col 0
-            }
-
-            set r [lindex [file split $file] end]
-            set num [lindex [split $r "."] 0]
-            image create photo img-$r -format "ppm" -file $file
-            #Load in the image to diplay on the button and do that.
-            
-            button $f.swatchFrame$row.swatch$num -image img-$r \
-		-command "set $this-filename [netedit getenv HOME]/SCIRun/$num.ppm.cmap2; $this swatch_load $num"
-            grid configure $f.swatchFrame$row.swatch$num -row $row \
-		-col $col -sticky "nw"
-            
-            incr col
-        }
-        set $this-row $row
-        set $this-col $col
+    method add_swatch { filename } {
+	if { ![validFile $filename] || ![validFile ${filename}.ppm] } return
+        set w .ui[modname].swatchpicker
+        if {![winfo exists $w]} return
+	set col [expr $swatches % 4]
+	set row [expr $swatches / 4]
+	set f [$w childsite].swatchFrame$row
+	if {$col == 0} {
+	    frame $f
+	    pack $f -side top -anchor nw
+	}
+	#Load in the image to diplay on the button
+	image create photo img-$swatches -format ppm -file ${filename}.ppm
+	button $f.swatch$swatches -image img-$swatches \
+	    -command "$this swatch_load $filename"
+	grid configure $f.swatch$swatches -row $row -col $col -sticky nw
+	incr swatches
     }
 
     method swatch_delete {} {
-        # The global $this-filename should be loaded with a xff now. 
-	# We want to recover the base
-        # filename, essentially the timestamp.  
-	# Then we can safely delete it.  This assumes the natural behavior
-        # that a swatch will be loaded and immediately deleted.
-        global deleteSwatch 
-        global $this-row
-        global $this-col
-         
-        # Note:  The following lines MAY break in windows due to 
-	# path declaration differences (/ vs. \)
-        set basename [file split $deleteSwatch] 
-        set basename [lindex $basename end]
-        set basename [lindex [split $basename "."] 0]
-        set path "[netedit getenv HOME]/SCIRun"
-        file delete "$path/$basename.ppm"
-        file delete "$path/$basename.ppm.cmap2"
-
-        set w .ui[modname]
-        if {[winfo exists $w.swatchpicker]} {
-            set f [$w.swatchpicker childsite]
-            foreach element [winfo children $f] {
-              destroy $element
-            }
-            set $this-row 0
-            set $this-col 0
-            create_swatches
-        }
+	upvar \#0 $this-deleteSwatch delete
+	if { ![file writable $delete] } return
+        file delete $delete
+	file delete ${delete}.ppm
+        set f .ui[modname].swatchpicker
+        if {![winfo exists $f]} return
+	foreach element [winfo children [$f childsite]] {
+	    destroy $element
+	}
+	create_swatches
     }
 
-    method swatch_load {swatchNum} {
-        #  Note:  This is the method in which we must 
-	# prepare the global filename for swatch_delete to work on.  
-        global deleteSwatch
-        set path "[netedit getenv HOME]/SCIRun"
-        set deleteSwatch "$path/$swatchNum.ppm.cmap2"
+    method swatch_load { filename } {
+	setGlobal $this-filename $filename
+	setGlobal $this-deleteSwatch $filename
         $this-c load
     }
 
     method swatch_save {} {
-        global $this-filename
-        set curdir [pwd]
-        set path "[netedit getenv HOME]/SCIRun"
-	if { ! [file isdirectory $path] } {
-	    file mkdir $path
-	}
-	
-        set numPPM 0
-       
-        cd $path
-        set files [glob -nocomplain "*.ppm"]
-        cd $curdir
-
-        set numPPM [clock format [clock seconds] -format {%Y%m%d_%H%M%S}]
-        
-        set $this-filename "$path/$numPPM.ppm"
-        $this-c "saveppm"
-
-	# the "saveppm" command does nothing if the TF has not been changed
-	# since it was last saved, which
-	# leads to a non-existant $path/$numPPM.ppm
-	if { [file exists $path/$numPPM.ppm] } {
-	    update_swatches $path/$numPPM.ppm
-	}
+	if { $swatchpath == "" } return
+        set basename [clock format [clock seconds] -format {%Y%m%d_%H%M%S}]
+        setGlobal $this-filename "${swatchpath}/${basename}.cmap2"
+        $this-c save true
+	add_swatch "${swatchpath}/${basename}.cmap2"
     }
 
     method label_widget_columns { frame } {
@@ -430,21 +302,19 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	return $frame
     }
 
-
     method ui {} {
-        global $this-filename
         global $this-num-entries
         trace vdelete $this-num-entries w "$this unpickle"
 
         set w .ui[modname]
         if {[winfo exists $w]} {
+	    SciRaise $w
             return
         }
         toplevel $w
 
 	# create an OpenGL widget
 	frame $w.glf -bd 2 -relief groove
-
 	$this-c setgl $w.glf.gl
 	bind_events $w.glf.gl
 	pack $w.glf.gl -side top -padx 0 -pady 0 -expand 0
@@ -459,6 +329,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    -showvalue true -resolution 0.001 \
 	    -orient horizontal -command "$this-c redraw"
 	pack $frame.shisto -side top -fill x -padx 4
+
 	# faux shading
 	frame $frame.f0 -relief groove -borderwidth 2
 	pack $frame.f0 -padx 2 -pady 2 -fill x
@@ -467,51 +338,44 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    -anchor w -command "$this-c redraw; $this-c needexecute"
 	pack $frame.f0.faux -side top -fill x -padx 4
 
+	# Scrollable frame areas for widget controls and swatches
         iwidgets::scrolledframe $w.widgets -hscrollmode none \
 	    -vscrollmode static
         iwidgets::scrolledframe $w.swatchpicker -hscrollmode none \
 	    -vscrollmode dynamic
 
-
-        frame $w.controls
-        button $w.controls.addtriangle -text "Add Triangle" \
-            -command "$this-c addtriangle" -width 11
-        button $w.controls.addrectangle -text "Add Rectangle" \
-            -command "$this-c addrectangle" -width 11
-        button $w.controls.delete -text "Delete" \
-            -command "$this-c deletewidget" -width 11
-        button $w.controls.undo -text "Undo" \
-            -command "$this-c undowidget" -width 11
-        button $w.controls.load -text "Load" \
-            -command "$this file_load" -width 11
-        button $w.controls.save -text "Save" \
-            -command "$this file_save" -width 11
-        pack $w.controls.addtriangle $w.controls.addrectangle \
-	    $w.controls.delete $w.controls.undo \
-	    $w.controls.load $w.controls.save \
-            -padx 8 -pady 4 -fill x -expand yes -side left
+	# W Controls
+	set f $w.controls
+        frame $f
+        button $f.addtriangle -text "Add Triangle" \
+            -command "$this-c addtriangle" -width 12
+        button $f.addrectangle -text "Add Rectangle" \
+            -command "$this-c addrectangle" -width 12
+        button $f.delete -text Delete -command "$this-c deletewidget" -width 12
+        button $f.undo -text Undo -command "$this-c undowidget" -width 12
+        button $f.load -text Load -command "$this file_load" -width 12
+        button $f.save -text Save -command "$this file_save" -width 12
+        pack $f.addtriangle $f.addrectangle $f.delete $f.undo $f.load $f.save \
+            -padx 8 -pady 4 -fill x -side left
 	
-	if 1 {
-	    frame $w.swatchcontrol
-	    button $w.swatchcontrol.saveButton -text "QuickSave" \
-		-command "$this swatch_save" -width 20
-	    button $w.swatchcontrol.delButton -text "Delete Swatch" \
-		-command "$this swatch_delete" -width 20
-	    pack $w.swatchcontrol.saveButton $w.swatchcontrol.delButton
-	}
+	# Swatch Controls
+	set f $w.swatchcontrol
+	frame $f
+	button $f.save -text QuickSave -command "$this swatch_save" -width 20
+	button $f.del -text "Delete Swatch" \
+	    -command "$this swatch_delete" -width 20
+	pack $f.save $f.del -padx 8 -pady 4 -side left -fill x -expand 1
 	
-	
+	# Pack 'em all up...
         pack [label_widget_columns $w.title]  -fill x -padx 2 -pady 2
         pack $w.widgets -side top -fill both -expand yes -padx 2
-        pack $w.controls -fill x 
-        
+        pack $w.controls -fill x         
+	pack $w.swatchpicker -side top -fill both -expand yes -padx 2
+	pack $w.swatchcontrol -side top
+	
 	add_frame [$w.widgets childsite]
         create_entries
-	if 1 {
-	    pack $w.swatchcontrol -side top -fill x
-	    pack $w.swatchpicker -side top -fill both -expand yes -padx 2
-	    create_swatches
-	}
+	create_swatches
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w
