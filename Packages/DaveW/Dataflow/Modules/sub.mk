@@ -10,7 +10,8 @@
 SRCDIR := Packages/DaveW/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/Contours\
+	$(SRCDIR)/LeadField\
+#	$(SRCDIR)/Contours\
 #	$(SRCDIR)/Readers\
 #	$(SRCDIR)/SurfTree\
 #	$(SRCDIR)/Writers\

@@ -17,6 +17,18 @@ PROGRAM := $(SRCDIR)/JAStoMesh
 SRCS := $(SRCDIR)/JAStoMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/ExtractCC
+SRCS := $(SRCDIR)/ExtractCC.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/FindMaxCentroid
+SRCS := $(SRCDIR)/FindMaxCentroid.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/MakeRadialCylinder
+SRCS := $(SRCDIR)/MakeRadialCylinder.cc
+include $(SRCTOP)/scripts/program.mk
+
 #PROGRAM := $(SRCDIR)/MeshToJAS
 #SRCS := $(SRCDIR)/MeshToJAS.cc
 #include $(SRCTOP)/scripts/program.mk
