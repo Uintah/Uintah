@@ -51,6 +51,7 @@ void Camera::makeRay(Ray& ray, double x, double y, double ixres, double iyres)
     ray.set_origin(eye + raydir*ray_offset);
 }
 
+#if 0
 void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
 {
     double screenx=(x+0.5)*ixres-0.5;
@@ -74,6 +75,31 @@ void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
     ray.set_direction(raydir - v*5*eyesep*iyres + raydir*ray_offset);
     ray.set_origin(eye + v*5*eyesep*iyres + raydir*ray_offset);
 }
+#else
+// Old school stereo, just move the eyepoint
+void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
+{
+    double screenx=(x+0.5)*ixres-0.5;
+    Vector sv(v*screenx);
+    double screeny=(y+0.5)*iyres-0.5;
+    Vector su(u*screeny);
+    Vector raydir=su+sv+direction;
+    raydir.normalize();
+    ray.set_direction(raydir);
+    ray.set_origin(eye-v*5*iyres);
+}
+void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
+{
+    ray.set_origin(eye+v*5*iyres);
+    double screenx=(x+0.5)*ixres-0.5;
+    Vector sv(v*screenx);
+    double screeny=(y+0.5)*iyres-0.5;
+    Vector su(u*screeny);
+    Vector raydir=su+sv+direction;
+    raydir.normalize();
+    ray.set_direction(raydir);
+}
+#endif
 
 void Camera::get_viewplane(Vector& uu, Vector& vv) const
 {
