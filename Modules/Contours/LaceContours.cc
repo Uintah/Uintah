@@ -1,16 +1,18 @@
 
 /*
- *  LaceContours.cc:  Lace a ContourSet into a Surface
+ *  LaceContours.cc:  Merge multiple contour sets into a Surface
  *
  *  Written by:
  *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   July 1994
+ *   August 1994
  *
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Classlib/Array1.h>
+#include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
@@ -19,18 +21,19 @@
 #include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
-#include <Math/Expon.h>
+#include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
+#include <Math/MinMax.h>
+#include <Math/Expon.h>
 
 #include <iostream.h>
 
 class LaceContours : public Module {
     ContourSetIPort* incontour;
     SurfaceOPort* osurface;
-
-    void lace_contours(const ContourSetHandle&, TriSurface*);
+    void lace_contours(const ContourSetHandle& contour, TriSurface* surf);
 public:
-    LaceContours(const clString& id);
+    LaceContours(const clString&);
     LaceContours(const LaceContours&, int deep);
     virtual ~LaceContours();
     virtual Module* clone(int deep);
@@ -42,14 +45,17 @@ static Module* make_LaceContours(const clString& id)
     return new LaceContours(id);
 }
 
-static RegisterModule db1("Contours", "Lace Contours", make_LaceContours);
-static RegisterModule db2("Visualization", "Lace Contours", make_LaceContours);
+static RegisterModule db1("Contours", "LaceContours", make_LaceContours);
+static RegisterModule db2("Visualization", "LaceContours", make_LaceContours);
+static RegisterModule db3("Dave", "LaceContours", make_LaceContours);
 
 LaceContours::LaceContours(const clString& id)
 : Module("LaceContours", id, Filter)
 {
     // Create the input port
-    incontour=new ContourSetIPort(this, "ContourSet", ContourSetIPort::Atomic);
+    incontour=new ContourSetIPort(this, "ContourSet", 
+				  ContourSetIPort::Atomic);
+
     add_iport(incontour);
     osurface=new SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
     add_oport(osurface);
@@ -73,19 +79,19 @@ Module* LaceContours::clone(int deep)
 void LaceContours::execute()
 {
     ContourSetHandle contours;
-    if (!incontour->get(contours))
-	return;
+    if (!incontour->get(contours)) return;
     TriSurface* surf=new TriSurface;
-    surf->name=contours->name;
     lace_contours(contours, surf);
     osurface->send(surf);
 }
 
 void LaceContours::lace_contours(const ContourSetHandle& contour, 
-				 TriSurface* surf) {
-    Array1<int> row;
+				   TriSurface* surf) {
+    surf->name=contour->name;
+    surf->conductivity=contour->conductivity;
+    Array1<int> row;	
     for (int i=0, curr=0; i<contour->contours.size(); i++) {
-	row.add(curr);
+	row.add(curr);	
 	curr+=contour->contours[i].size();
 	for (int j=0; j<contour->contours[i].size(); j++) {
 	    Point p(contour->contours[i][j]-contour->origin);
@@ -133,12 +139,14 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
 			 contour->contours[i-1][k].x())+
 	             Sqr(contour->contours[i][(j+1)%sz_top].y()-
 			 contour->contours[i-1][k].y());
-	   if ((d1<d2 || jdone) && !kdone) { // bottom moves
-	       surf->add_triangle(row[i]+j,row[i-1]+k,row[i-1]+((k+1)%sz_bot));
+	   if ((d1<d2 || jdone) && !kdone){ 	// bottom moves
+	       surf->add_triangle(row[i]+j, row[i-1]+k,
+				  row[i-1]+((k+1)%sz_bot));
 	       k=(k+1)%sz_bot;
 	       if (k==bot) kdone=1;
-	   } else {     // top moves
-	       surf->add_triangle(row[i]+j,row[i-1]+k,row[i]+((j+1)%sz_top));
+	   } else {     			// top moves
+	       surf->add_triangle(row[i]+j,row[i-1]+k,
+				  row[i]+((j+1)%sz_top));
 	       j=(j+1)%sz_top;
 	       if (j==top) jdone=1;
 	   }
