@@ -68,7 +68,7 @@ public:
 
   virtual bool is_scalar() const;
 
-  virtual const TypeDescription *data_at_type_description();
+  virtual const TypeDescription *data_at_type_description() const;
 
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::Node::index_type i) const;
@@ -406,7 +406,7 @@ GenericField<Mesh, FData>::get_type_description(int /*n*/) const
 
 template <class Mesh, class FData>
 const TypeDescription *
-GenericField<Mesh, FData>::data_at_type_description()
+GenericField<Mesh, FData>::data_at_type_description() const
 {
   switch(data_at())
   {

@@ -43,7 +43,7 @@
 namespace SCIRun {
 
 //! Should only be instantiated for fields with scalar data.
-template <class F>
+template <class F, class L>
 class SFInterface : public ScalarFieldInterface {
 public:
   SFInterface(const F *fld) :
@@ -68,12 +68,13 @@ class ScalarFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual ScalarFieldInterface *make(const Field *field) = 0;
-  static CompileInfo *get_compile_info(const TypeDescription *ftd);
+  static CompileInfo *get_compile_info(const TypeDescription *ftd,
+				       const TypeDescription *ltd);
 };
 
 
 
-template <class F>
+template <class F, class L>
 class SFInterfaceMaker : public ScalarFieldInterfaceMaker
 {
 public:
@@ -81,122 +82,51 @@ public:
   virtual ScalarFieldInterface *make(const Field *field)
   {
     const F *tfield = dynamic_cast<const F *>(field);
-    return scinew SFInterface<F>(tfield);
+    return scinew SFInterface<F, L>(tfield);
   }
 };
 
 
 
-template <class F>
+template <class F, class L>
 bool
-SFInterface<F>::finterpolate(double &result, const Point &p) const
+SFInterface<F, L>::finterpolate(double &result, const Point &p) const
 {
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch(fld_->data_at())
+
+  typename L::array_type locs;
+  vector<double> weights;
+  mesh->get_weights(p, locs, weights);
+
+  // weights is empty if point not found.
+  if (weights.size() <= 0) return false;
+
+  result = 0.0;
+  for (unsigned int i = 0; i < locs.size(); i++)
   {
-  case F::NODE:
+    typename F::value_type tmp;
+    if (fld_->value(tmp, locs[i]))
     {
-      typename F::mesh_type::Node::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
+      result += tmp * weights[i];
     }
-    break;
-
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::NONE:
-    return false;
   }
+
   return true;
 }
 
 
-template <class F>
+template <class F, class L>
 bool
-SFInterface<F>::interpolate(double &result, const Point &p) const
+SFInterface<F, L>::interpolate(double &result, const Point &p) const
 {
   return finterpolate(result, p);
 }
 
 
-template <class F>
+template <class F, class L>
 bool
-SFInterface<F>::interpolate_many(vector<double> &results,
-				 const vector<Point> &points) const
+SFInterface<F, L>::interpolate_many(vector<double> &results,
+				    const vector<Point> &points) const
 {
   bool all_interped_p = true;
   results.resize(points.size());
@@ -209,206 +139,67 @@ SFInterface<F>::interpolate_many(vector<double> &results,
 }
 
 
-template <class F>
+template <class F, class L>
 bool
-SFInterface<F>::compute_min_max(double &minout, double &maxout) const
+SFInterface<F, L>::compute_min_max(double &minout, double &maxout) const
 {
   bool result = false;
-  minout = 1.0e6;
-  maxout = -1.0e6;
+
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch (fld_->data_at())
+
+  typename L::iterator bi, ei;
+  mesh->begin(bi);
+  mesh->end(ei);
+
+  while (bi != ei)
   {
-  case F::NODE:
+    typename F::value_type val;
+    if (fld_->value(val, *bi))
     {
-      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val < minout) minout = val;
-	  if (val > maxout) maxout = val;
-	  result = true;
-	}
-	++bi;
-      }      
+      if (!result || val < minout) minout = val;
+      if (!result || val > maxout) maxout = val;
+      result = true;
     }
-    break;
+    ++bi;
+  }      
 
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val < minout) minout = val;
-	  if (val > maxout) maxout = val;
-	  result = true;
-	}
-	++bi;
-      }      
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val < minout) minout = val;
-	  if (val > maxout) maxout = val;
-	  result = true;
-	}
-	++bi;
-      }      
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val < minout) minout = val;
-	  if (val > maxout) maxout = val;
-	  result = true;
-	}
-	++bi;
-      }      
-    }
-    break;
-    
-  case F::NONE:
-    break;
-  }
   return result;
 }
 
 
-template <class F>
+template <class F, class L>
 double
-SFInterface<F>::find_closest(double &minout, const Point &p) const
+SFInterface<F, L>::find_closest(double &minout, const Point &p) const
 {
-  double mindist = 1.0e15;
+  double mindist;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch (fld_->data_at())
+
+  typename L::index_type index;
+  typename L::iterator bi, ei;
+  mesh->begin(bi); mesh->end(ei);
+  while (bi != ei)
   {
-  case F::NODE:
+    Point c;
+    mesh->get_center(c, *bi);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
     {
-      typename F::mesh_type::Node::index_type index;
-      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      typename F::value_type val;
-      fld_->value(val, index);
-      minout = (double)val;
+      mindist = dist;
+      index = *bi;
     }
-    break;
-
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::index_type index;
-      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      typename F::value_type val;
-      fld_->value(val, index);
-      minout = (double)val;
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::index_type index;
-      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      typename F::value_type val;
-      fld_->value(val, index);
-      minout = (double)val;
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::index_type index;
-      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      typename F::value_type val;
-      fld_->value(val, index);
-      minout = (double)val;
-    }
-    break;
-    
-  case F::NONE:
-    break;
+    ++bi;
   }
+  typename F::value_type val;
+  fld_->value(val, index);
+  minout = (double)val;
 
   return mindist;
 }
 
 
 
-//! Should only be instantiated for fields with scalar data.
-template <class F>
+//! Should only be instantiated for fields with vector data.
+template <class F, class L>
 class VFInterface : public VectorFieldInterface {
 public:
   VFInterface(const F *fld) :
@@ -433,12 +224,13 @@ class VectorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual VectorFieldInterface *make(const Field *field) = 0;
-  static CompileInfo *get_compile_info(const TypeDescription *ftd);
+  static CompileInfo *get_compile_info(const TypeDescription *ftd,
+				       const TypeDescription *ltd);
 };
 
 
 
-template <class F>
+template <class F, class L>
 class VFInterfaceMaker : public VectorFieldInterfaceMaker
 {
 public:
@@ -446,122 +238,51 @@ public:
   virtual VectorFieldInterface *make(const Field *field)
   {
     const F *tfield = dynamic_cast<const F *>(field);
-    return scinew VFInterface<F>(tfield);
+    return scinew VFInterface<F, L>(tfield);
   }
 };
 
 
 
-template <class F>
+template <class F, class L>
 bool
-VFInterface<F>::finterpolate(Vector  &result, const Point &p) const
+VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
 {
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch(fld_->data_at())
+
+  typename L::array_type locs;
+  vector<double> weights;
+  mesh->get_weights(p, locs, weights);
+
+  // weights is empty if point not found.
+  if (weights.size() <= 0) return false;
+
+  result = Vector(0.0, 0.0, 0.0);
+  for (unsigned int i = 0; i < locs.size(); i++)
   {
-  case F::NODE:
+    typename F::value_type tmp;
+    if (fld_->value(tmp, locs[i]))
     {
-      typename F::mesh_type::Node::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
+      result += tmp * weights[i];
     }
-    break;
-
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::NONE:
-    return false;
   }
+
   return true;
 }
 
 
-template <class F>
+template <class F, class L>
 bool
-VFInterface<F>::interpolate(Vector &result, const Point &p) const
+VFInterface<F, L>::interpolate(Vector &result, const Point &p) const
 {
   return finterpolate(result, p);
 }
 
 
-template <class F>
+template <class F, class L>
 bool
-VFInterface<F>::interpolate_many(vector<Vector> &results,
-				 const vector<Point> &points) const
+VFInterface<F, L>::interpolate_many(vector<Vector> &results,
+				    const vector<Point> &points) const
 {
   bool all_interped_p = true;
   results.resize(points.size());
@@ -574,221 +295,69 @@ VFInterface<F>::interpolate_many(vector<Vector> &results,
 }
 
 
-template <class F>
+template <class F, class L>
 bool
-VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
+VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout) const
 {
-  static const Vector MaxVector(1.0e6, 1.0e6, 1.0e6);
-  static const Vector MinVector(-1.0e6, -1.0e6, -1.0e6);
-
   bool result = false;
-  minout = MaxVector;
-  maxout = MinVector;
+
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch (fld_->data_at())
+
+  typename L::iterator bi, ei;
+  mesh->begin(bi);
+  mesh->end(ei);
+
+  while (bi != ei)
   {
-  case F::NODE:
+    typename F::value_type val;
+    if (fld_->value(val, *bi))
     {
-      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val.x() < minout.x()) minout.x(val.x());
-	  if (val.y() < minout.y()) minout.y(val.y());
-	  if (val.z() < minout.z()) minout.z(val.z());
+      if (!result ||val.x() < minout.x()) minout.x(val.x());
+      if (!result ||val.y() < minout.y()) minout.y(val.y());
+      if (!result ||val.z() < minout.z()) minout.z(val.z());
 
-	  if (val.x() > maxout.x()) maxout.x(val.x());
-	  if (val.y() > maxout.y()) maxout.y(val.y());
-	  if (val.z() > maxout.z()) maxout.z(val.z());
-	  result = true;
-	}
-	++bi;
-      }      
+      if (!result ||val.x() > maxout.x()) maxout.x(val.x());
+      if (!result ||val.y() > maxout.y()) maxout.y(val.y());
+      if (!result ||val.z() > maxout.z()) maxout.z(val.z());
+      result = true;
     }
-    break;
+    ++bi;
+  }      
 
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val.x() < minout.x()) minout.x(val.x());
-	  if (val.y() < minout.y()) minout.y(val.y());
-	  if (val.z() < minout.z()) minout.z(val.z());
-
-	  if (val.x() > maxout.x()) maxout.x(val.x());
-	  if (val.y() > maxout.y()) maxout.y(val.y());
-	  if (val.z() > maxout.z()) maxout.z(val.z());
-	  result = true;
-	}
-	++bi;
-      }      
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val.x() < minout.x()) minout.x(val.x());
-	  if (val.y() < minout.y()) minout.y(val.y());
-	  if (val.z() < minout.z()) minout.z(val.z());
-
-	  if (val.x() > maxout.x()) maxout.x(val.x());
-	  if (val.y() > maxout.y()) maxout.y(val.y());
-	  if (val.z() > maxout.z()) maxout.z(val.z());
-	  result = true;
-	}
-	++bi;
-      }      
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	typename F::value_type val;
-	if (fld_->value(val, *bi))
-	{
-	  if (val.x() < minout.x()) minout.x(val.x());
-	  if (val.y() < minout.y()) minout.y(val.y());
-	  if (val.z() < minout.z()) minout.z(val.z());
-
-	  if (val.x() > maxout.x()) maxout.x(val.x());
-	  if (val.y() > maxout.y()) maxout.y(val.y());
-	  if (val.z() > maxout.z()) maxout.z(val.z());
-	  result = true;
-	}
-	++bi;
-      }      
-    }
-    break;
-    
-  case F::NONE:
-    break;
-  }
   return result;
 }
 
 
-template <class F>
+template <class F, class L>
 double
-VFInterface<F>::find_closest(Vector &minout, const Point &p) const
+VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
 {
-  double mindist = 1.0e15;
+  double mindist;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch (fld_->data_at())
+
+  typename L::index_type index;
+  typename L::iterator bi, ei;
+  mesh->begin(bi); mesh->end(ei);
+  while (bi != ei)
   {
-  case F::NODE:
+    Point c;
+    mesh->get_center(c, *bi);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
     {
-      typename F::mesh_type::Node::index_type index;
-      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
+      mindist = dist;
+      index = *bi;
     }
-    break;
-
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::index_type index;
-      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::index_type index;
-      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::index_type index;
-      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
-    }
-    break;
-    
-  case F::NONE:
-    break;
+    ++bi;
   }
+  fld_->value(minout, index);
 
   return mindist;
 }
 
 
-
-//! Should only be instantiated for fields with scalar data.
-template <class F>
+//! Should only be instantiated for fields with tensor data.
+template <class F, class L>
 class TFInterface : public TensorFieldInterface {
 public:
   TFInterface(const F *fld) :
@@ -812,12 +381,13 @@ class TensorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual TensorFieldInterface *make(const Field *field) = 0;
-  static CompileInfo *get_compile_info(const TypeDescription *ftd);
+  static CompileInfo *get_compile_info(const TypeDescription *ftd,
+				       const TypeDescription *ltd);
 };
 
 
 
-template <class F>
+template <class F, class L>
 class TFInterfaceMaker : public TensorFieldInterfaceMaker
 {
 public:
@@ -825,123 +395,51 @@ public:
   virtual TensorFieldInterface *make(const Field *field)
   {
     const F *tfield = dynamic_cast<const Field *>(field);
-    return scinew TFInterface<F>(tfield);
+    return scinew TFInterface<F, L>(tfield);
   }
 };
 
 
 
-template <class F>
+template <class F, class L>
 bool
-TFInterface<F>::finterpolate(Tensor &result, const Point &p) const
+TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
 {
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch(fld_->data_at())
+
+  typename L::array_type locs;
+  vector<double> weights;
+  mesh->get_weights(p, locs, weights);
+
+  // weights is empty if point not found.
+  if (weights.size() <= 0) return false;
+
+  result = Tensor(0);
+  for (unsigned int i = 0; i < locs.size(); i++)
   {
-  case F::NODE:
+    typename F::value_type tmp;
+    if (fld_->value(tmp, locs[i]))
     {
-      typename F::mesh_type::Node::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
+      result += tmp * weights[i];
     }
-    break;
-
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::array_type locs;
-      vector<double> weights;
-      mesh->get_weights(p, locs, weights);
-
-      // weights is empty if point not found.
-      if (weights.size() <= 0) return false;
-
-      result = 0;
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	typename F::value_type tmp;
-	if (fld_->value(tmp, locs[i]))
-	{
-	  result += tmp * weights[i];
-	}
-      }
-    }
-    break;
-
-  case F::NONE:
-    return false;
   }
+
   return true;
 }
 
 
-
-template <class F>
+template <class F, class L>
 bool
-TFInterface<F>::interpolate(Tensor &result, const Point &p) const
+TFInterface<F, L>::interpolate(Tensor &result, const Point &p) const
 {
   return finterpolate(result, p);
 }
 
 
-template <class F>
+template <class F, class L>
 bool
-TFInterface<F>::interpolate_many(vector<Tensor> &results,
-				 const vector<Point> &points) const
+TFInterface<F, L>::interpolate_many(vector<Tensor> &results,
+				    const vector<Point> &points) const
 {
   bool all_interped_p = true;
   results.resize(points.size());
@@ -954,101 +452,30 @@ TFInterface<F>::interpolate_many(vector<Tensor> &results,
 }
 
 
-template <class F>
+template <class F, class L>
 double
-TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
+TFInterface<F, L>::find_closest(Tensor &minout, const Point &p) const
 {
-  double mindist = 1.0e15;
+  double mindist;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  switch (fld_->data_at())
+
+  typename L::index_type index;
+  typename L::iterator bi, ei;
+  mesh->begin(bi); mesh->end(ei);
+  while (bi != ei)
   {
-  case F::NODE:
+    Point c;
+    mesh->get_center(c, *bi);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
     {
-      typename F::mesh_type::Node::index_type index;
-      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
+      mindist = dist;
+      index = *bi;
     }
-    break;
-
-  case F::EDGE:
-    {
-      typename F::mesh_type::Edge::index_type index;
-      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
-    }
-    break;
-
-  case F::FACE:
-    {
-      typename F::mesh_type::Face::index_type index;
-      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
-    }
-    break;
-
-  case F::CELL:
-    {
-      typename F::mesh_type::Cell::index_type index;
-      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
-      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
-      while (bi != ei)
-      {
-	Point c;
-	mesh->get_center(c, *bi);
-	const double dist = (p - c).length2();
-	if (dist < mindist)
-	{
-	  mindist = dist;
-	  index = *bi;
-	}
-	++bi;
-      }
-      fld_->value(minout, index);
-    }
-    break;
-    
-  case F::NONE:
-    break;
+    ++bi;
   }
+
+  fld_->value(minout, index);
 
   return mindist;
 }

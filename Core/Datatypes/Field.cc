@@ -58,7 +58,8 @@ ScalarFieldInterface*
 Field::query_scalar_interface() const
 {
   const TypeDescription *ftd = get_type_description();
-  CompileInfo *ci = ScalarFieldInterfaceMaker::get_compile_info(ftd);
+  const TypeDescription *ltd = data_at_type_description();
+  CompileInfo *ci = ScalarFieldInterfaceMaker::get_compile_info(ftd, ltd);
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
   {
@@ -78,7 +79,8 @@ VectorFieldInterface*
 Field::query_vector_interface() const
 {
   const TypeDescription *ftd = get_type_description();
-  CompileInfo *ci = VectorFieldInterfaceMaker::get_compile_info(ftd);
+  const TypeDescription *ltd = data_at_type_description();
+  CompileInfo *ci = VectorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
   {
@@ -98,7 +100,8 @@ TensorFieldInterface*
 Field::query_tensor_interface() const
 {
   const TypeDescription *ftd = get_type_description();
-  CompileInfo *ci = TensorFieldInterfaceMaker::get_compile_info(ftd);
+  const TypeDescription *ltd = data_at_type_description();
+  CompileInfo *ci = TensorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
   {
