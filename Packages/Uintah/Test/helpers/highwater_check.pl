@@ -1,4 +1,4 @@
-#!/bin/perl
+#!/usr/bin/perl
 
 $testfilename = $ARGV[0];
 $comparefilename = $ARGV[1];
