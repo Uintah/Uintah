@@ -62,7 +62,7 @@
             The volume to be rendered.
           </p>
         </description>
-        <datatype>Field</datatype>
+        <datatype>PSECore::ScalarField</datatype>
         <componentname>GenField</componentname>
         <componentname>ReadField</componentname>
         <componentname>Kindlmann</componentname>
@@ -74,7 +74,7 @@
             The table used to map color and opacity to data values.
           </p>
         </description>
-        <datatype>Colormap</datatype>
+        <datatype>PSECore::ColorMap</datatype>
         <componentname>GenStandardColormaps</componentname>
         <componentname>GenTransferFunc</componentname>
         <componentname>Kindlmann</componentname>
@@ -88,7 +88,7 @@
             The geometry that represents the volume.
           </p>
         </description>
-        <datatype>Geometry</datatype>
+        <datatype>PSECore::Geometry</datatype>
         <componentname>Render3D</componentname>
         <componentname>WriteGeometry</componentname>
       </port>
@@ -99,7 +99,7 @@
             A "photograph" of the volume.
           </p>
         </description>
-        <datatype>Image</datatype>
+        <datatype>SCIRun::Image</datatype>
         <componentname>Render2D</componentname>
         <componentname>WriteImage</componentname>
       </port>
