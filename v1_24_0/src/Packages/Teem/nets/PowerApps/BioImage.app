@@ -1240,7 +1240,8 @@ class BioImageApp {
 	    global $m28-crop_$axis
 	    trace variable $m28-crop_$axis w "$this viewslices_crop_trace"
 	}
-	trace variable $m28-geom_flushed  w "$this maybe_autoview"
+	global $m28-geom_flushed
+	trace variable $m28-geom_flushed w "$this maybe_autoview"
 
 	global planes_mapType
 	setGlobal $m27-mapType $planes_mapType
@@ -4234,14 +4235,13 @@ class BioImageApp {
     }
     
 
-    method maybe_autoview { args } {
-	global mods
-	if {$has_autoviewed == 0} {
-          set has_autoviewed 1
-          $mods(Viewer)-ViewWindow_0-c autoview
+    method maybe_autoview { varname args } {
+	upvar \#0 $varname autoview
+	if { $autoview } {
+	    global mods
+	    after 100 $mods(Viewer)-ViewWindow_0-c autoview
 	}
     }
-
     method find_last_filter { } {
 	set prev 0
 	set cur [lindex $filters($prev) $next_index]

@@ -316,6 +316,7 @@ class ViewSlices : public Module
   UIint			dim0_;
   UIint			dim1_;
   UIint			dim2_;
+  UIint			geom_flushed_;
 
   UIdouble		background_threshold_;
   UIdouble		gradient_threshold_;
@@ -738,6 +739,7 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   dim0_(ctx->subVar("dim0"), 0),
   dim1_(ctx->subVar("dim1"), 0),
   dim2_(ctx->subVar("dim2"), 0),
+  geom_flushed_(ctx->subVar("geom_flushed"), 0),
   background_threshold_(ctx->subVar("background_threshold"), 0.0),
   gradient_threshold_(ctx->subVar("gradient_threshold"), 0.0),
   paint_widget_(0),
@@ -845,12 +847,11 @@ ViewSlices::send_all_geometry()
   if (for_each(&ViewSlices::send_mip_textures) ||
       for_each(&ViewSlices::send_slice_textures)) 
   {
-    geom_oport_->flush();
-    UIint flushed(ctx->subVar("geom_flushed"));
-    if (!flushed()) {
+    if (geom_flushed_())
+      geom_oport_->flush();
+    else {
       geom_oport_->flushViewsAndWait();
-      // Must eval, because traces wont be called otherwise
-      gui->eval("set "+id+"-geom_flushed 1");
+      geom_flushed_ = 1;
     }
   }
 }
@@ -2519,6 +2520,7 @@ ViewSlices::execute()
     dim2_ = max_slice_[2]+1;
       
     if (nrrdH.get_rep() && nrrdH->generation != nrrd_generations_[n]) {
+      geom_flushed_ = 0;
       re_extract = true;
       nrrd_generations_[n] = nrrdH->generation;
       if (volumes_[n]) {
