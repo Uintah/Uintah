@@ -14,7 +14,8 @@ include $(SRCTOP)/scripts/recurse.mk
 ifeq ($(LARGESOS),yes)
 PSELIBS := PSECore SCICore
 else
-PSELIBS := PSECore/Datatypes PSECore/Dataflow SCICore/Containers \
+PSELIBS := PSECore/Datatypes PSECore/Widgets \
+	PSECore/Dataflow SCICore/Containers \
 	SCICore/TclInterface SCICore/Exceptions SCICore/Persistent \
 	SCICore/Thread SCICore/Geom SCICore/Datatypes SCICore/Geometry
 endif
@@ -24,6 +25,9 @@ include $(SRCTOP)/scripts/so_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/21 17:33:23  kuzimmer
+# updating volume renderer
+#
 # Revision 1.2  2000/03/20 19:36:35  sparker
 # Added VPATH support
 #

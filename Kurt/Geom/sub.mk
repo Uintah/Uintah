@@ -6,11 +6,14 @@
 SRCDIR   := Kurt/Geom
 
 SRCS     += $(SRCDIR)/MultiBrick.cc $(SRCDIR)/VolumeOctree.cc \
-	$(SRCDIR)/Brick.cc $(SRCDIR)/TexBrick.cc \
-	$(SRCDIR)/VolumeUtils.cc $(SRCDIR)/SliceTable.cc
+	$(SRCDIR)/Brick.cc $(SRCDIR)/VolumeUtils.cc \
+	$(SRCDIR)/SliceTable.cc
 
 #
 # $Log$
+# Revision 1.3  2000/03/21 17:33:26  kuzimmer
+# updating volume renderer
+#
 # Revision 1.2  2000/03/20 19:36:38  sparker
 # Added VPATH support
 #

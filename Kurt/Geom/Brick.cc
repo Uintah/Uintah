@@ -104,16 +104,62 @@ void Brick::get_bounds(BBox& bb)
   
 
 void 
-Brick::draw(Ray viewRay, double alpha, bool drawWireFrame,
+Brick::draw(Ray viewRay, double alpha, bool drawWireFrame, bool reload,
 		  double tmin, double tmax, double dt )
 {
   if( drawWireFrame ){
     this->drawWireFrame();
   } else {
    //cerr<<"BBox = ("<<corner[0]<<", "<<corner[7]<<")"<<endl;
-    drawSlices(viewRay, alpha, tmin, tmax, dt );
+    drawSlices(viewRay, alpha, reload, tmin, tmax, dt );
   }
 }  
+
+void
+Brick::draw(Ray viewRay, bool drawWireFrame, bool reload,
+	    const Point& planeIntersection)
+{
+  Point view = viewRay.origin();
+  Point mid = corner[0] + (corner[7] - corner[0])*0.5;
+  
+  Point xOrigin(corner[0].x(),mid.y(),mid.z());
+  Point yOrigin(mid.x(), corner[0].y(),mid.z());
+  Point zOrigin(mid.x(),mid.y(),corner[0].z());
+  Vector xDirection(planeIntersection.x() - xOrigin.x(),0,0);
+  Vector yDirection(0,planeIntersection.y() - yOrigin.y(),0);
+  Vector zDirection(0,0,planeIntersection.z() - zOrigin.z());
+
+
+  if (planeIntersection.x() > corner[0].x() &&
+      planeIntersection.x() < corner[7].x()) {
+    if ( view.x() > planeIntersection.x()){
+      xOrigin.x( corner[7].x());
+      xDirection.x(planeIntersection.x() - xOrigin.x());
+    }
+    draw( Ray( xOrigin, xDirection),
+	  1.0, drawWireFrame, reload, 1.0, 1.0, 1.0);
+  }
+  if (planeIntersection.y() > corner[0].y() &&
+      planeIntersection.y() < corner[7].y()) {
+    if ( view.y() > planeIntersection.y()){
+      yOrigin.y( corner[7].y() );
+      yDirection.y(planeIntersection.y() - yOrigin.y());
+    }
+    draw( Ray( yOrigin, yDirection),
+	  1.0, drawWireFrame, reload, 1.0, 1.0, 1.0);
+  }
+  
+  if (planeIntersection.z() > corner[0].z() &&
+      planeIntersection.z() < corner[7].z()) {
+    if ( view.z() > planeIntersection.z()){
+      zOrigin.z( corner[7].z());
+      zDirection.z(planeIntersection.z() - zOrigin.z());
+    }
+    draw( Ray( zOrigin, zDirection),
+	  1.0, drawWireFrame, reload, 1.0, 1.0, 1.0);
+  }
+}
+  
 
 void
 Brick::drawWireFrame()
@@ -168,12 +214,14 @@ Brick::drawWireFrame()
 
 
 void 
-Brick::drawSlices(Ray viewRay, double alpha,
+Brick::drawSlices(Ray viewRay, double alpha, bool reload,
 		  double tmin, double tmax, double dt  )
 {
   int i;
-   if( !texName ) {
-    glGenTextures(1, &texName);
+   if( !texName || reload ) {
+     if( !texName )
+       glGenTextures(1, &texName);
+
     glPrintError("glGenTextures");
     glBindTexture(GL_TEXTURE_3D_EXT, texName);
     glPrintError("glBindTexture");
@@ -181,12 +229,6 @@ Brick::drawSlices(Ray viewRay, double alpha,
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //   glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     //   glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-/*     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, */
-/* 		    GL_CLAMP_TO_BORDER_SGIS); */
-/*     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T, */
-/* 		    GL_CLAMP_TO_BORDER_SGIS); */
-/*     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT, */
-/* 		    GL_CLAMP_TO_BORDER_SGIS); */
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,

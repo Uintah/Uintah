@@ -30,13 +30,20 @@ public:
 
   MultiBrick(int id, int slices, double alpha,
 	     int maxdim, Point min, Point max,
-	     bool drawMIP, bool debug,
+	     int mode, bool debug,
 	     int X, int Y, int Z,
 	     const ScalarFieldRGuchar* tex,
 	     const GLvoid* cmap);
   void SetMaxBrickSize(int x,int y,int z);
   void SetNSlices(int s) { slices = s; }
   void SetDrawLevel(int l){ drawLevel = l;}
+  void SetPlaneIntersection(const Point& p){ widgetPoint = p; }
+  void SetMode(int mode) { this->mode = mode;}
+  void Reload() { reload = (unsigned char *)1;}
+  void SetVol( const ScalarFieldRGuchar *tex );
+  void SetColorMap( const GLvoid* map){ cmap = map;}
+  void SetDebug( bool db){ debug = db;}
+  void SetAlpha( double alpha){ this->alpha = alpha;}
   int getMaxLevel(){ return treeDepth; }
   int getMaxSize(){ return ((X < Y && X < Z)? X:((Y < Z)? Y:Z)); }
 
@@ -56,8 +63,9 @@ public:
 private:
   int X,Y,Z; // tex size
   const ScalarFieldRGuchar *tex;
+  unsigned char *reload;
   const GLvoid *cmap;
-  bool drawMIP;
+  int mode;
   bool debug;
   int nodeId;
   int drawLevel;
@@ -65,6 +73,7 @@ private:
   int treeDepth;
   int xmax, ymax, zmax;  // max brick sizes.
   Point min, max;
+  Point widgetPoint;
   double alpha;
   double dx, dy, dz;
   bool drawWireFrame;

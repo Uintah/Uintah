@@ -7,13 +7,16 @@ SRCDIR := Kurt/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl
+$(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.3  2000/03/21 17:33:25  kuzimmer
+# updating volume renderer
+#
 # Revision 1.2  2000/03/20 19:36:37  sparker
 # Added VPATH support
 #

@@ -34,8 +34,9 @@ public:
 
   ~Brick();
 
-  void draw(Ray viewRay, double alpha, bool drawWireFrame,
+  void draw(Ray viewRay, double alpha, bool drawWireFrame, bool reload,
 	    double tmin, double tmax, double dt );
+  void draw(Ray viewRay, bool drawWireFrame, bool reload, const Point& planeIntersection); 
   Point getCorner(int i) const { return corner[i]; }
   int getLevel() const{ return level;}
 
@@ -59,7 +60,7 @@ private:
   double aX, aY, aZ;
   int padx, pady, padz;
 
-  void drawSlices(Ray viewRay, double alpha,
+  void drawSlices(Ray viewRay, double alpha, bool reload,
 		  double tmin, double tmax, double dt);
   void drawWireFrame();
 
