@@ -61,20 +61,24 @@ TetVolMesh::TetVolMesh() :
   points_lock_("TetVolMesh points_ fill lock"),
   cells_(0),
   cells_lock_("TetVolMesh cells_ fill lock"),
-  neighbors_(0),
-  nbors_lock_("TetVolMesh neighbors_ fill lock"),
-  faces_(0),
-  face_table_(0),
-  face_table_lock_("TetVolMesh faces_ fill lock"),
-  edges_(0),
-  edge_table_(0),
-  edge_table_lock_("TetVolMesh edge_ fill lock"),
-  node_cells_table_(0),
-  node_cells_table_lock_("TetVolMesh node_cells_ fill lock"),
-  have_node_cells_table_(false),
-  node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
+  edges_computed_p_(false),
+  edge_hasher_(cells_),
+  edge_eq_(cells_),
+  all_edges_(100,edge_hasher_,edge_eq_),
+  edges_(100,edge_hasher_,edge_eq_),
+  edge_lock_("TetVolMesh edges_ fill lock"),
+  faces_computed_p_(false),
+  face_hasher_(cells_),
+  face_eq_(cells_),
+  all_faces_(100,face_hasher_,face_eq_),
+  faces_(100,face_hasher_,face_eq_),
+  face_lock_("TetVolMesh faces_ fill lock"),
+  nodes_computed_p_(false),
+  nodes_(0),
+  node_lock_("TetVolMesh nodes_ fill lock"),
   grid_(0),
-  grid_lock_("TetVolMesh grid_ fill lock")
+  grid_lock_("TetVolMesh grid_ fill lock"),
+  dirty_(true)
 {
 }
 
@@ -83,20 +87,24 @@ TetVolMesh::TetVolMesh(const TetVolMesh &copy):
   points_lock_("TetVolMesh points_ fill lock"),
   cells_(copy.cells_),
   cells_lock_("TetVolMesh cells_ fill lock"),
-  neighbors_(copy.neighbors_),
-  nbors_lock_("TetVolMesh neighbors_ fill lock"),
-  faces_(copy.faces_),
-  face_table_(copy.face_table_),
-  face_table_lock_("TetVolMesh faces_ fill lock"),
-  edges_(copy.edges_),
-  edge_table_(copy.edge_table_),
-  edge_table_lock_("TetVolMesh edge_ fill lock"),
-  node_cells_table_(copy.node_cells_table_),
-  node_cells_table_lock_("TetVolMesh node_cells_ fill lock"),
-  have_node_cells_table_(copy.have_node_cells_table_),
-  node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
+  edges_computed_p_(copy.edges_computed_p_),
+  edge_hasher_(cells_),
+  edge_eq_(cells_),
+  all_edges_(100,edge_hasher_,edge_eq_),
+  edges_(100,edge_hasher_,edge_eq_),
+  edge_lock_("TetVolMesh edges_ fill lock"),
+  faces_computed_p_(copy.faces_computed_p_),
+  face_hasher_(cells_),
+  face_eq_(cells_),
+  all_faces_(100,face_hasher_,face_eq_),
+  faces_(100,face_hasher_,face_eq_),
+  face_lock_("TetVolMesh edges_ fill lock"),
+  nodes_computed_p_(copy.nodes_computed_p_),
+  nodes_(0),
+  node_lock_("TetVolMesh nodes_ fill lock"),
   grid_(copy.grid_),
-  grid_lock_("TetVolMesh grid_ fill lock")
+  grid_lock_("TetVolMesh grid_ fill lock"),
+  dirty_(true)//  dirty_(copy.dirty_)
 {
 }
 
@@ -181,145 +189,89 @@ TetVolMesh::transform(Transform &t)
 }
 
 
-void
-TetVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
-		      Node::index_type n3,
-		      Cell::index_type ci, face_ht &table) const {
-  PFace f(n1, n2, n3);
-
-  face_ht::iterator iter = table.find(f);
-  if (iter == table.end()) {
-    f.cells_[0] = ci;
-    table[f] = 0; // insert for the first time
-  } else {
-    PFace f = (*iter).first;
-    if (f.cells_[1] != -1) {
-//      cerr << "Bad mesh... ";
-      return;
-    }
-    f.cells_[1] = ci; // add this cell
-    table.erase(iter);
-    table[f] = 0;
-  }
-}
 
 void
 TetVolMesh::compute_faces()
-{
-  face_table_lock_.lock();
-  if (faces_.size() > 0) {face_table_lock_.unlock(); return;}
-  cerr << "TetVolMesh::computing faces...\n";
 
-  Cell::iterator ci, cie;
-  begin(ci); end(cie);
-  Node::array_type arr(4);
-  while (ci != cie)
+{  
+  //ASSERT(!is_frozen());
+  if (faces_computed_p_) return;
+  face_lock_.lock();
+  faces_computed_p_ = true;
+  faces_.clear();
+  all_faces_.clear();
+  unsigned int i, num_cells = cells_.size();
+  for (i = 0; i < num_cells; i++)
   {
-    get_nodes(arr, *ci);
-    // 4 faces
-    hash_face(arr[0], arr[1], arr[2], *ci, face_table_);
-    hash_face(arr[0], arr[1], arr[3], *ci, face_table_);
-    hash_face(arr[0], arr[2], arr[3], *ci, face_table_);
-    hash_face(arr[1], arr[2], arr[3], *ci, face_table_);
-    ++ci;
+    faces_.insert(i);
+    all_faces_.insert(i);
   }
-  // dump edges into the edges_ container.
-  faces_.resize(face_table_.size());
-  vector<PFace>::iterator f_iter = faces_.begin();
-  face_ht::iterator ht_iter = face_table_.begin();
-  int i = 0;
-  while (ht_iter != face_table_.end()) {
-    *f_iter = (*ht_iter).first;
-    (*ht_iter).second = i;
-    ++f_iter; ++ht_iter; i++;
-  }
-  face_table_lock_.unlock();
+  face_lock_.unlock();
 }
 
-void
-TetVolMesh::hash_edge(Node::index_type n1, Node::index_type n2,
-		      Cell::index_type ci, edge_ht &table) const {
-  PEdge e(n1, n2);
-  edge_ht::iterator iter = table.find(e);
-  if (iter == table.end()) {
-    table[e] = 0; // insert for the first time
-  } else {
-    PEdge e = (*iter).first;
-    e.cells_.push_back(ci); // add this cell
-    table.erase(iter);
-    table[e] = 0;
-  }
-}
 
 void
 TetVolMesh::compute_edges()
 {
-  edge_table_lock_.lock();
-  if (edges_.size() > 0) {edge_table_lock_.unlock(); return;}
-  cerr << "TetVolMesh::computing edges...\n";
-
-  Cell::iterator ci, cie;
-  begin(ci); end(cie);
-  Node::array_type arr(4);
-  while (ci != cie)
+  //ASSERT(!is_frozen());
+  if (edges_computed_p_) return;
+  edge_lock_.lock();
+  edges_computed_p_ = true;
+  edges_.clear();
+  all_edges_.clear();
+  unsigned int i, num_cells = (cells_.size()) / 4 * 6;
+  for (i = 0; i < num_cells; i++)
   {
-    get_nodes(arr, *ci);
-    hash_edge(arr[0], arr[1], *ci, edge_table_);
-    hash_edge(arr[0], arr[2], *ci, edge_table_);
-    hash_edge(arr[0], arr[3], *ci, edge_table_);
-    hash_edge(arr[1], arr[2], *ci, edge_table_);
-    hash_edge(arr[1], arr[3], *ci, edge_table_);
-    hash_edge(arr[2], arr[3], *ci, edge_table_);
-    ++ci;
+    edges_.insert(i);
+    all_edges_.insert(i);
   }
-  // dump edges into the edges_ container.
-  edges_.resize(edge_table_.size());
-  vector<PEdge>::iterator              e_iter = edges_.begin();
-  edge_ht::iterator ht_iter = edge_table_.begin();
-  while (ht_iter != edge_table_.end()) {
-    *e_iter = (*ht_iter).first;
-    (*ht_iter).second = e_iter - edges_.begin();
-    ++e_iter; ++ht_iter;
-  }
-  edge_table_lock_.unlock();
+  edge_lock_.unlock();
 }
 
 void
-TetVolMesh::recompute_connectivity() {
-  edge_table_lock_.lock();
-  edges_.clear();
-  edge_table_.clear();
-  edge_table_lock_.unlock();
+TetVolMesh::compute_nodes()
+{
+  //ASSERT(!is_frozen());
+  if (nodes_computed_p_) return;
+  node_lock_.lock();
+  nodes_computed_p_ = true;
+  nodes_.clear();
+  nodes_.resize(points_.size());
+  unsigned int i, num_cells = cells_.size();
+  for (i = 0; i < num_cells; i++)
+  {
+    nodes_[cells_[i]].push_back(i);
+  }
+  node_lock_.unlock();
+}
 
-  face_table_lock_.lock();
-  faces_.clear();
-  face_table_.clear();
-  face_table_lock_.unlock();
-  
-  nbors_lock_.lock();
-  neighbors_.clear();
-  nbors_lock_.unlock();
 
-  node_nbor_lock_.lock();
-  node_neighbors_.clear();
-  node_nbor_lock_.unlock();
-
+void
+TetVolMesh::recompute_connectivity() 
+{
   grid_lock_.lock();
   grid_=0;
   grid_lock_.unlock();
-
-  compute_edges();
-  compute_faces();
-  compute_node_neighbors();
-  compute_grid();
+  dirty_ = true;
+  flush_changes();
 }
 
 void
-TetVolMesh::flush_changes() {
-  compute_edges();
+TetVolMesh::flush_changes() 
+{
+  if (!dirty_) return;
+  //rewind_mesh();
+  nodes_computed_p_ = false;
+  edges_computed_p_ = false;
+  faces_computed_p_ = false;    
   compute_faces();
-  compute_node_neighbors();
+  compute_edges();
+  compute_nodes();
   compute_grid();
+  dirty_ = false;
+  cout << "  Total cells: " << cells_.size() / 4
+       << "  Total edges: " << edges_.size()
+       << "  Total faces: " << faces_.size() << endl;
 }
 
 
@@ -344,13 +296,15 @@ TetVolMesh::size(TetVolMesh::Node::size_type &s) const
 void
 TetVolMesh::begin(TetVolMesh::Edge::iterator &itr) const
 {
-  itr = 0;
+  ASSERT(edges_computed_p_);
+  itr = edges_.begin();
 }
 
 void
 TetVolMesh::end(TetVolMesh::Edge::iterator &itr) const
 {
-  itr = edges_.size();
+  ASSERT(edges_computed_p_);
+  itr = edges_.end();
 }
 
 void
@@ -362,13 +316,15 @@ TetVolMesh::size(TetVolMesh::Edge::size_type &s) const
 void
 TetVolMesh::begin(TetVolMesh::Face::iterator &itr) const
 {
-  itr = 0;
+  ASSERT(faces_computed_p_);
+  itr = faces_.begin();
 }
 
 void
 TetVolMesh::end(TetVolMesh::Face::iterator &itr) const
 {
-  itr = faces_.size();
+  ASSERT(faces_computed_p_);
+  itr = faces_.end();
 }
 
 void
@@ -395,13 +351,237 @@ TetVolMesh::size(TetVolMesh::Cell::size_type &s) const
   s = cells_.size() >> 2;
 }
 
+
+
+void
+TetVolMesh::create_cell_edges(Cell::index_type c)
+{
+  //ASSERT(!is_frozen());
+  edge_lock_.lock();
+  for (int i = c*6; i < c*6+6; ++i)
+  {
+    edges_.insert(i);
+    all_edges_.insert(i);
+  }
+  edge_lock_.unlock();
+}
+      
+
+void
+TetVolMesh::delete_cell_edges(Cell::index_type c)
+{
+  //ASSERT(!is_frozen());
+  edge_lock_.lock();
+  for (int i = c*6; i < c*6+6; ++i)
+  {
+    //! If the Shared Edge Set is represented by the particular
+    //! cell/edge index that is being recomputed, then
+    //! remove it (and insert a non-recomputed edge if any left)
+    bool shared_edge_exists = true;
+    Edge::iterator shared_edge = edges_.find(i);
+    // ASSERT guarantees edges were computed correctly for this cell
+    ASSERT(shared_edge != edges_.end());
+    if ((*shared_edge).index_ == i) 
+    {
+      edges_.erase(shared_edge);
+      shared_edge_exists = false;
+    }
+    
+    Edge::HalfEdgeSet::iterator half_edge_to_delete = all_edges_.end();
+    pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+      all_edges_.equal_range(i);
+    for (Edge::HalfEdgeSet::iterator e = range.first; e != range.second; ++e)
+    {
+      if ((*e).index_ == i)
+      {
+	half_edge_to_delete = e;
+      }
+      else if (!shared_edge_exists)
+      {
+	edges_.insert((*e).index_);
+	shared_edge_exists = true;
+      }
+      //! At this point, the edges_ set has the new index for this 
+      //! shared edge and we know what half-edge is getting deleted below
+      if (half_edge_to_delete != all_edges_.end() && shared_edge_exists) break;
+    }
+    //! ASSERT guarantees edges were computed correctly for this cell
+    ASSERT(half_edge_to_delete != all_edges_.end());
+    all_edges_.erase(half_edge_to_delete);
+  }
+  edge_lock_.unlock();
+}
+
+void
+TetVolMesh::create_cell_faces(Cell::index_type c)
+{
+  //ASSERT(!is_frozen());
+  face_lock_.lock();
+  for (int i = c*6; i < c*6+6; ++i)
+  {
+    faces_.insert(i);
+    all_faces_.insert(i);
+  }
+  face_lock_.unlock();
+}
+
+void
+TetVolMesh::delete_cell_faces(Cell::index_type c)
+{
+  //ASSERT(!is_frozen());
+  face_lock_.lock();
+  for (int i = c*4; i < c*4+4; ++i)
+  {
+    // If the Shared Face Set is represented by the particular
+    // cell/face index that is being recomputed, then
+    // remove it (and insert a non-recomputed shared face if any exist)
+    bool shared_face_exists = true;
+    Face::FaceSet::iterator shared_face = faces_.find(i);
+    ASSERT(shared_face != faces_.end());
+    if ((*shared_face).index_ == i) 
+    {
+      faces_.erase(shared_face);
+      shared_face_exists = false;
+    }
+    
+    Face::HalfFaceSet::iterator half_face_to_delete = all_faces_.end();
+    pair<Face::HalfFaceSet::iterator, Face::HalfFaceSet::iterator> range =
+      all_faces_.equal_range(i);
+    for (Face::HalfFaceSet::iterator e = range.first; e != range.second; ++e)
+    {
+      if ((*e).index_ == i)
+      {
+	half_face_to_delete = e;
+      }
+      else if (!shared_face_exists)
+      {
+	faces_.insert((*e).index_);
+	shared_face_exists = true;
+      }
+      if (half_face_to_delete != all_faces_.end() && shared_face_exists) break;
+    }
+
+    //! If this ASSERT is reached, it means that the faces
+    //! were not computed correctlyfor this cell
+    ASSERT(half_face_to_delete != all_faces_.end());
+    all_faces_.erase(half_face_to_delete);
+  }
+  face_lock_.unlock();
+}
+
+void
+TetVolMesh::create_cell_nodes(Cell::index_type c)
+{
+  //ASSERT(!is_frozen());
+  node_lock_.lock();
+  for (int i = c*4; i < c*4+4; ++i)
+  {
+    nodes_[cells_[i]].push_back(i);
+  }
+  node_lock_.unlock();
+}
+
+
+void
+TetVolMesh::delete_cell_nodes(Cell::index_type c)
+{
+  //ASSERT(!is_frozen());
+  node_lock_.lock();
+  for (int i = c*4; i < c*4+4; ++i)
+  {
+    const int n = cells_[i];
+    vector<Cell::index_type>::iterator node_cells_end = nodes_[n].end();
+    vector<Cell::index_type>::iterator cell = nodes_[n].begin();
+    while (cell != node_cells_end && (*cell) != i) ++cell;
+
+    //! ASSERT that the nodes_ structure contains this cell
+    ASSERT(cell != node_cells_end);
+
+    nodes_[n].erase(cell);
+  }
+  node_lock_.unlock();      
+}
+
+      
+
+//! Given two nodes (n0, n1), return all edge indexes that
+//! span those two nodes
+bool
+TetVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
+		    Edge::array_type *array = 0)
+{
+  edge_lock_.lock();
+  cells_lock_.lock();
+
+  //! Create a phantom cell with edge 0 being the one we're searching for
+  const int fake_edge = cells_.size() / 4 * 6;
+  vector<under_type>::iterator c0 = cells_.insert(cells_.end(),n0);
+  vector<under_type>::iterator c1 = cells_.insert(cells_.end(),n1);
+
+  //! Search the all_edges_ multiset for edges matching our fake_edge
+  pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+    all_edges_.equal_range(fake_edge);
+
+  if (array)
+  {
+    array->clear();
+    copy(range.first, range.second, array->end());
+  }
+
+  //! Delete the pahntom cell
+  cells_.erase(c0);
+  cells_.erase(c1);
+
+  edge_lock_.unlock();
+  cells_lock_.unlock();
+
+  return range.first != range.second;
+}
+
+//! Given three nodes (n0, n1, n2), return all facee indexes that
+//! span those three nodes
+bool
+TetVolMesh::is_face(Node::index_type n0,Node::index_type n1, 
+		    Node::index_type n2, Face::array_type *array = 0)
+{
+  edge_lock_.lock();
+  cells_lock_.lock();
+
+  //! Create a phantom cell with face 3 being the one we're searching for
+  const int fake_face = cells_.size() + 3;
+  vector<under_type>::iterator c0 = cells_.insert(cells_.end(),n0);
+  vector<under_type>::iterator c1 = cells_.insert(cells_.end(),n1);
+  vector<under_type>::iterator c2 = cells_.insert(cells_.end(),n2);
+
+  //! Search the all_face_ multiset for edges matching our fake_edge
+  pair<Face::HalfFaceSet::iterator, Face::HalfFaceSet::iterator> range =
+    all_faces_.equal_range(fake_face);
+
+  if (array)
+  {
+    array->clear();
+    copy(range.first, range.second, array->end());
+  }
+
+  //! Delete the pahntom cell
+  cells_.erase(c0);
+  cells_.erase(c1);
+  cells_.erase(c2);
+
+  edge_lock_.unlock();
+  cells_lock_.unlock();
+  return range.first != range.second;
+}
+  
+  
+  
 void
 TetVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   array.clear();
-  PEdge e = edges_[idx];
-  array.push_back(e.nodes_[0]);
-  array.push_back(e.nodes_[1]);
+  pair<Edge::index_type, Edge::index_type> edge = Edge::edgei(idx);
+  array.push_back(cells_[edge.first]);
+  array.push_back(cells_[edge.second]);
 }
 
 
@@ -409,10 +589,10 @@ void
 TetVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   array.clear();
-  PFace f = faces_[idx];
-  array.push_back(f.nodes_[0]);
-  array.push_back(f.nodes_[1]);
-  array.push_back(f.nodes_[2]);
+  const int base = idx/4*4;
+  for (int i = base; i < base+4; i++)
+    if (i != idx.index_)
+      array.push_back(cells_[i]);
 }
 
 
@@ -420,25 +600,42 @@ void
 TetVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.clear();
-  array.push_back(cells_[idx * 4 + 0]);
-  array.push_back(cells_[idx * 4 + 1]);
-  array.push_back(cells_[idx * 4 + 2]);
-  array.push_back(cells_[idx * 4 + 3]);
+  for (int n = idx*4; n < idx*4+4; ++n)
+    array.push_back(cells_[n]);
 }
 
 void
 TetVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
 {
-  cells_[idx * 4 + 0] = array[0];
-  cells_[idx * 4 + 1] = array[1];
-  cells_[idx * 4 + 2] = array[2];
-  cells_[idx * 4 + 3] = array[3];
+  ASSERT(array.size() == 4);
+
+  dirty_ = true;
+  
+  delete_cell_edges(idx);
+  delete_cell_faces(idx);
+  delete_cell_nodes(idx);
+
+  for (int n = 4; n < 4; ++n)
+    cells_[idx * 4 + n] = array[n];
+
+  create_cell_edges(idx);
+  create_cell_faces(idx);
+  create_cell_nodes(idx);
+
 }
+
+void
+TetVolMesh::get_edges(Edge::array_type &array, Node::index_type idx) const
+{
+  ASSERTFAIL("Not implemented yet");
+}
+
 
 void
 TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
-  array.clear();
+  ASSERTFAIL("Not implemented correctly");
+  array.clear();    
   static int table[4][3] =
   {
     {3, 4, 5},
@@ -447,9 +644,8 @@ TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
     {0, 1, 3}
   };
 
-  int base = idx / 4 * 6;
-  int off = idx % 4;
-
+  const int base = idx / 4 * 6;
+  const int off = idx % 4;
   array.push_back(base + table[off][0]);
   array.push_back(base + table[off][1]);
   array.push_back(base + table[off][2]);
@@ -460,21 +656,24 @@ void
 TetVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
 {
   array.clear();
+  for (int e = idx * 6; e < idx * 6 + 6; e++)
+  {
+    array.push_back(e);
+  }
+}
 
-  const int off = idx * 4;
-  PEdge e0(cells_[off + 0], cells_[off + 1]);
-  PEdge e1(cells_[off + 0], cells_[off + 2]);
-  PEdge e2(cells_[off + 0], cells_[off + 3]);
-  PEdge e3(cells_[off + 1], cells_[off + 2]);
-  PEdge e4(cells_[off + 2], cells_[off + 3]);
-  PEdge e5(cells_[off + 1], cells_[off + 3]);
 
-  array.push_back((*(edge_table_.find(e0))).second);
-  array.push_back((*(edge_table_.find(e1))).second);
-  array.push_back((*(edge_table_.find(e2))).second);
-  array.push_back((*(edge_table_.find(e3))).second);
-  array.push_back((*(edge_table_.find(e4))).second);
-  array.push_back((*(edge_table_.find(e5))).second);
+
+void
+TetVolMesh::get_faces(Face::array_type &array, Node::index_type idx) const
+{
+  ASSERTFAIL("Not implemented yet");
+}
+
+void
+TetVolMesh::get_faces(Face::array_type &array, Edge::index_type idx) const
+{
+  ASSERTFAIL("Not implemented yet");
 }
 
 
@@ -482,108 +681,125 @@ void
 TetVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 {
   array.clear();
-
-  const int off = idx * 4;
-  PFace f0(cells_[off + 0], cells_[off + 1], cells_[off + 2]);
-  PFace f1(cells_[off + 0], cells_[off + 1], cells_[off + 3]);
-  PFace f2(cells_[off + 0], cells_[off + 2], cells_[off + 3]);
-  PFace f3(cells_[off + 1], cells_[off + 2], cells_[off + 3]);
-
-  // operator[] not const safe...
-  array.push_back((*(face_table_.find(f0))).second);
-  array.push_back((*(face_table_.find(f1))).second);
-  array.push_back((*(face_table_.find(f2))).second);
-  array.push_back((*(face_table_.find(f3))).second);
+  for (int f = idx * 4; f < idx * 4 + 4; f++)
+    array.push_back(f);
 }
 
 void
-TetVolMesh::get_cells(Cell::array_type &array, Node::index_type idx)
+TetVolMesh::get_cells(Cell::array_type &array, Edge::index_type idx) const
 {
+  pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+      all_edges_.equal_range(idx);
 
-  // have to calculate it if it does not already exist
-  if (! is_frozen()) { 
-    ASSERTFAIL("can only call get_cells with a node index if frozen!!");
-    return;
+  //! ASSERT that this cell's edges have been computed
+  ASSERT(range.first != range.second);
+
+  array.clear();
+  while (range.first != range.second)
+  {
+    array.push_back((*range.first)/4);
+    ++range.first;
   }
-  if (! have_node_cells_table_) { calc_node_cells_map(); }
-  
-  array = node_cells_table_[idx];
 }
+
 
 void
-TetVolMesh::calc_node_cells_map() 
+TetVolMesh::get_cells(Cell::array_type &array, Face::index_type idx) const
 {
-  node_cells_table_lock_.lock();
-  have_node_cells_table_ = true;
-  
-  Cell::iterator iter, endit;
-  begin(iter); 
-  end(endit);
-  while (iter != endit) {
-    Cell::index_type idx = *iter;
-    ++iter;
-    Node::array_type nodes;
-    get_nodes(nodes, idx);    
-    node_cells_table_[nodes[0]].push_back(idx);
-    node_cells_table_[nodes[1]].push_back(idx);
-    node_cells_table_[nodes[2]].push_back(idx);
-    node_cells_table_[nodes[3]].push_back(idx);
+  pair<Face::HalfFaceSet::iterator, Face::HalfFaceSet::iterator> range =
+      all_faces_.equal_range(idx);
+
+  //! ASSERT that this cell's faces have been computed
+  ASSERT(range.first != range.second);
+
+  array.clear();
+  while (range.first != range.second)
+  {
+    array.push_back((*range.first)/4);
+    ++range.first;
   }
-  node_cells_table_lock_.unlock();
 }
 
+  
+
+//! this is a bad hack for existing code that calls this function
+//! call the one below instead
 bool
 TetVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 			 Face::index_type idx) const
 {
-  const PFace &f = faces_[idx];
-
-  if (from == f.cells_[0]) {
-    neighbor = f.cells_[1];
-  } else {
-    neighbor = f.cells_[0];
-  }
-  if (neighbor == -1) return false;
-  return true;
+  ASSERT(idx/4 == from);
+  Face::index_type neigh;
+  bool ret_val = get_neighbor(neigh, idx);
+  neighbor.index_ = neigh.index_;
+  return ret_val;
 }
+
+
+
+//! given a face index, return the face index that spans the same 3 nodes
+bool
+TetVolMesh::get_neighbor(Face::index_type &neighbor, Face::index_type idx)const
+{
+  pair<Face::HalfFaceSet::iterator,Face::HalfFaceSet::iterator> range =
+    all_faces_.equal_range(idx);
+
+  // ASSERT that this face was computed
+  ASSERT(range.first != range.second);
+
+  // Cell has no neighbor
+  Face::HalfFaceSet::iterator second = range.first;
+  if (++second == range.second)
+  {
+    neighbor = -1;
+    return false;
+  }
+
+  if ((*range.first).index_ == idx)
+    neighbor = (*second).index_;
+  else if ((*second).index_ == idx)
+    neighbor = (*range.first).index_;
+  else {ASSERTFAIL("Non-Manifold Face in all_faces_ structure.");}
+
+  return true;
+}  
+  
+  
+
 
 void
 TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 {
-  Face::array_type faces;
-  get_faces(faces, idx);
-  array.clear();
-  Face::array_type::iterator iter = faces.begin();
-  while(iter != faces.end()) {
-    Cell::index_type nbor;
-    if (get_neighbor(nbor, idx, *iter)) {
-      array.push_back(nbor);
-    }
-    ++iter;
-  }
+  Face::index_type face;
+  for (int i = idx*4; i < idx*4+4;i++)
+  {
+    face.index_ = i;
+    pair<const Face::HalfFaceSet::iterator,
+         const Face::HalfFaceSet::iterator> range =
+      all_faces_.equal_range(face);
+    for (Face::HalfFaceSet::iterator iter = range.first;
+	 iter != range.second; ++iter)
+      if (*iter != i)
+	array.push_back(*iter/4);
+  } 
 }
 
 void
 TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 {
-  array.clear();
-  array.insert(array.end(), node_neighbors_[idx].begin(),
-	       node_neighbors_[idx].end());
+  set<int> inserted;
+  for (unsigned int i = 0; i < nodes_[idx].size(); i++)
+  {
+    const int base = nodes_[idx][i]/4*4;
+    for (int c = base; c < base+4; c++)
+      if (c != idx && inserted.find(cells_[c]) == inserted.end())
+      {
+	inserted.insert(cells_[c]);
+	array.push_back(cells_[c]);
+      }
+  }
 }
 
-void
-TetVolMesh::compute_node_neighbors()
-{
-  node_nbor_lock_.lock();
-  if (node_neighbors_.size() > 0) {node_nbor_lock_.unlock(); return;}
-  cerr << "TetVolMesh::computing node neighbors...\n";
-  node_neighbors_.clear();
-  node_neighbors_.resize(points_.size());
-  Edge::iterator ei, eie;
-  begin(ei); end(eie);
-  for_each(ei, eie, FillNodeNeighbors(node_neighbors_, *this));
-  node_nbor_lock_.unlock();
-}
 
 void
 TetVolMesh::get_center(Point &p, Node::index_type idx) const
@@ -816,7 +1032,6 @@ TetVolMesh::compute_grid()
   grid_lock_.lock();
   if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
-  cerr << "TetVolMesh::compute_grid starting" << endl;
   BBox bb = get_bounding_box();
   if (!bb.valid()) { grid_lock_.unlock(); return; }
   // cubed root of number of cells to get a subdivision ballpark
@@ -861,12 +1076,13 @@ TetVolMesh::compute_grid()
     }
     ++ci;
   }
-  cerr << "TetVolMesh::compute_grid done." << endl << endl;
   grid_lock_.unlock();
 }
 
+
+
 bool
-TetVolMesh::inside4_p(int i, const Point &p) const
+TetVolMesh::inside4_p(int i, const Point &p)
 {
   // TODO: This has not been tested.
   // TODO: Looks like too much code to check sign of 4 plane/point tests.
@@ -925,6 +1141,56 @@ TetVolMesh::inside4_p(int i, const Point &p) const
   return true;
 }
 
+
+
+//! This code uses the robust geometric predicates 
+//! in Core/Math/Predicates.h
+//! for some reason they crash right now, so this code is not compiled in
+#if 0
+bool
+TetVolMesh::inside4_p(int i, const Point &p)
+{
+  double *p0 = &points_[cells_[i*4+0]](0);
+  double *p1 = &points_[cells_[i*4+1]](0);
+  double *p2 = &points_[cells_[i*4+2]](0);
+  double *p3 = &points_[cells_[i*4+3]](0);
+
+  return (orient3d(p2, p1, p3, p0) < 0.0 &&
+	  orient3d(p0, p2, p3, p1) < 0.0 &&
+	  orient3d(p0, p3, p1, p2) < 0.0 &&
+	  orient3d(p0, p1, p2, p3) < 0.0);
+}
+
+void
+TetVolMesh::rewind_mesh()
+{
+  //! Fix Tetrahedron orientation.
+  //! TetVolMesh tets are oriented as follows:
+  //! Points 0, 1, & 2 map out face 3 in a counter-clockwise order
+  //! Point 3 is above the plane of face 3 in a right handed coordinate system.
+  //! Therefore, crossing edge #0(0-1) and edge #2(0-2) creates a normal that
+  //! points in the (general) direction of Point 3.  
+  vector<Point>::size_type i, num_cells = cells_.size();
+  for (i = 0; i < num_cells/4; i++)
+  {   
+    //! This is the approximate tet volume * 6.  All we care about is sign.
+    //! orient3d will return EXACTLY 0.0 if point d lies on plane made by a,b,c
+    const double tet_vol = orient3d(&points_[cells_[i*4+0]](0), 
+				    &points_[cells_[i*4+1]](0),
+				    &points_[cells_[i*4+2]](0),
+				    &points_[cells_[i*4+3]](0));
+    //! Tet is oriented backwards.  Swap index #0 and #1 to re-orient tet.
+    if (tet_vol > 0.) 
+      flip(i);
+    else if (tet_vol == 0.) // orient3d is exact, no need for epsilon
+      // TODO: Degerate tetrahedron (all 4 nodes lie on a plane), mark to delete
+      cerr << "Zero Volume Tetrahedron #" << i << ".  Need to delete\n";
+    //! else means Tet is valid.  Do nothing.
+  }
+}
+
+#endif
+
 //! return the volume of the tet.
 double
 TetVolMesh::get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,
@@ -974,6 +1240,8 @@ TetVolMesh::get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,
   return(vol);
 }
 
+
+
 TetVolMesh::Node::index_type
 TetVolMesh::add_find_point(const Point &p, double err)
 {
@@ -984,139 +1252,97 @@ TetVolMesh::add_find_point(const Point &p, double err)
   }
   else
   {
+    dirty_ = true;
     points_.push_back(p);
     return points_.size() - 1;
   }
 }
 
 
-void
-TetVolMesh::add_tet(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d)
+TetVolMesh::Elem::index_type
+TetVolMesh::add_tet(Node::index_type a, Node::index_type b, 
+		    Node::index_type c, Node::index_type d)
 {
+  dirty_ = true;
+  const int tet = cells_.size() / 4;
   cells_.push_back(a);
   cells_.push_back(b);
   cells_.push_back(c);
   cells_.push_back(d);
+
+  create_cell_nodes(tet);
+  create_cell_edges(tet);
+  create_cell_faces(tet);
+
+  return tet; 
 }
 
-
-void
-TetVolMesh::connect(double err)
-{
-  // Collapse point set by err.
-  // TODO: average in stead of first found for new point?
-  vector<Point> points(points_);
-  vector<int> mapping(points_.size());
-  vector<Point>::size_type i;
-  points_.clear();
-  for (i = 0; i < points.size(); i++)
-  {
-    mapping[i] = add_find_point(points[i], err);
-  }
-
-  // Repair faces.
-  for (i=0; i < cells_.size(); i++)
-  {
-    cells_[i] = mapping[i];
-  }
-
-  // TODO: Remove all degenerate cells here.
-
-  // TODO: fix forward/backward facing problems.
-
-  // TODO: Find neighbors
-  vector<list<int> > edgemap(points_.size());
-  for (i=0; i< cells_.size(); i++)
-  {
-    edgemap[cells_[i]].push_back(i);
-  }
-
-#if 0
-  for (i=0; i<edgemap.size(); i++)
-  {
-    list<int>::iterator li1 = edgemap[i].begin();
-
-    while (li1 != edgemap[i].end())
-    {
-      int e1 = *li1;
-      li1++;
-
-      list<int>::iterator li2 = li1;
-      while (li2 != edgemap[i].end())
-      {
-	int e2 = *li2;
-	li2++;
-	
-	if ( faces_[next(e1)] == faces_[prev(e2)])
-	{
-	  neighbors_[e1] = e2;
-	  neighbors_[e2] = e1;
-	}
-      }
-    }
-  }
-#endif
-
-  // Remove unused points.
-  // Reuse mapping array, edgemap array.
-  vector<Point> dups(points_);
-  points_.clear();
-
-  for (i=0; i<dups.size(); i++)
-  {
-    if(edgemap[i].begin() != edgemap[i].end())
-    {
-      points_.push_back(dups[i]);
-      mapping[i] = points_.size() - 1;
-    }
-  }
-
-  // Repair faces.
-  for (i=0; i < cells_.size(); i++)
-  {
-    cells_[i] = mapping[i];
-  }
-}
 
 
 TetVolMesh::Node::index_type
 TetVolMesh::add_point(const Point &p)
 {
+  dirty_ = true;
   points_.push_back(p);
   return points_.size() - 1;
 }
 
 
-void
+TetVolMesh::Elem::index_type
 TetVolMesh::add_tet(const Point &p0, const Point &p1, const Point &p2,
 		    const Point &p3)
 {
-  add_tet(add_find_point(p0), add_find_point(p1), add_find_point(p2),
-	  add_find_point(p3));
+  return add_tet(add_find_point(p0), add_find_point(p1), 
+		 add_find_point(p2), add_find_point(p3));
 }
 
 
 TetVolMesh::Elem::index_type
 TetVolMesh::add_elem(Node::array_type a)
 {
-  cells_.push_back(a[0]);
-  cells_.push_back(a[1]);
-  cells_.push_back(a[2]);
-  cells_.push_back(a[3]);
-  return (cells_.size() - 1) >> 2;
+  ASSERT(a.size() == 4);
+
+  dirty_ = true;
+  const int tet = cells_.size() / 4;
+ 
+  for (unsigned int n = 0; n < a.size(); n++)
+    cells_.push_back(a[n]);
+
+  create_cell_nodes(tet);
+  create_cell_edges(tet);
+  create_cell_faces(tet);
+
+  return tet;
 }
+
 
 
 void
-TetVolMesh::add_tet_unconnected(const Point &p0,
-				const Point &p1,
-				const Point &p2,
-				const Point &p3)
+TetVolMesh::delete_cells(set<int> &to_delete)
 {
-  add_tet(add_point(p0), add_point(p1), add_point(p2), add_point(p3));
+  vector<under_type> old_cells = cells_;
+  int i = 0, c;
+
+  cells_.clear();
+  cells_.reserve(old_cells.size() - to_delete.size()*4);
+
+  for (set<int>::iterator deleted = to_delete.begin();
+       deleted != to_delete.end(); ++deleted)
+  {
+    for (;i < *deleted; ++i)
+      for (c = i*4; c < i*4+4; ++c)
+	cells_.push_back(old_cells[c]);
+    ++i;
+
+  }
+
+  for (; i < (int)(old_cells.size()/4); ++i)
+    for (c = i*4; c < i*4+4; ++c)
+      cells_.push_back(old_cells[c]);
+  
+  dirty_ = true;
+  flush_changes();
 }
-
-
 
 double 
 TetVolMesh::volume(TetVolMesh::Cell::index_type ci)
@@ -1163,16 +1389,23 @@ TetVolMesh::orient(Cell::index_type ci) {
 }
 
 
-#define TETVOLMESH_VERSION 1
+
+#define TETVOLMESH_VERSION 2
 
 void
 TetVolMesh::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), TETVOLMESH_VERSION);
+  const int version = stream.begin_class(type_name(-1), TETVOLMESH_VERSION);
   Mesh::io(stream);
 
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
+  if (version == 1)
+  {
+    vector<int> neighbors;
+    SCIRun::Pio(stream, neighbors);
+  }
+
   // orient the tets..
   Cell::iterator iter, endit;
   begin(iter);
@@ -1182,12 +1415,12 @@ TetVolMesh::io(Piostream &stream)
     ++iter;
   }
 
-  SCIRun::Pio(stream, neighbors_);
-
   stream.end_class();
 
+  cerr << "TetVolMesh::io\n";
   if (stream.reading())
   {
+    dirty_ = true;
     flush_changes();
   }
 }
@@ -1263,6 +1496,24 @@ get_type_description(TetVolMesh::Cell *)
   }
   return td;
 }
+
+
+
+void
+TetVolMesh::get_cells(Cell::array_type &array, Node::index_type idx)
+{
+  
+  // have to calculate it if it does not already exist
+  if (! is_frozen()) { 
+    ASSERTFAIL("can only call get_cells with a node index if frozen!!");
+    return;
+  }
+  compute_nodes();
+  array.clear();
+  for (unsigned int i = 0; i < nodes_[idx].size(); ++i)
+    array.push_back(nodes_[idx][i]/4);
+ }
+
 
 
 } // namespace SCIRun

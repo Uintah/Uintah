@@ -111,7 +111,7 @@ void BuildFEMatrix::parallel(int proc)
   
   if (proc==0){
     hMesh_->compute_edges();
-    hMesh_->compute_node_neighbors();
+    hMesh_->compute_nodes();
   }
 
   barrier_.wait(np_);

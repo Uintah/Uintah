@@ -106,6 +106,7 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
     
     QuadraticTetVolMeshHandle mesh_handle;
     QuadraticTetVolMeshHandle qtvm_ = qtv->get_typed_mesh();
+    qtvm_->flush_changes();
 
     QuadraticTetVolMesh::Node::size_type nnodes;
     qtvm_->size(nnodes);
@@ -152,12 +153,20 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
 	 
 	 cerr << "DipoleMatrixSourceRHS: Found Dipole in element "<<loc<<"\n";
 
-	 double s1, s2, s3, s4,s5,s6,s7,s8,s9,s10;
-	 
 	 // use these next six lines if we're using a dipole
-	 Vector g1, g2, g3, g4,g5,g6,g7,g8,g9,g10;
+	 vector<Vector> g(10);
+	 cerr << "Getting Gradient Basis\n";
+	 qtvm_->get_gradient_basis(loc,p,g[0],g[1],g[2],g[3],g[4],
+				   g[5],g[6],g[7],g[8],g[9]);
+	 vector<int> s(10);
+	 TetVolMesh::Node::array_type cell_nodes(10);
+	 cerr << "Getting nodes\n";
+	 qtvm_->get_nodes(cell_nodes, loc);
+	 cerr << "Got Nodes\n";
 
-	 qtvm_->get_gradient_basis(loc,p,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10);
+	 for (int k = 0; k < 10; k++)
+	   (*rhs)[cell_nodes[k]] += Dot(dir,g[k]);
+
 	 
 	 //	 Point centroid = mesh->elems[loc]->centroid();
 //	 cerr << centroid << "\n";
@@ -168,45 +177,6 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
 	 //	 cerr << "g3="<<g3<<"  g4="<<g4<<"  g5="<<g5<<"  g6="<<g6<<"  g7="<<g7<<"  g8="<<g8<<"  g9="<<g9<<"  g10="<<g10<<"\n";
 	 //
 
-
-	 s1=Dot(dir,g1);
-	 s2=Dot(dir,g2);
-	 s3=Dot(dir,g3);
-	 s4=Dot(dir,g4);
-	 s5=Dot(dir,g5);
-	 s6=Dot(dir,g6);
-	 s7=Dot(dir,g7);
-	 s8=Dot(dir,g8);
-	 s9=Dot(dir,g9);
-	 s10=Dot(dir,g10);
-
-	 //	 cerr << s1 << " " << s2 << " " << s3 << " " << s4 << " " << s5 << " " << s6 << " " << s7 << " " << s8 << " " << s9 << " " << s10 << "\n";
-	  
-	 int i1, i2, i3, i4,i5,i6,i7,i8,i9,i10;
-
-	 TetVolMesh::Node::array_type cell_nodes(10);
-	 qtvm_->get_nodes(cell_nodes, loc);
-	 i1=cell_nodes[0];
-	 i2=cell_nodes[1];
-	 i3=cell_nodes[2];
-	 i4=cell_nodes[3];
-	 i5=cell_nodes[4];
-	 i6=cell_nodes[5];
-	 i7=cell_nodes[6];
-	 i8=cell_nodes[7];
-	 i9=cell_nodes[8];
-	 i10=cell_nodes[9];	
-	 
-	 (*rhs)[i1]+=s1;
-	 (*rhs)[i2]+=s2;
-	 (*rhs)[i3]+=s3;
-	 (*rhs)[i4]+=s4;
-	 (*rhs)[i5]+=s5;
-	 (*rhs)[i6]+=s6;
-	 (*rhs)[i7]+=s7;
-	 (*rhs)[i8]+=s8;
-	 (*rhs)[i9]+=s9;
-	 (*rhs)[i10]+=s10;
 	
 #if 0
 	 cerr << "DipoleMatrixSourceRHS :: Here's the RHS vector: ";
@@ -219,7 +189,9 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
 	 cerr << "\n";
 #endif
  	 
-       } else {
+       } 
+       else 
+       {
 	 cerr << "Dipole: "<<p<<" not located within mesh!\n";
        }
 

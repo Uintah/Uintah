@@ -39,8 +39,20 @@
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
 #include <sci_hash_map.h>
+#include <hash_set>
+#include <set>
+
+#define MIN(a, b)     ((a < b) ? a : b) 
+#define MAX(a, b)     ((a > b) ? a : b)
+#define MIN3(a, b, c) ((a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c)) 
+#define MAX3(a, b, c) ((a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c ))
+#define MID3(a, b, c) ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
+		                 ((b < c) ? b : ((a > c) ? a : c)))
+
+
 
 namespace SCIRun {
+
 
 using std::hash_map;
 
@@ -56,21 +68,7 @@ public:
     typedef NodeIndex<under_type>       size_type;
     typedef vector<index_type>          array_type;
   };					
-					
-  struct Edge {				
-    typedef EdgeIndex<under_type>       index_type;
-    typedef EdgeIterator<under_type>    iterator;
-    typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };					
-					
-  struct Face {				
-    typedef FaceIndex<under_type>       index_type;
-    typedef FaceIterator<under_type>    iterator;
-    typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };					
-					
+
   struct Cell {				
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
@@ -78,11 +76,149 @@ public:
     typedef vector<index_type>          array_type;
   };
 
+  // Used for hashing operations below
+  static const int sizeof_uint = sizeof(unsigned int) * 8; // in bits
+
+
+  //! An edge is indexed via the cells structure.
+  //! There are 6 unique edges in each cell of 4 nodes.
+  //! Therefore, the edge index / 6 == cell index
+  //! And, the edge index % 6 == which edge in that cell
+  //! Edges indices are stored in a hash_set and a hash_multiset.
+  //! The hash_set stores shared edges only once.
+  //! The hash_multiset stores all shared edges together.   
+  struct Edge {				
+    typedef EdgeIndex<under_type>       index_type;
+
+    //! edgei return the two nodes make the edge
+    static pair<index_type, index_type> edgei(index_type idx)
+    { 
+      const int b = (idx / 6) * 4;
+      switch (idx % 6)
+      {
+      case 0: return pair<index_type,index_type>(b+0,b+1); break;
+      case 1: return pair<index_type,index_type>(b+0,b+2); break;
+      case 2: return pair<index_type,index_type>(b+0,b+3); break;
+      case 3: return pair<index_type,index_type>(b+1,b+2); break;
+      case 4: return pair<index_type,index_type>(b+2,b+3); break;
+      default:
+      case 5: return pair<index_type,index_type>(b+1,b+3); break;
+      }
+    }
+
+    //! A fucntor that returns a boolean indicating weather two
+    //! edges indices share the same nodes, and thus the same edge in space
+    //! Used as a template parameter to STL containers typedef'd below
+    struct eqEdge : binary_function<index_type, index_type, bool>
+    {
+    private:
+      const vector<under_type> &cells_;
+    public:
+      eqEdge(const vector<under_type> &cells) : 
+	cells_(cells) {};
+      bool operator()(index_type ei1, index_type ei2) const
+      {
+	const pair<index_type, index_type> e1 = edgei(ei1), e2 = edgei(ei2);
+	return (MAX(cells_[e1.first], cells_[e1.second]) == 
+		MAX(cells_[e2.first], cells_[e2.second]) &&
+		MIN(cells_[e1.first], cells_[e1.second]) == 
+		MIN(cells_[e2.first], cells_[e2.second]));
+      };
+    };
+      
+    //! A functor that hashes an edge index according to the node
+    //! indices of that edge
+    //! Used as a template parameter to STL hash_[set,map] containers
+    struct CellEdgeHasher : public unary_function<size_t, index_type>
+    {
+    private:
+      const vector<under_type> &cells_;
+    public:
+      CellEdgeHasher(const vector<under_type> &cells) : 
+	cells_(cells) {};
+      static const int size = sizeof_uint / 2; // in bits
+      static const int mask = (~(unsigned int)0) >> (sizeof_uint - size);
+      size_t operator()(index_type cell) const 
+      { 
+	pair<index_type,index_type> e = edgei(cell);
+	const int n0 = cells_[e.first] & mask;
+	const int n1 = cells_[e.second] & mask;
+	return MIN(n0, n1) << size | MAX(n0, n1);
+      }
+    };   
+
+    typedef hash_multiset<index_type, CellEdgeHasher,eqEdge> HalfEdgeSet;
+    typedef hash_set<index_type, CellEdgeHasher, eqEdge> EdgeSet;
+    //! This iterator will traverse each shared edge once in no 
+    //! particular order.
+    typedef EdgeSet::iterator		iterator;
+    typedef EdgeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+  
+
+  //! A face is directly opposite the same indexed node in the cells_ structure
+  struct Face 
+  {				
+    typedef FaceIndex<under_type>       index_type;
+    
+    struct eqFace : binary_function<index_type, index_type, bool>
+    {
+    private:
+      const vector<under_type> &cells_;
+    public:
+      eqFace(const vector<under_type> &cells) : 
+	cells_(cells) {};
+      bool operator()(index_type fi1, index_type fi2) const
+      {
+	const int f1_offset = fi1 % 4;
+	const int f1_base = fi1 - f1_offset;
+	const under_type f1_n0 = cells_[f1_base + (f1_offset < 1 ? 1 : 0)];
+	const under_type f1_n1 = cells_[f1_base + (f1_offset < 2 ? 2 : 1)];
+	const under_type f1_n2 = cells_[f1_base + (f1_offset < 3 ? 3 : 2)];
+	const int f2_offset = fi2 % 4;
+	const int f2_base = fi2 - f2_offset;
+	const under_type f2_n0 = cells_[f2_base + (f2_offset < 1 ? 1 : 0)];
+	const under_type f2_n1 = cells_[f2_base + (f2_offset < 2 ? 2 : 1)];
+	const under_type f2_n2 = cells_[f2_base + (f2_offset < 3 ? 3 : 2)];
+
+	return (MAX3(f1_n0, f1_n1, f1_n2) == MAX3(f2_n0, f2_n1, f2_n2) &&
+		MID3(f1_n0, f1_n1, f1_n2) == MID3(f2_n0, f2_n1, f2_n2) &&
+		MIN3(f1_n0, f1_n1, f1_n2) == MIN3(f2_n0, f2_n1, f2_n2));
+      }
+    };
+    
+    struct CellFaceHasher: public unary_function<size_t, index_type>
+    {
+    private:
+      const vector<under_type> &cells_;
+    public:
+      CellFaceHasher(const vector<under_type> &cells) : 
+	cells_(cells) {};
+      static const int size = sizeof_uint / 3; // in bits
+      static const int mask = (~(unsigned int)0) >> (sizeof_uint - size);
+      size_t operator()(index_type cell) const 
+      {
+	const int offset = cell % 4;
+	const int base = cell - offset;
+	const under_type n0 = cells_[base + (offset < 1 ? 1 : 0)] & mask;
+	const under_type n1 = cells_[base + (offset < 2 ? 2 : 1)] & mask;
+	const under_type n2 = cells_[base + (offset < 3 ? 3 : 2)] & mask;      
+	return MIN3(n0,n1,n2)<<size*2 | MID3(n0,n1,n2)<<size | MAX3(n0,n1,n2);
+      }
+    };
+    typedef hash_multiset<index_type, CellFaceHasher,eqFace> HalfFaceSet;
+    typedef hash_set<index_type, CellFaceHasher, eqFace> FaceSet;
+    typedef FaceSet::iterator		iterator;
+    typedef FaceIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };					
+  
+
   typedef Cell Elem;
 
   TetVolMesh();
   TetVolMesh(const TetVolMesh &copy);
-  //TetVolMesh(const MeshRG &lattice);
   virtual TetVolMesh *clone() { return new TetVolMesh(*this); }
   virtual ~TetVolMesh();
 
@@ -103,19 +239,31 @@ public:
   void size(Edge::size_type &) const;
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
-
+  
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
+
+  void get_edges(Edge::array_type &array, Node::index_type idx) const;
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
   void get_edges(Edge::array_type &array, Cell::index_type idx) const;
+
+  void get_faces(Face::array_type &array, Node::index_type idx) const;
+  void get_faces(Face::array_type &array, Edge::index_type idx) const;
   void get_faces(Face::array_type &array, Cell::index_type idx) const;
+
   void get_cells(Cell::array_type &array, Node::index_type idx);
+  void get_cells(Cell::array_type &array, Edge::index_type idx) const;
+  void get_cells(Cell::array_type &array, Face::index_type idx) const;
+  
+  // This function is redundant, the next one can be used with less parameters 
   bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
-		    Face::index_type idx) const;
+		   Face::index_type idx) const;
+  // Use this one instead
+  bool get_neighbor(Face::index_type &neighbor, Face::index_type idx) const;
   void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
-  //! must call compute_node_neighbors before calling get_neighbors.
   void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+
   void get_center(Point &result, Node::index_type idx) const;
   void get_center(Point &result, Edge::index_type idx) const;
   void get_center(Point &result, Face::index_type idx) const;
@@ -128,12 +276,15 @@ public:
   bool locate(Cell::index_type &loc, const Point &p);
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("TetVolMesh::get_weights for edges isn't supported");}
-  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("TetVolMesh::get_weights for faces isn't supported");}
+  void get_weights(const Point &, Edge::array_type &, vector<double> &) 
+  {ASSERTFAIL("TetVolMesh::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) 
+  {ASSERTFAIL("TetVolMesh::get_weights for faces isn't supported");}
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w);
 
   void get_point(Point &result, Node::index_type index) const
   { result = points_[index]; }
+
   void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
@@ -171,240 +322,114 @@ public:
     else
       return false;
   }
+
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>
   void fill_cells(Iter begin, Iter end, Functor fill_ftor);
-  template <class Iter, class Functor>
-  void fill_neighbors(Iter begin, Iter end, Functor fill_ftor);
-  template <class Iter, class Functor>
-  void fill_data(Iter begin, Iter end, Functor fill_ftor);
+
+
+  void flip(Cell::index_type, bool recalculate = false);
+  void rewind_mesh();
 
   //! (re)create the edge and faces data based on cells.
   virtual void flush_changes();
   void recompute_connectivity();
-  void compute_edges();
-  void compute_faces();
-  void compute_node_neighbors();
-  void compute_grid();
+  virtual void		compute_nodes();
+  void			compute_edges();
+  void			compute_faces();
+  void			compute_grid();
 
   //! Persistent IO
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
-
   virtual const TypeDescription *get_type_description() const;
 
+
   // Extra functionality needed by this specific geometry.
+  void			set_nodes(Node::array_type &, Cell::index_type);
 
-  void set_nodes(Node::array_type &array, Cell::index_type idx);
-  Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
-  void add_tet(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d);
-  void add_tet(const Point &p0, const Point &p1, const Point &p2,
-	       const Point &p3);
-  Elem::index_type add_elem(Node::array_type a);
-  virtual bool is_editable() const { return true; }
+  Node::index_type	add_point(const Point &p);
+  Node::index_type	add_find_point(const Point &p, double err = 1.0e-3);
 
-  // Must call connect after adding tets this way.
-  Node::index_type add_point(const Point &p);
-  void add_tet_unconnected(const Point &p0, const Point &p1,
-			   const Point &p2, const Point &p3);
-
-  void connect(double err = 1.0e-3);
-
-
-  //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
-  //		 Face::index_type &face, double &u, double &v);
+  Elem::index_type	add_tet(Node::index_type a, 
+				Node::index_type b,
+				Node::index_type c,
+				Node::index_type d);
+  Elem::index_type	add_tet(const Point &p0,
+				const Point &p1,
+				const Point &p2,
+				const Point &p3);
+  Elem::index_type	add_elem(Node::array_type a);
 
 
-  const Point &point(Node::index_type i) { return points_[i]; }
+  void			delete_cells(set<int> &to_delete);
+  
+  bool			is_edge(Node::index_type n0,
+				Node::index_type n1,
+				Edge::array_type *edges = 0);
+
+  bool			is_face(Node::index_type n0,
+				Node::index_type n1,
+				Node::index_type n2,
+				Face::array_type *faces = 0);
+
+
+  virtual bool		is_editable() const { return true; }
 
 protected:
-  virtual void calc_node_cells_map(); 
-  bool inside4_p(int, const Point &p) const;
+  void			orient(Cell::index_type ci);
+  double		volume(TetVolMesh::Cell::index_type ci);
+  bool			inside4_p(int, const Point &p);
 
-  //! all the nodes.
-  vector<Point>        points_;
-  Mutex                points_lock_;
+  //! Used to recompute data for individual cells
+  void			create_cell_edges(Cell::index_type);
+  void			delete_cell_edges(Cell::index_type);
+  void			create_cell_faces(Cell::index_type);
+  void			delete_cell_faces(Cell::index_type);
+  void			create_cell_nodes(Cell::index_type);
+  void			delete_cell_nodes(Cell::index_type);
+
+  //! all the vertices
+  vector<Point>		points_;
+  Mutex			points_lock_;
 
   //! each 4 indecies make up a tet
-  vector<under_type>   cells_;
-  Mutex                cells_lock_;
-  //! face neighbors index to tet opposite the corresponding node in cells_
-  vector<under_type>   neighbors_;
-  Mutex                nbors_lock_;
-  //! Face information.
-  struct PFace {
-    Node::index_type         nodes_[3];   //! 3 nodes makes a face.
-    Cell::index_type         cells_[2];   //! 2 cells may have this face is in.
+  vector<under_type>	cells_;
+  Mutex			cells_lock_;
 
-    PFace() {
-      nodes_[0] = -1;
-      nodes_[1] = -1;
-      nodes_[2] = -1;
-      cells_[0] = -1;
-      cells_[1] = -1;
-    }
-    // nodes_ must be sorted. See Hash Function below.
-    PFace(Node::index_type n1, Node::index_type n2, Node::index_type n3) {
-      cells_[0] = -1;
-      cells_[1] = -1;
-      if ((n1 < n2) && (n1 < n3)) {
-	nodes_[0] = n1;
-	if (n2 < n3) {
-	  nodes_[1] = n2;
-	  nodes_[2] = n3;
-	} else {
-	  nodes_[1] = n3;
-	  nodes_[2] = n2;
-	}
-      } else if ((n2 < n1) && (n2 < n3)) {
-	nodes_[0] = n2;
-	if (n1 < n3) {
-	  nodes_[1] = n1;
-	  nodes_[2] = n3;
-	} else {
-	  nodes_[1] = n3;
-	  nodes_[2] = n1;
-	}
-      } else {
-	nodes_[0] = n3;
-	if (n1 < n2) {
-	  nodes_[1] = n1;
-	  nodes_[2] = n2;
-	} else {
-	  nodes_[1] = n2;
-	  nodes_[2] = n1;
-	}
-      }
-    }
+  typedef LockingHandle<Edge::HalfEdgeSet> HalfEdgeSetHandle;
+  typedef LockingHandle<Edge::EdgeSet> EdgeSetHandle;
+  bool			edges_computed_p_;
+  Edge::CellEdgeHasher	edge_hasher_;
+  Edge::eqEdge		edge_eq_;
+  Edge::HalfEdgeSet	all_edges_;
+  Edge::EdgeSet		edges_;
+  Mutex			edge_lock_;
 
-    bool shared() const { return ((cells_[0] != -1) && (cells_[1] != -1)); }
+  typedef LockingHandle<Face::HalfFaceSet> HalfFaceSetHandle;
+  typedef LockingHandle<Face::FaceSet> FaceSetHandle;
+  bool			faces_computed_p_;
+  Face::CellFaceHasher	face_hasher_;
+  Face::eqFace		face_eq_;
+  Face::HalfFaceSet	all_faces_;
+  Face::FaceSet		faces_;
+  Mutex			face_lock_;
 
-    //! true if both have the same nodes (order does not matter)
-    bool operator==(const PFace &f) const {
-      return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) &&
-	      (nodes_[2] == f.nodes_[2]));
-    }
-  };
-
-
-  //! Edge information.
-  struct PEdge {
-    Node::index_type         nodes_[2];   //! 2 nodes makes an edge.
-    vector<Cell::index_type> cells_;      //! list of all the cells this edge is in.
-
-    PEdge() : cells_(0) {
-      nodes_[0] = -1;
-      nodes_[1] = -1;
-    }
-    // node_[0] must be smaller than node_[1]. See Hash Function below.
-    PEdge(Node::index_type n1, Node::index_type n2) : cells_(0) {
-      if (n1 < n2) {
-	nodes_[0] = n1;
-	nodes_[1] = n2;
-      } else {
-	nodes_[0] = n2;
-	nodes_[1] = n1;
-      }
-    }
-
-    bool shared() const { return cells_.size() > 1; }
-
-    //! true if both have the same nodes (order does not matter)
-    bool operator==(const PEdge &e) const {
-      return ((nodes_[0] == e.nodes_[0]) && (nodes_[1] == e.nodes_[1]));
-    }
-  };
-
-  /*! hash the egde's node_indecies such that edges with the same nodes
-   *  hash to the same value. nodes are sorted on edge construction. */
-  static const int sz_int = sizeof(int) * 8; // in bits
-  struct FaceHash {
-    static const int sz_third_int = (int)(sz_int * .333333); // in bits
-    static const int up3_mask = ((~((int)0)) << sz_third_int << sz_third_int);
-    static const int mid3_mask =  up3_mask ^ (~((int)0) << sz_third_int);
-    static const int low3_mask = ~(up3_mask | mid3_mask);
-
-    size_t operator()(const PFace &f) const {
-      return ((f.nodes_[0] << sz_third_int << sz_third_int) |
-	      (mid3_mask & (f.nodes_[1] << sz_third_int)) |
-	      (low3_mask & f.nodes_[2]));
-    }
-  };
-
-  /*! hash the egde's node_indecies such that edges with the same nodes
-   *  hash to the same value. nodes are sorted on edge construction. */
-  struct EdgeHash {
-    static const int sz_int = sizeof(int) * 8; // in bits
-    static const int sz_half_int = sizeof(int) << 2; // in bits
-    static const int up_mask = ((~((int)0)) << sz_half_int);
-    static const int low_mask = (~((int)0) ^ up_mask);
-
-    size_t operator()(const PEdge &e) const {
-      return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[1]);
-    }
-  };
-
-  typedef hash_map<PFace, Face::index_type, FaceHash> face_ht;
-  typedef hash_map<PEdge, Edge::index_type, EdgeHash> edge_ht;
-
-  /*! container for face storage. Must be computed each time
-    nodes or cells change. */
-  vector<PFace>             faces_;
-  face_ht                  face_table_;
-  Mutex                    face_table_lock_;
-  /*! container for edge storage. Must be computed each time
-    nodes or cells change. */
-  vector<PEdge>             edges_;
-  edge_ht                  edge_table_;
-  Mutex                    edge_table_lock_;
-
-  //! bookkeeping to get from node_index to Cells
-  typedef hash_map<int, Cell::array_type> node_cells_ht;
-  node_cells_ht            node_cells_table_;
-  Mutex                    node_cells_table_lock_;
-  bool                     have_node_cells_table_;
-
-  inline
-  void hash_edge(Node::index_type n1, Node::index_type n2,
-		 Cell::index_type ci, edge_ht &table) const;
-
-  inline
-  void hash_face(Node::index_type n1, Node::index_type n2, Node::index_type n3,
-		 Cell::index_type ci, face_ht &table) const;
-
-  //! useful functors
-  struct FillNodeNeighbors {
-    FillNodeNeighbors(vector<vector<Node::index_type> > &n, const TetVolMesh &m) :
-      nbor_vec_(n),
-      mesh_(m)
-    {}
-
-    void operator()(Edge::index_type e) {
-      nodes_.clear();
-      mesh_.get_nodes(nodes_, e);
-      nbor_vec_[nodes_[0]].push_back(nodes_[1]);
-      nbor_vec_[nodes_[1]].push_back(nodes_[0]);
-    }
-
-    vector<vector<Node::index_type> > &nbor_vec_;
-    const TetVolMesh            &mesh_;
-    Node::array_type                   nodes_;
-  };
-
-  vector<vector<Node::index_type> > node_neighbors_;
-  Mutex                       node_nbor_lock_;
+  typedef vector<vector<Cell::index_type> > NodeMap;
+  typedef LockingHandle<NodeMap> NodeMapHandle;
+  bool			nodes_computed_p_;
+  NodeMap		nodes_;
+  Mutex			node_lock_;
 
   typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
-  grid_handle                 grid_;
-  Mutex                       grid_lock_; // Bad traffic!
+  grid_handle           grid_;
+  Mutex                 grid_lock_; // Bad traffic!
+
+  bool			dirty_;
   
-
-  void orient(Cell::index_type ci);
-  double volume(TetVolMesh::Cell::index_type ci);
-
 public:
   inline grid_handle get_grid() {return grid_;}
 
@@ -427,6 +452,7 @@ TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     ++piter; ++iter;
   }
   points_lock_.unlock();
+  dirty_ = true;
 }
 
 template <class Iter, class Functor>
@@ -448,28 +474,9 @@ TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     ++citer; ++iter;
   }
   cells_lock_.unlock();
+  dirty_ = true;
 }
 
-template <class Iter, class Functor>
-void
-TetVolMesh::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
-  nbors_lock_.lock();
-  Iter iter = begin;
-  neighbors_.resize((end - begin) * 4); // resize to the new size
-  vector<under_type>::iterator citer = neighbors_.begin();
-  while (iter != end) {
-    int *face_nbors = fill_ftor(*iter); // returns an array of length 4
-    *citer = face_nbors[0];
-    ++citer;
-    *citer = face_nbors[1];
-    ++citer;
-    *citer = face_nbors[2];
-    ++citer;
-    *citer = face_nbors[3];
-    ++citer; ++iter;
-  }
-  nbors_lock_.unlock();
-}
 
 const TypeDescription* get_type_description(TetVolMesh *);
 const TypeDescription* get_type_description(TetVolMesh::Node *);
