@@ -84,9 +84,9 @@ DEALINGS IN THE SOFTWARE.
       <li>GatherFields (FieldsCreate) - Add support for elem data copying.</li>
       <li>GatherFields (FieldsCreate) - Fix crash bug when no valid input fields are present.</li>
       <li>SampleField (FieldsCreate) -  Lower the max number of samples to 201 on rake slider.</li>
-      <li>BuildMappingMatrix (FieldsData) - Reenable parallel interpolation.</li>
+      <li>BuildMappingMatrix (FieldsData) - Re-enable parallel interpolation.</li>
       <li>ChangeFieldBasis (FieldsData) - Emit identity mapping if basis is same.</li>
-      <li>ChangeFieldBasis (FieldsData) - Fix backwards compatability bug.</li>
+      <li>ChangeFieldBasis (FieldsData) - Fix backward compatibility bug.</li>
       <li>FieldMeasures (FieldsOther) - Add error checking and fix normals.</li>
       <li>LinAlgUnary (Math) - Added support for SparseRowMatrices.</li>
       <li>LinAlgBinary (Math) - Added support for SparseRowMatrices.</li>
@@ -139,15 +139,15 @@ DEALINGS IN THE SOFTWARE.
       <li>Help and about now work for all Power Apps.</li>
       <li>BioTensor (Teem) - Now saves out glyph normalize scale.</li>
       <li>BioTensor (Teem) - Autoviews correctly when loading tensors directly.</li>
-      <li>BioTensor (Teem) - Bug fixed when user selects Execute mutliple times during load process.</li>
+      <li>BioTensor (Teem) - Bug fixed when user selects Execute multiple times during load process.</li>
       <li>BioTensor (Teem) - Coloring planes, isosurfaces, glyphs and fibers and switching between all of these color methods now works.</li>
-      <li>BioImage (Teem) - Handles reseting of crops and resamples correctly when loading a saved sesssion as well as the filter type of a resample filter.</li>
+      <li>BioImage (Teem) - Handles reseting of crops and resamples correctly when loading a saved session as well as the filter type of a resample filter.</li>
       <li>BioImage (Teem) - 'incr' call fixed when adding filters to the history.</li>
       <li>BioImage (Teem) - Proper ViewSlices orientations now set when loading a session.</li>
       <li>BioImage (Teem) - Progress indicator now works for loading large datasets.</li>
       <li>BioImage (Teem) - Hide/Show icons reversed in filter history.</li>
       <li>BioImage (Teem) - Uses correct paths to data directory.</li>
-      <li>BioImage (Teem) - References to Cmedain changed to Median Filtering.</li>
+      <li>BioImage (Teem) - References to Cmedian changed to Median Filtering.</li>
       <li>BioImage (Teem) - Scroll wheel now works in history frame.</li>
       <li>BioImage (Teem) - Now uses a RescaleColorMap module for volume rendering for machines that do not support shaders.</li>
       <li>BioImage (Teem) - Now handles loading different datasets.</li>
@@ -175,7 +175,7 @@ DEALINGS IN THE SOFTWARE.
       <li>BioImage (ViewSlices) - Change Zoom to be up/left is zoom out and down/right is zoom in to be consistent with 3D window.</li>
       <li>BioImage (Viewer) - Fix 3D autoview when loading a dataset for the first time.</li>
       <li>BioImage (GUI) - Move eye radio button to between filters and automatically update when changing eye.</li>
-      <li>BioImage (GUI) - Automatic Re-Orginization of filters in Network Editor</li>
+      <li>BioImage (GUI) - Automatic Re-Organization of filters in Network Editor</li>
 
 
 	
@@ -209,7 +209,7 @@ DEALINGS IN THE SOFTWARE.
       <li>Add support for get_normals to ImageMesh and StructQuadSurfMeshes.</li>
       <li>Use std::vector for all Mesh::get_neighbors.  Cannot guarantee an upper bound on neighbor size so fixed-sized arrays won't work.</li>
       <li>Work around bad parsing of exponents in our tcl expscale widget.  %d will not read integers with a leading zero as it thinks they are octal.  However %.0f works.</li>
-      <li>Wrap up OpenGL shader problems to avoid backwards linking compatability problems.</li>
+      <li>Wrap up OpenGL shader problems to avoid backwards linking compatibility problems.</li>
       <li>Create virtual destructor for GeomColormapInterface.</li>
       <li>Use const references for Masked*Field indices where appropriate.</li>
       <li>Fix volume rendering transparency on apples with unsupported hardware.</li>
@@ -218,16 +218,16 @@ DEALINGS IN THE SOFTWARE.
       <li>Major re-factoring of SCIRun->Render->ViewSlices to use function pointers for common tasks</li>
       <li>Re-Layout of BioImage underlying network makes network debugging easier.</li>
       <li>Throttle ViewSlices redraw loop if mouse is not in GL window.</li>
-      <li>Fix bug rendering ViewSlices slice positions in wrong locaiton on first draw.</li>
+      <li>Fix bug rendering ViewSlices slice positions in wrong location on first draw.</li>
       <li>Print name of mutex when displaying error about destroying locked mutex.</li>
       <li>Fix bug that was creating new widgets in EditColorMap2D off-screen</li>
       <li>Added 'bool GuiVar::changed()' method that return true if the TCL var has changed. Useful for determining if re-execution is necessary.</li>
-      <li>Fix bug that was disabling hardware widget rasterizaiton in EditColorMap2D.</li>
+      <li>Fix bug that was disabling hardware widget rasterization in EditColorMap2D.</li>
       <li>Flip input nrrd in Y in Teem->Converters->NrrdToColorMap2.</li>
       <li>Added methods GuiArgs::get_int() &amp; GuiArgs::get_double(), that automatically convert TCL arguments to tcl_command to their numeric representation and handle error checking too.</li>
       <li>Added versioning of .scirunrc file.  Prompts user to copy .scirunrc file if version of SCIRun is newer than the version the users .scirunrc file was written for.</li>
       <li>Bug #2535.  Fix duplicating module on subnet.</li>
-      <li>Bug #2536: Support for dopuble-quote character '"' in Tooltips.</li>
+      <li>Bug #2536: Support for double-quote character '"' in Tooltips.</li>
       <li>Clear EditColorMap2d undo stack when loading new .cmap2 file</li>
       <li>Package RPMS and OSX binary release with ITK 2.0.0.</li>
       <li>Add button 'New ViewSlices Window' to open multiple ViewSlices GL windows for one module</li>
