@@ -247,14 +247,12 @@ public:
 		     int matlIndex, const Patch* patch);
 
    void sendMPI(SendState& ss, DependencyBatch* batch,
-		const ProcessorGroup* world, const VarLabel* pos_var,
-		BufferInfo& buffer, OnDemandDataWarehouse* old_dw,
-		const DetailedDep* dep);
-   void recvMPI(BufferInfo& buffer, DependencyBatch* batch,
-		const ProcessorGroup* world, OnDemandDataWarehouse* old_dw,
-		const DetailedDep* dep);
+		const VarLabel* pos_var, BufferInfo& buffer, 
+                OnDemandDataWarehouse* old_dw, const DetailedDep* dep);
+   void recvMPI(SendState& rs, BufferInfo& buffer, DependencyBatch* batch,
+	        OnDemandDataWarehouse* old_dw, const DetailedDep* dep);
    void reduceMPI(const VarLabel* label, const Level* level,
-		  const MaterialSubset* matls, const ProcessorGroup* world);
+		  const MaterialSubset* matls);
 
    // Scrub counter manipulator functions -- when the scrub count goes to
    // zero, the data is deleted
