@@ -90,7 +90,7 @@ recurse.mk, which performs the actual recursion.  Here is an example:
 <pre>
 SUBDIRS := $(SRCDIR)/ThirdParty $(SRCDIR)/Modules $(SRCDIR)/GUI
 
-include $(OBJTOP_ABS)/scripts/recurse.mk
+include $(SRCTOP)/scripts/recurse.mk
 </pre>
   <li>Building a library.  One includes the appropriate so_prologue,
 defines the sources for this directory, defines the other PSE
@@ -98,7 +98,7 @@ libraries used to link this library, and any other (external)
 libraries.  Finally, it includes the so_epilogue which generates the
 rules for the subdirectory.  Here is an example:
 <pre>
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECommon/Modules/FEM
 
@@ -111,7 +111,7 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Datatypes \
 	SCICore/Exceptions SCICore/TclInterface SCICore/Geometry
 LIBS := 
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 </pre>
   <li>Build a tclIndex file.  This one is not automated but is very
 simple, such as:
@@ -128,7 +128,7 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/BaseDial.tcl $(SRCDIR)/ColorPicker.tcl \
 	$(SRCDIR)/MemStats.tcl $(SRCDIR)/PointVector.tcl \
 	$(SRCDIR)/ThreadStats.tcl $(SRCDIR)/Util.tcl \
 	$(SRCDIR)/VTRDial.tcl
-	scripts/createTclIndex SCICore/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/SCICore/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 </pre>
@@ -143,7 +143,7 @@ PROGRAM := $(SRCDIR)/sidl
 PSELIBS :=
 LIBS :=
 
-include $(SRCTOP_ABS)/scripts/program.mk
+include $(SRCTOP)/scripts/program.mk
 </pre>
 </ul>
 
@@ -187,7 +187,7 @@ You will need to fill in the @...@ values.
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := @this source dir@
 
@@ -197,10 +197,14 @@ PSELIBS := @the list of pre-requisite libraries, in the form:
 		SCICore/Thread SCICore/Malloc ...@
 LIBS := @the list of external libraries@
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:33:23  sparker
+# Updated document to contain template and examples for
+# updated, VPATH-friendly sub.mk's
+#
 # Revision 1.1  2000/03/17 09:23:59  sparker
 # Added a document on the new makefiles
 #
@@ -224,10 +228,14 @@ PSELIBS := @the list of pre-requisite libraries, in the form:
 		SCICore/Thread SCICore/Malloc ...@
 LIBS := @the list of external libraries@
 
-include $(SRCTOP_ABS)/scripts/program.mk
+include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:33:23  sparker
+# Updated document to contain template and examples for
+# updated, VPATH-friendly sub.mk's
+#
 # Revision 1.1  2000/03/17 09:23:59  sparker
 # Added a document on the new makefiles
 #
