@@ -31,7 +31,6 @@
 
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include "Matrix.h"
 
 //namespace SCIRun {
   
@@ -65,7 +64,7 @@ class LinSolver: public sci::cca::Component{
     virtual ~LinSolver();
     sci::cca::Services::pointer getServices(){return services;}
     virtual void setServices(const sci::cca::Services::pointer& svc);
-    bool jacobi(const sci::cca::Matrix::pointer &A, 
+    bool jacobi(const SSIDL::array2<double> &A, 
 		const SSIDL::array1<double> &b);
     SSIDL::array1<double> solution;
  private:
