@@ -45,10 +45,10 @@
 #endif
 #include <algorithm>
 #include <Core/Datatypes/VolumeUtils.h>
-
+#include <strstream>
 using std::hex;
 using std::dec;
-
+using std::ostrstream;
 
 
 namespace Kurt {
@@ -98,6 +98,7 @@ void GridVolVis::execute(void)
   static double old_min = 0;
   static double old_max = 1;
   static bool old_fixed = false;
+  static int dumpcounter = 0;
 
   infield = (FieldIPort *)get_iport("Texture Field");
   incolormap = (ColorMapIPort *)get_iport("Color Map");
@@ -211,9 +212,15 @@ void GridVolVis::execute(void)
   volren->SetNSlices( num_slices.get() );
   volren->SetSliceAlpha( alpha_scale.get() );
   //AuditAllocator(default_allocator);
-  ogeom->flushViews();				  
+  //ogeom->flushViews();	
+  ogeom->flushViewsAndWait();
   //AuditAllocator(default_allocator);
-//   DumpAllocator(default_allocator );
+  char buf[16];
+  ostrstream num(buf, 16);
+  num <<dumpcounter++;
+  string dump_string("gd");
+  dump_string += num.str();
+  //  DumpAllocator(default_allocator, dump_string.c_str() );
 }
 
 } // End namespace Kurt

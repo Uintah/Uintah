@@ -86,6 +86,10 @@ GridSliceVis::GridSliceVis(const string& id)
   drawZ("drawZ", id, this),
   drawView("drawView", id, this),
   interp_mode("interp_mode", id, this),
+  point_x("point_x", id, this),
+  point_y("point_y", id, this),
+  point_z("point_z", id, this),
+  point_init("pointk_init", id, this),
   sliceren(0),
   svr(0)
 {
@@ -134,8 +138,12 @@ GridSliceVis::tcl_command( TCLArgs& args, void* userdata)
 void GridSliceVis::widget_moved(int)
 {
   if( sliceren ){
-      sliceren->SetControlPoint(control_widget->ReferencePoint());
-    }
+    Point w = control_widget->ReferencePoint();
+    point_x.set( w.x() );
+    point_y.set( w.y() );
+    point_z.set( w.z() );
+    sliceren->SetControlPoint(w);
+  }
 }
 
 
@@ -185,16 +193,18 @@ void GridSliceVis::execute(void)
     
     if(LevelMesh *mesh = dynamic_cast<LevelMesh *> (tex->mesh().get_rep()))
     {
-      Smin = mesh->get_min();
-      Smax = mesh->get_max();
+      BBox bb = mesh->get_bounding_box();
+      Smin = bb.min();
+      Smax = bb.max();
       nx = mesh->get_nx();
       ny = mesh->get_ny();
       nz = mesh->get_nz();
     } else if( LatVolMesh *mesh =
 	       dynamic_cast<LatVolMesh *> (tex->mesh().get_rep()))
     {
-      Smin = mesh->get_min();
-      Smax = mesh->get_max();
+      BBox bb = mesh->get_bounding_box();
+      Smin = bb.min();
+      Smax = bb.max();
       nx = mesh->get_nx();
       ny = mesh->get_ny();
       nz = mesh->get_nz();
@@ -207,7 +217,19 @@ void GridSliceVis::execute(void)
     ddv.y(dv.y()/(ny - 1));
     ddv.z(dv.z()/(nz - 1));
     ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
-    control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
+    if( point_init.get() ){
+      control_widget->SetPosition( Point( point_x.get(),
+					  point_y.get(),
+					  point_z.get()) );
+    } else {
+      Point w( Interpolate(Smin,Smax,0.5) );
+      control_widget->SetPosition( w );
+      point_init.set(1);
+      point_x.set( w.x() );
+      point_y.set( w.y() );
+      point_z.set( w.z() );
+
+    }
     control_widget->SetScale(dv.length()/80.0);
   }
 
@@ -246,16 +268,18 @@ void GridSliceVis::execute(void)
       old_tex = tex;
     if(LevelMesh *mesh = dynamic_cast<LevelMesh *> (tex->mesh().get_rep()))
     {
-      Smin = mesh->get_min();
-      Smax = mesh->get_max();
+      BBox bb = mesh->get_bounding_box();
+      Smin = bb.min();
+      Smax = bb.max();
       nx = mesh->get_nx();
       ny = mesh->get_ny();
       nz = mesh->get_nz();
     } else if( LatVolMesh *mesh =
 	       dynamic_cast<LatVolMesh *> (tex->mesh().get_rep()))
     {
-      Smin = mesh->get_min();
-      Smax = mesh->get_max();
+      BBox bb = mesh->get_bounding_box();
+      Smin = bb.min();
+      Smax = bb.max();
       nx = mesh->get_nx();
       ny = mesh->get_ny();
       nz = mesh->get_nz();
