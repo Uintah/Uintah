@@ -66,6 +66,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_explicit_press      = false;
   switchDebug_PressFC             = false;
   switchDebugLagrangianValues     = false;
+  switchDebugLagrangianSpecificVol= false;
   switchDebugMomentumExchange_CC  = false;
   switchDebugSource_Sink          = false;
   switchDebug_advance_advect      = false;
@@ -88,7 +89,7 @@ ICE::~ICE()
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
-void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
                         SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
@@ -139,6 +140,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
        switchDebug_PressFC              = true;
       else if (debug_attr["label"] == "switchDebugLagrangianValues")
        switchDebugLagrangianValues      = true;
+      else if (debug_attr["label"] == "switchDebugLagrangianSpecificVol")
+       switchDebugLagrangianSpecificVol = true;
       else if (debug_attr["label"] == "switchDebugMomentumExchange_CC")
        switchDebugMomentumExchange_CC   = true;
       else if (debug_attr["label"] == "switchDebugSource_Sink")
@@ -269,6 +272,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     cout_norm << "switchDebug_PressFC is ON" << endl;
   if (switchDebugLagrangianValues == true) 
     cout_norm << "switchDebugLagrangianValues is ON" << endl;
+  if (switchDebugLagrangianSpecificVol == true) 
+    cout_norm << "switchDebugLagrangianSpecificVol is ON" << endl;
   if (switchDebugSource_Sink == true) 
     cout_norm << "switchDebugSource_Sink is ON" << endl;
   if (switchDebug_advance_advect == true) 
@@ -981,8 +986,34 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                      press_CC,   gamma,   cv[m],
                                      rho_micro[m],    Temp_CC[m]);
       }
-    }  
-    
+      //__________________________________
+      //    B U L L E T   P R O O F I N G
+      //press_CC[IntVector(1,1,1)] = -press_CC[IntVector(1,1,1)];
+      IntVector neg_cell;
+      ostringstream warn;
+      if( !areAllValuesPositive(press_CC, neg_cell) ) {
+        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " press_CC is negative\n";
+        throw ProblemSetupException(warn.str() );
+      }
+      if( !areAllValuesPositive(rho_CC[m], neg_cell) ) {
+        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " rho_CC is negative\n";
+        throw ProblemSetupException(warn.str() );
+      }
+      if( !areAllValuesPositive(Temp_CC[m], neg_cell) ) {
+        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " Temp_CC is negative\n";
+        throw ProblemSetupException(warn.str() );
+      }
+      if( !areAllValuesPositive(sp_vol_CC[m], neg_cell) ) {
+        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " sp_vol_CC is negative\n";
+        throw ProblemSetupException(warn.str() );
+      }
+    }   // numMatls loop 
+
+          
     for (int m = 0; m < numMatls; m++ ) { 
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex(); 
@@ -1795,7 +1826,18 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,   indx,patch,Ghost::None,0);
       new_dw->get(burnedMass,  lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
-
+      
+      //---- P R I N T   D A T A ------  
+      if (switchDebug_explicit_press ) {
+        ostringstream desc;
+        desc<<"middle_explicit_Pressure_Mat_"<<indx<<"_patch_"<<patch->getID();
+        printData(    patch,1, desc.str(), "vol_frac",   vol_frac);
+        printData(    patch,1, desc.str(), "speedSound", speedSound);
+        printData(    patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC[m]);
+        printData_FC( patch,1, desc.str(), "uvel_FC",    uvel_FC);
+        printData_FC( patch,1, desc.str(), "vvel_FC",    vvel_FC);
+        printData_FC( patch,1, desc.str(), "wvel_FC",    wvel_FC);
+      }
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
@@ -1807,18 +1849,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       }
       //__________________________________
       //   First order advection of q_CC
-      advector->advectQ(q_CC,patch,q_advected);
-
-      //---- P R I N T   D A T A ------  
-      if (switchDebug_explicit_press ) {
-        ostringstream desc;
-        desc<<"middle_explicit_Pressure_Mat_"<<indx<<"_patch_"<<patch->getID();
-        printData(    patch,1, desc.str(), "speedSound", speedSound);
-        printData(    patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC[m]);
-        printData_FC( patch,1, desc.str(), "uvel_FC",    uvel_FC);
-        printData_FC( patch,1, desc.str(), "vvel_FC",    vvel_FC);
-        printData_FC( patch,1, desc.str(), "wvel_FC",    wvel_FC);
-      }    
+      advector->advectQ(q_CC,patch,q_advected);    
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -1853,11 +1884,20 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     if (switchDebug_explicit_press) {
       ostringstream desc;
       desc << "Bottom_of_explicit_Pressure_patch_" << patch->getID();
-    //printData( patch, 1,desc.str(), "term2",         term2);
-    //printData( patch, 1,desc.str(), "term3",         term3); 
+      printData( patch, 1,desc.str(), "term2",         term2);
+      printData( patch, 1,desc.str(), "term3",         term3); 
       printData( patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
     //printData( patch, 1,desc.str(), "delP_MassX",    delP_MassX);
       printData( patch, 1,desc.str(), "Press_CC",      press_CC);
+    }
+    //__________________________________
+    //  B U L L E T   P R O O F I N G
+    IntVector neg_cell;
+    if(!areAllValuesPositive(press_CC, neg_cell) ) {
+      ostringstream warn;
+      warn<<"ERROR: ICE::computeDelPressAndUpdatePressCC, cell "
+          << neg_cell<< " Negative press_CC";
+      throw InvalidValue(warn.str());
     }
   }  // patch loop
 }
@@ -2515,21 +2555,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
        cout << "Mass gained by the gas this timestep = " << massGain << endl;
        }  //  if (mass exchange)
 
-        //__________________________________
-        //  B U L L E T   P R O O F I N G
-        // catch negative internal energies
-        double numcells = 0;
-        double int_eng_sign_sum = 0;
-        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
-             iter++) {
-          IntVector c = *iter;
-          int_eng_sign_sum += int_eng_L[c]/fabs(int_eng_L[c]);
-          numcells++;
-        }
-        if (fabs(int_eng_sign_sum - numcells) > 1.0e-2) {
-         string warn = "ICE::computeLagrangianValues: Negative Internal energy or Temperature detected";
-         throw InvalidValue(warn);
-        }
         //---- P R I N T   D A T A ------ 
         // Dump out all the matls data
         if (switchDebugLagrangianValues ) {
@@ -2540,6 +2565,16 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           printVector(patch,1, desc.str(), "zmom_L_CC", 2, mom_L);
           printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
 
+        }
+        //__________________________________
+        //  B U L L E T   P R O O F I N G
+        // catch negative internal energies
+        IntVector neg_cell;
+        if (!areAllValuesPositive(int_eng_L, neg_cell) ) {
+         ostringstream warn;
+         warn<<"ICE::computeLagrangianValues, mat "<<indx<<" cell "
+             <<neg_cell<<" Negative int_eng_L \n";
+         throw InvalidValue(warn.str());
         }
         new_dw->put(mom_L,     lb->mom_L_CCLabel,     indx,patch);
         new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
@@ -2569,7 +2604,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
     constCCVariable<double> rho_CC, createdVol, sp_vol;
     //__________________________________
-    //  Compute the Lagrangian specific volume
+    //  Note that spec_vol_L[m] = Mass[m] * sp_vol[m]
     for(int m = 0; m < numALLMatls; m++) {
      Material* matl = d_sharedState->getMaterial( m );
      int indx = matl->getDWIndex();
@@ -2878,6 +2913,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     double vol = dx.x()*dx.y()*dx.z(),mass;
     double invvol = 1.0/vol;
     double cv;
+    IntVector neg_cell;
+    ostringstream warn;
 
     // These arrays get re-used for each material, and for each
     // advected quantity
@@ -2958,7 +2995,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }   
      
       setBC(rho_CC, "Density", patch, d_sharedState, indx);
-
+      
       //__________________________________
       // Advect  momentum and backout vel_CC
       for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
@@ -2992,9 +3029,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
       
       setBC(temp, "Temperature", patch, d_sharedState, indx);
-
+      
       //__________________________________
-      // Advection of specific volume.  Advected quantity is a volume fraction
+      // Advection of specific volume
+      // Note sp_vol_L[m] is actually sp_vol[m] * Mass[m] 
       for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
         IntVector c = *iter;
         q_CC[c] = spec_vol_L[c]*invvol;
@@ -3002,7 +3040,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       advector->advectQ(q_CC,patch,q_advected);
 
-      // After the following expression, sp_vol_CC is the matl volume
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
        IntVector c = *iter;
        sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c])/(rho_CC[c]*vol);
@@ -3023,6 +3060,23 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
        printVector( patch,1, desc.str(), "uvel_CC", 0,  vel_CC);
        printVector( patch,1, desc.str(), "vvel_CC", 1,  vel_CC);
        printVector( patch,1, desc.str(), "wvel_CC", 2,  vel_CC);
+      }
+      //__________________________________
+      //   B U L L E T   P R O O F I N G
+      if (!areAllValuesPositive(rho_CC, neg_cell)) {
+        warn <<"ERROR ICE::advectAndAdvanceInTime, mat "<< indx <<" cell "
+             << neg_cell << " negative rho_CC\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!areAllValuesPositive(temp, neg_cell)) {
+        warn <<"ERROR ICE::advectAndAdvanceInTime, mat "<< indx <<" cell "
+             << neg_cell << " negative temp_CC\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!areAllValuesPositive(sp_vol_CC, neg_cell)) {
+        warn <<"ERROR ICE::advectAndAdvanceInTime, mat "<< indx <<" cell "
+             << neg_cell << " negative sp_vol_CC\n ";        
+       throw InvalidValue(warn.str());
       }
       if(ice_matl) {
         new_dw->put(vel_CC,   lb->vel_CCLabel,           indx,patch);
@@ -3418,7 +3472,43 @@ void ICE::getExchangeCoefficients( DenseMatrix& K, DenseMatrix& H  )
      throw InvalidValue("Number of exchange components don't match.");
   
 }
+/*---------------------------------------------------------------------
+ Function~  ICE::areAllValuesPositive--
+ ---------------------------------------------------------------------  */
+bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
+{ 
+  double numCells = 0;
+  double sum_src = 0;
+  //#if SCI_ASSERTION_LEVEL != 0  // turn off if assertion level = 0
+  //    add this when you turn it on (#include <sci_defs.h>)
+  IntVector lowIndex  = src.getLowIndex();
+  IntVector highIndex = src.getHighIndex();
+  for(int i=lowIndex.x();i<highIndex.x();i++) {
+    for(int j=lowIndex.y();j<highIndex.y();j++) {
+      for(int k=lowIndex.z();k<highIndex.z();k++) {
+	sum_src += src[IntVector(i,j,k)]/fabs(src[IntVector(i,j,k)]);
+	numCells++;
+      }
+    }
+  }
+  //#endif  
+  // now find the first cell where the value is < 0   
+  if (fabs(sum_src - numCells) > 1.0e-2) {
 
+    for(int i=lowIndex.x();i<highIndex.x();i++) {
+      for(int j=lowIndex.y();j<highIndex.y();j++) {
+	for(int k=lowIndex.z();k<highIndex.z();k++) {
+	  if (src[IntVector(i,j,k)] < 0.0) {
+	    neg_cell = IntVector(i,j,k);
+	    return false;
+	  }
+	}
+      }
+    }
+  } 
+  neg_cell = IntVector(0,0,0); 
+  return true;      
+} 
 
 #ifdef __sgi
 #define IRIX
