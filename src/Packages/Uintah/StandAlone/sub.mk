@@ -21,7 +21,6 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
-        Packages/Uintah/CCA/Components/HETransformation \
         Packages/Uintah/CCA/Components/Arches/Mixing \
         Packages/Uintah/CCA/Components/Arches/fortran \
         Packages/Uintah/CCA/Components/Arches/Radiation \
