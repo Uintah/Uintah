@@ -535,7 +535,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   /* Step 10: Effect of the area integral in J-integral formula
                   */
                   double Jx2=0.,Jy2=0.;
-                  if(d_useVolumeIntegral) {
+                  if(useVolumeIntegral) {
                     // Define integral points in the area enclosed by J-integral contour
                     int nc=(int)(d_rJ/dx_max);
                     if(d_rJ/dx_max-nc>=0.5) nc++;
@@ -719,6 +719,9 @@ void Crack::OutputCrackFrontResults(const int& m)
 
   bool timeToDump = dataArchiver->wasOutputTimestep();
   if(timeToDump) {
+    double time=d_sharedState->getElapsedTime();
+    int timestep=d_sharedState->getCurrentTopLevelTimeStep();
+
     int num=(int)cfSegNodes[m].size();
     int numSubCracks=0;
     for(int i=0;i<num;i++) {
@@ -727,7 +730,8 @@ void Crack::OutputCrackFrontResults(const int& m)
         int node=cfSegNodes[m][i];
         Point cp=cx[m][node];
         Vector cfPara=cfSegK[m][i];
-        outCrkFrt << setw(15) << time
+        outCrkFrt << setw(5) << timestep
+                  << setw(15) << time
                   << setw(5)  << (i-1+2*numSubCracks)/2
                   << setw(10)  << node
                   << setw(15) << cp.x()
