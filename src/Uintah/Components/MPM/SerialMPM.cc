@@ -121,7 +121,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					  lb->pMicrocrackSizeLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pMicrocrackPositionLabel,
 					  lb->pMicrocrackPositionLabel_preReloc); 
-					  
+       lb->registerPermanentParticleState(m,lb->pCrackingSpeedLabel,
+					  lb->pCrackingSpeedLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 					  lb->pIsBrokenLabel_preReloc); 
      }
@@ -675,6 +676,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			 Ghost::None);
 	      t->requires( old_dw, lb->pMicrocrackPositionLabel, idx, patch,
 			 Ghost::None);
+	      t->requires( old_dw, lb->pCrackingSpeedLabel, idx, patch,
+			 Ghost::None);
 	      t->requires( old_dw, lb->pVolumeLabel, idx, patch,
 			 Ghost::None);
 	      t->requires( new_dw, lb->pDilationalWaveSpeedLabel, idx, patch,
@@ -688,6 +691,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pMicrocrackSizeLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pMicrocrackPositionLabel_preReloc, idx, patch );
+	      t->computes( new_dw, lb->pCrackingSpeedLabel_preReloc, idx, patch );
 	    }
 	 }
 
@@ -1840,6 +1844,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.143  2000/09/11 01:08:37  tan
+// Modified time step calculation (in constitutive model computeStressTensor(...))
+// when fracture cracking speed involved.
+//
 // Revision 1.142  2000/09/11 00:14:55  tan
 // Added calculations on random distributed microcracks in broken particles.
 //
