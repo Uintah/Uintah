@@ -39,6 +39,7 @@ namespace SCIRun {
   class SpChannel;
   class Thread;
   class DTPoint;
+  class DTMessage;
   class SocketEpChannel : public EpChannel {
     friend class SocketMessage;
     friend class SocketThread;
@@ -54,8 +55,7 @@ namespace SCIRun {
     void allocateHandlerTable(int size);
     void registerHandler(int num, void* handle);
     void bind(SpChannel* spchan);
-
-    void runService();
+    int getTableSize();
   private:
     DTPoint *ep;
 

@@ -39,6 +39,7 @@ DTPoint::DTPoint(){
   object=NULL;
   sema=new Semaphore("DTPoint semaphore", 0);
   PIDL::getDT()->registerPoint(this);
+  service=NULL;
 }
 
 DTPoint::~DTPoint(){
@@ -59,10 +60,8 @@ DTPoint::putMessage(DTMessage *msg){
 }
 
 
-void 
-DTPoint::wakeup(){
-  sema->up();
-}
+
+
 
 
 

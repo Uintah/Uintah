@@ -59,12 +59,11 @@ using namespace std;
 using namespace SCIRun;
 
 
-SocketMessage::SocketMessage(SocketEpChannel *epchan, DTMessage *dtmsg)
+SocketMessage::SocketMessage(DTMessage *dtmsg)
 {
   this->msg=dtmsg->buf;
   this->dtmsg=dtmsg;
   msg_size=sizeof(int); //skip handler_id
-  this->epchan=epchan;
   spchan=NULL;
 }
 
@@ -74,7 +73,6 @@ SocketMessage::SocketMessage(SocketSpChannel *spchan)
   this->msg=NULL;
   msg_size=sizeof(int); //skip handler_id
   this->spchan=spchan;
-  epchan=NULL;
 }
 
 SocketMessage::~SocketMessage() {
@@ -133,10 +131,10 @@ SocketMessage::sendMessage(int handler){
   wmsg->length=msg_size;
   wmsg->autofree=true;
 
-  if(epchan!=NULL){
+  if(dtmsg!=NULL){
     wmsg->recver=dtmsg->sender;
     wmsg->to_addr=dtmsg->fr_addr;
-    epchan->ep->putMessage(wmsg);
+    dtmsg->recver->putMessage(wmsg);
   }
   else{
     wmsg->recver=spchan->ep;
@@ -198,8 +196,8 @@ SocketMessage::unmarshalSpChannel(SpChannel* channel){
 
 void* 
 SocketMessage::getLocalObj(){
-  if(epchan!=NULL){
-    return epchan->ep->object;
+  if(dtmsg!=NULL){
+    return dtmsg->recver->object;
   }
   else{
     if(!PIDL::getDT()->isLocal(spchan->ep_addr)) return NULL;

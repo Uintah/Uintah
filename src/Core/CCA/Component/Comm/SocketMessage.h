@@ -41,7 +41,7 @@ namespace SCIRun {
   class SocketMessage : public Message {
   public:
     SocketMessage(SocketSpChannel *spchan);
-    SocketMessage(SocketEpChannel *spchan, DTMessage *dtmsg);
+    SocketMessage(DTMessage *dtmsg);
     virtual ~SocketMessage();
     void* getLocalObj();
     void createMessage();
@@ -75,7 +75,6 @@ namespace SCIRun {
     int capacity;
     int msg_size;
     static const int INIT_SIZE=1024;
-    SocketEpChannel *epchan;
     SocketSpChannel *spchan;
     DTMessage *dtmsg;
   };
