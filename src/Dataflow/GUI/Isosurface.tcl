@@ -55,7 +55,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval 0
 	set $this-isoval-typed 0
 	set $this-isoval-quantity 1
-	set $this-quantity-range "colormap"
+	set $this-quantity-range "field"
 	set $this-quantity-min 0
 	set $this-quantity-max 100
 	set $this-isoval-list "0.0 1.0 2.0 3.0"
@@ -65,7 +65,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-algorithm 0
 	set $this-build_trisurf 1
 	set $this-np 1
-	set $this-active_tab "MC"
 	set $this-update_type "on release"
 	set $this-color-r 0.4
 	set $this-color-g 0.2
@@ -146,7 +145,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	 
 	 #pack the node color frame
 	 pack $frame.colorFrame.set_color $frame.colorFrame.swatch -side left
-	 pack $frame.colorFrame -side left
+	 pack $frame.colorFrame -side left -padx 3 -pady 3
 
     }
 
@@ -177,7 +176,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection"
 	set isf [$w.f.iso childsite]
 
-	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 180
+	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 130
 	pack $isf.tabs -side top -fill x -expand 1
 	pack $w.f.iso -side top -fill x -expand 1
 
@@ -189,10 +188,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    [set $this-isoval-min] [set $this-isoval-max] \
 	     4c $this-isoval $this-isoval2
 
-	button $sel.extract -text "Extract" -command "$this-c needexecute"
-
 	pack $sel.isoval  -fill x
-	pack $sel.extract -side top -expand 1
 
 	# Iso Value using quantity
 	
@@ -203,8 +199,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	entry $sel.f.e -width 20 -text $this-isoval-quantity
 	bind $sel.f.e <Return> "$this-c needexecute"
 	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
-	frame $sel.m -relief groove -borderwidth 2
-	label $sel.m.l -text "MinMax Determination"
+	frame $sel.m
 	radiobutton $sel.m.c -text "ColorMap MinMax" \
 		-variable $this-quantity-range -value "colormap" \
 		-command "$this-c needexecute"
@@ -224,12 +219,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 	bind $sel.m.t.maxe <Return> "$this-c needexecute"
 	pack $sel.m.t.minl $sel.m.t.mine $sel.m.t.maxl $sel.m.t.maxe \
 		-side left -fill x -expand 1
-	pack $sel.m.l -side top
+
 	pack $sel.m.c $sel.m.f -side top -anchor w
 	pack $sel.m.m $sel.m.t -side left -anchor w
 
-	button $sel.extract -text "Extract" -command "$this-c needexecute"
-	pack $sel.f $sel.m $sel.extract -side top -expand 1 -fill x
+	pack $sel.f $sel.m -side top -expand 1 -fill x -pady 5
 
 	# Iso Value using list
 	
@@ -240,9 +234,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	entry $isolist.f.e -width 40 -text $this-isoval-list
 	bind $isolist.f.e <Return> "$this-c needexecute"
 	pack $isolist.f.l $isolist.f.e -side left -fill both -expand 1
-	button $isolist.extract -text "Extract" -command "$this-c needexecute"
 	pack $isolist.f -fill x
-	pack $isolist.extract -side top -expand 1
 
 	# Pack the Iso Value Selection Tabs
 
@@ -280,33 +272,32 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $w.f.opt -side top -fill x -expand 1
 
 	#  Methods
-	iwidgets::labeledframe $w.f.meth -labelpos nw -labeltext "Methods"
+	iwidgets::labeledframe $w.f.meth -labelpos nw \
+	    -labeltext "Computation Method"
 	set mf [$w.f.meth childsite]
-	
-	iwidgets::tabnotebook  $mf.tabs -raiseselect true 
-	#-fill both
-	pack $mf.tabs -side top
 
-	#  Method:
+	frame $mf.mc
+	radiobutton $mf.mc.r -text "Marching Cubes" \
+	    -variable $this-algorithm -value 0 -command "$this select-alg"
 
-	set alg [$mf.tabs add -label "MC" -command "$this select-alg 0"]
-	
-        scale $alg.np -label "Threads:" \
-		-variable $this-np \
-		-from 1 -to 32 \
-		-showvalue true \
-		-orient horizontal
-	
-        pack $alg.np -side left -fill x
+	label $mf.mc.lthreads -text "Threads:"
+	entry $mf.mc.ethreads -textvar $this-np -width 3
 
-	set alg [$mf.tabs add -label "NOISE"  -command "$this select-alg 1"]
+	pack $mf.mc.r -side left
+	pack $mf.mc.ethreads $mf.mc.lthreads -side right -padx 5
 
-	$mf.tabs view [set $this-active_tab]
-	$mf.tabs configure -tabpos "n"
+	bind $mf.mc.ethreads <Return> "$this select-alg"
 
-	pack $mf.tabs -side top -fill x -expand 1
+	radiobutton $mf.noise -text "NOISE" \
+	    -variable $this-algorithm -value 1 -command "$this select-alg"
+
+	pack $mf.mc -side top -anchor w -expand y -fill x
+	pack $mf.noise -side top -anchor w
+
 	pack $w.f.meth -side top -fill x -expand 1
 
+	button $w.execute -text Execute -command "$this-c needexecute"
+	pack $w.execute -fill x -expand yes -padx 10 -pady 5
     }
 
     method set-isoval {} {
@@ -325,20 +316,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	$tab.tabs configure -tabpos [$page.orient get]
     }
 
-    method select-alg { alg } {
-	global $this-algorithm
-	global $this-active_tab
-
-	if { $alg == 0 } {
-	    set $this-active_tab "MC"
-	} else {
-	    set $this-active_tab "NOISE"
-	}
-	if { [set $this-algorithm] != $alg } {
-	    set $this-algorithm $alg
-	    if { [set $this-continuous] == 1.0 } {
-		eval "$this-c needexecute"
-	    }
+    method select-alg {} {
+	if { [set $this-update] != "Manual" } {
+	    eval "$this-c needexecute"
 	}
     }
 
