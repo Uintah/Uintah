@@ -69,34 +69,6 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	}
     }
 
-#     method fill_tuple_tab {} {
-#         set w .ui[modname]
-
-# 	if {![winfo exists $w]} {
-#             return
-#         }
-# 	set att [$w.att childsite]
-# 	# tuple tab is always first
-# 	set tuple [$att.tabs childsite 0]
-# 	#parse the label axis string to gather all the info out of it.
-# 	set l [regexp -inline -all -- {([\w-]+):(\w+),?} [set $this-label0]]
-
-# 	set last [$tuple.listbox index end]
-# 	$tuple.listbox delete 0 $last
-# 	$tuple.listbox insert 0 "Name (Type)"
-	
-# 	if {[llength $l]} {
-# 	    set ind 1
-# 	    foreach {match axname type} $l {
-# 		$tuple.listbox insert $ind "$axname ($type)"
-# 		incr ind
-# 	    }
-# 	} else {
-# 	    $tuple.listbox insert 1 "unknown tuple axis label format"
-# 	    $tuple.listbox insert 2 [set $this-label0]
-# 	}
-#     }
-
     method delete_tabs {} {
 	set w .ui[modname]
 	

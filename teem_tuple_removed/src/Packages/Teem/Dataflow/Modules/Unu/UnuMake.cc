@@ -199,6 +199,10 @@ void UnuMake::read_file_and_create_nrrd() {
       nout_->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
     else if (kind == "nrrdKind3DTensor")
       nout_->nrrd->axis[0].kind = nrrdKind3DTensor;
+    else if (kind == "nrrdKindList")
+      nout_->nrrd->axis[1].kind = nrrdKindList;
+    else if (kind == "nrrdKindStub")
+      nout_->nrrd->axis[1].kind = nrrdKindStub;
     else
       nout_->nrrd->axis[0].kind = nrrdKindUnknown;
 

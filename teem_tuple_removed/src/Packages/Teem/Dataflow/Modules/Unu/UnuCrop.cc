@@ -31,6 +31,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <sstream>
 #include <iostream>
@@ -228,6 +229,10 @@ UnuCrop::execute()
   for(int i = 0; i <  num_axes_.get(); i++) {
     min[i] = mins_[i]->get();
     max[i] = maxs_[i]->get();
+
+    if (nrrdKindSize(nin->axis[i].kind) > 1 && (min[i] != 0 || max[i] != absmaxs_[i]->get())) {
+      warning("Trying to crop axis " + to_string(i) + " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
+    }
   }
 
   if (nrrdCrop(nout, nin, min, max)) {

@@ -281,6 +281,15 @@ void UnuAxinfo::execute()
       case nrrdKindScalar:
 	kind_[a]->set("nrrdKindScalar");
 	break;
+      case nrrdKind3Color:
+	kind_[a]->set("nrrdKind3Color");
+	break;
+      case nrrdKind3Vector:
+	kind_[a]->set("nrrdKind3Vector");
+	break;
+      case nrrdKind3Normal:
+	kind_[a]->set("nrrdKind3Normal");
+	break;
       case nrrdKind3DSymTensor:
 	kind_[a]->set("nrrdKind3DSymTensor");
 	break;
@@ -289,6 +298,12 @@ void UnuAxinfo::execute()
 	break;
       case nrrdKind3DTensor:
 	kind_[a]->set("nrrdKind3DTensor");
+	break;
+      case nrrdKindList:
+	kind_[a]->set("nrrdKindList");
+	break;
+      case nrrdKindStub:
+	kind_[a]->set("nrrdKindStub");
 	break;
       default:
 	kind_[a]->set("nrrdKindUnknown");
@@ -366,6 +381,10 @@ void UnuAxinfo::execute()
 	nout->axis[i].kind = nrrdKind3DMaskedSymTensor;
       } else if (kind == "nrrdKind3DTensor") {
 	nout->axis[i].kind = nrrdKind3DTensor;
+      } else if (kind == "nrrdKindList") {
+	nout->axis[i].kind = nrrdKindList;
+      } else if (kind == "nrrdKindStub") {
+	nout->axis[i].kind = nrrdKindStub;
       } else {
 	nout->axis[i].kind = nrrdKindUnknown;
       }
