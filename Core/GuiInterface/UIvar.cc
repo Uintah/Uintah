@@ -68,6 +68,11 @@ inline GuiContext & UiSingle<T>::operator->() {
   return *context_;
 }
 
+template<class T>
+inline bool UiSingle<T>::operator!() {
+  get();
+  return !value_;
+}
 
 
 template<class T>
