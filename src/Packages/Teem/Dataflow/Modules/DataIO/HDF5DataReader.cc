@@ -86,6 +86,24 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
 HDF5DataReader::~HDF5DataReader() {
 }
 
+
+
+// Allows nrrds to join along tuple i.e. scalar and vector sets can be joined,
+// or allows for a multiple identical nrrds to assume a time series, 
+// and be joined along a new time axis. 
+bool
+HDF5DataReader::is_mergeable(Nrrd* n1, Nrrd* n2) const
+{
+  if (n1->type != n2->type) return false;
+  if (n1->dim != n2->dim)  return false;
+  for (int i = 1; i < n1->dim; i++) {
+    if (n1->axis[i].size != n2->axis[i].size) return false;
+  }
+
+  return true;
+}
+
+
 void HDF5DataReader::execute() {
 
 #ifdef HAVE_HDF5
@@ -126,6 +144,8 @@ void HDF5DataReader::execute() {
 
     updateFile = true;
   }
+  // get all the actual values from gui.
+  reset_vars();
 
   if( mergedata_ != mergeData_.get() ||
       assumesvt_ != assumeSVT_.get() ) {
@@ -175,27 +195,32 @@ void HDF5DataReader::execute() {
     parseDatasets( new_datasets, paths, datasets );
 
     vector< vector<NrrdDataHandle> > nHandles;
-
+    
     for( int ic=0; ic<paths.size(); ic++ ) {
 
-      NrrdDataHandle handle =
-	readDataset( new_filename, paths[ic], datasets[ic]);
+      NrrdDataHandle handle = readDataset(new_filename, paths[ic], 
+					  datasets[ic]);
 
-      int jc = 0;
+      bool inserted = false;
+      vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
+      while (iter != nHandles.end()) {
 
-      while( jc<nHandles.size() ) {
-	if( handle->nrrd->type == nHandles[jc][0]->nrrd->type ) {
-	  nHandles[jc].push_back( handle );
-	  
+	vector<NrrdDataHandle> &vec = *iter;
+	++iter;
+
+	if (vec.size() == 0) {
+	  vec.push_back(handle);
+	  inserted = true;
 	  break;
-
-	} else
-	  ++jc;
+	} else if(is_mergeable(handle->nrrd, vec[0]->nrrd)) {
+	  vec.push_back(handle);
+	  inserted = true;
+	  break;
+	}
       }
 
-      if( nHandles.size() == 0 || ic<nHandles.size() ) {
+      if (! inserted) {
 	vector<NrrdDataHandle> nrrdSet;
-
 	nrrdSet.push_back( handle );
 	nHandles.push_back( nrrdSet );
       }
@@ -204,60 +229,63 @@ void HDF5DataReader::execute() {
     // Merge the like datatypes together.
     if( mergedata_ ) {
 
-      for( int ic=0; ic<nHandles.size(); ic++ ) {
-	if( nHandles[ic].size() > 1) {
+      vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
+      while (iter != nHandles.end()) {
 
+	vector<NrrdDataHandle> &vec = *iter;
+	++iter;
+
+	if (vec.size() > 1) {
+	  
 	  NrrdData* onrrd = new NrrdData(true);
-
-	  Array1<Nrrd*> arr( nHandles[ic].size() );
 	  string new_label("");
 	  string axis_label("");
 
-	  int dim, axis=0;
+	  bool time_axis = true;
+	  // check if this is a time axis merge or a tuple axis merge.
+	  vector<Nrrd*> join_me;
+	  vector<NrrdDataHandle>::iterator niter = vec.begin();
+	  NrrdDataHandle first = *niter;
+	  string first_tlab(first->nrrd->axis[0].label);
+	  new_label = first_tlab;
+	  ++niter;
+	  join_me.push_back(first->nrrd);
+	  while (niter != vec.end()) {
+	    NrrdDataHandle n = *niter;
+	    ++niter;
+	    join_me.push_back(n->nrrd);
+	    string tlab(n->nrrd->axis[0].label);
+	    if (tlab != first_tlab) time_axis = false;
 
-	  for( int jc=0; jc<nHandles[ic].size(); jc++ ) {
+	    new_label += string(",") + tlab;
 
-	    NrrdData* nrrdData = nHandles[ic][jc].get_rep();
-	    arr[jc] = nrrdData->nrrd;
-
-	    if (jc == 0) {
-	      dim = nrrdData->nrrd->dim;
-
-	      new_label += string(nrrdData->nrrd->axis[0].label);
-	    } else {
-	      bool merge = true;
-
-	      if( dim == nrrdData->nrrd->dim ) {
-		for( int kc=0; kc<nrrdData->nrrd->dim; kc++ )
-		  if( nrrdData->nrrd->axis[kc].size != arr[0]->axis[kc].size )
-		    merge = false;
-	      } else if( dim != nrrdData->nrrd->dim )
-		merge = false;
-
-	      if( !merge )
-		error( "Input data can not be merged - use spearate readers." );
+	  }	  
+	  int axis = 0; // tuple
+	  int incr = 0; // tuple case.
+	  if (time_axis) {
+	    axis = join_me[0]->dim + 1;
+	    incr = 1;
+	  }
+	  onrrd->nrrd = nrrdNew();
+	  if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
+	      char *err = biffGetDone(NRRD);
+	      error(string("Join Error: ") +  err);
+	      free(err);
 	      error_ = true;
 	      return;
 	    }
-
-	    new_label += string(",") + string(nrrdData->nrrd->axis[0].label);
-	  }	  
-
-	  onrrd->nrrd = nrrdNew();
-	  if (nrrdJoin(onrrd->nrrd, &arr[0], nHandles[ic].size(), axis, false)) {
-	    char *err = biffGetDone(NRRD);
-	    error(string("Join Error: ") +  err);
-	    free(err);
-	    error_ = true;
-	    return;
-	  }
 	  
-	  // Take care of tuple axis label.
-	  onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
 
-	  nHandles[ic].clear();
+	  if (time_axis) {
+	    onrrd->nrrd->axis[axis].label = "Time";
+	  } else {
+	    // Take care of tuple axis label.
+	    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
+	  }
 
-	  nHandles[ic].push_back( (NrrdDataHandle) onrrd );
+	  // clear the nrrds;
+	  vec.clear();
+	  vec.push_back(onrrd);
 	}
       }
     }
@@ -628,9 +656,218 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   status = H5Sclose(mem_space_id);
 
 
-  int pad_data = 0; // if 0 then no copy is made 
+  string tuple_type_str(":Scalar");
   int sink_size = 1;
-  string sink_label = group + "-" + dataset + string(":Scalar");
+  NrrdData *nout = scinew NrrdData(false);
+
+  switch(ndims) {
+  case 1: 
+    nrrdWrap(nout->nrrd, data,
+	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0]);
+    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		nrrdCenterNode);
+    break;
+
+  case 2: 
+    {
+      // If the user asks us to assume vector or tensor data, the
+      // assumption is based on the size of the last dimension.
+      int sz_last_dim = 1;
+      if (assumesvt_) { sz_last_dim = count[1];} 
+      
+      switch (sz_last_dim) {
+      case 3: // Vector data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
+		 (unsigned int) count[0], (unsigned int) count[1]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);
+	tuple_type_str = ":Vector";
+	break;
+	
+      case 6: // Tensor data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
+		 (unsigned int) count[0], (unsigned int) count[1]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);	
+	tuple_type_str = ":Tensor";
+	break;
+
+      default: // treat the rest as Scalar data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+		 (unsigned int) count[0], (unsigned int) count[1]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);	
+	break;
+      };
+    }
+    break;
+
+  case 3: 
+    {
+      // If the user asks us to assume vector or tensor data, the
+      // assumption is based on the size of the last dimension.
+      int sz_last_dim = 1;
+      if (assumesvt_) { sz_last_dim = count[2];} 
+      
+      switch (sz_last_dim) {
+      case 3: // Vector data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	tuple_type_str = ":Vector";
+	break;
+	
+      case 6: // Tensor data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
+	tuple_type_str = ":Tensor";
+	break;
+
+      default: // treat the rest as Scalar data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	break;
+      };
+    }
+    break;
+
+  case 4: 
+    {
+      // If the user asks us to assume vector or tensor data, the
+      // assumption is based on the size of the last dimension.
+      int sz_last_dim = 1;
+      if (assumesvt_) { sz_last_dim = count[3]; } 
+
+      switch (sz_last_dim) {
+      case 3: // Vector data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode);
+	tuple_type_str = ":Vector";
+	break;
+	
+      case 6: // Tensor data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode);	
+	tuple_type_str = ":Tensor";
+	break;
+
+      default: // treat the rest as Scalar data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode);
+	break;
+      };
+    }
+    break;
+
+  case 5: 
+    {
+      // If the user asks us to assume vector or tensor data, the
+      // assumption is based on the size of the last dimension.
+      int sz_last_dim = 1;
+      if (assumesvt_) { sz_last_dim = count[4];} 
+      
+      switch (sz_last_dim) {
+      case 3: // Vector data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);
+	tuple_type_str = ":Vector";
+	break;
+	
+      case 6: // Tensor data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);	
+	tuple_type_str = ":Tensor";
+	break;
+
+      default: // treat the rest as Scalar data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);
+	break;
+      };
+    }
+
+    break;
+
+  case 6: 
+        {
+      // If the user asks us to assume vector or tensor data, the
+      // assumption is based on the size of the last dimension.
+      int sz_last_dim = 1;
+      if (assumesvt_) { sz_last_dim = count[5];} 
+      
+      switch (sz_last_dim) {
+      case 3: // Vector data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4], dims[5]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	tuple_type_str = ":Vector";
+	break;
+	
+      case 6: // Tensor data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4], dims[5]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
+	tuple_type_str = ":Tensor";
+	break;
+
+      default: // treat the rest as Scalar data
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4], dims[5]);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	break;
+      };
+    }
+    break;
+  }
+
+  string sink_label = group + "-" + dataset + tuple_type_str;
 
   // Remove all of the tcl special characters.
   std::string::size_type pos;
@@ -640,46 +877,6 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     sink_label.replace( pos, 1, "_" );
   while( (pos = sink_label.find("]")) != string::npos )
     sink_label.erase( pos, 1 );
-
-  NrrdData *nout = scinew NrrdData(pad_data);
-
-  switch(ndims) {
-  case 1: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0]);
-    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, nrrdCenterNode);
-    break;
-
-  case 2: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0], (unsigned int) count[1]);
-    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    break;
-
-  case 3: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0], (unsigned int) count[1], (unsigned int) count[2]);
-    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    break;
-
-  case 4: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0], (unsigned int) count[1], (unsigned int) count[2], (unsigned int) count[3]);
-    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    break;
-
-  case 5: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0], (unsigned int) count[1], (unsigned int) count[2], (unsigned int) count[3], (unsigned int) count[4]);
-    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    break;
-
-  case 6: 
-    nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0], (unsigned int) count[1], (unsigned int) count[2], (unsigned int) count[3], (unsigned int) count[4], dims[5]);
-    nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    break;
-  }
 
   nout->nrrd->axis[0].label = strdup(sink_label.c_str());
 

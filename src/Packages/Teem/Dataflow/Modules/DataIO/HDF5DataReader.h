@@ -64,6 +64,9 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 
 private:
+
+  bool is_mergeable(Nrrd* n1, Nrrd* n2) const;
+
   GuiString filename_;
   GuiString datasets_;
   GuiString dumpname_;
