@@ -2756,11 +2756,12 @@ AC_SUBST(LIBLAPACK)
 
 ##  --  search for petsc stuff  ------------------------------------------
 
-if test "$debug" = "yes"; then
-  PETSC_SUB=libg
-else
+# We only use the optimized petsc lib even if we are building a debug SCIRun
+#if test "$debug" = "yes"; then
+#  PETSC_SUB=libg
+#else
   PETSC_SUB=libO
-fi
+#fi
 
 case $host in
   *-irix*)
