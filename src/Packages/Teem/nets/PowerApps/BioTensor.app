@@ -5181,6 +5181,7 @@ class BioTensorApp {
 
 	    set $mods(ChooseNrrd-BMatrix)-port-index 0
 	    disableModule $mods(NrrdReader-BMatrix) 1
+	    disableModule $mods(NrrdReader-Gradient) 0
 	} else {
             $dt_tab1.bm.childsite.load.e configure -state normal \
                 -foreground black
@@ -5192,6 +5193,7 @@ class BioTensorApp {
 
 	    set $mods(ChooseNrrd-BMatrix)-port-index 1
 	    disableModule $mods(NrrdReader-BMatrix) 0
+	    disableModule $mods(NrrdReader-Gradient) 1
 	}
     }
 
