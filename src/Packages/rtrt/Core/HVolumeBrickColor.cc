@@ -471,6 +471,7 @@ void HVolumeBrickColorDpy::run()
     }
 }
 
+#if 0
 static void printString(GLuint fontbase, double x, double y,
 			char *s, const Color& c)
 {
@@ -483,6 +484,7 @@ static void printString(GLuint fontbase, double x, double y,
     glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
     glPopAttrib ();
 }
+#endif
 
 static int calc_width(XFontStruct* font_struct, char* str)
 {
