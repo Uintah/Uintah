@@ -45,12 +45,12 @@ SRCS     += \
 
 
 
-ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS := Core/Exceptions Core/Thread Core/globus_threads 
-LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) $(UUID_LIB) $(M_LIBRARY)
-else
-PSELIBS := Core/Exceptions Core/Thread 
+PSELIBS := Core/Exceptions Core/Thread Core/CCA/Component/Comm/DT
 LIBS := $(UUID_LIB) $(M_LIBRARY)
+
+ifeq ($(HAVE_GLOBUS),yes)
+PSELIBS += Core/globus_threads 
+LIBS +=  $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) 
 endif
 
 ifeq ($(HAVE_MPI),yes) 
