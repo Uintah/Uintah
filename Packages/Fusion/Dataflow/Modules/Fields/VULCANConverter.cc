@@ -142,13 +142,10 @@ VULCANConverter::execute(){
 
     // Save the field handles.
     if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
-      nrrdName = "Jolly Unknown";
-
       // Get the name of the nrrd being worked on.
       if( !nHandle->get_property( "Name", nrrdName ) ||
 	  nrrdName == "Unknown" ) {
 
-	error( nrrdName );
 	error( "Can not find the name of the nrrd or it is unknown." );
 	return;
       }
