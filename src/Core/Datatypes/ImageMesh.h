@@ -222,6 +222,7 @@ public:
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
   unsigned get_ny() const { return ny_; }
+  unsigned get_nz() const { return 1; }
   Vector diagonal() const;
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
