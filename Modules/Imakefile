@@ -9,7 +9,8 @@ SCISubdirs($(SUBDIRS))
 
 AllTarget(libModules.o)
 
-OBJS = Contours/libContours.o FEM/libFEM.o Matrix/libMatrix.o \
+OBJS = Contours/libContours.o FEM/libFEM.o Fields/libFields.o \
+	Matrix/libMatrix.o \
 	Mesh/libMesh.o Readers/libReaders.o Salmon/libSalmon.o \
 	Sound/libSound.o Surface/libSurface.o \
 	Visualization/libVisualization.o Writers/libWriters.o
