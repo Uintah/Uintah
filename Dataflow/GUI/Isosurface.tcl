@@ -372,10 +372,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-isoval-min
 	global $this-isoval-max
 
-	set $this-isoval-min $min
-	set $this-isoval-max $max
-
-	set_min_max $min $max
+	set_min_max [set $this-isoval-min] [set $this-isoval-max]
     }
 
     method set_min_max { min max } {
