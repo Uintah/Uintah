@@ -28,13 +28,14 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
 class ScalarFieldWriter : public Module {
-    ScalarFieldIPort* inport;
-    TCLstring filename;
-    TCLstring filetype;
+  ScalarFieldIPort* inport;
+  TCLstring filename;
+  TCLstring filetype;
+  TCLint split;
 public:
-    ScalarFieldWriter(const clString& id);
-    virtual ~ScalarFieldWriter();
-    virtual void execute();
+  ScalarFieldWriter(const clString& id);
+  virtual ~ScalarFieldWriter();
+  virtual void execute();
 };
 
 Module* make_ScalarFieldWriter(const clString& id) {
@@ -43,7 +44,8 @@ Module* make_ScalarFieldWriter(const clString& id) {
 
 ScalarFieldWriter::ScalarFieldWriter(const clString& id)
 : Module("ScalarFieldWriter", id, Source), filename("filename", id, this),
-  filetype("filetype", id, this)
+  filetype("filetype", id, this),
+  split("split", id, this)
 {
     // Create the output data handle and port
     inport=scinew ScalarFieldIPort(this, "Input Data", ScalarFieldIPort::Atomic);
@@ -72,6 +74,9 @@ void ScalarFieldWriter::execute()
 	stream=scinew TextPiostream(fn, Piostream::Write);
     }
     // Write the file
+    
+    handle->set_raw( split.get() );
+
     Pio(*stream, handle);
     delete stream;
 }
@@ -81,6 +86,10 @@ void ScalarFieldWriter::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/02/04 00:27:29  yarden
+// Provide a way to write a ScalarFieldRG in two files (a seperate raw file
+// for the grid).
+//
 // Revision 1.6  1999/10/07 02:07:12  sparker
 // use standard iostreams and complex type
 //
