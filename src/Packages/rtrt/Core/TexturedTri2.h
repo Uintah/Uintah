@@ -4,7 +4,7 @@
 
 #include <Packages/rtrt/Core/TexturedTri.h>
 
-#define TEXSCROLLSPEED .1
+#define TEXSCROLLSPEED 1
 
 namespace rtrt {
 
@@ -38,7 +38,7 @@ class TexturedTri2 : public TexturedTri
 
   virtual void animate(double t, bool& changed)
   {
-    translate_tex(Vector(0,t*TEXSCROLLSPEED*.1,0));
+    translate_tex(Vector(0,t*TEXSCROLLSPEED*.0001,0));
     changed=true;
   }
 };
