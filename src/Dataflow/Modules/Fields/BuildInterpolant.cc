@@ -74,7 +74,6 @@ template <> const string find_type_name(vector<pair<LatVolMesh::face_index, doub
 template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *)
 { return "vector<pair<LatVolMesh::cell_index"; }
 
-#if 0
 void Pio(Piostream &s, TetVolMesh::node_index &i)
 { Pio(s, (unsigned int &)i); }
 void Pio(Piostream &s, TetVolMesh::edge_index &i)
@@ -112,16 +111,7 @@ void Pio(Piostream &s, LatVolMesh::cell_index &i)
   Pio(s, i.k_);
   s.end_cheap_delim();
 }
-#else
-void Pio(Piostream &, TetVolMesh::node_index &) {}
-void Pio(Piostream &, TetVolMesh::edge_index &) {}
-void Pio(Piostream &, TetVolMesh::face_index &) {}
-void Pio(Piostream &, TetVolMesh::cell_index &) {}
-void Pio(Piostream &, LatVolMesh::node_index &) {}
-void Pio(Piostream &, LatVolMesh::edge_index &) {}
-void Pio(Piostream &, LatVolMesh::face_index &) {}
-void Pio(Piostream &, LatVolMesh::cell_index &) {}
-#endif
+
 
 // TetVol
 
