@@ -44,6 +44,8 @@ using std::cout;
 using namespace SCIRun;
 using namespace Uintah;
 
+// for calculating memory usage when sci-malloc is disabled.
+char* SimulationController::start_addr = NULL;
 
 SimpleSimulationController::SimpleSimulationController(const ProcessorGroup* myworld) :
   SimulationController(myworld)
@@ -55,8 +57,9 @@ SimpleSimulationController::~SimpleSimulationController()
 {
 }
 
-void SimpleSimulationController::doRestart(std::string restartFromDir, int timestep,
-				     bool fromScratch, bool removeOldDir)
+void
+SimpleSimulationController::doRestart(std::string restartFromDir, int timestep,
+				      bool fromScratch, bool removeOldDir)
 {
    d_restarting = true;
    d_restartFromDir = restartFromDir;
@@ -87,7 +90,8 @@ double stdDeviation(list<double>& vals, double& mean)
 }
 #endif
 
-void SimpleSimulationController::run()
+void 
+SimpleSimulationController::run()
 {
    UintahParallelPort* pp = getPort("problem spec");
    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(pp);
@@ -104,13 +108,15 @@ void SimpleSimulationController::run()
       throw ProblemSetupException("Input file is not a Uintah specification");
 
    bool log_dw_mem=false;
+#ifndef DISABLE_SCI_MALLOC
    ProblemSpecP debug = ups->findBlock("debug");
    if(debug){
      ProblemSpecP log_mem = debug->findBlock("logmemory");
      if(log_mem)
        log_dw_mem=true;
    }
-   
+#endif
+
    Output* output = dynamic_cast<Output*>(getPort("output"));
    output->problemSetup(ups);
    
@@ -207,6 +213,9 @@ void SimpleSimulationController::run()
      cout << "done taskgraph compile (" << dt << " seconds)\n";
    scheduler->execute(d_myworld);
 
+   if(output)
+     output->executedTimestep();
+
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
    list<double> wallTimes;
@@ -281,9 +290,12 @@ void SimpleSimulationController::run()
       }
       
       if(log_dw_mem){
+	// Remember, this isn't logged if DISABLE_SCI_MALLOC is set
+	// (So usually in optimized mode this will not be run.)
 	scheduler->logMemoryUse();
 	ostringstream fn;
-	fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
+	fn << "alloc." << setw(5) << setfill('0') 
+	   << d_myworld->myrank() << ".out";
 	string filename(fn.str());
 	DumpAllocator(DefaultAllocator(), filename.c_str());
       }
@@ -347,13 +359,17 @@ void SimpleSimulationController::run()
       }
       // Execute the current timestep
       scheduler->execute(d_myworld);
+      if(output)
+	output->executedTimestep();
+
       t += delt;
       TAU_DB_DUMP();
    }
 }
 
-void SimpleSimulationController::problemSetup(const ProblemSpecP& params,
-					GridP& grid)
+void 
+SimpleSimulationController::problemSetup(const ProblemSpecP& params,
+					 GridP& grid)
 {
    ProblemSpecP grid_ps = params->findBlock("Grid");
    if(!grid_ps)
@@ -496,9 +512,9 @@ void SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 
 bool
 SimpleSimulationController::need_recompile(double time, double delt,
-				     const LevelP& level,
-				     SimulationInterface* /*sim*/,
-				     Output* output)
+					   const LevelP& level,
+					   SimulationInterface* /*sim*/,
+					   Output* output)
 {
   // Currently, nothing but output can request a recompile.  This
   // should be fixed - steve
