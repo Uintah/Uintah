@@ -100,92 +100,82 @@ private:
                                 int ms,
                                 MatrixHandle &);
 
-inline void  SetupBEMatrix::get_g_coef(
-					const Vector&,
-					const Vector&,
-					const Vector&,
-					const Vector&,
-					double,
-					double,
-					const Vector&,
-					DenseMatrix&);
+  inline void get_g_coef( const Vector&,
+                          const Vector&,
+                          const Vector&,
+                          const Vector&,
+                          double,
+                          double,
+                          const Vector&,
+                          DenseMatrix&);
 
+  inline void get_cruse_weights( const Vector&,
+                                 const Vector&,
+                                 const Vector&,
+                                 double,
+                                 double,
+                                 double,
+                                 DenseMatrix& );
 
-inline void  SetupBEMatrix::get_cruse_weights(
-					const Vector&,
-					const Vector&,
-					const Vector&,
-					double,
-					double,
-					double,
-					DenseMatrix&);
+  inline void getOmega( const Vector&,
+                        const Vector&,
+                        const Vector&,
+                        DenseMatrix& );
 
+  inline double do_radon_g( const Vector&,
+                            const Vector&,
+                            const Vector&,
+                            const Vector&,
+                            double,
+                            double,
+                            DenseMatrix& );
 
-inline void  SetupBEMatrix::getOmega(
-				     const Vector&,
-				     const Vector&,
-				     const Vector&,
-				     DenseMatrix&);
+  inline void get_auto_g( const Vector&,
+                          const Vector&,
+                          const Vector&,
+                          unsigned int,
+                          DenseMatrix&,
+                          double,
+                          double,
+                          DenseMatrix& );
 
+  inline double get_new_auto_g( const Vector&,
+                                const Vector&,
+                                const Vector& );
 
-inline double  SetupBEMatrix::do_radon_g(
-					const Vector&,
-					const Vector&,
-					const Vector&,
-                                        const Vector&,
-                                        double,
-                                        double,
-                                        DenseMatrix&);
+  inline void make_auto_P( TriSurfMeshHandle,
+                           DenseMatrixHandle&,
+                           double,
+                           double,
+                           double );
 
-inline void  SetupBEMatrix::get_auto_g(
-					const Vector&,
-					const Vector&,
-					const Vector&,
-                                        unsigned int,
-					DenseMatrix&,
-                                        double,
-                                        double,
-                                        DenseMatrix&);
+  inline void make_cross_P( TriSurfMeshHandle,
+                            TriSurfMeshHandle,
+                            DenseMatrixHandle&,
+                            double,
+                            double,
+                            double );
 
-inline double  SetupBEMatrix::get_new_auto_g(
-					const Vector&,
-					const Vector&,
-					const Vector&);
+  inline void make_cross_G( TriSurfMeshHandle,
+                            TriSurfMeshHandle,
+                            DenseMatrixHandle&,
+                            double,
+                            double,
+                            double );
 
+  inline void make_auto_G( TriSurfMeshHandle,
+                           DenseMatrixHandle&,
+                           double,
+                           double,
+                           double );
 
-inline void SetupBEMatrix::make_auto_P(TriSurfMeshHandle,
-                                        DenseMatrixHandle&,
-                                        double,
-                                        double,
-                                        double);
+  void concat_rows( DenseMatrixHandle,
+                    DenseMatrixHandle,
+                    DenseMatrix* );
 
-inline void SetupBEMatrix::make_cross_P(TriSurfMeshHandle,
-                                         TriSurfMeshHandle,
-                                         DenseMatrixHandle&,
-                                         double,
-                                         double,
-                                         double);
-
-inline void SetupBEMatrix::make_cross_G(TriSurfMeshHandle,
-                                         TriSurfMeshHandle,
-                                         DenseMatrixHandle&,
-                                         double,
-                                         double,
-                                         double);
-
-inline void SetupBEMatrix::make_auto_G(TriSurfMeshHandle,
-                                        DenseMatrixHandle&,
-                                        double,
-                                        double,
-                                        double);
-
-void SetupBEMatrix::concat_rows(DenseMatrixHandle,
-                                 DenseMatrixHandle,
-                                 DenseMatrix*);
-
-void SetupBEMatrix::concat_cols(DenseMatrixHandle,
-                                 DenseMatrixHandle,
-                                 DenseMatrix*);
+  void concat_cols( DenseMatrixHandle,
+                    DenseMatrixHandle,
+                    DenseMatrix* );
 
 public:
 
@@ -302,7 +292,7 @@ pair_less(const pair<double, int> &a,
 
 int
 SetupBEMatrix::compute_parent(const vector<TriSurfMeshHandle> &meshes,
-			       int index)
+                              int index)
 {
   Point point;
   meshes[index]->get_center(point, TriSurfMesh::Node::index_type(0));
@@ -310,7 +300,7 @@ SetupBEMatrix::compute_parent(const vector<TriSurfMeshHandle> &meshes,
   vector<pair<double, int> > intersections;
 
   unsigned int i;
-  for (i = 0; i < meshes.size(); i++)
+  for (i = 0; i < (unsigned int)meshes.size(); i++)
   {
     compute_intersections(intersections, meshes[i], point, dir, i);
   }
@@ -331,13 +321,13 @@ SetupBEMatrix::compute_parent(const vector<TriSurfMeshHandle> &meshes,
 	}
       }
       // No odd parent, is outside.
-      return meshes.size();
+      return (int)meshes.size();
     }
     counts[intersections[i].second]++;
   }
 
   // Indeterminant, we should intersect with ourselves.
-  return meshes.size();
+  return (int)meshes.size();
 }
 
 
@@ -349,7 +339,7 @@ SetupBEMatrix::compute_nesting(vector<int> &nesting,
   nesting.resize(meshes.size());
 
   unsigned int i;
-  for (i = 0; i < meshes.size(); i++)
+  for (i = 0; i < (unsigned int)meshes.size(); i++)
   {
     nesting[i] = compute_parent(meshes, i);
   }

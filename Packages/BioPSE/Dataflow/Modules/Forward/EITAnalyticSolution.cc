@@ -273,10 +273,10 @@ EITAnalyticSolution::execute(){
   ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
   electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
 
-  unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
+  //unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
   int numElectrodes           = (int) ( (*electrodeParams)[1]);
-  double electrodeLen         = (*electrodeParams)[2];
-  int startNodeIndex          = (int) (*electrodeParams)[3];
+  //double electrodeLen         = (*electrodeParams)[2];
+  //int startNodeIndex          = (int) (*electrodeParams)[3];
 
 
   cout << "number of electrodes = " << numElectrodes << endl;
