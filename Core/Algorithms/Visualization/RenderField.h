@@ -30,6 +30,7 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomDL.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/ColorMap.h>
@@ -442,7 +443,8 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   //cerr << "rendering nodes" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
   GeomGroup* nodes = scinew GeomGroup;
-  node_switch_ = scinew GeomSwitch(nodes);
+  GeomDL *display_list = scinew GeomDL(nodes);
+  node_switch_ = scinew GeomSwitch(display_list);
   GeomPts *pts = 0;
 
   // 0 Points 1 Spheres 2 Axes 3 Disks
@@ -532,12 +534,14 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   {
     cedges = scinew GeomCLines;
     cedges->setLineWidth(edge_scale);
-    edge_switch_ = scinew GeomSwitch(cedges);
+    GeomDL *display_list = scinew GeomDL(cedges);
+    edge_switch_ = scinew GeomSwitch(display_list);
   }
   else
   {
     edges = scinew GeomGroup;
-    edge_switch_ = scinew GeomSwitch(edges);
+    GeomDL *display_list = scinew GeomDL(edges);
+    edge_switch_ = scinew GeomSwitch(display_list);
   }
 
   // Second pass: over the edges
@@ -599,13 +603,15 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   if (use_transparency)
   {
     faces = scinew GeomTranspTriangles;
+    face_switch_ = scinew GeomSwitch(faces);
   }
   else
   {
     faces = scinew GeomTriangles;
+    GeomDL *display_list = scinew GeomDL(faces);
+    face_switch_ = scinew GeomSwitch(display_list);
   }
 
-  face_switch_ = scinew GeomSwitch(faces);
   // Third pass: over the faces
   mesh->synchronize(Mesh::FACES_E);
   typename Fld::mesh_type::Face::iterator fiter; mesh->begin(fiter);  
