@@ -54,18 +54,6 @@ DESCRIPTION
    A class to encapsulate several static methods for PIDL.
 ****************************************/
 
-  //Forward declaration of template
-  /*
-  template <class Tptr>
-  class ProxySample;
-  
-  template <class Tptr>
-  void ProxySample<Tptr>::setProxySample(Tptr aptr);
-  
-  template <class Tptr>
-  void ProxySample<Tptr>::callgetException();
-  */
-
   class DataTransmitter;
   class PIDL {
   public:
@@ -100,6 +88,10 @@ DESCRIPTION
     //////////
     // Create a base Object class from the given Reference
     static Object::pointer objectFrom(const Reference&);
+
+    //////////
+    // Create a base Object class from a vector of proxies  
+    static Object::pointer objectFrom(const std::vector<Object::pointer>& pxy, int mysize = 1, int myrank = 0);
 
     //////////
     // Go into the main loop which services requests for all

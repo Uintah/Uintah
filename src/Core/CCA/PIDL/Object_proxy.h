@@ -75,6 +75,11 @@ DESCRIPTION
     Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank);
 
     //////////
+    // Private constructor from an vector of proxies. Combine them all into one parallel component. 
+    // (parallel component case)
+    Object_proxy(const std::vector<Object::pointer>& pxy, int mysize, int myrank);
+
+    //////////
     // Destructor
     virtual ~Object_proxy();
 

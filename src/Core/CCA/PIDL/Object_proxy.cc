@@ -88,6 +88,30 @@ Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
     rm.intracomm = NULL;
 }
 
+Object_proxy::Object_proxy(const std::vector<Object::pointer>& pxy, int mysize, int myrank)
+{
+  std::vector<Object::pointer>::const_iterator iter = pxy.begin();
+  for(unsigned int i=0; i < pxy.size(); i++, iter++) {
+    ProxyBase* pbase = dynamic_cast<ProxyBase* >((*iter).getPointer());
+    refList* refL = pbase->_proxyGetReferenceMgr()->getAllReferences();
+    refList::const_iterator riter = refL->begin();
+    for(unsigned int i=0; i < refL->size(); i++, riter++) {
+      Reference *ref = (*riter)->clone();
+      rm.insertReference(ref);
+    }
+  }
+
+  rm.localSize = mysize;
+  rm.s_lSize = mysize;
+  rm.localRank = myrank;
+
+  if(mysize > 1)
+    rm.intracomm = PIDL::getIntraComm();
+  else
+    rm.intracomm = NULL;
+}
+
+
 Object_proxy::~Object_proxy()
 {
 }
