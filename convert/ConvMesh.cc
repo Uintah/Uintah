@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	}
 	cerr << "nelems=" << mesh->elems.size() << endl;
     }
-    TextPiostream stream(argv[argc-1], Piostream::Write);
+    BinaryPiostream stream(argv[argc-1], Piostream::Write);
     Pio(stream, mesh);
     return 0;
 }

@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     MusilRNG rng;
     BBox bbox;
     bbox.extend(Point(0,0,0));
-    bbox.extend(Point(1,1,1));
+    bbox.extend(Point(2,2,2));
         double epsilon=.1*bbox.longest_edge();
 
     // Extend by max-(eps, eps, eps) and min+(eps, eps, eps) to
@@ -99,18 +99,18 @@ int main(int argc, char **argv)
 	for(int j=0;j<n;j++){
 	    double y=double(map[j])/double(n-1);
 	    for(int k=0;k<n;k++){
-		double z=double(map[k])/double(n-1);
+		double z=double(k)/double(n-1);
 		double xx=x;
 		double yy=y;
 		double zz=z;
 		if(i>0 && i<n-1)
-		    xx+=rng()*0.3/double(n-1);
+		    xx+=(rng()-.5)*0.00/double(n-1);
 		    //xx+=rng()*0.0/double(n-1);
 		if(j>0 && j<n-1)
-		    yy+=rng()*0.3/double(n-1);
+		    yy+=(rng()-.5)*0.00/double(n-1);
 		    //yy+=rng()*0.0/double(n-1);
 		if(k>0 && k<n-1)
-		    zz+=rng()*0.3/double(n-1);
+		    zz+=(rng()-.5)*0.00/double(n-1);
 		    //zz+=rng()*0.0/double(n-1);
 		//mesh->nodes.add(NodeHandle(new Node(Point(xx,yy,zz))));
 		if(!mesh->insert_delaunay(Point(xx,yy,zz), 0)){
@@ -133,8 +133,14 @@ int main(int argc, char **argv)
     mesh->pack_all();
     double vol=0;
     cerr << "There are " << mesh->elems.size() << " elements" << endl;
+    for(i=0;i<mesh->nodes.size();i++){
+        Point p(mesh->nodes[i]->p);
+        cerr << p.x() << " " << p.y() << " " << p.z() << endl;
+    }
     for(i=0;i<mesh->elems.size();i++){
 	vol+=mesh->elems[i]->volume();
+        Element* e=mesh->elems[i];
+        cerr << e->n[0]+1 << " " << e->n[1]+1 << " " << e->n[2]+1 << " " << e->n[3]+1 << " " << e->volume() << endl;
     }
     cerr << "Total volume: " << vol << endl;
 
