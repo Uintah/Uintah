@@ -15,6 +15,8 @@
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <iostream>
 #include "ConstitutiveModelFactory.h"
+#include <Uintah/Components/MPM/Burn/HEBurnFactory.h>
+#include <Uintah/Components/MPM/Burn/HEBurn.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
 using namespace std;
 using namespace Uintah::MPM;
@@ -43,6 +45,10 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    if(!d_cm)
       throw ParameterNotFound("No constitutive model");
    std::cerr << "works here after cm factory" << std::endl;
+
+   d_burn = HEBurnFactory::create(ps);
+   if (!d_burn)
+	throw ParameterNotFound("No burn model");
 
    // Step 2 -- get the general material properties
 
@@ -299,6 +305,9 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.28  2000/06/02 22:51:55  jas
+// Added infrastructure for Burn models.
+//
 // Revision 1.27  2000/06/02 21:17:28  guilkey
 // Added ParticleID's.  This isn't quite done yet, but shouldn't
 // cause anything else to not work.  It will be completed ASAP.

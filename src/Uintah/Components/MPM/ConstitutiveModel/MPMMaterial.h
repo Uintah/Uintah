@@ -21,6 +21,7 @@ namespace Uintah {
       class GeometryObject;
       class GeometryPiece;
       class ConstitutiveModel;
+      class HEBurn;
       using SCICore::Geometry::Point;
       using SCICore::Geometry::Vector;
       
@@ -93,6 +94,9 @@ WARNING
 	 
 	 // Specific constitutive model associated with this material
 	 ConstitutiveModel *d_cm;
+
+         // Burn model
+	 HEBurn *d_burn;
 	 
 	 double d_density;
 	 double d_toughness;
@@ -116,6 +120,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.21  2000/06/02 22:51:55  jas
+// Added infrastructure for Burn models.
+//
 // Revision 1.20  2000/06/02 21:17:28  guilkey
 // Added ParticleID's.  This isn't quite done yet, but shouldn't
 // cause anything else to not work.  It will be completed ASAP.
