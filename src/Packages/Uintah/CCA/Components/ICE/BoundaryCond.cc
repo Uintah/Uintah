@@ -118,75 +118,117 @@ void setBC(CCVariable<Vector>& var_CC,
 
 /* --------------------------------------------------------------------- 
  Function~  ImplicitMatrixBC--      
- Purpose~   Along each face of the domain set the stencil weight in
-           that face = 0
+ Purpose~   Along each face of the domain set the stencil weight
  Naming convention
       +x -x +y -y +z -z
        e, w, n, s, t, b 
+ 
+   A.p = beta[c] -
+          (A.n + A.s + A.e + A.w + A.t + A.b);
+   LHS       
+   A.p*delP - (A.e*delP_e + A.w*delP_w + A.n*delP_n + A.s*delP_s 
+             + A.t*delP_t + A.b*delP_b )
+             
+ Suppose the x- face has Press=Neumann BC, then you must add A.w to
+ both A.p and set A.w = 0.  If the pressure is Dirichlet BC you leave A.p 
+ alone and set A.w = 0;           
+       
  ---------------------------------------------------------------------  */
 void ImplicitMatrixBC( CCVariable<Stencil7>& A, 
                    const Patch* patch)        
 { 
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-      
-    // only apply the BC when on the edge of the computational domain.
-    // skip the faces between neighboring patches  
-    bool onEdgeOfDomain = false;  
-    if (patch->getBCType(face) == Patch::None) {
-      onEdgeOfDomain = true;
-    }
+  vector<Patch::FaceType>::const_iterator itr;
+  for (itr  = patch->getBoundaryFaces()->begin(); 
+       itr != patch->getBoundaryFaces()->end(); ++itr){
+    Patch::FaceType face = *itr;
     
-    if (onEdgeOfDomain){
-      switch (face) {
-      case Patch::xplus:
-        for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                 !iter.done(); iter++) { 
-          IntVector c(*iter - IntVector(1,0,0));
-          A[c].e = 0.0;
+    int mat_id = 0; // hard coded for pressure
+    
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind  = "NotSet";
+      vector<IntVector> bound;  
+      
+      bool foundIterator =       
+        getIteratorBCValueBCKind<double>( patch, face, child, "Pressure", 
+                                         mat_id, bc_value, bound,bc_kind);
+                                    
+      // don't set BCs unless we've found the iterator                                   
+      if (foundIterator) {
+        //__________________________________
+        //  Neumann or Dirichlet Press_BC;
+        double one_or_zero = -999;
+        if(bc_kind == "zeroNeumann" || bc_kind == "Neumann" ||
+           bc_kind == "symmetric"){
+          one_or_zero = 1.0;      // subtract from A.p
         }
-        break;
-      case Patch::xminus:
-        for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                 !iter.done(); iter++) { 
-          IntVector c(*iter + IntVector(1,0,0));
-          A[c].w = 0.0;
+        if(bc_kind == "Dirichlet" || bc_kind == "Custom"){
+          one_or_zero = 0.0;      // leave A.p Alone
+        }                                 
+        //__________________________________
+        //  Set the BC  
+        vector<IntVector>::const_iterator iter;
+
+        switch (face) {
+        case Patch::xplus:
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector c(*iter - IntVector(1,0,0));
+            A[c].p = A[c].p + one_or_zero * A[c].e;
+            A[c].e = 0.0;
+          }
+          break;
+        case Patch::xminus:
+          for (iter=bound.begin(); iter != bound.end(); iter++) { 
+            IntVector c(*iter + IntVector(1,0,0));
+            A[c].p = A[c].p + one_or_zero * A[c].w;
+            A[c].w = 0.0;
+          }
+          break;
+        case Patch::yplus:
+          for (iter=bound.begin(); iter != bound.end(); iter++) { 
+            IntVector c(*iter - IntVector(0,1,0));
+            A[c].p = A[c].p + one_or_zero * A[c].n;
+            A[c].n = 0.0;
+          }
+          break;
+        case Patch::yminus:
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector c(*iter + IntVector(0,1,0)); 
+            A[c].p = A[c].p + one_or_zero * A[c].s;
+            A[c].s = 0.0;
+          }
+          break;
+        case Patch::zplus:
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector c(*iter - IntVector(0,0,1));
+            A[c].p = A[c].p + one_or_zero * A[c].t;
+            A[c].t = 0.0;
+          }
+          break;
+        case Patch::zminus:
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector c(*iter + IntVector(0,0,1));
+            A[c].p = A[c].p + one_or_zero * A[c].b;
+            A[c].b = 0.0;
+          }
+          break;
+        case Patch::numFaces:
+          break;
+        case Patch::invalidFace:
+          break; 
         }
-        break;
-      case Patch::yplus:
-        for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                 !iter.done(); iter++) { 
-          IntVector c(*iter - IntVector(0,1,0));
-          A[c].n = 0.0;
-        }
-        break;
-      case Patch::yminus:
-        for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                 !iter.done(); iter++) { 
-          IntVector c(*iter + IntVector(0,1,0)); 
-          A[c].s = 0.0;
-        }
-        break;
-      case Patch::zplus:
-        for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                 !iter.done(); iter++) { 
-          IntVector c(*iter - IntVector(0,0,1));
-          A[c].t = 0.0;
-        }
-        break;
-      case Patch::zminus:
-        for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                 !iter.done(); iter++) { 
-          IntVector c(*iter + IntVector(0,0,1));
-          A[c].b = 0.0;
-        }
-        break;
-      case Patch::numFaces:
-        break;
-      case Patch::invalidFace:
-        break; 
-      } 
-    }  // face on edge of domain?
+        //__________________________________
+        //  debugging
+        #if 0
+        cout <<"Face: "<< face << " one_or_zero " << one_or_zero
+             <<"\t child " << child  <<" NumChildren "<<numChildren 
+             <<"\t BC kind "<< bc_kind
+             <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	      << endl;
+        #endif
+      } // if (bc_kind !=notSet)
+    } // child loop
   }  // face loop
 }
 /* --------------------------------------------------------------------- 
@@ -336,10 +378,11 @@ void setBC(CCVariable<double>& press_CC,
       string bc_kind = "NotSet";
       vector<IntVector> bound;
       
-      getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-					bc_value, bound,bc_kind); 
+      bool foundIterator = 
+        getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
+					       bc_value, bound,bc_kind); 
                                    
-      if(bc_kind != "NotSet" && bc_kind != "LODI") {
+      if(foundIterator && bc_kind != "LODI") {
         // define what a symmetric  pressure BC means
         if( bc_kind == "symmetric"){
           bc_kind = "zeroNeumann";
@@ -454,11 +497,11 @@ void setBC(CCVariable<double>& var_CC,
       double bc_value = -9;
       string bc_kind = "NotSet";
       vector<IntVector> bound;
+      bool foundIterator = 
+        getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
+					       bc_value, bound,bc_kind); 
       
-      getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
-					     bc_value, bound,bc_kind); 
-      
-      if (bc_kind != "NotSet" && bc_kind != "LODI") {
+      if (foundIterator && bc_kind != "LODI") {
         //__________________________________
         // LOGIC
         // Any CC Variable
@@ -563,10 +606,12 @@ void setBC(CCVariable<Vector>& var_CC,
       Vector bc_value = Vector(-9,-9,-9);
       string bc_kind = "NotSet";
       vector<IntVector> bound;
-      getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
-				           bc_value, bound,bc_kind);
+      
+      bool foundIterator = 
+          getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
+				                bc_value, bound,bc_kind);
      
-      if (bc_kind != "NotSet" && bc_kind != "LODI") {
+      if (foundIterator && bc_kind != "LODI") {
  
         IveSetBC = setNeumanDirichletBC<Vector>(patch, face, var_CC,bound, 
 						bc_kind, bc_value, cell_dx,
