@@ -118,11 +118,16 @@ void Network::initialize(NetworkEditor* _netedit)
     connect(modules[0], 0, modules[1], 0);
     connect(modules[1], 0, modules[2], 0);
 #endif
+#if 0
     add_module("FieldReader");
     add_module("IsoSurface");
     add_module("Salmon");
     connect(modules[0], 0, modules[1], 0);
     connect(modules[1], 0, modules[2], 0);
+#endif
+    add_module("MeshView");
+    add_module("Salmon");
+    connect(modules[0], 0, modules[1], 0);
 }
 
 void Network::add_module(const clString& name, int xpos, int ypos)

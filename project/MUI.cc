@@ -269,7 +269,6 @@ MUI_slider_int::MUI_slider_int(const clString& name, int* data,
     XmString nstring=XmStringCreateSimple(name());
     scale->SetTitleString(nstring);
     scale->SetHighlightThickness(0);
-    scale->SetDecimalPoints(2);
     scale->SetValue(*data);
 }
 

@@ -434,6 +434,8 @@ void UserModule::update_progress(int n, int max)
 
 int UserModule::should_execute()
 {
+    cerr << "Module: " << name << ", sched_class=" << sched_class
+	<< ", sched_state=" << sched_state << endl;
     if(sched_state == SchedNewData)
 	return 0; // Already maxed out...
     int changed=0;
