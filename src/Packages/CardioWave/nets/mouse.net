@@ -1,0 +1,30 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "CardioWave" "CreateModel" "VectorFieldsToTensorField" 136 118]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 234 9]
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 136 205]
+
+addConnection $m1 0 $m0 0
+addConnection $m2 0 $m0 1
+addConnection $m0 0 $m3 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename {/home/sci/dmw/mydata/mouse-tensor-e1.lvv.fld}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-filename {/home/sci/dmw/mydata/mouse-tensor-e2.lvv.fld}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-filename {/home/sci/dmw/mydata/mouse-tensor.lvt.fld}
+set $m3-filetype {ASCII}
+
+::netedit scheduleok
