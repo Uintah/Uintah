@@ -1306,6 +1306,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  ::SCIRun::refList* _refL;\n";
     e.out << "  ::SCIRun::refList::iterator iter;\n";
     e.out << "  ::SCIRun::ReferenceMgr* _rm = _proxyGetReferenceMgr();\n";
+    e.out << "  _refL = _rm->getAllReferences();\n";
     e.out << "  ::SCIRun::Message** msgs = new ::SCIRun::Message*[_refL->size()];\n";
 #ifdef MxNDEBUG
     e.out << "  //Turn on debug to a file\n";
@@ -1314,7 +1315,6 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
 #endif
     e.out << "  \n";
-    e.out << "  _refL = _rm->getAllReferences();\n";
     e.out << "  iter = _refL->begin();\n";
     e.out << "  for(unsigned int i=0; i < _refL->size(); i++, iter++) {\n";
     e.out << "    msgs[i] = (*iter)->chan->getMessage();\n";
