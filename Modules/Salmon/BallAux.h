@@ -2,6 +2,8 @@
 #ifndef _H_BallAux
 #define _H_BallAux
 
+#include <math.h>
+
 typedef int Bool;
 enum QuatPart {X, Y, Z, W, QuatLen};
 typedef double HMatrix[QuatLen][QuatLen];
@@ -32,6 +34,7 @@ public:
 	return (qq);
     }
 	
+    double VecMag(void) { return sqrt(x*x + y*y + z*z); };
     double x, y, z, w;
 };
 typedef Quat HVect;

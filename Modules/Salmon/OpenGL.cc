@@ -244,7 +244,7 @@ void OpenGL::redraw_loop()
 	int nreply=0;
 	if(roe->inertia_mode){
 	    cerr << "Inertia mode...";
-	    cerr << "framerate=" << framerate << endl;
+//	    cerr << "framerate=" << framerate << endl;
 	    double current_time=throttle.time();
 	    if(framerate==0)
 		framerate=30;
@@ -252,28 +252,29 @@ void OpenGL::redraw_loop()
 	    double delta=current_time-newtime;
 	    cerr << "delta=" << delta << endl;
 	    if(delta > 1.5*frametime){
-		cerr << "REALLY backing off..." << endl;
+//		cerr << "REALLY backing off..." << endl;
 		framerate=1./delta;
 		frametime=delta;
 		newtime=current_time;
-		cerr << "now=" << framerate << endl;
+//		cerr << "now=" << framerate << endl;
 	    } if(delta > .85*frametime){
-		cerr << "Backing off framerate.." << endl;
+//		cerr << "Backing off framerate.." << endl;
 		framerate*=.9;
-		cerr << "now=" << framerate << endl;
+//		cerr << "now=" << framerate << endl;
 		frametime=1./framerate;
 		newtime=current_time;
 	    } else if(delta < .5*frametime){
-		cerr << "Advancing off framrate..." << endl;
+//		cerr << "Advancing off framrate..." << endl;
 		framerate*=1.1;
 		if(framerate>30)
 		    framerate=30;
-		cerr << "now=" << framerate << endl;
+//		cerr << "now=" << framerate << endl;
 		frametime=1./framerate;
 		newtime=current_time;
 	    }
 	    newtime+=frametime;
 	    throttle.wait_for_time(newtime);
+
 	    while(1){
 		int r;
 		if(!send_mb.try_receive(r))
@@ -286,9 +287,38 @@ void OpenGL::redraw_loop()
 		    nreply++;
 		}
 	    }
-	    View view(roe->view.get());
-	    view.eyep(view.eyep()+(view.eyep()-view.lookat())*0.01);
-	    roe->view.set(view);
+
+//	    View view(roe->view.get());
+//	    view.eyep(view.eyep()+(view.eyep()-view.lookat())*0.01);
+//	    roe->view.set(view);
+
+	    // you want to just rotate around the current rotation
+	    // axis - the current quaternion is roe->ball->qNow	    
+	    // the first 3 components of this 
+
+	    cerr << "Using time: " << newtime << endl;
+	    roe->ball->SetAngle(newtime*roe->angular_v);
+
+	    View tmpview(roe->rot_view);
+	    
+	    Transform tmp_trans;
+	    HMatrix mNow;
+	    roe->ball->Value(mNow);
+	    tmp_trans.set(&mNow[0][0]);
+	    
+	    Transform prv = roe->prev_trans;
+	    prv.post_trans(tmp_trans);
+	    
+	    HMatrix vmat;
+	    prv.get(&vmat[0][0]);
+	    
+	    Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+	    
+	    tmpview.up(y_a.vector());
+	    tmpview.eyep((z_a*(roe->eye_dist)) + tmpview.lookat().vector());
+	    
+	    roe->view.set(tmpview);	    
 	} else {
 	    while(1){
 		int r=send_mb.receive();
@@ -301,6 +331,9 @@ void OpenGL::redraw_loop()
 		}
 	    }
 	    newtime=throttle.time();
+	    throttle.stop();
+	    throttle.clear();
+	    throttle.start();
 	}
 	redraw_frame();
 	for(int i=0;i<nreply;i++)

@@ -26,10 +26,11 @@ public:
     void EndDrag(void);
     void Draw(void);
     void DValue(HMatrix&); // value at qDown
+    void SetAngle(double); // works of normalized value...
 
     HVect center;
     double radius;
-    Quat qNow, qDown, qDrag;
+    Quat qNow, qDown, qDrag, qNorm;
     HVect vNow, vDown, vFrom, vTo, vrFrom, vrTo;
     HMatrix mNow, mDown;
     Bool showResult, dragging;

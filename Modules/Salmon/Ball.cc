@@ -86,6 +86,21 @@ void BallData::Value( HMatrix& mow)
     for (i=15; i>=0; i--) ((double *)mow)[i] = ((double *)mNow)[i];
 }
 
+
+// assume that qNorm is normalized version of qNow.Conj(), you just need to 
+// rotate around its axis by theta
+void BallData::SetAngle(double theta)
+{
+    double c_theta = cos(theta/2.0); 
+    double s_theta = sin(theta/2.0);
+
+    qNow = qNorm;
+
+    qNow.x *= s_theta; qNow.y *= s_theta; qNow.z *= s_theta;
+    qNow.w = c_theta;
+    qNow.ToMatrix(mNow);
+}
+
 /* Return rotation matrix defined by qDown only... */
 void BallData::DValue( HMatrix& mow)
 {

@@ -203,7 +203,7 @@ itcl_class Roe {
 
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
-	set "$this-global-type" Gouraud
+	set "$this-global-type" Flat
 	set "$this-global-debug" 0
 	set "$this-global-clip" 1
 
@@ -381,11 +381,11 @@ itcl_class Roe {
 	global "$this-$objid-debug"
 	global "$this-$objid-clip"
 
-	set "$this-$objid-type" Gouraud
+	set "$this-$objid-type" Default
 	set "$this-$objid-light" 1
 	set "$this-$objid-fog" 0
 	set "$this-$objid-debug" 0
-	set "$this-$objid-clip" 1
+	set "$this-$objid-clip" 0
 
 	set menuvar  $m.objlist.canvas.frame.menu2_$objid
 	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]

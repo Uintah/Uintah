@@ -344,6 +344,10 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
     switch(action){
     case MouseStart:
 	{
+	    if(inertia_mode){
+		inertia_mode=0;
+		redraw();
+	    }
 	    update_mode_string("rotate:");
 	    last_x=x;
 	    last_y=y;
@@ -392,9 +396,12 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 	    ball->Mouse(mouse);
 	    ball->BeginDrag();
 
+	    prev_time[0] = time;
+	    prev_quat[0] = mouse;
 	    ball->Update();
 	    last_time=time;
 	    inertia_mode=0;
+	    need_redraw = 1;
 	}
 	break;
     case MouseMove:
@@ -407,8 +414,15 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 		break;
 
 	    HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+	    prev_time[2] = prev_time[1];
+	    prev_time[1] = prev_time[0];
+	    prev_time[0] = time;
 	    ball->Mouse(mouse);
 	    ball->Update();
+
+	    prev_quat[2] = prev_quat[1];
+	    prev_quat[1] = prev_quat[0];
+	    prev_quat[0] = mouse;
 
 	    // now we should just sendthe view points through
 	    // the rotation (after centerd around the ball)
@@ -442,15 +456,73 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 	}
 	break;
     case MouseEnd:
-	if(time-last_time < 10){
+	if(time-last_time < 20){
+	    // now setup the normalized quaternion
+ 
+
+	    View tmpview(rot_view);
+	    
+	    Transform tmp_trans;
+	    HMatrix mNow;
+	    ball->Value(mNow);
+	    tmp_trans.set(&mNow[0][0]);
+	    
+	    Transform prv = prev_trans;
+	    prv.post_trans(tmp_trans);
+	    
+	    HMatrix vmat;
+	    prv.get(&vmat[0][0]);
+	    
+	    Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+	    
+	    tmpview.up(y_a.vector());
+	    tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
+	    
+	    view.set(tmpview);
+	    prev_trans = prv;
+
+	    // now you need to use the history to 
+	    // set up the arc you want to use...
+
+	    ball->Init();
+	    double rad = 0.8;
+	    HVect center(0,0,0,1.0);
+
+	    ball->Place(center,rad);
+
+	    ball->vDown = prev_quat[2];
+	    ball->vNow  = prev_quat[0];
+	    ball->dragging = 1;
+	    ball->Update();
+	    
+	    ball->qNorm = ball->qNow.Conj();
+	    double mag = ball->qNow.VecMag();
+
 	    // Go into inertia mode...
 	    inertia_mode=1;
 	    need_redraw=1;
+
+	    if (mag < 0.00001) { // arbitrary ad-hoc threshold
+		inertia_mode = 0;
+		need_redraw = 1;
+		cerr << mag << " " << prev_time[0] - prev_time[2] << endl;
+	    }
+	    else {
+		double c = 1.0/mag;
+		double dt = prev_time[0] - prev_time[2]; // time between last 2 events
+		ball->qNorm.x *= c;
+		ball->qNorm.y *= c;
+		ball->qNorm.z *= c;
+		angular_v = 2*cos(ball->qNow.w)*100.0/dt;
+		cerr << dt << endl;
+	    }
 	} else {
 	    inertia_mode=0;
 	}
 	ball->EndDrag();
 	rot_point_valid = 0; // so we don't have to draw this...
+	need_redraw = 1;     // always update this...
 	update_mode_string("");
 	break;
     }

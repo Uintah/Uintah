@@ -24,6 +24,7 @@
 #include <Geometry/Transform.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLvar.h>
+#include <Modules/Salmon/BallAux.h>
 
 class DBContext;
 class GeomObj;
@@ -73,14 +74,10 @@ protected:
 
     BBox bb;
 
-    Transform prev_trans;
     int last_x, last_y;
     double total_x, total_y, total_z;
     Point rot_point;
     int rot_point_valid;
-    View rot_view;
-    double eye_dist;
-    double total_scale;
     GeomPick* pick_pick;
     GeomObj* pick_obj;
 
@@ -113,6 +110,15 @@ protected:
 public:
     int inertia_mode;
     BallData *ball;  // this is the ball for arc ball stuff
+
+    double angular_v; // angular velocity for inertia
+    View rot_view;    // pre-rotation view
+    Transform prev_trans;
+    double eye_dist;
+    double total_scale;
+    int prev_time[3]; // history for quaternions and time
+    HVect prev_quat[3];
+
 
     Renderer* current_renderer;
     Renderer* get_renderer(const clString&);
