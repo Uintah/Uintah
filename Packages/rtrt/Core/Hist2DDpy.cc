@@ -137,9 +137,13 @@ void Hist2DDpy::init() {
   if(!have_p)
     set_p();
 
-  // Ok, figure out where the center is.  These values never change
+  // Ok, figure out where the center is.  These values never change.
   cx = vdatamin+0.5f*(vdatamax-vdatamin);
   cy = gdatamin+0.5f*(gdatamax-gdatamin);
+  if (vdatamin <=  147 && 147 <= vdatamax )
+    cx = 147;
+  if (gdatamin <=  131 && 131 <= vdatamax )
+    cy = 131;
 
   if (use_perp) {
     px0 = cx;
@@ -164,6 +168,7 @@ void Hist2DDpy::compute_perp(ImplicitLine &l1, ImplicitLine &l2,
   //  cout << "x = "<<x<<", y = "<<y<<endl;
 }
 
+#if 0
 void Hist2DDpy::run()
 {
   open_display();
@@ -171,17 +176,9 @@ void Hist2DDpy::run()
   init();
   
   for(;;){
-    if(need_hist){
-      need_hist=false;
-      compute_hist(fontbase);
-      redraw=true;
-    }
-    if(redraw || redraw_isoval){
-      if(redraw)
-	redraw_isoval=false;
-      draw_hist(fontbase, fontInfo, redraw_isoval);
+    if(redraw){
+      display();
       redraw=false;
-      redraw_isoval=false;
     }
     // We should try to consume all the queued events before we redraw.
     // That way we don't waste time redrawing after each event
@@ -255,27 +252,41 @@ void Hist2DDpy::run()
 	}
 	break;
       case KeyPress:
-	switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
-	case XK_space:
-	  new_clip=!new_clip;
-	  break;
-	case XK_P:
-	case XK_p:
-	  new_use_perp = !new_use_perp;
-	  if (new_use_perp) {
-	    px0 = cx;
-	    py0 = cy;
-	    set_lines();
-	    redraw_isoval=true;
-	  }
-	  break;
-	}
+	key_pressed(XKeycodeToKeysym(dpy, e.xkey.keycode, 0));
 	break;
       default:
 	cerr << "Unknown event, type=" << e.type << '\n';
       } // event switch
     } // while there are events
   } // for(;;)
+}
+#endif
+
+void Hist2DDpy::display() {
+  if(need_hist){
+    need_hist=false;
+    compute_hist(fontbase);
+    redraw_isoval = false;
+  }
+  draw_hist(fontbase, fontInfo, redraw_isoval);
+  redraw_isoval=false;
+  redraw=false;
+}
+
+void Hist2DDpy::resize(const int width, const int height) {
+#if 0
+  if (xres != width || yres != height) {
+    xres = width;
+    yres = height;
+    redraw = true;
+    redraw_isoval = true;
+    need_hist = true;
+  }
+#else
+  // We want to prevent resizing for now, because the histogram creation is
+  // really expensive to do over again.
+  XResizeWindow(dpy, win, xres, yres);  
+#endif
 }
 
 void Hist2DDpy::compute_hist(unsigned int fid)
@@ -398,10 +409,11 @@ void Hist2DDpy::draw_hist(unsigned int fid, XFontStruct* font_struct,
   glClear(GL_COLOR_BUFFER_BIT);
 
   glColor3f(0,0,.8);
-  if (new_clip)
-    draw_isoline(new_isoline, vdatamin, gdatamin, vdatamax, gdatamax);
-  else
+
+  if (new_use_perp || !new_clip)
     draw_isoline(new_isoline, px0, py0, px1, py1);
+  else
+    draw_isoline(new_isoline, vdatamin, gdatamin, vdatamax, gdatamax);
 
   if (new_use_perp)
     draw_isoline(new_perp_line, vdatamin, gdatamin, vdatamax, gdatamax);
@@ -450,6 +462,25 @@ void Hist2DDpy::draw_isoline(ImplicitLine &line,
   glEnd();
 }
 
+void Hist2DDpy::key_pressed(unsigned long key) {
+  switch(key) {
+  case XK_space:
+    new_clip=!new_clip;
+    break;
+  case XK_P:
+  case XK_p:
+    new_use_perp = !new_use_perp;
+    if (new_use_perp) {
+      px0 = cx;
+      py0 = cy;
+      set_lines();
+      redraw_isoval=true;
+      redraw = true;
+    }
+    break;
+  }
+}
+
 void Hist2DDpy::button_pressed(MouseButton button, const int x, const int y) {
   float xx0=(px0-vdatamin)*xres/(vdatamax-vdatamin);
   float xx1=(px1-vdatamin)*xres/(vdatamax-vdatamin);
@@ -466,10 +497,12 @@ void Hist2DDpy::button_pressed(MouseButton button, const int x, const int y) {
   if (new_use_perp)
     whichp=1;
   redraw_isoval=true;
+  redraw = true;
 }
 
 void Hist2DDpy::button_released(MouseButton button, const int x, const int y) {
   redraw_isoval=true;
+  redraw = true;
 }
 
 void Hist2DDpy::button_motion(MouseButton button, const int x, const int y) {
@@ -486,6 +519,7 @@ void Hist2DDpy::button_motion(MouseButton button, const int x, const int y) {
   }
   set_lines();
   redraw_isoval=true;
+  redraw = true;
 }
 
 void Hist2DDpy::animate(bool& changed)
