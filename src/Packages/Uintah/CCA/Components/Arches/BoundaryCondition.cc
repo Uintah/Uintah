@@ -469,7 +469,7 @@ BoundaryCondition::sched_mmWallCellTypeInit_first(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::None, numGhostcells);
   tsk->computes(d_lab->d_mmcellTypeLabel);
-  tsk->computes(d_lab->d_mmgasVolFracLabel);
+  tsk->modifies(d_lab->d_mmgasVolFracLabel);
   
   sched->addTask(tsk, patches, matls);
 }
@@ -501,7 +501,7 @@ BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
     new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
     mmcellType.copyData(cellType);
     CCVariable<double> mmvoidFrac;
-    new_dw->allocateAndPut(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    new_dw->getModifiable(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
     mmvoidFrac.copyData(voidFrac);
 	
     IntVector domLo = mmcellType.getFortLowIndex();

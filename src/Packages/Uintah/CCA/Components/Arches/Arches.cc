@@ -338,8 +338,11 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_viscosityCTSLabel);
     tsk->computes(d_lab->d_oldDeltaTLabel);
     // for reacting flows save temperature and co2 
-    if (d_MAlab)
+    if (d_MAlab) {
       tsk->computes(d_lab->d_pressPlusHydroLabel);
+      tsk->computes(d_lab->d_mmgasVolFracLabel);
+    }
+
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -380,6 +383,7 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> density;
     CCVariable<double> viscosity;
     CCVariable<double> pPlusHydro;
+    CCVariable<double> mmgasVolFrac;
     std::cerr << "Material Index: " << matlIndex << endl;
     new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
@@ -411,6 +415,8 @@ Arches::paramInit(const ProcessorGroup* ,
     if (d_MAlab) {
       new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
       pPlusHydro.initialize(0.0);
+      new_dw->allocateAndPut(mmgasVolFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+      mmgasVolFrac.initialize(1.0);
     }
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
