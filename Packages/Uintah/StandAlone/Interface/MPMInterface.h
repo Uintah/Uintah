@@ -57,14 +57,14 @@ public:
 
     //////////
     // Insert Documentation Here:
-    virtual void computeStableTimestep(const LevelP& level,
+    virtual void scheduleStableTimestep(const LevelP& level,
 				       SchedulerP&, DataWarehouseP&) = 0;
 
     //////////
     // Insert Documentation Here:
-    virtual void timeStep(double t, double dt,
-			  const LevelP& level, SchedulerP&,
-			  const DataWarehouseP&, DataWarehouseP&) = 0;
+    virtual void scheduleTimeAdvance(double t, double dt,
+				     const LevelP& level, SchedulerP&,
+				     const DataWarehouseP&, DataWarehouseP&) = 0;
 private:
     MPMInterface(const MPMInterface&);
     MPMInterface& operator=(const MPMInterface&);
@@ -75,6 +75,9 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/04/13 06:51:05  sparker
+// More implementation to get this to work
+//
 // Revision 1.7  2000/04/11 07:10:53  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications
