@@ -32961,6 +32961,13 @@ echo "$as_me: checking for required MPI components......" >&6;}
               _sci_inc="$with_mpi/include"
            fi
         fi
+
+	# After each attempt to locate mpi, we need to verify that the mpi it
+	# chose is in the path we specified.  This is because some machines
+	# have MPI installed in a standard location and sometimes will choose
+	# that one over the one we specified.
+	the_file=libmpi
+
         # /usr/include/mpi is the standard location of mpi on some linux dists.
 
 ##
@@ -33433,6 +33440,15 @@ _sci_includes=''
 ##
 
 
+
+        if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+           test ! -e $with_mpi/lib/$the_file.so &&
+           test ! -e $with_mpi/lib/$the_file.a &&
+           test ! -e $with_mpi/lib/$the_file.dylib; then
+             { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&5
+echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+	     HAVE_MPI="no"
+        fi
 
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
@@ -33911,6 +33927,16 @@ _sci_includes=''
 
 
 
+          # verify that it was found in the location requested.
+          if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+             test ! -e $with_mpi/lib/$the_file.so &&
+             test ! -e $with_mpi/lib/$the_file.a &&
+             test ! -e $with_mpi/lib/$the_file.dylib; then
+             { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&5
+echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+	     HAVE_MPI="no"
+          fi
+
           if test "$HAVE_MPI" != "yes"; then
 
 ##
@@ -34383,6 +34409,16 @@ _sci_includes=''
 ##
 
 
+
+             # verify that it was found in the location requested.
+             if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+                test ! -e $with_mpi/lib/$the_file.so &&
+                test ! -e $with_mpi/lib/$the_file.a &&
+                test ! -e $with_mpi/lib/$the_file.dylib; then
+                { echo "$as_me:$LINENO: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&5
+echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/lib" >&2;}
+	        HAVE_MPI="no"
+             fi
 
              if test "$HAVE_MPI" != "yes"; then
 
