@@ -300,6 +300,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	 }
       }
       level->finalizeLevel();
+      level->assignBCS(grid_ps);
       grid->addLevel(level);
    }
 }
@@ -455,6 +456,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.37  2000/06/23 19:28:32  jas
+// Added the reading of grid bcs right after we finalize a level.
+//
 // Revision 1.36  2000/06/17 07:06:42  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
