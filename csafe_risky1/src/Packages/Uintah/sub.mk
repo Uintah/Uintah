@@ -33,7 +33,7 @@ PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/ProblemSpecification \
 	SCICore/Exceptions Uintah/Interface SCICore/Thread
 endif
-LIBS := $(XML_LIBRARY) -lmpi
+LIBS := $(XML_LIBRARY) -lmpi $(VAMPIR_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
@@ -55,6 +55,9 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.16.4.1  2000/10/07 00:00:34  witzel
+# Added vampir support
+#
 # Revision 1.16  2000/08/23 21:02:52  witzel
 # added testprograms sub-directory
 #
