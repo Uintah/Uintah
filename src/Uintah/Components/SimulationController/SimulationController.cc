@@ -19,6 +19,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/MPMInterface.h>
+#include <Uintah/Interface/MDInterface.h>
 #include <Uintah/Interface/Output.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecInterface.h>
@@ -93,6 +94,11 @@ void SimulationController::run()
    MPMInterface* mpm = dynamic_cast<MPMInterface*>(getPort("mpm"));
    if(mpm)
       mpm->problemSetup(ups, grid, sharedState);
+
+   // Initialize the MD components --tan
+   MDInterface* md = dynamic_cast<MDInterface*>(getPort("md"));
+   if(md)
+      md->problemSetup(ups, grid, sharedState);
    
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    SchedulerP scheduler(sched);
@@ -120,7 +126,7 @@ void SimulationController::run()
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
 	 LevelP level = grid->getLevel(i);
-	 scheduleInitialize(level, scheduler, old_ds, cfd, mpm);
+	 scheduleInitialize(level, scheduler, old_ds, cfd, mpm, md);
       }
    }
    
@@ -136,7 +142,7 @@ void SimulationController::run()
    double t = timeinfo.initTime;
    
    scheduleComputeStableTimestep(level, scheduler, old_ds,
-				 cfd, mpm);
+				 cfd, mpm, md);
    
    ProcessorContext* pc = ProcessorContext::getRootContext();
 
@@ -178,13 +184,13 @@ void SimulationController::run()
       d_dwMpiHandler->registerDW( new_ds );
       new_ds->carryForward(old_ds);
       scheduleTimeAdvance(t, delt, level, scheduler, old_ds, new_ds,
-			  cfd, mpm);
+			  cfd, mpm, md);
       if(output)
 	 output->finalizeTimestep(t, delt, level, scheduler, old_ds, new_ds);
       t += delt;
       
       // Begin next time step...
-      scheduleComputeStableTimestep(level, scheduler, new_ds, cfd, mpm);
+      scheduleComputeStableTimestep(level, scheduler, new_ds, cfd, mpm, md);
       scheduler->addTarget(sharedState->get_delt_label());
       scheduler->execute(pc, new_ds);
       
@@ -294,7 +300,8 @@ void SimulationController::scheduleInitialize(LevelP& level,
 					      SchedulerP& sched,
 					      DataWarehouseP& new_ds,
 					      CFDInterface* cfd,
-					      MPMInterface* mpm)
+					      MPMInterface* mpm,
+					      MDInterface* md)
 {
   if(cfd) {
     cfd->scheduleInitialize(level, sched, new_ds);
@@ -302,18 +309,24 @@ void SimulationController::scheduleInitialize(LevelP& level,
   if(mpm) {
     mpm->scheduleInitialize(level, sched, new_ds);
   }
+  if(md) {
+    md->scheduleInitialize(level, sched, new_ds);
+  }
 }
 
 void SimulationController::scheduleComputeStableTimestep(LevelP& level,
 							 SchedulerP& sched,
 							 DataWarehouseP& new_ds,
 							 CFDInterface* cfd,
-							 MPMInterface* mpm)
+							 MPMInterface* mpm,
+							 MDInterface* md)
 {
    if(cfd)
       cfd->scheduleComputeStableTimestep(level, sched, new_ds);
    if(mpm)
       mpm->scheduleComputeStableTimestep(level, sched, new_ds);
+   if(md)
+      md->scheduleComputeStableTimestep(level, sched, new_ds);
 }
 
 void SimulationController::scheduleTimeAdvance(double t, double delt,
@@ -322,13 +335,19 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 					       DataWarehouseP& old_ds,
 					       DataWarehouseP& new_ds,
 					       CFDInterface* cfd,
-					       MPMInterface* mpm)
+					       MPMInterface* mpm,
+					       MDInterface* md)
 {
    // Temporary - when cfd/mpm are coupled this will need help
    if(cfd)
       cfd->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
    if(mpm)
       mpm->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
+      
+   // Added molecular dynamics module, currently it will not be coupled with 
+   // cfd/mpm.  --tan
+   if(md)
+      md->scheduleTimeAdvance(t, delt, level, sched, old_ds, new_ds);
    
 #if 0
    
@@ -428,6 +447,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.30  2000/06/09 17:20:12  tan
+// Added MD(molecular dynamics) module to SimulationController.
+//
 // Revision 1.29  2000/06/08 21:00:40  jas
 // Added timestep multiplier (fudge factor).
 //
