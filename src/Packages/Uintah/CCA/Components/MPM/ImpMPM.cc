@@ -227,41 +227,23 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
-
-  scheduleDestroyMatrix(sched, d_perproc_patches,matls,false);
-
-  scheduleCreateMatrix(sched, d_perproc_patches,matls,false);
-
+  scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
+  scheduleCreateMatrix(                   sched, d_perproc_patches,matls,false);
   scheduleApplyBoundaryConditions(        sched, d_perproc_patches,matls);
-
   scheduleComputeContact(                 sched, d_perproc_patches,matls);
-
   scheduleFindFixedDOF(                   sched, d_perproc_patches,matls);
-
   scheduleComputeStressTensor(            sched, d_perproc_patches,matls,false);
-
   scheduleFormStiffnessMatrix(            sched, d_perproc_patches,matls,false);
-
   scheduleComputeInternalForce(           sched, d_perproc_patches,matls,false);
-
-  scheduleFormQ(                         sched, d_perproc_patches,matls,false);
-
+  scheduleFormQ(                          sched, d_perproc_patches,matls,false);
   scheduleSolveForDuCG(                   sched, d_perproc_patches,matls);
-
-  scheduleGetDisplacementIncrement(sched, d_perproc_patches, matls);
-
-  scheduleUpdateGridKinematics(sched, d_perproc_patches,matls,false);
-
-  scheduleCheckConvergence(sched,level,d_perproc_patches,matls,false);
-
-  scheduleIterate(sched,level,          d_perproc_patches,matls);
-
+  scheduleGetDisplacementIncrement(       sched, d_perproc_patches, matls);
+  scheduleUpdateGridKinematics(           sched, d_perproc_patches,matls,false);
+  scheduleCheckConvergence(          sched,level,d_perproc_patches,matls,false);
+  scheduleIterate(                   sched,level,d_perproc_patches,matls);
   scheduleComputeStressTensor(            sched, d_perproc_patches,matls);
-
-  scheduleComputeInternalForce(sched, d_perproc_patches,matls,false);
-
+  scheduleComputeInternalForce(           sched, d_perproc_patches,matls,false);
   scheduleComputeAcceleration(            sched, d_perproc_patches,matls);
-
   scheduleInterpolateToParticlesAndUpdate(sched, d_perproc_patches,matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
@@ -1888,13 +1870,6 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 
       if (dispIncNorm > dispIncNormMax){
 	dispIncNormMax = dispIncNorm;
-      }
-
-      if(d_myworld->myrank() == 0){
-        cerr << "dispIncNorm = " << dispIncNorm << "\n";
-        cerr << "dispIncQNorm = " << dispIncQNorm << "\n";
-        cerr << "dispIncNormMax = " << dispIncNormMax << "\n";
-        cerr << "dispIncQNorm0 = " << dispIncQNorm0 << "\n";
       }
 
       double nothing = 0.;
