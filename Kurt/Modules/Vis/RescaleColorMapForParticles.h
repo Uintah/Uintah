@@ -27,7 +27,7 @@ DESCRIPTION
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Dataflow/Module.h>
-#include <Kurt/DataArchive/VisParticleSetPort.h>
+#include <Kurt/Datatypes/VisParticleSetPort.h>
 
 namespace Kurt {
 namespace Modules {
