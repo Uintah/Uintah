@@ -30,6 +30,8 @@ PSELIBS := Core/Datatypes Core/Containers Core/Thread \
 	Packages/Volume/Core/Util \
 	Packages/Volume/Core/Datatypes \
 
-LIBS := $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+
+INCLUDES += $(TEEM_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
