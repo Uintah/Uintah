@@ -172,7 +172,7 @@ DEALINGS IN THE SOFTWARE.
       Add a cropping filter, by clicking the Processing Pane's
       <guibutton>Crop</guibutton> button.  A new frame will appear
       below the resample filter frame and cropping controls (boxes)
-      will appear within the 2D Viewers.
+      will appear within the slice panes.
     </para>
     
     <figure id="fig.filter">
@@ -221,7 +221,7 @@ DEALINGS IN THE SOFTWARE.
 
     <para>
       Filters are applied sequentially, first to last (top to bottom
-      in the Processing Pane window).  If a filter parameter is
+      in the Processing Pane).  If a filter parameter is
       modified, the <guibutton>Update</guibutton> button must be
       pressed to apply the filter.
     </para>
@@ -293,7 +293,7 @@ DEALINGS IN THE SOFTWARE.
 	<title>A Slice Pane and its Controls</title>
 	<mediaobject>
 	  <textobject>
-	    <phrase>2d Viewer pane showing tooth dataset.</phrase>
+	    <phrase>Slice pane showing tooth dataset.</phrase>
 	  </textobject>
 	  <imageobject>
 	    <imagedata fileref="Figures/2dview.eps" align="center" format="EPS"/>
@@ -493,10 +493,10 @@ DEALINGS IN THE SOFTWARE.
     
 <!--
     <figure id="fig.3dview">
-      <title>3d Viewer Window</title>
+      <title>Volume Pane</title>
       <mediaobject>
 	<textobject>
-	  <phrase>3d Viewer Window showing tooth dataset.</phrase>
+	  <phrase>Volume Pane showing tooth dataset.</phrase>
 	</textobject>
 	<imageobject>
 	  <imagedata fileref="Figures/3dview.eps" align="center" format="EPS"/>
@@ -512,7 +512,7 @@ DEALINGS IN THE SOFTWARE.
       <title>Volume Rendering</title>
       <mediaobject>
 	<textobject>
-	  <phrase>Volume Rendering in 3D Viewer Window</phrase>
+	  <phrase>Volume Rendering in Volume Pane</phrase>
 	</textobject>
 	<imageobject>
 	  <imagedata fileref="Figures/3dVolRen.eps" align="center" format="EPS"/>
