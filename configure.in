@@ -961,8 +961,10 @@ case $host in
       sed "s+VERBOSE_CC+${CXX}+g;" < ${srcdir}/scripts/cc.in > scripts/CC
       chmod 755 scripts/cc scripts/CC
 
-      CC="$(OBJTOP)/scripts/cc"
-      CXX="$(OBJTOP)/scripts/CC"
+      CC="scripts/cc"
+      CPP="scripts/cc -E"
+      CXX="scripts/CC"
+      CXXCPP="scripts/CC -E"
     else
       AC_MSG_RESULT(no)
     fi
