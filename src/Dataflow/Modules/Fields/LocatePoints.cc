@@ -12,8 +12,7 @@
  */
 
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/TriSurface.h>
 #include <Core/Malloc/Allocator.h>
@@ -26,35 +25,36 @@ namespace SCIRun {
 
 
 class LocatePoints : public Module {
-    MeshIPort* imesh;
-    SurfaceIPort* isurf;
-    MatrixOPort* omat;
-    MatrixHandle matH;
-    int meshGen;
-    int surfGen;
 public:
-    LocatePoints(const clString& id);
-    virtual ~LocatePoints();
-    virtual void execute();
+  LocatePoints(const clString& id);
+  virtual ~LocatePoints();
+  virtual void execute();
+private:
+  FieldIPort*      imesh_;
+  FieldIPort*    isurf_;
+  MatrixOPort*     omat_;
+  MatrixHandle     mat_handle_;
+  int              mesh_gen_;
+  int              surf_gen_;
 };
 
 extern "C" Module* make_LocatePoints(const clString& id)
 {
-    return new LocatePoints(id);
+  return new LocatePoints(id);
 }
 
 LocatePoints::LocatePoints(const clString& id)
-: Module("LocatePoints", id, Filter)
+  : Module("LocatePoints", id, Filter)
 {
-    imesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
-    add_iport(imesh);
-    isurf=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
-    add_iport(isurf);
-    // Create the output port
-    omat=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-    add_oport(omat);
-    meshGen=-1;
-    surfGen=-1;
+  imesh_=scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
+  add_iport(imesh_);
+  isurf_=scinew FieldIPort(this, "Surface", FieldIPort::Atomic);
+  add_iport(isurf_);
+  // Create the output port
+  omat_=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
+  add_oport(omat_);
+  mesh_gen_=-1;
+  surf_gen_=-1;
 }
 
 LocatePoints::~LocatePoints()
@@ -77,81 +77,85 @@ void sortpts(double *dist, int *idx) {
 
 void LocatePoints::execute()
 {
-    MeshHandle meshH;
-    if(!imesh->get(meshH))
-	return;
+  FieldHandle meshH;
+  if(!imesh_->get(meshH))
+    return;
 
-    SurfaceHandle surfH;
-    if (!isurf->get(surfH))
-	return;
+  FieldHandle surfH;
+  if (!isurf_->get(surfH))
+    return;
 
-    if (meshGen == meshH->generation && surfGen == surfH->generation && matH.get_rep()) {
-	omat->send(matH);
-	return;
-    }
+  if (mesh_gen_ == meshH->generation && surf_gen_ == surfH->generation && 
+      mat_handle_.get_rep()) {
+    omat_->send(mat_handle_);
+    return;
+  }
 
-    meshGen = meshH->generation;
-    surfGen = surfH->generation;
+  mesh_gen_ = meshH->generation;
+  surf_gen_ = surfH->generation;
 
-    TriSurface *ts=dynamic_cast<TriSurface*>(surfH.get_rep());
-    if (!ts) {
-      cerr << "Error - need a TriSurface.\n";
-      return;
-    }
+  TriSurface *ts = dynamic_cast<TriSurface*>(surfH.get_rep());
+  if (!ts) {
+    cerr << "Error - need a TriSurface.\n";
+    return;
+  }
 
-    int *rows=new int[ts->point_count()+1];
-    int *cols=new int[ts->point_count()*4];
-    double *a=new double[ts->point_count()*4];
-    SparseRowMatrix *mm=scinew SparseRowMatrix(ts->point_count(),
-					       meshH->nodesize(),
-					       rows, cols,
-					       ts->point_count()*4, a);
-    matH=mm;
-    int i,j;
-    int ix;
-    int nodes[4];
-    double dist[4];
-    double sum;
-    for (i=0; i<ts->point_count(); i++) {
-      rows[i]=i*4;
-      if (!meshH->locate(&ix, ts->point(i), 1.e-4, 1.e-4)) {
-	int foundIt=0;
-	for (j=0; j<meshH->nodesize(); j++) {
-	  if ((meshH->point(j) - ts->point(i)).length2() < 0.001) {
-	    ix=meshH->node(j).elems[0];
-	    foundIt=1;
-	    break;
-	  }
-	}
-	if (!foundIt) {
-	  cerr << "Error - couldn't find point "<<ts->point(i)<<" in mesh.\n";
-	  delete rows;
-	  delete cols;
-	  delete a;
-	  return;
-	}
-      }
-      Element *e=meshH->element(ix);
-      for (sum=0,j=0; j<4; j++) {
-	nodes[j]=e->n[j];
-	dist[j]=(ts->point(i) - meshH->point(nodes[j])).length();
-	sum+=dist[j];
-      }
-      sortpts(dist, nodes);
-      for (j=0; j<4; j++) {
-	cols[i*4+j]=nodes[j];
-	a[i*4+j]=dist[j]/sum;
-      }
-      if (i==ts->point_count()-1 || i==0 || (!(i%(ts->point_count()/10)))) {
-	cerr << "i="<<i<<"\n";
-	for (j=0; j<4; j++) {
-	  cerr << "a["<<i*4+j<<"]="<<a[i*4+j]<<" ";
-	}
-	cerr << "\n";
-      }
-    }
+  int *rows=new int[ts->point_count()+1];
+  int *cols=new int[ts->point_count()*4];
+  double *a=new double[ts->point_count()*4];
+// FIX_ME
+#if 0 
+  SparseRowMatrix *mm=scinew SparseRowMatrix(ts->point_count(),
+					     meshH->nodesize(),
+					     rows, cols,
+					     ts->point_count()*4, a);
+  mat_handle_=mm;
+  int i,j;
+  int ix;
+  int nodes[4];
+  double dist[4];
+  double sum;
+  for (i=0; i<ts->point_count(); i++) {
     rows[i]=i*4;
-    omat->send(matH);
+    if (!meshH->locate(&ix, ts->point(i), 1.e-4, 1.e-4)) {
+      int foundIt=0;
+      for (j=0; j<meshH->nodesize(); j++) {
+	if ((meshH->point(j) - ts->point(i)).length2() < 0.001) {
+	  ix=meshH->node(j).elems[0];
+	  foundIt=1;
+	  break;
+	}
+      }
+      if (!foundIt) {
+	cerr << "Error - couldn't find point "<<ts->point(i)<<" in mesh.\n";
+	delete rows;
+	delete cols;
+	delete a;
+	return;
+      }
+    }
+    Element *e=meshH->element(ix);
+    for (sum=0,j=0; j<4; j++) {
+      nodes[j]=e->n[j];
+      dist[j]=(ts->point(i) - meshH->point(nodes[j])).length();
+      sum+=dist[j];
+    }
+    sortpts(dist, nodes);
+    for (j=0; j<4; j++) {
+      cols[i*4+j]=nodes[j];
+      a[i*4+j]=dist[j]/sum;
+    }
+    if (i==ts->point_count()-1 || i==0 || (!(i%(ts->point_count()/10)))) {
+      cerr << "i="<<i<<"\n";
+      for (j=0; j<4; j++) {
+	cerr << "a["<<i*4+j<<"]="<<a[i*4+j]<<" ";
+      }
+      cerr << "\n";
+    }
+  }
+  rows[i]=i*4;
+#endif 
+  omat_->send(mat_handle_);
 }
 
 } // End namespace SCIRun

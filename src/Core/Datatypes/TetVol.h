@@ -1,3 +1,13 @@
+/*
+ *  TetVol.h
+ *
+ *  Written by:
+ *   Martin Cole
+ *   School of Computing
+ *   University of Utah
+ *
+ *  Copyright (C) 2001 SCI Institute
+ */
 
 #ifndef Datatypes_TetVol_h
 #define Datatypes_TetVol_h
