@@ -29,6 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Fri Jul 16 00:11:18 2004
 
+#include <sci_defs/ogl_defs.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -44,7 +45,6 @@
 #include <Dataflow/Ports/TexturePort.h>
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
 #include <Core/Util/DebugStream.h>
-#include <sci_defs/ogl_defs.h>
 
 namespace SCIRun {
 
