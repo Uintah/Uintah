@@ -1,8 +1,8 @@
 
 #include <config/sci.cf>
 
-OBJS = TrigTable.o
-SRCS = TrigTable.cc
+OBJS = Mat.o  TrigTable.o
+SRCS = Mat.cc TrigTable.cc
 
 LIBNAME = Math
 
