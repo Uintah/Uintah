@@ -285,7 +285,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
     new_dw->allocateAndPut(beta, lb->betaLabel,    0, patch, gn, 0);
     IntVector right, left, top, bottom, front, back;
     IntVector R_CC, L_CC, T_CC, B_CC, F_CC, BK_CC;
-    
+
     //__________________________________
     //  Initialize beta and A
     beta.initialize(0.0);
@@ -293,7 +293,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
       IntVector c = *iter;
       A[c].p = 1.0;
       A[c].n = 0.0;   A[c].s = 0.0;
-      A[c].e = 0.0;   A[c].w = 0.0;  // extra cell = 1.0
+      A[c].e = 0.0;   A[c].w = 0.0;   // extra cell only A.p[c] = 1.0
       A[c].t = 0.0;   A[c].b = 0.0;
     } 
     for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
@@ -323,7 +323,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
       // Sum (<upwinded volfrac> * sp_vol on faces)
       // +x -x +y -y +z -z
       //  e, w, n, s, t, b
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
         IntVector c = *iter;
         right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
         top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
@@ -332,10 +333,10 @@ void ICE::setupMatrix(const ProcessorGroup*,
         R_CC = right;   L_CC  = c - IntVector(1,0,0);  // Left, right
         T_CC = top;     B_CC  = c - IntVector(0,1,0);  // top, bottom
         F_CC = front;   BK_CC = c - IntVector(0,0,1);  // front, back
+             
         //__________________________________
         //  T H I S   I S   G O I N G   T O   B E   S L O W   
         //__________________________________
-        
         double sp_vol_brack_R = 2.0*(sp_vol_CC[c] * sp_vol_CC[R_CC])/      
                                     (sp_vol_CC[c] + sp_vol_CC[R_CC]);      
                                                                          
@@ -376,7 +377,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
       //__________________________________
       // sum beta = sum ( vol_frac * sp_vol/speedSound^2)
       // (THINK ABOUT PULLING OUT OF ITER LOOP)
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         beta[c] += vol_frac[c] * sp_vol_CC[c]/(speedSound[c] * speedSound[c]);
       }   
@@ -389,7 +390,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
     double tmp_n_s = delT_2/( dx.y() * dx.y() );
     double tmp_t_b = delT_2/( dx.z() * dx.z() );
         
-    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+   for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
       IntVector c = *iter;
       A[c].e *= -tmp_e_w;
       A[c].w *= -tmp_e_w;
@@ -399,15 +400,23 @@ void ICE::setupMatrix(const ProcessorGroup*,
 
       A[c].t *= -tmp_t_b;
       A[c].b *= -tmp_t_b;
-      
+    }  
+    //__________________________________
+    //  Boundary conditons on A.e, A.w, A.n, A.s, A.t, A.b
+    ImplicitMatrixBC( A, patch);   
+     
+    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
+      IntVector c = *iter;
       A[c].p = beta[c] -
                 (A[c].n + A[c].s + A[c].e + A[c].w + A[c].t + A[c].b);
-    }    
+    }        
     //---- P R I N T   D A T A ------   
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
       desc << "BOT_setupMatrix_patch_" << patch->getID();
-      printStencil( 0, patch, 0, desc.str(), "A", A);
+      
+      printData(    0, patch, 1, desc.str(), "beta", beta);
+      printStencil( 0, patch, 1, desc.str(), "A", A);
     }         
   }
 }
