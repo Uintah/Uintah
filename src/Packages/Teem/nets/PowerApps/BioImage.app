@@ -164,6 +164,11 @@ class BioImageApp {
         set data_dir ""
         set 2D_fixed 0
 
+        set update_flip 0
+	set flip_0 0
+	set flip_1 0
+	set flip_2 0
+
 	### Define Tooltips
 	##########################
 	global tips
@@ -287,7 +292,15 @@ class BioImageApp {
 
 
                 set 2D_fixed 1
+	    } elseif {$update_flip == 1} {
+                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
+                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
+                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
+		
+		set udpate_flip 0
 	    }
+
+	    
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    # update slice sliders
 	    global $which-size0 
@@ -322,23 +335,23 @@ class BioImageApp {
 	    change_indicator_labels "Loading Volume..."
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
-	    set NrrdInfo [lindex [lindex $filters(0) $modules] $load_info]
- 	    global $NrrdInfo-dimension
- 	    set dimension [set $NrrdInfo-dimension]
+	    set NrrdInfo $which
+ 	    global [set NrrdInfo]-dimension
+ 	    set dimension [set [set NrrdInfo]-dimension]
 
- 	    global $NrrdInfo-size1
+ 	    global [set NrrdInfo]-size1
 	    
- 	    if {[info exists $NrrdInfo-size1]} {
- 		global $NrrdInfo-size0
- 		global $NrrdInfo-size1
+ 	    if {[info exists [set NrrdInfo]-size1]} {
+ 		global [set NrrdInfo]-size0
+ 		global [set NrrdInfo]-size1
 		
- 		set 0_samples [set $NrrdInfo-size0]
- 		set 1_samples [set $NrrdInfo-size1]
+ 		set 0_samples [set [set NrrdInfo]-size0]
+		set 1_samples [set [set NrrdInfo]-size1]
 
 		# configure samples info
  		if {$dimension == 3} {
- 		    global $NrrdInfo-size2
- 		    set 2_samples [set $NrrdInfo-size2]
+ 		    global [set NrrdInfo]-size2
+ 		    set 2_samples [set [set NrrdInfo]-size2]
  		    $history1.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
  		    $history2.f0.childsite.ui.samples configure -text \
@@ -887,14 +900,14 @@ class BioImageApp {
 	    set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 65 186]
 	    set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 245]
 	    set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 324]
-	    set m25 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 10 400]
-	    
+	    set m25 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 39 972]
+	    	  
 	    set c1 [addConnection $m4 0 $m5 0]
 	    set c2 [addConnection $m1 0 $m6 0]
 	    set c3 [addConnection $m2 0 $m6 1]
 	    set c4 [addConnection $m3 0 $m6 2]
 	    set c5 [addConnection $m5 2 $m6 3]
-            set c6 [addConnection $m6 0 $m25 0]
+
 	    
 	    # Disable other load modules (Dicom, Analyze, Field)
 	    disableModule $m2 1
@@ -923,6 +936,14 @@ class BioImageApp {
             set m26 [addModuleAtPosition "SCIRun" "Render" "ViewImage" 704 2057]
 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 741 1977]
 	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
+	    set m29 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 28 405]
+	    set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 28 548]
+	    set m31 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 28 691]
+	    set m32 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 468]
+	    set m33 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 612]
+	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 751]
+	    set m35 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 28 830]
+	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 890]
 
 	    # store some in mods
 	    set mods(EditTransferFunc) $m14
@@ -951,13 +972,32 @@ class BioImageApp {
 	    set c29 [addConnection $m7 0 $m28 0]
 
 	    # connect load to vis
-	    set c21 [addConnection $m6 0 $m7 0]
+	    set c21 [addConnection $m6 0 $m32 0]
 	    set c22 [addConnection $m7 0 $m8 0]
 	    set c23 [addConnection $m7 0 $m16 2]
 	    set c24 [addConnection $m7 0 $m22 1]
 
 	    # connect vis to Viewer
 	    set c25 [addConnection $m15 0 $mods(Viewer) 0]
+
+	    # flip connections
+	    # might want to connect this to $m6 instead of $m36
+	    # depending on desired behavior
+	    set c26 [addConnection $m36 0 $m25 0]
+	    set c27 [addConnection $m29 0 $m32 1]
+	    set c28 [addConnection $m32 0 $m33 0]
+	    set c29 [addConnection $m30 0 $m33 1]
+	    set c30 [addConnection $m6 0 $m29 0]
+	    set c31 [addConnection $m32 0 $m30 0]
+	    set c32 [addConnection $m33 0 $m31 0]
+	    set c32 [addConnection $m33 0 $m34 0]
+	    set c33 [addConnection $m31 0 $m34 1]
+	    set c34 [addConnection $m34 0 $m7 0]
+	    set c35 [addConnection $m34 0 $m35 0]
+	    set c36 [addConnection $m34 0 $m36 0]
+	    set c36 [addConnection $m35 0 $m36 1]
+
+
 
 	    # disable the volume rendering
  	    disableModule $m8 1
@@ -967,9 +1007,10 @@ class BioImageApp {
 
 	    # set some ui parameters
 	    global $m1-filename
-#	    set $m1-filename $data_dir/volume/CThead.nhdr
+	    set $m1-filename $data_dir/volume/CThead.nhdr
+#	    set $m1-filename $data_dir/volume/tooth.nhdr
 #	    set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
-	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
+#	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
 
 	    global $m8-nbits
 	    set $m8-nbits {8}
@@ -1068,7 +1109,21 @@ class BioImageApp {
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
 
-	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28]
+	    global $m29-axis
+	    set $m29-axis 0
+
+	    global $m30-axis
+	    set $m30-axis 1
+
+	    global $m31-axis
+	    set $m31-axis 2
+
+	    disableModule $m29 1
+	    disableModule $m30 1
+	    disableModule $m31 1
+	    disableModule $m35 1
+
+	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36]
 	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1]
 
             $this build_viewers $m25 $m26
@@ -1197,6 +1252,75 @@ class BioImageApp {
 	
 	# Set default view to be Nrrd
 	$data.ui.tnb view "Nrrd"
+
+	button $data.ui.flip0 -text "Flip Left and Right" \
+	    -command "$this flip0" -width 22
+
+	button $data.ui.flip1 -text "Flip Anterior and Posterior" \
+	    -command "$this flip1" -width 22
+
+	button $data.ui.flip2 -text "Flip Superior and Inferior" \
+	    -command "$this flip2" -width 22
+
+	pack $data.ui.flip0 $data.ui.flip1 $data.ui.flip2 \
+	    -side top -anchor n -padx 0 -pady 1
+    }
+
+    method flip0 {} {
+	set UnuFlip [lindex [lindex $filters(0) $modules] 28]
+	set Choose [lindex [lindex $filters(0) $modules] 31]
+	global [set Choose]-port-index
+	
+	if {$flip_0 == 0} {
+	    set flip_0 1
+	    disableModule [set UnuFlip] 0
+	    set [set Choose]-port-index 1
+	    [set UnuFlip]-c needexecute
+	} else {
+	    set flip_0 0
+	    disableModule [set UnuFlip] 1
+	    set [set Choose]-port-index 0
+	    [set Choose]-c needexecute
+	}
+	set update_flip 1
+    }
+
+    method flip1 {} {
+	set UnuFlip [lindex [lindex $filters(0) $modules] 29]
+	set Choose [lindex [lindex $filters(0) $modules] 32]
+	global [set Choose]-port-index
+	
+	if {$flip_1 == 0} {
+	    set flip_1 1
+	    disableModule [set UnuFlip] 0
+	    set [set Choose]-port-index 1
+	    [set UnuFlip]-c needexecute
+	} else {
+	    set flip_1 0
+	    disableModule [set UnuFlip] 1
+	    set [set Choose]-port-index 0
+	    [set Choose]-c needexecute
+	}
+	set update_flip 1	
+    }
+
+    method flip2 {} {
+	set UnuFlip [lindex [lindex $filters(0) $modules] 30]
+	set Choose [lindex [lindex $filters(0) $modules] 33]
+	global [set Choose]-port-index
+	
+	if {$flip_2 == 0} {
+	    set flip_2 1
+	    disableModule [set UnuFlip] 0
+	    set [set Choose]-port-index 1
+	    [set UnuFlip]-c needexecute
+	} else {
+	    set flip_2 0
+	    disableModule [set UnuFlip] 1
+	    set [set Choose]-port-index 0
+	    [set Choose]-c needexecute
+	}
+	set update_flip 1
     }
 
     ##############################
@@ -3003,6 +3127,10 @@ class BioImageApp {
 
     variable data_dir
     variable 2D_fixed
+    variable update_flip
+    variable flip_0
+    variable flip_1
+    variable flip_2
 }
 
 
