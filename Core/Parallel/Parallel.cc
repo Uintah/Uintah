@@ -125,11 +125,18 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   } else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")){
     // Look for ALC's MPI
     ::usingMPI=true;
+  } else if(getenv("PBS_JOBID") || getenv("PBS_NODENUM")){
+    // Look for turing mpi
+    ::usingMPI=true;
   } else {
     // Look for mpich
     for(int i=0;i<argc;i++){
       string s = argv[i];
-      if(s.substr(0,3) == "-p4")
+
+      // on the turing machine, using mpich, we can't find the mpich var, so
+      // search for our own -mpi, as (according to sus.cc),
+      // we haven't parsed the args yet
+      if(s.substr(0,3) == "-p4" || s == "-mpi")
 	::usingMPI=true;
     }
   }
