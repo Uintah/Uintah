@@ -147,6 +147,7 @@ case $host in
              threads="irix"
            fi
 	   TIME_IMPL=Time_irix.cc
+	   TRACEBACK_LIB=-lexc
            ;;
   *-linux-gnu)
      AC_PROG_CC
@@ -160,6 +161,7 @@ case $host in
      LDRUN_PREFIX="-Wl,-rpath -Wl,"
      TIME_IMPL=Time_unix.cc
      PLATFORM_LDFLAGS="-ldl"
+     TRACEBACK_LIB=""
      echo "checking for sstream"
      AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
            ;;
@@ -172,6 +174,7 @@ esac
 AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(SSTREAM_COMPAT)
+AC_SUBST(TRACEBACK_LIB)
 
 ##-- Part II thread configuration --------------------------------------------
 
@@ -557,6 +560,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.52  2000/03/23 10:33:10  sparker
+# Configure new exception facility (using libexc on SGI)
+#
 # Revision 1.51  2000/03/20 23:07:06  yarden
 #  enable compilation in any subdir (sparker)
 #  fix sstream include
