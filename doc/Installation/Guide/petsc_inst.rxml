@@ -51,7 +51,11 @@ DEALINGS IN THE SOFTWARE.
     <para>
       <acronym>PETSc</acronym> is built and installed from its source
       code distribution.  &sr; supports <acronym>PETSc</acronym>
-      versions 2.1.5-2.2.0.
+      versions 2.1.5 and 2.1.6.  These are older versions of PETSc and
+      are available via a web browser from the following site:
+      <literallayout class="monospaced">
+<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/software_old">ftp://ftp.mcs.anl.gov/pub/petsc/software_old</ulink>
+      </literallayout>
     </para>
     <note>
       <para>
