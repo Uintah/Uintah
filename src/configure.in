@@ -1970,7 +1970,7 @@ case $host in
   *aix*)
     # AIX Fortran Library Check
     SCI_CHECK_LIB(,xlf90,main,,,not-optional)
-    if test "$HAVE_LIB_xlf90" == "yes"; then
+    if test "$HAVE_LIB_XLF90" = "yes"; then
       F_LIB_FLAG="$XLF90_LIB_FLAG"
     fi
     ;;
@@ -3047,7 +3047,7 @@ case $host in
      SCI_CHECK_LIB($dirs,essl,main,$F_LIB_FLAG,,optional)
      if test "$HAVE_LIB_ESSL"; then
         LIB_DIR_BLAS=$LIB_DIR_ESSL
-	HAVE_LIB_BLAS=$HAVE_LIB_EESL
+	HAVE_LIB_BLAS=$HAVE_LIB_ESSL
         BLAS_LIB_FLAG=$ESSL_LIB_FLAG
         BLAS_LIB_DIR_FLAG=$ESSL_LIB_DIR_FLAG
         DEF_BLAS="#define HAVE_BLAS 1"
@@ -3184,10 +3184,9 @@ if test -z "$PETSC_ARCH"; then
    AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
 fi
 
-
-if test "$HAVE_LIB_MPI" &&
-   test "$HAVE_LIB_BLAS" &&
-   test "$HAVE_LIB_LAPACK"; then 
+# It seems that under AIX, you don't need lapack for petsc...
+if test "$HAVE_LIB_MPI" && test "$HAVE_LIB_BLAS" && 
+   (test "$PETSC_ARCH" = "rs6000_sp" || test "$HAVE_LIB_LAPACK"); then
 
   dirs=""
 
@@ -3246,6 +3245,8 @@ if test "$HAVE_LIB_MPI" &&
   fi 
 else
   AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
+  AC_MSG_WARN(HAVE_LIB_MPI: $HAVE_LIB_MPI)
+  AC_MSG_WARN(HAVE_LIB_BLAS: $HAVE_LIB_BLAS)
   AC_MSG_WARN(Not configuring PETSc.)
 fi
 
