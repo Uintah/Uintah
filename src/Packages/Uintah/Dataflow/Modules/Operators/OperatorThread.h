@@ -111,10 +111,11 @@ public:
       ++counter;
     }
   }
-  cerr<<"sum  = "<<ave<<", counter = "<<counter<<", ave = "<<ave/counter<<endl;
-
   lock_->lock();
-  aveVal_ += ( ave/counter );
+  cerr<<"sum  = "<<ave<<", counter = "<<counter
+      <<", ave = "<<ave/(double)counter<<endl;
+
+  aveVal_ += ( ave/(double)counter );
   lock_->unlock();
   sema_->up();
 }

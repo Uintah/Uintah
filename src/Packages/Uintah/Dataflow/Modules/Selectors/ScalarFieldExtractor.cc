@@ -35,6 +35,7 @@ LOG
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Util/Endian.h>
 #include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
@@ -84,7 +85,6 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
 				   vector< const TypeDescription *>& types)
 {
   string command;
-  DataArchive& archive = *((*(archiveH.get_rep()))());
   // Set up data to build or rebuild GUI interface
   string sNames("");
   int index = -1;
@@ -96,12 +96,12 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
     //  only handle NC and CC Vars
     if( td->getType() ==  TypeDescription::NCVariable ||
 	td->getType() ==  TypeDescription::CCVariable ){
-      // supported scalars double, int, long, long long, short, bool
+      // supported scalars double, int, long64, long long, short, bool
       if( subtype->getType() == TypeDescription::double_type ||
 	  subtype->getType() == TypeDescription::int_type ||
   	  subtype->getType() == TypeDescription::long64_type) {
 //  	  subtype->getType() == TypeDescription::short_int_type ||
-//  	  subtype->getType() == TypeDescription::bool_type
+//  	  subtype->getType() == TypeDescription::bool_type) {
 	if( sNames.size() != 0 )
 	  sNames += " ";
 	sNames += names[i];
@@ -129,7 +129,6 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
 void ScalarFieldExtractor::execute() 
 { 
   tcl_status.set("Calling ScalarFieldExtractor!"); 
-
   in = (ArchiveIPort *) get_iport("Data Archive");
   sfout = (FieldOPort *) get_oport("Scalar Field");
   
@@ -148,11 +147,18 @@ void ScalarFieldExtractor::execute()
   
   archiveH = handle;
   DataArchive& archive = *((*(archiveH.get_rep()))());
+  string endianness( archive.queryEndianness() );
+  bool need_byte_swap( endianness != SCIRun::endianness() );
 
   // get time, set timestep, set generation, update grid and update gui
   double time = update(); // yeah it does all that
-
+  
   LevelP level = grid->getLevel( 0 );
+  IntVector hi, low, range;
+  level->findIndexRange(low, hi);
+  range = hi - low;
+  BBox box;
+  level->getSpatialRange(box);
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
@@ -163,37 +169,48 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::double_type:
 	{
 	  NCVariable<double> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<double> *sfd =
-	    scinew LevelField<double>( mesh, Field::NODE );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<double> *sfd =
+	    scinew LatticeVol<double>( lvm, Field::NODE );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
-	  build_field( archive, level, var, mat, time, gridVar, sfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			sfd, need_byte_swap);
 	  sfout->send(sfd);
 	  return;
 	}
       case TypeDescription::int_type:
 	{
 	  NCVariable<int> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<int> *sfd =
-	    scinew LevelField<int>( mesh, Field::NODE );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<int> *sfd =
+	    scinew LatticeVol<int>( lvm, Field::NODE );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
-	  build_field( archive, level, var, mat, time, gridVar, sfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			sfd, need_byte_swap);
 	  sfout->send(sfd);
+	  return;
 	  return;
 	}
      case TypeDescription::long64_type:
 	{
 	  NCVariable<long64> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<long64> *sfd =
-	    scinew LevelField<long64>( mesh, Field::NODE );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<long64> *sfd =
+	    scinew LatticeVol<long64>( lvm, Field::NODE );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
-	  build_field( archive, level, var, mat, time, gridVar, sfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			sfd, need_byte_swap);
 	  sfout->send(sfd);
+	  return;
 	  return;
 	}
       default:
@@ -206,24 +223,35 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::double_type:
 	{
 	  CCVariable<double> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<double> *sfd =
-	    scinew LevelField<double>( mesh, Field::CELL );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<double> *sfd =
+	    scinew LatticeVol<double>( lvm, Field::CELL );
+	  
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
-	  build_field( archive, level, var, mat, time, gridVar, sfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			sfd, need_byte_swap);
+//  	  double min, max;
+//  	  ScalarFieldInterface *sfi = sfd->query_scalar_interface();
+//  	  sfi->compute_min_max(min, max);
+//  	  sfd->store("minmax", pair<double, double>(min, max), true);
 	  sfout->send(sfd);
 	  return;
 	}
       case TypeDescription::int_type:
 	{
 	  CCVariable<int> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<int> *sfd =
-	    scinew LevelField<int>( mesh, Field::CELL );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<int> *sfd =
+	    scinew LatticeVol<int>( lvm, Field::CELL );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
-	  build_field( archive, level, var, mat, time, gridVar, sfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			sfd, need_byte_swap);
 	  sfout->send(sfd);
 	  return;
 	}
@@ -231,12 +259,15 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::long_type:
 	{
 	  CCVariable<long64> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<long64> *sfd =
-	    scinew LevelField<long64>( mesh, Field::CELL );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<long64> *sfd =
+	    scinew LatticeVol<long64>( lvm, Field::CELL );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
-	  build_field( archive, level, var, mat, time, gridVar, sfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			sfd, need_byte_swap);
 	  sfout->send(sfd);
 	  return;
 	}

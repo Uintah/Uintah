@@ -12,7 +12,6 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <string>
 #include <iostream>
 using std::string;

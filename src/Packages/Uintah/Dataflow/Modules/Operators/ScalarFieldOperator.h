@@ -12,7 +12,6 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <string>
 #include <iostream>
 using std::string;
@@ -52,15 +51,11 @@ void ScalarFieldOperator::performOperation(Field* field,
   initField(field, scalarField);
 
   switch(guiOperation.get()) {
-  case 0:
-    computeScalars(field, scalarField,
-		   NoOp());
-    break;
-  case 1: // extract element 1
+  case 0: // extract element 1
     computeScalars(field, scalarField,
 		   NaturalLogOp());
     break;
-  case 2:
+  case 1:
     computeScalars(field, scalarField,
 		   ExponentialOp());
     break;

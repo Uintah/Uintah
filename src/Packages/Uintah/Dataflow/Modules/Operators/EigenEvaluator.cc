@@ -6,6 +6,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 
 namespace Uintah {
 
@@ -47,8 +48,8 @@ void EigenEvaluator::execute(void) {
   LatticeVol<double> *eValueField = 0;
   LatticeVol<Vector> *eVectorField = 0;
 
-  if( LevelField<Matrix3> *tensorField =
-      dynamic_cast<LevelField<Matrix3>*>(hTF.get_rep())) {
+  if( LatticeVol<Matrix3> *tensorField =
+      dynamic_cast<LatticeVol<Matrix3>*>(hTF.get_rep())) {
 
     eValueField = scinew LatticeVol<double>(hTF->data_at());
     eVectorField = scinew LatticeVol<Vector>(hTF->data_at());

@@ -30,8 +30,11 @@ LOG
 #include "ParticleFieldExtractor.h"
 
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/Timer.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
@@ -62,6 +65,8 @@ namespace Uintah {
 
 
 using namespace SCIRun;
+
+Mutex ParticleFieldExtractor::module_lock("PFEMutex");
 
 extern "C" Module* make_ParticleFieldExtractor( const string& id ) {
   return scinew ParticleFieldExtractor( id ); 
@@ -310,6 +315,8 @@ int ParticleFieldExtractor::get_matl_from_particleID(long64 particleID) {
 	}
       }
     }
+  // failed to find a matl
+  return -1;
 }
 /*
 
@@ -343,6 +350,7 @@ void ParticleFieldExtractor::graph(string idx, string var)
 //----------------------------------------------------------------
 void ParticleFieldExtractor::execute() 
 { 
+  module_lock.lock();
   tcl_status.set("Calling ParticleFieldExtractor!"); 
 
   in = (ArchiveIPort *) get_iport("Data Archive");
@@ -393,6 +401,7 @@ void ParticleFieldExtractor::execute()
    pvout->send( vp );
    ptout->send( tp );	  
    tcl_status.set("Done");
+   module_lock.unlock();
 }
 
 
@@ -427,10 +436,14 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   Mutex vmutex("VectorParticles Mutex");
   Mutex tmutex("TensorrParticles Mutex");
   Mutex imutex("ParticleIds Mutex");
-
+  WallClockTimer my_timer;
+  my_timer.start();
+  double size = level->numPatches();
+  int count = 0;
   // iterate over patches
   for(Level::const_patchIterator patch = level->patchesBegin();
       patch != level->patchesEnd(); patch++ ){
+    update_progress(count++/size, my_timer);
     sema->down();
     Thread *thrd =
       new Thread( scinew PFEThread( this, archive, *patch,  sp, vp, tp, pset,
@@ -439,16 +452,17 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 			     &smutex, &vmutex, &tmutex, &imutex),
 		  "Particle Field Extractor Thread");
     thrd->detach();
-//     PFEThread *thrd = scinew PFEThread( this, archive, *patch,  sp, vp, tp,
-// 			     pset, scalar_type, have_sp, have_vp,
-// 			     have_tp, have_ids, sema,
-// 			     &smutex, &vmutex, &tmutex, &imutex);
+//     PFEThread *thrd = scinew PFEThread( this, archive, *patch,  sp, vp, tp, pset,
+//  			     scalar_type, have_sp, have_vp,
+//  			     have_tp, have_ids, sema,
+//  			     &smutex, &vmutex, &tmutex, &imutex);
 
-//     thrd->run();
+//     thrd->run(); 
   }
   sema->down( max_workers );
-  if( sema )
-    delete sema;
+  if( sema )  delete sema;
+  timer.add( my_timer.time() );
+  my_timer.stop();
 } 
 void PFEThread::run(){     
 
@@ -468,6 +482,7 @@ void PFEThread::run(){
   ParticleVariable< long64 > pvi;
 
   //int numMatls = 29;
+
   for(int matl = 0; matl < pfe->num_materials; matl++) {
     string result;
     ParticleSubset* source_subset;
@@ -548,34 +563,81 @@ void PFEThread::run(){
     ids.resync();
     scalars.resync();
     tensors.resync();
+    bool need_byte_swap = ( endianness() != archive.queryEndianness() );
+
     for(ParticleSubset::iterator iter = source_subset->begin();
 	iter != source_subset->end(); iter++, dest++){
-      if(have_vp)
-	vectors[dest]=pvv[*iter];
-      else
-	vectors[dest]=Vector(0,0,0);
-      if(have_sp)
-	switch (scalar_type) {
-	case TypeDescription::double_type:
-	  scalars[dest]=pvs[*iter];
-	  break;
-	case TypeDescription::int_type:
-	  scalars[dest]=pvint[*iter];
-	  break;
+      if( need_byte_swap){
+	if(have_vp){
+	  Vector val(pvv[*iter]); 
+	  swapbytes( val );
+	  vectors[dest]= val;
+	} else
+	  vectors[dest]=Vector(0,0,0);
+	if(have_sp)
+	  switch (scalar_type) {
+	  case TypeDescription::double_type:
+	    {
+	      double val = pvs[*iter];  
+	      swapbytes( val );
+	      scalars[dest]=val;
+	    }
+	    break;
+	  case TypeDescription::int_type:
+	    {
+	      int val = pvs[*iter];
+	      swapbytes( val );
+	      scalars[dest]=val;
+	    }
+	    break;
+	  }
+	else
+	  scalars[dest]=0;
+	if(have_tp){
+	  Matrix3 val(pvt[*iter]);
+	  swapbytes( val );
+	  tensors[dest]=val;
 	}
-      else
-	scalars[dest]=0;
-      if(have_tp){
-	tensors[dest]=pvt[*iter];
-      }
-      else
-	tensors[dest]=Matrix3(0.0);
-      if(have_ids)
-	ids[dest] = pvi[*iter];
-      else
-	ids[dest] = -1;
+	else
+	  tensors[dest]=Matrix3(0.0);
+	if(have_ids){
+	  long64 val = pvi[*iter];
+	  swapbytes( val );
+	  ids[dest] = val;
+	} else
+	  ids[dest] = -1;
 	
-      positions[dest]=pvp[*iter];
+	Point val = pvp[*iter];
+	swapbytes( val );
+	positions[dest]=val;
+      } else {
+	if(have_vp)
+	  vectors[dest]=pvv[*iter];
+	else
+	  vectors[dest]=Vector(0,0,0);
+	if(have_sp)
+	  switch (scalar_type) {
+	  case TypeDescription::double_type:
+	    scalars[dest]=pvs[*iter];
+	    break;
+	  case TypeDescription::int_type:
+	    scalars[dest]=pvint[*iter];
+	    break;
+	  }
+	else
+	  scalars[dest]=0;
+	if(have_tp){
+	  tensors[dest]=pvt[*iter];
+	}
+	else
+	  tensors[dest]=Matrix3(0.0);
+	if(have_ids)
+	  ids[dest] = pvi[*iter];
+	else
+	  ids[dest] = -1;
+	
+	positions[dest]=pvp[*iter];
+      }
     }
   }
   imutex->lock();

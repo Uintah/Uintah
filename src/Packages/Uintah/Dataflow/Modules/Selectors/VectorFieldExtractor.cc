@@ -80,7 +80,6 @@ void VectorFieldExtractor::get_vars(vector< string >& names,
 				   vector< const TypeDescription *>& types)
 {
   string command;
-  DataArchive& archive = *((*(archiveH.get_rep()))());
   // Set up data to build or rebuild GUI interface
   string sNames("");
   int index = -1;
@@ -109,7 +108,7 @@ void VectorFieldExtractor::get_vars(vector< string >& names,
   }
 
   if( !matches && index != -1 ) {
-    sVar.get() = names[index].c_str();
+    sVar.set(names[index].c_str());
     type = types[index];
   }
 
@@ -138,6 +137,8 @@ void VectorFieldExtractor::execute()
   
   archiveH = handle;
   DataArchive& archive = *((*(archiveH.get_rep()))());
+  string endianness( archive.queryEndianness() );
+  bool need_byte_swap( endianness != SCIRun::endianness() );
 
   // get time, set timestep, set generation, update grid and update gui
   double time = update(); // yeah it does all that
@@ -150,6 +151,11 @@ void VectorFieldExtractor::execute()
     dt = times[timestep] - times[timestep-1];
   
   LevelP level = grid->getLevel( 0 );
+  IntVector hi, low, range;
+  level->findIndexRange(low, hi);
+  range = hi - low;
+  BBox box;
+  level->getSpatialRange(box);
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
@@ -184,15 +190,22 @@ void VectorFieldExtractor::execute()
       case TypeDescription::Vector:
 	{	
 	  CCVariable<Vector> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<Vector> *vfd =
-	    scinew LevelField<Vector>( mesh, Field::CELL );
+//  	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+//  	  LevelField<Vector> *vfd =
+//  	    scinew LevelField<Vector>( mesh, Field::CELL );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<Vector> *vfd =
+	    scinew LatticeVol<Vector>( lvm, Field::CELL );
 	  // set the generation and timestep in the field
 	  vfd->store("varname",string(var), true);
 	  vfd->store("generation",generation, true);
 	  vfd->store("timestep",timestep, true);
 	  vfd->store("delta_t",dt, true);
-	  build_field(archive, level, var, mat, time, gridVar, vfd);
+//  	  build_field(archive, level, var, mat, time, gridVar, vfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			vfd, need_byte_swap);
 	  // send the field out to the port
 	  vfout->send(vfd);
 	  return;

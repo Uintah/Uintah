@@ -1,8 +1,6 @@
 #include "VectorFieldOperator.h"
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Geometry/BBox.h>
@@ -40,8 +38,8 @@ void VectorFieldOperator::execute(void) {
   }
 
   LatticeVol<double>  *scalarField = 0;  
-  if( LevelField<Vector> *vectorField =
-      dynamic_cast<LevelField<Vector>*>(hTF.get_rep())) {
+  if( LatticeVol<Vector> *vectorField =
+      dynamic_cast<LatticeVol<Vector>*>(hTF.get_rep())) {
 
     scalarField = scinew LatticeVol<double>(hTF->data_at());
 
