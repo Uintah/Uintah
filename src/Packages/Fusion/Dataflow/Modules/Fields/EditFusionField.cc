@@ -17,7 +17,7 @@
 
 
 /*
- *  MeshBuilde.cc:
+ *  EditFusionField.cc:
  *
  *  Written by:
  *   Allen Sanderson

@@ -26,7 +26,9 @@
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Datatypes/QuadSurfField.h>
 
-namespace SCIRun {
+namespace Fusion {
+
+using namespace SCIRun;
 
 class FusionSlicerAlgo : public DynamicAlgoBase
 {
