@@ -22,6 +22,7 @@ class Image;
 class Light;
 class Ray;
 class HitInfo;
+class DpyBase;
 struct DepthStats;
 struct PerProcessorContext;
 
@@ -39,6 +40,7 @@ class Scene {
   
   Array1<Light*> lights;
   RTRT *rtrt_engine;
+  Array1<DpyBase*> displays;
   
   double ambientscale;
   bool hotspots;
@@ -185,6 +187,8 @@ public:
   bool doHotSpots() {
     return hotspots;
   }
+
+  void attach_display(DpyBase *dpy);
 };
 
 } // end namespace rtrt
