@@ -345,13 +345,12 @@ herr_t HDF5Dump_datatype(hid_t dataset_id, ostream* iostr)
       *iostr << "Double";
 
     } else {
-      cerr << "Undefined HDF5 float." << endl;
-      return -1;
+      *iostr << "Undefined HDF5 float.";
     }
     break;
 
   case H5T_STRING:
-    *iostr << "String";
+    *iostr << "String - Unsupported";
     break;
 
   case H5T_COMPOUND:
@@ -359,7 +358,7 @@ herr_t HDF5Dump_datatype(hid_t dataset_id, ostream* iostr)
     break;
       
   default:
-    printf("Unsupported or unknown data type");
+    *iostr << "Unsupported or unknown data type";
     break;
   }
 

@@ -42,10 +42,11 @@ Once the file has been read the contents will be displayed in the File
 Treeview. The user may scroll through the contents using the arrows
 keys or by using left mouse clicks on the to open the folders. Only
 HDF5 groups, attributes, and dataset nodes are displayed in the
-treeview. For attribute and dataset nodes their type value aredisplayed in
-the Type and Value columns, respectufully. In the case of the
-attrbiutes the data values are displayed. For datasets the dimensions
-of the dataset are displayed.
+treeview. For attribute and dataset nodes their node type, data type,
+and value are displayed in the Type and Value columns,
+respectufully. In the case of the attrbiutes the data values are
+displayed. For datasets the data type and the value of the dimensions
+of the dataset are displayed. 
 </p>
 <p>
 A single dataset may be selected using a left mouse click. When a
