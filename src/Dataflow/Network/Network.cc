@@ -125,7 +125,8 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
 	msg.u.clc.iport = p2;
         strcpy (msg.u.clc.connID, id());
         msg.u.clc.connHandle = conn->handle = getNextHandle();
-        conn_handles.insert(conn->handle, conn);
+        conn_handles[conn->handle] = conn;
+	
 
 	// send control message
         char buf[BUFSIZE];
@@ -140,11 +141,11 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
 	if (m1->isSkeleton()) {
 	    msg.u.crc.fromRemote = true; 	// connection from slave
 	    m2->handle = getNextHandle();	// assign handle to local mod
-	    mod_handles.insert(m2->handle, m2); // take this out - don't need
+	    mod_handles[m2->handle] = m2;       // take this out - don't need
 	} else {
 	    msg.u.crc.fromRemote = false; 	// connection from master
 	    m1->handle = getNextHandle();	// assign handle to local mod
-	    mod_handles.insert(m1->handle, m1); // take this out - don't need
+	    mod_handles[m1->handle] = m1;       // take this out - don't need
 	}
 	    
         msg.u.crc.outModHandle = m1->handle;
@@ -153,7 +154,7 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
         msg.u.crc.iport = p2;
         strcpy (msg.u.crc.connID, id());
         msg.u.crc.connHandle = conn->handle = getNextHandle();
-        conn_handles.insert(conn->handle, conn);
+        conn_handles[conn->handle] = conn;
 	msg.u.crc.socketPort = conn->socketPort = BASE_PORT + conn->handle;
 
 	// send control message
@@ -195,8 +196,8 @@ int Network::disconnect(const clString& connId)
     	bcopy ((char *) &msg, buf, sizeof (msg));
     	write (slave_socket, buf, sizeof(buf));
 	
-    	// remove from handle hashtable
-    	conn_handles.remove (connections[i]->handle);
+    	// remove from handle hash table
+    	conn_handles.erase(connections[i]->handle);
 
     // only distrib connections will have a handle - format DeleteLocConnMsg
     } else if (connections[i]->handle) {
@@ -209,8 +210,8 @@ int Network::disconnect(const clString& connId)
     	bcopy ((char *) &msg, buf, sizeof (msg));
     	write (slave_socket, buf, sizeof(buf));
 
-    	// remove from handle hashtable
-    	conn_handles.remove (connections[i]->handle);
+    	// remove from handle hash table
+    	conn_handles.erase(connections[i]->handle);
     } 
     // remove connection ref from iport and oport
 
@@ -321,20 +322,23 @@ Module* Network::add_module(const clString& packageName,
     // Instantiates ModuleHelper and starts event loop.
     mod->set_context(netedit, this);   
 
-    // add Module id and ptr to Module to hashtable of modules in network
-    module_ids.insert(mod->id, mod);
+    // add Module id and ptr to Module to hash table of modules in network
+    module_ids[mod->id] = mod;
 
-    // add to hashtable of handles and module ptrs
-    if (mod->handle > 0)
-    	mod_handles.insert(mod->handle, mod);
+    // add to hash table of handles and module ptrs
+    if (mod->handle > 0) {
+      mod_handles[mod->handle] = mod;
+    }
+    
     return mod;
 }
 
 Module* Network::get_module_by_id(const clString& id)
 {
-    Module* mod;
-    if(module_ids.lookup(id, mod)){
-	return mod;
+    MapClStringModule::iterator mod;
+    mod = module_ids.find(id);
+    if (mod != module_ids.end()) {
+	return (*mod).second;
     } else {
 	return 0;
     }
@@ -342,9 +346,10 @@ Module* Network::get_module_by_id(const clString& id)
 
 Module* Network::get_module_by_handle (int handle)
 {
-    Module* mod;
-    if (mod_handles.lookup (handle, mod)) {
-	return mod;
+    MapIntModule::iterator mod;
+    mod = mod_handles.find(handle);
+    if (mod != mod_handles.end()) {
+	return (*mod).second;
     } else {
 	return 0;
     }
@@ -352,9 +357,10 @@ Module* Network::get_module_by_handle (int handle)
 
 Connection* Network::get_connect_by_handle (int handle)
 {
-    Connection *conn;
-    if (conn_handles.lookup (handle, conn)) {
-  	return conn;
+    MapIntConnection::iterator conn;
+    conn = conn_handles.find(handle);
+    if (conn != conn_handles.end()) {
+  	return (*conn).second;
     } else {
 	return 0;
     }
@@ -379,8 +385,8 @@ int Network::delete_module(const clString& id)
         bcopy ((char *) &msg, buf, sizeof (msg));
         write (slave_socket, buf, sizeof(buf));
 	
-	// remove from handle hashtable
-  	mod_handles.remove (mod->handle);
+	// remove from handle hash table
+  	mod_handles.erase(mod->handle);
     }
 
     // traverse array of ptrs to Modules in Network to find this module
@@ -391,9 +397,9 @@ int Network::delete_module(const clString& id)
     if (i == modules.size())
 	return 0;
 
-    // remove array element corresponding to module, remove from hashtable
+    // remove array element corresponding to module, remove from hash table
     modules.remove(i);
-    module_ids.remove(id);
+    module_ids.erase(id);
     delete mod;			
     return 1;
 }
@@ -403,6 +409,10 @@ int Network::delete_module(const clString& id)
 
 //
 // $Log$
+// Revision 1.7  2000/03/11 00:40:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.6  1999/10/07 02:07:19  sparker
 // use standard iostreams and complex type
 //

@@ -15,7 +15,6 @@
 #include <PSECommon/Modules/Salmon/Salmon.h>
 #include <PSECommon/Modules/Salmon/Renderer.h>
 #include <PSECommon/Modules/Salmon/Roe.h>
-#include <SCICore/Containers/HashTable.h>
 #include <PSECore/Comm/MessageTypes.h>
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/ModuleHelper.h>
@@ -43,47 +42,57 @@ using PSECore::Datatypes::GeometryComm;
 
 using SCICore::GeomSpace::HeadLight;
 using SCICore::Containers::to_string;
-using SCICore::Containers::HashTableIter;
 using SCICore::Containers::AVLTreeIter;
 using SCICore::Thread::Mailbox;
 
+//----------------------------------------------------------------------
 Module* make_Salmon(const clString& id) {
   return new Salmon(id);
 }
 
+//----------------------------------------------------------------------
 Salmon::Salmon(const clString& id)
 : Module("Salmon", id, SalmonSpecial), max_portno(0), geomlock("Salmon geometry lock")
 {
-    // Add a headlight
+				// Add a headlight
     lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
-    // Create the input port
+    
+				// Create the input port
     add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
 			      Color(.7,.7,.7), 50);
     busy_bit=1;
     have_own_dispatch=1;
 
-    // Create port 0 - we use this for global objects such as cameras,
-    // light source icons, etc.
+				// Create port 0 - we use this for
+				// global objects such as cameras,
+				// light source icons, etc.
     int portid=max_portno++;
-    // Create the port
+    
+				// Create the port
     GeomSalmonPort *pi = new GeomSalmonPort(portid);
 
 #if 0
     PortInfo* pi=scinew PortInfo;
-    portHash.insert(portid, pi);
+    
+    portHash[portid] = pi;
+    
     pi->msg_head=pi->msg_tail=0;
     pi->portno=portid;
-    pi->objs=scinew HashTable<int, SceneItem*>;
+    
+    pi->objs = scinew MapIntSceneItem;
+    
 #endif
 
     ports.addObj(pi,portid);
 }
 
+//----------------------------------------------------------------------
 Salmon::~Salmon()
 {
 }
 
+//----------------------------------------------------------------------
 void Salmon::do_execute()
 {
     for(;;){
@@ -102,6 +111,7 @@ void Salmon::do_execute()
     }
 }
 
+//----------------------------------------------------------------------
 int Salmon::process_event(int block)
 {
     int ni=mailbox.numItems();
@@ -242,40 +252,45 @@ int Salmon::process_event(int block)
     return 1;
 }
 
+//----------------------------------------------------------------------
 void Salmon::initPort(Mailbox<GeomReply>* reply)
 {
     int portid=max_portno++;
-    // Create the port
-//    PortInfo* pi=scinew PortInfo;
+				// Create the port
+    // PortInfo* pi=scinew PortInfo;
     GeomSalmonPort *pi = new GeomSalmonPort(portid);
     ports.addObj(pi,portid);
 #if 0
-    portHash.insert(portid, pi);
+    portHash[portid] = pi;
     pi->msg_head=pi->msg_tail=0;
     pi->portno=portid;
-    pi->objs=scinew HashTable<int, SceneItem*>;
+    //pi->objs=scinew MapIntSceneItem;
 #endif
     reply->send(GeomReply(portid, &busy_bit));
 }
 
+//----------------------------------------------------------------------
 void Salmon::flushViews()
 {
-    for (int i=0; i<roe.size(); i++)
-	roe[i]->force_redraw();
+  for (int i=0; i<roe.size(); i++)
+    roe[i]->force_redraw();
 }
 
+//----------------------------------------------------------------------
 void Salmon::addObj(GeomSalmonPort* port, int serial, GeomObj *obj,
 		    const clString& name, CrowdMonitor* lock)
 {
     clString pname(name+" ("+to_string(port->portno)+")");
-//    SceneItem* si=scinew SceneItem(obj, pname, lock);
+    // SceneItem* si=scinew SceneItem(obj, pname, lock);
     GeomSalmonItem* si = scinew GeomSalmonItem(obj, pname, lock);
     port->addObj(si,serial);
-//    port->objs->insert(serial, si);
-    for (int i=0; i<roe.size(); i++)
+    // port->objs->insert(serial, si);
+    for (int i=0; i<roe.size(); i++) {
 	roe[i]->itemAdded(si);
+    }
 }
 
+//----------------------------------------------------------------------
 void Salmon::delObj(GeomSalmonPort* port, int serial, int del)
 {
     GeomSalmonItem* si;
@@ -288,15 +303,19 @@ void Salmon::delObj(GeomSalmonPort* port, int serial, int del)
     }
 }
 
+//----------------------------------------------------------------------
 void Salmon::delAll(GeomSalmonPort* port)
 {
-    HashTableIter<int, GeomObj*> iter = port->getIter();
-    for (iter.first(); iter.ok();++iter) {
-	GeomSalmonItem* si=(GeomSalmonItem*)iter.get_data();
-	for (int i=0; i<roe.size(); i++)
-	    roe[i]->itemDeleted(si);
-    }
-    port->delAll();
+  GeomIndexedGroup::IterIntGeomObj iter = port->getIter();
+  
+  for ( ; iter.first != iter.second; iter.first++) {
+    GeomSalmonItem* si =
+      (GeomSalmonItem*)((*iter.first).second);
+    for (int i=0; i<roe.size(); i++)
+      roe[i]->itemDeleted(si);
+  }
+  
+  port->delAll();
 }
 
 void Salmon::addTopRoe(Roe *r)
@@ -311,6 +330,7 @@ void Salmon::delTopRoe(Roe *r)
     }
 } 
 
+//----------------------------------------------------------------------
 #ifdef OLDUI
 void Salmon::spawnIndCB(CallbackData*, void*)
 {
@@ -325,6 +345,7 @@ void Salmon::spawnIndCB(CallbackData*, void*)
 }
 #endif
 
+//----------------------------------------------------------------------
 void Salmon::connection(ConnectionMode mode, int which_port, int)
 {
     if(mode==Disconnected){
@@ -334,6 +355,7 @@ void Salmon::connection(ConnectionMode mode, int which_port, int)
     }
 }
 
+//----------------------------------------------------------------------
 void Salmon::delete_roe(Roe* delroe)
 {
   for(int i=0;i<roe.size();i++){
@@ -344,6 +366,7 @@ void Salmon::delete_roe(Roe* delroe)
   }
 }
 
+//----------------------------------------------------------------------
 void Salmon::tcl_command(TCLArgs& args, void* userdata)
 {
     if(args.count() < 2){
@@ -369,16 +392,19 @@ void Salmon::tcl_command(TCLArgs& args, void* userdata)
     }
 }
 
+//----------------------------------------------------------------------
 void Salmon::execute()
 {
     // Never gets called...
 }
 
+//----------------------------------------------------------------------
 SalmonMessage::SalmonMessage(const clString& rid)
 : MessageBase(MessageTypes::RoeRedraw), rid(rid), nframes(0)
 {
 }
 
+//----------------------------------------------------------------------
 SalmonMessage::SalmonMessage(const clString& rid, double tbeg, double tend,
 			     int nframes, double framerate)
 : MessageBase(MessageTypes::RoeRedraw), rid(rid), tbeg(tbeg), tend(tend),
@@ -388,12 +414,14 @@ SalmonMessage::SalmonMessage(const clString& rid, double tbeg, double tend,
 	cerr << "Warning - nframes shouldn't be zero for animation\n";
 }
 
+//----------------------------------------------------------------------
 SalmonMessage::SalmonMessage(MessageTypes::MessageType type,
 			     const clString& rid, const clString& filename)
 : MessageBase(type), rid(rid), filename(filename)
 {
 }
 
+//----------------------------------------------------------------------
 SalmonMessage::SalmonMessage(MessageTypes::MessageType type,
 			     const clString& rid, const clString& filename,
 			     const clString& format)
@@ -401,43 +429,49 @@ SalmonMessage::SalmonMessage(MessageTypes::MessageType type,
 {
 }
 
+//----------------------------------------------------------------------
 SalmonMessage::~SalmonMessage()
 {
 }
 
+//----------------------------------------------------------------------
 #if 0
 SceneItem::SceneItem(GeomObj* obj, const clString& name, CrowdMonitor* lock)
 : obj(obj), name(name), lock(lock)
 {
 }
 
+//----------------------------------------------------------------------
 SceneItem::~SceneItem()
 {
 }
 #endif
 
+//----------------------------------------------------------------------
 void Salmon::append_port_msg(GeometryComm* gmsg)
 {
-    // Look up the right port number
-//    PortInfo* pi;
-    GeomSalmonPort *pi;
-
-    if (!(pi = ((GeomSalmonPort*)ports.getObj(gmsg->portno)))) {
-//    if(!portHash.lookup(gmsg->portno, pi)){
-	cerr << "Geometry message sent to bad port!!!: " << gmsg->portno << "\n";
-	return;
-    }
-
-    // Queue up the messages until the flush...
-    if(pi->msg_tail){
-	pi->msg_tail->next=gmsg;
-	pi->msg_tail=gmsg;
-    } else {
-	pi->msg_head=pi->msg_tail=gmsg;
-    }
-    gmsg->next=0;
+				// Look up the right port number
+  // PortInfo* pi;
+  GeomSalmonPort *pi;
+  
+  if (!(pi = ((GeomSalmonPort*)ports.getObj(gmsg->portno)))) {
+    // if(portHash.find(gmsg->portno) == portHash.end()){
+    cerr << "Geometry message sent to bad port!!!: " << gmsg->portno << "\n";
+    return;
+  }
+  
+				// Queue up the messages until the
+				// flush...
+  if(pi->msg_tail){
+    pi->msg_tail->next=gmsg;
+    pi->msg_tail=gmsg;
+  } else {
+    pi->msg_head=pi->msg_tail=gmsg;
+  }
+  gmsg->next=0;
 }
 
+//----------------------------------------------------------------------
 void Salmon::flushPort(int portid)
 {
     // Look up the right port number
@@ -471,16 +505,27 @@ void Salmon::flushPort(int portid)
     }
 }
 
+//----------------------------------------------------------------------
 int Salmon::lookup_specific(const clString& key, void*& data)
 {
-    return specific.lookup(key, data);
+    //return specific.lookup(key, data);
+    
+    MapClStringVoid::iterator result = specific.find(key);
+    if (result != specific.end()) {
+	data = (*result).second;
+	return 1;
+    }
+    return 0;
 }
 
+//----------------------------------------------------------------------
 void Salmon::insert_specific(const clString& key, void* data)
 {
-    specific.insert(key, data);
+    //specific.insert(key, data);
+    specific[key] = data;
 }
 
+//----------------------------------------------------------------------
 void Salmon::emit_vars(ostream& out)
 {
   cerr << "Salmon emitvars" << endl;
@@ -496,6 +541,10 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.10  2000/03/11 00:39:53  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.9  1999/12/03 00:28:59  dmw
 // added setView message for Salmon/Roe
 //
