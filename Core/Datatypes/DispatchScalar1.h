@@ -25,13 +25,13 @@
       } else {\
         disp_error = true; disp_msg = "LevelField<int>::get_type_name is broken";\
       }\
-    } else if (field1->get_type_name(1) == "long int") {\
-      LevelField<long int> *f1 = 0;\
-      f1 = dynamic_cast<LevelField<long int>*>(field1.get_rep());\
+    } else if (field1->get_type_name(1) == "long") {\
+      LevelField<long> *f1 = 0;\
+      f1 = dynamic_cast<LevelField<long>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "LevelField<long int>::get_type_name is broken";\
+        disp_error = true; disp_msg = "LevelField<long>::get_type_name is broken";\
       }\
     }\
   } else if (disp_error) {\
