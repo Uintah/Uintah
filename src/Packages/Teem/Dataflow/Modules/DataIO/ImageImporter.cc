@@ -98,7 +98,7 @@ ImageImporter::execute()
   if( fn == "" ) {
     error("No file has been selected.  Please choose a file.");
     return;
-  } else if (stat(fn.c_str(), &buf)) {
+  } else if (stat(fn.c_str(), &buf) == -1) {
     error("File '" + fn + "' not found.");
     return;
   }

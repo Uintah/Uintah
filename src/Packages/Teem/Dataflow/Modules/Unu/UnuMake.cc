@@ -161,7 +161,7 @@ void UnuMake::read_file_and_create_nrrd() {
 
   // Read the status of this file so we can compare modification timestamps.
   struct stat buf;
-  if (stat(fn.c_str(), &buf)) {
+  if (stat(fn.c_str(), &buf) == -1) {
     error(string("UnuMake error - file not found: '")+fn+"'");
     return;
   }

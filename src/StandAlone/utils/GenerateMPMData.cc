@@ -155,13 +155,13 @@ main(int argc, char **argv)
   }
 
   struct stat buff;
-  if (stat(argv[1], &buff))
+  if (stat(argv[1], &buff) == -1)
   {
     cout << "File " << argv[1] << " not found\n";
     exit(99);
   }
 
-  if (stat(argv[2], &buff))
+  if (stat(argv[2], &buff) == -1)
   {
     cout << "Directory  " << argv[2] << " not found\n";
     exit(100);
