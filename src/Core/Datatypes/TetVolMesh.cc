@@ -226,6 +226,11 @@ void
 TetVolMesh::compute_faces()
 {  
   face_lock_.lock();
+  if (synchronized_ & FACE_NEIGHBORS_E) {
+    face_lock_.unlock();
+    return;
+  }
+
   faces_.clear();
   all_faces_.clear();
   unsigned int i, num_cells = cells_.size();
@@ -441,7 +446,6 @@ void
 TetVolMesh::create_cell_faces(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
-  std::cerr << "Creating cell # " << int(c) << std::endl;
   if (!(synchronized_ & FACES_E) && !(synchronized_ & FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
   for (int i = c*4; i < c*4+4; ++i)
@@ -456,7 +460,6 @@ void
 TetVolMesh::delete_cell_faces(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
-  std::cerr << "Deleting cell # " << int(c) << std::endl;
   if (!(synchronized_ & FACES_E) && !(synchronized_ & FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
   for (int i = c*4; i < c*4+4; ++i)
