@@ -26,54 +26,28 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+# Build platform specific installation guides.
 
-# Make html and print versions of the installation guide.
+platforms := Linux Irix OSX
 
-parms_chunk := chunk.section.depth=1 use.id.as.filename=1
-stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
-stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
-stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
-params_print := -V %footnote-ulinks% -V %section-autolabel% \
-  -V %generate-article-toc% -V bop-footnotes
-rxmlsrcs := ${wildcard *.rxml}
-edition := ../../edition.xml
-treetop := ../../..
+.PHONY: docs clean veryclean
 
-.PHONY: all html print clean veryclean
+docs: ${platforms}
+	for p in ${platforms}; \
+        do \
+          cd $$p && ${MAKE} -f ../Makefile.platform; \
+          cd ..; \
+        done
 
-.DELETE_ON_ERROR:
+${platforms}:
+	mkdir $@
 
-all: html print
-
-# HTML versions
-html: srig.html
-
-srig.html: ${rxmlsrcs} ${edition}
-	for f in ${rxmlsrcs}; \
-	do \
-	   OUTPUT_MODE=html eruby --delimiters xml $$f > $${f%.rxml}.hxml ; \
-	done
-	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_nochunk} treetop=${treetop} >$@
-	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_chunk} ${parms_chunk} treetop=${treetop}
-
-# Print version
-print: srig.pdf
-
-srig.pdf : ${rxmlsrcs} ${edition}
-	for f in ${rxmlsrcs}; \
-	do \
-	   OUTPUT_MODE=print eruby --delimiters xml $$f > $${f%.rxml}.pxml ; \
-	done
-	openjade -t tex -V tex-backend -c ${CATALOG} -o srig.tex \
-          -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
-	for i in 1 2 3; do jadetex srig.tex ; done
-	dvipdfm -p letter srig.dvi
-
-# Cleanage
 clean:
-	-rm -f *.[ph]xml srig.aux srig.log srig.out srig.dvi srig.tex *~
+	for p in ${platforms}; \
+        do \
+          cd $$p && ${MAKE} -f ../Makefile.platform clean; \
+          cd ..; \
+        done
 
-veryclean: clean
-	-rm -f *.html srig.pdf
+veryclean:
+	rm -rf ${platforms}
