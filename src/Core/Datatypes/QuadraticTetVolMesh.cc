@@ -100,13 +100,13 @@ QuadraticTetVolMesh::begin(Node::iterator &itr) const
 void
 QuadraticTetVolMesh::end(Node::iterator &itr) const
 {
-  itr = points_.size() + cells_.size() * 6;
+  itr = points_.size() + cells_.size() / 4 * 6;
 }
 
 void
 QuadraticTetVolMesh::size(Node::size_type &s) const
 {
-  s = points_.size() + cells_.size() * 6;
+  s = points_.size() + cells_.size() / 4 * 6;
 }
 
 void
@@ -167,9 +167,8 @@ const Point &
 QuadraticTetVolMesh::ave_point(const Point &p0, const Point &p1) const
 {
   static Point rval;
-  rval = Point(p0.x() + p1.x() * 0.5, 
-	       p0.y() + p1.y() * 0.5, 
-	       p0.z() + p1.z() * 0.5);
+  Vector v = p1 - p0;
+  rval = p0 + v * 0.5;
   return rval;
 }
 
@@ -241,7 +240,7 @@ QuadraticTetVolMesh::get_neighbors(Node::array_type &array,
 void 
 QuadraticTetVolMesh::get_center(Point &result, Node::index_type idx) const
 {
-  TetVolMesh::get_center(result, idx);
+  get_point(result, idx);
 }
 void 
 QuadraticTetVolMesh::get_center(Point &result, Edge::index_type idx) const

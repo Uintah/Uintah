@@ -68,7 +68,7 @@ void TetVol2QuadraticTetVol::execute()
   if(!fld_handle.get_rep()){
     warning("No Data in port 1 field.");
     return;
-  } else if (fld_handle->get_type_name(0) != "TetVol") {
+  } else if (fld_handle->get_type_name(0) != "TetVolField") {
     error("input must be a TetVol type, not a "+fld_handle->get_type_name(0));
     return;
   }
