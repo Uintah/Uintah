@@ -18,6 +18,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
@@ -1178,14 +1179,16 @@ public:
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){
-      cerr << "Solve of " << X_label->getName() 
-	   << " on level " << level->getIndex();
-      if(niter < toomany)
-	cerr << " completed in ";
-      else
-	cerr << " FAILED in ";
-      cerr << niter << " iterations, " << dt << " seconds (" 
-	   << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
+      if(niter < toomany) {
+        cerr << "Solve of " << X_label->getName() 
+	      << " on level " << level->getIndex()
+             << " completed in "
+             << niter << " iterations, " << dt << " seconds (" 
+	      << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
+      }else{
+        throw ConvergenceFailure("CGSolve variable: "+X_label->getName(), 
+			  niter, e, params->tolerance);
+      }
     }
   }
     
