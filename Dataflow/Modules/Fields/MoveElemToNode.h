@@ -110,6 +110,65 @@ MoveElemToNodeAlgoLat<FIELD>::execute(ProgressReporter *mod,
 }
 
 
+template <class FIELD>
+class MoveElemToNodeAlgoImg : public MoveElemToNodeAlgo
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+
+};
+
+
+template <class FIELD>
+FieldHandle
+MoveElemToNodeAlgoImg<FIELD>::execute(ProgressReporter *mod,
+				      FieldHandle fieldh)
+{
+  FIELD *ifield = dynamic_cast<FIELD*>(fieldh.get_rep());
+  typename FIELD::mesh_type *imesh =
+    dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
+
+  const int ni = imesh->get_ni();
+  const int nj = imesh->get_nj();
+
+  const double ioff = (1.0 - ((ni-2.0) / (ni-1.0))) * 0.5;
+  const double joff = (1.0 - ((nj-2.0) / (nj-1.0))) * 0.5;
+
+  const Point minp(ioff, joff, 0.0);
+  const Point maxp(1.0-ioff, 1.0-joff, 1.0);
+
+  typename FIELD::mesh_type *omesh =
+    scinew typename FIELD::mesh_type(ni-1, nj-1, minp, maxp);
+
+  Transform trans;
+  imesh->get_canonical_transform(trans);
+  omesh->transform(trans);
+
+  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+
+  // Copy data from ifield to ofield.
+  typename FIELD::mesh_type::Elem::iterator iter, eiter;
+  imesh->begin(iter);
+  imesh->end(eiter);
+  while (iter != eiter)
+  {
+    typename FIELD::value_type v;
+    ifield->value(v, *iter);
+
+    typename FIELD::mesh_type::Node::index_type oi(omesh,
+						   (*iter).i_,
+						   (*iter).j_);
+
+    ofield->set_value(v, oi);
+
+    ++iter;
+  }
+
+  return ofield;
+}
+
+
 
 } // end namespace SCIRun
 
