@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Variables/SFCYVariableBase.h>
 #include <Packages/Uintah/Core/Variables/SFCZVariableBase.h>
 #include <Packages/Uintah/Core/Variables/ReductionVariableBase.h>
+#include <Packages/Uintah/Core/Variables/SoleVariableBase.h>
 #include <Packages/Uintah/Core/Variables/PerPatchBase.h>
 #include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -92,6 +93,16 @@ public:
 			const Level* level = 0, int matlIndex = -1) = 0;
   virtual void print(ostream& intout, const VarLabel* label,
 		     const Level* level, int matlIndex = -1) = 0;
+
+  // Sole Variables
+  virtual void get(SoleVariableBase&, const VarLabel*,
+		   const Level* level = 0, int matlIndex = -1) = 0;
+  virtual void put(const SoleVariableBase&, const VarLabel*,
+		   const Level* level = 0, int matlIndex = -1) = 0;
+
+  virtual void override(const SoleVariableBase&, const VarLabel*,
+			const Level* level = 0, int matlIndex = -1) = 0;
+
 
   // Particle Variables
   virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
