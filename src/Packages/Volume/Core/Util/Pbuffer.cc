@@ -528,13 +528,16 @@ Pbuffer::bind (unsigned int buffer)
                          GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
     }
     if(mFormat == GL_FLOAT && mNV_float_buffer) {
-      if(mUseDefaultShader)
+      if(mUseDefaultShader) {
         mShader->bind();
-      glMatrixMode(GL_TEXTURE);
-      glPushMatrix();
-      glLoadIdentity();
-      glScalef(mWidth, mHeight, 1.0);
-      glMatrixMode(GL_MODELVIEW);
+      }
+      if(mUseTextureMatrix) {
+        glMatrixMode(GL_TEXTURE);
+        glPushMatrix();
+        glLoadIdentity();
+        glScalef(mWidth, mHeight, 1.0);
+        glMatrixMode(GL_MODELVIEW);
+      }
     }
   }
 }
@@ -551,11 +554,14 @@ Pbuffer::release (unsigned int buffer)
     glBindTexture(mTexTarget, 0);
     glDisable(mTexTarget);
     if(mFormat == GL_FLOAT && mNV_float_buffer) {
-      glMatrixMode(GL_TEXTURE);
-      glPopMatrix();
-      glMatrixMode(GL_MODELVIEW);
-      if(mUseDefaultShader)
+      if(mUseTextureMatrix) {
+        glMatrixMode(GL_TEXTURE);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+      }
+      if(mUseDefaultShader) {
         mShader->release();
+      }
     }
   }
 }
@@ -587,6 +593,12 @@ void
 Pbuffer::set_use_default_shader(bool b)
 {
   mUseDefaultShader = b;
+}
+
+void
+Pbuffer::set_use_texture_matrix(bool b)
+{
+  mUseTextureMatrix = b;
 }
 
 Pbuffer::Pbuffer (int width, int height, bool isRenderTex)

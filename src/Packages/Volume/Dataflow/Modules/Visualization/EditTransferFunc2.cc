@@ -492,7 +492,7 @@ EditTransferFunc2::redraw()
     
       // Rasterize widgets
       for (unsigned int i=0; i<widgets_.size(); i++) {
-        widgets_[i]->rasterize(*shader_factory_, gui_faux_.get());
+        widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), false);
       }
 
       glDisable(GL_BLEND);
@@ -592,7 +592,7 @@ EditTransferFunc2::redraw()
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     for(unsigned int i=0; i<widgets_.size(); i++) {
-      widgets_[i]->rasterize(*shader_factory_, gui_faux_.get());
+      widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), false);
     }
 
     glBlendFunc(GL_ONE, GL_DST_ALPHA);

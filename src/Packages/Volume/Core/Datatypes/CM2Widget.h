@@ -48,7 +48,7 @@ public:
   
   // appearance
   virtual void draw() = 0;
-  virtual void rasterize(CM2ShaderFactory& factory, bool faux) = 0;
+  virtual void rasterize(CM2ShaderFactory& factory, bool faux, bool blend) = 0;
   virtual void rasterize(SCIRun::Array3<float>& array, bool faux) = 0;
   virtual CM2Widget* clone() = 0;
   
@@ -81,11 +81,17 @@ class FragmentProgramARB;
 enum {
   CM2_TRIANGLE = 0,
   CM2_TRIANGLE_FAUX = 1,
-  CM2_RECTANGLE_1D = 2,
-  CM2_RECTANGLE_1D_FAUX = 3,
-  CM2_RECTANGLE_ELLIPSOID = 4,
-  CM2_RECTANGLE_ELLIPSOID_FAUX = 5,
-  CM2_LAST = 6
+  CM2_TRIANGLE_BLEND = 2,
+  CM2_TRIANGLE_FAUX_BLEND = 3,
+  CM2_RECTANGLE_1D = 4,
+  CM2_RECTANGLE_1D_FAUX = 5,
+  CM2_RECTANGLE_1D_BLEND = 6,
+  CM2_RECTANGLE_1D_FAUX_BLEND = 7,
+  CM2_RECTANGLE_ELLIPSOID = 8,
+  CM2_RECTANGLE_ELLIPSOID_FAUX = 9,
+  CM2_RECTANGLE_ELLIPSOID_BLEND = 10,
+  CM2_RECTANGLE_ELLIPSOID_FAUX_BLEND = 11,
+  CM2_LAST = 12
 };
 
 class CM2ShaderFactory
@@ -116,7 +122,7 @@ public:
   
   // appearance
   void draw();
-  void rasterize(CM2ShaderFactory& factory, bool faux);
+  void rasterize(CM2ShaderFactory& factory, bool faux, bool blend);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
   
   // behavior
@@ -149,7 +155,7 @@ public:
 
   // appearance
   void draw();
-  void rasterize(CM2ShaderFactory& factory, bool faux);
+  void rasterize(CM2ShaderFactory& factory, bool faux, bool blend);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
   
   // behavior

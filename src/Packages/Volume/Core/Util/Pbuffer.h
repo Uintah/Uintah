@@ -65,6 +65,7 @@ public:
 
   bool need_shader();
   void set_use_default_shader(bool b);
+  void set_use_texture_matrix(bool b);
   
 protected:
   int mWidth, mHeight;
@@ -78,6 +79,7 @@ protected:
   unsigned int mTexTarget; // associated texture target
   unsigned int mTexFormat; // associated texture format
   bool mUseDefaultShader;
+  bool mUseTextureMatrix;
   // GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE_NV
   struct PbufferImpl* mImpl; // implementation specific details
 };
