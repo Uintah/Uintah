@@ -49,16 +49,13 @@ itcl_class SCIRun_DataIO_PathWriter {
 
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	if {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
-	}
 	
-	if { $initdir==""} {
-	    if {[info exists env(SCI_DATA)]} {
-		set initdir $env(SCI_DATA)
-	    } elseif {[info exists env(SCIRUN_DATA)]} {
-		set initdir $env(SCIRUN_DATA)
-	    }
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
 	}
 
 	#######################################################
