@@ -198,7 +198,7 @@ int main(int argc, char** argv)
 	    cfd = scinew ArchesSpace::Arches(world);
 	}
 	if(do_ice){
-	    cfd = scinew ICESpace::ICE();
+	    cfd = scinew ICESpace::ICE(world);
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
@@ -294,6 +294,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.30  2000/10/04 20:21:18  jas
+// Changed ICE() to ICE(world).
+//
 // Revision 1.29  2000/10/02 17:54:45  dav
 // Changed the semantics of numThreads.  By specifying "-nthreads", you
 // are no longer asking for the threaded version of components.  You ARE
