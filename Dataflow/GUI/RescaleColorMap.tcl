@@ -18,7 +18,6 @@
 itcl_class SCIRun_Visualization_RescaleColorMap { 
     inherit Module 
 
-    protected  bVar
     constructor {config} { 
         set name RescaleColorMap 
         set_defaults 
@@ -52,14 +51,14 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
  
 	frame $w.f1 -relief flat
 	pack $w.f1 -side top -expand yes -fill x
-	radiobutton $w.f1.b -text "Auto Scale"  -variable bVar -value 0 \
-	    -command "$this autoScale"
+	radiobutton $w.f1.b -text "Auto Scale" -variable $this-isFixed \
+	    -value 0 -command "$this autoScale"
 	pack $w.f1.b -side left
 
 	frame $w.f2 -relief flat
 	pack $w.f2 -side top -expand yes -fill x
-	radiobutton $w.f2.b -text "Fixed Scale"  -variable bVar -value 1 \
-	    -command "$this fixedScale"
+	radiobutton $w.f2.b -text "Fixed Scale"  -variable $this-isFixed \
+	    -value 1 -command "$this fixedScale"
 	pack $w.f2.b -side left
 
 	frame $w.f3 -relief flat
@@ -92,8 +91,6 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	global $this-isFixed
 	set w .ui[modname]
 	
-	set $this-isFixed 0
-
 	set color "#505050"
 
 	$w.f3.l1 configure -foreground $color
@@ -108,9 +105,6 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
     method fixedScale { } {
 	global $this-isFixed
 	set w .ui[modname]
-
-	set $this-isFixed 1
-
 
 	$w.f3.l1 configure -foreground black
 	$w.f3.e1 configure -state normal -foreground black
