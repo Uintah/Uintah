@@ -73,10 +73,8 @@ public:
       : MaskedLatIndex(m, i,j,k) {}
 
     operator unsigned() const { 
-      if (mesh_ == 0) 
-	return (i_-1)*(j_-1)*(k_-1); 
-      else 
-	return i_ + (mesh_->ni_-1)*j_ + (mesh_->ni_-1)*(mesh_->nj_-1)*k_;
+      ASSERT(mesh_);
+      return i_ + (mesh_->ni_-1)*j_ + (mesh_->ni_-1)*(mesh_->nj_-1)*k_;
     }
 
     bool operator ==(const CellIndex &a) const
@@ -104,10 +102,8 @@ public:
       : MaskedLatIndex(m, i,j,k) {}
 
     operator unsigned() const { 
-      if (mesh_ == 0) 
-	return i_*j_*k_; 
-      else 
-	return i_ + mesh_->ni_*j_ + mesh_->ni_*mesh_->nj_*k_;
+      ASSERT(mesh_);
+      return i_ + mesh_->ni_*j_ + mesh_->ni_*mesh_->nj_*k_;
     }
 
     bool operator ==(const MaskedLatIndex &a) const
@@ -135,7 +131,8 @@ public:
 	      unsigned dir)
       : MaskedLatIndex(m, i,j,k) , dir_(dir){}
     operator unsigned() const { 
-      if (mesh_) switch (dir_)
+      ASSERT(mesh_);
+      switch (dir_)
 	{
 	case 0: return (i_ + (mesh_->ni_-1)*j_ + 
 			(mesh_->ni_-1)*mesh_->nj_*k_); 
@@ -152,7 +149,6 @@ public:
 	default: return 0; //ASSERTFAIL("EdgeIndex dir_ off.");
 	  break;
 	}
-      return 0;
     }
 
     bool operator ==(const EdgeIndex &a) const
@@ -182,7 +178,8 @@ public:
 	      unsigned dir)
       : MaskedLatIndex(m, i,j,k) , dir_(dir){}
     operator unsigned() const { 
-      if (mesh_) switch (dir_)
+      ASSERT(mesh_);
+      switch (dir_)
 	{
 	case 0: return (i_ + (mesh_->ni_-1)*j_ + 
 			(mesh_->ni_-1)*(mesh_->nj_-1)*k_); 
@@ -199,7 +196,6 @@ public:
 	default: return 0; //ASSERTFAIL("FaceIndex dir_ off."); 
 	  break;
 	}
-      return 0;
     }
 
     bool operator ==(const FaceIndex &a) const
@@ -289,10 +285,8 @@ public:
 
     operator unsigned() const 
     { 
-      if (mesh_ == 0) 
-	return i_*j_*k_; 
-      else 
-	return i_ + mesh_->ni_*j_ + mesh_->ni_*mesh_->nj_*k_;
+      ASSERT(mesh_);
+      return i_ + mesh_->ni_*j_ + mesh_->ni_*mesh_->nj_*k_;
     }
 
     NodeIter &operator++()
@@ -747,10 +741,8 @@ public:
 
     operator unsigned() const 
     { 
-      if (mesh_ == 0) 
-	return (i_-1)*(j_-1)*(k_-1); 
-      else 
-	return i_ + (mesh_->ni_-1)*j_ + (mesh_->ni_-1)*(mesh_->nj_-1)*k_;
+      ASSERT(mesh_);
+      return i_ + (mesh_->ni_-1)*j_ + (mesh_->ni_-1)*(mesh_->nj_-1)*k_;
     }
 
     CellIter &operator++()
