@@ -18,6 +18,14 @@
         <value>itk::Image&lt;float, 2&gt;</value>
       </type>
      </instance>
+    <instance num="2">
+      <type name="ImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+      <type name="FeatureImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+     </instance>
   </instantiations>
 
   <includes>
