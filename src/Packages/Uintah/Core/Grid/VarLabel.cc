@@ -29,9 +29,11 @@ VarLabel* VarLabel::create(const string& name,
     if(boundaryLayer != dup->d_boundaryLayer)
       SCI_THROW(InternalError(string("Multiple VarLabels defined with different # of boundary layers")));
 
-#if !defined(_AIX)
+#if !defined(_AIX) && !defined(__APPLE__)
     // AIX uses lib.a's, therefore the "same" var labels are different...
     // Need to look into fixing this in a better way...
+    // And I am not sure why we have to do this on the mac...
+    cerr << "td=" << td << ", dup->td=" << dup->d_td << '\n';
     if (td != dup->d_td || vartype != dup->d_vartype)
       SCI_THROW(InternalError(string("VarLabel with same name exists, '")
 			  + name + "', but with different type"));

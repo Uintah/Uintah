@@ -2,14 +2,15 @@
 
 SRCDIR := Packages/Uintah/Core
 SUBDIRS := \
-	$(SRCDIR)/Parallel    \
+	$(SRCDIR)/DataArchive \
+	$(SRCDIR)/Datatypes   \
 	$(SRCDIR)/Disclosure  \
-	$(SRCDIR)/Math        \
 	$(SRCDIR)/Exceptions  \
 	$(SRCDIR)/Grid        \
-	$(SRCDIR)/DataArchive \
-	$(SRCDIR)/ProblemSpec \
-	$(SRCDIR)/Datatypes
+	$(SRCDIR)/Labels      \
+	$(SRCDIR)/Math        \
+	$(SRCDIR)/Parallel    \
+	$(SRCDIR)/ProblemSpec
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

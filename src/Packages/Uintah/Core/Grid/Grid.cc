@@ -9,7 +9,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
-#include <values.h>
+#include <sci_values.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -168,7 +168,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
       // resolution is used on a problem with more than one patch,
       // the resulting grid spacing must be consistent.
       Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
-      Point highPoint(MINDOUBLE, MINDOUBLE, MINDOUBLE);
+      Point highPoint(-MAXDOUBLE, -MAXDOUBLE, -MAXDOUBLE);
 
       Vector spacing;
       bool have_levelspacing=false;

@@ -8,7 +8,6 @@
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Core/Util/NotFinished.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
