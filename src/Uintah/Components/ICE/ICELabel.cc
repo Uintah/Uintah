@@ -1,13 +1,14 @@
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/FCVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <SCICore/Malloc/Allocator.h>
 
 using namespace Uintah;
-using namespace Uintah::ICE;
+using namespace Uintah::ICESpace;
 
 ICELabel::ICELabel()
 {
@@ -100,53 +101,56 @@ ICELabel::ICELabel()
 ICELabel::~ICELabel()
 {
     // Cell centered variables
-    delete VarLabel* press_CCLabel;
-    delete VarLabel* press_CCLabel_0;
-    delete VarLabel* press_CCLabel_1;
-    delete VarLabel* press_CCLabel_2;
-    delete VarLabel* press_CCLabel_3;
-    delete VarLabel* press_CCLabel_4;
-    delete VarLabel* press_CCLabel_5;
-    delete VarLabel* press_CCLabel_6_7;
+    delete  press_CCLabel;
+    delete  press_CCLabel_0;
+    delete  press_CCLabel_1;
+    delete  press_CCLabel_2;
+    delete  press_CCLabel_3;
+    delete  press_CCLabel_4;
+    delete  press_CCLabel_5;
+    delete  press_CCLabel_6_7;
 
-    delete VarLabel* rho_CCLabel;
-    delete VarLabel* rho_CCLabel_0;
-    delete VarLabel* rho_CCLabel_1;
-    delete VarLabel* rho_CCLabel_2;
-    delete VarLabel* rho_CCLabel_3;
-    delete VarLabel* rho_CCLabel_4;
-    delete VarLabel* rho_CCLabel_5;
-    delete VarLabel* rho_CCLabel_6_7;
+    delete  rho_CCLabel;
+    delete  rho_CCLabel_0;
+    delete  rho_CCLabel_1;
+    delete  rho_CCLabel_2;
+    delete  rho_CCLabel_3;
+    delete  rho_CCLabel_4;
+    delete  rho_CCLabel_5;
+    delete  rho_CCLabel_6_7;
 
-    delete VarLabel* temp_CCLabel;
-    delete VarLabel* temp_CCLabel_0;
-    delete VarLabel* temp_CCLabel_1;
-    delete VarLabel* temp_CCLabel_2;
-    delete VarLabel* temp_CCLabel_3;
-    delete VarLabel* temp_CCLabel_4;
-    delete VarLabel* temp_CCLabel_5;
-    delete VarLabel* temp_CCLabel_6_7;
+    delete temp_CCLabel;
+    delete temp_CCLabel_0;
+    delete temp_CCLabel_1;
+    delete temp_CCLabel_2;
+    delete temp_CCLabel_3;
+    delete temp_CCLabel_4;
+    delete temp_CCLabel_5;
+    delete temp_CCLabel_6_7;
 
-    delete VarLabel* vel_CCLabel;
-    delete VarLabel* vel_CCLabel_0;
-    delete VarLabel* vel_CCLabel_1;
-    delete VarLabel* vel_CCLabel_2;
-    delete VarLabel* vel_CCLabel_3;
-    delete VarLabel* vel_CCLabel_4;
-    delete VarLabel* vel_CCLabel_5;
-    delete VarLabel* vel_CCLabel_6_7;
+    delete vel_CCLabel;
+    delete vel_CCLabel_0;
+    delete vel_CCLabel_1;
+    delete vel_CCLabel_2;
+    delete vel_CCLabel_3;
+    delete vel_CCLabel_4;
+    delete vel_CCLabel_5;
+    delete vel_CCLabel_6_7;
 
-    delete VarLabel* cv_CCLabel;
-    delete VarLabel* div_velfc_CCLabel;
+    delete cv_CCLabel;
+    delete div_velfc_CCLabel;
 
     // Face centered variables
-    delete VarLabel* vel_FCLabel;
-    delete VarLabel* press_FCLabel;
-    delete VarLabel* tau_FCLabel;
+    delete vel_FCLabel;
+    delete press_FCLabel;
+    delete tau_FCLabel;
 
     delete delTLabel;
 }
 // $Log$
+// Revision 1.2  2000/10/04 20:17:52  jas
+// Change namespace ICE to ICESpace.
+//
 // Revision 1.1  2000/10/04 19:26:14  guilkey
 // Initial commit of some classes to help mainline ICE.
 //

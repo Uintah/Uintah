@@ -6,7 +6,7 @@
 #include <Uintah/Grid/VarTypes.h>
 #include <SCICore/Malloc/Allocator.h>
 
-using namespace Uintah::ICE;
+using namespace Uintah::ICESpace;
 
 EquationOfState::EquationOfState()
 {
@@ -21,6 +21,9 @@ EquationOfState::~EquationOfState()
 }
 
 //$Log$
+//Revision 1.2  2000/10/04 20:17:52  jas
+//Change namespace ICE to ICESpace.
+//
 //Revision 1.1  2000/10/04 19:26:14  guilkey
 //Initial commit of some classes to help mainline ICE.
 //

@@ -10,10 +10,10 @@
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <iostream>
-#include "EquationOfState.h"
+#include "EquationOfStateFactory.h"
 
 using namespace std;
-using namespace Uintah::ICE;
+using namespace Uintah::ICESpace;
 using namespace Uintah;
 using namespace SCICore::Geometry;
 
@@ -44,7 +44,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
    int vf;
    ps->require("velocity_field",vf);
    setVFIndex(vf);
-   }
 
    lb = scinew ICELabel();
 }
@@ -81,6 +80,9 @@ double ICEMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.2  2000/10/04 20:17:52  jas
+// Change namespace ICE to ICESpace.
+//
 // Revision 1.1  2000/10/04 19:26:14  guilkey
 // Initial commit of some classes to help mainline ICE.
 //

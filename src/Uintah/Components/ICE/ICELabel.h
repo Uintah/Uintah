@@ -8,7 +8,7 @@
 using std::vector;
 
 namespace Uintah {
-  namespace ICE {
+  namespace ICESpace {
     class ICELabel {
     public:
 
@@ -68,6 +68,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.2  2000/10/04 20:17:52  jas
+// Change namespace ICE to ICESpace.
+//
 // Revision 1.1  2000/10/04 19:26:14  guilkey
 // Initial commit of some classes to help mainline ICE.
 //
