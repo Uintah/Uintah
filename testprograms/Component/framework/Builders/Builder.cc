@@ -5,6 +5,7 @@
 #include <testprograms/Component/framework/TestComponents/Sender.h>
 #include <testprograms/Component/framework/TestComponents/Provider.h>
 #include <testprograms/Component/framework/REI/scr.h>
+#include <testprograms/Component/framework/REI/scrUser.h>
 
 #include <sstream>
 #include <iostream>
@@ -13,8 +14,15 @@ namespace sci_cca {
 
 using std::cerr;
 
+scrUser * scruser = 0;
+
 Builder::Builder()
 {
+  // Hard code creation of a scrUser so that I can use it to call
+  // the "go" function.  Go should actually be an interface...
+  scruser = new scrUser();
+  Component comp = scruser;
+  CCA::init( comp, "scrUser" );
 }
 
 Builder::~Builder()
@@ -42,21 +50,59 @@ Builder::read_input_script()
 void
 Builder::connect_components()
 {
-  cout << "Not done yet.\n\n";
+  array1<ComponentID> componentIds;
 
+  RegistryServices reg_port = pidl_cast<RegistryServices>(
+                                       services_->getPort("RegistryServices"));
+  if ( !reg_port ) {
+    cerr << "Could not get registry port\n";
+    return;
+  } else {
 
-  //    ConnectionServices connect_port = pidl_cast<ConnectionServices>(
-  //                                          svc->getPort("ConnectionServices"));
-//    if ( !connect_port ) {
-//      cerr << "Could not get connection port\n";
-//      return;
-//    }
+    cout << "\nComponents:\n"; 
 
-    //connect_port->connect( sid, "Uses", pid, "Provides" );
+    reg_port->getActiveComponentList( componentIds );
+
+    cerr << componentIds.size() << " components returned:\n";
+
+    for( unsigned int cnt = 0; cnt < componentIds.size(); cnt++ )
+      {
+	cerr << cnt << ": " << componentIds[ cnt ]->toString() << "\n";
+      }
+    services_->releasePort( "RegistryServices" );
+    reg_port = 0;
+  }
+
+  unsigned int user, provider;
+
+  cout << "\n";
+  cout << "Enter uses component: "; cout.flush();
+  cin >> user;
+
+  cout << "Enter provides component: "; cout.flush();
+  cin >> provider;
+
+  // Unsigned int, thus no > 0 comparison.
+  if( user >= componentIds.size() || provider >= componentIds.size() )
+    {
+      cout << "Invalid component.  Bye.\n";
+      return;
+    }
+
+  ConnectionServices connect_port = 
+     pidl_cast<ConnectionServices>( services_->getPort("ConnectionServices") );
+
+  if ( !connect_port ) {
+    cerr << "Could not get connection port\n";
+    return;
+  }
+
+  connect_port->connect( componentIds[ user ], "scrUserIn0", 
+			 componentIds[ provider ], "scrOut0" );
     
-    //sender->go();
-    
-    //svc->releasePort( "ConnectionServices" );
+  services_->releasePort( "ConnectionServices" );
+
+  scruser->go();
 }
 
 void
@@ -72,7 +118,7 @@ Builder::create_component()
       done = true;
 
       cout << "Create what type of component:\n";
-      cout << "  1) Provider, 2) Sender, 3) scr\n";
+      cout << "  1) Provider, 2) Sender, 3) scr, 4) scrUser\n";
       cin >> command;
       cin.ignore( 100, '\n' ); 
 
@@ -89,6 +135,10 @@ Builder::create_component()
 	case '3':
 	  name = "scr";
 	  comp = new scr();
+	  break;
+	case '4':
+	  name = "scrUser";
+	  comp = new scrUser();
 	  break;
 	default:
 	  done = false;
@@ -108,14 +158,14 @@ Builder::list_active_components()
     cerr << "Could not get registry port\n";
     return;
   } else {
-    array1<string> components;
-    reg_port->getActiveComponentList( components );
+    array1<ComponentID> componentIds;
+    reg_port->getActiveComponentList( componentIds );
 
-    cerr << components.size() << " components returned:\n";
+    cerr << "Number of Components Returned: " << componentIds.size() << "\n";
 
-    for( unsigned int cnt = 0; cnt < components.size(); cnt++ )
+    for( unsigned int cnt = 0; cnt < componentIds.size(); cnt++ )
       {
-	cerr << cnt << ": " << components[ cnt ] << "\n";
+	cerr << cnt << ": " << componentIds[ cnt ]->toString() << "\n";
       }
     services_->releasePort( "RegistryServices" );
     reg_port = 0;
