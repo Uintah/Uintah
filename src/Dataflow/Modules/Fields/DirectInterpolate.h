@@ -92,6 +92,10 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
+    else
+    {
+      fld->set_value((typename Fld::value_type)0, *itr);
+    }
     ++itr;
   }
   
@@ -162,6 +166,10 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
+    else
+    {
+      fld->set_value((typename Fld::value_type)0, *itr);
+    }
 
     ++itr;
   }
@@ -230,6 +238,10 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
     else if (closest && tfi->find_closest(val, p) < dist)
     {
       fld->set_value((typename Fld::value_type)val, *itr);
+    }
+    else
+    {
+      fld->set_value((typename Fld::value_type)0, *itr);
     }
 
     ++itr;
