@@ -31,11 +31,34 @@ if [ -d "$TEST_UDADIR" ]; then
   else
     cd $TEST_UDADIR
     echo "Comparing dat files"
+
+    # choose the first dat file to compare number of lines later
+    testdat=`ls -1 $TEST_UDADIR/*.dat | head -n 1`
+    retval=$?
+    if [ $retval != "0" ]; then
+	# $TEST_UDADIR has no dat files
+	testdat=`ls -1 $COMPARE_UDADIR/*.dat | head -n 1`
+	retval=$?
+	if [ $retval != "0" ]; then
+	    # $COMPARE_UDADIR has no dat files either
+	    echo "No dat files to compare"
+	    exit -1
+	else
+	    # $COMPARE_UDADIR does have at least one dat file so
+	    # there is no excuse for $TEST_UDADIR for not having any.
+	    echo "The new uda directory has no dat files, but the old one does"
+	    exit 1
+	fi
+    fi
+
     compare_dat_files 1e-10 $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat > $TMPDIR/compare_dat_files.msg 2>&1
     retval=$?
 
-    newcount=`grep -c '\0' $TEST_UDADIR/KineticEnergy.dat`
-    oldcount=`grep -c '\0' $TEST_UDADIR/KineticEnergy.dat`
+    if [ $retval = "0" ]; then
+	newcount=`grep -c '\0' $TEST_UDADIR/$testdat`
+	oldcount=`grep -c '\0' $COMPARE_UDADIR/$testdat`
+    fi
+
     if [ $retval = "0" -a $newcount = $oldcount ]; then
 	echo "Comparison passed"
     else
@@ -44,8 +67,8 @@ if [ -d "$TEST_UDADIR" ]; then
        else
          cat >> $TMPDIR/error_info.msg <<EOF
 There is only a discrepancy in the line count of the dat files.
-There are $newcount lines in the new KineticEnergy.dat and
-          $oldcount lines in the old KineticEnergy.dat.
+There are $newcount lines in the new $testdat and
+          $oldcount lines in the old $testdat.
 This could simply be a result of changes timestep size.
 EOF
        fi
