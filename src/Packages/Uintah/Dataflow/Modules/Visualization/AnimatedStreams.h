@@ -36,7 +36,7 @@ public:
   virtual ~AnimatedStreams();
   virtual void widget_moved(int last);    
   virtual void execute();
-  //  void tcl_command( TCLArgs&, void* );
+  void tcl_command( TCLArgs&, void* );
 
 private:
   
@@ -47,7 +47,8 @@ private:
   GeometryOPort* ogeom;
    
   int cmap_id;  // id associated with color map...
-  
+  int generation; // the current generation of Uintah::DataArchive
+  int timestep; // the current timestep
 
   GuiInt pause;
   GuiInt normals;
