@@ -49,7 +49,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-color-b
 
 	set $this-isoval-min 0
-	set $this-isoval-max 4095
+	set $this-isoval-max 99
 	set $this-isoval 0
 	set $this-isoval-typed 0
 	set $this-isoval-quantity 1
@@ -411,20 +411,24 @@ itcl_class SCIRun_Visualization_Isosurface {
 	frame $win 
 #	pack $win -side top -padx 5
 
-	scale $win.s -from $start -to $stop -length $length \
-	    -tickinterval [expr ($start - $stop)/3.00000001] \
+	frame $win.l
+	frame $win.r
+	scale $win.l.s -from $start -to $stop -length $length \
+	    -tickinterval [expr ($start - $stop)/3.00001] \
 	    -variable $var1 -orient horizontal -showvalue false \
 	    -command "$this updateSliderEntry $var1 $var2" \
 	    -resolution 0.001
 
-	entry $win.e -width 10 -text $var2
+	entry $win.r.e -width 7 -text $var2
 
-	bind $win.s <ButtonRelease> "$this set-isoval"
+	bind $win.l.s <ButtonRelease> "$this set-isoval"
 
-	bind $win.e <Return> "$this manualSliderEntry $start $stop $var1 $var2"
+	bind $win.r.e <Return> "$this manualSliderEntry $start $stop $var1 $var2"
 
-	pack $win.s -side left
-	pack $win.e -side top -padx 5 -pady 3
+	pack $win.l.s -side top -expand 1 -fill x -padx 5
+	pack $win.r.e -side top -padx 5 -pady 3
+	pack $win.l -side left -expand 1 -fill x
+	pack $win.r -side right -fill y
     }
 
     method updateSliderEntry {var1 var2 someUknownVar} {
