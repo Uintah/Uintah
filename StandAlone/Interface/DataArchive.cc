@@ -155,6 +155,7 @@ GridP DataArchive::queryGrid( double time )
 {
    double start = Time::currentSeconds();
    XMLURL url;
+   d_lock.lock();
    DOM_Node top = getTimestep(time, url);
    DOM_Node gridnode = findNode("Grid", top);
    if(gridnode == 0)
@@ -214,6 +215,7 @@ GridP DataArchive::queryGrid( double time )
 	 cerr << "WARNING: Unknown grid data: " << toString(n.getNodeName()) << '\n';
       }
    }
+   d_lock.unlock();
    grid->performConsistencyCheck();
    ASSERTEQ(grid->numLevels(), numLevels);
    dbg << "DataArchive::queryGrid completed in " << Time::currentSeconds()-start << " seconds\n";
@@ -234,6 +236,7 @@ void DataArchive::queryVariables( vector<string>& names,
 				 vector<const TypeDescription*>& types)
 {
    double start = Time::currentSeconds();
+   d_lock.lock();
    DOM_Node vars = findNode("variables", d_indexDoc.getDocumentElement());
    if(vars == 0)
       throw InternalError("variables section not found\n");
@@ -262,6 +265,7 @@ void DataArchive::queryVariables( vector<string>& names,
 	 cerr << "WARNING: Unknown variable data: " << toString(n.getNodeName()) << '\n';
       }
    }
+   d_lock.unlock();
    dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
@@ -288,7 +292,6 @@ DOM_Node DataArchive::TimeHashMaps::findVariable(const string& name,
   if ((d_lastFoundIt != d_patchHashMaps.end()) &&
       ((*d_lastFoundIt).first == time))
     return (*d_lastFoundIt).second.findVariable(name, patch, matl, foundUrl);
-       
   map<double, PatchHashMaps>::iterator foundIt =
     d_patchHashMaps.find(time);
   if (foundIt != d_patchHashMaps.end()) {
@@ -308,10 +311,8 @@ DataArchive::PatchHashMaps::PatchHashMaps()
 void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOM_Node tsTopNode)
 {
   d_isParsed = false;
-
   // grab the data xml files from the timestep xml file
   ASSERTL3(tsTopNode != 0);
-  
   DOM_Node datanode = findNode("Data", tsTopNode);
   if(datanode == 0)
     throw InternalError("Cannot find Data in timestep");
@@ -444,6 +445,9 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.12  2000/10/04 19:48:01  kuzimmer
+// added some locks since the xerces stuff appears not to be thread safe
+//
 // Revision 1.11  2000/09/25 20:39:14  sparker
 // Quiet g++ compiler warnings
 //
