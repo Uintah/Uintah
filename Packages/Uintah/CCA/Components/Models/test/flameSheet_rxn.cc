@@ -107,7 +107,6 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
 
   for (ProblemSpecP child = params->findBlock("scalar"); child != 0;
        child = child->findNextBlock("scalar")) {
-    ProblemSpecP child = params->findBlock("scalar");
     string name;
     child->getAttribute("name", name);
     map<string, Scalar*>::iterator iter = names.find(name);
@@ -224,9 +223,9 @@ void flameSheet_rxn::scheduleComputeStableTimestep(SchedulerP&,
   // None necessary...
 }
 //__________________________________
-void flameSheet_rxn::scheduleMassExchange(SchedulerP& sched,
-				  const LevelP& level,
-				  const ModelInfo* mi)
+void flameSheet_rxn::scheduleMassExchange(SchedulerP&,
+				  const LevelP&,
+				  const ModelInfo*)
 {
   // None required
 }
@@ -272,7 +271,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       CCVariable<double> energySource, f_src;
       
       double new_f, newTemp;
-      double Y_fuel, Y_oxidizer,Y_products;
+      double Y_fuel,Y_products;
             
       old_dw->get(density,     mi->density_CCLabel,     matl, patch, gn, 0);
       old_dw->get(temperature, mi->temperature_CCLabel, matl, patch, gn, 0);
@@ -305,7 +304,6 @@ void flameSheet_rxn::react(const ProcessorGroup*,
         // compute the energy source
         if (d_f_stoic < f && f <= 1.0 ){                  // Inside the flame eqs
           Y_fuel     = (f - d_f_stoic)/(1.0 - d_f_stoic); // 9.43a,b,c & 9.51a
-          Y_oxidizer = 0.0;
           Y_products = (1 - f)/(1-d_f_stoic);
           
           double tmp = d_f_stoic * del_h_comb/((1.0 - d_f_stoic) * d_cp);
@@ -314,8 +312,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
         }
                 
         if (d_f_stoic == f ){                          // At the flame surface
-          Y_fuel     = 0.0;                            // eqs 9.45a,b,c & 9.51a
-          Y_oxidizer = 0.0;                           
+          Y_fuel     = 0.0;                            // eqs 9.45a,b,c & 9.51a                         
           Y_products = 1.0;
           
           double A = d_f_stoic *( del_h_comb/d_cp + d_T_fuel_init - d_T_oxidizer_inf);
@@ -324,7 +321,6 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       
         if (0 <= f && f < d_f_stoic ){                 //outside the flame
           Y_fuel     = 0.0;                            // eqs 9.46a,b,c & 9.51c
-          Y_oxidizer = 1.0 - f/d_f_stoic;
           Y_products = f/d_f_stoic;
           
           double A = f *( (del_h_comb/d_cp) + d_T_fuel_init - d_T_oxidizer_inf);
