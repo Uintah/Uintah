@@ -77,6 +77,7 @@ public:
   };
 
   typedef Cell Elem;
+  enum { ELEMENTS_E = CELLS_E };
 
   HexVolMesh();
   HexVolMesh(const HexVolMesh &copy);
@@ -175,12 +176,6 @@ public:
   template <class Iter, class Functor>
   void fill_data(Iter begin, Iter end, Functor fill_ftor);
 
-  //! (re)create the edge and faces data based on cells.
-  virtual void flush_changes();
-  void compute_edges();
-  void compute_faces();
-  void compute_node_neighbors();
-  void compute_grid();
 
   //! Persistent IO
   virtual void io(Piostream&);
@@ -200,14 +195,9 @@ public:
   Elem::index_type add_elem(Node::array_type a);
   virtual bool is_editable() const { return true; }
 
-  // Must call connect after adding Hexs this way.
   Node::index_type add_point(const Point &p);
-  void add_hex_unconnected(const Point &p0, const Point &p1,
-			   const Point &p2, const Point &p3,
-			   const Point &p4, const Point &p5,
-			   const Point &p6, const Point &p7);
 
-  void connect(double err = 1.0e-3);
+
 
 
   //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
@@ -215,8 +205,15 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
+  virtual bool		synchronize(const synchronized_t &);
 
 private:
+
+  void compute_edges();
+  void compute_faces();
+  void compute_node_neighbors();
+  void compute_grid();
+
 
   bool inside8_p(Cell::index_type i, const Point &p) const;
 
@@ -227,9 +224,7 @@ private:
   //! each 8 indecies make up a Hex
   vector<under_type>   cells_;
   Mutex                cells_lock_;
-  //! face neighbors index to Hex opposite the corresponding node in cells_
-  vector<under_type>   neighbors_;
-  Mutex                nbors_lock_;
+
   //! Face information.
   struct PFace {
     Node::index_type         nodes_[4];   //! 4 nodes makes a face.
@@ -406,6 +401,8 @@ private:
   typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
+
+  synchronized_t		synchronized_;
 };
 
 // Handle type for HexVolMesh mesh.
