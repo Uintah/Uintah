@@ -157,8 +157,11 @@ void DestroyInportNode(inport_node* n)
   if (n->upstream) {
     for (char_iter i=n->upstream->begin();
 	 i!=n->upstream->end();
-	 i++)
-      delete[] (*i).second;
+	 i++) {
+      if ((*i).second != NOT_SET) {
+	delete[] (*i).second;
+      }
+    }
     delete n->upstream;
   }
   delete n;
@@ -172,8 +175,11 @@ void DestroyOutportNode(outport_node* n)
   if (n->downstream) {
     for (char_iter i=n->downstream->begin();
          i!=n->downstream->end();
-         i++)
-      delete[] (*i).second;
+         i++) {
+      if ((*i).second != NOT_SET) {
+	delete[] (*i).second;
+      }
+    }
     delete n->downstream;
   }
   delete n;
