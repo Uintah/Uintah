@@ -29,6 +29,7 @@ class CrackFrontNodes
      // Public parameters
      int node;    // node number 
 
+     int pre_idx; // node=node(pre_idx) 
      int max_idx; // max node-index of the sub-crack on which the node is
      int min_idx; // min node-index of the sub-crack on which the node is
 
@@ -52,6 +53,7 @@ inline CrackFrontNodes::CrackFrontNodes()
 {
   // Default Constructor
   node=-1;
+  pre_idx=-1;
   max_idx=-1;
   min_idx=99999999;
   patchID=-1;
@@ -76,6 +78,7 @@ inline CrackFrontNodes::CrackFrontNodes(const int& n)
 inline CrackFrontNodes::CrackFrontNodes(const CrackFrontNodes& copy)
 {
   node=copy.node;
+  pre_idx=copy.pre_idx;
   max_idx=copy.max_idx;
   min_idx=copy.min_idx;
   patchID=copy.patchID;
