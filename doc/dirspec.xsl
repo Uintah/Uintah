@@ -51,7 +51,7 @@
 
         <area coords="0,41,156,64" shape="rect" alt="Installation Guide">
         <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.html')" />
+        <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.xml?cont=0&amp;dir=2')" />
         </xsl:attribute>
         </area>
 
