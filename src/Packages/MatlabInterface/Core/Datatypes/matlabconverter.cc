@@ -1,3 +1,4 @@
+
 /*
    For more information, please see: http://software.sci.utah.edu
 
@@ -40,6 +41,68 @@ namespace MatlabIO {
 // Currently the property converter only manages strings
 // all other data is ignored both on matlabside as well
 // as on the property manager side.
+
+/* DESIGN NOTES : */
+
+/* 
+ * The BIG Problem in SCIRun is that it is hard to know what
+ * kind of object a SCIRun property is and how it should be 
+ * translated. For example there are countless array classes and
+ * no attempt has been made to standardize the data formats
+ * which leads to a huge conversion problem. Hence only the useful
+ * objects are translated the rest is just discarded. Until there
+ * is a better data management structure within SCIRun, the conversion
+ * process is basically a big switch statemet scanning for each possible
+ * object structure
+ */
+
+/* 
+ * With the hope in mind that a better data management system will be
+ * in place in the future, all conversion algorithms are grouped in
+ * this one object. All the other matlab classes function independent
+ * of the main SCIRun structure, it has its own memory and data management
+ * making it easier to adapt to future changes. The separation of matlab
+ * and SCIRun data management has the advantage that the matlab side can be
+ * further enhanced to deal with different future matlab fileformats, without
+ * having to comb through the conversion modules. Though there is a little 
+ * memory overhead. Especially with the V7 compressed files, more memory
+ * is needed to maintain the integrity of the matlab reader. Some changes 
+ * in this converter may be needed to enhance performance. Currently the
+ * a compressed file will be decompressed and scanned for suitable objects.
+ * Upon loading the matrix, the matrix will be decompressed again as after
+ * scanning the file, nothing will remain in memory
+ */
+
+
+// Manage converter options
+
+// Set defaults in the constructor
+matlabconverter::matlabconverter()
+: numericarray_(false), indexbase_(1), datatype_(matlabarray::miSAMEASDATA)
+{
+}
+
+void matlabconverter::setdatatype(matlabarray::mitype dataformat)
+{
+	datatype_ = dataformat;
+}
+
+void matlabconverter::setindexbase(long indexbase)
+{
+	indexbase_ = indexbase;
+}
+
+void matlabconverter::converttonumericmatrix()
+{
+	numericarray_ = true;
+}
+
+void matlabconverter::converttostructmatrix()
+{
+	numericarray_ = false;
+}
+
+
 
 void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,SCIRun::PropertyManager *handle)
 {
@@ -145,8 +208,18 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
 		case matlabarray::mlSTRUCT:
 		{
 			long index;
+			/* A lot of different names can be used for the data:
+			   This has mainly historical reasons: a lot of different
+			   names have been used at CVRTI to store data, to be 
+			   compatible with all, we allow all of them. Though we
+			   suggest the use of : "data" 
+			*/
 			index = ma.getfieldnameindexCI("data");
 			if (index == -1) index = ma.getfieldnameindexCI("potvals");	// in case it is a saved TSDF file
+			if (index == -1) index = ma.getfieldnameindexCI("field");
+			if (index == -1) index = ma.getfieldnameindexCI("scalarfield");
+			if (index == -1) index = ma.getfieldnameindexCI("vectorfield");
+			if (index == -1) index = ma.getfieldnameindexCI("tensorfield");
 			if (index == -1) return(0); // incompatible
 		
 			long numel;
@@ -259,6 +332,11 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 				long dataindex, propertyindex;
 				dataindex = ma.getfieldnameindexCI("data");
 				if (dataindex == -1) dataindex = ma.getfieldnameindex("potvals");
+				if (dataindex == -1) dataindex = ma.getfieldnameindexCI("field");
+				if (dataindex == -1) dataindex = ma.getfieldnameindexCI("scalarfield");
+				if (dataindex == -1) dataindex = ma.getfieldnameindexCI("vectorfield");
+				if (dataindex == -1) dataindex = ma.getfieldnameindexCI("tensorfield");
+
 				propertyindex = ma.getfieldnameindexCI("property");
 				
 				if (dataindex == -1)
@@ -285,8 +363,11 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 }
 
 
-void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarray &mlmat,matlabarray::mitype dataformat)
+void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarray &mlmat)
 {
+	// Get the format for exporting data
+	matlabarray::mitype dataformat = datatype_;
+
 	// SCIRun matrices are always (up till now) doubles
 	if (dataformat == matlabarray::miSAMEASDATA) dataformat = matlabarray::miDOUBLE;
 	
@@ -332,19 +413,29 @@ void matlabconverter::sciMatrixTOmlMatrix(SCIRun::MatrixHandle &scimat,matlabarr
 }
 
 
-void matlabconverter::sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat,matlabarray::mitype dataformat)
+void matlabconverter::sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat)
 {
-	matlabarray dataarray;
-	mlmat.createstructarray();
-	sciMatrixTOmlMatrix(scimat,dataarray,dataformat);
-	mlmat.setfield(0,"data",dataarray);
-	sciPropertyTOmlProperty(static_cast<SCIRun::PropertyManager *>(scimat.get_rep()),mlmat);
+	if (numericarray_ == true)
+	{
+		sciMatrixTOmlMatrix(scimat,mlmat);
+	}
+	else
+	{
+		matlabarray dataarray;
+		mlmat.createstructarray();
+		sciMatrixTOmlMatrix(scimat,dataarray);
+		mlmat.setfield(0,"data",dataarray);
+		sciPropertyTOmlProperty(static_cast<SCIRun::PropertyManager *>(scimat.get_rep()),mlmat);
+	}
 }
 
+// Support function to check whether the names supplied are within the 
+// rules that matlab allows. Otherwise we could save the file, but matlab 
+// would complain it could not read the file.
 
 bool matlabconverter::isvalidmatrixname(std::string name)
 {
-	const std::string validchar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+	const std::string validchar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
 	const std::string validstartchar("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 
@@ -354,7 +445,8 @@ bool matlabconverter::isvalidmatrixname(std::string name)
 	for (long p=0; p < name.size(); p++)
 	{
 		if (p == 0)
-		{
+		{   
+			// A variable name is not allowed to start with a number
 			foundchar = false;
 			for (long q = 0; q < validstartchar.size(); q++) 
 			{
@@ -398,9 +490,15 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &i
 		matlabarray subarray;
 		
 		fieldnameindex = mlarray.getfieldnameindexCI("data");
+		if (fieldnameindex == -1) fieldnameindex = mlarray.getfieldnameindexCI("potvals");
+		if (fieldnameindex == -1) fieldnameindex = mlarray.getfieldnameindexCI("field");
+		if (fieldnameindex == -1) fieldnameindex = mlarray.getfieldnameindexCI("scalarfield");
+		if (fieldnameindex == -1) fieldnameindex = mlarray.getfieldnameindexCI("vectorfield");
+		if (fieldnameindex == -1) fieldnameindex = mlarray.getfieldnameindexCI("tensorfield");
+
 		if (fieldnameindex == -1) return(0);
 		
-		subarray = mlarray.getfield(0,"data");
+		subarray = mlarray.getfield(0,fieldnameindex);
 	
 		if (subarray.isempty()) return(0);
 				
@@ -624,6 +722,12 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDat
 			{
 				long dataindex;
 				dataindex = mlarray.getfieldnameindexCI("data");
+				if (dataindex == -1) dataindex = mlarray.getfieldnameindexCI("potvals");
+				if (dataindex == -1) dataindex = mlarray.getfieldnameindexCI("field");
+				if (dataindex == -1) dataindex = mlarray.getfieldnameindexCI("scalarfield");
+				if (dataindex == -1) dataindex = mlarray.getfieldnameindexCI("vectorfield");
+				if (dataindex == -1) dataindex = mlarray.getfieldnameindexCI("tensorfield");
+
 			
 				// We need data to create an object
 				// if no data field is found return
@@ -892,10 +996,11 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDat
 }
 
 
-void matlabconverter::sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlarray,matlabarray::mitype dataformat)
+void matlabconverter::sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlarray)
 {
 
 	Nrrd	    *nrrdptr;
+	matlabarray::mitype dataformat = datatype_;
 
 	mlarray.clear();
 
@@ -948,10 +1053,10 @@ void matlabconverter::sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, ma
 }
 
 
-void matlabconverter::sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlarray,matlabarray::mitype dataformat)
+void matlabconverter::sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlarray)
 {
 	matlabarray matrix;
-	sciNrrdDataTOmlMatrix(scinrrd,matrix,dataformat);
+	sciNrrdDataTOmlMatrix(scinrrd,matrix);
 		
 	mlarray.createstructarray();
 	mlarray.setfield(0,"data",matrix);
@@ -1020,8 +1125,8 @@ void matlabconverter::sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, mat
 	sciPropertyTOmlProperty(static_cast<SCIRun::PropertyManager *>(scinrrd.get_rep()),mlarray);
 }
 
-
 #endif
+
 
 
 // Routine for discovering which kind of mesh is being supplied
@@ -1062,38 +1167,6 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 	// Field data has been analysed, now analyse the connectivity data
 	// Connectivity data needs to be or edge data, or face data, or cell data,
 	// or no data in which case it is a point cloud.
-
-	if (fs.snode.isdense())
-	{
-		// Structured mesh:
-		// StructCurveMesh, StructQuadSurfMesh, StructHexVolMesh
-		
-		long numdims = fs.snode.getnumdims();
-		
-		if (fs.snode.getm() !=  3) return(0);
-		
-		std::ostringstream oss;
-		std::string name = mlarray.getname();
-		oss << name << " ";
-		if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-		
-		switch (numdims)
-		{
-			case 2:
-				oss << "[STRUCTURED CURVEMESH - " << fieldtype << "]";
-				break;
-			case 3:
-				oss << "[STRUCTURED QUADSURFMESH - " << fieldtype << "]";
-				break;
-			case 4:
-				oss << "[STRUCTURED HEXVOLMESH - " << fieldtype << "]";
-				break;
-			default:
-				return(0);  // matrix is not compatible
-		}
-		infostring = oss.str();
-		return(1);
-	}
 	
 	if ((fs.x.isdense())&&(fs.y.isdense())&(fs.z.isdense()))
 	{
@@ -1116,7 +1189,7 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 		std::ostringstream oss;
 		std::string name = mlarray.getname();
 		oss << name << " ";
-		if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing		
+		if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing		
 		if (numdims == 2)
 		{
 			if ((dimsx[0] == 1)||(dimsx[1] == 1)) numdims = 1;
@@ -1125,21 +1198,21 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 		switch (numdims)
 		{
 			case 1:
-				oss << "[STRUCTURED CURVEMESH - " << fieldtype << "]";
+				oss << "[STRUCTURED CURVEMESH (" << dimsx[0] << " nodes) - " << fieldtype << "]";
 				break;
 			case 2:
-				oss << "[STRUCTURED QUADSURFMESH - " << fieldtype << "]";
+				oss << "[STRUCTURED QUADSURFMESH (" << dimsx[0] << "x" << dimsx[1] << " nodes) - " << fieldtype << "]";
 				break;
 			case 3:
-				oss << "[STRUCTURED HEXVOLMESH - " << fieldtype << "]";
+				oss << "[STRUCTURED HEXVOLMESH (" << dimsx[0] << "x" << dimsx[1] << "x" << dimsx[2] << " nodes) - " << fieldtype << "]";
 				break;
 			default:
 				return(0);  // matrix is not compatible
 		}
 		infostring = oss.str();
-		return(1);
-		
+		return(1);		
 	}
+	
 
 	if (fs.node.isempty()) return(0); // a node matrix is always required
 	
@@ -1150,8 +1223,14 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 	m = fs.node.getm();
 	n = fs.node.getn();
 	
+	long numpoints;
+	long numel;
+	
 	if ((n==0)||(m==0)) return(0); //empty matrix, no nodes => no mesh => no field......
 	if ((n != 3)&&(m != 3)) return(0); // SCIRun is ONLY 3D data, no 2D, or 1D
+	
+	numpoints = n;
+	if ((m!=3)&&(n==3)) numpoints = m;
 	
 	if ((fs.edge.isempty())&&(fs.face.isempty())&&(fs.cell.isempty()))
 	{
@@ -1168,8 +1247,8 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 		std::ostringstream oss;
 		std::string name = mlarray.getname();	
 		oss << name << "  ";
-		if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-		oss << "[POINTCLOUD - " << fieldtype << "]";
+		if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+		oss << "[POINTCLOUD (" << numpoints << " nodes) - " << fieldtype << "]";
 		infostring = oss.str();
 		return(1);
 	}
@@ -1198,12 +1277,15 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 		n = fs.edge.getn();
 		
 		if ((n!=2)&&(m!=2)) return(0); 
-		
+	
+		numel = n;
+		if ((m!=2)&&(n==2)) numel = m;
+				
 		std::ostringstream oss;	
 		std::string name = mlarray.getname();
 		oss << name << "  ";
-		if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-		oss << "[CURVEFIELD - " << fieldtype << "]";
+		if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+		oss << "[CURVEFIELD (" << numpoints << " nodes, " << numel << " edges) - " << fieldtype << "]";
 		infostring = oss.str();
 		return(1);
 	}
@@ -1230,13 +1312,17 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 			{   // explicitly stated type 
 				if (fs.elemtype.compareCI("trisurf")) return(0);
 			}
-			
+	
+			numel = n;
+			if ((m!=3)&&(n==3)) numel = m;
+
+							
 			// Generate an output string describing the field we just reckonized
 			std::ostringstream oss;	
 			std::string name = mlarray.getname();
 			oss << name << "  ";
-			if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-			oss << "[TRISURFFIELD - " << fieldtype << "]";
+			if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+			oss << "[TRISURFFIELD (" << numpoints << " nodes, " << numel << " faces) - " << fieldtype << "]";
 			infostring = oss.str();		
 			return(1);
 		}
@@ -1249,12 +1335,16 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 				if (fs.elemtype.compareCI("quadsurf")) return(0);
 			}
 			
+			numel = n;
+			if ((m!=4)&&(n==4)) numel = m;
+			
+			
 			// Generate an output string describing the field we just reckonized
 			std::ostringstream oss;	
 			std::string name = mlarray.getname();
 			oss << name << "  ";
-			if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-			oss << "[QUADSURFFIELD - " << fieldtype << "]";
+			if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+			oss << "[QUADSURFFIELD (" << numpoints << "nodes , " << numel << " faces) - " << fieldtype << "]";
 			infostring = oss.str();		
 			return(1);
 		}
@@ -1282,11 +1372,15 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 				if (fs.elemtype.compareCI("tetvol")) return(0);
 			}	
 			
+			numel = n;
+			if ((m!=4)&&(n==4)) numel = m;
+
+			
 			std::ostringstream oss;	
 			std::string name = mlarray.getname();			
 			oss << name << "  ";
-			if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-			oss << "[TETVOLFIELD - " << fieldtype << "]";
+			if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+			oss << "[TETVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
 			infostring = oss.str();		
 			return(1);
 		}
@@ -1298,11 +1392,14 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 				if (fs.elemtype.compareCI("hexvol")) return(0);
 			}	
 			
+			numel = n;
+			if ((m!=8)&&(n==8)) numel = m;
+			
 			std::ostringstream oss;	
 			std::string name = mlarray.getname();		
 			oss << name << "  ";
-			if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-			oss << "[HEXVOLFIELD - " << fieldtype << "]";
+			if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+			oss << "[HEXVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
 			infostring = oss.str();		
 			return(1);		
 		}
@@ -1314,11 +1411,15 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 				if (fs.elemtype.compareCI("prismvol")) return(0);
 			}	
 			
+			numel = n;
+			if ((m!=6)&&(n==6)) numel = m;
+
+			
 			std::ostringstream oss;	
 			std::string name = mlarray.getname();		
 			oss << name << "  ";
-			if (name.length() < 40) oss << std::string(40-(name.length()),' '); // add some form of spacing
-			oss << "[PRISMVOLFIELD - " << fieldtype << "]";
+			if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing
+			oss << "[PRISMVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
 			infostring = oss.str();		
 			return(1);		
 		}
@@ -1342,7 +1443,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	// system.
 	// Dimensions are checked and the matrix is transposed if it is necessary
 	
-	if ((fs.node.isempty())&&(fs.snode.isempty())&&(fs.x.isempty())) throw matlabconverter_error(); // a node matrix is always required
+	if ((fs.node.isempty())&&(fs.x.isempty())) throw matlabconverter_error(); // a node matrix is always required
 		
 	long m,n,numnodes;
 	
@@ -1438,12 +1539,6 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		}
 	}
 	
-	// Process structured mesh data
-	if (fs.snode.isdense())
-	{
-		m  = fs.snode.getm();
-		if (m != 3) throw matlabconverter_error();
-	}
 	
 	
 	// Check the field information and preprocess the field information
@@ -1481,7 +1576,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	{
 		if (fs.scalarfield.isdense())
 		{
-			if ((fs.snode.isempty())&&(fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
+			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
 			{
 		
 				if (fs.scalarfield.getnumdims() == 2)
@@ -1505,7 +1600,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		}
 		if (fs.vectorfield.isdense())
 		{
-			if ((fs.snode.isempty())&&(fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
+			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
 			{
 
 				if (fs.vectorfield.getnumdims() == 2)
@@ -1530,7 +1625,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		if (fs.tensorfield.isdense())
 		{
 			
-			if ((fs.snode.isempty())&&(fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
+			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
 			{
 
 				if (fs.tensorfield.getnumdims() == 2)
@@ -1736,178 +1831,11 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					}		
 				}			
 				break;
-		}
-	
+		}	
 	}
 		
-	
-	
-	if (fs.snode.isdense())
-	{
-		long numdim = fs.snode.getnumdims();
 		
-		if ((numdim > 4)||(numdim < 2)) throw matlabconverter_error();
-		
-		std::vector<long> dims;
-		std::vector<unsigned int> mdims;
-		dims = fs.snode.getdims();
-		
-		numnodes = 1;
-		mdims.resize(numdim-1);
-		for (long p=1; p < numdim; p++) { numnodes *= dims[p]; mdims[p-1] = static_cast<unsigned int>(dims[p]); }
-		
-		switch (numdim)
-		{
-			case 2:
-				{
-					// Process a structured curve mesh
-					SCIRun::StructCurveMeshHandle meshH;
-					meshH = new SCIRun::StructCurveMesh;
-					
-					std::vector<double> nodebuffer;
-					fs.snode.getnumericarray(nodebuffer);
-					
-					meshH->set_dim(mdims);
-					long p,q;
-					for (p = 0, q = 0; p < numnodes; p++, q+=3)
-					{
-						meshH->set_point(SCIRun::Point(nodebuffer[q],nodebuffer[q+1],nodebuffer[q+2]),static_cast<SCIRun::StructCurveMesh::Node::index_type>(p));
-					}
-					
-					
-					if ((fs.scalarfield.isempty())&&(fs.vectorfield.isempty())&&(fs.tensorfield.isempty()))
-					{
-						SCIRun::StructCurveField<double> *fieldptr;
-						fieldptr = new SCIRun::StructCurveField<double>(meshH,data_at);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.scalarfield.isdense())
-					{
-						SCIRun::StructCurveField<double> *fieldptr;
-						fieldptr = new SCIRun::StructCurveField<double>(meshH,data_at);
-						addscalardata(fieldptr,fs.scalarfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.vectorfield.isdense())
-					{
-						SCIRun::StructCurveField<SCIRun::Vector> *fieldptr;
-						fieldptr = new SCIRun::StructCurveField<SCIRun::Vector>(meshH,data_at);
-						addvectordata(fieldptr,fs.vectorfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.tensorfield.isdense())
-					{
-						SCIRun::StructCurveField<SCIRun::Tensor> *fieldptr;
-						fieldptr = new SCIRun::StructCurveField<SCIRun::Tensor>(meshH,data_at);
-						addtensordata(fieldptr,fs.tensorfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}		
-				}
-				break;
-			case 3:
-				{
-					// Process a structured quadsurf mesh
-					SCIRun::StructQuadSurfMeshHandle meshH;
-					meshH = new SCIRun::StructQuadSurfMesh;
-					
-					std::vector<double> nodebuffer;
-					fs.snode.getnumericarray(nodebuffer);
-					
-					meshH->set_dim(mdims);
-					unsigned int p,r;
-					long q = 0;
-					for (r = 0; r < mdims[1]; r++)
-					for (p = 0; p < mdims[0]; p++)
-					{
-						meshH->set_point(SCIRun::Point(nodebuffer[q],nodebuffer[q+1],nodebuffer[q+2]),SCIRun::StructQuadSurfMesh::Node::index_type(static_cast<SCIRun::ImageMesh *>(meshH.get_rep()),p,r));
-						q += 3;
-					}
-					
-					
-					if ((fs.scalarfield.isempty())&&(fs.vectorfield.isempty())&&(fs.tensorfield.isempty()))
-					{
-						SCIRun::StructQuadSurfField<double> *fieldptr;
-						fieldptr = new SCIRun::StructQuadSurfField<double>(meshH,data_at);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.scalarfield.isdense())
-					{
-						SCIRun::StructQuadSurfField<double> *fieldptr;
-						fieldptr = new SCIRun::StructQuadSurfField<double>(meshH,data_at);
-						addscalardata2d(fieldptr,fs.scalarfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.vectorfield.isdense())
-					{
-						SCIRun::StructQuadSurfField<SCIRun::Vector> *fieldptr;
-						fieldptr = new SCIRun::StructQuadSurfField<SCIRun::Vector>(meshH,data_at);
-						addvectordata2d(fieldptr,fs.vectorfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.tensorfield.isdense())
-					{
-						SCIRun::StructQuadSurfField<SCIRun::Tensor> *fieldptr;
-						fieldptr = new SCIRun::StructQuadSurfField<SCIRun::Tensor>(meshH,data_at);
-						addtensordata2d(fieldptr,fs.tensorfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}		
-				}			
-				break;
-			case 4:
-				{
-					// Process a structured quadsurf mesh
-					SCIRun::StructHexVolMeshHandle meshH;
-					meshH = new SCIRun::StructHexVolMesh;
-					
-					std::vector<double> nodebuffer;
-					fs.snode.getnumericarray(nodebuffer);
-					
-					meshH->set_dim(mdims);
-
-					unsigned int p,r,s;
-					long q = 0;
-					for (s = 0; s < mdims[2]; s++)
-					for (r = 0; r < mdims[1]; r++)
-					for (p = 0; p < mdims[0]; p++)
-					{
-						meshH->set_point(SCIRun::Point(nodebuffer[q],nodebuffer[q+1],nodebuffer[q+2]),SCIRun::StructHexVolMesh::Node::index_type(static_cast<SCIRun::LatVolMesh *>(meshH.get_rep()),p,r,s));
-						q += 3;
-					}
-
-					if ((fs.scalarfield.isempty())&&(fs.vectorfield.isempty())&&(fs.tensorfield.isempty()))
-					{
-						SCIRun::StructHexVolField<double> *fieldptr;
-						fieldptr = new SCIRun::StructHexVolField<double>(meshH,data_at);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.scalarfield.isdense())
-					{
-						SCIRun::StructHexVolField<double> *fieldptr;
-						fieldptr = new SCIRun::StructHexVolField<double>(meshH,data_at);
-						addscalardata3d(fieldptr,fs.scalarfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.vectorfield.isdense())
-					{
-						SCIRun::StructHexVolField<SCIRun::Vector> *fieldptr;
-						fieldptr = new SCIRun::StructHexVolField<SCIRun::Vector>(meshH,data_at);
-						addvectordata3d(fieldptr,fs.vectorfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}
-					if (fs.tensorfield.isdense())
-					{
-						SCIRun::StructHexVolField<SCIRun::Tensor> *fieldptr;
-						fieldptr = new SCIRun::StructHexVolField<SCIRun::Tensor>(meshH,data_at);
-						addtensordata3d(fieldptr,fs.tensorfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
-					}		
-				}			
-				break;
-		}
-	
-	}
-	
-	if ((fs.edge.isempty())&&(fs.face.isempty())&&(fs.cell.isempty())&&(fs.snode.isempty())&&(fs.x.isempty()))
+	if ((fs.edge.isempty())&&(fs.face.isempty())&&(fs.cell.isempty())&&(fs.x.isempty()))
 	{
 		// These is no connectivity data => it must be a pointcloud ;)
 		// Supported mesh/field types here:
@@ -2748,18 +2676,10 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	if (!ma.isstruct()) return(fs);
 	
 	// NODE MATRIX
-	index = ma.getfieldnameindexCI("node");
-	if (index > -1) fs.node = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("pts");
 	if (index > -1) fs.node = ma.getfield(0,index);
-
-	// STRUCTURED NODE MATRIX
-	index = ma.getfieldnameindexCI("snode");
-	if (index > -1) fs.snode = ma.getfield(0,index);
-	index = ma.getfieldnameindexCI("spts");
-	if (index > -1) fs.snode = ma.getfield(0,index);
-	index = ma.getfieldnameindexCI("xyz");
-	if (index > -1) fs.snode = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("node");
+	if (index > -1) fs.node = ma.getfield(0,index);
 
 	// STRUCTURE MATRICES IN SUBMATRICES
 	index = ma.getfieldnameindexCI("x");
@@ -2770,32 +2690,30 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	if (index > -1) fs.z = ma.getfield(0,index);
 
 	// EDGE MATRIX
-	index = ma.getfieldnameindexCI("edge");
-	if (index > -1) fs.edge = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("line");
+	if (index > -1) fs.edge = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("edge");
 	if (index > -1) fs.edge = ma.getfield(0,index);
 
 	// FACE MATRIX
-	index = ma.getfieldnameindexCI("face");
-	if (index > -1) fs.face = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("fac");
 	if (index > -1) fs.face = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("quad");
 	if (index > -1) fs.face = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("face");
+	if (index > -1) fs.face = ma.getfield(0,index);
 	
 	// CELL MATRIX
-	index = ma.getfieldnameindexCI("cell");
-	if (index > -1) fs.cell = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("tet");
 	if (index > -1) fs.cell = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("hex");
 	if (index > -1) fs.cell = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("prism");
 	if (index > -1) fs.cell = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("cell");
+	if (index > -1) fs.cell = ma.getfield(0,index);
 	
 	// FIELDNODE MATRIX
-	index = ma.getfieldnameindexCI("field");
-	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("data");
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("potvals");
@@ -2804,27 +2722,31 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("scalardata");
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("field");
+	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 
 	// FIELDEDGE MATRIX
-	index = ma.getfieldnameindexCI("vectorfield");
-	if (index > -1) fs.vectorfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("vectordata");
+	if (index > -1) fs.vectorfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("vectorfield");
 	if (index > -1) fs.vectorfield = ma.getfield(0,index);
 
 	// FIELDFACE MATRIX
-	index = ma.getfieldnameindexCI("tensorfield");
-	if (index > -1) fs.tensorfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("tensordata");
+	if (index > -1) fs.tensorfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("tensorfield");
 	if (index > -1) fs.tensorfield = ma.getfield(0,index);
 
 	// FIELDCELL MATRIX
 	index = ma.getfieldnameindexCI("fieldlocation");
 	if (index > -1) fs.fieldlocation = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("fieldat");
+	if (index > -1) fs.fieldlocation = ma.getfield(0,index);
 
 	// ELEMTYPE MATRIX
 	index = ma.getfieldnameindexCI("elemtype");
 	if (index > -1) fs.elemtype = ma.getfield(0,index);
-	index = ma.getfieldnameindexCI("type");
+	index = ma.getfieldnameindexCI("meshclass");
 	if (index > -1) fs.elemtype = ma.getfield(0,index);
 
 	// NAME OF THE MESH/FIELD
@@ -2835,6 +2757,25 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	index = ma.getfieldnameindexCI("property");
 	if (index > -1) fs.property = ma.getfield(0,index);
 
+	// REGULAR MATRICES
+	index = ma.getfieldnameindexCI("dim");
+	if (index > -1) fs.dims = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("dims");
+	if (index > -1) fs.dims = ma.getfield(0,index);
+	
+	index = ma.getfieldnameindexCI("translation");
+	if (index > -1) fs.offset = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("offset");
+	if (index > -1) fs.offset = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("scale");
+	if (index > -1) fs.size = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("size");
+	if (index > -1) fs.size = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("rotation");
+	if (index > -1) fs.rotation = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("transform");
+	if (index > -1) fs.transform = ma.getfield(0,index);
+	
 	return(fs);
 }
 
