@@ -44,9 +44,9 @@
 #define SCIRun_FrameworkProperties_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/TypeMap.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
-#include <SCIRun/TypeMap.h>
 
 namespace SCIRun {
 
@@ -82,26 +82,26 @@ public:
     /** Set CCA framework properties from a TypeMap. */
     virtual void setProperties(const sci::cca::TypeMap::pointer& properties);
 
-    static const char* CONFIG_DIR;
-    static const char* CONFIG_FILE;
-    static const char* CACHE_FILE;
+    static std::string CONFIG_DIR;
+    static std::string CONFIG_FILE;
+    static std::string CACHE_FILE;
 
 private:
     FrameworkProperties(SCIRunFramework* framework, const std::string& name);
 
     /** Gets user logged in on the controlling terminal of the process
         or a null pointer (see man getlogin(3)) */
-    std::string getLogin();
+    void getLogin();
 
     /** Get a ';' seperated list of directories where XML based
         descriptions of components can be found. */
-    std::string getSidlXMLPath();
+    void getEnv();
 
     /** Persistent framework properties from file. */
-    void readPropertiesFromFile();
+    bool readPropertiesFromFile();
 
     /** Persistent framework properties from file. */
-    void writePropertiesToFile();
+    bool writePropertiesToFile();
 
     sci::cca::TypeMap::pointer frameworkProperties;
 };

@@ -45,23 +45,24 @@
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 
+#include <iostream>
 #include <unistd.h>
 
 namespace SCIRun {
 
-const char* FrameworkProperties::CONFIG_DIR = "/.sr2";
-const char* FrameworkProperties::CONFIG_FILE = "sr2.config";
-const char* FrameworkProperties::CACHE_FILE = "sr2.cache";
+std::string FrameworkProperties::CONFIG_DIR("/.sr2");
+std::string FrameworkProperties::CONFIG_FILE("sr2rc");
+std::string FrameworkProperties::CACHE_FILE("sr2.cache");
 
 FrameworkProperties::FrameworkProperties(SCIRunFramework* framework,
-					    const std::string& name)
-    : InternalComponentInstance(framework, name, "internal:FrameworkProperties")
+                        const std::string& name)
+  : InternalComponentInstance(framework, name, "internal:FrameworkProperties")
 {
     this->framework = framework;
     frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
     frameworkProperties->putString("url", framework->getURL().getString());
-    frameworkProperties->putString("default_login", getLogin());
-    frameworkProperties->putString("sidl_xml_path", getSidlXMLPath());
+    getLogin();
+    getEnv();
 }
 
 FrameworkProperties::~FrameworkProperties()
@@ -72,7 +73,7 @@ InternalComponentInstance*
 FrameworkProperties::create(SCIRunFramework* framework, const std::string& name)
 {
     FrameworkProperties* fp =
-	new FrameworkProperties(framework, name);
+    new FrameworkProperties(framework, name);
     fp->addReference();
     return fp;
 }
@@ -94,42 +95,64 @@ sci::cca::Port::pointer FrameworkProperties::getService(const std::string& name)
     return sci::cca::Port::pointer(this);
 }
 
-void FrameworkProperties::readPropertiesFromFile()
-{
-  std::cerr << "FrameworkProperties::readPropertiesFromFile not implemented" << std::endl;
-}
-
-std::string FrameworkProperties::getSidlXMLPath()
+void FrameworkProperties::getEnv()
 {
     // ';' seperated list of directories where one can find SIDL xml files
     // getenv may return NULL if SIDL_XML_PATH was not set
     const char *component_path = getenv("SIDL_XML_PATH");
     if (component_path) {
-	return std::string(component_path);
+        frameworkProperties->putString("sidl_xml_path", std::string(component_path));
+    } else if (readPropertiesFromFile()) {
+        return;
+    } else {
+        frameworkProperties->putString("sidl_xml_path", std::string());
     }
-    return std::string();
 }
 
-std::string FrameworkProperties::getLogin()
+void FrameworkProperties::getLogin()
 {
     char *login = getlogin();
     if (login) {
-	return std::string(login);
+        frameworkProperties->putString("default_login", std::string(login));
+    } else {
+        frameworkProperties->putString("default_login", std::string());
     }
-    return std::string();
 }
 
-void FrameworkProperties::writePropertiesToFile()
+bool FrameworkProperties::readPropertiesFromFile()
+{
+    char *HOME = getenv("HOME");
+    std::string name(HOME);
+    sci_putenv("HOME", HOME);
+
+    name += CONFIG_DIR + "/" + CONFIG_FILE;
+    if (parse_scirunrc(name)) {
+        const char *dll_path = sci_getenv("SIDL_DLL_PATH");
+        if (dll_path != 0) {
+            frameworkProperties->putString("sidl_dll_path", dll_path);
+        }
+
+        const char *xml_path = sci_getenv("SIDL_XML_PATH");
+        if (xml_path != 0) {
+            frameworkProperties->putString("sidl_xml_path", xml_path);
+        }
+    } else {
+        return false;
+    }
+}
+
+bool FrameworkProperties::writePropertiesToFile()
 {
     char *HOME = getenv("HOME");
     std::string name(HOME);
     name.append(CONFIG_DIR);
     Dir dir(name);
     if (! dir.exists()) {
-	Dir::create(name);
+        Dir::create(name);
     }
     // get file
     // write to file
+    return false;
 }
 
 }
