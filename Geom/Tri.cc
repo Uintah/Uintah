@@ -59,7 +59,7 @@ void GeomTri::make_prims(Array1<GeomObj*>&,
 void GeomTri::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
     double tmp=Dot(n, ray.direction());
-    if(tmp < 1.e-6 || tmp > 1.e-6)return; // Parallel to plane
+    if(tmp > -1.e-6 && tmp < 1.e-6)return; // Parallel to plane
     Vector v=p1-ray.origin();
     double t=Dot(n, v)/tmp;
     if(t<1.e-6)return;
@@ -117,4 +117,9 @@ int GeomTri::x_cross(double p1[2], double p2[2], double p[2])
 	return 0; // p is left of edge
     else
 	return 1; // p is right of edge
+}
+
+Vector GeomTri::normal(const Point&)
+{
+    return n;
 }

@@ -12,9 +12,9 @@
  */
 
 #include <Geom/HeadLight.h>
-#include <Classlib/NotFinished.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geom/View.h>
+#include <Modules/Salmon/Raytracer.h>
 
 HeadLight::HeadLight(const clString& name, const Color& c)
 : Light(name), c(c)
@@ -47,9 +47,9 @@ void HeadLight::lintens(const OcclusionData& od, const Point& p,
 	light_dir=od.view->eyep-p;
 	light_dir.normalize();
     } else {
-	NOT_FINISHED("HeadLight::lintens");
-	light=Color(1,1,1);
-	light_dir=Vector(0,1,0);
+	light_dir=od.view->eyep-p;
+	double light_dist=light_dir.normalize();
+	double atten=od.raytracer->light_ray(p, od.view->eyep, light_dir, light_dist);
+	light=c*atten;
     }
 }
-
