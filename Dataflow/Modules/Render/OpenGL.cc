@@ -883,6 +883,19 @@ OpenGL::redraw_frame()
 	glGetDoublev (GL_PROJECTION_MATRIX, get_depth_proj);
 	glGetIntegerv(GL_VIEWPORT, get_depth_view);
 	
+	// set up point size, line size, and polygon offset
+	glPointSize(drawinfo->point_size);
+	glLineWidth(drawinfo->line_width);
+	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+	if (drawinfo->polygon_offset_factor || 
+	    drawinfo->polygon_offset_units) {
+	  glPolygonOffset(drawinfo->polygon_offset_factor, 
+			  drawinfo->polygon_offset_units);
+	  glEnable(GL_POLYGON_OFFSET_FILL);
+	} else {
+	  glDisable(GL_POLYGON_OFFSET_FILL);
+	}
+
 	// Draw it all...
 	current_time=modeltime;
 	viewwindow->do_for_visible(this, &OpenGL::redraw_obj);
