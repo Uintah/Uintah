@@ -4,10 +4,11 @@
  * Description: C source code for classes to provide an API for Visible Human
  *		segmentation information:  The Master Anatomy Label Map
  *		Spatial Adjacency relations for the anatomical structures
- *		and Bounding BOxes for each anatmocal entity.
+ *		and Bounding Boxes for each anatmocal entity.
  *
  * Author: Stewart Dickson <mailto:dicksonsp@ornl.gov>
  *	   <http://www.csm.ornl.gov/~dickson>
+ *         DARPA Virtual Soldier Project <http://www.virtualsoldier.net>
  ******************************************************************************/
 
 #include <stdio.h>
@@ -16,6 +17,59 @@
 #include "labelmaps.h"
 
 using namespace std;
+
+/******************************************************************************
+ * misc string manip functions 
+ ******************************************************************************/
+
+char *space_to_underbar(char *dst, char *src)
+{
+  char *srcPtr, *dstPtr;
+  for(srcPtr = src, dstPtr = dst; *srcPtr != '\0'; srcPtr++, dstPtr++)
+  {
+    if(*srcPtr == ' ') *dstPtr = '_';
+    else *dstPtr = *srcPtr;
+  } /* end while(*srcPtr != '\0') */
+  /* srcPtr points to '\0', but *dstPtr is uninitialized */
+  *dstPtr = '\0';
+  return(dst);
+} /* end space_to_underbar() */
+
+int
+countCommas(char *inString)
+{
+  int count = 0;
+  while(*inString != '\0')
+  {
+    if(*inString++ == ',') count++;
+  }
+  return count;
+} /* end countCommas() */
+
+int
+splitAtComma(char *srcStr, char **dst0, char **dst1)
+{
+  char *srcPtr = srcStr;
+  int count = 0;
+
+  if(!srcStr || !dst0 || !dst1)
+  {
+    cerr << "VH_MasterAnatomy::splitAtComma(): NULL string" << endl;
+    return(0);
+  }
+  while(*srcPtr != ',') { srcPtr++; count++; }
+#ifdef __APPLE__
+  *dst0 = (char *)malloc((count + 1) * sizeof(char));
+  bzero(*dst0, count + 1);
+  strncpy(*dst0, srcStr, count);
+#else
+  *dst0 = strndup(srcStr, count);
+#endif
+  // srcPtr points to ','
+  *dst1 = ++srcPtr;
+  return(1);
+} /* end splitAtComma() */
+
 
 char *read_line(char *retbuff, int *bufsize, FILE *infile)
 {
@@ -77,6 +131,14 @@ else
   }
 } // end read_line()
 
+/******************************************************************************
+ * class VH_MasterAnatomy
+ *
+ * The mapping between 16-bit integer indices in the Labelmap volume
+ * (e.g., Voxel Addresses) to the anatomical names of the segmented
+ * tissue types.
+ ******************************************************************************/
+
 VH_MasterAnatomy::VH_MasterAnatomy()
 {
   anatomyname = new (char *)[VH_LM_NUM_NAMES];
@@ -95,29 +157,6 @@ VH_MasterAnatomy::readFile(FILE *infileptr)
 {
 } // end VH_MasterAnatomy::readFile(FILE *infileptr)
 
-int
-splitAtComma(char *srcStr, char **dst0, char **dst1)
-{
-  char *srcPtr = srcStr;
-  int count = 0;
-
-  if(!srcStr || !dst0 || !dst1)
-  {
-    cerr << "VH_MasterAnatomy::splitAtComma(): NULL string" << endl;
-    return(0);
-  }
-  while(*srcPtr != ',') { srcPtr++; count++; }
-#ifdef __APPLE__
-  *dst0 = (char *)malloc((count + 1) * sizeof(char));
-  bzero(*dst0, count + 1);
-  strncpy(*dst0, srcStr, count);
-#else
-  *dst0 = strndup(srcStr, count);
-#endif
-  // srcPtr points to ','
-  *dst1 = ++srcPtr;
-  return(1);
-}
 
 void
 VH_MasterAnatomy::readFile(char *infilename)
@@ -186,6 +225,13 @@ VH_MasterAnatomy::get_labelindex(char *targetname)
   return(-1);
 } // end VH_MasterAnatomy::get_labelindex(char *anatomyname)
 
+/******************************************************************************
+ * class VH_AdjacencyMapping
+ *
+ * Lists of relations between tissue types by adjacency.  Lists consist of the
+ * 16-bit label map tissue indices.
+ ******************************************************************************/
+
 VH_AdjacencyMapping::VH_AdjacencyMapping()
 {
   rellist = new (int *)[VH_LM_NUM_NAMES];
@@ -197,16 +243,6 @@ VH_AdjacencyMapping::~VH_AdjacencyMapping()
 {
   delete [] rellist;
   delete [] numrel;
-}
-int
-countCommas(char *inString)
-{
-  int count = 0;
-  while(*inString != '\0')
-  {
-    if(*inString++ == ',') count++;
-  }
-  return count;
 }
 
 void
@@ -286,7 +322,7 @@ VH_AdjacencyMapping::adjacent_to(int index)
   }
   // return the relation list for "unknown"
   return(rellist[0]);
-}
+} /* end VH_AdjacencyMapping::adjacent_to() */
 
 int 
 VH_AdjacencyMapping::get_num_rel(int index)
@@ -300,7 +336,15 @@ VH_AdjacencyMapping::get_num_rel(int index)
   }
   // return the number of relations for "unknown"
   return(numrel[0]);
-}
+} /* end VH_AdjacencyMapping::get_num_rel() */
+
+/******************************************************************************
+ * class VH_AnatomyBoundingBox
+ *
+ * The spatial extent of a tissue type.  Nodes consist of the full anatomical
+ * name and the spatial extrema (xmin, ymin, zmin, xmax, ymax, zmax) of the
+ * tissue.  Dimensions are in terms of voxels in the segmented volume.
+ ******************************************************************************/
 
 VH_AnatomyBoundingBox *
 VH_Anatomy_readBoundingBox_File(char *infilename)
@@ -329,7 +373,7 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
   // clear input buffer line
   strcpy(inLine, "");
 
-  // allocate the first Anatomy Nama/BoundingBox node
+  // allocate the first Anatomy Name/BoundingBox node
   VH_AnatomyBoundingBox *listRoot = new VH_AnatomyBoundingBox();
   VH_AnatomyBoundingBox *listPtr = listRoot;
   while(read_line(inLine, &buffsize, infile) != 0)
@@ -364,7 +408,7 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
            "VH_AnatomyBoundingBox::readFile(%s): format error line %d\n",
            infilename, inLine_cnt);
       }
-      // allocate the next Anatomy Nama/BoundingBox node
+      // allocate the next Anatomy Name/BoundingBox node
       listPtr->flink = new VH_AnatomyBoundingBox();
       listPtr = listPtr->flink;
     } // end if(strlen(inLine) > 0)

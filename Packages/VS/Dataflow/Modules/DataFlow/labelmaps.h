@@ -17,6 +17,9 @@
 
 #define VH_LM_NUM_NAMES 512
 
+/* misc string manip functions */
+char *space_to_underbar(char *dst, char *src);
+
 /******************************************************************************
  * class VH_MasterAnatomy
  *
