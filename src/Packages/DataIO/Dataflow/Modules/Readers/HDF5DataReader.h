@@ -69,17 +69,17 @@ public:
   virtual void execute();
 
   void ReadandSendData( string& filename,
-			vector< string >& paths,
-			vector< string >& datasets,
+			vector< string >& pathList,
+			vector< string >& datasethList,
 			bool cache,
 			int which );
 
-  void parseDatasets( string new_datasets,
-		      vector<string>& paths,
-		      vector<string>& datasets );
+  void parseDatasets( string datasets,
+		      vector<string>& pathhList,
+		      vector<string>& datasethList );
 
-  unsigned int parseAnimateDatasets( vector<string>& paths,
-				     vector<string>& datasets,
+  unsigned int parseAnimateDatasets( vector<string>& pathhList,
+				     vector<string>& datasethList,
 				     vector< vector<string> >& frame_paths,
 				     vector< vector<string> >& frame_datasets );
 
@@ -88,6 +88,10 @@ public:
   //  float* readGrid( string filename );
   //  float* readData( string filename );
   NrrdDataHandle readDataset( string filename, string path, string dataset );
+
+  string getDumpFileName( string filename );
+  bool checkDumpFile( string filename, string dumpname );
+  int createDumpFile( string filename, string dumpname );
 
   virtual void tcl_command(GuiArgs&, void*);
 
@@ -137,9 +141,9 @@ protected:
   string old_datasets_;
   time_t old_filemodification_;
 
-  string tmp_filename_;
-  string tmp_datasets_;
-  time_t tmp_filemodification_;
+  string sel_filename_;
+  string sel_datasets_;
+  time_t sel_filemodification_;
 
   int mergedata_;
   int assumesvt_;
