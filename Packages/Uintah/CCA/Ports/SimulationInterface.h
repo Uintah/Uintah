@@ -79,8 +79,8 @@ WARNING
 
      //////////
      // ask the component if it needs to be recompiled
-     virtual bool need_recompile(double time, double dt,
-				   const GridP& grid) {return false;}
+     virtual bool need_recompile(double /*time*/, double /*dt*/,
+				   const GridP& /*grid*/) {return false;}
    private:
      SimulationInterface(const SimulationInterface&);
      SimulationInterface& operator=(const SimulationInterface&);
