@@ -7,7 +7,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/ICE
 ICE_DIR  := Uintah/Components/ICE/ice_sm
+
+ifeq ($(NBITS),64)
 ICE_LIBS := $(ICE_DIR)/Libraries/64bit
+else
+ICE_LIBS := $(ICE_DIR)/libraries/n32bit
 
 SRCS	+= $(SRCDIR)/ICE.cc
 
@@ -64,6 +68,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.6  2000/06/14 21:37:44  jehall
+# - Added generated executable 'ice' to CVS ignore list
+#
 # Revision 1.5  2000/06/08 02:04:08  jas
 # Added stuff for making ice.
 #
