@@ -77,6 +77,7 @@ void TimestepSelector::execute()
    catch (const InternalError& e) {
      cerr << "TimestepSelector caught exception: " << e.message() << endl;
      tcl_status.set("Exception");
+     error(e.message());
      return;
    }
   
