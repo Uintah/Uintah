@@ -130,7 +130,7 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
       compressionMode = "";
   }
 
-  DOMText* text = oc.varnode->getOwnerDocument()->createTextNode(XMLString::transcode("compression"));
+  DOMText* text = oc.varnode->getOwnerDocument()->createTextNode(to_xml_ch_ptr("compression"));
   if (compressionMode != "" && compressionMode != "none")
     //appendElement(oc.varnode, "compression", compressionMode);
     appendElement(oc.varnode, text, compressionMode);

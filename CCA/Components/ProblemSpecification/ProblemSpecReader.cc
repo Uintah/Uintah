@@ -30,7 +30,7 @@ ProblemSpecP ProblemSpecReader::readInputFile()
     XMLPlatformUtils::Initialize();
   }
   catch(const XMLException& toCatch) {
-      throw ProblemSetupException("XML Exception: "+ string(XMLString::transcode(toCatch.getMessage())));
+      throw ProblemSetupException("XML Exception: "+ string(to_char_ptr(toCatch.getMessage())));
   }
   
   ProblemSpecP prob_spec;
@@ -57,7 +57,7 @@ ProblemSpecP ProblemSpecReader::readInputFile()
       delete parser;
       prob_spec = scinew ProblemSpec(doc->getDocumentElement());
   } catch(const XMLException& ex) {
-      throw ProblemSetupException("XML Exception: "+string(XMLString::transcode(ex.getMessage())));
+      throw ProblemSetupException("XML Exception: "+string(to_char_ptr(ex.getMessage())));
   }
 
   return prob_spec;
