@@ -424,18 +424,10 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
 				   const MaterialSet* all_matls)
 {
   Task* t;
-  if (d_ice->d_RateForm) {     // R A T E   F O R M
-    cout_doing << "MPMICE::scheduleCCMomExchangeRF" << endl;
+  cout_doing << "MPMICE::scheduleCCMomExchange" << endl;
+  t=scinew Task("MPMICE::doCCMomExchange",
+		  this, &MPMICE::doCCMomExchange);
 
-    t=scinew Task("MPMICE::doCCMomExchangeRF",
-		    this, &MPMICE::doCCMomExchangeRF);
-  }
-  if (d_ice->d_EqForm) {       // E Q   F O R M
-    cout_doing << "MPMICE::scheduleCCMomExchange" << endl;
-    t=scinew Task("MPMICE::doCCMomExchange",
-		    this, &MPMICE::doCCMomExchange);
-  }
-  
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
                                  // I C E
   t->computes(Ilb->mom_L_ME_CCLabel,            ice_matls);
@@ -1004,7 +996,7 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 //
 void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              const PatchSubset* patches,
-			     const MaterialSubset* ,
+			        const MaterialSubset*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
@@ -1038,8 +1030,10 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     StaticArray<NCVariable<double> > dTdt_NC(numALLMatls);
     StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
     StaticArray<CCVariable<double> > mass_L_temp(numALLMatls);
+    StaticArray<CCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > mass_L(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
+    StaticArray<constCCVariable<double> > old_temp(numALLMatls);
 
     vector<double> b(numALLMatls);
     vector<double> density(numALLMatls);
@@ -1059,51 +1053,65 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int dwindex = matl->getDWIndex();
-      if(mpm_matl){                   // M P M
-        new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
-        new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
-        new_dw->allocate(mass_L_temp[m],  Ilb->mass_L_CCLabel, dwindex, patch);
-
-        new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,         dwindex, patch,
+      int indx = matl->getDWIndex();
+      if(mpm_matl){                 // M P M
+        new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     indx, patch);
+        new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,indx, patch);
+        new_dw->allocate(mass_L_temp[m],  Ilb->mass_L_CCLabel,  indx, patch);
+        new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,         indx, patch,
 							        Ghost::None, 0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
       if(ice_matl){                 // I C E
-        new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,     dwindex, patch);
-        new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel,    dwindex, patch);
-        new_dw->get(mass_L[m],      Ilb->mass_L_CCLabel,  dwindex, patch,
+        new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,     indx, patch);
+        new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel,    indx, patch);
+        new_dw->get(mass_L[m],      Ilb->mass_L_CCLabel,  indx, patch,
 							  Ghost::None, 0);
         cv[m] = ice_matl->getSpecificHeat();
       }                             // A L L  M A T L S
-
-      new_dw->get(rho_micro_CC[m],  Ilb->rho_micro_CCLabel, dwindex, patch,
+      new_dw->get(rho_micro_CC[m],  Ilb->rho_micro_CCLabel, indx, patch,
 							  Ghost::None, 0);
-      new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,     dwindex, patch,
+      new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,     indx, patch,
 							  Ghost::None, 0);
-      new_dw->get(int_eng_L[m],     Ilb->int_eng_L_CCLabel, dwindex, patch,
+      new_dw->get(int_eng_L[m],     Ilb->int_eng_L_CCLabel, indx, patch,
 							  Ghost::None, 0);
-      new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,  dwindex, patch,
+      new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,  indx, patch,
 							  Ghost::None, 0);
-      new_dw->allocate(dvdt_CC[m], MIlb->dvdt_CCLabel,      dwindex, patch);
-      new_dw->allocate(dTdt_CC[m], MIlb->dTdt_CCLabel,      dwindex, patch);
-      new_dw->allocate(mom_L_ME[m], Ilb->mom_L_ME_CCLabel,  dwindex,patch);
-      new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex,patch);
-
+      new_dw->allocate(dvdt_CC[m], MIlb->dvdt_CCLabel,      indx, patch);
+      new_dw->allocate(dTdt_CC[m], MIlb->dTdt_CCLabel,      indx, patch);
+      new_dw->allocate(mom_L_ME[m], Ilb->mom_L_ME_CCLabel,  indx, patch);
+      new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,indx,patch);
       dvdt_CC[m].initialize(zero);
       dTdt_CC[m].initialize(0.);
+    }
+    //__________________________________
+    //   R A T E   F O R M
+    if(d_ice->d_RateForm) { 
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+        int indx = matl->getDWIndex();
+        if(mpm_matl){               
+          new_dw->get(old_temp[m],Ilb->temp_CCLabel,indx,patch,Ghost::None,0);
+        }
+        if(ice_matl){               
+          old_dw->get(old_temp[m],Ilb->temp_CCLabel,indx,patch,Ghost::None,0);
+        }                            
+        new_dw->allocate(Tdot[m], Ilb->Tdot_CCLabel,indx ,patch);
+      }
     }
 
     double vol = dx.x()*dx.y()*dx.z();
     double tmp;
-
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(mpm_matl){
        // Loaded rho_CC into mass_L for solid matl's, converting to mass_L
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-	  mass_L_temp[m][*iter] = rho_CC[m][*iter]*vol;
+         IntVector c = *iter;
+	  mass_L_temp[m][c] = rho_CC[m][c]*vol;
        }
        mass_L[m] = mass_L_temp[m];
       }
@@ -1111,19 +1119,21 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
     // Convert momenta to velocities.  Slightly different for MPM and ICE.
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][*iter] = int_eng_L[m][*iter]/(mass_L[m][*iter]*cv[m]);
-        vel_CC[m][*iter]  = mom_L[m][*iter]/mass_L[m][*iter];
+        Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m]);
+        vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
       }
     }
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
       //   Form BETA matrix (a), off diagonal terms
       //  The beta and (a) matrix is common to all momentum exchanges
       for(int m = 0; m < numALLMatls; m++)  {
-        density[m]  = rho_micro_CC[m][*iter];
+        density[m]  = rho_micro_CC[m][c];
         for(int n = 0; n < numALLMatls; n++) {
-	  beta[m][n] = delT * vol_frac_CC[n][*iter] * K[n][m]/density[m];
+	  beta[m][n] = delT * vol_frac_CC[n][c] * K[n][m]/density[m];
 	  a[m][n] = -beta[m][n];
         }
       }
@@ -1140,7 +1150,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       for(int m = 0; m < numALLMatls; m++) {
         b[m] = 0.0;
         for(int n = 0; n < numALLMatls; n++) {
-	  b[m] += beta[m][n] * (vel_CC[n][*iter].x() - vel_CC[m][*iter].x());
+	  b[m] += beta[m][n] * (vel_CC[n][c].x() - vel_CC[m][c].x());
         }
       }
       //     S O L V E
@@ -1148,15 +1158,15 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       vector<double> X(numALLMatls);
       d_ice->multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
       for(int m = 0; m < numALLMatls; m++) {
-	  vel_CC[m][*iter].x( vel_CC[m][*iter].x() + X[m] );
-	  dvdt_CC[m][*iter].x( X[m]/delT );
+	  vel_CC[m][c].x( vel_CC[m][c].x() + X[m] );
+	  dvdt_CC[m][c].x( X[m]/delT );
       } 
 
       //     Y - M O M E N T U M  --   F O R M   R H S   (b)
       for(int m = 0; m < numALLMatls; m++) {
         b[m] = 0.0;
         for(int n = 0; n < numALLMatls; n++) {
-	  b[m] += beta[m][n] * (vel_CC[n][*iter].y() - vel_CC[m][*iter].y());
+	  b[m] += beta[m][n] * (vel_CC[n][c].y() - vel_CC[m][c].y());
         }
       }
 
@@ -1164,15 +1174,15 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       //  - Add exchange contribution to orig value
       d_ice->multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
       for(int m = 0; m < numALLMatls; m++)  {
-	  vel_CC[m][*iter].y( vel_CC[m][*iter].y() + X[m] );
-	  dvdt_CC[m][*iter].y( X[m]/delT );
+	  vel_CC[m][c].y( vel_CC[m][c].y() + X[m] );
+	  dvdt_CC[m][c].y( X[m]/delT );
       }
 
       //     Z - M O M E N T U M  --  F O R M   R H S   (b)
       for(int m = 0; m < numALLMatls; m++)  {
         b[m] = 0.0;
         for(int n = 0; n < numALLMatls; n++) {
-	  b[m] += beta[m][n] * (vel_CC[n][*iter].z() - vel_CC[m][*iter].z());
+	  b[m] += beta[m][n] * (vel_CC[n][c].z() - vel_CC[m][c].z());
         }
       }    
 
@@ -1180,16 +1190,16 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       //  - Add exchange contribution to orig value
       d_ice->multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
       for(int m = 0; m < numALLMatls; m++)  {
-	  vel_CC[m][*iter].z( vel_CC[m][*iter].z() + X[m] );
-	  dvdt_CC[m][*iter].z( X[m]/delT );
+	  vel_CC[m][c].z( vel_CC[m][c].z() + X[m] );
+	  dvdt_CC[m][c].z( X[m]/delT );
       }
 
       //---------- E N E R G Y   E X C H A N G E
       //         
       for(int m = 0; m < numALLMatls; m++) {
-        tmp = cv[m]*rho_micro_CC[m][*iter];
+        tmp = cv[m]*rho_micro_CC[m][c];
         for(int n = 0; n < numALLMatls; n++)  {
-	  beta[m][n] = delT * vol_frac_CC[n][*iter] * H[n][m]/tmp;
+	  beta[m][n] = delT * vol_frac_CC[n][c] * H[n][m]/tmp;
 	  a[m][n] = -beta[m][n];
         }
       }
@@ -1206,24 +1216,20 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
        for(int n = 0; n < numALLMatls; n++) {
 	  b[m] += beta[m][n] *
-	    (Temp_CC[n][*iter] - Temp_CC[m][*iter]);
+	    (Temp_CC[n][c] - Temp_CC[m][c]);
         }
       }
       //     S O L V E, Add exchange contribution to orig value
       d_ice->matrixSolver(numALLMatls,a,b,X);
       for(int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][*iter] = Temp_CC[m][*iter] + X[m];
-        dTdt_CC[m][*iter] = X[m]/delT;
+        Temp_CC[m][c] = Temp_CC[m][c] + X[m];
+        dTdt_CC[m][c] = X[m]/delT;
       }
 
     }  //end CellIterator loop
 
     //__________________________________
     //  Set the Boundary conditions 
-    //   Do this for all matls even though MPM doesn't
-    //   care about this.  For two identical ideal gases
-    //   mom_L_ME and int_eng_L_ME should be identical and this
-    //   is useful when debugging.
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
@@ -1231,7 +1237,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       d_ice->setBC(vel_CC[m], "Velocity",   patch,dwindex);
       d_ice->setBC(Temp_CC[m],"Temperature",patch,dwindex);
       
-
       //__________________________________
       //  Symetry BC dTdt: Neumann = 0
       //             dvdt: tangent components Neumann = 0
@@ -1244,9 +1249,19 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     //__________________________________
     // Convert vars. primitive-> flux 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
-          int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv[m] * mass_L[m][*iter];
-          mom_L_ME[m][*iter]     = vel_CC[m][*iter]          * mass_L[m][*iter];
+        int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c];
+        mom_L_ME[m][c]     = vel_CC[m][c]          * mass_L[m][c];
+      }
+    }
+    if(d_ice->d_RateForm) {         // RateForm
+      for(CellIterator iter = patch->getExtraCellIterator(); 
+                                                          !iter.done();iter++){
+        IntVector c = *iter;
+        for (int m = 0; m < numALLMatls; m++) {
+          Tdot[m][c] = (Temp_CC[m][c] - old_temp[m][c])/delT;        
+        }
       }
     }
     //---- P R I N T   D A T A ------ 
@@ -1271,16 +1286,19 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     //    Put into new_dw
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
-      int dwindex = matl->getDWIndex();
+      int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-       if(ice_matl){
-         new_dw->put(mom_L_ME[m],    Ilb->mom_L_ME_CCLabel,    dwindex, patch);
-         new_dw->put(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex, patch);
-       }
-       if(mpm_matl){
-        new_dw->put(dvdt_CC[m],MIlb->dvdt_CCLabel,dwindex,patch);
-        new_dw->put(dTdt_CC[m],MIlb->dTdt_CCLabel,dwindex,patch);
+      if(ice_matl){
+        new_dw->put(mom_L_ME[m],    Ilb->mom_L_ME_CCLabel,    indx,patch);
+        new_dw->put(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,indx,patch);
+      }
+      if(mpm_matl){
+        new_dw->put(dvdt_CC[m],     MIlb->dvdt_CCLabel,       indx,patch);
+        new_dw->put(dTdt_CC[m],     MIlb->dTdt_CCLabel,       indx,patch);
+      }
+      if(d_ice->d_RateForm){ 
+        new_dw->put(Tdot[m],        Ilb->Tdot_CCLabel,        indx,patch);
       }
     }  
   } //patches
