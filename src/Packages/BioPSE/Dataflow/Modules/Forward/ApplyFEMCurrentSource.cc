@@ -568,14 +568,16 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       if (sourceNode < (unsigned int)hMapping->nrows() &&
           sinkNode < (unsigned int)hMapping->nrows())
       {
-        Array1<int> cc;
-        Array1<double> vv;
-        hMapping->getRowNonzeros(sourceNode, cc, vv);
-        ASSERT(cc.size());
-        sourceNode = cc[0];
-        hMapping->getRowNonzeros(sinkNode, cc, vv);
-        ASSERT(cc.size());
-        sinkNode = cc[0];
+        int *cc;
+        double *vv;
+        int ccsize;
+        int ccstride;
+        hMapping->getRowNonzerosNoCopy(sourceNode, ccsize, ccstride, cc, vv);
+        ASSERT(ccsize);
+        sourceNode = cc?cc[0]:0;
+        hMapping->getRowNonzerosNoCopy(sinkNode, ccsize, ccstride, cc, vv);
+        ASSERT(ccsize);
+        sinkNode = cc?cc[0]:0;
       }
       else
       {
@@ -597,13 +599,16 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       double currentDensity;
       hCurField->value(currentDensity, *ii);
 
-      Array1<int> cc;
-      Array1<double> vv;
-      hMapping->getRowNonzeros((int)(*ii), cc, vv);
+      int *cc;
+      double *vv;
+      int ccsize;
+      int ccstride;
+
+      hMapping->getRowNonzerosNoCopy((int)(*ii), ccsize, ccstride, cc, vv);
       
-      for (int j=0; j < cc.size(); j++)
+      for (int j=0; j < ccsize; j++)
       {
-        (*rhs)[cc[j]] += vv[j] * currentDensity;
+        (*rhs)[cc?cc[j*ccstride]:j] += vv[j*ccstride] * currentDensity;
       }
     }
 
@@ -627,14 +632,17 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       if (sourceNode < (unsigned int)hMapping->nrows() &&
           sinkNode < (unsigned int)hMapping->nrows())
       {
-        Array1<int> cc;
-        Array1<double> vv;
-        hMapping->getRowNonzeros(sourceNode, cc, vv);
-        ASSERT(cc.size());
-        sourceNode = cc[0];
-        hMapping->getRowNonzeros(sinkNode, cc, vv);
-        ASSERT(cc.size());
-        sinkNode = cc[0];
+        int *cc;
+        double *vv;
+        int ccsize;
+        int ccstride;
+
+        hMapping->getRowNonzerosNoCopy(sourceNode, ccsize, ccstride, cc, vv);
+        ASSERT(ccsize);
+        sourceNode = cc?cc[0]:0;
+        hMapping->getRowNonzerosNoCopy(sinkNode, ccsize, ccstride, cc, vv);
+        ASSERT(ccsize);
+        sinkNode = cc?cc[0]:0;
       }
       else
       {

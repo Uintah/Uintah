@@ -174,8 +174,10 @@ void ApplyFEMVoltageSource::execute()
   SparseRowMatrix *mat = matIn->clone();
 
   //! adjusting matrix for Dirichlet BC
-  Array1<int> idcNz;
-  Array1<double> valNz;
+  int *idcNz;
+  double *valNz;
+  int idcNzsize;
+  int idcNzstride;
 
   TetVolMesh::Node::array_type nind;
   vector<double> dbc;
@@ -185,12 +187,12 @@ void ApplyFEMVoltageSource::execute()
     double val = dirBC[idx].second;
     
     // -- getting column indices of non-zero elements for the current row
-    mat->getRowNonzeros(ni, idcNz, valNz);
+    mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
     
     // -- updating rhs
-    for (int i=0; i<idcNz.size(); ++i){
-      int j = idcNz[i];
-      (*rhs)[j] +=-val*valNz[i]; 
+    for (int i=0; i<idcNzsize; ++i){
+      int j = idcNz?idcNz[i*idcNzstride]:i;
+      (*rhs)[j] += - val * valNz[i*idcNzstride]; 
     }
   }
   
@@ -199,12 +201,12 @@ void ApplyFEMVoltageSource::execute()
     int ni = dirBC[idx].first;
     double val = dirBC[idx].second;
     
-    mat->getRowNonzeros(ni, idcNz, valNz);
+    mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
       
-    for (int i=0; i<idcNz.size(); ++i){
-      int j = idcNz[i];
-      mat->put(ni, j, 0);
-      mat->put(j, ni, 0); 
+    for (int i=0; i<idcNzsize; ++i){
+      int j = idcNz?idcNz[i*idcNzstride]:i;
+      mat->put(ni, j, 0.0);
+      mat->put(j, ni, 0.0); 
     }
       
     //! updating dirichlet node and corresponding entry in rhs
