@@ -6,6 +6,7 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
@@ -17,13 +18,22 @@ public:
   FData3d():Array3<Data>(){}
   virtual ~FData3d(){}
 
-  value_type &operator[](typename LatVolMesh::cell_index idx) const
+  const value_type &operator[](typename LatVolMesh::cell_index idx) const 
     { return operator()(idx.i_,idx.j_,idx.k_); } 
-  value_type &operator[](typename LatVolMesh::face_index idx) const
+  const value_type &operator[](typename LatVolMesh::face_index idx) const
     { return (Data)0; }
-  value_type &operator[](typename LatVolMesh::edge_index idx) const
+  const value_type &operator[](typename LatVolMesh::edge_index idx) const 
     { return (Data)0; }
-  value_type &operator[](typename LatVolMesh::node_index idx) const
+  const value_type &operator[](typename LatVolMesh::node_index idx) const
+    { return operator()(idx.i_,idx.j_,idx.k_); }
+
+  value_type &operator[](typename LatVolMesh::cell_index idx)
+    { return operator()(idx.i_,idx.j_,idx.k_); } 
+  value_type &operator[](typename LatVolMesh::face_index idx)
+    { return (Data)0; }
+  value_type &operator[](typename LatVolMesh::edge_index idx)
+    { return (Data)0; }
+  value_type &operator[](typename LatVolMesh::node_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
   static const string type_name(int);
@@ -51,7 +61,8 @@ public:
   virtual LatticeVol<Data> *clone() const 
     { return new LatticeVol<Data>(*this); }
  
-  static const string type_name(int );
+  static const string type_name(int); 
+  static const string type_name();
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
 };
@@ -59,24 +70,41 @@ public:
 #define LATTICEVOL_VERSION 1
 
 template <class Data>
+Persistent* make_LatticeVol()
+{
+  return scinew LatticeVol<Data>;
+}
+
+template <class Data>
+PersistentTypeID
+LatticeVol<Data>::type_id(type_name().c_str(),
+		   GenericField<LatVolMesh, FData3d<Data> >::type_name().c_str(),
+                   make_LatticeVol<Data>); 
+
+template <class Data>
 void
 LatticeVol<Data>::io(Piostream &stream)
 {
-  stream.begin_class("LatticeVol", LATTICEVOL_VERSION);
+  stream.begin_class(type_name().c_str(), LATTICEVOL_VERSION);
   GenericField<LatVolMesh, FData3d<Data> >::io(stream);
   stream.end_class();                                                         
 }
 
 template <class Data>
-PersistentTypeID 
-LatticeVol<Data>::type_id("LatticeVol","Datatype",0);
+const string
+LatticeVol<Data>::type_name()
+{
+  static const string name = "LatticeVol<" + find_type_name((Data *)0) + ">";
+  return name;
+} 
 
 template <class Data>
 const string
-LatticeVol<Data>::type_name(int )
+LatticeVol<Data>::type_name(int a)
 {
-  const static string name =  "LatticeVol<" + find_type_name((Data *)0) + ">";
-  return name;
+  ASSERT((a <= 1) && a >= 0);
+  if (a == 0) { return "LatticeVol"; }
+  return find_type_name((Data *)0);
 } 
 
 
