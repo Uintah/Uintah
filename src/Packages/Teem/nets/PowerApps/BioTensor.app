@@ -4877,20 +4877,20 @@ class BioTensorApp {
 	set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
 
 	# Only include axis information for planes that are turned on
-	global $mods(ShowField-X)-faces-on
-	global $mods(ShowField-Y)-faces-on
-	global $mods(ShowField-Z)-faces-on
+	global show_plane_x
+	global show_plane_y
+	global show_plane_z
 
 	set function "(v > [set $mods(Isosurface)-isoval]) &&"
-	if {[set $mods(ShowField-X)-faces-on]} {
+	if {$show_plane_x} {
 	    set index [string last "&&" $function]
 	    set function [string replace $function $index end "&& (x $clip_x $span_x) &&"]
 	}
-	if {[set $mods(ShowField-Y)-faces-on]} {
+	if {$show_plane_y} {
 	    set index [string last "&&" $function]
 	    set function [string replace $function $index end "&& (y $clip_y $span_y) &&"]
 	}
-	if {[set $mods(ShowField-Z)-faces-on]} {
+	if {$show_plane_z} {
 	    set index [string last "&&" $function]
 	    set function [string replace $function $index end "&& (z $clip_z $span_z) &&"]
 	}
@@ -7603,7 +7603,7 @@ class BioTensorApp {
             } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
-            } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
+            } elseif {$vis_activated && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
         }
@@ -8581,7 +8581,7 @@ class BioTensorApp {
             } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
-            } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+            } elseif {$vis_activated && [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
         }
