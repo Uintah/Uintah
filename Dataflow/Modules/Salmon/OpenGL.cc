@@ -1373,10 +1373,10 @@ void OpenGL::setvisual(const clString& wname, int which, int width, int height)
 {
   tkwin=0;
   current_drawer=0;
-  cerr << "choosing visual " << which << '\n';
+  //cerr << "choosing visual " << which << '\n';
   TCL::execute(clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height));
-  cerr << clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height) << endl;
-  cerr << "done choosing visual\n";
+  //cerr << clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height) << endl;
+  //cerr << "done choosing visual\n";
 }
 
 void OpenGL::getData(int datamask, AsyncReply<GeometryData*>* result)
@@ -1466,6 +1466,12 @@ template class Mailbox<GetReq>;
 
 //
 // $Log$
+// Revision 1.5  1999/08/23 20:11:49  sparker
+// GenAxes had no UI
+// Removed extraneous print statements
+// Miscellaneous compilation issues
+// Fixed an authorship error
+//
 // Revision 1.4  1999/08/23 06:30:31  sparker
 // Linux port
 // Added X11 configuration options

@@ -18,10 +18,8 @@ itcl_class PSECommon_Salmon_Salmon {
     }
     destructor {
 	foreach rid $roe {
-	    puts "destroy .ui[$rid modname]"
 	    destroy .ui[$rid modname]
 
-	    puts "$rid delete"
 	    $rid delete
 	}
     }
@@ -32,10 +30,7 @@ itcl_class PSECommon_Salmon_Salmon {
     method makeRoeID {} {
 	set id $this-Roe_$nextrid
 	incr nextrid
-	puts $id
-	puts " commands: [info commands $id]"
 	while {[::info commands $id] != ""} {
-	    puts "trying new id $id"
 	    set id $this-Roe_$nextrid
 	    incr nextrid
 	}
@@ -64,7 +59,6 @@ itcl_class Roe {
 	}
 
     destructor {
-        puts "I have been deleted: $this"
     }
 
     constructor {config} {
@@ -173,7 +167,7 @@ itcl_class Roe {
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
 		-command "$this switchvisual $i"
 #        -command { puts "switchvisual doesn't work on NT" }
-            puts "$i: $t"
+#puts "$i: $t"
 	    incr i
 	}
 
@@ -417,7 +411,6 @@ itcl_class Roe {
 	    destroy $w.wframe.draw
 	}
 	$this-c switchvisual $w.wframe.draw $idx 640 512
-	puts "done: $this-c switchvisual $w.wframe.draw $idx 640 512"
 	if {[winfo exists $w.wframe.draw]} {
 	    bindEvents $w.wframe.draw
 	    pack $w.wframe.draw -expand yes -fill both

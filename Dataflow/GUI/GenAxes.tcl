@@ -1,4 +1,5 @@
-itcl_class GenAxes {
+
+itcl_class PSECommon_Visualization_GenAxes {
     inherit Module
     constructor {config} {
 	set name GenAxes
