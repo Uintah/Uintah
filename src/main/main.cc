@@ -52,8 +52,8 @@ using std::endl;
 #include <afxwin.h>
 #endif
 
-#define VERSION "1.10.0" // this needs to be synced with the contents of
-                        // SCIRun/doc/edition.xml
+#define VERSION "1.20.0" // this needs to be synced with the contents of
+                         // SCIRun/doc/edition.xml
 
 using namespace SCIRun;
 
