@@ -23,6 +23,7 @@ Generator::Generator()
   cc_out_ = "";
   gui_out_ = "";
   xml_out_ = "";
+  path_to_insight_package_ = "";
 
   parser_ = new Parser();
   translator_ = new Translator();
@@ -109,6 +110,17 @@ void Generator::set_xml_out(string f)
 string Generator::get_xml_out( void )
 {
   return xml_out_;
+}
+
+void Generator::set_path_to_insight_package(string f)
+{
+  path_to_insight_package_ = f;
+  this->parser_->set_path_to_insight_package(path_to_insight_package_);
+}
+
+string Generator::get_path_to_insight_package( void )
+{
+  return path_to_insight_package_;
 }
 
 //////////////////////////////
