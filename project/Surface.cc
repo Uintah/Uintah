@@ -73,6 +73,7 @@ void TriSurface::add_triangle(int i1, int i2, int i3) {
 
 void TriSurface::io(Piostream& stream) {
     int version=stream.begin_class("TriSurface", TRISURFACE_VERSION);
+    Surface::io(stream);
     Pio(stream, points);
     Pio(stream, elements);
     stream.end_class();

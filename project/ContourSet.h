@@ -19,6 +19,7 @@
 #include <Classlib/LockingHandle.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Classlib/String.h>
 
 class ContourSet;
 typedef LockingHandle<ContourSet> ContourSetHandle;
@@ -29,6 +30,7 @@ public:
     Vector basis[3];
     Vector origin;
     double space;
+    clString name;
 
     ContourSet();
     ContourSet(const ContourSet &copy);

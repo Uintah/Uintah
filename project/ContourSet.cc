@@ -13,12 +13,10 @@
 #include <ContourSet.h>
 #include <Surface.h>
 #include <Geom.h>
-#include <MtXEventLoop.h>
-#include <GL/glu.h>
+#include <Classlib/String.h>
+#include <Geometry/Transform.h>
 
 #define Sqr(x) ((x)*(x))
-
-extern MtXEventLoop* evl;
 
 Vector mmult(double *m, const Vector &v) {
     double x[3], y[3];
@@ -64,21 +62,26 @@ void ContourSet::scale(double sc) {
 
 // just takes the (dx, dy, dz) vector as input -- read off dials...
 void ContourSet::rotate(const Vector &rot) {
-    evl->lock();
-    glMatrixMode(GL_MODELVIEW_MATRIX);
-    glPushMatrix();
-    glLoadIdentity();
-    glRotated(rot.x(), 1, 0, 0);
-    glRotated(rot.y(), 0, 1, 0);
-    glRotated(rot.z(), 0, 0, 1);
-    double mm[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, mm);
-    glPopMatrix();
-    basis[0]=mmult(mm, basis[0]);
-    basis[1]=mmult(mm, basis[1]);
-    basis[2]=mmult(mm, basis[2]);
+    Transform tran;
+    tran.rotate(rot.x(), Vector(1,0,0));
+    tran.rotate(rot.y(), Vector(0,1,0));
+    tran.rotate(rot.z(), Vector(0,0,1));
+    basis[0]=tran.project(basis[0]);
+    basis[1]=tran.project(basis[1]);
+    basis[2]=tran.project(basis[2]);
 }
+
+#define CONTOUR_SET_VERSION 1
 
 void ContourSet::io(Piostream& stream) 
 {
+    int version=stream.begin_class("ContourSet", CONTOUR_SET_VERSION);
+    Pio(stream, contours);
+    Pio(stream, basis[0]);
+    Pio(stream, basis[1]);
+    Pio(stream, basis[2]);
+    Pio(stream, origin);
+    Pio(stream, space);
+    Pio(stream, name);
+    stream.end_class();
 }
