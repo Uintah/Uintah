@@ -1142,18 +1142,19 @@ void HypoElasticPlastic::addRequiresDamageParameter(Task* task,
 						    const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, pLocalizedLabel,matlset,Ghost::None);
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
 
 }
 
 void HypoElasticPlastic::getDamageParameter(const Patch* patch,
 					    ParticleVariable<int>& damage,
 					    int dwi,
-					    DataWarehouse* dw)
+					    DataWarehouse* old_dw,
+					    DataWarehouse* new_dw)
 {
-  ParticleSubset* pset = dw->getParticleSubset(dwi,patch);
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
   constParticleVariable<int> pLocalized;
-  dw->get(pLocalized, pLocalizedLabel, pset);
+  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
 
   ParticleSubset::iterator iter;
   for (iter = pset->begin(); iter != pset->end(); iter++) {
