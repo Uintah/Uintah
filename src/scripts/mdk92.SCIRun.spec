@@ -27,7 +27,7 @@
 #
 
 %define defname SCIRun
-%define defver	1.22
+%define defver	1.24
 %define dotver  0
 %define gccver  3.3.1
 %define plat	mdk9.2
@@ -36,12 +36,12 @@
 %undefine	__check_files
 %define thirdpartydotver 0
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
-%define insightver  1.6.0
+%define insightver  1.8.1
 
 
 Name:		%{defname}
 Version:	%{defver}.%{dotver}
-Serial:		6
+Serial:		7
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited

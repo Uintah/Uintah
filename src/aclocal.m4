@@ -660,7 +660,6 @@ if test "$9" = "specific"; then
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $6/$i
     if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
      AC_MSG_ERROR(Specifically requested $1 library file '$6/$i' (.so or .a) was not found)
     fi
