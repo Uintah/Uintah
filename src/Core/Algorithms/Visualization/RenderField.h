@@ -941,23 +941,10 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
-  GeomTexts *texts = 0;
-  GeomTextsCulled *ctexts = 0;
-  GeomSwitch *text_switch = 0;
-  const bool culling_p = false; //backface_cull_p && mesh->has_normals();
-  if (culling_p)
-  {
-    mesh->synchronize(Mesh::NORMALS_E);
-    ctexts = scinew GeomTextsCulled();
-    text_switch = scinew GeomSwitch(ctexts);
-    ctexts->set_font_index(fontsize);
-  }
-  else
-  {
-    texts = scinew GeomTexts();
-    text_switch = scinew GeomSwitch(texts);
-    texts->set_font_index(fontsize);
-  }
+  GeomTexts *texts = scinew GeomTexts();
+  GeomDL *display_list = scinew GeomDL(text);
+  GeomSwitch *text_switch = scinew GeomSwitch(display_list);
+  texts->set_font_index(fontsize);
 
   std::ostringstream buffer;
   buffer.precision(precision);
@@ -984,15 +971,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
       {
 	m = choose_mat(use_default_material, *iter);
       }
-      if (culling_p)
-      {
-	//mesh->get_normal(n, *iter);
-	ctexts->add(buffer.str(), p, n, m->diffuse);
-      }
-      else
-      {
-	texts->add(buffer.str(), p, m->diffuse);
-      }
+      texts->add(buffer.str(), p, m->diffuse);
     }
     ++iter;
   }
@@ -1029,7 +1008,7 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
   else
   {
     texts = scinew GeomTexts();
-    text_switch = scinew GeomSwitch(texts);
+    text_switch = scinew GeomSwitch(scinew GeomDL(texts));
     texts->set_font_index(fontsize);
   }
 
@@ -1105,7 +1084,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
   else
   {
     texts = scinew GeomTexts();
-    text_switch = scinew GeomSwitch(texts);
+    text_switch = scinew GeomSwitch(scinew GeomDL(texts));
     texts->set_font_index(fontsize);
   }
 
@@ -1172,7 +1151,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
   mesh->synchronize(Mesh::EDGES_E);
 
   GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   ostringstream buffer;
@@ -1228,7 +1207,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   mesh->synchronize(Mesh::FACES_E);
 
   GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   ostringstream buffer;
@@ -1284,7 +1263,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
   mesh->synchronize(Mesh::CELLS_E);
 
   GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   ostringstream buffer;
@@ -1407,12 +1386,12 @@ RenderFieldData<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   if (disks_p || cones_p)
   {
     disks = scinew GeomGroup();
-    data_switch = scinew GeomSwitch(disks);
+    data_switch = scinew GeomSwitch(scinew GeomDL(disks));
   }
   else
   {
     vec_node = scinew GeomArrows(arrow_heads?0.15:0.0, 0.6);
-    data_switch = scinew GeomSwitch(vec_node);
+    data_switch = scinew GeomSwitch(scinew GeomDL(vec_node));
   }
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
