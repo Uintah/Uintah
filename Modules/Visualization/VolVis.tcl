@@ -232,15 +232,6 @@ itcl_class VolVis {
 		-variable $this-salmon -value 2
 
 
-	# set the method tcl variable
-
-	frame $w.f.methods
-
-	radiobutton $w.f.methods.l -text Levoy -variable $this-method      \
-		-value 0
-	radiobutton $w.f.methods.b -text Bresenham -variable $this-method  \
-		-value 1
-
 	#create the scale
 	    
 	frame $w.f.f -relief groove -borderwidth 2
@@ -268,8 +259,6 @@ itcl_class VolVis {
 	pack $w.f.salmon_interaction.none $w.f.salmon_interaction.view  \
 		$w.f.salmon_interaction.all -side left -fill x
 
-	pack $w.f.methods.l $w.f.methods.b -side left -fill x
-
 	pack $w.f.f.steps -side left -fill x
 	
 #        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj       \
@@ -278,7 +267,7 @@ itcl_class VolVis {
 #		-expand yes -fill x -pady 2 -padx 2
 
         pack $w.f.viewstuff $w.f.rastersize $w.f.background                 \
-		$w.f.proc $w.f.salmon_interaction $w.f.methods              \
+		$w.f.proc $w.f.salmon_interaction                           \
 		$w.f.graph  $w.f.f $w.f.b  $w.f.execbutton                  \
 		-expand yes -fill x -pady 2 -padx 2
 	pack $w.f

@@ -56,12 +56,6 @@
 
 // the initial view data
 
-
-
-const View homeview
-(Point(0.6, 2.6, 0.6), Point(0.6, 0.6, 0.6), Vector(1.,0.,0.), 30);
-
-// EXP!
 const ExtendedView ehomeview
 (Point(0.6, 2.6, 0.6), Point(0.6, 0.6, 0.6), Vector(1.,0.,0.), 30, 100, 100,
  Color(0.,0.,0.));
@@ -106,11 +100,6 @@ class VolVis : public Module {
   double y_pixel_size;
 
   
-
-  // the view: eyepoint, atpoint, up vector, and field of view
-  
-  TCLView iView;
-
   // EXP! try the extended view stuff
 
   TCLExtendedView iEView;
@@ -150,10 +139,6 @@ class VolVis : public Module {
   Array1<double> Opacity[4];
   Array1<double> ScalarVal[4];
   
-  // the number of nodes
-  
-  int       NodeCount;
-  
   // the image is stored in this 2d-array.  it contains
   // pixel values arranged in the order row then column
 
@@ -180,7 +165,7 @@ class VolVis : public Module {
 
   // pointer to the levoy structure
   
-  Levoy * calc;
+  Levoy calc;
 
   // specifies the number of separate slices processed by
   // each of the processors
@@ -211,10 +196,6 @@ class VolVis : public Module {
   //    &* use all the information: view, z, and rgb values
 
   TCLint salmonData;
-
-  // allow the user to select the method for volume visualization
-  
-  TCLint method;
 
   // allow the user to specify the step size for Levoy's algorithm
 
@@ -305,7 +286,6 @@ extern "C" {
 
 VolVis::VolVis(const clString& id)
 : Module("VolVis", id, Source),
-  iView("View", id, this),
   iEView("eview", id, this),
   minSV("minSV", id, this),
   maxSV("maxSV", id, this),
@@ -320,7 +300,6 @@ VolVis::VolVis(const clString& id)
   Bop("Bop", id, this),
   uiopen("uiopen", id, this),
   salmonData("salmon", id, this),
-  method("method", id, this),
   stepSize("stepsize", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
@@ -338,7 +317,6 @@ VolVis::VolVis(const clString& id)
 
   // initialize the view to home view
 
-  iView.set( homeview );
   iEView.set( ehomeview );
 
   // initialize a few variables used by OpenGL
@@ -371,7 +349,6 @@ VolVis::VolVis(const clString& id)
 
 VolVis::VolVis(const VolVis& copy, int deep)
 : Module(copy, deep),
-  iView("View", id, this),
   iEView("eview", id, this),
   maxSV("maxSV", id, this),
   minSV("minSV", id, this),
@@ -386,7 +363,6 @@ VolVis::VolVis(const VolVis& copy, int deep)
   Bop("Bop", id, this),
   uiopen("uiopen", id, this),
   salmonData("salmon", id, this),
-  method("method", id, this),
   stepSize("stepsize", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
@@ -461,7 +437,7 @@ VolVis::parallel( int proc )
 
       if ( proc != procCount - 1 )
 	for ( i = 0; i < intervalCount.get(); i++ )
-	  calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+	  calc.PerspectiveTrace( interval * ( proc + procCount * i ),
 				 interval * ( proc + 1 + procCount * i ) );
       
       else
@@ -469,10 +445,10 @@ VolVis::parallel( int proc )
 	  // columns because interval is an integer
 	  
 	  for ( i = 0; i < intervalCount.get()-1; i++ )
-	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+	    calc.PerspectiveTrace( interval * ( proc + procCount * i ),
 				   interval * ( proc + 1 + procCount * i ) );
 
-	  calc->PerspectiveTrace(interval * ( proc + procCount *
+	  calc.PerspectiveTrace(interval * ( proc + procCount *
 					     ( intervalCount.get() - 1 ) ),
 				 myview.xres() );
 	}
@@ -507,7 +483,6 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
     }
 
   // make sure scalar field is a regular grid
-  // actually, it doesn't have to be (Steve says so)
   
   if ( ( (*homeSFRGrid) = homeSFHandle->getRG()) == 0)
     {
@@ -548,7 +523,8 @@ void
 VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 {
   cerr << "Welcome to UpdateTransferFncArray\n";
-  
+
+  int NodeCount;
   int i, len, position;
   char * array;
   char * suppl = new char[CANVAS_WIDTH*4+1];
@@ -810,34 +786,28 @@ VolVis::execute()
   WallClockTimer watch;
   
   // make sure TCL variables are updated
-  
   ScalarFieldRG *homeSFRGrid;
 
   // execute if the input ports are valid and if it is necessary
   // to execute
-
   if ( ! Validate( &homeSFRGrid ) )
     return;
 
   // update the values from TCL interface
-
   reset_vars();
 
   // continue if UI is open
-  
   if ( ! uiopen.get() )
     return;
   
   // get data from transfer map and make sure these changes
   // are reflected in the TCL variables
-
   TCL::execute(id+" get_data");
   reset_vars();
   
 
   // retrieve the scalar value-opacity/rgb values, and store them
   // in arrays
-
   UpdateTransferFncArray( Xarray.get(), Yarray.get(), 0 );
   UpdateTransferFncArray( Rsv.get(), Rop.get(), 1 );
   UpdateTransferFncArray( Gsv.get(), Gop.get(), 2 );
@@ -846,58 +816,46 @@ VolVis::execute()
   // if connected to a Salmon module, retrieve Salmon geometry info
   // and store it in a LevoyS type structure
   // otherwise, use the Levoy structure
-
   GeometryData* data=ogeom->getData(0, GEOM_ALLDATA);
 
   // update myview information, but make sure that the variables
   // such as bg color and raster size cannot be accessed by redraw
   // at the same time
-
   imagelock.lock();
-    
-  myview = iEView.get();
-
+            myview = iEView.get();
   imagelock.unlock();
 
-  if ( data != NULL )
+#if 0  
     {
       calc = new LevoyS( homeSFRGrid, ScalarVal, Opacity );
       ((LevoyS*)calc)->SetUp( data, stepSize.get() );
     }
-  else
-    {
-      calc = new Levoy ( homeSFRGrid, ScalarVal, Opacity );
-      calc->SetUp( myview, stepSize.get() );
-    }      
+#endif
+  
+  if ( data == NULL )
+    calc.SetUp( homeSFRGrid, ScalarVal, Opacity, myview, stepSize.get() );
 
-  cerr << " interval count is " << intervalCount.get() <<endl;
-  
-  cerr << "added vars: " << salmonData.get() << "  " << method.get()
-    << "  " << stepSize.get() << endl;
-  
   watch.start();
 
   if ( intervalCount.get() != 0 && iProc.get() )
     {
       procCount = Task::nprocessors();
-
-
       Task::multiprocess(procCount, do_parallel, this);
     }
   else
-    calc->TraceRays( projection.get() );
+    calc.TraceRays( projection.get() );
 
   watch.stop();
 
   cerr << "my watch reports: " << watch.time() << "units of time\n";
 
   // lock it because the Image array will be modified
-
   imagelock.lock();
 
-//  Image = calc->Image;
-  Image = *(calc->Image);
+            // copies the image array
+            Image = calc.Image;
 
+#if 0  
   /* THE MOST AWESOME DEBUGGING TECHNIQUE */
   
   int loop;
@@ -932,21 +890,17 @@ VolVis::execute()
     }
   
   /* END OF THE MOST AWESOME DEBUGGING TECHNIQUE */
-  
+#endif  
   
   // the Image array has been modified, it is now safe to let
   // go of the thread
-  
   imagelock.unlock();
 
 
   // TEMP: execute a tcl command (what does this do???)
-  
   update_progress(0.5);
 
   TCL::execute(id+" redraw_when_idle");
-
-  delete calc;
 }
 
 

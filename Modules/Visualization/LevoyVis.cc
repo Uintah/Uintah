@@ -20,35 +20,58 @@
  *
  */
 
+#include <config.h>
+#undef SCI_ASSERTION_LEVEL_3
+#define SCI_ASSERTION_LEVEL_2
+
 #include "kuswik.h"
 #include <Classlib/Timer.h>
 #include <Modules/Visualization/LevoyVis.h>
 #include <Math/MiscMath.h>
+#include "FastRender.h"
 
 
 /* the tiny epsilon vector added to counteract possible
    calculation error */
 
-Vector EpsilonVector( 1.e-6, 1.e-6, 1.e-6 );
+extern Vector EpsilonVector;
 
 /* the most tiny opacity contribution of a point in
    the volume */
 
 double  EpsilonContribution = 0.01;
-double  EpsilonAlpha = log( 0.01 );
-  
+extern double  EpsilonAlpha;
+
 
 
 inline double
-Levoy::AssociateValue ( double scalarValue, int arrayIndex )
+Levoy::AssociateValueO ( double scalarValue )
 {
-  return(SVOpacity[arrayIndex][ int( (scalarValue - SVmin) * SVMultiplier) ] );
+  return(SVOpacity[ int( (scalarValue - SVmin) * SVMultiplier) ] );
+}
+
+inline double
+Levoy::AssociateValueR ( double scalarValue )
+{
+  return(SVR[ int( (scalarValue - SVmin) * SVMultiplier) ] );
+}
+
+inline double
+Levoy::AssociateValueG ( double scalarValue )
+{
+  return(SVG[ int( (scalarValue - SVmin) * SVMultiplier) ] );
+}
+
+inline double
+Levoy::AssociateValueB ( double scalarValue )
+{
+  return(SVB[ int( (scalarValue - SVmin) * SVMultiplier) ] );
 }
 
 
 void
 Levoy::PrepareAssociateValue( double sv_max, Array1<double> * ScalarVals,
-	      Array1<double> * AssociatedVals )
+			     Array1<double> * AssociatedVals )
 {
   int i, j, k;
   int beg, end;
@@ -70,24 +93,67 @@ Levoy::PrepareAssociateValue( double sv_max, Array1<double> * ScalarVals,
 
   SVMultiplier = ( TABLE_SIZE - 1 ) / ( sv_max - SVmin );
 
-  for ( j = 0; j < 4; j++ )
+  j = 0;
+  counter = 0;
+  SVOpacity[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
     {
-      counter = 0;
-      SVOpacity[j] = new double[TABLE_SIZE];
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
       
-      SVOpacity[j][counter++] = AssociatedVals[j][0];
-      
-      for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
-	{
-	  beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
-	  end = int( ScalarVals[j][i+1] * SVMultiplier );
-	  
-	  for( k = beg; k <= end; k++ )
-	    SVOpacity[j][counter++] = ( Slopes[j][i+1] * ( k - beg ) /
-				       SVMultiplier + AssociatedVals[j][i] );
-	}
+      for( k = beg; k <= end; k++ )
+	SVOpacity[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+				SVMultiplier + AssociatedVals[j][i] );
     }
 
+
+  j = 1;
+  counter = 0;
+  SVR[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
+    {
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
+      
+      for( k = beg; k <= end; k++ )
+	SVR[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+			  SVMultiplier + AssociatedVals[j][i] );
+    }
+
+
+  j = 2;
+  counter = 0;
+  SVG[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
+    {
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
+      
+      for( k = beg; k <= end; k++ )
+	SVG[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+			  SVMultiplier + AssociatedVals[j][i] );
+    }
+
+
+  j = 0;
+  counter = 0;
+  SVB[counter++] = AssociatedVals[j][0];
+  
+  for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
+    {
+      beg = int( ScalarVals[j][i] * SVMultiplier ) + 1;
+      end = int( ScalarVals[j][i+1] * SVMultiplier );
+      
+      for( k = beg; k <= end; k++ )
+	SVB[counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+			  SVMultiplier + AssociatedVals[j][i] );
+    }
+
+
+  
   if ( counter > TABLE_SIZE )
     {
       cerr << "NOT GOOD AT ALL\n";
@@ -141,6 +207,11 @@ Levoy::PrepareAssociateValue( double sv_max, Array1<double> * ScalarVals,
  *
  **************************************************************************/
 
+Levoy::Levoy ()
+{
+  homeSFRGrid = NULL;
+}
+
 Levoy::Levoy ( ScalarFieldRG * grid, Array1<double> * ScalarVals,
 	      Array1<double> * AssociatedVals )
 {
@@ -165,21 +236,76 @@ Levoy::Levoy ( ScalarFieldRG * grid, Array1<double> * ScalarVals,
   box.extend( bmax );
 
   PrepareAssociateValue( sv_max, ScalarVals, AssociatedVals );
-  
-  Image = new Array2<CharColor>;
-
-#ifdef LIGHTING
-  // setup the lighting coefficients
-
-  ambient_coeff = 0.3;
-  diffuse_coeff = 0.4;
-  specular_coeff = 0.2;
-  specular_iter = 30;
-#endif
 }
 
 
+void
+Levoy::SetUp ( ScalarFieldRG * grid, Array1<double> * ScalarVals,
+	      Array1<double> * AssociatedVals, const ExtendedView& myview,
+	      int stepsize )
+{
+  Point bmin, bmax;
+  double sv_max;
+  
+  homeSFRGrid = grid;
+  homeSFRGrid->get_bounds( bmin, bmax );
+  homeSFRGrid->get_minmax( SVmin, sv_max );
 
+  Vector diagonal=bmax-bmin;
+  diagx=diagonal.x();
+  diagy=diagonal.y();
+  diagz=diagonal.z();
+
+  nx=homeSFRGrid->nx;
+  ny=homeSFRGrid->ny;
+  nz=homeSFRGrid->nz;
+  
+  // set up the bounding box for the image
+  box.extend( bmin );
+  box.extend( bmax );
+
+  PrepareAssociateValue( sv_max, ScalarVals, AssociatedVals );
+  
+  // temporary storage for eye position
+  eye = myview.eyep();
+
+  // assign background color
+  backgroundColor = myview.bg();
+
+  xres = myview.xres();
+  yres = myview.yres();
+  
+  // useful for ray-bbox intersection
+  box.PrepareIntersect( eye );
+
+  // the original ray from the eye point to the lookat point
+  homeRay = myview.lookat() - eye;
+  homeRay.normalize();
+
+  // rayStep represents the length of vector.  in order to
+  // traverse the volume, a vector of this length in the direction
+  // of the ray is added to the current point in space
+  rayStep = DetermineRayStepSize ( stepsize );
+
+
+  // deallocate old array and allocate enough space
+  Image.newsize( myview.yres(), myview.xres() );
+
+  
+  // initialize to the default (black) color
+  Image.initialize( myview.bg() );
+
+
+  // calculate the increments to be added in the u,v directions
+  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV );
+
+  // determine the function to use
+  if ( whiteFlag )
+    CastRay = &Levoy::Eight;
+  else // user defined SV-color map
+    CastRay = &Levoy::Nine;
+
+}
 /**************************************************************************
  *
  * destructor
@@ -206,13 +332,11 @@ Levoy::DetermineRayStepSize ( int steps )
   double result;
   
   // calculate a step size that is about the length of one voxel
-
   small[0] = ( box.max().x() - box.min().x() ) / nx;
   small[1] = ( box.max().y() - box.min().y() ) / ny;
   small[2] = ( box.max().z() - box.min().z() ) / nz;
 
   // set rayStep to the smallest of the step sizes
-  
   if ( small[0] < small[1] )
     if ( small[0] < small[2] )
       result = small[0];
@@ -288,27 +412,17 @@ Levoy::SetUp ( const ExtendedView& myview, int stepsize )
 
   // deallocate old array and allocate enough space
 
-  Image->newsize( myview.yres(), myview.xres() );
+  Image.newsize( myview.yres(), myview.xres() );
 
   
   // initialize to the default (black) color
 
-  Image->initialize( myview.bg() );
+  Image.initialize( myview.bg() );
 
   // calculate the increments to be added in the u,v directions
 
   CalculateRayIncrements( myview, rayIncrementU, rayIncrementV );
 
-#ifdef LIGHTING
-  
-  // calculate the vector, L, which points toward the sun ( a point
-  // light source which is very far away
-
-//  Lvector = homeRay + rayIncrementU * 3 + rayIncrementV * 3;
-  Lvector = homeRay;
-  Lvector.normalize();
-#endif
-  
   // determine the function to use
 
   if ( whiteFlag )
@@ -341,176 +455,13 @@ Levoy::SetUp ( const ExtendedView& myview, int stepsize )
  *
  **************************************************************************/
 
+		 
 Color
 Levoy::Eight ( Vector& step, const Point& beg )
 {
-  // the color for rendering
-
-  Color colr = WHITE;
-
-  // find step vector
-
-  step.normalize();
-
-  step *= rayStep;
-
-  // flag that tells me that the ray is no longer in the bbox space
-  
-  //int Flag = 1;
-  
-  // as the ray passes through the volume, the Alpha (total opacity)
-  // value increases
-  
-  double Alpha = 0;
-
-  // accumulated color as the ray passes through the volume
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-  
-  Color accumulatedColor = BLACK;
-
-  // a scalar value corresponds to a particular point
-  // in space
-  
-  double scalarValue;
-
-  // opacity for a particular position in the volume
-
-  double opacity;
-
-  // position of the point in space at the beginning of the cast
-  
-  Point atPoint = beg + EpsilonVector;
-
-  // begin traversing through the volume at the first point of
-  // intersection of the ray with the bbox.  keep going through
-  // the volume until the contribution of the voxel color
-  // is almost none, or until the second intersection point has
-  // been reached.
-
-  scalarValue = 0;
-
-  double x00, x01, x10, x11;
-  double y0, y1, inside;
-  
-  Vector pn=atPoint-box.min();
-  
-  double dx=step.x()*(nx-1)/diagx;
-  double dy=step.y()*(ny-1)/diagy;
-  double dz=step.z()*(nz-1)/diagz;
-
-  double x=pn.x()*(nx-1)/diagx;
-  double y=pn.y()*(ny-1)/diagy;
-  double z=pn.z()*(nz-1)/diagz;
-  
-  int ix=(int)(x+10000)-10000;
-  int iy=(int)(y+10000)-10000;
-  int iz=(int)(z+10000)-10000;
-  
-  double fx=x-ix;
-  double fy=y-iy;
-  double fz=z-iz;
-  
-  inside = 1;
-  
-  if(ix<0 || ix+1>=nx)inside=0;
-  if(iy<0 || iy+1>=ny)inside=0;
-  if(iz<0 || iz+1>=nz)inside=0;
-  
-  // will not perform bounds checking
-  double*** grid=homeSFRGrid->grid.get_dataptr();
-
-  // the first atPoint may be outside the volume due to roundoff error
-
-  if(inside)
-    {
-      x00=Interpolate(grid[ix][iy][iz], grid[ix+1][iy][iz], fx);
-      x01=Interpolate(grid[ix][iy][iz+1], grid[ix+1][iy][iz+1], fx);
-      x10=Interpolate(grid[ix][iy+1][iz], grid[ix+1][iy+1][iz], fx);
-      x11=Interpolate(grid[ix][iy+1][iz+1], grid[ix+1][iy+1][iz+1], fx);
-      y0=Interpolate(x00, x10, fy);
-      y1=Interpolate(x01, x11, fy);
-      scalarValue=Interpolate(y0, y1, fz);
-      opacity = AssociateValue( scalarValue, 0 );
-      
-      Alpha += - opacity * rayStep / 0.1;
-    }
-
-  // even if initially we were slightly outside, add step and
-  // then determine if we're inside the bbox
-  inside = 1;
-  
-  while ( Alpha >= EpsilonAlpha   &&   inside )
-    { 
-      fx+=dx;
-      if(fx<0){
-	int i=(int)(-fx)+1;
-	fx+=i;
-	ix-=i;
-	if(ix<0)
-	  inside=0;
-      } else if(fx>=1){
-	int i=(int)fx;
-	fx-=i;
-	ix+=i;
-	if(ix+1 >= nx)
-	  inside=0;
-      }
-      
-      fy+=dy;
-      if(fy<0){
-	int i=(int)(-fy)+1;
-	fy+=i;
-	iy-=i;
-	if(iy<0)
-	  inside=0;
-      } else if(fy>=1){
-	int i=(int)fy;
-	fy-=i;
-	iy+=i;
-	if(iy+1 >= ny)
-	  inside=0;
-      }
-      
-      fz+=dz;
-      if(fz<0){
-	int i=(int)(-fz)+1;
-	fz+=i;
-	iz-=i;
-	if(iz<0)
-	  inside=0;
-      } else if(fz>=1){
-	int i=(int)fz;
-	fz-=i;
-	iz+=i;
-	if(iz+1 >= nz)
-	  inside=0;
-      }
-
-      if(inside)
-	{
-	  x00=Interpolate(grid[ix][iy][iz], grid[ix+1][iy][iz], fx);
-	  x01=Interpolate(grid[ix][iy][iz+1], grid[ix+1][iy][iz+1], fx);
-	  x10=Interpolate(grid[ix][iy+1][iz], grid[ix+1][iy+1][iz], fx);
-	  x11=Interpolate(grid[ix][iy+1][iz+1], grid[ix+1][iy+1][iz+1], fx);
-	  y0=Interpolate(x00, x10, fy);
-	  y1=Interpolate(x01, x11, fy);
-	  scalarValue=Interpolate(y0, y1, fz);
-	  opacity = AssociateValue( scalarValue, 0 );
-
-	  Alpha += - opacity * rayStep / 0.1;
-	}
-    }
-
-  
-  Alpha = exp( Alpha );
-  
-  // background color should contribute to the final color of
-  // the pixel.
-  
-  accumulatedColor = WHITE * ( 1 - Alpha ) + backgroundColor * Alpha;
-
-  return accumulatedColor;
+  return BasicVolRender( step, rayStep, beg, SVOpacity, SVmin, SVMultiplier,
+			box, homeSFRGrid->grid.get_dataptr(), backgroundColor,
+			nx, ny, nz, diagx, diagy, diagz );
 }
 
 
@@ -531,134 +482,12 @@ Levoy::Eight ( Vector& step, const Point& beg )
 Color
 Levoy::Nine ( Vector& step, const Point& beg )
 {
-  // the color for rendering
-
-  Color colr = WHITE;
-
-  // find step vector
-
-  step.normalize();
-
-  step *= rayStep;
-
-  // flag that tells me that the ray is no longer in the bbox space
-  
-  int Flag = 1;
-  
-  // as the ray passes through the volume, the voxel's
-  // color contribution decreases
-  
-  Color Alpha = BLACK;
-  
-  // accumulated color as the ray passes through the volume
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-  
-  Color accumulatedColor = BLACK;
-
-  // a scalar value corresponds to a particular point
-  // in space
-  
-  double scalarValue;
-
-  // opacity for a particular position in the volume
-
-  double opacity;
-
-  // position of the point in space at the beginning of the cast
-  
-  Point atPoint = beg + EpsilonVector;
-
-  // begin traversing through the volume at the first point of
-  // intersection of the ray with the bbox.  keep going through
-  // the volume until the contribution of the voxel color
-  // is almost none, or until the second intersection point has
-  // been reached.
-
-  scalarValue = 0;
-
-  double tmpc;
-
-  
-  if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-    {
-      Color tempcolr( AssociateValue( scalarValue, 1 ),
-		     AssociateValue( scalarValue, 2 ),
-		     AssociateValue( scalarValue, 3 ) );
-
-      colr = tempcolr;
-
-      opacity = AssociateValue( scalarValue, 0 );
-
-//      accumulatedColor += colr * ( contribution * opacity );
-//      contribution = contribution * ( 1.0 - opacity );
-
-      tmpc = Alpha.r() - opacity * rayStep / 0.1 * colr.r();
-      Alpha.r( tmpc );
-      tmpc = Alpha.g() - opacity * rayStep / 0.1 * colr.g();
-      Alpha.g( tmpc );
-      tmpc = Alpha.b() - opacity * rayStep / 0.1 * colr.b();
-      Alpha.b( tmpc ); 
-    }
-  
-  while ( ( Alpha.r() >= EpsilonAlpha || Alpha.g() >= EpsilonAlpha ||
-	   Alpha.b()  >= EpsilonAlpha  )  &&   Flag )
-    {
-      atPoint += step;
-      scalarValue = 0;
-
-      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-	{
-	  Color tempcolr( AssociateValue( scalarValue, 1 ),
-			 AssociateValue( scalarValue, 2 ),
-			 AssociateValue( scalarValue, 3 ) );
-
-	  colr = tempcolr;
-
-	  opacity = AssociateValue( scalarValue, 0 );
-
-	  Alpha.r( Alpha.r() - opacity * rayStep / 0.1 * colr.r() );
-	  Alpha.g( Alpha.g() - opacity * rayStep / 0.1 * colr.g() );
-	  Alpha.b( Alpha.b() - opacity * rayStep / 0.1 * colr.b() );
-	}
-      else
-	Flag = 0;
-    }
-
-  Alpha.r( exp ( Alpha.r() ) );
-  Alpha.g( exp ( Alpha.g() ) );
-  Alpha.b( exp ( Alpha.b() ) );
-  
-  // background color should contribute to the final color of
-  // the pixel.  if contribution is minute, the background
-  // is not visible therefore don't add the background color
-  // to the accumulated one.
-
-  accumulatedColor.r( 1 - Alpha.r() );
-  accumulatedColor.g( 1 - Alpha.g() );
-  accumulatedColor.b( 1 - Alpha.b() );
-  
-  return accumulatedColor;
-
+  return ColorVolRender( step, rayStep, beg, SVOpacity, SVR, SVG, SVB,
+			SVmin, SVMultiplier,
+			box, homeSFRGrid->grid.get_dataptr(), backgroundColor,
+			nx, ny, nz, diagx, diagy, diagz );
 }
 
-
-#ifdef LIGHTING
-/**************************************************************************
- *
- *
- *
- **************************************************************************/
-
-double
-Levoy::LightingComponent( const Vector& normal )
-{
-  double i = ambient_coeff;
-  i += diffuse_coeff * Dot( Lvector, normal );
-
-  return i;
-}
-#endif
 
 
 /**************************************************************************
@@ -698,11 +527,11 @@ Levoy::PerspectiveTrace( int from, int till )
 	     Image( loop, pool ) = pixelColor;
 	     */
 
-	  ((*Image)( loop, pool )).red =
+	  (Image( loop, pool )).red =
 	    (char)(pixelColor.r()*255);
-	  ((*Image)( loop, pool )).green =
+	  (Image( loop, pool )).green =
 	    (char)(pixelColor.g()*255);
-	  ((*Image)( loop, pool )).blue =
+	  (Image( loop, pool )).blue =
 	    (char)(pixelColor.b()*255);
 	}
     }
@@ -717,7 +546,7 @@ Levoy::PerspectiveTrace( int from, int till )
  **************************************************************************/
 
 LevoyS::LevoyS ( ScalarFieldRG * grid,
-	      Array1<double> * Xarr, Array1<double> * Yarr )
+		Array1<double> * Xarr, Array1<double> * Yarr )
 : Levoy( grid, Xarr, Yarr )
 {
 }
@@ -794,9 +623,9 @@ LevoyS::SetUp ( GeometryData * g, int stepsize )
 
   // deallocate, allocate, and initialize the array
   
-  Image->newsize( g->yres, g->xres );
+  Image.newsize( g->yres, g->xres );
   
-  Image->initialize( temp );
+  Image.initialize( temp );
 
   // calculate the increments to be added in the u,v directions
 
@@ -804,13 +633,6 @@ LevoyS::SetUp ( GeometryData * g, int stepsize )
 
   CalculateRayIncrements( joy, rayIncrementU, rayIncrementV );
 
-#ifdef LIGHTING
-  // calculate the vector, L, which points toward the sun ( a point
-  // light source which is very far away
-
-  Lvector = homeRay + rayIncrementU * 3 + rayIncrementV * 3;
-#endif
-  
   // determine the function to use
 
   if ( whiteFlag )
@@ -839,8 +661,8 @@ LevoyS::SetUp ( GeometryData * g, int stepsize )
 
 Color
 LevoyS::Eleven ( const Point& eye, Vector& step,
-	       const Point& beg, const Point& end, const int& px,
-	      const int& py )
+		const Point& beg, const Point& end, const int& px,
+		const int& py )
 {
   // as the ray passes through the volume, the voxel's
   // color contribution decreases
@@ -888,13 +710,13 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
 
   int templength = step.length() * ( clipConst *
-		   geom->depthbuffer->get_depth(px,py) + nearTohome );
+				    geom->depthbuffer->get_depth(px,py) + nearTohome );
 
   // compare the 2 lengths, pick the shorter one
 
   if ( templength < mylength )
-      mylength = templength;
-    
+    mylength = templength;
+  
 
   // find step vector
 
@@ -937,7 +759,7 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
-	  opacity = AssociateValue( scalarValue, 0 );
+	  opacity = AssociateValueO( scalarValue );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -976,10 +798,10 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
 Color
 LevoyS::Twelve ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end, const int& px,
-	      const int& py )
+		const Point& beg, const Point& end, const int& px,
+		const int& py )
 {
-
+#if 0
   // as the ray passes through the volume, the voxel's
   // color contribution decreases
   
@@ -1033,13 +855,13 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
   // in space
 
   int templength = step.length() * ( clipConst *
-		   geom->depthbuffer->get_depth(px,py) + nearTohome );
+				    geom->depthbuffer->get_depth(px,py) + nearTohome );
 
   // compare the 2 lengths, pick the shorter one
 
   if ( templength < mylength )
-      mylength = templength;
-    
+    mylength = templength;
+  
 
   // find step vector
   
@@ -1102,6 +924,7 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
       accumulatedColor;
 
   return accumulatedColor;
+#endif  
 }
 
 
@@ -1146,11 +969,11 @@ LevoyS::PerspectiveTrace( int from, int till )
 
 	  // assign color value to pixel
 
-	  ((*Image)( loop, pool )).red =
+	  (Image( loop, pool )).red =
 	    (char)(pixelColor.r()*255);
-	  ((*Image)( loop, pool )).green =
+	  (Image( loop, pool )).green =
 	    (char)(pixelColor.g()*255);
-	  ((*Image)( loop, pool )).blue =
+	  (Image( loop, pool )).blue =
 	    (char)(pixelColor.b()*255);
 
 	}
@@ -1170,7 +993,7 @@ LevoyS::PerspectiveTrace( int from, int till )
  *
  **************************************************************************/
 
-Array2<CharColor> *
+void
 Levoy::TraceRays ( int projectionType )
 {
   // cast one ray per pixel to determine pixel color
@@ -1179,6 +1002,4 @@ Levoy::TraceRays ( int projectionType )
     {
       PerspectiveTrace( 0, xres );
     }
-
-  return Image;
 }

@@ -66,7 +66,12 @@ protected:
   Point eye;
 
   // Transfer map: the 4 SV-{opacity, r,g,b} arrays
-  double *SVOpacity[4];
+//  double *SVOpacity[4];
+  
+  double SVOpacity[TABLE_SIZE];
+  double SVR[TABLE_SIZE];
+  double SVG[TABLE_SIZE];
+  double SVB[TABLE_SIZE];
 
   // appropriately scales the SV for array access
   double SVMultiplier;
@@ -102,8 +107,8 @@ protected:
   // the volume rendering routine to be used
   CRF CastRay;
 
-
-
+  /*
+  */
   
   double DetermineRayStepSize ( int steps );
 
@@ -112,49 +117,42 @@ protected:
   
   // associates an opacity or color value (0-1 range) given
   // a scalar value
-  inline double AssociateValue( double scalarValue, int arrayIndex );
+  inline double AssociateValueO( double scalarValue );
+  inline double AssociateValueR( double scalarValue );
+  inline double AssociateValueG( double scalarValue );
+  inline double AssociateValueB( double scalarValue );
 
   void PrepareAssociateValue( double sv_min, Array1<double> * ScalarVals,
 	      Array1<double> * AssociatedVals );
 
-#ifdef LIGHTING   
-  // L vector is the vector pointing toward the sun
-
-  Vector Lvector;
-
-  // lighting coefficients
-
-  double ambient_coeff, diffuse_coeff, specular_coeff, specular_iter;
-
-  double LightingComponent( const Vector& normal );
-#endif
-  
 public:
 
-  Array2<CharColor> * Image;
+  Array2<CharColor> Image;
 
   // constructor
+  Levoy();
   Levoy( ScalarFieldRG * grid, Array1<double> * Xarr, Array1<double> * Yarr );
 
   // destructor
   ~Levoy();
 
   // set up variables given view info and the stepsize
+  void SetUp ( ScalarFieldRG * grid, Array1<double> *Xarr,
+	      Array1<double> * Yarr, const ExtendedView& myview,
+	      int stepsize );
   void SetUp ( const ExtendedView& myview, int stepsize );
 
   // uses the new transfer map and ray-bbox intersections
-
   Color Eight ( Vector& step, const Point& beg  );
+  
 
   Color Nine ( Vector& step, const Point& beg );
 
   // traces all the rays
-  
-  Array2<CharColor>* TraceRays ( int projectionType );
+  void TraceRays ( int projectionType );
 
 
   // Traces rays starting at x=from until x=till
-  
   virtual void PerspectiveTrace( int from, int till );
   
 };
