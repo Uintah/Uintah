@@ -1,26 +1,26 @@
 
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
+#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/CFDInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Geometry/Vector.h>
 
 
 namespace Uintah {
 
 using namespace SCIRun;
-
+    
     class ICE : public UintahParallelComponent, public CFDInterface {
     public:
       ICE(const ProcessorGroup* myworld);
@@ -160,6 +160,9 @@ using namespace SCIRun;
                    const CCVariable<Vector>& q_CC);
                    
       void Message(int abort, char message1[],char message2[],char message3[]);
+
+      void readData(const Patch* patch, int include_GC, char    filename[],          
+                 char    var_name[],  const CCVariable<double>& q_CC);
       
       // Debugging switches
       bool switchDebugInitialize;
