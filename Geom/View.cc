@@ -44,6 +44,16 @@ View& View::operator=(const View& copy)
     return *this;
 }
 
+int
+View::operator==(const View& copy)
+{
+  if ( eyep_ == copy.eyep_ && lookat_ == copy.lookat_ &&
+       up_ == copy.up_     && fov_ == copy.fov_           )
+    return 1;
+  else
+    return 0;
+}
+
 void View::get_viewplane(double aspect, double zdist,
 			 Vector& u, Vector& v)
 {
@@ -57,6 +67,20 @@ void View::get_viewplane(double aspect, double zdist,
     double yviewsize=xviewsize/aspect;
     x*=xviewsize;
     y*=yviewsize;
+    u=x;
+    v=y;
+}
+
+void
+View::get_normalized_viewplane( Vector& u, Vector& v)
+{
+    Vector lookdir(lookat()-eyep());
+    Vector z(lookdir);
+    z.normalize();
+    Vector x(Cross(z, up()));
+    x.normalize();
+    Vector y(Cross(x, z));
+    y.normalize();
     u=x;
     v=y;
 }
