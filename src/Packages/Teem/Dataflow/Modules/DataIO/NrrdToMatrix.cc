@@ -50,9 +50,14 @@ public:
   NrrdIPort*   nrows_;
   NrrdIPort*   ncols_;
   MatrixOPort* omat_;
+  int data_generation_;
+  int rows_generation_;
+  int cols_generation_;
 
-  GuiInt nnz_;
+  MatrixHandle last_matrix_;
 
+  GuiInt cols_;
+  int old_cols_;
 
   NrrdToMatrix(GuiContext*);
 
@@ -65,7 +70,7 @@ public:
   MatrixHandle create_matrix_from_nrrds(NrrdDataHandle dataH,
 					NrrdDataHandle rowsH,
 					NrrdDataHandle colsH,
-					int nnz);
+					int cols);
 
   template<class PTYPE> 
   MatrixHandle create_column_matrix(NrrdDataHandle dataH);
@@ -75,14 +80,18 @@ public:
 
   template<class PTYPE>
   MatrixHandle create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
-				    NrrdDataHandle colsH, int nnz);
+				    NrrdDataHandle colsH, int cols);
 };
 
 
 DECLARE_MAKER(NrrdToMatrix)
 NrrdToMatrix::NrrdToMatrix(GuiContext* ctx)
   : Module("NrrdToMatrix", ctx, Source, "DataIO", "Teem"),
-    nnz_(ctx->subVar("nnz"))
+    ndata_(0), nrows_(0), ncols_(0), omat_(0),
+    data_generation_(-1), rows_generation_(-1), 
+    cols_generation_(-1), last_matrix_(0),
+    cols_(ctx->subVar("cols")),
+    old_cols_(-1)
 {
 }
 
@@ -114,8 +123,6 @@ void
     return;
   }
 
-  cerr << "FIX ME : NEED TO CHECK GENERATIONS BEFORE EXECUTING\n";
-
   NrrdDataHandle dataH;
   NrrdDataHandle rowsH;
   NrrdDataHandle colsH;
@@ -128,14 +135,36 @@ void
   if (!ncols_->get(colsH))
     colsH = 0;
 
-  MatrixHandle omat_handle = create_matrix_from_nrrds(dataH, rowsH, colsH, nnz_.get());
+  bool do_execute = false;
+  // check the generations to see if we need to re-execute
+  if (dataH != 0 && data_generation_ != dataH->generation) {
+    data_generation_ = dataH->generation;
+    do_execute = true;
+  }
+  if (rowsH != 0 && rows_generation_ != rowsH->generation) {
+    rows_generation_ = rowsH->generation;
+    do_execute = true;
+  }
+  if (colsH != 0 && cols_generation_ != colsH->generation) {
+    cols_generation_ = colsH->generation;
+    do_execute = true;
+  }
+  if (old_cols_ != cols_.get()) {
+    old_cols_ = cols_.get();
+    do_execute = true;
+  }
 
-  omat_->send(omat_handle);  
+  if (do_execute) {
+    last_matrix_ = create_matrix_from_nrrds(dataH, rowsH, colsH, cols_.get());
+  }
+
+  if (last_matrix_ != 0)
+    omat_->send(last_matrix_);  
 }
 
 MatrixHandle
 NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rowsH,
-				       NrrdDataHandle colsH, int nnz) {
+				       NrrdDataHandle colsH, int cols) {
 
 
   // Determine if we have data, rows, columns to indicate whether it is
@@ -150,7 +179,7 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
     has_cols = true;
 
   MatrixHandle matrix;
-  if (has_data && !has_rows && !has_cols) {
+  if (has_data && (!has_rows || !has_cols)) {
     if (dataH->nrrd->dim == 1) {
       // column matrix
       switch(dataH->nrrd->type) {
@@ -219,37 +248,48 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
     }
   } else if (has_data && has_rows && has_cols) {
     // sparse matrix
+
+      // rows and cols should be of type nrrdTypeInt
+      if (rowsH->nrrd->type != nrrdTypeInt || colsH->nrrd->type != nrrdTypeInt) {
+        error("Rows and Columns nrrds must both be of type nrrdTypeInt");
+        return 0;
+      }
+      
+      if (dataH->nrrd->dim != 1 || rowsH->nrrd->dim != 1 || colsH->nrrd->dim != 1) {
+	error("All nrrds must be 1 dimension for a SparseRowMatrix.");
+	return 0;
+      }
       switch(dataH->nrrd->type) {
       case nrrdTypeChar:
-	matrix = create_sparse_matrix<char>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<char>(dataH, rowsH, colsH, cols);
 	break;
       case nrrdTypeUChar:
-	matrix = create_sparse_matrix<unsigned char>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<unsigned char>(dataH, rowsH, colsH, cols);
 	break;
       case nrrdTypeShort:
-	matrix = create_sparse_matrix<short>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<short>(dataH, rowsH, colsH, cols);
 	break;
       case nrrdTypeUShort:
-	matrix = create_sparse_matrix<unsigned short>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<unsigned short>(dataH, rowsH, colsH, cols);
 	break;
       case nrrdTypeInt:
-	matrix = create_sparse_matrix<int>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<int>(dataH, rowsH, colsH, cols);
 	break;
       case nrrdTypeUInt:
-	matrix = create_sparse_matrix<unsigned int>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<unsigned int>(dataH, rowsH, colsH, cols);
 	break;
       case nrrdTypeFloat:
-	matrix = create_sparse_matrix<float>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<float>(dataH, rowsH, colsH, cols);
 	break;
       case nrrdTypeDouble:
-	matrix = create_sparse_matrix<double>(dataH, rowsH, colsH, nnz);
+	matrix = create_sparse_matrix<double>(dataH, rowsH, colsH, cols);
 	break;
       default:
 	error("Unkown nrrd type.");
 	return 0;
       }
   } else {
-    error("Must have data.  Must have rows and columns for a sparse matrix.");
+    error("Must have data to convert to any type of Matrix.  Must have rows and columns for a SparseRowMatrix.");
     return 0;
   }
 
@@ -304,10 +344,107 @@ NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH) {
 template<class PTYPE>
 MatrixHandle 
 NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
-				   NrrdDataHandle colsH, int nnz) {
+				   NrrdDataHandle colsH, int cols) {
+  cerr << "Columns: " << cols << "\n";
+
+  Nrrd *data_n = dataH->nrrd;
+  Nrrd *rows_n = rowsH->nrrd;
+  Nrrd *cols_n = colsH->nrrd;
+
+  // pointers to nnrds
+  PTYPE *data_d = (PTYPE*)data_n->data;
+  int *rows_d = (int*)rows_n->data;
+  int *cols_d = (int*)cols_n->data;
+
+  if (cols == -1) {
+    // Auto selected...attempt to determine number of columns
+    for (int i=0; i<cols_n->axis[0].size; i++) {
+      if (cols_d[i] > cols)
+	cols = cols_d[i];
+    }
+    cols += 1; 
+    cerr << "Columns now " << cols << "\n";
+  }
   
-  error("Not implemented for Sparse Matrices yet.");
-  return 0;
+  cerr << "rows_n size: " << rows_n->axis[0].size << "\n";
+  int rows = rows_n->axis[0].size-1;
+  int offset = 0;
+  if (rows_d[0] != 0) {
+    warning("First entry of rows nrrd must be a 0. Inserting 0 in first position.");
+    offset = 1;
+    rows++;
+  }
+
+  int nnz = data_n->axis[0].size;
+
+  // error checking...
+
+  // cols_n and dn should be of size nnz
+  if (cols_n->axis[0].size != nnz) {
+    error("The Data and Columns nrrds should be the same size.");
+    return 0;
+  }
+  
+  // rows values must be in increasing order
+  for (int i=0; i<rows_n->axis[0].size-1; i++) {
+    if (rows_d[i] > rows_d[i+1] || rows_d[i] < 0) {
+      error("Rows nrrd must contain values in increasing order and positive.");
+      return 0;
+    }
+  }
+
+  // last rows value should be less than nnz
+  if (rows_d[rows_n->axis[0].size-1] > nnz) {
+    error("The last entry in the rows array must be less than the number of non zeros.");
+    return 0;
+  }
+
+  for (int i=0; i<nnz; i++) {
+    if (cols_d[i] < 0) {
+      error("Columns nrrd must have positive values");
+      return 0;
+    }
+  }
+
+  // for each rows[N+1] - rows[N] sections of the cols array,
+  // those values must be in increasing order
+  for (int i=0; i<rows_n->axis[0].size-1; i++) {
+    int span = rows_d[i+1] - rows_d[i];
+    cerr << "span: " << span << "\n";
+    for(int j=i;j<(i+span-1);j++) {
+      if (cols_d[j] > cols_d[j+1]) {
+	error("Columns nrrd ordered incorrectly.");
+	return 0;
+      }
+    }
+  }
+
+  cerr << "Rows: " << rows << "\n";
+  // pointers to matrix arrays
+  double *d = scinew double[nnz];
+  int *rr = scinew int[rows_n->axis[0].size+offset];
+  int *cc = scinew int[nnz];
+  
+  // copy rest of rows
+  if (offset == 1) {
+    rr[0] = 0;
+  }
+  for (int i=0; i<rows_n->axis[0].size; i++) {
+    rr[i+offset] = rows_d[i];
+  }
+	
+  // copy data and cols
+  for(int i=0; i<nnz; i++) {
+    cc[i] = cols_d[i];
+    d[i] = data_d[i];
+  }
+
+
+  SparseRowMatrix *matrix = scinew SparseRowMatrix(rows, cols, rr, cc, nnz, d);
+
+  MatrixHandle result(matrix);
+
+  return result;
 }
 
 
