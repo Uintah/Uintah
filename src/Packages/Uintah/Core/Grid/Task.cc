@@ -14,12 +14,12 @@ MaterialSubset* Task::globalMatlSubset = 0;
 
 void Task::initialize()
 {
-  d_resourceIndex=-1;
   comp_head=comp_tail=0;
   req_head=req_tail=0;
   mod_head=mod_tail=0;
   patch_set=0;
   matl_set=0;
+  taskNumber=-1;
 }
 
 Task::ActionBase::~ActionBase()
@@ -308,8 +308,7 @@ Task::doit(const ProcessorGroup* pc, const PatchSubset* patches,
 void
 Task::display( ostream & out ) const
 {
-  out << getName() << " (" << d_tasktype << "): [Own: " << d_resourceIndex
-      << ", ";
+  out << getName() << " (" << d_tasktype << "): [";
   if( patch_set != 0 ){
     out << "Patches: {";
     for(int i=0;i<patch_set->size();i++){
