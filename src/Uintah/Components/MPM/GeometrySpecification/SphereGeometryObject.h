@@ -16,7 +16,7 @@ namespace Components {
 CLASS
    SphereGeometryObject
 	
-   Short description...
+   Creates a sphere from the xml input file description.
 	
 GENERAL INFORMATION
 	
@@ -31,10 +31,19 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   SphereGeometryObject
+   SphereGeometryObject  BoundingBox inside
 	
 DESCRIPTION
-   Long description...
+   Creates a sphere from the xml input file description.
+   Requires two inputs: origin and a radius.  
+   There are methods for checking if a point is inside the sphere
+   and also for determining the bounding box for the sphere.
+   The input form looks like this:
+       <sphere>
+         <origin>[0.,0.,0.]</origin>
+	 <radius>2.0</radius>
+       </sphere>
+	
 	
 WARNING
 	
@@ -45,19 +54,20 @@ class SphereGeometryObject : public GeometryObject {
 
  public:
   //////////
-  // Insert Documentation Here:
+  //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+  // input specification and builds a sphere.
   SphereGeometryObject(ProblemSpecP &);
 
   //////////
-  // Insert Documentation Here:
+  // Destructor
   virtual ~SphereGeometryObject();
 
   //////////
-  // Insert Documentation Here: 
+  // Determines whether a point is inside the sphere. 
   virtual bool inside(const Point &p) const;
 
   //////////
-  // Insert Documentation Here:
+  // Returns the bounding box surrounding the box.
   virtual Box getBoundingBox() const;
 
  private:
@@ -72,6 +82,9 @@ class SphereGeometryObject : public GeometryObject {
 #endif // __SPHERE_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.6  2000/04/22 18:19:11  jas
+// Filled in comments.
+//
 // Revision 1.5  2000/04/22 16:51:04  jas
 // Put in a skeleton framework for documentation (coccoon comment form).
 // Comments still need to be filled in.

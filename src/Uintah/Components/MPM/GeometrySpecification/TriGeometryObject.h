@@ -17,7 +17,7 @@ namespace Components {
 CLASS
    TriGeometryObject
 	
-   Short description...
+   Creates a triangulated surface object from the xml input file description.
 	
 GENERAL INFORMATION
 	
@@ -32,10 +32,18 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   TriGeometryObject
+   TriGeometryObject BoundingBox inside
 	
 DESCRIPTION
-   Long description...
+   Creates a triangulated surface object from the xml input file description.
+   Requires one input: file name (convetion use suffix .dat).  
+   There are methods for checking if a point is inside the surface
+   and also for determining the bounding box for the surface.
+   The input form looks like this:
+       <tri>
+         <file>surface.dat</file>
+       </tri>
+	
 	
 WARNING
 	
@@ -44,18 +52,20 @@ WARNING
 class TriGeometryObject : public GeometryObject {
  public:
   //////////
-  // Insert Documentation Here:
+  //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+  // input specification and builds the triangulated surface object.
   TriGeometryObject(ProblemSpecP &);
   //////////
-  // Insert Documentation Here:
+
+  // Destructor
   virtual ~TriGeometryObject();
 
   //////////
-  // Insert Documentation Here:
+  // Determins whether a point is inside the triangulated surface.
   virtual bool inside(const Point &p) const;
 
   //////////
-  // Insert Documentation Here:
+  // Returns the bounding box surrounding the triangulated surface.
   virtual Box getBoundingBox() const;
 
  private:
@@ -69,6 +79,9 @@ class TriGeometryObject : public GeometryObject {
 #endif // __TRI_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.6  2000/04/22 18:19:11  jas
+// Filled in comments.
+//
 // Revision 1.5  2000/04/22 16:55:12  jas
 // Added logging of changes.
 //
