@@ -44,6 +44,24 @@ QuadraticTetVolMesh::~QuadraticTetVolMesh()
 {
 }
 
+void
+QuadraticTetVolMesh::begin(Node::iterator &itr) const
+{
+  itr = 0;
+}
+
+void
+QuadraticTetVolMesh::end(Node::iterator &itr) const
+{
+  itr = points_.size() + cells_.size() * 6;
+}
+
+void
+QuadraticTetVolMesh::size(Node::size_type &s) const
+{
+  s = points_.size() + cells_.size() * 6;
+}
+
 const Point &
 QuadraticTetVolMesh::ave_point(const Point &p0, const Point &p1) const
 {

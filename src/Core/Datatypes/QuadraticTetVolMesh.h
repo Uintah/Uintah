@@ -34,6 +34,11 @@ public:
   virtual QuadraticTetVolMesh *clone() 
   { return new QuadraticTetVolMesh(*this); }
   virtual ~QuadraticTetVolMesh();
+
+  void begin(Node::iterator &) const;
+  void end(Node::iterator &) const;
+  void size(Node::size_type &) const;
+
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
   void get_point(Point &result, Node::index_type index) const;
 
