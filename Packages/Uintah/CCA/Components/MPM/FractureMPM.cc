@@ -60,17 +60,7 @@ FractureMPM::FractureMPM(const ProcessorGroup* myworld)
   : SerialMPM(myworld)
 {
   
-  d_nextOutputTime=0.;
-  d_SMALL_NUM_MPM=1e-200;
-  d_with_ice    = false;
-  d_with_arches = false;
-  contactModel        = 0;
-  thermalContactModel = 0;
   crackMethod         = 0; // for Fracture
-  d_min_part_mass = 3.e-15;
-  d_max_vel = 3.e105;
-  NGP     = 1;
-  NGN     = 1;
 }
 
 FractureMPM::~FractureMPM()
@@ -458,7 +448,7 @@ void FractureMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,              gan, NGP);
   if(flags->d_8or27==27){
-   t->requires(Task::OldDW, lb->pSizeLabel,          gan, NGP);
+    t->requires(Task::OldDW, lb->pSizeLabel,          gan, NGP);
   }
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel, gan, NGP);
   t->requires(Task::NewDW, lb->gTemperatureLabel,    gac, 2*NGP);
