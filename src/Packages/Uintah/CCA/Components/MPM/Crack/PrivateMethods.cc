@@ -1199,7 +1199,13 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
       }
       else { // for the nodes of non-enclosd cracks or
 	     //  non-end-nodes of enclosed cracks
-        int k1=(k-2)<minIdx ? minIdx : k-2;
+        int k1=-1;
+	if((maxIdx-minIdx+1)/2>2) { // three or more segments
+ 	  k1=(k-2)<minIdx+1 ? minIdx+1 : k-2;
+	}  
+	else { // One or two segments
+    	  k1=(k-2)<minIdx ? minIdx : k-2;
+	}  
         node1=cfSegNodes[mm][k1];
       }
       Point pt1=cx[mm][node1];
@@ -1212,7 +1218,13 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
       }
       else { // for the nodes of non-enclosd cracks or
              // non-end-nodes of enclosed cracks
-        int k2=(k+2)>maxIdx ? maxIdx : k+2;
+        int k2=-1;
+	if((maxIdx-minIdx+1)>2) { // Three or more segments
+	  k2=(k+2)>maxIdx-1 ? maxIdx-1 : k+2;
+	}  
+	else { // Onr or two segments
+	  k2=(k+2)>maxIdx ? maxIdx : k+2;	
+	}  
         node2=cfSegNodes[mm][k2];
       }
       Point pt2=cx[mm][node2];
@@ -1331,16 +1343,16 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
   }
   
   /* Task 3: Calculate bi-normals of crack plane at crack-front nodes
-             and adjust crack-plane normals to make sure the three axes
-             are perpendicular to each other.
+             and adjust tangential normals to make sure the three axes
+             are perpendicular to each other. Keep V2 unchanged.
   */
   cfSegV1[mm].clear();
   cfSegV1[mm].resize(cfNodeSize);
   for(int k=0; k<cfNodeSize; k++) {
     Vector V1=Cross(cfSegV2[mm][k],cfSegV3[mm][k]);
     cfSegV1[mm][k]=V1/V1.length();
-    Vector V2=Cross(cfSegV3[mm][k],cfSegV1[mm][k]);
-    cfSegV2[mm][k]=V2/V2.length();
+    Vector V3=Cross(cfSegV1[mm][k],cfSegV2[mm][k]);
+    cfSegV3[mm][k]=V3/V3.length();
   }
 
 }
