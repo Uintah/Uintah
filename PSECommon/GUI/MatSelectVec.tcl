@@ -80,8 +80,8 @@ itcl_class PSECommon_Matrix_MatSelectVec {
         if {[winfo exists $w]} {
 	    global $this-colMaxTCL
 	    global $this-rowMaxTCL
-	    $w.f.r config -to [set $this-colMaxTCL]
-	    $w.f.c config -to [set $this-rowMaxTCL]
+	    $w.f.r config -to [set $this-rowMaxTCL]
+	    $w.f.c config -to [set $this-colMaxTCL]
 	    puts "updating!"
 	}
     }
