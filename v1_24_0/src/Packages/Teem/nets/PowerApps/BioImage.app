@@ -180,6 +180,8 @@ class BioImageApp {
 	set cur_data_tab "Nrrd"
 	set c_vis_tab "Planes"
 
+	set execute_choose 0
+
 	### Define Tooltips
 	##########################
 	global tips
@@ -358,8 +360,16 @@ class BioImageApp {
     # We only care about "JustStarted" and "Completed" calls.
     method update_progress { which state } {
 	global mods
+	
+	set ChooseNrrd [lindex [lindex $filters(0) $modules] 5]
 
-	if {[string first "NrrdSetupTexture" $which] != -1 && $state == "JustStarted"} {
+ 	if {[string first [set ChooseNrrd] $which] != -1 && $state == "Completed"} {
+	    if {$execute_choose == 1} {
+		set ChooseNrrd2 [lindex [lindex $filters(0) $modules] 35]
+		set execute_choose 0
+		#[set ChooseNrrd2]-c needexecute
+	    }
+	} elseif {[string first "NrrdSetupTexture" $which] != -1 && $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
 	} elseif {[string first "NrrdSetupTexture" $which] != -1 && $state == "Completed"} {
@@ -437,13 +447,17 @@ class BioImageApp {
 
  		set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
  		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+ 		set Rescale [lindex [lindex $filters(0) $modules] 36] 
  		global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
  		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+		global [set Rescale]-min [set Rescale]-max
 
  		set [set NrrdSetupTexture]-maxf $max
  		set [set NrrdSetupTexture]-minf $min
  		set [set UnuJhisto]-maxs "$max nan"
  		set [set UnuJhisto]-mins "$min nan"
+		set [set Rescale]-min $min
+		set [set Rescale]-max $max
 
 		upvar \#0 $mods(ViewSlices)-min min_val 
                 setGlobal $mods(ViewSlices)-background_threshold $min_val
@@ -1036,21 +1050,25 @@ class BioImageApp {
  		# UnuJhisto axis 0 mins/maxs
  		set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
  		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+ 		set Rescale [lindex [lindex $filters(0) $modules] 36] 
 		
  		global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
  		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+		global [set Rescale]-min [set Rescale]-max
 		
  		set [set NrrdSetupTexture]-maxf $max
  		set [set NrrdSetupTexture]-minf $min
 		
  		set [set UnuJhisto]-maxs "$max nan"
  		set [set UnuJhisto]-mins "$min nan"
+		set [set Rescale]-min $min
+		set [set Rescale]-max $max
 
 		# execute modules if volume rendering enabled
 		global show_vol_ren
 		if {$show_vol_ren == 1} {
+		    [set Rescale]-c needexecute
 		    [set NrrdSetupTexture]-c needexecute
-#		    [set UnuJhisto]-c needexecute
 		}
  	    }
 
@@ -1244,7 +1262,7 @@ class BioImageApp {
 	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 813]
 	    set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 970]
 	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 485]
-#	    set m37 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 183 2398]
+            set m37 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 18 2486]
 
 
 	    # store some in mods
@@ -1254,12 +1272,12 @@ class BioImageApp {
 	    set c2 [addConnection $m12 0 $m15 0]
 	    set c3 [addConnection $m11 1 $m9 0]
 	    set c4 [addConnection $m11 1 $m22 2]
-#	    set c5 [addConnection $m16 0 $m17 0]
+	    set c5 [addConnection $m27 0 $m37 0]
 	    set c6 [addConnection $m24 0 $m19 0]
 	    set c7 [addConnection $m23 0 $m24 0]
 	    set c8 [addConnection $m20 0 $m21 0]
 	    set c9 [addConnection $m19 0 $m20 0]
-#	    set c10 [addConnection $m8 0 $m37 0]
+	    set c10 [addConnection $m37 0 $m15 1]
 #	    set c11 [addConnection $m13 0 $m9 0]
 #	    set c12 [addConnection $m11 1 $m10 0]
 	    set c13 [addConnection $m22 0 $m23 1]
@@ -1309,22 +1327,14 @@ class BioImageApp {
 	    # connect Gradient Magnitude to ViewSlices for painting
 	    set c43 [addConnection $m9 0 $m26 5]
 
-	    # more connections
-#	    set c44 [addConnection $m10 0 $m37 1]
-#	    set c45 [addConnection $m37 0 $m12 0]
-
 	    set c46 [addConnection $m26 1 $m14 0]
 
 	    # disable the volume rendering
-# 	    disableModule $m8 1
  	    disableModule $m15 1
-# 	    disableModule $m17 1
-# 	    disableModule $m18 1
 	    disableModule $m11 1
  	    disableModule $m22 1
             disableModule $m14 1
 	    disableModule $m12 1
-#	    disableModule $m13 1
 	    disableModule $m9 1
 
 	    # disable flip/permute modules
@@ -1336,10 +1346,6 @@ class BioImageApp {
 	    # set some ui parameters
 	    setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
 
-#	    setGlobal $m8-nbits {8}
-#	    setGlobal $m8-useinputmin 0
-#	    setGlobal $m8-useinputmax 0
-
 	    setGlobal $m9-nbits {8}
 	    setGlobal $m9-useinputmin 1
 	    setGlobal $m9-useinputmax 1
@@ -1347,12 +1353,6 @@ class BioImageApp {
 	    setGlobal $m11-valuesonly {0}
 	    setGlobal $m11-useinputmin {0}
 	    setGlobal $m11-useinputmax {0}
-
-#	    setGlobal $m11-nbits {8}
-#	    setGlobal $m11-useinputmin 1
-#	    setGlobal $m11-useinputmax 1
-
-#	    setGlobal $m13-measure {9}
 
 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
             setGlobal $m14-panx {0.0}
@@ -1433,9 +1433,11 @@ class BioImageApp {
 
 	    setGlobal $m32-axis 2
 
-#	    setGlobal $m37-port-index 1
+	    setGlobal $m37-isFixed 1
+	    setGlobal $m37-min 0
+	    setGlobal $m37-max 0
 
-	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 0 $m9 0 $m11 $m12 0 $m14 $m15 0 0 0 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 0]
+	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 0 $m9 0 $m11 $m12 0 $m14 $m15 0 0 0 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
 	    set filters(0) [list load $mod_list [list $m6] [list $m35 0] start end 0 0 1 "Data - Unknown"]
 
             $this build_viewers $m25 $m26
@@ -2854,7 +2856,13 @@ class BioImageApp {
                 } 
             }
             set 2D_fixed 0
+
+            # for some reason, the choosenrrds don't execute properly -- downstream
+            # ones execute before the upstream ones so a new dataset isn't propagated            
+            set execute_choose 1
+
 	    $mod-c needexecute
+
 	    set has_executed 1
 	} else {
 	    tk_messageBox -message "Invalid filename specified.  Please select a valid filename\nand click the Update button." -type ok -icon info -parent .standalone
@@ -3040,13 +3048,6 @@ class BioImageApp {
             set $m1-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
             set $m1-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]     
         } 
-#         else {
-#             set $m1-maxAxis0 "M"
-#             set $m1-maxAxis1 "M"
-# 	    set $m1-maxAxis2 "M"
-#         }
-
-        # put traces on changing these
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -3488,13 +3489,18 @@ class BioImageApp {
 	 
 	 set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
          set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+         set Rescale [lindex [lindex $filters(0) $modules] 36] 
          global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
   	 global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+  	 global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+  	 global [set Rescale]-min [set Rescale]-max
 
   	 set [set NrrdSetupTexture]-maxf $max
       	 set [set NrrdSetupTexture]-minf $min
        	 set [set UnuJhisto]-maxs "$max nan"
        	 set [set UnuJhisto]-mins "$min nan"
+         set [set Rescale]-min $min
+	 set [set Rescale]-max $max
 
          # if linked, change the ViewSlices window width and level
          global link_winlevel
@@ -3516,9 +3522,9 @@ class BioImageApp {
  	global show_vol_ren
  	if {$show_vol_ren == 1} {
    	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
-            set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+   	    set Rescale [lindex [lindex $filters(0) $modules] 36] 
+    	    [set Rescale]-c needexecute
  	    [set NrrdSetupTexture]-c needexecute
-#            [set UnuJhisto]-c needexecute
          }
      }
 
@@ -3528,9 +3534,9 @@ class BioImageApp {
 	 global link_winlevel show_vol_ren 
 	 if {$link_winlevel == 1 && $show_vol_ren == 1} {
    	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
-            set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+   	    set Rescale [lindex [lindex $filters(0) $modules] 36] 
+    	    [set Rescale]-c needexecute
  	    [set NrrdSetupTexture]-c needexecute
-#            [set UnuJhisto]-c needexecute
 	 }
      }
 
@@ -3908,7 +3914,6 @@ class BioImageApp {
              } elseif {[string first "crop_maxAxis0" $varname] != -1} {
 		 global [set UnuCrop]-maxAxis0
                  global $mods(ViewSlices)-crop_maxAxis0
-                 #set [set UnuCrop]-maxAxis0 [expr [set $mods(ViewSlices)-crop_maxAxis0]+ [lindex $pad_vals 1]] 
                  set [set UnuCrop]-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0] 
              } elseif {[string first "crop_minAxis1" $varname] != -1} {
 		 global [set UnuCrop]-minAxis1
@@ -3917,7 +3922,6 @@ class BioImageApp {
  	    } elseif {[string first "crop_maxAxis1" $varname] != -1} {
  	        global [set UnuCrop]-maxAxis1
 		global $mods(ViewSlices)-crop_maxAxis1
-		#set [set UnuCrop]-maxAxis1 [expr [set $mods(ViewSlices)-crop_maxAxis1] + [lindex $pad_vals 3]]
                  set [set UnuCrop]-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
              } elseif {[string first "crop_minAxis2" $varname] != -1} {
 		 global [set UnuCrop]-minAxis2
@@ -3926,7 +3930,6 @@ class BioImageApp {
  	    } elseif {[string first "crop_maxAxis2" $varname] != -1} {
  	        global [set UnuCrop]-maxAxis2
 		global $mods(ViewSlices)-crop_maxAxis2
-		#set [set UnuCrop]-maxAxis2 [expr [set $mods(ViewSlices)-crop_maxAxis2] + [lindex $pad_vals 5]]
                 set [set UnuCrop]-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]
              }
          }
@@ -5003,39 +5006,31 @@ class BioImageApp {
 	global mods show_vol_ren 
 
 	set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
-#	set NodeGradient [lindex [lindex $filters(0) $modules] 16]
-#	set FieldToNrrd [lindex [lindex $filters(0) $modules] 17]
 	set UnuQuantize [lindex [lindex $filters(0) $modules] 8]
 	set UnuJhisto [lindex [lindex $filters(0) $modules] 21]
         set EditColorMap2D [lindex [lindex $filters(0) $modules] 13]
         set NrrdTextureBuilder [lindex [lindex $filters(0) $modules] 11]
-#        set UnuProject [lindex [lindex $filters(0) $modules] 12]
         set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10]
+	set Rescale [lindex [lindex $filters(0) $modules] 36] 
 
         if {$show_vol_ren == 1} {
 	    disableModule [set VolumeVisualizer] 0
-#	    disableModule [set NodeGradient] 0
-#	    disableModule [set FieldToNrrd] 0
 	    disableModule [set NrrdSetupTexture] 0
 	    disableModule [set UnuQuantize] 0
 	    disableModule [set UnuJhisto] 0
 	    disableModule [set EditColorMap2D] 0
 	    disableModule [set NrrdTextureBuilder] 0
-#	    disableModule [set UnuProject] 0
 
             change_indicator_labels "Volume Rendering..."
-
+    	    [set Rescale]-c needexecute
             [set NrrdSetupTexture]-c needexecute
         } else {
 	    disableModule [set VolumeVisualizer] 1
-#	    disableModule [set NodeGradient] 1
-#	    disableModule [set FieldToNrrd] 1
 	    disableModule [set NrrdSetupTexture] 1
 	    disableModule [set UnuQuantize] 1
 	    disableModule [set UnuJhisto] 1
 	    disableModule [set EditColorMap2D] 1
 	    disableModule [set NrrdTextureBuilder] 1
-#	    disableModule [set UnuProject] 1
         }
     }
 
@@ -5140,6 +5135,12 @@ class BioImageApp {
 	}
     }
 
+    method reset_app {} {
+	global Subnet
+	foreach module $Subnet(Subnet0_Modules) {
+            disableModule $module 0
+        }
+    }
 
 
     # Application placing and size
@@ -5209,6 +5210,8 @@ class BioImageApp {
     variable axial-size
     variable sagittal-size
     variable coronal-size
+
+    variable execute_choose
 }
 
 
