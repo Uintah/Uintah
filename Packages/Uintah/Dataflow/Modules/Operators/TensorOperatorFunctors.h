@@ -40,7 +40,7 @@ struct TensorElementExtractionOp
     : m_row(row), m_column(column) { }
 
   inline double operator()(Matrix3 M)
-  { return M(m_row, m_column); }
+  { return M(m_row-1, m_column-1); }
 
   int m_row;
   int m_column;
