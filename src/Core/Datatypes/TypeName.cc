@@ -59,7 +59,7 @@ template<> const string find_type_name(double*)
 
 template<> const string find_type_name(long double*)
 {
-  static const string name = "long double";
+  static const string name = "long_double";
   return name;
 }
 
@@ -73,7 +73,7 @@ template<> const string find_type_name(short*)
 
 template<> const string find_type_name(unsigned short*)
 {
-  static const string name = "unsigned short";
+  static const string name = "unsigned_short";
   return name;
 }
 
@@ -85,7 +85,7 @@ template<> const string find_type_name(int*)
 
 template<> const string find_type_name(unsigned int*)
 {
-  static const string name = "unsigned int";
+  static const string name = "unsigned_int";
   return name;
 }
 
@@ -97,19 +97,19 @@ template<> const string find_type_name(long*)
 
 template<> const string find_type_name(unsigned long*)
 {
-  static const string name = "unsigned long";
+  static const string name = "unsigned_long";
   return name;
 }
 
 template<> const string find_type_name(long long*)
 {
-  static const string name = "long long";
+  static const string name = "long_long";
   return name;
 }
 
 template<> const string find_type_name(unsigned long long*)
 {
-  static const string name = "unsigned long long";
+  static const string name = "unsigned_long_long";
   return name;
 }
 
@@ -123,7 +123,7 @@ template<> const string find_type_name(char*)
 
 template<> const string find_type_name(unsigned char*)
 {
-  static const string name = "unsigned char";
+  static const string name = "unsigned_char";
   return name;
 }
 
