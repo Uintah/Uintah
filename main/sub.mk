@@ -23,6 +23,9 @@ LIBS :=
 ifeq ($(BUILD_PARALLEL),yes)
 LIBS := $(LIBS) -L$(GLOBUS_LIB_DIR) -lglobus_io
 endif
+ifeq ($(NEED_SONAME),yes)
+LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) -ldl -lz
+endif
 
 PROGRAM := $(PROGRAM_PSE)
 
@@ -38,6 +41,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/20 21:53:29  yarden
+# Linux port: add action for NEED_SONAME
+#
 # Revision 1.2  2000/03/20 19:39:00  sparker
 # Added VPATH support
 #
