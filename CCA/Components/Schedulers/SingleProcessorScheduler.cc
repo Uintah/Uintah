@@ -117,9 +117,11 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
 #endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts_->getTask( i );
-    dbg << "Running task: " << task->getTask()->getName() << "\n";
+    if(dbg.active())
+      dbg << "Running task: " << task->getTask()->getName() << "\n";
     task->doit(pg, dws, plain_old_dws);
-    dbg << "calling done\n";
+    if(dbg.active())
+      dbg << "calling done\n";
     task->done(dws);
 
     double delT = Time::currentSeconds()-start;
@@ -128,8 +130,9 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
     long long dummy;
     read_counters(0, &dummy, 19, &flop_count);
 #endif
-    dbg << "Completed task: " << *task->getTask()
-	<< " (" << delT << " seconds)\n";
+    if(dbg.active())
+      dbg << "Completed task: " << *task->getTask()
+	  << " (" << delT << " seconds)\n";
     //scrub(task);
     emitNode( task, start, delT, delT, flop_count );
   }

@@ -40,7 +40,8 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 	  const Array3<double>& X, CellIterator iter,
 	  const IntVector& l, const IntVector& h1, long64& flops, long64& memrefs)
 {
-  cout_doing << "CGSolver::Mult" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::Mult" << endl;
   // Center
 #if OPT
   IntVector  ll(iter.begin());
@@ -237,7 +238,8 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 	  const IntVector& l, const IntVector& h1, long64& flops,
 	  long64& memrefs, double& dotresult)
 {
-  cout_doing << "CGSolver::Mult" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::Mult" << endl;
   // Center
 #if OPT
   double dot=0;
@@ -445,7 +447,8 @@ static void Sub(Array3<double>& r, const Array3<double>& a,
 		const Array3<double>& b,
 		CellIterator iter, long64& flops, long64& memrefs)
 {
-  cout_doing << "CGSolver::Sub" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::Sub" << endl;
   for(; !iter.done(); ++iter)
     r[*iter] = a[*iter]-b[*iter];
   IntVector diff = iter.end()-iter.begin();
@@ -457,7 +460,8 @@ void Mult(Array3<double>& r, const Array3<double>& a,
 	  const Array3<double>& b,
 	  CellIterator iter, long64& flops, long64& memrefs)
 {
-  cout_doing << "CGSolver::Mult" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::Mult" << endl;
   for(; !iter.done(); ++iter)
     r[*iter] = a[*iter]*b[*iter];
   IntVector diff = iter.end()-iter.begin();
@@ -480,7 +484,8 @@ static void DivDiagonal(Array3<double>& r, const Array3<double>& a,
 static void InverseDiagonal(Array3<double>& r, const Array3<Stencil7>& A,
 			    CellIterator iter, long64& flops, long64& memrefs)
 {
-  cout_doing << "CGSolver::InverseDiagonal" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::InverseDiagonal" << endl;
   for(; !iter.done(); ++iter)
     r[*iter] = 1./A[*iter].p;
   IntVector diff = iter.end()-iter.begin();
@@ -491,7 +496,8 @@ static void InverseDiagonal(Array3<double>& r, const Array3<Stencil7>& A,
 static double L1(const Array3<double>& a, CellIterator iter, long64& flops,
 		 long64& memrefs)
 {
-  cout_doing << "CGSolver::L1" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::L1" << endl;
   double sum=0;
   for(; !iter.done(); ++iter)
     sum += Abs(a[*iter]);
@@ -504,7 +510,8 @@ static double L1(const Array3<double>& a, CellIterator iter, long64& flops,
 double LInf(const Array3<double>& a, CellIterator iter, long64& flops,
 	    long64& memrefs)
 {
-  cout_doing << "CGSolver::Linf" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::Linf" << endl;
   double max=0;
   for(; !iter.done(); ++iter)
     max = Max(max, Abs(a[*iter]));
@@ -517,7 +524,8 @@ double LInf(const Array3<double>& a, CellIterator iter, long64& flops,
 double Dot(const Array3<double>& a, const Array3<double>& b,
 	   CellIterator iter, long64& flops, long64& memrefs)
 {
-  cout_doing << "CGSolver::Dot" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::Dot" << endl;
   double sum=0;
   for(; !iter.done(); ++iter)
     sum += a[*iter]*b[*iter];
@@ -531,7 +539,8 @@ void ScMult_Add(Array3<double>& r, double s,
 		const Array3<double>& a, const Array3<double>& b,
 		CellIterator iter, long64& flops, long64& memrefs)
 {
-  cout_doing << "CGSolver::ScMult_Add" << endl;
+  if(cout_doing.active())
+    cout_doing << "CGSolver::ScMult_Add" << endl;
 #if OPT
   IntVector ll(iter.begin());
   IntVector hh(iter.end());
@@ -742,7 +751,8 @@ public:
   {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      cout_doing << "CGSolver::step2 on patch" << patch->getID()<<endl;
+      if(cout_doing.active())
+	cout_doing << "CGSolver::step2 on patch" << patch->getID()<<endl;
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
@@ -857,7 +867,8 @@ public:
   {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      cout_doing << "CGSolver::step3 on patch" << patch->getID()<<endl;
+      if(cout_doing.active())
+	cout_doing << "CGSolver::step3 on patch" << patch->getID()<<endl;
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
@@ -900,7 +911,8 @@ public:
     DataWarehouse* parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      cout_doing << "CGSolver::setup on patch " << patch->getID()<< endl;
+      if(cout_doing.active())
+	cout_doing << "CGSolver::setup on patch " << patch->getID()<< endl;
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
@@ -992,7 +1004,8 @@ public:
 	     DataWarehouse* old_dw, DataWarehouse* new_dw,
 	     Handle<CGStencil7<Types> >)
   {
-    cout_doing << "CGSolver::solve" << endl;
+    if(cout_doing.active())
+      cout_doing << "CGSolver::solve" << endl;
     double tstart = Time::currentSeconds();
     SchedulerP subsched = sched->createSubScheduler();
     DataWarehouse::ScrubMode old_dw_scrubmode = old_dw->setScrubbing(DataWarehouse::ScrubNone);
@@ -1019,7 +1032,8 @@ public:
 
     //__________________________________
     // Schedule the setup
-    cout_doing << "CGSolver::schedule setup" << endl;
+    if(cout_doing.active())
+      cout_doing << "CGSolver::schedule setup" << endl;
     Task* task = scinew Task("CGSolve setup", this, &CGStencil7<Types>::setup);
     task->requires(Task::ParentNewDW, B_label, Ghost::None, 0);
     task->requires(Task::ParentNewDW, A_label, Ghost::None, 0);
@@ -1077,7 +1091,8 @@ public:
   
       //__________________________________
       // Step 1 - requires A(parent), D(old, 1 ghost) computes aden(new)
-      cout_doing << "CGSolver::schedule Step 1" << endl;
+      if(cout_doing.active())
+	cout_doing << "CGSolver::schedule Step 1" << endl;
       task = scinew Task("CGSolve step1", this, &CGStencil7<Types>::step1);
       task->requires(Task::ParentNewDW, A_label, Ghost::None, 0);
       task->requires(Task::OldDW,       D_label, Around, 1);
@@ -1089,7 +1104,8 @@ public:
       //__________________________________
       // schedule
       // Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
-      cout_doing << "CGSolver::schedule Step 2" << endl;
+      if(cout_doing.active())
+	cout_doing << "CGSolver::schedule Step 2" << endl;
       task = scinew Task("CGSolve step2", this, &CGStencil7<Types>::step2);
       task->requires(Task::OldDW, d_label);
       task->requires(Task::NewDW, aden_label);
@@ -1112,7 +1128,8 @@ public:
       //__________________________________
       // schedule
       // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
-      cout_doing << "CGSolver::schedule Step 2" << endl;
+      if(cout_doing.active())
+	cout_doing << "CGSolver::schedule Step 2" << endl;
       task = scinew Task("CGSolve step3", this, &CGStencil7<Types>::step3);
       task->requires(Task::OldDW, D_label, Ghost::None, 0);
       task->requires(Task::NewDW, Q_label, Ghost::None, 0);
