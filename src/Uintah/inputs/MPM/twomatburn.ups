@@ -38,9 +38,7 @@
 	<MPM>
 	    <material>
                 <burn>
-                  <type>simple</type>
-                  <a>.004</a>
-                  <b>400.</b>
+                  <type>null</type>
                 </burn>
                 <density>1000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
