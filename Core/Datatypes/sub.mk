@@ -25,7 +25,6 @@ SRCS += $(SRCDIR)/Attrib.cc                 \
         $(SRCDIR)/MeshGeom.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PointCloudGeom.cc	    \
-        $(SRCDIR)/SField.cc		    \
         $(SRCDIR)/ScalarField.cc	    \
         $(SRCDIR)/ScalarFieldHUG.cc	    \
         $(SRCDIR)/ScalarFieldRG.cc          \
@@ -39,7 +38,6 @@ SRCS += $(SRCDIR)/Attrib.cc                 \
         $(SRCDIR)/Surface.cc		    \
         $(SRCDIR)/SurfaceGeom.cc	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
-        $(SRCDIR)/TField.cc		    \
 	$(SRCDIR)/TriSurfGeom.cc	    \
         $(SRCDIR)/TetMeshGeom.cc	    \
         $(SRCDIR)/TriDiagonalMatrix.cc	    \
@@ -47,7 +45,6 @@ SRCS += $(SRCDIR)/Attrib.cc                 \
         $(SRCDIR)/TriSurfGeom.cc	    \
 	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/UnstructuredGeom.cc	    \
-        $(SRCDIR)/VField.cc		    \
         $(SRCDIR)/VectorField.cc	    \
         $(SRCDIR)/VectorFieldHUG.cc	    \
         $(SRCDIR)/VectorFieldRG.cc	    \

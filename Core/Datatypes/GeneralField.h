@@ -17,7 +17,7 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/SField.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/DiscreteAttrib.h>
 #include <Core/Datatypes/TypeName.h>
 
@@ -76,6 +76,7 @@ template <class G, class A=DiscreteAttrib<double> >
   // return the min and max values
   virtual bool get_minmax(typename A::value_type &min,
 			  typename A::value_type &max);
+
 
   //////////
   // Walk the field, applying op to each node

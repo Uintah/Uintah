@@ -16,7 +16,7 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/LatticeGeom.h>
 #include <Core/Datatypes/TriSurfGeom.h>
-#include <Core/Datatypes/SField.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>

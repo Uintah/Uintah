@@ -15,7 +15,7 @@
 #ifndef SCI_project_FieldWrapper_h
 #define SCI_project_FieldWrapper_h 1
 
-#include <Core/Datatypes/SField.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Geom.h>
