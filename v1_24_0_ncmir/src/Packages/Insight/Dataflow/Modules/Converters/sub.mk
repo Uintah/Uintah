@@ -43,6 +43,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Insight/Dataflow/Modules/Converters
 
 SRCS     += \
+	$(SRCDIR)/BuildSeedVolume.cc\
 	$(SRCDIR)/CharToDouble.cc\
 	$(SRCDIR)/CharToFloat.cc\
 	$(SRCDIR)/CharToUChar.cc\
