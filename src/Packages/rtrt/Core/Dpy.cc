@@ -314,10 +314,10 @@ Dpy::checkGuiFlags()
   if( turnOffAllLights_ ){
     double left;
     if( lightoff_frame < 0 ) {
-      lightoff_frame = Time::currentSeconds();
+      lightoff_frame = SCIRun::Time::currentSeconds();
       left = 1.0;
     } else {
-      left = 1.0 - (Time::currentSeconds()-lightoff_frame)*0.2;
+      left = 1.0 - (SCIRun::Time::currentSeconds()-lightoff_frame)*0.2;
     }
 
     scene->turnOffAllLights(left);
