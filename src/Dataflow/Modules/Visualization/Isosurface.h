@@ -40,25 +40,6 @@
 
 
 namespace SCIRun {
-  class MarchingCubesAlg;
-  class NoiseAlg;
-  class SageAlg;
-  class GeomObj;
-
-class MinmaxFunctor {
-public:
-  virtual bool get( Field *, pair<double,double>& ) = 0;
-};
-
-template<class F>
-class Minmax : public MinmaxFunctor {
-public:
-  virtual bool get( Field *field, pair<double,double> &p ) {
-    F *f = dynamic_cast<F *>(field);
-    if ( !f ) return false;
-    return field_minmax( *f, p );
-  }
-};
 
 class Isosurface : public Module {
 
@@ -79,24 +60,16 @@ class Isosurface : public Module {
   GuiDouble  gui_color_g_;
   GuiDouble  gui_color_b_;
 
-  FieldHandle field_;
-  vector<GeomObj *> surface_;
-  vector<double> isovals_;
-  ColorMapHandle cmap_;
-  FieldHandle trisurf_mesh_;
+  vector<GeomObj *> surfaces_;
+  vector<double>    isovals_;
+  FieldHandle       trisurf_mesh_;
 
   //! status variables
-  int geom_id_;
-  double prev_min_;
-  double prev_max_;
-  int last_generation_;
-  int build_trisurf_;
-  bool have_ColorMap_;
-
-  //! Handles to the isosurfacing algorithms.
-  LockingHandle<MarchingCubesAlg>       mc_alg_;
-  LockingHandle<NoiseAlg>               noise_alg_;
-  LockingHandle<SageAlg>                sage_alg_;
+  int        geom_id_;
+  double     prev_min_;
+  double     prev_max_;
+  int        last_generation_;
+  int        build_trisurf_;
 
 public:
   Isosurface(GuiContext* ctx);
