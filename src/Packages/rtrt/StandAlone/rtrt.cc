@@ -29,7 +29,9 @@
 #include <Packages/rtrt/Core/Gui.h>
 
 #include <sys/stat.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #include <dlfcn.h>
 #include <stdio.h>
