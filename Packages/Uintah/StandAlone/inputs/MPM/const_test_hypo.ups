@@ -17,9 +17,10 @@
    <DataArchiver>
         <filebase>const_test_hypo.uda</filebase>
 	<outputInterval>.05</outputInterval>
-<!--
-        <save label = "NTractionZMinus"/>
--->
+        <save label = "BndyForce_zminus"/>
+        <save label = "BndyForce_zplus"/>
+        <save label = "BndyContactArea_zminus"/>
+        <save label = "BndyContactArea_zplus"/>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "StrainEnergy"/>
@@ -37,6 +38,7 @@
 
     <MPM>
 	<time_integrator>explicit</time_integrator>
+        <boundary_traction_faces>[zminus,zplus]</boundary_traction_faces> 
     </MPM>
 
     <PhysicalConstants>
