@@ -255,7 +255,7 @@ void EditFusionField::execute(){
 }
 
 CompileInfo *
-EditFusionFieldAlgo::get_compile_info(const TypeDescription *field_td)
+EditFusionFieldAlgo::get_compile_info(const TypeDescription *ftd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -264,15 +264,15 @@ EditFusionFieldAlgo::get_compile_info(const TypeDescription *field_td)
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       field_td->get_filename() + ".",
+		       ftd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       field_td->get_name());
+                       ftd->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_namespace("Fusion");
-  field_td->fill_compile_info(rval);
+  ftd->fill_compile_info(rval);
   return rval;
 }
 
