@@ -733,7 +733,7 @@ OpenGL::redraw_frame()
     pbuffer.create( dpy, screen, xres, yres, 8, 8 );
   }
 
-  if((viewwindow->doingMovie || do_hi_res)  && pbuffer.is_valid()){
+  if(viewwindow->doingMovie && pbuffer.is_valid()){
     pbuffer.makeCurrent();
     glDrawBuffer( GL_FRONT );
 
@@ -801,8 +801,7 @@ OpenGL::redraw_frame()
     }
 
 #if defined(HAVE_PBUFFER)
-    if( (pbuffer.is_current() && !viewwindow->doingMovie) ||
-	(pbuffer.is_current() && !do_hi_res) ){
+    if( pbuffer.is_current() && !viewwindow->doingMovie ){
       glXMakeCurrent(dpy, win, cx);
     }
 #endif
@@ -867,7 +866,7 @@ OpenGL::redraw_frame()
 	else
 	{
 #if defined(HAVE_PBUFFER)
-	  if(!viewwindow->doingMovie && !do_hi_res){
+	  if(!viewwindow->doingMovie){
 	    if( pbuffer.is_current() )
 	      cerr<<"pbuffer is current while not doing Movie\n";
 #endif
@@ -1170,7 +1169,7 @@ OpenGL::redraw_frame()
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
-      if( !viewwindow->doingMovie && !do_hi_res)
+      if( !viewwindow->doingMovie )
 #endif
       glXSwapBuffers(dpy, win);
 
@@ -1290,7 +1289,7 @@ OpenGL::redraw_frame()
 #endif
     }
 #if defined(HAVE_PBUFFER)
-      if( !viewwindow->doingMovie && !do_hi_res)
+      if( !viewwindow->doingMovie )
 #endif
     glXSwapBuffers(dpy, win);
   }
@@ -1376,7 +1375,7 @@ OpenGL::redraw_frame()
 	EndMpeg();
       }
       unsigned char movie[10];
-      int startDiv = 1000;
+      int startDiv = 100;
       int idx=0;
       int fi = viewwindow->curFrame;
       while (startDiv >= 1)
@@ -1640,28 +1639,10 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 #if defined(HAVE_PBUFFER)
   if( pbuffer.is_valid() && pbuffer.is_current()){
     glXMakeCurrent( dpy, win, cx );
-    glDrawBuffer( GL_BACK );
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDrawBuffer(GL_FRONT);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    // *** All because of Raster Position sillyness ****
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(0, vp[2], 0, vp[3]);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glRasterPos4f( 0, 0, 0, 1 );
-    // *************************************************
     glDrawPixels(vp[2],vp[3], GL_RGB, GL_UNSIGNED_BYTE,pxl);
-    // **** Undo Raster Position changes ***************
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    // *************************************************
-    glXSwapBuffers(dpy, win);
+    glDrawBuffer(GL_BACK);
   }
 #endif
   delete[] pxl;
@@ -2430,7 +2411,6 @@ OpenGL::StartMpeg(const string& fname)
       mpeg_options_.error << "\n";
     return;
   }
-  cerr<<"Starting Mpeg ";
 #endif // HAVE_MPEG
 }
 
@@ -2446,8 +2426,7 @@ OpenGL::AddMpegFrame()
   int width, height;
   ImVfbPtr ptr;
 
-  //  cerr<<"Adding Mpeg Frame\n";
-  cerr<<". ";
+  cerr<<"Adding Mpeg Frame\n";
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
 
@@ -2474,32 +2453,10 @@ OpenGL::AddMpegFrame()
 #if defined(HAVE_PBUFFER)
   if( pbuffer.is_valid() && pbuffer.is_current() ){
     glXMakeCurrent( dpy, win, cx ); 
-    glDrawBuffer( GL_BACK );
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDrawBuffer(GL_FRONT);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    double rasterpos[4];
-    glGetDoublev( GL_CURRENT_RASTER_POSITION , rasterpos);
-    cerr<<"1:raster position for framebuffer is "<<rasterpos[0]<<", "<<
-      rasterpos[1]<<", "<<rasterpos[2]<<", "<<rasterpos[3]<<"\n";
-
-    // *** All because of Raster Position sillyness ****
-//     glMatrixMode(GL_PROJECTION);
-//     glPushMatrix();
-//     glLoadIdentity();
-//     gluOrtho2D(0, width, 0, height);
-//     glMatrixMode(GL_MODELVIEW);
-//     glPushMatrix();
-//     glLoadIdentity();
-//     glRasterPos4f( 0, 0, 0, 1 );
-    // *************************************************
     glDrawPixels(width,height, GL_RGB, GL_UNSIGNED_BYTE,ptr);
-    // **** Undo Raster Position changes ***************
-//     glPopMatrix();
-//     glMatrixMode(GL_PROJECTION);
-//     glPopMatrix();
-//     glMatrixMode(GL_MODELVIEW);
-    // *************************************************
-    glXSwapBuffers(dpy, win);
+    glDrawBuffer(GL_BACK);
   }
 #endif
 
