@@ -7,7 +7,10 @@
 #include <Uintah/Grid/Grid.h>
 #include "NCScalarField.h"
 #include <values.h>
+#include <ostream>
 using std::vector;
+using std::cerr;
+
 
 
 namespace SCICore{
@@ -100,6 +103,8 @@ void NCScalarField<T>::AddVar( const NCVariable<T>& v, const Patch* p)
   nx = high.x() - low.x();
   ny = high.y() - low.y();
   nz = high.z() - low.z();
+
+  cerr<<"High index = "<<high<<",  low index = "<< low << endl;
 }
 
 
@@ -189,63 +194,38 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double eps,
 {
   using SCICore::Math::Interpolate;
 
-  Uintah::Box b;
   int i;
   Level::const_patchIterator r;
   for(i = 0, r = _level->patchesBegin();
       r != _level->patchesEnd(); r++, i++){
-    b = (*r)->getBox();
-    if(b.contains(p)){
-      break;
+    
+    if (i >= _vars.size())
+      return 0;
+
+    IntVector ni[8];
+    double S[8];
+    if((*r)->findCellAndWeights(p, ni, S)){
+      value=0;
+      for(int k = 0; k < 8; k++){
+	if((*r)->containsNode(ni[k])){
+	  value += _vars[i][ni[k]]*S[k];
+	} else {
+	  Level::const_patchIterator r1;
+	  int j;
+	  for(j = 0, r1 = _level->patchesBegin();
+	      r1 != _level->patchesEnd(); r1++, j++)
+	    if( (*r1)->containsNode(ni[k])){
+	      value += _vars[j][ni[k]]*S[k];
+	      break;
+	    }
+	}
+      }
+      return 1;
     }
   }
-
-  if (i >= _vars.size())
-    return 0;
-  
-  IntVector index;
-  if( !(*r)->findCell( p, index))
-    return 0;
-  
-  int ix = index.x();
-  int iy = index.y();
-  int iz = index.z();
-  int ix1 = ix+1;
-  int iy1 = iy+1;
-  int iz1 = iz+1;
-  IntVector upper = (*r)->getNodeHighIndex();
-  IntVector lower = (*r)->getNodeLowIndex();
-  Vector diag = b.upper() - b.lower();
-  Vector pn = p - b.lower();
-  double x = pn.x()*(upper.x() - lower.x()-1)/diag.x();
-  double y = pn.y()*(upper.y() - lower.y()-1)/diag.y();
-  double z = pn.z()*(upper.z() - lower.z()-1)/diag.z();
-
-
-  if (ix<0) { if (x<-eps) return 0; else ix=lower.x(); }
-    if (iy<0) { if (y<-eps) return 0; else iy=lower.y(); }
-    if (iz<0) { if (z<-eps) return 0; else iz=lower.z(); }
-    if (ix1>=upper.x()) { if (x>upper.x()-1+eps) return 0; else ix1=ix; }
-    if (iy1>=upper.y()) { if (y>upper.y()-1+eps) return 0; else iy1=iy; }
-    if (iz1>=upper.z()) { if (z>upper.z()-1+eps) return 0; else iz1=iz; }
-    double fx=x-ix;
-    double fy=y-iy;
-    double fz=z-iz;
-    typedef IntVector iv;
-    double x00=Interpolate(_vars[i][iv(ix, iy, iz)], 
-			   _vars[i][iv(ix1, iy, iz)], fx);
-    double x01=Interpolate(_vars[i][iv(ix, iy, iz1)],
-			   _vars[i][iv(ix1, iy, iz1)], fx);
-    double x10=Interpolate(_vars[i][iv(ix, iy1, iz)],
-			   _vars[i][iv(ix1, iy1, iz)], fx);
-    double x11=Interpolate(_vars[i][iv(ix, iy1, iz1)],
-			   _vars[i][iv(ix1, iy1, iz1)], fx);
-    double y0=Interpolate(x00, x10, fy);
-    double y1=Interpolate(x01, x11, fy);
-    value=Interpolate(y0, y1, fz);
-    return 1;
+  return 0;
 }
-
+ 
 
 template <class T>
 Vector NCScalarField<T>::gradient(const Point& p)
