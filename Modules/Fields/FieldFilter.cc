@@ -155,6 +155,7 @@ void FieldFilter::execute() {
     ScalarFieldHandle ifh;
     if(!iField->get(ifh))
 	return;
+    ScalarFieldRGBase *rgb=isf;
     isf=ifh->getRGBase();
     if(!isf){
 	error("FieldFilter can't deal with unstructured grids!");
@@ -177,6 +178,10 @@ void FieldFilter::execute() {
     Point p1;
     Point p2;
     isf->get_bounds(p1, p2);
+    int newFld=0;
+    if (isf != rgb) {
+	newFld=1;
+    }
     if (check_widget) {
 	// Set the sliders based on the widget parameters
 	Point center, right, down, in;
@@ -209,6 +214,8 @@ void FieldFilter::execute() {
 	range_max_x.set(maxi);
 	range_max_y.set(maxj);
 	range_max_z.set(maxk);
+    }
+    if (newFld) {
 	nx.set((int) (1./widget->GetRatioR()));
 	ny.set((int) (1./widget->GetRatioD()));
 	nz.set((int) (1./widget->GetRatioI()));
@@ -221,13 +228,6 @@ void FieldFilter::execute() {
     int max_y=range_max_y.get()-1;
     int max_z=range_max_z.get()-1;
     
-    //cerr << "min_x="<<min_x;
-    //cerr << "  min_y="<<min_y;
-    //cerr << "  min_z="<<min_z;
-    //cerr << "\nmax_x="<<max_x;
-    //cerr << "  max_y="<<max_y;
-    //cerr << "  max_z="<<max_z;
-
     Point minPt(isf->get_point(min_x, min_y, min_z));
     Point maxPt(isf->get_point(max_x, max_y, max_z));
     Point ctrPt(Interpolate(minPt, maxPt, .5));
@@ -252,7 +252,6 @@ void FieldFilter::execute() {
 	cerr << "Field Filter: SAME AS BEFORE!\n";
 	return;
     }
-
 #endif
 
     // reposition the widget
