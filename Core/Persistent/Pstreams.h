@@ -98,14 +98,17 @@ public:
 };
 
 class SCICORESHARE TextPiostream : public Piostream {
-  std::ifstream* istr;
-  std::ofstream* ostr;
+  std::istream* istr;
+  std::ostream* ostr;
   int have_peekname;
   string peekname;
+  bool ownstreams_p;
   void expect(char);
   virtual void emit_pointer(int&, int&);
 public:
   TextPiostream(const string& filename, Direction dir);
+  TextPiostream(std::istream *strm);
+  TextPiostream(std::ostream *strm);
   virtual ~TextPiostream();
   virtual string peek_class();
   virtual int begin_class(const string& name, int);
