@@ -98,7 +98,6 @@ PointCloud<Data>::type_name(int n)
   }
 } 
 
-
 template <class Data>
 PointCloud<Data>::PointCloud()
   :  GenericField<PointCloudMesh, vector<Data> >()

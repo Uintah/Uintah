@@ -146,7 +146,7 @@ DynamicLoader::create_cc(const CompileInfo &info)
   vector<string>::const_iterator iter = info.includes_.begin();
   while (iter != info.includes_.end()) {  
     if ((*iter).substr(0, 5) == STD_STR) {
-      string std_include = (*iter).substr(6, (*iter).length() -1);
+      string std_include = (*iter).substr(5, (*iter).length() -1);
       fstr << "#include <" << std_include << ">" << endl;
       using_std = true;
     } else if (*iter != "builtin")

@@ -112,6 +112,7 @@ public:
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
   bool get_gradient(Vector &, Point &);
+  virtual const TypeDescription* get_type_description() const;
 
 private:
   static Persistent* maker();
@@ -196,6 +197,28 @@ ImageField<Data>::io(Piostream &stream)
   }  
 }
 
+template <class T>
+const TypeDescription* 
+get_type_description(ImageField<T>*)
+{
+  static TypeDescription* td = 0;
+  static string name("ImageField");
+  static string path(__FILE__);
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(name, subs, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* 
+ImageField<T>::get_type_description() const 
+{
+  return SCIRun::get_type_description((ImageField<T>*)0);
+}
 
 template <class Data>
 const string

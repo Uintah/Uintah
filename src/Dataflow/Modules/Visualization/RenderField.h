@@ -135,17 +135,24 @@ template <class T>
 bool
 to_double(const T& tmp, double &val)
 {
-  val = tmp;
-  return true;
+  return false;
 }
 
 template <>
 bool
-to_double(const Vector&, double &);
+to_double(const double&, double &);
 
 template <>
 bool
-to_double(const Tensor&, double &);
+to_double(const int&, double &);
+
+template <>
+bool
+to_double(const short&, double &);
+
+template <>
+bool
+to_double(const unsigned char&, double &);
 
 template <class Fld>
 void 
@@ -194,7 +201,7 @@ RenderField<Fld>::render_nodes(const Fld *sfld,
     switch (sfld->data_at()) {
     case Field::NODE:
       {
-	typename Fld::value_type tmp = 0;
+	typename Fld::value_type tmp;
 	if (! (sfld->value(tmp, *niter) && (to_double(tmp, val)))) { 
 	  def_color = true; 
 	}
@@ -253,8 +260,8 @@ RenderField<Fld>::render_edges(const Fld *sfld,
     switch (sfld->data_at()) {
     case Field::NODE:
       {
-	typename Fld::value_type tmp1 = 0;
-	typename Fld::value_type tmp2 = 0;
+	typename Fld::value_type tmp1;
+	typename Fld::value_type tmp2;
 	if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
 	       sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2))) { 
 	  def_color = true; 
@@ -265,7 +272,7 @@ RenderField<Fld>::render_edges(const Fld *sfld,
       break;
     case Field::EDGE:
       {
-	typename Fld::value_type tmp = 0;
+	typename Fld::value_type tmp;
 	if (! (sfld->value(tmp, *eiter) && to_double(tmp, val_avg))) { 
 	  def_color = true; 
 	}
@@ -325,9 +332,9 @@ RenderField<Fld>::render_faces(const Fld *sfld,
     switch (sfld->data_at()) {
     case Field::NODE:
       {
-	typename Fld::value_type tmp1 = 0;
-	typename Fld::value_type tmp2 = 0;
-	typename Fld::value_type tmp3 = 0;
+	typename Fld::value_type tmp1;
+	typename Fld::value_type tmp2;
+	typename Fld::value_type tmp3;
 	if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
 	       sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2) &&
 	       sfld->value(tmp3, nodes[2]) && to_double(tmp3, val3))) { 
@@ -337,7 +344,7 @@ RenderField<Fld>::render_faces(const Fld *sfld,
       break;
     case Field::FACE: 
       {
-	typename Fld::value_type tmp = 0;
+	typename Fld::value_type tmp;
 	if (! (sfld->value(tmp, *fiter) && to_double(tmp, val1) && 
 	       to_double(tmp, val2) && to_double(tmp, val3))) {
 	  def_color = true; 
