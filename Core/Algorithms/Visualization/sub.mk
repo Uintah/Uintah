@@ -40,11 +40,13 @@ SRCS     += \
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/mcube2.cc		\
 	$(SRCDIR)/Noise.cc		\
+	$(SRCDIR)/NrrdTextureBuilderAlgo.cc	\
 	$(SRCDIR)/PrismMC.cc		\
 	$(SRCDIR)/QuadMC.cc		\
 	$(SRCDIR)/RenderField.cc	\
 	$(SRCDIR)/Sage.cc		\
 	$(SRCDIR)/TetMC.cc		\
+	$(SRCDIR)/TextureBuilderAlgo.cc	\
 	$(SRCDIR)/TriMC.cc		\
 	$(SRCDIR)/UHexMC.cc		\
 
@@ -52,7 +54,7 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
 	Core/Exceptions Core/Geom Core/Util Core/Geometry \
-	Core/Persistent
+	Core/Persistent Core/Volume
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
