@@ -15,6 +15,10 @@ static char *id="@(#) $Id$";
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Grid/SoleVariable.h>
 
+#include <iostream>
+using std::cerr;
+using std::endl;
+
 using Uintah::Components::Arches;
 using namespace Uintah::Grid;
 
@@ -95,7 +99,9 @@ void Arches::timeStep(double time, double dt,
   int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
 					      sched, old_dw, new_dw);
   if (!error_code) {
+#if 0
     old_dw = new_dw;
+#endif
   }
   else {
     cerr << "Nonlinear Solver didn't converge" << endl;
@@ -105,6 +111,7 @@ void Arches::timeStep(double time, double dt,
 void Arches::sched_paramInit(const LevelP& level,
 			     SchedulerP& sched, DataWarehouseP& dw)
 {
+#if 0
     for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -124,14 +131,15 @@ void Arches::sched_paramInit(const LevelP& level,
 		    CCVariable<double>::getTypeDescription());
       sched->addTask(tsk);
     }
-
   }
+#endif
 }
 
 void Arches::paramInit(const ProcessorContext*,
 		       const Region* region,
 		       const DataWarehouseP& old_dw)
 {
+#if 0
   FCVariable<Vector> velocity;
   // ....but will only compute for computational domain
   old_dw->allocate(velocity,"velocity",region, 1);
@@ -153,6 +161,7 @@ void Arches::paramInit(const ProcessorContext*,
   old_dw->put(scalar, "scalar", region, 0);
   old_dw->put(density, "density", region, 0);
   old_dw->put(viscosity, "viscosity", region, 0);
+#endif
 }
   
 
@@ -163,6 +172,9 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.16  2000/04/12 22:46:42  dav
+// changes to make it compile
+//
 // Revision 1.15  2000/04/11 19:55:51  rawat
 // modified nonlinear solver for initialization
 //
