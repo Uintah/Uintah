@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
     <title>Loading Data</title>
     <para>Upon opening BioImage, the
     first module visible in the Processing Pane is the Load Data
-    frame as seen in label 1 of <xref linkend="fig.load"/>.  This 
+    frame as seen in label 2 of <xref linkend="fig.load"/>.  This 
     tutorial will load a CT volume of a tooth.  The volume
     is stored in a format called Nrrd which means Nearly-Raw Raster
     Data.  To load the volume, select the Nrrd tab.  This will allow 
@@ -50,7 +50,7 @@ DEALINGS IN THE SOFTWARE.
       "tooth.nhdr" file.  After highlighting the proper dataset, press the
       "Set" button to load the data.  The File Selection Dialog will disapear.
       Press the green "Update" button located near the bottom of the Processing
-      Pane as show in <xref linkend="fig.load"/> labeled 2, to complete the process of
+      Pane as show in <xref linkend="fig.load"/> labeled 4, to complete the process of
       loading the data into BioImage.  Clicking the "Update" button will finalize 
       and apply the new filter rules.  Only after clicking the Update button will any
       changes made to the data be applied to the data being visualized.
@@ -138,9 +138,10 @@ DEALINGS IN THE SOFTWARE.
       only the label showing.
     </para>
 
-    <para>To add a Resample filter, click the "Resample" button.  A
+    <para>To add a Resample filter, click the "Resample" button from
+    the menu of buttons labeled 1 in <xref linkend="fig.load"/>.  A
     new window will appear immediately below the Load Data window as
-    shown in <xref linkend="fig.filter"/>.
+    shown in label 2 of <xref linkend="fig.filter"/>.
     This window allows for resampling in each dimension as well as a
     parameterized method for resampling.  To downsample this data set
     in each dimension, change the "x1" to "x0.5" in each dimension.

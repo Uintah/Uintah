@@ -128,7 +128,7 @@ cd /usr/local/SCIRun/bin
 	  launching.</phrase>
 	</textobject>
 	<imageobject>
-	  <imagedata fileref="Figures/gui-launch.gif" align="center" format="GIF"/>
+	  <imagedata fileref="Figures/gui-launch.jpg" align="center" format="JPG"/>
 	</imageobject>
 	<imageobject>
 	  <imagedata fileref="Figures/gui-launch.eps" align="center" format="EPS"/>
@@ -141,8 +141,8 @@ cd /usr/local/SCIRun/bin
   <section>
     <title>The User Interface</title>
     <para>
-      BioImage is divided into three main panes: the Processing Pane on the left, 
-      the Rendering Windows in the center, and the Visualization Pane on the right
+      BioImage is divided into three main panes: 1. Processing Pane on the left, 
+      2. Rendering Windows in the center, and 3. Visualization Pane on the right
       as labeled in <xref linkend="fig.gui-launch"/>.
       The two side panes can be detached from the Rendering Windows by clicking on 
       the pane detachment/attachment controls which are the vertical dashed lines 
