@@ -1678,6 +1678,16 @@ set mods(TendFiber) $m123
 set mods(ChooseColorMap-Fibers) $m135
 set mods(GatherPoints) $m90
 
+### Anisotropy modules
+set mods(TendAnvol-0) $m11
+set mods(TendAnvol-1) $m19
+set mods(TendAnvol-2) $m20
+set mods(TendEvecRGB) $m128
+set mods(NrrdToField-0) $m12
+set mods(NrrdToField-1) $m21
+set mods(NrrdToField-2) $m22
+set mods(NrrdToField-3) $m16
+
 
 ### Viewer
 set mods(Viewer) $m44
@@ -2194,6 +2204,12 @@ class BioTensorApp {
 	# Disable execute buttons so that only the set button
 	# can be used for NrrdReaders
 	#.ui$mods(NrrdReader1).f7.execute configure -state disabled
+
+	# Disable planar and linear anisotropy modules (1,2)
+	disableModule $mods(TendAnvol-1) 1
+	disableModule $mods(NrrdToField-1) 1
+	disableModule $mods(TendAnvol-2) 1
+	disableModule $mods(NrrdToField-2) 1
     }
 
     
@@ -5624,13 +5640,15 @@ class BioTensorApp {
 	    disable_planes_colormaps
         }
 
+	configure_anisotropy_modules
+
 	$planes_tab1.color.childsite.select.color select $which
 	$planes_tab2.color.childsite.select.color select $which
 	
         # execute 
 	global show_planes
 	
-	if {$vis_activated && $show_planes == 1} {
+	if {$vis_activated && $show_planes == 1 && !$loading} {
 	    $mods(ChooseField-ColorPlanes)-c needexecute
 	    $mods(ShowField-X)-c rerender_faces
 	    $mods(ShowField-Y)-c rerender_faces
@@ -6077,7 +6095,6 @@ class BioTensorApp {
 	    # if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    # }
-	    
 	    $mods(SamplePlane-Z)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
 	} else {
@@ -6742,12 +6759,15 @@ class BioTensorApp {
 	    disable_isosurface_colormaps
         }
 
+	configure_anisotropy_modules
+
 	$isosurface_tab1.isocolor.childsite.select.color select $which
 	$isosurface_tab2.isocolor.childsite.select.color select $which
 	
         # execute 
 	global $mods(ShowField-Isosurface)-faces-on
-	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {
+	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1 \
+		&& !$loading} {
 	    $mods(ChooseField-Isosurface)-c needexecute
 	    $mods(ShowField-Isosurface)-c rerender_faces
 	} else {
@@ -6797,12 +6817,15 @@ class BioTensorApp {
 	    set $mods(ChooseField-Isoval)-port-index 2
         } 
 
+	configure_anisotropy_modules
+
 	$isosurface_tab1.isovalcolor select $which
 	$isosurface_tab2.isovalcolor select $which
 	
         # execute 
 	global $mods(ShowField-Isosurface)-faces-on
-	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {
+	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1 \
+		&& !$loading} {
 	    $mods(ChooseField-Isoval)-c needexecute
 	} else {
 	    global exec_iso
@@ -7521,6 +7544,8 @@ class BioTensorApp {
 	    disable_glyphs_colormaps
 	}
 	
+	configure_anisotropy_modules
+
 	# sync attached/detached optionmenus
 	configure_glyphs_tabs
 
@@ -8472,6 +8497,8 @@ class BioTensorApp {
 	    set $mods(ChooseField-Fibers)-port-index 0
 	    disable_fibers_colormaps
 	}
+
+	configure_anisotropy_modules
 	
 	# sync attached/detached optionmenus
 	$fibers_tab1.rep.childsite.f1.type select $type
@@ -9039,6 +9066,63 @@ class BioTensorApp {
 		$indicatorL2 configure -text $msg
 	    }
 
+	}
+    }
+
+    # This method will make sure that out of the 4 different
+    # anisotropies available, only those needed are enabled
+    method configure_anisotropy_modules {} {
+	global mods
+	global $mods(ChooseField-Isoval)-port-index \
+	    $mods(ChooseField-Isosurface)-port-index \
+	    $mods(ChooseField-ColorPlanes)-port-index \
+	    $mods(ChooseField-Glyphs)-port-index \
+	    $mods(ChooseField-Fibers)-port-index
+
+	set tmp1 [set $mods(ChooseField-Isoval)-port-index]
+	set tmp2 [set $mods(ChooseField-Isosurface)-port-index]
+	set tmp3 [set $mods(ChooseField-ColorPlanes)-port-index]
+	set tmp4 [set $mods(ChooseField-Glyphs)-port-index]
+	set tmp5 [set $mods(ChooseField-Fibers)-port-index]
+
+	# Fractional Anisotropy
+	if {$tmp1 == 0 || $tmp2 == 0 || $tmp3 == 0 \
+		|| $tmp4 == 0 || $tmp5 == 0} {
+	    disableModule $mods(TendAnvol-0) 0
+	    disableModule $mods(NrrdToField-0) 0	    
+	} else {
+	    disableModule $mods(TendAnvol-0) 1
+	    disableModule $mods(NrrdToField-0) 1
+	}
+
+	# Linear Anisotropy
+	if {$tmp1 == 1 || $tmp2 == 1 || $tmp3 == 1 \
+		|| $tmp4 == 1 || $tmp5 == 1} {
+	    disableModule $mods(TendAnvol-1) 0
+	    disableModule $mods(NrrdToField-1) 0	    
+	} else {
+	    disableModule $mods(TendAnvol-1) 1
+	    disableModule $mods(NrrdToField-1) 1
+	}
+
+	# Planar Anisotropy
+	if {$tmp1 == 2 || $tmp2 == 2 || $tmp3 == 2 \
+		|| $tmp4 == 2 || $tmp5 == 2} {
+	    disableModule $mods(TendAnvol-2) 0
+	    disableModule $mods(NrrdToField-2) 0	    
+	} else {
+	    disableModule $mods(TendAnvol-2) 1
+	    disableModule $mods(NrrdToField-2) 1
+	}
+
+	# Principle Eigenvector
+	if {$tmp1 == 3 || $tmp2 == 3 || $tmp3 == 3 \
+		|| $tmp4 == 3 || $tmp5 == 3} {
+	    disableModule $mods(TendEvecRGB) 0
+	    disableModule $mods(NrrdToField-3) 0	    
+	} else {
+	    disableModule $mods(TendEvecRGB) 1
+	    disableModule $mods(NrrdToField-3) 1
 	}
     }
 
