@@ -108,8 +108,8 @@ private:
 
 
 
-  TCLdouble time;
-
+  TCLint time;
+  TCLdouble timeval;
 
   ArchiveIPort *in;
   ScalarFieldOPort *sfout;
