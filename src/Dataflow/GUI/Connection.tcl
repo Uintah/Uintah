@@ -552,7 +552,7 @@ proc findModulesToInsertOnConnection { conn } {
 	    lappend modules "$maybe $onum $inum"
 	}
     }
-    return [lsort $modules]
+    return $modules
 }
 
 
