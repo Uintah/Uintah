@@ -82,6 +82,7 @@ public:
 
   void SetNSlices(int s) { slices = s;}
   void SetSliceAlpha( double as){ slice_alpha = as;}
+  void SetScaleAlpha( double as){ scale_alpha = as;}
   void BuildTransferFunctions();
 
 
@@ -153,6 +154,7 @@ private:
   Point controlPoint;
   
   double slice_alpha;
+  double scale_alpha;
 
   bool cmapHasChanged;
   bool drawX, drawY, drawZ, drawView;

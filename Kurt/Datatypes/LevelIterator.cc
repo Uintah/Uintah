@@ -1,73 +1,67 @@
-#include "ROIIterator.h"
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Vector.h>
+
+//#include <SCICore/Utils/NotFinished.h>
+#include "LevelIterator.h"
 #include "Brick.h"
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 
 namespace Kurt {
 namespace Datatypes {
 
-using SCICore::Geometry::BBox;
-using SCICore::Geometry::Vector;
+using SCICore::Geometry::Point;
 
 
 
-ROIIterator::ROIIterator(const GLTexture3D* tex, Ray view,
-			 Point control):
-    GLTextureIterator( tex, view, control )
+LevelIterator::LevelIterator(const GLTexture3D* tex, Ray view,
+				 Point control, int level):
+  GLTextureIterator( tex, view, control), level( level )
 {
+
   const Octree< Brick* >* node = tex->getBonTree();
+  // SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
-    BBox box((*node)()->bbox());
     int child;
-    if( !box.inside( control )){
-      next = (*node)();
-      return;
-    }
     do {
       order.push_back( traversal( node ));
       path.push_back( node );
       child = order.back()->front();
       order.back()->pop_front();
       node = (*node)[child];
-      BBox b((*node)()->bbox());
-      if( !b.inside( control ) &&
-	(*node)()->level() == 1){
+      if( (*node)()->level() == level)
 	break;
-      }
     } while (node->type() == Octree<Brick* >::PARENT);
     
     next = (*node)();
   }
-
+  if( next == 0 ) done = true;
 }
-
-
+  
 Brick*
-ROIIterator::Start()
+LevelIterator::Start()
 {
-  return next;
-}
-
-Brick*
-ROIIterator::Next()
-{
-    // Get the last iterator
-    if( !done )
-      SetNext();
     return next;
 }
 
-bool
-ROIIterator::isDone()
+Brick*
+LevelIterator::Next()
 {
- return done;
+  // Get the last iterator
+    if( !done )
+      SetNext();
+    return next;
+
+}
+
+bool
+LevelIterator::isDone()
+{
+  return done;
 }
 
 void 
-ROIIterator::SetNext()
+LevelIterator::SetNext()
 { 
   while( path.size() != 0 && 
 	 !order.back()->size() ){
@@ -87,11 +81,8 @@ ROIIterator::SetNext()
   node = (*node)[child];
   
   while( node->type() == Octree<Brick* >::PARENT ){
-    BBox b( (*node)()->bbox() );
-    if(!b.inside( control ) &&
-	(*node)()->level() == 1){
+    if( (*node)()->level() == level)
       break;
-    }
     order.push_back( traversal( node ));
     path.push_back( node );
     child = order.back()->front();

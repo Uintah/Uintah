@@ -16,6 +16,7 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/GLMIP.cc \
 	 $(SRCDIR)/GLPlanes.cc \
 	 $(SRCDIR)/GLVolRenState.cc \
+	 $(SRCDIR)/LevelIterator.cc \
 	 $(SRCDIR)/FullRes.cc \
 	 $(SRCDIR)/FullResIterator.cc \
 	 $(SRCDIR)/LOS.cc \
@@ -47,6 +48,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2001/01/05 17:36:27  kuzimmer
+# Implemented multithreaded texture building and cleaned up some files.
+#
 # Revision 1.7  2000/12/06 04:43:02  kuzimmer
 # Added PSECore/Dataflow and PSECore/XMLUtil to PSELIBS.  Added -lmpi to LIBS.  To remove unresolved symbol warnings on compile
 #

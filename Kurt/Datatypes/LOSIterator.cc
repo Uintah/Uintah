@@ -18,14 +18,15 @@ LOSIterator::LOSIterator(const GLTexture3D* tex, Ray view,
 {
   Vector v = control - view.origin();
   Point p;
-  const Octree< Brick* >* node = (tex->bontree);
+  const Octree< Brick* >* node = tex->getBonTree();
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
     int child;
     BBox box((*node)()->bbox());
     box.PrepareIntersect( view.origin() );
-    if( !box.Intersect( view.origin(), v, p )){
+    if( !box.Intersect( view.origin(), v, p ) &&
+	(*node)()->level() == 1){
       next = (*node)();
       return;
     }
@@ -95,7 +96,8 @@ LOSIterator::SetNext()
    BBox b( (*node)()->bbox() );
    b.PrepareIntersect( view.origin() );
 
-    if(!b.Intersect( view.origin(), v, p )){
+    if(!b.Intersect( view.origin(), v, p ) &&
+	(*node)()->level() == 1){
       break;
     }
     order.push_back( traversal( node ));

@@ -55,6 +55,7 @@ extern "C" Module* make_TextureVolVis( const clString& id) {
 TextureVolVis::TextureVolVis(const clString& id)
   : Module("TextureVolVis", id, Filter), 
   alpha_scale("alpha_scale", id, this),
+  alpha_gamma("alpha_gamma", id, this),
   num_slices("num_slices", id, this),
   draw_mode("draw_mode", id, this),
   render_style("render_style", id, this),
@@ -201,7 +202,8 @@ void TextureVolVis::execute(void)
 
   //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   volren->SetNSlices( num_slices.get() );
-  volren->SetSliceAlpha( alpha_scale.get() );
+  volren->SetSliceAlpha( alpha_gamma.get() );
+  volren->SetScaleAlpha( alpha_scale.get() );
   volren->BuildTransferFunctions();
   //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   ogeom->flushViews();				  

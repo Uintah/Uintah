@@ -1,6 +1,8 @@
 #include "GLTexture3D.h"
+#include "Octree.h"
 #include "Brick.h"
 #include "VolumeUtils.h"
+#include <SCICore/Util/Assert.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -39,6 +41,8 @@ using namespace SCICore::Thread;
 using SCICore::Containers::clString;
 using SCICore::Math::Max;
 
+int GLTexture3D::max_workers = 0;
+
 void glPrintError(const string& word){
   GLenum errCode;
   const GLubyte *errString;
@@ -68,14 +72,14 @@ void GLTexture3D::io(Piostream&)
 GLTexture3D::GLTexture3D() :
   _tex(0), X(0), Y(0),
   Z(0), xmax(0), ymax(0), zmax(0), isCC(false),
-  tg(new ThreadGroup("texture group"))
+  tg(0)
 {
 }
 
 GLTexture3D::GLTexture3D(ScalarFieldRGBase *tex ) :
   _tex(tex), X(tex->nx), Y(tex->ny),
   Z(tex->nz),  xmax(128), ymax(128), zmax(128), isCC(false),
-  tg(new ThreadGroup("texture group"))
+  tg(0)
 {
   tex->get_bounds( minP, maxP );
   tex->get_minmax( _min, _max );
@@ -101,67 +105,69 @@ void GLTexture3D::SetBounds()
 
 void GLTexture3D::BuildTexture()
 {
-  cerr<<"Type = "<<_tex->getType()<<endl;
-  int max_workers = Max(Thread::numProcessors(), 8);
+//   cerr<<"Type = "<<_tex->getType()<<endl;
+  max_workers = Max(Thread::numProcessors()/2, 8);
   Semaphore* thread_sema = new Semaphore( "worker count semhpore",
 					  max_workers);  
+
+//   cerr<<"Max_worker threads = "<<max_workers<<endl;
   if( _tex->getRGDouble() ){
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
-			   _tex->getRGDouble(), 0, thread_sema); 
+			   _tex->getRGDouble(), 0, thread_sema, tg); 
 			   
   } else if( _tex->getRGFloat() ){
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
-			   _tex->getRGFloat(), 0, thread_sema); 
+			   _tex->getRGFloat(), 0, thread_sema, tg); 
 			   
   } else if( _tex->getRGInt() ) {
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
-			   _tex->getRGInt(), 0, thread_sema); 
+			   _tex->getRGInt(), 0, thread_sema, tg); 
 			   
   } else if( _tex->getRGShort() ){
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
-			   _tex->getRGShort(), 0, thread_sema); 
+			   _tex->getRGShort(), 0, thread_sema, tg); 
 			   
   } else if( _tex->getRGUchar() ){
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
-			   _tex->getRGUchar(), 0, thread_sema); 
+			   _tex->getRGUchar(), 0, thread_sema, tg); 
 
   } else if( _tex->getRGChar() ){
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
-			   _tex->getRGChar(), 0, thread_sema); 
+			   _tex->getRGChar(), 0, thread_sema, tg); 
 			   
   } else if(NCScalarField<double> *sfd =
 	    dynamic_cast<NCScalarField<double> *> (_tex)){
     cerr<<"Type = <NCScalarField<double>\n";
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfd, 0, 
-			   thread_sema);
+			   thread_sema, tg);
   } else if(NCScalarField<int> *sfi =
 	    dynamic_cast<NCScalarField<int> *> (_tex)){
     cerr<<"Type = NCScalarField<int>\n";
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfi, 0, 
-			   thread_sema);
+			   thread_sema, tg);
   } else if(NCScalarField<long> *sfl =
 	    dynamic_cast<NCScalarField<long> *> (_tex)){
     cerr<<"Type = NCScalarField<long>\n";
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfl, 0, 
-			   thread_sema);
+			   thread_sema, tg);
   } else if(CCScalarField<double> *sfd =
 	    dynamic_cast<CCScalarField<double> *> (_tex)){
     cerr<<"Type = CCScalarField<double>\n";
     isCC = true;
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfd, 0, 
-			   thread_sema);
+			   thread_sema, tg);
   } else if(CCScalarField<int> *sfi =
 	    dynamic_cast<CCScalarField<int> *> (_tex)) {
     cerr<<"Type = CCScalarField<int>\n";
     isCC = true;
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfi, 0, 
-			   thread_sema);
+			   thread_sema, tg);
   } else if(CCScalarField<long> *sfl =
 	    dynamic_cast<CCScalarField<long> *> (_tex)) {
     cerr<<"Type = CCScalarField<long>\n";
     isCC = true;
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfl, 0, 
-			   thread_sema);
+			   thread_sema, tg);
   } else {
     cerr<<"Error: cast didn't work!\n";
   }
@@ -227,7 +233,6 @@ void GLTexture3D::computeTreeDepth()
   
 }
 
-
 bool GLTexture3D::SetMaxBrickSize(int maxBrick)
 {
 
@@ -263,328 +268,6 @@ bool GLTexture3D::SetMaxBrickSize(int maxBrick)
    }
 }
 
-template <class T>
-Octree<Brick*>*
-GLTexture3D::buildBonTree(Point min, Point max,
-            int xoff, int yoff, int zoff,
-            int xsize, int ysize, int zsize,
-	    int level, T *tex, Octree<Brick*>* parent,
-	    Semaphore* thread_sema)
-{
-
-    /* The cube is numbered in the following way 
-     
-          2________6        y
-         /|        |        |  
-        / |       /|        |
-       /  |      / |        |
-      /   0_____/__4        |
-     3---------7   /        |_________ x
-     |  /      |  /         /
-     | /       | /         /
-     |/        |/         /
-     1_________5         /
-                        z  
-  */
-
-  Octree<Brick *> *node;
-
-  if (xoff > X || yoff > Y || zoff> Z){
-    node = 0;
-    return node;
-  }
-
-  Brick* brick;
-  Array3<unsigned char> *brickData;
-  // Check to make sure that we can accommodate the requested texture
-  GLint xtex =0 , ytex = 0 , ztex = 0;
-
-  if ( xsize <= xmax ) xtex = 1;
-  if ( ysize <= ymax ) ytex = 1;
-  if ( zsize <= zmax ) ztex = 1;
-
-  brickData = scinew Array3<unsigned char>();
-  int padx = 0,pady = 0,padz = 0;
-
-  if( xtex && ytex && ztex) { // we can accommodate
-    int newx = xsize, newy = ysize, newz = zsize;
-    // set the pad size for each direction
-    if (xsize < xmax){
-      padx = xmax - xsize;
-      newx = xmax;
-    }
-    if (ysize < ymax){
-      pady = ymax - ysize;
-      newy = ymax;
-    }
-    if (zsize < zmax){
-      padz = zmax - zsize;
-      newz = zmax;
-    }
-    brickData->newsize( newz, newy, newx);
-    thread_sema->down();
-    Thread *t = new Thread(new GLTexture3D::run_makeBrickData<T>(this, 
-				     thread_sema, 
-				     newx,newy,newz,
-				     xsize,ysize,zsize,
-				     xoff,yoff,zoff,
-				     tex, brickData),
-			   "makeBrickData worker",tg);
-    t->detach();
-    
-//     GLTexture3D::run_makeBrickData<T> mbd(this, 
-// 					  thread_sema, total_threads, 
-// 					  newx,newy,newz,
-// 					  xsize,ysize,zsize,
-// 					  xoff,yoff,zoff,
-// 					  tex, brickData);
-//     mbd.run();
-
-    brick = scinew Brick(min, max, padx,  pady, padz, level, brickData);
-
-    node = scinew Octree<Brick*>(brick, Octree<Brick *>::LEAF,
-				    parent );
-  } else { // we must subdivide
-
-
-    brickData->newsize( zmax, ymax, xmax);
-
-    thread_sema->down();
-    Thread *t = new Thread(new GLTexture3D::run_makeLowResBrickData<T>(this, 
-					   thread_sema,
-					   xmax, ymax, zmax,
-					   xsize, ysize, zsize,
-					   xoff, yoff, zoff, 
-					   padx, pady, padz,
-					   level, tex, brickData),
-			   "makeLowResBrickData worker", tg);
-    t->detach();
-
-//     GLTexture3D::run_makeLowResBrickData<T> mlrbd(this, 
-// 						  thread_sema, total_threads,
-// 						  xmax, ymax, zmax,
-// 						  xsize, ysize, zsize,
-// 						  xoff, yoff, zoff, 
-// 						  padx, pady, padz,
-// 						  level, tex, brickData);
-//     mlrbd.run();
-
-    brick = scinew Brick(min, max, padx, pady, padz, level, brickData);
-
-    node = scinew Octree<Brick*>(brick, Octree<Brick *>::PARENT,
-				    parent);
-
-    int sx = xmax, sy = ymax, sz = zmax, tmp;
-    tmp = xmax;
-    while( tmp < xsize){
-      sx = tmp;
-      tmp = tmp*2 -1;
-    }
-    tmp = ymax;
-    while( tmp < ysize){
-      sy = tmp;
-      tmp = tmp*2 -1;
-    }
-    tmp = zmax;
-    while( tmp < zsize){
-      sz = tmp;
-      tmp = tmp*2 -1;
-    }   
- 
-    level++;
-
-    int X2, Y2, Z2;
-    X2 = largestPowerOf2( xsize -1);
-    Y2 = largestPowerOf2( ysize -1);
-    Z2 = largestPowerOf2( zsize -1);
-
-
-    Vector diag = max - min;
-    Point mid;
-    if( Z2 == Y2 && Y2 == X2 ){mid = min + Vector(dx* (sx-1), dy* (sy-1),
-						  dz* (sz-1));
-      for(int i = 0; i < 8; i++){
-	BuildChild(i, min, mid, max, xoff, yoff, zoff,
-		    xsize, ysize, zsize, sx, sy, sz,level,tex, node, 
-			   thread_sema);
-      }
-    } else if( Z2 > Y2 && Z2 > X2 ) {
-      mid = min + Vector(diag.x(),
-			 diag.y(),
-			 dz*(sz-1));
-      
-      BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, ysize, sz, level, tex, node, 
-			   thread_sema);
-      BuildChild(1, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, ysize, sz, level, tex, node, 
-			   thread_sema);
-    } else  if( Y2 > Z2 && Y2 > X2 ) {
-      mid = min + Vector(diag.x(),
-			 dy*(sy - 1),
-			 diag.z());
-      BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, zsize, level, tex, node, 
-			   thread_sema);
-      BuildChild(2, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, zsize, level, tex, node, 
-			   thread_sema);
-    } else  if( X2 > Z2 && X2 > Y2 ) {
-      mid = min + Vector(dx*(sx-1),
-			 diag.y(),
-			 diag.z());
-      BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, zsize, level, tex, node, 
-			   thread_sema);
-      BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, zsize, level, tex, node, 
-			   thread_sema);
-    } else if( Z2 == Y2 ){
-      mid = min + Vector(diag.x(),
-			 dy * (sy - 1),
-			 dz* (sz - 1));
-      BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
-			   thread_sema);
-      BuildChild(1,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
-			   thread_sema);
-      BuildChild(2,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
-			   thread_sema);
-      BuildChild(3,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
-			   thread_sema);
-    } else if( X2 == Y2 ){
-      mid = min + Vector(dx*(sx - 1), dy*(sy-1),
-			 diag.z());
-      BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
-			   thread_sema);
-      BuildChild(2,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
-			   thread_sema);
-      BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
-			   thread_sema);
-      BuildChild(6,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
-			   thread_sema);
-    } else if( Z2 == X2 ){
-      mid = min + Vector(dx*(sx-1),
-			 diag.y(),
-			 dz*(sz-1));
-      BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
-			   thread_sema);
-      BuildChild(1,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
-			   thread_sema);
-      BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
-			   thread_sema);
-      BuildChild(5,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
-			   thread_sema);
-    }
-  }
-  return node;
-}
-
-template <class T>
-void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
-			     int xoff, int yoff, int zoff,
-			     int xsize, int ysize, int zsize,
-			     int X2, int Y2, int Z2,
-			     int level,  T* tex, Octree<Brick*>* node,
-			     Semaphore* thread_sema)
-{
-  Point pmin, pmax;
-
-  switch( i ) {
-  case 0:
-    pmin = min;
-    pmax = mid;
-    node->SetChild(0, buildBonTree(pmin, pmax, xoff, yoff, zoff,
-				   X2, Y2, Z2, level, tex, node, 
-			   thread_sema));
-    break;
-  case 1:
-    pmin = min;
-    pmax = mid;
-    pmin.z(mid.z());
-    pmax.z(max.z());
-    node->SetChild(1, buildBonTree(pmin, pmax,
-				   xoff, yoff, zoff + Z2 -1,
-				   X2, Y2, zsize-Z2+1, level, tex, node, 
-				   thread_sema));
-    break;
-  case 2:
-    pmin = min;
-    pmax = mid;
-    pmin.y(mid.y());
-    pmax.y(max.y());
-    node->SetChild(2, buildBonTree(pmin, pmax,
-				   xoff, yoff + Y2 - 1, zoff,
-				   X2, ysize - Y2 + 1, Z2, level, tex, node, 
-				   thread_sema));
-    break;
-  case 3:
-    pmin = mid;
-    pmax = max;
-    pmin.x(min.x());
-    pmax.x(mid.x());
-    node->SetChild(3, buildBonTree(pmin, pmax,
-				   xoff, yoff + Y2 - 1 , zoff + Z2 - 1,
-				   X2, ysize - Y2 + 1, zsize - Z2 + 1, level, 
-				   tex, node, 
-				   thread_sema));
-    break;
-  case 4:
-    pmin = min;
-    pmax = mid;
-    pmin.x(mid.x());
-    pmax.x(max.x());
-    node->SetChild(4, buildBonTree(pmin, pmax,
-				   xoff + X2 - 1, yoff, zoff,
-				   xsize - X2 + 1, Y2, Z2, level, tex, node, 
-				   thread_sema));
-    break;
-  case 5:
-    pmin = mid;
-    pmax = max;
-    pmin.y(min.y());
-    pmax.y(mid.y());
-    node->SetChild(5, buildBonTree(pmin, pmax,
-				   xoff + X2 - 1, yoff, zoff +  Z2 - 1,
-				   xsize - X2 + 1, Y2, zsize - Z2 + 1, level, 
-				   tex, node, 
-				   thread_sema));
-    break;
-  case 6:
-    pmin = mid;
-    pmax = max;
-    pmin.z(min.z());
-    pmax.z(mid.z());
-    node->SetChild(6, buildBonTree(pmin, pmax,
-				   xoff + X2 - 1, yoff + Y2 - 1, zoff,
-				   xsize - X2 + 1, ysize - Y2 + 1, Z2, level, 
-				   tex, node, 
-				   thread_sema));
-    break;
-  case 7:
-   pmin = mid;
-   pmax = max;
-   node->SetChild(7, buildBonTree(pmin, pmax,  xoff + X2 - 1,
-				  yoff + Y2 - 1, zoff +  Z2 - 1,
-				  xsize - X2 + 1, ysize - Y2 + 1,
-				  zsize - Z2 + 1, level, tex, node, 
-				  thread_sema));
-   break;
-  default:
-    break;
-  }
-}
 
 double
 GLTexture3D::SETVAL(double val) {
@@ -613,30 +296,15 @@ GLTexture3D::run_makeBrickData<T>::run_makeBrickData(
 }
 
 
-template <class T>	
-void					
-GLTexture3D::run_makeBrickData<T>::run() 
-{
-  int i,j,k,ii,jj,kk;
 
-  for(kk = 0, k = zoff; kk < zsize; kk++, k++)
-    for(jj = 0, j = yoff; jj < ysize; jj++, j++)
-      for(ii = 0, i = xoff; ii < xsize; ii++, i++){
-	(*bd)(kk,jj,ii) = tex3D->SETVAL( tex->grid(i,j,k) );
-  }
-  thread_sema->up();
-
-}
-
-template <class T>						
-GLTexture3D::run_makeLowResBrickData<T>::run_makeLowResBrickData(
+GLTexture3D::run_makeLowResBrickData::run_makeLowResBrickData(
 				      GLTexture3D* tex3D,
 			              Semaphore *thread,
 				      int xmax, int ymax, int zmax,
 				      int xsize, int ysize, int zsize,
 				      int xoff, int yoff, int zoff,
 				      int& padx, int& pady, int& padz,
-				      int level, T* tex,
+				      int level, Octree<Brick*>* node,
 				      Array3<unsigned char>*& bd) :
   tex3D(tex3D),
   thread_sema( thread ), 
@@ -644,89 +312,64 @@ GLTexture3D::run_makeLowResBrickData<T>::run_makeLowResBrickData(
   xsize(xsize), ysize(ysize), zsize(zsize),
   xoff(xoff), yoff(yoff), zoff(zoff),
   padx(padx), pady(pady), padz(padz),
-  level(level), tex(tex), bd(bd)
+  level(level), parent(node), bd(bd)
 {
   // constructor
 }
 
-template <class T>
 void
-GLTexture3D::run_makeLowResBrickData<T>::run() 
+GLTexture3D::run_makeLowResBrickData::run() 
 {
   using SCICore::Math::Interpolate;
 
-  double  i,j,k;
+  int  i,j,k;
   int ii,jj,kk;
   double dx, dy, dz;
 
-  if( level == 0 ){
-    dx = (double)(xsize-1)/(xmax-1.0);
-    dy = (double)(ysize-1)/(ymax-1.0);
-    dz = (double)(zsize-1)/(zmax-1.0);
-
-    int k1,j1,i1;
-    double dk,dj,di, k00,k01,k10,k11,j00,j01;
-
-    for(kk = 0, k = zoff; kk < zmax; kk++, k+=dz){
-      k1 = ((int)k + 1 >= zoff+zsize-1)?k:(int)k + 1 ;
-      if(k1 == (int)k ) { dk = 0; } else {dk = k1 - k;}
-      for(jj = 0,j = yoff; jj < ymax; jj++, j+=dy){
-	j1 = ((int)j + 1 >= yoff+ysize-1)?j:(int)j + 1 ;
-	if(j1 == (int)j) {dj = 0;} else { dj = j1 - j;} 
-	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
-	  i1 = ((int)i + 1 >= xoff+xsize-1)?i:(int)i + 1 ;
-	  if( i1 == (int)i){ di = 0;} else {di = i1 - i;}
-	  k00 = Interpolate(tex3D->SETVAL( tex->grid(i,j,k) ),
-			    tex3D->SETVAL( tex->grid(i,j,k1)),dk);
-	  k01 = Interpolate(tex3D->SETVAL( tex->grid(i1,j,k)),
-			    tex3D->SETVAL( tex->grid(i1,j,k1)),dk);
-	  k10 = Interpolate(tex3D->SETVAL( tex->grid(i,j1,k)),
-			    tex3D->SETVAL( tex->grid(i,j,k1)),dk);
-	  k11 = Interpolate(tex3D->SETVAL( tex->grid(i1,j1,k)),
-			    tex3D->SETVAL( tex->grid(i1,j1,k1)),dk);
-	  j00 = Interpolate(k00,k10,dj);
-	  j01 = Interpolate(k01,k11,dj);
-	  (*bd)(kk,jj,ii) = Interpolate(j00,j01,di);
-	}
-      }
-    }
+  if( level == 1 ){
+     thread_sema->up();
+     return;
   } else {
+    Brick *brick = 0;
+    Array3<unsigned char>* brickTexture;
+    int x,y,z;
+    for( kk = 0, k = 0; kk < zmax; kk++, k+=2){
+      if ( 2*kk >= zmax )  z = 1; else z = 0;
+      if ( 2*kk == zmax ) k = 1;
+      for( jj = 0, j = 0; jj < ymax; jj++, j+=2){
+	if( 2*jj >= ymax) y = 2; else y = 0;
+	if( 2*jj == ymax) j = 1;
+	for (ii = 0, i = 0; ii < xmax; ii++, i+=2){
+	  if( 2*ii >= xmax ) x = 4; else x = 0;
+	  if( 2*ii == xmax ) i = 1;
 
+	  brick = (*((*this->parent)[x+y+z]))();
+	  brickTexture = brick->texture();
 
-    if( xmax > xsize ) {
-      dx = 1; padx=(xmax - xsize);
-    } else {
-      dx = pow(2.0, tex3D->depth() - level);
-      if( xmax * dx > xsize){
-	padx = (xmax*dx - xsize)/dx;
-      }
-    }
-    if( ymax > ysize ) {
-      dy = 1; pady = (ymax - ysize);
-    } else {
-      dy = pow(2.0, tex3D->depth() - level);
-      if( ymax * dy > ysize){
-	pady = (ymax*dy - ysize)/dy;
-      }
-    }
-    if( zmax > zsize ) {
-      dz = 1; padz = (zmax - zsize);
-    } else {
-      dz = pow(2.0, tex3D->depth() - level);
-      if( zmax * dz > zsize){
-	padz = (zmax*dz - zsize)/dz;
-      }
-    }
-  }
-  
-  for(kk = 0, k = zoff; kk < zmax; kk++, k+=dz){
-      for(jj = 0, j = yoff; jj < ymax; jj++, j+=dy){
-	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
-	  if( i < xoff + xsize && j < yoff + ysize && k < zoff + zsize){
-	    (*bd)(kk,jj,ii) = tex3D->SETVAL( tex->grid(i,j,k) );
+	  // This code does simple subsampling.  Uncomment the 
+	  // center section to perform averaging.
+	  if( brick == 0 ){
+	    (*bd)(kk,jj,ii) = (unsigned char)0;
+//////////// Uncomment for texel averageing
+// 	  } else if((ii > 0 && ii < xmax - 1) &&
+// 	     (jj > 0 && jj < ymax - 1) &&
+// 	     (kk > 0 && kk < zmax - 1)){
+// 	    (*bd)(kk,jj,ii) = (0.5*(*brickTexture)(k,j,i)           +
+// 			       0.083333333*(*brickTexture)(k,j,i-1) +
+// 			       0.083333333*(*brickTexture)(k,j,i+1) +
+// 			       0.083333333*(*brickTexture)(k,j-1,i) +
+// 	                       0.083333333*(*brickTexture)(k,j+1,i) +
+// 			       0.083333333*(*brickTexture)(k-1,j,i) +
+// 			       0.083333333*(*brickTexture)(k+1,j,i));
+///////////
+	  } else {
+	    // texel subsampling--always select border cells.
+	    // leave uncommented even if averaging is uncommented.
+	    (*bd)(kk,jj,ii) = (*brickTexture)(k,j,i);
 	  }
 	}
       }
+    }
   }    
   thread_sema->up();
 }

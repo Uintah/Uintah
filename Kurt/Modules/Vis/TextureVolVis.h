@@ -62,6 +62,7 @@ private:
   TCLint draw_mode;
   TCLint render_style;
   TCLdouble alpha_scale;
+  TCLdouble alpha_gamma;
   TCLint interp_mode;
   GLVolumeRenderer *volren;
 
