@@ -14,13 +14,15 @@ CLASS
 GENERAL INFORMATION
    CompLocalDynamicProcedure.h - declaration of the class
    
-   Author: Zhaosheng Gao (zgao@crsim.utah.edu)
+   Author: Rajesh Rawat (rawat@crsim.utah.edu)
       
-   Creation Date:   Feb 1, 2005
+   Creation Date:   Mar 1, 2000
+   
+   Last Modified by Zhaosheng Gao (zgao@crsim.utah.edu) on  Apr 05, 2005
    
    C-SAFE 
    
-   Copyright U of U 2005
+   Copyright U of U 2000-2005
 
 KEYWORDS
 

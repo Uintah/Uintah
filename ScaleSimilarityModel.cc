@@ -71,44 +71,6 @@ ScaleSimilarityModel::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("ScaleSimilarity");
   db->require("cf", d_CF);
 }
-void
-ScaleSimilarityModel::initializeSmagCoeff( const ProcessorGroup*,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset* ,
-                                                DataWarehouse*,
-                                                DataWarehouse* new_dw,
-                                                const TimeIntegratorLabel* ) {
-  int archIndex = 0; // only one arches material
-  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    CCVariable<double> Cs; //smag coeff 
-    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);  
-    Cs.initialize(0.0);
-  }
-}
-
-//****************************************************************************
-// Schedule initialization of the smag coeff sub model 
-//****************************************************************************
-void 
-ScaleSimilarityModel::sched_initializeSmagCoeff( SchedulerP& sched, 
-                                                      const PatchSet* patches,
-                                                      const MaterialSet* matls,
-                                                      const TimeIntegratorLabel* timelabels )
-{
-  string taskname =  "ScaleSimilarityModel::initializeSmagCoeff" + timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
-                          &ScaleSimilarityModel::initializeSmagCoeff,
-                          timelabels);
-
-  tsk->computes(d_lab->d_CsLabel);
-  sched->addTask(tsk, patches, matls);
-}
-
-
 
 
 //****************************************************************************
