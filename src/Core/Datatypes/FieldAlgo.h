@@ -71,28 +71,32 @@ template<class Field, class T>
 bool
 field_minmax( Field &field, pair<T,T>& minmax )
 {
-  typedef typename Field::value_type value_type;
-  pair<value_type,value_type> local_minmax;
+  typedef typename Field::value_type value_type; 
+  typedef pair<value_type,value_type> Minmax;
+
+  Minmax *tmp;
   
-  if ( !field.get( "minmax", local_minmax ) ) {
+  if ( !field.get( "minmax", tmp ) ) {
     // compute minmax
     typename Field::fdata_type::iterator i = field.fdata().begin();
+
     if ( i == field.fdata().end() ) 
       return false;// error! empty field
 
-    local_minmax.first = local_minmax.second = *i;
+    tmp = new Minmax;
+    tmp->first = tmp->second = *i;
     for (++i; i != field.fdata().end(); i++ ) {
       value_type v = *i;
-      if ( v < local_minmax.first ) local_minmax.first = v;
-      else if ( v > local_minmax.second ) local_minmax.second = v;
+      if ( v < tmp->first ) tmp->first = v;
+      else if ( v > tmp->second ) tmp->second = v;
     }
 
     // cache in the field properties
-    field.store( "minmax", local_minmax );
+    field.store( "minmax", tmp );
   }
-
-  minmax.first = T(local_minmax.first);
-  minmax.second = T(local_minmax.second);
+  
+  minmax.first = T(tmp->first);
+  minmax.second = T(tmp->second);
 
   return true;
 }
