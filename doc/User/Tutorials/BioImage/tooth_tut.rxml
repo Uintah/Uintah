@@ -311,16 +311,30 @@ DEALINGS IN THE SOFTWARE.
 	    The "window width" and "level" controls can be used to emphasise data values in Viewers. The default
 	    "level" (or center value) is the center value of the dataset, and the "range" (range of displayed values)
 	    is the whole dataset.
-	    With the default window and level, all values in the dataset are visible in the viewer. Chaning the 
-	    "window width" and "level" may allo us to view certain features of the dataset, like
+	    With the default window and level, all values in the dataset are visible in the viewer. Changing the 
+	    "window width" and "level" may allow us to view certain features of the dataset, like
 	    bone for example.
 	  </para>
+	  <figure id="fig.windowWidthLevelControlsDefault"><title>Window Width and Level controls</title>
+	  <mediaobject>
+	    <textobject>
+	      <phrase>Window Width and Level controls.</phrase>
+	    </textobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/window_level_sliders.eps" align="center" format="EPS"/>
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/window_level_sliders.jpg" align="center" format="JPG"/>
+	    </imageobject>
+	  </mediaobject>
+	  </figure>	
 	  <para>
 	    The easiest way to change the "window width" and "level" is using the slider in the Planes pane (image here).
 	    There are two sliders which can be used to set the window width and level. It is also possible to type
 	    in a numerical value for the window with and level by clicking on the digit displayed next to the 
 	    slider and typing in a value.
 	  </para>
+
 	  <para>
 	    Using the left mouse button inside of the 2D viewer also changes the window and level. Left clicking 
 	    and dragging the mouse up and down inside of the 2D viewer changes the level.
@@ -330,10 +344,10 @@ DEALINGS IN THE SOFTWARE.
 	  </para>
 	  <para>
 	    The tooth dataset has data values ranging from 0 to 1300, and corresponding default level of 650, 
-	    and a default window width of 1300. If we set the window with to a very narrow 77, and 
+	    and a default window width of 1300. If we set the window width to a very narrow 77, and 
 	    set the window level to 942, we see that the enamel becomes the only material visible in the viewer window.
 	  </para>
-	  <figure id="fig.window_level_control_enamel">
+	  <figure id="fig.enamel_window_level_control">
 	    <title>Window and Level Sliders</title>
 	    <mediaobject>
 	      <textobject>
@@ -347,7 +361,7 @@ DEALINGS IN THE SOFTWARE.
 	      </imageobject>
 	    </mediaobject>
 	  </figure>
-	  <figure id="fig.window_level_control_enamel">
+	  <figure id="fig.enamel_window_level_view">
 	    <title>Enamel epmhasized with window and level</title>
 	    <mediaobject>
 	      <textobject>
