@@ -2102,6 +2102,7 @@ PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched, const PatchSet* pat
     tsk->requires(Task::NewDW, d_lab->d_uVelNormLabel);
     tsk->requires(Task::NewDW, d_lab->d_vVelNormLabel);
     tsk->requires(Task::NewDW, d_lab->d_wVelNormLabel);
+    tsk->requires(Task::NewDW, d_lab->d_rhoNormLabel);
   }
 
   sched->addTask(tsk, patches, matls);
