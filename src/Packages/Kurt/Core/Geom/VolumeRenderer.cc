@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <sci_defs.h>
+#include <sci_defs/ogl_defs.h>
 #include <Packages/Kurt/Core/Geom/VolumeRenderer.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomOpenGL.h>

@@ -3,7 +3,7 @@
  * Real time ray-tracer
  */
 
-#include <sci_defs.h> // For HAVE_OOGL
+#include <sci_defs/ogl_defs.h> // For HAVE_OOGL
 #if defined(HAVE_OOGL)
 #undef HAVE_OOGL
 #endif
