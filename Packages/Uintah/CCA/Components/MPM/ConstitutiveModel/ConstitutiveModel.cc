@@ -238,6 +238,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   return velGrad;
 }
 
+// Calculate velocity gradient for 27 noded interpolation (for FRACTURE)
 Matrix3
 ConstitutiveModel::computeVelocityGradient(const Patch* patch,
                                            const double* oodx,
@@ -274,6 +275,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   return velGrad;
 }
 
+// Calculate velocity gradient for 27 noded interpolation (for FRACTURE)
 Matrix3
 ConstitutiveModel::computeVelocityGradient(const Patch* patch,
                                            const double* oodx,
@@ -306,12 +308,30 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   return velGrad;
 }
 
-// Convert J-integral into stress intensity factors
+// Convert J-integral into stress intensity (for FRACTURE)
 void 
 ConstitutiveModel::ConvertJToK(const MPMMaterial*,
      const Vector&,const Vector&,const Vector&,Vector& SIF)
 {
   SIF=Vector(-9999.,-9999.,-9999.);
+}
+
+// Determine crack-propagating direction (for FRACTURE)
+double
+ConstitutiveModel::GetPropagationDirection(const double& KI,
+                                           const double& KII)
+{
+  double PI=3.141592654;
+  return PI;
+}
+
+// Detect if crack propagtes (for FRACTURE)
+short
+ConstitutiveModel::CrackSegmentPropagates(const double& KI,
+                                          const double& KII)
+{
+  enum {NO=0, YES};
+  return NO;
 }
 
 // Calculate polar decomposition using Simo page 244
