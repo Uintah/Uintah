@@ -30,6 +30,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Math/MinMax.h>
 
 
 using namespace Uintah;
@@ -332,24 +333,24 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 						   &velocityVars,
 						   &constVelocityVars);
     }
-    d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
-					    &velocityVars, &constVelocityVars);
     int out_celltypeval = d_boundaryCondition->outletCellType();
-    if (!(out_celltypeval==-10))
+//    if (!(out_celltypeval==-10))
     d_boundaryCondition->addPresGradVelocityOutletBC(pc, patch, index, cellinfo,
 						     delta_t, &velocityVars,
 						     &constVelocityVars);
+    d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
+					    &velocityVars, &constVelocityVars);
 
     double maxAbsU = 0.0;
     double maxAbsV = 0.0;
     double maxAbsW = 0.0;
-    double temp_absU, temp_absV, temp_absW;
     IntVector ixLow;
     IntVector ixHigh;
     
     switch (index) {
     case Arches::XDIR:
 
+  //velocityVars.uVelRhoHat.print(cout);
       ixLow = patch->getSFCXFORTLowIndex();
       ixHigh = patch->getSFCXFORTHighIndex();
     
@@ -359,8 +360,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
               IntVector currCell(colX, colY, colZ);
 
-	      temp_absU = Abs(velocityVars.uVelRhoHat[currCell]);
-	      if (temp_absU > maxAbsU) maxAbsU = temp_absU;
+	      maxAbsU = Max(Abs(velocityVars.uVelRhoHat[currCell]), maxAbsU);
           }
         }
       }
@@ -378,8 +378,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
               IntVector currCell(colX, colY, colZ);
 
-	      temp_absV = Abs(velocityVars.vVelRhoHat[currCell]);
-	      if (temp_absV > maxAbsV) maxAbsV = temp_absV;
+	      maxAbsV = Max(Abs(velocityVars.vVelRhoHat[currCell]), maxAbsV);
           }
         }
       }
@@ -397,8 +396,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
               IntVector currCell(colX, colY, colZ);
 
-	      temp_absW = Abs(velocityVars.wVelRhoHat[currCell]);
-	      if (temp_absW > maxAbsW) maxAbsW = temp_absW;
+	      maxAbsW = Max(Abs(velocityVars.wVelRhoHat[currCell]), maxAbsW);
           }
         }
       }
@@ -499,12 +497,11 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 
   if (d_pressure_correction)
-  if ((timelabels->integrator_step_name == "BEEmulation2")||
-      (timelabels->integrator_step_name == "BEEmulation3")) 
-    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   else
-    tsk->requires(Task::OldDW, timelabels->pressure_guess, 
+    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -628,7 +625,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
   }
   maxAbsU = mxAbsU;
-  maxAbsV = mxAbsW;
+  maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
 
   for (int p = 0; p < patches->size(); p++) {
@@ -658,7 +655,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
     else {
       old_values_dw = new_dw;
-      new_dw->get(constVelocityVars.old_density, d_lab->d_densityTempLabel, 
+      old_values_dw->get(constVelocityVars.old_density, d_lab->d_densityTempLabel, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
     old_values_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
@@ -682,12 +679,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 
     if (d_pressure_correction)
-    if ((timelabels->integrator_step_name == "BEEmulation2")||
-        (timelabels->integrator_step_name == "BEEmulation3")) 
-      new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      old_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     else
-      old_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
+      new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #ifdef divergenceconstraint
@@ -812,7 +808,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
 	new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,
 			       matlIndex, patch);
-	velocityVars.uVelRhoHat.copy(constVelocityVars.uVelocity,
+	velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
 				     velocityVars.uVelRhoHat.getLowIndex(),
 				     velocityVars.uVelRhoHat.getHighIndex());
 
@@ -824,7 +820,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
 	new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,
 			       matlIndex, patch);
-	velocityVars.vVelRhoHat.copy(constVelocityVars.vVelocity,
+	velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
 				     velocityVars.vVelRhoHat.getLowIndex(),
 				     velocityVars.vVelRhoHat.getHighIndex());
 
@@ -836,7 +832,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
 	new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,
 			       matlIndex, patch);
-	velocityVars.wVelRhoHat.copy(constVelocityVars.wVelocity,
+	velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
 				     velocityVars.wVelRhoHat.getLowIndex(),
 				     velocityVars.wVelRhoHat.getHighIndex());
 
@@ -1228,7 +1224,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
 					  &velocityVars, &constVelocityVars);
-    d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo,
+    d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo, delta_t,
 					     &velocityVars, &constVelocityVars);
     int out_celltypeval = d_boundaryCondition->outletCellType();
     if (!(out_celltypeval==-10))
@@ -1553,9 +1549,13 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
         IntVector xminusyminusCell(colX-1, colY-1, colZ);
         IntVector xminuszminusCell(colX-1, colY, colZ-1);
 
+ 	if (cellType[xminusCell] == press_celltypeval)
+	   new_uvel[currCell] = new_uvel[xplusCell];
+	else
 	   new_uvel[currCell] = (factor_old*old_uvel[currCell]*
 		(old_density[currCell]+old_density[xminusCell]) +
 		factor_new*new_uvel[currCell]*
@@ -1597,6 +1597,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector xpluszminusCell(colX+1, colY, colZ-1);
         IntVector xplusplusCell(colX+2, colY, colZ);
 
+ 	if (cellType[xplusCell] == press_celltypeval)
+           new_uvel[xplusCell] = new_uvel[currCell];
+	else
 	   new_uvel[xplusCell] = (factor_old*old_uvel[xplusCell]*
 		(old_density[xplusCell]+old_density[currCell]) +
 		factor_new*new_uvel[xplusCell]*
@@ -1635,9 +1638,13 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
 	IntVector yminusCell(colX, colY-1, colZ);
+	IntVector yplusCell(colX, colY+1, colZ);
         IntVector yminusxminusCell(colX-1, colY-1, colZ);
         IntVector yminuszminusCell(colX, colY-1, colZ-1);
 
+ 	if (cellType[yminusCell] == press_celltypeval)
+	   new_vvel[currCell] = new_vvel[yplusCell];
+	else
 	   new_vvel[currCell] = (factor_old*old_vvel[currCell]*
 		(old_density[currCell]+old_density[yminusCell]) +
 		factor_new*new_vvel[currCell]*
@@ -1679,6 +1686,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector ypluszminusCell(colX, colY+1, colZ-1);
         IntVector yplusplusCell(colX, colY+2, colZ);
 
+ 	if (cellType[yplusCell] == press_celltypeval)
+	   new_vvel[yplusCell] = new_vvel[currCell];
+	else
 	   new_vvel[yplusCell] = (factor_old*old_vvel[yplusCell]*
 		(old_density[yplusCell]+old_density[currCell]) +
 		factor_new*new_vvel[yplusCell]*
@@ -1717,9 +1727,13 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
 	IntVector zminusCell(colX, colY, colZ-1);
+	IntVector zplusCell(colX, colY, colZ+1);
         IntVector zminusxminusCell(colX-1, colY, colZ-1);
         IntVector zminusyminusCell(colX, colY-1, colZ-1);
 
+ 	if (cellType[zminusCell] == press_celltypeval)
+	   new_wvel[currCell] = new_wvel[zplusCell];
+	else
 	   new_wvel[currCell] = (factor_old*old_wvel[currCell]*
 		(old_density[currCell]+old_density[zminusCell]) +
 		factor_new*new_wvel[currCell]*
@@ -1762,6 +1776,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector zplusyminusCell(colX, colY-1, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
 
+ 	if (cellType[zplusCell] == press_celltypeval)
+	   new_wvel[zplusCell] = new_wvel[currCell];
+	else
 	   new_wvel[zplusCell] = (factor_old*old_wvel[zplusCell]*
 		(old_density[zplusCell]+old_density[currCell]) +
 		factor_new*new_wvel[zplusCell]*

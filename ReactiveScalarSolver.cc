@@ -256,7 +256,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       new_dw->get(mxAbsW, timelabels->maxabsw_in);
     }
     maxAbsU = mxAbsU;
-    maxAbsV = mxAbsW;
+    maxAbsV = mxAbsV;
     maxAbsW = mxAbsW;
   }
 
@@ -525,7 +525,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
   }
   maxAbsU = mxAbsU;
-  maxAbsV = mxAbsW;
+  maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
 
   for (int p = 0; p < patches->size(); p++) {
@@ -601,7 +601,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 					delta_t, maxAbsU, maxAbsV, maxAbsW);
 
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
-				        &reactscalarVars,&constReactscalarVars);
+				        &reactscalarVars,&constReactscalarVars, delta_t);
 
   }
 }
