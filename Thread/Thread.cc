@@ -125,24 +125,21 @@ void Thread::niceAbort() {
         char action;
         Thread* s=Thread::currentThread();
         if(s->abort_handler){
-    	action=s->abort_handler->thread_abort(s);
+	    action=s->abort_handler->thread_abort(s);
         } else {
-    	fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-    	fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname);
-    	fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
-    	fflush(stderr);
-    	char buf[100];
-    	int fd=dup(fileno(stdin));
-    	FILE* fp=fdopen(fd, "r");
-    	while(fgets(buf, 100, fp) == 0){
-    	    if(errno != EINTR){
-    		fprintf(stderr, "\nCould not read response, exiting\n");
-    		buf[0]='e';
-    		break;
-    	    }
-    	}
-    	fclose(fp);
-    	action=buf[0];
+	    fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
+	    fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname);
+	    fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
+	    fflush(stderr);
+	    char buf[100];
+	    while(read(fileno(stdin), buf, 100) <= 0){
+		if(errno != EINTR){
+		    fprintf(stderr, "\nCould not read response, exiting\n");
+		    buf[0]='e';
+		    break;
+		}
+	    }
+	    action=buf[0];
         }
         char command[500];
         switch(action){
