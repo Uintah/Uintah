@@ -35,3 +35,13 @@ void Surface::io(Piostream& stream) {
     Pio(stream, name);
     stream.end_class();
 }
+
+TriSurface* Surface::getTriSurface()
+{
+    if(rep==TriSurf)
+	return (TriSurface*)this;
+    else
+	return 0;
+}
+
+    
