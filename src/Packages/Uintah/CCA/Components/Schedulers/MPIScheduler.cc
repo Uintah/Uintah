@@ -106,7 +106,7 @@ MPIScheduler::verifyChecksum()
 }
 
 void
-MPIScheduler::compile( const ProcessorGroup* pg, bool scrub_new, bool scrub_old)
+MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
   TAU_PROFILE("MPIScheduler::compile()", " ", TAU_USER); 
 
@@ -134,9 +134,6 @@ MPIScheduler::compile( const ProcessorGroup* pg, bool scrub_new, bool scrub_old)
   releasePort("load balancer");
 
   dts_->assignMessageTags(graph.getTasks());
-  int me=pg->myrank();
-  dts_->computeLocalTasks(me);
-  dts_->createScrublists(scrub_new, scrub_old);
 
   verifyChecksum();
 

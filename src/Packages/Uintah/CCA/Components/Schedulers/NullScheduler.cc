@@ -58,7 +58,7 @@ NullScheduler::advanceDataWarehouse(const GridP& grid)
 }
 
 void
-NullScheduler::compile( const ProcessorGroup * pg, bool scrub_new, bool scrub_old )
+NullScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
   if( dts_ )
     delete dts_;
@@ -84,9 +84,6 @@ NullScheduler::compile( const ProcessorGroup * pg, bool scrub_new, bool scrub_ol
   releasePort("load balancer");
 
   dts_->assignMessageTags(graph.getTasks());
-  int me=pg->myrank();
-  dts_->computeLocalTasks(me);
-  dts_->createScrublists(scrub_new, scrub_old);
 }
 
 void

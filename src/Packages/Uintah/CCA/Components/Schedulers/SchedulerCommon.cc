@@ -224,11 +224,31 @@ SchedulerCommon::get_new_dw()
   return dws_[ Task::NewDW ];
 }
 
-void SchedulerCommon::
-getExpectedExtents(const VarLabel* label, const Patch* patch,
-		   IntVector& lowIndex, IntVector& highIndex) const
+const vector<const Patch*>* SchedulerCommon::
+getSuperPatchExtents(const VarLabel* label, const Patch* patch,
+		     Ghost::GhostType gtype, int numGhostCells,
+		     IntVector& lowIndex, IntVector& highIndex) const
 {
-  m_ghostOffsetVarMap.getExtents(label, patch, lowIndex, highIndex);
+  const SuperPatch* connectedPatchGroup =
+    m_locallyComputedPatchVarMap.getConnectedPatchGroup(label, patch);
+  if (connectedPatchGroup == 0)
+    return 0;
+  
+  SuperPatch::Region extents = connectedPatchGroup->getRegion();
+
+  // expand to cover the entire connected patch group
+  for (int i = 0; i < connectedPatchGroup->getBoxes().size(); i++) {
+    // get the minimum extents containing both the expected ghost cells
+    // to be needed and the given ghost cells.
+    const Patch* patch = connectedPatchGroup->getBoxes()[i];
+    m_ghostOffsetVarMap.getExtents(label, patch, gtype, numGhostCells,
+				   lowIndex, highIndex);
+    extents = extents.enclosingRegion(SuperPatch::Region(lowIndex, highIndex));
+  }
+  
+  lowIndex = extents.low_;
+  highIndex = extents.high_;
+  return &connectedPatchGroup->getBoxes();
 }
 
 void
@@ -277,5 +297,27 @@ void SchedulerCommon::scrub(const DetailedTask* task)
   for(const ScrubItem* s=task->getScrublist();s!=0;s=s->next){
     if(dws_[s->dw])
       dws_[s->dw]->scrub(s->var);
+  }
+}
+
+void SchedulerCommon::compile( const ProcessorGroup * pg, bool scrub_new,
+			       bool scrub_old)
+{
+  actuallyCompile(pg);
+  if (dts_ != 0) {
+    dts_->computeLocalTasks(pg->myrank());
+    dts_->createScrublists(scrub_new, scrub_old);
+    
+    // figure out the locally computed patches for each variable.
+    for (int i = 0; i < dts_->numLocalTasks(); i++) {
+      const DetailedTask* dt = dts_->localTask(i);
+      for(const Task::Dependency* comp = dt->getTask()->getComputes();
+	  comp != 0; comp = comp->next){
+	constHandle<PatchSubset> patches =
+	  comp->getPatchesUnderDomain(dt->getPatches());
+	m_locallyComputedPatchVarMap.addComputedPatchSet(comp->var,
+							 patches.get_rep());
+      }
+    }
   }
 }

@@ -158,10 +158,16 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
     internalDependencyLock("DetailedTask Internal Dependencies"),
     scrublist(0), resourceIndex(-1)
 {
-  if(patches)
+  if(patches) {
+    // patches and matls must be sorted
+    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end()));
     patches->addReference();
-  if(matls)
+  }
+  if(matls) {
+    // patches and matls must be sorted
+    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end()));    
     matls->addReference();
+  }
 }
 
 DetailedTask::~DetailedTask()

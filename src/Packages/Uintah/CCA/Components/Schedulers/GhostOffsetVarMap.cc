@@ -19,22 +19,24 @@ void GhostOffsetVarMap::includeOffsets(const VarLabel* var,
 }
 
 void GhostOffsetVarMap::getExtents(const VarLabel* var, const Patch* patch,
+				   Ghost::GhostType gtype, int numGhostCells,
 				   IntVector& lowIndex,
 				   IntVector& highIndex) const
 {
   IntVector lowOffset, highOffset;
   Patch::VariableBasis basis =
     Patch::translateTypeToBasis(var->typeDescription()->getType(), true);
+  Offsets offsets; // defaults to (0,0,0), (0,0,0)
   Map::const_iterator foundIter = map_.find(var);
-  if (foundIter == map_.end()) {
-    // if no offsets are specified, use {0,0,0} as default for both.
-    lowOffset = IntVector(0, 0, 0);
-    highOffset = IntVector(0, 0, 0);
+  if (foundIter != map_.end()) {
+    offsets = (*foundIter).second;
   }
-  else {
-    (*foundIter).second.getOffsets(lowOffset, highOffset);
-  }
+
+  Patch::getGhostOffsets(var->typeDescription()->getType(), gtype,
+			 numGhostCells, lowOffset, highOffset);
+  offsets.encompassOffsets(lowOffset, highOffset);
   
+  offsets.getOffsets(lowOffset, highOffset);
   patch->computeExtents(basis, lowOffset, highOffset, lowIndex, highIndex);  
 }
 

@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.h>
 #include <iosfwd>
 
 class DOM_Document;
@@ -59,8 +60,8 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual void initialize();
-       
-    virtual void compile( const ProcessorGroup * pc, bool scrub_new, bool scrub_old=true ) = 0;
+
+    void compile( const ProcessorGroup * pg,  bool scrub_new, bool scrub_old=true );
 
     //////////
     // Insert Documentation Here:
@@ -82,9 +83,18 @@ WARNING
 
     // Get the expected extents that may be needed for a particular variable
     // on a particular patch (which should include expected ghost cells.
-    virtual void
-    getExpectedExtents(const VarLabel* label, const Patch* patch,
-		       IntVector& lowIndex, IntVector& highIndex) const;
+    //virtual void
+    //getExpectedExtents(const VarLabel* label, const Patch* patch,
+    //	       IntVector& lowIndex, IntVector& highIndex) const;
+
+    // Get the SuperPatch (set of connected patches making a larger rectangle)
+    // for the given label and patch and find the largest extents encompassing
+    // the expected ghost cells and requested ghost cells for each of the
+    // patches.
+    virtual const vector<const Patch*>*
+    getSuperPatchExtents(const VarLabel* label, const Patch* patch,
+			 Ghost::GhostType gtype, int numGhostCells,
+			 IntVector& lowIndex, IntVector& highIndex) const;
 
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
@@ -92,6 +102,8 @@ WARNING
     typedef map< string, list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap();
   protected:
+    virtual void actuallyCompile( const ProcessorGroup * pc ) = 0;
+    
     void makeTaskGraphDoc(const DetailedTasks* dt,
 			  int rank = 0);
     void emitNode(const DetailedTask* dt, double start, double duration,
@@ -121,6 +133,7 @@ WARNING
     ofstream* memlogfile;
     bool emit_taskgraph;
     GhostOffsetVarMap m_ghostOffsetVarMap;
+    LocallyComputedPatchVarMap m_locallyComputedPatchVarMap;
   };
 } // End namespace Uintah
 
