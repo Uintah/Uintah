@@ -83,8 +83,11 @@ void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
 {
    from.push_back(bElBarLabel);
    from.push_back(lb->pDeformationMeasureLabel);
+   from.push_back(lb->pStressLabel);
+
    to.push_back(bElBarLabel_preReloc);
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
+   to.push_back(lb->pStressLabel_preReloc);
 }
 
 void CompNeoHook::computeStableTimestep(const Patch* patch,
