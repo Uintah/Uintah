@@ -38,7 +38,7 @@ using std::ostream;
 
 namespace SCIRun {
 
-BaseVariable::BaseVariable( const clString& name,
+BaseVariable::BaseVariable( const string& name,
 			    ConstraintSolver* s, const Scheme scheme,
 			    const Point& value )
 : name(name), data(value, VarCore::Rigid), solver(s),
@@ -48,7 +48,7 @@ BaseVariable::BaseVariable( const clString& name,
 }
 
 
-BaseVariable::BaseVariable( const clString& name,
+BaseVariable::BaseVariable( const string& name,
 			    ConstraintSolver* s, const Scheme scheme,
 			    const Real value )
 : name(name), data(value, VarCore::Rigid), solver(s),

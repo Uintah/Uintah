@@ -41,16 +41,16 @@ namespace SCIRun {
 
 class PSECORESHARE CenterConstraint : public BaseConstraint {
 public:
-   CenterConstraint( const clString& name,
+   CenterConstraint( const string& name,
 		     const Index numSchemes,
 		     PointVariable* center,
 		     PointVariable* p1, PointVariable* p2 );
-   CenterConstraint( const clString& name,
+   CenterConstraint( const string& name,
 		     const Index numSchemes,
 		     PointVariable* center,
 		     PointVariable* p1, PointVariable* p2,
 		     PointVariable* p3 );
-   CenterConstraint( const clString& name,
+   CenterConstraint( const string& name,
 		     const Index numSchemes,
 		     PointVariable* center,
 		     PointVariable* p1, PointVariable* p2,

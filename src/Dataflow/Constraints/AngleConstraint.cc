@@ -50,7 +50,7 @@ static DebugSwitch ac_debug("Constraints", "Angle");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-AngleConstraint::AngleConstraint( const clString& name,
+AngleConstraint::AngleConstraint( const string& name,
 				  const Index numSchemes,
 				  PointVariable* center, PointVariable* end1,
 				  PointVariable* end2, PointVariable* p,

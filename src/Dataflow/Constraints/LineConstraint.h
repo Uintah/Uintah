@@ -39,7 +39,7 @@ namespace SCIRun {
 
 class PSECORESHARE LineConstraint : public BaseConstraint {
 public:
-   LineConstraint( const clString& name,
+   LineConstraint( const string& name,
 		   const Index numSchemes,
 		   PointVariable* p1, PointVariable* p2,
 		   PointVariable* p3 );

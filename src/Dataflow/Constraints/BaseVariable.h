@@ -36,7 +36,10 @@
 
 #include <Dataflow/Constraints/VarCore.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/String.h>
+#include <string>
+
+using std::string;
+
 
 namespace SCIRun {
 
@@ -58,9 +61,9 @@ class PSECORESHARE BaseVariable {
    friend class BaseConstraint;
    friend class ConstraintSolver;
 public:
-   BaseVariable( const clString& name, ConstraintSolver* s, const Scheme scheme,
+   BaseVariable( const string& name, ConstraintSolver* s, const Scheme scheme,
 		 const Point& initialValue );
-   BaseVariable( const clString& name, ConstraintSolver* s, const Scheme scheme,
+   BaseVariable( const string& name, ConstraintSolver* s, const Scheme scheme,
 		 const Real initialValue );
    ~BaseVariable();
 
@@ -86,11 +89,11 @@ public:
 
    void print( std::ostream& os );
 
-   inline const clString& GetName() const { return name; }
+   inline const string& GetName() const { return name; }
    inline int GetNumConstraints() const { return numconstraints; }
 
 private:
-   clString name;
+   string name;
 
    VarCore data;
 

@@ -39,7 +39,7 @@ namespace SCIRun {
 
 class PSECORESHARE PlaneConstraint : public BaseConstraint {
 public:
-   PlaneConstraint( const clString& name,
+   PlaneConstraint( const string& name,
 		    const Index numSchemes,
 		    PointVariable* p1, PointVariable* p2,
 		    PointVariable* p3, PointVariable* p4);

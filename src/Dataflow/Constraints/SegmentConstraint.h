@@ -39,7 +39,7 @@ namespace SCIRun {
 
 class PSECORESHARE SegmentConstraint : public BaseConstraint {
 public:
-   SegmentConstraint( const clString& name,
+   SegmentConstraint( const string& name,
 		      const Index numSchemes,
 		      PointVariable* end1, PointVariable* end2,
 		      PointVariable* p );
