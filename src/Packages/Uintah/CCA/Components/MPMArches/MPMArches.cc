@@ -67,6 +67,7 @@ MPMArches::MPMArches(const ProcessorGroup* myworld)
   d_arches      = scinew Arches(myworld);
   d_SMALL_NUM = 1.e-100;
   nofTimeSteps = 0;
+  //  cutCellLabel = 0;
 }
 
 // ****************************************************************************
@@ -3464,3 +3465,41 @@ bool MPMArches::needRecompile(double time, double dt,
 			      const GridP& grid) {
   return d_recompile;
 }
+
+namespace Uintah {
+
+  static MPI_Datatype makeMPI_cutcell()
+  {
+    ASSERTEQ(sizeof(cutcell), sizeof(double)*12);
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 12, 12, MPI_DOUBLE, &mpitype);
+    MPI_Type_commit(&mpitype);
+    return mpitype;
+  }
+  
+  const TypeDescription* fun_getTypeDescription(cutcell*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+                              "cutcell", true, 
+                              &makeMPI_cutcell);
+    }
+    return td;
+  }
+  
+} // namespace Uintah
+
+//______________________________________________________________________
+//  
+namespace SCIRun {
+
+  void swapbytes( Uintah::cutcell& c) {
+    double *p = c.d_cutcell;
+    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  }
+  
+} // namespace SCIRun
