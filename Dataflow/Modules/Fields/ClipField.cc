@@ -136,7 +136,7 @@ ClipField::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
-    error("Unable to initialize " +name + "'s iport.");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
@@ -154,7 +154,7 @@ ClipField::execute()
   // Maybe get clip field.
   FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
   if (!cfp) {
-    error("Unable to initialize " + name + "'s iport\n");
+    error("Unable to initialize iport 'Clip Field'.");
     return;
   }
   FieldHandle cfieldhandle;
@@ -223,7 +223,7 @@ ClipField::execute()
     GeometryOPort *ogport=0;
     ogport = (GeometryOPort*)get_oport("Selection Widget");
     if (!ogport) {
-      error("Unable to initialize " + name + "'s oport.");
+      error("Unable to initialize oport 'Selection Widget'.");
       return;
     }
     ogport->addObj(widget_group, "ClipField Selection Widget",
@@ -328,7 +328,7 @@ ClipField::execute()
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     if (!ofield_port) {
-      error("Unable to initialize " + name + "'s oport.");
+      error("Unable to initialize oport 'Output Field'.");
       return;
     }
     

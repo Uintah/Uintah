@@ -155,7 +155,7 @@ NrrdCrop::execute()
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {
-    error("Error: empty Nrrd\n");
+    error("Empty input Nrrd.");
     return;
   }
   
