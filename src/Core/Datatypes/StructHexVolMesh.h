@@ -29,12 +29,14 @@
  */
 
 /*
-  A sturctured grid is a dataset with regular topology but with irregular geometry.
+  A sturctured grid is a dataset with regular topology but with irregular 
+  geometry.
+
   The grid may have any shape but can not be overlapping or self-intersecting.
   
-  The topology of a structured grid is represented using a 2D, or 3D vector with
-  the points being stored in an index based array. The faces (quadrilaterals) and
-  cells (Hexahedron) are implicitly define based based upon their indexing.
+  The topology of a structured grid is represented using 2D, or 3D vector with
+  the points being stored in an index based array. The faces (quadrilaterals)
+  and cells (Hexahedron) are implicitly define based based upon their indexing.
 
   Structured grids are typically used in finite difference analysis.
 
@@ -83,6 +85,14 @@ public:
   void get_center(Point &, const Face::index_type &) const {}
   void get_center(Point &, const Cell::index_type &) const;
 
+  double get_size(Node::index_type idx) const;
+  double get_size(Edge::index_type idx) const;
+  double get_size(Face::index_type idx) const;
+  double get_size(Cell::index_type idx) const;
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
   bool locate(Node::index_type &, const Point &);
   bool locate(Edge::index_type &, const Point &) const { return false; }
   bool locate(Face::index_type &, const Point &) const { return false; }
@@ -99,9 +109,6 @@ public:
   { get_center(point, index); }
   void set_point(const Node::index_type &index, const Point &point);
 
-  void get_normal(Vector &vector, const Node::index_type &index) const
-  { ASSERTFAIL("not implemented") }
-
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
 
@@ -111,11 +118,6 @@ public:
 			    Vector& g5, Vector& g6, Vector& g7)
   { ASSERTFAIL("not implemented") }
 
-  //void compute_edges();
-  //void compute_faces();
-  //void compute_node_neighbors();
-  void compute_grid();
-
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
@@ -124,6 +126,7 @@ public:
   virtual const TypeDescription *get_type_description() const;
 
 private:
+  void compute_grid();
   double inside8_p(Cell::index_type i, const Point &p) const;
 
   Array3<Point> points_;

@@ -153,6 +153,24 @@ ImageMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
   }
 }
 
+int
+ImageMesh::get_valence(Edge::index_type idx) const
+{
+  
+  const int j_idx = idx - (ni_-1) * nj_;
+  if (j_idx >= 0)
+  {
+    const unsigned int i = j_idx / (nj_ - 1);
+    return (i == 0 || i == ni_ - 1) ? 1 : 2;
+  }
+  else
+  {
+    const unsigned int j = idx / (ni_ - 1);
+    return (j == 0 || j == nj_ - 1) ? 1 : 2;
+  }
+}
+
+
 //! return all face_indecies that overlap the BBox in arr.
 void
 ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox)
