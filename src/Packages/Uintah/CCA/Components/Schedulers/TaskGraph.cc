@@ -622,8 +622,28 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     DetailedTask* task = dt->getTask(i);
     for(Task::Dependency* comp = task->task->getComputes();
 	comp != 0; comp = comp->next){
-      const PatchSubset* patches = intersection(comp->patches, task->patches);
-      const MaterialSubset* matls = intersection(comp->matls, task->matls);
+      const PatchSubset* patches;
+      switch(comp->patches_dom){
+      case Task::NormalDomain:
+	patches = intersection(comp->patches, task->patches);
+        break;
+      case Task::OutOfDomain:
+	patches = comp->patches;
+	break;
+      default:
+	throw InternalError("Unknown patches_dom type");
+      }
+      const MaterialSubset* matls;
+      switch(comp->matls_dom){
+      case Task::NormalDomain:
+	matls = intersection(comp->matls, task->matls);
+	break;
+      case Task::OutOfDomain:
+	matls = comp->matls;
+	break;
+      default:
+	throw InternalError("Unknown matls_dom type");
+      }
       if(!patches && !matls)
 	ct.remembercomp(task, comp, 0, 0); // Reduction task
       else if(!patches->empty() && !matls->empty())
@@ -651,10 +671,30 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       if(dbg.active())
 	dbg << "req: " << *req << '\n';
 
-      const PatchSubset* patches = intersection(req->patches, task->patches);
+      const PatchSubset* patches;
+      switch(req->patches_dom){
+      case Task::NormalDomain:
+	patches = intersection(req->patches, task->patches);
+        break;
+      case Task::OutOfDomain:
+	patches = req->patches;
+	break;
+      default:
+	throw InternalError("Unknown patches_dom type");
+      }
+      const MaterialSubset* matls;
+      switch(req->matls_dom){
+      case Task::NormalDomain:
+	matls = intersection(req->matls, task->matls);
+	break;
+      case Task::OutOfDomain:
+	matls = req->matls;
+	break;
+      default:
+	throw InternalError("Unknown matls_dom type");
+      }
       if(patches)
 	patches->addReference();
-      const MaterialSubset* matls = intersection(req->matls, task->matls);
       if(matls)
 	matls->addReference();
       if(patches && !patches->empty() && matls && !matls->empty()){
