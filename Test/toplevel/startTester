@@ -202,6 +202,10 @@ else
   ID=`date +%m%d%y`
 fi
 
+if [ "$USER" != "" ]; then
+    ID="$ID"-"$USER"
+fi
+
 if [ $USE_TREE != "new" ]; then
 # use the SCIRun specified on the command line
     cd "$USE_TREE"
