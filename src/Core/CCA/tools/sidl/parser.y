@@ -37,7 +37,7 @@ extern int lineno;
 #include <iostream>
 
  using namespace std;
-
+ 
 %}
 
 %union {
@@ -51,6 +51,7 @@ extern int lineno;
   ScopedName* scoped_identifier;
   Class* c_class;
   Class::Modifier class_modifier;
+  DistributionArray* distributionarray;
   Enum* c_enum;
   Enumerator* enumerator;
   struct {
@@ -60,7 +61,10 @@ extern int lineno;
   } class_inherit;
   bool boolean;
   ScopedNameList* scoped_identifier_list;
-  MethodList* method_list;
+  struct {
+    MethodList* method_list;
+    DistributionArrayList* distarray_list;
+  } statement_list;
   Method* method;
   Method::Modifier method_modifier;
   Method::Modifier2 method_modifiers2;
@@ -85,6 +89,7 @@ extern int lineno;
 %token CLASS
 %token COPY
 %token DCOMPLEX
+%token DISTRIBUTION
 %token DOUBLE
 %token ENUM
 %token EXTENDS
@@ -121,14 +126,15 @@ extern int lineno;
 %type<class_modifier> class_modifier
 %type<definition> definition
 %type<definition_list> definition_star
+%type<distributionarray> distribution
 %type<enumerator> enumerator
 %type<c_enum> enumerator_list enum
 %type<interface> interface
 %type<scoped_identifier_list> import_star
 %type<scoped_identifier> import
 %type<method> method class_method
-%type<method_list> methods method_star
-%type<method_list> class_methods class_method_star
+%type<statement_list> statements statements_star
+%type<statement_list> class_statements class_statement_star
 %type<method_modifier> method_modifier
 %type<method_modifiers2> method_modifiers2
 %type<mode> mode
@@ -194,7 +200,7 @@ definition_star: /* Empty */
 		 $$=new DefinitionList();
 	       }
                |
-	       definition_star definition
+ 	       definition_star definition
 	       {
 		 $$=$1;
 		 $$->add($2);
@@ -238,7 +244,20 @@ definition:    class
 	       {
 		 $$=$1;
 	       }
+               |
+	       /* Not in SIDL spec but added for MxN soln. purposes */
+	       distribution
+               {
+		 $$=$1;
+               }
 	       ;
+
+distribution:  DISTRIBUTION ARRAY IDENTIFIER '<' type opt_comma_number '>' ';'
+               {
+		 ArrayType* arr_t = new ArrayType($5,$6);
+		 $$=new DistributionArray(curfile,lineno,$3,arr_t);
+               }
+               ;
 
 package:       PACKAGE scoped_identifier '{' definition_star '}' opt_semi
 	       {
@@ -289,11 +308,11 @@ dot_identifier_star: /* Empty */
 		     ;
 
 
-class:	       class_modifier CLASS IDENTIFIER class_inherit class_methods opt_semi
+class:	       class_modifier CLASS IDENTIFIER class_inherit class_statements opt_semi
 	       {
 		 $$=new Class(curfile, lineno, $1, $3,
 			      $4.class_extends, $4.class_implementsall,
-			      $4.class_implements, $5);
+			      $4.class_implements, $5.method_list, $5.distarray_list);
 	       }
 	       ;
 
@@ -399,28 +418,37 @@ enumerator: IDENTIFIER
 	    }
             ;
 
-interface:     INTERFACE IDENTIFIER interface_extends methods opt_semi
+interface:     INTERFACE IDENTIFIER interface_extends statements opt_semi
 	       {
-		 $$=new Interface(curfile, lineno, $2, $3, $4);
+		 $$=new Interface(curfile, lineno, $2, $3, $4.method_list, $4.distarray_list);
 	       }
 	       ;
 
-class_methods: '{' class_method_star '}'
-		{
-		  $$=$2;
-		}
-		;
 
-class_method_star: /* Empty */
+class_statements: '{' class_statement_star '}'
+		  {
+		    $$=$2;
+		  }
+		  ;
+
+class_statement_star: /* Empty */
 		   {
-		     $$=new MethodList();
+		     $$.method_list = new MethodList();
+		     $$.distarray_list = new DistributionArrayList();
 		   }
 		   |
-		   class_method_star class_method
+		   class_statement_star class_method
 		   {
 		     $$=$1;
-		     $$->add($2);
+		     ($$.method_list)->add($2);
 		   }
+                   |
+                   /* Not in SIDL spec but added for MxN soln. purposes */
+                   class_statement_star distribution
+                   {
+		     $$=$1;
+		     ($$.distarray_list)->add($2);
+                   }
                    ;
 
 interface_extends: /* Empty */
@@ -463,29 +491,38 @@ method_modifier: /* Empty */
 		 }
 		 ;
 
-methods: '{' method_star '}'
-	 {
-	   $$=$2;
-	 }
-	 ;
+statements: '{' statements_star '}'
+	    {
+	      $$=$2;
+	    }
+	    ;
 
-method_star: /* Empty */
-	     {
-	       $$=new MethodList();
-             }
-	     |
-	     method_star method
-	     {
-	       $$=$1;
-	       $$->add($2);
-             }
-	     ;
+statements_star: /* Empty */
+	         {
+	           $$.method_list = new MethodList();
+		   $$.distarray_list = new DistributionArrayList();  
+                 }
+	         |
+	         statements_star method
+	         {
+	           $$=$1;
+	           ($$.method_list)->add($2);
+                 }
+                 |
+		 /* Not in SIDL spec but added for MxN soln. purposes */
+                 statements_star distribution
+                 {
+		   $$=$1;
+		   ($$.distarray_list)->add($2);
+                 }
+	         ; 
 
 method: return_type IDENTIFIER arguments method_modifiers2 opt_throws_clause ';'
 	{
 	  $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $3, $4, $5);
 	}
 	;
+      
 
 method_modifiers2: /* Empty */
                   {

@@ -107,7 +107,7 @@ void Interface::staticCheck(SymbolTable* names)
       if(s->getType() != Symbol::InterfaceType){
 	cerr << curfile << ':' << lineno
 	     << ": (103) Interface extends a non-interface: " 
-	     << (*iter)->getName() << '\n';;
+	     << (*iter)->getName() << '\n';
 	exit(1);
       }
       (*iter)->bind(s);
@@ -121,6 +121,7 @@ void Interface::staticCheck(SymbolTable* names)
   if(mymethods){
     mymethods->setInterface(this);
     mymethods->staticCheck(symbols);
+    detectRedistribution();
     vector<Method*> allmethods;
     gatherMethods(allmethods);
     checkMethods(allmethods);
@@ -142,6 +143,7 @@ void Interface::gatherSymbols(SymbolTable* names)
     case Symbol::MethodType:
     case Symbol::EnumType:
     case Symbol::EnumeratorType:
+    case Symbol::DistArrayType:
       cerr << curfile << ':' << lineno 
 	   << ": (100) Re-definition of " << names->fullname()+"."+name << " as interface\n";
       exit(1);
@@ -152,6 +154,7 @@ void Interface::gatherSymbols(SymbolTable* names)
   n=new Symbol(name);
   names->insert(n);
   symbols=new SymbolTable(names, name);
+  mydistarrays->gatherSymbols(symbols);
   n->setType(Symbol::InterfaceType);
   n->setDefinition(this);
 }
@@ -211,6 +214,7 @@ void Class::staticCheck(SymbolTable* names)
   if(mymethods){
     mymethods->setClass(this);
     mymethods->staticCheck(symbols);
+    detectRedistribution();
     vector<Method*> allmethods;
     gatherMethods(allmethods);
     checkMethods(allmethods);
@@ -227,6 +231,7 @@ void Class::gatherSymbols(SymbolTable* names)
     case Symbol::MethodType:
     case Symbol::EnumType:
     case Symbol::EnumeratorType:
+    case Symbol::DistArrayType:
       cerr << curfile << ':' << lineno 
 	   << ": (105) Re-definition of " << names->fullname()+"."+name << " as class\n";
       exit(1);
@@ -242,6 +247,7 @@ void Class::gatherSymbols(SymbolTable* names)
   n=new Symbol(name);
   names->insert(n);
   symbols=new SymbolTable(names, name);
+  mydistarrays->gatherSymbols(symbols);
   n->setType(Symbol::ClassType);
   n->setDefinition(this);
 }
@@ -328,6 +334,7 @@ void Method::staticCheck(SymbolTable* names)
     case Symbol::ClassType:
     case Symbol::EnumType:
     case Symbol::EnumeratorType:
+    case Symbol::DistArrayType:
       cerr << curfile << ':' << lineno
 	   << ": (113) Internal error - Re-definition of " << names->fullname()+"."+name << " as a method\n";
       exit(1);
@@ -428,6 +435,7 @@ void Method::staticCheck(SymbolTable* names)
       case Symbol::InterfaceType:
       case Symbol::EnumType:
       case Symbol::EnumeratorType:
+      case Symbol::DistArrayType:
 	cerr << curfile << ':' << lineno
 	     << ": (120) Method throws a non-class: "
 	     << (*iter)->getName() << '\n';
@@ -528,6 +536,7 @@ void NamedType::staticCheck(SymbolTable* names) const
   case Symbol::ClassType:
   case Symbol::InterfaceType:
   case Symbol::EnumType:
+  case Symbol::DistArrayType:
     /* Ok... */
     break;
   case Symbol::PackageType:
@@ -643,6 +652,7 @@ void Enum::gatherSymbols(SymbolTable* names)
     case Symbol::MethodType:
     case Symbol::ClassType:
     case Symbol::EnumeratorType:
+    case Symbol::DistArrayType:
       cerr << curfile << ':' << lineno 
 	   << ": (128) Re-definition of " << names->fullname()+"."+name << " as enum\n";
       exit(1);
@@ -676,6 +686,7 @@ void Enumerator::gatherSymbols(SymbolTable* names)
     case Symbol::MethodType:
     case Symbol::ClassType:
     case Symbol::EnumType:
+    case Symbol::DistArrayType:
       cerr << curfile << ':' << lineno 
 	   << ": (130) Re-definition of " << names->fullname()+"."+name << " as enumerator\n";
       exit(1);
@@ -692,3 +703,103 @@ void Enumerator::gatherSymbols(SymbolTable* names)
   n->setType(Symbol::EnumeratorType);
   n->setEnumerator(this);
 }
+
+void DistributionArray::gatherSymbols(SymbolTable* names)
+{
+  Symbol* n=names->lookup(name, false);
+  if(n){
+    switch(n->getType()){
+    case Symbol::InterfaceType:
+    case Symbol::PackageType:
+    case Symbol::MethodType:
+    case Symbol::ClassType:
+    case Symbol::EnumType:
+    case Symbol::EnumeratorType:
+      cerr << curfile << ':' << lineno 
+	   << ": (130) Re-definition of " << names->fullname()+"."+name << " as distribution array\n";
+      exit(1);
+      break;
+    case Symbol::DistArrayType:
+      cerr << curfile << ':' << lineno
+	   << ": (131) Re-definition of distrtibution array " << names->fullname()+"."+name << '\n';
+      exit(1);
+      break;
+    }
+  }
+
+  n=new Symbol(name);
+  names->insert(n);
+  n->setType(Symbol::DistArrayType); 
+  n->setDefinition(this);
+}
+
+void DistributionArray::staticCheck(SymbolTable* names)
+{
+}
+
+void DistributionArrayList::staticCheck(SymbolTable* names) const
+{
+}
+
+void DistributionArrayList::gatherSymbols(SymbolTable* names) const
+{
+  for(vector<DistributionArray*>::const_iterator iter=list.begin();iter != list.end(); iter++){
+    (*iter)->gatherSymbols(names);
+  }
+}
+
+
+bool ArrayType::detectRedistribution() { return false; }
+
+bool BuiltinType::detectRedistribution() { return false; }
+
+bool NamedType::detectRedistribution() 
+{
+  Symbol::Type t = name->getSymbol()->getType(); 
+  if(t == Symbol::DistArrayType) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+bool Argument::detectRedistribution() 
+{
+  return (type->detectRedistribution());
+}
+
+bool ArgumentList::detectRedistribution() 
+{
+  bool redis = false;
+  for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+    if ((*iter)->detectRedistribution()) redis = true;
+  }
+  return redis;
+}
+
+bool Method::detectRedistribution()
+{
+  if (args->detectRedistribution()) {
+    doRedistribution = true;
+    return true;
+  }
+  else
+    return false;
+}
+
+bool MethodList::detectRedistribution() 
+{
+  bool redis = false;
+  for(vector<Method*>::const_iterator iter=list.begin();iter != list.end();iter++){
+    if ((*iter)->detectRedistribution()) redis = true;
+  }
+  return redis;
+}
+
+void CI::detectRedistribution()
+{
+  if (mymethods->detectRedistribution())
+    doRedistribution = true;
+}
+

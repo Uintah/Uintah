@@ -65,8 +65,19 @@ DESCRIPTION
     Object_proxy(const URL&);
 
     //////////
+    // Private constructor from an array of URLs
+    // (parallel component case)
+    Object_proxy(const int urlc, const URL urlv[], int mysize, int myrank);
+
+    //////////
+    // Private constructor from an vector of URLs
+    // (parallel component case)
+    Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank);
+
+    //////////
     // Destructor
     virtual ~Object_proxy();
+
   private:
   };
 } // End namespace SCIRun

@@ -17,7 +17,7 @@
 
 
 /*
- *  Reference.h: A serializable "pointer" to an object
+ *  PingPong_impl.h: Test client for PIDL
  *
  *  Written by:
  *   Steven G. Parker
@@ -28,48 +28,30 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include "Reference.h"
-#include <Core/CCA/Component/PIDL/TypeInfo.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
-using namespace SCIRun;
+#include <testprograms/Component/pingpongArr/PingPong_impl.h>
+#include <Core/Util/NotFinished.h>
 
-Reference::Reference()
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+
+using namespace PingPong_ns;
+using namespace std;
+
+PingPong_impl::PingPong_impl()
 {
-  chan = PIDL::getSpChannel();
-  d_vtable_base=TypeInfo::vtable_invalid;    
 }
 
-Reference::Reference(const Reference& copy)
-  :d_vtable_base(copy.d_vtable_base), par_size(copy.par_size), par_rank(copy.par_rank)
+PingPong_impl::~PingPong_impl()
 {
-  chan = (copy.chan)->SPFactory(false);
 }
 
-Reference::~Reference(){
-  if (chan != NULL) {
-    delete chan;
-    chan = NULL;
-  }
-}
-
-Reference& Reference::operator=(const Reference& copy)
+int PingPong_impl::pingpong(const CIA::array1<int>& arg)
 {
-  d_vtable_base=copy.d_vtable_base;
-  chan = (copy.chan)->SPFactory(false);
-  par_rank = copy.par_rank;
-  par_size = copy.par_size;
-  return *this;
+  int sum = 0;
+  for(unsigned int i = 0; i < arg.size() ; i++)
+    sum += arg[i];
+  return sum;
 }
-
-int Reference::getVtableBase() const
-{
-    return d_vtable_base;
-}
-
-
-
-
-
-
-
-

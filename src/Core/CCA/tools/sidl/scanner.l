@@ -35,6 +35,7 @@ integer [0-9]+
 "class"		return CLASS;
 "copy"          return COPY;
 "dcomplex"	return DCOMPLEX;
+"distribution"  return DISTRIBUTION;
 "double"	return DOUBLE;
 "enum"          return ENUM;
 "extends"	return EXTENDS;
@@ -120,4 +121,23 @@ int yywrap()
 }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

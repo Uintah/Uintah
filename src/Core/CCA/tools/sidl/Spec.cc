@@ -158,9 +158,10 @@ string ArgumentList::fullsignature() const
 }
 
 CI::CI(const string& curfile, int lineno, const string& name,
-       MethodList* methods)
-  : Definition(curfile, lineno, name), mymethods(methods)
+       MethodList* methods, DistributionArrayList* arrays)
+  : Definition(curfile, lineno, name), mymethods(methods), mydistarrays(arrays)
 {
+  doRedistribution = false;
   vtable_base=-1234;
   parentclass=0;
 }
@@ -175,8 +176,9 @@ Class::Class(const string& curfile, int lineno, Modifier modifier,
 	     const string& name,  ScopedName* class_extends,
 	     ScopedNameList* class_implementsall,
 	     ScopedNameList* class_implements,
-	     MethodList* methods)
-  : CI(curfile, lineno, name, methods),
+	     MethodList* methods,
+	     DistributionArrayList* arrays)
+  : CI(curfile, lineno, name, methods,arrays),
     modifier(modifier),
     class_extends(class_extends), class_implementsall(class_implementsall),
     class_implements(class_implements)
@@ -284,8 +286,9 @@ void DefinitionList::add(Definition* def)
 }
 
 Interface::Interface(const string& curfile, int lineno, const string& id,
-		     ScopedNameList* interface_extends, MethodList* methods)
-  : CI(curfile, lineno, id, methods),
+		     ScopedNameList* interface_extends, MethodList* methods,
+		     DistributionArrayList* arrays)
+  : CI(curfile, lineno, id, methods,arrays),
     interface_extends(interface_extends)
 {
 }
@@ -303,6 +306,7 @@ Method::Method(const string& curfile, int lineno, bool copy_return,
     return_type(return_type), name(name), args(args),
     modifier2(modifier2), throws_clause(throws_clause), modifier(Unknown)
 {
+  doRedistribution = false;
   myclass=0;
   myinterface=0;
   checked=false;
@@ -775,7 +779,7 @@ std::string NamedType::cppfullname(SymbolTable* localScope) const
 }
 
 ArrayType::ArrayType(Type* t, int dim)
-  : subtype(t), dim(dim)
+  : dim(dim), subtype(t)
 {
 }
 
@@ -894,3 +898,43 @@ void SpecificationList::processImports()
 {
   cerr << "processImports not finished!\n";
 }
+
+DistributionArray::DistributionArray(const std::string& curfile, int lineno, const std::string& name,
+				     ArrayType* arr_t)
+  : Definition(curfile,lineno,name), array_t(arr_t), name(name)
+{
+}
+
+DistributionArray::~DistributionArray() 
+{ 
+  delete array_t;
+}
+
+ArrayType* DistributionArray::getArrayType() 
+{
+  return array_t;
+}
+
+std::string DistributionArray::getName() 
+{
+  return name;
+}
+
+DistributionArrayList::DistributionArrayList()
+{
+}
+
+DistributionArrayList::~DistributionArrayList()
+{
+  for(vector<DistributionArray*>::iterator iter=list.begin();iter != list.end();iter++){
+    delete *iter;
+  }
+}
+
+void DistributionArrayList::add(DistributionArray* d)
+{
+  list.push_back(d);
+}
+
+
+

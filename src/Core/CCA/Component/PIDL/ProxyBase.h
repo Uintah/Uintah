@@ -32,6 +32,8 @@
 #define Component_PIDL_ProxyBase_h
 
 #include <Core/CCA/Component/PIDL/Reference.h>
+#include <Core/CCA/Component/PIDL/MxNScheduler.h>
+#include <vector> 
 
 namespace SCIRun {
 
@@ -45,43 +47,57 @@ KEYWORDS
    
 DESCRIPTION
    The base class for all proxy objects.  It contains the reference to
-   the remote object.  This class should not be used outside of PIDL
+   the remote object (or references to all objects part of a parallel
+   component).  This class should not be used outside of PIDL
    or automatically generated sidl code.
 ****************************************/
+        typedef std::vector<Reference> refList;
+
 	class ProxyBase {
 	public:
+
+	  //////////
+	  // A MxN Distribution Scheduler in case this proxy needs
+	  // to redistribute an array
+	  MxNScheduler* d_sched;
+	  
 	protected:
 	  ProxyBase();
-	    
-	    ////////////
-	    // Create the proxy from the given reference.
-	    ProxyBase(const Reference&);
+	
+	  ////////////
+	  // Create the proxy from the given reference.
+	  ProxyBase(const Reference&);
 
-	    ///////////
-	    // Destructor which closes connection
-	    virtual ~ProxyBase();
+	  ////////////
+	  // Create the proxy from the given reference list.
+	  ProxyBase(const refList&);	  
 
-	    //////////
-	    // The reference to the remote object.
-	    Reference d_ref;
+	  ///////////
+	  // Destructor which closes connection
+	  virtual ~ProxyBase();
+	  
+	  //////////
+	  // A vector of reference to the remote objects.
+	  refList d_ref;
+	  
+	  //////////
+	  // TypeInfo is a friend so that it can call _proxyGetReference
+	  friend class TypeInfo;
+	  
+	  //////////
+	  // Return a the first internal reference or a copy of it.  
+	  void _proxyGetReference(Reference& ref, bool copy) const;
 
-	    //////////
-	    // TypeInfo is a friend so that it can call _proxyGetReference
-	    friend class TypeInfo;
+	  //////////
+	  // Adds another reference (parallel component situation)  
+	  void addParReference(Reference& ref);
 
-	    //////////
-	    // Return a copy of the internal reference or a copy of it.  
-	    void _proxyGetReference(Reference& ref, bool copy) const;
-
-	    //////////
-	    // Once the constructor of a sub class has finished
-	    // successfully attached, it will call this function.
-	    // This is used so that the destructor does NOT run if
-	    // an attach was not already successful.
-	    void attach_done() { attached_ = true; }
-
+	  /////////
+	  // Returns the whole reference list or a copy of it.
+	  void _proxyGetReferenceList(refList& ref, bool copy) const;
+	  
 	private:
-	    bool attached_;
+
 	};
 } // End namespace SCIRun
 

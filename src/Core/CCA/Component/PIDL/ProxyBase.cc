@@ -36,15 +36,22 @@ using namespace SCIRun;
 ProxyBase::ProxyBase() { }
 
 ProxyBase::ProxyBase(const Reference& ref)
-  : d_ref(ref), attached_( false )
-{ }
+{ 
+  d_ref.insert(d_ref.begin(),ref);
+}
+
+ProxyBase::ProxyBase(const refList& refL)
+{ 
+  d_ref = refL;
+}
 
 ProxyBase::~ProxyBase()
 {
-  if( attached_ )
-    {
-      d_ref.chan->closeConnection();
-    }
+  refList::iterator iter = d_ref.begin();
+  for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
+    (*iter).chan->closeConnection();
+  }
+  delete d_sched;
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
@@ -54,13 +61,38 @@ void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
       delete (ref.chan);
       ref.chan = NULL;
     }
-    ref.chan = (d_ref.chan)->SPFactory(true);
+    ref.chan = (d_ref[0].chan)->SPFactory(true);
   }
   else {
-    ref = d_ref;
+    ref = d_ref[0];
   }
 }
 
+void ProxyBase::addParReference(Reference& ref)
+{
+  d_ref.insert(d_ref.begin(),ref);
+}
+
+void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
+{
+  if (copy) {
+    refList::iterator iter = ref.begin();
+    for(unsigned int i=0; i < ref.size(); i++, iter++) {      
+      if ((*iter).chan != NULL) {
+	delete ((*iter).chan);
+	(*iter).chan = NULL;
+      }
+    }
+
+    ref = d_ref;
+    for(unsigned int i=0; i < ref.size(); i++) {      
+      ref[i].chan = (d_ref[i].chan)->SPFactory(true);
+    }
+  }
+  else {
+    ref = d_ref; 
+  }
+}
 
 
 

@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/argtest
+SRCDIR := testprograms/Component/mxnargtest
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core

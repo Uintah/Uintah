@@ -68,10 +68,6 @@ DESCRIPTION
     ~URL();
 
     //////////
-    // Copy the URL.
-    URL& operator=(const URL&);
-
-    //////////
     // Return the entire URL as a single string.
     std::string getString() const;
 

@@ -17,30 +17,24 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR := testprograms/Component/mxn
 
-SRCDIR   := Core/CCA/Component/PIDL
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+PSELIBS := Core/CCA/Component/PIDL  Core/CCA/Component/Comm Core/Thread \
+	Core/Exceptions Core/globus_threads 
+endif
+LIBS := 
 
-SRCS     += \
-	$(SRCDIR)/InvalidReference.cc \
-	$(SRCDIR)/MalformedURL.cc \
-	$(SRCDIR)/Object.cc \
-	$(SRCDIR)/Object_proxy.cc \
-	$(SRCDIR)/PIDL.cc \
-	$(SRCDIR)/PIDLException.cc \
-	$(SRCDIR)/ProxyBase.cc \
-	$(SRCDIR)/Reference.cc \
-	$(SRCDIR)/ServerContext.cc \
-	$(SRCDIR)/URL.cc \
-	$(SRCDIR)/Warehouse.cc \
-	$(SRCDIR)/TypeInfo.cc \
-	$(SRCDIR)/TypeInfo_internal.cc \
-	$(SRCDIR)/MxNArrayRep.cc \
-	$(SRCDIR)/MxNScheduler.cc \
-	$(SRCDIR)/MxNScheduleEntry.cc
+PROGRAM := $(SRCDIR)/MxNArrRep_Test
+SRCS := $(SRCDIR)/MxNArrRep_Test.cc
+include $(SCIRUN_SCRIPTS)/program.mk
 
-PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
-LIBS := $(GLOBUS_LIBS) -lglobus_io
+PROGRAM := $(SRCDIR)/MxNSchedEntry_Test
+SRCS := $(SRCDIR)/MxNSchedEntry_Test.cc
+include $(SCIRUN_SCRIPTS)/program.mk
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
+PROGRAM := $(SRCDIR)/MxNScheduler_Test
+SRCS := $(SRCDIR)/MxNScheduler_Test.cc
+include $(SCIRUN_SCRIPTS)/program.mk

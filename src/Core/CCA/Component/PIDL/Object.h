@@ -33,6 +33,8 @@
 
 
 #include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/Component/PIDL/MxNArrayRep.h>
+#include <Core/CCA/Component/PIDL/MxNScheduler.h>
 #include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/CCA/SmartPointer.h>
 
@@ -93,9 +95,19 @@ public:
   void deleteReference();
 
   //////////
+  // Used to set the distribution of a particular array
+  // when this object is the callee  
+  void setCalleeDistribution(std::string distname, 
+			     MxNArrayRep* arrrep);
+
+  //////////
   // The context of the server object.  If this is null,
   // then the object is a proxy and there is no server.
   ServerContext* d_serverContext;
+
+  //////////
+  // Method used to create an array distribution scheduler
+  void createScheduler();
 
 protected:
   //////////
@@ -145,9 +157,19 @@ private:
   //////////
   // Private assignment operator to make assignment impossible.
   Object& operator=(const Object&);
+
 };
 
 } // End namespace SCIRun
 
 #endif
+
+
+
+
+
+
+
+
+
 

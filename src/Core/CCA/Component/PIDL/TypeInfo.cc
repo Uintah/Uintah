@@ -69,9 +69,9 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   if(!p)
     return 0;
 
-  Reference _ref;
-  p->_proxyGetReference(_ref,false); 
-  Message* message = _ref.chan->getMessage();
+  refList _refL;
+  p->_proxyGetReferenceList(_refL,false); 
+  Message* message = _refL[0].chan->getMessage();
 
   // Get a startpoint ready for the reply
   message->createMessage();
@@ -107,10 +107,11 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     return 0;
   } else {
     // isa succeeded, return the correct proxy
-    Reference new_ref;
-    new_ref = _ref;
-    new_ref.d_vtable_base=vtbase;
-    return (*d_priv->create_proxy)(new_ref);
+    refList new_refL;
+    new_refL = _refL;
+    for(unsigned int i=0; i < new_refL.size(); i++)
+      new_refL[i].d_vtable_base=vtbase;
+    return (*d_priv->create_proxy)(new_refL);
   }
 }
 
