@@ -26,6 +26,13 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+//Port to Framework properties
+interface FrameworkProperties extends sci.cca.Port
+{
+    TypeMap getProperties();
+    void setProperties(in TypeMap properties);
+}
+
 //Temp test (Bridge)
 interface IDPort extends sci.cca.Port
 {
