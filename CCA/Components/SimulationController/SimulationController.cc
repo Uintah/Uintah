@@ -211,6 +211,9 @@ void SimulationController::run()
      cout << "done taskgraph compile (" << dt << " seconds)\n";
    scheduler->execute(d_myworld);
 
+   if(output)
+      output->executedTimestep();
+
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
    list<double> wallTimes;
@@ -354,6 +357,9 @@ void SimulationController::run()
       }
       // Execute the current timestep
       scheduler->execute(d_myworld);
+      if(output)
+	output->executedTimestep();
+      
       t += delt;
       TAU_DB_DUMP();
    }
