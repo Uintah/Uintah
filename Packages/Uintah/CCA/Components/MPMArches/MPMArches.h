@@ -38,6 +38,16 @@ WARNING
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 
+namespace Uintah {
+ struct cutcell { double d_cutcell[13]; }; //centroids/surface normals/areafractions
+} 
+
+namespace SCIRun {
+
+  void swapbytes( Uintah::cutcell& );
+
+}
+
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
@@ -54,8 +64,6 @@ namespace Uintah {
 using namespace SCIRun;
 
 
- struct cutcell { double d_cutcell[13]; }; //centroids/surface normals/areafractions
- 
  const TypeDescription* fun_getTypeDescription(cutcell*);
 
 class MPMArches : public UintahParallelComponent, public SimulationInterface {
@@ -344,10 +352,5 @@ public:
       
 } // End namespace Uintah
       
-namespace SCIRun {
-
-  void swapbytes( Uintah::cutcell& );
-
-}
 
 #endif

@@ -1,8 +1,20 @@
 #ifndef __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
 #define __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
 
-#include "ConstitutiveModel.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+
+namespace Uintah {
+  struct ViscoScramStateData {
+    Matrix3 DevStress[5];
+  };   
+}
+
+#include <Core/Util/Endian.h>
+namespace SCIRun {
+  void swapbytes( Uintah::ViscoScramStateData& d);
+} // namespace SCIRun
+
+#include "ConstitutiveModel.h"
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
@@ -53,10 +65,8 @@ namespace Uintah {
       double C2_WLF;
     };
 
-    struct StateData {
-      Matrix3 DevStress[5];
-    };
-
+    typedef ViscoScramStateData StateData;
+    
     const VarLabel* pVolChangeHeatRateLabel;
     const VarLabel* pViscousHeatRateLabel;
     const VarLabel* pCrackHeatRateLabel;
@@ -197,9 +207,6 @@ namespace Uintah {
 
 } // End namespace Uintah
       
-namespace SCIRun {
-  void swapbytes( Uintah::ViscoScram::StateData& d);
-} // namespace SCIRun
 
 #endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
 

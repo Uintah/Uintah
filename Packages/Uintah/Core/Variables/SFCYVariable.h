@@ -132,17 +132,17 @@ WARNING
 			  IntVector& strides) const;
     virtual void getSizeInfo(string& elems, unsigned long& totsize,
 			     void*& ptr) const {
-      IntVector siz = size();
+      IntVector siz = this->size();
       ostringstream str;
       str << siz.x() << "x" << siz.y() << "x" << siz.z();
       elems=str.str();
       totsize=siz.x()*siz.y()*siz.z()*sizeof(T);
-      ptr = (void*)getPointer();
+      ptr = (void*)this->getPointer();
     }
     virtual IntVector getLow()
-    { return getLowIndex(); }
+    { return this->getLowIndex(); }
     virtual IntVector getHigh()
-    { return getHighIndex(); }
+    { return this->getHighIndex(); }
 
     virtual void emitNormal(ostream& out, const IntVector& l, const IntVector& h,
 			    ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
@@ -159,8 +159,8 @@ WARNING
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){
-	RunLengthEncoder<T> rle(Array3<T>::iterator(this, l),
-				Array3<T>::iterator(this, h));
+	RunLengthEncoder<T> rle(typename Array3<T>::iterator(this, l),
+				typename Array3<T>::iterator(this, h));
 	rle.write(out);
       }
       else
@@ -190,7 +190,7 @@ WARNING
 
     static TypeDescription::Register registerMe;
     virtual RefCounted* getRefCounted() {
-      return getWindow();
+      return this->getWindow();
     }
 
   protected:
@@ -272,10 +272,10 @@ WARNING
   SFCYVariable<T>::allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex)
   {
-    if(getWindow())
+    if(this->getWindow())
       SCI_THROW(InternalError("Allocating an SFCYvariable that "
 			  "is apparently already allocated!"));
-    resize(lowIndex, highIndex);
+    this->resize(lowIndex, highIndex);
   }
 /*
   template<class T>
@@ -284,7 +284,7 @@ WARNING
     Array3<T> newdata;
     newdata.resize(low, high);
     newdata.copy(*this, low, high);
-    resize(low, high);
+    this->resize(low, high);
     Array3<T>::operator=(newdata);
   }
 */
@@ -304,8 +304,8 @@ WARNING
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex)
   {
-    if (getWindow()->getData() == src.getWindow()->getData() &&
-	getWindow()->getOffset() == src.getWindow()->getOffset()) {
+    if (this->getWindow()->getData() == src.getWindow()->getData() &&
+	this->getWindow()->getOffset() == src.getWindow()->getOffset()) {
       // No copy needed
       //cerr << "No copy needed for SFCYVariable!!!\n";
       return;
@@ -321,7 +321,7 @@ WARNING
   void*
   SFCYVariable<T>::getBasePointer() const
   {
-    return (void*)getPointer();
+    return (void*)this->getPointer();
   }
 
   template<class T>
@@ -336,9 +336,9 @@ WARNING
   SFCYVariable<T>::getSizes(IntVector& low, IntVector& high, 
 			    IntVector& siz) const
   {
-    low = getLowIndex();
-    high = getHighIndex();
-    siz = size();
+    low = this->getLowIndex();
+    high = this->getHighIndex();
+    siz = this->size();
   }
   template<class T>
   void
@@ -346,10 +346,10 @@ WARNING
 			    IntVector& dataLow, IntVector& siz,
 			    IntVector& strides) const
   {
-    low=getLowIndex();
-    high=getHighIndex();
-    dataLow = getWindow()->getOffset();   
-    siz=size();
+    low=this->getLowIndex();
+    high=this->getHighIndex();
+    dataLow = this->getWindow()->getOffset();   
+    siz=this->size();
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			(int)(sizeof(T)*siz.y()*siz.x()));
   }

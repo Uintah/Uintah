@@ -586,11 +586,11 @@ template<class T>
       : constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>(copy) {}
 
     ParticleSubset* getParticleSubset() const {
-      return rep_.getParticleSubset();
+      return this->rep_.getParticleSubset();
     }
 
     ParticleSet* getParticleSet() const {
-      return rep_.getParticleSet();
+      return this->rep_.getParticleSet();
     }    
   };
 

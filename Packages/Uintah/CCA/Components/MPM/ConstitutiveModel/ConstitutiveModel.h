@@ -6,6 +6,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Variables/Array3.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>

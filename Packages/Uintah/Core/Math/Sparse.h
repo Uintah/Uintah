@@ -107,7 +107,7 @@ template<class ValueType, class IndexType> class SparseMatrix {
   valarray<ValueType> operator *(valarray<ValueType>& x) {
     assert((size_type)x.size() == Columns());
     valarray<ValueType> b(ValueType(0),Columns());
-    for (SparseMatrix<ValueType,IndexType>::iterator itr = begin(); 
+    for (typename SparseMatrix<ValueType,IndexType>::iterator itr = begin(); 
 	 itr != end(); itr++) {
       b[Index1(itr)] += Value(itr)*x[Index2(itr)];
     }

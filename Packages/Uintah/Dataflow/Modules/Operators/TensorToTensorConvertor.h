@@ -47,7 +47,8 @@ namespace Uintah {
     for (iter = inTensor.begin(); iter != inTensor.end(); iter++) {
       
       ParticleSubset* subset = (*iter).getParticleSubset();
-      outSet = ParticleVariable<Matrix3>(subset);
+      ParticleVariable<Matrix3> tmp(subset);
+      outSet = tmp;
       for (ParticleSubset::iterator sub_iter = subset->begin();
 	   sub_iter != subset->end(); sub_iter++) {
 	outSet[*sub_iter] = op((*iter)[*sub_iter]);

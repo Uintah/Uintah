@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Variables/CellIterator.h>
@@ -12,7 +13,6 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
-#include <Packages/Uintah/Core/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>

@@ -92,8 +92,8 @@ WARNING
      
     virtual void allocate(const Patch*, const IntVector& boundary)
     {
-      SCI_THROW(InternalError("Should not call ReductionVariable<T, Op>"
-			  "::allocate(const Patch*)")); 
+      SCI_THROW(SCIRun::InternalError("Should not call ReductionVariable<T, Op>"
+                                      "::allocate(const Patch*)")); 
     }
 
     virtual const TypeDescription* virtualGetTypeDescription() const;

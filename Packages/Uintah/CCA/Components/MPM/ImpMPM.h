@@ -15,7 +15,7 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Variables/Array3.h>
+//#include <Packages/Uintah/Core/Variables/Array3.h>
 
 
 
