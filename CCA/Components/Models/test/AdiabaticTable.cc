@@ -209,6 +209,7 @@ if (!oldStyleAdvect.active()){
   //  Read in probe locations for the scalar field
   ProblemSpecP probe_ps = child->findBlock("probePoints");
   if (probe_ps) {
+    d_usingProbePts = true;
     probe_ps->require("probeSamplingFreq", d_probeFreq);
      
     Vector location = Vector(0,0,0);
@@ -222,7 +223,7 @@ if (!oldStyleAdvect.active()){
       
       d_probePts.push_back(location);
       d_probePtsNames.push_back(name);
-      d_usingProbePts = true;
+      d_usingProbePts = false;
     }
   } 
 }
@@ -536,6 +537,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       Vector dx = patch->dCell();
       double volume = dx.x()*dx.y()*dx.z();
       
+#if 0
       double maxTemp = 0;
       double maxIncrease = 0;    //debugging
       double maxDecrease = 0;
@@ -547,6 +549,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       double cpsum = 0;
       double masssum=0;
       bool flag=true;
+#endif
       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
@@ -585,6 +588,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
 #endif
 
 
+#if 0
         //__________________________________
         // debugging
         totalEnergy += erelease*mass;
@@ -603,11 +607,13 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
           maxIncrease = dtemp;
         if(dtemp < maxDecrease)
           maxDecrease = dtemp;
+#endif
       }
 #if 0
       if(flag)
         cerr << "PASSED!!!!!!!!!!!!!!!!!!!!!!!!\n";
 #endif
+#if 0
       cerr << "MaxTemp = " << maxTemp << ", maxFlameTemp=" << maxFlameTemp << ", maxIncrease=" << maxIncrease << ", maxDecrease=" << maxDecrease << ", totalEnergy=" << totalEnergy << '\n';
       double cp = cpsum/ncells;
       double mass = masssum/ncells;
@@ -616,6 +622,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       vector<double> tmp(1);
       tmp[0]=fsum/masssum;
       cerr << "AverageTemp=" << atemp << ", AverageF=" << fsum/masssum << ", targetTemp=" << table->interpolate(d_temp_index, tmp) << '\n';
+#endif
 
       //__________________________________
       //  Tack on diffusion
