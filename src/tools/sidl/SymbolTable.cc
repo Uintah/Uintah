@@ -45,6 +45,7 @@ Symbol::Symbol(const string& name)
 {
     definition=0;
     method=0;
+    emitted_forward=false;
 }
 
 const string& Symbol::getName() const
@@ -123,14 +124,25 @@ string SymbolTable::fullname() const
 	return "";
 }
 
-string SymbolTable::fullname(const string& n) const
+string SymbolTable::cppfullname() const
 {
-    return fullname()+"."+n;
+    if(parent)
+	return parent->cppfullname()+"::"+name;
+    else
+	return "";
 }
 
 string Symbol::fullname() const
 {
-    return symtab->fullname(name);
+    return symtab->fullname()+"."+name;
+}
+
+string Symbol::cppfullname(SymbolTable* forstab) const
+{
+    if(forstab == symtab)
+	return name;
+    else
+	return symtab->cppfullname()+"::"+name;
 }
 
 void Symbol::setSymbolTable(SymbolTable* stab)
@@ -141,8 +153,22 @@ void Symbol::setSymbolTable(SymbolTable* stab)
     }
     symtab=stab;
 }
+
+SymbolTable* SymbolTable::getParent() const
+{
+    return parent;
+}
+
+std::string SymbolTable::getName() const
+{
+    return name;
+}
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:07:26  sparker
+// Added nexus code generation capability
+//
 // Revision 1.2  1999/08/30 17:39:54  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)
