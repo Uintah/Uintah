@@ -40,7 +40,6 @@ namespace Uintah {
          // copy constructor
          MWViscoElastic(const MWViscoElastic &cm);
          MWViscoElastic& operator=(const MWViscoElastic &cm);
-         int d_8or27;
 
       public:
          // constructors

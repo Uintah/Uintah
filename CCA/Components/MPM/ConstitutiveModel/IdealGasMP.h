@@ -34,7 +34,6 @@ namespace Uintah {
          // copy constructor
          IdealGasMP(const IdealGasMP &cm);
          IdealGasMP& operator=(const IdealGasMP &cm);
-         int d_8or27;
 
       public:
          // constructors

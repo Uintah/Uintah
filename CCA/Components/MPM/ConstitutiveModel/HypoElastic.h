@@ -36,7 +36,6 @@ namespace Uintah {
          // copy constructor
          HypoElastic(const HypoElastic &cm);
          HypoElastic& operator=(const HypoElastic &cm);
-         int d_8or27;
 
       public:
          // constructors

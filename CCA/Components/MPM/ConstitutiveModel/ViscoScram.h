@@ -53,8 +53,6 @@ namespace Uintah {
          ViscoScram(const ViscoScram &cm);
          ViscoScram& operator=(const ViscoScram &cm);
 
-         int d_8or27;
-
       public:
          // constructors
          ViscoScram(ProblemSpecP& ps, MPMLabel* lb, int n8or27);

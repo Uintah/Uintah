@@ -63,7 +63,6 @@ WARNING
 	 CompNeoHookPlas(const CompNeoHookPlas &cm);
 	 CompNeoHookPlas& operator=(const CompNeoHookPlas &cm);
 
-         int d_8or27;
       public:
 	 // constructors
 	 CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* lb,int n8or27);

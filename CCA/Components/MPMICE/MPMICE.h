@@ -224,7 +224,7 @@ protected:
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   int              d_8or27;
-  int              d_NGCs;
+  int              NGN;
 
   double d_dbgTime; 
   double d_dbgStartTime;

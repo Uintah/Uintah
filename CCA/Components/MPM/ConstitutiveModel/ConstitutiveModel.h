@@ -122,6 +122,9 @@ WARNING
         protected:
 
 	 MPMLabel* lb;
+         int d_8or27;
+         int NGP;
+         int NGN;
       };
 } // End namespace Uintah
       
