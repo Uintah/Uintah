@@ -129,6 +129,9 @@ bool Generator::generate( FileFormat format )
 
   if(node == 0)
     return false;
+
+  if(parser_->has_errors_) 
+    return false;
   
   // Generate temporary file and write it out.
   // This file combines the sci, itk, and gui xml files

@@ -113,8 +113,14 @@ int main(int argc, const char* argv[])
       gen->set_output_file(output_file);
       
       
-      if(!gen->generate(format))
-	cerr << "****** INSIGHT MODULE GENERATOR FAILED! ******\n";
+      if(!gen->generate(format)) {
+	cerr << "**********************************************\n";
+	cerr << "**     INSIGHT MODULE GENERATOR FAILED      **\n";
+	cerr << "**  This could be due to errors in any of   **\n";
+	cerr << "**  the 3 XML files.                        **\n";
+	cerr << "**********************************************\n";
+	return 0;
+      }
     }
     else {
       // generate CC
@@ -130,8 +136,14 @@ int main(int argc, const char* argv[])
       output_file += ".cc";
       gen->set_output_file(output_file);
 
-      if(!gen->generate(CC))
-	cerr << "****** INSIGHT MODULE GENERATOR FAILED! ******\n";     
+      if(!gen->generate(CC)) {
+	cerr << "**********************************************\n";
+	cerr << "**     INSIGHT MODULE GENERATOR FAILED      **\n";
+	cerr << "**  This could be due to errors in any of   **\n";
+	cerr << "**  the 3 XML files.                        **\n";
+	cerr << "**********************************************\n";
+	return 0;
+      }     
 
       // generate GUI
       xsl_file = argv[1];
@@ -144,8 +156,14 @@ int main(int argc, const char* argv[])
       output_file += ".tcl";
       gen->set_output_file(output_file);
 
-      if(!gen->generate(GUI))
-	cerr << "****** INSIGHT MODULE GENERATOR FAILED! ******\n";       
+      if(!gen->generate(GUI)) {
+	cerr << "**********************************************\n";
+	cerr << "**     INSIGHT MODULE GENERATOR FAILED      **\n";
+	cerr << "**  This could be due to errors in any of   **\n";
+	cerr << "**  the 3 XML files.                        **\n";
+	cerr << "**********************************************\n";
+	return 0;
+      }
 
       // generate xml
       xsl_file = argv[1];
@@ -158,8 +176,14 @@ int main(int argc, const char* argv[])
       output_file += ".xml";
       gen->set_output_file(output_file);
 
-      if(!gen->generate(XML))
-	cerr << "****** INSIGHT MODULE GENERATOR FAILED! ******\n";  
+      if(!gen->generate(XML)) {
+	cerr << "**********************************************\n";
+	cerr << "**     INSIGHT MODULE GENERATOR FAILED      **\n";
+	cerr << "**  This could be due to errors in any of   **\n";
+	cerr << "**  the 3 XML files.                        **\n";
+	cerr << "**********************************************\n";
+	return 0;
+      }
     }
     // check GUI/sub.mk
 

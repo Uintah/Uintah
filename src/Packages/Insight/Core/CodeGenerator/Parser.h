@@ -68,8 +68,9 @@ public:
   string get_path_to_insight_package( void );
 
 
+  bool has_errors_;
 private:
-
+  
   string path_to_insight_package_;
 
 };

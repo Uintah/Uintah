@@ -34,6 +34,7 @@
 Parser::Parser()
 {
   path_to_insight_package_ = "";
+  has_errors_ = false;
 }
 
 
@@ -63,7 +64,7 @@ DOMNode* Parser::read_input_file(string filename)
     //std::cerr << parser->getErrorCount() << std::endl;
 
     if(handler.foundError){
-      std::cerr << "Handler Error\n";
+      has_errors_ = true;
     }
 
     DOMDocument* doc = parser->adoptDocument();
