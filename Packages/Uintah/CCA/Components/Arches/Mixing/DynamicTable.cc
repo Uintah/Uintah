@@ -49,15 +49,30 @@ DynamicTable::getProps(const vector<double> mixRxnVar)
   for (int i = 0; i < d_tableDim; i++)
     {
 	// calculates index in the table
-      double tableIndex = (mixRxnVar[i] - d_tableInfo->getMinValue(i))/  
-	d_tableInfo->getIncrValue(i);
-      //cout << "DynamicTable: tableIndex = " << tableIndex << endl;
+      double midPt = d_tableInfo->getStoicValue(i);
+      double tableIndex;
+      if (mixRxnVar[i] <= midPt) {
+	tableIndex = (mixRxnVar[i] - d_tableInfo->getMinValue(i))/  
+	  d_tableInfo->getIncrValueBelow(i);
+	//cout << mixRxnVar[i] << " " << d_tableInfo->getMinValue(i) << " " 
+	//   << d_tableInfo->getIncrValueBelow(i) << endl;
+      }
+      else {
+	tableIndex = ((mixRxnVar[i] - midPt)/  
+	  d_tableInfo->getIncrValueAbove(i))+d_tableInfo->getNumDivsBelow(i);
+	//cout << mixRxnVar[i] << " " << midPt << " " 
+	//     << d_tableInfo->getIncrValueAbove(i) << " "  << 
+	//  d_tableInfo->getNumDivsBelow(i)<< endl;
+      }
       // can use floor(tableIndex)
+      //tableIndex = tableIndex + 0.5;
       int tableLowIndex = (int) tableIndex; // cast to int
       int tableUpIndex = tableLowIndex + 1;
-      if (tableLowIndex >= d_tableInfo->getNumDivisions(i))
+      if (tableLowIndex >= (d_tableInfo->getNumDivsBelow(i)+
+	  d_tableInfo->getNumDivsAbove(i)))
 	{
-	  tableLowIndex = d_tableInfo->getNumDivisions(i);
+	  tableLowIndex = d_tableInfo->getNumDivsBelow(i)+
+	    d_tableInfo->getNumDivsAbove(i);
 	  tableIndex = tableLowIndex;
 	  tableUpIndex = tableLowIndex;
 	}
@@ -88,13 +103,8 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
       upFactor[currentDim] = d_tableBoundsVec[1][currentDim];
       lowIndex[currentDim] = d_tableIndexVec[0][currentDim];
       Stream lowValue = tableLookUp(lowIndex);
-      //cout << "DynamicTable: lowValue complete for lowIndex = " << lowIndex[currentDim] << endl;
-      //cout<< "LowFactor = "<<lowFactor[currentDim]<<" UpFactor = "<<
-      //	upFactor[currentDim]<<endl;
       lowIndex[currentDim] = d_tableIndexVec[1][currentDim];
-      //cout<< "lowIndex = " << lowIndex[currentDim] << endl;
       Stream upValue = tableLookUp(lowIndex);
-      //cout << "Dynamic Table: upValue complete for upIndex = " << lowIndex[currentDim] <<endl;
       return lowValue.linInterpolate(upFactor[currentDim],
 				     lowFactor[currentDim], upValue);
     }
@@ -121,11 +131,17 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
 }
 
 
-
+ 
 //
 // $Log$
-// Revision 1.4  2001/10/11 18:48:58  divyar
-// Made changes to Mixing
+// Revision 1.5  2001/11/08 19:13:44  spinti
+// 1. Corrected minor problems in ILDMReactionModel.cc
+// 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
+//    a reaction table is created dynamically. The limits and spacing in the
+//    table are specified in the *.ups file.
+// 3. Corrected the mixture temperature computation in Stream::addStream. It
+//    now is computed using a Newton search.
+// 4. Made other minor corrections to various reaction model files.
 //
 // Revision 1.2  2001/08/03 18:08:09  witzel
 // Removed an extraneous semi-colon at the end of a #include.

@@ -46,6 +46,7 @@
 
   **************************************************************************/
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+
 #include <vector>
 
 using namespace std;
@@ -53,6 +54,7 @@ using namespace std;
 namespace  Uintah {
   class ChemkinInterface;
   class Stream;
+  class MixingModel;
 
   const double SMALL_VALUE = 1.e-20;
  
@@ -70,24 +72,11 @@ namespace  Uintah {
     // GROUP: Constructors:
     ////////////////////////////////////////////////////////////////////////
     //
-    // Constructs an instance of ReactionModel with the given number of 
-    // independent mixing and reaction progress variables. In addition,
-    // total number of state-space variables are specified.
+    // Constructs an instance of ReactionModel 
     // PRECONDITIONS
-    //  numMixVar is positive.
-    //  numRxnVar is positive.
-    //  numStateSpaceVar is positive.
     // POSTCONDITIONS
     //  This is a properly constructed instance of ReactionModel.
-    //
-    // Constructor taking
-    //   [in] numMixVar Number of independent mixing variables.
-    //   [in] numRxnVar Number of reaction progress variables.
-    //   [in] numStateSpaceVar Total number of state space variables.
-    //   [in] adiabatic If =1, system is adiabatic; otherwise, its nonadiabatic.
-    //   [bool] createRxnTable If true, reaction table will be constructed and
-    // desired state space variables will be interpolated from table. If false,
-    // state space variables will be computed directly. 
+    // 
     ReactionModel();
 
     // GROUP: Destructor:
@@ -101,48 +90,30 @@ namespace  Uintah {
     ///////////////////////////////////////////////////////////////////////
     //
     //
-    virtual void problemSetup(const ProblemSpecP& params) = 0;
+    virtual void problemSetup(const ProblemSpecP& params,
+			      MixingModel* mixModel) = 0;
 
     //
     // GROUP: Actual Action Methods :
-    /////////////////////////////////////////////////////////////////////////
-    //
-    //computeEnthalpy returns the enthalpies (J/kg) used in the linearization 
-    // of the local enthalpy(absH), given the unreacted stream information 
-    // and values for the independent variables (no variance).
-    //
-    virtual Stream computeEnthalpy(Stream& unreactedMixture,
-				   const std::vector<double>& mixRxnVar) = 0;
-    /////////////////////////////////////////////////////////////////////////
-    //
-    //normalizeParameter returns the minimum and maximum parameter values used 
-    // to normalize the reaction parameter.
-    // 
-    //virtual std::vector<double> normalizeParameter(Stream& unreactedMixture,
-    //				   const std::vector<double>& mixRxnVar) = 0;
     ///////////////////////////////////////////////////////////////////////
     //
     // Computes the state space (dependent) variables given the unreacted
     // stream information and values for the independent variables 
     // (no variance)
     //
-    virtual Stream computeRxnStateSpace(Stream& unreactedMixture,
-					const std::vector<double>& mixRxnVar,
-					bool adiabatic) = 0;
+    virtual void getRxnStateSpace(Stream& unreactedMixture,
+				  std::vector<double>& mixRxnVar,
+				  Stream& reactedStream) = 0;
 
       
     // GROUP: Get Methods :
     ///////////////////////////////////////////////////////////////////////
     //    
-    // returns the pointer to chemkin interface class
+    // Returns the pointer to chemkin interface class
     //
-    virtual ChemkinInterface* getChemkinInterface() = 0;
-				
-
-#if 0
-    virtual Stream computeEnthalpy(Stream& unreactedMixture) = 0;
-#endif
-    //virtual vector<double> findRxnVariables(double* mixRxnVar, double* yArray) = 0;
+    virtual ChemkinInterface* getChemkinInterface() const = 0;
+    virtual bool getSootBool() const = 0;
+    virtual int getTotalDepVars() const = 0;
   
   private:  
   }; // End Class ReactionModel
@@ -154,8 +125,14 @@ namespace  Uintah {
 
 //
 // $Log$
-// Revision 1.4  2001/10/11 18:48:59  divyar
-// Made changes to Mixing
+// Revision 1.5  2001/11/08 19:13:44  spinti
+// 1. Corrected minor problems in ILDMReactionModel.cc
+// 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
+//    a reaction table is created dynamically. The limits and spacing in the
+//    table are specified in the *.ups file.
+// 3. Corrected the mixture temperature computation in Stream::addStream. It
+//    now is computed using a Newton search.
+// 4. Made other minor corrections to various reaction model files.
 //
 // Revision 1.2  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases

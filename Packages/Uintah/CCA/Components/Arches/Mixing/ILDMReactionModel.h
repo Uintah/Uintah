@@ -61,7 +61,7 @@ POSSIBLE REVISIONS:
 using namespace std;
 namespace Uintah {
   class KD_Tree;
-  class PDFMixingModel; //Change to PDFMixingModel???
+  class MixingModel; //Change to PDFMixingModel???
   class Stream;
  
   // Reference temperature defined to be the lower limit of integration in the
@@ -115,9 +115,9 @@ namespace Uintah {
     // Computes the state space (dependent) variables given the unreacted
     // stream information and values for the reaction variables
     //
-    virtual Stream computeRxnStateSpace(Stream& unreactedMixture, 
-					std::vector<double>& varsHFPi,
-					bool adiabatic);  
+    virtual void getRxnStateSpace(Stream& unreactedMixture, 
+				  std::vector<double>& varsHFPi,
+				  Stream& reactedStream);  
 
 
   private:
@@ -129,6 +129,7 @@ namespace Uintah {
     // mechanism read in through Chemkin including species, elements, reaction
     // rates, and thermodynamic information.
     ChemkinInterface* d_reactionData;
+    MixingModel* d_mixModel;
     bool d_adiabatic;
     bool d_lsoot;
     int d_numMixVars;
