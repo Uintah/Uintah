@@ -114,6 +114,64 @@ SCI_ARG_VAR(CXXCPP,C++ preprocessor)
 # checks that they 
 INIT_PACKAGE_CHECK_VARS()
 
+# want or require in the macro.
+sci_check_unipetc=no
+sci_check_mpiuni=yes
+
+#sci_check_dependency mode=no
+sci_check_gmake=no 
+sci_check_awk=no
+sci_check_etags=no
+sci_check_thirdparty=no
+sci_check_exc=no 
+
+# typically Remote
+sci_check_jpeg=no
+sci_check_tiff=no
+
+# typically rtrt
+sci_check_glut=no
+sci_check_glui=no
+sci_check_oogl=no
+sci_check_audio=no
+
+# typically fusion
+sci_check_plplot=no
+sci_check_mdsplus=no
+sci_check_hdf5=no
+
+# typically uintah
+sci_check_fortran=no
+sci_check_mpi=no
+sci_check_tau=no
+sci_check_gzopen=no
+sci_check_blas=no
+sci_check_lapack=no
+sci_check_hypre=no
+sci_check_petsc=no
+sci_check_perl=no
+sci_check_tools=no
+
+# typically teem
+sci_check_teem=no
+
+#typically VDT
+sci_check_vdt=no
+
+# typically Netsolve
+sci_check_netsolve=no
+
+# typically Insight
+sci_check_instight=no
+
+# SCIRun2
+sci_check_babel=no
+sci_check_fortran=no
+sci_check_ssl=no
+sci_check_crypto=no
+sci_check_globus=no
+sci_check_qt=no
+sci_check_uuid=no
 
 ## find the machine's pwd, and don't use the sh built-in pwd.
 ## sh pwd can print the wd with symbolic links depending on
@@ -243,11 +301,19 @@ SCI_ARG_WITH(tiff,
                  Use the tiff installation in DIR),
   [with_tiff="$withval"],
   [with_tiff=""])
+
 SCI_ARG_WITH(mdsplus,
   AC_HELP_STRING(--with-mdsplus=DIR,
                  Use the mdsplus installation in DIR),
   [with_mdsplus="$withval"],
   [with_mdsplus=""])
+
+SCI_ARG_WITH(hdf5,
+  AC_HELP_STRING(--with-hdf5=DIR,
+                 Use the hdf5 installation in DIR),
+  [with_hdf5="$withval"],
+  [with_hdf5=""])
+
 SCI_ARG_WITH(glut,
   AC_HELP_STRING(--with-glut=DIR,
                  Use the glut installation in DIR),
@@ -379,6 +445,10 @@ fi
 
 # Take care of package dependencies
 if test "$pkg_Fusion" == "yes"; then
+   sci_check_plplot=yes
+   sci_check_mdsplus=yes
+   sci_check_hdf5=yes
+
   # Fusion depends upon Teem Package.  
   if test -z $pkg_Teem; then
     AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
@@ -2481,7 +2551,7 @@ if test "$sci_check_mdsplus" = "yes"; then
     _sci_inc="$with_mdsplus/include"
   else
     _sci_lib="/usr/local/mdsplus/lib $sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
+    _sci_inc="/usr/local/mdsplus/include $sci_thirdparty_includes"
   fi
 
   SCI_TRY_LINK(MDSPLUS,mdslib library and headers,[
@@ -2494,7 +2564,7 @@ if test "$sci_check_mdsplus" = "yes"; then
   
   if test "$with_mdsplus" && test ! "$DEF_MDSPLUS"; then
     echo
-    AC_MSG_ERROR(One or more of the MDS PLUS components is missing.)
+    AC_MSG_ERROR(One or more of the MDSPLUS components is missing.)
     echo
   fi
 fi #end sci_check_mdsplus
@@ -2503,6 +2573,37 @@ AC_SUBST(MDSPLUS_LIB_FLAG)
 AC_SUBST(MDSPLUS_LIB_DIR_FLAG)
 AC_SUBST(INC_MDSPLUS_H)
 AC_SUBST(DEF_MDSPLUS)
+
+##  --  search for hdf5  -------------------------------------------------
+
+if test "$sci_check_hdf5" = "yes"; then
+  if test "$with_hdf5"; then
+    _sci_lib="$with_hdf5/lib"
+    _sci_inc="$with_hdf5/include"
+  else
+    _sci_lib="/usr/local/hdf5/1.4.5/lib $sci_thirdparty_libs"
+    _sci_inc="/usr/local/hdf5/1.4.5/include $sci_thirdparty_includes"
+  fi
+
+  SCI_TRY_LINK(HDF5,hdf5 library and headers,[
+   #include <hdf5.h>
+   ],$_sci_inc,hdf5,$_sci_lib,,,optional)
+
+  if test "$HAVE_HDF5" = "yes"; then
+     DEF_HDF5="#define HAVE_HDF5 1"
+  fi
+  
+  if test "$with_hdf5" && test ! "$DEF_HDF5"; then
+    echo
+    AC_MSG_ERROR(One or more of the HDF5 components is missing.)
+    echo
+  fi
+fi #end sci_check_hdf5
+
+AC_SUBST(HDF5_LIB_FLAG)
+AC_SUBST(HDF5_LIB_DIR_FLAG)
+AC_SUBST(INC_HDF5_H)
+AC_SUBST(DEF_HDF5)
 
 ##  --  search for perfex  -----------------------------------------------
 
@@ -2936,45 +3037,3 @@ else
   mv sci_testdefs.h sci_defs.h
   AC_MSG_WARN(sci_defs.h has changed.)
 fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
