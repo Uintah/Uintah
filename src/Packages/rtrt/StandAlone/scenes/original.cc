@@ -32,13 +32,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
 
-    Material* white=new Phong(Color(0,0,0), Color(.6,.6,.6), Color(.6,.6,.6), 20, 0.2);
-    Material* black=new Phong(Color(0,0,0), Color(0,0,0), Color(.6,.6,.6), 20, 0.5);
+    Material* white=new Phong(Color(.6,.6,.6), Color(.6,.6,.6), 20, 0.2);
+    Material* black=new Phong(Color(0,0,0), Color(.6,.6,.6), 20, 0.5);
     Material* plane_matl=new Checker(white, black, Vector(1,0,0), Vector(0,1,0));
     Object* p=new Rect(plane_matl, Point(0,0,0), Vector(20,0,0), Vector(0,20,0));
     Group* group = new Group();
     group->add(p);
-    Material* red=new Phong(Color(0,0,0), Color(.6,0,0), Color(.6,.6,.6), 20, 0.4);
+    Material* red=new Phong(Color(.6,0,0), Color(.6,.6,.6), 20, 0.4);
     Sphere* s=new Sphere(red, Point(0,0,1.2),1.0);
     group->add(s);
 
@@ -53,7 +53,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     scene->add_light(l2);
     scene->add_light(l3);
 
-    scene->select_shadow_mode("uncached");
+    scene->select_shadow_mode( Uncached_Shadows );
     scene->maxdepth=5;
     return scene;
 }

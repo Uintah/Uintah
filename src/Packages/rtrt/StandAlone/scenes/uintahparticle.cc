@@ -151,7 +151,7 @@ void get_material(rtrt::Array1<Material*> &matls) {
   for(int i=0;i<ncolors;i++){
     float frac=float(i)/(ncolors-1);
     Color c(spline(frac));
-    matls[i]=new Phong(c*Ka, c*Kd, c*Ks, specpow, refl);
+    matls[i]=new Phong( c*Kd, c*Ks, specpow, refl);
     //matls[i]=new LambertianMaterial(c*Kd);
   }
 }
@@ -837,7 +837,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   for(int i=0;i<ncolors;i++){
     float frac=float(i)/(ncolors-1);
     Color c(spline(frac));
-    material_properties[i]=new Phong(c*Ka, c*Kd, c*Ks, specpow, refl);
+    material_properties[i]=new Phong( c*Kd, c*Ks, specpow, refl);
     //material_properties[i]=new LambertianMaterial(c*Kd);
   }
 
@@ -1062,7 +1062,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       AuditDefaultAllocator();	  
       if (debug) cerr << "Finished level\n";
       cout << "Adding timestep.\n";
-      //Material* matl0=new Phong(Color(0,0,0), Color(.2,.2,.2), Color(.3,.3,.3), 10, .5);
+      //Material* matl0=new Phong( Color(.2,.2,.2), Color(.3,.3,.3), 10, .5);
       //timeblock2->add(new Sphere(matl0,::Point(t,t,t),1));
       //alltime->add(timeblock2);
 #ifdef PATCH_BY_PATCH
@@ -1097,7 +1097,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group* timeblock2;
   for (int t = 0; t < 5; t++) {
     timeblock2 = new Group();
-    Material* matl0=new Phong(Color(1,0,0), Color(.5,.2,.2), Color(.8,.3,.3), 10, .5);
+    Material* matl0=new Phong( Color(.5,.2,.2), Color(.8,.3,.3), 10, .5);
     timeblock2->add((Object*)new Sphere(matl0,::Point(t,t,t),1));
     alltime2->add((Object*)timeblock2);
   }
@@ -1117,7 +1117,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			 ambient_scale);
   
   scene->add_light(new Light(rtrt::Point(500,-300,300), Color(.8,.8,.8), 0));
-  scene->shadow_mode=1;
+  //scene->shadow_mode=1;
   return scene;
 }
 

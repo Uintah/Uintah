@@ -475,7 +475,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
   scene->ambient_hack = false;
 
-  scene->select_shadow_mode("hard");
+  scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
   scene->add_light(new Light(Point(-6, -16, 7.9), Color(.8,.8,.8), 0));
   scene->add_light(new Light(Point(-12, -26, 7.9), Color(.8,.8,.8), 0));

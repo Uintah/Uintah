@@ -48,8 +48,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                          "/home/moulding/i3d97.smaller.gamma",
 #endif
                          ImageMaterial::Tile,
-                         ImageMaterial::Tile,
-                         Color(0,0,0), 1,
+                         ImageMaterial::Tile, 1,
                          Color(1,1,1), 4000);
 
   ImageMaterial *matl0 = new ImageMaterial(
@@ -59,7 +58,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                            "/home/moulding/holo.ppm",
 #endif
                                            ImageMaterial::Tile,
-                                           ImageMaterial::Tile,Color(0,0,0),
+                                           ImageMaterial::Tile,
                                            4,Color(.5,.5,.5),40,0,0);
 
   matl0->flip();

@@ -591,7 +591,7 @@ void read_matentry(Chunk* ch, State3D& state)
 	delete chunk;
     }
     mat.shininess=100;
-    Material* matl=new Phong(mat.ambient, mat.diffuse, mat.specular,
+    Material* matl=new Phong(mat.diffuse, mat.specular,
 			     mat.shininess);
     //cerr << "Material: " << mat.name << " " << mat.ambient << " " << mat.diffuse << " " << mat.specular << " " << mat.shininess << '\n';
     state.matls.insert(mat.name, matl);
@@ -734,8 +734,7 @@ void read_3ds(char* filename, Scene* scene, double light_radius, int maxtri)
     }
     if(state.nomatl.size()>0){
 	cerr << "Applying a default material to " << state.nomatl.size() << " objects\n";
-	Material* default_matl=new Phong(Color(.1,.1,.1),
-					 Color(.5,.5,.5),
+	Material* default_matl=new Phong(Color(.5,.5,.5),
 					 Color(.4,.4,.4),
 					 100, 0);
 	for(int i=0;i<state.nomatl.size();i++){
@@ -751,8 +750,8 @@ void read_3ds(char* filename, Scene* scene, double light_radius, int maxtri)
 		  
     scene->copy_camera(0);
     if(strcmp(filename, "ROACH.3DS")==0){
-	Material* ground=new Checker(new Phong(Color(.05,.05,.05), Color(.95,.95,.95), Color(.1,.1,.1), 0, .05),
-				     new Phong(Color(.05,.0,0), Color(.7,.3,.3), Color(.1,.1,.1), 0, .05),
+	Material* ground=new Checker(new Phong(Color(.95,.95,.95), Color(.1,.1,.1), 0, .05),
+				     new Phong(Color(.7,.3,.3), Color(.1,.1,.1), 0, .05),
 				     Vector(.02,.02,0), Vector(-.02,.02,0));
 	world->add(new Rect(ground, Point(0,0,-40), Vector(0,8000,-500), Vector(8000,0,0)));
 	scene->add_light(new Light(Point(300,300,300), Color(1,1,1), light_radius));
@@ -806,6 +805,6 @@ Scene* make_scene(int argc, char* argv[])
 			   bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
 			   ambient_scale);
     read_3ds(file, scene, 0, maxtri);
-    scene->select_shadow_mode("hard");
+    scene->select_shadow_mode(Hard_Shadows);
     return scene;
 }

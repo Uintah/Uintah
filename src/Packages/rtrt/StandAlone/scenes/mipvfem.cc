@@ -59,6 +59,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane,
 			   ambient_scale);
     scene->ambient_hack=false;
-    scene->select_shadow_mode("none");
+    scene->select_shadow_mode( No_Shadows );
     return scene;
 }

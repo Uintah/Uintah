@@ -107,8 +107,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                Point(lookatx,lookaty,lookatz),
                Vector(upx,upy,upz), foview);
 
-    Material* matl0=new Phong(Color(.06,.03,.18),
-                              Color(.0,.6,.6),
+    Material* matl0=new Phong(Color(.0,.6,.6),
                               Color(.6,.6,.6),
                               100, 0);
 
@@ -129,10 +128,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
         Group *group=new Group();
         obj=group;
 
-        Material* matl1=new Phong(Color(.06,.02,.01),
-                                  Color(.6,.2,.1),
-                                  Color(.6,.2,.1),
-                                  100, 0);
+        Material* matl1=new Phong(Color(.6,.2,.1), Color(.6,.2,.1), 100, 0);
 
         group->add(htvol);
 
@@ -299,7 +295,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                Color(0.0,0.0,0.0),
                                Vector(1, 0, 0)) );
 
-    scene->select_shadow_mode("none");
+    scene->select_shadow_mode( No_Shadows );
     scene->ambient_hack=false;
     scene->attach_display(dpy);
     return scene;

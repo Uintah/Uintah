@@ -78,7 +78,7 @@ read_matls(FILE* f, Array1<Material *>& mats, Array1<char *>& matnames)
 		fgets(buf,4096,f);
 		sscanf(buf,"%s %lf",junk,&Ns);
 		
- 		mats.add(new Phong(Ka,Kd,Ks,Ns));
+ 		mats.add(new Phong(Kd,Ks,Ns));
 // 		mats.add(new LambertianMaterial(Kd));
 
 	    }
@@ -449,15 +449,14 @@ Scene* make_scene(int argc, char* argv[])
       fprintf(stdout,"TFILE: %s\n",tfile);
 	matl0 = new ImageMaterial(tfile,
 				  ImageMaterial::Clamp,
-				  ImageMaterial::Clamp,
-				  Color(0,0,0), 1,
+				  ImageMaterial::Clamp, 1,
 				  Color(0,0,0), 0);
     } else 
     {
-	matl0 = new Phong(Color(.1,.1,.1),Color(.63,.51,.5),Color(.3,.3,.3),400);
+	matl0 = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
     }
     
-    //Material* matl0=new Phong (Color(.4,.4,.4),Color(.6,.6,0),Color(.5,.5,.5),30);
+    //Material* matl0=new Phong(Color(.6,.6,0),Color(.5,.5,.5),30);
 #if 0
     Material* matl0=new CrowMarble(2, 
                           Vector(2,1,0),
@@ -473,7 +472,7 @@ Scene* make_scene(int argc, char* argv[])
 
     Object* obj = hf;
     if(shownodes){
-       Material* matl1=new Phong (Color(.4,.4,.4),Color(.6,.6,0),Color(.5,.5,.5),30);
+       Material* matl1=new Phong (Color(.6,.6,0),Color(.5,.5,.5),30);
        BrickArray2<float>& data = hf->blockdata;
        Group* g = new Group();
        double rad  =Min(hf->sdiag.x(), hf->sdiag.y(), hf->sdiag.z())*0.05;
@@ -508,7 +507,7 @@ Scene* make_scene(int argc, char* argv[])
 			   groundplane, 
 			   ambient_scale);
     scene->add_light(new Light(Point(-10000,-10000,10000), Color(.7,.7,.7), 0));
-    scene->select_shadow_mode("none");
+    scene->select_shadow_mode( No_Shadows );
     scene->ambient_hack=true;
     scene->maxdepth=0;
     scene->set_background_ptr( new LinearBackground(

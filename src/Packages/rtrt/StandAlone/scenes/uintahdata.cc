@@ -51,7 +51,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	       Vector(0,1,0), 60);
 
     Color surf(.50000, 0.0, 0.00);
-    Material* matl0=new Phong(surf*0.1, surf*0.6, surf*0.6, 100, .4);
+    Material* matl0=new Phong( surf*0.6, surf*0.6, 100, .4);
     VolumeDpy* dpy=new VolumeDpy();
     ifstream in(file);
 #if 0
@@ -127,7 +127,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                Color(0.2, 0.4, 0.9),
                                Color(0.0,0.0,0.0),
                                Vector(1, 0, 0)) );
-    scene->shadow_mode=0;
+    //scene->shadow_mode=0;
     scene->ambient_hack=false;
     scene->maxdepth=0;
     scene->attach_display(dpy);
