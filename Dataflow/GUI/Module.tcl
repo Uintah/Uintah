@@ -199,6 +199,8 @@ itcl_class Module {
 
     #  Make the modules icon on a particular canvas
     method make_icon {canvas minicanvas modx mody} {
+	global $this-done_bld_icon
+	set $this-done_bld_icon 0
 	global modules
 	set modules "$modules [modname]"
 	global mainCanvasWidth mainCanvasHeight
@@ -242,7 +244,8 @@ itcl_class Module {
 	# Make the title
 	label $p.title -text $name -font $modname_font -anchor w
 	pack $p.title -side top -padx 2 -anchor w
-		
+	bind $p.title <Map> "$this setDone"
+	
 	# Make the time label
 	if {$make_time} {
 	    label $p.time -text "00.00" -font $time_font
@@ -794,7 +797,7 @@ itcl_class Module {
 	global maincanvas
 	global modname_font
 	global port_spacing
-
+	
 	set temp_spacing [expr $port_spacing+1]
 	set mod_width [winfo width $maincanvas.module[modname] ]
 	
@@ -807,16 +810,17 @@ itcl_class Module {
 	# module isn't done being created and it
 	# adds on too many extra_ports
 
-	if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
-		$temp_spacing } {
-	    incr $this-extra_ports 1
-	    set title_width [expr [set $this-original_title_size]+\
-		    [expr $temp_spacing*[set $this-extra_ports]]]
-	    set title_width [expr int(\
-		    [expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
-	    $maincanvas.module[modname].ff.title configure -width $title_width
+	if {[set $this-done_bld_icon]} {
+	    if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
+		    $temp_spacing } {
+		incr $this-extra_ports 1
+		set title_width [expr [set $this-original_title_size]+\
+			[expr $temp_spacing*[set $this-extra_ports]]]
+		set title_width [expr int(\
+			[expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
+		$maincanvas.module[modname].ff.title configure -width $title_width
+	    }
 	}
-	
     }
     
     method module_shrink {} {  
@@ -840,8 +844,35 @@ itcl_class Module {
 	    $maincanvas.module[modname].ff.title configure -width $title_width
 	}
     }
-
+    method setDone {} {
+	#module actually mapped to the canvas
+	if {[set $this-done_bld_icon] == 0 } {
+	    set $this-done_bld_icon 1
+	    
+	    global maincanvas
+	    global port_spacing
+	    set mod_width [winfo width $maincanvas.module[modname] ]
+	    set title_width [winfo width $maincanvas.module[modname].ff.title ]
+	    set temp_spacing [expr $port_spacing+1]
+	    set ports [llength [$this-c iportinfo]]
+	    set extras $ports
+	    
+	    #making sure that it is big enough
+	    if {[expr $extras*$temp_spacing] > $mod_width } {
+		incr extras -1
+		while { [expr $extras*$temp_spacing] > $mod_width } {
+		    incr extras -1
+		}
+		#the minus 1 is to account for the fact that 
+		#when module_grow is called it will increment
+		#extra_ports as if a connection has been made
+		set $this-extra_ports [expr [expr $ports-$extras]-1]
+		module_grow $ports
+	    }
+	}
+    }
 }   
+
 proc popup_menu {x y canvas minicanvas modid} {
     global CurrentlySelectedModules
     
