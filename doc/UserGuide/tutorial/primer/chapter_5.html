@@ -20,6 +20,7 @@
 	<td>
 	<center>
 	<br>
+	<A name="section 5"></A>
 	<font size="4"
 	face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
 	color="maroon">
@@ -27,6 +28,7 @@
         <p>&nbsp; </p>
         </center>
         <div align="left">
+	
 	<p><b><H4><A href="#section 1">Volume conductor problem</H4></b></A>
 	<p><b><H4><A href="#section 2">Finite element simulation network</H4></b></A>
 	<p><b><H4><A href="#section 3">FEM user interface settings</H4></b></A>
@@ -34,32 +36,35 @@
 	
         <p><b>Chapter Overview</b><br>
 
-        <p>In Chapters 1-4, we worked with dataflow programming,we
+        <p>In Chapters 1-4, we worked with dataflow programming, and we 
 	built networks to visualize existing datasets.In this
         chapter, we will construct a simulation network that <em>computes</em>
         simulated voltages for a realistic volume conductor problem.
 
 	<p>So far, we have used modules from the
         SCIRun <dfn>package</dfn> (packages are logically
-	grouped sets of modules. New packages can be added to SCIRun).
-	Those modules are general purpose
+	grouped sets of modules). New packages can be added to SCIRun. 
+	
+
+	<p>Those modules are general purpose
         tools--not targeted towards any specific application. In this chapter we will use 
 	modules from the BioPSE package, a set of tools specifically written for the
         modeling, simulation, and visualization of bioelectric field
         problems.
 
 	<!-- Hack out the next 2 paragraphs.  See note below -->
-	[<p>Typically, Packages (<b>Figure 5.1</b>) are logically
+	<p>Typically, Packages (<b>Figure 5.1</b>) are logically
 	grouped sets of modules and the supporting code for those
-	modules.[link to Ug 6.o Packages] Packages can be created by anyone, 
+	modules.Packages can be created by anyone, 
 	and compiled into SCIRun. They can be wholly dependent upon SCIRun code, or
-	can depend upon any additional third party code.  
+	can depend upon any additional third party code. To learn more about packages, see <a NAME:"sec:packages" 
+	HREF="node7.html">User's Guide 6.0, Packages.</a>
 
 	<p>Packages can, in fact, simply wrap around third party code, such that
 	SCIRun can use Dataflow functionality. Bridging is the concept that
 	SCIRun can be used in conjunction with other useful software
 	such as Matlab or Teem. Packages are a major
-	mechanism to bridging in SCIRun.|<Useful information but doesn't belong here.>]
+	mechanism to bridging in SCIRun.<Useful information but doesn't belong here.>
 
 	</div>
 	<center>
@@ -179,15 +184,15 @@
 	<b>Figure 5.3</b></p>
 	</center>
 	<div align="left">
-	<p><br>
-	<ol>
-	<li value="1.">The ApplyFEMCurrentSource module modifies the right hand
+	<p>
+	<ul>
+	<li>The ApplyFEMCurrentSource module modifies the right hand
 	side vector to account for current sources within the model.
-	<li>[On the UI (<b>Figure 5.4</b>), you|We] can choose [|(<b>Figure
-	5.4</b>)] whether the
+	<li>On the UI (<b>Figure 5.4</b>), you can choose (<b>Figure
+	5.4</b>) whether the
 	current sources are due to a dipole or to a source/sink
 	electrode pair.  
-	<li>Select the "dipole" setting.</ol>
+	<li>Select the "dipole" setting.</ul>
 
 	</div>
 	<center>
@@ -206,9 +211,6 @@
 	
 	<p><b>Note:</b> the SolveMatrix UI must remain either open or minimized
 	while the solver is running; it must not be closed completely.
-
-	<p>For more information on the SolveMatrix module, click on this
-	link [link to ?].
 
 	</div>
 	<center>
@@ -247,7 +249,15 @@
 	<p>Congratulations, you have solved a finite element problem!<br>
 
 	<p><H4><b>Summary</H4></b>
-	need content
+	In this chapter, we have used modules from the bioelectric 
+	problem solving environment (BioPSE) package. We have also 
+	constructed a simulation network that computes simulated voltages for a 
+	realistic volume conductor problem. 
+
+	<p>In Chapter 6, we will reuse the finite element simulation network from this chapter, 
+	as well as the visualization network from Chapter 4. 
+
+	<p><b><H4><A href="#section 5">Back to Top</H4></b></A>
 
 	<br>
 	<br>
