@@ -87,7 +87,13 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	checkbutton $wtab.auto -text "Execute automatically" \
 		-variable $this-autoexecute
 
-	pack $wtab.type $wtab.f1 $wtab.auto -side top -fill x -pady 5 -anchor w
+	button $wtab.reset -text "Reset Widget" \
+	    -command "set $this-force-rake-reset 1; $this-c needexecute"
+
+	pack $wtab.type $wtab.f1 $wtab.auto \
+	    -side top -fill x -pady 5 -anchor w
+
+	pack $wtab.reset -side top -pady 5
 
 
 	frame $rtab.f2
