@@ -36,6 +36,7 @@ using namespace SCIRun;
 #pragma set woff 1468
 #endif
 
+#include <Core/Geometry/Tensor.h>
 
 #include <Core/Datatypes/ColumnMatrix.h>
 template class LockingHandle<ColumnMatrix>;
@@ -44,22 +45,47 @@ template class LockingHandle<ColumnMatrix>;
 template class LockingHandle<Matrix>;
 
 #include <Core/Datatypes/TetVol.h>
-// linux needs these explicit declarations so that type_id is initialized.
+template class TetVol<Tensor>;
+template class TetVol<Vector>;
 template class TetVol<double>;
 template class TetVol<int>;
-template class GenericField<TetVolMesh, vector<double> >;
-
-#include <Core/Geometry/Tensor.h>
-template class TetVol<Tensor>;
+template class TetVol<short>;
+template class TetVol<char>;
 template class GenericField<TetVolMesh, vector<Tensor> >;
+template class GenericField<TetVolMesh, vector<Vector> >;
+template class GenericField<TetVolMesh, vector<double> >;
+template class GenericField<TetVolMesh, vector<int> >;
+template class GenericField<TetVolMesh, vector<short> >;
+template class GenericField<TetVolMesh, vector<char> >;
+
 
 #include <Core/Datatypes/LatticeVol.h>
-template class LatticeVol<double>;
-template class GenericField<LatVolMesh, FData3d<double> >;
-
-#include <Core/Geometry/Vector.h>
+template class LatticeVol<Tensor>;
 template class LatticeVol<Vector>;
+template class LatticeVol<double>;
+template class LatticeVol<int>;
+template class LatticeVol<short>;
+template class LatticeVol<char>;
+template class GenericField<LatVolMesh, FData3d<Tensor> >;
 template class GenericField<LatVolMesh, FData3d<Vector> >;
+template class GenericField<LatVolMesh, FData3d<double> >;
+template class GenericField<LatVolMesh, FData3d<int> >;
+template class GenericField<LatVolMesh, FData3d<short> >;
+template class GenericField<LatVolMesh, FData3d<char> >;
+
+#include <Core/Datatypes/TriSurf.h>
+template class TriSurf<Tensor>;
+template class TriSurf<Vector>;
+template class TriSurf<double>;
+template class TriSurf<int>;
+template class TriSurf<short>;
+template class TriSurf<char>;
+template class GenericField<TriSurfMesh, vector<Tensor> >;
+template class GenericField<TriSurfMesh, vector<Vector> >;
+template class GenericField<TriSurfMesh, vector<double> >;
+template class GenericField<TriSurfMesh, vector<int> >;
+template class GenericField<TriSurfMesh, vector<short> >;
+template class GenericField<TriSurfMesh, vector<char> >;
 
 #include <Core/Datatypes/ContourField.h>
 template class ContourField<double>;
@@ -67,9 +93,6 @@ template class GenericField<ContourMesh, vector<double> >;
 
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/PersistentSTL.h>
-
-#include <Core/Datatypes/TriSurfMesh.h>
-template class GenericField<TriSurfMesh, vector<double> >;
 
 #include <Core/Datatypes/PropertyManager.h>
 template class Property<string>;
