@@ -165,6 +165,8 @@ public:
     bool dl_update(GeomDL *obj, unsigned int state);
     bool dl_addnew(GeomDL *obj, unsigned int state, unsigned int &dl);
     bool dl_remove(GeomDL *obj);
+
+    bool mouse_action;
 };
 
 } // End namespace SCIRun

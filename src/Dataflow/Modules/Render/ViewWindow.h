@@ -205,6 +205,7 @@ protected:
 public:
   int inertia_mode;
   BallData *ball;		// this is the ball for arc ball stuff
+  bool mouse_action_;
   
   double angular_v;		// angular velocity for inertia
   View rot_view;		// pre-rotation view
@@ -356,7 +357,9 @@ public:
   void setDI(DrawInfoOpenGL*,string);
   // sets up OGL clipping planes...
   void setClip(DrawInfoOpenGL*); 
-
+  // sets up mouse state
+  void setMouse(DrawInfoOpenGL*); 
+  
   // Which of the objects do we draw?
   MapStringObjTag visible;
 

@@ -882,6 +882,7 @@ void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
     break;
   case MouseEnd:
     update_mode_string("");
+    //need_redraw=true; -- this would be needed for mouse-adaptive rendering
     break;
   }
 }
@@ -2500,9 +2501,9 @@ void ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
   }
   int action;
   if(args[2] == "start"){
-    action=MouseStart;
+    action=MouseStart; mouse_action_ = true;
   } else if(args[2] == "end"){
-    action=MouseEnd;
+    action=MouseEnd; mouse_action_ = false;
   } else if(args[2] == "move"){
     action=MouseMove;
   } else {
