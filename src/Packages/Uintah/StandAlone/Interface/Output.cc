@@ -15,15 +15,12 @@ Output::~Output()
 {
 }
 
-void
-Output::finalizeTimestep(double t, double, const LevelP&,
-			 SchedulerP&, const DataWarehouseP&)
-{
-    //cerr << "Finalizing time step: t=" << t << '\n';
-}
-
 //
 // $Log$
+// Revision 1.5  2000/05/15 19:39:52  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.4  2000/04/26 06:49:11  sparker
 // Streamlined namespaces
 //
