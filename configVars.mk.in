@@ -63,9 +63,9 @@ SO_OR_A_FILE := @SO_OR_ARCHIVE_EXTENSION@
 
 
 ifeq ($(OBJTOP),.)
-LIBDIR := lib/
+LIBDIR := lib
 else
-LIBDIR := $(OBJTOP_ABS)/lib/
+LIBDIR := $(OBJTOP_ABS)/lib
 endif
 
 # squash any output from noisy environments, we just want the pwd output
