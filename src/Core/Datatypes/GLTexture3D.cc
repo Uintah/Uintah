@@ -537,11 +537,18 @@ void GLTexture3D::build_child(int i, Point min, Point mid, Point max,
 }
 
 double
-GLTexture3D::SETVAL(double val) {
+GLTexture3D::SETVAL(double val)
+{
   double v = (val - min_)*255/(max_ - min_);
   if ( v < 0 ) return 0;
   else if (v > 255) return 255;
   else return v;
+}
+
+unsigned char
+GLTexture3D::SETVALC(double val)
+{
+  return (unsigned char)SETVAL(val);
 }
 
 template <class T>
@@ -556,7 +563,7 @@ void GLTexture3D::make_brick_data(int newx, int newy, int newz,
   for(kk = 0, k = zoff; kk < zsize; kk++, k++)
     for(jj = 0, j = yoff; jj < ysize; jj++, j++)
       for(ii = 0, i = xoff; ii < xsize; ii++, i++){
-	(*bd)(kk,jj,ii) = SETVAL( tex->fdata()(i,j,k) );
+	(*bd)(kk,jj,ii) = SETVALC( tex->fdata()(i,j,k) );
   }
 
 }
@@ -584,13 +591,13 @@ void GLTexture3D::make_low_res_brick_data(int xmax, int ymax, int zmax,
     double dk,dj,di, k00,k01,k10,k11,j00,j01;
 
     for(kk = 0, k = zoff; kk < zmax; kk++, k+=dz){
-      k1 = ((int)k + 1 >= zoff+zsize-1)?k:(int)k + 1 ;
+      k1 = ((int)k + 1 >= zoff+zsize-1)?(int)k:(int)k + 1 ;
       if(k1 == (int)k ) { dk = 0; } else {dk = k1 - k;}
       for(jj = 0,j = yoff; jj < ymax; jj++, j+=dy){
-	j1 = ((int)j + 1 >= yoff+ysize-1)?j:(int)j + 1 ;
+	j1 = ((int)j + 1 >= yoff+ysize-1)?(int)j:(int)j + 1 ;
 	if(j1 == (int)j) {dj = 0;} else { dj = j1 - j;} 
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
-	  i1 = ((int)i + 1 >= xoff+xsize-1)?i:(int)i + 1 ;
+	  i1 = ((int)i + 1 >= xoff+xsize-1)?(int)i:(int)i + 1 ;
 	  if( i1 == (int)i){ di = 0;} else {di = i1 - i;}
 	  k00 = Interpolate(SETVAL( tex->fdata()(i,j,k) ),
 			    SETVAL( tex->fdata()(i,j,k1)),dk);
@@ -602,7 +609,7 @@ void GLTexture3D::make_low_res_brick_data(int xmax, int ymax, int zmax,
 			    SETVAL( tex->fdata()(i1,j1,k1)),dk);
 	  j00 = Interpolate(k00,k10,dj);
 	  j01 = Interpolate(k01,k11,dj);
-	  (*bd)(kk,jj,ii) = Interpolate(j00,j01,di);
+	  (*bd)(kk,jj,ii) = (unsigned char)Interpolate(j00,j01,di);
 	}
       }
     }
@@ -614,7 +621,7 @@ void GLTexture3D::make_low_res_brick_data(int xmax, int ymax, int zmax,
     } else {
       dx = pow(2.0, levels_ - level);
       if( xmax * dx > xsize){
-	padx = (xmax*dx - xsize)/dx;
+	padx = (int)((xmax*dx - xsize)/dx);
       }
     }
     if( ymax > ysize ) {
@@ -622,7 +629,7 @@ void GLTexture3D::make_low_res_brick_data(int xmax, int ymax, int zmax,
     } else {
       dy = pow(2.0, levels_ - level);
       if( ymax * dy > ysize){
-	pady = (ymax*dy - ysize)/dy;
+	pady = (int)((ymax*dy - ysize)/dy);
       }
     }
     if( zmax > zsize ) {
@@ -630,7 +637,7 @@ void GLTexture3D::make_low_res_brick_data(int xmax, int ymax, int zmax,
     } else {
       dz = pow(2.0, levels_ - level);
       if( zmax * dz > zsize){
-	padz = (zmax*dz - zsize)/dz;
+	padz = (int)((zmax*dz - zsize)/dz);
       }
     }
 /*     if(debug){ */
@@ -645,7 +652,7 @@ void GLTexture3D::make_low_res_brick_data(int xmax, int ymax, int zmax,
       for(jj = 0, j = yoff; jj < ymax; jj++, j+=dy){
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
 	  if( i < xoff + xsize && j < yoff + ysize && k < zoff + zsize){
-	    (*bd)(kk,jj,ii) = SETVAL( tex->fdata()(i,j,k) );
+	    (*bd)(kk,jj,ii) = SETVALC( tex->fdata()(i,j,k) );
 	  }
 	}
       }

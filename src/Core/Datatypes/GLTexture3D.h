@@ -138,6 +138,7 @@ private:
   double dx_, dy_, dz_;
   bool isCC_;
   double SETVAL(double);
+  unsigned char SETVALC(double);
   void set_bounds();
   void compute_tree_depth();
   void build_texture();
