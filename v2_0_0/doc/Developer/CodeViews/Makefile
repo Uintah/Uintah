@@ -34,7 +34,7 @@ docs:
 	if ( test -d ${SRC} && ( test "$$WITH_CV" = true || test $$MAKELEVEL -eq 1 ) ) && ( test ! -d html || ruby outOfDate.rb ) ;  \
 	then \
 		test -d html && rm -rf html; \
-		doxygen Doxyconfig; \
+		/usr/local/bin/doxygen Doxyconfig; \
 	fi
 
 clean:
