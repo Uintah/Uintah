@@ -101,7 +101,7 @@ void ParticleVis::execute()
   tpin= (TensorParticlesIPort *) get_iport("Tensor Particles");
   cin= (ColorMapIPort *) get_iport("ColorMap"); 
   ogeom= (GeometryOPort *) get_oport("Geometry"); 
-
+  ogeom->delAll();
   
   ScalarParticlesHandle part;
   ScalarParticlesHandle scaleSet;
