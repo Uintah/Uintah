@@ -46,6 +46,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/genColorMap
 SRCS := $(SRCDIR)/genColorMap.cc
 SRCS += $(SRCDIR)/libtrick.cc\
-	$(SRCDIR)/VH_Adj_to_adjTable.cc
+	$(SRCDIR)/VH_Adj_to_adjTable.cc\
+	Packages/VS/Dataflow/Modules/DataFlow/labelmaps.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
