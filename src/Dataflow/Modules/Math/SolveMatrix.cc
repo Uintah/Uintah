@@ -268,6 +268,9 @@ void SolveMatrix::execute()
   } else {
     solution=scinew ColumnMatrix(rhs->nrows());
     solution->zero();
+    string units;
+    if (rhs->get_property("units", units))
+      solution->set_property("units", units, false);
   }
   
   int size=matrix->nrows();
