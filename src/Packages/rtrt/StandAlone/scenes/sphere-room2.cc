@@ -161,7 +161,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                          ambient_scale, Constant_Ambient);
   scene->select_shadow_mode(No_Shadows);
   LinearBackground *background = 
-    new LinearBackground(Color(.8,.5,.2),Color(.2,.8,.1),Vector(0,0,-1));
+    new LinearBackground(Color(.8,.5,.3),Color(.05,.1,.4),Vector(0,0,-1));
   scene->set_background_ptr( background );
 
   //
