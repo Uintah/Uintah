@@ -1,10 +1,10 @@
 #!/usr/local/bin/wish -f
 
 if {![info exists sci_root]} {
-    set sci_root ..
+    set sci_root .
 }
 
-source $sci_root/project/defaults.tcl
+source $sci_root/defaults.tcl
 
 set modname_font "-Adobe-Helvetica-bold-R-Normal-*-120-*"
 set ui_font "-Adobe-Helvetica-medium-R-Normal-*-120-*"
@@ -199,7 +199,7 @@ proc itemDrag {c x y} {
     set lastY $y
 }
 
-source $sci_root/project/Filebox.tcl
-source $sci_root/project/MemStats.tcl
-source $sci_root/project/ThreadStats.tcl
-source $sci_root/project/Module.tcl
+source $sci_root/TCL/Filebox.tcl
+source $sci_root/Dataflow/MemStats.tcl
+source $sci_root/Dataflow/ThreadStats.tcl
+source $sci_root/Dataflow/Module.tcl

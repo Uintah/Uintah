@@ -37,7 +37,7 @@ int NetworkEditor::body(int)
 {
     // Create User interface...
     TCL::add_command("netedit", this, 0);
-    TCL::source_once("project/project/NetworkEditor.tcl");
+    TCL::source_once("Dataflow/NetworkEditor.tcl");
     TCL::execute("makeNetworkEditor");
 
     // Initialize the network
