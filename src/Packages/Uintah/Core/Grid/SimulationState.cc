@@ -17,6 +17,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    nonconstDelt->allowMultipleComputes();
    delt_label = nonconstDelt;
    d_mpm_cfd = false;
+   d_ref_press = 0.0;
 
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
