@@ -68,6 +68,7 @@ public:
 
     // compare 2 views; are they exactly the same?
     int operator==(const View&);
+    int operator!=(const View&);
     
     void get_viewplane(double aspect, double zdist,
 		       Vector& u, Vector& v);
