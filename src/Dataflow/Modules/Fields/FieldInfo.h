@@ -31,8 +31,7 @@ namespace SCIRun {
 class FieldInfoAlgoCount : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshHandle src, int &num_nodes, int &num_elems,
-		       int &dimension) = 0;
+  virtual void execute(MeshHandle src, int &num_nodes, int &num_elems) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc);
@@ -44,67 +43,23 @@ class FieldInfoAlgoCountT : public FieldInfoAlgoCount
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshHandle src, int &num_nodes, int &num_elems,
-		       int &dimension);
+  virtual void execute(MeshHandle src, int &num_nodes, int &num_elems);
 };
 
 
 template <class MESH>
 void 
-FieldInfoAlgoCountT<MESH>::execute(MeshHandle mesh_h,
-				   int &num_nodes, int &num_elems,
-				   int &dimension)
+FieldInfoAlgoCountT<MESH>::execute(MeshHandle mesh_h, int &num_nodes, 
+				   int &num_elems)
 {
-  typedef typename MESH::Node::iterator node_iter_type;
-  typedef typename MESH::Elem::iterator elem_iter_type;
-
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
-
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
-
-  int count = 0;
-  node_iter_type ni; mesh->begin(ni);
-  node_iter_type nie; mesh->end(nie);
-  while (ni != nie)
-  {
-    count++;
-    ++ni;
-  }
-  num_nodes = count;
-
-  count = 0;
-  elem_iter_type ei; mesh->begin(ei);
-  elem_iter_type eie; mesh->end(eie);
-  while (ei != eie)
-  {
-    count++;
-    ++ei;
-  }
-  num_elems = count;
-
-  dimension = 0;
-  
-  typename MESH::Edge::iterator eb, ee; mesh->begin(eb); mesh->end(ee);
-  if (eb != ee);
-  {
-    dimension = 1;
-  }
-  typename MESH::Face::iterator fb, fe; mesh->begin(fb); mesh->end(fe);
-  if (fb != fe)
-  {
-    dimension = 2;
-  }
-  typename MESH::Cell::iterator cb, ce; mesh->begin(cb); mesh->end(ce);
-  if (cb != ce)
-  {
-    dimension = 3;
-  }
+  typename MESH::Node::size_type nnodes;
+  typename MESH::Elem::size_type nelems;
+  mesh->size(nnodes);
+  mesh->size(nelems);
+  num_nodes=nnodes;
+  num_elems=nelems;
 }
-
-
-
-
-
 
 } // end namespace SCIRun
 

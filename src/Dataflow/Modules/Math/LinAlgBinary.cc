@@ -121,6 +121,99 @@ void LinAlgBinary::execute() {
     }
     omat_->send(MatrixHandle(m));
     delete[] ab;
+  } else if (op == "SelectColumns") {
+    if (!aH.get_rep() || !bH.get_rep()) {
+      cerr << "LinAlgBinary:SelectColumns Error - can't have an empty input matrix for this operation.\n";
+      return;
+    }
+    ColumnMatrix *bc = dynamic_cast<ColumnMatrix *>(bH.get_rep());
+    if (!bc) {
+      cerr << "LinAlgBinary:SelectColumns Error - second input must be a ColumnMatrix!\n";
+      return;
+    }
+    DenseMatrix *cd = scinew DenseMatrix(aH->nrows(), bc->nrows());
+    for (int i=0; i<cd->ncols(); i++) {
+      int idx = (int)(*bc)[i];
+      if (idx == -1) continue;
+      if (idx > aH->ncols()) {
+	cerr << "LinAlgBinary:SelectColumns Error - tried to select a column ("<<idx<<") that was out of range ("<<aH->ncols()<<")\n";
+	return;
+      }
+      for (int j=0; j<aH->nrows(); j++) {
+	(*cd)[j][i]=aH->get(j,idx);
+      }
+    }
+    if (dynamic_cast<DenseMatrix *>(aH.get_rep()))
+      omat_->send(MatrixHandle(cd));
+    else if (dynamic_cast<ColumnMatrix *>(aH.get_rep())) {
+      omat_->send(MatrixHandle(cd->column()));
+      delete cd;
+    } else {
+      omat_->send(MatrixHandle(cd->sparse()));
+      delete cd;
+    }
+    return;
+  } else if (op == "SelectRows") {
+    if (!aH.get_rep() || !bH.get_rep()) {
+      cerr << "LinAlgBinary:SelectRows Error - can't have an empty input matrix for this operation.\n";
+      return;
+    }
+    ColumnMatrix *bc = dynamic_cast<ColumnMatrix *>(bH.get_rep());
+    if (!bc) {
+      cerr << "LinAlgBinary:SelectRows Error - second input must be a ColumnMatrix!\n";
+      return;
+    }
+    DenseMatrix *cd = scinew DenseMatrix(bc->nrows(), aH->ncols());
+    for (int i=0; i<cd->nrows(); i++) {
+      int idx = (int)(*bc)[i];
+      if (idx == -1) continue;
+      if (idx > aH->nrows()) {
+	cerr << "LinAlgBinary:SelectRows Error - tried to select a row ("<<idx<<") that was out of range ("<<aH->nrows()<<")\n";
+	return;
+      }
+      for (int j=0; j<aH->ncols(); j++) {
+	(*cd)[i][j]=aH->get(idx,j);
+      }
+    }
+    if (dynamic_cast<DenseMatrix *>(aH.get_rep()))
+      omat_->send(MatrixHandle(cd));
+    else if (dynamic_cast<ColumnMatrix *>(aH.get_rep())) {
+      omat_->send(MatrixHandle(cd->column()));
+      delete cd;
+    } else {
+      omat_->send(MatrixHandle(cd->sparse()));
+      delete cd;
+    }
+    return;
+  } else if (op == "NormalizeAtoB") {
+    if (!aH.get_rep() || !bH.get_rep()) {
+      cerr << "LinAlgBinary:NormalizeAtoB Error - can't have an empty input matrix for this operation.\n";
+      return;
+    }
+    double amin, amax, bmin, bmax;
+    MatrixHandle anewH = aH->clone();
+    double *a = &((*(aH.get_rep()))[0][0]);
+    double *anew = &((*(anewH.get_rep()))[0][0]);
+    double *b = &((*(bH.get_rep()))[0][0]);
+    int na = aH->nrows()*aH->ncols();
+    int nb = bH->nrows()*bH->ncols();
+    amin=amax=a[0];
+    bmin=bmax=b[0];
+    int i;
+    for (i=1; i<na; i++) {
+      if (a[i]<amin) amin=a[i];
+      else if (a[i]>amax) amax=a[i];
+    }
+    for (i=1; i<nb; i++) {
+      if (b[i]<bmin) bmin=b[i];
+      else if (b[i]>bmax) bmax=b[i];
+    }
+    double da=amax-amin;
+    double db=bmax-bmin;
+    double scale = db/da;
+    for (i=0; i<na; i++)
+      anew[i] = (a[i]-amin)*scale+bmin;
+    omat_->send(anewH);
   } else {
     warning("Don't know operation "+op);
     return;

@@ -65,7 +65,12 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   if (!fld2->query_scalar_interface()) { return 0; }
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+
+  Field::data_location d_at = fld->data_at();
+  if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (d_at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
@@ -127,7 +132,12 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   if (!fld2->query_vector_interface()) { return 0; }
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+
+  Field::data_location d_at = fld->data_at();
+  if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (d_at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
@@ -189,7 +199,12 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   if (!fld2->query_tensor_interface()) { return 0; }
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+
+  Field::data_location d_at = fld->data_at();
+  if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (d_at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);

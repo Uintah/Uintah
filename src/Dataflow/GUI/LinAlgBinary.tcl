@@ -52,6 +52,9 @@ itcl_class SCIRun_Math_LinAlgBinary {
                 top $this-op \
 		{{"A X B" Mult} \
                 {"A + B" Add} \
+                {"Normalize A to B" NormalizeAtoB} \
+                {"Select Rows" SelectRows} \
+                {"Select Columns" SelectColumns} \
 		{"Function" Function}}
 	global $this-function
 	make_entry $w.f.f "    specify function:" $this-function "$this-c needexecute"	
