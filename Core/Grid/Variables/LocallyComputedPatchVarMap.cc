@@ -3,6 +3,7 @@
 
 #include <iostream>
 using namespace std;
+using namespace SCIRun;
 using namespace Uintah;
 
 class PatchRangeQuerier

@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/BufferInfo.h>
 namespace Uintah {
 
-  using namespace SCIRun;
+  using SCIRun::IntVector;
 
   /**************************************
 

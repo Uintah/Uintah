@@ -24,20 +24,21 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Core/Containers/SuperBox.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-
-  using namespace SCIRun;
 
   inline int getVolume(const IntVector& low, const IntVector& high)
   { return Patch::getVolume(low, high); }
 
-  typedef SuperBox<const Patch*, IntVector, int, int,
-    InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatch;
+  typedef SCIRun::SuperBox<const Patch*, IntVector, int, int,
+    SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatch;
 
-  typedef SuperBoxSet<const Patch*, IntVector, int, int,
-    InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
+  typedef SCIRun::SuperBoxSet<const Patch*, IntVector, int, int,
+    SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
   typedef SuperPatchSet::SuperBoxContainer SuperPatchContainer;
 
   class LocallyComputedPatchVarMap {
@@ -57,8 +58,8 @@ namespace Uintah {
     class Compare {
       VarLabel::Compare vlcomp;
     public:
-      inline bool operator()(const pair<const VarLabel*, const Level*>& p1,
-			     const pair<const VarLabel*, const Level*>& p2) const
+      inline bool operator()(const std::pair<const VarLabel*, const Level*>& p1,
+			     const std::pair<const VarLabel*, const Level*>& p2) const
       {
 	return p1.second == p2.second?vlcomp(p1.first, p2.first): p1.second < p2.second;
       }
