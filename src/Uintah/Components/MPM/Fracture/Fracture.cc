@@ -152,10 +152,10 @@ void Fracture::computerNodesVisibilityAndCrackSurfaceContactForce(
  	  Point& X2 = pX[pContact];
 	  double size2 = pow(pVolume[pContact],0.3333);
 	  
-	  if( (X1-X2).length() < (size1+size2) * 0.9 ) {
+	  if( (X1-X2).length() < (size1+size2)/2 * 0.9 ) {
             double mass2 = pMass[pContact];
 	    Vector& V2 = pVelocity[pContact];
-	    Vector F = (V2-V1)*mass1*mass2/(mass1+mass2);
+	    Vector F = (V2-V1)*mass1*mass2/(mass1+mass2)/delT;
 	    pCrackSurfaceContactForce[pIdx] += F;
 	    pCrackSurfaceContactForce[pContact] -= F;
 	  }	  
@@ -301,6 +301,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.45  2000/09/11 20:23:26  tan
+// Fixed a mistake in crack surface contact force algorithm.
+//
 // Revision 1.44  2000/09/11 19:45:43  tan
 // Implemented crack surface contact force calculation algorithm.
 //

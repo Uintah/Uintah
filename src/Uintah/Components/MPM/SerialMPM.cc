@@ -260,8 +260,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
-	    t->requires(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
 
             t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
@@ -271,6 +269,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
              */
 
 	    if(mpm_matl->getFractureModel()) {
+	       t->requires(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
 	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
    	    }
@@ -1870,6 +1870,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.147  2000/09/11 20:23:19  tan
+// Fixed a mistake in crack surface contact force algorithm.
+//
 // Revision 1.146  2000/09/11 19:45:15  tan
 // Implemented crack surface contact force calculation algorithm.
 //
