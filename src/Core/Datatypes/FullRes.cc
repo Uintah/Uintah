@@ -52,10 +52,12 @@ FullRes::draw()
 
   
   vector<Polygon* > polys;
+  vector<Polygon* >::iterator it;
   double tmin, tmax, dt;
   double ts[8];
   int i;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
+    for(it = polys.begin(); it != polys.end(); it++) { delete *it; }
     polys.clear();
     Brick& b = *brick;
     for( i = 0; i < 8; i++)
