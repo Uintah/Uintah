@@ -445,9 +445,12 @@ template <class F>
 bool
 VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 {
+  static const Vector MaxVector(1.0e6, 1.0e6, 1.0e6);
+  static const Vector MinVector(-1.0e6, -1.0e6, -1.0e6);
+
   bool result = false;
-  minout = 1.0e6;
-  maxout = -1.0e6;
+  minout = MaxVector;
+  maxout = MinVector;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   switch (fld_->data_at())
   {
