@@ -30,5 +30,5 @@ echo "SRCTOP_ABS = $srcloc" >> Makefile
 echo "OBJTOP     = ./" >> Makefile
 echo 'OBJTOP_ABS = $(shell cd $(OBJTOP) ; pwd)' >> Makefile
 echo "" >> Makefile
-echo "include REPLACE_SCIRUN_OBJTOP/PackMakefile" >> Makefile
+echo "include REPLACE_SCIRUN_OBJTOP/disjointPackageMakefile" >> Makefile
 echo "#this file is to define variables needed by the local package make" > localdefs.mk

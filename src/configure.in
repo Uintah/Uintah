@@ -1228,7 +1228,7 @@ if ! test -d "Dataflow/Modules/Math/Manip"; then
 fi
 AC_OUTPUT(	configVars.mk \
 		Makefile \
-		PackMakefile \
+		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
 		sci_defs.h \
