@@ -276,7 +276,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 void
 GLVolRenState::loadColorMap(Brick& brick)
 {
-#ifdef CORRECT_OGLEXT_HDRS
+  //glCheckForError("start of loadColorMap");
   const unsigned char *arr = volren->transfer_functions(brick.level());
 
 #if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)  && defined(__APPLE__)
@@ -303,8 +303,8 @@ GLVolRenState::loadColorMap(Brick& brick)
     }
     glActiveTexture(GL_TEXTURE0_ARB);
   }
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI )
-  //  cerr<<"GL_TEXTURE_COLOR_TABLE_SGI defined\n";
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
+  //cerr << "GL_TEXTURE_COLOR_TABLE_SGI defined" << endl;
   glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
                256, // try larger sizes?
@@ -312,26 +312,28 @@ GLVolRenState::loadColorMap(Brick& brick)
                GL_UNSIGNED_BYTE, // try shorts...
                arr);
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
-  //  cerr<<"GL_SHARED_TEXTURE_PALETTE_EXT  defined \n";
+  //cerr << "GL_SHARED_TEXTURE_PALETTE_EXT  defined" << endl;
 
 #ifndef HAVE_CHROMIUM
-    ASSERT(glColorTableEXT != NULL );
+  //cerr << "not HAVE_CHROMIUM" << endl;
+  ASSERT(glColorTableEXT != NULL );
   glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
 		  GL_RGBA,
 		  256, // try larger sizes?
 		  GL_RGBA,  // need an alpha value...
 		  GL_UNSIGNED_BYTE, // try shorts...
 		  arr);
+  //glCheckForError("After glColorTableEXT");
 #endif
-  //   glCheckForError("After glColorTableEXT");
+
 #endif
-#endif
+  //glCheckForError("end of loadColorMap");
 }
 
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
-#ifdef CORRECT_OGLEXT_HDRS
+  //glCheckForError("start of GLVolRenState::loadTexture");
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   glActiveTexture(GL_TEXTURE0_ARB);
 //   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -343,15 +345,15 @@ GLVolRenState::loadTexture(Brick& brick)
       textureNames.push_back( brick.texName() );
      }
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
-//      glCheckForError("After glBindTexture");
+    //glCheckForError("After glBindTexture");
     if(volren->interp()){
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      //        glCheckForError("glTexParameteri GL_LINEAR");
+      //glCheckForError("glTexParameteri GL_LINEAR");
     } else {
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      //        glCheckForError("glTexParameteri GL_NEAREST");
+      //glCheckForError("glTexParameteri GL_NEAREST");
     }
 
 
@@ -366,16 +368,16 @@ GLVolRenState::loadTexture(Brick& brick)
 #else
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
-//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_S GL_CLAMP");
+    //glCheckForError("glTexParameteri GL_TEXTURE_WRAP_S GL_CLAMP");
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,
 		    GL_CLAMP);
-//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_T GL_CLAMP");
+    //glCheckForError("glTexParameteri GL_TEXTURE_WRAP_T GL_CLAMP");
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT,
 		    GL_CLAMP);
-//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_R GL_CLAMP");
+    //glCheckForError("glTexParameteri GL_TEXTURE_WRAP_R GL_CLAMP");
 #endif
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-//      glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
+    //glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
     
 #if defined( GL_ARB_fragment_program ) && defined(GL_ARB_multitexture) && defined(__APPLE__)
     glTexImage3D(GL_TEXTURE_3D, 0,
@@ -386,7 +388,7 @@ GLVolRenState::loadTexture(Brick& brick)
 		 0,
 		 GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		 &(*(brick.texture()))(0,0,0));
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) 
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
     // set up the texture
     //glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
     glTexImage3D(GL_TEXTURE_3D, 0,
@@ -397,7 +399,7 @@ GLVolRenState::loadTexture(Brick& brick)
 		    0,
 		    GL_RED, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
-//      glCheckForError("After glTexImage3D SGI");
+    //glCheckForError("After glTexImage3D SGI");
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
     glTexImage3D(GL_TEXTURE_3D_EXT, 0,
 		    GL_COLOR_INDEX8_EXT,
@@ -407,13 +409,11 @@ GLVolRenState::loadTexture(Brick& brick)
 		    0,
 		    GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
-//      glCheckForError("After glTexImage3D Linux");
+    //glCheckForError("After glTexImage3D Linux");
 #endif
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }
-  //#endif
-#endif
 }
 void 
 GLVolRenState::makeTextureMatrix( const Brick& brick)

@@ -42,7 +42,7 @@ using std::cerr;
 using std::endl;
 using std::string;
 
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
 #ifndef HAVE_GLEW
 
 #ifndef GL_ARB_vertex_program
@@ -128,7 +128,7 @@ ShaderProgramARB::~ShaderProgramARB ()
 bool
 ShaderProgramARB::valid()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   return mSupported ? glIsProgramARB(mId) : false;
 #else
   return false;
@@ -139,7 +139,7 @@ bool
 ShaderProgramARB::create()
 {
   if(!mInit) {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
 #ifdef HAVE_GLEW
     if (!GLEW_ARB_vertex_program || !GLEW_ARB_fragment_program) {
       mSupported = false;
@@ -184,7 +184,7 @@ ShaderProgramARB::create()
     mInit = true;
   }
 
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     dbg << mProgram << endl;
     glGenProgramsARB(1, &mId);
@@ -234,7 +234,7 @@ ShaderProgramARB::create()
 void
 ShaderProgramARB::destroy ()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     glDeleteProgramsARB(1, &mId);
     mId = 0;
@@ -245,7 +245,7 @@ ShaderProgramARB::destroy ()
 void
 ShaderProgramARB::bind ()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     glEnable(mType);
     glBindProgramARB(mType, mId);
@@ -256,7 +256,7 @@ ShaderProgramARB::bind ()
 void
 ShaderProgramARB::release ()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     glBindProgramARB(mType, 0);
     glDisable(mType);
@@ -267,7 +267,7 @@ ShaderProgramARB::release ()
 void
 ShaderProgramARB::enable ()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     glEnable(mType);
   }
@@ -277,7 +277,7 @@ ShaderProgramARB::enable ()
 void
 ShaderProgramARB::disable ()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     glDisable(mType);
   }
@@ -287,7 +287,7 @@ ShaderProgramARB::disable ()
 void
 ShaderProgramARB::makeCurrent ()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     glBindProgramARB(mType, mId);
   }
@@ -297,7 +297,7 @@ ShaderProgramARB::makeCurrent ()
 void
 ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(mSupported) {
     glProgramLocalParameter4fARB(mType, i, x, y, z, w);
   }

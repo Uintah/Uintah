@@ -1710,9 +1710,10 @@ $_sci_inc, GL, $_sci_lib,,
 ],optional)
 
 DEF_OGL_EXT_HDRS=""
+DEF_HAVE_AVR=""
 
 if test "$HAVE_EXT_HDRS" = "yes"; then
-
+  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"	
   SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
   [
     #define GL_GLEXT_PROTOTYPES
@@ -1738,14 +1739,15 @@ fi
   
 
 if test "$HAVE_AVR" = "yes"; then
-  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
   COMPILE_AVR=1
+  DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
 fi
 
 AC_LANG(C)
 
 AC_SUBST(DEF_OGL_EXT_HDRS)
 AC_SUBST(COMPILE_AVR)
+AC_SUBST(DEF_HAVE_AVR)
 
 ##  --  search for dlopen  -----------------------------------------------
 SCI_TRY_LINK(DL,dlopen in libc,dlfcn.h,,c,,,[
