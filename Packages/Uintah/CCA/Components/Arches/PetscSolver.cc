@@ -65,6 +65,9 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   db->require("pctype", d_pcType);
   if (d_pcType == "asm")
     db->require("overlap",d_overlap);
+  if (d_pcType == "ilu")
+    db->require("fill",d_fill);
+  db->require("ksptype",d_kspType);
   int argc = 2;
   char** argv;
   argv = new char*[2];
@@ -262,6 +265,7 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw PetscError(ierr, "MatCreateMPIAIJ");
+
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
@@ -511,7 +515,6 @@ PetscSolver::pressLinearSolve()
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
   ierr = SLESCreate(PETSC_COMM_WORLD,&sles);
   if(ierr)
     throw PetscError(ierr, "SLESCreate");
@@ -537,10 +540,28 @@ PetscSolver::pressLinearSolve()
     if(ierr)
       throw PetscError(ierr, "PCASMSetOverlap");
   }
+  else if (d_pcType == "ilu") {
+    ierr = PCSetType(peqnpc, PCILU);
+    if(ierr)
+      throw PetscError(ierr, "PCSetType");
+    ierr = PCILUSetFill(peqnpc, d_fill);
+    if(ierr)
+      throw PetscError(ierr, "PCILUSetFill");
+  }
   else {
     ierr = PCSetType(peqnpc, PCBJACOBI);
     if(ierr)
       throw PetscError(ierr, "PCSetType");
+  }
+  if (d_kspType == "cg") {
+    ierr = KSPSetType(ksp, KSPCG);
+    if(ierr)
+      throw PetscError(ierr, "KSPSetType");
+  }
+  else {
+    ierr = KSPSetType(ksp, KSPGMRES);
+    if(ierr)
+      throw PetscError(ierr, "KSPSetType");
   }
   ierr = KSPSetTolerances(ksp, 1.e-7, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   if(ierr)
