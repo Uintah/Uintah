@@ -2235,7 +2235,8 @@ public:
 				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
-				 int resolution) = 0;
+				 int resolution,
+				 double emphasis) = 0;
 
 
 
@@ -2254,7 +2255,10 @@ protected:
 
   void add_super_quadric(GeomGroup *g, MaterialHandle mat,
 			 const Point &p, Tensor &t,
-			 double scale, int resolution, bool colorize);
+			 double scale, int resolution, bool colorize,
+			 double emphasis);
+
+  double map_emphasis(double zero_to_one);
 };
 
 
@@ -2269,7 +2273,8 @@ public:
 				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
-				 int resolution);
+				 int resolution,
+				 double zo_emphasis);
 };
 
 
@@ -2282,7 +2287,8 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 						bool force_def_color,
 						const string &display_mode,
 						double scale, 
-						int resolution)
+						int resolution,
+						double zo_emphasis)
 {
   VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep()); 
@@ -2291,6 +2297,8 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   const bool sphere_p = (display_mode == "Ellipsoids");
   const bool squad_p = (display_mode == "Superquadrics");
   const bool cbox_p = (display_mode == "Colored Boxes");
+
+  const double emph = map_emphasis(zo_emphasis);
 
   GeomHandle glyph;
   if (box_p)
@@ -2358,7 +2366,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       {
 	if (squad_p)
 	{
-	  add_super_quadric(objs, 0, p, tmp, scale, resolution, true);
+	  add_super_quadric(objs, 0, p, tmp, scale, resolution, true, emph);
 	}
 	else
 	{
@@ -2375,7 +2383,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	if (squad_p)
 	{
 	  add_super_quadric(objs, cmap->lookup(ctmpd),
-			    p, tmp, scale, resolution, false);
+			    p, tmp, scale, resolution, false, emph);
 	}
 	else
 	{
@@ -2394,7 +2402,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	vcol->diffuse = Color(ctmpv.x(), ctmpv.y(), ctmpv.z());
 	if (squad_p)
 	{
-	  add_super_quadric(objs, vcol, p, tmp, scale, resolution, false);
+	  add_super_quadric(objs, vcol, p, tmp, scale, resolution, false, emph);
 	}
 	else
 	{
@@ -2406,7 +2414,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       {
 	if (squad_p)
 	{
-	  add_super_quadric(objs, 0, p, tmp, scale, resolution, false);
+	  add_super_quadric(objs, 0, p, tmp, scale, resolution, false, emph);
 	}
 	else
 	{

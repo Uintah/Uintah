@@ -309,13 +309,27 @@ RenderTensorFieldBase::add_item(GeomGroup *g,
 }
 
 
+double
+RenderTensorFieldBase::map_emphasis(double old)
+{
+  if (old < 0.0) old = 0.0;
+  else if (old > 1.0) old = 1.0;
+  //return tan(old * (M_PI / 2.0 * 0.999));
+  // Map old 3.5 value onto new 0.825 value.
+  return tan(old * (atan(3.5) / (0.825 * 4.0)));
+}
+
+
+// emphasis was 3.5 and looked reasonable.  It should currently be
+// computed via 'tan(VAL * M_PI / 4 * 0.999)', where VAL is [0,1].
 
 void 
 RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
 					 MaterialHandle mat,
 					 const Point &p, Tensor &t,
 					 double scale, int reso,
-					 bool colorize)
+					 bool colorize,
+					 double emphasis)
 {
   double v1, v2, v3;
   t.get_eigenvalues(v1, v2, v3);
@@ -328,14 +342,14 @@ RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
   if (cl > cp)
   {
     axis = 0;
-    qA = pow((1.0 - cp), 3.5);  // Magic 3.5, adds emphasis to edges.
-    qB = pow((1.0 - cl), 3.5);
+    qA = pow((1.0 - cp), emphasis);
+    qB = pow((1.0 - cl), emphasis);
   }
   else
   {
     axis = 2;
-    qA = pow((1.0 - cl), 3.5);
-    qB = pow((1.0 - cp), 3.5);
+    qA = pow((1.0 - cl), emphasis);
+    qB = pow((1.0 - cp), emphasis);
   }
 
   GeomHandle glyph = scinew GeomSuperquadric(axis, qA, qB, reso, reso);
