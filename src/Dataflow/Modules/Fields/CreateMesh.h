@@ -28,6 +28,7 @@
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/HexVolField.h>
@@ -89,7 +90,8 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
   typename FIELD::mesh_handle_type mesh = scinew typename FIELD::mesh_type();
 
   int i, j;
-  for (i = 0; i < positions->nrows(); i++)
+  const int pnrows = positions->nrows();
+  for (i = 0; i < pnrows; i++)
   {
     const Point p(positions->get(i, 0),
 		  positions->get(i, 1),
@@ -97,14 +99,30 @@ CreateMeshAlgoT<FIELD>::execute(ProgressReporter *mod,
     mesh->add_point(p);
   }
 
+  int ecount = 0;
   for (i = 0; i < elements->nrows(); i++)
   {
     typename FIELD::mesh_type::Node::array_type nodes;
     for (j = 0; j < elements->ncols(); j++)
     {
-      nodes.push_back((unsigned int)(elements->get(i, j)));
+      int index = (int)elements->get(i, j);
+      if (index < 0 || index >= pnrows)
+      {
+	if (ecount < 10)
+	{
+	  mod->error("Bad index found at " + to_string(i) + ", "
+		     + to_string(j));
+	}
+	index = 0;
+	ecount++;
+      }
+      nodes.push_back(index);
     }
     mesh->add_elem(nodes);
+  }
+  if (ecount >= 10)
+  {
+    mod->error("..." + to_string(ecount-9) + " additional bad indices found.");
   }
   
   FIELD *field = scinew FIELD(mesh, data_at);
