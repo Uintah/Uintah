@@ -230,7 +230,7 @@ void ColumnMatrix::put(int r, int c, double d)
 {
     ASSERTRANGE(r, 0, nrows_);
     ASSERTEQ(c, 0);
-    data[r] += d;
+    data[r] = d;
 }
 
 void ColumnMatrix::add(int r, int c, double d)
