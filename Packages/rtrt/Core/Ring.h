@@ -16,6 +16,7 @@ void Pio(Piostream&, rtrt::Ring*&);
 namespace rtrt {
 
 class Ring : public Object {
+protected:
   Point cen;
   Vector n;
   double d;
