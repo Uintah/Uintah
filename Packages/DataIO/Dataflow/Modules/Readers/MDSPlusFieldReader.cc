@@ -625,7 +625,7 @@ void MDSPlusFieldReader::execute(){
 
 	for( int i=0; i<MAX_SCALAR; i++ ) {
 	  if( bScalar_[i] ) {
-	    sField[i] = scinew StructHexVolField<double>(hvm, Field::NODE);
+	    sField[i] = scinew StructHexVolField<double>(hvm, 1);
 	    sHandle_[i] = sField[i];
 	  } else {
 	    sField[i] = NULL;
@@ -634,7 +634,7 @@ void MDSPlusFieldReader::execute(){
 
 	for( int i=0; i<MAX_VECTOR; i++ ) {
 	  if( bVector_[i] ) {
-	    vField[i] = scinew StructHexVolField<Vector>(hvm, Field::NODE);
+	    vField[i] = scinew StructHexVolField<Vector>(hvm, 1);
 	    vHandle_[i] = vField[i]; 
 	  } else {
 	    vField[i] = NULL;
