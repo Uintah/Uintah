@@ -124,6 +124,8 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   quitAction->addTo(file);
   exitAction->addTo(file);
 
+  menuBar()->insertItem("&Clusters");
+
   buildPackageMenus();
   menuBar()->insertSeparator();
   QPopupMenu * help = new QPopupMenu( this );
