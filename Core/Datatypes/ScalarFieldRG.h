@@ -266,35 +266,32 @@ int ScalarFieldRGT<T>::interpolate(const Point& p, double& value, double eps,
 				   double)
 {
 
-  Vector pn=p-bmin;
-  double dx=diagonal.x();
-  double dy=diagonal.y();
-  double dz=diagonal.z();
-  double x=pn.x()*(nx-1)/dx;
-  double y=pn.y()*(ny-1)/dy;
-  double z=pn.z()*(nz-1)/dz;
-  int ix=(int)x;
-  int iy=(int)y;
-  int iz=(int)z;
-  int ix1=ix+1;
-  int iy1=iy+1;
-  int iz1=iz+1;
-  if (ix<0) { if (x<-eps) return 0; else ix=0; }
-  if (iy<0) { if (y<-eps) return 0; else iy=0; }
-  if (iz<0) { if (z<-eps) return 0; else iz=0; }
-  if (ix1>=nx) { if (x>nx-1+eps) return 0; else ix1=ix; }
-  if (iy1>=ny) { if (y>ny-1+eps) return 0; else iy1=iy; }
-  if (iz1>=nz) { if (z>nz-1+eps) return 0; else iz1=iz; }
-  double fx=x-ix;
-  double fy=y-iy;
-  double fz=z-iz;
-  double x00=Interpolate(grid(ix, iy, iz), grid(ix1, iy, iz), fx);
-  double x01=Interpolate(grid(ix, iy, iz1), grid(ix1, iy, iz1), fx);
-  double x10=Interpolate(grid(ix, iy1, iz), grid(ix1, iy1, iz), fx);
-  double x11=Interpolate(grid(ix, iy1, iz1), grid(ix1, iy1, iz1), fx);
-  double y0=Interpolate(x00, x10, fy);
-  double y1=Interpolate(x01, x11, fy);
-  value=Interpolate(y0, y1, fz);
+  Vector pn = p - bmin;
+  const double x = pn.x()*(nx-1) / diagonal.x();
+  const double y = pn.y()*(ny-1) / diagonal.y();
+  const double z = pn.z()*(nz-1) / diagonal.z();
+  int ix = (int)x;
+  int iy = (int)y;
+  int iz = (int)z;
+  if (ix<0) { if (x<-eps) return 0; else ix = 0; }
+  if (iy<0) { if (y<-eps) return 0; else iy = 0; }
+  if (iz<0) { if (z<-eps) return 0; else iz = 0; }
+  int ix1 = ix+1;
+  int iy1 = iy+1;
+  int iz1 = iz+1;
+  if (ix1>=nx) { if (x>nx-1+eps) return 0; else ix1 = ix; }
+  if (iy1>=ny) { if (y>ny-1+eps) return 0; else iy1 = iy; }
+  if (iz1>=nz) { if (z>nz-1+eps) return 0; else iz1 = iz; }
+  double fx = x-ix;
+  double fy = y-iy;
+  double fz = z-iz;
+  double x00 = Interpolate(grid(ix, iy, iz), grid(ix1, iy, iz), fx);
+  double x01 = Interpolate(grid(ix, iy, iz1), grid(ix1, iy, iz1), fx);
+  double x10 = Interpolate(grid(ix, iy1, iz), grid(ix1, iy1, iz), fx);
+  double x11 = Interpolate(grid(ix, iy1, iz1), grid(ix1, iy1, iz1), fx);
+  double y0 = Interpolate(x00, x10, fy);
+  double y1 = Interpolate(x01, x11, fy);
+  value = Interpolate(y0, y1, fz);
   return 1;
 }
 
