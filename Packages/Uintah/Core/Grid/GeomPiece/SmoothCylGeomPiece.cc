@@ -39,7 +39,7 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Thickness > Radius"));
 
   d_capThick = 0.0;
-  ps->get("cap_thickness", d_capThick);
+  ps->get("endcap_thickness", d_capThick);
   if (d_capThick < 0.0)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Cap Thickness < 0.0"));
 }
@@ -185,7 +185,8 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
 
   // Find the vector along the axis of the cylinder
   Vector axis = d_top - d_bottom;
-  axis = axis/axis.length();
+  double axislen = axis.length();
+  axis /= axislen;
 
   // Get the bounding patch box
   Box b = patch->getBox();
@@ -205,12 +206,13 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
   int count = 0;
 
   // Calculate the radial and axial material point spacing
-  double axisInc = d_capThick/(double) d_numAxial;
+  double axisInc = axislen/(double) d_numAxial;
+  int numCapAxial = int(d_capThick/axisInc);
   double radInc = d_radius/(double) d_numRadial;
 
   // Create particles for the bottom end cap
   double currZ = d_bottom.z() - 0.5*axisInc;
-  for (int kk = 0; kk < d_numAxial; ++kk) {
+  for (int kk = 0; kk < numCapAxial; ++kk) {
     Vector currCenter = d_bottom.asVector() - axis*currZ;
     for (int ii = 1; ii < d_numRadial+1; ++ii) {
       double prevRadius = (ii-1)*radInc;
@@ -239,7 +241,7 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
           if (doCreate) {
 	    particleIndex pidx = start+count;
 	    pos[pidx] = p;
-	    vol[pidx] = d_thickness*area;
+	    vol[pidx] = axisInc*area;
 	    psiz[pidx] = Vector(.5,.5,.5);
           } 
 	  count++;
@@ -251,8 +253,8 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
   
   // Create particles for the top end cap
   currZ = d_top.z() + 0.5*axisInc;
-  for (int kk = 0; kk < d_numAxial; ++kk) {
-    Vector currCenter = d_bottom.asVector() + axis*currZ;
+  for (int kk = 0; kk < numCapAxial; ++kk) {
+    Vector currCenter = d_top.asVector() + axis*currZ;
     for (int ii = 1; ii < d_numRadial+1; ++ii) {
       double prevRadius = (ii-1)*radInc;
       double currRadius = ii*radInc;
@@ -280,7 +282,7 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
           if (doCreate) {
 	    particleIndex pidx = start+count;
 	    pos[pidx] = p;
-	    vol[pidx] = d_thickness*area;
+	    vol[pidx] = axisInc*area;
 	    psiz[pidx] = Vector(.5,.5,.5);
           } 
 	  count++;
@@ -365,7 +367,7 @@ SmoothCylGeomPiece::createOrCountSolidCylParticles(const Patch* patch,
           if (doCreate) {
 	    particleIndex pidx = start+count;
 	    pos[pidx] = p;
-	    vol[pidx] = d_thickness*area;
+	    vol[pidx] = axisInc*area;
 	    psiz[pidx] = Vector(.5,.5,.5);
           } 
 	  count++;
@@ -417,14 +419,15 @@ SmoothCylGeomPiece::createOrCountHollowCylParticles(const Patch* patch,
 
   // Calculate the radial and axial material point spacing
   double axisInc = length/(double) d_numAxial;
-  double radInc = d_thickness/(double) d_numRadial;
+  double radInc = d_radius/(double) d_numRadial;
+  int numThick = (int)(d_thickness/radInc);
   double innerRad = d_radius - d_thickness;
 
-  // Create particles for the bottom end cap
+  // Create particles for the hollow cylinder
   double currZ = d_bottom.z() + 0.5*axisInc;
   for (int kk = 0; kk < d_numAxial; ++kk) {
     Vector currCenter = d_bottom.asVector() + axis*currZ;
-    for (int ii = 1; ii < d_numRadial+1; ++ii) {
+    for (int ii = 1; ii < numThick+1; ++ii) {
       double prevRadius = innerRad + (ii-1)*radInc;
       double currRadius = innerRad + ii*radInc;
       double radLoc = 0.5*(prevRadius+currRadius);
@@ -452,7 +455,7 @@ SmoothCylGeomPiece::createOrCountHollowCylParticles(const Patch* patch,
           if (doCreate) {
 	    particleIndex pidx = start+count;
 	    pos[pidx] = p;
-	    vol[pidx] = d_thickness*area;
+	    vol[pidx] = axisInc*area;
 	    psiz[pidx] = Vector(.5,.5,.5);
           } 
 	  count++;
