@@ -22,7 +22,7 @@ SRCDIR := Packages/Teem/StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core Packages/Teem/Core
 else
-PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Math Packages/Teem/Core/Datatypes
+PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Disclosure Packages/Teem/Core/Datatypes
 endif
 LIBS := $(TEEM_LIBRARY) -lell -lair -lbiff -lnrrd -lm
 
