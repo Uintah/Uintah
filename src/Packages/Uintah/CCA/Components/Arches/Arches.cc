@@ -263,9 +263,9 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     int zeroGhostCells = 0;
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
     PerPatch<CellInformationP> cellInfoP;
 
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
