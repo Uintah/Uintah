@@ -86,27 +86,27 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scal
 
 						
   geometries[GeomPoint] = scinew GeomSphere;
-  picks[PointP] = scinew GeomPick(geometries[GeomPoint], module, this, PointP);
-  picks[PointP]->set_highlight(DefaultHighlightMaterial);
-  materials[PointMatl] = scinew GeomMaterial(picks[PointP], DefaultPointMaterial);
+  picks_[PointP] = scinew GeomPick(geometries[GeomPoint], module, this, PointP);
+  picks(PointP)->set_highlight(DefaultHighlightMaterial);
+  materials[PointMatl] = scinew GeomMaterial(picks_[PointP], DefaultPointMaterial);
   CreateModeSwitch(0, materials[PointMatl]);
 
   geometries[GeomShaft] = scinew GeomCylinder;
-  picks[ShaftP] = scinew GeomPick(geometries[GeomShaft], module, this, ShaftP);
-  picks[ShaftP]->set_highlight(DefaultHighlightMaterial);
-  materials[ShaftMatl] = scinew GeomMaterial(picks[ShaftP], DefaultEdgeMaterial);
+  picks_[ShaftP] = scinew GeomPick(geometries[GeomShaft], module, this, ShaftP);
+  picks(ShaftP)->set_highlight(DefaultHighlightMaterial);
+  materials[ShaftMatl] = scinew GeomMaterial(picks_[ShaftP], DefaultEdgeMaterial);
   CreateModeSwitch(1, materials[ShaftMatl]);
 
   geometries[GeomHead] = scinew GeomCappedCone;
-  picks[HeadP] = scinew GeomPick(geometries[GeomHead], module, this, HeadP);
-  picks[HeadP]->set_highlight(DefaultHighlightMaterial);
-  materials[HeadMatl] = scinew GeomMaterial(picks[HeadP], DefaultEdgeMaterial);
+  picks_[HeadP] = scinew GeomPick(geometries[GeomHead], module, this, HeadP);
+  picks(HeadP)->set_highlight(DefaultHighlightMaterial);
+  materials[HeadMatl] = scinew GeomMaterial(picks_[HeadP], DefaultEdgeMaterial);
   CreateModeSwitch(2, materials[HeadMatl]);
 
   geometries[GeomResize] = scinew GeomCappedCylinder;
-  picks[ResizeP] = scinew GeomPick(geometries[GeomResize], module, this, ResizeP);
-  picks[ResizeP]->set_highlight(DefaultHighlightMaterial);
-  materials[ResizeMatl] = scinew GeomMaterial(picks[ResizeP], DefaultResizeMaterial);
+  picks_[ResizeP] = scinew GeomPick(geometries[GeomResize], module, this, ResizeP);
+  picks(ResizeP)->set_highlight(DefaultHighlightMaterial);
+  materials[ResizeMatl] = scinew GeomMaterial(picks_[ResizeP], DefaultResizeMaterial);
   CreateModeSwitch(3, materials[ResizeMatl]);
 
   SetMode(Mode0, Switch0|Switch1|Switch2);
@@ -163,11 +163,11 @@ ArrowWidget::redraw()
   {
     if (geom==ResizeP)
     {
-      picks[geom]->set_principal(v);
+      picks(geom)->set_principal(v);
     }
     else
     {
-      picks[geom]->set_principal(v, v1, v2);
+      picks(geom)->set_principal(v, v1, v2);
     }
   }
 }
@@ -175,7 +175,8 @@ ArrowWidget::redraw()
 
 
 void
-ArrowWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
+ArrowWidget::geom_pick(GeomPickHandle p,
+		       ViewWindow *vw, int data, const BState &bs)
 {
   BaseWidget::geom_pick(p, vw, data, bs);
   pick_pointvar_ = variables[PointVar]->point();
@@ -198,7 +199,7 @@ ArrowWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+ArrowWidget::geom_moved( GeomPickHandle, int /* axis */, double /* dist */,
 			 const Vector& /*delta*/, int pick, const BState&,
 			 const Vector &pick_offset)
 {

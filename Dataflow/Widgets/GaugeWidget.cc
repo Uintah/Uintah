@@ -97,49 +97,49 @@ GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock,
 
   // Shaft geometry.
   geometries[GeomShaft] = scinew GeomCappedCylinder;
-  picks[PickCyl] =
+  picks_[PickCyl] =
     scinew GeomPick(geometries[GeomShaft], module, this, PickCyl);
-  picks[PickCyl]->set_highlight(DefaultHighlightMaterial);
-  materials[ShaftMatl] = scinew GeomMaterial(picks[PickCyl],
+  picks(PickCyl)->set_highlight(DefaultHighlightMaterial);
+  materials[ShaftMatl] = scinew GeomMaterial(picks_[PickCyl],
 					     DefaultEdgeMaterial);
   CreateModeSwitch(0, materials[ShaftMatl]);
 
   // Rotate ball geometry.
   GeomGroup* sphs = scinew GeomGroup;
   geometries[GeomPointL] = scinew GeomSphere;
-  picks[PickSphL] = scinew GeomPick(geometries[GeomPointL],
+  picks_[PickSphL] = scinew GeomPick(geometries[GeomPointL],
 				    module, this, PickSphL);
-  picks[PickSphL]->set_highlight(DefaultHighlightMaterial);
-  sphs->add(picks[PickSphL]);
+  picks(PickSphL)->set_highlight(DefaultHighlightMaterial);
+  sphs->add(picks_[PickSphL]);
   geometries[GeomPointR] = scinew GeomSphere;
-  picks[PickSphR] = scinew GeomPick(geometries[GeomPointR],
+  picks_[PickSphR] = scinew GeomPick(geometries[GeomPointR],
 				    module, this, PickSphR);
-  picks[PickSphR]->set_highlight(DefaultHighlightMaterial);
-  sphs->add(picks[PickSphR]);
+  picks(PickSphR)->set_highlight(DefaultHighlightMaterial);
+  sphs->add(picks_[PickSphR]);
   materials[PointMatl] = scinew GeomMaterial(sphs, DefaultPointMaterial);
   CreateModeSwitch(1, materials[PointMatl]);
 
   // Resize geometry
   GeomGroup* resizes = scinew GeomGroup;
   geometries[GeomResizeL] = scinew GeomCappedCylinder;
-  picks[PickResizeL] = scinew GeomPick(geometries[GeomResizeL],
+  picks_[PickResizeL] = scinew GeomPick(geometries[GeomResizeL],
 				       module, this, PickResizeL);
-  picks[PickResizeL]->set_highlight(DefaultHighlightMaterial);
-  resizes->add(picks[PickResizeL]);
+  picks(PickResizeL)->set_highlight(DefaultHighlightMaterial);
+  resizes->add(picks_[PickResizeL]);
   geometries[GeomResizeR] = scinew GeomCappedCylinder;
-  picks[PickResizeR] = scinew GeomPick(geometries[GeomResizeR],
+  picks_[PickResizeR] = scinew GeomPick(geometries[GeomResizeR],
 				       module, this, PickResizeR);
-  picks[PickResizeR]->set_highlight(DefaultHighlightMaterial);
-  resizes->add(picks[PickResizeR]);
+  picks(PickResizeR)->set_highlight(DefaultHighlightMaterial);
+  resizes->add(picks_[PickResizeR]);
   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
   CreateModeSwitch(2, materials[ResizeMatl]);
 
   // Slider geometry.
   geometries[GeomSlider] = scinew GeomCappedCylinder;
-  picks[PickSlider] = scinew GeomPick(geometries[GeomSlider],
+  picks_[PickSlider] = scinew GeomPick(geometries[GeomSlider],
 				      module, this, PickSlider);
-  picks[PickSlider]->set_highlight(DefaultHighlightMaterial);
-  materials[SliderMatl] = scinew GeomMaterial(picks[PickSlider],
+  picks(PickSlider)->set_highlight(DefaultHighlightMaterial);
+  materials[SliderMatl] = scinew GeomMaterial(picks_[PickSlider],
 					      DefaultSliderMaterial);
   CreateModeSwitch(3, materials[SliderMatl]);
 
@@ -232,11 +232,11 @@ GaugeWidget::redraw()
   {
     if ((geom == PickSlider) || (geom == PickResizeL) || (geom == PickResizeR))
     {
-      picks[geom]->set_principal(v);
+      picks(geom)->set_principal(v);
     }
     else
     {
-      picks[geom]->set_principal(v, v1, v2);
+      picks(geom)->set_principal(v, v1, v2);
     }
   }
 }
@@ -244,7 +244,8 @@ GaugeWidget::redraw()
 
 
 void
-GaugeWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
+GaugeWidget::geom_pick(GeomPickHandle p, ViewWindow *vw,
+		       int data, const BState &bs)
 {
   BaseWidget::geom_pick(p, vw, data, bs);
   pick_pointlvar_ = variables[PointLVar]->point();
@@ -270,7 +271,7 @@ GaugeWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
+GaugeWidget::geom_moved( GeomPickHandle, int axis, double dist,
 			 const Vector& /*delta*/, int pick, const BState&,
 			 const Vector &offset)
 {

@@ -164,9 +164,9 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock,
     geometries[geom] = scinew GeomCylinder;
     cyls->add(geometries[geom]);
   }
-  picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
-  picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-  materials[EdgeMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+  picks_[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
+  picks(PickCyls)->set_highlight(DefaultHighlightMaterial);
+  materials[EdgeMatl] = scinew GeomMaterial(picks_[PickCyls], DefaultEdgeMaterial);
   CreateModeSwitch(0, materials[EdgeMatl]);
 
   GeomGroup* pts = scinew GeomGroup;
@@ -174,9 +174,9 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock,
        geom <= GeomPointL; geom++, pick++)
   {
     geometries[geom] = scinew GeomSphere;
-    picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
-    picks[pick]->set_highlight(DefaultHighlightMaterial);
-    pts->add(picks[pick]);
+    picks_[pick] = scinew GeomPick(geometries[geom], module, this, pick);
+    picks(pick)->set_highlight(DefaultHighlightMaterial);
+    pts->add(picks_[pick]);
   }
   materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
   CreateModeSwitch(1, materials[PointMatl]);
@@ -186,22 +186,22 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock,
        geom <= GeomResizeL; geom++, pick++)
   {
     geometries[geom] = scinew GeomCappedCylinder;
-    picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
-    picks[pick]->set_highlight(DefaultHighlightMaterial);
-    resizes->add(picks[pick]);
+    picks_[pick] = scinew GeomPick(geometries[geom], module, this, pick);
+    picks(pick)->set_highlight(DefaultHighlightMaterial);
+    resizes->add(picks_[pick]);
   }
   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
   CreateModeSwitch(2, materials[ResizeMatl]);
 
   GeomGroup* sliders = scinew GeomGroup;
   geometries[GeomSliderCylR] = scinew GeomCappedCylinder;
-  picks[PickSliderR] = scinew GeomPick(geometries[GeomSliderCylR], module, this, PickSliderR);
-  picks[PickSliderR]->set_highlight(DefaultHighlightMaterial);
-  sliders->add(picks[PickSliderR]);
+  picks_[PickSliderR] = scinew GeomPick(geometries[GeomSliderCylR], module, this, PickSliderR);
+  picks(PickSliderR)->set_highlight(DefaultHighlightMaterial);
+  sliders->add(picks_[PickSliderR]);
   geometries[GeomSliderCylD] = scinew GeomCappedCylinder;
-  picks[PickSliderD] = scinew GeomPick(geometries[GeomSliderCylD], module, this, PickSliderD);
-  picks[PickSliderD]->set_highlight(DefaultHighlightMaterial);
-  sliders->add(picks[PickSliderD]);
+  picks_[PickSliderD] = scinew GeomPick(geometries[GeomSliderCylD], module, this, PickSliderD);
+  picks(PickSliderD)->set_highlight(DefaultHighlightMaterial);
+  sliders->add(picks_[PickSliderD]);
   materials[SliderMatl] = scinew GeomMaterial(sliders, DefaultSliderMaterial);
   CreateModeSwitch(3, materials[SliderMatl]);
 
@@ -329,30 +329,31 @@ FrameWidget::redraw()
   {
     if ((geom == PickResizeU) || (geom == PickResizeD) || (geom == PickSliderD))
     {
-      picks[geom]->set_principal(Down);
+      picks(geom)->set_principal(Down);
     }
     else if ((geom == PickResizeL) || (geom == PickResizeR) || (geom == PickSliderR))
     {
-      picks[geom]->set_principal(Right);
+      picks(geom)->set_principal(Right);
     }
     else if ((geom == PickSphU) || (geom == PickSphD))
     {
-      picks[geom]->set_principal(Right, Norm);
+      picks(geom)->set_principal(Right, Norm);
     }
     else if ((geom == PickSphL) || (geom == PickSphR))
     {
-      picks[geom]->set_principal(Down, Norm);
+      picks(geom)->set_principal(Down, Norm);
     }
     else
     {
-      picks[geom]->set_principal(Right, Down, Norm);
+      picks(geom)->set_principal(Right, Down, Norm);
     }
   }
 }
 
 // if rotating, save the start position of the selected widget 
 void
-FrameWidget::geom_pick(GeomPick*p, ViewWindow*w, int pick, const BState& state)
+FrameWidget::geom_pick(GeomPickHandle p,
+		       ViewWindow*w, int pick, const BState& state)
 {
   BaseWidget::geom_pick(p, w, pick, state);
 
@@ -401,7 +402,7 @@ FrameWidget::geom_pick(GeomPick*p, ViewWindow*w, int pick, const BState& state)
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-FrameWidget::geom_moved( GeomPick*, int axis, double dist,
+FrameWidget::geom_moved( GeomPickHandle, int axis, double dist,
 			 const Vector& delta, int pick, const BState&,
 			 const Vector &pick_offset)
 {

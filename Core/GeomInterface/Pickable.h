@@ -32,6 +32,7 @@
 #define SCI_Geom_Pickable_h 1
 
 #include <Core/share/share.h>
+#include <Core/Geom/GeomObj.h>
 
 namespace SCIRun {
 
@@ -39,8 +40,7 @@ class Vector;
 class Point;
 class ViewWindow;
 class GeomPick;
-class GeomObj;
-
+typedef LockingHandle<GeomPick> GeomPickHandle;
 
 struct BState {
    unsigned int control:1;
@@ -55,10 +55,10 @@ class SCICORESHARE WidgetPickable {
 public:
   virtual ~WidgetPickable();
 
-  virtual void geom_pick(GeomPick*, ViewWindow*, int widget_data, 
+  virtual void geom_pick(GeomPickHandle, ViewWindow*, int widget_data, 
 			 const BState& bs);
-  virtual void geom_release(GeomPick*, int, const BState& bs);
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+  virtual void geom_release(GeomPickHandle, int, const BState& bs);
+  virtual void geom_moved(GeomPickHandle, int, double, const Vector&, int,
 			  const BState&, const Vector &pick_offset);
 };
 
@@ -68,10 +68,10 @@ class SCICORESHARE ModulePickable {
 public:
   virtual ~ModulePickable();
 
-  virtual void geom_pick(GeomPick*, void*, GeomObj*);
-  virtual void geom_release(GeomPick*, void*, GeomObj*);
-  virtual void geom_moved(GeomPick*, int, double, const Vector&,
-			  void*, GeomObj*);
+  virtual void geom_pick(GeomPickHandle, void*, GeomHandle);
+  virtual void geom_release(GeomPickHandle, void*, GeomHandle);
+  virtual void geom_moved(GeomPickHandle, int, double, const Vector&,
+			  void*, GeomHandle);
 };
 
 } // End namespace SCIRun

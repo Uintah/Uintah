@@ -36,6 +36,7 @@
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GuiGeom.h>
 #include <Core/Geom/GuiView.h>
 #include <Core/Geom/View.h>
@@ -76,7 +77,6 @@ inline int  Sign (double a)             { return a > 0 ? 1 : a < 0 ? -1 : 0; }
 namespace SCIRun {
   using namespace std;
 class GeomObj;
-class GeomPick;
 class GeomSphere;
 struct DrawInfoOpenGL;
 class Light;
@@ -133,12 +133,12 @@ protected:
   double total_x, total_y, total_z;
   Point rot_point;
   int rot_point_valid;
-  GeomPick* pick_pick;
-  GeomObj* pick_obj;
+  GeomPickHandle pick_pick;
+  GeomHandle pick_obj;
   int pick_n;
 
   void update_mode_string(const string&);
-  void update_mode_string(GeomObj*);
+  void update_mode_string(GeomHandle);
 
   int maxtag;
 

@@ -47,7 +47,7 @@ public:
   virtual ~ViewWidget();
 
   virtual void redraw();
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+  virtual void geom_moved(GeomPickHandle, int, double, const Vector&, int,
 			  const BState&, const Vector &pick_offset);
 
   virtual void MoveDelta( const Vector& delta );

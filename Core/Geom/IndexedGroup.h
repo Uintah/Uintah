@@ -44,7 +44,7 @@ using namespace std;
 class SCICORESHARE GeomIndexedGroup: public GeomObj {
     
 public:
-    typedef map< int, GeomObj*, less<int> > MapIntGeomObj;
+    typedef map< int, GeomHandle, less<int> > MapIntGeomObj;
     
     typedef pair< MapIntGeomObj::iterator,
                   MapIntGeomObj::iterator >
@@ -71,10 +71,10 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 
-    void addObj(GeomObj*, int);  // adds an object to the table
-    GeomObj* getObj(int);        // gets an object from the table
-    void delObj(int, int del);	 // removes object from table
-    void delAll(void);		 // deletes everything
+    void addObj(GeomHandle obj, int id);  // adds an object to the table
+    GeomHandle getObj(int id);        // gets an object from the table
+    void delObj(int id);       	 // removes object from table
+    void delAll();		 // deletes everything
 
     IterIntGeomObj getIter(); // gets an iter 
     

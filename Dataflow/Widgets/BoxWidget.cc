@@ -273,9 +273,9 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock,
     geometries[geom] = scinew GeomCylinder;
     cyls->add(geometries[geom]);
   }
-  picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
-  picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-  materials[EdgeMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+  picks_[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
+  picks(PickCyls)->set_highlight(DefaultHighlightMaterial);
+  materials[EdgeMatl] = scinew GeomMaterial(picks_[PickCyls], DefaultEdgeMaterial);
   CreateModeSwitch(0, materials[EdgeMatl]);
 
   GeomGroup* pts = scinew GeomGroup;
@@ -283,9 +283,9 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock,
        geom <= SphereO; geom++, pick++)
   {
     geometries[geom] = scinew GeomSphere;
-    picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
-    picks[pick]->set_highlight(DefaultHighlightMaterial);
-    pts->add(picks[pick]);
+    picks_[pick] = scinew GeomPick(geometries[geom], module, this, pick);
+    picks(pick)->set_highlight(DefaultHighlightMaterial);
+    pts->add(picks_[pick]);
   }
   materials[PointMatl] = scinew GeomMaterial(pts, DefaultPointMaterial);
   CreateModeSwitch(1, materials[PointMatl]);
@@ -295,26 +295,26 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock,
        geom <= GeomResizeO; geom++, pick++)
   {
     geometries[geom] = scinew GeomCappedCylinder;
-    picks[pick] = scinew GeomPick(geometries[geom], module, this, pick);
-    picks[pick]->set_highlight(DefaultHighlightMaterial);
-    resizes->add(picks[pick]);
+    picks_[pick] = scinew GeomPick(geometries[geom], module, this, pick);
+    picks(pick)->set_highlight(DefaultHighlightMaterial);
+    resizes->add(picks_[pick]);
   }
   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
   CreateModeSwitch(2, materials[ResizeMatl]);
 
   GeomGroup* sliders = scinew GeomGroup;
   geometries[SliderCylR] = scinew GeomCappedCylinder;
-  picks[PickSliderR] = scinew GeomPick(geometries[SliderCylR], module, this, PickSliderR);
-  picks[PickSliderR]->set_highlight(DefaultHighlightMaterial);
-  sliders->add(picks[PickSliderR]);
+  picks_[PickSliderR] = scinew GeomPick(geometries[SliderCylR], module, this, PickSliderR);
+  picks(PickSliderR)->set_highlight(DefaultHighlightMaterial);
+  sliders->add(picks_[PickSliderR]);
   geometries[SliderCylD] = scinew GeomCappedCylinder;
-  picks[PickSliderD] = scinew GeomPick(geometries[SliderCylD], module, this, PickSliderD);
-  picks[PickSliderD]->set_highlight(DefaultHighlightMaterial);
-  sliders->add(picks[PickSliderD]);
+  picks_[PickSliderD] = scinew GeomPick(geometries[SliderCylD], module, this, PickSliderD);
+  picks(PickSliderD)->set_highlight(DefaultHighlightMaterial);
+  sliders->add(picks_[PickSliderD]);
   geometries[SliderCylI] = scinew GeomCappedCylinder;
-  picks[PickSliderI] = scinew GeomPick(geometries[SliderCylI], module, this, PickSliderI);
-  picks[PickSliderI]->set_highlight(DefaultHighlightMaterial);
-  sliders->add(picks[PickSliderI]);
+  picks_[PickSliderI] = scinew GeomPick(geometries[SliderCylI], module, this, PickSliderI);
+  picks(PickSliderI)->set_highlight(DefaultHighlightMaterial);
+  sliders->add(picks_[PickSliderI]);
   materials[SliderMatl] = scinew GeomMaterial(sliders, DefaultSliderMaterial);
   CreateModeSwitch(3, materials[SliderMatl]);
 
@@ -486,38 +486,38 @@ BoxWidget::redraw()
   {
     if ((geom == PickResizeU) || (geom == PickResizeD) || (geom == PickSliderD))
     {
-      picks[geom]->set_principal(Down);
+      picks(geom)->set_principal(Down);
     }
     else if ((geom == PickResizeL) || (geom == PickResizeR) || (geom == PickSliderR))
     {
-      picks[geom]->set_principal(Right);
+      picks(geom)->set_principal(Right);
     }
     else if ((geom == PickResizeO) || (geom == PickResizeI) || (geom == PickSliderI))
     {
-      picks[geom]->set_principal(In);
+      picks(geom)->set_principal(In);
     }
     else if ((geom == PickSphL) || (geom == PickSphR))
     {
-      picks[geom]->set_principal(Down, In);
+      picks(geom)->set_principal(Down, In);
     }
     else if ((geom == PickSphU) || (geom == PickSphD))
     {
-      picks[geom]->set_principal(Right, In);
+      picks(geom)->set_principal(Right, In);
     }
     else if ((geom == PickSphO) || (geom == PickSphI))
     {
-      picks[geom]->set_principal(Right, Down);
+      picks(geom)->set_principal(Right, Down);
     }
     else
     {
-      picks[geom]->set_principal(Right, Down, In);
+      picks(geom)->set_principal(Right, Down, In);
     }
   }
 }
 
 // if rotating, save the start position of the selected widget 
 void
-BoxWidget::geom_pick( GeomPick *p, ViewWindow *w,
+BoxWidget::geom_pick( GeomPickHandle p, ViewWindow *w,
 		      int pick, const BState&state )
 {
   BaseWidget::geom_pick(p, w, pick, state);
@@ -570,7 +570,7 @@ BoxWidget::geom_pick( GeomPick *p, ViewWindow *w,
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-BoxWidget::geom_moved( GeomPick*, int axis, double dist,
+BoxWidget::geom_moved( GeomPickHandle, int axis, double dist,
 		       const Vector &delta, int pick, const BState&,
 		       const Vector &pick_offset)
 {

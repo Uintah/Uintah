@@ -1259,7 +1259,7 @@ OpenGL::redraw_frame()
 
 void
 OpenGL::get_pick(Viewer*, ViewWindow*, int x, int y,
-		 GeomObj*& pick_obj, GeomPick*& pick_pick,
+		 GeomHandle& pick_obj, GeomPickHandle& pick_pick,
 		 int& pick_index)
 {
   send_pick_x=x;
@@ -1286,7 +1286,7 @@ OpenGL::get_pick(Viewer*, ViewWindow*, int x, int y,
 
 void
 OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
-		      GeomObj*& pick_obj, GeomPick*& pick_pick,
+		      GeomHandle& pick_obj, GeomPickHandle& pick_pick,
 		      int& pick_index)
 {
   pick_obj=0;

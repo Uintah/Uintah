@@ -113,13 +113,13 @@ bool GeomIndexedGroup::saveobj(ostream& out, const string& format,
 }
 
 //----------------------------------------------------------------------
-void GeomIndexedGroup::addObj(GeomObj* obj, int id)
+void GeomIndexedGroup::addObj(GeomHandle obj, int id)
 {
     objs[id] = obj;
 }
 
 //----------------------------------------------------------------------
-GeomObj* GeomIndexedGroup::getObj(int id)
+GeomHandle GeomIndexedGroup::getObj(int id)
 {
   MapIntGeomObj::iterator iter = objs.find(id);
   if (iter != objs.end()) {
@@ -132,12 +132,10 @@ GeomObj* GeomIndexedGroup::getObj(int id)
 }
 
 //----------------------------------------------------------------------
-void GeomIndexedGroup::delObj(int id, int del)
+void GeomIndexedGroup::delObj(int id)
 {
   MapIntGeomObj::iterator iter = objs.find(id);
   if (iter != objs.end()) {
-    //cerr << "Deleting, del=" << del << endl;
-    if (del) delete (*iter).second;
     objs.erase(iter);
   }
   else {
@@ -146,12 +144,8 @@ void GeomIndexedGroup::delObj(int id, int del)
 }
 
 //----------------------------------------------------------------------
-void GeomIndexedGroup::delAll(void)
+void GeomIndexedGroup::delAll()
 {
-  MapIntGeomObj::iterator iter;
-  for (iter = objs.begin(); iter != objs.end(); iter++) {
-    delete (*iter).second;
-  }
   objs.clear();
 }
 

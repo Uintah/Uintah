@@ -120,7 +120,7 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
     constraints(NumConstraints, NULL),
     variables(NumVariables, NULL),
     geometries(NumGeometries, NULL),
-    picks(NumPicks, NULL),
+    picks_(NumPicks, NULL),
     materials(NumMaterials, NULL),
     modes(NumModes, -1),
     mode_switches(NumSwitches, NULL),
@@ -607,7 +607,7 @@ BaseWidget::execute(int always_callback)
 }
 
 void
-BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/,
+BaseWidget::geom_pick( GeomPickHandle pick, ViewWindow* /*roe*/,
 		       int /* cbdata */, const BState& state )
 {
   if (state.btn == 3 && !state.alt && !state.control)
@@ -631,7 +631,7 @@ BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/,
 
 
 void
-BaseWidget::geom_release( GeomPick*, int /* cbdata */, const BState& )
+BaseWidget::geom_release( GeomPickHandle, int /* cbdata */, const BState& )
 {
 
   module_->widget_moved(true);
@@ -639,7 +639,7 @@ BaseWidget::geom_release( GeomPick*, int /* cbdata */, const BState& )
 
 
 void
-BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
+BaseWidget::geom_moved(GeomPickHandle, int, double, const Vector&,
 		       int, const BState&, const Vector &/*pick_offset*/ )
 {
   module_->widget_moved(false);
@@ -691,9 +691,9 @@ BaseWidget::FinishWidget()
   {
     ASSERT(geometries[i].get_rep() != NULL);
   }
-  for (i=0; i<picks.size(); i++)
+  for (i=0; i<picks_.size(); i++)
   {
-    ASSERT(picks[i] != NULL);
+    ASSERT(picks_[i].get_rep() != NULL);
   }
   for (i=0; i<materials.size(); i++)
   {

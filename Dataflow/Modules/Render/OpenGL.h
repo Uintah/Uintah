@@ -157,7 +157,8 @@ protected:
   // set 'p' to that value & return true.  Otherwise, return false.
   bool pick_scene(int x, int y, Point *p);
 
-  void get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&, GeomPick*&, int& );
+  void get_pick(Viewer*, ViewWindow*, int, int, GeomHandle&,
+		GeomPickHandle&, int& );
 
   void kill_helper();
 
@@ -206,8 +207,8 @@ private:
 #endif // HAVE_MPEG
 
 
-  void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&,
-		     GeomPick*&, int&);
+  void real_get_pick(Viewer*, ViewWindow*, int, int, GeomHandle&,
+		     GeomPickHandle&, int&);
   void dump_image(const string& fname, const string& type = "raw");
   void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
@@ -244,8 +245,8 @@ private:
   int send_pick_x;
   int send_pick_y;
 
-  GeomObj* ret_pick_obj;
-  GeomPick* ret_pick_pick;
+  GeomHandle ret_pick_obj;
+  GeomPickHandle ret_pick_pick;
   int ret_pick_index;
 
   View lastview;

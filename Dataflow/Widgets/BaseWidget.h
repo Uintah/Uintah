@@ -107,9 +107,9 @@ public:
   inline Point GetPointVar( const Index vindex ) const;
   inline double GetRealVar( const Index vindex ) const;
    
-  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
-  virtual void geom_release(GeomPick*, int, const BState& bs);
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+  virtual void geom_pick(GeomPickHandle, ViewWindow*, int, const BState& bs);
+  virtual void geom_release(GeomPickHandle, int, const BState& bs);
+  virtual void geom_moved(GeomPickHandle, int, double, const Vector&, int,
 			  const BState& button_state,
 			  const Vector &pick_offset);
 
@@ -138,7 +138,7 @@ protected:
   vector<BaseConstraint*> constraints;
   vector<BaseVariable*>   variables;
   vector<GeomHandle>      geometries;
-  vector<GeomPick*>       picks;
+  vector<GeomHandle>      picks_;
   vector<GeomMaterial*>   materials;
 
   template <class T> T geometry(int i) {
@@ -147,7 +147,13 @@ protected:
     ASSERT(tmp);
     return tmp;
   }
-      
+
+  GeomPickHandle picks(int i) {
+    ASSERT(picks_[i].get_rep());
+    GeomPick *p = dynamic_cast<GeomPick*>(picks_[i].get_rep());
+    ASSERT(p);
+    return p;
+  }
 
   enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
   vector<long>        modes;

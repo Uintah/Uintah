@@ -50,7 +50,7 @@ class SCICORESHARE GeomPick : public GeomContainer {
 private:
   ModulePickable*   module_;
   void*             cbdata_;
-  GeomObj*          picked_obj_;
+  GeomHandle        picked_obj_;
   vector<Vector>    directions_;
   WidgetPickable*   widget_;
   int               widget_data_;
@@ -81,7 +81,7 @@ public:
   void set_module_data(void*);
   void set_widget_data(int);
   
-  void set_picked_obj(GeomObj *);
+  void set_picked_obj(GeomHandle);
   void pick(ViewWindow* viewwindow, const BState& bs);
   void moved(int axis, double distance, const Vector& delta, const BState& bs,
 	     const Vector &pick_offset);
@@ -97,6 +97,8 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
+
+typedef LockingHandle<GeomPick> GeomPickHandle;
   
 } // End namespace SCIRun
 

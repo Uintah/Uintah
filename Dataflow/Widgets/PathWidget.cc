@@ -412,7 +412,7 @@ PathWidget::GenerateSpline()
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-PathWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+PathWidget::geom_moved( GeomPickHandle, int /* axis */, double /* dist */,
 			const Vector& delta, int pick, const BState& state,
 			const Vector &/*pick_offset*/)
 {

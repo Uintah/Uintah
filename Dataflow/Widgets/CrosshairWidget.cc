@@ -67,9 +67,9 @@ CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double wid
 
   geometries[GeomCenter] = scinew GeomSphere;
   materials[PointMatl] = scinew GeomMaterial(geometries[GeomCenter], DefaultPointMaterial);
-  picks[PickAxes] = scinew GeomPick(materials[PointMatl], module, this, PickAxes);
-  picks[PickAxes]->set_highlight(DefaultHighlightMaterial);
-  CreateModeSwitch(0, picks[PickAxes]);
+  picks_[PickAxes] = scinew GeomPick(materials[PointMatl], module, this, PickAxes);
+  picks(PickAxes)->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(0, picks_[PickAxes]);
 
   GeomGroup* axes = scinew GeomGroup;
   geometries[GeomAxis1] = scinew GeomCappedCylinder;
@@ -79,9 +79,9 @@ CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double wid
   geometries[GeomAxis3] = scinew GeomCappedCylinder;
   axes->add(geometries[GeomAxis3]);
   materials[AxesMatl] = scinew GeomMaterial(axes, DefaultEdgeMaterial);
-  picks[Pick] = scinew GeomPick(materials[AxesMatl], module, this, Pick);
-  picks[Pick]->set_highlight(DefaultHighlightMaterial);
-  CreateModeSwitch(1, picks[Pick]);
+  picks_[Pick] = scinew GeomPick(materials[AxesMatl], module, this, Pick);
+  picks(Pick)->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(1, picks_[Pick]);
 
   SetMode(Mode0, Switch0|Switch1);
   SetMode(Mode1, Switch0);
@@ -135,12 +135,12 @@ CrosshairWidget::redraw()
 
   for (Index geom = 0; geom < NumPcks; geom++)
   {
-    picks[geom]->set_principal(axis1, axis2, axis3);
+    picks(geom)->set_principal(axis1, axis2, axis3);
   }
 }
 
 void
-CrosshairWidget::geom_pick(GeomPick *p, ViewWindow *vw,
+CrosshairWidget::geom_pick(GeomPickHandle p, ViewWindow *vw,
 			   int data, const BState &bs)
 {
   BaseWidget::geom_pick(p, vw, data, bs);
@@ -161,7 +161,7 @@ CrosshairWidget::geom_pick(GeomPick *p, ViewWindow *vw,
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-CrosshairWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+CrosshairWidget::geom_moved( GeomPickHandle, int /* axis */, double /* dist */,
 			     const Vector& /*delta*/, int pick, const BState&,
 			     const Vector &pick_offset)
 {

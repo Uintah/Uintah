@@ -333,11 +333,11 @@ void Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
 void Viewer::delObj(GeomViewerPort* port, int serial, int del)
 {
   GeomViewerItem* si;
-  if ((si = ((GeomViewerItem*)port->getObj(serial))))
+  if ((si = ((GeomViewerItem*)port->getObj(serial).get_rep())))
   {
     for (unsigned int i=0; i<view_window_.size(); i++)
       view_window_[i]->itemDeleted(si);
-    port->delObj(serial, del);
+    port->delObj(serial);
   }
   else
   {
@@ -354,7 +354,7 @@ void Viewer::delAll(GeomViewerPort* port)
   for ( ; iter.first != iter.second; iter.first++)
   {
     GeomViewerItem* si =
-      (GeomViewerItem*)((*iter.first).second);
+      (GeomViewerItem*)((*iter.first).second.get_rep());
     for (unsigned int i=0; i<view_window_.size(); i++)
       view_window_[i]->itemDeleted(si);
   }
@@ -500,7 +500,7 @@ void Viewer::append_port_msg(GeometryComm* gmsg)
   // PortInfo* pi;
   GeomViewerPort *pi;
   
-  if (!(pi = ((GeomViewerPort*)ports_.getObj(gmsg->portno))))
+  if (!(pi = ((GeomViewerPort*)ports_.getObj(gmsg->portno).get_rep())))
   {
     warning("Geometry message sent to bad port!!!: " +
 	    to_string(gmsg->portno));
@@ -525,7 +525,7 @@ void Viewer::flushPort(int portid)
 {
   // Look up the right port number
   GeomViewerPort* pi;
-  if(!(pi = ((GeomViewerPort*)ports_.getObj(portid))))
+  if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
   {
     warning("Geometry message sent to bad port!!!\n");
     return;

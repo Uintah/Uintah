@@ -66,9 +66,9 @@ PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scal
 
   geometries[GeomPoint] = scinew GeomSphere;
   materials[PointMatl] = scinew GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
-  picks[Pick] = scinew GeomPick(materials[PointMatl], module, this, Pick);
-  picks[Pick]->set_highlight(DefaultHighlightMaterial);
-  CreateModeSwitch(0, picks[Pick]);
+  picks_[Pick] = scinew GeomPick(materials[PointMatl], module, this, Pick);
+  picks(Pick)->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(0, picks_[Pick]);
 
   SetMode(Mode0, Switch0);
    
@@ -108,7 +108,8 @@ PointWidget::redraw()
 
 
 void
-PointWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
+PointWidget::geom_pick(GeomPickHandle p, ViewWindow *vw,
+		       int data, const BState &bs)
 {
   BaseWidget::geom_pick(p, vw, data, bs);
   pick_position_ = variables[PointVar]->point();
@@ -130,7 +131,7 @@ PointWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-PointWidget::geom_moved( GeomPick*, int /* axis */, double /*dist*/,
+PointWidget::geom_moved( GeomPickHandle, int /* axis */, double /*dist*/,
 			 const Vector& /*delta*/, int pick, const BState&,
 			 const Vector &pick_offset)
 {

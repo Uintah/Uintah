@@ -35,7 +35,6 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 
 namespace SCIRun {
-class GeomPick;
 
 class ArrowWidget : public BaseWidget {
 public:
@@ -44,8 +43,8 @@ public:
   virtual ~ArrowWidget();
 
   virtual void redraw();
-  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
-  virtual void geom_moved(GeomPick*, int, double,
+  virtual void geom_pick(GeomPickHandle, ViewWindow*, int, const BState& bs);
+  virtual void geom_moved(GeomPickHandle, int, double,
 			  const Vector&, int, const BState&,
 			  const Vector &pick_offset);
 

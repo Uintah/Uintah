@@ -127,26 +127,26 @@ LightWidget::LightWidget( Module* module, CrowdMonitor* lock, double widget_scal
   geometries[GeomHead] = scinew GeomCappedCone;
   arr->add(geometries[GeomHead]);
   materials[ArrowMatl] = scinew GeomMaterial(arr, DefaultEdgeMaterial);
-  picks[PickArrow] = scinew GeomPick(materials[ArrowMatl], module, this, PickArrow);
-  picks[PickArrow]->set_highlight(DefaultHighlightMaterial);
-  CreateModeSwitch(0, picks[PickArrow]);
+  picks_[PickArrow] = scinew GeomPick(materials[ArrowMatl], module, this, PickArrow);
+  picks(PickArrow)->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(0, picks_[PickArrow]);
 
   geometries[GeomSource] = scinew GeomSphere;
-  picks[PickSource] = scinew GeomPick(geometries[GeomSource], module, this, PickSource);
-  picks[PickSource]->set_highlight(DefaultHighlightMaterial);
-  materials[SourceMatl] = scinew GeomMaterial(picks[PickSource], DefaultPointMaterial);
+  picks_[PickSource] = scinew GeomPick(geometries[GeomSource], module, this, PickSource);
+  picks(PickSource)->set_highlight(DefaultHighlightMaterial);
+  materials[SourceMatl] = scinew GeomMaterial(picks_[PickSource], DefaultPointMaterial);
   CreateModeSwitch(1, materials[SourceMatl]);
 
   GeomGroup* spheres = scinew GeomGroup;
   geometries[GeomDirect] = scinew GeomSphere;
-  picks[PickDirect] = scinew GeomPick(geometries[GeomDirect], module, this, PickDirect);
-  picks[PickDirect]->set_highlight(DefaultHighlightMaterial);
-  spheres->add(picks[PickDirect]);
+  picks_[PickDirect] = scinew GeomPick(geometries[GeomDirect], module, this, PickDirect);
+  picks(PickDirect)->set_highlight(DefaultHighlightMaterial);
+  spheres->add(picks_[PickDirect]);
 
   geometries[GeomCone] = scinew GeomSphere;
-  picks[PickCone] = scinew GeomPick(geometries[GeomCone], module, this, PickCone);
-  picks[PickCone]->set_highlight(DefaultHighlightMaterial);
-  spheres->add(picks[PickCone]);
+  picks_[PickCone] = scinew GeomPick(geometries[GeomCone], module, this, PickCone);
+  picks(PickCone)->set_highlight(DefaultHighlightMaterial);
+  spheres->add(picks_[PickCone]);
   materials[PointMatl] = scinew GeomMaterial(spheres, DefaultPointMaterial);
 
   GeomGroup* axes = scinew GeomGroup;
@@ -154,9 +154,9 @@ LightWidget::LightWidget( Module* module, CrowdMonitor* lock, double widget_scal
   axes->add(geometries[GeomAxis]);
   geometries[GeomRing] = scinew GeomTorus;
   axes->add(geometries[GeomRing]);
-  picks[PickAxis] = scinew GeomPick(axes, module, this, PickAxis);
-  picks[PickAxis]->set_highlight(DefaultHighlightMaterial);
-  materials[ConeMatl] = scinew GeomMaterial(picks[PickAxis], DefaultEdgeMaterial);
+  picks_[PickAxis] = scinew GeomPick(axes, module, this, PickAxis);
+  picks(PickAxis)->set_highlight(DefaultHighlightMaterial);
+  materials[ConeMatl] = scinew GeomMaterial(picks_[PickAxis], DefaultEdgeMaterial);
 
   GeomGroup* conegroup = scinew GeomGroup;
   conegroup->add(materials[PointMatl]);
@@ -243,11 +243,11 @@ LightWidget::redraw()
     {
       if (geom == PickCone)
       {
-	picks[geom]->set_principal(v1, v2);
+	picks(geom)->set_principal(v1, v2);
       }
       else
       {
-	picks[geom]->set_principal(direct, v1, v2);
+	picks(geom)->set_principal(direct, v1, v2);
       }
     }
   }
@@ -267,7 +267,7 @@ LightWidget::redraw()
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-LightWidget::geom_moved( GeomPick* gp, int axis, double dist,
+LightWidget::geom_moved( GeomPickHandle gp, int axis, double dist,
 			 const Vector& delta, int pick, const BState& state,
 			 const Vector &pick_offset)
 {
