@@ -773,8 +773,8 @@ proc ClearCanvas {} {
    # destroy all modules
     
     set result [tk_messageBox -type okcancel -parent . -message \
-	    "ALL modules and connections will be cleared.\nReally exit?"\
-	    -icon warning ]
+	        "ALL modules and connections will be cleared.\nReally clear?"\
+		-icon warning ]
     
     if {[string compare "ok" $result] == 0} {
 	global modules
