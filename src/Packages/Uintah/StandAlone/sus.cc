@@ -22,6 +22,7 @@
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/Schedulers/MPIScheduler.h>
+#include <Uintah/Components/Schedulers/MixedScheduler.h>
 #include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
 #include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Uintah/Components/Schedulers/SimpleLoadBalancer.h>
@@ -240,6 +241,11 @@ int main(int argc, char** argv)
 	      scinew MPIScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
+	} else if(scheduler == "MixedScheduler"){
+	   MixedScheduler* sched =
+	      scinew MixedScheduler(world, output);
+	   sim->attachPort("scheduler", sched);
+	   sched->attachPort("load balancer", bal);
 	} else {
 	   quit( "Unknown schduler: " + scheduler );
 	}
@@ -247,6 +253,15 @@ int main(int argc, char** argv)
 	/*
 	 * Start the simulation controller
 	 */
+
+	char * st = getenv( "INITIAL_SLEEP_TIME" );
+	if( st != 0 ){
+	  int sleepTime = atoi( st );
+	  cerr << "SLEEPING FOR " << sleepTime 
+	       << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
+	  sleep( sleepTime );
+	}
+
 	sim->run();
 
     delete sim;
@@ -270,7 +285,6 @@ int main(int argc, char** argv)
 	cerr << "Caught unknown exception\n";
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
-
     }
 
     /*
@@ -281,6 +295,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.23  2000/09/26 21:49:00  dav
+// Added the ability to specify the MixedScheduler on the command line.
+// Added the ability to set an environment var to allow time for debuggers
+// to attach to the program before it starts running.
+//
 // Revision 1.22  2000/09/25 18:05:27  sparker
 // Deal with mpich arguments
 // Started FP_SETMASK configuration
