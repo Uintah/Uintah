@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     usage(argv[0]);
   Framework::pointer fw;
   try {
-    PIDL::initialize(argc,argv);
+    PIDL::initialize();
     sleep( 1 ); // Give threads enough time to come up.
 
     if(server) {

@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     using PingPong_ns::PingPong;
 
     try {
-      PIDL::initialize(argc,argv);
+      PIDL::initialize();
 
 	bool client=false;
 	bool server=false;

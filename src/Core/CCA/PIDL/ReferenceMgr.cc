@@ -33,9 +33,9 @@ using namespace SCIRun;
 
 ReferenceMgr::ReferenceMgr()
 {
-  localSize=1; 
-  localRank=0;
-  s_lSize=1;
+  localSize=PIDL::size; 
+  localRank=PIDL::rank;
+  s_lSize=localSize;
   s_refSize=0;
 }
 

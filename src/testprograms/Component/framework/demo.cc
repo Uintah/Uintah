@@ -15,7 +15,7 @@ int
 main( int argc, char *argv[] )
 {
   bool stop = argc == 1;
-  PIDL::PIDL::initialize(argc,argv);
+  PIDL::PIDL::initialize();
 
   ComponentImpl *cp = argc == 1 ? 0 : new ComponentImpl;
   

@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     using PingThrow_ns::PingThrow;
 
     try {
-      PIDL::initialize(argc,argv);
+      PIDL::initialize();
       MPI_Init(&argc,&argv);
       
       int myrank = 0;
@@ -136,7 +136,8 @@ int main(int argc, char* argv[])
 	  for(int z=0; z<10; z++) { 
             ::std::cout << "Calling from node " << myrank << " for the " << z+1 << " time\n";
        	    int j=pp->pingthrow(13);
-          }
+            //if(z==0) pp->getException();
+	  }
           double dt=Time::currentSeconds()-stime;
 	  cerr << "3 reps in " << dt << " seconds\n";
 	  double us=dt/reps*1000*1000;

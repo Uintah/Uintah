@@ -49,7 +49,7 @@ main(int argc, char *argv[] )
  MPI_Init(&argc,&argv);
 
   try {
-    PIDL::initialize(argc, argv);
+    PIDL::initialize();
   } 
   catch(const Exception& e) {
     cerr << "Caught exception:\n";
