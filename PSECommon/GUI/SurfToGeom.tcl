@@ -18,6 +18,7 @@ itcl_class PSECommon_Surface_SurfToGeom {
 	global $this-clr-b
 	global $this-normals
 	global $this-resol
+	global $this-outofboundsval
 	set $this-range_min -1
 	set $this-range_max 1
 	set $this-range best
@@ -31,6 +32,7 @@ itcl_class PSECommon_Surface_SurfToGeom {
 	set $this-clr-b 0.3
 	set $this-normals 0
 	set $this-resol 5
+	set $this-outofboundsval avg
     }
     method raiseColor { col } {
 	set w .ui[modname]
@@ -54,6 +56,14 @@ itcl_class PSECommon_Surface_SurfToGeom {
 
 	.ui[modname].p.f.col config -background [format #%04x%04x%04x $ir $ig $ib]
     }
+    method make_entry {w text v c} {
+        frame $w
+        label $w.l -text "$text"
+        pack $w.l -side left
+        entry $w.e -textvariable $v
+        bind $w.e <Return> $c
+        pack $w.e -side right
+    }
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
@@ -71,6 +81,7 @@ itcl_class PSECommon_Surface_SurfToGeom {
 	global $this-clr-r
 	global $this-clr-g
 	global $this-clr-b
+	global $this-outofboundsval
 	toplevel $w
 
 	frame $w.p -relief groove -borderwidth 2
@@ -120,7 +131,9 @@ itcl_class PSECommon_Surface_SurfToGeom {
                 {"Manual" manual} \
                 {"Cmap" cmap}}
 	checkbutton $w.b.i -text Invert -variable $this-invert
-	pack $w.b.b $w.b.i -side top -expand 1 -fill x
+        make_entry $w.b.ob "Out of Bounds Value:" $this-outofboundsval \
+                "$this-c needexecute"	
+	pack $w.b.b $w.b.i $w.b.ob -side top -expand 1 -fill x
 	pack $w.d $w.f $w.b -side top -fill x
     }
 }
