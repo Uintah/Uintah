@@ -48,13 +48,12 @@
 
     &requirements;
 
-  <sect2>
-    <title>Minimum System Recommendations</title>
+    <sect2>
+      <title>Minimum System Recommendations</title>
 
-    &recommendations;
+      &recommendations;
 
-  </sect2>
-
+    </sect2>
   </sect1>
 
   <sect1>
@@ -63,29 +62,30 @@
     <para>
       <orderedlist>
         <listitem>
-          <para><emphasis>
+          <para>
             Obtain the source trees for SCIRun and any desired
             packages.
-          </emphasis></para>
+          </para>
         </listitem>
         <listitem>
-          <para><emphasis>
+          <para>
             Unzip the SCIRun source tree into a directory of your
             choosing.
-          </emphasis></para>
+          </para>
           <para>
             The chosen directory will be referred to as 
             <term>INSTALL_DIR</term> from now on.
           </para>
         </listitem>
         <listitem>
-          <para><emphasis>
+          <para>
             Unzip the packages (if any) into 
             <term>INSTALL_DIR</term>/SCIRun/src/Packages.
-          </emphasis></para>
+          </para>
         </listitem>
       </orderedlist>
     </para>          
+
   </sect1>
 
   <sect1>
@@ -116,4 +116,5 @@
       </orderedlist>
     </para>
   </sect1>
+
 </chapter>

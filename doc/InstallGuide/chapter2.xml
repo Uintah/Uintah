@@ -253,7 +253,7 @@ cd ../sgi64
             options that may be invoked at configure time by supplying
             the configure command with arguments. The available
             <term>CONFIGURE_OPTIONS</term> can be found in the 
-            <ulink url="#9">Appendix</ulink> below. 
+            <ulink url="#9">Configure Options</ulink> below. 
           </para>
         </listitem>
         <listitem>
@@ -366,7 +366,7 @@ subscribe scirun-users
   </sect1>
 
   <sect1>
-    <title>Appendix</title>
+    <title>Configure Options</title>
     <para>
       The following table contains descriptions of the options
       available for configuring SCIRun.

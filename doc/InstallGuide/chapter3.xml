@@ -77,10 +77,13 @@
     <orderedlist>
       <listitem>
         <para><emphasis>
-          Download the install script tar ball from <ulink
-          url="http://software.sci.utah.edu/software/download.xml?dir=0">  
-          here</ulink>.
+          Download the install script tar ball from this web page:
         </emphasis></para>
+
+        <para><ulink
+          url="http://software.sci.utah.edu/software/download.xml?dir=0">  
+          http://software.sci.utah.edu/software/download.xml?dir=0</ulink>.
+        </para>
       </listitem>
       <listitem>
         <para><emphasis>
@@ -248,7 +251,7 @@ configure --prefix=<term>INST_DIR</term>
        </computeroutput>
 
        <para>
-         <emphasis>For Xerces-C</emphasis>
+         <emphasis>For Xerces-C++</emphasis>
        </para>
 
        <para>

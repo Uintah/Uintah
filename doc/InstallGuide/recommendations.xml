@@ -16,6 +16,7 @@
   University of Utah. All Rights Reserved.
 -->
 
+<sect1>
 <para>
   <table>
     <tgroup cols="4">
@@ -47,4 +48,4 @@
     </tgroup>
   </table>
 </para>
-
+</sect1>
