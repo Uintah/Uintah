@@ -240,8 +240,8 @@ execute(MeshHandle& mHandle,
 
   imesh->begin( inodeItr );
 
-  int npts = pointsH->nrrd->axis[0].size;
-  int rank = pointsH->nrrd->axis[1].size;
+  int npts = pointsH->nrrd->axis[1].size;
+  int rank = pointsH->nrrd->axis[0].size;
 
   PNTYPE *pPtr = (PNTYPE *)(pointsH->nrrd->data);
   
@@ -252,7 +252,6 @@ execute(MeshHandle& mHandle,
     if( rank >= 1 ) xVal = pPtr[index*rank + 0];
     if( rank >= 2 ) yVal = pPtr[index*rank + 1];
     if( rank >= 3 ) zVal = pPtr[index*rank + 2];
-    
     imesh->add_point( Point(xVal, yVal, zVal) );
   }
 
@@ -275,7 +274,7 @@ execute(MeshHandle& mHandle,
       // p x n
       for( int i=0; i<nelements; i++ ) {
 	for( unsigned int j=0; j<connectivity; j++ ) {
-	  array[j] = (int) cPtr[j*connectivity+i];
+	  array[j] = (int) cPtr[i*connectivity+j];
 	}
 	imesh->add_elem( array );
       }
@@ -283,7 +282,7 @@ execute(MeshHandle& mHandle,
       // n x p
       for( int i=0; i<nelements; i++ ) {
 	for( unsigned int j=0; j<connectivity; j++ ) {
-	  array[j] = (int) cPtr[i*connectivity+j];
+	  array[j] = (int) cPtr[j*connectivity+i];
 	}
 	imesh->add_elem( array );
       }
