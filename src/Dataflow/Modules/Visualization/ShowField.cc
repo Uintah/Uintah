@@ -480,8 +480,8 @@ ShowField::add_face(const Point &p0, const Point &p1, const Point &p2,
 		    GeomTriangles *g) 
 {
   g->add(p0, m0, 
-	 p1, m2, 
-	 p2, m1);
+	 p1, m1, 
+	 p2, m2);
 }
 
 void 
