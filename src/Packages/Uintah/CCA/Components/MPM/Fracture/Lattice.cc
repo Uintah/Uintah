@@ -163,33 +163,6 @@ bool Lattice::checkPossible(
   return false;
 }
 
-void fit(ParticleSubset* pset_patchOnly,
-	 const ParticleVariable<Point>& pX_patchOnly,
-         ParticleSubset* pset_patchAndGhost,
-	 const ParticleVariable<Point>& pX_patchAndGhost,
-	 vector<int>& particleIndexExchange)
-{
-  Vector d = pset_patchOnly->getPatch()->dCell()/10;
-  
-  for(ParticleSubset::iterator iter_patchOnly = pset_patchOnly->begin();
-       iter_patchOnly != pset_patchOnly->end(); iter_patchOnly++)
-  {
-    const Point& v = pX_patchOnly[*iter_patchOnly];
-    for(ParticleSubset::iterator iter_patchAndGhost = pset_patchAndGhost->begin();
-         iter_patchAndGhost != pset_patchAndGhost->end(); iter_patchAndGhost++)
-    {
-      const Point& p = pX_patchAndGhost[*iter_patchAndGhost];
-      if( fabs(v.x()-p.x()) < d.x() && 
-          fabs(v.y()-p.y()) < d.y() && 
-          fabs(v.z()-p.z()) < d.z() )
-      {
-        particleIndexExchange[*iter_patchOnly] = *iter_patchAndGhost;
-	break;
-      }
-    }
-  }
-}
-
 } // End namespace Uintah
   
 

@@ -44,12 +44,6 @@ private:
   const ParticleVariable<Point>* d_pX;
 };
 
-void fit(ParticleSubset* pset_patchOnly,
-	 const ParticleVariable<Point>& pX_patchOnly,
-         ParticleSubset* pset_patchAndGhost,
-	 const ParticleVariable<Point>& pX_patchAndGhost,
-	 std::vector<int>& particleIndexExchange);
-
 } // End namespace Uintah
 
 #endif //__LATTICE_H__
