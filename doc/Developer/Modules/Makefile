@@ -32,21 +32,16 @@
 #  Convert xml file to html
 define xmltohtml
 @echo $@
-@sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< > ${1}-tmp.xml
-@java org.apache.xalan.xslt.Process -IN ${1}-tmp.xml -XSL ${stylesheet} \
--OUT $@ -PARAM treetop ../${treetop}/ -HTML
-@rm ${1}-tmp.xml
+@sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< >${notdir $<}
+@java org.apache.xalan.xslt.Process -IN ${notdir $<} -XSL ${stylesheet} \
+-OUT $@ -PARAM treetop ${1} -HTML
+@-rm ${notdir $<}
 endef
 
 # Produce list of html files which correspond to xml files in package
 #  given by ${1}
 define htmlfiles
-${addprefix ${1}/, ${shell cd ${2}; ls -1 *.xml | sed 's,.xml,.html,g'}}
-endef
-
-# Make the directory named by ${1}
-define makedir
-@test -d ${1} || mkdir ${1}
+${addprefix ${1}/, ${shell cd ${1}; ls -1 *.xml | sed 's,.xml,.html,g'}}
 endef
 
 # Return path of package given by ${1}
@@ -56,7 +51,7 @@ endef
 
 # Make package index.html
 define makepkgindex
--@cd ${1}; ruby ../${treetop}/doc/Utilities/HTML/makepkgindex.rb
+ruby ${treetop}/doc/Utilities/HTML/makepkgindex.rb ${1} ${2}
 endef 
 
 # ########## Variables
@@ -68,7 +63,13 @@ treetop:=../../..
 stylesheet:=${treetop}/doc/Utilities/XML/component.xsl
 
 # List of packages
-packages:=SCIRun BioPSE Teem VDT MatlabInterface Fusion Uintah
+packages:=SCIRun BioPSE Teem VDT MatlabInterface Fusion
+
+# Top of tree relative to SCIRun XML dir
+xmlsrtreetop:=../../../
+
+# Top of tree relative to Package XML dirs
+xmlpkgtreetop:= ../../../../../
 
 # ########## Top level targets
 
@@ -87,71 +88,80 @@ uintah : scirun Unitah
 
 # ########## SCIRun
 SCIRun_xml_dir=${treetop}/src/Dataflow/XML
-SCIRun_html_files=${addprefix SCIRun/, ${shell cd ${SCIRun_xml_dir}; ls -1 *.xml | sed 's,.xml,.html,g'}}
+SCIRun_html_files=${addprefix ${SCIRun_xml_dir}/, ${shell cd ${SCIRun_xml_dir}; ls -1 *.xml | sed 's,.xml,.html,g'}}
 
 SCIRun : ${SCIRun_html_files}
-	${call makepkgindex,SCIRun}
+	${call makepkgindex,SCIRun,${SCIRun_xml_dir}}
 
-${SCIRun_html_files}: SCIRun/%.html: ${SCIRun_xml_dir}/%.xml
-	${call makedir,SCIRun}
-	${call xmltohtml,SCIRun}
+${SCIRun_html_files}: ${SCIRun_xml_dir}/%.html: ${SCIRun_xml_dir}/%.xml
+	${call xmltohtml,${xmlsrtreetop}}
+
+SCIRun_clean:
+	-rm -f ${SCIRun_html_files}
 
 # ########## BioPSE
 BioPSE_xml_dir=${call xmldir,BioPSE}
-BioPSE_html_files=${call htmlfiles,BioPSE,${BioPSE_xml_dir}}
+BioPSE_html_files=${call htmlfiles,${BioPSE_xml_dir}}
 BioPSE : ${BioPSE_html_files}
-	${call makepkgindex,BioPSE}
+	${call makepkgindex,BioPSE,${BioPSE_xml_dir}}
 
-${BioPSE_html_files}: BioPSE/%.html: ${BioPSE_xml_dir}/%.xml
-	${call makedir,BioPSE}
-	${call xmltohtml,BioPSE}
+${BioPSE_html_files}: ${BioPSE_xml_dir}/%.html: ${BioPSE_xml_dir}/%.xml
+	${call xmltohtml,${xmlpkgtreetop}}
+
+BioPSE_clean:
+	-rm -f ${_html_files}
 
 # ########## Teem
 Teem_xml_dir=${call xmldir,Teem}
-Teem_html_files=${call htmlfiles,Teem,${Teem_xml_dir}}
+Teem_html_files=${call htmlfiles,${Teem_xml_dir}}
 Teem : ${Teem_html_files}
-	${call makepkgindex,Teem}
+	${call makepkgindex,Teem,${Teem_xml_dir}}
 
-${Teem_html_files}: Teem/%.html: ${Teem_xml_dir}/%.xml
-	${call makedir,Teem}
-	${call xmltohtml,Teem}
+${Teem_html_files}: ${Teem_xml_dir}/%.html: ${Teem_xml_dir}/%.xml
+	${call xmltohtml,${xmlpkgtreetop}}
+
+Teem_clean:
+	-rm -f ${Teem_html_files}
 
 # ########## VDT
 VDT_xml_dir=${call xmldir,VDT}
-VDT_html_files=${call htmlfiles,VDT,${VDT_xml_dir}}
+VDT_html_files=${call htmlfiles,${VDT_xml_dir}}
 VDT : ${VDT_html_files}
-	${call makepkgindex,VDT}
+	${call makepkgindex,VDT,${VDT_xml_dir}}
 
-${VDT_html_files}: VDT/%.html: ${VDT_xml_dir}/%.xml
-	${call makedir,VDT}
-	${call xmltohtml,VDT}
+${VDT_html_files}: ${VDT_xml_dir}/%.html: ${VDT_xml_dir}/%.xml
+	${call xmltohtml,${xmlpkgtreetop}}
+
+VDT_clean:
+	-rm -f ${VDT_html_files}
 
 # ########## MatlabInterface
 MatlabInterface_xml_dir=${call xmldir,MatlabInterface}
-MatlabInterface_html_files=${call htmlfiles,MatlabInterface,${MatlabInterface_xml_dir}}
+MatlabInterface_html_files=${call htmlfiles,${MatlabInterface_xml_dir}}
 MatlabInterface : ${MatlabInterface_html_files}
-	${call makepkgindex,MatlabInterface}
+	${call makepkgindex,MatlabInterface,${MatlabInterface_xml_dir}}
 
-${MatlabInterface_html_files}: MatlabInterface/%.html: ${MatlabInterface_xml_dir}/%.xml
-	${call makedir,MatlabInterface}
-	${call xmltohtml,MatlabInterface}
+${MatlabInterface_html_files}: ${MatlabInterface_xml_dir}/%.html: ${MatlabInterface_xml_dir}/%.xml
+	${call xmltohtml,${xmlpkgtreetop}}
+
+MatlabInterface_clean:
+	-rm -f ${MatlabInterface_html_files}
 
 # ########## Fusion
 Fusion_xml_dir=${call xmldir,Fusion}
-Fusion_html_files=${call htmlfiles,Fusion,${Fusion_xml_dir}}
+Fusion_html_files=${call htmlfiles,${Fusion_xml_dir}}
 Fusion : ${Fusion_html_files}
-	${call makepkgindex,Fusion}
+	${call makepkgindex,Fusion,${Fusion_xml_dir}}
 
-${Fusion_html_files}: Fusion/%.html: ${Fusion_xml_dir}/%.xml
-	${call makedir,Fusion}
-	${call xmltohtml,Fusion}
+${Fusion_html_files}: ${Fusion_xml_dir}/%.html: ${Fusion_xml_dir}/%.xml
+	${call xmltohtml,${xmlpkgtreetop}}
+
+Fusion_clean:
+	-rm -f ${Fusion_html_files}
 
 # ########## Cleanage
 clean:
 	@echo clean
 
-veryclean: clean
-	-for p in ${packages};\
-	do\
-	  rm -rf $$p;\
-	done
+veryclean: clean ${addsuffix _clean,${packages}}
+	-rm ${addsuffix .html,${packages}}
