@@ -37,6 +37,7 @@
 @DEF_QT@
 @DEF_VDT@
 @DEF_MAGICK@
+@DEF_PNG@
 @DEF_MPEG@
 @DEF_TEEM@
 @DEF_PERFEX@
@@ -78,12 +79,4 @@
 #define USE_SCI_THROW 0
 
 #endif
-
-
-
-
-
-
-
-
 
