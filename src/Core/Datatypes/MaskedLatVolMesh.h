@@ -849,7 +849,10 @@ public:
   friend class EdgeIter;
   friend class FaceIter;
 
-
+  friend class NodeIndex;
+  friend class CellIndex;
+  friend class EdgeIndex;
+  friend class FaceIndex;
 
   MaskedLatVolMesh();
   MaskedLatVolMesh(unsigned int x, unsigned int y, unsigned int z,
