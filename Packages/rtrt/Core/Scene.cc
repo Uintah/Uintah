@@ -1,12 +1,10 @@
 #include <Packages/rtrt/Core/Scene.h>
+
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
-#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/HitInfo.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Sphere.h>
@@ -19,13 +17,18 @@
 #include <Packages/rtrt/Core/Shadows/MultiSampleSoftShadows.h>
 #include <Packages/rtrt/Core/Shadows/ScrewyShadows.h>
 #include <Packages/rtrt/Core/Shadows/UncachedHardShadows.h>
+
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
+#include <Core/Math/MinMax.h>
+
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
 
 using namespace rtrt;
 using namespace SCIRun;
-using std::cerr;
+using namespace std;
 
 // initialize the static member type_id
 PersistentTypeID Scene::type_id("Scene", "Persistent", 0);
