@@ -79,6 +79,16 @@ WARNING
               const PatchSubset* patches,
 	       const MaterialSubset* matls, DataWarehouse*, 
 	       DataWarehouse* new_dw, const ModelInfo*);
+    
+    inline double cannotBeGreaterThan(double d1, double d2)
+    {
+      return d1>d2?d2:d1;
+    }
+
+    inline double cannotBeLessThan(double d1, double d2)
+    {
+      return d1<d2?d2:d1;
+    }
 
 template <class T> 
    void q_diffusion(CellIterator iter, 
