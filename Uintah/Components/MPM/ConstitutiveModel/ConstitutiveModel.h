@@ -65,13 +65,16 @@ WARNING
 				       const MPMMaterial* matl,
 				       DataWarehouseP& new_dw) = 0;
 	 
-	 const VarLabel* px_label;
-	 const VarLabel* p_deformationMeasure_label;
-	 const VarLabel* p_stress_label;
-	 const VarLabel* p_mass_label;
-	 const VarLabel* p_volume_label;
-	 const VarLabel* g_velocity_label;
-	 const VarLabel* delt_label;
+
+         const VarLabel* deltLabel;
+
+         const VarLabel* pDeformationMeasureLabel;
+         const VarLabel* pStressLabel;
+         const VarLabel* pVolumeLabel;
+         const VarLabel* pMassLabel;
+         const VarLabel* pXLabel;
+
+         const VarLabel* gVelocityLabel;
 	 
       };
       
@@ -79,6 +82,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.10  2000/05/01 17:25:00  jas
+// Changed the var labels to be consistent with SerialMPM.
+//
 // Revision 1.9  2000/04/26 06:48:15  sparker
 // Streamlined namespaces
 //
