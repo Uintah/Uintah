@@ -75,7 +75,7 @@ WARNING
 	 void readTri(const string& file);
 	 void makePlanes();
 	 void makeTriBoxes();
-	 bool insideTriangle(const Point& p, int i) const;
+	 void insideTriangle(const Point& p, int i, int& NCS, int& NES) const;
 	 
 	 Box d_box;
 	 vector<Point> d_points;
