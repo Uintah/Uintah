@@ -188,7 +188,7 @@ main(int argc, char **argv) {
   int status = 0;
   if (argc < 3 || argc > 5) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
 #if defined(__APPLE__)  

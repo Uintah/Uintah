@@ -125,7 +125,7 @@ int
 main(int argc, char **argv) {
   if (argc < 4 || argc > 9) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -139,7 +139,7 @@ main(int argc, char **argv) {
   char *fieldName = argv[3];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);
@@ -174,35 +174,35 @@ main(int argc, char **argv) {
     n8-=baseIndex; 
     if (n1<0 || n1>=npts) { 
       cerr << "Error -- n1 ("<<i<<") out of bounds: "<<n1<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n2<0 || n2>=npts) { 
       cerr << "Error -- n2 ("<<i<<") out of bounds: "<<n2<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n3<0 || n3>=npts) { 
       cerr << "Error -- n3 ("<<i<<") out of bounds: "<<n3<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n4<0 || n4>=npts) { 
       cerr << "Error -- n4 ("<<i<<") out of bounds: "<<n4<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n5<0 || n5>=npts) { 
       cerr << "Error -- n5 ("<<i<<") out of bounds: "<<n5<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n6<0 || n6>=npts) { 
       cerr << "Error -- n6 ("<<i<<") out of bounds: "<<n6<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n7<0 || n7>=npts) { 
       cerr << "Error -- n7 ("<<i<<") out of bounds: "<<n7<<"\n"; 
-      return 0; 
+      return 2; 
     }
     if (n8<0 || n8>=npts) { 
       cerr << "Error -- n8 ("<<i<<") out of bounds: "<<n8<<"\n"; 
-      return 0; 
+      return 2; 
     }
     hvm->add_hex(n1, n2, n3, n4, n5, n6, n7, n8);
     if (debugOn) 
