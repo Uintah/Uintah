@@ -67,6 +67,6 @@ public:
 
 } // End namespace SCIRun
 
-#endif Graph_h
+#endif /* Graph_h */
 
 

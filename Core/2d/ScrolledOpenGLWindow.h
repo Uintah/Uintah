@@ -39,6 +39,6 @@ public:
 
 } // End namespace SCIRun
 
-#endif ScrolledOpenGLWindow_h
+#endif /* ScrolledOpenGLWindow_h */
 
 

@@ -52,5 +52,5 @@ namespace SCIRun {
 } // End namespace SCIRun
 
 
-#endif OpenGL_h 
+#endif /* OpenGL_h  */
 
