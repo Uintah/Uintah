@@ -398,7 +398,7 @@ void HierarchicalGrid::gridit(int proc)
 	else
 	  cerr <<"   no L2 children\n";
 	if(LeafCells)
-	  cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" tris / leaf.\n";
+	  cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" objects / leaf.\n";
 	else
 	  cerr <<"   no leafs\n";
 	
