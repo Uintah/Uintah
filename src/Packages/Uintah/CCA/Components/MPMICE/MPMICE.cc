@@ -286,6 +286,7 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
 
   d_ice->scheduleAddExchangeToMomentumAndEnergy(  sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
+                                                                  press_matl,
                                                                   all_matls); 
 
   d_ice->scheduleComputeLagrangianSpecificVolume( sched, patches, press_matl,
