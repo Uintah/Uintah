@@ -75,7 +75,19 @@ PPMImage::read_image(const char* filename)
   indata >> u_ >> v_;
   eat_comments_and_whitespace(indata);
   indata >> max_;
-  eat_comments_and_whitespace(indata);
+  // After we get this we only want to eat a new line rather than
+  // trying to get all the whitespace, as this has the potential to
+  // eat into our data if the data just happens to match '\t', ' ', or
+  // '\n'.
+  {
+    char c;
+    for(;;) {
+      indata.get(c);
+      if (c=='\n') {
+	break;
+      }
+    }
+  }
   image_.resize(u_*v_);
   if (token == "P6") {
     for(unsigned v=0;v<v_;++v){
