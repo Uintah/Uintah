@@ -206,7 +206,7 @@ Pbuffer::create ()
 #ifdef __ECC
   // For now no Pbuffer support on the Altix system
   mSupported = false;
-  return false;
+  return true;
 #else
   if(!mInit) {
 #ifdef HAVE_GLEW
