@@ -174,6 +174,14 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     bind $w <KeyPress-Left>  "canvasScroll $canvas -0.01 0.0"
     bind $w <KeyPress-Right> "canvasScroll $canvas 0.01 0.0" 
     bind $canvas <Configure> "drawSubnetConnections $Subnet(num)"
+
+    bind all <Control-d> "moduleDestroySelected"
+    # Clear the canvas
+    bind all <Control-l> "ClearCanvas 1 $Subnet(num)"
+    bind all <Control-z> "undo"
+    bind all <Control-a> "selectAll $Subnet(num)"
+    bind all <Control-y> "redo"
+
     return $Subnet(num)
 }
 
