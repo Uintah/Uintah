@@ -96,7 +96,7 @@ private:
 			  double time, XMLURL& foundUrl);
   private:
     map<double, PatchHashMaps> d_patchHashMaps;
-    list<XMLURL> d_xmlUrls;
+    map<double, PatchHashMaps>::iterator d_lastFoundIt;
   };
 
   // Second layer of data structure for storing hash maps of variable data
@@ -104,15 +104,21 @@ private:
   class PatchHashMaps {
     friend class TimeHashMaps;
   public:
-    PatchHashMaps() {}    
+    PatchHashMaps();
+    void init(XMLURL tsUrl, DOM_Node tsTopNode);
+    
     DOM_Node findVariable(const string& name, const Patch* patch,
 			  int matl, XMLURL& foundUrl)      ;
   private:
+    void parse();    
     void add(const string& name, int patchid, int matl,
 	     DOM_Node varNode, XMLURL* pUrl)
     { d_matHashMaps[patchid].add(name, matl, varNode, pUrl); }
 
     map<int, MaterialHashMaps> d_matHashMaps;
+    map<int, MaterialHashMaps>::iterator d_lastFoundIt;
+    list<XMLURL> d_xmlUrls;
+    bool d_isParsed;
   };
 
   // Third layer of data structure for storing hash maps of variable data
@@ -537,6 +543,14 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.11  2000/09/15 22:08:34  witzel
+// Changed the variable hash map structure so that it only parses data xml
+// files for a timestep after that timestep has be queried (instead of
+// parsing all of them at first).   Also added d_lastFoundIt members to
+// TimeHashMaps and PatchHashMaps to speed things up when multiple queries
+// are made to the same timestep and/or patch (doesn't really seem to have
+// much of an affect, but I'll keep it for now anyway).
+//
 // Revision 1.10  2000/09/14 23:59:06  witzel
 // Changed findVariable method to make it much more efficient and not
 // have to search through xml files over and over again.  The first

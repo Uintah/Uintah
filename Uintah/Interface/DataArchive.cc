@@ -273,61 +273,10 @@ DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
    ASSERTL3(tsTimes.size() == tsTopNodes.size());
    ASSERTL3(tsUrls.size() == tsTopNodes.size());
 
-   for (int i = 0; i < tsTimes.size(); i++) {
-     DOM_Node ts = tsTopNodes[i];
-     ASSERTL3(ts != 0);
-     
-     DOM_Node datanode = findNode("Data", ts);
-     if(datanode == 0)
-       throw InternalError("Cannot find Data in timestep");
-     for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
-       if(n.getNodeName().equals(DOMString("Datafile"))){
-	 DOM_NamedNodeMap attributes = n.getAttributes();
-	 DOM_Node datafile = attributes.getNamedItem("href");
-	 if(datafile == 0)
-	    throw InternalError("timestep href not found");
-
-	 DOMString href_name = datafile.getNodeValue();
-	 XMLURL url(tsUrls[i], toString(href_name).c_str());
-	 d_xmlUrls.push_back(url);
-
-	 DOMParser parser;
-	 parser.setDoValidation(false);
-
-	 SimpleErrorHandler handler;
-	 parser.setErrorHandler(&handler);
-
-	 //cerr << "reading: " << toString(url.getURLText()) << '\n';
-	 parser.parse(url.getURLText());
-	 if(handler.foundError)
-	    throw InternalError("Cannot read timestep file");
-
-	 DOM_Node top = parser.getDocument().getDocumentElement();
-	 for(DOM_Node r = top.getFirstChild(); r != 0; r=r.getNextSibling()){
-	    if(r.getNodeName().equals(DOMString("Variable"))){
-	       string varname;
-	       if(!get(r, "variable", varname))
-		  throw InternalError("Cannot get variable name");
-	       
-	       int patchid;
-	       if(!get(r, "patch", patchid) && !get(r, "region", patchid))
-		  throw InternalError("Cannot get patch id");
-
-	       int index;
-	       if(!get(r, "index", index))
-		  throw InternalError("Cannot get index");
-
-	       d_patchHashMaps[tsTimes[i]].add(varname, patchid,
-					       index, r, &d_xmlUrls.back());
-	    } else if(r.getNodeType() != DOM_Node::TEXT_NODE){
-	       cerr << "WARNING: Unknown element in Variables section: " << toString(r.getNodeName()) << '\n';
-	    }
-	 }
-       } else if(n.getNodeType() != DOM_Node::TEXT_NODE){
-	 cerr << "WARNING: Unknown element in Data section: " << toString(n.getNodeName()) << '\n';
-       }
-     }
-   }
+   for (int i = 0; i < tsTimes.size(); i++)
+     d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i]);
+   
+   d_lastFoundIt = d_patchHashMaps.end();
 }
 
 DOM_Node DataArchive::TimeHashMaps::findVariable(const string& name,
@@ -335,11 +284,94 @@ DOM_Node DataArchive::TimeHashMaps::findVariable(const string& name,
 						 double time,
 						 XMLURL& foundUrl)
 {
+  // assuming nearby queries will often be made sequentially,
+  // checking the lastFound can reduce overall query times.
+  if ((d_lastFoundIt != d_patchHashMaps.end()) &&
+      ((*d_lastFoundIt).first == time))
+    return (*d_lastFoundIt).second.findVariable(name, patch, matl, foundUrl);
+       
   map<double, PatchHashMaps>::iterator foundIt =
     d_patchHashMaps.find(time);
-  if (foundIt != d_patchHashMaps.end())
+  if (foundIt != d_patchHashMaps.end()) {
+    d_lastFoundIt = foundIt;
     return (*foundIt).second.findVariable(name, patch, matl, foundUrl);
+  }
   return DOM_Node();
+}
+
+DataArchive::PatchHashMaps::PatchHashMaps()
+  : d_matHashMaps(),
+    d_lastFoundIt(d_matHashMaps.end()),
+    d_isParsed(false)
+{
+}
+
+void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOM_Node tsTopNode)
+{
+  d_isParsed = false;
+
+  // grab the data xml files from the timestep xml file
+  ASSERTL3(tsTopNode != 0);
+  
+  DOM_Node datanode = findNode("Data", tsTopNode);
+  if(datanode == 0)
+    throw InternalError("Cannot find Data in timestep");
+  for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
+    if(n.getNodeName().equals(DOMString("Datafile"))){
+      DOM_NamedNodeMap attributes = n.getAttributes();
+      DOM_Node datafile = attributes.getNamedItem("href");
+      if(datafile == 0)
+	throw InternalError("timestep href not found");
+      
+      DOMString href_name = datafile.getNodeValue();
+      XMLURL url(tsUrl, toString(href_name).c_str());
+      d_xmlUrls.push_back(url);
+    }
+    else if(n.getNodeType() != DOM_Node::TEXT_NODE){
+      cerr << "WARNING: Unknown element in Data section: " << toString(n.getNodeName()) << '\n';
+    }
+  }
+}
+
+void DataArchive::PatchHashMaps::parse()
+{
+  for (list<XMLURL>::iterator urlIt = d_xmlUrls.begin();
+       urlIt != d_xmlUrls.end(); urlIt++) {
+    DOMParser parser;
+    parser.setDoValidation(false);
+    
+    SimpleErrorHandler handler;
+    parser.setErrorHandler(&handler);
+    
+    //cerr << "reading: " << toString(url.getURLText()) << '\n';
+    parser.parse((*urlIt).getURLText());
+    if(handler.foundError)
+      throw InternalError("Cannot read timestep file");
+    
+    DOM_Node top = parser.getDocument().getDocumentElement();
+    for(DOM_Node r = top.getFirstChild(); r != 0; r=r.getNextSibling()){
+      if(r.getNodeName().equals(DOMString("Variable"))){
+	string varname;
+	if(!get(r, "variable", varname))
+	  throw InternalError("Cannot get variable name");
+	
+	int patchid;
+	if(!get(r, "patch", patchid) && !get(r, "region", patchid))
+	  throw InternalError("Cannot get patch id");
+	
+	int index;
+	if(!get(r, "index", index))
+	  throw InternalError("Cannot get index");
+	
+	add(varname, patchid, index, r, &d_xmlUrls.back());
+      } else if(r.getNodeType() != DOM_Node::TEXT_NODE){
+	cerr << "WARNING: Unknown element in Variables section: " << toString(r.getNodeName()) << '\n';
+      }
+    }
+  }
+  
+  d_isParsed = true;
+  d_lastFoundIt = d_matHashMaps.end();
 }
 
 DOM_Node DataArchive::PatchHashMaps::findVariable(const string& name,
@@ -347,11 +379,22 @@ DOM_Node DataArchive::PatchHashMaps::findVariable(const string& name,
 						  int matl,
 						  XMLURL& foundUrl)
 {
-  map<int, MaterialHashMaps>::iterator foundIt =
-    d_matHashMaps.find(patch->getID());
+  if (!d_isParsed) parse(); // parse on demand
+  int patchid = patch->getID();
   
-  if (foundIt != d_matHashMaps.end())
+  // assuming nearby queries will often be made sequentially,
+  // checking the lastFound can reduce overall query times.
+  if ((d_lastFoundIt != d_matHashMaps.end()) &&
+      ((*d_lastFoundIt).first == patchid))
+    return (*d_lastFoundIt).second.findVariable(name, matl, foundUrl);
+
+  map<int, MaterialHashMaps>::iterator foundIt =
+    d_matHashMaps.find(patchid);
+  
+  if (foundIt != d_matHashMaps.end()) {
+    d_lastFoundIt = foundIt;
     return (*foundIt).second.findVariable(name, matl, foundUrl);
+  }
   return DOM_Node();  
 }
 
@@ -402,6 +445,14 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.10  2000/09/15 22:08:34  witzel
+// Changed the variable hash map structure so that it only parses data xml
+// files for a timestep after that timestep has be queried (instead of
+// parsing all of them at first).   Also added d_lastFoundIt members to
+// TimeHashMaps and PatchHashMaps to speed things up when multiple queries
+// are made to the same timestep and/or patch (doesn't really seem to have
+// much of an affect, but I'll keep it for now anyway).
+//
 // Revision 1.9  2000/09/14 23:59:06  witzel
 // Changed findVariable method to make it much more efficient and not
 // have to search through xml files over and over again.  The first
