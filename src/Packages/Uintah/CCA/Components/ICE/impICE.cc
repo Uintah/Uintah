@@ -295,8 +295,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
               << patch->getID() <<"\t\t\t\t ICE" << endl;
               
     // define parent_new/old_dw
-    DataWarehouse* parent_new_dw = 
-	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+    // Not used: DataWarehouse* parent_new_dw = 
+    //	         new_dw->getOtherDataWarehouse(Task::ParentNewDW);
     DataWarehouse* parent_old_dw = 
 	  new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
             

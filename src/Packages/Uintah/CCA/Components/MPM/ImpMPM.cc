@@ -1348,10 +1348,10 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
 }
 
 void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset*,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+				 const PatchSubset* patches,
+				 const MaterialSubset*,
+				 DataWarehouse* /*old_dw*/,
+				 DataWarehouse* new_dw)
 {
   if (!dynamic)
     return;
@@ -1405,7 +1405,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 void ImpMPM::computeInternalForce(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* ,
-				  DataWarehouse* old_dw,
+				  DataWarehouse* /*old_dw*/,
 				  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -1542,7 +1542,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
 			  const PatchSubset* patches,
 			  const MaterialSubset* ,
 			  DataWarehouse*,
-			  DataWarehouse* new_dw)
+			  DataWarehouse* /*new_dw*/)
 
 {
   int num_nodes = 0;
