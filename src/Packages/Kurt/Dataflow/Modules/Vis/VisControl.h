@@ -34,17 +34,29 @@ LOG
 #include <Kurt/DataArchive/Archive.h>
 #include <Kurt/DataArchive/ArchivePort.h>
 #include <Kurt/DataArchive/VisParticleSetPort.h>
-
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <PSECore/Datatypes/VectorFieldPort.h>
 #include <PSECore/Dataflow/Module.h> 
 #include <SCICore/TclInterface/TCLvar.h> 
 #include <string>
+#include <vector>
 
-  
+
+namespace SCICore {
+  namespace Datatypes {
+  class ScalarFieldRGdouble;
+  class VectorFieldRG;
+  }
+}
+
 namespace Kurt {
+  namespace Datatypes {
+  class VisParticleSet;
+  }
 namespace Modules {
-
+using Kurt::Datatypes::VisParticleSet;
+using SCICore::Datatypes::ScalarFieldRGdouble;
+using SCICore::Datatypes::VectorFieldRG;
 using Uintah::DataArchive;
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
@@ -88,6 +100,14 @@ private:
   TCLstring pvVar;
   TCLstring ptVar;
 
+  TCLint gsMatNum;
+  TCLint pNMaterials;
+  TCLint gvMatNum;
+  TCLint animate;
+  
+
+
+
   TCLdouble time;
 
 
@@ -101,6 +121,11 @@ private:
 
   ArchiveHandle archive;
   void setVars(ArchiveHandle ar);
+  void buildData(DataArchive& archive, std::vector< double >& times,
+		 int idx, ScalarFieldRGdouble*& sf,
+		 VectorFieldRG*& vf, VisParticleSet*& vps);
+
+
   //  void graph(clString, clString);
 }; //class 
 
