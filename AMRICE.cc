@@ -85,9 +85,6 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     addRefineDependencies(task, lb->sp_vol_CCLabel,   step, nsteps);
     addRefineDependencies(task, lb->temp_CCLabel,     step, nsteps);
     addRefineDependencies(task, lb->vel_CCLabel,      step, nsteps);
-    if(d_usingLODI) {
-      addRefineDependencies(task,lb->vol_frac_CCLabel,step, nsteps);
-    }
     
     //__________________________________
     // Model Variables.
