@@ -73,9 +73,14 @@ using std::pair;
       { copySection(fromDir, d_dir, section); }
 
       //////////
-      // Insert Documentation Here:
+      // Call this after all other tasks have been added to the scheduler
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
 				    SchedulerP&);
+
+      //////////
+      // Call this after the timestep has been executed.
+      virtual void executedTimestep();
+     
       //////////
       // Insert Documentation Here:
       virtual const string getOutputLocation() const;

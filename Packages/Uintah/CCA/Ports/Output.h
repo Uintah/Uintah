@@ -65,10 +65,14 @@ WARNING
 				 const LevelP& level) = 0;
 
       //////////
-      // Insert Documentation Here:
+      // Call this after all other tasks have been added to the scheduler
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
 				    SchedulerP&) = 0;
 
+      //////////
+      // Call this after the timestep has been executed.
+      virtual void executedTimestep() = 0;
+     
       //////////
       // Insert Documentation Here:
       virtual const std::string getOutputLocation() const = 0;

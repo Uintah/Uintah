@@ -814,46 +814,64 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	throw;
       ldir = tdir.getSubdir(lname.str());
     }
+  }
+}
       
+void DataArchiver::executedTimestep()
+{
+  vector<Dir*> baseDirs;
+  if (d_wasOutputTimestep)
+    baseDirs.push_back(&d_dir);
+  if (d_wasCheckpointTimestep)
+    baseDirs.push_back(&d_checkpointsDir);
+
+  for (int i = 0; i < baseDirs.size(); i++) {
+    int timestep = d_currentTimestep;
+    
+    ostringstream tname;
+    tname << "t" << setw(4) << setfill('0') << timestep;
+    
     // Reference this timestep in index.xml
-    string iname = baseDir.getName()+"/index.xml";
-    DOM_Document indexDoc = loadDocument(iname);
-    DOM_Node ts = findNode("timesteps", indexDoc.getDocumentElement());
-    if(ts == 0){
-      DOM_Text leader = indexDoc.createTextNode("\n");
-      indexDoc.getDocumentElement().appendChild(leader);
-      ts = indexDoc.createElement("timesteps");
-      indexDoc.getDocumentElement().appendChild(ts);
-    }
-    bool found=false;
-    for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
-      if(n.getNodeName().equals(DOMString("timestep"))){
-	int readtimestep;
-	if(!get(n, readtimestep))
-	  throw InternalError("Error parsing timestep number");
-	if(readtimestep == timestep){
-	  found=true;
-	  break;
+    if(d_writeMeta){
+      string iname = baseDirs[i]->getName()+"/index.xml";
+      DOM_Document indexDoc = loadDocument(iname);
+      DOM_Node ts = findNode("timesteps", indexDoc.getDocumentElement());
+      if(ts == 0){
+	DOM_Text leader = indexDoc.createTextNode("\n");
+	indexDoc.getDocumentElement().appendChild(leader);
+	ts = indexDoc.createElement("timesteps");
+	indexDoc.getDocumentElement().appendChild(ts);
+      }
+      bool found=false;
+      for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
+	if(n.getNodeName().equals(DOMString("timestep"))){
+	  int readtimestep;
+	  if(!get(n, readtimestep))
+	    throw InternalError("Error parsing timestep number");
+	  if(readtimestep == timestep){
+	    found=true;
+	    break;
+	  }
 	}
       }
+      if(!found){
+	string timestepindex = tname.str()+"/timestep.xml";      
+	DOM_Text leader = indexDoc.createTextNode("\n\t");
+	ts.appendChild(leader);
+	DOM_Element newElem = indexDoc.createElement("timestep");
+	ts.appendChild(newElem);
+	ostringstream value;
+	value << timestep;
+	DOM_Text newVal = indexDoc.createTextNode(value.str().c_str());
+	newElem.appendChild(newVal);
+	newElem.setAttribute("href", timestepindex.c_str());
+	DOM_Text trailer = indexDoc.createTextNode("\n");
+	ts.appendChild(trailer);
+      }
+      
+      ofstream indexOut(iname.c_str());
+      indexOut << indexDoc << endl;
     }
-    if(!found){
-      string timestepindex = tname.str()+"/timestep.xml";      
-      DOM_Text leader = indexDoc.createTextNode("\n\t");
-      ts.appendChild(leader);
-      DOM_Element newElem = indexDoc.createElement("timestep");
-      ts.appendChild(newElem);
-      ostringstream value;
-      value << timestep;
-      DOM_Text newVal = indexDoc.createTextNode(value.str().c_str());
-      newElem.appendChild(newVal);
-      newElem.setAttribute("href", timestepindex.c_str());
-      DOM_Text trailer = indexDoc.createTextNode("\n");
-      ts.appendChild(trailer);
-    }
-    
-    ofstream indexOut(iname.c_str());
-    indexOut << indexDoc << endl;     
   }
 }
 
