@@ -10,6 +10,7 @@
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/SketchMaterialBase.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <teem/nrrd.h>
 #include <teem/gage.h>
 #include <stdlib.h>
@@ -39,12 +40,17 @@ protected:
   // made by the worker num.
   Array1<gageContext*> ctx_pool;
 
+  // This is used to do cool to warm colormaps
+  ScalarTransform1D<float, Color> *cool2warm;
+  // This is used for the shadow color when using cool2warm
+  Color shadow_color;
+
   Color color(const Vector &N, const Vector &V, const Vector &L, 
 	      const Color &object_color, const Color &light_color) const;
   int rtrtGageProbe(gageContext *ctx, gage_t x, gage_t y, gage_t z);
 public:
   SketchMaterial(ArrayType &indata, BBox &bbox, Array2<float>& sil_trans,
-		 float sil_thickness);
+		 float sil_thickness, ScalarTransform1D<float, Color>* cm);
   virtual ~SketchMaterial();
   
   virtual void shade(Color& result, const Ray& ray,
@@ -56,9 +62,12 @@ public:
 };
 
 template<class ArrayType, class DataType>
-SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbox, Array2<float>& sil_trans, float sil_thickness):
+SketchMaterial<ArrayType, DataType>::SketchMaterial
+(ArrayType &indata, BBox &bbox, Array2<float>& sil_trans, float sil_thickness,
+ ScalarTransform1D<float, Color> *cm):
   SketchMaterialBase(sil_thickness),
-  bbox(bbox), ambient(0.5f), specular(1), spec_coeff(32), diffuse(1)
+  bbox(bbox), ambient(0.5f), specular(1), spec_coeff(32), diffuse(1),
+  cool2warm(cm)
 {
   char me[] = "SketchMaterial::SketchMaterial";
   char *errS;
@@ -197,6 +206,9 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbo
   // nrrdKernelSpecNix(ksp0);
   // nrrdKernelSpecNix(ksp1);
   // nrrdKernelSpecNix(ksp2);
+
+  // This will set up the colormap properly
+  shadow_color = cool2warm->lookup(0);
 }
   
 template<class ArrayType, class DataType>
@@ -286,12 +298,25 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 	double dist=light_dir.normalize();
 	if(cx->scene->lit(hit_pos, light, light_dir, dist, shadowfactor, depth, cx) ){
 	  // Not in shadow
-	  
-	  surface = color(normal, ray.direction(), light_dir, 
-			  surface, light->get_color());
+	  if (use_cool2warm) {
+	    double dot = Dot(light_dir, normal);
+	    surface = cool2warm->lookup_bound(dot);
+	  } else {
+	    surface = color(normal, ray.direction(), light_dir, 
+			    surface, light->get_color());
+	  }
 	} else {
 	  // we are in shadow
-	  surface = light->get_color() * surface * ambient;
+	  if (use_cool2warm) {
+	    double dot = Dot(light_dir, normal);
+	    if (dot >= 0)
+	      surface = cool2warm->lookup_bound(dot);
+	    else
+	      // This is regions facing the light
+	      surface = cool2warm->lookup_bound(dot+1);
+	  } else {
+	    surface = light->get_color() * surface * ambient;
+	  }
 	}
 
 	if (show_silhouettes == 0) {
@@ -473,6 +498,7 @@ void
 SketchMaterial<ArrayType, DataType>::animate(double /*t*/, bool& changed) {
   // Here we can update all the gage stuff if we need to.
   if (gui_sil_thickness != sil_thickness ||
+      gui_use_cool2warm != use_cool2warm ||
       gui_sil_color_r != sil_color.red() ||
       gui_sil_color_g != sil_color.green() ||
       gui_sil_color_b != sil_color.blue() ||
@@ -491,6 +517,9 @@ SketchMaterial<ArrayType, DataType>::animate(double /*t*/, bool& changed) {
       show_silhouettes = gui_show_silhouettes;
       // Update normal_method
       normal_method = gui_normal_method;
+
+      use_cool2warm = gui_use_cool2warm;
+      
       changed = true;
     }
 }
