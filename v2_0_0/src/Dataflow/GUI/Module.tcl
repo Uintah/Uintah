@@ -490,6 +490,7 @@ itcl_class Module {
 	    set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	    set initial_width [winfo width $canvas.module[modname]]
 	    resize_icon
+	    drawNotes [modname]
 	    drawConnections [portConnections "[modname] all o"]
 	}
     }
@@ -1547,12 +1548,14 @@ proc moduleDestroy {modid} {
     }
 
     # Delete Icon from canvases
-    $Subnet(Subnet$Subnet($modid)_canvas) delete $modid
+    $Subnet(Subnet$Subnet($modid)_canvas) delete $modid $modid-notes
     destroy $Subnet(Subnet$Subnet($modid)_canvas).module$modid
     $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
     
     # Remove references to module is various state arrays
     array unset Subnet ${modid}_connections
+    array unset Disabled $modid
+    array unset Notes $modid*
     listFindAndRemove CurrentlySelectedModules $modid
     listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
 
@@ -1781,14 +1784,15 @@ proc drawPort { port { color red } { connected 0 } } {
     } else {
 	place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
     }
-	
-    foreach p [list $portbevel $portlight] {
-	bind $p <2> "startPortConnection {$port}"
-	bind $p <B2-Motion> "trackPortConnection {$port} %x %y"
-	bind $p <ButtonRelease-2> "endPortConnection {$port}"
-	bind $p <ButtonPress-1> "tracePort {$port}"
-	bind $p <Control-Button-1> "tracePort {$port} 1"
-	bind $p <ButtonRelease-1> "deleteTraces"
+    if !$isSubnetEditor {
+	foreach p [list $portbevel $portlight] {
+	    bind $p <2> "startPortConnection {$port}"
+	    bind $p <B2-Motion> "trackPortConnection {$port} %x %y"
+	    bind $p <ButtonRelease-2> "endPortConnection {$port}"
+	    bind $p <ButtonPress-1> "tracePort {$port}"
+	    bind $p <Control-Button-1> "tracePort {$port} 1"
+	    bind $p <ButtonRelease-1> "deleteTraces"
+	}
     }
 }
 
