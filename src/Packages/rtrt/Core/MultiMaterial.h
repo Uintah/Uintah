@@ -3,6 +3,7 @@
 #define MULTIMATERIAL_H 1
 
 #include <Packages/rtrt/Core/Material.h>
+#include <Core/Thread/Time.h>
 #include <vector>
 
 using std::vector;
@@ -27,7 +28,7 @@ struct MatPercent {
   MatPercent(Material *m, double d) { material=m; percent=d; }
   ~MatPercent() {}
 
-  friend void SCIRun::Pio(SCIRun::Piostream&, MatPercent&);
+  friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::MatPercent&);
 };
 
 class MultiMaterial : public Material {
@@ -59,11 +60,15 @@ class MultiMaterial : public Material {
     return material_stack_.size();
   }
 
+  void set(unsigned index, double percent) 
+    { material_stack_[index]->percent = percent; }
+
   virtual void shade(Color& result, const Ray &ray, const HitInfo &hit, 
                      int depth, double atten, const Color &accumcolor,
                      Context *cx)
   {
     // this can be really inefficient, should be improved
+    double time = SCIRun::Time::currentSeconds();
     unsigned loop,length;
     Color final,original=result;
     double percent;
@@ -71,7 +76,8 @@ class MultiMaterial : public Material {
     if (length>0) {
       material_stack_[0]->material->shade(result,ray,hit,depth,
                                          atten, accumcolor,cx);
-      percent = material_stack_[0]->percent;
+      //percent = material_stack_[0]->percent;
+      percent = sin(time/3.);
       final = result*percent;
       for (loop=1; loop<length; ++loop) {
         result = original;
