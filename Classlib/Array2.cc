@@ -22,6 +22,7 @@
 template<class T>
 Array2<T>::Array2()
 {
+    dm1=dm2=0;
     objs=0;
 }
 

@@ -108,7 +108,9 @@ static PersistentTypeID* find_derived(const clString& classname,
 	return 0;
     if(basename == pid->parent)
 	return pid;
-    return find_derived(pid->parent, basename);
+    if(find_derived(pid->parent, basename))
+	return pid;
+    return 0;
 }
 
 void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
@@ -172,6 +174,9 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	    // Emit it..
 	    have_data=1;
 	    pointer_id=current_pointer_id++;
+	    if(!outpointers)
+		outpointers=new HashTable<Persistent*, int>;
+	    outpointers->insert(data, pointer_id);
 	}
 	emit_pointer(have_data, pointer_id);
 	if(have_data)
