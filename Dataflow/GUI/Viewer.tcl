@@ -565,6 +565,9 @@ itcl_class ViewWindow {
         checkbutton $m.eframe.f.resize2 -text "Resize 1024x768" \
 	    -variable $this-global-resize \
 	    -offvalue 0 -onvalue 2 -command "$this resize; $this-c redraw"
+        checkbutton $m.eframe.f.resize3 -text "Resize 1600x1024" \
+	    -variable $this-global-resize \
+	    -offvalue 0 -onvalue 3 -command "$this resize; $this-c redraw"
         radiobutton $m.eframe.f.none -text "Stop Recording" \
             -variable $this-global-movie -value 0 -command "$this-c redraw"
 	radiobutton $m.eframe.f.raw -text "Raw Frames" \
@@ -583,7 +586,8 @@ itcl_class ViewWindow {
         pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
             -side top  -anchor w
         pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
-	pack $m.eframe.f.resize $m.eframe.f.resize2 -side top  -anchor w
+	pack $m.eframe.f.resize $m.eframe.f.resize2 \
+	    $m.eframe.f.resize3 -side top  -anchor w
 
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
@@ -650,11 +654,20 @@ itcl_class ViewWindow {
 	    pack configure $w.wframe -expand yes -fill both
 	} elseif { [set $this-global-resize] == 1 }  {
 	    set size "352x240"
+	    wm geometry $w "=654x639"
+	    if { $IsAttached == 1 } { $this switch_frames }
+	    pack configure $w.wframe -expand no -fill none
+	    $w.wframe.draw configure -geometry $size
+	} elseif { [set $this-global-resize] == 2 } {
+	    set size "1024x768"
+	    wm geometry $w "=1038x895"
+	    if { $IsAttached == 1 } { $this switch_frames }
 	    pack configure $w.wframe -expand no -fill none
 	    $w.wframe.draw configure -geometry $size
 	} else {
-	    set size "1024x768"
-	    wm geometry $w "=1030x900"
+	    set size "1600x1024"
+	    wm geometry $w "=1614x1151"
+	    if { $IsAttached == 1 } { $this switch_frames }
 	    pack configure $w.wframe -expand no -fill none
 	    $w.wframe.draw configure -geometry $size
 	}
