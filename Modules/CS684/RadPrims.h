@@ -1,17 +1,18 @@
-#ifndef SCI_project_RadPrims_h
-#define SCI_project_RadPrims_h 1
+#ifndef SCI_Modules_CS684_RadPrims_h
+#define SCI_Modules_CS684_RadPrims_h 1
 
 #include <Datatypes/Datatype.h>
 #include <Classlib/LockingHandle.h>
 #include <Classlib/Array2.h>
 #include <Datatypes/TriSurface.h>
-#include <Datatypes/Spectrum.h>
 #include <Geom/Color.h>
 #include <Geom/Material.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Math/MusilRNG.h>
+
+#include <Modules/CS684/Spectrum.h>
 
 class RTObject;
 typedef LockingHandle<RTObject> RTObjectHandle;

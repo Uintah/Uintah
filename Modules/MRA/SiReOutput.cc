@@ -17,15 +17,16 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldRGuchar.h>
 #include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Malloc/Allocator.h>
 #include <Math/MinMax.h>
 #include <iostream.h>
 #include <stdio.h>
-#include "sire_const.h"
-#include "sire_struct.h"
-#include "sire_version.h"
+
+#include <Modules/MRA/SiRe.h>
+#include <Modules/MRA/sire_const.h>
+#include <Modules/MRA/sire_struct.h>
+#include <Modules/MRA/sire_version.h>
 
 /* Prototypes */
 extern "C" {
@@ -111,7 +112,7 @@ void SiReOutput::execute()
     VoidStarHandle vsh;
     if (!iport->get(vsh)) return;
     SiReData *s;
-    if (!vsh.get_rep() || !(s=vsh->getSiReData())) return;
+    if (!vsh.get_rep() || !(s=dynamic_cast<SiReData*>(vsh.get_rep()))) return;
     
    cerr << "\n\nSIREOUTPUT\n\n\n";
 

@@ -10,18 +10,12 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "DRaytracer.h"
+#include <Modules/CS684/DRaytracer.h>
+#include <Modules/CS684/Image.h>
 #include <Malloc/Allocator.h>
 
 int global_numbounces;
 Mutex global_bounces_mutex;
-
-DRaytracer* VoidStar::getDRaytracer() {
-    if (rep==DRaytracerType) {
-	return (DRaytracer*)this;
-    } else
-	return 0;
-}
 
 static Persistent* make_DRaytracer()
 {
@@ -30,8 +24,8 @@ static Persistent* make_DRaytracer()
 
 PersistentTypeID DRaytracer::type_id("DRaytracer", "VoidStar", make_DRaytracer);
 
-DRaytracer::DRaytracer(Representation r)
-: VoidStar(r)
+DRaytracer::DRaytracer()
+: VoidStar()
 {
     camera.fLength=0.05;
     camera.zoom=1;

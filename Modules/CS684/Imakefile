@@ -17,10 +17,12 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = BldBRDF.o  BldScene.o  DRaytracer.o  RTPrims.o  RadPrims.o  \
-	Radiosity.o  Sample2D.o  Scene.o  $(OPENGLOBJS)
-SRCS = BldBRDF.cc BldScene.cc DRaytracer.cc RTPrims.cc RadPrims.cc  \
-	Radiosity.cc Sample2D.cc Scene.cc $(OPENGLSRCS)
+OBJS = BldBRDF.o  BldScene.o  DRaytracer.o  Image.o  Pixel.o \
+	RTPrims.o  RadPrims.o  Radiosity.o  Sample2D.o  Scene.o  \
+	Spectrum.o $(OPENGLOBJS)
+SRCS = BldBRDF.cc BldScene.cc DRaytracer.cc Image.cc Pixel.cc \
+	RTPrims.cc RadPrims.cc Radiosity.cc Sample2D.cc Scene.cc \
+	Spectrum.cc $(OPENGLSRCS)
 
 LIBNAME = CS684
 

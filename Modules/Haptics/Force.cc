@@ -15,7 +15,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Malloc/Allocator.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Datatypes/Interval.h>
 #include <Datatypes/IntervalPort.h>
@@ -28,6 +27,7 @@
 #include <iostream.h>
 #include <stdio.h>
 
+#include <Modules/Haptics/PhantomData.h>
 
 class Force : public Module {
  
@@ -176,7 +176,7 @@ cout << "FOrce: PRangeZ = " << PRangeX->low << "," << PRangeX->high << endl;
  VoidStarHandle pHandle;
   input->get(pHandle);
   if (!pHandle.get_rep()) return;
-  if (!(force = pHandle->getPhantomUVW())) return;
+  if (!(force = dynamic_cast<PhantomUVW*>(pHandle.get_rep()))) return;
 
   // now have input force to send to phantom 
 

@@ -13,14 +13,15 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdio.h>
-#include "sire_const.h"
-#include "sire_struct.h"
-#include "sire_version.h"
+
+#include <Modules/MRA/SiRe.h>
+#include <Modules/MRA/sire_const.h>
+#include <Modules/MRA/sire_struct.h>
+#include <Modules/MRA/sire_version.h>
 
 #define DEBUG 0
 
@@ -119,7 +120,7 @@ void SiReCrunch::execute()
    VoidStarHandle vsh;
    if (!iport->get(vsh)) return;
    SiReData *s;
-   if (!vsh.get_rep() || !(s=vsh->getSiReData())) return;
+   if (!vsh.get_rep() || !(s=dynamic_cast<SiReData*>(vsh.get_rep()))) return;
 
    cerr << "\n\nSIRECRUNCH\n\n\n";
    s->lockstepSem.up();

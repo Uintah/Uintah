@@ -76,7 +76,7 @@ TransformField
 Category: Haptics
 Endpoint
 Force
-Magnitude
+HedgehogLitLines
 Position
 PositionToForce
 
@@ -167,6 +167,7 @@ ScalarFieldReader
 SegFldReader
 SigmaSetReader
 SurfaceReader
+TensorFieldReader
 TiffReader
 VectorFieldReader
 VectorFieldOceanReader
@@ -230,7 +231,6 @@ GenTransferFunc
 GenFieldEdges
 GenStandardColorMaps
 Hedgehog
-HedgehogLitLines
 ImageViewer
 IsoMask
 IsoSurface
@@ -260,11 +260,12 @@ ScalarFieldWriter
 SegFldWriter
 SigmaSetWriter
 SurfaceWriter
+TensorFieldWriter
 TetraWriter
 TiffWriter
 VectorFieldWriter
 
 Category: eModules
-TensorFieldReader
+TensorFieldRawReader
 TensorStaticClean
 TensorCreateEVectors

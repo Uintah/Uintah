@@ -5,18 +5,19 @@ OBJS = ColorMapWriter.o  ColumnMatrixWriter.o  ContourSetWriter.o   \
 	GeometryWriter.o MatrixWriter.o  MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o SegFldWriter.o  \
 	SurfaceWriter.o   VectorFieldWriter.o   VoidStarWriter.o \
-	TetraWriter.o MultiScalarFieldWriter.o 
+	TensorFieldWriter.o  TetraWriter.o MultiScalarFieldWriter.o 
 GENSRCS = ColorMapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc  \
 	MatrixWriter.cc \
 	MultiMeshWriter.cc ScalarFieldWriter.cc SegFldWriter.cc \
 	SurfaceWriter.cc VectorFieldWriter.cc VoidStarWriter.cc 
 SRCS = $(GENSRCS) GeometryWriter.cc MultiScalarFieldWriter.cc \
-	MeshWriter.cc TetraWriter.cc TiffWriter.cc  \
+	MeshWriter.cc TensorFieldWriter.cc TetraWriter.cc TiffWriter.cc  \
 
 GENTCLS = ColorMapWriter.tcl ColumnMatrixWriter.tcl ContourSetWriter.tcl \
 	GeometryWriter.tcl MatrixWriter.tcl MeshWriter.tcl \
 	MultiMeshWriter.tcl ScalarFieldWriter.tcl SegFldWriter.tcl \
-	SurfaceWriter.tcl VectorFieldWriter.tcl VoidStarWriter.tcl
+	SurfaceWriter.tcl TensorFieldWriter.cc VectorFieldWriter.tcl \
+	VoidStarWriter.tcl
 TCLS = $(GENTCLS) TetraWriter.tcl TiffWriter.tcl
 
 LIBNAME = Writers
@@ -88,6 +89,12 @@ SurfaceWriter.cc: Writer.cc
 
 SurfaceWriter.tcl: Writer.tcl
 	sed 's/TYPE/Surface/g' < Writer.tcl > SurfaceWriter.tcl
+
+TensorFieldWriter.cc: Writer.cc
+	sed 's/TYPE/TensorField/g' < Writer.cc > TensorFieldWriter.cc
+
+TensorFieldWriter.tcl: Writer.tcl
+	sed 's/TYPE/TensorField/g' < Writer.tcl > TensorFieldWriter.tcl
 
 VectorFieldWriter.cc: Writer.cc
 	sed 's/TYPE/VectorField/g' < Writer.cc > VectorFieldWriter.cc

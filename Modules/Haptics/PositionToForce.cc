@@ -23,7 +23,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Malloc/Allocator.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Datatypes/VectorFieldRG.h>
 #include <Datatypes/VectorFieldPort.h>
@@ -37,6 +36,8 @@
 #include <Modules/Haptics/client.c>
 //#include <Datatypes/ljdGlobals.h>
 #endif
+
+#include <Modules/Haptics/PhantomData.h>
 
 class PositionToForce : public Module {
  
@@ -299,7 +300,7 @@ void PositionToForce::execute()
     VoidStarHandle rmHandle;
     input->get(rmHandle);
     if (!rmHandle.get_rep()) return; // check for null pointer 
-    if (!(xyz = rmHandle->getPhantomXYZ())) return; // check for contents and
+    if (!(xyz = dynamic_cast<PhantomXYZ*>(rmHandle.get_rep()))) return; // check for contents and
            //assign to xyz
     
     xyz->updateLock.read_lock(); 

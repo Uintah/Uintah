@@ -28,6 +28,12 @@ public:
     Array1<int> junctionlessWires;	// wires can be closed loops
     Array1< Array1<int> > patchBdryEdgeFace;  // each patch boundary edge has
                                               // an idx to the face it bounds
+    Array1< Array1<int> > wireBdryNodes;      // each wire has a list of the
+                                              // nodes that bound it
+    Array1<int> faceToPatch;		// what patch is a particular face in
+    Array1<int> edgeToWire;		// what wire is an edge in (none = -1)
+    Array1<int> nodeToJunction;		// what junction is a node (none = -1)
+
 public:
     TopoSurfTree(Representation r=TSTree);
     TopoSurfTree(const TopoSurfTree& copy, Representation r=STree);

@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <Modules/CS684/Image.h>
+
 extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
@@ -138,7 +140,7 @@ void RayMatrix::execute()
     VoidStarHandle rmHandle;
     iRM->get(rmHandle);
     if (!rmHandle.get_rep()) return;
-    if (!(rm = rmHandle->getImageRM())) return;
+    if (!(rm = dynamic_cast<ImageRM*>(rmHandle.get_rep()))) return;
 
     NY=rm->pix.dim1();
     NX=rm->pix.dim2();

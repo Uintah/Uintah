@@ -1,8 +1,10 @@
 
 #include <config/sci.cf>
 
-OBJS = PositionToForce.o Endpoint.o  Position.o Force.o
-SRCS = PositionToForce.cc Endpoint.cc Position.cc Force.cc
+OBJS = Endpoint.o  Force.o  HedgehogLitLines.o  PhantomData.o  \
+	Position.o  PositionToForce.o  
+SRCS = Endpoint.cc Force.cc HedgehogLitLines.cc PhantomData.cc \
+	Position.cc PositionToForce.cc 
 
 LIBNAME = Haptics
 

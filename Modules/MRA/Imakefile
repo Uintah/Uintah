@@ -1,8 +1,8 @@
 
 #include <config/sci.cf>
 
-OBJS = SiReAll.o  SiReInput.o  SiReOutput.o  SiReCrunch.o
-SRCS = SiReAll.cc SiReInput.cc SiReOutput.cc SiReCrunch.cc
+OBJS = SiRe.o  SiReAll.o  SiReInput.o  SiReOutput.o  SiReCrunch.o
+SRCS = SiRe.cc SiReAll.cc SiReInput.cc SiReOutput.cc SiReCrunch.cc
 
 LIBNAME = MRA
 

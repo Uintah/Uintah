@@ -10,8 +10,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_Datatypes_DRaytracer_h
-#define SCI_Datatypes_DRaytracer_h 1
+#ifndef SCI_Modules_CS684_DRaytracer_h
+#define SCI_Modules_CS684_DRaytracer_h 1
 
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
@@ -30,9 +30,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "RTPrims.h"
-#include "Sample2D.h"
-#include "Scene.h"
+#include <Modules/CS684/Image.h>
+#include <Modules/CS684/RTPrims.h>
+#include <Modules/CS684/Sample2D.h>
+#include <Modules/CS684/Scene.h>
 
 class DRaytracer : public VoidStar {
     double stepX;
@@ -67,7 +68,7 @@ public:
     double specMin, specMax;
     int specNum;
 
-    DRaytracer(Representation r=DRaytracerType);
+    DRaytracer();
     DRaytracer(const DRaytracer& copy);
     virtual ~DRaytracer();
     virtual VoidStar* clone();

@@ -21,6 +21,7 @@
 #include <Geom/Group.h>
 #include <Geom/Pt.h>
 #include <Geom/Line.h>
+#include <Geom/Sphere.h>
 #include <Geom/Triangles.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
@@ -31,7 +32,11 @@ class TopoSurfToGeom : public Module {
 
     Array1<MaterialHandle> c;
 
-    TCLstring mode;
+    TCLstring patchMode;
+    TCLstring wireMode;
+    TCLstring junctionMode;
+    TCLstring nonjunctionMode;
+    TCLstring rad;
 
     void surf_to_geom(const SurfaceHandle&, GeomGroup*);
 public:
@@ -50,7 +55,9 @@ Module* make_TopoSurfToGeom(const clString& id)
 }
 
 TopoSurfToGeom::TopoSurfToGeom(const clString& id)
-: Module("TopoSurfToGeom", id, Filter), mode("mode", id, this)
+: Module("TopoSurfToGeom", id, Filter), patchMode("patchMode", id, this),
+  wireMode("wireMode", id, this), junctionMode("junctionMode", id, this),
+  rad("rad", id, this), nonjunctionMode("nonjunctionMode", id, this)
 {
     // Create the input port
     isurface=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
@@ -68,7 +75,10 @@ TopoSurfToGeom::TopoSurfToGeom(const clString& id)
 }
 
 TopoSurfToGeom::TopoSurfToGeom(const TopoSurfToGeom&copy, int deep)
-: Module(copy, deep), mode("mode", id, this)
+: Module(copy, deep), patchMode("patchMode", id, this),
+  wireMode("wireMode", id, this), junctionMode("junctionMode", id, this),
+  rad("rad", id, this), nonjunctionMode("nonjunctionMode", id, this)
+
 {
     NOT_FINISHED("TopoSurfToGeom::TopoSurfToGeom");
 }
@@ -104,7 +114,8 @@ void TopoSurfToGeom::execute()
 
     Array1<GeomTriangles* > Patches;
     Array1<GeomLines* > Wires;
-    GeomPts *Junctions = 0;
+    Array1<GeomObj* > Junctions;
+    Array1<GeomObj* > NonJunctions;
 
     TopoSurfTree* topo=surf->getTopoSurfTree();
     if (!topo) {
@@ -117,7 +128,7 @@ void TopoSurfToGeom::execute()
     }
 
     reset_vars();
-    if (mode.get() == "patches") {
+    if (patchMode.get() != "patchNone" && topo->patches.size()) {
 	Patches.resize(topo->patches.size());
 	for (int i=0; i<Patches.size(); i++)
 	    Patches[i] = scinew GeomTriangles;
@@ -136,12 +147,13 @@ void TopoSurfToGeom::execute()
 				    topo->nodes[i3],
 				    topo->nodes[i2]);
 	    }	
-    } else if (mode.get() == "wires") {
+    }
+    if (wireMode.get() != "wireNone" && topo->wires.size()) {
 	Wires.resize(topo->wires.size());
 	for (int i=0; i<Wires.size(); i++)
 	    Wires[i] = scinew GeomLines;
 	for (i=0; i<topo->wires.size(); i++)
-	    for (int j=0; j<topo->wires[j].size(); j++) {
+	    for (int j=0; j<topo->wires[i].size(); j++) {
 		int lnIdx=topo->wires[i][j];
 		int i1=topo->edges[lnIdx]->i1;
 		int i2=topo->edges[lnIdx]->i2;
@@ -150,29 +162,95 @@ void TopoSurfToGeom::execute()
 		else
 		    Wires[i]->add(topo->nodes[i2], topo->nodes[i1]);
 	    }
-    } else {	// mode.get() == "junctions"
-	Junctions = new GeomPts(topo->junctions.size());
-	for (int i=0; i<topo->junctions.size(); i++) {
-	    Junctions->pts[i*3]=topo->nodes[topo->junctions[i]].x();
-	    Junctions->pts[i*3+1]=topo->nodes[topo->junctions[i]].y();
-	    Junctions->pts[i*3+2]=topo->nodes[topo->junctions[i]].z();
+    }
+    if (junctionMode.get() != "junctionNone" && topo->junctions.size()) {
+	double r;	
+	(rad.get()).get_double(r);
+	if (r == 0) {
+	    GeomPts *gpts = scinew GeomPts(0);
+	    for (int i=0; i<topo->junctions.size(); i++) {
+		gpts->add(topo->nodes[topo->junctions[i]]);
+	    }
+	    Junctions.add(gpts);
+	} else {
+	    for (int i=0; i<topo->junctions.size(); i++) {
+		Junctions.add(scinew GeomSphere(topo->nodes[topo->junctions[i]], r));
+	    }
+	}
+    }
+    if (nonjunctionMode.get() != "nonjunctionNone" && topo->junctionlessWires.size()) {
+	double r;
+	(rad.get()).get_double(r);
+	cerr << "r="<<r<<"\n";
+	if (r == 0) {
+	    GeomPts *gpts = scinew GeomPts(0);
+	    cerr << "1)topo->junctionlessWires.size()="<<topo->junctionlessWires.size()<<"\n";
+	    for (int i=0; i<topo->junctionlessWires.size(); i++) {
+		gpts->add(topo->nodes[topo->junctionlessWires[i]]);
+	    }
+	    NonJunctions.add(gpts);
+	} else {
+	    cerr << "2)topo->junctionlessWires.size()="<<topo->junctionlessWires.size()<<"\n";
+	    for (int i=0; i<topo->junctionlessWires.size(); i++) {
+		NonJunctions.add(scinew GeomSphere(topo->nodes[topo->junctionlessWires[i]], r));
+	    }
 	}
     }
 
     ogeom->delAll();
-    if (Junctions) {
-	ogeom->addObj(Junctions, clString("Topo Junctions"));
-	return;
-    }
-    GeomGroup* ngroup = scinew GeomGroup;
-    if (Wires.size()) {
-	for (int i=0; i<Wires.size(); i++) {
-	    ngroup->add(scinew GeomMaterial(Wires[i], c[i%7]));
+
+    if (Patches.size()) {
+	if (patchMode.get() == "patchTog") {
+	    GeomGroup* gr=scinew GeomGroup;
+	    for (int i=0; i<Patches.size(); i++) {
+		gr->add(scinew GeomMaterial(Patches[i], c[i%7]));
+	    }
+	    ogeom->addObj(gr, clString("Topo Patches"));
+	} else {
+	    for (int i=0; i<Patches.size(); i++) {
+		clString name("Topo Patch "+to_string(i));
+		ogeom->addObj(scinew GeomMaterial(Patches[i], c[i%7]), name);
+	    }
 	}
-	ogeom->addObj(ngroup, clString("Topo Wires"));
-    } else {	// Patches
-	for (int i=0; i<Patches.size(); i++)
-	    ngroup->add(scinew GeomMaterial(Patches[i], c[i%7]));
-	ogeom->addObj(ngroup, clString("Topo Patches"));
+    }	    
+    if (Wires.size()) {
+	if (wireMode.get() == "wireTog") {
+	    GeomGroup* gr=scinew GeomGroup;
+	    for (int i=0; i<Wires.size(); i++) {
+		gr->add(scinew GeomMaterial(Wires[i], c[i%7]));
+	    }
+	    ogeom->addObj(gr, clString("Topo Wires"));
+	} else {
+	    for (int i=0; i<Wires.size(); i++) {
+		clString name("Topo Wire "+to_string(i));
+		ogeom->addObj(scinew GeomMaterial(Wires[i], c[i%7]), name);
+	    }
+	}
+    }
+    if (Junctions.size()) {
+	if (junctionMode.get() == "junctionTog") {
+	    GeomGroup* gr=scinew GeomGroup;
+	    for (int i=0; i<Junctions.size(); i++)
+		gr->add(scinew GeomMaterial(Junctions[i], c[i%7]));
+	    ogeom->addObj(gr, clString("Topo Junctions"));
+	} else {
+	    for (int i=0; i<Junctions.size(); i++) {
+		clString name("Topo Junction "+to_string(i));
+		ogeom->addObj(scinew GeomMaterial(Junctions[i], c[i%7]), name);
+	    }
+	}
+    }
+    if (NonJunctions.size()) {
+	if (nonjunctionMode.get() == "nonjunctionTog") {
+	    GeomGroup* gr=scinew GeomGroup;
+	    for (int i=0; i<NonJunctions.size(); i++)
+		gr->add(scinew GeomMaterial(NonJunctions[i], c[i%7]));
+	    ogeom->addObj(gr, clString("Topo NonJunctions"));
+	} else {
+	    for (int i=0; i<NonJunctions.size(); i++) {
+		clString name("Topo NonJunction "+to_string(i));
+		ogeom->addObj(scinew GeomMaterial(NonJunctions[i], c[i%7]), name);
+	    }
+	}
     }
 }

@@ -15,7 +15,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Malloc/Allocator.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Datatypes/Interval.h>
 #include <Datatypes/IntervalPort.h>
@@ -23,6 +22,8 @@
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <stdio.h>
+
+#include <Modules/Haptics/PhantomData.h>
 
 #ifdef SOCKETS
   #include <Modules/Haptics/client.c>

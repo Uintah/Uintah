@@ -15,7 +15,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -32,6 +31,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include <Modules/CS684/Image.h>
 
 extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
@@ -121,7 +122,7 @@ void XYZtoRGB::execute()
     VoidStarHandle xyzHandle;
     iXYZ->get(xyzHandle);
     if (!xyzHandle.get_rep()) return;
-    if (!(xyz = xyzHandle->getImageXYZ())) return;
+    if (!(xyz = dynamic_cast<ImageXYZ*>(xyzHandle.get_rep()))) return;
 
     NY=xyz->xyz.dim1();
     NX=xyz->xyz.dim2()/3;

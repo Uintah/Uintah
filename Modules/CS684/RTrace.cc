@@ -43,7 +43,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "RTPrims.h"
+#include <Modules/CS684/RTPrims.h>
+#include <Modules/CS684/DRaytracer.h>
+#include <Modules/CS684/Image.h>
 
 extern int global_numbounces;
 
@@ -225,9 +227,15 @@ void RTrace::execute()
     View v=camera_widget->GetView();
 
     VoidStarHandle RTHandle;
+
     iRT->get(RTHandle);
     if (!RTHandle.get_rep()) return;
-    if (!(rt = RTHandle->getDRaytracer())) return;
+
+//    if (!(rt = RTHandle->getDRaytracer())) return;
+    if (!(rt = dynamic_cast<DRaytracer*>(RTHandle.get_rep()))) {
+	cerr << "RTracer error - expected DRaytracer type of RTHandle";
+	return;
+    }
 
     // New scene -- have to build widgets
     if (rt->generation != rtGen) {

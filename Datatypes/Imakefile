@@ -6,7 +6,7 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  Image.o  ImagePort.o Interval.o IntervalPort.o \
 	ManhattanDist.o   Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  \
-	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  Pixel.o  \
+	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  \
 	ScalarField.o  \
 	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGshort.o  ScalarFieldRGint.o \
@@ -16,7 +16,7 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	ScaledBoxWidgetData.o  ScaledBoxWidgetDataPort.o  \
 	SegFld.o  SegFldPort.o  \
 	SigmaSet.o  SigmaSetPort.o  \
-	SoundPort.o  SparseRowMatrix.o  Spectrum.o  SurfOctree.o  \
+	SoundPort.o  SparseRowMatrix.o  SurfOctree.o  \
 	SurfOctreeTopPort.o  \
 	SurfTree.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TopoSurfTree.o  TriDiagonalMatrix.o  TriSurface.o  \
@@ -30,8 +30,8 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	ParticleGridReader.o ParticleGridReaderPort.o \
 	TecplotReader.o MEFluid.o ParticleSetExtension.o \
 	ParticleSetExtensionPort.o \
-	cfdlibParticleSet.o 
-#        TensorField.o TensorFieldBase.o TensorFieldPort.o
+	cfdlibParticleSet.o \
+        TensorField.o TensorFieldBase.o TensorFieldPort.o
 
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc \
@@ -43,7 +43,7 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	Datatype.cc DenseMatrix.cc \
 	GeometryPort.cc Image.cc ImagePort.cc Interval.cc IntervalPort.cc  \
 	ManhattanDist.cc Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc \
-	MultiMesh.cc MultiMeshPort.cc Octree.cc OctreePort.cc Pixel.cc \
+	MultiMesh.cc MultiMeshPort.cc Octree.cc OctreePort.cc \
 	ScalarField.cc \
 	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
 	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
@@ -54,7 +54,7 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	ScaledBoxWidgetData.cc  ScaledBoxWidgetDataPort.cc \
 	SegFld.cc  SegFldPort.cc \
 	SigmaSet.cc SigmaSetPort.cc \
-	SoundPort.cc SparseRowMatrix.cc Spectrum.cc SurfOctree.cc \
+	SoundPort.cc SparseRowMatrix.cc SurfOctree.cc \
 	SurfOctreeTopPort.cc \
 	SurfTree.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TopoSurfTree.cc TriDiagonalMatrix.cc TriSurface.cc \
@@ -68,8 +68,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	TecplotReader.cc MEFluid.cc ParticleSetExtension.cc \
 	ParticleSetExtensionPort.cc \
 	VoidStar.cc VoidStarPort.cc \
-	cfdlibParticleSet.cc 
-#        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc
+	cfdlibParticleSet.cc \
+        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc
 
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
 	ScalarFieldRGdouble.h ScalarFieldRG.h ScalarFieldRGshort.h \

@@ -14,15 +14,16 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/Pstreams.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <stdio.h>
-#include "sire_const.h"
-#include "sire_struct.h"
-#include "sire_version.h"
+
+#include <Modules/MRA/SiRe.h>
+#include <Modules/MRA/sire_const.h>
+#include <Modules/MRA/sire_struct.h>
+#include <Modules/MRA/sire_version.h>
 
 /* Prototypes */
 extern "C" {

@@ -10,11 +10,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "RTPrims.h"
-#include "RadPrims.h"
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
-#include <Datatypes/Spectrum.h>
 #include <Geom/Color.h>
 #include <Geom/Material.h>
 #include <Geometry/Point.h>
@@ -25,6 +22,10 @@
 #include <iostream.h>
 #include <math.h>
 #include <stdio.h>
+
+#include <Modules/CS684/RTPrims.h>
+#include <Modules/CS684/RadPrims.h>
+#include <Modules/CS684/Spectrum.h>
 
 PersistentTypeID BRDF::type_id("BRDF", "Datatype", 0);
 

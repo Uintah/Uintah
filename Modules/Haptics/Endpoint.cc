@@ -14,7 +14,6 @@
  ****************************************************************/
 
 #include <Classlib/NotFinished.h>
-#include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Widgets/PointWidget.h>
@@ -27,6 +26,7 @@
 #include <iostream.h>
 #include <stdio.h>
 
+#include <Modules/Haptics/PhantomData.h>
 
 class Endpoint : public Module {
  
@@ -103,7 +103,7 @@ void Endpoint::execute()
   VoidStarHandle pHandle;
   input->get(pHandle);
   if (!pHandle.get_rep()) return;
-  if (!(position = pHandle->getPhantomXYZ())) return;
+  if (!(position = dynamic_cast<PhantomXYZ*>(pHandle.get_rep()))) return;
 
   // now have input position to work with.
 

@@ -17,7 +17,6 @@
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorFieldPort.h>
-#include <Datatypes/VoidStar.h> // ljd added
 #include <Datatypes/VoidStarPort.h> // ljd added
 #include <Geom/BBoxCache.h>
 #include <Geom/Group.h>
@@ -31,6 +30,8 @@
 #include <Widgets/ScaledBoxWidget.h>
 #include <Widgets/ScaledFrameWidget.h>
 #include <iostream.h>
+
+#include <Modules/Haptics/PhantomData.h> // ljd added
 
 #define CP_PLANE 0
 #define CP_SURFACE 1
@@ -191,8 +192,8 @@ void HedgehogLitLines::execute()
       VoidStarHandle rmHandle;
       inpoint->get(rmHandle);
       if (rmHandle.get_rep()) { 
-         if ((xyz = rmHandle->getPhantomXYZ())) haveXYZ = 1; // check for contents and
-           //assign to xyz
+         if ((xyz = dynamic_cast<PhantomXYZ*>(rmHandle.get_rep()))) 
+	     haveXYZ = 1; // check for contents and assign to xyz
       }
     } 
 // end ljd added

@@ -10,12 +10,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include "RadPrims.h"
-#include "RTPrims.h"
-
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
-#include <Datatypes/Spectrum.h>
 #include <Geom/Color.h>
 #include <Geom/Material.h>
 #include <Geometry/Point.h>
@@ -27,7 +23,10 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "DRaytracer.h"
+#include <Modules/CS684/DRaytracer.h>
+#include <Modules/CS684/RadPrims.h>
+#include <Modules/CS684/RTPrims.h>
+#include <Modules/CS684/Spectrum.h>
 
 RadObj::RadObj()
 {	

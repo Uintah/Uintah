@@ -17,7 +17,6 @@
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/GeometryPort.h>
-#include <Datatypes/Spectrum.h>
 #include <Datatypes/VoidStar.h>
 #include <Datatypes/VoidStarPort.h>
 #include <Geom/Color.h>
@@ -40,7 +39,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "RTPrims.h"
+#include <Modules/CS684/DRaytracer.h>
+#include <Modules/CS684/Image.h>
+#include <Modules/CS684/RTPrims.h>
+#include <Modules/CS684/Spectrum.h>
 
 class BldScene : public Module {
     VoidStarIPort *iRT;
@@ -531,7 +533,8 @@ void BldScene::execute()
     VoidStarHandle RTHandle;
     iRT->get(RTHandle);
     if (!RTHandle.get_rep()) return;
-    if (!(rt = RTHandle->getDRaytracer())) return;
+
+    if (!(rt = dynamic_cast<DRaytracer*>(RTHandle.get_rep()))) return;
 
 //    cerr << "Number of objects: (rt->scene.obj.size()) "<<rt->scene.obj.size()<<"\n";
 
