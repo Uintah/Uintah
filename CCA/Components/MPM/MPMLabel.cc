@@ -54,6 +54,9 @@ MPMLabel::MPMLabel()
   
   pTemperatureLabel = VarLabel::create( "p.temperature",
 			ParticleVariable<double>::getTypeDescription() );
+                     
+  pSp_volLabel      = VarLabel::create( "p.sp_vol",
+			ParticleVariable<double>::getTypeDescription() ); 
   
   pExternalHeatRateLabel = VarLabel::create( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
@@ -135,7 +138,10 @@ MPMLabel::MPMLabel()
   
   pTemperatureLabel_preReloc = VarLabel::create( "p.temperature+",
 			ParticleVariable<double>::getTypeDescription() );
-  
+
+  pSp_volLabel_preReloc = VarLabel::create( "p.Sp_vol+",
+			ParticleVariable<double>::getTypeDescription() );  
+                     
   pExternalHeatRateLabel_preReloc = VarLabel::create( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -218,6 +224,12 @@ MPMLabel::MPMLabel()
 			NCVariable<double>::getTypeDescription());
 
   massBurnFractionLabel  = VarLabel::create("massBurnFraction",
+			NCVariable<double>::getTypeDescription());
+                     
+  gSp_volLabel     =  VarLabel::create("g.sp_vol",
+			NCVariable<double>::getTypeDescription()); 
+ 
+  gSp_vol_srcLabel =  VarLabel::create("g.sp_vol_src",
 			NCVariable<double>::getTypeDescription());
 
   // Interaction with Arches, Fluid Mechanics
@@ -337,6 +349,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pXLabel_preReloc);
   VarLabel::destroy(pTemperatureLabel);
   VarLabel::destroy(pTemperatureLabel_preReloc);
+  VarLabel::destroy(pSp_volLabel); 
+  VarLabel::destroy(pSp_volLabel_preReloc); 
   VarLabel::destroy(pExternalHeatRateLabel);
   VarLabel::destroy(pExternalHeatRateLabel_preReloc);
   VarLabel::destroy(pSurfLabel);
@@ -368,6 +382,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gStressLabel);
   VarLabel::destroy(gSurfNormLabel);
   VarLabel::destroy(gTemperatureLabel);
+  VarLabel::destroy(gSp_volLabel); 
+  VarLabel::destroy(gSp_vol_srcLabel); 
   VarLabel::destroy(gTemperatureNoBCLabel);
   VarLabel::destroy(gTemperatureStarLabel);
   VarLabel::destroy(gTemperatureRateLabel);
