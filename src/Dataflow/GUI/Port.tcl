@@ -261,6 +261,7 @@ proc drawPort { port { color red } { connected 0 } } {
 	    bind $p <ButtonPress-1> "tracePort {$port}"
 	    bind $p <Control-Button-1> "tracePort {$port} 1"
 	    bind $p <ButtonRelease-1> "deleteTraces"
+	    bind $p <3> "portMenu %X %Y {$port} %x %y"
 	}
     }
 }
@@ -398,5 +399,102 @@ proc tracePortsBackwards { ports } {
 }
 
 
+proc findModulesToInsertOnPort { port } {
+    global Subnet ModuleIPorts ModuleOPorts
+    set origins [findPortOrigins $port]
+    if { ![llength $origins] } { return }
+    set port [lindex [lsort -integer -unique -index 1 $origins] 0]
+    set path [modulePath [pMod port]]
+    if { [pType port] == "o" } {
+	set datatype [lindex $ModuleOPorts($path) [pNum port]]
+    } else {
+	set datatype [lindex $ModuleIPorts($path) [pNum port]]
+    }
 
+    set modules ""
+    foreach maybe [array names ModuleIPorts] {
+	if { [pType port] == "o" } {
+	    set num [lsearch -exact $ModuleIPorts($maybe) $datatype]
+	} else {
+	    set num [lsearch -exact $ModuleOPorts($maybe) $datatype]
+	}
+	if { $num != -1 } {
+	    lappend modules "$maybe $num"
+	}
+    }
+    return [lsort -command moduleCompareCommand $modules]
+}
+
+
+proc insertModuleOnPortMenu { port menu } {
+    # Return if this menu already exists
+    if { [winfo exists $menu] } { return 1 }
+    # Return if there is no modules that would insert on this port
+    set moduleList [findModulesToInsertOnPort $port]
+    if { ![llength $moduleList] } { return 0 }
+
+    # create a new menu
+    menu $menu -tearoff false -disabledforeground black
+
+    set added ""
+    foreach path $moduleList {
+	if { [lsearch $added [lindex $path 0]] == -1 } {
+	    lappend added [lindex $path 0]
+	    # Add a menu separator if this package isn't the first one
+	    if { [$menu index end] != "none" } {
+		$menu add separator 
+	    }
+	    # Add a label for the Package name
+	    $menu add command -label [lindex $path 0] -state disabled
+	}
+
+	set submenu $menu.menu_[join [lrange $path 0 1] _]
+	if { ![winfo exists $submenu] } {
+	    menu $submenu -tearoff false
+	    $menu add cascade -label "  [lindex $path 1]" -menu $submenu
+	}
+	set command "insertModuleOnPort \{$port\} $path"
+	$submenu add command -label [lindex $path 2] -command $command
+    }
+    update idletasks
+    return 1
+}
+
+
+proc insertModuleOnPort { port package category module num } {
+    global Subnet mouseX mouseY inserting insertOffset
+    set inserting 0
+    set insertOffset "0 0"
+    set Subnet(Loading) $Subnet([pMod port])
+    if { ![isaSubnetEditor [pMod port]] } {
+	set c1 [portCoords $port]
+	set c2 [portCoords [lreplace $port 1 1 $num]]
+	set dx [expr [lindex $c1 0] - [lindex $c2 0]]
+	set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
+	set bbox [$canvas bbox [pMod port]]
+	set mouseX [expr $dx+[lindex $bbox 0] - [$canvas canvasx 0]]
+	set y0 [$canvas canvasy 0]
+	if { [pType port] == "o" } {
+	    set mouseY [expr [lindex $bbox 3] + 20 - $y0]
+	} else {
+	    set mouseY [expr 2*[lindex $bbox 1] - [lindex $bbox 3] - 25 - $y0]
+	}
+    }
+    set modid [addModuleAtPosition $package $category $module $mouseX $mouseY]
+    set Subnet(Loading) 0
+    set inserting 0
+    after 100 createConnection \{[makeConn $port "$modid $num [invType port]"]\} 1 1
+}
+    
+
+proc portMenu {x y port cx cy} {
+    if { [pType port] == "i" && [portIsConnected $port] } return
+    global Subnet mouseX mouseY
+    set mouseX $cx
+    set mouseY $cy
+    set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
+    set menu_id "$canvas.menu[join $port _]"
+    insertModuleOnPortMenu $port $menu_id
+    tk_popup $menu_id $x $y
+}
 
