@@ -2160,6 +2160,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     // - Set BCs on rhoMicro. using press_CC 
     // - backout sp_vol_new 
     for (int m = 0; m < numMatls; m++)   {
+/*`==========TESTING==========*/
+// This needs to be rethought.
+// With a jet inlet, rho_CC is fixed and the pressure is allowed to 
+// float.   Backing out rho_micro at the new pressure will eventually
+// cause vol_frac to != 1.0.
+// 
+#if 0
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       
       // only hit boundary faces  
@@ -2176,7 +2183,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                 cv[m][c],Temp[m][c]);
         }
       } // face loop
-
+#endif 
+/*===========TESTING==========`*/
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c]; 
