@@ -68,15 +68,17 @@ Diagram::~Diagram()
 }
 
 void
-Diagram::add( DrawObj *d )
+Diagram::add( Polyline *d )
 {
-  graph_.add(d);
+  poly_.add(d);
+  active_.add(true);
   if ( window() != "" ) {
-    tcl_ << " add " << (graph_.size()-1) << " ";
+    tcl_ << " add " << (poly_.size()-1) << " ";
     if ( d->name() != "" )
       tcl_ << d->name();
     else
-      tcl_ << (graph_.size()-1);
+      tcl_ << (poly_.size()-1);
+    tcl_ << " " << d->tcl_color();
     tcl_exec();
   }
 }
@@ -93,9 +95,9 @@ void
 Diagram::reset_bbox()
 {
   graphs_bounds_.reset();
-  for (int i=0; i<graph_.size(); i++)
-    if ( graph_[i]->is_enabled() )
-      graph_[i]->get_bounds( graphs_bounds_ );
+  for (int i=0; i<poly_.size(); i++)
+    if ( poly_[i]->is_enabled() )
+      poly_[i]->get_bounds( graphs_bounds_ );
 }
   
 void
@@ -112,7 +114,7 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
   if ( args[1] == "select" ) {
     int plot = atoi( args[2].c_str() );
     bool state = args[3] == "0" ? false : true;
-    graph_[plot]->enable( state );
+    active_[plot] = state;
     redraw();
   } 
   else if ( args[1] == "select-one" ) {
@@ -163,12 +165,8 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
 void
 Diagram::add_hairline() 
 {
-  BBox2d b1, b2;
-  get_bounds( b1 );
-  b2.extend( Point2d( b1.min().x(), 0 ) );
-  b2.extend( Point2d( b1.max().x(), 1 ) );
-
-  Hairline *hair = scinew Hairline( b2, "Hairline");
+  cerr << "add_hairline\n";
+  Hairline *hair = scinew Hairline( this, "Hairline");
   int w = add_widget( hair );
 
   string window_name;
@@ -176,11 +174,6 @@ Diagram::add_hairline()
   hair->set_id( id()+"-hairline-" + to_string(w) );
   hair->set_window( window_name, string("hair")+ to_string(w));
 
-  for (int i=0; i<graph_.size(); i++) {
-    Polyline *p = dynamic_cast<Polyline *>(graph_[i]);
-    if ( p ) 
-      hair->add( p );
-  }
   redraw();
 }
 
@@ -202,10 +195,10 @@ Diagram::set_window( const string & window )
 {
   TclObj::set_window( window, name() );
 
-  for (int i=0; i<graph_.size(); i++) {
+  for (int i=0; i<poly_.size(); i++) {
     tcl_ << " add " << i << " ";
-    if ( graph_[i]->name() != "" )
-      tcl_ << graph_[i]->name();
+    if ( poly_[i]->name() != "" )
+      tcl_ << poly_[i]->name();
     else
       tcl_ << i;
     tcl_exec();
@@ -273,6 +266,22 @@ Diagram::button_release( int x, int y, int button )
     redraw();
   }
 }
+
+
+void
+Diagram::get_active( Array1<Polyline *> &poly )
+{
+  poly.resize( 0 );
+
+  if ( gui_select->get() == 1 ) {
+    poly.add( poly_[selected_] );
+  }
+  else {
+    for (int i=0; i<active_.size(); i++ )
+      if ( active_[i] )
+	poly.add( poly_[i] );
+  }
+}    
 
 #define DIAGRAM_VERSION 1
 

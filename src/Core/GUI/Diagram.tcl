@@ -34,6 +34,7 @@ class Diagram {
     variable n
     variable initialized
     variable last
+    variable w
 
     constructor { args } {
 	set initialized 0
@@ -53,42 +54,69 @@ class Diagram {
     }
 
     method init {} {
+	#
 	# widgets menu
+	#
 	$menu add menubutton .widgets -text "Widgets"
 
 	$menu add command .widgets.hairline -label Hairline -underline 0 \
 	    -command "$this widget hairline"
 
-	# option
-	frame $opt.b
-	iwidgets::labeledframe $opt.b.all -labeltext $n -labelpos nw
-	iwidgets::labeledframe $opt.b.one -labeltext $n -labelpos nw
-	pack $opt.b.all 
+	#
+	# option area
+	#
+	iwidgets::labeledframe $opt.d -labeltext $n -labelpos nw
 
-	frame $opt.select 
-	label $opt.select.label -text "Select:"
-	set $this-select 2
-	radiobutton $opt.select.one -text "One" \
-	    -variable $this-select -value 1 \
-	    -command "$this select one"
-	radiobutton $opt.select.many -text "Many" \
-	    -variable $this-select -value 2 \
-	    -command "$this select many"
-	pack $opt.select.label $opt.select.one $opt.select.many -side left
+	set w [$opt.d childsite]
 
-	frame $opt.scale 
-	label $opt.scale.label -text "Scale:"
-	set $this-scale 1
-	radiobutton $opt.scale.all -text "All" -variable $this-scale \
-	    -value 1 \
-	    -command "$this-c redraw" -anchor w
-	radiobutton $opt.scale.each -text "Each" -variable $this-scale \
-	    -value 2 \
-	    -command "$this-c redraw" -anchor w
-	pack $opt.scale.label $opt.scale.all $opt.scale.each -side left 
+	# list of polys
+	frame $w.poly
+	pack $w.poly -side left -anchor n
+
+	   # two different options
+	   frame $w.poly.all
+	   frame $w.poly.one
+
+	   # select the 'all' option
+	   pack $w.poly.all 
 	
-	pack $opt.b $opt.select $opt.scale -side top 
 
+	# select polys
+	frame $w.s
+
+  	  label $w.s.select -text "Select:"
+	  set $this-select 2
+
+	  frame $w.s.b1
+	  radiobutton $w.s.b1.one -text "One" \
+	      -variable $this-select -value 1 \
+	      -command "$this select one"
+	  radiobutton $w.s.b1.many -text "Many" \
+	      -variable $this-select -value 2 \
+	      -command "$this select many"
+
+	  pack $w.s.b1.one $w.s.b1.many -side left
+
+	  label $w.s.scale -text "Scale:"
+	  set $this-scale 1
+
+	  frame $w.s.b2
+	  radiobutton $w.s.b2.all -text "All" \
+	      -variable $this-scale -value 1 \
+	      -command "$this-c redraw" -anchor w
+	  radiobutton $w.s.b2.each -text "Each" \
+	      -variable $this-scale -value 2 \
+	      -command "$this-c redraw" -anchor w
+	  pack $w.s.b2.all $w.s.b2.each -side left
+	
+	pack $w.s.select -side top -anchor w
+	pack $w.s.b1 -side top -anchor e
+	pack $w.s.scale -side top -anchor w
+	pack $w.s.b2 -side top -anchor e 
+
+	pack $w.s -side left -ipadx 5 -anchor n
+
+	pack $opt.d
 
 	bind DiagramTags <ButtonPress> "$this-c ButtonPress %x %y %b "
 	bind DiagramTags <B1-Motion> "$this-c Motion %x %y %b "
@@ -97,31 +125,32 @@ class Diagram {
 	set initialized 1
     }
 	
-    method add { n name } {
+    method add { n name color} {
 	if { $initialized == 0 } {
 	    $this init
 	}
 	    
-	set cs [$opt.b.all childsite]
-	checkbutton $cs.$name -text $name -variable val($name) \
+	checkbutton $w.poly.all.$name -text $name -variable val($name) \
+	    -fg $color \
 	    -command "$this-c select $n \$val($name)"
-	$cs.$name select
-	pack $cs.$name -side left
+	$w.poly.all.$name select
+	pack $w.poly.all.$name -side top
 
-	set cs [$opt.b.one childsite]
-	radiobutton $cs.$name -text $name -variable select-one -value $n \
+	radiobutton $w.poly.one.$name -text $name \
+	    -variable select-one -value $n \
+	    -bg $color \
 	    -command "$this-c select-one $n"
-	pack $cs.$name -side left
+	pack $w.poly.one.$name -side top -ipady 2
 
     }
 
     method select {which} {
 	if { $which == "one" } {
-	    pack forget $opt.b.all
-	    pack $opt.b.one -side left
+	    pack forget $w.poly.all
+	    pack $w.poly.one
 	} else {
-	    pack forget $opt.b.one 
-	    pack $opt.b.all -side left
+	    pack forget $w.poly.one 
+	    pack $w.poly.all
 	}
 	$this-c redraw
     }
@@ -135,11 +164,11 @@ class Diagram {
     }
 
     method new-opt {} {
-	set w $opt.$last
-	frame $w
-	pack $w -side left
+	set win $w.$last
+	frame $win
+	pack $win -side left -anchor n
 	
 	set last [expr $last + 1]
-	return $w
+	return $win
     }
 }

@@ -78,7 +78,6 @@ class Hairline {
     }
 
     method values { args } {
-	puts "tcl values: $args "
 	if { $initialized == 0 } {
 	    $this init
 	}
@@ -110,9 +109,10 @@ class Hairline {
 	    set item [lindex $args $i]
 	    set c [lindex $item 0]
 	    set v [lindex $item 1]
-	    puts "tcl values $c $v"
   	    $w.$i-line config -bg $c
   	    $w.$i-val config -text $v
   	}
+
+	set current $l
     }
 }
