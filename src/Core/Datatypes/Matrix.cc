@@ -80,6 +80,14 @@ Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
   mat.mult(v, result, flops, memrefs);
 }
 
+int 
+Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const
+{
+  double err;
+  int niter, flops, memrefs;
+  return cg_solve(rhs, lhs, err, niter, flops, memrefs);
+}
+
 int
 Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		 double &err, int &niter, 
@@ -155,6 +163,14 @@ Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
     if (err>1000000) return 0;
   }
   return 0;
+}
+
+int 
+Matrix::bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const
+{
+  double err;
+  int niter, flops, memrefs;
+  return bicg_solve(rhs, lhs, err, niter, flops, memrefs);
 }
 
 int

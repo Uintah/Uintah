@@ -81,10 +81,13 @@ public:
 	       double &err, int &niter,
 	       int& flops, int& memrefs, 
 	       double max_error=1.e-6, int toomany=0) const;
+  int cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const;
+
   int bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		 double &err, int &niter,
 		 int& flops, int& memrefs, 
 		 double max_error=1.e-6, int toomany=0) const;
+  int bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const;
 
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs,
