@@ -158,7 +158,7 @@ int glprintf(const char* format, ...)
   
   glBegin(GL_QUADS);
   if (_gl_text_align_ == GL_LEFT) {
-    for(loop1=0;loop1<length2;--loop1) {
+    for(loop1=0;loop1<length2;++loop1) {
       if (string[loop1]=='\0') break;
       y = (string[loop1]-' ')/TABLE_CHAR_WIDTH;
       x = (string[loop1]-' ')%TABLE_CHAR_WIDTH;
@@ -201,22 +201,22 @@ int glprintf(const char* format, ...)
       dx = ((double)CHAR_PIXEL_WIDTH/TABLE_PIXEL_WIDTH)*Font->wslop;
       dy = ((double)CHAR_PIXEL_HEIGHT/TABLE_PIXEL_HEIGHT)*Font->hslop;
       glTexCoord2f(fx+dx-xsmidge,fy+ysmidge);
-      glVertex3f(locpos[0]+_gl_text_width_*right[0],
-		 locpos[1]+_gl_text_width_*right[1],
-		 locpos[2]+_gl_text_width_*right[2]);
+      glVertex3f(locpos[0],locpos[1],locpos[2]);
       glTexCoord2f(fx+dx-xsmidge,fy+dy-ysmidge);
-      glVertex3f(locpos[0]-_gl_text_height_*_gl_text_up_[0]+
-		 _gl_text_width_*right[0],
-		 locpos[1]-_gl_text_height_*_gl_text_up_[1]+
-		 _gl_text_width_*right[1],
-		 locpos[2]-_gl_text_height_*_gl_text_up_[2]+
-		 _gl_text_width_*right[2]);
-      glTexCoord2f(fx+xsmidge,fy+dy-ysmidge);
       glVertex3f(locpos[0]-_gl_text_height_*_gl_text_up_[0],
 		 locpos[1]-_gl_text_height_*_gl_text_up_[1],
 		 locpos[2]-_gl_text_height_*_gl_text_up_[2]);
+      glTexCoord2f(fx+xsmidge,fy+dy-ysmidge);
+      glVertex3f(locpos[0]-_gl_text_height_*_gl_text_up_[0]-
+		 _gl_text_width_*right[0],
+		 locpos[1]-_gl_text_height_*_gl_text_up_[1]-
+		 _gl_text_width_*right[1],
+		 locpos[2]-_gl_text_height_*_gl_text_up_[2]-
+		 _gl_text_width_*right[2]);
       glTexCoord2f(fx+xsmidge,fy+ysmidge);
-      glVertex3f(locpos[0],locpos[1],locpos[2]);
+      glVertex3f(locpos[0]-_gl_text_width_*right[0],
+		 locpos[1]-_gl_text_width_*right[1],
+		 locpos[2]-_gl_text_width_*right[2]);
       locpos[0]-=_gl_text_width_*right[0];
       locpos[1]-=_gl_text_width_*right[1];
       locpos[2]-=_gl_text_width_*right[2];
