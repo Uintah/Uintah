@@ -412,13 +412,13 @@ void Hedgehog::execute()
 	      matl = outcolor;
 	    }
 
-	    if(vv.length2()*lenscale > 1.e-10)
+	    if(vv.length()*lenscale > 1.e-10)
 	      arrows->add(p, vv*lenscale, matl, matl, matl);
 	  } else {
-	    if(vv.length2()*lenscale > 1.e-10)
+	    if(vv.length()*lenscale > 1.e-10)
 	      arrows->add(p, vv*lenscale, shaft, back, head);
 	    //else
-	    //    cerr << "vv.length2()="<<vv.length2()<<"\n";
+	    //    cerr << "vv.length()="<<vv.length()<<"\n";
 	  }
 	}
       }
