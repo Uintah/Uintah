@@ -174,39 +174,6 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
   }  // face loop
 }
 
-/* --------------------------------------------------------------------- 
- Function~  are_We_Using_LODI_BC--   
- Purpose~   returns if we are using LODI BC on any face, 
- ---------------------------------------------------------------------  */
-bool are_We_Using_LODI_BC(const Patch* patch,
-                          vector<bool>& is_LODI_face,
-                          const int mat_id)
-{ 
-  BC_doing << "are_We_Using_LODI_BC on patch"<<patch->getID()<< endl;
-     
-  is_LODI_face.resize(6);
-  //__________________________________
-  // Iterate over the faces encompassing the domain
-  bool using_lodi = false;
-  vector<Patch::FaceType>::const_iterator iter;
-  for (iter  = patch->getBoundaryFaces()->begin(); 
-       iter != patch->getBoundaryFaces()->end(); ++iter){
-    Patch::FaceType face = *iter;  
-    
-    is_LODI_face[face] = false;
-    bool lodi_pressure =    patch->haveBC(face,mat_id,"LODI","Pressure");
-    bool lodi_density  =    patch->haveBC(face,mat_id,"LODI","Density");
-    bool lodi_temperature = patch->haveBC(face,mat_id,"LODI","Temperature");
-    bool lodi_velocity =    patch->haveBC(face,mat_id,"LODI","Velocity");
-       
-    if (lodi_pressure || lodi_density || lodi_temperature || lodi_velocity) {
-      using_lodi = true;
-      is_LODI_face[face] = true;
-    }
-    BC_dbg << " using LODI on face " << is_LODI_face[face] << endl;
-  }
-  return using_lodi;
-}
 
 
 /* --------------------------------------------------------------------- 
@@ -223,23 +190,15 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
                    const Patch* patch,
                    const string& which_Var,
                    SimulationStateP& sharedState,
-                   DataWarehouse* new_dw)
+                   DataWarehouse* new_dw,
+                   Lodi_vars_pressBC* lv)
 {
   if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
     throw InternalError("setBC (pressure): Invalid option for which_var");
   }
+  bool usingLODI = lv->usingLODI;
   
   int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
-
-  bool usingLODI = false;
-  vector<bool> is_LODI_face(6);
-  int numICEMatls = sharedState->getNumICEMatls();
-  
-  for (int m = 0; m < numICEMatls; m++ ) {
-    ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
-    int indx= ice_matl->getDWIndex();  
-    usingLODI = are_We_Using_LODI_BC(patch,is_LODI_face, indx);
-  }
   
 /*`==========TESTING==========*/
   Vector gravity = sharedState->getGravity();
@@ -277,7 +236,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if(is_LODI_face[face] ) {  // only need rhoMicro on gravity or lodi faces
+    if(is_LODI_face(patch, face, sharedState) ) {  // only need rhoMicro on gravity or lodi faces
       CellIterator iterLimits = patch->getFaceCellIterator(face, "plusEdgeCells");
 
       for (int m = 0; m < numMatls; m++) {
@@ -320,7 +279,7 @@ void setBC(CCVariable<double>& press_CC,
   StaticArray<CCVariable<double> > rho_micro(numMatls);
   
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
-                patch, which_Var, sharedState,  new_dw);  
+                patch, which_Var, sharedState,  new_dw, lv);  
                 
   //__________________________________
   // Iterate over the faces encompassing the domain
