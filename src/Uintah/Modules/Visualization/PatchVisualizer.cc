@@ -2,7 +2,13 @@
  *  PatchVisualizer.cc:  Displays Patch boundaries
  *
  *  This module is used display the patch boundaries.  There will be
- *  different methods of visualizing the boundaries.
+ *  different methods of visualizing the boundaries (solid color, by x,
+ *  y, and z, and random).  The coloring by x,y,z,random is based off of
+ *  a color map passed in.  If no colormap is passed in then solid color
+ *  coloring will be used.
+ *
+ *  One can change values for up to 6 different levels.  After that, levels
+ *  6 and above will use the settings for level 5.
  *  
  *
  *  Written by:
@@ -37,7 +43,6 @@
 #include <float.h>
 #include <time.h>
 #include <stdlib.h>
-//#include <string>
 
 namespace PSECommon {
 namespace Modules {
@@ -50,9 +55,6 @@ using namespace SCICore::TclInterface;
 using namespace Uintah;
 using namespace Uintah::Datatypes;
 using namespace std;
-
-#define GRID_COLOR 1
-#define NODE_COLOR 2
 
 #define SOLID 0
 #define X_DIM 1
@@ -73,7 +75,7 @@ private:
   bool getGrid();
   void setupColors();
   int getScheme(clString scheme);
-  MaterialHandle getColor(clString color, int type);
+  MaterialHandle getColor(clString color, float value);
   
   ArchiveIPort* in;
   GeometryOPort* ogeom;
@@ -95,9 +97,6 @@ private:
   TCLstring level5_color_scheme;
   TCLint nl;
   TCLint patch_seperate;
-  
-  vector<int> old_id_list;
-  vector<int> id_list;
   
   vector< double > times;
   DataArchive* archive;
@@ -232,15 +231,15 @@ void PatchVisualizer::setupColors() {
   ////////////////////////////////
   // Set up the colors used
 
-  // define some colors
   // assign some colors to the different levels
-  level_color[0] = getColor(level0_grid_color.get(),GRID_COLOR);
-  level_color[1] = getColor(level1_grid_color.get(),GRID_COLOR);
-  level_color[2] = getColor(level2_grid_color.get(),GRID_COLOR);
-  level_color[3] = getColor(level3_grid_color.get(),GRID_COLOR);
-  level_color[4] = getColor(level4_grid_color.get(),GRID_COLOR);
-  level_color[5] = getColor(level5_grid_color.get(),GRID_COLOR);
+  level_color[0] = getColor(level0_grid_color.get(),1);
+  level_color[1] = getColor(level1_grid_color.get(),1);
+  level_color[2] = getColor(level2_grid_color.get(),1);
+  level_color[3] = getColor(level3_grid_color.get(),1);
+  level_color[4] = getColor(level4_grid_color.get(),1);
+  level_color[5] = getColor(level5_grid_color.get(),1);
 
+  // extract the coloring schemes
   level_color_scheme[0] = getScheme(level0_color_scheme.get());
   level_color_scheme[1] = getScheme(level1_color_scheme.get());
   level_color_scheme[2] = getScheme(level2_color_scheme.get());
@@ -249,6 +248,7 @@ void PatchVisualizer::setupColors() {
   level_color_scheme[5] = getScheme(level5_color_scheme.get());
 }
 
+// returns an int corresponding to the string scheme
 int PatchVisualizer::getScheme(clString scheme) {
   if (scheme == "solid")
     return SOLID;
@@ -264,47 +264,36 @@ int PatchVisualizer::getScheme(clString scheme) {
   return SOLID;
 }
 
-// based on the color expressed by color returns the color
-MaterialHandle PatchVisualizer::getColor(clString color, int type) {
-  float i;
-  if (type == GRID_COLOR)
-    i = 1.0;
-  else
-    i = 0.7;
+// returns a MaterialHandle where the hue is based on the clString passed in
+// and the value is based on value.
+MaterialHandle PatchVisualizer::getColor(clString color, float value) {
   if (color == "red")
-    return scinew Material(Color(0,0,0), Color(i,0,0),
+    return scinew Material(Color(0,0,0), Color(value,0,0),
 			   Color(.5,.5,.5), 20);
   else if (color == "green")
-    return scinew Material(Color(0,0,0), Color(0,i,0),
+    return scinew Material(Color(0,0,0), Color(0,value,0),
 			   Color(.5,.5,.5), 20);
   else if (color == "yellow")
-    return scinew Material(Color(0,0,0), Color(i,i,0),
+    return scinew Material(Color(0,0,0), Color(value,value,0),
 			   Color(.5,.5,.5), 20);
   else if (color == "magenta")
-    return scinew Material(Color(0,0,0), Color(i,0,i),
+    return scinew Material(Color(0,0,0), Color(value,0,value),
 			   Color(.5,.5,.5), 20);
   else if (color == "cyan")
-    return scinew Material(Color(0,0,0), Color(0,i,i),
+    return scinew Material(Color(0,0,0), Color(0,value,value),
 			   Color(.5,.5,.5), 20);
   else if (color == "blue")
-    return scinew Material(Color(0,0,0), Color(0,0,i),
+    return scinew Material(Color(0,0,0), Color(0,0,value),
 			   Color(.5,.5,.5), 20);
   else
-    return scinew Material(Color(0,0,0), Color(i,i,i),
+    return scinew Material(Color(0,0,0), Color(value,value,value),
 			   Color(.5,.5,.5), 20);
 }
 
 void PatchVisualizer::execute()
 {
 
-  cerr << "\t\tEntering execute.\n";
-
-  old_id_list = id_list;
-  // clean out ogeom
-  if (old_id_list.size() != 0)
-    for (int i = 0; i < (int)old_id_list.size(); i++)
-      ogeom->delObj(old_id_list[i]);
-  id_list.clear();
+  ogeom->delAll();
 
   // Get the handle on the grid and the number of levels
   bool new_grid = getGrid();
@@ -323,49 +312,27 @@ void PatchVisualizer::execute()
     clString visible;
     TCL::eval(id + " isVisible", visible);
     if ( visible == "1") {
-      TCL::execute(id + " destroyFrames");
-      TCL::execute(id + " build");
+      TCL::execute(id + " Rebuild");
       
       TCL::execute("update idletasks");
       reset_vars();
     }
   }
 
-  /*
-  //-----------------------------------------
-  // for each level in the grid
-  for(int l = 0;l<numLevels;l++){
-    LevelP level = grid->getLevel(l);
-
-    // there can be up to 6 colors only
-    int color_index = l;
-    if (color_index >= 6)
-      color_index = 5;
-    
-    // edges is all the edges made up all the patches in the level
-    GeomLines* edges = scinew GeomLines();
-
-    Level::const_patchIterator iter;
-    //---------------------------------------
-    // for each patch in the level
-    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
-      const Patch* patch=*iter;
-      Box box = patch->getBox();
-      addBoxGeometry(edges, box);
-    }
-
-    // add all the edges for the level
-    ostringstream name_edges;
-    name_edges << "Patches - level " << l;
-    id_list.push_back(ogeom->addObj(scinew GeomMaterial(edges, level_color[color_index]), name_edges.str().c_str()));
-
-  }
-  */
-  //-----------------------------------------
-  // need to process all the patches and then add the geometry
+  //////////////////////////////////////////////////////////////////
+  // Extract the geometry from the archive
+  //////////////////////////////////////////////////////////////////
+  
+  // it's faster when we don't use push_back and know the exact size
   vector< vector<Box> > patches(numLevels);
+
+  // initialize the min and max for the entire region.
+  // Note: there are already function that compute this, but they currently
+  //       iterate over the same data.  Rather than interate over all the data
+  //       twice I will compute min/max here while I iterate over the data.
+  //       This will make the code faster.
   Point min(DBL_MAX,DBL_MAX,DBL_MAX), max(DBL_MIN,DBL_MIN,DBL_MIN);
-  bool seperate_patches = patch_seperate.get() == 1; 
+
   for(int l = 0;l<numLevels;l++){
     LevelP level = grid->getLevel(l);
 
@@ -380,7 +347,6 @@ void PatchVisualizer::execute()
       patch_list[i] = box;
 
       // determine boundaries
-      //if (seperate_patches) {
       if (box.upper().x() > max.x())
 	max.x(box.upper().x());
       if (box.upper().y() > max.y())
@@ -394,13 +360,15 @@ void PatchVisualizer::execute()
 	min.y(box.lower().y());
       if (box.lower().z() < min.z())
 	min.z(box.lower().z());
-      //}
       i++;
     }
     patches[l] = patch_list;
   }
-  Vector change_v;
-  if (seperate_patches) {
+  // the change in size of the patches.
+  // This is based on the actual size of the data, so it should be a pretty
+  // good guess.
+  Vector change_v; 
+  if (patch_seperate.get() == 1) {
     double change_factor = 100;
     change_v = Vector((max.x() - min.x())/change_factor,
 		      (max.y() - min.y())/change_factor,
@@ -408,25 +376,32 @@ void PatchVisualizer::execute()
   } else {
     change_v = Vector(0,0,0);
   }
-  //double x_change = (max.x() - min.x())/change_factor;
-  //double y_change = (max.y() - min.y())/change_factor;
-  //double z_change = (max.z() - min.z())/change_factor;
+
+  //////////////////////////////////////////////////////////////////
+  // Create the geometry for export
+  //////////////////////////////////////////////////////////////////
   
   // loops over all the levels
   for(int l = 0;l<patches.size();l++){
-    // there can be up to 6 levels only
+    // there can be up to 6 levels only, after that the value of the last
+    // level is used.
     int level_index = l;
     if (level_index >= 6)
       level_index = 5;
-    
+
+    // all the geometry for this level.  It will be added to the screen graph
+    // seperately in order to be able to select and unselect them from
+    // the renderer.
     GeomGroup *level_geom = scinew GeomGroup();
 
     int scheme;
+    // if we don't have a colormap, then use solid color coloring
     if (have_cmap)
       scheme = level_color_scheme[level_index];
     else
       scheme = SOLID;
-    // determine the coloring scheme
+    
+    // generate the geometry based the coloring scheme
     switch (scheme) {
     case SOLID: {
       
@@ -482,6 +457,7 @@ void PatchVisualizer::execute()
       
       break;
     case RANDOM:
+      // drand48 returns valued between 0 and 1
       cmap->Scale(0, 1);
 
       //---------------------------------------
@@ -494,17 +470,16 @@ void PatchVisualizer::execute()
       
       break;
     } // end of switch
+    
     // add all the edges for the level
     ostringstream name_edges;
     name_edges << "Patches - level " << l;
-    id_list.push_back(ogeom->addObj(level_geom, name_edges.str().c_str()));
+    ogeom->addObj(level_geom, name_edges.str().c_str());
   }
-  
-  
-  
-  cerr << "\t\tFinished execute\n";
 }
 
+// This is called when the tcl code explicity calls a function besides
+// needexecute.
 void PatchVisualizer::tcl_command(TCLArgs& args, void* userdata)
 {
   if(args.count() < 2) {

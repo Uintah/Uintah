@@ -13,15 +13,17 @@
 itcl_class Uintah_Visualization_PatchVisualizer {
     inherit Module
 
-    protected num_colors 240
-
     constructor {config} {
 	set name PatchVisualizer
 	set_defaults
     }
     
     method set_defaults {} {
-	#the grid colors
+	# There can only be 6 unique representations
+	# If there are more than 6 level than the value for level 5 will
+	# be used for all subsequent levels
+
+	#the grid colors used for solid coloring
 	global $this-level0_grid_color
 	set $this-level0_grid_color red
 	global $this-level1_grid_color
@@ -35,7 +37,9 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	global $this-level5_grid_color
 	set $this-level5_grid_color blue
 	
-	#the grid colors
+	#the level coloring scheme
+	#they are all initialized to solid, because it is faster than the
+	#the other coloring methods
 	global $this-level0_color_scheme
 	set $this-level0_color_scheme solid
 	global $this-level1_color_scheme
@@ -49,13 +53,23 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	global $this-level5_color_scheme
 	set $this-level5_color_scheme solid
 	
+	# the number of levels
+	# this is set by the c-code
 	global $this-nl
 	set $this-nl 0
 
+	# check button that indicates whether the patch geometry should have
+	# some seperation between them.
+	# Default is off(0). On is 1.
 	global $this-patch_seperate
 	set $this-patch_seperate 0
     }
-    # This creates a menu to select colors for the grid
+    # This creates a sub menue for a button that will have 6 radial buttons
+    # for the selection of the solid color for the level
+
+    # w - the tickle menu to add the radio buttons to
+    # v - the variable the radio buttons control
+    # n - the command to execute when the buttons are touched
     method make_color_menu {w v n} {
 	$w add radiobutton \
 		-variable $v \
@@ -90,16 +104,24 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 
     }
     # this is used for seting up the colors used for
-    # the levels and grid points
+    # the levels as well as setting up controls for the type of coloring
+
+    # w - the widget to add all this stuff to
+    # nl - the number of levels
+    # n - the command to execute when any of the controls are touched
     method setup_color {w nl n} {
+	# loop for each level
 	for {set i 0} { $i < $nl} {incr i} {
 	    # color scheme menu stuff
 	    frame $w.colorscheme -borderwidth 3 -relief ridge
 	    pack $w.colorscheme -side left -anchor w -padx 2 -pady 2
 	    
+	    # construct the variable name by the form
+	    #  $this-level(level)_color_scheme
 	    set var "$this-level$i"
 	    append var "_color_scheme"
 
+	    # add all the radio buttons
 	    radiobutton $w.colorscheme.solid -text "solid" -variable $var \
 		    -command $n -value solid
 	    pack $w.colorscheme.solid -side top -anchor w -pady 2 -ipadx 3
@@ -120,19 +142,27 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 		    -command $n -value random
 	    pack $w.colorscheme.random -side top -anchor w -pady 2 -ipadx 3
 
+	    # create the solid color selection menue
+	    # st = $w.l(level)grid
 	    set st "$w.l$i"
 	    append st "grid"
-#	    puts $st
+
+	    # create the button we will create the menu($st.list) later
 	    menubutton $st -text "Level [expr $i - 1] grid color" \
 		    -menu $st.list -relief groove
 	    pack $st -side left -anchor n -padx 2 -pady 2
+
 	    
 	    menu $st.list
+
+	    # create the variable, $this-level(level)_grid_color
 	    set var "$this-level$i"
 	    append var "_grid_color"
 	    make_color_menu $st.list $var $n
 	}
     }
+    
+    # returns 1 if the window is visible, 0 otherwise
     method isVisible {} {
 	if {[winfo exists .ui[modname]]} {
 	    return 1
@@ -140,30 +170,29 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	    return 0
 	}
     }
+
+    # destroys and rebuilds the archive specific stuff
     method Rebuild {} {
 	set w .ui[modname]
 
 	$this destroyFrames
 	$this makeFrames $w
     }
-    method build {} {
-	set w .ui[modname]
 
-	$this makeFrames $w
-    }
+    # destroys all archive specific stuff
     method destroyFrames {} {
 	set w .ui[modname]
 	destroy $w.colormenus
     }
+
+    # creates all archive specific stuff
     method makeFrames {w} {
 	$this buildColorMenus $w
     }
-    method graph {name} {
-    }
+
+    # creates the color selection stuff
     method buildColorMenus {w} {
 	set n "$this-c needexecute "
-	set i 0
-	set b 1
 	if {[set $this-nl] > 0} {
 	    # color menu stuff
 	    frame $w.colormenus -borderwidth 3 -relief ridge
@@ -176,14 +205,8 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	    setup_color $w.colormenus.gridcolor [set $this-nl] $n
 	}
     }
-    method make_entry {w text v c} {
-	frame $w
-	label $w.l -text "$text"
-	pack $w.l -side left
-	entry $w.e -textvariable $v -state disabled
-	bind $w.e <Return> $c
-	pack $w.e -side right
-    }
+
+    # this is the main function which creates the initial window
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
@@ -198,54 +221,17 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	frame $w.options
 	pack $w.options  -side top -fill x -padx 2 -pady 2
 
+	# add the Seperate Patches check button
 	checkbutton $w.options.seperate -text "Seperate Patches" -variable \
 		$this-patch_seperate -command $n
 	pack $w.options.seperate -side top -anchor w -pady 2 -ipadx 3
 
+	# add the level specific stuff
 	makeFrames $w
 
 	# close button
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side bottom -expand yes -fill x
-#	button $w.gtest -text "Graph test" -command "$this graph_test"
-#	pack $w.gtest -side bottom -expand yes -fill x
-    }
-    method get_color { index } {
-	set color_scheme {
-	    { 255 0 0}  { 255 102 0}
-	    { 255 204 0}  { 255 234 0}
-	    { 204 255 0}  { 102 255 0}
-	    { 0 255 0}    { 0 255 102}
-	    { 0 255 204}  { 0 204 255}
-	    { 0 102 255}  { 0 0 255}}
-	#set color_scheme { {255 0 0} {0 255 0} {0 0 255} }
-	set incr {}
-	set upper_bounds [expr [llength $color_scheme] -1]
-	for {set j 0} { $j < $upper_bounds} {incr j} {
-	    set c1 [lindex $color_scheme $j]
-	    set c2 [lindex $color_scheme [expr $j + 1]]
-	    set incr_a {}
-	    lappend incr_a [expr [lindex $c2 0] - [lindex $c1 0]]
-	    lappend incr_a [expr [lindex $c2 1] - [lindex $c1 1]]
-	    lappend incr_a [expr [lindex $c2 2] - [lindex $c1 2]]
-	    lappend incr $incr_a
-	}
-	lappend incr {0 0 0}
-#	puts "incr = $incr"
-	set step [expr $num_colors / [llength $color_scheme]]
-	set ind [expr $index % $num_colors] 
-	set i [expr $ind / $step]
-	set im [expr double($ind % $step)/$step]
-#	puts "i = $i  im = $im"
-	set curr_color [lindex $color_scheme $i]
-	set curr_incr [lindex $incr $i]
-#	puts "curr_color = $curr_color, curr_incr = $curr_incr"
-	set r [expr [lindex $curr_color 0]+round([lindex $curr_incr 0] * $im)] 
-	set g [expr [lindex $curr_color 1]+round([lindex $curr_incr 1] * $im)] 
-	set b [expr [lindex $curr_color 2]+round([lindex $curr_incr 2] * $im)] 
-	set c [format "#%02x%02x%02x" $r $g $b]
-#	puts "r=$r, g=$g, b=$b, c=$c"
-	return $c
     }
 }	
 	
