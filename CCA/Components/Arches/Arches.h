@@ -35,6 +35,7 @@ WARNING
 #include <sci_defs.h>
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -141,6 +142,12 @@ public:
       virtual void scheduleTimeAdvance( const LevelP& level, 
 					SchedulerP&, int step, int nsteps );
 
+      ///////////////////////////////////////////////////////////////////////
+       // Function to return boolean for recompiling taskgraph
+
+	virtual bool need_recompile(double time, double dt,
+			    const GridP& grid);
+
       // for multimaterial
       void setMPMArchesLabel(const MPMArchesLabel* MAlb)
 	{
@@ -226,13 +233,15 @@ private:
       Filter* d_filter;
 #endif
 
-      bool nofTimeSteps;
+      int nofTimeSteps;
 #ifdef multimaterialform
       MultiMaterialInterface* d_mmInterface;
 #endif
 
     string d_timeIntegratorType;
     int d_conv_scheme;
+
+    bool d_recompile;
 
 }; // end class Arches
 
