@@ -39,16 +39,11 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
   d_stop_time = 999999.99;  // default is to never stop
   ps->get("stop_time",d_stop_time);
 
-  /* Removing memory hog (bb - 1/3/03)
-  try {
-    ps->require("direction",d_direction);
-  } catch (ParameterNotFound& e) {
-    cerr << "Default contact direction is Z-direction (0,0,1)\n";
-    d_direction.x(0); d_direction.y(0); d_direction.z(1);
-  }
-  */
   IntVector defaultDir(0,0,1);
   ps->getWithDefault("direction",d_direction, defaultDir);
+
+  Vector defaultStopVel(0.,0.,0.);
+  ps->getWithDefault("velocity_after_stop",d_vel_after_stop, defaultStopVel);
 
   d_direction.x(1^d_direction.x());  // Change 1 to 0, or 0 to 1
   d_direction.y(1^d_direction.y());  // Change 1 to 0, or 0 to 1
@@ -75,7 +70,6 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 					 DataWarehouse*,
 					 DataWarehouse* new_dw)
 {
-  Vector zero(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
   double centerOfMassMass;
 
@@ -93,11 +87,11 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel, dwi, patch);
     }
 
-#if 1
+#if 0
     if(d_sharedState->getElapsedTime() >= d_stop_time){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
-	gvelocity[0][c]   = zero;
+	gvelocity[0][c]   = d_vel_after_stop;
       }
     }
 #endif
@@ -165,12 +159,14 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
 
-    if(d_sharedState->getElapsedTime() >= d_stop_time){
-      Vector zero(0.,0.,0.);
+    static bool stopped = false;
+    Vector new_velocity = d_vel_after_stop;
+    if(d_sharedState->getElapsedTime() >= d_stop_time && !stopped){
+      stopped = true;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
           IntVector c = *iter; 
-	  gacceleration[0][c]    = (zero - gvelocity_star[0][c])/delT;
-	  gvelocity_star[0][c]   = zero;
+	  gacceleration[0][c]    = (new_velocity - gvelocity_star[0][c])/delT;
+	  gvelocity_star[0][c]   = new_velocity;
       }
     }
 
