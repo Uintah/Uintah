@@ -749,6 +749,75 @@ itcl_class Module {
 		"$w.f1.txt configure -cursor xterm"
 	}
     }
+
+    # writeStateToScript
+    # Called from genSubnetScript, it will append the TCL
+    # commands needed to initialize this module's variables
+    # after it is created.  This is located here in the Module class
+    # so sub-classes (like SCIRun_Render_Viewer) can specialize
+    # the variables they write out
+    #
+    # 'scriptVar' is the name of the TCL variable one level
+    # up that we will append our commands to 
+    # 'i' is the number indicating the prefix for the variables
+    # 'tab' is the indent string to make it look pretty
+    method writeStateToScript { scriptVar i { tab "" }} {
+	if [isaSubnetIcon [modname]] return
+	upvar 1 $scriptVar script
+	set module [modname]
+	set write_vars ""
+	set modstr [join [modulePath $module] ->]
+
+	global ModuleSavedVars ModuleSubstitutedVars
+	if { [info exists ModuleSavedVars($module)] } {
+	    set classname [join [modulePath $module] _]
+	    foreach var $ModuleSavedVars($module) {
+		if { ![isaDefaultValue $module $var $classname] } {
+		    lappend write_vars $var
+		} else {
+		    puts "$var is default"
+		}
+	    }
+	}
+
+	if { [llength $write_vars] } {
+	    # Write the comment line for this modules GUI values
+	    append script "\n"
+	    append script "${tab}\# Set GUI variables for the $modstr Module\n"
+	    foreach var $write_vars {
+		upvar \#0 $module-$var val
+		set varname "\$m$i-${var}"
+		if { [llength $varname] > 1 } {
+		    set varname \"${varname}\"
+		}
+
+		if { [info exists ModuleSubstitutedVars($module)] && \
+			 [lsearch $ModuleSubstitutedVars($module) $var]!=-1} {
+		    append script "${tab}set $varname \""
+		    append script "\"[subDATADIRandDATASET $val]\"\n"
+		} else {
+		    if { [llength $val] == 1 && ![string is integer $val] } {
+			set failed [catch "set num [format %.[string length $val]e $val]"]
+			if { !$failed } {
+			    set failed [catch "set num [expr $num]"]
+			}
+			if { !$failed } {
+			    append script "${tab}set $varname \{$num\}\n"
+			    continue
+			}
+		    }
+		    puts "Writing ${tab}set $varname \{${val}\}"
+		    append script "${tab}set $varname \{${val}\}\n"
+		}
+	    }
+	}
+	
+	# Write command to open GUI on load if it was open on save
+	if [windowIsMapped .ui$module] {
+	    append script "\n${tab}\# Open the $modstr UI\n"
+	    append script "${tab}\$m$i initialize_ui\n"
+	}	
+    }    
 }   
 
 proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {
@@ -1327,6 +1396,8 @@ proc moduleEndDrag {modid x y} {
 }
 
 proc htmlHelp {modid} {
+    global BROWSER_DONT_ASK tcl_patform
+    set BROWSER_DONT_ASK 0
     set path [modulePath $modid]
     set htmlpath Dataflow/XML/[lindex $path 2].html
     if { ![string equal [lindex $path 0] SCIRun] } { 
@@ -1345,7 +1416,6 @@ proc htmlHelp {modid} {
     
     if { !$usehtml } { return 0 }
 
-    global tcl_platform
     if { $tcl_platform(os) == "Darwin" } {
 	set ret_val [netedit sci_system open $url]
 	return [expr $ret_val == 0]
@@ -1366,6 +1436,7 @@ proc htmlHelp {modid} {
 	}
 
 	if { [llength $browser] == 1 } { 
+	    set BROWSER_DONT_ASK 1
 	    setBrowser $browser $url
 	    return 1
 	}
@@ -1386,7 +1457,6 @@ proc htmlHelp {modid} {
 	frame $w.f
 
 	$w.list activate 0
-	global BROWSER_DONT_ASK
 	set BROWSER_DONT_ASK 1
 	checkbutton $w.f.ask -variable BROWSER_DONT_ASK \
 	    -text "Dont ask for help viewer again"
