@@ -7477,9 +7477,6 @@ class BioTensorApp {
 	    if {$type == "RGB"} {
                 set glyph_type "RGB"
 		set $mods(ShowField-Glyphs)-tensor_display_type "Colored Boxes"
-   	        #disableModule $mods(RescaleColorMap-Glyphs) 1
-		set $mods(ChooseColorMap-Glyphs)-port-index 1
-		set $mods(ChooseColorMap-Glyphs)-port-index 0
 		disable_glyphs_colormaps
 	    } else {
 		set $mods(ShowField-Glyphs)-tensor_display_type Boxes
@@ -7497,7 +7494,7 @@ class BioTensorApp {
 	    set glyph_type "Fractional Anisotropy"
 	    set $mods(ChooseField-Glyphs)-port-index 0
 
-	    set $mods(ChooseColorMap-Glyphs)-port-index 
+	    set $mods(ChooseColorMap-Glyphs)-port-index 0
 	    enable_glyphs_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
 	    set glyph_type "Linear Anisotropy"
@@ -7514,8 +7511,6 @@ class BioTensorApp {
 	} elseif {$type == "Constant"} {
 	    set glyph_type "Constant"
 
-	    set $mods(ChooseColorMap-Glyphs)-port-index 1
-	    set $mods(ShowField-Glyphs)-tensor-usedefcolor 1
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
 	    set $mods(ShowField-Glyphs)-tensors-usedefcolor 1
 	    disable_glyphs_colormaps
@@ -7525,7 +7520,8 @@ class BioTensorApp {
 	configure_glyphs_tabs
 
 	global $mods(ShowField-Glyphs)-tensors-on
-	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] \
+	    && !$loading} {
 	    $mods(ShowField-Glyphs)-c data_display_type
 	    $mods(ChooseField-Glyphs)-c needexecute
 	} else {
@@ -8479,7 +8475,8 @@ class BioTensorApp {
 	configure_fibers_tabs
 
 	global $mods(ShowField-Fibers)-edges-on
-	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on] \
+	    && !$loading} {
 	    $mods(ChooseField-Fibers)-c needexecute
 	    $mods(ShowField-Fibers)-c rerender_edges
 	} else {
