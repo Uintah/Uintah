@@ -1,0 +1,33 @@
+# SCI Network 1.0
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 154 28]
+set m1 [addModuleAtPosition "BioPSE" "Visualization" "ShowLeads" 178 138]
+
+addConnection $m0 0 $m1 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename $DATADIR/brain-eg/brain-eg-condparams.mat
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-time-units {s}
+set $m1-time-min {.1}
+set $m1-time-max {.789}
+$m1 initialize_ui
+
+::netedit scheduleok
