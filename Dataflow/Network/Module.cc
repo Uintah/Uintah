@@ -613,7 +613,7 @@ static string
 parse_description(const string &in)
 {
   std::stack<int> state;
-  string::size_type tagstart;
+  string::size_type tagstart = 0;
   string out;
   state.push(0);
   state.push(2); // start by eating spaces.
