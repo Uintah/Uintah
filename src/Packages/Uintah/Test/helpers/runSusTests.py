@@ -222,8 +222,6 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       malloc_stats_file = "malloc_stats"
     environ['MALLOC_STATS'] = malloc_stats_file
 
-  print getcwd()
-  print "nice %s %s > sus.log 2>&1" % (command, susinput)
   rc = system("nice %s %s > sus.log 2>&1" % (command, susinput))
 
   if mode == "dbg":
