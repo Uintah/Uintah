@@ -188,15 +188,19 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
 	char *s = val.transcode();
 	std::string cmp(s);
 	delete[] s;
-	if (cmp == "false") {
+	// Slurp up any spaces that were put in before or after the cmp string.
+	istringstream result_stream(cmp);
+        string nospace_cmp;
+        result_stream >> nospace_cmp;
+	if (nospace_cmp == "false") {
 	   value = false;
-       }
-	else if  (cmp == "true") {
+	}
+	else if  (nospace_cmp == "true") {
 	  value = true;
-       } else { 
-         string error = name + " Must be either true or false, no extra spaces";
+	} else {
+	  string error = name + "Must be either true or false";
 	  throw ProblemSetupException(error);
-       }
+	}
       }
     }
   }
@@ -355,7 +359,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	  result += c;
 	  if (next == ',' ||  next == ' ' || next == ']') {
 	    // turn the result into a number
-	    int val = atof(result.c_str());
+	    int val = atoi(result.c_str());
 	    value.push_back(val);
 	    result.erase();
 	  }
