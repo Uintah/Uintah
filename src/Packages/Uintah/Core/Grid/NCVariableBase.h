@@ -50,6 +50,8 @@ WARNING
       virtual ~NCVariableBase();
       
       virtual void copyPointer(const NCVariableBase&) = 0;
+
+      virtual void rewindow(const IntVector& low, const IntVector& high) = 0;
       
       //////////
       // Insert Documentation Here:
@@ -58,7 +60,7 @@ WARNING
       virtual void allocate(const Patch* patch) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
-      virtual void copyPatch(NCVariableBase* src,
+      virtual void copyPatch(const NCVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       virtual void* getBasePointer() = 0;

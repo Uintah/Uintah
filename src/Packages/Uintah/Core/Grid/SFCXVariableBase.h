@@ -60,7 +60,7 @@ WARNING
       virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
-      virtual void copyPatch(SFCXVariableBase* src,
+      virtual void copyPatch(const SFCXVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       virtual void* getBasePointer() = 0;

@@ -61,8 +61,11 @@ WARNING
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
-     
+    
     virtual void copyPointer(const NCVariableBase&);
+
+    virtual void rewindow(const IntVector& low, const IntVector& high)
+    { Array3<T>::rewindow(low, high); }    
      
     //////////
     // Insert Documentation Here:
@@ -76,10 +79,11 @@ WARNING
     virtual void allocate(const Patch* patch)
     { allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex()); }
 
-    virtual void copyPatch(NCVariableBase* src,
+    virtual void copyPatch(const NCVariableBase* src,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex);
-    NCVariable<T>& operator=(const NCVariable<T>&);
+    void copyPatch(const NCVariable<T>& src)
+    { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
      
     virtual void* getBasePointer();
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -255,7 +259,10 @@ WARNING
     virtual RefCounted* getRefCounted() {
       return getWindow();
     }
+
   private:
+    NCVariable<T>& operator=(const NCVariable<T>&);
+    
     static Variable* maker();
   };
    
@@ -302,19 +309,9 @@ WARNING
     const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in NC variable");
-    *this = *c;
+    Array3<T>::copyPointer(*c);
   }
 
-  template<class T>
-  NCVariable<T>&
-  NCVariable<T>::operator=(const NCVariable<T>& copy)
-  {
-    if(this != &copy){
-      Array3<T>::operator=(copy);
-    }
-    return *this;
-  }
-   
   template<class T>
   NCVariable<T>::NCVariable()
   {
@@ -338,7 +335,7 @@ WARNING
   }
   template<class T>
   void
-  NCVariable<T>::copyPatch(NCVariableBase* srcptr,
+  NCVariable<T>::copyPatch(const NCVariableBase* srcptr,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex)
   {

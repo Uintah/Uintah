@@ -60,7 +60,7 @@ WARNING
       virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
-      virtual void copyPatch(SFCYVariableBase* src,
+      virtual void copyPatch(const SFCYVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       virtual void* getBasePointer() = 0;
