@@ -45,6 +45,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+
 #define __USE_UNIX98
 #include <pthread.h>
 #ifndef PTHREAD_MUTEX_RECURSIVE
@@ -663,6 +664,9 @@ Thread::initialize()
     return;
   if(exiting)
     abort(); // Something really weird happened!
+
+  CleanupManager::initialize();
+
   atexit(exit_handler);
   if(pthread_mutex_init(&sched_lock, NULL) != 0)
     throw ThreadError(std::string("pthread_mutex_init failed")
