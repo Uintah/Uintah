@@ -334,6 +334,7 @@ void Module::remove_iport(int which)
 		     "\"destroyConnection "+
 		     iports[loop1]->connection(loop2)->id+
 		     " "+omod+" "+imod+"\"");
+      TCL::execute(bob);
     }
   }
 
