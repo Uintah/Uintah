@@ -58,7 +58,7 @@ itcl_class SCIRun_Math_BuildTransform {
     }
     method ui {} {
 	set w .ui[modname]
-		if {[winfo exists $w]} {
+	if {[winfo exists $w]} {
 	    raise $w
 	    return;
 	}
@@ -78,7 +78,7 @@ itcl_class SCIRun_Math_BuildTransform {
 	global $this-translate_z
 	global $this-pre_transform
 	global $this-which_transform
-
+    
 	frame $w.f.which
 	radiobutton $w.f.which.trans \
 		-command "$this set_transform $w translate" \
@@ -198,7 +198,7 @@ itcl_class SCIRun_Math_BuildTransform {
 		-side top -expand 1 -fill both
 	pack $w.f.p.b.l $w.f.p.b.r -side left -expand 1 -fill both
 	pack $w.f.p.b -side bottom -fill both -expand 1
-	
+
 	global $this-scale_uniform
 	global $this-scale_x
 	global $this-scale_y
@@ -251,7 +251,7 @@ itcl_class SCIRun_Math_BuildTransform {
 		-expand 1 -side top
 	pack $w.f.sh.d -fill x \
 		-expand 1 -side bottom
-	
+
 	global $this-widget_scale
 	global $this-ignoring_widget_changes
 	global $this-widget_show_resize_handles
@@ -280,12 +280,12 @@ itcl_class SCIRun_Math_BuildTransform {
 
 	pack $w.f -fill x -expand 1 -side top
 	$this set_transform $w [set $this-which_transform]
-	}
     }	
 
     method change_ignore { } {
 	global $this-ignoring_widget_changes
-	$this-c change_ignore [set $this-ignoring_widget_changes]
+	set ignore [set $this-ignoring_widget_changes]
+	$this-c change_ignore $ignore
     }
 
     method change_handles { } {

@@ -92,7 +92,7 @@ BuildTransform::BuildTransform(const clString& id)
     permute_x_gui_("permute_x", id, this),
     permute_y_gui_("permute_y", id, this), 
     permute_z_gui_("permute_z", id, this),
-    widget_resizable_gui_("widget_resizable", id, this)
+    widget_resizable_gui_("widget_resizable", id, this),
     pre_transform_gui_("pre_transform", id, this),
     which_transform_gui_("which_transform", id, this),
     widget_scale_gui_("widget_scale", id, this),
@@ -119,7 +119,7 @@ BuildTransform::~BuildTransform()
 
 void BuildTransform::execute()
 {
-  int which_transform=which_transform_gui_.get();
+  clString which_transform=which_transform_gui_.get();
 
   // create the widget
   if (!have_been_initialized_) {
@@ -208,7 +208,7 @@ void BuildTransform::execute()
       local_transform.pre_translate(C.vector());
     }
     local_transform.post_trans(latest_widget_trans_);
-    latest_widget_trans__=local_transform;
+    latest_widget_trans_=local_transform;
     widget_pose_center_=C;
     widget_pose_inv_trans_.load_frame(C,R-C,D-C,I-C);
     widget_pose_inv_trans_.invert();
@@ -261,7 +261,7 @@ void BuildTransform::tcl_command(TCLArgs& args, void* userdata) {
     else if (args[1] == "composite")
       composite_trans_=latest_trans_;
     latest_trans_.load_identity();
-    latest_widget_trans__.load_identity();
+    latest_widget_trans_.load_identity();
     box_widget_->SetPosition(Point(0,0,0), 
 			     Point(1,0,0), Point(0,1,0), Point(0,0,1));
     widget_pose_center_=Point(0,0,0);
