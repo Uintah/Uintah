@@ -1,4 +1,3 @@
-
 /*
  *  Persistent.h: Base class for persistent objects...
  *
@@ -16,10 +15,13 @@
 #include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+
 using std::cerr;
 using std::endl;
+
 #include <fstream>
 using std::ifstream;
+
 #include <sstream>
 using std::istringstream;
 
@@ -27,8 +29,10 @@ namespace SCIRun {
 
 static Piostream::MapClStringPersistentTypeID* table = 0;  
 
-//----------------------------------------------------------------------
-PersistentTypeID::PersistentTypeID(const char* type, const char* parent,
+//////////
+// Constructors/Destructor
+PersistentTypeID::PersistentTypeID(const char* type, 
+				   const char* parent,
 				   Persistent* (*maker)()) :
   type(type), parent(parent), maker(maker)
 {
@@ -57,9 +61,39 @@ PersistentTypeID::PersistentTypeID(const char* type, const char* parent,
 }
 
 //----------------------------------------------------------------------
+PersistentTypeID::PersistentTypeID(string typeName, 
+				   string parentName,
+				   Persistent* (*maker)())
+{
+  if (!table) {
+    table = scinew Piostream::MapClStringPersistentTypeID;
+  }
+  
+  clString typestring(typeName.c_str());
+  
+  Piostream::MapClStringPersistentTypeID::iterator dummy;
+
+  dummy = table->find(typestring);
+  if (dummy != table->end()) {
+    if ((*dummy).second->maker != maker ||
+      clString((*dummy).second->parent) != clString(parentName.c_str()))
+      {
+ 	cerr << "WARNING: duplicate type in Persistent "
+	     << "Object Type Database: " << typestring << endl;
+      }
+  }
+  
+  (*table)[typestring] = this;
+}
+
+//----------------------------------------------------------------------
 Persistent::~Persistent()
 {
 }
+
+// GROUP: Piostream class implementation
+//////////
+//
 
 //----------------------------------------------------------------------
 Piostream::Piostream(Direction dir, int version, const clString &name)
@@ -288,6 +322,19 @@ bool Piostream::readHeader(const clString& filename, char* hdr,
 int Piostream::begin_class(const char* classname, int current_version)
 {
   return begin_class(clString(classname), current_version);
+}
+
+//----------------------------------------------------------------------
+void Pio(Piostream& stream, string& data) { 
+  if (stream.reading()){
+    clString tmp;
+    stream.io(tmp);
+    data=tmp();
+  }
+  else {
+    clString tmp(data.c_str());
+    stream.io(tmp);
+  }
 }
 
 } // End namespace SCIRun

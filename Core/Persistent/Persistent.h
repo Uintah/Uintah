@@ -14,8 +14,10 @@
 #ifndef SCI_project_Persistent_h
 #define SCI_project_Persistent_h 1
 
-#include <map.h>
+#include <map>
 #include <iosfwd>
+#include <vector>
+#include <string>
 
 #include <Core/Containers/String.h>
 #include <Core/share/share.h>
@@ -26,6 +28,9 @@ namespace SCIRun {
 
 namespace SCIRun {
 
+using std::string;
+using std::map;
+using std::vector;
 
 class Persistent;
 
@@ -35,6 +40,7 @@ struct SCICORESHARE PersistentTypeID {
   const char* parent;
   Persistent* (*maker)();
   PersistentTypeID(const char* type, const char* parent, Persistent* (*maker)());
+  PersistentTypeID(string type, string parent, Persistent* (*maker)());
 };
 
 //----------------------------------------------------------------------
@@ -117,13 +123,23 @@ SCICORESHARE inline void Pio(Piostream& stream, double& data) { stream.io(data);
 SCICORESHARE inline void Pio(Piostream& stream, float& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, clString& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
+SCICORESHARE        void Pio(Piostream& stream, string& data);
 
-				// persistent io for maps
+// GROUP: Templates for persistent io for C++ standard library units
+//////////
+//
+
+//////////
+// Persistent IO for maps
 template <class Key, class Data>
 SCICORESHARE void
-  Pio(Piostream& stream, map<Key, Data>& data );
+Pio(Piostream& stream, map<Key, Data>& data );
+
+//////////
+// Persistent IO of vector containers
+template <class T>
+SCICORESHARE void Pio(Piostream& stream, vector<T>& data);
 
 } // End namespace SCIRun
 
 #endif
-
