@@ -44,6 +44,7 @@ private:
   NrrdOPort*      otens_;
   //NrrdOPort*      oerr_;
 
+  GuiInt       knownB0_;
   GuiInt       use_default_threshold_;
   GuiDouble    threshold_;
   GuiDouble    soft_;
@@ -54,6 +55,7 @@ DECLARE_MAKER(TendEstim)
 
 TendEstim::TendEstim(SCIRun::GuiContext *ctx) : 
   Module("TendEstim", ctx, Filter, "Tend", "Teem"), 
+  knownB0_(ctx->subVar("knownB0")),
   use_default_threshold_(ctx->subVar("use-default-threshold")),
   threshold_(ctx->subVar("threshold")),
   soft_(ctx->subVar("soft")),
@@ -128,10 +130,10 @@ TendEstim::execute()
   if (use_default_threshold_.get()) threshold = AIR_NAN;
   else threshold = threshold_.get();
 
-  int knownB0 = AIR_TRUE; // TRUE for brains, FALSE for dog hearts
+  int knownB0 = knownB0_.get(); // TRUE for brains, FALSE for dog hearts
   Nrrd* dummy = nrrdNew();
   if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, sliced_bmat, 
-			  knownB0, threshold_.get(), soft_.get(), 
+			  knownB0, threshold, soft_.get(), 
 			  scale_.get()))
   {
     char *err = biffGetDone(TEN);
