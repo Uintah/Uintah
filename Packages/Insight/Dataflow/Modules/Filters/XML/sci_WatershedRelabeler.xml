@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <filter name="watershed::Relabeler">
-  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/ITK/itk_WatershedRelabeler.xml"/>
-  <include href="/Users/yarden/projects/SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML/gui_WatershedRelabeler_Darby.xml"/>
+  <include href="ITK/itk_WatershedRelabeler.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_WatershedRelabeler_Darby.xml"/>
 
 <filter-sci name="WatershedRelabeler">
   <package>Insight</package>
