@@ -32,7 +32,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ThreadStats.tcl $(SRCDIR)/Util.tcl \
 	$(SRCDIR)/VTRDial.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Core/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Core/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

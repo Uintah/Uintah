@@ -52,7 +52,7 @@ ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
-CREATETCLINDEX := $(SRCTOP)/scripts/createTclIndex
+CREATETCLINDEX := $(OBJTOP)/createTclIndex
 
 # etags generation
 TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
@@ -70,12 +70,12 @@ $(MAKEFILEDIRS):
 	@echo creating directory $@
 	@mkdir -p $@
 
-$(CREATETCLINDEX): $(CREATETCLINDEX).in $(OBJTOP)/Makefile
-	@echo creating scripts/createTclIndex
+$(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
+	@echo creating createTclIndex
 	-@sed -e 's,ITCLSH,$(ITCLSH),g' \
               -e 's,ITCL_INIT_DIR,$(ITCL_INIT_DIR),g' \
 	      -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
-              $(CREATETCLINDEX).in > $(CREATETCLINDEX)
+              $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
 	-@chmod a+x $(CREATETCLINDEX)
 
 $(LIBDIR):
@@ -131,7 +131,7 @@ clean::
 
 distclean:: clean
 	rm -f config.status config.log config.cache
-	rm -f scripts/createTclIndex scripts/CC scripts/cc
+	rm -f $(CREATETCLINDEX) scripts/CC scripts/cc
 	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
 	rm -f sci_config.h sci_defs.h stamp-
 

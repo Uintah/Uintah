@@ -34,7 +34,7 @@ $(SRCDIR)/tclIndex: \
 
 #[INSERT NEW TCL FILE HERE]
 
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI
+	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
