@@ -34,6 +34,7 @@ SRCS     += \
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
+	$(SRCDIR)/Centroids.cc\
 	$(SRCDIR)/ClipField.cc\
 	$(SRCDIR)/ClipLattice.cc\
 	$(SRCDIR)/Coregister.cc\

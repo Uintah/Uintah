@@ -271,6 +271,18 @@ EditField::build_widget(FieldHandle f)
   if (!cgeom_.get()) {
     // build a widget identical to the BBox
     size = Vector(bbox.max()-bbox.min());
+    if (fabs(size.x())<1.e-4) {
+      size.x(2.e-4); 
+      bbox.extend(bbox.min()-Vector(1.e-4,0,0));
+    }
+    if (fabs(size.y())<1.e-4) {
+      size.y(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0,1.e-4,0));
+    }
+    if (fabs(size.z())<1.e-4) {
+      size.z(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0,0,1.e-4));
+    }
     center = Point(bbox.min() + size/2.);
   } else {
     // build a widget as described by the UI
