@@ -12,6 +12,7 @@
  *  Copyright (C) 2000 U of U
  */
 
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
@@ -50,7 +51,9 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-static void quit( const std::string & msg = "" )
+static
+void
+quit( const std::string & msg = "" )
 {
   if( msg != "" )
     {
@@ -60,9 +63,11 @@ static void quit( const std::string & msg = "" )
   exit( 1 );
 }
 
-static void usage( const std::string & message,
-	    const std::string& badarg,
-	    const std::string& progname)
+static
+void
+usage( const std::string & message,
+       const std::string& badarg,
+       const std::string& progname)
 {
   if( !Uintah::Parallel::usingMPI() || 
       ( Uintah::Parallel::usingMPI() &&
@@ -84,8 +89,12 @@ static void usage( const std::string & message,
   quit();
 }
 
-int main(int argc, char** argv)
+int
+main(int argc, char** argv)
 {
+    TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
+    TAU_PROFILE_INIT(argc,argv);
+
     SimulationController::start_addr = (char*)sbrk(0);
     Thread::disallow_sgi_OpenGL_page0_sillyness();
   
