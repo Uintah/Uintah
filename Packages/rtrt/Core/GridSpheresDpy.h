@@ -2,10 +2,8 @@
 #ifndef __GRIDSPHERESDPY_H__
 #define __GRIDSPHERESDPY_H__
 
-#include <GL/glx.h>
-#include <GL/glu.h>
+#include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/Core/Array1.h>
-#include <Core/Thread/Runnable.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -19,11 +17,10 @@ class GridSpheres;
 class TextureGridSpheres;
 class PCAGridSpheres;
 
-class GridSpheresDpy : public Runnable {
+class GridSpheresDpy : public DpyBase {
   
   int* hist;
   int* histmax;
-  int xres, yres;
   friend class GridSpheres;
   friend class TextureGridSpheres;
   friend class PCAGridSpheres;
@@ -63,6 +60,20 @@ class GridSpheresDpy : public Runnable {
     { return (val>min?(val<max?val:max):min); }
 
   void write_data_file(char *out_file);
+
+  // Inherited functions
+
+  // Called at the start of run.
+  virtual void init();
+  virtual void display();
+  virtual void resize(const int width, const int height);
+  virtual void key_pressed(unsigned long key);
+  virtual void button_pressed(MouseButton button, const int x, const int y);
+  virtual void button_motion(MouseButton button, const int x, const int y);
+
+  // Gui control variables
+  bool need_hist;
+  int redraw_range;
   
 public:
   GridSpheresDpy(int colordata, char *in_file=0);
@@ -70,7 +81,6 @@ public:
   virtual ~GridSpheresDpy();
   void attach(GridSpheres* g);
   void set_var_names(std::string* in_var_names) { var_names = in_var_names; }
-  virtual void run();
   void setup_vars();
 
   // This is frame safe.  If you call this function before any
