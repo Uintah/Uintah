@@ -63,7 +63,9 @@ itcl_class PSECommon_Salmon_EditPath {
 		-orient horizontal -width 15 -command "$this-c get_to_view" -label "Current View:"
 	scale $ef.fsb.fsm -variable $this-tcl_step_size -digits 6 -from 0.01 -to 1 \
 		-resolution 0.01 -orient horizontal -width 7 -label "Path Step:"
-	pack $ef.fsb.fr $ef.fsb.fsm -side top -fill x -padx 2
+	scale $ef.fsb.sp -variable $this-tcl_speed_val -digits 4 -from 0.1 -to 10 \
+		-resolution 0.1 -orient horizontal -width 7 -label "Speed:"
+	pack $ef.fsb.fr $ef.fsb.fsm $ef.fsb.sp -side top -fill x -padx 2
 
 	button $ef.btn.add -text "Add View" -command "$this-c add_vp" -anchor w
 	button $ef.btn.del -text "Del View" -command "$this-c rem_vp" -anchor w
@@ -86,8 +88,8 @@ itcl_class PSECommon_Salmon_EditPath {
 	label $ef.sw.spd.lb -text "Acceleration:" -anchor w
 	radiobutton $ef.sw.spd.sm -text "Smooth Start/End" -variable $this-tcl_acc_mode  -anchor w -value 1 
 	radiobutton $ef.sw.spd.no -text "No acceleration " -variable $this-tcl_acc_mode  -anchor w -value 0
-	# radiobutton $ef.sw.spd.us -text "User Defined" -variable $this-tcl_acc_mode  -anchor w -value 2 -state disabled
-	pack $ef.sw.spd.lb $ef.sw.spd.no $ef.sw.spd.sm -side top -pady 3 -padx 2 -anchor w
+	radiobutton $ef.sw.spd.us -text "User Speeds Only" -variable $this-tcl_acc_mode  -anchor w -value 2
+	pack $ef.sw.spd.lb $ef.sw.spd.no $ef.sw.spd.sm $ef.sw.spd.us -side top -pady 3 -padx 2 -anchor w
 	
 	label $ef.sw.int.lb -text "Interpolation Type:" -anchor w
 	radiobutton $ef.sw.int.lin -text "Linear" -variable $this-tcl_intrp_type  -anchor w -value 1
@@ -124,9 +126,9 @@ itcl_class PSECommon_Salmon_EditPath {
 	frame $df.info.msg -relief raised
 	pack $df.info.speed $df.info.acc  $df.info.nv $df.info.msg -side top -anchor w -fill x -pady 1
 	
-	label $df.info.speed.head -text "Speed:\t"
-	label $df.info.speed.val -textvariable $this-tcl_speed_val
-	pack $df.info.speed.head $df.info.speed.val -side left -anchor w -padx 2
+	#label $df.info.speed.head -text "Speed:\t"
+	#label $df.info.speed.val -textvariable $this-tcl_speed_val
+	#pack $df.info.speed.head $df.info.speed.val -side left -anchor w -padx 2
 	
 	label $df.info.acc.head -text "Acceleration:\t"
 	label $df.info.acc.val -textvariable $this-tcl_acc_val
@@ -185,6 +187,9 @@ itcl_class PSECommon_Salmon_EditPath {
 	set w .ui[modname]
 	set df $w.drv
 	set ef $w.editor
+	
+	# brute force fixes of GUI update problem ( didn't figure it out yet)
+	
 	$df.modes.new configure -variable $this-tcl_is_new
 	$df.modes.exist configure -variable $this-tcl_is_new
 	$ef.sw.int.lin configure -variable $this-tcl_intrp_type
@@ -192,8 +197,10 @@ itcl_class PSECommon_Salmon_EditPath {
 	$ef.sw.int.cub configure -variable $this-tcl_intrp_type
 	$ef.sw.spd.sm configure -variable $this-tcl_acc_mode
 	$ef.sw.spd.no configure -variable $this-tcl_acc_mode
+	$ef.sw.spd.us configure -variable $this-tcl_acc_mode
 	$df.out.ogeom configure -variable $this-tcl_send_dir
 	$df.out.oview configure -variable $this-tcl_send_dir
+	$ef.fsb.sp configure -variable $this-tcl_speed_val
 	update
     }
 }
