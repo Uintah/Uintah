@@ -31,6 +31,7 @@ SRCS     += \
 	$(SRCDIR)/ConductivitySearch.cc\
 	$(SRCDIR)/DipoleSearch.cc\
 	$(SRCDIR)/Tikhonov.cc\
+        $(SRCDIR)/TikhonovSVD.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/BioPSE/Core/Algorithms/NumApproximation \
