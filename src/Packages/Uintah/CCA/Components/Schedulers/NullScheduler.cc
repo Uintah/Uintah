@@ -58,7 +58,7 @@ NullScheduler::advanceDataWarehouse(const GridP& grid)
 }
 
 void
-NullScheduler::actuallyCompile(const ProcessorGroup* pg)
+NullScheduler::actuallyCompile(const ProcessorGroup* pg, bool scrubNew)
 {
   if( dts_ )
     delete dts_;
@@ -70,9 +70,9 @@ NullScheduler::actuallyCompile(const ProcessorGroup* pg)
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   if( useInternalDeps() )
-    dts_ = graph.createDetailedTasks( pg, lb, true );
+    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, true );
   else
-    dts_ = graph.createDetailedTasks( pg, lb, false );
+    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, false );
 
   if(dts_->numTasks() == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";

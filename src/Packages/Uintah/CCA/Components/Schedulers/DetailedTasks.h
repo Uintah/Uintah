@@ -1,9 +1,11 @@
 #ifndef UINTAH_HOMEBREW_DetailedTasks_H
 #define UINTAH_HOMEBREW_DetailedTasks_H
 
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
@@ -119,15 +121,8 @@ namespace Uintah {
     unsigned long satisfiedGeneration;
   };
 
-  struct ScrubItem {
-    ScrubItem* next;
-    const VarLabel* var;
-    Task::WhichDW dw;
-    ScrubItem(ScrubItem* next, const VarLabel* var, Task::WhichDW dw)
-      : next(next), var(var), dw(dw)
-    {}
-  };
-
+  typedef map<VarLabelMatlPatch, unsigned int> ScrubCountMap;
+  
   class DetailedTask {
   public:
     DetailedTask(Task* task, const PatchSubset* patches,
@@ -136,8 +131,9 @@ namespace Uintah {
     
     void doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
 	      DataWarehouse* new_dw);
-    // Called after doit finishes.
-    void done();
+    // Called after doit and mpi data sent (packed in buffers) finishes.
+    // Handles internal dependencies and scrubbing.
+    void done(DataWarehouse* old_dw, DataWarehouse* new_dw); 
 
     string getName() const;
     
@@ -163,9 +159,6 @@ namespace Uintah {
     DependencyBatch* getComputes() const {
       return comp_head;
     }
-    const ScrubItem* getScrublist() const {
-      return scrublist;
-    }
 
     void findRequiringTasks(const VarLabel* var,
 			    list<DetailedTask*>& requiringTasks);
@@ -174,8 +167,15 @@ namespace Uintah {
 
     bool addRequires(DependencyBatch*);
     void addComputes(DependencyBatch*);
-    void addScrub(const VarLabel* var, Task::WhichDW dw);
 
+    void addRequiresForOldData(const VarLabel* label, int matl,
+			       const Patch* patch)
+    { requiresForOldData_.push_back(VarLabelMatlPatch(label, matl, patch)); } 
+
+    void addRequiresForNewData(const VarLabel* label, int matl,
+			       const Patch* patch)
+    { requiresForNewData_.push_back(VarLabelMatlPatch(label, matl, patch)); } 
+    
     void addInternalDependency(DetailedTask* prerequisiteTask,
 			       const VarLabel* var);
 
@@ -184,6 +184,8 @@ namespace Uintah {
   protected:
     friend class TaskGraph;
   private:
+    // called by done()
+    void scrub(DataWarehouse* old_dw, DataWarehouse* new_dw); 
 
     Task* task;
     const PatchSubset* patches;
@@ -191,6 +193,8 @@ namespace Uintah {
     map<DependencyBatch*, DependencyBatch*> reqs;
     DependencyBatch* comp_head;
     DetailedTasks* taskGroup;
+    list<VarLabelMatlPatch> requiresForOldData_;
+    list<VarLabelMatlPatch> requiresForNewData_;
 
     mutable string name_; /* doesn't get set until getName() is called
 			     the first time. */
@@ -209,7 +213,6 @@ namespace Uintah {
     unsigned long numPendingInternalDependencies;
     Mutex internalDependencyLock;
     
-    ScrubItem* scrublist;
     int resourceIndex;
 
     DetailedTask(const Task&);
@@ -219,6 +222,7 @@ namespace Uintah {
   class DetailedTasks {
   public:
     DetailedTasks(const ProcessorGroup* pg, const TaskGraph* taskgraph,
+		  bool scrubNew = true,
 		  bool mustConsiderInternalDependencies = false);
     ~DetailedTasks();
 
@@ -230,7 +234,13 @@ namespace Uintah {
       return tasks[i];
     }
 
+
     void assignMessageTags(int me);
+
+    void scrubCountDependency(DetailedTask* to, Task::Dependency* req,
+			      const Patch *fromPatch, int matl,
+			      Task::WhichDW dw);
+
     void possiblyCreateDependency(DetailedTask* from, Task::Dependency* comp,
 				  const Patch* fromPatch,
 				  DetailedTask* to, Task::Dependency* req,
@@ -257,8 +267,19 @@ namespace Uintah {
 
     DetailedTask* getNextInternalReadyTask();
     
-    void createScrublists(bool scrub_new, bool scrub_old=true);
+    unsigned int doScrubNew()
+    { return scrubNew_; }
 
+    unsigned int getScrubCount(const VarLabel* label, int matlIndex,
+			       const Patch* patch)
+    { return scrubCountMap_[VarLabelMatlPatch(label, matlIndex, patch)]; }
+
+    unsigned int getOldDWScrubCount(const VarLabel* label, int matlIndex,
+				    const Patch* patch)
+    { return oldDWScrubCountMap_[VarLabelMatlPatch(label, matlIndex, patch)]; }
+
+    void scrubExtraneousOldDW();
+    
     bool mustConsiderInternalDependencies()
     { return mustConsiderInternalDependencies_; }
 
@@ -277,6 +298,9 @@ namespace Uintah {
 	throw InternalError("DetailedTasks::currentDependencySatisfyingGeneration has overflowed");
       currentDependencyGeneration_++;
     }
+
+    // called by DetailedTask::scrub for the InitialTask (send old data)
+    void actuallyScrubExtraneous(DataWarehouse* old_dw);    
     
     vector<DetailedTask*> tasks;
 #if 0
@@ -308,6 +332,11 @@ namespace Uintah {
     unsigned long currentDependencyGeneration_;
     Mutex readyQueueMutex_;
     Semaphore readyQueueSemaphore_;
+
+    ScrubCountMap scrubCountMap_;
+    ScrubCountMap oldDWScrubCountMap_;
+    bool scrubNew_;
+    bool scrubExtraneousOldDW_;
 
     DetailedTasks(const DetailedTasks&);
     DetailedTasks& operator=(const DetailedTasks&);

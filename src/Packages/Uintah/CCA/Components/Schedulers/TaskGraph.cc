@@ -17,7 +17,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 
-#include "sci_algorithm.h"
+#include <sci_algorithm.h>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -548,6 +548,7 @@ TaskGraph::createDetailedTask(DetailedTasks* tasks, Task* task,
 DetailedTasks*
 TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
 				LoadBalancer* lb,
+				bool scrubNew,
 			        bool useInternalDeps )
 {
   vector<Task*> sorted_tasks;
@@ -574,7 +575,8 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
   ASSERT(level != 0);
   lb->createNeighborhood(level, pg);
 
-  DetailedTasks* dt = scinew DetailedTasks( pg, this, useInternalDeps );
+  DetailedTasks* dt = scinew DetailedTasks( pg, this, scrubNew,
+					    useInternalDeps );
   for(int i=0;i<(int)sorted_tasks.size();i++){
     Task* task = sorted_tasks[i];
     const PatchSet* ps = task->patch_set;
@@ -758,6 +760,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
   // We could fuse both of these into one loop, since we know that the
   // taskgraph is already sorted.  It may make it slightly faster
 
+  int me = pg->myrank();
+  
   // Collect all of the comps
   CompTable ct;
   for(int i=0;i<dt->numTasks();i++){
@@ -770,7 +774,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	// computing the reduction
 	DetailedTask* reductionTask = d_reductionTasks[comp->var];
 	if (reductionTask->getAssignedResourceIndex() == 
-	    task->getAssignedResourceIndex()) {
+	    task->getAssignedResourceIndex() &&
+	    task->getAssignedResourceIndex() == me) {
 	  // the tasks are on the same processor, so add an internal dependency
 	  reductionTask->addInternalDependency(task, comp->var);
 	}
@@ -843,6 +848,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 				      bool modifies)
 
 {
+  int me = pg->myrank();
   for( ; req != 0; req = req->next){
     if(dbg.active())
       dbg << "req: " << *req << '\n';
@@ -912,7 +918,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		       << endl;
 		  cerr << "creator=" << *creator << '\n';
 		  cerr << "neighbor=" << *neighbor << '\n';
-		  cerr << "me=" << pg->myrank() << '\n';
+		  cerr << "me=" << me << '\n';
 		  //throw InternalError("Failed to find comp for dep!");
 		  continue;
 		}
@@ -945,7 +951,9 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		}
 	      }
 	    }
-	    
+
+	    if (task->getAssignedResourceIndex() == me)
+	      dt->scrubCountDependency(task, req, neighbor, matl, req->dw);
 	    if (!alreadyThere) {
 	      dt->possiblyCreateDependency(creator, comp, neighbor,
 					   task, req, patch,
@@ -967,9 +975,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	       << task->getTask()->getName() << endl; 
 	  throw InternalError("Failed to find comp for dep!");
 	}
-	if(task->getAssignedResourceIndex() == 
-	   creator->getAssignedResourceIndex()) {
-	  task->addInternalDependency(creator, req->var);
+	if(task->getAssignedResourceIndex() ==
+	   creator->getAssignedResourceIndex() &&
+	   task->getAssignedResourceIndex() == me) {
+	    dt->scrubCountDependency(task, req, 0, matl, req->dw);
+	    task->addInternalDependency(creator, req->var);
 	}
       }
     }
