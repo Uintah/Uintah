@@ -42,6 +42,9 @@ using namespace SCIRun;
     GuiDouble guiDelta;
     GuiInt guiEigen2DCalcType;
     
+    // n . sigma . t operation
+    GuiDouble guiNx, guiNy, guiNz;
+    GuiDouble guiTx, guiTy, guiTz;
     TensorParticlesIPort *in;
 
     ScalarParticlesOPort *spout;
