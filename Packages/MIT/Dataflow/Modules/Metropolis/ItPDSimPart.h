@@ -34,7 +34,10 @@ public:
   float df() { return df_; }
 
   // set values
-  void df( float v ) { df_ = v; }
+  void df( float v ) { df_ = v; df_changed(df_); }
+
+  // Signals
+  Signal1<float> df_changed;
 };
   
 
