@@ -107,16 +107,15 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 // Schedule non linear solve and carry out some actual operations
 //****************************************************************************
-int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
-					  const LevelP& level,
+int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 					  SchedulerP& sched,
 					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw)
+					  DataWarehouseP& new_dw,
+					  double time, double delta_t)
 {
   //initializes and allocates vars for new_dw
   sched_initialize(level, sched, old_dw, new_dw);
 
-#ifdef THIS_SHOULD_GO_INTO_SIMULATION_CONTROLLER
   int nlIterations = 0;
   double nlResidual = 2.0*d_resTol;;
   do{
@@ -126,28 +125,32 @@ int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
     DataWarehouseP nonlinear_dw = sched->createDataWarehouse(d_generation);
     ++d_generation;
 
+#ifdef WONt_COMPILE_YET
     //correct inlet velocities to account for change in properties
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, new_dw, 
 						  new_dw);
+#endif
 
     // linearizes and solves pressure eqn
-    d_pressSolver->solve(time, delta_t, level, sched, new_dw, new_dw);
+    d_pressSolver->solve(level, sched, new_dw, new_dw, time, delta_t);
 
+#ifdef WONt_COMPILE_YET
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     d_boundaryCondition->sched_computePressureBC(pc, level, new_dw,
 						 new_dw);
+#endif
 
     // x-velocity    
     for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solve(time, delta_t, index, level, sched, new_dw, new_dw);
+      d_momSolver->solve(level, sched, new_dw, new_dw, time, delta_t, index);
     }
     
     // equation for scalars
     for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve different scalars
-      d_scalarSolver->solve(time, delta_t, index, level, sched, new_dw, new_dw);
+      d_scalarSolver->solve(level, sched, new_dw, new_dw, time, delta_t, index);
     }
 
     // update properties
@@ -157,14 +160,21 @@ int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
     // that accounts for sub-grid scale turbulence
     d_turbModel->sched_computeTurbSubmodel(level, sched, new_dw, new_dw);
 
+#ifdef WONT_COMPILE_YET
     // not sure...but we need to execute tasks somewhere
     ProcessorContext* pc = ProcessorContext::getRootContext();
-    scheduler->execute(pc);
-     ++nlIterations;
+    sched->execute(pc);
+#endif
+
+    ++nlIterations;
+
+#ifdef WONT_COMPILE_YET
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, new_dw, new_dw);
-  }while((nlIterations < d_nonlinear_its)||(nlResidual > d_resTol));
 #endif
+
+  }while((nlIterations < d_nonlinear_its)||(nlResidual > d_resTol));
+
   return(0);
 }
 
@@ -279,15 +289,16 @@ PicardNonlinearSolver::initialize(const ProcessorContext* ,
   new_dw->put(viscosity_new, d_viscosityLabel, matlIndex, patch);
 }
 
-
-
-#if 0
-double PicardNonlinearSolver::computeResidual(const LevelP& level,
-					    SchedulerP& sched,
-					    const DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw)
+//****************************************************************************
+// compute the residual
+//****************************************************************************
+double 
+PicardNonlinearSolver::computeResidual(const LevelP& level,
+				       SchedulerP& sched,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
 {
-  double nlresidual;
+  double nlresidual = 0.0;
 #if 0
   SoleVariable<double> residual;
   SoleVariable<double> omg;
@@ -310,11 +321,13 @@ double PicardNonlinearSolver::computeResidual(const LevelP& level,
 #endif
   return nlresidual;
 }
-#endif  
 
 
 //
 // $Log$
+// Revision 1.20  2000/06/04 23:57:46  bbanerje
+// Updated Arches to do ScheduleTimeAdvance.
+//
 // Revision 1.19  2000/06/04 22:40:14  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.

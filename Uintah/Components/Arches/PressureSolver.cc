@@ -114,11 +114,11 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 // Schedule solve of linearized pressure equation
 //****************************************************************************
-void PressureSolver::solve(double time, double delta_t,
-			   const LevelP& level,
+void PressureSolver::solve(const LevelP& level,
 			   SchedulerP& sched,
 			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw)
+			   DataWarehouseP& new_dw,
+			   double time, double delta_t)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
@@ -247,6 +247,9 @@ normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.15  2000/06/04 23:57:46  bbanerje
+// Updated Arches to do ScheduleTimeAdvance.
+//
 // Revision 1.14  2000/06/04 22:40:14  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.

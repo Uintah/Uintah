@@ -74,11 +74,11 @@ public:
       //    [out] 
       //        documentation here
       //
-      virtual int nonlinearSolve(double time, double deltat, 
-				 const LevelP&, 
+      virtual int nonlinearSolve(const LevelP&, 
 				 SchedulerP& sched,
 				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw) = 0;
+				 DataWarehouseP& new_dw,
+				 double time, double deltat) = 0;
   
 private:
 
@@ -90,6 +90,9 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/06/04 23:57:46  bbanerje
+// Updated Arches to do ScheduleTimeAdvance.
+//
 // Revision 1.8  2000/06/04 22:40:14  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.
