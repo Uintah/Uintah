@@ -4968,11 +4968,11 @@ class BioTensorApp {
 	    draw_colormap Blackbody $maps.blackbody.f.canvas
 	    
 	    
-	    # BP Seismic
+	    # Red-to-Blue
 	    frame $maps.bpseismic
 	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
 		-value 17 \
 		-state disabled \
@@ -4984,7 +4984,7 @@ class BioTensorApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
 	    
 	    global clip_to_isosurface
 	    global clip_to_isosurface_color
@@ -5812,11 +5812,11 @@ class BioTensorApp {
 	    
 	    draw_colormap Blackbody $maps.blackbody.f.canvas
 	    
-	    # BP Seismic
+	    # Red-to-Blue
 	    frame $maps.bpseismic
 	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
 		-value 17 \
 		-state disabled \
@@ -5828,7 +5828,7 @@ class BioTensorApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
 	    
 	    
 	    global clip_by_planes
@@ -6267,11 +6267,11 @@ class BioTensorApp {
 	    draw_colormap Blackbody $maps.blackbody.f.canvas
 	    
 	    
-	    # BP Seismic
+	    # Red-to-Blue
 	    frame $maps.bpseismic
 	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
 		-value 17 \
 		-state disabled \
@@ -6283,7 +6283,7 @@ class BioTensorApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
 	    
 	    
 	    global scale_glyph
@@ -6632,7 +6632,7 @@ class BioTensorApp {
 	global scale_glyph
 	if {$vis_activated && $scale_glyph} {
 	    global mods
-	    $mods(ShowField-Glyphs)-c data_display_tensors
+	    $mods(ShowField-Glyphs)-c data_scale
 	}
     }
 
@@ -7003,11 +7003,11 @@ class BioTensorApp {
 	    draw_colormap Blackbody $maps.blackbody.f.canvas
 	    
 	    
-	    # BP Seismic
+	    # Red-to-Blue
 	    frame $maps.bpseismic
 	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 17 \
 		-state disabled \
@@ -7019,7 +7019,7 @@ class BioTensorApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
 	} 
     }
 
@@ -7356,8 +7356,8 @@ class BioTensorApp {
 		{ 246 72  1 }  { 255 175 36 }
 		{ 255 231 68 }  { 251 255 121 }
 		{ 239 253 174 }}}
-	} elseif {$which == "BP Seismic"} {
-	    set color { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
+	} elseif {$which == "Red-to-Blue"} {
+	    set color { "Red-to-Blue" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	}
 
         set colorMap [$this set_color_map $color]
