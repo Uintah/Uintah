@@ -267,6 +267,7 @@ void SolveMatrix::execute()
   if(use_previous_soln.get() && solution.get_rep() && 
      solution->nrows() == rhs->nrows()){
     solution.detach();
+    solution->generation++;
   } else {
     solution=scinew ColumnMatrix(rhs->nrows());
     solution->zero();
