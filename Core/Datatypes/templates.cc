@@ -28,12 +28,13 @@ template class LockingHandle<Matrix>;
 #include <Core/Datatypes/TetVol.h>
 template class TetVol<double>;
 
+#include <Core/Datatypes/LatticeVol.h>
+template class LatticeVol<double>;
+
 #include <Core/Datatypes/GenericField.h>
-//#include <Core/Datatypes/Lat3VolMesh.h>
-#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/PersistentSTL.h>
 
-//template class GenericField<Lat3VolMesh, vector<double> >;
+#include <Core/Datatypes/TriSurfMesh.h>
 template class GenericField<TriSurfMesh, vector<double> >;
 
 #ifdef __sgi
