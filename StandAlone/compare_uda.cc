@@ -276,9 +276,9 @@ int main(int argc, char** argv)
     DataArchive* da2 = scinew DataArchive(filebase2);
 
     vector<string> vars;
-    vector<const TypeDescription*> types;
+    vector<const Uintah::TypeDescription*> types;
     vector<string> vars2;
-    vector<const TypeDescription*> types2;
+    vector<const Uintah::TypeDescription*> types2;
     da1->queryVariables(vars, types);
     ASSERTEQ(vars.size(), types.size());
     da2->queryVariables(vars2, types2);
@@ -343,8 +343,8 @@ int main(int argc, char** argv)
       
       for(int v=0;v<(int)vars.size();v++){
 	std::string var = vars[v];
-	const TypeDescription* td = types[v];
-	const TypeDescription* subtype = td->getSubType();
+	const Uintah::TypeDescription* td = types[v];
+	const Uintah::TypeDescription* subtype = td->getSubType();
 	cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	for(int l=0;l<grid->numLevels();l++){
 	  LevelP level = grid->getLevel(l);
@@ -410,21 +410,21 @@ int main(int argc, char** argv)
 	      int matl = *matlIter;
 	      cout << "\t\t\tMaterial: " << matl << "\n";
 	      switch(td->getType()){
-	      case TypeDescription::ParticleVariable:
+	      case Uintah::TypeDescription::ParticleVariable:
 		switch(subtype->getType()){
-		case TypeDescription::double_type:
+		case Uintah::TypeDescription::double_type:
 		  compareParticles<double>(da1, da2, var, matl, patch, patch2,
 					   time, time2, abs_tolerance, rel_tolerance);
 		  break;
-		case TypeDescription::Point:
+		case Uintah::TypeDescription::Point:
 		  compareParticles<Point>(da1, da2, var, matl, patch, patch2,
 					  time, time2, abs_tolerance, rel_tolerance);
 		  break;
-		case TypeDescription::Vector:
+		case Uintah::TypeDescription::Vector:
 		  compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
 					   time, time2, abs_tolerance, rel_tolerance);
 		  break;
-		case TypeDescription::Matrix3:
+		case Uintah::TypeDescription::Matrix3:
 		  compareParticles<Matrix3>(da1, da2, var, matl, patch, patch2,
 					    time, time2, abs_tolerance, rel_tolerance);
 		  break;
@@ -433,24 +433,24 @@ int main(int argc, char** argv)
 		  exit(-1);
 		}
 		break;
-	      case TypeDescription::NCVariable:
+	      case Uintah::TypeDescription::NCVariable:
 		switch(subtype->getType()){
-		case TypeDescription::double_type:
+		case Uintah::TypeDescription::double_type:
 		  compareFields< NCVariable<double> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
-		case TypeDescription::Point:
+		case Uintah::TypeDescription::Point:
 		  compareFields< NCVariable<Point> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
-		case TypeDescription::Vector:
+		case Uintah::TypeDescription::Vector:
 		  compareFields< NCVariable<Vector> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
-		case TypeDescription::Matrix3:
+		case Uintah::TypeDescription::Matrix3:
 		  compareFields< NCVariable<Matrix3> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
@@ -460,24 +460,24 @@ int main(int argc, char** argv)
 		  exit(-1);
 		}
 		break;
-	      case TypeDescription::CCVariable:
+	      case Uintah::TypeDescription::CCVariable:
 		switch(subtype->getType()){
-		case TypeDescription::double_type:
+		case Uintah::TypeDescription::double_type:
 		  compareFields< CCVariable<double> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
-		case TypeDescription::Point:
+		case Uintah::TypeDescription::Point:
 		  compareFields< CCVariable<Point> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
-		case TypeDescription::Vector:
+		case Uintah::TypeDescription::Vector:
 		  compareFields< CCVariable<Vector> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
-		case TypeDescription::Matrix3:
+		case Uintah::TypeDescription::Matrix3:
 		  compareFields< CCVariable<Matrix3> >
 		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
