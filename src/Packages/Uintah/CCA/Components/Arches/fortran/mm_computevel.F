@@ -30,8 +30,8 @@ c*********************************************************************
 
                   idf = ioff*i+joff*j+koff*k
 
-                  dene = 0.5*(den(i-ioff,j-joff,k-koff)+den(i,j,k))
-                  old_dene = 0.5*(old_den(i-ioff,j-joff,k-koff)+
+                  dene = 0.5D0*(den(i-ioff,j-joff,k-koff)+den(i,j,k))
+                  old_dene = 0.5D0*(old_den(i-ioff,j-joff,k-koff)+
      $                 old_den(i,j,k))
                   old_uu = uu(i,j,k)
 

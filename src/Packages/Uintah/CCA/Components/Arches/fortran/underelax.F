@@ -30,7 +30,7 @@ C-----------------------------------------------------------------------
          do 200 j = idxLo(2), idxHi(2)
             do 100 i = idxLo(1), idxHi(1)
                ap(i,j,k) = ap(i,j,k)/urelax
-               su(i,j,k) = su(i,j,k) + (1. - urelax)*ap(i,j,k)*
+               su(i,j,k) = su(i,j,k) + (1.0D0 - urelax)*ap(i,j,k)*
      $                                              phi(i,j,k)
  100        continue
  200     continue
