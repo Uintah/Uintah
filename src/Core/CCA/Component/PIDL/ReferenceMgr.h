@@ -135,15 +135,6 @@ DESCRIPTION
     // An object used to facilitate intra-component communication
     // (parallel component case)
     IntraComm* intracomm;
-    
-    /////////
-    // For parallel proxies, number of cohorts
-    int localSize;
-
-    /////////
-    // For parallel proxies, my ordered number
-    int localRank;
-
 
   protected:
     ///////
@@ -152,7 +143,15 @@ DESCRIPTION
     friend class TypeInfo;
 
   private:
+    /////////
+    // For parallel proxies, number of cohorts
+    int localSize;
+
+    /////////
+    // For parallel proxies, my ordered number
     ///////
+    int localRank;
+
     // Denote whether we have subsetted this object  
     bool isSubset;
 
