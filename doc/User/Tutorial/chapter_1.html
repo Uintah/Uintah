@@ -3,11 +3,6 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Geometry Visualization</title>
-<!-- Changed by: Ted Dustman, 22-Feb-2002 -->
-<!-- Changed by: TjD, 24-Feb-2002 -->
-<!-- Changed by: Ted Dustman, 21-Mar-2002 -->
-<!-- Last update: Sun Feb 24 22:10:47 2002 by Rob MacLeod
-     - lots of little fixes and some restructuring -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -53,7 +48,6 @@ color="maroon">
 <div align="left">
 <p><b><H4><A href="#section-1">FieldReader user interface</H4></b></A>
 <p><b><H4><A href="#section-2">Overview of field types</H4></b></A>
-<p><b><H4><A href="#section-3">ShowField module</H4></b></A>
 <p><b><H4><A href="#section-4">Hooking modules together</H4></b></A>
 <p><b><H4><A href="#section-5">Viewer module</H4></b></A>
 <p><b><H4><A href="#section-6">Navigating the Viewer Window</H4></b></A>
@@ -66,19 +60,19 @@ color="maroon">
     
     <p>In this first chapter, we will construct a SCIRun network (see the 
     <a HREF="../Guide/usersguide/srug3.html#sec:startingup">User's Guide 3.0,
-    Starting SCIRun</a>) to perform a visualization task: 
-    rendering of a
+    Starting SCIRun</a>) that performs a visualization task: 
+    rendering a
     tetrahedral mesh.  Our &quot;net,&quot will consist of three
-    types of modules: data reader, geometry converter, and renderer.  These modules are the FieldReader, ShowField, Viewer.<br> 
+    types of modules: data reader, geometry converter, and renderer.  These modules are FieldReader, ShowField, and Viewer.<br> 
     
  
-    <p>We will read the <dfn>Field</dfn> data from a file, set some rendering
+    <p>We will read the Field data from a file, set some rendering
     properties for the nodes, edges, and faces (the
     nodes will be rendered as blue spheres), and render the
     geometry to the screen in an interactive Viewer window.<br>  
     
-    <p>To begin, we will construct a net from scratch (as shown,
-    completed, in <b>Figure 1.1</b>). In the chapters that follow, we will
+    <p>To begin, we will construct a net (as shown,
+    completed, in <b>Figure 1.1</b>), and in the chapters that follow, we will
     expand on this network, adding more features and
     functionality as we progress.<br>
     
@@ -97,7 +91,7 @@ color="maroon">
      before starting SCIRun. For more information about environment
      variables, you may consult the <a
      HREF="../Guide/usersguide/srug3.html#sec:scirundata">User's Guide 3.4,
-     SCIRun_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory that is a separate dowload from the SCIRun build.  
+     SCIRun_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory, a separate download from the SCIRun build.  
     <ol>
       <li value="1.">The SCIRUN_DATA variable points to the location 
       of the SCIRunData directory on your system.  
@@ -106,7 +100,7 @@ color="maroon">
       since many of our example networks run with a variety of data inputs such as sphere, brain-EG, and utahtorso-lowres.
     </ol> 
 
-<p>To begin, we will construct a network that loads a geometric mesh from disk and render it to the screen.  In your Unix shell window:</p>
+<p>To begin, we will construct a network that loads a geometric mesh from disk and renders it to the screen.  In your Unix shell window:</p>
 <ol>
   <li value="1.">Set your SCIRUN_DATA variable, pointing to the
   location of SCIRunData.  
@@ -139,7 +133,7 @@ color="maroon">
     <li value="2.">The SCIRun NetworkEditor window appears on your
     screen, as shown in 
     <b>Figure 1.3.</b>.</ol>
-	<p> The NetworkEditor screen consists of three frames: the GlobalView frame in the left uppermost corner; the Error frame in the right uppermost corner, and the NetEdit frame which is the largest.  The NetEdit frame is a large area in which you will construct your networks of modules. Since the NetEdit frame is so extensive, the Global View frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red, during startup or during the execution of a net.  
+	<p> The NetworkEditor screen consists of three frames: the GlobalView frame in the left uppermost corner; the Error frame in the right uppermost corner, and the NetEdit frame. The NetEdit frame is a large area in which you will construct your networks of modules. Since the NetEdit frame is so extensive, the Global View frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red during startup, or during the execution of a net.  
     
     </div>
     <center>
@@ -148,49 +142,50 @@ color="maroon">
     </center>
     <div align="left">
     <p><br>
-    
-    <p>We will first create a FieldReader module. From the
+   <p> A module is a single-purpose unit that functions within a dataflow environment. Modules will always have at least one input port for receiving data, located at the top of the module, or one output port for sending data, located at the bottom.</p> 
+<p>For a more complete description of modules, you may consult the User's Guide, Section 2.3 Modules and Networks>.</p>
+<p> Each datatype in SCIRun has a unique color such as yellow, purple, or pink.  You may connect ports of the same color. These colors are described in more detail in the User's Guide, Section 4.2, Anatomy of a Module.</p> 
+<p>By joining the modules together, data passes from one module to another; two or more connected modules form a SCIRun network (&quot;net&quot;).</p>
+<br> 
+    <p>We will first create a FieldReader module that loads a SCIRun Field.</p>
+	<p><ul><li>From the
     SCIRun menu, select DataIO/FieldReader, as shown in
-    <b>Figure 1.3.1.</b> To find out more about using nets, see the <a
+    <b>Figure 1.3.1.</b></p></ul>
+<p> To find out more about using nets, see the <a
     HREF="../Guide/usersguide/srug4.html#sec:workingwithnets">User's Guide
     4.0, Working 
-    with Networks.</a> 
+    with Networks.</a></p> 
     
     </div>
     <center>
     <p><img height="258" width="450" src="images/figures/1_3.gif"><br>
-    <b>Figure 1.3.1</b></p>
+    <b>Figure 1.3.1, showing drop-down menus that create the FieldReader module</b></p>
     </center>
     <div align="left">
     <p><br>
-    
-    <p>The module appears in the NetEdit frame, 
-    as shown in <b>Figure 1.4.</b><p>
-    
+<p>Set the user interface (UI) settings for the FieldReader module:
+   <ol>
+      <p><li value="1.">Press the UI button to launch the file
+      browser window, titled "Open field file." Your SCIRun environment should look like <b>Figure 1.4</b>.</p></li>  
+    <li value="2.">Type, or point-and-click to the
+      utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld input file. This dataset is a low resolution tetrahedral mesh of a human
+      torso.</p>
+<li><p>Select the filename in the file-browser
+	  window, press &quot;Open.&quot;  The file-browser window
+	  disappears and the module begins to execute.</p><br>  
     </div>
     <center>
     <p><img height="512" width="500" src="images/figures/1_4.gif"><br>
-    <b>Figure 1.4, showing the file browser window that corresponds to this module</b></p>
+    <b>Figure 1.4, shows the file browser window that corresponds to this module</b></p>
     </center>
     <div align="left">
-    <p><br>
-    
-    <p>To continue creating the module:
-    <ol>
-      <li value="1.">Press the user interface button (UI) to launch the file
-      browser window, titled "Open field file."  You should now have a  
-      <li value+"2.">Type, or point-and-click navigate to the
-      utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld input file.
-      (this dataset is a low resolution tetrahedral mesh of a human
-      torso.)  
-      <li>Select the filename in the file-browser
-	  window, press &quot;OK&quot;; the file-browser window
-	  disappears.
-      <li>The FieldReader module begins to execute. 
-      <li>The module finishes computing and the progress bar turns green. 
-      <li>The module icon displays a number that indicates the amount of
-	  CPU time required to complete (<b>Figure 1.5</b>).
-    </ol>
+    <p>
+     <ul>
+      <li><p>The module finishes computing and the progress bar turns green.</p> 
+      <li><p>The module icon displays a number that indicates the amount of
+	  CPU time required to complete its execution (<b>Figure 1.5</b>).</p>
+	<li><p> You have just loaded a SCIRun Field.</p>
+    </ul><br>
     
     </div>
     <center>
@@ -200,13 +195,18 @@ color="maroon">
     <div align="left">
     <p><br>
     
-    <p> We have just loaded the SCIRun
-    Field dataset.  A Field contains a geometric mesh and
-    a collection of data values mapped onto that mesh.  In this case,
+    <p>A Field contains a geometric mesh and
+    a collection of data values mapped onto that mesh. Data can be stored at the nodes, edges, faces, and cells of the mesh. In this case,
     we use a tetrahedral mesh with voltages defined at the nodes of the
-    mesh.  The brief overview below describes the various types
+    mesh.</p> 
+<p>The dimensionality of the mesh type limits
+    the available storage locations. For example, TriSurf has nodes,
+    edges, and planar faces, but not cells, which we assume to be
+    three-dimensional elements.  As a result, a TriSurf cannot store any
+    data in cells--but it can store data in edges or faces.</p>
+<p>The brief overview below describes the various types
     of geometric meshes, data values, and mappings that SCIRun
-    supports.
+    supports.</p><br>
     
     <p><A name="section-2"><b>Overview of field types</A></b><br>
     
@@ -241,7 +241,7 @@ color="maroon">
 
 	
 	<p><img height="83" width="100" src="images/figures/quadsurf.gif" align="left" valign="top">
-         <b>QuadSurfMesh:</b> a surface make of connected quadrilaterals.<br clear="all">
+         <b>QuadSurfMesh:</b> a surface made of connected quadrilaterals.<br clear="all">
 	
 
 	
@@ -260,21 +260,12 @@ color="maroon">
 	
 
         <br>
-        <br>
-    
-    <p>In a Field, there are, at most, four different places in which
-    data can be stored: nodes, edges, faces, and cells.  The
-    dimensionality of the mesh type limits
-    the available storage locations. For instance, a TriSurf has nodes,
-    edges, and planar faces, but not cells, which we assume to be
-    three-dimensional elements.  As a result, a TriSurf cannot store any
-    data in cells--but it can store data in edges or faces.
     
     <p>The following data types can be stored in a Field:<br>
     </p>
     <ul>
-      <li>Tensor
-      <li>Vector
+      <li>tensor
+      <li>vector
       <li>double precision
       <li>float(ing point)
       <li>int(eger)
@@ -285,131 +276,88 @@ color="maroon">
       <li>unsigned char<br>
     </ul>
     <p><br>
-
-    <p><b><A name="section-3">ShowField module</b><br></A>
     
-    <p>We will now add a second module to our network.  
-
-    Select ShowField from the SCIRun/Visualization menu. 
-    (Use this module to visualize various Field types).
-
-<!-- <Here we need an image, number 1.6, of the network with the two -->
-<!-- modules in the network editor, but not connected. -->
-
-
     <p><b><A name="section-4">Hooking modules together</b><br></A>
     
-    <p>You will now connect the two modules in your canvas so that data can 
-    flow between them.  The Output port in SCIRun is always on the bottom
-    of the module,
-    whereas the Input ports are always on top. Each datatype in SCIRun that
-    can pass
-    through ports has a unique color. You may connect ports of the same color.
-                  
-    <p>To hook the modules together:
-    <ol>       
-      <li value="1.">Position the
-      mouse's pointer over the yellow output port on
-      the FieldReader (<b>Figure 1.7.1</b>). Now press and hold down
-      the mouse's middle button. You will see the name of
-      the port and lines that indicate possible connections.
-      <li value="2."> Drag your middle mouse toward the ShowField input
-      Field port (yellow). 
-      <li>When the line turns red (<b>Figure 1.7.2</b>), release the mouse
-	  button. 
-      <li>You should see a yellow bar showing a data flow connection
-	  between FieldReader and ShowField (<b>Figure 1.7.3</b>).
-      <LI>If you ever make an incorrect connection, just click on that
-	  connection with the right mouse button and start again.
-    </ol>
+    <p>We will now add a second module to our network to visualize various Field types.  You will connect the two modules in your canvas so that data can 
+    flow between them.</p>  
+   
+       
+     <p><ol><li>Select ShowField from the SCIRun/Visualization menu.</li></p>
+ <p><li value="2.">Position the
+      mouse pointer over the yellow output port on
+      the FieldReader. Now press and hold
+      the mouse middle button. You will see the name of
+      the port and a line that indicates a possible connection.
+    </p>
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7a.gif"><br>
     <b>Figure 1.7.1</b></p>
     </center>
     <div align="left">
-    <p><br>
+ <ol><li value="3."> Continue to hold the button and drag your mouse toward the yellow ShowField input port.</p> 
+      <p><li>The line turns red, showing the desired connection. Release the mouse
+	  button. </p>   
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7b.gif"><br>
     <b>Figure 1.7.2</b></p>
     </center>
     <div align="left">
-    <p><br>
+<ol><li value="4.">You should see a yellow pipe showing a data flow connection
+	  between FieldReader and ShowField.
+    </p></ol>
+    </p><br>
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7c.gif"><br>
     <b>Figure 1.7.3</b></p>
     </center>
     <div align="left">
-    <p><br>
+
 
     <p><b>Setting the ShowField User Interface</b><br>
 
     
-    <p>ShowField has a User Interface (UI) option for rendering a Field's
-    geometer, and special options for rendering vector data.
-    ShowField can use color to represent data within
-    the geometry, if desired.  For now, we will 
-    render blue spheres as the nodes of the geometry.
-    <ol><li value="1.">Select the UI button on the ShowField
-      module(<b>Figure 1.8</b>).
-    </ol>
-
-    <!-- <We need to make a new figure 1.8 with the connection in place, -->
-    <!-- or perhaps better, just add the connection to the image> -->
-    
-    </div>
+    <p>The ShowField module has options for changing the visual representations of a Field's geometry.  For example, in the dataset we have just loaded (using the FieldReader module), you will change the color of the nodes to blue spheres.</p>
+ 
+        
+    <p><ol>
+      <li value="1.">Select the UI button on the ShowField
+      module.</p>
+    <p><li value= "2.">Select the Default Color button
+      near the bottom of the GUI to change the default color and a separate &quot;color&quot; GUI appears.</p>    
+      <li ><p>In the color GUI, you can use the sliders to adjust the color values. Set Red and Green to 0.00, and Blue to 1.00. The Alpha value remains at 0.50 </p>  
+      <li><p>Select the &quot;OK&quot; button in the color GUI. Notice that the Default Color swatch in the ShowField GUI has changed to blue.  Your SCIRun environment should look like <b>Figure 1.8</b>.</p>  
+      <li ><p>In the color GUI, Select &quot;Cancel&quot; to close the window.</p></ol>
+</div>
     <center>
     <p><img height="512" width="500" src="images/figures/1_6.gif"><br>
     <b>Figure 1.8</b></p>
     </center>
     <div align="left">
-    
-    <p>We will display the Field's nodes as
-    spheres and set their color to blue:<br>
-    
-    <ol>
-      <li value= "2.">Select the Default Color button
-      near the bottom of the dialogue to change the default color.    
-      <li >When a new dialogue with red, green, and blue sliders
-      appears,  
-      set red and green to 0.0, and blue to 1.00.  
-      <li>Select the &quot;OK&quot; button in this color dialogue.  
-      <li >Select &quot;Cancel&quot; to remove the dialogue from
-      view. 
-      <li>Change the Node Scale to 2 and set the Sphere Resolution
-	  to 5. 
-      <li>Turn off the display of edges and faces.  
-      <li>Select the Edges tab in the ShowField dialogue.  
-      <li>Turn off Show Edges.
-      <li>Select the Faces tab.  
-      <li>Turn off Show Faces.  
-      <li>The ShowField module is now ready to render the nodes as blue
-	  spheres. 
-      <li> Next, press the "Execute" button on the ShowField UI
-      that forces the module to execute its algorithm.
+<br>
+<p>We will now change the scale and resolution of the nodes.</p>
+ 
+      <ol><li><p>In the ShowField GUI, you can increase the Node Scale interval by a power of 10 by pressing the + button.  Set the Node Scale to 2.</p>
+<p><li>Set the Sphere Resolution
+	  to 5.</p> 
+      <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box.</p>  
+      <li><p>Go the the Faces tab and repeat the same action.</p></ol><br> 
+      <p>The ShowField module is now ready to render the nodes as blue
+	  spheres. The module will &quot;Interactively Update&quot;, by default, to execute after every change.  Or, you may select &quot;Execute Button Only&quot; that holds all changes until you press the Execute button.
     </ol>
     <p>Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
     User's Guide 4.5,
     Executing a Network</a> for more details. 
-    <p>ShowField works with any of the SCIRun Field data types.
-    However, you will notice a delay when ShowField is asked to
-    visualize a Field data type for the first time--this is because
-    the data type must be first compiled into a shared library (which
-    is saved for future runs of SCIRun).  See the pdf document <a
+    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library as needed where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
+<p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-    Compilation</a> for more information.
+    Compilation</a> or the Developer's Guide, Section .
 
-    <!--<p>You will notice a delay when ShowField executes for the first time. 
-    This happens when the module compiles the algorithm specific to the
-    field type, and loads it
-    into SCIRun.  We cache away this compiled algorithm in a
-    shared library, loading it without delay the next time you run
-    SCIRun.-->
-
-    <p>ShowField will then execute the newly loaded algorithm
-    passing its results to downstream modules.
+    <!--chapter break here-->
+    
 
 
     <p><b><A name="section-5">Viewer module</b><br></A>
