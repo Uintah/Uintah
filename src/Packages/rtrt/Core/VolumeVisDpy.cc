@@ -12,10 +12,12 @@
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <stdio.h>
 #include <X11/keysym.h>
+#include <algorithm>
 
 using namespace rtrt;
 using SCIRun::Mutex;
 using SCIRun::Thread;
+using namespace std;
 
 namespace rtrt {
   extern Mutex xlock;
@@ -61,8 +63,8 @@ void VolumeVisDpy::attach(VolumeVis *volume) {
 
   // this needs to be done here, because we can't guarantee that setup_vars
   // will get called before VolumeVis starts cranking!
-  data_min = Min(data_min, volume->data_min);
-  data_max = Max(data_max, volume->data_max);
+  data_min = min(data_min, volume->data_min);
+  data_max = max(data_max, volume->data_max);
 
   color_transform.scale(data_min,data_max);
   alpha_transform.scale(data_min,data_max);
