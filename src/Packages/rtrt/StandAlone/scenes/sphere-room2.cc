@@ -26,23 +26,24 @@ using namespace rtrt;
 using namespace std;
 
 #define RENDERWALLS            1
-#define RENDERPLANETS          1
+#define RENDERPLANETS          0
 #define DOORWIDTH              1.5
 #define DOORHEIGHT             2.3
 #define DOOROFFSET             5.25
-#define ROOMFLOOR              .5
-#define ROOMHEIGHT             (30+ROOMFLOOR)
-#define ROOMRADIUS             50
+#define ROOMSCALE              .5
+#define ROOMFLOOR              .55
+#define ROOMHEIGHT             ((30*ROOMSCALE)+ROOMFLOOR)
+#define ROOMRADIUS             (50*ROOMSCALE)
 #define ROOMOFFSET             4
 #define PORTALOFFSET           .001
 #define ROOMCENTER             (ROOMRADIUS+ROOMOFFSET),(ROOMRADIUS+ROOMOFFSET)
 #define WALLTHICKNESS          .1
-#define SYSTEM_SIZE_SCALE      1.438848E-5 /*1.438848E-6*/
-#define SYSTEM_DISTANCE_SCALE  6.76E-9 /*3.382080E-9*/
+#define SYSTEM_SIZE_SCALE      (1.438848E-5*ROOMSCALE) /*1.438848E-6*/
+#define SYSTEM_DISTANCE_SCALE  (6.76E-9*ROOMSCALE) /*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
 #define SYSTEM_TIME_SCALE2     .01
 #define FLIP_IMAGES            true
-#define ANIMATE                false
+#define ANIMATE                TRUE
 #if 0
 #define IMAGEDIR      "/home/moulding/images/"
 #else
@@ -78,7 +79,7 @@ satellite_data table[] = {
   { 6378, 1.496E8, .99727, 365.26, .0167, 23.45, 0,
     0, 0, 0, "earth" },
   
-  { 1737.4, 384400*50, 27.32166, 27.32166, .0549, 1.5424, 5.1454,
+  { 1737.4, 384400*50*ROOMSCALE, 27.32166, 27.32166, .0549, 1.5424, 5.1454,
     1, 0, 0, "luna" },
 
   { 2439.7, 5.791E7, 58.65, 87.97, .2056, 0, 7.004, 
@@ -105,10 +106,10 @@ satellite_data table[] = {
   { 1137*6, 5.91352E9, 6.3872, 90779, .2482, 122.52, 17.148,
     0, 1, 0, "pluto" },
 
-  { 1815, 421600*400, 1.769, 1.769, .004, 0, .04,
+  { 1815, 421600*400*ROOMSCALE, 1.769, 1.769, .004, 0, .04,
     6, 0, 0, "io" },
 
-  { 1569, 670900*400, 3.55, 3.55, .009, 0, .47,
+  { 1569, 670900*400*ROOMSCALE, 3.55, 3.55, .009, 0, .47,
     6, 0, 0, "europa" },
 
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -118,9 +119,9 @@ extern "C"
 Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/) 
 {
   Group *galaxy_room = new Group();
-  Grid2 *solar_system = new Grid2(galaxy_room,8);
+  //Grid2 *solar_system = new Grid2(galaxy_room,8);
 
-  galaxy_room->add( solar_system );
+  //galaxy_room->add( solar_system );
 
   Camera cam( Point(10,0,1.8), 
               Point(9,ROOMRADIUS,1.8), 
@@ -165,7 +166,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   MapBlendMaterial *earth_spec = 
     new MapBlendMaterial(IMAGEDIR"earthspec4k.ppm", 
                          new TileImageMaterial(earthppm, 1, 
-                                               Color(1,1,1), 60, 0, 0,
+                                               Color(1,1,1), 20, 0, 0,
                                                FLIP_IMAGES),
                          new TileImageMaterial(earthppm, 1, 
                                                Color(1,1,1), 0, 0, 0,
@@ -187,10 +188,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   matl1->SetScale(3,3*(ROOMHEIGHT/(double)(ROOMRADIUS*2)));
 
   MultiMaterial *holo0 = new MultiMaterial();
-  holo0->insert(matl0,.0);
+  holo0->insert(matl0,1);
   holo0->insert(starfield,1);
   MultiMaterial *holo1 = new MultiMaterial();
-  holo1->insert(matl1,.0);
+  holo1->insert(matl1,1);
   holo1->insert(starfield,1);
 
   //
@@ -199,6 +200,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   double radius;
   double orb_radius;
+  BBox bbox;
 
 
 
@@ -206,7 +208,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
 #if RENDERWALLS
   Parallelogram *floor = new Parallelogram(holo0, 
-                                           Point(ROOMOFFSET,ROOMOFFSET,
+                                           Point(ROOMOFFSET,
+                                                 ROOMOFFSET,
                                                  ROOMFLOOR),
                                            Vector(ROOMRADIUS*2,0,0),
                                            Vector(0,ROOMRADIUS*2,0));
@@ -241,8 +244,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                            Vector(0,-ROOMRADIUS*2,0),
                                            Vector(0,0,ROOMHEIGHT));
 
-  galaxy_room->add( ceiling );
   galaxy_room->add( floor );
+  galaxy_room->add( ceiling );
   galaxy_room->add( wall0 );
   galaxy_room->add( wall1 );
   galaxy_room->add( wall2 );
@@ -308,10 +311,12 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   earth->set_rev_speed(1./table[1].rot_speed_*SYSTEM_TIME_SCALE1);
   table[1].self_ = earth;
   cerr << earth->name_ << " = " << earth << endl;
-  solar_system->add( earth );
+  bbox.reset();
+  earth->compute_bounds(bbox,1E-6);
+  galaxy_room->add( earth );
   
   // these two lines needed for animation
-  earth->set_anim_grid(solar_system);
+  //earth->set_anim_grid(solar_system);
   scene->addObjectOfInterest(earth,ANIMATE);
 
   // build the other satellites
@@ -338,12 +343,15 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
          << newsat->get_parent() << endl;
     newsat->set_rev_speed(1./table[loop].rot_speed_*SYSTEM_TIME_SCALE1);
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
-    solar_system->add( newsat );
-    newsat->set_anim_grid(solar_system);
+    bbox.reset();
+    newsat->compute_bounds( bbox, 1E-6 );
+    galaxy_room->add( newsat );
+    //newsat->set_anim_grid(solar_system);
     scene->addObjectOfInterest( newsat, ANIMATE );
 
     if (newsat->get_name() == "saturn") {
-      solar_system->add( newsat );
+      bbox.reset();
+      newsat->compute_bounds( bbox, 1E-6 );
       cerr << "adding rings!!!! " << radius << endl;
       up = Vector(-sin(DEG2RAD(table[loop].tilt_)), 0, 
                   cos(DEG2RAD(table[loop].tilt_)));
@@ -355,8 +363,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                           65754*SYSTEM_SIZE_SCALE,
                           newsat);
 
-      solar_system->add( rings );
-      rings->set_anim_grid(solar_system);
+      bbox.reset();
+      rings->compute_bounds( bbox, 1E-6 );
+      galaxy_room->add( rings );
+      //rings->set_anim_grid(solar_system);
       scene->addObjectOfInterest( rings, ANIMATE );
     }
   }
