@@ -611,7 +611,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,
                                                 Ghost::AroundCells,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub,
-                                                Ghost::None);
+                                                Ghost::AroundCells,2); 
   t->requires(Task::NewDW,lb->rho_CCLabel,      Ghost::None);
   t->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
   t->requires(Task::OldDW,lb->doMechLabel);
@@ -2182,10 +2182,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
-      // What is supposed to go in here?
-      if(d_RateForm){
-      }
-
       CCVariable<Vector>   mom_source;
       new_dw->allocate(mom_source,  lb->mom_source_CCLabel,  indx, patch);
       mom_source.initialize(Vector(0.,0.,0.));
@@ -2206,7 +2202,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       tau_Z_FC.initialize(Vector(0.,0.,0.));
       viscosity = 0.0;
       if(ice_matl){
-        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,Ghost::None, 0);
+        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,Ghost::AroundCells, 2); 
         viscosity = ice_matl->getViscosity();
         if(viscosity != 0.0){  
           computeTauX_Components( patch, vel_CC, viscosity, dx, tau_X_FC);
@@ -2231,7 +2227,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           bottom   = c + IntVector(0,0,0);
           front    = c + IntVector(0,0,1);
           back     = c + IntVector(0,0,0);
-
+          //__________________________________
+          //  WARNING:  Note that vol_frac * div Tau
+          //   is not right.  It should be div (vol_frac Tau)
+          //   Just trying it out.
           //__________________________________
           //    X - M O M E N T U M 
           pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
@@ -2241,7 +2240,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                          (tau_Z_FC[front].x() - tau_Z_FC[back].x())  *delX*delY;
 
           mom_source[c].x( (-pressure_source * delY * delZ +
-                             viscous_source +
+                             vol_frac[c] * viscous_source +
                              mass * gravity.x() * include_term) * delT );
           //__________________________________
           //    Y - M O M E N T U M
@@ -2252,8 +2251,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                          (tau_Z_FC[front].y() - tau_Z_FC[back].y())  *delX*delY;
 
           mom_source[c].y( (-pressure_source * delX * delZ +
-                             viscous_source +
-                             mass * gravity.y() * include_term) * delT );
+                             vol_frac[c] * viscous_source +
+                             mass * gravity.y() * include_term) * delT );       
         //__________________________________
         //    Z - M O M E N T U M
           pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
@@ -2263,8 +2262,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                          (tau_Z_FC[front].z() - tau_Z_FC[back].z())  *delX*delY;
 
           mom_source[c].z( (-pressure_source * delX * delY +
-                           viscous_source + 
-                                 mass * gravity.z() * include_term) * delT );
+                           vol_frac[c] * viscous_source + 
+                           mass * gravity.z() * include_term) * delT );
                                  
         }
       }
@@ -2293,7 +2292,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           // a negative sign in front of press_diff_source, since sigma=-p*I
 
           //__________________________________
-          //    X - M O M E N T U M
+          //    X - M O M E N T U M    R A T E   F O R M
           pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
 
           press_diff_source = (press_diffX_FC[right]-press_diffX_FC[left]);
@@ -2307,7 +2306,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                              press_diff_source * delY * delZ * include_term +
                              mass * gravity.x() * include_term) * delT);
           //__________________________________
-          //    Y - M O M E N T U M
+          //    Y - M O M E N T U M   R A T E   F O R M
           pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
 
           press_diff_source = (press_diffY_FC[top]-press_diffY_FC[bottom]);
@@ -2321,7 +2320,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                              press_diff_source * delX * delZ * include_term +
                              mass * gravity.y() * include_term) * delT );
           //__________________________________
-          //    Z - M O M E N T U M
+          //    Z - M O M E N T U M   R A T E   F O R M
           pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
 
           press_diff_source = (press_diffZ_FC[front]-press_diffZ_FC[back]);
@@ -2964,8 +2963,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     
     new_dw->allocate(q_advected, lb->q_advectedLabel, 0, patch);
     new_dw->allocate(qV_advected,lb->qV_advectedLabel,0, patch);
-    new_dw->allocate(qV_CC, lb->qV_CCLabel,0, patch,Ghost::AroundCells,1);
-    new_dw->allocate(q_CC,  lb->q_CCLabel, 0, patch,Ghost::AroundCells,1);
+    new_dw->allocate(qV_CC,      lb->qV_CCLabel, 0,patch,Ghost::AroundCells,1);
+    new_dw->allocate(q_CC,       lb->q_CCLabel,  0,patch,Ghost::AroundCells,1);
 
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -3000,6 +2999,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       rho_CC.initialize(0.0);
       temp.initialize(0.0);
       vel_CC.initialize(Vector(0.0,0.0,0.0));
+      qV_advected.initialize(Vector(0.0,0.0,0.0));
       double cv = ice_matl->getSpecificHeat();
       //__________________________________
       //   Advection preprocessing
@@ -3034,6 +3034,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         mass = rho_CC[c] * vol;
         vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass ;
       }
+
       setBC(vel_CC, "Velocity", patch,indx);
 
       //__________________________________
@@ -3200,8 +3201,21 @@ void ICE::computeTauX_Components( const Patch* patch,
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
   //__________________________________
-  // loop over each cell
-  for(CellIterator iter = patch->getSFCXIterator();!iter.done();iter++){
+  // loop over the left cell faces
+  // For multipatch problems adjust the iter limits
+  // on the left patches to include the right face
+  // of the cell at the patch boundary. 
+  // We compute tau_ZZ[right]-tau_XX[left] on each patch
+  CellIterator hi_lo = patch->getSFCXIterator();
+  IntVector low,hi; 
+  low = hi_lo.begin();
+  hi  = hi_lo.end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
+		   patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  CellIterator iterLimits(low,hi); 
+  
+  for(CellIterator iter = iterLimits;!iter.done();iter++){ 
     IntVector cell = *iter;
     int i = cell.x();
     int j = cell.y();
@@ -3251,9 +3265,12 @@ void ICE::computeTauX_Components( const Patch* patch,
     grad_2 = (vel_CC[cell].z() - vel_CC[left].z())/delX;
     tau_X_FC[cell].z(viscosity * (grad_1 + grad_2));
     
-//  cout<<cell<<" tau_XX: "<<tau_X_FC[cell].x()<<
-//  " tau_XY: "<<tau_X_FC[cell].y()<<
-//  " tau_XZ: "<<tau_X_FC[cell].z()<<endl;     
+//     if (i == 0 && k == 0){
+//       cout<<cell<<" tau_XX: "<<tau_X_FC[cell].x()<<
+//       " tau_XY: "<<tau_X_FC[cell].y()<<
+//       " tau_XZ: "<<tau_X_FC[cell].z()<<
+//       " patch: " <<patch->getID()<<endl;     
+//     } 
   }
 }
 
@@ -3265,9 +3282,7 @@ void ICE::computeTauX_Components( const Patch* patch,
             of the 4 cells surrounding that edge, however we only use2 cells
             to compute it.  When you take the difference of the edge velocities 
             there are two common cells that automatically cancel themselves out.
-          - The viscosity we're using isn't right if it varies spatially.
-  WARNING: THIS DOESN'T COMPUTE THE SHEAR STRESS ON THE LAST Y INTERIOR FACE
-            THIS ISN'T BIG DEAL BUT SHOULD BE FIXED. 
+          - The viscosity we're using isn't right if it varies spatially. 
  ---------------------------------------------------------------------  */
 void ICE::computeTauY_Components( const Patch* patch,
                           const CCVariable<Vector>& vel_CC,
@@ -3278,8 +3293,21 @@ void ICE::computeTauY_Components( const Patch* patch,
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
   //__________________________________
-  // loop over the bottom then top cell face
-  for(CellIterator iter = patch->getSFCYIterator();!iter.done();iter++){
+  // loop over the bottom cell faces
+  // For multipatch problems adjust the iter limits
+  // on the bottom patches to include the top face
+  // of the cell at the patch boundary. 
+  // We compute tau_YY[top]-tau_YY[bot] on each patch
+  CellIterator hi_lo = patch->getSFCYIterator();
+  IntVector low,hi; 
+  low = hi_lo.begin();
+  hi  = hi_lo.end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
+		   patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  CellIterator iterLimits(low,hi); 
+  
+  for(CellIterator iter = iterLimits;!iter.done();iter++){ 
     IntVector cell = *iter;
     int i = cell.x();
     int j = cell.y();
@@ -3316,6 +3344,7 @@ void ICE::computeTauY_Components( const Patch* patch,
     term1 = 2.0 * viscosity * grad_vvel;
     term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
     tau_Y_FC[cell].y(term1 - term2);
+    
     //__________________________________
     //  tau_YX
     grad_1 = (vel_CC[cell].x() - vel_CC[bottom].x())/delY;
@@ -3329,9 +3358,12 @@ void ICE::computeTauY_Components( const Patch* patch,
     grad_2 = (vel_CC[cell].z() - vel_CC[bottom].z())/delY;
     tau_Y_FC[cell].z(viscosity * (grad_1 + grad_2));
     
-//  cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
-//  " tau_YY: "<<tau_Y_FC[cell].y()<<
-//  " tau_YZ: "<<tau_Y_FC[cell].z()<<endl;
+//     if (i == 0 && k == 0){    
+//       cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
+//       " tau_YY: "<<tau_Y_FC[cell].y()<<
+//       " tau_YZ: "<<tau_Y_FC[cell].z()<<
+//        " patch: "<<patch->getID()<<endl;
+//     }
   }
 }
 
@@ -3352,9 +3384,23 @@ void ICE::computeTauZ_Components( const Patch* patch,
 {
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
+ 
   //__________________________________
-  // loop over the  faces
-  for(CellIterator iter = patch->getSFCZIterator();!iter.done();iter++){  
+  // loop over the back cell faces
+  // For multipatch problems adjust the iter limits
+  // on the back patches to include the front face
+  // of the cell at the patch boundary. 
+  // We compute tau_ZZ[front]-tau_ZZ[back] on each patch
+  CellIterator hi_lo = patch->getSFCZIterator();
+  IntVector low,hi; 
+  low = hi_lo.begin();
+  hi  = hi_lo.end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
+  CellIterator iterLimits(low,hi); 
+
+  for(CellIterator iter = iterLimits;!iter.done();iter++){ 
     IntVector cell = *iter; 
     int i = cell.x();
     int j = cell.y();
