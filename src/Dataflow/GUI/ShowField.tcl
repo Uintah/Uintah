@@ -44,8 +44,9 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-node_scale
 	global $this-edge_scale
 	global $this-vectors_scale
-	global $this-edge-resolution
 	global $this-node-resolution
+	global $this-edge-resolution
+	global $this-data-resolution
 	global $this-active_tab
 	global $this-has_vec_data
 	global $this-interactive_mode
@@ -83,6 +84,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-normalize_vectors 0
 	set $this-node-resolution 6
 	set $this-edge-resolution 6
+	set $this-data-resolution 6
 	set $this-has_vec_data 0
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
@@ -315,6 +317,17 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-vectors_scale
 
 	bind $vector.slide.scale <ButtonRelease> "$this-c data_scale"
+
+
+	iwidgets::labeledframe $vector.resolution \
+	    -labelpos nw -labeltext "Disk/Cone Resolution"
+	pack $vector.resolution -side top -fill x -expand 1
+
+	set res [$vector.resolution childsite]
+	scale $res.scale -orient horizontal -variable $this-data-resolution \
+	    -from 3 -to 20 -showvalue true -resolution 1
+	bind $res.scale <ButtonRelease> "$this-c data_resolution_scale"
+	pack $res.scale -side top -fill both -expand 1
     }
 
     # Text Tab
@@ -438,7 +451,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook  $dof.tabs -height 300 -width 325 \
+	iwidgets::tabnotebook  $dof.tabs -height 350 -width 325 \
 	    -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
