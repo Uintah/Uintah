@@ -61,7 +61,9 @@ Barrier_private::~Barrier_private()
 Barrier::Barrier(const char* name)
     : name_(name)
 {
-    priv_=new Barrier_private;
+  if(!Thread::isInitialized())
+    Thread::initialize();
+  priv_=new Barrier_private;
 }
 
 Barrier::~Barrier()
