@@ -274,11 +274,12 @@ main(int argc, char** argv)
 
 	// Connect a CFD module if applicable
 	CFDInterface* cfd = 0;
+	ICE* ice = 0;
 	if(do_arches){
 	    cfd = scinew Arches(world);
 	}
 	if(do_ice){
-	    cfd = scinew ICE(world);
+	    cfd = ice = scinew ICE(world);
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
@@ -296,6 +297,11 @@ main(int argc, char** argv)
 	// Output
 	Output* output = scinew DataArchiver(world);
 	sim->attachPort("output", output);
+
+	// This port is only needed for knowing when to spit out debugging
+	// information.
+	if (ice)
+	  ice->attachPort("output", output);
 
 	if(world->myrank() == 0){
 	   cerr << "Using scheduler: " << scheduler << " and load balancer: " << loadbalancer << '\n';
