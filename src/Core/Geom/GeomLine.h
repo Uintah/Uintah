@@ -87,11 +87,12 @@ public:
 
 
 class SCICORESHARE GeomCLines : public GeomObj {
-public:
+protected:
   double line_width_;
   vector<Point> points_;
   vector<Color> colors_;
 
+public:
   GeomCLines();
   GeomCLines(const GeomCLines&);
 

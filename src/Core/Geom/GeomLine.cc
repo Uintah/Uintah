@@ -222,7 +222,9 @@ void GeomCLines::io(Piostream& stream)
 
     stream.begin_class("GeomCLines", GEOMLINES_VERSION);
     GeomObj::io(stream);
+    Pio(stream, line_width_);
     Pio(stream, points_);
+    Pio(stream, colors_);
     stream.end_class();
 }
 
