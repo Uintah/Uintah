@@ -148,6 +148,11 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 {
   Task* t = scinew Task("SerialMPM::actuallyInitialize",
 			this, &SerialMPM::actuallyInitialize);
+
+  MaterialSubset* zeroth_matl = scinew MaterialSubset();
+  zeroth_matl->add(0);
+  zeroth_matl->addReference();
+
   t->computes(lb->partCountLabel);
   t->computes(lb->pXLabel);
   t->computes(lb->pMassLabel);
@@ -161,7 +166,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pSizeLabel);
   t->computes(lb->doMechLabel);
   t->computes(d_sharedState->get_delt_label());
-  t->computes(lb->pCellNAPIDLabel);
+  t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
@@ -606,9 +611,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
-       int dwindex = mpm_matl->getDWIndex();
-
-       contactModel->initializeContact(patch,dwindex,new_dw);
     }
     new_dw->put(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
 
