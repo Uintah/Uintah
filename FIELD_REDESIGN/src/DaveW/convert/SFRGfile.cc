@@ -31,7 +31,7 @@
 #include <stdio.h>
 
 extern "C" {
-#include <nrrd.h>
+#include <DaveW/ThirdParty/Nrrd/include/nrrd.h>
 }
 
 typedef enum {DOUBLE, FLOAT, INT, SHORT, UCHAR, CHAR} VTYPE; // voxel type
@@ -460,6 +460,7 @@ void readNRRD() {
 }
 
 void readOther() {
+    int isBin=1;
     FILE *f = fopen(inName, "rt");
     if (inFile == PCGV) {
 	char header[4096];
@@ -498,6 +499,14 @@ void readOther() {
 		done = 1;
 	}
     } else {	// it's a RAW file -- we have to get this info from the user...
+	clString binAscii;
+	cout << "Is it an ASCII file (A/a) or a Binary file (B/b) [B]\n";
+	cin >> binAscii;
+	if (binAscii.len() && binAscii()[0]=='A' || binAscii()[0]=='a') {
+	    isBin=0;
+	    cout << " -- ASCII\n";
+	} else cout << " -- Binary\n";
+    
 	cout << "Please enter nz: ";
 	cin >> nz;
 	cout << "Please enter ny: ";
@@ -535,15 +544,23 @@ void readOther() {
     // SCIRun is stored z fastest, not .vol files...
 
     int j,k;
+    double val;
     if (inVoxel == UCHAR) {
 	ifu = new ScalarFieldRGuchar();
 	ifu->resize(nx,ny,nz);
 	for (k=0; k<nz; k++) {
 	    for (j=0; j<ny; j++) {
-		unsigned char buf[4096]; // just read into buf...
-		fread(buf, sizeof(unsigned char), nx, f);
-		for(int i=0;i<nx; i++) {
-		    ifu->grid(i,j,k) = buf[i];
+		if (isBin) {
+		    unsigned char buf[4096]; // just read into buf...
+		    fread(buf, sizeof(unsigned char), nx, f);
+		    for(int i=0;i<nx; i++) {
+			ifu->grid(i,j,k) = buf[i];
+		    }
+		} else {
+		    for(int i=0; i<nx; i++) {
+			fscanf(f, "%lf", &val);
+			ifu->grid(i,j,k) = (unsigned char) val;
+		    }
 		}
 	    }
 	}
@@ -553,12 +570,19 @@ void readOther() {
 	ifc->resize(nx,ny,nz);
 	for (k=0; k<nz; k++) {
 	    for (j=0; j<ny; j++) {
-		unsigned short int buf[4096]; // just read into buf...
-		fread(buf, sizeof(char), nx, f);
-		for(int i=0;i<nx; i++) {
-		    ifc->grid(i,j,k) = buf[i];
+		if (isBin) {
+		    char buf[4096]; // just read into buf...
+		    fread(buf, sizeof(char), nx, f);
+		    for(int i=0;i<nx; i++) {
+			ifc->grid(i,j,k) = buf[i];
+		    }
+		} else {
+		    for(int i=0; i<nx; i++) {
+			fscanf(f, "%lf", &val);
+			ifc->grid(i,j,k) = (char) val;
+		    }
 		}
-	    }	
+	    } 
 	}
 	ifc->get_minmax(Omin, Omax);
     } else if (inVoxel == SHORT) {
@@ -566,10 +590,17 @@ void readOther() {
 	ifs->resize(nx,ny,nz);
 	for (k=0; k<nz; k++) {
 	    for (j=0; j<ny; j++) {
-		unsigned short int buf[4096]; // just read into buf...
-		fread(buf, sizeof(unsigned short int), nx, f);
-		for(int i=0;i<nx; i++) {
-		    ifs->grid(i,j,k) = buf[i];
+		if (isBin) {
+		    unsigned short int buf[4096]; // just read into buf...
+		    fread(buf, sizeof(unsigned short int), nx, f);
+		    for(int i=0;i<nx; i++) {
+			ifs->grid(i,j,k) = buf[i];
+		    }
+		} else {
+		    for(int i=0; i<nx; i++) {
+			fscanf(f, "%lf", &val);
+			ifs->grid(i,j,k) = (unsigned short) val;
+		    }
 		}
 	    }	
 	}
@@ -579,10 +610,17 @@ void readOther() {
 	ifi->resize(nx,ny,nz);
 	for (k=0; k<nz; k++) {
 	    for (j=0; j<ny; j++) {
-		int buf[4096]; // just read into buf...
-		fread(buf, sizeof(int), nx, f);
-		for(int i=0;i<nx; i++) {
-		    ifi->grid(i,j,k) = buf[i];
+		if (isBin) {
+		    int buf[4096]; // just read into buf...
+		    fread(buf, sizeof(int), nx, f);
+		    for(int i=0;i<nx; i++) {
+			ifi->grid(i,j,k) = buf[i];
+		    }
+		} else {
+		    for(int i=0; i<nx; i++) {
+			fscanf(f, "%lf", &val);
+			ifi->grid(i,j,k) = (int) val;
+		    }
 		}
 	    }
 	}
@@ -592,10 +630,17 @@ void readOther() {
 	iff->resize(nx,ny,nz);
 	for (k=0; k<nz; k++) {
 	    for (j=0; j<ny; j++) {
-		float buf[4096]; // just read into buf...
-		fread(buf, sizeof(float), nx, f);
-		for(int i=0;i<nx; i++) {
-		    iff->grid(i,j,k) = buf[i];
+		if (isBin) {
+		    float buf[4096]; // just read into buf...
+		    fread(buf, sizeof(float), nx, f);
+		    for(int i=0;i<nx; i++) {
+			iff->grid(i,j,k) = buf[i];
+		    }
+		} else {
+		    for(int i=0; i<nx; i++) {
+			fscanf(f, "%lf", &val);
+			iff->grid(i,j,k) = (float) val;
+		    }
 		}
 	    }
 	}
@@ -605,10 +650,17 @@ void readOther() {
 	ifd->resize(nx,ny,nz);
 	for (k=0; k<nz; k++) {
 	    for (j=0; j<ny; j++) {
-		double buf[4096]; // just read into buf...
-		fread(buf, sizeof(double), nx, f);
-		for(int i=0;i<nx; i++) {
-		    ifd->grid(i,j,k) = buf[i];
+		if (isBin) {
+		    double buf[4096]; // just read into buf...
+		    fread(buf, sizeof(double), nx, f);
+		    for(int i=0;i<nx; i++) {
+			ifd->grid(i,j,k) = buf[i];
+		    }
+		} else {
+		    for(int i=0; i<nx; i++) {
+			fscanf(f, "%lf", &val);
+			ifd->grid(i,j,k) = val;
+		    }
 		}
 	    }
 	}
@@ -1295,4 +1347,3 @@ void main(int argc, char *argv[]) {
 	writeOther();  // this works for PCGV or RAW
     }
 }
-

@@ -40,20 +40,39 @@ using namespace std;
 void boxFilter();
 void padFld();
 void voteFilter();
+void voteFilterWeighted();
 void triangleFilter();
 void buildUndersampleTriangleTable(Array2<double>*, int, int, double);
 void buildOversampleTriangleTable(Array2<double>*, int, double);
 double padD;
 float padF;
 int padI;
-uchar padC;
+uchar padU;
+char padC;
 
 ScalarFieldRGBase *isf, *osf, *fldX, *fldY;
+void histo(ScalarFieldRGchar *sfc, int nx, int ny, int nz) {
+  Array1<int> bins(6);
+  bins.initialize(0);
+  int i, j, k;
+  char c;
+  for (i=0; i<nx; i++)
+    for (j=0; j<ny; j++)
+      for (k=0; k<nz; k++) {
+	c = sfc->grid(i,j,k);
+	if (c >= '0' && c <= '5')
+	  bins[c-'0']++;
+      }
+  cerr << "Bins: \n";
+  for (i=0; i<bins.size(); i++)
+    cerr << "    "<<i<<" "<<bins[i]<<"\n";
+  cerr << "\n";
+}
 
-void main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     if (argc != 7 && argc != 8) {
-	cerr << "Usage: "<<argv[0]<<" infile outfile {box|triangle|vote} nx ny nz [-pad]\n";
-	return;
+	cerr << "Usage: "<<argv[0]<<" infile outfile {box|triangle|vote|wvote} nx ny nz [-pad]\n";
+	return 0;
     }
     clString inname(argv[1]);
     clString outname(argv[2]);
@@ -63,30 +82,30 @@ void main(int argc, char *argv[]) {
     int nz=atoi(argv[6]);
     if (nx<1 || ny<1 || nz<1) {
 	cerr << "Error -- bad output dimensions.\n";
-	return;
+	return -1;
     }
     
-    if (ftype != "box" && ftype != "triangle" && ftype != "vote") {
+    if (ftype != "box" && ftype != "triangle" && ftype != "vote" && ftype != "wvote") {
 	cerr << "Error: bad filter type "<<ftype<<"\n";
-	return;
+	return -1;
     }
 
     ScalarFieldHandle ifh;
     Piostream* stream=auto_istream(inname);
     if (!stream) {
 	cerr << "Error: couldn't open "<<inname<<".\n";
-	return;
+	return -1;
     }
     Pio(*stream, ifh);
     if (!ifh.get_rep()) {
 	cerr << "Error reading field "<<inname<<".\n";
-	return;
+	return -1;
     }
 
     isf=ifh->getRGBase();
     if(!isf){
 	cerr << "FieldFilter can't deal with unstructured grids.\n";
-	return;
+	return -1;
     }
     Point p1, p2;
     ifh->get_bounds(p1,p2);
@@ -95,6 +114,7 @@ void main(int argc, char *argv[]) {
     ScalarFieldRGfloat *iff=isf->getRGFloat();
     ScalarFieldRGint *ifi=isf->getRGInt();
     ScalarFieldRGuchar *ifu=isf->getRGUchar();
+    ScalarFieldRGshort *ifs=isf->getRGShort();
     ScalarFieldRGchar *ifc=isf->getRGChar();
 
     ScalarFieldHandle oFldHandle;
@@ -144,7 +164,23 @@ void main(int argc, char *argv[]) {
 	fldY=fY;
 	osf=of;
 	padI=ifi->grid(0,0,0);
+    } else if (ifs) {
+	ScalarFieldRGshort *fX, *fY, *of;
+	fX=new ScalarFieldRGshort();
+	fX->resize(nx, isf->ny, isf->nz);
+	fX->grid.initialize(0);
+	fY=new ScalarFieldRGshort();
+	fY->resize(nx, ny, isf->nz);
+	fY->grid.initialize(0);
+	oFldHandle=of=new ScalarFieldRGshort();
+	of->resize(nx, ny, nz);
+	of->grid.initialize(0);
+	fldX=fX;
+	fldY=fY;
+	osf=of;
+	padI=ifs->grid(0,0,0);
     } else if (ifc) {
+        histo(ifc, ifc->nx, ifc->ny, ifc->nz);
 	ScalarFieldRGchar *fX, *fY, *of;
 	fX=new ScalarFieldRGchar();
 	fX->resize(nx, isf->ny, isf->nz);
@@ -158,7 +194,7 @@ void main(int argc, char *argv[]) {
 	fldX=fX;
 	fldY=fY;
 	osf=of;
-	padI=ifc->grid(0,0,0);
+	padC=ifc->grid(0,0,0);
     } else {					// must be uchar field
 	ScalarFieldRGuchar *fX, *fY, *of;
 	fX=new ScalarFieldRGuchar();
@@ -173,7 +209,7 @@ void main(int argc, char *argv[]) {
 	fldX=fX;
 	fldY=fY;
 	osf=of;
-	padC=ifu->grid(0,0,0);
+	padU=ifu->grid(0,0,0);
     }
     fldX->set_bounds(p1, p2);
     fldY->set_bounds(p1, p2);
@@ -182,8 +218,11 @@ void main(int argc, char *argv[]) {
 	boxFilter();
     } else if (ftype == "triangle") {
 	triangleFilter();
-    } else {	// "vote"
+    } else if (ftype == "vote") {
 	voteFilter();
+    } else {	// "wvote"
+	cerr << "Using weighted filter.\n";
+	voteFilterWeighted();
     }
 
     // gotta 0 pad the field!
@@ -192,7 +231,9 @@ void main(int argc, char *argv[]) {
     }
 
     BinaryPiostream stream2(outname, Piostream::Write);
+//    oFldHandle->set_raw(1);
     Pio(stream2, oFldHandle);
+    return 1;
 }
 
 #if 0
@@ -325,7 +366,7 @@ void padFld() {
 		for (int k=0; k<nz; k++)
 		    if (i==0 || j==0 || k==0 || i==(nx-1) || j==(ny-1) || 
 			k==(nz-1)) 
-			fu->grid(i,j,k)=padC;
+			fu->grid(i,j,k)=padU;
     } else {
 	cerr << "Unknown ScalarFieldRGBase type in ResampleField!\n";
     }
@@ -335,6 +376,7 @@ void boxFilter() {
     ScalarFieldRGdouble *ifd, *xfd, *yfd, *ofd;
     ScalarFieldRGfloat *iff, *xff, *yff, *off;
     ScalarFieldRGint *ifi, *xfi, *yfi, *ofi;
+    ScalarFieldRGshort *ifs, *xfs, *yfs, *ofs;
     ScalarFieldRGchar *ifc, *xfc, *yfc, *ofc;
     ScalarFieldRGuchar *ifu, *xfu, *yfu, *ofu;
     ifd=isf->getRGDouble();
@@ -349,6 +391,10 @@ void boxFilter() {
     xfi=fldX->getRGInt();
     yfi=fldY->getRGInt();
     ofi=osf->getRGInt();
+    ifs=isf->getRGShort();
+    xfs=fldX->getRGShort();
+    yfs=fldY->getRGShort();
+    ofs=osf->getRGShort();
     ifc=isf->getRGChar();
     xfc=fldX->getRGChar();
     yfc=fldY->getRGChar();
@@ -370,6 +416,8 @@ cerr << "XRatio = " <<Xratio<<"\n";
 		    xff->grid(i,j,k)=iff->grid((int)curr+0,jj,kk);
 		else if (ifi)
 		    xfi->grid(i,j,k)=ifi->grid((int)curr+0,jj,kk);
+		else if (ifs)
+		    xfs->grid(i,j,k)=ifs->grid((int)curr+0,jj,kk);
 		else if (ifu)
 		    xfu->grid(i,j,k)=ifu->grid((int)curr+0,jj,kk);
 		else 
@@ -389,6 +437,8 @@ cerr << "YRatio = " <<Yratio<<"\n";
 		    yff->grid(i,j,k)=xff->grid(ii,(int)curr+0,kk);
 		else if (ifi)
 		    yfi->grid(i,j,k)=xfi->grid(ii,(int)curr+0,kk);
+		else if (ifs)
+		    yfs->grid(i,j,k)=xfs->grid(ii,(int)curr+0,kk);
 		else if (ifu)
 		    yfu->grid(i,j,k)=xfu->grid(ii,(int)curr+0,kk);
 		else 
@@ -408,6 +458,8 @@ cerr << "ZRatio = " <<Zratio<<"\n";
 		    off->grid(i,j,k)=yff->grid(ii,jj,(int)curr+0);
 		else if (ifi)
 		    ofi->grid(i,j,k)=yfi->grid(ii,jj,(int)curr+0);
+		else if (ifs)
+		    ofs->grid(i,j,k)=yfs->grid(ii,jj,(int)curr+0);
 		else if (ifu)
 		    ofu->grid(i,j,k)=yfu->grid(ii,jj,(int)curr+0);
 		else 
@@ -421,6 +473,7 @@ void triangleFilter() {
     ScalarFieldRGdouble *ifd, *xfd, *yfd, *ofd;
     ScalarFieldRGfloat *iff, *xff, *yff, *off;
     ScalarFieldRGint *ifi, *xfi, *yfi, *ofi;
+    ScalarFieldRGshort *ifs, *xfs, *yfs, *ofs;
     ScalarFieldRGchar *ifc, *xfc, *yfc, *ofc;
     ScalarFieldRGuchar *ifu, *xfu, *yfu, *ofu;
     ifd=isf->getRGDouble();
@@ -435,6 +488,10 @@ void triangleFilter() {
     xfi=fldX->getRGInt();
     yfi=fldY->getRGInt();
     ofi=osf->getRGInt();
+    ifs=isf->getRGShort();
+    xfs=fldX->getRGShort();
+    yfs=fldY->getRGShort();
+    ofs=osf->getRGShort();
     ifc=isf->getRGChar();
     xfc=fldX->getRGChar();
     yfc=fldY->getRGChar();
@@ -455,6 +512,8 @@ void triangleFilter() {
 			xff->grid(i,j,k)=iff->grid(ii, jj, kk);
 		    else if (ifi)
 			xfi->grid(i,j,k)=ifi->grid(ii, jj, kk);
+		    else if (ifs)
+			xfs->grid(i,j,k)=ifs->grid(ii, jj, kk);
 		    else if (ifu)
 			xfu->grid(i,j,k)=ifu->grid(ii, jj, kk);
 		    else 
@@ -479,6 +538,9 @@ void triangleFilter() {
 				tEntry;
 			else if (ifi)
 			    xfi->grid(i,j,k)+=ifi->grid(inPixelIdx,jj,kk)*
+				tEntry;
+			else if (ifs)
+			    xfs->grid(i,j,k)+=ifs->grid(inPixelIdx,jj,kk)*
 				tEntry;
 			else if (ifu)
 			    xfu->grid(i,j,k)+=ifu->grid(inPixelIdx,jj,kk)*
@@ -507,6 +569,9 @@ void triangleFilter() {
 		    else if (ifi)
 			xfi->grid(i,j,k)=ifi->grid(left,jj,kk)*lEntry+
 			    ifi->grid(right,jj,kk)*rEntry;
+		    else if (ifs)
+			xfs->grid(i,j,k)=ifs->grid(left,jj,kk)*lEntry+
+			    ifs->grid(right,jj,kk)*rEntry;
 		    else if (ifu)
 			xfu->grid(i,j,k)=ifu->grid(left,jj,kk)*lEntry+
 			    ifu->grid(right,jj,kk)*rEntry;
@@ -526,6 +591,8 @@ void triangleFilter() {
 			yff->grid(i,j,k)=xff->grid(ii, jj, kk);
 		    else if (ifi)
 			yfi->grid(i,j,k)=xfi->grid(ii, jj, kk);
+		    else if (ifs)
+			yfs->grid(i,j,k)=xfs->grid(ii, jj, kk);
 		    else if (ifu)
 			yfu->grid(i,j,k)=xfu->grid(ii, jj, kk);
 		    else 
@@ -550,6 +617,9 @@ void triangleFilter() {
 				tEntry;
 			else if (ifi)
 			    yfi->grid(i,j,k)+=xfi->grid(ii,inPixelIdx,kk)*
+				tEntry;
+			else if (ifs)
+			    yfs->grid(i,j,k)+=xfs->grid(ii,inPixelIdx,kk)*
 				tEntry;
 			else if (ifu)
 			    yfu->grid(i,j,k)+=xfu->grid(ii,inPixelIdx,kk)*
@@ -578,6 +648,9 @@ void triangleFilter() {
 		    else if (ifi)
 			yfi->grid(i,j,k)=xfi->grid(ii,left,kk)*lEntry+
 			    xfi->grid(ii,right,kk)*rEntry;
+		    else if (ifs)
+			yfs->grid(i,j,k)=xfs->grid(ii,left,kk)*lEntry+
+			    xfs->grid(ii,right,kk)*rEntry;
 		    else if (ifu)
 			yfu->grid(i,j,k)=xfu->grid(ii,left,kk)*lEntry+
 			    xfu->grid(ii,right,kk)*rEntry;
@@ -597,6 +670,8 @@ void triangleFilter() {
 			off->grid(i,j,k)=yff->grid(ii, jj, kk);
 		    else if (ifi)
 			ofi->grid(i,j,k)=yfi->grid(ii, jj, kk);
+		    else if (ifs)
+			ofs->grid(i,j,k)=yfs->grid(ii, jj, kk);
 		    else if (ifu)
 			ofu->grid(i,j,k)=yfu->grid(ii, jj, kk);
 		    else 
@@ -621,6 +696,9 @@ void triangleFilter() {
 				tEntry;
 			else if (ifi)
 			    ofi->grid(i,j,k)+=yfi->grid(ii,jj,inPixelIdx)*
+				tEntry;
+			else if (ifs)
+			    ofs->grid(i,j,k)+=yfs->grid(ii,jj,inPixelIdx)*
 				tEntry;
 			else if (ifu)
 			    ofu->grid(i,j,k)+=yfu->grid(ii,jj,inPixelIdx)*
@@ -649,6 +727,9 @@ void triangleFilter() {
 		    else if (ifi)
 			ofi->grid(i,j,k)=yfi->grid(ii,jj,left)*lEntry+
 			    yfi->grid(ii,jj,right)*rEntry;
+		    else if (ifs)
+			ofs->grid(i,j,k)=yfs->grid(ii,jj,left)*lEntry+
+			    yfs->grid(ii,jj,right)*rEntry;
 		    else if (ifu)
 			ofu->grid(i,j,k)=yfu->grid(ii,jj,left)*lEntry+
 			    yfu->grid(ii,jj,right)*rEntry;
@@ -663,6 +744,7 @@ void voteFilter() {
     ScalarFieldRGdouble *ifd, *xfd, *yfd, *ofd;
     ScalarFieldRGfloat *iff, *xff, *yff, *off;
     ScalarFieldRGint *ifi, *xfi, *yfi, *ofi;
+    ScalarFieldRGshort *ifs, *xfs, *yfs, *ofs;
     ScalarFieldRGchar *ifc, *xfc, *yfc, *ofc;
     ScalarFieldRGuchar *ifu, *xfu, *yfu, *ofu;
     ifd=isf->getRGDouble();
@@ -677,6 +759,10 @@ void voteFilter() {
     xfi=fldX->getRGInt();
     yfi=fldY->getRGInt();
     ofi=osf->getRGInt();
+    ifs=isf->getRGShort();
+    xfs=fldX->getRGShort();
+    yfs=fldY->getRGShort();
+    ofs=osf->getRGShort();
     ifc=isf->getRGChar();
     xfc=fldX->getRGChar();
     yfc=fldY->getRGChar();
@@ -697,15 +783,18 @@ void voteFilter() {
 			xff->grid(i,j,k)=iff->grid(ii, jj, kk);
 		    else if (ifi)
 			xfi->grid(i,j,k)=ifi->grid(ii, jj, kk);
+		    else if (ifs)
+			xfs->grid(i,j,k)=ifs->grid(ii, jj, kk);
 		    else if (ifu)
 			xfu->grid(i,j,k)=ifu->grid(ii, jj, kk);
 		    else 
 			xfc->grid(i,j,k)=ifc->grid(ii, jj, kk);
     } else if (Xratio<1) {		// undersampling     big->small
 	int span=ceil(2./Xratio);
-	if (ifi || ifc || ifu) {
+	if (ifs || ifi || ifc || ifu) {
 	    double min_elem, max_elem;
 	    if (ifi) ifi->get_minmax(min_elem, max_elem);
+	    else if (ifs) ifs->get_minmax(min_elem, max_elem);
 	    else if (ifu) ifu->get_minmax(min_elem, max_elem);
 	    else ifc->get_minmax(min_elem, max_elem);
 	    Array1<int> table((int)(max_elem-min_elem+1));
@@ -720,6 +809,8 @@ void voteFilter() {
 			    else if(inPixelIdx>isf->nx-1) inPixelIdx=isf->nx-1;
 			    if (ifi)
 				table[ifi->grid(inPixelIdx,jj,kk)-min_elem]++;
+			    else if (ifs) 
+				table[ifs->grid(inPixelIdx,jj,kk)-min_elem]++;
 			    else if (ifu) 
 				table[ifu->grid(inPixelIdx,jj,kk)-min_elem]++;
 			    else 
@@ -736,6 +827,8 @@ void voteFilter() {
 			if (ifi) xfi->grid(i,j,k)=(int)(max_idx+min_elem);
 			else if (ifu) 
 			    xfu->grid(i,j,k)=(uchar)(max_idx+min_elem);
+			else if (ifs) 
+			    xfs->grid(i,j,k)=(short)(max_idx+min_elem);
 			else xfc->grid(i,j,k)=(char)(max_idx+min_elem);
 		    }
 	    }
@@ -770,6 +863,8 @@ void voteFilter() {
 			xff->grid(i,j,k)=iff->grid((int)curr+0,jj,kk);
 		    else if (ifi)
 			xfi->grid(i,j,k)=ifi->grid((int)curr+0,jj,kk);
+		    else if (ifs)
+			xfs->grid(i,j,k)=ifs->grid((int)curr+0,jj,kk);
 		    else if (ifu)
 			xfu->grid(i,j,k)=ifu->grid((int)curr+0,jj,kk);
 		    else 
@@ -789,15 +884,18 @@ void voteFilter() {
 			yff->grid(i,j,k)=xff->grid(ii, jj, kk);
 		    else if (ifi)
 			yfi->grid(i,j,k)=xfi->grid(ii, jj, kk);
+		    else if (ifs)
+			yfs->grid(i,j,k)=xfs->grid(ii, jj, kk);
 		    else if (ifu)
 			yfu->grid(i,j,k)=xfu->grid(ii, jj, kk);
 		    else 
 			yfc->grid(i,j,k)=xfc->grid(ii, jj, kk);
     } else if (Yratio<1) {		// undersampling     big->small
 	int span=ceil(2./Yratio);
-	if (ifi || ifc || ifu) {
+	if (ifs || ifi || ifc || ifu) {
 	    double min_elem, max_elem;
 	    if (ifi) ifi->get_minmax(min_elem, max_elem);
+	    else if (ifs) ifs->get_minmax(min_elem, max_elem);
 	    else if (ifu) ifu->get_minmax(min_elem, max_elem);
 	    else ifc->get_minmax(min_elem, max_elem);
 	    Array1<int> table((int)(max_elem-min_elem+1));
@@ -814,6 +912,8 @@ void voteFilter() {
 				table[xfi->grid(ii,inPixelIdx,kk)-min_elem]++;
 			    else if (ifu)
 				table[xfu->grid(ii,inPixelIdx,kk)-min_elem]++;
+			    else if (ifs)
+				table[xfs->grid(ii,inPixelIdx,kk)-min_elem]++;
 			    else 
 				table[xfc->grid(ii,inPixelIdx,kk)-min_elem]++;
 			}
@@ -828,6 +928,8 @@ void voteFilter() {
 			if (ifi) yfi->grid(i,j,k)=(int)(max_idx+min_elem);
 			else if (ifu) 
 			    yfu->grid(i,j,k)=(uchar)(max_idx+min_elem);
+			else if (ifs) 
+			    yfs->grid(i,j,k)=(short)(max_idx+min_elem);
 			else yfc->grid(i,j,k)=(char)(max_idx+min_elem);
 		    }			
 	    }
@@ -862,6 +964,8 @@ void voteFilter() {
 			yff->grid(i,j,k)=xff->grid(ii,(int)curr+0,kk);
 		    else if (ifi)
 			yfi->grid(i,j,k)=xfi->grid(ii,(int)curr+0,kk);
+		    else if (ifs)
+			yfs->grid(i,j,k)=xfs->grid(ii,(int)curr+0,kk);
 		    else if (ifu)
 			yfu->grid(i,j,k)=xfu->grid(ii,(int)curr+0,kk);
 		    else 
@@ -881,16 +985,19 @@ void voteFilter() {
 			off->grid(i,j,k)=yff->grid(ii, jj, kk);
 		    else if (ifi)
 			ofi->grid(i,j,k)=yfi->grid(ii, jj, kk);
+		    else if (ifs)
+			ofs->grid(i,j,k)=yfs->grid(ii, jj, kk);
 		    else if (ifu)
 			ofu->grid(i,j,k)=yfu->grid(ii, jj, kk);
 		    else 
 			ofc->grid(i,j,k)=yfc->grid(ii, jj, kk);
     } else if (Zratio<1) {		// undersampling     big->small
 	int span=ceil(2./Zratio);
-	if (ifi || ifc || ifu) {
+	if (ifs || ifi || ifc || ifu) {
 	    double min_elem, max_elem;
 	    if (ifi) ifi->get_minmax(min_elem, max_elem);
 	    else if (ifu) ifu->get_minmax(min_elem, max_elem);
+	    else if (ifs) ifs->get_minmax(min_elem, max_elem);
 	    else ifc->get_minmax(min_elem, max_elem);
 	    Array1<int> table((int)(max_elem-min_elem+1));
 	    for (int k=0; k<osf->nz; k++) {
@@ -906,6 +1013,8 @@ void voteFilter() {
 				table[yfi->grid(ii,jj,inPixelIdx)-min_elem]++;
 			    else if (ifu)
 				table[yfu->grid(ii,jj,inPixelIdx)-min_elem]++;
+			    else if (ifs)
+				table[yfs->grid(ii,jj,inPixelIdx)-min_elem]++;
 			    else
 				table[yfc->grid(ii,jj,inPixelIdx)-min_elem]++;
 			}
@@ -920,6 +1029,8 @@ void voteFilter() {
 			if (ifi) ofi->grid(i,j,k)=(int)(max_idx+min_elem);
 			else if (ifu) 
 			    ofu->grid(i,j,k)=(uchar)(max_idx+min_elem);
+			else if (ifs) 
+			    ofs->grid(i,j,k)=(short)(max_idx+min_elem);
 			else ofc->grid(i,j,k)=(char)(max_idx+min_elem);
 		    }
 	    }	    
@@ -954,6 +1065,8 @@ void voteFilter() {
 			off->grid(i,j,k)=yff->grid(ii,jj,(int)curr+0);
 		    else if (ifi)
 			ofi->grid(i,j,k)=yfi->grid(ii,jj,(int)curr+0);
+		    else if (ifs)
+			ofs->grid(i,j,k)=yfs->grid(ii,jj,(int)curr+0);
 		    else if (ifu)
 			ofu->grid(i,j,k)=yfu->grid(ii,jj,(int)curr+0);
 		    else 
@@ -968,6 +1081,7 @@ void voteFilterWeighted() {
     ScalarFieldRGdouble *ifd, *xfd, *yfd, *ofd;
     ScalarFieldRGfloat *iff, *xff, *yff, *off;
     ScalarFieldRGint *ifi, *xfi, *yfi, *ofi;
+    ScalarFieldRGshort *ifs, *xfs, *yfs, *ofs;
     ScalarFieldRGchar *ifc, *xfc, *yfc, *ofc;
     ScalarFieldRGuchar *ifu, *xfu, *yfu, *ofu;
     ifd=isf->getRGDouble();
@@ -990,10 +1104,14 @@ void voteFilterWeighted() {
     xfu=fldX->getRGUchar();
     yfu=fldY->getRGUchar();
     ofu=osf->getRGUchar();
+    ifs=isf->getRGShort();
+    xfs=fldX->getRGShort();
+    yfs=fldY->getRGShort();
+    ofs=osf->getRGShort();
 
     Array1<int> weights;
     weights.resize(6);
-    weights[0]=1; weights[1]=4; weights[3]=1; weights[4]=2; weights[5]=1;
+    weights[0]=1; weights[1]=4; weights[2]=4; weights[3]=1; weights[4]=1; weights[5]=1;
     double Xratio=(osf->nx-1.)/(isf->nx-1.);
     if (Xratio == 1) {		// trivial filter
 	for (int i=0, ii=0; i<fldX->nx; i++, ii++)
@@ -1007,14 +1125,17 @@ void voteFilterWeighted() {
 			xfi->grid(i,j,k)=ifi->grid(ii, jj, kk);
 		    else if (ifu)
 			xfu->grid(i,j,k)=ifu->grid(ii, jj, kk);
+		    else if (ifs)
+			xfs->grid(i,j,k)=ifs->grid(ii, jj, kk);
 		    else 
 			xfc->grid(i,j,k)=ifc->grid(ii, jj, kk);
     } else if (Xratio<1) {		// undersampling     big->small
 	int span=ceil(2./Xratio);
-	if (ifi || ifc || ifu) {
+	if (ifi || ifc || ifu || ifs) {
 	    double min_elem, max_elem;
 	    if (ifi) ifi->get_minmax(min_elem, max_elem);
 	    else if (ifu) ifu->get_minmax(min_elem, max_elem);
+	    else if (ifs) ifs->get_minmax(min_elem, max_elem);
 	    else ifc->get_minmax(min_elem, max_elem);
 	    Array1<int> table((int)(max_elem-min_elem+1));
 	    for (int i=0; i<fldX->nx; i++) {
@@ -1030,6 +1151,8 @@ void voteFilterWeighted() {
 				table[ifi->grid(inPixelIdx,jj,kk)-min_elem]++;
 			    else if (ifu) 
 				table[ifu->grid(inPixelIdx,jj,kk)-min_elem]++;
+			    else if (ifs) 
+				table[ifs->grid(inPixelIdx,jj,kk)-min_elem]++;
 			    else 
 				table[ifc->grid(inPixelIdx,jj,kk)-min_elem]++;
 			}
@@ -1044,6 +1167,8 @@ void voteFilterWeighted() {
 			if (ifi) xfi->grid(i,j,k)=(int)(max_idx+min_elem);
 			else if (ifu) 
 			    xfu->grid(i,j,k)=(uchar)(max_idx+min_elem);
+			else if (ifs) 
+			    xfs->grid(i,j,k)=(short)(max_idx+min_elem);
 			else xfc->grid(i,j,k)=(char)(max_idx+min_elem);
 		    }
 	    }
@@ -1080,6 +1205,8 @@ void voteFilterWeighted() {
 			xfi->grid(i,j,k)=ifi->grid((int)curr+0,jj,kk);
 		    else if (ifu)
 			xfu->grid(i,j,k)=ifu->grid((int)curr+0,jj,kk);
+		    else if (ifs)
+			xfs->grid(i,j,k)=ifs->grid((int)curr+0,jj,kk);
 		    else 
 			xfc->grid(i,j,k)=ifc->grid((int)curr+0,jj,kk);
 		}
@@ -1099,11 +1226,13 @@ void voteFilterWeighted() {
 			yfi->grid(i,j,k)=xfi->grid(ii, jj, kk);
 		    else if (ifu)
 			yfu->grid(i,j,k)=xfu->grid(ii, jj, kk);
+		    else if (ifs)
+			yfs->grid(i,j,k)=xfs->grid(ii, jj, kk);
 		    else 
 			yfc->grid(i,j,k)=xfc->grid(ii, jj, kk);
     } else if (Yratio<1) {		// undersampling     big->small
 	int span=ceil(2./Yratio);
-	if (ifi || ifc || ifu) {
+	if (ifi || ifc || ifu || ifs) {
 	    double min_elem, max_elem;
 	    if (ifi) ifi->get_minmax(min_elem, max_elem);
 	    else if (ifu) ifu->get_minmax(min_elem, max_elem);
@@ -1122,6 +1251,8 @@ void voteFilterWeighted() {
 				table[xfi->grid(ii,inPixelIdx,kk)-min_elem]++;
 			    else if (ifu)
 				table[xfu->grid(ii,inPixelIdx,kk)-min_elem]++;
+			    else if (ifs)
+				table[xfs->grid(ii,inPixelIdx,kk)-min_elem]++;
 			    else 
 				table[xfc->grid(ii,inPixelIdx,kk)-min_elem]++;
 			}
@@ -1136,6 +1267,8 @@ void voteFilterWeighted() {
 			if (ifi) yfi->grid(i,j,k)=(int)(max_idx+min_elem);
 			else if (ifu) 
 			    yfu->grid(i,j,k)=(uchar)(max_idx+min_elem);
+			else if (ifs) 
+			    yfs->grid(i,j,k)=(short)(max_idx+min_elem);
 			else yfc->grid(i,j,k)=(char)(max_idx+min_elem);
 		    }			
 	    }
@@ -1172,6 +1305,8 @@ void voteFilterWeighted() {
 			yfi->grid(i,j,k)=xfi->grid(ii,(int)curr+0,kk);
 		    else if (ifu)
 			yfu->grid(i,j,k)=xfu->grid(ii,(int)curr+0,kk);
+		    else if (ifs)
+			yfs->grid(i,j,k)=xfs->grid(ii,(int)curr+0,kk);
 		    else 
 			yfc->grid(i,j,k)=xfc->grid(ii,(int)curr+0,kk);
 		}
@@ -1191,11 +1326,13 @@ void voteFilterWeighted() {
 			ofi->grid(i,j,k)=yfi->grid(ii, jj, kk);
 		    else if (ifu)
 			ofu->grid(i,j,k)=yfu->grid(ii, jj, kk);
+		    else if (ifs)
+			ofs->grid(i,j,k)=yfs->grid(ii, jj, kk);
 		    else 
 			ofc->grid(i,j,k)=yfc->grid(ii, jj, kk);
     } else if (Zratio<1) {		// undersampling     big->small
 	int span=ceil(2./Zratio);
-	if (ifi || ifc || ifu) {
+	if (ifi || ifc || ifu || ifs) {
 	    double min_elem, max_elem;
 	    if (ifi) ifi->get_minmax(min_elem, max_elem);
 	    else if (ifu) ifu->get_minmax(min_elem, max_elem);
@@ -1214,6 +1351,8 @@ void voteFilterWeighted() {
 				table[yfi->grid(ii,jj,inPixelIdx)-min_elem]++;
 			    else if (ifu)
 				table[yfu->grid(ii,jj,inPixelIdx)-min_elem]++;
+			    else if (ifs)
+				table[yfs->grid(ii,jj,inPixelIdx)-min_elem]++;
 			    else
 				table[yfc->grid(ii,jj,inPixelIdx)-min_elem]++;
 			}
@@ -1228,6 +1367,8 @@ void voteFilterWeighted() {
 			if (ifi) ofi->grid(i,j,k)=(int)(max_idx+min_elem);
 			else if (ifu) 
 			    ofu->grid(i,j,k)=(uchar)(max_idx+min_elem);
+			else if (ifs) 
+			    ofs->grid(i,j,k)=(short)(max_idx+min_elem);
 			else ofc->grid(i,j,k)=(char)(max_idx+min_elem);
 		    }
 	    }	    
@@ -1264,6 +1405,8 @@ void voteFilterWeighted() {
 			ofi->grid(i,j,k)=yfi->grid(ii,jj,(int)curr+0);
 		    else if (ifu)
 			ofu->grid(i,j,k)=yfu->grid(ii,jj,(int)curr+0);
+		    else if (ifs)
+			ofs->grid(i,j,k)=yfs->grid(ii,jj,(int)curr+0);
 		    else 
 			ofc->grid(i,j,k)=yfc->grid(ii,jj,(int)curr+0);
 		}	

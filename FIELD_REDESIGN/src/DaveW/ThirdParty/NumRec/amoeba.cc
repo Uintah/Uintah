@@ -13,10 +13,10 @@ for (j=1;j<=ndim;j++) {\
 #define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
 
 void amoeba(double **p, double y[], int ndim, double ftol,
-	    double *(*funk)(double []), int *nfunk, int extra)
+	    double *(*funk)(int), int *nfunk, int extra, int *stop)
 {
     double *amotry(double **p, double y[], double psum[], int ndim,
-		   double *(*funk)(double []), int ihi, double fac, int extra);
+		   double *(*funk)(int), int ihi, double fac, int extra);
     int i,ihi,ilo,inhi,j,mpts=ndim+1;
     double rtol,sum,swap,ysave,*ytry,*psum;
     
@@ -24,6 +24,7 @@ void amoeba(double **p, double y[], int ndim, double ftol,
     
     
     psum=dvector(1,ndim);
+    cerr << "Starting amoeba...\n";
     *nfunk=0;
     GET_PSUM
 	for (;;) {
@@ -51,7 +52,7 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 		cerr << "\n";
 	    }
 #endif
-	    if (rtol < ftol) {
+	    if (rtol < ftol || *stop) {
 		SWAP(y[1],y[ilo])
 		    for (i=1;i<=ndim+extra;i++) SWAP(p[1][i],p[ilo][i])
 						    break;
@@ -83,7 +84,7 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 			if (i != ilo) {
 			    for (j=1;j<=ndim;j++)
 				p[i][j]=p[mpts+1][j]=0.5*(p[i][j]+p[ilo][j]);
-			    ytry=(*funk)(p[i]);
+			    ytry=(*funk)(i);
 			    y[i]=ytry[0];
 			    for (;j<=ndim+extra;j++) {
 				p[i][j]=ytry[j-ndim];
