@@ -10,18 +10,19 @@
 
 include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
 
-SRCDIR   := Moulding/Modules/Visualization
+SRCDIR   := Packages/Moulding/Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/VolumeRender.cc\
 	$(SRCDIR)/StreamLines.cc\
+	$(SRCDIR)/GenField.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := PSECore/Datatypes PSECore/Dataflow \
-        SCICore/Persistent SCICore/Containers SCICore/Util \
-        SCICore/Exceptions SCICore/Thread SCICore/TclInterface \
-        SCICore/Geom SCICore/Datatypes SCICore/Geometry \
-        SCICore/TkExtensions
+PSELIBS := Core/Datatypes Dataflow/Ports \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread Core/TclInterface \
+        Core/Geom Core/Datatypes Core/Geometry \
+        Core/TkExtensions
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk

@@ -7,18 +7,14 @@
  *
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-
-#include <Moulding/share/share.h>
+#include <Packages/Moulding/share/share.h>
 
 namespace Moulding {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
+using namespace SCIRun;
 
 class MouldingSHARE VolumeRender : public Module {
 public:
@@ -32,34 +28,18 @@ public:
 };
 
 extern "C" MouldingSHARE Module* make_VolumeRender(const clString& id) {
-  return scinew VolumeRender(id);
+  return new VolumeRender(id);
 }
 
 VolumeRender::VolumeRender(const clString& id)
-  : Module("VolumeRender", id, Source,"Visualization","Moulding")
+  : Module("VolumeRender", id, Source)
 {
 }
 
-VolumeRender::~VolumeRender()
-{
+VolumeRender::~VolumeRender(){
 }
 
-void VolumeRender::execute()
-{
-  ScalarFieldIPort* volume_port = (ScalarFieldIPort*)get_iport("Volume");
-  if (!volume_port) {
-    std::cerr << "VolumeRender: unable to get port named \"Volume\"." << endl;
-    return;
-  }
-
-  ScalarFieldHandle volume;
-  if (!volume_port->get(volume)) {
-    std::cerr << "VolumeRender: no data for port named \"Volume\"." << endl;
-    return;
-  }
-  
-  std::cerr << "VolumeRender: found a scalar field on port named \"Volume\"!" 
-            << endl;
+void VolumeRender::execute(){
 }
 
 void VolumeRender::tcl_command(TCLArgs& args, void* userdata)
@@ -67,7 +47,6 @@ void VolumeRender::tcl_command(TCLArgs& args, void* userdata)
   Module::tcl_command(args, userdata);
 }
 
-} // End namespace Modules
 } // End namespace Moulding
 
 
