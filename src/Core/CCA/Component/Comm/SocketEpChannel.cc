@@ -18,6 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
@@ -42,7 +43,7 @@ using namespace std;
 using namespace SCIRun;
 
 SocketEpChannel::SocketEpChannel(){ 
-  int new_fd;  // listen on sock_fd, new connection on new_fd
+  //int new_fd;  // listen on sock_fd, new connection on new_fd
 
   struct sockaddr_in my_addr;    // my address information
   
@@ -177,7 +178,8 @@ SocketEpChannel::runAccept(){
 void 
 SocketEpChannel::runService(int new_fd){
   //cerr<<"SocketServiceThread is running\n";
-  while(true){
+  bool done = false;
+  while( !done ){
     int headerSize=sizeof(long)+sizeof(int);
     void *buf=malloc(headerSize);
     int numbytes=0;
@@ -223,7 +225,7 @@ SocketEpChannel::runService(int new_fd){
       close(new_fd);
       break;
     }
-  }  
-}
+  } // end while
+} // end runService()
 
 

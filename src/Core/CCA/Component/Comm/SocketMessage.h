@@ -15,9 +15,10 @@
   University of Utah. All Rights Reserved.
 */
 
-
 #ifndef SOCKET_MESSAGE_H
 #define SOCKET_MESSAGE_H 
+
+#include <stdlib.h>
 
 ///////////////////////////////
 //message layout
