@@ -55,7 +55,7 @@ $(notdir $(LIBNAME)_LIBS) := $(LIBS)
 # lib/libCore_Thread.so to -lCore_Thread.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
 ifeq ($(NEED_SONAME),yes)
-  SONAMEFLAG = -Wl,-soname,$(notdir $@)
+  SONAMEFLAG = -Wl,-soname -Wl,$(notdir $@)
 else
   SONAMEFLAG = 
 endif
