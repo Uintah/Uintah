@@ -51,7 +51,9 @@ map<string, FieldIEPlugin *> *FieldIEPlugin::table = 0;
   // Mac philosophy on when to load dynamic libraries.)
   extern Mutex fieldIEPluginMutex;
 #else
-  Mutex fieldIEPluginMutex("FieldIE Plugin Table Lock");  
+  // Same problem on Linux really.  We need control of the static
+  // initializer order.
+  extern Mutex fieldIEPluginMutex;
 #endif
 
 
@@ -70,7 +72,6 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     filereader(freader),
     filewriter(fwriter)
 {
-#if 0
   fieldIEPluginMutex.lock();
   if (!table)
   {
@@ -101,14 +102,12 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
   }
 
   fieldIEPluginMutex.unlock();
-#endif
 }
 
 
 
 FieldIEPlugin::~FieldIEPlugin()
 {
-#if 0
   if (table == NULL)
   {
     cerr << "WARNING: FieldIEPlugin.cc: ~FieldIEPlugin(): table is NULL\n";
@@ -136,7 +135,6 @@ FieldIEPlugin::~FieldIEPlugin()
   }
 
   fieldIEPluginMutex.unlock();
-#endif
 }
 
 
