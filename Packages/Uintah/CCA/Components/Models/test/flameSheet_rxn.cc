@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -31,10 +31,13 @@ static DebugStream cout_doing("flameSheet_RXN_DOING_COUT", false);
 //              by Stephen Turns pp 268 - 275
 // Assumptions: cp_fuel = cp_oxidizer = cp_products
 //              Enthalpies of formation of the oxidizer and products  0.0
-//              Thus the enthalpy of formatio of the fuel equal the heat
+//              Thus the enthalpy of formatiom of the fuel equal the heat
 //              of combustion.
+//              Thermal energy and species diffusivities are equal
+//               
 
-flameSheet_rxn::flameSheet_rxn(const ProcessorGroup* myworld, ProblemSpecP& params)
+flameSheet_rxn::flameSheet_rxn(const ProcessorGroup* myworld, 
+                               ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
   mymatls = 0;
@@ -122,8 +125,9 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
     
     react_ps->getWithDefault("f_stoichometric",       d_f_stoic,       -9);  
     react_ps->getWithDefault("delta_H_combustion",    d_del_h_comb,    -9);  
-    react_ps->getWithDefault("oxidizer_temp_infinity",d_T_oxidizer_inf,-9);          
-    react_ps->getWithDefault("initial_fuel_temp",     d_T_fuel_init,   -9);  
+    react_ps->getWithDefault("oxidizer_temp_infinity",d_T_oxidizer_inf,-9);
+    react_ps->getWithDefault("initial_fuel_temp",     d_T_fuel_init,   -9);    
+    react_ps->getWithDefault("diffusivity",           d_diffusivity,   -9);   
     if( d_f_stoic == -9        ||  d_del_h_comb == -9 ||    // bulletproofing
         d_T_oxidizer_inf == -9 ||  d_T_fuel_init == -9 ) {
       ostringstream warn;
@@ -131,7 +135,8 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
            << "\n f_stoichometric        "<< d_f_stoic
            << "\n delta_H_combustion     "<< d_del_h_comb
            << "\n oxidizer_temp_infinity "<< d_T_oxidizer_inf
-           << "\n fuel_temp_init         "<< d_T_fuel_init << endl;
+           << "\n fuel_temp_init         "<< d_T_fuel_init 
+           << "\n diffusivity            "<< d_diffusivity<< endl;
       throw ProblemSetupException(warn.str());
     }
     
@@ -240,6 +245,7 @@ void flameSheet_rxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->modifies(mi->energy_source_CCLabel);
   t->requires(Task::OldDW, mi->density_CCLabel,     Ghost::None);
   t->requires(Task::OldDW, mi->temperature_CCLabel, Ghost::None);
+  t->requires(Task::OldDW, mi->delT_Label);
   
   for(vector<Scalar*>::iterator iter = scalars.begin();
       iter != scalars.end(); iter++){
@@ -257,9 +263,13 @@ void flameSheet_rxn::react(const ProcessorGroup*,
 		   DataWarehouse* new_dw,
 		   const ModelInfo* mi)
 {
+
+  delt_vartype delT;
+  old_dw->get(delT, mi->delT_Label);
+ 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing react on patch "<<patch->getID()<< "\t\t\t\t flameSheet" << endl;    
+    cout_doing << "Doing react on patch "<<patch->getID()<< "\t\t\t\t flameSheet" << endl;
 
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();
@@ -267,14 +277,14 @@ void flameSheet_rxn::react(const ProcessorGroup*,
     
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
-      constCCVariable<double> density, temperature,f_old;
+      constCCVariable<double> rho_CC, Temp_CC,f_old;
       CCVariable<double> energySource, f_src;
       
       double new_f, newTemp;
       double Y_fuel,Y_products;
             
-      old_dw->get(density,     mi->density_CCLabel,     matl, patch, gn, 0);
-      old_dw->get(temperature, mi->temperature_CCLabel, matl, patch, gn, 0);
+      old_dw->get(rho_CC,      mi->density_CCLabel,     matl, patch, gn, 0);
+      old_dw->get(Temp_CC,     mi->temperature_CCLabel, matl, patch, gn, 0);
       new_dw->getModifiable(energySource,   
                                mi->energy_source_CCLabel,matl,patch);
       // transported scalar.                        
@@ -296,13 +306,13 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       //__________________________________   
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	 IntVector c = *iter;
-	 double mass = density[c]*volume;
+	 double mass = rho_CC[c]*volume;
 	 double f = f_old[c];
-	 double oldTemp  = temperature[c];
+	 double oldTemp  = Temp_CC[c];
 
         //__________________________________
         // compute the energy source
-        if (d_f_stoic < f && f <= 1.0 ){                  // Inside the flame eqs
+        if (d_f_stoic < f && f <= 1.0 ){                // Inside the flame eqs
           Y_fuel     = (f - d_f_stoic)/(1.0 - d_f_stoic); // 9.43a,b,c & 9.51a
           Y_products = (1 - f)/(1-d_f_stoic);
           
@@ -312,10 +322,11 @@ void flameSheet_rxn::react(const ProcessorGroup*,
         }
                 
         if (d_f_stoic == f ){                          // At the flame surface
-          Y_fuel     = 0.0;                            // eqs 9.45a,b,c & 9.51a                         
+          Y_fuel     = 0.0;                            // eqs 9.45a,b,c & 9.51a
           Y_products = 1.0;
           
-          double A = d_f_stoic *( del_h_comb/d_cp + d_T_fuel_init - d_T_oxidizer_inf);
+          double A = d_f_stoic *( del_h_comb/d_cp + d_T_fuel_init 
+                                  - d_T_oxidizer_inf);
           newTemp = A + d_T_oxidizer_inf;
         }
       
@@ -333,6 +344,126 @@ void flameSheet_rxn::react(const ProcessorGroup*,
         
 	 f_src[c] += new_f - f; 
       }  //iter
+      
+      //__________________________________
+      //  Tack on diffusion
+      IntVector right, left, top, bottom, front, back;
+      double areaX = dx.y() * dx.z();
+      double areaY = dx.x() * dx.z();
+      double areaZ = dx.x() * dx.y();
+
+      if(d_diffusivity != 0.0){ 
+        SFCXVariable<double> f_flux_X_FC;
+        SFCYVariable<double> f_flux_Y_FC;
+        SFCZVariable<double> f_flux_Z_FC;
+
+        computeQ_diffusion_FC( new_dw, patch, 
+                                rho_CC,  rho_CC, f_old, d_diffusivity,
+                                f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
+
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
+                                                                  iter++){
+          IntVector c = *iter;
+          right  = c + IntVector(1,0,0);    left   = c ;
+          top    = c + IntVector(0,1,0);    bottom = c ;
+          front  = c + IntVector(0,0,1);    back   = c ;
+
+          f_src[c] -=((f_flux_X_FC[right] - f_flux_X_FC[left])  *areaX + 
+                      (f_flux_Y_FC[top]   - f_flux_Y_FC[bottom])*areaY +
+                      (f_flux_Z_FC[front] - f_flux_Z_FC[back])  *areaZ )*delT;
+        }
+      }  // diffusivity > 0 
     }  // matl loop
   }
+}
+// --------------------------------------------------------------------- 
+//
+template <class T> 
+  void flameSheet_rxn::q_diffusion(CellIterator iter, 
+                         IntVector adj_offset,
+                         const double diffusivity,
+                         const double dx,  
+                         const CCVariable<double>& q_CC,
+                         T& q_flux_FC)
+{
+  //__________________________________
+  //  For variable diffusivity use
+  //  diffusivity_FC = 2 * D[L] * D[R]/ ( D[R] + D[L])
+  double diffusivity_FC = diffusivity;
+  
+  for(;!iter.done(); iter++){
+    IntVector R = *iter;
+    IntVector L = R + adj_offset;
+    q_flux_FC[R] = diffusivity_FC* (q_CC[R] - q_CC[L])/dx;
+
+  }
+}
+
+
+//______________________________________________________________________
+//
+void flameSheet_rxn::computeQ_diffusion_FC(DataWarehouse* new_dw,
+                                 const Patch* patch,
+                                 const CCVariable<double>& rho_CC,      
+                                 const CCVariable<double>& sp_vol_CC,   
+                                 const CCVariable<double>& q_CC,
+                                 const double diffusivity,
+                                 SFCXVariable<double>& q_flux_X_FC,
+                                 SFCYVariable<double>& q_flux_Y_FC,
+                                 SFCZVariable<double>& q_flux_Z_FC)
+{
+  Vector dx = patch->dCell();
+  vector<IntVector> adj_offset(3);
+  adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+  adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+  adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+
+  new_dw->allocateTemporary(q_flux_X_FC, patch, Ghost::AroundCells, 1);
+  new_dw->allocateTemporary(q_flux_Y_FC, patch, Ghost::AroundCells, 1);
+  new_dw->allocateTemporary(q_flux_Z_FC, patch, Ghost::AroundCells, 1);
+
+  q_flux_X_FC.initialize(0.0);
+  q_flux_Y_FC.initialize(0.0);
+  q_flux_Z_FC.initialize(0.0);
+
+  //__________________________________
+  // For multipatch problems adjust the iter limits
+  // on the (left/bottom/back) patches to 
+  // include the (right/top/front) faces
+  // of the cells at the patch boundary. 
+  // We compute q_X[right]-q_X[left] on each patch
+  IntVector low,hi;      
+  low = patch->getSFCXIterator().begin();    // X Face iterator
+  hi  = patch->getSFCXIterator().end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
+                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
+                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  CellIterator X_FC_iterLimits(low,hi);
+         
+  low = patch->getSFCYIterator().begin();   // Y Face iterator
+  hi  = patch->getSFCYIterator().end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
+                 patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
+                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  CellIterator Y_FC_iterLimits(low,hi); 
+        
+  low = patch->getSFCZIterator().begin();   // Z Face iterator
+  hi  = patch->getSFCZIterator().end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
+                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
+                 patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
+  CellIterator Z_FC_iterLimits(low,hi);            
+  //__________________________________
+  //  For each face compute conduction
+  q_diffusion<SFCXVariable<double> >(X_FC_iterLimits,
+                                     adj_offset[0],  diffusivity, dx.x(),
+                                     q_CC, q_flux_X_FC);
+
+  q_diffusion<SFCYVariable<double> >(Y_FC_iterLimits,
+                                     adj_offset[1], diffusivity, dx.y(),
+                                     q_CC, q_flux_Y_FC);
+  
+  q_diffusion<SFCZVariable<double> >(Z_FC_iterLimits,
+                                     adj_offset[2],  diffusivity, dx.z(),
+                                     q_CC, q_flux_Z_FC);
 }
