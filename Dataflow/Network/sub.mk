@@ -10,7 +10,7 @@ SRCDIR   := PSECore/Dataflow
 SRCS     += $(SRCDIR)/Connection.cc $(SRCDIR)/ModuleHelper.cc \
 	$(SRCDIR)/Network.cc $(SRCDIR)/Port.cc $(SRCDIR)/Module.cc \
 	$(SRCDIR)/NetworkEditor.cc $(SRCDIR)/PackageDB.cc \
-        $(SRCDIR)/CreateModulePackage.cc
+        $(SRCDIR)/CreatePacCatMod.cc
 
 PSELIBS := PSECore/Comm SCICore/Exceptions SCICore/Thread \
 	SCICore/Containers SCICore/TclInterface SCICore/Util \
@@ -21,6 +21,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/06/07 00:02:32  moulding
+# removed the package maker, ane added the module maker
+#
 # Revision 1.3  2000/03/20 19:37:18  sparker
 # Added VPATH support
 #
