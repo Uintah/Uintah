@@ -95,6 +95,13 @@
         <name>Injury Icon</name>
         <datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <description>
+          <p>NrrdData port with physiology data.</p>
+        </description>
+        <name>Physiology Data</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
     </outputs>
   </io>
   <gui>
