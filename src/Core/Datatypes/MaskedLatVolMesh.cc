@@ -955,6 +955,24 @@ MLVMEdgeIndex::operator unsigned() const
   }
 }
 
+MLVMFaceIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  switch (dir_)
+  {
+  case 0: return (i_ + (mesh_->ni_-1)*j_ + 
+                  (mesh_->ni_-1)*(mesh_->nj_-1)*k_); 
+  case 1: return (j_ + (mesh_->nj_-1)*k_ + 
+                  (mesh_->nj_-1)*(mesh_->nk_-1)*i_ + 
+                  (mesh_->ni_-1)*(mesh_->nj_-1)*mesh_->nk_);
+  case 2: return (k_ + (mesh_->nk_-1)*i_ + 
+                  (mesh_->nk_-1)*(mesh_->ni_-1)*j_ +
+                  (mesh_->ni_-1)*(mesh_->nj_-1)*mesh_->nk_ + 
+                  mesh_->ni_*(mesh_->nj_-1)*(mesh_->nk_-1));
+  default: return 0; //ASSERTFAIL("MLVMFaceIndex dir_ off."); 
+  }
+}
+
 
 MLVMNodeIter::operator unsigned() const
 {
