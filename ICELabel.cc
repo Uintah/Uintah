@@ -107,7 +107,14 @@ ICELabel::ICELabel()
     // Misc labels
     scratchLabel     =
      scinew VarLabel("scratch",  CCVariable<double>::getTypeDescription() );
+    scratch_FCXLabel   =
+     scinew VarLabel("scratch_FCX",SFCXVariable<double>::getTypeDescription());
 
+    scratch_FCYLabel   =
+     scinew VarLabel("scratch_FCY",SFCYVariable<double>::getTypeDescription());
+
+    scratch_FCZLabel   =
+     scinew VarLabel("scratch_FCZ",SFCZVariable<double>::getTypeDescription());
     IveBeenHereLabel     =
      scinew VarLabel("IveBeenHere",CCVariable<int>::getTypeDescription() );
      
