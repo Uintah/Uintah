@@ -1363,31 +1363,25 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
-  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //else {
-  //  cellInfoP.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //}
-  CellInformation* cellInfo = cellInfoP;
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = d_wallBdry->d_cellTypeID;
+  int flow_celltypeval = d_flowfieldCellTypeVal;
+  // ** WARNING ** Symmetry is hardcoded to -3
+  int symmetry_celltypeval = -3;
 
-#ifdef WONT_COMPILE_YET
   //fortran call
   FORT_PRESSBC(domLo.get_pointer(), domHi.get_pointer(),
 	       idxLo.get_pointer(), idxHi.get_pointer(),
-	       pressCoeff[Arches::AP].getPointer(),
-	       pressCoeff[Arches::AE].getPointer(),
-	       pressCoeff[Arches::AW].getPointer(),
-	       pressCoeff[Arches::AN].getPointer(),
-	       pressCoeff[Arches::AS].getPointer(),
-	       pressCoeff[Arches::AT].getPointer(),
-	       pressCoeff[Arches::AB].getPointer(),
 	       pressure.getPointer(), 
-	       cellType.getPointer());
-#endif
+	       presCoef[Arches::AE].getPointer(),
+	       presCoef[Arches::AW].getPointer(),
+	       presCoef[Arches::AN].getPointer(),
+	       presCoef[Arches::AS].getPointer(),
+	       presCoef[Arches::AT].getPointer(),
+	       presCoef[Arches::AB].getPointer(),
+	       cellType.getPointer(),
+	       &wall_celltypeval, &symmetry_celltypeval,
+	       &flow_celltypeval);
 
   // Put the calculated data into the new DW
   for (int ii = 0; ii < nofStencils; ii++) {
@@ -1964,6 +1958,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.41  2000/07/13 04:51:32  bbanerje
+// Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
+//
 // Revision 1.40  2000/07/12 23:59:21  rawat
 // added wall bc for u-velocity
 //

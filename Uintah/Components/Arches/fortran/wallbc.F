@@ -4,8 +4,9 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE wallbc(indexLow, indexHigh, PCELL,
-     &     AE,AW,AN,AS,AT,AB)
+      SUBROUTINE wallbc(domLo, domHi, idxLo, idxHi,
+     &     AE,AW,AN,AS,AT,AB,
+     &     PCELL, WALL)
 *--------------------------------------------------------------------
 *     This subroutine handles intrusion boundary conditions
 *          for ETA, F, GETA, GF, HCN, NO, P, PP, and YFU.
@@ -18,76 +19,76 @@ c*********************************************************************
       implicit none
 
 #include "param4.h"
-#include "pcell.h"
+c #include "pcell.h"
 
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(indexLow(1):indexHigh(1), indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision AE(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AW(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AN(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AS(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AT(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AB(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      double precision AE(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AW(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AN(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AS(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AT(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AB(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer WALL
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer istm1,jstm1,kstm1,iendp1,jendp1,kendp1,i,j,k
+      integer iBegGhost,jBegGhost,kBegGhost
+      integer iEndGhost,jEndGhost,kEndGhost,i,j,k
       integer ist,jst,kst,iend,jend,kend
 
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      istm1 = indexLow(1)
-      jstm1 = indexLow(2)
-      kstm1 = indexLow(3)
-      iendp1 = indexHigh(1)
-      jendp1 = indexHigh(2)
-      kendp1 = indexHigh(3)
-      ist = istm1 + 1
-      jst = jstm1 + 1
-      kst = kstm1 + 1
-      iend = iendp1 - 1
-      jend = jendp1 - 1
-      kend = kendp1 - 1
+      iBegGhost = domLo(1)
+      jBegGhost = domLo(2)
+      kBegGhost = domLo(3)
+      iEndGhost = domHi(1)
+      jEndGhost = domHi(2)
+      kEndGhost = domHi(3)
+      ist = idxLo(1)
+      jst = idxLo(2)
+      kst = idxLo(3)
+      iend = idxHi(1)
+      jend = idxHi(2)
+      kend = idxHi(3)
       
-      DO 500 K = kstm1,kendp1
-         DO 400 J = jstm1,jendp1
-            DO 300 I = istm1,iendp1
+      DO 500 K = kBegGhost,kEndGhost
+         DO 400 J = jBegGhost,jEndGhost
+            DO 300 I = iBegGhost,iEndGhost
                IF (PCELL(I,J,K).EQ.WALL) THEN
-                  IF (I.NE.istm1) THEN
+                  IF (I.NE.iBegGhost) THEN
                      IF (PCELL(I-1,J,K).NE.WALL) 
      $                    AE(I-1,J,K) = ZERO
                   END IF
-                  IF (I.NE.iendp1) THEN
+                  IF (I.NE.iEndGhost) THEN
                      IF (PCELL(I+1,J,K).NE.WALL) 
      $                    AW(I+1,J,K) = ZERO
                   END IF
-                  IF (J.NE.jstm1) THEN
+                  IF (J.NE.jBegGhost) THEN
                      IF (PCELL(I,J-1,K).NE.WALL) 
      $                    AN(I,J-1,K) = ZERO
                   END IF
-                  IF (J.NE.jendp1) THEN
+                  IF (J.NE.jEndGhost) THEN
                      IF (PCELL(I,J+1,K).NE.WALL) 
      $                    AS(I,J+1,K) = ZERO
                   END IF
-                  IF (K.NE.kstm1) THEN
+                  IF (K.NE.kBegGhost) THEN
                      IF (PCELL(I,J,K-1).NE.WALL) 
      $                    AT(I,J,K-1) = ZERO
                   END IF
-                  IF (K.NE.kendp1) THEN
+                  IF (K.NE.kEndGhost) THEN
                      IF (PCELL(I,J,K+1).NE.WALL) 
      $                    AB(I,J,K+1) = ZERO
                   END IF
@@ -101,6 +102,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/13 04:51:35  bbanerje
+c Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
+c
 c Revision 1.1  2000/04/12 20:31:51  rawat
 c modified PressureSolver and added fortran subroutines
 c

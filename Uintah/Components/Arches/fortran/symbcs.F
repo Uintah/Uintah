@@ -4,9 +4,10 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE symbcs(indexLow, indexHigh, PCELL,
+      SUBROUTINE symbcs(domLo, domHi, idxLo, idxHi,
      &     PHI,
      &     AE,AW,AN,AS,AT,AB,
+     &     PCELL, SYMTRY,
      &     LPRDJK, LPRDKK)
 C--------------------------------------------------------------------
 C     Subroutine provides symmtry boundary conditions for the 
@@ -16,54 +17,54 @@ C--------------------------------------------------------------------
       implicit none
 
 #include "param4.h"
-#include "pcell.h"
+c#include "pcell.h"
 
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(indexLow(1):indexHigh(1), indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision PHI(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision AE(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision AW(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision AN(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision AS(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision AT(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision AB(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      double precision PHI(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision AE(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision AW(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision AN(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision AS(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision AT(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      double precision AB(domLo(1):domHi(1), domLo(2):domHi(2),
+     &     domLo(3):domHi(3))
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer SYMTRY
       logical LPRDKK,LPRDJK
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
       integer i, j, k
-      integer iBegGhost, iEndGhost, iBegActual, iEndActual
-      integer jBegGhost, jEndGhost, jBegActual, jEndActual
-      integer kBegGhost, kEndGhost, kBegActual, kEndActual
+      integer iBegGhost, iEndGhost, IST, IEND
+      integer jBegGhost, jEndGhost, JST, JEND
+      integer kBegGhost, kEndGhost, KST, KEND
       
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      iBegActual = iBegGhost + 1
-      jBegActual = jBegGhost + 1
-      kBegActual = kBegGhost + 1
-      iEndGhost = indexHigh(1)
-      jEndGhost = indexHigh(2)
-      kEndGhost = indexHigh(3)
-      iEndActual = iEndGhost - 1
-      jEndActual = jEndGhost - 1
-      kEndActual = kEndGhost - 1
+      iBegGhost = domLo(1)
+      jBegGhost = domLo(2)
+      kBegGhost = domLo(3)
+      iEndGhost = domHi(1)
+      jEndGhost = domHi(2)
+      kEndGhost = domHi(3)
+      IST = idxLo(1)
+      JST = idxLo(2)
+      KST = idxLo(3)
+      IEND = idxHi(1)
+      JEND = idxHi(2)
+      KEND = idxHi(3)
 
 c*********************************************************************
 c     Start :
@@ -80,28 +81,28 @@ C--------------------------------------------------------------------
                IF (PCELL(I,J,K).EQ.SYMTRY) THEN
                   IF (K.EQ.kBegGhost) THEN
                      IF (.NOT.(LPRDKK.OR.LPRDJK)) THEN
-                        PHI(I,J,kBegGHost) = PHI(I,J,kBegActual)
-                        AB(I,J,kBegActual) = ZERO
+                        PHI(I,J,kBegGhost) = PHI(I,J,KST)
+                        AB(I,J,KST) = ZERO
                      END IF
                   ELSE IF (K.EQ.kEndGhost) THEN
                      IF (.NOT.LPRDKK) THEN
-                        PHI(I,J,kEndGhost) = PHI(I,J,kEndActual)
-                        AT(I,J,kEndActual) = ZERO
+                        PHI(I,J,kEndGhost) = PHI(I,J,KEND)
+                        AT(I,J,KEND) = ZERO
                      END IF
                   ELSE IF (J.EQ.jBegGhost) THEN
                      IF (.NOT.LPRDJK) THEN
-                        PHI(I,jBegGhost,K) = PHI(I,jBegActual,K)
-                        AS(I,jBegActual,K) = ZERO
+                        PHI(I,jBegGhost,K) = PHI(I,JST,K)
+                        AS(I,JST,K) = ZERO
                      END IF
                   ELSE IF (J.EQ.jEndGhost) THEN
-                     PHI(I,jEndGhost,K) = PHI(I,jEndActual,K)
-                     AN(I,jEndActual,K) = ZERO
+                     PHI(I,jEndGhost,K) = PHI(I,JEND,K)
+                     AN(I,JEND,K) = ZERO
                   ELSE IF (I.EQ.iBegGhost) THEN
-                     PHI(iBegGhost,J,K) = PHI(iBegActual,J,K)
-                     AW(iBegActual,J,K) = ZERO
+                     PHI(iBegGhost,J,K) = PHI(IST,J,K)
+                     AW(IST,J,K) = ZERO
                   ELSE IF (I.EQ.iEndGhost) THEN
-                     PHI(iEndGhost,J,K) = PHI(iEndActual,J,K)
-                     AE(iEndActual,J,K) = ZERO
+                     PHI(iEndGhost,J,K) = PHI(IEND,J,K)
+                     AE(IEND,J,K) = ZERO
                   ELSE 
                      WRITE(6,*)' ERROR: SYMMETRY CONDITION 
      &                    SPECIFIED ON INTERIOR CELL '
@@ -118,6 +119,9 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/13 04:51:35  bbanerje
+c Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
+c
 c Revision 1.1  2000/04/12 20:31:51  rawat
 c modified PressureSolver and added fortran subroutines
 c

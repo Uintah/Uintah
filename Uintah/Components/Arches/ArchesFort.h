@@ -58,7 +58,7 @@ WARNING
 #define FORT_APCAL apcal_
 #define FORT_PRESSCOEFF prescoef_
 #define FORT_PRESSOURCE pressrc_
-#define FORT_PRESSBC pressbc_
+#define FORT_PRESSBC bcpress_
 #define FORT_VELCOEF velcoef_
 #define FORT_SCALARCOEF scalcof_
 #define FORT_VELSOURCE vsource_
@@ -585,12 +585,32 @@ extern "C"
 		    const double* sew, const double* sns, const double* stb,
 		    const int* cellType, const int* cellTypeID);
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the pressure source terms
+    //
+    void
+    FORT_PRESSBC(const int* domLo, const int* domHi,
+		 const int* idxLo, const int* idxHi,
+		 double* pressure,
+		 double* pressCoeffAE,
+		 double* pressCoeffAW,
+		 double* pressCoeffAN,
+		 double* pressCoeffAS,
+		 double* pressCoeffAT,
+		 double* pressCoeffAB,
+		 int* cellType,
+		 int* wall_celltypeval, int* symmetry_celltypeval,
+		 int* flow_celltypeval);
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.20  2000/07/13 04:51:32  bbanerje
+// Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
+//
 // Revision 1.19  2000/07/12 23:59:20  rawat
 // added wall bc for u-velocity
 //
