@@ -23,6 +23,7 @@ namespace Uintah {
   class Patch;
   class VarLabel;
   class MPMLabel;
+  class MPMFlags;
   class MPMMaterial;
   class DataWarehouse;
   class ParticleSubset;
@@ -249,6 +250,7 @@ namespace Uintah {
     void BnltDBnl(double Bnl[3][24], double sig[3][3], double Kg[24][24]) const;
 
     MPMLabel* lb;
+    MPMFlags* flag;
     int d_8or27;
     int NGP;
     int NGN;

@@ -54,7 +54,7 @@ namespace Uintah {
 
       public:
          // constructors
-         TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+         TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
          TransIsoHyperImplicit(const TransIsoHyperImplicit* cm);
        
          // destructor

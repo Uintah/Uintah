@@ -67,7 +67,7 @@ WARNING
 
   public:
     // constructors
-    CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
+    CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* lb,MPMFlags* flag);
     CompNeoHookPlas(const CompNeoHookPlas* cm);
 	 
     // destructor 

@@ -11,6 +11,7 @@
 
 namespace Uintah {
   class MPMLabel;
+  class MPMFlags;
 
   /**************************************
 CLASS
@@ -58,7 +59,7 @@ WARNING
 
   public:
     // constructor
-    CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
+    CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
     CompMooneyRivlin(const CompMooneyRivlin* cm);
 	 
     // destructor 

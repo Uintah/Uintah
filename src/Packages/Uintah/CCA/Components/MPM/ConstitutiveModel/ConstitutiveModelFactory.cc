@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -47,53 +48,56 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }   
    
   if (mat_type == "comp_mooney_rivlin")
-    return(scinew CompMooneyRivlin(child,lb,flags->d_8or27));
+    return(scinew CompMooneyRivlin(child,lb,flags));
    
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew CompNeoHook(child,lb,flags->d_8or27));
+      return(scinew CompNeoHook(child,lb,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew CompNeoHookImplicit(child,lb,flags->d_8or27));
+      return(scinew CompNeoHookImplicit(child,lb,flags));
   }
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew TransIsoHyper(child,lb,flags->d_8or27));
+      return(scinew TransIsoHyper(child,lb,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew TransIsoHyperImplicit(child,lb,flags->d_8or27));
+      return(scinew TransIsoHyperImplicit(child,lb,flags));
   }
 
   else if (mat_type ==  "ideal_gas")
-    return(scinew IdealGasMP(child,lb,flags->d_8or27));
+    return(scinew IdealGasMP(child,lb,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew CompNeoHookPlas(child,lb,flags->d_8or27));
+    return(scinew CompNeoHookPlas(child,lb,flags));
    
   else if (mat_type ==  "visco_scram")
-    return(scinew ViscoScram(child,lb,flags->d_8or27));
+    return(scinew ViscoScram(child,lb,flags));
    
   else if (mat_type ==  "hypo_elastic") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
-      return(scinew HypoElastic(child,lb,flags->d_8or27));
+      return(scinew HypoElastic(child,lb,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew HypoElasticImplicit(child,lb,flags->d_8or27));
+      return(scinew HypoElasticImplicit(child,lb,flags));
   }
 
   else if (mat_type ==  "mw_visco_elastic")
-    return(scinew MWViscoElastic(child,lb,flags->d_8or27));
+    return(scinew MWViscoElastic(child,lb,flags));
    
   else if (mat_type ==  "membrane")
-    return(scinew Membrane(child,lb,flags->d_8or27));
+    return(scinew Membrane(child,lb,flags));
 
   else if (mat_type ==  "shell_CNH")
-    return(scinew ShellMaterial(child,lb,flags->d_8or27));
+    return(scinew ShellMaterial(child,lb,flags));
    
   else if (mat_type ==  "hypoelastic_plastic")
-    return(scinew HypoElasticPlastic(child,lb,flags->d_8or27));
-   
+    return(scinew HypoElasticPlastic(child,lb,flags));
+
+  else if (mat_type ==  "elastic_plastic")
+    return(scinew ElasticPlastic(child,lb,flags));
+
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")");
 
@@ -146,6 +150,9 @@ ConstitutiveModelFactory::createCopy(const ConstitutiveModel* cm)
   else if (dynamic_cast<const HypoElasticPlastic*>(cm)) 
     return(scinew HypoElasticPlastic(dynamic_cast<const HypoElasticPlastic*>(cm)));
    
+  else if (dynamic_cast<const ElasticPlastic*>(cm)) 
+    return(scinew ElasticPlastic(dynamic_cast<const ElasticPlastic*>(cm)));
+
   else 
     throw ProblemSetupException("Cannot create copy of unknown material.");
 

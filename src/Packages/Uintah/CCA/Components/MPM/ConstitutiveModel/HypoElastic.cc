@@ -27,9 +27,11 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
+HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, 
+                                           MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
 
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
@@ -48,7 +50,7 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   }
 #endif
   
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -59,6 +61,7 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 HypoElastic::HypoElastic(const HypoElastic* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 

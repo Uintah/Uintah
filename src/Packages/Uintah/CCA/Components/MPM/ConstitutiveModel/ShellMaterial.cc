@@ -34,7 +34,8 @@ static DebugStream debug("ShellMat", false);
 //
 // Constructor
 //
-ShellMaterial::ShellMaterial(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
+ShellMaterial::ShellMaterial(ProblemSpecP& ps,  MPMLabel* Mlb, 
+                                                MPMFlags* Mflag)
 {
   // Read Material Constants
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -42,9 +43,10 @@ ShellMaterial::ShellMaterial(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 
   // Initialize labels
   lb = Mlb;
+  flag = Mflag;
 
   // Set up support size for interpolation
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   NGN = 1;
   if (d_8or27 == 27) NGN = 2;
 
@@ -95,6 +97,7 @@ ShellMaterial::ShellMaterial(const ShellMaterial* cm)
   d_initialData.Shear = cm->d_initialData.Shear;
 
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 

@@ -25,9 +25,11 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int /*n8or27*/)
+HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
+                                                            MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
 
@@ -37,6 +39,7 @@ HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int /
 HypoElasticImplicit::HypoElasticImplicit(const HypoElasticImplicit* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   NGN = cm->NGN;
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;

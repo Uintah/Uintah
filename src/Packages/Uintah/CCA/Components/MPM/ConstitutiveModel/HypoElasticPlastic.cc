@@ -1,11 +1,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldConditionFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/StabilityCheckFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfStateFactory.h>
+#include "PlasticityModels/YieldConditionFactory.h"
+#include "PlasticityModels/StabilityCheckFactory.h"
+#include "PlasticityModels/PlasticityModelFactory.h"
+#include "PlasticityModels/DamageModelFactory.h"
+#include "PlasticityModels/MPMEquationOfStateFactory.h"
+#include "PlasticityModels/PlasticityState.h"
 #include <math.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -30,7 +31,6 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityState.h>
 
 using std::cerr;
 using namespace Uintah;
@@ -41,9 +41,10 @@ static DebugStream cout_CST1("HEP1",false);
 
 HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, 
                                        MPMLabel* Mlb, 
-                                       int n8or27)
+				       MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
   d_erosionAlgorithm = "none";
 
   ps->require("bulk_modulus",d_initialData.Bulk);
@@ -128,7 +129,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps,
     throw ParameterNotFound(desc.str());
   }
   
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   switch(d_8or27) {
   case 8:
     NGN = 1; break;
@@ -180,6 +181,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps,
 HypoElasticPlastic::HypoElasticPlastic(const HypoElasticPlastic* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27 ;
   NGN = cm->NGN ;
   d_erosionAlgorithm = cm->d_erosionAlgorithm;
