@@ -24,6 +24,7 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/VarTypes.h>
 
+#include "ICE_switches.i"
 #include "nrutil+.h"
 #include "functionDeclare.h"
 #include "parameters.h"
@@ -35,11 +36,6 @@ using SCICore::Geometry::Vector;
 using SCICore::Geometry::IntVector;
 using std::cerr;
 using std::endl;
-
-
-
-
-
 
 /* ---------------------------------------------------------------------
 GENERAL INFORMATION
@@ -86,25 +82,54 @@ using Uintah::ICESpace::ICE;
 
 ICE::ICE()
 {
-  delTLabel = new VarLabel("delT", delt_vartype::getTypeDescription() );
-  vel_CCLabel = new VarLabel("vel_CC",CCVariable<Vector>::getTypeDescription() );
-  press_CCLabel = new VarLabel("press_CC", CCVariable<double>::getTypeDescription() );
-  press_CCLabel_1 = new VarLabel("press_CC_1", CCVariable<double>::getTypeDescription() );
-  
-  rho_CCLabel = new VarLabel("rho_CC",CCVariable<double>::getTypeDescription() );
-  temp_CCLabel= new VarLabel("temp_CC",CCVariable<double>::getTypeDescription() );
-  cv_CCLabel=new VarLabel("cv_CC", CCVariable<double>::getTypeDescription() );
+    /*__________________________________
+    *   Cell-centered variables
+    *___________________________________*/
+    delTLabel         = new VarLabel("delT",      delt_vartype::getTypeDescription() );
+    vel_CCLabel       = new VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
+    press_CCLabel     = new VarLabel("press_CC",  CCVariable<double>::getTypeDescription() );
+    press_CCLabel_1   = new VarLabel("press_CC_1",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_2   = new VarLabel("press_CC_2",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_3   = new VarLabel("press_CC_3",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_4   = new VarLabel("press_CC_4",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_5   = new VarLabel("press_CC_5",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_6_7 = new VarLabel("press_CC_6_7",CCVariable<double>::getTypeDescription() );
 
-  div_velfc_CCLabel=new VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
+    rho_CCLabel       = new VarLabel("rho_CC",    CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_1     = new VarLabel("rho_CC_1",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_2     = new VarLabel("rho_CC_2",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_3     = new VarLabel("rho_CC_3",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_4     = new VarLabel("rho_CC_4",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_5     = new VarLabel("rho_CC_5",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_6_7   = new VarLabel("rho_CC_6_7",  CCVariable<double>::getTypeDescription() );
+ 
+    temp_CCLabel      = new VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_1    = new VarLabel("temp_CC_1", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_2    = new VarLabel("temp_CC_2", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_3    = new VarLabel("temp_CC_3", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_4    = new VarLabel("temp_CC_4", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_5    = new VarLabel("temp_CC_5", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_6_7  = new VarLabel("temp_CC_6_7", CCVariable<double>::getTypeDescription() );
+ 
+    vel_CCLabel       = new VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_1     = new VarLabel("vel_CC_1",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_2     = new VarLabel("vel_CC_2",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_3     = new VarLabel("vel_CC_3",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_4     = new VarLabel("vel_CC_4",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_5     = new VarLabel("vel_CC_5",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_6_7   = new VarLabel("vel_CC_6_7",  CCVariable<Vector>::getTypeDescription() );
+ 
+    cv_CCLabel        = new VarLabel("cv_CC",     CCVariable<double>::getTypeDescription() );
+    div_velfc_CCLabel =new VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
 
   // Face centered variables
-  vel_FCLabel= new VarLabel("vel_FC", FCVariable<Vector>::getTypeDescription() );
-  press_FCLabel=new VarLabel("press_FC", FCVariable<double>::getTypeDescription() );
-    tau_FCLabel= new VarLabel("tau_FC", FCVariable<Vector>::getTypeDescription() );
+    vel_FCLabel       = new VarLabel("vel_FC",    FCVariable<Vector>::getTypeDescription() );
+    press_FCLabel     = new VarLabel("press_FC",  FCVariable<double>::getTypeDescription() );
+    tau_FCLabel       = new VarLabel("tau_FC",    FCVariable<Vector>::getTypeDescription() );
 
-/*__________________________________
-*   Plotting variables
-*___________________________________*/
+    /*__________________________________
+    *   Plotting variables
+    *___________________________________*/
     stat = putenv("PGPLOT_DIR=" PGPLOT_DIR);
     stat = putenv("PGPLOT_I_AM_HERE=0");              
     stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
@@ -114,7 +139,6 @@ ICE::ICE()
      *   Allocate memory for the arrays
      *___________________________________*/
 #include "allocate_memory.i"
-    
     
 }
 
@@ -164,13 +188,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP&,
   ProblemSpecP ice_mat_ps = mat_ps->findBlock("ICE");
   
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    ps->require("viscosity",viscosity);
-    ps->require("thermal_conductivity",thermal_conductivity);
-    ps->require("specific_heat",specific_heat);
-    ps->require("speed_of_sound",speed_of_sound);
-    ps->require("ideal_gas_constant",ideal_gas_constant);
-    ps->require("gamma",d_gamma);
+       ps = ps->findNextBlock("material") ) 
+ {
+    ps->require(    "viscosity",            viscosity);
+    ps->require(    "thermal_conductivity", thermal_conductivity);
+    ps->require(    "specific_heat",        specific_heat);
+    ps->require(    "speed_of_sound",       speed_of_sound);
+    ps->require(    "ideal_gas_constant",   ideal_gas_constant);
+    ps->require(    "gamma",                d_gamma);
   }
   
   cerr << "viscosity " << viscosity << endl;
@@ -194,69 +219,69 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP&,
    *                  
    * -----------------------------------------------------------------------  */
   
-  readInputFile(   &xLoLimit,      &yLoLimit,      &zLoLimit,     
-		   &xHiLimit,      &yHiLimit,      &zHiLimit,
-		   &delX,          &delY,          &delZ,
-		   uvel_CC,        vvel_CC,        wvel_CC, 
-		   Temp_CC,        press_CC,       rho_CC,
-		   scalar1_CC,     scalar2_CC,     scalar3_CC,
-		   viscosity_CC,   thermalCond_CC, cv_CC,
-		   R,              gamma,
-		   &t_final,       t_output_vars,  delt_limits,
-		   output_file_basename,           output_file_desc,       
-		   grav,           speedSound,
-		   BC_inputs,      BC_Values,      &CFL,
-		   &nMaterials);      
-  
-  testInputFile(      xLoLimit,       yLoLimit,       zLoLimit,
-		      xHiLimit,       yHiLimit,       zHiLimit,
-		      delX,           delY,           delZ,
-		      Temp_CC,        press_CC,       rho_CC,
-		      viscosity_CC,   thermalCond_CC, cv_CC,
-		      speedSound,      
-		      t_final,        t_output_vars,  delt_limits,
-		      BC_inputs,      printSwitch,    CFL,
-		      nMaterials); 
-  
-  definition_of_different_physical_boundary_conditions(BC_inputs, BC_types,
-						       BC_float_or_fixed,
-						       BC_Values, nMaterials);  
-  
-  /*__________________________________
-   * Now make sure that the face centered
-   * values know about each other.
-   * for example 
-   * [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
-   *___________________________________*/  
-  
-  equate_ptr_addresses_adjacent_cell_faces(              
-					   x_FC,  y_FC,  z_FC,
-					   uvel_FC, vvel_FC, wvel_FC,
-					   press_FC,
-					   tau_X_FC,tau_Y_FC, tau_Z_FC,
-					   nMaterials);   
+        readInputFile(   &xLoLimit,      &yLoLimit,      &zLoLimit,     
+                        &xHiLimit,      &yHiLimit,      &zHiLimit,
+                        &delX,          &delY,          &delZ,
+                        uvel_CC,        vvel_CC,        wvel_CC, 
+                        Temp_CC,        press_CC,       rho_CC,
+                        scalar1_CC,     scalar2_CC,     scalar3_CC,
+                        viscosity_CC,   thermalCond_CC, cv_CC,
+                        R,              gamma,
+                        &t_final,       t_output_vars,  delt_limits,
+                        output_file_basename,           output_file_desc,       
+                        grav,           speedSound,
+                        BC_inputs,      BC_Values,      &CFL,
+                        &nMaterials);      
+    
+    testInputFile(      xLoLimit,       yLoLimit,       zLoLimit,
+                        xHiLimit,       yHiLimit,       zHiLimit,
+                        delX,           delY,           delZ,
+                        Temp_CC,        press_CC,       rho_CC,
+                        viscosity_CC,   thermalCond_CC, cv_CC,
+                        speedSound,      
+                        t_final,        t_output_vars,  delt_limits,
+                        BC_inputs,      printSwitch,    CFL,
+                        nMaterials); 
+                   
+    definition_of_different_physical_boundary_conditions(              
+                        BC_inputs,      BC_types,       BC_float_or_fixed,
+                        BC_Values,      nMaterials  );  
+                        
+/*__________________________________
+* Now make sure that the face centered
+* values know about each other.
+* for example 
+* [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
+*___________________________________*/  
 
-  /*__________________________________
-   * Generate a grid
-   *___________________________________*/ 
-  generateGrid(       xLoLimit,       yLoLimit,       zLoLimit,
-		      xHiLimit,       yHiLimit,       zHiLimit,
-		      delX,           delY,           delZ,
-		      x_CC,           y_CC,           z_CC,   Vol_CC,  
-		      x_FC,           y_FC,           z_FC );
-  /*__________________________________
-   *   zero the face-centered arrays
-   *___________________________________*/
-  zero_arrays_6d(
-		 xLoLimit,       yLoLimit,       zLoLimit,             
-		 xHiLimit,       yHiLimit,       zHiLimit,
-		 1,              N_CELL_FACES,
-		 1,              nMaterials,     
-		 7,             
-		 uvel_FC,        vvel_FC,        wvel_FC,
-		 press_FC,
-		 tau_X_FC,       tau_Y_FC,       tau_Z_FC);                         
-  stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+    equate_ptr_addresses_adjacent_cell_faces(              
+                        x_FC,           y_FC,           z_FC,
+                        uvel_FC,        vvel_FC,        wvel_FC,
+                        press_FC,
+                        tau_X_FC,       tau_Y_FC,       tau_Z_FC,
+                        nMaterials);   
+
+    /*__________________________________
+    * Generate a grid
+    *___________________________________*/ 
+    generateGrid(       xLoLimit,       yLoLimit,       zLoLimit,
+                        xHiLimit,       yHiLimit,       zHiLimit,
+                        delX,           delY,           delZ,
+                        x_CC,           y_CC,           z_CC,   Vol_CC,  
+                        x_FC,           y_FC,           z_FC );
+    /*__________________________________
+    *   zero the face-centered arrays
+    *___________________________________*/
+    zero_arrays_6d(
+                        xLoLimit,       yLoLimit,       zLoLimit,             
+                        xHiLimit,       yHiLimit,       zHiLimit,
+                        1,              N_CELL_FACES,
+                        1,              nMaterials,     
+                        7,             
+                        uvel_FC,        vvel_FC,        wvel_FC,
+                        press_FC,
+                        tau_X_FC,       tau_Y_FC,       tau_Z_FC);                         
+    stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
   
   
   /*__________________________________
@@ -316,14 +341,17 @@ void ICE::actuallyInitialize(
     const ProcessorGroup*,
     const Patch* patch,
     DataWarehouseP& /* old_dw */,
-    DataWarehouseP& new_dw)
+    DataWarehouseP& to_dw)
 {
     bool include_ghost_cells = true;
-    cerr <<"Doing actuallyInitialize . . ." << endl;
+     cerr <<"Doing actuallyInitialize . . ." << endl;
+/*`==========TESTING==========*/ 
+#if 0    
     CCVariable<Vector> vel_cc;
     CCVariable<double> press_cc,    press_cc_1,     rho_cc, temp_cc,    cv_cc;
     FCVariable<Vector> vel_fc,      tau_fc;
     FCVariable<double> press_fc;
+   
     /*__________________________________
     *  Allocate variable in the new dw
     *___________________________________*/
@@ -333,12 +361,13 @@ void ICE::actuallyInitialize(
     new_dw->allocate(   rho_cc,     rho_CCLabel,    0,patch);
     new_dw->allocate(   temp_cc,    temp_CCLabel,   0,patch);
     new_dw->allocate(   cv_cc,      cv_CCLabel,     0,patch);
-    //    new_dw->allocate(   vel_fc,     vel_FCLabel,    0,patch);
+    new_dw->allocate(   vel_fc,     vel_FCLabel,    0,patch);
     new_dw->allocate(   press_fc,   press_FCLabel,  0,patch);
     new_dw->allocate(   tau_fc,     tau_FCLabel,    0,patch);
     /*__________________________________
     *   Convert the array data into ucf format
     *___________________________________*/
+
 
   
     ICE::convertNR_4dToUCF(patch,
@@ -373,7 +402,7 @@ void ICE::actuallyInitialize(
                         zLoLimit,       zHiLimit,       
                         nMaterials);
                         
-    ICE::convertNR_4dToUCF(patch,         vel_cc,
+    ICE::convertNR_4dToUCF(patch,       vel_cc,
                         uvel_CC,        vvel_CC,        wvel_CC,
                         include_ghost_cells,
                         xLoLimit,       xHiLimit,       
@@ -393,6 +422,38 @@ void ICE::actuallyInitialize(
     new_dw->put(      vel_fc,     vel_FCLabel,    0,patch);
     new_dw->put(      press_fc,   press_FCLabel,  0,patch);
     new_dw->put(      tau_fc,     tau_FCLabel,    0,patch);
+    
+#endif 
+ /*==========TESTING==========`*/   
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_initialize
+    CCVariable<double>  press_cc;
+    CCVariable<double>  rho_cc;
+    CCVariable<double>  temp_cc;
+    CCVariable<Vector>  vel_cc;
+    
+    to_dw->allocate(    press_cc, press_CCLabel,  0,patch);
+    to_dw->allocate(    rho_cc,   rho_CCLabel,    0,patch);
+    to_dw->allocate(    temp_cc,  temp_CCLabel,   0,patch);
+    to_dw->allocate(    vel_cc,   vel_CCLabel,    0,patch);
+
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc,  press_CC,
+                       rho_cc,    rho_CC,
+                       temp_cc,   Temp_CC,
+                       vel_cc,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc,  press_CCLabel,  0,patch);
+    to_dw->put(        rho_cc,    rho_CCLabel,    0,patch);
+    to_dw->put(        temp_cc,   temp_CCLabel,   0,patch);
+    to_dw->put(        vel_cc,    vel_CCLabel,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
 }
 
 
@@ -464,16 +525,41 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/ 
 void ICE::actually_Top_of_main_loop(const ProcessorGroup*,
 			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+			DataWarehouseP& from_dw,
+			DataWarehouseP& to_dw)
 {
     int should_I_write_output;
     
+
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_stepTop_of_main_loopOnOff 
+    CCVariable<double>  press_cc;
+    CCVariable<double>  rho_cc;
+    CCVariable<double>  temp_cc;
+    CCVariable<Vector>  vel_cc;
+   
+    from_dw->get(       press_cc,       press_CCLabel,  0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc,         rho_CCLabel,    0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc,        temp_CCLabel,   0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc,         vel_CCLabel,    0, patch, Ghost::None, 0);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc,       press_CC,
+                        rho_cc,         rho_CC,
+                        temp_cc,        Temp_CC,
+                        vel_cc,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+#endif
+/*______________________________________________________________________*/  
+
     fprintf(stderr,"\n\n________________________________\n");
-    cerr << "Actually doing step 0" << endl;
+    cerr << "Actually at top of main loop" << endl;
   
     should_I_write_output = Is_it_time_to_write_output( t, t_output_vars  ); 
-  
   /*__________________________________
    * update the physical boundary conditions
    * and initialize some arrays
@@ -507,21 +593,54 @@ void ICE::actually_Top_of_main_loop(const ProcessorGroup*,
                         Vol_L_CC,       mass_CC);
 
 
+/*`==========TESTING==========*/ 
     /*__________________________________
     *   Find the new time step based on the
     *   Courant condition
     *___________________________________*/        
-    find_delta_time_based_on_CC_vel(
+ /*    find_delta_time_based_on_CC_vel(
                         xLoLimit,        yLoLimit,      zLoLimit,
                         xHiLimit,        yHiLimit,      zHiLimit,
                         &delt,           delt_limits,
                         delX,            delY,          delZ,
                         uvel_CC,         vvel_CC,       wvel_CC,
-                        speedSound,      CFL,           nMaterials ); 
+                        speedSound,      CFL,           nMaterials ); */
+ /*==========TESTING==========`*/ 
+    
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_stepTop_of_main_loopOnOff 
+    CCVariable<double>  press_cc_0;
+    CCVariable<double>  rho_cc_0;
+    CCVariable<double>  temp_cc_0;
+    CCVariable<Vector>  vel_cc_0;
+    
+    to_dw->allocate(    press_cc_0, press_CCLabel_0,  0,patch);
+    to_dw->allocate(    rho_cc_0,   rho_CCLabel_0,    0,patch);
+    to_dw->allocate(    temp_cc_0,  temp_CCLabel_0,   0,patch);
+    to_dw->allocate(    vel_cc_0,   vel_CCLabel_0,    0,patch);
+
     /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc_0,  press_CC,
+                       rho_cc_0,    rho_CC,
+                       temp_cc_0,   Temp_CC,
+                       vel_cc_0,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc_0,  press_CCLabel_0,  0,patch);
+    to_dw->put(        rho_cc_0,    rho_CCLabel_0,    0,patch);
+    to_dw->put(        temp_cc_0,   temp_CCLabel_0,   0,patch);
+    to_dw->put(        vel_cc_0,    vel_CCLabel_0,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
+
+  /*__________________________________
     *   Quite full warn remarks
     *___________________________________*/
-    should_I_write_output = should_I_write_output;                     
+    should_I_write_output = should_I_write_output;                   
 }
 
 
@@ -544,90 +663,113 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/ 
 void ICE::actuallyStep1(const ProcessorGroup*,
 			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+			DataWarehouseP& from_dw,
+			DataWarehouseP& to_dw)
 {
-  bool include_ghost_cells = NO;
-  /*__________________________________
-   * get data from the data warehouse and
-   *  convert it to NR arrays
-   *___________________________________*/
-#if 1
-  CCVariable<double> press_cc; 
-  CCVariable<double> rho_cc;
-  CCVariable<double> temp_cc;
-  CCVariable<double> cv_cc;
+  bool include_ghost_cells = true;
 
-  
-  old_dw->get(  press_cc,   press_CCLabel,  0, patch, Ghost::None, 0);  
-  old_dw->get(  rho_cc,     rho_CCLabel,    0, patch, Ghost::None, 0);
-  old_dw->get(  temp_cc,    temp_CCLabel,   0, patch, Ghost::None, 0); 
-  old_dw->get(  cv_cc,      cv_CCLabel,     0, patch, Ghost::None, 0);
+ 
+ 
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_step1OnOff  
+    CCVariable<double>  press_cc;
+    CCVariable<double>  rho_cc;
+    CCVariable<double>  temp_cc;
+    CCVariable<Vector>  vel_cc;
+   
+    from_dw->get(       press_cc,     press_CCLabel,0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc,       rho_CCLabel,  0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc,      temp_CCLabel, 0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc,       vel_CCLabel,  0, patch, Ghost::None, 0);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc,     press_CC,
+                        rho_cc,       rho_CC,
+                        temp_cc,      Temp_CC,
+                        vel_cc,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+#endif    
+/*______________________________________________________________________*/
 
-  
-  ICE::convertUCFToNR_4d(patch,
-	 press_cc,   press_CC,
-	 include_ghost_cells,
-	 xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials); 
-  
-  ICE::convertUCFToNR_4d(patch,
-          rho_cc,     rho_CC,
-          include_ghost_cells,
-          xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-          nMaterials); 
-
-  ICE::convertUCFToNR_4d(patch,
-          temp_cc,    Temp_CC,
-          include_ghost_cells,
-          xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-          nMaterials); 
-
-  ICE::convertUCFToNR_4d(patch,
-          cv_cc,      cv_CC,
-          include_ghost_cells,
-          xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-          nMaterials); 
-#endif
-    
-    
   /*__________________________________
    *  Use the equation of state to get
    *  P at the cell center
    *___________________________________*/
 #if switch_step1_OnOff
-  cerr << "Actually step 1 " << endl;
+    cerr << "Actually doing step 1 " << endl;
 
-  // INPUTS:  R, rho_CC, Temp_CC
-  // OUTPUTS: press_CC
-  equation_of_state(
-		    xLoLimit,       yLoLimit,       zLoLimit,
-		    xHiLimit,       yHiLimit,       zHiLimit,
-		    R,
-		    press_CC,       rho_CC,         Temp_CC,
-		    cv_CC,          nMaterials   );
-  
-  // INPUTS: gamma, R, Temp_CC
-  // OUTPUS: speedSound
-  speed_of_sound(
-		 xLoLimit,       yLoLimit,       zLoLimit,       
-		 xHiLimit,       yHiLimit,       zHiLimit,       
-		 gamma,          R,              Temp_CC,     
-		 speedSound,     nMaterials   );
+    // INPUTS:  R, rho_CC, Temp_CC
+    // OUTPUTS: press_CC
+    equation_of_state(
+                    xLoLimit,       yLoLimit,       zLoLimit,
+                    xHiLimit,       yHiLimit,       zHiLimit,
+                    R,
+                    press_CC,       rho_CC,         Temp_CC,
+                    cv_CC,          nMaterials   );  
+    // INPUTS: gamma, R, Temp_CC
+    // OUTPUS: speedSound
+    speed_of_sound(
+                    xLoLimit,       yLoLimit,       zLoLimit,       
+                    xHiLimit,       yHiLimit,       zHiLimit,       
+                    gamma,          R,              Temp_CC,     
+                    speedSound,     nMaterials   );
+
+
+    /*__________________________________
+    *  Make up some diffusion
+    *___________________________________*/ 
+#if 0
+    int m = 1;                   
+    for ( int k = (zLoLimit); k <= (zHiLimit); k++)
+    {
+        for ( int j = (yLoLimit); j <= (yHiLimit); j++)
+        {
+            for ( int i = (xLoLimit); i <= (xHiLimit); i++)
+            { 
+                   Temp_CC[m][i][j][k]   = ( (Temp_CC[m][i-1][j][k] + Temp_CC[m][i+1][j][k]) +
+                                            (Temp_CC[m][i][j-1][k] + Temp_CC[m][i][j+1][k]) )/4.0;
+            
+                    rho_CC[m][i][j][k]   = ( (rho_CC[m][i-1][j][k] + rho_CC[m][i+1][j][k]) +
+                                            (rho_CC[m][i][j-1][k] + rho_CC[m][i][j+1][k]) )/4.0;
+            }
+        }
+    }
 #endif
-     
-  // ICE::convert NR stuff back to ucf and store in data warehouse
-  CCVariable<double> press_cc_1;
-  new_dw->allocate( press_cc_1,press_CCLabel_1,0,patch); 
+#endif
 
-  ICE::convertNR_4dToUCF(patch,
-	  press_cc_1,   press_CC,
-	 include_ghost_cells,
-	 xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-         nMaterials);
-          
-  new_dw->put(press_cc_1, press_CCLabel_1,  0,patch); 
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_step1OnOff
+    CCVariable<double>  press_cc_1;
+    CCVariable<double>  rho_cc_1;
+    CCVariable<double>  temp_cc_1;
+    CCVariable<Vector>  vel_cc_1;
+    
+    to_dw->allocate(    press_cc_1, press_CCLabel_1,  0,patch);
+    to_dw->allocate(    rho_cc_1,   rho_CCLabel_1,    0,patch);
+    to_dw->allocate(    temp_cc_1,  temp_CCLabel_1,   0,patch);
+    to_dw->allocate(    vel_cc_1,   vel_CCLabel_1,    0,patch);
 
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc_1,  press_CC,
+                       rho_cc_1,    rho_CC,
+                       temp_cc_1,   Temp_CC,
+                       vel_cc_1,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc_1,  press_CCLabel_1,  0,patch);
+    to_dw->put(        rho_cc_1,    rho_CCLabel_1,    0,patch);
+    to_dw->put(        temp_cc_1,   temp_CCLabel_1,   0,patch);
+    to_dw->put(        vel_cc_1,    vel_CCLabel_1,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
 }
 
 
@@ -650,37 +792,39 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::actuallyStep2(const ProcessorGroup*,
 			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+			DataWarehouseP& from_dw,
+			DataWarehouseP& to_dw)
 {
   bool include_ghost_cells = false;
-    /*__________________________________
-    * get data from the data warehouse and
-    *  convert it to NR arrays
-    *___________________________________*/
-#if 1
-    CCVariable<Vector> vel_cc;
+
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_step2OnOff  
+    CCVariable<double>  press_cc_1;
+    CCVariable<double>  rho_cc_1;
+    CCVariable<double>  temp_cc_1;
+    CCVariable<Vector>  vel_cc_1;
    
-  
-    old_dw->get(vel_cc, vel_CCLabel, 0, patch, Ghost::None,0);
-  
-    ICE::convertUCFToNR_4d(patch,
-        vel_cc,     uvel_CC,    vvel_CC,    wvel_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-        nMaterials);
-        
-        
-    CCVariable<double> press_cc_1;    
-    new_dw->get(press_cc_1, press_CCLabel_1, 0, patch, Ghost::None,0);
-  
-    ICE::convertUCFToNR_4d(patch,
-        press_cc_1,             press_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-        nMaterials); 
-#endif
-    
+    from_dw->get(       press_cc_1,     press_CCLabel_1,0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc_1,       rho_CCLabel_1,  0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc_1,      temp_CCLabel_1, 0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc_1,       vel_CCLabel_1,  0, patch, Ghost::None, 0);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc_1,     press_CC,
+                        rho_cc_1,       rho_CC,
+                        temp_cc_1,      Temp_CC,
+                        vel_cc_1,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+#endif    
+/*______________________________________________________________________*/
+ 
+    /*__________________________________
+    *   Now do the work
+    *___________________________________*/    
     cerr << "Actually doing step 2" << endl;
 
 
@@ -699,16 +843,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                     uvel_FC,        vvel_FC,        wvel_FC,
                     nMaterials ); 
 
-    FCVariable<Vector> vel_fc;
-    new_dw->allocate(vel_fc, vel_FCLabel, 0 , patch);
 
-  ICE::convertNR_4dToUCF(patch,
-        vel_fc, uvel_CC,    vvel_CC,    wvel_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
-  
-  new_dw->put(vel_fc, vel_FCLabel, 0, patch);
 
     // INPUTS: delX, delY, delZ, uvel_FC, vvel_FC, wvel_FC
     // OUTPUTS: div_velFC_CC
@@ -718,17 +853,6 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                     delX,           delY,           delZ,
                     uvel_FC,        vvel_FC,        wvel_FC,
                     div_velFC_CC,   nMaterials); 
-    CCVariable<double> div_velfc_cc;
-
-    new_dw->allocate(div_velfc_cc,div_velfc_CCLabel,0,patch);
-    ICE::convertNR_4dToUCF(patch,
-        div_velfc_cc, div_velFC_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
-
-    new_dw->put(div_velfc_cc, div_velfc_CCLabel, 0, patch);    
-
     stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
 
 
@@ -758,8 +882,35 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                     delPress_CC,    DELPRESS);
                                             
     #endif
-  // ICE::convert back to ucf format and store in data warehouse
-   
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_step2OnOff
+    CCVariable<double>  press_cc_2;
+    CCVariable<double>  rho_cc_2;
+    CCVariable<double>  temp_cc_2;
+    CCVariable<Vector>  vel_cc_2;
+    
+    to_dw->allocate(    press_cc_2, press_CCLabel_2,  0,patch);
+    to_dw->allocate(    rho_cc_2,   rho_CCLabel_2,    0,patch);
+    to_dw->allocate(    temp_cc_2,  temp_CCLabel_2,   0,patch);
+    to_dw->allocate(    vel_cc_2,   vel_CCLabel_2,    0,patch);
+
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc_2,  press_CC,
+                       rho_cc_2,    rho_CC,
+                       temp_cc_2,   Temp_CC,
+                       vel_cc_2,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc_2,  press_CCLabel_2,  0,patch);
+    to_dw->put(        rho_cc_2,    rho_CCLabel_2,    0,patch);
+    to_dw->put(        temp_cc_2,   temp_CCLabel_2,   0,patch);
+    to_dw->put(        vel_cc_2,    vel_CCLabel_2,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
 }
 
 
@@ -777,9 +928,35 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::actuallyStep3(const ProcessorGroup*,
 			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+			DataWarehouseP& from_dw,
+			DataWarehouseP& to_dw)
 {
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_step3OnOff  
+    CCVariable<double>  press_cc_2;
+    CCVariable<double>  rho_cc_2;
+    CCVariable<double>  temp_cc_2;
+    CCVariable<Vector>  vel_cc_2;
+   
+    from_dw->get(       press_cc_2,     press_CCLabel_2,0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc_2,       rho_CCLabel_2,  0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc_2,      temp_CCLabel_2, 0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc_2,       vel_CCLabel_2,  0, patch, Ghost::None, 0);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc_2,     press_CC,
+                        rho_cc_2,       rho_CC,
+                        temp_cc_2,      Temp_CC,
+                        vel_cc_2,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+#endif    
+/*______________________________________________________________________*/
+
+
 #if switch_step3_OnOff                                  
     cerr << "Actually doing step 3" << endl;
     press_face(         
@@ -790,6 +967,36 @@ void ICE::actuallyStep3(const ProcessorGroup*,
                     press_CC,       press_FC,       rho_CC, 
                     nMaterials );
 #endif
+
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_step3OnOff
+    CCVariable<double>  press_cc_3;
+    CCVariable<double>  rho_cc_3;
+    CCVariable<double>  temp_cc_3;
+    CCVariable<Vector>  vel_cc_3;
+    
+    to_dw->allocate(    press_cc_3, press_CCLabel_3,  0,patch);
+    to_dw->allocate(    rho_cc_3,   rho_CCLabel_3,    0,patch);
+    to_dw->allocate(    temp_cc_3,  temp_CCLabel_3,   0,patch);
+    to_dw->allocate(    vel_cc_3,   vel_CCLabel_3,    0,patch);
+
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc_3,  press_CC,
+                       rho_cc_3,    rho_CC,
+                       temp_cc_3,   Temp_CC,
+                       vel_cc_3,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc_3,  press_CCLabel_3,  0,patch);
+    to_dw->put(        rho_cc_3,    rho_CCLabel_3,    0,patch);
+    to_dw->put(        temp_cc_3,   temp_CCLabel_3,   0,patch);
+    to_dw->put(        vel_cc_3,    vel_CCLabel_3,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
 }
 
 
@@ -813,50 +1020,94 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::actuallyStep4(const ProcessorGroup*,
 			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+			DataWarehouseP& from_dw,
+			DataWarehouseP& to_dw)
 {
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_step4OnOff  
+    CCVariable<double>  press_cc_3;
+    CCVariable<double>  rho_cc_3;
+    CCVariable<double>  temp_cc_3;
+    CCVariable<Vector>  vel_cc_3;
+   
+    from_dw->get(       press_cc_3,     press_CCLabel_3,0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc_3,       rho_CCLabel_3,  0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc_3,      temp_CCLabel_3, 0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc_3,       vel_CCLabel_3,  0, patch, Ghost::None, 0);
     /*__________________________________
-    * get data from the data warehouse and
-    *  convert it to NR arrays
+    *   UCF NR
     *___________________________________*/
-    CCVariable<double> mass;
-    CCVariable<double> temp;
-    CCVariable<double> rho;
-    CCVariable<Vector> tau;
-    CCVariable<double> viscosity;
-    CCVariable<double> del_pres;
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc_3,     press_CC,
+                        rho_cc_3,       rho_CC,
+                        temp_cc_3,      Temp_CC,
+                        vel_cc_3,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+#endif    
+/*______________________________________________________________________*/
  
 #if (switch_step4_OnOff == 1 && switch_Compute_burgers_eq == 0) 
     cerr << "Actually doing step 4" << endl;
     accumulate_momentum_source_sinks(
-                          xLoLimit,       yLoLimit,       zLoLimit,                  
-                          xHiLimit,       yHiLimit,       zHiLimit,                  
-                          delt,                      
-                          delX,           delY,           delZ,                      
-                          grav,                  
-                          mass_CC,        rho_CC,         press_FC,            
-                          Temp_CC,        cv_CC,
-                          uvel_CC,        vvel_CC,        wvel_CC,
-                          tau_X_FC,       tau_Y_FC,       tau_Z_FC,               
-                          viscosity_CC,              
-                          xmom_source,    ymom_source,    zmom_source,           
-                          nMaterials   ); 
+                        xLoLimit,       yLoLimit,       zLoLimit,
+                        xHiLimit,       yHiLimit,       zHiLimit,
+                        delt,
+                        delX,           delY,           delZ,
+                        grav,
+                        mass_CC,        rho_CC,         press_FC,
+                        Temp_CC,        cv_CC,
+                        uvel_CC,        vvel_CC,        wvel_CC,
+                        tau_X_FC,       tau_Y_FC,       tau_Z_FC,
+                        viscosity_CC,
+                        xmom_source,    ymom_source,    zmom_source,
+                        nMaterials   );
 
      accumulate_energy_source_sinks(
-                          xLoLimit,       yLoLimit,       zLoLimit,
-                          xHiLimit,       yHiLimit,       zHiLimit,
-                          delt,            
-                          delX,           delY,           delZ,    
-                          grav,           mass_CC,        rho_CC,          
-                          press_CC,       delPress_CC,    Temp_CC,         
-                          cv_CC,          speedSound,     
-                          uvel_CC,        vvel_CC,        wvel_CC,
-                          div_velFC_CC,         
-                          int_eng_source,  
-                          nMaterials   );
+                        xLoLimit,       yLoLimit,       zLoLimit,
+                        xHiLimit,       yHiLimit,       zHiLimit,
+                        delt,
+                        delX,           delY,           delZ,
+                        grav,           mass_CC,        rho_CC,
+                        press_CC,       delPress_CC,    Temp_CC,
+                        cv_CC,          speedSound,
+                        uvel_CC,        vvel_CC,        wvel_CC,
+                        div_velFC_CC,
+                        int_eng_source,
+                        nMaterials   );
 
     #endif
+    
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_step4OnOff
+    CCVariable<double>  press_cc_4;
+    CCVariable<double>  rho_cc_4;
+    CCVariable<double>  temp_cc_4;
+    CCVariable<Vector>  vel_cc_4;
+    
+    to_dw->allocate(    press_cc_4, press_CCLabel_4,  0,patch);
+    to_dw->allocate(    rho_cc_4,   rho_CCLabel_4,    0,patch);
+    to_dw->allocate(    temp_cc_4,  temp_CCLabel_4,   0,patch);
+    to_dw->allocate(    vel_cc_4,   vel_CCLabel_4,    0,patch);
+
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc_4,  press_CC,
+                       rho_cc_4,    rho_CC,
+                       temp_cc_4,   Temp_CC,
+                       vel_cc_4,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc_4,  press_CCLabel_4,  0,patch);
+    to_dw->put(        rho_cc_4,    rho_CCLabel_4,    0,patch);
+    to_dw->put(        temp_cc_4,   temp_CCLabel_4,   0,patch);
+    to_dw->put(        vel_cc_4,    vel_CCLabel_4,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
 
 }
 
@@ -876,10 +1127,33 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::actuallyStep5(const ProcessorGroup*,
 			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+			DataWarehouseP& from_dw,
+			DataWarehouseP& to_dw)
 {
-
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_step5OnOff  
+    CCVariable<double>  press_cc_4;
+    CCVariable<double>  rho_cc_4;
+    CCVariable<double>  temp_cc_4;
+    CCVariable<Vector>  vel_cc_4;
+   
+    from_dw->get(       press_cc_4,     press_CCLabel_4,0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc_4,       rho_CCLabel_4,  0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc_4,      temp_CCLabel_4, 0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc_4,       vel_CCLabel_4,  0, patch, Ghost::None, 0);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc_4,     press_CC,
+                        rho_cc_4,       rho_CC,
+                        temp_cc_4,      Temp_CC,
+                        vel_cc_4,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+#endif    
+/*______________________________________________________________________*/
      /*__________________________________
     *    S  T  E  P     5                        
     *   Compute Lagrangian values for the volume 
@@ -919,6 +1193,35 @@ void ICE::actuallyStep5(const ProcessorGroup*,
                         int_eng_CC,     int_eng_L_CC,   int_eng_source,
                         nMaterials);
     #endif  
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_step5OnOff
+    CCVariable<double>  press_cc_5;
+    CCVariable<double>  rho_cc_5;
+    CCVariable<double>  temp_cc_5;
+    CCVariable<Vector>  vel_cc_5;
+    
+    to_dw->allocate(    press_cc_5, press_CCLabel_5,  0,patch);
+    to_dw->allocate(    rho_cc_5,   rho_CCLabel_5,    0,patch);
+    to_dw->allocate(    temp_cc_5,  temp_CCLabel_5,   0,patch);
+    to_dw->allocate(    vel_cc_5,   vel_CCLabel_5,    0,patch);
+
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc_5,  press_CC,
+                       rho_cc_5,    rho_CC,
+                       temp_cc_5,   Temp_CC,
+                       vel_cc_5,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc_5,  press_CCLabel_5,  0,patch);
+    to_dw->put(        rho_cc_5,    rho_CCLabel_5,    0,patch);
+    to_dw->put(        temp_cc_5,   temp_CCLabel_5,   0,patch);
+    to_dw->put(        vel_cc_5,    vel_CCLabel_5,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
 
 }
 
@@ -943,10 +1246,33 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::actuallyStep6and7(const ProcessorGroup*,
 			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw)
+			DataWarehouseP& from_dw,
+			DataWarehouseP& to_dw)
 {
-
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_step6_7OnOff  
+    CCVariable<double>  press_cc_5;
+    CCVariable<double>  rho_cc_5;
+    CCVariable<double>  temp_cc_5;
+    CCVariable<Vector>  vel_cc_5;
+   
+    from_dw->get(       press_cc_5,     press_CCLabel_5,0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc_5,       rho_CCLabel_5,  0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc_5,      temp_CCLabel_5, 0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc_5,       vel_CCLabel_5,  0, patch, Ghost::None, 0);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc_5,     press_CC,
+                        rho_cc_5,       rho_CC,
+                        temp_cc_5,      Temp_CC,
+                        vel_cc_5,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+#endif    
+/*______________________________________________________________________*/
     /*_________________________________   
     *    S  T  E  P     6                            
     *   Compute the advection of mass,
@@ -987,7 +1313,37 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
                         cv_CC,          int_eng_CC,     Temp_CC,
                         nMaterials ); 
     #endif
+/*______________________________________________________________________
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_step6_7OnOff
+    CCVariable<double>  press_cc_6_7;
+    CCVariable<double>  rho_cc_6_7;
+    CCVariable<double>  temp_cc_6_7;
+    CCVariable<Vector>  vel_cc_6_7;
+    
+    to_dw->allocate(    press_cc_6_7, press_CCLabel_6_7,  0,patch);
+    to_dw->allocate(    rho_cc_6_7,   rho_CCLabel_6_7,    0,patch);
+    to_dw->allocate(    temp_cc_6_7,  temp_CCLabel_6_7,   0,patch);
+    to_dw->allocate(    vel_cc_6_7,   vel_CCLabel_6_7,    0,patch);
+
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(   patch,
+                       press_cc_6_7,  press_CC,
+                       rho_cc_6_7,    rho_CC,
+                       temp_cc_6_7,   Temp_CC,
+                       vel_cc_6_7,    uvel_CC,     vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        press_cc_6_7,  press_CCLabel_6_7,  0,patch);
+    to_dw->put(        rho_cc_6_7,    rho_CCLabel_6_7,    0,patch);
+    to_dw->put(        temp_cc_6_7,   temp_CCLabel_6_7,   0,patch);
+    to_dw->put(        vel_cc_6_7,    vel_CCLabel_6_7,    0,patch);
+#endif   
+/*_______________________________________________________________________*/
 }
+
 
 
 /* ---------------------------------------------------------------------
@@ -1005,19 +1361,49 @@ Version   Programmer         Date       Description
 _____________________________________________________________________*/
 void ICE::actually_Bottom_of_main_loop(const ProcessorGroup*,
                     const Patch* patch,
-		      DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw)
+		      DataWarehouseP& from_dw,
+		      DataWarehouseP& to_dw)
 {
   double t      = this->cheat_t;
   double delt   = this->cheat_delt;
   int   should_I_write_output;
   bool include_ghost_cells = true;
+  
+
   /*__________________________________
    *   Plotting variables
    *___________________________________*/
 #if (switchDebug_main == 1|| switchDebug_main == 2 || switchDebug_main_input == 1)
     #include "plot_declare_vars.h"   
 #endif
+    cerr << "Actually doing at bottom of main loop" << endl;
+/*______________________________________________________________________
+*    F  R  O  M     D  W     W  R  A  P  P  E  R 
+*--------------------------------------*/
+#if switch_UCF_Bottom_of_main_loopOnOff  
+    CCVariable<double>  press_cc_6_7;
+    CCVariable<double>  rho_cc_6_7;
+    CCVariable<double>  temp_cc_6_7;
+    CCVariable<Vector>  vel_cc_6_7;
+   
+    from_dw->get(       press_cc_6_7,   press_CCLabel_6_7,0, patch, Ghost::None, 0);
+    from_dw->get(       rho_cc_6_7,     rho_CCLabel_6_7,  0, patch, Ghost::None, 0);
+    from_dw->get(       temp_cc_6_7,    temp_CCLabel_6_7, 0, patch, Ghost::None, 0);
+    from_dw->get(       vel_cc_6_7,     vel_CCLabel_6_7,  0, patch, Ghost::None, 0);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::before_each_step_wrapper(  patch,
+                        press_cc_6_7,   press_CC,
+                        rho_cc_6_7,     rho_CC,
+                        temp_cc_6_7,    Temp_CC,
+                        vel_cc_6_7,
+                        uvel_CC,        vvel_CC,        wvel_CC);
+
+
+#endif
+/*______________________________________________________________________*/
+
     should_I_write_output = Is_it_time_to_write_output( t, t_output_vars  );
     /*__________________________________
     *    T  E  C  P  L  O  T  
@@ -1074,90 +1460,42 @@ void ICE::actually_Bottom_of_main_loop(const ProcessorGroup*,
     
     fprintf(stderr, "press return to continue \n");
     getchar();
-  
+ 
+
+
+
 
 /*______________________________________________________________________
-*   leftovers from steve
-*_______________________________________________________________________*/
-    // Added by Steve for sanity checking
-#if 0
-    double sumRho=0;
-    double sumEng=0;
-    int m=1;
-    for ( int i = xLoLimit; i <= xHiLimit; i++){
-      for ( int j = yLoLimit; j <= yHiLimit; j++){
-        for ( int k = zLoLimit; k <= zHiLimit; k++){ 
-	  cerr << "rho["<<i<<"]["<<j<<"]["<<k<<"] = " << rho_CC[m][i][j][k] << endl;
-	  sumRho += rho_CC[m][i][j][k];
-	  sumEng += int_eng_CC[m][i][j][k];
-        }
-      }
-    }
-    cerr << "sum rho=" << sumRho << '\n';
-    cerr << "sum eng=" << sumEng << '\n';
-    cerr << "ii=" << int_eng_CC[1][5][5][1] << '\n';
-#endif
-
-    /*__________________________________
-    *   - Allocate memory for the new dw
-    *   - Convert NR arrays into UCF format
-    *   - put the UCF formatted arrays into the dw
-    *___________________________________*/
-  
+*     T  O     D  W     W  R  A  P  P  E  R  
+*--------------------------------------*/
+#if switch_UCF_Bottom_of_main_loopOnOff
     CCVariable<Vector>  new_vel_cc;
     CCVariable<double>  new_temp_cc;
     CCVariable<double>  new_rho_cc;
     CCVariable<double>  new_press_cc;
-    CCVariable<double>  new_cv_cc;
     
-    new_dw->allocate(   new_vel_cc,     vel_CCLabel,    0,patch);
-    new_dw->allocate(   new_temp_cc,    temp_CCLabel,   0,patch);
-    new_dw->allocate(   new_rho_cc,     rho_CCLabel,    0,patch);
-    new_dw->allocate(   new_press_cc,   press_CCLabel,  0,patch);
-    new_dw->allocate(   new_cv_cc,      cv_CCLabel,     0,patch);
-    
-    ICE::convertNR_4dToUCF(patch,
-        new_vel_cc, uvel_CC,    vvel_CC,    wvel_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
-  
-    ICE::convertNR_4dToUCF(patch,
-        new_temp_cc,            Temp_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
-        
-    ICE::convertNR_4dToUCF(patch,
-        new_rho_cc,             rho_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
-        
-    ICE::convertNR_4dToUCF(patch,
-        new_press_cc,           press_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
-        
-    ICE::convertNR_4dToUCF(patch,
-        new_cv_cc,              cv_CC,
-        include_ghost_cells,
-        xLoLimit,   xHiLimit,   yLoLimit,   yHiLimit,   zLoLimit,   zHiLimit,
-	 nMaterials);
-                  
-    new_dw->put(        new_cv_cc,      cv_CCLabel,     0,patch);
-    new_dw->put(        new_temp_cc,    temp_CCLabel,   0,patch); 
-    new_dw->put(        new_vel_cc,     vel_CCLabel,    0,patch); 
-    new_dw->put(        new_press_cc,   press_CCLabel,  0,patch); 
-    new_dw->put(        new_rho_cc,     rho_CCLabel,    0,patch);    
-    
+    to_dw->allocate(    new_vel_cc,     vel_CCLabel,    0,patch);
+    to_dw->allocate(    new_temp_cc,    temp_CCLabel,   0,patch);
+    to_dw->allocate(    new_rho_cc,     rho_CCLabel,    0,patch);
+    to_dw->allocate(    new_press_cc,   press_CCLabel,  0,patch);
+    /*__________________________________
+    *   UCF NR
+    *___________________________________*/
+    ICE::after_each_step_wrapper(  patch,
+                       new_press_cc,   press_CC,
+                       new_rho_cc,     rho_CC,
+                       new_temp_cc,    Temp_CC,
+                       new_vel_cc,
+                       uvel_CC,         vvel_CC,        wvel_CC);
+                       
+    to_dw->put(        new_press_cc,   press_CCLabel,  0,patch); 
+    to_dw->put(        new_rho_cc,     rho_CCLabel,    0,patch);
+    to_dw->put(        new_temp_cc,    temp_CCLabel,   0,patch); 
+    to_dw->put(        new_vel_cc,     vel_CCLabel,    0,patch);        
+#endif  
+/*______________________________________________________________________*/
 
 }
-
-
-
-
 
 
 

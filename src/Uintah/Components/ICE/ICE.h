@@ -122,7 +122,7 @@ public:
                         const Patch*, 
                         CCVariable<double>& scalar_ucf, 
 			   double ****scalar_CC,
-			bool include_ghostcells,
+			   bool include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -137,7 +137,7 @@ public:
 			   double ****uvel_CC,
 			   double ****vvel_CC,
 			   double ****wvel_CC,
-			bool include_ghostcells,
+			   bool include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -150,7 +150,7 @@ public:
                         const Patch*, 
                         CCVariable<double>& scalar_ucf, 
 			   double ****scalar_CC,
-			bool include_ghostcells,
+			   bool include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -165,7 +165,7 @@ public:
 			   double ****uvel_FC,
 			   double ****vvel_FC,
 			   double ****wvel_FC,
-			bool include_ghostcells,
+			   bool include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -173,19 +173,77 @@ public:
 			   int zLoLimit,
 			   int zHiLimit,
 			   int nMaterials);
+                        
+void before_each_step_wrapper(
+                        const Patch* patch,
+                        CCVariable<double>& press_cc,
+                        double  ****press_CC,
+                        CCVariable<double>& rho_cc,
+                        double  ****rho_CC,
+                        CCVariable<double>& temp_cc,
+                        double  ****Temp_CC,
+                        CCVariable<Vector>& vel_cc,
+                        double  ****uvel_CC,
+                        double  ****vvel_CC,
+                        double  ****wvel_CC);
+                        
+void after_each_step_wrapper(
+                        const Patch* patch,
+                        CCVariable<double>& press_cc,
+                        double  ****press_CC,
+                        CCVariable<double>& rho_cc,
+                        double  ****rho_CC,
+                        CCVariable<double>& temp_cc,
+                        double  ****Temp_CC,
+                        CCVariable<Vector>& vel_cc,
+                        double  ****uvel_CC,
+                        double  ****vvel_CC,
+                        double  ****wvel_CC);
 			  
    
-private:
+                        private:
  // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
  
  // Cell centered variables
 
     const VarLabel* delTLabel;
-    const VarLabel* vel_CCLabel;
+
     const VarLabel* press_CCLabel;
+    const VarLabel* press_CCLabel_0;
     const VarLabel* press_CCLabel_1;
+    const VarLabel* press_CCLabel_2;
+    const VarLabel* press_CCLabel_3;
+    const VarLabel* press_CCLabel_4;
+    const VarLabel* press_CCLabel_5;
+    const VarLabel* press_CCLabel_6_7;
+    
     const VarLabel* rho_CCLabel;
+    const VarLabel* rho_CCLabel_0;
+    const VarLabel* rho_CCLabel_1;
+    const VarLabel* rho_CCLabel_2;
+    const VarLabel* rho_CCLabel_3;
+    const VarLabel* rho_CCLabel_4;
+    const VarLabel* rho_CCLabel_5;
+    const VarLabel* rho_CCLabel_6_7;
+    
     const VarLabel* temp_CCLabel;
+    const VarLabel* temp_CCLabel_0;
+    const VarLabel* temp_CCLabel_1;
+    const VarLabel* temp_CCLabel_2;
+    const VarLabel* temp_CCLabel_3;
+    const VarLabel* temp_CCLabel_4;
+    const VarLabel* temp_CCLabel_5;
+    const VarLabel* temp_CCLabel_6_7;
+    
+    const VarLabel* vel_CCLabel;
+    const VarLabel* vel_CCLabel_0;
+    const VarLabel* vel_CCLabel_1;
+    const VarLabel* vel_CCLabel_2;
+    const VarLabel* vel_CCLabel_3;
+    const VarLabel* vel_CCLabel_4;
+    const VarLabel* vel_CCLabel_5;
+    const VarLabel* vel_CCLabel_6_7;
+    
     const VarLabel* cv_CCLabel;
     const VarLabel* div_velfc_CCLabel;
 
