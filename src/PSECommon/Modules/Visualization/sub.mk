@@ -39,8 +39,7 @@ SRCS     += \
 	$(SRCDIR)/IsoSurfaceDW.cc\
 	$(SRCDIR)/IsoSurfaceMRSG.cc\
 	$(SRCDIR)/IsoSurfaceMSRG.cc\
-	$(SRCDIR)/IsoSurfaceSAGE.cc\
-	$(SRCDIR)/IsoSurfaceNOISE.cc\
+	$(SRCDIR)/Isosurface.cc\
 	$(SRCDIR)/Span.cc\
 	$(SRCDIR)/SearchNOISE.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
@@ -56,6 +55,9 @@ SRCS     += \
         $(SRCDIR)/TextureVolVis.cc\
         $(SRCDIR)/TexCuttingPlanes.cc\
 #[INSERT NEW CODE FILE HERE]
+
+#	$(SRCDIR)/IsoSurfaceSAGE.cc\
+#	$(SRCDIR)/IsoSurfaceNOISE.cc\
 
 #	$(SRCDIR)/Span.cc\
 #	$(SRCDIR)/Noise.cc\
@@ -73,6 +75,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12  2000/12/12 20:22:58  yarden
+# remove SAGE and NOISE add Isosurface
+#
 # Revision 1.11  2000/12/09 17:29:50  moulding
 # Port Kurt's volume rendering stuff to linux and move it to PSECommon.
 #
