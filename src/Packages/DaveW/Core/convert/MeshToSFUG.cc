@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     ScalarFieldUG *sfug=scinew ScalarFieldUG(mesh, ScalarFieldUG::NodalValues);
     
     for (i=0; i<sfug->data.size(); i++)
-	sfug->data[i] = mesh->nodes[i]->p.y();
+	sfug->data[i] = mesh->point(i).y();
 
     BinaryPiostream stream2(fout, Piostream::Write);
     ScalarFieldHandle sfH(sfug);

@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 	sscanf(buf, "%d %lf %lf %lf", &dum1, &x, &y, &z);
 	while (dum1-1 != mesh->nodes.size())
 	    mesh->nodes.add(NodeHandle(0));
-	allNodes[cnt]->p=Point(x,y,z);
+	allNodes[cnt]->p = Point(x,y,z);
 	mesh->nodes.add(NodeHandle(allNodes[cnt++]));
     }
 

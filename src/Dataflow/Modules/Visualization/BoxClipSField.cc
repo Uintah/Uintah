@@ -172,7 +172,7 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     //Array1<int> new_nodes;
     if (isAlligned) {
 	for (int i=0; i<m->nodesize(); i++) {
-	    const Point &p=m->node(i).p;
+	    const Point &p = m->point(i);
 	    if (p.x()>=minPt.x() && p.y()>=minPt.y() && p.z()>=minPt.z() &&
 		p.x()<=maxPt.x() && p.y()<=maxPt.y() && p.z()<=maxPt.z())
 		in_nodes[i]=-2;
@@ -197,7 +197,7 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
 	pln.add(Plane(pnt[2], pnt[6], pnt[7]));
 	pln.add(Plane(pnt[4], pnt[5], pnt[1]));
 	for (int i=0; i<m->nodesize(); i++) {
-	    const Point &p = m->node(i).p;
+ 	    const Point &p = m->point(i);
 	    if (pln[0].eval_point(p)<=0 && pln[1].eval_point(p)<=0 &&
 		pln[2].eval_point(p)<=0 && pln[3].eval_point(p)<=0 &&
 		pln[4].eval_point(p)<=0 && pln[5].eval_point(p)<=0)
@@ -231,7 +231,7 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     for (i=0; i<in_nodes.size(); i++) {
 	if (in_nodes[i] == -1) {
 	    in_nodes[i] = nnodes;
-	    sf->mesh->nodes.add(new Node(m->node(i).p));
+	    sf->mesh->nodes.add(new Node(m->point(i)));
 	    sf->data.add(sfug->data[i]);
 	    nnodes++;
 	}

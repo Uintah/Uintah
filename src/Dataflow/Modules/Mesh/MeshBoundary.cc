@@ -78,9 +78,9 @@ void MeshBoundary::execute()
 	      bdryNodes[teste->n[facei[j+1]]] = 1;
 	      bdryNodes[teste->n[facei[j+2]]] = 1;
 	      bdryNodes[teste->n[facei[j+3]]] = 1;
-	      tris->add(mesh->node(teste->n[facei[j+1]]).p,
-			mesh->node(teste->n[facei[j+2]]).p,
-			mesh->node(teste->n[facei[j+3]]).p);
+	      tris->add(mesh->point(teste->n[facei[j+1]]),
+			mesh->point(teste->n[facei[j+2]]),
+			mesh->point(teste->n[facei[j+3]]));
 	  }
 	}
       }
@@ -93,7 +93,7 @@ void MeshBoundary::execute()
 	if (bdryNodes[i]) {
 	    nodeMap[i] = count;
 	    count++;
-	    ts->points.add(mesh->node(i).p);
+	    ts->points.add(mesh->point(i));
 	}
     }
     for (i=0; i<mesh->elemsize(); i++) {

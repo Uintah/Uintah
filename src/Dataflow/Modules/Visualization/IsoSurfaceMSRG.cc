@@ -755,10 +755,10 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    Node* n1=mesh->nodes[element->n[0]].get_rep();
-    Node* n2=mesh->nodes[element->n[1]].get_rep();
-    Node* n3=mesh->nodes[element->n[2]].get_rep();
-    Node* n4=mesh->nodes[element->n[3]].get_rep();
+    const Point &p1 = mesh->point(element->n[0]);
+    const Point &p2 = mesh->point(element->n[1]);
+    const Point &p3 = mesh->point(element->n[2]);
+    const Point &p4 = mesh->point(element->n[3]);
     if(v1 == v2 && v3 == v4 && v1 == v4)
 	return 0;
     int f1=v1<0;
@@ -776,9 +776,9 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     case 14:
 	// Point 4 is inside
  	if(v4 != 0){
-	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(p4, p1, v4/(v4-v1)));
+	    Point p2(Interpolate(p4, p2, v4/(v4-v2)));
+	    Point p3(Interpolate(p4, p3, v4/(v4-v3)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE2|FACE3;
 	}
@@ -787,9 +787,9 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     case 13:
 	// Point 3 is inside
  	if(v3 != 0){
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(p3, p1, v3/(v3-v1)));
+	    Point p2(Interpolate(p3, p2, v3/(v3-v2)));
+	    Point p3(Interpolate(p3, p4, v3/(v3-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE2|FACE4;
 	}
@@ -798,10 +798,10 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     case 12:
 	// Point 3 and 4 are inside
  	{
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n2->p, v4/(v4-v2)));
+	    Point p1(Interpolate(p3, p1, v3/(v3-v1)));
+	    Point p2(Interpolate(p3, p2, v3/(v3-v2)));
+	    Point p3(Interpolate(p4, p1, v4/(v4-v1)));
+	    Point p4(Interpolate(p4, p2, v4/(v4-v2)));
 	    if(v3 != v4){
 		if(v3 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -815,9 +815,9 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     case 11:
 	// Point 2 is inside
  	if(v2 != 0){
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
+	    Point p1(Interpolate(p2, p1, v2/(v2-v1)));
+	    Point p2(Interpolate(p2, p3, v2/(v2-v3)));
+	    Point p3(Interpolate(p2, p4, v2/(v2-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE3|FACE4;
 	}
@@ -826,10 +826,10 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     case 10:
 	// Point 2 and 4 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(p2, p1, v2/(v2-v1)));
+	    Point p2(Interpolate(p2, p3, v2/(v2-v3)));
+	    Point p3(Interpolate(p4, p1, v4/(v4-v1)));
+	    Point p4(Interpolate(p4, p3, v4/(v4-v3)));
 	    if(v2 != v4){
 		if(v2 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -843,10 +843,10 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     case 9:
 	// Point 2 and 3 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n4->p, v2/(v2-v4)));
-	    Point p3(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p4(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(p2, p1, v2/(v2-v1)));
+	    Point p2(Interpolate(p2, p4, v2/(v2-v4)));
+	    Point p3(Interpolate(p3, p1, v3/(v3-v1)));
+	    Point p4(Interpolate(p3, p4, v3/(v3-v4)));
 	    if(v2 != v3){
 		if(v2 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -860,9 +860,9 @@ int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
     case 8:
 	// Point 1 is inside
  	if(v1 != 0){
-	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
-	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
-	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
+	    Point p1(Interpolate(p1, p2, v1/(v1-v2)));
+	    Point p2(Interpolate(p1, p3, v1/(v1-v3)));
+	    Point p3(Interpolate(p1, p4, v1/(v1-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE2|FACE3|FACE4;
 	}
@@ -981,10 +981,10 @@ inline int F_FACE(int e1, int e2) { return EDGE_TO_FACE[(e1<<3)|e2]; }
 inline int E_FACE(int e1, int e2) { return ((e1<<3)|e2); }
 
 inline void add_strip_point(const int nvert, GeomTriStripList* group,
-			    const NodeHandle& n1,
-			    const NodeHandle& n2,
-			    const NodeHandle& n3,
-			    const NodeHandle& n4,
+			    const Point &p1,
+			    const Point &p2,
+			    const Point &p3,
+			    const Point &p4,
 			    const double v1,
 			    const double v2,
 			    const double v3,
@@ -993,32 +993,32 @@ inline void add_strip_point(const int nvert, GeomTriStripList* group,
     int i = group->num_since();
     Point pm1(group->get_pm1());
     Point pm2(group->get_pm2());
-    Point p1;
+    Point p;
 
 	switch (nvert) {
 	case E12:
-	    p1 = (Interpolate(n1->p,n2->p,v1/(v1-v2)));
+	    p = (Interpolate(p1, p2, v1/(v1-v2)));
 	    break;
 	case E13:
-	    p1 =  (Interpolate(n1->p,n3->p,v1/(v1-v3)));
+	    p = (Interpolate(p1, p3, v1/(v1-v3)));
 	    break;
 	case E14:
-	    p1 = (Interpolate(n1->p,n4->p,v1/(v1-v4)));
+	    p = (Interpolate(p1, p4, v1/(v1-v4)));
 	    break;
 	case E23:
-	    p1 = (Interpolate(n2->p,n3->p,v2/(v2-v3)));
+	    p = (Interpolate(p2, p3, v2/(v2-v3)));
 	    break;
 	case E24:
-	    p1 = (Interpolate(n2->p,n4->p,v2/(v2-v4)));
+	    p = (Interpolate(p2, p4, v2/(v2-v4)));
 	    break;
 	case E34:
-	    p1 = (Interpolate(n3->p,n4->p,v3/(v3-v4)));
+	    p = (Interpolate(p3, p4, v3/(v3-v4)));
 	    break;
 	default:
 	    cerr << "Major error, unnkown code: " << nvert << "\n";
 	}
 
-    Vector n(Cross(p1-pm2,pm1-pm2));
+    Vector n(Cross(p-pm2,pm1-pm2));
 #if NORMALIZE_NORMALS
     if (n.length2() > 0){
 	n.normalize();
@@ -1026,7 +1026,7 @@ inline void add_strip_point(const int nvert, GeomTriStripList* group,
 #endif
     if (!(i&1)) // this implies a different sign convention
 	n *=-1.0;
-    group->add(p1,n);
+    group->add(p,n);
 }
 
 // an "entrance" contains 6 bits - 3 bits for 1st edge, 3 for second
@@ -1043,10 +1043,10 @@ int IsoSurfaceMSRG::iso_strip_enter(int inc,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    NodeHandle n1=mesh->nodes[element->n[0]];
-    NodeHandle n2=mesh->nodes[element->n[1]];
-    NodeHandle n3=mesh->nodes[element->n[2]];
-    NodeHandle n4=mesh->nodes[element->n[3]];
+    const Point &p1 = mesh->point(element->n[0]);
+    const Point &p2 = mesh->point(element->n[1]);
+    const Point &p3 = mesh->point(element->n[2]);
+    const Point &p4 = mesh->point(element->n[3]);
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;
@@ -1062,7 +1062,7 @@ int IsoSurfaceMSRG::iso_strip_enter(int inc,
     // remember LOW is the most recently emmited
     if (two_exit) { // exit on only one face
 	int nvert = GET_EDGE_ONE(inc);
-	add_strip_point(nvert,group,n1,n2,n3,n4,v1,v2,v3,v4);
+	add_strip_point(nvert, group, p1, p2, p3, p4, v1, v2, v3, v4);
 	rfaces = E_FACE(LOWE(inc),nvert);
 	pfaces = F_FACE(HIGHE(inc),nvert);
     }
@@ -1070,9 +1070,9 @@ int IsoSurfaceMSRG::iso_strip_enter(int inc,
 	// this is simple, you must emit the vertex
 	// corresponding to the edge opposite the last vertex first
 	int nhigh = GET_EDGE_OPP(LOWE(inc));
-	add_strip_point(nhigh,group,n1,n2,n3,n4,v1,v2,v3,v4);
+	add_strip_point(nhigh, group, p1, p2, p3, p4, v1, v2, v3, v4);
 	int nlow = GET_EDGE_OPP(HIGHE(inc));
-	add_strip_point(nlow,group,n1,n2,n3,n4,v1,v2,v3,v4);
+	add_strip_point(nlow, group, p1, p2, p3, p4, v1, v2, v3, v4);
 	rfaces = E_FACE(nhigh,nlow);
 	pfaces = F_FACE(HIGHE(inc),nhigh)|F_FACE(LOWE(inc),nlow);
     }
@@ -1159,10 +1159,10 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    NodeHandle n1=mesh->nodes[element->n[0]];
-    NodeHandle n2=mesh->nodes[element->n[1]];
-    NodeHandle n3=mesh->nodes[element->n[2]];
-    NodeHandle n4=mesh->nodes[element->n[3]];
+    const Point &p1 = mesh->point(element->n[0]);
+    const Point &p2 = mesh->point(element->n[1]);
+    const Point &p3 = mesh->point(element->n[2]);
+    const Point &p4 = mesh->point(element->n[3]);
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;
@@ -1188,9 +1188,9 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 14:
 	// Point 4 is inside
  	{
-	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(p4, p1, v4/(v4-v1)));
+	    Point p2(Interpolate(p4, p2, v4/(v4-v2)));
+	    Point p3(Interpolate(p4, p3, v4/(v4-v3)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
@@ -1214,9 +1214,9 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 13:
 	// Point 3 is inside
  	{
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(p3, p1, v3/(v3-v1)));
+	    Point p2(Interpolate(p3, p2, v3/(v3-v2)));
+	    Point p3(Interpolate(p3, p4, v3/(v3-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
@@ -1241,10 +1241,10 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 12:
 	// Point 3 and 4 are inside
  	{
-	    pA=Interpolate(n3->p, n1->p, v3/(v3-v1));
-	    pB=Interpolate(n3->p, n2->p, v3/(v3-v2));
-	    pC=Interpolate(n4->p, n1->p, v4/(v4-v1));
-	    pD=Interpolate(n4->p, n2->p, v4/(v4-v2));
+	    pA=Interpolate(p3, p1, v3/(v3-v1));
+	    pB=Interpolate(p3, p2, v3/(v3-v2));
+	    pC=Interpolate(p4, p1, v4/(v4-v1));
+	    pD=Interpolate(p4, p2, v4/(v4-v2));
 
 	    eA = E31;
 	    eB = E32;
@@ -1257,9 +1257,9 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 11:
 	// Point 2 is inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
+	    Point p1(Interpolate(p2, p1, v2/(v2-v1)));
+	    Point p2(Interpolate(p2, p3, v2/(v2-v3)));
+	    Point p3(Interpolate(p2, p4, v2/(v2-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
@@ -1281,10 +1281,10 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 10:
 	// Point 2 and 4 are inside
  	{
-	    pA=Interpolate(n2->p, n1->p, v2/(v2-v1));
-	    pB=Interpolate(n2->p, n3->p, v2/(v2-v3));
-	    pC=Interpolate(n4->p, n1->p, v4/(v4-v1));
-	    pD=Interpolate(n4->p, n3->p, v4/(v4-v3));
+	    pA=Interpolate(p2, p1, v2/(v2-v1));
+	    pB=Interpolate(p2, p3, v2/(v2-v3));
+	    pC=Interpolate(p4, p1, v4/(v4-v1));
+	    pD=Interpolate(p4, p3, v4/(v4-v3));
 
 	    eA = E21;
 	    eB = E23;
@@ -1297,10 +1297,10 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 9:
 	// Point 2 and 3 are inside
  	{
-	    pA=Interpolate(n2->p, n1->p, v2/(v2-v1));
-	    pB=Interpolate(n2->p, n4->p, v2/(v2-v4));
-	    pC=Interpolate(n3->p, n1->p, v3/(v3-v1));
-	    pD=Interpolate(n3->p, n4->p, v3/(v3-v4));
+	    pA=Interpolate(p2, p1, v2/(v2-v1));
+	    pB=Interpolate(p2, p4, v2/(v2-v4));
+	    pC=Interpolate(p3, p1, v3/(v3-v1));
+	    pD=Interpolate(p3, p4, v3/(v3-v4));
 
 	    eA = E21;
 	    eB = E24;
@@ -1312,9 +1312,9 @@ int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 8:
 	// Point 1 is inside
  	{
-	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
-	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
-	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
+	    Point p1(Interpolate(p1, p2, v1/(v1-v2)));
+	    Point p2(Interpolate(p1, p3, v1/(v1-v3)));
+	    Point p3(Interpolate(p1, p4, v1/(v1-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){

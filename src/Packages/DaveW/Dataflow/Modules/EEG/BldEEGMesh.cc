@@ -311,8 +311,8 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 	n0=e->n[0]; n1=e->n[1]; n2=e->n[2]; n3=e->n[3];
 	while (tied) {
 //	    cerr << "tied... ";
-	    randomPointsInTetra(samples, m->nodes[n0]->p, m->nodes[n1]->p,
-				m->nodes[n2]->p, m->nodes[n3]->p);
+	    randomPointsInTetra(samples, m->point(n0), m->point(n1),
+				m->point(n2), m->point(n3));
 	    int j;
 	    for (j=0; j<samples.size(); j++) {
 		sf->locate(samples[j], ci, cj, ck);
@@ -361,10 +361,10 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 	    }
 //	    cerr << "mostPopAmt="<<mostPopAmt<<" Idx="<<mostPopIdx<<" ";
 	}
-	sf->locate(AffineCombination(m->nodes[n0]->p, .25, 
-				     m->nodes[n1]->p, .25,
-				     m->nodes[n2]->p, .25,
-				     m->nodes[n3]->p, .25), ci, cj, ck);
+	sf->locate(AffineCombination(m->point(n0), .25, 
+				     m->point(n1), .25,
+				     m->point(n2), .25,
+				     m->point(n3), .25), ci, cj, ck);
 
 	if (sf->grid(ci,cj,ck) == 0) {airCtr++; m->elems[i]=0; scalp[n0]=1; scalp[n1]=1; scalp[n2]=1; scalp[n3]=1;} else {othrCtr++;
 //	int comp=sf->grid(ci,cj,ck);
@@ -527,7 +527,7 @@ void BldEEGMesh::applyScalpBCs(Mesh *m, SurfTree *st,
 	bcVal=st->data[i];
 	for (int j=0; j<m->nodes.size(); j++) {
 	    if (!used[j]) {
-		double d=(m->nodes[j]->p - bcPt).length2();
+		double d=(m->point(j) - bcPt).length2();
 		if (invalid || d<dist) {
 		    invalid=0;
 		    dist=d;
@@ -568,7 +568,7 @@ void BldEEGMesh::findCortexNodesInSTree(Mesh *m, SurfTree* st, int startCNode,
     }
 //    cerr << "NscalpPts="<<st->bcIdx.size();
     for (i=0; i<cortexBCMeshNodes.size(); i++) {
-	Point p(m->nodes[cortexBCMeshNodes[i]]->p);
+        const Point &p = m->point(cortexBCMeshNodes[i]);
 //	cerr << "p="<<p<<"  ";
 	int idx=ctxPts[0];
 	double d=(p-st->nodes[idx]).length2();

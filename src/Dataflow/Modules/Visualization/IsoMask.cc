@@ -881,10 +881,10 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    const Point	&n1=mesh->node(element->n[0]).p;
-    const Point	&n2=mesh->node(element->n[1]).p;
-    const Point	&n3=mesh->node(element->n[2]).p;
-    const Point	&n4=mesh->node(element->n[3]).p;
+    const Point	&n1 = mesh->point(element->n[0]);
+    const Point	&n2 = mesh->point(element->n[1]);
+    const Point	&n3 = mesh->point(element->n[2]);
+    const Point	&n4 = mesh->point(element->n[3]);
     if(v1 == v2 && v3 == v4 && v1 == v4)
 	return 0;
     int f1=v1<0;
@@ -1169,10 +1169,10 @@ int IsoMask::iso_strip_enter(int inc,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    const Point &n1 = mesh->node(element->n[0]).p;
-    const Point &n2 = mesh->node(element->n[1]).p;
-    const Point &n3 = mesh->node(element->n[2]).p;
-    const Point &n4 = mesh->node(element->n[3]).p;
+    const Point &n1 = mesh->point(element->n[0]);
+    const Point &n2 = mesh->point(element->n[1]);
+    const Point &n3 = mesh->point(element->n[2]);
+    const Point &n4 = mesh->point(element->n[3]);
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;
@@ -1285,10 +1285,10 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    const Point &n1 = mesh->node(element->n[0]).p;
-    const Point &n2 = mesh->node(element->n[1]).p;
-    const Point &n3 = mesh->node(element->n[2]).p;
-    const Point &n4 = mesh->node(element->n[3]).p;
+    const Point &n1 = mesh->point(element->n[0]);
+    const Point &n2 = mesh->point(element->n[1]);
+    const Point &n3 = mesh->point(element->n[2]);
+    const Point &n4 = mesh->point(element->n[3]);
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;

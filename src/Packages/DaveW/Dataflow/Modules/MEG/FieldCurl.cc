@@ -29,8 +29,8 @@ public:
   virtual void execute();
 private:
   Vector curl(int x, int y, int z, VectorFieldRG* vf);
-  Vector get_curl(Element* elem,
-		  Vector& v0, Vector& v1, Vector& v2, Vector& v3);
+  Vector get_curl(Mesh *mesh, Element *elem,
+		  Vector &v0, Vector &v1, Vector &v2, Vector &v3);
 };
 
 extern "C" Module* make_FieldCurl(const clString& id)
@@ -86,7 +86,7 @@ void FieldCurl::execute() {
 	Vector v2=vfug->data[e->n[1]];
 	Vector v3=vfug->data[e->n[2]];
 	Vector v4=vfug->data[e->n[3]];
-	Vector curl = get_curl(e,v1,v2,v3,v4);
+	Vector curl = get_curl(mesh, e, v1, v2, v3, v4);
 	for(int j=0;j<4;j++){
 	     curls[e->n[j]]+=curl;
 	}
@@ -109,7 +109,7 @@ void FieldCurl::execute() {
 	Vector v2=vfug->data[e->n[1]];
 	Vector v3=vfug->data[e->n[2]];
 	Vector v4=vfug->data[e->n[3]];
-	Vector curl = get_curl(e,v1,v2,v3,v4);
+	Vector curl = get_curl(mesh, e, v1, v2, v3, v4);
 	vfug2->data[i]=curl;
       }
     }
@@ -211,14 +211,14 @@ Vector FieldCurl::curl(int x, int y, int z, VectorFieldRG* vf) {
 
 //get curl for unstructured grid
 
-Vector FieldCurl::get_curl(Element* elem, Vector& v1, Vector& v2, Vector& v3, Vector& v4)
+Vector FieldCurl::get_curl(Mesh *mesh, Element *elem, Vector &v1, Vector &v2, Vector &v3, Vector &v4)
 {
 
 #ifndef STORE_ELEMENT_BASIS
-    Point p1(nodes[elem->n[0]]->p);
-    Point p2(nodes[elem->n[1]]->p);
-    Point p3(nodes[elem->n[2]]->p);
-    Point p4(nodes[elem->n[3]]->p);
+    const Point &p1 = mesh->point(elem->n[0]);
+    const Point &p2 = mesh->point(elem->n[1]);
+    const Point &p3 = mesh->point(elem->n[2]);
+    const Point &p4 = mesh->point(elem->n[3]);
     double x1=p1.x();
     double y1=p1.y();
     double z1=p1.z();

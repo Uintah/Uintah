@@ -75,7 +75,7 @@ void Delaunay::execute()
     BBox bbox;
     int i;
     for(i=0;i<nn;i++)
-	bbox.extend(mesh->node(i).p);
+	bbox.extend(mesh->point(i));
 
     double epsilon=.1*bbox.longest_edge();
 

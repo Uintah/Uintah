@@ -69,9 +69,9 @@ void TetraWriter::execute()
     int i;
     for (i = 0; i < handle->nodesize(); i++)
     {
-	outfile << handle->node(i).p.x() << " " <<
-	           handle->node(i).p.y() << " " <<
-	           handle->node(i).p.z() << endl;
+	outfile << handle->point(i).x() << " " <<
+	           handle->point(i).y() << " " <<
+	           handle->point(i).z() << endl;
     }
 
     strcpy(str2, str1);

@@ -210,13 +210,13 @@ void ScalarFieldUG::get_boundary_lines(Array1<Point>& lines)
  */ 
 
 
-inline Point RandomPoint(Element* e)
+inline Point RandomPoint(Mesh *mesh, Element *e)
 {
   
-  const Point &p0(e->mesh->node(e->n[0]).p);
-  const Point &p1(e->mesh->node(e->n[1]).p);
-  const Point &p2(e->mesh->node(e->n[2]).p);
-  const Point &p3(e->mesh->node(e->n[3]).p);
+  const Point &p0 = mesh->point(e->n[0]);
+  const Point &p1 = mesh->point(e->n[1]);
+  const Point &p2 = mesh->point(e->n[2]);
+  const Point &p3 = mesh->point(e->n[3]);
   double alpha,gamma,beta; // 3 random variables...
 
   alpha = pow(drand48(),1.0/3.0);
@@ -295,7 +295,7 @@ void ScalarFieldUG::distribute_samples()
       cerr << "Over flow!\n";
     } else {
       aug_elems[pi].pt_samples.add(i);
-      samples[i].loc = RandomPoint(mymesh->element(pi));
+      samples[i].loc = RandomPoint(mymesh, mymesh->element(pi));
     }
   }
 }
