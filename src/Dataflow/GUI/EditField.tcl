@@ -60,7 +60,7 @@ itcl_class SCIRun_Fields_EditField {
 	set $this-typename2 "--- No typename ---"
 	set $this-datamin2 0
 	set $this-datamax2 0
-	set $this-dataat2 "Field::CELL"
+	set $this-dataat2 "Nodes"
 	set $this-cfldname 0
 	set $this-ctypename 0
 	set $this-cdataminmax 0
@@ -126,8 +126,7 @@ itcl_class SCIRun_Fields_EditField {
 		    $this-cbbox "$this-c update_widget"
 	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2 \
 		    $this-cdataminmax
-	labelcombo $edit.l9 "Data at" {Field::CELL 
-		                       Field::NODE Field::NONE} \
+	labelcombo $edit.l9 "Data at" {Nodes Edges Faces Cells} \
 		   $this-dataat2 $this-cdataat
 	pack $edit.l1 $edit.l2 $edit.l5 \
 	     $edit.l9 -side top 
@@ -289,8 +288,7 @@ itcl_class SCIRun_Fields_EditField {
 	} else {
 	    set $this-fldname2 ""
 	}
-	config_labelcombo $edit.l9 {Field::CELL  \
-		                    Field::NODE Field::NONE} [set $this-dataat]
+	config_labelcombo $edit.l9 {Nodes Edges Faces Cells} [set $this-dataat]
 	set $this-datamin2 [set $this-datamin]
 	set $this-datamax2 [set $this-datamax]
 	set $this-minx2 [set $this-minx]
