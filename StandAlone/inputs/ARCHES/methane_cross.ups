@@ -32,6 +32,7 @@
 	<save label = "densityCP"/>
 	<save label = "viscosityCTS"/>
 	<save label = "tempIN"/>
+        <save label = "co2IN"/>
 	<save label = "cellType"/>
 	<checkpoint cycle = "2" interval = "0.2"/>
    </DataArchiver>
