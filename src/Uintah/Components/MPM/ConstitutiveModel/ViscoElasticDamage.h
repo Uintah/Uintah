@@ -44,9 +44,11 @@
 
 #include <math.h>
 #include "ConstitutiveModel.h"	
+#include <vector>
 
 namespace Uintah {
 namespace Components {
+
 
 class ViscoElasticDamage : public ConstitutiveModel {
  private:
@@ -69,10 +71,10 @@ class ViscoElasticDamage : public ConstitutiveModel {
   double d_Bulk,d_Shear;
   // Damage parameters
   double d_Alpha, d_Beta;
-  // Damage Character 
-  double damageG;
   // Viscoelastic constants
   double d_Tau, d_Gamma;
+  // Damage Character 
+  double damageG;
   // Maximum equivalent strain
   double maxEquivStrain;
 
@@ -112,9 +114,9 @@ class ViscoElasticDamage : public ConstitutiveModel {
  
   virtual Matrix3 getDeformationMeasure() const;
   // access the mechanical properties
-#ifdef WONT_COMPILE_YET
-  virtual BoundedArray<double> getMechProps() const;
-#endif
+  virtual std::vector<double> getMechProps() const;
+
+
 
   
   // Compute the various quantities of interest
@@ -133,6 +135,11 @@ class ViscoElasticDamage : public ConstitutiveModel {
 				   const MPMMaterial* matl,
                                    const DataWarehouseP& new_dw);
 
+  // initialize  each particle's constitutive model data
+  virtual void initializeCMData(const Region* region,
+				const MPMMaterial* matl,
+				DataWarehouseP& new_dw);      
+  
   // Return the Lame constants
   virtual double getMu() const;
   virtual double getLambda() const;
@@ -178,8 +185,10 @@ class ViscoElasticDamage : public ConstitutiveModel {
   virtual int getSize() const;
 };
 
+
 } // end namespace Components
 } // end namespace Uintah
+
 
 #endif // __VISCOELASTIC_DAMAGE_CONSTITUTIVE_MODEL_H__ 
 

@@ -20,7 +20,7 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
-#ifdef WONT_COMPILE_YET
+using namespace Uintah::Components;
 
 CompNeoHook::CompNeoHook()
 {
@@ -107,22 +107,25 @@ Matrix3 CompNeoHook::getDeformationMeasure() const
 
 }
 
-BoundedArray<double> CompNeoHook::getMechProps() const
+std::vector<double> CompNeoHook::getMechProps() const
 {
   // Return bulk and shear modulus
 
-  BoundedArray<double> props(1,2,0.0);
+  std::vector<double> props(2,0.0);
 
-  props[1] = d_Bulk;
-  props[2] = d_Shear;
+  props[0] = d_Bulk;
+  props[1] = d_Shear;
 
   return props;
 
 }
 
-void CompNeoHook::computeStressTensor(Matrix3 velocityGradient, double time_step)
+void CompNeoHook::computeStressTensor(const Region* region,
+                                   const MPMMaterial* matl,
+                                   const DataWarehouseP& old_dw,
+                                   DataWarehouseP& new_dw)
 {
-
+#ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,shearTrial,fbar,deformationGradientInc;
   double J,p;
   double onethird = (1.0/3.0);
@@ -163,11 +166,15 @@ void CompNeoHook::computeStressTensor(Matrix3 velocityGradient, double time_step
   stressTensor = Identity*J*p + shearTrial;
 
   bElBar = bElBarTrial;
+#endif
 
 }
 
-double CompNeoHook::computeStrainEnergy()
+double CompNeoHook::computeStrainEnergy(const Region* region,
+                                     const MPMMaterial* matl,
+                                     const DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   double se,J,U,W;
 
   J = deformationGradient.Determinant();
@@ -177,7 +184,15 @@ double CompNeoHook::computeStrainEnergy()
   se = U + W;
 
   return se;
+#endif
 }
+
+void CompNeoHook::initializeCMData(const Region* region,
+                            const MPMMaterial* matl,
+                            DataWarehouseP& new_dw)
+{
+}
+
 
 double CompNeoHook::getLambda() const
 {
@@ -290,9 +305,14 @@ int CompNeoHook::getSize() const
   return(s);
 }
 
-#endif
+
 
 // $Log$
+// Revision 1.4  2000/04/19 21:15:54  jas
+// Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
+// functions that need access to data warehouse still have WONT_COMPILE_YET
+// around the methods.
+//
 // Revision 1.3  2000/04/14 17:34:42  jas
 // Added ProblemSpecP capabilities.
 //

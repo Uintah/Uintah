@@ -17,6 +17,7 @@
 #include "ConstitutiveModelFactory.h"
 #include "ElasticConstitutiveModel.h"
 
+
 #include <Uintah/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
 #include <fstream>
 using std::endl;
@@ -34,6 +35,8 @@ ElasticConstitutiveModel::ElasticConstitutiveModel()
   // No initialization
 
 }
+
+
 
 ElasticConstitutiveModel::ElasticConstitutiveModel(double YM, double PR): 
   YngMod(YM),PoiRat(PR)
@@ -65,6 +68,8 @@ ElasticConstitutiveModel::~ElasticConstitutiveModel()
   //cout << "Calling ElasticConstitutiveModel destructor . . . " << endl;
  
 }
+
+
 
 void ElasticConstitutiveModel::setYngMod(double ym)
 {
@@ -150,20 +155,20 @@ Matrix3 ElasticConstitutiveModel::getDeformationMeasure() const
 
 }
 
-#ifdef WONT_COMPILE_YET
-BoundedArray<double> ElasticConstitutiveModel::getMechProps() const
+
+std::vector<double> ElasticConstitutiveModel::getMechProps() const
 {
   // Return Young's Mod and Poisson's ratio
 
-  BoundedArray<double> props(1,2,0.0);
+  std::vector<double> props(2);
 
-  props[1] = YngMod;
-  props[2] = PoiRat;
+  props[0] = YngMod;
+  props[1] = PoiRat;
 
   return props;
 
 }
-#endif
+
 
 Matrix3 ElasticConstitutiveModel::getStrainIncrement() const
 {
@@ -320,6 +325,13 @@ double ElasticConstitutiveModel::computeStrainEnergy(const Region* region,
   cerr << "computeStrainEnergy not finished\n";
 }
 
+void ElasticConstitutiveModel::initializeCMData(const Region* region,
+						const MPMMaterial* matl,
+						DataWarehouseP& new_dw)
+{
+
+}
+
 #ifdef WONT_COMPILE_YET
 double ElasticConstitutiveModel::computeStrainEnergy()
 {
@@ -389,7 +401,7 @@ void ElasticConstitutiveModel::writeParameters(ofstream& out, double *p_array)
   out << p_array[0] << " " << p_array[1] << " ";
 }
 
-ConstitutiveModel* ElasticConstitutiveModel::readParametersAndCreate(
+Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::readParametersAndCreate(
 					     ProblemSpecP ps)
 {
   double p_array[2];
@@ -409,7 +421,7 @@ void ElasticConstitutiveModel::writeRestartParameters(ofstream& out) const
       << (getStressTensor())(3,3) << endl;
 }
 
-ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(
+Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(
                                              ProblemSpecP ps)
 {
 #if 0
@@ -429,7 +441,7 @@ ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(
 #endif
 }
 
-ConstitutiveModel* ElasticConstitutiveModel::create(double *p_array)
+Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::create(double *p_array)
 {
 #ifdef WONT_COMPILE_YET
   return(new ElasticConstitutiveModel(p_array[0], p_array[1]));
@@ -459,7 +471,7 @@ void ElasticConstitutiveModel::printParameterNames(ofstream& out) const
       << "Pois. Rat" << endl;
 }
 
-ConstitutiveModel* ElasticConstitutiveModel::copy() const
+Uintah::Components::ConstitutiveModel* ElasticConstitutiveModel::copy() const
 {
 #ifdef WONT_COMPILE_YET
   return( new ElasticConstitutiveModel(*this) );
@@ -468,7 +480,7 @@ ConstitutiveModel* ElasticConstitutiveModel::copy() const
 #endif
 }
 
-ConstitutiveModel &ElasticConstitutiveModel::operator=(const ElasticConstitutiveModel &cm)
+Uintah::Components::ConstitutiveModel &ElasticConstitutiveModel::operator=(const ElasticConstitutiveModel &cm)
 {
  
   stressTensor=cm.stressTensor;
@@ -491,7 +503,13 @@ int ElasticConstitutiveModel::getSize() const
   return(s);
 }
 
+
 // $Log$
+// Revision 1.6  2000/04/19 21:15:55  jas
+// Changed BoundedArray to vector<double>.  More stuff to compile.  Critical
+// functions that need access to data warehouse still have WONT_COMPILE_YET
+// around the methods.
+//
 // Revision 1.5  2000/04/19 05:26:04  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)
