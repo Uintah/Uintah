@@ -44,7 +44,6 @@ set bbox {0 0 3100 3100}
 
 set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
 
-
 # This is a hack.  For some reason it takes a long time to add the first
 # ShowField module.  The load ui uses ShowField and I want to cut down
 # on the instantiation time.  So I'll just instantiate a dummy one that
@@ -64,14 +63,24 @@ set new_label "Unknown"
 global eye
 set eye 0
 
+# volume orientations
+global top
+set top "S"
+
+global front
+set front "A"
+
+global side
+set side "L"
+
 # show planes
 global show_plane_x
 global show_plane_y
 global show_plane_z
 global show_guidelines
-set show_plane_x 0
-set show_plane_y 0
-set show_plane_z 0
+set show_plane_x 1
+set show_plane_y 1
+set show_plane_z 1
 set show_guidelines 1
 global planes_mapType
 set planes_mapType 0
@@ -102,7 +111,7 @@ class BioImageApp {
 	set i_width 260
 
 	set viewer_width 436
-	set viewer_height 540
+	set viewer_height 540 
 	
 	set notebook_width 305
 	set notebook_height [expr $viewer_height - 50]
@@ -163,11 +172,6 @@ class BioImageApp {
         set has_executed 0
         set data_dir ""
         set 2D_fixed 0
-
-        set update_flip 0
-	set flip_0 0
-	set flip_1 0
-	set flip_2 0
 
 	### Define Tooltips
 	##########################
@@ -292,15 +296,12 @@ class BioImageApp {
 
 
                 set 2D_fixed 1
-	    } elseif {$update_flip == 1} {
-                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
-                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
-                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
-		
-		set udpate_flip 0
-	    }
+	    } 
 
-	    
+	    if {$has_autoviewed == 0} {
+		set has_autoviewed 1
+		after 100 "$mods(Viewer)-ViewWindow_0-c autoview"
+	    }
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    # update slice sliders
 	    global $which-size0 
@@ -530,11 +531,11 @@ class BioImageApp {
 
 
 	### pack 3 frames
-	pack $attachedPFr -side left -anchor n
+	pack $attachedPFr -side left -anchor n -fill y
 
 	pack $win.viewers -side left -anchor n -fill both -expand 1
 
-	pack $attachedVFr -side left -anchor n 
+	pack $attachedVFr -side left -anchor n -fill y
 
 	set total_width [expr $process_width + $viewer_width + $vis_width]
 
@@ -611,6 +612,7 @@ class BioImageApp {
 	radiobutton $topr.modes.slice.b -text "Slice Mode" \
 	    -variable  $mods(ViewImage)-axial-viewport0-mode -value 0 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+	Tooltip $topr.modes.slice.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
 	pack $topr.modes.slice.b -side left -padx 0 -anchor nw
 
 	global $mods(ViewImage)-axial-viewport0-slice
@@ -634,11 +636,13 @@ class BioImageApp {
 	radiobutton $topr.modes.mip.b -text "MIP Mode" \
 	    -variable $mods(ViewImage)-axial-viewport0-mode -value 1 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+	Tooltip $topr.modes.mip.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
 	pack $topr.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
 
 	set img [image create photo -width 1 -height 1]
 	button $topr.modes.expand -height 4 -bd 2 -relief raised -image $img \
 	    -cursor based_arrow_down -command "$this hide_control_panel $topr.modes"
+
 	pack $topr.modes.expand -side bottom -fill both
 
 	# modes for sagittal
@@ -652,6 +656,7 @@ class BioImageApp {
 	radiobutton $botl.modes.slice.b -text "Slice Mode" \
 	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 0 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+	Tooltip $botl.modes.slice.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
 	pack $botl.modes.slice.b -side left -padx 0 -anchor nw
 
 
@@ -671,11 +676,13 @@ class BioImageApp {
 	radiobutton $botl.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 1 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+	Tooltip $botl.modes.mip "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
 	pack $botl.modes.mip -side top -padx 0 -pady 0 -anchor nw
 
 	set img [image create photo -width 1 -height 1]
 	button $botl.modes.expand -height 4 -bd 2 -relief raised -image $img \
 	    -cursor based_arrow_down -command "$this hide_control_panel $botl.modes"
+
 	pack $botl.modes.expand -side bottom -fill both
 
 
@@ -691,6 +698,7 @@ class BioImageApp {
 	radiobutton $botr.modes.slice.b -text "Slice Mode" \
 	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 0 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+	Tooltip $botr.modes.slice.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
 	pack $botr.modes.slice.b -side left -padx 0 -anchor nw
 
 	global $mods(ViewImage)-coronal-viewport0-slice
@@ -709,11 +717,13 @@ class BioImageApp {
 	radiobutton $botr.modes.mip -text "MIP Mode" \
 	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
 	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+	Tooltip $botr.modes.mip "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
 	pack $botr.modes.mip -side top -padx 0 -pady 0 -anchor nw
 
 	set img [image create photo -width 1 -height 1]
 	button $botr.modes.expand -height 4 -bd 2 -relief raised -image $img \
 	    -cursor based_arrow_down -command "$this hide_control_panel $botr.modes"
+
 	pack $botr.modes.expand -side bottom -fill both
 
 
@@ -767,13 +777,12 @@ class BioImageApp {
 
 	    build_menu $m
 
-
 	    frame $m.p -borderwidth 2 -relief groove
 	    pack $m.p -side left -fill both -anchor nw -expand yes
 
 	    ### Filter Menu
 	    frame $m.p.filters
-	    pack $m.p.filters -side top -expand yes -fill x
+	    pack $m.p.filters -side top -expand no -fill x
 
 	    set filter $m.p.filters
 	    button $filter.resamp -text "Resample" \
@@ -792,7 +801,7 @@ class BioImageApp {
 		-background $scolor \
 		-activebackground "#6c90ce" \
 		-command "$this add_Cmedian"
-	    Tooltip $filter.crop "Cmedian"
+	    Tooltip $filter.cmedian "Median/mode filtering"
 
 	    button $filter.histo -text "Histogram" \
 		-background $scolor \
@@ -804,20 +813,20 @@ class BioImageApp {
 		-command "$this filter_Delete" \
 		-background "#c1300c" \
 		-activebackground "#d73e18"
-	    Tooltip $filter.delete "Delete the highlighted filter"
+	    Tooltip $filter.delete "Delete the currently highlighted filter"
 
 	    button $filter.update -text "Update" \
 		-command "$this execute_current" \
 		-background "#09ac24" \
 		-activebackground "#23c43d"
-	    Tooltip $filter.update "Update the View"
+	    Tooltip $filter.update "Update any filter changes, also\nupdating the 3D and 2D view windows.\nThis only updates filters up to and\nincluding the currently highlighted filter."
 
 	    pack $filter.resamp $filter.crop $filter.histo $filter.cmedian $filter.delete $filter.update \
 		-side left -padx 1 -expand yes -fill x
 
 	    iwidgets::scrolledframe $m.p.sf -width [expr $process_width - 20] \
 		-height [expr $process_height - 150] -labeltext "History"
-	    pack $m.p.sf -side top -anchor nw
+	    pack $m.p.sf -side top -anchor nw -expand yes -fill both
 	    set history [$m.p.sf childsite]
 
 	    # Add Load UI
@@ -892,7 +901,7 @@ class BioImageApp {
 	    set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 65 186]
 	    set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 245]
 	    set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 324]
-	    set m25 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 39 972]
+	    set m25 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 65 1054]
 	    	  
 	    set c1 [addConnection $m4 0 $m5 0]
 	    set c2 [addConnection $m1 0 $m6 0]
@@ -928,14 +937,15 @@ class BioImageApp {
             set m26 [addModuleAtPosition "SCIRun" "Render" "ViewImage" 704 2057]
 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 741 1977]
 	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
-	    set m29 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 28 405]
-	    set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 28 548]
-	    set m31 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 28 691]
-	    set m32 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 468]
-	    set m33 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 612]
-	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 751]
-	    set m35 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 28 830]
-	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 890]
+
+	    set m29 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 81 408]
+	    set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 81 575]
+	    set m31 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 60 731]
+	    set m32 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 50 892]
+	    set m33 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 9 653]
+	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 813]
+	    set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 970]
+	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 485]
 
 	    # store some in mods
 	    set mods(EditTransferFunc) $m14
@@ -964,7 +974,7 @@ class BioImageApp {
 	    set c29 [addConnection $m7 0 $m28 0]
 
 	    # connect load to vis
-	    set c21 [addConnection $m6 0 $m32 0]
+	    set c21 [addConnection $m6 0 $m36 0]
 	    set c22 [addConnection $m7 0 $m8 0]
 	    set c23 [addConnection $m7 0 $m16 2]
 	    set c24 [addConnection $m7 0 $m22 1]
@@ -975,24 +985,24 @@ class BioImageApp {
 	    # flip connections
 	    # might want to connect this to $m6 instead of $m36
 	    # depending on desired behavior
-	    set c26 [addConnection $m36 0 $m25 0]
-	    set c27 [addConnection $m29 0 $m32 1]
-	    set c28 [addConnection $m32 0 $m33 0]
-	    set c29 [addConnection $m30 0 $m33 1]
-	    set c30 [addConnection $m6 0 $m29 0]
-	    set c31 [addConnection $m32 0 $m30 0]
-	    set c32 [addConnection $m33 0 $m31 0]
-	    set c32 [addConnection $m33 0 $m34 0]
-	    set c33 [addConnection $m31 0 $m34 1]
-	    set c34 [addConnection $m36 0 $m7 0]
-	    set c35 [addConnection $m34 0 $m35 0]
-	    set c36 [addConnection $m34 0 $m36 0]
-	    set c36 [addConnection $m35 0 $m36 1]
+
+ 	    set c26 [addConnection $m33 0 $m34 0]
+ 	    set c27 [addConnection $m33 0 $m31 0]
+ 	    set c28 [addConnection $m34 0 $m35 0]
+ 	    set c29 [addConnection $m34 0 $m32 0]
+            set c32 [addConnection $m6 0 $m29 0]
+            set c33 [addConnection $m6 0 $m36 0]
+            set c34 [addConnection $m29 0 $m36 1]
+	    set c35 [addConnection $m36 0 $m30 0]
+	    set c36 [addConnection $m36 0 $m33 0]
+	    set c36 [addConnection $m30 0 $m33 1]
+	    set c38 [addConnection $m31 0 $m34 1]
+	    set c39 [addConnection $m32 0 $m35 1]
+	    set c40 [addConnection $m35 0 $m25 0]
+	    set c41 [addConnection $m35 0 $m7 0]
 
 	    # connect 2D Viewer to 3D Viewer
-	    set c37 [addConnection $m26 0 $mods(Viewer) 2]
-
-
+	    set c37 [addConnection $m26 0 $mods(Viewer) 1]
 
 	    # disable the volume rendering
  	    disableModule $m8 1
@@ -1000,13 +1010,19 @@ class BioImageApp {
  	    disableModule $m17 1
  	    disableModule $m22 1
 
+	    # disable flip/permute modules
+	    disableModule $m29 1
+	    disableModule $m30 1
+	    disableModule $m31 1
+	    disableModule $m32 1
+
 	    # set some ui parameters
 	    global $m1-filename
-	    set $m1-filename $data_dir/volume/CThead.nhdr
+#	    set $m1-filename $data_dir/volume/CThead.nhdr
 #	    set $m1-filename $data_dir/brain-dt/demo-B0.nrrd
 #	    set $m1-filename $data_dir/volume/tooth.nhdr
 #	    set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
-#	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
+	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
 
 	    global $m8-nbits
 	    set $m8-nbits {8}
@@ -1105,19 +1121,14 @@ class BioImageApp {
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
 
-	    global $m29-axis
-	    set $m29-axis 0
-
 	    global $m30-axis
-	    set $m30-axis 1
+	    set $m30-axis 0
 
 	    global $m31-axis
-	    set $m31-axis 2
+	    set $m31-axis 1
 
-	    disableModule $m29 1
-	    disableModule $m30 1
-	    disableModule $m31 1
-	    disableModule $m35 1
+	    global $m32-axis
+	    set $m32-axis 2
 
 	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36]
 	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1]
@@ -1137,6 +1148,7 @@ class BioImageApp {
  	radiobutton $history.eye$which -text "" \
  	    -variable eye -value $which \
 	    -command "$this change_eye $which"
+	Tooltip $history.eye$which "Select to change current view\nof 3D and 2D windows"
 	
  	grid config $history.eye$which -column 0 -row 0 -sticky "nw"
 	
@@ -1156,8 +1168,10 @@ class BioImageApp {
  	    -anchor nw \
  	    -command "$this change_visibility $which" \
  	    -relief flat
+	Tooltip $data.expand.b "Click to hide/show the Load UI"
  	label $data.expand.l -text "Data - Unknown" -width $label_width \
  	    -anchor nw
+	Tooltip $data.expand.l "Right click to edit label"
  	pack $data.expand.b $data.expand.l -side left -anchor nw 
 	
  	bind $data.expand.l <ButtonPress-1> "$this change_current $which"
@@ -1193,6 +1207,7 @@ class BioImageApp {
 
 	label $page.file.l -text "Nrrd File:" 
 	entry $page.file.e -textvariable [set NrrdReader]-filename 
+	Tooltip $page.file.e "Currently loaded data set"
 	pack $page.file.l $page.file.e -side left -padx 3 -pady 0 -anchor nw \
 	    -fill x 
 	bind $page.file.l <ButtonPress-1> "$this change_current $which"
@@ -1202,6 +1217,7 @@ class BioImageApp {
 	button $page.load -text "Browse" \
 	    -command "$NrrdReader initialize_ui" \
 	    -width 12
+	Tooltip $page.load "Use a file browser to\nselect a data set"
 	pack $page.load -side top -anchor n -padx 3 -pady 1
 	
 	
@@ -1249,76 +1265,259 @@ class BioImageApp {
 	# Set default view to be Nrrd
 	$data.ui.tnb view "Nrrd"
 
-	button $data.ui.flip0 -text "Flip Left and Right" \
-	    -command "$this flip0" -width 22
-
-	button $data.ui.flip1 -text "Flip Anterior and Posterior" \
-	    -command "$this flip1" -width 22
-
-	button $data.ui.flip2 -text "Flip Superior and Inferior" \
-	    -command "$this flip2" -width 22
-
-	pack $data.ui.flip0 $data.ui.flip1 $data.ui.flip2 \
-	    -side top -anchor n -padx 0 -pady 1
-    }
-
-    method flip0 {} {
-	set UnuFlip [lindex [lindex $filters(0) $modules] 28]
-	set Choose [lindex [lindex $filters(0) $modules] 31]
-	global [set Choose]-port-index
+	frame $data.ui.f
+	pack $data.ui.f
 	
-	if {$flip_0 == 0} {
-	    set flip_0 1
-	    disableModule [set UnuFlip] 0
-	    set [set Choose]-port-index 1
-	    [set UnuFlip]-c needexecute
-	} else {
-	    set flip_0 0
-	    disableModule [set UnuFlip] 1
-	    set [set Choose]-port-index 0
-	    [set Choose]-c needexecute
-	}
-	set update_flip 1
+	set w $data.ui.f
+	
+	# Orientations button
+	set image_dir  [netedit getenv SCIRUN_SRCDIR]/pixmaps
+	set show [image create photo -file ${image_dir}/OrientationsCube.ppm]
+	button $w.orient -image $show \
+	    -anchor nw \
+	    -command "$this update_orientations"
+	Tooltip $w.orient "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	grid config $w.orient -row 0 -column 1 -columnspan 3 -rowspan 4 -sticky "n"
+	
+
+	# Top entry
+	global top
+	entry $w.tentry -textvariable top -width 3
+	Tooltip $w.tentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	grid config $w.tentry -row 0 -column 0 -sticky "e"
+
+	# Front entry
+	global front
+	entry $w.fentry -textvariable front -width 3
+	Tooltip $w.fentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	grid config $w.fentry -row 4 -column 2 -sticky "nw"
+	
+	
+	# Side entry
+	global side
+	entry $w.sentry -textvariable side -width 3
+	Tooltip $w.sentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	grid config $w.sentry -row 1 -column 4 -sticky "n"
+	
     }
 
-    method flip1 {} {
+    ### update_orientations
+    #################################################
+    method update_orientations {} {
+	global top front side
+
+	# check that they are all different
+	if {[string eq $top $front] || [string eq $top $side] || \
+		[string eq $front $side]} {
+	    tk_messageBox -message "Orientations must all be different\nand consist of a Superior (S)\nor Inferior (I), an Anterior (A)\nor a Posterior (P), and a Left (L)\nor Right (R)." -type ok -icon info -parent .standalone
+	    return
+	}
+
+	# check that each is S/s/I/i A/a/P/p L/l/R/r
+ 	if {$front != "S" && $front != "s" && \
+		$front != "I" && $front != "i" && \
+		$front != "A" && $front != "a" && \
+		$front != "P" && $front != "p" && \
+		$front != "L" &&  $front != "l" && \
+		$front != "R" && $front != "r"} {
+	    tk_messageBox -message "Orientations must all be different\nand consist of a Superior (S)\nor Inferior (I), an Anterior (A)\nor a Posterior (P), and a Left (L)\nor Right (R)." -type ok -icon info -parent .standalone
+	    return
+	}
+
+	if {$top != "S" && $top != "s" && $top != "I" && \
+		$top != "i" && $top != "A" && $top != "a" && \
+		$top != "P" && $top != "p" && $top != "L" && \
+		$top != "l" && $top != "R" && $top != "r"} {
+	    tk_messageBox -message "Orientations must all be different\nand consist of a Superior (S)\nor Inferior (I), an Anterior (A)\nor a Posterior (P), and a Left (L)\nor Right (R)." -type ok -icon info -parent .standalone
+	    return
+	} 
+	
+	if {$side != "S" && $side != "s" && $side != "I" &&  \
+		$side != "i" && $side != "A" && $side != "a" && \
+		$side != "P" && $side != "p" && $side != "L" && \
+		$side != "l" && $side != "R" &&  $side != "r"} {
+	    tk_messageBox -message "Orientations must all be different\nand consist of a Superior (S)\nor Inferior (I), an Anterior (A)\nor a Posterior (P), and a Left (L)\nor Right (R)." -type ok -icon info -parent .standalone
+	    return
+	} 
+
+	# Permute into order where top   = S/I
+	#                          front = A/P
+	#                          side    L/R
+	set new_side 0
+	set new_front 1
+	set new_top 2
+
+	set c_side "L"
+	set c_front "A"
+	set c_top "I"
+
+	
+	set need_permute 0
+	# Check side variable which corresponds to axis 0
+	if {$side == "L" || $side == "l"} {
+	    set new_side 0
+	    set c_side "L"
+	} elseif {$side == "R" || $side == "r"} {
+	    set new_side 0
+	    set c_side "R"
+	} elseif {$side == "A" || $side == "a"} {
+	    set new_side 1
+	    set need_permute 1
+	    set c_front "A"
+	} elseif {$side == "P" || $side == "p"} {
+	    set new_side 1
+	    set need_permute 1
+	    set c_front "P"
+	} elseif {$side == "S" || $side == "s"} {
+	    set new_side 2
+	    set need_permute 1
+	    set c_top "S"
+	} else {
+	    set new_side 2
+	    set need_permute 1
+	    set c_top "I"
+	}
+
+	# Check front variable which corresponds to axis 1
+	if {$front == "A" || $front == "a"} {
+	    set new_front 1
+	    set c_front "A"
+	} elseif {$front == "P" || $front == "p"} {
+	    set new_front 1
+	    set c_front "P"
+	} elseif {$front == "L" || $front == "l"} {
+	    set new_front 0
+	    set need_permute 1
+	    set c_side "L"
+	} elseif {$front == "R" || $front == "r"} {
+	    set new_front 0
+	    set need_permute 1
+	    set c_side "R"
+	} elseif {$front == "S" || $front == "s"} {
+	    set new_front 2
+	    set need_permute 1
+	    set c_top "S"
+	} else {
+	    set new_front 2
+	    set need_permute 1
+	    set c_top "I"
+	}
+
+	# Check top variable which is axis 2
+	if {$top == "S" || $top == "s"} {
+	    set new_top 2
+	    set c_top "S"
+	} elseif {$top == "I" || $top == "i"} {
+	    set new_top 2
+	    set c_top "I"
+	} elseif {$top == "L" || $top == "l"} { 
+	    set new_top 0
+	    set need_permute 1
+	    set c_side "L"
+	} elseif {$top == "R" || $top == "r"} {
+	    set new_top 0
+	    set need_permute 1
+	    set c_side "R"
+	} elseif {$top == "A" || $top == "a"} {
+	    set new_top 1
+	    set need_permute 1
+	    set c_front "A"
+	} else {
+	    set new_top 1
+	    set need_permute 1
+	    set c_front "I"
+	}
+
+	# only use permute if needed to avoid copying data
+	set UnuPermute [lindex [lindex $filters(0) $modules] 28]
+	set Choose [lindex [lindex $filters(0) $modules] 35]
+	global [set Choose]-port-index
+
+	if {$need_permute == 1} {
+	    set [set Choose]-port-index 1
+	    disableModule [set UnuPermute] 0
+	    global [set UnuPermute]-axis0 [set UnuPermute]-axis1 [set UnuPermute]-axis2
+
+	    set [set UnuPermute]-axis0 $new_side
+	    set [set UnuPermute]-axis1 $new_front
+	    set [set UnuPermute]-axis2 $new_top
+	} else {
+	    set [set Choose]-port-index 0
+	    disableModule [set UnuPermute] 1
+	}
+
+	# only flip axes if needed
+	if {$c_side != "L"} {
+	    # need to flip axis 0
+	    $this flip0 1
+	} else {
+	    $this flip0 0
+	}
+
+	if {$c_front != "A"} {
+	    # need to flip axis 1
+	    $this flip1 1
+	} else {
+	    $this flip1 0
+	}
+
+	if {$c_top != "S"} {
+	    # need to flip axis 2
+	    $this flip2 1
+	} else {
+	    $this flip2 0
+	}
+
+	# Re-execute
+	if {$has_executed} {
+	    set m [lindex [lindex $filters(0) $modules] 5]
+	    $m-c needexecute
+	}
+
+    }
+
+    method flip0 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 29]
 	set Choose [lindex [lindex $filters(0) $modules] 32]
 	global [set Choose]-port-index
 	
-	if {$flip_1 == 0} {
-	    set flip_1 1
+	if {$toflip == 1} {
 	    disableModule [set UnuFlip] 0
 	    set [set Choose]-port-index 1
-	    [set UnuFlip]-c needexecute
 	} else {
-	    set flip_1 0
 	    disableModule [set UnuFlip] 1
 	    set [set Choose]-port-index 0
-	    [set Choose]-c needexecute
 	}
-	set update_flip 1	
     }
-
-    method flip2 {} {
+    
+    method flip1 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 30]
 	set Choose [lindex [lindex $filters(0) $modules] 33]
 	global [set Choose]-port-index
 	
-	if {$flip_2 == 0} {
-	    set flip_2 1
+	if {$toflip == 1} {
 	    disableModule [set UnuFlip] 0
 	    set [set Choose]-port-index 1
-	    [set UnuFlip]-c needexecute
 	} else {
-	    set flip_2 0
 	    disableModule [set UnuFlip] 1
 	    set [set Choose]-port-index 0
-	    [set Choose]-c needexecute
 	}
-	set update_flip 1
     }
-
+    
+    method flip2 { toflip } {
+	set UnuFlip [lindex [lindex $filters(0) $modules] 31]
+	set Choose [lindex [lindex $filters(0) $modules] 34]
+	global [set Choose]-port-index
+	
+	if {$toflip == 1} {
+	    disableModule [set UnuFlip] 0
+	    set [set Choose]-port-index 1
+	} else {
+	    disableModule [set UnuFlip] 1
+	    set [set Choose]-port-index 0
+	}
+    }
+    
     ##############################
     ### configure_readers
     ##############################
@@ -1424,7 +1623,7 @@ class BioImageApp {
 	    ### Visualization Frame
 	    iwidgets::labeledframe $m.vis \
 		-labelpos n -labeltext "Visualization" 
-	    pack $m.vis -side right -anchor n 
+	    pack $m.vis -side right -anchor n -fill y
 	    
 	    set vis [$m.vis childsite]
 	    
@@ -1449,17 +1648,20 @@ class BioImageApp {
 
 
 	    global show_plane_x show_plane_y show_plane_z
-	    checkbutton $page.x -text "Show Plane X (Sagittal)" \
+	    checkbutton $page.x -text "Show Sagittal Plane" \
 		-variable show_plane_x \
 		-command "$this toggle_show_plane_x"
+            Tooltip $page.x "Turn Sagittal plane on/off"
 
-	    checkbutton $page.y -text "Show Plane Y (Coronal)" \
+	    checkbutton $page.y -text "Show Coronal Plane" \
 		-variable show_plane_y \
 		-command "$this toggle_show_plane_y"
+            Tooltip $page.y "Turn Coronal plane on/off"
 
-	    checkbutton $page.z -text "Show Plane Z (Axial)" \
+	    checkbutton $page.z -text "Show Axial Plane" \
 		-variable show_plane_z \
 		-command "$this toggle_show_plane_z"
+            Tooltip $page.z "Turn Axial plane on/off"
 
 	    pack $page.x $page.y $page.z -side top -anchor nw \
 		-padx 4 -pady 4
@@ -2143,6 +2345,7 @@ class BioImageApp {
 	radiobutton $history.eye$which -text "" \
 	    -variable eye -value $which \
 	    -command "$this change_eye $which"
+	Tooltip $history.eye$which "Select to change current view\nof 3D and 2D windows"
 
 	grid config $history.eye$which -column 0 -row $row -sticky "nw"
 
@@ -2165,7 +2368,9 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
+	Tooltip $w.expand.b "Click to hide/show the Resample UI"
 	label $w.expand.l -text "Resample - Unknown" -width $label_width
+	Tooltip $w.expand.l "Right click to edit label"
 	pack $w.expand.b $w.expand.l -side left -anchor nw 
 
 	bind $w.expand.l <ButtonPress-1> "$this change_current $which"
@@ -2183,6 +2388,11 @@ class BioImageApp {
 	    make_entry $w.ui.$i "Axis $i:" $UnuResample-resampAxis$i $which
 	    pack $w.ui.$i -side top -anchor nw -expand yes -fill x
 	}
+
+        # configure labels
+        $w.ui.0.l configure -text "Sagittal" -width 10
+        $w.ui.1.l configure -text "Coronal" -width 10
+        $w.ui.2.l configure -text "Axial" -width 10
 
         global [set UnuResample]-sigma [set UnuResample]-extent
         make_entry $w.ui.sigma "Gaussian Sigma:" [set UnuResample]-sigma $which
@@ -2212,6 +2422,7 @@ class BioImageApp {
 	radiobutton $history.eye$which -text "" \
 	    -variable eye -value $which \
 	    -command "$this change_eye $which"
+	Tooltip $history.eye$which "Select to change current view\nof 3D and 2D windows"
 
 	grid config $history.eye$which -column 0 -row $row -sticky "nw"
 
@@ -2234,8 +2445,10 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
+	Tooltip $w.expand.b "Click to hide/show the Crop UI"
 	label $w.expand.l -text "Crop - Unknown" -width $label_width \
 	    -anchor nw
+	Tooltip $w.expand.l "Right click to edit label"
 	pack $w.expand.b $w.expand.l -side left -anchor nw 
 
 	bind $w.expand.l <ButtonPress-1> "$this change_current $which"
@@ -2261,19 +2474,35 @@ class BioImageApp {
 
 	    frame $w.ui.$i
 	    pack $w.ui.$i -side top -anchor nw -expand yes -fill x
+
 	    label $w.ui.$i.minl -text "Min Axis $i:"
 	    entry $w.ui.$i.minv -textvariable [set UnuCrop]-minAxis$i \
-		-width 6
+		-width 4
 	    label $w.ui.$i.maxl -text "Max Axis $i:"
 	    entry $w.ui.$i.maxv -textvariable [set UnuCrop]-maxAxis$i \
-		-width 6
-	    pack $w.ui.$i.minl $w.ui.$i.minv $w.ui.$i.maxl $w.ui.$i.maxv -side left -anchor nw \
-		-expand yes -fill x
+		-width 4
+
+            grid configure $w.ui.$i.minl -row $i -column 0 -sticky "w"
+            grid configure $w.ui.$i.minv -row $i -column 1 -sticky "e"
+            grid configure $w.ui.$i.maxl -row $i -column 2 -sticky "w"
+            grid configure $w.ui.$i.maxv -row $i -column 3 -sticky "e"
+	    #pack $w.ui.$i.minl $w.ui.$i.minv $w.ui.$i.maxl $w.ui.$i.maxv -side left -anchor nw 
+	   
 	    bind $w.ui.$i.minl <ButtonPress-1> "$this change_current $which"
 	    bind $w.ui.$i.minv <ButtonPress-1> "$this change_current $which"
 	    bind $w.ui.$i.maxl <ButtonPress-1> "$this change_current $which"
 	    bind $w.ui.$i.maxv <ButtonPress-1> "$this change_current $which"
 	}
+
+        # Configure labels
+        $w.ui.0.minl configure -text "Right:" -width 10
+        $w.ui.0.maxl configure -text "Left:" -width 10
+
+        $w.ui.1.minl configure -text "Posterior:" -width 10
+        $w.ui.1.maxl configure -text "Anterior:" -width 10
+
+        $w.ui.2.minl configure -text "Inferior:" -width 10
+        $w.ui.2.maxl configure -text "Superior:" -width 10
     }	
 
 
@@ -2284,6 +2513,7 @@ class BioImageApp {
 	radiobutton $history.eye$which -text "" \
 	    -variable eye -value $which \
 	    -command "$this change_eye $which"
+	Tooltip $history.eye$which "Select to change current view\nof 3D and 2D windows"
 
 	grid config $history.eye$which -column 0 -row $row -sticky "nw"
 
@@ -2306,8 +2536,10 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
+        Tooltip $w.expand.b "Click to hide/show the Cmedian UI"
 	label $w.expand.l -text "Cmedian - Unknown" -width $label_width \
 	    -anchor nw
+	Tooltip $w.expand.l "Right click to edit label"
 	pack $w.expand.b $w.expand.l -side left -anchor nw 
 
 	bind $w.expand.l <ButtonPress-1> "$this change_current $which"
@@ -2336,6 +2568,7 @@ class BioImageApp {
 	radiobutton $history.eye$which -text "" \
 	    -variable eye -value $which \
 	    -command "$this change_eye $which"
+	Tooltip $history.eye$which "Select to change current view\nof 3D and 2D window"
 
 	grid config $history.eye$which -column 0 -row $row -sticky "nw"
 
@@ -2358,8 +2591,10 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
+	Tooltip $w.expand.b "Click to hide/show the Histogram UI"
 	label $w.expand.l -text "Histogram - Unknown" -width $label_width \
 	    -anchor nw
+	Tooltip $w.expand.l "Right click to edit label"
 	pack $w.expand.b $w.expand.l -side left -anchor nw 
 
 	bind $w.expand.l <ButtonPress-1> "$this change_current $which"
@@ -2988,26 +3223,29 @@ class BioImageApp {
     # Methods to turn on/off planes
     method toggle_show_plane_x {} {
 	global mods show_plane_x
-        #puts "FIX ME: implement toggle_show_plane_x"
-        tk_messageBox -message "Toggling planes not implemented yet" -type ok -icon info -parent .standalone
-        set show_plane_x 0
-        return
+	if {$show_plane_x == 1} {
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice0 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
+	} else {
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	}
     }
 
     method toggle_show_plane_y {} {
 	global mods show_plane_y
-        #puts "FIX ME: implement toggle_show_plane_y"
-        tk_messageBox -message "Toggling planes not implemented yet" -type ok -icon info -parent .standalone
-        set show_plane_y 0
-        return
+	if {$show_plane_y == 1} {
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice1 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
+	} else {
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	}
     }
 
     method toggle_show_plane_z {} {
 	global mods show_plane_z
-        #puts "FIX ME: implement toggle_show_plane_z"
-        tk_messageBox -message "Toggling planes not implemented yet" -type ok -icon info -parent .standalone
-        set show_plane_z 0
-        return
+	if {$show_plane_z == 1} {
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice2 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
+	} else {
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	}
     }
 
     method toggle_show_guidelines {} {
@@ -3113,10 +3351,6 @@ class BioImageApp {
 
     variable data_dir
     variable 2D_fixed
-    variable update_flip
-    variable flip_0
-    variable flip_1
-    variable flip_2
 }
 
 
