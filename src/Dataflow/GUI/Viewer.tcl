@@ -355,6 +355,7 @@ itcl_class BaseViewWindow {
 	    -parent $w \
 	    -filevar $this-saveFile \
 	    -command "$this doSaveImage; wm withdraw $w" \
+	    -commandname Save \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
@@ -1431,14 +1432,20 @@ itcl_class ViewWindow {
 	wm geometry .ui[modname] $geometry
     }
 
-    method makeSaveMoviePopup {} {
-	set w .ui[modname]-saveMovie
+    method checkMPGlicense {} {
 
 	# check license env var
 	if { [$this-c have_mpeg] && ![envBool SCIRUN_MPEG_LICENSE_ACCEPT]} {
 	    tk_messageBox -message "License information describing the mpeg_encode software can be found in SCIRun's Thirdparty directory, in the mpeg_encode/README file.\n\nThe MPEG software is freely distributed and may be used for any non-commercial purpose.  However, patents are held by several companies on various aspects of the MPEG video standard. Companies or individuals who want to develop commercial products that include this code must acquire licenses from these companies. For information on licensing, see Appendix F in the standard. For more information, please see the mpeg_encode README file.\n\nIf you are allowed to use the MPEG functionality based on the above license, you may enable MPEG movie recording in SCIRun (accessible via the SCIRun Viewer's \"File->Record Movie\" menu) by setting the value of SCIRUN_MPEG_LICENSE_ACCEPT to \"true\". This can be done by uncommenting the reference to the SCIRUN_MPEG_LICENSE_ACCEPT variable in your scirunrc and changing the value from false to true." -type ok -icon info -parent .ui[modname] -title "MPEG License"
-	    return
+
+	    set $this-global-movie 0
+	} else {
+	    $this-c redraw
 	}
+    }
+
+    method makeSaveMoviePopup {} {
+	set w .ui[modname]-saveMovie
 
 	if {[winfo exists $w]} {
 	   SciRaise $w
@@ -1455,7 +1462,7 @@ itcl_class ViewWindow {
 	radiobutton $w.raw -text "PPM Frames" \
             -variable $this-global-movie -value 1 -command "$this-c redraw"
 	radiobutton $w.mpeg -text "Mpeg" \
-	    -variable $this-global-movie -value 2 -command "$this-c redraw"
+	    -variable $this-global-movie -value 2 -command "$this checkMPGlicense"
 	
 	Tooltip $w.none "Press to stop recording the movie."
 	Tooltip $w.raw \
