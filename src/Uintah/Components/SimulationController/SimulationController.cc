@@ -84,7 +84,7 @@ void SimulationController::run()
    // Print out meta data
    grid->printStatistics();
 
-   SimulationStateP sharedState = new SimulationState;
+   SimulationStateP sharedState = new SimulationState(ups);
    
    // Initialize the CFD and/or MPM components
    CFDInterface* cfd = dynamic_cast<CFDInterface*>(getPort("cfd"));
@@ -425,6 +425,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.21  2000/05/18 18:49:16  jas
+// SimulationState constructor now uses the input file.
+//
 // Revision 1.20  2000/05/15 19:39:45  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
