@@ -1,4 +1,5 @@
-#include <Packages/rtrt/Core/TimeObj.h>
+//#include <Packages/rtrt/Core/TimeObj.h>
+#include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/Camera.h>
@@ -139,6 +140,11 @@ VolumeVis *create_volume_from_nrrd(char *filename,
   cout << "dim = (" << nx << ", " << ny << ", " << nz << ")\n";
   cout << "total = " << nz * ny * nz << endl;
   cout << "spacing = " << n->axis[0].spacing << " x "<<n->axis[1].spacing<< " x "<<n->axis[2].spacing<< endl;
+  for (int i = 0; i<n->dim; i++)
+    if (!(AIR_EXISTS(n->axis[i].spacing))) {
+      cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
+      n->axis[i].spacing = 1;
+    }
   data.resize(nx,ny,nz); // resize the bricked data
   // get the physical bounds
   minP = Point(0,0,0);
@@ -450,7 +456,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   if (scene_type == 6) {
     if (data_files.size() > 1) {
       // create a timeobj
-      TimeObj *timeobj = new TimeObj(frame_rate);
+      //      TimeObj *timeobj = new TimeObj(frame_rate);
+      SelectableGroup *timeobj = new SelectableGroup(1.0/frame_rate);
       for(unsigned int i = 0; i < data_files.size(); i++) {
 	char *myfile = strdup(data_files[i].c_str());
 	Object *volume = (Object*)create_volume_from_nrrd
@@ -503,6 +510,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
   //scene->shadow_mode=1;
   scene->attach_display(dpy);
+  scene->addObjectOfInterest(obj,true);
   
   return scene;
 }
