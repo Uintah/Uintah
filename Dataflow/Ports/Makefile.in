@@ -9,6 +9,6 @@ SRCS     = BooleanPort.cc ColorMapPort.cc ColumnMatrixPort.cc \
            SurfacePort.cc VectorFieldPort.cc VoidStarPort.cc cMatrixPort.cc \
            cVectorPort.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

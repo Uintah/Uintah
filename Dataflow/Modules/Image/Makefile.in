@@ -9,6 +9,6 @@ SRCS     = Binop.cc Edge.cc FFT.cc FFTImage.cc FilterImage.cc Gauss.cc \
 	   Subsample.cc Ted.cc Threshold.cc TiffReader.cc Transforms.cc \
 	   Turk.cc Unop.cc ViewHist.cc WhiteNoiseImage.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

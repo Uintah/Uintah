@@ -5,6 +5,6 @@ OBJTOP   = ../..
 SRCS     = Complex.cc Mat.c MusilRNG.cc TrigTable.cc LinAlg.c fft.c hf.c \
            ssmult.c
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

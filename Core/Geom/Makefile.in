@@ -18,7 +18,7 @@ SRCS     = GeomObj.cc GeomOpenGL.cc GeomArrows.cc Pt.cc \
            GeomPolyline.cc TexSquare.cc tGrid.cc \
            GeomPick.cc Pickable.cc TCLGeom.cc TCLView.cc
 
-INCLUDES = -I$(OBJTOP) \
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk

@@ -14,7 +14,7 @@ SRCS     = AddWells.cc AddWells2.cc BitVisualize.cc BoundGrid.cc \
            Streamline.cc VectorSeg.cc VolRendTexSlices.cc VolVis.cc \
            WidgetTest.cc FastRender.c HedgehogLitLines.cc
 
-INCLUDES = -I$(OBJTOP) \
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk
