@@ -59,6 +59,7 @@ public:
   GuiInt      build_eigens_;
   GuiString   quad_or_tet_;
   GuiString   struct_unstruct_;
+  GuiString   datasets_;
   int         data_generation_, points_generation_;
   int         connect_generation_, origfield_generation_;
   FieldHandle last_field_;
@@ -122,6 +123,7 @@ NrrdToField::NrrdToField(GuiContext* ctx)
     build_eigens_(ctx->subVar("build-eigens")),
     quad_or_tet_(ctx->subVar("quad-or-tet")),
     struct_unstruct_(ctx->subVar("struct-unstruct")),
+    datasets_(ctx->subVar("datasets")),
     data_generation_(-1), points_generation_(-1),
     connect_generation_(-1), origfield_generation_(-1),
     last_field_(0)
@@ -197,6 +199,53 @@ void
     do_execute = true;
   }
 
+  // set the names of the datasets for the UI
+  string datasetsStr = "";
+  string property;
+
+  if (pointsH != 0) {
+    if (pointsH->get_property( "Name", property ) && property != "Unknown")
+      datasetsStr.append( "{Points : " + property + "} ");
+    else
+      datasetsStr.append( "{Points : Unknown} " );
+  } else {
+    datasetsStr.append( "{Points : (none)} " );
+  }
+  if (connectH != 0) {
+    if (connectH->get_property( "Name", property ) && property != "Unknown")
+      datasetsStr.append( "{Connections: " + property + "} ");
+    else
+      datasetsStr.append( "{Connections : Unknown} " );
+  } else {
+    datasetsStr.append( "{Connections : (none)} " );
+  }
+  if (dataH != 0) {
+    if (dataH->get_property( "Name", property ) && property != "Unknown")
+      datasetsStr.append( "{Data : " + property + "} ");
+    else
+      datasetsStr.append( "{Data : Unknown} " );
+  } else {
+    datasetsStr.append( "{Data : (none)} " );
+  }
+  if (origfieldH != 0) {
+    if (origfieldH->get_property( "Name", property ) && property != "Unknown")
+      datasetsStr.append( "{Original Field : " + property + "} ");
+    else
+      datasetsStr.append( "{Original Field : Unknown} " );
+  } else {
+    datasetsStr.append( "{Original Field : (none)} " );
+  }
+
+  datasets_.reset();
+  if( datasetsStr != datasets_.get() ) {
+    // Update the dataset names and dims in the GUI.
+    ostringstream str;
+    str << id << " set_names {" << datasetsStr << "}";
+    
+    gui->execute(str.str().c_str());
+  }
+
+  // execute the module
   if (do_execute) {
     last_field_ = create_field_from_nrrds(dataH, pointsH, connectH, origfieldH,
 							build_eigens_.get(), permute_.get(), 
