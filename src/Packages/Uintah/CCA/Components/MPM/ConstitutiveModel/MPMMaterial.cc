@@ -179,28 +179,22 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 
    ParticleVariable<int> pIsBroken;
    ParticleVariable<Vector> pCrackNormal;
-   ParticleVariable<Vector> pCrackSurfaceContactForce;
-   ParticleVariable<double> pTensileStrength;
-   ParticleVariable<Vector> pImageVelocity;
+   ParticleVariable<double> pToughness;
    
    if(d_fracture) {
      new_dw->allocate(pIsBroken, 
        lb->pIsBrokenLabel, subset);
      new_dw->allocate(pCrackNormal, 
        lb->pCrackNormalLabel, subset);
-     new_dw->allocate(pCrackSurfaceContactForce, 
-       lb->pCrackSurfaceContactForceLabel, subset);
-     new_dw->allocate(pTensileStrength, 
-       lb->pTensileStrengthLabel, subset);
-     new_dw->allocate(pImageVelocity, 
-       lb->pImageVelocityLabel, subset);
+     new_dw->allocate(pToughness, 
+       lb->pToughnessLabel, subset);
    }
    
    particleIndex start = 0;
    for(int i=0; i<(int)d_geom_objs.size(); i++){
       start += createParticles( d_geom_objs[i], start, position,
 				pvelocity,pexternalforce,pmass,pvolume,
-				pissurf,ptemperature,pTensileStrength,
+				pissurf,ptemperature,pToughness,
 				pparticleID,NAPID,patch);
    }
 
@@ -219,8 +213,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      if(d_fracture) {
 	pIsBroken[pIdx] = 0;
 	pCrackNormal[pIdx] = Vector(0.,0.,0.);
-	pCrackSurfaceContactForce[pIdx] = Vector(0.,0.,0.);
-	pImageVelocity[pIdx] = Vector(0.,0.,0.);
      }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
@@ -288,11 +280,11 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 
 	 double particle_half_size = pow( pvolume[pIdx], 1./3.) /2;
 
-	 if(vdis > 0 && vdis < particle_half_size) {
+	 if(vdis > 0 && vdis < particle_half_size * 2) {
 	   pIsBroken[pIdx] = 1;
 	   pCrackNormal[pIdx] = - bc->e3();
 	 }
-	 else if(vdis < 0 && vdis > -particle_half_size) {
+	 else if(vdis <= 0 && vdis >= -particle_half_size*2) {
 	   pIsBroken[pIdx] = 1;
 	   pCrackNormal[pIdx] = bc->e3();
 	 }
@@ -316,9 +308,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    if(d_fracture) {
      new_dw->put(pIsBroken, lb->pIsBrokenLabel);
      new_dw->put(pCrackNormal, lb->pCrackNormalLabel);
-     new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
-     new_dw->put(pTensileStrength, lb->pTensileStrengthLabel);
-     new_dw->put(pImageVelocity, lb->pImageVelocityLabel);
+     new_dw->put(pToughness, lb->pToughnessLabel);
    }
 }
 
@@ -367,7 +357,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<int>& pissurf,
 				   ParticleVariable<double>& temperature,
-				   ParticleVariable<double>& tensilestrength,
+				   ParticleVariable<double>& toughness,
 				   ParticleVariable<long>& particleID,
 				   PerPatch<long>& NAPID,
 				   const Patch* patch)
@@ -410,29 +400,29 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 
 
 		  if( d_fracture ) {
-		    if(obj->getTensileStrengthMin() == obj->getTensileStrengthMax())
+		    if(obj->getToughnessMin() == obj->getToughnessMax())
 		    {
-		      tensilestrength[start+count] = obj->getTensileStrengthMin();
+		      toughness[start+count] = obj->getToughnessMin();
 		    }
 		    else
 		    {
 	              double probability;
 		      double x;
-		      double tensileStrengthAve = ( obj->getTensileStrengthMin() + 
-                                 obj->getTensileStrengthMax() )/2;
-		      double tensileStrengthWid = ( obj->getTensileStrengthMax() - 
-                                 obj->getTensileStrengthMin() )/2 *
-                                 obj->getTensileStrengthVariation();
+		      double toughnessAve = ( obj->getToughnessMin() + 
+                                 obj->getToughnessMax() )/2;
+		      double toughnessWid = ( obj->getToughnessMax() - 
+                                 obj->getToughnessMin() )/2 *
+                                 obj->getToughnessVariation();
 		      double s;
 		      do {
 	                double rand = drand48();
-	                s = (1-rand) * obj->getTensileStrengthMin() + 
-		            rand * obj->getTensileStrengthMax();
+	                s = (1-rand) * obj->getToughnessMin() + 
+		            rand * obj->getToughnessMax();
 	              
 	                probability = drand48();
-	                x = (s-tensileStrengthAve)/tensileStrengthWid;
+	                x = (s-toughnessAve)/toughnessWid;
 	              } while( exp(-x*x) < probability );
-	              tensilestrength[start+count] = s;
+	              toughness[start+count] = s;
 		    }
 		  }
 		  

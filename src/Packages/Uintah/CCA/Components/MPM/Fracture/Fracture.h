@@ -31,18 +31,26 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw) = 0;
 
-  virtual void   computeNodeVisibility(
+  virtual void   computeVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw) = 0;
 
-  virtual void   crackGrow(const Patch* patch,
+  virtual void   computeFracture(
+                  const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw) = 0;
 
-  virtual void   stressRelease(const Patch* patch,
+  virtual void   stressRelease(
+                  const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw) = 0;
+
+  virtual void   computeBoundaryContact(
+                  const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw) = 0;

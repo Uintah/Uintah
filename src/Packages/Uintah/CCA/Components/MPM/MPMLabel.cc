@@ -18,34 +18,36 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
-  pRotationRateLabel = scinew VarLabel("p.rotationRate",
-			ParticleVariable<Vector>::getTypeDescription());
-
   pVisibilityLabel = scinew VarLabel("p.visibility",
 			ParticleVariable<int>::getTypeDescription());
   
-  pStressReleasedLabel = scinew VarLabel("p.stressReleased",
-			ParticleVariable<int>::getTypeDescription());
-  
-  pIsNewlyBrokenLabel = scinew VarLabel("p.isNewlyBroken",
-			ParticleVariable<int>::getTypeDescription());
+  pXXLabel = scinew VarLabel("p.position",
+			ParticleVariable<Point>::getTypeDescription());
 
-  pStressAfterStrainRateLabel = scinew VarLabel("p.stressAfterStrainRate",
-			ParticleVariable<Matrix3>::getTypeDescription());
-
-  pStressAfterFractureReleaseLabel = scinew VarLabel("p.stressAfterFractureRelease",
-			ParticleVariable<Matrix3>::getTypeDescription());
-
-  pVelocityAfterUpdateLabel = scinew VarLabel("p.velocityAfterUpdate",
+  pCrackSurfaceContactForceLabel = scinew VarLabel("p.crackSurfaceContactForce",
 			ParticleVariable<Vector>::getTypeDescription());
 
-  pVelocityAfterFractureLabel = scinew VarLabel("p.velocityAfterFracture",
+  pVelocityAfterBoundaryContactLabel = scinew VarLabel("p.velocityAfterBoundaryContact",
 			ParticleVariable<Vector>::getTypeDescription());
+
+  pNewCrackNormalLabel = scinew VarLabel("p.newCrackNormal",
+			ParticleVariable<Vector>::getTypeDescription());
+
+  pNewIsBrokenLabel = scinew VarLabel("p.newIsBroken",
+			ParticleVariable<int>::getTypeDescription());
+
+  pStressAfterFractureReleaseLabel = scinew VarLabel(
+                        "p.stressAfterFractureRelease",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
+  pStressAfterStrainRateLabel = scinew VarLabel(
+                        "p.stressAfterStrainRate",
+			ParticleVariable<Matrix3>::getTypeDescription());
 
   pStrainEnergyLabel = scinew VarLabel("p.strainEnergy",
 			ParticleVariable<double>::getTypeDescription());
 
-  pNewlyBrokenSurfaceNormalLabel = scinew VarLabel("p.newlyBrokenSurfaceNormal",
+  pRotationRateLabel = scinew VarLabel("p.rotationRate",
 			ParticleVariable<Vector>::getTypeDescription());
 
   pXXLabel = scinew VarLabel("p.positionXX",
@@ -97,17 +99,11 @@ MPMLabel::MPMLabel()
   pCrackNormalLabel = scinew VarLabel( "p.crackNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pCrackSurfaceContactForceLabel = scinew VarLabel("p.crackSurfaceContactForce",
-			ParticleVariable<Vector>::getTypeDescription());
-
-  pTensileStrengthLabel = scinew VarLabel( "p.tensileStrength",
+  pToughnessLabel = scinew VarLabel( "p.toughness",
 			ParticleVariable<double>::getTypeDescription() );
 
   pEnergyReleaseRateLabel = scinew VarLabel( "p.energyReleaseRateLabel",
 			ParticleVariable<double>::getTypeDescription() );
-
-  pImageVelocityLabel = scinew VarLabel( "p.imageVelocity",
-			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel = scinew VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
@@ -161,17 +157,11 @@ MPMLabel::MPMLabel()
   pCrackNormalLabel_preReloc = scinew VarLabel( "p.crackNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pCrackSurfaceContactForceLabel_preReloc = scinew VarLabel("p.crackSurfaceContactForce+",
-			ParticleVariable<Vector>::getTypeDescription());
-
-  pTensileStrengthLabel_preReloc = scinew VarLabel( "p.tensileStrength+",
+  pToughnessLabel_preReloc = scinew VarLabel( "p.toughness+",
 			ParticleVariable<double>::getTypeDescription() );
 
   pEnergyReleaseRateLabel_preReloc = scinew VarLabel( "p.energyReleaseRateLabel+",
 			ParticleVariable<double>::getTypeDescription() );
-
-  pImageVelocityLabel_preReloc = scinew VarLabel( "p.imageVelocity+",
-			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
 			ParticleVariable<long>::getTypeDescription() );
@@ -210,15 +200,6 @@ MPMLabel::MPMLabel()
   
   gMomExedVelocityStarLabel = scinew VarLabel( "g.momexedvelocity_star",
 			NCVariable<Vector>::getTypeDescription() );
-  
-  gSelfContactLabel = scinew VarLabel( "g.selfContact",
-			NCVariable<bool>::getTypeDescription() );
-
-  gCrackNormalLabel = scinew VarLabel( "g.crackNormal",
-			NCVariable<Vector>::getTypeDescription() );
-
-  gTensileStrengthLabel = scinew VarLabel( "g.tensileStrength",
-			NCVariable<double>::getTypeDescription() );
   
   gTemperatureLabel = scinew VarLabel("g.temperature",
 			NCVariable<double>::getTypeDescription());
@@ -292,21 +273,14 @@ MPMLabel::~MPMLabel()
 {
   //non PermanentParticleState
   delete pDeformationMeasureLabel;
-  delete pRotationRateLabel,
   delete pVisibilityLabel;
-  delete pStressReleasedLabel;
-  delete pIsNewlyBrokenLabel;
-  
-  delete pStressAfterStrainRateLabel;
-  delete pStressAfterFractureReleaseLabel;
-
-  delete pVelocityAfterUpdateLabel;
-  delete pVelocityAfterFractureLabel;
-  
-  delete pStrainEnergyLabel;
-  delete pNewlyBrokenSurfaceNormalLabel;
-  
   delete pXXLabel;
+  delete pCrackSurfaceContactForceLabel;
+  delete pNewCrackNormalLabel;
+  delete pNewIsBrokenLabel;
+
+  delete pStressAfterFractureReleaseLabel;
+  delete pStressAfterStrainRateLabel;
 
   //PermanentParticleState
   delete pStressLabel;
@@ -323,8 +297,7 @@ MPMLabel::~MPMLabel()
   delete pSurfLabel;
   delete pIsBrokenLabel;
   delete pCrackNormalLabel;
-  delete pCrackSurfaceContactForceLabel;
-  delete pTensileStrengthLabel;
+  delete pToughnessLabel;
   delete pEnergyReleaseRateLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
@@ -344,8 +317,7 @@ MPMLabel::~MPMLabel()
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
   delete pCrackNormalLabel_preReloc;
-  delete pCrackSurfaceContactForceLabel_preReloc;
-  delete pTensileStrengthLabel_preReloc;
+  delete pToughnessLabel_preReloc;
   delete pEnergyReleaseRateLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
@@ -363,9 +335,6 @@ MPMLabel::~MPMLabel()
   delete gNormTractionLabel;
   delete gStressLabel;
   delete gSurfNormLabel;
-  delete gSelfContactLabel;
-  delete gCrackNormalLabel;
-  delete gTensileStrengthLabel;
   delete gTemperatureLabel;
   delete gTemperatureStarLabel;
   delete gTemperatureRateLabel;

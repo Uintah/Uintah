@@ -15,9 +15,9 @@ GeometryObject::GeometryObject(MPMMaterial* mpm_matl,
    ps->require("temperature", d_initialTemperature);
    
    if(mpm_matl->getFractureModel()) {
-     ps->require("tensile_strength_min", d_tensileStrengthMin);
-     ps->require("tensile_strength_max", d_tensileStrengthMax);
-     ps->require("tensile_strength_variation", d_tensileStrengthVariation);
+     ps->require("toughness_min", d_toughnessMin);
+     ps->require("toughness_max", d_toughnessMax);
+     ps->require("toughness_variation", d_toughnessVariation);
    }
 }
 

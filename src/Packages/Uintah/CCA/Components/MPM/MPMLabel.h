@@ -22,20 +22,20 @@ using std::vector;
       
       //non PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
-      const VarLabel* pRotationRateLabel;
       const VarLabel* pVisibilityLabel;
-      const VarLabel* pStressReleasedLabel;
-      const VarLabel* pIsNewlyBrokenLabel;
-      const VarLabel* pStressAfterStrainRateLabel;
-      const VarLabel* pStressAfterFractureReleaseLabel;
-
-      const VarLabel* pVelocityAfterUpdateLabel;
-      const VarLabel* pVelocityAfterFractureLabel;
-
-      const VarLabel* pStrainEnergyLabel;
-      const VarLabel* pNewlyBrokenSurfaceNormalLabel;
+      
+      const VarLabel* pCrackSurfaceContactForceLabel;
+      const VarLabel* pVelocityAfterBoundaryContactLabel;
       
       const VarLabel* pXXLabel;
+      const VarLabel* pNewCrackNormalLabel;
+      const VarLabel* pNewIsBrokenLabel;
+      
+      const VarLabel* pStressAfterFractureReleaseLabel;
+      const VarLabel* pStressAfterStrainRateLabel;
+      
+      const VarLabel* pStrainEnergyLabel;
+      const VarLabel* pRotationRateLabel;
       
       //PermanentParticleState
       const VarLabel* pStressLabel;
@@ -48,10 +48,8 @@ using std::vector;
       const VarLabel* pSurfLabel;
       const VarLabel* pIsBrokenLabel; //for fracture
       const VarLabel* pCrackNormalLabel; //for fracture
-      const VarLabel* pCrackSurfaceContactForceLabel;
-      const VarLabel* pTensileStrengthLabel; //for fracture
+      const VarLabel* pToughnessLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
-      const VarLabel* pImageVelocityLabel;
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
@@ -71,10 +69,8 @@ using std::vector;
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pIsBrokenLabel_preReloc; //for fracture
       const VarLabel* pCrackNormalLabel_preReloc; //for fracture
-      const VarLabel* pCrackSurfaceContactForceLabel_preReloc;
-      const VarLabel* pTensileStrengthLabel_preReloc; //for fracture
+      const VarLabel* pToughnessLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
-      const VarLabel* pImageVelocityLabel_preReloc;
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
@@ -92,9 +88,6 @@ using std::vector;
       const VarLabel* gMomExedVelocityStarLabel;
       const VarLabel* gExternalForceLabel;
       const VarLabel* gInternalForceLabel;
-      const VarLabel* gSelfContactLabel; //for fracture
-      const VarLabel* gCrackNormalLabel;
-      const VarLabel* gTensileStrengthLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
       const VarLabel* gTemperatureStarLabel; //for heat conduction

@@ -133,6 +133,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
+  
   old_dw->get(pstress, lb->pStressLabel, pset);
 
   // Retrieve the array of constitutive parameters
@@ -294,12 +295,15 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      DataWarehouseP& new_dw) const
 {
    int idx = matl->getDWIndex();
-   
+
    task->requires(old_dw, lb->pXLabel, idx, patch, Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, idx, patch, Ghost::None);
    task->requires(old_dw, lb->pMassLabel,   idx,  patch, Ghost::None);
    task->requires(old_dw, lb->pVolumeLabel, idx,  patch, Ghost::None);
+   
    task->requires(old_dw, lb->pStressLabel, idx,  patch, Ghost::None);
+   //task->requires(old_dw, lb->pVelocityLabel, idx,  patch, Ghost::None);
+   
    task->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch,
 						Ghost::AroundCells, 1);
    task->requires(old_dw, lb->delTLabel);
@@ -311,7 +315,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    if(matl->getFractureModel()) {
       task->requires(new_dw, lb->pVisibilityLabel,   idx, patch, Ghost::None);
       task->computes(new_dw, lb->pRotationRateLabel, idx, patch);
-      task->computes(new_dw, lb->pStrainEnergyLabel, idx,  patch);
+      task->computes(new_dw, lb->pStrainEnergyLabel, idx, patch);
    }
 }
 
@@ -335,10 +339,9 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
      matlindex, patch, Ghost::AroundCells, 1, lb->pXLabel);
 
   old_dw->get(pX_patchAndGhost, lb->pXLabel, pset_patchAndGhost);
-  new_dw->get(pIsBroken, lb->pIsBrokenLabel_preReloc, pset_patchAndGhost);
-  new_dw->get(pCrackNormal, lb->pCrackNormalLabel_preReloc, 
-    pset_patchAndGhost);
-  new_dw->get(pVolume, lb->pVolumeLabel_preReloc, pset_patchAndGhost);
+  old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset_patchAndGhost);
+  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset_patchAndGhost);
+  old_dw->get(pVolume, lb->pVolumeLabel, pset_patchAndGhost);
 
   Lattice lattice(pX_patchAndGhost);
   ParticlesNeighbor particles;
@@ -415,32 +418,7 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
     }
   }
 
-  new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel_preReloc);
-
-
-  //time step requirement
-
-  /*
-  double delT_new = 1.0e12;
-
-  ParticleVariable<double> pMass;
-  new_dw->get(pMass, lb->pMassLabel_preReloc, pset_patchOnly);
-
-  double tolerance = 0.01;
-  
-  Vector dx = patch->dCell();
-  double dxLength = dx.length() * tolerance;
-
-  for(ParticleSubset::iterator iter = pset_patchOnly->begin();
-          iter != pset_patchOnly->end(); iter++) {
-    double force = pCrackSurfaceContactForce[*iter].length();
-    if(force > 0) {
-      delT_new = Min(delT_new,sqrt(2*dxLength*pMass[*iter]/force));
-    }
-  }
-
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-  */
+  new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
 }
 
 void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
@@ -456,15 +434,14 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pXXLabel, idx,  patch,
 			Ghost::None);
-  task->requires(new_dw, lb->pVolumeLabel_preReloc, idx, patch,
+  task->requires(old_dw, lb->pVolumeLabel, idx, patch,
 			Ghost::AroundCells, 1 );
-  task->requires(new_dw, lb->pIsBrokenLabel_preReloc, idx, patch,
+  task->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
 			Ghost::AroundCells, 1 );
-  task->requires(new_dw, lb->pCrackNormalLabel_preReloc, idx, patch,
+  task->requires(old_dw, lb->pCrackNormalLabel, idx, patch,
 			Ghost::AroundCells, 1 );
-  task->requires(new_dw, lb->pMassLabel_preReloc, idx, patch, Ghost::None);
 		  
-  task->computes(new_dw, lb->pCrackSurfaceContactForceLabel_preReloc, idx, patch );
+  task->computes(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch );
 }
 
 #ifdef __sgi
