@@ -1003,7 +1003,7 @@ bool
   ITKDatatype* out_<xsl:value-of select="@name"/>_ = scinew ITKDatatype; 
   out_OutputImage_->data_ = tmp;
   outhandle_<xsl:value-of select="@name"/>_ = out_<xsl:value-of select="@name"/>_; 
-  outport_<xsl:value-of select="@name"/>_->send_intermediate(outhandle_<xsl:value-of select="@name"/>_);
+  outport_<xsl:value-of select="@name"/>_->send(outhandle_<xsl:value-of select="@name"/>_,true);
   return true;
 }
 </xsl:if>
