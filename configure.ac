@@ -849,7 +849,7 @@ case $host in
     CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
     CXXFLAGS="$CFLAGS"
     ASFLAGS="$BINARYFLAGS"
-    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
+    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)/so_locations $(TLINK) ${SOFLAGS}"
     LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
     AC_MSG_CHECKING(if ${CC} talks too much)
     touch wow.c
@@ -888,7 +888,7 @@ case $host in
       CFLAGS="$CFLAGS -pthread"
       CXXFLAGS="$CXXFLAGS -pthread"
     fi
-    SOFLAGS="-shared -warning_unresolved -update_registry \$(LIBDIR)so_locations"
+    SOFLAGS="-shared -warning_unresolved -update_registry \$(LIBDIR)/so_locations"
     LDFLAGS=""
     LDRUN_PREFIX="-rpath "
     REPOSITORY_FLAGS="-ptr"
@@ -2025,8 +2025,44 @@ for i in $_sci_lib; do
   #include <png.h>
   ],$i/include,png,$i/lib,,,optional)
 
+  # Now check for the correct version.
   if test "$HAVE_PNG" = "yes"; then
-    DEF_PNG="#define HAVE_PNG 1"
+
+    AC_MSG_CHECKING(for PNG version 1.0.2 or better.)
+    cat > conftest-png.c <<EOF
+
+         #include <png.h>
+         #include <stdio.h>
+
+         int main() {
+
+           if (PNG_LIBPNG_VER < 10002) {
+	       printf("1\n");
+	   } else {
+	       printf("0\n");
+           }	   
+          return 0;
+         }
+EOF
+    #echo "$CC $INC_PNG_H conftest-png.c -o conftest-png"
+    $CC $INC_PNG_H conftest-png.c -o conftest-png
+    #ls -l conftest-png
+    png_error=`conftest-png`
+    rm -f conftest-png conftest-png.c
+
+    if test "$png_error" != "0"; then
+       AC_MSG_RESULT(PNG library too old.  Need at least 1.0.2.  Turning off PNG.)
+       DEF_PNG=""
+       HAVE_PNG="no"
+       PNG_LIB_FLAG=""
+       PNG_LIB_DIR_FLAG=""
+       INC_PNG_H=""
+       DEF_PNG=""
+    else
+       AC_MSG_RESULT(yes.)
+       DEF_PNG="#define HAVE_PNG 1"
+    fi
+
     break
   fi
 done
@@ -2593,7 +2629,7 @@ AC_SUBST(XALAN_PATH)
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
 if test "$sci_check_tau" = "yes"; then
-  if test "$with_xalan" && test ! -f "$with_tau" ; then
+  if test ! -f "$with_tau" ; then
     SCI_MSG_ERROR($with_tau does not exist.  Bye!)
   fi
 
@@ -2612,19 +2648,18 @@ if test "$sci_check_tau" = "yes"; then
 EOF
 
   cat > conftest-tau-makefile <<EOF
-include $(with_tau)
+include $with_tau
 all:
-  $(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INC_LUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
+	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
 EOF
 
-  ac_try="make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1"
+  ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
   (eval $ac_try) 2>&5
   ac_status=$?
-  if $ac_status; then
-    rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+  if test "$ac_status" != 0; then
     SCI_MSG_ERROR(TAU libraries not working. Bye!)
   fi
-  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
 
   TAU_MAKEFILE="$with_tau"
 fi

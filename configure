@@ -2258,7 +2258,6 @@ case SCIRun2 in
   Uintah)
     sci_check_fortran=yes
     sci_check_mpi=yes
-    sci_check_tau=yes
     sci_check_blas=yes
     sci_check_lapack=yes
     sci_check_hypre=yes
@@ -2421,7 +2420,6 @@ case $i in
   Uintah)
     sci_check_fortran=yes
     sci_check_mpi=yes
-    sci_check_tau=yes
     sci_check_blas=yes
     sci_check_lapack=yes
     sci_check_hypre=yes
@@ -4137,7 +4135,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4140:" \
+echo "$as_me:4138:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4917,7 +4915,7 @@ echo "$as_me: error: Looked in $COMPILER_DIR" >&2;}
     CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
     CXXFLAGS="$CFLAGS"
     ASFLAGS="$BINARYFLAGS"
-    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
+    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)/so_locations $(TLINK) ${SOFLAGS}"
     LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
     echo "$as_me:$LINENO: checking if ${CC} talks too much" >&5
 echo $ECHO_N "checking if ${CC} talks too much... $ECHO_C" >&6
@@ -4960,7 +4958,7 @@ echo "${ECHO_T}no" >&6
       CFLAGS="$CFLAGS -pthread"
       CXXFLAGS="$CXXFLAGS -pthread"
     fi
-    SOFLAGS="-shared -warning_unresolved -update_registry \$(LIBDIR)so_locations"
+    SOFLAGS="-shared -warning_unresolved -update_registry \$(LIBDIR)/so_locations"
     LDFLAGS=""
     LDRUN_PREFIX="-rpath "
     REPOSITORY_FLAGS="-ptr"
@@ -12812,8 +12810,47 @@ _sci_includes=''
 
 
 
+  # Now check for the correct version.
   if test "$HAVE_PNG" = "yes"; then
-    DEF_PNG="#define HAVE_PNG 1"
+
+    echo "$as_me:$LINENO: checking for PNG version 1.0.2 or better." >&5
+echo $ECHO_N "checking for PNG version 1.0.2 or better.... $ECHO_C" >&6
+    cat > conftest-png.c <<EOF
+
+         #include <png.h>
+         #include <stdio.h>
+
+         int main() {
+
+           if (PNG_LIBPNG_VER < 10002) {
+	       printf("1\n");
+	   } else {
+	       printf("0\n");
+           }
+          return 0;
+         }
+EOF
+    #echo "$CC $INC_PNG_H conftest-png.c -o conftest-png"
+    $CC $INC_PNG_H conftest-png.c -o conftest-png
+    #ls -l conftest-png
+    png_error=`conftest-png`
+    rm -f conftest-png conftest-png.c
+
+    if test "$png_error" != "0"; then
+       echo "$as_me:$LINENO: result: PNG library too old.  Need at least 1.0.2.  Turning off PNG." >&5
+echo "${ECHO_T}PNG library too old.  Need at least 1.0.2.  Turning off PNG." >&6
+       DEF_PNG=""
+       HAVE_PNG="no"
+       PNG_LIB_FLAG=""
+       PNG_LIB_DIR_FLAG=""
+       INC_PNG_H=""
+       DEF_PNG=""
+    else
+       echo "$as_me:$LINENO: result: yes." >&5
+echo "${ECHO_T}yes." >&6
+       DEF_PNG="#define HAVE_PNG 1"
+    fi
+
     break
   fi
 done
@@ -17358,7 +17395,7 @@ fi
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
 if test "$sci_check_tau" = "yes"; then
-  if test "$with_xalan" && test ! -f "$with_tau" ; then
+  if test ! -f "$with_tau" ; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -17408,16 +17445,16 @@ echo "${ECHO_T}Using TAU makefile: $with_tau" >&6
 EOF
 
   cat > conftest-tau-makefile <<EOF
-include $(with_tau)
+include $with_tau
 all:
-  $(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INC_LUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
+	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
 EOF
 
-  ac_try="make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1"
+  ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
   (eval $ac_try) 2>&5
   ac_status=$?
-  if $ac_status; then
-    rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+  if test "$ac_status" != 0; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -17450,7 +17487,6 @@ echo "$as_me: error: TAU libraries not working. Bye!" >&2;}
    { (exit 1); exit 1; }; }
 
   fi
-  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
 
   TAU_MAKEFILE="$with_tau"
 fi
