@@ -524,10 +524,12 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::integrateAcceleration",
 			    this, &SerialMPM::integrateAcceleration);
 
+  const MaterialSubset* mss = matls->getUnion();
+
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::NewDW, lb->gAccelerationLabel,    Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityLabel, Ghost::None);
+  t->modifies(             lb->gAccelerationLabel, mss, Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
   t->computes(lb->gVelocityStarLabel);
 
@@ -593,22 +595,21 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::NewDW, lb->gMomExedAccelerationLabel, Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gMomExedVelocityStarLabel, Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureRateLabel,     Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,         Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,     Ghost::AroundCells,1);
-  t->requires(Task::OldDW, lb->pXLabel,                   Ghost::None);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,       Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,                Ghost::None);
-  t->requires(Task::OldDW, lb->pParticleIDLabel,          Ghost::None);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,         Ghost::None);
-  t->requires(Task::OldDW, lb->pVelocityLabel,            Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,                Ghost::None);
-  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::None);
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,      Ghost::None);
+  t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,     Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gTemperatureRateLabel,  Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,      Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::AroundCells,1);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
+  t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
 
-  
   if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,            Ghost::AroundCells,1);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,   Ghost::AroundCells,1);
@@ -1707,9 +1708,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocate(pmassNew,         lb->pMassLabel_preReloc,        pset);
       new_dw->allocate(pvolumeNew,       lb->pVolumeLabel_preReloc,      pset);
 
-      new_dw->get(gvelocity_star,   lb->gMomExedVelocityStarLabel,
+      new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gacceleration,    lb->gMomExedAccelerationLabel,
+      new_dw->get(gacceleration,    lb->gAccelerationLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
       new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel,
 			dwindex, patch, Ghost::AroundCells, 1);

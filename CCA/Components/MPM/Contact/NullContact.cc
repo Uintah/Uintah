@@ -57,11 +57,6 @@ void NullContact::exMomInterpolated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
-
-      //  All this does is carry forward the array from gVelocityLabel
-      //  to gMomExedVelocityLabel
-
-      // Retrieve necessary data from DataWarehouse
       NCVariable<Vector> gvelocity;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -80,20 +75,16 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
-
-      //  All this does is carry forward the array from gVelocityStarLabel
-      //  and gAccelerationLabel to gMomExedVelocityStarLabel and 
-      //  gMomExedAccelerationLabel respectively
-
       NCVariable<Vector> gv_star;
       NCVariable<Vector> gacc;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+
       new_dw->get(gv_star, lb->gVelocityStarLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(gacc,    lb->gAccelerationLabel, dwi, patch, Ghost::None, 0);
 
-      new_dw->put(gv_star, lb->gMomExedVelocityStarLabel, dwi, patch);
-      new_dw->put(gacc,    lb->gMomExedAccelerationLabel, dwi, patch);
+      new_dw->modify(gv_star, lb->gVelocityStarLabel, dwi, patch);
+      new_dw->modify(gacc,    lb->gAccelerationLabel, dwi, patch);
     }
   }
 }
@@ -103,16 +94,14 @@ void NullContact::addComputesAndRequiresInterpolated( Task* t,
 						const MaterialSet* ms) const
 {
   const MaterialSubset* mss = ms->getUnion();
-  t->modifies( lb->gVelocityLabel, mss, Ghost::None);
+  t->modifies(lb->gVelocityLabel, mss, Ghost::None);
 }
 
 void NullContact::addComputesAndRequiresIntegrated( Task* t,
 					     const PatchSet* ,
-					     const MaterialSet*) const
+					     const MaterialSet* ms) const
 {
-  t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->gAccelerationLabel, Ghost::None);
-
-  t->computes( lb->gMomExedVelocityStarLabel);
-  t->computes( lb->gMomExedAccelerationLabel);
+  const MaterialSubset* mss = ms->getUnion();
+  t->modifies(lb->gVelocityStarLabel, mss, Ghost::None);
+  t->modifies(lb->gAccelerationLabel, mss, Ghost::None);
 }
