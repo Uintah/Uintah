@@ -52,6 +52,13 @@ setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)" 0
 setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)" 0
 setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)" 0
 
+
+proc frametrace { varname args } {
+    upvar \#0 $varname frames
+    puts "total frames: $frames"
+}
+
+
 set mods(ViewSlices) ""
 set mods(EditColorMap2D) ""
 
@@ -3122,18 +3129,20 @@ class BioImageApp {
 
 	    label $f.minl
 	    iwidgets::spinner $f.minv -textvariable $UnuCrop-minAxis$i \
-	        -increment "incr $UnuCrop-minAxis$i" \
-		-decrement "incr $UnuCrop-minAxis$i -1" -width 4
+	        -increment "$this change_crop $UnuCrop min $i 1" \
+		-decrement "$this change_crop $UnuCrop min $i -1" \
+		-validate "$this change_crop $UnuCrop min $i 0 %P" -width 4
 	    label $f.maxl
 	    iwidgets::spinner $f.maxv -textvariable $UnuCrop-maxAxis$i \
-		-increment "incr $UnuCrop-maxAxis$i" \
-		-decrement "incr $UnuCrop-maxAxis$i -1" -width 4
+	        -increment "$this change_crop $UnuCrop max $i 1" \
+		-decrement "$this change_crop $UnuCrop max $i -1" \
+		-validate "$this change_crop $UnuCrop max $i 0 %P" -width 4
 
 	    set r [expr $i+1]
-            grid configure $f.minl -row $r -column 0 -sticky "w" -padx 2
-            grid configure $f.minv -row $r -column 1 -sticky "e" -padx 2
-            grid configure $f.maxl -row $r -column 2 -sticky "w" -padx 2
-            grid configure $f.maxv -row $r -column 3 -sticky "e" -padx 2
+            grid configure $f.minl -row $r -column 0 -sticky w -padx 2
+            grid configure $f.minv -row $r -column 1 -sticky e -padx 2
+            grid configure $f.maxl -row $r -column 2 -sticky w -padx 2
+            grid configure $f.maxv -row $r -column 3 -sticky e -padx 2
 	}
 
         # Configure labels
@@ -3149,6 +3158,33 @@ class BioImageApp {
 	return $history.$which
     }
 
+    method change_crop { crop kind axis amount { newval "" } } {
+	global mods
+	set varname $crop-${kind}Axis$axis
+	set oppvar $crop-[expr ("$kind"=="min")?"max":"min"]Axis$axis
+		     
+	upvar \#0 $varname var $oppvar opp $mods(ViewSlices)-dim$axis max
+	if { ![string length $newval] } {
+	    set newval [expr $var+$amount]
+	}
+
+	if { ($amount == 0 && ![string is integer $newval]) || \
+		 ($kind == "min" && ($newval > $opp)) || \
+		 ($kind == "max" && ($newval < $opp)) } {
+	    return 0
+	} elseif { $newval < 0 } {
+	    setGlobal $varname 0
+	    return 0
+	} elseif { $newval >= $max } {
+	    setGlobal $varname [expr $max-1]
+	    return 0
+	} elseif { $amount != 0 } {
+	    setGlobal $varname $newval
+	}
+	return 1
+    }
+	
+	
     method viewslices_crop_trace { varname args } {
 	global mods
 
@@ -3457,6 +3493,7 @@ class BioImageApp {
 
     method update_changes {} {
 	if { !$has_executed } {
+	    $this set_viewer_position
 	    $this execute_Data
 	    $this disable_update
 	    return
@@ -4238,9 +4275,20 @@ class BioImageApp {
 	upvar \#0 $varname autoview
 	if { $autoview } {
 	    global mods
-	    after 100 $mods(Viewer)-ViewWindow_0-c autoview
+	    set var $mods(Viewer)-ViewWindow_0-total_frames
+	    global $var
+	    trace variable $var w "$this autoview"
 	}
     }
+    method autoview { varname args } {
+	global mods
+	$mods(Viewer)-ViewWindow_0-c autoview
+	set var $mods(Viewer)-ViewWindow_0-total_frames
+	global $var
+	trace vdelete $var w "$this autoview"
+
+    }
+
     method find_last_filter { } {
 	set prev 0
 	set cur [lindex $filters($prev) $next_index]
@@ -4313,6 +4361,23 @@ class BioImageApp {
 	    incr i
 	}
     }
+  
+    method set_viewer_position {} {
+ 	global mods
+ 	set vw $mods(Viewer)-ViewWindow_0
+    	setGlobal $vw-view-eyep-x {560.899236544}
+	setGlobal $vw-view-eyep-y {356.239586973}
+	setGlobal $vw-view-eyep-z {178.810334192}
+	setGlobal $vw-view-lookat-x {51.5}
+	setGlobal $vw-view-lookat-y {47.0}
+	setGlobal $vw-view-lookat-z {80.5}
+	setGlobal $vw-view-up-x {-0.181561715965}
+	setGlobal $vw-view-up-y {0.0242295849764}
+	setGlobal $vw-view-up-z {0.983081009128}
+	setGlobal $vw-view-fov {20.0}
+    }
+    
+
 
     # Application placing and size
     variable notebook_width
