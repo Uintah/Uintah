@@ -1132,6 +1132,20 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 }
 
 
+template <class T>
+void
+value_to_string(std::ostringstream &buffer, const T &value)
+{
+  buffer << value;
+}
+
+template <>
+void value_to_string(std::ostringstream &buffer, const char &value);
+
+template <>
+void value_to_string(std::ostringstream &buffer, const unsigned char &value);
+
+
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
@@ -1187,7 +1201,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
       mesh->get_center(p, *iter);
 
       buffer.str("");
-      buffer << val;
+      value_to_string(buffer, val);
 
       if (use_default_material)
       {
@@ -1277,7 +1291,7 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
       mesh->get_center(p, *iter);
       
       buffer.str("");
-      buffer << val;
+      value_to_string(buffer, val);
 
       if (use_default_material)
       {
@@ -1815,7 +1829,8 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
     typename Fld::mesh_type::Node::iterator niter_end; mesh->end(niter_end);  
     typename Fld::mesh_type::Node::array_type nodes;
     while(niter != niter_end ){
-      int i, idx;
+      //int i;
+      int idx;
       // convert data values to double
       typename Fld::value_type val;
       double dval;      
