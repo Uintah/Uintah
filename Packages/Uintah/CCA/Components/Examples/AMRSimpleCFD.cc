@@ -16,12 +16,14 @@
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
@@ -121,18 +123,18 @@ void AMRSimpleCFD::scheduleRefineInterface(const LevelP& /*fineLevel*/,
 //
 template<class ArrayType, class constArrayType>
 void refineFaces(const Patch* patch, 
-               const Level* level,
+                 const Level* level,
 		 const Level* coarseLevel, 
-               const IntVector& dir,
+                 const IntVector& dir,
 		 Patch::FaceType lowFace, 
-               Patch::FaceType highFace,
+                 Patch::FaceType highFace,
 		 ArrayType& xvel, 
-               const VarLabel* label,
+                 const VarLabel* label,
 		 double subCycleProgress_var, 
-               int matl, 
-               DataWarehouse* coarse_old_dw,
+                 int matl, 
+                 DataWarehouse* coarse_old_dw,
 		 DataWarehouse* coarse_new_dw, 
-               Patch::VariableBasis basis)
+                 Patch::VariableBasis basis)
 {
   //  cout << "RANDY: AMRSimpleCFD::refineFaces() BGN" << endl;
   for(Patch::FaceType face = Patch::startFace;
@@ -560,14 +562,16 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
 		   0, Task::FineLevel, 0, Task::NormalDomain,gn, 0);
     task->modifies(lb_->temperature);
   }
+
+  // give these ghost cells to refine the faces
   task->requires(Task::NewDW, lb_->xvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesX, 1);
 
   task->requires(Task::NewDW, lb_->yvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesY, 1);
 
   task->requires(Task::NewDW, lb_->zvelocity,
-		 0, Task::FineLevel, 0, Task::NormalDomain,gn, 0);
+		 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::AroundFacesZ, 1);
 
   task->modifies(lb_->density);
   task->modifies(lb_->xvelocity);
@@ -709,7 +713,6 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-
       //__________________________________
       //   D E N S I T Y
       CCVariable<double> density;
@@ -747,7 +750,7 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 	CCVariable<double> temp;
 	new_dw->getModifiable(temp, lb_->temperature, matl, coarsePatch);
 	
-       for(int i=0;i<finePatches.size();i++){
+        for(int i=0;i<finePatches.size();i++){
 	  const Patch* finePatch = finePatches[i];
 	  constCCVariable<double> fine_temp;
 	  new_dw->get(fine_temp, lb_->temperature, matl, finePatch,
