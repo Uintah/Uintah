@@ -448,12 +448,9 @@ GLXContext OpenGLGetContext(interp, name)
     OpenGLPtr=(OpenGL*)info.clientData;
     if(!OpenGLPtr->cx){
 	Tk_Window* tkwin;
-	fprintf(stderr, "O1\n");
 	tkwin=Tk_NameToWindow(interp, name, Tk_MainWindow(interp));
-	fprintf(stderr, "O2\n");
 	OpenGLPtr->cx = glXCreateContext(Tk_Display(tkwin),
 					 OpenGLPtr->vi, 0, OpenGLPtr->direct);
-	fprintf(stderr, "O3\n");
 	if(!OpenGLPtr->cx){
 	    Tcl_AppendResult(interp, "Error making GL context", (char*)NULL);
 	    return TCL_ERROR;
