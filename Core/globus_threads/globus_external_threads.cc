@@ -100,7 +100,8 @@ void GlobusThread::run()
 	    thread_pool_mutex.unlock();
 	    /* Call the thread specific data destructors */
 	    for (int i = 0; i < MAXKEYS; i++){
-		globus_thread_key_destructor_func_t func = key_table_destructor_funcs[i];
+		globus_thread_key_destructor_func_t func = 
+		                              key_table_destructor_funcs[i];
 		void* value = threadSpecific[i];
 		if (func && value){
 		    (*func)(value);

@@ -127,7 +127,13 @@ string SymbolTable::fullname() const
 string SymbolTable::cppfullname() const
 {
     if(parent)
-	return parent->cppfullname()+"::"+name;
+      {
+	string parent_name = parent->cppfullname();
+	if( parent_name == "" )
+	  return name;
+	else
+	  return parent_name + "::" + name;
+      }
     else
 	return "";
 }

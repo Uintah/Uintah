@@ -1,6 +1,6 @@
 %{
-#include <tools/sidl/Spec.h>
-#include <tools/sidl/parser.h>
+#include <Core/CCA/tools/sidl/Spec.h>
+#include <Core/CCA/tools/sidl/parser.h>
 #include <string.h>
 int lineno;
 char* curfile;

@@ -11,8 +11,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_TypeInfo_internal_h
-#define Core/CCA/Component_PIDL_TypeInfo_internal_h
+#ifndef Component_PIDL_TypeInfo_internal_h
+#define Component_PIDL_TypeInfo_internal_h
 
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <globus_nexus.h>
@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -117,7 +117,7 @@ DESCRIPTION
 	    void add_castables(TypeInfo_internal* ti, int offset);
 
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

@@ -16,8 +16,8 @@
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <globus_nexus.h>
 
-using Component::PIDL::ProxyBase;
-using Component::PIDL::Reference;
+using PIDL::ProxyBase;
+using PIDL::Reference;
 
 ProxyBase::ProxyBase(const Reference& ref)
     : d_ref(ref)

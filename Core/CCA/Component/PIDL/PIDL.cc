@@ -14,30 +14,26 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/GlobusError.h>
 #include <Core/CCA/Component/PIDL/Object_proxy.h>
-#include <Core/CCA/Component/PIDL/Wharehouse.h>
+#include <Core/CCA/Component/PIDL/Warehouse.h>
 #include <Core/Exceptions/InternalError.h>
 #include <globus_nexus.h>
 #include <iostream>
 #include <sstream>
 
-using Component::PIDL::GlobusError;
-using Component::PIDL::Object;
-using Component::PIDL::PIDL;
-using Component::PIDL::Reference;
-using Component::PIDL::Wharehouse;
+
+namespace PIDL {
 
 static unsigned short port;
 static char* host;
 
-Wharehouse* PIDL::wharehouse;
+Warehouse* PIDL::warehouse;
 
 static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
 {
-    using namespace Component::PIDL;
     try {
-	Wharehouse* wh=PIDL::getWharehouse();
+	Warehouse* wh=PIDL::getWarehouse();
 	return wh->approval(urlstring, sp);
-    } catch(const Exception& e) {
+    } catch(const SCIRun::Exception& e) {
 	std::cerr << "Caught exception (" << e.message() << "): " << urlstring
 		  << ", rejecting client (code=1005)\n";
 	return 1005;
@@ -48,10 +44,11 @@ static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
     }
 }
 
-void PIDL::initialize(int, char*[])
+void
+PIDL::PIDL::initialize(int, char*[])
 {
-    if(!wharehouse){
-	wharehouse=new Wharehouse;
+    if(!warehouse){
+	warehouse=new Warehouse;
 	if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
 	    throw GlobusError("Unable to initialize nexus", gerr);
  	if(int gerr=globus_nexus_allow_attach(&port, &host, approval_fn, 0))
@@ -60,11 +57,12 @@ void PIDL::initialize(int, char*[])
     }
 }
 
-Wharehouse* PIDL::getWharehouse()
+Warehouse*
+PIDL::getWarehouse()
 {
-    if(!wharehouse)
-	throw InternalError("Wharehouse not initialized!\n");
-    return wharehouse;
+    if(!warehouse)
+	throw SCIRun::InternalError("Warehouse not initialized!\n");
+    return warehouse;
 }
 
 
@@ -76,17 +74,18 @@ PIDL::objectFrom(const URL& url)
 
 void PIDL::serveObjects()
 {
-    if(!wharehouse)
-	throw InternalError("Wharehouse not initialized!\n");
-    wharehouse->run();
+    if(!warehouse)
+	throw SCIRun::InternalError("Warehouse not initialized!\n");
+    warehouse->run();
 }
 
 std::string PIDL::getBaseURL()
 {
-    if(!wharehouse)
-	throw InternalError("Wharehouse not initialized!\n");
+    if(!warehouse)
+	throw SCIRun::InternalError("Warehouse not initialized!\n");
     std::ostringstream o;
     o << "x-nexus://" << host << ":" << port << "/";
     return o.str();
 }
 
+} // end namespace PIDL

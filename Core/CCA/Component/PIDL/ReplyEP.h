@@ -11,13 +11,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_ReplyEP_h
-#define Core/CCA/Component_PIDL_ReplyEP_h
+#ifndef Component_PIDL_ReplyEP_h
+#define Component_PIDL_ReplyEP_h
 
 #include <Core/Thread/Semaphore.h>
 #include <globus_nexus.h>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -88,14 +88,14 @@ DESCRIPTION
 
 	    //////////
 	    // The semaphore used for blocking
-	    Semaphore d_sema;
+	    SCIRun::Semaphore d_sema;
 
 	    //////////
 	    // A place to bounce the buffer from the handler thread to
 	    // the waiter.
 	    globus_nexus_buffer_t d_bufferHandoff;
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

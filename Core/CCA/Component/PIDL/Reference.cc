@@ -15,7 +15,7 @@
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <globus_nexus.h>
 
-using Component::PIDL::Reference;
+using PIDL::Reference;
 
 Reference::Reference()
 {

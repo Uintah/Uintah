@@ -11,13 +11,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_InvalidReference_h
-#define Core/CCA/Component_PIDL_InvalidReference_h
+#ifndef Component_PIDL_InvalidReference_h
+#define Component_PIDL_InvalidReference_h
 
 #include <Core/CCA/Component/PIDL/PIDLException.h>
 #include <string>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -60,7 +60,7 @@ DESCRIPTION
 
 	    InvalidReference& operator=(const InvalidReference&);
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

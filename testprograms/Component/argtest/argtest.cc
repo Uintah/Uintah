@@ -11,18 +11,24 @@
  *  Copyright (C) 1999 U of U
  */
 
-#include <iostream>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+
 #include "argtest_sidl.h"
+
 #include <Core/Thread/Time.h>
+
+#include <iostream>
 #include <vector>
 #include <sstream>
+
 using std::cerr;
 using std::cout;
 using std::vector;
+using std::string;
+
 using argtest::ref;
 using argtest::Server;
-using std::string;
+
 using CIA::array1;
 using std::istringstream;
 using std::ostringstream;
@@ -38,7 +44,7 @@ static void init(array1<int>& a, int s)
 
 static bool test(const array1<int>& a, int s)
 {
-    if(a.size() != s)
+    if((int)a.size() != s)
 	return false;
     for(int i=0;i<s;i++){
 	if(a[i] != s+i)
@@ -56,7 +62,7 @@ static void init(array1<array1<int> >& a, int s)
 
 static bool test(const array1<array1<int> >& a, int s)
 {
-    if(a.size() != s)
+    if(int(a.size()) != s)
 	return false;
     for(int i=0;i<s;i++){
 	if(!test(a[i], i+s))
@@ -77,7 +83,7 @@ static void init(array1<string>& a, int s)
 
 static bool test(const array1<string>& a, int s)
 {
-    if(a.size() != s)
+    if(int(a.size()) != s)
 	return false;
     for(int i=0;i<s;i++){
 	istringstream in(a[i]);
@@ -98,7 +104,7 @@ static void init(array1<bool>& a, int s)
 
 static bool test(const array1<bool>& a, int s)
 {
-    if(a.size() != s)
+    if(int(a.size()) != s)
 	return false;
     for(int i=0;i<s;i++){
 	if(a[i] != (((s+i)&1)?true:false))
@@ -372,7 +378,7 @@ static void init(array1<ref>& a, int s)
 
 static bool test(const array1<ref>& a, int s)
 {
-    if(a.size() != s)
+    if(int(a.size()) != s)
 	return false;
     for(int i=0;i<s;i++){
 	if(a[i]->test() != s+i)
@@ -431,12 +437,9 @@ static void usage(char* progname)
 int main(int argc, char* argv[])
 {
     using std::string;
-    using Component::PIDL::Object;
-    using Component::PIDL::PIDLException;
-    using Component::PIDL::PIDL;
 
     try {
-	PIDL::initialize(argc, argv);
+	PIDL::PIDL::initialize(argc, argv);
 
 	bool client=false;
 	bool server=false;
@@ -474,10 +477,13 @@ int main(int argc, char* argv[])
 	    cerr << "Waiting for argtest connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
+	  cerr << "aaaaaaaaa\n";
 	    double stime=Time::currentSeconds();
-	    Object obj=PIDL::objectFrom(client_url);
+	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
 	    Server rm=pidl_cast<Server>(obj);
+	  cerr << "AAAAAAAAA\n";
 	    for(int i=0;i<reps;i++){
+	  cerr << "bbbbbbbbb\n";
 		if(rm->return_int() != 5)
 		    fail("return_int");
 		rm->in_int(6);
@@ -600,7 +606,7 @@ int main(int argc, char* argv[])
 	    double us=dt/reps*1000*1000;
 	    cerr << "argtest: " << us << " us/rep\n";
 	}
-	PIDL::serveObjects();
+	PIDL::PIDL::serveObjects();
 	cerr << "Argtest successful\n";
     } catch(const Exception& e) {
 	cerr << "Caught exception:\n";

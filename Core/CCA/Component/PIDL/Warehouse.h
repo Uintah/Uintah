@@ -1,6 +1,6 @@
 
 /*
- *  Wharehouse.h: A pile of distributed objects
+ *  Warehouse.h: A pile of distributed objects
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,8 +11,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_Wharehouse_h
-#define Core/CCA/Component_PIDL_Wharehouse_h
+#ifndef Component_PIDL_Warehouse_h
+#define Component_PIDL_Warehouse_h
 
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Mutex.h>
@@ -20,21 +20,21 @@
 #include <string>
 #include <globus_nexus.h>
 
-namespace SCIRun {
+namespace PIDL {
 
 /**************************************
  
 CLASS
-   Wharehouse
+   Warehouse
    
 KEYWORDS
-   Wharehouse, PIDL
+   Warehouse, PIDL
    
 DESCRIPTION
    Internal PIDL class. This is a singleton that holds all activated
    server objects.
 ****************************************/
-	class Wharehouse {
+	class Warehouse {
 	public:
 	    //////////
 	    // The nexus approval function.  Returns the startpoint
@@ -48,19 +48,19 @@ DESCRIPTION
 
 	    //////////
 	    // The constructor - only called once.
-	    Wharehouse();
+	    Warehouse();
 
 	    //////////
 	    // Destructor
-	    ~Wharehouse();
+	    ~Warehouse();
 
 	    //////////
 	    // The Object base class will register server objects with
-	    // the wharehouse.
+	    // the warehouse.
 	    friend class Object_interface;
 
 	    //////////
-	    // Register obj with the wharehouse, returning the objects
+	    // Register obj with the warehouse, returning the objects
 	    // unique identifier.
 	    int registerObject(Object_interface* obj);
 
@@ -82,19 +82,19 @@ DESCRIPTION
 	    Object_interface* lookupObject(int id);
 
 	    //////////
-	    // "Run" the wharehouse.  This simply blocks until objects
-	    // have been removed from the wharehouse.
+	    // "Run" the warehouse.  This simply blocks until objects
+	    // have been removed from the warehouse.
 	    void run();
 
 	private:
 	    //////////
 	    // The lock for the object database and nextID
-	    Mutex mutex;
+	    SCIRun::Mutex mutex;
 
 	    //////////
 	    // The wait condition for run().  It is signaled when all
-	    // objects have been removed from the wharehouse.
-	    ConditionVariable condition;
+	    // objects have been removed from the warehouse.
+	    SCIRun::ConditionVariable condition;
 
 	    //////////
 	    // The object database
@@ -104,7 +104,7 @@ DESCRIPTION
 	    // The ID of the next object to be created.
 	    int nextID;
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

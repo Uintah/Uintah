@@ -69,12 +69,9 @@ void usage(char* progname)
 int main(int argc, char* argv[])
 {
     using std::string;
-    using Component::PIDL::Object;
-    using Component::PIDL::PIDLException;
-    using Component::PIDL::PIDL;
 
     try {
-	PIDL::initialize(argc, argv);
+	PIDL::PIDL::initialize(argc, argv);
 
 	bool client=false;
 	bool server=false;
@@ -117,7 +114,7 @@ int main(int argc, char* argv[])
 	    cerr << "Waiting for memstress connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
-	    Object obj=PIDL::objectFrom(client_url);
+	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
 	    Server s=pidl_cast<Server>(obj);
 
 	    if(test == "ping" || test == "all"){
@@ -146,7 +143,7 @@ int main(int argc, char* argv[])
 	    if(test == "urlcast"){
 		double stime=Time::currentSeconds();
 		for(int i=0;i<reps;i++){
-		    Object obj2=PIDL::objectFrom(client_url);
+		    PIDL::Object obj2=PIDL::PIDL::objectFrom(client_url);
 		    Server s2=pidl_cast<Server>(obj2);
 		    s2->ping();
 		}
@@ -178,7 +175,7 @@ int main(int argc, char* argv[])
 		cerr << "newobject: " << us << " us/rep\n";
 	    }
 	}
-	PIDL::serveObjects();
+	PIDL::PIDL::serveObjects();
     } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';

@@ -14,7 +14,8 @@
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/Exceptions/InternalError.h>
-using Component::PIDL::TypeInfo_internal;
+
+using PIDL::TypeInfo_internal;
 
 TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,
 				     const std::string& uuid,
@@ -50,7 +51,7 @@ void TypeInfo_internal::add_castable(const TypeInfo_internal* ti, int vtoffset)
 	const_cast<TypeInfo_internal*>(ti)->add_castables(this, vtoffset);
     } else {
 	if(iter_classname->second.first->uuid != ti->uuid){
-	    throw InternalError("inconsistent typeinfo");
+	    throw SCIRun::InternalError("inconsistent typeinfo");
 	} else {
 	    // Ok...
 	}

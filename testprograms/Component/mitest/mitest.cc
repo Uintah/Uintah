@@ -15,11 +15,11 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include "mitest_sidl.h"
 #include <Core/Thread/Time.h>
+
 using std::cerr;
 using std::cout;
-using namespace mitest;
-using Component::PIDL::Object_interface;
 
+using namespace mitest;
 using namespace SCIRun;
 
 class mitest_impl : public D_interface {
@@ -193,13 +193,9 @@ static void test_a(A a, bool& failed)
 int main(int argc, char* argv[])
 {
     using std::string;
-    using Component::PIDL::Object;
-    using Component::PIDL::PIDLException;
-    using Component::PIDL::PIDL;
-    using Component::PIDL::Wharehouse;
 
     try {
-	PIDL::initialize(argc, argv);
+	PIDL::PIDL::initialize(argc, argv);
 
 	bool client=false;
 	bool server=false;
@@ -231,7 +227,7 @@ int main(int argc, char* argv[])
 	    cerr << "Waiting for mitest connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
-	    Object obj=PIDL::objectFrom(client_url);
+	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
 	    bool failed=false;
 
 	    // From base Object
@@ -331,7 +327,7 @@ int main(int argc, char* argv[])
 		cout << "tests successful!\n";
 	    }
 	}
-	PIDL::serveObjects();
+	PIDL::PIDL::serveObjects();
     } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';

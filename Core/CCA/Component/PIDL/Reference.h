@@ -11,12 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_Reference_h
-#define Core/CCA/Component_PIDL_Reference_h
+#ifndef Component_PIDL_Reference_h
+#define Component_PIDL_Reference_h
 
 #include <globus_nexus.h>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -61,7 +61,7 @@ DESCRIPTION
 	    // The vtable base offset
 	    int d_vtable_base;
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

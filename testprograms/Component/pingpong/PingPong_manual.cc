@@ -11,9 +11,9 @@
 #include <iostream>
 #include <globus_nexus.h>
 
-static Core/CCA/Component::PIDL::TypeInfo typeinfo;
+static PIDL::TypeInfo typeinfo;
 
-using namespace SCIRun;
+using namespace PingPong;
 
 static void fn1(globus_nexus_endpoint_t* ep, globus_nexus_buffer_t* buffer,
 		globus_bool_t)
@@ -22,9 +22,9 @@ static void fn1(globus_nexus_endpoint_t* ep, globus_nexus_buffer_t* buffer,
     globus_nexus_get_int(buffer, &arg1, 1);
     globus_nexus_startpoint_t sp;
     if(int gerr=globus_nexus_get_startpoint(buffer, &sp, 1))
-	throw Core/CCA/Component::PIDL::GlobusError("get_startpoint", gerr);
+	throw PIDL::GlobusError("get_startpoint", gerr);
     if(int gerr=globus_nexus_buffer_destroy(buffer))
-	throw Core/CCA/Component::PIDL::GlobusError("buffer_destroy", gerr);
+	throw PIDL::GlobusError("buffer_destroy", gerr);
     void* v=globus_nexus_endpoint_get_user_pointer(ep);
     PingPong::PingPong_interface* obj=(PingPong::PingPong_interface*)v;
     if(!obj)
@@ -34,19 +34,19 @@ static void fn1(globus_nexus_endpoint_t* ep, globus_nexus_buffer_t* buffer,
     int size=globus_nexus_sizeof_int(2); // one for flag, one for data
     globus_nexus_buffer_t rbuff;
     if(int gerr=globus_nexus_buffer_init(&rbuff, size, 0))
-	throw Core/CCA/Component::PIDL::GlobusError("buffer_init", gerr);
+	throw PIDL::GlobusError("buffer_init", gerr);
     int flag=0;
     globus_nexus_put_int(&rbuff, &flag, 1);
     globus_nexus_put_int(&rbuff, &ret, 1);
     if(int gerr=globus_nexus_send_rsr(&rbuff, &sp, 0,
 				      GLOBUS_TRUE, GLOBUS_FALSE))
-	throw Core/CCA/Component::PIDL::GlobusError("send_rsr", gerr);
+	throw PIDL::GlobusError("send_rsr", gerr);
 #if 1
     static int hack=0;
     if(hack++ > 1)
 #endif
 	if(int gerr=globus_nexus_startpoint_destroy(&sp))
-	    throw Core/CCA/Component::PIDL::GlobusError("startpoint_destroy", gerr);
+	    throw PIDL::GlobusError("startpoint_destroy", gerr);
 }
 
 static globus_nexus_handler_t handler_table[] =
@@ -55,16 +55,16 @@ static globus_nexus_handler_t handler_table[] =
     {GLOBUS_NEXUS_HANDLER_TYPE_THREADED, fn1}
 };
 
-static Core/CCA/Component::PIDL::Dispatch dispatch(handler_table, sizeof(handler_table)/sizeof(globus_nexus_handler_t));
+static PIDL::Dispatch dispatch(handler_table, sizeof(handler_table)/sizeof(globus_nexus_handler_t));
 
-const Core/CCA/Component::PIDL::TypeSignature& PingPong::PingPong::type_signature()
+const PIDL::TypeSignature& PingPong::PingPong::type_signature()
 {
     static std::string mytypename="PingPong::PingPong";
     return mytypename;
 }
 
 PingPong::PingPong_interface::PingPong_interface()
-    : Core/CCA/Component::PIDL::Object_interface(&typeinfo, &dispatch, this)
+    : PIDL::Object_interface(&typeinfo, &dispatch, this)
 {
 }
 
@@ -72,8 +72,8 @@ PingPong::PingPong_interface::~PingPong_interface()
 {
 }
 
-PingPong::PingPong_proxy::PingPong_proxy(const Core/CCA/Component::PIDL::Reference& ref)
-    : Core/CCA/Component::PIDL::ProxyBase(ref)
+PingPong::PingPong_proxy::PingPong_proxy(const PIDL::Reference& ref)
+    : PIDL::ProxyBase(ref)
 {
 }
 
@@ -83,20 +83,20 @@ PingPong::PingPong_proxy::~PingPong_proxy()
 
 int PingPong::PingPong_proxy::pingpong(int i)
 {
-    Core/CCA/Component::PIDL::ReplyEP* reply=Core/CCA/Component::PIDL::ReplyEP::acquire();
+    PIDL::ReplyEP* reply=PIDL::ReplyEP::acquire();
     globus_nexus_startpoint_t sp;
     reply->get_startpoint(&sp);
     int size=globus_nexus_sizeof_int(1)
 	+globus_nexus_sizeof_startpoint(&sp, 1);
     globus_nexus_buffer_t buffer;
     if(int gerr=globus_nexus_buffer_init(&buffer, size, 0))
-	throw Core/CCA/Component::PIDL::GlobusError("buffer_init", gerr);
+	throw PIDL::GlobusError("buffer_init", gerr);
     globus_nexus_put_int(&buffer, &i, 1);
     globus_nexus_put_startpoint_transfer(&buffer, &sp, 1);
 
     if(int gerr=globus_nexus_send_rsr(&buffer, &getStartpoint()->d_sp,
 				      1, GLOBUS_TRUE, GLOBUS_FALSE))
-	throw Core/CCA/Component::PIDL::GlobusError("send_rsr", gerr);
+	throw PIDL::GlobusError("send_rsr", gerr);
 
     globus_nexus_buffer_t rbuffer=reply->wait();
     int flag;
@@ -106,8 +106,8 @@ int PingPong::PingPong_proxy::pingpong(int i)
     int result;
     globus_nexus_get_int(&rbuffer, &result, 1);
     if(int gerr=globus_nexus_buffer_destroy(&rbuffer))
-	throw Core/CCA/Component::PIDL::GlobusError("buffer_destroy", gerr);
-    Core/CCA/Component::PIDL::ReplyEP::release(reply);
+	throw PIDL::GlobusError("buffer_destroy", gerr);
+    PIDL::ReplyEP::release(reply);
 
     return result;
 }

@@ -11,13 +11,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_Object_proxy_h
-#define Core/CCA/Component_PIDL_Object_proxy_h
+#ifndef Component_PIDL_Object_proxy_h
+#define Component_PIDL_Object_proxy_h
 
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/PIDL/Object.h>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -52,7 +52,7 @@ DESCRIPTION
 	    virtual ~Object_proxy();
 	private:
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

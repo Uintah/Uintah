@@ -11,14 +11,14 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_CIA_string_h
-#define Core/CCA/Component_CIA_string_h
+#ifndef Component_CIA_string_h
+#define Component_CIA_string_h
 
 #include <string>
 
-namespace SCIRun {
+namespace CIA {
     typedef std::string string;
-} // End namespace SCIRun
+} // End namespace CIA
 
 #endif
 

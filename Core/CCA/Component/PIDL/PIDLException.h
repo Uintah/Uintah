@@ -11,12 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_PIDLException_h
-#define Core/CCA/Component_PIDL_PIDLException_h
+#ifndef Component_PIDL_PIDLException_h
+#define Component_PIDL_PIDLException_h
 
 #include <Core/Exceptions/Exception.h>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -32,7 +32,7 @@ DESCRIPTION
    It provides no additional methods beyond the Core base exception
    class.
 ****************************************/
-	class PIDLException : public Exception {
+	class PIDLException : public SCIRun::Exception {
 	public:
 	    PIDLException();
 	    PIDLException(const PIDLException&);
@@ -40,7 +40,7 @@ DESCRIPTION
 	private:
 	    PIDLException& operator=(const PIDLException&);
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

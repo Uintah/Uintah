@@ -31,7 +31,6 @@
 using std::cerr;
 using std::cout;
 using std::endl;
-using Component::PIDL::PIDL;
 #endif
 
 #ifdef _WIN32
@@ -74,7 +73,7 @@ int main(int argc, char** argv)
 
 #ifdef SCI_PARALLEL
   try {
-    PIDL::initialize(argc, argv);
+    PIDL::PIDL::initialize(argc, argv);
   } catch(const Exception& e) {
     cerr << "Caught exception:\n";
     cerr << e.message() << '\n';

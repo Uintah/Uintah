@@ -13,6 +13,9 @@
 
 #include <iostream>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+
+#include <Core/CCA/Component/PIDL/MalformedURL.h>
+
 #include "PingPong_impl.h"
 #include "PingPong_sidl.h"
 #include <Core/Thread/Time.h>
@@ -35,19 +38,19 @@ void usage(char* progname)
 int main(int argc, char* argv[])
 {
     using std::string;
-    using Component::PIDL::Object;
-    using Component::PIDL::PIDLException;
-    using Component::PIDL::PIDL;
+
     using PingPong::PingPong_impl;
     using PingPong::PingPong;
 
     try {
-	PIDL::initialize(argc, argv);
+      cout << "initialize:\n";
+	PIDL::PIDL::initialize(argc, argv);
+      cout << "done initialize:\n";
 
 	bool client=false;
 	bool server=false;
 	string client_url;
-	int reps=1000;
+	int reps=100;
 
 	for(int i=1;i<argc;i++){
 	    string arg(argv[i]);
@@ -79,14 +82,19 @@ int main(int argc, char* argv[])
 	    cerr << "Waiting for pingpong connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
-	    Object obj=PIDL::objectFrom(client_url);
+	  cout << "objectFrom: " << client_url << "\n";
+	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
+	    cout << "got it\n";
 	    PingPong pp=pidl_cast<PingPong>(obj);
+	    cout << "done with pidl_cast\n";
 	    if(!pp){
 		cerr << "Wrong object type!\n";
 		abort();
 	    }
 	    double stime=Time::currentSeconds();
+	    cout << "time is: " << stime << "\n";
 	    for(int i=0;i<reps;i++){
+	      cerr << i << ": ping!\n";
 		int j=pp->pingpong(i);
 		if(i != j)
 		    cerr << "BAD data: " << i << " vs. " << j << '\n';
@@ -96,9 +104,14 @@ int main(int argc, char* argv[])
 	    double us=dt/reps*1000*1000;
 	    cerr << us << " us/rep\n";
 	}
-	PIDL::serveObjects();
+	cerr << "Serve Objects!\n";
+	PIDL::PIDL::serveObjects();
+	cerr << "Done Serve Objects!\n";
+    } catch(const PIDL::MalformedURL& e) {
+	cerr << "pingpong.cc: Caught MalformedURL exception:\n";
+	cerr << e.message() << '\n';
     } catch(const Exception& e) {
-	cerr << "Caught exception:\n";
+	cerr << "pingpong.cc: Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
     } catch(...) {
