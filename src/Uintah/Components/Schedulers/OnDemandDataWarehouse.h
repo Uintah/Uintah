@@ -119,6 +119,15 @@ public:
    // variable (with materialIndex, and in the given region) is on.
    virtual int findMpiNode( const VarLabel * label,
 			    const Region   * region );
+
+   bool isFinalized() const {
+      return d_finalized;
+   }
+   bool exists(const VarLabel*, const Region*) const;
+
+   void finalize() {
+      d_finalized=true;
+   }
 private:
 
    struct dataLocation {
@@ -143,7 +152,7 @@ private:
    //////////
    // Insert Documentation Here:
    mutable SCICore::Thread::CrowdMonitor  d_lock;
-   bool                                   d_allowCreation;
+   bool                                   d_finalized;
    GridP                                  d_grid;
    
    const VarLabel           * d_positionLabel;
@@ -156,6 +165,10 @@ private:
 
 //
 // $Log$
+// Revision 1.16  2000/05/07 06:02:08  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.15  2000/05/05 06:42:43  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

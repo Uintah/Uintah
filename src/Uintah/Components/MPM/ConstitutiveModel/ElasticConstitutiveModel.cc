@@ -23,13 +23,8 @@
 
 #include <Uintah/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
 #include <fstream>
-using std::endl;
-using std::ifstream;
-using std::ofstream;
-using std::string;
 #include <iostream>
-using std::cerr;
-
+using namespace std;
 using namespace Uintah::MPM;
 
 ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
@@ -351,6 +346,15 @@ void ElasticConstitutiveModel::computeStressTensor
 }
 #endif
 
+void ElasticConstitutiveModel::addComputesAndRequires(Task* task,
+						      const MPMMaterial* matl,
+						      const Region* region,
+						      const DataWarehouseP& old_dw,
+						      DataWarehouseP& new_dw) const
+{
+   cerr << "ElasticConsitutive::addComputesAndRequires needs to be filled in\n";
+}
+
 void ElasticConstitutiveModel::readParameters(ProblemSpecP ps, double *p_array)
 {
 
@@ -475,6 +479,10 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.10  2000/05/07 06:02:04  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.9  2000/05/01 16:18:11  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data

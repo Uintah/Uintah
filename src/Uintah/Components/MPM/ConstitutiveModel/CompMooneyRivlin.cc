@@ -6,6 +6,7 @@
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <SCICore/Math/MinMax.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
@@ -224,6 +225,32 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
     new_dw->put(cmdata, p_cmdata_label, matlindex, region);
 }
 
+void CompMooneyRivlin::addComputesAndRequires(Task* task,
+					      const MPMMaterial* matl,
+					      const Region* region,
+					      const DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw) const
+{
+   task->requires(old_dw, pXLabel, matl->getDWIndex(), region,
+		  Task::None);
+   task->requires(old_dw, pDeformationMeasureLabel, matl->getDWIndex(), region,
+		  Task::None);
+   task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  region,
+		  Task::None);
+   task->requires(old_dw, pMassLabel, matl->getDWIndex(),  region,
+		  Task::None);
+   task->requires(old_dw, pVolumeLabel, matl->getDWIndex(),  region,
+		  Task::None);
+   task->requires(new_dw, gMomExedVelocityLabel, matl->getDWIndex(), region,
+		  Task::AroundCells, 1);
+   task->requires(old_dw, deltLabel);
+
+   task->computes(new_dw, deltLabel);
+   task->computes(new_dw, pStressLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
+}
+
 double CompMooneyRivlin::computeStrainEnergy(const Region* /*region*/,
                                              const MPMMaterial* /*matl*/,
                                              const DataWarehouseP& /*new_dw*/)
@@ -316,6 +343,10 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.24  2000/05/07 06:02:02  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.23  2000/05/04 16:37:30  guilkey
 // Got the CompNeoHookPlas constitutive model up to speed.  It seems
 // to work but hasn't had a rigorous test yet.

@@ -44,6 +44,7 @@ public:
    ~DWDatabase();
 
    bool exists(const VarLabel* label, int matlIndex, const Region* region) const;
+   bool exists(const VarLabel* label, const Region* region) const;
    void put(const VarLabel* label, int matlindex, const Region* region,
 	    const VarType& var, bool replace);
    void get(const VarLabel* label, int matlindex, const Region* region,
@@ -135,6 +136,25 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
 	 RegionRecord* rr = regioniter->second;
 	 if(matlIndex >= 0 && matlIndex < rr->vars.size()){
 	    if(rr->vars[matlIndex] != 0){
+	       return true;
+	    }
+	 }
+      }
+   }
+   return false;
+}
+
+template<class VarType>
+bool DWDatabase<VarType>::exists(const VarLabel* label, const Region* region) const
+{
+   nameDBtype::const_iterator nameiter = names.find(label);
+   if(nameiter != names.end()) {
+      NameRecord* nr = nameiter->second;
+      regionDBtype::const_iterator regioniter = nr->regions.find(region);
+      if(regioniter != nr->regions.end()) {
+	 RegionRecord* rr = regioniter->second;
+	 for(int i=0; i<rr->vars.size(); i++){
+	    if(rr->vars[i] != 0){
 	       return true;
 	    }
 	 }
@@ -236,6 +256,10 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
 //
 // $Log$
+// Revision 1.6  2000/05/07 06:02:07  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.5  2000/05/06 03:54:10  sparker
 // Fixed multi-material carryForward
 //

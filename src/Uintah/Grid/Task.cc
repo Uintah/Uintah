@@ -2,6 +2,9 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/Material.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <iostream>
@@ -45,28 +48,83 @@ Task::subregionCapable(bool state)
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_reqs.push_back(new Dependency(this, ds, var, 0, 0));
+  d_reqs.push_back(new Dependency(this, ds, var, -1, 0));
 }
 
 void
-Task::requires(const DataWarehouseP& ds, const VarLabel* var,
-	       const Region* region, int numGhostCells)
+Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
+	       const Region* region, GhostType gtype, int numGhostCells)
 {
-  d_reqs.push_back(new Dependency(this, ds, var, region, numGhostCells));
+   const TypeDescription* td = var->typeDescription();
+   int l,h;
+   switch(gtype){
+   case Task::None:
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+      l=h=0;
+      break;
+   case Task::AroundNodes:
+      if(numGhostCells == 0)
+	 throw InternalError("No ghost cells specified with Task::AroundNodes");
+      switch(td->getBasis()){
+      case TypeDescription::Node:
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 break;
+      case TypeDescription::Cell:
+	 // Lower neighbors
+	 l=-1;
+	 h=0;
+         break;
+      default:
+	 throw InternalError("Illegal Basis type");
+      }
+      break;
+   case Task::AroundCells:
+      if(numGhostCells == 0)
+	 throw InternalError("No ghost cells specified with Task::AroundCells");
+      switch(td->getBasis()){
+      case TypeDescription::Node:
+	 // Upper neighbors
+	 l=0;
+	 h=1;
+         break;
+      case TypeDescription::Cell:
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 break;
+      default:
+	 throw InternalError("Illegal Basis type");
+      }
+      break;
+   default:
+      throw InternalError("Illegal ghost type");
+   }
+   for(int ix=l;ix<=h;ix++){
+      for(int iy=l;iy<=h;iy++){
+	 for(int iz=l;iz<=h;iz++){
+	    const Region* neighbor = region->getNeighbor(IntVector(ix,iy,iz));
+	    if(neighbor)
+	       d_reqs.push_back(new Dependency(this, ds, var, matlIndex,
+					       neighbor));
+	 }
+      }
+   }
 }
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_comps.push_back(new Dependency(this, ds, var, 0, 0));
+  d_comps.push_back(new Dependency(this, ds, var, -1, 0));
 }
 
 void
-Task::computes(const DataWarehouseP& ds, const VarLabel* var,
+Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	       const Region*)
 {
-  d_comps.push_back(new Dependency(this, ds, var,
-				   d_region, 0));
+  d_comps.push_back(new Dependency(this, ds, var, matlIndex, d_region));
 }
 
 void
@@ -75,40 +133,18 @@ Task::doit(const ProcessorContext* pc)
   if( d_completed )
       throw InternalError("Task performed, but already completed");
   d_action->doit(pc, d_region, d_fromDW, d_toDW);
-  //d_completed=true;
+  d_completed=true;
 }
 
 Task::Dependency::Dependency(Task* task, const DataWarehouseP& dw,
-			     const VarLabel* var,
-			     const Region* region, int numGhostCells)
+			     const VarLabel* var, int matlIndex,
+			     const Region* region)
     : d_task(task),
       d_dw(dw),
       d_var(var),
-      d_region(region),
-      d_numGhostCells(numGhostCells)
+      d_matlIndex(matlIndex),
+      d_region(region)
 {
-}
-
-void
-Task::addReqs(vector<Dependency*>& to) const
-{
-  vector<Dependency*>::const_iterator iter;
-
-  for( iter = d_reqs.begin(); iter != d_reqs.end(); iter++ )
-    {
-      to.push_back(*iter);
-    }
-}
-
-void
-Task::addComps(std::vector<Dependency*>& to) const
-{
-  vector<Dependency*>::const_iterator iter;
-
-  for( iter = d_comps.begin(); iter != d_comps.end(); iter++ )
-    {
-      to.push_back(*iter);
-    }
 }
 
 const vector<Task::Dependency*>&
@@ -117,8 +153,18 @@ Task::getComputes() const
   return d_comps;
 }
 
+const vector<Task::Dependency*>&
+Task::getRequires() const
+{
+  return d_reqs;
+}
+
 //
 // $Log$
+// Revision 1.9  2000/05/07 06:02:13  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.8  2000/05/05 06:42:45  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

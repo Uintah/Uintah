@@ -3,6 +3,7 @@
 
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <iostream> // TEMPORARY
 
@@ -62,8 +63,10 @@ WARNING
       const TypeDescription*
       ReductionVariable<T, Op>::getTypeDescription()
       {
-	 //cerr << "ReductionVariable::getTypeDescription not done\n";
-	 return 0;
+	 static TypeDescription* td;
+	 if(!td)
+	    td = new TypeDescription(true, TypeDescription::None);
+	 return td;
       }
    
    template<class T, class Op>
@@ -111,6 +114,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/07 06:02:12  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.3  2000/05/02 06:07:22  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

@@ -15,6 +15,7 @@
 #include "ConstitutiveModelFactory.h"
 #include "CompNeoHook.h"
 #include <fstream>
+#include <iostream>
 using namespace Uintah::MPM;
 using namespace std;
 
@@ -121,10 +122,10 @@ std::vector<double> CompNeoHook::getMechProps() const
 
 }
 
-void CompNeoHook::computeStressTensor(const Region* region,
-				      const MPMMaterial* matl,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw)
+void CompNeoHook::computeStressTensor(const Region* /*region*/,
+				      const MPMMaterial* /*matl*/,
+				      const DataWarehouseP& /*old_dw*/,
+				      DataWarehouseP& /*new_dw*/)
 {
 #ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,shearTrial,fbar,deformationGradientInc;
@@ -171,9 +172,9 @@ void CompNeoHook::computeStressTensor(const Region* region,
 
 }
 
-double CompNeoHook::computeStrainEnergy(const Region* region,
-                                     const MPMMaterial* matl,
-                                     const DataWarehouseP& new_dw)
+double CompNeoHook::computeStrainEnergy(const Region* /*region*/,
+					const MPMMaterial* /*matl*/,
+					const DataWarehouseP& /*new_dw*/)
 {
 #ifdef WONT_COMPILE_YET
   double se,J,U,W;
@@ -188,12 +189,21 @@ double CompNeoHook::computeStrainEnergy(const Region* region,
 #endif
 }
 
-void CompNeoHook::initializeCMData(const Region* region,
-                            const MPMMaterial* matl,
-                            DataWarehouseP& new_dw)
+void CompNeoHook::initializeCMData(const Region* /*region*/,
+                            const MPMMaterial* /*matl*/,
+                            DataWarehouseP& /*new_dw*/)
 {
 }
 
+
+void CompNeoHook::addComputesAndRequires(Task* task,
+					 const MPMMaterial* matl,
+					 const Region* region,
+					 const DataWarehouseP& old_dw,
+					 DataWarehouseP& new_dw) const
+{
+   cerr << "CompNeoHook::addComputesAndRequires needs to be filled in\n";
+}
 
 double CompNeoHook::getLambda() const
 {
@@ -309,6 +319,10 @@ int CompNeoHook::getSize() const
 
 
 // $Log$
+// Revision 1.7  2000/05/07 06:02:03  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.6  2000/04/26 06:48:14  sparker
 // Streamlined namespaces
 //

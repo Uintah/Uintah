@@ -39,11 +39,8 @@
 #include "ConstitutiveModelFactory.h"
 #include "ViscoElasticDamage.h"
 #include <fstream>
-using std::ifstream;
-using std::ofstream;
-using std::endl;
-using std::string;
-
+#include <iostream>
+using namespace std;
 using namespace Uintah::MPM;
 
 ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
@@ -441,6 +438,15 @@ void ViscoElasticDamage::printParameterNames(ofstream& out) const
       << "d_Tau" << endl
       << "d_Gamma" << endl
       << "maxEquivStrain" << endl;
+}
+
+void ViscoElasticDamage::addComputesAndRequires(Task* task,
+						const MPMMaterial* matl,
+						const Region* region,
+						const DataWarehouseP& old_dw,
+						DataWarehouseP& new_dw) const
+{
+   cerr << "ViscoElasticDamage::addComputesAndRequires needs to be filled in\n";
 }
 
 ConstitutiveModel* ViscoElasticDamage::copy() const

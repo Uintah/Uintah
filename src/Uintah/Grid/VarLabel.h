@@ -55,6 +55,10 @@ namespace Uintah {
       bool isPositionVariable() const {
 	 return d_vartype == PositionVariable;
       }
+
+      const TypeDescription* typeDescription() const {
+	 return d_td;
+      }
       class Compare {
       public:
 	 bool operator()(const VarLabel* v1, const VarLabel* v2) const;
@@ -74,6 +78,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.7  2000/05/07 06:02:14  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.6  2000/05/02 06:07:23  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

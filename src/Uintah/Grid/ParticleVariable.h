@@ -5,6 +5,7 @@
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/ParticleData.h>
 #include <Uintah/Grid/ParticleSubset.h>
+#include <Uintah/Grid/TypeDescription.h>
 #include <iostream> //TEMPORARY
 
 
@@ -91,8 +92,10 @@ WARNING
       const TypeDescription*
       ParticleVariable<T>::getTypeDescription()
       {
-	 //cerr << "ParticleVariable::getTypeDescription not done\n";
-	 return 0;
+	 static TypeDescription* td;
+	 if(!td)
+	    td = new TypeDescription(false, TypeDescription::Cell);
+	 return td;
       }
    
    template<class T>
@@ -182,6 +185,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/05/07 06:02:12  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.9  2000/05/01 16:18:17  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data

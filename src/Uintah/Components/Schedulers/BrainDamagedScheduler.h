@@ -4,7 +4,10 @@
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/TaskProduct.h>
+#include <Uintah/Grid/Task.h>
 #include <vector>
+#include <map>
 
 namespace SCICore {
     namespace Thread {
@@ -78,20 +81,21 @@ WARNING
    private:
       BrainDamagedScheduler(const BrainDamagedScheduler&);
       BrainDamagedScheduler& operator=(const BrainDamagedScheduler&);
-      
+
       struct TaskRecord {
 	 TaskRecord(Task*);
 	 ~TaskRecord();
-	 
+
 	 Task*                    task;
-	 std::vector<TaskRecord*> deps;
-	 std::vector<TaskRecord*> reverseDeps;
+	 bool visited;
       };
-      
+
       //////////
       // Insert Documentation Here:
       bool allDependenciesCompleted(TaskRecord* task) const;
-      
+
+      void performTask(TaskRecord* task, const ProcessorContext * pc) const;
+
       //////////
       // Insert Documentation Here:
       void setupTaskConnections();
@@ -102,18 +106,23 @@ WARNING
 			   SCICore::Thread::SimpleReducer*);
       
       SCICore::Thread::SimpleReducer* d_reducer;
-      
+
       std::vector<TaskRecord*>        d_tasks;
       std::vector<const VarLabel*>    d_targets;
-      
+
       SCICore::Thread::ThreadPool*    d_pool;
       int                             d_numThreads;
+      std::map<TaskProduct, TaskRecord*>   d_allcomps;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/05/07 06:02:07  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.8  2000/05/05 06:42:43  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //
