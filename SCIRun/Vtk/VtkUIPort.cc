@@ -26,7 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
  *  VtkUIPort.cc: CCA-style Interface to old TCL interfaces
  *
@@ -41,19 +40,23 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
-
 #include <SCIRun/Vtk/VtkUIPort.h>
 #include <SCIRun/Vtk/VtkComponentInstance.h>
 
 #include <iostream>
 
-using namespace SCIRun;
+namespace SCIRun {
 
-
+/**
+ * \class VtkUIThread
+ *
+ * ?
+ */
 class VtkUIThread : public Runnable {
 public:
   VtkUIThread(VtkComponentInstance* ci);
   ~VtkUIThread() {}
+  /** ? */
   void run();
 private:
   VtkComponentInstance* ci;
@@ -64,15 +67,10 @@ VtkUIThread::VtkUIThread(VtkComponentInstance* ci)
 {
 }
 
-
-
-
 void VtkUIThread::run()
 {
   ci->getComponent()->popupUI();
 }
-
-
 
 VtkUIPort::VtkUIPort(VtkComponentInstance* ci)
   : ci(ci)
@@ -87,14 +85,14 @@ int
 VtkUIPort::ui()
 {
   if(ci->getComponent()->isThreadedUI()){
-    Thread* t = new Thread(new VtkUIThread(ci), "Vtk UI Thread", 0);
-    t->detach();
+  Thread* t = new Thread(new VtkUIThread(ci), "Vtk UI Thread", 0);
+  t->detach();
   }else{
-    return ci->getComponent()->popupUI();
+  return ci->getComponent()->popupUI();
   }
   //return 0 success, -1 fatal error, 
   //other values for other errors.
   return 0;
 }
 
-
+} // end namespace SCIRun

@@ -43,19 +43,28 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-namespace SCIRun{
-  class VtkComponentInstance;
-  class VtkUIPort : public sci::cca::ports::UIPort {
-  public:
-    VtkUIPort(VtkComponentInstance* ci);
-    virtual ~VtkUIPort();
+namespace SCIRun
+{
+class VtkComponentInstance;
+/**
+ * \class VtkUIPort
+ *
+ * ?
+ */
+class VtkUIPort : public sci::cca::ports::UIPort
+{
+public:
+  VtkUIPort(VtkComponentInstance* ci);
+  virtual ~VtkUIPort();
 
-    virtual int ui();
-  private:
-    VtkComponentInstance* ci;
-    VtkUIPort(const VtkUIPort&);
-    VtkUIPort& operator=(const VtkUIPort&);
-  };
+  /** ? */  
+  virtual int ui();
+private:
+  VtkComponentInstance* ci;
+  VtkUIPort(const VtkUIPort&);
+  VtkUIPort& operator=(const VtkUIPort&);
+};
+
 }
 
 #endif
