@@ -1,5 +1,5 @@
 
-#include "FrictionContact.h"
+#include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>

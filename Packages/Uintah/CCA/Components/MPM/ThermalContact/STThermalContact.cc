@@ -1,4 +1,4 @@
-#include "STThermalContact.h"
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/STThermalContact.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>

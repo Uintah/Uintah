@@ -42,7 +42,7 @@
 //   all default settings. (usefulness??)
 // o Time stamp option
 
-#include "DebugStream.h"
+#include <Core/Util/DebugStream.h>
 
 namespace SCIRun {
 

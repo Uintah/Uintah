@@ -413,8 +413,8 @@ SimpleSimulationController::run()
 	output->executedTimestep();
 
       t += delt;
-      TAU_DB_DUMP();
    }
+   TAU_DB_DUMP();
    ups->getNode()->getOwnerDocument()->release();
 }
 

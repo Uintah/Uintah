@@ -7,7 +7,7 @@
 // ensure that one can get the same answer using prescribed
 // contact as can be gotten using "automatic" contact.
 
-#include "SingleVelContact.h"
+#include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>

@@ -1,5 +1,5 @@
-#include "TriGeometryPiece.h"
-#include "GeometryPieceFactory.h"
+#include <Packages/Uintah/Core/Grid/TriGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <iostream>

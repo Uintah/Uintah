@@ -1,7 +1,7 @@
-#include "BurnFactory.h"
-#include "NullBurn.h"
-#include "SimpleBurn.h"
-#include "IgnitionCombustion.h"
+#include <Packages/Uintah/CCA/Components/HETransformation/BurnFactory.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/NullBurn.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/SimpleBurn.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/IgnitionCombustion.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <string>

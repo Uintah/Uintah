@@ -1,4 +1,4 @@
-#include "Endian.h"
+#include <Core/Util/Endian.h>
 
 namespace SCIRun {
 

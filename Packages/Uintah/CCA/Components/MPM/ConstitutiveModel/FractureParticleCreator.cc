@@ -1,4 +1,4 @@
-#include "FractureParticleCreator.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/FractureParticleCreator.h>
 
 using namespace Uintah;
 using std::vector;

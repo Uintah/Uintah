@@ -1,5 +1,5 @@
 
-#include "MPMICE.h"
+#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>

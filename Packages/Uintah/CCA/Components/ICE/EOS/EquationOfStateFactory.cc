@@ -1,8 +1,8 @@
-#include "EquationOfStateFactory.h"
-#include "IdealGas.h"
+#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/IdealGas.h>
 #if 0
-#include "Harlow.h"
-#include "StiffGas.h"
+#include <Packages/Uintah/CCA/Components/ICE/EOS/Harlow.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/StiffGas.h>
 #endif
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>

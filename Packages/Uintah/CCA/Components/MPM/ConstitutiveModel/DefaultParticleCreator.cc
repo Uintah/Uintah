@@ -1,4 +1,4 @@
-#include "DefaultParticleCreator.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DefaultParticleCreator.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
