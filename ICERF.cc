@@ -60,9 +60,11 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
                                      + 1.0/(dx.y() * dx.y()) 
                                      + 1.0/(dx.z() * dx.z())  );
                                      
-    constCCVariable<double> speedSound, sp_vol_CC, rho_CC;
+    constCCVariable<double> speedSound, sp_vol_CC, rho_CC, thermalCond;
     constCCVariable<Vector> vel_CC;
-    Ghost::GhostType  gac = Ghost::AroundCells;    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;   
+    
     if (d_CFL > 0.5) {
       throw ProblemSetupException("CFL can't exceed 0.5 for RF problems");
     }
@@ -101,7 +103,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);     
-      
+      new_dw->get(thermalCond,lb->thermalCondLabel,   indx,patch,gn,  0);      
       //__________________________________
       //  stability constraint due to courant Condition
       for (int dir = 0; dir <3; dir++) {  //loop over all three directions
@@ -137,15 +139,15 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
       // stability constraint due to heat conduction
       //  I C E  O N L Y
       if (ice_matl) {
-        double thermalCond = ice_matl->getThermalConductivity();
-        if (thermalCond !=0) {
+        double thermalCond_test = ice_matl->getThermalConductivity();
+        if (thermalCond_test !=0) {
           double cv    = ice_matl->getSpecificHeat();
           double gamma = ice_matl->getGamma();
           double cp = cv * gamma;
 
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
-            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond);
+            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
             double A =  0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
             delt_cond = std::min(A, delt_cond);
           }
@@ -627,7 +629,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     CCVariable<double> term1, term2, term3;
     
     constCCVariable<double> sp_vol_CC, speedSound, press_CC;
-    constCCVariable<double> f_theta, rho_CC, Temp_CC;
+    constCCVariable<double> f_theta, rho_CC, Temp_CC, thermalCond;
     
     constSFCXVariable<double> pressX_FC, pressDiffX_FC;
     constSFCYVariable<double> pressY_FC, pressDiffY_FC;
@@ -677,7 +679,9 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       new_dw->get(f_theta,       lb->f_theta_CCLabel,    indx,patch,gn,  0);
       new_dw->get(pressDiffX_FC, lb->press_diffX_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffY_FC, lb->press_diffY_FCLabel,indx,patch,gac, 1);      
-      new_dw->get(pressDiffZ_FC, lb->press_diffZ_FCLabel,indx,patch,gac, 1);         
+      new_dw->get(pressDiffZ_FC, lb->press_diffZ_FCLabel,indx,patch,gac, 1);
+      old_dw->get(Temp_CC,       lb->temp_CCLabel,       indx,patch,gac, 1);
+      new_dw->get(thermalCond,   lb->thermalCondLabel,   indx,patch,gac, 1);         
       new_dw->allocateAndPut(int_eng_source, 
                                  lb->int_eng_source_CCLabel, indx,patch);
       int_eng_source.initialize(0.0);
@@ -766,10 +770,8 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       //  Source due to conduction
       //   I C E   O N L Y
       if(ice_matl){
-        double thermalCond = ice_matl->getThermalConductivity();
-        if(thermalCond != 0.0){ 
-          old_dw->get(Temp_CC, lb->temp_CCLabel, indx,patch,gac,1);
-       
+        double thermalCond_test = ice_matl->getThermalConductivity();
+        if(thermalCond_test != 0.0){ 
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
           scalarDiffusionOperator(new_dw, patch, use_vol_frac,
                                   rho_CC, sp_vol_CC,  Temp_CC,
