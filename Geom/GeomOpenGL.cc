@@ -35,6 +35,7 @@
 #include <Geom/Switch.h>
 #include <Geom/Tetra.h>
 #include <Geom/Torus.h>
+#include <Geom/Transform.h>
 #include <Geom/Tri.h>
 #include <Geom/Triangles.h>
 #include <Geom/Tube.h>
@@ -903,11 +904,15 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 0);
     di->polycount+=pts.size();
+    double old_size;
+    glGetDoublev(GL_POINT_SIZE, &old_size);
+    glPointSize(di->point_size);
     glBegin(GL_POINTS);
     for (int i=0; i<pts.size(); i++) {
 	glVertex3d(pts[i].x(), pts[i].y(), pts[i].z());
     }
     glEnd();
+    glPointSize(old_size);
 }
 
 // WARNING not fixed for lighting yet!
@@ -1276,6 +1281,16 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 	break;	
     }
     glPopMatrix();
+}
+
+void GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  glPushMatrix();
+  double mat[16];
+  trans.get(mat);
+  glMultMatrixd(mat);
+  child->draw(di, matl, time);
+  glPopMatrix();
 }
 
 void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)

@@ -52,6 +52,7 @@ public:
     int check_clip; // see if you should ignore clipping planes
     
     int clip_planes; // clipping planes that are on
+    double point_size; // so points and lines can be thicker than 1 pixel
 
     Material* current_matl;
     void set_matl(Material*);

@@ -225,7 +225,7 @@ CharColor::CharColor ( Color& c )
 }
 
 
-CharColor&
+CharColor
 CharColor::operator= ( const Color& c ) const
 {
   CharColor f;
