@@ -13,12 +13,13 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/IntersectionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/NullGeometryPiece.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using std::endl;
@@ -37,43 +38,43 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
         ShellGeometryFactory::create(child, objs);
       
       else if (go_type == "box")
-	 objs.push_back(new BoxGeometryPiece(child));
+	 objs.push_back(scinew BoxGeometryPiece(child));
       
       else if (go_type == "sphere")
-	 objs.push_back(new SphereGeometryPiece(child));
+	 objs.push_back(scinew SphereGeometryPiece(child));
 
       else if (go_type == "sphere_membrane")
-	 objs.push_back(new SphereMembraneGeometryPiece(child));
+	 objs.push_back(scinew SphereMembraneGeometryPiece(child));
 
       else if (go_type ==  "cylinder")
-	 objs.push_back(new CylinderGeometryPiece(child));
+	 objs.push_back(scinew CylinderGeometryPiece(child));
 
       else if (go_type ==  "smoothcyl")
-	 objs.push_back(new SmoothCylGeomPiece(child));
+	 objs.push_back(scinew SmoothCylGeomPiece(child));
 
       else if (go_type ==  "corrugated")
-	 objs.push_back(new CorrugEdgeGeomPiece(child));
+	 objs.push_back(scinew CorrugEdgeGeomPiece(child));
 
       else if (go_type ==  "cone")
-	 objs.push_back(new ConeGeometryPiece(child));
+	 objs.push_back(scinew ConeGeometryPiece(child));
 
       else if (go_type == "tri")
-	 objs.push_back(new TriGeometryPiece(child));
+	 objs.push_back(scinew TriGeometryPiece(child));
  
       else if (go_type == "union")
-	 objs.push_back(new UnionGeometryPiece(child));
+	 objs.push_back(scinew UnionGeometryPiece(child));
    
       else if (go_type == "difference")
-	 objs.push_back(new DifferenceGeometryPiece(child));
+	 objs.push_back(scinew DifferenceGeometryPiece(child));
 
       else if (go_type == "file")
-	 objs.push_back(new FileGeometryPiece(child));
+	 objs.push_back(scinew FileGeometryPiece(child));
 
       else if (go_type == "intersection")
-	 objs.push_back(new IntersectionGeometryPiece(child));
+	 objs.push_back(scinew IntersectionGeometryPiece(child));
 
       else if (go_type == "null")
-	objs.push_back(new NullGeometryPiece(child));
+	objs.push_back(scinew NullGeometryPiece(child));
 
       else if (go_type == "res" || go_type == "velocity" || 
                go_type == "temperature") {
