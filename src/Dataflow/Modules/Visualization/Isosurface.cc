@@ -196,7 +196,6 @@ void Isosurface::execute()
   default: // Error
     error("Unknow Algorithm requested\n");
     return;
-    break;
   }
 
   send_results();
