@@ -232,23 +232,25 @@
 	images. It can read diffusion weighted images (DWIs), perform
 	correction for a common class of distortions in echo-planar imaging,
 	estimate tensors from DWIs, and visualize the diffusion tensor
-	field. BioTensor's functionality can be easily extended and future
-	versions will have expanded capabilities, based on contributions from
+	field. BioTensor's functionality is easily extended. Future
+	versions will have expanded capabilities based on contributions from
 	external collaborators and internal development.
       </p>
       <p>
-	Diffusion weighted imaging uses the diffusion of water molecules to
-	probe the directional micro-structure of living tissue. A single
-	diffusion weighted image generally measures diffusivity of water
-	molecules along a particular direction. The amount of diffusion along
-	a direction is detected by destructive interference of different phase
-	signatures created by the magnetic gradient. A large set of DWIs along
-	carefully chosen gradient directions permits estimation of a diffusion
-	tensor that models the relationship between direction and
-	diffusivity. The BioTensor application provides the means of going
-	from DWIs to "diffusion tensor images" (DTIs), which are actually
-	three-dimensional fields of tensor values. Seminal papers on diffusion
-	tensor imaging, written by Peter Basser and others, can be found
+ 	Diffusion weighted imaging uses the diffusion of water
+	molecules to probe the directional micro-structure of living
+	tissue. A single diffusion weighted image generally measures
+	diffusivity of water molecules along a particular
+	direction. The amount of diffusion along a direction is
+	detected by destructive interference of different phase
+	signatures created by the magnetic gradient. A large set of
+	DWIs along carefully chosen gradient directions permits
+	estimation of a diffusion tensor that models the relationship
+	between direction and diffusivity. The BioTensor application
+	generates "diffusion tensor images" (DTIs) from DWIs.  DTIs
+	are three-dimensional fields of tensor values. Seminal papers
+	on diffusion tensor imaging, written by Peter Basser and
+	others, can be found
 	<a href="http://dir2.nichd.nih.gov/nichd/stbb/publications.html">
 	  here</a>.
       </p>
@@ -282,8 +284,8 @@
       </ul>
 
       <p>
-	This tutorial demonstrates many of BioTensor's capabilities.  In
-	this tutorial BioTensor is used to process diffusion weighted images
+	This tutorial demonstrates many of BioTensor's capabilities.
+	BioTensor is used in this tutorial to process diffusion weighted images
 	acquired using the echo-planar imaging method.  These data  are part
 	of the SCIRun sample data set collection and may be <a
 	  href="http::software.sci.utah.edu/datasets/SCIRunData.1.20.0.tar.gz">downloaded</a>
@@ -294,7 +296,7 @@
       <h2>Section 2&mdash;Getting Started</h2> 
       <p>
 	This section demonstrates how to start BioTensor. Subsequent
-	sections demonstrates how to load, process, and visualize data.
+	sections demonstrate how to load, process, and visualize data.
       </p>
 
       <h3>
@@ -415,12 +417,12 @@
 
       <p>
 	BioTensor's user interface, shown in <a
-	href="#figure_1">Figure 1</a>, contains three panes.  The
-	Processing Pane, the left pane, guides the user through the
-	application. The Rendering Pane, the center pane, is where
-	data interaction and visualization is performed.  The
-	Visualization Pane, the right pane, controls
-	parameters for the Rendering Pane.
+	href="#figure_1">Figure 1</a>, contains three panes.  The left
+	pane is the Processing Pane. It guides the user through the
+	application. The center pane is the Rendering Pane. Data
+	interaction and visualization is performed here. The right
+	pane is the Visualization Pane. It controls parameters for the
+	Rendering Pane.
       </p>
       <p>
 	The panes may be "detached" from one another by clicking on the
@@ -491,7 +493,7 @@
       <p>
 	Just above the Progress Indicator are two buttons: an Execute
 	 button and a Next button. Press the Execute button to
-	 complete the current processing step.  Press Next to begin
+	 complete the current processing step.  Press the Next button to begin
 	 the next processing step.
       </p>
 
@@ -547,8 +549,8 @@
 	</li>
 	<li>
 	  <p>
-	    DICOM or Analyze format data can be loaded using the Dicom and Analyze
-	    panels respectively.</p>
+	   Load  DICOM or Analyze format data using the Dicom and Analyze
+	    panels, respectively.</p>
 	</li>
       </ul>
       <br/>
@@ -574,10 +576,10 @@
 	select different slices from the volume to inspect.
       </p>
       <p>
-	The next step in the BioTensor application is performing
-	distortion correction on the DWI channels.  Press Next (at the
-	bottom of the Processing pane) to proceed to the registration
-	processing step.
+	Performing distortion correction on the DWI channels is the
+	next step in the BioTensor application.  Press the yellow Next
+	button at the bottom of the Processing pane to proceed to the
+	registration processing step.
       </p>
 
       <a name="section_4" id="section_4"/>
@@ -591,15 +593,14 @@
 	eddy currents, and local distortions due to susceptibility
 	artifacts.  BioTensor can correct the first type of
 	distortion.  Future versions may include field-map based
-	correction of the second type of distortion. Following
-	convention, BioTensor assumes the X direction is the read-out
+	correction of the second type of distortion. BioTensor assumes the X direction is the read-out
 	direction, and the Y direction is the phase-encoding
 	direction, along which EPI distortions occur.  <a
 	href="#figure_6">Figure 6</a> shows the Processing pane's
 	Registration tab. "Check" the Registration tab's "Perform
 	Global EPI Registration" check-box to perform EPI
 	registration.  The following sections describe each
-	registration paramter.  This tutorial assumes use of default
+	registration parameter.  This tutorial assumes use of default
 	registration settings.
       </p>
 
@@ -609,55 +610,61 @@
 	  src="figures/biotensor-processing.jpg"
 	  alt="Figure: Registration Tab."/>
 	<br/>
-	<b>Figure 6: Registration Panel.</b>
+	<b>Figure 6: Registration Pane.</b>
       </center>
       <br/><br/>
 
       <h3 id="section_4_1">4.1 Visualizing Mis-registration Problems</h3>
       <p>
-	Problems due to poor DWI registration can be visualized by
-	looking at the variance, at each voxel, across the DWIs, as
-	shown in <a href="#figure_6">Figure 6</a>, by selecting the
-	"View Variance of Original Data" check-box in the
-	visualization pane's Vis Options > Variance tab. DWI variance
-	is a simple indicator of anisotropy, since isotropic regions
-	should generate constant DWI values for all gradient
-	directions. Note, however, the regions of high spurious
-	("ghost") anisotropy at the top (anterior) and bottom
+	Visualizing the variance at each voxel across the DWIs, can
+	indicate problems due to poor DWI registration as shown in <a
+	href="#figure_6">Figure 6</a>.  To view the variance, select
+	the Vis Options tab.  Then select the Variance tab.  Now
+	select the "View Variance of Original Data" check-box. DWI
+	variance is a simple indicator of anisotropy, because
+	isotropic regions should generate constant DWI values for all
+	gradient directions. Note, however, the regions of high
+	spurious ("ghost") anisotropy at the top (anterior) and bottom
 	(posterior) edges of the brain, due to DWI mis-registration.
-      </p>
+       </p>
 
       
       <h3 id="section_4_2">4.2 Gradients Data</h3>
       <p>
-	The method for registering EPI acquired images looks at over-all brain
-	cross-section changes across the DWIs to estimate (and correct for)
-	the distortion caused by eddy currents. The first piece of information
-	required at this stage is the list of gradient directions associated
-	with each DWI (the direction along which the image is sensitized to
-	diffusion).  This is given as the "Gradients File:". This is a plain
-	text file, with three numbers per line, giving the X, Y, and Z
-	components of the gradient. There must be one line per DWI.
-	This tutorial uses the file demo-gradients.txt, which is part
-	of the brain-dt dataset.
-      </p>
+	The method for registering EPI acquired images looks at
+	over-all brain cross-section changes across the DWIs to
+	estimate (and correct for) the distortion caused by eddy
+	currents. The list of gradient directions associated with each
+	DWI (the direction along which the image is sensitized to
+	diffusion) is the first piece of information required at this
+	stage. This is given as the "Gradients File:". This is a
+	plain text file, with three numbers per line, giving the X, Y,
+	and Z components of the gradient. There must be one line per
+	DWI.
+     </p>
 
       <h3 id="section_4_3">4.3 Reference Image</h3>
       <p>
 	The registration method can perform implicit registration with
-	the reference (B=0) image ("Implicit Reference: estimate
-	distortion parameters from all images"), or it can use a
-	diffusion weighted image chosen by the user.  When using a
-	diffusion weighted image, the user should choose the image
-	least affected by EPI distortion.  Use the slider labled
-	"Choose Reference Image" to choose an image. Note that DWIs
-	are sequentially numbered, starting with 1 (as opposed to
-	0). Implicit registration attempts to model the relationship
-	between gradient directions and the resulting distortion,
-	which allows this method to map the DWIs back to the
-	coordinate space of the B=0 image without explicitly
-	registering with it.
+	the reference (B=0) image, or it can use a diffusion weighted
+	image chosen by the user.  Select the implicit registration
+	method by clicking on radio button Implicit Reference.  To use
+	a diffusion weighted image, click Choose Reference
+	Image. Then, use the slider labled Choose Reference Image to
+	choose an image (note that DWIs are sequentially numbered,
+	starting with 1).
       </p>
+      <p>
+	Implicit registration models the relationship between gradient
+	directions and the resulting distortion, allowing implicit
+	registration to map DWIs to the coordinate space of the B=0
+	image without explicitly registering with it.
+      </p>
+      <p>
+	When using a diffusion weighted image, choose the image least
+	affected by EPI distortion.
+      </p>
+ 
 
       <h3 id="section_4_4">4.4 Segmentation Settings</h3>
       <p>
@@ -669,21 +676,24 @@
 	is represented in the UI.
       </p>
       <p>
-	In "Gaussian Smoothing", sliders control the radius (standard
-	deviation) of the Gaussian smoothing along that direction. Some amount
-	of smoothing helps the thresholding find more accurate estimates of
-	the brain cortical outline; too much smoothing distorts the estimate
-	of cortical shape due to anisotropy in the underlying white
-	matter. The preset defaults work well.
+	The X and Y sliders located within the Gaussian Smoothing box,
+	control the radius (standard deviation) of the Gaussian
+	smoothing along the X and Y directions. Some amount of
+	smoothing helps the thresholding find more accurate estimates
+	of the brain cortical outline. Too much smoothing distorts the
+	estimate of cortical shape due to anisotropy in the underlying
+	white matter. The preset defaults work well.
       </p>
       <p>
-	The "Background/DWI Threshold" area of the UI allows use of automatic
-	determination of the threshold DWI value between background and brain
-	tissue ("Automatically Determine Threshold"), or allows the
-	user to enter a threshold value ("Specify Threshold").
+	The threshold DWI value, between background and brain tissue,
+	can be automatically determined by clicking the radio button
+	labeled Automatically Determine Threshold in the
+	Background/DWI Threshold box.  A threshold value may be
+	specified by clicking the radio button labeled Specify
+	Threshold, and entering a threshold value.
       </p>
       <p>
-	The "Use Connected Components" check box determines whether connected
+	The Use Connected Components check box determines whether connected
 	component analysis is done to refine the thresholding output. Using
 	connected components is helpful because it leads to estimates of the
 	brain cross-section shape that are more similar across the diffusion
@@ -693,25 +703,27 @@
 
       <h3 id="section_4_5">4.5 Fitting Percentage</h3>
       <p>
-	Based on the segmentation of the brain interior, the registration
-	method estimates the distortion on each slice of the DWI volumes. To
-	improve the robustness, a linear fitting of the distortion parameters
-	across the slices is performed. This allows better distortion
-	correction on slices where the brain cross-section shape was poorly
-	segmented, leading to poor distortion estimation on that single
-	slice. The algorithm internally generates a measure of segmentation
-	quality, and uses some fraction of the slices (those with the best
-	segmentation) as reference when performing the linear fit of
-	distortion parameters across slices. With the "Fitting" percentage
-	slider, specify how many of slices should contribute to the fitting,
-	versus how many slices (with the poorest segmentation results) should
-	be ignored. The default setting works well.
+	Based on the segmentation of the brain interior, the
+	registration method estimates the distortion on each slice of
+	the DWI volumes. To improve the robustness, a linear fitting
+	of the distortion parameters across the slices is
+	performed. This allows better distortion correction on slices
+	where the brain cross-section shape was poorly segmented,
+	leading to poor distortion estimation on that single
+	slice. The algorithm internally generates a measure of
+	segmentation quality, and uses some fraction of slices (those
+	with the best segmentation) as reference when performing the
+	linear fit of distortion parameters across slices. With the
+	Fitting percentage slider, specify how many slices should
+	contribute to the fitting, versus how many slices (with the
+	poorest segmentation results) should be ignored. The default
+	setting works well.
       </p>
 
 
       <h3 id="section_4_6">4.6 Resampling Filter</h3>
       <p>
-	The kernel used when applying the warp to the individual images is the
+	The filter used when applying the warp to the individual images is the
 	final parameter in the registration method. In order of ascending
 	quality (and decreasing speed), the choices are:
       </p>
@@ -726,6 +738,9 @@
 	  <p>Windowed Sinc (Hann window with 8-sample radius)</p>
 	</li>
       </ul>
+      <p>
+	Use the pop-up menu labeled Resampling Filter to choose a filter.
+      </p>
 
       <h3 id="section_4_7">4.7 Computing Registration</h3>
       <p>
@@ -779,54 +794,69 @@
 
       <h3 id="section_5_1">5.1 DWI Smoothing</h3>
       <p>
-	 Prior to the estimation of tensors, later visualization
-	and analysis stages sometimes benefit from some smoothing of the
-	individual DWIs prior to estimation of tensors. This option allows the
-	user to Gaussian blur the DWIs by controlling the radius (the standard
-	deviation) of the Gaussian kernel within the slice plane ("Radius in X
-	and Y") and across slices ("Radius in Z").
+	Visualization and analysis stages sometimes benefit from
+	smoothing of the individual DWIs prior to estimation of
+	tensors. The checkbox labeled Do Smoothing enables Gaussian
+	blur of the DWIs by controlling the radius (the standard
+	deviation) of the Gaussian kernel within the slice plane and
+	across slices.  The slider labeled Radius in X and Y controls
+	the Gaussian kernel radius within the slice plane.  The slider
+	labeled Radius in Z controls the Gaussian kernel radius across
+	slices.
       </p>
 
       <h3 id="section_5_2">5.2 Masking Threshold</h3>
       <p>
 	Diffusion tensors can not be meaningfully
-	calculated in the background (air) of the DWIs; neither the
-	non-diffusion-weighted image nor any DWIs has significant signal in
-	the background. Diffusion tensors can be calculated inside the CSF
-	(cerebrospinal fluid), but they do not record interesting anatomical
-	structure. In both regions, the value of DWIs is small compared to
-	values inside the brain. BioTensor masks the tensor field based on the
-	mean DWI value, so the regions do not appear in later
-	visualizations. For this option, specify the mean DWI value used for
-	thresholding ("Specify Threshold"), or allow BioTensor to attempt to
-	automatically find the threshold by histogram analysis. NOTE: tensors
-	are computed for all voxels; the DWI masking produces a separate
-	scalar field that BioTensor uses for controlling visualization, but
-	does not scale tensors themselves.
+	calculated in the background (air) of DWIs. The
+	non-diffusion-weighted image and DWIs do not have significant
+	signal in the background. Diffusion tensors can be calculated
+	inside the CSF (cerebrospinal fluid), but they do not record
+	interesting anatomical structure. In both regions, the value
+	of DWIs is small compared to values inside the
+	brain. BioTensor masks the tensor field based on the mean DWI
+	value, so the regions do not appear in later
+	visualizations.
+      </p>
+      <p>
+	To allow BioTensor to automatically find a threshold (by
+	histogram analysis), click the radio button labeled
+	Automatically Determine Threshold.  To specify a threshold,
+	click the radio button labeled Specify Threshold and enter a
+	threshold value.  Note: tensors are computed for all voxels;
+	the DWI masking produces a separate scalar field that
+	BioTensor uses for controlling visualization, but does not
+	scale tensors themselves.
       </p>
 
       <h3 id="section_5_3">5.3 B-Matrix</h3>
       <p>
-	In order to estimate tensors from DWIs, the relationship
-	between each DWI and the diffusion tensor must be known. The B-matrix
-	is a matrix that captures the weighting that each diffusion tensor
-	coefficient received in a given DWI. BioTensor currently refers to the
-	list of B-matrices for all DWIs as the "B-Matrix". There are two ways
-	B-Matrix information can be communicated to BioTensor.
+	To estimate tensors from DWIs, the relationship between each
+	DWI and the diffusion tensor must be known. The B-matrix is a
+	matrix that captures the weighting that each diffusion tensor
+	coefficient received in a given DWI. BioTensor currently
+	refers to the list of B-matrices for all DWIs as the
+	"B-Matrix".  B-Matrix information can be communicated to
+	BioTensor in two ways.
       </p>
       <p>
-	"Compute B-Matrix Using Gradients Provided": Assuming diffusion
-	weighting caused by imaging gradients is negligible, the B-Matrix can
-	be computed directly from the list of gradient directions used
-	previously for EPI registration. NOTE: in this case, the first image
-	among the DWIs is assumed to be the reference T2 image, which exhibits
-	no diffusion weighting, and the B-matrix is assumed to be all zeros
-	("B=0").
+	Assuming diffusion weighting caused by imaging gradients is
+	negligible, the B-Matrix can be computed directly from the
+	list of gradient directions used previously for EPI
+	registration. Note: in this case, the first image among the
+	DWIs is assumed to be the reference T2 image, which exhibits
+	no diffusion weighting, and the B-matrix is assumed to be all
+	zeros ("B=0").  To let BioTensor compute the B-Matrix, click
+	the radio button labeled Compute B-Matrix Using Gradients
+	provided
       </p>
+
       <p>
-	Alternatively, if a B-matrix has been computed for each DWI,
-	from both imaging gradients and diffusion-encoding gradients,
-	a it can be loaded as a separate text ("Load B-Matrix").  <a
+	If a B-matrix has been computed for each DWI from both imaging
+	gradients and diffusion-encoding gradients, it can be loaded
+	as a separate text ("Load B-Matrix").  To load a pre-computed
+	B-Matrix file, click the radio button labeled Load B-Matrix,
+	and enter the name of a B-Matrix file.  <a
 	href="#appendix_b">Appendix B</a> discusses the format of a
 	B-Matrix file.
       </p>
@@ -846,35 +876,38 @@
       <h2>Section 6&mdash;Visualization</h2>
 
       <p>
-	As the visualization stage begins, the system begins computing a
-	number of derived quantities. This may take several minutes, during
-	which time, the Progress indicator indicates that the system is busy.
-	One of the first quantities the system renders, is a set of three
-	orthogonal cutting planes through the DT volume. Once the Progress
-	indicator changes to "Completed" (green), begin interacting with the
-	visualization.
+	As the visualization stage begins, the system computes a
+	number of derived quantities. This may take several minutes,
+	during which time, the Progress indicator shows that the
+	system is busy.  One of the first quantities the system
+	renders, is a set of three orthogonal cutting planes through
+	the DT volume. Begin interacting with the visualization when
+	the Progress Indicator shows that compuations are
+	complete.
       </p>
 
       <a name="section_6_1" id="section_6_1"/>
       <h3>6.1 Rendering Window</h3>
 
-      <p>
-	To begin visualizing the data, press the AutoView button to move the
-	rendered geometry into the middle of the window. The AutoView button
-	is located on the Viewer Options tab, or press Ctrl-V while the mouse
-	is in the Rendering window. 
+ <!-- Need figure of Viewer options tab. -->
+     <p>
+	To visualize data, press the AutoView button to move the
+	rendered geometry into the middle of the window, or press
+	Ctrl-V while the mouse is in the Rendering window. The
+	AutoView button is located on the Viewer Options tab.
       </p>
       <p>
 	Interaction with the Rendering window is performed with the
 	mouse.  The Rendering window's scene can be translated,
 	zoomed, rotated, etc.  <a href="#table_1">Table 1</a> shows
-	mouse actions.  Controls for navigating within the
-	Rendering window are similar to the SCIRun <a
-	  href="http://software.sci.utah.edu/doc/User/Guide/usersguide/srug6_1.html">Viewer</a>.
-	However, the full control pane normally found at the bottom of the
-	SCIRun ViewWindow, has been replaced with the most frequently used
-	subset of those controls, and is located on the Viewer Options
-	tab.
+	mouse actions for controlling the Rendering window.  Controls
+	for navigating within the Rendering window are similar to the
+	SCIRun <a
+	href="http://software.sci.utah.edu/doc/User/Guide/usersguide/srug6_1.html">Viewer</a>.
+	However, the full control pane normally found at the bottom of
+	the SCIRun ViewWindow, has been replaced with the most
+	frequently used subset of those controls, and is located on
+	the Viewer Options tab.
       </p>
 
       <a name="table_1" id="table_1"/>
