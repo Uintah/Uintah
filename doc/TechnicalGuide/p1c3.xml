@@ -140,8 +140,7 @@ python install 32 12
           regarding the --with-thirdparty SCIRun configure option.
           Cut and paste that option when running the configure command 
           for SCIRun (see step 2 of <ulink
-          url="installguide.xml?dir=2&amp;cont=2#5">Building SCIRun
-          and Packages</ulink>). 
+          url="p1c2.html#5">Building SCIRun and Packages</ulink>). 
         </para>
 
         <para>

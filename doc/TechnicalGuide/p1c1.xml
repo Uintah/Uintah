@@ -26,7 +26,7 @@
     </para>
     <para>
       See the next chapter 
-      <ulink url="installguide.xml?cont=2&amp;dir=2"><citetitle>SCIRun
+      <ulink url="p1c2.html"><citetitle>SCIRun
       Installation and Build Instructions</citetitle></ulink> for more
       detailed instructions.
     </para>
@@ -40,7 +40,7 @@
     </para>
 
     <para>
-      Refer to the chapter <ulink url="installguide.xml?cont=3&amp;dir=2">
+      Refer to the chapter <ulink url="p1c3.html">
       <citetitle>Third Party Software Installation and Build Information
       </citetitle></ulink> for information on installing the required
       software listed below.

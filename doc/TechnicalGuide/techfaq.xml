@@ -88,7 +88,7 @@ Occured for thread:
         to _not_ use threads.  Xerces is typically the offending library, 
         although Tcl and others may also be incorrectly configured to use
         threads.  See the 
-        <a href="../InstallGuide/installguide.xml?dir=2&amp;cont=3">Thirdparty
+        <a href="p1c3.html#4">Thirdparty
         Software Installation and Build Information</a> for recommended
 	configure arguments for the thirdparty software.  Note that when the
 	automatic install script is used, all the software is automatically

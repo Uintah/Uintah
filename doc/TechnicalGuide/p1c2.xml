@@ -59,7 +59,7 @@
     </para>
 
     <para>
-      Refer to the chapter <ulink url="installguide.xml?cont=3&amp;dir=2">
+      Refer to the chapter <ulink url="p1c3.html">
       <citetitle>Third Party Software Installation and Build Information
       </citetitle></ulink> for information on installing the required software
       listed below.
@@ -187,7 +187,7 @@ tar xvf BioPSE.PKG.x.x.x.tar
           </emphasis></para>
 
           <para>
-            See the <ulink url="installguide.xml?cont=3&amp;dir=2">
+            See the <ulink url="p1c3.html">
             <citetitle>Thirdparty Software Installation and Build
             Information</citetitle></ulink> for more information.
           </para>
@@ -256,7 +256,7 @@ cd ../sgi64
             options that may be invoked at configure time by supplying
             the configure command with arguments. The available
             <term>CONFIGURE_OPTIONS</term> can be found in the 
-            <ulink url="installguide.xml?dir=2&amp;cont=4">Appendix</ulink>
+            <ulink url="p4c1.html">Appendix</ulink>
             below. 
           </para>
         </listitem>
