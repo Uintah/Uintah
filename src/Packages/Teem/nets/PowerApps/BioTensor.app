@@ -6128,7 +6128,7 @@ class BioTensorApp {
 	    set plane_type "Fractional Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    disableModule $mods(ChooseColorMap-Planes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 0
 	    enable_planes_colormaps
