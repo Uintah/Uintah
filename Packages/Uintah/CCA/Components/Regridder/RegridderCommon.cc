@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
@@ -23,19 +24,6 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
 {
   d_filterType = FILTER_STAR;
   d_lastRegridTimestep = 0;
-  /*
-  cout << "I am contructing a RegridderCommon." << endl;
-
-  CCVariable<int> flaggedCells;
-  flaggedCells.rewindow(IntVector(0,0,0), IntVector(11,11,11));
-  flaggedCells.initialize(0);
-  flaggedCells[IntVector(5,5,5)] = 1;
-
-  CCVariable<int> dilatedFlaggedCells;
-  dilatedFlaggedCells.rewindow(IntVector(0,0,0), flaggedCells.size());
-
-  Dilate( flaggedCells, dilatedFlaggedCells, FILTER_STAR, IntVector(1,1,1) );
-  */
 }
 
 RegridderCommon::~RegridderCommon()
@@ -65,28 +53,38 @@ bool RegridderCommon::needsToReGrid()
   return d_isAdaptive;
 }
 
-bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
+bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched)
 {
-  /*
-    bool flaggedCells, retval;
-    Level* level = grid->getLevel(grid->numLevels()-1);
-    if (we are doing mpi) {
-      for each patch on level
-        if (lb->getPatchwiseProcessorAssignment(patch) == d_myworld->myrank())
-          get flagged cells on that patch
-          if those cells are flagged
-           flaggedCells = true;
-      MPI_Allreduce(flaggedCells, or, retval);
-      return retval;
-      }
-    else {
-      for each patch on level
-        get flagged cells on that patch
-        if those cells are flagged
-          return true;
+  const Level* level = grid->getLevel(grid->numLevels()-1).get_rep();
+  DataWarehouse* newDW = sched->getLastDW();
+
+  // mpi version
+  if (d_myworld->size() > 1) {
+    int thisproc = false;
+    int allprocs;
+    for (Level::const_patchIterator iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+      // here we assume that the per-patch has been set
+      PerPatch<int> flaggedPatchCells;
+      newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
+      if (flaggedPatchCells)
+        thisproc = true;
     }
-  */
-  return true;
+    MPI_Allreduce(&thisproc, &allprocs, 1, MPI_INT, MPI_MAX, d_myworld->getComm());
+    return allprocs;
+  }
+  else { 
+    
+    for (Level::const_patchIterator iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+      // here we assume that the per-patch has been set
+      PerPatch<int> flaggedPatchCells;
+      newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
+      cout << "  finest level, patch " << (*iter)->getID() << flaggedPatchCells.get() << endl;
+      if (flaggedPatchCells.get())
+        return true;
+    }
+    return false;
+  }
+  
 }
 
 void RegridderCommon::problemSetup(const ProblemSpecP& params, 
