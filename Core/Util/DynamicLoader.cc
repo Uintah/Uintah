@@ -21,6 +21,7 @@
 #include <sci_defs.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Util/Environment.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <string>
@@ -110,7 +111,7 @@ DynamicLoader::DynamicLoader() :
   compilation_cond_("DynamicLoader: waits for compilation to finish."),
   map_lock_("DynamicLoader: controls mutable access to the map.")
 {
-  char *env = getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"); 
+  const char *env = sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"); 
   if (env)
     otf_dir_ = string(env);
   map_lock_.lock();

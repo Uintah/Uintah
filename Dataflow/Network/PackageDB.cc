@@ -29,6 +29,7 @@
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiInterface.h>
+#include <Core/Util/Environment.h>
 #include <stdio.h>
 #include <iostream>
 #include <ctype.h>
@@ -98,7 +99,7 @@ typedef void (*pkgInitter)(const string& tclPath);
 LIBRARY_HANDLE PackageDB::findLib(string lib)
 {
   LIBRARY_HANDLE handle=0;
-  const char *env = getenv("PACKAGE_LIB_PATH");
+  const char *env = sci_getenv("PACKAGE_LIB_PATH");
   string tempPaths(env?env:"");
   // try to find the library in the specified path
   while (tempPaths!="") {
@@ -213,18 +214,18 @@ void PackageDB::loadPackage(bool resolve)
   //			   "__ZN6SCIRun10CurveFieldINS_6TensorEE2ioERNS_9PiostreamE");
   //#endif
 
-  char *env;
+  const char *env;
   // the format of PACKAGE_PATH is a colon seperated list of paths to the
   // root(s) of package source trees.
   packagePath = string(SCIRUN_SRCDIR) + "/Packages";
 
   // if the user specififes it, build the complete package path
-  env = getenv("PACKAGE_SRC_PATH");
+  env = sci_getenv("PACKAGE_SRC_PATH");
   if (env) packagePath = string(env) + ":" + packagePath;
 
   // the format of LOAD_PACKAGE is a comma seperated list of package names.
   // build the complete list of packages to load
-  env = getenv("LOAD_PACKAGE");
+  env = sci_getenv("LOAD_PACKAGE");
   loadPackage = string(env?env:LOAD_PACKAGE);
 
   while(loadPackage!="") {
@@ -365,7 +366,7 @@ void PackageDB::loadPackage(bool resolve)
       }
     }
   }
-  if (gui && !getenv("SCI_NOSPLASH"))
+  if (gui && !sci_getenv_p("SCI_NOSPLASH"))
   {
     gui->execute("showSplash ""[file join " + string(SCIRUN_SRCDIR) + 
 		 " " + splash_path_ + "]"" " + to_string(mod_count));
@@ -383,7 +384,7 @@ void PackageDB::loadPackage(bool resolve)
 
     if(gui){
       gui->postMessage("Loading package '" + pname + "'", false);
-      if (!getenv("SCI_NOSPLASH"))
+      if (!sci_getenv_p("SCI_NOSPLASH"))
       {
 	gui->execute(".splash.fb configure -labeltext {Loading package: " +
 		     pname + " }");
@@ -418,7 +419,7 @@ void PackageDB::loadPackage(bool resolve)
 	  numreg++;
 	  registerModule((*mi).second);
 	}
-	if (gui && !getenv("SCI_NOSPLASH"))
+	if (gui && !sci_getenv_p("SCI_NOSPLASH"))
 	{
 	  gui->execute("if [winfo exists .splash.fb] "
 		       "{.splash.fb step; update idletasks}");
@@ -441,7 +442,7 @@ void PackageDB::loadPackage(bool resolve)
 
   if(gui){
     gui->postMessage("\nFinished loading packages.",false);
-    if (!getenv("SCI_NOSPLASH"))
+    if (!sci_getenv_p("SCI_NOSPLASH"))
     {
       if (!loading_app_) {
 	gui->execute("if [winfo exists .splash] {hideSplash \"true\"}");

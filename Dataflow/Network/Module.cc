@@ -42,6 +42,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -756,7 +757,7 @@ void Module::setPid(int pid)
 // Error conditions
 void Module::error(const string& str)
 {
-  if (getenv("SCI_REGRESSION_TESTING"))
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":ERROR: " << str << "\n";
   }
@@ -767,7 +768,7 @@ void Module::error(const string& str)
 
 void Module::warning(const string& str)
 {
-  if (getenv("SCI_REGRESSION_TESTING"))
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":WARNING: " << str << "\n";
   }
@@ -778,7 +779,7 @@ void Module::warning(const string& str)
 
 void Module::remark(const string& str)
 {
-  if (getenv("SCI_REGRESSION_TESTING"))
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":REMARK: " << str << "\n";
   }
@@ -789,7 +790,7 @@ void Module::remark(const string& str)
 
 void Module::postMessage(const string& str)
 {
-  if (getenv("SCI_REGRESSION_TESTING"))
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":postMessage: " << str << "\n";
   }

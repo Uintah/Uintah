@@ -34,6 +34,7 @@
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Modules/Render/BallMath.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/Environment.h>
 #include <Core/Util/Timer.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
@@ -1163,7 +1164,7 @@ void ViewWindow::unicam_choose(int X, int Y)
   sdelt[1] = te[1] - _start_pix[1];
 
   int xa=0,ya=1;
-  if (getenv("FLIP_CAM_MANIP")) {
+  if (sci_getenv("FLIP_CAM_MANIP")) {
     int tmp = xa;
     xa = ya;
     ya = tmp;
