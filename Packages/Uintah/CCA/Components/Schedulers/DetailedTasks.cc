@@ -9,6 +9,7 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/ProgressiveWarning.h>
 
 #include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
@@ -562,13 +563,8 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if(v1 > v2+v3){
       // If we get this, perhaps we should allow multiple deps so
       // that we do not communicate more of the patch than necessary
-      static int warned=false;
-      if(!warned){
-	cerr << "WARNING: Possible extra communication between patches!\n";
-	cerr << "This warning will only appear once\n";
-	
-	warned=true;
-      }
+      static ProgressiveWarning warn("WARNING: Possible extra communication between patches!", 10);
+      warn.invoke();
     }
     if(dbg.active()){
       dbg << d_myworld->myrank() << "            EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
