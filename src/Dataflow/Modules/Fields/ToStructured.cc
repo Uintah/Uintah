@@ -28,25 +28,22 @@
 
 
 /*
- *  Unstructure: Store/retrieve values from an input matrix to/from 
+ *  ToStructured: Store/retrieve values from an input matrix to/from 
  *            the data of a field
  *
  *  Written by:
  *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   February 2001
+ *   July 2004
  *
- *  Copyright (C) 2001 SCI Institute
+ *  Copyright (C) 2004 SCI Institute
  */
 
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Modules/Fields/Unstructure.h>
-#include <Core/Datatypes/StructHexVolField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/StructCurveField.h>
+#include <Dataflow/Modules/Fields/ToStructured.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
 
@@ -55,11 +52,11 @@
 
 namespace SCIRun {
 
-class Unstructure : public Module
+class ToStructured : public Module
 {
 public:
-  Unstructure(GuiContext* ctx);
-  virtual ~Unstructure();
+  ToStructured(GuiContext* ctx);
+  virtual ~ToStructured();
   virtual void execute();
 
 private:
@@ -68,9 +65,9 @@ private:
 };
 
 
-DECLARE_MAKER(Unstructure)
-Unstructure::Unstructure(GuiContext* ctx)
-  : Module("Unstructure", ctx, Filter, "FieldsGeometry", "SCIRun"),
+DECLARE_MAKER(ToStructured)
+ToStructured::ToStructured(GuiContext* ctx)
+  : Module("ToStructured", ctx, Filter, "FieldsGeometry", "SCIRun"),
     last_generation_(0),
     ofieldhandle_(0)
 {
@@ -78,14 +75,14 @@ Unstructure::Unstructure(GuiContext* ctx)
 
 
 
-Unstructure::~Unstructure()
+ToStructured::~ToStructured()
 {
 }
 
 
 
 void
-Unstructure::execute()
+ToStructured::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
@@ -109,28 +106,28 @@ Unstructure::execute()
     if (mtdn == get_type_description((LatVolMesh *)0)->get_name() ||
 	mtdn == get_type_description((StructHexVolMesh *)0)->get_name())
     {
-      dstname = "HexVolField";
+      dstname = "StructHexVolField";
     }
     else if (mtdn == get_type_description((ImageMesh *)0)->get_name() ||
 	     mtdn == get_type_description((StructQuadSurfMesh *)0)->get_name())
     {
-      dstname = "QuadSurfField";
+      dstname = "StructQuadSurfField";
     }  
     else if (mtdn == get_type_description((ScanlineMesh *)0)->get_name() ||
 	     mtdn == get_type_description((StructCurveMesh *)0)->get_name())
     {
-      dstname = "CurveField";
+      dstname = "StructCurveField";
     }
 
     if (dstname == "")
     {
-      warning("Do not know how to unstructure a " + mtdn + ".");
+      warning("Do not know how to structure a " + mtdn + ".");
     }
     else
     {
       const TypeDescription *ftd = ifieldhandle->get_type_description();
-      CompileInfoHandle ci = UnstructureAlgo::get_compile_info(ftd, dstname);
-      Handle<UnstructureAlgo> algo;
+      CompileInfoHandle ci = ToStructuredAlgo::get_compile_info(ftd, dstname);
+      Handle<ToStructuredAlgo> algo;
       if (!module_dynamic_compile(ci, algo)) return;
 
       ofieldhandle_ = algo->execute(this, ifieldhandle);
@@ -154,13 +151,13 @@ Unstructure::execute()
 
 
 CompileInfoHandle
-UnstructureAlgo::get_compile_info(const TypeDescription *fsrc,
-				  const string &partial_fdst)
+ToStructuredAlgo::get_compile_info(const TypeDescription *fsrc,
+				   const string &partial_fdst)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("UnstructureAlgoT");
-  static const string base_class_name("UnstructureAlgo");
+  static const string template_class_name("ToStructuredAlgoT");
+  static const string base_class_name("ToStructuredAlgo");
 
   const string::size_type loc = fsrc->get_name().find_first_of('<');
   const string fdstname = partial_fdst + fsrc->get_name().substr(loc);
