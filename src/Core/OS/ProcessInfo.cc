@@ -32,9 +32,16 @@
 
 #include <sys/param.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+
+#if defined( __sgi )
+#  include <fcntl.h>
+#  include <sys/ioctl.h>
+#  include <sys/procfs.h>
+#endif
 
 
 namespace SCIRun {
@@ -42,15 +49,14 @@ namespace SCIRun {
 
   bool ProcessInfo::IsSupported ( int info_type )
   {
-#if defined( __linux )
+#if defined( __linux ) || defined( __sgi )
+
     switch ( info_type ) {
     case MEM_SIZE: return true;
-    case MEM_RSS: return true;
-    default: return false;
+    case MEM_RSS : return true;
+    default      : return false;
     }
-    return true;
-#elif defined( __sgi )
-    return false;
+
 #elif defined( __APPLE__ )
     return false;
 #elif defined( _AIX )
@@ -63,20 +69,7 @@ namespace SCIRun {
   unsigned long ProcessInfo::GetInfo ( int info_type )
   {
 #if defined( __linux )
-    return LinuxGetInfo( info_type );
-#elif defined( __sgi )
-    return 0;
-#elif defined( __APPLE__ )
-    return 0;
-#elif defined( _AIX )
-    return 0;
-#else
-    return 0;
-#endif
-  }
 
-  unsigned long ProcessInfo::LinuxGetInfo ( int info_type )
-  {
     char statusFileName[MAXPATHLEN];
     sprintf( statusFileName, "/proc/%d/status", getpid() );
 
@@ -89,7 +82,7 @@ namespace SCIRun {
 
       switch ( info_type ) {
       case MEM_SIZE: compareString = "VmSize:"; break;
-      case MEM_RSS:  compareString = "VmRSS:";  break;
+      case MEM_RSS : compareString = "VmRSS:" ; break;
       default:
 	fclose( file );
 	return 0;
@@ -106,6 +99,39 @@ namespace SCIRun {
     }
 
     return 0;
+
+#elif defined( __sgi )
+
+    char statusFileName[MAXPATHLEN];
+    sprintf( statusFileName, "/proc/pinfo/%d", getpid() );
+
+    int file = open( statusFileName, O_RDONLY );
+
+    if ( file != -1 ) {
+      struct prpsinfo processInfo;
+      if ( ioctl( file, PIOCPSINFO, &processInfo ) == -1 ) {
+	close( file );
+	return 0;
+      }
+
+      close( file );
+
+      switch ( info_type ) {
+      case MEM_SIZE: return processInfo.pr_size   * getpagesize();
+      case MEM_RSS : return processInfo.pr_rssize * getpagesize();
+      default:       return 0;
+      }
+    }
+    
+    return 0;
+
+#elif defined( __APPLE__ )
+    return 0;
+#elif defined( _AIX )
+    return 0;
+#else
+    return 0;
+#endif
   }
 
 
