@@ -858,6 +858,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	  if(!lb->inNeighborhood(neighbor))
 	    continue;
 	  for(int m=0;m<matls->size();m++){
+	    if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
+	      continue;
 	    int matl = matls->get(m);
 	    DetailedTask* creator;
 	    Task::Dependency* comp = 0;
