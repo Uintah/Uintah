@@ -19,7 +19,8 @@
 # Print to stdout a list of files to be included in the tar archive.
 # This script is used as a filter by doc/Makefile.
 
-# To do: Consider a per-directory 'doc-include' file which lists
+# To do: 
+# Consider a per-directory 'doc-include' file which lists
 # files to be included in the doc distribution.  Then the
 # responsibility of this file would be to slurp up the contents of all
 # those files and produce a list of files to be included in the doc
@@ -46,6 +47,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/User/Guide/Figures
 #{root}/doc/User/Guide/usersguide.pdf
 #{root}/doc/User/Tutorial
+#{root}/doc/User/BioTensorTutorial
 #{root}/doc/User/Nets/nets.pdf
 #{root}/doc/Developer/index.html
 #{root}/doc/Developer/FAQ/faq.html
