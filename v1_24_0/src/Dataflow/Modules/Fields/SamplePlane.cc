@@ -180,11 +180,12 @@ SamplePlane::execute()
   unsigned int sizex = Max(2, size_x_.get());
   unsigned int sizey = Max(2, size_y_.get());
   Point minb(0.0, 0.0, 0.0);
-  Point maxb(1.0, 1.0, 1.0);
+  Point maxb(1.0, 1.0, 0.0);
   Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
   minb -= diag;
   maxb += diag;
-
+  minb.z(-1.0);
+  maxb.z(1.0);
 
   ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
 
