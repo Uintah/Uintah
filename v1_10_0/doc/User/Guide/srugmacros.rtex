@@ -18,20 +18,21 @@
 %
 % Markup and style for SCIRun Users guide.
 %
-\textheight 9.5in
-\textwidth 7in
-\topmargin -.50in
-\oddsidemargin -.25in
+
+\setlength{\textheight}{9.5in}
+\setlength{\textwidth}{7in}
+\setlength{\topmargin}{-.50in}
+\setlength{\oddsidemargin}{-.25in}
 \sloppy
 
 % Fancy headings stuff
 \pagestyle{fancy}
-\headsep .08in
-\footskip 25pt
-\headheight 15pt
-\setlength{\footrulewidth}{.8pt}
+\setlength{\headsep}{.08in}
+\setlength{\footskip}{25pt}
+\setlength{\headheight}{15pt}
+%\setlength{\footrulewidth}{.8pt}
 %\setlength{\headrulewidth}{.8pt}
-\rhead{{ \PSE{} Users' Manual}}
+\rhead{{ \BIOPSE{} Users' Manual}}
 \lhead{Version \version}
 \lfoot{}
 \cfoot{}
@@ -48,9 +49,6 @@
 % This sets the spacing between paragraphs
 \setlength{\parskip}{\smallskipamount} 
 
-% Common markup commands
-\input{../../Utilities/TeX/scirun-doc.tex}
-
 % Users Guide specific markup
 %<
 version = File.open("../../edition.xml") do |f|
@@ -59,7 +57,7 @@ end
 %>
 \newcommand{\version}{%<= version %>}
 \newcommand{\viewer}{\emph{Viewer}}
-\newcommand{\installguideurl}{../../../Installation/Guide/index.html}
+\newcommand{\installguideurl}{\htmlurl{\scisoftware{}/doc/Installation/Guide/index.html}}
 \newcommand{\modulemakerguideurl}{}
 
 % Markup used by latex module descriptions.

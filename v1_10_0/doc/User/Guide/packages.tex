@@ -32,28 +32,33 @@ see \secref{SCIRun versus BioPSE}{sec:srversuspse}.
 \label{sec:srpackage}
 \index{SCIRun@\sr{}!package}
 
+
 The \sr{} package contains these categories:
 
 \begin{description}
 
-\item[\category{DataIO}] Contains modules for reading and writing \sr{}
-  type data.  Use these to read \sr{} type data into a network and write
+\item[\category{DataIO}] Modules for reading and writing \sr{}
+  data types.  Use these to read \sr{} type data into a network and write
   data to disk from a network.  These only know about \sr{} type data.
   Non-\sr{} (foreign) data may be converted to \sr{} type data using
   \sr{}'s converter programs.  See \secref{Importing data into
   \sr{}}{sec:import} for more information.
 
-\item[\category{Fields}] \missing{}
-\item[\category{Math}] \missing{}
-\item[\category{Render}] \missing{}
-\item[\category{Visualization}] the main visualization tool at present is
-  the Viewer, which is described in more detail in \secref{Visualization
-  with the \viewer{}}{sec:viewer}.
+\item[\category{Fields}] Modules for creating,
+  manipulating, and processing field data.
+  See Section~\ref{sec:field-types} for an introduction to \sr{} field
+  types. 
+\item[\category{Math}] Modules providing matrix operations and
+  equation solving capabilities.
+\item[\category{Render}] Modules for visualizing data produced by
+  other modules.  The main visualization tool at present
+  is the Viewer, which is described in more detail in
+  \secref{Visualization with the \viewer{}}{sec:viewer}.
 \end{description}
 
 \subsection{The BioPSE Package}
 \label{sec:biopsepackage}
-\index{SCIRun@\PSE{}!package}
+\index{SCIRun@\BIOPSE{}!package}
 
 
 These modules provide you with tools tailored to solving bioelectric field
@@ -62,10 +67,17 @@ center}{http://www.sci.utah.edu/ncrr} we have developed.
 
 
 \begin{description}
-\item[\category{Forward Problems}] \missing{}
-\item[\category{Inverse Problems}] \missing{}
-\item[\category{LeadField Calculations}] \missing{}
-%\item[\category{Visualization}] \missing{}
+\item[\category{DataIO}] Modules for reading and writing \sr{} data types.
+\item[\category{Forward Problems}] Modules for solving forward
+  problems in the bioelectric field domain.
+\item[\category{Inverse Problems}] Modules for solving inverse problems.
+\item[\category{LeadField Calculations}] Modules which support the
+  construction and analysis of fields derived from experimental or
+  computed data gathered or computed at electrode sensor locations.
+\item[\category{Modeling}] Modules which support the construction of
+  surface and volume bioelectric field models.
+\item[\category{Visualization}] Modules for visualizing bioelectric
+  field data.
 \end{description}
 
 %%% Local Variables: 
