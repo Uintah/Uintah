@@ -280,14 +280,15 @@ RenderTensorFieldBase::add_item(GeomGroup *g,
 #ifdef HAVE_TEEM  
   else
   {
-    float ten[6];
+    float ten[7];
 
-    ten[0] = t.mat_[0][0];
-    ten[1] = t.mat_[0][1];
-    ten[2] = t.mat_[0][2];
-    ten[3] = t.mat_[1][1];
-    ten[4] = t.mat_[1][2];
-    ten[5] = t.mat_[2][2];
+    ten[0] = 1.0;
+    ten[1] = t.mat_[0][0];
+    ten[2] = t.mat_[0][1];
+    ten[3] = t.mat_[0][2];
+    ten[4] = t.mat_[1][1];
+    ten[5] = t.mat_[1][2];
+    ten[6] = t.mat_[2][2];
     float eval[3];
     float evec[9];
     tenEigensolve(eval, evec, ten);
@@ -379,13 +380,14 @@ RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
 #ifdef HAVE_TEEM
   else
   {
-    float ten[6];
-    ten[0] = t.mat_[0][0];
-    ten[1] = t.mat_[0][1];
-    ten[2] = t.mat_[0][2];
-    ten[3] = t.mat_[1][1];
-    ten[4] = t.mat_[1][2];
-    ten[5] = t.mat_[2][2];
+    float ten[7];
+    ten[0] = 1.0;
+    ten[1] = t.mat_[0][0];
+    ten[2] = t.mat_[0][1];
+    ten[3] = t.mat_[0][2];
+    ten[4] = t.mat_[1][1];
+    ten[5] = t.mat_[1][2];
+    ten[6] = t.mat_[2][2];
     float eval[3];
     float evec[9];
     tenEigensolve(eval, evec, ten);
