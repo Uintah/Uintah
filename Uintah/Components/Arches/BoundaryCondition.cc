@@ -19,6 +19,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/SoleVariable.h>
+#include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/Reductions.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/GeometryPieceFactory.h>
 #include <Uintah/Grid/UnionGeometryPiece.h>
@@ -29,6 +31,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/TypeUtils.h>
 #include <iostream>
 using namespace std;
@@ -170,6 +173,7 @@ BoundaryCondition::cellTypeInit(const ProcessorContext*,
 {
   CCVariable<int> cellType;
   int matlIndex = 0;
+
   old_dw->allocate(cellType, d_cellTypeLabel, matlIndex, patch);
   // initialize CCVariable to -1 which corresponds to flowfield
   // ** WARNING **  this needs to be changed soon (6/9/2000)
@@ -292,6 +296,85 @@ BoundaryCondition::cellTypeInit(const ProcessorContext*,
   }
   old_dw->put(cellType, d_cellTypeLabel, matlIndex, patch);
 }  
+    
+//****************************************************************************
+// Actual initialization of celltype
+//****************************************************************************
+void 
+BoundaryCondition::computeInletFlowArea(const ProcessorContext*,
+				 const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP&)
+{
+  CCVariable<int> cellType;
+  int matlIndex = 0;
+  int numGhostCells = 0;
+  old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch,
+	      Ghost::None, numGhostCells);
+  // initialize CCVariable to -1 which corresponds to flowfield
+  // ** WARNING **  this needs to be changed soon (6/9/2000)
+  // IntVector domainLow = patch->getCellLowIndex();
+  // IntVector domainHigh = patch->getCellHighIndex();
+  // IntVector indexLow = patch->getCellLowIndex();
+  // IntVector indexHigh = patch->getCellHighIndex();
+  int domainLow[3], domainHigh[3];
+  int indexLow[3], indexHigh[3];
+  domainLow[2] = (patch->getCellLowIndex()).x()+1;
+  domainLow[1] = (patch->getCellLowIndex()).y()+1;
+  domainLow[0] = (patch->getCellLowIndex()).z()+1;
+  domainHigh[2] = (patch->getCellHighIndex()).x();
+  domainHigh[1] = (patch->getCellHighIndex()).y();
+  domainHigh[0] = (patch->getCellHighIndex()).z();
+  for (int ii = 0; ii < 3; ii++) {
+    indexLow[ii] = domainLow[ii]+1;
+    indexHigh[ii] = domainHigh[ii]-1;
+  }
+ 
+  Box patchBox = patch->getBox();
+  for (int ii = 0; ii < d_numInlets; ii++) {
+    GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece;
+    Box geomBox = piece->getBoundingBox();
+    Box b = geomBox.intersect(patchBox);
+    // check for another geometry
+    if (b.degenerate())
+      continue; // continue the loop for other inlets
+    // iterates thru box b, converts from geometry space to index space
+    // make sure this works
+    CellIterator iter = patch->getCellIterator(b);
+    domainLow[0] = (iter.begin()).x()+1;
+    domainLow[1] = (iter.begin()).y()+1;
+    domainLow[2] = (iter.begin()).z()+1;
+    domainHigh[0] = (iter.end()).x();
+    domainHigh[1] = (iter.end()).y();
+    domainHigh[2] = (iter.end()).z();
+    for (int indx = 0; indx < 3; indx++) {
+      indexLow[indx] = domainLow[indx]+1;
+      indexHigh[indx] = domainHigh[indx]-1;
+    }
+    double inlet_area;
+#ifdef WONT_COMPILE_YET
+  // using chain of responsibility pattern for getting cell information
+    DataWarehouseP top_dw = new_dw->getTop();
+    PerPatch<CellInformation*> cellinfop;
+    if(top_dw->exists("cellinfo", patch)){
+      top_dw->get(cellinfop, "cellinfo", patch);
+    } else {
+      cellinfop.setData(scinew CellInformation(patch));
+      top_dw->put(cellinfop, "cellinfo", patch);
+    } 
+    CellInformation* cellinfo = cellinfop;
+#endif
+  // ** WARNING ** this is just for compilation purposes
+    CellInformation* cellinfo = scinew CellInformation(patch);
+
+    FORT_AREAIN(domainLow, domainHigh, indexLow, indexHigh,
+		cellType.getPointer(), &d_flowInlets[ii].d_cellTypeID,
+		cellinfo->sew.get_objs(),
+		cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
+		&inlet_area);
+    old_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
+  }
+}
     
 //****************************************************************************
 // Schedule the calculation of the velocity BCs
@@ -1113,10 +1196,12 @@ BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
 BoundaryCondition::FlowInlet::FlowInlet(int numMix, int cellID):
   d_cellTypeID(cellID)
 {
-  area = 0.0;
   density = 0.0;
   turb_lengthScale = 0.0;
   flowRate = 0.0;
+  // add cellId to distinguish different inlets
+  d_area_label = scinew VarLabel("flowarea"+cellID,
+   ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
 }
 
 //****************************************************************************
@@ -1153,6 +1238,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
  
 }
 
+
 //****************************************************************************
 // constructor for BoundaryCondition::PressureInlet
 //****************************************************************************
@@ -1160,7 +1246,6 @@ BoundaryCondition::PressureInlet::PressureInlet(int numMix, int cellID):
   d_cellTypeID(cellID)
 {
   //  streamMixturefraction.setsize(numMix-1);
-  area = 0.0;
   density = 0.0;
   turb_lengthScale = 0.0;
   refPressure = 0.0;
@@ -1206,7 +1291,6 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int numMix, int cellID):
   d_cellTypeID(cellID)
 {
   //  streamMixturefraction.setsize(numMix-1);
-  area = 0.0;
   density = 0.0;
   turb_lengthScale = 0.0;
 }
@@ -1243,6 +1327,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.18  2000/06/15 22:13:22  rawat
+// modified boundary stuff
+//
 // Revision 1.17  2000/06/15 08:48:12  bbanerje
 // Removed most commented stuff , added StencilMatrix, tasks etc.  May need some
 // more work

@@ -7,8 +7,8 @@
 
 SRCDIR   := Uintah/Components/Arches/fortran
 
-SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F  \
-	$(SRCDIR)/celltypeInit.F $(SRCDIR)/cellg.F
+SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
+	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -41,6 +41,9 @@ PSELIBS :=
 
 #
 # $Log$
+# Revision 1.10  2000/06/15 22:13:24  rawat
+# modified boundary stuff
+#
 # Revision 1.9  2000/06/14 23:07:59  bbanerje
 # Added celltypeInit.F and sub.mk
 #
