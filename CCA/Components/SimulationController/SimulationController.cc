@@ -353,6 +353,7 @@ namespace Uintah {
 
   void SimulationController::printSimulationStats ( SimulationStateP sharedState, double delt, double time )
   {
+#ifndef _WIN32 // win32 doesn't have sci-malloc or sbrk
     // get memory stats for output
 #ifndef DISABLE_SCI_MALLOC
     size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
@@ -429,7 +430,7 @@ namespace Uintah {
 		   MPI_MAX, 0, d_myworld->getComm());
       }
     }
-    
+#endif
     // calculate mean/std dev
     double stdDev = 0;
     double mean = 0;
@@ -458,6 +459,7 @@ namespace Uintah {
 	dbg << ", mean: "   << mean
 	    << " +- "       << stdDev;
       }
+#ifndef _WIN32
       dbg << ", Mem Use = ";
       if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
 	dbg << avg_memuse;
@@ -475,6 +477,7 @@ namespace Uintah {
 	}
 	dbg << " (max)";
       }
+#endif
       dbg << endl;
 
       if ( d_n > 0 ) {
