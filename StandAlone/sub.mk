@@ -7,6 +7,7 @@ SUBDIRS := $(SRCDIR)/tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS := $(SRCDIR)/sus.cc
+SRCS := $(SRCS) $(SRCDIR)/FakeMPM_ICE.cc
 
 ifeq ($(CC),newmpxlc)
   AIX_LIBRARY := \
@@ -49,18 +50,13 @@ else
         Packages/Uintah/Core/Disclosure \
         Packages/Uintah/Core/Exceptions \
         Packages/Uintah/CCA/Ports \
-        Packages/Uintah/CCA/Components/MPM \
-        Packages/Uintah/CCA/Components/MPMICE \
         Packages/Uintah/CCA/Components/DataArchiver \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Packages/Uintah/CCA/Components/Solvers \
-        Packages/Uintah/CCA/Components/ICE \
         Packages/Uintah/CCA/Components/Examples \
-        Packages/Uintah/CCA/Components/Arches \
-        Packages/Uintah/CCA/Components/MPMArches \
         Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBRARY)
 endif
