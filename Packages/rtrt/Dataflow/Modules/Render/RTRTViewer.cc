@@ -149,7 +149,7 @@ void RTRTViewer::start_rtrt() {
   int c1 = 0;
   int ncounters=0;
   bool bench=false;
-  int shadow_mode=-1;
+  char* shadow_mode=0;
   bool no_aa=false;
   double bvscale=.3;
   char* criteria1="db, stereo, max rgb, max accumrgb";
@@ -220,7 +220,10 @@ void RTRTViewer::start_rtrt() {
   } else if(strcmp(argv[i], "-bench")==0){
     bench=true;
   } else if(strcmp(argv[i], "-no_shadows")==0){
-    shadow_mode=0;
+    shadow_mode="none";
+  } else if(strcmp(argv[i], "-shadows")==0){
+    i++;
+    shadow_mode=argv[i];
   } else if(strcmp(argv[i], "-no_aa")==0){
     no_aa=true;
   } else if(strcmp(argv[i], "-bvscale")==0){
@@ -312,8 +315,12 @@ void RTRTViewer::start_rtrt() {
   // set the scenes rtrt_engine pointer
   current_scene->set_rtrt_engine(rtrt_engine);
   
-  if(shadow_mode != -1)
-    current_scene->shadow_mode = shadow_mode;
+  if(shadow_mode){
+    if(!current_scene->select_shadow_mode(shadow_mode)){
+      cerr << "Unknown shadow mode: " << shadow_mode << '\n';
+      exit(1);
+    }
+  }
   current_scene->no_aa = no_aa;
   
   if(use_bv){
@@ -455,7 +462,7 @@ Scene* RTRTViewer::make_scene_1() {
     Scene* scene=new Scene(group, cam,
 			   bgcolor, Color(0,0,0), bgcolor, groundplane,
 			   ambient_scale);
-    scene->shadow_mode=1;
+    scene->select_shadow_mode("hard");
     return scene;
 }
 
