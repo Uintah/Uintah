@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
@@ -86,6 +87,8 @@ class MPMMaterial;
 	return d_gravity;
       }
 
+      void finalizeMaterials();
+      const MaterialSet* allMPMMaterials() const;
       double getRefPress() const {
 	return d_ref_press;
       }
@@ -110,6 +113,7 @@ class MPMMaterial;
       std::vector<MPMMaterial*> mpm_matls;
       std::vector<ICEMaterial*> ice_matls;
       Vector d_gravity;
+      MaterialSet* all_mpm_matls;
       double d_ref_press;
       double d_elapsed_time;
    };
