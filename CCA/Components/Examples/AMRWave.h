@@ -61,6 +61,14 @@ WARNING
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
 		       DataWarehouse*, DataWarehouse* new_dw);
+    void refine(const ProcessorGroup*,
+                const PatchSubset* patches,
+                const MaterialSubset* matls,
+                DataWarehouse*, DataWarehouse* new_dw);
+    void coarsen(const ProcessorGroup*,
+                 const PatchSubset* patches,
+                 const MaterialSubset* matls,
+                 DataWarehouse*, DataWarehouse* new_dw);
 
     AMRWave(const AMRWave&);
     AMRWave& operator=(const AMRWave&);
