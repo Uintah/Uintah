@@ -25,6 +25,8 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+source [file join $SCIRUN_SRCDIR Core GUI Range.tcl]
+
 itk::usual Linkedpane {
     keep -background -cursor -sashcursor
 }
@@ -92,9 +94,15 @@ global planes_mapType
 set planes_mapType 0
 global planes_threshold
 set planes_threshold 0
-global slab_min slab_max
-set slab_min 0
-set slab_max 124
+global axial_min axial_max
+set axial_min 1
+set axial_max 1
+global coronal_min coronal_max
+set coronal_min 1
+set coronal_max 1
+global sagittal_min sagittal_max
+set sagittal_min 1
+set sagittal_max 1
 
 global turn_off_crop
 set turn_off_crop 0
@@ -342,6 +350,11 @@ class BioImageApp {
 
 		$this update_planes_threshold_slider_min_max
 
+ 	    # turn off MIP stuff
+#              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+#              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+#              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+
                 set 2D_fixed 1
 	    } 
 
@@ -370,17 +383,12 @@ class BioImageApp {
 
   	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizez
 
-	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.mip.s configure -from 1 -to $sizez
   	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slice.s configure -from 0 -to $sizex
-  	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.mip.s configure -from 1 -to $sizex
  	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizey
- 	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.mip.s configure -from 1 -to $sizey
 
-	    set $mods(ViewImage)-axial-viewport0-slab_width $sizez
-	    set $mods(ViewImage)-sagittal-viewport0-slab_width $sizex
-	    set $mods(ViewImage)-coronal-viewport0-slab_width $sizey
-
-
+	    set $mods(ViewImage)-axial-viewport0-slab_width 0
+	    set $mods(ViewImage)-sagittal-viewport0-slab_width 0
+	    set $mods(ViewImage)-coronal-viewport0-slab_width 0
 
 	    if {!$loading} {
 		# set slice to be middle slice
@@ -391,6 +399,16 @@ class BioImageApp {
 		set $mods(ViewImage)-axial-viewport0-slice [expr $sizez/2]
 		set $mods(ViewImage)-sagittal-viewport0-slice [expr $sizex/2]
 		set $mods(ViewImage)-coronal-viewport0-slice [expr $sizey/2]
+		
+		global axial_min axial_max
+		global sagittal_min sagittal_max
+		global coronal_min coronal_max
+		set axial_min [expr $sizez/2]
+		set axial_max [expr $sizez/2]
+		set sagittal_min [expr $sizex/2]
+		set sagittal_max [expr $sizex/2]
+		set coronal_min [expr $sizey/2]
+		set coronal_max [expr $sizey/2]
 	    }
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
@@ -674,56 +692,18 @@ class BioImageApp {
 	frame $topr.modes.slice
 	pack $topr.modes.slice -side top -pady 0 -anchor nw -expand yes -fill x
 
-	global $mods(ViewImage)-axial-viewport0-mode
-	radiobutton $topr.modes.slice.b -text "Slice Mode" \
-	    -variable  $mods(ViewImage)-axial-viewport0-mode -value 0 \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
-	Tooltip $topr.modes.slice.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $topr.modes.slice.b -side left -padx 0 -anchor nw
+	label $topr.modes.slice.l -text "Axial\nSlices:"
+	
+	global axial_min axial_max
+	range $topr.modes.slice.s -from 0 -to 20 \
+	    -orient horizontal -showvalue true \
+	    -length 120 -rangecolor "#990000" \
+	    -varmin axial_min -varmax axial_max \
+	    -command "$this update_axial_slices $axial_min $axial_max"
 
-	global $mods(ViewImage)-axial-viewport0-slice
- 	scale $topr.modes.slice.s \
- 	    -from 0 -to 20 \
- 	    -orient horizontal -showvalue false \
- 	    -length 110 \
-	    -variable $mods(ViewImage)-axial-viewport0-slice
+ 	pack $topr.modes.slice.l $topr.modes.slice.s -side left -anchor n -padx 4
 
-	entry $topr.modes.slice.l -textvariable $mods(ViewImage)-axial-viewport0-slice \
-	    -width 6 -relief flat
-	bind $topr.modes.slice.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
- 	pack $topr.modes.slice.s $topr.modes.slice.l -side left -anchor n -padx 0
-
-        bind $topr.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
-
-	frame $topr.modes.mip
-	pack $topr.modes.mip -side top -anchor nw \
-	    -expand yes -fill x -pady 0 -padx 0
-
-	radiobutton $topr.modes.mip.b -text "MIP Mode" \
-	    -variable $mods(ViewImage)-axial-viewport0-mode -value 1 \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
-	Tooltip $topr.modes.mip.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $topr.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
-
-
-	global $mods(ViewImage)-axial-viewport0-slab_width
- 	scale $topr.modes.mip.s \
- 	    -from 1 -to 20 \
- 	    -orient horizontal -showvalue false \
- 	    -length 110 \
-	    -variable $mods(ViewImage)-axial-viewport0-slab_width
-
-	entry $topr.modes.mip.l -textvariable $mods(ViewImage)-axial-viewport0-slab_width \
-	    -width 6 -relief flat
-	bind $topr.modes.mip.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
- 	pack $topr.modes.mip.s $topr.modes.mip.l -side left -anchor n -padx 0
-
-        bind $topr.modes.mip.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
-
-	Tooltip $topr.modes.mip.s "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
-	Tooltip $topr.modes.mip.l "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
-
-
+        bind $topr.modes.slice.s <Motion> "$this update_axial_slices $axial_min $axial_max 1"
 
 	set img [image create photo -width 1 -height 1]
 	button $topr.modes.expand -height 4 -bd 2 -relief raised -image $img \
@@ -738,59 +718,24 @@ class BioImageApp {
 	frame $botl.modes.slice
 	pack $botl.modes.slice -side top -pady 0 -anchor nw -expand yes -fill x
 
-	global $mods(ViewImage)-sagittal-viewport0-mode
-	radiobutton $botl.modes.slice.b -text "Slice Mode" \
-	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 0 \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
-	Tooltip $botl.modes.slice.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $botl.modes.slice.b -side left -padx 0 -anchor nw
+	label $botl.modes.slice.l -text "Sagittal\nSlices:"
+	
+	global sagittal_min sagittal_max
+	range $botl.modes.slice.s -from 0 -to 20 \
+	    -orient horizontal -showvalue true \
+	    -length 120 -rangecolor "#990000" \
+	    -varmin sagittal_min -varmax sagittal_max \
+	    -command "$this update_sagittal_slices $sagittal_min $sagittal_max"
 
+ 	pack $botl.modes.slice.l $botl.modes.slice.s -side left -anchor n -padx 4
 
-	global $mods(ViewImage)-sagittal-viewport0-slice
- 	scale $botl.modes.slice.s \
- 	    -from 0 -to 254 \
- 	    -orient horizontal -showvalue false \
- 	    -length 110 \
-	    -variable $mods(ViewImage)-sagittal-viewport0-slice
-	entry $botl.modes.slice.l -textvariable $mods(ViewImage)-sagittal-viewport0-slice \
-	    -width 6 -relief flat
- 	pack $botl.modes.slice.s $botl.modes.slice.l -side left -anchor n -padx 0
-	bind $botl.modes.slice.l <Return> "$mods(ViewImage)-c rebind  .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
-
-        bind $botl.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
-
-	frame $botl.modes.mip
-	pack $botl.modes.mip -side top -pady 0 -anchor nw -expand yes -fill x
-
-	radiobutton $botl.modes.mip.b -text "MIP Mode" \
-	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 1 \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
-	Tooltip $botl.modes.mip.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $botl.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
-
-	global $mods(ViewImage)-sagittal-viewport0-slab_width
- 	scale $botl.modes.mip.s \
- 	    -from 1 -to 20 \
- 	    -orient horizontal -showvalue false \
- 	    -length 110 \
-	    -variable $mods(ViewImage)-sagittal-viewport0-slab_width
-
-	entry $botl.modes.mip.l -textvariable $mods(ViewImage)-sagittal-viewport0-slab_width \
-	    -width 6 -relief flat
-	bind $botl.modes.mip.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
- 	pack $botl.modes.mip.s $botl.modes.mip.l -side left -anchor n -padx 0
-
-        bind $botl.modes.mip.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
-
-	Tooltip $botl.modes.mip.s "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
-	Tooltip $botl.modes.mip.l "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
+        bind $botl.modes.slice.s <Motion> "$this update_sagittal_slices $sagittal_min $sagittal_max 1"
 
 	set img [image create photo -width 1 -height 1]
 	button $botl.modes.expand -height 4 -bd 2 -relief raised -image $img \
 	    -cursor based_arrow_down -command "$this hide_control_panel $botl.modes"
 
 	pack $botl.modes.expand -side bottom -fill both
-
 
 	# modes for coronal
 	frame $botr.modes
@@ -800,51 +745,18 @@ class BioImageApp {
 	frame $botr.modes.slice
 	pack $botr.modes.slice -side top -pady 0 -anchor nw -expand yes -fill x
 
-	global $mods(ViewImage)-coronal-viewport0-mode
-	radiobutton $botr.modes.slice.b -text "Slice Mode" \
-	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 0 \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
-	Tooltip $botr.modes.slice.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $botr.modes.slice.b -side left -padx 0 -anchor nw
+	label $botr.modes.slice.l -text "Coronal\nSlices:"
+	
+	global coronal_min coronal_max
+	range $botr.modes.slice.s -from 0 -to 20 \
+	    -orient horizontal -showvalue true \
+	    -length 120 -rangecolor "#990000" \
+	    -varmin coronal_min -varmax coronal_max \
+	    -command "$this update_coronal_slices $coronal_min $coronal_max"
 
-	global $mods(ViewImage)-coronal-viewport0-slice
- 	scale $botr.modes.slice.s \
- 	    -from 0 -to 254 \
- 	    -orient horizontal -showvalue false \
- 	    -length 110 \
-	    -variable $mods(ViewImage)-coronal-viewport0-slice
-	entry $botr.modes.slice.l -textvariable $mods(ViewImage)-coronal-viewport0-slice \
-	    -width 6 -relief flat
-	bind $botr.modes.slice.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
- 	pack $botr.modes.slice.s $botr.modes.slice.l -side left -anchor n -padx 0
+ 	pack $botr.modes.slice.l $botr.modes.slice.s -side left -anchor n -padx 4
 
-        bind $botr.modes.slice.s <Motion> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
-
-	frame $botr.modes.mip
-	pack $botr.modes.mip -side top -pady 0 -anchor nw -expand yes -fill x
-
-	radiobutton $botr.modes.mip.b -text "MIP Mode" \
-	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
-	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
-	Tooltip $botr.modes.mip.b "View in 2D Slice Mode or a\nMaximum Intensity Projection (MIP)"
-	pack $botr.modes.mip.b -side left -padx 0 -pady 0 -anchor nw
-
-	global $mods(ViewImage)-coronal-viewport0-slab_width
- 	scale $botr.modes.mip.s \
- 	    -from 1 -to 20 \
- 	    -orient horizontal -showvalue false \
- 	    -length 110 \
-	    -variable $mods(ViewImage)-coronal-viewport0-slab_width
-
-	entry $botr.modes.mip.l -textvariable $mods(ViewImage)-coronal-viewport0-slab_width \
-	    -width 6 -relief flat
-	bind $botr.modes.mip.l <Return> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
- 	pack $botr.modes.mip.s $botr.modes.mip.l -side left -anchor n -padx 0
-
-        bind $botr.modes.mip.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
-
-	Tooltip $botr.modes.mip.s "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
-	Tooltip $botr.modes.mip.l "Change the number of slabs in the mip.\nThe slab number indicates the the width\nof the MIP projection. For example,\na slab width of 3 would display a MIP\nof the previous, current and next slice."
+        bind $botr.modes.slice.s <Motion> "$this update_coronal_slices $coronal_min $coronal_max 1"
 
 	set img [image create photo -width 1 -height 1]
 	button $botr.modes.expand -height 4 -bd 2 -relief raised -image $img \
@@ -870,7 +782,7 @@ class BioImageApp {
 
     method show_control_panel { w } {
 	pack forget $w.expand
-	pack $w.slice $w.mip -side top -pady 0 -anchor nw -expand yes -fill x
+	pack $w.slice -side top -pady 0 -anchor nw -expand yes -fill x
 	pack $w.expand -side bottom -fill both
 
 	$w.expand configure -command "$this hide_control_panel $w" \
@@ -878,7 +790,7 @@ class BioImageApp {
     }
 
     method hide_control_panel { w } {
-	pack forget $w.slice $w.mip
+	pack forget $w.slice 
 	pack $w.expand -side bottom -fill both
 
 	$w.expand configure -command "$this show_control_panel $w" \
@@ -1010,7 +922,7 @@ class BioImageApp {
 	    
             bind $m.p.indicator <Button> {app display_module_error} 
 	    
-            label $m.p.indicatorL -text "Press Execute to Load Volume..."
+            label $m.p.indicatorL -text "Press Update to Load Volume..."
             pack $m.p.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
 	    set indicator$case $m.p.indicator.canvas
@@ -1934,10 +1846,10 @@ class BioImageApp {
 		-command "$this toggle_show_plane_x"
             Tooltip $page.planes.xp "Turn Sagittal plane on/off"
 
-	    checkbutton $page.planes.xm -text "Show Sagittal MIP" \
-		-variable show_MIP_x \
-		-command "$this toggle_show_MIP_x"
-            Tooltip $page.planes.xm "Turn Sagittal MIP on/off"
+  	    checkbutton $page.planes.xm -text "Show Sagittal MIP" \
+  		-variable show_MIP_x \
+  		-command "$this toggle_show_MIP_x"
+              Tooltip $page.planes.xm "Turn Sagittal MIP on/off"
 
 
 	    checkbutton $page.planes.yp -text "Show Coronal Plane" \
@@ -1945,10 +1857,10 @@ class BioImageApp {
 		-command "$this toggle_show_plane_y"
             Tooltip $page.planes.yp "Turn Coronal plane on/off"
 
-	    checkbutton $page.planes.ym -text "Show Coronal MIP" \
-		-variable show_MIP_y \
-		-command "$this toggle_show_MIP_y"
-            Tooltip $page.planes.ym "Turn Coronal MIP on/off"
+  	    checkbutton $page.planes.ym -text "Show Coronal MIP" \
+  		-variable show_MIP_y \
+  		-command "$this toggle_show_MIP_y"
+              Tooltip $page.planes.ym "Turn Coronal MIP on/off"
 
 
 	    checkbutton $page.planes.zp -text "Show Axial Plane" \
@@ -1956,10 +1868,10 @@ class BioImageApp {
 		-command "$this toggle_show_plane_z"
             Tooltip $page.planes.zp "Turn Axial plane on/off"
 
-	    checkbutton $page.planes.zm -text "Show Axial MIP" \
-		-variable show_MIP_z \
-		-command "$this toggle_show_MIP_z"
-            Tooltip $page.planes.zm "Turn Axial MIP on/off"
+  	    checkbutton $page.planes.zm -text "Show Axial MIP" \
+  		-variable show_MIP_z \
+  		-command "$this toggle_show_MIP_z"
+              Tooltip $page.planes.zm "Turn Axial MIP on/off"
 
 
             grid configure $page.planes.xp -row 0 -column 0 -sticky "w"
@@ -1968,8 +1880,6 @@ class BioImageApp {
             grid configure $page.planes.ym -row 1 -column 1 -sticky "w"
             grid configure $page.planes.zp -row 2 -column 0 -sticky "w"
             grid configure $page.planes.zm -row 2 -column 1 -sticky "w"
-
-
 
             # Background threshold
             global planes_threshold
@@ -3865,8 +3775,8 @@ class BioImageApp {
  	set IsVAttached 1
  	set executing_modules 0
 
- 	$indicatorL0 configure -text "Press Execute to run to save point..."
- 	$indicatorL1 configure -text "Press Execute to run to save point..."
+ 	$indicatorL0 configure -text "Press Update to run to save point..."
+ 	$indicatorL1 configure -text "Press Update to run to save point..."
     }	
 
     #########################
@@ -4036,6 +3946,73 @@ class BioImageApp {
 	    disableModule [set EditTransferFunc2] 1
 	    disableModule [set NrrdTextureBuilder] 1
         }
+    }
+
+    method update_axial_slices {var1 var2 someUknownVar} {
+	global axial_min axial_max mods
+	global $mods(ViewImage)-axial-viewport0-mode
+	
+	# if they are the same, make sure you are in slice mode
+	# and update the slice variable
+	if {$axial_min == $axial_max} {
+	    set $mods(ViewImage)-axial-viewport0-mode 0
+            global $mods(ViewImage)-axial-viewport0-slice
+            set $mods(ViewImage)-axial-viewport0-slice $axial_min
+        } else {
+	    set $mods(ViewImage)-axial-viewport0-mode 1
+            global $mods(ViewImage)-axial-viewport0-slice
+            global $mods(ViewImage)-axial-viewport0-slab_width
+            set width [expr $axial_max - $axial_min]
+            set slice [expr $width/2]
+            set $mods(ViewImage)-axial-viewport0-slice [expr $axial_min + $slice]
+            set $mods(ViewImage)-axial-viewport0-slab_width $width
+        } 
+
+        $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
+    }
+
+    method update_sagittal_slices {var1 var2 someUknownVar} {
+	global sagittal_min sagittal_max mods
+	global $mods(ViewImage)-sagittal-viewport0-mode
+	
+	# if they are the same, make sure you are in slice mode
+	# and update the slice variable
+	if {$sagittal_min == $sagittal_max} {
+	    set $mods(ViewImage)-sagittal-viewport0-mode 0
+            global $mods(ViewImage)-sagittal-viewport0-slice
+            set $mods(ViewImage)-sagittal-viewport0-slice $sagittal_min
+        } else {
+	    set $mods(ViewImage)-sagittal-viewport0-mode 1
+            global $mods(ViewImage)-sagittal-viewport0-slice
+            global $mods(ViewImage)-sagittal-viewport0-slab_width
+            set width [expr $sagittal_max - $sagittal_min]
+            set slice [expr $width/2]
+            set $mods(ViewImage)-sagittal-viewport0-slice [expr $sagittal_min + $slice]
+            set $mods(ViewImage)-sagittal-viewport0-slab_width $width
+        } 
+        $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
+    }
+
+    method update_coronal_slices {var1 var2 someUknownVar} {
+	global coronal_min coronal_max mods
+	global $mods(ViewImage)-coronal-viewport0-mode
+	
+	# if they are the same, make sure you are in slice mode
+	# and update the slice variable
+	if {$coronal_min == $coronal_max} {
+	    set $mods(ViewImage)-coronal-viewport0-mode 0
+            global $mods(ViewImage)-coronal-viewport0-slice
+            set $mods(ViewImage)-coronal-viewport0-slice $coronal_min
+        } else {
+	    set $mods(ViewImage)-coronal-viewport0-mode 1
+            global $mods(ViewImage)-coronal-viewport0-slice
+            global $mods(ViewImage)-coronal-viewport0-slab_width
+            set width [expr $coronal_max - $coronal_min]
+            set slice [expr $width/2]
+            set $mods(ViewImage)-coronal-viewport0-slice [expr $coronal_min + $slice]
+            set $mods(ViewImage)-coronal-viewport0-slab_width $width
+        } 
+        $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
     }
 
     # Application placing and size
