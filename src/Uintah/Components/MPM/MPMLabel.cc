@@ -23,6 +23,9 @@ MPMLabel::MPMLabel()
   pVolumeLabel = new VarLabel( "p.volume",
 			ParticleVariable<double>::getTypeDescription());
   
+  pVolumeDeformedLabel = new VarLabel( "p.volumedeformed",
+			ParticleVariable<double>::getTypeDescription());
+  
   pMassLabel = new VarLabel( "p.mass",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -59,6 +62,12 @@ MPMLabel::MPMLabel()
   pParticleIDLabel = new VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
 
+  pIsIgnitedLabel  = new VarLabel( "p.isIgnited",
+			ParticleVariable<int>::getTypeDescription() );
+  
+  pMassRateLabel  = new VarLabel( "p.massRate",
+			ParticleVariable<double>::getTypeDescription() );
+  
   // Node Centered Variables
   
   gAccelerationLabel = new VarLabel( "g.acceleration",
@@ -133,6 +142,9 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.8  2000/06/08 16:56:51  guilkey
+// Added tasks and VarLabels for HE burn model stuff.
+//
 // Revision 1.7  2000/06/03 05:25:43  sparker
 // Added a new for pSurfLabel (was uninitialized)
 // Uncommented pleaseSaveIntegrated

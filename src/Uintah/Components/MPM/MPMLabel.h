@@ -19,6 +19,7 @@ namespace Uintah {
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
+      const VarLabel* pVolumeDeformedLabel;
       const VarLabel* pMassLabel;
       const VarLabel* pVelocityLabel;
       const VarLabel* pExternalForceLabel;
@@ -30,6 +31,8 @@ namespace Uintah {
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
       const VarLabel* pParticleIDLabel;
+      const VarLabel* pIsIgnitedLabel; //for burn models
+      const VarLabel* pMassRateLabel; //for burn models
       
       const VarLabel* gMassLabel;
       const VarLabel* gAccelerationLabel;
@@ -60,6 +63,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.8  2000/06/08 16:56:51  guilkey
+// Added tasks and VarLabels for HE burn model stuff.
+//
 // Revision 1.7  2000/06/06 03:17:42  tan
 // Added particle variable lable pAverageMicrocrackLength for fracture simulation.
 //
