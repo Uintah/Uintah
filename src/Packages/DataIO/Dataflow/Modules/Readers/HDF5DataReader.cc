@@ -464,8 +464,8 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
       if( vec.size() > 1) {
 
-	if( assumesvt_ && vec.size() != 3 && vec.size() != 6) {
-	  warning( "Assuming Vector and Tensor data but can not merge into a Vector or Tensor because there are not 3 or 6 nrrds that are alike." );
+	if( assumesvt_ && vec.size() != 3 && vec.size() != 6 && vec.size() != 9) {
+	  warning( "Assuming Vector and Matrix data but can not merge into a Vector or Matrix because there are not 3, 6, or 9 nrrds that are alike." );
 	  continue;
 	}
 	  
@@ -530,8 +530,11 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	  onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
 	  nrrdName += string(":Vector");
 	} else if (assumesvt_ && join_me.size() == 6) {
-	  onrrd->nrrd->axis[0].kind = nrrdKind3DSymTensor;
-	  nrrdName += string(":Tensor");
+	  onrrd->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+	  nrrdName += string(":Matrix");
+	} else if (assumesvt_ && join_me.size() == 9) {
+	  onrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
+	  nrrdName += string(":Matrix");
 	} else {
 	  onrrd->nrrd->axis[0].kind = nrrdKindDomain;
 	  nrrdName += string(":Scalar");
@@ -1350,7 +1353,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   // Stuff the data into the NRRD.
   NrrdData *nout = scinew NrrdData();
 
-  // If the user asks us to assume vector or tensor data, the
+  // If the user asks us to assume vector or matrix data, the
   // assumption is based on the size of the last dimension of the hdf5 data
   // amd will be in the first dimension of the nrrd
   int sz_last_dim = 1;
@@ -1438,9 +1441,14 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     nout->nrrd->axis[0].kind = nrrdKind3Vector;
     break;
 	  
-  case 6: // Tensor data
-    nrrdName += ":Tensor";
-    nout->nrrd->axis[0].kind = nrrdKind3DSymTensor;
+  case 6: // Matrix data
+    nrrdName += ":Matrix";
+    nout->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+    break;
+	  
+  case 9: // Matrix data
+    nrrdName += ":Matrix";
+    nout->nrrd->axis[0].kind = nrrdKind3DMatrix;
     break;
 	  
   default: // treat the rest as Scalar data

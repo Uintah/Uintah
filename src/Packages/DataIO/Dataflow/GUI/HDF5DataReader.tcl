@@ -442,7 +442,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	frame $dm.svt
 
 	checkbutton $dm.svt.button -variable $this-assumeSVT
-	label $dm.svt.label -text "Assume Vector-Tensor data" \
+	label $dm.svt.label -text "Assume Vector-Matrix data" \
 	    -width 30 -anchor w -just left
 	
 	pack $dm.svt.button $dm.svt.label  -side left
