@@ -1195,7 +1195,7 @@ HexVolMesh::compute_grid()
     box.extend(padmin);
     box.extend(padmax);
 
-    sgc.insert(*ci, get_size(*ci), box);
+    sgc.insert(*ci, box);
 
     ++ci;
   }
