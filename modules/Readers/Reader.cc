@@ -24,13 +24,13 @@ static Module* make_TYPEReader()
 #include "TYPERegister.h"
 
 TYPEReader::TYPEReader()
-: UserModule("Reader", Source)
+: UserModule("TYPEReader", Source)
 {
     // Create the output data handle and port
     outport=new TYPEOPort(this, "Output Data", TYPEIPort::Atomic);
     add_oport(outport);
 
-    add_ui(new MUI_file_selection("IsoContour value", &filename,
+    add_ui(new MUI_file_selection("TYPE file", &filename,
 				  MUI_widget::NotExecuting));
 }
 
@@ -59,8 +59,11 @@ void TYPEReader::execute()
 	}
 	// Read the file...
 	TYPE* object=(TYPE*)stream->io(ScalarField::typeid);
-	if(!object)
+	if(!object){
 	    error("Error reading TYPE from file");
+	    delete stream;
+	    return;
+	}
 	handle=object;
 	delete stream;
     }

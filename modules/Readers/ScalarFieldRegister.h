@@ -11,6 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-static RegisterModule db1("Fields", "FieldReader", make_ScalarFieldReader);
-static RegisterModule db2("Readers", "FieldReader", make_ScalarFieldReader);
+static RegisterModule db1("Fields", "ScalarFieldReader", make_ScalarFieldReader);
+static RegisterModule db2("Readers", "ScalarFieldReader", make_ScalarFieldReader);
 
