@@ -37,17 +37,17 @@ using SCIRun::FieldHandle;
 
 VolumeRenderer::VolumeRenderer(int id) 
   : GeomObj( id ),
-    gvr_(0),
     rs_(VolumeRenderer::OVEROP),
     slices_(0),
     tex_(0),
     bg_(0),
+    gvr_(0),
+    lighting_(0),
     mutex("VolumeRenderer Mutex"),
     cmap(0),
     slice_alpha(1.0),
-    cmapHasChanged(true),
     di_(0),
-    lighting_(0)
+    cmapHasChanged(true)
 {
   NOT_FINISHED("VolumeRenderer::VolumeRenderer(int id, const Texture3D* tex, ColorMap* cmap)");
 }
@@ -59,11 +59,12 @@ VolumeRenderer::VolumeRenderer(int id, GridVolRen* gvr,
 			       bool fixed,
 			       double min, double max)
   : GeomObj( id ),
-    gvr_(gvr),
     rs_(VolumeRenderer::OVEROP),
     slices_(0),
     tex_(tex),
     bg_(0),
+    gvr_(gvr),
+    lighting_(0),
     mutex("VolumeRenderer Mutex"),
     cmap(map),
     brick_size_(128),
@@ -71,9 +72,8 @@ VolumeRenderer::VolumeRenderer(int id, GridVolRen* gvr,
     is_fixed_(fixed),
     min_val_(min),
     max_val_(max),
-    cmapHasChanged(true),
     di_(0),
-    lighting_(0)
+    cmapHasChanged(true)
 {
   mutex.lock();
   buildBrickGrid();
@@ -82,11 +82,12 @@ VolumeRenderer::VolumeRenderer(int id, GridVolRen* gvr,
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy)
   : GeomObj( copy.id ),
-    gvr_(copy.gvr_),
     rs_(copy.rs_),
     slices_(copy.slices_),
     tex_(copy.tex_),
     bg_(copy.bg_),
+    gvr_(copy.gvr_),
+    lighting_(copy.lighting_),
     mutex("VolumeRenderer Mutex"),
     cmap(copy.cmap),
     brick_size_(copy.brick_size_),
@@ -94,9 +95,8 @@ VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy)
     is_fixed_(copy.is_fixed_),
     min_val_(copy.min_val_),
     max_val_(copy.max_val_),
-    cmapHasChanged(copy.cmapHasChanged),
     di_(copy.di_),
-    lighting_(copy.lighting_)
+    cmapHasChanged(copy.cmapHasChanged)
 {
   mutex.lock();
   buildBrickGrid();

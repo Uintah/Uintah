@@ -6,13 +6,16 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <Core/Datatypes/Field.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Core/Datatypes/LatVolField.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Packages/Kurt/Core/Geom/BrickGridThread.h>
 #include <Packages/Kurt/Core/Geom/GridBrick.h>
-
 
 using std::pair;
 
@@ -21,13 +24,17 @@ namespace Kurt {
 using SCIRun::Array3;
 using SCIRun::Point;
 using SCIRun::BBox;
+using SCIRun::Vector;
 using SCIRun::LockingHandle;
 using SCIRun::Datatype;
 using SCIRun::FieldHandle;
+using SCIRun::Field;
 using SCIRun::LatVolField;
 using SCIRun::Piostream;
+using SCIRun::Thread;
 using Uintah::ShareAssignArray3;
 using Uintah::LevelField;
+using Uintah::Semaphore;
 class GridVolRen;
 
 
