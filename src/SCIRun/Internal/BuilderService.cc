@@ -34,6 +34,7 @@
 #include <SCIRun/CCA/CCAException.h>
 #include <SCIRun/PortInstance.h>
 #include <SCIRun/CCA/ComponentID.h>
+#include <SCIRun/CCA/CCAComponentInstance.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/CCA/ConnectionID.h>
 #include <iostream>
@@ -166,11 +167,18 @@ SSIDL::array1<std::string> BuilderService::getUsedPortNames(const sci::cca::Comp
   return result;
 }
 
-sci::cca::TypeMap::pointer BuilderService::getPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
-							     const std::string& /*portname*/)
+sci::cca::TypeMap::pointer BuilderService::getPortProperties(const sci::cca::ComponentID::pointer& cid,
+							     const std::string& portname)
 {
-  cerr << "BuilderService::getPortProperties not finished\n";
-  return sci::cca::TypeMap::pointer(0);
+  ComponentInstance* comp=framework->lookupComponent(cid->getInstanceName());
+  if(comp==NULL){
+    return sci::cca::TypeMap::pointer(0);
+  }
+  CCAComponentInstance* ccacomp=dynamic_cast<CCAComponentInstance*>(comp);
+  if(ccacomp==NULL){
+    return sci::cca::TypeMap::pointer(0);
+  }
+  return ccacomp->getPortProperties(portname);
 }
 
 void BuilderService::setPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
