@@ -565,8 +565,13 @@ void ProblemSpec::getAttributes(map<string,string>& attributes)
   int num_attr = attr->getLength();
 
   for (int i = 0; i<num_attr; i++) {
-    string name(XMLString::transcode(attr->item(i)->getNodeName()));
-    string value(XMLString::transcode(attr->item(i)->getNodeValue()));
+    char* attrName = XMLString::transcode(attr->item(i)->getNodeName());
+    char* attrValue = XMLString::transcode(attr->item(i)->getNodeValue());
+    string name(attrName);
+    string value(attrValue);
+
+    delete [] attrName;
+    delete [] attrValue;
 		
     attributes[name]=value;
   }
@@ -579,7 +584,10 @@ bool ProblemSpec::getAttribute(const string& attribute, string& result)
   DOMNamedNodeMap* attr = d_node->getAttributes();
   //DOMString search_name(attribute.c_str());
 
-  const DOMNode* n = attr->getNamedItem(XMLString::transcode(attribute.c_str()));
+  XMLCh* attrName = XMLString::transcode(attribute.c_str());
+  const DOMNode* n = attr->getNamedItem(attrName);
+  delete [] attrName;
+
   if(n == 0)
      return false;
   //DOMString val = n.getNodeValue();
