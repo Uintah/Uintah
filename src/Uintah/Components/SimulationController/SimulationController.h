@@ -68,8 +68,7 @@ namespace Uintah {
       SimulationController& operator=(const SimulationController&);
       
       bool           d_restarting;
-      int            d_generation;    // The Nth iteration (time step.)
-                                      //    Starts at 0.
+                                      // The Nth iteration (time step.)
       Thread       * d_MpiThread;
       DWMpiHandler * d_dwMpiHandler;  // DWs register with the DWMpiHandler
                                       //    and it handles the Mpi requests
@@ -79,6 +78,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.13  2000/07/28 07:37:50  bbanerje
+// Rajesh must have missed these .. adding the changed version of
+// createDataWarehouse calls
+//
 // Revision 1.12  2000/06/17 07:06:43  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -46,7 +46,6 @@ SimulationController::SimulationController(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
    d_restarting = false;
-   d_generation = 0;
 #if 0
    d_dwMpiHandler = scinew DWMpiHandler();
 #endif
@@ -107,9 +106,8 @@ void SimulationController::run()
    
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    SchedulerP scheduler(sched);
-
-   DataWarehouseP old_dw = scheduler->createDataWarehouse( d_generation );
-   d_generation++;
+   DataWarehouseP null_dw = 0;
+   DataWarehouseP old_dw = scheduler->createDataWarehouse(null_dw);
 
 #if 0
    d_dwMpiHandler->registerDW( old_dw );
@@ -188,8 +186,7 @@ void SimulationController::run()
 
       scheduler->initialize();
 
-      DataWarehouseP new_dw = scheduler->createDataWarehouse( d_generation );
-      d_generation++;
+      DataWarehouseP new_dw = scheduler->createDataWarehouse(old_dw);
 
 #if 0
       d_dwMpiHandler->registerDW( new_dw );
@@ -478,6 +475,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.40  2000/07/28 07:37:50  bbanerje
+// Rajesh must have missed these .. adding the changed version of
+// createDataWarehouse calls
+//
 // Revision 1.39  2000/07/27 22:39:48  sparker
 // Implemented MPIScheduler
 // Added associated support
