@@ -1,0 +1,188 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "allen"
+
+global runDate
+set runDate " Wed  Jan 30 2002"
+
+global runTime
+set runTime " 13:48:42"
+
+set bbox {16.0 19.0 754 846}
+
+set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 19]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 16 220]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 230 298]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 230 23]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 16 449]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 16 802]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 173 448]
+set m7 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 16 110]
+set m8 [addModuleAtPosition "Fusion" "Fields" "RadialGridDifferent" 432 192]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 414 289]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 414 498]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 559 392]
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 559 274]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 584 570]
+
+addConnection $m3 0 $m2 0
+addConnection $m1 0 $m4 0
+addConnection $m2 0 $m4 1
+addConnection $m2 0 $m6 1
+addConnection $m1 0 $m2 1
+addConnection $m4 0 $m5 0
+addConnection $m6 1 $m5 1
+addConnection $m7 0 $m1 0
+addConnection $m0 0 $m7 0
+addConnection $m8 0 $m9 1
+addConnection $m9 0 $m10 0
+addConnection $m9 0 $m11 1
+addConnection $m11 0 $m10 1
+addConnection $m10 0 $m5 2
+addConnection $m12 0 $m11 0
+addConnection $m0 1 $m7 1
+addConnection $m7 1 $m1 1
+addConnection $m7 0 $m8 0
+addConnection $m7 0 $m9 0
+addConnection $m1 0 $m6 0
+addConnection $m11 0 $m13 1
+addConnection $m9 0 $m13 0
+addConnection $m13 1 $m5 3
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/mnt/z/FUSION/mdsplus/data/NIMROD_10089_00.mds}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-isFixed {0}
+set $m2-min {0}
+set $m2-max {476463}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {1}
+set $m3-height {1}
+set $m3-mapType {3}
+set $m3-minRes {12}
+set $m3-resolution {12}
+set $m3-realres {12}
+set $m3-gamma {0}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-nodes-on {1}
+set $m4-nodes-as-disks {0}
+set $m4-edges-on {1}
+set $m4-use-normals {0}
+set $m4-use-transparency {0}
+set $m4-faces-on {1}
+set $m4-vectors-on {0}
+set $m4-normalize-vectors {0}
+set $m4-has_vec_data {0}
+set $m4-def-color-r {0.5}
+set $m4-def-color-g {0.5}
+set $m4-def-color-b {0.5}
+set $m4-def-color-a {0.5}
+set $m4-node_display_type {Points}
+set $m4-edge_display_type {Lines}
+set $m4-active_tab {Faces}
+set $m4-node_scale {0.03}
+set $m4-edge_scale {0.03}
+set $m4-vectors_scale {0.03}
+set $m4-show_progress {0}
+set $m4-interactive_mode {Interactive}
+set $m4-resolution {4}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-isoval {0.1}
+set $m6-extract-from-new-field {0}
+set $m6-algorithm {0}
+set $m6-build_trisurf {0}
+set $m6-np {1}
+set $m6-active_tab {MC}
+set $m6-update_type {on release}
+set $m6-color-r {0.4}
+set $m6-color-g {0.2}
+set $m6-color-b {0.9}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-idim {385}
+set $m7-jdim {192}
+set $m7-kdim {10}
+set $m7-istart {0}
+set $m7-jstart {0}
+set $m7-kstart {0}
+set $m7-idelta {384}
+set $m7-jdelta {192}
+set $m7-kdelta {5}
+set $m7-iskip {10}
+set $m7-jskip {5}
+set $m7-kskip {1}
+set $m7-reduce {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-nodes-on {1}
+set $m10-nodes-as-disks {0}
+set $m10-edges-on {0}
+set $m10-use-normals {0}
+set $m10-use-transparency {0}
+set $m10-faces-on {1}
+set $m10-vectors-on {0}
+set $m10-normalize-vectors {41943415}
+set $m10-has_vec_data {0}
+set $m10-def-color-r {0.5}
+set $m10-def-color-g {0.5}
+set $m10-def-color-b {0.5}
+set $m10-def-color-a {0.5}
+set $m10-node_display_type {Points}
+set $m10-edge_display_type {Lines}
+set $m10-active_tab {Faces}
+set $m10-node_scale {0.03}
+set $m10-edge_scale {0.03}
+set $m10-vectors_scale {0.03}
+set $m10-show_progress {19052420}
+set $m10-interactive_mode {Interactive}
+set $m10-resolution {4}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-isFixed {0}
+set $m11-min {0}
+set $m11-max {11.831}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-tcl_status {Calling GenStandardColorMaps!}
+set $m12-positionList {}
+set $m12-nodeList {}
+set $m12-width {347}
+set $m12-height {40}
+set $m12-mapType {3}
+set $m12-minRes {12}
+set $m12-resolution {60}
+set $m12-realres {12}
+set $m12-gamma {-0.2}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m13-isoval {4.6}
+set $m13-extract-from-new-field {0}
+set $m13-algorithm {0}
+set $m13-build_trisurf {0}
+set $m13-np {1}
+set $m13-active_tab {MC}
+set $m13-update_type {on release}
+set $m13-color-r {0.4}
+set $m13-color-g {0.2}
+set $m13-color-b {0.9}
+
+::netedit scheduleok

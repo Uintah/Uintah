@@ -11,27 +11,30 @@ set runDate " Wed  Jan 30 2002"
 global runTime
 set runTime " 13:48:42"
 
-set bbox {18.0 8.0 1045 779}
+set bbox {18.0 8.0 1327 779}
 
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 8]
 set m1 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 18 156]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 297 297]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 297 43]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 388]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 233 282]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 233 141]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 400]
 set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 19 735]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 172 485]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 581 242]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 563 430]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 563 351]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 428 521]
-set m11 [addModuleAtPosition "Teem" "DataIO" "NrrdWriter" 901 544]
-set m12 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 901 433]
-set m13 [addModuleAtPosition "Fusion" "Fields" "MeshBuilder" 18 81]
-set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 739 430]
-set m15 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 410 162]
-set m16 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 610 78]
-set m17 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 847 25]
-set m18 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 847 152]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 174 401]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 448 239]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 430 433]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 430 327]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 430 518]
+set m11 [addModuleAtPosition "Teem" "DataIO" "NrrdWriter" 1183 552]
+set m12 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 1183 456]
+set m13 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 18 81]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 612 410]
+set m15 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 611 283]
+set m16 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 889 118]
+set m17 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 889 208]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 889 398]
+set m19 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 907 302]
+set m20 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 871 493]
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 871 590]
 
 addConnection $m3 0 $m2 0
 addConnection $m1 0 $m2 1
@@ -46,38 +49,50 @@ addConnection $m7 0 $m9 1
 addConnection $m1 0 $m7 0
 addConnection $m8 0 $m10 0
 addConnection $m10 0 $m5 2
-addConnection $m9 0 $m8 0
 addConnection $m2 0 $m10 1
 addConnection $m12 0 $m11 0
 addConnection $m0 0 $m13 0
 addConnection $m13 0 $m1 0
 addConnection $m0 1 $m13 1
 addConnection $m13 1 $m1 1
+addConnection $m9 0 $m8 0
 addConnection $m9 0 $m14 0
+addConnection $m0 2 $m16 1
+addConnection $m0 0 $m16 0
+addConnection $m16 0 $m17 0
+addConnection $m16 1 $m17 1
+addConnection $m17 0 $m19 0
+addConnection $m19 0 $m18 1
 addConnection $m17 0 $m18 0
+addConnection $m19 1 $m5 3
+addConnection $m18 0 $m20 1
+addConnection $m1 0 $m20 0
+addConnection $m21 0 $m5 4
+addConnection $m2 0 $m21 1
+addConnection $m20 0 $m21 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename {/mnt/z/FUSION/mdsplus/data/NIMROD_10089_20.mds}
+set $m0-filename {/mnt/z/FUSION/mdsplus/data/NIMROD_10089_00.mds}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m2-notes {}
 set $m2-show_status {1}
-set $m2-isFixed {0}
-set $m2-min {-0.002265}
-set $m2-max {723639}
+set $m2-isFixed {1}
+set $m2-min {1.04083e-17}
+set $m2-max {733699}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m3-tcl_status {Calling GenStandardColorMaps!}
 set $m3-positionList {}
 set $m3-nodeList {}
-set $m3-width {1}
-set $m3-height {1}
+set $m3-width {398}
+set $m3-height {40}
 set $m3-mapType {3}
 set $m3-minRes {12}
-set $m3-resolution {12}
-set $m3-realres {12}
-set $m3-gamma {0}
+set $m3-resolution {255}
+set $m3-realres {255}
+set $m3-gamma {-0.6}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-nodes-on {1}
@@ -85,7 +100,7 @@ set $m4-nodes-as-disks {0}
 set $m4-edges-on {1}
 set $m4-use-normals {0}
 set $m4-use-transparency {0}
-set $m4-faces-on {1}
+set $m4-faces-on {0}
 set $m4-vectors-on {0}
 set $m4-normalize-vectors {0}
 set $m4-has_vec_data {0}
@@ -95,7 +110,7 @@ set $m4-def-color-b {0.5}
 set $m4-def-color-a {0.5}
 set $m4-node_display_type {Points}
 set $m4-edge_display_type {Lines}
-set $m4-active_tab {Nodes}
+set $m4-active_tab {Faces}
 set $m4-node_scale {0.03}
 set $m4-edge_scale {0.03}
 set $m4-vectors_scale {0.03}
@@ -108,34 +123,34 @@ $m5 ui
 set $m5-ViewWindow_0-pos {}
 set $m5-ViewWindow_0-caxes {0}
 set $m5-ViewWindow_0-iaxes {169567944}
-set $m5-ViewWindow_0-view-eyep-x {4.77088}
-set $m5-ViewWindow_0-view-eyep-y {-13.5566}
-set $m5-ViewWindow_0-view-eyep-z {-11.9902}
-set $m5-ViewWindow_0-view-lookat-x {-0.223413}
-set $m5-ViewWindow_0-view-lookat-y {0.00187249}
-set $m5-ViewWindow_0-view-lookat-z {-0.010124}
-set $m5-ViewWindow_0-view-up-x {-0.223252}
-set $m5-ViewWindow_0-view-up-y {0.597957}
-set $m5-ViewWindow_0-view-up-z {-0.769809}
+set $m5-ViewWindow_0-view-eyep-x {13.9186}
+set $m5-ViewWindow_0-view-eyep-y {1.25137}
+set $m5-ViewWindow_0-view-eyep-z {13.654}
+set $m5-ViewWindow_0-view-lookat-x {4.13714e-12}
+set $m5-ViewWindow_0-view-lookat-y {-9.635e-07}
+set $m5-ViewWindow_0-view-lookat-z {0.01023}
+set $m5-ViewWindow_0-view-up-x {-0.665629}
+set $m5-ViewWindow_0-view-up-y {-0.252658}
+set $m5-ViewWindow_0-view-up-z {0.702212}
 set $m5-ViewWindow_0-view-fov {20}
-set $m5-ViewWindow_0-view-eyep-x {4.77088}
-set $m5-ViewWindow_0-view-eyep-y {-13.5566}
-set $m5-ViewWindow_0-view-eyep-z {-11.9902}
-set $m5-ViewWindow_0-view-eyep-x {4.77088}
-set $m5-ViewWindow_0-view-eyep-y {-13.5566}
-set $m5-ViewWindow_0-view-eyep-z {-11.9902}
-set $m5-ViewWindow_0-view-lookat-x {-0.223413}
-set $m5-ViewWindow_0-view-lookat-y {0.00187249}
-set $m5-ViewWindow_0-view-lookat-z {-0.010124}
-set $m5-ViewWindow_0-view-lookat-x {-0.223413}
-set $m5-ViewWindow_0-view-lookat-y {0.00187249}
-set $m5-ViewWindow_0-view-lookat-z {-0.010124}
-set $m5-ViewWindow_0-view-up-x {-0.223252}
-set $m5-ViewWindow_0-view-up-y {0.597957}
-set $m5-ViewWindow_0-view-up-z {-0.769809}
-set $m5-ViewWindow_0-view-up-x {-0.223252}
-set $m5-ViewWindow_0-view-up-y {0.597957}
-set $m5-ViewWindow_0-view-up-z {-0.769809}
+set $m5-ViewWindow_0-view-eyep-x {13.9186}
+set $m5-ViewWindow_0-view-eyep-y {1.25137}
+set $m5-ViewWindow_0-view-eyep-z {13.654}
+set $m5-ViewWindow_0-view-eyep-x {13.9186}
+set $m5-ViewWindow_0-view-eyep-y {1.25137}
+set $m5-ViewWindow_0-view-eyep-z {13.654}
+set $m5-ViewWindow_0-view-lookat-x {4.13714e-12}
+set $m5-ViewWindow_0-view-lookat-y {-9.635e-07}
+set $m5-ViewWindow_0-view-lookat-z {0.01023}
+set $m5-ViewWindow_0-view-lookat-x {4.13714e-12}
+set $m5-ViewWindow_0-view-lookat-y {-9.635e-07}
+set $m5-ViewWindow_0-view-lookat-z {0.01023}
+set $m5-ViewWindow_0-view-up-x {-0.665629}
+set $m5-ViewWindow_0-view-up-y {-0.252658}
+set $m5-ViewWindow_0-view-up-z {0.702212}
+set $m5-ViewWindow_0-view-up-x {-0.665629}
+set $m5-ViewWindow_0-view-up-y {-0.252658}
+set $m5-ViewWindow_0-view-up-z {0.702212}
 set $m5-ViewWindow_0-view-fov {20}
 set $m5-ViewWindow_0-view-eyep_offset-x {5.60708e-260}
 set $m5-ViewWindow_0-view-eyep_offset-y {5.60767e-260}
@@ -165,14 +180,15 @@ set $m5-ViewWindow_0-resx {28}
 set $m5-ViewWindow_0-resy {10081}
 set $m5-ViewWindow_0-aspect {68}
 set $m5-ViewWindow_0-aspect_ratio {7.21479e-313}
+set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {0}
 set $m5-ViewWindow_0-unused {0}
-set $m5-ViewWindow_0-unused {0}
+set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {1}
 set $m6-notes {}
 set $m6-show_status {1}
-set $m6-isoval {302436}
+set $m6-isoval {408175}
 set $m6-extract-from-new-field {0}
 set $m6-algorithm {0}
 set $m6-build_trisurf {0}
@@ -184,20 +200,22 @@ set $m6-color-g {0.2}
 set $m6-color-b {0.9}
 set $m7-notes {}
 set $m7-show_status {1}
-set $m7-sizex {64}
-set $m7-sizey {64}
-set $m7-sizez {64}
+set $m7-sizex {32}
+set $m7-sizey {32}
+set $m7-sizez {32}
 set $m7-padpercent {0}
 set $m8-notes {}
 set $m8-show_status {1}
-set $m8-is_fixed {0}
+set $m8-is_fixed {1}
 set $m8-max_brick_dim {128}
-set $m8-sel_brick_dim {32}
+set $m8-sel_brick_dim {64}
 set $m8-min {0}
-set $m8-max {694402}
+set $m8-max {733699}
 set $m9-notes {}
 set $m9-show_status {1}
-set $m9-interp_op_gui {}
+set $m9-use_interp {1}
+set $m9-use_closest {0}
+set $m9-closeness_distance {1e+15}
 set $m10-notes {}
 set $m10-show_status {1}
 set $m10-drawX {1}
@@ -205,6 +223,11 @@ set $m10-drawY {1}
 set $m10-drawZ {1}
 set $m10-drawView {0}
 set $m10-interp_mode {1}
+set $m10-draw_phi_0 {1}
+set $m10-draw_phi_1 {1}
+set $m10-phi_0 {201}
+set $m10-phi_1 {300.3}
+set $m10-cyl_active {1}
 set $m11-notes {}
 set $m11-show_status {1}
 set $m11-filename {/home/allen/FUSION/mdsplus/data/t3.fld}
@@ -232,23 +255,83 @@ set $m14-filename {/home/allen/FUSION/mdsplus/nets/3D_Texture.fld}
 set $m14-filetype {Binary}
 set $m15-notes {}
 set $m15-show_status {1}
-set $m15-interp_op_gui {}
-set $m15-interp_nearest {0}
-set $m15-use_closest_outside {1}
+set $m15-filename {/home/allen/FUSION/mdsplus/nets/3D_Texture.fld}
 set $m16-notes {}
 set $m16-show_status {1}
-set $m16-interp_op_gui {}
-set $m16-interp_nearest {0}
-set $m16-use_closest_outside {0}
+set $m16-idim {385}
+set $m16-jdim {192}
+set $m16-kdim {10}
+set $m16-istart {0}
+set $m16-jstart {0}
+set $m16-kstart {0}
+set $m16-idelta {384}
+set $m16-jdelta {192}
+set $m16-kdelta {10}
+set $m16-iskip {10}
+set $m16-jskip {5}
+set $m16-kskip {1}
+set $m16-reduce {1}
 set $m17-notes {}
 set $m17-show_status {1}
-set $m17-filename {/home/allen/FUSION/mdsplus/nets/3D_Texture.fld}
 set $m18-notes {}
 set $m18-show_status {1}
-set $m18-is_fixed {0}
-set $m18-max_brick_dim {128}
-set $m18-sel_brick_dim {128}
-set $m18-min {0}
-set $m18-max {694402}
+set $m18-stepsize {0.01}
+set $m18-tolerance {0.01}
+set $m18-maxsteps {50}
+set $m18-direction {0}
+set $m18-remove-colinear {1}
+set $m19-notes {}
+set $m19-show_status {1}
+set $m19-endpoints {1}
+set $m19-endpoint0x {1.46823}
+set $m19-endpoint0y {0.00466037}
+set $m19-endpoint0z {0.997447}
+set $m19-endpoint1x {2.0046}
+set $m19-endpoint1y {0.00334838}
+set $m19-endpoint1z {-0.0423068}
+set $m19-widgetscale {0.103313}
+set $m19-maxseeds {3}
+set $m19-numseeds {10}
+set $m19-rngseed {1}
+set $m19-clamp {0}
+set $m19-autoexecute {0}
+set $m19-type {}
+set $m19-dist {impuni}
+set $m19-whichtab {Widget}
+set $m20-notes {}
+set $m20-show_status {1}
+set $m20-use_interp {1}
+set $m20-use_closest {0}
+set $m20-closeness_distance {1e+15}
+set $m21-notes {}
+set $m21-show_status {1}
+set $m21-nodes-on {0}
+set $m21-nodes-as-disks {0}
+set $m21-edges-on {1}
+set $m21-use-normals {0}
+set $m21-use-transparency {0}
+set $m21-faces-on {0}
+set $m21-vectors-on {0}
+set $m21-normalize-vectors {39847714}
+set $m21-has_vec_data {0}
+set $m21-def-color-r {0.5}
+set $m21-def-color-g {0.5}
+set $m21-def-color-b {0.5}
+set $m21-def-color-a {0.5}
+set $m21-node_display_type {Spheres}
+set $m21-edge_display_type {Cylinders}
+set $m21-active_tab {Edges}
+set $m21-node_scale {0.05}
+set $m21-edge_scale {0.03}
+set $m21-vectors_scale {0.3}
+set $m21-show_progress {23069137}
+set $m21-interactive_mode {Interactive}
+set $m21-resolution {4}
+$m2 initialize_ui
+$m7 initialize_ui
+$m8 initialize_ui
+$m10 initialize_ui
+$m18 initialize_ui
+$m19 initialize_ui
 
 ::netedit scheduleok
