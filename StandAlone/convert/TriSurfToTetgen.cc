@@ -94,8 +94,8 @@ main(int argc, char **argv) {
   TriSurfMesh::Node::iterator niter, niter_end;
   TriSurfMesh::Node::size_type ninner; inner->size(ninner);
   TriSurfMesh::Face::size_type finner; inner->size(finner);
-  TriSurfMesh::Node::size_type nouter; inner->size(nouter);
-  TriSurfMesh::Face::size_type fouter; inner->size(fouter);
+  TriSurfMesh::Node::size_type nouter; outer->size(nouter);
+  TriSurfMesh::Face::size_type fouter; outer->size(fouter);
   
   fprintf(fout, "# Number of nodes, pts/tri, no holes, no boundary markers\n");
   fprintf(fout, "%d 3 0 0\n", ninner+nouter);
