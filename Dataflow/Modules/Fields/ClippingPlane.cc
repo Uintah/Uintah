@@ -154,7 +154,6 @@ ClippingPlane::execute()
     trans.pre_scale(diag);
     trans.pre_translate(Vector(loc));
   }
-  //trans.pre_rotate(angle, axis_vector);
   
   // Create blank mesh.
   unsigned int sizex = Max(2, size_x_.get());
