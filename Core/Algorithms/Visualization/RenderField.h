@@ -1593,8 +1593,8 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   SFld *sfld = dynamic_cast<SFld*>(sfld_handle.get_rep());
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep()); 
 
-  const bool points_p = (display_mode == "Points");
-  const bool sized_p = (display_mode == "Scaled Spheres");
+  bool sized_p = (display_mode == "Scaled Spheres");
+  bool points_p = (display_mode == "Points");
 
   GeomHandle data_switch = 0;
   GeomPoints *points = 0;
@@ -1612,6 +1612,15 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
       points = scinew GeomPoints();
       data_switch = scinew GeomDL(points);
     }
+  }
+  else if (sized_p)
+  {
+    points = scinew GeomPoints();
+    spheres = scinew GeomSpheres(scale, resolution, resolution);
+    GeomGroup *tmp = scinew GeomGroup();
+    tmp->add(spheres);
+    tmp->add(points);
+    data_switch = scinew GeomDL(tmp);
   }
   else
   {
@@ -1650,7 +1659,6 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
       }
       else
       {
-	const double dtmp = fabs((double)tmp);
 	if (cmap.get_rep())
 	{
 	  typename CFld::value_type ctmp;
@@ -1661,7 +1669,11 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 
 	  if (sized_p)
 	  {
-	    spheres->add_radius(p, scale * dtmp, ctmpd);
+	    const double dtmp = fabs((double)tmp * scale);
+	    if (!spheres->add_radius(p, dtmp, ctmpd))
+	    {
+	      points->add(p, ctmpd);
+	    }
 	  }
 	  else
 	  {
@@ -1672,7 +1684,11 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 	{
 	  if (sized_p)
 	  {
-	    spheres->add_radius(p, scale * dtmp);
+	    const double dtmp = fabs((double)tmp * scale);
+	    if (!spheres->add_radius(p, dtmp))
+	    {
+	      points->add(p);
+	    }
 	  }
 	  else
 	  {

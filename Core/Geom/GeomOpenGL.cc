@@ -3103,6 +3103,9 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+  const bool ulr = radii_.size() == centers_.size();
+  if (!ulr && global_radius_ < 1.0e-6) { return; }
+
   if(!pre_draw(di, matl, 1)) return;
 
   di->polycount += 2 * (nu_-1) * (nv_-1) * centers_.size();
@@ -3119,64 +3122,19 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   
   const bool using_color = centers_.size() == colors_.size() / 4;
-  const bool ulr = radii_.size() == centers_.size();
 
-  if (ulr)
+  glMatrixMode(GL_MODELVIEW);
+  for (unsigned int i=0; i < centers_.size(); i++)
   {
-    glMatrixMode(GL_MODELVIEW);
-    for (unsigned int i=0; i < centers_.size(); i++)
-    {
-      if (using_texture) { glTexCoord1f(indices_[i]); }
-      if (using_color) { glColor4ubv(&(colors_[i*4])); }
+    if (using_texture) { glTexCoord1f(indices_[i]); }
+    if (using_color) { glColor4ubv(&(colors_[i*4])); }
 
-      if (radii_[i] > 1.0e-6)
-      {
-	glPushMatrix();
+    glPushMatrix();
 
-	glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
-	gluSphere(di->qobj, radii_[i], nu_, nv_);
+    glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
+    gluSphere(di->qobj, ulr?radii_[i]:global_radius_, nu_, nv_);
 	
-	glPopMatrix();
-      }
-      else
-      {
-	glDisable(GL_LIGHTING);
-	glBegin(GL_POINTS);
-	glVertex3f(centers_[i].x(), centers_[i].y(), centers_[i].z());
-	glEnd();
-	glEnable(GL_LIGHTING);
-      }
-    }
-  }
-  else if (global_radius_ > 1.0e-6)
-  {
-    glMatrixMode(GL_MODELVIEW);
-    for (unsigned int i=0; i < centers_.size(); i++)
-    {
-      if (using_texture) { glTexCoord1f(indices_[i]); }
-      if (using_color) { glColor4ubv(&(colors_[i*4])); }
-
-      glPushMatrix();
-
-      glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
-      gluSphere(di->qobj, global_radius_, nu_, nv_);
-	
-      glPopMatrix();
-    }
-  }
-  else
-  {
-    glDisable(GL_LIGHTING);
-    glBegin(GL_POINTS);
-    for (unsigned int i=0; i < centers_.size(); i++)
-    {
-      if (using_texture) { glTexCoord1f(indices_[i]); }
-      if (using_color) { glColor4ubv(&(colors_[i*4])); }
-
-      glVertex3f(centers_[i].x(), centers_[i].y(), centers_[i].z());
-    }
-    glEnd();
-    glEnable(GL_LIGHTING);
+    glPopMatrix();
   }
 
   glDisable(GL_TEXTURE_1D);

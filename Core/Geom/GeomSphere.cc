@@ -223,16 +223,19 @@ GeomSpheres::add(const Point &center, float index)
 }
 
 
-void
+bool
 GeomSpheres::add_radius(const Point &c, double r)
 {
+  if (r < 1.0e-6) { return false; }
   centers_.push_back(c);
   radii_.push_back(r);
+  return true;
 }
 
-void
+bool
 GeomSpheres::add_radius(const Point &c, double r, const MaterialHandle &mat)
 {
+  if (r < 1.0e-6) { return false; }
   add_radius(c, r);
   const unsigned char r0 = COLOR_FTOB(mat->diffuse.r());
   const unsigned char g0 = COLOR_FTOB(mat->diffuse.g());
@@ -242,13 +245,16 @@ GeomSpheres::add_radius(const Point &c, double r, const MaterialHandle &mat)
   colors_.push_back(g0);
   colors_.push_back(b0);
   colors_.push_back(a0);
+  return true;
 }
 
-void
+bool
 GeomSpheres::add_radius(const Point &c, double r, float index)
 {
+  if (r < 1.0e-6) { return false; }
   add_radius(c, r);
   indices_.push_back(index);
+  return true;
 }
 
 
