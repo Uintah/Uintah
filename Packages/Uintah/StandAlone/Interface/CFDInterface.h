@@ -2,16 +2,15 @@
 #ifndef UINTAH_HOMEBREW_CFDInterface_H
 #define UINTAH_HOMEBREW_CFDInterface_H
 
-#include "CFDInterfaceP.h"
-#include "DataWarehouseP.h"
-#include "Handle.h"
-#include "RefCounted.h"
-#include "GridP.h"
-#include "LevelP.h"
-#include "SchedulerP.h"
-#include "ProblemSpecP.h"
+#include <Uintah/Parallel/UintahParallelPort.h>
+#include <Uintah/Interface/CFDInterfaceP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Grid/ProblemSpecP.h>
 
-class CFDInterface : public RefCounted {
+class CFDInterface : public UintahParallelPort {
 public:
     CFDInterface();
     virtual ~CFDInterface();
