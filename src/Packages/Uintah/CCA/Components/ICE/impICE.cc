@@ -277,7 +277,10 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 
   t->modifies(lb->press_CCLabel,  press_matl,oims);     
   t->computes(lb->betaLabel,      one_matl,oims);       
-  t->computes(lb->term2Label,     one_matl,oims);       
+  t->computes(lb->term2Label,     one_matl,oims);
+
+  // If we are debugging, compute the rhs after the second iteration...
+  t->computes(lb->rhsLabel,       one_matl, oims);
   
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  
@@ -824,6 +827,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
     subsched->execute();
     subNewDW->get(max_RHS,   lb->max_RHSLabel);
+
+    if(switchDebugConvergence && counter == 1){
+      // Save the residual (rhs) after the first iteration...
+      ParentNewDW->transferFrom(subNewDW, lb->rhsLabel, patch_sub, press_matl);
+    }
     counter ++;
     
     // restart timestep if working too hard
@@ -875,6 +883,18 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   subNewDW  = subsched->get_dw(3);
   ParentNewDW->transferFrom(subNewDW, lb->betaLabel,      patch_sub,one_matl);          
   ParentNewDW->transferFrom(subNewDW, lb->term2Label,     patch_sub,one_matl);
+
+  // If we only iterated once, we need to output RHS as zero
+  if(switchDebugConvergence && counter == 1){
+    // Save the residual (rhs) after the first iteration...
+    for (int p = 0; p < patch_sub->size();p++) {
+      const Patch* patch = patch_sub->get(p);
+      CCVariable<double> rhs;
+      ParentNewDW->allocateAndPut(rhs, lb->rhsLabel, 0, patch);
+      rhs.initialize(0);
+    }
+  }
+
 
  // for modified variables you need to do it manually
   constCCVariable<double> press_CC;

@@ -92,6 +92,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebugSource_Sink               = false; 
   switchDebug_advance_advect           = false; 
   switchTestConservation               = false; 
+  switchDebugConvergence               = false;
 
   d_RateForm          = false;
   d_EqForm            = false; 
