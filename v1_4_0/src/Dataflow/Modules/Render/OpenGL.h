@@ -111,20 +111,30 @@ struct GetReq {
 struct ImgReq {
   string name;
   string type;
-  ImgReq( const string& n, const string& t);
+  int resx;
+  int resy;
+  ImgReq( const string& n, const string& t, int rx, int ry);
   ImgReq();
 };
 
 struct Frustum {
-  double n;
-  double f;
-  double l;
-  double r;
-  double b;
-  double t;
-  double tb[4][6];
-  double clr;
-  double cbt;
+  double znear;
+  double zfar;
+  double left;
+  double right;
+  double bottom;
+  double top;
+  double width;
+  double height;
+};
+
+struct HiRes {
+  double nrows;
+  double ncols;
+  int row;
+  int col;
+  int resx;
+  int resy;
 };
 
 class OpenGL : public Renderer {
@@ -185,12 +195,11 @@ public:
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
   virtual void saveImage(const string& fname,
-		   const string& type = "ppm");
-  void real_saveImage(const string& fname,
-		      const string& type = "ppm");
-  virtual void saveHiResImage(const string& fname,
-		      const string& type = "ppm");
-  void cycleFrustum();
+			 const string& type = "ppm", int x=640, int y=512);
+  void render_and_save_image(int x, int y,
+			     const string& fname,
+			     const string& type = "ppm");
+  void setFrustumToWindowPortion();
   void deriveFrustum();
 
 // HACK -- support data for get_pixel_depth
@@ -213,6 +222,7 @@ GLint    get_depth_view[4];
     Mailbox<ImgReq> img_mb;
     
     Frustum frustum;
+    HiRes hi_res;
 
     Viewer* viewer;
     ViewWindow* viewwindow;
