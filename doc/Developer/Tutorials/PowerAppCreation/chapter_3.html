@@ -82,12 +82,17 @@
                 <h4>
                   <b>Overview</b>
                 </h4>
-<p>The PowerAppBase class should control the general look and feel of the apps and provide the basic methods needed to build a PowerApp. The variables and method are described below.</p>
+<p>The PowerAppBase class should control the general look and feel of
+the apps and provide the basic methods needed to build a PowerApp. The
+variables and method are described below.</p>
 
                 <h4>
                   <b><a name="Variables" id="Variables">PowerAppBase Variables</a></b>
                 </h4>
-<p>The variables contained in the PowerAppBase class mainly deal with the app size, colors and progress indicator. There are also variables for making color map swatches.  Below are all of the PowerAppBase variables and their descriptions.</p>
+<p>Variables contained in PowerAppBase class handle 
+the app size, colors, and progress indicator. There are also variables
+for making color map swatches.  Below are the PowerAppBase
+variables and their descriptions.</p>
 <pre>
 ###############################
 ### Class Variables
@@ -117,8 +122,8 @@ variable viewer_height
 variable vis_width
 variable vis_height
 
-# The width and height of the current screen so that
-# the app can come up in the center.
+# The width and height of the current screen, so 
+# the app comes up in the center.
 variable screen_width
 variable screen_height
 
@@ -140,16 +145,16 @@ variable IsVAttached
 variable detachedVFr
 variable attachedVFr
 
-# Flag to indicate whether entire gui has been built.
+# Flag to indicate if entire gui has been built.
 # This is usefull in functions called by scale widgets
-# because they get called during initialization.
+# because they are called during initialization.
 variable initialized
 
 # Flag to indicate when app is loading and executing a
 # saved session.
 variable loading
 
-# The id for the call to change_indicator which controls
+# The id for the call to change_indicator that controls
 #  the progress bar.
 variable indicatorID
     
@@ -171,8 +176,8 @@ variable indicatorL2
 # 3 = Error state
 variable indicate
 
-# The progress spinner is just an image shifting upon
-# each executing. The cyle variable keeps track of how
+# The progress spinner is an image shifting upon
+# each execution. The cyle variable keeps track of how
 # many shifts the image has made.
 variable cycle
 
@@ -193,38 +198,37 @@ variable stripes
 variable i_move
 variable i_back
 
-# Stores name of first module to get an error and the
-# indicator won't be cleared from the error state until
-# this module clears it.
+# Stores name of first module to get an error. The
+# indicator will not clear from the error state until
+# the module clears it.
 variable error_module
 
 # Colors for execute and next buttons
 variable next_color
 variable execute_color
 
-# Width and height and resolution of colormap canvases if
+# Width, height, and resolution of colormap canvases if
 # needed.
 variable colormap_width
 variable colormap_height
-variable colormap_res
-
-# Stores saved session filename. This filename
-# should be displayed along with the title when loaded and
-# should be used when Save Session is selected.
-variable saveFile    
+variable colormap_res    
 </pre>
 
                 <h4>
                   <b><a name="Methods" id="Methods">PowerAppBase Methods</a></b>
                 </h4>
 
-<p>The PowerAppBase class provides methods for building the standard parts of an App such as the Menu, Viewer Options tab, Progress Indicator, and colormap canvases. It also provides some helper methods for loading and saving, and activating and disabling widgets. Below are the methods and their descriptions.</p>
+<p>The PowerAppBase class provides methods for building a standard
+App, which includes the Menu, Viewer Options tab, Progress Indicator,
+and colormap canvases. It also provides some helper methods for
+loading and saving, and activating and disabling widgets. Below are
+methods and their descriptions.</p>
 <pre>
 ############################
 ### constructor
 ############################
-# The PowerAppBase constructor will be called before the 
-# child's constructor. It will initialize variables regarding 
+# The PowerAppBase constructor is called before the 
+# child's constructor. It initializes variables regarding 
 # size, state, the progress indicator, tooltips, etc. The 
 # constructor also configures the scheme (color, fonts, etc)
 # constructor {} 
@@ -239,8 +243,8 @@ destructor
 #############################
 ### configure_scheme
 #############################
-# Configure the color scheme and look and feel to be the same.
-# This includes the colors for the next and execute buttons.
+# Configure the look and color scheme the same.
+# This includes colors for the next and execute buttons.
 method configure_scheme {} 
 
 
@@ -257,7 +261,7 @@ method build_menu { m }
 ### reset_app
 #########################
 # Method that should be called when loading a session.  
-# This just enables any disabled modules so that the
+# This enables disabled modules, so the
 # loaded session can disable a fresh set of modules.
 method reset_app {} 
    
@@ -265,9 +269,9 @@ method reset_app {}
 ##########################
 ### save_module_variables
 ##########################
-# This method saves out the variables of all of the
-# modules to the specified file. It currently only
-# saves out the variables for the modules that the
+# Saves out variables of all 
+# modules to the specified file. Currently, this method 
+# saves out variables only for modules the
 # application has included in the global mods array.
 method save_module_variables { fileid } 
 
@@ -275,7 +279,7 @@ method save_module_variables { fileid }
 ##########################
 ### get_module_variable_name
 ##########################
-# This method strips away the module name information and gets
+# Strips away the module name information, and acquires 
 # just the variable name (i.e. port-index from 
 # SCIRun_FieldsOther_ChooseField_0-port-index
 method get_module_variable_name { var } 
@@ -284,15 +288,22 @@ method get_module_variable_name { var }
 #########################
 ### save_disabled_modules
 #########################
-# Save out the call to disable all modules
-# that are currently disabled
+# Save out the call to disable all modules 
+# currently disabled
 method save_disabled_modules { fileid } 
+    
 
+#########################
+### save_class_variables
+#########################
+# Save out all class variables 
+method save_class_variables { fileid } 
 
+    
 #######################
 ### get_class_variable_name
 #######################
-# Remove the :: fromt the variable
+# Remove the :: from the variable
 method get_class_variable_name { var } 
 
 
@@ -306,41 +317,40 @@ method exit_app {}
 #############################
 ### create_viewer_tab
 #############################
-# Build the Viewer tab.  This is actually labeled
-# the "Viewer Options".
+# Build the Viewer tab labeled
+# "Viewer Options".
 method create_viewer_tab { vis } 
 
 
 ########################
 ### display_module_error
 ########################
-# If a module has received an error, and the
-# user clicks on the red progress bar, this
-# displays the module's log.
+# If a module has received an error, click the red progress bar to 
+# display the module's log.
 method display_module_error {} 
 
 
 ###########################
 ### activate_widget
 ###########################
-# This method activates a widget and changes the foreground 
-# color to be black. If it is a Next or Execute button, it 
-# changes the foreground color to be the appropriate color
+# Activates a widget and changes the foreground 
+# color black. If it is a Next or Execute button, this method  
+# changes the foreground color to the appropriate color
 method activate_widget {w} 
 
     
 ##############################
 ### disable_widget
 ##############################
-# This method disables a widget and sets the foreground to 
-# be grey64.
+# Disables a widget and sets the foreground to 
+# grey64.
 method disable_widget {w} 
 
 
 ############################
 ### construct_indicator
 ############################
-# This intializes the canvases for the different
+# Intializes the canvases for the different
 # indicate states (reset, error, executing, complete)
 method construct_indicator { canvas } 
 
@@ -349,11 +359,10 @@ method construct_indicator { canvas }
 ### change_indicator
 #######################
 # Change the indicator bar.  If indicate equals 0,
-# reset, 1 equals start swirl, 2 equals complete,
-# 3 equals error state. Each time this executes with
+# reset. 1 equals start swirl, 2 equals complete,
+# 3 equals error state. Each time this method executes with
 # indicate=1, the swirl canvas shifts.  After 3 cyles
-# it starts over. Only when indicate is a 1 does this
-# function call itself again.
+# it starts over. This function calls itself again, only when indicate is 1.
 method change_indicator {} 
 
 
@@ -374,8 +383,7 @@ method unblock_connection { modA portA modB portB }
 #############################
 ### draw_colormap
 #############################
-# This draws a small colormap specified by
-# which on the canvas
+# This method draws a small colormap.
 method draw_colormap { which canvas } 
 
     
@@ -400,8 +408,8 @@ method modify { i range }
 #######################
 ### addColorSelection
 #######################
-# This method creates a button and color swatch so the
-# user can set a specific color
+# Creates a button and color swatch, so 
+# a specific color can be set.
 method addColorSelection {frame text color mod} 
     
     
@@ -415,7 +423,7 @@ method raiseColor {col color mod}
 #########################
 ### setColor
 #########################
-# Set the appropriate color.  This should probably be
+# Set the appropriate color.  This should be
 # re-written by the child class to change the color
 # for a specific ShowField.
 method setColor {col color mode} 
@@ -424,7 +432,8 @@ method setColor {col color mode}
                 <h4>
                   <b>Summary</b>
                 </h4>
-<p>Chapter 3 showed the variables and methods within the PowerAppBase class.  Chapter 4 will go into more depth of what your PowerApp class should have.</p>
+<p>Chapter 3 showed the variables and methods within the PowerAppBase
+class.  Chapter 4 discusses what the PowerApp class should contain.</p>
 
 
                 <div align="right">

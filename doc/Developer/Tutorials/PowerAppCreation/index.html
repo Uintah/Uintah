@@ -85,38 +85,43 @@
                   <b>Overview</b>
                 </h4>
 
-<p>Chapter 1 discusses the general layout and core functionality that a standard PowerApp should provide as well as some of the design issues that arise in building such an application.</p>
+<p>Chapter 1 discusses the general layout and core functionality of a
+standard PowerApp, and some design issues that arise when building such an application.</p>
 
                 <h4>
                   <b><a name="Layout" id="Layout">General Layout</a></b>
                 </h4>
 
-<p>The typical layout for a SCIRun PowerApp is shown in <b>Figure 1</b> and consists of:</p> 
+<p>The typical layout for a SCIRun PowerApp is shown in <b>Figure
+ 1</b>.
+The menu consists of:</p> 
 <ul>
-  <li>The Processing Pane on the left guides you through the stages of the
+  <li>On the left, there is a Processing Pane that
+guides the user through the stages of the
 application.</li>
-  <li>In the middle, there is a Rendering window, which is
-where all of the data interaction and visualization is performed.</li>
-  <li>On the right, there is a Visualization Pane, from which you
-can control many of the parameters for the Rendering window.</li>
+  <li>In the middle, there is a Rendering window 
+where all data interaction and visualization is performed.</li>
+  <li>On the right, there is a Visualization Pane where many
+parameters for the Rendering window can be controlled.</li>
 </ul>
 <center><p><a href="figures/layout.jpg"><img src="figures/layout.jpg" width="516" height="300" alt="General Layout"/></a></p>
 <p><b>Figure 1: General PowerApp Layout</b></p></center>
-<p>A smaller scale PowerApp may not need both a Processing Pane and Visualization Pane and either can be removed as shown in comparing the BioTensor and BioFEM apps.</p>
+<p>A smaller scale PowerApp may not need a Processing Pane and
+Visualization Pane. Either can be removed as shown in comparing the BioTensor and BioFEM apps.</p>
 
 
-<p>Each PowerApp should have the standard menu as illustrated in <b>Figure 2</b>.  This menu consists of:</p>
+<p>Each PowerApp should have the standard menu as illustrated in
+<b>Figure 2</b>.  
+The menu consists of:</p>
 <ul>
+  <li>File -> Save Session... - Saves a session for a specific PowerApp</li>
   <li>File -> Load Session... - Loads a session for a specific PowerApp</li>
-  <li>File -> Save Session    - Saves a session for a specific PowerApp to the already specified filename</li>
-  <li>File -> Save Session As... - Specify a filename and save a session for a specific PowerApp</li>
-  <li>File -> Save Image...   - Saves the viewer image</li>
-  <li>File -> Quit - Nicely quits the PowerApp</li>
+  <li>File -> Quit - Quits the PowerApp</li>
 </ul>
 <ul>
   <li>Help -> Show Tooltips - Turns tooltips on/off</li>
-  <li>Help -> Help Contents - References Tutorial and might show splashscreen</li>
-  <li>Help -> About - Displays a brief summary of the PowerApp</li>
+  <li>Help -> Help Contents - References Tutorial and may show splashscreen</li>
+  <li>Help -> About - Displays a brief summary of PowerApp</li>
 </ul>
 <center>
 <table border="0" width="400">
@@ -132,13 +137,24 @@ can control many of the parameters for the Rendering window.</li>
                 <h4>
                   <b><a name="Functionality" id="Functionality">Core Functionality</a></b>
                 </h4>
-<p>Because it is often desirable to view the Rendering window at full-screen
-resolution, there must be support for detaching and reattaching these
-three panes.  This should be done by clicking on the vertical dashed lines between them. See <b>Figure 3</b> to see the panes detached.</p>
+<p>To view the Rendering window at full-screen
+resolution, there must be support for detaching and reattaching the
+three panes.  Do this by clicking on the vertical dashed lines between
+the panes. See detached panes in <b>Figure 3</b>.</p>
 <center><p><a href="figures/detached.jpg"><img src="figures/detached.jpg" width="470" height="251" alt="Detached Panes"/></a></p>
 <p><b>Figure 3: Panes Detached from Viewer</b></p></center>
 
-<p>At the bottom of either the Processing Pane or Visualization Pane should be a progress indicator consisting of a label and an indicator.  The label indicates the current processing or visualization step.  It can also indicate when dynamic compilation is occuring.  Below the indicator label is a progress indicator.  When nothing is happening, the indicator should be in a reset state.  When modules are executing a spinning &quot;candycane&quot; is displayed.  When all executing modules are done, the complete state appears. In the case of an error, the progress indicator turns red and the user can click on the indicator to view the error module's log. <b>Figure 4</b> shows all four indicator states.</p>
+<p>At the bottom of the Processing Pane or Visualization Pane, there
+should be a progress indicator with a label and an indicator.  The
+label indicates the current processing or visualization step.  It can
+also indicate dynamic compilation. Below the indicator label is a
+progress indicator.  When nothing is happening, the progress indicator
+should be in a reset state.  When modules are executing, a spinning
+&quot;candy cane&quot; is displayed.  When all executing modules are
+done, the complete state appears. In the case of an error, the
+progress indicator turns red. Click on the indicator
+to view the error module's log. The four indicator states are shown in
+<b>Figure 4</b>.</p>
 
 <center>
 <table border="0" width="500">
@@ -166,22 +182,46 @@ three panes.  This should be done by clicking on the vertical dashed lines betwe
                 <h4>
                   <b><a name="Issues" id="Issues">Design Issues</a></b>
                 </h4>
-<p>Some of the design issues related to PowerApps include the interaction with SCIRun modules and their variables as well as hidding the complexities of dataflow from the user.</p>
+<p>Some design issues related to PowerApps include interaction with
+SCIRun modules and their variables, and hidding complexities of
+dataflow from the user.</p>
 
-<p>A PowerApp is really running SCIRun in the background.  PowerApp widgets in general will reference module variables. To make this easier, there should be a global array called <i>mods</i>.  After loading the net, mods is set up to point to any modules you will need to reference in the PowerApp.  See <b>Figure 5</b> for an example of setting the mods array.</p>
-<center><p><img src="figures/setMods.jpg" border="1" alt="Setting mods array"/></p>
-<p><b>Figure 5: Setting the mods Array</b></p></center>
+<p>A PowerApp runs SCIRun in the background. In general, PowerApp
+widgets reference module variables. There should be a global array
+called <i>mods</i>.  After loading the net, mods is set up to point to
+any modules that need to be referenced in the PowerApp.  An example of
+setting the mods array is shown in <b>Figure 5</b>.</p>
+<center><p><img src="figures/setMods.jpg" border="1" alt="Setting mods
+array"/></p> <p><b>Figure 5: Setting the mods Array</b></p></center>
 
-<p>Even though there is a dataflow network underneath, the user needs to see logical steps in execution. The next step is not available until the previous step has been executed.  To enforces this, during the initializing of a PowerApp, certain modules are disabled to prevent the user from moving on to a step beyond the first step.  Upon executing a step, modules are enabled to allow the suser to move on.</p>
+<p>Althouigh there is a dataflow network underneath, the user needs to
+see logical steps in execution. During initialization of a PowerApp,
+certain modules are disabled to prevent the user from moving on to a
+step beyond the first step.  Upon executing a step, modules are
+enabled, allowing the user to move on.</p>
 
-<p>In addition to disabling modules, the widgets for future processing  and visualization steps need to be disabled and only be enabled at the appropriate time. Processing tabs should have an <img src="figures/executeButton.jpg" border="0" alt="Execute Button" /> button along with a <img src="figures/nextButton.jpg" border="0" alt="Next Button"/> button. These buttons can be enabled or disabled to help enforce the order of steps.</p>
+<p>In addition to disabling modules, widgets for future processing and
+visualization steps need to be disabled, and only enabled at the
+appropriate time. Processing tabs should have an <img
+src="figures/executeButton.jpg" border="0" alt="Execute Button" />
+button along with a <img src="figures/nextButton.jpg" border="0"
+alt="Next Button"/> button. These buttons can be enabled or disabled
+to help enforce the order of steps.</p>
 
-<p>Because PowerApps support attaching and detaching panes from the Viewer, a developer must make sure that the attached and detached panes are always in sync. Every time a tab is selected, the corresonding tab must also be selected in the other pane.  Every time a radiobutton or checkbutton is selected that is responsible for disabling widgets, the same widgets must be disabled in the other pane. It is usefull to have methods that keep these states in sync, especially when handling the loading of a session.</p>
+<p>PowerApps support attaching and detaching panes from the Viewer. A
+developer must make sure the attached and detached panes are in
+sync. When a tab is selected, the corresonding tab must also be
+selected in the other pane.  When widgets are disables with a
+radiobutton or checkbutton, the same widgets must be disabled in the other
+pane. It is usefull to have methods that keep these states in sync,
+especially when handling the loading of a session.</p>
 
                 <h4>
                   <b>Summary</b>
                 </h4>
-<p>Chapter 1 discussed the general layout and functionality of a PowerApp as well as some of the design issues to keep in mind when building your own PowerApp.  Chapter 2 will go into the anatomy of a .app file.</p>
+<p>Chapter 1 discussed the general layout and functionality of a
+PowerApp, and issues that arise when building a PowerApp.
+Chapter 2 discusses the anatomy of an .app file.</p>
 
 
                 <div align="right">

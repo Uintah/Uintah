@@ -90,48 +90,54 @@
                   <b>Overview</b>
                 </h4>
 
-<p>The child class includes several &quot;manditory&quot; methods as well as any other methods it needs. Below are descriptions of the different components of a PowerApp child class.</p>
+<p>The child class includes several &quot;manditory&quot;
+methods. Below are descriptions of the different components of a
+PowerApp child class.</p>
 
                 <h4>
                   <b><a name="MandMethods" id="MandMethods">Manditory Methods</a></b>
                 </h4>
 
 
-<p>Files such as Module.tcl make calls to PowerApp methods when their state is updated, they are dynamically compling, or an error is recieved. Therefore, each PowerApp must have certain methods to handle these situations. In addition, every PowerApp must handle loading and saving and displaying help and an about box. The following are manditory methods to have in a PowerApp child class:</p>
+<p>Files such as Module.tcl, make calls to PowerApp methods when their
+state is updated, they are dynamically compling, or an error is
+recieved. Therefore, each PowerApp must have certain methods for
+handling these situations. In addition, every PowerApp must handle
+loading and saving, displaying help, and an about box. The following
+are manditory methods to have in a PowerApp child class:</p>
 <ul>
   <li><b>constructor {}</b> to initialize variables and  define tooltips</li>
   <li><b>appname {}</b> - method that returns the name of the app</li>
-  <li><b>load_session {}</b> - method to handle loading a saved session</li>
   <li><b>save_session {}</b> - method to handle saving a session</li>
-  <li><b>save_session_as {}</b> - method to handle saving a session by specifying a new file</li>
-  <li><b>show_help {}</b> - method to display the help information</li>
+  <li><b>load_session {}</b> - method to handle loading a saved session</li>
+  <li><b>show_help {}</b> - method to display help information</li>
   <li><b>show_about {}</b> - method to display about information</li>
   <li><b>indicate_dynamic_compile {which mode}</b> - method to change the indicator and labels when dynamic compilation begins and ends</li>
   <li><b>update_progress {which state}</b> - method to catch module update_state calls and change the progress bar and labels accordingly</li>
   <li><b>indicate_error {which msg_state}</b> - method to indicate an error or reset an error</li>
   <li><b>change_indicate_val {val}</b> - method to change the indicate val and change labels appropriately</li>
   <li><b>change_indicator_labels {msg}</b> - method to change indicator labels and handle changing labels when loading a session.</li>
-  <li><b>save_class_variables {fileid}</b> - method to save out all of the class variables. This method should look just the one in the BioTensorApp but it must be in the child class so that the child variables are saved.</li>
 </ul>
 
 
                 <h4>
                   <b><a name="SugMethods" id="SugMethods">Suggested Methods</a></b>
                 </h4>
-<p>Below are several &quot;suggested&quot; methods that will help make keeping track of the state easeir.</p>
+<p>Below are several &quot;suggested&quot; methods to simplify keeping track of the state easeir.</p>
 <ul>
-  <li><b>build_app {}</b> - method to construct your app.  This will build both Panes and any tabs contained in them.</li>
+  <li><b>build_app {}</b> - method to construct app.  This builds both Panes and any tabs contained in them.</li>
   <li><b>initialize_blocks {}</b> - method to disable any modules to enforce the step-by-step functionality</li>
-  <li><b>setColor {col color mode}</b> - method only when giving a colormap selection choice</li>
-  <li><b>build_<i>step</i>_tab {f}</b> - for each step.  This should take a frame and should be called for the attached and detached Panes.</li>
+  <li><b>setColor {col color mode}</b> - method used only when giving a colormap selection choice</li>
+  <li><b>build_<i>step</i>_tab {f}</b> - for each step.  This takes a frame, and should be called for the attached and detached Panes.</li>
   <li><b>execute_<i>step</i> {}</b> - method to execute each processing step</li>
   <li><b>configure_<i>tabname</i>_tabs {}</b> - method to configure both the attached and detached tab given by <i>tabname</i></li>
-  <li><b>switch_<i>tabname</i>_tabs {}</b> - method called when switching a tab which should make sure the attached and detached tabs are in sync<i>tabname</i></li>
+  <li><b>switch_<i>tabname</i>_tabs {}</b> - method called when
+  switching a tab to make sure the attached and detached tabs are in sync<i>tabname</i></li>
   <li><b>toggle_<i>option</i></b> - methods for each checkbutton or radiobutton that enables or disables gui widgets</li>
   <li><b>init_Pframe {f}</b> - method to build Processing Pane on a specified frame</li>
   <li><b>init_Vframe {f}</b> - method to build Visualization Pane on a specified frame</li>
-  <li><b>switch_P_frames {}</b> - method to handle the attaching and detaching of the Processing Panes</li>
-  <li><b>switch_V_frames {}</b> - method to handle the attaching and detaching of the Visualization Panes</li>
+  <li><b>switch_P_frames</b> - method to handle attaching and detaching of the Processing Panes</li>
+  <li><b>switch_V_frames</b> - method to handle attaching and detaching of the Visualization Panes</li>
 </ul>
 
 
@@ -141,9 +147,10 @@
                 </h4>
 <p>To help maintain state during executing and when loading a saved session, there are several suggested variables regarding which tab is visible and which widgets are enabled or disabled.</p> 
 
-<p>There should be two variables for every tabnotebook widget so that when a tab is selected on the attached frame, the corresponding tab can be selected on the detached frame.  There should also be a variable for each tabnotebook indicating which tab is currently visible.</p>
+<p>There should be two variables for every tabnotebook widget, so when a tab is selected on the attached frame, the corresponding tab can be selected on the detached frame.  There should also be a variable for each tabnotebook indicating which tab is currently visible.</p>
 
-<p>For example, in BioTensor, the $proc_tab1 and $proc_tab2 point to the tabnotebook for the processing steps.  The c_procedure_tab variable indicates which tab is currently visible.  When the user clicks the &quot;Registration&quot; tab, a method is called that will change the indicator labels, set the $c_procedure_tab variable, and bring the appropriate tab forward in both the attached and detached panes.</p>
+<p>For example, in BioTensor, the $proc_tab1 and $proc_tab2 point to
+the tabnotebook for processing steps.  The c_procedure_tab variable indicates which tab is currently visible.  When the user clicks the &quot;Registration&quot; tab, a method is called to change the indicator labels, set the $c_procedure_tab variable, and bring the appropriate tab forward in both the attached and detached panes.</p>
 <pre>
   change_indicator_labels "Registration..."
 
@@ -153,9 +160,9 @@
   $proc_tab2 view "Registration"
 </pre>
 
-<p>When loading a session, these variables will be saved and you can easily restore the state of the PowerApp.</p>
+<p>When loading a session, these variables are saved, and the state of the PowerApp can easily be restored.</p>
 
-<p>It is also useful to have variables to indicate if each processing step has been completed.  This helps when enabling the next step. </p>
+<p>It is useful to have variables that indicate if each processing step has been completed.  This helps when enabling the next step: </p>
 <pre>
   set data_completed 0
 </pre>
@@ -164,9 +171,10 @@
                 <h4>
                   <b>Summary</b>
                 </h4>
-<p>Chapter 4 gave suggestions for what to include in your child PowerApp class.  For a simple example, look at the BioFEM example </p>
+<p>Chapter 4  suggested  what to include in the child PowerApp class.  
+For a simple example, seee BioFEM: </p>
 <pre>   SCIRun/src/Packages/BioPSE/nets/PowerApps/BioFEM.app</pre> 
-<p>and for a more complicated example see BioTensor </p>
+<p>and for a complicated example, see BioTensor: </p>
 <pre>   SCIRun/src/Packages/Teem/nets/PowerApps/BioTensor.app</pre>
 
                 <div align="right">
