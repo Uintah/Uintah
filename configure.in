@@ -25,19 +25,31 @@ AC_SUBST(CFLAGS)
 AC_SUBST(SOFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LDRUN_PREFIX)
+AC_SUBST(BINARYFLAGS)
+
+AC_ARG_ENABLE(64bit,
+	[  --enable-64bit		Compile in 64 bit mode],
+	[lac_cv_64bit="$enableval"]
+	[lac_cv_64bit=${lac_cv_enterleave='no'}])
+
 
 case $host in
   *-irix*) echo -n "Checking for /opt/MIPSpro/bin/cc... "
            if test -f /opt/MIPSpro/bin/cc ; then
              echo "yes"
              echo "  Using MIPSpro compilers instead of gcc; they're better"
+	     if test "$lac_cv_64bit" = "yes" ; then
+               BINARYFLAGS="-64 -mips4"
+             else
+               BINARYFLAGS="-n32 -mips4"
+             fi
              CC=/opt/MIPSpro/bin/cc
              CXX=/opt/MIPSpro/bin/CC
-             AS=/opt/MIPSpro/bin/as
+             AS="/opt/MIPSpro/bin/as $BINARYFLAGS"
              LD=/opt/MIPSpro/bin/ld
-             CFLAGS="-fullwarn -xansi -LANG:ansi-for-init-scope=ON -n32 ${CFLAGS}"
-             SOFLAGS="-shared -n32 -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
-             LDFLAGS="-n32 -no_unresolved -J\$(MAKE_PARALLELISM)"
+             CFLAGS="-fullwarn -xansi -LANG:ansi-for-init-scope=ON ${CFLAGS} $BINARYFLAGS"
+             SOFLAGS="-shared $BINARYFLAGS -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
+             LDFLAGS="$BINARYFLAGS -no_unresolved -J\$(MAKE_PARALLELISM)"
              LDRUN_PREFIX="-Wl,-rpath -Wl,"
            else
              echo "no"
@@ -63,7 +75,11 @@ case $host in
            echo "#define SCI_ASSERTION_LEVEL_3" >> config.h
            echo "#define SCI_OPENGL" >> config.h
            echo "#define SCI_NORM_OGL" >> config.h
-           echo "#define SCI_IRIX_BIN_n32_mips4" >> config.h
+	   if test "$lac_cv_64bit" = "yes" ; then
+             echo "#define SCI_IRIX_BIN_n64_mips4" >> config.h
+	   else
+             echo "#define SCI_IRIX_BIN_n32_mips4" >> config.h
+	   fi	
 
            echo "#define TEMPLATE_TAG" >> config.h
            echo "#define TEMPLATE_BOX" >> config.h
@@ -286,6 +302,21 @@ AC_SUBST(ITCL_LIB_FLAG)
 
 ##-- Check for header files ---------------------------------------------------
 
+AC_ARG_ENABLE(enterleave,
+	[  --enable-enterleave		Make gmake print out entering/leaving statements],
+	[lac_cv_enterleave="$enableval"]
+	[lac_cv_enterleave=${lac_cv_enterleave='no'}])
+
+if test "$lac_cv_enterleave" = "yes" ; then
+	NOPRINTDIR=EMPTY
+else
+	NOPRINTDIR="--no-print-directory"
+fi
+AC_SUBST(NOPRINTDIR)
+
+
+##-- Check for header files ---------------------------------------------------
+
 AC_CHECK_HEADERS(limits.h)
 AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(unistd.h)
@@ -295,6 +326,7 @@ AC_CHECK_HEADERS(sys/time.h)
 
 AC_OUTPUT(Makefile \
             scripts/compile.mk \
+	    scripts/recurse.mk \
             scripts/targets.mk \
               SCICore/Makefile \
                 SCICore/Containers/Makefile \
