@@ -1,9 +1,11 @@
-#include "GLAttenuate.h"
+//#include "GLAttenuate.h"
 #include "GLVolumeRenderer.h"
 #include <GL/gl.h>
 
 namespace SCICore {
 namespace GeomSpace  {
+
+using namespace Kurt::Datatypes;
 
 GLTexRenState* GLAttenuate::_instance = 0;
 

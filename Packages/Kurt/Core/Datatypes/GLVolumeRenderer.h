@@ -6,7 +6,6 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/ColorMap.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <GL/gl.h>
@@ -35,10 +34,6 @@ namespace GeomSpace  {
 using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
 using namespace Kurt::Datatypes;
-using SCICore::Containers::LockingHandle;
-
-class GLVolumeRenderer;
-typedef LockingHandle<GLVolumeRenderer> GLVolumeRendererHandle;
 
 class GLVolumeRenderer : public GeomObj
 {
@@ -62,8 +57,8 @@ public:
   void SetNSlices(int s) { slices = s; }
   void SetSliceAlpha( double as){ slice_alpha = as;}
 
-  void SetVol( const GLTexture3D *tex ){ tex = tex; }
-  void SetColorMap( ColorMap* map){this->cmap = map->raw1d;
+  void SetVol( GLTexture3DHandle tex ){ this->tex = tex.get_rep(); }
+  void SetColorMap( ColorMapHandle map){this->cmap = map->raw1d;
                                    cmapHasChanged = true;}
   void SetControlPoint( const Point& point){ controlPoint = point; }
 
@@ -108,7 +103,7 @@ protected:
   int slices;
 private:
 
-  GLTexture3DHandle tex;
+  const GLTexture3D *tex;
   unsigned char* cmap;
   Point controlPoint;
   
@@ -119,6 +114,7 @@ private:
   
   GLVolRenState* _state;
   GLTexRenState* _gl_state;
+  static double swapMatrix[16];
   
 };
 }  // namespace GeomSpace
