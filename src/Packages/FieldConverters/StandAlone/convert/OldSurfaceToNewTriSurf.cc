@@ -31,7 +31,6 @@
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-#include <Core/Datatypes/FieldSet.h>
 #include <Core/Geometry/Vector.h>
 
 #include <iostream>

@@ -46,7 +46,6 @@ SRCS     += \
 	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
-	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/SampleField.cc\
 	$(SRCDIR)/SampleLattice.cc\
