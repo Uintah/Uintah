@@ -338,19 +338,13 @@ private:
   void scheduleParticleVelocityField(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
-  void scheduleCrackAdjustInterpolated(SchedulerP& sched,
+  void scheduleAdjustCrackContactInterpolated(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
-  void scheduleCrackAdjustIntegrated(SchedulerP& sched,    
+  void scheduleAdjustCrackContactIntegrated(SchedulerP& sched,    
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
-  void schedulePrepareMovingCrack(SchedulerP& sched,
-                                     const PatchSet* patches,
-                                     const MaterialSet* matls);
-  void scheduleMoveCrack(SchedulerP& sched,             
-                                     const PatchSet* patches,
-                                     const MaterialSet* matls);
-  void scheduleUpdateCrackExtentAndNormals(SchedulerP& sched,
+  void scheduleMoveCracks(SchedulerP& sched,             
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
   // -----------------------------------------------
