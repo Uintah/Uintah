@@ -515,7 +515,7 @@ DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
   // Go in reverse order since it doesn't override below and the last
   // one should take precedent.
   for(unsigned long i=localtasks.size(); i>0; --i){
-    DetailedTask* dtask = localtasks[i];
+    DetailedTask* dtask = localtasks[i-1];
     const Task* task = dtask->getTask();
     for(const Task::Dependency* comp = task->getComputes();
 	comp != 0; comp=comp->next){
