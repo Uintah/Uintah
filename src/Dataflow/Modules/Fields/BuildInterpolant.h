@@ -27,6 +27,8 @@
 
 namespace SCIRun {
 
+#define BIA_MAX_DISTANCE (1.0e6)
+
 class BuildInterpAlgo : public DynamicAlgoBase
 {
 public:
@@ -53,8 +55,6 @@ public:
 private:
   double find_closest(typename LSRC::index_type &index,
 		      MSRC *mesh, const Point &p);
-
-  static const double MAX_DIST = 1.0e6;
 };
 
 
@@ -65,7 +65,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::inde
 {
   typename LSRC::iterator itr = mesh->tbegin((typename LSRC::iterator *)0);
   typename LSRC::iterator eitr = mesh->tend((typename LSRC::iterator *)0);
-  double mindist = MAX_DIST;
+  double mindist = BIA_MAX_DISTANCE;
   while (itr != eitr)
   {
     Point c;
@@ -116,7 +116,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshBaseHandle src_meshH
     else
     {
       typename LSRC::index_type index;
-      if (find_closest(index, src_mesh, p) < MAX_DIST)
+      if (find_closest(index, src_mesh, p) < BIA_MAX_DISTANCE)
       {
 	v.push_back(pair<typename LSRC::index_type, double>(index, 1.0));
       }
