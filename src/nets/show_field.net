@@ -65,7 +65,7 @@ addConnection $m5 0 $m7 0
 set $m0-notes {}
 set $m0-show_status 1
 set $m0-pid 3032
-set $m0-filename $env(SCIRUN_DATA)/sphere537.tvd.fld}
+set $m0-filename $env(SCIRUN_DATA)/sphere537.tvd.fld
 set $m1-notes {}
 set $m1-show_status 1
 set $m1-pid -2147483647
