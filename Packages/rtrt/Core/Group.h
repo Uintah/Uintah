@@ -27,6 +27,7 @@ public:
 				       DepthStats* st, PerProcessorContext* ppc);
     void add(Object* obj);
     void prime(int n);
+    int numObjects() { return objs.size(); }
     virtual void animate(double t, bool& changed);
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
     virtual void compute_bounds(BBox&, double offset);
