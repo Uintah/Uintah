@@ -223,7 +223,7 @@ proc createSciDialog { args } {
   # Wait for a response
   wm maxsize .sci_dialog 600 2000
   wm deiconify .sci_dialog
-  raise .sci_dialog
+  #raise .sci_dialog
 
   grab .sci_dialog
 
