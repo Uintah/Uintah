@@ -13,7 +13,7 @@
 //milan was here
 
 #include <PSECommon/Modules/Salmon/OpenGL.h>
-
+#include <PSECommon/ThirdParty/mpeg_encode/mpege.h>
 #ifdef __sgi
 #include <ifl/iflFile.h>
 #endif
@@ -1705,95 +1705,86 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 
 void OpenGL::StartMpeg(const clString& fname)
 {
-#ifdef __sgi  
-#if (_MIPS_SZPTR == 64)
-  cerr<<"Mpeg Recording not supported in 64 bit mode\n";
-#else    
-  cerr<<"Starting Mpeg\n";
-  GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT,vp);
-  int n=3*vp[2]*vp[3];
-  float cropwidth = (vp[3] - (vp[2] * 240.0/352.0))/2.0;
-  float *frameRate = new float(23.976);
-  os.open( fname(), ios::out);
-  clOpenCompressor(CL_MPEG1_VIDEO_SOFTWARE, &compressorHdl);
-  clSetParam(compressorHdl, CL_IMAGE_WIDTH, vp[2]);
-  clSetParam(compressorHdl, CL_IMAGE_HEIGHT, vp[3]);
-  clSetParam(compressorHdl, CL_IMAGE_CROP_TOP, int(cropwidth));
-  clSetParam(compressorHdl, CL_IMAGE_CROP_BOTTOM, int(cropwidth));
-  clSetParam(compressorHdl, CL_INTERNAL_FORMAT, CL_FORMAT_YCbCr422DC);
-  clSetParam(compressorHdl, CL_FRAME_RATE, CL_TypeIsInt(*frameRate));
-  clSetParam(compressorHdl, CL_FORMAT, CL_FORMAT_BGR);
-  compressedBufferSize = clGetParam(compressorHdl,
-					CL_COMPRESSED_BUFFER_SIZE);
-  compressedBufferHdl = clCreateBuf(compressorHdl, CL_BUF_COMPRESSED,
-				  compressedBufferSize, 1, NULL);
-#endif
-#else
-  cerr<<"Mpeg Recording supported only on SGI platform\n";
-#endif
+
+  // let's get a file pointer pointing to the output file
+  output=fopen(fname(), "w");
+  if (!output){
+    cerr<<"Failed to open file "<< fname()<<" for writing\n";
+    return;
+  }
+  // get the default options
+  MPEGe_default_options( &options );
+  // then change a couple
+  strcpy(options.frame_pattern, "II");
+  // was ("IIIIIIIIIIIIIII");
+  options.search_range[1]=0;
+  if( !MPEGe_open(output, &options ) ){
+    cerr<<"MPEGe library initialisation failure!:"<<options.error<<endl;
+    return;
+  }
 }
 
 void OpenGL::AddMpegFrame()
 {
-#ifdef __sgi  
-#if (_MIPS_SZPTR == 64)
-  cerr<<"Mpeg Recording not supported in 64 bit mode\n";  
-#else
+  static ImVfb *image=NULL; /* we only wnat to alloc memory for these once */
+  int width, height;
+  ImVfbPtr ptr;
+
   cerr<<"Adding Mpeg Frame\n";
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
-  int n=3*vp[2]*vp[3];
-  unsigned char* pxl=scinew unsigned char[n];
+
+  width = vp[2];
+  height = vp[3];
+
+  // int n=3*width*height;
+
+  //  memcpy( ptr, pxl, n*sizeof(unsigned char));
+
+  // set up the ImVfb used to store the image 
+  if( !image ){
+    image=MPEGe_ImVfbAlloc( width,height, IMVFBRGB, TRUE );
+    if( !image ){
+      cerr<<"Couldn't allocate memory for frame buffer\n";
+      exit(2);
+    }
+  }
+
+  // get to the first pixel in the image
+  ptr=ImVfbQPtr( image,0,0 );
   glPixelStorei(GL_PACK_ALIGNMENT,1);
   glReadBuffer(GL_FRONT);
-  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
-  int wrap, size;
-  void *buf;
-  clCompress(compressorHdl, 1, pxl,
-	     &compressedBufferSize,
- 	     NULL);
-  while ((size=clQueryValid(compressedBufferHdl, 0, &buf, &wrap)) > 0) {
-    os.write((const char *)buf, size);
-    clUpdateTail(compressedBufferHdl, size);
+  glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
+
+  int r=3*width;
+  static unsigned char* row = 0;
+  if( !row )
+    row = scinew unsigned char[r];
+  unsigned char* p0, *p1;
+
+  int k, j;
+  for(k = height -1, j = 0; j < height/2; k--, j++){
+    p0 = ptr + r*j;
+    p1 = ptr + r*k;
+    memcpy( row, p0, r);
+    memcpy( p0, p1, r);
+    memcpy( p1, row, r);
   }
-#endif
-#else
-  cerr<<"Mpeg Recording supported only on SGI platform\n";
-#endif
+    
+  if( !MPEGe_image(image, &options) ){
+    cerr<<"Oh dear MPEGe_image failure:"<<options.error<<endl;
+  }
 }
 
 void OpenGL::EndMpeg()
 {
-#ifdef __sgi 
-#if (_MIPS_SZPTR == 64)
-  cerr<<"Mpeg Recording not supported in 64 bit mode\n";  
-#else
-  cerr<<"Ending Mpeg\n";
-  GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT,vp);
-  int n=3*vp[2]*vp[3];
-  unsigned char* pxl=scinew unsigned char[n];
-  glPixelStorei(GL_PACK_ALIGNMENT,1);
-  glReadBuffer(GL_FRONT);
-  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
-  int wrap, size;
-  void *buf;
-  clCompress(compressorHdl, 1, pxl,
-	     &compressedBufferSize,
- 	     NULL);
-  clSetParam(compressorHdl, CL_MPEG1_END_OF_STREAM, 1);
-  while ((size=clQueryValid(compressedBufferHdl, 0, &buf, &wrap)) > 0) {
-    os.write((const char*)buf, size);
-    clUpdateTail(compressedBufferHdl, size);
+  if( !MPEGe_close(&options) ){
+    cerr<<"Had a bit of difficulty closing the file:"<<options.error;
   }
-  clDestroyBuf( compressedBufferHdl );
-  clCloseCompressor(compressorHdl);
-  os.close();
-#endif
-#else
-  cerr<<"Mpeg Recording supported only on SGI platform\n";
-#endif
+  
+  fclose(output);
+  cerr<<"tah dah\n";
+  cerr<<"Ending Mpeg\n";
 }
 
 // return world-space depth to point under pixel (x, y)
@@ -1841,6 +1832,9 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.33  2001/01/17 20:15:54  kuzimmer
+// more mpeg_encode stuff
+//
 // Revision 1.32  2000/12/13 21:03:53  dmw
 // Clipping planes were not being normalized correctly (a sqrt was missing)
 //

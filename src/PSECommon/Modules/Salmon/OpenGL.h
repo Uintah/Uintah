@@ -60,6 +60,7 @@
 #include <X11/extensions/SGIStereo.h>
 #if (_MIPS_SZPTR == 64)
 #include "imagelib.h"
+#include <PSECommon/ThirdParty/mpeg_encode/mpege.h>
 #else
 #include "imagelib.h"
 #include <dmedia/cl.h>
@@ -146,6 +147,9 @@ protected:
   void EndMpeg();
 #ifdef __sgi
 #if (_MIPS_SZPTR == 64)
+  FILE *output;
+  MPEGe_options options;
+
 #else
   CLhandle compressorHdl;
   int compressedBufferSize;

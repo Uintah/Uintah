@@ -43,6 +43,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Widgets PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
+	PSECommon/ThirdParty/mpeg_encode \
 	SCICore/Persistent SCICore/Exceptions SCICore/Geometry \
 	SCICore/Geom SCICore/Thread SCICore/Containers \
 	SCICore/TclInterface SCICore/TkExtensions SCICore/Util \
@@ -55,7 +56,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2001/01/17 20:15:54  kuzimmer
+# more mpeg_encode stuff
+#
 # Revision 1.10  2000/10/24 05:57:37  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and

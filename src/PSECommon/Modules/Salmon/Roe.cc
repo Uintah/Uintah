@@ -387,8 +387,9 @@ void Roe::mouse_translate(int action, int x, int y, int, int, int)
 	}
 	break;
     case MouseEnd:
-	update_mode_string("");
-	break;
+      need_redraw = 1;  // for Kurt only
+      update_mode_string("");
+      break;
     }
 }
 
@@ -428,6 +429,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int, int)
 	}
 	break;
     case MouseEnd:
+      need_redraw = 1;
 	update_mode_string("");
 	break;
     }	
@@ -2090,6 +2092,9 @@ GeomGroup* Roe::createGenAxes() {
 } // End namespace PSECommon
 
 // $Log$
+// Revision 1.25  2001/01/17 20:15:54  kuzimmer
+// more mpeg_encode stuff
+//
 // Revision 1.24  2000/12/06 04:36:03  moulding
 // only include roe_objs that are visible in the get_bounds() test.  This prevents
 // the axes from forcing the autoview to use it's bounding box when not visible.
