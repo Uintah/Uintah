@@ -1,3 +1,0 @@
-void initscal(IntVector indexLow, IntVector indexHigh,
-     CCVariable<double> scalar, double sval);
-     
