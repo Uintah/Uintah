@@ -29,7 +29,7 @@ LOG
 ****************************************/
 
 #include <Modules/CFD/ParticleGridVisControl.h>
-#include <Datatypes/TecplotReader.h>
+#include <Modules/CFD/TecplotReader.h>
 #include <Datatypes/MEFluid.h>
 #include <Datatypes/ParticleSetExtension.h>
 #include <Classlib/NotFinished.h>
@@ -336,14 +336,14 @@ void ParticleGridVisControl::graph(clString idx, clString var)
   if( pgrh->GetNTimesteps() ){
     int varId = pgrh->getFluid( pFluid.get() -1)->
       getParticleSet()->find_scalar( var ); // psVar.get() );
-    pgrh->GetParticleData(atoi(idx()), varId, pFluid.get(), values);
+    pgrh->GetParticleData(atoi(idx()), varId, pFluid.get(), false, values);
     
     Array1<double> vs;
     for(i = 0; i < values.size(); i++)
       vs.add( values[i] );
     
     ostrstream ostr;
-    ostr << id << " graph " << idx+var << " ";
+    ostr << id << " graph " << idx+var<<" "<<var << " ";
     int j = 0;
     for( i = pgrh->GetStartTime(); i <= pgrh->GetEndTime();
 	 i += pgrh->GetIncrement())

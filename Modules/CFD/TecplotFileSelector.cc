@@ -1,5 +1,5 @@
 #include <Modules/CFD/TecplotFileSelector.h>
-#include <Datatypes/TecplotReader.h>
+#include <Modules/CFD/TecplotReader.h>
 #include <Classlib/NotFinished.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h> 

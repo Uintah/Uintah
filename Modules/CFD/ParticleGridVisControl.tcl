@@ -271,7 +271,7 @@ itcl_class ParticleGridVisControl {
 	}
     }
 
-    method graph { id  args } {
+    method graph { id var args } {
 	global $this-psVar
 	set w .graph$this$id
         if {[winfo exists $w]} { 
@@ -294,10 +294,10 @@ itcl_class ParticleGridVisControl {
 	    if { $max < $val } { set max $val }
 	    if { $min > $val } { set min $val }
 	}
-	if { ($max - $min) > 1000 } {
-	    $w.graph yaxis configure -logscale true -title [set $this-psVar]
+	if { ($max - $min) > 1000 || ($max - $min) < 1e-3 } {
+	    $w.graph yaxis configure -logscale true -title $var
 	} else {
-	    $w.graph yaxis configure -title [set $this-psVar]
+	    $w.graph yaxis configure -title $var
 	}
 
 	$w.graph xaxis configure -title "Timestep" \

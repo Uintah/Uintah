@@ -8,10 +8,12 @@ TEMPLATE_SRCS = templates.cc
 
 OBJS = Readtec.o  PartToGeom.o  cfdGridLines.o  GatherTimeSteps.o \
 	TecplotFileSelector.o ParticleGridVisControl.o \
+	TecplotReader.o \
 	$(TEMPLATE_OBJS)
 
 SRCS = Readtec.cc PartToGeom.cc cfdGridLines.cc GatherTimeSteps.cc \
 	TecplotFileSelector.cc ParticleGridVisControl.cc \
+	TecplotReader.cc \
 	$(TEMPLATE_SRCS)
 
 LIBNAME = CFD
