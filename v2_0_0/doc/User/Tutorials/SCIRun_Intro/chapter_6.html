@@ -70,7 +70,7 @@ of the tetrahedral finite element mesh.  The ManageFieldData module
 
 <H2><A name="section-1">ManageFieldData</A></H2>
 
-The ManageFieldData module performs two simultaneous operations.
+The ManageFieldData (SCIRun-&gt;FieldsData) module performs two simultaneous operations.
 First, the module splits the input Field into a mesh and data
 values. The data values pass through the output matrix
 port.  Second, the module combines the mesh with the matrix
@@ -108,8 +108,9 @@ ManageFieldData module between them. The net should look similar to
 <b>Figure 6.1</b>. Notice that in <B>figure 6.1</B>, the modules have
 a more horizontal layout then in <B>Figure 4.2</B>.)  Note that all
 modules that were connected to the left FieldReader module in the chapter 4
-net, are now connected to the ManageFieldData module.
-
+net, are now connected to the ManageFieldData module. Notice also that the 
+RescaleColorMap module is getting input from the DirectInterpolate module.
+ 
 <center>
 <p><img height="513" width="500" src="images/figures/6_1.gif"><br>
 <b>Figure 6.1, Chapter 6 network</b></p>
