@@ -56,9 +56,8 @@ public:
 
   virtual void execute();
 
-
   void matrix_to_transform(MatrixHandle mH, Transform& t);
-  template <class M> void callback(Field *ifield, M *);
+
 private:  
   Transform trans_;
 };
@@ -89,33 +88,6 @@ TransformField::matrix_to_transform(MatrixHandle mH, Transform& t)
     for (int j=0; j<4; j++)
       *p++=(*mH.get_rep())[i][j];
   t.set(a);
-}
-
-
-template <class M>
-void
-TransformField::callback(Field *ifield, M *)
-{
-  Field *ofield = ifield->clone();
-  ofield->mesh_detach();
-
-  M *mesh = (M *)(ofield->mesh().get_rep());
-  typename M::Node::size_type nsize;  mesh->size(nsize);
-  const unsigned int sz = nsize;
-  for (unsigned int i = 0; i < sz; i++)
-  {
-    Point p;
-    mesh->get_point(p, i);
-    mesh->set_point(trans_.project(p), i);
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-  if (!ofp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-  FieldHandle fh(ofield);
-  ofp->send(fh);
 }
 
 
