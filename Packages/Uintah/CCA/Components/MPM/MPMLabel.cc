@@ -374,6 +374,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(pIsIgnitedLabel_preReloc);
   VarLabel::destroy(pMassRateLabel_preReloc);
+  VarLabel::destroy(pCrackRadiusLabel_preReloc);
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gMomExedAccelerationLabel);
