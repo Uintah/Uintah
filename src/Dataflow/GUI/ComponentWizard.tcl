@@ -142,15 +142,22 @@ proc make_io_gui_pane {p d} {
 #    set guidescript $p.guidescript
 #    create_text_entry $guidescript "Description:" $d guidescript
     frame $p.cp
+
+    frame $p.cp.name
+    label $p.cp.name.label -text "Module Name: " -width 20 -anchor e
+    entry $p.cp.name.entry -textvar ${d}(title) -width 30
+
     frame $p.cp.pack
+    label $p.cp.pack.label -text "Package: " -width 20 -anchor e
+    entry $p.cp.pack.entry -textvar ${d}(package) -width 30
+
     frame $p.cp.cat
+    label $p.cp.cat.label -text "Category: " -width 20 -anchor e
+    entry $p.cp.cat.entry -textvar ${d}(category) -width 30
+
     frame $p.cp.path
-    label $p.cp.cat.categoryl -text "Category: " -width 20 -anchor e
-    entry $p.cp.cat.category -textvar ${d}(category) -width 30
-    label $p.cp.pack.packagel -text "Package: " -width 20 -anchor e
-    entry $p.cp.pack.package -textvar ${d}(package) -width 30
-    label $p.cp.path.pathl -text "Path to SCIRun: " -width 20 -anchor e
-    entry $p.cp.path.path -textvar ${d}(path) -width 30
+    label $p.cp.path.label -text "Path to SCIRun: " -width 20 -anchor e
+    entry $p.cp.path.entry -textvar ${d}(path) -width 30
 
     set uiinfo $p.uiinfo
     create_text_entry $uiinfo "GUI Info:" $d uiinfo
@@ -172,9 +179,11 @@ proc make_io_gui_pane {p d} {
         -padx $PADi 
     pack $p.cp -fill x -side bottom -anchor sw -padx $PADi -pady $PADi
     pack $p.cp.pack $p.cp.cat $p.cp.path -side top -pady $PADi
-    pack $p.cp.cat.categoryl $p.cp.cat.category -side left
-    pack $p.cp.pack.packagel $p.cp.pack.package -side left
-    pack $p.cp.path.pathl $p.cp.path.path -side left
+
+    pack $p.cp.name.label $p.cp.name.entry -side left
+    pack $p.cp.pack.label $p.cp.pack.entry -side left
+    pack $p.cp.cat.label $p.cp.cat.entry -side left
+    pack $p.cp.path.label $p.cp.path.entry -side left
     
 #    pack $guidescript -fill x -side bottom -anchor sw \
 #        -padx $PADi 
