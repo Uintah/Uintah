@@ -109,6 +109,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 	    } else {
 	       shared=true;
 	    }
+	 } else {
+	    shared=false;
 	 }
 	 char* p = tmpname+strlen(tmpname)-1;
 	 while(p>tmpname && *p != '/')
@@ -345,7 +347,11 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
    for(int i=0;i<ivars.size();i++){
       const VarLabel* var = ivars[i];
       string filename = d_dir.getName()+"/"+var->getName()+".dat";
+#ifdef __GNUG__
+      ofstream out(filename.c_str(), ios::app);
+#else
       ofstream out(filename.c_str(), ios_base::app);
+#endif
       out << setprecision(17) << time << "\t";
       new_dw->emit(out, var);
       out << "\n";
@@ -453,7 +459,11 @@ void DataArchiver::output(const ProcessorGroup*,
    if(s == -1)
       throw ErrnoException("DataArchiver::output (stat call)", errno);
    ASSERTEQ(cur, st.st_size);
+#ifdef __sgi
    off64_t ls = lseek64(fd, cur, SEEK_SET);
+#else
+   off_t ls = lseek(fd, cur, SEEK_SET);
+#endif
    if(ls == -1)
       throw ErrnoException("DataArchiver::output (lseek64 call)", errno);
 
@@ -592,10 +602,9 @@ static Dir makeVersionedDir(const std::string nameBase)
             dirCreated = true;
          else
             dir.remove();
-
       } catch (ErrnoException& e) {
          if (e.getErrno() != EEXIST)
-            throw e;
+            throw;
 
          dirMin = dirNum + 1;
       }
@@ -632,6 +641,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.19  2000/09/25 18:06:55  sparker
+// linux/g++ changes
+//
 // Revision 1.18  2000/09/08 17:00:10  witzel
 // Added functions for getting the last timestep directory, the current
 // timestep, and whether the last timestep was one in which data was
