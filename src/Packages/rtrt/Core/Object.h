@@ -68,9 +68,13 @@ public:
     virtual void collect_prims(Array1<Object*>& prims);
     virtual void print(ostream& out);
     virtual void transform(Transform&) {}
-    //added for Cutting Planes, so far only HVolumeBrick returns true and the value at
-    //an interior point.
-    virtual bool interior_value( double&, const Ray &, const double ) { return false; }; 
+
+  // This function should return TRUE when the point in question
+  // (ray.v * t + ray.t0) can be mapped to a value by the object.
+  // It returns FALSE otherwise.
+  virtual bool interior_value( double& /*value*/, const Ray &/*ray*/,
+			       const double /*t*/)
+  { return false; }; 
 };
 
 } // end namespace rtrt
