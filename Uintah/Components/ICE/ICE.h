@@ -7,7 +7,7 @@ namespace Uintah {
 class ProcessorContext;
 class Region;
 
-namespace ICE {
+namespace ICESpace {
 
 class ICE : public CFDInterface {
 public:

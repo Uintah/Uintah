@@ -68,7 +68,7 @@ using std::cerr;
 
 extern "C" void audit();
 
-using Uintah::ICE::ICE;
+using Uintah::ICESpace::ICE;
 
 ICE::ICE()
 {
