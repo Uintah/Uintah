@@ -487,6 +487,10 @@ void Dpy::get_input()
       case XK_a:
 	animate=!animate;
 	break;
+      case XK_plus:
+	break;
+      case XK_minus:
+	break;
       case XK_f:
 	FPS -= 1;
 	if (FPS <= 0.0) FPS = 1.0;
@@ -1136,8 +1140,10 @@ void Dpy::run()
       barrier->wait(nworkers+1);
       // dump the frame and quit for now
       if (counter == 0) {
-	scene->get_image(showing_scene)->save("displayless.raw");
-	cerr <<"Wrote frame to displayless.raw\n";
+	if (!display_frames) {
+	  scene->get_image(showing_scene)->save("displayless.raw");
+	  cerr <<"Wrote frame to displayless.raw\n";
+	}
       }
       counter--;
       // This is the last stat for the rendering scene (cyan)
