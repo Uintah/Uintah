@@ -4,7 +4,7 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <iostream>
-
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 
 /*
 ColorMaps are used by cutting planes to color the interiors of objects.
@@ -27,16 +27,21 @@ class ColorCell {
 };
 
 class ColorMap {
- public:
-  Array1<ColorCell*> ColorCells;
-  int size;
   char filename[80];
-  ColorMap();
-  ColorMap(char* filebase);
+  ScalarTransform1D<float, Color> slices;
+public:
+  Array1<ColorCell*> ColorCells;
+  ColorMap(const int num_bins = 256);
+  ColorMap(char* filebase, const int num_bins = 256);
+
   Color indexColorMap(float v);
+
+  // This should be called when ever you change ColorCells
+  void create_slices();
+  
+  inline int size() { return ColorCells.size(); }
   friend ostream& operator<<(ostream& out, const ColorMap& c);
   void save();
-  bool valid;
 };
 
 } // end namespace rtrt
