@@ -36,6 +36,7 @@ struct BState {
 class GeomPick : public GeomContainer {
     Module* module;
     void* cbdata;
+    int pick_index;
     Array1<Vector> directions;
     BaseWidget* widget;
     int widget_data;
@@ -66,9 +67,10 @@ public:
     void set_module_data(void*);
     void set_widget_data(int);
 
-    void pick(Roe* roe, const BState& bs, int n);
-    void moved(int axis, double distance, const Vector& delta, const BState& bs, int n);
-    void release(const BState& bs, int n);
+    void set_index(int);
+    void pick(Roe* roe, const BState& bs);
+    void moved(int axis, double distance, const Vector& delta, const BState& bs);
+    void release(const BState& bs);
 
     void ignore_until_release();
 

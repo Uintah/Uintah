@@ -1574,8 +1574,16 @@ void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
+  if(di->pickmode){
     for (int i=0; i<objs.size(); i++)
+      {
+	glLoadName((GLuint)i);
 	objs[i]->draw(di, matl, time);
+      }
+  }
+  else 
+    for (int i=0; i<objs.size(); i++)
+      objs[i]->draw(di, matl, time);
 }
 
 void GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -1911,8 +1919,10 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 	unsigned int o2=o&0xffffffff;
 	glPushName(o1);
 	glPushName(o2);
+	glPushName(-99);
 #else
 	glPushName((GLuint)this);
+	glPushName(-99);
 #endif
     }
     if(selected && highlight.get_rep()){
@@ -3981,38 +3991,49 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 
-void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) {
+void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) 
+{
   pre_draw(di, matl, 0);
-
+  static GLuint texName = 0;
   glClearColor(0.0, 0.0, 0.0, 0.0);
   //  glEnable(GL_DEPTH_TEST);
   //  glDepthFunc(GL_LEQUAL);
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glTexImage2D( GL_TEXTURE_2D, 0, 3, 64, 64, 0, GL_RGB, GL_UNSIGNED_BYTE,
-		texture );
+  if( !glIsTexture( texName ) )
+    {
+      glGenTextures(1, &texName);
+      glBindTexture(GL_TEXTURE_2D, texName);
+    }
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-  glEnable(GL_TEXTURE_2D);
-  glShadeModel(GL_FLAT);
+  glTexImage2D( GL_TEXTURE_2D, 0, 3, 64, 64, 0,
+		GL_RGB, GL_UNSIGNED_BYTE,texture );
 
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_LIGHTING);
-  // glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  glBegin( GL_QUADS );
-  glTexCoord2f(0.0, 0.0); glVertex3f( a.x(), a.y(), a.z() );
-  glTexCoord2f(0.0, 1.0); glVertex3f( b.x(), b.y(), b.z() );
-  glTexCoord2f(1.0, 1.0); glVertex3f( c.x(), c.y(), c.z() );
-  glTexCoord2f(1.0, 0.0); glVertex3f( d.x(), d.y(), d.z() );
-  glEnd();
-  glFlush();
+  if (GL_NO_ERROR == glGetError()){
+    glEnable(GL_TEXTURE_2D);
+    glShadeModel(GL_FLAT);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+    // glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glBegin( GL_QUADS );
+      glTexCoord2f(0.0, 0.0); glVertex3f( a.x(), a.y(), a.z() );
+      glTexCoord2f(1.0, 0.0); glVertex3f( b.x(), b.y(), b.z() );
+      glTexCoord2f(1.0, 1.0); glVertex3f( c.x(), c.y(), c.z() );
+      glTexCoord2f(0.0, 1.0); glVertex3f( d.x(), d.y(), d.z() );
+    glEnd();
+    glFlush();
   
-  glDisable(GL_TEXTURE_2D);
-  glEnable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
   //  glEnable(GL_CULL_FACE);
+  } else {
+    cerr<<"Some sort of texturing error\n";
+  }
 
 }
 
