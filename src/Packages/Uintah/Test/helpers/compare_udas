@@ -7,7 +7,7 @@ COMPARE_UDADIR=$4
 TMPDIR=$5
 
 echo "$SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR"
-$SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR > $TMPDIR/compare_uda.log 2>&1
+nice $SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR > $TMPDIR/compare_uda.log 2>&1
 retval=$?
 cat $TMPDIR/compare_uda.log
 
