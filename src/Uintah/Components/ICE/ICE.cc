@@ -326,9 +326,6 @@ void ICE::actuallyInitialize(const ProcessorContext*,
   new_dw->put(vel_CC,vel_CCLabel,0,patch);
 
 
-  cerr << "Patch limits " << patch->getCellLowIndex() << " " 
-       << patch->getCellHighIndex() << endl;
-
 }
 
 void ICE::scheduleComputeStableTimestep(const LevelP& level,
@@ -432,7 +429,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
   
   delt = detl_CFL;
 #endif
-  //toDW->put("delt", delt);
   
   cerr << "Del T is " << delt << endl;
   delt_vartype dt(delt);
@@ -448,10 +444,68 @@ void ICE::scheduleTimeAdvance(double /*t*/,
 			      DataWarehouseP& old_dw, 
 			      DataWarehouseP& new_dw)
 {
-#if 1
+
     for(Level::const_patchIterator iter=level->patchesBegin();
 	iter != level->patchesEnd(); iter++){
 	const Patch* patch=*iter;
+	
+	{
+	// Step 1
+
+	Task* t = scinew Task("ICE::step1", patch, old_dw, new_dw,
+			      this, &ICE::actuallyStep1);
+	t->requires(old_dw, vel_CCLabel, 0,patch, Ghost::None);
+//  	t->requires(old_dw, "params", ProblemSpec::getTypeDescription());
+	//	t->computes(new_dw, vel_CCLabel,0,patch);
+	t->usesMPI(false);
+	t->usesThreads(false);
+	//t->whatis the cost model?();
+	sched->addTask(t);
+	}
+
+	{
+	// Step 2
+
+	Task* t = scinew Task("ICE::step2", patch, old_dw, new_dw,
+			      this, &ICE::actuallyStep2);
+	t->requires(old_dw, vel_CCLabel, 0,patch, Ghost::None);
+//  	t->requires(old_dw, "params", ProblemSpec::getTypeDescription());
+	//	t->computes(new_dw, vel_CCLabel,0,patch);
+	t->usesMPI(false);
+	t->usesThreads(false);
+	//t->whatis the cost model?();
+	sched->addTask(t);
+	}
+
+	{
+	// Step 3
+
+	Task* t = scinew Task("ICE::step3", patch, old_dw, new_dw,
+			      this, &ICE::actuallyStep3);
+	t->requires(old_dw, vel_CCLabel, 0,patch, Ghost::None);
+//  	t->requires(old_dw, "params", ProblemSpec::getTypeDescription());
+	//	t->computes(new_dw, vel_CCLabel,0,patch);
+	t->usesMPI(false);
+	t->usesThreads(false);
+	//t->whatis the cost model?();
+	sched->addTask(t);
+	}
+
+	{
+	// Step 4
+
+	Task* t = scinew Task("ICE::step4", patch, old_dw, new_dw,
+			      this, &ICE::actuallyStep4);
+	t->requires(old_dw, vel_CCLabel, 0,patch, Ghost::None);
+//  	t->requires(old_dw, "params", ProblemSpec::getTypeDescription());
+	//	t->computes(new_dw, vel_CCLabel,0,patch);
+	t->usesMPI(false);
+	t->usesThreads(false);
+	//t->whatis the cost model?();
+	sched->addTask(t);
+	}
+
+	{
 	Task* t = scinew Task("ICE::timeStep", patch, old_dw, new_dw,
 			      this, &ICE::actuallyTimeStep);
 	t->requires(old_dw, vel_CCLabel, 0,patch, Ghost::None);
@@ -461,13 +515,79 @@ void ICE::scheduleTimeAdvance(double /*t*/,
 	t->usesThreads(false);
 	//t->whatis the cost model?();
 	sched->addTask(t);
+	}
     }
 
     this->cheat_t=t;
     this->cheat_delt=delt;
 
-#endif
+
 }
+
+void ICE::actuallyStep1(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+
+  cerr << "Actually doing step 1" << endl;
+}
+
+void ICE::actuallyStep2(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+
+  cerr << "Actually doing step 2" << endl;
+}
+
+void ICE::actuallyStep3(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+
+  cerr << "Actually doing step 3" << endl;
+}
+
+void ICE::actuallyStep4(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+
+  cerr << "Actually doing step 4" << endl;
+}
+
+void ICE::actuallyStep5(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+
+  cerr << "Actually doing step 5" << endl;
+}
+
+void ICE::actuallyStep6(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+
+  cerr << "Actually doing step 6" << endl;
+}
+
+void ICE::actuallyStep7(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+
+  cerr << "Actually doing step 7" << endl;
+}
+
+
 
 void ICE::actuallyTimeStep(const ProcessorContext*,
 			   const Patch* patch,

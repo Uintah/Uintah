@@ -51,6 +51,42 @@ public:
 			 DataWarehouseP&,
 			 DataWarehouseP&);
 
+   void actuallyStep1(const ProcessorContext*,
+			 const Patch* patch,
+			 DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep2(const ProcessorContext*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep3(const ProcessorContext*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep4(const ProcessorContext*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep5(const ProcessorContext*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+ void actuallyStep6(const ProcessorContext*,
+		    const Patch* patch,
+		    DataWarehouseP&,
+		    DataWarehouseP&);
+
+ void actuallyStep7(const ProcessorContext*,
+		    const Patch* patch,
+		    DataWarehouseP&,
+		    DataWarehouseP&);
+
+
    void convertNR_4dToUCF(const Patch*, CCVariable<Vector>& vel_ucf, 
 			  double ****uvel_CC,
 			  double ****vvel_CC,
