@@ -101,8 +101,8 @@ c-----calculate residual------------------------------------------------
      &              at(i,j,k)*phi(i,j,k+1)+
      &              ab(i,j,k)*phi(i,j,k-1))
                res(i,j,k) = su(i,j,k) - res(i,j,k)
-               trunc = amax1(abs(ap(i,j,k)*phi(i,j,k)),
-     $                           abs(su(i,j,k)))
+               trunc = dmax1(dabs(ap(i,j,k)*phi(i,j,k)),
+     $                           dabs(su(i,j,k)))
                truncphi = truncphi + trunc
                
 
@@ -120,6 +120,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/28 22:16:47  bigler
+c Changed certain functions to explicity be double precision functions.
+c
 c Revision 1.3  2000/08/11 21:26:41  rawat
 c added linear solver for pressure eqn
 c
