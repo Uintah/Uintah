@@ -259,10 +259,11 @@ Gui::idleFunc()
   static vector<PPMImage *> images;
 
   if( !inited ) {
-    images.push_back( new PPMImage( "hogum.box.small.ppm", true ) );
-    images.push_back( new PPMImage( "NURBS.scene.4.smaller.ppm", true ) );
-    images.push_back( new PPMImage( "box.scratches.few.ppm", true ) );
-    images.push_back( new PPMImage( "david_brow_blue_noS_A.ppm", true ) );
+    string path = "/usr/sci/data/Geometry/interface/photos/";
+    images.push_back( new PPMImage( path+"hogum.box.small.ppm", true ) );
+    images.push_back( new PPMImage( path+"NURBS.scene.4.smaller.ppm", true ) );
+    images.push_back( new PPMImage( path+"box.scratches.few.ppm", true ) );
+    images.push_back( new PPMImage( path+"david_brow_blue_noS_A.ppm", true ) );
     images.push_back( ppm1 );
     inited = true;
   }
