@@ -60,34 +60,52 @@ NrrdInfo::~NrrdInfo(){
 void
 NrrdInfo::clear_vals() 
 {
+  gui->execute(id + " delete_tabs");
+#if 0
   gui->execute(string("set ") + id + "-type \"---\"");
-  gui->execute(string("set ") + id + "-dimension \"---\"");
-  gui->execute(string("set ") + id + "-size1 \"---\"");
-  gui->execute(string("set ") + id + "-size2 \"---\"");
-  gui->execute(string("set ") + id + "-size3 \"---\"");
-  gui->execute(string("set ") + id + "-center1 \"---\"");	
-  gui->execute(string("set ") + id + "-center2 \"---\"");	
-  gui->execute(string("set ") + id + "-center3 \"---\"");	
+  gui->execute(string("set ") + id + "-dimension 0");
   gui->execute(string("set ") + id + "-label0 \"---\"");
-  gui->execute(string("set ") + id + "-label1 \"---\"");	
-  gui->execute(string("set ") + id + "-label2 \"---\"");	
-  gui->execute(string("set ") + id + "-label3 \"---\"");	
-  gui->execute(string("set ") + id + "-spacing1 \"---\"");	
-  gui->execute(string("set ") + id + "-spacing2 \"---\"");	
-  gui->execute(string("set ") + id + "-spacing3 \"---\"");
-  gui->execute(string("set ") + id + "-min1 \"---\"");	
-  gui->execute(string("set ") + id + "-min2 \"---\"");	
-  gui->execute(string("set ") + id + "-min3 \"---\"");
-  gui->execute(string("set ") + id + "-max1 \"---\"");	
-  gui->execute(string("set ") + id + "-max2 \"---\"");	
-  gui->execute(string("set ") + id + "-max3 \"---\"");
+
+  for (int i = 1; i < nh->nrrd->dim; i++) {
+    ostringstream str;
+    
+    str << "set " << id.c_str() << "-size" << i 
+	<< " \"---\"";    
+    gui->execute(str.str());
+    str.clear();
+
+    str << "set " << id.c_str() << "-center" << i 
+	<< " \"---\"";    
+    gui->execute(str.str());
+    str.clear();
+
+    str << "set " << id.c_str() << "-label" << i 
+	<< " \"---\"";    
+    gui->execute(str.str());
+    str.clear();
+
+    str << "set " << id.c_str() << "-spacing" << i 
+	<< " \"---\"";    
+    gui->execute(str.str());
+    str.clear();
+
+    str << "set " << id.c_str() << "-min" << i 
+	<< " \"---\"";    
+    gui->execute(str.str());
+    str.clear();
+
+    str << "set " << id.c_str() << "-max" << i 
+	<< " \"---\"";    
+    gui->execute(str.str());
+  }
+#endif
+
 }
 
 
 void
 NrrdInfo::update_input_attributes(NrrdDataHandle nh) 
 {
-
   switch (nh->nrrd->type) {
   case nrrdTypeChar :  
     gui->execute(string("set ") + id + "-type \"char\"");
@@ -127,82 +145,47 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 	       string(nh->nrrd->axis[0].label));
 
   gui->execute(id + " fill_tuple_tab");
-  //Axis 1
-  if (nh->nrrd->dim > 1) {
-    gui->execute(string("set ") + id + "-size1 " + 
-		 to_string(nh->nrrd->axis[1].size));
+
+  for (int i = 1; i < nh->nrrd->dim; i++) {
+    ostringstream sz, cntr, lab, spac, min, max;
+    
+    sz << "set " << id.c_str() << "-size" << i 
+	<< " " << nh->nrrd->axis[1].size;
+    
+    gui->execute(sz.str());
+
+    cntr << "set " << id.c_str() << "-center" << i << " ";
 
     switch (nh->nrrd->axis[1].center) {
     case nrrdCenterUnknown :
-      gui->execute(string("set ") + id + "-center1 Unknown");
+      cntr << "Unknown";
       break;
     case nrrdCenterNode :
-      gui->execute(string("set ") + id + "-center1 Node");
+      cntr << "Node";
       break;
     case nrrdCenterCell :
-      gui->execute(string("set ") + id + "-center1 Cell");
+      cntr << "Cell";
       break;
     }
-    gui->execute(string("set ") + id + "-label1 " + 
-		 string(nh->nrrd->axis[1].label));
-    gui->execute(string("set ") + id + "-spacing1 " +
-		 to_string(nh->nrrd->axis[1].spacing));	
-    gui->execute(string("set ") + id + "-min1 " +
-		 to_string(nh->nrrd->axis[1].min));	
-    gui->execute(string("set ") + id + "-max1 " +
-		 to_string(nh->nrrd->axis[1].max));
-  }
-  //Axis 2
-  if (nh->nrrd->dim > 2) {
-    gui->execute(string("set ") + id + "-size2 " + 
-		 to_string(nh->nrrd->axis[2].size));
+    gui->execute(cntr.str());
 
-    switch (nh->nrrd->axis[2].center) {
-    case nrrdCenterUnknown :
-      gui->execute(string("set ") + id + "-center2 Unknown");
-      break;
-    case nrrdCenterNode :
-      gui->execute(string("set ") + id + "-center2 Node");
-      break;
-    case nrrdCenterCell :
-      gui->execute(string("set ") + id + "-center2 Cell");
-      break;
-    }
-    gui->execute(string("set ") + id + "-label2 " + 
-		 string(nh->nrrd->axis[2].label));
-    gui->execute(string("set ") + id + "-spacing2 " +
-		 to_string(nh->nrrd->axis[2].spacing));	
-    gui->execute(string("set ") + id + "-min2 " +
-		 to_string(nh->nrrd->axis[2].min));	
-    gui->execute(string("set ") + id + "-max2 " +
-		 to_string(nh->nrrd->axis[2].max));
-  }
-  //Axis 3
-  if (nh->nrrd->dim > 3) {
-    gui->execute(string("set ") + id + "-size3 " + 
-		 to_string(nh->nrrd->axis[3].size));
+    lab << "set " << id.c_str() << "-label" << i 
+	<< " " << nh->nrrd->axis[i].label;
+    gui->execute(lab.str());
 
-    switch (nh->nrrd->axis[3].center) {
-    case nrrdCenterUnknown :
-      gui->execute(string("set ") + id + "-center3 Unknown");
-      break;
-    case nrrdCenterNode :
-      gui->execute(string("set ") + id + "-center3 Node");
-      break;
-    case nrrdCenterCell :
-      gui->execute(string("set ") + id + "-center3 Cell");
-      break;
-    }
-    gui->execute(string("set ") + id + "-label3 " + 
-		 string(nh->nrrd->axis[3].label));
-    gui->execute(string("set ") + id + "-spacing3 " +
-		 to_string(nh->nrrd->axis[3].spacing));	
-    gui->execute(string("set ") + id + "-min3 " +
-		 to_string(nh->nrrd->axis[3].min));	
-    gui->execute(string("set ") + id + "-max3 " +
-		 to_string(nh->nrrd->axis[3].max));	
-  }
+    spac << "set " << id.c_str() << "-spacing" << i 
+	 << " " << nh->nrrd->axis[i].spacing;
+    gui->execute(spac.str());
 
+    min << "set " << id.c_str() << "-min" << i 
+	<< " " << nh->nrrd->axis[i].min;
+    gui->execute(min.str());
+
+    max << "set " << id.c_str() << "-max" << i 
+	<< " " << nh->nrrd->axis[i].max;
+    gui->execute(max.str());
+  }
+  gui->execute(id + " add_tabs");
 }
 
 

@@ -27,64 +27,17 @@ itcl_class Teem_NrrdData_NrrdInfo {
     method set_defaults {} {
 	# the width of the first column of the data display
 	global $this-firstwidth
-	set $this-firstwidth 12
-
-	# for entire nrrd
 	global $this-type
 	global $this-dimension
-
-        # for each axis
-	global $this-size1	
-	global $this-size2	
-	global $this-size3	
-
-	global $this-center1	
-	global $this-center2	
-	global $this-center3	
-
-	global $this-label0
-	global $this-label1	
-	global $this-label2	
-	global $this-label3	
-
-	global $this-spacing1	
-	global $this-spacing2	
-	global $this-spacing3
-
-	global $this-min1	
-	global $this-min2	
-	global $this-min3
-
-	global $this-max1	
-	global $this-max2	
-	global $this-max3	
-
 	global $this-active_tab
+	global $this-label0
 
-	set $this-active_tab "Tuple Axis"
 	# these won't be saved 
+	set $this-firstwidth 12
 	set $this-type "---"
-	set $this-dimension "---"
-	set $this-size1	 "---"
-	set $this-size2	 "---"
-	set $this-size3	 "---"
-	set $this-center1 "---"	
-	set $this-center2 "---"	
-	set $this-center3 "---"	
+	set $this-dimension 0
+	set $this-active_tab "Tuple Axis"
 	set $this-label0 "---"
-	set $this-label1 "---"	
-	set $this-label2 "---"	
-	set $this-label3 "---"	
-	set $this-spacing1 "---"	
-	set $this-spacing2 "---"	
-	set $this-spacing3 "---"
-	set $this-min1 "---"	
-	set $this-min2 "---"	
-	set $this-min3 "---"
-	set $this-max1 "---"	
-	set $this-max2 "---"	
-	set $this-max3 "---"
-
     }
 
     method set_active_tab {act} {
@@ -130,6 +83,41 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	}
     }
 
+    method delete_tabs {} {
+	set w .ui[modname]
+        if {[winfo exists $w.att]} {
+	    set af [$w.att childsite]
+	    set l [$af.tabs childsite]
+	    if { [llength $l] > 1 } { 
+		$af.tabs delete 1 end
+	    }
+	    set_active_tab "Tuple Axis"
+	    $af.tabs view [set $this-active_tab]
+	}
+    }
+
+    method add_tabs {} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+	    set af [$w.att childsite]
+
+	    for {set i 1} {$i < [set $this-dimension]} {incr i} {
+		set t [$af.tabs add -label "Axis $i" \
+			     -command "$this set_active_tab \"Axis $i\""]
+		
+		labelpair $t.l "Label" $this-label$i
+		labelpair $t.c "Center" $this-center$i
+		labelpair $t.sz "Size" $this-size$i
+		labelpair $t.sp "Spacing" $this-spacing$i
+		labelpair $t.mn "Min" $this-min$i
+		labelpair $t.mx "Max" $this-max$i
+		
+		pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
+		pack $t -side top -fill both -expand 1
+	    }
+	}
+    }
+
     method add_tuple_tab {af} {
 
 	set tuple [$af.tabs add -label "Tuple Axis" \
@@ -142,54 +130,6 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	pack $tuple.listbox -side top -fill both -expand 1
     }
 
-    method add_axis1_tab {af} {
-
-	set a1 [$af.tabs add -label "Axis 1" \
-		       -command "$this set_active_tab \"Axis 1\""]
-
-	labelpair $a1.l "Label" $this-label1
-	labelpair $a1.c "Center" $this-center1
-	labelpair $a1.sz "Size" $this-size1
-	labelpair $a1.sp "Spacing" $this-spacing1
-	labelpair $a1.mn "Min" $this-min1
-	labelpair $a1.mx "Max" $this-max1
-
-	pack $a1.l $a1.c $a1.sz  $a1.sp $a1.mn $a1.mx  -side top
-	pack $a1 -side top -fill both -expand 1
-    }
-
-    method add_axis2_tab {af} {
-
-	set a2 [$af.tabs add -label "Axis 2" \
-		       -command "$this set_active_tab \"Axis 2\""]
-
-	labelpair $a2.l "Label" $this-label2
-	labelpair $a2.c "Center" $this-center2
-	labelpair $a2.sz "Size" $this-size2
-	labelpair $a2.sp "Spacing" $this-spacing2
-	labelpair $a2.mn "Min" $this-min2
-	labelpair $a2.mx "Max" $this-max2
-
-	pack $a2.l $a2.c $a2.sz  $a2.sp $a2.mn $a2.mx  -side top
-	pack $a2 -side top -fill both -expand 1
-    }
-
-    method add_axis3_tab {af} {
-
-	set a3 [$af.tabs add -label "Axis 3" \
-		       -command "$this set_active_tab \"Axis 3\""]
-
-	labelpair $a3.l "Label" $this-label3
-	labelpair $a3.c "Center" $this-center3
-	labelpair $a3.sz "Size" $this-size3
-	labelpair $a3.sp "Spacing" $this-spacing3
-	labelpair $a3.mn "Min" $this-min3
-	labelpair $a3.mx "Max" $this-max3
-
-	pack $a3.l $a3.c $a3.sz  $a3.sp $a3.mn $a3.mx  -side top
-	pack $a3 -side top -fill both -expand 1
-    }
-
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -198,8 +138,9 @@ itcl_class Teem_NrrdData_NrrdInfo {
         }
         toplevel $w
 
+	# notebook for the axis specific info.
 	iwidgets::labeledframe $w.att -labelpos nw \
-		               -labeltext "Nrrd Attributes" 
+	    -labeltext "Nrrd Attributes" 
 			       
 	pack $w.att 
 	set att [$w.att childsite]
@@ -212,9 +153,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	    -raiseselect true 
 
 	add_tuple_tab $att
-	add_axis1_tab $att
-	add_axis2_tab $att
-	add_axis3_tab $att
+	add_tabs
 
 	# view the active tab
 	$att.tabs view [set $this-active_tab]	
