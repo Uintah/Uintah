@@ -42,12 +42,12 @@ Reference::Reference()
 Reference::Reference(const Reference& copy)
   :d_vtable_base(copy.d_vtable_base) 
 {
-		chan = (copy.chan)->SPFactory(false);
+  chan = (copy.chan)->SPFactory(false);
 }
 
 Reference::~Reference(){
-      		if (chan != NULL) {
-		    	delete chan;
+  if (chan != NULL) {
+    delete chan;
     chan = NULL;
   }
 }
@@ -55,7 +55,7 @@ Reference::~Reference(){
 Reference& Reference::operator=(const Reference& copy)
 {
   d_vtable_base=copy.d_vtable_base;
-	if(chan!=NULL) delete chan;  //k.z
+  if(chan!=NULL) delete chan;  //k.z
   chan = (copy.chan)->SPFactory(false);
   return *this;
 }
