@@ -56,23 +56,23 @@ itcl_class DaveW_FEM_ErrorMetric {
         frame $w.rms -relief groove -borderwidth 2
         blt::graph $w.rms.g -height 200 \
                 -plotbackground #CCCCFF
-        $w.rms.g element create RMS -data "1 0" -foreground black
+        $w.rms.g element create RMS -data "1 0" -color black -symbol ""
         $w.rms.g yaxis configure -title "RMS Error" -logscale true
 	global NITERS
         $w.rms.g xaxis configure -title "Iteration" -min 1 -max $NITERS
         pack $w.rms.g -side top -fill x
         frame $w.cc -relief groove -borderwidth 2
-        blt_graph $w.cc.g -height 200 \
+        blt::graph $w.cc.g -height 200 \
                 -plotbackground #FFCCCC
-        $w.cc.g element create 1-CC -data "1 0" -foreground black
+        $w.cc.g element create 1-CC -data "1 0" -color black -symbol ""
         $w.cc.g yaxis configure -title "1 - Correlation Coeff" -logscale true
         $w.cc.g xaxis configure -title "Iteration" -min 1 -max $NITERS
         pack $w.cc.g -side top -fill x
         frame $w.data -relief groove -borderwidth 2
-        blt_graph $w.data.g -height 200 \
+        blt::graph $w.data.g -height 200 \
                 -plotbackground #CCFFCC
-        $w.data.g element create A -data "1 0" -foreground red
-        $w.data.g element create B -data "1 0" -foreground blue
+        $w.data.g element create A -data "1 0" -color red -symbol ""
+        $w.data.g element create B -data "1 0" -color blue -symbol ""
         $w.data.g yaxis configure -title "Value" -min 0
         $w.data.g xaxis configure -title "Element" -min 1
         pack $w.data.g -side top -fill x
