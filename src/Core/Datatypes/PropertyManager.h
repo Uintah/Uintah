@@ -67,7 +67,7 @@ class PropertyManager;
 template<class T>
 class Property : public PropertyBase {
 public:
-  friend PropertyManager;
+  friend class PropertyManager;
 
   Property(const T &o, bool trans) :  PropertyBase(trans), obj_(o) {}
   //Property(const Property &p) :  PropertyBase(p), obj_(p.obj_) {}
