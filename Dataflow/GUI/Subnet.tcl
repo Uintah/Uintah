@@ -861,6 +861,12 @@ proc counting_set { args } {
     return [uplevel 1 real_set $args]
 }
 
+proc counting_instanceSubnet { args } {
+    global scriptCount
+    incr scriptCount(Total)
+    return doNothing
+}
+
 
 proc loading_addModuleAtPosition { args } {
     global PowerApp
@@ -895,12 +901,18 @@ proc loading_set { args } {
     return [uplevel 1 real_set $args]
 }
 
+proc loading_instanceSubnet { args } {
+    incrProgress
+    return [uplevel 1 instanceSubnet $args]
+}
+
 
 
 proc renameNetworkCommands { prefix } {
     lappend commands set
     lappend commands addModuleAtPosition
     lappend commands addConnection
+    lappend commands instanceSubnet
 
     foreach command $commands {
 	set exists [expr [llength [info commands ${prefix}${command}]] == 1]
