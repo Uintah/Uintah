@@ -81,18 +81,20 @@ public:
 
   typedef Edge Elem;
 
-  ScanlineMesh() : offset_(0), length_(0) {}
-  ScanlineMesh(unsigned int length, const Point &min, const Point &max);
-  ScanlineMesh(ScanlineMesh* mh, unsigned int offset, unsigned int length)
-    : offset_(offset), length_(length), transform_(mh->transform_) {}
+  ScanlineMesh() : offset_(0), nx_(0) {}
+  ScanlineMesh(unsigned int nx, const Point &min, const Point &max);
+  ScanlineMesh(ScanlineMesh* mh, unsigned int offset, unsigned int nx)
+    : offset_(offset), nx_(nx), transform_(mh->transform_) {}
   ScanlineMesh(const ScanlineMesh &copy)
-    : offset_(copy.offset_), length_(copy.get_length()),
+    : offset_(copy.offset_), nx_(copy.get_nx()),
       transform_(copy.transform_) {}
   virtual ScanlineMesh *clone() { return new ScanlineMesh(*this); }
   virtual ~ScanlineMesh() {}
 
   //! get the mesh statistics
-  unsigned get_length() const { return length_; }
+  unsigned get_nx() const { return nx_; }
+  unsigned get_ny() const { return 1; }
+  unsigned get_nz() const { return 1; }
   //Point get_min() const { return min_; }
   //Point get_max() const { return max_; }
   Vector diagonal() const;
@@ -116,7 +118,7 @@ public:
 
   //! set the mesh statistics
   //void set_offset(unsigned int x) { offset_ = x; }
-  //void set_length(unsigned int x) { length_ = x; }
+  //void set_nx(unsigned int x) { nx_ = x; }
   //void set_min(Point p) { min_ = p; }
   //void set_max(Point p) { max_ = p; }
 
@@ -181,7 +183,7 @@ protected:
 
   //! the Node::index_type space extents of a ScanlineMesh
   //! (min=min_Node::index_type, max=min+extents-1)
-  unsigned int length_;
+  unsigned int nx_;
 
   //! the object space extents of a ScanlineMesh
   Transform transform_;
