@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/BurnFactory.h>
 
 
 #define SMALL_NUM 1.0e-100
@@ -35,6 +36,9 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
    d_eos = EquationOfStateFactory::create(ps);
    if(!d_eos)
       throw ParameterNotFound("No EOS");
+   
+   d_burn = BurnFactory::create(ps);
+
 
    // Step 2 -- get the general material properties
    ps->require("thermal_conductivity",d_thermalConductivity);
@@ -73,6 +77,7 @@ ICEMaterial::~ICEMaterial()
   // Destructor
 
   delete d_eos;
+  delete d_burn;
   delete lb;
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
 	delete d_geom_objs[i];
@@ -85,6 +90,14 @@ EquationOfState * ICEMaterial::getEOS() const
   // with this material
 
   return d_eos;
+}
+
+Burn* ICEMaterial::getBurnModel()
+{
+  // Return the pointer to the burn model associated
+  // with this material
+
+  return d_burn;
 }
 
 double ICEMaterial::getThermalConductivity() const
