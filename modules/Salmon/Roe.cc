@@ -461,20 +461,7 @@ void Roe::orthoCB(CallbackData*, void*) {
     glLoadIdentity();
     glOrtho(-8, 8, -6, 6, -100, 100);
     // determine the bounding box so we can scale the view
-    if (!bb.valid()) {
-	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, GeomObj*>* serHash=iter.get_data();
-	    HashTableIter<int, GeomObj*> serIter(serHash);
-	    for (serIter.first(); serIter.ok(); ++serIter) {
-		GeomObj *geom=serIter.get_data();
-		for (int i=0; i<geomItemA.size(); i++)
-		    if (geomItemA[i]->geom == geom)
-			if (geomItemA[i]->vis)
-			    bb.extend(geom->bbox());
-	    }
-	}
-    }			
+    get_bounds(bb);
     if (bb.valid()) {
 	Point cen(bb.center());
 	double cx=cen.x();
@@ -519,20 +506,7 @@ void Roe::initCB(CallbackData*, void*) {
 
     // opted for orthographic as the default
     glOrtho(-8, 8, -6, 6, -100, 100);
-    if (!bb.valid()) {
-	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, GeomObj*>* serHash=iter.get_data();
-	    HashTableIter<int, GeomObj*> serIter(serHash);
-	    for (serIter.first(); serIter.ok(); ++serIter) {
-		GeomObj *geom=serIter.get_data();
-		for (int i=0; i<geomItemA.size(); i++)
-		    if (geomItemA[i]->geom == geom)
-			if (geomItemA[i]->vis)
-			    bb.extend(geom->bbox());
-	    }
-	}
-    }			
+    get_bounds(bb);
     if (bb.valid()) {
 	Point cen(bb.center());
 	double cx=cen.x();
@@ -880,7 +854,7 @@ void Roe::get_bounds(BBox& bbox)
 	    for (int i=0; i<geomItemA.size(); i++)
 		if (geomItemA[i]->geom == geom)
 		    if (geomItemA[i]->vis) {
-			bbox.extend(geom->bbox());
+			geom->get_bounds(bbox);
 		    }
 	}		
     }	
