@@ -701,8 +701,8 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
          throw ProblemSetupException((*it).labelName +
 				     " variable label not found to save.");
       
-      saveItem.label = (*found).second.first;
-      saveItem.matls = ConsecutiveRangeSet((*found).second.second);
+      saveItem.label = var;
+      saveItem.matls = ConsecutiveRangeSet((*found).second);
       saveItem.matls = saveItem.matls.intersected((*it).matls);
       
       if (saveItem.label->typeDescription()->isReductionVariable())
@@ -715,6 +715,9 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 
 //
 // $Log$
+// Revision 1.27  2000/12/23 02:09:50  witzel
+// Oops, forgot a couple of things with respect to my last commit
+//
 // Revision 1.26  2000/12/23 01:48:39  witzel
 // Changed initSaveLabels() to reflect a change in Scheduler::VarLabelMaterialMap
 //
