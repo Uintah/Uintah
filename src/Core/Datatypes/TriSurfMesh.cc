@@ -221,7 +221,6 @@ TriSurfMesh::get_point(Point &result, node_index index) const
 }
 
 
-#if 0
 bool
 TriSurfMesh::inside4_p(int i, const Point &p)
 {
@@ -281,7 +280,7 @@ TriSurfMesh::inside4_p(int i, const Point &p)
 
   return true;
 }
-#endif
+
 
 
 TriSurfMesh::node_index
