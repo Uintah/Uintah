@@ -10,6 +10,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/IntVector.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iosfwd>
 
 namespace Uintah {
@@ -17,9 +18,11 @@ namespace Uintah {
    using SCICore::Geometry::Point;
    using SCICore::Geometry::Vector;
    using SCICore::Geometry::IntVector;
+   using SCICore::Math::RoundUp;
    
    class NodeSubIterator;
    class NodeIterator;
+   class CellIterator;
    
 /**************************************
       
@@ -55,7 +58,9 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      Vector dCell() const;
+      Vector dCell() const {
+	 return (d_box.upper()-d_box.lower())/d_res;
+      }
       
       //////////
       // Insert Documentation Here:
@@ -77,7 +82,11 @@ WARNING
       //////////
       // Insert Documentation Here:
       inline NodeIterator end() const;
-      
+
+      //////////
+      // Insert Documentation Here:
+      CellIterator getCellIterator(const Box& b) const;
+
       //////////
       // Insert Documentation Here:
       void subregionIteratorPair(int i, int n,
@@ -104,12 +113,13 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-#if 0
       inline bool contains(const Array3Index& idx) const {
 	 return idx.i() >= 0 && idx.j() >= 0 && idx.k() >= 0
-	    && idx.i() <= d_nx && idx.j() <= d_ny && idx.k() <= d_nz;
+	    && idx.i() <= d_res.x() && idx.j() <= d_res.y() && idx.k() <= d_res.z();
       }
-#endif
+      Point nodePosition(const IntVector& idx) const {
+	 return d_box.lower() + dCell()*idx;
+      }
    protected:
       friend class Level;
       
@@ -163,6 +173,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2000/04/27 23:18:50  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.8  2000/04/26 06:48:54  sparker
 // Streamlined namespaces
 //

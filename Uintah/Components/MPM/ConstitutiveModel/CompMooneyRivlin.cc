@@ -34,17 +34,10 @@ CompMooneyRivlin::CompMooneyRivlin(const Region* /*region*/,
 
 CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
 {
-  double c1,c2,c3,c4;
-  ps->require("he_constant_1",c1);
-  ps->require("he_constant_2",c2);
-  ps->require("he_constant_3",c3);
-  ps->require("he_constant_4",c4);
-  /*
-  CMData.C1 = c1;
-  CMData.C2 = c2;
-  CMData.C3 = c3;
-  CMData.C4 = c4;
-  */
+  ps->require("he_constant_1",d_initialData.C1);
+  ps->require("he_constant_2",d_initialData.C2);
+  ps->require("he_constant_3",d_initialData.C3);
+  ps->require("he_constant_4",d_initialData.C4);
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -52,13 +45,19 @@ CompMooneyRivlin::~CompMooneyRivlin()
   // Destructor
 }
 
-void CompMooneyRivlin::initializeCMData(const Region* /*region*/,
-					const MPMMaterial* /*matl*/,
-					DataWarehouseP& /*new_dw*/)
+void CompMooneyRivlin::initializeCMData(const Region* region,
+					const MPMMaterial* matl,
+					DataWarehouseP& new_dw)
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-
+   // Put stuff in here to initialize each particle's
+   // constitutive model parameters and deformationMeasure
+   ParticleVariable<CMData> cmdata;
+   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   ParticleSubset* pset = cmdata.getParticleSubset();
+   for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++)
+	 cmdata[*iter] = d_initialData;
+   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
 }
 
 void CompMooneyRivlin::computeStressTensor(const Region* region,
@@ -279,6 +278,9 @@ ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
 }
 
 // $Log$
+// Revision 1.12  2000/04/27 23:18:43  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.11  2000/04/26 06:48:14  sparker
 // Streamlined namespaces
 //

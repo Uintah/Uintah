@@ -49,6 +49,8 @@ WARNING
 	    double C3;
 	    double C4;
 	 };
+
+	 CMData d_initialData;
 	 
 	 // Prevent copying of this class
 	 // copy constructor
@@ -109,6 +111,9 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.13  2000/04/27 23:18:43  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.12  2000/04/26 06:48:14  sparker
 // Streamlined namespaces
 //

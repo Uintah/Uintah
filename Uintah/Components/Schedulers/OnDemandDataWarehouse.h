@@ -52,13 +52,13 @@ public:
   virtual void allocate(int numParticles, ParticleVariableBase&,
 			const VarLabel*, const Region*) const;
   virtual void allocate(ParticleVariableBase&, const VarLabel*,
-			int matlIndex, const Region*, int numGhostCells) const;
+			int matlIndex, const Region*) const;
   virtual void get(ParticleVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*, int numGhostCells) const;
   virtual void put(const ParticleVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*);
   virtual void allocate(NCVariableBase&, const VarLabel*,
-			int matlIndex, const Region*, int numGhostCells) const;
+			int matlIndex, const Region*) const;
   virtual void get(NCVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*, int numGhostCells) const;
   virtual void put(const NCVariableBase&, const VarLabel*,
@@ -128,6 +128,9 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/04/27 23:18:48  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.10  2000/04/26 06:48:33  sparker
 // Streamlined namespaces
 //

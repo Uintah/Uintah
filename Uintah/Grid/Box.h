@@ -42,18 +42,24 @@ namespace Uintah {
       ~Box();
       Box(const Box&);
       Box& operator=(const Box&);
-      
+     
       Box(const Point& lower, const Point& upper);
-      
+
       bool overlaps(const Box&, double epsilon=1.e-6) const;
-      
+
       inline Point lower() const {
 	 return d_lower;
       }
       inline Point upper() const {
 	 return d_upper;
       }
-      
+      inline Box intersect(const Box& b) const {
+	 return Box(SCICore::Geometry::Max(d_lower, b.d_lower),
+		    SCICore::Geometry::Min(d_upper, b.d_upper));
+      }
+      bool degenerate() const {
+	 return d_lower.x() >= d_upper.x() || d_lower.y() >= d_upper.y() || d_lower.z() >= d_upper.z();
+      }
    private:
       Point d_lower;
       Point d_upper;
@@ -66,6 +72,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
 //
 // $Log$
+// Revision 1.4  2000/04/27 23:18:49  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.3  2000/04/26 06:48:47  sparker
 // Streamlined namespaces
 //
