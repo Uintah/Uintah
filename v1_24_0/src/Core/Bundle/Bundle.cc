@@ -375,7 +375,7 @@ Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
           nrrdH->nrrd->axis[1].kind = nrrdKindDomain;
 
           double *val = (double*)nrrdH->nrrd->data;
-          double *data = matrix->getData();
+          double *data = matrix->get_data_pointer();
 
           int i,j;
           i = 0;
@@ -398,7 +398,7 @@ Bundle::MatrixToNrrd(MatrixHandle matH,NrrdDataHandle &nrrdH)
           nrrdH->nrrd->axis[1].kind = nrrdKindDomain;
 
           double *val = (double*)nrrdH->nrrd->data;
-          double *data = matrix->getData();
+          double *data = matrix->get_data_pointer();
 
           for(int c=0; c<cols; c++) 
             {

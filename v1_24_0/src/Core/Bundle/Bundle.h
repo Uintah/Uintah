@@ -347,7 +347,7 @@ namespace SCIRun {
             DenseMatrix* matrix = scinew DenseMatrix(rows,cols);
       
             PTYPE *val = (PTYPE*)dataH->nrrd->data;
-            double *data = matrix->getData();
+            double *data = matrix->get_data_pointer();
 
             int i,j;
             i = 0; j = 0;
@@ -369,7 +369,7 @@ namespace SCIRun {
             DenseMatrix* matrix = scinew DenseMatrix(cols,rows);
       
             PTYPE *val = (PTYPE*)dataH->nrrd->data;
-            double *data = matrix->getData();
+            double *data = matrix->get_data_pointer();
             
             for(int c=0; c<cols; c++) 
               {
