@@ -11,7 +11,12 @@
 
 #include "macros.h"
 #include "parameters.h"
+#include "ICE_switches.i"
 using Uintah::ICESpace::ICE;
+
+
+
+
 
 /* ---------------------------------------------------------------------
 GENERAL INFORMATION
@@ -59,41 +64,46 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<Vector>& vel_ucf,
       // Do something
     }
 
-    CellIterator iter = patch->getCellIterator(patch->getBox());
-    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() 
-         << endl;
-
-    cerr << "CC variables limits " << vel_ucf.getLowIndex() << " " 
-         << vel_ucf.getHighIndex() << endl;
-
-    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo << "] [ " 
-         << xHi << " " << yHi << " " << zHi << "]" << endl;  
-
     for (i = xLo; i <= xHi; i++) 
     {
         for (j = yLo; j <= yHi; j++) 
         {
             for (k = zLo; k <= zHi; k++) 
             {
-	        for (m = 1; m <= nMaterials; m++) 
+               for (m = 1; m <= nMaterials; m++) 
                {
 	          // Do something
 	          //  cerr << "uvel = " << uvel_CC[m][i][j][k] 
 	          //     << " vvel = " << vvel_CC[m][i][j][k] 
 	          //     << " wvel = " << wvel_CC[m][i][j][k] << endl;
 	          IntVector idx(i-xLo,j-yLo,k-zLo);
-	          vel_ucf[idx]=Vector(uvel_CC[m][i][j][k], vvel_CC[m][i][j][k], 
-			              wvel_CC[m][i][j][k]);
+	          vel_ucf[idx]=Vector(uvel_CC[m][i][j][k],
+                                         vvel_CC[m][i][j][k], 
+                                         wvel_CC[m][i][j][k]);
 	          //cerr << "vel_ucf = " << vel_ucf[idx] << endl;
-	        }
+               }
             }
         }
     }
+    /*__________________________________
+    *   DEBUGGING
+    *___________________________________*/
+#if switchDebug_NR_UCF
+    CellIterator iter = patch->getCellIterator(patch->getBox());
+    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() 
+         << endl;
+    cerr << "CC variables limits mat " << vel_ucf.getLowIndex()
+           << " " << vel_ucf.getHighIndex() << endl;
+
+    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo << "] [ " 
+         << xHi << " " << yHi << " " << zHi << "]" << endl;  
+#endif
 
   return;
 
 }
 
+ 
 /* ---------------------------------------------------------------------
 GENERAL INFORMATION
  Function:  ICE::convertNR_4dToUCF
@@ -138,13 +148,6 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<double>& scalar_ucf,
     }
 
     CellIterator iter = patch->getCellIterator(patch->getBox());
-    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() << endl;
-
-    cerr << "CC variables limits " << scalar_ucf.getLowIndex() << " " 
-         << scalar_ucf.getHighIndex() << endl;
-
-    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo << "] [ " 
-         << xHi << " " << yHi << " " << zHi << "]" << endl;  
 
     for (i = xLo; i <= xHi; i++) 
     {
@@ -163,6 +166,18 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<double>& scalar_ucf,
             }
         }
     }
+    /*__________________________________
+    *   DEBUGGING
+    *___________________________________*/
+#if switchDebug_NR_UCF
+    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() << endl;
+
+    cerr << "CC variables limits " << scalar_ucf.getLowIndex() << " " 
+         << scalar_ucf.getHighIndex() << endl;
+
+    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo << "] [ " 
+         << xHi << " " << yHi << " " << zHi << "]" << endl;  
+#endif
     return;
 }
 
@@ -212,15 +227,7 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
     }
 
     CellIterator iter = patch->getCellIterator(patch->getBox());
-    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() 
-         << endl;
-
-    cerr << "CC variables limits " << vel_ucf.getLowIndex() << " " 
-         << vel_ucf.getHighIndex() << endl;
-
-    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo
-         << "] [ " 
-         << xHi << " " << yHi << " " << zHi << "]" << endl;  
+    
 
     for (i = xLo; i <= xHi; i++) 
     {
@@ -242,6 +249,20 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<Vector>& vel_ucf,
            }
        }
     }
+    /*__________________________________
+    *   DEBUGGING
+    *___________________________________*/
+#if switchDebug_UCF_NR
+    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() 
+         << endl;
+
+    cerr << "CC variables limits " << vel_ucf.getLowIndex() << " " 
+         << vel_ucf.getHighIndex() << endl;
+
+    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo
+         << "] [ " 
+         << xHi << " " << yHi << " " << zHi << "]" << endl;  
+#endif
     return;
 }
 
@@ -289,15 +310,6 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf,
     }
 
     CellIterator iter = patch->getCellIterator(patch->getBox());
-    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() 
-         << endl;
-
-    cerr << "CC variables limits " << scalar_ucf.getLowIndex() << " " 
-         << scalar_ucf.getHighIndex() << endl;
-
-    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo
-         << "] [ " 
-         << xHi << " " << yHi << " " << zHi << "]" << endl;  
 
     for (i = xLo; i <= xHi; i++) 
     {
@@ -315,9 +327,25 @@ void ICE::convertUCFToNR_4d(const Patch* patch,CCVariable<double>& scalar_ucf,
               }
         }
     }
+   /*__________________________________
+   *   DEBUGGING
+   *___________________________________*/
+    #if switchDebug_UCF_NR
+    cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() 
+         << endl;
+
+    cerr << "CC variables limits " << scalar_ucf.getLowIndex() << " " 
+         << scalar_ucf.getHighIndex() << endl;
+
+    cerr << "NR s: [" << xLo << " " << yLo << " " << zLo
+         << "] [ " 
+         << xHi << " " << yHi << " " << zHi << "]" << endl;  
+#endif
     return;
 }
 
+
+/*`==========TESTING==========*/ 
 void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf, 
         double  ****uvel_FC,
         double  ****vvel_FC,
@@ -346,7 +374,7 @@ void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf,
         xLo = xLoLimit;         yLo = yLoLimit;         zLo = zLoLimit;
         xHi = xHiLimit;         yHi = yHiLimit;         zHi = zHiLimit;
     }
-
+#if 0
     for (FaceIterator iter = patch->getFaceIterator(patch->getBox()); 
          !iter.done(); iter++) 
     {
@@ -362,7 +390,7 @@ void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf,
 
     cerr << "NR s: [" << xLo << " " << yLo << " " << zLo << "] [ " 
          << xHi << " " << yHi << " " << zHi << "]" << endl;  
-
+#endif
     for (i = xLo; i <= xHi; i++) 
     {
         for (j = yLo; j <= yHi; j++) 
@@ -389,6 +417,6 @@ void ICE::convertNR_4dToUCF(const Patch* patch,FCVariable<Vector>& vel_ucf,
 
 }
 
-
+ /*==========TESTING==========`*/
 
 
