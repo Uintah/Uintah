@@ -99,7 +99,7 @@ public:
   DipoleSearch(GuiContext *context);
   virtual ~DipoleSearch();
   virtual void execute();
-  void tcl_command( TCLArgs&, void * );
+  virtual void tcl_command( GuiArgs&, void * );
 };
 
 
@@ -292,7 +292,7 @@ int DipoleSearch::find_better_neighbor(int best, Array1<double>& sum) {
   vol_mesh_->locate(ci, p);
   TetVolMesh::Cell::array_type ca;
   vol_mesh_->get_neighbors(ca, ci);
-  for (int n=0; n<ca.size(); n++) {
+  for (unsigned int n=0; n<ca.size(); n++) {
     Point p1;
     vol_mesh_->get_center(p1, ca[n]);
     dipoles_(NSEEDS_,0)=p1.x();
@@ -606,7 +606,8 @@ void DipoleSearch::execute() {
 
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
-void DipoleSearch::tcl_command(TCLArgs& args, void* userdata) {
+void DipoleSearch::tcl_command(GuiArgs& args, void* userdata)
+{
   if (args[1] == "pause") {
     if (mylock_.tryLock())
       cerr << "DipoleSearch pausing..."<<endl;

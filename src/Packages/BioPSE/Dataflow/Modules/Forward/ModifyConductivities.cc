@@ -29,6 +29,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/LatVolField.h>

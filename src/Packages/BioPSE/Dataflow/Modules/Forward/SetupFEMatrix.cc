@@ -33,6 +33,7 @@
  */
 
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>

@@ -28,6 +28,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
