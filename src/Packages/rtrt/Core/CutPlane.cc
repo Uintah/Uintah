@@ -60,7 +60,7 @@ void CutPlane::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 	return;
       }
     }
-    double t=(d-Dot(n, orig))/dt;
+    double t=-plane/dt;
     HitInfo newhit;
     if(plane > 0){
       child->intersect(ray, newhit, st, ppc);
@@ -148,13 +148,9 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 	return;
       }
     }
-    if(dt < 1.e-6 && dt > -1.e-6)
-      // perpendicular to the plane, so there are no intersections
-      return;
-    double t=(d-Dot(n, orig))/dt;
+    double t=-plane/dt;
     HitInfo newhit;
-    Color newatten(1,1,1);
-    Point p(orig+dir*t);
+    Color newatten(atten);
     if(plane > 0){
       newhit.min_t = hit.min_t;
       child->light_intersect(ray, newhit, newatten, st, ppc);
@@ -167,7 +163,7 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 	atten=newatten;
       } else if (use_material && (get_matl() != 0)) {
 	// the plane has a material, so use it :)
-	hit.hit(this,t);
+	hit.shadowHit(this,t);
       }
     } else {
       if(t<0)
@@ -176,10 +172,10 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
       if (use_material && (get_matl() != 0)) {
 	if (child_bbox.contains_point(ray, t)) {
 	  // We hit the plane before we can get to the child
-	  hit.hit(this,t);
+	  hit.shadowHit(this,t);
 	} else {
 	  // Need to compute intersection with the child
-	  Point p(orig+dir*t);
+	  Point p(orig+dir*t); // the point on the plane where the ray hit
 	  Ray newray(p, dir);
 	  child->light_intersect(newray, newhit, newatten, st, ppc);
 	  if(newhit.was_hit){
@@ -192,6 +188,7 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 	// Shoot the ray out
 	// On far side of plane...so create a new ray that starts at the
 	// location on the cut plane and send it out.
+	Point p(orig+dir*t);
 	Ray newray(p, dir);
 	newhit.min_t = hit.min_t-dt;
 	child->light_intersect(newray, newhit, newatten, st, ppc);
