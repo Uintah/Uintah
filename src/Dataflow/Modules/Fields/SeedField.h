@@ -69,12 +69,12 @@ private:
     bool search(table_entry_type&, long double);
   };
 
-  bool build_weight_table_sfi(MeshBaseHandle mesh_h,
+  bool build_weight_table_sfi(MeshHandle mesh_h,
 			      ScalarFieldInterface *sfi,
 			      DistTable &table,
 			      const string &dist);
 
-  bool build_weight_table_vfi(MeshBaseHandle mesh_h,
+  bool build_weight_table_vfi(MeshHandle mesh_h,
 			      VectorFieldInterface *vfi,
 			      DistTable &table,
 			      const string &dist);
@@ -115,7 +115,7 @@ SeedFieldAlgoT<Mesh>::DistTable::search(table_entry_type &e, long double d)
 
 template <class Mesh>
 bool 
-SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshBaseHandle mesh_h,
+SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
 					     ScalarFieldInterface *sfi,
 					     DistTable &table,
 					     const string &dist)
@@ -212,7 +212,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshBaseHandle mesh_h,
 
 template <class Mesh>
 bool 
-SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshBaseHandle mesh_h,
+SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
 					     VectorFieldInterface *vfi,
 					     DistTable &table,
 					     const string &dist)

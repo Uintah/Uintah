@@ -35,7 +35,7 @@ namespace SCIRun {
 class FieldBoundaryAlgoAux : public DynamicAlgoBase
 {
 public:
-  virtual void execute(const MeshBaseHandle mesh, FieldHandle &bndry, FieldHandle &intrp) = 0;
+  virtual void execute(const MeshHandle mesh, FieldHandle &bndry, FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *mesh);
@@ -48,7 +48,7 @@ class FieldBoundaryAlgoAuxT : public FieldBoundaryAlgoAux
 {
 public:
   //! virtual interface. 
-  virtual void execute(const MeshBaseHandle mesh, FieldHandle &boundary, FieldHandle &interp);
+  virtual void execute(const MeshHandle mesh, FieldHandle &boundary, FieldHandle &interp);
 
 private:
 };
@@ -57,7 +57,7 @@ private:
 
 template <class Msh>
 void 
-FieldBoundaryAlgoAuxT<Msh>::execute(const MeshBaseHandle mesh_untyped,
+FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 				    FieldHandle &boundary_fh,
 				    FieldHandle &interp_fh)
 {
@@ -149,7 +149,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshBaseHandle mesh_untyped,
 class FieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(const MeshBaseHandle mesh, FieldHandle &bndry, FieldHandle &intrp) = 0;
+  virtual void execute(const MeshHandle mesh, FieldHandle &bndry, FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *mesh);
@@ -161,13 +161,13 @@ class FieldBoundaryAlgoT : public FieldBoundaryAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(const MeshBaseHandle mesh, FieldHandle &boundary, FieldHandle &interp);
+  virtual void execute(const MeshHandle mesh, FieldHandle &boundary, FieldHandle &interp);
 };
 
 
 template <class Msh>
 void 
-FieldBoundaryAlgoT<Msh>::execute(const MeshBaseHandle mesh,
+FieldBoundaryAlgoT<Msh>::execute(const MeshHandle mesh,
 				 FieldHandle &boundary, FieldHandle &interp)
 {
   if (get_type_description((typename Msh::Elem *)0)->get_name() !=

@@ -33,7 +33,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <string>
 #include <vector>
@@ -74,7 +74,7 @@ void Pio(Piostream &stream, IndexPair<Data> &data)
   stream.end_class();
 }
 
-class SCICORESHARE ContourMesh : public MeshBase
+class SCICORESHARE ContourMesh : public Mesh
 {
 public:
   typedef unsigned int under_type;

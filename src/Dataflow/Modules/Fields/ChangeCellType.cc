@@ -87,7 +87,7 @@ ChangeCellType::~ChangeCellType() {
 template <class Data>
 void ChangeCellType::fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol)
  {
-  MeshBaseHandle meshb = tet_vol_fh->get_mesh();
+  MeshHandle meshb = tet_vol_fh->get_mesh();
   
   MeshTet *mesh = dynamic_cast<MeshTet*>(meshb.get_rep());
   if (mesh == 0) return;

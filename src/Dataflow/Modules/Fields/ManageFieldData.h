@@ -152,7 +152,7 @@ ManageFieldDataAlgoFieldTensor<Fld, Loc>::execute(FieldHandle ifield_h)
 class ManageFieldDataAlgoMesh : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshBaseHandle src, MatrixHandle mat) = 0;
+  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc,
@@ -166,13 +166,13 @@ class ManageFieldDataAlgoMeshScalar : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshBaseHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(MeshBaseHandle mesh,
+ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(MeshHandle mesh,
 						   MatrixHandle matrix)
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
@@ -242,12 +242,12 @@ class ManageFieldDataAlgoMeshVector : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshBaseHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat);
 };
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshBaseHandle mesh,
+ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
 						   MatrixHandle matrix)
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
@@ -333,13 +333,13 @@ class ManageFieldDataAlgoMeshTensor : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshBaseHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshBaseHandle mesh,
+ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
 						   MatrixHandle matrix)
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());

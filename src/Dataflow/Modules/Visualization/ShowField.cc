@@ -218,7 +218,7 @@ ShowField::execute()
     fld_gen_ = fld_handle->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; 
     faces_dirty_ = true; data_dirty_ = true;
-    MeshBaseHandle mh = fld_handle->mesh();
+    MeshHandle mh = fld_handle->mesh();
     mh->finish_mesh();  
   }
   

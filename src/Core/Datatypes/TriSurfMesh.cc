@@ -34,7 +34,7 @@
 
 namespace SCIRun {
 
-PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "MeshBase", NULL);
+PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "Mesh", NULL);
 
 
 const string
@@ -630,7 +630,7 @@ TriSurfMesh::io(Piostream &stream)
 {
   stream.begin_class(type_name(-1), TRISURFMESH_VERSION);
 
-  MeshBase::io(stream);
+  Mesh::io(stream);
 
   Pio(stream, points_);
   Pio(stream, faces_);

@@ -15,8 +15,8 @@
   University of Utah. All Rights Reserved.
 */
 
-#ifndef Datatypes_MeshBase_h
-#define Datatypes_MeshBase_h
+#ifndef Datatypes_Mesh_h
+#define Datatypes_Mesh_h
 
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Geometry/BBox.h>
@@ -26,11 +26,11 @@
 
 namespace SCIRun {
 
-class MeshBase : public PropertyManager {
+class Mesh : public PropertyManager {
 public:
 
-  virtual MeshBase *clone() = 0;
-  virtual ~MeshBase();
+  virtual Mesh *clone() = 0;
+  virtual ~Mesh();
   
   //! Required virtual functions.
   virtual BBox get_bounding_box() const = 0;
@@ -53,8 +53,8 @@ public:
   virtual const TypeDescription *get_type_description() const = 0;
 };
 
-typedef LockingHandle<MeshBase> MeshBaseHandle;
+typedef LockingHandle<Mesh> MeshHandle;
 
 } // end namespace SCIRun
 
-#endif // Datatypes_MeshBase_h
+#endif // Datatypes_Mesh_h

@@ -35,7 +35,7 @@ SRCS += $(SRCDIR)/ColorMap.cc		    	\
         $(SRCDIR)/ImageMesh.cc		    	\
 	$(SRCDIR)/LatVolMesh.cc 		\
         $(SRCDIR)/Matrix.cc		    	\
-        $(SRCDIR)/MeshBase.cc		    	\
+        $(SRCDIR)/Mesh.cc		    	\
         $(SRCDIR)/Path.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
         $(SRCDIR)/PropertyManager.cc	    	\

@@ -103,7 +103,7 @@ AssignLeadFieldSources::execute()
     remark("No input field.");
     return;
   }
-  MeshBaseHandle mbh = ifield->mesh();
+  MeshHandle mbh = ifield->mesh();
   TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(mbh.get_rep());
   if (!tvm) {
     remark("Field was supposed to be a TetVol.");

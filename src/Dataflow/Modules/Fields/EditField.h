@@ -31,7 +31,7 @@ namespace SCIRun {
 class EditFieldAlgoCount : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshBaseHandle src, int &num_nodes, int &num_elems,
+  virtual void execute(MeshHandle src, int &num_nodes, int &num_elems,
 		       int &dimension) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -44,14 +44,14 @@ class EditFieldAlgoCountT : public EditFieldAlgoCount
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshBaseHandle src, int &num_nodes, int &num_elems,
+  virtual void execute(MeshHandle src, int &num_nodes, int &num_elems,
 		       int &dimension);
 };
 
 
 template <class MESH>
 void 
-EditFieldAlgoCountT<MESH>::execute(MeshBaseHandle mesh_h,
+EditFieldAlgoCountT<MESH>::execute(MeshHandle mesh_h,
 				   int &num_nodes, int &num_elems,
 				   int &dimension)
 {

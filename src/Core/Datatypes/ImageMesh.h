@@ -33,7 +33,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/share/share.h>
 #include <string>
 #include <iostream>
@@ -42,7 +42,7 @@ namespace SCIRun {
 
 using std::string;
 
-class SCICORESHARE ImageMesh : public MeshBase
+class SCICORESHARE ImageMesh : public Mesh
 {
 public:
 

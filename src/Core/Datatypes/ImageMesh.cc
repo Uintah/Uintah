@@ -39,7 +39,7 @@ namespace SCIRun {
 using namespace std;
 
 
-PersistentTypeID ImageMesh::type_id("ImageMesh", "MeshBase", maker);
+PersistentTypeID ImageMesh::type_id("ImageMesh", "Mesh", maker);
 
 
 ImageMesh::ImageMesh(unsigned x, unsigned y,
@@ -332,7 +332,7 @@ ImageMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
 
-  MeshBase::io(stream);
+  Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream, nx_);
