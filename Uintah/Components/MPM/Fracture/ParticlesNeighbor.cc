@@ -10,33 +10,16 @@
 
 #include <Uintah/Grid/Patch.h>
 
+#include <iostream>
+
 namespace Uintah {
 namespace MPM {
 
 using SCICore::Exceptions::InternalError;
 
-ParticlesNeighbor::ParticlesNeighbor(const ParticleVariable<Point>& pX,
-	                  const ParticleVariable<int>& pIsBroken,
-			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
-			  const ParticleVariable<double>& pMicrocrackSize,
-			  const ParticleVariable<double>& pMicrocrackPosition)
-: std::vector<particleIndex>(),
-  d_pX(&pX),
-  d_pIsBroken(&pIsBroken),
-  d_pCrackSurfaceNormal(&pCrackSurfaceNormal),
-  d_pMicrocrackSize(&pMicrocrackSize),
-  d_pMicrocrackPosition(&pMicrocrackPosition)
-{
-}
-
 ParticlesNeighbor::ParticlesNeighbor()
 : std::vector<particleIndex>()
 {
-}
-
-const ParticleVariable<int>& ParticlesNeighbor::getpIsBroken() const
-{
-  return *d_pIsBroken;
 }
 
 void ParticlesNeighbor::buildIn(const IntVector& cellIndex,const Lattice& lattice)
@@ -58,6 +41,7 @@ void ParticlesNeighbor::buildIn(const IntVector& cellIndex,const Lattice& lattic
   }
 }
 
+/*
 void  ParticlesNeighbor::interpolateVector(LeastSquare& ls,
                           const particleIndex& pIdx,
                           const ParticleVariable<Vector>& pVector,
@@ -109,15 +93,28 @@ void  ParticlesNeighbor::interpolateInternalForce(LeastSquare& ls,
     pInternalForce(i) -= v(i);
   }
 }
+*/
 
-bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
+bool ParticlesNeighbor::visible(particleIndex idx,
+                                const Point& B,
+				const ParticleVariable<Point>& pX,
+				const ParticleVariable<int>& pIsBroken,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal,
+				const ParticleVariable<double>& pVolume) const
 {
+  const Point& A = pX[idx];
+  if(pIsBroken[idx]) {
+    if( Dot( B - A, pCrackSurfaceNormal[idx] ) > 0 ) return false;
+  }
+  
   for(int i=0; i<size(); i++) {
       int index = (*this)[i];
-      if( (*d_pIsBroken)[index] ) {
-        Vector N = (*d_pCrackSurfaceNormal)[index];
-        double size2 = (*d_pMicrocrackSize)[index] * (*d_pMicrocrackSize)[index];
-        Point O = (*d_pX)[index] + N * (*d_pMicrocrackPosition)[index];
+      //cout<<"neighbor distance"<<(pX[index] - A).length()<<endl;
+      
+      if( index != idx && pIsBroken[index] ) {
+        const Vector& N = pCrackSurfaceNormal[index];
+        double size2 = pow(pVolume[index],0.666666667) /4 * 2;
+        const Point& O = pX[index];
 
 	double A_N = Dot(A,N);
 	
@@ -142,6 +139,9 @@ bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.13  2000/09/22 07:18:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.12  2000/09/16 04:18:04  tan
 // Modifications to make fracture works well.
 //

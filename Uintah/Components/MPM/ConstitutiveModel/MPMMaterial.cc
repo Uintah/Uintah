@@ -83,7 +83,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
       }
 
       piece_num++;
-      d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps));
+      d_geom_objs.push_back(scinew GeometryObject(this,mainpiece, geom_obj_ps));
       
       // Step 4 -- Assign the boundary conditions to the object
 
@@ -169,12 +169,24 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(ptemperature, lb->pTemperatureLabel, subset);
    ParticleVariable<long> pparticleID;
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
+
+   ParticleVariable<int> pIsBroken;
+   ParticleVariable<Vector> pCrackSurfaceNormal;
+   ParticleVariable<Vector> pCrackSurfaceContactForce;
+   ParticleVariable<double> pTensileStrength;
+   
+   if(d_fracture) {
+     new_dw->allocate(pIsBroken, lb->pIsBrokenLabel, subset);
+     new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, subset);
+     new_dw->allocate(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel, subset);
+     new_dw->allocate(pTensileStrength, lb->pTensileStrengthLabel, subset);
+   }
    
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++){
       start += createParticles( d_geom_objs[i], start, position,
 				pvelocity,pexternalforce,pmass,pvolume,
-				pissurf,ptemperature,pparticleID,NAPID,patch);
+				pissurf,ptemperature,pTensileStrength,pparticleID,NAPID,patch);
    }
 
    particleIndex partclesNum = start;
@@ -188,6 +200,12 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
      ptemperatureGradient[pIdx] = Vector(0.,0.,0.);
      pexternalHeatRate[pIdx] = 0.;
+     
+     if(d_fracture) {
+	pIsBroken[pIdx] = 0;
+	pCrackSurfaceNormal[pIdx] = Vector(0.,0.,0.);
+	pCrackSurfaceContactForce[pIdx] = Vector(0.,0.,0.);
+     }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
 
@@ -225,6 +243,13 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 //   new_dw->put(pissurf, lb->pSurfLabel);
    new_dw->put(ptemperature, lb->pTemperatureLabel);
    new_dw->put(pparticleID, lb->pParticleIDLabel);
+   
+   if(d_fracture) {
+     new_dw->put(pIsBroken, lb->pIsBrokenLabel);
+     new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
+     new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
+     new_dw->put(pTensileStrength, lb->pTensileStrengthLabel);
+   }
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -272,6 +297,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<int>& pissurf,
 				   ParticleVariable<double>& temperature,
+				   ParticleVariable<double>& tensilestrength,
 				   ParticleVariable<long>& particleID,
 				   PerPatch<long>& NAPID,
 				   const Patch* patch)
@@ -311,6 +337,28 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  particleID[start+count]=
 				(patch_number | (NAPID + start + count));
+
+
+		  if( d_fracture ) {
+	            double probability;
+	            double x;
+                    double tensileStrengthAve = ( obj->getTensileStrengthMin() + 
+                                 obj->getTensileStrengthMax() )/2;
+                    double tensileStrengthWid = ( obj->getTensileStrengthMax() - 
+                                 obj->getTensileStrengthMin() )/2 *
+                                 obj->getTensileStrengthVariation();
+	            double s;
+		    do {
+	              double rand = drand48();
+	              s = (1-rand) * obj->getTensileStrengthMin() + 
+		          rand * obj->getTensileStrengthMax();
+	              
+	              probability = drand48();
+	              x = (s-tensileStrengthAve)/tensileStrengthWid;
+	            } while( exp(-x*x) < probability );
+	            tensilestrength[start+count] = s;
+		  }
+		  
 		  count++;
 	       }
 	    }
@@ -374,6 +422,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.50  2000/09/22 07:10:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.49  2000/09/07 00:38:00  tan
 // Fixed a bug in ForceBC.
 //

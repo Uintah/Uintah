@@ -149,7 +149,7 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
 }
 
 void ViscoScram::computeStressTensor(const Patch* patch,
@@ -479,7 +479,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-  new_dw->put(pstress, lb->pStressLabel_preReloc);
+  new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
   // Put the strain energy in the data warehouse
@@ -520,7 +520,7 @@ void ViscoScram::addComputesAndRequires(Task* task,
                   Ghost::AroundCells, 1);
    task->requires(old_dw, lb->delTLabel);
 
-   task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
+   task->computes(new_dw, lb->pStressAfterStrainRateLabel, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, p_statedata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
@@ -572,6 +572,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.8  2000/09/22 07:10:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.7  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //

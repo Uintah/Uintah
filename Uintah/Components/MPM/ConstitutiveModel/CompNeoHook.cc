@@ -181,11 +181,6 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
   
-   // As a side-effect of computeStressTensor, pDilationalWaveSpeed
-   // are calculated and for delT and saved that will be used later by fracture
-  ParticleVariable<double> pDilationalWaveSpeed;
-  new_dw->allocate(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
-
   NCVariable<Vector> gvelocity;
 
   new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
@@ -199,7 +194,6 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   ParticleVariable<int> pVisibility;
   ParticleVariable<Vector> pRotationRate;
   if(matl->getFractureModel()) {
-    old_dw->get(pCrackingSpeed, lb->pCrackingSpeedLabel, pset);
     new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
   }
@@ -304,27 +298,17 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-		     
-     if( matl->getFractureModel() ) {
-       //compare with the cracking speed
-       WaveSpeed=Vector(Max(pCrackingSpeed[idx],WaveSpeed.x()),
-                        Max(pCrackingSpeed[idx],WaveSpeed.y()),
-	  	        Max(pCrackingSpeed[idx],WaveSpeed.z()));
-     }
-
-    pDilationalWaveSpeed[idx] = c_dil;
   }
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-  new_dw->put(pstress, lb->pStressLabel_preReloc);
+  new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
+  new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
   new_dw->put(bElBar, bElBarLabel_preReloc);
 
   if( matl->getFractureModel() ) {
       new_dw->put(pRotationRate, lb->pRotationRateLabel);
-      new_dw->put(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel);
   }
 
   // Put the strain energy in the data warehouse
@@ -361,24 +345,22 @@ void CompNeoHook::addComputesAndRequires(Task* task,
                   Ghost::None);
    task->requires(old_dw, lb->pVolumeLabel, matl->getDWIndex(),  patch,
                   Ghost::None);
+   task->requires(old_dw, lb->pStressLabel, matl->getDWIndex(),  patch,
+		  Ghost::None);
    task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), patch,
                   Ghost::AroundCells, 1);
    task->requires(old_dw, bElBarLabel, matl->getDWIndex(), patch,
                   Ghost::None);
    task->requires(old_dw, lb->delTLabel);
-
-   task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
+   task->computes(new_dw, lb->pStressAfterStrainRateLabel, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    
    if(matl->getFractureModel()) {
-      task->requires(old_dw, lb->pCrackingSpeedLabel, matl->getDWIndex(), patch,
-		  Ghost::None);
       task->requires(new_dw, lb->pVisibilityLabel, matl->getDWIndex(), patch,
 		  Ghost::None);
-      task->computes(new_dw, lb->pDilationalWaveSpeedLabel, matl->getDWIndex(), patch);
       task->computes(new_dw, lb->pRotationRateLabel, matl->getDWIndex(),  patch);
    }
 }
@@ -430,6 +412,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.45  2000/09/22 07:10:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.44  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //

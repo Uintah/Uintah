@@ -101,7 +101,7 @@ namespace Uintah {
                                            DataWarehouseP& old_dw,
                                            DataWarehouseP& new_dw);
 
-         virtual void ViscoScram::addComputesAndRequiresForCrackSurfaceContact(
+         virtual void addComputesAndRequiresForCrackSurfaceContact(
 	                                     Task* task,
 					     const MPMMaterial* matl,
 					     const Patch* patch,
@@ -142,6 +142,9 @@ namespace Uintah {
 #endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.5  2000/09/22 07:10:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.4  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //

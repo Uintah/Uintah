@@ -34,7 +34,7 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
-  void   computerNodesVisibility(
+  void   computeNodeVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
@@ -45,14 +45,15 @@ public:
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
 
+  void   stressRelease(const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw);
+
 	 Fracture(ProblemSpecP& ps);
         ~Fracture();
-                
-private:
-  double           d_tensileStrengthMin;
-  double           d_tensileStrengthMax;
-  double           d_tensileStrengthVariationDegree;
 
+private:
   MPMLabel*        lb;
 };
 
@@ -62,6 +63,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.30  2000/09/22 07:18:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.29  2000/09/16 04:18:04  tan
 // Modifications to make fracture works well.
 //

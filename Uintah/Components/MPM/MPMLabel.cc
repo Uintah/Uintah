@@ -19,17 +19,23 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
-  pDilationalWaveSpeedLabel = scinew VarLabel("p.dilationalWaveSpeed",
-			ParticleVariable<double>::getTypeDescription());
-
   pRotationRateLabel = scinew VarLabel("p.rotationRate",
 			ParticleVariable<Vector>::getTypeDescription());
 
   pVisibilityLabel = scinew VarLabel("p.visibility",
 			ParticleVariable<int>::getTypeDescription());
   
-  pCrackSurfaceContactForceLabel = scinew VarLabel("p.crackSurfaceContactForce",
-			ParticleVariable<Vector>::getTypeDescription());
+  pStressReleasedLabel = scinew VarLabel("p.stressReleased",
+			ParticleVariable<int>::getTypeDescription());
+  
+  pIsNewlyBrokenLabel = scinew VarLabel("p.isNewlyBroken",
+			ParticleVariable<int>::getTypeDescription());
+
+  pStressAfterStrainRateLabel = scinew VarLabel("p.stressAfterStrainRate",
+			ParticleVariable<Matrix3>::getTypeDescription());
+
+  pStressAfterFractureReleaseLabel = scinew VarLabel("p.stressAfterFractureRelease",
+			ParticleVariable<Matrix3>::getTypeDescription());
   
   //PermanentParticleState
   pStressLabel = scinew VarLabel( "p.stress",
@@ -74,14 +80,8 @@ MPMLabel::MPMLabel()
   pCrackSurfaceNormalLabel = scinew VarLabel( "p.crackSurfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pMicrocrackSizeLabel = scinew VarLabel( "p.microcrackSize",
-			ParticleVariable<double>::getTypeDescription() );
-
-  pMicrocrackPositionLabel = scinew VarLabel( "p.microcrackPosition",
-			ParticleVariable<double>::getTypeDescription() );
-
-  pCrackingSpeedLabel = scinew VarLabel( "p.crackingSpeed",
-			ParticleVariable<double>::getTypeDescription() );
+  pCrackSurfaceContactForceLabel = scinew VarLabel("p.crackSurfaceContactForce",
+			ParticleVariable<Vector>::getTypeDescription());
 
   pTensileStrengthLabel = scinew VarLabel( "p.tensileStrength",
 			ParticleVariable<double>::getTypeDescription() );
@@ -141,14 +141,8 @@ MPMLabel::MPMLabel()
   pCrackSurfaceNormalLabel_preReloc = scinew VarLabel( "p.crackSurfaceNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pMicrocrackSizeLabel_preReloc = scinew VarLabel( "p.microcrackSize+",
-			ParticleVariable<double>::getTypeDescription() );
-
-  pMicrocrackPositionLabel_preReloc = scinew VarLabel( "p.microcrackPosition+",
-			ParticleVariable<double>::getTypeDescription() );
-
-  pCrackingSpeedLabel_preReloc  = scinew VarLabel( "p.crackingSpeed+",
-			ParticleVariable<double>::getTypeDescription() );
+  pCrackSurfaceContactForceLabel_preReloc = scinew VarLabel("p.crackSurfaceContactForce+",
+			ParticleVariable<Vector>::getTypeDescription());
 
   pTensileStrengthLabel_preReloc = scinew VarLabel( "p.tensileStrength+",
 			ParticleVariable<double>::getTypeDescription() );
@@ -240,6 +234,15 @@ MPMLabel::MPMLabel()
 
   // Reduction variables
 
+  delTAfterConstitutiveModelLabel = scinew VarLabel( "delTAfterConstitutiveModel", 
+    delt_vartype::getTypeDescription() );
+
+  delTAfterFractureLabel = scinew VarLabel( "delTAfterFracture", 
+    delt_vartype::getTypeDescription() );
+
+  delTAfterCrackSurfaceContactLabel = scinew VarLabel( "delTAfterCrackSurafceContact", 
+    delt_vartype::getTypeDescription() );
+
   delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
 
   StrainEnergyLabel = scinew VarLabel( "StrainEnergy",
@@ -267,10 +270,13 @@ MPMLabel::~MPMLabel()
 {
   //non PermanentParticleState
   delete pDeformationMeasureLabel;
-  delete pDilationalWaveSpeedLabel;
-  delete pCrackSurfaceContactForceLabel;
   delete pRotationRateLabel,
   delete pVisibilityLabel;
+  delete pStressReleasedLabel;
+  delete pIsNewlyBrokenLabel;
+  
+  delete pStressAfterStrainRateLabel;
+  delete pStressAfterFractureReleaseLabel;
 
   //PermanentParticleState
   delete pStressLabel;
@@ -287,9 +293,7 @@ MPMLabel::~MPMLabel()
   delete pSurfLabel;
   delete pIsBrokenLabel;
   delete pCrackSurfaceNormalLabel;
-  delete pMicrocrackSizeLabel;
-  delete pMicrocrackPositionLabel;
-  delete pCrackingSpeedLabel;
+  delete pCrackSurfaceContactForceLabel;
   delete pTensileStrengthLabel;
   delete pEnergyReleaseRateLabel;
   delete pParticleIDLabel;
@@ -310,9 +314,7 @@ MPMLabel::~MPMLabel()
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
   delete pCrackSurfaceNormalLabel_preReloc;
-  delete pMicrocrackSizeLabel_preReloc;
-  delete pMicrocrackPositionLabel_preReloc;
-  delete pCrackingSpeedLabel_preReloc;
+  delete pCrackSurfaceContactForceLabel_preReloc;
   delete pTensileStrengthLabel_preReloc;
   delete pEnergyReleaseRateLabel_preReloc;
   delete pParticleIDLabel_preReloc;
@@ -339,7 +341,12 @@ MPMLabel::~MPMLabel()
   delete gExternalHeatRateLabel;
   delete gThermalContactHeatExchangeRateLabel;
   delete cBurnedMassLabel;
+
+  delete delTAfterConstitutiveModelLabel;
+  delete delTAfterFractureLabel;
+  delete delTAfterCrackSurfaceContactLabel;
   delete delTLabel;
+
   delete StrainEnergyLabel;
   delete KineticEnergyLabel;
   delete TotalMassLabel;
@@ -367,6 +374,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.40  2000/09/22 07:14:06  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.39  2000/09/16 04:27:34  tan
 // Modifications to make fracture works well.
 //

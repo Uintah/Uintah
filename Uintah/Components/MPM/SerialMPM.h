@@ -96,7 +96,7 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void computerNodesVisibility(
+  void computeNodeVisibility(
                                const ProcessorGroup*,
 			       const Patch* patch,
 			       DataWarehouseP& old_dw,
@@ -198,9 +198,23 @@ protected:
   //////////
   // Insert Documentation Here:
   void crackGrow(const ProcessorGroup*,
-				    const Patch* /*patch*/,
-				    DataWarehouseP& /*old_dw*/,
-				    DataWarehouseP& /*new_dw*/);
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  void stressRelease(const ProcessorGroup*,
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  void carryForwardVariables( const ProcessorGroup*,
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -227,6 +241,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.60  2000/09/22 07:12:33  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.59  2000/09/12 16:52:04  tan
 // Reorganized crack surface contact force algorithm.
 //

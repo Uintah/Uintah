@@ -90,6 +90,7 @@ WARNING
 				       ParticleVariable<double>& volume,
 				       ParticleVariable<int>& pissurf,
 				       ParticleVariable<double>& temperature,
+				       ParticleVariable<double>& tensilestrength,
 				       ParticleVariable<long>& particleID,
 				       PerPatch<long>& NAPID,
 				       const Patch*);
@@ -139,6 +140,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.30  2000/09/22 07:10:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.29  2000/09/05 07:45:03  tan
 // Applied BrokenCellShapeFunction to constitutive models where fracture
 // is involved.
