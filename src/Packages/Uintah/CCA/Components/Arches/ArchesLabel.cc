@@ -887,6 +887,15 @@ ArchesLabel::ArchesLabel()
 				   SFCYVariable<double>::getTypeDescription() );
   d_filteredRhoUjWLabel = VarLabel::create("filteredRhoUjW",
 				   SFCZVariable<double>::getTypeDescription() );
+// kinetic energy
+  d_kineticEnergyLabel = VarLabel::create("kineticEnergy", 
+				   CCVariable<double>::getTypeDescription() );
+  d_totalKineticEnergyLabel = VarLabel::create("totalKineticEnergy",
+				       sum_vartype::getTypeDescription() );
+  d_totalKineticEnergyPredLabel = VarLabel::create("totalKineticEnergyPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalKineticEnergyIntermLabel = VarLabel::create("totalKineticEnergyInterm",
+				       sum_vartype::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -1221,6 +1230,11 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_filteredRhoUjULabel);
   VarLabel::destroy(d_filteredRhoUjVLabel);
   VarLabel::destroy(d_filteredRhoUjWLabel);
+// kinetic energy
+  VarLabel::destroy(d_kineticEnergyLabel); 
+  VarLabel::destroy(d_totalKineticEnergyLabel); 
+  VarLabel::destroy(d_totalKineticEnergyPredLabel); 
+  VarLabel::destroy(d_totalKineticEnergyIntermLabel); 
 			
 }
 

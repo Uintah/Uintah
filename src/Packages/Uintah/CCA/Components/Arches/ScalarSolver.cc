@@ -33,7 +33,7 @@ using namespace Uintah;
 using namespace std;
 
 //****************************************************************************
-// Default constructor for PressureSolver
+// Default constructor for ScalarSolver
 //****************************************************************************
 ScalarSolver::ScalarSolver(const ArchesLabel* label,
 			   const MPMArchesLabel* MAlb,
@@ -713,10 +713,12 @@ ScalarSolver::sched_scalarLinearSolvePred(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcPredLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  //  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+//		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }    
@@ -813,10 +815,12 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
 
+    new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel,
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_MAlab) {
-      new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel,
-		      matlIndex, patch, 
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
+   //   new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel,
+//		      matlIndex, patch, 
+//		      Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->getCopy(scalarVars.voidFraction, d_lab->d_mmgasVolFracLabel,
 		      matlIndex, patch, 
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -870,6 +874,8 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
     /* new_dw->put(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch); */;
 #endif
 #endif
+    d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
+				  &scalarVars);
 
 #ifdef correctorstep
     // allocateAndPut instead:
@@ -1280,6 +1286,8 @@ ScalarSolver::sched_scalarLinearSolveCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_scalarSPLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -1357,6 +1365,10 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
     new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
+
+    new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &scalarVars);
@@ -1458,6 +1470,8 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
     }
   #endif
 
+    d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
+				  &scalarVars);
   // put back the results
     // allocateAndPut instead:
     /* new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
@@ -1775,6 +1789,8 @@ ScalarSolver::sched_scalarLinearSolveInterm(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_scalarIntermLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -1840,6 +1856,9 @@ ScalarSolver::scalarLinearSolveInterm(const ProcessorGroup* pc,
     new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
+
+    new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
@@ -1913,6 +1932,8 @@ ScalarSolver::scalarLinearSolveInterm(const ProcessorGroup* pc,
       }
     }
   #endif
+    d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
+				  &scalarVars);
   
     // put back the results
     // allocateAndPut instead:
