@@ -65,7 +65,7 @@ JohnsonCookDamage::computeScalarDamage(const double& epdot,
 
   double sigStar = 0.0;
   if (sigEquiv != 0) sigStar = sigMean/sigEquiv;
-  if (sigStar > d_initialData.spallStress) return 1.0;
+  //if (sigStar > d_initialData.spallStress) return 1.0;
   if (sigStar > 1.5) sigStar = 1.5;
   if (sigStar < -1.5) sigStar = -1.5;
   //cout << " sigStar = " << sigStar;
