@@ -36,6 +36,7 @@ Other Items
   sub.mk
   sus
   compare_uda
+  setupTests
   Adding tests: (MPM,ARCHES,etc.)
 
 ****************************************************************************
@@ -838,9 +839,31 @@ Note: The absolute and relative tolerance tests must both fail
       for a comparison to fail.
 
 
------------
+----------
+setupTests - Uintah/Test/helpers/setupTests - sh script
+----------
+Overview:
+  setupTests is not actually used by the regression tester, but can be used 
+to initialize a directory for using the do*tests described above.
+
+  Usage: setupTests <SCIRUN-ROOT> <SCIRUN-BUILD-ROOT> <dbg or opt> <maxProcs>
+
+where 
+SCIRUN-ROOT        is where the source tree begins
+SCIRUN-BUILD-ROOT  is where the compilation is done
+maxProcs	   is the max number of procs to use in these tests
+
+Side effects:
+  Creates 4 links and as many do*tests as there are executable files in
+Uintah/Test.  The 4 links point to the directory where sus lives, the input
+files are, the goldStandard for this OS and mode (dbg/opt) are, and the 
+TestScripts live.  These are all created in the current directory.  If some
+of these files/links already exist, they are overwritten.
+  
+
+------------
 Adding tests: (MPM,ARCHES,etc.)
------------
+------------
 
 In the src/Packages/Uintah directory there is a directory called
 test.  In that directory there are several directories (helpers, toplevel,
