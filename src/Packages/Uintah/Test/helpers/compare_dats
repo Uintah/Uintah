@@ -54,7 +54,7 @@ if [ $newcount != $oldcount ]; then
 There is only a discrepancy in the line count of the dat files.
 There are $newcount lines in the new $testdat and
           $oldcount lines in the old $testdat.
-This could simply be a result of changes timestep size.
+This could simply be a result of a change to the timestep size.
 EOF
 fi
 
