@@ -213,7 +213,7 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
            = \frac{d\hat\sigma_e}{d\epsilon} \frac{d\epsilon}{dt}
            = \theta \dot\epsilon .
     \f] 
-    If \f$\dot\epsilon = \gamma$, then \f$ \theta = h \f$.
+    If \f$\dot\epsilon = \gamma\f$, then \f$ \theta = h \f$.
     Also, \f$ f_q = \frac{\partial f}{\partial \hat\sigma_e} \f$.
     For the von Mises yield condition, \f$(f)\f$, 
     \f$ f_q = \frac{\partial \sigma}{\partial \hat\sigma_e} \f$

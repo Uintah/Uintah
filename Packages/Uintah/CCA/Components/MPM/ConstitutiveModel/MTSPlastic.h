@@ -186,9 +186,9 @@ namespace Uintah {
 				     const MPMMaterial* matl,
 				     const particleIndex idx);
 
-    /*! Compute the elastic-plastic tangent modulus 
-    **WARNING** Assumes vonMises yield condition and the
-    associated flow rule */
+    // Compute the elastic-plastic tangent modulus 
+    // **WARNING** Assumes vonMises yield condition and the
+    // associated flow rule 
     virtual void computeTangentModulus(const Matrix3& stress,
 				       const Matrix3& rateOfDeform, 
 				       double temperature,
