@@ -2,22 +2,43 @@
 #ifndef Datatypes_LatticeVol_h
 #define Datatypes_LatticeVol_h
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/MeshRG.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Array3.h>
 #include <vector>
 
 namespace SCIRun {
 
+using namespace vector;
+
 template <class Data>
-class LatticeVol: public GenericField< LatVolMesh, Array3<Data> > { 
-{
+  class FData3d : public Array3<Data>
+
+  typedef Data value_type;
+
+  FData3d():Array3(){}
+  virtual ~FData3d(){}
+
+  value_type operator[](typename LatVolMesh::cell_index idx) const
+    { return this(idx.x_,idx.y_,idx.z_); } 
+  value_type operator[](typename LatVolMesh::face_index idx) const
+    { return this(idx,idx,idx); }
+  value_type operator[](typename LatVolMesh::edge_index idx) const
+    { return this(idx,idx,idx); }
+  value_type operator[](typename LatVolMesh::node_index idx) const
+    { return this(idx.x_,idx.y_,idx.z_); }
+};
+
+template <class Data>
+class LatticeVol: public GenericField< LatVolMesh, FData3d<Data> > { 
+
 public:
 
   LatticeVal() :
-    GenericField<LatVolMesh, Array3<Data> >() {};
-  LatticeVol(data_location data_at):location_(data_at) :
-    GenericField<LatVolMesh, Array3<Data> >(data_at) {};
+    GenericField<LatVolMesh, FData3d<Data> >() {};
+  LatticeVol(data_location data_at) :
+    GenericField<LatVolMesh, FData3d<Data> >(data_at) {};
   virtual ~LatticeVol(){};
 
   static const string type_name(int );

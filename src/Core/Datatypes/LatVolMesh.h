@@ -99,7 +99,8 @@ public:
   
   struct CellIter : public NCIter
   {
-    CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) : NCIter(m, i, j, k) {}
+    CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
+      : NCIter(m, i, j, k) {}
     
     CellIter &operator++()
     {
@@ -134,9 +135,13 @@ public:
  
   //typedef EdgeIndex       edge_index;     
   //typedef EdgeIterator    edge_iterator;
+  typedef int             edge_index;
+  typedef int             edge_iterator;
  
   //typedef FaceIndex       face_index;
   //typedef FaceIterator    face_iterator;
+  typedef int             face_index;
+  typedef int             face_iterator;
  
   typedef CellIndex       cell_index;
   typedef CellIter        cell_iterator;
@@ -149,8 +154,13 @@ public:
   typedef face_index  face_array[6];
   typedef cell_index  cell_array[8];
 
-  LatVolMesh(unsigned x, unsigned y, unsigned z, Point &min, Point &max);
-  LatVolMesh(const LatVolMesh &);
+  LatVolMesh()
+    : nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {};
+  LatVolMesh(unsigned x, unsigned y, unsigned z, Point &min, Point &max) 
+    : nx_(x),ny_(y),nz_(z),min_(min),max_(max) {};
+  LatVolMesh(const LatVolMesh &copy)
+    : nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
+      min_(copy.get_min()),max_(copy.get_max()) {};
   virtual ~LatVolMesh();
 
   node_iterator node_begin() const;
@@ -218,11 +228,11 @@ private:
   //! the object space extents of a LatVolMesh
   Point min_, max_;
 
-  //! the node_index extents of a LatVolMesh (min=0, max=n)
+  //! the node_index space extents of a LatVolMesh (min=0, max=n)
   unsigned nx_, ny_, nz_;
 
   // returns a LatVolMesh
-  static Persistent *maker();
+  static Persistent *maker() { return new LatVolMesh(); }
 };
 
 

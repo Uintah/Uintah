@@ -21,34 +21,6 @@ namespace SCIRun {
 PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
 
 
-Persistent *
-LatVolMesh::maker()
-{
-  return new LatVolMesh(1, 1, 1, Point(0, 0, 0), Point(1, 1, 1));
-}
-
-
-LatVolMesh::LatVolMesh(unsigned x, unsigned y, unsigned z, 
-		       Point &min, Point &max)
-  : nx_(x),
-    ny_(y),
-    nz_(z),
-    min_(min),
-    max_(max)
-{
-}
-
-
-LatVolMesh::LatVolMesh(const LatVolMesh &copy)
-  : nx_(copy.nx_),
-    ny_(copy.ny_),
-    nz_(copy.nz_),
-    min_(copy.min_),
-    max_(copy.max_)
-{
-}
-
-
 LatVolMesh::~LatVolMesh()
 {
 }
@@ -78,56 +50,56 @@ LatVolMesh::get_point(Point &result, const node_index &index) const
 }
 
 
-LatVolMesh::node_iterator
+inline LatVolMesh::node_iterator
 LatVolMesh::node_begin() const
 {
   return node_iterator(0, 0, 0);
 }
 
 
-LatVolMesh::node_iterator
+inline LatVolMesh::node_iterator
 LatVolMesh::node_end() const
 {
   return node_iterator(nx_, ny_, nz_);
 }
 
 
-LatVolMesh::edge_iterator
+inline LatVolMesh::edge_iterator
 LatVolMesh::edge_begin() const
 {
   return NULL;
 }
 
 
-LatVolMesh::edge_iterator
+inline LatVolMesh::edge_iterator
 LatVolMesh::edge_end() const
 {
   return NULL;
 }
 
 
-LatVolMesh::face_iterator
+inline LatVolMesh::face_iterator
 LatVolMesh::face_begin() const
 {
   return NULL;
 }
 
 
-LatVolMesh::face_iterator
+inline LatVolMesh::face_iterator
 LatVolMesh::face_end() const
 {
   return NULL;
 }
 
 
-LatVolMesh::cell_iterator
+inline LatVolMesh::cell_iterator
 LatVolMesh::cell_begin() const
 {
   return cell_iterator(0, 0, 0);
 }
 
 
-LatVolMesh::cell_iterator
+inline LatVolMesh::cell_iterator
 LatVolMesh::cell_end() const
 {
   return cell_iterator(nx_-1, ny_-1, nz_-1);
@@ -146,7 +118,6 @@ LatVolMesh::get_nodes(node_array &, face_index) const
 inline void 
 LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 {
-  unsigned nxny = nx*ny;
   node_index a;
 
   // return the node_indexex  in this cell
