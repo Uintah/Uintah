@@ -220,6 +220,17 @@ void FieldSubSample::execute(){
     return;
   }
 
+  if( fHandle->data_at() == Field::CELL ) {
+    if( iSkip_.get() != 1 || jSkip_.get() != 1 || kSkip_.get() != 1 ) {
+      error( fHandle->get_type_description(0)->get_name() );
+      error( "Currently only availible for cell data with no skipping." );
+    }
+  } else if( fHandle->data_at() != Field::NODE ) {
+    error( fHandle->get_type_description(0)->get_name() );
+    error( "Currently only availible for node data." );
+    return;
+  }
+
   int wrap;
 
   if( fHandle->get_type_description(0)->get_name() == "StructHexVolField" ||
