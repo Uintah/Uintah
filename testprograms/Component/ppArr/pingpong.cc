@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 
           //Set up server's requirement of the distribution array 
 	  Index** dr = new Index* [1]; 
-	  dr[0] = new Index(myrank,myrank,1);
+	  dr[0] = new Index(myrank,myrank+1,1);
 	  MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCalleeDistribution("D",arrr);
           std::cerr << "setCalleeDistribution completed\n";
@@ -156,16 +156,13 @@ int main(int argc, char* argv[])
 	  //Inform everyone else of my distribution
           //(this sends a message to all the callee objects)
           Index** dr = new Index* [1];
-          dr[0] = new Index(0,1,1);
+          dr[0] = new Index(0,2,1);
           MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCallerDistribution("D",arrr); 
 	  std::cerr << "setCallerDistribution completed\n";
 
 
-	  SSIDL::array1<std::string> arr;
-	  arr.push_back("                                                                ");
-	  arr.push_back("                                                                ");
-	  arr.push_back("                                                                ");
+	  SSIDL::array1<std::string> arr(2);
 	  int j=pp->pingpong(arr);
 	  for(int i=0; i<arr.size(); i++){
 	    cerr<<"arr["<<i<<"]="<<arr[i]<<endl;
