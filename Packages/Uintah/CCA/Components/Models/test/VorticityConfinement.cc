@@ -67,29 +67,6 @@ VorticityConfinement::problemSetup(GridP&, SimulationStateP& in_state,
   //__________________________________
   // Read in the constants for the scalar
   params->require("scale", scale);
-
-  //__________________________________
-  //  Read in probe locations for the scalar field
-  ProblemSpecP probe_ps = params->findBlock("probePoints");
-  if (probe_ps) {
-    d_usingProbePts = true;
-    probe_ps->require("probeSamplingFreq", d_probeFreq);
-     
-    Vector location = Vector(0,0,0);
-    map<string,string> attr;                    
-    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != 0; 
-                      prob_spec = prob_spec->findNextBlock("location")) {
-                      
-      prob_spec->get(location);
-      prob_spec->getAttributes(attr);
-      string name = attr["name"];
-      
-      d_probePts.push_back(location);
-      d_probePtsNames.push_back(name);
-    }
-  } else {
-    d_usingProbePts = false;
-  }
 }
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
@@ -225,33 +202,6 @@ void VorticityConfinement::computeModelSources(const ProcessorGroup*,
         momsrc[c] += f*mass*delt*scale;
         totalsrc += momsrc[c].length();
       }
-
-#if 0
-      //__________________________________
-      //  dump out the probe points
-      if (d_usingProbePts ) {
-        double time = d_dataArchiver->getCurrentTime();
-        double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
-        
-        if (time >= nextDumpTime){        // is it time to dump the points
-          FILE *fp;
-          string udaDir = d_dataArchiver->getOutputLocation();
-          IntVector cell_indx;
-          
-          // loop through all the points and dump if that patch contains them
-          for (unsigned int i =0 ; i < d_probePts.size(); i++) {
-            if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
-              string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
-              fp = fopen(filename.c_str(), "a");
-              fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
-              fclose(fp);
-            }
-          }
-          oldProbeDumpTime = time;
-        }  // time to dump
-      } // if(probePts)  
-#endif
-      
     }
   }
 }
@@ -270,3 +220,11 @@ void VorticityConfinement::scheduleErrorEstimate(const LevelP&,
 {
   // Not implemented yet
 }
+//__________________________________
+void VorticityConfinement::scheduleTestConservation(SchedulerP&,
+                                                    const PatchSet*,
+                                                    const ModelInfo*)
+{
+  // Not implemented yet
+}
+                                                    
