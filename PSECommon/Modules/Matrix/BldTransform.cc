@@ -12,7 +12,9 @@
  */
 
 #include <PSECore/Datatypes/MatrixPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Datatypes/DenseMatrix.h>
+#include <SCICore/Geom/Switch.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -20,6 +22,8 @@
 #include <SCICore/Math/MusilRNG.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/CrowdMonitor.h>
+#include <PSECore/Widgets/ScaledBoxWidget.h>
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
@@ -29,6 +33,7 @@ namespace Modules {
 
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::Geometry;
 using namespace SCICore::TclInterface;
 
@@ -39,22 +44,37 @@ class BldTransform : public Module {
     TCLdouble rx, ry, rz, th;
     TCLdouble tx, ty, tz;
     TCLdouble scale, scalex, scaley, scalez;
-    TCLdouble td, shu, shv;
+    TCLdouble sha, shb, shc, shd;
     TCLint xmapTCL;
     TCLint ymapTCL;
     TCLint zmapTCL;
     TCLint pre;
     TCLint whichxform;
+    TCLdouble widgetScale;
+    ScaledBoxWidget *boxWidget;
+    GeomSwitch *widget_switch;
+    CrowdMonitor widget_lock;
+    GeometryOPort* ogeom;
+    Transform composite, latestT, latestWidgetT, widget_trans, widget_pose_inv;
+    Point widget_pose_center;
+    int ignorechanges;
+    int autoupdate;
+    int init;
 public:
     BldTransform(const clString& id);
     virtual ~BldTransform();
+    virtual void widget_moved(int last);
     virtual void execute();
+    void tcl_command( TCLArgs&, void * );
 };
 
 extern "C" Module* make_BldTransform(const clString& id)
 {
     return new BldTransform(id);
 }
+
+static clString module_name("BldTransform");
+static clString widget_name("TransformWidget");
 
 BldTransform::BldTransform(const clString& id)
 : Module("BldTransform", id, Filter),
@@ -66,14 +86,23 @@ BldTransform::BldTransform(const clString& id)
   scale("scale", id, this), pre("pre", id, this),
   xmapTCL("xmapTCL", id, this), ymapTCL("ymapTCL", id, this), 
   zmapTCL("zmapTCL", id, this),
-  td("td", id, this), shu("shu", id, this), shv("shv", id, this),
-  whichxform("whichxform", id, this)
+  whichxform("whichxform", id, this),
+  sha("sha", id, this), shb("shb", id, this), shc("shc", id, this),
+  shd("shd", id, this), widget_lock("BldTransform widget lock"),
+  widgetScale("widgetScale", id, this), ignorechanges(1), autoupdate(0), 
+  init(0)
 {
+    // Create the input port
     imatrix=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(imatrix);
-    // Create the output port
+
+    // Create the output ports
     omatrix=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
     add_oport(omatrix);
+    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    add_oport(ogeom);
+    boxWidget=scinew ScaledBoxWidget(this, &widget_lock, 0.2);
+    widget_switch=boxWidget->GetWidget();
 }
 
 BldTransform::~BldTransform()
@@ -83,6 +112,18 @@ BldTransform::~BldTransform()
 void BldTransform::execute()
 {
     int wh=whichxform.get();
+    if (!init) {
+	Point C, R, D, I;
+	boxWidget->GetPosition(C,R,D,I);
+	cerr << "C="<<C<<"  R="<<R<<"  D="<<D<<"  I="<<I<<"\n";
+	C=Point(0,0,0); R=Point(1,0,0); D=Point(0,1,0), I=Point(0,0,1);
+	widget_pose_center=C;
+	boxWidget->SetPosition(C,R,D,I);
+	if (wh != 5) widget_switch->set_state(0);
+	ogeom->addObj(widget_switch, widget_name, &widget_lock);
+	ogeom->flushViews();
+	init=1;
+    }
     int i, j;
 
     // get the input matrix if there is one
@@ -98,9 +139,8 @@ void BldTransform::execute()
 	inT.set(inV);
     }
 
-    // set up the local transform this module is building
     Transform locT;
-    
+
     // get the "fixed point"
     double txx=tx.get();
     double tyy=ty.get();
@@ -131,31 +171,48 @@ void BldTransform::execute()
 	locT.post_rotate(th.get()*M_PI/180., axis);
 	locT.post_translate(-t);
     } else if (wh==3) {      		       // SHEAR
-	double shD=td.get();
-	Vector shV(1,shu.get(),shv.get());
-	locT.post_shear(t, shV, shD);
+	locT.post_shear(t, Plane(sha.get(),shb.get(),shc.get(),shd.get()));
 	printf("Here's the shear matrix:\n");
 	locT.print();
-    } else { // (wh==4)			       // PERMUTE
-	if (pre.get())
-	    locT.pre_permute(xmapTCL.get(), ymapTCL.get(), zmapTCL.get());
-	else
-	    locT.post_permute(xmapTCL.get(), ymapTCL.get(), zmapTCL.get());
-    }
+    } else if (wh==4) {			       // PERMUTE
+	locT.post_permute(xmapTCL.get(), ymapTCL.get(), zmapTCL.get());
+    } else { // (wh==5)			       // WIDGET
+	Point R, D, I, C;
+	boxWidget->GetPosition(C, R, D, I);
 
+	double ratio=widgetScale.get();
+	widgetScale.set(1);
+	R=C+(R-C)*ratio;
+	D=C+(D-C)*ratio;
+	I=C+(I-C)*ratio;
+	boxWidget->SetPosition(C, R, D, I);
+
+	// find the difference between widget_pose(_inv) and the current pose
+	if (!ignorechanges) {
+	    locT.load_frame(C,R-C,D-C,I-C);
+	    locT.post_trans(widget_pose_inv);
+	    locT.post_translate(C-widget_pose_center);
+	}
+	// multiply that by widget_trans
+	locT.pre_trans(widget_trans);
+	latestWidgetT=locT;
+    }
     DenseMatrix *dm=scinew DenseMatrix(4,4);
     omh=dm;
     
     // now either pre- or post-multiply the transforms and store in matrix
-    double finalP[16];
     if (pre.get()) {
+	locT.post_trans(composite);
+	latestT=locT;
 	locT.post_trans(inT);
-	locT.get(finalP);
     } else {
-	inT.post_trans(locT);
-	inT.get(finalP);
+	locT.pre_trans(composite);
+	latestT=locT;
+	locT.pre_trans(inT);
     }
 
+    double finalP[16];
+    locT.get(finalP);
     double *p=&(finalP[0]);
     int cnt=0;
     for (i=0; i<4; i++) 
@@ -168,12 +225,68 @@ void BldTransform::execute()
     omatrix->send(omh);
 }
 
+void BldTransform::widget_moved(int last)
+{
+    if(last && !abort_flag && autoupdate && !ignorechanges) {
+	abort_flag=1;	
+	want_to_execute();
+    }
+}
+
+void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
+    if (args[1] == "hide_widget") {
+	widget_switch->set_state(0);
+	ogeom->flushViews();
+    } else if (args[1] == "show_widget") {
+	widget_switch->set_state(1);
+	ogeom->flushViews();
+    } else if (args[1] == "composite") {
+	composite=latestT;
+	Point C,R,D,I;
+	boxWidget->GetPosition(C, R, D, I);
+	widget_trans.load_identity();
+	widget_pose_inv.load_frame(C,R-C,D-C,I-C);
+	widget_pose_inv.invert();
+	widget_pose_center=C;
+    } else if (args[1] == "change_autoupdate") {
+	if (args[2] == "1") {	// start autoupdating
+	    autoupdate=1;
+	    want_to_execute();
+	} else {		// stop autoupdating
+	    autoupdate=0;
+	}
+    } else if (args[1] == "change_ignore") {
+	if (args[2] == "1") {	// start ignoring
+	    Point R, D, I, C;
+	    boxWidget->GetPosition(C, R, D, I);
+	    widget_trans=latestWidgetT;
+	    widget_pose_inv.load_frame(C,R-C,D-C,I-C);
+	    widget_pose_inv.invert();
+	    widget_pose_center=C;
+	    ignorechanges=1;
+	} else {		// stop ignoring
+	    Point R, D, I, C;
+	    boxWidget->GetPosition(C, R, D, I);
+	    widget_trans=latestWidgetT;
+	    widget_pose_inv.load_frame(C,R-C,D-C,I-C);
+	    widget_pose_inv.invert();
+	    widget_pose_center=C;
+	    ignorechanges=0;
+	}
+    } else {
+        Module::tcl_command(args, userdata);
+    }
+}
+
 } // End namespace Modules
 } // End namespace PSECommon
 
 
 //
 // $Log$
+// Revision 1.5  2000/08/04 18:09:06  dmw
+// added widget-based transform generation
+//
 // Revision 1.4  2000/03/17 09:27:06  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

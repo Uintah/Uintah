@@ -40,7 +40,7 @@ class MatVec : public Module {
     void conjugate_gradient_sci(Matrix* matrix,
 			   ColumnMatrix& lhs, ColumnMatrix& rhs);
     int somethingChanged(ColumnMatrixHandle m1h, MatrixHandle m2h, clString opS);
-    int AtimesB();
+    void AtimesB(int trans);
 public:
     MatVec(const clString& id);
     virtual ~MatVec();
@@ -78,14 +78,25 @@ int MatVec::somethingChanged(ColumnMatrixHandle icolH, MatrixHandle imatH,
     return changed;
 }
 
-int MatVec::AtimesB() {
-    ColumnMatrix *res = scinew ColumnMatrix(imatH_last->nrows());
+void MatVec::AtimesB(int trans) {
+    ColumnMatrix *res;
+    if (trans) res=scinew ColumnMatrix(imatH_last->ncols());
+    else res=scinew ColumnMatrix(imatH_last->nrows());
     int dummy1, dummy2;
 //    cerr << "Calling mult...\n";
-    imatH_last->mult(*icolH_last.get_rep(), *res, dummy1, dummy2);
+
+    int cnt=0;
+    for (int i=0; i<icolH_last->nrows(); i++) 
+	if ((*icolH_last.get_rep())[i]) cnt++;
+    int spVec=0;
+    if (cnt < icolH_last->nrows()/10) spVec=1;
+    if (trans) imatH_last->mult_transpose(*icolH_last.get_rep(), *res, 
+					  dummy1, dummy2, -1, -1, spVec);
+    else
+	imatH_last->mult(*icolH_last.get_rep(), *res, dummy1, dummy2, 
+			 -1, -1, spVec);
 //    cerr << "Done!\n";
     ocH=res;
-    return 1;
 }
 
 void MatVec::execute() {
@@ -103,7 +114,11 @@ void MatVec::execute() {
     if (!somethingChanged(icolH, imatH, opS)) ocol->send(ocH);
 //    cerr << "Doing great!\n";
     if (opS == "AtimesB") {
-	if (AtimesB()) ocol->send(ocH);
+	AtimesB(0); 
+	ocol->send(ocH);
+    } else if (opS == "AtTimesB") {
+	AtimesB(1);
+	ocol->send(ocH);
     } else {
 	cerr << "MatVec: unknown operation "<<opS<<"\n";
     }
@@ -113,6 +128,9 @@ void MatVec::execute() {
 
 //
 // $Log$
+// Revision 1.5  2000/08/04 18:09:06  dmw
+// added widget-based transform generation
+//
 // Revision 1.4  2000/03/17 09:27:07  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
