@@ -2532,8 +2532,9 @@ OpenGL::compute_depth(ViewWindow* viewwindow, const View& view,
       znear=Min(znear, dist);
       zfar=Max(zfar, dist);
     }
-    znear -= d * 0.01;
-    zfar  += d * 0.01;
+    znear *= 0.99;
+    zfar  *= 1.01;
+
     if(znear <= 0)
     {
       if(zfar <= 0)
