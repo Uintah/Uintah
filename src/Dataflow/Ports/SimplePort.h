@@ -132,7 +132,7 @@ void SimpleIPort<T>::reset()
 template<class T>
 void SimpleIPort<T>::finish()
 {
-  if(!recvd_ && nconnections() > 0) {
+  if(!recvd_ && num_unblocked_connections() > 0) {
     if (module->showStats()) turn_on(Finishing);
     SimplePortComm<T>* msg=mailbox.receive();
     delete msg;
@@ -150,12 +150,15 @@ void SimpleOPort<T>::reset()
 template<class T>
 void SimpleOPort<T>::finish()
 {
-  if(!sent_something_ && nconnections() > 0){
+  if(!sent_something_ && num_unblocked_connections() > 0){
     // Tell them that we didn't send anything...
     if (module->showStats()) { turn_on(Finishing); }
     for(int i=0;i<nconnections();i++) {
       SimplePortComm<T>* msg = new SimplePortComm<T>();
-      ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+      Connection* conn = connections[i];
+      if (! conn->is_blocked()) {
+	((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+      }
     }
     
     if (module->showStats())
@@ -179,7 +182,7 @@ template<class T>
 void SimpleOPort<T>::do_send(const T& data)
 {
   handle_ = data;
-  if (nconnections() == 0) { return; }
+  if (num_unblocked_connections() == 0) { return; }
 
   // Change oport state and colors on screen.
   if (module->showStats()) { turn_on(); }
@@ -187,7 +190,10 @@ void SimpleOPort<T>::do_send(const T& data)
   for (int i = 0; i < nconnections(); i++) {
     // Add the new message.
     SimplePortComm<T>* msg = new SimplePortComm<T>(data);
-    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+    Connection* conn = connections[i];
+    if (! conn->is_blocked()) {
+      ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+    }
   }
   sent_something_ = true;
 
@@ -207,7 +213,7 @@ template<class T>
 void SimpleOPort<T>::do_send_intermediate(const T& data)
 {
   handle_ = data;
-  if(nconnections() == 0) { return; }
+  if(num_unblocked_connections() == 0) { return; }
 
   if (module->showStats()) { turn_on(); }
 
@@ -216,7 +222,10 @@ void SimpleOPort<T>::do_send_intermediate(const T& data)
   for(int i=0;i<nconnections();i++){
     // Add the new message.
     SimplePortComm<T>* msg=new SimplePortComm<T>(data);
-    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+    Connection* conn = connections[i];
+    if (! conn->is_blocked()) {
+      ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+    }
   }
   sent_something_ = true;
 
@@ -226,7 +235,7 @@ void SimpleOPort<T>::do_send_intermediate(const T& data)
 template<class T>
 int SimpleIPort<T>::get(T& data)
 {
-  if(nconnections()==0) { return 0; }
+  if(num_unblocked_connections()==0) { return 0; }
   if (module->showStats()) { turn_on(); }
 
   // Wait for the data...
@@ -260,9 +269,12 @@ void SimpleOPort<T>::resend(Connection* conn)
 {
   if (module->showStats()) { turn_on(); }
   for(int i=0;i<nconnections();i++){
-    if(connections[i] == conn){
-      SimplePortComm<T>* msg=new SimplePortComm<T>(handle_);
-      ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+    Connection* c = connections[i];
+    if (! c->is_blocked()) {
+      if(c == conn){
+	SimplePortComm<T>* msg=new SimplePortComm<T>(handle_);
+	((SimpleIPort<T>*)c->iport)->mailbox.send(msg);
+      }
     }
   }
   if (module->showStats()) { turn_off(); }
