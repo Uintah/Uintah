@@ -22,6 +22,8 @@ SimpleReducer::SimpleReducer(const char* name)
 {
     d_array_size=-1;
     d_p=0;
+    d_join[0]=0;
+    d_join[1]=0;
 }
 
 SimpleReducer::~SimpleReducer()
@@ -42,11 +44,13 @@ SimpleReducer::collectiveResize(int proc, int n)
     // or they will skip down too soon...
     wait(n);
     if(proc==0){
-        delete[] d_join[0];
-        delete[] d_join[1];
+	if(d_p){
+	    delete[] d_join[0];
+	    delete[] d_join[1];
+	    delete[] d_p;
+	}
         d_join[0]=new joinArray[n];
         d_join[0]=new joinArray[n];
-        delete[] d_p;
         d_p=new pdata[n];
         for(int i=0;i<n;i++)
 	    d_p[i].d_buf=0;
@@ -96,6 +100,9 @@ SimpleReducer::max(int proc, int n, double mymax)
 
 //
 // $Log$
+// Revision 1.3  1999/09/21 18:37:20  sparker
+// Fixed memory allocation bug
+//
 // Revision 1.2  1999/08/29 00:47:01  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
