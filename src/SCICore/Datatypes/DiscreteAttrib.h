@@ -40,13 +40,26 @@ public:
 
   virtual ~DiscreteAttrib();
 
-  const T &get1(int x) const;
-  const T &get2(int x, int y) const;
-  const T &get3(int x, int y, int z) const;
+  virtual void get1(T &result, int x);
+  virtual void get2(T &result, int x, int y);
+  virtual void get3(T &result, int x, int y, int z);
 
-  //T &set1(int x, T &val);
-  //T &set2(int x, int y, T &val);
-  //T &set3(int x, int y, int z, T &val);
+  virtual T &get1(int x);
+  virtual T &get2(int x, int y);
+  virtual T &get3(int x, int y, int z);
+
+  T &fget1(int x);
+  T &fget2(int x, int y);
+  T &fget3(int x, int y, int z);
+  
+
+  virtual void set1(int x, const T &val);
+  virtual void set2(int x, int y, const T &val);
+  virtual void set3(int x, int y, int z, const T &val);
+
+  void fset1(int x, const T &val);
+  void fset2(int x, int y, const T &val);
+  void fset3(int x, int y, int z, const T &val);
 
   // Implement begin()
   // Implement end()
@@ -114,53 +127,108 @@ DiscreteAttrib<T>::~DiscreteAttrib()
 }
 
 
-template <class T>
-const T &
-DiscreteAttrib<T>::get1(int) const
+template <class T> T &
+DiscreteAttrib<T>::fget1(int)
 {
   return defval;
-}
-
-
-template <class T>
-const T &
-DiscreteAttrib<T>::get2(int, int) const
-{
-  return defval;
-}
-
-
-template <class T>
-const T &
-DiscreteAttrib<T>::get3(int, int, int) const
-{
-  return defval;
-}
-
-
-#if 0
-template <class T>
-T &
-DiscreteAttrib<T>::set1(int, T& val)
-{
-  return defval = val;
-}
-
-
-template <class T>
-T &
-DiscreteAttrib<T>::set2(int, int, T& val)
-{
-  return defval = val;
 }
 
 
 template <class T> T &
-DiscreteAttrib<T>::set3(int, int, int, T& val)
+DiscreteAttrib<T>::fget2(int, int)
 {
-  return defval = val;
+  return defval;
 }
-#endif
+
+
+template <class T> T &
+DiscreteAttrib<T>::fget3(int, int, int)
+{
+  return defval;
+}
+
+
+// Copy wrappers, no allocation of result.
+template <class T> void
+DiscreteAttrib<T>::get1(T &result, int ix)
+{
+  result = fget1(ix);
+}
+
+template <class T> void
+DiscreteAttrib<T>::get2(T &result, int ix, int iy)
+{
+  result = fget2(ix, iy);
+}
+
+template <class T> void
+DiscreteAttrib<T>::get3(T &result, int ix, int iy, int iz)
+{
+  result = fget3(ix, iy, iz);
+}
+
+
+// Virtual wrappers for inline functions.
+template <class T> T &
+DiscreteAttrib<T>::get1(int ix)
+{
+  return fget1(ix);
+}
+
+template <class T> T &
+DiscreteAttrib<T>::get2(int ix, int iy)
+{
+  return fget2(ix, iy);
+}
+
+template <class T> T &
+DiscreteAttrib<T>::get3(int ix, int iy, int iz)
+{
+  return fget3(ix, iy, iz);
+}
+
+
+
+
+template <class T> void
+DiscreteAttrib<T>::fset1(int, const T &val)
+{
+  defval = val;
+}
+
+
+template <class T> void
+DiscreteAttrib<T>::fset2(int, int, const T &val)
+{
+  defval = val;
+}
+
+
+template <class T> void
+DiscreteAttrib<T>::fset3(int, int, int, const T &val)
+{
+  defval = val;
+}
+
+
+// Generic setters for Discrete type
+template <class T> void
+DiscreteAttrib<T>::set1(int x, const T &val)
+{
+  fset1(x, val);
+}
+
+template <class T> void
+DiscreteAttrib<T>::set2(int x, int y, const T &val)
+{
+  fset2(x, y, val);
+}
+
+template <class T> void
+DiscreteAttrib<T>::set3(int x, int y, int z, const T &val)
+{
+  fset3(x, y, z, val);
+}
 
 
 // template <class T> bool DiscreteAttrib<T>::compute_minmax(){
