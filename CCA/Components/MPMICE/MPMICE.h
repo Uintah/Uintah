@@ -62,9 +62,11 @@ class MPMICE : public SimulationInterface, public UintahParallelComponent {
 public:
   MPMICE(const ProcessorGroup* myworld);
   virtual ~MPMICE();
-         
-  //////////
-  // Insert Documentation Here:
+  
+  virtual bool restartableTimesteps();
+
+  virtual double recomputeTimestep(double current_dt); 
+          
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
                             SimulationStateP&);
          
@@ -73,8 +75,6 @@ public:
 
   virtual void restartInitialize();
 
-  //////////
-  // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
 #if 0         
