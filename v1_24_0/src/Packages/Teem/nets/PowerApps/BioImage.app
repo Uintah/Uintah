@@ -647,6 +647,13 @@ class BioImageApp {
     ############################
     # Build the processing and visualization frames and pack along with viewer
     method build_app {d} {
+	# make sure there is a slash on the end
+	if {[string first "/" $d] != -1 && [string index $d end] != "/"} {
+	    set d "$d/"
+	} elseif {[string first "\\" $d] != -1 && [string index $d end] != "\\"} {
+	    set d "$d\\"
+	}
+
 	set data_dir $d
 	global mods
 	wm withdraw .standalone
