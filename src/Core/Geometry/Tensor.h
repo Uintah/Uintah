@@ -46,6 +46,7 @@ public:
   Tensor();
   Tensor(const Tensor&);
   Tensor(int);
+  Tensor(double);
   Tensor(const Array1<double> &);
   Tensor(const double *);
   Tensor(const double **);
