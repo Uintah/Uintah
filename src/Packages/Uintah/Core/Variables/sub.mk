@@ -34,5 +34,7 @@ SRCS     += \
 PSELIBS := \
 	Packages/Uintah/Core/Math \
 
+LIBS       := $(MPI_LIBRARY)
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
