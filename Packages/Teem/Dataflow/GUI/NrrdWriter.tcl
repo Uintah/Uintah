@@ -40,12 +40,29 @@ itcl_class Teem_DataIO_NrrdWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype
+	global $this-filetype $this-confirm
 	set $this-filetype Binary
+        set $this-confirm 1
+	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
+	    set $this-confirm 0
+	}
+        
+        global $this-types
 	global $this-exporttype
-	# set $this-split 0
     }
-    
+
+    method overwrite {} {
+	global $this-confirm $this-filetype
+	if {[info exists $this-confirm] && [info exists $this-filename] && \
+		[set $this-confirm] && [file exists [set $this-filename]] } {
+	    set value [tk_messageBox -type yesno -parent . \
+			   -icon warning -message \
+			   "File [set $this-filename] already exists.\n Would you like to overwrite it?"]
+	    if [string equal "no" $value] { return 0 }
+	}
+	return 1
+    }
+
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
@@ -70,28 +87,29 @@ itcl_class Teem_DataIO_NrrdWriter {
 	set defname "MyNrrd"
 	set title "Save nrrd file"
 
-	# file types to appers in filter box
-	set types {
-	    {{Nrrd}     {.nrrd}      }
-	    {{Nrrd Header and Raw}     {.nhdr *.raw}      }
-	    {{All Files}       {.*}   }
-	}
-	
+
+	# Unwrap $this-types into a list.
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
+
 	######################################################
 	
 	makeSaveFilebox \
-		-parent $w \
+                -parent $w \
 		-filevar $this-filename \
 	        -setcmd "wm withdraw $w" \
 		-command "$this-c needexecute; wm withdraw $w" \
-		-cancel "wm withdraw $w" \
+                -cancel "wm withdraw $w" \
 		-title $title \
-		-filetypes $types \
+		-filetypes $tmp2 \
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
-		-formatvar $this-filetype \
-	        -selectedfiletype $this-exporttype
-		#-splitvar $this-split
+                -formatvar $this-filetype \
+                -formats {None} \
+                -confirmvar $this-confirm \
+                -selectedfiletype $this-exporttype
+
+        moveToCursor $w
     }
 }

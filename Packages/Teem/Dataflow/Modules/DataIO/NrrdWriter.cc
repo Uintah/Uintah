@@ -44,20 +44,30 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/ImportExport/Nrrd/NrrdIEPlugin.h>
+
 #include <sstream>
 #include <fstream>
+
 using std::ifstream;
 using std::ostringstream;
+
 
 namespace SCITeem {
 
 using namespace SCIRun;
 
-class NrrdWriter : public Module {
-    NrrdIPort*  inport_;
-    GuiFilename filename_;
-    GuiString   filetype_;
-    GuiString   exporttype_;
+class NrrdWriter : public Module
+{
+  NrrdIPort*  inport_;
+  GuiFilename filename_;
+  GuiString   filetype_;
+  GuiString   gui_types_;
+  GuiString   gui_exporttype_;
+
+  bool overwrite();
+  bool call_exporter(const string &filename, NrrdDataHandle handle);
+
 public:
     NrrdWriter(GuiContext *ctx);
     virtual ~NrrdWriter();
@@ -76,8 +86,33 @@ NrrdWriter::NrrdWriter(GuiContext *ctx)
 : Module("NrrdWriter", ctx, Filter, "DataIO", "Teem"), 
   filename_(ctx->subVar("filename")),
   filetype_(ctx->subVar("filetype")),
-  exporttype_(ctx->subVar("exporttype"))
+  gui_types_(ctx->subVar("types", false)),
+  gui_exporttype_(ctx->subVar("exporttype"))
 {
+  NrrdIEPluginManager mgr;
+  vector<string> exporters;
+  mgr.get_exporter_list(exporters);
+  
+  string exporttypes = "{";
+  exporttypes += "{{Nrrd} {.nrrd} } ";
+  exporttypes += "{{Nrrd Header and Raw} {.nhdr *.raw} } ";
+
+  for (unsigned int i = 0; i < exporters.size(); i++)
+  {
+    NrrdIEPlugin *pl = mgr.get_plugin(exporters[i]);
+    if (pl->fileExtension_ != "")
+    {
+      exporttypes += "{{" + exporters[i] + "} {" + pl->fileExtension_ + "} } ";
+    }
+    else
+    {
+      exporttypes += "{{" + exporters[i] + "} {.*} } ";
+    }
+  }
+
+  exporttypes += "}";
+
+  gui_types_.set(exporttypes);
 }
 
 
@@ -86,24 +121,78 @@ NrrdWriter::~NrrdWriter()
 }
 
 
+bool
+NrrdWriter::call_exporter(const string &filename, NrrdDataHandle handle)
+{
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+  
+  NrrdIEPluginManager mgr;
+  NrrdIEPlugin *pl = mgr.get_plugin(ft);
+  if (pl)
+  {
+    return pl->fileWriter_(this, handle, filename.c_str());
+  }
+  return false;
+}
+
+
+bool
+NrrdWriter::overwrite()
+{
+  std::string result;
+  gui->lock();
+  gui->eval(id + " overwrite", result);
+  gui->unlock();
+  if (result == std::string("0"))
+  {
+    warning("User chose to not save.");
+    return false;
+  }
+  return true;
+}
+
+
 void
 NrrdWriter::execute()
 {
+  const string ftpre = gui_exporttype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  const bool exporting_ = !(ft == "" ||
+                            ft == "Nrrd" ||
+                            ft == "Nrrd Header and Raw");
+
   // Read data from the input port.
-  NrrdDataHandle handle;
-  inport_ = (NrrdIPort *)get_iport("Input Data");
-  if(!inport_->get(handle))
-    return;
-  
-  if (!handle.get_rep()) {
-    error("Null input");
+  NrrdDataHandle handle_;
+
+  NrrdIPort *inport = (NrrdIPort *)get_iport("Input Data");
+
+  // Read data from the input port
+  if (!inport->get(handle_) || !handle_.get_rep())
+  {
+    remark("No data on input port.");
     return;
   }
 
   // If no name is provided, return.
-  string fn(filename_.get());
-  if(fn == "") {
-    error("Warning: no filename in NrrdWriter");
+  const string fn(filename_.get());
+  if (fn == "")
+  {
+    warning("No filename specified.");
+    return;
+  }
+
+  if (!overwrite()) return;
+  
+  if (exporting_)
+  {
+    if (!call_exporter(fn, handle_))
+    {
+      error("Export failed.");
+    }
     return;
   }
 
@@ -111,7 +200,6 @@ NrrdWriter::execute()
   string::size_type e = fn.find_last_of(".");
   string root = fn;
   if (e != string::npos) root = fn.substr(0,e);
-
 
   // Determine which case we are writing out based on the
   // original filename.  
@@ -124,24 +212,23 @@ NrrdWriter::execute()
   else if (fn.find(".nd",0) != string::npos) writing_nd = true;
 
   // If the filename doesn't have an extension
-  // use the export type to determine what it should be
+  // use the export type to determine what it should be.
   if (!writing_nrrd && !writing_nhdr && !writing_nd)
   {
-    string type = exporttype_.get();
-    if (type.find(".nrrd",0) != string::npos) writing_nrrd = true;
-    else writing_nhdr = true;
+    if (ft == "Nrrd") { writing_nrrd = true; }
+    else { writing_nhdr = true; }
   }
 
   // Only write out the .nd extension if that was the filename
   // specified or if there are properties.  In the case that it
   // was an .nd filename specified, write out a .nrrd file also.
-  if (handle->nproperties() > 0)
+  if (handle_->nproperties() > 0)
   {
     if (!writing_nd)
     {
       writing_nd = true;
       if (!writing_nhdr)
-	writing_nrrd = true;
+        writing_nrrd = true;
     }
   }
 
@@ -154,23 +241,23 @@ NrrdWriter::execute()
 
     // Set NrrdData's write_nrrd variable to indicate
     // whether NrrdData's io method should write out a .nrrd or .nhdr
-    if (writing_nhdr) handle.get_rep()->write_nrrd_ = false;
-    else handle.get_rep()->write_nrrd_ = true;
+    if (writing_nhdr) handle_.get_rep()->write_nrrd_ = false;
+    else handle_.get_rep()->write_nrrd_ = true;
 
     if (ft == "Binary")
-      {
-	stream = scinew BinaryPiostream(nrrd_data_fn, Piostream::Write);
-      }
+    {
+      stream = scinew BinaryPiostream(nrrd_data_fn, Piostream::Write);
+    }
     else
-      {
-	stream = scinew TextPiostream(nrrd_data_fn, Piostream::Write);
-      }
+    {
+      stream = scinew TextPiostream(nrrd_data_fn, Piostream::Write);
+    }
     
     if (stream->error()) {
       error("Could not open file for writing" + nrrd_data_fn);
     } else {
       // Write the file
-      Pio(*stream, handle); // This also writes a separate nrrd.
+      Pio(*stream, handle_); // This also writes a separate nrrd.
       delete stream; 
     } 
   }
@@ -181,7 +268,7 @@ NrrdWriter::execute()
     if (writing_nhdr) nrrd_fn += ".nhdr";
     else nrrd_fn += ".nrrd";
 
-    Nrrd *nin = handle->nrrd;
+    Nrrd *nin = handle_->nrrd;
     
     NrrdIoState *nio = nrrdIoStateNew();
     // Set encoding to be raw
@@ -199,7 +286,7 @@ NrrdWriter::execute()
     {
       if (nio->format != nrrdFormatNRRD)
       {
-	nio->format = nrrdFormatNRRD;
+        nio->format = nrrdFormatNRRD;
       }
     }
     
