@@ -62,19 +62,12 @@ double JWLC::computeRhoMicro(double press, double,
     rhoM+=delta;
     rhoM=fabs(rhoM);
     if(count>=100){
-      cout << setprecision(15);
-      cout << "JWLC::computeRhoMicro not converging." << endl;
-      cout << "press= " << press << " temp= " << Temp << " cv= " << cv << endl;
-      cout << "delta= " << delta << " rhoM= " << rhoM << " f = " << f <<
-              " df_drho = " << df_drho << endl;
-
 
       // The following is here solely to help figure out what was going on
       // at the time the above code failed to converge.  Start over with this
       // copy and print more out.
       delta = 1.;
       rhoM = 2.*rho0;
-      cout <<  rhoM << endl;;
       while(fabs(delta/rhoM)>epsilon){
        double inv_rho_rat=rho0/rhoM;
        double rho_rat=rhoM/rho0;
@@ -94,15 +87,17 @@ double JWLC::computeRhoMicro(double press, double,
        delta = -relfac*(f/df_drho);
        rhoM+=delta;
        rhoM=fabs(rhoM);
-       cout <<  "f = " << f << " df_drho = " << df_drho <<
-                " delta = " << delta << " rhoM = " << rhoM << endl;
-       if(count>=120){
+       if(count>=150){
+         cout << setprecision(15);
+         cout << "JWLC::computeRhoMicro not converging." << endl;
+         cout << "press= " << press << " temp=" << Temp << " cv=" << cv << endl;
+         cout << "delta= " << delta << " rhoM= " << rhoM << " f = " << f <<
+                 " df_drho =" << df_drho << " rho_guess =" << rho_guess << endl;
+
          exit(1);
        }
        count++;
       }
-
-      exit(1);
     }
     count++;
   }
