@@ -32,7 +32,6 @@ NexusSpChannel::NexusSpChannel() {
   //  if (kDEBUG) printDebug("NexusSpChannel::NexusSpChannel()");
 
   globus_nexus_startpoint_set_null(&d_sp);
-  msg = NULL;
 }
 
 NexusSpChannel::~NexusSpChannel() { 
@@ -43,8 +42,6 @@ NexusSpChannel::~NexusSpChannel() {
       throw CommError("nexus_startpoint_destroy_and_notify", gerr);
     }
   }
-  if (msg != NULL)
-    delete msg;
 }
 
 SpChannel* NexusSpChannel::SPFactory(bool deep) {
@@ -103,10 +100,7 @@ void NexusSpChannel::closeConnection() {
 
 Message* NexusSpChannel::getMessage() {
   if (kDEBUG) printDebug("NexusSpChannel::getMessage()");
-
-  if (msg == NULL)
-    msg = new NexusSpMessage(&d_sp);
-  return msg;
+  return (new NexusSpMessage(&d_sp));
 }  
 
 

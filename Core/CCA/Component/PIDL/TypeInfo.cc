@@ -69,7 +69,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   ProxyBase* p=dynamic_cast<ProxyBase*>(obj);
   if(!p)
     return 0;
-  
+
   ReferenceMgr* _rm;
   _rm = p->_proxyGetReferenceMgr(); 
   Message* message = _rm->d_ref[0].chan->getMessage();
@@ -103,6 +103,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   int vtbase;
   message->unmarshalInt(&vtbase);
   message->destroyMessage();
+  delete message;
 
   if(!flag){
     // isa failed
@@ -131,9 +132,10 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     }
 
     // return the correct proxy
-    for(unsigned int i=0; i < _rm->d_ref.size(); i++)
-      _rm->d_ref[i].d_vtable_base=vtbase;
-    return (*d_priv->create_proxy)(*_rm);
+    ReferenceMgr* new_rm = new ReferenceMgr(*_rm);
+    for(unsigned int i=0; i < new_rm->d_ref.size(); i++)
+      new_rm->d_ref[i].d_vtable_base=vtbase;
+    return (*d_priv->create_proxy)(*new_rm);
   }
 }
 
