@@ -32,16 +32,9 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/LatticeVol.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/PointCloud.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/Modules/Fields/BuildInterpolant.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -62,10 +55,6 @@ public:
   BuildInterpolant(const string& id);
   virtual ~BuildInterpolant();
   virtual void execute();
-
-  template <class MSRC, class MDST, class LSRC, class LDST, class FOUT>
-  void callback(MSRC *src_mesh, MDST *dst_mesh, LSRC *, LDST *, FOUT *,
-		Field::data_location dst_loc);
 
   //template <class Mesh, class Index>
   //void find_closest(Mesh *mesh, typename Index::index_type &idx, Point &p);
@@ -115,513 +104,91 @@ BuildInterpolant::find_closest(Mesh *mesh, typename Index::index_type &idx,
 }
 #endif
 
-template <class MSRC, class MDST, class LSRC, class LDST, class FOUT>
-void
-BuildInterpolant::callback(MSRC *src_mesh, MDST *dst_mesh,
-			   LSRC *, LDST *, FOUT *,
-			   Field::data_location dst_loc)
-{
-  FOUT *ofield = new FOUT(dst_mesh, dst_loc);
-
-  typedef typename LDST::iterator DSTITR; 
-  DSTITR itr = dst_mesh->tbegin((DSTITR *)0);
-  DSTITR end_itr = dst_mesh->tend((DSTITR *)0);
-
-  while (itr != end_itr)
-  {
-    typename LSRC::array_type locs;
-    vector<double> weights;
-    Point p;
-
-    dst_mesh->get_center(p, *itr);
-
-    src_mesh->get_weights(p, locs, weights);
-
-    vector<pair<typename LSRC::index_type, double> > v;
-    if (weights.size() > 0)
-    {
-      for (unsigned int i = 0; i < locs.size(); i++)
-      {
-	v.push_back(pair<typename LSRC::index_type, double>
-		    (locs[i], weights[i]));
-      }
-    }
-    else
-    {
-      //typename LSRC::index_type index;
-      //find_closest(src_mesh, (LSRC *)0, index, p);
-      //v.push_back(pair<typename LSRC::index_type, double>(index, 1.0));
-    }
-
-    ofield->set_value(v, *itr);
-    ++itr;
-  }
-
-  FieldHandle fh(ofield);
-  ofp->send(fh);
-}
-
-
-
-
-#define CALLBACK_WRAP(MSRC, FDST, fsrc, fdst)\
-{\
-  switch (fsrc->data_at())\
-  {\
-  case Field::NODE:\
-    switch (fdst->data_at())\
-    {\
-    case Field::NODE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Node *)0,\
-	       (FDST<double>::mesh_type::Node *)0,\
-	       (FDST<vector<pair<MSRC::Node::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::EDGE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Node *)0,\
-	       (FDST<double>::mesh_type::Edge *)0,\
-	       (FDST<vector<pair<MSRC::Node::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::FACE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Node *)0,\
-	       (FDST<double>::mesh_type::Face *)0,\
-	       (FDST<vector<pair<MSRC::Node::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::CELL:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Node *)0,\
-	       (FDST<double>::mesh_type::Cell *)0,\
-	       (FDST<vector<pair<MSRC::Node::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-    \
-    default:\
-      break;\
-    }\
-    break;\
-\
-  case Field::EDGE:\
-    switch (fdst->data_at())\
-    {\
-    case Field::NODE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Edge *)0,\
-	       (FDST<double>::mesh_type::Node *)0,\
-	       (FDST<vector<pair<MSRC::Edge::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::EDGE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Edge *)0,\
-	       (FDST<double>::mesh_type::Edge *)0,\
-	       (FDST<vector<pair<MSRC::Edge::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::FACE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Edge *)0,\
-	       (FDST<double>::mesh_type::Face *)0,\
-	       (FDST<vector<pair<MSRC::Edge::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::CELL:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Edge *)0,\
-	       (FDST<double>::mesh_type::Cell *)0,\
-	       (FDST<vector<pair<MSRC::Edge::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-    \
-    default:\
-      break;\
-    }\
-    break;\
-\
-  case Field::FACE:\
-    switch (fdst->data_at())\
-    {\
-    case Field::NODE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Face *)0,\
-	       (FDST<double>::mesh_type::Node *)0,\
-	       (FDST<vector<pair<MSRC::Face::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::EDGE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Face *)0,\
-	       (FDST<double>::mesh_type::Edge *)0,\
-	       (FDST<vector<pair<MSRC::Face::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::FACE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Face *)0,\
-	       (FDST<double>::mesh_type::Face *)0,\
-	       (FDST<vector<pair<MSRC::Face::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::CELL:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Face *)0,\
-	       (FDST<double>::mesh_type::Cell *)0,\
-	       (FDST<vector<pair<MSRC::Face::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-    \
-    default:\
-      break;\
-    }\
-    break;\
-\
-  case Field::CELL:\
-    switch (fdst->data_at())\
-    {\
-    case Field::NODE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Cell *)0,\
-	       (FDST<double>::mesh_type::Node *)0,\
-	       (FDST<vector<pair<MSRC::Cell::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::EDGE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Cell *)0,\
-	       (FDST<double>::mesh_type::Edge *)0,\
-	       (FDST<vector<pair<MSRC::Cell::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::FACE:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Cell *)0,\
-	       (FDST<double>::mesh_type::Face *)0,\
-	       (FDST<vector<pair<MSRC::Cell::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-\
-    case Field::CELL:\
-      callback((MSRC *)(fsrc->mesh().get_rep()),\
-	       (FDST<double>::mesh_type *)(fdst->mesh().get_rep()),\
-	       (MSRC::Cell *)0,\
-	       (FDST<double>::mesh_type::Cell *)0,\
-	       (FDST<vector<pair<MSRC::Cell::index_type, double> > > *)0,\
-	       fdst->data_at());\
-      break;\
-    \
-    default:\
-      break;\
-    }\
-    break;\
-\
-  default:\
-    break;\
-  }\
-}
-	   
 
 
 void
 BuildInterpolant::execute()
 {
   dst_port = (FieldIPort *)get_iport("Destination");
-  FieldHandle dfieldhandle;
-  Field *dst_field;
-  if (!(dst_port->get(dfieldhandle) && (dst_field = dfieldhandle.get_rep())))
+  FieldHandle fdst_h;
+  if (!(dst_port->get(fdst_h) && fdst_h.get_rep()))
   {
     return;
   }
 
   src_port = (FieldIPort *)get_iport("Source");
-  FieldHandle sfieldhandle;
-  Field *src_field;
-  if (!(src_port->get(sfieldhandle) && (src_field = sfieldhandle.get_rep())))
+  FieldHandle fsrc_h;
+  if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
     return;
   }
-  ofp = (FieldOPort *)get_oport("Interpolant");
-  const string dst_mesh_name = dst_field->get_type_name(0);
-  const string src_mesh_name = src_field->get_type_name(0);
 
-  if (src_mesh_name == "TetVolMesh")
+  CompileInfo *ci =
+    BuildInterpAlgo::get_compile_info(fsrc_h->mesh()->get_type_description(),
+				      fsrc_h->data_at_type_description(),
+				      fdst_h->mesh()->get_type_description(),
+				      fdst_h->data_at_type_description(),
+				      fdst_h->get_type_description());
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
-    if (dst_mesh_name == "TetVolMesh")
-    {
-      CALLBACK_WRAP(TetVolMesh, TetVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "LatVolMesh")
-    {
-      CALLBACK_WRAP(TetVolMesh, LatticeVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ImageMesh")
-    {
-      CALLBACK_WRAP(TetVolMesh, ImageField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "TriSurfMesh")
-    {
-      CALLBACK_WRAP(TetVolMesh, TriSurf, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ScanlineMesh")
-    {
-      CALLBACK_WRAP(TetVolMesh, ScanlineField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ContourMesh")
-    {
-      CALLBACK_WRAP(TetVolMesh, ContourField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "PointCloudMesh")
-    {
-      CALLBACK_WRAP(TetVolMesh, PointCloud, src_field, dst_field);
-    }
-    else
-    {
-      error("Unrecognized destination mesh type");
-    }
+    error("Could not compile algorithm.");
+    return;
   }
-  else if (src_mesh_name == "LatVolMesh")
+  BuildInterpAlgo *algo =
+    dynamic_cast<BuildInterpAlgo *>(algo_handle.get_rep());
+  if (algo == 0)
   {
-    if (dst_mesh_name == "TetVolMesh")
-    {
-      CALLBACK_WRAP(LatVolMesh, TetVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "LatVolMesh")
-    {
-      CALLBACK_WRAP(LatVolMesh, LatticeVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ImageMesh")
-    {
-      CALLBACK_WRAP(LatVolMesh, ImageField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "TriSurfMesh")
-    {
-      CALLBACK_WRAP(LatVolMesh, TriSurf, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ScanlineMesh")
-    {
-      CALLBACK_WRAP(LatVolMesh, ScanlineField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ContourMesh")
-    {
-      CALLBACK_WRAP(LatVolMesh, ContourField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "PointCloudMesh")
-    {
-      CALLBACK_WRAP(LatVolMesh, PointCloud, src_field, dst_field);
-    }
-    else
-    {
-      error("Unrecognized destination mesh type");
-    }
+    error("Could not get algorithm.");
+    return;
   }
-  else if (src_mesh_name == "TriSurfMesh")
-  {
-    if (dst_mesh_name == "TetVolMesh")
-    {
-      CALLBACK_WRAP(TriSurfMesh, TetVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "LatVolMesh")
-    {
-      CALLBACK_WRAP(TriSurfMesh, LatticeVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ImageMesh")
-    {
-      CALLBACK_WRAP(TriSurfMesh, ImageField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "TriSurfMesh")
-    {
-      CALLBACK_WRAP(TriSurfMesh, TriSurf, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ScanlineMesh")
-    {
-      CALLBACK_WRAP(TriSurfMesh, ScanlineField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ContourMesh")
-    {
-      CALLBACK_WRAP(TriSurfMesh, ContourField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "PointCloudMesh")
-    {
-      CALLBACK_WRAP(TriSurfMesh, PointCloud, src_field, dst_field);
-    }
-    else
-    {
-      error("Unrecognized destination mesh type");
-    }
-  }
-  else if (src_mesh_name == "ImageMesh")
-  {
-    if (dst_mesh_name == "TetVolMesh")
-    {
-      CALLBACK_WRAP(ImageMesh, TetVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "LatVolMesh")
-    {
-      CALLBACK_WRAP(ImageMesh, LatticeVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ImageMesh")
-    {
-      CALLBACK_WRAP(ImageMesh, ImageField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "TriSurfMesh")
-    {
-      CALLBACK_WRAP(ImageMesh, TriSurf, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ScanlineMesh")
-    {
-      CALLBACK_WRAP(ImageMesh, ScanlineField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ContourMesh")
-    {
-      CALLBACK_WRAP(ImageMesh, ContourField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "PointCloudMesh")
-    {
-      CALLBACK_WRAP(ImageMesh, PointCloud, src_field, dst_field);
-    }
-    else
-    {
-      error("Unrecognized destination mesh type");
-    }
-  }
-  else if (src_mesh_name == "ContourMesh")
-  {
-    if (dst_mesh_name == "TetVolMesh")
-    {
-      CALLBACK_WRAP(ContourMesh, TetVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "LatVolMesh")
-    {
-      CALLBACK_WRAP(ContourMesh, LatticeVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ImageMesh")
-    {
-      CALLBACK_WRAP(ContourMesh, ImageField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "TriSurfMesh")
-    {
-      CALLBACK_WRAP(ContourMesh, TriSurf, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ScanlineMesh")
-    {
-      CALLBACK_WRAP(ContourMesh, ScanlineField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ContourMesh")
-    {
-      CALLBACK_WRAP(ContourMesh, ContourField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "PointCloudMesh")
-    {
-      CALLBACK_WRAP(ContourMesh, PointCloud, src_field, dst_field);
-    }
-    else
-    {
-      error("Unrecognized destination mesh type");
-    }
-  }
-  else if (src_mesh_name == "ScanlineMesh")
-  {
-    if (dst_mesh_name == "TetVolMesh")
-    {
-      CALLBACK_WRAP(ScanlineMesh, TetVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "LatVolMesh")
-    {
-      CALLBACK_WRAP(ScanlineMesh, LatticeVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ImageMesh")
-    {
-      CALLBACK_WRAP(ScanlineMesh, ImageField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "TriSurfMesh")
-    {
-      CALLBACK_WRAP(ScanlineMesh, TriSurf, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ScanlineMesh")
-    {
-      CALLBACK_WRAP(ScanlineMesh, ScanlineField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ContourMesh")
-    {
-      CALLBACK_WRAP(ScanlineMesh, ContourField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "PointCloudMesh")
-    {
-      CALLBACK_WRAP(ScanlineMesh, PointCloud, src_field, dst_field);
-    }
-    else
-    {
-      error("Unrecognized destination mesh type");
-    }
-  }
-  else if (src_mesh_name == "PointCloudMesh")
-  {
-    if (dst_mesh_name == "TetVolMesh")
-    {
-      CALLBACK_WRAP(PointCloudMesh, TetVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "LatVolMesh")
-    {
-      CALLBACK_WRAP(PointCloudMesh, LatticeVol, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ImageMesh")
-    {
-      CALLBACK_WRAP(PointCloudMesh, ImageField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "TriSurfMesh")
-    {
-      CALLBACK_WRAP(PointCloudMesh, TriSurf, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ScanlineMesh")
-    {
-      CALLBACK_WRAP(PointCloudMesh, ScanlineField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "ContourMesh")
-    {
-      CALLBACK_WRAP(PointCloudMesh, ContourField, src_field, dst_field);
-    }
-    else if (dst_mesh_name == "PointCloudMesh")
-    {
-      CALLBACK_WRAP(PointCloudMesh, PointCloud, src_field, dst_field);
-    }
-    else
-    {
-      error("Unrecognized destination mesh type");
-    }
-  }
-  else
-  {
-    error("Unrecognized source mesh type");
-  }
+  FieldHandle result =
+    algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->data_at());
+
+  ofp = (FieldOPort *)get_oport("Interpolant");
+  ofp->send(result);
 }
+
+
+
+CompileInfo *
+BuildInterpAlgo::get_compile_info(const TypeDescription *msrc,
+				  const TypeDescription *lsrc,
+				  const TypeDescription *mdst,
+				  const TypeDescription *ldst,
+				  const TypeDescription *fdst)
+{
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("BuildInterpAlgoT");
+  static const string base_class_name("BuildInterpAlgo");
+
+  const string::size_type loc = fdst->get_name().find_first_of('<');
+  const string fout = fdst->get_name().substr(0, loc) +
+    "<vector<pair<" + lsrc->get_name() + "::index_type, double> > > ";
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       to_filename(msrc->get_name()) + "." +
+		       to_filename(lsrc->get_name()) + "." +
+		       to_filename(fdst->get_name()) + "." +
+		       to_filename(ldst->get_name()) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       msrc->get_name() + ", " +
+                       lsrc->get_name() + ", " +
+                       mdst->get_name() + ", " +
+                       ldst->get_name() + ", " +
+                       fout);
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  msrc->fill_compile_info(rval);
+  fdst->fill_compile_info(rval);
+  return rval;
+}
+
+
+
 
 } // End namespace SCIRun
