@@ -2,6 +2,11 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ..
 
+LDRUN_PREFIX  = @LDRUN_PREFIX@
+
+OBJTOP_ABS    = $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
+
 TCL_LIB_DIR   = @TCL_LIB_DIR@
 TCL_LIB_FLAG  = @TCL_LIB_FLAG@
 TK_LIB_DIR    = @TK_LIB_DIR@
@@ -10,14 +15,17 @@ TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_DIR  = @ITCL_LIB_DIR@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
-SUBDIRS = GUI Datatypes Modules
+SUBDIRS = Components Datatypes Exceptions GUI Grid Interface \
+	  Math Modules Parallel
 SOLIB   = libUintah.so
 ifeq (@BUILD_PARALLEL@,yes)
-COMPONENTLIBS = -L$(OBJTOP)/Component -lComponent
+COMPONENTLIBS = $(LDRUN_PREFIX)$(OBJTOP_ABS)/Component -L$(OBJTOP)/Component -lComponent
 GLOBUS_INCLUDE = @GLOBUS_INCLUDE@
 GLOBUS_LIB_DIR = @GLOBUS_LIB@
 GLOBUSLIBS = -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io
 endif
+
+INCLUDES  = -I$(SRCTOP) -I$(OBJTOP)
 
 SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
 	      $(COMPONENTLIBS) \
@@ -29,3 +37,33 @@ SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
               -lm
 
 include $(SRCTOP)/scripts/solib.mk
+
+STANDALONE_PROGRAM = sus
+STANDALONE_SRCS = sus.cc
+
+STANDALONE_OBJS = $(addsuffix .o,$(basename $(STANDALONE_SRCS)))
+STANDALONE_DEPS = $(addsuffix .d,$(basename $(STANDALONE_SRCS)))
+
+STANDALONE_LIBRARIES = $(LDRUN_PREFIX)$(OBJTOP_ABS)/Uintah \
+		       $(LDRUN_PREFIX)$(OBJTOP_ABS)/PSECore \
+		       $(LDRUN_PREFIX)$(OBJTOP_ABS)/SCICore \
+	               -L$(OBJTOP)/Uintah -lUintah \
+	               -L$(OBJTOP)/PSECore -lPSECore \
+		       $(COMPONENTLIBS) \
+	               -L$(OBJTOP)/SCICore -lSCICore \
+		       $(GLOBUSLIBS)
+
+all:: $(STANDALONE_PROGRAM)
+
+$(STANDALONE_PROGRAM):: $(STANDALONE_OBJS) $(SOLIB)
+	rm -f $(STANDALONE_PROGRAM)
+	$(CXX) $(LDFLAGS) -o $(STANDALONE_PROGRAM) $(STANDALONE_OBJS) $(STANDALONE_LIBRARIES)
+
+_cleanHere::
+	rm -f $(STANDALONE_OBJS) $(STANDALONE_DEPS)
+	rm -fr ii_files ti_files
+	rm -f $(STANDALONE_PROGRAM)
+
+ifneq (,$(STANDALONE_DEPS))
+-include $(STANDALONE_DEPS)
+endif

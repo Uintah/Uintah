@@ -2,16 +2,15 @@
 #ifndef UINTAH_HOMEBREW_MAPPER_H
 #define UINTAH_HOMEBREW_MAPPER_H
 
-#include "Handle.h"
-#include "RefCounted.h"
-#include "SchedulerP.h"
-#include "DataWarehouseP.h"
+#include <Uintah/Parallel/UintahParallelPort.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
 #include <string>
 
 class ProcessorContext;
 class Task;
 
-class Scheduler : public RefCounted {
+class Scheduler : public UintahParallelPort {
 public:
     Scheduler();
     virtual ~Scheduler();
