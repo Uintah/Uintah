@@ -839,7 +839,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
       targetlist.add(data.max_error);
     }
     data.reducer.wait(data.np);
-    if(err < data.max_error)
+    if(err < 1.e-15 || err < data.max_error)
       break;
 
     if (processor == 0 )
