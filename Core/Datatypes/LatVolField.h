@@ -50,25 +50,27 @@ public:
   const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const
   { return operator()(idx.k_,idx.j_,idx.i_); } 
   const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
-  { return operator()(0, 0, idx.i_); }
+  { return operator()(0, 0, idx); }
   const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const
-  { return operator()(0, 0, idx.i_); }    
+  { return operator()(0, 0, idx); }    
   const value_type &operator[](typename LatVolMesh::Node::index_type idx) const
   { return operator()(idx.k_,idx.j_,idx.i_); }    
 
   value_type &operator[](typename LatVolMesh::Cell::index_type idx)
   { return operator()(idx.k_,idx.j_,idx.i_); } 
   value_type &operator[](typename LatVolMesh::Face::index_type idx)
-  { return operator()(0, 0, idx.i_); }
+  { return operator()(0, 0, idx); }
   value_type &operator[](typename LatVolMesh::Edge::index_type idx)
-  { return operator()(0, 0, idx.i_); }    
+  { return operator()(0, 0, idx); }    
   value_type &operator[](typename LatVolMesh::Node::index_type idx)
   { return operator()(idx.k_,idx.j_,idx.i_); }    
 
   void resize(const LatVolMesh::Node::size_type &size)
   { newsize(size.k_, size.j_, size.i_); }
-  void resize(const LatVolMesh::Edge::size_type &size) {}
-  void resize(const LatVolMesh::Face::size_type &size) {}
+  void resize(const LatVolMesh::Edge::size_type &size)
+  { newsize(1, 1, size); }
+  void resize(const LatVolMesh::Face::size_type &size)
+  { newsize(1, 1, size); }
   void resize(const LatVolMesh::Cell::size_type &size)
   { newsize(size.k_, size.j_, size.i_); }
 

@@ -121,6 +121,49 @@ LatVolMesh::transform(Transform &t)
 
 
 void
+LatVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
+{
+  array.resize(2);
+  const unsigned int xidx = idx;
+  if (xidx < (nx_ - 1) * ny_ * nz_)
+  {
+    const int i = xidx % (nx_ - 1);
+    const int jk = xidx / (nx_ - 1);
+    const int j = jk % ny_;
+    const int k = jk / ny_;
+
+    array[0] = Node::index_type(i+0, j, k);
+    array[1] = Node::index_type(i+1, j, k);
+  }
+  else
+  {
+    const unsigned int yidx = idx - (nx_ - 1) * ny_ * nz_;
+    if (yidx < (nx_ * (ny_ - 1) * nz_))
+    {
+      const int j = yidx % (ny_ - 1);
+      const int ik = yidx / (ny_ - 1);
+      const int i = ik / nz_;
+      const int k = ik % nz_;
+
+      array[0] = Node::index_type(i, j+0, k);
+      array[1] = Node::index_type(i, j+1, k);
+    }
+    else
+    {
+      const unsigned int zidx = yidx - (nx_ * (ny_ - 1) * nz_);
+      const int k = zidx % (nz_ - 1);
+      const int ij = zidx / (nz_ - 1);
+      const int i = ij % nx_;
+      const int j = ij / nx_;
+
+      array[0] = Node::index_type(i, j, k+0);
+      array[1] = Node::index_type(i, j, k+1);
+    }      
+  }
+}
+
+
+void
 LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.resize(8);
@@ -263,7 +306,6 @@ LatVolMesh::get_node_range(Node::range_iter &begin, Node::iterator &end,
 void
 LatVolMesh::get_center(Point &result, Edge::index_type idx) const
 {
-#if 0 // TODO: Fix get_nodes
   Node::array_type arr;
   get_nodes(arr, idx);
   Point p0, p1;
@@ -271,7 +313,6 @@ LatVolMesh::get_center(Point &result, Edge::index_type idx) const
   get_center(p1, arr[1]);
 
   result = (p0.asVector() + p1.asVector() * 0.5).asPoint();
-#endif
 }
 
 
@@ -412,26 +453,7 @@ const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)
   }
   return td;
 }
-const TypeDescription* get_type_description(LatVolMesh::EdgeIndex *)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("LatVolMesh::EdgeIndex",
-				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
-}
-  return td;
-}
-const TypeDescription* get_type_description(LatVolMesh::FaceIndex *)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("LatVolMesh::FaceIndex",
-				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
-  }
-  return td;
-}
+
 const TypeDescription* get_type_description(LatVolMesh::CellIndex *)
 {
   static TypeDescription* td = 0;
@@ -454,22 +476,6 @@ Pio(Piostream& stream, LatVolMesh::NodeIndex& n)
 }
 
 void
-Pio(Piostream& stream, LatVolMesh::EdgeIndex& n)
-{
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    stream.end_cheap_delim();
-}
-
-void
-Pio(Piostream& stream, LatVolMesh::FaceIndex& n)
-{
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    stream.end_cheap_delim();
-}
-
-void
 Pio(Piostream& stream, LatVolMesh::CellIndex& n)
 {
     stream.begin_cheap_delim();
@@ -482,16 +488,6 @@ Pio(Piostream& stream, LatVolMesh::CellIndex& n)
 const string find_type_name(LatVolMesh::NodeIndex *)
 {
   static string name = "LatVolMesh::NodeIndex";
-  return name;
-}
-const string find_type_name(LatVolMesh::EdgeIndex *)
-{
-  static string name = "LatVolMesh::EdgeIndex";
-  return name;
-}
-const string find_type_name(LatVolMesh::FaceIndex *)
-{
-  static string name = "LatVolMesh::FaceIndex";
   return name;
 }
 const string find_type_name(LatVolMesh::CellIndex *)
@@ -564,31 +560,31 @@ LatVolMesh::size(LatVolMesh::Node::size_type &s) const
 void
 LatVolMesh::begin(LatVolMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(this,0);
+  itr = Edge::iterator(0);
 }
 
 void
 LatVolMesh::end(LatVolMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(this,0);
+  itr = ((nx_-1) * ny_ * nz_) + (nx_ * (ny_-1) * nz_) + (nx_ * ny_ * (nz_-1));
 }
 
 void
 LatVolMesh::size(LatVolMesh::Edge::size_type &s) const
 {
-  s = Edge::size_type(0);
+  s = ((nx_-1) * ny_ * nz_) + (nx_ * (ny_-1) * nz_) + (nx_ * ny_ * (nz_-1));
 }
 
 void
 LatVolMesh::begin(LatVolMesh::Face::iterator &itr) const
 {
-  itr = Face::iterator(this,0);
+  itr = Face::iterator(0);
 }
 
 void
 LatVolMesh::end(LatVolMesh::Face::iterator &itr) const
 {
-  itr = Face::iterator(this,0);
+  itr = Face::iterator(0);
 }
 
 void
