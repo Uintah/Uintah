@@ -66,7 +66,7 @@ RescaleColorMap::execute()
   ColorMapHandle cmap;
   ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *omap = (ColorMapOPort *)get_oport("ColorMap");
-  if(!imap->get(cmap)) {
+  if(!imap || !imap->get(cmap)) {
     return;
   }
   cmap = new ColorMap(*cmap.get_rep());
@@ -74,6 +74,8 @@ RescaleColorMap::execute()
     cmap->Scale(min.get(), max.get());
   } else {
     dynamic_port_range range = get_iports("Field");
+    if (range.first == range.second)
+      return;
     port_iter pi = range.first;
     while (pi != range.second)
     {
