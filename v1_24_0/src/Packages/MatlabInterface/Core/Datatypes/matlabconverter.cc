@@ -145,9 +145,11 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
 
   string dummyinfo;
   int matrixscore;
+  int fieldscore;
  
-   NrrdDataHandle  nrrd;
+  NrrdDataHandle  nrrd;
   MatrixHandle    matrix;
+  FieldHandle     field;
   
   // properties are stored in field property
   long propindex = ma.getfieldnameindexCI("property");
@@ -172,6 +174,17 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
               handle->set_property(propname,propval,false);
               continue;
             }
+          if ((fieldscore = sciFieldCompatible(subarray,dummyinfo,0)))
+          {
+            if (fieldscore > 1)
+            {
+               propname = proparray.getfieldname(p);
+               mlArrayTOsciField(subarray,field,0);
+  //             handle->set_property(propname,field,false);         
+               continue;
+            }          
+          }
+          
           if ((matrixscore = sciMatrixCompatible(subarray,dummyinfo,0)))
           {
             if (matrixscore > 1)
@@ -203,7 +216,13 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
                handle->set_property(propname,nrrd,false);         
                continue;
           }
- 
+          if (fieldscore > 0)
+          {
+             propname = proparray.getfieldname(p);
+             mlArrayTOsciField(subarray,field,0);
+ //            handle->set_property(propname,field,false);         
+             continue;
+          }             
         }
     }
 }
@@ -217,6 +236,7 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
   matlabarray subarray;
   MatrixHandle matrix;
   NrrdDataHandle nrrd;
+  FieldHandle field;
         
   proparray.createstructarray();
   numfields = handle->nproperties();
@@ -247,6 +267,12 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
           numericarray_ = oldnumericarray_;
           proparray.setfield(0,propname,subarray);
         } 
+//      if (handle->get_property(propname,field))
+//        {
+//          subarray.clear();
+//          sciFieldTOmlArray(field,subarray,0);
+//          proparray.setfield(0,propname,subarray);
+//        } 
     }
         
   ma.setfield(0,"property",proparray);
