@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
   DOM_NodeList top_node_list = doc.getElementsByTagName("Time");
   cout << "Processing doc nodes" << endl;
   DOM_Node tmp = doc.cloneNode(true);
-  string search("Time");
+  string search("initTime");
   DOMString dsearch(search.c_str());
   processNode(tmp,dsearch);
 

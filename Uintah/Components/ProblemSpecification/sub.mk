@@ -25,8 +25,12 @@ LIBS 	:= $(XML_LIBRARY)
 include $(SRCTOP)/scripts/program.mk
 
 
+
 #
 # $Log$
+# Revision 1.4  2000/03/29 23:45:22  jas
+# Sample input file format using xml.
+#
 # Revision 1.3  2000/03/29 01:57:05  jas
 # Added a problem specification reader.
 #
