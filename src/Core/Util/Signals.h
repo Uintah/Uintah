@@ -31,13 +31,15 @@
 #ifndef Signals_h
 #define Signals_h
 
-
+#include <iostream>
 #include <vector>
 #include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
 
-  using std::vector;
+using std::cerr;
+using std::endl;
+using std::vector;
 /*
  * SlotBase & SignalBase
  */
