@@ -64,7 +64,7 @@ WARNING
 
       public:
 	 // constructors
-	 CompNeoHookPlas(ProblemSpecP& ps);
+	 CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* lb);
 	 
 	 // destructor 
 	 virtual ~CompNeoHookPlas();

@@ -39,7 +39,7 @@ namespace Uintah {
 
       public:
          // constructors
-         HypoElastic(ProblemSpecP& ps);
+         HypoElastic(ProblemSpecP& ps, MPMLabel* lb);
        
          // destructor
          virtual ~HypoElastic();
