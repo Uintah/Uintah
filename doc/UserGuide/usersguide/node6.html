@@ -64,41 +64,28 @@ originally by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
 <BR>
 5. Visualization with the <EM>Viewer</EM>
 </H1>
-<A NAME="1743">&#160;</A>
-
-<P>
-This section describes perhaps the most frequently used module of <EM>SCIRun</EM>,
-the <EM>Viewer</EM>, which has the task of displaying interactive graphical
-output to the computer screen.  You will use the <EM>Viewer</EM> any time you
-wish to see a geometry, or spatial data.  More important for the
-computational steering (described in <A HREF="node3.html#sec:con-steering"><EM>Computational
-Steering</EM></A>), is that the <EM>Viewer</EM> provides access to
-many simulation parameters and controls and thus indirectly initiates new
-iterations of the simulation steps.
-
-<P>
-We begin with an overview of the <EM>Viewer</EM> window and its controls, then
-describe in detail all the options and variations.
-
-<P>
-
+<A NAME="1743">&#160;</A> 
+<P> This section describes, perhaps, the most frequently used module of <EM>SCIRun</EM>, 
+  the <EM>Viewer</EM>, which displays interactive graphical output to the computer 
+  screen. Use the <EM>Viewer</EM> to see a geometry, or spatial data. The <EM>Viewer</EM> 
+  provides access to many simulation parameters and controls, thus, indirectly 
+  initiates new iterations of the simulation steps important to computational 
+  steering (described in <a href="node3.html#sec:con-steering"><em>Computational 
+  Steering</em></a>). 
+<P>&nbsp; 
 <H2><A NAME="SECTION00061000000000000000">&#160;</A>
 <A NAME="sec:viewer-anatomy">&#160;</A>
 <BR>
-5.1 Anatomy of the <EM>Viewer</EM> window
-</H2> 
+  5.1 Anatomy of the <EM>Viewer</EM> Window </H2> 
 <A NAME="1745">&#160;</A>
 
-<P>
-The <EM>Viewer</EM> window contains two main areas, the upper portion, called the
-<EM>Graphics</EM> window, which displays the graphics, and the lower portion,
-where most of the control buttons are.  Figure&nbsp;<A HREF="node6.html#fig:viewwindow">5</A>
-contains an example of a <EM>Viewer</EM> window. In the <EM>Graphics</EM>
-window, control is mostly by means of the mouse, mouse buttons, and various
-modifier keys (shift/control/alt).  In the lower window are a lot of
-buttons and sliders, the function of which will become clear when you read
-this manual.
-
+<P> The <EM>Viewer</EM> window contains two main areas: the upper portion, <EM>Graphics</EM> 
+  window which displays the graphics, and the lower portion where most of the 
+  control buttons are located. Figure&nbsp;<A HREF="node6.html#fig:viewwindow">5</A> 
+  contains an example of a <EM>Viewer</EM> window. In the <EM>Graphics</EM> window, 
+  the mouse, mouse buttons, and various modifier keys (shift/control/alt) determine 
+  control. The lower window contains several buttons and sliders, the function 
+  of which becomes clear upon reading this guide. 
 <P>
 <BR>
 <DIV ALIGN="CENTER"><A NAME="fig:viewwindow">&#160;</A><A NAME="1746">&#160;</A>
@@ -112,19 +99,15 @@ The default <EM>Viewer</EM> window in <EM>SCIRun</EM></CAPTION>
 </TABLE>
 </DIV>
 <BR>
-<P>
-First, try out the controls for the <EM>Graphics</EM> window by moving the mouse
-to the center of the viewer window and clicking and holding the left button
-and then dragging the mouse.  The objects should translate along with the
-mouse.  Do the same operation with the middle mouse button and the objects
-will rotate around a point in the center of the display.  The right mouse
-button controls the scale of the display, zooming in when the mouse moves
-downward or to the right.  See <A HREF="node6.html#sec:view-mouse"><EM>Mouse Control in the
-Viewer</EM></A> for all the gory details on mouse control.
-
-<P>
-The control visible along the bottom of the <EM>Viewer</EM> window set some basic
-configurations as follows:
+<P> First, control the <EM>Graphics</EM> window by moving the mouse to the center 
+  of the viewer window, click and hold the left button, dragging the mouse. The 
+  objects should translate accodingly. Perform the same operation with the middle 
+  mouse button and the objects will rotate around a point in the center of the 
+  display. The right mouse button controls the scale of the display, zooming in 
+  when the mouse moves downward or to the right. See <A HREF="node6.html#sec:view-mouse"><EM>Mouse 
+  Control in the Viewer</EM></A> for details about mouse control. 
+<P>Basic configurations may be set by using the control along the bottom of the 
+  <EM>Viewer</EM> window: 
 <DL>
 <DT><STRONG>
 <!-- MATH: $\fbox{Autoview:}$ -->
@@ -132,56 +115,45 @@ configurations as follows:
  WIDTH="88" HEIGHT="23" ALIGN="BOTTOM" BORDER="0"
  SRC="img1.gif"
  ALT="\fbox{Autoview:}"></STRONG>
-<DD>restores the display back to a default
-condition, very useful when some combination of settings results in
-        the objects disappearing from the view window.
+  <DD>restores the display back to a default condition. This is very useful when 
+    objects disappear from the view window due to a combination of settings.
   <DT><STRONG>
 <!-- MATH: $\fbox{Set Home View:}$ -->
 <IMG
  WIDTH="134" HEIGHT="23" ALIGN="BOTTOM" BORDER="0"
  SRC="img2.gif"
  ALT="\fbox{Set Home View:}"></STRONG>
-<DD>captures the setting of the current view
-        so you 
-        can return to it later by clicking the ``Go home'' button.
+  <DD>captures the setting of the current view so you can return to it later by 
+    clicking the &quot;Go home'' button. 
   <DT><STRONG>
 <!-- MATH: $\fbox{Go home:}$ -->
 <IMG
  WIDTH="85" HEIGHT="23" ALIGN="BOTTOM" BORDER="0"
  SRC="img3.gif"
  ALT="\fbox{Go home:}"></STRONG>
-<DD>restore the current home view.
+  <DD>restores the current home view. 
   <DT><STRONG>
 <!-- MATH: $\fbox{Views:}$ -->
 <IMG
  WIDTH="61" HEIGHT="23" ALIGN="BOTTOM" BORDER="0"
  SRC="img4.gif"
  ALT="\fbox{Views:}"></STRONG>
-<DD>lists a number of standard viewing angles and
-        orientations.  The view directions align with the Cartesian axes
-        of the objects and the ``Up vector'' choice sets the orientation of
-        the objects when viewed along the selected axis.
+  <DD>lists a number of standard viewing angles and orientations. The view directions 
+    align with the Cartesian axes of the objects. The ``Up vector'' choice sets 
+    the orientation of the objects when viewed along the selected axis. 
 </DL>
-<P>
-In the left corner of the control panel of the <EM>Viewer</EM> window are
-performance indicators that document the current rendering speed for the
-display.  The better the graphics performance of the workstation you
-have, the higher the drawing rate.
-
-<P>
-In the lower right corner of the <EM>Viewer</EM> window is a small plus sign
-(``+'').  Clicking on this reveals the extended control panel with controls
-that we will describe in detail in <A HREF="node6.html#sec:view-control"><EM>Extended control window</EM></A>.
-
+<P> From the <EM>Viewer</EM> window, the left corner of the control panel contains 
+  performance indicators that document the current rendering speed for the display. 
+  More advanced graphics performance results in a higher drawing rate.
+<P> A small plus sign (``+'') appears in the lower right corner of the <i>Viewer</i> 
+  window. Clicking on the plus signreveals the extended control panel with controls 
+  described in <A HREF="node6.html#sec:view-control"><EM>Extended control window</EM></A>. 
 <P>
 
 <H3><A NAME="SECTION00061100000000000000">
 5.1.1 Menus</A>
 </H3>
-<A NAME="1747">&#160;</A>
-
-<P>
-At the top of the <EM>Viewer</EM> window are two pull-down menus.
+<P> Two pull-down menus appear at the top of the <EM>Viewer</EM> window.
 <DL>
 <DT><STRONG>
 <!-- MATH: $\fbox{Edit:}$ -->
@@ -199,27 +171,21 @@ color for the window, as well as the clipping planes (requires the
  WIDTH="64" HEIGHT="23" ALIGN="BOTTOM" BORDER="0"
  SRC="img6.gif"
  ALT="\fbox{Visual:}"></STRONG>
-<DD>allows you to select between different graphics
-        hardware settings that are available on your workstation.  The list
-        is ordered heuristically from most to least useful.
+  <DD>allows selection from among graphics hardware settings that are available 
+    on each workstation. The list is ordered heuristically from most-to-least 
+    useful. 
 </DL>
 <P>
 
 <H2><A NAME="SECTION00062000000000000000">&#160;</A>
 <A NAME="sec:view-mouse">&#160;</A>
 <BR>
-5.2 Mouse control in the <EM>Viewer</EM> window
-</H2> 
-<A NAME="1749">&#160;</A>
-
-<P>
-The mouse controls within <EM>SCIRun</EM> are extensive and flexible.  The resulting
-action depends on the choice of mouse button, any simultaneous control
-keys, and the way the mouse moves.  The description in
-Tables&nbsp;<A HREF="#tab:view-mouse">2</A> and&nbsp;<A HREF="#tab:view-unicam">3</A> below may seem overly
-complicated at first, but with a little playing, it becomes intuitive
-(another way of saying you will learn it if you use it enough).
-
+  5.2 Mouse Control in the <EM>Viewer</EM> Window </H2> 
+<P> The mouse controls within <EM>SCIRun</EM> are extensive and flexible. Action 
+  results from the choice of mouse button, any simultaneous control keys, and 
+  the way the mouse moves. The description in Tables&nbsp;<A HREF="#tab:view-mouse">2</A> 
+  and&nbsp;<A HREF="#tab:view-unicam">3</A> below may seem overly complicated 
+  at first, but with a little manipulation, becomes intuitive. 
 <P>
 <BR>
 <DIV ALIGN="CENTER"><A NAME="1751">&#160;</A>
@@ -242,11 +208,10 @@ complicated at first, but with a little playing, it becomes intuitive
 <TR><TD ALIGN="LEFT">&nbsp;</TD>
 <TD ALIGN="LEFT">Middle</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=360>
-<DIV ALIGN="RIGHT">
-Rotate scene about its center on an arc
-    ball that surrounds it; rotation direction is a function of the
-    initial mouse location so try different sites and note the
-    response. </DIV></TD>
+                <DIV ALIGN="RIGHT"> Rotate scene about its center on an arc ball 
+                  that surrounds it; rotation direction is a function of the initial 
+                  mouse location try different sites and note the response. </DIV>
+              </TD>
 </TR>
 <TR><TD ALIGN="LEFT">&nbsp;</TD>
 <TD ALIGN="LEFT">Right</TD>
@@ -341,18 +306,15 @@ Rotate scene about its center on an arc
 <H2><A NAME="SECTION00063000000000000000">&#160;</A>
 <A NAME="sec:view-control">&#160;</A>
 <BR>
-5.3 Extended control window
-</H2> 
+  5.3 Extended Control Window </H2> 
 <A NAME="1754">&#160;</A>
 
-<P>
-Click on the ``+'' sign in the lower right corner of the default
-<EM>Viewer</EM> window, and the window expands to reveal an extended panel of
-control buttons, as shown in Figure&nbsp;<A HREF="node6.html#fig:extviewwindow">6</A>.  Click on the
-``-'' sign that now replaces the ``+'' and this extended panel disappears
-again.  Here we describe the control options available in the extended
-control window.
-
+<P> Click on the ``+'' sign in the lower right corner of the default <EM>Viewer</EM> 
+  window, and the window expands to reveal an extended panel of control buttons, 
+  as shown in Figure&nbsp;<A HREF="node6.html#fig:extviewwindow">6</A>. Click 
+  on the &quot;-'' sign that now replaces the ``+'' and this extended panel disappears 
+  again. The following table describes the control options available in the extended 
+  control window:
 <P>
 <BR>
 <DIV ALIGN="CENTER"><A NAME="fig:extviewwindow">&#160;</A><A NAME="1755">&#160;</A>
@@ -369,167 +331,129 @@ The lower portion of extended
 <BR>
 <P>
 
-<H3><A NAME="SECTION00063100000000000000">
-5.3.1 Object selector</A>
-</H3>
+<H3><A NAME="SECTION00063100000000000000"> 5.3.1 Object Selector</A> </H3>
 
-<P>
-The lower portion of the extended <EM>Viewer</EM> window is divided into three
-columns and the middle of these contains a list of all the objects in the
-display.  If the list becomes long enough, a scroll bar on the left
-hand side controls which are visible.  For each entry in the list, we have
-the following controls, reading from left to right:
-
+<P> The lower portion of the extended <EM>Viewer</EM> window is divided into three 
+  columns.The middle column contains a list of all the objects in the display. 
+  If the list becomes long enough, a scroll bar on the left controls which are 
+  visible. Each entry in the list has the following controls, reading from left 
+  to right: 
 <P>
 <UL>
-<LI>At the left end of each of the
-        objects in the list is box that displays red when that object is
-        selected.  The <EM>Viewer</EM> window only displays those objects that
-        are selected.
-<LI>Next comes the name of the object.
-<LI>The 
-<!-- MATH: $\fbox{Shading}$ -->
-<IMG
+  <LI> A red box appears to the left of each selected object. The <EM>Viewer</EM> 
+    window only displays those objects that are selected. 
+  <LI>Next comes the name of the object.
+  <LI>The 
+    <!-- MATH: $\fbox{Shading}$ -->
+    <IMG
  WIDTH="72" HEIGHT="27" ALIGN="BOTTOM" BORDER="0"
  SRC="img7.gif"
- ALT="\fbox{Shading}">
-control box that comes next determines the
-        shading options that will be used for rendering the object.
-        Options include: Lighting, BBox, Fog, Use Clip, Back Cull, and
-        Display List (for descriptions, see
-        <A HREF="node6.html#sec:view-rendering"><EM>Rendering controls</EM></A>).
-<LI>As the right end of each entry is the lighting control, initially
-        marked 
-<!-- MATH: $\fbox{Default}$ -->
-<IMG
+ ALT="\fbox{Shading}"> control box determines the shading options used for rendering 
+    the object. Options include: Lighting, BBox, Fog, Use Clip, Back Cull, and 
+    Display List (for descriptions, see <A HREF="node6.html#sec:view-rendering"><EM>Rendering 
+    controls</EM></A>). 
+  <LI>The lighting control appears to the right of each entry, initially marked 
+    <!-- MATH: $\fbox{Default}$ -->
+    <IMG
  WIDTH="68" HEIGHT="23" ALIGN="BOTTOM" BORDER="0"
  SRC="img8.gif"
- ALT="\fbox{Default}">.
-In the Default setting, the common
-        rendering controls described in <A HREF="node6.html#sec:view-rendering"><EM>Rendering
-        controls</EM></A> below apply.  Clicking this box
-        reveals a set of options that will apply only to this object that
-        include Wire, Flat and Gouraud.
+ ALT="\fbox{Default}">. In the Default setting, the common rendering controls, 
+    described in <A HREF="node6.html#sec:view-rendering"><EM>Rendering controls</EM></A> 
+    below, apply. Clicking this box reveals a set of options that will apply only 
+    to this object that include Wire, Flat and Gouraud. 
 </UL>
 <P>
 
 <H3><A NAME="SECTION00063200000000000000">&#160;</A>
 <A NAME="sec:view-rendering">&#160;</A>
 <BR>
-5.3.2 Rendering controls
-</H3> 
+  5.3.2 Rendering Controls </H3> 
 <A NAME="1756">&#160;</A>
 
-<P>
-The left column of the extended <EM>Viewer</EM> window contains controls that
-apply to all of the selected objects with ``Default'' lighting selected.
-Those without the Default setting will use their own, object specific
-settings, as described in the previous section.  The lighting and shading
-options available are:
-<DL>
-<DT><STRONG>Lighting: </STRONG>
-<DD>toggles whether or not the <EM>Viewer</EM> applies lighting
-to the display.  Objects without lighting have a constant
-        color.
-  <DT><STRONG>Fog: </STRONG>
-<DD>draws objects with variable intensity based on their
-        distance from the user, also known as ``depth cueing''.  Close
-        objects appear brighter while more remote objects fade gradually
-        into the background as a function of distance from the front.
-  <DT><STRONG>BBox: </STRONG>
-<DD>toggles whether the <EM>Viewer</EM> draws the selected objects
-        in full detail or as a simple bounding box.
-  <DT><STRONG>Use Clip: </STRONG>
-<DD>applies up to six clipping planes to the display.
-        To control the clipping plane locations, use the
-        ``Edit -&gt; Clipping Planes'' menu at the top.
-  <DT><STRONG>Back Cull: </STRONG>
-<DD>displays only the forward facing facets of any surface
-        objects in the display.
-  <DT><STRONG>Display List: </STRONG>
-<DD>cache the list of objects to be displayed; this
-        option accelerates rendering when the content of the display does
-        not change. 
-  <DT><STRONG>Shading: </STRONG>
-<DD>selects the type of shading for objects from the
-        following options:
-        <DL>
-<DT><STRONG>Wire: </STRONG>
-<DD>show only the wire mesh of objects.
-<DT><STRONG>Flat: </STRONG>
-<DD>draw each facet with a constant color.
-          <DT><STRONG>Gouraud: </STRONG>
-<DD>linearly interpolate the color across facets. 
-        </DL></DL>
+<P> The left column of the extended <EM>Viewer</EM> window contains controls that 
+  apply to all of the selected objects with ``Default'' lighting selected. Those 
+  without the Default setting will use their own, object-specific settings, as 
+  described in the previous section. The lighting and shading options available 
+  are: 
+<DL> 
+  <DT><STRONG>Lighting: </STRONG> 
+  <DD>toggles whether or not the <EM>Viewer</EM> applies lighting to the display. 
+    Objects without lighting have a constant color. 
+  <DT><STRONG>Fog: </STRONG> 
+  <DD>draws objects with variable intensity based on their distance from the user, 
+    also known as ``depth cueing.'' As a function of distance from the front, 
+    close objects appear brighter while more remote objects fade gradually into 
+    the background 
+  <DT><STRONG>BBox: </STRONG> 
+  <DD>toggles whether the <EM>Viewer</EM> draws the selected objects in full detail 
+    or as a simple bounding box. 
+  <DT><STRONG>Use Clip: </STRONG> 
+  <DD>applies up to six clipping planes to the display. To control the clipping 
+    plane locations, use the ``Edit -&gt; Clipping Planes'' menu at the top. 
+  <DT><STRONG>Back Cull: </STRONG> 
+  <DD>displays only the forward facing facets of any surface objects in the display. 
+  <DT><STRONG>Display List: </STRONG> 
+  <DD>cache the list of objects to be displayed; this option accelerates rendering 
+    when the content of the display does not change. 
+  <DT><STRONG>Shading: </STRONG> 
+  <DD>selects the type of shading for objects from the following options: 
+    <DL> 
+      <DT><STRONG>Wire: </STRONG> 
+      <DD>show only the wire mesh of objects. 
+      <DT><STRONG>Flat: </STRONG> 
+      <DD>draw each facet with a constant color. 
+      <DT><STRONG>Gouraud: </STRONG> 
+      <DD> interpolate linearity of the color across facets. 
+    </DL>
+</DL>
 <P>
 The right hand column of the extended <EM>Viewer</EM> window contains controls
 for displaying the axes and creating stereoscopic rendering.  
 
 <P>
 
-<H4><A NAME="SECTION00063210000000000000">
-5.3.2.1 Stereo viewing: </A>
-</H4> requires hardware LCD glasses synchronized
-with the display so that visibility for each eye coincides with the
-display of the appropriate view.  The ``Fusion Scale'' control provides a
-means of setting the eye separation and thus setting the view that is most
-suited to facial anatomy and distance from the screen.
-
+<H4><A NAME="SECTION00063210000000000000"> 5.3.2.1 Stereo Viewing: </A> </H4>
+requires hardware LCD glasses synchronized with the display so that visibility 
+for each eye coincides with the display of the appropriate view. The ``Fusion 
+Scale'' control provides a means of setting the eye separation, thus, setting 
+the view that is most suited to facial anatomy and distance from the screen. 
 <P>
 
 <H3><A NAME="SECTION00063300000000000000">&#160;</A>
 <A NAME="sec:view-movies">&#160;</A> 
 <A NAME="1674">&#160;</A>
 <BR>
-5.3.3 Making movies
-</H3>
+  5.3.3 Making Movies </H3>
 
-<P>
-The <EM>Viewer</EM> window in <EM>SCIRun</EM> has simple controls for capturing sequences
-of images into animations or movies.  Here we describe how this works.
-
-<P>
-In the left column of the extended <EM>Viewer</EM> window are controls for
-selecting movie type and then initiating and stopping the acquisition of
-individual frames in the movie.
-
-<P>
-<EM>SCIRun</EM> sends a frame to the movie after each ``redraw'' operation, <EM>i.e.,</EM>
-each time anything moves in the display or any visualization parameter
-changes.  If the MPEG package is available (See the
-<A NAME="tex2html28"
- HREF="http://installation-manual">Installation Manual</A>
-for
-details) then an option will be available for saving the animations as MPEG
-movies.
-
-<P>
-There is also a button that forces the size of the graphical window to be
-352x240 pixels in size, which is a standard format well suited to MPEG.
-
+<P> The <EM>Viewer</EM> window in <EM>SCIRun</EM> has simple controls for capturing 
+  sequences of images into animations or movies. 
+<P> Controls in the left column of the extended <EM>Viewer</EM> window select 
+  movie type and then initiate or stop the acquisition of individual frames in 
+  the movie. 
+<P> <EM>SCIRun</EM> sends a frame to the movie after each &quot;redraw'' operation, 
+  ( <EM>i.e.,</EM> each time anything moves in the display or any visualization 
+  parameter changes). If the MPEG package is available (see the <A NAME="tex2html28"
+ HREF="http://installation-manual">Installation Manual</A> for details) then saving 
+  the animations as MPEG movies will be an option. 
+<P> There is also a button that forces the size of the graphical window to be 
+  352x240 pixels in size, a standard format well suited to MPEG. 
 <P>
 
 <H2><A NAME="SECTION00064000000000000000">&#160;</A>
 <A NAME="sec:view-widgets">&#160;</A>
 <BR>
-5.4 Control widgets
-</H2> 
+  5.4 Control Widgets </H2> 
 
-<P>
-While the <A HREF="node6.html#sec:view-mouse">mouse controls</A> describe many ways to interact with the contents
-of the <EM>Viewer</EM>, SR also supports some powerful display widgets.
-Examples of widgets capabilities include managing cutting surfaces colored
-according to the local data values, displaying streamlines in vector
-fields, or selecting sub-volumes within the display area for further
-manipulation. 
- 
-We have tried to make interacting with these widgets as consistent as
-possible so that, for example, controlling parameters is usually by clicking
-and dragging on either a cylindrical ``collar'' or a sphere element of the
-widget.  The original design of these modules was by James Purcifal
-Note that a single widget may have more than one purpose
-depending on the context in which it exists.
-
+<P> While the <A HREF="node6.html#sec:view-mouse">mouse controls</A> describe 
+  many ways to interact with the contents of the <EM>Viewer</EM>, <i>SCIRun</i> 
+  also supports some powerful display widgets. Examples of widgets' capabilities 
+  include: manage cutting surfaces colored according to the local data values; 
+  display streamlines in vector fields; or select sub-volumes within the display 
+  area for further manipulation. Widget interaction is consistent so that, for 
+  example, clicking and dragging on either a cylindrical &quot;collar'' or a sphere 
+  element controls parameters. James Purcifal generated the original design of 
+  these modules. Note that a single widget may have more than one purpose, depending 
+  on the context in which it exists. 
 <P>
 In this section, we describe the widgets available within <EM>SCIRun</EM> and <EM>BioPSE</EM>.
 The same widget may, for example, select a clipping or a display plane
@@ -579,14 +503,13 @@ source for a stream surface.
 
 <H4><A NAME="SECTION00064130000000000000">
 5.4.1.3 Controls: </A>
-</H4> Clicking and dragging either sphere causes the
-entire widget to move in space, rotating about the other sphere and
-following along behind the selected sphere.  Dragging either of the resize
-cylinders cases the size of the widget to change and dragging any point on
-the main cylinder moves the whole widget without any change in orientation.
-Dragging the slider collar changes the associated value, typically the
-density of seed points for a streamline source.
-
+</H4> 
+Clicking and dragging either sphere causes the entire widget to move in space, 
+rotating about the other sphere and following along behind the selected sphere. 
+Dragging either of the resize cylinders causes the size of the widget to change. 
+Dragging any point on the main cylinder moves the whole widget without any change 
+in orientation. Dragging the slider collar changes the associated value, typically, 
+the density of seed points for a streamline source. 
 <P>
 
 <H3><A NAME="SECTION00064200000000000000">&#160;</A>
@@ -659,12 +582,11 @@ The boxwidget for selecting sub-volumes</CAPTION>
 
 <H4><A NAME="SECTION00064310000000000000">
 5.4.3.1 Appearance: </A>
-</H4> The Box Widget consists of twelve cylinders (A)
-connected in a hexahedral box (three-dimensional rectangle) with cylinders
-indicating on the edges of the box (B).  In the middle of each face of the
-box is a sphere with a cylinder protruding from it (C) that provide resize
-control.
-
+</H4> 
+The Box Widget consists of twelve cylinders (A) connected in a hexahedral box 
+(three-dimensional rectangle) with cylinders indicated on the edges of the box 
+(B). A sphere with a cylinder protruding from it appears in the middle of each 
+face of the box, (C) providing resize control. 
 <P>
 
 <H4><A NAME="SECTION00064320000000000000">
@@ -711,25 +633,23 @@ The ring widget for selecting
 
 <H4><A NAME="SECTION00064410000000000000">
 5.4.4.1 Appearance: </A>
-</H4> The Ring Widget consists of a ring (A) with four
-embedded spheres (B), each with a resize cylindrical attached (D).  Between
-two of the spheres is a sliding collar (C).  One of the resize cylinders
-has a special material property (typically a different color from the other
-cylinders) to indicate that it is the ``halfway point'' for the slider (E).
-
+</H4> 
+The Ring Widget consists of a ring (A) with four embedded spheres (B), each with 
+a resize cylindrical attached (D). A sliding collar (C) exists between two of 
+the spheres. One of the resize cylinders has a special material property (typically 
+a different color from the other cylinders) to indicate that it is the ``halfway 
+point'' for the slider (E). 
 <P>
 
 <H4><A NAME="SECTION00064420000000000000">
 5.4.4.2 Purpose:</A>
-</H4> The primary use of the Ring Widget is to set the
-density of streamlines emerging from the ring--the ring serves as a set of
-seed points from which will emerge streamlines.  The Ring Widget can also
-serve as a three-dimensional angle gauge, as a source for multiple
-streamlines throughout its surface, as a source for a stream surface from
-the outer ring, and as a source for a stream volume.  Another use is as a
-color sheet, or ``tie dye'', in which the surface is colored as a function of
-the scalar value of the field at each point.
-
+</H4> 
+The primary use of the Ring Widget is to set the density of streamlines emerging 
+from the ring. The ring serves as a set of seed points from which emerge streamlines. 
+The Ring Widget can also serve as a three-dimensional angle gauge as a source 
+for multiple streamlines throughout its surface; as a source for a stream surface 
+from the outer ring and as a source for a stream volume. A color sheet, or &quot;tie-dye&quot; 
+provides abnother use as a function of the scalar value of the field at each point. 
 <P>
 
 <H4><A NAME="SECTION00064430000000000000">
