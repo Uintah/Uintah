@@ -363,6 +363,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTang2Label_preReloc);
   VarLabel::destroy(pNormLabel);
   VarLabel::destroy(pNormLabel_preReloc);
+  VarLabel::destroy(pDeformRatePlasticLabel);
+  VarLabel::destroy(pDeformRatePlasticLabel_preReloc);
+  VarLabel::destroy(pPlasticStrainLabel);
+  VarLabel::destroy(pPlasticStrainLabel_preReloc);
   
 
   VarLabel::destroy(gAccelerationLabel);
