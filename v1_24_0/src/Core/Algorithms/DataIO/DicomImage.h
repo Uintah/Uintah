@@ -56,8 +56,7 @@
 #include <Core/Malloc/Allocator.h>
 
 // Itk includes
-#include "itkDicomImageIOFactory.h"
-#include "itkDicomImageIO.h"
+#include "itkDICOMImageIO2.h"
 #include "itkImageSeriesReader.h"
 #include "itkDICOMSeriesFileNames.h"
 
@@ -81,7 +80,7 @@ class DicomImage
 public:
   // !Constructors
   DicomImage();
-  DicomImage( itk::DicomImageIO::Pointer io, ImageNDType::Pointer image,
+  DicomImage( itk::DICOMImageIO2::Pointer io, ImageNDType::Pointer image,
               std::string id );
 
   // !Copy constructor

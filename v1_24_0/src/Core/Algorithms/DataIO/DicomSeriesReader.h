@@ -59,8 +59,7 @@
 // SCIRun includes
 
 // Itk includes
-#include "itkDicomImageIOFactory.h"
-#include "itkDicomImageIO.h"
+#include "itkDICOMImageIO2.h"
 #include "itkImageSeriesReader.h"
 #include "itkImageFileReader.h"
 #include "itkDICOMSeriesFileNames.h"
