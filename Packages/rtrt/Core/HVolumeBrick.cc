@@ -40,6 +40,8 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
 {
   if(depth<=0)
     this->depth=depth=1;
+  ////////////////////////////////////////////////////
+  // read the header file
   char buf[200];
   sprintf(buf, "%s.hdr", filebase);
   ifstream in(buf);
@@ -60,7 +62,8 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
   }
   datadiag=max-min;
   sdiag=datadiag/Vector(nx-1,ny-1,nz-1);
-  
+
+  // calculate the total size for the data in bricks
 #define L1 3
 #define L2 6
   int totalx=(nx+L2*L1-1)/(L2*L1);
@@ -101,11 +104,13 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
     cerr << "Error allocating data array\n";
     exit(1);
   }
+
+  ////////////////////////////////////////////////////////////
+  // try reading the already bricked data, if you can't then read in the raw
+  // data and brick it
   sprintf(buf, "%s.brick", filebase);
   int bin_fd = open(buf, O_RDONLY);
-  //  ifstream bin(buf);
   if(bin_fd == -1){
-    //ifstream din(filebase);
     int din_fd = open(filebase, O_RDONLY);
     if(din_fd == -1){
       cerr << "Error opening data file: " << filebase << '\n';
@@ -117,10 +122,7 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
       exit(1);
     }
     double start=Time::currentSeconds();
-    //din.read((char*)data, sizeof(float)*nx*ny*nz);
     cerr << "Reading " << filebase << "...";
-    cerr.flush();
-    //read(din.rdbuf()->fd(), indata, sizeof(float)*nx*ny*nz);
     read(din_fd, indata, sizeof(float)*nx*ny*nz);
     double dt=Time::currentSeconds()-start;
     cerr << "done in " << dt << " seconds (" << (double)(sizeof(float)*nx*ny*nz)/dt/1024/1024 << " MB/sec)\n";
@@ -130,34 +132,33 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
       exit(1);
     }
     cerr << "Done reading data\n";
-    
+
+    ///////////////////////////////////////////////////////////////
+    // brick up the data
     int bnp=np>2?2:np;
-    //cerr << "Bricking data with " << bnp << " processors\n";
-    // <<<<< bigler >>>>>
-    //work=WorkQueue("Bricking");
+    cerr << "Bricking data with " << bnp << " processors\n";
     work.refill(nx, bnp, 5);
     Parallel<HVolumeBrick> phelper(this, &HVolumeBrick::brickit);
     Thread::parallel(phelper, bnp, true);
+    // we don't need the raw data anymore, because we have it in bricks now
+    delete[] indata;
     
-    //ofstream bout(buf);
-    int bout_fd = open(buf, O_WRONLY | O_CREAT | O_TRUNC);
+    ///////////////////////////////////////////////////////////////
+    // write the bricked data to a file, so that we don't have to rebrick it
+    int bout_fd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
     if (bout_fd == -1) {
       cerr << "Error opening file " << buf << " for writing.\n";
       exit(1);
     }
     cerr << "Writing " << buf << "...";
     start=Time::currentSeconds();
-    //write(bout.rdbuf()->fd(), blockdata, sizeof(float)*totalsize);
     write(bout_fd, blockdata, sizeof(float)*totalsize);
     dt=Time::currentSeconds()-start;
     cerr << "done (" << (double)(sizeof(float)*totalsize)/dt/1024/1024 << " MB/sec)\n";
-    delete[] indata;
   } else {
-    //din.read((char*)data, sizeof(float)*nx*ny*nz);
+    // read the bricked data from the file
     cerr << "Reading " << buf << "...";
-    cerr.flush();
     double start=Time::currentSeconds();
-    //read(bin.rdbuf()->fd(), blockdata, sizeof(float)*totalsize);
     read(bin_fd, blockdata, sizeof(float)*totalsize);
     double dt=Time::currentSeconds()-start;
     cerr << "done (" << (double)(sizeof(float)*totalsize)/dt/1024/1024 << " MB/sec)\n";
@@ -167,7 +168,9 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
       exit(1);
     }
   }
-  
+
+  ///////////////////////////////////////////////////////////////////
+  // now we need to build the macro cells
   xsize=new int[depth];
   ysize=new int[depth];
   zsize=new int[depth];
@@ -317,11 +320,15 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
     int ny=ysize[depth-1];
     int nz=zsize[depth-1];
     int totaltop=nx*ny*nz;
-    // <<<<< bigler >>>>>
-    //work=WorkQueue("Building hierarchy");
+#if 1
     work.refill(totaltop, np, 5);
     Parallel<HVolumeBrick> phelper(this, &HVolumeBrick::parallel_calc_mcell);
     Thread::parallel(phelper, np, true);
+#else
+    work.refill(totaltop, 1, 5);
+    Parallel<HVolumeBrick> phelper(this, &HVolumeBrick::parallel_calc_mcell);
+    Thread::parallel(phelper, 1, true);
+#endif
 #endif
     cerr << "done\n";
   }
@@ -625,12 +632,14 @@ void HVolumeBrick::calc_mcell(int depth, int startx, int starty, int startz,
 	int nx=xsize[depth-1];
 	int ny=ysize[depth-1];
 	int nz=zsize[depth-1];
+#if 0
 	if(endx>nx)
 	    endx=nx;
 	if(endy>ny)
 	    endy=ny;
 	if(endz>nz)
 	    endz=nz;
+#endif
 	VMCellfloat* mcells=macrocells[depth];
 	int* mxidx=macrocell_xidx[depth];
 	int* myidx=macrocell_yidx[depth];
