@@ -14,6 +14,7 @@
 #include <Modules/Salmon/Salmon.h>
 #include <Modules/Salmon/Roe.h>
 #include <Modules/Salmon/Renderer.h>
+#include <Classlib/Debug.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Timer.h>
 #include <Devices/DBCallback.h>
@@ -39,6 +40,7 @@
 #define MouseMove 2
 
 const int MODEBUFSIZE = 100;
+static DebugSwitch autoview_sw("Roe", "autoview");
 
 Roe::Roe(Salmon* s, const clString& id)
 : id(id), manager(s), view("view", id, this), shading("shading", id, this),
@@ -230,43 +232,6 @@ void Roe::get_bounds(BBox& bbox)
 	}
     }
 }
-
-#ifdef OLDUI
-void Roe::autoViewCB(CallbackData*, void*)
-{
-    BBox bbox;
-    get_bounds(bbox);
-    if (!bbox.valid()) return;
-    Point lookat(bbox.center());
-    lookat.z(bbox.max().z());
-    double lx=lookat.x();
-    double xwidth=lx-bbox.min().x();
-    double ly=lookat.y();
-    double ywidth=ly-bbox.min().y();
-    double dist=Max(xwidth, ywidth);
-    evl->lock();
-    make_current();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    double lz=lookat.z();
-    gluLookAt(lx, ly, lz+dist, lx, ly, lz, 0, 1, 0);
-    mtnScl=1;
-    // if we're in orthographics mode, scale appropriately
-    char ort;
-    orthoB->GetSet(&ort);
-    orthoB->GetValues();
-    if (ort) {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-8,8,-6,6,-100,100);
-	glScaled(4/dist, 4/dist, 4/dist);
-	glMatrixMode(GL_MODELVIEW);
-    }
-    evl->unlock();
-    need_redraw=1;
-}    
-
-#endif
 
 void Roe::rotate(double angle, Vector v, Point c)
 {
@@ -768,16 +733,16 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	// Move forward/backwards until entire view is in scene...
 	Vector lookdir(cv.lookat-cv.eyep);
 	double old_dist=lookdir.length();
-	cerr << "old_dist=" << old_dist << endl;
+	PRINTVAR(autoview_sw, old_dist);
 	double old_w=2*Tan(DtoR(cv.fov/2.))*old_dist;
-	cerr << "old_w=" << old_w << endl;
+	PRINTVAR(autoview_sw, old_w);
 	Vector diag(bbox.diagonal());
 	double w=diag.length();
-	cerr << "w=" << w << endl;
+	PRINTVAR(autoview_sw, w);
 	double dist=old_dist*w/old_w;
-	cerr << "dist=" << dist << endl;
+	PRINTVAR(autoview_sw, dist);
 	cv.eyep=cv.lookat-lookdir*dist/old_dist;
-	cerr << "cv.eyep=" << cv.eyep << endl;
+	PRINTVAR(autoview_sw, cv.eyep);
 	animate_to_view(cv, 2.0);
     } else {
 	args.error("Unknown minor command for Roe");
