@@ -139,7 +139,7 @@ void Exception::sci_throw(const Exception& exc)
     } else if(strcasecmp(emode, "dbx") == 0){
       // Fire up the debugger
       char command[100];
-      sprintf(command, "winterm -c dbx -p %d &", getpid());
+      sprintf(command, "xterm -e gdb -p %d &", getpid());
       cerr << "Starting: " << command << '\n';
       system(command);
       emode="ask";

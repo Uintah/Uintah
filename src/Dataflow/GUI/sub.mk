@@ -29,6 +29,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
+	$(SRCDIR)/ManageFieldSet.tcl \
 	$(SRCDIR)/ManipFields.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
