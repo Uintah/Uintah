@@ -66,7 +66,8 @@ RenderFieldBase::add_sphere(const Point &p0, double scale,
 			    GeomGroup *g, MaterialHandle mh)
 {
   GeomSphere *s = scinew GeomSphere(p0, scale, resolution, resolution);
-  g->add(scinew GeomMaterial(s, mh));
+  if (mh.get_rep()) { g->add(scinew GeomMaterial(s, mh)); }
+  else { g->add(s); }
 }
 
 
@@ -83,12 +84,26 @@ RenderFieldBase::add_disk(const Point &p, const Vector &vin,
     v*=scale/6;
     GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
 						      resolution, 1, 1);
-    g->add(scinew GeomMaterial(d, mh));
+    if (mh.get_rep())
+    {
+      g->add(scinew GeomMaterial(d, mh));
+    }
+    else
+    {
+      g->add(d);
+    }
   }
   else
   {
     GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-    g->add(scinew GeomMaterial(s, mh));
+    if (mh.get_rep())
+    {
+      g->add(scinew GeomMaterial(s, mh));
+    }
+    else
+    {
+      g->add(s);
+    }
   }
 }
 
@@ -96,7 +111,7 @@ RenderFieldBase::add_disk(const Point &p, const Vector &vin,
 
 void 
 RenderFieldBase::add_axis(const Point &p0, double scale, 
-			  GeomGroup *g, MaterialHandle mh) 
+			  GeomCLines *lines, MaterialHandle mh) 
 {
   static const Vector x(1., 0., 0.);
   static const Vector y(0., 1., 0.);
@@ -104,19 +119,15 @@ RenderFieldBase::add_axis(const Point &p0, double scale,
 
   Point p1 = p0 + x * scale;
   Point p2 = p0 - x * scale;
-  GeomLine *l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
+  lines->add(p1, mh, p2, mh);
+
   p1 = p0 + y * scale;
   p2 = p0 - y * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
+  lines->add(p1, mh, p2, mh);
+
   p1 = p0 + z * scale;
   p2 = p0 - z * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
+  lines->add(p1, mh, p2, mh);
 }
 
 
@@ -340,5 +351,13 @@ RenderTensorFieldBase::add_item(GeomHandle glyph,
   }
 }
 
+void
+RenderScalarFieldBase::add_sphere(const Point &p, double scale, int resolution,
+				  GeomGroup *g, MaterialHandle color)
+{
+  GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
+  if (color.get_rep()) { g->add(scinew GeomMaterial(s, color)); }
+  else { g->add(s); }
+}
 
 } // end namespace SCIRun
