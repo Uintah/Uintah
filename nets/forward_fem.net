@@ -11,6 +11,16 @@ set runDate " Tue  Mar 13 2001"
 global runTime
 set runTime " 0:22:14"
 
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 190 6]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 395 6]
 set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 208 91]
