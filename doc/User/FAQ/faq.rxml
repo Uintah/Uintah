@@ -126,8 +126,11 @@ doc.insertDocType("article", entities)
 	  SCIRun has been tested with the following PC graphics cards:
 	  <itemizedlist>
 	    <listitem>
-	      <simpara>NVIDIA GeForce, GeForce II &amp; GeForce3</simpara>
+	      <simpara>NVIDIA GeForce &amp; FX</simpara>
 	    </listitem>
+            <listitem>
+              <simpara>ATI Radeon 9700</simpara>
+            </listitem>
 	  </itemizedlist>
 	</para>
       </answer>
@@ -598,10 +601,8 @@ PRINT_TEXT
 	<para>Does SCIRun support 2D visualization?</para>
       </question>
       <answer>
-	<para>No, not in general.  But, in the BioPSE package there is a
-	module called ShowLeads that takes a matrix as input, and
-	renders a 2d graph. The module assumes that rows are a time
-	series of data, with columns the timestep values.</para>
+	<para>Yes. The ShowSlices module will display orthogonal slices of
+	      a 3D nrrd in a 2D OpenGL window. 
       </answer>
     </qandaentry>
 
