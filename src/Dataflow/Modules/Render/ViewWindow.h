@@ -97,7 +97,7 @@ class TexStruct3D;
 class SegBin;			// bins for sorted line segments...
 
 struct ObjTag {
-  GuiVarint* visible;
+  GuiInt* visible;
   int tagid;
 };
 
