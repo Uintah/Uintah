@@ -22,10 +22,10 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
             Interaction Dynamics
 _____________________________________________________________________*/
 void MPMICE::computeRateFormPressure(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                        const MaterialSubset* ,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* ,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -53,6 +53,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > rho_micro(numALLMatls);
     StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
     StaticArray<CCVariable<double> > rho_CC_new(numALLMatls);
+    StaticArray<CCVariable<double> > rho_CC_scratch(numALLMatls);
     StaticArray<CCVariable<double> > speedSound_new(numALLMatls);
     StaticArray<CCVariable<double> > f_theta(numALLMatls);
     StaticArray<CCVariable<double> > matl_press(numALLMatls);
@@ -87,15 +88,79 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       }
       new_dw->allocate(sp_vol_new[m],    Ilb->sp_vol_CCLabel,    indx,patch); 
       new_dw->allocate(rho_CC_new[m],    Ilb->rho_CCLabel,       indx,patch); 
+      new_dw->allocate(rho_CC_scratch[m],MIlb->rho_CCScratchLabel,indx,patch);
       new_dw->allocate(vol_frac[m],      Ilb->vol_frac_CCLabel,  indx,patch); 
       new_dw->allocate(f_theta[m],       Ilb->f_theta_CCLabel,   indx,patch); 
       new_dw->allocate(matl_press[m],    Ilb->matl_press_CCLabel,indx,patch); 
       new_dw->allocate(rho_micro[m],     Ilb->rho_micro_CCLabel, indx,patch); 
       new_dw->allocate(speedSound_new[m],Ilb->speedSound_CCLabel,indx,patch);
       speedSound_new[m].initialize(0.0);
+      if(ice_matl){                    // I C E
+       rho_CC_scratch[m].copyData(rho_CC[m]);
+      }
     }
     
     press_new.initialize(0.0);
+
+
+    // This adjusts the amount of ice material in cells that aren't
+    // identically full after initialization
+    static int tstep=1;
+    if(tstep==0){
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){        IntVector c = *iter;
+        double total_mat_vol = 0.0;
+        double total_ice_vol=0.0;
+        for (int m = 0; m < numALLMatls; m++) {
+          Material* matl = d_sharedState->getMaterial( m );
+          ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+          MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+          if(ice_matl){                // I C E
+           rho_micro[m][c]  = 1.0/sp_vol_CC[m][c];
+           sp_vol_new[m][c] = sp_vol_CC[m][c];
+           mat_mass[m]   = rho_CC[m][c] * cell_vol;
+           mat_volume[m] = mat_mass[m] * sp_vol_CC[m][c];
+           total_ice_vol+=mat_volume[m];
+          }
+          if(mpm_matl){                //  M P M
+            rho_micro[m][c]  = mass_CC[m][c]/mat_vol[m][c];
+            sp_vol_new[m][c] = 1/rho_micro[m][c];
+            mat_mass[m]      = mass_CC[m][c];
+            mat_volume[m] = mat_vol[m][c];
+          }
+          total_mat_vol += mat_volume[m];
+        }
+        // "Fix" the cells that aren't identically full
+        if((fabs(total_mat_vol-cell_vol)/cell_vol) > .01){
+          if(total_mat_vol > cell_vol){ // For cells that are too full
+            double extra_vol = total_mat_vol - cell_vol;
+            for (int m = 0; m < numALLMatls; m++) {
+             Material* matl = d_sharedState->getMaterial( m );
+             ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+             // Remove a proportional amount of each ice material's mass & vol
+             if(ice_matl){                // I C E
+               mat_volume[m] -= (extra_vol/total_ice_vol)*mat_volume[m];
+               mat_mass[m]   -= (extra_vol/total_ice_vol)*mat_mass[m];
+               rho_CC_scratch[m][c] = mat_mass[m]/cell_vol;
+             }
+            } // for ALL matls
+           }
+           if(total_mat_vol < cell_vol){ // For cells that aren't full enough
+            double missing_vol = cell_vol - total_mat_vol;
+            for (int m = 0; m < numALLMatls; m++) {
+             Material* matl = d_sharedState->getMaterial( m );
+             ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+             // Add an equal amount of each ice material's mass & vol
+             if(ice_matl){                // I C E
+               mat_volume[m] += missing_vol/((double) numICEMatls);
+               mat_mass[m]   = mat_volume[m]*rho_micro[m][c];
+               rho_CC_scratch[m][c] = mat_mass[m]/cell_vol;
+             }
+            } // for ALL matls
+          }
+        } // if cells aren't identically full
+      }
+    }
+    tstep++;
 
     //__________________________________
     // Compute rho_micro,matl_press, total_vol, speedSound
@@ -114,7 +179,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
                                          cv[m],Temp[m][c],
                                          press_eos[m],dp_drho[m],dp_de[m]);
 
-         mat_mass[m]   = rho_CC[m][c] * cell_vol;
+         mat_mass[m]   = rho_CC_scratch[m][c] * cell_vol;
          mat_volume[m] = mat_mass[m] * sp_vol_CC[m][c];
 
          tmp = dp_drho[m] + dp_de[m] * 
@@ -165,7 +230,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(ice_matl){
-        rho_CC_new[m].copyData(rho_CC[m]);
+        rho_CC_new[m].copyData(rho_CC_scratch[m]);
       }
       if(mpm_matl){
         for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
