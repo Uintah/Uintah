@@ -22,7 +22,7 @@
 
 catch {rename ParticleFieldExtractor ""}
 
-itcl_class Packages/Uintah_Visualization_ParticleFieldExtractor { 
+itcl_class Uintah_Visualization_ParticleFieldExtractor { 
     inherit Module 
 
     protected psVarList ""
