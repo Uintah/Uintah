@@ -174,7 +174,9 @@ public:
       seconds = tmp;
     }
     sleep(seconds);
-    cout << "Regression test timeout, killing SCIRun.\n";
+    cout << "\n";
+    cout << "main.cc: RegressionKiller: Regression test timed out\n";
+    cout << "         after " << seconds << " seconds.  Killing SCIRun.\n\n";
     Thread::exitAll(1);
   }
 };
