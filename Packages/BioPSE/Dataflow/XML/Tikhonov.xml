@@ -76,7 +76,11 @@ L-curve is user defined. </p>
         <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>RegForwardMat</name>
+        <name>RegParam</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RegInverseMat</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>

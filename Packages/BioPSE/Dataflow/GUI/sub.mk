@@ -40,15 +40,16 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/InsertVoltageSource.tcl\
 	$(SRCDIR)/IntegrateCurrent.tcl\
 	$(SRCDIR)/ModifyConductivities.tcl\
+	$(SRCDIR)/RawToDenseMatrix.tcl\
 	$(SRCDIR)/SegFieldOps.tcl \
 	$(SRCDIR)/SegFieldToLatVol.tcl \
 	$(SRCDIR)/SepSurfToQuadSurf.tcl \
 	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\
 	$(SRCDIR)/ShowLeads.tcl\
+	$(SRCDIR)/TSVD.tcl\
 	$(SRCDIR)/Tikhonov.tcl\
 	$(SRCDIR)/TikhonovSVD.tcl\
-	$(SRCDIR)/RawToDenseMatrix.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI

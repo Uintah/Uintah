@@ -281,8 +281,9 @@ void Tikhonov::execute()
   MatrixIPort *iportMeasDat = (MatrixIPort *)get_iport("MeasuredPots");
 	
   MatrixOPort *oportInvSol = (MatrixOPort *)get_oport("InverseSoln");
-  MatrixOPort *oportRegForMat = (MatrixOPort *)get_oport("RegForwardMat");
-  //    MatrixOPort *oportKAPA = (MatrixOPort *)get_oport("KAPA");
+  MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
+  MatrixOPort *oportRegInvMat = (MatrixOPort *)get_oport("RegInverseMat");
+
 
   if (!iportForMat) 
   {
@@ -304,15 +305,15 @@ void Tikhonov::execute()
     error("Unable to initialize oport 'InverseSoln'.");
     return;
   }
-  if (!oportRegForMat) 
+  if (!oportRegInvMat) 
   {
-    error("Unable to initialize oport 'RegForwardMat'.");
+    error("Unable to initialize oport 'RegInverseMat'.");
     return;
   }
     	
   // DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
   MatrixHandle hMatrixForMat, hMatrixRegMat, hMatrixMeasDat;
-  //MatrixHandle hMatrixRegForMat, hMatrixInvSol;
+  //MatrixHandle hMatrixRegInvMat, hMatrixInvSol;
     
   if(!iportForMat->get(hMatrixForMat)) 
   { 
@@ -408,12 +409,14 @@ void Tikhonov::execute()
     int i, j, k, l, nLambda;
     Array1<double> lambdaArray, rho, eta;
     double	lam_step;
+    nLambda=lambda_num_.get();
+
     ColumnMatrix *kapa = scinew ColumnMatrix(nLambda);
 
     lambdaArray.setsize(nLambda); 
     rho.setsize(nLambda);
     eta.setsize(nLambda);   
-    nLambda=lambda_num_.get();
+   
     lambdaArray[0]=lambda_min_.get();
     lam_step=pow(10,log10(lambda_max_.get()/lambda_min_.get())/(nLambda-1));
 	
@@ -487,6 +490,10 @@ void Tikhonov::execute()
 
   } // END  else if (reg_method_.get() == "lcurve")
   lambda2 = lambda*lambda;
+
+  ColumnMatrix  *RegParameter =scinew ColumnMatrix(1);
+  (*RegParameter)[0]=lambda;
+
   for (int i=0; i<N; i++)
   {
     for (int l=0; l<N; l++)
@@ -496,12 +503,18 @@ void Tikhonov::execute()
     }
   }
   regForMatrix->solve(*mat_AtrY);
-    
+  DenseMatrix  *InverseMatrix =scinew DenseMatrix(N, M);
+  regForMatrix->invert();
+  Mult(*InverseMatrix,*regForMatrix,*(matrixForMatD->transpose()));
+
+
+
   //...........................................................
   // SEND RESULTS TO THE OUTPUT PORTS
   oportInvSol->send(MatrixHandle(mat_AtrY));
-  oportRegForMat->send(MatrixHandle(regForMatrix));
-  //    oportKAPA->send(MatrixHandle(kapa));
+  oportRegParam->send(MatrixHandle(RegParameter));
+  oportRegInvMat->send(MatrixHandle(InverseMatrix));
+
 }
   
 } // End namespace BioPSE
