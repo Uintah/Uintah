@@ -105,6 +105,53 @@ void NrrdToField::execute()
   LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, minP, maxP);
   LatVolMeshHandle lvmH(lvm);
 
+  Array1<double> t(6);
+  if (ninH->nrrd->dim == 4) {  // vector or tensor data
+    if (ninH->nrrd->type != nrrdTypeDouble) {
+      cerr << "Error - vector and tensor nrrd's must be doubles.\n";
+      return;
+    }
+    if (ninH->nrrd->size[3] == 3) {
+      LatticeVol<Vector> *f = 
+	scinew LatticeVol<Vector>(lvm, Field::NODE);
+      double *p=(double *)ninH->nrrd->data;
+      for (k=0; k<nz; k++)
+	for (j=0; j<ny; j++)
+	  for(i=0; i<nx; i++) {
+	    f->fdata()(i,j,k).x(*p++);
+	    f->fdata()(i,j,k).y(*p++);
+	    f->fdata()(i,j,k).z(*p++);
+	  }
+      fieldH = f;      
+    } else if (ninH->nrrd->size[3] == 6) {
+      LatticeVol<Tensor> *f = 
+	scinew LatticeVol<Tensor>(lvm, Field::NODE);
+      double *p=(double *)ninH->nrrd->data;
+      for (k=0; k<nz; k++)
+	for (j=0; j<ny; j++)
+	  for(i=0; i<nx; i++) {
+	    for (int q=0; q<6; q++) t[q]=*p++;
+	    f->fdata()(i,j,k)=Tensor(t);
+	  }
+      fieldH = f;      
+    } else if (ninH->nrrd->size[3] == 7) {
+      LatticeVol<Tensor> *f = 
+	scinew LatticeVol<Tensor>(lvm, Field::NODE);
+      double *p=(double *)ninH->nrrd->data;
+      for (k=0; k<nz; k++)
+	for (j=0; j<ny; j++)
+	  for(i=0; i<nx; i++) {
+	    /* double valid = */ *p++; // should use masked value here
+	    for (int q=0; q<6; q++) t[q]=*p++;
+	    f->fdata()(i,j,k)=Tensor(t);
+	  }
+      fieldH = f;      
+    } else {
+      cerr << "Error - 4D nrrd must have vectors or tensors as 4th dim.\n";
+    }
+    return;
+  }
+
   if (ninH->nrrd->type == nrrdTypeChar) {
     LatticeVol<char> *f = 
       scinew LatticeVol<char>(lvm, Field::NODE);
