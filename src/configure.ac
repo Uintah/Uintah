@@ -73,7 +73,7 @@ AC_INIT([SCIRun],[1.22],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
-AC_PREREQ(2.57)
+AC_PREREQ(2.59)
 
 AC_COPYRIGHT(
 ##
@@ -1687,24 +1687,57 @@ AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
 AC_SUBST(INC_GL_H)
 
-
+AC_LANG(C++)
 # Test for advanced volume rendering capability
 
-SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
+
+SCI_COMPILE_LINK_TEST(EXT_HDRS,correct OpenGL extension headers ,
 [
   #define GL_GLEXT_PROTOTYPES
   #include <GL/gl.h>
+  #include <GL/glext.h>
 ],
 $_sci_inc, GL, $_sci_lib,,
 [
-  glActiveTexture(0);
+  int r = 5;
 ],optional)
 
+if test "$HAVE_EXT_HDRS" = "yes"; then
+
+  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
+
+  SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
+  [
+    #define GL_GLEXT_PROTOTYPES
+    #include <GL/gl.h>
+    #include <GL/glext.h>
+  ],
+  $_sci_inc, GL, $_sci_lib,,
+  [
+    glBindProgramARB(0,0);
+    glActiveTexture(0);
+  ],optional)
+else
+  SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
+  [
+    #include <GL/gl.h>
+  ],
+  $_sci_inc, GL, $_sci_lib,,
+  [
+    glBindProgramARB(0,0);
+    glActiveTexture(0);
+  ],optional)
+
+fi
+  
 
 if test "$HAVE_AVR" = "yes"; then
   COMPILE_AVR=1
 fi
 
+AC_LANG(C)
+
+AC_SUBST(DEF_OGL_EXT_HDRS)
 AC_SUBST(COMPILE_AVR)
 
 ##  --  search for dlopen  -----------------------------------------------

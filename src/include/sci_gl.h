@@ -46,11 +46,13 @@ extern int sci_glew_init();
 #endif
 
 #else /* !HAVE_GLEW */
-
-//#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
-//#include <GL/glext.h>
-
+ #if defined(CORRECT_OGLEXT_HDRS)
+  #define GL_GLEXT_PROTOTYPES
+  #include <GL/gl.h>
+  #include <GL/glext.h>
+ #else
+  #include <GL/gl.h>
+ #endif
 #endif
 
 #endif  /* #define SCI_GL_H */
