@@ -28,6 +28,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Exceptions \
+	Core/Geometry \
 	Core/Thread \
 	Core/Exceptions \
 	Core/Util \

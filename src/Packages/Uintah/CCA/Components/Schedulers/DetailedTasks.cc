@@ -120,7 +120,7 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 					     const Patch* fromPatch,
 					     DetailedTask* to,
 					     Task::Dependency* req,
-					     const Patch *toPatch,
+					     const Patch */*toPatch*/,
 					     int matl,
 					     const IntVector& low,
 					     const IntVector& high)
