@@ -298,7 +298,7 @@ const TypeDescription* get_type_description(ImageMesh::INodeIndex *)
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("ImageMesh::INodeIndex",
-				ImageMesh::get_h_file_path(),
+				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
   return td;
@@ -309,7 +309,7 @@ const TypeDescription* get_type_description(ImageMesh::IFaceIndex *)
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("ImageMesh::IFaceIndex",
-				ImageMesh::get_h_file_path(),
+				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
   return td;

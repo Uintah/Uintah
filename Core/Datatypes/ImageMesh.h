@@ -47,8 +47,6 @@ class SCICORESHARE ImageMesh : public Mesh
 {
 public:
 
-  static inline const string get_h_file_path() { return string(__FILE__); }
-
   struct ImageIndex
   {
   public:
