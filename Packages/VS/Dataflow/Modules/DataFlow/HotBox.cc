@@ -41,12 +41,13 @@
 #include "ServiceInterfaceSoapBinding.nsmap" // get namespace bindings
 #include "stdsoap2.h"
 // Xerces XML parser
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/framework/MemBufInputSource.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <xercesc/dom/DOMNodeList.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
 // VS/Hotbox
 #include "VS_SCI_HotBox.h"
 #include "labelmaps.h"
@@ -317,12 +318,12 @@ void
     return;
   }
 
-  // Instantiate the DOM parser.
-  XercesDOMParser parser;
-  parser.setDoValidation(false);
+  // Instantiate a DOM parser for the injury list file.
+  XercesDOMParser injListParser;
+  injListParser.setDoValidation(false);
 
   try {
-    parser.parse(injuryListDataSrc.c_str());
+    injListParser.parse(injuryListDataSrc.c_str());
   }  catch (const XMLException& toCatch) {
     std::cerr << "Error during parsing: '" <<
       injuryListDataSrc << "'\nException message is:  " <<
@@ -330,13 +331,11 @@ void
       return;
   }
                                                                                
-  DOMDocument *doc = parser.getDocument();
-  DOMNodeList *list = doc->getElementsByTagName(to_xml_ch_ptr("wound"));
-  unsigned long nlist = list->getLength();
-  if (nlist == 0) {
-    cout << "HotBox.cc: Error parsing xml file: " << injuryListDataSrc << endl;
-    return;
-  }
+  DOMDocument *injListDoc = injListParser.getDocument();
+  DOMNodeList *injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("wound"));
+  unsigned long nlist = injList->getLength();
+    cout << "HotBox.cc: xml file: " << injuryListDataSrc
+         << nlist << " wound entities" << endl;
 
   // we now have the anatomy name corresponding to the label value at the voxel
   if(dataSource == VS_DATASOURCE_OQAFMA)
@@ -383,14 +382,32 @@ void
       // parse XML query results
       std::string OQAFMA_result = resultStruQL._processStruQLReturn;
       cout << OQAFMA_result;
-      // get an iterator of the ws.soap->dom tree
-      // soap_dom_iterator sdi = ws.soap->dom->begin();
-      // int dom_elem_cnt = 0;
-      // while(sdi != ws.soap->dom->end())
-      // {
-      //   ++sdi; dom_elem_cnt++;
-      // }
-    }
+
+      // Instantiate a DOM parser for the OQAFMA query results
+      XercesDOMParser struQLretParser;
+      struQLretParser.setDoValidation(false);
+    
+      // create a Xerces InputSource to hold the query results
+       MemBufInputSource StruQLRetInputSrc (
+            (const XMLByte*)OQAFMA_result.c_str(),
+            strlen(OQAFMA_result.c_str()),
+            "HotBoxStruQL", false);
+      try {
+        struQLretParser.parse(StruQLRetInputSrc);
+      }  catch (const XMLException& toCatch) {
+        std::cerr << "Error during parsing: StruQLReturn\n"
+                  << "Exception message is:  " <<
+          xmlto_string(toCatch.getMessage());
+          return;
+      }
+
+      DOMDocument *struQLretDoc = struQLretParser.getDocument();
+      DOMNodeList *struQLretList = struQLretDoc->getElementsByTagName(to_xml_ch_ptr("part"));
+      nlist = struQLretList->getLength();
+      if (nlist == 0) {
+        cout << "HotBox.cc: no 'part' entities in StruQL return" << endl;
+      }
+    } // end else (SOAP_OK)
     // catch(exception& e)
     // {
     //   printf("Unknown exception has occured\n");
