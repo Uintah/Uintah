@@ -198,6 +198,18 @@ MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 
+#
+# etags generation
+#
+TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
+C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
+CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
+HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
+
+ETAGS_FILES := $(wildcard $(C_FILES) $(CPP_FILES) $(HEADER_FILES))
+TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
+ETAGS := @ETAGS@
+
 all:: $(MAKEFILEDIRS)
 
 all:: $(LIBDIR) $(SUBMAKEFILES)
@@ -215,7 +227,7 @@ $(ALLOBJS): $(ALLGEN)
 
 #
 # This rule must be after the includes, so that it will find $(SIDL_EXE)
-#
+# 
 %_sidl.o: %_sidl.cc %_sidl.h
 
 %_sidl.cc: %.sidl $(SIDL_EXE)
@@ -223,6 +235,13 @@ $(ALLOBJS): $(ALLGEN)
 
 %_sidl.h: %.sidl $(SIDL_EXE)
 	$(SIDL_EXE) -h -o $@ $<
+
+#
+# Make emacs etags file
+#
+sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
+	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
+	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
 
 #
 # The sophsticated looking $(...) mess below is just to convert a
@@ -281,6 +300,9 @@ endif
 
 #
 # $Log$
+# Revision 1.23  2000/05/11 20:26:04  mcole
+# add etags generation to build system
+#
 # Revision 1.22  2000/04/12 22:02:10  dav
 # changed rmdir libdir to rm minus Rf libdir so that it actually removes it when libdir still has stuff in it.
 #
