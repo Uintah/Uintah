@@ -7,9 +7,6 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h> 
 #include <Packages/rtrt/Core/BumpObject.h> 
 
-#include <fstream>
-#include <iostream>
-
 namespace rtrt {
 class NormalMapMaterial;
 }

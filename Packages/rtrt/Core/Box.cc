@@ -6,9 +6,13 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/TrivialAllocator.h>
+
 #include <Core/Math/MiscMath.h>
+#include <sci_values.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <float.h>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace SCIRun;

@@ -8,12 +8,16 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Light.h>
+
 #include <Core/Geometry/Transform.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace SCIRun;
-using std::cerr;
+using namespace std;
 
 Persistent* camera_maker() {
   return new Camera();

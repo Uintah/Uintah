@@ -16,9 +16,9 @@ namespace SCIRun {
 namespace rtrt {
 
 class DielectricMaterial : public Material {
-  double R0;            // reflectance at normal incidence
   double n_in;          // refractive index of media normal points away from
   double n_out;         // refractive index of media normal points to
+  double R0;            // reflectance at normal incidence
   int phong_exponent;
   Color extinction_in;  // transmittance through one unit distance of material:
   Color extinction_out;

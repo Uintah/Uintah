@@ -75,8 +75,10 @@ BasicTexture * backgroundTex;     // from rtrt.cc
 
 extern "C" Display *__glutDisplay;
 
-double ORBIT_SPEED  = 0;
-double ROTATE_SPEED = 1;
+namespace rtrt {
+  double ORBIT_SPEED  = 0;
+  double ROTATE_SPEED = 1;
+}
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -3140,7 +3142,7 @@ Gui::updateLightPositionCB( int id )
 }
 
 void
-Gui::updateLightRadiusCB( int id )
+Gui::updateLightRadiusCB( int /*id*/ )
 {
   if (activeGui->light_radius < 0) {
     // This is a no no

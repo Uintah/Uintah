@@ -203,7 +203,7 @@ bool HTVolumeBrick::intersect_voxel_tetra(int x, int y, int z, int* nodes)
 HTVolumeBrick::HTVolumeBrick(Material* matl, VolumeDpy* dpy,
 			     char* filebase, int depth, int np,
 			     double density)
-  : VolumeBase(matl, dpy), depth(depth), filebase(filebase), work(0)
+  : VolumeBase(matl, dpy), depth(depth), work(0), filebase(filebase)
 {
   if(depth<=0)
     depth=this->depth=1;

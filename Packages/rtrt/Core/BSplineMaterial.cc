@@ -3,15 +3,20 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/UV.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Object.h>
-#include <iostream>
-#include <stdio.h>
-#include <fstream>
-#include <stdlib.h>
 #include <Packages/rtrt/Core/Context.h>
+
+#include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 using namespace rtrt;
 using namespace std;

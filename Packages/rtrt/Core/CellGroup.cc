@@ -1,9 +1,14 @@
 #include <Packages/rtrt/Core/CellGroup.h>
 #include <Packages/rtrt/Core/HitInfo.h>
-#include <iostream>
+
 #include <sci_values.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 using namespace rtrt;
+using namespace std;
 
 CellGroup::CellGroup()
   : Object(0)

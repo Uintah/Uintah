@@ -2,12 +2,16 @@
 #include <Packages/rtrt/Core/BV2.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Array1.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
+
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace std;

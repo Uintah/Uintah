@@ -2,11 +2,13 @@
 #ifndef TOKEN_H
 #define TOKEN_H 1
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 
 
@@ -117,8 +119,8 @@ class Token
 
   void destroy_children()
   {
-    unsigned length = children_.size();
-    unsigned loop;
+    size_t length = children_.size();
+    size_t loop;
     for (loop=0; loop<length; ++loop) {
       children_[loop]->destroy_children();
       delete children_[loop];
@@ -150,7 +152,7 @@ class Token
   }
 	
   token_list *GetChildren() { return &children_; }
-  unsigned GetNumChildren() const { return children_.size(); }
+  size_t GetNumChildren() const { return children_.size(); }
   string GetMoniker() const { return moniker_; }
   string_list *GetArgs() { return &args_; }
   unsigned GetNumArgs() const { return nargs_; }

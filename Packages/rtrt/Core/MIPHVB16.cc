@@ -37,9 +37,9 @@ struct MIPVMCell {
 };
 
 struct MIPCell {
-    int depth;
     float maxval;
     double t;
+    int depth;
 
     int gx, gy, gz;
 
@@ -52,10 +52,9 @@ struct MIPCell {
 	    /*gx=gy=gz=-123456; */
 	    //mypri=maxval*1000;
     }
-    inline MIPCell(float maxval, int depth,
-		   double t,
+    inline MIPCell(float maxval, double t, int depth,
 		   int gx, int gy, int gz)
-	: maxval(maxval), depth(depth), t(t),
+	: maxval(maxval), t(t), depth(depth),
 	  gx(gx), gy(gy), gz(gz) {
 	      //mypri=maxval*1000;
     }
@@ -66,7 +65,7 @@ struct MIPCell {
 } // end namespace rtrt
 
 MIPHVB16::MIPHVB16(char* filebase, int depth, int np)
-  : Object(this), depth(depth), filebase(filebase), work(0)
+  : Object(this), depth(depth), work(0), filebase(filebase)
 {
     if(depth<=0)
 	this->depth=depth=1;
@@ -538,7 +537,7 @@ void MIPHVB16::intersect(Ray& ray, HitInfo& hit,
     const Vector dir(ray.direction());
     const Point orig(ray.origin());
     PriorityQ<MIPCell, 200> curr;
-    curr.insert(MIPCell(datamax, depth-1, 0,
+    curr.insert(MIPCell(datamax, 0, depth-1,
 			0, 0, 0));
     double xinv_dir=1./dir.x();
     double yinv_dir=1./dir.y();
@@ -856,7 +855,7 @@ void MIPHVB16::intersect(Ray& ray, HitInfo& hit,
 		int idx=mxidx[gx]+myidx[gy]+mzidx[gz];
 		MIPVMCell& mcell=mcells[idx];
 		if(mcell.max > maxsofar){
-		    curr.insert(MIPCell(mcell.max, cell.depth-1, t,
+		    curr.insert(MIPCell(mcell.max, t, cell.depth-1,
 					gx, gy, gz));
 		}
 		if(next_x < next_y && next_x < next_z){

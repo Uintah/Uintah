@@ -5,7 +5,9 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using SCIRun::Thread;
 using SCIRun::Parallel;

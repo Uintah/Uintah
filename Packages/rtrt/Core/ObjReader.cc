@@ -181,8 +181,8 @@ void addObjMaterial(Array1<Material*> &matl,
   Material *m=0;
   if (has_tmap) {
     ImageMaterial *im = new ImageMaterial(tmap_name, ImageMaterial::Tile,
-					  ImageMaterial::Tile, Ks, 1, 
-					  R0, 1-opacity, 0);
+					  ImageMaterial::Tile, Ks, 1,
+                                          (int)R0, 1-opacity, 0);
     if (!im->valid()) {
       cerr << "Error - unable to load texture map >>"<<tmap_name<<"<<\n";
       has_tmap=0;

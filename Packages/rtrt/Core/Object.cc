@@ -5,9 +5,11 @@
 #include <Packages/rtrt/Core/UVPlane.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Names.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <string>
 #include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
@@ -125,6 +127,16 @@ Object::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, matl);
   SCIRun::Pio(str, uv);
   str.end_class();
+}
+
+const string& Object::get_name() const
+{
+  return Names::getName(this);
+}
+
+void Object::set_name(const string &s)
+{
+  Names::nameObject(s, this);
 }
 
 namespace SCIRun {

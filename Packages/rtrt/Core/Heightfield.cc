@@ -13,8 +13,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #include <Packages/rtrt/Core/UV.h>
 
@@ -54,7 +56,7 @@ Heightfield<A,B>::type_name()
 template<class A, class B>
 Heightfield<A,B>::Heightfield(Material* matl, char* filebase,
 			      int depth, int np)
-  : Object(matl,this), depth(depth), filebase(filebase), np_(np)
+  : Object(matl,this), depth(depth), np_(np), filebase(filebase)
 {
     this->filebase=strdup(filebase);
     if(depth<1)
@@ -162,11 +164,11 @@ Heightfield<A,B>::Heightfield(Material* matl, char* filebase,
 	ss=(ss+s.d_miniosz-1)/s.d_miniosz*s.d_miniosz;
 	unsigned long total=0;
 	while(total != ss){
-	    int t=ss-total;
+	    unsigned long t=ss-total;
 	    if(t>s.d_maxiosz)
 		t=s.d_maxiosz;
 	    cerr << "reading: " << t << " bytes\n";
-	    int n=read(bin, (char*)blockdata.get_dataptr()+total, t);
+	    size_t n=read(bin, (char*)blockdata.get_dataptr()+total, t);
 	    cerr << "n=" << n << '\n';
 	    if(n != t){
 		perror("read");

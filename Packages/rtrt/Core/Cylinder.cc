@@ -6,7 +6,10 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/TrivialAllocator.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 
@@ -20,7 +23,7 @@ SCIRun::PersistentTypeID Cylinder::type_id("Cylinder", "Object",
 
 Cylinder::Cylinder(Material* matl, const Point& bottom, const Point& top,
 		   double radius)
-    : Object(matl), bottom(bottom), top(top), radius(radius)
+    : Object(matl), top(top), bottom(bottom), radius(radius)
 {
 }
 

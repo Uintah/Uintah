@@ -57,10 +57,10 @@ namespace rtrt {
 
 HVolumeBrickColor::HVolumeBrickColor(char* filebase, int np,
 				     double Ka, double Kd, double Ks,
-				     double specpow, double refl,
+				     int specpow, double refl,
 				     double dt)
-    : filebase(filebase), Ka(Ka/255.), Kd(Kd/255.), Ks(Ks/255.),
-      specpow(specpow), refl(refl), dt(dt), work(0)
+    : dt(dt), work(0), filebase(filebase),
+      Ka(Ka/255.), Kd(Kd/255.), Ks(Ks/255.), specpow(specpow), refl(refl)
 {
     nn=false;
     grid=false;
@@ -282,13 +282,13 @@ void HVolumeBrickColor::brickit(int proc)
     unsigned long nynz=ny*nz;
     int sx, ex;
     while(work.nextAssignment(sx, ex)){
-	for(unsigned long x=sx;x<ex;x++){
+	for(int x=sx;x<ex;x++){
 	    io_lock_.lock();
 	    cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
 	    io_lock_.unlock();
-	    for(int y=0;y<ny;y++){
+	    for(unsigned int y=0;y<ny;y++){
 		unsigned long idx=x*nynz*3+y*nz*3;
-		for(int z=0;z<nz;z++){
+		for(unsigned int z=0;z<nz;z++){
 		    unsigned char r=indata[idx];
 		    unsigned char g=indata[idx+1];
 		    unsigned char b=indata[idx+2];

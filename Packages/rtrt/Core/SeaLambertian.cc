@@ -89,7 +89,7 @@ void SeaLambertianMaterial::shade(Color& result, const Ray& ray,
 void SeaLambertianMaterial::intersect(Ray&, HitInfo&, DepthStats*,
 				      PerProcessorContext*)
 {
-  cerr << "SeaLambertianMaterial should not be added to scene!\n";
+  ASSERTFAIL("SeaLambertianMaterial should not be added to scene!\n");
 }
 
 Vector SeaLambertianMaterial::normal(const Point&, const HitInfo&)

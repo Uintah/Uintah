@@ -1,6 +1,7 @@
 
 /*
- *  BrickArray2.h: Interface to dynamic 2D array class
+ *  BrickArray2.h: Class which provides an interface to dynamic
+ *                 bricked 2D array data
  *
  *  Written by:
  *   Steven G. Parker
@@ -13,12 +14,16 @@
 
 #ifndef SCI_Classlib_BrickArray2_h
 #define SCI_Classlib_BrickArray2_h
+
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Util/Assert.h>
 #include <sci_config.h>
 
-#include <math.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
 
 namespace rtrt {
 template<class T> class BrickArray2;

@@ -59,6 +59,7 @@ Token::ParseChildren(ifstream &str)
     // parse the starting delimiter
     str >> curstring;
     delimiter = (DELIMITER)curstring[0];
+    bool delimiter_found = true;
     switch (delimiter) {
 	case DEL_LBRACE:
 	case DEL_LBRACKET:
@@ -68,16 +69,19 @@ Token::ParseChildren(ifstream &str)
 	case DEL_SINGLEQUOTE:
 	  break;
 	default:
-	  cerr << "Parse Error: Expected Delimiter:\n\t" 
-	       << "\"" << moniker_ << " ->" << curstring << "<-\"" << endl;
-	  return false;
-	  break;
+          delimiter_found = false;
+          break;
+    }
+    if (!delimiter_found) {
+      cerr << "Parse Error: Expected Delimiter:\n\t" 
+           << "\"" << moniker_ << " ->" << curstring << "<-\"" << endl;
+      return false;
     }
   }
   
   // parse all child tokens, and the closing delimiter
   str >> curstring;
-  while (1) {
+  for(;;) {
     if (str.eof()) {
       cerr << "Token: EOF" << endl;
       return true;
@@ -122,7 +126,7 @@ Token::ParseChildren(ifstream &str)
       if (unknown_delimiter) {
 	unknown_delimiter_stack++;
 	str >> curstring;
-	while (1) {
+        for(;;) {
 	  if (unknown_delimiter == 
 	      (DELIMITER)curstring[curstring.size()-1]) {
 	    unknown_delimiter_stack++;
@@ -181,7 +185,7 @@ Token::Parse(ifstream &str)
 void
 Token::Write(ofstream &str)
 {
-  unsigned loop, length;
+  size_t loop, length;
 
   if (!file_) {
     // write the token's moniker

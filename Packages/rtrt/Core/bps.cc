@@ -4,7 +4,11 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
 #include <sys/sysmp.h>
 #include <unistd.h>

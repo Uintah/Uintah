@@ -36,8 +36,9 @@ static void draw_circle(int radius, int x_center, int y_center);
 static void circle_points(int x, int y, int x_center, int y_center);
 
 ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins):
-  DpyBase("ColorMap GUI"), colors_index(matls),
+  DpyBase("ColorMap GUI"),
   data_min(MAXFLOAT), data_max(-MAXFLOAT),
+  colors_index(matls),
   selected_point(-1)
 {
   set_resolution(350,150);
@@ -49,7 +50,8 @@ ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins):
 }
 
 ColorMapDpy::ColorMapDpy(char *filebase, int num_bins):
-  DpyBase("ColorMap GUI"), data_min(MAXFLOAT), data_max(-MAXFLOAT),
+  DpyBase("ColorMap GUI"),
+  data_min(MAXFLOAT), data_max(-MAXFLOAT),
   selected_point(-1)
 {
   set_resolution(400,200);
@@ -383,7 +385,7 @@ void ColorMapDpy::draw_transform() {
   //  glLoadIdentity();
   glColor3f(1.0, 0.5, 1.0);
   int radius = (width/100)*3;
-  for(unsigned int k = 0; k < colors_index.size(); k++) {
+  for(int k = 0; k < colors_index.size(); k++) {
     draw_circle(radius, (int)(colors_index[k].x*width),
 		(int)(colors_index[k].val*height));
   }
@@ -429,7 +431,7 @@ int ColorMapDpy::select_point(int xpos, int ypos) {
   // now loop over the values and find the point closest
   float max_distance = FLT_MAX;
   int index = -1;
-  for(unsigned int i = 0; i < colors_index.size(); i++) {
+  for(int i = 0; i < colors_index.size(); i++) {
     // we don't really care about the actuall distance, just the relative
     // distance, so we don't have to square root this value.
     float distance = (x - colors_index[i].x) * (x - colors_index[i].x) +

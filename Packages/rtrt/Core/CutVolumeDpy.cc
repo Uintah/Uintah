@@ -11,15 +11,17 @@
 #include <Packages/rtrt/visinfo/visinfo.h>
 
 #include <Core/Math/MinMax.h>
+#include <sci_values.h>
 
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #include <stdlib.h>
-#include <sci_values.h>
 #include <stdio.h>
 #include <unistd.h>
 

@@ -247,7 +247,7 @@ int BumpMaterial::read_file(char *filename)
       for(int i = 0; i < dimension_x; i++)
         {
           fscanf(fin,"%d %d %d",&r,&g,&b);
-	  bumpimage[j*dimension_x+i] = (r+g+b)/3.0f;
+	  bumpimage[j*dimension_x+i] = static_cast<int>((r+g+b)/3.0f);
         }   
     evaru = 1.0f/(dimension_x);
     evarv = 1.0f/(dimension_y);
@@ -264,8 +264,8 @@ double BumpMaterial::fval(double u, double v)
 {
   int f1,f2,f3,f4,iu,iv,iu1,iv1;
   double fu0,fu1,du,dv;
-  iu = ((double)dimension_x*u);
-  iv = ((double)dimension_y*v);
+  iu = static_cast<int>((double)dimension_x*u);
+  iv = static_cast<int>((double)dimension_y*v);
   du = dimension_x*u - (double)iu;
   dv = dimension_y*v - (double)iv;
   if(iu >= dimension_x || iu < 0) iu = 0;
@@ -307,9 +307,9 @@ void BumpMaterial::writetoppm(char *filename,char *bumpfile,Vector *v)
     for(int i = 0; i < dimension_x; i++)
       {
 	Vector rgb = v[j*dimension_x+i];
-	int r = (rgb.x()+1)*128,
-	  g = (rgb.y()+1)*128,
-	  b = (rgb.z()+1)*128;
+	int r = static_cast<int>((rgb.x()+1)*128);
+        int g = static_cast<int>((rgb.y()+1)*128);
+	int b = static_cast<int>((rgb.z()+1)*128);
 	if(r > 256 || r < 0) {printf("warning [%d,%d] r=%d\n",i,j,r); r=256;}
 	if(g > 256 || g < 0) {printf("warning [%d,%d] g=%d\n",i,j,g); g=256;}
 	if(b > 256 || b < 0) {printf("warning [%d,%d] b=%d\n",i,j,b); b=256;}

@@ -1,13 +1,16 @@
 
 #include <Packages/rtrt/Core/Stealth.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdio.h>
 #include <math.h>
-//#include <iostream.h>
-
 
 using namespace rtrt;
 using namespace SCIRun;
-using std::cerr;
+using namespace std;
 
 static double translate_base = 1.5;      
 static double translate_max_count = 8;   
@@ -209,6 +212,27 @@ Stealth::stopPitchAndRotate()
   stopRotate();
 }
 
+double
+Stealth::getSpeed( int direction ) const {
+  switch( direction ) {
+  case 0:
+    return speed_;
+  case 1:
+    return horizontal_speed_;
+  case 2:
+    return vertical_speed_;
+  case 3:
+    return pitch_speed_;
+  case 4:
+    return rotate_speed_;
+  default:
+    cout << "Error in Stealth::getSpeed, bad direction " << direction 
+         << "\n";
+    exit( 1 );
+    return 0.0;
+  }
+}
+
 void
 Stealth::slowDown()
 {
@@ -379,13 +403,13 @@ Stealth::getNextLocation( Point & point, Point & look_at )
       begin_index = 0; end_index = 1;
     }
   //eye
-  Point & begin = (*currentPath_)[ begin_index ];
+  //  Point & begin = (*currentPath_)[ begin_index ];
   Point end = using_catmull_rom(*currentPath_, begin_index, t_catmull);
     
   point = end;
 
   //lookat 
-  Point & begin_at = (*currentLookAts_)[ begin_index ];
+  //  Point & begin_at = (*currentLookAts_)[ begin_index ];
   
   Point end_at = using_catmull_rom(*currentLookAts_, begin_index, t_catmull);
   look_at = end_at;

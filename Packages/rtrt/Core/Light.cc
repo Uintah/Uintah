@@ -31,7 +31,8 @@ void make_ortho(const Vector& v, Vector& v1, Vector& v2)
 // returns n^2 unit vectors within a cone with interior angle 2*theta0
 // oriented in direction axis (need not be unit).  Assumes incone is
 // already allocated
-void get_cone_vectors(const Vector& axis, double theta0, int n, Vector* incone)
+static void get_cone_vectors(const Vector& axis, double theta0, int n,
+                             Vector* incone)
 {
      Vector what = axis;
      what.normalize();
@@ -92,9 +93,9 @@ Light::Light(const Point& pos,
   origIntensity_(intensity), 
   currentColor_(color*intensity), 
   origColor_(color), 
+  moodLight_(moodLight),
   pos(pos),
-  isOn_(true),
-  moodLight_(moodLight)
+  isOn_(true)
 {
   init();
 }

@@ -1,13 +1,13 @@
 
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/HitInfo.h>
-#include <iostream>
+
 #include <sci_values.h>
 
 using namespace rtrt;
 
 SelectableGroup::SelectableGroup(float secs)
-  : Group(), autoswitch_secs(secs), autoswitch(true), no_skip(false)
+  : Group(), autoswitch(true), no_skip(false), autoswitch_secs(secs)
 {
   child = 0;
 }

@@ -1,13 +1,12 @@
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+
 #include <Packages/rtrt/Core/VolumeVis2D.h>
 #include <Packages/rtrt/Core/Volvis2DDpy.h>
+
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Stats.h>
-#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Context.h>
@@ -16,8 +15,16 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
-#include <float.h>
+
+#include <Core/Math/MiscMath.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <sci_values.h>
 
 using namespace std;
 using namespace rtrt;
@@ -36,11 +43,11 @@ VolumeVis2D::VolumeVis2D( BrickArray3<Voxel2D<float> >& _data,
 			     Point min, Point max,
 			     double spec_coeff, double ambient, double diffuse,
 			     double specular, Volvis2DDpy *dpy ):
-  Object(this), dpy(dpy), cdpy(0), cutplane_active(false),
-  data_min(data_min), data_max(data_max), diag(max - min),
-  nx(nx), ny(ny), nz(nz), use_cutplane_material(false),
-  min(min), max(max), spec_coeff(spec_coeff),
-  ambient(ambient), diffuse(diffuse), specular(specular)
+  Object(this), dpy(dpy), data_min(data_min), data_max(data_max), 
+  nx(nx), ny(ny), nz(nz), min(min), max(max), diag(max - min),
+  spec_coeff(spec_coeff), ambient(ambient), diffuse(diffuse),
+  specular(specular),
+  cdpy(0), cutplane_active(false), use_cutplane_material(false)
 {
   if (data_max.v() < data_min.v()) {
     float temp = data_max.v();
@@ -453,7 +460,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   //  cerr <<__LINE__<<"Number of lights in the scene is "<<cx->scene->nlights()<<"\n";
 
   // deal with whether or not a cutting plane is being used
-  VolumeVis2D_scratchpad* vsp;
+  VolumeVis2D_scratchpad* vsp = 0;
   float t_min = hit.min_t;
   float* t_maxp;
   float t_max;

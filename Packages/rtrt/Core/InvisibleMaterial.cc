@@ -1,3 +1,4 @@
+
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -7,8 +8,8 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
+
 #include <math.h>
-#include <iostream>
 
 using namespace rtrt;
 using namespace SCIRun;

@@ -8,8 +8,8 @@
 #include <GL/glx.h>
 #include <GL/glu.h>
 #include <sci_values.h>
-#include <sgi_stl_warnings_off.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -38,7 +38,7 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   float g_textureFactor = (textureHeight-1)/(gmax-gmin);
   float v_textureFactor = (textureWidth-1)/(vmax-vmin);
 
-  for( int n = 0; n < volumes.size(); n++ ) {
+  for(size_t n = 0; n < volumes.size(); n++ ) {
 
     // create histogram scatter plot
     for( int z = 0; z < volumes[n]->nz; z++ )
@@ -614,7 +614,8 @@ Volvis2DDpy::cycleWidgets(void) {
 void
 Volvis2DDpy::drawWidgets( GLenum mode ) {
   int count = 0;
-  while( count++ < widgets.size() ) {
+  int num_widgets = static_cast<int>(widgets.size());
+  while( count++ < num_widgets ) {
     if( mode == GL_SELECT )
       glLoadName( count );
     widgets[count-1]->draw();
@@ -626,7 +627,7 @@ Volvis2DDpy::drawWidgets( GLenum mode ) {
 // template<class T>
 void
 Volvis2DDpy::bindWidgetTextures( void ) {
-  for( int i = 0; i < widgets.size(); i++ )
+  for(size_t i = 0; i < widgets.size(); i++ )
     widgets[i]->paintTransFunc( transTexture2->textArray, master_opacity );
   redraw = true;
 } // bindWidgetTextures()
@@ -662,9 +663,9 @@ Volvis2DDpy::prioritizeWidgets( void ) {
     return;
 
   Widget *temp = widgets[pickedIndex];
-  for( int j = pickedIndex; j < widgets.size(); j++ )
+  for(size_t j = pickedIndex; j < widgets.size(); j++ )
     widgets[j] = widgets[j+1];
-  widgets[(int)(widgets.size()-1)] = temp;
+  widgets[widgets.size()-1] = temp;
   pickedIndex = (int)(widgets.size()-1);
   transFunc_changed = true;
 } // prioritizeWidgets()
@@ -1341,7 +1342,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 	    transTexture3->textArray[i][j][2] = 0;
 	    transTexture3->textArray[i][j][3] = 0;
 	  }
-	for( int i = 0; i < widgets.size()-1; i++ )
+	for(size_t i = 0; i < widgets.size()-1; i++ )
 	  widgets[i]->paintTransFunc( transTexture3->textArray,
 				      master_opacity );
 	widgetsMaintained = true;
@@ -1366,7 +1367,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 				   (330-y)/pixel_height-3 <
 				   m_opacity_slider->top ))) {
       adjustMasterOpacity( (float)x/pixel_width );
-      for( int i = 0; i < widgets.size(); i++ )
+      for(size_t i = 0; i < widgets.size(); i++ )
 	boundSubTexture( widgets[i] );
     }
     
@@ -1571,7 +1572,7 @@ Volvis2DDpy::display_cp_voxels( void )
   
   // display points (after connections to draw points on top)
   glColor3f( 0.0, 0.2, 0.9 );
-  for( int i = 0; i < cp_voxels.size()-1; i++ ) {
+  for(size_t i = 0; i < cp_voxels.size()-1; i++ ) {
     glBegin( GL_POINTS );
     glVertex2f( cp_voxels[i]->value, cp_voxels[i]->gradient );
     glEnd();
@@ -1613,7 +1614,7 @@ Volvis2DDpy::create_widget_probe()
   float p_vmax = -MAXFLOAT;
   float p_gmin = MAXFLOAT;
   float p_gmax = -MAXFLOAT;
-  for( int i = 0; i < cp_voxels.size(); i++ ) {
+  for(size_t i = 0; i < cp_voxels.size(); i++ ) {
     p_vmin = min( p_vmin, cp_voxels[i]->value );
     p_gmin = min( p_gmin, cp_voxels[i]->gradient );
     p_vmax = max( p_vmax, cp_voxels[i]->value );
@@ -1659,8 +1660,8 @@ Volvis2DDpy::voxel_lookup(Voxel2D<float> voxel, Color &color, float &opacity) {
 // template<class T>
 void
 Volvis2DDpy::saveUIState( unsigned long key ) {
-  char *file;
-  int stateNum;
+  char *file = 0;
+  int stateNum = -1;
   switch( key ) {
   case XK_1:
     file = "savedUIState1.txt";      
@@ -1703,10 +1704,14 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
     stateNum = 0;
     break;
   } // switch()
+  if (!file) {
+    perror( "Unknown key passed to Volvis2DDpy::saveUIState\n" );
+    return;
+  }
   ofstream outfile( file );
   if( !outfile.good() ) {
     perror( "Could not open saved state!\n" );
-    exit( 1 );
+    return;
   } // if()
 
   // save file header containing histogram information
@@ -1714,7 +1719,7 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
           << current_vmin << ' ' << current_vmax << ' '
           << current_gmin << ' ' << current_gmax << "\n\n";
 
-  for( int i = 0; i < widgets.size(); i++ ) {
+  for(size_t i = 0; i < widgets.size(); i++ ) {
     // if widget is a TriWidget...
     if( widgets[i]->type == Tri ) {
       outfile << "TriWidget";
@@ -2199,10 +2204,10 @@ Volvis2DDpy::loadWidgets( char* file )
 
 // sets window res. and initializes textures before any other calls are made
 // template<class T>
-Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
-					t_inc(t_inc), vmin(MAXFLOAT),
-					vmax(-MAXFLOAT), gmin(MAXFLOAT),
-					gmax(-MAXFLOAT), cut(cut) {
+Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut )
+  :DpyBase("Volvis2DDpy"), t_inc(t_inc), cut(cut),
+   vmin(MAXFLOAT), vmax(-MAXFLOAT), gmin(MAXFLOAT), gmax(-MAXFLOAT)
+{
   waiting_for_redraw = true;
   // initialize adjustable global variables from volume data
   selected_vmin = current_vmin = 0;

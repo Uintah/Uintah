@@ -87,13 +87,13 @@ protected:
   friend class Volvis2DDpy;
   Volvis2DDpy *dpy;
   
-  Vector diag;
-  Vector inv_diag;
   BrickArray3<Voxel2D<float> > data;
   Voxel2D<float> data_min, data_max;
   int nx, ny, nz;
   float norm_step_x, norm_step_y, norm_step_z;
   Point min, max;
+  Vector diag;
+  Vector inv_diag;
   double spec_coeff, ambient, diffuse, specular;
   float delta_x2, delta_y2, delta_z2;
 

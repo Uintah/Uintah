@@ -1,7 +1,11 @@
-#include <stdio.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
-#include <unistd.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <unistd.h>
+#include <stdio.h>
 
 using namespace std;
 

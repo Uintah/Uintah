@@ -1,11 +1,13 @@
 
 #include <Packages/rtrt/Core/Parallelogram2.h>
 
-extern double _HOLO_STATE_;
-
 namespace rtrt {
+  extern double _HOLO_STATE_;
+}
 
-void Parallelogram2::animate(double t, bool& changed)
+using namespace rtrt;
+
+void Parallelogram2::animate(double /*t*/, bool& /*changed*/)
 {
   MultiMaterial *mat = dynamic_cast<MultiMaterial*>(matl);
   if (mat) {
@@ -13,4 +15,3 @@ void Parallelogram2::animate(double t, bool& changed)
   }
 }  
 
-} // end namespace

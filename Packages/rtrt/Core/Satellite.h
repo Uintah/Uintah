@@ -4,14 +4,13 @@
 
 #include <Packages/rtrt/Core/UVSphere.h>
 #include <Packages/rtrt/Core/Names.h>
-#include <stdlib.h>
 
 namespace rtrt {
-class Satellite;
+  class Satellite;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Satellite*&);
+  void Pio(Piostream&, rtrt::Satellite*&);
 }
 
 namespace rtrt {
@@ -31,20 +30,7 @@ class Satellite : public UVSphere
 
   Satellite(const string &name, Material *mat, const Point &center,
             double radius, double orb_radius, const Vector &up=Vector(0,0,1), 
-            Satellite *parent=0) 
-    : UVSphere(mat, center, radius, up), parent_(parent), 
-    rev_speed_(1), orb_radius_(orb_radius), orb_speed_(1)
-  {
-    //theta_ = drand48()*6.282;
-    theta_ = 0;
-    Names::nameObject(name, this);
-
-    if (orb_radius_ && parent_) {
-      cen = parent->get_center();
-      cen += Vector(orb_radius_*cos(theta_),
-                    orb_radius_*sin(theta_),0);
-    }
-  }
+            Satellite *parent=0);
   virtual ~Satellite() {}
   Satellite() : UVSphere() {} // for Pio.
 
@@ -71,30 +57,7 @@ class Satellite : public UVSphere
   Point &get_center() { return cen; }
   void set_center(const Point &p) { cen = p; }
 
-  virtual void compute_bounds(BBox& bbox, double offset)
-  {
-#if _USING_GRID2_
-    bbox.extend(cen,radius+offset);
-#else
-    if (parent_) {
-      Point center = parent_->get_center();
-      bbox.extend(center);
-      Point extent = 
-        Point(center.x()+parent_->get_orb_radius()+orb_radius_+radius+offset,
-              center.y()+parent_->get_orb_radius()+orb_radius_+radius+offset,
-              center.z()+radius+offset);
-      bbox.extend( extent );
-      extent = 
-        Point(center.x()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
-              center.y()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
-              center.z()-(radius+offset));
-      bbox.extend( extent );
-
-    } else {
-      bbox.extend(cen, orb_radius_+radius+offset);
-    }
-#endif
-  }
+  virtual void compute_bounds(BBox& bbox, double offset);
 
   virtual void animate(double t, bool& changed);
 };

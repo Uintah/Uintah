@@ -1,7 +1,12 @@
+
 #include <Packages/rtrt/Core/TimeVaryingCheapCaustics.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
 
 using namespace rtrt;
 using namespace std;
@@ -25,13 +30,13 @@ TimeVaryingCheapCaustics::TimeVaryingCheapCaustics(char *fileNames,
 						   Color lightColor, 
 						   float timeScale, 
 						   float tilingFactor) :
-  minPoint(minPoint), 
-  uAxis(uAxis), 
-  vAxis(vAxis), 
-  lightColor(lightColor),
+  numFiles(numFiles),
   timeScale(timeScale), 
   tilingFactor(tilingFactor), 
-  numFiles(numFiles)
+  lightColor(lightColor),
+  minPoint(minPoint), 
+  uAxis(uAxis), 
+  vAxis(vAxis)
 {
   totalTime = timeScale*numFiles;
   projAxis = Cross(uAxis,vAxis);
@@ -44,7 +49,7 @@ TimeVaryingCheapCaustics::TimeVaryingCheapCaustics(char *fileNames,
   caustics.resize( numFiles );
 
   float *currArrayPtr;
-  char *dataPtr;
+  char *dataPtr = 0;
   char buf[1024];
   int xDim=1, yDim=1;
   FILE *currFile;
@@ -96,8 +101,9 @@ TimeVaryingCheapCaustics::TimeVaryingCheapCaustics(char *fileNames,
 
       caustics[i] = new Array2< float >(xDim,yDim);
       currArrayPtr = caustics[i]->get_dataptr();
-      int totalRead = fread( (void *)dataPtr, sizeof( char ), xDim*yDim, currFile );
-      if (totalRead != xDim*yDim)
+      size_t totalRead = fread( (void *)dataPtr, sizeof( char ), xDim*yDim, currFile );
+      size_t totalWanted = xDim*yDim;
+      if (totalRead != totalWanted)
 	{
 	  std::cerr << "Error!  File \""<<buf<<"\" too short!\n";
 	}
@@ -135,13 +141,13 @@ Color TimeVaryingCheapCaustics::GetCausticColor( Point atPoint, float currTime )
   if (uCoord < 0) uCoord += 1;
   if (vCoord < 0) vCoord += 1;
 
-  int u = uCoord*uDim;
-  int v = vCoord*vDim;
+  int u = static_cast<int>(uCoord*uDim);
+  int v = static_cast<int>(vCoord*vDim);
 
   /* gives a time value between 0 & number images */
   useTime = fmodf( useTime, totalTime)/timeScale;
-  int timeIdx1 = useTime, timeIdx2;
-  timeIdx2 = timeIdx1 % numFiles;
+  int timeIdx1 = static_cast<int>(useTime);
+  int timeIdx2 = timeIdx1 % numFiles;
 
   float pct2 = useTime-timeIdx1;
   float pct1 = 1-pct2;

@@ -1,7 +1,11 @@
 #include <Packages/rtrt/Core/GeoProbeReader.h>
 #include <Core/Geometry/Vector.h>
-#include <stdio.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
 
 using namespace SCIRun;
 using std::cerr;
@@ -43,7 +47,7 @@ int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
   // we simply can't just stuff all the memory into a single pointer.
   // We must iterate over the data and then store it one piece at a
   // time.
-  int buffer_size = nz*ny;
+  size_t buffer_size = nz*ny;
   unsigned char *buffer = new unsigned char[buffer_size];
   size_t total_size = nx*ny*nz;
   size_t total_read = 0;
@@ -85,22 +89,22 @@ int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
   cerr << "hdr.offset="<<Vector(hdr.xoffset,hdr.yoffset,hdr.zoffset)<<"\n";
   cerr << "hdr.step="<<Vector(hdr.xstep,hdr.ystep,hdr.zstep)<<"\n";
 
-  bool flipx = false;
-  bool flipy = false;
-  bool flipz = false;
+  //  bool flipx = false;
+  //  bool flipy = false;
+  //  bool flipz = false;
 
   if (hdr.xstep < 0) {
-    flipx = true;
+    //    flipx = true;
     hdr.xoffset=hdr.xoffset+(hdr.xsize-1)*hdr.xstep;
     hdr.xstep=-hdr.xstep;
   }
   if (hdr.ystep < 0) {
-    flipy = true;
+    //    flipy = true;
     hdr.yoffset=hdr.yoffset+(hdr.ysize-1)*hdr.ystep;
     hdr.ystep=-hdr.ystep;
   }
   if (hdr.zstep < 0) {
-    flipz = true;
+    //    flipz = true;
     hdr.zoffset=hdr.zoffset+(hdr.zsize-1)*hdr.zstep;
     hdr.zstep=-hdr.zstep;
   }

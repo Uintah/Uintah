@@ -1,10 +1,13 @@
-
 #include <Packages/rtrt/Core/Background.h>
 #include <Packages/rtrt/Core/PPMImage.h>
+
+#include <Core/Geometry/Vector.h>
 #include <Core/Math/MiscMath.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
-#include <Core/Geometry/Vector.h>
+#include <sgi_stl_warnings_on.h>
+
 
 using namespace rtrt;
 using namespace SCIRun;

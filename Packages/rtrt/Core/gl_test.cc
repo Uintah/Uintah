@@ -1,20 +1,25 @@
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/FontString.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
-#include <Packages/rtrt/Core/Color.h>
+
 #include <GL/glx.h>
 #include <GL/glu.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
-#include <unistd.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
-//#include <sys/time.h>
-#include <X11/Xlib.h>
 #include <X11/Xutil.h>
+//#include <sys/time.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "FontString.h"
 
 using namespace std;
 using namespace rtrt;

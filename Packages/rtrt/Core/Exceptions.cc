@@ -16,8 +16,12 @@
 #endif
 
 #include <Packages/rtrt/Core/Exceptions.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 using namespace std;
+
 #include <stdlib.h>		// for abort()
 #include <string.h>
 

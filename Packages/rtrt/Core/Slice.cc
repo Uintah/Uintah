@@ -6,13 +6,14 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
+
 #include <stdio.h>
-#include <fstream>
 #include <unistd.h>
-#include <iostream>
 #include <fcntl.h>
+
 extern Mutex io_lock_;
 
 using namespace std;

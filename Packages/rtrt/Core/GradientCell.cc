@@ -1,7 +1,8 @@
-#include    <Core/Geometry/Point.h>
-#include    <Core/Geometry/Vector.h>
-#include    <Packages/rtrt/Core/Ray.h>
-#include <iostream>
+
+#include <Packages/rtrt/Core/Ray.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
 // return non-unit-length normal

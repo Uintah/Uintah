@@ -1,11 +1,11 @@
 
-/*******************************************************************************\
- *                                                                             *
- * filename: TimeVaryingInstance.h                                             *
- * author  : R. Keith Morley                                                   *
- * last mod: 07/12/02                                                          *
- *                                                                             *
-\*******************************************************************************/ 
+/****************************************************************************\
+ *                                                                          *
+ * filename: TimeVaryingInstance.h                                          *
+ * author  : R. Keith Morley                                                *
+ * last mod: 07/12/02                                                       *
+ *                                                                          *
+\****************************************************************************/ 
 
 #include <Packages/rtrt/Core/TimeVaryingInstance.h>
 #include <Core/Geometry/Transform.h>
@@ -34,7 +34,7 @@ SCIRun::PersistentTypeID FishInstance2::type_id("FishInstance2",
 						f2_maker);
 
 
-/*******************************************************************************/
+/****************************************************************************/
 TimeVaryingInstance::TimeVaryingInstance (InstanceWrapperObject* obj)
    : Instance(obj, new Transform())
 {
@@ -50,7 +50,7 @@ TimeVaryingInstance::TimeVaryingInstance (InstanceWrapperObject* obj)
    //bbox.extend(Point(6, 6, 2.5));
 }
 
-/*******************************************************************************/
+/****************************************************************************/
 void 
 TimeVaryingInstance::computeTransform(double t)
 {
@@ -67,13 +67,13 @@ TimeVaryingInstance::computeTransform(double t)
 
 }
 
-/*******************************************************************************/
+/****************************************************************************/
 void TimeVaryingInstance::compute_bounds(BBox& b, double /*offset*/)
 {
    b.extend(bbox);
 }
 
-/*******************************************************************************/
+/****************************************************************************/
 void TimeVaryingInstance::animate(double t, bool& changed)
 {
   changed = true;
@@ -81,7 +81,7 @@ void TimeVaryingInstance::animate(double t, bool& changed)
   computeTransform(t); 
 }
 
-/*******************************************************************************/
+/****************************************************************************/
 void TimeVaryingInstance::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
                                        PerProcessorContext* ppc)
 {
@@ -117,22 +117,24 @@ void TimeVaryingInstance::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
    }
 }
 
-/*******************************************************************************/
-FishInstance1::FishInstance1(InstanceWrapperObject* obj, double _vertHeightScale, 
-                             double _horizHeightScale, double _vertPerScale, 
-                             double _horizPerScale, double _rotPerSec, double _startTime,
+/****************************************************************************/
+FishInstance1::FishInstance1(InstanceWrapperObject* obj,
+                             double _vertHeightScale, double _horizHeightScale,
+                             double _vertPerScale, double _horizPerScale,
+                             double _rotPerSec, double _startTime,
 			     double _vertShift)
-   : TimeVaryingInstance(obj), rotPerSec(_rotPerSec / 2.0),
+   : TimeVaryingInstance(obj),
      vertHeightScale(_vertHeightScale), horizHeightScale(_horizHeightScale), 
-     horizPerScale(_horizPerScale), vertPerScale(_vertPerScale),
-     startTime(_startTime), vertShift(_vertShift)
+     vertPerScale(_vertPerScale), horizPerScale(_horizPerScale),
+     rotPerSec(_rotPerSec / 2.0), startTime(_startTime),
+     vertShift(_vertShift)
 {
    currentTransform->load_identity();
    bbox.extend(Point(-6, -6,  vertShift + .5));
    bbox.extend(Point(6, 6,  vertShift + 2.5));
 }
 
-/*******************************************************************************/
+/****************************************************************************/
 void
 FishInstance1::computeTransform(double t)
 {
@@ -147,22 +149,24 @@ FishInstance1::computeTransform(double t)
 
 }
 
-/*******************************************************************************/
-FishInstance2::FishInstance2(InstanceWrapperObject* obj, double _vertHeightScale,
-                             double _horizHeightScale, double _vertPerScale,
-                             double _horizPerScale, double _rotPerSec, double _startTime,
+/****************************************************************************/
+FishInstance2::FishInstance2(InstanceWrapperObject* obj,
+                             double _vertHeightScale, double _horizHeightScale,
+                             double _vertPerScale, double _horizPerScale,
+                             double _rotPerSec, double _startTime,
                              double _vertShift)
-   : TimeVaryingInstance(obj), rotPerSec(_rotPerSec / 2.0),
+   : TimeVaryingInstance(obj),
      vertHeightScale(_vertHeightScale), horizHeightScale(_horizHeightScale),
-     horizPerScale(_horizPerScale), vertPerScale(_vertPerScale),
-     startTime(_startTime), vertShift(_vertShift)
+     vertPerScale(_vertPerScale), horizPerScale(_horizPerScale),
+     rotPerSec(_rotPerSec / 2.0), startTime(_startTime),
+     vertShift(_vertShift)
 {
    currentTransform->load_identity();
    bbox.extend(Point(-6, 2,  vertShift + .5));
    bbox.extend(Point(6, 9,  vertShift + 2.5));
 }
 
-/*******************************************************************************/
+/****************************************************************************/
 void
 FishInstance2::computeTransform(double t)
 {

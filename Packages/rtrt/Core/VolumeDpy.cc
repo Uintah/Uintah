@@ -5,12 +5,15 @@
 #include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <Packages/rtrt/Core/FontString.h>
+
 #include <Core/Math/MinMax.h>
 
 #include <GL/glx.h>
 #include <GL/glu.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #include <stdlib.h>
 #include <sci_values.h>

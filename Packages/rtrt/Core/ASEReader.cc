@@ -21,6 +21,8 @@
 #include <Packages/rtrt/Core/Rect.h>
 
 #include <Core/Geometry/Point.h>
+#include <Core/Util/Assert.h>
+#include <sci_values.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
@@ -69,9 +71,9 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
   vector<unsigned>  *v2=0;
   vector<unsigned>  *v4=0;
   vector<double>    *v5=0;
-  unsigned loop1, length1;
-  unsigned loop2, length2;
-  unsigned loop3, length3;
+  size_t loop1, length1;
+  size_t loop2, length2;
+  size_t loop3, length3;
   int matl_index = 0;
   children1 = infile.GetChildren();
   length1 = children1->size();
@@ -116,8 +118,8 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
 	  }
 	  if (v1 && v1->size() && v2 && v2->size()) {
 	    Group *group = new Group();
-	    unsigned loop4, length4;
-	    unsigned index, findex1, findex2, findex3;
+	    size_t loop4, length4;
+	    size_t index, findex1, findex2, findex3;
 	    length4 = v2->size()/3;
 	    for (loop4=0; loop4<length4; ++loop4) {
 	      index   = loop4*3;
@@ -190,7 +192,8 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
     } else if ((*children1)[loop1]->GetMoniker() == "*MATERIAL_LIST") {
       children2 = (*children1)[loop1]->GetChildren();
       length2 = children2->size();
-      ase_matls.resize(length2*2);
+      ASSERT(length2*2 <= INT_MAX);
+      ase_matls.resize(static_cast<int>(length2*2));
       for (loop2=0; loop2<length2; ++loop2) {
 	if ((*children2)[loop2]->GetMoniker() == "*MATERIAL") {
           MaterialToken *token = ((MaterialToken*)((*children2)[loop2]));
@@ -228,7 +231,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
               new DielectricMaterial(1.,
                                      1.,
                                      1.-token->GetTransparency(),
-                                     token->GetShine(),
+                                     (int)(token->GetShine()),
                                      Color(diffuse),
                                      Color(diffuse));
 #endif
@@ -239,7 +242,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
                                 ImageMaterial::Tile,
                                 1.,
                                 Color(specular),
-                                token->GetShine()*1000,
+                                (int)(token->GetShine()*1000),
                                 token->GetTransparency(),
                                 true);
           }

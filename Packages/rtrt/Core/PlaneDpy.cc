@@ -1,17 +1,19 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+#include <Packages/rtrt/Core/FontString.h>
+
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
+
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
-#include <iostream>
+
 #include <stdlib.h>
 #include <sci_values.h>
 #include <stdio.h>
-#include "FontString.h"
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -65,13 +67,14 @@ void PlaneDpy::display()
       glViewport(0, s, xres, e-s);
       double th=double(textheight+1)/(e-s);
       double v;
-      double wid=2;
+      //      double wid=2;
       char* name;
       switch(i){
       case 3: v=n.x(); name="X"; break;
       case 2: v=n.y(); name="Y"; break;
       case 1: v=n.z(); name="Z"; break;
-      case 0: v=d; name="D"; wid=20; break;
+      case 0:
+      default: v=d; name="D"; /*wid=20;*/ break;
       }
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
@@ -88,7 +91,7 @@ void PlaneDpy::display()
       glEnd();
       char buf[100];
       sprintf(buf, "%s: %g", name, v);
-      int w=calc_width(fontInfo, buf);
+      //      int w=calc_width(fontInfo, buf);
 //        printString(fontbase, v-w/wid/yres, 1./yres, buf, Color(1,1,1));
       printString( fontbase, 0, 1./yres, buf, Color(1,1,1));
     }

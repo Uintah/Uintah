@@ -11,7 +11,6 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 #include <Core/Geometry/Vector.h>
-#include <iostream>
 
 namespace rtrt {
   class Instance;

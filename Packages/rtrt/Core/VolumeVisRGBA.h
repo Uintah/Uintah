@@ -1,12 +1,10 @@
 #ifndef __RTRT_VOLUMEVIS_H__
 #define __RTRT_VOLUMEVIS_H__
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/VolumeVisBase.h>
 #include <Packages/rtrt/Core/VolumeVisDpy.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Material.h>
-#include <Packages/rtrt/Core/VolumeVisBase.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Array1.h>
@@ -14,17 +12,22 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/BBox.h>
-//#include <Packages/rtrt/Core/Stats.h>
-//#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
-#include <stdlib.h>
-#include <float.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdlib.h>
+#include <sci_values.h>
 
 namespace rtrt {
 
