@@ -200,7 +200,7 @@ using std::pair;
       //! creates the uda directory with a trailing version suffix
       void makeVersionedDir();
       
-      void initSaveLabels(SchedulerP& sched);
+      void initSaveLabels(SchedulerP& sched, bool initTimestep);
       void initCheckpoints(SchedulerP& sched);
      
       //! helper for beginOutputTimestep - creates and writes
@@ -270,6 +270,9 @@ using std::pair;
       //! Represents whether this proc will output non-processor-specific
       //! files
       bool d_writeMeta;
+
+      //! Whether or not to save the initialization timestep
+      bool d_outputInitTimestep;
 
       //! last timestep dir (filebase.000/t#)
       string d_lastTimestepLocation;
