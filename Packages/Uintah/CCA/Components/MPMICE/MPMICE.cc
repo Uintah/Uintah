@@ -1221,7 +1221,6 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       //__________________________________
       //  Take care of momentum and specific volume source
      if(d_rigidMPM){
-      cout << "RIGID_MPMCCToNC" << endl;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
         for(int in=0;in<8;in++){
