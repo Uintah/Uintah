@@ -898,7 +898,7 @@ GzipPiostream::GzipPiostream(const string& filename, Direction dir)
 	gzfile=gzopen(filename.c_str(), "w");
 	char str[100];
 	sprintf(str, "SCI\nGZP\n001\n");
-	gzwrite(gzfile, str, strlen(str));
+	gzwrite(gzfile, str, static_cast<unsigned int>(strlen(str)));
 	version=1;
     }
 }
@@ -1164,7 +1164,7 @@ void GzipPiostream::io(string& data)
 	    data+=c;
 	}
     } else {
-	int sz=data.size();
+      int sz=static_cast<int>(data.size());
 	if (!gzwrite(gzfile, (void *)(data.c_str()), sz+1)) {
 	    err=1;
 	    cerr << "gzwrite failed\n";
@@ -1450,7 +1450,7 @@ void GunzipPiostream::io(string& data)
 	    data+=c;
 	}
     } else {
-	int sz=data.size();
+      int sz=static_cast<int>(data.size());
 	if (!write(unzipfile, data.c_str(), sz+1)) {
 	    err=1;
 	    cerr << "unzipwrite failed\n";
