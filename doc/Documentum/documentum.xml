@@ -383,7 +383,7 @@ repository.</para>
 <filename>doc/Developer/FAQ/faq.xml</filename>,
 <filename>doc/Installation/FAQ/faq.xml</filename>, and
 <filename>doc/User/FAQ/faq.xml</filename>.</para></entry> 
-<entry><para>doc/FAQBook/Makefile</para></entry>
+<entry><para><filename>doc/FAQBook/Makefile</filename></para></entry>
 <entry><para><filename>doc/FAQBook/*.html</filename>.</para></entry>
 </row>
 <row>
@@ -918,13 +918,15 @@ the &dbk; language.  It is the file
 <filename>doc/Documentum/documentum.xml</filename>
 </para>
 
+<section>
+<title>Single File Document</title>
+
 <para>&dbk; documents may be contained in one file or may be segmented into
 several files.  A multi-file document will consist of a
 <firstterm>main</firstterm> file and one or more additional file.</para>
 
 <para>
 A new single file document will look like this:
-
 <programlisting>
 <![CDATA[
 <?xml version="1.0" encoding="iso-8859-1" ?>
@@ -962,16 +964,19 @@ End:
 -->
 ]]>
 </programlisting>
-
 Where <quote>root-element</quote> should be replaced by your document's root
 element, usually <sgmltag>book</sgmltag> or <sgmltag>article</sgmltag>.  And
 the path to <filename>docbook.ced</filename> should be altered appropriately.
 </para>
 
+</section>
+
+<section>
+<title>Multi-file Document</title>
+
 <para>A multi-file document will consist of a main file which usually does
 nothing more than <quote>include</quote> other files.  Here is the main
 file for a book consisting of five chapters:
-
 <programlisting>
 <![CDATA[
 <?xml version="1.0"? encoding="iso-8859-1" >
@@ -1022,9 +1027,7 @@ End:
 -->
 ]]>
 </programlisting>
-
 And <filename>chap1.xml</filename> would look like this:
-
 <programlisting>
 <![CDATA[
 <!--
@@ -1062,6 +1065,68 @@ End:
 ]]>
 </programlisting>
 </para>
+
+</section>
+
+<section>
+<title>Charater Literals&mdash;Do's and Dont's</title>
+
+<para>Some characters or character combinations should not be used
+literally.  This is because they will not be typeset in an optimal
+way.  Here is a list of things to watch for:
+<variablelist>
+<varlistentry>
+<term>Quotations</term>
+<listitem>
+<para>Enclose quotations in the <sgmltag
+class="element">quote</sgmltag> element.</para>
+
+<para>Rather than typing, say, "He said
+thus and such", type <sgmltag class="starttag">quote</sgmltag>He said
+thus and such<sgmltag class="endtag">quote</sgmltag>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Ellipsis</term>
+<listitem>
+<para>Use <sgmltag class="genentity">hellip</sgmltag> to produce
+ellipsis.</para> 
+
+<para>Rather than typing <sgmltag
+class="starttag">quote</sgmltag>He said thus and such and ...<sgmltag
+class="endtag">quote</sgmltag>, type <sgmltag
+class="starttag">quote</sgmltag>He said thus and such and <sgmltag
+class="genentity">hellip</sgmltag><sgmltag
+class="endtag">quote</sgmltag></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>En Dash</term>
+<listitem>
+<para>Use <sgmltag class="genentity">ndash</sgmltag> to produce an en
+dash.</para> 
+
+<para>Type <quote>1<sgmltag
+class="genentity">ndash</sgmltag>10</quote> rather than
+<quote>1-10</quote></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Em Dash</term>
+<listitem>
+<para>Use <sgmltag class="genentity">mdash</sgmltag> to produce an em
+dash.</para> 
+
+<para>Type <quote>You stink!<sgmltag
+class="genentity">mdash</sgmltag>Well, a little bit anyway</quote> rather than
+<quote>You stink!--Well, a little bit anyway.</quote></para>
+</listitem>
+</varlistentry>
+</variablelist>
+</para>
+
+
+</section>
 
 </section>
 
@@ -1281,11 +1346,16 @@ printable version of the users guide.</para>
 <para>The following sections present a never ending list of things to
 be done.</para>
 
+
+
 <section>
 <title>Installation Docs</title>
 <itemizedlist>
 <listitem>
-<para>Needs update.</para>
+<para>This has been done for release 1.8 (Installation will change
+again for the next release though so be prepared to rewrite again
+although it should really just be a matter of simplification more that
+anything else.</para>
 </listitem>
 </itemizedlist>
 </section>
@@ -1295,6 +1365,12 @@ be done.</para>
 <itemizedlist>
 <listitem>
 <para>Needs update.  See Blythes notes in doc-plan/srug.tex.</para>
+</listitem>
+<listitem>
+<para>Add content on dynamic compilation.</para>
+</listitem>
+<listitem>
+<para>Update UI content.</para>
 </listitem>
 </itemizedlist>
 </section>
@@ -1307,7 +1383,8 @@ be done.</para>
 </listitem>
 <listitem>
 <para>What to do with module docs that have xml and tex versions.
-Probably want to add a "See also" link to each doc.  How hard is this?</para>
+Probably want to add a "See also" link to each doc.  How hard is this?
+ This issue is partially solved (but could be improved).</para>
 </listitem>
 <listitem>
 <para>Get missing figures for a few modules.</para>
@@ -1330,8 +1407,41 @@ the <filename>Developer</filename> directory?</para>
 </section>
 
 <section>
-<title>General</title>
+<title>Css Stylesheets</title>
+
 <itemizedlist>
+<listitem>
+<para>Current css stylesheet,
+<filename>doc_styles.css</filename>, for hand written HTML/XHTML is in
+need of repair&mdash;it should be either more
+sophisticated or much simpler (I prefer the latter) and should produce
+comparable to the Latex and DocBook stylesheets.</para>
+</listitem>
+<listitem>
+<para>Current css DocBook stylesheet needs updating and should produce
+output comparable to the Latex and HTML stylesheets.</para>
+</listitem>
+<listitem>
+<para>Current css Latex stylesheet needs updating and should produce
+output comparable to the DocBook and HTML stylesheets.</para>
+</listitem>
+<listitem>
+<para>Modularize the stylesheets&mdash;create
+<filename>common.css</filename> and import this into the others.</para>
+</listitem>
+</itemizedlist>
+
+</section>
+
+<section>
+<title>General</title>
+
+<itemizedlist>
+<listitem>
+<para>Convert FAQs to DocBook QandA Set documents.  Doing this allows
+me to get rid of the FAQBook directory as each FAQ can be self
+contained  within its own article or as an appendix as part of a Book.</para>
+</listitem>
 <listitem>
 <para>Produce truly printable Installation and Developer Guides (how
 good are the FOPs these days?).  We can always use jade and jadetex.
@@ -1339,15 +1449,11 @@ This would require the installation of jade and the DocBook DSSSL
 stylesheets.</para>
 </listitem>
 <listitem>
-<para>Convert FAQs to DocBook QandA Set documents.  Doing this allows
-me to get rid of the FAQBook directory as each FAQ can be self
-contained  within its own article or as an appendix as part of a Book.</para>
-</listitem>
-<listitem>
 <para>Generate Makefiles via configure script.  Need to check that
  the proper tools are installed, etc.</para>
 </listitem>
 </itemizedlist>
+
 </section>
 
 </section>
