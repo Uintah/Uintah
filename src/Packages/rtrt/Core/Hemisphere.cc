@@ -37,17 +37,18 @@ void Hemisphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     double l2oc=OC.length2();
     double rad2=radius*radius;
     st->sphere_isect++;
-    if(l2oc < (rad2+0.00000001)){
+    if(l2oc < rad2) {
 	// Inside the sphere
-        if (Dot(OC,orientation)>0) return;
 	double t2hc=rad2-l2oc+tca*tca;
 	double thc=sqrt(t2hc);
-	double t=tca+thc;
-	hit.hit(this, t);
+	double t=tca+thc-0.00001;
+	Point pplus(ray.origin()+ray.direction()*t);
+	if (Dot(pplus-cen, orientation)>0)
+	  hit.hit(this, t);
 	st->sphere_hit++;
 	return;
     } else {
-	if(tca < 0.0){
+	if(tca < 0) {
 	    // Behind ray, no intersections...
 	    return;
 	} else {
@@ -59,10 +60,10 @@ void Hemisphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		double thc=sqrt(t2hc);
 		Point pminus(ray.origin()+ray.direction()*(tca-thc));
 		if (Dot(pminus-cen, orientation)>0)
-		  hit.hit(this, tca-thc);
+		  hit.hit(this, tca-thc-0.00001);
 		Point pplus(ray.origin()+ray.direction()*(tca+thc));
 		if (Dot(pplus-cen, orientation)>0)
-		  hit.hit(this, tca+thc);
+		  hit.hit(this, tca+thc-0.00001);
 		st->sphere_hit++;
 		return;
 	    }
