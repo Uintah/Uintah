@@ -94,12 +94,22 @@ public:
 
   // Particle Variables
   virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
-					       int matlIndex, const Patch*) = 0;
+					       int matlIndex, const Patch*,
+                                               Ghost::GhostType gt=Ghost::None,
+                                               int ngc = 0) = 0;
   virtual void saveParticleSubset(ParticleSubset* psubset, 
-                                  int matlIndex, const Patch*) = 0;
-  virtual bool haveParticleSubset(int matlIndex, const Patch*) = 0;
-  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
-  virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
+                                  int matlIndex, const Patch*,
+                                  Ghost::GhostType gt=Ghost::None, 
+                                  int ngc=0) = 0;
+  virtual bool haveParticleSubset(int matlIndex, const Patch*,
+                                  Ghost::GhostType gt = Ghost::None, 
+                                  int ngc = 0) = 0;
+  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
+                                            Ghost::GhostType gt=Ghost::None, 
+                                            int ngc = 0) = 0;
+  virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*,
+                                          Ghost::GhostType gt=Ghost::None, 
+                                          int ngc = 0) = 0;
   virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*, 
 					    Ghost::GhostType, 
@@ -321,11 +331,11 @@ public:
   
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
-		 const Scheduler* scheduler, 
+		 Scheduler* scheduler, 
 		 int generation );
   // These two things should be removed from here if possible - Steve
   const ProcessorGroup* d_myworld;
-  const Scheduler* d_scheduler;
+  Scheduler* d_scheduler;
 
   // Generation should be const, but is not as during a restart, the
   // generation number of the first DW is updated from 0 (the default
