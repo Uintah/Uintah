@@ -131,7 +131,7 @@ printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
 	{
 	    //printf("TCL::execute() 1\n");
 	    TCLTask::lock();
-        int code = Tcl_Eval(the_interp, string);
+        int code = Tcl_Eval(the_interp, (char*)(string()));
         if(code != TCL_OK)
 		{
 			Tk_BackgroundError(the_interp);
@@ -455,6 +455,10 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.8  1999/09/23 01:13:03  moulding
+// for a win32 #if block, changed Tcl_Eval(the_interp, string) to
+// Tcl_Eval(the_interp, (char*)(string()))
+//
 // Revision 1.7  1999/09/04 06:01:55  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)
