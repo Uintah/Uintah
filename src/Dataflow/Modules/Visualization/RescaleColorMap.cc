@@ -107,6 +107,8 @@ void
 RescaleColorMap::execute()
 {
   ColorMapHandle cmap;
+  ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
+  ColorMapOPort *omap = (ColorMapOPort *)get_oport("ColorMap");
   if(!imap->get(cmap)) {
     return;
   }
