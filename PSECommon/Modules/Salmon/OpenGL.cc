@@ -1145,7 +1145,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	}
 	pick_obj=(GeomObj*)hit_obj;
 	pick_pick=(GeomPick*)hit_pick;
-	pick_index=(int)hit_pick_index;
+	pick_obj->getId(pick_index); //(int)hit_pick_index;
 	cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
     }
     salmon->geomlock.readUnlock();
@@ -1741,6 +1741,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.17  1999/12/28 20:58:04  kuzimmer
+// modified the pick_index to return the proper value
+//
 // Revision 1.16  1999/11/19 05:44:14  dmw
 // commented out performance reporting so we dont get so many printouts from Salmon
 //
