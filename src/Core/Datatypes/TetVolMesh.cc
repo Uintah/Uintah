@@ -156,11 +156,10 @@ TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
   // get positions of the vertices
   Node::array_type ra(4);
   get_nodes(ra,ei);
-  Point p0,p1,p2,p3;
-  get_point(p0,ra[0]);
-  get_point(p1,ra[1]);
-  get_point(p2,ra[2]);
-  get_point(p3,ra[3]);
+  const Point &p0 = point(ra[0]);
+  const Point &p1 = point(ra[1]);
+  const Point &p2 = point(ra[2]);
+  const Point &p3 = point(ra[3]);
 
   // generate barrycentric coordinates
   double t,u,v,w;
@@ -197,9 +196,7 @@ TetVolMesh::get_bounding_box() const
   end(nie);
   while (ni != nie)
   {
-    Point p;
-    get_point(p, *ni);
-    result.extend(p);
+    result.extend(point(*ni));
     ++ni;
   }
   return result;
@@ -842,20 +839,13 @@ TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 
 
 void
-TetVolMesh::get_center(Point &p, Node::index_type idx) const
-{
-  get_point(p, idx);
-}
-
-void
 TetVolMesh::get_center(Point &p, Edge::index_type idx) const
 {
   const double s = 1.0/2.0;
   Node::array_type arr(2);
   get_nodes(arr, idx);
-  Point p1;
   get_point(p, arr[0]);
-  get_point(p1, arr[1]);
+  const Point &p1 = point(arr[1]);
 
   p.asVector() += p1.asVector();
   p.asVector() *= s;
@@ -868,10 +858,9 @@ TetVolMesh::get_center(Point &p, Face::index_type idx) const
   const double s = 1.0/3.0;
   Node::array_type arr(3);
   get_nodes(arr, idx);
-  Point p1, p2;
   get_point(p, arr[0]);
-  get_point(p1, arr[1]);
-  get_point(p2, arr[2]);
+  const Point &p1 = point(arr[1]);
+  const Point &p2 = point(arr[2]);
 
   p.asVector() += p1.asVector();
   p.asVector() += p2.asVector();
@@ -902,11 +891,10 @@ TetVolMesh::locate(Node::index_type &loc, const Point &p)
     Node::array_type nodes;
     get_nodes(nodes, ci);
 
-    Point ptmp;
     double mindist;
     for (int i=0; i<4; i++)
     {
-      get_center(ptmp, nodes[i]);
+      const Point &ptmp = point(nodes[i]);
       double dist = (p - ptmp).length2();
       if (i == 0 || dist < mindist)
       {
@@ -924,8 +912,7 @@ TetVolMesh::locate(Node::index_type &loc, const Point &p)
     Node::iterator ei; end(ei);
     while (bi != ei)
     {
-      Point c;
-      get_center(c, *bi);
+      const Point &c = point(*bi);
       const double dist = (p - c).length2();
       if (!found_p || dist < mindist)
       {
@@ -1057,11 +1044,11 @@ TetVolMesh::get_weights(const Point &p,
   if (locate(idx, p))
   {
     get_nodes(l,idx);
-    Point p0,p1,p2,p3;
-    get_point(p0,l[0]);
-    get_point(p1,l[1]);
-    get_point(p2,l[2]);
-    get_point(p3,l[3]);
+    const Point &p0 = point(l[0]);
+    const Point &p1 = point(l[1]);
+    const Point &p2 = point(l[2]);
+    const Point &p3 = point(l[3]);
+
     w.resize(4);
     w[0] = tet_vol6(p, p1, p2, p3);
     w[1] = tet_vol6(p, p0, p2, p3);
@@ -1403,11 +1390,10 @@ TetVolMesh::volume(TetVolMesh::Cell::index_type ci)
 {
   TetVolMesh::Node::array_type n;
   get_nodes(n, ci);
-  Point p1, p2, p3, p4;
-  get_point(p1, n[0]);
-  get_point(p2, n[1]);
-  get_point(p3, n[2]);
-  get_point(p4, n[3]);
+  const Point &p1 = point(n[0]);
+  const Point &p2 = point(n[1]);
+  const Point &p3 = point(n[2]);
+  const Point &p4 = point(n[3]);
   double x1=p1.x();
   double y1=p1.y();
   double z1=p1.z();

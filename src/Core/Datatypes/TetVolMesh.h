@@ -267,7 +267,7 @@ public:
   void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
   void get_neighbors(Node::array_type &array, Node::index_type idx) const;
 
-  void get_center(Point &result, Node::index_type idx) const;
+  void get_center(Point &result, Node::index_type idx) const { result = points_[idx]; }
   void get_center(Point &result, Edge::index_type idx) const;
   void get_center(Point &result, Face::index_type idx) const;
   void get_center(Point &result, Cell::index_type idx) const;
@@ -277,32 +277,29 @@ public:
   double get_size(Node::index_type idx) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
-    Node::array_type arr;
-    get_nodes(arr, idx);
-    Point p0, p1;
-    get_center(p0, arr[0]);
-    get_center(p1, arr[1]);
+    Node::array_type ra;
+    get_nodes(ra, idx);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
     return (p1.asVector() - p0.asVector()).length();
   }
   double get_size(Face::index_type idx) const
   {
     Node::array_type ra;
     get_nodes(ra,idx);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p2 = point(ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
   double get_size(Cell::index_type idx) const
   {
     Node::array_type ra(4);
     get_nodes(ra,idx);
-    Point p0,p1,p2,p3;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    get_point(p3,ra[3]);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p2 = point(ra[2]);
+    const Point &p3 = point(ra[3]);
     return Dot(Cross(p1-p0,p2-p0),p3-p0)*0.1666666666666666;
   } 
   double get_length(Edge::index_type idx) const { return get_size(idx); };
@@ -433,6 +430,8 @@ public:
   virtual int           dimensionality() const { return 3; }
 
 protected:
+  const Point &point(Node::index_type idx) const { return points_[idx]; }
+  
   void			compute_node_neighbors();
   void			compute_edges();
   void			compute_faces();
