@@ -44,6 +44,7 @@ WARNING
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 
 namespace Uintah {
 
@@ -114,11 +115,18 @@ public:
 				       DataWarehouseP&, 
 				       DataWarehouseP&);
 
-      /*
-      void sched_paramInit(const LevelP& level,
-                           SchedulerP& sched, 
-			   DataWarehouseP& dw);
-      */
+
+      // for multimaterial
+      void setMPMArchesLabel(const MPMArchesLabel* MAlb)
+	{
+	  d_MAlab = MAlb;
+	}
+
+      const ArchesLabel* getArchesLabel()
+	{
+	  return d_lab;
+	}
+
 
 protected:
 
@@ -162,6 +170,8 @@ private:
       SimulationStateP d_sharedState;
       // Variable labels that are used by the simulation controller
       const ArchesLabel* d_lab;
+      // for multimaterial
+      const MPMArchesLabel* d_MAlab;
 #ifdef multimaterialform
       MultiMaterialInterface* d_mmInterface;
 #endif

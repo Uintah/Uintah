@@ -47,6 +47,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
   d_lab = scinew ArchesLabel();
+  d_MAlab = 0; // will be set by setMPMArchesLabel
 }
 
 // ****************************************************************************
