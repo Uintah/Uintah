@@ -69,6 +69,12 @@ namespace Uintah {
 	 return d_td;
       }
 
+      void allowMultipleComputes()
+      { d_allowMultipleComputes = true; }
+
+      bool allowsMultipleComputes() const
+      { return d_allowMultipleComputes; }
+
       static VarLabel* find(string name);
      
       class Compare {
@@ -85,6 +91,11 @@ namespace Uintah {
    private:
       const TypeDescription* d_td;
       VarType                d_vartype;
+
+      // Allow a variable of this label to be computed multiple
+      // times in a TaskGraph without complaining.
+      bool                   d_allowMultipleComputes;
+     
       static std::map<std::string, VarLabel*> allLabels;     
       
       VarLabel(const VarLabel&);
@@ -96,6 +107,11 @@ ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
 
 //
 // $Log$
+// Revision 1.15  2001/01/04 22:32:34  witzel
+// Added allowMultipleComputes flag to allow one to indicate that a
+// VarLabel may be computed multiple times in a taskgraph without conflict
+// (i.e. can be done with reduction variables like delT).
+//
 // Revision 1.14  2000/12/23 00:35:23  witzel
 // Added a static member variable to VarLabel that maps VarLabel names to
 // the appropriate VarLabel* for all VarLabel's in existent, and added
