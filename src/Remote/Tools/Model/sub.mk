@@ -29,6 +29,9 @@ SRCS     += \
 
 #
 # $Log$
+# Revision 1.3.4.1  2000/10/26 23:24:13  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.3  2000/07/12 18:43:08  dahart
 # Removed circular dependency in sub.mk
 #

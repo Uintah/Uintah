@@ -14,6 +14,9 @@ SRCS     += \
 
 #
 # $Log$
+# Revision 1.1.4.1  2000/10/26 23:24:02  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.1  2000/07/10 20:39:00  dahart
 # initial add
 #
