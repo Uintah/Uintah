@@ -44,11 +44,16 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <iostream>
 
 namespace SCIRun {
 
 class SystemCallBase {
 
+  public:
+    SystemCallBase();
+    virtual ~SystemCallBase();
+    
   public:
   
     enum sce_error {	
@@ -64,11 +69,7 @@ class SystemCallBase {
 						SCE_THREADERROR,	// Could not create thread
 						SCE_BADALLOC
 					};
-					
-	// Some general functions used by the different components
 	
-	void	readline(int fd, std::string &str, std::string &buffer);
-	void	writeline(int fd, std::string str);
 };
 
 

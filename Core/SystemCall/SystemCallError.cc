@@ -39,6 +39,14 @@
 
 namespace SCIRun {
 
+SystemCallBase::SystemCallBase()
+{
+}
+
+SystemCallBase::~SystemCallBase()
+{
+}
+
 
 SystemCallError::SystemCallError(std::string error, int errnr, sce_error errclass) :
 	error_(error),

@@ -102,7 +102,10 @@ class SystemCallProcess : public SystemCallBase {
     //        ended some data may be pending on the fifo pipeline. To close this side of the
     //        fifos close must be called
     void    wait();
-    void    kill(int secs = 0);
+    // The last parameter informs the process that we already know that the process ended
+    // Hence in that case it only needs to clean up. Otherwise it will do a detect on the
+    // exit channel whether data has been written to this channel, if not it will kill the process
+    void    kill(int secs = 0,bool processexit = false);
     void    close();
     
   public:    
@@ -169,8 +172,10 @@ class SystemCallManager : public SystemCallBase {
     
     int        exec(std::string command);
     void       wait(int processid);    // wait for process to finish
-    void       kill(int processid,int secs=0);    // for the impatient: kill the process prematurely
-    void       close(int processid);    // close the communication descriptors
+    void       kill(int processid,int secs=0,bool processexit=false);    // for the impatient: kill the process prematurely
+                                                                         // In case we only want to clean up and know the process
+                                                                         // is not running anymore, put processexit to true
+     void       close(int processid);    // close the communication descriptors
 
     // Get the descriptors to the communication channels
     int        getstdin(int processid);    // Receives the stdin

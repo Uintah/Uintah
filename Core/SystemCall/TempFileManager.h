@@ -86,7 +86,15 @@ class TempFileManager {
 
     // some other useful functions
     
+    // Get the local of the SCIRun temp directory
     std::string get_scirun_tmp_dir(std::string subdir = std::string(""));
+    
+    // This writes an unique file in SCIRun's temp directory in the current homedirectory
+    // It will use this to ID this directory.
+    // Currently the implementation is a seed from the system clock feed through a random 
+    // number generator. In the future I'd like to replace this with a call to UUID as
+    // being implemented in SCIRun2
+    std::string get_homedirID();   
     
   private:
     MusilRNG    rand_;

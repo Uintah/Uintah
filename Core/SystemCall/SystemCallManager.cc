@@ -58,11 +58,11 @@ SystemCallProcess::~SystemCallProcess()
 }
 
 
-void SystemCallProcess::kill(int secs)
+void SystemCallProcess::kill(int secs, bool processexit)
 {
 #ifndef _WIN32
     dolock();
-    if (pid_ > 0)
+    if ((pid_ > 0)&&(processexit == false))
     {
         bool killprocess = true; // Do we need to kill the child process
 
@@ -89,8 +89,9 @@ void SystemCallProcess::kill(int secs)
         {
             int ret = ::killpg(pid_,SIGKILL);
         }
-        pid_ = 0;
     }
+    pid_ = 0;
+
     unlock();
 #endif
 }
@@ -735,7 +736,7 @@ void SystemCallManager::wait(int  processid)
 #endif    
 }
 
-void SystemCallManager::kill(int processid, int secs)
+void SystemCallManager::kill(int processid, int secs, bool processexit)
 {
 #ifndef _WIN32
     dolock();
@@ -744,7 +745,7 @@ void SystemCallManager::kill(int processid, int secs)
     {
         if ((*it)->processid_ == processid) 
         {
-            (*it)->kill(secs);
+            (*it)->kill(secs,processexit);
             unlock();
             return;
         }
