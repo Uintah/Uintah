@@ -410,10 +410,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     /*__________________________________
     * convert UCF data into NR arrays 
     *___________________________________*/
-    for (m = 1; m<= nMaterials; m++)
-    {
-    CCVariable<Vector> vel_cc;
-  
+  CCVariable<Vector> vel_cc;    
+  for (m = 1; m<= nMaterials; m++) {
     toDW->get(vel_cc, vel_CCLabel,m, patch,Ghost::None,0);
 
     ICE::convertUCFToNR_4d(patch,       vel_cc,
@@ -424,6 +422,66 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                         zLoLimit,       zHiLimit,
                         m);
     }
+
+    //    int numMatls = d_sharedState->getNumMatls();
+    int numMatls = nMaterials;
+    
+    double A,B, delt_CFL;
+    
+    for (int m = 1; m < numMatls; m++) {
+#if 0
+       Material* matl = d_sharedState->getMaterial(m);
+       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if (ice_matl) {
+	int matlindex = matl->getDWIndex();
+	inf vfindex = matl->getVFIndex();
+#endif
+	//
+	int matlindex = m;
+	toDW->get(vel_cc, vel_CCLabel,matlindex, patch,Ghost::None,0);
+
+
+	// Once we get the data on the grid, in this case the velocities,
+	// now we can get an iterator (which will be the equivalent to
+	// writing a triply nested loop (i,j,k) to loop over all of the
+	// velocity values of the patch.  
+
+	// We need to pass the getBox to the getCellIterator, since it
+	// indicates the extents of the patch in question.
+
+	// The iter.done() is just a test condition to see if we have
+	// visited all of the cells.
+
+	// Note:  This is the preferred way of traversing over the grid
+	// (or cells).
+
+	for (CellIterator iter = patch->getCellIterator(patch->getBox());
+	     !iter.done();
+	     iter++) {
+
+	  // Get the patch spacing.
+	  double delx = patch->dCell().x();
+	  double dely = patch->dCell().y();
+
+	  double fudge_factor = 1.0;
+#if 1
+	  A = fudge_factor*CFL*delx/fabs(vel_cc[*iter].x() + SMALL_NUM);
+	  B = fudge_factor*CFL*dely/fabs(vel_cc[*iter].y() + SMALL_NUM);
+	  cout << "A = " << A << " B = " << B << " delt_CFL = " << delt_CFL << endl;
+
+	  delt_CFL = DMIN(A,delt_CFL);
+	  delt_CFL = DMIN(B,delt_CFL);
+#endif
+	  // Do other steps
+
+	  //	}
+	}
+
+      }
+      cout << "delt = " << delt << endl;
+      delt = delt_CFL;
+      cout << "delt = " << delt << endl;
+
   
     /*__________________________________
     *   Find the new time step based on the
@@ -436,9 +494,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                         delX,            delY,          delZ,
                         uvel_CC,         vvel_CC,       wvel_CC,
                         speedSound,      CFL,           nMaterials );
-  
-  delt_vartype dt(delt);
-  toDW->put(dt, delTLabel);
+    cout << " delt computed = " << delt << endl;
+    delt_vartype dt(delt);
+    toDW->put(dt, delTLabel);
 }
 
 
