@@ -588,6 +588,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,            Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,                Ghost::None);
+  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::None);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,      Ghost::None);
 
   
