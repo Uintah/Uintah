@@ -83,6 +83,11 @@ void TCLdouble::set(double val)
     }
 }
 
+void TCLdouble::emit(ostream& out)
+{
+    out << "set " << varname() << " " << get() << endl;
+}
+
 TCLint::TCLint(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)
 {
@@ -117,6 +122,11 @@ void TCLint::set(int val)
 	Tcl_SetVar(the_interp, varname(), buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
+}
+
+void TCLint::emit(ostream& out)
+{
+    out << "set " << varname() << " " << get() << endl;
 }
 
 TCLstring::TCLstring(const clString& name, const clString& id, TCL* tcl)
@@ -154,6 +164,11 @@ void TCLstring::set(const clString& val)
     }
 }
 
+void TCLstring::emit(ostream& out)
+{
+    out << "set " << varname() << " {" << get() << "}" << endl;
+}
+
 TCLvardouble::TCLvardouble(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)
 {
@@ -179,6 +194,11 @@ TCLvardouble::~TCLvardouble()
 double TCLvardouble::get()
 {
     return value;
+}
+
+void TCLvardouble::emit(ostream& out)
+{
+    out << "set " << varname() << " " << get() << endl;
 }
 
 TCLvarint::TCLvarint(const clString& name, const clString& id, TCL* tcl)
@@ -213,6 +233,11 @@ void TCLvarint::set(int nv)
     value=nv;
 }
 
+void TCLvarint::emit(ostream& out)
+{
+    out << "set " << varname() << " " << get() << endl;
+}
+
 TCLvarintp::TCLvarintp(int* value,
 		       const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl), value(value)
@@ -242,6 +267,11 @@ void TCLvarintp::set(int nv)
     *value=nv;
 }
 
+void TCLvarintp::emit(ostream& out)
+{
+    out << "set " << varname() << " " << get() << endl;
+}
+
 TCLPoint::TCLPoint(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl), x("x", str(), tcl), y("y", str(), tcl),
   z("z", str(), tcl)
@@ -262,6 +292,13 @@ void TCLPoint::set(const Point& p)
     x.set(p.x());
     y.set(p.y());
     z.set(p.z());
+}
+
+void TCLPoint::emit(ostream& out)
+{
+    x.emit(out);
+    y.emit(out);
+    z.emit(out);
 }
 
 TCLVector::TCLVector(const clString& name, const clString& id, TCL* tcl)
@@ -286,3 +323,9 @@ void TCLVector::set(const Vector& p)
     z.set(p.z());
 }
 
+void TCLVector::emit(ostream& out)
+{
+    x.emit(out);
+    y.emit(out);
+    z.emit(out);
+}

@@ -43,11 +43,11 @@ public:
 
 class TCL {
     Array1<TCLvar*> vars;
-protected:
     friend class TCLvar;
     void register_var(TCLvar*);
     void unregister_var(TCLvar*);
 public:
+    void emit_vars(ostream& out);
     static void initialize();
     static void execute(const clString&);
     static void execute(char*);

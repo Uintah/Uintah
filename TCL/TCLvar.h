@@ -28,6 +28,7 @@ public:
     void reset();
 
     clString str();
+    virtual void emit(ostream& out)=0;
 };
 
 class TCLstring : public TCLvar {
@@ -38,6 +39,7 @@ public:
 
     clString get();
     void set(const clString&);
+    virtual void emit(ostream& out);
 };
 
 class TCLdouble : public TCLvar {
@@ -48,6 +50,7 @@ public:
 
     double get();
     void set(double);
+    virtual void emit(ostream& out);
 };
 
 class TCLint : public TCLvar {
@@ -58,6 +61,7 @@ public:
 
     int get();
     void set(int);
+    virtual void emit(ostream& out);
 };
 
 class TCLvardouble : public TCLvar {
@@ -68,6 +72,7 @@ public:
 
     double get();
     void set(double);
+    virtual void emit(ostream& out);
 };
 
 class TCLvarint : public TCLvar {
@@ -78,6 +83,7 @@ public:
 
     int get();
     void set(int);
+    virtual void emit(ostream& out);
 };
 
 class TCLvarintp : public TCLvar {
@@ -88,6 +94,7 @@ public:
 
     int get();
     void set(int);
+    virtual void emit(ostream& out);
 };
 
 class Point;
@@ -101,6 +108,7 @@ public:
 
     Point get();
     void set(const Point&);
+    virtual void emit(ostream& out);
 };
 
 class Vector;
@@ -114,6 +122,7 @@ public:
 
     Vector get();
     void set(const Vector&);
+    virtual void emit(ostream& out);
 };
 
 #endif

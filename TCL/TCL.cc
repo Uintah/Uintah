@@ -132,6 +132,12 @@ TCL::~TCL()
 {
 }
 
+void TCL::emit_vars(ostream& out)
+{
+    for(int i=0;i<vars.size();i++)
+        vars[i]->emit(out);
+}
+
 
 TCLArgs::TCLArgs(int argc, char* argv[])
 : args(argc)
