@@ -35,22 +35,22 @@ static Persistent* make_ScalarTriSurface()
 PersistentTypeID ScalarTriSurface::type_id("ScalarTriSurface", "Surface", make_ScalarTriSurface);
 
 ScalarTriSurface::ScalarTriSurface()
-: TriSurface(ScalarTriSurf)
+: TriSurface(Unused)
 {
 }
 
 ScalarTriSurface::ScalarTriSurface(const TriSurface& ts, const Array1<double>& d)
-: TriSurface(ts, ScalarTriSurf), data(d)
+: TriSurface(ts, Unused), data(d)
 {
 }
 
 ScalarTriSurface::ScalarTriSurface(const TriSurface& ts)
-: TriSurface(ts, ScalarTriSurf)
+: TriSurface(ts, Unused)
 {
 }
 
 ScalarTriSurface::ScalarTriSurface(const ScalarTriSurface& copy)
-: TriSurface(copy, ScalarTriSurf), data(copy.data)
+: TriSurface(copy, Unused), data(copy.data)
 {
     NOT_FINISHED("ScalarTriSurface::ScalarTriSurface");
 }
@@ -86,6 +86,9 @@ GeomObj* ScalarTriSurface::get_obj(const ColorMapHandle&)
 
 //
 // $Log$
+// Revision 1.3  1999/09/05 05:32:22  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.2  1999/08/23 05:48:00  dmw
 // Put back the NOT_FINISHED messages I accidentally removed.
 //

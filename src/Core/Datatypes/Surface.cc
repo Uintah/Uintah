@@ -79,24 +79,9 @@ void Surface::io(Piostream& stream) {
     stream.end_class();
 }
 
-TopoSurfTree* Surface::getTopoSurfTree() {
-    if (rep==TSTree)
-	return (TopoSurfTree*) this;
-    else
-	return 0;
-}
-
 SurfTree* Surface::getSurfTree() {
     if (rep==STree)
 	return (SurfTree*) this;
-    else
-	return 0;
-}
-
-ScalarTriSurface* Surface::getScalarTriSurface()
-{
-    if(rep==ScalarTriSurf)
-	return (ScalarTriSurface*)this;
     else
 	return 0;
 }
@@ -127,6 +112,9 @@ void Surface::set_bc(const clString& bc_expr)
 
 //
 // $Log$
+// Revision 1.5  1999/09/05 05:32:28  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.4  1999/08/28 17:54:36  sparker
 // Integrated new Thread library
 //
