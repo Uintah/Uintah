@@ -21,7 +21,7 @@ using namespace std;
 using namespace rtrt;
 using SCIRun::Thread;
 
-void get_material(Array1<Material*> &matls, Array1<float> &alphas,
+void get_material(Array1<Color*> &matls, Array1<float> &alphas,
 		  bool do_phong, int ncolors) {
   CatmullRomSpline<Color> spline(0);
 #if 1
@@ -90,6 +90,13 @@ void get_material(Array1<Material*> &matls, Array1<float> &alphas,
 #endif
   matls.resize(ncolors);
   alphas.resize(ncolors);
+#if 1
+  for(int i=0;i<ncolors;i++){
+    float frac=float(i)/(ncolors-1);
+    matls[i] = new Color(spline(frac));
+    alphas[i] = alpha_spline(frac);
+  }
+#else
   if (do_phong) {
     float Ka=1;
     float Kd=1;
@@ -112,6 +119,7 @@ void get_material(Array1<Material*> &matls, Array1<float> &alphas,
       //matls[i]=new LambertianMaterial(c*Kd);
     }
   }
+#endif
 }
 
 extern "C" 
@@ -175,7 +183,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Color bgcolor(0.,0.,0.);
   
   Group* all = new Group();
-  Array1<Material*> matls;
+  Array1<Color*> matls;
   Array1<float> alphas;
   get_material(matls,alphas,do_phong,ncolors);
   BrickArray3<float> data;
@@ -310,7 +318,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 					nx, ny, nz,
 					minP, maxP,
 					matls, matls.size(),
-					alphas, alphas.size());
+					alphas, alphas.size(),
+					64,0.5,1,1);
   
   if(cut){
     PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,0));
