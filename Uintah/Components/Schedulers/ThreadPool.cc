@@ -1,3 +1,5 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Schedulers/ThreadPool.h>
 
@@ -12,13 +14,13 @@ using SCICore::Exceptions::InternalError;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
-Semaphore * cerrSem = scinew Semaphore( "cerr sema", 1 );
+Mutex * cerrLock = scinew Mutex( "cerr lock" );
 
 #define DAV_DEBUG 0
 
 /////////////// Worker //////////////////
 
-Worker::Worker( ThreadPool * parent, int id, Semaphore * ready ) : 
+Worker::Worker( ThreadPool * parent, int id, Mutex * ready ) : 
   d_task( 0 ), d_pg( 0 ), d_id( id ),  d_parent( parent ), d_ready( ready )
 {}
 
@@ -26,9 +28,9 @@ void
 Worker::assignTask( Task * task, const ProcessorGroup * pg )
 {
 #if DAV_DEBUG
-  cerrSem->down();
+  cerrLock->lock();
   cerr << "Worker " << d_id << "- assignTask:   " << *task << "\n";
-  cerrSem->up();
+  cerrLock->unlock();
 #endif
   ASSERT( !d_pg && !d_task );
   d_pg = pg;
@@ -39,11 +41,11 @@ void
 Worker::run()
 {
   while( 1 ){
-    d_ready->down();
+    d_ready->lock();
 
 #if DAV_DEBUG
-    cerrSem->down(); cerr << "Worker " << d_id << " running: " 
-			  << *d_task << "\n"; cerrSem->up();
+    cerrLock->lock(); cerr << "Worker " << d_id << " running: " 
+			  << *d_task << "\n"; cerrLock->unlock();
 #endif
 
     ASSERT( d_task != 0 );
@@ -53,7 +55,7 @@ Worker::run()
     d_task->doit( d_pg );
 
 #if DAV_DEBUG
-    cerrSem->down(); cerr << "Done:    " << *d_task << "\n"; cerrSem->up();
+    cerrLock->lock();cerr<<"Done:    " <<*d_task<< "\n";cerrLock->unlock();
 #endif
 
     d_task = 0;
@@ -70,9 +72,9 @@ ThreadPool::ThreadPool( int numWorkers ) :
 {
   // Only one thing (worker thread or threadPool itself) can be
   // modifying the workerQueue (actually a stack) at a time.
-  d_workerQueueSem = scinew Semaphore( "ThreadPool Worker Queue Sem", 1 );
+  d_workerQueueLock = scinew Mutex( "ThreadPool Worker Queue Lock" );
 
-  d_workerReadySems = scinew Semaphore*[ numWorkers ];
+  d_workerReadyLocks = scinew Mutex*[ numWorkers ];
 
   d_workers = scinew Worker*[ numWorkers ];
 
@@ -82,9 +84,12 @@ ThreadPool::ThreadPool( int numWorkers ) :
 
     d_availableThreads.push( i );
 
-    d_workerReadySems[ i ] = scinew Semaphore( "Worker Ready Sem", 0 );
+    d_workerReadyLocks[ i ] = scinew Mutex( "Worker Ready Lock" );
+    // None of the workers are allowed to run until the ThreadPool
+    // tells them to run... therefore they must be locked initially.
+    d_workerReadyLocks[ i ]->lock();
 
-    Worker * worker = scinew Worker( this, i, d_workerReadySems[ i ] );
+    Worker * worker = scinew Worker( this, i, d_workerReadyLocks[ i ] );
 
     sprintf( name, "Worker Thread %d", i );
     scinew Thread( worker, name );
@@ -96,7 +101,7 @@ ThreadPool::ThreadPool( int numWorkers ) :
 int
 ThreadPool::available()
 {
-  d_workerQueueSem->down();
+  d_workerQueueLock->lock();
   int numAvail = d_numWorkers - d_numBusy;
 
 #if DAV_DEBUG
@@ -115,7 +120,7 @@ ThreadPool::available()
   }
 #endif
 
-  d_workerQueueSem->up();
+  d_workerQueueLock->unlock();
 
   return numAvail;
 }
@@ -123,7 +128,7 @@ ThreadPool::available()
 void
 ThreadPool::assignThread( Task * task, const ProcessorGroup * pg )
 {
-  d_workerQueueSem->down();
+  d_workerQueueLock->lock();
 
 #if DAV_DEBUG
   cerr << "ThreadPool assignThread\n";
@@ -143,20 +148,20 @@ ThreadPool::assignThread( Task * task, const ProcessorGroup * pg )
   d_numBusy++;
   worker->assignTask( task, pg );
 
-  d_workerReadySems[ id ]->up();
+  d_workerReadyLocks[ id ]->unlock();
 
-  d_workerQueueSem->up();
+  d_workerQueueLock->unlock();
 }
 
 void
 ThreadPool::done( int id, Task * task )
 {
-  d_workerQueueSem->down();
+  d_workerQueueLock->lock();
 
 #if DAV_DEBUG
-  cerrSem->down();
+  cerrLock->lock();
   cerr << "Worker " << id << " finished: " << *task << "\n";
-  cerrSem->up();
+  cerrLock->unlock();
 #endif
 
   d_finishedTasks.push_back( task );
@@ -164,14 +169,21 @@ ThreadPool::done( int id, Task * task )
   d_availableThreads.push( id );
   d_numBusy--;
 
-  d_workerQueueSem->up();
+  d_workerQueueLock->unlock();
 }
 
 void
 ThreadPool::getFinishedTasks( vector<Task *> & finishedTasks )
 {
-  d_workerQueueSem->down();
+  d_workerQueueLock->lock();
   finishedTasks = d_finishedTasks;
   d_finishedTasks.clear();
-  d_workerQueueSem->up();
+  d_workerQueueLock->unlock();
 }
+
+//
+// $Log$
+// Revision 1.2  2000/09/28 02:15:51  dav
+// updates due to not sending 0 particles
+//
+//

@@ -1,7 +1,7 @@
 
 #include <SCICore/Thread/Runnable.h>
 #include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Mutex.h>
 
 #include <Uintah/Grid/Task.h>
 
@@ -14,7 +14,7 @@ class ThreadPool;
 
 using SCICore::Thread::Runnable;
 using SCICore::Thread::Thread;
-using SCICore::Thread::Semaphore;
+using SCICore::Thread::Mutex;
 
 using std::vector;
 using std::stack;
@@ -23,14 +23,14 @@ class Worker : public Runnable {
 
 public:
   
-  Worker( ThreadPool * parent, int id, Semaphore * ready );
+  Worker( ThreadPool * parent, int id, Mutex * ready );
 
   void assignTask( Task * task, const ProcessorGroup * pg );
 
   virtual void run();
 
 private:
-  Semaphore            * d_ready;
+  Mutex                * d_ready;
   int                    d_id;
   ThreadPool           * d_parent;
   Task                 * d_task;
@@ -65,10 +65,10 @@ private:
   vector<Task *>    d_finishedTasks;
 
   // All workers and the threadPool can only access the workerQueue serially
-  Semaphore       * d_workerQueueSem;
+  Mutex           * d_workerQueueLock;
 
   // Used to unblock a worker thread after it has a task assigned to it.
-  Semaphore      ** d_workerReadySems; 
+  Mutex          ** d_workerReadyLocks; 
 
   // An array of Worker Threads.
   Worker         ** d_workers;
