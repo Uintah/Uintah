@@ -16,9 +16,9 @@ SRCS     += \
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
+	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/SeedField.cc\
-	$(SRCDIR)/SetFieldData.cc\
 	$(SRCDIR)/TransformField.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ChangeCellType.cc\
