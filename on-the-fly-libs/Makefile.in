@@ -97,7 +97,7 @@ all: $(OTF_LIBS)
           [ -s $@ ] || rm -f $@
 
 %.o : %.cc %.d
-	rm -f $@ $(*).so $(*).dylib
+	rm -f $@ $(*).so $(*).dylib $(*).dll
 	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
 
 %.so : %.o 
@@ -106,5 +106,8 @@ all: $(OTF_LIBS)
 %.dylib : %.o 
 	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
 
+%.dll : %.o
+	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
+
 clean::
-	@rm -rf *.o *.d *.cc *.h *.dylib *.so *.log *~ ii_files
+	@rm -rf *.o *.d *.cc *.h *.dll *.dylib *.so *.log *~ ii_files
