@@ -420,34 +420,15 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     
     OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(d_scheduler->get_dw(0));
     OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(d_scheduler->getLastDW());
-    
-    for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
-      //cout << d_myworld->myrank() << " COPY DATA FOR LEVEL " << levelIndex << endl;
-      Task* task = new Task("SchedulerCommon::copyDataToNewGrid",
-                            dynamic_cast<SchedulerCommon*>(d_scheduler.get_rep()),
-                            &SchedulerCommon::copyDataToNewGrid);
-      vector<VarLabelMatlPatch> variableInfo;
-      oldDataWarehouse->getVarLabelMatlPatchTriples(variableInfo);
-      map<const VarLabel*,const VarLabel*> labels;
-      for ( unsigned int i = 0; i < variableInfo.size(); i++ ) {
-        VarLabelMatlPatch currentVar = variableInfo[i];
-        
-        // only schedule a compute once (rather than once per patch/matl)
-        if (labels.find(currentVar.label_) == labels.end()) {
-          task->requires(Task::OldDW, currentVar.label_, 0, Task::OtherGridDomain, 0, Task::NormalDomain, Ghost::None, 0);
-          task->computes(currentVar.label_);
-          labels[currentVar.label_] = currentVar.label_;
-        }
-      }
-      d_scheduler->addTask(task, currentGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
-      if ( levelIndex != 0 ) {
-        d_sim->scheduleRefine(currentGrid->getLevel(levelIndex), d_scheduler);
-      }
+
+    dynamic_cast<SchedulerCommon*>(d_scheduler.get_rep())->scheduleDataCopy(currentGrid, d_sharedState);
+    for ( int levelIndex = 1; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+      d_sim->scheduleRefine(currentGrid->getLevel(levelIndex), d_scheduler);
     }
     
     d_scheduler->compile(); 
     d_scheduler->execute();
-    
+
     vector<VarLabelMatlLevel> reductionVariableInfo;
     oldDataWarehouse->getVarLabelMatlLevelTriples(reductionVariableInfo);
     
