@@ -1,4 +1,3 @@
-
 #include <TauProfilerForSCIRun.h>
 
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
@@ -67,6 +66,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 {
   d_lasttime=Time::currentSeconds();
   ss_ = 0;
+  rs_ = 0;
   reloc_new_posLabel_=0;
 }
 
@@ -81,6 +81,8 @@ MPIScheduler::~MPIScheduler()
 {
   if( ss_ )
     delete ss_;
+  if( rs_ )
+    delete rs_;
 }
 
 SchedulerP
@@ -190,6 +192,7 @@ MPIScheduler::initiateTask( DetailedTask          * task,
 
   double start_total_send = mpi_info_.totalsend;
   double start_total_task = mpi_info_.totaltask;
+
   runTask(task);
 
   double dsend = mpi_info_.totalsend - start_total_send;
@@ -297,7 +300,7 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
   ASSERT(!comp->next);
   
   OnDemandDataWarehouse* dw = dws[comp->mapDataWarehouse()].get_rep();
-  dw->reduceMPI(comp->var, comp->reductionLevel, comp->matls, d_myworld);
+  dw->reduceMPI(comp->var, comp->reductionLevel, comp->matls);
   task->done(dws);
 
   dbg << d_myworld->myrank() << " Completed task: ";
@@ -308,8 +311,8 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
 void
 MPIScheduler::postMPISends( DetailedTask         * task )
 {
-  if( mixedDebug.active() ) {
-    cerrLock.lock();mixedDebug << "postMPISends - task " << *task << '\n';
+  if( dbg.active() ) {
+    cerrLock.lock();dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
     cerrLock.unlock();
   }
 
@@ -317,8 +320,8 @@ MPIScheduler::postMPISends( DetailedTask         * task )
   for(DependencyBatch* batch = task->getComputes();
       batch != 0; batch = batch->comp_next){
 
-    if( mixedDebug.active() ) {
-      cerrLock.lock();mixedDebug << "batch: " << batch << '\n';
+    if( dbg.active() ) {
+      cerrLock.lock();dbg << d_myworld->myrank() << " sending batch: " << batch << '\n';
       cerrLock.unlock();
     }
 
@@ -335,15 +338,11 @@ MPIScheduler::postMPISends( DetailedTask         * task )
     ostr.clear();
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
-      if( mixedDebug.active() ) {
-	cerrLock.lock();
-	mixedDebug << " --> sending " << *req << '\n';
-	cerrLock.unlock();
-      }
 
-      if (dbg.active())
+      if (dbg.active()) {
         ostr << *req << ' ';
-      dbg << d_myworld->myrank() << " --> sending " << *req << " from dw " << dw->getID() << '\n';
+        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " from dw " << dw->getID() << '\n';
+      }
       const VarLabel* posLabel;
       OnDemandDataWarehouse* posDW;
       if(!reloc_new_posLabel_ && parentScheduler){
@@ -355,7 +354,8 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       }
       MPIScheduler* top = this;
       while(top->parentScheduler) top = top->parentScheduler;
-      dw->sendMPI(*top->ss_, batch, d_myworld, posLabel, mpibuff, posDW, req);
+
+      dw->sendMPI(*top->ss_, batch, posLabel, mpibuff, posDW, req);
     }
     // Post the send
     if(mpibuff.count()>0){
@@ -372,12 +372,11 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
-	  << " to " << to << ", length=" << count << "\n";
       if( dbg.active()) {
 	cerrLock.lock();
 	dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
-               << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
+            << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
+        dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; cerrLock.unlock();
       }
 
       MPI_Request requestid;
@@ -397,6 +396,13 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 
 } // end postMPISends();
 
+
+struct CompareDep {
+bool operator()(DependencyBatch* a, DependencyBatch* b)
+{
+  return a->messageTag < b->messageTag;
+}
+};
 void
 MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 			    list<DependencyBatch*>& externalRecvs,
@@ -406,20 +412,28 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 
   // Receive any of the foreign requires
 
-  if( mixedDebug.active() ) {
-    cerrLock.lock();mixedDebug << "postMPIRecvs - task " << *task << '\n';
+  if( dbg.active() ) {
+    cerrLock.lock();dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
     cerrLock.unlock();
   }
 
+  // sort the requires, so in case there is a particle send we receive it with
+  // the right message tag
 
+  vector<DependencyBatch*> sorted_reqs;
   map<DependencyBatch*, DependencyBatch*>::const_iterator iter = 
     task->getRequires().begin();
   for( ; iter != task->getRequires().end(); iter++) {
+     sorted_reqs.push_back(iter->first);
+  }
+  CompareDep comparator;;
+  sort(sorted_reqs.begin(), sorted_reqs.end(), comparator);
+  vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
+  for( ; sorted_iter != sorted_reqs.end(); sorted_iter++) {
     DependencyBatch* batch = (*iter).first;
-
-    if( mixedDebug.active() ) {
-      cerrLock.lock();mixedDebug << "Handle Batch: " 
-				 << *(batch->fromTask) << "\n";
+    if( dbg.active() ) {
+      cerrLock.lock(); dbg << d_myworld->myrank() << " Handle Batch: " << 
+                         batch << *(batch->fromTask) << "\n";
       cerrLock.unlock();
     }
 
@@ -439,19 +453,19 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       continue;
     }
 
-    if( mixedDebug.active() ) {
-      cerrLock.lock();mixedDebug << "postMPIRecvs: requesting batch message " 
+    if( dbg.active() ) {
+      cerrLock.lock();dbg << "postMPIRecvs: requesting batch message " 
 				 << batch->messageTag << "\n";
       cerrLock.unlock();
     }
 
     if(only_old_recvs){
-      if(mixedDebug.active()){
-	mixedDebug << "abort analysis: " << batch->fromTask->getTask()->getName()
+      if(dbg.active()){
+	dbg << "abort analysis: " << batch->fromTask->getTask()->getName()
 		   << ", so=" << batch->fromTask->getTask()->getSortedOrder()
 		   << ", abort_point=" << abort_point << '\n';
 	if(batch->fromTask->getTask()->getSortedOrder() <= abort_point)
-	  mixedDebug << "posting MPI recv for pre-abort message " 
+	  dbg << "posting MPI recv for pre-abort message " 
 		     << batch->messageTag << '\n';
       }
       if(!(batch->fromTask->getTask()->getSortedOrder() <= abort_point))
@@ -474,14 +488,15 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
     // Create the MPI type
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
-      if (dbg.active())
+      if (dbg.active()) {
         ostr << *req << ' ';
-      dbg << d_myworld->myrank() << " <-- receiving " << *req << " into dw " << dw->getID() << '\n';
+        dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
+      }
 
-      if( mixedDebug.active() ) {
+      if( dbg.active() ) {
 	cerrLock.lock();
-	mixedDebug << "-- scheduling receive for " << *req << '\n';
-	mixedDebug << "mpibuff size: " << mpibuff.count()<< "\n";
+	dbg << "-- scheduling receive for " << *req << '\n';
+	dbg << "mpibuff size: " << mpibuff.count()<< "\n";
 	cerrLock.unlock();
       }
 
@@ -491,29 +506,30 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       } else {
 	posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
       }
-      dw->recvMPI(mpibuff, batch, d_myworld, posDW, req);
+
+      MPIScheduler* top = this;
+      while(top->parentScheduler) top = top->parentScheduler;
+
+      dw->recvMPI(*top->rs_, mpibuff, batch, posDW, req);
       if (!req->isNonDataDependency()) {
 	dts_->setScrubCount(req->req->var, req->matl, req->fromPatch,
 			    req->req->mapDataWarehouse(), dws);
       }
 
-      if( mixedDebug.active() ) {
+      if( dbg.active() ) {
 	cerrLock.lock();
-	mixedDebug << "now mpibuff size: " << mpibuff.count()<< "\n";
+	dbg << "now mpibuff size: " << mpibuff.count()<< "\n";
 	cerrLock.unlock();
       }
 
-    }
-    if( mixedDebug.active() ) {
-      cerrLock.lock();mixedDebug << "MPIScheduler: here\n";cerrLock.unlock();
     }
 
     // Post the receive
     if(mpibuff.count()>0){
 
-      if( mixedDebug.active() ) {
+      if( dbg.active() ) {
 	cerrLock.lock();
-	mixedDebug << "mpibuff.count: " << mpibuff.count() << "\n";
+	dbg << "mpibuff.count: " << mpibuff.count() << "\n";
 	cerrLock.unlock();
       }
 
@@ -542,10 +558,6 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
                 ostr.str(), batch->messageTag);
       mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
 
-      if( mixedDebug.active() ) {
-	cerrLock.lock();mixedDebug << "MPIScheduler: HERE\n";cerrLock.unlock();
-      }
-
     }
     else {
       // Nothing really need to be received, but let everyone else know
@@ -560,9 +572,10 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
     }
   } // end for
 
-  if( mixedDebug.active() ) {
+
+  if( dbg.active() ) {
     cerrLock.lock();
-    mixedDebug << "Requested " << recvs.numRequests() << " receives\n";
+    dbg << "Requested " << recvs.numRequests() << " receives\n";
     cerrLock.unlock();  
   }
 } // end postMPIRecvs()
@@ -651,6 +664,9 @@ MPIScheduler::execute()
   if( ss_ )
     delete ss_;
   ss_ = scinew SendState;
+  if( rs_ )
+    delete rs_;
+  rs_ = scinew SendState;
   // We do not use many Bsends, so this doesn't need to be
   // big.  We make it moderately large anyway - memory is cheap.
   void* old_mpibuffer;
@@ -685,12 +701,13 @@ MPIScheduler::execute()
   }
 
   bool abort=false;
+
   int abort_point = 987654;
   while( numTasksDone < ntasks ) {
 
-    if( mixedDebug.active() ) {
+    if( dbg.active() ) {
       cerrLock.lock();
-      mixedDebug << "Num tasks done: " << numTasksDone << "\n";
+      dbg << "Num tasks done: " << numTasksDone << "\n";
       cerrLock.unlock();
     }
 
@@ -698,9 +715,9 @@ MPIScheduler::execute()
 
     //cerr << "Got task: " << task->getTask()->getName() << "\n";
 
-    if( mixedDebug.active() ) {
+    if( dbg.active() ) {
       cerrLock.lock();  
-      mixedDebug << "Got task: " << task->getTask()->getName() << "\n";
+      dbg << "Got task: " << task->getTask()->getName() << "\n";
       cerrLock.unlock();
     }
 
@@ -709,31 +726,32 @@ MPIScheduler::execute()
 
     switch(task->getTask()->getType()){
     case Task::Reduction:
-      if( mixedDebug.active() ) {
+      if( dbg.active() ) {
 	cerrLock.lock();
-	mixedDebug << "Initiating reduction: ";
-	printTask( mixedDebug, task );
-	mixedDebug << "\n";
+	dbg << "Initiating reduction: ";
+	printTask( dbg, task );
+	dbg << "\n";
 	cerrLock.unlock();
       }
       if(!abort)
 	initiateReduction(task);
       break;
     case Task::Normal:
+      //case Task::Output:
     case Task::InitialSend:
       {
-	if( mixedDebug.active() ) {
+	if( dbg.active() ) {
 	  cerrLock.lock();  
-	  mixedDebug<< " Initiating task: ";
-	  printTask(mixedDebug, task); mixedDebug << '\n';
+	  dbg<< " Initiating task: ";
+	  printTask(dbg, task); dbg << '\n';
 	  cerrLock.unlock();  
 	}
 
 	initiateTask( task, abort, abort_point );
 
-	if( mixedDebug.active() ) {
+	if( dbg.active() ) {
 	  cerrLock.lock();
-	  mixedDebug << "task initiated(MixedSchd) or done(MPIScheduler)\n";
+	  dbg << "task initiated(MixedSchd) or done(MPIScheduler)\n";
 	  cerrLock.unlock();
 	}
 
@@ -754,10 +772,13 @@ MPIScheduler::execute()
   // MPIScheduler will just continue.
   wait_till_all_done();
 
+  //if (d_generation > 2)
+  //dws[dws.size()-2]->printParticleSubsets();
+
   
-  if( mixedDebug.active() ) {
+  if( dbg.active() ) {
     cerrLock.lock();
-    mixedDebug << "Done with all tasks...\n";
+    dbg << "Done with all tasks...\n";
     cerrLock.unlock();
   }
 
@@ -783,14 +804,15 @@ MPIScheduler::execute()
 	   mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
 
 
-  if( mixedDebug.active() ) {
+  if( dbg.active() ) {
     cerrLock.lock();
-    mixedDebug << "Waiting for all final communications to finish\n";
+    dbg << "Waiting for all final communications to finish\n";
     cerrLock.unlock();
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.
   sends_.waitall(d_myworld);
+  ASSERT(sends_.numRequests() == 0);
   emitTime("final wait");
 
   finalizeTimestep();

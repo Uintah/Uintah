@@ -232,7 +232,6 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
 
 void
 OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
-                               const ProcessorGroup* world,
                                const VarLabel* pos_var,
                                BufferInfo& buffer,
                                OnDemandDataWarehouse* old_dw,
@@ -292,13 +291,13 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
         ssLock.unlock();  // Dd: ??
 #if SCI_ASSERTION_LEVEL >= 1
 	int* maxtag, found;
-	MPI_Attr_get(world->getComm(), MPI_TAG_UB, &maxtag, &found);
+	MPI_Attr_get(d_myworld->getComm(), MPI_TAG_UB, &maxtag, &found);
 	ASSERT(found);
 	ASSERT((PARTICLESET_TAG|batch->messageTag) <= (*maxtag));
 #endif
         ASSERT(batch->messageTag >= 0);
         MPI_Bsend(&numParticles, 1, MPI_INT, dest,
-                  PARTICLESET_TAG|batch->messageTag, world->getComm());
+                  PARTICLESET_TAG|batch->messageTag, d_myworld->getComm());
         ssLock.lock();  // Dd: ??       
         ss.add_sendset(patch, matlIndex, dest, sendset);
         ssLock.unlock();  // Dd: ??
@@ -374,9 +373,8 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 }
 
 void
-OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
+OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
                                DependencyBatch* batch,
-                               const ProcessorGroup* world,
                                OnDemandDataWarehouse* old_dw,
                                const DetailedDep* dep)
 {
@@ -403,7 +401,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
         int from=batch->fromTask->getAssignedResourceIndex();
 	ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Recv(&numParticles, 1, MPI_INT, from,
-                 PARTICLESET_TAG|batch->messageTag, world->getComm(),
+                 PARTICLESET_TAG|batch->messageTag, d_myworld->getComm(),
                  &status);
         old_dw->createParticleSubset(numParticles, matlIndex, patch);
       }
@@ -496,8 +494,8 @@ OnDemandDataWarehouse::recvMPIGridVar(DWDatabase& db, BufferInfo& buffer,
 void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 				 const Level* level,
-                                 const MaterialSubset* inmatls,
-                                 const ProcessorGroup* world)
+                                 const MaterialSubset* inmatls)
+                                 
 {
   const MaterialSubset* matls;
   if(!inmatls){
@@ -539,7 +537,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     count += sendcount;
   }
   int packsize;
-  MPI_Pack_size(count, datatype, world->getComm(), &packsize);
+  MPI_Pack_size(count, datatype, d_myworld->getComm(), &packsize);
   vector<char> sendbuf(packsize);
 
   int packindex=0;
@@ -566,7 +564,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 
   dbg << d_myworld->myrank() << " allreduce, buf=" << &sendbuf[0] << ", count=" << count << ", datatype=" << datatype << ", op=" << op << '\n';
   int error = MPI_Allreduce(&sendbuf[0], &recvbuf[0], count, datatype, op,
-			    world->getComm());
+			    d_myworld->getComm());
 
   if( mixedDebug.active() ) {
     cerrLock.lock(); mixedDebug << "done with MPI_Allreduce\n";
