@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class ImageSel {
+itcl_class SCIRun_Image_ImageSel {
     inherit Module
     constructor {config} {
 	set name ImageSel

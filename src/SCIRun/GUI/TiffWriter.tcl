@@ -1,7 +1,7 @@
 
 catch {rename TiffWriter ""}
 
-itcl_class TiffWriter {
+itcl_class SCIRun_Image_TiffWriter {
     inherit Module
     constructor {config} {
 	set name TiffWriter

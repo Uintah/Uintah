@@ -1,7 +1,7 @@
 #
 #
 
-itcl_class Subsample {
+itcl_class SCIRun_Image_Subsample {
     inherit Module
     constructor {config} {
 	set name Subsample
