@@ -233,8 +233,8 @@ std::ostream& operator<<( std::ostream& os, BaseWidget& w );
 
 //
 // $Log$
-// Revision 1.6.2.1  2000/09/28 03:14:24  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.6.2.2  2000/10/26 14:16:56  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.7  2000/08/11 15:44:44  bigler
 // Changed geom_* functions that took an int index to take a GeomObj* picked_obj.

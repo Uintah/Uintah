@@ -600,11 +600,8 @@ ScaledFrameWidget::GetMaterialName( const Index mindex ) const
 
 //
 // $Log$
-// Revision 1.2.2.2  2000/10/26 10:04:06  moulding
+// Revision 1.2.2.3  2000/10/26 14:16:57  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.2.2.1  2000/09/28 03:14:24  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.4  2000/06/26 21:54:19  bigler
 // Added new modes to allow for more control over which pieces

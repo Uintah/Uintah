@@ -730,11 +730,8 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
-// Revision 1.9.2.2  2000/10/26 10:04:06  moulding
+// Revision 1.9.2.3  2000/10/26 14:16:56  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.9.2.1  2000/09/28 03:14:24  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.10  2000/08/11 15:44:44  bigler
 // Changed geom_* functions that took an int index to take a GeomObj* picked_obj.

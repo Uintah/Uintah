@@ -61,8 +61,8 @@ void SimpleErrorHandler::resetErrors()
 
 //
 // $Log$
-// Revision 1.1.2.1  2000/09/28 03:14:26  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.1.2.2  2000/10/26 14:16:59  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.2  2000/06/11 19:09:18  moulding
 // added #include <stdio.h> for sprintf()

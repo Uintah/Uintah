@@ -127,11 +127,8 @@ namespace PSECore {
 
 //
 // $Log$
-// Revision 1.1.2.3  2000/10/26 10:04:09  moulding
+// Revision 1.1.2.4  2000/10/26 14:16:59  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.1.2.2  2000/10/16 23:15:31  moulding
-// more Phase 1 changes to FIELD_REDESIGN branch.
 //
 // Revision 1.5  2000/10/21 18:36:52  moulding
 // removed some utility functions from PackageDB.cc and put them into XMLUtil.

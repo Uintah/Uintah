@@ -191,11 +191,8 @@ BaseConstraint::Register()
 
 //
 // $Log$
-// Revision 1.5.2.2  2000/10/26 10:03:53  moulding
+// Revision 1.5.2.3  2000/10/26 14:16:45  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.5.2.1  2000/09/28 03:14:55  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.6  2000/06/15 19:50:56  sparker
 // Fixed warnings

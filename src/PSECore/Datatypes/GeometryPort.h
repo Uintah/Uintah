@@ -137,8 +137,8 @@ public:
 
 //
 // $Log$
-// Revision 1.7.2.1  2000/09/28 03:14:20  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.7.2.2  2000/10/26 14:16:52  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.8  2000/06/06 15:14:31  dahart
 // Added a constant GEOM_TRIANGLES to identify requests for geometry in
