@@ -20,6 +20,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
+#include <Core/Geom/GeomLine.h>
 #include <Core/Geom/ColorMapTex.h>
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geometry/Transform.h>
@@ -35,6 +36,9 @@ using std::cerr;
 namespace SCIRun {
 
 class ShowColorMap : public Module {
+  GuiString gui_length_;
+  GuiString gui_side_;
+  GuiInt gui_numlabels_;
 
   MaterialHandle white_;
 
@@ -51,7 +55,10 @@ extern "C" Module *make_ShowColorMap(const string &id)
 
 
 ShowColorMap::ShowColorMap(const string &id)
-  : Module("ShowColorMap", id, Filter, "Visualization", "SCIRun")
+  : Module("ShowColorMap", id, Filter, "Visualization", "SCIRun"),
+    gui_length_("length", id, this),
+    gui_side_("side", id, this),
+    gui_numlabels_("numlabels", id, this)
 {
   white_ = scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20);
 }
@@ -76,12 +83,55 @@ ShowColorMap::execute()
 
   GeomGroup *all = scinew GeomGroup();
 
-  double xsize = 15./16.0;
-  double ysize = 0.05;
-  ColorMapTex *sq = scinew ColorMapTex( Point( 0, -1, 0),
-					Point( xsize, -1, 0),
-					Point( xsize, -1 + ysize, 0 ),
-					Point( 0, -1 + ysize, 0 ) );
+  Point  ref1;
+  Vector out;
+  Vector along;
+  if (gui_side_.get() == "left")
+  {
+    out = Vector(-0.05, 0.0, 0.0);
+    if (gui_length_.get() == "full" || gui_length_.get() == "half1")
+    {
+      ref1 = Point(-1.0, 15.0/16.0, 0.0);
+    }
+    else
+    {
+      ref1 = Point(-1.0, -1.0/16.0, 1.0);
+    }
+    if (gui_length_.get() == "full")
+    {
+      along = Vector(0.0, -30.0/16.0, 0.0);
+    }
+    else
+    {
+      along = Vector(0.0, -14.0/16.0, 0.0);
+    }
+  }
+  else if (gui_side_.get() == "bottom")
+  {
+    out = Vector(0.0, -0.05, 0.0);
+    if (gui_length_.get() == "full" || gui_length_.get() == "half1")
+    {
+      ref1 = Point(-15.0/16.0, -1.0, 0.0);
+    }
+    else
+    {
+      ref1 = Point(1.0/16.0, -1.0, 0.0);
+    }
+    if (gui_length_.get() == "full")
+    {
+      along = Vector(30.0/16.0, 0.0, 0.0);
+    }
+    else
+    {
+      along = Vector(14.0/16.0, 0.0, 0.0);
+    }
+  }
+
+  const Point  ref0(ref1 - out);
+  ColorMapTex *sq = scinew ColorMapTex(ref0,
+				       ref0 + along,
+				       ref0 + along + out,
+				       ref0 + out);
 
   sq->set_texture( cmap->raw1d );
   all->add( sq );
@@ -134,27 +184,22 @@ ShowColorMap::execute()
     }
   }
 
-  // Some bases for positioning text.
-  double xloc = xsize;
-  double yloc = -1 + 1.1 * ysize;
-
-  // Create min and max numbers at the ends.
-  char value[80];
-  sprintf(value, "%.2g", max );
-  all->add( scinew GeomMaterial( scinew GeomText(value, Point(xloc,yloc,0) ),
-				 white_) );
-  sprintf(value, "%.2g", min );
-  all->add( scinew GeomMaterial( scinew GeomText(value,
-						 Point(0,yloc,0)), white_));
-
-  // Fill in 3 other places.
-  for(int i = 1; i < 4; i++ )
+  const int numlabels = gui_numlabels_.get();
+  if (numlabels > 1 && numlabels < 50)
   {
-    sprintf( value, "%.2g", min + i*(max-min)/4.0 );
-    all->add( scinew GeomMaterial( scinew GeomText(value,
-						   Point(xloc*i/4.0,yloc,0)),
-				   white_) );
-  }    
+    // Fill in the text.
+    Point p0  = ref0 - out * 0.02; 
+    char value[80];
+    GeomGroup *labels = scinew GeomGroup();
+    for(int i = 0; i < numlabels; i++ )
+    {
+      sprintf(value, "%.2g", min + (max-min)*(i/(numlabels-1.0)));
+      labels->add(scinew GeomText(value, p0 + along * (i/(numlabels-1.0))));
+      labels->add(new GeomLine(p0 + along * (i/(numlabels-1.0)),
+			       p0 + along * (i/(numlabels-1.0)) + out * 0.5));
+    }    
+    all->add(scinew GeomMaterial(labels, white_));
+  }
 
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
   GeomSticky *sticky = scinew GeomSticky(all);
