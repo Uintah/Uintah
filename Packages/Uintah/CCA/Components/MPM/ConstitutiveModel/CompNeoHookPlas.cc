@@ -109,39 +109,57 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
+						const MPMMaterial* matl,
+						const PatchSet* patch,
+						MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,p_statedata_label, Ghost::None);
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  task->requires(Task::OldDW,bElBarLabel, Ghost::None);
+}
+
+
 void CompNeoHookPlas::allocateCMDataAdd(DataWarehouse* new_dw,
-					ParticleSubset* subset,
+					ParticleSubset* addset,
 					map<const VarLabel*, ParticleVariableBase*>* newState,
 					ParticleSubset* delset,
 					DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
+  Matrix3 zero(0.);
 
   ParticleVariable<StateData> statedata;
   ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
 
-  new_dw->allocateTemporary(statedata,subset);
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(pstress,subset);
-  new_dw->allocateTemporary(bElBar,subset);
+  constParticleVariable<StateData> o_statedata;
+  constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_bElBar;
 
-  for(ParticleSubset::iterator iter =subset->begin();iter != subset->end(); 
-      iter++){
-    statedata[*iter].Alpha = d_initialData.Alpha;
-    deformationGradient[*iter] = Identity;
-    bElBar[*iter] = Identity;
-    pstress[*iter] = zero;
+  new_dw->allocateTemporary(statedata,addset);
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(pstress,addset);
+  new_dw->allocateTemporary(bElBar,addset);
+
+  old_dw->get(o_statedata,p_statedata_label,delset);
+  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_stress,lb->pStressLabel,delset);
+  old_dw->get(o_bElBar,bElBarLabel,delset);
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    statedata[*n].Alpha = o_statedata[*o].Alpha;
+    deformationGradient[*n] = o_deformationGradient[*o];
+    bElBar[*n] = o_bElBar[*o];
+    pstress[*n] = zero;
   }
 
   (*newState)[p_statedata_label]=statedata.clone();
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
   (*newState)[ bElBarLabel]=bElBar.clone();
-
-
 }
 
 void CompNeoHookPlas::computeStableTimestep(const Patch* patch,

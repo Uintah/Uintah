@@ -126,8 +126,9 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
   ParticleVariable<Statedata> pStatedata;
   new_dw->allocateAndPut(pStatedata, pStatedataLabel, pset);
   ParticleVariable<Matrix3> deformationGradient, pstress;
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
+			 pset);
+  new_dw->allocateAndPut(pstress,lb->pStressLabel, pset);
   
   if (d_doCrack) {
     ParticleVariable<double> pCrackRadius;
@@ -152,8 +153,23 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
 }
 
 void 
+ViscoScramForBinder::allocateCMDataAddRequires(Task* task,
+					       const MPMMaterial* matl,
+					       const PatchSet* patch,
+					       MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,pStatedataLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  if (d_doCrack)
+    task->requires(Task::OldDW,lb->pCrackRadiusLabel, Ghost::None);
+}
+
+
+void 
 ViscoScramForBinder::allocateCMDataAdd(DataWarehouse* new_dw,
-				       ParticleSubset* subset,
+				       ParticleSubset* addset,
 				       map<const VarLabel*, ParticleVariableBase*>* newState,
 				       ParticleSubset* delset,
 				       DataWarehouse* old_dw)
@@ -165,29 +181,37 @@ ViscoScramForBinder::allocateCMDataAdd(DataWarehouse* new_dw,
 
   ParticleVariable<Statedata> pStatedata;
   ParticleVariable<Matrix3> deformationGradient, pstress;
+  constParticleVariable<Statedata> o_Statedata;
+  constParticleVariable<Matrix3> o_deformationGradient, o_stress;
 
-  new_dw->allocateTemporary(pStatedata,subset);
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(pstress,subset);
+  new_dw->allocateTemporary(pStatedata,addset);
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(pstress,addset);
+
+  old_dw->get(o_Statedata,pStatedataLabel,delset);
+  old_dw->get(o_stress,lb->pStressLabel,delset);
+  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
 
   ParticleVariable<double> pCrackRadius;  
+  constParticleVariable<double> o_CrackRadius;  
   if (d_doCrack) {
-    new_dw->allocateTemporary(pCrackRadius,subset);
-    ParticleSubset::iterator iter = subset->begin();
-    for(;iter != subset->end();iter++) 
-      pCrackRadius[*iter] = d_initialData.initialRadius_Crack;
+    new_dw->allocateTemporary(pCrackRadius,addset);
+    old_dw->get(o_CrackRadius,lb->pCrackRadiusLabel,delset);
+    ParticleSubset::iterator o,n = addset->begin();
+    for (o=delset->begin(); o != delset->end(); o++, n++) 
+      pCrackRadius[*n] = o_CrackRadius[*o];
   } 
-  ParticleSubset::iterator iter = subset->begin();
-  for(;iter != subset->end();iter++){
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
     // Initialize state data
     //pStatedata[*iter].numElements = d_initialData.numMaxwellElements;
     //pStatedata[*iter].sigDev = new Matrix3[d_initialData.numMaxwellElements];
     for(int ii = 0; ii < d_initialData.numMaxwellElements; ii++){
-      pStatedata[*iter].sigDev[ii] = zero;
+      pStatedata[*n].sigDev[ii] = o_Statedata[*o].sigDev[ii];
     }
     // Initialize other stuff
-    deformationGradient[*iter] = one;
-    pstress[*iter] = zero;
+    deformationGradient[*n] = o_deformationGradient[*o];
+    pstress[*n] = zero;
   }
 
   (*newState)[pStatedataLabel]=pStatedata.clone();
@@ -195,7 +219,6 @@ ViscoScramForBinder::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[lb->pStressLabel]=pstress.clone();
   if(d_doCrack)
     (*newState)[lb->pCrackRadiusLabel]=pCrackRadius.clone();
-
 }
 
 

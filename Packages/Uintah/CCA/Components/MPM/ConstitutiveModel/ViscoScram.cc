@@ -101,13 +101,15 @@ void ViscoScram::initializeCMData(const Patch* patch,
   ParticleVariable<Matrix3> deformationGradient, pstress;
   ParticleVariable<double> pCrackRadius;
   ParticleVariable<double> pRand;
-  new_dw->allocateAndPut(statedata,          p_statedata_label,           pset);
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
-  new_dw->allocateAndPut(pCrackRadius,       lb->pCrackRadiusLabel,       pset);
-  new_dw->allocateAndPut(pRand,              pRandLabel,                  pset);
+  new_dw->allocateAndPut(statedata,p_statedata_label, pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
+			 pset);
+  new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
+  new_dw->allocateAndPut(pCrackRadius,lb->pCrackRadiusLabel,pset);
+  new_dw->allocateAndPut(pRand,pRandLabel,pset);
 
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();
+      iter++){
      statedata[*iter].VolumeChangeHeating = 0.0;
      statedata[*iter].ViscousHeating = 0.0;
      statedata[*iter].CrackHeating = 0.0;
@@ -126,8 +128,22 @@ void ViscoScram::initializeCMData(const Patch* patch,
    computeStableTimestep(patch, matl, new_dw);
 }
 
+void ViscoScram::allocateCMDataAddRequires(Task* task,
+					   const MPMMaterial* matl,
+					   const PatchSet* patch,
+					   MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,p_statedata_label, Ghost::None);
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pCrackRadiusLabel, Ghost::None);
+  task->requires(Task::OldDW,pRandLabel, Ghost::None);
+}
+
+
 void ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* subset,
+				   ParticleSubset* addset,
 				   map<const VarLabel*, ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw)
@@ -139,28 +155,39 @@ void ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
 
   ParticleVariable<StateData> statedata;
   ParticleVariable<Matrix3> deformationGradient, pstress;
-  ParticleVariable<double> pCrackRadius;
-  ParticleVariable<double> pRand;
-  new_dw->allocateTemporary(statedata,subset);
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(pstress,subset);
-  new_dw->allocateTemporary(pCrackRadius,subset);
-  new_dw->allocateTemporary(pRand,subset);
+  ParticleVariable<double> pCrackRadius,pRand;
 
-  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end();iter++){
-     statedata[*iter].VolumeChangeHeating = 0.0;
-     statedata[*iter].ViscousHeating = 0.0;
-     statedata[*iter].CrackHeating = 0.0;
-     statedata[*iter].CrackRadius = d_initialData.InitialCrackRadius;
-     for(int imaxwell=0; imaxwell<5; imaxwell++){
-       statedata[*iter].DevStress[imaxwell] = zero;
-     }
+  constParticleVariable<StateData> o_statedata;
+  constParticleVariable<Matrix3> o_deformationGradient, o_stress;
+  constParticleVariable<double> o_CrackRadius,o_Rand;
 
-      deformationGradient[*iter] = Identity;
-      pstress[*iter] = zero;
-      pCrackRadius[*iter] = 0.0;
-      //pRand[*iter] = drand48();
-      pRand[*iter] = .5;
+  new_dw->allocateTemporary(statedata,addset);
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(pstress,addset);
+  new_dw->allocateTemporary(pCrackRadius,addset);
+  new_dw->allocateTemporary(pRand,addset);
+
+  old_dw->get(o_statedata,p_statedata_label,delset);
+  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_stress,lb->pStressLabel,delset);
+  old_dw->get(o_CrackRadius,lb->pCrackRadiusLabel,delset);
+  old_dw->get(o_Rand,pRandLabel,delset);
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    statedata[*n].VolumeChangeHeating = o_statedata[*o].VolumeChangeHeating;
+    statedata[*n].ViscousHeating = o_statedata[*o].ViscousHeating;
+    statedata[*n].CrackHeating = o_statedata[*o].CrackHeating;
+    statedata[*n].CrackRadius = o_statedata[*o].CrackRadius;
+    for(int imaxwell=0; imaxwell<5; imaxwell++){
+      statedata[*n].DevStress[imaxwell] = o_statedata[*o].DevStress[imaxwell];
+    }
+    
+    deformationGradient[*n] = o_deformationGradient[*o];
+    pstress[*n] = zero;
+    pCrackRadius[*n] = o_CrackRadius[*o];
+    //pRand[*n] = drand48();
+    pRand[*n] = o_Rand[*o];
   }
 
   (*newState)[p_statedata_label]=statedata.clone();
