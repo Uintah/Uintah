@@ -14,6 +14,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/FaceIterator.cc \
 	$(SRCDIR)/Grid.cc $(SRCDIR)/FCVariableBase.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
+	$(SRCDIR)/PatchRangeTree.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
 	$(SRCDIR)/ReductionVariableBase.cc \
@@ -51,6 +52,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.23.4.2  2000/10/25 20:35:23  witzel
+# Added PatchRangeTree
+#
 # Revision 1.23.4.1  2000/10/19 05:18:04  sparker
 # Merge changes from main branch into csafe_risky1
 #
