@@ -1073,8 +1073,6 @@ LatVolMesh::to_index(LatVolMesh::Cell::index_type &idx, unsigned int a)
   const unsigned int jk = a / (ni_-1);
   const unsigned int j = jk % (nj_-1);
   const unsigned int k = jk / (nj_-1);
-  cout << "cell a=" << a << ", i=" << i << ", j=" << j << ", k=" << k <<
-    ", ni_=" << ni_ << ", nj_=" << nj_ << ", nk_=" << nk_ << "\n";
   idx = Cell::index_type(this, i, j, k);
 }
 
