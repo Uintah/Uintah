@@ -54,9 +54,10 @@ function newWindow(pageName,wide,tall,scroll) {
 }
 
 /* Document objects - An html document is classified as one of: Index,
-DocBook, ModuleSpec, ModuleIndex, or ReleaseNotes.  To inherit the
-correct "look and feel", an html document should contain the following
-code in the <head> element:
+DocBook, ModuleSpec, ModuleIndex, Latex2HTML, or ReleaseNotes.  To
+inherit the correct "look and feel", an html document (whether hand
+written or generated) should contain the following code in the <head>
+element:
 
 <script type="text/javascript" src="path-to/tools.js"></script>
 <script type="text/javascript">var doc = new XXXXDocument();</script>
@@ -198,25 +199,30 @@ Latex2HTMLDocument.prototype.postContent = function() {
   Document.prototype.postContent();
 }
 
+// Tutorial documents?
+// ...
+
 /*
 Code for generating table of contents.
 
-The toc code should be used as follows:
+The toc code is used as follows:
 
-+ Insert the following anchor element before the content to be
-  toc'ed: <a id="begin-toc">tag-list</a> where 'tag-list' is list of
-  tags with optional class attributes (i.e. tag[.attr]) that are to
-  be toc'ed.  Tags must be upper-case.
++ Insert the following anchor element before the content to be toc'ed:
+  <a id="begin-toc">toc-title:tag-list</a> where 'toc-title' is the
+  title string of the toc section and 'tag-list' is a comma separated
+  (no spaces allowed) list of tags with optional class attributes
+  (i.e. tag[.attr]) that are to be toc'ed.  Tags must be
+  upper-case. Character ':' must be present to separate the toc-title
+  from the tag list.
 
 + Insert the following script element after all content to be toc'ed
   (but before </body>): <script type="text/javascript">new
   Toc().build()</script>
 
-+ Add css style rules that manifest hierarchical arrangements
-  amongst entries in the toc.  Rules follow this form:
-  p.toc-tag-class where 'toc' must be literally present, 'tag' is a
-  tag name, and 'class' is an optional class attribute.  The '-'
-  separators must be present.
++ Add css style rules that manifest hierarchical arrangements amongst
+  entries in the toc.  Rules follow this form: p.toc-tag[-class] where
+  'toc-' must be literally present, 'tag' is a tag name, and 'class'
+  is an optional class attribute.
 
 I've not tested the generation of multiple tocs for things like tables,
 figures, etc. but it ought to work.
@@ -226,138 +232,172 @@ function setClassAttribute(node, value) {
   node.className = value;
 }
 
-/* Constructor. */
+// Constructor. 
 function Toc() { }
 
-/* Return a unique id number */
+// Return a unique id number 
 Toc.prototype.newIdNum = function() {
   this.idCount += 1;
   return this.idCount;
 }
 
-/* Return current id number */
+// Return current id number 
 Toc.prototype.idNum = function() {
   if (this.idCount == 0)
     this.idCount = 1;
   return this.idCount;
 }
 
-/* Return a new unique string to be used as the id of a toc
-   target. */
+// Return a new unique string to be used as the id of a toc
+// target. 
 Toc.prototype.newIdString = function() {
   var id = this.tocPrefix + String(this.newIdNum());
   return id;
 }
 
-/* Return the current toc target id string in play */
+// Return the current toc target id string in play 
 Toc.prototype.idString = function() {
   return this.tocPrefix + String(this.idNum());
 }
 
-/* Add, as 'node's previous sibling, an anchor node to be used as a
-   toc target */
+// Add, as 'node's previous sibling, an anchor node to be used as a
+// toc target 
 Toc.prototype.addTarget = function(node) {
-  var target = document.createElement("A");
-  var idString = this.newIdString();
-  target.setAttribute("id", idString);
-  node.parentNode.insertBefore(target, node);
+   var target = document.createElement("A");
+   var idString = this.newIdString();
+   target.setAttribute("id", idString);
+   node.parentNode.insertBefore(target, node);
 //  node.setAttribute("id", this.newIdString);
 }
 
-/* Add a toc entry which references its target */
+// Add a toc entry which references its target 
 Toc.prototype.addSource = function(node, cl) {
   var source = document.createElement("A");
   source.setAttribute("href", "#"+this.idString());
-  var text = this.getText(node);
-  source.appendChild(text)
+  var content = this.getContent(node);
+  for (var i=0; i < content.length; ++i)
+    source.appendChild(content[i]);
   var p = document.createElement("P");
   p.appendChild(source);
   setClassAttribute(p, cl);
-  this.tocLast.parentNode.insertBefore(p, this.tocLast.nextSibling);
-  this.tocLast = p;
+  this.tocContainer.appendChild(p)
 }
 
-/* Concat all of a node's text children into one text node while
-   converting <br> elements into spaces */
-Toc.prototype.getText = function(node) {
-  var textNode = document.createTextNode("");
+// Extract children of 'node', transforming
+// <BR> elements to " " text elements.   Assumes <BR> elements will
+// occur only as siblings of top level text nodes.
+Toc.prototype.getContent = function(node) {
+  var content = new Array();
+  var i = 0;
   var aNode = node.firstChild;
   while (aNode != null) {
-    switch (aNode.nodeType) {
-    case 1:
-      if (aNode.tagName == "BR")
-        textNode.appendData(" ");
-      break;
-    case 3:
-      textNode.nodeValue += aNode.nodeValue
-      break;
-    }
-    aNode = aNode.nextSibling;
+    if (aNode.nodeType == 1 && aNode.tagName == "BR")
+      content[i++] = document.createTextNode(" ");
+    else
+      content[i++] = aNode.cloneNode(true);
+    aNode = aNode.nextSibling;              
   }
-  return textNode;
+  return content;
 }
 
-/* Initialize the toc if necessary and then add 'node' to the toc.
-   'cl' is a string suffix that will be part of the node's class
-   attribute. */
+// Initialize the toc if necessary and then add 'node' to the toc.
+// 'cl' is a string suffix that will be part of the node's class
+// attribute. 
 Toc.prototype.addEntry = function(node, cl) {
   this.addTarget(node);
   this.addSource(node, cl);
 }
 
-/* Build a toc */
-Toc.prototype.build = function() {
-
-  /* Abort if <a class="begin-toc"> is missing or has empty content */
-  this.startElement = document.getElementById("begin-toc");
-  if (this.startElement == null || this.startElement.firstChild == null)
-    return;
-  else {
-    this.idCount = 0;
-    this.tocLast = this.startElement;
-    this.tocPrefix = "toc";
-
-    /* Mark end of toc */
-    document.write("<a id='endtoc'></a>")
-    this.endElement = document.getElementById("endtoc");
-
-    /* Build array of toc-able elements from content of <a class="begin-toc"> */
-    this.firstEntry = true;
-    this.tocElement = null;
-    var tocablesString = this.startElement.firstChild.nodeValue;
-    var ta = tocablesString.split(/ +/);
-    this.tocablesArray = new Array();
-    for (var i=0; i<ta.length; ++i) {
-      var t = ta[i].split(".");
-      this.tocablesArray[i] = { tag : t[0], clas : null };
-      if (t.length == 2)
-        this.tocablesArray[i].clas = t[1];
-    }
-
-    /* Build the toc */
-    var nextElement = this.startElement.nextSibling;
-    while (true) {
-      if (nextElement == this.endElement)
-        return null;
-      for (var i=0; i<this.tocablesArray.length; ++i) {
-        if (nextElement.nodeType == 1) {
-          var classAttr;
-          var classAttrNode = nextElement.attributes.getNamedItem("class");
-	  if (classAttrNode == null || classAttrNode.nodeValue == "")
-	    classAttr = null;
-	  else
-	    classAttr = classAttrNode.nodeValue;
-          if (nextElement.nodeName == this.tocablesArray[i].tag && classAttr == this.tocablesArray[i].clas) {
-            var className = "toc-" + nextElement.nodeName;
-	    if (classAttr != null)
-	      className = className + "-" + classAttr;
-	    this.addEntry(nextElement, className);
-	    break;
-	  }
-	}
+// TOC the given element.
+Toc.prototype.tocThis = function(element) {
+  for (var i=0; i<this.tocablesArray.length; ++i) {
+    if (element.nodeName == this.tocablesArray[i].tag) {
+      var classAttr;
+      var classAttrNode = element.attributes.getNamedItem("class");
+      if (classAttrNode == null || classAttrNode.nodeValue == "")
+	classAttr = null;
+      else
+	classAttr = classAttrNode.nodeValue;
+      if (classAttr == this.tocablesArray[i].clas) {
+        className = "toc-" + element.nodeName;
+        if (classAttr != null)
+          className = className + "-" + classAttr;
+        this.addEntry(element, className);
+        return;
       }
-      nextElement = nextElement.nextSibling;
     }
   }
 }
 
+// Return the next node in document order.
+Toc.prototype.nextNode = function() {
+  var cn = this.currentNode;
+  var nextNode = cn.firstChild;
+  if (nextNode == null)
+    nextNode = cn.nextSibling;
+  if (nextNode == null)
+    while (true) {
+      if (cn.parentNode == this.rootNode)
+        return null;
+      nextNode = cn.parentNode.nextSibling;
+      if (nextNode == null)
+        cn = cn.parentNode;
+      else
+        break;
+    }
+  this.currentNode = nextNode;
+  return this.currentNode;
+}
+
+// Build a toc
+Toc.prototype.build = function() {
+
+  // Abort if <a class="begin-toc"> is missing or has empty content
+  var beginToc = document.getElementById("begin-toc");
+  if (beginToc == null || beginToc.firstChild == null)
+    return;
+
+  // Mark end of toc search
+  document.write("<a id='endtoc'></a>")
+  this.endElement = document.getElementById("endtoc");
+
+  // Build array of toc-able elements from content of <a class="begin-toc">
+  var tocablesString = beginToc.firstChild.nodeValue;
+  var ta = tocablesString.split(/\:|,/g);
+  // var tocTitle = ta.shift(); // Mac IE 5 doesn't support shift() (sigh).
+  var tocTitle = ta[0]; ta = ta.slice(1)
+  this.tocablesArray = new Array();
+  for (var i=0; i<ta.length; ++i) {
+    var t = ta[i].split(".");
+    this.tocablesArray[i] = { tag : t[0], clas : null };
+    if (t.length == 2)
+      this.tocablesArray[i].clas = t[1];
+  }
+
+  // Create container for toc
+  this.tocContainer = document.createElement("DIV");
+  setClassAttribute(this.tocContainer, "toc");
+  this.idCount = 0;
+  this.tocPrefix = "toc";
+
+  // Initialize nextNode() iterator
+  this.currentNode = beginToc;
+  this.rootNode = this.currentNode.parentNode;
+
+  // Search for toc-able elements.
+  // Note: Should be able to use DOM2 traversal API but it is implemented
+  //  inconsistently among browsers (sigh).  Tried a recursive tree traversal
+  //  algorithm but Safari puked on that (sigh).
+  var node;
+  while ((node = this.nextNode()) != null && (node != this.endElement)) {
+    this.tocThis(node);
+  }
+
+  // Create section heading for TOC
+  var startTocSearch = beginToc.nextSibling;
+  var tocTitleElement = document.createElement("H1");
+  setClassAttribute(tocTitleElement, "toc");
+  tocTitleElement.appendChild(document.createTextNode(tocTitle));
+  beginToc.parentNode.insertBefore(tocTitleElement, startTocSearch.nextSibling);
+  beginToc.parentNode.insertBefore(this.tocContainer, tocTitleElement.nextSibling);
+}
