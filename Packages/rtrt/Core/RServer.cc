@@ -133,7 +133,7 @@ namespace rtrt {
 
 void RServer::sendImage(Image* image, int nstreams)
 {
-  double start = Time::currentSeconds();
+  double start = SCIRun::Time::currentSeconds();
   if(nstreams > MAXSTREAMS)
     nstreams=MAXSTREAMS;
   this->image = image;
@@ -173,7 +173,7 @@ void RServer::sendImage(Image* image, int nstreams)
   streamers[0]->sendImage();
   barrier->wait(nstreams);
   this->image=0;
-  double dt = Time::currentSeconds()-start;
+  double dt = SCIRun::Time::currentSeconds()-start;
   cerr << "Encoded/sent image in " << dt << " seconds\n";
 }
 
