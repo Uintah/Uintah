@@ -691,8 +691,11 @@ class LevelSetSegmenterApp {
 	set eviewer2 ""
 	set eviewer3 ""
 	set has_loaded 0
-	set histo_done 0
 	set 2D_fixed 0
+
+	set orig_size0 0
+	set orig_size1 0
+	set orig_size2 0
 
 	set size0 0
 	set size1 0
@@ -728,6 +731,8 @@ class LevelSetSegmenterApp {
 	set volren_has_autoviewed 0
 
 	set region_changed 0
+
+	set updating_crop_widget 0
 
 
 	### Define Tooltips
@@ -1011,7 +1016,7 @@ class LevelSetSegmenterApp {
 	    pack $step_tab.stats -side top -anchor nw -expand yes -fill y
 	    set stats [$step_tab.stats childsite]
 
-	    label $stats.samples -text "Samples: $size0, $size1, $size2"
+	    label $stats.samples -text "Samples: $orig_size0, $orig_size1, $orig_size2"
 	    label $stats.range -text "Data Range: $range_min - $range_max"
 
 	    pack $stats.samples $stats.range -side top -anchor nw \
@@ -1821,14 +1826,13 @@ class LevelSetSegmenterApp {
 	    change_indicator_labels "Loading Volume..."
 	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "Completed"} {
 	    change_indicate_val 2
-	    change_indicator_labels "Done Loading Volume"
-	    set has_loaded 1
 	} elseif {$which == $mods(ScalarFieldStats) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Building Histogram..."
 	} elseif {$which == $mods(ScalarFieldStats) && $state == "Completed"} {
 	    change_indicate_val 2
-	    set histo_done 1
+	    set has_loaded 1
+	    change_indicator_labels "Done Loading Volume"
 	} elseif {$which == $mods(NrrdInfo-Reader) && $state == "Completed"} {
 	    global $which-dimension
 
@@ -1842,6 +1846,10 @@ class LevelSetSegmenterApp {
 	    set size1 [set $which-size1]
 	    set size2 [set $which-size2]
 
+	    set orig_size0 $size0
+	    set orig_size1 $size1
+	    set orig_size2 $size2
+
 	    # Fix initial crop values
 	    if {!$loading} {
 		foreach i {0 1 2} {
@@ -1852,7 +1860,6 @@ class LevelSetSegmenterApp {
 		    set $mods(ViewSlices)-crop_minAxis$i 0
 		    set $mods(UnuCrop)-maxAxis$i [expr [set size$i]-1]
 		    set $mods(ViewSlices)-crop_maxAxis$i [expr [set size$i]-1]
-
 		}
 	    }
 
@@ -1860,8 +1867,8 @@ class LevelSetSegmenterApp {
 
 	    # update samples
 	    set path f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite
-	    $attachedPFr.$path.samples configure -text "Samples: $size0, $size1, $size2"
-	    $detachedPFr.$path.samples configure -text "Samples: $size0, $size1, $size2"
+	    $attachedPFr.$path.samples configure -text "Samples: $orig_size0, $orig_size1, $orig_size2"
+	    $detachedPFr.$path.samples configure -text "Samples: $orig_size0, $orig_size1, $orig_size2"
 	} elseif {$which == $mods(NrrdInfo-Size) && $state == "Completed"} {
 	    global $which-dimension
 
@@ -2275,6 +2282,9 @@ class LevelSetSegmenterApp {
 	$detachedPFr.$next_load configure -state normal -activebackground $next_color \
 	    -background $next_color 
 
+	set has_loaded 0
+	set 2D_fixed 0
+	
 	$mod-c needexecute
     }
 
@@ -2384,6 +2394,29 @@ class LevelSetSegmenterApp {
 	global show_roi
 	set show_roi 0
 	$this toggle_show_roi
+
+	# set ViewSlices pad values
+	global $mods(ViewSlices)-crop_minPadAxis0
+	global $mods(ViewSlices)-crop_maxPadAxis0
+	global $mods(ViewSlices)-crop_minPadAxis1
+	global $mods(ViewSlices)-crop_maxPadAxis1
+	global $mods(ViewSlices)-crop_minPadAxis2
+	global $mods(ViewSlices)-crop_maxPadAxis2
+	
+	global $mods(UnuCrop)-minAxis0 $mods(UnuCrop)-maxAxis0
+	global $mods(UnuCrop)-minAxis1 $mods(UnuCrop)-maxAxis1
+	global $mods(UnuCrop)-minAxis2 $mods(UnuCrop)-maxAxis2
+
+	
+	set $mods(ViewSlices)-crop_minPadAxis0 [set $mods(UnuCrop)-minAxis0]
+	set $mods(ViewSlices)-crop_maxPadAxis0 \
+	    [expr $orig_size0 - [set $mods(UnuCrop)-maxAxis0] - 1]
+	set $mods(ViewSlices)-crop_minPadAxis1 [set $mods(UnuCrop)-minAxis1]
+	set $mods(ViewSlices)-crop_maxPadAxis1 \
+	    [expr $orig_size1 - [set $mods(UnuCrop)-maxAxis1] - 1]
+	set $mods(ViewSlices)-crop_minPadAxis2 [set $mods(UnuCrop)-minAxis2]
+	set $mods(ViewSlices)-crop_maxPadAxis2 \
+	    [expr $orig_size2 - [set $mods(UnuCrop)-maxAxis2] - 1]
 
 	# execute UnuCrop
 	$mods(UnuCrop)-c needexecute
@@ -3148,18 +3181,29 @@ class LevelSetSegmenterApp {
 
     method update_crop_values { varname varele varop } {
 	global mods 
+
+	if {$updating_crop_widget == 1} {
+	    return
+	}
+
 	if {[string first "crop_minAxis0" $varname] != -1} {
 	    global $mods(UnuCrop)-minAxis0
 	    global $mods(ViewSlices)-crop_minAxis0
-	    set $mods(UnuCrop)-minAxis0 [set $mods(ViewSlices)-crop_minAxis0]
+	    global $mods(ViewSlices)-crop_minPadAxis0
+	    set $mods(UnuCrop)-minAxis0 \
+		[expr [set $mods(ViewSlices)-crop_minAxis0] + \
+		     [set $mods(ViewSlices)-crop_minPadAxis0]]
 	} elseif {[string first "crop_maxAxis0" $varname] != -1} {
 	    global $mods(UnuCrop)-maxAxis0
 	    global $mods(ViewSlices)-crop_maxAxis0
-	    set $mods(UnuCrop)-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0] 
+	    set $mods(UnuCrop)-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0]
 	} elseif {[string first "crop_minAxis1" $varname] != -1} {
 	    global $mods(UnuCrop)-minAxis1
 	    global $mods(ViewSlices)-crop_minAxis1
-	    set $mods(UnuCrop)-minAxis1 [set $mods(ViewSlices)-crop_minAxis1]
+	    global $mods(ViewSlices)-crop_minPadAxis1
+	    set $mods(UnuCrop)-minAxis1 \
+		[expr [set $mods(ViewSlices)-crop_minAxis1] + \
+		     [set $mods(ViewSlices)-crop_minPadAxis1]]
 	} elseif {[string first "crop_maxAxis1" $varname] != -1} {
 	    global $mods(UnuCrop)-maxAxis1
 	    global $mods(ViewSlices)-crop_maxAxis1
@@ -3167,7 +3211,10 @@ class LevelSetSegmenterApp {
 	} elseif {[string first "crop_minAxis2" $varname] != -1} {
 	    global $mods(UnuCrop)-minAxis2
 	    global $mods(ViewSlices)-crop_minAxis2
-	    set $mods(UnuCrop)-minAxis2 [set $mods(ViewSlices)-crop_minAxis2]
+	    global $mods(ViewSlices)-crop_minPadAxis2
+	    set $mods(UnuCrop)-minAxis2 \
+		[expr [set $mods(ViewSlices)-crop_minAxis2] + \
+		     [set $mods(ViewSlices)-crop_minPadAxis2]]
 	} elseif {[string first "crop_maxAxis2" $varname] != -1} {
 	    global $mods(UnuCrop)-maxAxis2
 	    global $mods(ViewSlices)-crop_maxAxis2
@@ -3183,14 +3230,17 @@ class LevelSetSegmenterApp {
         if {$type == "min"} {
     	    global $mods(UnuCrop)-minAxis$i $mods(ViewSlices)-crop_minAxis$i
             set min [set $mods(UnuCrop)-minAxis$i]
-            set $mods(ViewSlices)-crop_minAxisi$ $min           
+            set $mods(ViewSlices)-crop_minAxis$i $min           
         } else {
     	    global $mods(UnuCrop)-maxAxis$i $mods(ViewSlices)-crop_maxAxis$i
             set max [set $mods(UnuCrop)-maxAxis$i]
-            set $mods(ViewSlices)-crop_maxAxisi$ $max 
+            set $mods(ViewSlices)-crop_maxAxis$i $max 
         }
 
-	$mods(ViewSlices)-c updatecrop
+	global $mods(ViewSlices)-crop
+	if {[set $mods(ViewSlices)-crop] == 1} {
+	    $mods(ViewSlices)-c updatecrop
+	}
     }
 
     method save_binary {} {
@@ -3292,7 +3342,34 @@ class LevelSetSegmenterApp {
 	if {$show_roi == 0} {
 	    $mods(ViewSlices)-c stopcrop
 	} else {
+	    set updating_crop_widget 1
+
 	    $this start_crop
+
+	    # Make sure widget is over volume
+	    global $mods(ViewSlices)-dim0 $mods(ViewSlices)-dim1
+	    global $mods(ViewSlices)-dim2
+	    upvar \#0 $mods(ViewSlices)-dim0 dim0
+	    upvar \#0 $mods(ViewSlices)-dim1 dim1
+	    upvar \#0 $mods(ViewSlices)-dim2 dim2
+
+	    global $mods(ViewSlices)-crop_minAxis0 
+	    global $mods(ViewSlices)-crop_maxAxis0
+	    global $mods(ViewSlices)-crop_minAxis1 
+	    global $mods(ViewSlices)-crop_maxAxis1
+	    global $mods(ViewSlices)-crop_minAxis2 
+	    global $mods(ViewSlices)-crop_maxAxis2
+	    
+	    set $mods(ViewSlices)-crop_minAxis0 0
+	    set $mods(ViewSlices)-crop_minAxis1 0
+	    set $mods(ViewSlices)-crop_minAxis2 0
+
+	    set $mods(ViewSlices)-crop_maxAxis0 $dim0
+	    set $mods(ViewSlices)-crop_maxAxis1 $dim1
+	    set $mods(ViewSlices)-crop_maxAxis2 $dim2
+
+	    $mods(ViewSlices)-c updatecrop
+	    set updating_crop_widget 0
 	} 
     }
 
@@ -3343,8 +3420,11 @@ class LevelSetSegmenterApp {
     variable eviewer2
     variable eviewer3
     variable has_loaded
-    variable histo_done
     variable 2D_fixed
+
+    variable orig_size0
+    variable orig_size1
+    variable orig_size2
 
     variable size0
     variable size1
@@ -3375,6 +3455,8 @@ class LevelSetSegmenterApp {
     variable segs
     
     variable region_changed
+
+    variable updating_crop_widget
 }
 
 LevelSetSegmenterApp app
