@@ -336,6 +336,7 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
     for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
       for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
+	if (constvars->new_density[currCell] > 0.0)
 	unfiltered_divergence[currCell] = -constvars->drhodf[currCell]*
 	  ((constvars->scalarDiffusionCoeff[Arches::AE])[currCell]*
 	   constvars->scalar[IntVector(colX+1,colY,colZ)]+
@@ -353,6 +354,8 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
 	   (constvars->scalarDiffusionCoeff[Arches::AP])[currCell]*
 	   constvars->scalar[currCell])/(constvars->new_density[currCell]*
 				    constvars->new_density[currCell]);
+	else
+	unfiltered_divergence[currCell] = 0.0;
       }
     }
   }
@@ -1201,16 +1204,16 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
 
-	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+/*	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
 			   constscal_vars->scalar[xminusCell]) *
 			   (constscal_vars->density[currCell]+
 			   constscal_vars->density[xminusCell]) *
-			   constscal_vars->uVelocity[currCell];
-/*	x_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
+			   constscal_vars->uVelocity[currCell];*/
+	x_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
 			   constscal_vars->scalar[currCell] +
 			   constscal_vars->density[xminusCell] *
 			   constscal_vars->scalar[xminusCell]) *
-			   constscal_vars->uVelocity[currCell];*/
+			   constscal_vars->uVelocity[currCell];
         if ((constscal_vars->cellType[xminusCell] == wall_celltypeval)
 	    && (!(constscal_vars->cellType[currCell] == wall_celltypeval))) {
                      x_flux[currCell] = 0.0;
@@ -1228,16 +1231,16 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
 
-	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+/*	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
 			   constscal_vars->scalar[xminusCell]) *
 			   (constscal_vars->density[currCell]+
 			   constscal_vars->density[xminusCell]) *
-			   constscal_vars->uVelocity[currCell];
-/*	x_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
+			   constscal_vars->uVelocity[currCell];*/
+	x_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
 			   constscal_vars->scalar[currCell] +
 			   constscal_vars->density[xminusCell] *
 			   constscal_vars->scalar[xminusCell]) *
-			   constscal_vars->uVelocity[currCell];*/
+			   constscal_vars->uVelocity[currCell];
       }
     }
     x_end --;
@@ -1251,16 +1254,16 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
 
-	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+/*	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
 			   constscal_vars->scalar[yminusCell]) *
 			   (constscal_vars->density[currCell]+
 			   constscal_vars->density[yminusCell]) *
-			   constscal_vars->vVelocity[currCell];
-/*	y_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
+			   constscal_vars->vVelocity[currCell];*/
+	y_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
 			   constscal_vars->scalar[currCell] +
 			   constscal_vars->density[yminusCell] *
 			   constscal_vars->scalar[yminusCell]) *
-			   constscal_vars->vVelocity[currCell];*/
+			   constscal_vars->vVelocity[currCell];
       }
     }
     y_start ++;
@@ -1274,16 +1277,16 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
 
-	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+/*	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
 			   constscal_vars->scalar[yminusCell]) *
 			   (constscal_vars->density[currCell]+
 			   constscal_vars->density[yminusCell]) *
-			   constscal_vars->vVelocity[currCell];
-/*	y_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
+			   constscal_vars->vVelocity[currCell];*/
+	y_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
 			   constscal_vars->scalar[currCell] +
 			   constscal_vars->density[yminusCell] *
 			   constscal_vars->scalar[yminusCell]) *
-			   constscal_vars->vVelocity[currCell];*/
+			   constscal_vars->vVelocity[currCell];
       }
     }
     y_end --;
@@ -1297,16 +1300,16 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
 
-	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+/*	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
 			   constscal_vars->scalar[zminusCell]) *
 			   (constscal_vars->density[currCell]+
 			   constscal_vars->density[zminusCell]) *
-			   constscal_vars->wVelocity[currCell];
-/*	z_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
+			   constscal_vars->wVelocity[currCell];*/
+	z_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
 			   constscal_vars->scalar[currCell] +
 			   constscal_vars->density[zminusCell] *
 			   constscal_vars->scalar[zminusCell]) *
-			   constscal_vars->wVelocity[currCell];*/
+			   constscal_vars->wVelocity[currCell];
       }
     }
     z_start ++;
@@ -1320,16 +1323,16 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
 
-	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+/*	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
 			   constscal_vars->scalar[zminusCell]) *
 			   (constscal_vars->density[currCell]+
 			   constscal_vars->density[zminusCell]) *
-			   constscal_vars->wVelocity[currCell];
-/*	z_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
+			   constscal_vars->wVelocity[currCell];*/
+	z_flux[currCell] = 0.5 * (constscal_vars->density[currCell] *
 			   constscal_vars->scalar[currCell] +
 			   constscal_vars->density[zminusCell] *
 			   constscal_vars->scalar[zminusCell]) *
-			   constscal_vars->wVelocity[currCell];*/
+			   constscal_vars->wVelocity[currCell];
       }
     }
     z_end --;
