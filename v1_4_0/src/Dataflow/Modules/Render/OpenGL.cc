@@ -405,6 +405,7 @@ OpenGL::render_and_save_image(int x, int y,
     image=C_Magick::AllocateImage(image_info);
     image->columns=hi_res.resx;
     image->rows=hi_res.resy;
+
   }
 
   const int pix_size = channel_bytes*num_channels;
@@ -485,7 +486,12 @@ OpenGL::render_and_save_image(int x, int y,
 
   if (do_magick)
   {
-    C_Magick::WriteImage(image_info,image);
+    if (!C_Magick::WriteImage(image_info,image))
+    {
+      cerr << "\nCannont Write " << fname.c_str() << " because: " 
+	   << image->exception.reason << endl;
+    }
+	
     C_Magick::DestroyImageInfo(image_info);
     C_Magick::DestroyImage(image);
     C_Magick::DestroyMagick();
