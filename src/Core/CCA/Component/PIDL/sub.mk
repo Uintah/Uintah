@@ -37,7 +37,7 @@ SRCS     += \
 	$(SRCDIR)/TypeInfo_internal.cc 
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
-LIBS :=
+LIBS := $(GLOBUS_LIBS) -lglobus_io
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

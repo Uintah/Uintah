@@ -31,9 +31,7 @@
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <iostream>
-
-using PIDL::ProxyBase;
-using PIDL::Reference;
+using namespace SCIRun;
 
 ProxyBase::ProxyBase() { }
 

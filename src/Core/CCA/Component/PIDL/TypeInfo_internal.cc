@@ -31,8 +31,7 @@
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/Exceptions/InternalError.h>
-
-using PIDL::TypeInfo_internal;
+using namespace SCIRun;
 
 TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,
 				     const std::string& uuid,

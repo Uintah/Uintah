@@ -41,7 +41,7 @@ namespace SCIRun {
   class MutexPool;
 }
 
-namespace PIDL {
+namespace SCIRun {
 
 class TypeInfo;
 class ServerContext;  
@@ -147,7 +147,7 @@ private:
   Object& operator=(const Object&);
 };
 
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

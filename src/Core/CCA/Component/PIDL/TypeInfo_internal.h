@@ -32,12 +32,11 @@
 #define Component_PIDL_TypeInfo_internal_h
 
 #include <Core/CCA/Component/PIDL/Object.h>
-#include <globus_nexus.h>
 #include <map>
 #include <string>
 #include <vector>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -134,7 +133,6 @@ DESCRIPTION
 	    void add_castables(TypeInfo_internal* ti, int offset);
 
 	};
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
-

@@ -34,7 +34,7 @@
 #include "PIDLException.h"
 #include <string>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -77,7 +77,7 @@ DESCRIPTION
 
 	    InvalidReference& operator=(const InvalidReference&);
 	};
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

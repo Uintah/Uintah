@@ -33,7 +33,7 @@
 
 #include <Core/CCA/Component/PIDL/Reference.h>
 
-namespace PIDL {
+namespace SCIRun {
 
 /**************************************
  
@@ -83,7 +83,7 @@ DESCRIPTION
 	private:
 	    bool attached_;
 	};
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

@@ -36,7 +36,7 @@
 #include <map>
 #include <string>
 
-namespace PIDL {
+namespace SCIRun {
 
 class Object;
 
@@ -119,7 +119,7 @@ DESCRIPTION
     // The ID of the next object to be created.
     int nextID;
   };
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

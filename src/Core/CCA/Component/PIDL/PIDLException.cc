@@ -29,14 +29,13 @@
  */
 
 #include "PIDLException.h"
+using namespace SCIRun;
 
-//using namespace PIDL;
-
-::PIDL::PIDLException::PIDLException()
+PIDLException::PIDLException()
 {
 }
 
-::PIDL::PIDLException::PIDLException(const PIDLException&)
+PIDLException::PIDLException(const PIDLException&)
 {
 }
 

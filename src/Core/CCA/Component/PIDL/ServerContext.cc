@@ -32,8 +32,7 @@
 #include "ServerContext.h"
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
-
-using PIDL::ServerContext;
+using namespace SCIRun;
 
 void
 ServerContext::activateEndpoint()

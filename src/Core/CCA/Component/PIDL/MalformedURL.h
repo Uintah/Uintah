@@ -34,7 +34,7 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -90,7 +90,7 @@ class MalformedURL : public SCIRun::Exception {
 
     MalformedURL& operator=(const MalformedURL&);
   };
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

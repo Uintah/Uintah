@@ -33,7 +33,7 @@
 
 #include <string>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -107,7 +107,7 @@ DESCRIPTION
     //////////
     std::string d_spec;
   };
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

@@ -32,15 +32,13 @@
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
+#include <Core/CCA/Component/Comm/Message.h>
 #include <Core/CCA/Component/Comm/ReplyEP.h>
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
-
+using namespace SCIRun;
 using std::cerr;
-
-using PIDL::Object;
-using PIDL::TypeInfo;
 
 TypeInfo::TypeInfo(TypeInfo_internal* priv)
     : d_priv(priv)
@@ -67,11 +65,11 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
 Object* TypeInfo::pidl_cast(Object* obj) const
 {
   // If we aren't a proxy, we don't know what to do...
-  PIDL::ProxyBase* p=dynamic_cast<PIDL::ProxyBase*>(obj);
+  ProxyBase* p=dynamic_cast<ProxyBase*>(obj);
   if(!p)
     return 0;
 
-  PIDL::Reference _ref;
+  Reference _ref;
   p->_proxyGetReference(_ref,false); 
   Message* message = _ref.chan->getMessage();
 

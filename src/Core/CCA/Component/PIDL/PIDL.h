@@ -31,24 +31,13 @@
 #ifndef Component_PIDL_PIDL_h
 #define Component_PIDL_PIDL_h
 
-#include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/Comm/EpChannel.h>
-#include <Core/CCA/Component/Comm/SocketSpChannel.h>
-#include <Core/CCA/Component/Comm/SocketEpChannel.h>
-#include <Core/CCA/Component/Comm/NexusSpChannel.h>
-#include <Core/CCA/Component/Comm/NexusEpChannel.h>
-
 #include "Object.h"
-#include "PIDLException.h"
-#include "URL.h"
 #include <string>
 
-//Constants used to determine which communications package
-//is used 
-#define COMM_SOCKET 55
-#define COMM_NEXUS 56
+namespace SCIRun {
 
-namespace PIDL {
+  class SpChannel;
+  class URL;
 
 /**************************************
  
@@ -108,7 +97,7 @@ DESCRIPTION
     // Private constructor to prevent creation of a PIDL
     PIDL();
   };
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

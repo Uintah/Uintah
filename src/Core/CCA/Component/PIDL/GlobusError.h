@@ -34,17 +34,17 @@
 #include <Core/CCA/Component/PIDL/PIDLException.h>
 #include <string>
 
-namespace PIDL {
-/**************************************
+namespace SCIRun {
+  /**************************************
  
-CLASS
-   GlobusError
+  CLASS
+     GlobusError
    
-KEYWORDS
-   Exception, Error, globus, PIDL
+  KEYWORDS
+     Exception, Error, globus, PIDL
    
-DESCRIPTION
-   Exception class for globus functions.  An unhandled negative return
+  DESCRIPTION
+     Exception class for globus functions.  An unhandled negative return
    code from a globus function will get mapped to this exception.  The
    message is a description of the call, and the code is the result
    returned from globus.
@@ -86,7 +86,7 @@ DESCRIPTION
 
 	    GlobusError& operator=(const GlobusError&);
 	};
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

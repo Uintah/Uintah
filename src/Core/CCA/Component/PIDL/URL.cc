@@ -33,7 +33,7 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
-using PIDL::URL;
+using namespace SCIRun;
 
 URL::URL(const string& protocol,
 	 const string& hostname,

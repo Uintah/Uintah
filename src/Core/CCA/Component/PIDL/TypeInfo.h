@@ -35,7 +35,7 @@
 
 class NexusEpChannel;
 
-namespace PIDL {
+namespace SCIRun {
 
 class TypeInfo_internal;
 class Object;
@@ -126,7 +126,7 @@ private:
   TypeInfo_internal* d_priv;
 };
 
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 
