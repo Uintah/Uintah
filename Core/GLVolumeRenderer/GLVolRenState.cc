@@ -80,10 +80,6 @@ GLVolRenState::computeView(Ray& ray)
   // so that polys are normal to the view post opengl draw.
   GLTexture3DHandle tex = volren->get_tex3d_handle();
   Transform field_trans = tex->get_field_transform();
-  field_trans.invert();
-  mat.set(mvmat);
-  mat.post_trans(field_trans);
-  mat.get_trans(mvmat);
 
   // this is the world space view direction
   view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
@@ -91,26 +87,8 @@ GLVolRenState::computeView(Ray& ray)
   // but this is the view space viewPt
   viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
 
-  /* set the translation to zero */
-  mvmat[12]=mvmat[13] = mvmat[14]=0;
-   
-
-  /* The Transform stores it's matrix as
-     0  1  2  3
-     4  5  6  7
-     8  9 10 11
-     12 13 14 15
-
-     Because of this order, simply setting the tranform with the glmatrix 
-     causes our tranform matrix to be the transpose of the glmatrix
-     ( assuming no scaling ) */
-  mat.set( mvmat );
-    
-  /* Since mat is the transpose, we then multiply the view space viewPt
-     by the mat to get the world or model space viewPt, which we need
-     for calculations */
-
-  viewPt = mat.project( viewPt );
+  viewPt = field_trans.unproject( viewPt );
+  view = field_trans.unproject( view );
 
   ray =  Ray(viewPt, view);
 }
