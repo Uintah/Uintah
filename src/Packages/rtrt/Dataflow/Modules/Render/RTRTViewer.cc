@@ -29,6 +29,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
+#include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
 #include <dlfcn.h>
 #include <iostream>
 #include <stdio.h>
@@ -60,12 +61,15 @@ public:
   void tcl_command(TCLArgs& args, void* userdata);
 
 private:
+  Scene *current_scene, *next_scene;
+  
   GuiInt nworkers;
 
   void start_rtrt();
   void stop_rtrt();
 
   Scene* make_scene_1();
+  SceneIPort *in_scene_port;
 };
 
 static string widget_name("RTRTViewer Widget");
@@ -75,7 +79,8 @@ extern "C" Module* make_RTRTViewer(const string& id) {
 }
 
 RTRTViewer::RTRTViewer(const string& id)
-: Module("RTRTViewer", id, Filter),
+: Module("RTRTViewer", id, Filter, "Render", "rtrt"),
+  current_scene(0), next_scene(0),
   nworkers("nworkers",id,this)
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
@@ -90,11 +95,39 @@ RTRTViewer::~RTRTViewer()
 void RTRTViewer::execute()
 {
   reset_vars();
+
+  // get the scene
+  in_scene_port = (SceneIPort*) get_iport("Scene");
+  SceneHandle handle;
+  if(!in_scene_port->get(handle)){
+    std::cerr<<"Didn't get a handle\n";
+    return;
+  } else {
+    std::cerr<<"Got handle!\n";
+  }
+  next_scene = handle.get_rep()->get_scene();
+  if (next_scene == 0) {
+    std::cerr<<"Didn't get a non null scene pointer, bailing\n";
+    return;
+    //    scene = make_scene_1();
+  }
 }
 
 void RTRTViewer::start_rtrt() {
   cout << "Starting the rtrt\n";
   reset_vars();
+
+  if (current_scene != 0) {
+    // then we already have a scene running
+    std::cerr<<"Already running a scene. Stop it then start again.\n";
+    return;
+  } else {
+    current_scene = next_scene;
+  }
+  if (!current_scene) {
+    std::cerr<<"No scene to render.\n";
+    return;
+  }
 
   RTRT* rtrt_engine = new RTRT();
   int displayproc=0;
@@ -258,55 +291,48 @@ void RTRTViewer::start_rtrt() {
   }
 #endif
   
-  // get the scene
-  Scene* scene = make_scene_1();
-  if(!scene){
-    cerr << "Scene creation failed!\n";
-    return;
-  }
-  
   // set the scenes rtrt_engine pointer
-  scene->set_rtrt_engine(rtrt_engine);
+  current_scene->set_rtrt_engine(rtrt_engine);
   
   if(shadow_mode != -1)
-    scene->shadow_mode = shadow_mode;
-  scene->no_aa = no_aa;
+    current_scene->shadow_mode = shadow_mode;
+  current_scene->no_aa = no_aa;
   
   if(use_bv){
-    if(scene->nprims() > 1){
+    if(current_scene->nprims() > 1){
       if(use_bv==1){
-	scene->set_object(new BV1(scene->get_object()));
+	current_scene->set_object(new BV1(current_scene->get_object()));
       } else if(use_bv==2){
-	scene->set_object(new BV2(scene->get_object()));
+	current_scene->set_object(new BV2(current_scene->get_object()));
       } else if(use_bv==3){
-	scene->set_object(new Grid(scene->get_object(), gridcellsize));
+	current_scene->set_object(new Grid(current_scene->get_object(), gridcellsize));
       } else {
 	cerr << "WARNING: Unknown bv method\n";
       }
     }
   }
   
-  if(!scene->get_image(0)){
+  if(!current_scene->get_image(0)){
     Image* image0=new Image(xres, yres, false);
-    scene->set_image(0, image0);
+    current_scene->set_image(0, image0);
     Image* image1=new Image(xres, yres, false);
-    scene->set_image(1, image1);
+    current_scene->set_image(1, image1);
   }
   if(use_usercamera){
     usercamera.setup();
-    *scene->get_camera(0)=usercamera;
+    *current_scene->get_camera(0)=usercamera;
   }
-  scene->copy_camera(0);
+  current_scene->copy_camera(0);
   
   if(light_radius != -1){
-    for(int i=0;i<scene->nlights();i++)
-      scene->light(i)->radius=light_radius;
+    for(int i=0;i<current_scene->nlights();i++)
+      current_scene->light(i)->radius=light_radius;
   }
   
   cerr << "Preprocessing\n";
   int pp_size=0;
   int scratchsize=0;
-  scene->preprocess(bvscale, pp_size, scratchsize);
+  current_scene->preprocess(bvscale, pp_size, scratchsize);
   cerr << "Done\n";
   
   // initialize jitter masks 
@@ -325,10 +351,10 @@ void RTRTViewer::start_rtrt() {
     rtrt_engine->Gjitter_valsb[ii] *= 0.25;
   }
   
-  scene->logframes=logframes;
+  current_scene->logframes=logframes;
   
   // Start up display thread...
-  Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
+  Dpy* dpy=new Dpy(current_scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1,1.0,1.0,do_frameless==true);
   /* <<<< bigler >>>> */
   Thread* t = new Thread(dpy, "Display thread");
@@ -338,14 +364,14 @@ void RTRTViewer::start_rtrt() {
     char buf[100];
     sprintf(buf, "worker %d", i);
 #if 0
-    /* Thread* t=*/new Thread(new Worker(dpy, scene, i,
+    /* Thread* t=*/new Thread(new Worker(dpy, current_scene, i,
 					 pp_size, scratchsize,
 					 ncounters, c0, c1),
 			      buf);
     //t->migrate(i);
 #endif
     /* <<<< bigler >>>> */
-    Thread* t= new Thread(new Worker(dpy, scene, i,
+    Thread* t= new Thread(new Worker(dpy, current_scene, i,
 				     pp_size, scratchsize,
 				     ncounters, c0, c1),
 			  buf);
@@ -354,6 +380,7 @@ void RTRTViewer::start_rtrt() {
 
 void RTRTViewer::stop_rtrt() {
   cout << "Stoping the rtrt\n";
+  cout << "But not really....\n";
 }
 
 // This is called when the tcl code explicity calls a function besides
