@@ -96,7 +96,6 @@ template<class Field>
 void UHexMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
   build_field_ = build_field;
-  build_geom_ = build_geom;
 
   vertex_map_.clear();
   typename Field::mesh_type::Node::size_type nsize;
@@ -107,11 +106,11 @@ void UHexMC<Field>::reset( int n, bool build_field, bool build_geom )
   {
     mesh_->synchronize(Mesh::FACES_E);
     mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
-    node_vector_ = vector<long int>(nsize, -1);
+    if (build_field) { node_vector_ = vector<long int>(nsize, -1); }
   }
 
   triangles_ = 0;
-  if (build_geom_)
+  if (build_geom)
   {
     triangles_ = scinew GeomFastTriangles;
   }
@@ -195,7 +194,7 @@ void UHexMC<Field>::extract_c( const cell_index_type& cell, double iso )
     {
       mesh_->get_nodes(face_nodes, faces[f]);
       for (n=0; n<4; n++) { mesh_->get_center(p[n], face_nodes[n]); }
-      if (build_geom_)
+      if (triangles_)
       {
 	triangles_->add(p[0], p[1], p[2]);
 	triangles_->add(p[2], p[3], p[0]);
@@ -261,7 +260,7 @@ void UHexMC<Field>::extract_n( const cell_index_type& cell, double iso )
     int v0 = vertex[v++];
     int v1 = vertex[v++];
     int v2 = vertex[v++];
-    if (build_geom_)
+    if (triangles_)
     {
       triangles_->add(q[v0], q[v1], q[v2]);
     }

@@ -59,12 +59,9 @@ private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomLines *lines_;
-  bool build_field_;
-  bool build_geom_;
   CurveMeshHandle out_mesh_;
   map<long int, CurveMesh::Node::index_type> vertex_map_;
   int nnodes_;
-  int n_;
   vector<long int> node_vector_;
 
   CurveMesh::Node::index_type find_or_add_edgepoint(int, int, const Point &);
@@ -93,11 +90,6 @@ TriMC<Field>::~TriMC()
 template<class Field>
 void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
-  n_ = 0;
-
-  build_field_ = build_field;
-  build_geom_ = build_geom;
-
   vertex_map_.clear();
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
@@ -107,17 +99,17 @@ void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
   {
     mesh_->synchronize(Mesh::EDGES_E);
     mesh_->synchronize(Mesh::EDGE_NEIGHBORS_E);
-    node_vector_ = vector<long int>(nsize, -1);
+    if (build_field) { node_vector_ = vector<long int>(nsize, -1); }
   }
 
   lines_ = 0;
-  if (build_geom_)
+  if (build_geom)
   {
     lines_ = scinew GeomLines;
   }
 
   out_mesh_ = 0;
-  if (build_field_)
+  if (build_field)
   {
     out_mesh_ = scinew CurveMesh;
   }
@@ -188,18 +180,17 @@ void TriMC<Field>::extract_n( cell_index_type cell, double v )
     Point p0(Interpolate(p[a], p[b], (v-value[a])/double(value[b]-value[a])));
     Point p1(Interpolate(p[a], p[c], (v-value[a])/double(value[c]-value[a])));
 
-    if (build_geom_)
+    if (lines_)
     {
       lines_->add( p0, p1 );
     }
-    if (build_field_)
+    if (out_mesh_.get_rep())
     {
       CurveMesh::Node::array_type cnode(2);
       cnode[0] = find_or_add_edgepoint(node[a], node[b], p0);
       cnode[1] = find_or_add_edgepoint(node[a], node[c], p1);
       out_mesh_->add_elem(cnode);
     }
-    n_++;
   }
 }
 
@@ -227,11 +218,11 @@ void TriMC<Field>::extract_f( cell_index_type cell, double iso )
       mesh_->get_nodes(nodes, edges[i]);
       for (j=0; j < 2; j++) { mesh_->get_center(p[j], nodes[j]); }
 
-      if (build_geom_)
+      if (lines_)
       {
 	lines_->add(p[0], p[1]);
       }
-      if (build_field_)
+      if (out_mesh_.get_rep())
       {
 	for (j=0; j < 2; j ++)
 	{
