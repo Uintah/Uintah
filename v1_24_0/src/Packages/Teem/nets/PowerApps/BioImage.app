@@ -1342,7 +1342,7 @@ class BioImageApp {
 	    setGlobal $m14-faux {1}
 	    setGlobal $m14-histo {0.5}
 	    setGlobal $m14-num-entries {4}
-	    setGlobal $m14-name-0 {Nerve}
+	    setGlobal $m14-name-0 {Dentin/Pulp}
 	    setGlobal $m14-0-color-r {0.8}
 	    setGlobal $m14-0-color-g {0.17}
 	    setGlobal $m14-0-color-b {0.17}
@@ -1350,7 +1350,7 @@ class BioImageApp {
 	    setGlobal $m14-state-0 \
 		{r 0 0.0429688 0.335938 0.367187 0.453125 0.427807}
 	    setGlobal $m14-on-0 {1}
-	    setGlobal $m14-name-1 {Tooth}
+	    setGlobal $m14-name-1 {Bone/Dentin}
 	    setGlobal $m14-1-color-r {0.82}
 	    setGlobal $m14-1-color-g {0.84}
 	    setGlobal $m14-1-color-b {0.33}
@@ -1358,7 +1358,7 @@ class BioImageApp {
 	    setGlobal $m14-state-1 \
 		{t 0.462891 0.0679688 0.554687 0.295832 0.304965}
 	    setGlobal $m14-on-1 {1}
-	    setGlobal $m14-name-2 {Bond}
+	    setGlobal $m14-name-2 {Dentin/Enamel}
 	    setGlobal $m14-2-color-r {0.38}
 	    setGlobal $m14-2-color-g {0.4}
 	    setGlobal $m14-2-color-b {1.0}
@@ -1366,7 +1366,7 @@ class BioImageApp {
 	    setGlobal $m14-state-2 \
 		{r 0 0.607422 0.222656 0.277344 0.300781 0.465753}
 	    setGlobal $m14-on-2 {1}
-	    setGlobal $m14-name-3 {Crown}
+	    setGlobal $m14-name-3 {Air/Enamel}
 	    setGlobal $m14-3-color-r {1.0}
 	    setGlobal $m14-3-color-g {1.0}
 	    setGlobal $m14-3-color-b {1.0}
@@ -2202,7 +2202,7 @@ class BioImageApp {
             bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren_when_linked"
             entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww 
             bind $winlevel.ww.e <Return> "$this change_window_width 1; $this execute_vol_ren_when_linked"
-            pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
+            pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left
 
             label $winlevel.wl.l -text "Window Level "
             scale $winlevel.wl.s -variable $mods(ViewSlices)-axial-viewport0-clut_wl \
@@ -2213,7 +2213,7 @@ class BioImageApp {
             bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren_when_linked"
             entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl 
             bind $winlevel.wl.e <Return> "$this change_window_level 1; $this execute_vol_ren_when_linked"
-            pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
+            pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left
 
             trace variable $mods(ViewSlices)-min w "$this update_window_level_scales"
             trace variable $mods(ViewSlices)-max w "$this update_window_level_scales"
@@ -2526,7 +2526,7 @@ class BioImageApp {
         bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren"
         entry $winlevel.ww.e -textvariable vol_width 
 	bind $winlevel.ww.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
-        pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
+        pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left
 
         label $winlevel.wl.l -text "Window Level "
         scale $winlevel.wl.s -variable vol_level \
@@ -2537,7 +2537,7 @@ class BioImageApp {
        bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren"
        entry $winlevel.wl.e -textvariable vol_level
        bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
-        pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
+        pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left
 
         trace variable $mods(ViewSlices)-min w "$this update_volume_window_level_scales"
         trace variable $mods(ViewSlices)-max w "$this update_volume_window_level_scales"
