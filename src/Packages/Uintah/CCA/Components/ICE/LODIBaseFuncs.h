@@ -170,7 +170,7 @@ void xPlusDensityLODI(CCVariable<double>& rho_CC,
 
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> crn(3);
+  vector<IntVector> crn(4);
   crn[0] = IntVector(hi_x, low.y(), hi_z);         // right-bottom-front
   crn[1] = IntVector(hi_x, hi_y,    hi_z);         // right-top-front    
   crn[2] = IntVector(hi_x, hi_y,    low.z());      // right-top-back    
@@ -303,7 +303,7 @@ void xMinusDensityLODI(CCVariable<double>& rho_CC,
   } 
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> crn(3);
+  vector<IntVector> crn(4);
   crn[0] = IntVector(low.x(), low.y(), hi_z);         // left-bottom-front
   crn[1] = IntVector(low.x(), hi_y,    hi_z);         // left-top-front    
   crn[2] = IntVector(low.x(), hi_y,    low.z());      // left-top-back    
@@ -437,7 +437,7 @@ void yPlusDensityLODI(CCVariable<double>& rho_CC,
   }
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> crn(3);
+  vector<IntVector> crn(4);
   crn[0] = IntVector(hi_x,    hi_y, hi_z);         // right-top-front
   crn[1] = IntVector(low.x(), hi_y, hi_z);         // left-top-front    
   crn[2] = IntVector(low.x(), hi_y, low.z());      // left-top-back    
@@ -571,7 +571,7 @@ void yMinusDensityLODI(CCVariable<double>& rho_CC,
         
       //________________________________________________________
       // C O R N E R S    
-      vector<IntVector> crn(3);
+      vector<IntVector> crn(4);
       crn[0] = IntVector(hi_x,    low.y(), hi_z);         // right-bottom-front
       crn[1] = IntVector(low.x(), low.y(), hi_z);         // left-bottom-front    
       crn[2] = IntVector(low.x(), low.y(), low.z());      // left-bottom-back    
