@@ -60,6 +60,7 @@ bool CircleBCData::inside(const Point &p) const
 
 void CircleBCData::print()
 {
+  cout << "Geometry type = " << typeid(this).name() << endl;
   d_bc.print();
 }
 

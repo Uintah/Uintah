@@ -61,6 +61,7 @@ namespace Uintah {
     /// Set the face centered iterators for the x component
     void setSFCXIterator(std::vector<IntVector>& i);
 
+
     /// Set the face centered iterators for the y component
     void setSFCYIterator(std::vector<IntVector>& i);
 
@@ -110,6 +111,13 @@ namespace Uintah {
     public:
     bool operator()(BCGeomBase* p) {
       return (typeid(T) == typeid(*p));
+    }
+  };
+
+  template<typename T> class delete_object {
+  public:
+    void operator() (T* ptr) {
+      delete ptr;
     }
   };
 
