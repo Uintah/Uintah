@@ -42,6 +42,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/User/Guide/Figures
 #{root}/doc/User/Guide/usersguide.pdf
 #{root}/doc/User/Tutorial
+#{root}/doc/User/Nets/nets.pdf
 #{root}/doc/Developer/index.html
 #{root}/doc/Developer/FAQ/faq.html
 #{root}/doc/Developer/FAQ/faq.pdf
@@ -61,6 +62,9 @@ $stdout.print("#{root}/doc/index.html
 # Now do wildcards
 $stdout.print(Dir["
 #{root}/doc/User/FAQ/*.gif
+#{root}/doc/User/Nets/*.html
+#{root}/doc/User/Nets/*/*.jpg
+#{root}/doc/User/Nets/*/*.gif
 #{root}/doc/Documentum/*.html
 #{root}/doc/Documentum/*.pdf
 #{root}/doc/Installation/Guide/*.html
