@@ -44,11 +44,6 @@ set bbox {0 0 3100 3100}
 
 set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
 
-# This is a hack.  For some reason it takes a long time to add the first
-# ShowField module.  The load ui uses ShowField and I want to cut down
-# on the instantiation time.  So I'll just instantiate a dummy one that
-# will never get used.
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 3000 3000]
 global mods
 set mods(Viewer) $m1
 
@@ -89,6 +84,8 @@ set show_MIP_x 0
 set show_MIP_y 0
 set show_MIP_z 0
 set show_guidelines 1
+global filter2Dtextures
+set filter2Dtextures 0
 global planes_mapType
 set planes_mapType 0
 global planes_threshold
@@ -143,13 +140,13 @@ class BioImageApp {
 	set viewer_width 436
 	set viewer_height 620 
 	
-	set notebook_width 305
+	set notebook_width 260
 	set notebook_height [expr $viewer_height - 50]
 	
-	set process_width 325
+	set process_width 300
 	set process_height $viewer_height
 	
-	set vis_width [expr $notebook_width + 25]
+	set vis_width [expr $notebook_width + 30]
 	set vis_height $viewer_height
 
 	set num_filters 0
@@ -188,7 +185,7 @@ class BioImageApp {
 
 	set grid_rows 0
 
-	set label_width 31
+	set label_width 25
 
 	set 0_samples 2
 	set 1_samples 2
@@ -1229,6 +1226,7 @@ class BioImageApp {
 	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 813]
 	    set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 970]
 	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 485]
+	    set m37 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 183 2398]
 
 	    # store some in mods
 	    set mods(EditTransferFunc) $m14
@@ -1243,7 +1241,7 @@ class BioImageApp {
 	    set c7 [addConnection $m23 0 $m24 0]
 	    set c8 [addConnection $m20 0 $m21 0]
 	    set c9 [addConnection $m19 0 $m20 0]
-	    set c10 [addConnection $m10 0 $m12 0]
+	    set c10 [addConnection $m8 0 $m37 0]
 	    set c11 [addConnection $m13 0 $m9 0]
 	    set c12 [addConnection $m11 0 $m10 0]
 	    set c13 [addConnection $m22 0 $m23 1]
@@ -1293,13 +1291,20 @@ class BioImageApp {
 	    # connect Gradient Magnitude to ViewImage for painting
 	    set c43 [addConnection $m9 0 $m26 4]
 
+	    # more connections
+	    set c44 [addConnection $m10 0 $m37 1]
+	    set c45 [addConnection $m37 0 $m12 0]
+
+
 	    # disable the volume rendering
  	    disableModule $m8 1
  	    disableModule $m15 1
  	    disableModule $m17 1
+ 	    disableModule $m18 1
  	    disableModule $m22 1
             disableModule $m14 1
 	    disableModule $m12 1
+	    disableModule $m13 1
 
 	    # disable flip/permute modules
 	    disableModule $m29 1
@@ -1387,6 +1392,8 @@ class BioImageApp {
 	    set $m15-specular {0.388}
 	    set $m15-shine {24}
             set $m15-adaptive {1}
+	    global $m15-shading-button-state
+	    trace variable $m15-shading-button-state w "$this update_BioImage_shading_button_state"
 
 	    global $m19-bins
 	    global $m19-sbins
@@ -1447,7 +1454,10 @@ class BioImageApp {
 	    global $m32-axis
 	    set $m32-axis 2
 
-	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36]
+	    global $m37-port-index
+	    set $m37-port-index 1
+
+	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
 	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1]
 
             $this build_viewers $m25 $m26
@@ -1509,8 +1519,8 @@ class BioImageApp {
 
 	# Build data tabs
 	iwidgets::tabnotebook $data.ui.tnb \
-	    -width [expr $process_width - 115] -height 75 \
-	    -tabpos n 
+	    -width [expr $process_width - 110] -height 75 \
+	    -tabpos n -equaltabs false
 	pack $data.ui.tnb -side top -anchor nw \
 	    -padx 0 -pady 3
 	
@@ -2039,7 +2049,8 @@ class BioImageApp {
 	    
 	    ### Tabs
 	    iwidgets::tabnotebook $vis.tnb -width $notebook_width \
-		-height [expr $vis_height - 25] -tabpos n
+		-height [expr $vis_height - 25] -tabpos n \
+                -equaltabs false
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
             set vis_frame_tab$case $vis.tnb
@@ -2111,7 +2122,7 @@ class BioImageApp {
 
             label $winlevel.ww.l -text "Window Width"
             scale $winlevel.ww.s -variable $mods(ViewImage)-axial-viewport0-clut_ww \
-                -from 0 -to 129 -length 170 -width 15 \
+                -from 0 -to 129 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_width"
             bind $winlevel.ww.s <ButtonRelease> "$this update_planes_threshold"
@@ -2122,7 +2133,7 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 
             label $winlevel.wl.l -text "Window Level "
             scale $winlevel.wl.s -variable $mods(ViewImage)-axial-viewport0-clut_wl \
-                -from 0 -to 1299 -length 170 -width 15 \
+                -from 0 -to 1299 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_level"
             bind $winlevel.wl.s <ButtonRelease> "$this update_planes_threshold"
@@ -2144,7 +2155,7 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
             scale $page.thresh.s \
                 -from 0 -to 100 \
  	        -orient horizontal -showvalue false \
- 	        -length 110 -width 15 \
+ 	        -length 100 -width 15 \
 	        -variable planes_threshold
             label $page.thresh.l2 -textvariable planes_threshold
 
@@ -2164,11 +2175,17 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 		-command "$this toggle_show_guidelines" 
             pack $page.lines -side top -anchor nw -padx 4 -pady 7
 
+            global filter2Dtextures
+	    checkbutton $page.2Dtext -text "Filter 2D Textures" \
+		-variable filter2Dtextures \
+		-command "$this toggle_filter2Dtextures" 
+            pack $page.2Dtext -side top -anchor nw -padx 4 -pady 7
+
 	    global planes_color
 	    iwidgets::labeledframe $page.isocolor \
 		-labeltext "Color Planes Using" \
 		-labelpos nw 
-	    pack $page.isocolor -side top -anchor nw -padx 3 -pady 5
+	    pack $page.isocolor -side top -anchor n -padx 3 -pady 5
 	    
 	    set isocolor [$page.isocolor childsite]
 	    
@@ -2321,6 +2338,16 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
             -anchor w -command "$s; $n"
         pack $page.shading -side top -fill x -padx 4
 
+        #----------------------------------------------------------
+        # Disable Lightint
+        #----------------------------------------------------------
+        set ChooseNrrdLighting [lindex [lindex $filters(0) $modules] 36]
+        global [set ChooseNrrdLighting]-port-index
+	checkbutton $page.lighting -text "Disable Lighting" -relief flat \
+            -variable [set ChooseNrrdLighting]-port-index -onvalue 1 -offvalue 0 \
+            -anchor w -command "[set ChooseNrrdLighting]-c needexecute"
+        pack $page.lighting -side top -fill x -padx 4
+
         #-----------------------------------------------------------
         # Light
         #-----------------------------------------------------------
@@ -2347,12 +2374,12 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	scale $page.sampling.srate_hi -variable [set VolumeVisualizer]-sampling_rate_hi \
             -from 0.5 -to 10.0 -label "Sampling Rate" \
             -showvalue true -resolution 0.1 \
-            -orient horizontal \
+            -orient horizontal -width 15 \
 
 	scale $page.sampling.srate_lo -variable [set VolumeVisualizer]-sampling_rate_lo \
             -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
             -showvalue true -resolution 0.1 \
-            -orient horizontal \
+            -orient horizontal -width 15 \
 
 	pack $page.sampling.l $page.sampling.srate_hi \
             $page.sampling.srate_lo -side top -fill x -padx 4 -pady 2
@@ -2367,7 +2394,7 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	scale $page.tf.stransp -variable [set VolumeVisualizer]-alpha_scale \
 		-from -1.0 -to 1.0 -label "Global Opacity" \
 		-showvalue true -resolution 0.001 \
-		-orient horizontal 
+		-orient horizontal -width 15
 
 	pack $page.tf.l $page.tf.stransp \
             -side top -fill x -padx 4 -pady 2
@@ -3094,6 +3121,21 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 
 	$mods(ViewImage)-c redrawall
     }
+
+     method update_BioImage_shading_button_state {varname varele varop} {
+         set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
+
+         global [set VolumeVisualizer]-shading-button-state
+         
+         set path f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading
+         if {[set [set VolumeVisualizer]-shading-button-state]} {
+ 	     $attachedVFr.$path configure -fg "black"
+ 	     $detachedVFr.$path configure -fg "black"
+ 	 } else {
+ 	     $attachedVFr.$path configure -fg "darkgrey"
+ 	     $detachedVFr.$path configure -fg "darkgrey"
+ 	 }
+     }
 
     method check_crop {} {
 	if {$turn_off_crop == 1} {
@@ -4394,6 +4436,16 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
        }
     }
 
+   method toggle_filter2Dtextures {} {
+       global filter2Dtextures mods
+
+       if {$filter2Dtextures == 1} {
+
+       } else {
+       
+       } 
+   }
+
     method toggle_show_guidelines {} {
 
   	 $this check_crop
@@ -4427,27 +4479,34 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 
 	set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
 	set NodeGradient [lindex [lindex $filters(0) $modules] 16]
+	set FieldToNrrd [lindex [lindex $filters(0) $modules] 17]
 	set UnuQuantize [lindex [lindex $filters(0) $modules] 7]
 	set UnuJhisto [lindex [lindex $filters(0) $modules] 21]
         set EditTransferFunc2 [lindex [lindex $filters(0) $modules] 13]
         set NrrdTextureBuilder [lindex [lindex $filters(0) $modules] 11]
+        set UnuProject [lindex [lindex $filters(0) $modules] 12]
 
         if {$show_vol_ren == 1} {
 	    disableModule [set VolumeVisualizer] 0
 	    disableModule [set NodeGradient] 0
+	    disableModule [set FieldToNrrd] 0
 	    disableModule [set UnuQuantize] 0
 	    disableModule [set UnuJhisto] 0
 	    disableModule [set EditTransferFunc2] 0
 	    disableModule [set NrrdTextureBuilder] 0
+	    disableModule [set UnuProject] 0
+
 
             [set NodeGradient]-c needexecute
         } else {
 	    disableModule [set VolumeVisualizer] 1
 	    disableModule [set NodeGradient] 1
+	    disableModule [set FieldToNrrd] 1
 	    disableModule [set UnuQuantize] 1
 	    disableModule [set UnuJhisto] 1
 	    disableModule [set EditTransferFunc2] 1
 	    disableModule [set NrrdTextureBuilder] 1
+	    disableModule [set UnuProject] 1
         }
     }
 
