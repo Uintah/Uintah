@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
+<?xml-stylesheet href="../../../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -30,6 +32,18 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>GL Texture</name>
+        <datatype>SCIRun::GLTexture3D</datatype>
+      </port>
+   </outputs>
   </io>
   <testing>
   </testing>
