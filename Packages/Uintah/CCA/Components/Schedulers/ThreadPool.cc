@@ -244,7 +244,7 @@ Receiver::assignTask(DetailedTask* task)
  d_lock.lock();
   if (pg_ == 0 /* signals that it is blocked waiting for any task */) {
     pg_ = d_parent->getScheduler()->getProcessorGroup();
-    cerr << "Resuming thread " << my_thread_ << endl;
+    cerr << "Resuming thread " << my_thread_ << "\n";
     my_thread_->resume();
   }
   newTasks_.push(task);
@@ -308,7 +308,7 @@ Receiver::run()
   TAU_REGISTER_THREAD();
   TAU_PROFILE("Receiver_run()", "void ()", TAU_DEFAULT);
   TAU_PROFILE_TIMER(doittimer, "doit Task", "[Receiver::run()]", TAU_DEFAULT);
-    cerr << "Running thread " << my_thread_ << endl;
+    cerr << "Running thread " << my_thread_ << "\n";
 
   //if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -805,7 +805,7 @@ ThreadPool::reprioritize( Receiver* receiver, ReceiverPriorityQueueItem& item,
       }
     }
   }
-  cerr << endl;
+  cerr << "\n";
   cerrLock.unlock();
   /* end for testing */
 #endif
