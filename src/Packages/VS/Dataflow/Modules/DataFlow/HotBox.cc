@@ -230,7 +230,8 @@ protected:
   FieldHandle  geomFilehandle_;
   FieldHandle injuryfieldHandle_;
   string    geomFilename_;
-  string    activeBoundBoxSrc;
+  string    activeBoundBoxSrc_;
+  string    activeInjList_;
 
 public:
   HotBox(GuiContext*);
@@ -438,15 +439,13 @@ HotBox::execute()
   } // end else (data on input matrix port)
 
   // get the input ColorMap port
-  ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("ColorMap");
+  ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("Input ColorMap");
 
   if (!cmap_port)
   {
     error("Unable to initialize iport 'ColorMap'.");
-    return;
   }
-
-  if(!cmap_port->get(inputCMapHandle_) || !(inputCMapHandle_.get_rep()))
+  else if(!cmap_port->get(inputCMapHandle_) || !(inputCMapHandle_.get_rep()))
   {
     error( "No colormap handle or representation" );
   }
@@ -473,6 +472,7 @@ HotBox::execute()
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
   const string boundingBoxDataSrc(boundingboxdatasource_.get());
+  const string injuryListDataSrc(injurylistdatasource_.get());
   const string enableDraw(enableDraw_.get());
   const string hipVarPath(hipvarpath_.get());
 
@@ -533,20 +533,20 @@ HotBox::execute()
   }
 
   double segVolXextent, segVolYextent, segVolZextent;
-  if(!boundBoxList_ || boundingBoxDataSrc != activeBoundBoxSrc)
+  if(!boundBoxList_ || boundingBoxDataSrc != activeBoundBoxSrc_)
   { // bounding boxes have not been read or data source has changed
     if (stat(boundingBoxDataSrc.c_str(), &buf)) {
     error("File '" + boundingBoxDataSrc + "' not found.");
     }
 
-    if(boundBoxList_ != NULL && boundingBoxDataSrc != activeBoundBoxSrc)
+    if(boundBoxList_ != NULL && boundingBoxDataSrc != activeBoundBoxSrc_)
     {
       // destroy boundBoxList_
       VH_Anatomy_destroyBBox_list(boundBoxList_);
     }
     boundBoxList_ =
          VH_Anatomy_readBoundingBox_File((char *)boundingBoxDataSrc.c_str());
-    activeBoundBoxSrc = boundingBoxDataSrc;
+    activeBoundBoxSrc_ = boundingBoxDataSrc;
 
     // find the largest bounding volume of the segmentation
     if((maxSegmentVol_ = VH_Anatomy_findMaxBoundingBox(boundBoxList_)) != NULL)
@@ -599,7 +599,7 @@ HotBox::execute()
       VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
 
   // we now have the anatomy name corresponding to the label value at the voxel
-  if(!injListDoc_)
+  if(!injListDoc_ || activeInjList_ != injuryListDataSrc)
   { // Read the Injury List -- First time the HotBox Evaluates
     try {
       XMLPlatformUtils::Initialize();
@@ -611,7 +611,6 @@ HotBox::execute()
 
     // Instantiate a DOM parser for the injury list file.
     injListParser_.setDoValidation(false);
-    const string injuryListDataSrc(injurylistdatasource_.get());
 
     try {
       injListParser_.parse(injuryListDataSrc.c_str());
@@ -628,12 +627,16 @@ HotBox::execute()
 
   currentTime_ = gui_curTime_.get();
   // extract the injured tissues from the DOM Document whenever time changes
-  if(currentTime_ != lastTime_)
-  { // re-populate injury list with data from new timestep
+  if(currentTime_ != lastTime_ ||
+     activeInjList_ != injuryListDataSrc)
+  {
+    // injury list data source or time has changed
+    // re-populate injury list with data from new timestep
     if(injured_tissue_.size() > 0)
       injured_tissue_.clear();
     execInjuryList();
     lastTime_ = currentTime_;
+    activeInjList_ = injuryListDataSrc;
   }
 
   if(dataSource == VS_DATASOURCE_OQAFMA)
@@ -805,7 +808,7 @@ HotBox::execute()
   // send the ColorMap downstream
   if(inputCMapHandle_.get_rep() ) {
     ColorMapOPort *ocolormap_port =
-      (ColorMapOPort *) get_oport("ColorMap");
+      (ColorMapOPort *) get_oport("Output ColorMap");
 
     if (!ocolormap_port) {
       error("Unable to initialize "+name+"'s oport\n");
@@ -1523,6 +1526,7 @@ HotBox::executeOQAFMA()
 /*****************************************************************************
  * method HotBox::execInjuryList()
   // walk the DOM document collecting information on injured tissues
+  // <event>
   // <wound woundName="Left ventricular penetration" woundID="1.0">
   //     <timeStamp time="1"/>
   //     <primaryInjuryList>
@@ -1553,21 +1557,26 @@ HotBox::executeOQAFMA()
   //         </injuryEntity>
   //     </primaryInjuryList>
   // </wound>
+  // </event>
  *****************************************************************************/
 void
 HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
                         VH_injury **injuryPtr)
 {
   // debugging...
-  // if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
-  //    !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
-  //    !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
-  //   )
-  // {
-  //   cout << "Node[" << nodeIndex << "] type: " << woundNode.getNodeType();
-  //   cout << " name: " << to_char_ptr(woundNode.getNodeName());
-  //   cout << " value: " << to_char_ptr(woundNode.getNodeValue()) << endl;
-  // }
+  if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "primaryInjuryList") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "secondaryInjuryList") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "ablateRegion") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "stunRegion") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
+    )
+  {
+    cout << "Node[" << nodeIndex << "] type: " << woundNode.getNodeType();
+    cout << " name: " << to_char_ptr(woundNode.getNodeName());
+    cout << " value: " << to_char_ptr(woundNode.getNodeValue()) << endl;
+  }
 
   // key on node name
   if(!strcmp(to_char_ptr(woundNode.getNodeName()), "label"))
@@ -1655,6 +1664,26 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
       }
     } // end if((*injuryPtr)->isGeometry)
   } // end if(woundNode.getNodeName() == "value")
+  else if(!strcmp(to_char_ptr(woundNode.getNodeName()),
+          "primaryInjuryList"))
+  {
+    (*injuryPtr)->isPrimaryInjury = true;
+  }
+  else if(!strcmp(to_char_ptr(woundNode.getNodeName()),
+          "secondaryInjuryList"))
+  {
+    (*injuryPtr)->isPrimaryInjury = true;
+  }
+  else if(!strcmp(to_char_ptr(woundNode.getNodeName()),
+          "ablateRegion"))
+  {
+    (*injuryPtr)->isAblate = true;
+  }
+  else if(!strcmp(to_char_ptr(woundNode.getNodeName()),
+          "stunRegion"))
+  {
+    (*injuryPtr)->isStun = true;
+  }
   // get attributes
   if(woundNode.hasAttributes())
   {
@@ -1665,14 +1694,15 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
       elem = woundNode.getAttributes()->item(i);
 
       // debugging...
-      // if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
-      //    !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
-      //    !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
-      //   )
-      // {
-      //   cout << " attr name: " << to_char_ptr(elem->getNodeName());
-      //   cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
-      // }
+      if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
+         !strcmp(to_char_ptr(woundNode.getNodeName()), "probability") ||
+         !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
+         !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
+        )
+      {
+        cout << " attr name: " << to_char_ptr(elem->getNodeName());
+        cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
+      }
 
       if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") &&
          !strcmp(to_char_ptr(elem->getNodeName()), "time"))
@@ -1681,6 +1711,11 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
         // only collect wound for the current timeStep
         if((*injuryPtr)->timeStamp == curTime)
           (*injuryPtr)->timeSet = true;
+      }
+      else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "probability") &&
+         !strcmp(to_char_ptr(elem->getNodeName()), "prop"))
+      {
+        (*injuryPtr)->probability = atoi(to_char_ptr(elem->getNodeValue()));
       }
       else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") &&
               !strcmp(to_char_ptr(elem->getNodeName()), "FMAname"))
@@ -1735,7 +1770,7 @@ HotBox::execInjuryList()
   const string injuryListDataSrc(injurylistdatasource_.get());
 
   DOMNodeList *
-  woundList = injListDoc_->getElementsByTagName(to_xml_ch_ptr("wound"));
+  woundList = injListDoc_->getElementsByTagName(to_xml_ch_ptr("event"));
   int num_woundList = woundList->getLength();
 
   if (num_woundList == 0)
@@ -1795,6 +1830,39 @@ HotBox::makeInjGeometry()
       lvindx += 2;
       numLines++;
     }
+    else if(injPtr.geom_type == "sphere" ||
+            injPtr.geom_type == "hollow_sphere")
+    {
+      // get the center of the sphere
+      Point sphCenter = Point(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
+
+      // make the QuadSurfMesh
+      if(qsm == (QuadSurfMesh *)0)
+        qsm = new QuadSurfMesh();
+
+      int svindx = 0;
+      // make the polygons in the surface of the sphere
+      for(int k = 0; k <= CYLREZ; k++)
+      { // for each longitudinal step
+        for(int j = 0; j <= CYLREZ/2; j++)
+        { // make a circle in the X-Y plane
+          double pi = 3.14159;
+          double x = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * cos(2.0 * pi * k/CYLREZ);
+          double y = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
+          double z = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * sin(2.0 * pi * k/CYLREZ);
+          // rotate the circle into the plane defined by the longitudinal axis
+	  Point p(x, y, z);
+          qsm->add_point(p);
+          if(svindx >= CYLREZ/2)
+          {
+            qsm->add_quad(mvindx-(CYLREZ/2)-2, mvindx-(CYLREZ/2)-1,
+                          mvindx-(CYLREZ/2)+1, mvindx-(CYLREZ/2));
+            numQuads++;
+          }
+          mvindx += 2; svindx += 2;
+        } // end for(int j = 1; j <= CYLREZ; j++)
+      } // end for(int k = 1; k <= CYLREZ; k++)
+    } // end else if(injPtr.geom_type == "sphere" ... )
     else if(injPtr.geom_type == "cylinder" ||
             injPtr.geom_type == "hollow_cylinder")
     {
@@ -1804,52 +1872,37 @@ HotBox::makeInjGeometry()
       Vector zAxis = cylAxis;
       zAxis.safe_normalize();
 
-      // find a suitable vector to cross with the cylinder axis
-      Vector xAxis, yAxis;
-      // measure the angle between cylAxis and +-X, +-Y, +-Z
-      if(MIN3(fabs(zAxis.x()), fabs(zAxis.y()), fabs(zAxis.z())) ==
-         fabs(zAxis.x()))
-      {
-	xAxis = Cross(Vector(1.0, 0.0, 0.0), zAxis);
-      }
-      else if(MIN3(fabs(zAxis.x()), fabs(zAxis.y()), fabs(zAxis.z())) ==
-         fabs(zAxis.y()))
-      {
-	xAxis = Cross(Vector(0.0, 1.0, 0.0), zAxis);
-      }
-      else if(MIN3(fabs(zAxis.x()), fabs(zAxis.y()), fabs(zAxis.z())) ==
-         fabs(zAxis.z()))
-      {
-	xAxis = Cross(Vector(0.0, 0.0, 1.0), zAxis);
-      }
-      yAxis = Cross(zAxis, xAxis);
-
       // build the matrix which transforms the cylinder ends
       // into the planes defined by the axis
+
+      Transform cylXform;
+      cylXform.rotate(Vector(0.0, 0.0, 1.0), zAxis);
 
       // make the QuadSurfMesh
       if(qsm == (QuadSurfMesh *)0)
         qsm = new QuadSurfMesh();
 
+      int cvindx = 0;
       // make the polygons in the surface of the cylinder
-      for(int j = 1; j <= CYLREZ; j++)
+      for(int j = 0; j <= CYLREZ; j++)
       { // make a circle in the X-Y plane
         double pi = 3.14159;
         double x = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
         double y = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ);
         // rotate the circle into the plane defined by the cylindrical axis
-        double xt = xAxis.x()*x + xAxis.y()*y + injPtr.axisX0;
-        double yt = yAxis.x()*x + yAxis.y()*y + injPtr.axisY0;
-        double zt = zAxis.x()*x + zAxis.y()*y + injPtr.axisZ0;
-        qsm->add_point(Point(xt,yt,zt));
-        Point p1 = Point(xt,yt,zt) + cylAxis;
+        Point pt = cylXform.project(Point(x, y, 0.0));
+        Point p0 = pt;
+        p0 += Vector(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
+        qsm->add_point(p0);
+        Point p1 = pt;
+        p1 += Vector(injPtr.axisX1, injPtr.axisY1, injPtr.axisZ1);
         qsm->add_point(p1);
-        if(mvindx > 1)
+        if(cvindx > 1)
         {
-          qsm->add_quad(mvindx-2, mvindx-1, mvindx, mvindx+1);
+          qsm->add_quad(mvindx-2, mvindx-1, mvindx+1, mvindx);
           numQuads++;
         }
-        mvindx += 2;
+        mvindx += 2; cvindx += 2;
       } // end for(int j = 1; j <= CYLREZ; j++)
     } // end else if(injPtr.geom_type == "cylinder" ... )
   } // end for(int i = 0; i < injured_tissue_.size(); i++)
