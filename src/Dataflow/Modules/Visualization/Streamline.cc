@@ -33,13 +33,10 @@ hook up user interface buttons
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Core/Datatypes/ScalarField.h>
-//#include <Core/Datatypes/ScalarFieldRG.h>
-#include <Core/Datatypes/ScalarFieldUG.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/VectorField.h>
-#include <Core/Datatypes/VectorFieldUG.h>
-#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Dataflow/Ports/FieldPort.h>
+
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomDisc.h>
 #include <Core/Geom/GeomObj.h>
@@ -89,34 +86,34 @@ struct SLTracer {
     double starttime;
 
     SLTracer(const Point&, double s, double t,
-	     const VectorFieldHandle& vfield, double sign);
+	     const FieldHandle& vfield, double sign);
     virtual ~SLTracer();
-    virtual int advance(const VectorFieldHandle&, double stepsize, int skip)=0;
+    virtual int advance(const FieldHandle&, double stepsize, int skip)=0;
 };
 
 struct SLEulerTracer : public SLTracer {
     int stagnate;
     SLEulerTracer(const Point&, double s, double t,
-		  const VectorFieldHandle& vfield, double sign);
+		  const FieldHandle& vfield, double sign);
     virtual ~SLEulerTracer();
-    virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
+    virtual int advance(const FieldHandle&, double stepsize, int skip);
 };    
 
 #if 0
 struct SLExactTracer : public SLTracer {
     SLExactTracer(const Point&, double s, double t,
-		  const VectorFieldHandle& vfield, double sign);
+		  const FieldHandle& vfield, double sign);
     virtual ~SLExactTracer();
-    virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
+    virtual int advance(const FieldHandle&, double stepsize, int skip);
 };   
 #endif 
 
 struct SLRK4Tracer : public SLTracer {
     int stagnate;
     SLRK4Tracer(const Point&, double s, double t,
-		const VectorFieldHandle& vfield, double sign);
+		const FieldHandle& vfield, double sign);
     virtual ~SLRK4Tracer();
-    virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
+    virtual int advance(const FieldHandle&, double stepsize, int skip);
 };    
 
 struct SLSource {
@@ -130,7 +127,7 @@ struct SLSource {
     virtual Point trace_start(double s, double t)=0;
     virtual void get_n(int& s, int& t)=0;
     virtual Vector ribbon_direction(double s, double t, const Point&,
-				    const VectorFieldHandle& vfield)=0;
+				    const FieldHandle& vfield)=0;
     void select();
     void deselect();
 
@@ -147,7 +144,7 @@ public:
     virtual Point trace_start(double s, double t);
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point&,
-				    const VectorFieldHandle& vfield);
+				    const FieldHandle& vfield);
     virtual void update_position(const clString& base, const clString& varname);
     virtual void reposition(const clString& pos);
 };
@@ -161,7 +158,7 @@ public:
     virtual Point trace_start(double s, double t);
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point&,
-				    const VectorFieldHandle& vfield);
+				    const FieldHandle& vfield);
     virtual void update_position(const clString& base, const clString& varname);
     virtual void reposition(const clString& pos);
 };
@@ -175,7 +172,7 @@ public:
     virtual Point trace_start(double s, double t);
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point&,
-				    const VectorFieldHandle& vfield);
+				    const FieldHandle& vfield);
     virtual void update_position(const clString& base, const clString& varname);
     virtual void reposition(const clString& pos);
 };
@@ -189,7 +186,7 @@ public:
     virtual Point trace_start(double s, double t);
     virtual void get_n(int& s, int& t);
     virtual Vector ribbon_direction(double s, double t, const Point& p,
-				    const VectorFieldHandle& vfield);
+				    const FieldHandle& vfield);
     virtual void update_position(const clString& base, const clString& varname);
     virtual void reposition(const clString& pos);
 };
@@ -214,7 +211,7 @@ struct SLSourceInfo {
 			  double total_time, int timesteps);
 
     SLSourceInfo(int sid, Streamline* module, GeometryOPort* ogeom);
-    void pick_source(const clString& source, const VectorFieldHandle& vfield,
+    void pick_source(const clString& source, const FieldHandle& vfield,
 		     Streamline* module);
 };
 
@@ -230,9 +227,9 @@ struct VertBatch {
 #endif
 
 class Streamline : public Module {
-    VectorFieldIPort* infield;
+    FieldIPort* infield;
     ColorMapIPort* inColorMap;
-    ScalarFieldIPort* incolorfield;
+    FieldIPort* incolorfield;
     GeometryOPort* ogeom;
 
     int first_execute;
@@ -249,14 +246,14 @@ class Streamline : public Module {
     ALGS alg_enum;
 
     void make_tracers(SLSource*, Array1<SLTracer*>&,
-		      const VectorFieldHandle& vfield,
+		      const FieldHandle& vfield,
 		      double width=0);
     SLTracer* make_tracer(SLSource* source, double s, double t,
-			  const VectorFieldHandle& vfield,
+			  const FieldHandle& vfield,
 			  double sign);
     SLTracer* make_tracer(const Point& p,
 			  double s, double t,
-			  const VectorFieldHandle& vfield,
+			  const FieldHandle& vfield,
 			  double sign);
     Array1<SLTracer*> tracers;
     int np;
@@ -269,8 +266,8 @@ class Streamline : public Module {
     Array1<GeomTube*> tubes;
     double tubesize;
     Mutex grouplock;
-    VectorFieldHandle field;
-    ScalarFieldHandle sfield;
+    FieldHandle field;
+    FieldHandle sfield;
     ColorMapHandle cmap;
     SLSourceInfo* si;
 
@@ -297,14 +294,14 @@ public:
     }
 	    
     GeomVertex* get_vertex(double t, double maxt, const Point& p,
-			   const ScalarFieldHandle& sfield,
+			   const FieldHandle& sfield,
 			   const ColorMapHandle& cmap);
     GeomVertex* get_vertex(double t, double maxt, const Point& p,
-			   const ScalarFieldHandle& sfield,
+			   const FieldHandle& sfield,
 			   const ColorMapHandle& cmap,
 			   const Vector& normal);
     GeomVertex* get_vertex(double t, double maxt, const Point& p,
-			   const ScalarFieldHandle& sfield,
+			   const FieldHandle& sfield,
 			   const ColorMapHandle& cmap,
 			   const Vector& normal,
 			   int& ix);
@@ -329,11 +326,11 @@ Streamline::Streamline(const clString& id)
     grouplock("Streamline group lock"), widget_lock("Streamline widget lock")
 {
     // Create the input ports
-    infield=scinew VectorFieldIPort(this, "Vector Field",
-				 ScalarFieldIPort::Atomic);
+    infield=scinew FieldIPort(this, "Vector Field",
+				 FieldIPort::Atomic);
     add_iport(infield);
-    incolorfield=scinew ScalarFieldIPort(this, "Color Field",
-				      ScalarFieldIPort::Atomic);
+    incolorfield=scinew FieldIPort(this, "Color Field",
+				      FieldIPort::Atomic);
     add_iport(incolorfield);
     inColorMap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(inColorMap);
@@ -521,7 +518,7 @@ void Streamline::execute()
 }
 
 SLTracer* Streamline::make_tracer(SLSource* source, double s, double t,
-				  const VectorFieldHandle& vfield,
+				  const FieldHandle& vfield,
 				  double sign)
 {
     Point start(source->trace_start(s, t));
@@ -530,7 +527,7 @@ SLTracer* Streamline::make_tracer(SLSource* source, double s, double t,
 
 SLTracer* Streamline::make_tracer(const Point& start,
 				  double s, double t,
-				  const VectorFieldHandle& vfield,
+				  const FieldHandle& vfield,
 				  double sign)
 {
     switch(alg_enum){
@@ -547,7 +544,7 @@ SLTracer* Streamline::make_tracer(const Point& start,
 }
 
 void Streamline::make_tracers(SLSource* source, Array1<SLTracer*>& tracers,
-			      const VectorFieldHandle& vfield,
+			      const FieldHandle& vfield,
 			      double ribbonsize)
 {
     int ns, nt;
@@ -616,9 +613,10 @@ void SLSourceInfo::make_anim_groups(const clString& animation, GeomGroup* top,
 }
 
 GeomVertex* Streamline::get_vertex(double, double, const Point& p,
-				   const ScalarFieldHandle& sfield,
+				   const FieldHandle& sfield,
 				   const ColorMapHandle& cmap)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     if(sfield.get_rep()){
 	double sval;
 	if(sfield->interpolate(p, sval)){
@@ -630,13 +628,15 @@ GeomVertex* Streamline::get_vertex(double, double, const Point& p,
       return new GeomCVertex(p, matl->diffuse);
     }
     return new GeomVertex(p);
+#endif
 }
 
 GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
-				   const ScalarFieldHandle& sfield,
+				   const FieldHandle& sfield,
 				   const ColorMapHandle& cmap,
 				   const Vector& normal)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     Vector n(normal);
     double l=n.length2();
     if(l < 1.e-6){
@@ -657,14 +657,16 @@ GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
       return new GeomNMVertex(p, n, matl);
     }
     return new GeomNVertex(p, n);
+#endif
 }
 
 GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
-				   const ScalarFieldHandle& sfield,
+				   const FieldHandle& sfield,
 				   const ColorMapHandle& cmap,
 				   const Vector& normal,
 				   int& ix)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     Vector n(normal);
     if(n.length2() > 1.e-6)
 	n.normalize();
@@ -679,10 +681,12 @@ GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
       return new GeomNMVertex(p, n, matl);
     }
     return new GeomNVertex(p, n);
+#endif
 }
 
 void Streamline::parallel_streamline(int proc)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
   GeomGroup* group=0;
   int st=proc*tracers.size()/np;
   int et=(proc+1)*tracers.size()/np;
@@ -773,6 +777,7 @@ void Streamline::parallel_streamline(int proc)
   for(i=st;i<et;i++){
     delete tracers[i];
   }
+#endif
 }
 
 void Streamline::do_streamline(SLSourceInfo* si)
@@ -787,6 +792,7 @@ void Streamline::do_streamline(SLSourceInfo* si)
 
 void Streamline::parallel_streamlline(int proc)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
   int st=proc*tracers.size()/np;
   int et=(proc+1)*tracers.size()/np;
   double maxt=maxsteps*stepsize;
@@ -904,10 +910,12 @@ void Streamline::parallel_streamlline(int proc)
       grouplock.unlock(); 
     }
   }
+#endif
 }
 
 void Streamline::do_streamlline(SLSourceInfo* si, int doseed)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
   tracers.remove_all();
   if (!doseed) {
     make_tracers(si->source, tracers, field, alg_enum);
@@ -931,10 +939,12 @@ void Streamline::do_streamlline(SLSourceInfo* si, int doseed)
   np=Min(tracers.size(), Thread::numProcessors());
   Thread::parallel(Parallel<Streamline>(this, &Streamline::parallel_streamlline),
 		   np, true);
+#endif
 }
 
 void Streamline::parallel_streamtube(int proc)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     int st=proc*tracers.size()/np;
     int et=(proc+1)*tracers.size()/np;
     double t=0;
@@ -983,10 +993,12 @@ void Streamline::parallel_streamtube(int proc)
     for(int i=st;i<et;i++){
 	delete tracers[i];
     }
+#endif
 }
 
 void Streamline::do_streamtube(SLSourceInfo* si)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     SLSource* source=si->source;
     tracers.remove_all();
     make_tracers(source, tracers, field, alg_enum);
@@ -994,12 +1006,14 @@ void Streamline::do_streamtube(SLSourceInfo* si)
     np=Min(tracers.size(), Thread::numProcessors());
     Thread::parallel(Parallel<Streamline>(this, &Streamline::parallel_streamtube),
 		     np, true);
+#endif
 }
 
 void Streamline::do_streamribbon(SLSourceInfo* si,
 				 double ribbonsize)
 
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     tracers.remove_all();
     SLSource* source=si->source;
     make_tracers(source, tracers, field, ribbonsize);
@@ -1104,11 +1118,13 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
     for(int i=0;i<tracers.size();i++){
 	delete tracers[i];
     }
+#endif
 }
 
 void Streamline::do_streamsurface(SLSourceInfo* si,
 				  double)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     tracers.remove_all();
     SLSource* source=si->source;
     make_tracers(source, tracers, field, alg_enum);
@@ -1295,6 +1311,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 	}
 #endif
     }
+#endif
 }
 
 void Streamline::geom_moved(GeomPick*, int, double, const Vector&,
@@ -1383,13 +1400,15 @@ void SLPointSource::reposition(const clString& pos)
 
 Vector SLPointSource::ribbon_direction(double, double,
 				       const Point& p,
-				       const VectorFieldHandle& vfield)
+				       const FieldHandle& vfield)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     Vector grad(0,0,1); // Default, in case we are outside of the field
     vfield->interpolate(p, grad);
     Vector v1, v2;
     grad.find_orthogonal(v1, v2);
     return v1;
+#endif
 }
     
 
@@ -1462,7 +1481,7 @@ void SLLineSource::get_n(int& ns, int& nt)
 
 Vector SLLineSource::ribbon_direction(double, double,
 				      const Point&,
-				      const VectorFieldHandle&)
+				      const FieldHandle&)
 {
     Point p1, p2;
     gw->GetEndpoints(p1, p2);
@@ -1545,7 +1564,7 @@ void SLRingSource::get_n(int& ns, int& nt)
 
 Vector SLRingSource::ribbon_direction(double s, double,
 				      const Point&,
-				      const VectorFieldHandle&)
+				      const FieldHandle&)
 {
     double ratio=rw->GetRatio();
     double angle=s*ratio*2*Pi;
@@ -1628,7 +1647,7 @@ void SLSquareSource::get_n(int& ns, int& nt)
 
 Vector SLSquareSource::ribbon_direction(double, double,
 				      const Point&,
-				      const VectorFieldHandle&)
+				      const FieldHandle&)
 {
     Point center, R, D;
     fw->GetPosition( center, R, D);
@@ -1638,12 +1657,14 @@ Vector SLSquareSource::ribbon_direction(double, double,
 }
 
 SLTracer::SLTracer(const Point& p, double s, double t,
-		   const VectorFieldHandle& vfield, double sign)
+		   const FieldHandle& vfield, double sign)
 : p(p), s(s), t(t), inside(1), sign(sign), startstep(0), starttime(0)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     // Interpolate initial gradient
     if(!vfield->interpolate(p, grad))
 	inside=0;
+#endif
 }
 
 SLTracer::~SLTracer()
@@ -1653,7 +1674,7 @@ SLTracer::~SLTracer()
 #if 0
 
 SLExactTracer::SLExactTracer(const Point& p, double s, double t,
-			     const VectorFieldHandle& vfield, double sign)
+			     const FieldHandle& vfield, double sign)
 : SLTracer(p, s, t, vfield, sign)
 {
     ix=0;
@@ -1663,17 +1684,17 @@ SLExactTracer::~SLExactTracer()
 {
 }
 
-int SLExactTracer::advance(const VectorFieldHandle& vfield, double stepsize, int skip)
+int SLExactTracer::advance(const FieldHandle& vfield, double stepsize, int skip)
 {
     double s=stepsize*skip;
     s=100000000000000000000.;
     double total=0;
-    VectorFieldUG* ug=vfield->getUG();
+    FieldUG* ug=vfield->getUG();
     if(!ug){
 	inside=0;
 	return 0;
     }
-    if(ug->typ != VectorFieldUG::ElementValues){
+    if(ug->typ != FieldUG::ElementValues){
 	inside=0;
 	return 0;
     }
@@ -1752,7 +1773,7 @@ int SLExactTracer::advance(const VectorFieldHandle& vfield, double stepsize, int
 #endif
 
 SLEulerTracer::SLEulerTracer(const Point& p, double s, double t,
-			     const VectorFieldHandle& vfield,
+			     const FieldHandle& vfield,
 			     double sign)
 : SLTracer(p, s, t, vfield, sign)
 {
@@ -1764,8 +1785,9 @@ SLEulerTracer::~SLEulerTracer()
 {
 }
 
-int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize, int skip)
+int SLEulerTracer::advance(const FieldHandle& vfield, double stepsize, int skip)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     if(stagnate){
 	inside=0;
 	return 0;
@@ -1795,10 +1817,11 @@ int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize, int
 	}
     }
     return 1;
+#endif
 }
 
 SLRK4Tracer::SLRK4Tracer(const Point& p, double s, double t,
-			 const VectorFieldHandle& vfield, double sign)
+			 const FieldHandle& vfield, double sign)
 : SLTracer(p, s, t, vfield, sign)
 {
     stagnate=0;
@@ -1809,8 +1832,9 @@ SLRK4Tracer::~SLRK4Tracer()
 {
 }
 
-int SLRK4Tracer::advance(const VectorFieldHandle& vfield, double stepsize, int skip)
+int SLRK4Tracer::advance(const FieldHandle& vfield, double stepsize, int skip)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     Vector F1, F2, F3, F4;
 
     if(stagnate){
@@ -1905,6 +1929,7 @@ int SLRK4Tracer::advance(const VectorFieldHandle& vfield, double stepsize, int s
 	grad*=sign;
     }
     return 1;
+#endif
 }
 
 void Streamline::tcl_command(TCLArgs& args, void* userdata)
@@ -1991,9 +2016,10 @@ SLSourceInfo::SLSourceInfo(int sid, Streamline* module, GeometryOPort* ogeom)
 }
 
 void SLSourceInfo::pick_source(const clString& sname,
-			       const VectorFieldHandle& vfield,
+			       const FieldHandle& vfield,
 			       Streamline* module)
 {
+#if defined(REPLACE_WITH_NEW_FIELDS)
     SLSource* newsource=0;
     for(int i=0;i<sources.size();i++)
 	if(sources[i]->name == sname)
@@ -2035,6 +2061,7 @@ void SLSourceInfo::pick_source(const clString& sname,
 	for(int i=0;i<sources.size();i++)
 	    sources[i]->find(cen, axis, scale);
     }
+#endif
 }
 
 } // End namespace SCIRun

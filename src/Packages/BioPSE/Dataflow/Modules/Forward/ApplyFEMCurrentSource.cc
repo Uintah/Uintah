@@ -12,7 +12,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -24,7 +24,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ApplyFEMCurrentSource : public Module {
-  MeshIPort* inmesh;
+  FieldIPort* inmesh;
   MatrixIPort * isource;
   MatrixIPort * isrcmat;  
   MatrixIPort* irhs;
@@ -54,7 +54,7 @@ ApplyFEMCurrentSource::ApplyFEMCurrentSource(const clString& id)
   modeTCL("modeTCL", id, this)
 {
   // Create the input port
-  inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
+  inmesh = scinew FieldIPort(this, "TetVol", FieldIPort::Atomic);
   add_iport(inmesh);
   isource=scinew MatrixIPort(this, "Source", MatrixIPort::Atomic);
   add_iport(isource);
@@ -78,11 +78,12 @@ ApplyFEMCurrentSource::~ApplyFEMCurrentSource()
 
 void ApplyFEMCurrentSource::execute()
 {
-  MeshHandle mesh;
+  FieldHandle mesh;
   //     cerr << "ApplyFEMCurrentSource: about to read inputs...\n";
   if (!inmesh->get(mesh) || !mesh.get_rep()) return;
   
   MatrixHandle rhsh;
+#if 0 // FIX_ME mesh to TetVol
   ColumnMatrix* rhs = scinew ColumnMatrix(mesh->nodes.size());
   rhsh=rhs;
   MatrixHandle rhshIn;
@@ -222,5 +223,10 @@ void ApplyFEMCurrentSource::execute()
     (*idxvec)[5]=dir.z();
     oidx->send(MatrixHandle(idxvec));
   }
+#endif
 }
 } // End namespace BioPSE
+
+
+
+

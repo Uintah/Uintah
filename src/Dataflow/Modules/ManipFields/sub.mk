@@ -5,10 +5,10 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR := Dataflow/Modules/ManipFields
 
 SRCS := \
-	$(SRCDIR)/Rescale.cc\
+	#$(SRCDIR)/Rescale.cc\
 #[INSERT NEW CODE FILE HERE]
 
-VOLATILE_LIB := ManipFields
+#VOLATILE_LIB := ManipFields
 
 PSELIBS := Dataflow/Network Core/GuiInterface Core/Containers
 

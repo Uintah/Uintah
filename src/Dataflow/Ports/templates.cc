@@ -16,7 +16,6 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Datatypes/VectorField.h>
-#include <Core/Datatypes/Mesh.h>
 
 using namespace SCIRun;
 
@@ -31,7 +30,4 @@ template class SimpleOPort<ColorMapHandle>;
 
 template class SimpleIPort<VectorFieldHandle>;
 template class SimpleOPort<VectorFieldHandle>;
-
-template class SimpleIPort<MeshHandle>;
-template class SimpleOPort<MeshHandle>;
 

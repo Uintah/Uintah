@@ -16,8 +16,8 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Core/Datatypes/Mesh.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/TetVol.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -35,23 +35,25 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildFEMatrix : public Module {
-    MeshIPort* inmesh;
+    FieldIPort* inmesh;
     MatrixIPort* refnodeport;
     MatrixOPort* rhsoport;
     MatrixOPort * outmatrix;
+#if 0
     void build_local_matrix(Element*, double lcl[4][4],
-			    const MeshHandle&);
+			    const FieldHandle&);
     void add_lcl_gbl(Matrix&, double lcl[4][4],
-		     ColumnMatrix&, int, const MeshHandle&);
+		     ColumnMatrix&, int, const FieldHandle&);
     void add_lcl_gbl(Matrix&, double lcl[4][4],
-		     ColumnMatrix&, int, const MeshHandle&,
+		     ColumnMatrix&, int, const FieldHandle&,
 		     int s, int e);
+#endif
     int np;
     Barrier barrier;
     int* rows;
     Array1<int> colidx;
     int* allcols;
-    Mesh* mesh;
+    TetVol<double>* mesh;
     SparseRowMatrix* gbl_matrix;
     ColumnMatrix* rhs;
     GuiString BCFlag; // do we want Dirichlet conditions applied or PinZero
@@ -84,7 +86,7 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
   UseCondTCL("UseCondTCL", id, this), refnodeTCL("refnodeTCL", id, this)
 {
     // Create the input port
-    inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    inmesh = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
     add_iport(inmesh);
     refnodeport=scinew MatrixIPort(this, "RefNode", MatrixIPort::Atomic);
     add_iport(refnodeport);
@@ -100,7 +102,7 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
 BuildFEMatrix::~BuildFEMatrix()
 {
 }
-
+#if 0
 void BuildFEMatrix::parallel(int proc)
 {
     int nnodes=mesh->nodesize();
@@ -219,13 +221,13 @@ void BuildFEMatrix::parallel(int proc)
 	}
     }
 }
-
+#endif
 void BuildFEMatrix::execute()
 {
-     MeshHandle mesh;
+     FieldHandle mesh;
      if(!inmesh->get(mesh))
 	  return;
-
+#if 0
 #if 1
      if (mesh->generation == gen && gbl_matrixH.get_rep() && rhsH.get_rep() &&
 	 lastBCFlag == BCFlag.get()) {
@@ -278,8 +280,10 @@ void BuildFEMatrix::execute()
      //rhsoport->send(rhs);
      //cerr << "sent rhs to coloumn matrix port" << endl;
      this->mesh=0;
+#endif
 }
 
+#if 0
 void BuildFEMatrix::build_local_matrix(Element *elem, 
 				       double lcl_a[4][4],
 				       const MeshHandle& mesh)
@@ -428,6 +432,6 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 	  }
      }
 }
-
+#endif
 } // End namespace BioPSE
 

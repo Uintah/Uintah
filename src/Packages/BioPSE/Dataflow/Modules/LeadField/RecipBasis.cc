@@ -11,9 +11,10 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/TetVol.h>
 
 #include <iostream>
 using std::cerr;
@@ -25,7 +26,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class RecipBasis : public Module {    
-    MeshIPort* mesh_iport;
+    FieldIPort* mesh_iport;
     MatrixIPort* idx_iport;
     MatrixIPort* sol_iport;
     MatrixOPort* rhs_oport;
@@ -46,8 +47,8 @@ extern "C" Module* make_RecipBasis(const clString& id) {
 RecipBasis::RecipBasis(const clString& id)
 : Module("RecipBasis", id, Filter)
 {
-    mesh_iport = new MeshIPort(this, "Domain Mesh",
-				MeshIPort::Atomic);
+    mesh_iport = new FieldIPort(this, "Domain Mesh",
+				FieldIPort::Atomic);
     add_iport(mesh_iport);
     idx_iport = new MatrixIPort(this, "Electrode Indices",
 				       MatrixIPort::Atomic);
@@ -69,7 +70,7 @@ RecipBasis::RecipBasis(const clString& id)
 RecipBasis::~RecipBasis(){}
 
 void RecipBasis::execute() {
-    MeshHandle mesh_in;
+    FieldHandle mesh_in;
     if (!mesh_iport->get(mesh_in)) {
 	cerr << "RecipBasis -- couldn't get mesh.  Returning.\n";
 	return;
@@ -80,6 +81,7 @@ void RecipBasis::execute() {
 	cerr << "RecipBasis -- couldn't get index vector.  Returning.\n";
 	return;
     }
+#if 0 // FIX_ME mesh to TetVol
     int nelecs=idx_in->nrows();
     int nnodes=mesh_in->nodes.size();
     int nelems=mesh_in->elems.size();
@@ -116,5 +118,12 @@ void RecipBasis::execute() {
     basis_oport->send(bmat);
     basis2_oport->send(bmat2);
     cerr << "Done with the Module!"<<endl;
+#endif
 } 
 } // End namespace BioPSE
+
+
+
+
+
+
