@@ -293,8 +293,10 @@ proc createSubnet { from_subnet { modules "" } } {
     # Then move the modules to the new canvas
     foreach modid $modules {
 	set canvas $Subnet(Subnet$Subnet($modid)_canvas)
+	set minicanvas $Subnet(Subnet$Subnet($modid)_minicanvas)
 	set modbbox [$canvas bbox $modid]
 	$canvas delete $modid $modid-notes $modid-notes-shadow
+	$minicanvas delete $modid
 	destroy $canvas.module$modid
 	set x [expr [lindex $modbbox 0] - [lindex $bbox 0] + 10]
 	set y [expr [lindex $modbbox 1] - [lindex $bbox 1] + 25]
@@ -621,6 +623,9 @@ proc writeSubnet { filename subnet } {
 	# Cache all connections to a big list to write out later in the file
 	eval lappend connections $Subnet(${module}_connections)
 	# Write user notes 
+	if [info exists Notes($module)] {
+	    puts $out "${tab}setGlobal Notes(\$m$i) \{$Notes($module)\}"
+	}
 	if [info exists Notes($module-Position)] {
 	    puts $out "${tab}setGlobal Notes(\$m$i-Position) \{$Notes($module-Position)\}"
 	}
