@@ -6,8 +6,7 @@
 <meta name="Author" content="Martin Cole">
 <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
 <title>Specification Procedure</title>
-<!-- Changed by: MjC, 26-Sep-2000 -->
-<!-- Changed by: TjD, 05-Oct-2000 -->
+<!-- Changed by: Mjc, 09-Oct-2000 -->
 </head>
 <body>
 
@@ -41,7 +40,7 @@ width="150"></a>
 <p class="firstpara">Prior to anything else, it would be ideal if you bounce your module idea off of some of your peers. Talk to at least two other module developers about your design. This could help in many different ways. It could save you from doing it at all, or dramatically reduce your effort, by exposing previously written code. It can solidify your design idea, or enhance it. These do not have to be long discussions, but they need to be long enough to get the design across, and allow for feedback.</p>
 
 <p class="head"><a NAME="spec"></a>Create Specification</p>
-<p class="firstpara"><A HREF="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/component.html">This specification</A> is an xml file whose structure is defined by component.dtd. This file will contain information that the Module Maker will need to automatically generate the files for your module. It will contain all of the high level documentation about the module.</p>
+<p class="firstpara">This specification is an xml file whose structure is defined by component.dtd. This file will contain information that the Module Maker will need to automatically generate the files for your module. It will contain all of the specifications and documentation about the module.  The xml structure is decribed in detail in <a href="component.html">XML Component Specification Guide</a></p>
 
 <p class="nextpara">Documentation for all modules will be extracted from the collection of these files. This document will live side by side in our tree with the modules .cc file. It will need to be kept current just as the .cc needs to be current. Familiarize yourself with the more detailed description of the structure of the file and its contents. If your module has a gui, you will need to get a screen capture of the dialog, and place in ./doc/&lt;<i>ModuleName</i>>.gif. Remember that when you add a binary file you need to use the -kb option like this: <b>cvs add -kb &lt;<i>ModuleName</i>>.gif </b></p>
 
