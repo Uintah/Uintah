@@ -249,6 +249,16 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+HypoElastic::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
 void HypoElastic::addInitialComputesAndRequires(Task*,
                                                 const MPMMaterial*,
                                                 const PatchSet* ) const
@@ -279,6 +289,14 @@ void HypoElastic::addComputesAndRequires(Task* task,
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
+}
+
+void 
+HypoElastic::addComputesAndRequires(Task* ,
+				   const MPMMaterial* ,
+				   const PatchSet* ,
+				   const bool ) const
+{
 }
 
 double HypoElastic::computeRhoMicroCM(double pressure,

@@ -114,7 +114,7 @@ JohnsonCookPlastic::evaluateFlowStress(const double& ep,
 				       const double& epdot,
 				       const double& T,
                                        const MPMMaterial* matl,
-                                       const double& tolerance)
+                                       const double& )
 {
   double strainPart = d_initialData.A + d_initialData.B*pow(ep,d_initialData.n);
   double strainRatePart = 1.0;

@@ -250,6 +250,16 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+CompMooneyRivlin::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
 					std::vector<const VarLabel*>& to)
 {
@@ -287,6 +297,14 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
+}
+
+void 
+CompMooneyRivlin::addComputesAndRequires(Task* ,
+				   const MPMMaterial* ,
+				   const PatchSet* ,
+				   const bool ) const
+{
 }
 
 double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,

@@ -248,6 +248,16 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+CompNeoHook::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
 
 
 
@@ -283,6 +293,14 @@ void CompNeoHook::addComputesAndRequires(Task* task,
     task->computes(lb->pVolumeDeformedLabel,              matlset);
 
 
+}
+
+void 
+CompNeoHook::addComputesAndRequires(Task* ,
+				   const MPMMaterial* ,
+				   const PatchSet* ,
+				   const bool ) const
+{
 }
 
 

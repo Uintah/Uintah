@@ -426,6 +426,16 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 }
 
 void 
+HyperElasticPlastic::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
+void 
 HyperElasticPlastic::addInitialComputesAndRequires(Task* task,
 						   const MPMMaterial* matl,
 						   const PatchSet* patch) const
@@ -469,6 +479,14 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
 
   // Add internal evolution variables computed by plasticity model
   d_plasticity->addComputesAndRequires(task, matl, patch);
+}
+
+void 
+HyperElasticPlastic::addComputesAndRequires(Task* ,
+				   const MPMMaterial* ,
+				   const PatchSet* ,
+				   const bool ) const
+{
 }
 
 // Needed by MPMICE
