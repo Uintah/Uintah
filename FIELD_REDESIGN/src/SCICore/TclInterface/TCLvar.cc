@@ -525,11 +525,8 @@ void TCLVector::emit(ostream& out)
 
 //
 // $Log$
-// Revision 1.3.2.2  2000/10/26 10:04:44  moulding
+// Revision 1.3.2.3  2000/10/26 17:42:54  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.3.2.1  2000/09/28 03:11:44  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.4  2000/07/07 03:15:50  samsonov
 // Added TCLvardouble::set(double) implementation

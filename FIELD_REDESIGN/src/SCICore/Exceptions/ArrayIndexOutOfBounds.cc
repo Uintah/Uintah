@@ -51,11 +51,8 @@ const char* ArrayIndexOutOfBounds::type() const
 
 //
 // $Log$
-// Revision 1.2.2.2  2000/10/26 10:04:25  moulding
+// Revision 1.2.2.3  2000/10/26 17:51:52  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.2.2.1  2000/09/28 03:13:34  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.3  2000/09/25 17:58:57  sparker
 // Do not call variables errno due to #defines on some systems (linux)

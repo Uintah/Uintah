@@ -91,11 +91,8 @@ void* valloc(size_t size) THROWCLAUSE
 
 //
 // $Log$
-// Revision 1.6.2.2  2000/10/26 10:04:37  moulding
+// Revision 1.6.2.3  2000/10/26 17:38:01  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.6.2.1  2000/09/28 03:12:25  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.10  2000/09/25 18:39:10  sparker
 // Only use throw() for g++
