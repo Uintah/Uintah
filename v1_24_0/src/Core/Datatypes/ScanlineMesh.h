@@ -53,41 +53,46 @@ namespace SCIRun {
 
 using std::string;
 
+typedef unsigned int    under_type;
+
+//! Index and Iterator types required for Mesh Concept.
+struct ScanlineMeshNode {
+  typedef NodeIndex<under_type>       index_type;
+  typedef NodeIterator<under_type>    iterator;
+  typedef NodeIndex<under_type>       size_type;
+  typedef StackVector<index_type, 8>  array_type;
+};				
+				
+struct ScanlineMeshEdge {			
+  typedef EdgeIndex<under_type>       index_type;
+  typedef EdgeIterator<under_type>    iterator;
+  typedef EdgeIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};				
+  				
+struct ScanlineMeshFace {			
+  typedef FaceIndex<under_type>       index_type;
+  typedef FaceIterator<under_type>    iterator;
+  typedef FaceIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};				
+				
+struct ScanlineMeshCell {			
+  typedef CellIndex<under_type>       index_type;
+  typedef CellIterator<under_type>    iterator;
+  typedef CellIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};
+
+
 class SCICORESHARE ScanlineMesh : public Mesh
 {
 public:
 
-  typedef unsigned int    under_type;
-
-  //! Index and Iterator types required for Mesh Concept.
-  struct Node {
-    typedef NodeIndex<under_type>       index_type;
-    typedef NodeIterator<under_type>    iterator;
-    typedef NodeIndex<under_type>       size_type;
-    typedef StackVector<index_type, 8>  array_type;
-  };				
-				
-  struct Edge {			
-    typedef EdgeIndex<under_type>       index_type;
-    typedef EdgeIterator<under_type>    iterator;
-    typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };				
-  				
-  struct Face {			
-    typedef FaceIndex<under_type>       index_type;
-    typedef FaceIterator<under_type>    iterator;
-    typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };				
-				
-  struct Cell {			
-    typedef CellIndex<under_type>       index_type;
-    typedef CellIterator<under_type>    iterator;
-    typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };
-
+  typedef ScanlineMeshNode Node;
+  typedef ScanlineMeshEdge Edge;
+  typedef ScanlineMeshFace Face;
+  typedef ScanlineMeshCell Cell;
   typedef Edge Elem;
 
   ScanlineMesh() : min_i_(0), ni_(0) {}
