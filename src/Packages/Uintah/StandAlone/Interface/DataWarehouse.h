@@ -179,20 +179,6 @@ WARNING
       // Remove particles that are no longer relevant
       virtual void deleteParticles(ParticleSubset* delset) = 0;
 
-      //////////
-      // Adds a variable to the save set
-      virtual void pleaseSave(const VarLabel* label, int number) = 0;
-       
-      // Adds a variable to the integrated save set
-      virtual void pleaseSaveIntegrated(const VarLabel* label) = 0;
-
-      //////////
-      // Retrieves the saveset
-      virtual void getSaveSet(std::vector<const VarLabel*>&,
-			      std::vector<int>&) const = 0;
-
-      // Retrieves the integrated saveset
-      virtual void getIntegratedSaveSet(std::vector<const VarLabel*>&) const=0;
 
       virtual void emit(OutputContext&, const VarLabel* label,
 			int matlIndex, const Patch* patch) const = 0;
@@ -226,6 +212,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.42  2000/12/07 01:35:32  witzel
+// Nixed the pleaseSave stuff (that is now handle in DataArchiver via
+// the problem specification).
+//
 // Revision 1.41  2000/12/07 00:04:29  witzel
 // Change to allow reduction variables for particular materials
 //
