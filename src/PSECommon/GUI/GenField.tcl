@@ -19,19 +19,19 @@ itcl_class PSECommon_Fields_GenField {
 
 	global $this-fval
 
-	set $this-nx 5
-	set $this-ny 5
-	set $this-nz 5
+	set $this-nx 10
+	set $this-ny 10
+	set $this-nz 10
 
-	set $this-sx 0.0
-	set $this-sy 0.0
-	set $this-sz 0.0
+	set $this-sx -1.0
+	set $this-sy -1.0
+	set $this-sz -1.0
 
 	set $this-ex 1.0
 	set $this-ey 1.0
 	set $this-ez 1.0
 
-	set $this-fval 0
+	set $this-fval "x^2 + y^2 + z^2"
     }
     method make_entry {w text v c} {
 	frame $w

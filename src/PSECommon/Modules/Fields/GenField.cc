@@ -30,6 +30,7 @@
 #include <SCICore/Datatypes/AccelAttrib.h>
 #include <SCICore/Datatypes/BrickAttrib.h>
 #include <SCICore/Datatypes/IndexAttrib.h>
+#include <SCICore/Datatypes/AnalytAttrib.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Containers/String.h>
@@ -56,6 +57,9 @@ private:
   template <class A, class G> void tfill(A *a, G *g, int x, int y, int z);
   template <class A> void ifill(A *attrib, int x, int y, int z);
   template <class T> void fill(DiscreteAttrib<T> *attrib, int x, int y, int z);
+  template <class T> void fill2(DiscreteAttrib<T> *attrib,
+  				Lattice3Geom *geom,
+				AnalytAttrib<T> *analyt);
 
 public:
   //      DebugStream dbg;
@@ -79,7 +83,7 @@ public:
   virtual void execute();
 };
 
-extern "C" Module* make_GenField(const clString& id){
+extern "C" Module* make_GenField(const clString& id) {
   return new GenField(id);
 }
 
@@ -215,7 +219,101 @@ void GenField::ifill(A *attrib, int x, int y, int z)
     }
 }
 
+#if 1
+template <class T>
+void
+GenField::fill2(DiscreteAttrib<T> *attrib, Lattice3Geom *geom,
+		AnalytAttrib<T> *analyt)
+{
+  const int x = geom->get_nx();
+  const int y = geom->get_ny();
+  const int z = geom->get_nz();
 
+  for (int k=0; k < z; k++)
+    {
+      for (int j=0; j < y; j++)
+	{
+	  for (int i=0; i < x; i++)
+	    {
+	      Point p(i, j, k);
+	      Point r;
+	      geom->transform(p, r);	
+	      attrib->set3(i, j, k, analyt->eval(r.x(), r.y(), r.z()));
+	    }
+	}
+    }
+}
+
+
+void
+GenField::execute()
+{
+  // get scalar, vector, tensor:
+  const int nfuncts = 1;
+
+  // Get functions.
+  vector<string> functs;
+  for (int i = 0; i < nfuncts; i++)
+    {
+      string s = fval.get()();
+      functs.push_back(s);
+    }
+
+  // Create analytic attrib.
+  // TODO: error checking here?
+  AnalytAttrib<double> *analyt = scinew AnalytAttrib<double>();
+  analyt->set_fasteval();
+  analyt->set_function(functs);
+
+  // Create geometry.
+  const int x = nx.get();
+  const int y = ny.get();
+  const int z = nz.get();
+
+  const Point start(tcl_sx.get(), tcl_sy.get(), tcl_sz.get());
+  const Point end(tcl_ex.get(), tcl_ey.get(), tcl_ez.get());
+  
+  Lattice3Geom *geom = new Lattice3Geom(x, y, z, start, end);
+
+  // Create attrib.
+  const int mattribtype = attribtype.get();
+  DiscreteAttrib<double> *attrib;
+  switch (mattribtype)
+    {
+    case 4:
+      attrib = new DiscreteAttrib<double>(x, y, z);
+      break;
+      
+    case 3:
+      attrib = new BrickAttrib<double>(x, y, z);
+      break;
+
+    case 2:
+      attrib = new AccelAttrib<double>(x, y, z);
+      break;
+      
+    default:
+      attrib = new FlatAttrib<double>(x, y, z);
+    }
+
+  // Populate attrib, with analytic attrib and geometry.
+  fill2(attrib, geom, analyt);
+
+  dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
+
+  // Create index mapping.
+
+  // Convert attrib -> indexed attrib.
+
+
+  // Done, send it.
+  GenSField<double, Lattice3Geom> *osf =
+    new GenSField<double, Lattice3Geom>(geom, attrib);
+  SFieldHandle *hndl = new SFieldHandle(osf);
+  ofield->send(*hndl);
+}
+
+#else
 
 void
 GenField::execute()
@@ -273,8 +371,14 @@ GenField::execute()
   SFieldHandle *hndl = new SFieldHandle(osf);
   ofield->send(*hndl);
 }
+#endif
 
 
 } // End namespace Modules
 } // End namespace PSECommon
+
+
+
+
+
 
