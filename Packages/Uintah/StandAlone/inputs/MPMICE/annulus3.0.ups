@@ -281,7 +281,7 @@
 		<initial_pressure> 0. </initial_pressure>
                 <density>   1828.0   </density>
                 <constitutive_model type="comp_neo_hook">
-		    <shear_modulus>      2.5661.0e9  </shear_modulus>
+		    <shear_modulus>      2.5661e9  </shear_modulus>
 		    <bulk_modulus>       5.56e9       </bulk_modulus>
 	         </constitutive_model>
 		  <toughness>             10.e6           </toughness>
