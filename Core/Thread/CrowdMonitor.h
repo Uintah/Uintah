@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_CrowdMonitor_h
 #define SCICore_Thread_CrowdMonitor_h
 
+#include <SCICore/share/share.h>
+
 #include <SCICore/Thread/Mutex.h>
 
 namespace SCICore {
@@ -50,7 +52,7 @@ WARNING
    
 ****************************************/
 
-	class CrowdMonitor {
+	class SCICORESHARE CrowdMonitor {
 	public:
 	    //////////
 	    // Create and initialize the CrowdMonitor. <i>name</i> should
@@ -104,6 +106,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  1999/09/24 18:55:06  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.7  1999/09/02 16:52:42  sparker
 // Updates to cocoon documentation
 //

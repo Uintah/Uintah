@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_AtomicCounter_h
 #define SCICore_Thread_AtomicCounter_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	class AtomicCounter_private;
@@ -38,7 +40,7 @@ DESCRIPTION
    use of a statement like: x=x+2, which would NOT be thread safe.
 
 ****************************************/
-	class AtomicCounter {
+	class SCICORESHARE AtomicCounter {
 	public:
 	    //////////
 	    // Create an atomic counter with an unspecified initial value.
@@ -102,6 +104,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.9  1999/09/24 18:55:06  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.8  1999/09/02 16:52:41  sparker
 // Updates to cocoon documentation
 //
