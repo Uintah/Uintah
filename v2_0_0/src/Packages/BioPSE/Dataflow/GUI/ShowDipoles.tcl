@@ -44,12 +44,14 @@ itcl_class BioPSE_Visualization_ShowDipoles {
 	global $this-showLastVecGui_
 	global $this-showLinesGui_
 	global $this-num-dipoles
+	global $this-force-field-reset
 
 	set $this-widgetSizeGui_ 1
 	set $this-scaleModeGui_ normalize
 	set $this-showLastVecGui_ 0
 	set $this-showLinesGui_ 1
 	set $this-num-dipoles 0
+	set $this-force-field-reset 0
     }
     method make_entry {w text v c} {
         frame $w

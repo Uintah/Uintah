@@ -412,9 +412,6 @@ class BioFEMApp {
 	set $mods(Viewer)-ViewWindow_0-view-up-z ${view-up-z}
 	set $mods(Viewer)-ViewWindow_0-view-fov ${view-fov}
 
-	global $mods(StreamLines-rake)-force-rake-reset
-	set $mods(StreamLines-rake)-force-rake-reset 1
-
 	$this execute_Data
     }
 
@@ -859,7 +856,13 @@ class BioFEMApp {
 	
     method execute_Data {} {
 	global mods 
-	
+
+	global $mods(StreamLines-rake)-force-rake-reset
+	set $mods(StreamLines-rake)-force-rake-reset 1
+
+	global $mods(ShowDipole)-force-field-reset
+	set $mods(ShowDipole)-force-field-reset 1
+
 	$mods(FieldReader-conductivities)-c needexecute
 	$mods(FieldReader-electrodes)-c needexecute
 	$mods(FieldReader-probe)-c needexecute
