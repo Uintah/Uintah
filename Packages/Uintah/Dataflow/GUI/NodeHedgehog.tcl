@@ -64,6 +64,8 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	toplevel $w
 	wm minsize $w 300 430
 
+	set n "$this-c needexecute "
+	
 	frame $w.f1
 	pack $w.f1 -side top -fill x -padx 2 -pady 2
 
