@@ -731,29 +731,30 @@ proc notesDoneModule { id } {
 
 proc notesWindow { id {done ""} } {
     global Notes Color Subnet
-    if { [winfo exists .notes] } { destroy .notes }
+    set w .notes$id
+    if { [winfo exists $w] } { destroy $w }
     setIfExists cache Notes($id) ""
-    toplevel .notes
-    wm title .notes $id
-    text .notes.input -relief sunken -bd 2 -height 20
-    bind .notes.input <KeyRelease> \
-	"set Notes($id) \[.notes.input get 1.0 \"end - 1 chars\"\]"
-    frame .notes.b
-    button .notes.b.done -text "Done" \
+    toplevel $w
+    wm title $w $id
+    text $w.input -relief sunken -bd 2 -height 20
+    bind $w.input <KeyRelease> \
+	"set Notes($id) \[$w.input get 1.0 \"end - 1 chars\"\]"
+    frame $w.b
+    button $w.b.done -text "Done" \
 	-command "okNotesWindow $id \"$done\""
-    button .notes.b.clear -text "Clear" -command ".notes.input delete 1.0 end; set Notes($id) {}"
-    button .notes.b.cancel -text "Cancel" -command \
-	"set Notes($id) \"$cache\"; destroy .notes"
+    button $w.b.clear -text "Clear" -command "$w.input delete 1.0 end; set Notes($id) {}"
+    button $w.b.cancel -text "Cancel" -command \
+	"set Notes($id) \"$cache\"; destroy $w"
 
     setIfExists rgb Color($id) white
-    button .notes.b.reset -fg black -text "Reset Color" -command \
-	"unset Notes($id-Color); .notes.b.color configure -bg $rgb"
+    button $w.b.reset -fg black -text "Reset Color" -command \
+	"unset Notes($id-Color); $w.b.color configure -bg $rgb"
 
     setIfExists rgb Notes($id-Color) $rgb
-    button .notes.b.color -fg black -bg $rgb -text "Text Color" -command \
+    button $w.b.color -fg black -bg $rgb -text "Text Color" -command \
 	"colorNotes $id"
 
-    frame .notes.d -relief groove -borderwidth 2
+    frame $w.d -relief groove -borderwidth 2
 
     setIfExists Notes($id-Position) Notes($id-Position) def
 
@@ -764,27 +765,28 @@ proc notesWindow { id {done ""} } {
 	lappend radiobuttons {"Bottom" s}
     }
 	
-    make_labeled_radio .notes.d.pos "Display:" "" left Notes($id-Position) $radiobuttons
+    make_labeled_radio $w.d.pos "Display:" "" left Notes($id-Position) $radiobuttons
 
-    pack .notes.input -fill x -side top -padx 5 -pady 3
-    pack .notes.d -fill x -side top -padx 5 -pady 0
-    pack .notes.d.pos
-    pack .notes.b -fill y -side bottom -pady 3
-    pack .notes.b.done .notes.b.clear .notes.b.cancel .notes.b.reset \
-	.notes.b.color -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
+    pack $w.input -fill x -side top -padx 5 -pady 3
+    pack $w.d -fill x -side top -padx 5 -pady 0
+    pack $w.d.pos
+    pack $w.b -fill y -side bottom -pady 3
+    pack $w.b.done $w.b.clear $w.b.cancel $w.b.reset \
+	$w.b.color -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
 	    
-    if [info exists Notes($id)] {.notes.input insert 1.0 $Notes($id)}
+    if [info exists Notes($id)] {$w.input insert 1.0 $Notes($id)}
 }
 
 proc colorNotes { id } {
     global Notes
+    set w .notes$id
     networkHasChanged
-    .notes.b.color configure -bg [set Notes($id-Color) \
-       [tk_chooseColor -initialcolor [.notes.b.color cget -bg]]]
+    $w.b.color configure -bg [set Notes($id-Color) \
+       [tk_chooseColor -initialcolor [$w.b.color cget -bg]]]
 }
 
 proc okNotesWindow {id {done  ""}} {
-    destroy .notes
+    destroy .notes$id
     if { $done != ""} { eval $done $id }
 }
 
