@@ -29,6 +29,7 @@
 #include <SCIRun/Dataflow/SCIRunUIPort.h>
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <Dataflow/Network/Module.h>
+#include <iostream>
 using namespace SCIRun;
 
 SCIRunUIPort::SCIRunUIPort(SCIRunComponentInstance* component)
