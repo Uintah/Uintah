@@ -12,7 +12,8 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/profscalar.F  $(SRCDIR)/smagmodel.F $(SRCDIR)/calpbc.F \
 	$(SRCDIR)/inlbcs.F $(SRCDIR)/uvelcoef.F $(SRCDIR)/vvelcoef.F \
 	$(SRCDIR)/wvelcoef.F $(SRCDIR)/uvelsrc.F $(SRCDIR)/vvelsrc.F \
-	$(SRCDIR)/wvelsrc.F $(SRCDIR)/arrass.F $(SRCDIR)/mascal.F
+	$(SRCDIR)/wvelsrc.F $(SRCDIR)/arrass.F $(SRCDIR)/mascal.F \
+	$(SRCDIR)/apcal.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -45,6 +46,9 @@ FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conve
 
 #
 # $Log$
+# Revision 1.21  2000/07/12 19:55:45  bbanerje
+# Added apcal stuff in calcVelDiagonal
+#
 # Revision 1.20  2000/07/12 07:35:49  bbanerje
 # Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
 #
