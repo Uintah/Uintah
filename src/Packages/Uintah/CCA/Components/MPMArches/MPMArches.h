@@ -278,6 +278,7 @@ public:
   double d_tcond;
   bool d_calcEnergyExchange;
   bool d_DORad;
+  bool d_radiation;
   int nofTimeSteps;
   bool d_recompile;
   double prturb;
