@@ -73,10 +73,6 @@ TecplotReader::TecplotReader(const clString& file ) : xmin(0), xmax(1),
   readfile();
 }
 
-ParticleGridReader* TecplotReader::clone() const
-{
-  return scinew TecplotReader();
-}
 
 void TecplotReader::SetFile(const clString& file )
 {
@@ -103,6 +99,12 @@ MPMaterial* TecplotReader::getMaterial(int i)
 int TecplotReader::getNMaterials()
 {
   return materials.size();
+}
+void TecplotReader::GetParticleData(int particleId,
+                                    clString varname,
+                                    Array1<double>& values)
+{
+  NOT_FINISHED("TecplotReader::GetParticleData");
 }
 
 void TecplotReader::GetParticleData(int particleId,
@@ -804,6 +806,9 @@ VectorFieldHandle TecplotReader::makeVectorField(int ii, int jj,
 
 //
 // $Log$
+// Revision 1.5  1999/09/21 16:12:25  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.4  1999/08/25 03:49:04  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -46,23 +46,22 @@
     0 2 3 
     ------------------------------------------- */
 
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Datatypes/ColorMap.h>
-#include <Geom/GeomTri.h>
-#include <Geom/GeomGroup.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Datatypes/ColorMap.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geom/GeomGroup.h>
 
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 class istream;
 
 namespace Uintah {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::Datatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -72,9 +71,7 @@ class TriangleReader : public Module {
     clString old_filename;
 public:
     TriangleReader(const clString& id);
-    TriangleReader(const TriangleReader&, int deep=0);
     virtual ~TriangleReader();
-    virtual Module* clone(int deep);
     virtual void execute();
     TCLstring filename;
 
@@ -88,6 +85,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  1999/09/21 16:12:27  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.4  1999/08/25 03:49:06  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
