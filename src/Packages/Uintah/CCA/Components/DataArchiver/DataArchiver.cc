@@ -184,7 +184,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
        if(gethostname(hostname, MAXHOSTNAMELEN) != 0)
 	 strcpy(hostname, "unknown???");
        ostringstream ts;
-       ts << base << "/" << hostname << "-" << getpid();
+       ts << base << "-" << hostname << "-" << getpid();
+
        string test_string = ts.str();
        const char* outbuf = test_string.c_str();
        int outlen = (int)strlen(outbuf);
@@ -208,7 +209,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      // This will be an empty file, everything is encoded in the name anyway
      FILE* tmpout = fopen(fname.c_str(), "w");
      if(!tmpout)
-       throw ErrnoException("fopen", errno);
+       throw ErrnoException("fopen failed for " + fname, errno);
      fprintf(tmpout, "\n");
      if(fflush(tmpout) != 0)
        throw ErrnoException("fflush", errno);
