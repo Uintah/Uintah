@@ -192,6 +192,9 @@ void CuttingPlane::execute()
 
     // Get the scalar values and corresponding
     // colors to put in the cutting plane
+    Vector unorm=u.normal();
+    Vector vnorm=v.normal();
+    Vector N(Cross(unorm, vnorm));
     for (int i = 0; i < u_num; i++)
 	for (int j = 0; j < v_num; j++)
 	{
@@ -213,7 +216,10 @@ void CuttingPlane::execute()
 	    if (cptype == CP_SURFACE)
 	    {
 		double h = sval;
-		Vector normal(sfield->gradient(p));
+		Vector G(sfield->gradient(p));
+		double umag=Dot(unorm, G)*scale_fac;
+		double vmag=Dot(vnorm, G)*scale_fac;
+		Vector normal(N-unorm*umag-vnorm*vmag);
 		grid->set(i, j, ((h*scale_fac) + offset_fac), normal, matl);
 	    }
 	    else if (cptype == CP_PLANE)
