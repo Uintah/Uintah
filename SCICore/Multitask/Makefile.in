@@ -1,0 +1,9 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = Task_irix.cc ITC.cc Task.cc lock_mips.s
+
+INCLUDES = -I$(OBJTOP) -I$(SRCDIR)/..
+
+include $(SRCTOP)/scripts/objs.mk
