@@ -145,7 +145,6 @@ WARNING
     Scalar* d_scalar;
     
     SimulationStateP d_sharedState;
-    Output* dataArchiver;
     
     //__________________________________
     // global constants
