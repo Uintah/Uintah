@@ -57,16 +57,19 @@ namespace PSECommon {
 	GeomGroup *getGeom() { return group; };
       };
   
-
+    
+    inline
       MCUG::MCUG( ScalarFieldUG *field ) : field(field)
       {
       }
-    
+
+    inline
       MCUG::~MCUG()
       {
       }
     
-    
+
+    inline
       void MCUG::extract( int cell, double v )
       {
 	GeomTrianglesP *tmp = scinew GeomTrianglesP;
@@ -121,7 +124,8 @@ namespace PSECommon {
 	group->add(tmp );
       }
 
-    
+
+    inline
       void MCUG::reset( int n )
       {
 	group = new GeomGroup;
