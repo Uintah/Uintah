@@ -97,11 +97,15 @@ WARNING
     }
      
     const IntVector& operator*() const {
-      ASSERT(!d_done);
+//      ASSERT(!d_done);
       return d_cur;
     }
     inline CellIterator(const IntVector& s, const IntVector& e)
-      : d_s(s), d_e(e), d_cur(s), d_done(false) {
+      : d_s(s), d_e(e), d_cur(s){
+      if(d_s.x() >= d_e.x() || d_s.y() >= d_e.y() || d_s.z() >= d_e.z())
+	d_done = true;
+      else
+	d_done = false;
     }
     inline IntVector begin() const {
       return d_s;
