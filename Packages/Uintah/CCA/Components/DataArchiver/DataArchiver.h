@@ -111,6 +111,11 @@ using std::pair;
       // Get the current time step
       virtual int getCurrentTimestep()
       { return d_currentTimestep; }
+       
+      //////////
+      // Get the current time
+      virtual double getCurrentTime()
+      { return  d_currentTime; }
 
       //////////
       // Returns true if the last timestep was one
