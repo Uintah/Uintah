@@ -145,31 +145,27 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   QCanvasView* miniview = new QCanvasView(minicanvas, hsplit);
   QVBox* layout3 = new QVBox(hsplit);
   QHBox* layout4 = new QHBox(layout3);
-  new QLabel(" Messages: ", layout4);
-//  QMimeSourceFactory::defaultFactory()->setPixmap("fileopen", QPixmap(SCIRun_logo));
-//  QLabel* logo_image = new QLabel("SCIRun logo", layout4);
-//  logo_image->setPixmap( QPixmap(SCIRun_logo));
+  QLabel* message_label = new QLabel(" Messages: ", layout4);
+  QMimeSourceFactory::defaultFactory()->setPixmap("SCIRun logo", QPixmap(SCIRun_logo));
+  QLabel* logo_image = new QLabel("SCIRun logo", layout4);
+  logo_image->setPixmap( QPixmap(SCIRun_logo));
   e = new QTextEdit( layout3, "editor" );
   e->setFocus();
   e->setReadOnly(true);
   e->setUndoRedoEnabled(false);
 
-  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
-  displayMsg("Framework URL=");
-  displayMsg(builder->getFrameworkURL().c_str());
+  displayMsg("Framework URL: ");
+  displayMsg(builder->getFramework()->getURL().getString().c_str());
   displayMsg("\n");  
-   services->releasePort("cca.builderService");
+  services->releasePort("cca.BuilderService");
 
-
-
-  cerr << "Should append framework URL to message window\n";
   QCanvas *big_canvas = new QCanvas(2000,2000);
   big_canvas->setBackgroundColor(bgcolor);
   big_canvas_view = new NetworkCanvasView(big_canvas, vsplit);
-
 
   big_canvas_view->setServices(services);
 
@@ -179,7 +175,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
 
   buildPackageMenus();
 
-  gov::cca::ports::ComponentEventService::pointer ces = pidl_cast<gov::cca::ports::ComponentEventService::pointer>(services->getPort("cca.componentEventService"));
+  gov::cca::ports::ComponentEventService::pointer ces = pidl_cast<gov::cca::ports::ComponentEventService::pointer>(services->getPort("cca.ComponentEventService"));
   if(ces.isNull()){
     cerr << "Cannot get componentEventService!\n";
   } else {
@@ -288,7 +284,7 @@ void MenuTree::instantiateComponent()
 
 void BuilderWindow::buildPackageMenus()
 {
-  gov::cca::ports::ComponentRepository::pointer reg = pidl_cast<gov::cca::ports::ComponentRepository::pointer>(services->getPort("cca.componentRepository"));
+  gov::cca::ports::ComponentRepository::pointer reg = pidl_cast<gov::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
   if(reg.isNull()){
     cerr << "Cannot get component registry, not building component menus\n";
     return;
@@ -314,7 +310,7 @@ void BuilderWindow::buildPackageMenus()
     iter->second->populateMenu(menu);
     menuBar()->insertItem(iter->first.c_str(), menu);
   }
-  services->releasePort("cca.componentRegistry");
+  services->releasePort("cca.ComponentRepository");
 }
 
 void BuilderWindow::save()
@@ -363,34 +359,22 @@ void BuilderWindow::about()
 void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd)
 {
   cerr << "Should wait for component to be committed...\n";
-  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
+    return;
   }
   cerr << "Should put properties on component before creating\n";
 
   gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0));
 
   CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
-  cerr<<"Uses Port size="<<usesPorts.size()<<endl;
-
-  for(unsigned int i=0;i<usesPorts.size();i++){
-	cerr<<"Uses Port # "<<i<<"="<<usesPorts[i]<<endl;
-  }	
-	
   CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
-  cerr<<"Provides Port size="<<providesPorts.size()<<endl;
 
-  for(unsigned int i=0;i<providesPorts.size();i++){
-        cerr<<"Provides Port # "<<i<<"="<<providesPorts[i]<<endl;
-  }
-
-  gov::cca::Port::pointer uiport=builder->getUIPort(cd->getClassName());
-  	  
-  gov::cca::ports::UIPort::pointer uip=pidl_cast<gov::cca::ports::UIPort::pointer>(uiport);	  
-  services->releasePort("cca.builderService");
+  services->releasePort("cca.BuilderService");
   if(cd->getClassName()!="SCIRun.Builder"){
-	  big_canvas_view->addModule(cd->getClassName().c_str(), uip, usesPorts, providesPorts, cid  );
+    big_canvas_view->addModule(cd->getClassName(), usesPorts, providesPorts,
+			       cid);
   }
 }
 

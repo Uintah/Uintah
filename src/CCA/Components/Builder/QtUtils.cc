@@ -61,7 +61,7 @@ void QtThread::run()
   cerr<<"******************QtThread::run()**********************\n"; 
   int argc=1;
   char* argv[4];
-  argv[0]="test";
+  argv[0]="SCIRun2";
   argv[1]="-im";
   argv[2]="";
   argv[3]=0;

@@ -29,63 +29,41 @@ class Module:public QFrame
 
 public:
   enum PortType{USES, PROVIDES}; 
-  Module(QWidget *parent, const char *name, gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
-	QPoint usePortPoint(int num);
-	QPoint usePortPoint(const std::string &portname);
+  Module(QWidget *parent, const std::string& name,
+	 CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
+	 const gov::cca::Services::pointer& services,
+	 const gov::cca::ComponentID::pointer &cid);
+  QPoint usePortPoint(int num);
+  QPoint usePortPoint(const std::string &portname);
 	
-	QPoint providePortPoint(int num);
-        QPoint providePortPoint(const std::string &portname);
-	std::string providesPortName(int num);
-        std::string usesPortName(int num);	
-	QRect portRect(int portnum, PortType porttype);
-	bool clickedPort(QPoint localpos, PortType &porttype,
-			 std::string &portname);
+  QPoint providePortPoint(int num);
+  QPoint providePortPoint(const std::string &portname);
+  std::string providesPortName(int num);
+  std::string usesPortName(int num);	
+  QRect portRect(int portnum, PortType porttype);
+  bool clickedPort(QPoint localpos, PortType &porttype,
+		   std::string &portname);
 
 public slots:
   void execute();
-	void stop();
-	void ui();
+  void stop();
+  void ui();
 
 protected:
-	void paintEvent(QPaintEvent *e);
-	void mousePressEvent(QMouseEvent*);
-	QRect nameRect;
-        CIA::array1<std::string> up, pp;
+  void paintEvent(QPaintEvent *e);
+  void mousePressEvent(QMouseEvent*);
+  QRect nameRect;
+  std::string moduleName;
+  std::string instanceName;
+  CIA::array1<std::string> up, pp;
 private:
-	QPopupMenu *menu;
-	gov::cca::ports::UIPort::pointer uiPort;
-	int pd; //distance between two ports
-	int pw; //port width
-	int ph; //prot height
+  gov::cca::Services::pointer services;
+  QPopupMenu *menu;
+  int pd; //distance between two ports
+  int pw; //port width
+  int ph; //prot height
 public:
-		gov::cca::ComponentID::pointer cid;
+  gov::cca::ComponentID::pointer cid;
 };
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

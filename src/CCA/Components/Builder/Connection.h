@@ -19,7 +19,6 @@
 #include <vector>
 #include <qlayout.h>
 #include <qpainter.h>
-#include <SCIRun/CCA/ConnectionID.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include "Module.h"
 
@@ -31,7 +30,7 @@ public:
   Connection(Module*, const std::string&, Module*, const std::string&, const gov::cca::ConnectionID::pointer &connID,  QCanvasView *cv);
 	void resetPoints();
 	bool isConnectedTo(Module *);
-	ConnectionID::pointer getConnectionID();
+  gov::cca::ConnectionID::pointer getConnectionID();
 	void highlight();
 	void setDefault();
 	Module * getUsesModule();
@@ -43,7 +42,7 @@ protected:
 	QCanvasView *cv;
 	Module *pUse, *pProvide;
 	std::string portname1, portname2;
-	ConnectionID::pointer connID;
+  gov::cca::ConnectionID::pointer connID;
 	QColor color;
 };
 

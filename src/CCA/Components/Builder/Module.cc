@@ -21,80 +21,103 @@
 #include <qlabel.h>
 #include <qpainter.h>
 #include <qmessagebox.h>
-Module::Module(QWidget *parent, const char *name,
-gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp , const gov::cca::ComponentID::pointer &cid)
-  :QFrame(parent, name )
+using namespace std;
+
+Module::Module(QWidget *parent, const string& moduleName,
+	       CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
+	       const gov::cca::Services::pointer& services,
+	       const gov::cca::ComponentID::pointer& cid)
+  :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), up(up), services(services), cid(cid)
 {
-        pd=10; //distance between two ports
-        pw=10; //port width
-        ph=4; //prot height
+  pd=10; //distance between two ports
+  pw=10; //port width
+  ph=4; //prot height
 
-	this->cid=cid;
-	uiPort=uip;
-	for(unsigned int i=0; i<pp.size(); i++){
-		if(pp[i]!="ui") this->pp.push_back(pp[i]);
-	}
+  for(unsigned int i=0; i<pp.size(); i++){
+    if(pp[i]!="ui") this->pp.push_back(pp[i]);
+  }
 		
-        this->up=up;
-	//this->pp=pp;
-	int dx=5;
-/*	int dy=10;
-	int d=5;
-*/	int w=120;
-	int h=60;
+  int dx=5;
+/*  int dy=10;
+    int d=5;
+*/
+  int w=120;
+  int h=60;
 
-	nameRect=QRect(QPoint(0,0), (new QLabel(name,0))->sizeHint() );
-	if(nameRect.width()+dx*2>w) w=nameRect.width()+dx*2;
+  nameRect=QRect(QPoint(0,0), (new QLabel(moduleName.c_str(),0))->sizeHint() );
+  if(nameRect.width()+dx*2>w) w=nameRect.width()+dx*2;
 //	QRect uiRect(dx,nameRect.bottom()+d,20,20);
 
 	
-	setGeometry(QRect(0,0,w,h));
+  setGeometry(QRect(0,0,w,h));
   setFrameStyle(Panel|Raised);
-	setLineWidth(4);
+  setLineWidth(4);
 
 	
-  QPushButton *ui=new QPushButton("UI", this,"ui");
-	//	ui->setDefault(false);
-	ui->setGeometry(QRect(dx,h-dx-20,20,20));
-  connect(ui,SIGNAL(clicked()), this, SLOT(ui()));
-	menu=new QPopupMenu(this);
-	menu->insertItem("Execute",this, SLOT(execute()) );
-	menu->insertSeparator();	
-	menu->insertItem("Stop",this,  SLOT(stop()) );
+  menu=new QPopupMenu(this);
+  menu->insertItem("Execute",this, SLOT(execute()) );
+  menu->insertSeparator();	
+  menu->insertItem("Stop",this,  SLOT(stop()) );
+  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  if(builder.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+  } else {
+    CIA::array1<string> ports = builder->getProvidedPortNames(cid);
+    unsigned int i = 0;
+    for(; i < ports.size(); i++){
+      cerr << "ports[i] = " << ports[i] << '\n';
+      if(ports[i] == "ui")
+	break;
+    }
+    if(i != ports.size()){
+      // Have UI port
+      QPushButton *ui=new QPushButton("UI", this,"ui");
+      //	ui->setDefault(false);
+      ui->setGeometry(QRect(dx,h-dx-20,20,20));
+      connect(ui,SIGNAL(clicked()), this, SLOT(ui()));
+
+      string instanceName = cid->getInstanceName();
+      string uiPortName = instanceName+" uiPort";
+      services->registerUsesPort(uiPortName, "gov.cca.UIPort",
+				 gov::cca::TypeMap::pointer(0));
+      builder->connect(services->getComponentID(), uiPortName, cid, "ui");
+    }
+    services->releasePort("cca.BuilderService");
+  }
 }
 
 
 void Module::paintEvent(QPaintEvent *e)
 {
-	QFrame::paintEvent(e);
-    QPainter p( this );
-    p.setPen( black );
-    p.setFont( QFont( "Times", 10, QFont::Bold ) );
-    p.drawText(nameRect, AlignCenter, name() );
+  QFrame::paintEvent(e);
+  QPainter p( this );
+  p.setPen( black );
+  p.setFont( QFont( "Times", 10, QFont::Bold ) );
+  p.drawText(nameRect, AlignCenter, moduleName.c_str() );
    
-    p.setPen(green);
-    p.setBrush(green);    
-    for(unsigned int i=0;i<up.size();i++){
-	p.drawRect(portRect(i, USES));
-    }
+  p.setPen(green);
+  p.setBrush(green);    
+  for(unsigned int i=0;i<up.size();i++){
+    p.drawRect(portRect(i, USES));
+  }
 
-    p.setPen(red);
-    p.setBrush(red);
-    for(unsigned int i=0;i<pp.size();i++){
-	p.drawRect(portRect(i,PROVIDES));
-    }
+  p.setPen(red);
+  p.setBrush(red);
+  for(unsigned int i=0;i<pp.size();i++){
+    p.drawRect(portRect(i,PROVIDES));
+  }
 }
 
 QPoint Module::usePortPoint(int num)
 {
 	int x=pd+(pw+pd)*num+pw/2;
-	return QPoint(x,0);
+	return QPoint(x,height());
 }
 
 QPoint Module::providePortPoint(int num)
 {
 	int x=pd+(pw+pd)*num+pw/2;
-	return QPoint(x,height());	
+	return QPoint(x,0);	
 }
 
 QPoint Module::usePortPoint(const std::string &portname)
@@ -162,11 +185,11 @@ QRect Module::portRect(int portnum, PortType porttype)
 {
 	if(porttype==PROVIDES){ //provides	
 		QPoint	r=providePortPoint(portnum);
-		return QRect(r.x()-pw/2,r.y()-ph,pw,ph);
+		return QRect(r.x()-pw/2,r.y(),pw,ph);
 	}
 	else{
 		QPoint r=usePortPoint(portnum);
-		return QRect(r.x()-pw/2,r.y(),pw,ph);
+		return QRect(r.x()-pw/2,r.y()-ph,pw,ph);
 	}
 }
 
@@ -182,12 +205,14 @@ void Module::stop()
 
 void Module::ui()
 {
-	uiPort->ui();
-	//QMessageBox::warning(this, "UI", "User iterface is not implemented!");
+  string instanceName = cid->getInstanceName();
+  string uiPortName = instanceName+" uiPort";
+  gov::cca::Port::pointer p = services->getPort(uiPortName);
+  gov::cca::ports::UIPort::pointer uiPort = pidl_cast<gov::cca::ports::UIPort::pointer>(p);
+  if(uiPort.isNull()){
+    cerr << "uiPort is not connected, cannot bring up UI!\n";
+  } else {
+    uiPort->ui();
+    services->releasePort(uiPortName);
+  }
 }
-
-
-
-
-
-

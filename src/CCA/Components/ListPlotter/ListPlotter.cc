@@ -58,7 +58,7 @@ void ListPlotter::setServices(const gov::cca::Services::pointer& svc)
   gov::cca::TypeMap::pointer props = svc->createTypeMap();
   ImUIPort::pointer uip(&ui);
 	ImUIPort::pointer gop(&ui);
-  svc->addProvidesPort(uip,"ui","UIPort", props);
+  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
   svc->registerUsesPort("listport","ZListPort", props);
 }
 

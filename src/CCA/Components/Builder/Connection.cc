@@ -24,10 +24,10 @@ bool Connection::isConnectedTo(Module *who)
 
 void Connection::resetPoints()
 {
-		QPoint R=pUse->usePortPoint(portname1)+QPoint(cv->childX(pUse),cv->childY(pUse));
-		QPoint P=pProvide->providePortPoint(portname2)+QPoint(cv->childX(pProvide),cv->childY(pProvide));
-    QRect rUse(cv->childX(pUse),cv->childY(pUse),pUse->width(),pUse->height() );
-		QRect rProvide(cv->childX(pProvide),cv->childY(pProvide),pProvide->width(),pProvide->height() );
+  QPoint P=pUse->usePortPoint(portname1)+QPoint(cv->childX(pUse),cv->childY(pUse));
+  QPoint R=pProvide->providePortPoint(portname2)+QPoint(cv->childX(pProvide),cv->childY(pProvide));
+  QRect rUse(cv->childX(pUse),cv->childY(pUse),pUse->width(),pUse->height() );
+  QRect rProvide(cv->childX(pProvide),cv->childY(pProvide),pProvide->width(),pProvide->height() );
 
 		int t=4;
 		int h=10; //may varies with different ports
@@ -106,7 +106,7 @@ void Connection::drawShape ( QPainter & p)
 	//p.drawPolygon(points());
 }
 
-ConnectionID::pointer Connection::getConnectionID()
+gov::cca::ConnectionID::pointer Connection::getConnectionID()
 {
   return connID;
 }
