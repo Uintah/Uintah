@@ -28,17 +28,18 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Unu
 
 
 SRCS     += \
+	$(SRCDIR)/UnuAxinfo.cc\
 	$(SRCDIR)/UnuCmedian.cc\
 	$(SRCDIR)/UnuConvert.cc\
 	$(SRCDIR)/UnuCrop.cc\
 	$(SRCDIR)/UnuJoin.cc\
+	$(SRCDIR)/UnuMake.cc\
 	$(SRCDIR)/UnuPad.cc\
 	$(SRCDIR)/UnuPermute.cc\
 	$(SRCDIR)/UnuProject.cc\
 	$(SRCDIR)/UnuQuantize.cc\
 	$(SRCDIR)/UnuResample.cc\
 	$(SRCDIR)/UnuSlice.cc\
-	$(SRCDIR)/UnuAxinfo.cc\
 #[INSERT NEW CODE FILE HERE]
 
 # the following are stubs that need implementa
