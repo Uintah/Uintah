@@ -170,6 +170,16 @@ public:
 				   const int wall_celltypeval);
 
 
+      void calculateScalarFluxLimitedConvection(const ProcessorGroup*,
+				   const Patch* patch,
+				   int Index,
+				   CellInformation* cellinfo,
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars,
+				   const int wall_celltypeval,
+				   int limiter_type);
+
+
       void computeDivergence(const ProcessorGroup*,
 			     const Patch* patch,
 			     ArchesVariables* vars,

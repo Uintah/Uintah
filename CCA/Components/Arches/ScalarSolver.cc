@@ -80,15 +80,26 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   }
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"l2up");
-//  if (db->findBlock("convection_scheme")) {
-//    db->require("convection_scheme",conv_scheme);
     if (conv_scheme == "l2up") d_conv_scheme = 0;
     else if (conv_scheme == "eno") d_conv_scheme = 1;
          else if (conv_scheme == "weno") d_conv_scheme = 2;
-	      else throw InvalidValue("Convection scheme "
-		       "not supported: " + conv_scheme);
-//  } else
-//    d_conv_scheme = 0;
+              else if (conv_scheme == "flux_limited") d_conv_scheme = 3;
+	           else throw InvalidValue("Convection scheme "
+		                           "not supported: " + conv_scheme);
+  string limiter_type;
+  if (d_conv_scheme == 3) {
+    db->getWithDefault("limiter_type",limiter_type,"superbee");
+    if (limiter_type == "superbee") d_limiter_type = 0;
+      else if (limiter_type == "vanLeer") d_limiter_type = 1;
+        else if (limiter_type == "none") {
+	  d_limiter_type = 2;
+	  cout << "WARNING! Running central scheme for scalar," << endl;
+	  cout << "which can be unstable." << endl;
+	}
+	  else throw InvalidValue("Flux limiter type "
+		                           "not supported: " + limiter_type);
+  }
+
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
   string linear_sol;
@@ -198,7 +209,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
-  if (d_conv_scheme > 0) {
+  if ((d_conv_scheme > 0)&&(d_conv_scheme < 3)) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->requires(Task::OldDW, timelabels->maxabsu_in);
       tsk->requires(Task::OldDW, timelabels->maxabsv_in);
@@ -261,7 +272,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   double maxAbsU = 0.0;
   double maxAbsV = 0.0;
   double maxAbsW = 0.0;
-  if (d_conv_scheme > 0) {
+  if ((d_conv_scheme > 0)&&(d_conv_scheme < 3)) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
@@ -397,11 +408,17 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 					        maxAbsU, maxAbsV, maxAbsW, 
 				  	        &scalarVars, &constScalarVars,
 						wall_celltypeval);
-      else
+      else if (d_conv_scheme == 1)
         d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
 					       maxAbsU, maxAbsV, maxAbsW, 
 				  	       &scalarVars, &constScalarVars,
 					       wall_celltypeval); 
+      else
+        d_discretize->calculateScalarFluxLimitedConvection
+		                                  (pc, patch,  index, cellinfo,
+				  	          &scalarVars, &constScalarVars,
+					          wall_celltypeval, 
+						  d_limiter_type); 
     } 
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.

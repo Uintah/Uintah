@@ -182,6 +182,7 @@ private:
 
       const ProcessorGroup* d_myworld;
       int d_conv_scheme;
+      int d_limiter_type;
       bool d_radRKsteps;
       bool d_radImpsteps;
       bool d_dynScalarModel;

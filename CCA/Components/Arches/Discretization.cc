@@ -1619,3 +1619,341 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
     }
   }
 }
+//****************************************************************************
+// Scalar central scheme with flux limiter (Superbee or Van Leer) 
+// (for convection part only)
+//****************************************************************************
+void 
+Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
+					const Patch* patch,
+					int,
+					CellInformation* cellinfo,
+					ArchesVariables*  scal_vars,
+					ArchesConstVariables*  constscal_vars,
+					const int wall_celltypeval,
+					int limiter_type)
+{
+  Array3<double> x_flux;
+  Array3<double> y_flux;
+  Array3<double> z_flux;
+
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  x_flux.resize(idxLo,idxHi+IntVector(2,1,1));
+  y_flux.resize(idxLo,idxHi+IntVector(1,2,1));
+  z_flux.resize(idxLo,idxHi+IntVector(1,1,2));
+  x_flux.initialize(0.0);
+  y_flux.initialize(0.0);
+  z_flux.initialize(0.0);
+  
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  int x_start = idxLo.x();
+  int x_end = idxHi.x()+1;
+  int y_start = idxLo.y();
+  int y_end = idxHi.y()+1;
+  int z_start = idxLo.z();
+  int z_end = idxHi.z()+1;
+  
+  if (xminus) {
+    int colX = x_start;
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+
+	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+			   constscal_vars->scalar[xminusCell]) *
+			   (constscal_vars->density[currCell]+
+			   constscal_vars->density[xminusCell]) *
+			   constscal_vars->uVelocity[currCell];
+        if ((constscal_vars->cellType[xminusCell] == wall_celltypeval)
+	    && (!(constscal_vars->cellType[currCell] == wall_celltypeval))) {
+                     x_flux[currCell] = 0.0;
+        }
+      }
+    }
+    x_start ++;
+  }
+
+  if (xplus) {
+    int colX = x_end;
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+
+	x_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+			   constscal_vars->scalar[xminusCell]) *
+			   (constscal_vars->density[currCell]+
+			   constscal_vars->density[xminusCell]) *
+			   constscal_vars->uVelocity[currCell];
+      }
+    }
+    x_end --;
+  }
+  
+  if (yminus) {
+    int colY = y_start;
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+
+	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+			   constscal_vars->scalar[yminusCell]) *
+			   (constscal_vars->density[currCell]+
+			   constscal_vars->density[yminusCell]) *
+			   constscal_vars->vVelocity[currCell];
+      }
+    }
+    y_start ++;
+  }
+
+  if (yplus) {
+    int colY = y_end;
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+
+	y_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+			   constscal_vars->scalar[yminusCell]) *
+			   (constscal_vars->density[currCell]+
+			   constscal_vars->density[yminusCell]) *
+			   constscal_vars->vVelocity[currCell];
+      }
+    }
+    y_end --;
+  }
+  
+  if (zminus) {
+    int colZ = z_start;
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+
+	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+			   constscal_vars->scalar[zminusCell]) *
+			   (constscal_vars->density[currCell]+
+			   constscal_vars->density[zminusCell]) *
+			   constscal_vars->wVelocity[currCell];
+      }
+    }
+    z_start ++;
+  }
+
+  if (zplus) {
+    int colZ = z_end;
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+
+	z_flux[currCell] = 0.25 * (constscal_vars->scalar[currCell]+
+			   constscal_vars->scalar[zminusCell]) *
+			   (constscal_vars->density[currCell]+
+			   constscal_vars->density[zminusCell]) *
+			   constscal_vars->wVelocity[currCell];
+      }
+    }
+    z_end --;
+  }
+  double c, dZloc, dZup, Zup, Zdwn, r, psi, temp1, temp2;
+
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = x_start; colX <= x_end; colX ++) {
+
+          IntVector currCell(colX, colY, colZ);
+          IntVector xminusCell(colX-1, colY, colZ);
+          IntVector xminusminusCell(colX-2, colY, colZ);
+          IntVector xplusCell(colX+1, colY, colZ);
+
+	  c = constscal_vars->uVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[xminusCell]);
+
+	  if (c > 0.0) {
+	    dZloc = constscal_vars->scalar[currCell] -
+		    constscal_vars->scalar[xminusCell];
+
+	    dZup  = constscal_vars->scalar[xminusCell] -
+		    constscal_vars->scalar[xminusminusCell];
+
+	    Zup =   constscal_vars->scalar[xminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+	    dZloc = constscal_vars->scalar[currCell] -
+		    constscal_vars->scalar[xminusCell];
+
+	    dZup  = constscal_vars->scalar[xplusCell] -
+		    constscal_vars->scalar[currCell];
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[xminusCell];
+	  }
+
+	  if (!(dZloc == 0.0)) r = dZup/dZloc;
+	  else if (dZup == dZloc) r = 1.0;
+	  else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+
+	  if (limiter_type == 0) {
+	    temp1 = min(2.0 * r,1.0);
+	    temp2 = min(r,2.0);
+	    temp1 = max(temp1, temp2);
+	    psi = max(0.0,temp1);
+	  }
+          else if (limiter_type == 1)
+	    psi = (abs(r)+r)/(1.0+abs(r));
+	  else psi = 1.0;
+	  
+	  x_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
+      }
+    }
+  }
+
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      for (int colY = y_start; colY <= y_end; colY ++) {
+
+          IntVector currCell(colX, colY, colZ);
+          IntVector yminusCell(colX, colY-1, colZ);
+          IntVector yminusminusCell(colX, colY-2, colZ);
+          IntVector yplusCell(colX, colY+1, colZ);
+
+	  c = constscal_vars->vVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[yminusCell]);
+
+	  if (c > 0.0) {
+	    dZloc = constscal_vars->scalar[currCell] -
+		    constscal_vars->scalar[yminusCell];
+
+	    dZup  = constscal_vars->scalar[yminusCell] -
+		    constscal_vars->scalar[yminusminusCell];
+
+	    Zup =   constscal_vars->scalar[yminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+	    dZloc = constscal_vars->scalar[currCell] -
+		    constscal_vars->scalar[yminusCell];
+
+	    dZup  = constscal_vars->scalar[yplusCell] -
+		    constscal_vars->scalar[currCell];
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[yminusCell];
+	  }
+
+	  if (!(dZloc == 0.0)) r = dZup/dZloc;
+	  else if (dZup == dZloc) r = 1.0;
+	  else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+
+	  if (limiter_type == 0) {
+	    temp1 = min(2.0 * r,1.0);
+	    temp2 = min(r,2.0);
+	    temp1 = max(temp1, temp2);
+	    psi = max(0.0,temp1);
+	  }
+          else if (limiter_type == 1)
+	    psi = (abs(r)+r)/(1.0+abs(r));
+	  else psi = 1.0;
+	  
+	  y_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
+      }
+    }
+  }
+
+  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+    for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      for (int colZ = z_start; colZ <= z_end; colZ ++) {
+
+          IntVector currCell(colX, colY, colZ);
+          IntVector zminusCell(colX, colY, colZ-1);
+          IntVector zminusminusCell(colX, colY, colZ-2);
+          IntVector zplusCell(colX, colY, colZ+1);
+
+	  c = constscal_vars->wVelocity[currCell] * 0.5 *
+              (constscal_vars->density[currCell] +
+	       constscal_vars->density[zminusCell]);
+
+	  if (c > 0.0) {
+	    dZloc = constscal_vars->scalar[currCell] -
+		    constscal_vars->scalar[zminusCell];
+
+	    dZup  = constscal_vars->scalar[zminusCell] -
+		    constscal_vars->scalar[zminusminusCell];
+
+	    Zup =   constscal_vars->scalar[zminusCell];
+
+	    Zdwn =  constscal_vars->scalar[currCell];
+	  }
+	  else {
+	    dZloc = constscal_vars->scalar[currCell] -
+		    constscal_vars->scalar[zminusCell];
+
+	    dZup  = constscal_vars->scalar[zplusCell] -
+		    constscal_vars->scalar[currCell];
+
+	    Zup =   constscal_vars->scalar[currCell];
+
+	    Zdwn =  constscal_vars->scalar[zminusCell];
+	  }
+
+	  if (!(dZloc == 0.0)) r = dZup/dZloc;
+	  else if (dZup == dZloc) r = 1.0;
+	  else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
+
+	  if (limiter_type == 0) {
+	    temp1 = min(2.0 * r,1.0);
+	    temp2 = min(r,2.0);
+	    temp1 = max(temp1, temp2);
+	    psi = max(0.0,temp1);
+	  }
+          else if (limiter_type == 1)
+	    psi = (abs(r)+r)/(1.0+abs(r));
+	  else psi = 1.0;
+	  
+	  z_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
+      }
+    }
+  }
+
+
+  double areaew;
+  double areans;
+  double areatb;
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
+          IntVector currCell(colX, colY, colZ);
+          IntVector xplusCell(colX+1, colY, colZ);
+          IntVector yplusCell(colX, colY+1, colZ);
+          IntVector zplusCell(colX, colY, colZ+1);
+	  areaew = cellinfo->sns[colY] * cellinfo->stb[colZ];
+	  areans = cellinfo->sew[colX] * cellinfo->stb[colZ];
+	  areatb = cellinfo->sew[colX] * cellinfo->sns[colY];
+
+	  scal_vars->scalarNonlinearSrc[currCell] -=
+		(x_flux[xplusCell]-x_flux[currCell]) * areaew +
+		(y_flux[yplusCell]-y_flux[currCell]) * areans +
+		(z_flux[zplusCell]-z_flux[currCell]) * areatb;
+      }
+    }
+  }
+}
