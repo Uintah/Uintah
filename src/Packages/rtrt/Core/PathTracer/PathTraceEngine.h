@@ -15,35 +15,36 @@ namespace SCIRun {
 }
 
 namespace rtrt {
-
+  
   using SCIRun::Runnable;
   using SCIRun::Semaphore;
-
+  
   class PerProcessorContext;
   class DepthStats;
   class Background;
-
+  
   class PathTraceLight {
   public:
     Point center;
     double radius;
     double area;
     Color color;
-
+    
     PathTraceLight(const Point &cen, double radius, const Color &c);
     Vector random_vector(double r1, double r2, double r3);
     Point random_point(double r1, double r2, double r3);
     Point point_from_normal(const Vector& dir);
     Vector normal(const Point &point);
   };
-
+  
   class PathTraceContext {
   public:
     PathTraceContext(const Color &color, const PathTraceLight &light,
 		     Object* geometry, Background *background,
-		     int num_samples, int max_depth,
-		     Semaphore *semi = 0);
-
+		     int num_samples, int max_depth, bool dilate,
+		     int support, int use_weighted_ave,
+		     float threshold, Semaphore* sem);
+    
     // Light source
     PathTraceLight light;
     // Object color
@@ -57,15 +58,20 @@ namespace rtrt {
     int num_samples_root;
     // Maximum ray depth
     int max_depth;
-
+    // Stuff for texture dilation
+    bool dilate;
+    int support;
+    int use_weighted_ave;
+    float threshold;
+    
     // Semephore for threading
-    Semaphore *semi;
-
+    Semaphore *sem;
+    
     // Stuff for PerProcessorContext
     int pp_size;
     int pp_scratchsize;
   };
-
+  
 #define NUM_SAMPLE_GROUPS 100
   
   class PathTraceWorker: public Runnable {
@@ -79,11 +85,11 @@ namespace rtrt {
     MusilRNG rng;
     // Our group of random samples
     Array1<Point2D> sample_points[NUM_SAMPLE_GROUPS];
-
+    
     // Used for rendering
     PerProcessorContext* ppc;
     DepthStats* depth_stats;
-
+    
     size_t offset;
   public:
     PathTraceWorker(Group *group, PathTraceContext *ptc, char *texname,
@@ -103,10 +109,11 @@ namespace rtrt {
     TextureSphere(const Point &cen, double radius, int tex_res=16);
     ~TextureSphere() {}
     
-    void writeTexture(char* basename, size_t index);
-    void writeData(FILE *outfile, FILE *outfile2);
+    void dilateTexture(size_t index, PathTraceContext* ptc);
+    void writeTexture(char* basename, size_t index, PathTraceContext* ptc);
+    void writeData(FILE *outfile, size_t index, PathTraceContext* ptc);
   };
-
+  
 } // end namespace rtrt
 
 #endif
