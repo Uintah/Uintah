@@ -110,12 +110,14 @@ static void mld_alloc(unsigned long size, int nmld,
     mlds[i] = mld_create( 0, size );
     if ((long)mlds[i] < 0) {
       perror("mld_create()");
+      cerr << "Try using -nomempolicy\n";
       exit(1);
     }
   }
   mldset = mldset_create( mlds, nmld );
   if ((long) mldset < 0) {
     perror("mldset_create");
+    cerr << "Try using -nomempolicy\n";
     exit(1);
   }
 
@@ -125,6 +127,7 @@ static void mld_alloc(unsigned long size, int nmld,
     for(int i=0; i<nmld; i++)
       fprintf( stderr, "%d ", mlds[i] );
     fprintf( stderr, ")\n" );
+    cerr << "Try using -nomempolicy\n";
     exit(1);
   }
 }
