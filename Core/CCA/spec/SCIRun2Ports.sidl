@@ -153,19 +153,21 @@ interface ComponentEvent {
 }
 interface ComponentEventService  extends Port
 {
-  /** Sign up to be told about connection activity.
-      @param connectionEventType must be one of the integer values 
+  /** Sign up to be told about component activity.
+      @param ComponentEventType must be one of the integer values 
              ALL, ConnectPending, Connected, DisconnectPending, Disconnected
              as defined in @see ContainerEventType. 
              ALL means listening to all of the other four listed here.
       @param l, an object (this component or its delegate) that listens
              by implementing the ConnectionEventListener callback.
+      @param playInitialEvents, send events for components that have
+             already been instantiated
   */
-   void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitalEvents);
+   void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitialEvents);
 
-  /** Ignore future ConnectionEvents of the given type.
+  /** Ignore future ComponentEvents of the given type.
       Removing a non-added listener is not an error. 
-      @param connectionEventType must be one of the integer values defined in
+      @param ComponentEventType must be one of the integer values defined in
              addConnectionEventListener.
       @param l, a previously added listener interface.
    */
