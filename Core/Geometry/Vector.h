@@ -170,6 +170,14 @@ public:
 	return _z;
     }
   }
+
+  inline void Set(double x, double y, double z)
+    { 
+      _x = x;
+      _y = y;
+      _z = z;
+    }
+      
 };
 
 SCICORESHARE std::ostream& operator<<(std::ostream& os, const Vector& p);
