@@ -357,6 +357,10 @@ void ParticleFieldExtractor::execute()
    
 
    if ( handle.get_rep() != archiveH.get_rep() ) {
+     // we have a different archive
+
+     // empty the cache of stored variables
+     material_data_list.clear();
      
      if (archiveH.get_rep()  == 0 ){
        string visible;
