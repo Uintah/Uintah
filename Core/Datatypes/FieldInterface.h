@@ -1,4 +1,3 @@
-// FieldInterface.h -  This file holds all of the interfaces available for fields
 //
 //  Written by:
 //   Eric Kuehne
@@ -11,47 +10,27 @@
 //
 //
 // To add an Interface, a new class should be created in this file,
-// and the appropriate lines of code should be added to the querry_interface
-// function in the Field class (or a class derived from Field).
+// and the appropriate query pure virtual should be added in the Field class.
 //
-// Per convention, each interface should contain at least one function
-// that bears the same name as the class, but in all lower case.
-//
-// Eric Kuehne
 
-#ifndef SCI_project_FieldInterface_h
-#define SCI_project_FieldInterface_h 1
+
+#ifndef Datatypes_FieldInterface_h
+#define Datatypes_FieldInterface_h
 
 #include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 
 namespace SCIRun {
 
-
-//////////
-// The base classes for all field interfaces
-class SCICORESHARE FieldInterface{
+class InterpolateToScalar {
 public:
-};
-
-class SLInterpolate:public FieldInterface{
-public:
-  virtual int slinterpolate(const Point&, double&, double eps=1.e-6) = 0;
-};
-
-class VLInterpolate:public FieldInterface{
-public:
-  virtual int vlinterpolate(const Point&, Vector&) = 0;
-};
-
-class Gradient:public FieldInterface{
-public:
-  virtual Vector gradient(const Point&) = 0;
+  virtual bool interpolate(const Point& p, double& value) = 0;
+  
+  // TODO: Memory management of queried interfaces
 };
 
 } // end namespace SCIRun
 
 
-#endif
+#endif // Datatypes_FieldInterface_h
 
 

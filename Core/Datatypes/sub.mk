@@ -17,6 +17,7 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/Image.cc		    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
+        $(SRCDIR)/MeshBase.cc		    \
         $(SRCDIR)/MeshRG.cc		    \
         $(SRCDIR)/MeshTet.cc		    \
         $(SRCDIR)/Path.cc		    \
