@@ -92,6 +92,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/TrisReader.h>
 #include <Packages/rtrt/Core/GridTris.h>
+#include <Packages/rtrt/Core/MIPMaterial.h>
 // #include <Packages/rtrt/Core/Trigger.h>
 // #include <Packages/rtrt/Core/PPMImage.h>
 
@@ -132,7 +133,7 @@ void add_image_on_wall (char *image_name, const Point &top_left,
 			 const Vector &right, const Vector &down,
 			 Group* wall_group) {
   Material* image_mat = 
-    new ImageMaterial(image_name,ImageMaterial::Clamp, ImageMaterial::Clamp,
+    new MIPMaterial(image_name,ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0); 
   Object* image_obj = 
     new Parallelogram(image_mat, top_left, right, down);
@@ -385,7 +386,7 @@ void add_pedestal_and_year (Group* obj_group,Group* glass_group,Group* fake_grou
 
 #if IMGSONWALL
   Group* solid_group = new Group();
-  Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
+  Material* sign = new MIPMaterial(sign_name, ImageMaterial::Tile,
 				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
   sign->my_lights.add(l1);
   sign->my_lights.add(l2);
@@ -455,7 +456,7 @@ void add_pedestal_and_label (Group* obj_group, Group* glass_group,Group* fake_gr
   ped_white->my_lights.add(l4);
 
 #if IMGSONWALL
-  Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
+  Material* sign = new MIPMaterial(sign_name, ImageMaterial::Tile,
 				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
   // signs on all sides
   const float part = 0.8;
@@ -524,7 +525,7 @@ void add_stadium_pedestal (Group* obj_group, Group* glass_group,Group* fake_grou
   ped_white->my_lights.add(l4);
 
 #if IMGSONWALL
-  Material* sign = new ImageMaterial(sign_name, ImageMaterial::Tile,
+  Material* sign = new MIPMaterial(sign_name, ImageMaterial::Tile,
 				     ImageMaterial::Tile, 1, Color(0,0,0), 0);
   // signs on all sides
   const float part = 0.8;
@@ -2756,7 +2757,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 			    stadium_scale,
 			    stadium_scale));
   stadiumT.pre_rotate(M_PI_2,Vector(0,0,1));
-  stadiumT.pre_translate(stadium_centerpt.asVector()); //-Vector(0,0,0.08));
+  stadiumT.pre_translate(stadium_centerpt.asVector()-Vector(0,0,0.08));
   // .01 is high
 
   stadiumg->transform(stadiumT);

@@ -357,7 +357,7 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
   Scene *scene = new Scene(new HierarchicalGrid(group, 8, 8, 8, 10, 10, 4), cam, bgcolor, cdown, cup, groundplane, 0.3);
 
   scene->select_shadow_mode( Hard_Shadows );
-  scene->maxdepth = 4;
+  scene->maxdepth = 8;
 
   scene->add_per_matl_light( overhead );
   scene->add_per_matl_light( rSconce );
