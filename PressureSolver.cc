@@ -225,9 +225,12 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     /// requires convection coeff because of the nodal
   // differencing
     // computes all the components of velocity
-    tsk->computes(d_lab->d_uVelCoefPBLMLabel, d_lab->d_stencilMatl);
-    tsk->computes(d_lab->d_vVelCoefPBLMLabel, d_lab->d_stencilMatl);
-    tsk->computes(d_lab->d_wVelCoefPBLMLabel, d_lab->d_stencilMatl);
+    tsk->computes(d_lab->d_uVelCoefPBLMLabel,
+		  d_lab->d_stencilMatl, Task::OutOfDomain);
+    tsk->computes(d_lab->d_vVelCoefPBLMLabel,
+		  d_lab->d_stencilMatl, Task::OutOfDomain);
+    tsk->computes(d_lab->d_wVelCoefPBLMLabel,
+		  d_lab->d_stencilMatl, Task::OutOfDomain);
     
     tsk->computes(d_lab->d_uVelLinSrcPBLMLabel);
     tsk->computes(d_lab->d_vVelLinSrcPBLMLabel);
@@ -278,15 +281,16 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     // differencing
     // computes all the components of velocity
     tsk->requires(Task::NewDW, d_lab->d_uVelCoefPBLMLabel, 
-		  d_lab->d_stencilMatl,
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelCoefPBLMLabel, 
-		  d_lab->d_stencilMatl,
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelCoefPBLMLabel, 
-		  d_lab->d_stencilMatl,
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, numGhostCells);
-    tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl);
+    tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
+		   Task::OutOfDomain);
 
     tsk->requires(Task::NewDW, d_lab->d_uVelLinSrcPBLMLabel,
 		  Ghost::AroundCells, numGhostCells);
@@ -483,8 +487,8 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
     // coefficient for the variable for which solve is invoked
   tsk->requires(Task::NewDW, d_lab->d_pressureINLabel, 
 		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl, 
-		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain, Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_presNonLinSrcPBLMLabel,
 		Ghost::None, zeroGhostCells);
   // computes global residual
