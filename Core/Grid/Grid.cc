@@ -154,14 +154,21 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
        Point upper;
        box_ps->require("upper", upper);
        
-       IntVector lowCell = level->getCellIndex(lower);
+       IntVector lowCell = level->getCellIndex(lower+Vector(1.e-6,1.e-6,1.e-6));
        IntVector highCell = level->getCellIndex(upper+Vector(1.e-6,1.e-6,1.e-6));
        Point lower2 = level->getNodePosition(lowCell);
        Point upper2 = level->getNodePosition(highCell);
        double diff_lower = (lower2-lower).length();
-       if(diff_lower > 1.e-6)
-         throw ProblemSetupException("Box lower corner does not coincide with grid");
        double diff_upper = (upper2-upper).length();
+       if(diff_lower > 1.e-6) {
+         cerr << "lower=" << lower << '\n';
+         cerr << "lowCell =" << lowCell << '\n';
+         cerr << "highCell =" << highCell << '\n';
+         cerr << "lower2=" << lower2 << '\n';
+         cerr << "diff=" << diff_lower << '\n';
+
+         throw ProblemSetupException("Box lower corner does not coincide with grid");
+       }
        if(diff_upper > 1.e-6){
          cerr << "upper=" << upper << '\n';
          cerr << "lowCell =" << lowCell << '\n';
