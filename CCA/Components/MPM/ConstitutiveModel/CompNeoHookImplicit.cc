@@ -323,13 +323,15 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     if (recursion) {
       DataWarehouse* parent_old_dw = 
 	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+      DataWarehouse* parent_new_dw = 
+	new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       pset = parent_old_dw->getParticleSubset(dwi, patch);
       parent_old_dw->get(px,             lb->pXLabel,              pset);    
       parent_old_dw->get(pvolume,        lb->pVolumeLabel,         pset);
       parent_old_dw->get(pvolumeold,     lb->pVolumeOldLabel,      pset);      
-      old_dw->get(deformationGradient,lb->pDeformationMeasureLabel_preReloc,
-		  pset);
-      old_dw->get(bElBar_old, lb->bElBarLabel_preReloc, pset);
+      parent_new_dw->get(deformationGradient,
+			 lb->pDeformationMeasureLabel_preReloc, pset);
+      parent_new_dw->get(bElBar_old, lb->bElBarLabel_preReloc, pset);
     }
     else {
       pset = old_dw->getParticleSubset(dwi, patch);
@@ -880,9 +882,9 @@ void CompNeoHookImplicit::addComputesAndRequiresImplicit(Task* task,
     task->requires(Task::ParentOldDW, lb->pXLabel,      matlset, Ghost::None);
     task->requires(Task::ParentOldDW, lb->pVolumeLabel, matlset, Ghost::None);
     task->requires(Task::ParentOldDW,lb->pVolumeOldLabel,matlset,Ghost::None);
-    task->requires(Task::OldDW, lb->pDeformationMeasureLabel_preReloc,
+    task->requires(Task::ParentNewDW, lb->pDeformationMeasureLabel_preReloc,
 		   matlset,Ghost::None);
-    task->requires(Task::OldDW,lb->bElBarLabel_preReloc,matlset,
+    task->requires(Task::ParentNewDW,lb->bElBarLabel_preReloc,matlset,
 		   Ghost::None);
     task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   }
