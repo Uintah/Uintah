@@ -42,11 +42,12 @@
       old_dw->get(pcolor, lb->pColorLabel, pset);
       old_dw->get(px,     lb->pXLabel,     pset);
 
-      double time = d_sharedState->getElapsedTime();
+      double t = d_sharedState->getElapsedTime();
+      double time = t + d_sharedState->getTimeOffset();
       
       Vector hardWired_velocity = Vector(0,0,0);    // put relationship here
       if (time > 0.012589) {                        // root of curve fit
-        hardWired_velocity = Vector(7.402694,0,0);
+        hardWired_velocity = Vector(20.0,0,0);
       }
 
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); 
@@ -90,8 +91,53 @@
       }
     }
   #endif
+  //______________________________________________________________________
+  //        M P M I C E
+  //__________________________________
+  #if 0
+    //__________________________________
+    // put this in equilibration pressure just before the upper printData
+    // find the cells along the inner wall of the nozzle  
+    // - only on the first timestep
+    // - examine the vertical gradient of vol_frac for the nozzle matl (0)
+    // - 
+    if (dataArchiver->getCurrentTimestep() == 1) {
+      Vector dx = patch->dCell();
+      CellIterator iter=patch->getCellIterator();
+      IntVector lo = iter.begin();
+      IntVector hi = iter.end();
+      const Level* level = getLevel(patches);
+      Point this_cell_pos = level->getCellPosition(hi);
+      
+      if (this_cell_pos.x() < 0.38){
+      
+        int k   = 0;
+        int mat = 0;
+        
+        for(int i = lo.x(); i < hi.x(); i++) {
+          for(int j = lo.y(); j < hi.y()-1; j++) {
+            IntVector c(i, j, k);
+            IntVector adj(i, j+1, k);
+            Point cell_pos = level->getCellPosition(c);
 
+            // compute vertical gradient of vol_frac
+            double gradY = (vol_frac[mat][adj] - vol_frac[mat][c])/dx.y();
+            
+            // if cell position is below a certain position
 
+            if(vol_frac[mat][adj] > 0.001 && cell_pos.y() < 0.13){
+              if (fabs(gradY)>0.1){
+                cout << c << " adj " << vol_frac[mat][adj]
+                          << " c " << vol_frac[mat][c]
+                          << " gradY " << gradY << endl;
+                j = hi.y();
+              }
+            }
+          }
+        }
+      }
+    }
+  #endif
 
   //______________________________________________________________________
   //        I C E
@@ -120,7 +166,10 @@
       c[1] =  3.276185586871563e+06;    
       c[0] =  1.794787251771923e+06;
       
-      double time = sharedState->getElapsedTime();
+      
+      double t = sharedState->getElapsedTime();
+      double time = t + sharedState->getTimeOffset();
+      
       double tbar = (time - mean)/std;
       
       double pressfit = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
@@ -167,7 +216,9 @@
       c[1] =  3.276185586871563e+06;    
       c[0] =  1.794787251771923e+06;
       
-      double time = sharedState->getElapsedTime();
+      double t = sharedState->getElapsedTime();
+      double time = t + sharedState->getTimeOffset();
+
       double tbar = (time - mean)/std;
       
       double pressfit = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
