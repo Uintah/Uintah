@@ -76,10 +76,10 @@ extern "C" Module* make_SetupFEMatrix(const clString& id) {
 
 SetupFEMatrix::SetupFEMatrix(const clString& id): 
   Module("SetupFEMatrix", id, Filter), 
-  uiBCFlag_("BCFlag", id, this),
   uiUseCond_("UseCondTCL", id, this),
-  refNode_(0),
-  lastUseCond_(1)
+  lastUseCond_(1),
+  uiBCFlag_("BCFlag", id, this),
+  refNode_(0)
 {
   // Create the input ports
   iportField_ = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
