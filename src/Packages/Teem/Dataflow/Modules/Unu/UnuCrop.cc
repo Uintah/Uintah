@@ -45,6 +45,9 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+
 #include <sstream>
 #include <iostream>
 using std::endl;
@@ -59,16 +62,21 @@ public:
   UnuCrop(SCIRun::GuiContext *ctx);
   virtual ~UnuCrop();
   virtual void execute();
-  void load_gui();
+  virtual void tcl_command(GuiArgs&, void*);
+  int parse(const NrrdDataHandle& handle, const string& val, const int axis);
+
 private:
-  vector<GuiInt*> mins_;
-  vector<GuiInt*> maxs_;
+  vector<GuiString*> mins_;
+  vector<GuiString*> maxs_;
   vector<GuiInt*> absmaxs_;
   GuiInt          num_axes_;
+  GuiInt          uis_;
+  GuiInt          reset_data_;
   vector<int>     lastmin_;
   vector<int>     lastmax_;
   int             last_generation_;
   NrrdDataHandle  last_nrrdH_;
+  MatrixHandle    last_matrixH_;
 };
 
 } // End namespace SCITeem
@@ -78,201 +86,403 @@ DECLARE_MAKER(UnuCrop)
 UnuCrop::UnuCrop(SCIRun::GuiContext *ctx) : 
   Module("UnuCrop", ctx, Filter, "UnuAtoM", "Teem"), 
   num_axes_(ctx->subVar("num-axes")),
+  uis_(ctx->subVar("uis")),
+  reset_data_(ctx->subVar("reset_data")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
   // this will get overwritten when tcl side initializes, but 
   // until then make sure it is initialized.
-  num_axes_.set(0); 
-  load_gui();
+  num_axes_.set(0);
+ 
+  lastmin_.resize(4, -1);
+  lastmax_.resize(4, -1);  
+
+  for (int a = 0; a < 4; a++) {
+    ostringstream str;
+    str << "minAxis" << a;
+    mins_.push_back(new GuiString(ctx->subVar(str.str())));
+    ostringstream str1;
+    str1 << "maxAxis" << a;
+    maxs_.push_back(new GuiString(ctx->subVar(str1.str())));
+    ostringstream str2;
+    str2 << "absmaxAxis" << a;
+    absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+  }
 }
 
 UnuCrop::~UnuCrop() {
 }
 
-void
-UnuCrop::load_gui() {
-  num_axes_.reset();
-  if (num_axes_.get() == 0) { return; }
-  
- 
-  lastmin_.resize(num_axes_.get(), -1);
-  lastmax_.resize(num_axes_.get(), -1);  
-
-  if (mins_.size() != (unsigned int) num_axes_.get()) {
-    for (int a = 0; a < num_axes_.get(); a++) {
-      ostringstream str;
-      str << "minAxis" << a;
-      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
-      ostringstream str1;
-      str1 << "maxAxis" << a;
-      maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
-      ostringstream str2;
-      str2 << "absmaxAxis" << a;
-      absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
-    }
-  }
-}
-
 void 
 UnuCrop::execute()
 {
-  NrrdDataHandle nrrdH;
   update_state(NeedData);
+
+  NrrdDataHandle nrrdH;
   NrrdIPort* inrrd = (NrrdIPort *)get_iport("Nrrd");
-  NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
 
   if (!inrrd) {
     error("Unable to initialize iport 'Nrrd'.");
     return;
   }
-  if (!onrrd) {
-    error("Unable to initialize oport 'Nrrd'.");
+
+  if (!inrrd->get(nrrdH) || !nrrdH.get_rep()) {
+    error( "No handle or representation" );
     return;
   }
-  if (!inrrd->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
+
+  MatrixHandle matrixH;
+  MatrixIPort* imatrix = (MatrixIPort *)get_iport("Current Index");
+
+  if (!imatrix) {
+    error("Unable to initialize iport 'Current Index'.");
     return;
   }
-  
+
   num_axes_.reset();
-  
-  if (last_generation_ != nrrdH->generation) {
-    ostringstream str;
 
-    load_gui();
+  bool new_dataset = (last_generation_ != nrrdH->generation);
+  bool first_time = (last_generation_ == -1);
 
-    bool do_clear = false;
-    // if the dim and sizes are the same don't clear.
-    if ((num_axes_.get() == nrrdH->nrrd->dim)) {
-      for (int a = 0; a < num_axes_.get(); a++) {
-	if (absmaxs_[a]->get() != nrrdH->nrrd->axis[a].size - 1) {
-	  do_clear = true;
-	  break;
-	}
-      }
-    } else {
-      do_clear = true;
-    }
+  // create any resample axes that might have been saved
+  if (first_time) {
+    uis_.reset();
+    for(int i=4; i<uis_.get(); i++) {
+      ostringstream str, str2, str3, str4;
+      str << "minAxis" << i;
+      str2 << "maxAxis" << i;
+      str3 << "absmaxAxis" << i;
+      str4 << i;
+      mins_.push_back(new GuiString(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiString(ctx->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
 
-    if (do_clear) {
+      mins_[i]->reset();
+      maxs_[i]->reset();
+      lastmin_.push_back(parse(nrrdH, mins_[i]->get(),i));
+      lastmax_.push_back(parse(nrrdH, maxs_[i]->get(),i));  
 
-      lastmin_.clear();
-      lastmax_.clear();
-      vector<GuiInt*>::iterator iter = mins_.begin();
-      while(iter != mins_.end()) {
-	delete *iter;
-	++iter;
-      }
-      mins_.clear();
-      iter = maxs_.begin();
-      while(iter != maxs_.end()) {
-	delete *iter;
-	++iter;
-      }
-      maxs_.clear();
-      iter = absmaxs_.begin();
-      while(iter != absmaxs_.end()) {
-	delete *iter;
-	++iter;
-      }
-      absmaxs_.clear();
-      gui->execute(id.c_str() + string(" clear_axes"));
-      
-    
-      num_axes_.set(nrrdH->nrrd->dim);
-      num_axes_.reset();
-      load_gui();
-      gui->execute(id.c_str() + string(" init_axes"));
-
-      for (int a = 0; a < num_axes_.get(); a++) {
-	mins_[a]->set(0);
-	absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
-	maxs_[a]->reset();
-	absmaxs_[a]->reset();
-      }
-    
-      str << id.c_str() << " set_max_vals" << endl; 
-      gui->execute(str.str());
-    
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
     }
   }
 
-  if (num_axes_.get() == 0) { return; }
+  last_generation_ = nrrdH->generation;
+  num_axes_.set(nrrdH->nrrd->dim);
+  num_axes_.reset();
+
+  // remove any unused uis or add any needes uis
+  if (uis_.get() > nrrdH->nrrd->dim) {
+    // remove them
+    for(int i=uis_.get()-1; i>=nrrdH->nrrd->dim; i--) {
+      ostringstream str;
+      str << i;
+      vector<GuiString*>::iterator iter = mins_.end();
+      vector<GuiString*>::iterator iter2 = maxs_.end();
+      vector<GuiInt*>::iterator iter3 = absmaxs_.end();
+      vector<int>::iterator iter4 = lastmin_.end();
+      vector<int>::iterator iter5 = lastmax_.end();
+      mins_.erase(iter, iter);
+      maxs_.erase(iter2, iter2);
+      absmaxs_.erase(iter3, iter3);
+
+      lastmin_.erase(iter4, iter4);
+      lastmax_.erase(iter5, iter5);
+
+      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
+  } else if (uis_.get() < nrrdH->nrrd->dim) {
+    for (int i=uis_.get(); i < num_axes_.get(); i++) {
+      ostringstream str, str2, str3, str4;
+      str << "minAxis" << i;
+      str2 << "maxAxis" << i;
+      str3 << "absmaxAxis" << i;
+      str4 << i;
+      mins_.push_back(new GuiString(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiString(ctx->subVar(str2.str())));
+      //maxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
+      maxs_[i]->set("M");
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+      absmaxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
+
+      lastmin_.push_back(0);
+      lastmax_.push_back(nrrdH->nrrd->axis[i].size - 1); 
+
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+    }
+    uis_.set(nrrdH->nrrd->dim);
+  }
   
-  for (int a = 0; a < num_axes_.get(); a++) {
+
+  if (new_dataset) {
+    for (int a=0; a<num_axes_.get(); a++) {
+	int max = nrrdH->nrrd->axis[a].size - 1;
+      maxs_[a]->reset();
+      absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
+      absmaxs_[a]->reset();
+      if (parse(nrrdH, maxs_[a]->get(),a) > max) {
+	warning("Out of bounds, setting each axis min/max to 0 to M");
+	maxs_[a]->set("M");
+	maxs_[a]->reset();
+      }
+    }
+
+    gui->execute(id.c_str() + string (" update_sizes "));    
+  }
+
+  if (new_dataset && !first_time && reset_data_.get() == 1) {
+    ostringstream str;
+    str << id.c_str() << " reset_vals" << endl; 
+    gui->execute(str.str());  
+  }
+  
+  if (num_axes_.get() == 0) {
+    warning("Trying to crop a nrrd with no axes" );
+    return;
+  }
+
+  for (int a=0; a<num_axes_.get(); a++) {
     mins_[a]->reset();
     maxs_[a]->reset();
     absmaxs_[a]->reset();
   }
 
-  if (last_generation_ == nrrdH->generation && last_nrrdH_.get_rep()) {
+  // If a matrix present use those values.
+  if (imatrix->get(matrixH) && matrixH.get_rep()) {
 
-    last_generation_ = nrrdH->generation;
-    
-    bool same = true;
-
-    for (int i = 0; i < num_axes_.get(); i++) {
-      if (lastmin_[i] != mins_[i]->get()) {
-	same = false;
-	lastmin_[i] = mins_[i]->get();
-      }
-      if (lastmax_[i] != maxs_[i]->get()) {
-	same = false;
-	lastmax_[i] = maxs_[i]->get();
-      }
-    }
-    if (same) {
-      onrrd->send(last_nrrdH_);
+    if( num_axes_.get() != matrixH.get_rep()->nrows() ||
+	matrixH.get_rep()->ncols() != 2 ) {
+      error("Input matrix size does not match nrrd dimensions." );
       return;
     }
-  }
 
-  Nrrd *nin = nrrdH->nrrd;
-  Nrrd *nout = nrrdNew();
+    for (int a=0; a<num_axes_.get(); a++) {
+      int min, max;
 
-  int *min = scinew int[num_axes_.get()];
-  int *max = scinew int[num_axes_.get()];
+      min = (int) matrixH.get_rep()->get(a, 0);
+      max = (int) matrixH.get_rep()->get(a, 1);
 
-  for(int i = 0; i <  num_axes_.get(); i++) {
-    min[i] = mins_[i]->get();
-    max[i] = maxs_[i]->get();
-
-    if (nrrdKindSize(nin->axis[i].kind) > 1 &&
-	(min[i] != 0 || max[i] != absmaxs_[i]->get())) {
-      warning("Trying to crop axis " + to_string(i) +
-	      " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
+      mins_[a]->set(to_string(min));
+      mins_[a]->reset();
+      maxs_[a]->set(to_string(max));
+      mins_[a]->reset();
     }
   }
 
-  if (nrrdCrop(nout, nin, min, max)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Trouble resampling: ") + err);
-    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
-    free(err);
+  // See if any of the sizes have changed.
+  bool update = new_dataset;
+
+  for (int i=0; i<num_axes_.get(); i++) {
+      mins_[i]->reset();
+    int min = parse(nrrdH, mins_[i]->get(),i);
+    if (lastmin_[i] != min) {
+      update = true;
+      lastmin_[i] = min;
+    }
+    maxs_[i]->reset();
+    int max = parse(nrrdH, maxs_[i]->get(),i);
+    if (lastmax_[i] != max) {
+      update = true;
+	lastmax_[i] = max;
+    }
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
+  if( update ) {
+    Nrrd *nin = nrrdH->nrrd;
+    Nrrd *nout = nrrdNew();
 
-  // Copy the properies, kinds, and labels.
-  *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+    int *min = scinew int[num_axes_.get()];
+    int *max = scinew int[num_axes_.get()];
 
-  for( int i=0; i<nin->dim; i++ ) {
-    nout->axis[i].kind  = nin->axis[i].kind;
-    nout->axis[i].label = nin->axis[i].label;
-   }
+    DenseMatrix *indexMat = scinew DenseMatrix( num_axes_.get(), 2 );
+    last_matrixH_ = MatrixHandle(indexMat);
 
-  if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
-      (nout->axis[0].kind == nrrdKind3DSymTensor && nout->axis[0].size != 6) )
-    nout->axis[0].kind = nrrdKindDomain;
+    for(int i=0; i< num_axes_.get(); i++) {
+	mins_[i]->reset();
+	maxs_[i]->reset();
+	min[i] = parse(nrrdH, mins_[i]->get(),i);
+	max[i] = parse(nrrdH, maxs_[i]->get(),i);
 
-  //nrrd->copy_sci_data(*nrrdH.get_rep());
-  last_nrrdH_ = nrrd;
-  onrrd->send(last_nrrdH_);
+      indexMat->put(i, 0, (double) min[i]);
+      indexMat->put(i, 1, (double) max[i]);
 
-  delete min;
-  delete max;
+      if (nrrdKindSize(nin->axis[i].kind) > 1 &&
+	  (min[i] != 0 || max[i] != absmaxs_[i]->get())) {
+	warning("Trying to crop axis " + to_string(i) +
+		" which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
+      }
+    }
+
+    if (nrrdCrop(nout, nin, min, max)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Trouble cropping: ") + err);
+      msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+      free(err);
+    }
+
+    delete min;
+    delete max;
+
+    NrrdData *nrrd = scinew NrrdData;
+    nrrd->nrrd = nout;
+    last_nrrdH_ = NrrdDataHandle(nrrd);
+
+    // Copy the properies, kinds, and labels.
+    *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+
+    for( int i=0; i<nin->dim; i++ ) {
+      nout->axis[i].kind  = nin->axis[i].kind;
+      nout->axis[i].label = nin->axis[i].label;
+    }
+
+    if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
+	(nout->axis[0].kind == nrrdKind3DSymTensor && nout->axis[0].size != 6) )
+      nout->axis[0].kind = nrrdKindDomain;
+  }
+
+  if (last_nrrdH_.get_rep()) {
+
+    NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
+    if (!onrrd) {
+      error("Unable to initialize oport 'Nrrd'.");
+      return;
+    }
+
+    onrrd->send(last_nrrdH_);
+  }
+
+  if (last_matrixH_.get_rep()) {
+    MatrixOPort* omatrix = (MatrixOPort *)get_oport("Selected Index");
+    
+    if (!omatrix) {
+      error("Unable to initialize oport 'Selected Index'.");
+      return;
+    }
+    
+    omatrix->send( last_matrixH_ );
+  }
 }
+
+void 
+UnuCrop::tcl_command(GuiArgs& args, void* userdata)
+{
+  if(args.count() < 2){
+    args.error("UnuCrop needs a minor command");
+    return;
+  }
+
+  if( args[1] == "add_axis" ) 
+  {
+      uis_.reset();
+      int i = uis_.get();
+      ostringstream str, str2, str3, str4;
+      str << "minAxis" << i;
+      str2 << "maxAxis" << i;
+      str3 << "absmaxAxis" << i;
+      str4 << i;
+      mins_.push_back(new GuiString(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiString(ctx->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+
+      lastmin_.push_back(0);
+      lastmax_.push_back(0); 
+
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+
+      uis_.set(uis_.get() + 1);
+  }
+  else if( args[1] == "remove_axis" ) 
+  {
+    uis_.reset();
+    int i = uis_.get()-1;
+    ostringstream str;
+    str << i;
+    vector<GuiString*>::iterator iter = mins_.end();
+    vector<GuiString*>::iterator iter2 = maxs_.end();
+    vector<GuiInt*>::iterator iter3 = absmaxs_.end();
+    vector<int>::iterator iter4 = lastmin_.end();
+    vector<int>::iterator iter5 = lastmax_.end();
+    mins_.erase(iter, iter);
+    maxs_.erase(iter2, iter2);
+    absmaxs_.erase(iter3, iter3);
+    
+    lastmin_.erase(iter4, iter4);
+    lastmax_.erase(iter5, iter5);
+    
+    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    uis_.set(uis_.get() - 1);
+  }
+  else 
+  {
+    Module::tcl_command(args, userdata);
+  }
+}
+
+int 
+UnuCrop::parse(const NrrdDataHandle& nH, const string& val, const int a) {
+  // parse string val which must be in the form 
+  // M, M+int, M-int, m+int, int
+  
+  // remove white spaces
+  string new_val = "";
+  for(int i = 0; i<(int)val.length(); i++) {
+    if (val[i] != ' ') 
+      new_val += val[i];
+  }
+  
+  int val_length = new_val.length();
+  
+  bool has_base = false;
+  int base = 0;
+  
+  char op = '+';
+  
+  int int_result = 0;
+  int start = 0;
+  
+  if (val_length == 0) {
+    error("Error in UnuCrop::parse String length 0.");
+    return 0;
+  }
+  
+  if (new_val[0] == 'M') {
+    has_base = true;
+    base = nH->nrrd->axis[a].size - 1;
+  } else if (new_val[0] == 'm') { 
+    has_base = true;
+    base = parse(nH, mins_[a]->get(), a);
+  }
+  
+  if (has_base && val_length == 1) {
+    return base;
+  }
+  
+  if (has_base)  {
+    start = 2;
+    if (new_val[1] == '+') {
+      op = '+';
+    } else if (new_val[1] == '-') {
+      op = '-';
+    } else {
+      error("Error UnuCrop::parse Must have +/- operation when using M or m with integers");
+      return 0;
+    }
+  }
+
+  if (!string_to_int(new_val.substr(start,val_length), int_result)) {
+    error("Error UnuCrop::could not convert to integer");
+    return 0;
+  }
+
+  if (has_base) {
+    if (op == '+') {
+      int_result = base + int_result;
+    } else {
+      int_result = base - int_result;
+    }
+  }
+
+  return int_result;
+}
+
