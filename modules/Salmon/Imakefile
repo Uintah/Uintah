@@ -9,9 +9,11 @@ SRCS = Salmon.cc Roe.cc
 
 .cc.o:
 	$(CCC) $(CCFLAGS) -c $<
-	$(ARR) $(ARFLAGS_REPLACE) $(MODULELIST) $@
 
-AllTarget($(OBJS))
+../modules.o: $(OBJS)
+	cd .. && make modules.o
+
+AllTarget(../modules.o)
 
 SCIDependTarget($(SRCS))
 

@@ -21,6 +21,7 @@
 #include <Salmon/Roe.h>
 #include <Connection.h>
 #include <GeometryPort.h>
+#include <ModuleList.h>
 #include <MotifCallback.h>
 #include <MtXEventLoop.h>
 #include <NetworkEditor.h>
@@ -29,8 +30,16 @@
 #include <Mt/DrawingArea.h>
 #include <iostream.h>
 
-extern MtXEventLoop* evl;
 class GeomObj;
+
+extern MtXEventLoop* evl;
+
+static Module* make_Salmon()
+{
+    return new Salmon;
+}
+
+static RegisterModule db1("Geometry", "Salmon", make_Salmon);
 
 Salmon::Salmon()
 : Module("Salmon", Sink)
@@ -48,11 +57,6 @@ Salmon::Salmon(const Salmon& copy, int deep)
 
 Salmon::~Salmon()
 {
-}
-
-Module* make_Salmon()
-{
-    return new Salmon;
 }
 
 Module* Salmon::clone(int deep)
@@ -116,6 +120,16 @@ int Salmon::should_execute()
     return changed;
 }
 
+void Salmon::reconfigure_iports()
+{
+    NOT_FINISHED("Salmon::reconfigure_iports");
+}
+
+void Salmon::reconfigure_oports()
+{
+    NOT_FINISHED("Salmon::reconfigure_oports");
+}
+
 void Salmon::addObj(int serial, GeomObj *obj)
 {
     NOT_FINISHED("Salmon::addObj");
@@ -140,4 +154,3 @@ void Salmon::delTopRoe(Roe *r)
 {
     NOT_FINISHED("Salmon::delTopRoe");
 }
-

@@ -32,6 +32,8 @@ class Salmon : public Module {
     virtual void do_execute();
     virtual void create_interface();
     virtual int should_execute();
+    virtual void reconfigure_iports();
+    virtual void reconfigure_oports();
     DrawingAreaC* drawing_a;
     void redraw_widget(CallbackData*, void*);
     XQColor* bgcolor;
