@@ -222,7 +222,7 @@ MPWrite::BeginGrid( clString name,
 
 
 int 
-MPWrite::AddVarToGrid( clString name,  // variable name check
+MPWrite::AddSVarToGrid( clString name,  // variable name check
 		       ScalarField* var )
 {
   if( svCount >= sVars.size() ){
@@ -263,7 +263,7 @@ MPWrite::AddVarToGrid( clString name,  // variable name check
 } 
 
 int
-MPWrite::AddVarToGrid(clString name, double *sf, int length)
+MPWrite::AddSVarToGrid(clString name, double *sf, int length)
 {
   if( svCount >= sVars.size() ){
     cerr<<"Error: no more scalar values can be added.\n";
@@ -292,7 +292,7 @@ MPWrite::AddVarToGrid(clString name, double *sf, int length)
 
 
 int 
-MPWrite::AddVarToGrid( clString name,
+MPWrite::AddVecVarToGrid( clString name,
 		  VectorField*  var )
 {
   if(!(svCount <= sVars.size())) {
@@ -334,7 +334,7 @@ MPWrite::AddVarToGrid( clString name,
 }
 
 int 
-MPWrite::AddVarToGrid( clString name,
+MPWrite::AddVecVarToGrid( clString name,
 		       Vector* vf, int length)
 {
   if(!(svCount <= sVars.size())) {
@@ -367,6 +367,37 @@ MPWrite::AddVarToGrid( clString name,
   }
 }
 
+int 
+MPWrite::AddVecVarToGrid( clString name,
+			  double* vf, int length)
+{
+  if(!(svCount <= sVars.size())) {
+    cerr<<"Error: you must write out all scalar values first.\n";
+    return 0;
+  }
+  if( vvCount >= vVars.size() ){
+    cerr<<"Error: no more vector values can be added.\n";
+    return 0;
+  }
+  
+  if( name != vVars[ vvCount ] ) {
+    cerr<<"Error: you need to add values for "<< vVars[vvCount]<<" first.\n";
+    return 0;
+  }
+  if( currentGrid == NC){
+    vvCount++;
+    if( fileType == BIN ) {
+      os.write((char *) &(vf[0]), sizeof(double)*3*length);
+    } else {
+      for(int i = 0; i < length*3; i+=3 )
+	os<< vf[i] << " "<< vf[i+1] << " " << vf[i+2] << " ";
+    }
+    return 1;
+  } else {
+    cerr<<"Error: Unknown Grid type\n";
+    return 0;
+  }
+}
 
 int 
 MPWrite::EndGrid()
