@@ -60,6 +60,24 @@ namespace Uintah {
 	 return data->get(idx-lowIndex);
       }
       
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Return pointer to the data 
+      // (**WARNING**not complete implementation)
+      //
+      inline T* getPointer() {
+	return (data->getPointer());
+      }
+      
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Return const pointer to the data 
+      // (**WARNING**not complete implementation)
+      //
+      inline const T* getPointer() const {
+	return (data->getPointer());
+      }
+
    private:
       
       Array3Data<T>* data;
@@ -122,6 +140,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.6  2000/06/11 04:05:07  bbanerje
+// Added first cut of getPointer() needed for fortran calls.
+//
 // Revision 1.5  2000/05/10 20:02:58  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -103,7 +103,25 @@ namespace Uintah {
       IntVector getHighIndex() const {
 	return d_window->getHighIndex();
       }
+
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Return pointer to the data 
+      // (**WARNING**not complete implementation)
+      //
+      inline T* getPointer() {
+	return (d_window->getPointer());
+      }
       
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Return const pointer to the data 
+      // (**WARNING**not complete implementation)
+      //
+      inline const T* getPointer() const {
+	return (d_window->getPointer());
+      }
+
    private:
       Array3Window<T>* d_window;
    };
@@ -119,6 +137,9 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.14  2000/06/11 04:05:06  bbanerje
+// Added first cut of getPointer() needed for fortran calls.
+//
 // Revision 1.13  2000/06/05 18:47:38  tan
 // Filled in the constructor
 // Array3(const IntVector& lowIndex, const IntVector& highIndex).
