@@ -23,49 +23,32 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
     constructor {config} {
         set name NrrdSelectTime
 
-        global $this-selectable_min
-        global $this-selectable_max
-        global $this-selectable_inc
-        global $this-range_min
-        global $this-range_max
-	global $this-playmode
-	global $this-current
-	global $this-execmode
-	global $this-delay
-	global $this-inc-amount
-
-
         set_defaults
     }
 
     method set_defaults {} {    
-        set $this-selectable_min     0
-        set $this-selectable_max     100
-        set $this-selectable_inc     1
-        set $this-range_min          0
-        set $this-range_max          0
-	set $this-playmode           once
-	set $this-current            0
-	set $this-execmode           "init"
-	set $this-delay              0
-	set $this-inc-amount        1
+        setGlobal $this-selectable_min     0
+        setGlobal $this-selectable_max     100
+        setGlobal $this-selectable_inc     1
+        setGlobal $this-range_min          0
+        setGlobal $this-range_max          0
+	setGlobal $this-playmode           once
+	setGlobal $this-current            0
+	setGlobal $this-execmode           init
+	setGlobal $this-delay              0
+	setGlobal $this-inc-amount         1
+	trace variable $this-current w "update idletasks;\#"
     }
 
-    method run_update {} {
-	set $this-execmode "update"
+
+    method maybeRestart { args } {
+	upvar \#0 $this-execmode execmode
+	if ![string equal $execmode play] return
+	$this-c restart
 	$this-c needexecute
     }
 
-    method run_step {} {
-	set $this-execmode "step"
-	$this-c needexecute
-    }
 
-    method run_play {} {
-	set $this-execmode "play"
-	$this-c needexecute
-    }
-    
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -78,32 +61,68 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	frame $w.loc -borderwidth 2
 	frame $w.playmode -relief groove -borderwidth 2
 	frame $w.execmode -relief groove -borderwidth 2
+	frame $w.vcr -relief groove -borderwidth 2
+        set playmode $w.playmode
+	set vcr $w.vcr
 
-        scale $w.loc.min -variable $this-range_min -label "Start " \
-		-showvalue true -orient horizontal -relief groove -length 200
-        scale $w.loc.max -variable $this-range_max -label "End " \
-		-showvalue true -orient horizontal -relief groove -length 200
 
-	frame $w.loc.e
-	frame $w.loc.e.l
-	frame $w.loc.e.r
 
-	label $w.loc.e.l.curlabel -text "Current Value" -just left
-	entry $w.loc.e.r.curentry -width 10 -textvariable $this-current
+	# load the VCR button bitmaps
+	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
+	set rewind [image create photo -file ${image_dir}/rewind-icon.ppm]
+	set stepb [image create photo -file ${image_dir}/step-back-icon.ppm]
+	set pause [image create photo -file ${image_dir}/pause-icon.ppm]
+	set play [image create photo -file ${image_dir}/play-icon.ppm]
+	set stepf [image create photo -file ${image_dir}/step-forward-icon.ppm]
+	set fforward [image create photo -file ${image_dir}/fast-forward-icon.ppm]
 
-	label $w.loc.e.l.inclabel -text "Increment" -justify left
-	entry $w.loc.e.r.incentry -width 8 -textvariable $this-inc-amount
+	# Create and pack the VCR buttons frame
+	button $vcr.rewind -image $rewind -command "set $this-current \[set $this-range_min\]"
+	button $vcr.stepb -image $stepb -command "set $this-execmode stepb
+                                                  $this-c needexecute"
+	button $vcr.pause -image $pause -command "$this-c stop"
+	button $vcr.play -image $play -command "set $this-execmode play
+                                                $this-c needexecute"
+	button $vcr.stepf -image $stepf -command "set $this-execmode step
+                                                  $this-c needexecute"
+	button $vcr.fforward -image $fforward -command "set $this-current \[set $this-range_max\]"
 
-	pack $w.loc.e.l.curlabel $w.loc.e.l.inclabel \
-	      -side top -anchor w
+	pack $vcr.rewind $vcr.stepb $vcr.pause \
+	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
+	global ToolTipText
+	Tooltip $vcr.rewind $ToolTipText(VCRrewind)
+	Tooltip $vcr.stepb $ToolTipText(VCRstepback)
+	Tooltip $vcr.pause $ToolTipText(VCRpause)
+	Tooltip $vcr.play $ToolTipText(VCRplay)
+	Tooltip $vcr.stepf $ToolTipText(VCRstepforward)
+	Tooltip $vcr.fforward $ToolTipText(VCRfastforward)
 
-	pack $w.loc.e.r.curentry $w.loc.e.r.incentry \
-              -side top -anchor w
 
-	pack $w.loc.e.l $w.loc.e.r -side left -expand yes -fill both
+	# Save range, creating the scale resets it to defaults.
+	set rmin [set $this-range_min]
+	set rmax [set $this-range_max]
 
-        pack $w.loc.min $w.loc.max $w.loc.e \
-	    -side top -expand yes -fill both -pady 2
+	# Create the various range sliders
+        scale $w.min -variable $this-range_min \
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "$this maybeRestart"
+        scale $w.cur -variable $this-current \
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "$this maybeRestart"
+        scale $w.max -variable $this-range_max \
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "$this maybeRestart"
+        scale $w.inc -variable $this-inc-amount \
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "$this maybeRestart"
+
+	update_range
+
+	# Restore range to pre-loaded value
+	set $this-range_min $rmin
+	set $this-range_max $rmax
+
+	
 
 
 	label $w.playmode.label -text "Play Mode"
@@ -111,20 +130,16 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 		-variable $this-playmode -value once
 	radiobutton $w.playmode.loop -text "Loop" \
 		-variable $this-playmode -value loop
-	radiobutton $w.playmode.bounce1 -text "Bounce1" \
+	radiobutton $w.playmode.bounce1 -text "Bounce" \
 		-variable $this-playmode -value bounce1
-	radiobutton $w.playmode.bounce2 -text "Bounce2" \
+	radiobutton $w.playmode.bounce2 -text "Bounce with repeating endpoints" \
 		-variable $this-playmode -value bounce2
 
 	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
 	    -variable $this-playmode -value inc_w_exec
 
-	frame $w.playmode.delay
-	label $w.playmode.delay.label -text "Delay (ms)" \
-		-width 10 -just left
-	entry $w.playmode.delay.entry -width 10 -textvariable $this-delay
-	pack $w.playmode.delay.label $w.playmode.delay.entry \
-		-side left -anchor n -expand yes -fill x
+	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {0 86400000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+	trace variable $this-delay w "$this maybeRestart;\#"
 
 
 	pack $w.playmode.label -side top -expand yes -fill both
@@ -133,31 +148,63 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	    $w.playmode.delay -side top -anchor w
 
 
-        button $w.execmode.play -text "Play" -command "$this run_play"
-        button $w.execmode.stop -text "Stop" -command "$this-c stop"
-        button $w.execmode.step -text "Step" -command "$this run_step"
-        pack $w.execmode.play $w.execmode.stop $w.execmode.step \
-		-side left -fill both -expand yes
+	# Create the button to show/hide extened options
+	button $w.expanded
+	# Create the sci button panel
+	makeSciButtonPanel $w $w $this "-no_execute"
 
-        pack $w.loc $w.playmode $w.execmode \
-		-padx 5 -pady 5 -fill both -expand yes
+	# Show the no-frills interface
+	show_small_interface
 
 	update
     }
 
-    method update {} {
+    method forget_packing {} {
+	set w .ui[modname]
+	pack forget $w.vcr $w.cur $w.expanded $w.min $w.max $w.inc $w.playmode $w.buttonPanel
+    }
+
+    method show_small_interface {} {
+	forget_packing
+	set w .ui[modname]
+        pack $w.vcr $w.cur $w.expanded $w.buttonPanel \
+	    -padx 5 -pady 5 -fill x -expand 0
+	$w.expanded configure -text "Show Extended Options" \
+	    -command "$this show_expanded_interface"
+	wm geometry $w {}
+    }
+
+    method show_expanded_interface {} {
+	forget_packing
+	set w .ui[modname]
+        pack $w.vcr $w.min $w.cur $w.max $w.inc $w.playmode \
+	    $w.expanded $w.buttonPanel \
+	    -padx 5 -pady 5 -fill x -expand 0
+	$w.expanded configure -text "Hide Extended Options" \
+	    -command "$this show_small_interface"
+	wm geometry $w {}
+    }
+
+
+
+
+    method update_range {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            #puts "updating!"
+	    upvar \#0 $this-selectable_min min $this-selectable_max max 
 
-            $w.loc.min config -from [set $this-selectable_min]
-            $w.loc.min config -to   [set $this-selectable_max]
-            $w.loc.min config -label "Start"
-            $w.loc.max config -from [set $this-selectable_min]
-            $w.loc.max config -to   [set $this-selectable_max]
-            $w.loc.max config -label "End"
+            $w.min configure -label "Start:" \
+		-from $min -to $max
 
-	    #pack $w.loc.r $w.loc.c $w.loc.ff $w.loc.b -side top -fill x -expand yes
+            $w.cur config -label "Current:" \
+		-from $min -to $max
+
+            $w.max config -label "End:" \
+		-from $min -to $max
+
+            $w.inc config -label "Increment:" \
+		-from 1 -to [expr $max-$min]
+
         }
     }
 }
