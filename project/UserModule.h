@@ -37,6 +37,7 @@ class UserModule : public Module {
     int need_reconfig;
     int last_x, last_y;
     int compute_width();
+    int ui_button_enabled;
 public:
     UserModule(const clString& name, SchedClass);
     UserModule(const UserModule&, int deep);
@@ -46,6 +47,7 @@ public:
     void remove_ui(MUI_widget*);
     void add_ui(MUI_widget*);
     void reconfigure_ui();
+    void enable_ui_button();
 
     // Misc stuff for module writers
     void error(const clString&);

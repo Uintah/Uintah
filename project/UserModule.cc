@@ -45,6 +45,7 @@ UserModule::UserModule(const clString& name, SchedClass sched_class)
 : Module(name, sched_class), window(0), popup_on_create(0),
   drawing_a(0), need_reconfig(0), popup_menu(0), btn(0)
 {
+    ui_button_enabled=0;
 }
 
 UserModule::~UserModule()
@@ -65,12 +66,18 @@ void UserModule::add_ui(MUI_widget* widget)
 	window=new MUI_window(this);
 	if(popup_on_create)
 	    window->popup();
-	if(btn){
-	    btn->SetSensitive(True);
-	    btn->SetValues();
-	}
+	enable_ui_button();
     }
     window->attach(widget);
+}
+
+void UserModule::enable_ui_button()
+{
+    ui_button_enabled=1;
+    if(btn){
+	btn->SetSensitive(True);
+	btn->SetValues();
+    }
 }
 
 void UserModule::remove_ui(MUI_widget* widget)
@@ -198,7 +205,7 @@ void UserModule::create_interface()
     btn->SetHeight(bsize);
     btn->SetBackground(bgcolor->pixel());
     btn->SetHighlightThickness(0);
-    if(!window)
+    if(ui_button_enabled)
 	btn->SetSensitive(False);
     new MotifCallback<UserModule>FIXCB(btn, XmNactivateCallback,
 				       &netedit->mailbox, this,
