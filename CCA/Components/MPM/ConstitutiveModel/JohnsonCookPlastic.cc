@@ -126,15 +126,16 @@ JohnsonCookPlastic::evaluateFlowStress(const double& ep,
   double Tm = matl->getMeltTemperature();
   double m = d_initialData.m;
   double Tstar = (T-Tr)/(Tm-Tr);
-  if (Tstar < 0.0) {
-    cerr << " ep = " << ep << " Strain Part = " << strainPart << endl;
-    cerr << "epdot = " << epdot << " Strain Rate Part = " << strainRatePart << endl;
-    cerr << "Tstar = " << Tstar << " T = " << T << " Tr = " << Tr << " Tm = " << Tm << endl;
-    cerr << "Forcing Tstar to be 0.0" << endl;
-    Tstar = 0.0;
-  }
-  double tm = pow(Tstar,m);
-  double tempPart = 1.0 - tm;
+  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
+  //if (Tstar < 0.0) {
+  //  cerr << " ep = " << ep << " Strain Part = " << strainPart << endl;
+  //  cerr << "epdot = " << epdot << " Strain Rate Part = " << strainRatePart << endl;
+  //  cerr << "Tstar = " << Tstar << " T = " << T << " Tr = " << Tr << " Tm = " << Tm << endl;
+  //  cerr << "Forcing Tstar to be 0.0" << endl;
+  //  Tstar = 0.0;
+  //}
+  //double tm = pow(Tstar,m);
+  //double tempPart = 1.0 - tm;
   return (strainPart*strainRatePart*tempPart);
 }
 
