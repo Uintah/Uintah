@@ -12,26 +12,23 @@ namespace rtrt {
   template <class T>
     class Texture {
     public:
-    Texture() {
-      int i, j, k;
-      for( i = 0; i < textureHeight; i++ )
-	for( j = 0; j < textureWidth; j++ )
-	  for( k = 0; k < 4; k++ )
+    Texture( int x, int y ) {
+      for( int i = 0; i < textureHeight; i++ )
+	for( int j = 0; j < textureWidth; j++ )
+	  for( int k = 0; k < 4; k++ )
 	    textArray[i][j][k] = 0;
-      current_color[0] = 0;
-      current_color[1] = 1;
-      current_color[2] = 0;
-      colormap_x_offset = 133;
-      colormap_y_offset = 215;
+      cmap_x = x;
+      cmap_y = y;
+      store_position( 0, 0 );
+      colormap( 0, 0 );
     }
 
     T textArray[textureHeight][textureWidth][4];
-/*      GLuint TextName; */
     float current_color[3];
-    int colormap_x_offset;
-    int colormap_y_offset;
-    int stored_x;
-    int stored_y;
+    int cmap_x;
+    int cmap_y;
+    int old_x;
+    int old_y;
 
     /*********************************/
     // COLORMAP CODE
@@ -57,20 +54,20 @@ namespace rtrt {
 
     void
       store_position( int x, int y ) {
-      stored_x = x;
-      stored_y = y;
+      old_x = x;
+      old_y = y;
     }
 
     void 
       colormap( int X, int Y ) {
-      int dx = X - stored_x;
-      int dy = Y - stored_y;
+      int dx = X - old_x;
+      int dy = Y - old_y;
       const int xmin = 0;
       const int ymin = 30;
       const int xmax = 400;
       const int ymax = 400;
-      int x = (colormap_x_offset + dx + xmax)%xmax;
-      int y = colormap_y_offset + dy;
+      int x = (cmap_x + dx + xmax)%xmax;
+      int y = cmap_y + dy;
       if( y > ymax )
 	y = ymax;
       if( y < ymin )
@@ -150,139 +147,15 @@ namespace rtrt {
 	  textArray[i][j][2] = current_color[2];
 	}
 
-      colormap_x_offset = x;
-      colormap_y_offset = y;
-      stored_x = X;
-      stored_y = Y;
+      cmap_x = x;
+      cmap_y = y;
+      old_x = X;
+      old_y = Y;
     }
     /*********************************/
     // END OF COLORMAP CODE
     /*********************************/
 
-    void
-      makeOneDimTextureImage( void ) {
-      int i, j;
-      float intensity;
-      float halfWidth = (float)textureWidth*0.5f;
-      for( i = 0; i < textureHeight; i++ ) {
-	for( j = 0; j < halfWidth; j++ ) {
-	  intensity = (float)j/halfWidth;
-	  textArray[i][j][0] = current_color[0];
-	  textArray[i][j][1] = current_color[1];
-	  textArray[i][j][2] = current_color[2];
-	  textArray[i][j][3] = intensity;
-	}
-	for( j = halfWidth; j < textureWidth; j++ ) {
-	  intensity = (float)(textureWidth-j)/halfWidth;
-	  textArray[i][j][0] = current_color[0];
-	  textArray[i][j][1] = current_color[1];
-	  textArray[i][j][2] = current_color[2];
-	  textArray[i][j][3] = intensity;
-	}
-      }
-			
-/*        glPixelStoref( GL_UNPACK_ALIGNMENT, 1 ); */
-/*        glGenTextures( 1, &TextName ); */
-/*        glBindTexture( GL_TEXTURE_2D, TextName ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ); */
-/*        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth,  */
-/*  		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray ); */
-    }
-
-
-
-    void
-      makeEllipseTextureImage( void ) {
-      float halfHeight = (float)textureHeight*0.5f;
-      float halfWidth = (float)textureWidth*0.5f;
-      float halfHeightSqrd = halfHeight*halfHeight;
-      float halfWidthSqrd = halfWidth*halfWidth;
-      for( int i = 0; i < textureHeight; i++ ) {
-	float I_const = 1.0f - (i-halfHeight)*(i-halfHeight)/halfHeightSqrd;
-	for( int j = 0; j < textureWidth; j++ ) {
-	  float intensity = I_const-(j-halfWidth)*(j-halfWidth)/halfWidthSqrd;
-	  /*  	  intensity = 1.0f - (((j-halfHeight)*(j-halfHeight)+ */
-	  /*  			       (i-halfWidth)*(i-halfWidth))/ */
-	  /*  			      (halfHeight*halfHeight+ */
-	  /*  			       halfWidth*halfWidth)); */
-	  if( intensity < 0 )
-	    intensity = 0;
-	  textArray[i][j][0] = current_color[0];
-	  textArray[i][j][1] = current_color[1];
-	  textArray[i][j][2] = current_color[2];
-	  textArray[i][j][3] = intensity;
-	}
-      }
-
-/*        glPixelStoref( GL_UNPACK_ALIGNMENT, 1 ); */
-/*        glGenTextures( 1, & TextName ); */
-/*        glBindTexture( GL_TEXTURE_2D, TextName ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ); */
-/*        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth,  */
-/*  		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray ); */
-    }
-
-
-
-    void
-      makeDefaultTextureImage( void ) {
-      int i, j;
-      float red = 1;
-      float green = 0;
-      float blue = 0;
-      float hue_width = textureWidth/6;
-      //      float intensity;
-      float color_step = 1/hue_width;
-      for( i = 0; i < textureHeight; i++ )
-	{
-	  red = 1;
-	  green = blue = 0;
-	  //	  intensity = i*100/textureHeight;
-	  for( j = 0; j < textureWidth; j++ ) {
-	    if( j < hue_width )
-	      green += color_step;
-	    else if( j < 2*hue_width )
-	      red -= color_step;
-	    else if( j < 3*hue_width )
-	      blue += color_step;
-	    else if( j < 4*hue_width )
-	      green -= color_step;
-	    else if( j < 5*hue_width )
-	      red += color_step;
-	    else if( j < 6*hue_width )
-	      blue -= color_step;
-
-	    if( red < 0.0f )
-	      red = 0.0f;
-	    if( green < 0.0f )
-	      green = 0.0f;
-	    if( blue < 0.0f )
-	      blue = 0.0f;
-
-	    textArray[i][j][0] = red;
-	    textArray[i][j][1] = green;
-	    textArray[i][j][2] = blue;
-	    //	      textArray[i][j][3] = intensity;
-	    textArray[i][j][3] = 0.50f;
-	  }
-	}			
-			
-/*        glPixelStoref( GL_UNPACK_ALIGNMENT, 1 ); */
-/*        glGenTextures( 1, & TextName ); */
-/*        glBindTexture( GL_TEXTURE_2D, TextName ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); */
-/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ); */
-/*        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth,  */
-/*  		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray ); */
-    }
   }; // class Texture
 
 } // end namespace rtrt
