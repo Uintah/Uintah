@@ -402,6 +402,15 @@ AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
 
+##-- Find etags ------------------------------------------------------------
+
+AC_PATH_PROG(ETAGS, etags, notfound)
+if test "$ETAGS" = "notfound" ; then
+  echo "\tetags not found"
+else
+  echo "\tFound etags at " $ETAGS
+fi
+ 
 ##-- Find BLT ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built blt2.4... "
@@ -560,6 +569,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.53  2000/05/11 20:26:05  mcole
+# add etags generation to build system
+#
 # Revision 1.52  2000/03/23 10:33:10  sparker
 # Configure new exception facility (using libexc on SGI)
 #
