@@ -30,7 +30,6 @@
 #ifndef TetMC_h
 #define TetMC_h
 
-#include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
