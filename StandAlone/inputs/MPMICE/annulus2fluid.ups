@@ -186,7 +186,8 @@
         <ADD_HEAT>
           <add_heat_matls>   [2]      </add_heat_matls>
           <add_heat_coeff>   [8.0e10] </add_heat_coeff>
-          <add_heat_n_iters> 4000     </add_heat_n_iters>
+          <add_heat_t_start>  0.0    </add_heat_t_start>
+          <add_heat_t_final>  0.0    </add_heat_t_final>  <!-- this needs to be changed -->
         </ADD_HEAT>
       </ICE>        
     </CFD>
