@@ -57,8 +57,8 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-  if (handle->get_type_name(0) != "PointCloudField") {
-    cerr << "Error -- input field wasn't a PointCloudField (type_name="<<handle->get_type_name(0)<<"\n";
+  if (handle->get_type_description(0)->get_name() != "PointCloudField") {
+    cerr << "Error -- input field wasn't a PointCloudField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
     exit(0);
   }
 
@@ -82,7 +82,7 @@ main(int argc, char **argv) {
   }
   fclose(fpts);
 
-  if (handle->get_type_name(1) == "Vector") {
+  if (handle->get_type_description(1)->get_name() == "Vector") {
     PointCloudField<Vector> *fld = dynamic_cast<PointCloudField<Vector> *>(handle.get_rep());
     sprintf(fname, "%s.grad", argv[2]);
     FILE *fgrad = fopen(fname, "wt");
@@ -91,7 +91,7 @@ main(int argc, char **argv) {
       Vector v = fld->fdata()[i];
       fprintf(fgrad, "%lf %lf %lf\n", v.x(), v.y(), v.z());
     }
-  } else if (handle->get_type_name(1) == "double") {
+  } else if (handle->get_type_description(1)->get_name() == "double") {
     PointCloudField<double> *fld = dynamic_cast<PointCloudField<double> *>(handle.get_rep());
     sprintf(fname, "%s.pot", argv[2]);
     FILE *fpot = fopen(fname, "wt");
@@ -100,7 +100,7 @@ main(int argc, char **argv) {
       fprintf(fpot, "%lf\n", fld->fdata()[i]);
     }
   } else {
-    cerr << "Unrecognized data template ("<<handle->get_type_name(1)<<") -- only mesh was output.\n";
+    cerr << "Unrecognized data template ("<<handle->get_type_description(1)->get_name()<<") -- only mesh was output.\n";
   }
   return 0;  
 }    

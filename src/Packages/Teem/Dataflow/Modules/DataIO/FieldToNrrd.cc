@@ -106,7 +106,9 @@ void FieldToNrrd::execute()
   FieldHandle fieldH;
   if (!ifield->get(fieldH))
     return;
-  if (fieldH->get_type_name(0) != "LatVolField") {
+  if (fieldH->mesh()->get_type_description()->get_name() !=
+      get_type_description((LatVolMesh *)0)->get_name())
+  {
     cerr << "Error FieldToNrrd only works with LatVolField's" << endl;
     return;
   }
@@ -114,7 +116,7 @@ void FieldToNrrd::execute()
   int nx, ny, nz;
   NrrdData *nout=scinew NrrdData;
   Field *field = fieldH.get_rep();
-  const string data = field->get_type_name(1);
+  const string data = field->get_type_description(1)->get_name();
 
   nout->nrrd = nrrdNew();
   LatVolMeshHandle lvm;

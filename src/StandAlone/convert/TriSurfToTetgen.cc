@@ -57,8 +57,8 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-  if (inner_surf->get_type_name(0) != "TriSurfField") {
-    cerr << "Error -- input field wasn't a TriSurfField (type_name="<<inner_surf->get_type_name(0)<<"\n";
+  if (inner_surf->get_type_description(0)->get_name() != "TriSurfField") {
+    cerr << "Error -- input field wasn't a TriSurfField (type_name="<<inner_surf->get_type_description(0)->get_name()<<"\n";
     exit(0);
   }
 
@@ -76,8 +76,8 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<argv[2]<<".  Exiting...\n";
     exit(0);
   }
-  if (outer_surf->get_type_name(0) != "TriSurfField") {
-    cerr << "Error -- input field wasn't a TriSurfField (type_name="<<outer_surf->get_type_name(0)<<"\n";
+  if (outer_surf->get_type_description(0)->get_name() != "TriSurfField") {
+    cerr << "Error -- input field wasn't a TriSurfField (type_name="<<outer_surf->get_type_description(0)->get_name()<<"\n";
     exit(0);
   }
   mh = outer_surf->mesh();
