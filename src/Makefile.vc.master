@@ -1,0 +1,66 @@
+# Makefile.vc.master
+#
+# written by Chris Moulding 7/99
+
+!include <$(TOP)\Makefile.vc.config>
+
+#################################  EDIT HERE  #################################
+
+# you shouldn't need to edit anything in this file
+
+###############################################################################
+
+FULLDLLNAME = $(DLLNAME)$(APPENDIX)
+
+ALL = \
+!if ("$(DLLNAME)"!="")
+	$(FULLDLLNAME).dll\
+!elseif ("$(EXENAME)"!="")
+	$(EXENAME).exe
+!endif
+
+SCILIBPATH = -LIBPATH:$(TOP)\src\SCICore\
+		     -LIBPATH:$(TOP)\src\PSECore\
+             -LIBPATH:$(TOP)\src\PSECommon\
+		     -LIBPATH:$(TOP)\src\SCIRun\
+			 $(LIBPATH)
+
+SCIINCPATH = -I.\
+             -I..\
+			 -I$(TOP)\src\
+			 $(INCPATH)
+
+all: $(ALL)
+
+clean: soclean
+	$(RM) $(EXENAME).exe 2> NUL
+	$(RM) *.idb 2> NUL
+	$(RM) *.ilk 2> NUL
+	$(RM) /s *.odll *.oexe *.pdb 1> NUL 2> NUL
+
+soclean:
+	$(RM) $(EXENAME)
+	$(RM) $(FULLDLLNAME).dll 2> NUL
+	$(RM) $(FULLDLLNAME).lib 2> NUL
+	$(RM) $(FULLDLLNAME).exp 2> NUL
+	$(RM) *.pdb 2> NUL 
+
+$(EXENAME).exe: $(OBJS)
+	$(LINK) $(EXE_LFLAGS) $(LF) $(LIBS) $(SCILIBPATH) $(OBJS) -out:$(EXENAME).exe
+
+$(FULLDLLNAME).dll: $(OBJS)
+	$(LINK) $(DLL_LFLAGS) $(LF) $(LIBS) $(SCILIBPATH) $(OBJS) -out:$(FULLDLLNAME).dll
+
+.SUFFIXES: .cc .c
+
+.cc.odll:
+	$(CC) $(DLL_CFLAGS) $(CF) $(SCIINCPATH) -TP -Fo$(TOP)\src\$(DLLNAME)\$*.odll $<
+
+.c.odll:
+	$(CC) $(DLL_CFLAGS) $(CF) $(SCIINCPATH) -TC -Fo$(TOP)\src\$(DLLNAME)\$*.odll $<
+
+.cc.oexe:
+	$(CC) $(EXE_CFLAGS) $(CF) $(SCIINCPATH) -TP -Fo$(TOP)\src\$(EXENAME)\$*.oexe $<
+
+.c.oexe:
+	$(CC) $(EXE_CFLAGS) $(CF) $(SCIINCPATH) -TC -Fo$(TOP)\src\$(EXENAME)\$*.oexe $<
