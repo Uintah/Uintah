@@ -16,7 +16,7 @@ PSELIBS := \
 	Core/Geometry \
 	Core/Thread   \
 	Core/Exceptions
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
