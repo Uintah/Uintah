@@ -69,6 +69,7 @@ public:
   int get(T&);
 private:
   int recvd_;
+  bool execution_started_;
 };
 
 template<class T>
@@ -79,6 +80,7 @@ public:
 
   virtual void reset();
   virtual void finish();
+  virtual void detach(Connection *conn);
 
   void send(const T&);
   void send_intermediate(const T&);
@@ -105,7 +107,8 @@ template<class T>
 SimpleIPort<T>::SimpleIPort(Module* module, 
 			    const string& portname)
   : IPort(module, port_type_, portname, port_color_),
-    mailbox("Port mailbox (SimpleIPort)", 2)
+    mailbox("Port mailbox (SimpleIPort)", 2),
+    execution_started_(false)
 {
 }
 
@@ -134,6 +137,7 @@ template<class T>
 void SimpleIPort<T>::reset()
 {
   recvd_=0;
+  execution_started_ = true;
 }
 
 template<class T>
@@ -143,6 +147,7 @@ void SimpleIPort<T>::finish()
     if (module->show_stats()) turn_on(Finishing);
     SimplePortComm<T>* msg=mailbox.receive();
     delete msg;
+    execution_started_ = false;
     if (module->show_stats()) { turn_off(); }
   }
 }
@@ -172,6 +177,21 @@ void SimpleOPort<T>::finish()
        turn_off();
   }
 }
+
+template<class T>
+void SimpleOPort<T>::detach(Connection *conn) {
+  // Add the new message
+  SimplePortComm<T>* msg = new SimplePortComm<T>(0);
+  // Send it only if the connection isn't blocked,
+  // the oport doesn't have data yet,
+  // and the iport is waiting
+  if ((!conn->is_blocked()) && (!have_data()) && ((SimpleIPort<T>*)conn->iport)->execution_started_) {
+    ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
+  }
+  sent_something_ = true;
+  OPort::detach(conn);
+}
+
 
 //! Declare specialization for field ports.
 //! Field ports must only send const fields i.e. frozen fields.
