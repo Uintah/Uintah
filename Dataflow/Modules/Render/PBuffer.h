@@ -46,7 +46,8 @@ public:
   PBuffer( int doubleBuffer = GL_FALSE );
   ~PBuffer() {}
 
-  void create( Display* dpy, int screen,
+  // Returns false if the creation fails.
+  bool create( Display* dpy, int screen,
 	       int width, int height, 
 	       int colorBits, int depthBits /* 8, 16 */);
   void destroy();
