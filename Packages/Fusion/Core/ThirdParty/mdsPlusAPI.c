@@ -108,6 +108,7 @@ int get_value( const char *signal ) {
   int dtype_long = DTYPE_LONG;        /* MDS+ Descripter type def, long */
 
   int value = 0;
+  int retVal;
 
   /* Build a descriptor for fectching the data. */
   dsc = descr(&dtype_long, &value, &null);
@@ -117,7 +118,7 @@ int get_value( const char *signal ) {
   sprintf(buf,"%s", signal);
     
   /* Use MdsValue to get the value */
-  int retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? value : -1;
+  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? value : -1;
 
   return retVal;
 }
@@ -132,6 +133,7 @@ int* get_values( const char *signal, int size ) {
   int dtype_long = DTYPE_LONG;        /* MDS+ Descripter type def, long */
 
   int* values = (int *) malloc(size * sizeof(int));
+  int* retVal;
 
   /* Build a descriptor for fectching the data. */
   dsc = descr(&dtype_long, values, &size, &null);
@@ -141,7 +143,7 @@ int* get_values( const char *signal, int size ) {
   sprintf(buf,"%s", signal);
 
   /* Use MdsValue to get the value */
-  int* retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? values : NULL;
+  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? values : NULL;
 
   return retVal;
 }
@@ -184,6 +186,7 @@ double* get_data( const char *signal, int size )
      * However, MdsValue seems to get confused about using dynamically
      * allocated multidimensional arrays. */
   double *data = (double *) malloc(size * sizeof(double));
+  double* retVal;
 
   memset(data,0,sizeof(data));
   dsc = descr(&dtype_double, data, &size, &null);
@@ -193,7 +196,7 @@ double* get_data( const char *signal, int size )
   sprintf(buf,"%s", signal);
 
   /* Use MdsValue to get the value */
-  double* retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
+  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
 
   return retVal;
 }
@@ -211,6 +214,7 @@ char* get_string( const char *signal )
 
     /* Create a data array of sufficient size. */
   char *data = (char *) malloc(size * sizeof(char));
+  char* retVal;
 
   memset(data,0,sizeof(data));
   dsc = descr(&dtype_cstring, data, &null, &size);
@@ -220,7 +224,7 @@ char* get_string( const char *signal )
   sprintf(buf,"%s", signal);
 
   /* Use MdsValue to get the value */
-  char* retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
+  retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
 
   return retVal;
 }
