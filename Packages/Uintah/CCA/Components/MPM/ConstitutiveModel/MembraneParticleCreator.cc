@@ -117,9 +117,17 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 		pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[start+count]=(*obj)->getInitialVelocity();
 		ptemperature[start+count]=(*obj)->getInitialTemperature();
-		pmass[start+count]=matl->getInitialDensity() * pvolume[start+count];
+
+                // Calculate particle mass
+                double partMass = matl->getInitialDensity()*pvolume[start+count];
+	        pmass[start+count] = partMass;
+
+                // Apply the force BC if applicable
+                Vector pExtForce(0,0,0);
+                ParticleCreator::applyForceBC(dxpp, p, partMass, pExtForce);
+	        pexternalforce[start+count] = pExtForce;
+
 		// Determine if particle is on the surface
-		pexternalforce[start+count]=Vector(0,0,0); // for now
 		psize[start+count] = size;
 		pTang1[start+count] = Vector(1,0,0);
 		pTang2[start+count] = Vector(0,0,1);
@@ -140,8 +148,6 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
     start += count; 
   }
 
-
-  ParticleCreator::applyForceBC(start,pexternalforce,pmass,position);
   return subset;
 
 }

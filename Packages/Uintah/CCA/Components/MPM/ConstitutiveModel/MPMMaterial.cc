@@ -79,7 +79,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
    ps->require("density",d_density);
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
-   ps->require("specific_heat",d_specificHeat);
+   //ps->require("specific_heat",d_specificHeat);
    ps->get("gamma",d_gamma);
    
    // Step 3 -- Loop through all of the pieces in this geometry object
