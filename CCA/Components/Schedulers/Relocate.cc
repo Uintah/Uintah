@@ -631,7 +631,6 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	//	     deliter != delset->end(); deliter++) {
 
 	if (deliter != delset->end() && idx == *deliter) {
-	  cout << "Deleting " << idx << ", patch " << patch <<  endl;
 	  keep = false;
 	  deliter++;
 	}
