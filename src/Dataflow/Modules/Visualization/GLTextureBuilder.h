@@ -52,22 +52,16 @@ public:
   virtual void execute();
 
 private:
-  FieldIPort *infield;
+  FieldIPort *infield_;
 
-  GLTexture3DOPort* otexture;
+  GLTexture3DOPort* otexture_;
    
-  Point Smin,Smax;
-  Vector ddv;
-  
-  FieldHandle sfrg;
-  GLTexture3DHandle tex;
+  FieldHandle sfrg_;
+  GLTexture3DHandle tex_;
 
-  GuiInt max_brick_dim;
-  GuiDouble min, max;
-//  GuiInt isFixed;
-//  bool MakeContext(Display *dpy, GLXContext& cx);
-  // void DestroyContext(Display *dpy, GLXContext& cx);
-
+  GuiInt max_brick_dim_;
+  GuiDouble min_, max_;
+  int old_brick_size_;
 };
 
 } // End namespace SCIRun
