@@ -2233,7 +2233,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     int mmwallid = d_arches->getBoundaryCondition()->getMMWallId();
     
     double viscos = d_arches->getTurbulenceModel()->getMolecularViscosity();
-    double csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
+    //    double csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
+    double csmag = 0.17;
 
     IntVector valid_lo;
     IntVector valid_hi;
@@ -3369,7 +3370,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     int ffieldid = d_arches->getBoundaryCondition()->flowCellType();
     int mmwallid = d_arches->getBoundaryCondition()->getMMWallId();
     
-    double csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
+    // csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
+    double csmag = 0.17;
 
     IntVector valid_lo = patch->getCellFORTLowIndex();
     IntVector valid_hi = patch->getCellFORTHighIndex();
