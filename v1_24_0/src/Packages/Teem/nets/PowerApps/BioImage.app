@@ -2892,7 +2892,8 @@ class BioImageApp {
      }
 
     method update_crop_roi { which } {
-	if {$which >= $num_filters || \
+	if {"$which" == "end" || \
+		$which >= $num_filters || \
 		[lindex $filters($which) $which_row] == -1 || \
 		[lindex $filters($which) $filter_type] != "crop"} {
 	    stop_crop
@@ -2900,6 +2901,8 @@ class BioImageApp {
 	}
 	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
 	upvar \#0 $UnuCrop-show_roi show
+	puts "show crop roi $show"
+
 	if {$show} {
 	    start_crop $which
 	} else {
@@ -3373,19 +3376,16 @@ class BioImageApp {
 		    addConnection $pmod $pport $nmod $nport
 		}
 	    }
-	}    
+	    $this enable_update $prev
+	} else {
+	    setGlobal eye $prev
+	}
 	# Delete Filter Information
 	set filters($which) { {} {} {} {} -1 -1 -1 -1 0 {} }
 	incr grid_rows -1
-	global eye
-	if { [expr $eye+1] == $which } {
-	    setGlobal eye $prev
-	    change_eye 1
-	} 
+	change_eye 1
 	arrange_filter_modules
 
-	# enable update button
-	$this enable_update $prev
     }
 
     method update_changes {} {
@@ -3504,7 +3504,7 @@ class BioImageApp {
 	if { $execute } {
 	    $ChooseNrrd-c needexecute
 	}
-	update_crop_roi [expr $eye+1]
+	update_crop_roi [lindex $filters($eye) $next_index]
     }
 
     method change_label {x y which} {
