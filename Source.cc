@@ -22,18 +22,14 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
-//#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoeffupdate_fort.h>
 #ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
 #else
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
 #endif
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
@@ -44,11 +40,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmmomsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
@@ -315,7 +307,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 // Pressure source calculation
 //****************************************************************************
 void 
-Source::calculatePressureSourcePred(const ProcessorGroup* pc,
+Source::calculatePressureSourcePred(const ProcessorGroup* ,
 				    const Patch* patch,
 				    double delta_t,
 				    CellInformation* cellinfo,
@@ -366,95 +358,6 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
 #endif
 }
 
-
-void
-Source::calculatePressureSourceCorr(const ProcessorGroup*,
-				    const Patch* patch,
-				    double delta_t,
-				    CellInformation* cellinfo,
-				    ArchesVariables* vars)
-{
-
-  // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  fort_pressrccorr(idxLo, idxHi, vars->pressNonlinearSrc, vars->density,
-		   vars->old_density, vars->pred_density, vars->uVelRhoHat,
-                   vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
-		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
-}
-
-//****************************************************************************
-// Pressure source calculation
-//****************************************************************************
-void 
-Source::calculatePressureSource(const ProcessorGroup*,
-				const Patch* patch,
-				double delta_t,
-				CellInformation* cellinfo,
-				ArchesVariables* vars)
-{
-
-  // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  //fortran call ** WARNING ** ffield = -1
-  int ffield = -1;
-  fort_pressrc(idxLo, idxHi, vars->pressNonlinearSrc, vars->pressLinearSrc,
-	       vars->density, vars->old_density,
-	       vars->uVelocity, vars->uVelocityCoeff[Arches::AP],
-	       vars->uVelocityCoeff[Arches::AE],
-	       vars->uVelocityCoeff[Arches::AW],
-	       vars->uVelocityCoeff[Arches::AN],
-	       vars->uVelocityCoeff[Arches::AS],
-	       vars->uVelocityCoeff[Arches::AT],
-	       vars->uVelocityCoeff[Arches::AB], vars->uVelNonlinearSrc,
-	       vars->vVelocity, vars->vVelocityCoeff[Arches::AP],
-	       vars->vVelocityCoeff[Arches::AE],
-	       vars->vVelocityCoeff[Arches::AW],
-	       vars->vVelocityCoeff[Arches::AN],
-	       vars->vVelocityCoeff[Arches::AS],
-	       vars->vVelocityCoeff[Arches::AT],
-	       vars->vVelocityCoeff[Arches::AB], vars->vVelNonlinearSrc,
-	       vars->wVelocity, vars->wVelocityCoeff[Arches::AP],
-	       vars->wVelocityCoeff[Arches::AE],
-	       vars->wVelocityCoeff[Arches::AW],
-	       vars->wVelocityCoeff[Arches::AN],
-	       vars->wVelocityCoeff[Arches::AS],
-	       vars->wVelocityCoeff[Arches::AT],
-	       vars->wVelocityCoeff[Arches::AB], vars->wVelNonlinearSrc,
-	       cellinfo->sew, cellinfo->sns, cellinfo->stb,
-	       cellinfo->sewu, cellinfo->snsv, cellinfo->stbw,
-	       vars->cellType, ffield, delta_t);
-
-#ifdef ARCHES_SRC_DEBUG
-    cerr << "AFTER Calculate Pressure Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SU for Pressure for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->pressNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << "AFTER Calculate Pressure Source" << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP for Pressure for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vars->pressLinearSrc[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
-
-}
 
 //****************************************************************************
 // Scalar source calculation
@@ -549,7 +452,7 @@ void Source::thermalNOxSource(const ProcessorGroup*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
-  double tot_noxsource=0.0; // This varible is for monitoring the total NOx production
+  //double tot_noxsource=0.0; // This varible is for monitoring the total NOx production
   // Get the patch and variable indices
   IntVector indexLow = patch->getCellFORTLowIndex();
   IntVector indexHigh = patch->getCellFORTHighIndex();

@@ -46,7 +46,6 @@ using namespace std;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/add_hydrostatic_term_topressure_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/normpress_fort.h>
-//#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
 
 // ****************************************************************************
 // Default constructor for PressureSolver

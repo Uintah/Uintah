@@ -100,7 +100,9 @@ StaticMixingTable::computeProps(const InletStream& inStream,
   double enthalpy=0.0;
   // Adiabatic enthalpy
   double adia_enthalpy=0.0;
-  double interp_adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
+  double interp_adiab_enthalpy = 0.0;
+  if (d_adiab_enth_inputs)
+    interp_adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
   // Sensible enthalpy
   double sensible_enthalpy=0.0;
   if(!d_adiabatic){
