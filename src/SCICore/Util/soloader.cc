@@ -21,7 +21,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 
 	if (LibraryHandle == 0)
 	{
-		cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt." << endl;
+	    //cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt." << endl;
 		return 0;
 	}
 
@@ -33,7 +33,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 
 	if (SymbolAddress == 0)
 	{
-		cerr << "ERROR: The symbol \"" << symbolname << "\" could not be found in the library \"" << libname << "\"." << endl;
+	    //cerr << "ERROR: The symbol \"" << symbolname << "\" could not be found in the library \"" << libname << "\"." << endl;
 		return 0;
 	}
 
@@ -54,7 +54,7 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 
 	if (SymbolAddress == 0)
 	{
-		cerr << "ERROR: The symbol \"" << symbolname << "\" could not be found using the handle \"" << handle << "\"." << endl;
+	    //cerr << "ERROR: The symbol \"" << symbolname << "\" could not be found using the handle \"" << handle << "\"." << endl;
 		return 0;
 	}
 
@@ -75,7 +75,7 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 
 	if (LibraryHandle == 0)
 	{
-		cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt." << endl;
+	    //cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt." << endl;
 		return 0;
 	}
 
