@@ -83,6 +83,7 @@ SRCS := \
 	$(SRCDIR)/GenAxes.tcl \
 	$(SRCDIR)/GenClock.tcl \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
+	$(SRCDIR)/GenTitle.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/ToolTipText.tcl \
