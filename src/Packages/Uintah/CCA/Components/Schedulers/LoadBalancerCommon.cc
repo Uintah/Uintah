@@ -168,6 +168,18 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
 	patch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
 				      Ghost::AroundCells, maxGhost, n,
 				      lowIndex, highIndex);
+
+        // add amr stuff - so the patch will know about coarsening and refining
+        if (l > 0) {
+          const LevelP& coarseLevel = level->getCoarserLevel();
+          coarseLevel->selectPatches(level->mapCellToCoarser(lowIndex), 
+                                     level->mapCellToCoarser(highIndex), n);
+        }
+        if (l < grid->numLevels()-1) {
+          const LevelP& fineLevel = level->getFinerLevel();
+          fineLevel->selectPatches(level->mapCellToFiner(lowIndex), 
+                                     level->mapCellToFiner(highIndex), n);
+        }
 	for(int i=0;i<(int)n.size();i++){
 	  const Patch* neighbor = n[i]->getRealPatch();
 	  if(d_neighbors.find(neighbor) == d_neighbors.end())
