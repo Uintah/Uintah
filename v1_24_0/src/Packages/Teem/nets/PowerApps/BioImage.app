@@ -915,9 +915,6 @@ class BioImageApp {
 	frame $window.modes.slider.slice
 	pack $window.modes.slider.slice -side top -anchor n -expand 1 -fill x
 
-	# dummy value label
-	label $window.modes.slider.slice.dummy \
-	    -justify right -width 3 -anchor e
 	# slice slider
 	scale $window.modes.slider.slice.s \
 	    -variable $mods(ViewSlices)-$axis-viewport0-slice \
@@ -928,13 +925,11 @@ class BioImageApp {
                       $mods(ViewSlices)-c redrawall"
 
 	# slice value label
-	label $window.modes.slider.slice.l \
+	entry $window.modes.slider.slice.l \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slice \
-	    -justify left -width 3 -anchor w
+	    -justify left -width 3
+	bind $window.modes.slider.slice.l <Return>  "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; $mods(ViewSlices)-c redrawall"
 
-	
-	pack $window.modes.slider.slice.dummy -anchor w -side left \
-	    -padx 0 -pady 0 -expand 0
 	
 	pack $window.modes.slider.slice.l -anchor e -side right \
 	    -padx 0 -pady 0 -expand 0
@@ -946,9 +941,10 @@ class BioImageApp {
 	# Create range widget for slab mode
 	frame $window.modes.slider.slab
 	# min range value label
-	label $window.modes.slider.slab.min \
+	entry $window.modes.slider.slab.min \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_min \
-	    -justify right -width 3 -anchor e
+	    -justify right -width 3 
+	bind $window.modes.slider.slab.min <Return> "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; $mods(ViewSlices)-c redrawall" 
 	# MIP slab range widget
 	range $window.modes.slider.slab.s -from 0 -to 20 \
 	    -orient horizontal -showvalue false \
@@ -959,9 +955,10 @@ class BioImageApp {
                       $mods(ViewSlices)-c redrawall"
 	Tooltip $window.modes.slider.slab.s "Click and drag the\nmin or max sliders\nto change the extent\nof the slab. Click\nand drage the red\nrange bar to change the\ncenter poisition of\nthe slab range"
 	# max range value label
-	label $window.modes.slider.slab.max \
+	entry $window.modes.slider.slab.max \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_max \
-	    -justify left -width 3 -anchor w
+	    -justify left -width 3
+	bind $window.modes.slider.slab.max <Return> "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; $mods(ViewSlices)-c redrawall" 
 	
 	pack $window.modes.slider.slab.min -anchor w -side left \
 	    -padx 0 -pady 0 -expand 0 
