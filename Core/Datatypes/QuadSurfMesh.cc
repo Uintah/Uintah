@@ -59,8 +59,8 @@ QuadSurfMesh::QuadSurfMesh()
 
 QuadSurfMesh::QuadSurfMesh(const QuadSurfMesh &copy)
   : points_(copy.points_),
-    faces_(copy.faces_),
     edges_(copy.edges_),
+    faces_(copy.faces_),
     edge_neighbors_(copy.edge_neighbors_),
     synchronized_(copy.synchronized_)
 {
@@ -463,16 +463,16 @@ tri_area(const Point &a, const Point &b, const Point &c)
 
 void
 QuadSurfMesh::get_weights(const Point &p,
-			  Node::array_type &l, vector<double> &w)
+			  Node::array_type &locs, vector<double> &w)
 {
   Face::index_type idx;
   if (locate(idx, p))
   {
-    get_nodes(l, idx);
-    const Point &p0 = point(l[0]);
-    const Point &p1 = point(l[1]);
-    const Point &p2 = point(l[2]);
-    const Point &p3 = point(l[3]);
+    get_nodes(locs, idx);
+    const Point &p0 = point(locs[0]);
+    const Point &p1 = point(locs[1]);
+    const Point &p2 = point(locs[2]);
+    const Point &p3 = point(locs[3]);
 
     w.resize(4);
     const double a0 = tri_area(p, p0, p1);

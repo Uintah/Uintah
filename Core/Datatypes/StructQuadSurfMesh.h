@@ -162,6 +162,9 @@ protected:
   void compute_normals();
   void compute_edge_neighbors(double err = 1.0e-8);
 
+  const Point &point(const Node::index_type &idx)
+  { return points_(idx.i_, idx.j_); }
+
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
 
