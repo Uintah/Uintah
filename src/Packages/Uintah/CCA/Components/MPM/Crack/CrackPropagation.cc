@@ -73,6 +73,9 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
+      // Cell mass of the material
+      double d_cell_mass=mpm_matl->getInitialDensity()*dx.x()*dx.y()*dx.z(); 
+      
       // Get nodal mass information
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -211,7 +214,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 		  
                 for(int k = 0; k < d_8or27; k++) {
                   double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                  if(totalMass<5*d_SMALL_NUM_MPM) {
+                  if(totalMass<1.e-6*d_cell_mass) {
                     newPtInMat=NO;
                     break;
                   }
@@ -227,15 +230,15 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 	                   mpi_crack_comm, &status);
 	      }  
 		
-	      // If new_pt is inside, extend it out by dx_bar/2
+	      // If new_pt is inside, extend it out by 2dx_bar/3
               if(newPtInMat) { 
-                new_pt+=v*(dx_bar/2.);
+                new_pt+=v*(dx_bar*2./3.);
 	        extTimes++;
      	      } // end of if(newPtInMat)
             } // End of while(newPtInMat)
 		
             // If new_pt is outside the global grid, trim it
-            TrimCrackFrontWithGrid(pt2p,new_pt,GLP,GHP);
+            TrimLineSegmentWithBox(pt2p,new_pt,GLP,GHP);
 
             // Task 3b: If new_pt is outside, trim it back to the material boundary
 	    if(!newPtInMat) {
@@ -262,11 +265,11 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 	          }
 
                   // Trim ptp(or pt2p)->new_pt by the cell
-                  Point cross_pt=(new_pt!=ptp ? ptp:pt2p);
-		  if(TrimCrackFrontWithGrid(new_pt,cross_pt,LLP,LHP)) {
-		    // Extend cross_pt a little bit (dx_bar*10%) outside 
-		    new_pt=cross_pt+v*(dx_bar*0.1);
-		  }
+		  Point cross_pt=pt2p; 
+		  TrimLineSegmentWithBox(new_pt,cross_pt,LLP,LHP); 
+
+		  // Extend cross_pt a little bit (dx_bar*10%) outside 
+		  new_pt=cross_pt+v*(dx_bar/3.);
 		} 
 		MPI_Bcast(&new_pt,1,MPI_POINT,k,mpi_crack_comm);
 	      } // End of loop over k         
@@ -278,11 +281,12 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
           } // End of if this is a edge node
         } // End of loop cfSegNodes
 	 
-        /* Step 4: Prune crack-front, moving the distorted points
-	   if the direction between the two line-segments connected by it
-	   is larger than 30 degree.   
+        /* Step 4: Prune crack-front points if the direction of the two segments 
+	           connected by any point is larger than a critical angle (ca),
+		   moving it to the mass-center of the three points
 	*/
-        PruneCrackFrontAfterPropagation(m);	
+	double ca=3*csa[m]+15.;
+        PruneCrackFrontAfterPropagation(m,ca);	
 	
         /* Step 5: Apply symmetric BCs to new crack-front points
         */
@@ -317,7 +321,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
     for(int m=0; m<numMPMMatls; m++) {
       if(doCrackPropagation) {
-/*
+        /*
         // Step 1: Combine crack front nodes if they propagates
         // a little (<10%) or in self-similar way (angle<10 degree)
         for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
@@ -333,7 +337,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
            if(dis<0.1*(rdadx*dx_bar) || fabs(angle)<5)
              cx[m][node]=cfSegPtsT[m][i];
         }
-*/
+        */
         // Temporary crack-front segment nodes
         vector<int> cfSegNodesT;
         cfSegNodesT.clear();
@@ -369,12 +373,12 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           if((p2p-p2).length()/dx_bar<0.01) ep=NO; // p2 no propagating
 
           short CASE=0;        // no propagation
-          if(l12/cs0[m]<0.5) { // Adjust or combine the seg
+          if(l12/css[m]<0.5) { // Adjust or combine the seg
             if( !sp && ep) CASE=1;  // p2 propagates, p1 doesn't
             if( sp && !ep) CASE=2;  // p1 propagates, p2 doesn't
             if( sp &&  ep) CASE=3;  // Both of p1 and p2 propagate
           }
-          else if(l12/cs0[m]<2.) {// Keep the seg
+          else if(l12/css[m]<2.) {// Keep the seg
             if( sp && !ep) CASE=4;  // p1 propagates, p2 doesn't
             if(!sp &&  ep) CASE=5;  // p2 propagates, p1 doesn't
             if( sp &&  ep) CASE=6;  // Both of p1 and p2 propagate
