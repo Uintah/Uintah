@@ -69,13 +69,15 @@ public:
                 
 private:
   void   labelCellSurfaceNormal (
-           const ProcessorContext*,
+           int matlindex,
+           int vfindex,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   labelSelfContactNodes(
-           const ProcessorContext*,
+           int matlindex,
+           int vfindex,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
@@ -111,6 +113,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.16  2000/06/05 02:07:39  tan
+// Finished labelSelfContactNodesAndCells(...).
+//
 // Revision 1.15  2000/06/04 23:55:29  tan
 // Added labelSelfContactCells(...) to label the self-contact cells
 // according to the nodes self-contact information.
