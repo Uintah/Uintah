@@ -49,6 +49,12 @@ WARNING
       inline operator T () const {
 	 return value;
       }
+      inline T& get() {
+	 return value;
+      }
+      inline const T& get() const {
+	 return value;
+      }
       void setData(const T&);
       virtual PerPatchBase* clone() const;
       PerPatch<T>& operator=(const PerPatch<T>& copy);
@@ -105,6 +111,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/10/14 17:09:59  sparker
+// Added get() method to PerPatch
+// Fixed warning in SymmetryBoundCond
+//
 // Revision 1.5  2000/09/25 18:12:20  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes
