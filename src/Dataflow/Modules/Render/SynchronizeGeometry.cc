@@ -39,7 +39,7 @@ private:
 
   GuiInt gui_enforce_;
 
-  int enforce_barrier(MessageBase* message);
+  int process_event(MessageBase* message);
   void forward_saved_msg();
   void flush_all_msgs();
   void append_msg(GeometryComm* gmsg);
@@ -76,8 +76,6 @@ SynchronizeGeometry::execute()
 void
 SynchronizeGeometry::do_execute()
 {
-  MessageBase* msg;
-
   ogeom_ = (GeometryOPort*)getOPort("Output Geometry");
 
   if (ogeom_ == NULL)
@@ -87,8 +85,8 @@ SynchronizeGeometry::do_execute()
 
   for (;;)
   {
-    msg = mailbox.receive();
-    if (enforce_barrier(msg) == 86)
+    MessageBase *msg = mailbox.receive();
+    if (process_event(msg) == 86)
     {
       return;
     }
@@ -98,7 +96,7 @@ SynchronizeGeometry::do_execute()
 
 
 int
-SynchronizeGeometry::enforce_barrier(MessageBase* msg)
+SynchronizeGeometry::process_event(MessageBase* msg)
 {
   GeometryComm* gmsg = (GeometryComm*)msg;
 
@@ -119,6 +117,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
   case MessageTypes::GeometryDelObj:
   case MessageTypes::GeometryDelAll:
   case MessageTypes::GeometryAddObj:
+    gui_enforce_.reset();
     if (gui_enforce_.get())
     {
       append_msg(gmsg);
@@ -137,6 +136,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
 
   case MessageTypes::GeometryFlush:
   case MessageTypes::GeometryFlushViews:
+    gui_enforce_.reset();
     if (gui_enforce_.get())
     {
       append_msg(gmsg);
@@ -152,6 +152,14 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
       }
     }
     msg = 0;
+    break;
+
+  case MessageTypes::ExecuteModule:
+    gui_enforce_.reset();
+    if (!gui_enforce_.get())
+    {
+      flush_all_msgs();
+    }
     break;
 
   default:
