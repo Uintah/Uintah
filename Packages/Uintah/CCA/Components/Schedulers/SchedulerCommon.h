@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
 #include <iosfwd>
 
 class DOM_Document;
@@ -79,6 +80,12 @@ WARNING
     // Insert Documentation Here:
     virtual void advanceDataWarehouse(const GridP& grid);
 
+    // Get the expected extents that may be needed for a particular variable
+    // on a particular patch (which should include expected ghost cells.
+    virtual void
+    getExpectedExtents(const VarLabel* label, const Patch* patch,
+		       IntVector& lowIndex, IntVector& highIndex) const;
+
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
@@ -113,6 +120,7 @@ WARNING
     DOM_Element* m_nodes;
     ofstream* memlogfile;
     bool emit_taskgraph;
+    GhostOffsetVarMap m_ghostOffsetVarMap;
   };
 } // End namespace Uintah
 

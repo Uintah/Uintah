@@ -171,6 +171,13 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
 		      const MaterialSet* matls)
 {
    graph.addTask(task, patches, matls);
+   for (Task::Dependency* dep = task->getRequires(); dep != 0;
+	dep = dep->next) {
+     // Store the ghost cell information of each of the requires
+     // so we can predict the total allocation needed for each variable.
+     m_ghostOffsetVarMap.includeOffsets(dep->var, dep->gtype,
+					dep->numGhostCells);
+   }
 }
 
 void
@@ -183,6 +190,7 @@ void
 SchedulerCommon::initialize()
 {
    graph.initialize();
+   m_ghostOffsetVarMap.clear();
 }
 
 void 
@@ -192,7 +200,8 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
     delete dws_[ Task::OldDW ];
   dws_[ Task::OldDW ] = dws_[ Task::NewDW ];
   int generation = d_generation++;
-  dws_[Task::NewDW]=scinew OnDemandDataWarehouse(d_myworld, generation, grid);
+  dws_[Task::NewDW]=scinew OnDemandDataWarehouse(d_myworld, this, generation,
+						 grid);
 }
 
 DataWarehouse*
@@ -205,6 +214,13 @@ DataWarehouse*
 SchedulerCommon::get_new_dw()
 {
   return dws_[ Task::NewDW ];
+}
+
+void SchedulerCommon::
+getExpectedExtents(const VarLabel* label, const Patch* patch,
+		   IntVector& lowIndex, IntVector& highIndex) const
+{
+  m_ghostOffsetVarMap.getExtents(label, patch, lowIndex, highIndex);
 }
 
 void
