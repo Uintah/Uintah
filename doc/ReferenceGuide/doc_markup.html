@@ -30,7 +30,7 @@
 <p class="firstpara">The reason for using style sheets and having you follow these rules for composing HTML is to give all our documentation a consistent look and feel. Style sheets also make it possible to change aspects of the design for all the documents by modifying only a single document that contains the style rules. Therefore, the more layout is allowed to be controlled by the style sheet, rather than the internal markup of each page, the more the look and feel can be easily modified and kept consistent.</p>
 <p class="nextpara">The way style sheets achieve this is by defining how the HTML markup tags will behave in a separate document that all the pages refer to. In this case the document is called <b>doc_styles.css</b> and it is referred to in the HEAD section of each document by this line:</p>
 
-<p class="example">&lt;link rel=stylesheet type="text/css" href="doc_styles.css"&gt;</p>
+<p class="example"><b>&lt;link rel=stylesheet type="text/css"<br> href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css"&gt;</b></p>
 
 <p class="nextpara">Style sheets should change the way you think about constructing HTML. Rather than using tags to develop the appearance of the individual elements within a document, you can use them to identify the basic parts of documents that can then be formatted by the style sheet. For example, rather that creating large headings here, small headings there, indent this bit here, we can create one tag called "head" for all main headings that describes font, size, indentation, color and all else. Then we define other tags for the Table of Contents, paragraphs, code examples, etc. If we stick to these predefined tags, all of our documents have a consistant look and any modifications to the style sheet will work for all the documents.</p> 
 
@@ -41,7 +41,7 @@
 <ul class="list">
 <li>Do not use a web page generator to edit the pages. <b>Use a plain text editor such as EMACS or NOTEPAD.</b> Web page editors that generate the HTML for you do not know how the styles are being used and will not generate correctly formatted documents for our purposes.</li>
 <p></p>
-<li>Place the statement <b>&lt;link rel=stylesheet type="text/css" href="doc_styles.css"&gt;</b> in the HEAD section of the document.</li>
+<li>Place the statement <b>&lt;link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css"&gt;</b> in the HEAD section of the document.</li>
 <p></p>
 <li>Always use the beginning and end tags with the content in between. <b>&lt;tag&gt; content... &lt/tag&gt;</b>. That even goes for the &lt;p&gt; tag which should always have an associated &lt;/p&gt; tag. This allows the styles to be applied only to the content in between the tags. The exceptions are the tags that have no end tag such as &lt;img ...&gt; and &lt;br&gt;.</li>
 <p></p>
@@ -149,7 +149,8 @@
 &lt;html&gt;
 &lt;head&gt;
    &lt;meta name="Author" content="<b>Your Name</b>"&gt;
-   <b>&lt;link rel=stylesheet type="text/css" href="doc_styles.css"&gt;</b>
+   <b>&lt;link rel=stylesheet type="text/css" 
+href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css"&gt;</b>
    &lt;title&gt;<b>Title of Page</b>&lt;/title&gt;
 &lt;/head&gt;
 &lt;body&gt;
