@@ -274,6 +274,7 @@ void Streamline::execute()
 	widget_p2->get_pick()->set_principal(spvec, v1, v2);
 	widget_edge1->get_pick()->set_principal(spvec, v1, v2);
 	widget_slider1->get_pick()->set_principal(spvec);
+	widget->reset_bbox();
     } else if(widgettype.get() == "Square"){
 	NOT_FINISHED("Square widget");
     }
