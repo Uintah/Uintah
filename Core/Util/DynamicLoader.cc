@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sstream>
 
 namespace SCIRun {
 
@@ -176,7 +177,8 @@ DynamicLoader::wait_for_current_compile(const string &entry)
 //! libs at the same time, but forces only one thread can compile any one
 //! lib.
 bool
-DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p)
+DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
+				 ostream &serr)
 {  
   bool do_compile = false;
   
@@ -204,26 +206,25 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p)
   LIBRARY_HANDLE so = 0;
   struct stat buf;
   if (stat(full_so.c_str(), &buf) == 0) {
-    compile_so(info.filename_); // make sure
+    compile_so(info.filename_, serr); // make sure
     so = GetLibraryHandle(full_so.c_str());
   } else {
     // the lib does not exist.  
-    create_cc(info);
-    compile_so(info.filename_);
+    create_cc(info, serr);
+    compile_so(info.filename_, serr);
     so = GetLibraryHandle(full_so.c_str());
 
     if (maybe_compile_p && so == 0)
     {
-      create_empty_cc(info);
-      compile_so(info.filename_);
+      create_empty_cc(info, serr);
+      compile_so(info.filename_, serr);
       so = GetLibraryHandle(full_so.c_str());
     }
      
     if (so == 0) { // does not compile
-      cerr << "does not compile" << endl;
-      cerr << "DYNAMIC COMPILATION ERROR: " << full_so 
+      serr << "DYNAMIC COMPILATION ERROR: " << full_so 
 	   << " does not compile!!" << endl;
-      cerr << SOError() << endl;
+      serr << SOError() << endl;
       // Remove the null ref for this lib from the map.
       map_lock_.lock();
       algo_map_.erase(info.filename_);
@@ -238,9 +239,9 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p)
   maker = (maker_fun)GetHandleSymbolAddress(so, "maker");
   
   if (maker == 0) {
-    cerr << "DYNAMIC LIB ERROR: " << full_so 
+    serr << "DYNAMIC LIB ERROR: " << full_so 
 	 << " no maker function!!" << endl;
-    cerr << SOError() << endl;
+    serr << SOError() << endl;
     // Remove the null ref for this lib from the map.
     map_lock_.lock();
     algo_map_.erase(info.filename_);
@@ -263,17 +264,18 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p)
 //! Attempt to compile file into a .so, return true if it succeeded
 //! false otherwise.
 bool 
-DynamicLoader::compile_so(const string& file)
+DynamicLoader::compile_so(const string& file, ostream &serr)
 {
   string command = "cd " + OTF_OBJ_DIR + "; gmake " + file + "so";
+  command += " > " + file + "log 2>&1";
 
-  cerr << "Executing: " << command << endl;
+  serr << "DynamicLoader - Executing: " << command << endl;
   bool compiled =  sci_system(command.c_str()) == 0; 
   if(!compiled) {
-    cerr << "DynamicLoader::compile_so() error: "
+    serr << "DynamicLoader::compile_so() Error: "
 	 << "system call failed:" << endl << command << endl;
   } else {
-    cerr << "DynamicLoader - successfully compiled " << file + "so" << endl;
+    serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
   }
 
   return compiled;
@@ -285,7 +287,7 @@ DynamicLoader::compile_so(const string& file)
 //!
 //! Write a .cc file, from the compile info.
 bool 
-DynamicLoader::create_cc(const CompileInfo &info)
+DynamicLoader::create_cc(const CompileInfo &info, ostream &serr)
 {
   const string STD_STR("std::");
 
@@ -294,7 +296,8 @@ DynamicLoader::create_cc(const CompileInfo &info)
   ofstream fstr(full.c_str());
 
   if (!fstr) {
-    cerr << "DynamicLoader::create_cc could not create file " << full << endl;
+    serr << "DynamicLoader::create_cc - Could not create file " <<
+      full << endl;
     return false;
   }
   fstr << "// This is an autamatically generated file, do not edit!" << endl;
@@ -341,7 +344,7 @@ DynamicLoader::create_cc(const CompileInfo &info)
        << info.template_arg_ << ">;" << endl
        << "}" << endl << "}" << endl;
 
-  cerr << "DynamicLoader - successfully created " << full << endl;
+  serr << "DynamicLoader - Successfully created " << full << endl;
   return true;
 }
 
@@ -352,7 +355,7 @@ DynamicLoader::create_cc(const CompileInfo &info)
 //! It contains an empty maker function.  Used if the actual compilation
 //! fails.
 bool 
-DynamicLoader::create_empty_cc(const CompileInfo &info)
+DynamicLoader::create_empty_cc(const CompileInfo &info, ostream &serr)
 {
   const string STD_STR("std::");
 
@@ -361,7 +364,8 @@ DynamicLoader::create_empty_cc(const CompileInfo &info)
   ofstream fstr(full.c_str());
 
   if (!fstr) {
-    cerr << "DynamicLoader::create_cc could not create file " << full << endl;
+    serr << "DynamicLoader::create_empty_cc - Could not create file "
+	 << full << endl;
     return false;
   }
   fstr << "// This is an autamatically generated file, do not edit!" << endl;
@@ -407,7 +411,7 @@ DynamicLoader::create_empty_cc(const CompileInfo &info)
        << "  return 0;" << endl
        << "}" << endl << "}" << endl;
 
-  cerr << "DynamicLoader - successfully created " << full << endl;
+  serr << "DynamicLoader - Successfully created " << full << endl;
   return true;
 }
 
@@ -451,8 +455,10 @@ DynamicLoader::get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 bool
 DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
+  // log discarded.
+  ostringstream log;
   return (fetch(ci, algo) ||
-	  (compile_and_store(ci, true) && fetch(ci, algo)));
+	  (compile_and_store(ci, true, log) && fetch(ci, algo)));
 }
 
 } // End namespace SCIRun

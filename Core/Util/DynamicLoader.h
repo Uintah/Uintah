@@ -79,15 +79,16 @@ public:
   bool get(const CompileInfo &info, DynamicAlgoHandle&);
   bool maybe_get(const CompileInfo &info, DynamicAlgoHandle&);
   bool fetch(const CompileInfo &info, DynamicAlgoHandle&);
-  bool compile_and_store(const CompileInfo &info, bool maybe_compile = false);
+  bool compile_and_store(const CompileInfo &info, bool maybe_compile = false,
+			 ostream &serr = cerr);
 
   //! All modules should use this function to get the loader.
   static DynamicLoader& scirun_loader();
 
 private:
-  bool create_cc(const CompileInfo &info);
-  bool create_empty_cc(const CompileInfo &info);
-  bool compile_so(const string &file);
+  bool create_cc(const CompileInfo &info, ostream &serr);
+  bool create_empty_cc(const CompileInfo &info, ostream &serr);
+  bool compile_so(const string &file, ostream &serr);
   void store( const string &, maker_fun);
   bool entry_exists(const string &entry);
   bool entry_is_null(const string &entry);
