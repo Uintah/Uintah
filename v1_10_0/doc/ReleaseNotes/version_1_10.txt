@@ -27,14 +27,8 @@ New Projects in Version 1.10  (Major changes and Research Directions)
   their dual, the Separating Surfaces (this is all in the BioPSE
   package; most modules are in BioPSE::Modeling category).
 
-- Segmented Volumes (SegLatVolField) can be built from PlanarContours
-  using PlanarContoursToSegVol module (implements Scanline Surfacing
-  paper from Vis 2000).
-
-- SegLatVolField can also be built from a LatVolField by passing it
+- SegLatVolField can be built from a LatVolField by passing it
   into the SegFieldOps module
-
-- SegLatVolField can be processed for: erosion, dilation, absorption.
 
 - SegLatVolField can be turned back into a LatVolField with
   SegFieldToLatVol module.
@@ -45,12 +39,8 @@ New Projects in Version 1.10  (Major changes and Research Directions)
 - An individual QuadSurf component can be extracted from a
   SegLatVolField with the ExtractSingleSurface module
 
-- SepSurf can be smoothed via SmoothSepSurf module
-
 - SepSurf can be turned into a normal QuadSurfField via the
   SepSurfToQuadSurf module
-
-- Preliminary VDT Package support for meshing SepSurf into TetVolField
 
 ??????????????????????????
 - Support for Masked meshes and fields (need description from McKay),
@@ -68,10 +58,24 @@ New Projects in Version 1.10  (Major changes and Research Directions)
 - Preliminary support for TriSurf and TetVol mesh refinement via
   bisection, node insertion, and Watson-style node insertion
 
-- Time-dependent datasets -- we will be releasing one or two EEG
-  datasets, and one or two ECG datasets with this release.
-  (Northeastern (NEU) is leading this effort.)
+- Three new inverse-problem modules are now available in the
+  BioPSE/Inverse category: Tikhonov, TikhonovSVD, and TSVD.  These
+  implement Tikhonov inversion with flexible control of 
+  regularization, Tikhonov inversion via singular value decomposition,
+  and matrix inversion via truncated singular value decomposition,
+  respectively.
 
+- We are providing two time-dependent EEG datasets (scalp electrode
+  recordings), and one time-dependent ECG dataset (epicardial sock
+  recordings) for users interested in time-dependent problems.  These
+  datasets are avaialbe in the new SCIRunData/time-dependent
+  subdirectory, and are used in the BioPSE show-eeg-data
+  and tikhonov-inversion nets, respectively.
+
+- We have added a complete set of StandAlone "converter" programs
+  to enable users to import their datasets into SCIRun, and to export
+  SCIRun datasets to their systems.  These are described in more 
+  detail in the Converters section below.
 
 ---------------------------------------------------------------------------
 
@@ -84,7 +88,7 @@ sets of data for a given field.  Teem now supports conversion of all
 SCIRun Fields to Nrrds (through dynamic compilation).  All Teem
 modules now support N-dimensional data (NRRDS).
 
-Teem modules should now have info when you select Help for a module.
+All Teem modules now have run-time help information.
 
 Many Teem user interfaces now update dynamically to reflect the
 N-dimensional NRRDs that may be input. This means that a new net may
@@ -138,8 +142,9 @@ selection of GUI options, and again to send along the correct NRRD.
   SparseRowMatrix format.  Multiplying resultant matrix by source data
   produces data vector for destination field.
 
-- InflateCurveToQuadSurf: turn a non-bifurcating CurveField into a
-  QuadSurf by inflating it by a specified radius.
+- BioPSE::ConfigureWireElectrode: turns a non-bifurcating CurveField
+  into a QuadSurf by inflating it by a specified radius and specifying
+  a constant voltage over the surface.
 
 - BioPSE::IndicesToTensors and BioPSE::TensorsToIndices: converts
   between Fields that store their Tensors in lookup tables (Field<int>
@@ -239,9 +244,21 @@ Retired Modules (SCIRun, unless noted otherwise.)
 New Converters
 --------------
 
-??????????????????????
-Get info from Dave
-??????????????????????
+- Rewrote all conversion applications (in SCIRun/src/StandAlone/convert/).
+  New converters have a standardized set of command-line arguments, and
+  are comprehensive in providing import and export functionality for all
+  Field, Matrix, and ColorMap classes.
+
+- Each converter provides full usage information if invoked with no
+  arguments.
+
+- A complete document describing the philosophy and design of these
+  converters has been added to the User's Guide.
+
+- We have created example datasets, and documented example
+  invocations of the converters; these datasets, along with README
+  files are located in the new SCIRunData/convert-examples
+  subdirectory.
 
 ---------------------------------------------------------------------------
 
