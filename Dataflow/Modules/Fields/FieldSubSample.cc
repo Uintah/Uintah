@@ -98,7 +98,7 @@ DECLARE_MAKER(FieldSubSample)
 
 
 FieldSubSample::FieldSubSample(GuiContext *context)
-  : Module("FieldSubSample", context, Source, "Fields", "SCIRun"),
+  : Module("FieldSubSample", context, Filter, "Fields", "SCIRun"),
 
     Wrap_(context->subVar("wrap")),
     Dims_(context->subVar("dims")),
