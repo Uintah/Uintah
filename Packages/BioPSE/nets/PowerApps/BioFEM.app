@@ -544,13 +544,7 @@ class BioFEMApp {
 		-height [expr $vis_height - 160] -tabpos n
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
-            if {$case == 0} {
-		set vis_frame_tab1 $vis.tnb
-            } else {
-		set vis_frame_tab2 $vis.tnb	    
-            }
-
-
+	    set vis_frame_tab$case $vis.tnb
 	    set data [$vis.tnb add -label "Data Selection" -command "$this change_vis_frame 0"]
 
 	    init_data_selection_frame $data
@@ -564,32 +558,22 @@ class BioFEMApp {
 		-labeltext "Isopotential Surface"
 
 	    set iso [$page.isoframe childsite]
-	    
+	    set isosurface_tab$case $iso
 	    build_isosurface_tab $iso
 	    
             pack $page.isoframe -padx 4 -pady 4 -fill x
 
-            if {$case == 0} {
-		set isosurface_tab1 $iso
-            } else {
-		set isosurface_tab2 $iso
-            }
 	    
 	    ### StreamLines
 	    iwidgets::labeledframe $page.slframe -labelpos nw \
 		-labeltext "Electric Field Lines"
 
 	    set sl [$page.slframe childsite]
-	    
+	    set streamlines_tab$case $sl	    
 	    build_streamlines_tab $sl
 	    
             pack $page.slframe -padx 4 -pady 4 -fill x
 
-            if {$case == 0} {
-		set streamlines_tab1 $sl
-            } else {
-		set streamlines_tab2 $sl
-            }
 
 	    ### Electrodes
 	    iwidgets::labeledframe $page.elecframe -labelpos nw \
@@ -632,11 +616,8 @@ class BioFEMApp {
             pack $vis.last.ex -side right -anchor ne \
 		-padx 2 -pady 0
 
-	    if {$case == 0} {
-		set data_ex_button1 $vis.last.ex
-	    } else {
-		set data_ex_button2 $vis.last.ex
-	    }
+	    set data_ex_button$case $vis.last.ex
+
 
             ### Indicator
 	    frame $vis.indicator -relief sunken -borderwidth 2
@@ -652,13 +633,8 @@ class BioFEMApp {
             pack $vis.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
 	    
-            if {$case == 0} {
-		set indicator1 $vis.indicator.canvas
-		set indicatorL1 $vis.indicatorL
-            } else {
-		set indicator2 $vis.indicator.canvas
-		set indicatorL2 $vis.indicatorL
-            }
+	    set indicator$case $vis.indicator.canvas
+	    set indicatorL$case $vis.indicatorL
 	    
             construct_indicator $vis.indicator.canvas
 	    
@@ -1303,32 +1279,28 @@ class BioFEMApp {
     
 
     method change_indicator_labels { msg } {
+	$indicatorL0 configure -text $msg
 	$indicatorL1 configure -text $msg
-	$indicatorL2 configure -text $msg
     }
     
-    
-
     # Visualiztion frame tabnotebook
     variable vis_frame_tab1
-    variable vis_frame_tab2
+    variable vis_frame_tab0
     variable c_left_tab
 
     # Vis tabs notebook
     variable vis_tab1
-    variable vis_tab2
+    variable vis_tab0
 
     variable isosurface_tab1
-    variable isosurface_tab2
+    variable isosurface_tab0
 
     variable streamlines_tab1
-    variable streamlines_tab2
+    variable streamlines_tab0
 
     # Application placing and size
     variable notebook_width
     variable notebook_height
-
-
 }
 
 BioFEMApp app

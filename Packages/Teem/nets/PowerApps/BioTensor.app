@@ -2459,12 +2459,7 @@ class BioTensorApp {
 
 	    #Tooltip $step_tab $tips(LoadDataTab)
 	    
-            if {$case == 0} {
-                set proc_tab1 $process.tnb
-            } else {
-                set proc_tab2 $process.tnb
-            }
-
+	    set proc_tab$case $process.tnb
 
 	    # Radiobuttons for by-passing any processing and loading
 	    # the tensors directly
@@ -2540,11 +2535,7 @@ class BioTensorApp {
             pack $step_tab.tnb -side top -anchor n \
 		-padx 3 -pady 8
 
-            if {$case == 0} {
-                set data_tab1 $step_tab.tnb
-            } else {
-                set data_tab2 $step_tab.tnb
-            }	      
+	    set data_tab$case $step_tab.tnb
 	    
 	    
             ### Nrrd
@@ -2552,11 +2543,7 @@ class BioTensorApp {
 
 	    #Tooltip $page $tips(NrrdTab)
 
-	    if {$case == 0} {
-                set nrrd_tab1 $page
-            } else {
-                set nrrd_tab2 $page
-            }
+	    set nrrd_tab$case $page
 	    
             global $mods(NrrdReader1)-filename
             label $page.dwil -text "DWI Volume:"
@@ -2598,11 +2585,7 @@ class BioTensorApp {
 
 	    #Tooltip $page $tips(DicomTab)
 
-	    if {$case == 0} {
-                set dicom_tab1 $page
-            } else {
-                set dicom_tab2 $page
-            }
+	    set dicom_tab$case $page
 	    
             label $page.dwil -text "DWI Volume:"
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
@@ -2633,12 +2616,7 @@ class BioTensorApp {
 
 	    #Tooltip $page $tips(AnalyzeTab)
 
-	    if {$case == 0} {
-                set analyze_tab1 $page
-            } else {
-                set analyze_tab2 $page
-            }
-
+	    set analyze_tab$case $page
 	    
             label $page.dwil -text "DWI Volume:"
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
@@ -2689,25 +2667,15 @@ class BioTensorApp {
             pack $step_tab.last.ne $step_tab.last.ex -side right -anchor ne \
 		-padx 2 -pady 0
 
-	    if {$case == 0} {
-		set data_next_button1 $step_tab.last.ne
-		set data_ex_button1 $step_tab.last.ex
-	    } else {
-		set data_next_button2 $step_tab.last.ne
-		set data_ex_button2 $step_tab.last.ex
-	    }
-	    
+	    set data_next_button$case $step_tab.last.ne
+	    set data_ex_button$case $step_tab.last.ex
 	    
 	    ### Registration
             set step_tab [$process.tnb add -label "Registration" -command "$this change_processing_tab Registration"]          
 
 	    #Tooltip $step_tab $tips(RegistrationTab)
 	    
-            if {$case == 0} {
-		set reg_tab1 $step_tab
-            } else {
-		set reg_tab2 $step_tab
-            }
+	    set reg_tab$case $step_tab
 	    
 	    # Checkbutton to skip Registration entirely
             global do_registration
@@ -2752,11 +2720,7 @@ class BioTensorApp {
 	    
             set refimg [$step_tab.refimg childsite]
 	    
-	    if {$case == 0} {
-		set ref_image1 $refimg
-            } else {
-		set ref_image2 $refimg
-            }
+	    set ref_image$case $refimg
 	    
 	    radiobutton $refimg.est -text "Implicit Reference: estimate distortion\nparameters from all images" \
 		-state disabled \
@@ -2847,13 +2811,8 @@ class BioTensorApp {
             pack $seg.thresh -side top -anchor n -padx 0 -pady 0 \
 		-fill x -expand 1
 	    
-            set thresh [$seg.thresh childsite]
-	    
-            if {$case == 0} {
-                set reg_thresh1 $thresh
-            } else {
-                set reg_thresh2 $thresh	  
-            }
+            set thresh [$seg.thresh childsite]	    
+	    set reg_thresh$case $thresh
 	    
 	    global $mods(TendEpireg)-threshold
             global $mods(TendEpireg)-use-default-threshold
@@ -2938,13 +2897,8 @@ class BioTensorApp {
 
 	    Tooltip $step_tab $tips(BuildTensorsTab)
 	    
-            if {$case == 0} {
-		set dt_tab1 $step_tab
-            } else {
-		set dt_tab2 $step_tab
-            }	   
+	    set dt_tab$case $step_tab
 
-	    # DWI Smooting
             iwidgets::labeledframe $step_tab.blur \
 		-labeltext "DWI Smoothing" \
 		-labelpos nw -foreground grey64
@@ -3146,15 +3100,10 @@ class BioTensorApp {
 	    
             label $process.indicatorL -text "Press Execute to Load Data..."
             pack $process.indicatorL -side bottom -anchor sw -padx 5 -pady 3
-	    
-	    
-            if {$case == 0} {
-		set indicator1 $process.indicator.canvas
-		set indicatorL1 $process.indicatorL
-            } else {
-		set indicator2 $process.indicator.canvas
-		set indicatorL2 $process.indicatorL
-            }
+	    	    
+	    set indicator$case $process.indicator.canvas
+	    set indicatorL$case $process.indicatorL
+
 	    Tooltip $process.indicatorL $tips(IndicatorLabel)
 	    
             construct_indicator $process.indicator.canvas
@@ -3209,11 +3158,7 @@ class BioTensorApp {
 		-height [expr $vis_height - 25] -tabpos n
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
-            if {$case == 0} {
-               set vis_frame_tab1 $vis.tnb
-            } else {
-               set vis_frame_tab2 $vis.tnb	    
-            }
+	    set vis_frame_tab$case $vis.tnb
 	    
 	    set page [$vis.tnb add -label "Vis Options" -command "$this change_vis_frame \"Vis Options\""]
 	    
@@ -3227,68 +3172,35 @@ class BioTensorApp {
 	    
             pack $page.vis_tabs -padx 4 -pady 4
 	    
-            if {$case == 0} {
-		set vis_tab1 $page.vis_tabs
-            } else {
-		set vis_tab2 $page.vis_tabs
-            }
+	    set vis_tab$case $page.vis_tabs
 	    
             ### Variance
             set vis_tab [$page.vis_tabs add -label "Variance" -command "$this change_vis_tab Variance"]
-	    
-	    if {$case == 0} {
-		set variance_tab1 $vis_tab
-		build_variance_tab $variance_tab1
-	    } else {
-		set variance_tab2 $vis_tab
-		build_variance_tab $variance_tab2
-	    }         
-
+	    set variance_tab$case $vis_tab
+	    build_variance_tab $vis_tab
 	    
 	    ### Planes
             set vis_tab [$page.vis_tabs add -label "Planes" -command "$this change_vis_tab Planes"]
-	    
-	    if {$case == 0} {
-		set planes_tab1 $vis_tab
-		build_planes_tab $planes_tab1
-	    } else {
-		set planes_tab2 $vis_tab
-		build_planes_tab $planes_tab2
-	    } 
+	    set planes_tab$case $vis_tab
+	    build_planes_tab $vis_tab
 	    
 	    
 	    ### Isosurface
             set vis_tab [$page.vis_tabs add -label "Isosurface" -command "$this change_vis_tab Isosurface"]
-	    if {$case == 0} {
-		set isosurface_tab1 $vis_tab
-		build_isosurface_tab $isosurface_tab1
-	    } else {
-		set isosurface_tab2 $vis_tab
-		build_isosurface_tab $isosurface_tab2
-	    } 
+	    set isosurface_tab$case $vis_tab
+	    build_isosurface_tab $vis_tab
 
 	    
 	    ### Glyphs
             set vis_tab [$page.vis_tabs add -label "Glyphs" -command "$this change_vis_tab Glyphs"]
-	    
-	    if {$case == 0} {
-		set glyphs_tab1 $vis_tab
-		build_glyphs_tab $glyphs_tab1
-	    } else {
-		set glyphs_tab2 $vis_tab
-		build_glyphs_tab $glyphs_tab2
-	    } 
+	    set glyphs_tab$case $vis_tab
+	    build_glyphs_tab $vis_tab
 
 	    
 	    ### Fibers
             set vis_tab [$page.vis_tabs add -label "Fibers" -command "$this change_vis_tab Fibers"]
-	    if {$case == 0} {
-		set fibers_tab1 $vis_tab
-		build_fibers_tab $fibers_tab1
-	    } else {
-		set fibers_tab2 $vis_tab
-		build_fibers_tab $fibers_tab2
-	    } 
+	    set fibers_tab$case $vis_tab
+	    build_fibers_tab $vis_tab
 	    
             $page.vis_tabs view "Variance"
 	    
@@ -3941,10 +3853,8 @@ class BioTensorApp {
 		disableModule $mods(TendEpireg) 1
 	    }
 
-
+	    $indicatorL0 configure -text "Press Execute to run to save point..."
 	    $indicatorL1 configure -text "Press Execute to run to save point..."
-	    $indicatorL2 configure -text "Press Execute to run to save point..."
-
 	}	
     }
 
@@ -9612,17 +9522,17 @@ class BioTensorApp {
     method change_indicator_labels { msg } {
 	if {!$loading} {
 	    if {($msg == "Visualization..." && $data_completed && $reg_completed && $dt_completed) || ($msg != "Visualization...")} {
+		$indicatorL0 configure -text $msg
 		$indicatorL1 configure -text $msg
-		$indicatorL2 configure -text $msg
 	    }
 	} else {
 	    # $msg != "Dynamically Compiling Code..."
 	    if {$msg != "E R R O R !"} {
+		$indicatorL0 configure -text "Executing to save point..."
 		$indicatorL1 configure -text "Executing to save point..."
-		$indicatorL2 configure -text "Executing to save point..."
 	    } else {
+		$indicatorL0 configure -text $msg
 		$indicatorL1 configure -text $msg
-		$indicatorL2 configure -text $msg
 	    }
 
 	}
@@ -9795,55 +9705,55 @@ class BioTensorApp {
 
     # Procedures
     variable data_tab1
-    variable data_tab2
+    variable data_tab0
 
     variable reg_tab1
-    variable reg_tab2
+    variable reg_tab0
 
     variable dt_tab1
-    variable dt_tab2
+    variable dt_tab0
 
     # Data tabs
     variable nrrd_tab1
-    variable nrrd_tab2
+    variable nrrd_tab0
     variable dicom_tab1
-    variable dicom_tab2
+    variable dicom_tab0
     variable analyze_tab1
-    variable analyze_tab2
+    variable analyze_tab0
     variable data_next_button1
-    variable data_next_button2
+    variable data_next_button0
     variable data_ex_button1
-    variable data_ex_button2
+    variable data_ex_button0
 
     # Visualization frame tabnotebook
     variable vis_frame_tab1
-    variable vis_frame_tab2
+    variable vis_frame_tab0
 
     # Vis tabs notebook
     variable vis_tab1
-    variable vis_tab2
+    variable vis_tab0
 
     variable variance_tab1
-    variable variance_tab2
+    variable variance_tab0
 
     variable planes_tab1
-    variable planes_tab2
+    variable planes_tab0
 
     variable isosurface_tab1
-    variable isosurface_tab2
+    variable isosurface_tab0
 
     variable glyphs_tab1
-    variable glyphs_tab2
+    variable glyphs_tab0
 
     variable fibers_tab1
-    variable fibers_tab2
+    variable fibers_tab0
 
     # pointers to widgets
     variable ref_image1
-    variable ref_image2
+    variable ref_image0
 
     variable reg_thresh1
-    variable reg_thresh2
+    variable reg_thresh0
 
 
     # Application placing and size
