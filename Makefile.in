@@ -134,7 +134,7 @@ endif
 TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
 
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE)
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@
 
 SSTREAM_COMPAT := @SSTREAM_COMPAT@
 ifeq ($(SSTREAM_COMPAT),yes)
@@ -311,6 +311,9 @@ endif
 
 #
 # $Log$
+# Revision 1.27  2000/06/10 04:18:22  moulding
+# added a section to search for GL headers
+#
 # Revision 1.26  2000/06/09 17:46:16  kuzimmer
 # Modified so that linux and 64bit compiles won't choke on the new image
 # and compression libraries
