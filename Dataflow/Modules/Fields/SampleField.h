@@ -388,8 +388,6 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
   DistTable table;
   table.clear();
 
-  typedef typename Mesh::Node::array_type array_type;
-
   ScalarFieldInterface *sfi = field->query_scalar_interface();
   VectorFieldInterface *vfi = field->query_vector_interface();
   if (sfi)
@@ -411,7 +409,6 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
 
   long double max = table[table.size()-1].first;
   Mesh *mesh = dynamic_cast<Mesh *>(field->mesh().get_rep());
-  array_type ra;
 
   PointCloudMesh *pcmesh = scinew PointCloudMesh;
 
@@ -423,7 +420,8 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
     table.search(e,rng() * max);             // find random cell
     if (clamp)
     {
-      // find a random node in that cell
+      // Find a random node in that cell.
+      typename Mesh::Node::array_type ra;
       mesh->get_nodes(ra,e.second);
       mesh->get_center(p,ra[(int)(rng()*ra.size()+0.5)]);
     }
@@ -435,12 +433,8 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
     pcmesh->add_node(p);
   }
 
-  PointCloudField<double> *seeds = scinew PointCloudField<double>(pcmesh,Field::NODE);
-  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
-  for (loop=0; loop<num_seeds; ++loop)
-  {
-    fdata[loop]=1;
-  }
+  PointCloudField<double> *seeds =
+    scinew PointCloudField<double>(pcmesh,Field::NODE);
 
   return seeds;
 }
