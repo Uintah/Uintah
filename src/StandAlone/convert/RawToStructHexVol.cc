@@ -52,9 +52,9 @@ main(int argc, char **argv)
   ifstream condstream(argv[2]);
 
   int isize, jsize, ksize;
-  ptsstream >> isize;
-  ptsstream >> jsize;
   ptsstream >> ksize;
+  ptsstream >> jsize;
+  ptsstream >> isize;
 
   
   StructHexVolMesh *hvm = new StructHexVolMesh(isize, jsize, ksize);
@@ -89,6 +89,19 @@ main(int argc, char **argv)
   
   StructHexVolField<int> *hvf =
     scinew StructHexVolField<int>(hvm, Field::CELL);
+
+  int tmpi, tmpj, tmpk;
+  condstream >> tmpk;
+  condstream >> tmpj;
+  condstream >> tmpi;
+
+  if (tmpi != isize-1 &&
+      tmpj != jsize-1 &&
+      tmpk != ksize-1)
+  {
+    cerr << "Error -- Conductivity size does not correspond to points size.\n";
+    exit(0);
+  }
 
   count = 0;
   for (i = 0; i < isize-1; i++)
