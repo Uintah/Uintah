@@ -152,7 +152,7 @@ void BuildFEMatrixQuadratic::execute()
 
   rows=scinew int[nnodes+1];  
   np=Thread::numProcessors();
-  if (np>10) np/=2;
+  if (np>10) np = 5;//np/=2;
   colidx.resize(np+1);
 
   refnode=0;

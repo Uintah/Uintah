@@ -11,7 +11,7 @@
  #
  ##
 
-itcl_class PSECommon_FEM_BuildFEMatrixQuadratic {
+itcl_class RobV_Quadratic_BuildFEMatrixQuadratic {
     inherit Module
     constructor {config} {
         set name BuildFEMatrixQuadratic
