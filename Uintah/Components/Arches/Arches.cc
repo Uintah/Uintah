@@ -120,28 +120,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->problemSetup(db);
 }
 
-/*
-  void 
-  Arches::problemInit(const LevelP& ,
-  SchedulerP& , 
-  DataWarehouseP& ,
-  bool )
-{
-  cerr << "** NOTE ** Problem init has been called for ARCHES";
-#if 0
-  // initializes variables
-  if (!restrt) {
-    sched_paramInit(level, sched, dw);
-    // initialize velocity, scalars and properties at the boundary
-    d_boundaryCondition->sched_setProfile(level, sched, dw);
-  }
-  d_properties->sched_computeProperties(level, sched, dw, dw);
-  d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
-  d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
-#endif
-}
-*/
-
 //****************************************************************************
 // Schedule initialization
 //****************************************************************************
@@ -150,32 +128,15 @@ Arches::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched,
 			   DataWarehouseP& dw)
 {
-  // BB : 5/19/2000 : Start scheduling the initializations one by one
-  // Parameter initialization
-  //  cerr << "Schedule parameter initialization\n" ;
-  //  sched_paramInit(level, sched, dw);
-  // cerr << "SerialArches::scheduleInitialize not completely done\n";
-  
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
-    // cell type initialization
-    {
-      Task* tsk = new Task("BoundaryCondition::cellTypeInit",
-			   patch, dw, dw, d_boundaryCondition,
-			   &BoundaryCondition::cellTypeInit);
-      cerr << "New task created successfully\n";
-      int matlIndex = 0;
-      tsk->computes(dw, d_cellTypeLabel, matlIndex, patch);
-      sched->addTask(tsk);
-      cerr << "New task added successfully to scheduler\n";
-    }
+
     // primitive variable initialization
     {
       Task* tsk = new Task("Arches::paramInit",
 			   patch, dw, dw, this,
 			   &Arches::paramInit);
-      cerr << "New task created successfully\n";
       int matlIndex = 0;
       tsk->computes(dw, d_uVelocityINLabel, matlIndex, patch);
       tsk->computes(dw, d_vVelocityINLabel, matlIndex, patch);
@@ -186,7 +147,16 @@ Arches::scheduleInitialize(const LevelP& level,
       tsk->computes(dw, d_densityINLabel, matlIndex, patch);
       tsk->computes(dw, d_viscosityINLabel, matlIndex, patch);
       sched->addTask(tsk);
-      cerr << "New task added successfully to scheduler\n";
+    }
+
+    // cell type initialization
+    {
+      Task* tsk = new Task("BoundaryCondition::cellTypeInit",
+			   patch, dw, dw, d_boundaryCondition,
+			   &BoundaryCondition::cellTypeInit);
+      int matlIndex = 0;
+      tsk->computes(dw, d_cellTypeLabel, matlIndex, patch);
+      sched->addTask(tsk);
     }
 
   }
@@ -233,8 +203,8 @@ Arches::scheduleTimeAdvance(double time, double dt,
 			    DataWarehouseP& old_dw, 
 			    DataWarehouseP& new_dw)
 {
-  cerr << "Arches::scheduleTimeAdvance\n";
 
+  cerr << "Begin: Arches::scheduleTimeAdvance\n";
   // Schedule the non-linear solve
   // require : densityCP, viscosityCTS, [u,v,w]VelocitySP, 
   //           pressureIN. scalarIN
@@ -262,9 +232,6 @@ Arches::paramInit(const ProcessorGroup* ,
 		  DataWarehouseP& )
 {
   // ....but will only compute for computational domain
-
-  cerr << "Arches::paramInit\n";
-
   FCVariable<double> uVelocity;
   FCVariable<double> vVelocity;
   FCVariable<double> wVelocity;
@@ -273,8 +240,6 @@ Arches::paramInit(const ProcessorGroup* ,
   CCVariable<double> density;
   CCVariable<double> viscosity;
 
-  cerr << "Actual initialization - before allocation : old_dw = " 
-       << old_dw <<"\n";
   int matlIndex = 0;
   old_dw->allocate(uVelocity, d_uVelocityINLabel, matlIndex, patch);
   old_dw->allocate(vVelocity, d_vVelocityINLabel, matlIndex, patch);
@@ -285,32 +250,50 @@ Arches::paramInit(const ProcessorGroup* ,
   }
   old_dw->allocate(density, d_densityINLabel, matlIndex, patch);
   old_dw->allocate(viscosity, d_viscosityINLabel, matlIndex, patch);
-  cerr << "Actual initialization - after allocation\n";
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
-  IntVector domainLow = patch->getCellLowIndex();
-  IntVector domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
-  IntVector indexLow = domainLow;
-  IntVector indexHigh = domainHigh;
+  IntVector domLoU = uVelocity.getLowIndex();
+  IntVector domHiU = uVelocity.getHighIndex()-IntVector(1,1,1);
+  IntVector idxLoU = domLoU;
+  IntVector idxHiU = domHiU;
+  IntVector domLoV = vVelocity.getLowIndex();
+  IntVector domHiV = vVelocity.getHighIndex()-IntVector(1,1,1);
+  IntVector idxLoV = domLoV;
+  IntVector idxHiV = domHiV;
+  IntVector domLoW = wVelocity.getLowIndex();
+  IntVector domHiW = wVelocity.getHighIndex()-IntVector(1,1,1);
+  IntVector idxLoW = domLoW;
+  IntVector idxHiW = domHiW;
+  IntVector domLo = pressure.getLowIndex();
+  IntVector domHi = pressure.getHighIndex()-IntVector(1,1,1);
+  IntVector idxLo = domLo;
+  IntVector idxHi = domHi;
+
   //can read these values from input file 
   double uVal = 0.0, vVal = 0.0, wVal = 0.0;
   double pVal = 0.0, denVal = 0.0;
   double visVal = d_physicalConsts->getMolecularViscosity();
-  FORT_INIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
-	    indexLow.get_pointer(),  indexHigh.get_pointer(),
-	    uVelocity.getPointer(), &uVal, vVelocity.getPointer(), &vVal, 
+  FORT_INIT(domLoU.get_pointer(), domHiU.get_pointer(), 
+	    idxLoU.get_pointer(), idxHiU.get_pointer(),
+	    uVelocity.getPointer(), &uVal, 
+	    domLoV.get_pointer(), domHiV.get_pointer(), 
+	    idxLoV.get_pointer(), idxHiV.get_pointer(),
+	    vVelocity.getPointer(), &vVal, 
+	    domLoW.get_pointer(), domHiW.get_pointer(), 
+	    idxLoW.get_pointer(), idxHiW.get_pointer(),
 	    wVelocity.getPointer(), &wVal,
-	    pressure.getPointer(), &pVal, density.getPointer(), &denVal, 
+	    domLo.get_pointer(), domHi.get_pointer(), 
+	    idxLo.get_pointer(), idxHi.get_pointer(),
+	    pressure.getPointer(), &pVal, 
+	    density.getPointer(), &denVal, 
 	    viscosity.getPointer(), &visVal);
   for (int ii = 0; ii < d_nofScalars; ii++) {
     double scalVal = 0.0;
-    FORT_INIT_SCALAR(domainLow.get_pointer(), domainHigh.get_pointer(),
-		     indexLow.get_pointer(), indexHigh.get_pointer(), 
+    FORT_INIT_SCALAR(domLo.get_pointer(), domHi.get_pointer(),
+		     idxLo.get_pointer(), idxHi.get_pointer(), 
 		     scalar[ii].getPointer(), &scalVal);
   }
 
-  cerr << "Actual initialization - before put : old_dw = " 
-       << old_dw <<"\n";
   old_dw->put(uVelocity, d_uVelocityINLabel, matlIndex, patch);
   old_dw->put(vVelocity, d_vVelocityINLabel, matlIndex, patch);
   old_dw->put(wVelocity, d_wVelocityINLabel, matlIndex, patch);
@@ -320,33 +303,28 @@ Arches::paramInit(const ProcessorGroup* ,
   }
   old_dw->put(density, d_densityINLabel, matlIndex, patch);
   old_dw->put(viscosity, d_viscosityINLabel, matlIndex, patch);
-  cerr << "Actual initialization - after put \n";
+
+  // Testing if correct values have been put
+  /*
+  cout << " In C++ (Arches.cc) " << endl;
+  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
+    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
+      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " UU = " << uVelocity[IntVector(ii,jj,kk)]
+	     << " DEN = " << density[IntVector(ii,jj,kk)]
+	     << " VIS = " << viscosity[IntVector(ii,jj,kk)] << endl;
+      }
+    }
+  }
+  */
 }
   
-//****************************************************************************
-// Private default constructor for Arches
-//****************************************************************************
-//Arches::Arches():UintahParallelComponent()
-//{
-//}
-
-//****************************************************************************
-// Private copy constructor for Arches
-//****************************************************************************
-//Arches::Arches(const Arches&):UintahParallelComponent()
-//{
-//}
-
-//****************************************************************************
-// private operator=
-//****************************************************************************
-//Arches&
-//Arches::operator=(const Arches&)
-//{
-//}
-
 //
 // $Log$
+// Revision 1.46  2000/06/28 08:14:52  bbanerje
+// Changed the init routines a bit.
+//
 // Revision 1.45  2000/06/22 23:06:32  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

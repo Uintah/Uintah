@@ -52,32 +52,26 @@ c*********************************************************************
 c     Locals :
 c*********************************************************************
       integer i, j, k
-      integer iBegGhost, iEndGhost, iBegActual, iEndActual
-      integer jBegGhost, jEndGhost, jBegActual, jEndActual
-      integer kBegGhost, kEndGhost, kBegActual, kEndActual
+      integer iBeg, iEnd
+      integer jBeg, jEnd
+      integer kBeg, kEnd
 
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
-      iBegGhost = domainLow(1)
-      jBegGhost = domainLow(2)
-      kBegGhost = domainLow(3)
-      iBegActual = indexLow(1)
-      jBegActual = indexLow(2)
-      kBegActual = indexLow(3)
-      iEndGhost = domainHigh(1)
-      jEndGhost = domainHigh(2)
-      kEndGhost = domainHigh(3)
-      iEndActual = indexHigh(1)
-      jEndActual = indexHigh(2)
-      kEndActual = indexHigh(3)
+      iBeg = domainLow(1)
+      jBeg = domainLow(2)
+      kBeg = domainLow(3)
+      iEnd = domainHigh(1)
+      jEnd = domainHigh(2)
+      kEnd = domainHigh(3)
 
 C-----------------------------------------------------------------------
 C     INITIALIZE ALL CARDINAL VARIABLES  
 C-----------------------------------------------------------------------
-      DO 300 K = kBegGhost,kEndGhost
-         DO 200 J = jBegGhost,jEndGhost
-            DO 100 I = iBegGhost,iEndGhost
+      DO 300 K = kBeg,kEnd
+         DO 200 J = jBeg,jEnd
+            DO 100 I = iBeg,iEnd
                SCALAR(I,J,K) = SVAL
  100        CONTINUE
  200     CONTINUE
@@ -89,6 +83,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/06/28 08:14:55  bbanerje
+c Changed the init routines a bit.
+c
 c Revision 1.1  2000/06/13 19:52:58  bbanerje
 c Initialize scalars
 c

@@ -178,8 +178,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
     d_flowInlets[d_numInlets].problemSetup(inlet_db);
     d_cellTypes.push_back(total_cellTypes);
-    d_flowInlets[d_numInlets].density = d_props->computeInletProperties(
-					  d_flowInlets[d_numInlets].streamMixturefraction);
+    d_flowInlets[d_numInlets].density = 
+      d_props->computeInletProperties(d_flowInlets[d_numInlets].streamMixturefraction);
     ++total_cellTypes;
     ++d_numInlets;
   }
@@ -197,9 +197,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_pressBoundary = true;
     d_pressureBdry = scinew PressureInlet(numMixingScalars, total_cellTypes);
     d_pressureBdry->problemSetup(press_db);
-    d_pressureBdry->density = d_props->computeInletProperties(
-					  d_pressureBdry->streamMixturefraction);
-    
+    d_pressureBdry->density = 
+      d_props->computeInletProperties(d_pressureBdry->streamMixturefraction);
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
@@ -211,8 +210,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_outletBoundary = true;
     d_outletBC = scinew FlowOutlet(numMixingScalars, total_cellTypes);
     d_outletBC->problemSetup(outlet_db);
-    d_outletBC->density = d_props->computeInletProperties(
-              			  d_outletBC->streamMixturefraction);
+    d_outletBC->density = 
+      d_props->computeInletProperties(d_outletBC->streamMixturefraction);
     d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
@@ -235,115 +234,173 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   int matlIndex = 0;
 
   old_dw->allocate(cellType, d_cellTypeLabel, matlIndex, patch);
-  // initialize CCVariable to -1 which corresponds to flowfield
-  // ** WARNING **  this needs to be changed soon (6/9/2000)
-  IntVector domainLow = patch->getCellLowIndex();
-  IntVector domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
-  // IntVector indexLow = patch->getCellLowIndex();
-  // IntVector indexHigh = patch->getCellHighIndex();
-  //  int domainLow[3], domainHigh[3];
-  //  int indexLow[3], indexHigh[3];
-  //  domainLow[2] = (patch->getCellLowIndex()).x()+1;
-  //  domainLow[1] = (patch->getCellLowIndex()).y()+1;
-  //  domainLow[0] = (patch->getCellLowIndex()).z()+1;
-  //  domainHigh[2] = (patch->getCellHighIndex()).x();
-  //  domainHigh[1] = (patch->getCellHighIndex()).y();
-  //  domainHigh[0] = (patch->getCellHighIndex()).z();
+
+  IntVector domainLow = cellType.getLowIndex();
+  IntVector domainHigh = cellType.getHighIndex()-IntVector(1,1,1);
   IntVector indexLow = domainLow;
   IntVector indexHigh = domainHigh;
-  //  for (int ii = 0; ii < 3; ii++) {
-  //
-  //    indexLow[ii] = domainLow[ii]+1;
-  //    indexHigh[ii] = domainHigh[ii]-1;
-  //  }
  
-  int celltypeval = -1;
   cerr << "Just before geom init" << endl;
+  // initialize CCVariable to -1 which corresponds to flowfield
+  int celltypeval = -1;
   FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
 		    indexLow.get_pointer(), indexHigh.get_pointer(),
 		    cellType.getPointer(), &celltypeval);
-  // set boundary type for inlet flow field
-  cerr << "Just after fortran call "<< endl;
-  Box patchBox = patch->getBox();
-  // wall boundary type
-  GeometryPiece*  piece = d_wallBdry->d_geomPiece;
-  Box geomBox = piece->getBoundingBox();
-  Box b = geomBox.intersect(patchBox);
-  cerr << "Just before geom wall "<< endl;
-  // check for another geometry
-  if (!(b.degenerate())) {
-    CellIterator iter = patch->getCellIterator(b);
-    //    domainLow[0] = (iter.begin()).x()+1;
-    //    domainLow[1] = (iter.begin()).y()+1;
-    //   domainLow[2] = (iter.begin()).z()+1;
-    //   domainHigh[0] = (iter.end()).x();
-    //  domainHigh[1] = (iter.end()).y();
-    //  domainHigh[2] = (iter.end()).z();
-    domainLow = iter.begin();
-    domainHigh = iter.end() - IntVector(1,1,1);
-    indexLow = domainLow;
-    indexHigh = domainHigh;
-    celltypeval = d_wallBdry->d_cellTypeID;
-    FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
-		      indexLow.get_pointer(), indexHigh.get_pointer(),
-		      cellType.getPointer(), &celltypeval);
+
+  // Testing if correct values have been put
+  cout << " In C++ (BoundaryCondition.cc) after cell type init " << endl;
+  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
+    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
+      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
+      }
+    }
   }
 
+  // set boundary type for inlet flow field
+  Box patchBox = patch->getBox();
+  cout << "Patch box = " << patchBox << endl;
+
   for (int ii = 0; ii < d_numInlets; ii++) {
-    GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece;
-    Box geomBox = piece->getBoundingBox();
-    Box b = geomBox.intersect(patchBox);
-    // check for another geometry
-    if (b.degenerate())
-      continue; // continue the loop for other inlets
-    // iterates thru box b, converts from geometry space to index space
-    // make sure this works
-    CellIterator iter = patch->getCellIterator(b);
-    domainLow = iter.begin();
-    domainHigh = iter.end() - IntVector(1,1,1);
-    indexLow = domainLow;
-    indexHigh = domainHigh;
-    celltypeval = d_flowInlets[ii].d_cellTypeID;
-    FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
-		      indexLow.get_pointer(), indexHigh.get_pointer(),
-		      cellType.getPointer(), &celltypeval);
+    int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
+    for (int jj = 0; jj < nofGeomPieces; jj++) {
+      GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
+      Box geomBox = piece->getBoundingBox();
+      cout << "Inlet " << ii << " Geometry box = " << geomBox << endl;
+      Box b = geomBox.intersect(patchBox);
+      cout << "Inlet " << ii << " Intersection box = " << b << endl;
+      // check for another geometry
+      if (b.degenerate())
+	continue; // continue the loop for other inlets
+      // iterates thru box b, converts from geometry space to index space
+      // make sure this works
+      CellIterator iter = patch->getCellIterator(b);
+      IntVector indexLow = iter.begin();
+      IntVector indexHigh = iter.end() - IntVector(1,1,1);
+      celltypeval = d_flowInlets[ii].d_cellTypeID;
+      cout << "Flow inlet " << ii << " cell type val = " << celltypeval << endl;
+      FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
+			indexLow.get_pointer(), indexHigh.get_pointer(),
+			cellType.getPointer(), &celltypeval);
+    }
   }
+  // Testing if correct values have been put
+  cout << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
+  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
+    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
+      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
+      }
+    }
+  }
+
+  // wall boundary type
+  {
+    int nofGeomPieces = d_wallBdry->d_geomPiece.size();
+    for (int ii = 0; ii < nofGeomPieces; ii++) {
+      GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
+      Box geomBox = piece->getBoundingBox();
+      cout << "Wall Geometry box = " << geomBox << endl;
+      Box b = geomBox.intersect(patchBox);
+      cout << "Wall Intersection box = " << b << endl;
+      cerr << "Just before geom wall "<< endl;
+      // check for another geometry
+      if (!(b.degenerate())) {
+	CellIterator iter = patch->getCellIterator(b);
+	IntVector indexLow = iter.begin();
+	IntVector indexHigh = iter.end() - IntVector(1,1,1);
+	celltypeval = d_wallBdry->d_cellTypeID;
+	cout << "Wall cell type val = " << celltypeval << endl;
+	FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
+			  indexLow.get_pointer(), indexHigh.get_pointer(),
+			  cellType.getPointer(), &celltypeval);
+      }
+    }
+  }
+  // Testing if correct values have been put
+  cout << " In C++ (BoundaryCondition.cc) after wall geom init " << endl;
+  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
+    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
+      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
+      }
+    }
+  }
+
   // initialization for pressure boundary
-  if (d_pressBoundary) {
-    GeometryPiece*  piece = d_pressureBdry->d_geomPiece;
-    Box geomBox = piece->getBoundingBox();
-    Box b = geomBox.intersect(patchBox);
-    // check for another geometry
-    if (!(b.degenerate())) {
-      CellIterator iter = patch->getCellIterator(b);
-      domainLow = iter.begin();
-      domainHigh = iter.end() - IntVector(1,1,1);
-      indexLow = domainLow;
-      indexHigh = domainHigh;
-      celltypeval = d_pressureBdry->d_cellTypeID;
-      FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
-			indexLow.get_pointer(), indexHigh.get_pointer(),
-			cellType.getPointer(), &celltypeval);
+  {
+    if (d_pressBoundary) {
+      int nofGeomPieces = d_pressureBdry->d_geomPiece.size();
+      for (int ii = 0; ii < nofGeomPieces; ii++) {
+	GeometryPiece*  piece = d_pressureBdry->d_geomPiece[ii];
+	Box geomBox = piece->getBoundingBox();
+	cout << "Pressure Geometry box = " << geomBox << endl;
+	Box b = geomBox.intersect(patchBox);
+	cout << "Pressure Intersection box = " << b << endl;
+	// check for another geometry
+	if (!(b.degenerate())) {
+	  CellIterator iter = patch->getCellIterator(b);
+	  IntVector indexLow = iter.begin();
+	  IntVector indexHigh = iter.end() - IntVector(1,1,1);
+	  celltypeval = d_pressureBdry->d_cellTypeID;
+	  cout << "Pressure Bdry  cell type val = " << celltypeval << endl;
+	  FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
+			    indexLow.get_pointer(), indexHigh.get_pointer(),
+			    cellType.getPointer(), &celltypeval);
+	}
+      }
     }
   }
+  // Testing if correct values have been put
+  cout << " In C++ (BoundaryCondition.cc) after press inlet init " << endl;
+  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
+    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
+      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
+      }
+    }
+  }
+
   // initialization for outlet boundary
-  if (d_outletBoundary) {
-    GeometryPiece*  piece = d_outletBC->d_geomPiece;
-    Box geomBox = piece->getBoundingBox();
-    Box b = geomBox.intersect(patchBox);
-    // check for another geometry
-    if (!(b.degenerate())) {
-      CellIterator iter = patch->getCellIterator(b);
-      domainLow = iter.begin();
-      domainHigh = iter.end() - IntVector(1,1,1);
-      indexLow = domainLow;
-      indexHigh = domainHigh;
-      celltypeval = d_outletBC->d_cellTypeID;
-      FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
-			indexLow.get_pointer(), indexHigh.get_pointer(),
-			cellType.getPointer(), &celltypeval);
+  {
+    if (d_outletBoundary) {
+      int nofGeomPieces = d_outletBC->d_geomPiece.size();
+      for (int ii = 0; ii < nofGeomPieces; ii++) {
+	GeometryPiece*  piece = d_outletBC->d_geomPiece[ii];
+	Box geomBox = piece->getBoundingBox();
+	cout << "Outlet Geometry box = " << geomBox << endl;
+	Box b = geomBox.intersect(patchBox);
+	cout << "Outlet Intersection box = " << b << endl;
+	// check for another geometry
+	if (!(b.degenerate())) {
+	  CellIterator iter = patch->getCellIterator(b);
+	  IntVector indexLow = iter.begin();
+	  IntVector indexHigh = iter.end() - IntVector(1,1,1);
+	  celltypeval = d_outletBC->d_cellTypeID;
+	  cout << "Flow Outlet cell type val = " << celltypeval << endl;
+	  FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
+			    indexLow.get_pointer(), indexHigh.get_pointer(),
+			    cellType.getPointer(), &celltypeval);
+	}
+      }
     }
   }
+
+  // Testing if correct values have been put
+  cout << " In C++ (BoundaryCondition.cc) after cell type BC init " << endl;
+  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
+    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
+      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
+      }
+    }
+  }
+
   old_dw->put(cellType, d_cellTypeLabel, matlIndex, patch);
 }  
     
@@ -371,41 +428,44 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
   domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
   Box patchBox = patch->getBox();
   for (int ii = 0; ii < d_numInlets; ii++) {
-    GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece;
-    Box geomBox = piece->getBoundingBox();
-    Box b = geomBox.intersect(patchBox);
-    // check for another geometry
-    if (b.degenerate())
-      continue; // continue the loop for other inlets
-    // iterates thru box b, converts from geometry space to index space
-    // make sure this works
-    CellIterator iter = patch->getCellIterator(b);
-    domainLow = iter.begin();
-    domainHigh = iter.end() - IntVector(1,1,1);
-    indexLow = domainLow;
-    indexHigh = domainHigh;
+    int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
+    for (int jj = 0; jj < nofGeomPieces; jj++) {
+      GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
+      Box geomBox = piece->getBoundingBox();
+      Box b = geomBox.intersect(patchBox);
+      // check for another geometry
+      if (b.degenerate())
+	continue; // continue the loop for other inlets
+      // iterates thru box b, converts from geometry space to index space
+      // make sure this works
+      CellIterator iter = patch->getCellIterator(b);
+      domainLow = iter.begin();
+      domainHigh = iter.end() - IntVector(1,1,1);
+      indexLow = domainLow;
+      indexHigh = domainHigh;
 #ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-    DataWarehouseP top_dw = new_dw->getTop();
-    PerPatch<CellInformation*> cellinfop;
-    if(top_dw->exists("cellinfo", patch)){
-      top_dw->get(cellinfop, "cellinfo", patch);
-    } else {
-      cellinfop.setData(scinew CellInformation(patch));
-      top_dw->put(cellinfop, "cellinfo", patch);
-    } 
-    CellInformation* cellinfo = cellinfop;
+      // using chain of responsibility pattern for getting cell information
+      DataWarehouseP top_dw = new_dw->getTop();
+      PerPatch<CellInformation*> cellinfop;
+      if(top_dw->exists("cellinfo", patch)){
+	top_dw->get(cellinfop, "cellinfo", patch);
+      } else {
+	cellinfop.setData(scinew CellInformation(patch));
+	top_dw->put(cellinfop, "cellinfo", patch);
+      } 
+      CellInformation* cellinfo = cellinfop;
 #endif
-  // ** WARNING ** this is just for compilation purposes
-    CellInformation* cellinfo = scinew CellInformation(patch);
-    double inlet_area;
-    int cellid = d_flowInlets[ii].d_cellTypeID;
-    FORT_AREAIN(domainLow.get_pointer(), domainHigh.get_pointer(),
-		indexLow.get_pointer(), indexHigh.get_pointer(),
-		cellinfo->sew.get_objs(),
-		cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
-		&inlet_area, cellType.getPointer(), &cellid);
-    old_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
+      // ** WARNING ** this is just for compilation purposes
+      CellInformation* cellinfo = scinew CellInformation(patch);
+      double inlet_area;
+      int cellid = d_flowInlets[ii].d_cellTypeID;
+      FORT_AREAIN(domainLow.get_pointer(), domainHigh.get_pointer(),
+		  indexLow.get_pointer(), indexHigh.get_pointer(),
+		  cellinfo->sew.get_objs(),
+		  cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
+		  &inlet_area, cellType.getPointer(), &cellid);
+      old_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
+    }
   }
 }
     
@@ -1442,20 +1502,22 @@ BoundaryCondition::WallBdry::WallBdry(int cellID):
 void 
 BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
 {
+  ProblemSpecP geomObjPS = params->findBlock("geom_object");
+  GeometryPieceFactory::create(geomObjPS, d_geomPiece);
   // loop thru all the wall bdry geometry objects
-  for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
-       geom_obj_ps != 0; 
-       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPiece*> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
-    if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object");
-    } else if(pieces.size() > 1){
-      d_geomPiece = scinew UnionGeometryPiece(pieces);
-    } else {
-      d_geomPiece = pieces[0];
-    }
-  }
+  //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
+    // geom_obj_ps != 0; 
+    // geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    //vector<GeometryPiece> pieces;
+    //GeometryPieceFactory::create(geom_obj_ps, pieces);
+    //if(pieces.size() == 0){
+    //  throw ParameterNotFound("No piece specified in geom_object");
+    //} else if(pieces.size() > 1){
+    //  d_geomPiece = scinew UnionGeometryPiece(pieces);
+    //} else {
+    //  d_geomPiece = pieces[0];
+    //}
+  //}
 }
 
 
@@ -1484,22 +1546,24 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   params->require("Flow_rate", flowRate);
   params->require("TurblengthScale", turb_lengthScale);
   // check to see if this will work
-  double mixfrac;
+  ProblemSpecP geomObjPS = params->findBlock("geom_object");
+  GeometryPieceFactory::create(geomObjPS, d_geomPiece);
   // loop thru all the inlet geometry objects
-  for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
-       geom_obj_ps != 0; 
-       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPiece*> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
-    if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object");
-    } else if(pieces.size() > 1){
-      d_geomPiece = scinew UnionGeometryPiece(pieces);
-    } else {
-      d_geomPiece = pieces[0];
-    }
-  }
+  //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
+  //     geom_obj_ps != 0; 
+  //     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  //  vector<GeometryPiece*> pieces;
+  //  GeometryPieceFactory::create(geom_obj_ps, pieces);
+  //  if(pieces.size() == 0){
+  //    throw ParameterNotFound("No piece specified in geom_object");
+  //  } else if(pieces.size() > 1){
+  //    d_geomPiece = scinew UnionGeometryPiece(pieces);
+  //  } else {
+  //    d_geomPiece = pieces[0];
+  //  }
+  //}
 
+  double mixfrac;
   for (ProblemSpecP mixfrac_db = params->findBlock("MixtureFraction");
        mixfrac_db != 0; 
        mixfrac_db = mixfrac_db->findNextBlock("MixtureFraction")) {
@@ -1530,20 +1594,22 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
 {
   params->require("RefPressure", refPressure);
   params->require("TurblengthScale", turb_lengthScale);
+  ProblemSpecP geomObjPS = params->findBlock("geom_object");
+  GeometryPieceFactory::create(geomObjPS, d_geomPiece);
   // loop thru all the pressure inlet geometry objects
-  for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
-       geom_obj_ps != 0; 
-       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPiece*> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
-    if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object");
-    } else if(pieces.size() > 1){
-      d_geomPiece = scinew UnionGeometryPiece(pieces);
-    } else {
-      d_geomPiece = pieces[0];
-    }
-  }
+  //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
+  //     geom_obj_ps != 0; 
+  //     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  //  vector<GeometryPiece*> pieces;
+  //  GeometryPieceFactory::create(geom_obj_ps, pieces);
+  //  if(pieces.size() == 0){
+  //    throw ParameterNotFound("No piece specified in geom_object");
+  //  } else if(pieces.size() > 1){
+  //    d_geomPiece = scinew UnionGeometryPiece(pieces);
+  //  } else {
+  //    d_geomPiece = pieces[0];
+  //  }
+  //}
   double mixfrac;
   for (ProblemSpecP mixfrac_db = params->findBlock("MixtureFraction");
        mixfrac_db != 0; 
@@ -1565,26 +1631,28 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int numMix, int cellID):
 }
 
 //****************************************************************************
-// Problem Setup for BoundaryCondition::FlowInlet
+// Problem Setup for BoundaryCondition::FlowOutlet
 //****************************************************************************
 void 
 BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 {
   params->require("TurblengthScale", turb_lengthScale);
+  ProblemSpecP geomObjPS = params->findBlock("geom_object");
+  GeometryPieceFactory::create(geomObjPS, d_geomPiece);
   // loop thru all the inlet geometry objects
-  for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
-       geom_obj_ps != 0; 
-       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    vector<GeometryPiece*> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
-    if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object");
-    } else if(pieces.size() > 1){
-      d_geomPiece = scinew UnionGeometryPiece(pieces);
-    } else {
-      d_geomPiece = pieces[0];
-    }
-  }
+  //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
+  //     geom_obj_ps != 0; 
+  //     geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  //  vector<GeometryPiece*> pieces;
+  //  GeometryPieceFactory::create(geom_obj_ps, pieces);
+  //  if(pieces.size() == 0){
+  //    throw ParameterNotFound("No piece specified in geom_object");
+  //  } else if(pieces.size() > 1){
+  //    d_geomPiece = scinew UnionGeometryPiece(pieces);
+  //  } else {
+  //    d_geomPiece = pieces[0];
+  //  }
+  //}
   double mixfrac;
   for (ProblemSpecP mixfrac_db = params->findBlock("MixtureFraction");
        mixfrac_db != 0; 
@@ -1596,6 +1664,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.29  2000/06/28 08:14:52  bbanerje
+// Changed the init routines a bit.
+//
 // Revision 1.28  2000/06/22 23:06:33  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

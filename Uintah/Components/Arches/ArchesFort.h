@@ -74,11 +74,17 @@ extern "C"
     // Initialize basic variables :
     //
     void
-    FORT_INIT(const int* domainLow, const int* domainHigh, 
-	      const int* indexLow, const int* indexHigh,
+    FORT_INIT(const int* domLoU, const int* domHiU, 
+	      const int* idxLoU, const int* idxHiU,
 	      double* uVelocity, const double* uVelocityVal,
+	      const int* domLoV, const int* domHiV, 
+	      const int* idxLoV, const int* idxHiV,
 	      double* vVelocity, const double* vVelocityVal,
+	      const int* domLoW, const int* domHiW, 
+	      const int* idxLoW, const int* idxHiW,
 	      double* wVelocity, const double* wVelocityVal,
+	      const int* domLo, const int* domHi, 
+	      const int* idxLo, const int* idxHi,
 	      double* pressure, const double* pressureVal,
 	      double* density, const double* densityVal,
 	      double* viscosity, const double* viscosityVal);
@@ -100,6 +106,7 @@ extern "C"
     FORT_CELLTYPEINIT(const int* domainLow, const int* domainHigh, 
 		     const int* indexLow, const int* indexHigh,
 		     int* celltype, const int* celltypeval);
+
     ////////////////////////////////////////////////////////////////////////
     //
     // Initialize geometry variables :
@@ -108,25 +115,25 @@ extern "C"
     FORT_CELLG(const int* domainLow, const int* domainHigh, 
 	       const int* indexLow, const int* indexHigh,
 	       double* sew,double* sns, double* stb,
-	     double* sewu, double* snsv, double* stbw,
-	     double* dxep, double* dynp, double* dztp,
-	     double* dxepu,double*  dynpv,double*  dztpw,
-	     double* dxpw, double* dyps, double* dzpb,
-	     double* dxpwu, double* dypsv, double* dzpbw,
-	     double* cee, double* cwe,double*  cww,
-	     double* ceeu, double* cweu, double* cwwu,
-	     double* cnn, double* csn,double*  css,
-	     double* cnnv,double*  csnv, double* cssv,
-	     double* ctt, double* cbt, double* cbb,
-	     double* cttw, double* cbtw, double* cbbw,
+	       double* sewu, double* snsv, double* stbw,
+	       double* dxep, double* dynp, double* dztp,
+	       double* dxepu,double*  dynpv,double*  dztpw,
+	       double* dxpw, double* dyps, double* dzpb,
+	       double* dxpwu, double* dypsv, double* dzpbw,
+	       double* cee, double* cwe,double*  cww,
+	       double* ceeu, double* cweu, double* cwwu,
+	       double* cnn, double* csn,double*  css,
+	       double* cnnv,double*  csnv, double* cssv,
+	       double* ctt, double* cbt, double* cbb,
+	       double* cttw, double* cbtw, double* cbbw,
 	     //	     rr, ra, rv, rone,
 	     //	     rcv, rcva,
-	     double* xx,double*  xu, double* yy, double* yv, double* zz, double* zw,
-	     double* efac, double* wfac, double* nfac, double* sfac,double*  tfac, double* bfac,
-	     double* fac1u, double* fac2u, double* fac3u, double* fac4u,
-	     double* fac1v, double* fac2v, double* fac3v, double* fac4v,
-	     double* fac1w, double* fac2w, double* fac3w, double* fac4w,
-	     double* iesdu, double* iwsdu, double* jnsdv, double* jssdv, double* ktsdw,double*  kbsdw);
+	       double* xx,double*  xu, double* yy, double* yv, double* zz, double* zw,
+	       double* efac, double* wfac, double* nfac, double* sfac,double*  tfac, double* bfac,
+	       double* fac1u, double* fac2u, double* fac3u, double* fac4u,
+	       double* fac1v, double* fac2v, double* fac3v, double* fac4v,
+	       double* fac1w, double* fac2w, double* fac3w, double* fac4w,
+	       double* iesdu, double* iwsdu, double* jnsdv, double* jssdv, double* ktsdw,double*  kbsdw);
 
 
 
@@ -151,6 +158,7 @@ extern "C"
 	       double* uVelocity, double* vVelocity, double* wVelocity, 
 	       int* celltype, double * area, const int* celltypeval,
 	       double* flowrate, double* density);
+
     ////////////////////////////////////////////////////////////////////////
     //
     // Cset flat profiles for scalars:
@@ -166,6 +174,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.6  2000/06/28 08:14:52  bbanerje
+// Changed the init routines a bit.
+//
 // Revision 1.5  2000/06/20 20:42:36  rawat
 // added some more boundary stuff and modified interface to IntVector. Before
 // compiling the code you need to update /SCICore/Geometry/IntVector.h

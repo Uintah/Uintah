@@ -412,32 +412,26 @@ Source::calculateScalarSource(const ProcessorGroup*,
   int matlIndex = 0;
 
   FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
+  CCVariable<double> scalar;
+  CCVariable<double> density;
+  CCVariable<double> viscosity;
+
   new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  FCVariable<double> vVelocity;
   new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  FCVariable<double> wVelocity;
   new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  //FCVariable<Vector> velocity;
-  //old_dw->get(velocity, "velocity", patch, 1);
 
   // ** WARNING ** The scalar is got based on the input index
-  CCVariable<double> scalar;
   old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
-  //old_dw->get(scalar, "scalar", patch, 1);
-
-  CCVariable<double> density;
   new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  //old_dw->get(density, "density", patch, 1);
-
-  CCVariable<double> viscosity;
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  //old_dw->get(viscosity, "viscosity", patch, 1);
 
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
@@ -455,16 +449,12 @@ Source::calculateScalarSource(const ProcessorGroup*,
   IntVector lowIndex = patch->getCellLowIndex();
   IntVector highIndex = patch->getCellHighIndex();
 
-  //SP term in Arches
-  CCVariable<double> scalarLinearSrc;
-  new_dw->allocate(scalarLinearSrc, d_scalLinSrcSBLMLabel, index, patch);
-  //new_dw->allocate(scalarLinearSrc, "ScalarLinearSrc", patch, index, 0);
+  CCVariable<double> scalarLinearSrc; //SP term in Arches
+  CCVariable<double> scalarNonlinearSrc; // SU in Arches
 
-  // SU in Arches
-  CCVariable<double> scalarNonlinearSrc;
+  new_dw->allocate(scalarLinearSrc, d_scalLinSrcSBLMLabel, index, patch);
   new_dw->allocate(scalarNonlinearSrc, d_scalNonLinSrcSBLMLabel, 
 		   index, patch);
-  //new_dw->allocate(scalarNonlinearSrc, "ScalarNonlinearSource", patch, index, 0);
 
 #ifdef WONT_COMPILE_YET
   // 3-d array for volume - fortran uses it for temporary storage
@@ -486,10 +476,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
 #endif
 
   new_dw->put(scalarLinearSrc, d_scalLinSrcSBLMLabel, index, patch);
-  //new_dw->put(scalarLinearSrc, "scalarLinearSource", patch, index, 0);
-
   new_dw->put(scalarNonlinearSrc, d_scalNonLinSrcSBLMLabel, index, patch);
-  //new_dw->put(scalarNonlinearSrc, "scalarNonlinearSource", patch, index, 0);
 
 }
 

@@ -342,7 +342,7 @@ private:
 	// calculated values
 	double density;
 	// stores the geometry information, read from problem specs
-	GeometryPiece* d_geomPiece;
+	std::vector<GeometryPiece*> d_geomPiece;
 	FlowInlet(int numMix, int cellID);
 	void problemSetup(ProblemSpecP& params);
 	// reduction variable label to get area
@@ -361,7 +361,7 @@ private:
 	double refPressure;
 	double area;
 	// stores the geometry information, read from problem specs
-	GeometryPiece* d_geomPiece;
+	std::vector<GeometryPiece*> d_geomPiece;
 	PressureInlet(int numMix, int cellID);
 	void problemSetup(ProblemSpecP& params);
       };
@@ -377,7 +377,7 @@ private:
 	double density;
 	double area;
 	// stores the geometry information, read from problem specs
-	GeometryPiece* d_geomPiece;
+	std::vector<GeometryPiece*> d_geomPiece;
 	FlowOutlet(int numMix, int cellID);
 	void problemSetup(ProblemSpecP& params);
       };
@@ -390,7 +390,7 @@ private:
 	int d_cellTypeID;
 	double area;
 	// stores the geometry information, read from problem specs
-	GeometryPiece* d_geomPiece;
+	std::vector<GeometryPiece*> d_geomPiece;
 	WallBdry(int cellID);
 	void problemSetup(ProblemSpecP& params);
       };
@@ -476,6 +476,9 @@ private:
   
 //
 // $Log$
+// Revision 1.28  2000/06/28 08:14:53  bbanerje
+// Changed the init routines a bit.
+//
 // Revision 1.27  2000/06/22 23:06:33  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)
