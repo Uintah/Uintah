@@ -23,18 +23,19 @@
 </HEAD>
 
 <BODY>
-
 <!-- *************************************************************** -->
-<!-- *************** STANDARD SCI RESEARCH HEADER ****************** -->
+<!-- ********** STANDARD SCI RESEARCH HEADER WITH MENU ************* -->
 <!-- *************************************************************** -->
-<center><img SRC="../images/research_menuheader.gif" usemap="#head-links" height="71" width="600" border="0"></center>
+<center><img SRC="../images/research_menuheader.jpg" usemap="#head-links" height="71" width="600" border="0"></center>
 <map name="head-links">
-	<area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html">
-	<area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu">
-	<area href="../InstallGuide/installguide.html" coords="0,45,150,70">
-	<area href="../UserGuide/userguide.html" coords="150,45,300,70">
-	<area href="../DeveloperGuide/devguide.html" coords="300,45,450,70">
-	<area href="../ReferenceGuide/refguide.html" coords="450,45,600,70">
+	<area href="http://www.sci.utah.edu" shape="rect" coords="7,4,171,33" alt="SCI Home">
+	<area href="../index.html" shape="rect" coords="340,10,480,32" alt="Documentation">
+	<area href="http://www.sci.utah.edu/software" shape="rect" coords="490,10,586,32" alt="Software">
+	<area href="../InstallGuide/installguide.html" shape="rect" coords="0,41,156,64" alt="Installation Guide">
+	<area href="../UserGuide/userguide.html" shape="rect" coords="157,41,256,64" alt="User's Guide">
+	<area href="../DeveloperGuide/devguide.html" shape="rect" coords="257,41,397,64" alt="Developer's Guide">
+	<area href="../ReferenceGuide/refguide.html" shape="rect" coords="398,41,535,64" alt="Reference Guide">
+	<area href="../FAQ/faq.html" shape="rect" coords="536,41,600,64" alt="FAQ">
 </map>
 <!-- *************************************************************** -->
 <!-- *************************************************************** -->
@@ -55,7 +56,7 @@
   <LI><A HREF="#compilation_problems">Compilation Problems</A>
 </UL>
 
-<A NAME="gen_prog">
+<A NAME="gen_prog"></a>
 <H2>General programming</H2>
 <A HREF = "#q100">1.0.0   Passline plylines</A><BR>
 <A HREF = "#q101">1.0.1   Naming ports</A><BR>
@@ -71,7 +72,7 @@
 <A HREF = "#q1011">1.0.11 Refresh rates</A><BR>
 <A HREF = "#q1012">1.0.12 Graphical Refresh Rates</A><BR>
 
-<A NAME="cplusplus_and_tcl">
+<A NAME="cplusplus_and_tcl"></a>
 <H2>C++ and TCL</H2>
 <A HREF = "#q200">2.0.0 C++ -> TCL arrays </A><BR>
 <A HREF = "#q201">2.0.1 TCL::execute() </A><BR>
@@ -79,7 +80,7 @@
 <A HREF = "#q203">2.0.3 TCL and C variable synchronization </A><BR>
 <A HREF = "#q204">2.0.4 TCL Object existence check</A><BR>
 
-<A NAME="surfaces_and_meshes">
+<A NAME="surfaces_and_meshes"></A>
 <H2>Surfaces and Meshes</H2>
 <A HREF = "#q300">3.0.0 Looking at a large number of surfaces </A><BR>
 <A HREF = "#q301">3.0.1 mesh->nodes[i]->elems[0] </A><BR>
@@ -91,7 +92,7 @@
 <A HREF = "#q307">3.0.7 Scalar field -> tetrahedral mesh</A><BR>
 <A HREF = "#q308">3.0.8 Creating Meshes</A><BR>
 
-<A NAME="design_and_modules">
+<A NAME="design_and_modules"></A>
 <H2>Design and Modules</H2>
 <A HREF = "#q400">4.0.0 SymSparseRowMatrix </A><BR>
 <A HREF = "#q401">4.0.1 Interpolation </A><BR>
@@ -107,17 +108,17 @@
 <A HREF = "#q413">4.1.3 Crystal Eyz settings</A><BR>
 
 
-<A NAME="cvs">
+<A NAME="cvs"></A>
 <H2>CVS</H2>
 <A HREF = "#q500">5.0.0 fixcvs passwd </A><BR>
 
-<A NAME="compilation_problems">
+<A NAME="compilation_problems"></A>
 <H2>Compilation Problems</H2>
 <A HREF = "#q500">6.0.0 gmake: *** No rule to make target... error </A><BR>
 
 
 <HR>
-<A NAME = "q100"> 
+<A NAME = "q100"></A> 
 <H2><B>General Programming</B></H2><P>
 
 <LI><B>1.0.0  I want to pass polyines (or just arrays of (2D) points)
@@ -128,10 +129,10 @@ through a data port.  What datatype/port should I look into using? </B>
    Alternatively, if you really want to make a new type, you can look at
    Datatypes/VoidStar.{cc,h} and make a Polyline2D class that derives from
    the VoidStar class.
-</A></UL>
+</UL>
 
 
-<A NAME = "q101">
+<A NAME = "q101"></A>
 <LI><B>1.0.1 Sometimes when I create a module, it has a large number of
 input/output ports, and I can't tell what exactly is supposed to go
 in to/out of each port.  Is there anyway to dynamically find this out?
@@ -143,10 +144,10 @@ of text message saying briefly what the port is for?   </B>
    use the string the user gives when creating the port in the module, and
    just cat it on to the type string you presently see when you click with
    the right mouse on the port (e.g. Mesh:Polyline).
-</A></UL>
+</UL>
 
 
-<A NAME = "q102">
+<A NAME = "q102"></A>
 <LI><B>1.0.2 I have a simple file reader that can read a series of files and send
 them down the dataflow as a crude animator.  After the first file is 
 sent I want to make sure that everything has executed before sending
@@ -156,10 +157,10 @@ the next file. How do I do this?</B>
    hacked together, since I knew exactly what modules I'd be using, was to
    add a semaphore that can be shared between your reader and whatever the
    last module downstream is.  Obviously this is a crude hack... but it does
-   the job if you know your network in advance. </TD></TR>
-</A></UL>
+   the job if you know your network in advance. 
+</UL>
 
-<A NAME = "q103">
+<A NAME = "q103"></A>
 <LI><B>1.0.3 Rather than dig through code, can anyone tell me what 
 causes the "Error, no culling info" to appear in the xterm 
 window while running SCIRun.  I'm guessing that I'm failing 
@@ -167,9 +168,9 @@ to set up some geometry correctly.</B>
 <UL TYPE=NONE>
    <LI>I have never seen that error before.  It is time to get out your
    find/grep tools again...
-</UL></A>
+</UL>
 
-<A NAME = "q104">
+<A NAME = "q104"></A>
 <LI><B>1.0.4 In the process of fixing a few of the compiler warnings, I was
 planning on removing the ";" at the end of the extern "C" blocks:<P>
 
@@ -182,9 +183,9 @@ Does anyone know if this will cause a problem?</B>
 <UL TYPE=NONE>
    <LI>No, that should be fine.
 </UL>
-</A>
 
-<A NAME = "q105">
+
+<A NAME = "q105"></A>
 <LI><B>1.0.5 How do I use Dynamic casting in C++</B>
 <UL TYPE=NONE>
    <LI>Here's a snippet showing how to use C++
@@ -216,9 +217,9 @@ base class's get method has been replaced by a call to dyanmic_cast.<P>
         return;<BR>
     }<BR>
 </UL>
-</A>
 
-<A NAME = "q106">
+
+<A NAME = "q106"></A>
 <LI><B>1.0.6 I can't compile the Malloc directory because of an n32 vs o32 
 problem:<P>
 
@@ -243,9 +244,9 @@ make<P>
 
 You will need to do the same thing in Multitask.
 </UL>
-</A>
 
-<A NAME = "q107">
+
+<A NAME = "q107"></A>
 <LI><B>1.0.7 ScalarFieldReader gave the following error when reading in 
 a field I generated:<P>
 
@@ -259,10 +260,10 @@ downstream of the Reader.
    in this case a double was expected.  How did you generate the data
    file that is being read in?  Sounds like a formatting error.
 </UL>
-</A>
 
 
-<A NAME = "q108">
+
+<A NAME = "q108"></A>
 <LI><B>1.0.8 How do I set a pause into the ModuleX::execute() loop?
 I am sending out a series of images and want to pause a specific
 amount of time between them.
@@ -270,9 +271,9 @@ amount of time between them.
 <UL TYPE=NONE>
    <LI>sleep(10) should work.
 </UL>
-</A>
 
-<A NAME = "q109">
+
+<A NAME = "q109"></A>
 <LI><B>1.0.9 I need to add a shared library called mpeg (libmpeg.so).  The directory
 containing the stuff to go into the library is /SCIRun/Modules/Salmon/mpeg
 and contains a makefile that creates the shared library (using C).  
@@ -292,10 +293,10 @@ How do I get SCIRun to automatically create this library when it's built
 
    to the Salmon Imakefile and it will descend into the mpeg subdirectory.
 </UL>
-</A>
 
 
-<A NAME = "q1010">
+
+<A NAME = "q1010"></A>
 <LI><B>1.0.10 When I compile the Salmon module, it give me a warning that it can't find
 libvice.so, which is needed for proper transitive linking.  Is this
 something that I should worry about? 
@@ -303,9 +304,9 @@ something that I should worry about?
 <UL TYPE=NONE>
    <LI>No, don't worry about it - it is an SGI "bug", but doesn't do any harm.
 </UL>
-</A>
 
-<A NAME = "q1011">
+
+<A NAME = "q1011"></A>
 <LI><B>1.0.11 I am trying to determine how fast/slow my haptics and graphics
 are refreshing themselves. Does anyone know of a quick way
 to time stamp, quicker than going out to read the system clock?<BR>
@@ -322,10 +323,10 @@ in terms of polygons per second and frames per second?<P>
    <LI>Use the Clock.cc in Datatypes. it will give you the time in ticks.
    to convert to msec multiply by cycleval*1e-9.
 </UL>
-</A>
 
 
-<A NAME = "q1012">
+
+<A NAME = "q1012"></A>
 <LI><B>1.0.12 Okay, so I am running an interactive system using Salmon to handle
 the graphics and I simply want to know how often Salmon is refreshing
 one or two specific graphical objects.
@@ -345,13 +346,13 @@ how Salmon does its upstream-ing.
    you know the name of the object, I'm sure you could print out the timer
    information every time an object with that name is added, right?)
 </UL>
-</A>
 
 
 
 
 
-<A NAME = "q200"><P> 
+
+<A NAME = "q200"></a><P> 
 <H2><B>C++ and TCL</B></H2>
 <P>
 <LI><B>2.0.0 How do I send an array from C++ to tcl  </B>
@@ -383,9 +384,9 @@ how Salmon does its upstream-ing.
         }<BR>
    ----------------------<BR>
 
-</UL></A>
+</UL>
 
-<A NAME = "q201"> 
+<A NAME = "q201"></A> 
 <LI><B>2.0.1 Is this true?
 A call to TCL::execute() in C++ code does not wait for the 
 function return.</B>
@@ -395,9 +396,9 @@ function return.</B>
    functionality in Tk, so the actual widgets aren't created until some
    point in the future.
 </UL>
-</A>
 
-<A NAME = "q202">
+
+<A NAME = "q202"></A>
 <LI><B>2.0.2 Has anyone used the Histogram widget James Purciful wrote ? 
 I have one example which uses it, MeshView.cc, but it doesn't
 use all the features I am trying to use.<P> 
@@ -414,9 +415,9 @@ the same data seems to gunk up the display.
   help look at it too.
 
 </UL>
-</A>
 
-<A NAME = "q203"> 
+
+<A NAME = "q203"></A> 
 <LI><B>2.0.3 Can anybody tell me why it is that a variable value change 
 in tcl does not create an instantaneous change in the 
 corresponding C++ variable?<P>
@@ -432,10 +433,10 @@ tcl to C++, but I don't understand why this is necessary.
    The TCLvarint and vardouble classes are more efficient for these
    types of updates, and they do not need to be reset.
 </UL>
-</A>
 
 
-<A NAME = "q204">
+
+<A NAME = "q204"></A>
 <LI><B>2.0.4 Anyone know how to check and see if a tcl object exists?
 </B>
 <UL TYPE=NONE>
@@ -444,12 +445,12 @@ if {[winfo exists $w]} {puts "$w exists" }
 where w is set to the path (name) of the tk window you are looking for.
 A perfect example is in GenStandardColorMaps.tcl written by Zimmerman
 </UL>
-</A>
 
 
 
 
-<A NAME = "q300"> 
+
+<A NAME = "q300"></a> 
 <H2><B>Surfaces and Meshes</B></H2><P>
 
 <LI><B>3.0.0 I'm trying to look at 40 different surfaces (one for each major muscle
@@ -492,9 +493,9 @@ work? </B>
 
    All of the above usage info is available if you type CombineTriSurfs with
    an illegal number of arguments (i.e. one or two).
-</UL></A>
+</UL>
 
-<A NAME = "q301"> 
+<A NAME = "q301"></A> 
 <LI><B>3.0.1 I have a mesh of Leonid's that won't let me access the
 node element list or the element faces list.<BR>
 
@@ -544,9 +545,9 @@ for the Delaunay-specific mesh code?
    that isn't actually used in any of the elements, if you want to use
    the topology you will need to clean up the mesh.
 </UL>
-</A>
 
-<A NAME = "q302"> 
+
+<A NAME = "q302"></A> 
 <LI><B>3.0.2 Could someone tell me what the difference between these two Mesh.h's
 are?<P>
 
@@ -570,18 +571,18 @@ SCIRun/Modules/Simplify/Mesh.h</B>
    non-manifold surface simplification - neither of those files are in
    the makefiles.)
 </UL>
-</A>
 
-<A NAME = "q303"> 
+
+<A NAME = "q303"></A> 
 <LI><B>3.0.3 Does someone out there have a piece of code that determines if a
 point is inside a polygon?
 </B>
 <UL TYPE=NONE>
 <LI>Yes
 </UL>
-</A>
 
-<A NAME = "q304">
+
+<A NAME = "q304"></A>
 <LI><B>3.0.4 Somebody please explain the unstructured Mesh class to me.
 Datatypes/Mesh.{h,cc}  I think what I need to know lies 
 in the neighbors() methods or maybe the hashing.<BR>  
@@ -629,9 +630,9 @@ for nodes within the range and add them to a new mesh?</B>
    accelerators.  They allow you to clear 1/256th of the frame buffer
    instead of the whole thing...)
 </UL>
-</A>
 
-<A NAME = "q305">
+
+<A NAME = "q305"></A>
 <LI><B>3.0.5 I want to draw some translucent triangles but I'm 
 having trouble doing so.<BR>
 
@@ -664,10 +665,10 @@ triangles?
    a few triangles.<BR>
 
 </UL>
-</A>
 
 
-<A NAME = "q306">
+
+<A NAME = "q306"></A>
 <LI><B>3.0.6 I want to generate a deformed plane and visualize it
 as a solid surface with lighting to help me see the
 shape.
@@ -693,10 +694,10 @@ array, no elems array.</B>
    The latter example is simpler, so look at it first.<BR>
 
 </UL>
-</A>
 
 
-<A NAME = "q307">
+
+<A NAME = "q307"></A>
 <LI><B>3.0.7 I'm trying to create a tetrahedral mesh from a scalar field defined on
 a regular grid (to compare my unstructured code to that of my regular
 grid core).  Is there a module somewhere to do this?</B>
@@ -706,10 +707,10 @@ grid core).  Is there a module somewhere to do this?</B>
    correctness, since I just hacked this together... seems to work, though).
 
 </UL>
-</A>
 
 
-<A NAME = "q308">
+
+<A NAME = "q308"></A>
 <LI><B>3.0.8 I'd like to generate a set of simple tetrahedral meshes. They can be
 regular grids. Is there something in the convert directory to generate
 a mesh from a set of grid points?</B>
@@ -719,12 +720,12 @@ assigned based on the value of the cell (classified data), where cells
 containing value '0' are removed from the Mesh.
 
 </UL>
-</A>
 
 
 
 
-<A NAME = "q400"> 
+
+<A NAME = "q400"></a> 
 <H2><B>Design and Modules</B></H2><P>
 
 <LI><B>4.0.0 What is the reason for designing SymSparseRowMatrix to
@@ -734,9 +735,9 @@ instead of use the Array1 datatype?  was it performance?</B>
    <LI>It is just for performance.  The arrays do not change size, so the
    Array1 is overkill.
 </UL>
-</A>
 
-<A NAME = "q401"> 
+
+<A NAME = "q401"></A> 
 <LI><B>4.0.1 I'm having some trouble understanding the interpolation
 on a ScalarFieldUG. It looks as though interpolate()
 looks at the mesh elements and sees if the point
@@ -747,18 +748,18 @@ is inside each element?  </B>
   Or if it is a piecewise constant element (typ == ElementValues), then
   it just returns that data value.
 </UL>
-</A>
 
-<A NAME = "q402"> 
+
+<A NAME = "q402"></A> 
 <LI><B>4.0.2 Does anyone know what "ScalarFieldOcean" (in Datatypes) is and
 whether it should compile or should be deleted?</B>
 <UL TYPE=NONE>
    <LI>It supports the data format for the global ocean model from Los Alamos.
 It should probably be moved down into one of the SCIRun directories.
 </UL>
-</A>
 
-<A NAME = "q403">
+
+<A NAME = "q403"></A>
 <LI><B>4.0.3 I have several 'time instants' of data that I want to display on a
 surface. I have a scirun surface but the data is in ascii files of a single 
 potential on each line corresponding to the node it belongs to. How do I
@@ -774,9 +775,9 @@ display?</B>
    Hopefully it isn't too difficult to translate that code into
    ScalarFieldRG or ScalarFieldUG.
 </UL>
-</A>
 
-<A NAME = "q404">
+
+<A NAME = "q404"></A>
 <LI><B>4.0.4 Okay, so now I have an sfug (ScalarFieldUG). What modules do I need to view 
 it. It looked like the output from sf reader would go into surftogeom but 
 that didn't seem to work. Do I need to do SFUG to surface first?</B>
@@ -794,9 +795,9 @@ that didn't seem to work. Do I need to do SFUG to surface first?</B>
    data-values on a plane, and can view it as contours, a colormapped plane,
    or a height-field -- you just choose which option you want on the UI.
 </UL>
-</A>
 
-<A NAME = "q405">
+
+<A NAME = "q405"></A>
 <LI><B>4.0.5 I want to display two things in a Roe window:<P>
 
  a huge mesh from a single vantage point, and 
@@ -822,9 +823,9 @@ and limit the redraws just to that plane.
    about adding a similar feature, but we have always held out for
    Cosmo3D/OpenGL++/Fahrenheit/SGI-scene-graph-toolkit-du-jour
 </UL>
-</A>
 
-<A NAME = "q406">
+
+<A NAME = "q406"></A>
 <LI><B>4.0.6 What are the standard colormaps? </B>
 <UL TYPE=NONE>
    <LI>gray<BR>
@@ -833,9 +834,9 @@ and limit the redraws just to that plane.
    darkhue (so coined by Gordon)<BR>
    blackbody<BR>
 </UL>
-</A>
 
-<A NAME = "q407">
+
+<A NAME = "q407"></A>
 <LI><B>4.0.7 What's the difference between isosurface, isosurfacedw, and isosurfacesp
 (other than the obvious authors of the last two...)?</B>
 <UL TYPE=NONE>
@@ -844,11 +845,11 @@ able to build trisurface's when extracting (as opposed to just
 GeomTri's)... and IsosurfaceSP is just like IsosurfaceDW - I think it's
 just hard-coded to use one processor, though.
 </UL>
-</A>
 
 
 
-<A NAME = "q410">
+
+<A NAME = "q410"></A>
 <LI><B>4.1.0 Will Crystal Eyz glasses work with SCIRun? Do I simply choose  one of
 the stereo options on the Roe menu, or do I need to add some specific
 code first?  I remember something Peter-Pike said about it requiring
@@ -858,9 +859,9 @@ though!
 <UL TYPE=NONE>
    <LI>The stereo button on Roe will work.<P>
 </UL>
-</A>
 
-<A NAME =  "q411">
+
+<A NAME =  "q411"></A>
 <LI><B>4.1.1 There's "stereo" options on the Roe->Visualize menu. Do you mean
 those, or Is that the button on the bottom part of the Roe window, the
 part that pops up when you hit the + button?</B>
@@ -868,18 +869,18 @@ part that pops up when you hit the + button?</B>
    <LI>You need both.  You select a stereo visual, and then click the stereo
    button that pops up under the +.<P>
 </UL>
-</A>
 
-<A NAME = "q412">
+
+<A NAME = "q412"></A>
 <LI><B>4.1.2 I don't have that button. I've seen it on other people's windows.
 What files would I need to update to get it to work?</B>
 <UL TYPE=NONE>
    <LI>Updating only parts of the tree is a really big can of worms, and
    I do not recommend that people do it.
 </UL>
-</A>
 
-<A NAME = "q413">
+
+<A NAME = "q413"></A>
 <LI><B>4.1.3 What settings am I supposed to use in the Roe->Visualize menu, anyway?
 I have seen Dave toggle between some of them to get things to look better.</B>
 <UL TYPE=NONE>
@@ -887,9 +888,9 @@ I have seen Dave toggle between some of them to get things to look better.</B>
    the word "stereo" listed.  Other than that, you probably want the one
    with the largest R,G,B components for your application.
 </UL>
-</A>
 
-<A NAME = "q500"> 
+
+<A NAME = "q500"></a> 
 <H2><B>CVS</B></H2><P>
 
 <LI><B>5.0.0 Okay, I did the fixcvs thing, but it seems to think that I am part of
@@ -900,9 +901,9 @@ C-SAFE and asks for my passwd.  What is up with this? </B>
    directly through or ir it asks you any questions.  If it asks you to
    continue, say yes, log out, and try it again.  If/when it goes
    directly through, try your cvs request again.  It should work.
-</UL></A>
+</UL>
 
-<A NAME = "q600"> 
+<A NAME = "q600"></a> 
 <H2><B>Compilation Problems</B></H2><P>
 
 <LI><B>6.0.0 I get a "gmake: *** No rule to make target..." error.  
