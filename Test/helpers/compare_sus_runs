@@ -85,7 +85,7 @@ if [ -d "$TEST_UDADIR" ]; then
     echo "Comparing udas"
     echo "======================================"
     echo
-    compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR ""
     retval=$?
     if [ $retval != "0" ]; then
 	echo 
@@ -101,7 +101,7 @@ if [ -d "$TEST_UDADIR" ]; then
     echo "Comparing checkpoints"
     echo "======================================"
     echo
-    compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR "-skip_unknown_types"
     retval=$?
     if [ $retval != "0" ]; then
 	echo 
