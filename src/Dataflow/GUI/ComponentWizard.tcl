@@ -566,7 +566,10 @@ proc generateXML { d } {
 	      ![llength [set ${d}(package)]] || \
               ![info exists ${d}(path)] || \
               ![llength [set ${d}(path)]]]} {
-      puts "Please give the module a valid Name, Package, Category and Source path"
+      messagedialog "Module Creation Error" \
+	            "One or more of the following required fields needs to be \
+                     filled: module name, package name, category name, path \
+                     to SCIRun source."
       return
     } 
     puts $id "<component name=\"[set ${d}(title)]\" category=\"[set ${d}(category)]\">"
@@ -606,6 +609,8 @@ proc generateXML { d } {
                   ![llength [set ${port}(name)]] || \
                   ![info exists ${port}(datatype)] || \
                   ![llength [set ${port}(datatype)]]]} {
+          messagedialog "Module Creation Error" \
+                        "Please provide all the ports with names and datatypes."
           puts "please provide all the ports with names and datatypes"
           return
 	}
@@ -794,7 +799,7 @@ proc messagedialog {title message} {
 
     toplevel $w 
     wm title $w $title
-    wm geometry $w 350x150+150+100
+    wm geometry $w 350x200+150+100
     text $w.message -width 60 -height 10 -wrap word -relief flat
     $w.message insert 0.1 $message
     button $w.ok -text "Ok" -command "destroy $w"
@@ -812,7 +817,7 @@ proc yesnodialog {title message command} {
 
     toplevel $w
     wm title $w $title
-    wm geometry $w 350x150+150+100
+    wm geometry $w 350x200+150+100
     frame $w.top
     frame $w.bot
     text $w.top.message -width 60 -height 10 -wrap word -relief flat
