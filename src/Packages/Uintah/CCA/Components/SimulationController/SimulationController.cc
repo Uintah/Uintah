@@ -253,8 +253,7 @@ void SimulationController::run()
       GetGlobalStats(DefaultAllocator(),
 		     nalloc, sizealloc, nfree, sizefree,
 		     nfillbin, nmmap, sizemmap, nmunmap,
-		     sizemunmap, highwater_alloc,
-		     highwater_mmap, nlonglocks, nnaps);
+		     sizemunmap, highwater_alloc, highwater_mmap);
       unsigned long memuse = sizealloc - sizefree;
 #else
       unsigned long memuse = (char*)sbrk(0)-start_addr;
