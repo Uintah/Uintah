@@ -140,6 +140,12 @@ void Vector::rotz90(const int c)
     }
 }
 
+const string& 
+Vector::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
 const TypeDescription* get_type_description(Vector*)
 {
   static TypeDescription* td = 0;

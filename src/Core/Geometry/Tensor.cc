@@ -215,6 +215,12 @@ void SCICORESHARE Pio(Piostream& stream, Tensor& t){
   stream.end_cheap_delim();
 }
 
+const string& 
+Tensor::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
 const TypeDescription* get_type_description(Tensor*)
 {
   static TypeDescription* td = 0;

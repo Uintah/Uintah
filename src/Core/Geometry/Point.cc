@@ -488,6 +488,12 @@ void Pio(Piostream& stream, Point& p)
     stream.end_cheap_delim();
 }
 
+const string& 
+Point::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
 const TypeDescription* get_type_description(Point*)
 {
   static TypeDescription* td = 0;

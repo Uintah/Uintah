@@ -155,6 +155,22 @@ TypeDescription::lookup_type(const std::string& t)
    return iter->second;
 }
 
+string TypeDescription::cc_to_h(const string &dot_cc) {
+  static const string D_CC(".cc");
+  int l = dot_cc.length();
+  string dot_h = dot_cc;
+  if (dot_h.substr(l-3, l) == D_CC) {
+    // convert...
+    dot_h.erase(l-2, l);
+    dot_h.append("h");
+  } else {
+    cerr << "Warning: TypeDescription::cc_to_h input does not end in .cc" 
+	 << endl << "the string:" << dot_cc << endl;
+  }
+  return dot_h;
+}
+
+
 TypeDescription::Register::Register(const TypeDescription*/* td*/)
 {
   // Registration happens in CTOR
