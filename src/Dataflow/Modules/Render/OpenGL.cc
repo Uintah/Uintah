@@ -2182,7 +2182,7 @@ OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar)
   znear=MAXDOUBLE;
   zfar=-MAXDOUBLE;
   BBox bb;
-  view_window_->get_bounds(bb);
+  view_window_->get_bounds_all(bb);
   if(bb.valid())
   {
     // We have something to draw.
