@@ -47,7 +47,7 @@
 //       the PVFS fix just in case someone has a
 //       problem and needs a way to turn it off.
 
-// #define PVFS_FIX
+#define PVFS_FIX
 
 using namespace Uintah;
 using namespace std;
