@@ -47,8 +47,8 @@ using std::string;
 
 class CrvApprox {
 public:
-  static double vertices[1][2];
-  static double edges[1][2];
+  static double UnitVertices[1][2];
+  static int UnitEdges[1][2];
 
   CrvApprox() {}
   virtual ~CrvApprox() {}
@@ -82,12 +82,12 @@ template <class T>
 class CrvLinearLgn : public CrvApprox
 {
 public:
-  typedef T value_type;
+  static int GaussianNum;
+  static double GaussianPoints[1][1];
+  static double GaussianWeights[1];
 
   CrvLinearLgn() : CrvApprox() {}
   virtual ~CrvLinearLgn() {}
-  
-  int polynomial_order() const { return 1; }
   
   virtual void approx_edge(const unsigned /* edge */, 
 			   const unsigned /*div_per_unit*/,

@@ -48,9 +48,9 @@ using std::string;
 
 class HexApprox {  
 public:
-  static double vertices[8][3];
-  static double edges[12][2];
-  static double faces[6][4];
+  static double UnitVertices[8][3];
+  static int UnitEdges[12][2];
+  static int UnitFaces[6][4];
 
   HexApprox() {}
   virtual ~HexApprox() {}
@@ -62,8 +62,8 @@ public:
   {
     coords.resize(div_per_unit + 1);
 
-    const double *v0 = vertices[(int)edges[edge][0]];
-    const double *v1 = vertices[(int)edges[edge][1]];
+    const double *v0 = UnitVertices[UnitEdges[edge][0]];
+    const double *v1 = UnitVertices[UnitEdges[edge][1]];
 
     const double &p1x = v0[0];
     const double &p1y = v0[1];
@@ -88,10 +88,10 @@ public:
 			   const unsigned div_per_unit, 
 			   vector<vector<vector<double> > > &coords) const
   {
-    const double *v0 = vertices[(int)faces[face][0]];
-    const double *v1 = vertices[(int)faces[face][1]];
-    //	const double *v2=vertices[faces[face][2]];
-    const double *v3 = vertices[(int)faces[face][3]];
+    const double *v0 = UnitVertices[UnitFaces[face][0]];
+    const double *v1 = UnitVertices[UnitFaces[face][1]];
+    //	const double *v2=UnitVertices[UnitFaces[face][2]];
+    const double *v3 = UnitVertices[UnitFaces[face][3]];
     const double d = 1. / (double)div_per_unit;
     coords.resize(div_per_unit);
     vector<vector<vector<double> > >::iterator citer = coords.begin();
@@ -119,13 +119,13 @@ template <class T>
 class HexTrilinearLgn : public HexApprox
 {
 public:
-  typedef T value_type;
-
+  static int GaussianNum=8;
+  static double GaussianPoints[8][3];
+  static double GaussianWeights[8];
+ 
   HexTrilinearLgn() {}
   virtual ~HexTrilinearLgn() {}
   
-  int polynomial_order() const { return 1; }
-
   // Value at coord
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const

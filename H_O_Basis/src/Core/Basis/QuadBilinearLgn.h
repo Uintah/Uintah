@@ -48,9 +48,9 @@ using std::string;
 
 class QuadApprox {  
 public:
-  static double vertices[4][2];
-  static double edges[4][2];
-  static double faces[1][4];
+  static double UnitVertices[4][2];
+  static int UnitEdges[4][2];
+  static int UnitFaces[1][4];
 
   QuadApprox() {}
   virtual ~QuadApprox() {}
@@ -63,10 +63,10 @@ public:
   {
     coords.resize(div_per_unit + 1);
       
-    const double p1x = vertices[(int)edges[edge][0]][0];
-    const double p1y = vertices[(int)edges[edge][0]][1];
-    const double dx = vertices[(int)edges[edge][1]][0] - p1x;
-    const double dy = vertices[(int)edges[edge][1]][1] - p1y;
+    const double p1x = UnitVertices[UnitEdges[edge][0]][0];
+    const double p1y = UnitVertices[UnitEdges[edge][0]][1];
+    const double dx = UnitVertices[UnitEdges[edge][1]][0] - p1x;
+    const double dy = UnitVertices[UnitEdges[edge][1]][1] - p1y;
       
     for(unsigned i = 0; i <= div_per_unit; i ++) {
       const double d = (double)div_per_unit / (double)i;
@@ -104,13 +104,13 @@ template <class T>
 class QuadBilinearLgn : public QuadApprox
 {
 public:
-  typedef T value_type;
-
+  static int GaussianNum;
+  static double GaussianPoints[4][2];
+  static double GaussianWeights[4];
+ 
   QuadBilinearLgn() {}
   virtual ~QuadBilinearLgn() {}
   
-  int polynomial_order() const { return 1; }
-
   // Value at coord
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const

@@ -33,9 +33,13 @@
 
 namespace SCIRun {
 
-  double TriApprox::vertices[3][2] = {{0,0}, {1,0}, {0,1}};
-  double TriApprox::edges[3][2] = {{0,1}, {1,2}, {2,0}};
-  double TriApprox::faces[1][3] = {{0,1,2}};
+  double TriApprox::UnitVertices[3][2] = {{0,0}, {1,0}, {0,1}};
+  int TriApprox::UnitEdges[3][2] = {{0,1}, {1,2}, {2,0}};
+  int TriApprox::UnitFaces[1][3] = {{0,1,2}};
 
+  int TriLinearLgn::GaussianNum=3;
+  double TriLinearLgn::GaussianPoints[3][2] = {{1./6.,1./6.}, {2./3.,1./6.}, {1./6.,2./3.}};
+  double TriLinearLgn::GaussianWeights[3] = {1./3., 1./3., 1./3.};
+  
 } //namespace SCIRun
 

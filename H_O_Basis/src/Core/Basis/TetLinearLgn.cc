@@ -33,9 +33,12 @@
 
 namespace SCIRun {
 
-  double TetApprox::vertices[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
-  double TetApprox::edges[6][3] = {{0,1}, {1,2}, {2,0}, {0,3}, {1,3}, {2,3}};
-  double TetApprox::faces[4][3] = {{0,1,2}, {0,1,3}, {1,2,3}, {2,0,3}};
+  double TetApprox::UnitVertices[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
+  int TetApprox::UnitEdges[6][3] = {{0,1}, {1,2}, {2,0}, {0,3}, {1,3}, {2,3}};
+  int TetApprox::UnitFaces[4][3] = {{0,1,2}, {0,1,3}, {1,2,3}, {2,0,3}};
 
+  int TetLinearLgn::GaussianNum=4;
+  double TetLinearLgn::GaussianPoints[4][2] = {{1./6.,1./6.,,1./6.}, {2./3.,1./6.,,1./6.}, {1./6.,2./3.,,1./6.}, {1./6.,1./6.,2./3.,}};
+  double TetLinearLgn::GaussianWeights[4] = {.25, .25, 25.};
 } //namespace SCIRun
 
