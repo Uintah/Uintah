@@ -29,31 +29,31 @@
 #endif
 
 extern "C" {
-void* malloc(size_t size);
-void free(void* ptr);
-void* calloc(size_t, size_t);
-void* realloc(void* p, size_t s);
-void* memalign(size_t, size_t);
-void* valloc(size_t);
+void* malloc(size_t size) throw();
+void free(void* ptr) throw();
+void* calloc(size_t, size_t) throw();
+void* realloc(void* p, size_t s) throw();
+void* memalign(size_t, size_t) throw();
+void* valloc(size_t) throw();
 }
 
 using namespace SCICore::Malloc;
 
 #ifndef DISABLE_SCI_MALLOC
 
-void* malloc(size_t size)
+void* malloc(size_t size) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
     return default_allocator->alloc(size, "Unknown - malloc");
 }
 
-void free(void* ptr)
+void free(void* ptr) throw()
 {
     default_allocator->free(ptr);
 }
 
-void* calloc(size_t n, size_t s)
+void* calloc(size_t n, size_t s) throw()
 {
     size_t tsize=n*s;
     void* p=malloc(tsize);
@@ -61,19 +61,19 @@ void* calloc(size_t n, size_t s)
     return p;
 }
 
-void* realloc(void* p, size_t s)
+void* realloc(void* p, size_t s) throw()
 {
     return default_allocator->realloc(p, s);
 }
 
-void* memalign(size_t alignment, size_t size)
+void* memalign(size_t alignment, size_t size) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
     return default_allocator->memalign(alignment, size, "Unknown - memalign");
 }
 
-void* valloc(size_t size)
+void* valloc(size_t size) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
@@ -85,6 +85,10 @@ void* valloc(size_t size)
 
 //
 // $Log$
+// Revision 1.9  2000/09/25 18:00:42  sparker
+// Added throw() to C declarations
+// Find bzero in string.h for linux
+//
 // Revision 1.8  2000/09/14 15:51:02  sparker
 // Include sci_defs.h for DISABLE_SCI_MALLOC
 //

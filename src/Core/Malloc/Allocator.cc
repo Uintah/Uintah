@@ -32,6 +32,9 @@
     #include <bstring.h>
   #endif
 #endif
+#ifdef __linux
+#include <string.h>
+#endif
 
 #include <stdio.h>
 #include <sci_config.h>
@@ -1197,6 +1200,10 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.13  2000/09/25 18:00:42  sparker
+// Added throw() to C declarations
+// Find bzero in string.h for linux
+//
 // Revision 1.12  2000/08/08 22:03:21  dav
 // moved the MALLOC_TRACE code block above the MALLOC_STATS block because it sets a var used by MALLOC_STATS
 //
