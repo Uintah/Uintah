@@ -118,7 +118,7 @@ bool ICE::restartableTimesteps()
 
 double ICE::recomputeTimestep(double current_dt)
 {
-  return current_dt/2;
+  return current_dt * 0.75;
 }
 
 /* ---------------------------------------------------------------------
