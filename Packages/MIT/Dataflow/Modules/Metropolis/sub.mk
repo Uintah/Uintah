@@ -15,6 +15,7 @@ SRCDIR   := Packages/MIT/Dataflow/Modules/Metropolis
 SRCS     += \
 	$(SRCDIR)/PDSimPart.cc\
 	$(SRCDIR)/IUniformPDSimPart.cc\
+	$(SRCDIR)/RUPDSimPart.cc\
 	$(SRCDIR)/IGaussianPDSimPart.cc\
 	$(SRCDIR)/ItPDSimPart.cc\
 	$(SRCDIR)/RtPDSimPart.cc\
@@ -27,6 +28,8 @@ SRCS     += \
 	$(SRCDIR)/ItPDSimPartGui.cc \
 	$(SRCDIR)/RtPDSimPartGui.cc \
 	$(SRCDIR)/IGaussianPDSimPartGui.cc \
+	$(SRCDIR)/RUPDSimPartGui.cc \
+	$(SRCDIR)/IUniformPDSimPartGui.cc \
         $(SRCDIR)/Bayer.cc\
         $(SRCDIR)/AS245.F\
         $(SRCDIR)/mvtpdf.F\

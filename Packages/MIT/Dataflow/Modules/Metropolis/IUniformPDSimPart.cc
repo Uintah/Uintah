@@ -66,6 +66,29 @@ IUniformPDSimPart::lpr( vector<double> &)
   return 0;
 }
 
+void
+IUniformPDSimPart::pars( const vector<double> &values )
+{
+  par_ = values;
+}
+
+void
+IUniformPDSimPart::par( int i, double v ) 
+{
+  par_[i] = v;
+}
+void
+IUniformPDSimPart::centers( const vector<double> &values )
+{
+  center_ = values;
+}
+
+void
+IUniformPDSimPart::center( int i, double v ) 
+{
+  center_[i] = v;
+}
 } // End namespace MIT
+
 
 
