@@ -39,6 +39,8 @@ using std::string;
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 
+static DebugStream dbg("SchedulerCommon", false);
+
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   : UintahParallelComponent(myworld), m_outPort(oport), m_graphDoc(NULL),
     m_nodes(NULL)
@@ -97,9 +99,9 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
     ofstream graphfile(file_name.c_str());
     if (!graphfile) {
       cerr << "SchedulerCommon::emitEdges(): unable to open output file!\n";
-      return;	// dependency dump failure shouldn't be fatal to anything else
+      return;   // dependency dump failure shouldn't be fatal to anything else
     }
-    graphfile << *m_graphDoc << endl;
+    graphfile << *m_graphDoc << "\n";
   }
 }
 
@@ -112,10 +114,15 @@ SchedulerCommon::useInternalDeps()
 }
 
 void
-SchedulerCommon::emitNode(const DetailedTask* task, double start, double duration, double execution_duration, long long execution_flops, long long communication_flops)
+SchedulerCommon::emitNode( const DetailedTask* task, 
+                                 double        start,
+                                 double        duration,
+                                 double        execution_duration,
+                                 double        execution_flops,
+                                 double        communication_flops )
 {  
     if (m_nodes == NULL)
-    	return;
+        return;
     
     DOM_Element node = m_graphDoc->createElement("node");
     m_nodes->appendChild(node);
@@ -135,7 +142,7 @@ void
 SchedulerCommon::finalizeNodes(int process /* = 0*/)
 {
     if (m_graphDoc == NULL)
-    	return;
+        return;
 
     if (m_outPort->wasOutputTimestep()) {
       string timestep_dir(m_outPort->getLastTimestepOutputLocation());
@@ -144,7 +151,7 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
       fname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
       string file_name(timestep_dir + fname.str());
       ofstream graphfile(file_name.c_str());
-      graphfile << *m_graphDoc << endl;
+      graphfile << *m_graphDoc << "\n";
     }
     
     delete m_nodes;
@@ -169,34 +176,42 @@ SchedulerCommon::getLoadBalancer()
 
 void
 SchedulerCommon::addTask(Task* task, const PatchSet* patches,
-		      const MaterialSet* matls)
+                      const MaterialSet* matls)
 {
-   graph.addTask(task, patches, matls);
-   for (Task::Dependency* dep = task->getRequires(); dep != 0;
-	dep = dep->next) {
-     // Store the ghost cell information of each of the requires
-     // so we can predict the total allocation needed for each variable.
-     if (dep->numGhostCells > 0) {
-       const PatchSubset* dep_patches;
-       const MaterialSubset* dep_matls;
-       if (dep->patches_dom == Task::NormalDomain)
-	 dep_patches = patches->getUnion();
-       else if (dep->patches_dom == Task::OutOfDomain)
-	 dep_patches = dep->patches;
-       else {
-	 throw InternalError("Unhandled patches_dom with > 0 ghost cells");
-       }
-       if (dep->matls_dom == Task::NormalDomain)
-	 dep_matls = matls->getUnion();
-       else if (dep->matls_dom == Task::OutOfDomain)
-	 dep_matls = dep->matls;
-       else {
-	 throw InternalError("Unhandled patches_dom with > 0 ghost cells");
-       }
-       m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls, dep_patches,
-					  dep->gtype, dep->numGhostCells);
-     }
-   }
+  dbg << "adding Task: " << task->getName() << ", # patches: ";
+  if( patches ) dbg << patches->size();
+  else          dbg << "0";
+  dbg << ", # matls: " ;
+  if( matls ) dbg << matls->size();
+  else          dbg << "0";
+  dbg << "\n";
+
+  graph.addTask(task, patches, matls);
+  for (Task::Dependency* dep = task->getRequires(); dep != 0;
+       dep = dep->next) {
+    // Store the ghost cell information of each of the requires
+    // so we can predict the total allocation needed for each variable.
+    if (dep->numGhostCells > 0) {
+      const PatchSubset* dep_patches;
+      const MaterialSubset* dep_matls;
+      if (dep->patches_dom == Task::NormalDomain)
+        dep_patches = patches->getUnion();
+      else if (dep->patches_dom == Task::OutOfDomain)
+        dep_patches = dep->patches;
+      else {
+        throw InternalError("Unhandled patches_dom with > 0 ghost cells");
+      }
+      if (dep->matls_dom == Task::NormalDomain)
+        dep_matls = matls->getUnion();
+      else if (dep->matls_dom == Task::OutOfDomain)
+        dep_matls = dep->matls;
+      else {
+        throw InternalError("Unhandled patches_dom with > 0 ghost cells");
+      }
+      m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls, dep_patches,
+                                         dep->gtype, dep->numGhostCells);
+    }
+  }
 }
 
 void
@@ -245,11 +260,11 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
     // first datawarehouse -- indicate that it is the "initialization"= dw.
     dws_[Task::NewDW] = scinew
       OnDemandDataWarehouse(d_myworld, this, generation, grid,
-			    true /* initialization dw */);
+                            true /* initialization dw */);
   }
   else {
     dws_[Task::NewDW]=scinew OnDemandDataWarehouse(d_myworld, this, generation,
-						   grid);
+                                                   grid);
   }
 }
 
@@ -267,9 +282,9 @@ SchedulerCommon::get_new_dw()
 
 const vector<const Patch*>* SchedulerCommon::
 getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
-		     Ghost::GhostType requestedGType, int requestedNumGCells,
-		     IntVector& requiredLow, IntVector& requiredHigh,
-		     IntVector& requestedLow, IntVector& requestedHigh) const
+                     Ghost::GhostType requestedGType, int requestedNumGCells,
+                     IntVector& requiredLow, IntVector& requiredHigh,
+                     IntVector& requestedLow, IntVector& requestedHigh) const
 {
   const SuperPatch* connectedPatchGroup =
     m_locallyComputedPatchVarMap.getConnectedPatchGroup(label, patch);
@@ -287,8 +302,8 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
     const Patch* memberPatch = connectedPatchGroup->getBoxes()[i];
     VarLabelMatlPatch vmp(label, matlIndex, memberPatch);
     m_ghostOffsetVarMap.getExtents(vmp, requestedGType, requestedNumGCells,
-				   requiredLow, requiredHigh,
-				   requestedLow, requestedHigh);
+                                   requiredLow, requiredHigh,
+                                   requestedLow, requestedHigh);
     SuperPatch::Region requiredRegion =
       SuperPatch::Region(requiredLow, requiredHigh);
     requiredExtents = requiredExtents.enclosingRegion(requiredRegion);
@@ -365,11 +380,11 @@ void SchedulerCommon::compile( const ProcessorGroup * pg, bool scrub_new)
     for (int i = 0; i < dts_->numLocalTasks(); i++) {
       const DetailedTask* dt = dts_->localTask(i);
       for(const Task::Dependency* comp = dt->getTask()->getComputes();
-	  comp != 0; comp = comp->next){
-	constHandle<PatchSubset> patches =
-	  comp->getPatchesUnderDomain(dt->getPatches());
-	m_locallyComputedPatchVarMap.addComputedPatchSet(comp->var,
-							 patches.get_rep());
+          comp != 0; comp = comp->next){
+        constHandle<PatchSubset> patches =
+          comp->getPatchesUnderDomain(dt->getPatches());
+        m_locallyComputedPatchVarMap.addComputedPatchSet(comp->var,
+                                                         patches.get_rep());
       }
     }
   }
