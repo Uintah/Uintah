@@ -11,13 +11,14 @@ using namespace std;
 
 map<string, VarLabel*> VarLabel::allLabels;
 string VarLabel::defaultCompressionMode = "none";
-
+SCIRun::Mutex VarLabel::d_lock("VarLabel create/destroy lock");
 
 VarLabel* VarLabel::create(const string& name,
 			   const TypeDescription* td,
 			   VarType vartype /*= Normal*/)
 {
   VarLabel* label = 0;
+ d_lock.lock();
   map<string, VarLabel*>::iterator iter = allLabels.find(name);
   if(iter != allLabels.end()){
     // two labels with the same name -- make sure they are the same type
@@ -35,16 +36,20 @@ VarLabel* VarLabel::create(const string& name,
     label = scinew VarLabel(name, td, vartype);
   }
   label->addReference();
+ d_lock.unlock();  
   return label;
 }
 
 bool VarLabel::destroy(const VarLabel* label)
 {
   if (label == 0) return false;
+ d_lock.lock();    
   if (label->removeReference()) {
     delete label;
+ d_lock.unlock();      
     return true;
   }
+ d_lock.unlock();    
   return false;
 }
 
