@@ -778,6 +778,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   
   
 /*`==========TESTING==========*/ 
+#if 0
 if (switchDebugInitialize){
   cout << " Initial Conditions" << endl;
   
@@ -814,6 +815,7 @@ if (switchDebugInitialize){
   printVector( patch, 1, description, "vvel_CC", 1,  vel_CC);
   printVector( patch, 1, description, "wvel_CC", 2,  vel_CC);
 } 
+#endif
  /*==========TESTING==========`*/   
   }
   setBC(press_CC,"Pressure",patch);
@@ -1207,6 +1209,8 @@ void ICE::computeFaceCenteredVelocities(
     printData( patch, 1, description, "rho_CC",      rho_CC);
     printData( patch, 1, description, "rho_micro_CC",rho_micro_CC);
     printVector( patch,1, description, "uvel_CC", 0, vel_CC);
+    printVector( patch,1, description, "uvel_CC", 1, vel_CC);
+    printVector( patch,1, description, "wvel_CC", 2, vel_CC);
     }
  /*==========TESTING==========`*/
 #endif    
@@ -1308,17 +1312,6 @@ void ICE::computeFaceCenteredVelocities(
       }
     }
 
-#if 0
-/*`==========DEBUG============*/ 
-    if (switchDebug_vel_FC ) {
-    Material* matl = d_sharedState->getMaterial( m );
-    int dwindex = matl->getDWIndex(); 
-    char description[50];
-    sprintf(description, "bottom_of_vel_FC_Before_SetBC_Mat_%d ",dwindex);
-    printData_FC( patch,1, description, "uvel_FC", uvel_FC);
-    }
- /*==========DEBUG============`*/
- #endif    
     setBC(uvel_FC,"Velocity","x",patch);
     setBC(vvel_FC,"Velocity","y",patch);
     setBC(wvel_FC,"Velocity","z",patch);
@@ -1684,7 +1677,7 @@ void ICE::computeDelPressAndUpdatePressCC(
 		 q_in,q_in_EF,q_in_CF,q_advected);
 /*`==========DEBUG============*/ 
     if (switchDebug_explicit_press ) {
-#if 1
+#if 0
     char description[50];
     sprintf(description, "middle_of_explicit_Pressure_Mat_%d ",dwindex);
     printData_FC( patch,1, description, "uvel_FC", uvel_FC);
