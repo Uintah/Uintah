@@ -45,6 +45,7 @@ XMLS :=  \
 	sci_CannySegmentationLevelSetImageFilter.xml \
 	sci_WatershedSegmentTreeGenerator.xml \
 	sci_WatershedImageFilter.xml \
+	sci_MeanImageFilter.xml \
 #[INSERT NEW CODE FILE HERE]
 
 INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
@@ -63,7 +64,6 @@ SRCS := \
 	$(SRCDIR)/ImageReaderUShort3D.tcl \
 	$(SRCDIR)/ImageToField.tcl \
 	$(SRCDIR)/Switch.tcl \
-#	$(SRCDIR)/MeanImageFilter.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
