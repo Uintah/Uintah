@@ -17,10 +17,10 @@
 
 
 /*
- *  MeshBuilde.cc:
+ *  FusionSlicer.cc:
  *
  *  Written by:
- *   Allen Sanderson
+ *   Michael Callahan
  *   School of Computing
  *   University of Utah
  *   March 2002
@@ -104,7 +104,6 @@ FusionSlicer::FusionSlicer(GuiContext *context)
 
     fGeneration_(-1),
     mGeneration_(-1)
-
 {
 }
 
