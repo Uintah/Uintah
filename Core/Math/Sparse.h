@@ -58,7 +58,7 @@ class MatrixElement {
     return *this;
   }
 
-  Reference operator=(const Reference rhs)
+  Reference operator=(Reference rhs)
   {
     if (this != &rhs) {
       return operator=(rhs.asValue());
