@@ -110,26 +110,33 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
 #if 0
   if (d_MAlab)
     d_boundaryCondition->sched_mmWallCellTypeInit(sched, patches, matls);
 #endif
+
   //initializes and allocates vars for new_dw
   // set initial guess
   // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
   //                     viscosityCTS
   // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
   //                     viscosityIN
+
   sched_setInitialGuess(sched, patches, matls);
 
   // Start the iterations
+
   int nlIterations = 0;
   double nlResidual = 2.0*d_resTol;
   int nofScalars = d_props->getNumMixVars();
+
   do{
+
     //correct inlet velocities to account for change in properties
     // require : densityIN, [u,v,w]VelocityIN (new_dw)
     // compute : [u,v,w]VelocitySIVBC
+
     d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls);
 
     // linearizes and solves pressure eqn
@@ -140,13 +147,18 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
     //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
     //           pressurePS (new_dw)
-    d_pressSolver->solve(level, sched, time, delta_t);
 
+    // calculate density reference array for buoyant plume calculation
+
+    d_props->sched_computeDenRefArray(sched, patches, matls);
+
+    d_pressSolver->solve(level, sched, time, delta_t);
 
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelocityCPBC, pressureSPBC
+
     d_boundaryCondition->sched_recomputePressureBC(sched, patches, matls);
 
     // Momentum solver
@@ -158,49 +170,64 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
     //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
     //           [u,v,w]VelocitySPBC
+
     for (int index = 1; index <= Arches::NDIM; ++index) {
+
       d_momSolver->solve(sched, patches, matls, time, delta_t, index);
+
     }
+
     // equation for scalars
     // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
     //           scalarSP, densityCP (old_dw)
     // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
     //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
+
     for (int index = 0;index < nofScalars; index ++) {
+
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
+
       d_scalarSolver->solve(sched, patches, matls, time, delta_t, index);
+
     }
 
 
     // update properties
     // require : densityIN
     // compute : densityCP
+
     d_props->sched_reComputeProps(sched, patches, matls);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
     // require : densityCP, viscosityIN, [u,v,w]VelocitySPBC
     // compute : viscosityCTS
+
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
+
 #ifdef multimaterialform
     if (!(d_mmInterface == 0)) {
       d_mmInterface->sched_putCFDVars();
     }
 #endif
 
-
     ++nlIterations;
+
 #if 0    
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, old_dw, new_dw);
 #endif
+
   }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
 
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
+
   sched_interpolateFromFCToCC(sched, patches, matls);
+
   // print information at probes provided in input file
+
   if (d_probe_data)
     sched_probeData(sched, patches, matls);
 
@@ -335,7 +362,8 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
 		Ghost::None, numGhostCells);
   tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, numGhostCells);
-      
+  tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
+		  Ghost::None, numGhostCells);
   int nofScalars = d_props->getNumMixVars();
   // warning **only works for one scalar
   for (int ii = 0; ii < nofScalars; ii++) {
@@ -356,7 +384,7 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
   }
   tsk->computes(d_lab->d_densityINLabel);
   tsk->computes(d_lab->d_viscosityINLabel);
-  
+  tsk->computes(d_lab->d_densityMicroINLabel);
   sched->addTask(tsk, patches, matls);
 
 #if 0
@@ -503,6 +531,9 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched, const PatchSet* patche
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, numGhostCells);
+
+  tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		Ghost::AroundCells, numGhostCells);
       
   sched->addTask(tsk, patches, matls);
   
@@ -554,6 +585,13 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int nofGhostCells = 0;
+    CCVariable<double> denMicro;
+    old_dw->get(denMicro, d_lab->d_densityMicroLabel, 
+		matlIndex, patch, Ghost::None, nofGhostCells);
+    CCVariable<double> denMicro_new;
+    new_dw->allocate(denMicro_new, d_lab->d_densityMicroINLabel, 
+		     matlIndex, patch);
+    denMicro_new = denMicro;
     CCVariable<int> cellType;
     if (d_MAlab)
       new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,
@@ -648,6 +686,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     }
     new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
+    new_dw->put(denMicro_new, d_lab->d_densityMicroINLabel, matlIndex, patch);
   }
 }
 
@@ -793,17 +832,25 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
 		Ghost::None, nofGhostCells);
     new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
+    
+    CCVariable<double> gasfraction;
+    new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
+		Ghost::None, nofGhostCells);
+
     for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
 	 iter != d_probePoints.end(); iter++) {
+
       if (patch->containsCell(*iter)) {
 	cerr << "for Intvector: " << *iter << endl;
 	cerr << "Density: " << density[*iter] << endl;
-	cerr << "Viscosity: " << viscosity[*iter] << endl;
+	//	cerr << "Viscosity: " << viscosity[*iter] << endl;
 	cerr << "Pressure: " << pressure[*iter] << endl;
-	cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
+	//	cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
 	cerr << "UVelocity: " << newUVel[*iter] << endl;
 	cerr << "VVelocity: " << newVVel[*iter] << endl;
 	cerr << "WVelocity: " << newWVel[*iter] << endl;
+
+	cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
 
       }
     }

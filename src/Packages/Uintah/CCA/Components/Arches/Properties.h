@@ -54,38 +54,52 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Constructor taking
       //   [in] 
+
       Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
       // Destructor
+
       ~Properties();
 
       // GROUP: Problem Setup :
       ///////////////////////////////////////////////////////////////////////
       // Set up the problem specification database
+
       void problemSetup(const ProblemSpecP& params);
 
       // GROUP: Compute properties 
       ///////////////////////////////////////////////////////////////////////
       // Compute properties for inlet/outlet streams
+
       void computeInletProperties(const InletStream& inStream,
 				  Stream& outStream);
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule the computation of proprties
+
       void sched_computeProps(SchedulerP&, const PatchSet* patches,
 			      const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of proprties
+
       void sched_reComputeProps(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the computation of density reference array here
+
+      void sched_computeDenRefArray(SchedulerP&, const PatchSet* patches,
+				    const MaterialSet* matls);
+
 
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the number of mixing variables
+
       inline int getNumMixVars() const{ 
 	return d_numMixingVars; 
       }
@@ -93,6 +107,7 @@ public:
       // GROUP: Set Methods :
       ///////////////////////////////////////////////////////////////////////
       // Set the boundary consition pointer
+
       inline void setBC(const BoundaryCondition* bc) {
 	d_bc = bc;
       }
@@ -104,6 +119,7 @@ private:
       // GROUP: Actual Action Methods :
       ///////////////////////////////////////////////////////////////////////
       // Carry out actual computation of properties
+
       void computeProps(const ProcessorGroup*,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
@@ -112,17 +128,28 @@ private:
 
       ///////////////////////////////////////////////////////////////////////
       // Carry out actual recomputation of properties
+
       void reComputeProps(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
 
+      ///////////////////////////////////////////////////////////////////////
+      // Carry out actual computation of density reference array
+
+      void computeDenRefArray(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
+
       // GROUP: Constructors Not Instantiated:
       ///////////////////////////////////////////////////////////////////////
       // Copy Constructor (never instantiated)
       //   [in] 
       //        const Properties&   
+
       Properties(const Properties&);
 
       // GROUP: Operators Not Instantiated:
@@ -130,6 +157,7 @@ private:
       // Assignment Operator (never instantiated)
       //   [in] 
       //        const Properties&   
+
       Properties& operator=(const Properties&);
 
 private:
