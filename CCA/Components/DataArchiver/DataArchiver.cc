@@ -88,8 +88,9 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
    ProblemSpecP p = params->findBlock("DataArchiver");
 
    d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
-
    p->require("filebase", d_filebase);
+
+   // get output timestep or time interval info
    d_outputInterval = 0;
    if(!p->get("outputTimestepInterval", d_outputTimestepInterval))
      d_outputTimestepInterval = 0;
@@ -100,11 +101,13 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
    if (d_outputInterval != 0.0 && d_outputTimestepInterval != 0)
      throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both");
    
+   // set default compression mode - can be "tryall", "gzip", "rle", "rle, gzip", "gzip, rle", or "none"
    string defaultCompressionMode = "";
    if (p->get("compression", defaultCompressionMode)) {
      VarLabel::setDefaultCompressionMode(defaultCompressionMode);
    }
    
+   // get the variables to save
    map<string, string> attributes;
    SaveNameItem saveItem;
    ProblemSpecP save = p->findBlock("save");
@@ -164,6 +167,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
      throw ProblemSetupException(" You must save p.x when saving other particle variables");
    }     
    
+   // get checkpoint information
    d_checkpointInterval = 0.0;
    d_checkpointTimestepInterval = 0;
    d_checkpointWalltimeStart = 0;
@@ -230,6 +234,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
    if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0 && d_checkpointWalltimeInterval == 0) 
 	return;
 
+   // set up the next output and checkpoint time
    d_nextOutputTime=0.0;
    d_nextOutputTimestep=1;
    d_nextCheckpointTime=d_checkpointInterval; // no need to checkpoint t=0
@@ -373,6 +378,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
    }
 
    if (d_writeMeta) {
+      // create index.xml 
       string inputname = d_dir.getName()+"/input.xml";
       ofstream out(inputname.c_str());
       if (!out) {
@@ -382,6 +388,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
       out << params << endl; 
       createIndexXML(d_dir);
    
+      // create checkpoints/index.xml (if we are saving checkpoints)
       if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 ||
 	  d_checkpointWalltimeInterval != 0) {
 	 d_checkpointsDir = d_dir.createSubdir("checkpoints");
@@ -507,6 +514,7 @@ void DataArchiver::combinePatchSetup(Dir& fromDir)
 
 void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
 {
+  // copy chunk labeled section between index.xml files
   string iname = fromDir.getName()+"/index.xml";
   ProblemSpecP indexDoc = loadDocument(iname);
 
@@ -541,11 +549,13 @@ void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
 void DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 				   int timestep)
 {
+   // add restart history to restarts section
    ProblemSpecP restarts = indexDoc->findBlock("restarts");
    if (restarts == 0) {
      restarts = indexDoc->appendChild("restarts");
    }
 
+   // restart from <dir> at timestep
    ProblemSpecP restartInfo = indexDoc->appendChild("restart",1);
    restartInfo->setAttribute("from", fromDir.getName().c_str());
    
@@ -580,6 +590,7 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
       timesteps = indexDoc->appendChild("timesteps");
    }
    
+   // copy each timestep 
    int timestep;
    while (ts != 0) {
       ts->get(timestep);
@@ -599,6 +610,7 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 	 if (href_pos != string::npos)
 	   href = hrefNode.substr(0, href_pos);
 	 
+         //copy timestep directory
 	 Dir timestepDir = fromDir.getSubdir(href);
 	 if (removeOld)
 	    timestepDir.move(toDir);
@@ -624,6 +636,7 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
       ts = ts->findNextBlock("timestep");
    }
 
+   // re-output index.xml
    ofstream copiedIndex(iname.c_str());
    if (!copiedIndex) {
      throw InternalError("DataArchiver::copyTimesteps(): The file \"" + \
@@ -649,6 +662,7 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
    ProblemSpecP globals = indexDoc->findBlock("globals");
    if (globals != 0) {
       ProblemSpecP variable = globals->findBlock("variable");
+      // copy data file associated with each variable
       while (variable != 0) {
 	 map<string,string> attributes;
 	 variable->getAttributes(attributes);
@@ -833,6 +847,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
     }
   }
   
+  // same thing for checkpoints
   if ((d_checkpointInterval != 0.0 && time+delt >= d_nextCheckpointTime) ||
       (d_checkpointTimestepInterval != 0 &&
        timestep >= d_nextCheckpointTimestep) ||
@@ -918,7 +933,8 @@ void DataArchiver::outputTimestep(Dir& baseDir,
     Dir tdir;
     try {
       tdir = baseDir.createSubdir(tname.str());
-      
+ 
+      // make a timestep.xml file for this timestep
       ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
 
       ProblemSpecP timeElem = rootElem->appendChild("Time");
@@ -959,6 +975,8 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       for(int l=0;l<numLevels;l++){
 	ostringstream lname;
 	lname << "l" << l;
+
+        // create a pxxxxx.xml file for each proc doing the outputting
 	for(int i=0;i<d_myworld->size();i++){
           if (i % lb->getNthProc() != 0 )
             continue;
@@ -1076,6 +1094,7 @@ void DataArchiver::executedTimestep(double delt)
   }
 
 
+  // start dumping files to disk
   vector<Dir*> baseDirs;
   if (d_wasOutputTimestep)
     baseDirs.push_back(&d_dir);
@@ -1111,7 +1130,8 @@ void DataArchiver::executedTimestep(double delt)
 #else
       ProblemSpecP indexDoc = loadDocument(iname);
 #endif
-      
+
+      // if this timestep isn't already in index.xml, add it in
       if (indexDoc == 0)
         continue; // output timestep but no variables scheduled to be saved.
       ASSERT(indexDoc != 0);
@@ -1132,6 +1152,7 @@ void DataArchiver::executedTimestep(double delt)
 	}
       }
       if(!found){
+        // add timestep info
 	string timestepindex = tname.str()+"/timestep.xml";      
 	
 	ProblemSpecP newElem = ts->appendChild("timestep",1);
@@ -1159,14 +1180,16 @@ void DataArchiver::executedTimestep(double delt)
   {
     // Close data file handles used in regular outputs.
       
-    map< int, int >::iterator dataFileHandleIdx = d_DataFileHandles.begin();
-    map< int, int >::iterator dataFileHandleEnd = d_DataFileHandles.end();
+    map< int, pair<int, char*> >::iterator dataFileHandleIdx = d_DataFileHandles.begin();
+    map< int, pair<int, char*> >::iterator dataFileHandleEnd = d_DataFileHandles.end();
 
     while ( dataFileHandleIdx != dataFileHandleEnd ) {
 
-      int fd = dataFileHandleIdx->second;
+      int fd = dataFileHandleIdx->second.first;
+      char* filename = dataFileHandleIdx->second.second;
 
       if ( close( fd ) == -1 ) {
+	cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
 	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno);
       }
 
@@ -1183,9 +1206,11 @@ void DataArchiver::executedTimestep(double delt)
     
     while ( dataFileHandleIdx != dataFileHandleEnd ) {
       
-      int fd = dataFileHandleIdx->second;
+      int fd = dataFileHandleIdx->second.first;
+      char* filename = dataFileHandleIdx->second.second;
       
       if ( close( fd ) == -1 ) {
+	cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
 	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno);
       }
       
@@ -1328,6 +1353,7 @@ void DataArchiver::indexAddGlobals()
 {
   dbg << "indexAddGlobals()\n";
 
+  // add info to index.xml about each global (reduction) var
   // assume for now that global variables that get computed will not
   // change from timestep to timestep
   static bool wereGlobalsAdded = false;
@@ -1451,6 +1477,7 @@ void DataArchiver::output(const ProcessorGroup*,
   }
   bool isReduction = var->typeDescription()->isReductionVariable();
 
+  // this task should be called once per variable (per patch/matl subset).
   dbg << "output called ";
   if(patches->size() == 1 && !patches->get(0)){
     dbg << "for reduction";
@@ -1483,7 +1510,11 @@ void DataArchiver::output(const ProcessorGroup*,
   string dataFilename;
   const Level* level = NULL;
 
+  // find the xml filename and data filename that we will write to
+  // Normal reductions will be handled by outputReduction, but checkpoint
+  // reductions call this function, and we handle them differently.
   if (!isReduction) {
+    // find the level and level number associated with this patch
     ostringstream lname;
     ASSERT(patches->size() != 0);
     ASSERT(patches->get(0) != 0);
@@ -1571,12 +1602,14 @@ void DataArchiver::output(const ProcessorGroup*,
     }
 
     int fd;
+    char* filename;
 #ifdef PVFS_FIX
     if ( isReduction )
 #endif
     {
       // Open the data file
-      fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
+      filename = (char*) dataFilename.c_str();
+      fd = open(filename, O_WRONLY|O_CREAT, 0666);
       if ( fd == -1 ) {
 	cerr << "Cannot open dataFile: " << dataFilename << '\n';
 	throw ErrnoException("DataArchiver::output (open call)", errno);
@@ -1585,8 +1618,10 @@ void DataArchiver::output(const ProcessorGroup*,
 #ifdef PVFS_FIX
     else
     {
-      map< int, int >* currentDataFileHandleMap;
-      map< int, int >::iterator currentDataFileHandle;
+      // map of levels to file descriptors.  select between 
+      // data files and checkpoint file handles
+      map< int, pair<int, char*> >* currentDataFileHandleMap;
+      map< int, pair<int, char*> >::iterator currentDataFileHandle;
 
       if ( isThisCheckpoint ) {
 	currentDataFileHandleMap = &d_CheckpointDataFileHandles;
@@ -1601,19 +1636,20 @@ void DataArchiver::output(const ProcessorGroup*,
       //       already have.
 
       if ( currentDataFileHandle == currentDataFileHandleMap->end() ) {
-
-	fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
+        filename = (char*) dataFilename.c_str();
+	fd = open(filename, O_WRONLY|O_CREAT, 0666);
 
 	if ( fd == -1 ) {
 	  cerr << "Cannot open dataFile: " << dataFilename << '\n';
 	  throw ErrnoException("DataArchiver::output (open call)", errno);
 	}
 	else {
-	  (*currentDataFileHandleMap)[level->getIndex()] = fd;
+	  (*currentDataFileHandleMap)[level->getIndex()] = make_pair(fd, filename);
 	}
       }
       else {
-	fd = (*currentDataFileHandleMap)[level->getIndex()];
+	fd = (*currentDataFileHandleMap)[level->getIndex()].first;
+        filename = (*currentDataFileHandleMap)[level->getIndex()].second;
       }
     }
 #endif    
@@ -1628,10 +1664,13 @@ void DataArchiver::output(const ProcessorGroup*,
     ASSERTEQ(cur, st.st_size);
 #endif
     
+    // loop through patches and materials
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       int patchID = patch?patch->getID():-1;
       for(int m=0;m<matls->size();m++){
+
+        // add info for this variable to the current xml file
 	int matlIndex = matls->get(m);
 	ProblemSpecP pdElem = doc->appendChild("Variable");
 	doc->appendText("\n");
@@ -1639,37 +1678,45 @@ void DataArchiver::output(const ProcessorGroup*,
 	pdElem->appendElement("variable", var->getName());
 	pdElem->appendElement("index", matlIndex);
 	pdElem->appendElement("patch", patchID);
-	pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), isThisCheckpoint ) );
+  	pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), isThisCheckpoint ) );
 	
 #ifdef __sgi
 	off64_t ls = lseek64(fd, cur, SEEK_SET);
 #else
 	off_t ls = lseek(fd, cur, SEEK_SET);
 #endif
-	if(ls == -1)
-	  throw ErrnoException("DataArchiver::output (lseek64 call)", errno);
-
+        if(ls == -1) {
+          cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
+	  throw ErrnoException("DataArchiver::output (lseek call)", errno);
+        }
 	// Pad appropriately
 	if(cur%PADSIZE != 0){
 	  long pad = PADSIZE-cur%PADSIZE;
 	  char* zero = scinew char[pad];
 	  bzero(zero, pad);
-	  write(fd, zero, pad);
+	  int err = write(fd, zero, pad);
+          if (err != pad) {
+            cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
+            SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno));
+          }
 	  cur+=pad;
 	  delete[] zero;
 	}
 	ASSERTEQ(cur%PADSIZE, 0);
 	pdElem->appendElement("start", cur);
 
-	OutputContext oc(fd, cur, pdElem, d_outputDoubleAsFloat && !isThisCheckpoint);
+        // output data to data file
+	OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && !isThisCheckpoint);
 	new_dw->emit(oc, var, matlIndex, patch);
 	pdElem->appendElement("end", oc.cur);
 	pdElem->appendElement("filename", dataFilebase.c_str());
 
 #if SCI_ASSERTION_LEVEL >= 1
 	s = fstat(fd, &st);
-	if(s == -1)
+	if(s == -1) {
+          cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
 	  throw ErrnoException("DataArchiver::output (stat call)", errno);
+        }
 	ASSERTEQ(oc.cur, st.st_size);
 #endif
 
@@ -1677,13 +1724,16 @@ void DataArchiver::output(const ProcessorGroup*,
       }
     }
 
+    // close files and handles (with pvfs fix, only do this with reductions).
 #ifdef PVFS_FIX
     if ( isReduction )
 #endif
     {
       int s = close(fd);
-      if(s == -1)
+      if(s == -1) {
+        cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
 	throw ErrnoException("DataArchiver::output (close call)", errno);
+      }
     }
 
 #ifdef PVFS_FIX
@@ -1705,6 +1755,7 @@ void DataArchiver::output(const ProcessorGroup*,
       ProblemSpecP indexDoc;
 
 #ifdef PVFS_FIX
+      // grab the corresponding index.xml and open it if necessary
       if ( isThisCheckpoint ) {
 	if ( !d_CheckpointXMLIndexDoc ) {
 	  d_CheckpointXMLIndexDoc = loadDocument(iname);
@@ -1723,6 +1774,7 @@ void DataArchiver::output(const ProcessorGroup*,
       indexDoc = loadDocument(iname);
 #endif
 
+      // add variable (as global or variable) to index.xml if not already there.
       ProblemSpecP vs;
       string variableSection = (isReduction) ? "globals" : "variables";
 	 
@@ -1896,7 +1948,11 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
   pLabelMatlMap = sched->makeVarLabelMaterialMap();
   for (list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
        it != d_saveLabelNames.end(); it++) {
-     
+
+    // go through each of the saveLabelNames we created in problemSetup
+    //   see if that variable has been created, set the compression mode
+    //   make sure that the scheduler shows that that it has been scheduled
+    //   to be computed.  Then save it to saveItems.
     VarLabel* var = VarLabel::find((*it).labelName);
     if (var == NULL)
       throw ProblemSetupException((*it).labelName +
