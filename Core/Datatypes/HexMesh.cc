@@ -343,9 +343,8 @@ void HexFace::finish_read (HexMesh * m)
  *******************************************************************************/
 
 Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
-  : my_index (index),
+  : my_index (index), corner(e),
     num_faces (6),
-    corner (e),
     min (999999, 999999, 999999),
     max (0, 0, 0)
 {
@@ -668,9 +667,9 @@ static Persistent* make_HexMesh()
  *******************************************************************************/
 
 HexMesh::HexMesh ()
-  : highest_face_index (0),
-    highest_node_index (0),
-    classified (0)
+  : classified (0),
+    highest_face_index (0),
+    highest_node_index (0)
 {
 }
 
@@ -680,11 +679,11 @@ HexMesh::HexMesh(const HexMesh &copy) :
   element_set(copy.element_set),
   face_set(copy.face_set),
   neighbor_set(copy.neighbor_set),
+  classified(copy.classified),
   KD(copy.KD),
   highest_face_index(copy.highest_face_index),
   highest_node_index(copy.highest_node_index),
-  highest_element_index(copy.highest_element_index),
-  classified(copy.classified)
+  highest_element_index(copy.highest_element_index)
 {
 }
 
@@ -931,7 +930,7 @@ void PushDown (KDTree * c, Hexahedron * h, int level)
 {
   Point mmin, mmax;
   double dx, dy, dz;
-  int side;
+  int side=0;
   
   switch (c->split)
   {

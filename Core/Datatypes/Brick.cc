@@ -16,8 +16,8 @@ namespace SCIRun {
 
 
 Brick::Brick() :
-  padx(0), pady(0), padz(0), lev(0),
-   tex(0), name(0)
+  tex(0),padx(0), pady(0), padz(0), lev(0),
+    name(0)
 {
 }
 
@@ -25,8 +25,8 @@ Brick::Brick(const Point& min, const Point& max,
 	      int padx, int pady, int padz,
 	      int level,
 	      Array3<unsigned char>* tex) :
-  padx(padx), pady(pady), padz(padz), lev(level),
-   tex( tex ), name(0)
+  tex(tex),padx(padx), pady(pady), padz(padz), lev(level),
+   name(0)
 {
   
   /* The cube is numbered in the following way 
@@ -247,7 +247,7 @@ Brick::OrderIntersects(Point *p, Point *t, Ray *r, Ray *te,
   int nSorted = 3;
   int i, j, k;
   double cosTheta, maxCosTheta;
-  int i0, i1;
+  int i0=0, i1=0;
 
   for(i = 0; i < nSorted;  i++){
       sorted[i] = p[i];
