@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 	<para>HDF5 must be installed before building &sr;</para>
       </listitem>
       <listitem>
-	<para>HDF5 must be built to be thread safe&mdash;HDF5 binary
+	<para>HDF5 must be built thread safe&mdash;HDF5 binary
 	distributions that are not thread safe cannot be used with
 	&sr;.</para>
       </listitem>
@@ -70,12 +70,14 @@ DEALINGS IN THE SOFTWARE.
 	  <para>
 	    Web browser download:
 	    <literallayout>
-<!--%= doc.doIfHTML {
-%q{<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"/>}
+<!--%= 
+doc.doIfHTML {
+  %q{<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"/>}
 }
 %-->
-<!--%= doc.doIfPrint {
-"ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"
+<!--%= 
+doc.doIfPrint {
+  "ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"
 }
 %-->
 	    </literallayout>
@@ -93,9 +95,77 @@ gunzip -c hdf5-1.6.2.tar.gz | tar xvf -
     </para>
   </section>
 
+  <section id="sec.sr_hdf5_build">
+    <title>Building</title>
+    <para>Follow the steps below to build HDF5.  See the <ulink
+    url="ftp://ftp.ncsa.uiuc.edu/HDF/HDF5/current/src/unpacked/release_docs/INSTALL">HDF5
+    installation home page</ulink> for complete installation
+    instructions.  To build HDF5:
+    <itemizedlist>
+      <listitem>
+	<para>
+	  Change the working directory to the HDF5 directory:
+	  <literallayout class="monospaced">
+cd <replaceable>path-to</replaceable>/hdf5-1.6.2
+	  </literallayout>
+	</para>
+      </listitem>
+      <listitem>
+	<para>Set compiler environment variables, for example,</para>
+	<para>
+	  For an sh-type shell:
+	  <literallayout class="monospaced">
+CC=gcc
+CXX=g++
+export CC CXX
+	  </literallayout>
+	</para>
+	<para>
+	  For an csh-type shell:
+	  <literallayout class="monospaced">
+setenv CC gcc
+setenv CXX g++
+	  </literallayout>
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  Configure HDF5:
+	  <literallayout class="monospaced">
+./configure --enable-threadsafe --with-pthread=/usr --prefix=/usr/local/hdf5
+	  </literallayout>
+	  This will install HDF5 binaries, libraries, header files,
+	  and tools in <filename>/usr/local/hdf5</filename>.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  Build HDF5:
+	  <literallayout class="monospaced">
+make all
+	  </literallayout>
+	  Become root user and install HDF5:
+	  <literallayout class="monospaced">
+su -
+make install	    
+	  </literallayout>
+	  Leave the root account by typing <command>exit</command>.
+	</para>
+      </listitem>
+    </itemizedlist>
+    </para>
+  </section>
+
   <section id="sec.sr_hdf5_config">
     <title>&sr; HDF5 Configure Options</title>
-    <para></para>
+    <para>
+      The configure option below adds support for HDF5 in &sr;.
+      Include this option in the &sr; <command>configure</command>
+      command (<xref linkend="sec.build-sr"/>):
+      <literallayout class="monospaced">
+--with-hdf5=/usr/local/hdf5
+      </literallayout>
+    </para>
   </section>
 
 </appendix>

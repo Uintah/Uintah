@@ -102,15 +102,23 @@ cd &sr;/<replaceable>dir</replaceable>
 --with-lapack=/usr/local/lib
 	</literallayout>
 	Use option <option>--with-insight</option> to add support
-	for Insight.  For example:
+	for Insight.  Also enable packages TEEM and Insight.  For example:
 	<literallayout class="monospaced">
 ../src/configure \
---with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
+--with-thirdparty=/usr/local/Thirdparty_lib_osx.1.22.0 \
 --enable-package="BioPSE TEEM Insight" \
 --with-insight=/usr/local/lib/InsightToolkit
 	</literallayout>
+	Use options <option>--with-hdf5</option> and
+	<option>--with-mdplus</option> to add support for HDF5 and
+	MDSplus.  Also enable packages TEEM and DataIO.  For example:
+	<literallayout class="monospaced">
+../src/configure \
+--with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
+--enable-package="BioPSE TEEM DataIO" \
+--with-hdf5=/usr/local/hdf5 --with-mdsplus=/usr/local/mdsplus
+	</literallayout>
       </para>
-
 
       <para>
 	&osx; builds of &sr; require use of configure options

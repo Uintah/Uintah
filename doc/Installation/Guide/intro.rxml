@@ -176,24 +176,18 @@ DEALINGS IN THE SOFTWARE.
 
   <section id="sec.osx_notes">
     <title>&osx; Prerequisites</title>
-    <para>Apple's X11 software must be installed on &osx;.  X11 is
-    distributed with &osx; but is not installed by default.  X11 is
-    installed by double-clicking on file
-    <filename>X11User.pkg</filename>.  <filename>X11User.pkg</filename>
-    is located on the third CD of the &osx; distribution in the
-    <filename>Packages</filename> directory.</para>
 
-    <para>Apple's Xcode developement tools must be installed on &osx;
-    systems.  Xcode tools are distributed with &osx; on their own CD.
-    Xcode tools are installed by double-clicking file
-    <filename>Developer.mpkg</filename>, which is found on the Xcode
-    CD.</para>
-
-    <para>Apple's X11 software development kit must be installed on
-    &osx;.  The X11 SDK is distributed with the Xcode tools but are
-    not part of the default Xcode installation.  To install the X11
-    SDK, double-click file <filename>X11SDK.pkg</filename>, which is
-    found in the <filename>Packages</filename> directory of the Xcode
+    <para>Apple's X11 server software, Xcode developer tools, and X11
+    software development kit must be installed before installing &sr;.
+    Apple's X11 server software, Xcode developer tools, and X11 SDK
+    are distributed with &osx; but are not part of the &osx; default
+    installation.  They are installed by double-clicking, in turn, the
+    files <filename>X11User.pkg</filename>,
+    <filename>Developer.mpkg</filename>, and
+    <filename>X11SDK.pkg</filename>.  These files may be present on
+    the hard drive, the &osx; installation CDs or DVD.
+    <filename>Developer.mpkg</filename> and
+    <filename>X11SDK.pkg</filename> are part of the Xcode
     distribution.</para>
   </section>
 
@@ -241,9 +235,9 @@ DEALINGS IN THE SOFTWARE.
 	<para>One card did work well under Redhat 9.</para>
       </listitem>
       <listitem>
-	<para>The &sr; configure option,
-	<option>--enable-ati-card-fix</option> can be used to improve the
-	usability of ATI cards.</para>
+	<para>Setting environment variable
+	<envar>SCIRUN_DRAWARRAYS_DISABLE</envar> can be used to
+	improve the usability of ATI cards.</para>
       </listitem>
     </itemizedlist>
     Based on these experiences, SCI does not recommend the use of ATI

@@ -54,36 +54,36 @@ DEALINGS IN THE SOFTWARE.
     Guide</ulink> for more information.</para>
 
     <note>
-      <para>The <acronym>RPM</acronym> distribution of &sr;
+      <para>The &sr;/Insight <acronym>RPM</acronym> distribution of &sr;
       <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
       <acronym>RPM</acronym> distribution installs Insight libraries in
       /usr/local/lib/InsightTookit.  The instructions in sections <xref
       linkend="sec.obitk"/>, <xref linkend="sec.cmake"/>, and <xref
       linkend="sec.itk_configsr"/> apply only to a source code installation
-      of &sr;.</para>
+      of &sr;.  Insight is not supported on Irix systems.</para>
     </note>
 
     <para>&sr;'s <acronym>ITK</acronym> support depends on the presence of
-    Java JDK 1.2.2 or later.  On Irix and Linux systems, environment
+    Java JDK 1.2.2 or later.  On Linux systems, environment
     variable <envar>JAVA_HOME</envar> must contain the path to the java
     <quote>JDK</quote> directory.  <envar>JAVA_HOME</envar> does not need
     to be set on &osx;. The JDK directory is typically
     <filename>/usr/java</filename>, <filename>/usr/java2</filename>, or
-    <filename>/usr/java/jdk<replaceable>x.x.x</replaceable></filename>.
-    </para>
+    <filename>/usr/java/jdk<replaceable>x.x.x</replaceable></filename>.</para>
+
     <para>
       For an sh-type shell:
       <literallayout class="monospaced">
-JAVA_HOME=/usr/java2
+JAVA_HOME=/usr/java
 export JAVA_HOME
       </literallayout>
       for a csh-type shell:
       <literallayout class="monospaced">
-setenv JAVA_HOME /usr/java2
+setenv JAVA_HOME /usr/java
       </literallayout>
     </para>
 
-    <para>On Irix and Linux systems, environment variable
+    <para>On Linux systems, environment variable
     <envar>PATH</envar> must contain the path to the
     <command>java</command> command. <envar>PATH</envar> does not need to
     be set on &osx;.  <envar>PATH</envar> is set as follows:</para>
@@ -170,8 +170,8 @@ setenv PATH $JAVA_HOME/bin:$PATH
     <para>Here is an example &sr; <command>configure</command> command:
     <literallayout class="monospaced">
 ../src/configure \
---with-thirdparty=/usr/local/&sr;/Thirdparty/1.10.0/Irix/CC-32bit \
---enable-package="BioPSE TEEM Insight " \
+--with-thirdparty=/usr/local/Thirdparty_lib_osx.1.22.0 \
+--enable-package="BioPSE TEEM Insight" \
 --with-insight=/usr/local/lib/InsightToolkit
     </literallayout>
     Note that package TEEM must be enabled.
