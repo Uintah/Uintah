@@ -10,49 +10,65 @@
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-using namespace SCIRun;
-
-/**************************************
-
-CLASS
-   DifferenceBCData
+  /*!
+    
+  \class DifferenceBCData
+  
+  \ brief Stores the difference of two different boundary condition geometries.
    
-   
-GENERAL INFORMATION
+  \author John A. Schmidt \n
+  Department of Mechanical Engineering \n
+  University of Utah \n
+  Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
 
-   DifferenceBCData.h
-
-   John A. Schmidt
-   Department of Mechanical Engineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  */
   
-   Copyright (C) 2000 SCI Group
+  using namespace SCIRun;
 
-KEYWORDS
-   DifferenceBCData
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
-   class DifferenceBCData : public BCGeomBase  {
+  class DifferenceBCData : public BCGeomBase  {
    public:
-     DifferenceBCData();
+
+    /// Default constructor
+    DifferenceBCData();
+
+    /// Copy constructor
      DifferenceBCData(const DifferenceBCData& rhs);
+
+     /// Assignment operator
      DifferenceBCData& operator=(const DifferenceBCData& bc);
+
+     /// Constructor with two boundary condition geometries.  The second 
+     /// argument is subtracted from the first argument.
      DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2);
+
+     /// Destructor
      virtual ~DifferenceBCData();
+
+     /// Clone the boundary condition geometry -- allocates memory.
      DifferenceBCData* clone();
+
+     /// Get the boundary condition data
      void getBCData(BCData& bc) const;
+
+     /// Add the boundary condition data -- no longer used.
      void addBCData(BCData& bc);
+
+     /// Add the old boundary condition data -- no longer used.
      void addBC(BoundCondBase* bc);
+
+     /// Determine if a point is inside the object.
      bool inside(const Point& p) const;
+
+     /// Print out the boundary condition geometry types.
      virtual void print();
+
+     /// Determine the cell and node boundary iterators.
+     virtual void determineIteratorLimits(Patch::FaceType face,
+					  const Patch* patch, 
+					  vector<Point>& test_pts);
+
+     /// Determine the face centered iterators.
+     virtual void determineSFLimits(Patch::FaceType face, const Patch* patch);
 
    private:
      BCGeomBase* left;

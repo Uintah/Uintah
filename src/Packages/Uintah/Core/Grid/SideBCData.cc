@@ -3,10 +3,12 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
+#include <iostream>
 
 using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
+
 SideBCData::SideBCData() 
 {
   
@@ -21,35 +23,6 @@ SideBCData::SideBCData(BCData& bc)
 SideBCData::~SideBCData()
 {
 }
-
-#if 0
-SideBCData::SideBCData(const SideBCData& mybc)
-{
-  d_bc=mybc.d_bc;
-  boundary=mybc.boundary;
-  interior=mybc.interior;
-  sfcx=mybc.sfcx;
-  sfcy=mybc.sfcy;
-  sfcz=mybc.sfcz;
-
-}
-
-
-SideBCData& SideBCData::operator=(const SideBCData& rhs)
-{
-  if (this == &rhs)
-    return *this;
-
-  d_bc = rhs.d_bc;
-  boundary = rhs.boundary;
-  interior = rhs.interior;
-  sfcx=rhs.sfcx;
-  sfcy=rhs.sfcy;
-  sfcz=rhs.sfcz;
-
-  return *this;
-}
-#endif
 
 SideBCData* SideBCData::clone()
 {
@@ -80,4 +53,22 @@ bool SideBCData::inside(const Point &p) const
 void SideBCData::print()
 {
   d_bc.print();
+}
+
+void SideBCData::determineIteratorLimits(Patch::FaceType face, 
+					 const Patch* patch, 
+					 vector<Point>& test_pts)
+{
+#if 0
+  cout << "SideBC determineIteratorLimits()" << endl;
+#endif
+  BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+}
+
+void SideBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
+{
+#if 0
+  cout << "SideBC determineSFLimits()" << endl;
+#endif
+  BCGeomBase::determineSFLimits(face,patch);
 }

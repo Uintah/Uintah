@@ -11,55 +11,69 @@
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-using namespace SCIRun;
 
-/**************************************
-
-CLASS
-   CircleBCData
-   
-   
-GENERAL INFORMATION
-
-   CircleBCData.h
-
-   John A. Schmidt
-   Department of Mechanical Engineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  /*!
+    
+  \class CircleBCData
   
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   CircleBCData
-
-DESCRIPTION
-   Long description...
+  \ brief Defines a circular geometry for a boundary condition.
   
-WARNING
-  
-****************************************/
+  \author John A. Schmidt \n
+  Department of Mechanical Engineering \n
+  University of Utah \n
+  Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
 
-   class CircleBCData : public BCGeomBase  {
+  */
+  
+  using namespace SCIRun;
+
+  class CircleBCData : public BCGeomBase  {
+
    public:
-     CircleBCData();
-     CircleBCData(BCData& bc);
-     CircleBCData(Point& p, double radius);
-     virtual ~CircleBCData();
-     CircleBCData* clone();
-     void addBCData(BCData& bc);
-     void addBC(BoundCondBase* bc);
-     void getBCData(BCData& bc) const;
-     bool inside(const Point& p) const;
-     virtual void print();
-         
-   private:
-     BCData d_bc;
-     double d_radius;
-     Point  d_origin;
-   };
+    /// Constructor
+    CircleBCData();
 
+    /// Constructor with boundary condition data.
+    CircleBCData(BCData& bc);
+
+    /// Constructor used with a point defining the origin and the radius.
+    CircleBCData(Point& p, double radius);
+
+    /// Destructor
+    virtual ~CircleBCData();
+
+    /// Clone the boundary condition geometry -- allocates memory.
+    CircleBCData* clone();
+
+    /// Add the boundary condition data
+    void addBCData(BCData& bc);
+
+    /// Add the old boundary condition data -- no longer used.
+    void addBC(BoundCondBase* bc);
+
+    /// Get the boundary condition data
+    void getBCData(BCData& bc) const;
+
+    /// Determines if a point is inside the circle
+    bool inside(const Point& p) const;
+
+    /// Print out the boundary condition geometry type.
+    virtual void print();
+
+    /// Determine the cell and node centered iterators
+    virtual void determineIteratorLimits(Patch::FaceType face,
+					 const Patch* patch, 
+					 vector<Point>& test_pts);
+    
+    /// Determine the face centered iterators
+    virtual void determineSFLimits(Patch::FaceType face, const Patch* patch);
+    
+  private:
+    BCData d_bc;
+    double d_radius;
+    Point  d_origin;
+  };
+  
 } // End namespace Uintah
 
 #endif

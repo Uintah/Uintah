@@ -78,3 +78,23 @@ void RectangleBCData::print()
 {
   d_bc.print();
 }
+
+void RectangleBCData::determineIteratorLimits(Patch::FaceType face, 
+					      const Patch* patch, 
+					      vector<Point>& test_pts)
+{
+#if 0
+  cout << "RectangleBC determineIteratorLimits()" << endl;
+#endif
+  BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+}
+
+
+void RectangleBCData::determineSFLimits(Patch::FaceType face, 
+					const Patch* patch)
+{
+#if 0
+  cout << "RectangleBC determineSFLimits()" << endl;
+#endif
+  BCGeomBase::determineSFLimits(face,patch);
+}
