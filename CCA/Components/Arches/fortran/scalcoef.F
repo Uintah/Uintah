@@ -78,7 +78,7 @@ C-----------------------------------------------------------------------
 *
       double precision prinv
       double precision crn
-      logical*1 l2up, lsmpt, lcend, lcentral
+      logical*1 l2up, lsmpt, lcend, lcentral, leno
       double precision vol
       double precision arean, areas, areaew, areatb
       double precision dene, denw, denn, dens, dent, denb
@@ -107,6 +107,8 @@ c      lcend = .true.
       lcend = .false.
       lsmpt = .false.
       lcentral = .false.
+c      leno = .true.
+      leno = .false.
       vol = zero
       prandtlno = 0.9
 
@@ -255,6 +257,19 @@ C----------------------------------------------------------------------
                   AT(I,J,K) = DT
                   AB(I,J,K) = DB
 c                  AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
+               ELSE IF (LENO) THEN
+                  AE(I,J,K) = DE
+                  AW(I,J,K) = DW
+                  AN(I,J,K) = DN
+                  AS(I,J,K) = DS
+                  AT(I,J,K) = DT
+                  AB(I,J,K) = DB
+                  CESAV(I,J,K) = 0.0D0
+                  CWSAV(I,J,K) = 0.0D0
+                  CNSAV(I,J,K) = 0.0D0
+                  CSSAV(I,J,K) = 0.0D0
+                  CTSAV(I,J,K) = 0.0D0
+                  CBSAV(I,J,K) = 0.0D0
                ELSE IF (LCEND) THEN
                   AE(I,J,K) = DE-CE*0.5
                   AW(I,J,K) = DW+CW*0.5
