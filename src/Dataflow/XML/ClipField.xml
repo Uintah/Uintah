@@ -21,7 +21,7 @@
 -->
 
 
-<component name="Clip" category="Fields">
+<component name="ClipField" category="Fields">
   <overview>
     <authors>
       <author>Michael Callahan</author>
