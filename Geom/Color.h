@@ -65,6 +65,22 @@ public:
     friend class HSVColor;
 };
 
+class Colorub { // unsigned byte color
+  unsigned char data[3]; // data...
+public:
+  Colorub() {};
+  Colorub(Color& c) { data[0] = c.r()*255; data[1] = c.g()*255;
+		      data[2] = c.b()*255; }; // converts them...
+
+  unsigned char* ptr() { return &data[0]; }; // grab pointer
+
+  inline unsigned char r() const { return data[0]; };
+  inline unsigned char g() const { return data[1]; };
+  inline unsigned char b() const { return data[2]; };
+
+  // should be enough for now - this is less bandwidth...
+};
+
 class HSVColor {
     double _hue;
     double _sat;

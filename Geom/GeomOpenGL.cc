@@ -11,6 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Datatypes/ColorMap.h>
 #include <Geom/GeomOpenGL.h>
 #include <Classlib/NotFinished.h>
 #include <Geom/Arrows.h>
@@ -20,8 +21,11 @@
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
 #include <Geom/Grid.h>
+#include <Geom/QMesh.h>
 #include <Geom/tGrid.h>
+#include <Geom/TimeGrid.h>
 #include <Geom/Group.h>
+#include <Geom/TimeGroup.h>
 #include <Geom/HeadLight.h>
 #include <Geom/IndexedGroup.h>
 #include <Geom/Light.h>
@@ -638,9 +642,276 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
   }
 }
+#if 0
+void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
+{
+  pre_draw(di, matl, 0);
+  int nu=dimU;
+  int nv=dimV;
+  di->polycount+=2; 
+  Vector uu(u/(nu-1));
+  Vector vv(v/(nv-1));
 
+  // first find which ones need to be drawn...
+
+  for(int i=0;i<time.size() && (time[i] <= t);i++)
+    ;
+
+  int start,end;
+  double dt;
+
+  if (i) { // if it was zero, just keep it...
+    if (i != (time.size()))
+      --i;
+  }
+
+  start = i;
+  end = i+1;
+
+  if (end == time.size())
+    end--; // can't wrap over...
+
+  dt = (t-time[i])/(time[1]-time[0]);
+  cerr << dt << " Trying to do texture draw...\n";
+  
+
+  if (dt < 0.0) dt = 0.0;
+  if (dt > 1.0) dt = 1.0;
+
+  switch(di->get_drawtype()){
+  case DrawInfoOpenGL::WireFrame:
+    break;
+  case DrawInfoOpenGL::Flat:
+  case DrawInfoOpenGL::Gouraud:
+  case DrawInfoOpenGL::Phong:
+    {
+      if (tmap_dlist[start] == 0) {
+	tmap_dlist[start] = glGenLists(1);
+	glNewList(tmap_dlist[start],GL_COMPILE_AND_EXECUTE);
+	glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
+		  GL_MODULATE);
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+			GL_LINEAR);
+	cerr << tmap_size << " Trying to do texture draw... bf\n";
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
+			GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage2D(GL_TEXTURE_2D,0,4,tmap_size,tmap_size,
+		     0,GL_RGBA,GL_FLOAT,tmap[start]);
+	cerr << "Trying to do texture draw... cf\n";
+	glEndList();
+      }
+      else {
+	glCallList(tmap_dlist[start]);
+      }
+      cerr << "Trying to do texture draw... ef\n";
+
+      glColor4f(1.0,1.0,1.0,1.0-dt);
+//      glColor4f(1.0,1.0,1.0,1.0);
+      glEnable(GL_TEXTURE_2D);
+      
+      glBlendFunc(GL_SRC_ALPHA,GL_ZERO); // just add in the first part
+      
+      glEnable(GL_BLEND);
+
+      glBegin(GL_QUADS);
+      glTexCoord2f(0.0,0.0);
+      glVertex3d(corner.x(),corner.y(),corner.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),0.0);
+      glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),
+		   dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x()+u.x(),
+		 corner.y()+v.y()+u.y(),
+		 corner.z()+v.z()+u.z());
+      
+      glTexCoord2f(0.0,dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
+      
+      glEnd();
+#if 1
+      if (tmap_dlist[end] == 0) {
+	tmap_dlist[end] = glGenLists(1);
+	glNewList(tmap_dlist[end],GL_COMPILE_AND_EXECUTE);
+	glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
+		  GL_MODULATE);
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+			GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
+			GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage2D(GL_TEXTURE_2D,0,4,tmap_size,tmap_size,
+		     0,GL_RGBA,GL_FLOAT,tmap[end]);
+	glEndList();
+      }
+      else {
+	glCallList(tmap_dlist[end]);
+      }
+      glColor4f(1.0,1.0,1.0,dt);
+      glBlendFunc(GL_SRC_ALPHA,GL_ONE); // just add in the first part
+      
+      glBegin(GL_QUADS);
+      glTexCoord2f(0.0,0.0);
+      glVertex3d(corner.x(),corner.y(),corner.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),0.0);
+      glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),
+		   dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x()+u.x(),
+		 corner.y()+v.y()+u.y(),
+		 corner.z()+v.z()+u.z());
+      
+      glTexCoord2f(0.0,dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
+      
+      glEnd();
+#endif      
+      glDisable(GL_BLEND);
+      glDisable(GL_TEXTURE_2D);
+      break;
+    }
+  }
+}
+#else
+void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
+{
+  pre_draw(di, matl, 0);
+  int nu=dimU;
+  int nv=dimV;
+  di->polycount+=2; 
+  Vector uu(u/(nu-1));
+  Vector vv(v/(nv-1));
+
+  // first find which ones need to be drawn...
+
+  for(int i=0;i<time.size() && (time[i] <= t);i++)
+    ;
+
+  int start,end;
+  double dt;
+  int last_frame=0;
+
+  last_frame = (t >= time[time.size()-1]); // 1 if last time step...
+
+  if (i) { // if it was zero, just keep it...
+    i--;
+  }
+
+  start = i;
+  end = i+1;
+
+  if (last_frame) {
+    start = time.size()-1; // just go to end....
+    end= start;
+  }
+
+  dt = (t-time[start])/(time[1]-time[0]);
+  cerr << time[start] << " " << t << " " << start << " ";
+  cerr << dt << " Trying to do texture draw...\n";
+
+  if (dt < 0.0) dt = 0.0;
+  if (dt > 1.0) dt = 1.0;
+
+  switch(di->get_drawtype()){
+  case DrawInfoOpenGL::WireFrame:
+    break;
+  case DrawInfoOpenGL::Flat:
+  case DrawInfoOpenGL::Gouraud:
+  case DrawInfoOpenGL::Phong:
+    {
+      // first blend two images together...
+
+      float *startM=tmap[start],*endM=tmap[end];
+      double bval = dt;
+
+//      int mapsz = map->rcolors.size();
+      double cdenom = 1.0/(map->max-map->min); // index
+      
+      double min = 1000000;
+      double max = -100000;
+
+      if (last_frame) {
+	for(int j=0;j<dimV;j++) {
+	  int bindex = j*tmap_size*3; // use RGB?
+	  int sindex = j*tmap_size;
+	  
+	  for(int i=0;i<dimU;i++) {
+	    float nval = startM[sindex + i];
+
+	    double rmapval = (nval-map->min)*cdenom;
+	    MaterialHandle hand = map->lookup2(rmapval);
+
+	    bmap[bindex + i*3 + 0] = hand->diffuse.r();
+	    bmap[bindex + i*3 + 1] = hand->diffuse.g();
+	    bmap[bindex + i*3 + 2] = hand->diffuse.b();
+	  }
+	}
+      } else {
+	for(int j=0;j<dimV;j++) {
+	  int bindex = j*tmap_size*3; // use RGB?
+	  int sindex = j*tmap_size;
+	  
+	  for(int i=0;i<dimU;i++) {
+	    float nval = startM[sindex + i] + 
+	      bval*(endM[sindex+i]-startM[sindex + i]);
+	    // now look this up in the color map...
+	    
+	    double rmapval = (nval-map->min)*cdenom;
+	    MaterialHandle hand = map->lookup2(rmapval);
+
+	    bmap[bindex + i*3 + 0] = hand->diffuse.r();
+	    bmap[bindex + i*3 + 1] = hand->diffuse.g();
+	    bmap[bindex + i*3 + 2] = hand->diffuse.b();
+	    //	  bmap[bindex + i*4 + 3] = 1.0;
+	    
+	  }
+	}
+      }
+      // now bmap contains the blended texture...
+      glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
+		GL_MODULATE);
+      glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+		      GL_LINEAR);
+      glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
+		      GL_LINEAR);
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+      glTexImage2D(GL_TEXTURE_2D,0,3,tmap_size,tmap_size,
+		   0,GL_RGB,GL_FLOAT,bmap);
+      
+      glColor4f(1.0,1.0,1.0,1.0);
+
+      glEnable(GL_TEXTURE_2D);
+      
+      glBegin(GL_QUADS);
+      glTexCoord2f(0.0,0.0);
+      glVertex3d(corner.x(),corner.y(),corner.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),0.0);
+      glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),
+		   dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x()+u.x(),
+		 corner.y()+v.y()+u.y(),
+		 corner.z()+v.z()+u.z());
+      
+      glTexCoord2f(0.0,dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
+      
+      glEnd();
+
+      glDisable(GL_TEXTURE_2D);
+      break;
+    }
+  }
+}
+#endif
 // WARNING doesn't respond to lighting correctly yet!
-
+#ifdef BROKEN_BUT_FAST
 void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
@@ -790,11 +1061,291 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     glPopMatrix();
 }
+#else
+void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    int nu=verts.dim1();
+    int nv=verts.dim2();
+
+    if (image) {
+        di->polycount+=2*nu*nv;
+        Vector uu(u/nu);
+        Vector vv(v/nv);
+        pre_draw(di,matl,0);
+        Point rstart(corner);
+        glBegin(GL_QUADS);
+        for (int i=0; i<nu; i++) {
+            Point p1(rstart);
+            Point p2(rstart+uu);
+            Point p3(rstart+uu+vv);
+            Point p4(rstart+vv);
+            for (int j=0; j<nv; j++) {
+                if (have_matls)
+                    di->set_matl(matls(i,j).get_rep());
+                glVertex3d(p1.x(), p1.y(), p1.z());
+                glVertex3d(p2.x(), p2.y(), p2.z());
+                glVertex3d(p3.x(), p3.y(), p3.z());
+                glVertex3d(p4.x(), p4.y(), p4.z());
+                p1+=vv;
+                p2+=vv;
+                p3+=vv;
+                p4+=vv;
+            }
+            rstart+=uu;
+        }
+        glEnd();
+        return;
+    }
+
+    pre_draw(di, matl, 1);
+    di->polycount+=2*(nu-1)*(nv-1);
+    Vector uu(u/(nu-1));
+    Vector vv(v/(nv-1));
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+        {
+            Point rstart(corner);
+            for(int i=0;i<nu;i++){
+                Point p1(rstart);
+                glBegin(GL_LINE_STRIP);
+                for(int j=0;j<nv;j++){
+                    Point pp1(p1+w*verts(i, j));
+                    if(have_matls)
+                        di->set_matl(matls(i, j).get_rep());
+                    if(have_normals){
+                        Vector normal(normals(i, j));
+                        glNormal3d(normal.x(), normal.y(), normal.z());
+                    }
+                    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+                    p1+=vv;
+                }
+                glEnd();
+                rstart+=uu;
+            }
+            rstart=corner;
+            for(int j=0;j<nv;j++){
+                Point p1(rstart);
+                glBegin(GL_LINE_STRIP);
+                for(int i=0;i<nu;i++){
+                    Point pp1(p1+w*verts(i, j));
+                    if(have_matls)
+                        di->set_matl(matls(i, j).get_rep());
+                    if(have_normals){
+                        Vector normal(normals(i, j));
+                        glNormal3d(normal.x(), normal.y(), normal.z());
+                    }
+                    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+                    p1+=uu;
+                }
+                glEnd();
+                rstart+=vv;
+            }
+        }
+        break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+        {
+#if 0
+            if(!have_normals)
+                glNormal3d(w.x(), w.y(), w.z());
+            Point rstart(corner);
+            for(int i=0;i<nu-1;i++){
+                Point p1(rstart);
+                Point p2(rstart+uu);
+                rstart=p2;
+                glBegin(GL_TRIANGLE_STRIP);
+                for(int j=0;j<nv;j++){
+                    Point pp1(p1+w*verts(i, j));
+                    Point pp2(p2+w*verts(i+1, j));
+                    if(have_matls)
+                        di->set_matl(matls(i, j).get_rep());
+                    if(have_normals){
+                        Vector normal(normals(i, j));
+                        glNormal3d(normal.x(), normal.y(), normal.z());
+                    }
+                    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+                    if(have_matls)
+                        di->set_matl(matls(i+1, j).get_rep());
+                    if(have_normals){
+                        Vector normal(normals(i+1, j));
+                        glNormal3d(normal.x(), normal.y(), normal.z());
+                    }
+                    glVertex3d(pp2.x(), pp2.y(), pp2.z());
+                    p1+=vv;
+                    p2+=vv;
+                }
+                glEnd();
+            }
+#endif
+            if(have_matls)
+              di->set_matl(matls(0,0).get_rep());
+            Point rstart(corner);
+            if(have_normals && have_matls){
+              for(int i=0;i<nu-1;i++){
+                Point p1(rstart);
+                Point p2(rstart+uu);
+                rstart=p2;
+                glBegin(GL_TRIANGLE_STRIP);
+                for(int j=0;j<nv;j++){
+                  Point pp1(p1+w*verts(i, j));
+                  Point pp2(p2+w*verts(i+1, j));
+                  float c[4];
+                  matls(i,j)->diffuse.get_color(c);
+                  glColor3fv(c);
+                  Vector& normal(normals(i, j));
+                  glNormal3d(normal.x(), normal.y(), normal.z());
+                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+                  matls(i+1, j)->diffuse.get_color(c);
+                  glColor3fv(c);
+                  Vector& normal2(normals(i+1, j));
+                  glNormal3d(normal2.x(), normal2.y(), normal2.z());
+                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+                  p1+=vv;
+                  p2+=vv;
+                }
+                glEnd();
+              }
+            } else if(have_matls){
+              glNormal3d(w.x(), w.y(), w.z());
+              for(int i=0;i<nu-1;i++){
+                Point p1(rstart);
+                Point p2(rstart+uu);
+                rstart=p2;
+                glBegin(GL_TRIANGLE_STRIP);
+                for(int j=0;j<nv;j++){
+                  Point pp1(p1+w*verts(i, j));
+                  Point pp2(p2+w*verts(i+1, j));
+                  float c[4];
+                  matls(i,j)->diffuse.get_color(c);
+                  glColor3fv(c);
+                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+                  matls(i+1, j)->diffuse.get_color(c);
+                  glColor3fv(c);
+                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+                  p1+=vv;
+                  p2+=vv;
+                }
+                glEnd();
+              }
+            } else if(have_normals){
+              for(int i=0;i<nu-1;i++){
+                Point p1(rstart);
+                Point p2(rstart+uu);
+                rstart=p2;
+                glBegin(GL_TRIANGLE_STRIP);
+                for(int j=0;j<nv;j++){
+                  Point pp1(p1+w*verts(i, j));
+                  Point pp2(p2+w*verts(i+1, j));
+                  Vector& normal(normals(i, j));
+                  glNormal3d(normal.x(), normal.y(), normal.z());
+                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+                  Vector& normal2(normals(i+1, j));
+                  glNormal3d(normal2.x(), normal2.y(), normal2.z());
+                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+                  p1+=vv;
+                  p2+=vv;
+                }
+                glEnd();
+              }
+            } else {
+              glNormal3d(w.x(), w.y(), w.z());
+              for(int i=0;i<nu-1;i++){
+                Point p1(rstart);
+                Point p2(rstart+uu);
+                rstart=p2;
+                glBegin(GL_TRIANGLE_STRIP);
+                for(int j=0;j<nv;j++){
+                  Point pp1(p1+w*verts(i, j));
+                  Point pp2(p2+w*verts(i+1, j));
+                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
+                  p1+=vv;
+                  p2+=vv;
+                }
+                glEnd();
+              }
+            }
+        }
+        break;
+    }
+}
+
+#endif
+
+void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  pre_draw(di, matl, 1); 
+
+  di->polycount += (nrows-1)*(ncols-1)*2;
+
+  if (di->currently_lit) {
+    for(int j=0;j<ncols-1;j++) {
+      glBegin(GL_QUAD_STRIP);
+      float *rpts=&pts[j*nrows*3];
+      float *nrm=&nrmls[j*nrows*3];
+      for(int i=0;i<nrows;i++) {
+	glNormal3fv(nrm);
+	glColor3ub(clrs[j*nrows+i].r(),clrs[j*nrows+i].g(),
+		   clrs[j*nrows+i].b());
+	glVertex3fv(rpts);
+
+	glNormal3fv(nrm+nrows*3);
+	glColor3ub(clrs[(j+1)*nrows+i].r(),clrs[(j+1)*nrows+i].g(),
+		   clrs[(j+1)*nrows+i].b());
+	glVertex3fv(rpts+nrows*3);
+	rpts += 3;
+	nrm += 3; // bump stuff along
+      }
+      glEnd();
+    }
+  } else {
+    for(int j=0;j<ncols-1;j++) {
+      glBegin(GL_QUAD_STRIP);
+      float *rpts=&pts[j*nrows*3];
+      for(int i=0;i<nrows;i++) {
+	glColor3ub(clrs[j*nrows+i].r(),clrs[j*nrows+i].g(),
+		   clrs[j*nrows+i].b());
+	glVertex3fv(rpts);
+
+	glColor3ub(clrs[(j+1)*nrows+i].r(),clrs[(j+1)*nrows+i].g(),
+		   clrs[(j+1)*nrows+i].b());
+	glVertex3fv(rpts+nrows*3);
+	rpts += 3;
+      }
+      glEnd();
+    }
+  }
+}
 
 void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
     for (int i=0; i<objs.size(); i++)
 	objs[i]->draw(di, matl, time);
+}
+
+void GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  for (int i=0; i<objs.size() && (start_times[i] <= time); i++) 
+    ;
+  if (i) { // you can go...
+
+    if (i > objs.size()-1) i = objs.size()-1;
+
+    if (start_times[i] > time)
+      --i;
+
+    if (i < 0) i = 0;
+
+    objs[i]->draw(di,matl,time); // run with it...
+  }
 }
 
 void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -817,6 +1368,270 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
       glVertex3d(pt.x(), pt.y(), pt.z());
     }
     glEnd();
+}
+
+const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
+
+void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double currentime)
+{
+  pre_draw(di, matl, 0);  // lighting is turned off here...
+  di->polycount+=pts.size()/2;
+
+  static Vector view;  // shared by all of them - should be in Roe!
+
+  // always assume you are not there...
+  // can't mix them...
+
+  // first set up the line size stuff...
+  
+  glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+  glLineWidth(di->point_size);
+  
+  // here is where the texture stuff has to be done...
+  // first setup the texture matrix...
+  
+  double model_mat[16]; // this is the modelview matrix
+  
+  glGetDoublev(GL_MODELVIEW_MATRIX,model_mat);
+  glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+    
+  // this is what you rip the view vector from
+  // just use the "Z" axis, normalized
+  
+  view = Vector(model_mat[0*4+2],model_mat[1*4+2],model_mat[2*4+2]);
+  
+  view.normalize();
+  
+  for(int q=0;q<15;q++)
+    model_mat[q] = 0.0;
+
+  model_mat[0*4+0] = view.x()*0.5;
+  model_mat[1*4+0] = view.y()*0.5;
+  model_mat[2*4+0] = view.z()*0.5;
+  model_mat[3*4+0] = 0.5;
+
+  model_mat[15] = 1.0;
+    
+  // you might want to zero out the rest, but id doesn't matter for 1D
+  // texture maps
+  
+  glLoadMatrixd(model_mat); // loads the matrix...
+  
+  if (!tmapid) { // has the texture been created?
+    tmap1d.resize(256*3); // that is the size of the 1D texture...
+    for(int i=0;i<256;i++) {
+      double r,ks,LdotT;
+      
+      LdotT = i*2/(255.0)-1.0;
+      ks =  0.3*(pow(2*LdotT*LdotT - 1,30));
+      
+      r = 0.05 + 0.6*(1-LdotT*LdotT) + ks;
+      
+      if (r>1.0)
+	r = 1.0;
+      
+      if (r < 0.0)
+	cerr << "Negative r!\n";
+      
+      if (r>1.0 || ks>1.0)
+	cerr << r << " " << ks << " Error - out of range...\n";
+      
+      tmap1d[i*3+0] = r*255;
+      tmap1d[i*3+1] = r*255;    // just have them be red for now...
+      tmap1d[i*3+2] = r*255;
+    }
+    // now set the end conditions...
+
+#if 0
+      tmap1d[0*3 + 0] = 0;
+      tmap1d[0*3 + 1] = 255;
+      tmap1d[0*3 + 2] = 0;
+
+      tmap1d[255*3 + 0] = 0;
+      tmap1d[255*3 + 1] = 0;
+      tmap1d[255*3 + 2] = 255;
+#endif
+    tmapid = glGenLists(1);
+    glNewList(tmapid,GL_COMPILE_AND_EXECUTE);
+    
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    
+    GLfloat brder[4];
+    
+    brder[3] = 1.0; // this is just the alpha component...
+    
+    brder[0] = (tmap1d[0] + tmap1d[255*3 + 0])/510.0;
+    brder[0] = (tmap1d[1] + tmap1d[255*3 + 1])/510.0;
+    brder[0] = (tmap1d[2] + tmap1d[255*3 + 2])/510.0;
+    
+    glTexParameterfv(GL_TEXTURE_1D,GL_TEXTURE_BORDER_COLOR,brder);
+    
+    glEnable(GL_TEXTURE_1D);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glTexImage1D(GL_TEXTURE_1D,0,3,
+		 256,0,GL_RGB,GL_UNSIGNED_BYTE,
+		 &tmap1d[0]);
+    glEndList();
+  } else {
+    glCallList(tmapid);
+  }
+
+  glEnable(GL_TEXTURE_1D);
+
+  // see if you need to create the sorted lists...
+  if (!colors.size()) // set if you don't have colors...
+    glColor4f(1.0,0.0,0.0,1.0);  // this state always needs to be set...
+
+  if (alpha != 1.0) { // create sorted lists...
+    if (!sorted.size())
+      SortVecs(); // creates sorted lists...
+  } 
+  
+  if (alpha == 1.0) {
+
+    glBegin(GL_LINES);
+    if (tex_per_seg) {
+      for(int i=0;i<pts.size()/2;i++){
+	Point& pt=pts[i*2];
+	Point& pt2=pts[i*2+1];
+	glTexCoord3d(tangents[i].x(),tangents[i].y(),tangents[i].z());
+	glVertex3d(pt.x(), pt.y(), pt.z());
+	glVertex3d(pt2.x(), pt2.y(), pt2.z());
+      }
+    } else {
+      if (colors.size()) {
+	for(int i=0;i<pts.size()/2;i++){
+	  Point& pt=pts[i*2];
+	  Point& pt2=pts[i*2+1];
+	  glColor3ubv(colors[i*2].ptr());
+	  glTexCoord3d(tangents[i*2].x(),tangents[i*2].y(),
+		       tangents[i*2].z());
+	  glVertex3d(pt.x(), pt.y(), pt.z());
+	  glColor3ubv(colors[i*2 + 1].ptr());
+	  glTexCoord3d(tangents[i*2+1].x(),tangents[i*2+1].y(),
+		       tangents[i*2+1].z());
+	  glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	}
+	
+      } else {
+	for(int i=0;i<pts.size()/2;i++){
+	  Point& pt=pts[i*2];
+	  Point& pt2=pts[i*2+1];
+	  glTexCoord3d(tangents[i*2].x(),tangents[i*2].y(),
+		       tangents[i*2].z());
+	  glVertex3d(pt.x(), pt.y(), pt.z());
+	  glTexCoord3d(tangents[i*2+1].x(),tangents[i*2+1].y(),
+		       tangents[i*2+1].z());
+	  glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	}
+      }
+    }
+    glEnd();
+  } else {
+    // render with transparency...
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    
+    if (!colors.size())
+      glColor4f(1,0,0,alpha); // make sure it is used...
+    
+    int sort_start=0;
+    int sort_dir=1; // positive direction
+    
+    char which;
+    
+    if (fabs(view.x()) > fabs(view.y())) {
+      if (fabs(view.x()) > fabs(view.z())) { // use x dir
+	if (view.x() < 0) {
+	  sort_dir=-1; sort_start=pts.size()/2-1;
+	} else
+	  sort_start=0;
+      } else { // use z dir
+	if (view.z() < 0) {
+	  sort_dir=-1;sort_start = 2*pts.size()/2-1;
+	} else
+	  sort_start = pts.size()/2;
+      }
+    } else if (fabs(view.y()) > fabs(view.z())) { // y greates
+      if (view.y() < 0) {
+	sort_dir=-1;sort_start = 3*(pts.size()/2)-1;
+      } else
+	sort_start = 2*pts.size()/2-1;
+    } else { // z is the one
+      if (view.z() < 0) {
+	sort_dir=-1;sort_start = 2*pts.size()/2-1;
+      } else
+	sort_start = pts.size()/2;
+    }
+    
+    glBegin(GL_LINES);
+    int i = sort_start;
+    if (tex_per_seg) {
+      for(int p=0;p<pts.size()/2;p++){
+	Point& pt=pts[sorted[i]];
+	Point& pt2=pts[sorted[i]+1]; // already times2...
+	glTexCoord3d(tangents[sorted[i]/2].x(),
+		     tangents[sorted[i]/2].y(),
+		     tangents[sorted[i]/2].z());
+	
+	glVertex3d(pt.x(), pt.y(), pt.z());
+	glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	i += sort_dir; // increment i...
+      }
+    } else { // this is from the stream line data...
+      if (colors.size()) {
+	unsigned char aval = alpha*255; // quantize this...
+	for(int p=0;p<pts.size()/2;p++){
+	  Point& pt=pts[sorted[i]];
+	  Point& pt2=pts[sorted[i]+1]; // already times2...
+	  glColor4ub(colors[sorted[i]].r(),
+		     colors[sorted[i]].g(),
+		     colors[sorted[i]].b(),
+		     aval);
+	  glTexCoord3d(tangents[sorted[i]].x(),
+		       tangents[sorted[i]].y(),
+		       tangents[sorted[i]].z());
+	  glVertex3d(pt.x(), pt.y(), pt.z());
+	  glColor4ub(colors[sorted[i]+1].r(),
+		     colors[sorted[i]+1].g(),
+		     colors[sorted[i]+1].b(),
+		     aval);
+	  glTexCoord3d(tangents[sorted[i]+1].x(),
+		       tangents[sorted[i]+1].y(),
+		       tangents[sorted[i]+1].z());
+	  glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	  i += sort_dir; // increment i...
+	}
+      } else {
+	for(int p=0;p<pts.size()/2;p++){
+	  Point& pt=pts[sorted[i]];
+	  Point& pt2=pts[sorted[i]+1]; // already times2...
+	  glTexCoord3d(tangents[sorted[i]].x(),
+		       tangents[sorted[i]].y(),
+		       tangents[sorted[i]].z());
+	  glVertex3d(pt.x(), pt.y(), pt.z());
+	  glTexCoord3d(tangents[sorted[i]+1].x(),
+		       tangents[sorted[i]+1].y(),
+		       tangents[sorted[i]+1].z());
+	  glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	  i += sort_dir; // increment i...
+	}
+      }
+      
+      
+    }
+    glEnd();
+    glDisable(GL_BLEND);
+  }
+  
+  glDisable(GL_TEXTURE_1D);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
 }
 
 void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double time)
