@@ -122,8 +122,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 					  lb->pIsBrokenLabel_preReloc); 
      }
-     lb->registerPermanentParticleState(m, lb->pCrackRadiusLabel,
-					lb->pCrackRadiusLabel_preReloc);
      
      lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
 					  lb->pTemperatureLabel_preReloc); 
