@@ -24,6 +24,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ArrowWidget.tcl \
 	$(SRCDIR)/BaseWidget.tcl \
+	$(SRCDIR)/BuildInterpolant.tcl \
 	$(SRCDIR)/BuildNoise.tcl \
 	$(SRCDIR)/BuildTransform.tcl \
 	$(SRCDIR)/BoxWidget.tcl \

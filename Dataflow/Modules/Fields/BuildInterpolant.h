@@ -33,7 +33,9 @@ class BuildInterpAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
-			      Field::data_location loc) = 0;
+			      Field::data_location loc,
+			      bool use_closest_outside,
+			      bool interp_nearest) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc,
@@ -50,7 +52,9 @@ class BuildInterpAlgoT : public BuildInterpAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
-			      Field::data_location loc);
+			      Field::data_location loc,
+			      bool use_closest_outside,
+			      bool interp_nearest);
 
 private:
   double find_closest(typename LSRC::index_type &index,
@@ -85,7 +89,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::inde
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 FieldHandle
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc)
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc, bool use_closest_outside, bool interp_nearest)
 {
   MSRC *src_mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
@@ -108,13 +112,29 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
     vector<pair<typename LSRC::index_type, double> > v;
     if (weights.size() > 0)
     {
-      for (unsigned int i = 0; i < locs.size(); i++)
+      if (interp_nearest)
       {
+	int maxi = 0;
+	for (unsigned int i = 1; i < locs.size(); i++)
+	{
+	  if (weights[maxi] > weights[i])
+	  {
+	    maxi = i;
+	  }
+	}
 	v.push_back(pair<typename LSRC::index_type, double>
-		    (locs[i], weights[i]));
+		    (locs[maxi], weights[maxi]));
+      }
+      else
+      {
+	for (unsigned int i = 0; i < locs.size(); i++)
+	{
+	  v.push_back(pair<typename LSRC::index_type, double>
+		      (locs[i], weights[i]));
+	}
       }
     }
-    else
+    else if (use_closest_outside)
     {
       typename LSRC::index_type index;
       if (find_closest(index, src_mesh, p) < BIA_MAX_DISTANCE)
