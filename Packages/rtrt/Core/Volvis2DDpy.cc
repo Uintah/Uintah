@@ -760,10 +760,15 @@ Volvis2DDpy::button_released(MouseButton /*button*/, const int x, const int y){
     hist_x = hist_x*(current_vmax-current_vmin)+current_vmin;
     hist_y = hist_y*(current_gmax-current_gmin)+current_gmin;
 
-    // prevent maxima = minima that would result in a division by 0
-    if( hist_x == selected_vmin || hist_y == selected_gmin )
+    // prevent maxima = minima that would result in eventual division by 0
+    if( hist_x == selected_vmin || hist_y == selected_gmin ) {
+      selected_vmin = current_vmin;
+      selected_vmax = current_vmax;
+      selected_gmin = current_gmin;
+      selected_gmax = current_gmax;
+      redraw = true;
       return;
-
+    }
     // if maxima < minima, then switch the values
     if( hist_x < selected_vmin ) {
       selected_vmax = selected_vmin;
@@ -848,10 +853,8 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 	    (m_opacity_adjusting||((height-y)/pixel_height+3 >
 				   m_opacity_slider->bottom &&
 				   (330-y)/pixel_height-3 <
-				   m_opacity_slider->top &&
-				   x/pixel_width+3 > m_opacity_slider->left &&
-				   x/pixel_width-3 < m_opacity_slider->right)))
-      adjustMasterOpacity( (x-old_x)/pixel_width );
+				   m_opacity_slider->top )))
+      adjustMasterOpacity( (float)x/pixel_width );
     
     // if the user is trying to adjust the cutplane opacity level
     else if( cut ) {
@@ -860,16 +863,13 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 			          cp_opacity_slider->bottom &&
 				  (330-y)/pixel_height-3 <
 				  cp_opacity_slider->top &&
-				  x/pixel_width+3 > cp_opacity_slider->left &&
-				  x/pixel_width-3 < cp_opacity_slider->right)))
-	adjustCutplaneOpacity( (x-old_x)/pixel_width );
+				  x < UIwind->width*0.5)))
+	  adjustCutplaneOpacity( (float)x/pixel_width );
       else if(cp_gs_adjusting || ((height-y)/pixel_height+3 >
 				  cp_gs_slider->bottom &&
 				  (330-y)/pixel_height-3 <
-				  cp_gs_slider->top &&
-				  x/pixel_width+3 > cp_gs_slider->left &&
-				  x/pixel_width-3 < cp_gs_slider->right))
-	adjustCutplaneGS( (x-old_x)/pixel_width );
+				  cp_gs_slider->top ))
+	      adjustCutplaneGS( (float)x/pixel_width );
     }
 
     // if no widget was selected
@@ -886,22 +886,28 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 // adjusts the master opacity control located below the histogram scatter plot
 // template<class T>
 void
-Volvis2DDpy::adjustMasterOpacity( float dx ) {
-  // if movement keeps slider inside its sliding bar
-  if( !(m_opacity_slider->left + dx < m_opacity_bar->left || 
-	m_opacity_slider->right + dx > m_opacity_bar->right) ) {
-    // set to true to allow for movement until mouse button is released
-    m_opacity_adjusting = true;
-
-    // adjust the master opacity
-    m_opacity_slider->translate( dx, 0 );
-    master_opacity += dx/235.0f;
-
-    // prevent ugly display when close to 0 (e.g. 1.2439847e-7)
-    master_opacity=master_opacity<1.e-3?0:(master_opacity>2)?2:master_opacity;
+Volvis2DDpy::adjustMasterOpacity( float x ) {
+  m_opacity_adjusting = true;
+  
+  // bound the x value
+  float max_x = m_opacity_bar->right - m_opacity_slider->width*0.5f;
+  float min_x = m_opacity_bar->left + m_opacity_slider->width*0.5f;
+  if( x > max_x )
+    x = max_x;
+  else if( x < min_x )
+    x = min_x;
+  
+  // adjust the master opacity
+  m_opacity_slider->left = x - m_opacity_slider->width*0.5f;
+  m_opacity_slider->right = x + m_opacity_slider->width*0.5f;
+  master_opacity = 2*((m_opacity_slider->left - UIwind->border)/
+		      (m_opacity_bar->width - m_opacity_slider->width));
+  
+  // if at least one widget is being used, the transfer function needs to be
+  //  recomputed
+  if( widgets.size() > 0 )
     transFunc_changed = true;
-    redraw = true;
-  } // if slider inside sliding bar
+  redraw = true;
 } // adjustMasterOpacity()
 
 
@@ -910,22 +916,25 @@ Volvis2DDpy::adjustMasterOpacity( float dx ) {
 // adjusts the cutplane opacity
 // template<class T>
 void
-Volvis2DDpy::adjustCutplaneOpacity( float dx ) {
-  // if movement keeps slider inside its sliding bar
-  if( !(cp_opacity_slider->left + dx < cp_opacity_bar->left || 
-	cp_opacity_slider->right + dx > cp_opacity_bar->right) ) {
-    // set to true to allow for movement until mouse button is released
-    cp_opacity_adjusting = true;
-
-    // adjust the cutplane opacity
-    cp_opacity_slider->translate( dx, 0 );
-    cp_opacity += dx/231.0f;
-
-    // prevent ugly display when close to 0 (e.g. 1.2439847e-7)
-    cp_opacity=cp_opacity<1.e-3?0:(cp_opacity>1.0)?1.0:cp_opacity;
-    transFunc_changed = false;
-    redraw = true;
-  } // if slider inside sliding bar
+Volvis2DDpy::adjustCutplaneOpacity( float x ) {
+  // set to true to allow for movement until mouse button is released
+  cp_opacity_adjusting = true;
+  
+  // bound the x value
+  float max_x = cp_opacity_bar->right - cp_opacity_slider->width*0.5f;
+  float min_x = cp_opacity_bar->left + cp_opacity_slider->width*0.5f;
+  if( x > max_x )
+    x = max_x;
+  else if( x < min_x )
+    x = min_x;
+  
+  // adjust the cutplane opacity
+  cp_opacity_slider->left = x - cp_opacity_slider->width*0.5f;
+  cp_opacity_slider->right = x + cp_opacity_slider->width*0.5f;
+  cp_opacity = (cp_opacity_slider->left - UIwind->border)/
+    (cp_opacity_bar->width - cp_opacity_slider->width);
+  
+  redraw = true;
 } // adjustCutplaneOpacity()
 
 
@@ -934,22 +943,25 @@ Volvis2DDpy::adjustCutplaneOpacity( float dx ) {
 // adjusts the cutting plane grayscale
 // template<class T>
 void
-Volvis2DDpy::adjustCutplaneGS( float dx ) {
-  // if movement keeps slider inside its sliding bar
-  if( !(cp_gs_slider->left + dx < cp_gs_bar->left || 
-	cp_gs_slider->right + dx > cp_gs_bar->right) ) {
-    // set to true to allow for movement until mouse button is released
-    cp_gs_adjusting = true;
-
-    // adjust the cutplane grayscale
-    cp_gs_slider->translate( dx, 0 );
-    cp_gs += dx/231.0f;
-
-    // prevent ugly display when close to 0 (e.g. 1.2439847e-7)
-    cp_gs=cp_gs<1.e-3?0:(cp_gs>1.0)?1.0:cp_gs;
-    transFunc_changed = false;
-    redraw = true;
-  } // if slider inside sliding bar
+Volvis2DDpy::adjustCutplaneGS( float x ) {
+  // set to true to allow for movement until mouse button is released
+  cp_gs_adjusting = true;
+  
+  // bound the x value
+  float max_x = cp_gs_bar->right - cp_gs_slider->width*0.5f;
+  float min_x = cp_gs_bar->left + cp_gs_slider->width*0.5f;
+  if( x > max_x )
+    x = max_x;
+  else if( x < min_x )
+    x = min_x;
+  
+  // adjust the cutplane grayscale
+  cp_gs_slider->left = x - cp_gs_slider->width*0.5f;
+  cp_gs_slider->right = x + cp_gs_slider->width*0.5f;
+  cp_gs = (cp_gs_slider->left - 253.0f)/
+    (cp_gs_bar->width - cp_gs_slider->width);
+  
+  redraw = true;
 } // adjustMasterGS()
 
 
