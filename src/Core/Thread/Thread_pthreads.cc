@@ -67,18 +67,18 @@ bool exiting=false;
 #define MAXTHREADS 4000
 
 namespace SCICore {
-    namespace Thread {
-	struct Thread_private {
-	    Thread* thread;
-	    pthread_t threadid;
-	    Thread::ThreadState state;
-	    int bstacksize;
-	    const char* blockstack[MAXBSTACK];
-	    sem_t done;
-	    sem_t delete_ready;
-	    sem_t block_sema;
-	};
-    }
+   namespace Thread {
+      struct Thread_private {
+	 Thread* thread;
+	 pthread_t threadid;
+	 Thread::ThreadState state;
+	 int bstacksize;
+	 const char* blockstack[MAXBSTACK];
+	 sem_t done;
+	 sem_t delete_ready;
+	 sem_t block_sema;
+      };
+   }
 }
 
 using SCICore::Thread::Thread_private;
@@ -95,18 +95,18 @@ static
 void
 lock_scheduler()
 {
-    if(pthread_mutex_lock(&sched_lock))
-	throw ThreadError(std::string("pthread_mutex_lock failed")
-			  +strerror(errno));
+   if(pthread_mutex_lock(&sched_lock))
+      throw ThreadError(std::string("pthread_mutex_lock failed")
+			+strerror(errno));
 }
 
 static
 void
 unlock_scheduler()
 {
-    if(pthread_mutex_unlock(&sched_lock))
-	throw ThreadError(std::string("pthread_mutex_unlock failed")
-			  +strerror(errno));
+   if(pthread_mutex_unlock(&sched_lock))
+      throw ThreadError(std::string("pthread_mutex_unlock failed")
+			+strerror(errno));
 }
 
 int
@@ -114,22 +114,22 @@ Thread::push_bstack(Thread_private* p, Thread::ThreadState state,
 		    const char* name)
 {
  
-    int oldstate=p->state;
-    p->state=state;
-    p->blockstack[p->bstacksize]=name;
-    p->bstacksize++;
-    if(p->bstacksize>=MAXBSTACK){
+   int oldstate=p->state;
+   p->state=state;
+   p->blockstack[p->bstacksize]=name;
+   p->bstacksize++;
+   if(p->bstacksize>=MAXBSTACK){
       fprintf(stderr, "Blockstack Overflow!\n");
       Thread::niceAbort();
-    }
-    return oldstate;
+   }
+   return oldstate;
 }
 
 void
 Thread::pop_bstack(Thread_private* p, int oldstate)
 {
-    p->bstacksize--;
-    p->state=(ThreadState)oldstate;
+   p->bstacksize--;
+   p->state=(ThreadState)oldstate;
 }
 
 void
@@ -142,45 +142,45 @@ static
 void
 Thread_shutdown(Thread* thread)
 {
-    Thread_private* priv=thread->d_priv;
+   Thread_private* priv=thread->d_priv;
 
-    if(sem_post(&priv->done) != 0)
-	throw ThreadError(std::string("sem_post failed")
-			  +strerror(errno));
+   if(sem_post(&priv->done) != 0)
+      throw ThreadError(std::string("sem_post failed")
+			+strerror(errno));
 
-    delete thread;
+   delete thread;
 
-    // Wait to be deleted...
-    if (priv->threadid != 0)
+   // Wait to be deleted...
+   if (priv->threadid != 0)
       if(sem_wait(&priv->delete_ready) == -1)
-	throw ThreadError(std::string("sem_wait failed")
-			  +strerror(errno));
+	 throw ThreadError(std::string("sem_wait failed")
+			   +strerror(errno));
 
-    // Allow this thread to run anywhere...
-    if(thread->d_cpu != -1)
-	thread->migrate(-1);
+   // Allow this thread to run anywhere...
+   if(thread->d_cpu != -1)
+      thread->migrate(-1);
 
-    priv->thread=0;
-    lock_scheduler();
-    /* Remove it from the active queue */
-    int i;
-    for(i=0;i<numActive;i++){
-	if(active[i]==priv)
-	    break;
-    }
-    for(i++;i<numActive;i++){
-	active[i-1]=active[i];
-    }
-    numActive--;
-    unlock_scheduler();
-    Thread::checkExit();
-    if(priv->threadid == 0){
-	priv->state=Thread::PROGRAM_EXIT;
-	if(sem_wait(&main_sema) == -1)
-	    throw ThreadError(std::string("sem_wait failed")
-			      +strerror(errno));
-    }
-    pthread_exit(0);
+   priv->thread=0;
+   lock_scheduler();
+   /* Remove it from the active queue */
+   int i;
+   for(i=0;i<numActive;i++){
+      if(active[i]==priv)
+	 break;
+   }
+   for(i++;i<numActive;i++){
+      active[i-1]=active[i];
+   }
+   numActive--;
+   unlock_scheduler();
+   Thread::checkExit();
+   if(priv->threadid == 0){
+      priv->state=Thread::PROGRAM_EXIT;
+      if(sem_wait(&main_sema) == -1)
+	 throw ThreadError(std::string("sem_wait failed")
+			   +strerror(errno));
+   }
+   pthread_exit(0);
 }
 
 void
@@ -593,9 +593,7 @@ Mutex::Mutex(const char* name)
     d_priv=new Mutex_private;
     if(pthread_mutex_init(&d_priv->mutex, NULL) != 0)
 				throw ThreadError(std::string("pthread_mutex_init: ")
-													+strerror(errno));
-		fprintf(stderr, "Initialize: this=%p, name=%s\n", this, name);
-		
+													+strerror(errno));		
 }
 
 Mutex::~Mutex()
@@ -609,12 +607,12 @@ Mutex::~Mutex()
 void
 Mutex::unlock()
 {
-		int status = pthread_mutex_unlock(&d_priv->mutex);
-		if(status != 0){
-				fprintf(stderr, "unlock failed, status=%d (%s)\n", status, strerror(status));
-				throw ThreadError(std::string("pthread_mutex_unlock: ")
-													+strerror(status));
-		}
+   int status = pthread_mutex_unlock(&d_priv->mutex);
+   if(status != 0){
+      fprintf(stderr, "unlock failed, status=%d (%s)\n", status, strerror(status));
+      throw ThreadError(std::string("pthread_mutex_unlock: ")
+			+strerror(status));
+   }
 }
 
 void
@@ -851,6 +849,11 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.16  2000/09/25 18:04:05  sparker
+// Added partial support for debuggin under linux
+// Added environment variable SCI_DBXCOMMAND
+// Misc. reformatting
+//
 // Revision 1.15  2000/06/09 20:35:32  yarden
 // use the return value of pthread_mutex_lock/unlock for reporting
 // the error instead of errno.
