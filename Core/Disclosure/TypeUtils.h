@@ -19,6 +19,7 @@ using namespace SCIRun;
 typedef int64_t long64;
 
 const TypeDescription* fun_getTypeDescription(bool*);
+const TypeDescription* fun_getTypeDescription(unsigned char*);
 const TypeDescription* fun_getTypeDescription(int*);
 const TypeDescription* fun_getTypeDescription(short int*);
 //const TypeDescription* fun_getTypeDescription(long*);
