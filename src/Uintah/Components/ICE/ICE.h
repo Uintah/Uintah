@@ -10,7 +10,9 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/XFCVariable.h>
+#include <Uintah/Grid/YFCVariable.h>
+#include <Uintah/Grid/ZFCVariable.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <SCICore/Geometry/Vector.h>
 
@@ -203,21 +205,29 @@ namespace Uintah {
       void setBC(CCVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
       
-      void setBC(FCVariable<double>& variable,const std::string& type, 
+      void setBC(XFCVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
-      void setBC(FCVariable<double>& variable,const std::string& type,
+      void setBC(XFCVariable<double>& variable,const std::string& type,
+		 const std::string& comp, const Patch* p);
+      void setBC(YFCVariable<double>& variable,const std::string& type, 
+		 const Patch* p);
+      void setBC(YFCVariable<double>& variable,const std::string& type,
+		 const std::string& comp, const Patch* p);
+      void setBC(ZFCVariable<double>& variable,const std::string& type, 
+		 const Patch* p);
+      void setBC(ZFCVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
       
-      void influxOutfluxVolume(const FCVariable<double>& uvel_CC,
-			       const FCVariable<double>& vvel_CC,
-			       const FCVariable<double>& wvel_CC,
+      void influxOutfluxVolume(const XFCVariable<double>& uvel_CC,
+			       const YFCVariable<double>& vvel_CC,
+			       const ZFCVariable<double>& wvel_CC,
 			       const double& delT, const Patch* patch,
 			       CCVariable<fflux>& OFS, CCVariable<eflux>& OFE,
 			       CCVariable<fflux>& IFS, CCVariable<eflux>& IFE);
       
-      void outflowVolCentroid(const FCVariable<double>& uvel_CC,
-			      const FCVariable<double>& vvel_CC,
-			      const FCVariable<double>& wvel_CC,
+      void outflowVolCentroid(const XFCVariable<double>& uvel_CC,
+			      const YFCVariable<double>& vvel_CC,
+			      const ZFCVariable<double>& wvel_CC,
 			      const double& delT, const Vector& dx,
 			      CCVariable<fflux>& r_out_x,
 			      CCVariable<fflux>& r_out_y,
@@ -307,6 +317,9 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.39  2000/11/28 03:50:28  jas
+// Added {X,Y,Z}FCVariables.  Things still don't work yet!
+//
 // Revision 1.38  2000/11/23 00:45:45  guilkey
 // Finished changing the way initialization of the problem was done to allow
 // for different regions of the domain to be easily initialized with different

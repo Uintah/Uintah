@@ -1,7 +1,9 @@
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/XFCVariable.h>
+#include <Uintah/Grid/YFCVariable.h>
+#include <Uintah/Grid/ZFCVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/PerPatch.h>
@@ -96,25 +98,29 @@ ICELabel::ICELabel()
 
   // Face centered variables
     uvel_FCLabel       = 
-     scinew VarLabel("uvel_FC",   FCVariable<double>::getTypeDescription() );
+     scinew VarLabel("uvel_FC",   XFCVariable<double>::getTypeDescription() );
     vvel_FCLabel       = 
-     scinew VarLabel("vvel_FC",   FCVariable<double>::getTypeDescription() );
+     scinew VarLabel("vvel_FC",   YFCVariable<double>::getTypeDescription() );
     wvel_FCLabel       = 
-     scinew VarLabel("wvel_FC",   FCVariable<double>::getTypeDescription() );
+     scinew VarLabel("wvel_FC",   ZFCVariable<double>::getTypeDescription() );
     uvel_FCMELabel       = 
-     scinew VarLabel("uvel_FCME", FCVariable<double>::getTypeDescription() );
+     scinew VarLabel("uvel_FCME", XFCVariable<double>::getTypeDescription() );
     vvel_FCMELabel       = 
-     scinew VarLabel("vvel_FCME", FCVariable<double>::getTypeDescription() );
+     scinew VarLabel("vvel_FCME", YFCVariable<double>::getTypeDescription() );
     wvel_FCMELabel       = 
-     scinew VarLabel("wvel_FCME", FCVariable<double>::getTypeDescription() );
-    press_FCLabel     = 
-     scinew VarLabel("press_FC",  FCVariable<double>::getTypeDescription() );
+     scinew VarLabel("wvel_FCME", ZFCVariable<double>::getTypeDescription() );
+    pressX_FCLabel     = 
+     scinew VarLabel("pressX_FC",  XFCVariable<double>::getTypeDescription() );
+    pressY_FCLabel     = 
+     scinew VarLabel("pressY_FC",  YFCVariable<double>::getTypeDescription() );
+    pressZ_FCLabel     = 
+     scinew VarLabel("pressZ_FC",  ZFCVariable<double>::getTypeDescription() );
     tau_X_FCLabel       = 
-     scinew VarLabel("tau_X_FC",    FCVariable<Vector>::getTypeDescription() );
+     scinew VarLabel("tau_X_FC",   XFCVariable<Vector>::getTypeDescription() );
     tau_Y_FCLabel       = 
-     scinew VarLabel("tau_Y_FC",    FCVariable<Vector>::getTypeDescription() );
+     scinew VarLabel("tau_Y_FC",   YFCVariable<Vector>::getTypeDescription() );
     tau_Z_FCLabel       = 
-     scinew VarLabel("tau_Z_FC",    FCVariable<Vector>::getTypeDescription() );
+     scinew VarLabel("tau_Z_FC",   ZFCVariable<Vector>::getTypeDescription() );
 } 
 
 ICELabel::~ICELabel()
@@ -158,7 +164,9 @@ ICELabel::~ICELabel()
     delete uvel_FCLabel;
     delete vvel_FCLabel;
     delete wvel_FCLabel;
-    delete press_FCLabel;
+    delete pressX_FCLabel;
+    delete pressY_FCLabel;
+    delete pressZ_FCLabel;
     delete tau_X_FCLabel;
     delete tau_Y_FCLabel;
     delete tau_Z_FCLabel;
@@ -166,6 +174,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.14  2000/11/28 03:50:28  jas
+// Added {X,Y,Z}FCVariables.  Things still don't work yet!
+//
 // Revision 1.13  2000/11/14 04:02:11  jas
 // Added getExtraCellIterator and things now appear to be working up to
 // face centered velocity calculations.
