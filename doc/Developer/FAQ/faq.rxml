@@ -39,6 +39,32 @@ end
 <revhistory>
 <revision>
 <revnumber>1.0</revnumber>
+<date>1/31/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>My SCIRun dies with a memory allocation error.  Specifically
+this one:
+<literallayout class="monospaced">
+Error allocating memory (32833536 bytes requested) mmap: errno=12 Thread
+</literallayout>
+</para>
+</question>
+
+<answer>
+<para>If you did not configure with <option>--enable-64bit</option>, then
+your program will not be able to use more than approximately 2G of
+memory.</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
 <date>7/29/01</date>
 </revision>
 </revhistory>
@@ -451,7 +477,7 @@ going.  Stopped/thread->resume() is the preferred method.</para>
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: xml
-sgml-default-dtd-file:"../../../doc/Utilities/XML/faq.ced"
+sgml-default-dtd-file:"../../../doc/Utilities/XML/docbook.ced"
 sgml-omittag:nil
 sgml-shorttag:nil
 End:
