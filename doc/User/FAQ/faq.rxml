@@ -848,15 +848,13 @@ PRINT_TEXT
     <qandaentry>
       <revhistory>
 	<revision>
-	  <revnumber>1.0</revnumber>
-	  <date>4/20/04</date>
+	  <revnumber>1.0.1</revnumber>
+	  <date>4/30/04</date>
 	</revision>
       </revhistory>
       <question>
-	<para>I am seeing this error when running SCIRun:</para>
-	<literallayout>
-  Xlib: sequence lost&#x2026;
-	</literallayout>
+	<para>I am seeing the error <quote>Xlib: sequence
+	lost&#x2026;</quote>when running SCIRun</para>
 	<para>What does it mean and how do I fix it?</para>
       </question>
       <answer>
