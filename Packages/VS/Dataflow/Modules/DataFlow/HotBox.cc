@@ -13,6 +13,10 @@
  *
  *****************************************************************************/
 
+#include <Core/Containers/HashTable.h>
+#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
@@ -23,6 +27,7 @@
 #include <Core/Geom/GeomSticky.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -71,6 +76,9 @@ using namespace SCIRun;
 #define VS_QUERYTYPE_CONTAINS 2
 #define VS_QUERYTYPE_PARTS 3
 #define VS_QUERYTYPE_PARTCONTAINS 4
+
+#define CYLREZ 20
+#define MIN3(x, y, z) MIN(x, MIN(y, z))
 
 class PSECORESHARE HotBox : public Module {
 private:
@@ -150,6 +158,7 @@ private:
 
   // current time
   GuiInt gui_curTime_;
+  int currentTime_, lastTime_;
 
   // fixed anatomical label map files
   VH_MasterAnatomy *anatomytable;
@@ -183,11 +192,13 @@ private:
   void execAdjacency();
   void traverseDOMtree(DOMNode &, int, int, VH_injury **);
   void execInjuryList();
+  void makeInjGeometry();
   void executeOQAFMA();
   void executeHighlight();
 
 protected:
   FieldHandle  geomFilehandle_;
+  FieldHandle injuryfieldHandle_;
   string    geomFilename_;
 
 public:
@@ -462,10 +473,17 @@ HotBox::execute()
 
     // get the DOM document tree structure from the file
     injListDoc = injListParser.getDocument();
-  }
+  } // end if(!injListDoc)
 
+  currentTime_ = gui_curTime_.get();
   // extract the injured tissues from the DOM Document whenever time changes
-  execInjuryList();
+  if(currentTime_ != lastTime_)
+  { // re-populate injury list with data from new timestep
+    if(injured_tissue.size() > 0)
+      injured_tissue.clear();
+    execInjuryList();
+    lastTime_ = currentTime_;
+  }
 
   if(dataSource == VS_DATASOURCE_OQAFMA)
   { // get the ontological hierarchy information
@@ -559,6 +577,21 @@ HotBox::execute()
   if(geomFilehandle_.get_rep() != 0)
     highlightOutport->send(geomFilehandle_);
 
+  // build geometry from wound icon descriptions
+  makeInjGeometry();
+
+  // get output geometry port -- Injury Icon
+  SimpleOPort<FieldHandle> *
+  injuryOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Injury Icon");
+
+  // send the injury field (surface) downstream
+  if (!injuryOutport) {
+    error("Unable to initialize oport.");
+  }
+  else if(injuryfieldHandle_.get_rep() != 0)
+    injuryOutport->send(injuryfieldHandle_);
+
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
     Point bmax((double)selectBox->get_maxX(),
@@ -596,7 +629,6 @@ HotBox::execute()
     selectionsource_.set("fromProbe");
   }
 
-  injured_tissue.clear();
 } // end HotBox::execute()
 
 /*****************************************************************************
@@ -1395,6 +1427,109 @@ HotBox::execInjuryList()
   cerr << injured_tissue.size() << " injuries found" << endl;
 
 } // end execInjuryList()
+
+void
+HotBox::makeInjGeometry()
+{
+  int lvindx = 0, numLines = 0;
+  int mvindx = 0, numQuads = 0;
+  CurveMesh *cm = (CurveMesh *)0;
+  QuadSurfMesh *qsm = (QuadSurfMesh *)0;
+
+  CurveField<double> *cf;
+  QuadSurfField<double> *qsf;
+
+  cerr << "HotBox::makeInjGeometry(): ";
+  cerr << injured_tissue.size() << " injuries ";
+  // traverse the injured tissue list
+  for(int i = 0; i < injured_tissue.size(); i++)
+  {
+    VH_injury injPtr = (VH_injury)injured_tissue[i];
+
+    if(injPtr.geom_type == "line")
+    {
+      if(cm == (CurveMesh *)0)
+        cm = new CurveMesh();
+
+      cm->add_point(Point(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0));
+      cm->add_point(Point(injPtr.axisX1, injPtr.axisY1, injPtr.axisZ1));
+      cm->add_edge(lvindx, lvindx+1);
+      lvindx += 2;
+      numLines++;
+    }
+    else if(injPtr.geom_type == "cylinder" ||
+            injPtr.geom_type == "hollow_cylinder")
+    {
+      // get the axis of the cylinder
+      Vector cylAxis = Point(injPtr.axisX1, injPtr.axisY1, injPtr.axisZ1) -
+                       Point(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
+      Vector zAxis = cylAxis;
+      zAxis.safe_normalize();
+
+      // find a suitable vector to cross with the cylinder axis
+      Vector xAxis, yAxis;
+      // measure the angle between cylAxis and +-X, +-Y, +-Z
+      if(MIN3(fabs(zAxis.x()), fabs(zAxis.y()), fabs(zAxis.z())) ==
+         fabs(zAxis.x()))
+      {
+	xAxis = Cross(Vector(1.0, 0.0, 0.0), zAxis);
+      }
+      else if(MIN3(fabs(zAxis.x()), fabs(zAxis.y()), fabs(zAxis.z())) ==
+         fabs(zAxis.y()))
+      {
+	xAxis = Cross(Vector(0.0, 1.0, 0.0), zAxis);
+      }
+      else if(MIN3(fabs(zAxis.x()), fabs(zAxis.y()), fabs(zAxis.z())) ==
+         fabs(zAxis.z()))
+      {
+	xAxis = Cross(Vector(0.0, 0.0, 1.0), zAxis);
+      }
+      yAxis = Cross(zAxis, xAxis);
+
+      // build the matrix which transforms the cylinder ends
+      // into the planes defined by the axis
+
+      // make the QuadSurfMesh
+      if(qsm == (QuadSurfMesh *)0)
+        qsm = new QuadSurfMesh();
+
+      // make the polygons in the surface of the cylinder
+      for(int j = 1; j <= CYLREZ; j++)
+      { // make a circle in the X-Y plane
+        double pi = 3.14159;
+        double x = cos(2.0 * pi * j/CYLREZ);
+        double y = sin(2.0 * pi * j/CYLREZ);
+        // rotate the circle into the plane defined by the cylindrical axis
+        double xt = xAxis.x()*x + xAxis.y()*y + injPtr.axisX0;
+        double yt = yAxis.x()*x + yAxis.y()*y + injPtr.axisY0;
+        double zt = zAxis.x()*x + zAxis.y()*y + injPtr.axisZ0;
+        qsm->add_point(Point(xt,yt,zt));
+        Point p1 = Point(xt,yt,zt) + cylAxis;
+        qsm->add_point(p1);
+        if(mvindx > 1)
+        {
+          qsm->add_quad(mvindx-2, mvindx-1, mvindx, mvindx+1);
+          numQuads++;
+        }
+        mvindx += 2;
+      } // end for(int j = 1; j <= CYLREZ; j++)
+    } // end else if(injPtr.geom_type == "cylinder" ... )
+  } // end for(int i = 0; i < injured_tissue.size(); i++)
+  if(numLines > 0)
+  {
+    cerr << numLines << " lines";
+    cf = scinew CurveField<double>(cm, -1);
+  }
+  if(numQuads > 0)
+  {
+    cerr << numQuads << " quads";
+    qsf = scinew QuadSurfField<double>(qsm, -1);
+  }
+
+  injuryfieldHandle_ = qsf;
+
+  cerr << " done" << endl;
+} // end makeInjGeometry()
 
 /*****************************************************************************
  * method HotBox::executeHighlight()
