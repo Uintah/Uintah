@@ -23,6 +23,7 @@
 
 namespace SCIRun {
 
+using std::hash_set;
 
 class SCICORESHARE TetVolMesh : public MeshBase
 {
