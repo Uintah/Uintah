@@ -3,38 +3,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleComputeNonEquilibrationPressureRF--
- Note:  This similar to ICE::scheduleComputeEquilibrationPressure
-         with the addition of MPM matls
-_____________________________________________________________________*/
-void ICE::scheduleComputeNonEquilibrationPressureRF(SchedulerP& sched,
-                                                 const PatchSet* patches,
-                                                 const MaterialSubset* ice_matls,
-                                                 const MaterialSubset* press_matl,
-                                                 const MaterialSet*    all_matls)
-{
-  cout_doing << "ICE::scheduleComputeNonEquilibrationPressureRF" << endl;
-
-  Task* t = scinew Task("ICE::computeNonEquilibrationPressureRF",
-                     this, &ICE::computeNonEquilibrationPressureRF);
-
-  t->requires(Task::OldDW,lb->press_CCLabel,         press_matl, Ghost::None);
-  t->requires(Task::OldDW,lb->rho_CC_top_cycleLabel, ice_matls,  Ghost::None);
-  t->requires(Task::OldDW,lb->temp_CCLabel,          ice_matls,  Ghost::None);
-  t->requires(Task::OldDW,lb->sp_vol_CCLabel,        ice_matls,  Ghost::None);
-
-
-  t->computes(lb->speedSound_CCLabel);
-  t->computes(lb->rho_micro_CCLabel);
-  t->computes(lb->vol_frac_CCLabel);
-  t->computes(lb->rho_CCLabel);
-  t->computes(lb->matl_press_CCLabel);
-  t->computes(lb->f_theta_CCLabel);
-  t->computes(lb->press_equil_CCLabel, press_matl);
-
-  sched->addTask(t, patches, all_matls);
-}
-/* ---------------------------------------------------------------------
  Function~ ICE::scheduleComputeFCPressDiffRF
 _____________________________________________________________________*/
 void ICE::scheduleComputeFCPressDiffRF(SchedulerP& sched,
@@ -45,196 +13,33 @@ void ICE::scheduleComputeFCPressDiffRF(SchedulerP& sched,
                                         const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeFCPressDiffRF" << endl;
-  Task* task = scinew Task("ICE::computeFCPressDiffRF",
+  Task* t = scinew Task("ICE::computeFCPressDiffRF",
                      this, &ICE::computeFCPressDiffRF);
 
-  task->requires(Task::OldDW,lb->delTLabel);
-  task->requires(Task::NewDW,lb->rho_CCLabel,            Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->rho_micro_CCLabel,      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->matl_press_CCLabel,     Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->vel_CCLabel,mpm_matls,  Ghost::AroundCells,1);
-  task->requires(Task::OldDW,lb->vel_CCLabel,ice_matls,  Ghost::AroundCells,1);
+  t->requires(Task::OldDW,lb->delTLabel);
+  t->requires(Task::NewDW,lb->rho_CCLabel,            Ghost::AroundCells,1);
+  t->requires(Task::NewDW,lb->rho_micro_CCLabel,      Ghost::AroundCells,1);
+  t->requires(Task::NewDW,lb->matl_press_CCLabel,     Ghost::AroundCells,1);
+  t->requires(Task::NewDW,lb->vel_CCLabel,mpm_matls,  Ghost::AroundCells,1);
+  t->requires(Task::OldDW,lb->vel_CCLabel,ice_matls,  Ghost::AroundCells,1);
 
-  task->requires(Task::NewDW,lb->press_equil_CCLabel,press_matl,
+  t->requires(Task::NewDW,lb->press_equil_CCLabel,press_matl,
                                                           Ghost::AroundCells,1);
 
-  task->computes(lb->press_diffX_FCLabel);
-  task->computes(lb->press_diffY_FCLabel);
-  task->computes(lb->press_diffZ_FCLabel);
+  t->computes(lb->press_diffX_FCLabel);
+  t->computes(lb->press_diffY_FCLabel);
+  t->computes(lb->press_diffZ_FCLabel);
 
-  sched->addTask(task, patches, matls);
-}
-
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleComputeFaceCenteredVelocitiesRF--
-_____________________________________________________________________*/
-void ICE::scheduleComputeFaceCenteredVelocitiesRF(SchedulerP& sched,
-                                                const PatchSet* patches,
-                                                const MaterialSubset* ice_matls,
-                                                const MaterialSubset* mpm_matls,
-                                                const MaterialSubset* press_matl,
-                                                const MaterialSet* all_matls)
-{
-  cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" << endl;
-  Task* task = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
-                     this, &ICE::computeFaceCenteredVelocitiesRF);
-
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::NewDW,lb->press_equil_CCLabel, press_matl,
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->rho_micro_CCLabel,   /*all_matls*/
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->rho_CCLabel,         /*all_matls*/
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls, 
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->vel_CCLabel,         mpm_matls, 
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->press_diffX_FCLabel, /*all_matls*/
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->press_diffY_FCLabel, /*all_matls*/
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->press_diffZ_FCLabel, /*all_matls*/
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->matl_press_CCLabel,  /*all_matls*/
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->vol_frac_CCLabel,    /*all_matls*/
-                                                      Ghost::AroundCells,1);
-  task->requires(Task::OldDW, lb->doMechLabel);
-
-
-  task->computes(lb->uvel_FCLabel);
-  task->computes(lb->vvel_FCLabel);
-  task->computes(lb->wvel_FCLabel);
-  sched->addTask(task, patches, all_matls);
-}
-
-
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleAccumulateMomentumSourceSinksRF--
-_____________________________________________________________________*/
-void ICE::scheduleAccumulateMomentumSourceSinksRF(SchedulerP& sched,
-                                                const PatchSet* patches,
-                                                const MaterialSubset* press_matl,
-                                                const MaterialSubset* ice_matls_sub,
-                                                const MaterialSet* matls)
-{
-  cout_doing << "ICE::scheduleAccumulateMomentumSourceSinksRF" << endl; 
-  Task* task = scinew Task("ICE::accumulateMomentumSourceSinksRF", 
-                     this, &ICE::accumulateMomentumSourceSinksRF);
-                     
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    
-                                                   Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,
-                                                   Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,
-                                                   Ghost::AroundCells,1);
-  task->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub,
-                                                   Ghost::None);
-
-  task->requires(Task::NewDW,lb->rho_CCLabel,         Ghost::None);
-  task->requires(Task::NewDW,lb->vol_frac_CCLabel,    Ghost::None);
-  task->requires(Task::NewDW,lb->press_diffX_FCLabel, Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->press_diffY_FCLabel, Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->press_diffZ_FCLabel, Ghost::AroundCells,1);
-
-  task->requires(Task::OldDW,lb->doMechLabel);
-  task->computes(lb->doMechLabel);
-
-  task->computes(lb->mom_source_CCLabel);
-  sched->addTask(task, patches, matls);
-}
-
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleAccumulateEnergySourceSinksRF--
-_____________________________________________________________________*/
-void ICE::scheduleAccumulateEnergySourceSinksRF(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              const MaterialSubset* press_matl,
-                                              const MaterialSet* matls)
-
-{
-  cout_doing << "ICE::scheduleAccumulateEnergySourceSinksRF" << endl;
-  Task* task = scinew Task("ICE::accumulateEnergySourceSinksRF",
-                     this, &ICE::accumulateEnergySourceSinksRF);
+  sched->addTask(t, patches, matls);
   
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
-  //task->requires(Task::NewDW, lb->delP_MassXLabel,   press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->rho_micro_CCLabel,            Ghost::None);
-  task->requires(Task::NewDW, lb->speedSound_CCLabel,           Ghost::None);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
-
-#ifdef ANNULUSICE
-  task->requires(Task::NewDW, lb->rho_CCLabel,                  Ghost::None);
-#endif
-  
-  task->computes(lb->int_eng_source_CCLabel);
-  
-  sched->addTask(task, patches, matls);
-}
-
-/* ---------------------------------------------------------------------
- Function~  ICE:: scheduleComputeLagrangianSpecificVolumeRF--
-_____________________________________________________________________*/
-void ICE::scheduleComputeLagrangianSpecificVolumeRF(SchedulerP& sched,
-                                               const PatchSet* patches,
-                                               const MaterialSubset* press_matl,
-                                               const MaterialSubset* ice_matls,
-                                               const MaterialSet* matls)
-{
-  cout_doing << "ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
-  Task* task = scinew Task("ICE::computeLagrangianSpecificVolumeRF",
-                      this,&ICE::computeLagrangianSpecificVolumeRF);
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, Ghost::None);
-  task->requires(Task::NewDW, lb->rho_micro_CCLabel, ice_matls, Ghost::None);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,  ice_matls, Ghost::None);
-  task->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, Ghost::None);
-  task->requires(Task::NewDW, lb->Tdot_CCLabel,      ice_matls, Ghost::None);
-  task->requires(Task::NewDW, lb->f_theta_CCLabel,   ice_matls, Ghost::None);
-  task->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
-  
-  task->computes(lb->spec_vol_L_CCLabel);
-  task->computes(lb->spec_vol_source_CCLabel);
-
-  sched->addTask(task, patches, matls);
-}
-
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleAddExchangeToMomentumAndEnergy--
-_____________________________________________________________________*/
-void ICE::scheduleAddExchangeToMomentumAndEnergyRF(SchedulerP& sched,
-                                                 const PatchSet* patches, 
-                                                 const MaterialSet* matls)
-{
-  cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergyRF" << endl;
-  Task* task = scinew Task("ICE::addExchangeToMomentumAndEnergyRF",
-                     this, &ICE::addExchangeToMomentumAndEnergyRF);;
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::NewDW, lb->mass_L_CCLabel,   Ghost::None);
-  task->requires(Task::NewDW, lb->mom_L_CCLabel,    Ghost::None);
-  task->requires(Task::NewDW, lb->int_eng_L_CCLabel,Ghost::None);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel, Ghost::None);
-  task->requires(Task::NewDW, lb->rho_micro_CCLabel,Ghost::None);
-  task->requires(Task::OldDW, lb->temp_CCLabel,     Ghost::None);
- 
-  task->computes(lb->mom_L_ME_CCLabel);
-  task->computes(lb->int_eng_L_ME_CCLabel);
-  task->computes(lb->Tdot_CCLabel);
-  
-  sched->addTask(task, patches, matls);
 }
 
 /* --------------------------------------------------------------------- 
- Function~  ICE::computeNonEquilibrationPressureRF-- 
+ Function~  ICE::computeRateFormPressure-- 
  Reference: A Multifield Model and Method for Fluid Structure
             Interaction Dynamics
 _____________________________________________________________________*/
-void ICE::computeNonEquilibrationPressureRF(const ProcessorGroup*,
+void ICE::computeRateFormPressure(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* ,
                                              DataWarehouse* old_dw,
@@ -243,8 +48,8 @@ void ICE::computeNonEquilibrationPressureRF(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing<<"Doing computeNonEquilibrationPressureRF on patch "
-              << patch->getID() <<"\t\t MPMICE" << endl;
+    cout_doing<<"Doing computeRateFormPressure on patch "
+              << patch->getID() <<"\t\t ICE" << endl;
 
     double tmp;
     int numMatls = d_sharedState->getNumICEMatls();
@@ -380,7 +185,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing computeFCPressDiffRF on patch " << patch->getID()
-         << "\t\t\t\t MPMICE" << endl;
+         << "\t\t\t\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
