@@ -344,7 +344,6 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  patch);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->StrainEnergyLabel);
 }
@@ -369,6 +368,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.18  2000/06/09 00:20:13  bard
+// Removed computes pVolume, now computes only pVolumeDeformed
+//
 // Revision 1.17  2000/06/08 22:00:29  bard
 // Added Time Step control to reflect finite deformations and material velocities.
 // Removed fudge factors.
