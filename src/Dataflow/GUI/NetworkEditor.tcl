@@ -221,8 +221,8 @@ proc makeNetworkEditor {} {
 	-variable tooltipsOn
 
     # Mac hack to fix size of 'About' window ... sigh... 
-    .main_menu.help.menu add command -label "About..." -underline 0 -state disabled \
-	-command  "showSplash 1 0 1"
+    .main_menu.help.menu add command -label "About..." -underline 0 \
+	-state disabled -command  "showProgress 1 none 1"
 
     .main_menu.help.menu add command -label "License..." -underline 0 \
 	-command  "licenseDialog" -state disabled
@@ -531,7 +531,8 @@ proc createSubnetMenu { menu { subnet 0 } } {
     
 
 proc networkHasChanged {args} {
-    setGlobal NetworkChanged 1
+    upvar \#0 NetworkChanged changed
+    set changed 1
 }
 
 proc addModule { package category module } {
