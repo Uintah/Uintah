@@ -410,7 +410,8 @@ manipulation.
 We have tried to make interacting with these widgets as consistent as
 possible so that, for example, controlling parameters is usually by clicking
 and dragging on either a cylindrical ``collar'' or a sphere element of the
-widget.  The original design of these modules was by James Purcifal
+widget.  
+%%The original design of these modules was by James Purcifal
 %%\cite{??}. 
 Note that a single widget may have more than one purpose
 depending on the context in which it exists.
@@ -434,16 +435,17 @@ streamline module.
     density of seed points}
 \end{figure}
 
-\paragraph{Appearance: } The Gauge Widget consists of two spheres (A)
-connected by a cylinder (B) with a small slider collar (C) on the cylinder.
-There are also small resize cylinders extending from the spheres (D).
+\paragraph{Appearance} The Gauge
+Widget (see Figure~\ref{fig:gaugewidget}) consists of two spheres (A) connected by a cylinder (B) with a
+small slider collar (C) on the cylinder.  There are also small resize
+cylinders extending from the spheres (D).
 
-\paragraph{Purpose:} The primary use of the Gauge Widget is to set the
+\paragraph{Purpose} The primary use of the Gauge Widget is to set the
 location and density of streamlines emerging from the long cylinder.  It
 may also be used as a more general purpose three-dimensional slider or as a
 source for a stream surface. 
 
-\paragraph{Controls: } Clicking and dragging either sphere causes the
+\paragraph{Controls} Clicking and dragging either sphere causes the
 entire widget to move in space, rotating about the other sphere and
 following along behind the selected sphere.  Dragging either of the resize
 cylinders cases the size of the widget to change and dragging any point on
@@ -466,18 +468,19 @@ density of seed points for a streamline source.
 \end{figure}
 
 
-\paragraph{Appearance: } The Frame Widget consists of four cylinders
-connected in a rectangle.  In the middle of each of the cylinders there is
-a sphere (B), from which a resize cylinder extends (C).
+\paragraph{Appearance} The
+Frame Widget(See Figure~\ref{fig:framewidget}) consists of four cylinders connected in a rectangle.  In
+the middle of each of the cylinders there is a sphere (B), from which
+a resize cylinder extends (C).
 
-\paragraph{Purpose:} The primary uses of the Frame Widget is for image
-plane definition, for defining stream volumes, and as a "tie dye" as with
+\paragraph{Purpose} The primary uses of the Frame Widget is for image
+plane definition, for defining stream volumes, and as a ``tie dye'' as with
 the Ring Widget described in \secref{Ring Widget}{sec:view-ringwidget}.
 
-\paragraph{Controls: } Clicking and ragging a sphere on the widget will
-cause the widget to rotate about it center; dragging on a resize cylinder
-will move the associated edge and this extend or contract the rectangle.
-Dragging any of the cylinder will drag the entire widget through space.
+\paragraph{Controls} Clicking and dragging a sphere on the widget will
+cause the widget to rotate about its center; dragging on a resize cylinder
+will move the associated edge and thus extend or contract the rectangle.
+Dragging any of the cylinders will drag the entire widget through space.
 
 
 \subsubsection{Box Widget}
@@ -493,18 +496,19 @@ Dragging any of the cylinder will drag the entire widget through space.
   \caption{\label{fig:boxwidget} The boxwidget for selecting sub-volumes}
 \end{figure}
 
-\paragraph{Appearance: } The Box Widget consists of twelve cylinders (A)
-connected in a hexahedral box (three-dimensional rectangle) with cylinders
-indicating on the edges of the box (B).  In the middle of each face of the
-box is a sphere with a cylinder protruding from it (C) that provide resize
-control.
+\paragraph{Appearance} The Box
+Widget (see Figure~\ref{sec:view-boxwidget}) consists of twelve 
+connected cylinders (A) which form a hexahedral box (three-dimensional
+rectangle) with cylinders indicating the edges of the box.  In the
+middle of each face is a sphere (B) with an attached short cylinder
+(C) providing resize control.
 
-\paragraph{Purpose:} The primary use of the Box Widget is to select a
+\paragraph{Purpose} The primary use of the Box Widget is to select a
 subvolume of the workspace for further manipulation (\eg{} volume
 rendering, isosurfaces, streamlines, mesh adaption) where the faces of the
 widget act as orthogonal clipping planes.
 
-\paragraph{Controls: } Clicking and dragging on one of the spheres rotates
+\paragraph{Controls} Clicking and dragging on one of the spheres rotates
 the widget about its center without changing the position of the center.
 Clicking on and dragging any resize handle
 % What do these look like??
@@ -527,13 +531,15 @@ orientation.
 \end{figure}
 
 
-\paragraph{Appearance: } The Ring Widget consists of a ring (A) with four
-embedded spheres (B), each with a resize cylindrical attached (D).  Between
-two of the spheres is a sliding collar (C).  One of the resize cylinders
-has a special material property (typically a different color from the other
-cylinders) to indicate that it is the ``halfway point'' for the slider (E).
+\paragraph{Appearance} The Ring
+Widget (see Figure~\ref{sec:view-ringwidget}) consists of a ring (A)
+with four embedded spheres (B), each with a resize cylindrical
+attached (D).  Between two of the spheres is a sliding collar (C).
+One of the resize cylinders has a special material property (typically
+a different color from the other cylinders) to indicate that it is the
+``halfway point'' for the slider (E).
 
-\paragraph{Purpose:} The primary use of the Ring Widget is to set the
+\paragraph{Purpose} The primary use of the Ring Widget is to set the
 density of streamlines emerging from the ring---the ring serves as a set of
 seed points from which will emerge streamlines.  The Ring Widget can also
 serve as a three-dimensional angle gauge, as a source for multiple
@@ -542,7 +548,7 @@ the outer ring, and as a source for a stream volume.  Another use is as a
 color sheet, or ``tie dye'', in which the surface is colored as a function of
 the scalar value of the field at each point.
 
-\paragraph{Controls: } Clicking and dragging the slider collar along the
+\paragraph{Controls} Clicking and dragging the slider collar along the
 ring changes the density of the seed points or some other related
 parameter.  Dragging the spheres controls the orientation of the Ring
 Widget, while moving the resize cylinders changes the radius of the Ring

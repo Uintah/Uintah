@@ -17,39 +17,38 @@
 %
 % Document name: package.tex
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Packages}
 \label{sec:packages}
 \index{packages}
 
 Packages are what provide the real utility of \SR{} from most users'
 perspectives.  The are sets of modules that use the basic \SR{}
-functionality to perform specific tasks such a solving bioelectric field
-problems.  To remind yourself about the way packages fit into the picture,
-see \secref{SCIRun versus BioPSE}{sec:srversuspse}.
+functionality to perform specific tasks such a solving bioelectric
+field problems (See also \secref{\SR{} and its
+  Packages}{sec:srversuspse}).
 
 \subsection{The \sr{} Package}
 \label{sec:srpackage}
 \index{SCIRun@\sr{}!package}
 
-
 The \sr{} package contains these categories:
 
 \begin{description}
-
-\item[\category{DataIO}] Modules for reading and writing \sr{}
-  data types.  Use these to read \sr{} type data into a network and write
+\item[\category{DataIO}] Modules for reading and writing \sr{} data
+  types.  Use these to read \sr{} type data into a network and write
   data to disk from a network.  These only know about \sr{} type data.
   Non-\sr{} (foreign) data may be converted to \sr{} type data using
-  \sr{}'s converter programs.  See \secref{Importing data into
-  \sr{}}{sec:import} for more information.
-
-\item[\category{Fields}] Modules for creating,
-  manipulating, and processing field data.
-  See Section~\ref{sec:field-types} for an introduction to \sr{} field
-  types. 
+  \sr{}'s converter programs (see \secref{Importing data into
+    \sr{}}{sec:import} for more information).
+  
+\item[\category{Fields}] Modules for creating, manipulating, and
+  processing field data.  See Section~\ref{sec:field-types} for an
+  introduction to \sr{} field types.
+  
 \item[\category{Math}] Modules providing matrix operations and
   equation solving capabilities.
+  
 \item[\category{Render}] Modules for visualizing data produced by
   other modules.  The main visualization tool at present
   is the Viewer, which is described in more detail in
