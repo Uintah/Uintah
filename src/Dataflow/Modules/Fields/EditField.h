@@ -24,10 +24,11 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Datatypes/Field.h>
 
 namespace SCIRun {
 
-class EditFieldAlgoCN : public DynamicAlgoBase
+class EditFieldAlgoCount : public DynamicAlgoBase
 {
 public:
   virtual void execute(MeshBaseHandle src, int &num_nodes, int &num_elems) = 0;
@@ -38,7 +39,7 @@ public:
 
 
 template <class MESH>
-class EditFieldAlgoCNT : public EditFieldAlgoCN
+class EditFieldAlgoCountT : public EditFieldAlgoCount
 {
 public:
   //! virtual interface. 
@@ -48,8 +49,8 @@ public:
 
 template <class MESH>
 void 
-EditFieldAlgoCNT<MESH>::execute(MeshBaseHandle mesh_h,
-				int &num_nodes, int &num_elems)
+EditFieldAlgoCountT<MESH>::execute(MeshBaseHandle mesh_h,
+				   int &num_nodes, int &num_elems)
 {
   typedef typename MESH::Node::iterator node_iter_type;
   typedef typename MESH::Elem::iterator elem_iter_type;
@@ -75,6 +76,73 @@ EditFieldAlgoCNT<MESH>::execute(MeshBaseHandle mesh_h,
     ++ei;
   }
   num_elems = count;
+}
+
+
+
+class EditFieldAlgoCopy : public DynamicAlgoBase
+{
+public:
+
+  virtual FieldHandle execute(FieldHandle fsrc_h,
+			      Field::data_location fout_at,
+			      bool transform_p, double scale,
+			      double translate) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
+				       const string &fdstname);
+};
+
+
+template <class FSRC, class FOUT>
+class EditFieldAlgoCopyT : public EditFieldAlgoCopy
+{
+public:
+
+  //! virtual interface. 
+  virtual FieldHandle execute(FieldHandle fsrc_h,
+			      Field::data_location fout_at,
+			      bool transform_p, double scale,
+			      double translate);
+};
+
+
+template <class FSRC, class FOUT>
+FieldHandle
+EditFieldAlgoCopyT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
+					Field::data_location fout_at,
+					bool transform_p, double scale,
+					double translate)
+{
+  FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
+
+  // Create the field with the new mesh and data location.
+  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), fout_at);
+
+  // Copy the (possibly transformed) data to the new field.
+  fout->resize_fdata();
+  typename FSRC::fdata_type::iterator in = fsrc->fdata().begin();
+  typename FOUT::fdata_type::iterator out = fout->fdata().begin();
+  typename FSRC::fdata_type::iterator end = fsrc->fdata().end();
+  if (fout_at == fsrc->data_at())
+  {
+    while (in != end)
+    {
+      if (transform_p)
+      {
+	// Linearly transform the data.
+	*out = (typename FOUT::value_type)(*in * scale + translate);
+      }
+      else
+      {
+	*out = (typename FOUT::value_type)(*in);
+      }
+      ++in; ++out;
+    }
+  }
+
+  return fout;
 }
 
 

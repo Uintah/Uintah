@@ -172,15 +172,15 @@ void EditField::update_input_attributes(FieldHandle f)
   }
 
   const TypeDescription *meshtd = f->mesh()->get_type_description();
-  CompileInfo *ci = EditFieldAlgoCN::get_compile_info(meshtd);
+  CompileInfo *ci = EditFieldAlgoCount::get_compile_info(meshtd);
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
     cout << "Could not compile algorithm." << std::endl;
     return;
   }
-  EditFieldAlgoCN *algo =
-    dynamic_cast<EditFieldAlgoCN *>(algo_handle.get_rep());
+  EditFieldAlgoCount *algo =
+    dynamic_cast<EditFieldAlgoCount *>(algo_handle.get_rep());
   if (algo == 0)
   {
     cout << "Could not get algorithm." << std::endl;
@@ -225,7 +225,21 @@ void EditField::update_input_attributes(FieldHandle f)
 
 bool EditField::check_types(FieldHandle f)
 {
-  return true;
+  const string &oname = f->get_type_description()->get_name();
+  const string &nname = typename_.get();
+  
+  string::size_type oindx = oname.find('<');
+  string::size_type nindx = nname.find('<');
+
+  if (oindx == nindx)
+  {
+    if (oname.substr(0, oindx) == nname.substr(0, nindx))
+    {
+      return true;
+    }
+  }
+  warning("The selected type and the input field type are incompatable.");
+  return false;
 }
 
 template <class FSRC, class FOUT>
@@ -240,7 +254,6 @@ EditField::create_edited_field(FSRC *fsrc, FOUT *,
 
   // Copy the (possibly transformed) data to the new field.
   fout->resize_fdata();
-  TCL::execute(id + " set_state Executing 0");
   typename FSRC::fdata_type::iterator in = fsrc->fdata().begin();
   typename FOUT::fdata_type::iterator out = fout->fdata().begin();
   typename FSRC::fdata_type::iterator end = fsrc->fdata().end();
@@ -317,7 +330,7 @@ void EditField::execute()
 {
   FieldIPort *iport=0; 
   FieldHandle fh;
-  Field *f=0;
+  //Field *f=0;
   FieldOPort *oport=0;
   
   // the output port is required
@@ -327,7 +340,7 @@ void EditField::execute()
   // the input port (with data) is required
   if (!(iport=(FieldIPort*)get_iport(0)) || 
       !iport->get(fh) || 
-      !(f=fh.get_rep()))
+      !(fh.get_rep()))
   {
     clear_vals();
     return;
@@ -340,7 +353,7 @@ void EditField::execute()
   if (firsttime_)
   {
     firsttime_ = false;
-    build_widget(f);
+    build_widget(fh);
   } 
 
   if (!cfldname_.get() &&
@@ -350,21 +363,15 @@ void EditField::execute()
       !cbbox_.get())
   {
     // no changes, just send the original through (it may be nothing!)
-    oport->send(f);    
+    oport->send(fh);
     return;
   }
 
   // verify that the requested edits are possible (type check)
-  if (ctypename_.get() && !check_types(fh))
+  if (!check_types(fh))
   {
-    return;
+    typename_.set(fh->get_type_description()->get_name());
   }
-
-  // create a field identical to the input, except for the edits
-  string tn1 = f->get_type_name(-1);
-  string tn2 = typename_.get(); 
-  int ctype = ctypename_.get();
-  FieldHandle ef;
 
   // Identify the new data location.
   Field::data_location dataat;
@@ -386,733 +393,52 @@ void EditField::execute()
   }
   else
   {
-    dataat = f->data_at();
+    dataat = fh->data_at();
   }
 
-  const bool transform_p = cdataminmax_.get();
+  // Setup data transform.
+  bool transform_p = cdataminmax_.get();
   double scale = 1.0;
   double translate = 0.0;
   if (transform_p)
   {
-    scale = (datamax_.get() - datamin_.get()) /
-      (minmax_.second - minmax_.first);
-    translate = datamin_.get() - minmax_.first * scale;
+    if (fh->query_scalar_interface())
+    {
+      scale = (datamax_.get() - datamin_.get()) /
+	(minmax_.second - minmax_.first);
+      translate = datamin_.get() - minmax_.first * scale;
+    }
+    else
+    {
+      transform_p = false;
+    }
   }
 
-  // oh man, is this a pain...
-  if (!ctype) {
-    if (tn1 == "TetVol<char>") {
-      ef = create_edited_field((TetVol<char>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<unsigned char>") {
-      ef = create_edited_field((TetVol<unsigned char>*)f,
-			       (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<short>") {
-      ef = create_edited_field((TetVol<short>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<unsigned short>") {
-      ef = create_edited_field((TetVol<unsigned short>*)f,
-			       (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<int>") {
-      ef = create_edited_field((TetVol<int>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<unsigned int>") {
-      ef = create_edited_field((TetVol<unsigned int>*)f,
-			       (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<float>") {
-      ef = create_edited_field((TetVol<float>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<double>") {
-      ef = create_edited_field((TetVol<double>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<long>") {
-      ef = create_edited_field((TetVol<long>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TetVol<Vector>") {
-      ef = create_edited_field((TetVol<Vector>*)f,(TetVol<Vector>*)0, dataat, transform_p, scale, translate);
-      /*} else if (tn1 == "TetVol<Tensor>") {
-	ef = create_edited_field((TetVol<Tensor>*)f,(TetVol<Tensor>*)0, dataat, transform_p, scale, translate);*/
-    } else if (tn1 == "TriSurf<char>") { 
-      ef = create_edited_field((TriSurf<char>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<unsigned char>") {
-      ef = create_edited_field((TriSurf<unsigned char>*)f,
-			       (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<short>") {
-      ef = create_edited_field((TriSurf<short>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<unsigned short>") {
-      ef = create_edited_field((TriSurf<unsigned short>*)f,
-			       (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<int>") {
-      ef = create_edited_field((TriSurf<int>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<unsigned int>") {
-      ef = create_edited_field((TriSurf<unsigned int>*)f,
-			       (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<float>") {
-      ef = create_edited_field((TriSurf<float>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<double>") {
-      ef = create_edited_field((TriSurf<double>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<long>") {
-      ef = create_edited_field((TriSurf<long>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "TriSurf<Vector>") {
-      ef = create_edited_field((TriSurf<Vector>*)f,(TriSurf<Vector>*)0, dataat, transform_p, scale, translate);
-      /*} else if (tn1 == "TriSruf<Tensor>") {
-	ef = create_edited_field((TriSurf<Tensor>*)f,(TriSurf<Tensor>*)0, dataat, transform_p, scale, translate);*/
-    } else if (tn1 == "LatticeVol<char>") {
-      ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<unsigned char>") {
-      ef = create_edited_field((LatticeVol<unsigned char>*)f,
-			       (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<short>") {
-      ef = create_edited_field((LatticeVol<short>*)f,
-			       (LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<unsigned short>") {
-      ef = create_edited_field((LatticeVol<unsigned short>*)f,
-			       (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<int>") {
-      ef = create_edited_field((LatticeVol<int>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<unsigned int>") {
-      ef = create_edited_field((LatticeVol<unsigned int>*)f,
-			       (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<float>") {
-      ef = create_edited_field((LatticeVol<float>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<double>") {
-      ef = create_edited_field((LatticeVol<double>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<long>") {
-      ef = create_edited_field((LatticeVol<long>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-    } else if (tn1 == "LatticeVol<Vector>") {
-      ef = create_edited_field((LatticeVol<Vector>*)f,(LatticeVol<Vector>*)0, dataat, transform_p, scale, translate);
-      /*} else if (tn1 == "LatticeVol<Tensor>") {
-	ef = create_edited_field((LatticeVol<Tensor>*)f,(LatticeVol<Tensor>*)0, dataat, transform_p, scale, translate);*/
-    }
-  } else {
-    if (tn1 == "TetVol<char>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<char>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<char>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<char>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<char>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<char>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<char>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<char>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<char>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<char>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<unsigned char>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<unsigned char>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<short>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<short>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<short>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<short>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<short>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<short>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<short>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<short>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<short>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<short>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<unsigned short>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<int>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<unsigned short>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<unsigned int>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<unsigned int>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<float>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<float>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<float>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<float>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<float>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<float>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<float>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<float>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<float>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<float>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<double>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<double>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<double>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<double>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<double>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<double>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<double>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<double>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<double>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<double>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TetVol<long>") {
-      if (tn2 == "TetVol<char>") {
-	ef = create_edited_field((TetVol<long>*)f,(TetVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned char>") {
-	ef = create_edited_field((TetVol<long>*)f,
-				 (TetVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<short>") {
-	ef = create_edited_field((TetVol<long>*)f,(TetVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned short>") {
-	ef = create_edited_field((TetVol<long>*)f,
-				 (TetVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<int>") {
-	ef = create_edited_field((TetVol<long>*)f,(TetVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<unsigned int>") {
-	ef = create_edited_field((TetVol<long>*)f,
-				 (TetVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<float>") {
-	ef = create_edited_field((TetVol<long>*)f,(TetVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<double>") {
-	ef = create_edited_field((TetVol<long>*)f,(TetVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TetVol<long>") {
-	ef = create_edited_field((TetVol<long>*)f,(TetVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    }
-
-    if (tn1 == "TriSurf<char>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<char>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<char>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<char>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<char>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<char>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<char>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<char>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<char>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<char>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<unsigned char>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<unsigned char>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<short>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<short>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<short>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<short>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<short>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<short>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<short>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<short>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<short>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<short>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<unsigned short>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<unsigned short>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<int>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<int>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<int>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<int>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<int>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<int>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<int>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<int>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<int>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<int>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<unsigned int>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<unsigned int>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<float>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<float>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<float>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<float>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<float>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<float>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<float>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<float>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<float>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<float>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<double>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<double>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<double>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<double>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<double>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<double>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<double>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<double>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<double>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<double>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "TriSurf<long>") {
-      if (tn2 == "TriSurf<char>") {
-	ef = create_edited_field((TriSurf<long>*)f,(TriSurf<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned char>") {
-	ef = create_edited_field((TriSurf<long>*)f,
-				 (TriSurf<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<short>") {
-	ef = create_edited_field((TriSurf<long>*)f,(TriSurf<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned short>") {
-	ef = create_edited_field((TriSurf<long>*)f,
-				 (TriSurf<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<int>") {
-	ef = create_edited_field((TriSurf<long>*)f,(TriSurf<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<unsigned int>") {
-	ef = create_edited_field((TriSurf<long>*)f,
-				 (TriSurf<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<float>") {
-	ef = create_edited_field((TriSurf<long>*)f,(TriSurf<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<double>") {
-	ef = create_edited_field((TriSurf<long>*)f,(TriSurf<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "TriSurf<long>") {
-	ef = create_edited_field((TriSurf<long>*)f,(TriSurf<long>*)0, dataat, transform_p, scale, translate);
-      }
-    }
-
-    if (tn1 == "LatticeVol<char>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<char>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<char>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<char>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<unsigned char>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<unsigned char>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<short>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<short>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<short>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<short>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<short>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<short>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<short>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<short>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<short>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<short>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<unsigned short>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<unsigned short>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<int>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<char>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<char>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<char>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<char>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<unsigned int>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<int>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<unsigned int>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<float>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<float>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<float>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<float>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<float>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<float>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<float>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<float>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<float>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<float>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<double>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<double>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<double>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<double>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<double>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<double>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<double>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<double>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<double>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<double>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    } else if (tn1 == "LatticeVol<long>") {
-      if (tn2 == "LatticeVol<char>") {
-	ef = create_edited_field((LatticeVol<long>*)f,(LatticeVol<char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned char>") {
-	ef = create_edited_field((LatticeVol<long>*)f,
-				 (LatticeVol<unsigned char>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<short>") {
-	ef = create_edited_field((LatticeVol<long>*)f,(LatticeVol<short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned short>") {
-	ef = create_edited_field((LatticeVol<long>*)f,
-				 (LatticeVol<unsigned short>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<int>") {
-	ef = create_edited_field((LatticeVol<long>*)f,(LatticeVol<int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<unsigned int>") {
-	ef = create_edited_field((LatticeVol<long>*)f,
-				 (LatticeVol<unsigned int>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<float>") {
-	ef = create_edited_field((LatticeVol<long>*)f,(LatticeVol<float>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<double>") {
-	ef = create_edited_field((LatticeVol<long>*)f,(LatticeVol<double>*)0, dataat, transform_p, scale, translate);
-      } else if (tn2 == "LatticeVol<long>") {
-	ef = create_edited_field((LatticeVol<long>*)f,(LatticeVol<long>*)0, dataat, transform_p, scale, translate);
-      }
-    }
-
+  // Create a field identical to the input, except for the edits.
+  const TypeDescription *fsrc_td = fh->get_type_description();
+  CompileInfo *ci =
+    EditFieldAlgoCopy::get_compile_info(fsrc_td, typename_.get());
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    cout << "Could not compile algorithm." << std::endl;
+    return;
   }
+  EditFieldAlgoCopy *algo =
+    dynamic_cast<EditFieldAlgoCopy *>(algo_handle.get_rep());
+  if (algo == 0)
+  {
+    cout << "Could not get algorithm." << std::endl;
+    return;
+  }
+  TCL::execute(id + " set_state Executing 0");
+  FieldHandle ef(algo->execute(fh, dataat, transform_p, scale, translate));
 
   // Transform the mesh if necessary.
   // TODO: This appears to be broken, does not preserve the transformed mesh.
   if (cbbox_.get())
   {
-    BBox old = f->mesh()->get_bounding_box();
+    BBox old = fh->mesh()->get_bounding_box();
     Point oldc = old.min() + (old.max() - old.min()) / 2.0;
     Point center, right, down, in;
     box_->GetPosition(center, right, down, in);
@@ -1204,12 +530,12 @@ void EditField::widget_moved(int i)
 
 
 CompileInfo *
-EditFieldAlgoCN::get_compile_info(const TypeDescription *mesh_td)
+EditFieldAlgoCount::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("EditFieldAlgoCNT");
-  static const string base_class_name("EditFieldAlgoCN");
+  static const string template_class_name("EditFieldAlgoCountT");
+  static const string base_class_name("EditFieldAlgoCount");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
@@ -1221,6 +547,30 @@ EditFieldAlgoCN::get_compile_info(const TypeDescription *mesh_td)
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   mesh_td->fill_compile_info(rval);
+  return rval;
+}
+
+
+CompileInfo *
+EditFieldAlgoCopy::get_compile_info(const TypeDescription *field_td,
+				    const string &fdstname)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("EditFieldAlgoCopyT");
+  static const string base_class_name("EditFieldAlgoCopy");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       to_filename(field_td->get_name()) + "." +
+		       to_filename(fdstname) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       field_td->get_name() + "," + fdstname + " ");
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  field_td->fill_compile_info(rval);
   return rval;
 }
 
