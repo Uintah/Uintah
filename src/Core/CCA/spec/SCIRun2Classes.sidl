@@ -11,11 +11,11 @@ interface Loader
 {
 
         //returns 0 if successful
-        //distribution array dURL <string, 1>;
+        distribution array dURL <string, 1>;
 
-        //collective 
-	//int createInstance(in string componentName, in string componentType, 
-	//		           out dURL componentURLs);
+        collective 
+	int createPInstance(in string componentName, in string componentType, 
+			           out dURL componentURLs);
 
 	int createInstance(in string componentName, in string componentType,  
 			           out string componentURL);
