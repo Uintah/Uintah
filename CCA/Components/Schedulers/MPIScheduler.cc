@@ -362,7 +362,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       MPIScheduler* top = this;
       while(top->parentScheduler) top = top->parentScheduler;
 
-      dw->sendMPI(*top->ss_, batch, posLabel, mpibuff, posDW, req);
+      dw->sendMPI(*top->ss_, *top->rs_, batch, posLabel, mpibuff, posDW, req);
     }
     // Post the send
     if(mpibuff.count()>0){
