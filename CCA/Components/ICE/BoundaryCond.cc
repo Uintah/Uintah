@@ -1694,7 +1694,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
       continue;
     } 
     if (vel_new_bcs != 0 && kind == "Velocity" && vel_new_bcs->getKind() == "LODI") {
-      fillFaceVelLODI(vel_CC,di, nu, rho_tmp, p, vel,  
+      fillFaceVelLODI(patch, vel_CC,di, nu, rho_tmp, p, vel,  
                       face, delT, dx);
     }
   } 
@@ -1785,7 +1785,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
     }
 
     if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "LODI") {
-       fillFaceTempLODI(temp_CC, di,
+       fillFaceTempLODI(patch, temp_CC, di,
                         e, rho_CC, nu, rho_tmp, 
                         p, vel, face, delT, cv, gamma,
                         dx);
