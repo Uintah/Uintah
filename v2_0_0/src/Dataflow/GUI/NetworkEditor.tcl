@@ -62,7 +62,7 @@ set NetworkChanged 0
 
 # Make sure version stays in sync with main/main.cc
 global SCIRun_version
-set SCIRun_version v1.20.2
+set SCIRun_version v1.20.3
 
 
 proc makeNetworkEditor {} {
