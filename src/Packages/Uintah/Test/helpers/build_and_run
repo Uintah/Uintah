@@ -11,37 +11,39 @@ fi
 
 cd "${BUILDROOT}/${mode}/build"
 
-echo "Configuring ${mode} build at `date` using these arguments"
-echo "\t$CONFIGURE_ARGS"
-echo "../../src/configure $CONFIGURE_ARGS" > configure_command
-chmod a+x configure_command
-./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
-retval=$?
-if [ $retval != "0" ]; then
-    echo "*** Configure failed with code $retval"
-    echo ""
-    echo "Showing configure log:"
-    cat "${BUILDROOT}/${mode}/configure.log"
+if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+    echo "Configuring ${mode} build at `date` using these arguments"
+    echo "\t$CONFIGURE_ARGS"
+    echo "../../src/configure $CONFIGURE_ARGS" > configure_command
+    chmod a+x configure_command
+    ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
+    retval=$?
+    if [ $retval != "0" ]; then
+	echo "*** Configure failed with code $retval"
+	echo ""
+	echo "Showing configure log:"
+	cat "${BUILDROOT}/${mode}/configure.log"
 
-    cd "${BUILD_DIR}"
-    if [ ! -d "configure-${mode}.lock" ]; then
-      # failed ${mode} configure, set a lock
-      echo "ln -s $BUILDROOT configure-${mode}.lock"
-      ln -s "$BUILDROOT" "configure-${mode}.lock"
+	cd "${BUILD_DIR}"
+	if [ ! -d "configure-${mode}.lock" ]; then
+	    # failed ${mode} configure, set a lock
+	    echo "ln -s $BUILDROOT configure-${mode}.lock"
+	    ln -s "$BUILDROOT" "configure-${mode}.lock"
+	fi
+	exit 1
     fi
-    exit 1
+
+    if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
+	# configured successfully - remove old configure lock 
+	rm "${BUILD_DIR}/configure-${mode}.lock"
+    fi
+
+    echo "Starting $mode build at `date`"
+
+    cd "${BUILDROOT}/${mode}/build"
+    
+    rm -f "../make.log"
 fi
-
-if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
-    # configured successfully - remove old configure lock 
-    rm "${BUILD_DIR}/configure-${mode}.lock"
-fi
-
-echo "Starting $mode build at `date`"
-
-cd "${BUILDROOT}/${mode}/build"
-
-rm -f "../make.log"
 while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
     nice /usr/local/gnu/bin/make -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
     retval=$?
@@ -67,54 +69,66 @@ fi
 
 failed=0
 
-if [ ! -d "$TESTDATA" ]; then
-    echo "TESTDATA directory doesn't exist: $TESTDATA"
+if [ ! -d "$TEST_DATA" ]; then
+    echo "TEST_DATA directory doesn't exist: $TEST_DATA"
     exit -1;
 fi
 
-if [ ! -d "${TESTDATA}/${mode}" ]; then
-    mkdir "${TESTDATA}/${mode}"
+if [ ! -d "${TEST_DATA}/${mode}" ]; then
+    mkdir "${TEST_DATA}/${mode}"
 fi
 
 
 cd "${BUILDROOT}/${mode}"
-ln -s build/Packages/Uintah/Test TestScripts
-ln -s build/Packages/Uintah/StandAlone susdir
-ln -s susdir/inputs inputs
-ln -s "${TESTDATA}/${mode}" goldStandard
+if [ ! -d TestScripts ]; then
+    ln -s ../src/Packages/Uintah/Test TestScripts
+fi
+if [ ! -d susdir ]; then
+    ln -s build/Packages/Uintah/StandAlone susdir
+fi
+if [ ! -d inputs ]; then
+    ln -s ../src/Packages/Uintah/StandAlone/inputs inputs
+fi
+if [ ! -d goldStandard ]; then
+    ln -s "${TEST_DATA}/${mode}" goldStandard
+fi
 
 summary_log="${BUILDROOT}/${mode}/summary_log"
+rm -f $summary_log
 
-for test in TestScripts/*; do
-    if [ -f "$test" -a -x "$test" -a]; then
-	    echo ""
-	    echo "Running test \"${test}-${mode}\" at `date`"
+cd TestScripts
+for test in *; do
+    if [ -f "$test" -a -x "$test" ]; then
+	echo ""
+	echo "Running test \"${test}-${mode}\" at `date`"
 
-	    echo "TestScripts/$test StandAlone inputs goldStandard $mode $PARALLELISM "'$1' > "do${test}tests"
-	    /bin/chgrp csafe "do${test}tests"
-	    /bin/chmod g+rx "do${test}tests"
-	    "./do${test}tests" > "${test}.log"  2>&1
-	    retval=$?
+	cd "${BUILDROOT}/${mode}"
+	doTestScript="do${test}tests"
+	echo "TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' > "$doTestScript"
+	/bin/chmod a+x "$doTestScript"
+	"$doTestScript" > "${test}.log"  2>&1
+	retval=$?
+	cat "${test}.log" >> "$summary_log"
+	cd TestScripts
 
-	    cat "${test}.log" >> "$summary_log"
-
-	    if [ $retval == "0" ]; then
-		echo "   Test Passed"
-		# It was successful, so it can remove the lock
-		if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
-		    # test ran successfully - remove the lock
-		    rm "${BUILD_DIR}/${test}-${mode}.lock"
-		fi
-	    else
-		echo "*** Test failed with code $retval"
-		if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
-		    ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock"
-		fi
-		failed=1
+	if [ $retval == "0" ]; then
+	    echo "   Test Passed"
+	    # It was successful, so it can remove the lock
+	    if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
+	        # test ran successfully - remove the lock
+	        rm "${BUILD_DIR}/${test}-${mode}.lock"
 	    fi
+	else
+	    echo "*** Test failed with code $retval"
+	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
+	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock"
+	    fi
+	    failed=1
 	fi
     fi
 done
+
+echo ""
 
 if [ $failed == "0" ]; then
     echo "All $mode tests passed!"
