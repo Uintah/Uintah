@@ -46,29 +46,49 @@
 
 namespace SCIRun {
 
-std::vector<CleanupManagerCallback> CleanupManager::callbacks_;
+std::vector<std::pair<CleanupManagerCallback, void *> > CleanupManager::callbacks_;
+Mutex CleanupManager::lock_("CleanupManager lock");
 
 void
-CleanupManager::add_callback(CleanupManagerCallback callback)
+CleanupManager::add_callback(CleanupManagerCallback cb, void *data)
 {
-  remove_callback(callback);
-  callbacks_.push_back(callback);
+  lock_.lock();
+  std::remove(callbacks_.begin(), callbacks_.end(),
+	      std::pair<CleanupManagerCallback, void *>(cb, data));
+  callbacks_.push_back(std::pair<CleanupManagerCallback, void *>(cb, data));
+  lock_.unlock();
 }
 
 void
-CleanupManager::remove_callback(CleanupManagerCallback callback)
+CleanupManager::invoke_remove_callback(CleanupManagerCallback callback,
+				       void *data)
 {
-  std::remove(callbacks_.begin(), callbacks_.end(), callback);
+  lock_.lock();
+  callback(data);
+  std::remove(callbacks_.begin(), callbacks_.end(),
+	      std::pair<CleanupManagerCallback, void *>(callback, data));
+  lock_.unlock();
+}
+
+void
+CleanupManager::remove_callback(CleanupManagerCallback callback, void *data)
+{
+  lock_.lock();
+  std::remove(callbacks_.begin(), callbacks_.end(),
+	      std::pair<CleanupManagerCallback, void *>(callback, data));
+  lock_.unlock();
 }
 
 void
 CleanupManager::call_callbacks()
 {
+  lock_.lock();
   for (unsigned int i = 0; i < callbacks_.size(); i++)
   {
-    callbacks_[i]();
+    callbacks_[i].first(callbacks_[i].second);
   }
   callbacks_.clear();
+  lock_.unlock();
 }
 
 
