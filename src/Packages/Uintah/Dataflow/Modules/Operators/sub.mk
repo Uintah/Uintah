@@ -8,6 +8,7 @@ SRCS     += \
 	$(SRCDIR)/ScalarFieldOperator.cc \
 	$(SRCDIR)/ScalarFieldBinaryOperator.cc \
 	$(SRCDIR)/ScalarFieldAverage.cc \
+	$(SRCDIR)/ScalarMinMax.cc \
 	$(SRCDIR)/TensorFieldOperator.cc \
 	$(SRCDIR)/TensorParticlesOperator.cc \
 	$(SRCDIR)/ParticleEigenEvaluator.cc \
@@ -36,7 +37,9 @@ PSELIBS := \
 	Core/Geom         \
 	Core/Geometry     \
 	Core/GeomInterface \
-	Core/Malloc
+	Core/Malloc \
+	Core/Util \
+
 LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
