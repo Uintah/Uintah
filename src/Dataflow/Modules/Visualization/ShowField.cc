@@ -476,6 +476,7 @@ ShowField::execute()
       data_at_dirty_ = true;
       edges_dirty_ = true;
       text_dirty_ = true;
+      data_dirty_ = true;
     }
     colormap_generation_ = -1;
   } else if (colormap_generation_ != color_handle->generation) {
@@ -483,6 +484,7 @@ ShowField::execute()
     data_at_dirty_ = true;
     edges_dirty_ = true;
     text_dirty_ = true;
+    data_dirty_ = true;
   }
 
   if (gui_node_resolution_.get() != node_resolution_) {
