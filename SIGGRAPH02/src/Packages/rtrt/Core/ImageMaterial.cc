@@ -47,9 +47,13 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 
   PPMImage ppm(texfile,flipped);
   if (ppm.valid())  {
-      valid_=true;
-      int nu, nv;
-      ppm.get_dimensions_and_data(image, nu, nv);
+    valid_=true;
+    int nu, nv;
+    ppm.get_dimensions_and_data(image, nu, nv);
+  } else {
+    cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
+    image.resize(1,1);
+    image(0,0)=Color(0.7,0.7,0.7);
   }
   outcolor=Color(0,0,0);
 }
@@ -67,6 +71,10 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
       valid_=true;
       int nu, nv;
       ppm.get_dimensions_and_data(image, nu, nv);
+  } else {
+    cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
+    image.resize(1,1);
+    image(0,0)=Color(0.7,0.7,0.7);
   }
   outcolor=Color(0,0,0);
 }
@@ -187,8 +195,9 @@ ImageMaterial::read_hdr_image(const string &filename)
      }
    }
    if(!indata){
-     cerr << "Error reading image!\n";
-     exit(1);
+     cerr << "Error reading ImageMaterial: " << filename << "\n";
+     image.resize(1,1);
+     image(0,0)=Color(0.7,0.7,0.7);     
    }
   valid_ = true;
 }
