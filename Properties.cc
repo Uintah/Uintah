@@ -44,9 +44,9 @@ using namespace Uintah;
 // Default constructor for Properties
 //****************************************************************************
 Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-		       bool reactingFlow, bool enthalpySolver):
+		       bool reactingFlow, bool enthalpySolver, bool thermalNOx):
   d_lab(label), d_MAlab(MAlb), d_reactingFlow(reactingFlow),
-  d_enthalpySolve(enthalpySolver)
+  d_enthalpySolve(enthalpySolver), d_thermalNOx(thermalNOx)
 {
   d_flamelet = false;
   d_steadyflamelet = false;
@@ -202,6 +202,8 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
     if (d_steadyflamelet)
       tsk->computes(d_lab->d_c2h2INLabel);
+    if (d_thermalNOx)
+      tsk->computes(d_lab->d_thermalnoxSRCINLabel);
   }
 
   if (d_flamelet) {
@@ -282,6 +284,7 @@ Properties::computeProps(const ProcessorGroup* pc,
     CCVariable<double> c2h2;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
+    CCVariable<double> thermalnoxSRC;
     if (d_reactingFlow) {
       new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
       new_dw->allocateAndPut(cp, d_lab->d_cpINLabel, matlIndex, patch);
@@ -296,6 +299,11 @@ Properties::computeProps(const ProcessorGroup* pc,
       if (d_steadyflamelet) {
         new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel,matlIndex, patch);
         c2h2.initialize(0.0);
+      }
+      if (d_thermalNOx) {
+         new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
+                          matlIndex, patch);
+         thermalnoxSRC.initialize(0.0);
       }
     }
     CCVariable<double> absorption;
@@ -432,6 +440,8 @@ Properties::computeProps(const ProcessorGroup* pc,
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	    if (d_steadyflamelet)
               c2h2[currCell] = outStream.getC2H2();
+            if (d_thermalNOx)
+              thermalnoxSRC[currCell] = 0.0;
 	  }
 	  if (d_flamelet) {
 	    temperature[currCell] = outStream.getTemperature();
@@ -881,6 +891,11 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+   // Added for Thermal NOx :Needed to compute the phi
+  if(d_thermalNOx){
+    tsk->requires(Task::OldDW, d_lab->d_thermalnoxSPLabel,
+              Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
   // Scalar dissipation for steady flamelet tables
   if (d_steadyflamelet) {
     tsk->requires(Task::NewDW, d_lab->d_scalarDissSPLabel,
@@ -909,6 +924,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
         tsk->computes(d_lab->d_reactscalarSRCINLabel);
       if (d_steadyflamelet)
         tsk->computes(d_lab->d_c2h2INLabel);
+      if (d_thermalNOx)
+        tsk->computes(d_lab->d_thermalnoxSRCINLabel);
     }
     if (d_flamelet) {
       tsk->computes(d_lab->d_tempINLabel);
@@ -939,6 +956,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
         tsk->modifies(d_lab->d_reactscalarSRCINLabel);
       if (d_steadyflamelet)
         tsk->modifies(d_lab->d_c2h2INLabel);
+      if (d_thermalNOx)
+        tsk->modifies(d_lab->d_thermalnoxSRCINLabel);
     }
     if (d_flamelet) {
       tsk->modifies(d_lab->d_tempINLabel);
@@ -1020,6 +1039,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> denMicro;
     constCCVariable<double> solidTemp;
 
+    CCVariable<double> thermalnoxSRC;
+    constCCVariable<double> thermalnox;
+
+
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -1070,6 +1093,13 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			         matlIndex, patch);
 	if (d_steadyflamelet)
 	  new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
+        if (d_thermalNOx){
+          new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
+                                 matlIndex, patch);
+          new_dw->get(thermalnox, d_lab->d_thermalnoxSPLabel,
+                          matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        }
+
       }
 
       if (d_flamelet) {
@@ -1109,6 +1139,13 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			         matlIndex, patch);
 	if (d_steadyflamelet)
           new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
+        if (d_thermalNOx){
+          new_dw->getModifiable(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
+                                 matlIndex, patch);
+          old_dw->get(thermalnox, d_lab->d_thermalnoxSPLabel,
+                                 matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        }
+
       }
 
       if (d_flamelet) {
@@ -1144,6 +1181,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  reactscalarSRC.initialize(0.0);
 	if (d_steadyflamelet)
           c2h2.initialize(0.0);
+        if (d_thermalNOx)
+          thermalnoxSRC.initialize(0.0);
     }    
     if (d_flamelet) {
       temperature.initialize(0.0);
@@ -1252,6 +1291,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	    if (d_steadyflamelet)
 	      c2h2[currCell] = outStream.getC2H2();
+            if (d_thermalNOx)
+              thermalnoxSRC[currCell] = 0.0;
 	  }
 	  
 
