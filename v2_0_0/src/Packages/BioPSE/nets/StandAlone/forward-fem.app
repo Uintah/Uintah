@@ -215,12 +215,11 @@ set $m22-faces-on {1}
 # global array indexed by module name to keep track of modules
 global mods
 
-
-### Viewer
 set mods(Viewer) $m7
 
-set mods(FieldReader1) $m0
-set mods(FieldReader2) $m11
+set mods(FieldReader-conductivities) $m0
+set mods(FieldReader-electrodes) $m11
+set mods(FieldReader-probe) $m20
 
 set mods(Isosurface) $m10
 set mods(ShowField-Isosurface) $m22
@@ -260,9 +259,6 @@ class ForwardFEMApp {
 	set viewer_width 640
 	set viewer_height 670
 	
-	set process_width 365
-	set process_height $viewer_height
-	
 	set vis_width [expr $notebook_width + 40]
 	set vis_height $viewer_height
 
@@ -270,9 +266,6 @@ class ForwardFEMApp {
 	set screen_height [winfo screenheight .]
 
         set initialized 0
-	set data_completed 0
-	set reg_completed 0
-	set dt_completed 0
 
         set indicator1 ""
         set indicator2 ""
@@ -323,7 +316,7 @@ class ForwardFEMApp {
         set error_color "red4"
 
         # colormaps
-        set colormap_width 150
+        set colormap_width 100
         set colormap_height 15
         set colormap_res 64
 
@@ -369,40 +362,47 @@ class ForwardFEMApp {
 	set eviewer [$mods(Viewer) ui_embedded]
 	$eviewer setWindow $win.viewer
 	
+	### Menu
+	frame $win.main_menu -relief raised -borderwidth 3
+	pack $win.main_menu -fill x -anchor nw
+
+
+	menubutton $win.main_menu.file -text "File" -underline 0 \
+	    -menu $win.main_menu.file.menu
 	
-	### Processing Part
-	#########################
-	### Create Detached Processing Part
-	toplevel $win.detachedP
-	frame $win.detachedP.f -relief flat
-	pack $win.detachedP.f -side left -anchor n -fill both -expand 1
+	menu $win.main_menu.file.menu -tearoff false
+
+	$win.main_menu.file.menu add command -label "Load       Ctr+O" \
+	    -underline 1 -command "$this load_session" -state active
 	
-	wm title $win.detachedP "Processing Window"
+	$win.main_menu.file.menu add command -label "Save      Ctr+S" \
+	    -underline 0 -command "$this save_session" -state active
 	
-	wm sizefrom $win.detachedP user
-	wm positionfrom $win.detachedP user
+	$win.main_menu.file.menu add command -label "Quit        Ctr+Q" \
+	    -underline 0 -command "$this exit_app" -state active
 	
-	wm withdraw $win.detachedP
+	pack $win.main_menu.file -side left
 
+	
+	global tooltipsOn
+	menubutton $win.main_menu.help -text "Help" -underline 0 \
+	    -menu $win.main_menu.help.menu
+	
+	menu $win.main_menu.help.menu -tearoff false
 
-	### Create Attached Processing Part
-	frame $win.attachedP 
-	frame $win.attachedP.f -relief flat 
-	pack $win.attachedP.f -side top -anchor n -fill both -expand 1
+	$win.main_menu.help.menu add check -label "Show Tooltips" \
+	    -variable tooltipsOn \
+	    -underline 0 -state active
 
-	set IsPAttached 1
+	$win.main_menu.help.menu add command -label "Help Contents" \
+	    -underline 0 -command "$this show_help" -state active
 
-	### set frame data members
-	set detachedPFr $win.detachedP
-	set attachedPFr $win.attachedP
-
-	init_Pframe $detachedPFr.f 0
-	init_Pframe $attachedPFr.f 1
-
-	### create detached width and heigh
-	append geomP $process_width x $process_height
-	wm geometry $detachedPFr $geomP
-
+	$win.main_menu.help.menu add command -label "About ForwardFEM" \
+	    -underline 0 -command "$this show_about" -state active
+	
+	pack $win.main_menu.help -side left
+	
+	tk_menuBar $win.main_menu $win.main_menu.file $win.main_menu.help
 
 	### Vis Part
 	#####################
@@ -434,10 +434,10 @@ class ForwardFEMApp {
 
 
 	### pack 3 frames
-	pack $attachedPFr $win.viewer $attachedVFr -side left \
+	pack $win.viewer $attachedVFr -side left \
 	    -anchor n -fill both -expand 1
 
-	set total_width [expr $process_width + $viewer_width + $vis_width]
+	set total_width [expr $viewer_width + $vis_width]
 
 	set total_height $viewer_height
 
@@ -457,49 +457,6 @@ class ForwardFEMApp {
         global mods
         
 	if { [winfo exists $m] } {
-	    ### Menu
-	    frame $m.main_menu -relief raised -borderwidth 3
-	    pack $m.main_menu -fill x -anchor nw
-
-
-	    menubutton $m.main_menu.file -text "File" -underline 0 \
-		-menu $m.main_menu.file.menu
-	    
-	    menu $m.main_menu.file.menu -tearoff false
-
-	    $m.main_menu.file.menu add command -label "Load       Ctr+O" \
-		-underline 1 -command "$this load_session" -state active
-	    
-	    $m.main_menu.file.menu add command -label "Save      Ctr+S" \
-		-underline 0 -command "$this save_session" -state active
-	    
-	    $m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
-		-underline 0 -command "$this exit_app" -state active
-	    
-	    pack $m.main_menu.file -side left
-
-	    
-	    global tooltipsOn
-	    menubutton $m.main_menu.help -text "Help" -underline 0 \
-		-menu $m.main_menu.help.menu
-	    
-	    menu $m.main_menu.help.menu -tearoff false
-
- 	    $m.main_menu.help.menu add check -label "Show Tooltips" \
-		-variable tooltipsOn \
- 		-underline 0 -state active
-
-	    $m.main_menu.help.menu add command -label "Help Contents" \
-		-underline 0 -command "$this show_help" -state active
-
-	    $m.main_menu.help.menu add command -label "About ForwardFEM" \
-		-underline 0 -command "$this show_about" -state active
-	    
-	    pack $m.main_menu.help -side left
-	    
-	    tk_menuBar $m.main_menu $win.main_menu.file $win.main_menu.help
-	    
-
 	    ### Processing Steps
 	    #####################
 	    iwidgets::labeledframe $m.p \
@@ -508,59 +465,13 @@ class ForwardFEMApp {
 	    
 	    set process [$m.p childsite]
 
-	    # Execute and Next buttons
-            frame $process.last
-            pack $process.last -side bottom -anchor ne \
-		-padx 5 -pady 5
-	    
-            button $process.last.ex -text "Execute" \
-		-background $execute_color \
-		-activebackground $execute_color \
-		-width 8 \
-		-command "$this execute_Data"
-	    Tooltip $process.last.ex $tips(Execute-DataAcquisition)
+	    frame $process.fsel
+	    label $process.fsel.l -text "Conductivity File:"
+	    entry $process.fsel.e -textvar $mods(FieldReader-conductivities)-filename
+	    button $process.fsel.b -text Browse -command "$mods(FieldReader-conductivities) ui"
+	    pack $process.fsel.l $process.fsel.e $process.fsel.b
+	    pack $process.fsel
 
-	    button $process.last.ne -text "Next" \
-                -command "$this change_processing_tab Registration" -width 8 \
-                -activebackground $next_color \
-                -background grey75 -state disabled 
-	    Tooltip $process.last.ne $tips(Next-DataAcquisition)
-
-            pack $process.last.ne $process.last.ex -side right -anchor ne \
-		-padx 2 -pady 0
-
-	    if {$case == 0} {
-		set data_next_button1 $process.last.ne
-		set data_ex_button1 $process.last.ex
-	    } else {
-		set data_next_button2 $process.last.ne
-		set data_ex_button2 $process.last.ex
-	    }
-
-            ### Indicator
-	    frame $process.indicator -relief sunken -borderwidth 2
-            pack $process.indicator -side bottom -anchor s -padx 3 -pady 5
-	    
-	    canvas $process.indicator.canvas -bg "white" -width $i_width \
-	        -height $i_height 
-	    pack $process.indicator.canvas -side top -anchor n -padx 3 -pady 3
-	    
-            bind $process.indicator <Button> {app display_module_error} 
-	    
-            label $process.indicatorL -text "Data Acquisition..."
-            pack $process.indicatorL -side bottom -anchor sw -padx 5 -pady 3
-	    
-	    
-            if {$case == 0} {
-		set indicator1 $process.indicator.canvas
-		set indicatorL1 $process.indicatorL
-            } else {
-		set indicator2 $process.indicator.canvas
-		set indicatorL2 $process.indicatorL
-            }
-	    
-            construct_indicator $process.indicator.canvas
-	    
 	    ### Attach/Detach button
             frame $m.d 
 	    pack $m.d -side left -anchor e
@@ -597,7 +508,7 @@ class ForwardFEMApp {
 	    
 	    ### Tabs
 	    iwidgets::tabnotebook $vis.tnb -width $notebook_width \
-		-height [expr $vis_height - 30] -tabpos n
+		-height [expr $vis_height - 160] -tabpos n
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
             if {$case == 0} {
@@ -667,6 +578,52 @@ class ForwardFEMApp {
 	    create_viewer_tab $vis
 	    
 	    
+	    # Execute Button
+            frame $vis.last
+            pack $vis.last -side bottom -anchor ne \
+		-padx 5 -pady 5
+	    
+            button $vis.last.ex -text "Execute" \
+		-background $execute_color \
+		-activebackground $execute_color \
+		-width 8 \
+		-command "$this execute_Data"
+	    Tooltip $vis.last.ex $tips(Execute-DataAcquisition)
+
+            pack $vis.last.ex -side right -anchor ne \
+		-padx 2 -pady 0
+
+	    if {$case == 0} {
+		set data_ex_button1 $vis.last.ex
+	    } else {
+		set data_ex_button2 $vis.last.ex
+	    }
+
+            ### Indicator
+	    frame $vis.indicator -relief sunken -borderwidth 2
+            pack $vis.indicator -side bottom -anchor s -padx 3 -pady 5
+	    
+	    canvas $vis.indicator.canvas -bg "white" -width $i_width \
+	        -height $i_height 
+	    pack $vis.indicator.canvas -side top -anchor n -padx 3 -pady 3
+	    
+            bind $vis.indicator <Button> {app display_module_error} 
+	    
+            label $vis.indicatorL -text "Data Acquisition..."
+            pack $vis.indicatorL -side bottom -anchor sw -padx 5 -pady 3
+	    
+	    
+            if {$case == 0} {
+		set indicator1 $vis.indicator.canvas
+		set indicatorL1 $vis.indicatorL
+            } else {
+		set indicator2 $vis.indicator.canvas
+		set indicatorL2 $vis.indicatorL
+            }
+	    
+            construct_indicator $vis.indicator.canvas
+	    
+
 	    ### Attach/Detach button
             frame $m.d 
 	    pack $m.d -side left -anchor e
@@ -856,35 +813,6 @@ class ForwardFEMApp {
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
 	
 	$vis.tnb view "Data Vis"
-    }
-
-
-    method switch_P_frames {} {
-	set c_width [winfo width $win]
-	set c_height [winfo height $win]
-	
-    	set x [winfo x $win]
-	set y [expr [winfo y $win] - 20]
-	
-	if { $IsPAttached } {	    
-	    pack forget $attachedPFr
-	    set new_width [expr $c_width - $process_width]
-	    append geom1 $new_width x $c_height + [expr $x+$process_width] + $y
-            wm geometry $win $geom1 
-	    append geom2 $process_width x $c_height + [expr $x-20] + $y
-	    wm geometry $detachedPFr $geom2
-	    wm deiconify $detachedPFr
-	    set IsPAttached 0
-
-	} else {
-	    wm withdraw $detachedPFr
-	    pack $attachedPFr -anchor n -side left -before $win.viewer \
-	       -fill both -expand 1
-	    set new_width [expr $c_width + $process_width]
-            append geom $new_width x $c_height + [expr $x - $process_width] + $y
-	    wm geometry $win $geom
-	    set IsPAttached 1
-	}
     }
 
 
@@ -1090,16 +1018,6 @@ class ForwardFEMApp {
     method indicate_dynamic_compile { which mode } {
 	if {$mode == "start"} {
 	    change_indicator_labels "Dynamically Compiling Code..."
-        } else {
-	    if {$dt_completed} {
-		change_indicator_labels "Visualization..."
-	    } elseif {$reg_completed} {
-		change_indicator_labels "Building Diffusion Tensors..."
-	    } elseif {$data_completed} {
-		change_indicator_labels "Registration..."
-	    } else {
-		change_indicator_labels "Data Acquisition..."
-	    }
 	}
     }
     
@@ -1110,15 +1028,15 @@ class ForwardFEMApp {
 	
 	return
 	
-	if {$which == $mods(FieldReader1) && $state == "NeedData"} {
+	if {$which == $mods(FieldReader-conductivities) && $state == "NeedData"} {
 	    change_indicator_labels "Data Acquisition..."
 	    change_indicate_val 1
-	} elseif {$which == $mods(FieldReader1) && $state == "Completed"} {
+	} elseif {$which == $mods(FieldReader-conductivities) && $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {$which == $mods(FieldReader2) && $state == "NeedData"} {
+	} elseif {$which == $mods(FieldReader-electrodes) && $state == "NeedData"} {
 	    change_indicator_labels "Data Acquisition..."
 	    change_indicate_val 1
-	} elseif {$which == $mods(FieldReader2) && $state == "Completed"} {
+	} elseif {$which == $mods(FieldReader-electrodes) && $state == "Completed"} {
 	    change_indicate_val 2
 	} elseif {$which == $mods(ShowField-Orig) && $state == "Completed"} {
 	    after 100
@@ -1174,152 +1092,21 @@ class ForwardFEMApp {
 	} else {
 	    if {$which == $error_module} {
 		set error_module ""
-		
-		if {$dt_completed} {
-		    change_indicator_labels "Visualization..."
-		} elseif {$reg_completed} {
-		    change_indicator_labels "Building Diffusion Tensors..."
-		} elseif {$data_completed} {
-		    change_indicator_labels "Registration..."
-		} else {
-		    change_indicator_labels "Data Acquisition..."
-		}
+		change_indicator_labels "Data Acquisition..."
 		change_indicate_val 0
 	    }
 	}
     }
 	
 	
-    method toggle_data_mode { } {
-	global data_mode
-        global mods
-        global $mods(ChooseNrrd-DT)-port-index
-	
-        if {$data_mode == "DWI"} {
-           configure_readers all
-        } else {
-           configure_readers all
-
-	    # disable Next button
-	    $data_next_button1 configure -state disabled \
-	       -background grey75 -foreground grey64
-	    $data_next_button2 configure -state disabled \
-	       -background grey75 -foreground grey64
-        }
-    }
-
-
-    method configure_readers { which } {
-        global mods
-        global $mods(ChooseNrrd1)-port-index
-	global $mods(ChooseNrrd-T2)-port-index
-	global $mods(ChooseNrrd-ToProcess)-port-index
-        global data_mode
-
-	if {$which == "Nrrd"} {
-	    set $mods(ChooseNrrd1)-port-index 0
-	    set $mods(ChooseNrrd-T2)-port-index 0
-	    set $mods(ChooseNrrd-ToProcess)-port-index 0
-
-	    disableModule $mods(NrrdReader1) 0
-	    disableModule $mods(NrrdReader-T2) 0
-
-	    disableModule $mods(DicomToNrrd1) 1
-	    disableModule $mods(DicomToNrrd-T2) 1
-
-	    disableModule $mods(AnalyzeToNrrd1) 1
-	    disableModule $mods(AnalyzeToNrrd-T2) 1
-
-	    if {$initialized != 0} {
-		$data_tab1 view "Nrrd"
-		$data_tab2 view "Nrrd"
-	    }
-        } elseif {$which == "Dicom"} {
-	    set $mods(ChooseNrrd1)-port-index 1
-	    set $mods(ChooseNrrd-T2)-port-index 1
-	    set $mods(ChooseNrrd-ToProcess)-port-index 1
-
-	    disableModule $mods(NrrdReader1) 1
-	    disableModule $mods(NrrdReader-T2) 1
-
-	    disableModule $mods(DicomToNrrd1) 0
-	    disableModule $mods(DicomToNrrd-T2) 0
-
-	    disableModule $mods(AnalyzeToNrrd1) 1
-	    disableModule $mods(AnalyzeToNrrd-T2) 1
-
-            if {$initialized != 0} {
-		$data_tab1 view "Dicom"
-		$data_tab2 view "Dicom"
-	    }
-        } elseif {$which == "Analyze"} {
-	    # Analyze
-	    set $mods(ChooseNrrd1)-port-index 2
-	    set $mods(ChooseNrrd-T2)-port-index 2
-	    set $mods(ChooseNrrd-ToProcess)-port-index 2
-
-	    disableModule $mods(NrrdReader1) 1
-	    disableModule $mods(NrrdReader-T2) 1
-
-	    disableModule $mods(DicomToNrrd1) 1
-	    disableModule $mods(DicomToNrrd-T2) 1
-
-	    disableModule $mods(AnalyzeToNrrd1) 0
-	    disableModule $mods(AnalyzeToNrrd-T2) 0
-
-	    if {$initialized != 0} {
-		$data_tab1 view "Analyze"
-		$data_tab2 view "Analyze"
-	    }
-        } elseif {$which == "all"} {
-	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
-		# nrrd
-		disableModule $mods(NrrdReader1) 0
-		disableModule $mods(NrrdReader-T2) 0
-		
-		disableModule $mods(DicomToNrrd1) 1
-		disableModule $mods(DicomToNrrd-T2) 1
-		
-		disableModule $mods(AnalyzeToNrrd1) 1
-		disableModule $mods(AnalyzeToNrrd-T2) 1
-	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
-		# dicom
-		disableModule $mods(NrrdReader1) 1
-		disableModule $mods(NrrdReader-T2) 1
-		
-		disableModule $mods(DicomToNrrd1) 0
-		disableModule $mods(DicomToNrrd-T2) 0
-		
-		disableModule $mods(AnalyzeToNrrd1) 1
-		disableModule $mods(AnalyzeToNrrd-T2) 1
-	    } else {
-		# analyze
-		disableModule $mods(NrrdReader1) 1
-		disableModule $mods(NrrdReader-T2) 1
-		
-		disableModule $mods(DicomToNrrd1) 1
-		disableModule $mods(DicomToNrrd-T2) 1
-		
-		disableModule $mods(AnalyzeToNrrd1) 0
-		disableModule $mods(AnalyzeToNrrd-T2) 0
-	    }
-	}
-    }
-
     method execute_Data {} {
 	global mods 
 	global data_mode
 	
 	
-	$mods(FieldReader1)-c needexecute
-	#$mods(FieldReader2)-c needexecute
-	set data_completed 1	
-
-	# enable Next button
-	$data_next_button1 configure -state normal \
-	    -foreground black -background $next_color
-	$data_next_button2 configure -state normal \
-	    -foreground black -background $next_color
+	$mods(FieldReader-conductivities)-c needexecute
+	$mods(FieldReader-electrodes)-c needexecute
+	$mods(FieldReader-probe)-c needexecute
     }
     
 
@@ -1331,7 +1118,6 @@ class ForwardFEMApp {
 	    disableModule $mods(StreamLines-Gradient) 0
 	    set "$eviewer-StreamLines rake (5)" 1
 	    $eviewer-c redraw
-	    puts $streamlines_tab1
 	    $streamlines_tab1.isoval.s configure -state normal
 	    $streamlines_tab2.isoval.s configure -state normal
 	    $streamlines_tab1.isoval.l configure -state normal
@@ -1377,8 +1163,6 @@ class ForwardFEMApp {
     method build_streamlines_tab { f } {
 	global mods
 	global $mods(ShowField-StreamLines)-edges-on
-
-	puts $f
 
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show StreamLines" \
@@ -2093,11 +1877,6 @@ class ForwardFEMApp {
     variable initialized
 
     # State
-    variable data_completed
-    variable reg_completed
-    variable dt_completed
-
-    
     variable IsPAttached
     variable detachedPFr
     variable attachedPFr
@@ -2153,9 +1932,6 @@ class ForwardFEMApp {
     # Application placing and size
     variable notebook_width
     variable notebook_height
-
-    variable process_width
-    variable process_height
 
     variable viewer_width
     variable viewer_height
