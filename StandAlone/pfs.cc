@@ -91,7 +91,7 @@ main(int argc, char *argv[])
       }
     }
 
-    grid->problemSetup(ups, world);  
+    grid->problemSetup(ups, world, false);  
     
     for (int l = 0; l < grid->numLevels(); l++) {
       LevelP level = grid->getLevel(l);
