@@ -16,7 +16,7 @@
 //
 // SCI_DEBUG = ([name]:[-|+|+FILENAME])(,[name]:[-|+|+FILENAME])*
 //
-// The + or - specifies wheather the named object is on or off.  If a file is 
+// The + or - specifies whether the named object is on or off.  If a file is 
 // specified it is opened in ios::out mode.  If no file is specified,
 // the stream is directed to cerr.  The : and , characters are
 // restricted to deliminators.
