@@ -65,11 +65,10 @@ namespace Nektar {
 
     void ICNektarReader::execute()
     {
-      using SCICore::Containers::Pio;
-      
       clString fn(filename.get());
       if( fn != old_filename){
 	old_filename=fn;
+	// read file
       }
     osport->send(scalar_handle);
     ovport->send(vector_handle);

@@ -24,7 +24,7 @@ SRCS     += \
 PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Datatypes \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
 	SCICore/Containers SCICore/TclInterface SCICore/Geom
-LIBS := 
+LIBS := $(NEKTAR_LIBRARY)  
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
