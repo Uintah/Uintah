@@ -61,6 +61,9 @@ class ClusterDialog : public QDialog
     Q_OBJECT
 
 public:
+    ClusterDialog(const char* defaultLoader, const char* defaultDomain,
+		    const char* defaultLogin, QWidget* parent = 0,
+		    const char* name = 0, bool modal = FALSE, WFlags fl = 0);
     ClusterDialog(QWidget* parent = 0, const char* name = 0,
 		    bool modal = FALSE, WFlags fl = 0);
     ~ClusterDialog();
@@ -89,6 +92,9 @@ protected slots:
     virtual void languageChange();
 
 private:
+    void setDefaultText(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin);
+    void setWidgets(const char* name, bool modal, WFlags fl);
+
     QLabel* textLabelLoader;
     QComboBox* comboBoxLoader;
     QLabel* textLabelDomain;

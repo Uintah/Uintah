@@ -49,7 +49,15 @@
 #include <qtooltip.h>
 #include <qwhatsthis.h>
 
-#include "ClusterDialog.h"
+#include <CCA/Components/Builder/ClusterDialog.h>
+
+#include <iostream>
+
+ClusterDialog::ClusterDialog(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin, QWidget* parent, const char* name, bool modal, WFlags fl) :  QDialog(parent, name, modal, fl)
+{
+    setWidgets(name, modal, fl);
+    setDefaultText(defaultLoader, defaultDomain, defaultLogin);
+}
 
 /*
  *  Constructs a ClusterDialog as a child of 'parent', with the
@@ -61,8 +69,16 @@
 ClusterDialog::ClusterDialog(QWidget* parent, const char* name, bool modal, WFlags fl)
     : QDialog(parent, name, modal, fl)
 {
-    if (!name)
-	setName("ClusterDialog");
+    setWidgets(name, modal, fl);
+
+}
+
+void ClusterDialog::setWidgets(const char* name, bool modal, WFlags fl)
+{
+    if (!name) {
+	setName("Add Loader command");
+    }
+
     setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, 0, 0, sizePolicy().hasHeightForWidth()));
     setMinimumSize(QSize(450, 350));
     setMaximumSize(QSize(450, 350));
@@ -86,6 +102,7 @@ ClusterDialog::ClusterDialog(QWidget* parent, const char* name, bool modal, WFla
     comboBoxLoader = new QComboBox(FALSE, privateLayoutWidget, "comboBoxLoader");
     comboBoxLoader->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)5, (QSizePolicy::SizeType)0, 0, 0, comboBoxLoader->sizePolicy().hasHeightForWidth()));
     comboBoxLoader->setEditable(TRUE);
+    comboBoxLoader->setSizeLimit( 5 );
     comboBoxLoader->setMaxCount(20);
     comboBoxLoader->setInsertionPolicy(QComboBox::AtTop);
     comboBoxLoader->setDuplicatesEnabled(FALSE);
@@ -102,6 +119,7 @@ ClusterDialog::ClusterDialog(QWidget* parent, const char* name, bool modal, WFla
     comboBoxDomain = new QComboBox(FALSE, privateLayoutWidget, "comboBoxDomain");
     comboBoxDomain->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)5, (QSizePolicy::SizeType)0, 0, 0, comboBoxDomain->sizePolicy().hasHeightForWidth()));
     comboBoxDomain->setEditable(TRUE);
+    comboBoxDomain->setSizeLimit( 5 );
     comboBoxDomain->setMaxCount(20);
     comboBoxDomain->setInsertionPolicy(QComboBox::AtTop);
     comboBoxDomain->setDuplicatesEnabled(FALSE);
@@ -118,6 +136,7 @@ ClusterDialog::ClusterDialog(QWidget* parent, const char* name, bool modal, WFla
     comboBoxLogin = new QComboBox(FALSE, privateLayoutWidget, "comboBoxLogin");
     comboBoxLogin->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)5, (QSizePolicy::SizeType)0, 0, 0, comboBoxLogin->sizePolicy().hasHeightForWidth()));
     comboBoxLogin->setEditable(TRUE);
+    comboBoxLogin->setSizeLimit( 5 );
     comboBoxLogin->setMaxCount(20);
     comboBoxLogin->setInsertionPolicy(QComboBox::AtTop);
     comboBoxLogin->setDuplicatesEnabled(FALSE);
@@ -238,13 +257,6 @@ ClusterDialog::ClusterDialog(QWidget* parent, const char* name, bool modal, WFla
     buttonCancel->setAutoDefault(TRUE);
     layoutButtons->addWidget(buttonCancel);
     layoutDialog->addLayout(layoutButtons);
-    languageChange();
-    resize(QSize(450, 350).expandedTo(minimumSizeHint()));
-    clearWState(WState_Polished);
-
-    // signals and slots connections
-    connect(buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(buttonCancel, SIGNAL(clicked()), this, SLOT(reject()));
 
     // buddies
     textLabelLoader->setBuddy(comboBoxLoader);
@@ -252,6 +264,15 @@ ClusterDialog::ClusterDialog(QWidget* parent, const char* name, bool modal, WFla
     textLabelLogin->setBuddy(comboBoxLogin);
     textLabelPasswd->setBuddy(lineEditPasswd);
     textLabelCopies->setBuddy(spinBoxCopies);
+
+    languageChange();
+
+    resize(QSize(450, 350).expandedTo(minimumSizeHint()));
+    clearWState(WState_Polished);
+
+    // signals and slots connections
+    connect(buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(buttonCancel, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
 /*
@@ -291,6 +312,22 @@ void ClusterDialog::languageChange()
     buttonOk->setAccel(QKeySequence(QString::null));
     buttonCancel->setText(tr("&Cancel"));
     buttonCancel->setAccel(QKeySequence(QString::null));
+
+}
+
+void ClusterDialog::setDefaultText(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin)
+{
+    comboBoxLoader->clear();
+    comboBoxLoader->insertItem( tr(defaultLoader) );
+    comboBoxLoader->setCurrentItem(0);
+
+    comboBoxDomain->clear();
+    comboBoxDomain->insertItem( tr(defaultDomain) );
+    comboBoxDomain->setCurrentItem(0);
+
+    comboBoxLogin->clear();
+    comboBoxLogin->insertItem( tr(defaultLogin) );
+    comboBoxLogin->setCurrentItem(0);
 }
 
 QString ClusterDialog::loader() const
