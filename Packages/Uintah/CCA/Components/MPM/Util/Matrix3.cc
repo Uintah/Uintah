@@ -23,6 +23,19 @@ using std::ostream;
 
 using namespace Uintah;
 
+// Added for compatibility with Core types
+namespace SCIRun {
+
+using std::string;
+
+template<> const string find_type_name(Matrix3*)
+{
+  static const string name = "Matrix3";
+  return name;
+}
+
+} // namespace SCIRun
+
 // Anything with absolute value < NEAR_ZERO may be considered
 // zero, assuming error is caused by round-off.
 #define NEAR_ZERO 1e-10
