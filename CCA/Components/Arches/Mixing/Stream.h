@@ -34,6 +34,9 @@ WARNING
 
 namespace Uintah {
     class ChemkinInterface;
+    // Low temperature limit; used in addStream
+    const double TLIM = 200.0;
+ 
     class Stream {
     public:
       Stream();
