@@ -164,7 +164,7 @@ short Crack::PhysicalGlobalGridContainsPoint(const double& dx,const Point& pt)
 }         
 
 // Find the intersection between a line-segment (p1->p2) and a box
-short Crack::TrimCrackFrontWithGrid(const Point& p1, Point& p2,
+void Crack::TrimLineSegmentWithBox(const Point& p1, Point& p2,
  	                 	const Point& lp, const Point& hp)
 {
   // For a box with the lowest and highest points (lp & hp) and 
@@ -172,43 +172,72 @@ short Crack::TrimCrackFrontWithGrid(const Point& p1, Point& p2,
   // find the intersection between the line-segment (p1->p2) and the box,
   // and store the intersection in p2.
 	
+  // Make sure p1!=p2
+  if(p1==p2) {
+    cout << "*** p1=p2=" << p1 << " in Crack::TrimLineSegmentWithBox(...)."
+         << " Program is terminated." << endl;
+    exit(1);
+  }
+	                      	
   double xl=lp.x(), yl=lp.y(), zl=lp.z();
   double xh=hp.x(), yh=hp.y(), zh=hp.z();
 
   double x1=p1.x(), y1=p1.y(), z1=p1.z();
   double x2=p2.x(), y2=p2.y(), z2=p2.z();
+  
+  // one-millionth of the diagonal length  of the box
+  double d=(hp-lp).length()*1.e-6;
+ 
+  // Detect if p1 is inside the box
+  short p1Outside=YES;
+  if(x1>xl-d && x1<xh+d && y1>yl-d && y1<yh+d && z1>zl-d && z1<zh+d) p1Outside=NO; 
+  
+  if(p1Outside) {
+    cout << "*** p1=" << p1 
+	 << " is outside of the box in Crack::TrimLineSegmentWithBox(): "
+	 << lp << "-->" << hp << ", where p2=" << p2 << endl;    
+    cout << " Program terminated." << endl;        
+    exit(1);
+  }
 
-  // Detect if line-segment p1->p2 crosses with the box
-  short cross=YES;
-  if(x2>xl && x2<xh && y2>yl && y2<yh && z2>zl && z2<zh) cross=NO;
+  // If p2 is outside the box, find the intersection
+  short p2Outside=YES;
+  if(x2>xl-d && x2<xh+d && y2>yl-d && y2<yh+d && z2>zl-d && z2<zh+d) p2Outside=NO;
     
-  if(cross) { // Find the intersection
+  while(p2Outside) {
     Vector v=TwoPtsDirCos(p1,p2);
-    double l=v.x(), m=v.y(), n=v.z();
+    double l=v.x(),m=v.y(),n=v.z();
 
     if(x2>xh || x2<xl) {
       if(x2>xh) x2=xh;
       if(x2<xl) x2=xl;
-      y2=y1+(x2-x1)/l*m;
-      z2=z1+(x2-x1)/l*n;
+      if(l>1.e-6) {
+        y2=y1+m*(x2-x1)/l;
+        z2=z1+n*(x2-x1)/l;
+      }
     }
-
-    if(y2>yh || y2<yl) {
+    else if(y2>yh || y2<yl) {
       if(y2>yh) y2=yh;
       if(y2<yl) y2=yl;
-      x2=x1+(y2-y1)/m*l;
-      z2=z1+(y2-y1)/m*n;
+      if(m>1.e-6) {
+        x2=x1+l*(y2-y1)/m;
+        z2=z1+n*(y2-y1)/m;
+      }
     }
-
-    if(z2>zh || z2<zl) {
+    else if(z2>zh || z2<zl) {
       if(z2>zh) z2=zh;
       if(z2<zl) z2=zl;
-      x2=x1+(z2-z1)/n*l;
-      y2=y1+(z2-z1)/n*m;
+      if(n>1.e-6) {
+        x2=x1+l*(z2-z1)/n;
+        y2=y1+m*(z2-z1)/n;
+      }	
     }
-  }  
+  
+    if(x2>xl-d && x2<xh+d && y2>yl-d && y2<yh+d && z2>zl-d && z2<zh+d) p2Outside=NO;
+  
+  } // End of while(!p2Inside)  
+
   p2=Point(x2,y2,z2);
-  return cross;
 }  
 
 // Calculate normal of a triangle
@@ -558,12 +587,18 @@ bool Crack::FindIntersectionOfJPathAndCrackPlane(const int& m,
 // Calculate direction cosines of line p1->p2
 Vector Crack::TwoPtsDirCos(const Point& p1,const Point& p2)
 {
-  double dx,dy,dz,ds;
-  dx=p2.x()-p1.x();
-  dy=p2.y()-p1.y();
-  dz=p2.z()-p1.z();
-  ds=sqrt(dx*dx+dy*dy+dz*dz);
-  return Vector(dx/ds, dy/ds, dz/ds);
+  Vector v=Vector(0.,0.,0.);
+
+  double l12=(p1-p2).length();
+  if(l12>1.e-32) { // p1!=p2 
+    double dx,dy,dz;
+    dx=p2.x()-p1.x();
+    dy=p2.y()-p1.y();
+    dz=p2.z()-p1.z();
+    v=Vector(dx/l12,dy/l12,dz/l12);
+  }  
+
+  return v;
 }
 
 // Find the equation of a plane by three points on it
@@ -1090,14 +1125,13 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
   return flag;
 }
 
-void Crack::PruneCrackFrontAfterPropagation(const int& m)
+void Crack::PruneCrackFrontAfterPropagation(const int& m, const double& ca)
 {
   // If the angle between two line-segments connected by 
-  // a point is larger than 30 dgree, move the point to
+  // a point is larger than a certain value (ca), move the point to
   // the mass center of the triangle which is composed of the three points
 
   int num=(int)cfSegNodes[m].size();
-  
   vector<Point> cfSegPtsPruned;
   cfSegPtsPruned.resize(num);
   
@@ -1109,14 +1143,14 @@ void Crack::PruneCrackFrontAfterPropagation(const int& m)
     int preIdx=cfSegPreIdx[m][i];
     if(preIdx<0) { // not operated
       if(i>cfSegMinIdx[m][i] && i<cfSegMaxIdx[m][i]) {
-	Point pt =cfSegPtsT[m][i];      
-        Point pt1=cfSegPtsT[m][i-1];
-        Point pt2=cfSegPtsT[m][i+2];
-        Vector v1=TwoPtsDirCos(pt1,pt);
-	Vector v2=TwoPtsDirCos(pt,pt2);
+	Point p =cfSegPtsT[m][i];      
+        Point p1=cfSegPtsT[m][i-1];
+        Point p2=cfSegPtsT[m][i+2];
+        Vector v1=TwoPtsDirCos(p1,p);
+	Vector v2=TwoPtsDirCos(p,p2);
 	double theta=acos(Dot(v1,v2))*180/3.141592654;
-	if(fabs(theta)>30) {
-	  cfSegPtsPruned[i]=pt1+(pt2-pt1)/2.;	
+	if(fabs(theta)>ca) {
+	  cfSegPtsPruned[i]=p+(p1-p)/3.+(p2-p)/3.;	
 	}
       }	// End of if(i>minIdx && i<maxIdx)
     }	    
@@ -1140,13 +1174,17 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
   cfSegV3[mm].clear();
   cfSegV3[mm].resize(cfNodeSize);
   for(int k=0; k<cfNodeSize; k++) {
-    int minIdx=cfSegMinIdx[mm][k];
-    int maxIdx=cfSegMaxIdx[mm][k];
-    int minNode=cfSegNodes[mm][minIdx];
-    int maxNode=cfSegNodes[mm][maxIdx];
+    int node=cfSegNodes[mm][k];	  
+    Point pt=cx[mm][node];
+    
     int preIdx=cfSegPreIdx[mm][k];
-
     if(preIdx<0) {// Not operated
+      int minIdx=cfSegMinIdx[mm][k];
+      int maxIdx=cfSegMaxIdx[mm][k];
+      int minNode=cfSegNodes[mm][minIdx];
+      int maxNode=cfSegNodes[mm][maxIdx];
+    
+      // The node to the right of pt 
       int node1=-1;
       if(minNode==maxNode && (k==minIdx || k==maxIdx)) { 
         // for the end of enclosed crack
@@ -1158,6 +1196,7 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
       }
       Point pt1=cx[mm][node1];
 
+      // The node to the left of pt
       int node2=-1;
       if(minNode==maxNode && (k==minIdx || k==maxIdx)) {
         // for the end of enclosed crack
@@ -1168,17 +1207,22 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
         node2=cfSegNodes[mm][k2];
       }
       Point pt2=cx[mm][node2];
- 
-      cfSegV3[mm][k]=-TwoPtsDirCos(pt1,pt2);
+      
+      // Weighting tangential vector between pt1->pt->pt2
+      double l1=(pt1-pt).length();
+      double l2=(pt-pt2).length();
+      Vector v3T=(l1*TwoPtsDirCos(pt1,pt)+l2*TwoPtsDirCos(pt,pt2))/(l1+l2);
+      cfSegV3[mm][k]=-v3T/v3T.length();
+      
+      //cfSegV3[mm][k]=-TwoPtsDirCos(pt1,pt2);
     }
 
-    else {// calculated
+    else { // calculated
       cfSegV3[mm][k]=cfSegV3[mm][preIdx];
     }
+  } // End of loop over k
 
-  }
-
-   /* Task 2: Calculate normals of crack plane at crack-front nodes
+  /* Task 2: Calculate normals of crack plane at crack-front nodes
   */
   cfSegV2[mm].clear();
   cfSegV2[mm].resize(cfNodeSize);
