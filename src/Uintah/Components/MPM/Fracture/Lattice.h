@@ -16,15 +16,15 @@ class Cell;
 
 class Lattice : public Array3<Cell> {
 public:
-        Lattice(const Patch* patch,const ParticleVariable<Point>& pX);
+        Lattice(const ParticleVariable<Point>& pX);
 
   bool              containCell(const IntVector& cellIndex) const;
   
   const Patch*                    getPatch() const;
-  const ParticleVariable<Point>&  getParticlesPosition() const;
+  const ParticleVariable<Point>&  getpX() const;
 
 private:
-  const Patch* d_patch;
+  const Patch*                   d_patch;
   const ParticleVariable<Point>& d_pX;
 };
 
@@ -34,6 +34,10 @@ private:
 #endif //__LATTICE_H__
 
 // $Log$
+// Revision 1.6  2000/09/05 06:34:13  tan
+// Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
+// where farcture is involved.
+//
 // Revision 1.5  2000/06/06 21:04:47  bigler
 // Added const to Lattice members to get it to compile
 //

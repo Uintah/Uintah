@@ -15,10 +15,9 @@ class Lattice;
 class BrokenCellShapeFunction {
 public:
 
-        BrokenCellShapeFunction( const Patch& patch,
-                                 const Lattice& lattice,
-                                 const ParticleVariable<Point>& pX,
-                                 const ParticleVariable<Vector>& pCrackSurfaceNormal );
+        BrokenCellShapeFunction( const Lattice& lattice,
+                                 const ParticleVariable<int>& pIsBroken,
+				 const ParticleVariable<Vector>& pCrackSurfaceNormal );
 
   void  findCellAndWeights( int partIdx, 
                             IntVector nodeIdx[8], 
@@ -33,10 +32,9 @@ public:
   bool  getVisiability(int partIdx,const IntVector& nodeIdx) const;
 
 private:
-  const ParticleVariable<Point>&  d_pX;
-  const ParticleVariable<Vector>& d_pCrackSurfaceNormal;
-  const Patch&                    d_patch;
   const Lattice&                  d_lattice;
+  const ParticleVariable<int>&    d_pIsBroken;
+  const ParticleVariable<Vector>& d_pCrackSurfaceNormal;
 };
 
 } //namespace MPM
@@ -45,6 +43,10 @@ private:
 #endif //__Uintah_MPM_BrokenCellShapeFunction__
 
 // $Log$
+// Revision 1.2  2000/09/05 06:34:42  tan
+// Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
+// where farcture is involved.
+//
 // Revision 1.1  2000/08/11 03:13:30  tan
 // Created BrokenCellShapeFunction to handle Shape functions (including Derivatives)
 // for a cell containing cracked particles.

@@ -1,18 +1,19 @@
 #include "BrokenCellShapeFunction.h"
 
 #include <Uintah/Grid/Patch.h>
+#include <Uintah/Components/MPM/Fracture/Lattice.h>
 
 namespace Uintah {
 namespace MPM {
 
 BrokenCellShapeFunction::
-BrokenCellShapeFunction( const Patch& patch,
-                         const Lattice& lattice,
-                         const ParticleVariable<Point>& pX,
-                         const ParticleVariable<Vector>& pCrackSurfaceNormal )
-: d_patch(patch),
-  d_lattice(lattice),
-  d_pX(pX),
+BrokenCellShapeFunction( const Lattice& lattice,
+                         const ParticleVariable<int>& pIsBroken,
+			 const ParticleVariable<Vector>& pCrackSurfaceNormal )
+
+
+: d_lattice(lattice),
+  d_pIsBroken(pIsBroken),
   d_pCrackSurfaceNormal(pCrackSurfaceNormal)
 {
 }
@@ -26,7 +27,8 @@ findCellAndWeights( int partIdx,
 {
   double completeShape[8];
   
-  if( !d_patch.findCellAndWeights(d_pX[partIdx], nodeIdx, completeShape) )
+  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
+     nodeIdx, completeShape) )
   {
     throw InternalError("Particle not in patch");
   }
@@ -44,7 +46,8 @@ findCellAndShapeDerivatives( int partIdx,
                              double d_S[8][3] ) const
 {
   double completeShapeDerivative[8];
-  if( !d_patch.findCellAndWeights(d_pX[partIdx], nodeIdx, completeShapeDerivative) )
+  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
+     nodeIdx, completeShapeDerivative) )
   {
     throw InternalError("Particle not in patch");
   }
@@ -65,6 +68,10 @@ getVisiability(int partIdx,const IntVector& nodeIdx) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.2  2000/09/05 06:34:54  tan
+// Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
+// where farcture is involved.
+//
 // Revision 1.1  2000/08/11 03:13:42  tan
 // Created BrokenCellShapeFunction to handle Shape functions (including Derivatives)
 // for a cell containing cracked particles.
