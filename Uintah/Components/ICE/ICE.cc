@@ -50,6 +50,7 @@ using SCICore::Datatypes::DenseMatrix;
 static int iterNum = 0;
 
 #undef john_debug
+#undef todd_debug
 //______________________________________________________________________
 //                                   I   C   E
 ICE::ICE(const ProcessorGroup* myworld) 
@@ -249,14 +250,7 @@ void ICE::actuallyInitialize(
   //  - put dt in new dw
   cout << "Doing actually Initialize" << endl;
   double dT = d_initialDt;
-  CCVariable<double>    rho_micro,      Temp_CC,        cv,     
-                        rho_CC,         press,          speedSound,
-                        uvel_CC,        vvel_CC,        wvel_CC,
-                        visc_CC,        vol_frac_CC;
-
-  SFCXVariable<double>  uvel_FC;
-  SFCYVariable<double>  vvel_FC;
-  SFCZVariable<double>  wvel_FC;
+  CCVariable<double>    press;
 
   new_dw->put(delt_vartype(dT), lb->delTLabel);
   
@@ -290,6 +284,12 @@ void ICE::actuallyInitialize(
     //  Allocate new DW memory
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int dwindex = ice_matl->getDWIndex();
+      CCVariable<double> rho_micro,rho_CC,Temp_CC,cv,speedSound,visc_CC;
+      CCVariable<double> vol_frac_CC,uvel_CC,vvel_CC,wvel_CC;
+      SFCXVariable<double> uvel_FC;
+      SFCYVariable<double> vvel_FC;
+      SFCZVariable<double> wvel_FC;
+
       new_dw->allocate(rho_micro,   lb->rho_micro_CCLabel,  dwindex,patch);
       new_dw->allocate(rho_CC,      lb->rho_CCLabel,        dwindex,patch);
       new_dw->allocate(Temp_CC,     lb->temp_CCLabel,       dwindex,patch);
@@ -371,6 +371,10 @@ void ICE::actuallyInitialize(
       new_dw->put(wvel_FC,    lb->wvel_FCLabel,      dwindex,patch);
       new_dw->put(visc_CC,    lb->viscosity_CCLabel, dwindex,patch);
   }
+
+#ifdef todd_debug
+  // This is broken and won't work with the above declarations of variables
+  // inside the loop over materials.
   //__________________________________
   //    Output initial Cond
     cout << " Initial Conditions" << endl;
@@ -409,6 +413,7 @@ void ICE::actuallyInitialize(
     printData( patch, 1, "initialCond", "wvel_CC",         wvel_CC);
 
    }
+#endif
 }
 //STOP_DOC
 /* --------------------------------------------------------------------- 
@@ -1744,10 +1749,7 @@ void ICE::actuallyStep4a(
   SFCYVariable<double> pressY_FC;
   SFCZVariable<double> pressZ_FC;
 
-  CCVariable<double>   xmom_source, ymom_source, zmom_source;
-  SFCXVariable<double> tau_X_FC;
-  SFCYVariable<double> tau_Y_FC;
-  SFCZVariable<double> tau_Z_FC;
+  
   //__________________________________
   //   Get data from the data warehouse
   new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch,Ghost::None, 0);
@@ -1767,6 +1769,10 @@ void ICE::actuallyStep4a(
     new_dw->get(vol_frac,lb->vol_frac_CCLabel, dwindex,patch,Ghost::None, 0);
 
     // Create variables for the results
+    CCVariable<double>   xmom_source, ymom_source, zmom_source;
+    SFCXVariable<double> tau_X_FC;
+    SFCYVariable<double> tau_Y_FC;
+    SFCZVariable<double> tau_Z_FC;
     new_dw->allocate(xmom_source, lb->xmom_source_CCLabel, dwindex, patch);
     new_dw->allocate(ymom_source, lb->ymom_source_CCLabel, dwindex, patch);
     new_dw->allocate(zmom_source, lb->zmom_source_CCLabel, dwindex, patch);
@@ -1885,7 +1891,7 @@ void ICE::actuallyStep4b(
   CCVariable<double> vol_frac;
   CCVariable<double> press_CC;
   CCVariable<double> delPress;
-  CCVariable<double> int_eng_source;
+
   
 
 
@@ -1908,7 +1914,7 @@ void ICE::actuallyStep4b(
       
       new_dw->get(vol_frac,         lb->vol_frac_CCLabel,
                     dwindex,        patch,      Ghost::None, 0);
-
+      CCVariable<double> int_eng_source;
       new_dw->allocate(int_eng_source,          lb->int_eng_source_CCLabel,
                     dwindex,        patch);
                     
@@ -2368,9 +2374,9 @@ void ICE::actuallyStep6and7(
   cout << "CFL = " << CFL << endl;
 #endif
 
-  CCVariable<double> uvel_CC, vvel_CC, wvel_CC, rho_CC, visc_CC, cv_old, cv,temp;
+
   CCVariable<double> xmom_L_ME, ymom_L_ME, zmom_L_ME, int_eng_L_ME, mass_L;
-  CCVariable<double> speedSound;
+  CCVariable<double> speedSound,cv_old;
 
   SFCXVariable<double> uvel_FC;
   SFCYVariable<double> vvel_FC;
@@ -2418,7 +2424,7 @@ void ICE::actuallyStep6and7(
                                                    dwindex,patch,Ghost::None,0);
       new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
                                                    dwindex,patch,Ghost::None,0);
-
+      CCVariable<double> uvel_CC, vvel_CC, wvel_CC, rho_CC, visc_CC, cv,temp;
       new_dw->allocate(rho_CC, lb->rho_CCLabel,        dwindex,patch);
       new_dw->allocate(temp,   lb->temp_CCLabel,       dwindex,patch);
       new_dw->allocate(cv,     lb->cv_CCLabel,         dwindex,patch);
@@ -2588,23 +2594,12 @@ void ICE::actuallyStep6and7(
       }
   #endif
       //__________________________________
-      //  Put updated arrays into dw
-       new_dw->put(rho_CC, lb->rho_CCLabel,  dwindex,patch);
-       new_dw->put(uvel_CC,lb->uvel_CCLabel, dwindex,patch);
-       new_dw->put(vvel_CC,lb->vvel_CCLabel, dwindex,patch);
-       new_dw->put(wvel_CC,lb->wvel_CCLabel, dwindex,patch);
-       new_dw->put(temp,   lb->temp_CCLabel, dwindex,patch);
-
-       // These are carried forward variables, they don't change
-       new_dw->put(visc_CC,lb->viscosity_CCLabel,dwindex,patch);
-       new_dw->put(cv,     lb->cv_CCLabel,       dwindex,patch);
-  }
+    
   
  
   //______________________________________________________________________
   // Compute new delt
-    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) 
-    {
+  
    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++)
       {
          double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
@@ -2626,6 +2621,17 @@ void ICE::actuallyStep6and7(
          delt_stability = std::min(B, delt_stability);
          delt_stability = std::min(C, delt_stability);
        }
+  
+  //  Put updated arrays into dw
+       new_dw->put(rho_CC, lb->rho_CCLabel,  dwindex,patch);
+       new_dw->put(uvel_CC,lb->uvel_CCLabel, dwindex,patch);
+       new_dw->put(vvel_CC,lb->vvel_CCLabel, dwindex,patch);
+       new_dw->put(wvel_CC,lb->wvel_CCLabel, dwindex,patch);
+       new_dw->put(temp,   lb->temp_CCLabel, dwindex,patch);
+
+       // These are carried forward variables, they don't change
+       new_dw->put(visc_CC,lb->viscosity_CCLabel,dwindex,patch);
+       new_dw->put(cv,     lb->cv_CCLabel,       dwindex,patch);
   }
   double dT = std::min(delt_stability, delt_CFL);
 #ifdef john_debug
@@ -3860,6 +3866,10 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.72  2001/01/03 02:27:40  jas
+// Declared variables in loops for allocating data to make multi-material
+// aspect of code work.  This affected initialization,step4a,step4b,step6and7.
+//
 // Revision 1.71  2001/01/03 00:51:53  harman
 // - added cflux, OFC, IFC, q_in_CF, q_out_CF
 // - Advection operator now in 3D, not fully tested
