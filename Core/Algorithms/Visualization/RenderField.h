@@ -52,7 +52,7 @@ public:
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res, bool use_normals) = 0;
+		      int res, bool use_normals, bool use_transparency) = 0;
 
   virtual ~RenderFieldBase();
 
@@ -100,13 +100,14 @@ public:
 		    double edge_scale);
   void render_faces(const Fld *fld, 
 		    bool use_def_color,
-		    bool use_normals);
+		    bool use_normals,
+		    bool use_transparency);
 
   void render_all(const Fld *fld,  
 		  bool nodes, bool edges, bool faces, bool data, 
 		  bool def_col, const string &ndt, const string &edt, 
 		  double ns, double es, double vs, bool normalize,
-		  bool use_normals);
+		  bool use_normals, bool use_transparency);
 
   void render_data(const Fld *fld, 
 		   const string &data_display_type, bool def_color,
@@ -119,7 +120,7 @@ public:
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res, bool use_normals);
+		      int res, bool use_normals, bool use_transparency);
     
 private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
@@ -133,13 +134,6 @@ private:
   inline void add_edge(const Point &p1, const Point &p2, double scale, 
 		       GeomGroup *g, MaterialHandle mh_avg,
 		       bool cyl = true);
-  inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
-		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		       GeomTriangles *g);
-  inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
-		       const Vector &v1, const Vector &v2, const Vector &v3, 
-		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		       GeomTriangles *g);
   
   template <class Iter>
   void render_data_at(const Fld *fld, Iter begin, Iter end, 
@@ -219,7 +213,7 @@ RenderField<Fld>::render(FieldHandle fh,  bool nodes,
 			 bool def_col, ColorMapHandle color_handle,
 			 const string &ndt, const string &edt,
 			 double ns, double es, double vs, bool normalize, 
-			 int res, bool use_normals)
+			 int res, bool use_normals, bool use_transparency)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -227,7 +221,7 @@ RenderField<Fld>::render(FieldHandle fh,  bool nodes,
   color_handle_ = color_handle;
   res_ = res;
   render_all(fld, nodes, edges, faces, data, def_col,  ndt, edt, ns, es, vs, 
-	     normalize, use_normals);
+	     normalize, use_normals, use_transparency);
 }
 
 template <class Fld> template <class Iter>
@@ -443,12 +437,22 @@ template <class Fld>
 void 
 RenderField<Fld>::render_faces(const Fld *sfld,
 			       bool use_def_color,
-			       bool use_normals)
+			       bool use_normals,
+			       bool use_transparency)
 {
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
   const bool with_normals = (use_normals && mesh->has_normals());
 
-  GeomTriangles* faces = scinew GeomTriangles;
+  GeomTriangles* faces;
+  if (use_transparency)
+  {
+    faces = scinew GeomTranspTriangles;
+  }
+  else
+  {
+    faces = scinew GeomTriangles;
+  }
+
   face_switch_ = scinew GeomSwitch(faces);
   // Third pass: over the faces
   typename Fld::mesh_type::Face::iterator fiter; mesh->begin(fiter);  
@@ -521,19 +525,13 @@ RenderField<Fld>::render_faces(const Fld *sfld,
     for (i=2; i<nodes.size(); i++)
     {
       if (with_normals) {
-	
-      add_face(points[0], points[i-1], points[i],
-	       normals[0], normals[i-1], normals[i], 
-	       choose_mat(def_color, vals[0]), 
-	       choose_mat(def_color, vals[i-1]), 
-	       choose_mat(def_color, vals[i]), 
-	       faces);
+	faces->add(points[0], normals[0], choose_mat(def_color, vals[0]),
+		   points[i-1], normals[i-1], choose_mat(def_color, vals[i-1]),
+		   points[i], normals[i], choose_mat(def_color, vals[i]));
       } else {
-	add_face(points[0], points[i-1], points[i], 
-		 choose_mat(def_color, vals[0]), 
-		 choose_mat(def_color, vals[i-1]), 
-		 choose_mat(def_color, vals[i]), 
-		 faces);
+	faces->add(points[0], choose_mat(def_color, vals[0]),
+		   points[i-1], choose_mat(def_color, vals[i-1]),
+		   points[i], choose_mat(def_color, vals[i]));
       }
     }
   }
@@ -546,11 +544,11 @@ RenderField<Fld>::render_all(const Fld *fld, bool nodes,
 			     bool def_col,
 			     const string &ndt, const string &edt,
 			     double ns, double es, double vs, bool normalize,
-			     bool use_normals)
+			     bool use_normals, bool use_transparency)
 {
   if (nodes) render_nodes(fld, ndt, def_col, ns);
   if (edges) render_edges(fld, edt, def_col, es);
-  if (faces) render_faces(fld, def_col, use_normals);
+  if (faces) render_faces(fld, def_col, use_normals, use_transparency);
   
   if (data) {
     vec_node_ = scinew GeomArrows(0.15, 0.6);
@@ -559,27 +557,6 @@ RenderField<Fld>::render_all(const Fld *fld, bool nodes,
   }
 }
 
-template <class Fld>
-void 
-RenderField<Fld>::add_face(const Point &p0, const Point &p1, const Point &p2, 
-		    const Vector &n0, const Vector &n1, const Vector &n2,
-		    MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		    GeomTriangles *g) 
-{
-  g->add(p0, n0, m0, 
-	 p1, n1, m1, 
-	 p2, n2, m2);
-}
-template <class Fld>
-void 
-RenderField<Fld>::add_face(const Point &p0, const Point &p1, const Point &p2, 
-		    MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		    GeomTriangles *g) 
-{
-  g->add(p0, m0, 
-	 p1, m1, 
-	 p2, m2);
-}
 
 template <class Fld>
 void 

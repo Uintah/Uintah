@@ -89,6 +89,7 @@ class ShowField : public Module
   bool                     edges_dirty_;
   //! faces.
   GuiInt                   use_normals_;
+  GuiInt                   use_transparency_;
   GuiInt                   faces_on_;
   bool                     faces_dirty_;
   //! data.
@@ -143,6 +144,7 @@ ShowField::ShowField(const string& id) :
   edges_on_("edges-on", id, this),
   edges_dirty_(true),
   use_normals_("use-normals", id, this),
+  use_transparency_("use-transparency", id, this),
   faces_on_("faces-on", id, this),
   faces_dirty_(true),
   vectors_on_("vectors-on", id, this),
@@ -280,7 +282,7 @@ ShowField::execute()
 	      nodes_dirty_, edges_dirty_, faces_dirty_, data_dirty_,
 	      def_mat_handle_, use_def_color_, color_handle_,
 	      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_,
-	      use_normals_.get());
+	      use_normals_.get(), use_transparency_.get());
 
   // cleanup...
   if (nodes_dirty_) {
