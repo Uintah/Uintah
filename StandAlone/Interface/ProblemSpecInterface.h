@@ -2,11 +2,10 @@
 #ifndef UINTAH_HOMEBREW_ProblemSpecINTERFACE_H
 #define UINTAH_HOMEBREW_ProblemSpecINTERFACE_H
 
-#include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/ProblemSpecP.h>
+#include <Packages/Uintah/Parallel/Packages/UintahParallelPort.h>
+#include <Packages/Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
@@ -36,7 +35,7 @@ WARNING
   
 ****************************************/
 
-   class ProblemSpecInterface : public UintahParallelPort {
+   class ProblemSpecInterface : public Packages/UintahParallelPort {
    public:
       ProblemSpecInterface();
       virtual ~ProblemSpecInterface();
@@ -47,19 +46,9 @@ WARNING
       ProblemSpecInterface(const ProblemSpecInterface&);
       ProblemSpecInterface& operator=(const ProblemSpecInterface&);
    };
+} // End namespace Uintah
    
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.2  2000/04/26 06:49:12  sparker
-// Streamlined namespaces
-//
-// Revision 1.1  2000/04/11 07:10:54  sparker
-// Completing initialization and problem setup
-// Finishing Exception modifications
-//
-//
 
 #endif
 

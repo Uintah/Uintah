@@ -1,4 +1,4 @@
-SRCDIR := Uintah/testprograms
+SRCDIR := Packages/Uintah/testprograms
 
 SUBDIRS := $(SRCDIR)/TestSuite \
 	$(SRCDIR)/TestMatrix3 \
@@ -10,9 +10,9 @@ PROGRAM := $(SRCDIR)/RunTests
 
 SRCS	= $(SRCDIR)/RunTests.cc
 
-PSELIBS := Uintah/testprograms/TestSuite \
-	Uintah/testprograms/TestMatrix3 \
-	Uintah/testprograms/TestConsecutiveRangeSet
+PSELIBS := Packages/Uintah/testprograms/TestSuite \
+	Packages/Uintah/testprograms/TestMatrix3 \
+	Packages/Uintah/testprograms/TestConsecutiveRangeSet
 
 LIBS := -lm
 

@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_InputContext_H
 
 namespace Uintah {
-   
    /**************************************
      
      CLASS
@@ -46,17 +45,9 @@ namespace Uintah {
       InputContext(const InputContext&);
       InputContext& operator=(const InputContext&);
       
+} // End namespace Uintah
    };
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.1  2000/05/20 08:09:36  sparker
-// Improved TypeDescription
-// Finished I/O
-// Use new XML utility libraries
-//
-//
 
 #endif
 

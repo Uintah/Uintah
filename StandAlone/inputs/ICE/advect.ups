@@ -3,7 +3,7 @@
 
 <!-- @version: -->
 
-<Uintah_specification>
+<Packages/Uintah_specification>
 
    <Meta>
 	<title>Advection test</title>
@@ -216,4 +216,4 @@
         </ICE>
     </InitialConditions>                   
 	
-</Uintah_specification>
+</Packages/Uintah_specification>

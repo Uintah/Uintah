@@ -24,5 +24,5 @@ const char* ProblemSetupException::message() const
 
 const char* ProblemSetupException::type() const
 {
-    return "Uintah::Exceptions::ProblemSetupException";
+    return "Packages/Uintah::Exceptions::ProblemSetupException";
 }

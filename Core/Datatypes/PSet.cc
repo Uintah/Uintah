@@ -1,18 +1,15 @@
 #include "PSet.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Grid.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Grid.h>
 using std::vector;
 namespace Uintah {
-namespace Datatypes {
-
 
 using Uintah::ParticleVariable;
-using SCICore::Datatypes::Persistent;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 
 static Persistent* maker()
 {
@@ -23,8 +20,6 @@ PersistentTypeID PSet::type_id("PSet", "ParticleSet", maker);
 #define PSet_VERSION 3
 void PSet::io(Piostream&)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
     NOT_FINISHED("PSet::io(Piostream&)");
 }
 
@@ -79,8 +74,8 @@ void PSet::compute_bounds()
     ParticleSubset *ps = (*it).getParticleSubset();
     for(ParticleSubset::iterator iter = ps->begin();
 	iter != ps->end(); iter++){
-      max = SCICore::Geometry::Max((*it)[ *iter ], max);
-      min = SCICore::Geometry::Min((*it)[ *iter ], min);
+      max = Max((*it)[ *iter ], max);
+      min = Min((*it)[ *iter ], min);
     }
   }
   if (min == max) {
@@ -93,6 +88,5 @@ void PSet::compute_bounds()
 }
 
 
+} // End namespace Uintah
 
-} // end namespace Datatypes
-} // end namespace Uintah

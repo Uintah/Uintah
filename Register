@@ -155,7 +155,7 @@ if($argu1 ne "-uda"){
 #$t1->cmd('B');
 #$command1 = "java NewBlazer " . $dirName;
 #$result = $t1->cmd($command1) or dienice("Can't execute java");
-#$t1->waitfor(String =>'Uintah', Timeout => 30);
+#$t1->waitfor(String =>'Packages/Uintah', Timeout => 30);
 #$t1->print($command1);
 #$t1->close;
     
@@ -203,13 +203,13 @@ sub description() {
 	  "      \"Unregister <whole uda direcotry name>\" to\n" .
 	  "      unregister it.\n" .
 	  "After you register:\n" .
-	  "      You can go to \"http:\/\/panda.cs.utah.edu\/~Uintah/\"\n" .
+	  "      You can go to \"http:\/\/panda.cs.utah.edu\/~Packages/Uintah/\"\n" .
 	  "      to check your input from blazer database.\n" .
 	  "About Delete old files: \n" .
 	  "      When you want to delete the old files, go to the password\n" .
 	  "      protected admin page to delete your file. \n" .
 	  "The URL for Blazer Server machine: \n" .
-	  "      Blazer's URL is \"http:\/\/panda.cs.utah.edu\/~Uintah/\" \n" .
+	  "      Blazer's URL is \"http:\/\/panda.cs.utah.edu\/~Packages/Uintah/\" \n" .
 	  "Any comments or question: \n" .
 	  "      please send email to xichen\@cs\.utah\.edu \n" );
 }

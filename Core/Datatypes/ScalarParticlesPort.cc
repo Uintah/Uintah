@@ -1,11 +1,9 @@
 
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Uintah {
 using namespace Uintah::Datatypes;
 
 
@@ -23,7 +21,6 @@ UINTAHSHARE OPort* make_ScalarParticlesOPort(Module* module,
 template<> clString SimpleIPort<ScalarParticlesHandle>::port_type("ScalarParticles");
 template<> clString SimpleIPort<ScalarParticlesHandle>::port_color("chartreuse");
 
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 

@@ -1,13 +1,13 @@
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Interface/InputContext.h>
-#include <SCICore/Exceptions/InternalError.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Thread/Time.h>
-#include <PSECore/XMLUtil/SimpleErrorHandler.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Interface/InputContext.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Util/Assert.h>
+#include <Core/Thread/Time.h>
+#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <fstream>
 #include <sax/SAXException.hpp>
@@ -19,10 +19,7 @@
 
 using namespace Uintah;
 using namespace std;
-using namespace SCICore::Exceptions;
-using namespace PSECore::XMLUtil;
-using SCICore::Thread::Time;
-using SCICore::Util::DebugStream;
+using namespace SCIRun;
 
 DebugStream DataArchive::dbg("DataArchive", false);
 
@@ -496,64 +493,3 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 }
 
 
-//
-// $Log$
-// Revision 1.14  2000/11/14 04:00:03  jas
-// Added limits for extraCells.
-//
-// Revision 1.13  2000/11/02 19:19:21  kuzimmer
-// Added particleVariable  query function
-//
-// Revision 1.12  2000/10/04 19:48:01  kuzimmer
-// added some locks since the xerces stuff appears not to be thread safe
-//
-// Revision 1.11  2000/09/25 20:39:14  sparker
-// Quiet g++ compiler warnings
-//
-// Revision 1.10  2000/09/15 22:08:34  witzel
-// Changed the variable hash map structure so that it only parses data xml
-// files for a timestep after that timestep has be queried (instead of
-// parsing all of them at first).   Also added d_lastFoundIt members to
-// TimeHashMaps and PatchHashMaps to speed things up when multiple queries
-// are made to the same timestep and/or patch (doesn't really seem to have
-// much of an affect, but I'll keep it for now anyway).
-//
-// Revision 1.9  2000/09/14 23:59:06  witzel
-// Changed findVariable method to make it much more efficient and not
-// have to search through xml files over and over again.  The first
-// time it is called it creates a data structure with hash tables to
-// speed up variable searches on subsequent calls.
-//
-// Revision 1.8  2000/07/27 22:39:52  sparker
-// Implemented MPIScheduler
-// Added associated support
-//
-// Revision 1.7  2000/06/27 18:28:36  bigler
-// Steve did some fixing up and moving around
-//
-// Revision 1.6  2000/06/15 21:57:21  sparker
-// Added multi-patch support (bugzilla #107)
-// Changed interface to datawarehouse for particle data
-// Particles now move from patch to patch
-//
-// Revision 1.5  2000/05/31 18:01:34  sparker
-// More region backwards compatibility
-//
-// Revision 1.4  2000/05/31 03:11:12  sparker
-// Made reader backwards compatible with pre-patch uda files
-//
-// Revision 1.3  2000/05/30 20:19:40  sparker
-// Changed new to scinew to help track down memory leaks
-// Changed region to patch
-//
-// Revision 1.2  2000/05/21 08:19:11  sparker
-// Implement NCVariable read
-// Do not fail if variable type is not known
-// Added misc stuff to makefiles to remove warnings
-//
-// Revision 1.1  2000/05/20 08:09:35  sparker
-// Improved TypeDescription
-// Finished I/O
-// Use new XML utility libraries
-//
-//

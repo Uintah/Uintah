@@ -50,18 +50,15 @@ int cubic_poly_roots(double b, double c, double d,
     // let t = r * exp(i*theta_t) = r * cos(theta_t) + i * r * sin(theta_t)
     //     u = r * exp(i*theta_u) = r * cos(theta_u) + i * r * sin(theta_u)
     // /* |t| = |u| = r is KEY to rest of this!!! */
-    //
     // if y = t - u is real, Im(t) = Im(u) ->
     //   sin(theta_t) = sin(theta_u) ->
     //   theta_t = theta_u + 2*n*pi or theta_t = pi - theta_u + 2*n*pi ->
     //   cos(theta_t) = cos(theta_u) or cos(theta_t) = -cos(theta_u) ->
     //   t - u = 0 (trival case already handled) or t - u = 2*r*cos(theta_t)
-    //
     // let theta = theta_t (for simplicity of names)
     // let t^3 = r^3 * exp(i * theta_3)
     // t = r * exp(i * (theta_3 / 3 + 2*n*pi / 3)), n = 0, 1, 2
     // theta = theta_3 / 3 + 2*n*pi / 3, n = 0, 1, 2
-    //
     // Note: if t3deter <= 0, all 3 roots are real (I don't know
     // the proof but it says that here:
     // http://mathworld.wolfram.com/CubicEquation.html)

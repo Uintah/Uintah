@@ -2,7 +2,7 @@
  *  RescaleColorMapForParticles.cc.cc:  Generate Color maps
  *
  *  Written by:
- *   Kurt Zimmerman
+ *   Packages/Kurt Zimmerman
  *   Department of Computer Science
  *   University of Utah
  *   December 1999
@@ -11,27 +11,18 @@
  */
 
 #include "RescaleColorMapForParticles.h"
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <Uintah/Grid/ParticleSubset.h>
-#include <Uintah/Datatypes/ScalarParticles.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Grid/ParticleSubset.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 
 namespace Uintah {
-namespace Modules {
-
 using Uintah::ParticleSubset;
 
-using SCICore::Datatypes::ColorMap;
-using SCICore::Datatypes::ColorMapHandle;
+using namespace SCIRun;
 using Uintah::Datatypes::ScalarParticles;
 using Uintah::Datatypes::ScalarParticlesHandle;
-using PSECore::Datatypes::ScalarParticlesIPort;
-using PSECore::Datatypes::ColorMapOPort;
-using PSECore::Datatypes::ColorMapIPort;
-using PSECore::Dataflow::Module;
 
-using namespace SCICore::TclInterface;
-using SCICore::Containers::clString;
 
 RescaleColorMapForParticles::RescaleColorMapForParticles(const clString& id)
 : Module("RescaleColorMapForParticles", id, Filter),
@@ -99,7 +90,6 @@ void RescaleColorMapForParticles::execute()
 extern "C" Module* make_RescaleColorMapForParticles( const clString& id ) {
   return scinew RescaleColorMapForParticles( id );
 }
+} // End namespace Uintah
 
-} // End namespace Modules
-} // End namespace Kurt
 

@@ -1,13 +1,13 @@
 #ifndef UINTAH_HOMEBREW_DataArchive_H
 #define UINTAH_HOMEBREW_DataArchive_H
 
-#include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/GridP.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Packages/Uintah/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Grid/NCVariable.h>
+#include <Packages/Uintah/Grid/CCVariable.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
 #include <string>
 #include <vector>
 #include <list>
@@ -32,11 +32,7 @@ using std::dec;
 #include <unistd.h>
 
 namespace Uintah {
-   class Patch;
-   using SCICore::Thread::Mutex;
-   using SCICore::Thread::Time;
-   using namespace PSECore::XMLUtil;
-   using SCICore::Util::DebugStream;
+using namespace SCIRun;
    using namespace std;
 
    struct eqstr { // comparison class used in hash_map to compare keys
@@ -62,7 +58,7 @@ namespace Uintah {
       
        DataArchive.h
       
-       Kurt Zimmerman
+       Packages/Kurt Zimmerman
        Department of Computer Science
        University of Utah
       
@@ -622,70 +618,9 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
     dbg << "DataArchive::query(values) completed in "
         << (Time::currentSeconds() - call_start) << " seconds\n";
 }
+} // End namespace Uintah
 
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.14  2000/11/28 04:10:53  jas
-// Added X,Y,Z FCVariables and got rid of some compiler warnings.
-//
-// Revision 1.13  2000/11/02 19:19:21  kuzimmer
-// Added particleVariable  query function
-//
-// Revision 1.12  2000/09/25 18:13:09  sparker
-// Do not use 64 bit lseek64 except on SGI
-//
-// Revision 1.11  2000/09/15 22:08:34  witzel
-// Changed the variable hash map structure so that it only parses data xml
-// files for a timestep after that timestep has be queried (instead of
-// parsing all of them at first).   Also added d_lastFoundIt members to
-// TimeHashMaps and PatchHashMaps to speed things up when multiple queries
-// are made to the same timestep and/or patch (doesn't really seem to have
-// much of an affect, but I'll keep it for now anyway).
-//
-// Revision 1.10  2000/09/14 23:59:06  witzel
-// Changed findVariable method to make it much more efficient and not
-// have to search through xml files over and over again.  The first
-// time it is called it creates a data structure with hash tables to
-// speed up variable searches on subsequent calls.
-//
-// Revision 1.9  2000/08/12 23:29:18  jehall
-// Added a DataArchive query for tracking the value of a variable at a
-// node/cell across multiple timesteps.
-//
-// Revision 1.8  2000/07/11 19:44:50  kuzimmer
-// commented out line 284:  ASSERT(td == NCVariable<T>::getTypeDescription()); This was failing because two NCVariable<double> typeDescriptors were getting created.  This should not happen, so a bug report has been filed
-//
-// Revision 1.7  2000/06/27 18:28:35  bigler
-// Steve did some fixing up and moving around
-//
-// Revision 1.6  2000/06/15 21:57:22  sparker
-// Added multi-patch support (bugzilla #107)
-// Changed interface to datawarehouse for particle data
-// Particles now move from patch to patch
-//
-// Revision 1.5  2000/05/30 20:19:40  sparker
-// Changed new to scinew to help track down memory leaks
-// Changed region to patch
-//
-// Revision 1.4  2000/05/21 08:19:11  sparker
-// Implement NCVariable read
-// Do not fail if variable type is not known
-// Added misc stuff to makefiles to remove warnings
-//
-// Revision 1.3  2000/05/20 08:09:36  sparker
-// Improved TypeDescription
-// Finished I/O
-// Use new XML utility libraries
-//
-// Revision 1.2  2000/05/20 02:34:56  kuzimmer
-// Multiple changes for new vis tools and DataArchive
-//
-// Revision 1.1  2000/05/18 16:01:30  sparker
-// Add data archive interface
-//
-//
 
 #endif
 

@@ -1,5 +1,4 @@
 
-// $Id$
 
 /*
  *  ParameterNotFound.h: 
@@ -13,14 +12,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Uintah_Exceptions_ParameterNotFound_h
-#define Uintah_Exceptions_ParameterNotFound_h
+#ifndef Packages/Uintah_Exceptions_ParameterNotFound_h
+#define Packages/Uintah_Exceptions_ParameterNotFound_h
 
-#include <Uintah/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Exceptions/ProblemSetupException.h>
 #include <string>
 
 namespace Uintah {
-   class ParameterNotFound : public ProblemSetupException {
    public:
       ParameterNotFound(const std::string&);
       ParameterNotFound(const ParameterNotFound&);
@@ -29,18 +27,9 @@ namespace Uintah {
    protected:
    private:
       ParameterNotFound& operator=(const ParameterNotFound&);
+} // End namespace Uintah
    };
-}
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/04/26 06:48:40  sparker
-// Streamlined namespaces
-//
-// Revision 1.1  2000/04/12 22:57:47  sparker
-// Added new exception classes
-//
-//
 

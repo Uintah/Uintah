@@ -1,4 +1,4 @@
-itcl_class Uintah_Visualization_RescaleColorMapForParticles { 
+itcl_class Packages/Uintah_Visualization_RescaleColorMapForParticles { 
 
     inherit Module 
 

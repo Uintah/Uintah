@@ -1,16 +1,12 @@
-#
 #  NodeHedgehog.tcl
-#
 #  Written by:
 #   James Bigler & Steve Parker
 #   Department of Computer Science
 #   University of Utah
 #   June 2000
-#
 #  Copyright (C) 2000 SCI Group
-#
 
-itcl_class Uintah_Visualization_NodeHedgehog {
+itcl_class Packages/Uintah_Visualization_NodeHedgehog {
     inherit Module
     constructor {config} {
 	set name NodeHedgehog

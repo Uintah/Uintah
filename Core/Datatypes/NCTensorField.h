@@ -2,19 +2,17 @@
 #define SCI_project_NCTensorField_h 1
 
 #include "TensorField.h"
-#include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/LevelP.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/IntVector.h>
+#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Grid/NCVariable.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
 #include <vector>
 
-namespace SCICore {
-  namespace Datatypes {
-
-using namespace SCICore::Geometry;
+namespace Uintah {
+using namespace SCIRun;
 using namespace Uintah;
 using std::vector;
 
@@ -51,9 +49,8 @@ private:
   IntVector low;
   IntVector high;
 };
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace SCICore
 
 #endif
 

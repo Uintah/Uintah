@@ -8,7 +8,6 @@
 #include <dom/DOM_Element.hpp>
 
 namespace Uintah {
-   
    /**************************************
      
      CLASS
@@ -53,21 +52,9 @@ namespace Uintah {
       OutputContext(const OutputContext&);
       OutputContext& operator=(const OutputContext&);
       
+} // End namespace Uintah
    };
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.2  2000/05/20 08:09:36  sparker
-// Improved TypeDescription
-// Finished I/O
-// Use new XML utility libraries
-//
-// Revision 1.1  2000/05/15 19:39:53  sparker
-// Implemented initial version of DataArchive (output only so far)
-// Other misc. cleanups
-//
-//
 
 #endif
 

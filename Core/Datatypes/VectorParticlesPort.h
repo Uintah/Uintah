@@ -14,18 +14,15 @@
 #ifndef SCI_project_VectorParticlesPort_h
 #define SCI_project_VectorParticlesPort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
+#include <Dataflow/Ports/SimplePort.h>
 #include "VectorParticles.h"
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Uintah {
 using namespace Uintah::Datatypes;
 
 typedef SimpleIPort<VectorParticlesHandle> VectorParticlesIPort;
 typedef SimpleOPort<VectorParticlesHandle> VectorParticlesOPort;
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 
 #endif

@@ -1,12 +1,9 @@
 #include "Archive.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
-namespace Datatypes {
-
-using SCICore::Datatypes::Persistent;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 
 
 static Persistent* maker()
@@ -18,8 +15,6 @@ PersistentTypeID Archive::type_id("Data Archive", "Archive", maker);
 #define Archive_VERSION 3
 void Archive::io(Piostream&)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
     NOT_FINISHED("Archive::io(Piostream&)");
 }
 Archive::Archive() :
@@ -35,6 +30,5 @@ Archive::Archive(DataArchive *ar) :
 Archive::~Archive()
 {
 }
+} // End namespace Uintah
 
-} // end namespace Datatypes
-} // end namespace Uintah

@@ -4,7 +4,6 @@
 #include <mpi.h>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
@@ -72,18 +71,8 @@ WARNING
       ProcessorGroup(const ProcessorGroup&);
       ProcessorGroup& operator=(const ProcessorGroup&);
    };
+} // End namespace Uintah
    
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.2  2000/07/27 22:39:54  sparker
-// Implemented MPIScheduler
-// Added associated support
-//
-// Revision 1.1  2000/06/17 07:06:49  sparker
-// Changed ProcessorContext to ProcessorGroup
-//
-//
 
 #endif

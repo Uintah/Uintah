@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  NodeHedgehog.cc:  
@@ -12,32 +11,32 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Geom/GeomArrows.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/NodeIterator.h>
-#include <Uintah/Grid/CellIterator.h>
-#include <Uintah/Datatypes/ArchivePort.h>
-#include <Uintah/Datatypes/Archive.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Geom/GeomArrows.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Grid/NodeIterator.h>
+#include <Packages/Uintah/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/Core/Datatypes/Archive.h>
 
-#include <PSECore/Widgets/ScaledBoxWidget.h>
-#include <PSECore/Widgets/ScaledFrameWidget.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Widgets/ScaledFrameWidget.h>
 #include <iostream>
 #include <vector>
 
@@ -48,18 +47,9 @@ using std::vector;
 #define CP_SURFACE 1
 #define CP_CONTOUR 2
 
-namespace PSECommon {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
-using namespace SCICore::Containers;
+namespace Uintah {
+using namespace SCIRun;
 using namespace Uintah::Datatypes;
-using namespace SCICore::Geometry;
 
 /**************************************
 CLASS
@@ -116,19 +106,16 @@ class NodeHedgehog : public Module {
   
   // GROUP:  Widgets:
   //////////////////////
-  //
   // widget_moved -  
   virtual void widget_moved(int last);
 
   // GROUP: Private Function:
   //////////////////////
-  //
   // getGrid -
   GridP getGrid();
 
   // GROUP: Private Function:
   //////////////////////
-  //
   // add_arrow -
   void add_arrow(VectorFieldHandle vfield, ScalarFieldHandle ssfield,
 		 int have_sfield, int exhaustive, ColorMapHandle cmap,
@@ -152,12 +139,9 @@ public:
  
         // GROUP:  Constructors:
         ///////////////////////////
-        //
         // Constructs an instance of class NodeHedgehog
-        //
         // Constructor taking
         //    [in] id as an identifier
-        //
    NodeHedgehog(const clString& id);
        
         // GROUP:  Destructor:
@@ -167,12 +151,10 @@ public:
   
         // GROUP:  Access functions:
         ///////////////////////////
-        //
         // execute() - execution scheduled by scheduler
    virtual void execute();
 
         //////////////////////////
-        //
         // tcl_commands - overides tcl_command in base class Module, takes:
         //                                  findxy,
         //                                  findyz,
@@ -512,76 +494,6 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+} // End namespace Uintah
 
-} // End namespace Modules
-} // End namespace PSECommon
 
-//
-// $Log$
-// Revision 1.5  2000/08/30 18:47:06  bigler
-// Added Cell centered viewing of vector fields.
-//
-// Revision 1.4  2000/08/09 03:18:09  jas
-// Changed new to scinew and added deletes to some of the destructors.
-//
-// Revision 1.3  2000/08/03 15:09:21  bigler
-// Fixed some bugs that was causing the module to crash when
-// the 2d widget on the xz plane was selected.  Also a bug that
-// was sending a faulty box to getNodeIterator.  Must have previously
-// checked in the wrong file???  Anyway, it works now.
-//
-// Revision 1.2  2000/06/27 17:13:19  bigler
-// Took out some old code.
-//
-// Revision 1.1  2000/06/27 15:23:56  bigler
-// Inital versions of a module that works like Hedgehog
-// except the vectors are originated from the node positions.
-//
-// Revision 1.8  2000/03/17 09:27:32  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/10/07 02:07:06  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/08/29 00:46:46  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/25 03:48:07  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:57  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:20:07  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:49  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:13  mcq
-// Initial commit
-//
-// Revision 1.3  1999/06/21 23:52:52  dav
-// updated makefiles.main
-//
-// Revision 1.2  1999/05/11 19:48:03  dav
-// updated Hedgehog
-//
-// Revision 1.1.1.1  1999/04/24 23:12:33  dav
-// Import sources
-//
-//

@@ -1,18 +1,14 @@
 #ifndef __VISUALIZATION_EIGENEVALUATOR_H__
 #define __VISUALIZATION_EIGENEVALUATOR_H__
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Containers/String.h>
-#include <Uintah/Datatypes/TensorFieldPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Containers/String.h>
+#include <Packages/Uintah/Core/Datatypes/TensorFieldPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
 
 namespace Uintah {
-namespace Modules {
-  using namespace SCICore::Containers;
-  using namespace PSECore::Dataflow;
-  using namespace SCICore::Datatypes;
-  using namespace PSECore::Datatypes;
+using namespace SCIRun;
 
   class EigenEvaluator: public Module {
   public:
@@ -28,8 +24,7 @@ namespace Modules {
 
     ScalarFieldOPort *sfout; // for eigen values
     VectorFieldOPort *vfout; // for eigen vectors
+} // End namespace Uintah
   };
-}
-}
 #endif // __VISUALIZATION_EIGENEVALUATOR_H__
 

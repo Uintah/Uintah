@@ -19,5 +19,5 @@ InvalidValue::~InvalidValue()
 
 const char* InvalidValue::type() const
 {
-    return "Uintah::Exceptions::InvalidValue";
+    return "Packages/Uintah::Exceptions::InvalidValue";
 }

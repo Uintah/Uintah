@@ -1,5 +1,4 @@
 
-// $Id$
 
 /*
  *  ProblemSetupException.h: 
@@ -13,14 +12,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Uintah_Exceptions_ProblemSetupException_h
-#define Uintah_Exceptions_ProblemSetupException_h
+#ifndef Packages/Uintah_Exceptions_ProblemSetupException_h
+#define Packages/Uintah_Exceptions_ProblemSetupException_h
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 #include <string>
 
 namespace Uintah {
-   class ProblemSetupException : public SCICore::Exceptions::Exception {
    public:
       ProblemSetupException(const std::string& msg);
       ProblemSetupException(const ProblemSetupException&);
@@ -30,19 +28,9 @@ namespace Uintah {
    private:
       std::string d_msg;
       ProblemSetupException& operator=(const ProblemSetupException&);
+} // End namespace Uintah
    };
-}
 
 #endif
 
-//
-// $Log$
-// Revision 1.5  2000/04/26 06:48:41  sparker
-// Streamlined namespaces
-//
-// Revision 1.4  2000/04/11 07:10:44  sparker
-// Completing initialization and problem setup
-// Finishing Exception modifications
-//
-//
 

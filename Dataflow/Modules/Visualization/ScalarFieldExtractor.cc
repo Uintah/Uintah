@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Kurt Zimmerman
+    Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -29,25 +29,25 @@ LOG
 ****************************************/
 #include "ScalarFieldExtractor.h"
 
-#include <SCICore/Util/NotFinished.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/TypeDescription.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <Uintah/Datatypes/NCScalarField.h>
-#include <Uintah/Datatypes/CCScalarField.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/NodeIterator.h>
+#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Datatypes/NCScalarField.h>
+#include <Packages/Uintah/Core/Datatypes/CCScalarField.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Grid/NodeIterator.h>
  
-//#include <Uintah/Datatypes/DumbScalarField.h>
+//#include <Packages/Uintah/Core/Datatypes/DumbScalarField.h>
 #include <iostream> 
 #include <sstream>
 #include <string>
@@ -58,15 +58,10 @@ using std::vector;
 using std::string;
 
 namespace Uintah {
-namespace Modules {
-
-using SCICore::Containers::to_string;
-using namespace SCICore::TclInterface;
-using SCICore::Geometry::BBox;
+using namespace SCIRun;
 using namespace Uintah;
 using namespace Uintah::Datatypes;
-using SCICore::Datatypes::ScalarFieldRGdouble;
-  //using SCICore::Datatypes::DumbScalarField;
+  //using DumbScalarField;
 
 extern "C" Module* make_ScalarFieldExtractor( const clString& id ) {
   return scinew ScalarFieldExtractor( id ); 
@@ -364,7 +359,7 @@ void ScalarFieldExtractor::execute()
   }
   return;
 
-//   UintahScalarField* sf = UintahScalarField::make( archive, grid, level,
+//   Packages/UintahScalarField* sf = Packages/UintahScalarField::make( archive, grid, level,
 // 						   type, sVar.get()(),
 // 						   sMatNum.get(),
 // 						   times[idx]);
@@ -373,7 +368,6 @@ void ScalarFieldExtractor::execute()
 //   }
 
 }
+} // End namespace Uintah
 //--------------------------------------------------------------- 
-} // end namespace Modules
-} // end namespace Kurt
   

@@ -1,16 +1,12 @@
-#
 #  GridVisualizer.tcl
-#
 #  Written by:
 #   James Bigler
 #   Department of Computer Science
 #   University of Utah
 #   Aug. 2000
-#
 #  Copyright (C) 2000 SCI Group
-#
 
-itcl_class Uintah_Visualization_GridVisualizer {
+itcl_class Packages/Uintah_Visualization_GridVisualizer {
     inherit Module
 
     protected var_list ""

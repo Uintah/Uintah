@@ -14,18 +14,15 @@
 #ifndef SCI_project_ArchivePort_h
 #define SCI_project_ArchivePort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
+#include <Dataflow/Ports/SimplePort.h>
 #include "Archive.h"
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Uintah {
 using namespace Uintah::Datatypes;
 
 typedef SimpleIPort<ArchiveHandle> ArchiveIPort;
 typedef SimpleOPort<ArchiveHandle> ArchiveOPort;
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 
 #endif

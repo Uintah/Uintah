@@ -1,12 +1,10 @@
 #include "TensorField.h"
 
-#include <SCICore/Containers/String.h>
+#include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
 
-namespace SCICore {
-namespace Datatypes {
-
+namespace Uintah {
 PersistentTypeID TensorField::type_id("TensorField", "Datatype", 0);
 
 #define TENSORFIELD_VERSION 1
@@ -25,7 +23,6 @@ void TensorField::get_bounds(Point& min, Point& max){
     }
     max=bmax;
     min=bmin;
+} // End namespace Uintah
 }
-} // End namespace Datatypes
-} // End namespace SCICore
 

@@ -1,21 +1,18 @@
 #include "TensorParticlesOperator.h"
 #include "TensorOperatorFunctors.h"
 #include <math.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <Uintah/Datatypes/TensorField.h>
-#include <Uintah/Datatypes/NCTensorField.h>
-#include <Uintah/Datatypes/CCTensorField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGCC.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/VectorFieldRGCC.h>
-//#include <SCICore/Math/Mat.h>
+#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/TensorField.h>
+#include <Packages/Uintah/Core/Datatypes/NCTensorField.h>
+#include <Packages/Uintah/Core/Datatypes/CCTensorField.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGCC.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/VectorFieldRGCC.h>
+//#include <Core/Math/Mat.h>
 
 namespace Uintah {
-namespace Modules {
- 
-using namespace SCICore::Containers;
-using namespace PSECore::Dataflow;
+using namespace SCIRun;
 
 
 extern "C" Module* make_TensorParticlesOperator( const clString& id ) { 
@@ -121,6 +118,5 @@ void computeScalars(TensorParticles* pTP, ScalarParticles* pSP,
     pSP->AddVar(scalarSet);
   }
 }
+} // End namespace Uintah
 
-}
-}
