@@ -7,6 +7,7 @@ SRCDIR   := Packages/rtrt/Core
 
 SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/gl_test.cc \
+	$(SRCDIR)/Trigger.cc \
 	$(SRCDIR)/VolumeVis.cc \
 	$(SRCDIR)/VolumeVisDpy.cc \
 	$(SRCDIR)/DpyBase.cc \

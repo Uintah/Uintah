@@ -21,6 +21,7 @@
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/PPMImage.h>
+#include <Packages/rtrt/Core/Trigger.h>
 #if !defined(linux)
 #  include <Packages/rtrt/Sound/SoundThread.h>
 #  include <Packages/rtrt/Sound/Sound.h>
@@ -44,14 +45,6 @@ namespace rtrt {
   extern float glyph_threshold;
 }
   
-
-////////////////////////////////////////////
-// OOGL stuff
-extern BasicTexture * blendTex;
-extern ShadedPrim   * blendTexQuad;
-extern Blend * blend;
-static double alpha = 0.0;
-static double offset = 0.01;
 ////////////////////////////////////////////
 
 extern "C" Display *__glutDisplay;
@@ -139,8 +132,9 @@ static int routeNumber = 0;
 
 Gui::Gui() :
   selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
-  selectedSoundId_(0), soundsWindowVisible(false),
-  routeWindowVisible(false), lightsWindowVisible(false),
+  selectedTriggerId_(-1), selectedSoundId_(0), soundsWindowVisible(false),
+  routeWindowVisible(false), lightsWindowVisible(false), 
+  triggersWindowVisible(false),
   objectsWindowVisible(false), mainWindowVisible(true),
   lightList(NULL), routeList(NULL), objectList(NULL), soundList_(NULL),
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
@@ -261,24 +255,9 @@ Gui::setupFonts()
   glXUseXFont(id, first, last-first+1, fontbase2+first);
 }
 
-extern PPMImage * ppm1;
-
 void
 Gui::idleFunc()
 {
-  static bool inited = false;
-  static vector<PPMImage *> images;
-
-  if( !inited ) {
-    string path = "/usr/sci/data/Geometry/interface/photos/";
-    images.push_back( new PPMImage( path+"hogum.box.small.ppm", true ) );
-    images.push_back( new PPMImage( path+"NURBS.scene.4.smaller.ppm", true ) );
-    images.push_back( new PPMImage( path+"box.scratches.few.ppm", true ) );
-    images.push_back( new PPMImage( path+"david_brow_blue_noS_A.ppm", true ) );
-    images.push_back( ppm1 );
-    inited = true;
-  }
-
   Dpy               * dpy = activeGui->dpy_;
   struct DpyPrivate * priv = activeGui->priv;
 
@@ -289,34 +268,55 @@ Gui::idleFunc()
 
   if( activeGui->enableSounds_ )
     {
-      activeGui->enableSounds_ = false;
+      // Sound Thread has finished loading sounds and is now active...
+      // ...so turn on the sound GUIs.
+      activeGui->enableSounds_ = false; 
       activeGui->openSoundPanelBtn_->enable();
       activeGui->soundVolumeSpinner_->enable();
       activeGui->startSoundThreadBtn_->set_name( "Sounds Started" );
     }
 
-  if( dpy->fullScreenMode_ ) {
-    ////////////////////////////////////////////
-    // OOGL stuff
-    blend->alpha( alpha );
-    alpha += offset;
-    if( alpha > 1 )
-      {
-	alpha = 1.0;
-	offset = -offset;
-      }
-    else if( alpha < 0 )
-      {
-	alpha = 0.0;
-	offset = -offset;
+  ///////////////////////////////////////////////////////////
+  // Handle Active Triggers
+  if( activeGui->activeTriggers_.size() > 0 )
+    {
+      bool done = false;
+      vector<Trigger*>::iterator iter = activeGui->activeTriggers_.end();
+      iter--;
 
-	static int position = 0;
-	position = (position + 1)%images.size();
-	blendTex->reset( GL_FLOAT, &((*images[position])(0,0)) );
-      }
-    blendTexQuad->draw();
-    ////////////////////////////////////////////
-  }
+      while( !done )
+	{
+	  bool result = (*iter)->advance();
+	  if( result == false ) // remove from active list.
+	    {
+	      iter = activeGui->activeTriggers_.erase( iter );
+	    }
+	  if( iter == activeGui->activeTriggers_.begin() || 
+	      activeGui->activeTriggers_.size() == 0 )
+	    {
+	      done = true;
+	    }
+	  else
+	    {
+	      iter--;
+	    }
+	}
+    }
+
+  // Check all triggers.
+  vector<Trigger*> & triggers = dpy->scene->getTriggers();
+  for( int cnt = 0; cnt < triggers.size(); cnt++ )
+    {
+      Trigger * trigger = triggers[cnt];
+      bool result = trigger->check( activeGui->camera_->eye );
+      if( result == true )
+	{
+	  activeGui->activeTriggers_.push_back( trigger );
+	}
+    }
+  // Done handling triggers
+  ///////////////////////////////////////////////////////////
+
 
   // I know this is a hack... 
   if( dpy->showImage_ ){
@@ -1018,6 +1018,16 @@ Gui::toggleObjectsWindowCB( int /*id*/ )
 }
 
 void
+Gui::toggleTriggersWindowCB( int /*id*/ )
+{
+  if( activeGui->triggersWindowVisible )
+    activeGui->triggersWindow_->hide();
+  else
+    activeGui->triggersWindow_->show();
+  activeGui->triggersWindowVisible = !activeGui->triggersWindowVisible;
+}
+
+void
 Gui::toggleSoundWindowCB( int /*id*/ )
 {
   if( activeGui->soundsWindowVisible )
@@ -1332,6 +1342,44 @@ Gui::createSoundsWindow( GLUI * window )
 }
 
 void
+Gui::createTriggersWindow( GLUI * window )
+{
+  vector<Trigger*> triggers = dpy_->scene->getTriggers();
+
+  GLUI_Panel * panel = window->add_panel( "Triggers" );
+
+  triggerList_ = window->add_listbox_to_panel( panel, "Selected Trigger",
+					       &selectedTriggerId_ );
+					     
+  GLUI_Button * doit = window->add_button_to_panel( panel, "Activate",
+						    -1, activateTriggerCB );
+
+  window->add_button( "Close", -1, toggleTriggersWindowCB );
+
+  if( triggers.size() > 0 ) selectedTriggerId_ = 0;
+
+  for( int num = 0; num < triggers.size(); num++ )
+    {
+      char name[ 1024 ];
+      sprintf( name, "%s", triggers[ num ]->getName().c_str() );
+      cout << "name: " << name << "\n";
+
+      triggerList_->add_item( num, name );
+    }
+}
+
+void
+Gui::activateTriggerCB( int /* id */ )
+{
+  if( activeGui->selectedTriggerId_ == -1 ) return;
+  vector<Trigger*> triggers = activeGui->dpy_->scene->getTriggers();
+  Trigger * trig = triggers[ activeGui->selectedTriggerId_ ];
+
+  trig ->activate();
+  activeGui->activeTriggers_.push_back( trig );
+}
+
+void
 Gui::startSoundThreadCB( int /*id*/ )
 {
 #if !defined(linux)
@@ -1568,7 +1616,6 @@ Gui::createLightWindow( GLUI * window )
 
   window->add_button_to_panel( panel, "Close",
 			       1, toggleLightsWindowCB );
-
 }
 
 
@@ -1601,10 +1648,11 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
     activeGui->mainWindowVisible = false;
   }
 
-  activeGui->routeWindow = GLUI_Master.create_glui( "Route", 0, 400, 400 );
-  activeGui->lightsWindow = GLUI_Master.create_glui( "Lights", 0, 500, 400 );
-  activeGui->objectsWindow = GLUI_Master.create_glui( "Objects", 0, 600, 400 );
-  activeGui->soundsWindow = GLUI_Master.create_glui( "Sounds", 0, 700, 400 );
+  activeGui->routeWindow     = GLUI_Master.create_glui( "Route",0,400,400 );
+  activeGui->lightsWindow    = GLUI_Master.create_glui( "Lights",0,500,400 );
+  activeGui->objectsWindow   = GLUI_Master.create_glui( "Objects",0,600,400 );
+  activeGui->soundsWindow    = GLUI_Master.create_glui( "Sounds",0,700,400 );
+  activeGui->triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,800,400 );
 
   activeGui->getStringWindow = 
                     GLUI_Master.create_glui( "Input Request", 0, 400, 400 );
@@ -1618,12 +1666,14 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->lightsWindow->hide();
   activeGui->objectsWindow->hide();
   activeGui->soundsWindow->hide();
+  activeGui->triggersWindow_->hide();
 
   activeGui->getStringWindow->hide();
 
   activeGui->createRouteWindow( activeGui->routeWindow );
   activeGui->createLightWindow( activeGui->lightsWindow );
   activeGui->createObjectWindow( activeGui->objectsWindow );
+  activeGui->createTriggersWindow( activeGui->triggersWindow_ );
   activeGui->createGetStringWindow( activeGui->getStringWindow );
 
   /////////////////////////////////////////////////////////
@@ -1815,20 +1865,28 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
     add_button_to_panel( button_panel, "Routes",
 			 ROUTE_BUTTON_ID, toggleRoutesWindowCB );
   activeGui->mainWindow->add_column_to_panel( button_panel );
+
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Lights",
 			 LIGHTS_BUTTON_ID, toggleLightsWindowCB );
   activeGui->mainWindow->add_column_to_panel( button_panel );
+
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Objects",
 			 OBJECTS_BUTTON_ID, toggleObjectsWindowCB );
   activeGui->mainWindow->add_column_to_panel( button_panel );
+
   activeGui->openSoundPanelBtn_ = activeGui->mainWindow->
     add_button_to_panel( button_panel, "Sounds",
 			 OBJECTS_BUTTON_ID, toggleSoundWindowCB );
   activeGui->openSoundPanelBtn_->disable();
+  activeGui->mainWindow->add_column_to_panel( button_panel );
+
+  activeGui->mainWindow->
+    add_button_to_panel( button_panel, "Triggers",
+			 OBJECTS_BUTTON_ID, toggleTriggersWindowCB );
   printf("done createmenus\n");
-}
+} // end createMenus()
 
 const string
 Gui::getFacingString() const
@@ -1973,9 +2031,11 @@ Gui::toggleGui()
     objectsWindow->hide();
     soundsWindow->hide();
     lightsWindow->hide();
+    triggersWindow_->hide();
     mainWindow->hide();
     
     lightsWindowVisible = false;
+    triggersWindowVisible = false;
     routeWindowVisible = false;
     objectsWindowVisible = false;
     soundsWindowVisible = false;
