@@ -2,6 +2,8 @@
 #ifndef UINTAH_HOMEBREW_CCVariableBase_H
 #define UINTAH_HOMEBREW_CCVariableBase_H
 
+#include <Uintah/Grid/Variable.h>
+
 namespace SCICore {
    namespace Geometry {
       class IntVector;
@@ -42,7 +44,7 @@ WARNING
   
 ****************************************/
 
-   class CCVariableBase {
+   class CCVariableBase : public Variable {
    public:
       
       virtual ~CCVariableBase();
@@ -71,6 +73,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.3  2000/05/31 04:01:51  rawat
 // partially completed CCVariable implementation
 //

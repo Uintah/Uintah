@@ -40,6 +40,7 @@ namespace Uintah {
 	 // rotation increment (3 x 3 matrix)
 	 Matrix3 rotationIncrement;
 
+      public:
 	 struct CMData {
 	    // ConstitutiveModel's properties
 	    // Young's Modulus
@@ -47,6 +48,7 @@ namespace Uintah {
 	    // Poisson's Ratio
 	    double PoiRat;
 	 };
+      private:
 	 friend const TypeDescription* fun_getTypeDescription(CMData*);
 	 
       public:
@@ -178,6 +180,10 @@ namespace Uintah {
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.15  2000/07/27 22:39:44  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.14  2000/06/15 21:57:05  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

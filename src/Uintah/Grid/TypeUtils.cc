@@ -19,7 +19,7 @@ const TypeDescription* fun_getTypeDescription(double*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::double_type,
-				  "double", true);
+				  "double", true, MPI_DOUBLE);
    }
    return td;
 }
@@ -29,7 +29,7 @@ const TypeDescription* fun_getTypeDescription(int*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::int_type,
-				  "int", true);
+				  "int", true, MPI_INT);
    }
    return td;
 }
@@ -39,7 +39,13 @@ const TypeDescription* fun_getTypeDescription(long*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::long_type,
-				  "long", true);
+				  "long", true,
+#ifdef SCI_64BITS
+      MPI_LONG_LONG_INT
+#else
+      MPI_LONG
+#endif
+      );
    }
    return td;
 }
@@ -49,29 +55,43 @@ const TypeDescription* fun_getTypeDescription(bool*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::bool_type,
-				  "bool", true);
+				  "bool", true, MPI_UB);
    }
    return td;
+}
+
+static MPI_Datatype makeMPI_Point()
+{
+   ASSERTEQ(sizeof(Point), sizeof(double)*3);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   return mpitype;
 }
 
 const TypeDescription* fun_getTypeDescription(Point*)
 {
    static TypeDescription* td;
    if(!td){
-      ASSERTEQ(sizeof(Point), sizeof(double)*3);
       td = scinew TypeDescription(TypeDescription::Point,
-				  "Point", true);
+				  "Point", true, &makeMPI_Point);
    }
    return td;
+}
+
+static MPI_Datatype makeMPI_Vector()
+{
+   ASSERTEQ(sizeof(Vector), sizeof(double)*3);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   return mpitype;
 }
 
 const TypeDescription* fun_getTypeDescription(Vector*)
 {
    static TypeDescription* td;
    if(!td){
-      ASSERTEQ(sizeof(Vector), sizeof(double)*3);
       td = scinew TypeDescription(TypeDescription::Vector,
-				  "Vector", true);
+				  "Vector", true, &makeMPI_Vector);
    }
    return td;
 }
@@ -80,6 +100,10 @@ const TypeDescription* fun_getTypeDescription(Vector*)
 
 //
 // $Log$
+// Revision 1.4  2000/07/27 22:39:51  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.3  2000/06/02 17:22:14  guilkey
 // Added long_type to the the TypeDescription and TypeUtils.
 //

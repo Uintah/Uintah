@@ -1,6 +1,8 @@
 #ifndef UINTAH_HOMEBREW_PROCESSORGROUP_H
 #define UINTAH_HOMEBREW_PROCESSORGROUP_H
 
+#include <mpi.h>
+
 namespace Uintah {
 
 /**************************************
@@ -48,6 +50,10 @@ WARNING
 	 return d_rank;
       }
 
+      MPI_Comm getComm() const {
+	 return d_comm;
+      }
+
    private:
       //////////
       // Insert Documentation Here:
@@ -55,10 +61,13 @@ WARNING
       
       friend class Parallel;
       ProcessorGroup(const ProcessorGroup* parent,
+		     MPI_Comm comm, bool allmpi,
 		     int rank, int size);
 
       int d_rank;
       int d_size;
+      MPI_Comm d_comm;
+      bool d_allmpi;
       
       ProcessorGroup(const ProcessorGroup&);
       ProcessorGroup& operator=(const ProcessorGroup&);
@@ -68,6 +77,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/07/27 22:39:54  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.1  2000/06/17 07:06:49  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

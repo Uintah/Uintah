@@ -54,7 +54,7 @@ WARNING
       void resize(int newSize) {
 	 data.resize(newSize);
       }
-      
+
    private:
       friend class ParticleVariable<T>;
       
@@ -91,6 +91,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.6  2000/04/28 07:35:36  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

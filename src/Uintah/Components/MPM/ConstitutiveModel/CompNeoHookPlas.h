@@ -40,8 +40,8 @@ WARNING
 ****************************************/
 
       class CompNeoHookPlas : public ConstitutiveModel {
-      private:
 	 // Create datatype for storing model parameters
+      public:
 	 struct CMData {
 	    double Bulk;
 	    double Shear;
@@ -49,6 +49,7 @@ WARNING
 	    double K;
             double Alpha;
 	 };	 
+      private:
 	 friend const TypeDescription* fun_getTypeDescription(CMData*);
 
 	 CMData d_initialData;
@@ -106,6 +107,10 @@ WARNING
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.16  2000/07/27 22:39:44  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.15  2000/06/15 21:57:04  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

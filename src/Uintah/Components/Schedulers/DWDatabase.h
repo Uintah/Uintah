@@ -7,6 +7,7 @@
 #include <Uintah/Exceptions/UnknownVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iosfwd>
 
 namespace Uintah {
    using SCICore::Exceptions::InternalError;
@@ -53,6 +54,7 @@ public:
    VarType* get(const VarLabel* label, int matlindex,
 		const Patch* patch) const;
    void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
+   void print(std::ostream&);
 private:
    typedef std::vector<VarType*> dataDBtype;
 
@@ -270,10 +272,34 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
    }
 }
 
+template<class VarType>
+void DWDatabase<VarType>::print(std::ostream& out)
+{
+   for(nameDBtype::const_iterator nameiter = names.begin();
+       nameiter != names.end(); nameiter++){
+      NameRecord* nr = nameiter->second;
+      out << nr->label->getName() << '\n';
+      for(patchDBtype::const_iterator patchiter = nr->patches.begin();
+	  patchiter != nr->patches.end();patchiter++){
+	 PatchRecord* rr = patchiter->second;
+	 out <<  "  " << rr->patch << '\n';
+	 for(int i=0;i<rr->vars.size();i++){
+	    if(rr->vars[i]){
+	       cerr << "    Material " << i << '\n';
+	    }
+	 }
+      }
+   }
+}
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.13  2000/07/27 22:39:47  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.12  2000/06/19 22:37:18  sparker
 // Improved messages for UnknownVariable
 //

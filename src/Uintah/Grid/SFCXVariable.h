@@ -79,6 +79,9 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 			     const IntVector& highIndex);
      SFCXVariable<T>& operator=(const SFCXVariable<T>&);
      
+     virtual void* getBasePointer();
+     virtual const TypeDescription* virtualGetTypeDescription() const;
+
      // Replace the values on the indicated face with value
      void fillFace(Patch::FaceType face, const T& value)
        { 
@@ -200,6 +203,7 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
       virtual void read(InputContext&);
       static TypeDescription::Register registerMe;
    private:
+   static Variable* maker();
    };
    
    template<class T>
@@ -212,10 +216,17 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 	 static TypeDescription* td;
 	 if(!td){
 	    td = scinew TypeDescription(TypeDescription::SFCXVariable,
-				     "SFCXVariable",
+				     "SFCXVariable", &maker,
 				     fun_getTypeDescription((T*)0));
 	 }
 	 return td;
+      }
+   
+   template<class T>
+      Variable*
+      SFCXVariable<T>::maker()
+      {
+	 return new SFCXVariable<T>();
       }
    
    template<class T>
@@ -311,6 +322,13 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
       }
 
    template<class T>
+      void*
+      SFCXVariable<T>::getBasePointer()
+      {
+	 return getPointer();
+      }
+
+   template<class T>
       void
       SFCXVariable<T>::read(InputContext& oc)
       {
@@ -332,10 +350,22 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+
+   template<class T>
+      const TypeDescription*
+      SFCXVariable<T>::virtualGetTypeDescription() const
+      {
+	 return getTypeDescription();
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.1  2000/06/27 23:18:17  rawat
 // implemented Staggered cell variables. Modified Patch.cc to get ghostcell
 // and staggered cell indexes.

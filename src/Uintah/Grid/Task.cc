@@ -49,7 +49,7 @@ Task::subpatchCapable(bool state)
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_reqs.push_back(scinew Dependency(ds, var, -1, 0));
+  d_reqs.push_back(scinew Dependency(ds, var, -1, 0, this));
 }
 
 void
@@ -63,11 +63,8 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
       l=h=0;
-      if(!patch){
-	 d_reqs.push_back(scinew Dependency(ds, var, matlIndex, patch));
-	 return;
-      }
-      break;
+      d_reqs.push_back(scinew Dependency(ds, var, matlIndex, patch, this));
+      return;
    case Ghost::AroundNodes:
       if(numGhostCells == 0)
 	 throw InternalError("No ghost cells specified with Task::AroundNodes");
@@ -117,21 +114,21 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
    for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       d_reqs.push_back(scinew Dependency(ds, var, matlIndex,
-					 neighbor));
+					 neighbor, this));
    }
 }
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_comps.push_back(scinew Dependency(ds, var, -1, d_patch));
+  d_comps.push_back(scinew Dependency(ds, var, -1, d_patch, this));
 }
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	       const Patch*)
 {
-  d_comps.push_back(scinew Dependency(ds, var, matlIndex, d_patch));
+  d_comps.push_back(scinew Dependency(ds, var, matlIndex, d_patch, this));
 }
 
 void
@@ -146,11 +143,14 @@ Task::doit(const ProcessorGroup* pc)
 
 Task::Dependency::Dependency(const DataWarehouseP& dw,
 			     const VarLabel* var, int matlIndex,
-			     const Patch* patch)
+			     const Patch* patch,
+			     Task* task)
     : d_dw(dw),
       d_var(var),
       d_matlIndex(matlIndex),
-      d_patch(patch)
+      d_patch(patch),
+   d_task(task),
+   d_serialNumber(-123)
 {
 }
 
@@ -168,6 +168,10 @@ Task::getRequires() const
 
 //
 // $Log$
+// Revision 1.16  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.15  2000/06/17 07:06:44  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

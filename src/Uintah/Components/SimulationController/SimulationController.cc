@@ -47,7 +47,9 @@ SimulationController::SimulationController(const ProcessorGroup* myworld) :
 {
    d_restarting = false;
    d_generation = 0;
+#if 0
    d_dwMpiHandler = scinew DWMpiHandler();
+#endif
 }
 
 SimulationController::~SimulationController()
@@ -109,16 +111,21 @@ void SimulationController::run()
    DataWarehouseP old_dw = scheduler->createDataWarehouse( d_generation );
    d_generation++;
 
+#if 0
    d_dwMpiHandler->registerDW( old_dw );
+#endif
    // Should I check to see if MpiProcesses is > 1 before making this
    // thread?  If not, the thread will just die when it realizes
    // that there are only one MpiProcesses.  Should I have if tests
    // around all the d_dwMpiHandler calls to test for this, or just
    // let it do the single assignment operation that will actually
    // have no effect?
+   // This should get moved into a (future) scheduler - Steve
+#if 0
    if( d_myworld->size() > 1 ) {
      d_MpiThread = scinew Thread( d_dwMpiHandler, "DWMpiHandler" );
    }
+#endif
 
    old_dw->setGrid(grid);
    
@@ -144,15 +151,14 @@ void SimulationController::run()
    double start_time = Time::currentSeconds();
    double t = timeinfo.initTime;
    
-   scheduleComputeStableTimestep(level, scheduler, old_dw,
-				 cfd, mpm, md);
+   scheduleComputeStableTimestep(level, scheduler, old_dw, cfd, mpm, md);
    
    if(output)
       output->finalizeTimestep(t, 0, level, scheduler, old_dw);
 
    Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
 
-   scheduler->execute(d_myworld, old_dw);
+   scheduler->execute(d_myworld, old_dw, old_dw);
 
    while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
@@ -164,25 +170,30 @@ void SimulationController::run()
       delt *= timeinfo.delt_factor;
 
       if(delt < timeinfo.delt_min){
-	 cerr << "WARNING: raising delt from " << delt
-	      << " to minimum: " << timeinfo.delt_min << '\n';
+	 if(d_myworld->myrank() == 0)
+	    cerr << "WARNING: raising delt from " << delt
+		 << " to minimum: " << timeinfo.delt_min << '\n';
 	 delt = timeinfo.delt_min;
       }
       if(delt > timeinfo.delt_max){
-	 cerr << "WARNING: lowering delt from " << delt 
-	      << " to maxmimum: " << timeinfo.delt_max << '\n';
+	 if(d_myworld->myrank() == 0)
+	    cerr << "WARNING: lowering delt from " << delt 
+		 << " to maxmimum: " << timeinfo.delt_max << '\n';
 	 delt = timeinfo.delt_max;
       }
       old_dw->override(delt_vartype(delt), sharedState->get_delt_label());
-      cout << "Time=" << t << ", delt=" << delt 
-	   << ", elapsed time = " << wallTime << '\n';
+      if(d_myworld->myrank() == 0)
+	 cout << "Time=" << t << ", delt=" << delt 
+	      << ", elapsed time = " << wallTime << '\n';
 
       scheduler->initialize();
 
       DataWarehouseP new_dw = scheduler->createDataWarehouse( d_generation );
       d_generation++;
 
+#if 0
       d_dwMpiHandler->registerDW( new_dw );
+#endif
       scheduleTimeAdvance(t, delt, level, scheduler, old_dw, new_dw,
 			  cfd, mpm, md);
       t += delt;
@@ -191,7 +202,7 @@ void SimulationController::run()
       
       // Begin next time step...
       scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, md);
-      scheduler->execute(d_myworld, new_dw);
+      scheduler->execute(d_myworld, old_dw, new_dw);
       
       //data analyze in each step
       if(analyze) {
@@ -202,9 +213,11 @@ void SimulationController::run()
       old_dw = new_dw;
    }
 
+#if 0
    if( d_myworld->myrank() == 0 && d_myworld->size() > 1 ) {
      d_dwMpiHandler->shutdown( d_myworld->size() );
    }
+#endif
 }
 
 void SimulationController::problemSetup(const ProblemSpecP& params,
@@ -465,6 +478,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.39  2000/07/27 22:39:48  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.38  2000/07/17 23:36:31  tan
 // Added Analyze interface that will be especially useful for debugging
 // on scitific results.

@@ -1,6 +1,8 @@
 
 #include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/Patch.h>
 #include <iostream>
+#include <sstream>
 
 using namespace Uintah;
 using namespace std;
@@ -18,9 +20,25 @@ bool VarLabel::Compare::operator()(const VarLabel* v1, const VarLabel* v2) const
    return v1->getName() < v2->getName();
 }
 
+string VarLabel::getFullName(int matlIndex, const Patch* patch) const
+{
+   ostringstream out;
+   out << d_name << "(matl=" << matlIndex;
+   if(patch)
+      out << ", patch=" << patch->getID();
+   else
+      out << ", no patch";
+   out << ")";
+   return out.str();
+}
+
 
 //
 // $Log$
+// Revision 1.6  2000/07/27 22:39:51  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.5  2000/05/02 06:07:23  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

@@ -22,6 +22,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -59,7 +60,6 @@ using SCICore::Math::Min;
 using SCICore::Math::Max;
 using namespace std;
 
-
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
@@ -95,6 +95,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					lb->pVelocityLabel_preReloc);
      lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
 					lb->pExternalForceLabel_preReloc);
+
      if(mpm_matl->getBurnModel()->getBurns()){
        //     lb->registerPermanentParticleState(m,lb->pSurfLabel,
        //lb->pSurfLabel_preReloc);
@@ -107,6 +108,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
        lb->registerPermanentParticleState(m,lb->pAverageMicrocrackLength,
 				  lb->pAverageMicrocrackLength_preReloc); 
      }
+     
      if(MPMPhysicalModules::heatConductionModel){
        lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
 					  lb->pTemperatureLabel_preReloc); 
@@ -125,7 +127,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					lb->pDeformationMeasureLabel_preReloc);
      lb->registerPermanentParticleState(m,lb->pStressLabel,
 					lb->pStressLabel_preReloc);
-     
      
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
 					lb->d_particleState_preReloc[m]);
@@ -742,12 +743,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    // labels that go with each material.
 
    //for (int m = 0; m < numMatls; m++) {
-   new_dw->scheduleParticleRelocation(level, sched, old_dw,
-				      lb->pXLabel_preReloc, 
-				      lb->d_particleState_preReloc[0],
-				      lb->pXLabel, lb->d_particleState[0],
-				      numMatls);
+   sched->scheduleParticleRelocation(level, old_dw, new_dw,
+				     lb->pXLabel_preReloc, 
+				     lb->d_particleState_preReloc[0],
+				     lb->pXLabel, lb->d_particleState[0],
+				     numMatls);
    //}
+
    if(MPMPhysicalModules::fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
@@ -786,7 +788,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 }
 
 void SerialMPM::pleaseSaveParticlesToGrid(const VarLabel* var,
-				 const VarLabel* varweight, int number,
+				 const VarLabel* /*varweight*/, int number,
 				 DataWarehouseP& new_dw)
 {
    new_dw->pleaseSave(var, number);
@@ -928,6 +930,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    }
 	 }
       }
+
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 //	 if(gmass[*iter] != 0.0){
@@ -1663,6 +1666,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.107  2000/07/27 22:39:43  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.106  2000/07/27 22:17:16  jas
 // Consolidated the registerPermanentParticleState to take both the
 // regular labels and the pre_Reloc labels.

@@ -460,12 +460,20 @@ void ElasticConstitutiveModel::printParameterNames(ofstream& out) const
 
 namespace Uintah {
    namespace MPM {
+
+static MPI_Datatype makeMPI_CMData()
+{
+   ASSERTEQ(sizeof(ElasticConstitutiveModel::CMData), sizeof(double)*2);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
+   return mpitype;
+}
+
 const TypeDescription* fun_getTypeDescription(ElasticConstitutiveModel::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      ASSERTEQ(sizeof(ElasticConstitutiveModel::CMData), sizeof(double)*2);
-      td = scinew TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true);
+      td = scinew TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true, &makeMPI_CMData);
    }
    return td;   
 }
@@ -510,6 +518,10 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.19  2000/07/27 22:39:44  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.18  2000/07/05 23:43:34  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

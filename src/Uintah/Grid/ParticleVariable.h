@@ -14,6 +14,7 @@
 #include <Uintah/Grid/ParticleSubset.h>
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Grid/TypeUtils.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <unistd.h>
 #include <errno.h>
@@ -58,6 +59,7 @@ WARNING
       ParticleVariable();
       virtual ~ParticleVariable();
       ParticleVariable(ParticleSubset* pset);
+      ParticleVariable(ParticleData<T>*, ParticleSubset* pset);
       ParticleVariable(const ParticleVariable<T>&);
       
       ParticleVariable<T>& operator=(const ParticleVariable<T>&);
@@ -65,7 +67,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       static const TypeDescription* getTypeDescription();
-      
+
       //////////
       // Insert Documentation Here:
       void resync() {
@@ -75,6 +77,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual ParticleVariable<T>* clone() const;
+      virtual ParticleVariable<T>* cloneSubset(ParticleSubset*) const;
       
       //////////
       // Insert Documentation Here:
@@ -94,9 +97,18 @@ WARNING
       virtual void allocate(ParticleSubset*);
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
-			  std::vector<ParticleVariableBase*> srcs);
+			  std::vector<ParticleVariableBase*> srcs,
+			  particleIndex extra = 0);
+      virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
+			     const ProcessorGroup* pg, int start, int n);
+      virtual void packMPI(void* buf, int bufsize, int* bufpos,
+			   const ProcessorGroup* pg, int start, int n);
+      virtual void packsizeMPI(int* bufpos,
+			       const ProcessorGroup* pg, int start, int n);
       virtual void emit(OutputContext&);
       virtual void read(InputContext&);
+      virtual void* getBasePointer();
+      virtual const TypeDescription* virtualGetTypeDescription() const;
    private:
       
       //////////
@@ -104,6 +116,7 @@ WARNING
       ParticleData<T>* d_pdata;
       
       static TypeDescription::Register registerMe;
+      static Variable* maker();
    };
 
    template<class T>
@@ -116,10 +129,17 @@ WARNING
 	 static TypeDescription* td;
 	 if(!td){
 	    td = scinew TypeDescription(TypeDescription::ParticleVariable,
-				     "ParticleVariable",
-				     fun_getTypeDescription((T*)0));
+					"ParticleVariable", &maker,
+					fun_getTypeDescription((T*)0));
 	 }
 	 return td;
+      }
+   
+   template<class T>
+      Variable*
+      ParticleVariable<T>::maker()
+      {
+	 return new ParticleVariable<T>();
       }
    
    template<class T>
@@ -165,6 +185,22 @@ WARNING
       }
    
    template<class T>
+      ParticleVariable<T>*
+      ParticleVariable<T>::cloneSubset(ParticleSubset* pset) const
+      {
+	 return scinew ParticleVariable<T>(d_pdata, pset);
+      }
+
+   template<class T>
+      ParticleVariable<T>::ParticleVariable(ParticleData<T>* pdata,
+					    ParticleSubset* pset)
+      : ParticleVariableBase(pset), d_pdata(pdata)
+      {
+	 if(d_pdata)
+	    d_pdata->addReference();
+      }
+   
+   template<class T>
       ParticleVariable<T>::ParticleVariable(const ParticleVariable<T>& copy)
       : ParticleVariableBase(copy), d_pdata(copy.d_pdata)
       {
@@ -201,7 +237,8 @@ WARNING
       void
       ParticleVariable<T>::gather(ParticleSubset* pset,
 				  std::vector<ParticleSubset*> subsets,
-				  std::vector<ParticleVariableBase*> srcs)
+				  std::vector<ParticleVariableBase*> srcs,
+				  particleIndex extra)
       {
 	 if(d_pdata && d_pdata->removeReference())
 	    delete d_pdata;
@@ -225,7 +262,7 @@ WARNING
 	       dstiter++;
 	    }
 	 }
-	 ASSERT(dstiter == pset->end());
+	 ASSERT(dstiter+extra == pset->end());
       }
 
    template<class T>
@@ -282,10 +319,85 @@ WARNING
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+
+   template<class T>
+      void*
+      ParticleVariable<T>::getBasePointer()
+      {
+	 return &d_pdata->data[0];
+      }
+
+   template<class T>
+      const TypeDescription*
+      ParticleVariable<T>::virtualGetTypeDescription() const
+      {
+	 return getTypeDescription();
+      }
+   
+   template<class T>
+      void
+      ParticleVariable<T>::unpackMPI(void* buf, int bufsize, int* bufpos,
+				     const ProcessorGroup* pg,
+				     int start, int n)
+      {
+	 // This should be fixed for variable sized types!
+	 const TypeDescription* td = getTypeDescription()->getSubType();
+	 if(td->isFlat()){
+	    ParticleSubset::iterator beg = d_pset->seek(start);
+	    ParticleSubset::iterator end = d_pset->seek(start+n);
+	    for(ParticleSubset::iterator iter = beg; iter != end; iter++){
+	       MPI_Unpack(buf, bufsize, bufpos,
+			  &d_pdata->data[*iter], 1, td->getMPIType(),
+			  pg->getComm());
+	    }
+	 } else {
+	    throw InternalError("packMPI not finished\n");
+	 }
+      }
+
+   template<class T>
+      void
+      ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
+			   const ProcessorGroup* pg, particleIndex start, int n)
+      {
+	 // This should be fixed for variable sized types!
+	 const TypeDescription* td = getTypeDescription()->getSubType();
+	 if(td->isFlat()){
+	    ParticleSubset::iterator beg = d_pset->seek(start);
+	    ParticleSubset::iterator end = d_pset->seek(start+n);
+	    for(ParticleSubset::iterator iter = beg; iter != end; iter++){
+	       MPI_Pack(&d_pdata->data[*iter], 1, td->getMPIType(),
+			buf, bufsize, bufpos, pg->getComm());
+	    }
+	 } else {
+	    throw InternalError("packMPI not finished\n");
+	 }
+      }
+
+   template<class T>
+      void
+      ParticleVariable<T>::packsizeMPI(int* bufpos,
+			       const ProcessorGroup* pg, int, int n)
+      {
+	 // This should be fixed for variable sized types!
+	 const TypeDescription* td = getTypeDescription()->getSubType();
+	 if(td->isFlat()){
+	    int size;
+	    MPI_Pack_size(n, td->getMPIType(), pg->getComm(), &size);
+	    (*bufpos)+= size;
+	 } else {
+	    throw InternalError("packsizeMPI not finished\n");
+	 }
+      }
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.18  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.17  2000/06/15 21:57:18  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

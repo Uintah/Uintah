@@ -9,6 +9,7 @@ SRCDIR   := Uintah/Components/Schedulers
 
 SRCS     += $(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
+	$(SRCDIR)/RoundRobinLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
 	$(SRCDIR)/TaskGraph.cc
@@ -21,6 +22,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/07/27 22:39:47  sparker
+# Implemented MPIScheduler
+# Added associated support
+#
 # Revision 1.8  2000/06/17 07:04:56  sparker
 # Implemented initial load balancer modules
 # Use ProcessorGroup

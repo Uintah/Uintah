@@ -400,12 +400,21 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 
 namespace Uintah {
    namespace MPM {
+
+static MPI_Datatype makeMPI_CMData()
+{
+   ASSERTEQ(sizeof(CompNeoHookPlas::CMData), sizeof(double)*5);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 5, 5, MPI_DOUBLE, &mpitype);
+   return mpitype;
+}
+
 const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      ASSERTEQ(sizeof(CompNeoHookPlas::CMData), sizeof(double)*5);
-      td = scinew TypeDescription(TypeDescription::Other, "CompNeoHookPlas::CMData", true);
+      td = scinew TypeDescription(TypeDescription::Other,
+				  "CompNeoHookPlas::CMData", true, &makeMPI_CMData);
    }
    return td;   
 }
@@ -413,6 +422,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.35  2000/07/27 22:39:44  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.34  2000/07/07 23:57:21  guilkey
 // Added volumetric dilation to particle volume.
 //

@@ -86,6 +86,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
       CCVariable<T>& operator=(const CCVariable<T>&);
      
+     virtual const TypeDescription* virtualGetTypeDescription() const;
+
      // Replace the values on the indicated face with value
       void fillFace(Patch::FaceType face, const T& value)
 	{ 
@@ -208,6 +210,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       static TypeDescription::Register registerMe;
 
    private:
+   static Variable* maker();
    };
       template<class T>
       TypeDescription::Register
@@ -220,10 +223,24 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	static TypeDescription* td;
 	if(!td){
 	  td = scinew TypeDescription(TypeDescription::CCVariable,
-				   "CCVariable",
-				   fun_getTypeDescription((T*)0));
+				      "CCVariable", &maker,
+				      fun_getTypeDescription((T*)0));
 	}
 	return td;
+      }
+   
+   template<class T>
+      const TypeDescription*
+      CCVariable<T>::virtualGetTypeDescription() const
+      {
+	 return getTypeDescription();
+      }
+   
+   template<class T>
+      Variable*
+      CCVariable<T>::maker()
+      {
+	 return new CCVariable<T>();
       }
    
    template<class T>
@@ -347,6 +364,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.19  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.18  2000/06/22 21:56:30  sparker
 // Changed variable read/write to fortran order
 //

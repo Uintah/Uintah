@@ -59,7 +59,6 @@ WARNING
 			   DataWarehouseP& toDW) = 0;
       };
 
-
       template<class T>
       class NPAction : public ActionBase {
 
@@ -239,6 +238,14 @@ WARNING
       };
 
    public:
+
+      enum TaskType {
+	 Normal,
+	 Reduction,
+	 Scatter,
+	 Gather
+      };
+
       Task(const string&         taskName)
 	 : d_taskName(taskName),
 	   d_patch(0),
@@ -250,7 +257,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
-	 d_isReductionTask = true;
+	 d_tasktype = Reduction;
       }
 
       template<class T>
@@ -273,7 +280,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
-	 d_isReductionTask = false;
+	 d_tasktype = Normal;
       }
 
      template<class T>
@@ -294,7 +301,7 @@ WARNING
          d_usesThreads = false;
          d_usesMPI = false;
          d_subpatchCapable = false;
-	 d_isReductionTask = false;
+	 d_tasktype = Normal;
       }
 
       
@@ -318,7 +325,7 @@ WARNING
          d_usesThreads = false;
          d_usesMPI = false;
          d_subpatchCapable = false;
-	 d_isReductionTask = false;
+	 d_tasktype = Normal;
       }
 
       
@@ -341,7 +348,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
-	 d_isReductionTask = false;
+	 d_tasktype = Normal;
       }
       
       template<class T, class Arg1>
@@ -366,7 +373,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
-	 d_isReductionTask = false;
+	 d_tasktype = Normal;
       }
       
       template<class T, class Arg1, class Arg2>
@@ -391,7 +398,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
-	 d_isReductionTask = false;
+	 d_tasktype = Normal;
       }
       
       template<class T, class Arg1, class Arg2, class Arg3>
@@ -416,7 +423,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
-	 d_isReductionTask = false;
+	 d_tasktype = Normal;
       }
       
       ~Task();
@@ -471,11 +478,14 @@ WARNING
 	 const VarLabel*  d_var;
 	 int		  d_matlIndex;
 	 const Patch*     d_patch;
+	 Task*		  d_task;
+	 int		  d_serialNumber;
 	 
 	 Dependency(      const DataWarehouseP& dw,
 			  const VarLabel* d_var,
 			  int matlIndex,
-			  const Patch*);
+			  const Patch*,
+			  Task* task);
 	 
       }; // end struct Dependency
       
@@ -492,11 +502,21 @@ WARNING
       const vector<Dependency*>& getRequires() const;
 
       bool isReductionTask() const {
-	 return d_isReductionTask;
+	 return d_tasktype == Reduction;
+      }
+
+      void setType(TaskType tasktype) {
+	 d_tasktype = tasktype;
+      }
+      TaskType getType() const {
+	 return d_tasktype;
       }
 
       void assignResource(int idx) {
 	 resourceIndex = idx;
+      }
+      int getAssignedResourceIndex() const {
+	 return resourceIndex;
       }
    protected:
       friend class TaskGraph;
@@ -518,8 +538,8 @@ WARNING
       bool                d_usesMPI;
       bool                d_usesThreads;
       bool                d_subpatchCapable;
-      bool		  d_isReductionTask;
-      
+      TaskType		  d_tasktype;
+
       Task(const Task&);
       Task& operator=(const Task&);
    };
@@ -528,6 +548,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.19  2000/07/27 22:39:50  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.18  2000/06/17 07:06:44  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -24,7 +24,7 @@ using namespace Uintah;
 using SCICore::Exceptions::InternalError;
 using namespace PSECore::XMLUtil;
 using namespace std;
-static SCICore::Util::DebugStream dbg("MPIScheduler", false);
+static SCICore::Util::DebugStream dbg("TaskGraph", false);
 
 TaskGraph::TaskGraph()
 {
@@ -51,15 +51,26 @@ TaskGraph::initialize()
 }
 
 void
+TaskGraph::assignSerialNumbers()
+{
+   vector<Task*>::iterator iter;
+   int num = 0;
+
+   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
+      Task* task = *iter;
+      const vector<Task::Dependency*>& reqs = task->getRequires();
+      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
+	  iter != reqs.end(); iter++){
+	 Task::Dependency* dep = *iter;
+	 dep->d_serialNumber = num++;
+      }
+   }
+}
+
+void
 TaskGraph::setupTaskConnections()
 {
    vector<Task*>::iterator iter;
-   // Initialize variables on the tasks
-   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-      Task* task = *iter;
-      task->visited=false;
-      task->sorted=false;
-   }
 
    // Look for all of the reduction variables - we must treat those
    // special.  Create a fake task that performs the reduction
@@ -104,17 +115,27 @@ TaskGraph::setupTaskConnections()
 	  iter != reqs.end(); iter++){
 	 Task::Dependency* dep = *iter;
 	 if(dep->d_dw->isFinalized()){
+#if 0 // Not a valid check for parallel code!
+
 	    if(!dep->d_dw->exists(dep->d_var, dep->d_patch))
-	       throw InternalError("Variable required from old datawarehouse, but it does not exist: "+dep->d_var->getName());
+	       throw InternalError("Variable required from old datawarehouse, but it does not exist: "+dep->d_var->getFullName(dep->d_matlIndex, dep->d_patch));
+#endif
 	 } else {
 	    TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-	    map<TaskProduct, Task*>::iterator aciter = d_allcomps.find(p);
+	    actype::iterator aciter = d_allcomps.find(p);
 	    if(aciter == d_allcomps.end())
 	       throw InternalError("Scheduler could not find production for variable: "+dep->d_var->getName()+", required for task: "+task->getName());
 	    if(dep->d_var->typeDescription() != aciter->first.getLabel()->typeDescription())
 	       throw TypeMismatchException("Type mismatch for variable: "+dep->d_var->getName());
 	 }
       }
+   }
+
+   // Initialize variables on the tasks
+   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+      Task* task = *iter;
+      task->visited=false;
+      task->sorted=false;
    }
 }
 
@@ -143,18 +164,19 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
       Task::Dependency* dep = *iter;
       if(!dep->d_dw->isFinalized()){
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-	 map<TaskProduct, Task*>::const_iterator aciter = d_allcomps.find(p);
-	 if(!aciter->second->sorted){
-	    if(aciter->second->visited){
+	 actype::const_iterator aciter = d_allcomps.find(p);
+	 Task* vtask = aciter->second->d_task;
+	 if(!vtask->sorted){
+	    if(vtask->visited){
 	       ostringstream error;
 	       error << "Cycle detected in task graph: trying to do\n\t"
 		     << task->getName();
 	       if(task->getPatch())
 		  error << " on patch " << task->getPatch()->getID();
 	       error << "\nbut already did:\n\t"
-		     << aciter->second->getName();
-	       if(aciter->second->getPatch())
-		  error << " on patch " << aciter->second->getPatch()->getID();
+		     << vtask->getName();
+	       if(vtask->getPatch())
+		  error << " on patch " << vtask->getPatch()->getID();
 	       error << ",\nwhile looking for variable: \n\t" 
 		     << dep->d_var->getName() << ", material " 
 		     << dep->d_matlIndex;
@@ -163,7 +185,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
 	       error << "\n";
 	       throw InternalError(error.str());
 	    }
-	    processTask(aciter->second, sortedTasks);
+	    processTask(vtask, sortedTasks);
 	 }
       }
    }
@@ -173,6 +195,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
    dbg << "Added task: " << task->getName();
    if(task->getPatch())
       dbg << " on patch " << task->getPatch()->getID();
+   dbg << '\n';
 }
 
 void
@@ -199,11 +222,47 @@ TaskGraph::addTask(Task* task)
        iter != comps.end(); iter++){
       Task::Dependency* dep = *iter;
       TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-      map<TaskProduct,Task*>::iterator aciter = d_allcomps.find(p);
+      actype::iterator aciter = d_allcomps.find(p);
       if(aciter != d_allcomps.end()) 
-	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->getName()+")");
-      d_allcomps[p] = task;
+	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
+      d_allcomps[p] = dep;
    }
+}
+
+const Task::Dependency* TaskGraph::getComputesForRequires(const Task::Dependency* req)
+{
+   TaskProduct p(req->d_patch, req->d_matlIndex, req->d_var);
+   actype::iterator aciter = d_allcomps.find(p);
+   if(aciter == d_allcomps.end())
+      throw InternalError("Scheduler could not find production for variable: "+req->d_var->getName());
+   return aciter->second;
+}
+
+void TaskGraph::getRequiresForComputes(const Task::Dependency* comp,
+				       vector<const Task::Dependency*>& reqs)
+{
+   // This REALLY needs to be improved - Steve
+   vector<Task*>::iterator iter;
+   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+      Task* task = *iter;
+      const vector<Task::Dependency*>& deps = task->getRequires();
+      vector<Task::Dependency*>::const_iterator dep_iter;
+      for (dep_iter = deps.begin(); dep_iter != deps.end(); dep_iter++) {
+	 const Task::Dependency* dep = *dep_iter;
+
+	 if (!dep->d_dw->isFinalized()) {
+	    extern int myrank;
+	    //cerr << myrank << ": " << (dep->d_patch?dep->d_patch->getID():-1) << "/" << (comp->d_patch?comp->d_patch->getID():-1) << ", " << dep->d_matlIndex << "/" << comp->d_matlIndex << ", " << dep->d_var->getName() << "/" << comp->d_var->getName() << ": " << dep->d_task->getName() << '\n';
+	    if(dep->d_patch == comp->d_patch 
+	       && dep->d_matlIndex == comp->d_matlIndex
+	       && (dep->d_var == comp->d_var || dep->d_var->getName() == comp->d_var->getName())){
+	       //cerr << myrank << ": " << "MATCH!: " << (dep->d_patch?dep->d_patch->getID():-1) << "/" << (comp->d_patch?comp->d_patch->getID():-1) << ", " << dep->d_matlIndex << "/" << comp->d_matlIndex << ", " << dep->d_var->getName() << "/" << comp->d_var->getName() << ": " << dep->d_task->getName() << '\n';
+	       reqs.push_back(dep);
+	    }
+	 }
+      }
+   }
+   //cerr << "Found " << reqs.size() << " consumers of variable: " << comp->d_var->getName() << " on patch " << comp->d_patch->getID() << " " << comp->d_patch << '\n';
 }
 
 bool
@@ -225,6 +284,10 @@ Task* TaskGraph::getTask(int idx)
 
 //
 // $Log$
+// Revision 1.5  2000/07/27 22:39:47  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.4  2000/07/25 20:59:28  jehall
 // - Simplified taskgraph output implementation
 // - Sort taskgraph edges; makes critical path algorithm eastier

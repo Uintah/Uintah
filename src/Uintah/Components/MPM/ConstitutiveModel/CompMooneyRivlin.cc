@@ -343,12 +343,19 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
 
 namespace Uintah {
    namespace MPM {
+static MPI_Datatype makeMPI_CMData()
+{
+   ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*3);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   return mpitype;
+}
+
 const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*3);
-      td = scinew TypeDescription(TypeDescription::Other, "CompMooneyRivlin::CMData", true);
+      td = scinew TypeDescription(TypeDescription::Other, "CompMooneyRivlin::CMData", true, &makeMPI_CMData);
    }
    return td;   
 }
@@ -356,6 +363,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.50  2000/07/27 22:39:44  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.49  2000/07/07 23:52:08  guilkey
 // Removed some inefficiences in the way the deformed volume was allocated
 // and stored, and also added changing particle volume to CompNeoHookPlas.
