@@ -9,6 +9,7 @@
       <soName>libUintah_Modules_Visualization.so</soName>
       <soName>libUintah.so</soName>
     </soNames>
+
   <dataflow-component name="GridVisualizer">
     <meta>
       <authors>
@@ -32,6 +33,26 @@ Level 6: Magenta</documentation>
       <creationFunction>make_GridVisualizer</creationFunction>
     </implementation>
   </dataflow-component>
+
+  <dataflow-component name="NodeHedgehog">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+	<author>James Bigler</author>
+      </authors>
+      <version-date>June 2000</version-date>
+      <version>2.0</version>
+      <description>Visualize vector fields</description>
+      <documentation>No documentation at this time</documentation>
+    </meta>
+    <inputs>Archive, VectorField, ScalarField, Colormap</inputs>
+    <outputs>Geometry</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_NodeHedgehog</creationFunction>
+    </implementation>
+  </dataflow-component>
+
   </scirun-library>
   <scirun-library category="MPMViz">
   <soNames>
@@ -55,6 +76,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_VizControl</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="ParticleDB">
     <meta>
       <authors>
@@ -71,6 +93,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_ParticleDB</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="RescaleParticleColorMap">
     <meta>
       <authors>
@@ -87,6 +110,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_RescaleParticleColorMap</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="RunSimulation">
     <meta>
       <authors>
@@ -103,6 +127,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_RunSimulation</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="TecplotFileSelector">
     <meta>
       <authors>
@@ -135,6 +160,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_cfdGridLines</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="PartToGeom">
     <meta>
       <authors>
@@ -167,6 +193,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_GridLines</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="ParticleGridVisControl">
     <meta>
       <authors>
@@ -199,6 +226,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_ParticleViz</creationFunction>
     </implementation>
   </dataflow-component>
+
   </scirun-library>
   <scirun-library category="Readers">
   <soNames>
@@ -222,6 +250,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_MPReader</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="ParticleSetReader">
     <meta>
       <authors>
@@ -238,6 +267,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_ParticleSetReader</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="TriangleReader">
     <meta>
       <authors>
@@ -254,6 +284,7 @@ Level 6: Magenta</documentation>
       <creationFunction>make_TriangleReader</creationFunction>
     </implementation>
   </dataflow-component>
+
   <dataflow-component name="ArchiveReader">
     <meta>
       <authors>
