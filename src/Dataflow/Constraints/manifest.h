@@ -15,13 +15,6 @@
 #ifndef _H_MANIFEST_VALUES
 #define _H_MANIFEST_VALUES
 
-#include <PSECore/share/share.h>
-
-#include <stdlib.h>
-#include <math.h>
-#include <SCICore/Util/Assert.h>
-#include <iostream.h>
-
 namespace PSECore {
 namespace Constraints {
 
@@ -31,28 +24,9 @@ typedef unsigned int Index;
 inline PSECORESHARE Real
 RealAbs ( Real x )
 {
-   return fabs(x);
+   return x<0?-x:x;
 }
 
-inline PSECORESHARE int
-RealRound ( Real x )
-{
-   return (int)(floor (x + 0.5));
-}
-
-inline PSECORESHARE Real
-RealMin ( Real x1, Real x2 )
-{
-   return ((x1 < x2) ? x1 : x2);
-}
-
-inline PSECORESHARE Real
-RealMax ( Real x1, Real x2 )
-{
-   return ((x1 > x2) ? x1 : x2);
-}
-
-#define ERROR_HERE(what) cerr << "Error: " << what << " in " << __FILE__ << " (line " << __LINE__ << ") " << endl
 
 } // End namespace Constraints
 } // End namespace PSECore

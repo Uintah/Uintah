@@ -22,6 +22,7 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <PSECore/Dataflow/Module.h>
+#include <math.h>
 
 namespace PSECore {
 namespace Widgets {
@@ -563,6 +564,9 @@ ViewWidget::GetMaterialName( const Index mindex ) const
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:44  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:38:33  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -25,7 +25,6 @@
 #include <SCICore/Datatypes/VectorFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldUG.h>
 #include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/Mutex.h>
@@ -164,6 +163,9 @@ void MagneticScalarField::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:29  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/02 04:27:08  dmw
 // Rob V's modules
 //

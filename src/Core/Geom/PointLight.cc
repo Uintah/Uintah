@@ -14,7 +14,6 @@
 
 #include <SCICore/Geom/PointLight.h>
 #include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -57,6 +56,9 @@ void PointLight::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:51  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/19 23:18:07  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

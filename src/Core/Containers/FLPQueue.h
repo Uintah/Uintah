@@ -16,6 +16,7 @@
 
 #include <sci_config.h>
 #include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace Containers {
@@ -58,19 +59,6 @@ public:
     void update_weight(const T&, double weight);
     friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, FLPQueue<T>&);
 };
-
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included FLPQueue.cc
-//
-
-#include <SCICore/Malloc/Allocator.h>
-
-namespace SCICore {
-namespace Containers {
 
 template<class T> FLPQueue<T>::FLPQueue(int size)
 : head(0), tail(0), _length(0), _size(size)
@@ -266,6 +254,9 @@ void Pio(Piostream& stream, Containers::FLPQueueNode<T>& n)
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:45  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/08/30 20:19:26  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

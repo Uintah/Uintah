@@ -14,7 +14,6 @@
 
 #include <SCICore/TclInterface/MemStats.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
 #include <stdio.h>
 
 namespace SCICore {
@@ -220,6 +219,9 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:55  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:39:43  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -19,7 +19,6 @@
 #include <SCICore/Thread/ThreadError.h>
 #include <SCICore/Thread/ThreadGroup.h>
 #include <errno.h>
-#include <iostream.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -304,6 +303,9 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.12  1999/09/08 02:26:56  sparker
+// Various #include cleanups
+//
 // Revision 1.11  1999/09/03 20:20:48  dmw
 // fixed desctructor
 //

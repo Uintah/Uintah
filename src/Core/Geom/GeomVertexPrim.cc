@@ -15,7 +15,6 @@
 #include <SCICore/Geom/GeomVertexPrim.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Containers/TrivialAllocator.h>
 
 namespace SCICore {
@@ -360,6 +359,9 @@ void Pio(Piostream& stream, GeomVertex*& obj)
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:51  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/08/23 07:06:33  sparker
 // Fix IRIX build
 //

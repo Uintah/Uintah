@@ -36,7 +36,6 @@ LOG
 #include <string.h>
 
 #include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/Histogram.h>
 
 #include <Uintah/Datatypes/Particles/MPMaterial.h>

@@ -28,7 +28,6 @@
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/Switch.h>
 #include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Mat.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/Histogram.h>
@@ -1639,6 +1638,9 @@ void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:27:06  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/05 01:15:28  dmw
 // added all of the old SCIRun mesh modules
 //

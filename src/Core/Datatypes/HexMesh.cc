@@ -28,6 +28,7 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -153,6 +154,7 @@ HexFace::HexFace ()
 void HexFace::calc_face (HexMesh * m)
 {
   using namespace SCICore::Geometry;
+  using namespace SCICore::Math;
 
 
   double d;
@@ -196,10 +198,10 @@ void HexFace::calc_face (HexMesh * m)
   // Find the distance between each corner and the plane.  (If the length of
   //   the normal is zero, no plane, this value is zero.)  Average them.
   
-  planar_adherence  = fabs (Dot (my_normal, my_centroid - *corner.node[0]));
-  planar_adherence += fabs (Dot (my_normal, my_centroid - *corner.node[1]));
-  planar_adherence += fabs (Dot (my_normal, my_centroid - *corner.node[2]));
-  planar_adherence += fabs (Dot (my_normal, my_centroid - *corner.node[3]));
+  planar_adherence  = Abs (Dot (my_normal, my_centroid - *corner.node[0]));
+  planar_adherence += Abs (Dot (my_normal, my_centroid - *corner.node[1]));
+  planar_adherence += Abs (Dot (my_normal, my_centroid - *corner.node[2]));
+  planar_adherence += Abs (Dot (my_normal, my_centroid - *corner.node[3]));
   
   planar_adherence /= 4.0;
   
@@ -1559,6 +1561,9 @@ void Pio (Piostream & p, Hexahedron * & h)
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:47  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/25 03:48:33  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

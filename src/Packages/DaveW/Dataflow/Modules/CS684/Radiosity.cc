@@ -36,7 +36,6 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 #include <string.h>

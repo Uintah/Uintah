@@ -12,11 +12,6 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <iostream.h>
-#include <fstream.h>
-#include <strstream.h>
-#include <string.h>
-
 #include <SCICore/Malloc/Allocator.h>
 
 #include <Uintah/Datatypes/Particles/MPMaterial.h>
@@ -121,6 +116,9 @@ void MPMaterial::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:27:07  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/19 23:18:08  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

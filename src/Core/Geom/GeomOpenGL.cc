@@ -81,7 +81,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-//#include <Modules/Salmon/Salmon.h>
+using namespace SCICore::Math;
 
 #include <stdio.h>
 
@@ -290,8 +290,8 @@ void DrawInfoOpenGL::init_view(double /*znear*/, double /*zfar*/,
 
   dir = 1;
 
-  if (fabs(view.x()) > fabs(view.y())) {
-    if (fabs(view.x()) > fabs(view.z())) { // use x dir
+  if (Abs(view.x()) > Abs(view.y())) {
+    if (Abs(view.x()) > Abs(view.z())) { // use x dir
       axis=0;
       if (view.x() < 0) {
 	dir=-1;
@@ -302,7 +302,7 @@ void DrawInfoOpenGL::init_view(double /*znear*/, double /*zfar*/,
 	dir=-1;
       }
     }
-  } else if (fabs(view.y()) > fabs(view.z())) { // y greates
+  } else if (Abs(view.y()) > Abs(view.z())) { // y greates
     axis=1;
     if (view.y() < 0) {
       dir=-1;
@@ -1839,8 +1839,8 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     
     //char which;
     
-    if (fabs(view.x()) > fabs(view.y())) {
-      if (fabs(view.x()) > fabs(view.z())) { // use x dir
+    if (Abs(view.x()) > Abs(view.y())) {
+      if (Abs(view.x()) > Abs(view.z())) { // use x dir
 	if (view.x() < 0) {
 	  sort_dir=-1; sort_start=pts.size()/2-1;
 	} else
@@ -1851,7 +1851,7 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 	} else
 	  sort_start = pts.size()/2;
       }
-    } else if (fabs(view.y()) > fabs(view.z())) { // y greates
+    } else if (Abs(view.y()) > Abs(view.z())) { // y greates
       if (view.y() < 0) {
 	sort_dir=-1;sort_start = 3*(pts.size()/2)-1;
       } else
@@ -2127,8 +2127,8 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     
     char which;
     
-    if (fabs(view.x()) > fabs(view.y())) {
-      if (fabs(view.x()) > fabs(view.z())) { // use x dir
+    if (Abs(view.x()) > Abs(view.y())) {
+      if (Abs(view.x()) > Abs(view.z())) { // use x dir
 	  which = 0;
 	if (view.x() < 0) {
 	  sort_dir=-1; sort_start=nx-1; sort_end=-1;
@@ -2143,7 +2143,7 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
 	  sort_start =0; sort_end=nz;
       }
       }
-    } else if (fabs(view.y()) > fabs(view.z())) { // y greates
+    } else if (Abs(view.y()) > Abs(view.z())) { // y greates
 	which = 1;
       if (view.y() < 0) {
 	sort_dir=-1;sort_start =ny-1; sort_end=-1;
@@ -4075,6 +4075,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.8  1999/09/08 02:26:50  sparker
+// Various #include cleanups
+//
 // Revision 1.7  1999/09/05 05:32:28  dmw
 // updated and added Modules from old tree to new
 //

@@ -196,7 +196,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
       }
       NextMode();
    } else if (args[1] == "print") { 
-       print();
+       print(cout);
    } else if (args[1] == "defmaterials") {
       if (args.count() != 2) {
 	 args.error("widget doesn't need a minor command");
@@ -722,6 +722,9 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.7  1999/09/08 02:26:43  sparker
+// Various #include cleanups
+//
 // Revision 1.6  1999/08/28 17:54:33  sparker
 // Integrated new Thread library
 //

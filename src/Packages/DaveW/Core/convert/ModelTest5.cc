@@ -10,9 +10,6 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <iostream.h>
-#include <fstream.h>
-#include <stdlib.h>
 #include <Containers/Array1.h>
 #include <Containers/String.h>
 #include <Persistent/Pstreams.h>
@@ -25,7 +22,6 @@
 #include "TEdge.h"
 #include "TFace.h"
 #include "TRegion.h"
-#include <stdio.h>
 
 #define Element		SCICore::Datatypes::Element
 #define Mesh		SCICore::Datatypes::Mesh

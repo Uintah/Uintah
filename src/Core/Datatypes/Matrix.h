@@ -56,9 +56,9 @@ private:
     Representation rep;
 public:
 
-  virtual double* get_val(){return NULL;}
-  virtual int* get_row(){return NULL;}
-  virtual int* get_col() {return NULL;}
+  virtual double* get_val(){return 0;}
+  virtual int* get_row(){return 0;}
+  virtual int* get_col() {return 0;}
 
   
     clString getType();
@@ -110,6 +110,9 @@ void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:48  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/25 03:48:35  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -13,8 +13,6 @@
  */
 
 #include <SCIRun/Datatypes/Image/ImagePort.h>
-
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/fft.h>
@@ -72,6 +70,9 @@ void FFTImage::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:58  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/31 08:55:31  sparker
 // Bring SCIRun modules up to speed
 //

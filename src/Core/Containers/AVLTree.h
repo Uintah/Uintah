@@ -18,6 +18,9 @@
 #pragma warning(disable:4786)
 #endif
 
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Malloc/Allocator.h>
+
 namespace SCICore {
 namespace Containers {
 
@@ -78,20 +81,6 @@ public:
     void operator++();
     void operator--();
 };
-
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included AVLTree.cc
-//
-
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Malloc/Allocator.h>
-
-namespace SCICore {
-namespace Containers {
 
 template<class Key, class Data>
 TreeLink<Key, Data>::TreeLink(const Key& key, const Data& data)
@@ -536,6 +525,9 @@ void AVLTree<Key, Data>::remove_all()
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:44  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/31 16:30:18  moulding
 // added a #pragma for win32 to disable a debug info warning
 //
