@@ -224,13 +224,11 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    return;
 	}
 	Module* mod=net->add_module(args[2],args[3],args[4]);
-	if(!mod){
-	    args.error("Module not found");
-	    return;
+	if(mod){
+	  // Add a TCL command for this module...
+	  gui->add_command(mod->id+"-c", mod, 0);
+	  args.result(mod->id);
 	}
-	// Add a TCL command for this module...
-	gui->add_command(mod->id+"-c", mod, 0);
-	args.result(mod->id);
     } else if(args[1] == "deletemodule"){
 	if(args.count() < 3){
 	    args.error("netedit deletemodule needs a module name");

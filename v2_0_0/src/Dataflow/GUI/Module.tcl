@@ -860,6 +860,8 @@ proc addConnection { omodid owhich imodid iwhich } {
 
 proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     global Subnet Notes Disabled Color
+    if {![string length [iMod conn]] || ![string length [oMod conn]]} {return}
+    
     if { ![info exists Subnet([oMod conn])] || \
 	     ![info exists Subnet([iMod conn])] || \
 	     $Subnet([oMod conn]) != $Subnet([iMod conn]) } {

@@ -399,6 +399,12 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     set category [netedit getCategoryName $package $category $module]
     set modid [netedit addmodule "$package" "$category" "$module"]
 
+    # netedit addmodule returns an empty string if the module wasnt created
+    if { ![string length $modid] } {
+	tk_messageBox -type ok -parent . -icon warning -message \
+	    "Cannot find the ${package}::${category}::${module} module."
+	return
+    }    
 
     global inserting insertPosition Subnet
     set canvas $Subnet(Subnet$Subnet(Loading)_canvas)
