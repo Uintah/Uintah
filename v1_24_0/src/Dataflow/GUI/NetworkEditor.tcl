@@ -1295,7 +1295,12 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
 	wm withdraw $w
 	wm protocol $w WM_DELETE_WINDOW hideProgress
     }
-    setProgressTitle "Welcome to SCIRun v[netedit getenv SCIRUN_VERSION]"
+    if { $show_image} {
+	wm title $w "Welcome to SCIRun v[netedit getenv SCIRUN_VERSION]"
+    } else {
+	wm title $w "Loading Network..."
+    }
+
     if { ![winfo exists $w.frame] } {
 	frame $w.frame
 	pack $w.frame -expand 1 -fill both
@@ -1382,13 +1387,6 @@ proc setProgressText { text } {
 	update idletasks
     }
 }
-
-proc setProgressTitle { text } {
-    if { ![info exists .splash] } return
-    wm title .splash $text
-    update idletasks
-}
-
 
 proc incrProgress { { steps 1 } } {
     global progressMeter
