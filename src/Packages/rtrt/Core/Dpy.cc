@@ -232,9 +232,10 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   //     hard coding for stadium.
   //BBox bb;
   //scene->get_object()->compute_bounds( bb, 1e-3 );
-  double scale   = 2.0;
-  double gravity = 10.0;
-  stealth = new Stealth( scale, gravity );
+  double translate_scale   = 100.0;
+  double rotate_scale      = 4.0;
+  double gravity           = 10.0;
+  stealth = new Stealth( translate_scale, rotate_scale, gravity );
 
 }
 

@@ -48,9 +48,10 @@ class Stealth {
 
 public:
 
-  // Scale of '50' is good if the eye is 5 units (or so) from
-  // the area of interest and the area of interest is ~20 units across.
-  Stealth( double scale, double gravity_force );
+  // rotate_scale of '4' is good 
+  // translate_scale of '100' is good if the eye is 3 units (or so) from
+  // the area of interest and the area of interest is ~6 units across.
+  Stealth( double translate_scale, double rotate_scale, double gravity_force );
   ~Stealth();
 
   // Tells the eye (camera) to update its position based on its current
@@ -122,12 +123,13 @@ public:
 
 private:
 
-  void increase_a_speed( double & speed, int & accel_cnt );
-  void decrease_a_speed( double & speed, int & accel_cnt );
+  void increase_a_speed( double & speed, int & accel_cnt, double scale, double base, double max );
+  void decrease_a_speed( double & speed, int & accel_cnt, double scale, double base, double min );
 
   // Scale is based on the size of the "universe".  It effects how fast
   // the stealth will move.
-  double scale_;
+  double translate_scale_;
+  double rotate_scale_;
 
   // Speeds (in units per frame)
   double speed_;            // + forward, - backward
