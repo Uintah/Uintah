@@ -95,7 +95,7 @@ protected:
   int current_pointer_id;
   virtual void emit_pointer(int&, int&)=0;
   static bool readHeader(const string& filename, char* hdr,
-    const char* type, int& version);
+			 const char* type, int& version);
 public:
   string file_name;
 

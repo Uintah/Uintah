@@ -77,7 +77,8 @@ typedef longlong_t __int64_t;
 namespace SCIRun {
 
 TextPiostream::TextPiostream(const string& filename, Direction dir)
-  : Piostream(dir, -1, filename)
+  : Piostream(dir, -1, filename),
+    ownstreams_p(true)
 {
   if(dir==Read){
     ostr=0;
@@ -109,7 +110,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
   } else {
     istr=0;
     ostr=scinew ofstream(filename.c_str());
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     if(!out){
       cerr << "Error opening file: " << filename << " for writing\n";
       err=1;
@@ -120,12 +121,53 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
   }
 }
 
+TextPiostream::TextPiostream(istream *strm)
+  : Piostream(Read, -1),
+    istr(strm),
+    ostr(0),
+    ownstreams_p(false)
+{
+  char hdr[12];
+  istr->read(hdr, 8);
+  if(!*istr){
+    cerr << "Error reading header of istream.\n";
+    err=1;
+    return;
+  }
+  int c=8;
+  while (*istr && c < 12){
+    hdr[c]=istr->get();
+    if(hdr[c] == '\n')
+      break;
+    c++;
+  }
+  if(!readHeader("istream", hdr, "ASC", version)){
+    cerr << "Error parsing header of istream.\n";
+    err=1;
+    return;
+  }
+}
+
+TextPiostream::TextPiostream(ostream *strm)
+  : Piostream(Write, -1),
+    istr(0),
+    ostr(strm),
+    ownstreams_p(false)
+{
+  ostream& out=*ostr;
+  out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
+  version=PERSISTENT_VERSION;
+}
+
 TextPiostream::~TextPiostream()
 {
-  if(istr)
-    delete istr;
-  if(ostr)
-    delete ostr;
+  if (ownstreams_p)
+  {
+    if(istr)
+      delete istr;
+    if(ostr)
+      delete ostr;
+  }
 }
 
 void TextPiostream::io(int do_quotes, string& str)
@@ -137,7 +179,7 @@ void TextPiostream::io(int do_quotes, string& str)
       char buf[1000];
       char* p=buf;
       int n=0;
-      ifstream& in=*istr;
+      istream& in=*istr;
       for(;;){
 	char c;
 	in.get(c);
@@ -167,7 +209,7 @@ void TextPiostream::io(int do_quotes, string& str)
       *p=0;
       str = string(buf);
     } else {
-      ofstream& out=*ostr;
+      ostream& out=*ostr;
       out << str << " ";
     }
   }
@@ -219,7 +261,7 @@ void TextPiostream::end_class()
     expect('}');
     expect('\n');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << "}\n";
   }
 }
@@ -230,7 +272,7 @@ void TextPiostream::begin_cheap_delim()
   if(dir==Read){
     expect('{');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << "{";
   }
 }
@@ -241,7 +283,7 @@ void TextPiostream::end_cheap_delim()
   if(dir==Read){
     expect('}');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << "}";
   }
 }
@@ -250,7 +292,7 @@ void TextPiostream::io(bool& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading char\n";
@@ -263,7 +305,7 @@ void TextPiostream::io(bool& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -272,7 +314,7 @@ void TextPiostream::io(char& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading char\n";
@@ -285,7 +327,7 @@ void TextPiostream::io(char& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -294,7 +336,7 @@ void TextPiostream::io(unsigned char& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading unsigned char\n";
@@ -307,7 +349,7 @@ void TextPiostream::io(unsigned char& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -316,7 +358,7 @@ void TextPiostream::io(short& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading short\n";
@@ -329,7 +371,7 @@ void TextPiostream::io(short& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -338,7 +380,7 @@ void TextPiostream::io(unsigned short& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading unsigned short\n";
@@ -351,7 +393,7 @@ void TextPiostream::io(unsigned short& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -360,7 +402,7 @@ void TextPiostream::io(int& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading int\n";
@@ -373,7 +415,7 @@ void TextPiostream::io(int& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -382,7 +424,7 @@ void TextPiostream::io(unsigned int& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading unsigned int\n";
@@ -395,7 +437,7 @@ void TextPiostream::io(unsigned int& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -404,7 +446,7 @@ void TextPiostream::io(long& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading long\n";
@@ -417,7 +459,7 @@ void TextPiostream::io(long& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -426,7 +468,7 @@ void TextPiostream::io(unsigned long& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading unsigned long\n";
@@ -439,7 +481,7 @@ void TextPiostream::io(unsigned long& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -448,7 +490,7 @@ void TextPiostream::io(long long& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading long long\n";
@@ -461,7 +503,7 @@ void TextPiostream::io(long long& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -470,7 +512,7 @@ void TextPiostream::io(double& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading double\n";
@@ -483,7 +525,7 @@ void TextPiostream::io(double& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -492,7 +534,7 @@ void TextPiostream::io(float& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     in >> data;
     if(!in){
       cerr << "Error reading float\n";
@@ -505,7 +547,7 @@ void TextPiostream::io(float& data)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << data << " ";
   }
 }
@@ -514,7 +556,7 @@ void TextPiostream::io(string& data)
 {
   if(err)return;
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     expect('"');
     char buf[1000];
     char* p=buf;
@@ -549,7 +591,7 @@ void TextPiostream::io(string& data)
     expect(' ');
     data=string(buf);
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     out << "\"" << data << "\" ";
   }
 }
@@ -557,7 +599,7 @@ void TextPiostream::io(string& data)
 void TextPiostream::expect(char expected)
 {
   if(err)return;
-  ifstream& in=*istr;
+  istream& in=*istr;
   if(!in){
     cerr << "read in expect failed (before read)\n";
     char buf[100];
@@ -599,7 +641,7 @@ void TextPiostream::expect(char expected)
 void TextPiostream::emit_pointer(int& have_data, int& pointer_id)
 {
   if(dir==Read){
-    ifstream& in=*istr;
+    istream& in=*istr;
     char c;
     in.get(c);
     if(in && c=='%')
@@ -618,7 +660,7 @@ void TextPiostream::emit_pointer(int& have_data, int& pointer_id)
     }
     expect(' ');
   } else {
-    ofstream& out=*ostr;
+    ostream& out=*ostr;
     if(have_data)
       out << '@';
     else
