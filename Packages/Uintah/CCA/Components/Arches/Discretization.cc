@@ -23,7 +23,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
-
+#include <math.h>
 #include <iostream>
 
 using namespace std;
@@ -1815,7 +1815,7 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 	    psi = max(0.0,temp1);
 	  }
           else if (limiter_type == 1)
-	    psi = (abs(r)+r)/(1.0+abs(r));
+	    psi = (Abs(r)+r)/(1.0+Abs(r));
 	  else psi = 1.0;
 	  
 	  x_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
@@ -1870,7 +1870,7 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 	    psi = max(0.0,temp1);
 	  }
           else if (limiter_type == 1)
-	    psi = (abs(r)+r)/(1.0+abs(r));
+	    psi = (Abs(r)+r)/(1.0+Abs(r));
 	  else psi = 1.0;
 	  
 	  y_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
@@ -1925,7 +1925,7 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 	    psi = max(0.0,temp1);
 	  }
           else if (limiter_type == 1)
-	    psi = (abs(r)+r)/(1.0+abs(r));
+	    psi = (Abs(r)+r)/(1.0+Abs(r));
 	  else psi = 1.0;
 	  
 	  z_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
