@@ -13,11 +13,13 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/ColumnMatrixPort.h>
+#include <Datatypes/HexMeshPort.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/Matrix.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarFieldHUG.h>
 #include <Datatypes/SparseRowMatrix.h>
+#include <Datatypes/VectorFieldPort.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
 
@@ -145,14 +147,14 @@ void TreatFEM::execute()
       pfield->data[i+1]=nodeList[i]->getSarc();
   }
   outpower->send(pfield);
-
-  ScalarFieldHUG* vfield=new ScalarFieldHUG(hexmesh);
+  
+  VectorFieldHUG* vfield=new VectorFieldHUG(hexmesh);
   vfield->data.resize(nodeList.size()+1);
   for (i=0;i<nodeList.size();i++) {
       Node* n=nodeList[i];
-      field->data[i+1]=Vector(n->getVX(), n->getVY(), n->getVZ());
+      vfield->data[i+1]=Vector(n->getVX(), n->getVY(), n->getVZ());
   }
-  outfield->send(field);
+  outfield->send(vfield);
 
   cout << "Number of nodes:   " << nodeList.size() << endl;
   cout << "Number of element: " << elementList.size() << endl;
