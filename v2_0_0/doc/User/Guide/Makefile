@@ -17,20 +17,14 @@
 # --
 #
 # Make html and ps versions of the Users guide.
-#
-# The env variable SRGROUP is expected to be set to one of scirun, biopse, or
-#  unitah. If its not set or is empty then biopse is assumed.  Note that
-#  uintah is not really supported yet.  This variable selects the set of
-#  packages for which module reference documents should be generated.
-#
 
 # ########## Variables
 
 # edition file
-edition:=../../edition.xml
+edition := ../../edition.xml
 
 # Latex command
-latex:=latex -interaction=nonstopmode
+latex := latex -interaction=nonstopmode
 
 # Name of root doc sans extension.
 bn := usersguide
@@ -52,9 +46,9 @@ htmlfigs := Figures/*.gif Figures/*.jpg
 
 # User created/edited sources (generated sources come into play further
 # down). 
-srcs:=${styfile} usersguide.tex title.tex intro.tex concepts.tex \
+srcs := ${macrosfile} usersguide.tex title.tex intro.tex concepts.tex \
 running.tex network.tex viewer.tex packages.tex converters.tex \
-../../Utilities/TeX/scirun-doc.tex
+itk_sr.tex ../../Utilities/TeX/scirun-doc.tex
 
 # Latex2html options.  Change as needed.
 latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
@@ -64,9 +58,9 @@ latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
 
 mainfile := ${bn}.tex
 dvifile := ${bn}.dvi
-pdffile = ${bn}.pdf
+pdffile := ${bn}.pdf
 htmldir := ${bn}
-treetop:=../../..
+treetop := ../../..
 
 # Remove list of directories
 define rmdirs
@@ -80,9 +74,9 @@ endef
 
 # ########## Targets for making various forms of the users guide.
 
-.PHONY: all latex html dvi pdf clean veryclean
+.PHONY: all html dvi pdf clean veryclean
 
-all: dvi pdf html  bib
+all: dvi pdf html
 
 dvi: ${dvifile}
 
@@ -90,8 +84,7 @@ html: ${htmldir}
 
 pdf: ${pdffile}
 
-# Note: ${bn}.bbl must be the last dependency!
-${dvifile}: ${macrosfile} ${mainfile} ${srcs} ${psfigs}
+${dvifile}: ${srcs} ${psfigs}
 	-${latex}  ${bn}
 	-makeindex ${bn}.idx
 	-bibtex ${bn}
@@ -110,10 +103,9 @@ ${pdffile}: ${dvifile}
 	dvipdfm -o ${pdffile} -p letter ${dvifile}
 
 # ########## Cleanage
-clean: ${call rmfiles,${bn}.aux ${bn}.log ${bn}.toc ${bn}.lot \
-	${bn}.lof ${bn}.dvi ${bn}.blg ${bn}.idx ${bn}.ilg \
-	${bn}.ind}
+clean:
+	${call rmfiles,${bn}.aux ${bn}.log ${bn}.toc ${bn}.lot ${bn}.lof ${bn}.dvi ${bn}.blg ${bn}.idx ${bn}.ilg  ${bn}.ind}
 
 veryclean: clean
 	${call rmdirs,${htmldir}}
-	${call rmfiles,${pdffile} *.bbl ${macrosfile} ${styfile}}
+	${call rmfiles,${pdffile} ${bn}.bbl ${macrosfile} ${styfile}}
