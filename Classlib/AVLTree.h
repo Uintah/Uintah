@@ -19,8 +19,6 @@
 #pragma interface
 #endif
 
-#include <iostream.h>
-
 template<class Key, class Data> class AVLTree;
 template<class Key, class Data> class AVLTreeIter;
 
