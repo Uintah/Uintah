@@ -53,7 +53,12 @@ public:
   inline double get_ntiles() {return ntiles;}
   int readfromppm6(char *);
   //int readfromppm(char *);
-  FILE * readcomments (FILE*fin);  
+
+  FILE * readcomments (FILE*fin);
+  void writetoppm(char *filename,char *bumpfile, Vector *v);
+  void CreateNormalMap(char *bumpfile, char *filename, Vector normal, Vector pu, Vector pv);
+  void print();
+
 };
 
 } // end namespace rtrt
