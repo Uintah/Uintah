@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
 #include <Packages/Uintah/Core/Variables/VarLabelMatlPatch.h>
+#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
 #include <Packages/Uintah/Core/Variables/VarLabelMatlPatchDW.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 
@@ -37,7 +38,6 @@ namespace Uintah {
   class TypeDescription;
   class Patch;
   class ProcessorGroup;
-  class PSPatchMatlGhost;
   class SendState;
 
 /**************************************
