@@ -22,6 +22,7 @@ MPMFlags::MPMFlags()
   d_useLoadCurves = false;
   d_createNewParticles = false;
   d_with_color = false;
+  d_fracture = false;
                       
   d_doErosion = false;
   d_erosionAlgorithm = "none";
