@@ -20,6 +20,9 @@ static DebugStream cout_norm("ICE_NORMAL_COUT", false);
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 
+
+
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleImplicitPressureSolve--
 _____________________________________________________________________*/
@@ -71,6 +74,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->vvel_FCMELabel,            gac,2); 
   t->requires( Task::NewDW, lb->wvel_FCMELabel,            gac,2); 
   
+  t->computes(lb->term2Label, one_matl);
   t->computes(lb->rhsLabel);
   t->computes(lb->initialGuessLabel);
   sched->addTask(t, patches, all_matls);
@@ -91,7 +95,8 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires(Task::NewDW, lb->press_equil_CCLabel,  press_matl,  gn);  
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,                    gn);
   t->requires(Task::NewDW, lb->rho_CCLabel,                       gn);
-    
+  t->requires(Task::NewDW, lb->betaLabel,           one_matl,     gn);
+      
   t->computes(lb->delP_DilatateLabel, press_matl);
   t->computes(lb->delP_MassXLabel,    press_matl);  
   t->computes(lb->press_CCLabel,      press_matl); 
@@ -127,22 +132,28 @@ void ICE::setupMatrix(const ProcessorGroup*,
    
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->allocateAndPut(A,    lb->matrixLabel,  0, patch);    
-    new_dw->allocateAndPut(beta, lb->betaLabel,    0, patch);
+    new_dw->allocateAndPut(A,    lb->matrixLabel,  0, patch, gn, 0);    
+    new_dw->allocateAndPut(beta, lb->betaLabel,    0, patch, gn, 0);
     IntVector right, left, top, bottom, front, back;
     IntVector R_CC, L_CC, T_CC, B_CC, F_CC, BK_CC;
     
+    //__________________________________
+    //  Initialize beta and A
     beta.initialize(0.0);
     for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
-      A[c].p = 0.0;
-      A[c].n = 0.0;
-      A[c].s = 0.0;
-      A[c].e = 0.0;
-      A[c].w = 0.0;
-      A[c].t = 0.0;
-      A[c].b = 0.0;
+      A[c].p = 1.0;
+      A[c].n = 1.0;   A[c].s = 1.0;
+      A[c].e = 1.0;   A[c].w = 1.0;  // extra cell = 1.0
+      A[c].t = 1.0;   A[c].b = 1.0;
     } 
+    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+      IntVector c = *iter;
+      A[c].p = 0.0;
+      A[c].n = 0.0;   A[c].s = 0.0;
+      A[c].e = 0.0;   A[c].w = 0.0;   // Interior cells = 0.0;
+      A[c].t = 0.0;   A[c].b = 0.0;
+    }
     
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -246,9 +257,9 @@ void ICE::setupMatrix(const ProcessorGroup*,
                 (A[c].n + A[c].s + A[c].e + A[c].w + A[c].t + A[c].b);
     }    
 /*`==========TESTING==========*/
+#if 1
     //__________________________________
-    //  setup up the matrix an rhs
-    // DUMMY matrix for right now
+    // DUMMY matrix
     for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
       A[c].p = 1.0;
@@ -258,8 +269,15 @@ void ICE::setupMatrix(const ProcessorGroup*,
       A[c].w = 1.0;
       A[c].t = 1.0;
       A[c].b = 1.0;
-    } 
-/*===========TESTING==========`*/       
+    }
+#endif 
+/*===========TESTING==========`*/ 
+    //---- P R I N T   D A T A ------   
+    if (switchDebug_setupMatrix) {    
+      ostringstream desc;
+      desc << "BOT_setupMatrix_" << patch->getID();
+      printStencil( 0, patch, 0, desc.str(), "A", A);
+    }         
   }
 }
 
@@ -287,7 +305,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     Advector* advector = d_advector->clone(new_dw,patch);
     CCVariable<double> q_CC, q_advected; 
     CCVariable<double> rhs, initialGuess;
-    CCVariable<double> sumAdvection, massExchangeTerm;
+    CCVariable<double> sumAdvection, massExchTerm;
     constCCVariable<double> beta, press_CC, oldPressure;
     
     const IntVector gc(1,1,1);
@@ -297,14 +315,16 @@ void ICE::setupRHS(const ProcessorGroup*,
     new_dw->get(beta,                   lb->betaLabel,          0,patch,gn,0);   
     new_dw->get(press_CC,               lb->press_equil_CCLabel,0,patch,gn,0);     
     new_dw->allocateAndPut(rhs,         lb->rhsLabel,           0,patch);    
-    new_dw->allocateAndPut(initialGuess,lb->initialGuessLabel,  0,patch);  
+    new_dw->allocateAndPut(initialGuess,lb->initialGuessLabel,  0,patch); 
+    new_dw->allocateAndPut(massExchTerm,lb->term2Label,         0,patch);
     new_dw->allocateTemporary(q_advected,       patch);
     new_dw->allocateTemporary(sumAdvection,     patch);
-    new_dw->allocateTemporary(massExchangeTerm, patch);
     new_dw->allocateTemporary(q_CC,             patch,  gac,1);    
  
+    rhs.initialize(0.0);
+    initialGuess.initialize(0.0);
     sumAdvection.initialize(0.0);
-    massExchangeTerm.initialize(0.0);
+    massExchTerm.initialize(0.0);
   
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -336,9 +356,9 @@ void ICE::setupRHS(const ProcessorGroup*,
       //  sum mass Exchange term
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
-        sumAdvection[c]     += q_advected[c];
+        sumAdvection[c] += q_advected[c];
         
-        massExchangeTerm[c] += burnedMass[c] * (sp_vol_CC[c]/vol);
+        massExchTerm[c] += burnedMass[c] * (sp_vol_CC[c]/vol);
         
       } 
     }  //matl loop
@@ -350,14 +370,25 @@ void ICE::setupRHS(const ProcessorGroup*,
       IntVector c = *iter;
 /*`==========TESTING==========*/
 //      double term1 = beta[c] * vol*(press_CC[c] - oldPressure[c]);
-/*===========TESTING==========`*/ 
       double term1 = 0.0;
-      double term2 = delT * massExchangeTerm[c];
+/*===========TESTING==========`*/ 
+
+      double term2 = delT * massExchTerm[c];
       rhs[c] = -term1 + term2 -sumAdvection[c];
 /*`==========TESTING==========*/
+      initialGuess[c] = 5; 
       rhs[c] = 1; 
-/*===========TESTING==========`*/ 
+/*===========TESTING==========`*/
     }
+    //---- P R I N T   D A T A ------  
+    if (switchDebug_setupRHS) {
+      ostringstream desc;
+      desc << "BOT_setupRHS_" << patch->getID();
+      printData( 0, patch, 0,desc.str(), "rhs",              rhs);
+      printData( 0, patch, 0,desc.str(), "sumAdvection",     sumAdvection);
+      printData( 0, patch, 0,desc.str(), "MassExchangeTerm", massExchTerm);
+      printData( 0, patch, 0,desc.str(), "InitialGuess",     initialGuess);
+    }  
   }  // patches loop
 }
 /* --------------------------------------------------------------------- 
@@ -383,19 +414,33 @@ void ICE::updatePressure(const ProcessorGroup*,
     constCCVariable<double> imp_delP;
     constCCVariable<double> pressure;
     constCCVariable<double> rho_CC;
+    constCCVariable<double> beta;
+    constCCVariable<double> massExchTerm;
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
     
     Ghost::GhostType  gn = Ghost::None;
     new_dw->get(imp_delP,      lb->imp_delPLabel,        0,patch,gn,0);
     new_dw->get(pressure,      lb->press_equil_CCLabel,  0,patch,gn,0);
-    
+    new_dw->get(beta,          lb->betaLabel,            0,patch,gn,0);
+    new_dw->get(massExchTerm,  lb->term2Label,           0,patch,gn,0);
+        
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
     new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,   0, patch);
     new_dw->allocateAndPut(press_CC,     lb->press_CCLabel,     0, patch);
     new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,   0, patch);
 
     sum_rho_CC.initialize(0.0);
-     
+    press_CC.initialize(0.);
+    delP_Dilatate.initialize(0.0);
+    delP_MassX.initialize(0.0); 
+    
+    //---- P R I N T   D A T A ------  
+    if (switchDebug_updatePressure) {
+      ostringstream desc;
+      desc << "TOP_updatePressure_" << patch->getID();
+      printData( 0, patch, 0,desc.str(), "imp_delP",     imp_delP);
+    }
+         
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -408,18 +453,20 @@ void ICE::updatePressure(const ProcessorGroup*,
         sum_rho_CC[c] += rho_CC[c];
       } 
     }    
-/*`==========TESTING==========*/
-    delP_Dilatate.initialize(0.0);
-    delP_MassX.initialize(0.0); 
-/*==========TESTING==========`*/
-    
     //__________________________________
     //  add delP to press
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
-      press_CC[c] = pressure[c];
+      press_CC[c] = pressure[c] + imp_delP[c];
     }
-
+    
+    //__________________________________
+    // backout delP_Dilatate and delP_MassX
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+      IntVector c = *iter;
+      delP_MassX[c]    = massExchTerm[c]/beta[c];
+      delP_Dilatate[c] = imp_delP[c] - delP_MassX[c];
+    }    
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
   }
