@@ -474,7 +474,7 @@ TextureRenderer::draw_polygons_wireframe(vector<float>& vertex,
 
 
 void
-TextureRenderer::build_colormap1(Array2< unsigned char>& cmap_array,
+TextureRenderer::build_colormap1(Array2<float>& cmap_array,
 				 unsigned int& cmap_tex, bool& cmap_dirty,
 				 bool& alpha_dirty,  double level_exponent)
 {
@@ -493,10 +493,10 @@ TextureRenderer::build_colormap1(Array2< unsigned char>& cmap_array,
         const Color &c = cmap1_->getColor(j*dv);
         double alpha = cmap1_->getAlpha(j*dv);
         // pre-multiply and quantize
-        cmap_array(j,0) = (unsigned char)(c.r()*alpha*255);
-        cmap_array(j,1) = (unsigned char)(c.g()*alpha*255);
-        cmap_array(j,2) = (unsigned char)(c.b()*alpha*255);
-        cmap_array(j,3) = (unsigned char)(alpha*255);
+        cmap_array(j,0) = c.r()*alpha;
+        cmap_array(j,1) = c.g()*alpha;
+        cmap_array(j,2) = c.b()*alpha;
+        cmap_array(j,3) = alpha;
       }
     } break;
     case MODE_MIP: {
@@ -505,10 +505,10 @@ TextureRenderer::build_colormap1(Array2< unsigned char>& cmap_array,
         const Color &c = cmap1_->getColor(j*dv);
         double alpha = cmap1_->getAlpha(j*dv);
         // pre-multiply and quantize
-        cmap_array(j,0) = (unsigned char)(c.r()*alpha*255);
-        cmap_array(j,1) = (unsigned char)(c.g()*alpha*255);
-        cmap_array(j,2) = (unsigned char)(c.b()*alpha*255);
-        cmap_array(j,3) = (unsigned char)(alpha*255);
+        cmap_array(j,0) = c.r()*alpha;
+        cmap_array(j,1) = c.g()*alpha;
+        cmap_array(j,2) = c.b()*alpha;
+        cmap_array(j,3) = alpha;
       }
     } break;
     case MODE_OVER: {
@@ -525,10 +525,10 @@ TextureRenderer::build_colormap1(Array2< unsigned char>& cmap_array,
 			  1.0/sampling_rate_/pow(2.0, level_exponent) );
 
         // pre-multiply and quantize
-        cmap_array(j,0) = (unsigned char)(c.r()*alpha*255);
-        cmap_array(j,1) = (unsigned char)(c.g()*alpha*255);
-        cmap_array(j,2) = (unsigned char)(c.b()*alpha*255);
-        cmap_array(j,3) = (unsigned char)(alpha*255);
+        cmap_array(j,0) = c.r()*alpha;
+        cmap_array(j,1) = c.g()*alpha;
+        cmap_array(j,2) = c.b()*alpha;
+        cmap_array(j,3) = alpha;
       }
     } break;
     default:
@@ -543,11 +543,11 @@ TextureRenderer::build_colormap1(Array2< unsigned char>& cmap_array,
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, cmap_array.dim1(), 0,
-                   GL_RGBA, GL_UNSIGNED_BYTE, &cmap_array(0,0));
+                   GL_RGBA, GL_FLOAT, &cmap_array(0,0));
     } else {
       glBindTexture(GL_TEXTURE_1D, cmap_tex);
       glTexSubImage1D(GL_TEXTURE_1D, 0, 0, cmap_array.dim1(),
-                      GL_RGBA, GL_UNSIGNED_BYTE, &cmap_array(0,0));
+                      GL_RGBA, GL_FLOAT, &cmap_array(0,0));
     }
     cmap_dirty = false;
     alpha_dirty = false;
@@ -763,20 +763,12 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
 #ifdef HAVE_AVR_SUPPORT
 #if LINUXCOMPAT
   glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
-  float cmap[256*4];
-  memcpy(cmap, cmap1_->get_rgba(), 256*4*sizeof(float));
-  for (int i = 0; i < 256; i++)
-  {
-    cmap[i*4+0] *= cmap[i*4+3];
-    cmap[i*4+1] *= cmap[i*4+3];
-    cmap[i*4+2] *= cmap[i*4+3];
-  }
   glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
                GL_RGBA,
                256,
                GL_RGBA,
                GL_FLOAT,
-               cmap);
+               &(cmap1_array_(0, 0)));
 #else
   // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);

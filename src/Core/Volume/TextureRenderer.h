@@ -55,7 +55,7 @@ class VolShaderFactory;
 struct cmap_data {
 public:
   cmap_data() : tex_id_(0), dirty_(true), alpha_dirty_(true) {}
-  Array2<unsigned char>  data_;
+  Array2<float>  data_;
   unsigned int tex_id_;
   bool dirty_;
   bool alpha_dirty_;
@@ -114,7 +114,7 @@ protected:
 
 #ifdef SCI_OPENGL  
   int cmap2_size_;
-  Array2<unsigned char> cmap1_array_;
+  Array2<float> cmap1_array_;
   unsigned int cmap1_tex_;
   Array3<float> raster_array_;
   Array3<unsigned char> cmap2_array_;
@@ -154,7 +154,7 @@ protected:
 			       vector<int>& poly,
 			       bool normal, bool fog, Pbuffer* buffer);
 
-  void build_colormap1(Array2< unsigned char>& cmap_array,
+  void build_colormap1(Array2<float>& cmap_array,
 		       unsigned int& cmap_tex, bool& cmap_dirty,
 		       bool& alpha_dirty,  double level_exponent = 0.0);
 //   void build_colormap1();
