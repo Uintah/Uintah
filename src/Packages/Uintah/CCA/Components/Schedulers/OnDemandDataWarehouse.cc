@@ -196,7 +196,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 
       if(!sendset){
 
-	cerr << "sendset is NULL\n";
+	mixedDebug << "sendset is NULL\n";
 
 	ParticleSubset* pset = var->getParticleSubset();
 	ssLock.lock();  // Dd: ??
@@ -231,7 +231,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
       int numParticles = sendset->numParticles();
       ssLock.unlock(); // Dd: ??
 
-      cerr << "sendset has " << numParticles << " particles\n";
+      mixedDebug << "sendset has " << numParticles << " particles\n";
 
       if( numParticles > 0){
 	getMPIBuffLock.lock(); // Dd: ??
