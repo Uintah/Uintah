@@ -697,7 +697,6 @@ OpenGL::redraw_frame()
 #if defined(HAVE_GLEW)
     static bool glew_init = false;
     if (!glew_init) {
-      fprintf(stdout, "Initing GLEW\n");
       glewExperimental = GL_TRUE;
       GLenum err = glewInit();
       if (GLEW_OK != err )
