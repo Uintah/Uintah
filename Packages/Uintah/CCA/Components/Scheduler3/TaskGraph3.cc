@@ -60,7 +60,6 @@ TaskGraph3::initialize()
     delete *iter;
 
   d_tasks.clear();
-  d_oldInitRequires = d_initRequires;
   d_initRequires.clear();
   d_initRequiredVars.clear();
   edges.clear();

@@ -131,7 +131,8 @@ WARNING
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
 
-    virtual void scheduleDataCopy(const GridP& grid, SimulationStateP& state);
+    virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& state, 
+                                       SimulationInterface* sim);
     
   protected:
     void finalizeTimestep();
@@ -174,7 +175,7 @@ WARNING
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in
     //! copyDataToNewGrid.
-    typedef map<const VarLabel*, MaterialSubset*> label_matl_map;
+    typedef map<const VarLabel*, pair<int, MaterialSubset*> > label_matl_map;
     label_matl_map label_matls_;
   };
 } // End namespace Uintah
