@@ -53,6 +53,7 @@ SRCS := \
 	$(SRCDIR)/OpenGLWindow.tcl\
 	$(SRCDIR)/PartManager.tcl\
 	$(SRCDIR)/NullGui.tcl\
+	$(SRCDIR)/Range.tcl\
 #	$(SRCDIR)/GuiFilename.tcl\
 #	$(SRCDIR)/Slider.tcl\
 #[INSERT NEW TCL FILE HERE]

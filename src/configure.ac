@@ -1938,7 +1938,7 @@ AC_SUBST(INC_TCL_H)
 # -- tk --
 if test -f "$_sci_lib/tkConfig.sh"; then 
   . $_sci_lib/tkConfig.sh; 
-  _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic"
+  _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic $TK_SRC_DIR/unix"
 fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
