@@ -331,10 +331,8 @@ int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
     }
     if(row != i)
     {
-      // Switch rows (actually their pointers)
-      double* tmp=A[i];
-      A[i]=A[row];
-      A[row]=tmp;
+      // Switch rows
+      swap_rows(A[i], A[row]);
       double dtmp=lhs[i];
       lhs[i]=lhs[row];
       lhs[row]=dtmp;
@@ -429,10 +427,8 @@ int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
       return 0;
     }
     if(row != i){
-      // Switch rows (actually their pointers)
-      double* tmp=A[i];
-      A[i]=A[row];
-      A[row]=tmp;
+      // Switch rows
+      swap_rows(A[i], A[row]);
       double dtmp=lhs[i];
       lhs[i]=lhs[row];
       lhs[row]=dtmp;
@@ -678,6 +674,19 @@ DenseMatrix::io(Piostream& stream)
   stream.end_class();
 }
 
+
+void
+DenseMatrix::swap_rows(double *a, double *b)
+{
+  for (int i = 0; i < ncols_; i++)
+  {
+    double tmp = a[i];
+    a[i] = b[i];
+    b[i] = tmp;
+  }
+}
+
+
 bool
 DenseMatrix::invert()
 {
@@ -720,10 +729,8 @@ DenseMatrix::invert()
       return false; 
     }
     if(row != i){
-      // Switch rows (actually their pointers)
-      double* tmp=data[i];
-      data[i]=data[row];
-      data[row]=tmp;
+      // Switch rows.
+      swap_rows(data[i], data[row]);
       double* ntmp=newdata[i];
       newdata[i]=newdata[row];
       newdata[row]=ntmp;
