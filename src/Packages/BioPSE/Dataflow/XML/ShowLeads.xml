@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="ShowLeads" category="LeadField">
+<component name="ShowLeads" category="Visualization">
   <overview>
     <authors>
     </authors>

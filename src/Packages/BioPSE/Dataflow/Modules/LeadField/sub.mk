@@ -30,7 +30,6 @@ SRCS     += \
 	$(SRCDIR)/AssignLeadFieldSources.cc\
 	$(SRCDIR)/BuildElemLeadField.cc\
 	$(SRCDIR)/BuildMisfitField.cc\
-	$(SRCDIR)/ShowLeads.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Disclosure Dataflow/Network Dataflow/Ports \
