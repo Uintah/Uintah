@@ -85,6 +85,7 @@ public:
     GeomID addObj(GeomObj*, const clString& name, CrowdMonitor* lock=0);
     void delObj(GeomID, int del=1);
     void delAll();
+    void flush();
     void flushViews();
     void flushViewsAndWait();
 

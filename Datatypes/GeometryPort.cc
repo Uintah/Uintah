@@ -76,6 +76,16 @@ void GeometryOPort::reset()
     dirty=0;
 }
 
+void GeometryOPort::flush()
+{
+  GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlush, portid);
+  if(outbox){
+    outbox->send(msg);
+  } else {
+    save_msg(msg);
+  } 
+}
+  
 void GeometryOPort::finish()
 {
     if(dirty){
