@@ -167,7 +167,7 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
     "                        double x, double y, double z,\n" +
     "                        const typename IFIELD::value_type &v)\n" +
     "  {\n" +
-    "     " + function + "\n" +
+    "    " + function + "\n" +
     "  }\n" +
     "\n" +
     "  virtual string identify()\n" +
