@@ -48,60 +48,82 @@
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/Runnable.h>
 #include <string>
+#include <list>
 
 namespace SCIRun {
-  using std::string;
 
-  class Connection;
-  class MessageBase;
-  class Module;
-  class Network;
-  class OPort;
+using std::string;
 
-  class Scheduler : public Runnable  {
-    Network* net;
-    void multisend(OPort*);
-    void do_scheduling(Module*);
-    bool first_schedule;
-    bool schedule;
-  public:
-    Mailbox<MessageBase*> mailbox;
+class Connection;
+class MessageBase;
+class Module;
+class Network;
+class OPort;
 
-    Scheduler(Network*);
-    ~Scheduler();
+
+struct SerialSet
+{
+  unsigned int base;
+  int size;
+  int callback_count;
+
+  SerialSet(unsigned int base, int s) :
+    base(base), size(s), callback_count(0)
+  {}
+};
+
+
+class Scheduler : public Runnable
+{
+  Network* net;
+  bool first_schedule;
+  bool schedule;
+  unsigned int serial_id;
+  std::list<SerialSet> serial_set;
+
+  virtual void run();
+  void main_loop();
+  void multisend_real(OPort*);
+  void do_scheduling_real(Module*);
+  void report_execution_finished_real(unsigned int serial);
+
+public:
+  Mailbox<MessageBase*> mailbox;
+
+  Scheduler(Network*);
+  ~Scheduler();
     
-    ////////////////////////
-    //Turns scheduler on and off
-    //Returns: true if scheduler is now on, false if scheduler is now off 	
-    bool toggleOnOffScheduling();
- 
-    void do_scheduling();
-    void request_multisend(OPort*);
+  // Turns scheduler on and off
+  // Returns: true if scheduler is now on, false if scheduler is now off
+  bool toggleOnOffScheduling();
 
-    void report_execution_finished(unsigned int serial);
+  void do_scheduling();
+  void request_multisend(OPort*);
 
-  private:
-    virtual void run();
-    void main_loop();
+  void report_execution_finished(unsigned int serial);
+};
 
-  };
 
-  class Scheduler_Module_Message : public MessageBase {
-  public:
-    Connection* conn;
-    unsigned int serial;
-    Scheduler_Module_Message(unsigned int serial);
-    Scheduler_Module_Message(Connection* conn);
-    virtual ~Scheduler_Module_Message();
-  };
+class Scheduler_Module_Message : public MessageBase {
+public:
+  Connection* conn;
+  unsigned int serial;
+  Scheduler_Module_Message(unsigned int serial);
+  Scheduler_Module_Message(Connection* conn);
+  virtual ~Scheduler_Module_Message();
+};
 
-  class Module_Scheduler_Message : public MessageBase {
-  public:
-    OPort* p1;
-    Module_Scheduler_Message();
-    Module_Scheduler_Message(OPort*);
-    virtual ~Module_Scheduler_Message();
-  };
+
+class Module_Scheduler_Message : public MessageBase {
+public:
+  OPort* p1;
+  unsigned int serial;
+  Module_Scheduler_Message();
+  Module_Scheduler_Message(OPort*);
+  Module_Scheduler_Message(unsigned int serial);
+  virtual ~Module_Scheduler_Message();
+};
+
 
 } // End namespace SCIRun
 
