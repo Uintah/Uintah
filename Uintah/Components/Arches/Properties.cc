@@ -21,6 +21,7 @@ using namespace Uintah::ArchesSpace;
 //****************************************************************************
 Properties::Properties(const ArchesLabel* label):d_lab(label)
 {
+  d_bc = 0;
 }
 
 //****************************************************************************
@@ -142,11 +143,14 @@ Properties::computeProps(const ProcessorGroup*,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw)
 {
-  // Get the CCVariable (density) from the old datawarehouse
-  CCVariable<double> density;
-  std::vector<CCVariable<double> > scalar(d_numMixingVars);
+  // Get the cellType and density from the old datawarehouse
   int matlIndex = 0;
   int nofGhostCells = 0;
+  CCVariable<int> cellType;
+  old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  CCVariable<double> density;
+  std::vector<CCVariable<double> > scalar(d_numMixingVars);
   old_dw->get(density, d_lab->d_densitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   cerr << "number of mixing vars" << d_numMixingVars << endl;
@@ -162,14 +166,18 @@ Properties::computeProps(const ProcessorGroup*,
   for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
     for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
       for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+
+	// Store current cell
+	IntVector currCell(colX, colY, colZ);
+
 	// for combustion calculations mixingmodel will be called
 	// this is similar to prcf.f
 	double local_den = 0.0;
 	double mixFracSum = 0.0;
 	for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 	  local_den += 
-	    (scalar[ii])[IntVector(colX, colY, colZ)]/d_streams[ii].d_density;
-	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
+	    (scalar[ii])[currCell]/d_streams[ii].d_density;
+	  mixFracSum += (scalar[ii])[currCell];
 	}
 	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
 	// std::cerr << "local_den " << local_den << endl;
@@ -177,8 +185,11 @@ Properties::computeProps(const ProcessorGroup*,
 	  throw InvalidValue("Computed zero density in props" );
 	else
 	  local_den = (1.0/local_den);
-	density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
-                 	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
+	if (d_bc == 0)
+	  throw InvalidValue("BoundaryCondition pointer not assigned");
+	if (cellType[currCell] != d_bc->wallCellType()) 
+	  density[currCell] = d_denUnderrelax*local_den +
+	                      (1.0-d_denUnderrelax)*density[currCell];
       }
     }
   }
@@ -276,6 +287,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.27  2000/08/19 05:53:43  bbanerje
+// Changed code so that output looks more like fortran output.
+//
 // Revision 1.26  2000/08/08 23:34:18  rawat
 // fixed some bugs in profv.F and Properties.cc
 //

@@ -34,6 +34,7 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Uintah/Components/Arches/ArchesLabel.h>
+#include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Grid/Patch.h>
@@ -102,7 +103,18 @@ public:
       //
       // Get the number of mixing variables
       //
-      int getNumMixVars() const{ return d_numMixingVars; }
+      inline int getNumMixVars() const{ 
+	return d_numMixingVars; 
+      }
+
+      // GROUP: Set Methods :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Set the boundary consition pointer
+      //
+      inline void setBC(const BoundaryCondition* bc) {
+	d_bc = bc;
+      }
 
 protected :
 
@@ -157,6 +169,7 @@ private:
 	void problemSetup(ProblemSpecP&);
       };
       std::vector<Stream> d_streams; 
+      const BoundaryCondition* d_bc;
 
       // Variable labels used by simulation controller
       const ArchesLabel* d_lab;
@@ -169,6 +182,9 @@ private:
 
 //
 // $Log$
+// Revision 1.16  2000/08/19 05:53:43  bbanerje
+// Changed code so that output looks more like fortran output.
+//
 // Revision 1.15  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

@@ -1810,10 +1810,10 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   }   
   if (d_pressureBdry) {
     // set density
-    FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
-		    idxLo.get_pointer(), idxHi.get_pointer(),
-		    density.getPointer(), cellType.getPointer(),
-		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
+    //FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
+	//	    idxLo.get_pointer(), idxHi.get_pointer(),
+	//	    density.getPointer(), cellType.getPointer(),
+	//	    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
     // set scalar values at the boundary
     for (int indx = 0; indx < d_nofScalars; indx++) {
       double scalarValue = d_pressureBdry->streamMixturefraction[indx];
@@ -2108,6 +2108,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.53  2000/08/19 05:53:43  bbanerje
+// Changed code so that output looks more like fortran output.
+//
 // Revision 1.52  2000/08/10 00:56:33  rawat
 // added pressure bc for scalar and changed discretization option for velocity
 //
