@@ -233,7 +233,8 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
   const VarLabel* label = dep->req->var;
   const Patch* patch = dep->fromPatch;
   int matlIndex = dep->matl;
-  
+
+ d_lock.readLock();
   switch(label->typeDescription()->getType()){
   case TypeDescription::ParticleVariable:
     {
@@ -347,6 +348,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
   default:
     throw InternalError("sendMPI not implemented for "+label->getFullName(matlIndex, patch));
   } // end switch( label->getType() );
+ d_lock.readUnlock();  
 }
 
 void
@@ -444,10 +446,15 @@ OnDemandDataWarehouse::recvMPIGridVar(DWDatabase& db, BufferInfo& buffer,
   VariableBase* var = 0;
   if (db.exists(label, matlIndex, patch)) {
     var = db.get(label, matlIndex, patch);
+    // use to indicate that it will be receiving (foreign) data and should
+    // not be replaced.
+    var->setForeign();
   }
   d_lock.readUnlock();
   
-  if (var == 0 || var->getBasePointer() == 0) {
+  if (var == 0 || var->getBasePointer() == 0 ||
+      Min(var->getLow(), dep->low) != var->getLow() ||
+      Max(var->getHigh(), dep->high) != var->getHigh()) {
     // There was no place reserved to recv the data yet,
     // so it must create the space now.
     Variable* v = label->typeDescription()->createInstance();
@@ -1604,34 +1611,29 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
       // Assumption is that it is a ghost patch -- so assert that.
       ASSERT(nonGhostPatches.find(patchGroupMember)
 	     == nonGhostPatches.end());
-      
+
       VariableBase* existingGhostVar =
 	db.get(label, matlIndex, patchGroupMember);
       IntVector existingLow = existingGhostVar->getLow();
       IntVector existingHigh = existingGhostVar->getHigh();
       IntVector minLow = Min(existingLow, enclosedLowIndex);
       IntVector maxHigh = Max(existingHigh, enclosedHighIndex);
-      
-      if (minLow == enclosedLowIndex && maxHigh == enclosedHighIndex) {
-	// this new ghost variable section encloses the old one,
-	// so replace the old one
-	// Note: it is important for this case to come first since
-	// you want to be able to replace null-data place holders
-	// when existingLow/High == enclosedLow/High.
-	db.put(label, matlIndex, patchGroupMember, clone, true);
-      }
-      else if (minLow == existingLow && maxHigh == existingHigh) {
-	// old ghost variable section encloses this new one, so leave it
+
+      if (existingGhostVar->isForeign()) {
+	// data already being received, so don't replace it
 	delete clone;
       }
+      else if (minLow == enclosedLowIndex && maxHigh == enclosedHighIndex) {
+	// this new ghost variable section encloses the old one,
+	// so replace the old one
+	db.put(label, matlIndex, patchGroupMember, clone, true);
+      }
       else {
-	// Neither encloses the other, so put in a place holder with
-	// null data so it will (unless it is replaced with a window
-	// that encompasses it) allocate for this patchGroupMember
-	// during recvMPI.
-	VariableBase* placeHolder = clone->makePlaceHolder(minLow, maxHigh);
-	delete clone;	  
-	db.put(label, matlIndex, patchGroupMember, placeHolder, true);
+	// Either the old ghost variable section encloses this new one
+	// (so leave it), or neither encloses the other (so just forget
+	// about it -- it'll allocate extra space for it when receiving
+	// the ghost data in recvMPIGridVar if nothing else).
+	delete clone;
       }
     }
     else {
