@@ -96,6 +96,8 @@ class ShowField : public Module
   GuiInt                   vectors_on_;
   GuiInt                   normalize_vectors_;
   GuiInt                   has_vec_data_;
+  GuiInt                   bidirectional_;
+  GuiInt                   arrow_heads_on_;
   bool                     data_dirty_;
   
   //! default color and material
@@ -174,6 +176,8 @@ ShowField::ShowField(GuiContext* ctx) :
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
   has_vec_data_(ctx->subVar("has_vec_data")),
+  bidirectional_(ctx->subVar("bidirectional")),
+  arrow_heads_on_(ctx->subVar("arrow-heads-on")),
   data_dirty_(true),
   def_color_r_(ctx->subVar("def-color-r")),
   def_color_g_(ctx->subVar("def-color-g")),
@@ -402,7 +406,8 @@ ShowField::execute()
 		      do_nodes, do_edges, do_faces, do_data,
 		      def_mat_handle_, data_at_dirty_, color_handle_,
 		      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_,
-		      use_normals_.get(), use_transparency_.get());
+		      use_normals_.get(), use_transparency_.get(),
+		      bidirectional_.get(), arrow_heads_on_.get());
   }
 
   // cleanup...
@@ -572,7 +577,17 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     // Toggle the GeomSwitch.
     normalize_vectors_.reset();
     data_dirty_ = true;
-    maybe_execute(FACE); // Must redraw the vectors.
+    maybe_execute(DATA); // Must redraw the vectors.
+  } else if (args[1] == "toggle_bidirectional"){
+    // Toggle the GeomSwitch.
+    bidirectional_.reset();
+    data_dirty_ = true;
+    maybe_execute(DATA); // Must redraw the vectors.
+  } else if (args[1] == "toggle_arrowheads"){
+    // Toggle the GeomSwitch.
+    arrow_heads_on_.reset();
+    data_dirty_ = true;
+    maybe_execute(DATA); // Must redraw the vectors.
   } else if (args[1] == "execute_policy"){
   } else if (args[1] == "calcdefs") {
     

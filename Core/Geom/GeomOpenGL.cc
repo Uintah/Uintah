@@ -451,6 +451,8 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     }
 
+    if (headwidth == 0 || headlength == 0) { post_draw(di); return; }
+
     // Draw back and head
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
