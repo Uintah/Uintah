@@ -1,0 +1,57 @@
+<faq>
+  <entry>
+    <keywords>SGI, runtime, pthreads, SIGABRT</context>
+    <question>
+      <p>
+        Using an SGI machine I successfully built all the required thirdparty
+        software by hand and successfully built SCIRun, but when I run SCIRun
+        it immediately signals an abort and displays the following error
+        message:
+      </p>
+      <pre>
+        Thread "main"(pid 251775) caught signal SIGABRT (Abort)
+        Backtrace:
+        0x5ff69224: SCIRun::Thread::niceAbort(void)
+        0x5ff7106c: handle_abort_signals
+        0xc37f7c0: sig_fixup_mask
+        0xfb11100: prctl
+        0xc37ee00: pthread_kill
+        0xc37fef8: _SGIPT_libc_raise
+        0xc378068: ptctl
+        0xfaf3e20: raise
+        0xfa668a4: abort
+        0xae40958: terminate(void)
+        0xae40788: __call_terminate
+        0xae42ba8: __throw
+        0x5ff72ad0: SCIRun::Thread::os_start(bool)
+        0x5ff68c7c: SCIRun::Thread::Thread(SCIRun::Runnable*,const
+        char*,SCIRun::ThreadGroup*,SCIRun::Thread::ActiveState)
+        0x100057c4: main
+        251775: main (state=running)
+ 
+        Abort signalled by pid: 251775
+        Occured for thread:
+        "main"resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
+      </pre>
+    </question>
+    <answer>
+      <p>
+        One or more of the thirdparty libraries was configured and built to
+        use (i.e. link against) pthreads.  On SGI machines, SCIRun uses sproc
+        threads instead of pthreads.  It is illegal to use both sproc and 
+        pthreads in a single process.  When two binaries are linked together
+        into a single process at runtime (e.g. scirun and libxerces-c1_4.so)
+        a segmentation fault is signalled and the process is shutdown.
+      </p>
+      <p>
+        The solution is to rebuild the offending libraries, configuring them
+        to _not_ use threads.  Xerces is typically the offending library, 
+        although Tcl and others may also be incorrectly configured to use
+        threads.  See the Thirdparty Software Installation and Build 
+        Information for recommended configure arguments for the thirdparty
+        software.  Note that when the automatic install script is used that
+        all the software is automatically correctly configured and built.
+      </p>
+    </answer>
+  </entry>
+</faq>
