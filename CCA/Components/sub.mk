@@ -25,13 +25,19 @@ ifeq ($(HAVE_QT),yes)
 SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
 	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
 	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
-	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/PHello $(SRCDIR)/PWorld
+	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/PHello 
 
 else
 SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
 endif
 
+
+ifeq ($(HAVE_MPI),yes)
+SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld
+endif
+
 ifeq ($(HAVE_BABEL),yes)
 SUBDIRS:= $(SUBDIRS) $(SRCDIR)/BabelTest
 endif
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
