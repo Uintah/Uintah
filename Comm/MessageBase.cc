@@ -11,7 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <MessageBase.h>
+#include <Comm/MessageBase.h>
+
 MessageBase::MessageBase(MessageTypes::MessageType type)
 : type(type)
 {
