@@ -31,8 +31,8 @@
 #ifndef Datatypes_MaskedLatVolField_h
 #define Datatypes_MaskedLatVolField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>

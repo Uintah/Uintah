@@ -46,12 +46,8 @@
 #ifndef Datatypes_StructHexVolField_h
 #define Datatypes_StructHexVolField_h
 
-#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Util/Assert.h>
+#include <Core/Datatypes/LatVolField.h>
 
 
 namespace SCIRun {
