@@ -1551,6 +1551,7 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 
   //fortran call
   fort_bcpress(domLo, domHi, idxLo, idxHi, vars->pressure,
+	       vars->pressCoeff[Arches::AP],
 	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
 	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
 	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
@@ -1979,10 +1980,11 @@ BoundaryCondition::newrecomputePressureBC(const ProcessorGroup* /*pc*/,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-    fort_calpbc(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, idxLo, idxHi,
-		vars->pressure, vars->density, vars->cellType, d_pressureBdry->d_cellTypeID,
-		d_pressureBdry->refPressure,
-		xminus, xplus, yminus, yplus, zminus, zplus);
+    fort_calbc(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, idxLo, idxHi,
+		    vars->pressure, vars->density, vars->cellType,
+		    d_pressureBdry->d_cellTypeID,
+		    d_pressureBdry->refPressure,
+		    xminus, xplus, yminus, yplus, zminus, zplus);
 
 }
 
