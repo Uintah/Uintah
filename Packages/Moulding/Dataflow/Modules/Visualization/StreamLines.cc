@@ -11,11 +11,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/ContourMesh.h>
 #include <Dataflow/Network/NetworkEditor.h>
 
 #include <iostream>
@@ -29,8 +30,6 @@ namespace Moulding {
 using namespace SCIRun;
 using std::cerr;
 using std::endl;
-
-  //template class GenericInterpolate<Vector>;
 
 // LUTs for the RK-fehlberg algorithm 
 double a[]   ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
@@ -64,18 +63,20 @@ private:
   FieldHandle                   sfhandle_;
   FieldHandle                   ohandle_;
 
-  Field                         *vf_;
+  Field                         *vf_;  // vector field
+  Field                         *sf_;  // seed point field
+  ContourField<double>          *cf_;
 
   GenericInterpolate<Vector>    *interp_;
 
   // member functions
 
-  // Using Runge-Kutta-Fehlberg, find the points that should
-  // be connected together to create a single streamline.
-  void FindStreamLineSupport(Array1<Point>&, Point, float, float, int);
+  // find the nodes that make up a single stream line.
+  // This particular implementation uses Runge-Kutta-Fehlberg
+  void FindStreamLineNodes(vector<Point>&, Point, float, float, int);
 
   // compute the inner terms of the RKF formula
-  int ComputeRKFTerms(Array1<Vector>&,Point&, float);
+  int ComputeRKFTerms(vector<Vector>&,Point&, float);
 };
 
 extern "C" MouldingSHARE Module* make_StreamLines(const clString& id) {
@@ -96,6 +97,8 @@ StreamLines::StreamLines(const clString& id)
   add_oport(oport_);
 
   vf_ = 0;
+  sf_ = 0;
+  cf_ = 0;
 }
 
 StreamLines::~StreamLines()
@@ -103,11 +106,13 @@ StreamLines::~StreamLines()
 }
 
 int
-StreamLines::ComputeRKFTerms(Array1<Vector>& v /* storage for terms */,
+StreamLines::ComputeRKFTerms(vector<Vector>& v /* storage for terms */,
 			     Point& p          /* previous point */,
 			     float s           /* current step size */)
 {
   int check = 0;
+
+  v.resize(6,Vector(0,0,0));
 
   check |= interp_->interpolate(p,v[0]);
   check |= interp_->interpolate(p+v[0]*d[1][0],v[1]);
@@ -128,24 +133,21 @@ StreamLines::ComputeRKFTerms(Array1<Vector>& v /* storage for terms */,
 }
   
 void
-StreamLines::FindStreamLineSupport(Array1<Point>& v /* storage for points */,
-				   Point x          /* initial point */,
-				   float t          /* error tolerance */,
-				   float s          /* initial step size */,
-				   int n            /* max number of steps */)
+StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
+				 Point x          /* initial point */,
+				 float t          /* error tolerance */,
+				 float s          /* initial step size */,
+				 int n            /* max number of steps */)
 {
   int loop = 0;
-  Array1<Vector> terms;
+  vector<Vector> terms;
   Vector error;
   float err;
   int check;
-
-  // initialize the terms
-  for (loop=0;loop<6;loop++)
-    terms.add(Vector(0,0,0));
+  Vector xv;
 
   // add the initial point to the list of points found.
-  v.add(x);
+  v.push_back(x);
   cerr << "found point = " << x << endl;
 
   for (loop=0;loop<n;loop++) {
@@ -170,13 +172,22 @@ StreamLines::FindStreamLineSupport(Array1<Point>& v /* storage for points */,
     // compute and add the point to the list of points found.
     x = x + terms[0]*a[0]+terms[1]*a[1]+terms[2]*a[2]+
             terms[3]*a[3]+terms[4]*a[4]+terms[5]*a[5];
-    v.add(x);
-    cerr << "found point = " << x << endl;
+
+    // if the new point is inside the field, add it.  Otherwise stop.
+    if (interp_->interpolate(x,xv)) {
+      v.push_back(x);
+      cerr << "found point = " << x << endl;
+    } else
+      break;
   }
 }
 
 void StreamLines::execute()
 {
+  ContourMesh *mesh;
+  vector<Point> nodes;
+  ContourMesh::node_index n1,n2; 
+
   if (!vfport_->get(vfhandle_))
     return;
 
@@ -185,14 +196,69 @@ void StreamLines::execute()
 
   // we expect that the field is a vector field
   if (vf_->get_type_name(1) != "Vector") {
-    postMessage("StreamLines: ERROR: FlowField is not a Vector field");
+    postMessage("StreamLines: ERROR: FlowField is not a Vector field."
+		"  Exiting.");
     return;
   }
 
+  cf_ = scinew ContourField<double>(Field::NODE);
+  mesh = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
+  ContourField<double>::fdata_type &fdata = cf_->fdata();
+
   interp_ = (GenericInterpolate<Vector>*)vf_->query_interpolate();
-    
-  Array1<Point> support;
-  FindStreamLineSupport(support,Point(32,32,32),.01,.05,100);
+
+  if (!interp_) {
+    postMessage("StreamLines: ERROR: unable to locate an interpolation"
+		" function for this field.  Exiting.");
+    return;
+  }
+
+  // get or generate seed_point(s) here
+  vector<Point> seed_points;
+  seed_points.push_back(Point(0.03,0.03,0.03));
+  seed_points.push_back(Point(-0.03,-0.03,-0.03));
+
+  // try to find the streamline for each seed point
+  vector<Point>::iterator seed_iter = seed_points.begin();
+  while (seed_iter!=seed_points.end()) {
+
+    // Is the seed point inside the field?
+    Vector test(0);
+    if (!interp_->interpolate(*seed_iter,test)) {
+      postMessage("StreamLines: WARNING: seed point was not inside the field."
+		  "  Exiting.");
+      return;
+    } 
+
+    cerr << "new streamline." << endl;
+
+    FindStreamLineNodes(nodes,*seed_iter,.1,.1,100);
+
+    cerr << "done finding streamline." << endl;
+
+    fdata.resize(fdata.size()+nodes.size());
+
+    int index = 0;
+    vector<Point>::iterator node_iter = nodes.begin();
+    if (node_iter!=nodes.end())
+      n1 = mesh->add_node(*node_iter);
+    while (node_iter!=nodes.end()) {
+      ++node_iter;
+      if (node_iter!=nodes.end()) {
+	n2 = mesh->add_node(*node_iter);
+	mesh->add_edge(n1,n2);
+	n1 = n2;
+	fdata[index] = index++;
+      }
+    }
+
+    cerr << "done adding streamline to contour field." << endl;
+
+    ++seed_iter;
+  }
+
+  oport_->send(cf_);
+  cerr << "done with everything." << endl;
 }
 
 void StreamLines::tcl_command(TCLArgs& args, void* userdata)
