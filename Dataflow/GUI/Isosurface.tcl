@@ -223,6 +223,15 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
 
+    method set_info { type generation } {
+	set w .ui[modname]    
+
+	set info [$w.f.info childsite]
+	
+	$info.type configure -text $type 
+	$info.gen  configure -text $generation
+    }
+
     method set_minmax {min max} {
 	set w .ui[modname]
 
