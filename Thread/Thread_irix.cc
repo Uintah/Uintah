@@ -518,6 +518,10 @@ static void install_signal_handlers(){
 	perror("sigaction");
 	exit(-1);
     }
+    if(sigaction(SIGTRAP, &action, NULL) == -1){
+	perror("sigaction");
+	exit(-1);
+    }
     if(sigaction(SIGBUS, &action, NULL) == -1){
 	perror("sigaction");
 	exit(-1);
