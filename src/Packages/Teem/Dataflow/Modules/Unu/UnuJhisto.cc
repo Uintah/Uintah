@@ -245,7 +245,7 @@ void
   }
 
   // get mins
-  int *min = new int[nrrds.size()];
+  double *min = new double[nrrds.size()];
   i=0, start=0;
   which = 0, end=0, counter=0;
   inword = false;
@@ -316,7 +316,7 @@ void
   }
 
   // get maxs
-  int *max = new int[nrrds.size()];
+  double *max = new double[nrrds.size()];
   i=0, start=0;
   which = 0, end=0, counter=0;
   inword = false;
@@ -328,7 +328,7 @@ void
 	if (maxs.substr(start,end-start) == "nan")
 	  max[counter] = AIR_NAN;
 	else
-	  max[counter] = (atoi(maxs.substr(start,end-start).c_str()));
+	  max[counter] = (atof(maxs.substr(start,end-start).c_str()));
 	which++;
 	counter++;
 	inword = false;
@@ -341,7 +341,7 @@ void
       if (maxs.substr(start,end-start) == "nan")
 	max[counter] = AIR_NAN;
       else
-	max[counter] = (atoi(maxs.substr(start,end-start).c_str()));
+	max[counter] = (atof(maxs.substr(start,end-start).c_str()));
       which++;
       counter++;
       inword = false;
