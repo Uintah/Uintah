@@ -25,6 +25,7 @@ namespace Uintah {
     const VarLabel* rho_micro_equil_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
+    const VarLabel* vel_CCLabel;
     const VarLabel* uvel_CCLabel;
     const VarLabel* vvel_CCLabel;
     const VarLabel* wvel_CCLabel;
@@ -74,6 +75,10 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.16  2001/01/05 16:34:10  jas
+// Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
+// where CC velocities are used.
+//
 // Revision 1.15  2001/01/03 00:51:53  harman
 // - added cflux, OFC, IFC, q_in_CF, q_out_CF
 // - Advection operator now in 3D, not fully tested

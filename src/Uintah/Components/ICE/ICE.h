@@ -135,8 +135,8 @@ namespace Uintah {
       
       void setBC(CCVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
-      void setBC(CCVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p);
+      void setBC(CCVariable<Vector>& variable,const std::string& type,
+		 const Patch* p);
       
       void setBC(SFCXVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
@@ -292,6 +292,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.48  2001/01/05 16:34:09  jas
+// Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
+// where CC velocities are used.
+//
 // Revision 1.47  2001/01/04 03:35:42  jas
 // Remove john_debugs.  Now specifying max_iter_equilibration in the input
 // file instead of using #define MAX_ITER_EQUILIBRATION.

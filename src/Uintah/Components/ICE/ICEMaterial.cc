@@ -132,16 +132,11 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 				  CCVariable<double>& speedSound,
 				  CCVariable<double>& visc_CC,
 				  CCVariable<double>& vol_frac_CC,
-				  CCVariable<double>& uvel_CC,
-				  CCVariable<double>& vvel_CC,
-				  CCVariable<double>& wvel_CC,
-				  const Patch* patch,
-				  DataWarehouseP& new_dw)
+				  CCVariable<Vector>& vel_CC,
+				  const Patch* patch,DataWarehouseP& new_dw)
 {
   // Zero the arrays so they don't get wacky values
-  uvel_CC.initialize(0.);
-  vvel_CC.initialize(0.);
-  wvel_CC.initialize(0.);
+  vel_CC.initialize(Vector(0.,0.,0.));
   rho_micro.initialize(0.);
   rho_CC.initialize(0.);
   temp.initialize(0.);
@@ -180,12 +175,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
      }
      
      if( count > 0){
-       uvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().x();
-       vvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().y();
-       wvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().z();
+       vel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity();
+       
 #if 0
-       cout << "velocity = " << uvel_CC[*iter] << " " << vvel_CC[*iter]
-	    << " " << wvel_CC[*iter] << endl;
+       cout << "velocity = " << vel_CC[*iter] <<  endl;
 #endif
        speedSound[*iter] = d_speed_of_sound;
        visc_CC[*iter]    = d_viscosity;
@@ -203,6 +196,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 }
 
 // $Log$
+// Revision 1.11  2001/01/05 16:34:10  jas
+// Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
+// where CC velocities are used.
+//
 // Revision 1.10  2000/12/18 23:25:55  jas
 // 2d ice works for simple advection.
 //

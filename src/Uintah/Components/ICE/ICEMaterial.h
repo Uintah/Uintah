@@ -72,11 +72,10 @@ WARNING
 	 double getViscosity() const;
 	 double getSpeedOfSound() const;
 
-	 void initializeCells(CCVariable<double>& rhom, CCVariable<double>& rhC,
-			      CCVariable<double>& temp, CCVariable<double>& cv,
-			      CCVariable<double>& ss,   CCVariable<double>& vsc,
-			      CCVariable<double>& volf, CCVariable<double>& uCC,
-			      CCVariable<double>& vCC,  CCVariable<double>& wCC,
+	 void initializeCells(CCVariable<double>& rhom,CCVariable<double>& rhC,
+			      CCVariable<double>& temp,CCVariable<double>& cv,
+			      CCVariable<double>& ss, CCVariable<double>& vsc,
+			      CCVariable<double>& volf,CCVariable<Vector>& vCC,
 			      const Patch* patch, DataWarehouseP& new_dw);
 
       private:
@@ -108,6 +107,10 @@ WARNING
 #endif // __ICE_MATERIAL_H__
 
 // $Log$
+// Revision 1.8  2001/01/05 16:34:10  jas
+// Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
+// where CC velocities are used.
+//
 // Revision 1.7  2001/01/03 19:32:18  jas
 // Remove unneeded files.
 //
