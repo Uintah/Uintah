@@ -11,17 +11,17 @@
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah {
+  class ICELabel;
+  class MPMLabel;
+  class MPMICELabel;
   class Output;
 
 using namespace SCIRun;
