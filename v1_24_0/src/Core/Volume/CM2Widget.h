@@ -32,7 +32,7 @@
 #ifndef CM2Widget_h
 #define CM2Widget_h
 
-#include "CM2Shader.h"
+#include <Core/Volume/CM2Shader.h>
 
 #include <Core/Datatypes/Color.h>
 #include <Core/Datatypes/Datatype.h>

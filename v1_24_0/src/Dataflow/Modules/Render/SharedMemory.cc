@@ -29,15 +29,18 @@
 
 
 #include <unistd.h>
-#ifndef __APPLE__
-#include <malloc.h>
-#endif
-#include <fcntl.h>
 
-#include <sys/types.h>
-#ifdef __sgi
-#include <sys/prctl.h>
+#ifndef __APPLE__
+#  include <malloc.h>
 #endif
+
+#include <fcntl.h>
+#include <sys/types.h>
+
+#ifdef __sgi
+#  include <sys/prctl.h>
+#endif
+
 #include <sys/time.h>
 #include <sys/stat.h>
 
@@ -47,7 +50,7 @@
 using std::cerr;
 using std::endl;
 
-#include "SharedMemory.h"
+#include <Dataflow/Modules/Render/SharedMemory.h>
 
 namespace SCIRun {
 

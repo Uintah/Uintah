@@ -40,10 +40,11 @@
  *  Copyright (c) 199? SCI Group
  */
 
-#include "HistogramTex.h"
+#include <Core/Geom/HistogramTex.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
+
 using std::ostream;
 
 namespace SCIRun {

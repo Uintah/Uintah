@@ -42,8 +42,9 @@
 
 /* Ken Shoemake, 1993 */
 
-#include "Ball.h"
-#include "BallMath.h"
+#include <Dataflow/Modules/Render/Ball.h>
+#include <Dataflow/Modules/Render/BallMath.h>
+
 #include <stdio.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
