@@ -664,6 +664,7 @@ proc writeSubnet { filename subnet } {
 
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
+	if { [isaSubnetIcon $module] } { incr i; continue } 
 	set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
 	set modulePath [list [netedit packageName $module] \
 			    [netedit categoryName $module] \
