@@ -90,8 +90,8 @@ void RecipBasis::execute() {
 	ColumnMatrix* rhs=new ColumnMatrix(nnodes);
 	int i;
 	for (i=0; i<nnodes; i++) (*rhs)[i]=0;
-	(*rhs)[0]=1;
-	(*rhs)[counter+1]=-1;
+	(*rhs)[(*idx_in.get_rep())[0]]=1;
+	(*rhs)[(*idx_in.get_rep())[counter+1]]=-1;
 	if (counter<(nelecs-2)) rhs_oport->send_intermediate(rhs);
 	else rhs_oport->send(rhs);
 
@@ -115,6 +115,9 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.6  1999/12/02 21:57:32  dmw
+// new camera path datatypes and modules
+//
 // Revision 1.5  1999/10/07 02:06:35  sparker
 // use standard iostreams and complex type
 //
