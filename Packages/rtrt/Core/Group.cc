@@ -1,5 +1,5 @@
 
-#include "Group.h"
+#include <Packages/rtrt/Core/Group.h>
 #include <iostream>
 
 using namespace rtrt;

@@ -2,7 +2,7 @@
 #ifndef Math_FastNoise_h
 #define Math_FastNoise_h 1
 
-#include "Noise.h"
+#include <Packages/rtrt/Core/Noise.h>
 
 namespace rtrt {
 

@@ -2,8 +2,8 @@
 #ifndef Grid_H
 #define Grid_H 1
 
-#include "Object.h"
-#include "BBox.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/BBox.h>
 
 namespace rtrt {
 

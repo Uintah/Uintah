@@ -1,9 +1,9 @@
-#include "Color.h"
-#include "Array1.cc"
-#include "Material.h"
-#include "VolumeDpy.h"
-#include "HVolumeMaterial.h"
-#include "ScalarTransform1D.h"
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/Array1.cc>
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
+#include <Packages/rtrt/Core/HVolumeMaterial.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 
 using namespace rtrt;
 using namespace SCIRun;

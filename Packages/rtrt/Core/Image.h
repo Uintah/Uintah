@@ -3,9 +3,9 @@
 #ifndef IMAGE_H
 #define IMAGE_H 1
 
-#include "Color.h"
+#include <Packages/rtrt/Core/Color.h>
 
-#include "Array1.h"
+#include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
 

@@ -1,6 +1,6 @@
 
-#include "MIPGroup.h"
-#include "HitInfo.h"
+#include <Packages/rtrt/Core/MIPGroup.h>
+#include <Packages/rtrt/Core/HitInfo.h>
 
 using namespace rtrt;
 
