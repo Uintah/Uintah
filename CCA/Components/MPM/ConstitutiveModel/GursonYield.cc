@@ -162,34 +162,28 @@ GursonYield::computeTangentModulus(const TangentModulusTensor& Ce,
   Matrix3 Cr(0.0), rC(0.0);
   double rCr = 0.0;
   for (int ii = 0; ii < 3; ++ii) {
-    int ii1 = ii+1;
     for (int jj = 0; jj < 3; ++jj) {
-      int jj1 = jj+1;
-      Cr(ii1,jj1) = 0.0;
-      rC(ii1,jj1) = 0.0;
+      Cr(ii,jj) = 0.0;
+      rC(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-        int kk1 = kk+1;
 	for (int ll = 0; ll < 3; ++ll) {
           double Ce1 = Ce(ii,jj,kk,ll);
           double Ce2 = Ce(kk,ll,ii,jj);
-          double fs = f_sigma(kk1,ll+1);
-          Cr(ii1,jj1) += Ce1*fs;
-          rC(ii1,jj1) += fs*Ce2;
+          double fs = f_sigma(kk,ll);
+          Cr(ii,jj) += Ce1*fs;
+          rC(ii,jj) += fs*Ce2;
         }
       }
-      rCr += rC(ii1,jj1)*f_sigma(ii1,jj1);
+      rCr += rC(ii,jj)*f_sigma(ii,jj);
     }
   }
   double rCr_fqhq = rCr - fqhq;
   for (int ii = 0; ii < 3; ++ii) {
-    int ii1 = ii+1;
     for (int jj = 0; jj < 3; ++jj) {
-      int jj1 = jj+1;
       for (int kk = 0; kk < 3; ++kk) {
-        int kk1 = kk+1;
 	for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii1,jj1)*rC(kk1,ll+1)/rCr_fqhq;
+	    Cr(ii,jj)*rC(kk,ll)/rCr_fqhq;
 	}  
       }  
     }  

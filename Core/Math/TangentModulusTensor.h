@@ -48,6 +48,9 @@ namespace Uintah {
 
       /*! \brief Contract a fourth order tensor with a second order tensor */ 
       void contract(const Matrix3& D, Matrix3& sigrate) const;
+
+      /* Convert a 6x6 tangent modulus to a 3x3x3x3 matrix */
+      void transformBy2ndOrderTensor(const Matrix3& F, double J);
     };
 
 } // namespace Uintah

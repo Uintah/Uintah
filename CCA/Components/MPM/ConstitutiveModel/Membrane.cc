@@ -287,7 +287,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 	  for (int j = 0; j<3; j++){
              double d_SXoodx = d_S[k][j] * oodx[j];
              for (int i = 0; i<3; i++) {
-               velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+               velGrad(i,j) += gvel[i] * d_SXoodx;
              }
 	  }
        }
@@ -392,29 +392,29 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       Vector vGT2 = velGrad*T2[idx];
       Vector vGT3 = velGrad*T3[idx];
 
-      L_ij_ip(1,1) = Dot(T1[idx], vGT1);
-      L_ij_ip(1,2) = Dot(T1[idx], vGT2);
-      L_ij_ip(1,3) = Dot(T1[idx], vGT3);
-      L_ij_ip(2,1) = Dot(T2[idx], vGT1);
-      L_ij_ip(2,2) = Dot(T2[idx], vGT2);
-      L_ij_ip(2,3) = Dot(T2[idx], vGT3);
-      L_ij_ip(3,1) = Dot(T3[idx], vGT1);
-      L_ij_ip(3,2) = Dot(T3[idx], vGT2);
-      L_ij_ip(3,3) = Dot(T3[idx], vGT3);
+      L_ij_ip(0,0) = Dot(T1[idx], vGT1);
+      L_ij_ip(0,1) = Dot(T1[idx], vGT2);
+      L_ij_ip(0,2) = Dot(T1[idx], vGT3);
+      L_ij_ip(1,0) = Dot(T2[idx], vGT1);
+      L_ij_ip(1,1) = Dot(T2[idx], vGT2);
+      L_ij_ip(1,2) = Dot(T2[idx], vGT3);
+      L_ij_ip(2,0) = Dot(T3[idx], vGT1);
+      L_ij_ip(2,1) = Dot(T3[idx], vGT2);
+      L_ij_ip(2,2) = Dot(T3[idx], vGT3);
 
       Matrix3 T1T1, T1T2, T2T1, T2T2;
 
       for(int i = 0; i<3; i++){
         for(int j = 0; j<3; j++){
-          T1T1(i+1,j+1) = T1[idx][i]*T1[idx][j];
-          T1T2(i+1,j+1) = T1[idx][i]*T2[idx][j];
-          T2T1(i+1,j+1) = T2[idx][i]*T1[idx][j];
-          T2T2(i+1,j+1) = T2[idx][i]*T2[idx][j];
+          T1T1(i,j) = T1[idx][i]*T1[idx][j];
+          T1T2(i,j) = T1[idx][i]*T2[idx][j];
+          T2T1(i,j) = T2[idx][i]*T1[idx][j];
+          T2T2(i,j) = T2[idx][i]*T2[idx][j];
         }
       }
 
-      L_ip = T1T1*L_ij_ip(1,1) + T1T2*L_ij_ip(1,2) +
-             T2T1*L_ij_ip(2,1) + T2T2*L_ij_ip(2,2);
+      L_ip = T1T1*L_ij_ip(0,0) + T1T2*L_ij_ip(0,1) +
+             T2T1*L_ij_ip(1,0) + T2T2*L_ij_ip(1,1);
 
       L_local = Q * L_ip * Q.Transpose();
 
@@ -439,12 +439,12 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       double delta = 1.;
       double f33, f33p, f33m, jv, jvp, jvm, sig33, sig33p, sig33m;
 
-      f33 =  1./(F(1,1)*F(2,2));
+      f33 =  1./(F(0,0)*F(1,1));
 
       while(fabs(delta) > epsilon){
-        double detF2=(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+        double detF2=(F(0,0)*F(1,1) - F(1,0)*F(0,1));
         jv = f33*detF2;
-        double FinF = F(1,1)*F(1,1)+F(1,2)*F(1,2)+F(2,1)*F(2,1)+F(2,2)*F(2,2);
+        double FinF = F(0,0)*F(0,0)+F(0,1)*F(0,1)+F(1,0)*F(1,0)+F(1,1)*F(1,1);
         sig33 = (shear/(3.*pow(jv,2./3.)))*
                 (2.*f33*f33 - FinF) + (.5*bulk)*(jv - 1./jv);
 
@@ -465,8 +465,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       }
 
       // get the volumetric part of the deformation
-      jv = f33*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
-      defGradIP[idx](3,3) = f33;
+      jv = f33*(F(0,0)*F(1,1) - F(1,0)*F(0,1));
+      defGradIP[idx](2,2) = f33;
 
       bElBar_new = defGradIP[idx]
 		 * defGradIP[idx].Transpose()*pow(jv,-(2./3.));
@@ -481,7 +481,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
       // compute the total stress (volumetric + deviatoric)
       pstress_new[idx] = Identity*p + Shear/jv;
-      pstress_new[idx](3,3) = 0.;
+      pstress_new[idx](2,2) = 0.;
 
       pstress_new[idx] = Q.Transpose() * pstress_new[idx] * Q;
 

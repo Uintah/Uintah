@@ -296,10 +296,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 	for (int j = 0; j<3; j++){
 	  double d_SXoodx = d_S[k][j] * oodx[j];
 	  for (int i = 0; i<3; i++) {
-	    velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
-	    //	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+	    velGrad(i,j) += gvel[i] * d_SXoodx;
 #ifdef FRACTURE
-            pvelGrads[idx](i+1,j+1)  = velGrad(i+1,j+1);
+            pvelGrads[idx](i,j)  = velGrad(i,j);
 #endif
 	  }
 	}
@@ -338,8 +337,8 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       // store the maximum
       c_dil = sqrt((4.*(C1+C2*invar2)/J
 		    +8.*(2.*C3/(invar3*invar3*invar3)+C4*(2.*invar3-1.))
-		    -Min((pstress[idx])(1,1),(pstress[idx])(2,2)
-			 ,(pstress[idx])(3,3))/J)
+		    -Min((pstress[idx])(0,0),(pstress[idx])(1,1)
+			 ,(pstress[idx])(2,2))/J)
 		   *pvolume_deform[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),

@@ -27,7 +27,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #define FRACTURE
-#undef FRACTURE
+//#undef FRACTURE
 
 RigidBodyContact::RigidBodyContact(ProblemSpecP& ps, 
 				    SimulationStateP& d_sS, MPMLabel* Mlb)

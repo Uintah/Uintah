@@ -140,7 +140,7 @@ AcousticTensorCheck::isLocalized(const TangentModulusTensor& C,
 	    for (int nn = 0; nn < 3; nn++) {
 	      for (int kk = 0; kk < 3; kk++) {
 		for (int ll = 0; ll < 3; ll++) {
-		  J(mm+1,nn+1) += detA[ii][jj]*C(mm,kk,ll,nn)*AInv(ll+1,kk+1);
+		  J(mm,nn) += detA[ii][jj]*C(mm,kk,ll,nn)*AInv(ll,kk);
 		}
 	      }
 	    }
@@ -264,11 +264,11 @@ AcousticTensorCheck::formAcousticTensor(const Vector& normal,
   // Form the acoustic tensor  A = n*C*n
   for (int ii = 0; ii < 3; ++ii) {
     for (int kk = 0; kk < 3; ++kk) {
-      A(ii+1,kk+1) = 0.0;
+      A(ii,kk) = 0.0;
       for (int jj = 0; jj < 3; ++jj) {
 	for (int ll = 0; ll < 3; ++ll) {
            double cc = C(ii,jj,kk,ll);
-           A(ii+1,kk+1) += cc*normal[jj]*normal[ll];
+           A(ii,kk) += cc*normal[jj]*normal[ll];
 	}
       }
     }

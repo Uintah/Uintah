@@ -107,7 +107,7 @@ void doMatrixSolvingTests(Suite& suite)
     M.Identity();
     c = getRandom();
     e = getRandom();
-    M(3, 3) = 0; M(1, 3) = c; M(2, 3) = e;
+    M(2, 2) = 0; M(0, 2) = c; M(1, 2) = e;
     rhs = randomVector();
     rhs.z(getRandomOrZero(0.75)); // make rhs.z zero 75% of the time
     has_solution = (rhs.z() == 0);
@@ -121,7 +121,7 @@ void doMatrixSolvingTests(Suite& suite)
   for (i = 0; i < 10; i++) {
     M.Identity();
     b = getRandom();
-    M(3, 3) = 0; M(2, 2) = 0; M(2, 3) = 1; M(1, 2) = b;
+    M(2, 2) = 0; M(1, 1) = 0; M(1, 2) = 1; M(0, 1) = b;
     rhs = randomVector();
     rhs.z(getRandomOrZero(0.75)); // make rhs.z zero 75% of the time
     has_solution = (rhs.z() == 0);
@@ -134,7 +134,7 @@ void doMatrixSolvingTests(Suite& suite)
   for (i = 0; i < 10; i++) {
     M.Identity();
     b = getRandom();
-    M(1, 1) = 0; M(1, 2) = 1; M(2, 2) = 0; M(2, 3) = 1; M(3, 3) = 0;
+    M(0, 0) = 0; M(0, 1) = 1; M(1, 1) = 0; M(1, 2) = 1; M(2, 2) = 0;
     rhs = randomVector();
     rhs.z(getRandomOrZero(0.75)); // make rhs.z zero 75% of the time
     has_solution = (rhs.z() == 0);
@@ -148,7 +148,7 @@ void doMatrixSolvingTests(Suite& suite)
     a = getRandomOrZero(0.5);
     b = getRandomOrZero(0.5);
     c = (a == 0 && b == 0) ? 1 : getRandomOrZero(0.5);
-    M(1, 1) = a; M(1, 2) = b; M(1, 3) = c; M(2, 2) = 0; M(3, 3) = 0;
+    M(0, 0) = a; M(0, 1) = b; M(0, 2) = c; M(1, 1) = 0; M(2, 2) = 0;
     rhs = randomVector();
     rhs.y(getRandomOrZero(0.80)); // make rhs.y zero 80% of the time
     rhs.z(getRandomOrZero(0.80)); // make rhs.z zero 80% of the time
@@ -231,15 +231,15 @@ void doEigenPlaneTests(Suite& suite)
     for (int plane = 1; plane <= 3; plane++) {
       if (plane == 1) {
 	num_eigen_values = M.getYZEigenValues(e1, e2);
-	planeM = Matrix3(M(2, 2), M(2, 3), 0, M(3, 2), M(3, 3), 0, 0, 0, 0);
+	planeM = Matrix3(M(1, 1), M(1, 2), 0, M(2, 1), M(2, 2), 0, 0, 0, 0);
       }
       else if (plane == 2) {
 	num_eigen_values = M.getXZEigenValues(e1, e2);
-	planeM = Matrix3(M(1, 1), M(1, 3), 0, M(3, 1), M(3, 3), 0, 0, 0, 0);
+	planeM = Matrix3(M(0, 0), M(0, 2), 0, M(2, 0), M(2, 2), 0, 0, 0, 0);
       }
       else {
  	num_eigen_values = M.getXYEigenValues(e1, e2);
-	planeM = Matrix3(M(1, 1), M(1, 2), 0, M(2, 1), M(2, 2), 0, 0, 0, 0);
+	planeM = Matrix3(M(0, 0), M(0, 1), 0, M(1, 0), M(1, 1), 0, 0, 0, 0);
       }
 
       // Use the 3x3 test with planeM (which is the sub-matrix
@@ -355,33 +355,34 @@ void randomlyMixup(Matrix3& M, Vector& rhs)
   Vector new_rhs(rhs);
   int i, j, k;
   
-  for (i = 1; i <= 3; i++) {
-    for (j = 1; j <= 3; j++) {
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
       double mult = getRandom();
       if (i != j) {
-	for (k = 1; k <= 3; k++)
+	for (k = 0; k < 3; k++)
 	  new_M(i, k) += M(j, k) * mult;
-	new_rhs[i-1] += rhs[j-1] * mult;
+	new_rhs[i] += rhs[j] * mult;
       }
       else {
 	if (fabs(mult) > 1) {
-	  for (k = 1; k <= 3; k++)
+	  for (k = 0; k < 3; k++)
 	    new_M(i, k) *= mult;
-	  new_rhs[i-1] *= mult;
+	  new_rhs[i] *= mult;
 	}
       }
     }
   }
 
   // now randomly swap rows
-  int row_orders[6][3] = {{1, 2, 3}, {1, 3, 2}, {2, 1, 3}, {2, 3, 1},
-			  {3, 1, 2}, {3, 2, 1}};
+  int row_orders[6][3] = {{0, 1, 2}, {0, 2, 1}, {1, 0, 2}, {1, 2, 0},
+			  {2, 0, 1}, {2, 1, 0}};
   int* row_order = row_orders[rand() % 6];
-  for (i = 1; i <= 3; i++) {
-    for (j = 1; j <= 3; j++) {
-      M(i, j) = new_M(row_order[i-1], j);
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      M(i, j) = new_M(row_order[i], j);
     }
-    rhs[i-1] = new_rhs[row_order[i-1]-1];
+    rhs[i] = new_rhs[row_order[i]];
+//    rhs[i] = new_rhs[row_order[i]-1];
   }
 }
 
@@ -393,8 +394,8 @@ Vector randomVector()
 Matrix3 randomMatrix()
 {
   Matrix3 M;
-  for (int i = 1; i <= 3; i++)
-    for (int j = 1; j <= 3; j++)
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < 3; j++)
       M(i, j) = getRandom();
   return M * pow(10.0, rand() % 10 - 3);
 }
@@ -412,6 +413,3 @@ bool equal_enough(Vector v1, Vector v2, double rel_scale)
   }
   return true;
 }
-
-
-

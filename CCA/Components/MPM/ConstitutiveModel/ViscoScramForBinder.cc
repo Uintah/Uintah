@@ -414,7 +414,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
 	for (int j = 0; j<3; j++){
 	  double temp = d_S[k][j] * oodx[j];
 	  for (int i = 0; i<3; i++) {
-	    velGrad(i+1,j+1)+=gvel[i] * temp;
+	    velGrad(i,j)+=gvel[i] * temp;
 	  }
 	}
       }
@@ -455,19 +455,19 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       for (int ii = 0; ii < NN; ++ii) {
         S_n[ii] = pStatedata[idx].sigDev[ii];
         sigPrime += S_n[ii];
-        cout << "S_n["<<ii<<"]={"<<S_n[ii](1,1)<<","<<S_n[ii](2,2)<<","
-                                 <<S_n[ii](3,3)<<","<<S_n[ii](2,3)<<","
-                                 <<S_n[ii](1,3)<<","<<S_n[ii](1,2)<<"}"<<endl;
+        cout << "S_n["<<ii<<"]={"<<S_n[ii](0,0)<<","<<S_n[ii](1,1)<<","
+                                 <<S_n[ii](2,2)<<","<<S_n[ii](1,2)<<","
+                                 <<S_n[ii](0,2)<<","<<S_n[ii](0,1)<<"}"<<endl;
       }
-      cout << "S={"<<sigPrime(1,1)<<","<<sigPrime(2,2)<<","
-                   <<sigPrime(3,3)<<","<<sigPrime(2,3)<<","
-                   <<sigPrime(1,3)<<","<<sigPrime(1,2)<<"}"<<endl;
-      cout << "sig={"<<pStress[idx](1,1)<<","<<pStress[idx](2,2)<<","
-                   <<pStress[idx](3,3)<<","<<pStress[idx](2,3)<<","
-                   <<pStress[idx](1,3)<<","<<pStress[idx](1,2)<<"}"<<endl;
-      cout << "e={"<<DPrime(1,1)<<","<<DPrime(2,2)<<","
-                   <<DPrime(3,3)<<","<<DPrime(2,3)<<","
-                   <<DPrime(1,3)<<","<<DPrime(1,2)<<"}"<<endl;
+      cout << "S={"<<sigPrime(0,0)<<","<<sigPrime(1,1)<<","
+                   <<sigPrime(2,2)<<","<<sigPrime(1,2)<<","
+                   <<sigPrime(0,2)<<","<<sigPrime(0,1)<<"}"<<endl;
+      cout << "sig={"<<pStress[idx](0,0)<<","<<pStress[idx](1,1)<<","
+                   <<pStress[idx](2,2)<<","<<pStress[idx](1,2)<<","
+                   <<pStress[idx](0,2)<<","<<pStress[idx](0,1)<<"}"<<endl;
+      cout << "e={"<<DPrime(0,0)<<","<<DPrime(1,1)<<","
+                   <<DPrime(2,2)<<","<<DPrime(1,2)<<","
+                   <<DPrime(0,2)<<","<<DPrime(0,1)<<"}"<<endl;
 
       // old total stress norm, effective stress, hydrostaic pressure
       double p = -onethird * pStress[idx].Trace();
@@ -538,18 +538,18 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
           Matrix3 SnDot = (DG - ST);
           S_n_new[ii] = S_n[ii] + SnDot*delT;
           cout << endl;
-          cout << "DG["<<ii<<"]={"<<DG(1,1)<<","<<DG(2,2)<<","
-                            <<DG(3,3)<<","<<DG(2,3)<<","
-                            <<DG(1,3)<<","<<DG(1,2)<<"}"<<endl;
-          cout << "ST["<<ii<<"]={"<<ST(1,1)<<","<<ST(2,2)<<","
-                            <<ST(3,3)<<","<<ST(2,3)<<","
-                            <<ST(1,3)<<","<<ST(1,2)<<"}"<<endl;
-          cout << "SnDot["<<ii<<"]={"<<SnDot(1,1)<<","<<SnDot(2,2)<<","
-                            <<SnDot(3,3)<<","<<SnDot(2,3)<<","
-                            <<SnDot(1,3)<<","<<SnDot(1,2)<<"}"<<endl;
-          cout << "Sn["<<ii<<"]={"<<S_n_new[ii](1,1)<<","<<S_n_new[ii](2,2)<<","
-                             <<S_n_new[ii](3,3)<<","<<S_n_new[ii](2,3)<<","
-                             <<S_n_new[ii](1,3)<<","<<S_n_new[ii](1,2)<<"}"<<endl;
+          cout << "DG["<<ii<<"]={"<<DG(0,0)<<","<<DG(1,1)<<","
+                            <<DG(2,2)<<","<<DG(1,2)<<","
+                            <<DG(0,2)<<","<<DG(0,1)<<"}"<<endl;
+          cout << "ST["<<ii<<"]={"<<ST(0,0)<<","<<ST(1,1)<<","
+                            <<ST(2,2)<<","<<ST(1,2)<<","
+                            <<ST(0,2)<<","<<ST(0,1)<<"}"<<endl;
+          cout << "SnDot["<<ii<<"]={"<<SnDot(0,0)<<","<<SnDot(1,1)<<","
+                            <<SnDot(2,2)<<","<<SnDot(1,2)<<","
+                            <<SnDot(0,2)<<","<<SnDot(0,1)<<"}"<<endl;
+          cout << "Sn["<<ii<<"]={"<<S_n_new[ii](0,0)<<","<<S_n_new[ii](1,1)<<","
+                             <<S_n_new[ii](2,2)<<","<<S_n_new[ii](1,2)<<","
+                             <<S_n_new[ii](0,2)<<","<<S_n_new[ii](0,1)<<"}"<<endl;
           cout << endl;
         }
       }
@@ -563,14 +563,14 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       for (int ii = 0; ii < NN; ++ii) {
         sigPrime_new += S_n_new[ii];
         pStatedata[idx].sigDev[ii] = S_n_new[ii];
-        cout << "S_n(new)["<<ii<<"]={"<<S_n_new[ii](1,1)<<","<<S_n_new[ii](2,2)<<","
-                                 <<S_n_new[ii](3,3)<<","<<S_n_new[ii](2,3)<<","
-                                 <<S_n_new[ii](1,3)<<","<<S_n_new[ii](1,2)<<"}"<<endl;
+        cout << "S_n(new)["<<ii<<"]={"<<S_n_new[ii](0,0)<<","<<S_n_new[ii](1,1)<<","
+                                 <<S_n_new[ii](2,2)<<","<<S_n_new[ii](1,2)<<","
+                                 <<S_n_new[ii](0,2)<<","<<S_n_new[ii](0,1)<<"}"<<endl;
       
       }
-      cout << "S(new)={"<<sigPrime_new(1,1)<<","<<sigPrime_new(2,2)<<","
-                   <<sigPrime_new(3,3)<<","<<sigPrime_new(2,3)<<","
-                   <<sigPrime_new(1,3)<<","<<sigPrime_new(1,2)<<"}"<<endl;
+      cout << "S(new)={"<<sigPrime_new(0,0)<<","<<sigPrime_new(1,1)<<","
+                   <<sigPrime_new(2,2)<<","<<sigPrime_new(1,2)<<","
+                   <<sigPrime_new(0,2)<<","<<sigPrime_new(0,1)<<"}"<<endl;
       delete[] S_n_new;
       //pStatedata[idx].numElements = NN;
 
@@ -578,15 +578,15 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       double ekkdot = DD.Trace();
       p = onethird*(pStress[idx].Trace()) + ekkdot*kk*delT;
       pStress_new[idx] = one*p + sigPrime_new;
-      cout << "sig(new)={"<<pStress_new[idx](1,1)<<","<<pStress_new[idx](2,2)<<","
-                   <<pStress_new[idx](3,3)<<","<<pStress_new[idx](2,3)<<","
-                   <<pStress_new[idx](1,3)<<","<<pStress_new[idx](1,2)<<"}"<<endl;
+      cout << "sig(new)={"<<pStress_new[idx](0,0)<<","<<pStress_new[idx](1,1)<<","
+                   <<pStress_new[idx](2,2)<<","<<pStress_new[idx](1,2)<<","
+                   <<pStress_new[idx](0,2)<<","<<pStress_new[idx](0,1)<<"}"<<endl;
 
       // Compute the strain energy for all the particles
       Matrix3 sigAv = (pStress_new[idx]+pStress[idx])*0.5;
-      strainEnergy += (DD(1,1)*sigAv(1,1) + DD(2,2)*sigAv(2,2) +
-	               DD(3,3)*sigAv(3,3) + 2.*(DD(1,2)*sigAv(1,2) +
-		       DD(1,3)*sigAv(1,3) + DD(2,3)*sigAv(2,3))) * 
+      strainEnergy += (DD(0,0)*sigAv(0,0) + DD(1,1)*sigAv(1,1) +
+	               DD(2,2)*sigAv(2,2) + 2.*(DD(0,1)*sigAv(0,1) +
+		       DD(0,2)*sigAv(0,2) + DD(1,2)*sigAv(1,2))) * 
                       pVolume_new[idx]*delT;
 
       // Compute wave speed at each particle, store the maximum
@@ -744,15 +744,15 @@ ViscoScramForBinder::stressEqnWithoutCrack(Matrix3* S_n,
     k_n[ii] = DG - ST;
 
     cout << endl;
-    cout << "DG["<<ii<<"]={"<<DG(1,1)<<","<<DG(2,2)<<","
-                            <<DG(3,3)<<","<<DG(2,3)<<","
-                            <<DG(1,3)<<","<<DG(1,2)<<"}"<<endl;
-    cout << "ST["<<ii<<"]={"<<ST(1,1)<<","<<ST(2,2)<<","
-                            <<ST(3,3)<<","<<ST(2,3)<<","
-                            <<ST(1,3)<<","<<ST(1,2)<<"}"<<endl;
-    cout << "kn["<<ii<<"]={"<<k_n[ii](1,1)<<","<<k_n[ii](2,2)<<","
-                             <<k_n[ii](3,3)<<","<<k_n[ii](2,3)<<","
-                             <<k_n[ii](1,3)<<","<<k_n[ii](1,2)<<"}"<<endl;
+    cout << "DG["<<ii<<"]={"<<DG(0,0)<<","<<DG(1,1)<<","
+                            <<DG(2,2)<<","<<DG(1,2)<<","
+                            <<DG(0,2)<<","<<DG(0,1)<<"}"<<endl;
+    cout << "ST["<<ii<<"]={"<<ST(0,0)<<","<<ST(1,1)<<","
+                            <<ST(2,2)<<","<<ST(1,2)<<","
+                            <<ST(0,2)<<","<<ST(0,1)<<"}"<<endl;
+    cout << "kn["<<ii<<"]={"<<k_n[ii](0,0)<<","<<k_n[ii](1,1)<<","
+                             <<k_n[ii](2,2)<<","<<k_n[ii](1,2)<<","
+                             <<k_n[ii](0,2)<<","<<k_n[ii](0,1)<<"}"<<endl;
     cout << endl;
   }
 }
@@ -883,9 +883,7 @@ ViscoScramForBinder::stressEqnWithCrack(int index,
   k_n = DPrime*(2.0*G_n) - S_n*RTau_n 
                  - (S*(3.0*c1Sqc2) + SDot*c1Cub)*(G_n/G);
 
-  cout << "kn["<<index<<"]={"<<k_n(1,1)<<","<<k_n(2,2)<<","
-                             <<k_n(3,3)<<","<<k_n(2,3)<<","
-                             <<k_n(1,3)<<","<<k_n(1,2)<<"}"<<endl;
+  cout << "kn["<<index<<"]={"<<k_n<<"}"<<endl;
 }
  
 void
@@ -906,15 +904,9 @@ ViscoScramForBinder::stressEqnWithoutCrack(int index,
   k_n = DG - ST;
 
   cout << endl;
-  cout << "DG["<<index<<"]={"<<DG(1,1)<<","<<DG(2,2)<<","
-                            <<DG(3,3)<<","<<DG(2,3)<<","
-                            <<DG(1,3)<<","<<DG(1,2)<<"}"<<endl;
-  cout << "ST["<<index<<"]={"<<ST(1,1)<<","<<ST(2,2)<<","
-                            <<ST(3,3)<<","<<ST(2,3)<<","
-                            <<ST(1,3)<<","<<ST(1,2)<<"}"<<endl;
-  cout << "kn["<<index<<"]={"<<k_n(1,1)<<","<<k_n(2,2)<<","
-                             <<k_n(3,3)<<","<<k_n(2,3)<<","
-                             <<k_n(1,3)<<","<<k_n(1,2)<<"}"<<endl;
+  cout << "DG["<<index<<"]={"<<DG<<"}"<<endl;
+  cout << "ST["<<index<<"]={"<<ST<<"}"<<endl;
+  cout << "kn["<<index<<"]={"<<k_n <<"}"<<endl;
   cout << endl;
 }
  

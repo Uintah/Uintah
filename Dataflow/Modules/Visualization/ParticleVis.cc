@@ -363,9 +363,9 @@ void ParticleVis::execute()
 	      double matrix[16];
 	      Matrix3 M = (*t_it)[*iter];
 	      if( M.Norm() > 1e-8){
-		Vector v1(M(1,1),M(2,1),M(3,1));
-		Vector v2(M(1,2),M(2,2),M(3,2));
-		Vector v3(M(1,3),M(2,3),M(3,3));
+		Vector v1(M(0,0),M(1,0),M(2,0));
+		Vector v2(M(0,1),M(1,1),M(2,1));
+		Vector v3(M(0,2),M(1,2),M(2,2));
 		double norm = 1/Max(v1.length(), v2.length(), v3.length());
 		if (M.Determinant() < 0) {
 		  norm *= -1;
@@ -373,11 +373,11 @@ void ParticleVis::execute()
 		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
 		  matrix[13] = matrix[14] = 0;
 		matrix[15] = 1;
-		matrix[0] = M(1,1)*norm; matrix[1] = M(2,1)*norm;
-		matrix[2] = M(3,1)*norm; matrix[4] = M(1,2)*norm;
-		matrix[5] = M(2,2)*norm; matrix[6] = M(3,2)*norm;
-		matrix[8] = M(1,3)*norm; matrix[9] = M(2,3)*norm;
-		matrix[10] = M(3,3)*norm;
+		matrix[0] = M(0,0)*norm; matrix[1] = M(1,0)*norm;
+		matrix[2] = M(2,0)*norm; matrix[4] = M(0,1)*norm;
+		matrix[5] = M(1,1)*norm; matrix[6] = M(2,1)*norm;
+		matrix[8] = M(0,2)*norm; matrix[9] = M(1,2)*norm;
+		matrix[10] = M(2,2)*norm;
 		
 		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomEllipsoid((*p_it)[*iter],

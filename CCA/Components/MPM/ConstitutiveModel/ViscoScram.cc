@@ -374,7 +374,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 #endif
           for (int j = 0; j<3; j++){
              for (int i = 0; i<3; i++) {
-                 velGrad(i+1,j+1)+=gvel[i] * d_S[k][j] * oodx[j];
+                 velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
              }
           }
        }
@@ -577,11 +577,11 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
        // This is the cracking work rate
        // Unused variable - Steve
        //double scrdot =(DevStress.Norm()*DevStress.Norm()*topc
-       //             + (DevStress(1,1)*SRate(1,1) + DevStress(2,2)*SRate(2,2) +
-       //		         DevStress(3,3)*SRate(3,3) + 
-       //			 2.*(DevStress(2,3)*SRate(2,3) +
-       //		             DevStress(1,2)*SRate(1,2) + 
-       //			     DevStress(1,3)*SRate(1,3))
+       //             + (DevStress(0,0)*SRate(0,0) + DevStress(1,1)*SRate(1,1) +
+       //		         DevStress(2,2)*SRate(2,2) + 
+       //			 2.*(DevStress(1,2)*SRate(1,2) +
+       //		             DevStress(0,1)*SRate(0,1) + 
+       //			     DevStress(0,2)*SRate(0,2))
        //			) * coa3
        //		     )/(2*G);
 
@@ -642,12 +642,12 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 
        // Compute the strain energy for all the particles
        OldStress = (pstressnew[idx] + OldStress)*.5;
-       se += (D(1,1)*OldStress(1,1) +
+       se += (D(0,0)*OldStress(0,0) +
+	      D(1,1)*OldStress(1,1) +
 	      D(2,2)*OldStress(2,2) +
-	      D(3,3)*OldStress(3,3) +
-	      2.*(D(1,2)*OldStress(1,2) +
-		  D(1,3)*OldStress(1,3) +
-		  D(2,3)*OldStress(2,3))) * pvolume_deformed[idx]*delT;
+	      2.*(D(0,1)*OldStress(0,1) +
+		  D(0,2)*OldStress(0,2) +
+		  D(1,2)*OldStress(1,2))) * pvolume_deformed[idx]*delT;
 
        // Compute wave speed at each particle, store the maximum
        Vector pvelocity_idx = pvelocity[idx];

@@ -253,7 +253,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 	
        	  for (int j = 0; j<3; j++){
             for (int i = 0; i<3; i++) {
-              dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
+              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
             }
           }
 
@@ -322,21 +322,21 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
         FastMatrix D(6,6);
       
-        D(0,0) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
-        D(0,1) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
-        D(0,2) = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(3,3));
-        D(0,3) =  - 2./3.*(shrTrl(1,2));
-        D(0,4) =  - 2./3.*(shrTrl(1,3));
-        D(0,5) =  - 2./3.*(shrTrl(2,3));
-        D(1,1) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
-        D(1,2) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(2,2) + shrTrl(3,3));
-        D(1,3) =  - 2./3.*(shrTrl(1,2));
-        D(1,4) =  - 2./3.*(shrTrl(1,3));
-        D(1,5) =  - 2./3.*(shrTrl(2,3));
-        D(2,2) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(3,3));
-        D(2,3) =  - 2./3.*(shrTrl(1,2));
-        D(2,4) =  - 2./3.*(shrTrl(1,3));
-        D(2,5) =  - 2./3.*(shrTrl(2,3));
+        D(0,0) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(0,0));
+        D(0,1) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(1,1));
+        D(0,2) = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(2,2));
+        D(0,3) =  - 2./3.*(shrTrl(0,1));
+        D(0,4) =  - 2./3.*(shrTrl(0,2));
+        D(0,5) =  - 2./3.*(shrTrl(1,2));
+        D(1,1) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
+        D(1,2) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
+        D(1,3) =  - 2./3.*(shrTrl(0,1));
+        D(1,4) =  - 2./3.*(shrTrl(0,2));
+        D(1,5) =  - 2./3.*(shrTrl(1,2));
+        D(2,2) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
+        D(2,3) =  - 2./3.*(shrTrl(0,1));
+        D(2,4) =  - 2./3.*(shrTrl(0,2));
+        D(2,5) =  - 2./3.*(shrTrl(1,2));
         D(3,3) =  -.5*coef2 + mubar;
         D(3,4) = 0.;
         D(3,5) = 0.;
@@ -363,7 +363,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         FastMatrix sig(3,3);
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
-            sig(i,j)=pstress[idx](i+1,j+1);
+            sig(i,j)=pstress[idx](i,j);
           }
         }
 
@@ -485,7 +485,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 	  const Vector& disp = dispNew[ni[k]];
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
-	      dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
+	      dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
 	    }
 	  }
 	}
