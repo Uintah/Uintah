@@ -124,6 +124,14 @@ class Matrix3 {
   //Transpose
   inline Matrix3 Transpose() const;
 
+  // Get a left or right polar decomposition of a non-singular square matrix
+  // Returns right stretch and rotation if rightFlag == true
+  // Returns left stretch and rotation if rightFlag == false
+  void polarDecomposition(Matrix3& stretch,
+                          Matrix3& rotation,
+                          double tolerance,
+                          bool rightFlag) const;
+
   // Returns number of real, unique eigen values and passes
   // back the values.  If it returns 1, the value is passed back
   // in e1.  If it returns 2, the values are passed back in e1
