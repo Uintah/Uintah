@@ -76,7 +76,7 @@ DEALINGS IN THE SOFTWARE.
 	</listitem>
 	<listitem>
 	  <para>
-	    <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 	  </para>
 	</listitem>
       </itemizedlist>
