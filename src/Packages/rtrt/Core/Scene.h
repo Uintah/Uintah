@@ -42,9 +42,6 @@ struct PerProcessorContext;
 
 enum AmbientType { Global_Ambient = 0, Constant_Ambient, Arc_Ambient, 
 		   Sphere_Ambient };
-};
-
-namespace rtrt {
 
 class Scene : public SCIRun::Persistent {
   

@@ -56,13 +56,13 @@ CycleMaterial::io(SCIRun::Piostream &str)
 {
   str.begin_class("CycleMaterial", CYCLEMATERIAL_VERSION);
   Material::io(str);
-  Pio(str, current);
-  Pio(str, members);
+  SCIRun::Pio(str, current);
+  SCIRun::Pio(str, members);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::CycleMaterial*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::CycleMaterial*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::CycleMaterial::type_id);

@@ -27,7 +27,7 @@ struct BV1Tree : public SCIRun::Persistent {
 } // end namespace rtrt
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream&, rtrt::BV1Tree*&);
+void Pio(SCIRun::Piostream&, rtrt::BV1Tree*&);
 }
 
 SCIRun::Persistent* bv1_maker() {
@@ -753,32 +753,32 @@ BV1::io(SCIRun::Piostream &str)
 {
   str.begin_class("BV1", BV1_VERSION);
   Object::io(str);
-  Pio(str, obj);
-  Pio(str, normal_tree);
-  Pio(str, light_tree);
+  SCIRun::Pio(str, obj);
+  SCIRun::Pio(str, normal_tree);
+  SCIRun::Pio(str, light_tree);
   str.end_class();
 }
 
 void BV1Tree::io(SCIRun::Piostream& str)
 {
   str.begin_class("BV1Tree", BV1TREE_VERSION);
-  Pio(str, primStart);
-  Pio(str, bbox);
-  Pio(str, prims);
+  SCIRun::Pio(str, primStart);
+  SCIRun::Pio(str, bbox);
+  SCIRun::Pio(str, prims);
   if (str.reading()) {
     slabs = new double[6*(2*prims.size()-1)];
   }
 
   for (int i=0; i < 6*(2*prims.size()-1); i++)
   {
-    Pio(str, slabs[i]);
+    SCIRun::Pio(str, slabs[i]);
   }
   str.end_class();
 }
 
 namespace SCIRun {
 
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::BV1Tree*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::BV1Tree*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::BV1Tree::type_id);
@@ -786,7 +786,7 @@ void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::BV1Tree*& obj)
     obj=(rtrt::BV1Tree*)pobj;
 }
 
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::BV1*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::BV1*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::BV1::type_id);

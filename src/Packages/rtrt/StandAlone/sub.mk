@@ -20,6 +20,7 @@ else
 	$(SOUNDDIR) \
 	Packages/rtrt/visinfo \
 	Core/Thread \
+	Core/Persistent \
 	Core/Geometry \
 	Core/Exceptions
 
@@ -64,6 +65,7 @@ else
   PSELIBS := \
 	Packages/rtrt/Core \
 	Core/Thread \
+	Core/Persistent \
 	Core/Exceptions
 
 endif
@@ -84,6 +86,7 @@ else
   PSELIBS := \
 	Packages/rtrt/Core \
 	Core/Thread \
+	Core/Persistent \
 	Core/Exceptions
 
 endif

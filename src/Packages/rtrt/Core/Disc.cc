@@ -78,7 +78,7 @@ void Disc::light_intersect(const Ray& ray, HitInfo& hit, Color&,
 
 void Disc::compute_bounds(BBox& bbox, double offset)
 {
-#if 0
+#if 1
   Vector v(1,0,0);
   Vector v2, v3;
   v2=Cross(n,v);
@@ -89,12 +89,12 @@ void Disc::compute_bounds(BBox& bbox, double offset)
   v2.normalize();
   v3=Cross(n,v2);
   v3.normalize();
-  bbox.extend(cen-v2*(2*radius+offset));
-  bbox.extend(cen+v2*(2*radius+offset));
+  bbox.extend(cen-v2*(1.74*radius+offset));
+  bbox.extend(cen+v2*(1.74*radius+offset));
   bbox.extend(cen+n*offset);
   bbox.extend(cen-n*offset);
-  bbox.extend(cen-v3*(2*radius+offset));
-  bbox.extend(cen+v3*(2*radius+offset));
+  bbox.extend(cen-v3*(1.74*radius+offset));
+  bbox.extend(cen+v3*(1.74*radius+offset));
 #else
   bbox.extend(cen+Vector(1,1,1)*(radius+offset));
   bbox.extend(cen-Vector(1,1,1)*(radius+offset));
@@ -122,7 +122,7 @@ Disc::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Disc*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Disc*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Disc::type_id);

@@ -138,15 +138,15 @@ Group::io(SCIRun::Piostream &str)
 {
   str.begin_class("Group", GROUP_VERSION);
   Object::io(str);
-  Pio(str, was_processed);
-  Pio(str, bbox);
-  Pio(str, all_children_are_groups);
-  Pio(str, objs);
+  SCIRun::Pio(str, was_processed);
+  SCIRun::Pio(str, bbox);
+  SCIRun::Pio(str, all_children_are_groups);
+  SCIRun::Pio(str, objs);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Group*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Group*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Group::type_id);

@@ -153,7 +153,7 @@ Vector Noise::dnoise(const Vector& p)
 
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& str, rtrt::Noise& obj)
+void Pio(SCIRun::Piostream& str, rtrt::Noise& obj)
 {
   str.begin_cheap_delim();
   Pio(str, obj.tablesize);

@@ -133,20 +133,20 @@ CrowMarble::io(SCIRun::Piostream &str)
 {
   str.begin_class("CrowMarble", CROWMARBLE_VERSION);
   Material::io(str);
-  Pio(str, scale);
-  Pio(str, c1);
-  Pio(str, c2);
-  Pio(str, c3);
-  Pio(str, direction);
-  Pio(str, spline);
-  Pio(str, turbulence);
-  Pio(str, phong_exponent);
-  Pio(str, R0);
+  SCIRun::Pio(str, scale);
+  SCIRun::Pio(str, c1);
+  SCIRun::Pio(str, c2);
+  SCIRun::Pio(str, c3);
+  SCIRun::Pio(str, direction);
+  SCIRun::Pio(str, spline);
+  SCIRun::Pio(str, turbulence);
+  SCIRun::Pio(str, phong_exponent);
+  SCIRun::Pio(str, R0);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::CrowMarble*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::CrowMarble*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::CrowMarble::type_id);

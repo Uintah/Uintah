@@ -267,13 +267,13 @@ BumpMaterial::io(SCIRun::Piostream &str)
 {
   str.begin_class("BumpMaterial", BUMPMATERIAL_VERSION);
   Material::io(str);
-  Pio(str, material);
-  Pio(str, dimension_x);
-  Pio(str, dimension_y);
-  Pio(str, evaru);
-  Pio(str, evarv);
-  Pio(str, ntiles);
-  Pio(str, bump_scale);
+  SCIRun::Pio(str, material);
+  SCIRun::Pio(str, dimension_x);
+  SCIRun::Pio(str, dimension_y);
+  SCIRun::Pio(str, evaru);
+  SCIRun::Pio(str, evarv);
+  SCIRun::Pio(str, ntiles);
+  SCIRun::Pio(str, bump_scale);
 
   int size = dimension_x*dimension_y*sizeof(int);
   if (str.reading()) {
@@ -281,13 +281,13 @@ BumpMaterial::io(SCIRun::Piostream &str)
     bumpimage = (int *)malloc(size);
   }
   for (int i = 0; i < size; i++) {
-    Pio(str, bumpimage[i]);    
+    SCIRun::Pio(str, bumpimage[i]);    
   }
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::BumpMaterial*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::BumpMaterial*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::BumpMaterial::type_id);

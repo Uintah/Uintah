@@ -403,22 +403,22 @@ Grid::io(SCIRun::Piostream &str)
 {
   str.begin_class("Grid", GRID_VERSION);
   Object::io(str);
-  Pio(str, obj);
-  Pio(str, bbox);
-  Pio(str, nx);
-  Pio(str, ny);
-  Pio(str, nz);
+  SCIRun::Pio(str, obj);
+  SCIRun::Pio(str, bbox);
+  SCIRun::Pio(str, nx);
+  SCIRun::Pio(str, ny);
+  SCIRun::Pio(str, nz);
   int ngrid = nx*ny*nz;
   //Pio(str, grid);
   //Pio(str, counts);
-  Pio(str, nsides);
+  SCIRun::Pio(str, nsides);
   if (str.reading()) {
     set_matl(new LambertianMaterial(Color(1,0,0)));
     counts=new int[2*ngrid];
   }
   // Read in the counts...
   for(int i=0;i<ngrid*2;i++) {
-    Pio(str, counts[i]);
+    SCIRun::Pio(str, counts[i]);
   }
   int total=0;
   for(int i=0;i<ngrid;i++){
@@ -430,13 +430,13 @@ Grid::io(SCIRun::Piostream &str)
   }
   // Read in grid.
   for(int j=0;j<total;j++) {
-    Pio(str, grid[j]);
+    SCIRun::Pio(str, grid[j]);
   }
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Grid*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Grid*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Grid::type_id);

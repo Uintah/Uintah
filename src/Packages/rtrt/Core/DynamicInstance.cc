@@ -86,14 +86,14 @@ DynamicInstance::io(SCIRun::Piostream &str)
 {
   str.begin_class("DynamicInstance", DYNAMICINSTANCE_VERSION);
   Instance::io(str);
-  Pio(str, origTransform);
-  Pio(str, newTransform);
-  Pio(str, location_);
+  SCIRun::Pio(str, origTransform);
+  SCIRun::Pio(str, newTransform);
+  SCIRun::Pio(str, location_);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::DynamicInstance*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::DynamicInstance*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::DynamicInstance::type_id);

@@ -309,7 +309,7 @@ Vector FastNoise::dnoise(const Vector& v, double& n)
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& str, rtrt::FastNoise& obj)
+void Pio(SCIRun::Piostream& str, rtrt::FastNoise& obj)
 {
   str.begin_cheap_delim();
   Pio(str, (Noise&)obj);

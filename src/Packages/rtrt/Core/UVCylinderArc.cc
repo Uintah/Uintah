@@ -147,17 +147,17 @@ UVCylinderArc::io(SCIRun::Piostream &str)
   str.begin_class("UVCylinderArc", UVCYLINDERARC_VERSION);
   Object::io(str);
   UVMapping::io(str);
-  Pio(str, top);
-  Pio(str, bottom);
-  Pio(str, radius);
-  Pio(str, tex_scale);
-  Pio(str, xform);
-  Pio(str, ixform);
+  SCIRun::Pio(str, top);
+  SCIRun::Pio(str, bottom);
+  SCIRun::Pio(str, radius);
+  SCIRun::Pio(str, tex_scale);
+  SCIRun::Pio(str, xform);
+  SCIRun::Pio(str, ixform);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::UVCylinderArc*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::UVCylinderArc*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::UVCylinderArc::type_id);
