@@ -1180,8 +1180,6 @@ Properties::computeDenRefArray(const ProcessorGroup*,
 
     double den_Ref = den_ref_var;
 
-    //cerr << "getdensity_ref " << den_Ref << endl;
-
     if (d_MAlab) {
 
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 

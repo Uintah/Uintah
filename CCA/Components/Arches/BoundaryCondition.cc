@@ -382,16 +382,55 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* p
 			  fixCellType);
   
   int numGhostcells = 0;
-  tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, 
-		Ghost::None, numGhostcells);
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-		Ghost::None, numGhostcells);
+
+  // New DW warehouse variables to calculate cell types if we are
+  // recalculating cell types and resetting void fractions
+
+  double time = d_lab->d_sharedState->getElapsedTime();
+  bool recalculateCellType = false;
+  int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  //  cout << "Current DW number = " << dwnumber << endl;
+  //  if (time < 1.0e-10 || !fixCellType) recalculateCellType = true;
+  if (dwnumber < 2 || !fixCellType) recalculateCellType = true;
+  //  cout << "recalculateCellType =" << recalculateCellType << endl;
+
   tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,
 		Ghost::None, numGhostcells);
+  tsk->requires(Task::OldDW, d_lab->d_mmcellTypeLabel, 
+		Ghost::None, numGhostcells);
+  tsk->requires(Task::OldDW, d_MAlab->mmCellType_MPMLabel, 
+		Ghost::None, numGhostcells);
+  if (d_cutCells)
+    tsk->requires(Task::OldDW, d_MAlab->mmCellType_CutCellLabel,
+		  Ghost::None, numGhostcells);
 
-  tsk->computes(d_lab->d_mmcellTypeLabel);
-  tsk->computes(d_lab->d_mmgasVolFracLabel);
-  
+  if (recalculateCellType) {
+
+    tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, 
+		  Ghost::None, numGhostcells);
+    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
+		  Ghost::None, numGhostcells);
+
+    tsk->computes(d_lab->d_mmgasVolFracLabel);
+    tsk->computes(d_lab->d_mmcellTypeLabel);
+    tsk->computes(d_MAlab->mmCellType_MPMLabel);
+    if (d_cutCells)
+      tsk->computes(d_MAlab->mmCellType_CutCellLabel);
+
+    tsk->modifies(d_MAlab->void_frac_MPM_CCLabel);
+    if (d_cutCells)
+      tsk->modifies(d_MAlab->void_frac_CutCell_CCLabel);
+  }
+  else {
+
+    tsk->computes(d_lab->d_mmgasVolFracLabel);
+    tsk->computes(d_lab->d_mmcellTypeLabel);
+    tsk->computes(d_MAlab->mmCellType_MPMLabel);
+    if (d_cutCells)
+      tsk->computes(d_MAlab->mmCellType_CutCellLabel);
+
+  }
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -414,48 +453,114 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
 
     double time = d_lab->d_sharedState->getElapsedTime();
     bool recalculateCellType = false;
-    if (time < 1.0e-10 || !fixCellType) recalculateCellType = true;
+    int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    //    cout << "Current DW number = " << dwnumber << endl;
+    //    if (time < 1.0e-10 || !fixCellType) recalculateCellType = true;
+    if (dwnumber < 2 || !fixCellType) recalculateCellType = true;
+    //    cout << "recalculateCellType = " << recalculateCellType << endl;
 
-    constCCVariable<int> cellType;
-    old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		Ghost::None, numGhostcells);
+    // New DW void fraction to decide cell types and reset void fractions
 
     constCCVariable<double> voidFrac;
-    new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
-		Ghost::None, numGhostcells);
+    constCCVariable<int> cellType;
+
+    CCVariable<double> mmGasVolFrac;
+    CCVariable<int> mmCellType;
+    CCVariable<int> mmCellTypeMPM;
+    CCVariable<int> mmCellTypeCutCell;
+    CCVariable<double> voidFracMPM;
+    CCVariable<double> voidFracCutCell;
 
     constCCVariable<double> oldGasVolFrac;
+    constCCVariable<int> mmCellTypeOld;
+    constCCVariable<int> mmCellTypeMPMOld;
+    constCCVariable<int> mmCellTypeCutCellOld;
+    constCCVariable<double> voidFracMPMOld;
+    constCCVariable<double> voidFracCutCellOld;
+
     old_dw->get(oldGasVolFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
 		Ghost::None, numGhostcells);
+    old_dw->get(mmCellTypeOld, d_lab->d_mmcellTypeLabel, matlIndex, patch,
+		Ghost::None, numGhostcells);
+    old_dw->get(mmCellTypeMPMOld, d_MAlab->mmCellType_MPMLabel, matlIndex, patch,
+		Ghost::None, numGhostcells);
+    if (d_cutCells)
+      old_dw->get(mmCellTypeCutCellOld, d_MAlab->mmCellType_CutCellLabel, matlIndex, patch,
+		  Ghost::None, numGhostcells);
 
-    CCVariable<int> mmcellType;
-    new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
-    mmcellType.copyData(cellType);
+    if (recalculateCellType) {
 
-    CCVariable<double> mmvoidFrac;
-    new_dw->allocateAndPut(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+      new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
+		  Ghost::None, numGhostcells);
+      old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::None, numGhostcells);
 
-    if (recalculateCellType) 
-      mmvoidFrac.copyData(voidFrac);
-    else
-      mmvoidFrac.copyData(oldGasVolFrac);
+      new_dw->allocateAndPut(mmGasVolFrac, d_lab->d_mmgasVolFracLabel, 
+			     matlIndex, patch);
+      new_dw->allocateAndPut(mmCellType, d_lab->d_mmcellTypeLabel, 
+			     matlIndex, patch);
+      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, 
+			     matlIndex, patch);
+      if (d_cutCells)
+	new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, 
+			       matlIndex, patch);
 
-    IntVector domLo = mmcellType.getFortLowIndex();
-    IntVector domHi = mmcellType.getFortHighIndex();
+      new_dw->getModifiable(voidFracMPM, d_MAlab->void_frac_MPM_CCLabel, 
+			    matlIndex, patch);
+      if (d_cutCells)
+	new_dw->getModifiable(voidFracCutCell, d_MAlab->void_frac_CutCell_CCLabel, 
+			      matlIndex, patch);
+
+    }
+    else {
+
+      new_dw->allocateAndPut(mmGasVolFrac, d_lab->d_mmgasVolFracLabel, 
+			     matlIndex, patch);
+      new_dw->allocateAndPut(mmCellType, d_lab->d_mmcellTypeLabel, 
+			     matlIndex, patch);
+      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, 
+			     matlIndex, patch);
+      if (d_cutCells)
+	new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, 
+			       matlIndex, patch);
+    }
+
+    IntVector domLo = mmCellType.getFortLowIndex();
+    IntVector domHi = mmCellType.getFortHighIndex();
     IntVector idxLo = domLo;
     IntVector idxHi = domHi;
 
     if (recalculateCellType) {
-    // resets old mmwall type back to flow field and sets cells with void fraction
-    // of less than .01 to mmWall
-      fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
-			  d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+
+      mmGasVolFrac.copyData(voidFrac);
+      mmCellType.copyData(cellType);
+      mmCellTypeMPM.copyData(cellType);
+      if (d_cutCells)
+	mmCellTypeCutCell.copyData(cellType);
+
+      // resets old mmwall type back to flow field and sets cells with void fraction
+      // of less than .5 to mmWall
+
+      fort_mmcelltypeinit(idxLo, idxHi, mmGasVolFrac, mmCellType, d_mmWallID,
+      			  d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+
+      fort_mmcelltypeinit(idxLo, idxHi, voidFracMPM, mmCellTypeMPM, d_mmWallID,
+      			  d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+      if (d_cutCells)
+	fort_mmcelltypeinit(idxLo, idxHi, voidFracCutCell, mmCellTypeCutCell, d_mmWallID,
+			    d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+    }
+    else {
+
+      mmGasVolFrac.copyData(oldGasVolFrac);
+      mmCellType.copyData(mmCellTypeOld);
+      mmCellTypeMPM.copyData(mmCellTypeMPMOld);
+      if (d_cutCells)
+	mmCellTypeCutCell.copyData(mmCellTypeCutCellOld);
     }
   }  
 }
 
-
-    
 // for multimaterial
 //****************************************************************************
 // schedule the initialization of mm wall cell types for the very first
