@@ -4,6 +4,9 @@
  */
 
 #include <sci_defs.h> // For HAVE_OOGL
+#if defined(HAVE_OOGL)
+#undef HAVE_OOGL
+#endif
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
