@@ -798,16 +798,16 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
 
-      // This task requires old densityCP, [u,v,w]VelocitySP
+      // This task requires densityCP, [u,v,w]VelocitySP from new_dw
       tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // This task computes new density, uVelocity, vVelocity and wVelocity
@@ -1488,13 +1488,13 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   // get cellType, velocity and density
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Get the low and high index for the patch and the variables
@@ -1963,6 +1963,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.39  2000/07/11 15:46:27  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.38  2000/07/08 23:42:53  bbanerje
 // Moved all enums to Arches.h and made corresponding changes.
 //

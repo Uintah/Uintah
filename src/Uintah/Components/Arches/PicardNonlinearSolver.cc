@@ -56,6 +56,15 @@ PicardNonlinearSolver::PicardNonlinearSolver(Properties* props,
 				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP",
 				    SFCZVariable<double>::getTypeDescription() );
+  // used by setInitial guess
+  d_uVelocitySPBCLabel = scinew VarLabel("uVelocitySPBC", 
+				    SFCXVariable<double>::getTypeDescription() );
+  d_vVelocitySPBCLabel = scinew VarLabel("vVelocitySPBC", 
+				    SFCYVariable<double>::getTypeDescription() );
+  d_wVelocitySPBCLabel = scinew VarLabel("wVelocitySPBC", 
+				    SFCZVariable<double>::getTypeDescription() );
+  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC", 
+				   CCVariable<double>::getTypeDescription() );
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				  CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
@@ -120,7 +129,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 					  double time, double delta_t)
 {
   //initializes and allocates vars for new_dw
-  //  sched_initialize(level, sched, old_dw, new_dw);
+  // set initial guess
+  sched_setInitialGuess(level, sched, old_dw, new_dw);
 
   int nlIterations = 0;
   double nlResidual = 2.0*d_resTol;;
@@ -205,10 +215,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 // Schedule initialize 
 //****************************************************************************
 void 
-PicardNonlinearSolver::sched_initialize(const LevelP& level,
-					SchedulerP& sched,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw)
+PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
+					     SchedulerP& sched,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw)
 {
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -216,21 +226,18 @@ PicardNonlinearSolver::sched_initialize(const LevelP& level,
     {
       //copies old db to new_db and then uses non-linear
       //solver to compute new values
-      Task* tsk = scinew Task("PicardNonlinearSolver::initialize",patch,
+      Task* tsk = scinew Task("PicardNonlinearSolver::initialGuess",patch,
 			   old_dw, new_dw, this,
-			   &PicardNonlinearSolver::initialize);
-
-      // do we need 0 or 1...coz we need to use ghost cell information
-      // for computing stencil coefficients
+			   &PicardNonlinearSolver::setInitialGuess);
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       int nofScalars = d_props->getNumMixVars();
@@ -257,15 +264,14 @@ PicardNonlinearSolver::sched_initialize(const LevelP& level,
     }
   }
 }
-
 //****************************************************************************
 // Actual initialize 
 //****************************************************************************
 void 
-PicardNonlinearSolver::initialize(const ProcessorGroup* ,
-				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw)
+PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
 {
   // Get the pressure, velocity, scalars, density and viscosity from the
   // old datawarehouse
@@ -273,17 +279,17 @@ PicardNonlinearSolver::initialize(const ProcessorGroup* ,
   int nofGhostCells = 0;
 
   CCVariable<double> pressure;
-  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   SFCXVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   SFCYVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   SFCZVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   int nofScalars = d_props->getNumMixVars();
@@ -379,6 +385,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.35  2000/07/11 15:46:27  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.34  2000/07/08 08:03:34  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc

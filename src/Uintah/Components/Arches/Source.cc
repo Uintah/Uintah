@@ -3,6 +3,7 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
+#include <Uintah/Components/Arches/ArchesFort.h>
 #include <Uintah/Components/Arches/Source.h>
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/StencilMatrix.h>
@@ -33,6 +34,12 @@ Source::Source()
   // inputs (calcVelocitySource)
   d_cellInfoLabel = scinew VarLabel("cellInformation",
 			    PerPatch<CellInformation*>::getTypeDescription());
+  d_uVelocitySPBCLabel = scinew VarLabel("uVelocitySPBC",
+				    SFCXVariable<double>::getTypeDescription() );
+  d_vVelocitySPBCLabel = scinew VarLabel("vVelocitySPBC",
+				    SFCYVariable<double>::getTypeDescription() );
+  d_wVelocitySPBCLabel = scinew VarLabel("wVelocitySPBC",
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
@@ -136,10 +143,14 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   int numGhostCells = 0;
   int matlIndex = 0;
 
+  SFCXVariable<double> old_uVelocity;
+  SFCYVariable<double> old_vVelocity;
+  SFCZVariable<double> old_wVelocity;
+  CCVariable<double> old_density;
+  CCVariable<double> density;
   SFCXVariable<double> uVelocity;
   SFCYVariable<double> vVelocity;
   SFCZVariable<double> wVelocity;
-  CCVariable<double> density;
   CCVariable<double> viscosity;
 
   SFCXVariable<double> uVelLinearSrc; //SP term in Arches 
@@ -150,6 +161,12 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   SFCZVariable<double> wVelNonlinearSrc; // SU in Arches 
 
   // get data
+  old_dw->get(old_uVelocity, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  old_dw->get(old_vVelocity, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  old_dw->get(old_wVelocity, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
   switch(eqnType) {
   case Arches::PRESSURE:
     new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -170,7 +187,9 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   default:
     throw InvalidValue("Equation type can be only PRESSURE or MOMENTUM");
   }
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(old_density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  new_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
@@ -188,6 +207,9 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   
   //get index component of gravity
   double gravity = d_physicalConsts->getGravity(index);
+  // get iref, jref, kref and ref density by broadcasting from a patch that contains
+  // iref, jref and kref
+  double den_ref = 0.0; // change it!!!
 
   // allocate
   switch(eqnType) {
@@ -240,59 +262,67 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   // Get the patch and variable indices
   IntVector domLoU = uVelocity.getFortLowIndex();
   IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector domLoV = uVelocity.getFortLowIndex();
-  IntVector domHiV = uVelocity.getFortHighIndex();
-  IntVector domLoW = uVelocity.getFortLowIndex();
-  IntVector domHiW = uVelocity.getFortHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
   IntVector domLo = density.getFortLowIndex();
   IntVector domHi = density.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
 
   switch(index) {
   case Arches::XDIR:
-    IntVector idxLoU = patch->getSFCXFORTLowIndex();
-    IntVector idxHiU = patch->getSFCXFORTHighIndex();
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     FORT_UVELSOURCE(domLoU.get_pointer(), domHiU.get_pointer(),
-		   idxLoU.get_pointer(), idxHiU.get_pointer(),
-		   uVelocity.getPointer(), 
-		   uVelLinearSrc.getPointer(), 
-		   uVelNonlinearSrc.getPointer(), 
-		   domLoV.get_pointer(), domHiV.get_pointer(),
-		   vVelocity.getPointer(), 
-		   domLoW.get_pointer(), domHiW.get_pointer(),
-		   wVelocity.getPointer(), 
-		   domLo.get_pointer(), domHi.get_pointer(),
-		   density.getPointer(),
-		   viscosity.getPointer(), 
-		   &gravity, 
-		   cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		   cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		   cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		   cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		   cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		   cellinfo->dxpwu, 
-		   cellinfo->fac1u, cellinfo->fac2u, cellinfo->fac3u, 
-		   cellinfo->fac4u,
-		   cellinfo->iesdu, cellinfo->iwsdu, 
-		   cellinfo->enfac, cellinfo->sfac,
-		   cellinfo->tfac, cellinfo->bfac);
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    uVelocity.getPointer(),
+		    old_uVelocity.getPointer(),
+		    uVelNonlinearSrc.getPointer(), 
+		    uVelLinearSrc.getPointer(), 
+		    domLoV.get_pointer(), domHiV.get_pointer(),
+		    vVelocity.getPointer(), 
+		    domLoW.get_pointer(), domHiW.get_pointer(),
+		    wVelocity.getPointer(), 
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    density.getPointer(),
+		    old_density.getPointer(),
+		    viscosity.getPointer(), 
+		    &gravity, &delta_t, &den_ref,
+		    cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(), 
+		    cellinfo->cwwu.get_objs(),
+		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
+		    cellinfo->css.get_objs(),
+		    cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
+		    cellinfo->cbb.get_objs(),
+		    cellinfo->sewu.get_objs(), cellinfo->sew.get_objs(),
+		    cellinfo->sns.get_objs(),
+		    cellinfo->stb.get_objs(),
+		    cellinfo->dxepu.get_objs(), cellinfo->dxpwu.get_objs(),
+		    cellinfo->dxpw.get_objs(),
+		    cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(), 
+		    cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(), 
+		    cellinfo->fac1u.get_objs(), cellinfo->fac2u.get_objs(),
+		    cellinfo->fac3u.get_objs(), 
+		    cellinfo->fac4u.get_objs(),
+		    cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs(), 
+		    cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
+		    cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
     break;
   case Arches::YDIR:
-    IntVector idxLoV = patch->getSFCYFORTLowIndex();
-    IntVector idxHiV = patch->getSFCYFORTHighIndex();
     break;
   case Arches::ZDIR:
-    IntVector idxLoW = patch->getSFCZFORTLowIndex();
-    IntVector idxHiW = patch->getSFCZFORTHighIndex();
     break;
   default:
     throw InvalidValue("Invalid index in Source::calcVelSrc");
   }
 
-#endif
 
 #ifdef MAY_BE_USEFUL_LATER  
   int ioff = 1;
@@ -686,6 +716,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.22  2000/07/11 15:46:28  rawat
+//added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 //Revision 1.21  2000/07/09 00:23:58  bbanerje
 //Made changes to calcVelocitySource .. still getting seg violation here.
 //

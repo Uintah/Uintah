@@ -48,6 +48,7 @@ WARNING
 #define FORT_UVELCOEF uvelcoef_
 #define FORT_VVELCOEF vvelcoef_
 #define FORT_WVELCOEF wvelcoef_
+#define FORT_UVELSOURCE uvelsrc_
 #define FORT_BCUVEL bcuvel_
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
@@ -363,12 +364,49 @@ extern "C"
 		  const int* ktsdw, const int* kbsdw, 
 		  const double* efac, const double* wfac,
 		  const double* nfac, const double* sfac);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the U-velocity coeffs and convection coeffs
+    //
+    void
+    FORT_UVELSOURCE(const int* domLoU, const int* domHiU,
+		    const int* idxLoU, const int* idxHiU,
+		    const double* uVelocity,  const double* old_uVelocity,
+		    double* uvelnlinSrc, double* uvellinSrc,
+		    const int* domLoV, const int* domHiV,
+		    const double* vVelocity,
+		    const int* domLoW, const int* domHiW,
+		    const double* wVelocity,
+		    const int* domLo, const int* domHi,
+		    const double* density, const double* old_density,
+		    const double* viscosity,
+		    const double* gravity,
+		    const double* deltaT, const double* den_ref,
+		    const double* ceeu, const double* cweu, const double* cwwu,
+		    const double* cnn, const double* csn, const double* css,
+		    const double* ctt, const double* cbt, const double* cbb,
+		    const double* sewu, const double* sew, const double* sns,
+		    const double* stb,
+		    const double* dxepu, const double* dxpwu,
+		    const double* dxpw, const double* dynp, const double* dyps,
+		    const double* dztp, const double* dzpb,
+		    const double* fac1u, const double* fac2u,
+		    const double* fac3u, const double* fac4u,
+		    const int* iesdu, const int* iwsdu, 
+		    const double* nfac, const double* sfac,
+		    const double* tfac, const double* bfac);
+
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.13  2000/07/11 15:46:26  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.12  2000/07/08 23:08:54  bbanerje
 // Added vvelcoef and wvelcoef ..
 // Rawat check the ** WARNING ** tags in these files for possible problems.

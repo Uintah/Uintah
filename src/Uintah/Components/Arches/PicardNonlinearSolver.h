@@ -101,10 +101,10 @@ public:
       //    [in] 
       //        data User data needed for solve 
       //
-      void sched_initialize(const LevelP&, 
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+      void sched_setInitialGuess(const LevelP&, 
+				 SchedulerP& sched,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
 
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
@@ -136,10 +136,10 @@ private:
       //    [in] 
       //        data User data needed for solve 
       //
-      void initialize(const ProcessorGroup* pc,
-		      const Patch* patch,
-		      DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw);
+      void setInitialGuess(const ProcessorGroup* pc,
+			   const Patch* patch,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
 
 private:
 
@@ -163,6 +163,10 @@ private:
       BoundaryCondition* d_boundaryCondition;
 
       // const VarLabel*
+      const VarLabel* d_pressureSPBCLabel;
+      const VarLabel* d_uVelocitySPBCLabel;
+      const VarLabel* d_vVelocitySPBCLabel;
+      const VarLabel* d_wVelocitySPBCLabel;
       const VarLabel* d_pressureINLabel;
       const VarLabel* d_uVelocitySPLabel;
       const VarLabel* d_vVelocitySPLabel;
@@ -183,6 +187,9 @@ private:
 
 //
 // $Log$
+// Revision 1.17  2000/07/11 15:46:27  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.16  2000/06/21 07:51:00  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

@@ -48,6 +48,8 @@ PressureSolver::PressureSolver(int nDim,
   // Inputs
   d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
 			     CCVariable<double>::getTypeDescription() );
+  d_pressureINLabel = scinew VarLabel("pressureIN",
+			     CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				 SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
@@ -201,11 +203,21 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       int matlIndex = 0;
 
       // Requires
-      tsk->requires(old_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
+      // from old_dw
       tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      // from new_dw
+      tsk->requires(new_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
@@ -335,6 +347,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.31  2000/07/11 15:46:28  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.30  2000/07/08 23:42:55  bbanerje
 // Moved all enums to Arches.h and made corresponding changes.
 //

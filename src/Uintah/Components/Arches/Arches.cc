@@ -162,9 +162,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // Computes velocities at apecified pressure b.c's
   if (d_boundaryCondition->getPressureBC()) 
     d_boundaryCondition->sched_computePressureBC(level, sched, dw, dw);
-  // NOTE : Sched pressure BC requires pressureCoeff. That has not been 
-  // computed yet in this flow.
-  //d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 }
 
 //****************************************************************************
@@ -337,6 +334,9 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.51  2000/07/11 15:46:26  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.50  2000/07/07 23:07:44  rawat
 // added inlet bc's
 //
