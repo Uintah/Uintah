@@ -1330,9 +1330,11 @@ void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     particleIndex numParticles = mpm_matl->countParticles(patch);
 
+    new_dw->unfinalize();
     mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
     mpm_matl->getConstitutiveModel()->initializeCMData(patch, mpm_matl, new_dw);
+    new_dw->refinalize();
   }
 }
 
