@@ -1,5 +1,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/BV1.h>
+#include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Tri.h>
 #include <Packages/rtrt/Core/AirBubble.h>
 #include <Packages/rtrt/Core/Box.h>
@@ -10,6 +12,7 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/InvisibleMaterial.h>
 #include <Packages/rtrt/Core/CrowMarble.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
@@ -67,6 +70,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *col4 = new Group;
   Group *col5 = new Group;
   Group *col6 = new Group;
+  Group *col7 = new Group;
+  Group *col8 = new Group;
+  Group *col9 = new Group;
+  Group *col10 = new Group;
   Group *patch1 = new Group;
   Group *patch2 = new Group;
   Group *patch3 = new Group;
@@ -82,6 +89,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *bubbles = new Group;
   Group *rock1 = new Group;
   Group *rock2 = new Group;
+  Group *rock3 = new Group;
+  Group *rock4 = new Group;
+  Group *rock5 = new Group;
   Group *iceberg = new Group;
   Group *iceberg2 = new Group;
   Group *craters = new Group;
@@ -94,10 +104,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //Material* glass_to_air = new DielectricMaterial(1.0, 1.5, 0.04, 400.0, Color(.80, .93 , .87), Color(1,1,1), false);
   //Material* water_to_glass = new DielectricMaterial(1.5, 1.3, 0.04, 400.0, Color(.80, .84 , .93), Color(1,1,1), false);
 
-  Material* glass_to_air = new DielectricMaterial(1.0, 1.4, 0.01, 400.0, Color(1, 1, 1), Color(1,1,1), true);
-  Material* water_to_glass = new DielectricMaterial(1.4, 1.2, 0.004, 400.0, Color(.9, .93, 1), Color(1,1,1), true, 1);
-  Material* air_bubble = new DielectricMaterial(1.0, 1.1, 0.004, 400.0, Color(1, 1, 1), Color(1.01,1.01,1.01), false);
-
+//  Material* glass_to_air   = new DielectricMaterial(1.0, 1.0, 0.01, 400.0, Color(1, 1, 1), Color(1,1,1), false);
+//  Material* water_to_glass = new DielectricMaterial(1.0, 1.0, 0.004, 400.0, Color(.9, .93, 1), Color(1,1,1), false, 1);
+  Material* air_bubble     = new DielectricMaterial(1.0, 1.1, 0.004, 400.0, Color(1, 1, 1), Color(1.01,1.01,1.01), false);
+  Material* water_to_glass   = new PhongMaterial(Color(.5, .5, .5), .2, 0.8, 20, true); 
+//  Material* water_to_glass   = new InvisibleMaterial(); 
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
   Material* red = new LambertianMaterial(Color(1,0,0));
   Material* tan = new SeaLambertianMaterial(Color(0.6,0.6,0.2), tvcc);
@@ -118,9 +129,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // south tube
 
   // glass tube
-  Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -6, 1), Point(4, -6, 1), 2);
+//  Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -6, 1), Point(4, -6, 1), 2);
   Object *south_tube_outer = new Cylinder(water_to_glass, Point(-4, -6, 1), Point(4, -6, 1), 2.05);
-  south_tube->add(south_tube_inner);
+//  south_tube->add(south_tube_inner);
   south_tube->add(south_tube_outer);
   // floor
   south_tube->add(new Rect(checker, Point(0, -6, 0), Vector(4, 0, 0), Vector(0, 1.5, 0)));
@@ -150,10 +161,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   /**********************************************************************/
   // north tube
 
-  // glass tube
-  Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
+//  Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
   Object *north_tube_outer = new Cylinder(water_to_glass, Point(-4, 10, 1), Point(4, 10, 1), 2.05);
-  north_tube->add(north_tube_inner);
+//  north_tube->add(north_tube_inner);
   north_tube->add(north_tube_outer);
   // floor
   north_tube->add(new Rect(checker, Point(0, 10, 0), Vector(4, 0, 0), Vector(0, 1.5 ,0)));
@@ -183,9 +193,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // west tube
 
   // glass tube
-  Object *west_tube_inner = new Cylinder(glass_to_air, Point(-10, -4, 1), Point(-10, 4, 1), 2);
+//  Object *west_tube_inner = new Cylinder(glass_to_air, Point(-10, -4, 1), Point(-10, 4, 1), 2);
   Object *west_tube_outer = new Cylinder(water_to_glass, Point(-10, -4, 1), Point(-10, 4, 1), 2.05);
-  west_tube->add(west_tube_inner);
+//  west_tube->add(west_tube_inner);
   west_tube->add(west_tube_outer);
 
   // floor
@@ -215,9 +225,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   /**********************************************************************/
   // east tube
   
-  Object *east_tube_inner = new Cylinder(glass_to_air, Point(10, -4, 1), Point(10, 4, 1), 2);
+// Object *east_tube_inner = new Cylinder(glass_to_air, Point(10, -4, 1), Point(10, 4, 1), 2);
   Object *east_tube_outer = new Cylinder(water_to_glass, Point(10, -4, 1), Point(10, 4, 1), 2.05);
-  east_tube->add(east_tube_inner);
+// east_tube->add(east_tube_inner);
   east_tube->add(east_tube_outer);
   // floor
   east_tube->add(new Rect(checker, Point(10, 0, 0), Vector(1.5, 0, 0), Vector(0, 4, 0)));
@@ -322,6 +332,46 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    t,col6))
      exit(1);
   
+  // columns by west tube
+    // columns by west tube
+  t.load_identity();
+  t.pre_scale(Vector(.02, .02, .02));
+  t.pre_rotate(-1.3, Vector(0, 1, 0));
+  t.pre_rotate(-.4, Vector(0, 0, 1));
+  t.pre_translate(Vector(-16, 4, -1.2));
+  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
+                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+                   t,col7))
+        exit(1);
+
+  // columns by west tube
+  t.load_identity();
+  t.pre_scale(Vector(.02, .02, .02));
+  t.pre_translate(Vector(-16, -4, -.8));
+  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
+                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+                   t,col8))
+        exit(1);
+  // columns by west tube
+  t.load_identity();
+  t.pre_scale(Vector(.02, .02, .02));
+  t.pre_rotate(.1, Vector(0, 1, 0));
+  t.pre_rotate(.2, Vector(1, 0, 0));
+  t.pre_translate(Vector(-19, -4, -.8));
+  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
+                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+                   t,col9))
+        exit(1);
+  // columns by west tube
+  t.load_identity(); 
+  t.pre_scale(Vector(.02, .02, .02));
+  t.pre_translate(Vector(-19, 4, -.8));
+  if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
+                   "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
+                   t,col10))
+        exit(1);
+  
+  
   /*********************************************************************/
   // read in rocks
   
@@ -330,7 +380,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_translate(Vector(-7, -4.5, -3.5));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.obj",
 	           "/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.mtl",
-		    t1,patch1))
+		    t1,rock3))
         exit(1);
 
   t1.load_identity();
@@ -339,7 +389,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t1.pre_translate(Vector(4.2, 5.5, -3.5));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.obj", 
                    "/usr/sci/data/Geometry/models/read_in_models/rocks/stein002.mtl", 
-                    t1,patch1))
+                    t1,rock4))
         exit(1);
 
   t1.load_identity();
@@ -627,7 +677,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *shell1 = new Group;
   Group *anker = new Group;
   Group *krabbe = new Group;
-  Group *school = new Group;
+  Group *school1 = new Group;
+  Group *school2 = new Group;
+  Group *school3 = new Group;
+  Group *school4 = new Group;
   Group *tiger = new Group;
   
   t3.load_identity();
@@ -662,24 +715,24 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.pre_translate(Vector(-1, -3, 1.5));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school))
+                   t3, school1))
       exit(-1);
  
   t3.pre_translate(Vector(0, -.5, -.25));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school))
+                   t3, school2))
       exit(-1);
 
   t3.pre_translate(Vector(-.5 ,-.5, .5));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school))
+                   t3, school3))
       exit(-1);  
   t3.pre_translate(Vector(1.20, .2, -.3));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school))
+                   t3, school4))
       exit(-1);
 
   t3.load_identity();
@@ -699,35 +752,89 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    t3, shell1))
       exit(-1);
 
- 
-  all_tubes->add(new BV1(shell1));
-  all_tubes->add(new BV1(tiger));
-  all_tubes->add(new BV1(school));
-  all_tubes->add(new BV1(krabbe));
-  all_tubes->add(new BV1(anker));
-  all_tubes->add(new BV1(shark1));
-  all_tubes->add(new BV1(col1));
-  all_tubes->add(new BV1(col2));
-  all_tubes->add(new BV1(col3));
-  all_tubes->add(new BV1(col4));
-  all_tubes->add(new BV1(col5));
-  all_tubes->add(new BV1(col6));
-  all_tubes->add(new BV1(patch1));
-  all_tubes->add(new BV1(patch2));
-  all_tubes->add(new BV1(patch3));
-  all_tubes->add(new BV1(patch4));
-  all_tubes->add(new BV1(patch5));
-  all_tubes->add(new BV1(patch6));
-  all_tubes->add(new BV1(gazebo));
-  all_tubes->add(new BV1(erect));
-  all_tubes->add(new BV1(temple));
-  all_tubes->add(new BV1(parth));
-  all_tubes->add(new BV1(temple2));
-  all_tubes->add(new BV1(rock1));
-  all_tubes->add(new BV1(rock2));
-  all_tubes->add(new BV1(iceberg));
-  all_tubes->add(new BV1(iceberg2));
-  all_tubes->add(new BV1(rock_tower));
+
+  all_tubes->add(new Grid (shell1, 15));
+  all_tubes->add(new Grid (tiger, 10));
+  all_tubes->add(new Grid (school1, 10));
+  all_tubes->add(new Grid (school2, 10));
+  all_tubes->add(new Grid (school3, 10));
+  all_tubes->add(new Grid (school4, 10));
+  all_tubes->add(new Grid (krabbe, 10));
+  all_tubes->add(new BV1  (anker));
+  all_tubes->add(new BV1  (shark1));
+  all_tubes->add(new Grid (col1, 15));
+  all_tubes->add(new Grid (col2, 15));
+  all_tubes->add(new Grid (col3, 15));
+  all_tubes->add(new Grid (col4, 15));
+  all_tubes->add(new Grid (col7, 15));
+  all_tubes->add(new Grid (col8, 15));
+  all_tubes->add(new Grid (col9, 15));
+  all_tubes->add(new Grid (col10, 15));
+    
+  all_tubes->add(new Grid (col5, 35));
+  // all_tubes->add(new HierarchicalGrid (col5, 4, 4, 4, 10, 10, 1));
+
+  all_tubes->add(new Grid (col6, 35));
+  // all_tubes->add(new HierarchicalGrid (col6, 4, 4, 4, 10, 10, 1));
+
+  all_tubes->add(new HierarchicalGrid (patch1, 4, 4, 4, 10, 10, 1));
+  // all_tubes->add(new Grid (patch1, 25));
+
+  all_tubes->add(new HierarchicalGrid (patch2, 4, 4, 4, 10, 10, 1));
+  // all_tubes->add(new Grid (patch2, 30));
+
+  //  all_tubes->add(new Grid (patch3, 20));
+  // all_tubes->add(new Grid (patch3, 20));
+  all_tubes->add(new HierarchicalGrid (patch3, 6, 6, 6, 10, 10, 1));
+
+  //  all_tubes->add(new BV1  (patch4));
+  all_tubes->add(new HierarchicalGrid (patch4, 6, 6, 6, 10, 10, 1));
+  // all_tubes->add(new Grid (patch4, 20));
+
+  //  all_tubes->add(new BV1  (patch5));
+  all_tubes->add(new HierarchicalGrid (patch5, 6, 6, 6, 10, 10, 1));
+  // all_tubes->add(new Grid (patch5, 20));
+
+  //  all_tubes->add(new BV1  (patch6));
+  all_tubes->add(new HierarchicalGrid (patch6, 8, 8, 8, 10, 10, 1));
+  // all_tubes->add(new Grid (patch6, 20));
+
+  //  all_tubes->add(new Grid (gazebo, 15));
+  all_tubes->add(new HierarchicalGrid (gazebo, 8, 8, 6, 10, 10, 1));
+
+  // all_tubes->add(new Grid (erect, 10));
+  all_tubes->add(new HierarchicalGrid (erect, 10, 6, 6, 10, 10, 1));
+
+  // all_tubes->add(new Grid(temple, 10));
+  all_tubes->add(new HierarchicalGrid(temple, 6, 6, 6, 10, 10, 1));
+
+  // all_tubes->add(new Grid(parth, 10));
+  all_tubes->add(new HierarchicalGrid(parth, 4, 4, 4, 10, 10, 1));
+
+  // all_tubes->add(new Grid(temple2, 20));
+  all_tubes->add(new HierarchicalGrid(temple2, 6, 6, 6, 10, 10, 1));
+
+  //  all_tubes->add(new HierarchicalGrid (rock1, 4, 4, 4, 10, 10, 1));
+  all_tubes->add(new Grid (rock1, 40));
+
+  // all_tubes->add(new HierarchicalGrid (rock2, 4, 4, 4, 10, 10, 1));
+  all_tubes->add(new Grid (rock2, 40));
+
+  all_tubes->add(new Grid (rock3, 40));
+  //all_tubes->add(new HierarchicalGrid (rock3, 4, 4, 4, 10, 10, 1));
+  
+  all_tubes->add(new Grid (rock4, 40));
+  //all_tubes->add(new HierarchicalGrid (rock4, 4, 4, 4, 10, 10, 1));
+  
+  all_tubes->add(new Grid (rock5, 40));
+  //all_tubes->add(new HierarchicalGrid (rock5, 4, 4, 4, 10, 10, 1));
+  
+  all_tubes->add(new Grid (iceberg, 20));
+
+  all_tubes->add(new Grid (iceberg2, 20));
+
+  all_tubes->add(new HierarchicalGrid(rock_tower, 6, 6, 6, 10, 10, 1));
+  // all_tubes->add(new Grid(rock_tower, 10));
  
   all_tubes->add(ruins);  
   
