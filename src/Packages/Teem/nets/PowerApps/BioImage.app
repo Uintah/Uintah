@@ -396,19 +396,6 @@ class BioImageApp {
 		setGlobal $VS-coronal-viewport0-axis 1
 		setGlobal $VS-axial-viewport0-axis 2
 
-		$this update_window_level_scales
-
-		# force initial draw in correct modes
-		upvar \#0 $VS-min min $VS-max max
-                set ww [expr abs($max-$min)]
-                set wl [expr ($min+$max)/2.0]
-
-		setGlobal $VS-clut_ww $ww
-		setGlobal $VS-clut_wl $wl
-		setGlobal vol_width $ww
-		setGlobal vol_level $wl
-                setGlobal $VS-background_threshold $min
-		
 		global $VS-clut_ww $VS-clut_wl
 		set command "$this change_window_width_and_level 0"
 		trace variable $VS-clut_ww w $command
@@ -427,6 +414,18 @@ class BioImageApp {
 		global $VS-background_threshold
 		set command "$VS-c background_thresh"
 		trace variable $VS-background_threshold w $command
+
+		$this update_window_level_scales
+
+		upvar \#0 $VS-min min $VS-max max
+                set ww [expr abs($max-$min)]
+                set wl [expr ($min+$max)/2.0]
+
+		setGlobal $VS-clut_ww $ww
+		setGlobal $VS-clut_wl $wl
+		setGlobal vol_width $ww
+		setGlobal vol_level $wl
+                setGlobal $VS-background_threshold $min
 				
 		global slice_frame
                 $VS-c rebind $slice_frame(axial).bd.axial
