@@ -10,15 +10,18 @@ SRCDIR   := Uintah/Exceptions
 SRCS     += $(SRCDIR)/InvalidGrid.cc $(SRCDIR)/InvalidValue.cc \
 	$(SRCDIR)/ParameterNotFound.cc \
 	$(SRCDIR)/ProblemSetupException.cc \
-	$(SRCDIR)/TypeMismatchException.cc $(SRCDIR)/UnknownVariable.cc
+	$(SRCDIR)/TypeMismatchException.cc
 
-PSELIBS := SCICore/Exceptions Uintah/Grid
+PSELIBS := SCICore/Exceptions
 LIBS :=
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/12/23 01:09:01  witzel
+# moved UnknownVariable to Uintah/Grid to avoid warnings
+#
 # Revision 1.6  2000/12/06 23:44:19  witzel
 # Added Uintah/Grid to PSELIBS.  This causes a "circular dependency"
 # warning while compiling, but it gives many more warnings without it
