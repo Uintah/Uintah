@@ -117,6 +117,7 @@ void MeshBoundary::execute()
 	    }
 	}
     }
+    outport->delAll();
     outport->addObj(tris,"Boundary Triangles");
     SurfaceHandle tsHandle(ts);
     osurf->send(tsHandle);
@@ -128,6 +129,9 @@ void MeshBoundary::execute()
 
 //
 // $Log$
+// Revision 1.3  2000/03/04 00:21:27  dmw
+// need to delete previous mesh boundary
+//
 // Revision 1.2  1999/10/07 02:08:19  sparker
 // use standard iostreams and complex type
 //
