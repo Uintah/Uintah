@@ -15,14 +15,14 @@ Instance::io(SCIRun::Piostream &str)
   str.begin_class("Instance", UVSPHERE_VERSION);
   Object::io(str);
   Material::io(str);
-  Pio(str, o);
-  Pio(str, currentTransform);
-  Pio(str, bbox);
+  //Pio(str, o);
+  //Pio(str, currentTransform);
+  //Pio(str, bbox);
   str.end_class();
 }
 
 namespace SCIRun {
-void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Instance*& obj)
+void Pio(SCIRun::Piostream& stream, rtrt::Instance*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, rtrt::Instance::type_id);
