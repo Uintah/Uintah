@@ -488,51 +488,76 @@ OnDemandDataWarehouse::recvMPIGridVar(DWDatabase& db, BufferInfo& buffer,
 void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 				 const Level* level,
-                                 const MaterialSubset* matls,
+                                 const MaterialSubset* inmatls,
                                  const ProcessorGroup* world)
 {
-  int matlIndex;
+  const MaterialSubset* matls;
   if(!matls){
-    matlIndex = -1;
+    matls = scinew MaterialSubset();
+    matls->add(-1);
   } else {
-    int nmatls = matls->size();
-    // We need to examine this for multi-material reductions!
-    ASSERTEQ(nmatls, 1);
-    matlIndex = matls->get(0);
+    matls = inmatls;
   }
 
-  d_lock.writeLock();
-  ReductionVariableBase* var;
-  try {
-    var = d_reductionDB.get(label, matlIndex, level);
-  } catch (UnknownVariable) {
-    SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
-			      "on reduceMPI"));
-  }
+  // Count the number of data elements in the reduction array
+  int nmatls = matls->size();
+  int count=0;
+  MPI_Op op;
+  MPI_Datatype datatype;
 
-  void* sendbuf;
-  int sendcount;
-  MPI_Datatype senddatatype;
-  MPI_Op sendop;
-  var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
-  ReductionVariableBase* tmp = var->clone();
-  void* recvbuf;
-  int recvcount;
-  MPI_Datatype recvdatatype;
-  MPI_Op recvop;
-  tmp->getMPIBuffer(recvbuf, recvcount, recvdatatype, recvop);
-  ASSERTEQ(recvcount, sendcount);
-  ASSERTEQ(senddatatype, recvdatatype);
-  ASSERTEQ(recvop, sendop);
-      
+  d_lock.readLock();
+  for(int m=0;m<nmatls;m++){
+    int matlIndex = matls->get(m);
+
+    ReductionVariableBase* var;
+    try {
+      var = d_reductionDB.get(label, matlIndex, level);
+    } catch (UnknownVariable) {
+      SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
+				"on reduceMPI"));
+    }
+    int sendcount;
+    MPI_Datatype senddatatype;
+    MPI_Op sendop;
+    var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
+    if(m==0){
+      op=sendop;
+      datatype=senddatatype;
+    } else {
+      ASSERTEQ(op, sendop);
+      ASSERTEQ(datatype, senddatatype);
+    }
+    count += sendcount;
+  }
+  int packsize;
+  MPI_Pack_size(count, senddatatype, world->getComm(), &packsize);
+  vector<char*> sendbuf(packsize);
+
+  int packindex=0;
+  for(int m=0;m<nmatls;m++){
+    int matlIndex = matls->get(m);
+
+    ReductionVariableBase* var;
+    try {
+      var = d_reductionDB.get(label, matlIndex, level);
+    } catch (UnknownVariable) {
+      SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
+				"on reduceMPI(pass 2)"));
+    }
+    var->getMPIData(sendbuf, packindex);
+  }
+  d_lock.readUnlock();
+
+  vector<char*> recvbuf(packsize);
+
   if( mixedDebug.active() ) {
     cerrLock.lock(); mixedDebug << "calling MPI_Allreduce\n";
     cerrLock.unlock();
   }
 
-  dbg << d_myworld->myrank() << " allreduce, buf=" << sendbuf << ", count=" << recvcount << ", datatype=" << recvdatatype << ", op=" << recvop << '\n';
-  int error = MPI_Allreduce(sendbuf, recvbuf, recvcount,
-                            recvdatatype, recvop, world->getComm());
+  dbg << d_myworld->myrank() << " allreduce, buf=" << &sendbuf[0] << ", count=" << count << ", datatype=" << datatype << ", op=" << op << '\n';
+  int error = MPI_Allreduce(&sendbuf[0], &recvbuf[0], count, datatype, op,
+			    world->getComm());
 
   if( mixedDebug.active() ) {
     cerrLock.lock(); mixedDebug << "done with MPI_Allreduce\n";
@@ -546,10 +571,23 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     SCI_THROW(InternalError("reduceMPI: MPI error"));     
   }
 
-  var->copyPointer(*tmp);
-  
-  delete tmp;
+  d_lock.writeLock();
+  int unpackindex=0;
+  for(int m=0;m<nmatls;m++){
+    int matlIndex = matls->get(m);
+
+    ReductionVariableBase* var;
+    try {
+      var = d_reductionDB.get(label, matlIndex, level);
+    } catch (UnknownVariable) {
+      SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
+				"on reduceMPI(pass 2)"));
+    }
+    var->putMPIData(recvbuf, unpackindex);
+  }
   d_lock.writeUnlock();
+  if(matls != inmatls)
+    delete matls;
 }
 
 void
