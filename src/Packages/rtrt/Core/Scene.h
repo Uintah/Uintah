@@ -13,11 +13,15 @@
 #include <Packages/rtrt/Core/Background.h>
 #include <Packages/rtrt/Core/Shadows/ShadowBase.h>
 #include <Core/Thread/Mutex.h>
+
 #include <stdio.h>
+
+#include <vector>
 
 namespace rtrt {
 
 using SCIRun::WorkQueue;
+using std::vector;
 
 class Object;
 class Camera;
@@ -199,7 +203,7 @@ public:
   void refill_work(int which, int nworkers);
   void waitForEmpty(int which);
 
-#if !defined(linux) && !defined(SCI_64BITS)
+#if !defined(linux)
   // Used mainly by make_scene to register sounds with the application.
   void           addSound( Sound * sound ) { sounds_.push_back( sound ); }
   vector<Sound*> getSounds() { return sounds_; }
