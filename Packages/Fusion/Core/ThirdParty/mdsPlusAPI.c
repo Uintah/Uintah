@@ -40,6 +40,10 @@
 
 #include <mdslib.h>
 
+/* These are not defined in mdslib.h so to prevent a warning. */
+int MdsOpen(char *tree, int* shot);
+void MdsDisconnect();
+
 /* If an MDSPlus call is successful the first bit is set. */
 #define status_ok( status ) ((status & 1) == 1)
 
@@ -47,14 +51,14 @@
 int MDS_Connect( const char *server )
 {
   /* Connect to MDSplus */
-  return MdsConnect(server);
+  return MdsConnect((char*)server);
 }
 
 /* Simple interface to interface bewteen the C and C++ calls. */
 int MDS_Open( const char *tree, int shot )
 {
   /* Open tree */
-  if ( !status_ok( MdsOpen(tree,&shot) ) )
+  if ( !status_ok( MdsOpen((char*)tree,&shot) ) )
     return -1;
   else
     return 0;
@@ -265,12 +269,14 @@ int get_dims( const char *node, int *dims )
   sprintf( buf, "%s", node );
   rank = get_rank( buf );
 
-  /* Fetch the dimensions of the signal. */
-  for( i=0; i<rank; i++ )
-  {
-    sprintf( buf, "%s,%d", node, i );
+  if( 0 < rank && rank < 4 ) { 
+    /* Fetch the dimensions of the signal. */
+    for( i=0; i<rank; i++ )
+      {
+	sprintf( buf, "%s,%d", node, i );
 
-    dims[i] = get_size( buf );
+	dims[i] = get_size( buf );
+      }
   }
 
   return rank;
@@ -293,7 +299,10 @@ double* get_grid( const char *axis, int *dims )
       ( strcmp( axis, "PHI" ) == 0 && rank == 1 ) ||
       ( strcmp( axis, "X"   ) == 0 && rank == 3 ) ||
       ( strcmp( axis, "Y"   ) == 0 && rank == 3 ) ||
-      ( strcmp( axis, "Z"   ) == 0 && rank == 2 ) )
+      ( strcmp( axis, "Z"   ) == 0 && rank == 2 ) ||
+      ( strcmp( axis, "K"   ) == 0 && rank == 1 ) ||
+      ( strcmp( axis, "RADIAL"   ) == 0 && rank == 1 ) ||
+      ( strcmp( axis, "POLOIDAL"   ) == 0 && rank == 1 ) )
   {
     /* The dimensions for the axis. */
     for( i=0; i<rank; i++ )
@@ -383,9 +392,6 @@ double *get_realspace_data( const char *name, const char *node, int *dims )
     /* Get the total size of the signal. */
     for( i=0; i<rank; i++ )
       size *= dims[i];
-
-    fprintf( stdout, "\t%s %d %d %d %d \n",
-	     node, rank, dims[0], dims[1], dims[2] );
 
     /* Fetch the data from the node */
     sprintf(buf,"%s.%s.REALSPACE.%s", sliceStr, name, node);
