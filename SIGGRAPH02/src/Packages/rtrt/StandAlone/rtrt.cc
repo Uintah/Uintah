@@ -18,6 +18,7 @@
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/PPMImage.h>
+#include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
@@ -46,8 +47,14 @@
 /////////////////////////////////////////////////
 // OOGL stuff
 ShadedPrim   * backgroundTexQuad;
-
 ShadedPrim   * blendTexQuad;
+BasicTexture * blendTex;
+Blend        * blend = NULL;
+
+ShadedPrim   * bottomGraphicTexQuad;
+BasicTexture * bottomGraphicTex;
+ShadedPrim   * leftGraphicTexQuad;
+BasicTexture * leftGraphicTex;
 
 BasicTexture * rtrtBotTex; // Bottom 512 pixels
 BasicTexture * rtrtTopTex; // Top 64 pixels
@@ -59,10 +66,6 @@ ShadedPrim   * rtrtMidTopTexQuad;
 BasicTexture * rtrtMidBotTex; // Medium Size RTRT Render Window (512x320)
 ShadedPrim   * rtrtMidBotTexQuad;
 
-BasicTexture * blendTex;
-
-Blend          * blend;
-rtrt::PPMImage * ppm1;
 /////////////////////////////////////////////////
 
 using namespace rtrt;
@@ -70,6 +73,10 @@ using namespace std;
 
 using SCIRun::Thread;
 using SCIRun::ThreadGroup;
+
+Trigger * loadBottomGraphic();
+Trigger * loadLeftGraphic();
+int       mainWindowId = -1;
 
 static void usage(char* progname)
 {
@@ -117,6 +124,7 @@ static void usage(char* progname)
   cerr << "                    as a fraction of pixels per/proc\n";
   cerr << " -sound           - start sound thread\n";
   cerr << " -fullscreen      - run in full screen mode\n";
+  cerr << " -demo            - spiffy gratuitous border animations\n";
   cerr << " -jitter          - jittered masks - fixed table for now\n";
   cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
   cerr << " -display_gltest  - calls run_gl_test from display thread\n";
@@ -149,6 +157,7 @@ namespace rtrt {
 //extern int do_jitter;
 
 bool fullscreen = false;
+bool demo = false;
 
 // For glut to call, but since we are always redrawing (currently)
 // glut doesn't need to redraw for use.
@@ -156,15 +165,16 @@ void doNothingCB()
 {
   cout << "doNothingCB\n";
   if( fullscreen ) {
+    glutSetWindow( mainWindowId );
 
-glViewport(0, 0, 1280, 1024);
-glMatrixMode(GL_PROJECTION);
-glLoadIdentity();
-gluOrtho2D(0, 1280, 0, 1024);
-glDisable( GL_DEPTH_TEST );
-glMatrixMode(GL_MODELVIEW);
-glLoadIdentity();
-glTranslatef(0.375, 0.375, 0.0);
+    glViewport(0, 0, 1280, 1024);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, 1280, 0, 1024);
+    glDisable( GL_DEPTH_TEST );
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.375, 0.375, 0.0);
 
     backgroundTexQuad->draw();
     glutSwapBuffers();
@@ -329,6 +339,8 @@ main(int argc, char* argv[])
       }
     } else if(strcmp(argv[i],"-fullscreen")==0) {
       fullscreen = true;
+    } else if(strcmp(argv[i],"-demo")==0) {
+      demo = true;
     } else if(strcmp(argv[i],"-jitter")==0) {
       rtrt_engine->do_jitter=1;
     } else if(strcmp(argv[i],"-sound")==0) {
@@ -508,9 +520,13 @@ main(int argc, char* argv[])
     scene->set_object( scene->get_object() );
   }
   
+  Trigger * bottomGraphicTrigger = NULL;
+  Trigger * leftGraphicTrigger = NULL;
   if( fullscreen ) { // For Demo... and oogl stuff 
     xres = 512; // Start in low res mode.
     yres = 288;
+  } else {
+    if( demo ) demo = false; // If not in full screen mode, no demo stuff.
   }
 
   if(!scene->get_image(0)){
@@ -572,7 +588,7 @@ main(int argc, char* argv[])
   printf("start glut inits\n");
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
 
-  int mainWindowId = glutCreateWindow("RTRT");
+  mainWindowId = glutCreateWindow("RTRT");
 
   glutInitWindowPosition( 0, 0 );
 
@@ -610,24 +626,50 @@ main(int argc, char* argv[])
 
     //// BLEND QUAD STUFF
 
-    string path = "/usr/sci/data/Geometry/interface/photos/";
-    ppm1 = new PPMImage( path+"dav.ppm", true );
-
     blend = new Blend( Vec4f(1.0, 1.0, 1.0, 0.5) );
 
-    lowerLeft.set( 255, 0 );
-    upperRight.set( 512, 256 );
+    lowerLeft.set( 255, 0 );    // Going to be 64,64
+    upperRight.set( 512, 256 ); //  and 1088, 320
     PlanarQuad * blendQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    blendQuad->compile();
 
     texDimen.set(256,256);
     blendTex = 
       new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
-			NULL, GL_FLOAT, &((*ppm1)(0,0)) );
+			NULL, GL_FLOAT, NULL );
 
     Shader * blendTexShader = new Shader( blendTex, blend );
     blendTexQuad = new ShadedPrim( blendQuad, blendTexShader );
+
+    //// BOTTOM GRAPHIC QUAD STUFF
+
+    lowerLeft.set( 0, 0 );
+    upperRight.set( 2047, 63 );
+    PlanarQuad * bottomGraphicQuad =
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+
+    texDimen.set(2048,64);
+    bottomGraphicTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
+			NULL, GL_FLOAT, NULL );
+    Shader * bottomGraphicTexShader = new Shader( bottomGraphicTex );
+    bottomGraphicTexQuad = new ShadedPrim( bottomGraphicQuad, 
+					   bottomGraphicTexShader );
+  
+    //// LEFT GRAPHIC QUAD STUFF
+
+    lowerLeft.set( 0, 0 );
+    upperRight.set( 63, 1023 );
+    PlanarQuad * leftGraphicQuad =
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+
+    texDimen.set(64,1024);
+    leftGraphicTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
+			NULL, GL_FLOAT, NULL );
+    Shader * leftGraphicTexShader = new Shader( leftGraphicTex );
+    leftGraphicTexQuad = new ShadedPrim( leftGraphicQuad, 
+					 leftGraphicTexShader );
   
     //// RTRT QUAD STUFF -- NEED 2 QUADS (512 Tall + 64 Tall)
 
@@ -691,6 +733,21 @@ main(int argc, char* argv[])
   // end OOGL stuff
   //////////////////////////////////////////////////////////////////
 
+  // All non-sound triggers will be drawn to the blend quad...  let
+  // them know about it.
+  vector<Trigger*> & triggers = scene->getTriggers();
+  for( int cnt = 0; cnt < triggers.size(); cnt++ ) {
+    Trigger * trigger = triggers[cnt];
+    if( !trigger->isSoundTrigger() )
+      trigger->setDrawableInfo( blendTex, blendTexQuad, blend );
+  }
+  if( demo ) { // Load the fancy dynamic graphics
+    bottomGraphicTrigger = loadBottomGraphic();
+    leftGraphicTrigger = loadLeftGraphic();
+    gui->setBottomGraphic( bottomGraphicTrigger );
+    gui->setLeftGraphic( leftGraphicTrigger );
+  }
+
   cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
 
   glutKeyboardFunc( Gui::handleKeyPressCB );
@@ -752,3 +809,79 @@ main(int argc, char* argv[])
  
 }
 
+
+// Returns first trigger in sequence.
+Trigger * 
+loadBottomGraphic()
+{
+  cout << "Loading Bottom Graphics\n";
+  vector<Point> locations;
+  locations.push_back(Point(0,0,0));
+
+  Trigger * next = NULL;
+  Trigger * ninety;
+
+  for( int frame = 90; frame >= 30; frame-- )
+    {
+      char name[256];
+      sprintf( name,
+         "/usr/sci/data/Geometry/interface/frames_bottom/interface00%d.ppm",
+	       frame );
+
+      PPMImage * ppm = new PPMImage( name, true );
+
+      Trigger * trig = 
+	new Trigger( "bottom bar", locations, 0, 0.02, ppm, false, NULL,
+		     false, next );
+
+      trig->setDrawableInfo( bottomGraphicTex, bottomGraphicTexQuad );
+      if( frame == 90 )
+	ninety = trig;
+
+      next = trig;
+    }
+
+  ninety->setNext( next );
+  ninety->setDelay( 5.0 );
+
+  cout << "Done Loading Bottom Graphics\n";
+  return next;
+}
+
+// Returns first trigger in sequence.
+Trigger * 
+loadLeftGraphic()
+{
+  cout << "Loading Left Graphics\n";
+  vector<Point> locations;
+  locations.push_back(Point(0,0,0));
+
+  Trigger * next = NULL;
+  Trigger * ninety;
+
+  for( int frame = 90; frame >= 30; frame-- )
+    {
+      char name[256];
+      sprintf( name,
+         "/usr/sci/data/Geometry/interface/frames_left_side/interface00%d.ppm",
+	       frame );
+
+      PPMImage * ppm = new PPMImage( name, true );
+
+      Trigger * trig = 
+	new Trigger( "bottom bar", locations, 0, 0.02, ppm, false, NULL,
+		     false, next );
+      trig->setDrawableInfo( leftGraphicTex, leftGraphicTexQuad );
+
+      if( frame == 90 )
+	ninety = trig;
+
+      next = trig;
+    }
+
+  ninety->setNext( next );
+  ninety->setDelay( 10.0 );
+
+  cout << "Done Loading Left Graphics\n";
+  return next;
+}
