@@ -6,7 +6,7 @@ TypeMismatchException::TypeMismatchException(const std::string& msg)
 {
 }
 
-std::string TypeMismatchException::message() const
+const char* TypeMismatchException::message() const
 {
-    return msg;
+    return msg.c_str();
 }

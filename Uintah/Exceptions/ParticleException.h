@@ -9,7 +9,7 @@ class ParticleException : public SCICore::Exceptions::Exception {
     std::string msg;
 public:
     ParticleException(const std::string&);
-    virtual std::string message() const;
+    virtual const char* message() const;
 };
 
 #endif

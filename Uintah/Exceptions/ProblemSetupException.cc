@@ -6,7 +6,7 @@ ProblemSetupException::ProblemSetupException(const std::string& msg)
 {
 }
 
-std::string ProblemSetupException::message() const
+const char* ProblemSetupException::message() const
 {
-    return msg;
+    return msg.c_str();
 }

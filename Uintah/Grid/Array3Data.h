@@ -56,12 +56,12 @@ public:
     void initialize(const T& val, int o1, int o2, int o3,
 		    int s1, int s2, int s3);
     inline T& get(int i, int j, int k) {
-	//ASSERTRANGE(i, 0, size1);
-	//ASSERTRANGE(j, 0, size2);
-	//ASSERTRANGE(k, 0, size3);
+	//CHECKARRAYBOUNDS(i, 0, size1);
+	//CHECKARRAYBOUNDS(j, 0, size2);
+	//CHECKARRAYBOUNDS(k, 0, size3);
 #if 0
 	int idx = i*d_size3*d_size2+j*d_size3+k;
-	ASSERTRANGE(idx, 0, d_totalsize);
+	CHECKARRAYBOUNDS(idx, 0, d_totalsize);
 	return d_data[idx];
 #else
 	return d_data3[i][j][k];
@@ -82,12 +82,12 @@ void Array3Data<T>::initialize(const T& val,
 			       int off1, int off2, int off3,
 			       int s1, int s2, int s3)
 {
-    ASSERTRANGE(off1, 0, d_size1);
-    ASSERTRANGE(off2, 0, d_size2);
-    ASSERTRANGE(off3, 0, d_size3);
-    ASSERTRANGE(s1, 1, d_size1-off1+1);
-    ASSERTRANGE(s2, 1, d_size2-off2+1);
-    ASSERTRANGE(s3, 1, d_size3-off3+1);
+    CHECKARRAYBOUNDS(off1, 0, d_size1);
+    CHECKARRAYBOUNDS(off2, 0, d_size2);
+    CHECKARRAYBOUNDS(off3, 0, d_size3);
+    CHECKARRAYBOUNDS(s1, 1, d_size1-off1+1);
+    CHECKARRAYBOUNDS(s2, 1, d_size2-off2+1);
+    CHECKARRAYBOUNDS(s3, 1, d_size3-off3+1);
     T* d = d_data + off1*d_size3*d_size2 + off2*d_size3 + off3;
     for(int i=0;i<s1;i++){
 	T* dd=d;
@@ -132,6 +132,9 @@ Array3Data<T>::~Array3Data()
 
 //
 // $Log$
+// Revision 1.5  2000/03/22 23:41:27  sparker
+// Working towards getting arches to compile/run
+//
 // Revision 1.4  2000/03/21 02:22:57  dav
 // few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
 //

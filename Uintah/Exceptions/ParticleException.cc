@@ -6,7 +6,7 @@ ParticleException::ParticleException(const std::string& msg)
 {
 }
 
-std::string ParticleException::message() const
+const char* ParticleException::message() const
 {
-    return msg;
+    return msg.c_str();
 }

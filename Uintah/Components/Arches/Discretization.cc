@@ -1,6 +1,6 @@
 
 #include <Uintah/Components/Arches/Discretization.h>
-#include <Uintah/Components/Arches/Stencil.h>
+#include <Uintah/Grid/Stencil.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Interface/Scheduler.h>
@@ -12,8 +12,9 @@
 #include <Uintah/Grid/SoleVariable.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Exceptions/InvalidValue.h>
+#include <Uintah/Grid/Array3.h>
 #include <iostream>
-using std::cerr;
+using namespace std;
 
 using Uintah::Components::Discretization;
 using namespace Uintah::Components;
@@ -100,18 +101,20 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
   Array3Index highIndex = region->getHighIndex();
 
   //get physical constants
-  Vector gravity; // 3 components of gravity
-  top_dw->get(SoleVariable<Vector>(gravity), "gravity"); 
+  SoleVariable<Vector> gravity_var;
+  top_dw->get(gravity_var, "gravity"); 
+  Vector gravity = gravity_var;
 
   if (Index == 1) {
     //7pt stencil declaration
-    Stencil uVelocityCoeff(new_dw, "uVelocityCoeff", region);
+    Stencil<double> uVelocityCoeff(region);
     // convection coeffs
-    Stencil uVelocityConvectCoeff(new_dw, "uVelocityConvectCoeff", region);
+    Stencil<double> uVelocityConvectCoeff(region);
     int ioff = 1;
     int joff = 0;
     int koff = 0;
-    Array3<double> volume(region); // 3-d array for volume
+    // 3-d array for volume - fortran uses it for temporary storage
+    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
     FORT_VELCOEF(velocity, viscosity, density, gravity.x(), 
 		 uVelocityConvectCoeff, uVelocityCoeff,
 		 ioff, joff, koff, lowIndex, highIndex,
@@ -129,13 +132,14 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
   }
   else if (Index == 2) {
     //7pt stencil declaration
-    Stencil vVelocityCoeff(new_dw, "vVelocityCoeff", region);
+    Stencil<double> vVelocityCoeff(region);
     // convection coeffs
-    Stencil vVelocityConvectCoeff(new_dw, "vVelocityConvectCoeff", region);
+    Stencil<double> vVelocityConvectCoeff(region);
     int ioff = 0;
     int joff = 1;
     int koff = 0;
-    Array3<double> volume(region); // 3-d array for volume
+    // 3-d array for volume - fortran uses it for temporary storage
+    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
     // pass velocity as v,w, u
     FORT_VELCOEF(velocity, viscosity, density, gravity.y(), 
 		 vVelocityConvectCoeff, vVelocityCoeff,
@@ -154,13 +158,14 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
   }
   else if (Index == 3) {
     //7pt stencil declaration
-    Stencil wVelocityCoeff(new_dw, "wVelocityCoeff", region);
+    Stencil<double> wVelocityCoeff(region);
     // convection coeffs
-    Stencil wVelocityConvectCoeff(new_dw, "wVelocityConvectCoeff", region);
+    Stencil<double> wVelocityConvectCoeff(region);
     int ioff = 0;
     int joff = 0;
     int koff = 1;
-    Array3<double> volume(region); // 3-d array for volume
+    // 3-d array for volume - fortran uses it for temporary storage
+    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
     FORT_VELCOEF(velocity, viscosity, density, gravity.z(), 
 		 wVelocityConvectCoeff, wVelocityCoeff,
 		 ioff, joff, koff, lowIndex, highIndex,
@@ -247,36 +252,3 @@ void Discretization::calculatePressureCoeff(const ProcessorContext*,
   new_dw->put(pressCoeff, "pressureCoeff", region, 0);
 }
   
-void  Discretization::calculateResidual(const ProcessorContext*,
-				       SchedulerP& sched,
-				       const DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
-{
-
-  //pass a string to identify the eqn for which residual 
-  // needs to be solved, in this case pressure string
-  d_linearSolver->sched_computeResidual(level, sched,
-					old_dw, new_dw);
-  // reduces from all processors to compute L1 norm
-  new_dw->get(d_residual, "PressResidual"); 
-
-
-}
-
-void  Discretization::calculateOrderMagnitude(const LevelP& level,
-					      SchedulerP& sched,
-					      const DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
-{
-
-  //pass a string to identify the eqn for which residual 
-  // needs to be solved, in this case pressure string
-  d_linearSolver->sched_calculateOrderMagnitude(level, sched,
-						old_dw, new_dw);
-  // reduces from all processors to compute L1 norm
-  new_dw->get(d_ordermagnitude, "PressOMG"); 
-
-
-}
-
-

@@ -1,7 +1,14 @@
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/PressureSolver.h>
+#include <Uintah/Components/Arches/MomentumSolver.h>
+#include <Uintah/Components/Arches/ScalarSolver.h>
+#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Exceptions/InvalidValue.h>
 #include <SCICore/Util/NotFinished.h>
 #include <math.h>
+
+using Uintah::Components::PicardNonlinearSolver;
 
 PicardNonlinearSolver::PicardNonlinearSolver()
 {
@@ -60,7 +67,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //create a new data warehouse to store new values during the
     // non-linear iteration, if the iteration is succesful then
     // it copies the dw to new_dw
-    DataWarehouseP nonlinear_dw = scheduler->createDataWarehouse();
+    DataWarehouseP nonlinear_dw = sched->createDataWarehouse();
 
     // linearizes and solves pressure eqn
     d_pressSolver->solve(level, sched, new_dw, nonlinear_dw);

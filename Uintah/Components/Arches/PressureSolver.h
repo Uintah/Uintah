@@ -32,11 +32,20 @@ WARNING
 #ifndef included_PressureSolver
 #define included_PressureSolver
 
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
 
+namespace Uintah {
+    namespace Components {
 
 
 #ifndef LACKS_NAMESPACE
-using namespace UINTAH;
+using namespace Uintah::Grid;
+using namespace Uintah::Components;
+using namespace Uintah::Interface;
 #endif
 
 class Discretization;
@@ -44,7 +53,7 @@ class Source;
 class BoundaryCondition;
 class LinearSolver;
 
-class PressureSolver :
+class PressureSolver
 {
 
  public:
@@ -68,9 +77,9 @@ class PressureSolver :
    ~PressureSolver();
 
    // access functions
-   const CCVariable <vector> getPressure() const;
-   const double getResidual() const;
-   const double getOrderMagnitude() const;
+   CCVariable<double> getPressure() const;
+   double getResidual() const;
+   double getOrderMagnitude() const;
    // sets parameters at start time
    void problemSetup(const ProblemSpecP& params);
 
@@ -100,10 +109,10 @@ class PressureSolver :
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
 
-   calculateOrderMagnitude(const LevelP& level,
-			   SchedulerP& sched,
-			   const DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
+    void calculateOrderMagnitude(const LevelP& level,
+				 SchedulerP& sched,
+				 const DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
       // Modify coefficients
    void modifyCoeff(const Region* region,
 		    SchedulerP& sched,
@@ -114,11 +123,6 @@ class PressureSolver :
 		      SchedulerP& sched,
 		      const DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw);
-
-   ////////////////////////////////////////////////////////////////////////
-   // Read input data from specified database and initializes solver.
-   void getFromInput(Pointer<Database> input_db,
-			    bool is_from_restart);
 
    // computes coefficients
    Discretization* d_discretize;
@@ -137,14 +141,15 @@ class PressureSolver :
    ////////////////////////////////////////////////////////////////////////
    // Maximum number of iterations to take before stopping/giving up.
    int d_maxIterations;
-   // non-linear L-1 norm residual, computed before linear solve
-   SoleVariable<double> d_residual;
-   // order of magnitude term, required to normalize residual
-   SoleVariable<double>  d_orderMagnitude;
+
    // underrealaxation parameter, read from an input database
    double d_underrelax;
    //reference points for the solvers
    int d_ipref, d_jpref, d_kpref;
 
 };
+
+    }
+}
+
 #endif

@@ -43,6 +43,7 @@ public:
 	d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
 	d_window->addReference();
     }
+    Array3(const Array3Index& lowIndex, const Array3Index& highIndex);
     virtual ~Array3();
     Array3(const Array3& copy)
 	: d_window(copy.d_window)
@@ -122,6 +123,9 @@ Array3<T>::~Array3()
 
 //
 // $Log$
+// Revision 1.5  2000/03/22 23:41:27  sparker
+// Working towards getting arches to compile/run
+//
 // Revision 1.4  2000/03/22 00:32:12  sparker
 // Added Face-centered variable class
 // Added Per-region data class
