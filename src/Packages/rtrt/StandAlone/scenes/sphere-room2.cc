@@ -4,6 +4,8 @@
 #include <Packages/rtrt/Core/LightMaterial.h>
 #include <Packages/rtrt/Core/TileImageMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/EMBMaterial.h>
+#include <Packages/rtrt/Core/MultiMaterial.h>
 
 #include <Packages/rtrt/Core/Satellite.h>
 #include <Packages/rtrt/Core/PortalParallelogram.h>
@@ -28,7 +30,7 @@ using namespace std;
 #define HEIGHTRATIO            (DOORHEIGHT/ROOMHEIGHT)
 #define ROOMRADIUS             50
 #define ROOMOFFSET             4
-#define PORTALOFFSET           .01
+#define PORTALOFFSET           .001
 #define ROOMCENTER             (ROOMRADIUS/2.+ROOMOFFSET),(ROOMRADIUS/2.+ROOMOFFSET)
 #define WALLTHICKNESS          .1
 #define INSCILAB               0
@@ -129,15 +131,17 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                          bgcolor, cdown, cup, groundplane,
                          ambient_scale, Constant_Ambient);
   scene->select_shadow_mode(No_Shadows);
-  EnvironmentMapBackground *starfield = 
-    new EnvironmentMapBackground(IMAGEDIR"tycho8.ppm");
-  scene->set_background_ptr( starfield );
+  LinearBackground *background= 
+    new LinearBackground(Color(.8,.8,.8),Color(.2,.3,.8),Vector(0,0,-1));
+  scene->set_background_ptr( background );
 
   //
   // materials
   //
 
   Material *white = new LambertianMaterial(Color(1,1,1));
+
+  EMBMaterial *starfield = new EMBMaterial(IMAGEDIR"tycho8.ppm");
 
   string solppm(IMAGEDIR); solppm+=table[0].name_; solppm+=".ppm";
   TileImageMaterial *sol_m = 
@@ -169,6 +173,13 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                           4,Color(.5,.5,.5),0,0,0,FLIP_IMAGES);
   matl1->SetScale(6,6*(ROOMHEIGHT/(double)(ROOMRADIUS*2)));
 
+  MultiMaterial *holo0 = new MultiMaterial();
+  holo0->insert(matl0,.8);
+  holo0->insert(starfield,1);
+  MultiMaterial *holo1 = new MultiMaterial();
+  holo1->insert(matl1,.8);
+  holo1->insert(starfield,1);
+
   //
   // objects
   //
@@ -179,33 +190,33 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   // galaxy room
 
-  Parallelogram *floor = new Parallelogram(matl0, 
+  Parallelogram *floor = new Parallelogram(holo0, 
                                            Point(ROOMOFFSET,ROOMOFFSET,0),
                                            Vector(ROOMRADIUS*2,0,0),
                                            Vector(0,ROOMRADIUS*2,0));
 
-  Parallelogram *ceiling = new Parallelogram(matl0, 
+  Parallelogram *ceiling = new Parallelogram(holo0, 
                                              Point(ROOMOFFSET,
                                                    ROOMOFFSET,
                                                    ROOMHEIGHT),
                                              Vector(ROOMRADIUS*2,0,0),
                                              Vector(0,ROOMRADIUS*2,0));
 
-  Parallelogram *wall0 = new Parallelogram(matl1, 
+  Parallelogram *wall0 = new Parallelogram(holo1, 
                                            Point(ROOMOFFSET,ROOMOFFSET,0),
                                            Vector(ROOMRADIUS*2,0,0),
                                            Vector(0,0,ROOMHEIGHT));
-  Parallelogram *wall1 = new Parallelogram(matl1, \
+  Parallelogram *wall1 = new Parallelogram(holo1, \
                                            Point(ROOMRADIUS*2+ROOMOFFSET,
                                                  ROOMRADIUS*2+ROOMOFFSET,0),
                                            Vector(-ROOMRADIUS*2,0,0),
                                            Vector(0,0,ROOMHEIGHT));
-  Parallelogram *wall2 = new Parallelogram(matl1, 
+  Parallelogram *wall2 = new Parallelogram(holo1, 
                                            Point(ROOMRADIUS*2+ROOMOFFSET,
                                                  ROOMOFFSET,0),
                                            Vector(0,ROOMRADIUS*2,0),
                                            Vector(0,0,ROOMHEIGHT));
-  Parallelogram *wall3 = new Parallelogram(matl1, 
+  Parallelogram *wall3 = new Parallelogram(holo1, 
                                            Point(ROOMOFFSET,
                                                  ROOMRADIUS*2+ROOMOFFSET,0),
                                            Vector(0,-ROOMRADIUS*2,0),
@@ -231,23 +242,25 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                   ROOMOFFSET+PORTALOFFSET,0),
                             Vector(DOORWIDTH,0,0),
                             Vector(0,0,DOORHEIGHT));
-#if 0
+
   PortalParallelogram *door1a = 
-    new PortalParallelogram(Point(ROOMOFFSET+DOOROFFSET,
-                                  ROOMOFFSET-PORTALOFFSET,0),
-                            Vector(DOORWIDTH,0,0),
+    new PortalParallelogram(Point(ROOMOFFSET-PORTALOFFSET,
+                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,0),
+                            Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
 
   PortalParallelogram *door1b = 
-    new PortalParallelogram(Point(ROOMOFFSET+DOOROFFSET,
-                                  ROOMOFFSET+PORTALOFFSET,0),
-                            Vector(DOORWIDTH,0,0),
+    new PortalParallelogram(Point(ROOMOFFSET+PORTALOFFSET,
+                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,0),
+                            Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
-#endif
 
   solar_system->add(door0a);
   solar_system->add(door0b);
+  solar_system->add(door1a);
+  solar_system->add(door1b);
   PortalParallelogram::attach(door0a,door0b);
+  PortalParallelogram::attach(door1a,door1b);
 
 
   // build the sun but don't add it to the scene 
