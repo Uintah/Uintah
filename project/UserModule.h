@@ -32,7 +32,7 @@ class UserModule : public Module {
     MUI_window* window;
     int popup_on_create;
     int old_gwidth;
-    WallClockTimer timer;
+    CPUTimer timer;
     PushButtonC* btn;
     int need_reconfig;
     int last_x, last_y;

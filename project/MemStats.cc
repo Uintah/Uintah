@@ -21,6 +21,7 @@
 #include <MemStats.h>
 #include <MotifCallback.h>
 #include <NetworkEditor.h>
+#include <XFont.h>
 #include <XQColor.h>
 #include <Malloc/New.h>
 #include <MtXEventLoop.h>
@@ -30,8 +31,8 @@
 #include <stdio.h>
 extern MtXEventLoop* evl;
 
-// #define MEMSTATS_FONT "screen14"
-#define MEMSTATS_FONT "-*-clean-medium-r-*-*-10-*"
+#define MEMSTATS_FONTSIZE 10
+#define MEMSTATS_FONTFACE XFont::Medium
 #define MEMSTATS_FGCOLOR "black"
 #define MEMSTATS_INLISTCOLOR "blue"
 #define MEMSTATS_UNFREEDCOLOR "red"
@@ -57,10 +58,7 @@ MemStats::MemStats(NetworkEditor* netedit)
     drawing_a->Create(*dialog, "memory_stats");
 
     dpy=evl->get_display();
-    if( (stats_font = XLoadQueryFont(dpy, MEMSTATS_FONT)) == 0){
-	cerr << "Error loading font: " << stats_font << endl;
-	exit(-1);
-    }
+    stats_font=new XFont(MEMSTATS_FONTSIZE, MEMSTATS_FONTFACE);
     win=XtWindow(*drawing_a);
     gc=XCreateGC(dpy, win, 0, 0);
     fgcolor=new XQColor(netedit->color_manager, MEMSTATS_FGCOLOR);
@@ -68,7 +66,7 @@ MemStats::MemStats(NetworkEditor* netedit)
     inlist_color=new XQColor(netedit->color_manager, MEMSTATS_INLISTCOLOR);
 
     // Set up junk...
-    XSetFont(dpy, gc, stats_font->fid);
+    XSetFont(dpy, gc, stats_font->font->fid);
     MemoryManager::get_global_stats(old_nnew, old_snew, old_nfillbin,
 				    old_ndelete, old_sdelete,
 				    old_nsbrk, old_ssbrk);
@@ -89,7 +87,7 @@ MemStats::MemStats(NetworkEditor* netedit)
     }
     XCharStruct dim;
     int dir;
-    if(!XTextExtents(stats_font, "Xpq", 3, &dir, &ascent, &descent,
+    if(!XTextExtents(stats_font->font, "Xpq", 3, &dir, &ascent, &descent,
 		     &dim)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);

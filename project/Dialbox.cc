@@ -23,6 +23,7 @@
 #include <MotifCallback.h>
 #include <MtXEventLoop.h>
 #include <NotFinished.h>
+#include <XFont.h>
 #include <XQColor.h>
 #include <Math/Trig.h>
 #include <Mt/DialogShell.h>
@@ -39,7 +40,8 @@
 #define DIAL_BGCOLOR "steve1"
 #define DIAL_BORDER 5
 #define DIAL_BEVEL 2
-#define DIAL_FONT "-*-lucida-medium-r-*-*-12-*-*-*-*-*-*-*"
+#define DIAL_FONTSIZE 12
+#define DIAL_FONTFACE XFont::Medium
 
 
 static Dialbox* the_dialbox;
@@ -297,11 +299,8 @@ void Dialbox::popup_ui()
 	}
 	dpy=evl->get_display();
 	gc=XCreateGC(dpy, XtWindow(*title_da), 0, 0);
-	font=XLoadQueryFont(dpy, DIAL_FONT);
-	if(!font){
-	    cerr << "Can't load font: " << DIAL_FONT << endl;
-	}
-	XSetFont(dpy, gc, font->fid);
+	font=new XFont(DIAL_FONTSIZE, DIAL_FONTFACE);
+	XSetFont(dpy, gc, font->font->fid);
 	bgcolor=new XQColor(color_manager, DIAL_BGCOLOR);
 	top_shadow=bgcolor->top_shadow();
 	bottom_shadow=bgcolor->bottom_shadow();
@@ -420,7 +419,8 @@ void Dialbox::redraw_dial(CallbackData*, void* vwhich)
     int descent;
     int dir;
     XCharStruct dim;
-    if(!XTextExtents(font, buf, strlen(buf), &dir, &ascent, &descent, &dim)){
+    if(!XTextExtents(font->font, buf, strlen(buf),
+		     &dir, &ascent, &descent, &dim)){
 	cerr << "XTextExtents failed???\n";
     }
     int x=DIAL_WIDTH/2-dim.width/2;
@@ -428,7 +428,7 @@ void Dialbox::redraw_dial(CallbackData*, void* vwhich)
     XDrawString(dpy, XtWindow(*dial_da[which]), gc, x, y, buf, strlen(buf));
 
     // Draw label
-    if(!XTextExtents(font, knob->name(), knob->name.len(),
+    if(!XTextExtents(font->font, knob->name(), knob->name.len(),
 		     &dir, &ascent, &descent, &dim)){
 	cerr << "XTextExtents failed???\n";
     }

@@ -23,6 +23,7 @@ class CallbackData;
 class ColorManager;
 class DialogShellC;
 class DrawingAreaC;
+class XFont;
 class XQColor;
 
 struct DialMsg : public MessageBase {
@@ -41,7 +42,7 @@ class Dialbox : public Task {
 
     Display* dpy;
     GC gc;
-    XFontStruct* font;
+    XFont* font;
     XQColor* bgcolor;
     XQColor* top_shadow;
     XQColor* bottom_shadow;

@@ -26,6 +26,7 @@
 #include <NetworkEditor.h>
 #include <NotFinished.h>
 #include <UserModule.h>
+#include <XFont.h>
 #include <XQColor.h>
 #include <Geometry/Point.h>
 #include <Mt/DialogShell.h>
@@ -34,7 +35,8 @@
 #include <Mt/RowColumn.h>
 #include <Mt/Scale.h>
 extern MtXEventLoop* evl;
-#define MUI_FONT "screen14"
+#define MUI_FONTSIZE 14
+#define MUI_FONTFACE XFont::Medium
 #define ONOFF_NSTEPS 10
 #define ONOFF_INSET 2
 #define ONOFF_BORDER 4
@@ -191,7 +193,7 @@ void MUI_widget::dispatch(Point newdata, Point* data,
 
 MUI_slider_real::MUI_slider_real(const clString& name, double* data,
 				 DispatchPolicy dp, int dispatch_drag,
-				 Style style, Orientation orient,
+				 Style, Orientation orient,
 				 void* cbdata)
 : MUI_widget(name, cbdata, dp), data(data), dispatch_drag(dispatch_drag)
 {
@@ -268,7 +270,7 @@ void MUI_slider_real::value_callback(CallbackData* cbdata, void*)
 
 MUI_slider_int::MUI_slider_int(const clString& name, int* data,
 			       DispatchPolicy dp, int dispatch_drag,
-			       Style style, Orientation orient,
+			       Style, Orientation orient,
 			       void* cbdata)
 : MUI_widget(name, cbdata, dp), data(data), dispatch_drag(dispatch_drag)
 {
@@ -390,16 +392,11 @@ void MUI_onoff_switch::attach(MUI_window* _window, EncapsulatorC* parent)
 {
     evl->lock();
     Display* dpy=evl->get_display();
-    XFontStruct* font;
-    
-    if( (font = XLoadQueryFont(dpy, MUI_FONT)) == 0){
-	cerr << "Error loading font: " << MUI_FONT << endl;
-	exit(-1);
-    }
+    XFont* font=new XFont(MUI_FONTSIZE, MUI_FONTFACE);
     int dir;
     int ascent;
     XCharStruct dim;
-    if(!XTextExtents(font, name(), name.len(), &dir,
+    if(!XTextExtents(font->font, name(), name.len(), &dir,
 		     &ascent, &descent, &dim)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);
@@ -438,7 +435,7 @@ void MUI_onoff_switch::attach(MUI_window* _window, EncapsulatorC* parent)
     text_color=bgcolor->fg_color();
     inset_color=bgcolor->select_color();
     GC gc=XCreateGC(dpy, XtWindow(*sw), 0, 0);
-    XSetFont(dpy, gc, font->fid);
+    XSetFont(dpy, gc, font->font->fid);
     vgc=(void*)gc;
     evl->unlock();
 }

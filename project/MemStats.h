@@ -19,6 +19,7 @@ class CallbackData;
 class DialogShellC;
 class DrawingAreaC;
 class NetworkEditor;
+class XFont;
 class XQColor;
 
 class MemStats {
@@ -26,7 +27,7 @@ class MemStats {
     DialogShellC* dialog;
     DrawingAreaC* drawing_a;
 
-    XFontStruct* stats_font;
+    XFont* stats_font;
     Drawable win;
     Display* dpy;
     GC gc;

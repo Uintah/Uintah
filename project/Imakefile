@@ -12,7 +12,7 @@ OBJS = CallbackCloners.o \
 	MtXEventLoop.o \
 	Network.o  NetworkEditor.o  Persistent.o  PopupMenu.o  Port.o  \
 	SoundPort.o \
-	UserModule.o  XQColor.o \
+	UserModule.o  XFont.o  XQColor.o \
 	main.o
 SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
@@ -24,7 +24,7 @@ SRCS = CallbackCloners.cc \
 	MtXEventLoop.cc \
 	Network.cc NetworkEditor.cc Persistent.cc PopupMenu.cc Port.cc \
 	SoundPort.cc \
-	UserModule.cc XQColor.cc \
+	UserModule.cc XFont.cc XQColor.cc \
 	main.cc
 TARGET = project
 

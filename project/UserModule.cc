@@ -30,6 +30,7 @@
 #include <NetworkEditor.h>
 #include <NotFinished.h>
 #include <Port.h>
+#include <XFont.h>
 #include <XQColor.h>
 #include <Math/MinMax.h>
 #include <Mt/DrawingArea.h>
@@ -102,7 +103,7 @@ void UserModule::create_interface()
     int title_ascent;
     int title_descent;
     XCharStruct dim_title;
-    if(!XTextExtents(netedit->name_font, name(), name.len(), &dir,
+    if(!XTextExtents(netedit->name_font->font, name(), name.len(), &dir,
 		     &title_ascent, &title_descent, &dim_title)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);
@@ -112,7 +113,7 @@ void UserModule::create_interface()
     int time_descent;
     XCharStruct dim_time;
     static char* timestr="88:88";
-    if(!XTextExtents(netedit->time_font, timestr, strlen(timestr), &dir,
+    if(!XTextExtents(netedit->time_font->font, timestr, strlen(timestr), &dir,
 		     &time_ascent, &time_descent, &dim_time)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);
@@ -318,7 +319,7 @@ void UserModule::redraw_widget(CallbackData*, void*)
     }
 
     // Draw title
-    XSetFont(dpy, gc, netedit->name_font->fid);
+    XSetFont(dpy, gc, netedit->name_font->font->fid);
     XSetForeground(dpy, gc, fgcolor->pixel());
     XDrawString(dpy, win, gc, title_left, widget_ytitle, name(), name.len());
 
@@ -360,7 +361,7 @@ void UserModule::update_module(int clear_first)
 	sprintf(timebuf, "%d.%02d", secs, frac);
     }
     int timelen=strlen(timebuf);
-    XSetFont(dpy, gc, netedit->time_font->fid);
+    XSetFont(dpy, gc, netedit->time_font->font->fid);
     XSetForeground(dpy, gc, fgcolor->pixel());
     XDrawString(dpy, win, gc, title_left, widget_ytime, timebuf, timelen);
 
@@ -496,7 +497,10 @@ void UserModule::do_execute()
     // Call the User's execute function...
     state=Executing;
     update_progress(0.0);
+    timer.clear();
+    timer.start();
     execute();
+    timer.stop();
     state=Completed;
     update_progress(1.0);
 

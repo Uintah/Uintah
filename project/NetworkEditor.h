@@ -32,6 +32,7 @@ class MessageBase;
 class Module;
 class Network;
 class TextC;
+class XFont;
 
 class NetworkEditor : public Task {
     Network* net;
@@ -75,8 +76,8 @@ public:
     DrawingAreaC* drawing_a;
     Display* display;
     ColorManager* color_manager;
-    XFontStruct* name_font;
-    XFontStruct* time_font;
+    XFont* name_font;
+    XFont* time_font;
     Mailbox<MessageBase*> mailbox;
 
     NetworkEditor(Network*, Display*, ColorManager*);

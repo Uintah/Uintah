@@ -35,6 +35,7 @@ public:
 };
 
 struct DrawInfo {
+    int polycount;
     MaterialProp* current_matl;
     Stack<MaterialProp*> stack;
     enum DrawType {

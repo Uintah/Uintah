@@ -108,6 +108,7 @@ Triangle::~Triangle()
 void Triangle::draw(DrawInfo* di) {
     if(matl)
 	di->push_matl(matl);
+    di->polycount++;
     switch(di->drawtype){
     case DrawInfo::WireFrame:
 	glBegin(GL_LINE_LOOP);
@@ -167,6 +168,7 @@ Tetra::~Tetra()
 void Tetra::draw(DrawInfo* di) {
     if(matl)
 	di->push_matl(matl);
+    di->polycount+=4;
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
@@ -215,6 +217,7 @@ void GeomSphere::draw(DrawInfo* di)
     double cy=cen.y();
     double cz=cen.z();
     int i, j;
+    di->polycount+=nu*nv;
     switch(di->drawtype){
     case DrawInfo::WireFrame:
 	for(i=0;i<nu-1;i++){
@@ -336,6 +339,7 @@ GeomPt::~GeomPt() {
 void GeomPt::draw(DrawInfo* di) {
     if(matl)
 	di->push_matl(matl);
+    di->polycount++;
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glEnd();

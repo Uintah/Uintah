@@ -31,6 +31,7 @@
 #include <Network.h>
 #include <NotFinished.h>
 #include <Port.h>
+#include <XFont.h>
 #include <XQColor.h>
 #include <Math/MiscMath.h>
 #include <Mt/ApplicationShell.h>
@@ -55,8 +56,10 @@ extern MtXEventLoop* evl;
 #define NETEDIT_CANVAS_SIZE 2000
 #define NETEDIT_STAY_FROM_EDGE 2
 #define NETEDIT_BACKGROUND_COLOR "#224488"
-#define MODULE_NAME_FONT "-*-lucida-bold-r-*-*-14-*-*-*-*-*-*-*"
-#define MODULE_TIME_FONT "-*-lucida-medium-r-*-*-11-*-*-*-*-*-*-*"
+#define MODULE_NAME_FONTSIZE 14
+#define MODULE_NAME_FONTFACE XFont::Bold
+#define MODULE_TIME_FONTSIZE 11
+#define MODULE_TIME_FONTFACE XFont::Medium
 #define LIST_VISIBLE 4
 
 NetworkEditor::NetworkEditor(Network* net, Display* display,
@@ -80,14 +83,8 @@ int NetworkEditor::body(int)
 
     // Allocate fonts...
     evl->lock();
-    if( (name_font = XLoadQueryFont(display, MODULE_NAME_FONT)) == 0){
-	cerr << "Error loading font: " << MODULE_NAME_FONT << endl;
-	exit(-1);
-    }
-    if( (time_font = XLoadQueryFont(display, MODULE_TIME_FONT)) == 0){
-	cerr << "Error loading font: " << MODULE_TIME_FONT << endl;
-	exit(-1);
-    }
+    name_font=new XFont(MODULE_NAME_FONTSIZE, MODULE_NAME_FONTFACE);
+    time_font=new XFont(MODULE_TIME_FONTSIZE, MODULE_TIME_FONTFACE);
     
     // Allocate Colors...
     XQColor background(color_manager, NETEDIT_BACKGROUND_COLOR);
