@@ -64,6 +64,7 @@ class SampleField : public Module
   GuiInt numSeeds_;
   GuiInt rngSeed_;
   GuiInt clamp_;
+  GuiInt autoexec_;
   GuiString widgetType_;
   GuiString randDist_;
   GuiString whichTab_;
@@ -93,6 +94,7 @@ SampleField::SampleField(const string& id)
     numSeeds_("numseeds", id, this),
     rngSeed_("rngseed", id, this),
     clamp_("clamp", id, this),
+    autoexec_("autoexecute", id, this),
     widgetType_("type", id, this),
     randDist_("dist", id, this),
     whichTab_("whichtab", id, this),
@@ -115,10 +117,14 @@ SampleField::~SampleField()
 void
 SampleField::widget_moved(int i)
 {
-  if (i==1)
+  if (i == 1)
   {
     if (rake_) rake_->GetEndpoints(endpoint0_,endpoint1_);
-    want_to_execute();
+    autoexec_.reset();
+    if (autoexec_.get())
+    {
+      want_to_execute();
+    }
   }
 }
 
@@ -243,8 +249,9 @@ SampleField::execute()
                                          clamp_.get()));
     rngSeed_.set(rngSeed_.get()+1);
     ofport_->send(seedhandle);
+
     if (widgetid_) { ogport_->delObj(widgetid_); }
-    widgetid_=0;
+    widgetid_ = 0;
     rake_ = 0;
     ogport_->flushViews();
   }
