@@ -140,9 +140,9 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 	return;
 
    d_nextOutputTime=0.0;
-   d_nextOutputTimestep=0;
+   d_nextOutputTimestep=1;
    d_nextCheckpointTime=d_checkpointInterval; // no need to checkpoint t=0
-   d_nextCheckpointTimestep=d_checkpointTimestepInterval;
+   d_nextCheckpointTimestep=d_checkpointTimestepInterval+1;
    
    if(Parallel::usingMPI()){
      // See how many shared filesystems that we have
@@ -542,7 +542,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
   }
   
   bool do_output=false;
-  if (d_outputInterval != 0.0 && delt != 0) {
+  if ((d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && delt != 0) {
     // Schedule task to dump out reduction variables at every timestep
     Task* t = scinew Task("DataArchiver::outputReduction",
 			  this, &DataArchiver::outputReduction);
