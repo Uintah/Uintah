@@ -347,6 +347,8 @@ private:
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
+  double           d_conv_crit_disp;
+  double           d_conv_crit_energy;
   
   const PatchSet* d_perproc_patches;
 
