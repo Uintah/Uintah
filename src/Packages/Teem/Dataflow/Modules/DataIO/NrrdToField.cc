@@ -293,7 +293,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
     }
     
     Handle<NrrdFieldConverterFieldAlgo> algo;
-    
     if (!module_dynamic_compile(ci, algo)) return 0;
     
     if (!has_data_) 
@@ -303,13 +302,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       warning("Attempting to build eigendecomposition of Tensors with non symmetric tensor");
     }
     
-    //if( topology_ & STRUCTURED ) {
-    if (idim != 0) { // has been changed 
-      ofield_handle = algo->execute( mHandle, dataH, build_eigens, idim, jdim, kdim, permute);
-      
-    } else  {
-      ofield_handle = algo->execute( mHandle, dataH, build_eigens);
-    }
+    ofield_handle = algo->execute( mHandle, dataH, build_eigens);
     
     return ofield_handle;
   }
