@@ -122,7 +122,7 @@ void Sort(string *words_to_sort, int alg_to_use);
         One important difference is that the Sort module seperates
         the mode for communicating inputs of different kinds, i.e. data
         is treated differently and seperately from control.
-      </para>
+      </para><beginpage/>
     
       <para>
         On the lowest level a module is almost exactly like the function.
@@ -297,7 +297,7 @@ void Sort::send_data(string *list)
         just a C++ file which defines a new module class.  A module
         needs at least one, and possibly two, more files: an
         XML file and a TCL file.
-      </para>
+      </para><beginpage/>
     
       <para>
         The XML file is used to describe how many and what type of
@@ -546,7 +546,7 @@ SUBDIRS := \
 #[INSERT NEW CATEGORY DIR HERE]
  
 include $(SCIRUN_SCRIPTS)/recurse.mk
-      </computeroutput>
+      </computeroutput><beginpage/>
 
       <para>
         and then add the .cc file to the second sub.mk file, again
@@ -614,7 +614,7 @@ Module("Sort", id, Source, "WordList", "SCIRun"),
 ...
 itcl_class SCIRun_WordList_Sort { 
 ...
-      </computeroutput>
+      </computeroutput><beginpage/>
 
       <para>
         After editing sub.mk files, make sure that each of the entries
@@ -648,9 +648,10 @@ SRCS     += \
 
       <para>
         Until you become a seasoned SCIRun developer, all the work
-        discussed above will seem too daunting to get started with
-        development.  For this reason SCIRun comes with the Component
-        Wizard - a tool for automatically generating all the files
+        discussed above will seem too daunting to get start
+        development on a new module.  For this reason SCIRun comes
+        with the Component 
+        Wizard, a tool for automatically generating all the files
         needed to start a new module from scratch.  It even edits
         the makefile system to add the new module.
       </para>
@@ -665,85 +666,50 @@ SRCS     += \
       </para>
 
       <para>
-        Access the Component Wizard from the main SCIRun menu,
-        File->New->Module:
+        Access the Component Wizard from the main SCIRun menu:
+        File->New->Module.  The Component Wizard starts up with a
+        "blank" module, as shown in figure <fignum name="cw"/>a.
+        To create a new module, simply
+        fill in all the required entry fields (module name, category,
+        package and path to SCIRun source) on the "I/O and GUI" tab,
+        and add ports using the add input/output port buttons.  Figure
+        <fignum name="cw"/>b shows the Sort module in construction.
       </para>
 
-      <figure file="../images/research_menuheader.jpg" caption="The Component Wizard"/>
+      <figure name="cw" 
+        imga="../images/ComponentWizard.gif" 
+        capa="The Component Wizard with a blank module" 
+        imgb="../images/ComponentWizard2.gif" 
+        capb="Building the Sort module"/><beginpage/>
 
-      <figure file="../images/research_header_sm.gif" caption="The blah"/>
       <para>
-        The Component Wizard
+        After creating input and output ports you need to provide
+        names and datatypes for them.  To do that, right-click on a
+        port and select Edit from the pulldown menu (you can delete ports
+        from the pulldown menu as well).  A dialog will pop up 
+        (figure <fignum name="ep"/>)
+        which has fields to provide a name and datatype for the
+        selected port.
       </para>
 
-    </sect2>
-
-    <sect2>
-      <title>Port</title>
+      <figure name="ep" 
+        imga="../images/EditPort.gif" 
+        capa="Editing the input port of the sort module"/>
       
       <para>
-        Ports are the analog of formal paramaters of a C function.
-        They are used to connect modules together and they enforce type
-        matching.
+        Once the "I/O and GUI" tab is completely filled out, and the
+        ports all have names and datatypes, you can press the Create
+        button to have the Component Wizard generate all the skeleton
+        files for the new module. 
       </para>
-    </sect2>
 
-    <sect2>
-      <title>Connection</title>
       <para>
+        The Component Wizard can be used to include additional
+        information for the module via the other tabs, however at this
+        point only the information on the "I/O and GUI" tab is
+        actually used when generating files.
       </para>
-    </sect2>
-    
-    <sect2>
-      <title>Network</title>
-      <para>
-      </para>
-    </sect2>
 
-    <sect2>
-      <title>Network Editor</title>
-      <para>
-      </para>
-    </sect2>
-
-    <sect2>
-      <title>Examples</title>
-   
-    
-      <para>
-        To get data into and out of your module's execute function, you
-        need to use the module's ports.  In order to use the ports, 
-        you first need to get a pointer to a specific port.  Then, call
-        that port's get() function with a handle to the type of data
-        expected on the port.  On success, the handle passed to get()
-        will represent the data that is on that input port:
-      </para>
-    
-      <computeroutput>
-
-        #include &lt;Dataflow/Ports/MatrixPort.h&gt;
-
-        ...
-
-        void SomeModule::execute() {
-
-          //The input port for this module is of type Matrix, and is
-          // named "Input Matrix"
-
-          MatrixIPort *iport = get_iport("Input Matrix");
-
-          MatrixHandle InputMatrix;
-
-          int connected = iport->get(InputMatrix);
-
-          if (!connected) {
-            printf("There is no connection for 'Input Matrix'!");
-	    return;
-          }
-        
-	  ...
-        }
-      </computeroutput>
     </sect2>
   </sect1>
 </chapter>
