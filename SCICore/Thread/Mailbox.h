@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  Mailbox: Threadsafe FIFO
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -115,6 +114,10 @@ namespace SCICore {
 	    int d_send_wait;
 	    int d_recv_wait;
 	    inline int ringNext(int inc);
+
+	    // Cannot copy them
+	    Mailbox(const Mailbox<Item>&);
+	    Mailbox<Item> operator=(const Mailbox<Item>&);
 	};
     }
 }
@@ -256,6 +259,9 @@ SCICore::Thread::Mailbox<Item>::numItems() const
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 03:46:48  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.4  1999/08/25 19:00:48  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

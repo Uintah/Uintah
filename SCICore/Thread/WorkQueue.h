@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  WorkQueue: Manage assignments of work
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -37,8 +36,7 @@ WARNING
    
 ****************************************/
 
-#include <SCICore/Thread/ConditionVariable.h>
-#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/AtomicCounter.h>
 #include <vector>
 
 namespace SCICore {
@@ -62,7 +60,7 @@ namespace SCICore {
 	    // approximately uniform size.  <i>name</i> should be a static
 	    // string which describes the primitive for debugging purposes.
 	    void refill(int totalAssignments, int nthreads,
-			bool dynamic, int granularity=5);
+			int granularity=5);
 	    
 	    //////////
 	    // Destroy the work queue.  Any unassigned work will be lost.  
@@ -75,34 +73,22 @@ namespace SCICore {
 	    // from the returned <i>start</i> through <i>end-l</i>.
 	    // Assignments can range from 0 to  <i>totalAssignments</i>-1.
 	    // When <i>nextAssignment</i> returns false, all work has
-	    // been completed (dynamic=true), or has been assigned
-	    // (dynamic=false).
+	    // been assigned.
 	    bool nextAssignment(int& start, int& end);
 	    
-	    //////////
-	    // Increase the work to be done.  <i>dynamic</i> as provided
-	    // to the constructor MUST be true. Work should only be added
-	    // by the workers.
-	    void addWork(int nassignments);
-
-	    //////////
-	    // Block until the queue is empty
-	    void waitForEmpty();
-
 	private:
-	    WorkQueue_private* d_priv;
 	    const char* d_name;
 	    int d_num_threads;
 	    int d_total_assignments;
 	    int d_granularity;
 	    std::vector<int> d_assignments;
-	    
-	    int d_num_waiting;
+	    AtomicCounter d_current_assignment;
 	    bool d_done;
 	    bool d_dynamic;
 	    
-	    void init();
 	    void fill();
+
+	    // Cannot copy them
 	    WorkQueue(const WorkQueue& copy);
 	    WorkQueue& operator=(const WorkQueue&);
 	};
@@ -113,6 +99,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 03:46:53  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.5  1999/08/25 19:00:53  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

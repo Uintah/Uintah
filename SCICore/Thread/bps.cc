@@ -6,8 +6,8 @@
 #include "Mutex.h"
 #include "Time.h"
 #include <iostream.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/sysmp.h>
 #include <unistd.h>
 
 using SCICore::Thread::Thread;
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     int np=0;
     int count=0;
     if(argc != 3){
-	usage(argv[1]);
+	usage(argv[0]);
     }
     np=atoi(argv[1]);
     count=atoi(argv[2]);
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     for(int i=0;i<np;i++){
 	char buf[100];
 	sprintf(buf, "worker %d", i);
-	new Thread(new BPS(barrier, count, i), buf, group);
+	new Thread(new BPS(barrier, count, i), strdup(buf), group);
     }
     group->join();
 }
@@ -67,7 +67,7 @@ void BPS::run()
 	barrier->wait();
 	static int g=0;
 	if(g != i)
-	    cerr << "OOPS!\n";
+	    cerr << "OOPS!: " << g << " vs. " << i << ", proc=" << proc << "\n";
 	barrier->wait();
 	if(proc==0)
 	    g++;
@@ -79,3 +79,4 @@ void BPS::run()
 	cerr << (etime-time)/count*1000 << " ms/barrier\n";
     }
 }
+

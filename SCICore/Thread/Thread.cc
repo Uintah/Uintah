@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  Thread: The thread class
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -15,7 +13,9 @@ static char *id="$Id$";
  */
 
 #include <SCICore/Thread/Thread.h>
+#include <SCICore/Exceptions/Exception.h>
 #include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/ThreadError.h>
 #include <SCICore/Thread/ThreadGroup.h>
 #include <errno.h>
 #include <iostream.h>
@@ -25,7 +25,12 @@ static char *id="$Id$";
 #include <sys/types.h>
 #include <unistd.h>
 
-SCICore::Thread::Thread::~Thread()
+#define THREAD_DEFAULT_STACKSIZE 64*1024
+
+using SCICore::Thread::Thread;
+using SCICore::Thread::ThreadGroup;
+
+Thread::~Thread()
 {
     if(d_runner){
         d_runner->d_my_thread=0;
@@ -33,7 +38,7 @@ SCICore::Thread::Thread::~Thread()
     }
 }
 
-SCICore::Thread::Thread::Thread(ThreadGroup* g, const char* name)
+Thread::Thread(ThreadGroup* g, const char* name)
 {
     d_group=g;
     g->addme(this);
@@ -42,16 +47,30 @@ SCICore::Thread::Thread::Thread(ThreadGroup* g, const char* name)
     d_detached=false;
     d_runner=0;
     d_cpu=-1;
+    d_stacksize=THREAD_DEFAULT_STACKSIZE;
 }
 
 void
-SCICore::Thread::Thread::run_body()
+Thread::run_body()
 {
-    d_runner->run();
+    try {
+	d_runner->run();
+    } catch(const ThreadError& e){
+	fprintf(stderr, "Caught unhandled Thread error:\n%s\n",
+		e.message().c_str());
+	Thread::niceAbort();
+    } catch(const SCICore::Exceptions::Exception& e){
+	fprintf(stderr, "Caught unhandled exception:\n%s\n",
+		e.message().c_str());
+	Thread::niceAbort();
+    } catch(...){
+	fprintf(stderr, "Caught unhandled exception of unknown type\n");
+	Thread::niceAbort();
+    }
 }
 
-SCICore::Thread::Thread::Thread(Runnable* runner, const char* name,
-	       ThreadGroup* group, bool stopped)
+Thread::Thread(Runnable* runner, const char* name,
+	       ThreadGroup* group, ActiveState state)
     : d_runner(runner), d_threadname(name), d_group(group)
 {
     if(group == 0){
@@ -65,42 +84,65 @@ SCICore::Thread::Thread::Thread(Runnable* runner, const char* name,
     d_daemon=false;
     d_cpu=-1;
     d_detached=false;
+    d_stacksize=THREAD_DEFAULT_STACKSIZE;
+    switch(state){
+    case Activated:
+	os_start(false);
+	d_activated=true;
+	break;
+    case Stopped:
+	os_start(true);
+	d_activated=true;
+	break;
+    case NotActivated:
+	d_activated=false;
+	d_priv=0;
+	break;
+    }
+}
+
+void
+Thread::Thread::activate(bool stopped)
+{
+    if(d_activated)
+	throw ThreadError("Thread is already activated");
+    d_activated=true;
     os_start(stopped);
 }
 
-SCICore::Thread::ThreadGroup*
-SCICore::Thread::Thread::getThreadGroup()
+ThreadGroup*
+Thread::getThreadGroup()
 {
     return d_group;
 }
 
 void
-SCICore::Thread::Thread::setDaemon(bool to)
+Thread::setDaemon(bool to)
 {
     d_daemon=to;
     checkExit();
 }
 
 bool
-SCICore::Thread::Thread::isDaemon() const
+Thread::isDaemon() const
 {
     return d_daemon;
 }
 
 bool
-SCICore::Thread::Thread::isDetached() const
+Thread::isDetached() const
 {
     return d_detached;
 }
 
 const char*
-SCICore::Thread::Thread::getThreadName() const
+Thread::getThreadName() const
 {
     return d_threadname;
 }
 
-SCICore::Thread::ThreadGroup*
-SCICore::Thread::Thread::parallel(const ParallelBase& helper, int nthreads,
+ThreadGroup*
+Thread::parallel(const ParallelBase& helper, int nthreads,
 		 bool block, ThreadGroup* threadGroup)
 {
     ThreadGroup* newgroup=new ThreadGroup("Parallel group",
@@ -109,7 +151,7 @@ SCICore::Thread::Thread::parallel(const ParallelBase& helper, int nthreads,
         char buf[50];
         sprintf(buf, "Parallel thread %d of %d", i, nthreads);
         new Thread(new ParallelHelper(&helper, i), buf,
-		   newgroup, true);
+		   newgroup, Thread::Stopped);
     }
     newgroup->gangSchedule();
     newgroup->resume();
@@ -124,75 +166,81 @@ SCICore::Thread::Thread::parallel(const ParallelBase& helper, int nthreads,
 }
 
 void
-SCICore::Thread::Thread::niceAbort()
+Thread::niceAbort()
 {
     for(;;){
         char action;
         Thread* s=Thread::self();
-#if 0
-        if(s->d_abortHandler){
-	    //action=s->d_abortHandler->threadAbort(s);
-        } else {
-#endif
-	    fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-	    fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
-	    fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
-	    fflush(stderr);
-	    char buf[100];
-	    while(read(fileno(stdin), buf, 100) <= 0){
-		if(errno != EINTR){
-		    fprintf(stderr, "\nCould not read response, exiting\n");
-		    buf[0]='e';
-		    break;
-		}
+	fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
+	fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
+	fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
+	fflush(stderr);
+	char buf[100];
+	while(read(fileno(stdin), buf, 100) <= 0){
+	    if(errno != EINTR){
+		fprintf(stderr, "\nCould not read response, exiting\n");
+		buf[0]='e';
+		exitAll(1);
 	    }
-	    action=buf[0];
-#if 0
-        }
-#endif
+	}
+	action=buf[0];
         char command[500];
         switch(action){
         case 'r': case 'R':
-    	return;
+	    return;
         case 'd': case 'D':
-    	sprintf(command, "winterm -c dbx -p %d &", getpid());
-    	system(command);	
-    	break;
+	    sprintf(command, "winterm -c dbx -p %d &", getpid());
+	    system(command);	
+	    break;
         case 'c': case 'C':
-    	sprintf(command, "cvd -pid %d &", getpid());
-    	system(command);	
-    	break;
+	    sprintf(command, "cvd -pid %d &", getpid());
+	    system(command);	
+	    break;
         case 'k': case 'K':
-	exit();
-    	break;
+	    exit();
+	    break;
         case 'e': case 'E':
-    	exitAll(1);
-    	break;
+	    exitAll(1);
+	    break;
         default:
-    	break;
+	    break;
         }
     }
 }
 
 int
-SCICore::Thread::Thread::couldBlock(const char* why)
+Thread::couldBlock(const char* why)
 {
     Thread_private* p=Thread::self()->d_priv;
     return push_bstack(p, BLOCK_ANY, why);
 }
 
 void
-SCICore::Thread::Thread::couldBlockDone(int restore)
+Thread::couldBlockDone(int restore)
 {
     Thread_private* p=Thread::self()->d_priv;
     pop_bstack(p, restore);
+}
+
+unsigned long
+Thread::getStackSize() const
+{
+    return d_stacksize;
+}
+
+void
+Thread::setStackSize(unsigned long stacksize)
+{
+    if(d_activated)
+	throw ThreadError("Cannot change stack size on a running thread");
+    d_stacksize=stacksize;
 }
 
 /*
  * Return the statename for p
  */
 const char*
-SCICore::Thread::Thread::getStateString(ThreadState state)
+Thread::getStateString(ThreadState state)
 {
     switch(state) {
     case STARTUP:
@@ -224,6 +272,9 @@ SCICore::Thread::Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 03:46:50  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.5  1999/08/25 22:36:01  sparker
 // More thread library updates - now compiles
 //

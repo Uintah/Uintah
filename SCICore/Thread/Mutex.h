@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  Mutex: Standard locking primitive
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -70,6 +69,10 @@ namespace SCICore {
 	private:
 	    Mutex_private* d_priv;
 	    const char* d_name;
+
+	    // Cannot copy them
+	    Mutex(const Mutex&);
+	    Mutex& operator=(const Mutex&);
 	};
     }
 }
@@ -78,6 +81,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 03:46:48  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.5  1999/08/25 19:00:49  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  ThreadGroup: A set of threads
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -19,11 +17,12 @@ static char *id="$Id$";
 #include <stdlib.h>
 #include <string.h>
 
-SCICore::Thread::ThreadGroup* SCICore::Thread::ThreadGroup::s_default_group;
+using SCICore::Thread::ThreadGroup;
+
+ThreadGroup* ThreadGroup::s_default_group;
 using std::vector;
 
-SCICore::Thread::ThreadGroup::ThreadGroup(const char* name,
-					  ThreadGroup* parentGroup)
+ThreadGroup::ThreadGroup(const char* name, ThreadGroup* parentGroup)
     : d_lock("ThreadGroup lock"), d_name(name), d_parent(parentGroup)
 {
     if(parentGroup==0){
@@ -33,12 +32,12 @@ SCICore::Thread::ThreadGroup::ThreadGroup(const char* name,
     }
 }
 
-SCICore::Thread::ThreadGroup::~ThreadGroup()
+ThreadGroup::~ThreadGroup()
 {
 }
 
 int
-SCICore::Thread::ThreadGroup::numActive(bool countDaemon)
+ThreadGroup::numActive(bool countDaemon)
 {
     d_lock.lock();
     int total=0;
@@ -57,7 +56,9 @@ SCICore::Thread::ThreadGroup::numActive(bool countDaemon)
     return total;
 }
 
-void SCICore::Thread::ThreadGroup::stop() {
+void
+ThreadGroup::stop()
+{
     d_lock.lock();
     for(vector<ThreadGroup*>::iterator iter=d_groups.begin();
 	iter != d_groups.end();iter++)
@@ -69,7 +70,7 @@ void SCICore::Thread::ThreadGroup::stop() {
 }
 
 void
-SCICore::Thread::ThreadGroup::resume()
+ThreadGroup::resume()
 {
     d_lock.lock();
     for(vector<ThreadGroup*>::iterator iter=d_groups.begin();
@@ -82,7 +83,7 @@ SCICore::Thread::ThreadGroup::resume()
 }
 
 void
-SCICore::Thread::ThreadGroup::join()
+ThreadGroup::join()
 {
     d_lock.lock();
     for(vector<ThreadGroup*>::iterator iter=d_groups.begin();
@@ -95,7 +96,7 @@ SCICore::Thread::ThreadGroup::join()
 }
 
 void
-SCICore::Thread::ThreadGroup::detach()
+ThreadGroup::detach()
 {
     d_lock.lock();
     for(vector<ThreadGroup*>::iterator iter=d_groups.begin();
@@ -107,14 +108,14 @@ SCICore::Thread::ThreadGroup::detach()
     d_lock.unlock();
 }
 
-SCICore::Thread::ThreadGroup*
-SCICore::Thread::ThreadGroup::parentGroup()
+ThreadGroup*
+ThreadGroup::parentGroup()
 {
     return d_parent;
 }
 
 void
-SCICore::Thread::ThreadGroup::addme(ThreadGroup* t)
+ThreadGroup::addme(ThreadGroup* t)
 {
     d_lock.lock();
     d_groups.push_back(t);
@@ -122,7 +123,7 @@ SCICore::Thread::ThreadGroup::addme(ThreadGroup* t)
 }
 
 void
-SCICore::Thread::ThreadGroup::addme(Thread* t)
+ThreadGroup::addme(Thread* t)
 {
     d_lock.lock();
     d_threads.push_back(t);
@@ -131,6 +132,9 @@ SCICore::Thread::ThreadGroup::addme(Thread* t)
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 03:46:51  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.4  1999/08/25 19:00:52  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

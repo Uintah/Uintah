@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
- *  Reducer: A barrier with reduction operations
+ *  SimpleReducer: A barrier with reduction operations
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -14,10 +12,12 @@ static char *id="$Id$";
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Thread/Reducer.h>
+#include <SCICore/Thread/SimpleReducer.h>
 #include <SCICore/Thread/ThreadGroup.h>
 
-SCICore::Thread::Reducer::Reducer(const char* name, int numThreads)
+using SCICore::Thread::SimpleReducer;
+
+SimpleReducer::SimpleReducer(const char* name, int numThreads)
     : Barrier(name, numThreads)
 {
     d_array_size=numThreads;
@@ -28,7 +28,7 @@ SCICore::Thread::Reducer::Reducer(const char* name, int numThreads)
         d_p[i].d_buf=0;
 }
 
-SCICore::Thread::Reducer::Reducer(const char* name, ThreadGroup* group)
+SimpleReducer::SimpleReducer(const char* name, ThreadGroup* group)
     : Barrier(name, group)
 {
     d_array_size=group->numActive(true);
@@ -39,7 +39,7 @@ SCICore::Thread::Reducer::Reducer(const char* name, ThreadGroup* group)
         d_p[i].d_buf=0;
 }
 
-SCICore::Thread::Reducer::~Reducer()
+SimpleReducer::~SimpleReducer()
 {
     delete[] d_join[0];
     delete[] d_join[1];
@@ -47,7 +47,7 @@ SCICore::Thread::Reducer::~Reducer()
 }
 
 void
-SCICore::Thread::Reducer::collectiveResize(int proc)
+SimpleReducer::collectiveResize(int proc)
 {
     // Extra barrier here to change the array size...
 
@@ -70,7 +70,7 @@ SCICore::Thread::Reducer::collectiveResize(int proc)
 }
 
 double
-SCICore::Thread::Reducer::sum(int proc, double mysum)
+SimpleReducer::sum(int proc, double mysum)
 {
     int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     if(n != d_array_size){
@@ -90,7 +90,7 @@ SCICore::Thread::Reducer::sum(int proc, double mysum)
 }
 
 double
-SCICore::Thread::Reducer::max(int proc, double mymax)
+SimpleReducer::max(int proc, double mymax)
 {
     int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     if(n != d_array_size){
@@ -112,6 +112,9 @@ SCICore::Thread::Reducer::max(int proc, double mymax)
 
 //
 // $Log$
+// Revision 1.1  1999/08/28 03:46:50  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.4  1999/08/25 19:00:50  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

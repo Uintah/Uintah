@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *cvid="$Id$";
-
 /*
  *  ConditionVariable: Condition variable primitive
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -53,6 +51,7 @@ SCICore::Thread::ConditionVariable::~ConditionVariable()
 void
 SCICore::Thread::ConditionVariable::wait(Mutex& m)
 {
+    int oldstate=Thread::couldBlock(d_name);
     d_priv->mutex.lock();
     d_priv->num_waiters++;
     d_priv->mutex.unlock();
@@ -62,6 +61,7 @@ SCICore::Thread::ConditionVariable::wait(Mutex& m)
     d_priv->semaphore.down();
     Thread::couldBlockDone(s);
     m.lock();
+    Thread::couldBlockDone(oldstate);
 }
 
 void
@@ -88,6 +88,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 03:46:47  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.2  1999/08/25 22:36:01  sparker
 // More thread library updates - now compiles
 //

@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  Parallel: Automatically instantiate several threads
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -54,6 +53,10 @@ namespace SCICore {
 	    void (T::*d_pmf)(int);
 	protected:
 	    virtual void run(int proc);
+	private:
+	    // Cannot copy them
+	    Parallel(const Parallel&);
+	    Parallel<T>& operator=(const Parallel<T>&);
 	};
     }
 }
@@ -79,6 +82,9 @@ SCICore::Thread::Parallel<T>::~Parallel()
 #endif
 //
 // $Log$
+// Revision 1.5  1999/08/28 03:46:48  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.4  1999/08/25 19:00:49  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

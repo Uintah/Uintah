@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *cmid="$Id$";
-
 /*
  *  CrowdMonitor: Multiple reader/single writer locks
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -32,7 +30,10 @@ namespace SCICore {
     }
 }
 
-SCICore::Thread::CrowdMonitor_private::CrowdMonitor_private()
+using SCICore::Thread::CrowdMonitor_private;
+using SCICore::Thread::CrowdMonitor;
+
+CrowdMonitor_private::CrowdMonitor_private()
     : write_waiters("CrowdMonitor write condition"),
       read_waiters("CrowdMonitor read condition"),
       lock("CrowdMonitor lock")
@@ -43,24 +44,25 @@ SCICore::Thread::CrowdMonitor_private::CrowdMonitor_private()
     num_writers=0;
 }
 
-SCICore::Thread::CrowdMonitor_private::~CrowdMonitor_private()
+CrowdMonitor_private::~CrowdMonitor_private()
 {
 }
 
-SCICore::Thread::CrowdMonitor::CrowdMonitor(const char* name)
+CrowdMonitor::CrowdMonitor(const char* name)
     : d_name(name)
 {
     d_priv=new CrowdMonitor_private;
 }
 
-SCICore::Thread::CrowdMonitor::~CrowdMonitor()
+CrowdMonitor::~CrowdMonitor()
 {
     delete d_priv;
 }
 
 void
-SCICore::Thread::CrowdMonitor::readLock()
+CrowdMonitor::readLock()
 {
+    int oldstate=Thread::couldBlock(d_name);
     d_priv->lock.lock();
     while(d_priv->num_writers > 0){
         d_priv->num_readers_waiting++;
@@ -71,10 +73,11 @@ SCICore::Thread::CrowdMonitor::readLock()
     }
     d_priv->num_readers++;
     d_priv->lock.unlock();
+    Thread::couldBlockDone(oldstate);
 }
 
 void
-SCICore::Thread::CrowdMonitor::readUnlock()
+CrowdMonitor::readUnlock()
 {
     d_priv->lock.lock();
     d_priv->num_readers--;
@@ -84,8 +87,9 @@ SCICore::Thread::CrowdMonitor::readUnlock()
 }
 
 void
-SCICore::Thread::CrowdMonitor::writeLock()
+CrowdMonitor::writeLock()
 {
+    int oldstate=Thread::couldBlock(d_name);
     d_priv->lock.lock();
     while(d_priv->num_writers || d_priv->num_readers){
         // Have to wait...
@@ -97,10 +101,11 @@ SCICore::Thread::CrowdMonitor::writeLock()
     }
     d_priv->num_writers++;
     d_priv->lock.unlock();
+    Thread::couldBlockDone(oldstate);
 }
 
 void
-SCICore::Thread::CrowdMonitor::writeUnlock()
+CrowdMonitor::writeUnlock()
 {
     d_priv->lock.lock();
     d_priv->num_writers--;
@@ -113,6 +118,9 @@ SCICore::Thread::CrowdMonitor::writeUnlock()
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 03:46:47  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.2  1999/08/25 22:36:01  sparker
 // More thread library updates - now compiles
 //
