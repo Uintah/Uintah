@@ -6,6 +6,10 @@
 <!-- Changed by: Ted Dustman, 22-Feb-2002 -->
 <!-- Last update: Fri Mar  1 01:12:57 2002 by Rob MacLeod
     - last round before the March 1 release.  -->
+<!-- Last update: Sun Mar 10 14:22:07 2002 by Rob MacLeod
+    - removed need to have solve matrix module showing, as per Dave's
+   instructions.
+-->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -174,15 +178,18 @@
 	src="images/b.gif">, to determine the potentials at the nodes.
 	</ol>
 	<p>Each of the above steps corresponds to a SCIRun module.
-	<ul><li>For steps 1 and 2, we will use 2 SCIRun/DataIO/FieldReader
-	modules.  
-	<li>For step 3, we will use a BioPSE/Forward/SetupFEMatrix module.  
-	<li>For step 4, we will use a BioPSE/Forward/ApplyFEMCurrentSource module.  
-	<li>And for step 5, we will use a SCIRun/Math/SolveMatrix module.</ul>
+	<ul>
+	  <li>For steps 1 and 2, we will use 2 SCIRun/DataIO/FieldReader
+	      modules.  
+	  <li>For step 3, we will use a BioPSE/Forward/SetupFEMatrix module.  
+	  <li>For step 4, we will use a BioPSE/Forward/ApplyFEMCurrentSource
+	      module.   
+	  <li>And for step 5, we will use a SCIRun/Math/SolveMatrix module.
+	</ul>
 
-	<p>All of these modules should be connected as shown in <b>Figure 5.2</b>.  The User
-	Interface settings for each of the modules are described in
-	the following sections.<A NAME="figure-5.2">
+	<p>All of these modules should be connected as shown in <b>Figure
+	5.2</b>.  The User Interface settings for each of the modules are
+	described in the following sections.<A NAME="figure-5.2">
 
       </div>
 	<center>
@@ -211,12 +218,13 @@
 	<div align="left">
 	<p>
 	<ul>
-	<li>The ApplyFEMCurrentSource module modifies the right hand
-	side vector to account for current sources within the model.
-	<li>On the UI (<b>Figure 5.4</b>), you can choose whether the
-	current sources are due to a dipole or to a source/sink
-	electrode pair.  
-	<li>Select the "dipole" setting.</ul>
+	  <li>The ApplyFEMCurrentSource module modifies the right hand
+	      side vector to account for current sources within the model.
+	  <li>On the UI (<b>Figure 5.4</b>), you can choose whether the
+	      current sources are due to a dipole or to a source/sink
+	      electrode pair.  
+	  <li>Select the "dipole" setting.
+	</ul>
 
 	</div>
 	<center>
@@ -228,15 +236,13 @@
 
 	<p>The SolveMatrix module solves a linear system using one of
 	several methods.  
-	<ol><li value=1.">Choose "Conjugate
-	Gradient" solver (<b>Figure 5.5</b>), and set the
-	Target Error to 0.0001.
-	<li>Set the Maximum Iterations to 200.</ol>
+	<ol>
+	  <li>Choose "Conjugate
+	      Gradient" solver (<b>Figure 5.5</b>), and set the
+	      Target Error to 0.0001.
+	  <li>Set the Maximum Iterations to 200.
+	</ol>
 	
-	<p><b>Note:</b> the SolveMatrix UI must remain either open or
-	minimized 
-	while the solver is running; it must not be closed completely.
-
 	</div>
 	<center>
 	<p><img height="575" width="250" src="images/figures/5_5.gif"><br>
@@ -283,7 +289,8 @@
 	constructed a simulation network that computes simulated voltages for a 
 	realistic volume conductor problem. 
 
-	<p>In Chapter 6, we will reuse the finite element simulation network from this chapter, 
+	<p>In Chapter 6, we will reuse the finite element simulation
+	network from this chapter,  
 	as well as the visualization network from Chapter 4. 
 	<br>
 	<br><A href="#section-5">Back to Top</A>
@@ -295,7 +302,12 @@
 </td>
 </tr>
 <tr>
-<td><img height="35" width="600" src="images/sub-banner-bottom.jpg" border="0" usemap="#sub-banner-bottom8ac6e984"><map name="sub-banner-bottom8ac6e984"><area href="chapter_6.html" coords="566,2,589,20" shape="rect"><area href="chapter_4.html" coords="537,1,560,23" shape="rect"><area href="http://www.sci.utah.edu" coords="6,6,68,30" shape="rect" title="SCI Institute"></map></td>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg"
+    border="0" usemap="#sub-banner-bottom8ac6e984"><map
+    name="sub-banner-bottom8ac6e984"><area href="chapter_6.html"
+    coords="566,2,589,20" shape="rect"><area href="chapter_4.html"
+    coords="537,1,560,23" shape="rect"><area href="http://www.sci.utah.edu"
+    coords="6,6,68,30" shape="rect" title="SCI Institute"></map></td> 
 </tr>
 </table>
 </body>
