@@ -17,7 +17,7 @@
 #include <SCICore/share/share.h>
 
 #ifndef _WIN32
-#include <config.h>
+#include <sci_config.h>
 #endif
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Containers/String.h>
@@ -66,6 +66,18 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 05:30:55  sparker
+// Configuration updates:
+//  - renamed config.h to sci_config.h
+//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
+//    sci_config.h
+//  - Added flags for --enable-scirun, --enable-uintah, and
+//    --enable-davew, to build the specific package set.  More than one
+//    can be specified, and at least one must be present.
+//  - Added a --enable-parallel, to build the new parallel version.
+//    Doesn't do much yet.
+//  - Made construction of config.h a little bit more general
+//
 // Revision 1.3  1999/08/17 23:50:31  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

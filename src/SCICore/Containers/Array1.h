@@ -14,7 +14,7 @@
 #ifndef SCI_Containers_Array1_h
 #define SCI_Containers_Array1_h 1
 
-#include <config.h>
+#include <sci_config.h>
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Tester/RigorousTest.h>
@@ -361,6 +361,18 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 05:30:54  sparker
+// Configuration updates:
+//  - renamed config.h to sci_config.h
+//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
+//    sci_config.h
+//  - Added flags for --enable-scirun, --enable-uintah, and
+//    --enable-davew, to build the specific package set.  More than one
+//    can be specified, and at least one must be present.
+//  - Added a --enable-parallel, to build the new parallel version.
+//    Doesn't do much yet.
+//  - Made construction of config.h a little bit more general
+//
 // Revision 1.3  1999/08/18 21:45:25  sparker
 // Array1 const correctness, and subsequent fixes
 // Array1 bug fix courtesy Tom Thompson

@@ -1,5 +1,5 @@
 
-#include <config.h>
+#include <sci_config.h>
 #include <SCICore/share/share.h>
 
 #include <tk.h>
