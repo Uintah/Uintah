@@ -47,6 +47,7 @@ public:
   //! add to the list of files to include.
   void add_include(const string &inc);
   void add_namespace(const string &inc) { namespaces_[inc] = 1; }
+  void add_post_include(const string &post);
   
   string             filename_;
   list<string>       includes_;
@@ -54,6 +55,7 @@ public:
   string             base_class_name_;
   string             template_class_name_;
   string             template_arg_;
+  string             post_include_extra_;
 
   int       ref_cnt;
 };

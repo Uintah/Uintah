@@ -229,8 +229,7 @@ LinearAlgebraAlgo::get_compile_info(int argc,
 
   // Code for the function.
   string class_declaration =
-    string("\"\n\nusing namespace SCIRun;\n\n") + 
-    "class " + template_name + " : public LinearAlgebraAlgo\n" +
+    string("class ") + template_name + " : public LinearAlgebraAlgo\n" +
 "{\n" +
     "  virtual void user_function(MatrixHandle &o1, MatrixHandle &o2, MatrixHandle &o3, MatrixHandle &o4, MatrixHandle &o5, const MatrixHandle &i1, const MatrixHandle &i2, const MatrixHandle &i3, const MatrixHandle &i4, const MatrixHandle &i5)\n" +
 "  {\n" +
@@ -239,10 +238,11 @@ LinearAlgebraAlgo::get_compile_info(int argc,
     "\n" +
     "  virtual string identify()\n" +
 "  { return string(\"" + string_Cify(function) + "\"); }\n" +
-    "};\n//";
+    "};\n";
 
   // Add in the include path to compile this obj
-  rval->add_include(include_path + class_declaration);
+  rval->add_include(include_path);
+  rval->add_post_include(class_declaration);
   return rval;
 }
 

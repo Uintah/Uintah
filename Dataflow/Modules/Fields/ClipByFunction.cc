@@ -202,8 +202,7 @@ ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
 
   // Add in the include path to compile this obj
   string class_declaration =
-    string("\"\n\nusing namespace SCIRun;\n\n") + 
-    "template <class FIELD>\n" +
+    string("template <class FIELD>\n") +
     "class " + template_name + " : public ClipByFunctionAlgoT<FIELD>\n" +
     "{\n" +
     "  virtual bool vinside_p(double x, double y, double z,\n" +
@@ -214,9 +213,10 @@ ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
     "\n" +
     "  virtual string identify()\n" +
     "  { return string(\"" + string_Cify(clipfunction) + "\"); }\n" +
-    "};\n//";
+    "};\n";
 
-  rval->add_include(include_path + class_declaration);
+  rval->add_include(include_path);
+  rval->add_post_include(class_declaration);
   fsrc->fill_compile_info(rval);
 
   return rval;

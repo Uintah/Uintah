@@ -158,8 +158,7 @@ MaskLatticeAlgo::get_compile_info(const TypeDescription *field_td,
 
   // Code for the clip function.
   string class_declaration =
-    string("\"\n\nusing namespace SCIRun;\n\n") + 
-    "template <class A, class B, class C, class D>\n" +
+    string("template <class A, class B, class C, class D>\n") +
     "class " + template_name + " : public MaskLatticeAlgoT<A, B, C, D>\n" +
     "{\n" +
     "  virtual bool vinside_p(double x, double y, double z,\n" +
@@ -170,10 +169,11 @@ MaskLatticeAlgo::get_compile_info(const TypeDescription *field_td,
     "\n" +
     "  virtual string identify()\n" +
     "  { return string(\"" + string_Cify(clipfunction) + "\"); }\n" +
-    "};\n//";
+    "};\n";
 
   // Add in the include path to compile this obj
-  rval->add_include(include_path + class_declaration);
+  rval->add_include(include_path);
+  rval->add_post_include(class_declaration);
   field_td->fill_compile_info(rval);
   return rval;
 }
