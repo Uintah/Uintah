@@ -1345,7 +1345,9 @@ void Dpy::run()
       barrier->wait(nworkers+1);
       // exit if you are supposed to
       if (scene->rtrt_engine->stop_execution()) {
+	xlock.lock();
 	XCloseDisplay(priv->dpy);
+	xlock.unlock();
 	return;
       }
 
