@@ -10,12 +10,21 @@ SUBDIRS := $(SRCDIR)/Particles
 
 include $(SRCTOP)/scripts/recurse.mk
 
-SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc 
+SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
+	$(SRCDIR)/NCScalarField.cc $(SRCDIR)/CCScalarField.cc \
+	$(SRCDIR)/NCVectorField.cc $(SRCDIR)/CCVectorField.cc \
+	$(SRCDIR)/NCTensorField.cc $(SRCDIR)/CCTensorField.cc \
+	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldPort.cc \
+	$(SRCDIR)/ScalarParticles.cc $(SRCDIR)/ScalarParticlesPort.cc \
+	$(SRCDIR)/VectorParticles.cc $(SRCDIR)/VectorParticlesPort.cc \
+	$(SRCDIR)/TensorParticles.cc $(SRCDIR)/TensorParticlesPort.cc 
+
+
 
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
 	SCICore/Containers SCICore/Thread Uintah/Grid Uintah/Interface \
-        Uintah/Exceptions PSECore/XMLUtil 
+        Uintah/Exceptions PSECore/XMLUtil Uintah/Components/MPM
 
 LIBS := $(XML_LIBRARY)
 
@@ -29,6 +38,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/07/31 17:45:42  kuzimmer
+# Added files and modules for Field Extraction from uda
+#
 # Revision 1.3  2000/06/20 20:13:27  kuzimmer
 # updated so that Archiver reader will compile in Uintah
 #

@@ -67,16 +67,23 @@ public:
   //////////
   // return the archive
   DataArchive* operator()(){ return archive; };
-
+  //////////
+  // return the selected timestep
+  int timestep(){ return _timestep; }
+  
   // GROUP: Modify
   //////////  
-  // Set a new scalarField
+  // Set the timestep
+  void SetTimestep( int t ){ _timestep = t; }
+
   // Persistant representation
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  
 
 private:
   DataArchive *archive;
+  int _timestep;
 };
 
 } // end namespace Datatypes

@@ -13,13 +13,22 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/TecplotFileSelector.tcl $(SRCDIR)/TriangleReader.tcl \
 	$(SRCDIR)/application.tcl $(SRCDIR)/cfdGridLines.tcl \
 	$(SRCDIR)/test.tcl $(SRCDIR)/GridLines.tcl \
+	$(SRCDIR)/ScalarFieldExtractor.tcl $(SRCDIR)/TimestepSelector.tcl \
+	$(SRCDIR)/VectorFieldExtractor.tcl \
+	$(SRCDIR)/TensorFieldExtractor.tcl \
+	$(SRCDIR)/ParticleFieldExtractor.tcl \
+	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
+
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.5  2000/07/31 17:45:43  kuzimmer
+# Added files and modules for Field Extraction from uda
+#
 # Revision 1.4  2000/06/27 16:56:58  bigler
 # Added Nodehedgehog.tcl
 #
