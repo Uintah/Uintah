@@ -38,7 +38,7 @@ PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \
 	Dataflow/Network Dataflow/Ports \
         Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry \
+        Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Core/TkExtensions 
 
 LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair
