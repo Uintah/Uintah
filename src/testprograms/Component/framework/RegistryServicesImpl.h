@@ -30,7 +30,7 @@ public:
   void init( const Framework & );
 
   // export services
-  virtual void getActiveComponentList( array1<string> & components );
+  virtual void getActiveComponentList( array1<ComponentID> & componentIds );
 
   // Tells the framework to shut itself down... here for lack of better
   // place to put it currently...

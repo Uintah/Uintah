@@ -3,7 +3,6 @@
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/Registry.h>
 #include <testprograms/Component/framework/FrameworkImpl.h>
-#include <testprograms/Component/framework/ComponentIdImpl.h>
 
 #include <iostream>
 
@@ -32,7 +31,7 @@ RegistryServicesImpl::init( const Framework &f )
 }
 
 void
-RegistryServicesImpl::getActiveComponentList( array1<string> & components )
+RegistryServicesImpl::getActiveComponentList( array1<ComponentID> & cIds )
 {
   registry_->connections_.readLock();
   
@@ -41,12 +40,8 @@ RegistryServicesImpl::getActiveComponentList( array1<string> & components )
   for( ; iter != registry_->components_.end(); iter++ )
     {
       ComponentRecord * cr = (*iter).second;
-      ComponentIdImpl * cidp = 
-	dynamic_cast<ComponentIdImpl*>( cr->id_.getPointer());
-
-      components.push_back( cidp->fullString() );
+      cIds.push_back( cr->id_ );
     }
-
   registry_->connections_.readUnlock();
 }
 
