@@ -3705,7 +3705,7 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 // ****************************************************************************
 // Function to return boolean for recompiling taskgraph
 // ****************************************************************************
-bool MPMArches::need_recompile(double time, double dt, 
-			    const GridP& grid) {
+bool MPMArches::needRecompile(double time, double dt, 
+			      const GridP& grid) {
   return d_recompile;
 }

@@ -1820,12 +1820,12 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
   }
 }
 
-bool DataArchiver::need_recompile(double time, double dt,
+bool DataArchiver::needRecompile(double time, double dt,
 				  const GridP& grid)
 {
   LevelP level = grid->getLevel(0);
   d_currentTime=time+dt;
-  dbg << "DataArchiver::need_recompile called\n";
+  dbg << "DataArchiver::needRecompile called\n";
   d_currentTimestep++;
   bool recompile=false;
   bool do_output=false;
