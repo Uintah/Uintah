@@ -59,7 +59,7 @@ public:
   void select_part( int );
 
   // Signal
-  Signal1< const string &> has_part;
+  Signal1< const string & > has_part;
   Signal1< int > part_selected;
 };
 
