@@ -1,6 +1,16 @@
 mode=$1 # dbg or opt
 CONFIGURE_ARGS=$2 # configure command line arguments
 
+echo "" >> $HTMLLOG
+echo "Compiling" >> $HTMLLOG
+echo "==================================" >> $HTMLLOG
+echo "" >> $HTMLLOG
+echo "Starting configure on `date`" >> $HTMLLOG
+echo "  with command" >> $HTMLLOG
+grep configure configure_command >> $HTMLLOG
+echo "" >> $HTMLLOG
+
+
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 if [ $retval != "0" ]; then
@@ -20,12 +30,14 @@ if [ $retval != "0" ]; then
 	exit 1
 fi
 
+echo "Configure successful"
+
 if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
 	# configured successfully - remove old configure lock 
 	rm "${BUILD_DIR}/configure-${mode}.lock"
 fi
 
-echo "Starting build on `date`:"
+echo "Starting build on `date`:" >> $HTMLLOG
 
 cd "${BUILDROOT}/${mode}/build"
     
@@ -115,4 +127,6 @@ if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
     rm "${BUILD_DIR}/make-${mode}.lock"
 fi
 
+echo "Sus compiled successfully"
+echo "Sus compiled successfully" >> $HTMLLOG
 exit 0
