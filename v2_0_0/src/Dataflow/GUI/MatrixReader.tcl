@@ -82,5 +82,7 @@ itcl_class SCIRun_DataIO_MatrixReader {
 		-filetypes $types \
 		-initialdir $initdir \
 		-defaultextension $defext
+
+	moveToCursor $w	
     }
 }
