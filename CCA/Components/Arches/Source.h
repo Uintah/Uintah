@@ -73,24 +73,12 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
       // scalars
-      void calculatePressureSource(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   double delta_t,
-				   CellInformation* cellinfo,
-				   ArchesVariables* vars); 
-
       void calculatePressureSourcePred(const ProcessorGroup* pc,
 				       const Patch* patch,
 				       double delta_t,
 				       CellInformation* cellinfo,
 				       ArchesVariables* vars,
 				       ArchesConstVariables* constvars); 
-
-      void calculatePressureSourceCorr(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   double delta_t,
-				   CellInformation* cellinfo,
-				   ArchesVariables* vars); 
 
       void calculateVelocityPred(const ProcessorGroup* ,
 				 const Patch* patch,

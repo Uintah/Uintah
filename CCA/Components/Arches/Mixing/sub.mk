@@ -30,11 +30,12 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Exceptions    \
 	Packages/Uintah/Core/Math          \
+	Packages/Uintah/CCA/Components/Models          \
 	Core/Exceptions \
 	Core/Thread     \
 	Core/Geometry   
 
-LIBS := $(XML_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 

@@ -77,7 +77,6 @@ $(SRCDIR)/Arches.o: $(SRCDIR)/fortran/initScal_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/addpressuregrad_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcenthalpy_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcinout_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlpresbcinout_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcpress_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcscalar_fort.h
@@ -86,9 +85,7 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcvvel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcwvel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/calpbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/celltypeInit_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/denaccum_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/enthalpyradwallbc_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/hatvelcalpbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlbcs_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/intrusion_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_computevel_fort.h
@@ -101,10 +98,6 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmbcenthalpy_energyex_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmcelltypeinit_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmwallbc_trans_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outarea_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbc_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbcenth_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbcrscal_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/profscalar_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/profv_fort.h
 $(SRCDIR)/CellInformation.o: $(SRCDIR)/fortran/cellg_fort.h
@@ -153,10 +146,8 @@ $(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradthinsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_scalar_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mmmomsrc_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrccorr_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrcpred_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrcpred_var_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/scalsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/vvelsrc_fort.h

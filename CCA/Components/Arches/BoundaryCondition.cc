@@ -55,15 +55,8 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/areain_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/profscalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/calpbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/hatvelcalpbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/inlbcs_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/denaccum_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcinout_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/inlpresbcinout_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/outarea_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/outletbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/outletbcenth_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/outletbcrscal_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcscalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcvvel_fort.h>
@@ -138,7 +131,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
          inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
       d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
       d_flowInlets[d_numInlets].problemSetup(inlet_db);
-      d_cellTypes.push_back(total_cellTypes);
       // compute density and other dependent properties
       d_flowInlets[d_numInlets].streamMixturefraction.d_initEnthalpy=true;
       d_flowInlets[d_numInlets].streamMixturefraction.d_scalarDisp=0.0;
@@ -158,7 +150,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_wallBoundary = true;
     d_wallBdry = scinew WallBdry(total_cellTypes);
     d_wallBdry->problemSetup(wall_db);
-    d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
   else {
@@ -176,7 +167,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_props->computeInletProperties(
                 		 d_pressureBC->streamMixturefraction, 
 		        	 d_pressureBC->calcStream);
-    d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
   else {
@@ -194,7 +184,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_props->computeInletProperties(
 			       d_outletBC->streamMixturefraction, 
 			       d_outletBC->calcStream);
-    d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
   else {
@@ -206,7 +195,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_intrusionBoundary = true;
     d_intrusionBC = scinew IntrusionBdry(total_cellTypes);
     d_intrusionBC->problemSetup(intrusion_db);
-    d_cellTypes.push_back(total_cellTypes);
     ++total_cellTypes;
   }
   else {
@@ -974,19 +962,16 @@ BoundaryCondition::velocityBC(const ProcessorGroup*,
 			      ArchesVariables* vars,
 			      ArchesConstVariables* constvars) 
 {
-  //get Molecular Viscosity of the fluid
-  double molViscosity = d_physicalConsts->getMolecularViscosity();
-
   // Call the fortran routines
   switch(index) {
   case 1:
-    uVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
+    uVelocityBC(patch, cellinfo, vars, constvars);
     break;
   case 2:
-    vVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
+    vVelocityBC(patch, cellinfo, vars, constvars);
     break;
   case 3:
-    wVelocityBC(patch, molViscosity, cellinfo, vars, constvars);
+    wVelocityBC(patch, cellinfo, vars, constvars);
     break;
   default:
     cerr << "Invalid Index value" << endl;
@@ -999,7 +984,6 @@ BoundaryCondition::velocityBC(const ProcessorGroup*,
 //****************************************************************************
 void 
 BoundaryCondition::uVelocityBC(const Patch* patch,
-			       double VISCOS,
 			       CellInformation* cellinfo,
 			       ArchesVariables* vars,
 		               ArchesConstVariables* constvars)
@@ -1010,13 +994,10 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  // for no ghost cells
-  
-  // ** Reverted back to old ways
-  // for a single patch should be equal to 1 and nx
-  //IntVector idxLoU = vars->cellType.getFortLowIndex();
-  //IntVector idxHiU = vars->cellType.getFortHighIndex();
+
   // computes momentum source term due to wall
+  // uses total viscosity for wall source, not just molecular viscosity
+  //double molViscosity = d_physicalConsts->getMolecularViscosity();
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1053,7 +1034,6 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 //****************************************************************************
 void 
 BoundaryCondition::vVelocityBC(const Patch* patch,
-			       double VISCOS,
 			       CellInformation* cellinfo,
 			       ArchesVariables* vars,
 		               ArchesConstVariables* constvars)
@@ -1064,10 +1044,10 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  // for a single patch should be equal to 1 and nx
-  //IntVector idxLoV = vars->cellType.getFortLowIndex();
-  //IntVector idxHiV = vars->cellType.getFortHighIndex();
+
   // computes momentum source term due to wall
+  // uses total viscosity for wall source, not just molecular viscosity
+  //double molViscosity = d_physicalConsts->getMolecularViscosity();
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1075,7 +1055,6 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  // computes remianing diffusion term and also computes source due to gravity
   fort_bcvvel(constvars->vVelocity, vars->vVelocityCoeff[Arches::AP],
 	      vars->vVelocityCoeff[Arches::AE],
 	      vars->vVelocityCoeff[Arches::AW], 
@@ -1105,7 +1084,6 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 //****************************************************************************
 void 
 BoundaryCondition::wVelocityBC(const Patch* patch,
-			       double VISCOS,
 			       CellInformation* cellinfo,
 			       ArchesVariables* vars,
 		               ArchesConstVariables* constvars)
@@ -1116,17 +1094,17 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  // for no ghost cells
+
+  // computes momentum source term due to wall
+  // uses total viscosity for wall source, not just molecular viscosity
+  //double molViscosity = d_physicalConsts->getMolecularViscosity();
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-  // for a single patch should be equal to 1 and nx
-  //IntVector idxLoW = vars->cellType.getFortLowIndex();
-  //IntVector idxHiW = vars->cellType.getFortHighIndex();
-  // computes momentum source term due to wall
+
   fort_bcwvel(constvars->wVelocity, vars->wVelocityCoeff[Arches::AP],
 	      vars->wVelocityCoeff[Arches::AE],
 	      vars->wVelocityCoeff[Arches::AW], 
@@ -2287,7 +2265,7 @@ void
 BoundaryCondition::calculateIntrusionVel(const ProcessorGroup* ,
 					 const Patch* patch,
 					 int index,
-					 CellInformation* cellinfo,
+					 CellInformation* ,
 					 ArchesVariables* vars,
 		      	       		 ArchesConstVariables* constvars)
 {
@@ -2818,202 +2796,6 @@ void
 BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
 			    const Patch* patch,
 			    int /*index*/,
-			    CellInformation* cellinfo,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const double delta_t)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  int pressure_celltypeval = pressureCellType();
-
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        if (constvars->cellType[xminusCell] == pressure_celltypeval)
-//	  if (constvars->uVelocity[currCell] < 0.0)
-                        vars->scalar[xminusCell] = vars->scalar[currCell];
-//	  else vars->scalar[xminusCell] = 0.0;
-      }
-    }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xplusCell] == pressure_celltypeval)
-//	  if (constvars->uVelocity[xplusCell] > 0.0)
-                        vars->scalar[xplusCell] = vars->scalar[currCell];
-//	  else vars->scalar[xplusCell] = 0.0;
-      }
-    }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        if (constvars->cellType[yminusCell] == pressure_celltypeval)
-//	  if (constvars->vVelocity[currCell] < 0.0)
-                        vars->scalar[yminusCell] = vars->scalar[currCell];
-//	  else vars->scalar[yminusCell] = 0.0;
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == pressure_celltypeval)
-//	  if (constvars->vVelocity[yplusCell] > 0.0)
-                        vars->scalar[yplusCell] = vars->scalar[currCell];
-//	  else vars->scalar[yplusCell] = 0.0;
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        if (constvars->cellType[zminusCell] == pressure_celltypeval)
-//	  if (constvars->wVelocity[currCell] < 0.0)
-                        vars->scalar[zminusCell] = vars->scalar[currCell];
-//	  else vars->scalar[zminusCell] = 0.0;
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == pressure_celltypeval)
-//	  if (constvars->wVelocity[zplusCell] > 0.0)
-                        vars->scalar[zplusCell] = vars->scalar[currCell];
-//	  else vars->scalar[zplusCell] = 0.0;
-      }
-    }
-  }
-  /*
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        if (constvars->cellType[yminusCell] == pressure_celltypeval) {
-	   double out_vel = constvars->vVelocity[currCell];
-           vars->scalar[yminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-                constvars->old_density[yminusCell]*constvars->old_scalar[yminusCell]) /
-	       cellinfo->dynp[colY-1] +
-	       constvars->old_old_density[yminusCell]*constvars->old_old_scalar[yminusCell])/
-	      constvars->density_guess[yminusCell];
-           if (vars->scalar[yminusCell] > 1.0)
-               vars->scalar[yminusCell] = 1.0;
-           else if (vars->scalar[yminusCell] < 0.0)
-               vars->scalar[yminusCell] = 0.0;
-        }
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == pressure_celltypeval) {
-	   double out_vel = constvars->vVelocity[yplusCell];
-           vars->scalar[yplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
-                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	       cellinfo->dyps[colY+1] +
-	       constvars->old_old_density[yplusCell]*constvars->old_old_scalar[yplusCell])/
-	      constvars->density_guess[yplusCell];
-           if (vars->scalar[yplusCell] > 1.0)
-               vars->scalar[yplusCell] = 1.0;
-           else if (vars->scalar[yplusCell] < 0.0)
-               vars->scalar[yplusCell] = 0.0;
-        }
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        if (constvars->cellType[zminusCell] == pressure_celltypeval) {
-	   double out_vel = constvars->wVelocity[currCell];
-           vars->scalar[zminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-                constvars->old_density[zminusCell]*constvars->old_scalar[zminusCell]) /
-	       cellinfo->dztp[colZ-1] +
-	       constvars->old_old_density[zminusCell]*constvars->old_old_scalar[zminusCell])/
-	      constvars->density_guess[zminusCell];
-           if (vars->scalar[zminusCell] > 1.0)
-               vars->scalar[zminusCell] = 1.0;
-           else if (vars->scalar[zminusCell] < 0.0)
-               vars->scalar[zminusCell] = 0.0;
-        }
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == pressure_celltypeval) {
-	   double out_vel = constvars->wVelocity[zplusCell];
-           vars->scalar[zplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
-                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	       cellinfo->dzpb[colZ+1] +
-	       constvars->old_old_density[zplusCell]*constvars->old_old_scalar[zplusCell])/
-	      constvars->density_guess[zplusCell];
-           if (vars->scalar[zplusCell] > 1.0)
-               vars->scalar[zplusCell] = 1.0;
-           else if (vars->scalar[zplusCell] < 0.0)
-               vars->scalar[zplusCell] = 0.0;
-        }
-      }
-    }
-  }*/
-}
-
-
-
-//****************************************************************************
-// Set zero gradient for enthalpy on pressure bc
-//****************************************************************************
-void 
-BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
-			    const Patch* patch,
-			    CellInformation*,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars)
 {
@@ -3037,7 +2819,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         if (constvars->cellType[xminusCell] == pressure_celltypeval)
-                        vars->enthalpy[xminusCell] = vars->enthalpy[currCell];
+          vars->scalar[xminusCell] = vars->scalar[currCell];
       }
     }
   }
@@ -3048,7 +2830,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == pressure_celltypeval)
-                        vars->enthalpy[xplusCell] = vars->enthalpy[currCell];
+          vars->scalar[xplusCell] = vars->scalar[currCell];
       }
     }
   }
@@ -3059,7 +2841,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         if (constvars->cellType[yminusCell] == pressure_celltypeval)
-                        vars->enthalpy[yminusCell] = vars->enthalpy[currCell];
+          vars->scalar[yminusCell] = vars->scalar[currCell];
       }
     }
   }
@@ -3070,7 +2852,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == pressure_celltypeval)
-                        vars->enthalpy[yplusCell] = vars->enthalpy[currCell];
+          vars->scalar[yplusCell] = vars->scalar[currCell];
       }
     }
   }
@@ -3081,7 +2863,7 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         if (constvars->cellType[zminusCell] == pressure_celltypeval)
-                        vars->enthalpy[zminusCell] = vars->enthalpy[currCell];
+          vars->scalar[zminusCell] = vars->scalar[currCell];
       }
     }
   }
@@ -3092,7 +2874,99 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == pressure_celltypeval)
-                        vars->enthalpy[zplusCell] = vars->enthalpy[currCell];
+          vars->scalar[zplusCell] = vars->scalar[currCell];
+      }
+    }
+  }
+}
+
+
+
+//****************************************************************************
+// Set zero gradient for enthalpy on pressure bc
+//****************************************************************************
+void 
+BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int pressure_celltypeval = pressureCellType();
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        if (constvars->cellType[xminusCell] == pressure_celltypeval)
+          vars->enthalpy[xminusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (constvars->cellType[xplusCell] == pressure_celltypeval)
+          vars->enthalpy[xplusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+        if (constvars->cellType[yminusCell] == pressure_celltypeval)
+          vars->enthalpy[yminusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (constvars->cellType[yplusCell] == pressure_celltypeval)
+          vars->enthalpy[yplusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+        if (constvars->cellType[zminusCell] == pressure_celltypeval)
+          vars->enthalpy[zminusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (constvars->cellType[zplusCell] == pressure_celltypeval)
+          vars->enthalpy[zplusCell] = vars->enthalpy[currCell];
       }
     }
   }
@@ -3104,13 +2978,8 @@ void
 BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
 			    const Patch* patch,
 			    int /*index*/,
-			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const double delta_t,
-			    const double maxAbsU,
-			    const double maxAbsV,
-			    const double maxAbsW)
+			    ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -3131,20 +3000,8 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xminusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->uVelocity[xplusCell];
-           vars->scalar[xminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-                constvars->old_density[xminusCell]*constvars->old_scalar[xminusCell]) /
-	       cellinfo->dxep[colX-1] + 
-	       constvars->old_old_density[xminusCell]*constvars->old_old_scalar[xminusCell])/
-	      constvars->density_guess[xminusCell];
-           if (vars->scalar[xminusCell] > 1.0)
-               vars->scalar[xminusCell] = 1.0;
-           else if (vars->scalar[xminusCell] < 0.0)
-               vars->scalar[xminusCell] = 0.0;
-        } 
+        if (constvars->cellType[xminusCell] == outlet_celltypeval)
+          vars->scalar[xminusCell]= vars->scalar[currCell];
       }
     }
   }
@@ -3154,32 +3011,8 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xplusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->uVelocity[xplusCell];
-/*	   out_vel = maxAbsU;
-           vars->scalar[xplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[xplusCell]*constvars->old_scalar[xplusCell] -
-                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	       cellinfo->dxpw[colX+1] +
-	       constvars->old_old_density[xplusCell]*constvars->old_old_scalar[xplusCell])/
-	      constvars->density_guess[xplusCell];
-*/
-//	   if (constvars->uVelocity[xplusCell] > 0.0)
-           vars->scalar[xplusCell]= vars->scalar[currCell];
-/*	   else
-             if (d_enthalpySolve)
-	       vars->scalar[xplusCell] = -1.0;
-	     else
-	       vars->scalar[xplusCell] = 0.0;
-*/
-// Don't clip the special case scalar = -1 used to reinitialize enthalpy
-// to adiabatic value	   
-	   if (!(vars->scalar[xplusCell] == -1.0))
-             if (vars->scalar[xplusCell] > 1.0)
-                 vars->scalar[xplusCell] = 1.0;
-             else if (vars->scalar[xplusCell] < 0.0)
-                 vars->scalar[xplusCell] = 0.0;
-        } 
+        if (constvars->cellType[xplusCell] == outlet_celltypeval)
+          vars->scalar[xplusCell]= vars->scalar[currCell];
       }
     }
   }
@@ -3189,32 +3022,8 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yminusCell] == outlet_celltypeval) {
-/*	   double out_vel = constvars->vVelocity[yplusCell];
-           vars->scalar[yminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-                constvars->old_density[yminusCell]*constvars->old_scalar[yminusCell]) /
-	       cellinfo->dynp[colY-1] +
-	       constvars->old_old_density[yminusCell]*constvars->old_old_scalar[yminusCell])/
-	      constvars->density_guess[yminusCell];
-*/
-	   if (constvars->vVelocity[currCell] < 0.0)
-           vars->scalar[yminusCell]= vars->scalar[currCell];
-	   else
-             if (d_enthalpySolve)
-	       vars->scalar[yminusCell] = -1.0;
-	     else
-	       vars->scalar[yminusCell] = 0.0;
-
-// Don't clip the special case scalar = -1 used to reinitialize enthalpy
-// to adiabatic value	   
-	   if (!(vars->scalar[yminusCell] == -1.0))
-             if (vars->scalar[yminusCell] > 1.0)
-                 vars->scalar[yminusCell] = 1.0;
-             else if (vars->scalar[yminusCell] < 0.0)
-                 vars->scalar[yminusCell] = 0.0;
-        } 
+        if (constvars->cellType[yminusCell] == outlet_celltypeval)
+          vars->scalar[yminusCell]= vars->scalar[currCell];
       }
     }
   }
@@ -3224,31 +3033,8 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == outlet_celltypeval) {
-/*	   double out_vel = constvars->vVelocity[currCell];
-           vars->scalar[yplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
-                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	       cellinfo->dyps[colY+1] +
-	       constvars->old_old_density[yplusCell]*constvars->old_old_scalar[yplusCell])/
-	      constvars->density_guess[yplusCell];
-*/
-	   if (constvars->vVelocity[yplusCell] > 0.0)
-           vars->scalar[yplusCell]= vars->scalar[currCell];
-	   else
-             if (d_enthalpySolve)
-	       vars->scalar[yplusCell] = -1.0;
-	     else
-	       vars->scalar[yplusCell] = 0.0;
-
-// don't clip the special case scalar = -1 used to reinitialize enthalpy
-// to adiabatic value	   
-	   if (!(vars->scalar[yplusCell] == -1.0))
-             if (vars->scalar[yplusCell] > 1.0)
-                 vars->scalar[yplusCell] = 1.0;
-             else if (vars->scalar[yplusCell] < 0.0)
-                 vars->scalar[yplusCell] = 0.0;
-        } 
+        if (constvars->cellType[yplusCell] == outlet_celltypeval)
+          vars->scalar[yplusCell]= vars->scalar[currCell];
       }
     }
   }
@@ -3258,32 +3044,8 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
-        IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zminusCell] == outlet_celltypeval) {
-/*	   double out_vel = constvars->wVelocity[zplusCell];
-           vars->scalar[zminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
-                constvars->old_density[zminusCell]*constvars->old_scalar[zminusCell]) /
-	       cellinfo->dztp[colZ-1] +
-	       constvars->old_old_density[zminusCell]*constvars->old_old_scalar[zminusCell])/
-	      constvars->density_guess[zminusCell];
-*/
-	   if (constvars->wVelocity[currCell] < 0.0)
-           vars->scalar[zminusCell]= vars->scalar[currCell];
-	   else
-             if (d_enthalpySolve)
-	       vars->scalar[zminusCell] = -1.0;
-	     else
-	       vars->scalar[zminusCell] = 0.0;
-
-// Don't clip the special case scalar = -1 used to reinitialize enthalpy
-// to adiabatic value	   
-	   if (!(vars->scalar[zminusCell] == -1.0))
-             if (vars->scalar[zminusCell] > 1.0)
-                 vars->scalar[zminusCell] = 1.0;
-             else if (vars->scalar[zminusCell] < 0.0)
-                 vars->scalar[zminusCell] = 0.0;
-        } 
+        if (constvars->cellType[zminusCell] == outlet_celltypeval)
+          vars->scalar[zminusCell]= vars->scalar[currCell];
       }
     }
   }
@@ -3293,31 +3055,8 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == outlet_celltypeval) {
-/*	   double out_vel = constvars->wVelocity[currCell];
-           vars->scalar[zplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
-                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
-	       cellinfo->dzpb[colZ+1] +
-	       constvars->old_old_density[zplusCell]*constvars->old_old_scalar[zplusCell])/
-	      constvars->density_guess[zplusCell];
-*/
-	   if (constvars->wVelocity[zplusCell] > 0.0)
-           vars->scalar[zplusCell]= vars->scalar[currCell];
-	   else
-             if (d_enthalpySolve)
-	       vars->scalar[zplusCell] = -1.0;
-	     else
-	       vars->scalar[zplusCell] = 0.0;
-
-// don't clip the special case scalar = -1 used to reinitialize enthalpy
-// to adiabatic value	   
-	   if (!(vars->scalar[zplusCell] == -1.0))
-             if (vars->scalar[zplusCell] > 1.0)
-                 vars->scalar[zplusCell] = 1.0;
-             else if (vars->scalar[zplusCell] < 0.0)
-                 vars->scalar[zplusCell] = 0.0;
-        } 
+        if (constvars->cellType[zplusCell] == outlet_celltypeval)
+          vars->scalar[zplusCell]= vars->scalar[currCell];
       }
     }
   }
@@ -3331,13 +3070,8 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
 void 
 BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const double delta_t,
-			    const double maxAbsU,
-			    const double maxAbsV,
-			    const double maxAbsW)
+			    ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -3358,16 +3092,8 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xminusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->uVelocity[xplusCell];
-           vars->enthalpy[xminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
-                constvars->old_density[xminusCell]*constvars->old_enthalpy[xminusCell]) /
-	       cellinfo->dxep[colX-1] +
-	       constvars->old_old_density[xminusCell]*constvars->old_old_enthalpy[xminusCell])/
-	      constvars->density_guess[xminusCell];
-	}
+        if (constvars->cellType[xminusCell] == outlet_celltypeval)
+          vars->enthalpy[xminusCell]= vars->enthalpy[currCell];
       }
     }
   }
@@ -3377,17 +3103,8 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xplusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->uVelocity[currCell];
-	   out_vel = maxAbsU;
-           vars->enthalpy[xplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[xplusCell]*constvars->old_enthalpy[xplusCell] -
-                constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
-	       cellinfo->dxpw[colX+1] +
-	       constvars->old_old_density[xplusCell]*constvars->old_old_enthalpy[xplusCell])/
-	      constvars->density_guess[xplusCell];
-           vars->enthalpy[xplusCell]= vars->enthalpy[currCell];
-	}
+        if (constvars->cellType[xplusCell] == outlet_celltypeval)
+          vars->enthalpy[xplusCell]= vars->enthalpy[currCell];
       }
     }
   }
@@ -3397,16 +3114,8 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yminusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->vVelocity[yplusCell];
-           vars->enthalpy[yminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
-                constvars->old_density[yminusCell]*constvars->old_enthalpy[yminusCell]) /
-	       cellinfo->dynp[colY-1] +
-	       constvars->old_old_density[yminusCell]*constvars->old_old_enthalpy[yminusCell])/
-	      constvars->density_guess[yminusCell];
-	}
+        if (constvars->cellType[yminusCell] == outlet_celltypeval)
+          vars->enthalpy[yminusCell]= vars->enthalpy[currCell];
       }
     }
   }
@@ -3416,15 +3125,8 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if (constvars->cellType[yplusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->vVelocity[currCell];
-           vars->enthalpy[yplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[yplusCell]*constvars->old_enthalpy[yplusCell] -
-                constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
-	       cellinfo->dyps[colY+1] +
-	       constvars->old_old_density[yplusCell]*constvars->old_old_enthalpy[yplusCell])/
-	      constvars->density_guess[yplusCell];
-	}
+        if (constvars->cellType[yplusCell] == outlet_celltypeval)
+          vars->enthalpy[yplusCell]= vars->enthalpy[currCell];
       }
     }
   }
@@ -3434,16 +3136,8 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
-        IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zminusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->wVelocity[zplusCell];
-           vars->enthalpy[zminusCell]= (- delta_t * out_vel *
-               (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
-                constvars->old_density[zminusCell]*constvars->old_enthalpy[zminusCell]) /
-	       cellinfo->dztp[colZ-1] +
-	       constvars->old_old_density[zminusCell]*constvars->old_old_enthalpy[zminusCell])/
-	      constvars->density_guess[zminusCell];
-	}
+        if (constvars->cellType[zminusCell] == outlet_celltypeval)
+          vars->enthalpy[zminusCell]= vars->enthalpy[currCell];
       }
     }
   }
@@ -3453,15 +3147,8 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zplusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->wVelocity[currCell];
-           vars->enthalpy[zplusCell]= (- delta_t * out_vel *
-               (constvars->old_density[zplusCell]*constvars->old_enthalpy[zplusCell] -
-                constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
-	       cellinfo->dzpb[colZ+1] +
-	       constvars->old_old_density[zplusCell]*constvars->old_old_enthalpy[zplusCell])/
-	      constvars->density_guess[zplusCell];
-	}
+        if (constvars->cellType[zplusCell] == outlet_celltypeval)
+          vars->enthalpy[zplusCell]= vars->enthalpy[currCell];
       }
     }
   }
@@ -3472,7 +3159,6 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
 void 
 BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
 			    const Patch* patch,
-			    CellInformation*,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars,
 			    double time_shift)
@@ -3504,13 +3190,13 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
   }
 }
 //****************************************************************************
-// Set zero gradient for rho hat velocity on pressure bc
+// Set hat velocity on pressure bc
+// Tangential bc's are not needed to be set for hat velocities
+// Commented them out to avoid confusion
 //****************************************************************************
 void 
 BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
-			    const double delta_t,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars)
 {
@@ -3535,12 +3221,15 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xminusCell] == pressure_celltypeval) {
-           vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
-           vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
+	  if (constvars->uVelocity[currCell] > 1.0e-10)
+            vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
+	  else
+	    vars->uVelRhoHat[currCell] = 0.0;
+          vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
+         /* if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
@@ -3553,12 +3242,15 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
         if (constvars->cellType[xplusCell] == pressure_celltypeval) {
-           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
-           vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
+	  if (constvars->uVelocity[xplusCell] < -1.0e-10)
+            vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+	  else
+	    vars->uVelRhoHat[xplusCell] = 0.0;
+          vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
+         /* if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
@@ -3571,15 +3263,15 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yminusCell] == pressure_celltypeval) {
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
-	   if (constvars->vVelocity[currCell] > 0.0)
-           vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
-	   else
-	   vars->vVelRhoHat[currCell] = 0.0;
-           vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
+        /*  if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];*/
+	  if (constvars->vVelocity[currCell] > 1.0e-10)
+            vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
+	  else
+	    vars->vVelRhoHat[currCell] = 0.0;
+          vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
+         /* if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
@@ -3592,15 +3284,15 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
         if (constvars->cellType[yplusCell] == pressure_celltypeval) {
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
-	   if (constvars->vVelocity[yplusCell] < 0.0)
-           vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
-	   else
-	   vars->vVelRhoHat[yplusCell] = 0.0;
-           vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
+         /* if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];*/
+	  if (constvars->vVelocity[yplusCell] < -1.0e-10)
+            vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
+	  else
+	    vars->vVelRhoHat[yplusCell] = 0.0;
+          vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
+        /*  if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
@@ -3613,15 +3305,15 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zminusCell] == pressure_celltypeval) {
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
-	   if (constvars->wVelocity[currCell] > 0.0)
-           vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
-	   else
-	   vars->wVelRhoHat[currCell] = 0.0;
-           vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
+        /*  if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+          if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];*/
+	  if (constvars->wVelocity[currCell] > 1.0e-10)
+            vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
+	  else
+	    vars->wVelRhoHat[currCell] = 0.0;
+          vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
         }
       }
     }
@@ -3634,255 +3326,30 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
         if (constvars->cellType[zplusCell] == pressure_celltypeval) {
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
-	   if (constvars->wVelocity[zplusCell] < 0.0)
-           vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
-	   else
-	   vars->wVelRhoHat[zplusCell] = 0.0;
-           vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
+         /* if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+          if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];*/
+	  if (constvars->wVelocity[zplusCell] < -1.0e-10)
+            vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
+	  else
+	    vars->wVelRhoHat[zplusCell] = 0.0;
+          vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
         }
       }
     }
-  /*
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        if (constvars->cellType[xminusCell] == pressure_celltypeval) {
-           vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
-           vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
-        }
-      }
-    }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
-           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
-           vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
-        }
-      }
-    }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[yminusCell] == pressure_celltypeval) {
-           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
-			                constvars->old_density[yminusCell]);
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
-
-           vars->vVelRhoHat[currCell] =  (old_avdenlow*constvars->old_vVelocity[currCell]-
-		   			  delta_t*(
-			                  (0.25*(constvars->density[currCell]+constvars->density[xplusCell])*
-					   constvars->uVelocity[xplusCell]*
-					   (constvars->vVelocity[currCell]+constvars->vVelocity[xplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[xminusCell])*
-					   constvars->uVelocity[currCell]*
-					   (constvars->vVelocity[currCell]+constvars->vVelocity[xminusCell]))/cellinfo->sew[colX]+
-		                          (0.25*(constvars->vVelocity[yplusCell]+constvars->vVelocity[currCell])*
-			                   (constvars->vVelocity[yplusCell]+constvars->vVelocity[currCell])*
-					   constvars->density[currCell]-
-					   constvars->vVelocity[currCell]*constvars->vVelocity[currCell]
-					   *constvars->density[currCell])/cellinfo->snsv[colY]+
-			                  (0.25*(constvars->density[currCell]+constvars->density[zplusCell])*
-					   constvars->wVelocity[zplusCell]*
-					   (constvars->vVelocity[currCell]+constvars->vVelocity[zplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[zminusCell])*
-					   constvars->wVelocity[currCell]*
-					   (constvars->vVelocity[currCell]+constvars->vVelocity[zminusCell]))/cellinfo->stb[colZ])
-			                 )/(0.5*(constvars->density[currCell]+constvars->density[yminusCell]));
-           vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
-
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
-        }
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector xminusCell(colX-1, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        IntVector yplusxplusCell(colX+1, colY+1, colZ);
-        IntVector yplusxminusCell(colX-1, colY+1, colZ);
-        IntVector yplusplusCell(colX, colY+2, colZ);
-        IntVector ypluszplusCell(colX, colY+1, colZ+1);
-        IntVector ypluszminusCell(colX, colY+1, colZ-1);
-        if (constvars->cellType[yplusCell] == pressure_celltypeval) {
-           double old_avden = 0.5 * (constvars->old_density[yplusCell] +
-			             constvars->old_density[currCell]);
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
-
-           vars->vVelRhoHat[yplusCell] =  (old_avden*constvars->old_vVelocity[yplusCell]-
-		                          delta_t*(
-			                  (0.25*(constvars->density[currCell]+constvars->density[xplusCell])*
-					   constvars->uVelocity[xplusCell]*
-					   (constvars->vVelocity[yplusCell]+constvars->vVelocity[yplusxplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[xminusCell])*
-					   constvars->uVelocity[currCell]*
-					   (constvars->vVelocity[yplusCell]+constvars->vVelocity[yplusxminusCell]))/cellinfo->sew[colX]+
-		                          (-0.25*(constvars->vVelocity[yplusCell]+constvars->vVelocity[currCell])*
-			                   (constvars->vVelocity[yplusCell]+constvars->vVelocity[currCell])*
-					   constvars->density[currCell]+
-					   constvars->vVelocity[yplusCell]*constvars->vVelocity[yplusCell]
-					   *constvars->density[currCell])/cellinfo->snsv[colY]+
-			                  (0.25*(constvars->density[currCell]+constvars->density[zplusCell])*
-					   constvars->wVelocity[zplusCell]*
-					   (constvars->vVelocity[yplusCell]+constvars->vVelocity[ypluszplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[zminusCell])*
-					   constvars->wVelocity[currCell]*
-					   (constvars->vVelocity[yplusCell]+constvars->vVelocity[ypluszminusCell]))/cellinfo->stb[colZ])
-			                 )/(0.5*(constvars->density[currCell]+constvars->density[yplusCell]));
-           vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
-
-        if (!(zminus && (colZ == idxLo.z())))
-           vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
-        }
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        if (constvars->cellType[zminusCell] == pressure_celltypeval) {
-           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
-			                constvars->old_density[zminusCell]);
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
-
-           vars->wVelRhoHat[currCell] =   (old_avdenlow*constvars->old_wVelocity[currCell]-
-		   			  delta_t*(
-			                  (0.25*(constvars->density[currCell]+constvars->density[xplusCell])*
-					   constvars->uVelocity[xplusCell]*
-					   (constvars->wVelocity[currCell]+constvars->wVelocity[xplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[xminusCell])*
-					   constvars->uVelocity[currCell]*
-					   (constvars->wVelocity[currCell]+constvars->wVelocity[xminusCell]))/cellinfo->sew[colX]+
-			                  (0.25*(constvars->density[currCell]+constvars->density[yplusCell])*
-					   constvars->vVelocity[yplusCell]*
-					   (constvars->wVelocity[currCell]+constvars->wVelocity[yplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[yminusCell])*
-					   constvars->vVelocity[currCell]*
-					   (constvars->wVelocity[currCell]+constvars->wVelocity[yminusCell]))/cellinfo->sns[colY]+
-		                          (0.25*(constvars->wVelocity[zplusCell]+constvars->wVelocity[currCell])*
-			                   (constvars->wVelocity[zplusCell]+constvars->wVelocity[currCell])*
-					   constvars->density[currCell]-
-					   constvars->wVelocity[currCell]*constvars->wVelocity[currCell]
-					   *constvars->density[currCell])/cellinfo->stbw[colZ])
-			                 )/(0.5*(constvars->density[currCell]+constvars->density[zminusCell]));
-           vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
-        }
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector xminusCell(colX-1, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        IntVector zplusxplusCell(colX+1, colY, colZ+1);
-        IntVector zplusxminusCell(colX-1, colY, colZ+1);
-        IntVector zplusyplusCell(colX, colY+1, colZ+1);
-        IntVector zplusyminusCell(colX, colY-1, colZ+1);
-        IntVector zplusplusCell(colX, colY, colZ+2);
-        if (constvars->cellType[zplusCell] == pressure_celltypeval) {
-           double old_avden = 0.5 * (constvars->old_density[zplusCell] +
-			             constvars->old_density[currCell]);
-        if (!(xminus && (colX == idxLo.x())))
-           vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
-        if (!(yminus && (colY == idxLo.y())))
-           vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
-
-           vars->wVelRhoHat[zplusCell] =  (old_avden*constvars->old_wVelocity[zplusCell]-
-		   			  delta_t*(
-			                  (0.25*(constvars->density[currCell]+constvars->density[xplusCell])*
-					   constvars->uVelocity[xplusCell]*
-					   (constvars->wVelocity[zplusCell]+constvars->wVelocity[zplusxplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[xminusCell])*
-					   constvars->uVelocity[currCell]*
-					   (constvars->wVelocity[zplusCell]+constvars->wVelocity[zplusxminusCell]))/cellinfo->sew[colX]+
-			                  (0.25*(constvars->density[currCell]+constvars->density[yplusCell])*
-					   constvars->vVelocity[yplusCell]*
-					   (constvars->wVelocity[zplusCell]+constvars->wVelocity[zplusyplusCell])-
-					   0.25*(constvars->density[currCell]+constvars->density[yminusCell])*
-					   constvars->vVelocity[currCell]*
-					   (constvars->wVelocity[zplusCell]+constvars->wVelocity[zplusyminusCell]))/cellinfo->sns[colY]+
-		                          (-0.25*(constvars->wVelocity[zplusCell]+constvars->wVelocity[currCell])*
-			                   (constvars->wVelocity[zplusCell]+constvars->wVelocity[currCell])*
-					   constvars->density[currCell]+
-					   constvars->wVelocity[zplusCell]*constvars->wVelocity[zplusCell]
-					   *constvars->density[currCell])/cellinfo->stbw[colZ])
-			                 )/(0.5*(constvars->density[currCell]+constvars->density[zplusCell]));
-           vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
-        }
-      }
-    }*/
   }
 }
 //****************************************************************************
-// Set rho hat velocity at the outlet from 1d advection equation
+// Set hat velocity at the outlet
+// Tangential bc's are not needed to be set for hat velocities
+// Commented them out to avoid confusion
 //****************************************************************************
 void 
 BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
-			    const double delta_t,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const double maxAbsU,
-			    const double maxAbsV,
-			    const double maxAbsW)
+			    ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -3898,503 +3365,127 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   if (xminus) {
-    double gravity = d_physicalConsts->getGravity(Arches::XDIR);
     int colX = idxLo.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-	IntVector yminusCell(colX, colY-1, colZ);
-	IntVector zminusCell(colX, colY, colZ-1);
         IntVector xplusCell(colX+1, colY, colZ);
-        IntVector xplusyminusCell(colX+1, colY-1, colZ);
-        IntVector xpluszminusCell(colX+1, colY, colZ-1);
-        IntVector xminusyminusCell(colX-1, colY-1, colZ);
-        IntVector xminuszminusCell(colX-1, colY, colZ-1);
         if (constvars->cellType[xminusCell] == outlet_celltypeval) {
-           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
-			                constvars->old_density[xminusCell]);
-           double avden = 0.5 * (constvars->density[xplusCell] +
-			         constvars->density[currCell]);
-           double avdenlow = 0.5 * (constvars->density[currCell] +
-			            constvars->density[xminusCell]);
-           double ref_avdenlow = 0.5 * (constvars->denRefArray[currCell] +
-			            constvars->denRefArray[xminusCell]);
-           double new_avdenlow = 0.5 * (constvars->new_density[currCell] +
-			                constvars->new_density[xminusCell]);
-	   double out_vel = constvars->uVelocity[xplusCell];
-
-           vars->uVelRhoHat[currCell] = (delta_t * (- out_vel *
-            (avden*constvars->uVelocity[xplusCell] -
-             avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxepu[colX-1] +
-	     (avdenlow - ref_avdenlow) * gravity) +
-	    old_avdenlow*constvars->old_uVelocity[currCell]) / new_avdenlow;
-
-           vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
-
-        if (!(yminus && (colY == idxLo.y()))) {
-           old_avdenlow = 0.5 * (constvars->old_density[xminusCell] +
-			         constvars->old_density[xminusyminusCell]);
-           avden = 0.5 * (constvars->density[currCell] +
-	                  constvars->density[yminusCell]);
-           avdenlow = 0.5 * (constvars->density[xminusCell] +
-			     constvars->density[xminusyminusCell]);
-           new_avdenlow = 0.5 * (constvars->new_density[xminusCell] +
-			         constvars->new_density[xminusyminusCell]);
-	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
-			    constvars->uVelocity[xplusyminusCell]);
-
-           vars->vVelRhoHat[xminusCell] = (- delta_t * out_vel *
-            (avden*constvars->vVelocity[currCell] - 
-	     avdenlow*constvars->vVelocity[xminusCell]) /cellinfo->dxep[colX-1]+
-	    old_avdenlow*constvars->old_vVelocity[xminusCell]) / new_avdenlow;
-	}
-        if (!(zminus && (colZ == idxLo.z()))) {
-           old_avdenlow = 0.5 * (constvars->old_density[xminusCell] +
-			         constvars->old_density[xminuszminusCell]);
-           avden = 0.5 * (constvars->density[currCell] +
-	                  constvars->density[zminusCell]);
-           avdenlow = 0.5 * (constvars->density[xminusCell] +
-			     constvars->density[xminuszminusCell]);
-           new_avdenlow = 0.5 * (constvars->new_density[xminusCell] +
-			         constvars->new_density[xminuszminusCell]);
-	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
-			    constvars->uVelocity[xpluszminusCell]);
-
-           vars->wVelRhoHat[xminusCell] = (- delta_t * out_vel *
-            (avden*constvars->wVelocity[currCell] - 
-	     avdenlow*constvars->wVelocity[xminusCell]) /cellinfo->dxep[colX-1]+
-	    old_avdenlow*constvars->old_wVelocity[xminusCell]) / new_avdenlow;
-	}
+	  if (constvars->uVelocity[currCell] < -1.0e-10)
+            vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
+	  else
+	    vars->uVelRhoHat[currCell] = 0.0;
+          vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
+ /*         if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
   }
   if (xplus) {
-      cout.precision(25);
-//      cout << maxAbsU << endl;
-    double gravity = d_physicalConsts->getGravity(Arches::XDIR);
     int colX = idxHi.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         IntVector currCell(colX, colY, colZ);
-	IntVector xminusCell(colX-1, colY, colZ);
-	IntVector yminusCell(colX, colY-1, colZ);
-	IntVector zminusCell(colX, colY, colZ-1);
         IntVector xplusCell(colX+1, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector xplusyminusCell(colX+1, colY-1, colZ);
-        IntVector xpluszminusCell(colX+1, colY, colZ-1);
-        IntVector xplusyplusCell(colX+1, colY+1, colZ);
-        IntVector xpluszplusCell(colX+1, colY, colZ+1);
         IntVector xplusplusCell(colX+2, colY, colZ);
         if (constvars->cellType[xplusCell] == outlet_celltypeval) {
-           double old_avden = 0.5 * (constvars->old_density[xplusCell] +
-			             constvars->old_density[currCell]);
-           double avden = 0.5 * (constvars->density[xplusCell] +
-			         constvars->density[currCell]);
-           double ref_avden = 0.5 * (constvars->denRefArray[xplusCell] +
-			         constvars->denRefArray[currCell]);
-           double avdenlow = 0.5 * (constvars->density[currCell] +
-			            constvars->density[xminusCell]);
-           double new_avden = 0.5 * (constvars->new_density[xplusCell] +
-			             constvars->new_density[currCell]);
-	   double out_vel = constvars->uVelocity[currCell];
-	   out_vel = maxAbsU;
-//	   out_vel = 25.0;
-
-	   if (constvars->uVelocity[xplusCell] > 0.0)
-/*           vars->uVelRhoHat[xplusCell] = ( delta_t * (- out_vel *
-            (avden*constvars->uVelocity[xplusCell] - 
-	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1]
-	    +
-	     (avden-ref_avden) * gravity
-	     )+
-	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;*/
-           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
-	   else
-	   vars->uVelRhoHat[xplusCell] = 0.0;
-//	   if (vars->uVelRhoHat[xplusCell] < 0.0) vars->uVelRhoHat[xplusCell] = 0.0;
-/*           vars->uVelRhoHat[xplusCell] = (old_avden*constvars->old_uVelocity[xplusCell]-
-		   			  delta_t*(
-		                          (-0.25*(constvars->uVelocity[xplusCell]+constvars->uVelocity[currCell])*
-			                   (constvars->uVelocity[xplusCell]+constvars->uVelocity[currCell])*
-					   constvars->density[currCell]+
-					   constvars->uVelocity[xplusCell]*constvars->uVelocity[xplusCell]
-					   *constvars->density[currCell])/cellinfo->sewu[colX]+
-			                  (0.125*(constvars->density[currCell]+constvars->density[yplusCell])*
-					   (constvars->vVelocity[yplusCell]+constvars->vVelocity[xplusyplusCell])*
-					   (constvars->uVelocity[xplusCell]+constvars->uVelocity[xplusyplusCell])-
-					   0.125*(constvars->density[currCell]+constvars->density[yminusCell])*
-					   (constvars->vVelocity[currCell]+constvars->vVelocity[xplusCell])*
-					   (constvars->uVelocity[xplusCell]+constvars->uVelocity[xplusyminusCell]))/cellinfo->sns[colY]+
-			                  (0.125*(constvars->density[currCell]+constvars->density[zplusCell])*
-					   (constvars->wVelocity[zplusCell]+constvars->wVelocity[xpluszplusCell])*
-					   (constvars->uVelocity[xplusCell]+constvars->uVelocity[xpluszplusCell])-
-					   0.125*(constvars->density[currCell]+constvars->density[zminusCell])*
-					   (constvars->wVelocity[currCell]+constvars->wVelocity[xplusCell])*
-					   (constvars->uVelocity[xplusCell]+constvars->uVelocity[xpluszminusCell]))/cellinfo->stb[colZ]
-	                                   -(avden-ref_avden) * gravity)
-			                 )/(0.5*(constvars->density[currCell]+constvars->density[xplusCell]));
-*/
-           vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
-        }
-      }
-    }
-
-    colX = idxHi.x();
-    int maxY = idxHi.y();
-    if (yplus) maxY++;
-    int maxZ = idxHi.z();
-    if (zplus) maxZ++;
-    for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
-      for (int colY = idxLo.y(); colY <= maxY; colY ++) {
-        IntVector currCell(colX, colY, colZ);
-	IntVector xminusCell(colX-1, colY, colZ);
-	IntVector yminusCell(colX, colY-1, colZ);
-	IntVector zminusCell(colX, colY, colZ-1);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector xplusyminusCell(colX+1, colY-1, colZ);
-        IntVector xpluszminusCell(colX+1, colY, colZ-1);
-        IntVector xplusyplusCell(colX+1, colY+1, colZ);
-        IntVector xpluszplusCell(colX+1, colY, colZ+1);
-        IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constvars->cellType[xplusCell] == outlet_celltypeval) {
-           double old_avden,avden,avdenlow,new_avden,out_vel;
-        if (!(zplus && (colZ == maxZ))) {
-           old_avden = 0.5 * (constvars->old_density[xplusCell] +
-	                      constvars->old_density[xplusyminusCell]);
-           avden = 0.5 * (constvars->density[xplusCell] +
-	                  constvars->density[xplusyminusCell]);
-           avdenlow = 0.5 * (constvars->density[currCell] +
-			     constvars->density[yminusCell]);
-           new_avden = 0.5 * (constvars->new_density[xplusCell] +
-	                      constvars->new_density[xplusyminusCell]);
-	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
-			    constvars->uVelocity[xplusyminusCell]);
-	   out_vel = maxAbsU;
-//	   out_vel = 25.0;
-
-           vars->vVelRhoHat[xplusCell] = (- delta_t * out_vel *
-            (avden*constvars->vVelocity[xplusCell] - 
-	     avdenlow*constvars->vVelocity[currCell]) / cellinfo->dxpw[colX+1] +
-	    old_avden*constvars->old_vVelocity[xplusCell]) / new_avden;
-	}
-
-        if (!(yplus && (colY == maxY))) {
-           old_avden = 0.5 * (constvars->old_density[xplusCell] +
-	                      constvars->old_density[xpluszminusCell]);
-           avden = 0.5 * (constvars->density[xplusCell] +
-	                  constvars->density[xpluszminusCell]);
-           avdenlow = 0.5 * (constvars->density[currCell] +
-			     constvars->density[zminusCell]);
-           new_avden = 0.5 * (constvars->new_density[xplusCell] +
-	                      constvars->new_density[xpluszminusCell]);
-	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
-			    constvars->uVelocity[xpluszminusCell]);
-	   out_vel = maxAbsU;
-//	   out_vel = 25.0;
-
-           vars->wVelRhoHat[xplusCell] = (- delta_t * out_vel * 
-            (avden*constvars->wVelocity[xplusCell] - 
-	     avdenlow*constvars->wVelocity[currCell]) / cellinfo->dxpw[colX+1] +
-	    old_avden*constvars->old_wVelocity[xplusCell]) / new_avden;
-	}
+	  if (constvars->uVelocity[xplusCell] > 1.0e-10)
+            vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+	  else
+	    vars->uVelRhoHat[xplusCell] = 0.0;
+          vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
+   /*       if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
   }
   if (yminus) {
-    double gravity = d_physicalConsts->getGravity(Arches::YDIR);
     int colY = idxLo.y();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
 	IntVector yminusCell(colX, colY-1, colZ);
-	IntVector zminusCell(colX, colY, colZ-1);
         IntVector yplusCell(colX, colY+1, colZ);
-        IntVector yplusxminusCell(colX-1, colY+1, colZ);
-        IntVector ypluszminusCell(colX, colY+1, colZ-1);
-        IntVector yminusxminusCell(colX-1, colY-1, colZ);
-        IntVector yminuszminusCell(colX, colY-1, colZ-1);
         if (constvars->cellType[yminusCell] == outlet_celltypeval) {
-           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
-			                constvars->old_density[yminusCell]);
-           double avden = 0.5 * (constvars->density[yplusCell] +
-			         constvars->density[currCell]);
-           double avdenlow = 0.5 * (constvars->density[currCell] +
-			            constvars->density[yminusCell]);
-           double ref_avdenlow = 0.5 * (constvars->denRefArray[currCell] +
-			            constvars->denRefArray[yminusCell]);
-           double new_avdenlow = 0.5 * (constvars->new_density[currCell] +
-			                constvars->new_density[yminusCell]);
-	   double out_vel = constvars->vVelocity[yplusCell];
-
-           vars->vVelRhoHat[currCell] = (delta_t * (- out_vel *
-            (avden*constvars->vVelocity[yplusCell] -
-             avdenlow*constvars->vVelocity[currCell]) / cellinfo->dynpv[colY-1] +
-	     (avdenlow - ref_avdenlow) * gravity) +
-	    old_avdenlow*constvars->old_vVelocity[currCell]) /new_avdenlow;
-
-           vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
-
-        if (!(xminus && (colX == idxLo.x()))) {
-           old_avdenlow = 0.5 * (constvars->old_density[yminusCell] +
-			         constvars->old_density[yminusxminusCell]);
-           avden = 0.5 * (constvars->density[currCell] +
-	                  constvars->density[xminusCell]);
-           avdenlow = 0.5 * (constvars->density[yminusCell] +
-			     constvars->density[yminusxminusCell]);
-           new_avdenlow = 0.5 * (constvars->new_density[yminusCell] +
-			         constvars->new_density[yminusxminusCell]);
-	   out_vel = 0.5 * (constvars->vVelocity[yplusCell] +
-			    constvars->vVelocity[yplusxminusCell]);
-
-           vars->uVelRhoHat[yminusCell] = (- delta_t * out_vel *
-            (avden*constvars->uVelocity[currCell] - 
-	     avdenlow*constvars->uVelocity[yminusCell]) /cellinfo->dynp[colY-1]+
-	    old_avdenlow*constvars->old_uVelocity[yminusCell]) / new_avdenlow;
-	}
-        if (!(zminus && (colZ == idxLo.z()))) {
-           old_avdenlow = 0.5 * (constvars->old_density[yminusCell] +
-			         constvars->old_density[yminuszminusCell]);
-           avden = 0.5 * (constvars->density[currCell] +
-	                  constvars->density[zminusCell]);
-           avdenlow = 0.5 * (constvars->density[yminusCell] +
-			     constvars->density[yminuszminusCell]);
-           new_avdenlow = 0.5 * (constvars->new_density[yminusCell] +
-			         constvars->new_density[yminuszminusCell]);
-	   out_vel = 0.5 * (constvars->vVelocity[yplusCell] +
-			    constvars->vVelocity[ypluszminusCell]);
-
-           vars->wVelRhoHat[yminusCell] = (- delta_t * out_vel *
-            (avden*constvars->wVelocity[currCell] - 
-	     avdenlow*constvars->wVelocity[yminusCell]) /cellinfo->dynp[colY-1]+
-	    old_avdenlow*constvars->old_wVelocity[yminusCell]) / new_avdenlow;
-	}
+     /*     if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];*/
+	  if (constvars->vVelocity[currCell] < -1.0e-10)
+            vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
+	  else
+	    vars->vVelRhoHat[currCell] = 0.0;
+          vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
+     /*     if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
   }
   if (yplus) {
-    double gravity = d_physicalConsts->getGravity(Arches::YDIR);
     int colY = idxHi.y();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
-	IntVector xminusCell(colX-1, colY, colZ);
-	IntVector yminusCell(colX, colY-1, colZ);
-	IntVector zminusCell(colX, colY, colZ-1);
         IntVector yplusCell(colX, colY+1, colZ);
-        IntVector yplusxminusCell(colX-1, colY+1, colZ);
-        IntVector ypluszminusCell(colX, colY+1, colZ-1);
         IntVector yplusplusCell(colX, colY+2, colZ);
         if (constvars->cellType[yplusCell] == outlet_celltypeval) {
-           double old_avden = 0.5 * (constvars->old_density[yplusCell] +
-			             constvars->old_density[currCell]);
-           double avden = 0.5 * (constvars->density[yplusCell] +
-			         constvars->density[currCell]);
-           double ref_avden = 0.5 * (constvars->denRefArray[yplusCell] +
-			         constvars->denRefArray[currCell]);
-           double avdenlow = 0.5 * (constvars->density[currCell] +
-			            constvars->density[yminusCell]);
-           double new_avden = 0.5 * (constvars->new_density[yplusCell] +
-			             constvars->new_density[currCell]);
-	   double out_vel = constvars->vVelocity[currCell];
-
-           vars->vVelRhoHat[yplusCell] = (delta_t * (- out_vel *
-            (avden*constvars->vVelocity[yplusCell] - 
-	     avdenlow*constvars->vVelocity[currCell]) / cellinfo->dypsv[colY+1] +
-	     (avden - ref_avden) * gravity) +
-	    old_avden*constvars->old_vVelocity[yplusCell]) / new_avden;
-
-           vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
-
-        if (!(xminus && (colX == idxLo.x()))) {
-           old_avden = 0.5 * (constvars->old_density[yplusCell] +
-	                      constvars->old_density[yplusxminusCell]);
-           avden = 0.5 * (constvars->density[yplusCell] +
-	                  constvars->density[yplusxminusCell]);
-           avdenlow = 0.5 * (constvars->density[currCell] +
-			     constvars->density[xminusCell]);
-           new_avden = 0.5 * (constvars->new_density[yplusCell] +
-	                      constvars->new_density[yplusxminusCell]);
-	   out_vel = 0.5 * (constvars->vVelocity[currCell] +
-			    constvars->vVelocity[xminusCell]);
-
-           vars->uVelRhoHat[yplusCell] = (- delta_t * out_vel *
-            (avden*constvars->uVelocity[yplusCell] - 
-	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dyps[colY+1] +
-	    old_avden*constvars->old_uVelocity[yplusCell]) / new_avden;
-	}
-
-        if (!(zminus && (colZ == idxLo.z()))) {
-           old_avden = 0.5 * (constvars->old_density[yplusCell] +
-	                      constvars->old_density[ypluszminusCell]);
-           avden = 0.5 * (constvars->density[yplusCell] +
-	                  constvars->density[ypluszminusCell]);
-           avdenlow = 0.5 * (constvars->density[currCell] +
-			     constvars->density[zminusCell]);
-           new_avden = 0.5 * (constvars->new_density[yplusCell] +
-	                      constvars->new_density[ypluszminusCell]);
-	   out_vel = 0.5 * (constvars->vVelocity[currCell] +
-			    constvars->vVelocity[zminusCell]);
-
-           vars->wVelRhoHat[yplusCell] = (- delta_t * out_vel *
-            (avden*constvars->wVelocity[yplusCell] - 
-	     avdenlow*constvars->wVelocity[currCell]) / cellinfo->dyps[colY+1] +
-	    old_avden*constvars->old_wVelocity[yplusCell]) / new_avden;
-	}
+      /*    if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];*/
+	  if (constvars->vVelocity[yplusCell] > 1.0e-10)
+            vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
+	  else
+	    vars->vVelRhoHat[yplusCell] = 0.0;
+          vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
+       /*   if (!(zminus && (colZ == idxLo.z())))
+            vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];*/
         }
       }
     }
   }
   if (zminus) {
-    double gravity = d_physicalConsts->getGravity(Arches::ZDIR);
     int colZ = idxLo.z();
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-	IntVector yminusCell(colX, colY-1, colZ);
 	IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        IntVector zplusxminusCell(colX-1, colY, colZ+1);
-        IntVector zplusyminusCell(colX, colY-1, colZ+1);
-        IntVector zminusxminusCell(colX-1, colY, colZ-1);
-        IntVector zminusyminusCell(colX, colY-1, colZ-1);
         if (constvars->cellType[zminusCell] == outlet_celltypeval) {
-           double old_avdenlow = 0.5 * (constvars->old_density[currCell] +
-			                constvars->old_density[zminusCell]);
-           double avden = 0.5 * (constvars->density[zplusCell] +
-			         constvars->density[currCell]);
-           double avdenlow = 0.5 * (constvars->density[currCell] +
-			            constvars->density[zminusCell]);
-           double ref_avdenlow = 0.5 * (constvars->denRefArray[currCell] +
-			            constvars->denRefArray[zminusCell]);
-           double new_avdenlow = 0.5 * (constvars->new_density[currCell] +
-			                constvars->new_density[zminusCell]);
-	   double out_vel = constvars->wVelocity[zplusCell];
-
-           vars->wVelRhoHat[currCell] = (delta_t * (- out_vel *
-            (avden*constvars->wVelocity[zplusCell] -
-             avdenlow*constvars->wVelocity[currCell]) / cellinfo->dztpw[colZ-1] +
-	     (avdenlow - ref_avdenlow) * gravity) +
-	    old_avdenlow*constvars->old_wVelocity[currCell]) / new_avdenlow;
-
-           vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
-
-        if (!(xminus && (colX == idxLo.x()))) {
-           old_avdenlow = 0.5 * (constvars->old_density[zminusCell] +
-			         constvars->old_density[zminusxminusCell]);
-           avden = 0.5 * (constvars->density[currCell] +
-	                  constvars->density[xminusCell]);
-           avdenlow = 0.5 * (constvars->density[zminusCell] +
-			     constvars->density[zminusxminusCell]);
-           new_avdenlow = 0.5 * (constvars->new_density[zminusCell] +
-			         constvars->new_density[zminusxminusCell]);
-	   out_vel = 0.5 * (constvars->wVelocity[zplusCell] +
-			    constvars->wVelocity[zplusxminusCell]);
-
-           vars->uVelRhoHat[zminusCell] = (- delta_t * out_vel *
-            (avden*constvars->uVelocity[currCell] - 
-	     avdenlow*constvars->uVelocity[zminusCell]) /cellinfo->dztp[colZ-1]+
-	    old_avdenlow*constvars->old_uVelocity[zminusCell]) / new_avdenlow;
-	}
-        if (!(yminus && (colY == idxLo.y()))) {
-           old_avdenlow = 0.5 * (constvars->old_density[zminusCell] +
-			         constvars->old_density[zminusyminusCell]);
-           avden = 0.5 * (constvars->density[currCell] +
-	                  constvars->density[yminusCell]);
-           avdenlow = 0.5 * (constvars->density[zminusCell] +
-			     constvars->density[zminusyminusCell]);
-           new_avdenlow = 0.5 * (constvars->new_density[zminusCell] +
-			         constvars->new_density[zminusyminusCell]);
-	   out_vel = 0.5 * (constvars->wVelocity[zplusCell] +
-			    constvars->wVelocity[zplusyminusCell]);
-
-           vars->vVelRhoHat[zminusCell] = (- delta_t * out_vel *
-            (avden*constvars->vVelocity[currCell] - 
-	     avdenlow*constvars->vVelocity[zminusCell]) /cellinfo->dztp[colZ-1]+
-	    old_avdenlow*constvars->old_vVelocity[zminusCell]) / new_avdenlow;
-	}
+      /*    if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+          if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];*/
+	  if (constvars->wVelocity[currCell] < -1.0e-10)
+            vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
+	  else
+	    vars->wVelRhoHat[currCell] = 0.0;
+          vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
         }
       }
     }
   }
   if (zplus) {
-    double gravity = d_physicalConsts->getGravity(Arches::ZDIR);
     int colZ = idxHi.z();
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
-	IntVector xminusCell(colX-1, colY, colZ);
-	IntVector yminusCell(colX, colY-1, colZ);
-	IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        IntVector zplusxminusCell(colX-1, colY, colZ+1);
-        IntVector zplusyminusCell(colX, colY-1, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
         if (constvars->cellType[zplusCell] == outlet_celltypeval) {
-           double old_avden = 0.5 * (constvars->old_density[zplusCell] +
-			             constvars->old_density[currCell]);
-           double avden = 0.5 * (constvars->density[zplusCell] +
-			         constvars->density[currCell]);
-           double ref_avden = 0.5 * (constvars->denRefArray[zplusCell] +
-			         constvars->denRefArray[currCell]);
-           double avdenlow = 0.5 * (constvars->density[currCell] +
-			            constvars->density[zminusCell]);
-           double new_avden = 0.5 * (constvars->new_density[zplusCell] +
-			             constvars->new_density[currCell]);
-	   double out_vel = constvars->wVelocity[currCell];
-
-           vars->wVelRhoHat[zplusCell] = (delta_t * (- out_vel *
-            (avden*constvars->wVelocity[zplusCell] - 
-	     avdenlow*constvars->wVelocity[currCell]) / cellinfo->dzpbw[colZ+1] +
-	     (avden - ref_avden) * gravity) +
-	    old_avden*constvars->old_wVelocity[zplusCell]) / new_avden;
-
-           vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
-
-        if (!(xminus && (colX == idxLo.x()))) {
-           old_avden = 0.5 * (constvars->old_density[zplusCell] +
-	                      constvars->old_density[zplusxminusCell]);
-           avden = 0.5 * (constvars->density[zplusCell] +
-	                  constvars->density[zplusxminusCell]);
-           avdenlow = 0.5 * (constvars->density[currCell] +
-			     constvars->density[xminusCell]);
-           new_avden = 0.5 * (constvars->new_density[zplusCell] +
-	                      constvars->new_density[zplusxminusCell]);
-	   out_vel = 0.5 * (constvars->wVelocity[currCell] +
-			    constvars->wVelocity[xminusCell]);
-
-           vars->uVelRhoHat[zplusCell] = (- delta_t * out_vel *
-            (avden*constvars->uVelocity[zplusCell] - 
-	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
-	    old_avden*constvars->old_uVelocity[zplusCell]) / new_avden;
-	}
-
-        if (!(yminus && (colY == idxLo.y()))) {
-           old_avden = 0.5 * (constvars->old_density[zplusCell] +
-	                      constvars->old_density[zplusyminusCell]);
-           avden = 0.5 * (constvars->density[zplusCell] +
-	                  constvars->density[zplusyminusCell]);
-           avdenlow = 0.5 * (constvars->density[currCell] +
-			     constvars->density[yminusCell]);
-           new_avden = 0.5 * (constvars->new_density[zplusCell] +
-	                      constvars->new_density[zplusyminusCell]);
-	   out_vel = 0.5 * (constvars->wVelocity[currCell] +
-			    constvars->wVelocity[yminusCell]);
-
-           vars->vVelRhoHat[zplusCell] = (- delta_t * out_vel *
-            (avden*constvars->vVelocity[zplusCell] - 
-	     avdenlow*constvars->vVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
-	    old_avden*constvars->old_vVelocity[zplusCell]) / new_avden;
-	}
+       /*   if (!(xminus && (colX == idxLo.x())))
+            vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+          if (!(yminus && (colY == idxLo.y())))
+            vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];*/
+	  if (constvars->wVelocity[zplusCell] > 1.0e-10)
+            vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
+	  else
+	    vars->wVelRhoHat[zplusCell] = 0.0;
+          vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
         }
       }
     }
@@ -4407,7 +3498,6 @@ void
 BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
 			    const Patch* patch,
 			    const int index,
-			    CellInformation*,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars)
 {
@@ -4435,24 +3525,57 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= maxY; colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
+        IntVector xminusyminusCell(colX-1, colY-1, colZ);
+        IntVector xminuszminusCell(colX-1, colY, colZ-1);
         if ((constvars->cellType[xminusCell] == pressure_celltypeval)||
             (constvars->cellType[xminusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
            break;
            case Arches::YDIR:
-        if (!(zplus && (colZ == maxZ)))
-           vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+             if (!(zplus && (colZ == maxZ)))
+               vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
            break;
            case Arches::ZDIR:
-        if (!(yplus && (colY == maxY)))
-           vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
+             if (!(yplus && (colY == maxY)))
+               vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
 		throw InvalidValue("Invalid index in velocityPressureBC");
           }
         }
+	else {
+	  if ((constvars->cellType[xminusyminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[xminusyminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+               if (!(zplus && (colZ == maxZ)))
+                 vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	  if ((constvars->cellType[xminuszminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[xminuszminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+               if (!(yplus && (colY == maxY)))
+                 vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	}
       }
     }
   }
@@ -4466,25 +3589,57 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= maxY; colY ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        IntVector xplusplusCell(colX+2, colY, colZ);
+        IntVector xplusyminusCell(colX+1, colY-1, colZ);
+        IntVector xpluszminusCell(colX+1, colY, colZ-1);
         if ((constvars->cellType[xplusCell] == pressure_celltypeval)||
             (constvars->cellType[xplusCell] == outlet_celltypeval)) {
-        //if (constvars->cellType[xplusCell] == pressure_celltypeval) {
           switch (index) {
            case Arches::XDIR:
            break;
            case Arches::YDIR:
-        if (!(zplus && (colZ == maxZ)))
-           vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+             if (!(zplus && (colZ == maxZ)))
+               vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
            break;
            case Arches::ZDIR:
-        if (!(yplus && (colY == maxY)))
-           vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
+             if (!(yplus && (colY == maxY)))
+               vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
 		throw InvalidValue("Invalid index in velocityPressureBC");
           }
         }
+	else {
+	  if ((constvars->cellType[xplusyminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[xplusyminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+               if (!(zplus && (colZ == maxZ)))
+                 vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	  if ((constvars->cellType[xpluszminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[xpluszminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+               if (!(yplus && (colY == maxY)))
+                 vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	}
       }
     }
   }
@@ -4498,24 +3653,57 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= maxX; colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
+        IntVector yminusxminusCell(colX-1, colY-1, colZ);
+        IntVector yminuszminusCell(colX, colY-1, colZ-1);
         if ((constvars->cellType[yminusCell] == pressure_celltypeval)||
             (constvars->cellType[yminusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
-        if (!(zplus && (colZ == maxZ)))
-           vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
+             if (!(zplus && (colZ == maxZ)))
+               vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
            break;
            case Arches::YDIR:
            break;
            case Arches::ZDIR:
-        if (!(xplus && (colX == maxX)))
-           vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
+             if (!(xplus && (colX == maxX)))
+               vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
 		throw InvalidValue("Invalid index in velocityPressureBC");
           }
         }
+	else {
+	  if ((constvars->cellType[yminusxminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[yminusxminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+               if (!(zplus && (colZ == maxZ)))
+                 vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	  if ((constvars->cellType[yminuszminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[yminuszminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+               if (!(xplus && (colX == maxX)))
+                 vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	}  
       }
     }
   }
@@ -4529,24 +3717,57 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= maxX; colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        IntVector yplusplusCell(colX, colY+2, colZ);
+        IntVector yplusxminusCell(colX-1, colY+1, colZ);
+        IntVector ypluszminusCell(colX, colY+1, colZ-1);
         if ((constvars->cellType[yplusCell] == pressure_celltypeval)||
             (constvars->cellType[yplusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
-        if (!(zplus && (colZ == maxZ)))
-           vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
+             if (!(zplus && (colZ == maxZ)))
+               vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
            break;
            case Arches::YDIR:
            break;
            case Arches::ZDIR:
-        if (!(xplus && (colX == maxX)))
-           vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
+             if (!(xplus && (colX == maxX)))
+               vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
 		throw InvalidValue("Invalid index in velocityPressureBC");
           }
         }
+	else {
+	  if ((constvars->cellType[yplusxminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[yplusxminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+               if (!(zplus && (colZ == maxZ)))
+                 vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	  if ((constvars->cellType[ypluszminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[ypluszminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+               if (!(xplus && (colX == maxX)))
+                 vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	}
       }
     }
   }
@@ -4560,17 +3781,18 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= maxX; colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
-        IntVector zplusCell(colX, colY, colZ+1);
+        IntVector zminusxminusCell(colX-1, colY, colZ-1);
+        IntVector zminusyminusCell(colX, colY-1, colZ-1);
         if ((constvars->cellType[zminusCell] == pressure_celltypeval)||
             (constvars->cellType[zminusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
-        if (!(yplus && (colY == maxY)))
-           vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+             if (!(yplus && (colY == maxY)))
+               vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
            break;
            case Arches::YDIR:
-        if (!(xplus && (colX == maxX)))
-           vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
+             if (!(xplus && (colX == maxX)))
+               vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
            break;
            case Arches::ZDIR:
            break;
@@ -4578,6 +3800,38 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
 		throw InvalidValue("Invalid index in velocityPressureBC");
           }
         }
+	else {
+	  if ((constvars->cellType[zminusxminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[zminusxminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+               if (!(yplus && (colY == maxY)))
+                 vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	  if ((constvars->cellType[zminusyminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[zminusyminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+               if (!(xplus && (colX == maxX)))
+                 vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	}
       }
     }
   }
@@ -4591,17 +3845,18 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
       for (int colX = idxLo.x(); colX <= maxX; colX ++) {
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
-        IntVector zplusplusCell(colX, colY, colZ+2);
+        IntVector zplusxminusCell(colX-1, colY, colZ+1);
+        IntVector zplusyminusCell(colX, colY-1, colZ+1);
         if ((constvars->cellType[zplusCell] == pressure_celltypeval)||
             (constvars->cellType[zplusCell] == outlet_celltypeval)) {
           switch (index) {
            case Arches::XDIR:
-        if (!(yplus && (colY == maxY)))
-           vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+             if (!(yplus && (colY == maxY)))
+               vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
            break;
            case Arches::YDIR:
-        if (!(xplus && (colX == maxX)))
-           vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
+             if (!(xplus && (colX == maxX)))
+               vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
            break;
            case Arches::ZDIR:
            break;
@@ -4609,6 +3864,38 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
 		throw InvalidValue("Invalid index in velocityPressureBC");
           }
         }
+	else {
+	  if ((constvars->cellType[zplusxminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[zplusxminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+               if (!(yplus && (colY == maxY)))
+                 vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+             break;
+             case Arches::YDIR:
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	  if ((constvars->cellType[zplusyminusCell] == pressure_celltypeval)
+              ||(constvars->cellType[zplusyminusCell] == outlet_celltypeval)) {
+            switch (index) {
+             case Arches::XDIR:
+             break;
+             case Arches::YDIR:
+               if (!(xplus && (colX == maxX)))
+                 vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
+             break;
+             case Arches::ZDIR:
+             break;
+             default:
+		  throw InvalidValue("Invalid index in velocityPressureBC");
+            }
+          }
+	}
       }
     }
   }
@@ -4670,7 +3957,6 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
         IntVector xplusplusCell(colX+2, colY, colZ);
         if ((constvars->cellType[xplusCell] == outlet_celltypeval)||
             (constvars->cellType[xplusCell] == pressure_celltypeval)) {
-//        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
            double avden = 0.5 * (constvars->density[xplusCell] +
 			         constvars->density[currCell]);
 
@@ -5031,7 +4317,9 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 }
 
 //****************************************************************************
-// Schedule outlet velocity correction
+// Schedule mass balance computation
+// Does not perform any velocity correction
+// Named for historical reasons
 //****************************************************************************
 void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
 					      const PatchSet* patches,
@@ -5044,19 +4332,11 @@ void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
 			  &BoundaryCondition::correctVelocityOutletBC,
 			  timelabels);
   
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, timelabels->flowIN);
   tsk->requires(Task::NewDW, timelabels->flowOUT);
   tsk->requires(Task::NewDW, timelabels->denAccum);
   tsk->requires(Task::NewDW, timelabels->floutbc);
   tsk->requires(Task::NewDW, timelabels->areaOUT);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-
-    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
 
   if (timelabels->integrator_last_step)
     tsk->computes(d_lab->d_uvwoutLabel);
@@ -5069,7 +4349,7 @@ void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
 //****************************************************************************
 void 
 BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
-			      const PatchSubset* patches,
+			      const PatchSubset* ,
 			      const MaterialSubset*,
 			      DataWarehouse*,
 			      DataWarehouse* new_dw,
@@ -5098,18 +4378,13 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
     int me = pc->myrank();
 
     if (d_outletBoundary) {
-     if (totalAreaOUT > 0.0) {
+      if (totalAreaOUT > 0.0) {
 	uvwcorr = (totalFlowIN - denAccum - totalFlowOUT - netFlowOUT_outbc)/
 	           totalAreaOUT;
-#ifdef discard_negative_velocity_correction
-	if (uvwcorr < 0.0) {
-         if (me == 0) {
-          cerr << "Negative velocity correction " << uvwcorr
-	       << " , discarding it" << endl;
-         }
-	 uvwcorr = 0.0;
-        }
-#endif
+      }
+      else {
+	cout << "Zero area for specified outlet" << endl;
+	exit(1);
       }
     }
     else
@@ -5128,52 +4403,6 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
     if (timelabels->integrator_last_step)
       new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
  
-    for (int p = 0; p < patches->size(); p++) {
-      const Patch* patch = patches->get(p);
-      int archIndex = 0; // only one arches material
-      int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-      constCCVariable<int> cellType;
-      constCCVariable<double> density;
-      SFCXVariable<double> uVelocity;
-      SFCYVariable<double> vVelocity;
-      SFCZVariable<double> wVelocity;
-      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex,
-		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
-		  	    patch);
-      new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
-		  	    patch);
-      new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
-		  	    patch);
-
-      int outlet_celltypeval = outletCellType();
-      if (d_outletBoundary) {
-// Assuming outlet is xplus
-      IntVector indexLow = patch->getCellFORTLowIndex();
-      IntVector indexHigh = patch->getCellFORTHighIndex();
-      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-      if (xplus) {
-        int colX = indexHigh.x()+1;
-	for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	  for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	    IntVector currCell(colX, colY, colZ);
-	    IntVector xplusCell(colX+1, colY, colZ);
-	    IntVector xminusCell(colX-1, colY, colZ);
-	    if (cellType[currCell]==outlet_celltypeval) {
-	    
-//	    uVelocity[currCell] += uvwcorr;
-//	    uVelocity[currCell] += uvwcorr/(0.5*(density[currCell]+density[xminusCell]));
-// Negative velocity limiter, as requested by Rajesh
-//	    if (uVelocity[currCell] < 0.0) uVelocity[currCell] = 0.0;
-//	    uVelocity[xplusCell] = uVelocity[currCell];
-	    }
-	  }
-	}
-      }
-      }
-    }
 }
 //****************************************************************************
 // Schedule init inlet bcs
@@ -5363,5 +4592,235 @@ BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
       }
       new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
     
+  }
+}
+//****************************************************************************
+// Schedule setting zero tangential force velocity BC
+//****************************************************************************
+void
+BoundaryCondition::sched_setVelocityTangentialBC(SchedulerP& sched,
+				      const PatchSet* patches,
+				      const MaterialSet* matls,
+				      const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "BoundaryCondition::setVelocityTangentialBC" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+			  &BoundaryCondition::setVelocityTangentialBC,
+			  timelabels);
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+
+  tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Set zero tangential force velocity BC
+//****************************************************************************
+void 
+BoundaryCondition::setVelocityTangentialBC(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset*,
+				DataWarehouse*,
+				DataWarehouse* new_dw,
+				const TimeIntegratorLabel* timelabels)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    constCCVariable<int> cellType;
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
+    SFCXVariable<double> new_uVelocity;
+    SFCYVariable<double> new_vVelocity;
+    SFCZVariable<double> new_wVelocity;
+
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,
+		matlIndex, patch, Ghost::AroundCells,Arches::ONEGHOSTCELL);
+
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    new_dw->get(uVelocity, d_lab->d_uVelRhoHatLabel, matlIndex,
+		patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelocity, d_lab->d_vVelRhoHatLabel, matlIndex,
+		patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelocity, d_lab->d_wVelRhoHatLabel, matlIndex,
+		patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+   
+    new_dw->getModifiable(new_uVelocity, d_lab->d_uVelocitySPBCLabel,
+		          matlIndex, patch);
+    new_dw->getModifiable(new_vVelocity, d_lab->d_vVelocitySPBCLabel,
+		          matlIndex, patch);
+    new_dw->getModifiable(new_wVelocity, d_lab->d_wVelocitySPBCLabel,
+		          matlIndex, patch);
+
+    // Get the low and high index for the patch and the variables
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+
+    //int pressure_celltypeval = pressureCellType();
+    int pressure_celltypeval = -10;
+    int outlet_celltypeval = outletCellType();
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    if (xminus) {
+      int colX = idxLo.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector xminusCell(colX-1, colY, colZ);
+          IntVector yminusCell(colX, colY-1, colZ);
+          IntVector zminusCell(colX, colY, colZ-1);
+          if ((cellType[xminusCell] == pressure_celltypeval)||
+              (cellType[xminusCell] == outlet_celltypeval)) {
+            if (!(yminus && (colY == idxLo.y())))
+              new_vVelocity[xminusCell] = vVelocity[currCell] +
+		(uVelocity[currCell] - uVelocity[yminusCell]) *
+		cellinfo->sew[colX]/cellinfo->sns[colY];
+            if (!(zminus && (colZ == idxLo.z())))
+              new_wVelocity[xminusCell] = wVelocity[currCell] +
+		(uVelocity[currCell] - uVelocity[zminusCell]) *
+		cellinfo->sew[colX]/cellinfo->stb[colZ];
+          }
+        }
+      }
+    }
+    if (xplus) {
+      int colX = idxHi.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector xplusCell(colX+1, colY, colZ);
+          IntVector xplusyminusCell(colX+1, colY-1, colZ);
+          IntVector xpluszminusCell(colX+1, colY, colZ-1);
+          if ((cellType[xplusCell] == pressure_celltypeval)||
+              (cellType[xplusCell] == outlet_celltypeval)) {
+            if (!(yminus && (colY == idxLo.y())))
+              new_vVelocity[xplusCell] = vVelocity[currCell] -
+		(uVelocity[xplusCell] - uVelocity[xplusyminusCell]) *
+		cellinfo->sew[colX]/cellinfo->sns[colY];
+            if (!(zminus && (colZ == idxLo.z())))
+              new_wVelocity[xplusCell] = wVelocity[currCell] -
+		(uVelocity[xplusCell] - uVelocity[xpluszminusCell]) *
+		cellinfo->sew[colX]/cellinfo->stb[colZ];
+          }
+        }
+      }
+    }
+    if (yminus) {
+      int colY = idxLo.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector xminusCell(colX-1, colY, colZ);
+          IntVector yminusCell(colX, colY-1, colZ);
+          IntVector zminusCell(colX, colY, colZ-1);
+          if ((cellType[yminusCell] == pressure_celltypeval)||
+              (cellType[yminusCell] == outlet_celltypeval)) {
+            if (!(xminus && (colX == idxLo.x())))
+              new_uVelocity[yminusCell] = uVelocity[currCell] +
+		(vVelocity[currCell] - vVelocity[xminusCell]) *
+		cellinfo->sns[colY]/cellinfo->sew[colX];
+            if (!(zminus && (colZ == idxLo.z())))
+              new_wVelocity[yminusCell] = wVelocity[currCell] +
+		(vVelocity[currCell] - vVelocity[zminusCell]) *
+		cellinfo->sns[colY]/cellinfo->stb[colZ];
+          }
+        }
+      }
+    }
+    if (yplus) {
+      int colY = idxHi.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector yplusCell(colX, colY+1, colZ);
+          IntVector yplusxminusCell(colX-1, colY+1, colZ);
+          IntVector ypluszminusCell(colX, colY+1, colZ-1);
+          if ((cellType[yplusCell] == pressure_celltypeval)||
+              (cellType[yplusCell] == outlet_celltypeval)) {
+            if (!(xminus && (colX == idxLo.x())))
+              new_uVelocity[yplusCell] = uVelocity[currCell] -
+		(vVelocity[yplusCell] - vVelocity[yplusxminusCell]) *
+		cellinfo->sns[colY]/cellinfo->sew[colX];
+            if (!(zminus && (colZ == idxLo.z())))
+              new_wVelocity[yplusCell] = wVelocity[currCell] -
+		(vVelocity[yplusCell] - vVelocity[ypluszminusCell]) *
+		cellinfo->sns[colY]/cellinfo->stb[colZ];
+          }
+        }
+      }
+    }
+    if (zminus) {
+      int colZ = idxLo.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector xminusCell(colX-1, colY, colZ);
+          IntVector yminusCell(colX, colY-1, colZ);
+          IntVector zminusCell(colX, colY, colZ-1);
+          if ((cellType[zminusCell] == pressure_celltypeval)||
+              (cellType[zminusCell] == outlet_celltypeval)) {
+            if (!(xminus && (colX == idxLo.x())))
+              new_uVelocity[zminusCell] = uVelocity[currCell] +
+		(wVelocity[currCell] - wVelocity[xminusCell]) *
+		cellinfo->stb[colZ]/cellinfo->sew[colX];
+            if (!(yminus && (colY == idxLo.y())))
+              new_vVelocity[zminusCell] = vVelocity[currCell] +
+		(wVelocity[currCell] - wVelocity[yminusCell]) *
+		cellinfo->stb[colZ]/cellinfo->sns[colY];
+          }
+        }
+      }
+    }
+    if (zplus) {
+      int colZ = idxHi.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector zplusCell(colX, colY, colZ+1);
+          IntVector zplusxminusCell(colX-1, colY, colZ+1);
+          IntVector zplusyminusCell(colX, colY-1, colZ+1);
+          if ((cellType[zplusCell] == pressure_celltypeval)||
+              (cellType[zplusCell] == outlet_celltypeval)) {
+            if (!(xminus && (colX == idxLo.x())))
+              new_uVelocity[zplusCell] = uVelocity[currCell] -
+		(wVelocity[zplusCell] - wVelocity[zplusxminusCell]) *
+		cellinfo->stb[colZ]/cellinfo->sew[colX];
+            if (!(yminus && (colY == idxLo.y())))
+              new_vVelocity[zplusCell] = vVelocity[currCell] -
+		(wVelocity[zplusCell] - wVelocity[zplusyminusCell]) *
+		cellinfo->stb[colZ]/cellinfo->sns[colY];
+          }
+        }
+      }
+    }
   }
 }

@@ -308,7 +308,7 @@ void
 Properties::reComputeProps(const ProcessorGroup* pc,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
+			   DataWarehouse* ,
 			   DataWarehouse* new_dw,
 			   const TimeIntegratorLabel* timelabels,
 			   bool modify_ref_density,
@@ -1435,7 +1435,7 @@ Properties::saveTempDensity(const ProcessorGroup*,
 			   const MaterialSubset*,
 			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel* )
 {
   for (int p = 0; p < patches->size(); p++) {
 

@@ -16,7 +16,6 @@ SRCS += \
 	$(SRCDIR)/arrass.F \
 	$(SRCDIR)/arrl1.F \
 	$(SRCDIR)/bcenthalpy.F \
-	$(SRCDIR)/bcinout.F \
 	$(SRCDIR)/inlpresbcinout.F \
 	$(SRCDIR)/bcpress.F \
 	$(SRCDIR)/bcscalar.F \
@@ -25,11 +24,9 @@ SRCS += \
 	$(SRCDIR)/bcwvel.F \
 	$(SRCDIR)/calcpressgrad.F \
 	$(SRCDIR)/calpbc.F \
-        $(SRCDIR)/hatvelcalpbc.F \
 	$(SRCDIR)/cellg.F \
 	$(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/computeVel.F \
-	$(SRCDIR)/denaccum.F \
 	$(SRCDIR)/enthalpyradflux.F \
 	$(SRCDIR)/enthalpyradsrc.F \
 	$(SRCDIR)/enthalpyradthinsrc.F \
@@ -60,16 +57,10 @@ SRCS += \
 	$(SRCDIR)/mmwallbc.F \
 	$(SRCDIR)/mmwallbc_trans.F \
 	$(SRCDIR)/normpress.F \
-	$(SRCDIR)/outarea.F \
-	$(SRCDIR)/outletbc.F \
-	$(SRCDIR)/outletbcenth.F \
-	$(SRCDIR)/outletbcrscal.F \
 	$(SRCDIR)/prescoef.F \
         $(SRCDIR)/prescoef_var.F \
-        $(SRCDIR)/pressrcpred_var.F \
-	$(SRCDIR)/pressrc.F \
-	$(SRCDIR)/pressrccorr.F \
 	$(SRCDIR)/pressrcpred.F \
+        $(SRCDIR)/pressrcpred_var.F \
 	$(SRCDIR)/profscalar.F \
 	$(SRCDIR)/profv.F \
 	$(SRCDIR)/rescal.F \
@@ -98,14 +89,9 @@ SRCS += \
 	$(SRCDIR)/comp_dynamic_7loop.F \
 	$(SRCDIR)/comp_dynamic_8loop.F
 
-PSELIBS := \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
-	Core/Exceptions
+PSELIBS := 
 
-LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
+LIBS := $(F_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
@@ -121,7 +107,6 @@ $(SRCDIR)/areain.o: $(SRCDIR)/areain_fort.h
 $(SRCDIR)/arrass.o: $(SRCDIR)/arrass_fort.h
 $(SRCDIR)/arrl1.o: $(SRCDIR)/arrl1_fort.h
 $(SRCDIR)/bcenthalpy.o: $(SRCDIR)/bcenthalpy_fort.h
-$(SRCDIR)/bcinout.o: $(SRCDIR)/bcinout_fort.h
 $(SRCDIR)/inlpresbcinout.o: $(SRCDIR)/inlpresbcinout_fort.h
 $(SRCDIR)/bcpress.o: $(SRCDIR)/bcpress_fort.h
 $(SRCDIR)/bcscalar.o: $(SRCDIR)/bcscalar_fort.h
@@ -134,7 +119,6 @@ $(SRCDIR)/cellg.o: $(SRCDIR)/cellg_fort.h
 $(SRCDIR)/celltypeInit.o: $(SRCDIR)/celltypeInit_fort.h
 $(SRCDIR)/coeffb.o: $(SRCDIR)/coeffb_fort.h
 $(SRCDIR)/computeVel.o: $(SRCDIR)/computeVel_fort.h
-$(SRCDIR)/denaccum.o: $(SRCDIR)/denaccum_fort.h
 $(SRCDIR)/enthalpyradflux.o: $(SRCDIR)/enthalpyradflux_fort.h
 $(SRCDIR)/enthalpyradsrc.o: $(SRCDIR)/enthalpyradsrc_fort.h
 $(SRCDIR)/enthalpyradthinsrc.o: $(SRCDIR)/enthalpyradthinsrc_fort.h
@@ -159,16 +143,10 @@ $(SRCDIR)/mmmomsrc.o: $(SRCDIR)/mmmomsrc_fort.h
 $(SRCDIR)/mmwallbc.o: $(SRCDIR)/mmwallbc_fort.h
 $(SRCDIR)/mmwallbc_trans.o: $(SRCDIR)/mmwallbc_trans_fort.h
 $(SRCDIR)/normpress.o: $(SRCDIR)/normpress_fort.h
-$(SRCDIR)/outarea.o: $(SRCDIR)/outarea_fort.h
-$(SRCDIR)/outletbc.o: $(SRCDIR)/outletbc_fort.h
-$(SRCDIR)/outletbcenth.o: $(SRCDIR)/outletbcenth_fort.h
-$(SRCDIR)/outletbcrscal.o: $(SRCDIR)/outletbcrscal_fort.h
 $(SRCDIR)/prdbc1.o: $(SRCDIR)/prdbc1_fort.h
 $(SRCDIR)/prdbc2.o: $(SRCDIR)/prdbc2_fort.h
 $(SRCDIR)/prescoef.o: $(SRCDIR)/prescoef_fort.h
 $(SRCDIR)/prescoef_var.o: $(SRCDIR)/prescoef_var_fort.h
-$(SRCDIR)/pressrc.o: $(SRCDIR)/pressrc_fort.h
-$(SRCDIR)/pressrccorr.o: $(SRCDIR)/pressrccorr_fort.h
 $(SRCDIR)/pressrcpred.o: $(SRCDIR)/pressrcpred_fort.h
 $(SRCDIR)/pressrcpred_var.o: $(SRCDIR)/pressrcpred_var_fort.h
 $(SRCDIR)/profscalar.o: $(SRCDIR)/profscalar_fort.h
@@ -188,7 +166,6 @@ $(SRCDIR)/vvelsrc.o: $(SRCDIR)/vvelsrc_fort.h
 $(SRCDIR)/wallbc.o: $(SRCDIR)/wallbc_fort.h
 $(SRCDIR)/wvelcoef.o: $(SRCDIR)/wvelcoef_fort.h
 $(SRCDIR)/wvelsrc.o: $(SRCDIR)/wvelsrc_fort.h
-$(SRCDIR)/hatvelcalpbc.o: $(SRCDIR)/hatvelcalpbc_fort.h
 $(SRCDIR)/uvelcoeffupdate.o: $(SRCDIR)/uvelcoeffupdate_fort.h
 $(SRCDIR)/inc_dynamic_1loop.o: $(SRCDIR)/inc_dynamic_1loop_fort.h
 $(SRCDIR)/inc_dynamic_2loop.o: $(SRCDIR)/inc_dynamic_2loop_fort.h
