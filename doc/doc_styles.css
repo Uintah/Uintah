@@ -16,19 +16,31 @@ p {margin-left:90px; margin-right:80px; font-family:"serif"}
 
 .title {font-family: "times"; font-weight:bold; font-size:x-large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
 
+.ptitle {font-family: "times"; font-weight:bold; font-size:large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
+
 .subtitle {font-family:times; text-align:center; font-weight:bold}
+
+.psubtitle {font-family:times; text-align:center; font-weight:bold; font-size:0.85em}
 
 .head {color:#000000; margin:0px; margin-top:25px; border:none; font-size:large; font-family:"arial", "helvetica", "sans-serif"}
 
+.phead {color:#000000; margin:0px; margin-top:25px; border:none; font-family:"arial", "helvetica", "sans-serif"}
+
 .subhead {margin-left:10px; font-style:italic; font-size:1.15em; font-family:"arial", "helvetica", "sans-serif"}
+
+.psubhead {margin-left:10px; font-style:italic; font-size:0.85em; font-family:"arial", "helvetica", "sans-serif"}
 
 .subsubhead {margin-left:10px; font-weight:bold; font-family:"arial", "helvetica", "sans-serif"}
 
 .firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"}
 
+.pfirstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; font-size:0.75em}
+
 .nextpara {margin-left:20px; margin-right:10px; text-align:left; text-indent:2em;  font-family:"serif"}
 
 .example {margin-left:50px; white-space:pre; font-family:monospace}
+
+.pexample {margin-left:50px; white-space:pre; font-family:monospace; font-size:0.6em}
 
 blockquote {margin-left:150px; font-family:times}
 
