@@ -3,7 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <vector>
 #include <iostream>
 
@@ -95,7 +95,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     l2g.initialize(-1234);
     long totalNodes=0;
     const Level* level = patch->getLevel();
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];

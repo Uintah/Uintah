@@ -753,7 +753,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       SCI_THROW(InternalError("Ghost cells specified with task type none!\n"));
     return getParticleSubset(matlIndex, patch);
   }
-  Level::selectType neighbors;
+  Patch::selectType neighbors;
   IntVector lowIndex, highIndex;
   patch->computeVariableExtents(Patch::CellBased, pos_var->getBoundaryLayer(),
 				gtype, numGhostCells,
@@ -1113,7 +1113,7 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
   NCVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
 
-  Level::selectType patches;
+  Patch::selectType patches;
   level->selectPatches(low, high, patches);
   
   d_lock.readLock();
@@ -1148,7 +1148,7 @@ OnDemandDataWarehouse::getRegion(constCCVariableBase& constVar,
   CCVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
 
-  Level::selectType patches;
+  Patch::selectType patches;
   level->selectPatches(low, high, patches);
   
   d_lock.readLock();
@@ -1183,7 +1183,7 @@ OnDemandDataWarehouse::getRegion(constSFCXVariableBase& constVar,
   SFCXVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
 
-  Level::selectType patches;
+  Patch::selectType patches;
   level->selectPatches(low, high, patches);
   
   d_lock.readLock();
@@ -1218,7 +1218,7 @@ OnDemandDataWarehouse::getRegion(constSFCYVariableBase& constVar,
   SFCYVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
 
-  Level::selectType patches;
+  Patch::selectType patches;
   level->selectPatches(low, high, patches);
   
   d_lock.readLock();
@@ -1253,7 +1253,7 @@ OnDemandDataWarehouse::getRegion(constSFCZVariableBase& constVar,
   SFCZVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
 
-  Level::selectType patches;
+  Patch::selectType patches;
   level->selectPatches(low, high, patches);
   
   d_lock.readLock();
@@ -1761,7 +1761,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
     IntVector dn = high - low;
     long total = dn.x()*dn.y()*dn.z();
     
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     IntVector lowIndex, highIndex;
     patch->computeVariableExtents(basis, label->getBoundaryLayer(),
 				  gtype, numGhostCells,
@@ -1932,7 +1932,7 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   
   var.allocate(superLowIndex, superHighIndex);
   
-  Level::selectType encompassedPatches;
+  Patch::selectType encompassedPatches;
   if (requiredSuperLow == lowIndex && requiredSuperHigh == highIndex) {
     // only encompassing the patch currently being allocated
     encompassedPatches.push_back(patch);
@@ -1952,7 +1952,7 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
     nonGhostPatches.insert((*superPatchGroup)[i]);
   }
   
-  Level::selectType::iterator iter = encompassedPatches.begin();    
+  Patch::selectType::iterator iter = encompassedPatches.begin();    
   for (; iter != encompassedPatches.end(); ++iter) {
     const Patch* patchGroupMember = *iter;
     VariableBase* clone = var.clone();

@@ -18,6 +18,7 @@
 //    Date   : Fri May 18 14:36:19 2001
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <map>

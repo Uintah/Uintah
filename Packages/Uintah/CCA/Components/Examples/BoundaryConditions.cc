@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Core/Math/MiscMath.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

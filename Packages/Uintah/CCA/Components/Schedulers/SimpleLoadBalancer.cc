@@ -147,7 +147,7 @@ SimpleLoadBalancer::createNeighborhood(const GridP& grid,
 	iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;
       if(getPatchwiseProcessorAssignment(patch, group) == me){
-	Level::selectType n;
+	Patch::selectType n;
 	IntVector lowIndex, highIndex;
 	patch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
 				      Ghost::AroundCells, maxGhost, n,

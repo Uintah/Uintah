@@ -207,7 +207,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
     // Particles are only allowed to be one cell out
     IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
     IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     level->selectPatches(l, h, neighbors);
 
     for(int m = 0; m < matls->size(); m++){
@@ -320,7 +320,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
     // Particles are only allowed to be one cell out
     IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
     IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     level->selectPatches(l, h, neighbors);
 
     for(int m = 0; m < matls->size(); m++){
@@ -632,7 +632,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     // Particles are only allowed to be one cell out
     IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
     IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     level->selectPatches(l, h, neighbors);
 
     // Find all of the neighbors, and add them to a set
@@ -920,7 +920,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     // Particles are only allowed to be one cell out
     IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
     IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     level->selectPatches(l, h, neighbors);
 
     for(int m = 0; m < matls->size(); m++){
