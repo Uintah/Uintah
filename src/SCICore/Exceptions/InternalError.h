@@ -24,12 +24,14 @@ namespace SCICore {
 	class InternalError : public Exception {
 	public:
 	    InternalError(const std::string&);
+	    InternalError(const InternalError&);
 	    virtual ~InternalError();
 	    virtual const char* message() const;
 	    virtual const char* type() const;
 	protected:
 	private:
 	    std::string d_message;
+	    InternalError& operator=(const InternalError&);
 	};
     }
 }
@@ -38,6 +40,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.3  2000/03/23 20:43:10  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.2  2000/03/23 10:25:41  sparker
 // New exception facility - retired old "Exception.h" classes
 //

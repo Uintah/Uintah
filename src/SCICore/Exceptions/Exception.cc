@@ -30,6 +30,10 @@ Exception::Exception()
 {
 }
 
+Exception::Exception(const Exception&)
+{
+}
+
 Exception::~Exception()
 {
 }
@@ -152,6 +156,9 @@ void Exception::sci_throw(const Exception& exc)
 
 //
 // $Log$
+// Revision 1.2  2000/03/23 20:43:10  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.1  2000/03/23 10:25:40  sparker
 // New exception facility - retired old "Exception.h" classes
 //

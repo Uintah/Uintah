@@ -28,6 +28,11 @@ ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper)
 	    value, lower, upper);
     msg=strdup(buf);
 }
+
+ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds& copy)
+    : msg(strdup(copy.msg))
+{
+}
     
 ArrayIndexOutOfBounds::~ArrayIndexOutOfBounds()
 {
@@ -46,6 +51,9 @@ const char* ArrayIndexOutOfBounds::type() const
 
 //
 // $Log$
+// Revision 1.2  2000/03/23 20:43:09  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.1  2000/03/23 10:25:40  sparker
 // New exception facility - retired old "Exception.h" classes
 //

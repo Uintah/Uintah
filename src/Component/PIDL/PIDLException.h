@@ -36,8 +36,11 @@ DESCRIPTION
 ****************************************/
 	class PIDLException : public SCICore::Exceptions::Exception {
 	public:
+	    PIDLException();
+	    PIDLException(const PIDLException&);
 	protected:
 	private:
+	    PIDLException& operator=(const PIDLException&);
 	};
     }
 }
@@ -46,6 +49,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 20:43:07  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.4  1999/09/24 20:03:36  sparker
 // Added cocoon documentation
 //
