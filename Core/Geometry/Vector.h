@@ -50,10 +50,16 @@ public:
     friend SCICORESHARE inline double Dot(const Vector&, const Point&);
     Vector& operator=(const Vector&);
 
+    inline double& operator()(int idx) {
+	// Ugly, but works
+	return (&_x)[idx];
+    }
+
     // checks if one vector is exactly the same as another
     int operator==(const Vector&) const;
 
     Vector operator*(const double) const;
+    Vector operator*(const Vector&) const;
     Vector& operator*=(const double);
     Vector operator/(const double) const;
     Vector operator/(const Vector&) const;
@@ -177,6 +183,11 @@ inline Vector Vector::operator/(const Vector& v2) const
 inline Vector Vector::operator+(const Vector& v2) const
 {
     return Vector(_x+v2._x, _y+v2._y, _z+v2._z);
+}
+
+inline Vector Vector::operator*(const Vector& v2) const
+{
+    return Vector(_x*v2._x, _y*v2._y, _z*v2._z);
 }
 
 inline Vector Vector::operator-(const Vector& v2) const
@@ -342,6 +353,9 @@ inline Point Vector::asPoint() const {
 
 //
 // $Log$
+// Revision 1.5  2000/01/26 01:32:52  sparker
+// Added new stuff for C-SAFE
+//
 // Revision 1.4  1999/10/07 02:07:57  sparker
 // use standard iostreams and complex type
 //

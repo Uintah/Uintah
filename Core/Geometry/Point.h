@@ -66,6 +66,7 @@ public:
     void z(const double);
     inline double z() const;
     Vector vector() const;
+    inline Vector asVector() const;
     
     clString string() const;
     
@@ -220,7 +221,13 @@ inline double Point::z() const
     return _z;
 }
 
+// THIS ONE SHOULD BE REMOVED
 inline Vector Point::vector() const
+{
+    return Vector(_x,_y,_z);
+}
+
+inline Vector Point::asVector() const
 {
     return Vector(_x,_y,_z);
 }
@@ -260,6 +267,9 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
+// Revision 1.5  2000/01/26 01:32:52  sparker
+// Added new stuff for C-SAFE
+//
 // Revision 1.4  1999/10/07 02:07:56  sparker
 // use standard iostreams and complex type
 //
