@@ -55,6 +55,7 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
             raise $w
             return;
         }
+
         toplevel $w
 
 	
@@ -161,32 +162,36 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 
     method forget_packing {} {
 	set w .ui[modname]
-	pack forget $w.vcr $w.cur $w.expanded $w.min $w.max $w.inc $w.playmode $w.buttonPanel
+        if {[winfo exists $w]} {
+	    pack forget $w.vcr $w.cur $w.expanded \
+		$w.min $w.max $w.inc $w.playmode $w.buttonPanel
+	}
     }
 
     method show_small_interface {} {
 	forget_packing
 	set w .ui[modname]
-        pack $w.vcr $w.cur $w.expanded $w.buttonPanel \
-	    -padx 5 -pady 5 -fill x -expand 0
-	$w.expanded configure -text "Show Extended Options" \
-	    -command "$this show_expanded_interface"
-	wm geometry $w {}
+        if {[winfo exists $w]} {
+	    pack $w.vcr $w.cur $w.expanded $w.buttonPanel \
+		-padx 5 -pady 5 -fill x -expand 0
+	    $w.expanded configure -text "Show Extended Options" \
+		-command "$this show_expanded_interface"
+	    wm geometry $w {}
+	}
     }
 
     method show_expanded_interface {} {
 	forget_packing
-	set w .ui[modname]
-        pack $w.vcr $w.min $w.cur $w.max $w.inc $w.playmode \
-	    $w.expanded $w.buttonPanel \
-	    -padx 5 -pady 5 -fill x -expand 0
-	$w.expanded configure -text "Hide Extended Options" \
-	    -command "$this show_small_interface"
-	wm geometry $w {}
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+	    pack $w.vcr $w.min $w.cur $w.max $w.inc $w.playmode \
+		$w.expanded $w.buttonPanel \
+		-padx 5 -pady 5 -fill x -expand 0
+	    $w.expanded configure -text "Hide Extended Options" \
+		-command "$this show_small_interface"
+	    wm geometry $w {}
+	}
     }
-
-
-
 
     method update_range {} {
         set w .ui[modname]
