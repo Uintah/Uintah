@@ -37,7 +37,7 @@ itcl_class SCIRun_Fields_SeedField {
 	set $this-dist importance
 	set $this-numseeds 10
 	set $this-rngseed 1234
-	set $this-whichtab widget
+	set $this-whichtab Widget
     }
 
     method ui {} {
@@ -51,10 +51,14 @@ itcl_class SCIRun_Fields_SeedField {
 	iwidgets::tabnotebook  $w.tabs -raiseselect true -width 350
 	pack $w.tabs -side top
 	set wtab [$w.tabs add -label "Widget" \
-		  -command "set $this-whichtab widget"]
+		  -command "set $this-whichtab Widget"]
 	set rtab [$w.tabs add -label "Random" \
-		  -command "set $this-whichtab random"]
-	$w.tabs view "Widget"
+		  -command "set $this-whichtab Random"]
+	if {"[set $this-whichtab]"=="Widget"} {
+	    $w.tabs view 0
+	} else {
+	    $w.tabs view 1
+	}
 
 	iwidgets::Labeledframe $wtab.type -labelpos nw -labeltext "Widget type"
 	pack $wtab.type 
