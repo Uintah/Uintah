@@ -196,7 +196,7 @@ private:
 
 
   vector<Point>  points_;
-  vector<int>    faces_;
+  vector<Node::index_type>    faces_;
   vector<int>    neighbors_;
   //! normalized per node normal.
   vector<Vector> normals_;
