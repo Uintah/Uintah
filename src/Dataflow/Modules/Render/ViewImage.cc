@@ -132,7 +132,7 @@ class ViewImage : public Module
     NrrdDataHandle      nrrd_;
     
     bool		dirty_;
-    
+    unsigned int	mode_;
     unsigned int	tex_wid_;
     unsigned int	tex_hei_;
 
@@ -200,7 +200,6 @@ class ViewImage : public Module
     OpenGLContext *	opengl_;
     int			mouse_x_;
     int			mouse_y_;
-    UIint		mode_;
     
     SliceWindows	windows_;
   };
@@ -241,8 +240,6 @@ class ViewImage : public Module
 
   UIdouble		min_;
   UIdouble		max_;
-
-  DisplayMode_e		display_mode_;
 
   //! output port
   GeometryOPort *	ogeom_;
@@ -316,6 +313,7 @@ ViewImage::NrrdSlice::NrrdSlice(int axis, int slice, NrrdVolume *volume) :
   slice_num_(slice),
   nrrd_(0),
   dirty_(true),
+  mode_(0),
   tex_wid_(0),
   tex_hei_(0),
   wid_(0),
@@ -398,7 +396,6 @@ ViewImage::ViewImage(GuiContext* ctx) :
   window_level_(0),
   min_(ctx->subVar("min"), -1),
   max_(ctx->subVar("max"), -1),
-  display_mode_(normal_e),
   ogeom_(0),
   freetype_lib_(0),
   fonts_(),
@@ -1145,7 +1142,7 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
     default:
     case 2: text = "Axial"; break;
     }
-    if (display_mode_ == mip_e) text = "MIP - "+text;
+    if (window.mode_ == mip_e) text = "MIP - "+text;
     draw_label(window, text, window.viewport_->width() - 2, 0, 
 	       FreeTypeText::se, font);
   }
@@ -1263,6 +1260,7 @@ ViewImage::extract_window_slices(SliceWindow &window) {
     for (a = 0; a < 3; a++) {
       window.slices_.push_back
 	(scinew NrrdSlice(a, window.slice_[a], volumes_[v]));
+      window.slices_.back()->mode_ = window.mode_();
       if (window.axis_ == a)
 	extract_slice(*volumes_[v], *window.slices_.back(), a, *window.slice_[a]);
     }
@@ -1286,7 +1284,7 @@ ViewImage::extract_slice(NrrdVolume &volume,
 
   NrrdDataHandle temp2 = scinew NrrdData;
   
-  if (display_mode_ == mip_e) {
+  if (slice.mode_ == mip_e) {
     if (nrrdProject(temp1->nrrd, volume.nrrd_->nrrd, axis, 2, nrrdTypeDefault)) {
       char *err = biffGetDone(NRRD);
       error(string("Error Projecting nrrd: ") + err);
@@ -1363,7 +1361,7 @@ ViewImage::set_axis(SliceWindow &window, unsigned int axis) {
 void
 ViewImage::prev_slice(SliceWindow &window)
 {
-  if (display_mode_ == mip_e) return;
+  if (window.mode_ == mip_e) return;
   if (window.slice_[window.axis_] == 0) 
     return;
   if (window.slice_[window.axis_] < 1)
@@ -1378,7 +1376,7 @@ ViewImage::prev_slice(SliceWindow &window)
 void
 ViewImage::next_slice(SliceWindow &window)
 {
-  if (display_mode_ == mip_e) return;
+  if (window.mode_ == mip_e) return;
   if (*window.slice_[window.axis_] == max_slice_[window.axis_]) 
     return;
   if (window.slice_[window.axis_] > max_slice_[window.axis_])
@@ -1849,15 +1847,10 @@ ViewImage::handle_gui_keypress(GuiArgs &args) {
       //window.scale_ += 0.1;
       redraw_window(window);
     } else if (args[4] == "m") {
+      window.mode_ = (window.mode_+1)%num_display_modes_e;
+      extract_window_slices(window);
+      redraw_window(window);
       //window.scale_ += 0.1;
-      display_mode_ = DisplayMode_e((display_mode_+1)%num_display_modes_e);
-      WindowLayouts::iterator liter = layouts_.begin();
-      while (liter != layouts_.end()) {
-	for (unsigned int j = 0; j < (*liter).second->windows_.size(); ++j)
-	  extract_window_slices(*(*liter).second->windows_[j]);
-	++liter;
-      }
-      redraw_all();
     } else if (args[4] == "Left") {
       window.x_ -= 1.0;
       redraw_window(window);
