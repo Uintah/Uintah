@@ -21,6 +21,10 @@
 class GeomCylinder : public GeomObj {
     Vector v1;
     Vector v2;
+
+    double height;
+    Vector zrotaxis;
+    double zrotangle;
 public:
     Point bottom;
     Point top;

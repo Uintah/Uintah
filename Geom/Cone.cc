@@ -63,12 +63,18 @@ GeomObj* GeomCone::clone()
 void GeomCone::adjust()
 {
     axis=top-bottom;
-    if(axis.length2() < 1.e-6){
+    height=axis.length();
+    if(height < 1.e-6){
 	cerr << "Degenerate Cone!\n";
     } else {
 	axis.find_orthogonal(v1, v2);
     }
     tilt=(bot_rad-top_rad)/axis.length2();
+    Vector z(0,0,1);
+    zrotaxis=Cross(axis, z);
+    zrotaxis.normalize();
+    double cangle=Dot(z, axis)/height;
+    zrotangle=Acos(cangle);
 }
 
 void GeomCone::get_bounds(BBox& bb)

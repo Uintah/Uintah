@@ -64,6 +64,12 @@ void GeomDisc::adjust()
     } else {
 	normal.find_orthogonal(v1, v2);
     }
+    normal.normalize();
+    Vector z(0,0,1);
+    zrotaxis=Cross(normal, z);
+    zrotaxis.normalize();
+    double cangle=Dot(z, zrotaxis);
+    zrotangle=Acos(cangle);
 }
 
 void GeomDisc::get_bounds(BBox& bb)

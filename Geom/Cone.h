@@ -22,6 +22,9 @@ class GeomCone : public GeomObj {
     Vector v1;
     Vector v2;
     double tilt;
+    double height;
+    Vector zrotaxis;
+    double zrotangle;
 public:
     Point bottom;
     Point top;
