@@ -100,13 +100,6 @@ protected:
 				     DataWarehouseP& new_dw);
 
   //////////
-  // apply physical boundary conditions to particles
-  void applyPhysicalBCToParticles(const ProcessorGroup*,
-					   const Patch* patch,
-					   DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw);
-
-  //////////
   // Insert Documentation Here:
   void interpolateParticlesToGrid(const ProcessorGroup*,
 				  const Patch* patch,
@@ -215,6 +208,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.50  2000/08/18 20:29:19  tan
+// Fixed some bugs in SerialMPM, mainly in applyPhysicalBC.
+//
 // Revision 1.49  2000/08/07 17:09:35  tan
 // Added applyPhysicalBCToParticles to handle particle boundary conditions
 // in each step.
