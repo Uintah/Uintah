@@ -334,6 +334,7 @@ void MaterialParticleData::sort()
   ASSERT(particleIDs_->getParticleVars().size() != 0);
 
   vector< pair<long64, int> > idIndices;
+  int base = 0;
   
   for (unsigned int i = 0; i < particleIDs_->getParticleVars().size(); i++) {
     ParticleVariable<long64>* pIDs = dynamic_cast<ParticleVariable<long64>*>(particleIDs_->getParticleVars()[i]);
@@ -346,8 +347,9 @@ void MaterialParticleData::sort()
     ParticleSubset* subset = pIDs->getParticleSubset();
     for (ParticleSubset::iterator iter = subset->begin();
 	 iter != subset->end(); iter++) {
-      idIndices.push_back(ID_Index(*(pID++), *iter));
+      idIndices.push_back(ID_Index(*(pID++), base + *iter));
     }
+    base = idIndices.size();
   }
 
   // sort by particle id and find out what happens to the particle indices.
@@ -355,6 +357,7 @@ void MaterialParticleData::sort()
 
   vector<particleIndex> subsetIndices(idIndices.size());
   for (particleIndex i = 0; i < (particleIndex)idIndices.size(); i++) {
+    ASSERT(subsetIndices[idIndices[i].second] == 0);
     subsetIndices[idIndices[i].second] = i;
   }
 
