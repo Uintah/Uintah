@@ -31,7 +31,7 @@ using namespace Uintah;
 
 BCReader::BCReader() 
 {
-  //  d_bcs.resize(6);
+  d_bcs.resize(6);
 }
 
 BCReader::~BCReader()
@@ -170,8 +170,12 @@ BCReader::read(ProblemSpecP& bc_ps)
 	     << bc  << endl;
 #endif
 	// This is for the old boundary conditions.
+	// Can only add in boundary conditions that are using "side"
+	if (typeid(SideBCData) == typeid(*bcGeom)) {
+#if 0
 	if (int (d_bcs.size()) < face_side + 1) {
 	 d_bcs.resize(face_side + 1);
+#endif
 	 d_bcs[face_side].setBCValues(mat_id,bc);
 	}
 	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
