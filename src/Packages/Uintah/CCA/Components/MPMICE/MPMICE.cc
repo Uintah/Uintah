@@ -35,10 +35,10 @@ using namespace std;
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
+  cout<<"MPMICE initial"<<endl;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
-  d_fracture = false;
   d_mpm      = scinew SerialMPM(myworld);
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = 1.e-100;
@@ -56,6 +56,7 @@ MPMICE::~MPMICE()
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			  SimulationStateP& sharedState)
 {
+  cout<<"MPMICE problemSetup"<<endl;
   d_sharedState = sharedState;
   
   d_mpm->setMPMLabel(Mlb);
@@ -112,7 +113,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
-  if(d_fracture) {
+  if( d_mpm->withFracture() ) {
     d_mpm->scheduleSetPositions(                  sched, patches, mpm_matls);
     d_mpm->scheduleComputeBoundaryContact(        sched, patches, mpm_matls);
     d_mpm->scheduleComputeConnectivity(           sched, patches, mpm_matls);
@@ -181,7 +182,9 @@ void MPMICE::scheduleTimeAdvance(double, double,
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
 
-  if(d_fracture) {
+  cout<<"schedule!"<<endl;
+  if( d_mpm->withFracture() ) {
+  cout<<"fracture schedule!"<<endl;
     d_mpm->scheduleComputeFracture(               sched, patches, mpm_matls);
     d_mpm->scheduleComputeCrackExtension(         sched, patches, mpm_matls);
   }

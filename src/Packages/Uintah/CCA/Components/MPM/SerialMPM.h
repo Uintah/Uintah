@@ -100,6 +100,11 @@ public:
                 SYMMETRY,
                 NEIGHBOR };
 
+  bool withFracture() const
+  {
+    return d_fracture;
+  };
+
 private:
   //////////
   // Insert Documentation Here:
