@@ -7,7 +7,7 @@ itcl_class PSECommon_Surface_SurfToGeom {
     method set_defaults {} {
 	global $this-range_min
 	global $this-range_max
-	global $this-best
+	global $this-range
 	global $this-invert
 	global $this-nodes
 	global $this-named
@@ -17,9 +17,10 @@ itcl_class PSECommon_Surface_SurfToGeom {
 	global $this-clr-g
 	global $this-clr-b
 	global $this-normals
+	global $this-resol
 	set $this-range_min -1
 	set $this-range_max 1
-	set $this-best 1
+	set $this-range best
 	set $this-invert 0
 	set $this-nodes 0
 	set $this-named 0
@@ -29,6 +30,7 @@ itcl_class PSECommon_Surface_SurfToGeom {
 	set $this-clr-g 0.7
 	set $this-clr-b 0.3
 	set $this-normals 0
+	set $this-resol 5
     }
     method raiseColor { col } {
 	set w .ui[modname]
@@ -110,11 +112,15 @@ itcl_class PSECommon_Surface_SurfToGeom {
 		-label "range max:"
 	pack $w.f.min $w.f.max -side left -expand 1
 	frame $w.b
-	global $this-best
+	global $this-range
 	global $this-invert
-	checkbutton $w.b.b -text Best -variable $this-best
+        make_labeled_radio $w.b.b "MinMax Mapping:" "" \
+                left $this-range \
+                {{"Best" best} \
+                {"Manual" manual} \
+                {"Cmap" cmap}}
 	checkbutton $w.b.i -text Invert -variable $this-invert
-	pack $w.b.b $w.b.i -side left -expand 1 -fill x
+	pack $w.b.b $w.b.i -side top -expand 1 -fill x
 	pack $w.d $w.f $w.b -side top -fill x
     }
 }

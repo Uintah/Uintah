@@ -39,7 +39,8 @@ itcl_class PSECommon_Matrix_MatVec {
      	global $this-opTCL
 	make_labeled_radio $w.f "Operation: " " " \
 		top $this-opTCL \
-		{{"A x b" AtimesB}}
+		{{"A x b" AtimesB} \
+		{"A^T x b" AtTimesB}}
 	
 	pack $w.f -expand 1 -fill both
     }
