@@ -69,13 +69,13 @@ WARNING
 
      virtual void scheduleRefine(/* const */ LevelP& coarseLevel, 
                                  /* const */ LevelP& fineLevel, 
-				 SchedulerP& scheduler) {};
+				 SchedulerP& scheduler);
      virtual void scheduleRefineInterface(/* const */ LevelP& coarseLevel, 
                                           /* const */ LevelP& fineLevel, 
-				          SchedulerP& scheduler) {};
+				          SchedulerP& scheduler);
      virtual void scheduleCoarsen(/* const */ LevelP& coarseLevel, 
                                   /* const */ LevelP& fineLevel, 
-				  SchedulerP& scheduler) {};
+				  SchedulerP& scheduler);
 
    private:
       SimulationInterface(const SimulationInterface&);
