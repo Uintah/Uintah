@@ -40,7 +40,7 @@ class ShaderProgramARB
 {
 public:
   ShaderProgramARB(const std::string& program);
-  ~ShaderProgramARB();
+  virtual ~ShaderProgramARB();
   
   bool create();
   bool valid();
