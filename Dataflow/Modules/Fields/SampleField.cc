@@ -254,19 +254,8 @@ SampleField::execute_random()
 {
   const TypeDescription *mtd = vfhandle_->mesh()->get_type_description();
   CompileInfo *ci = SampleFieldRandomAlgo::get_compile_info(mtd);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  SampleFieldRandomAlgo *algo =
-    dynamic_cast<SampleFieldRandomAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<SampleFieldRandomAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
   FieldHandle seedhandle(algo->execute(this, vfhandle_, numSeeds_.get(),
 				       rngSeed_.get(), randDist_.get(), 
 				       clamp_.get()));

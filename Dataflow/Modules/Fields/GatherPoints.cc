@@ -32,6 +32,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -80,19 +81,8 @@ GatherPoints::execute()
     if (ifield->get(field)) {
       const TypeDescription *meshtd = field->mesh()->get_type_description();
       CompileInfo *ci = GatherPointsAlgo::get_compile_info(meshtd);
-      DynamicAlgoHandle algo_handle;
-      if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-      {
-	error("Could not compile algorithm.");
-	return;
-      }
-      GatherPointsAlgo *algo =
-	dynamic_cast<GatherPointsAlgo *>(algo_handle.get_rep());
-      if (algo == 0)
-      {
-	error("Could not get algorithm.");
-	return;
-      }
+      Handle<GatherPointsAlgo> algo;
+      if (!module_dynamic_compile(*ci, algo)) return;
       algo->execute(field->mesh(), pcmH);
     }
     ++pi;

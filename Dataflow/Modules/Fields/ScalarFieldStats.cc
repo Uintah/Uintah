@@ -35,6 +35,7 @@
 #include <Dataflow/Modules/Fields/ScalarFieldStats.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -103,21 +104,10 @@ ScalarFieldStats::execute()
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
   CompileInfo *ci = ScalarFieldStatsAlgo::get_compile_info(ftd, ltd);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  ScalarFieldStatsAlgo *algo =
-    dynamic_cast<ScalarFieldStatsAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
-  algo->execute(ifieldhandle, this);
+  Handle<ScalarFieldStatsAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
 
+  algo->execute(ifieldhandle, this);
 }
 
 

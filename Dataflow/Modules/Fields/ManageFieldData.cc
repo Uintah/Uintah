@@ -34,6 +34,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ManageFieldData.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -99,19 +100,8 @@ ManageFieldData::execute()
     get_compile_info(ifieldhandle->get_type_description(),
 		     ifieldhandle->data_at_type_description(),
 		     svt_flag);
-  DynamicAlgoHandle algo_handle_field;
-  if (! DynamicLoader::scirun_loader().get(*ci_field, algo_handle_field))
-  {
-    error("Could not compile field algorithm.");
-    return;
-  }
-  ManageFieldDataAlgoField *algo_field =
-    dynamic_cast<ManageFieldDataAlgoField *>(algo_handle_field.get_rep());
-  if (algo_field == 0)
-  {
-    error("Could not get field algorithm.");
-    return;
-  }
+  Handle<ManageFieldDataAlgoField> algo_field;
+  if (!module_dynamic_compile(*ci_field, algo_field)) return;
 
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   if (!omp) {
@@ -156,19 +146,9 @@ ManageFieldData::execute()
       get_compile_info(ifieldhandle->mesh()->get_type_description(),
 		       ifieldhandle->get_type_description(),
 		       matrix_svt_flag);
-    DynamicAlgoHandle algo_handle_mesh;
-    if (! DynamicLoader::scirun_loader().get(*ci_mesh, algo_handle_mesh))
-    {
-      error("Could not compile mesh algorithm.");
-      return;
-    }
-    ManageFieldDataAlgoMesh *algo_mesh =
-      dynamic_cast<ManageFieldDataAlgoMesh *>(algo_handle_mesh.get_rep());
-    if (algo_mesh == 0)
-    {
-      error("Could not get mesh algorithm.");
-      return;
-    }
+    Handle<ManageFieldDataAlgoMesh> algo_mesh;
+    if (!module_dynamic_compile(*ci_mesh, algo_mesh)) return;
+
     result_field =
       algo_mesh->execute(this, ifieldhandle->mesh(), imatrixhandle);
   }
@@ -176,7 +156,7 @@ ManageFieldData::execute()
   string units;
   if (imatrixhandle.get_rep() && imatrixhandle->get_property("units", units))
     result_field->set_property("units", units, false);
-
+  
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
   if (!ofp) {
     error("Unable to initialize oport 'Output Field'.");

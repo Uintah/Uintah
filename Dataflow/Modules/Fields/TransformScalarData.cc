@@ -30,6 +30,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/TransformScalarData.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 #include <sstream>
 
@@ -87,19 +88,9 @@ TransformScalarData::execute()
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
   CompileInfo *ci = TransformScalarDataAlgo::get_compile_info(ftd, ltd);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  TransformScalarDataAlgo *algo =
-    dynamic_cast<TransformScalarDataAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<TransformScalarDataAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
+
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, function));
 
   delete function;

@@ -13,6 +13,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Fields/CastMLVtoHV.h>
+#include <Core/Containers/Handle.h>
 #include <math.h>
 
 #include <Core/share/share.h>
@@ -111,19 +112,8 @@ void CastMLVtoHV::execute()
 
   CompileInfo *ci =
     CastMLVtoHVAlgo::get_compile_info(fsrc_td, lsrc_td, ldst_td);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  CastMLVtoHVAlgo *algo =
-    dynamic_cast<CastMLVtoHVAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<CastMLVtoHVAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
 
   ofieldH_ = algo->execute(ifieldH, ifieldH->data_at());
 

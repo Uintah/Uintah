@@ -155,19 +155,9 @@ AttractNormals::execute()
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
   CompileInfo *ci =
     AttractNormalsAlgo::get_compile_info(ftd, ltd, mtd, scale_p);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  AttractNormalsAlgo *algo =
-    dynamic_cast<AttractNormalsAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<AttractNormalsAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
+
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
 
   FieldOPort *ofield_port = (FieldOPort *)getOPort("Output Field");

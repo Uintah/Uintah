@@ -34,6 +34,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/Unstructure.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/Handle.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -111,19 +112,9 @@ Unstructure::execute()
     {
       const TypeDescription *ftd = ifieldhandle->get_type_description();
       CompileInfo *ci = UnstructureAlgo::get_compile_info(ftd, dstname);
-      DynamicAlgoHandle algo_handle;
-      if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-      {
-	error("Could not compile algorithm.");
-	return;
-      }
-      UnstructureAlgo *algo =
-	dynamic_cast<UnstructureAlgo *>(algo_handle.get_rep());
-      if (algo == 0)
-      {
-	error("Could not get algorithm.");
-	return;
-      }
+      Handle<UnstructureAlgo> algo;
+      if (!module_dynamic_compile(*ci, algo)) return;
+
       ofieldhandle_ = algo->execute(this, ifieldhandle);
 
       if (ofieldhandle_.get_rep())

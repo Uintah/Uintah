@@ -31,6 +31,7 @@
 #include <Core/Datatypes/CurveField.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Visualization/StreamLines.h>
+#include <Core/Containers/Handle.h>
 
 #include <iostream>
 #include <vector>
@@ -300,19 +301,8 @@ void StreamLines::execute()
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
   const TypeDescription *sltd = sf_->data_at_type_description();
   CompileInfo *ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  StreamLinesAlgo *algo =
-    dynamic_cast<StreamLinesAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<StreamLinesAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
 
   oport_->send(algo->execute(sf_->mesh(), vfi,
 			     tolerance, stepsize, maxsteps, direction, color,

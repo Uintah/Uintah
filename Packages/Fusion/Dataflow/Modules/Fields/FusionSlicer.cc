@@ -34,6 +34,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/Fusion/Dataflow/Modules/Fields/FusionSlicer.h>
 #include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
+#include <Core/Containers/Handle.h>
 #include <Packages/Fusion/share/share.h>
 
 namespace Fusion {
@@ -185,19 +186,9 @@ void FusionSlicer::execute(){
     const TypeDescription *ttd = fHandle->get_type_description(1);
 
     CompileInfo *ci = FusionSlicerAlgo::get_compile_info(ftd,ttd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error( "Could not compile algorithm." );
-      return;
-    }
-    FusionSlicerAlgo *algo =
-      dynamic_cast<FusionSlicerAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error( "Could not get algorithm." );
-      return;
-    }
+    Handle<FusionSlicerAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
     unsigned int index;
     if (axis_ == 0) {
       index = Max(iindex_, 1);

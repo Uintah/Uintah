@@ -32,6 +32,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/BioPSE/Dataflow/Modules/Forward/GenDistanceField.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 
 
@@ -109,20 +110,8 @@ GenDistanceField::execute()
 	get_compile_info(dfieldhandle->get_type_description(),
 			 dfieldhandle->data_at_type_description(),
 			 skel_handle->get_type_description());
-
-      DynamicAlgoHandle algo_handle;
-      if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-      {
-	error("Could not compile algorithm.");
-	continue;
-      }
-      GenDistanceFieldAlgo *algo =
-	dynamic_cast<GenDistanceFieldAlgo *>(algo_handle.get_rep());
-      if (algo == 0)
-      {
-	error("Could not get algorithm.");
-	continue;
-      }
+      Handle<GenDistanceFieldAlgo> algo;
+      if (!module_dynamic_compile(*ci, algo)) return;
 
       if (!did_once_p) { dfieldhandle.detach(); }
       if (skel_handle->data_at() == Field::NODE)

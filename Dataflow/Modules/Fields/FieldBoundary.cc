@@ -30,6 +30,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
+#include <Core/Containers/Handle.h>
 
 #include <iostream>
 
@@ -103,19 +104,9 @@ FieldBoundary::execute()
 
     const TypeDescription *mtd = mesh->get_type_description();
     CompileInfo *ci = FieldBoundaryAlgo::get_compile_info(mtd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    FieldBoundaryAlgo *algo =
-      dynamic_cast<FieldBoundaryAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<FieldBoundaryAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
     algo->execute(this, mesh, tri_fh_, interp_fh_);
   }
   osurf_->send(tri_fh_);

@@ -225,19 +225,8 @@ ClipLattice::execute()
     // Dynamically compile the clipper.
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfo *ci = ClipLatticeAlgo::get_compile_info(ftd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    ClipLatticeAlgo *algo =
-      dynamic_cast<ClipLatticeAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<ClipLatticeAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
 
     // Get widget bounds.
     Point center, r, d, i, top, bottom;
