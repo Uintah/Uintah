@@ -1228,6 +1228,13 @@ proc getOnTheFlyLibsDir {} {
     if [info exists env(SCIRUN_ON_THE_FLY_LIBS_DIR)] {
 	set dir $env(SCIRUN_ON_THE_FLY_LIBS_DIR)
 	catch "file mkdir $dir"
+	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
+	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
+		file copy $name $dir
+	    }
+	}
+		
+	    
     }
 
     if ![validDir $dir] {
@@ -1238,6 +1245,11 @@ proc getOnTheFlyLibsDir {} {
 	set home [file nativename ~]
 	set dir [file join $home SCIRun on-the-fly-libs $tcl_platform(os)]
 	catch "file mkdir $dir"
+	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
+	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
+		file copy $name $dir
+	    }
+	}
     }
     set makefile [file join $SCIRUN_OBJDIR on-the-fly-libs Makefile]
     if { ![validDir $dir] || [catch "file copy -force $makefile $dir"] } {
