@@ -280,7 +280,11 @@ namespace Uintah {
       const VarLabel* q_in_EFLabel;
       
     };
-    
+
+#define MAX_ITER_EQUILIBRATION 50     /* max inter in equilibration press calc        */ 
+ /*______________________________________________________________________
+ *      Needed by Advection Routines
+ *______________________________________________________________________*/   
 #define TOP        0          /* index used to designate the top cell face    */
 #define BOTTOM     1          /* index used to designate the bottom cell face */
 #define RIGHT      2          /* index used to designate the right cell face  */
@@ -308,6 +312,12 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.43  2000/12/29 17:52:48  harman
+// - removed div_vel_fc calculation from delpress calculation
+// - changed how press_FC is being calculated
+// - get press_CC from new_dw instead of old_dw in step 1c
+// - changed convergence criteria in step1b (equilibration pressure)
+//
 // Revision 1.42  2000/12/21 21:54:50  jas
 // The exchange coefficients are now vector<double> so that an arbitrary
 // number of materials may be specified.
