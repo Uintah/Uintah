@@ -111,9 +111,11 @@ SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
 						     const vector<vector<const VarLabel*> >& old_labels,
 						     const VarLabel* new_posLabel,
 						     const vector<vector<const VarLabel*> >& new_labels,
+						     const VarLabel* particleIDLabel,
 						     const MaterialSet* matls)
 {
   reloc.scheduleParticleRelocation(this, d_myworld, 0, level,
 				   old_posLabel, old_labels,
-				   new_posLabel, new_labels, matls);
+				   new_posLabel, new_labels,
+				   particleIDLabel, matls);
 }
