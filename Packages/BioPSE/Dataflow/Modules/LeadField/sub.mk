@@ -27,8 +27,8 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/LeadField
 
 SRCS     += \
+	$(SRCDIR)/BuildLeadField.cc\
 	$(SRCDIR)/FieldFromBasis.cc\
-	$(SRCDIR)/RecipBasis.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
