@@ -11,9 +11,11 @@ OPENGL_OBJS =
 OPENGL_SRCS =
 #endif
 
-OBJS = tkAppInit.o  tkBevel.o  tkMain.o  $(OPENGL_OBJS)
-SRCS = tkAppInit.c  tkBevel.c  tkMain.c  $(OPENGL_SRCS)
-LOCALINCLUDES = -I../tcl -I../tk
+OBJS = tk3d2.o  tkAppInit.o  tkBevel.o  tkCanvBLine.o  \
+	tkMain.o  $(OPENGL_OBJS)
+SRCS = tk3d2.c  tkAppInit.c  tkBevel.c  tkCanvBLine.c  \
+	tkMain.c  $(OPENGL_SRCS)
+LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src
 
 LIBNAME = scitk
 

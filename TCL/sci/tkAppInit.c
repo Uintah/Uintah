@@ -30,24 +30,14 @@ static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 #endif /* not lint */
 
 #include "tk.h"
+#include "itcl.h"
 #include <config.h>
-
-/*
- * The following variable is a special hack that allows applications
- * to be linked using the procedure "main" from the Tk library.  The
- * variable generates a reference to "main", which causes main to
- * be brought in from the library (and all of Tk and Tcl with it).
- */
-
-#ifdef NOT_NEEDED
-extern int main();
-int *tclDummyMainPtr = (int *) main;
-#endif
 
 extern int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BevelCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
+extern int BLineInit _ANSI_ARGS_((void));
 
 /*
  *----------------------------------------------------------------------
@@ -93,6 +83,13 @@ Tcl_AppInit(interp)
     if (Tk_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
+    /*
+     *  Add [incr Tcl] facilities...
+     */
+    if (Itcl_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
 
     /*
      * Call Tcl_CreateCommand for application-specific commands, if
@@ -104,6 +101,11 @@ Tcl_AppInit(interp)
 #endif
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) main,
 		      (void (*)()) NULL);
+
+    /*
+     * Initialize the BLine Canvas item
+     */
+    BLineInit();
 
     /*
      * Specify a user-specific startup file to invoke if the application
