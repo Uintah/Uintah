@@ -101,6 +101,13 @@ void TimestepSelector::execute()
 
    timeval.set(times[idx]);
 
+   // now set up time for dumping to vis
+
+   GeomGroup *all;
+   Point ref(14.0/16, 31.0/16, 0.0);
+   Vector along(-0.5, -1.0, 0.0);
+   double v, hour, min, sec, microseconds;
+
    if( animate.get() ){
      //DataArchive& archive = *((*(handle.get_rep()))());
      while( animate.get() && idx < (int)times.size() - 1){
@@ -113,17 +120,39 @@ void TimestepSelector::execute()
        out->send_intermediate( handle );
        sleep(unsigned( anisleep.get()));
        reset_vars();
+       v =  times[idx];
+       hour = trunc( v/3600.0);
+       min = trunc( v/60.0 - (hour * 60));
+       sec = trunc( v - (hour * 3600) - (min * 60));
+       microseconds = (v - sec - (hour * 3600) - (min * 60))*(1e3);
+       ostringstream oss;
+       if(hour > 0 || min > 0 || sec > 0 ){
+	 oss.width(2);
+	 oss.fill('0');
+	 oss<<hour<<":";
+	 oss.width(2);
+	 oss.fill('0');
+	 oss<<min<<":";
+	 oss.width(2);
+	 oss.fill('0');
+	 oss<<sec<<" + ";
+       }
+       oss<<microseconds<<"ms";
+       all = scinew GeomGroup();
+       all->add(scinew GeomText(oss.str(), ref + along,
+				def_mat_handle_->diffuse, 
+				font_size_.get()));
+       GeomSticky *sticky = scinew GeomSticky(all);
+       ogeom->delAll();
+       ogeom->addObj(sticky, "TimeStamp");
+       ogeom->flushViews();
      }
      animate.set(0);
    }
    handle->SetTimestep( idx );
    out->send(handle);
 
-   // now ship the time out to the vis for those that are interested.
-   GeomGroup *all = scinew GeomGroup();
-   Point ref(14.0/16, 31.0/16, 0.0);
-   Vector along(-0.5, -1.0, 0.0);
-   double v, hour, min, sec, microseconds;
+
    v =  times[idx];
    hour = trunc( v/3600.0);
    min = trunc( v/60.0 - (hour * 60));
@@ -142,7 +171,7 @@ void TimestepSelector::execute()
      oss<<sec<<" + ";
    }
    oss<<microseconds<<"ms";
-
+   all = scinew GeomGroup();
    all->add(scinew GeomText(oss.str(), ref + along,
 			    def_mat_handle_->diffuse, 
 			    font_size_.get()));
