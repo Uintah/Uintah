@@ -64,7 +64,7 @@ extern void hilbert_i2c( int n, int m, long int r, int a[]);
 Worker::Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 	       int ncounters, int c0, int c1)
   : dpy(dpy), num(num), scene(scene), ncounters(ncounters), c0(c0), c1(c1),
-    stop_(false), useAddSubBarrier_(false)
+    stop_(false), useAddSubBarrier_(false), rendering_scene(0)
 {
   if(dpy){
     dpy->register_worker(num, this);
@@ -87,18 +87,7 @@ Stats* Worker::get_stats(int idx)
 
 // this stuff is just in global variables for now...
 
-//int NUMCHUNKS=1<<16;
-//double updatePercent=0.5;
-//int clusterSize=1;
-//int shuffleClusters=1;
-
 extern float Galpha;
-
-//int framelessMode = 1; // default is the other mode...
-
-//int do_jitter=0;
-
-//double Gjitter_vals[1000],Gjitter_valsb[1000];
 
 bool pin = false;
 
@@ -118,11 +107,9 @@ void Worker::run()
   else
     counters=0;
   
-  rendering_scene=0;
-  
   if (!dpy->doing_frameless()) {
 
-    int showing_scene=1;
+    int showing_scene = 1 - rendering_scene;
     
     // jittered masks for this stuff...
     double jitter_vals[1000];
@@ -135,7 +122,7 @@ void Worker::run()
       jitter_valsb[ii] = scene->get_rtrt_engine()->Gjitter_valsb[ii];
     }
   
-    for(;;){
+    for(;;) {
       if( useAddSubBarrier_ ) {
 	//cout << "stopping for threads, will wait for: " 
 	//   << oldNumWorkers_+1 << " threads\n";
