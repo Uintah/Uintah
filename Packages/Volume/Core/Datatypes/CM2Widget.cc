@@ -419,7 +419,6 @@ TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
 void
 TriangleCM2Widget::release (int obj, int x, int y, int w, int h)
 {
-  //move(obj, x, y, w, h);
 }
 
 
@@ -835,7 +834,6 @@ RectangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
 void
 RectangleCM2Widget::release (int obj, int x, int y, int w, int h)
 {
-  //move(obj, x, y, w, h);
 }
 
 
