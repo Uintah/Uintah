@@ -241,6 +241,11 @@ VolumeVisualizer::execute()
   case 1:
     volren_->set_mode(VolumeRenderer::MODE_MIP);
     break;
+  default:
+    warning("Unsupported blend mode.  Using over.");
+    volren_->set_mode(VolumeRenderer::MODE_OVER);
+    gui_render_style_.set(0);
+    break;
   }
   
   //AuditAllocator(default_allocator);
