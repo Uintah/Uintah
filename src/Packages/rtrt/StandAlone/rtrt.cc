@@ -694,7 +694,7 @@ main(int argc, char* argv[])
     ggt->setDpy( dpy );
     ggt->setDpyGui( dpygui );
 
-    new Thread(ggt, "Glut Glui Thread", rtrt_engine_tg);
+    (new Thread(ggt, "Glut Glui Thread"))->detach();
   }
 
   /*  bigler */
