@@ -82,7 +82,7 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	set min [set $this-min]
 	set max [set $this-max]
 	if {$min >= $max} {
-	    set $this-min [expr $max - 1.0]
+	    set $this-min $max
 	}
 
 	clear_graph
@@ -93,7 +93,7 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	global $this-min
 	set w .ui[modname]
 	
-	set min [expr [set $this-min] + 1]
+	set min [set $this-min]
 	$w.np.max configure -from $min
     }
 
@@ -101,7 +101,7 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	global $this-max
 	set w .ui[modname]
 	
-	set max [expr [set $this-max] - 1]
+	set max [set $this-max]
 	$w.np.min configure -to $max
     }
     
@@ -133,9 +133,8 @@ itcl_class BioPSE_Visualization_ShowLeads {
 		-orient horizontal -variable $this-max \
 		-command "$this scale_graph"
 
-	$w.np.min configure  -from 0 -to [expr [set $this-max] - 1]
-	$w.np.max configure -from  [expr [set $this-min] + 1] \
-	    -to [expr [set $this-max] - 1]
+	$w.np.min configure  -from 0 -to [set $this-max]
+	$w.np.max configure -from  [set $this-min] -to [set $this-max]
 	
 	bind $w.np.min <ButtonRelease-1> "$this min_changed"
 	bind $w.np.max <ButtonRelease-1> "$this max_changed"
@@ -199,13 +198,13 @@ itcl_class BioPSE_Visualization_ShowLeads {
 	return [format "#%02x%02x%02x" $r $g $b]
     }
 
-    method set_min_max {min max} {
+    method set_min_max_index {min max} {
 	set w .ui[modname]
 
 	if {[winfo exists $w.np.min]} {
 	    #configure the min and max sliders
-	    $w.np.min configure  -from 0 -to [expr $max - 1]
-	    $w.np.max configure -from  [expr $min + 1] -to [expr $max - 1]
+	    $w.np.min configure  -from 0 -to [expr $max]
+	    $w.np.max configure -from  $min -to [expr $max]
 	}
 
 	set $this-min $min

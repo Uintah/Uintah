@@ -79,7 +79,7 @@ void ShowLeads::execute(){
   int rows = mh->nrows();
   int cols = mh->ncols();
   ostringstream set_mm;
-  set_mm << id << " set_min_max 0 " << rows; 
+  set_mm << id << " set_min_max_index 0 " << rows - 1; 
   gui->execute(set_mm.str().c_str());
 
   for(int i = 0; i < rows; i++) {
