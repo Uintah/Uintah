@@ -4,7 +4,6 @@
 namespace SCICore {
 namespace GeomSpace  {
 
-GLTexRenState* GLPlanes::_instance = 0;
 
 GLPlanes::GLPlanes(const GLVolumeRenderer* glvr) :
   GLTexRenState( glvr )
@@ -13,23 +12,19 @@ GLPlanes::GLPlanes(const GLVolumeRenderer* glvr) :
 
 void GLPlanes::preDraw()
 {
-  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  //glBlendEquation(GL_FUNC_ADD_EXT);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  //  glBlendColorEXT(1.f, 1.f, 1.f, 1.f/volren->slices);
+
 }
 
 void GLPlanes::postDraw()
 {
-  glDisable(GL_DEPTH_TEST);
-}
+  glDisable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
 
-GLTexRenState* GLPlanes::Instance(const GLVolumeRenderer* glvr)
-{
-  // Not a true Singleton class, but this does make sure that 
-  // there is only one instance per volume renderer.
-  if( _instance == 0 ){
-    _instance = new GLPlanes( glvr );
-  }
-  
-  return _instance;
 }
 
 } // end namespace Datatypes

@@ -1,4 +1,5 @@
 #include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
 #include "VolumeUtils.h"
 #include "Brick.h"
 #include "Polygon.h"
@@ -15,6 +16,7 @@ namespace Kurt {
 namespace Datatypes {
 
 using namespace SCICore::Geometry;
+using namespace SCICore::Malloc;
 
 Brick::Brick() :
   padx(0), pady(0), padz(0), lev(0),
@@ -119,7 +121,7 @@ void Brick::ComputePoly(Ray r, double t, Polygon*& p) const
     OrderIntersects( intersects, edgeList, dts, nIntersects );
   }
   
-  p = new Polygon( intersects, nIntersects );
+  p = scinew Polygon( intersects, nIntersects );
 
 }
 
@@ -183,7 +185,7 @@ Brick::ComputePolys(Ray r, double tmin, double tmax,
 	  buildEdgeList = true;
       }
     }
-    Polygon *poly = new Polygon( intersects, nIntersects );
+    Polygon *poly = scinew Polygon( intersects, nIntersects );
     polys.push_back( poly );
     t -= dt;
 
