@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
@@ -52,6 +53,21 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
   : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
     d_gtype(gtype), d_numGhostCells(numGhostCells),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)
+{
+  init();
+  d_pset->addReference();
+  for(int i=0;i<(int)neighbor_subsets.size();i++)
+    neighbor_subsets[i]->addReference();
+  if(fill)
+    fillset();
+}
+
+ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
+                               int matlIndex, const Patch* patch,
+                               Ghost::GhostType gt, int numgc,
+                               particleIndex sizeHint)
+  : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
+    d_gtype(gt), d_numGhostCells(numgc)
 {
   init();
   d_pset->addReference();
@@ -166,4 +182,16 @@ particleIndex ParticleSubset::addParticles(particleIndex count)
   for(particleIndex idx = oldsize; idx < newsize; idx++, start++)
     d_particles[start] = idx;
   return oldsize;  // The beginning of the new index range
+}
+
+ostream& operator<<(ostream& out, ParticleSubset& pset)
+{
+    out << &pset
+        << " patch: " << pset.getPatch() << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
+        << "), matl "
+        << pset.getMatlIndex() << " ghost (" << pset.getGhostType() 
+        << "," << pset.numGhostCells() << ") " 
+        << pset.numParticles() << " particles, " 
+        << pset.getNeighbors().size() << " neighbors" ;
+    return out;
 }
