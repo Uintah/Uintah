@@ -1212,10 +1212,16 @@ proc biopseFDialogResolveFile {context text defaultext} {
 
     set path [biopseFDialog_JoinFile $context $text]
 
-    if {[file ext $path] == ""} {
-	set path "$path$defaultext"
+    # DMW: directories have their final / lopped off by "file join"
+    if {[file isdirectory $path] && [string index $path end] != "/" && \
+	    [string equal [file join $text] [file join $path]]} {
+	set path $path/
     }
 
+    # DMW: added second comparison so we can specify a directory
+    if {[file ext $path] == "" && [string index $path end] != "/"} {
+	set path "$path$defaultext"
+    }
 
     if {[catch {file exists $path}]} {
 	# This "if" block can be safely removed if the following code
