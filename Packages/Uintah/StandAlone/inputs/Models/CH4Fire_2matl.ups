@@ -90,10 +90,10 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "4" label = "Velocity"     var = "Dirichlet">
+        <BCType id = "1" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,10.,0.] </value>
         </BCType>
-        <BCType id = "4" label = "Temperature"  var = "Dirichlet">
+        <BCType id = "1" label = "Temperature"  var = "Dirichlet">
                      <!-- CH4 Temperature  -->
                               <value> 298.0  </value>
                      <!-- JP8 Temperature  -->
@@ -101,7 +101,7 @@
                               <value> 627.46570  </value>
                       -->
         </BCType>
-        <BCType id = "4" label = "Density"      var = "Dirichlet">
+        <BCType id = "1" label = "Density"      var = "Dirichlet">
                      <!-- CH4 Density  -->
                               <value> 0.6560618010  </value>
                      <!-- JP8 Density  -->
@@ -109,10 +109,10 @@
                               <value> 0.23861344  </value>
                       -->
         </BCType>
-        <BCType id = "4" label = "scalar-f"     var = "Dirichlet">
+        <BCType id = "1" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
         </BCType>
-        <BCType id = "4" label = "cumulativeEnergyReleased" var = "Dirichlet">
+        <BCType id = "1" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -121,19 +121,19 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "4" label = "Velocity"     var = "Dirichlet">
+        <BCType id = "1" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,1.0,0.] </value>
         </BCType>
-        <BCType id = "4" label = "Temperature"  var = "Dirichlet">
+        <BCType id = "1" label = "Temperature"  var = "Dirichlet">
                               <value> 298.0  </value>
         </BCType>
-        <BCType id = "4" label = "Density"      var = "Dirichlet">
+        <BCType id = "1" label = "Density"      var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
-        <BCType id = "4" label = "scalar-f"     var = "Dirichlet">
+        <BCType id = "1" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "4" label = "cumulativeEnergyReleased" var = "Dirichlet">
+        <BCType id = "1" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -235,7 +235,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>CH4_2D_soupToNuts.uda</filebase>
+      <filebase>CH4_2D_2matl.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
       <compression>gzip</compression>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
@@ -248,6 +248,9 @@
       <save label="vel_CC"/>
       <save label="scalar-f"/> 
       <save label= "cumulativeEnergyReleased"/>
+      <save label= "modelMass_src"/>
+      <save label= "modelMom_src"/> 
+      <save label= "modelEng_src"/>
       
       <save label="p.x"/>
       <save label="p.particleID"/>
@@ -260,9 +263,6 @@
       <save label="p.strainRate"/> 
       <save label="p.localized"/> 
       <save label="p.velocity"/>
-      <save label= "modelMass_src"/>
-      <save label= "modelMom_src"/> 
-      <save label= "modelEng_src"/>
       <save label="g.mass"/>
       <save label="g.temperature"/>  -->
       <checkpoint cycle = "4" timestepInterval = "200"/>
@@ -330,7 +330,7 @@
         <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
         <accumulate_strain_energy>       false      </accumulate_strain_energy>
         <use_load_curves>                false      </use_load_curves>
-        <create_new_particles>           true       </create_new_particles>
+        <create_new_particles>           false      </create_new_particles>
         <erosion algorithm = "KeepStress"/>
     </MPM>
 
@@ -379,67 +379,19 @@
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
                 <geom_object>
-                  <difference>
                     <cylinder label = "outer cylinder">
                      <bottom>           [0.0,0.0,-.05715]   </bottom>
                      <top>              [0.0,0.0, .05715]   </top>
                      <radius>           0.05715             </radius>
                    </cylinder>
-                   <cylinder label = "inner cylinder">
-                     <bottom>           [0.0,0.0,-.0508]   </bottom>
-                     <top>              [0.0,0.0, .0508]   </top>
-                     <radius>           0.0508             </radius>
-                   </cylinder>
-                  </difference>
                  <res>                 [2,2,2]         </res>
                  <velocity>            [0.0,0.0,0.0]   </velocity>
                  <temperature>        300.0            </temperature>
                 </geom_object>
          </material>
          
-         <material  name = "reactant">    <!-- MATL 2 -->
-                <density>   1840.0   </density>
-                <constitutive_model type = "visco_scram">
-                    <useModifiedEOS>     true       </useModifiedEOS>
-                    <PR>0.3</PR>
-                    <CrackParameterA>   1.e-3 </CrackParameterA>
-                    <CrackPowerValue>   10.0  </CrackPowerValue>
-                    <CrackMaxGrowthRate>300.0 </CrackMaxGrowthRate>
-                    <StressIntensityF>  500.0 </StressIntensityF>
-                    <CrackFriction>     0.35  </CrackFriction>
-                    <InitialCrackRadius>3.e-5 </InitialCrackRadius>
-                    <CrackGrowthRate>   12.   </CrackGrowthRate>
-                    <G1>  3.5e8   </G1>
-                    <G2>  1.739e8 </G2>
-                    <G3>  5.212e8 </G3>
-                    <G4>  9.085e8 </G4>
-                    <G5>  6.875e8 </G5>
-                    <RTau1> 0.0    </RTau1> 
-                    <RTau2> 7.32e3 </RTau2> 
-                    <RTau3> 7.32e4 </RTau3> 
-                    <RTau4> 7.32e5 </RTau4> 
-                    <RTau5> 2.e6   </RTau5> 
-                    <Beta>  1.5e-4 </Beta>  
-                    <Gamma> 1.0    </Gamma> 
-                    <DCp_DTemperature>3.30773</DCp_DTemperature>
-               </constitutive_model>
-               <toughness>             10.e6            </toughness>
-                <thermal_conductivity>  .452            </thermal_conductivity>
-                <specific_heat>        996.0            </specific_heat>
-                <geom_object>
-                   <cylinder label = "inner cylinder">
-                     <bottom>           [0.0,0.0,-.0508]   </bottom>
-                     <top>              [0.0,0.0, .0508]   </top>
-                     <radius>           0.0508             </radius>
-                  </cylinder>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         300.0           </temperature>
-                </geom_object>
-         </material>
-
             <contact>
-              <type>approach</type>
+              <type>null</type>
               <vel_fields>              [0,0,0]         </vel_fields>
               <mu> 0.0 </mu>
             </contact>
@@ -447,7 +399,7 @@
       </MPM>
       <!--__________________________________-->
        <ICE>
-         <material name = "Atmosphere">       <!-- MATL 4 -->   
+         <material name = "Atmosphere">       <!-- MATL 1 -->   
            <EOS type = "ideal_gas"> </EOS>
            <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>          1e-6            </dynamic_viscosity>
@@ -475,49 +427,10 @@
            </geom_object>
          </material>
 
-         <material name = "PBXproductGases">  <!-- MATL 5 -->
-           <EOS type = "JWLC">
-             <A>  8.580805e11</A>
-             <B>  7.546e9    </B>
-             <C>  7.8127e8   </C>
-             <R1> 4.306      </R1>
-             <R2> 0.80       </R2>
-             <om> 0.30       </om>
-             <rho0>1894.0    </rho0>
-           </EOS>
-           <includeFlowWork>        false              </includeFlowWork>
-           <dynamic_viscosity>          0.0            </dynamic_viscosity>
-           <thermal_conductivity>       0.0            </thermal_conductivity>
-           <specific_heat>              544.96         </specific_heat>
-           <speed_of_sound>             374.17         </speed_of_sound>
-           <gamma>                      1.4            </gamma>
-           <geom_object>
-                  <box>
-                    <min>           [ 1.0, 1.0, 1.0] </min>
-                    <max>           [ 2.0, 2.0, 2.0] </max>
-                  </box>
-             <res>                      [2,2,2]       </res>
-             <velocity>           [0.0,0.0,0.0]       </velocity>
-             <temperature>        300.0               </temperature>
-             <density>            1.62605283294106    </density>
-             <pressure>           101325.0            </pressure>
-           </geom_object>
-         </material>
-      </ICE>       
-       
       <exchange_properties> 
          <exchange_coefficients>
-              <momentum>  [ 0, 0, 0, 1e15, 1e15,
-                               0, 0, 1e15, 1e15,
-                                  0, 1e15, 1e15,
-                                     1e15, 1e15,
-                                           1e15]     </momentum>
-
-              <heat>      [ 0, 0, 0, 1e10, 1e10,
-                               0, 0, 1e10, 1e10,
-                                  0, 1e10, 1e10,
-                                     1e10, 1e10,
-                                           1e10]     </heat>
+              <momentum>  [1e15]     </momentum>
+              <heat>      [1e10]     </heat>
         </exchange_coefficients>
       </exchange_properties> 
     </MaterialProperties>
@@ -525,17 +438,6 @@
     <!--      M O D E L S                                                   -->
     <!--____________________________________________________________________-->
     <Models>
-<!-- 
-      <Model type="Simple_Burn">
-        <fromMaterial> reactant     </fromMaterial>
-        <toMaterial>  PBXproductGases </toMaterial>
-        <ThresholdTemp>       450.0 </ThresholdTemp>
-        <ThresholdPressure> 50000.0 </ThresholdPressure>
-        <Enthalpy>        2000000.0 </Enthalpy>
-        <BurnCoeff>            7.53 </BurnCoeff>
-        <refPressure>      101325.0 </refPressure>
-      </Model>
- -->
        <Model type="AdiabaticTable">
         <!--_______________________________________________________________-->
         <!-- Steve's CH4 Table                                             -->
