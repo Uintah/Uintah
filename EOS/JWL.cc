@@ -3,20 +3,20 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
+#include <iomanip>
 
 using namespace Uintah;
 
 JWL::JWL(ProblemSpecP& ps)
 {
    // Constructor
-  A = 5.484e11;  // Pascals
-  B = 9.375e9;   // Pascals
-  R1 = 4.94;
-  R2 = 1.21;
-  om = 0.28;
-  rho0 = 1630.;  // kg/m^3
-  c_v = 996.;        // J/(kg K)
-  // rho_micro at P=101325. and T = 300. is 1.21109437751004
+  ps->require("A",A);
+  ps->require("B",B);
+  ps->require("R1",R1);
+  ps->require("R2",R2);
+  ps->require("om",om);
+  ps->require("rho0",rho0);
+  // rho_micro at P=101325. and T = 300. is 1.37726724081686
 }
 
 JWL::~JWL()
@@ -30,39 +30,76 @@ double JWL::computeRhoMicro(double press, double gamma,
   // P=P(rho,T) is not invertable to get rho=rho(P,T)
   // so I'm using Newton's method to find the rhoM
   // such that 
-  //press - (A*(1.-om*rhoM/(R1*rho0))*exp(-R1*rho0/rhoM) +
-  //         B*(1.-om*rhoM/(R2*rho0))*exp(-R2*rho0/rhoM) + om*rhoM*c_v*Temp) = 0
+  //press - (A*exp(-R1*rho0/rhoM) +
+  //         B*exp(-R2*rho0/rhoM) + om*rhoM*cv*Temp) = 0
   // First guess comes from inverting the last term of this equation
 
-  double rhoM = press/(om*c_v*Temp);
+  double rhoM = min(10000.,press/(om*cv*Temp));
   double epsilon = 1.e-15;
   double delta = 1.;
-  double f,df_drho;
+  double f,df_drho,relfac=.9;
   int count = 0;
 
   while(fabs(delta/rhoM)>epsilon){
-    f = (A*(1.-om*rhoM/(R1*rho0))*exp(-R1*rho0/rhoM) +
-         B*(1.-om*rhoM/(R2*rho0))*exp(-R2*rho0/rhoM) +
-         om*rhoM*c_v*Temp) - press;
+    f = (A*exp(-R1*rho0/rhoM) + B*exp(-R2*rho0/rhoM) + om*rhoM*cv*Temp) - press;
 
-    df_drho = A*((-om/(R1*rho0))*exp(-R1*rho0/rhoM) +
-                (1.-om*rhoM/(R1*rho0))*(R1*rho0/(rhoM*rhoM))*exp(-R1*rho0/rhoM))
-            + B*((-om/(R2*rho0))*exp(-R2*rho0/rhoM) +
-                (1.-om*rhoM/(R2*rho0))*(R2*rho0/(rhoM*rhoM))*exp(-R2*rho0/rhoM))
-            + om*c_v*Temp;
+    df_drho = A*(R1*rho0/(rhoM*rhoM))*exp(-R1*rho0/rhoM)
+            + B*(R2*rho0/(rhoM*rhoM))*exp(-R2*rho0/rhoM)
+            + om*cv*Temp;
 
-    delta = -(f/df_drho);
+    delta = -relfac*(f/df_drho);
     rhoM+=delta;
     rhoM=fabs(rhoM);
     if(count>=100){
+      cout << setprecision(15);
       cout << "JWL::computeRhoMicro not converging." << endl;
+      cout << "press = " << press << " temp = " << Temp << " cv = " << cv << endl;
       cout << "delta = " << delta << " rhoM = " << rhoM << " f = " << f << " df_drho = " << df_drho << endl;
+
+
+      // The following is here solely to help figure out what was going on
+      // at the time the above code failed to converge.  Start over with this
+      // copy and print more out.
+      delta = 1.;
+      rhoM = press/(om*cv*Temp);
+      cout <<  rhoM << endl;;
+      while(fabs(delta/rhoM)>epsilon){
+       f = (A*exp(-R1*rho0/rhoM) +
+            B*exp(-R2*rho0/rhoM) + om*rhoM*cv*Temp) - press;
+
+       df_drho = A*(R1*rho0/(rhoM*rhoM))*exp(-R1*rho0/rhoM)
+               + B*(R2*rho0/(rhoM*rhoM))*exp(-R2*rho0/rhoM)
+               + om*cv*Temp;
+
+       delta = -relfac*(f/df_drho);
+       rhoM+=delta;
+       rhoM=fabs(rhoM);
+       cout <<  "f = " << f << " df_drho = " << df_drho << " delta = " << delta << endl;
+       cout <<  rhoM << endl;;
+       if(count>=120){
+         exit(1);
+       }
+       count++;
+      }
+
       exit(1);
     }
     count++;
   }
   return rhoM;
   
+}
+
+// Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
+double JWL::getAlpha(double Temp, double sp_v, double P, double cv)
+{
+  // Cheating here a bit, computing v*(dT/dv) and returning the inverse of that
+  double alpha;
+  alpha = 1.0/((sp_v*rho0/(om*cv))*
+          (P - A*exp(-R1*sp_v*rho0) - B*exp(-R2*sp_v*rho0)) +
+           sp_v*(A*R1*rho0*exp(-R1*sp_v*rho0) + B*R2*sp_v*exp(-R2*sp_v*rho0)));
+
+  return  alpha;
 }
 
 //__________________________________
@@ -79,9 +116,8 @@ void JWL::computeTempCC(const Patch* patch,
   if(comp_domain == "WholeDomain") {
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      Temp[c]= (press[c] - A*(1.-om*rhoM[c]/(R1*rho0))*exp(-R1*rho0/rhoM[c])
-                         - B*(1.-om*rhoM[c]/(R2*rho0))*exp(-R2*rho0/rhoM[c]))
-                         / (om*rhoM[c]*c_v);
+      Temp[c]= (press[c] - A*exp(-R1*rho0/rhoM[c])
+                         - B*exp(-R2*rho0/rhoM[c])) / (om*rhoM[c]*cv);
     }
   } 
   // Although this isn't currently being used
@@ -89,9 +125,8 @@ void JWL::computeTempCC(const Patch* patch,
   if(comp_domain == "FaceCells") {     
    for (CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
       IntVector c = *iter;
-      Temp[c]= (press[c] - A*(1.-om*rhoM[c]/(R1*rho0))*exp(-R1*rho0/rhoM[c])
-                         - B*(1.-om*rhoM[c]/(R2*rho0))*exp(-R2*rho0/rhoM[c]))
-                         / (om*rhoM[c]*c_v);
+      Temp[c]= (press[c] - A*exp(-R1*rho0/rhoM[c])
+                         - B*exp(-R2*rho0/rhoM[c])) / (om*rhoM[c]*cv);
    }
   }
 }
@@ -105,15 +140,11 @@ void JWL::computePressEOS(double rhoM, double gamma,
 {
   // Pointwise computation of thermodynamic quantities
 
-  press   = A*(1.-om*rhoM/(R1*rho0))*exp(-R1*rho0/rhoM) +
-            B*(1.-om*rhoM/(R2*rho0))*exp(-R2*rho0/rhoM) +
-            om*rhoM*c_v*Temp;
+  press   = A*exp(-R1*rho0/rhoM) +
+            B*exp(-R2*rho0/rhoM) + om*rhoM*cv*Temp;
 
-  dp_drho = A*((-om/(R1*rho0))*exp(-R1*rho0/rhoM) +
-               (1.-om*rhoM/(R1*rho0))*(R1*rho0/(rhoM*rhoM))*exp(-R1*rho0/rhoM))
-          + B*((-om/(R2*rho0))*exp(-R2*rho0/rhoM) +
-               (1.-om*rhoM/(R2*rho0))*(R2*rho0/(rhoM*rhoM))*exp(-R2*rho0/rhoM))
-          + om*c_v*Temp;
+  dp_drho = A*(exp(-R1*rho0/rhoM))
+          + B*(exp(-R2*rho0/rhoM)) + om*cv*Temp;
 
   dp_de   = om*rhoM;
 }
@@ -128,8 +159,7 @@ void JWL::hydrostaticTempAdjustment(Patch::FaceType face,
                           const double& cv,
                           const Vector& dx,
                           CCVariable<double>& Temp_CC)
-  { 
-
+{ 
     double delTemp_hydro;
     switch (face) {
     case Patch::xplus:
@@ -180,4 +210,4 @@ void JWL::hydrostaticTempAdjustment(Patch::FaceType face,
       break;
     }
 
-  }
+}
