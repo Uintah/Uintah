@@ -237,7 +237,7 @@ public:
   //! get the mesh statistics
   unsigned get_min_i() const { return min_i_; }
   unsigned get_min_j() const { return min_j_; }
-  vector<unsigned int> get_min() const;
+  bool get_min(vector<unsigned int>&) const;
   unsigned get_ni() const { return ni_; }
   unsigned get_nj() const { return nj_; }
   bool get_dim(vector<unsigned int>&) const;

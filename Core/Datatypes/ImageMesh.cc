@@ -79,15 +79,16 @@ ImageMesh::transform(Transform &t)
   transform_.pre_trans(t);
 }
 
-vector<unsigned int>
-ImageMesh::get_min() const
+bool
+ImageMesh::get_min(vector<unsigned int> &array) const
 {
-  vector<unsigned int> array(2);
+  array.resize(2);
+  array.clear();
 
-  array[0] = min_i_;
-  array[1] = min_j_;
+  array.push_back(min_i_);
+  array.push_back(min_j_);
 
-  return array;
+  return true;
 }
 
 bool

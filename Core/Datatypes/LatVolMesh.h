@@ -405,7 +405,7 @@ public:
   unsigned get_min_i() const { return min_i_; }
   unsigned get_min_j() const { return min_j_; }
   unsigned get_min_k() const { return min_k_; }
-  vector<unsigned int> get_min() const;
+  bool get_min(vector<unsigned int>&) const;
   unsigned get_ni() const { return ni_; }
   unsigned get_nj() const { return nj_; }
   unsigned get_nk() const { return nk_; }

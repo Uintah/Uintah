@@ -191,7 +191,9 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
       ifield->get_type_description(0)->get_name() == "ImageField" ||
       ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
 
-    omesh->set_min( imesh->get_min() );
+    vector< unsigned int > min;
+    imesh->get_min( min );
+    omesh->set_min( min );
 
     // Set the orginal transform.
     omesh->set_transform( imesh->get_transform() );

@@ -125,16 +125,17 @@ LatVolMesh::transform(Transform &t)
   transform_.pre_trans(t);
 }
 
-vector<unsigned int>
-LatVolMesh::get_min() const
+bool
+LatVolMesh::get_min(vector<unsigned int> &array) const
 {
-  vector<unsigned int> array(3);
+  array.resize(3);
+  array.clear();
 
-  array[0] = min_i_;
-  array[1] = min_j_;
-  array[2] = min_k_;
+  array.push_back(min_i_);
+  array.push_back(min_j_);
+  array.push_back(min_k_);
 
-  return array;
+  return true;
 }
 
 bool
