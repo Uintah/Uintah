@@ -959,7 +959,7 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
 //        cout << "Mouse down on object "<<current_obj->get_name()<<endl;
       cbFunc mouseCB = MouseCallBack::getCB_MD( current_obj );
       if(mouseCB)
-	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
+	mouseCB( current_obj, ray, hit );
     }
     return;
   }
@@ -1035,7 +1035,7 @@ Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
 //        cout << "Mouse up on object "<<current_obj->get_name()<<endl;
       cbFunc mouseCB = MouseCallBack::getCB_MU( current_obj );
       if(mouseCB)
-	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
+	mouseCB( current_obj, ray, hit );
     }
     return;
   }
@@ -1212,7 +1212,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 //        cout << "Mouse moving on object "<<current_obj->get_name()<<endl;
       cbFunc mouseCB = MouseCallBack::getCB_MM( current_obj );
       if (mouseCB)
-	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
+	mouseCB( current_obj, ray, hit );
     }
     return;
   }
