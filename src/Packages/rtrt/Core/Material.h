@@ -18,20 +18,19 @@ using SCIRun::Vector;
 using SCIRun::Point;
 
 struct Context;
-class HitInfo;
-class Scene;
-class Ray;
-class Stats;
-class Worker;
+class  HitInfo;
+class  Ray;
+class  Stats;
+class  Worker;
 
 class Material {
 protected:
     // For a simple implementation of material, use this function.  Just
-    // pass in ambient, diffuse, specular colors, as well as the specular
+    // pass in diffuse, specular colors, as well as the specular
     // exponent (spec_coeff), the reflectivity (refl),
     // The other arguments should just be forwarded from the shade
     // parameter block.
-    void phongshade(Color& result, const Color& ambient,
+    void phongshade(Color& result,
 		    const Color& diffuse, const Color& specular,
 		    double spec_coeff, double refl,
 		    const Ray& ray, const HitInfo& hit,
@@ -45,6 +44,11 @@ public:
 
     //ambient color (irradiance/pi) at position with surface normal
   inline Color ambient_hack(Scene* scene, const Vector& normal) const {
+
+    if( !scene->ambient_hack ) {
+      return scene->getAmbientColor();
+    }
+
     float cosine = scene->get_groundplane().cos_angle( normal );
 #ifdef __sgi
     float sine = fsqrt ( 1.F - cosine*cosine );
