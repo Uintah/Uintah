@@ -37,7 +37,7 @@ itcl_class SCIRun_Fields_SampleField {
         global $this-autoexecute
 	set $this-wtype rake
 	set $this-maxseeds 15
-	set $this-dist impuni
+	set $this-dist uniuni
 	set $this-numseeds 10
 	set $this-rngseed 1
 	set $this-rnginc 1
@@ -89,13 +89,19 @@ itcl_class SCIRun_Fields_SampleField {
 	pack $wtab.type $wtab.f1 $wtab.auto -side top -fill x -pady 5 -anchor w
 
 
+	frame $rtab.f2
+	pack $rtab.f2 -side top -anchor w -padx 8
+	label $rtab.f2.numseeds_l -text "Number of samples" -width 23 -anchor w
+	entry $rtab.f2.numseeds -text $this-numseeds -width 10
+	pack $rtab.f2.numseeds_l $rtab.f2.numseeds -side left -anchor w
+
 	iwidgets::Labeledframe $rtab.dist -labelpos nw \
 		               -labeltext "Distribution"
-	pack $rtab.dist
+	pack $rtab.dist -fill x -e y
 	set dist [$rtab.dist childsite]
 	frame $dist.imp 
 	frame $dist.uni 
-	pack $dist.imp $dist.uni -side left -f both -e y
+	pack $dist.uni $dist.imp -side left -f both -e y
 
 	label $dist.imp.label -text "Importance Weighted"
 	radiobutton $dist.imp.uni -var $this-dist -value impuni \
@@ -109,27 +115,22 @@ itcl_class SCIRun_Fields_SampleField {
 	            -text "Scattered" 
 	pack $dist.imp.label $dist.imp.uni $dist.imp.scat \
 	     $dist.uni.label $dist.uni.uni $dist.uni.scat \
-	     -side top -padx 5 -pady 2
+	     -side top -padx 5 -pady 2 -anchor w
+
+	checkbutton $rtab.rnginc -text "Increment RNG seed on execute" \
+	    -var $this-rnginc
+	pack $rtab.rnginc -side top -anchor w -padx 8
 
 	frame $rtab.f1 
-	pack $rtab.f1 -side top 
-	label $rtab.f1.rngseed_l -text "Seed value for RNG" -width 23 \
-              -anchor w
+	pack $rtab.f1 -side top  -anchor w
+	label $rtab.f1.rngseed_l -text "Seed value for RNG" -width 23 -anchor w
 	entry $rtab.f1.rngseed -text $this-rngseed -width 10
-	pack $rtab.f1.rngseed_l $rtab.f1.rngseed -side left -anchor w
-	checkbutton $rtab.rnginc -text "Increment seed on execute" \
-	    -var $this-rnginc
-	pack $rtab.rnginc -side top
-	frame $rtab.f2
-	pack $rtab.f2 -side top
-	label $rtab.f2.numseeds_l -text "number of samples" -width 23 \
-              -anchor w
-	entry $rtab.f2.numseeds -text $this-numseeds -width 10
-	pack $rtab.f2.numseeds_l $rtab.f2.numseeds -side left
+	pack $rtab.f1.rngseed_l $rtab.f1.rngseed -side left -anchor w -padx 8
+
         frame $rtab.f3
-        pack $rtab.f3 -side top
+        pack $rtab.f3 -side top -anchor w
         checkbutton $rtab.f3.clamp -text "Clamp to nodes" -var $this-clamp
-        pack $rtab.f3.clamp
+        pack $rtab.f3.clamp -anchor w -padx 8
 
 	
 
