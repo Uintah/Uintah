@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-puts "\nLoading BioTensor...\n"
+puts "\nLoading BioTensor (this may take a minute)...\n"
 
 # COLOR SCHEME
 set basecolor grey
@@ -1792,6 +1792,13 @@ set scale_glyph 1
 global exag_glyph
 set exag_glyph 0
 
+global glyph_rake
+set glyph_rake 1
+
+global glyph_point
+set glyph_point 1
+
+
 # fibers
 global fiber_color
 set fiber_color ""
@@ -1810,6 +1817,12 @@ set fibers_length 100
 
 global fibers_steps
 set fibers_steps 200
+
+global fiber_rake
+set fiber_rake 1
+
+global fiber_point
+set fiber_point 1
 
 
                                                                                
@@ -1850,7 +1863,7 @@ class BioTensorApp {
 	set dt_completed 0
 	set vis_activated 0
 
-	set c_procedure_tab "Data"
+	set c_procedure_tab "Load Data"
 	set c_data_tab "Nrrd"
 	set c_left_tab "Data Vis"
 	set c_vis_tab "Variance"
@@ -1977,15 +1990,15 @@ class BioTensorApp {
 	    "Indicates the current event"
 
 	# Data Acquisition Tab
-	set tips(DataTab) "Select to access\nparameters for\nData Acquisition\nstep"
-        set tips(Execute-DataAcquisition) "Select to execute the\nData Acquisition step"
+	set tips(DataTab) "Select to access\nparameters for\nthe Loading Data\nstep"
+        set tips(Execute-DataAcquisition) "Select to execute the\nLoading Data step"
 	set tips(Next-DataAcquisition) "Select to proceed to\nthe Registration step"
 
 	# Registration Tab
 	set tips(Execute-Registration) "Select to execute the\nRegistration step"
 	set tips(Next-Registration) "Select to build\ndiffusion tensors"
 
-	# Build DTs Tab
+	# Build Tensors Tab
 	set tips(Execute-DT) "Select to execute building\nof diffusion tensors\nand start visualization"
 	set tips(Next-DT) "Select to view first\nvisualization tab"
 
@@ -2176,8 +2189,8 @@ class BioTensorApp {
 	    $m.main_menu.file.menu add command -label "Save Session... Ctr+S" \
 		-underline 0 -command "$this save_session" -state active
 
-#	    $m.main_menu.file.menu add command -label "Save Image..." \
-#		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
+	    $m.main_menu.file.menu add command -label "Save Image..." \
+		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
 	    
 	    $m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
 		-underline 0 -command "$this exit_app" -state active
@@ -2218,10 +2231,10 @@ class BioTensorApp {
             iwidgets::tabnotebook $process.tnb \
                 -width [expr $process_width - 40] \
                 -height [expr $process_height - 120] \
-                -tabpos n
+                -tabpos n -equaltabs 0
 	    pack $process.tnb -side top -anchor n 
 	    
-            set step_tab [$process.tnb add -label "Data" -command "$this change_processing_tab Data"]
+            set step_tab [$process.tnb add -label "Load Data" -command "$this change_processing_tab Data"]
 
 	    
             if {$case == 0} {
@@ -2610,14 +2623,14 @@ class BioTensorApp {
 	    Tooltip $step_tab.last.ex $tips(Execute-Registration)
 
 	    button $step_tab.last.ne -text "Next" -state disabled -width 8 \
-		-command "$this change_processing_tab \"Build DTs\"" 
+		-command "$this change_processing_tab \"Build Tensors\"" 
 	    Tooltip $step_tab.last.ne $tips(Next-Registration)
 
             pack $step_tab.last.ne $step_tab.last.ex -side right \
 		-anchor ne -padx 2 -pady 0
 	    
 	    ### Build DT
-            set step_tab [$process.tnb add -label "Build DTs" -command "$this change_processing_tab \"Build DTs\""]
+            set step_tab [$process.tnb add -label "Build Tensors" -command "$this change_processing_tab \"Build Tensors\""]
 	    
             if {$case == 0} {
 		set dt_tab1 $step_tab
@@ -2779,7 +2792,7 @@ class BioTensorApp {
 	    
             bind $process.indicator <Button> {app display_module_error} 
 	    
-            label $process.indicatorL -text "Data Acquisition..."
+            label $process.indicatorL -text "Press Execute to Load Data..."
             pack $process.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
 	    
@@ -2794,7 +2807,7 @@ class BioTensorApp {
 	    
             construct_indicator $process.indicator.canvas
 	    
-            $process.tnb view "Data"
+            $process.tnb view "Load Data"
 	    
 	    ### Attach/Detach button
             frame $m.d 
@@ -2988,9 +3001,9 @@ class BioTensorApp {
 	pack $view_opts.buttons.v1 -side left -anchor nw
 	
 	
-	button $view_opts.buttons.v1.autoview -text "Autoview" \
+	button $view_opts.buttons.v1.autoview -text "Autoview (Ctrl-v)" \
 	    -command "$mods(Viewer)-ViewWindow_0-c autoview" \
-	    -width 12 -padx 3 -pady 3
+	    -width 15 -padx 3 -pady 3
 	
 	pack $view_opts.buttons.v1.autoview -side top -padx 3 -pady 3 \
 	    -anchor n -fill x
@@ -3001,7 +3014,7 @@ class BioTensorApp {
 	
 	menubutton $view_opts.buttons.v1.views.def -text "Views" \
 	    -menu $view_opts.buttons.v1.views.def.m -relief raised \
-	    -padx 3 -pady 3  -width 12
+	    -padx 3 -pady 3  -width 15
 	
 	menu $view_opts.buttons.v1.views.def.m -tearoff 0
 
@@ -3110,11 +3123,11 @@ class BioTensorApp {
 	pack $view_opts.buttons.v2 -side left -anchor nw
 	
 	button $view_opts.buttons.v2.sethome -text "Set Home View" -padx 3 -pady 3 \
-	    -command "$mods(Viewer)-ViewWindow_0-c sethome"
+	    -command "$mods(Viewer)-ViewWindow_0-c sethome" -width 15
 	
 	button $view_opts.buttons.v2.gohome -text "Go Home" \
 	    -command "$mods(Viewer)-ViewWindow_0-c gohome" \
-	    -padx 3 -pady 3
+	    -padx 3 -pady 3 -width 15
 	
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
@@ -3617,12 +3630,12 @@ class BioTensorApp {
 
 	    if {$dt_completed} {
 		change_indicator_labels "Visualization..."
-	    } elseif {$c_procedure_tab == "Build DTs"} {
+	    } elseif {$c_procedure_tab == "Build Tensors"} {
 		change_indicator_labels "Building Diffusion Tensors..."
 	    } elseif {$c_procedure_tab == "Registration"} {
 		change_indicator_labels "Registration..."
 	    } else {
-		change_indicator_labels "Data Acquisition..."
+		change_indicator_labels "Loading Data..."
 	    }
 	}
     }
@@ -3637,7 +3650,7 @@ class BioTensorApp {
 	
 	
 	if {$which == $mods(ChooseNrrd1) && $state == "JustStarted"} {
-	    change_indicator_labels "Data Acquisition..."
+	    change_indicator_labels "Loading Data..."
 	    change_indicate_val 1
 	} elseif {$which == $mods(ChooseNrrd1) && $state == "Completed"} {
 	    change_indicate_val 2
@@ -3852,7 +3865,7 @@ class BioTensorApp {
 		    } elseif {$data_completed} {
 			change_indicator_labels "Registration..."
 		    } else {
-			change_indicator_labels "Data Acquisition..."
+			change_indicator_labels "Loading Data..."
 		    }
 		    change_indicate_val 0
 		}
@@ -6140,7 +6153,7 @@ class BioTensorApp {
 	    global $mods(ShowField-Glyphs)-tensors_scale
 	    
 	    frame $f.scale 
-	    pack $f.scale -side top -anchor n -padx 3 -pady 0
+	    pack $f.scale -side top -anchor nw -padx 8 -pady 0
 	    
 	    checkbutton $f.scale.b -text "Glyph Size:            " \
 		-variable scale_glyph \
@@ -6160,12 +6173,36 @@ class BioTensorApp {
 	    bind $f.scale.s <ButtonRelease> {app change_glyph_scale}
 	    
 	    pack $f.scale.b $f.scale.s $f.scale.l -side left -anchor nw -padx 1 -pady 0
+
+
+
+	    global $mods(ShowField-Glyphs)-data-resolution
+	    
+	    frame $f.disc
+	    pack $f.disc -side top -anchor nw -padx 8 -pady 0
+	    
+	    label $f.disc.la -text "Discretization: " -state disabled
+	    
+	    scale $f.disc.s -from 3 -to 20 \
+                -resolution 1 \
+  		-length 100  -width 15 \
+		-sliderlength 15 \
+                -orient horizontal \
+   	        -state disabled \
+		-showvalue false \
+   	        -foreground grey64 \
+	        -variable $mods(ShowField-Glyphs)-data-resolution
+	    label $f.disc.l -textvariable $mods(ShowField-Glyphs)-data-resolution -state disabled
+	    bind $f.disc.s <ButtonRelease> {app change_glyph_disc}
+	    
+	    pack $f.disc.la $f.disc.s $f.disc.l -side left -anchor nw -padx 1 -pady 0
+
 	    
 	    global exag_glyph
 	    global $mods(TendAnscale-Glyphs)-scale
 	    
 	    frame $f.exag 
-	    pack $f.exag -side top -anchor n -padx 3 -pady 0
+	    pack $f.exag -side top -anchor nw -padx 8 -pady 0
 	    
 	    checkbutton $f.exag.b -text "Shape Exaggerate:" \
 		-variable exag_glyph \
@@ -6198,21 +6235,45 @@ class BioTensorApp {
 	    
 	    global $mods(ChooseField-GlyphSeeds)-port-index
 	    frame $seed.a
-	    pack $seed.a -side left -anchor n -padx 10
-	    radiobutton $seed.a.point -text "Single Point" \
+	    pack $seed.a -side left -anchor n -padx 3
+
+	    frame $seed.a.pointf
+	    pack $seed.a.pointf -side top\
+		-anchor nw -padx 3 -pady 1
+	    radiobutton $seed.a.pointf.point -text "Single Point" \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 0 \
 		-state disabled \
 		-command "$this update_glyph_seed_method"
-	    
-	    radiobutton $seed.a.rake -text "Along Line" \
+
+	    global glyph_point
+	    checkbutton $seed.a.pointf.w -text "Widget" \
+		-variable glyph_point \
+		-state disabled \
+		-command "$this toggle_glyph_point"
+
+	    pack $seed.a.pointf.point $seed.a.pointf.w -side left -anchor nw -padx 0 -pady 0
+
+	    frame $seed.a.rakef
+	    pack $seed.a.rakef  -side top \
+		-anchor nw -padx 3 -pady 1
+
+	    radiobutton $seed.a.rakef.rake -text "Along Line  " \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 1 \
 		-state disabled \
 		-command "$this update_glyph_seed_method"
+
+	    global glyph_rake
+	    checkbutton $seed.a.rakef.w -text "Widget" \
+		-variable glyph_rake \
+		-state disabled \
+		-command "$this toggle_glyph_rake"
+
+	    pack $seed.a.rakef.rake $seed.a.rakef.w -side left -anchor nw -padx 0 -pady 0
 	    
 	    frame $seed.b
-	    pack $seed.b -side right -anchor n -padx 10
+	    pack $seed.b -side right -anchor n -padx 3
 	    radiobutton $seed.b.plane -text "On Planes" \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 2 \
@@ -6225,8 +6286,6 @@ class BioTensorApp {
 		-state disabled \
 		-command "$this update_glyph_seed_method"
 	    
-	    pack $seed.a.point $seed.a.rake  -side top \
-		-anchor nw -padx 3 -pady 1
 	    
 	    pack $seed.b.plane $seed.b.grid -side top \
 		-anchor nw -padx 3 -pady 1
@@ -6539,6 +6598,21 @@ class BioTensorApp {
 		$glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
 		$glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
 	    }
+
+	    # configure glyph rake
+	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+		$glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
+		$glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
+	    } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index]== 0} {
+		$glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
+		$glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
+	    } else {
+		$glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
+		$glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
+		$glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
+		$glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
+	    }
         } else {
 	    foreach w [winfo children $glyphs_tab1] {
 		disable_widget $w
@@ -6688,17 +6762,59 @@ class BioTensorApp {
         if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
+	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
+
+	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
         } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
+	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
+
+	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
+	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
         } else {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
+
+	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
         }
 	
         $mods(ChooseField-GlyphSeeds)-c needexecute
 	
-	after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
+	$mods(Viewer)-ViewWindow_0-c redraw
+    }
+
+    method toggle_glyph_point {} {
+	global glyph_point
+	global mods
+	
+	if {$glyph_point} {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
+	} else {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
+	}
+
+	$mods(Viewer)-ViewWindow_0-c redraw
+    }
+    
+
+    method toggle_glyph_rake {} {
+	global glyph_rake
+	global mods
+	
+	if {$glyph_rake} {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
+	} else {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+	}
+
+	$mods(Viewer)-ViewWindow_0-c redraw
     }
     
     method toggle_show_glyphs {} {
@@ -6730,6 +6846,14 @@ class BioTensorApp {
 	if {$vis_activated && $scale_glyph} {
 	    global mods
 	    $mods(ShowField-Glyphs)-c data_scale
+	}
+    }
+
+
+    method change_glyph_disc {} {
+	if {$vis_activated} {
+	    global mods
+	    $mods(ShowField-Glyphs)-c data_resolution_scale
 	}
     }
 
@@ -6961,21 +7085,45 @@ class BioTensorApp {
 	    global $mods(ChooseField-FiberSeeds)-port-index
 	    
 	    frame $seed.a
-	    pack $seed.a -side left -anchor n -padx 10 
-	    radiobutton $seed.a.point -text "Single Point" \
+	    pack $seed.a -side left -anchor n -padx 3
+
+	    frame $seed.a.pointf
+	    pack $seed.a.pointf -side top\
+		-anchor nw -padx 3 -pady 1
+	    radiobutton $seed.a.pointf.point -text "Single Point" \
 		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 0 \
 		-state disabled \
 		-command "$this update_fiber_seed_method"
-	    
-	    radiobutton $seed.a.rake -text "Along Line" \
-	    -variable $mods(ChooseField-FiberSeeds)-port-index \
+
+	    global fiber_point
+	    checkbutton $seed.a.pointf.w -text "Widget" \
+		-variable fiber_point \
+		-state disabled \
+		-command "$this toggle_fiber_point"
+
+	    pack $seed.a.pointf.point $seed.a.pointf.w -side left -anchor nw -padx 0 -pady 0
+
+	    frame $seed.a.rakef
+	    pack $seed.a.rakef  -side top \
+		-anchor nw -padx 3 -pady 1
+
+	    radiobutton $seed.a.rakef.rake -text "Along Line  " \
+		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 1 \
 		-state disabled \
 		-command "$this update_fiber_seed_method"
-	    
+
+	    global fiber_rake
+	    checkbutton $seed.a.rakef.w -text "Widget" \
+		-variable fiber_rake \
+		-state disabled \
+		-command "$this toggle_fiber_rake"
+
+	    pack $seed.a.rakef.rake $seed.a.rakef.w -side left -anchor nw -padx 0 -pady 0
+
 	    frame $seed.b
-	    pack $seed.b -side right -anchor n -padx 10
+	    pack $seed.b -side right -anchor n -padx 3
 	    radiobutton $seed.b.plane -text "On Planes" \
 		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 2 \
@@ -6988,11 +7136,9 @@ class BioTensorApp {
 		-state disabled \
 		-command "$this update_fiber_seed_method"
 	    
-	    pack $seed.a.point $seed.a.rake  -side top \
-		-anchor nw -padx 5 -pady 0
 	    
 	    pack $seed.b.plane $seed.b.grid -side top \
-		-anchor nw -padx 5 -pady 0
+		-anchor nw -padx 3 -pady 1
 	    
 	    iwidgets::labeledframe $f.rep \
 		-labeltext "Color Fibers Based On" \
@@ -7190,6 +7336,21 @@ class BioTensorApp {
 	    } else {
 		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
 		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
+	    }
+
+	    # configure glyph rake
+	    global $mods(ChooseField-FiberSeeds)-port-index
+	    if {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
+		$fibers_tab1.seed.childsite.a.rakef.w configure -state normal
+		$fibers_tab2.seed.childsite.a.rakef.w configure -state normal
+	    } elseif {[set $mods(ChooseField-FiberSeeds)-port-index]== 0} {
+		$fibers_tab1.seed.childsite.a.pointf.w configure -state normal
+		$fibers_tab2.seed.childsite.a.pointf.w configure -state normal
+	    } else {
+		$fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
+		$fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
+		$fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
+		$fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
 	    }
 
 	} else {
@@ -7395,18 +7556,60 @@ class BioTensorApp {
         if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+	    $fibers_tab1.seed.childsite.a.pointf.w configure -state normal
+	    $fibers_tab2.seed.childsite.a.pointf.w configure -state normal
+
+	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
+	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
         } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
+	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
+	    $fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
+
+	    $fibers_tab1.seed.childsite.a.rakef.w configure -state normal
+	    $fibers_tab2.seed.childsite.a.rakef.w configure -state normal
         } else {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
+	    $fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
+
+	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
+	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
         }
 	
         $mods(ChooseField-FiberSeeds)-c needexecute
 	$mods(Viewer)-ViewWindow_0-c redraw
 	
-	after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
+	$mods(Viewer)-ViewWindow_0-c redraw
+    }
+
+    method toggle_fiber_point {} {
+	global fiber_point
+	global mods
+	
+	if {$fiber_point} {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
+	} else {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
+	}
+
+	$mods(Viewer)-ViewWindow_0-c redraw
+    }
+    
+
+    method toggle_fiber_rake {} {
+	global fiber_rake
+	global mods
+	
+	if {$fiber_rake} {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
+	} else {
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+	}
+
+	$mods(Viewer)-ViewWindow_0-c redraw
     }
 	    
 
@@ -7929,21 +8132,21 @@ class BioTensorApp {
 	    change_indicate_val 0
 	}
 	if {$initialized} {
-	    if {$which == "Data"} {
+	    if {$which == "Load Data"} {
 		# Data Acquisition step
-		$proc_tab1 view "Data"
-		$proc_tab2 view "Data"
-		change_indicator_labels "Data Acquisition..."
-		set c_procedure_tab "Data"
+		$proc_tab1 view "Load Data"
+		$proc_tab2 view "Load Data"
+		change_indicator_labels "Press Execute to Load Data..."
+		set c_procedure_tab "Load Data"
 	    } elseif {$which == "Registration"} {
 		# Registration step
 		if {$data_completed} {
 		    $proc_tab1 view "Registration"
 		    $proc_tab2 view "Registration"
-		    change_indicator_labels "Registration..."
+		    change_indicator_labels "Press Execute to Perform EPI Registration..."
 		} 
 		set c_procedure_tab "Registration"
-	    } elseif {$which == "Build DTs"} {
+	    } elseif {$which == "Build Tensors"} {
 		if {!$do_registration} {
 		    set reg_completed 1
 		    disableModule $mods(ChooseNrrd-ToReg) 0
@@ -7953,15 +8156,15 @@ class BioTensorApp {
 		    disableModule $mods(UnuJoin) 1
 		    $mods(ChooseNrrd-ToReg)-c needexecute
 		    activate_dt
-		    $proc_tab1 view "Build DTs"
-		    $proc_tab2 view "Build DTs"
+		    $proc_tab1 view "Build Tensors"
+		    $proc_tab2 view "Build Tensors"
 		} elseif {$reg_completed} {
 		    # Building DTs step
-		    $proc_tab1 view "Build DTs"
-		    $proc_tab2 view "Build DTs"
-		    change_indicator_labels "Building Diffusion Tensors..."
+		    $proc_tab1 view "Build Tensors"
+		    $proc_tab2 view "Build Tensors"
+		    change_indicator_labels "Press Execute to Build Diffusion Tensors..."
 		}
-		set c_procedure_tab "Build DTs"
+		set c_procedure_tab "Build Tensors"
 	    }
 	    
 	    set indicator 0
@@ -8177,7 +8380,7 @@ class BioTensorApp {
 			} elseif {$data_completed} {
 			    change_indicator_labels "Registration..."
 			} else {
-			    change_indicator_labels "Data Acquisition..."
+			    change_indicator_labels "Loading Data..."
 			}
 		    }
 		} elseif {$darby < 0} {
@@ -8195,7 +8398,7 @@ class BioTensorApp {
 			} elseif {$data_completed} {
 			    change_indicator_labels "Registration..."
 			} else {
-			    change_indicator_labels "Data Acquisition..."
+			    change_indicator_labels "Loading Data..."
 			}
 		    }
 
