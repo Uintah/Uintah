@@ -15,19 +15,19 @@
   University of Utah. All Rights Reserved.
 */
 
-//    File   : MapScalarData.h
-//    Author : Michael Callahan
-//    Date   : June 2002
+//    File   : ReplaceScalarDataValue.h
+//    Author : David Weinstein
+//    Date   : October 2002
 
-#if !defined(MapScalarData_h)
-#define MapScalarData_h
+#if !defined(ReplaceScalarDataValue_h)
+#define ReplaceScalarDataValue_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
 namespace SCIRun {
 
-class MapScalarDataAlgo : public DynamicAlgoBase
+class ReplaceScalarDataValueAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle src, double oldvalue, 
@@ -40,7 +40,7 @@ public:
 
 
 template <class FIELD, class LOC>
-class MapScalarDataAlgoT : public MapScalarDataAlgo
+class ReplaceScalarDataValueAlgoT : public ReplaceScalarDataValueAlgo
 {
 public:
   //! virtual interface. 
@@ -51,7 +51,7 @@ public:
 
 template <class FIELD, class LOC>
 FieldHandle
-MapScalarDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
+ReplaceScalarDataValueAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 					double oldvalue,
 					double newvalue)
 {
@@ -80,4 +80,4 @@ MapScalarDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 
 } // end namespace SCIRun
 
-#endif // MapScalarData_h
+#endif // ReplaceScalarDataValue_h

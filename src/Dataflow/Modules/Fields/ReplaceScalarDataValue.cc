@@ -16,7 +16,7 @@
 */
 
 /*
- *  MapScalarData: Unary field data operations
+ *  ReplaceScalarDataValue: Unary field data operations
  *
  *  Written by:
  *   Michael Callahan
@@ -29,40 +29,40 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Modules/Fields/MapScalarData.h>
+#include <Dataflow/Modules/Fields/ReplaceScalarDataValue.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
 #include <sstream>
 
 namespace SCIRun {
 
-class MapScalarData : public Module {
+class ReplaceScalarDataValue : public Module {
   GuiDouble oldvalue_;
   GuiDouble newvalue_;
 public:
-  MapScalarData(GuiContext* ctx);
-  virtual ~MapScalarData();
+  ReplaceScalarDataValue(GuiContext* ctx);
+  virtual ~ReplaceScalarDataValue();
   virtual void execute();
 };
 
 
-DECLARE_MAKER(MapScalarData)
+DECLARE_MAKER(ReplaceScalarDataValue)
 
 
-  MapScalarData::MapScalarData(GuiContext* ctx)
-    : Module("MapScalarData", ctx, Filter,"Fields", "SCIRun"),
+  ReplaceScalarDataValue::ReplaceScalarDataValue(GuiContext* ctx)
+    : Module("ReplaceScalarDataValue", ctx, Filter,"Fields", "SCIRun"),
       oldvalue_(ctx->subVar("oldvalue")), newvalue_(ctx->subVar("newvalue"))
 {
 }
 
 
-MapScalarData::~MapScalarData()
+ReplaceScalarDataValue::~ReplaceScalarDataValue()
 {
 }
 
 
 void
-MapScalarData::execute()
+ReplaceScalarDataValue::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
@@ -88,8 +88,8 @@ MapScalarData::execute()
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
-  CompileInfo *ci = MapScalarDataAlgo::get_compile_info(ftd, ltd);
-  Handle<MapScalarDataAlgo> algo;
+  CompileInfo *ci = ReplaceScalarDataValueAlgo::get_compile_info(ftd, ltd);
+  Handle<ReplaceScalarDataValueAlgo> algo;
   if (!module_dynamic_compile(*ci, algo)) return;
 
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, oldvalue, newvalue));
@@ -104,13 +104,13 @@ MapScalarData::execute()
 
 
 CompileInfo *
-MapScalarDataAlgo::get_compile_info(const TypeDescription *field_td,
+ReplaceScalarDataValueAlgo::get_compile_info(const TypeDescription *field_td,
 					 const TypeDescription *loc_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("MapScalarDataAlgoT");
-  static const string base_class_name("MapScalarDataAlgo");
+  static const string template_class_name("ReplaceScalarDataValueAlgoT");
+  static const string base_class_name("ReplaceScalarDataValueAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
