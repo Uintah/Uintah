@@ -53,10 +53,8 @@ void usage(char* progname)
 {
     cerr << "usage: " << progname << " [options]\n";
     cerr << "valid options are:\n";
-    cerr << "  -server  - server process\n";
-    cerr << "  -client  - client process\n";
-    cerr << "  -stop  - stop the server\n";
-    cerr << "  -test  - test the ploader\n";
+    cerr << "  server  - server process\n";
+    cerr << "  client  - client process\n";
     cerr << "\n";
     exit(1);
 }
@@ -75,6 +73,11 @@ public:
   
 };
 
+const int nServer=10;
+const int nClient=10;
+const int nRep=100;
+const int SIZE=80000;
+
 int main(int argc, char* argv[])
 {
     using std::string;
@@ -84,14 +87,11 @@ int main(int argc, char* argv[])
       bool stop=false;
       bool test=false;
       string url;
-      int reps=1;
       
       for(int i=1;i<argc;i++){
 	string arg(argv[i]);
 	if(arg == "server") server=true;
         else if(arg == "client") client=true;
-        else if(arg == "stop")   stop=true;
-        else if(arg == "test")   test=true;
         else url=arg;
       }
       if(!client && !server && !stop && !test)
@@ -100,40 +100,47 @@ int main(int argc, char* argv[])
 
       PIDL::initialize();
       if(server) {
-	DTPoint *ep=new DTPoint(PIDL::getDT());
+	DTPoint *ep[nServer];
 	ofstream f("pp.url");
-	std::string s;
 	f<<PIDL::getDT()->getUrl()<<endl;
-	f<<(long)ep<<endl;
+	for(int i=0; i<nServer; i++){
+	  ep[i]=new DTPoint(PIDL::getDT());
+	  f<<(long)ep[i]<<endl;
+	}
 	f.close();
-	/*	
-	for(int i=0; i<20;i++){
-	  sleep(5);
-	  Thread* t = new Thread(new MyThread, "MyThread", 0, Thread::Activated);
-	  t->detach();
-	} 
-	*/
-	
+
 	while(true){
-	  DTMessage *msg=ep->getMessage();
-	  cerr<<"getMessage="<<msg->buf<<endl;
-	  DTMessage *rm=new DTMessage;
-	  rm->buf="I got it";
-	  rm->length=strlen(msg->buf);
-	  rm->autofree=false;
-	  rm->to_addr=msg->fr_addr;
-	  rm->recver=msg->sender;
-	  ep->putMessage(rm);
+	  for(int i=0; i<nServer; i++){
+	    DTMessage *msg=ep[i]->getMessage();
+	    cerr<<"getMessage="<<msg->buf<<endl;
+	    /*
+	    DTMessage *rm=new DTMessage;
+	    rm->buf="I got it";
+	    rm->length=strlen(msg->buf);
+	    rm->autofree=false;
+	    rm->to_addr=msg->fr_addr;
+	    rm->recver=msg->sender;
+	    ep->putMessage(rm);
+	    */
+	  }
 	}
       }
       else if(client){
 	ifstream f("pp.url");
-	DTPoint *sp=new DTPoint(PIDL::getDT());
-	long ep;
+	DTPoint *sp[nClient];
+
+	for(int i=0; i<nClient; i++){
+	  sp[i]=new DTPoint(PIDL::getDT());
+	}
+
+	cerr<<"sender="<< (long)sp<<endl;
+	long ep[nServer];
 	string ppurl;
 	f>>ppurl;
-	f>>ep;
-	cerr<<"ppurl="<<ppurl<<ep<<endl;
+	for(int i=0; i<nServer; i++){
+	  f>>ep[i];
+	  cerr<<"ppurl="<<ppurl<<ep[i]<<endl;
+	}
 	f.close();
 
 	URL url(ppurl);
@@ -141,27 +148,30 @@ int main(int argc, char* argv[])
 	int port=url.getPortNumber();
 	long ip=url.getIP();
 
-	for(int i=0; i<5; i++){
-	  DTMessage *msg=new DTMessage;
-	  const int SIZE=80000;
-	  msg->buf=new char[SIZE];
-	  msg->length=SIZE;
-	  sprintf(msg->buf, "$This is LONG message #%d$...\0",i);
-	  msg->autofree=true;
-	  msg->to_addr.port=port;
-	  msg->to_addr.ip  =ip;
-	  msg->recver= (DTPoint *)ep;
-	  sp->putMessage(msg);
-	  msg=sp->getMessage();
-	  cerr<<"getMessage="<<msg->buf<<endl;	  
+	for(int k=0; k<nRep; k++){
+	  for(int j=0; j<nClient; j++){
+	    for(int i=0; i<nServer; i++){
+	      DTMessage *msg=new DTMessage;
+	      msg->buf=new char[SIZE];
+	      msg->length=SIZE;
+	      sprintf(msg->buf, "$This is LONG message #%d from client %d to server %d $...",k, j, i);
+	      msg->autofree=true;
+	      msg->to_addr.port=port;
+	      msg->to_addr.ip  =ip;
+	      msg->recver= (DTPoint *)ep[i];
+	      sp[j]->putMessage(msg);
+	      //msg=sp[j]->getMessage();
+	      //cerr<<"getMessage="<<msg->buf<<endl;	  
+	    }
+	  }
 	}
       }
     } catch(const MalformedURL& e) {
-	cerr << "pp.cc: Caught MalformedURL exception:\n";
-	cerr << e.message() << '\n';
+      cerr << "pp.cc: Caught MalformedURL exception:\n";
+      cerr << e.message() << '\n';
     } catch(...) {
-	cerr << "Caught unexpected exception!\n";
-	abort();
+      cerr << "Caught unexpected exception!\n";
+      abort();
     }
     PIDL::finalize();
     return 0;
