@@ -2,16 +2,15 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
-set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 69]
+set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 8]
 set m1 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 159]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 70 259]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 355 169]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 355 252]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 273 170]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 273 253]
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 349]
 set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 436]
+set m7 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 203 9]
+set m8 [addModuleAtPosition "Insight" "DataIO" "Switch" 10 91]
 
 addConnection $m1 0 $m2 0
 addConnection $m3 0 $m4 0
@@ -19,11 +18,13 @@ addConnection $m1 0 $m4 1
 addConnection $m4 0 $m5 1
 addConnection $m1 0 $m5 0
 addConnection $m5 0 $m6 0
-addConnection $m0 0 $m1 0
+addConnection $m0 0 $m8 0
+addConnection $m7 0 $m8 1
+addConnection $m8 0 $m1 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename {/scratch/darbyb/data/tumorbase/case1/spgr/test.mhd}
+set $m0-filename {}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m2-notes {}
@@ -102,15 +103,15 @@ set $m6-ViewWindow_0-caxes {0}
 set $m6-ViewWindow_0-raxes {1}
 set $m6-ViewWindow_0-iaxes {}
 set $m6-ViewWindow_0-have_collab_vis {0}
-set $m6-ViewWindow_0-view-eyep-x {          37.2748}
-set $m6-ViewWindow_0-view-eyep-y {          36.3757}
-set $m6-ViewWindow_0-view-eyep-z {          1066.97}
-set $m6-ViewWindow_0-view-lookat-x {          129.302}
-set $m6-ViewWindow_0-view-lookat-y {          126.183}
-set $m6-ViewWindow_0-view-lookat-z {         -17.6463}
-set $m6-ViewWindow_0-view-up-x {                0}
-set $m6-ViewWindow_0-view-up-y {               -1}
-set $m6-ViewWindow_0-view-up-z {                0}
+set $m6-ViewWindow_0-view-eyep-x {          304.549}
+set $m6-ViewWindow_0-view-eyep-y {          169.574}
+set $m6-ViewWindow_0-view-eyep-z {          1025.07}
+set $m6-ViewWindow_0-view-lookat-x {           116.93}
+set $m6-ViewWindow_0-view-lookat-y {          123.733}
+set $m6-ViewWindow_0-view-lookat-z {         -11.5598}
+set $m6-ViewWindow_0-view-up-x {        0.0232876}
+set $m6-ViewWindow_0-view-up-y {         -0.99893}
+set $m6-ViewWindow_0-view-up-z {        0.0399638}
 set $m6-ViewWindow_0-view-fov {               20}
 set $m6-ViewWindow_0-view-eyep_offset-x {}
 set $m6-ViewWindow_0-view-eyep_offset-y {}
@@ -149,5 +150,11 @@ set $m6-ViewWindow_0-global-dl {0}
 set $m6-ViewWindow_0-global-type {Gouraud}
 set $m6-ViewWindow_0-ortho-view {0}
 set $m6-ViewWindow_0-unused {1}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-filename {}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-which_port {1}
 
 ::netedit scheduleok
