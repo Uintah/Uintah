@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -38,35 +39,33 @@ ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase
    return *this;
 }
 
-void ParticleVariableBase::getMPIBuffer(void*& buf, int& count,
-					MPI_Datatype& datatype, bool& free_datatype,
+void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
 					ParticleSubset* sendset)
 {
-   buf = getBasePointer();
-   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
-   bool linear=true;
-   ParticleSubset::iterator iter = sendset->begin();
-   if(iter != sendset->end()){
-      particleIndex last = *iter;
-      for(;iter != sendset->end(); iter++){
-	 particleIndex idx = *iter;
-	 if(idx != last+1){
-	    linear=false;
-	    break;
-	 }
+  const TypeDescription* td = virtualGetTypeDescription()->getSubType();
+  bool linear=true;
+  ParticleSubset::iterator iter = sendset->begin();
+  if(iter != sendset->end()){
+    particleIndex last = *iter;
+    for(;iter != sendset->end(); iter++){
+      particleIndex idx = *iter;
+      if(idx != last+1){
+	linear=false;
+	break;
       }
-   }
-   if(linear){
-      datatype=td->getMPIType();
-      count = sendset->getParticleSet()->numParticles();
-   } else {
-      vector<int> blocklens(sendset->numParticles(), 1);
-      MPI_Type_indexed(sendset->numParticles(), &blocklens[0],
-		       sendset->begin(), td->getMPIType(), &datatype);
-      MPI_Type_commit(&datatype);
-      count=1;
-      free_datatype=true;
-   } 
+    }
+  }
+  void* buf = getBasePointer();
+  int count = sendset->numParticles();
+  if(linear){
+    buffer.add(buf, count, td->getMPIType(), false);
+  } else {
+    vector<int> blocklens(sendset->numParticles(), 1);
+    MPI_Datatype datatype;
+    MPI_Type_indexed(count, &blocklens[0],
+		     sendset->begin(), td->getMPIType(), &datatype);
+    MPI_Type_commit(&datatype);
+    buffer.add(buf, 1, datatype, true);
+  } 
 }
-
 
