@@ -235,36 +235,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      }
    }
 
-   // allocateAndPut instead:
-   /* new_dw->put(position,             lb->pXLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pvelocity,            lb->pVelocityLabel); */;
-#ifdef IMPLICIT
-   // allocateAndPut instead:
-   /* new_dw->put(pacceleration,        lb->pAccelerationLabel); */;
-   //   new_dw->put(bElBar,               lb->bElBarLabel);
-#endif
-   // allocateAndPut instead:
-   /* new_dw->put(pexternalforce,       lb->pExternalForceLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pmass,                lb->pMassLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pvolume,              lb->pVolumeLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(ptemperature,         lb->pTemperatureLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pparticleID,          lb->pParticleIDLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(psize,                lb->pSizeLabel); */;
-   
-   if(d_membrane){
-     // allocateAndPut instead:
-     /* new_dw->put(pTang1, lb->pTang1Label); */;
-     // allocateAndPut instead:
-     /* new_dw->put(pTang2, lb->pTang2Label); */;
-     // allocateAndPut instead:
-     /* new_dw->put(pNorm,  lb->pNormLabel); */;
-   }
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
