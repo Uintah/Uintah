@@ -60,10 +60,10 @@ SocketThread::run()
     if(id==1){
       ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(ep->object);
       if(_sc->d_objptr->getRefCount()==0){
-	cerr<<"calling accept_thread->exit()...";
-	ep->accept_thread->stop();
-	ep->accept_thread->exit();
-	cerr<<"Done";
+	//cerr<<"calling accept_thread->exit()...";
+	ep->dead=true;
+	//ep->accept_thread->exit();
+	//cerr<<"Done";
       }
     }
   }

@@ -43,6 +43,7 @@ using namespace SCIRun;
 
 SocketEpChannel::SocketEpChannel(){ 
   int new_fd;  // listen on sock_fd, new connection on new_fd
+
   struct sockaddr_in my_addr;    // my address information
   
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -62,6 +63,7 @@ SocketEpChannel::SocketEpChannel(){
   msg = NULL;
   object=NULL;
   accept_thread=NULL;
+  dead=false;
 }
 
 SocketEpChannel::~SocketEpChannel(){ 
@@ -137,24 +139,38 @@ SocketEpChannel::bind(SpChannel* spchan){
 void 
 SocketEpChannel::runAccept(){
   //cerr<<"SocketAcceptThread is running\n";
-  while(sockfd!=0){
-    int new_fd;
-    socklen_t sin_size = sizeof(struct sockaddr_in);
-    sockaddr_in their_addr;
-    //cerr<<"Waiting for socket connections...\n";
-    if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
-			 &sin_size)) == -1) {
-      throw CommError("accept", errno);
+  fd_set read_fds; // temp file descriptor list for select()
+  struct timeval timeout;
+  // add the listener to the master set
+  while(!dead){
+    timeout.tv_sec=0;
+    timeout.tv_usec=0;
+    FD_ZERO(&read_fds);
+    FD_SET(sockfd, &read_fds);
+    if (select(sockfd+1, &read_fds, NULL, NULL, &timeout) == -1) {
+      throw CommError("select", errno);
     }
-
-    //printf("server: got connection from %s\n", inet_ntoa(their_addr.sin_addr));
-    if(object==NULL) throw CommError("Access Null object", -1);
-    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
-    _sc->d_objptr->addReference();
-
-    Thread *t= new Thread(new SocketThread(this, NULL, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
-    t->detach();
-  }  
+    //cerr<<"Still running..."<<endl;
+    // run through the existing connections looking for data to read
+    if(FD_ISSET(sockfd, &read_fds)){
+      int new_fd;
+      socklen_t sin_size = sizeof(struct sockaddr_in);
+      sockaddr_in their_addr;
+      //cerr<<"Waiting for socket connections...\n";
+      if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
+			   &sin_size)) == -1) {
+	throw CommError("accept", errno);
+      }
+      
+      //printf("server: got connection from %s\n", inet_ntoa(their_addr.sin_addr));
+      if(object==NULL) throw CommError("Access Null object", -1);
+      ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
+      _sc->d_objptr->addReference();
+      
+      Thread *t= new Thread(new SocketThread(this, NULL, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
+      t->detach();
+    }  
+  }
 }
 
 
