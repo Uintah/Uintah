@@ -271,6 +271,7 @@ private:
   // functions
   void add_arrow(Vector vv, Point p, double lenscale) {
     double length = vv.length();
+    
     // crop the vector based on it's length
     // we only want to check against max_crop_length if it's greater than 0
     if (hog->max_crop_length.get() > 0)
@@ -358,13 +359,16 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
   //cout << "v_origin = "<<v_origin<<", vf_value = "<<vf_value<<endl;
 
   // crop the vector based on it's length
-  // we only want to check against max_crop_length if it's greater than 0
+  // we only want to check against max_crop_length if it's greater than SMALL_NUM
+  // it locks up if the vector is too small.
   double length = vf_value.length();
+  double SMALL_NUM = 1.0e-50;
   //cout << "vf_value"<<vf_value<<"length("<<length<<")";flush(cout);
-  if (length <= 0.0)
+
+  if (length <= SMALL_NUM)
     // zero length vectors are not added
     return;
-  if (info.maxlen > 0)
+  if (info.maxlen > SMALL_NUM)
     if (length > info.maxlen)
       return;
   if (length < info.minlen)
@@ -610,6 +614,7 @@ void NodeHedgehog::execute()
   info.sf_interface = sf_interface;
   info.have_cmap = have_cmap;
   info.cmap = cmap;
+  
 #ifdef USE_HOG_THREADS
   // break up the volume into smaller pieces and then loop over each piece
 #else
@@ -652,6 +657,7 @@ void NodeHedgehog::execute()
     cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
     if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
 #endif
+
     for(; iter != end; ++iter) {
       //cout << "*";
       Point v_origin;
@@ -661,6 +667,7 @@ void NodeHedgehog::execute()
       Vector vf_value = fld->value(*iter);
       add_arrow(v_origin, vf_value, arrows, info);
     }
+
   } else if( fld->data_at() == Field::NODE) {
 #if 0
     LatVolMesh::Node::index_type min_index, max_index;
@@ -674,6 +681,8 @@ void NodeHedgehog::execute()
     LatVolMesh::Node::range_iter iter;
     LatVolMesh::Node::iterator end;
     mesh->get_node_range(iter, end, BBox(lower, upper));
+    
+
 #if 0
     cout << "begin["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"]\n";
     cout << "end["<<(*end).i_<<", "<<(*end).j_<<", "<<(*end).k_<<"]\n";
