@@ -45,7 +45,7 @@ public:
   
   //////////
   // return the value at the given position
-  T& get3(int, int, int);
+  const T& get3(int, int, int) const;
 
   T& set3(int, int, int, T& val);
 
@@ -111,9 +111,8 @@ Accel3Attrib<T>::Accel3Attrib(const Accel3Attrib<T>& copy)
 }
 
 
-template <class T>
-T&
-Accel3Attrib<T>::get3(int ix, int iy, int iz)
+template <class T> const T &
+Accel3Attrib<T>::get3(int ix, int iy, int iz) const
 {
   return accel[iz][iy][ix];
 }

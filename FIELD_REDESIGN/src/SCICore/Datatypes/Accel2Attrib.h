@@ -45,7 +45,7 @@ public:
   
   //////////
   // return the value at the given position
-  T& get2(int, int);
+  const T& get2(int, int) const;
 
   T& set2(int, int, T& val);
 
@@ -108,8 +108,8 @@ Accel2Attrib<T>::Accel2Attrib(const Accel2Attrib<T>& copy)
 
 
 template <class T>
-T&
-Accel2Attrib<T>::get2(int ix, int iy)
+const T &
+Accel2Attrib<T>::get2(int ix, int iy) const
 {
   return accel[iy][ix];
 }
