@@ -60,6 +60,7 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
   d_serverContext->chan->openConnection();
   d_serverContext->d_typeinfo=typeinfo;
   d_serverContext->d_ptr=ptr;
+  d_serverContext->storage = new HandlerStorage();
 }
 
 Object::~Object()
@@ -76,6 +77,8 @@ Object::~Object()
     delete d_serverContext->chan;
     if(d_serverContext->d_sched)
       delete d_serverContext->d_sched;
+    if(d_serverContext->storage)
+      delete d_serverContext->storage;
     delete d_serverContext;
   }
 }
