@@ -36,6 +36,9 @@
  *
  */
 
+
+
+
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -54,8 +57,16 @@
 #include <Core/Services/ServiceBase.h>
 #include <Core/Services/FileTransferClient.h>
 #include <Core/ICom/IComSocket.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h> 
+ 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif 
  
 namespace MatlabIO {
 
@@ -102,6 +113,7 @@ class MatlabEngineThreadInfo
 	bool				exit_;
 	bool				passed_test_;
 };
+
 
 class Matlab2 : public Module, public ServiceBase 
 {
@@ -1105,7 +1117,17 @@ bool Matlab2::save_input_matrices()
 			loadcmd = "load " + file_transfer_->remote_file(input_matrix_matfile_[p]) + ";\n";
 			m_file << loadcmd;
             
-            if (need_file_transfer_) file_transfer_->put_file(file_transfer_->local_file(input_matrix_matfile_[p]),file_transfer_->remote_file(input_matrix_matfile_[p]));
+            if (need_file_transfer_) 
+            {
+                if(!(file_transfer_->put_file(file_transfer_->local_file(input_matrix_matfile_[p]),file_transfer_->remote_file(input_matrix_matfile_[p]))))
+                {
+                    error("Matlab2: Could not transfer file");
+                    std::string err = "Error :" + file_transfer_->geterror();
+                    error(err);
+                    return(false);
+                }
+                
+            }
 		}
 
 		for (int p = 0; p < NUM_FIELD_PORTS; p++)
@@ -1159,8 +1181,18 @@ bool Matlab2::save_input_matrices()
 			loadcmd = "load " + file_transfer_->remote_file(input_field_matfile_[p]) + ";\n";
 			m_file << loadcmd;
             
-              if (need_file_transfer_) file_transfer_->put_file(file_transfer_->local_file(input_field_matfile_[p]),file_transfer_->remote_file(input_field_matfile_[p]));
-		}
+            if (need_file_transfer_) 
+            {
+                if(!(file_transfer_->put_file(file_transfer_->local_file(input_field_matfile_[p]),file_transfer_->remote_file(input_field_matfile_[p]))))
+                {
+                    error("Matlab2: Could not transfer file");
+                    std::string err = "Error :" + file_transfer_->geterror();
+                    error(err);
+                    return(false);
+                }
+                
+            }
+        }
 
 		for (int p = 0; p < NUM_NRRD_PORTS; p++)
 		{
@@ -1213,8 +1245,17 @@ bool Matlab2::save_input_matrices()
 			loadcmd = "load " + file_transfer_->remote_file(input_nrrd_matfile_[p]) + ";\n";            
 			m_file << loadcmd;
             
-            if (need_file_transfer_) file_transfer_->put_file(file_transfer_->local_file(input_nrrd_matfile_[p]),file_transfer_->remote_file(input_nrrd_matfile_[p]));
-            
+            if (need_file_transfer_) 
+            {
+                if(!(file_transfer_->put_file(file_transfer_->local_file(input_nrrd_matfile_[p]),file_transfer_->remote_file(input_nrrd_matfile_[p]))))
+                {
+                    error("Matlab2: Could not transfer file");
+                    std::string err = "Error :" + file_transfer_->geterror();
+                    error(err);
+                    return(false);
+                }
+                
+            }            
 		}
 	}
 	catch (matlabfile::could_not_open_file)
@@ -1251,25 +1292,6 @@ bool Matlab2::create_temp_directory()
 
 bool Matlab2::delete_temp_directory()
 {
-	if(mfile_.size() > 0) tfmanager_.delete_tempfile(mfile_);
-
-	for (int p = 0; p < NUM_MATRIX_PORTS; p++)
-	{
-		if (input_matrix_matfile_[p].size() > 0) tfmanager_.delete_tempfile(input_matrix_matfile_[p]);
-		if (output_matrix_matfile_[p].size() > 0) tfmanager_.delete_tempfile(output_matrix_matfile_[p]);
-	}
-	
-	for (int p = 0; p < NUM_FIELD_PORTS; p++)
-	{
-		if (input_field_matfile_[p].size() > 0) tfmanager_.delete_tempfile(input_field_matfile_[p]);
-		if (output_field_matfile_[p].size() > 0) tfmanager_.delete_tempfile(output_field_matfile_[p]);
-	}
-	
-	for (int p = 0; p < NUM_NRRD_PORTS; p++)
-	{
-		if (input_nrrd_matfile_[p].size() > 0) tfmanager_.delete_tempfile(input_nrrd_matfile_[p]);
-		if (output_nrrd_matfile_[p].size() > 0) tfmanager_.delete_tempfile(output_nrrd_matfile_[p]);
-	}
 
 	tfmanager_.delete_tempdir(temp_directory_);
 	temp_directory_ = "";
@@ -1307,3 +1329,8 @@ std::string Matlab2::totclstring(std::string &instring)
 }
 
 } // End namespace MatlabInterface
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif
