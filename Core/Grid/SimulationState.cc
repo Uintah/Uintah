@@ -80,3 +80,9 @@ const MaterialSet* SimulationState::allMPMMaterials() const
   ASSERT(all_mpm_matls != 0);
   return all_mpm_matls;
 }
+
+const MaterialSet* SimulationState::allICEMaterials() const
+{
+  ASSERT(all_ice_matls != 0);
+  return all_ice_matls;
+}
