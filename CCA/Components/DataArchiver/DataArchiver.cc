@@ -88,6 +88,9 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
    ProblemSpecP p = params->findBlock("DataArchiver");
 
    d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
+
+   // set to false if restartSetup is called - we can't do it there
+   // as the first timestep doesn't have any tasks
    d_outputInitTimestep = p->findBlock("outputInitTimestep") != 0;
    p->require("filebase", d_filebase);
 
@@ -407,6 +410,7 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
 				int timestep, double time, bool fromScratch,
 				bool removeOldDir)
 {
+   d_outputInitTimestep = false;
    if (d_writeMeta && !fromScratch) {
       // partial copy of dat files
       copyDatFiles(restartFromDir, d_dir, startTimestep,
@@ -449,15 +453,14 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
    //d_currentTimestep = timestep;
    
    if (d_outputInterval > 0)
-      d_nextOutputTime = d_outputInitTimestep?time:d_outputInterval * ceil(time / d_outputInterval);
+      d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
    else if (d_outputTimestepInterval > 0)
-      d_nextOutputTimestep = d_outputInitTimestep?timestep:timestep + d_outputTimestepInterval;
+      d_nextOutputTimestep = timestep + d_outputTimestepInterval;
    
    if (d_checkpointInterval > 0)
-      d_nextCheckpointTime = d_outputInitTimestep?time:d_checkpointInterval *
-	 ceil(time / d_checkpointInterval);
+      d_nextCheckpointTime = d_checkpointInterval * ceil(time / d_checkpointInterval);
    else if (d_checkpointTimestepInterval > 0)
-      d_nextCheckpointTimestep = d_outputInitTimestep?timestep:timestep + d_checkpointTimestepInterval;
+      d_nextCheckpointTimestep = timestep + d_checkpointTimestepInterval;
    if (d_checkpointWalltimeInterval > 0)
      d_nextCheckpointWalltime = d_checkpointWalltimeInterval + 
        (int)Time::currentSeconds();
