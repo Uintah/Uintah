@@ -43,7 +43,9 @@ using std::ostringstream;
 #include <Core/Geom/Material.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/MaskedTetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/MaskedLatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
 
 #include <Core/Algorithms/Loader/Loader.h>
@@ -305,6 +307,23 @@ Isosurface::initialize()
   minmax_loader.store("TetVol<double>", 
 		      new Minmax<TetVol<double> > );
 
+  minmax_loader.store("MaskedTetVol<unsigned char>", 
+		      new Minmax<MaskedTetVol<unsigned char> > );
+  minmax_loader.store("MaskedTetVol<char>",   
+		      new Minmax<MaskedTetVol<char> > );
+  minmax_loader.store("MaskedTetVol<unsigned short>",
+		      new Minmax<MaskedTetVol<unsigned short> > );
+  minmax_loader.store("MaskedTetVol<short>",  
+		      new Minmax<MaskedTetVol<short> > );
+  minmax_loader.store("MaskedTetVol<unsigned int>",    
+		      new Minmax<MaskedTetVol<unsigned int> > );
+  minmax_loader.store("MaskedTetVol<int>",    
+		      new Minmax<MaskedTetVol<int> > );
+  minmax_loader.store("MaskedTetVol<float>",  
+		      new Minmax<MaskedTetVol<float> > );
+  minmax_loader.store("MaskedTetVol<double>", 
+		      new Minmax<MaskedTetVol<double> > );
+
   minmax_loader.store("LatticeVol<unsigned char>",   
 		      new Minmax<LatticeVol<unsigned char> > );
   minmax_loader.store("LatticeVol<char>",   
@@ -321,6 +340,23 @@ Isosurface::initialize()
 		      new Minmax<LatticeVol<float> > );
   minmax_loader.store("LatticeVol<double>", 
 		      new Minmax<LatticeVol<double> > );
+
+  minmax_loader.store("MaskedLatticeVol<unsigned char>",   
+		      new Minmax<MaskedLatticeVol<unsigned char> > );
+  minmax_loader.store("MaskedLatticeVol<char>",   
+		      new Minmax<MaskedLatticeVol<char> > );
+  minmax_loader.store("MaskedLatticeVol<unsigned short>",  
+		      new Minmax<MaskedLatticeVol<unsigned short> > );
+  minmax_loader.store("MaskedLatticeVol<short>",  
+		      new Minmax<MaskedLatticeVol<short> > );
+  minmax_loader.store("MaskedLatticeVol<unsigned int>",    
+		      new Minmax<MaskedLatticeVol<unsigned int> > );
+  minmax_loader.store("MaskedLatticeVol<int>",    
+		      new Minmax<MaskedLatticeVol<int> > );
+  minmax_loader.store("MaskedLatticeVol<float>",  
+		      new Minmax<MaskedLatticeVol<float> > );
+  minmax_loader.store("MaskedLatticeVol<double>", 
+		      new Minmax<MaskedLatticeVol<double> > );
 
   // MC::TetVol
   loader.store("MC::TetVol<unsigned char>", 
@@ -340,6 +376,24 @@ Isosurface::initialize()
   loader.store("MC::TetVol<double>", 
 	       new MarchingCubes<Module,TetMC<TetVol<double> > >(this) );
 
+  // MC::MaskedTetVol
+  loader.store("MC::MaskedTetVol<unsigned char>", 
+	       new MarchingCubes<Module,TetMC<MaskedTetVol<unsigned char> > >(this));
+  loader.store("MC::MaskedTetVol<char>", 
+	       new MarchingCubes<Module,TetMC<MaskedTetVol<char> > >(this) );
+  loader.store("MC::MaskedTetVol<unsigned short>", 
+              new MarchingCubes<Module,TetMC<MaskedTetVol<unsigned short> > >(this));
+  loader.store("MC::MaskedTetVol<short>", 
+	       new MarchingCubes<Module,TetMC<MaskedTetVol<short> > >(this) );
+  loader.store("MC::MaskedTetVol<unsigned int>", 
+	       new MarchingCubes<Module,TetMC<MaskedTetVol<unsigned int> > >(this) );
+  loader.store("MC::MaskedTetVol<int>", 
+	       new MarchingCubes<Module,TetMC<MaskedTetVol<int> > >(this) );
+  loader.store("MC::MaskedTetVol<float>", 
+	       new MarchingCubes<Module,TetMC<MaskedTetVol<float> > >(this) );
+  loader.store("MC::MaskedTetVol<double>", 
+	       new MarchingCubes<Module,TetMC<MaskedTetVol<double> > >(this) );
+
   // Noise::TetVol
   loader.store("Noise::TetVol<char>", 
 	       new Noise<Module,TetMC<TetVol<char> > >(this) );
@@ -357,6 +411,25 @@ Isosurface::initialize()
 	       new Noise<Module,TetMC<TetVol<float> > >(this) );
   loader.store("Noise::TetVol<double>", 
 	       new Noise<Module,TetMC<TetVol<double> > >(this) );
+
+
+  // Noise::MaskedTetVol
+  loader.store("Noise::MaskedTetVol<char>", 
+	       new Noise<Module,TetMC<MaskedTetVol<char> > >(this) );
+  loader.store("Noise::MaskedTetVol<unsigned char>", 
+	       new Noise<Module,TetMC<MaskedTetVol<unsigned char> > >(this) );
+  loader.store("Noise::MaskedTetVol<short>", 
+	       new Noise<Module,TetMC<MaskedTetVol<short> > >(this) );
+  loader.store("Noise::MaskedTetVol<unsigned short>", 
+	       new Noise<Module,TetMC<MaskedTetVol<unsigned short> > >(this) );
+  loader.store("Noise::MaskedTetVol<int>", 
+	       new Noise<Module,TetMC<MaskedTetVol<int> > >(this) );
+  loader.store("Noise::MaskedTetVol<unsigned int>", 
+	       new Noise<Module,TetMC<MaskedTetVol<unsigned int> > >(this) );
+  loader.store("Noise::MaskedTetVol<float>", 
+	       new Noise<Module,TetMC<MaskedTetVol<float> > >(this) );
+  loader.store("Noise::MaskedTetVol<double>", 
+	       new Noise<Module,TetMC<MaskedTetVol<double> > >(this) );
 
 
   // MC:LatticeVol
@@ -378,6 +451,25 @@ Isosurface::initialize()
   loader.store("MC::LatticeVol<double>", 
 	       new MarchingCubes<Module,HexMC<LatticeVol<double> > >(this) );
 
+  // MC:MaskedLatticeVol
+
+  loader.store("MC::MaskedLatticeVol<char>", 
+	       new MarchingCubes<Module,HexMC<MaskedLatticeVol<char> > >(this) );
+  loader.store("MC::MaskedLatticeVol<unsigned char>", 
+	  new MarchingCubes<Module,HexMC<MaskedLatticeVol<unsigned char> > >(this) );
+  loader.store("MC::MaskedLatticeVol<short>", 
+	       new MarchingCubes<Module,HexMC<MaskedLatticeVol<short> > >(this) );
+  loader.store("MC::MaskedLatticeVol<unsigned short>", 
+	 new MarchingCubes<Module,HexMC<MaskedLatticeVol<unsigned short> > >(this) );
+  loader.store("MC::MaskedLatticeVol<int>", 
+	       new MarchingCubes<Module,HexMC<MaskedLatticeVol<int> > >(this) );
+  loader.store("MC::MaskedLatticeVol<unsigned int>", 
+	 new MarchingCubes<Module,HexMC<MaskedLatticeVol<unsigned int> > >(this) );
+  loader.store("MC::MaskedLatticeVol<float>", 
+	       new MarchingCubes<Module,HexMC<MaskedLatticeVol<float> > >(this) );
+  loader.store("MC::MaskedLatticeVol<double>", 
+	       new MarchingCubes<Module,HexMC<MaskedLatticeVol<double> > >(this) );
+
   // Noise::LatticeVol
   loader.store("Noise::LatticeVol<char>", 
 	       new Noise<Module,HexMC<LatticeVol<char> > >(this) );
@@ -396,6 +488,24 @@ Isosurface::initialize()
   loader.store("Noise::LatticeVol<double>", 
 	       new Noise<Module,HexMC<LatticeVol<double> > >(this) );
 
+  // Noise::MaskedLatticeVol
+  loader.store("Noise::MaskedLatticeVol<char>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<char> > >(this) );
+  loader.store("Noise::MaskedLatticeVol<unsigned char>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<unsigned char> > >(this) );
+  loader.store("Noise::MaskedLatticeVol<short>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<short> > >(this) );
+  loader.store("Noise::MaskedLatticeVol<unsigned short>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<unsigned short> > >(this) );
+  loader.store("Noise::MaskedLatticeVol<int>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<int> > >(this) );
+  loader.store("Noise::MaskedLatticeVol<unsigned int>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<unsigned int> > >(this) );
+  loader.store("Noise::MaskedLatticeVol<float>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<float> > >(this) );
+  loader.store("Noise::MaskedLatticeVol<double>", 
+	       new Noise<Module,HexMC<MaskedLatticeVol<double> > >(this) );
+
   // Sage::LatticeVol
   loader.store("Sage::LatticeVol<char>", 
 	       new Sage<Module,LatticeVol<char> >(this) );
@@ -413,6 +523,24 @@ Isosurface::initialize()
 	       new Sage<Module,LatticeVol<float> >(this) );
   loader.store("Sage::LatticeVol<double>", 
 	       new Sage<Module,LatticeVol<double> >(this) );
+
+  // Sage::MaskedLatticeVol
+  loader.store("Sage::MaskedLatticeVol<char>", 
+	       new Sage<Module,MaskedLatticeVol<char> >(this) );
+  loader.store("Sage::MaskedLatticeVol<unsigned char>", 
+	       new Sage<Module,MaskedLatticeVol<unsigned char> >(this) );
+  loader.store("Sage::MaskedLatticeVol<short>", 
+	       new Sage<Module,MaskedLatticeVol<short> >(this) );
+  loader.store("Sage::MaskedLatticeVol<unsigned short>", 
+	       new Sage<Module,MaskedLatticeVol<unsigned short> >(this) );
+  loader.store("Sage::MaskedLatticeVol<int>", 
+	       new Sage<Module,MaskedLatticeVol<int> >(this) );
+  loader.store("Sage::MaskedLatticeVol<unsigned int>", 
+	       new Sage<Module,MaskedLatticeVol<unsigned int> >(this) );
+  loader.store("Sage::MaskedLatticeVol<float>", 
+	       new Sage<Module,MaskedLatticeVol<float> >(this) );
+  loader.store("Sage::MaskedLatticeVol<double>", 
+	       new Sage<Module,MaskedLatticeVol<double> >(this) );
 }
 
 } // End namespace SCIRun
