@@ -291,9 +291,28 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
        // 1. This option uses particle counting
        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
+	 double scale_factor=1.0;
 
-       // 2. This option uses only cell volumes
-	 //       if(totalNodalVol/cell_vol > d_vol_const){
+       // 2. This option uses only cell volumes.  The idea is that a cell is full
+       // if totalNodalVol/cell_vol .ge. 1.0, and the contraint should only be
+       // applied when cells are full.  This logic is used when d_vol_const=0.
+       // For d_vol_const > 0 the contact forces are ramped up linearly from 0
+       // for totalNodalVol/cell_vol .le. 1.0-d_vol_const to 1.0 for
+       // totalNodalVol/cell_vol = 1.  Ramping the contact influence seems to 
+       // help remove a "switching" instability.  A good value seems to be
+       // d_vol_const=.05
+
+	 //	 double scale_factor=0.0;
+	 //	 if(d_vol_const > 0.0){
+	 //	   scale_factor=(totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
+	 //	   scale_factor=Max(0.0,scale_factor);
+	 //	 }
+	 //	 else if(totalNodalVol/cell_vol > 1.0){
+	 //	   scale_factor=1.0;
+	 //	 }
+
+	 //	 if(scale_factor > 0.0){
+	 //	   scale_factor=Min(1.0,scale_factor);
 
         // Loop over velocity fields.  Only proceed if velocity field mass
         // is nonzero (not numerical noise) and the difference from
@@ -367,6 +386,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 		  double ff=Min(epsilon_max,.5)/epsilon_max;
 		  Dv=Dv*ff;
 	        }
+		Dv=scale_factor*Dv;
 	        gvelocity[n][c]+=Dv;
             }  // if traction
 	  }    // if !compare && !compare
@@ -451,9 +471,28 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
        // 1. This option uses particle counting
        if((totalNodalVol/cell_vol)*(64./totalNearParticles) > d_vol_const){
+	 double scale_factor=1.0;
 
-       // 2. This option uses only cell volumes
-	 //       if(totalNodalVol/cell_vol > d_vol_const){
+       // 2. This option uses only cell volumes.  The idea is that a cell is full
+       // if totalNodalVol/cell_vol .ge. 1.0, and the contraint should only be
+       // applied when cells are full.  This logic is used when d_vol_const=0.
+       // For d_vol_const > 0 the contact forces are ramped up linearly from 0
+       // for totalNodalVol/cell_vol .le. 1.0-d_vol_const to 1.0 for
+       // totalNodalVol/cell_vol = 1.  Ramping the contact influence seems to 
+       // help remove a "switching" instability.  A good value seems to be
+       // d_vol_const=.05
+
+	 //	 double scale_factor=0.0;
+	 //	 if(d_vol_const > 0.0){
+	 //	   scale_factor=(2.*totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
+	 //	   scale_factor=Max(0.0,scale_factor);
+	 //	 }
+	 //	 else if(2.*totalNodalVol/cell_vol > 1.0){
+	 //	   scale_factor=1.0;
+	 //	 }
+
+	 //	 if(scale_factor > 0.0){
+	 //	   scale_factor=Min(1.0,scale_factor);
 
         // Loop over velocity fields.  Only proceed if velocity field mass
         // is nonzero (not numerical noise) and the difference from
@@ -528,6 +567,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 	        double ff=Min(epsilon_max,.5)/epsilon_max;
 	        Dv=Dv*ff;
 	      }
+	      Dv=scale_factor*Dv;
 	      gvelocity_star[n][c]+=Dv;
 	      Dv=Dv/delT;
 	      gacceleration[n][c]+=Dv;
