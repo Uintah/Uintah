@@ -10,7 +10,7 @@ OBJS = AsyncReply.o Parallel.o Thread.o AtomicCounter.o \
 #CCFLAGS = -O2 -m486
 #CCC = g++
 #CCFLAGS = -g -n32 -mips4
-CCFLAGS = -g -64 -mips4
+CCFLAGS = -g -n32 -mips4
 CCC = CC -LANG:ansi-for-init-scope=ON -MDupdate Makedepend
 
 .SUFFIXES: .cc
