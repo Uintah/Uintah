@@ -51,8 +51,6 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
   string name("_");
   name += symbolname;
   void *symbol = dlsym(handle, name.c_str());
-//    if (!symbol)
-//      cerr << "dlsym failed: " << SOError(true) << "\n";
   return symbol;
 #else
  return dlsym(handle,symbolname);
@@ -65,8 +63,6 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
   return LoadLibrary(libname);
 #else
   void *lib = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
-//    if (!lib)
-//      cerr << "dlopen failed [" << libname << "] " << SOError(true) << "\n";
   return lib;
 #endif
 }
@@ -80,24 +76,11 @@ void CloseLibrary(LIBRARY_HANDLE LibraryHandle)
 #endif
 }
 
-const char* SOError( bool save )
+const char* SOError( )
 {
-  static string last_error;
-  static bool saved = false;
-
 #ifdef _WIN32
   return 0;
 #else
-  if ( saved ) {
-    saved = false;
-    return last_error.c_str();
-  }
-  if ( save ) {
-    last_error = dlerror();
-    saved = true;
-    return last_error.c_str();
-  }    
-
   return dlerror();
 #endif
 }
