@@ -175,9 +175,7 @@
        <ICE>
            <material Rx = "product" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-           <gas_constant>       287                     </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>          1e-2                    </viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716                     </specific_heat>
@@ -203,9 +201,7 @@
          </material>
            <material Rx = "reactant" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-           <gas_constant>       188.92                  </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>          1e-2                     </viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      652.9                   </specific_heat>
