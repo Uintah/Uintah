@@ -1810,29 +1810,16 @@ class FusionViewerApp {
 	set tt _quantity_tab
 	set $suffix$tt$case $quantity
 
-	frame $quantity.isoquant
-	
 	global $isomod-isoval-quantity
 
-	label $quantity.isoquant.l -text "Number of evenly-spaced isovalues:"
-	scale $quantity.isoquant.s \
-	    -from 1 -to 15 \
-	    -length 50 -width 15 \
-	    -sliderlength 15 \
-	    -resolution 1 \
-	    -variable $isomod-isoval-quantity \
-	    -showvalue false \
-	    -orient horizontal
+	iwidgets::spinner $quantity.isoquant \
+	    -labeltext "Number of evenly-spaced isovalues: " \
+	    -width 5 -fixed 5 \
+	    -validate "$this set-quantity %P $isomod-isoval-quantity]" \
+	    -decrement "$this spin-quantity -1 $quantity.isoquant $isomod-isoval-quantity" \
+	    -increment "$this spin-quantity  1 $quantity.isoquant $isomod-isoval-quantity" 
 
-	bind $quantity.isoquant.s <ButtonRelease> "$this $cmd"
-
-	entry $quantity.isoquant.val -width 5 -relief flat \
-	    -textvariable $isomod-isoval-quantity
-
-	bind $quantity.isoquant.val <Return> "$this $cmd"
-
-	pack $quantity.isoquant.l $quantity.isoquant.s $quantity.isoquant.val \
-	    -side left -anchor nw -padx 3
+	$quantity.isoquant insert 1 [set $isomod-isoval-quantity]
 
 	pack $quantity.isoquant -side top -anchor nw -padx 3 -pady 3
 
@@ -3754,6 +3741,29 @@ class FusionViewerApp {
     }
     
     
+    method set-quantity {new quantity} {
+	global $quantity
+	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $quantity]} {
+	    return 0
+	} elseif {$quantity < 1.0} {
+	    return 0
+	}
+	set $quantity $new
+	$this-c needexecute
+	return 1
+    }
+
+    method spin-quantity {step spinner quantity} {
+	global $quantity
+	set newquantity [expr [set $quantity] + $step]
+
+	if {$newquantity < 1.0} {
+	    set newquantity 0
+	}   
+	set $quantity $newquantity
+	$spinner delete 0 end
+	$spinner insert 0 [set $quantity]
+    }
 
     # Visualiztion frame tabnotebook
     variable vis_frame_tab0
