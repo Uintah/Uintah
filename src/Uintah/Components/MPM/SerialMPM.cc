@@ -2,9 +2,6 @@
 // $Id$
 //
 
-#include <Uintah/Components/MPM/SerialMPM.h>
-#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -12,7 +9,6 @@
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/PerPatch.h>
@@ -20,8 +16,13 @@
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/BoundCond.h>
+#include <Uintah/Grid/VelocityBoundCond.h>
+#include <Uintah/Grid/SymmetryBoundCond.h>
+#include <Uintah/Grid/TemperatureBoundCond.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
 
@@ -29,28 +30,21 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
 
-#include <Uintah/Components/MPM/Burn/HEBurn.h>
-#include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-
-#include <Uintah/Components/MPM/Fracture/Visibility.h>
-
 #include <iostream>
 #include <fstream>
 
+#include <Uintah/Components/MPM/SerialMPM.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
+#include <Uintah/Components/MPM/Burn/HEBurn.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/Components/MPM/Fracture/Visibility.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
-
-
-#include <Uintah/Grid/BoundCond.h>
-#include <Uintah/Grid/VelocityBoundCond.h>
-#include <Uintah/Grid/SymmetryBoundCond.h>
-#include <Uintah/Grid/TemperatureBoundCond.h>
-
 #include <Uintah/Components/MPM/MPMPhysicalModules.h>
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <Uintah/Components/MPM/HeatConduction/HeatConduction.h>
 #include <Uintah/Components/MPM/Fracture/Fracture.h>
 #include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
-
 #include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Uintah/Components/MPM/PhysicalBC/ForceBC.h>
 
@@ -2080,6 +2074,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.177  2000/12/27 23:08:44  guilkey
+// Eat me.
+//
 // Revision 1.176  2000/12/22 23:28:58  guilkey
 // Improved the constant temperature boundary condition and added
 // a heat flux boundary condition which seems to work.
