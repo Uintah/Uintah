@@ -375,6 +375,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->rho_micro_CCLabel);
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->press_CCLabel, press_matl);
+  t->computes(lb->imp_delPLabel, press_matl);  // one_matl
   //t->computes(d_sharedState->get_delt_label());
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
@@ -1067,9 +1068,11 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     StaticArray<CCVariable<double>   > speedSound(numMatls);
     StaticArray<CCVariable<double>   > vol_frac_CC(numMatls);
     StaticArray<CCVariable<Vector>   > vel_CC(numMatls);
-    CCVariable<double>    press_CC;  
+    CCVariable<double>    press_CC, imp_delP;  
     StaticArray<double>   cv(numMatls);
     new_dw->allocateAndPut(press_CC, lb->press_CCLabel, 0,patch);
+    new_dw->allocateAndPut(imp_delP, lb->imp_delPLabel, 0,patch);
+    imp_delP.initialize(0.0);  // initial guess
     press_CC.initialize(0.0);
 
   //__________________________________
