@@ -11,6 +11,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
@@ -46,7 +47,10 @@ static void usage(char* progname)
     cerr << "     n=2: Use bounding volume tree, implementation #2.\n";
     cerr << "          (doesn't work yet)\n";
     cerr << "     n=3: Use Grid traversal\n";
+    cerr << "     n=4: Use Hierarchical Grid traversal\n";
     cerr << " -gridcellsize n  - Set the number of gridcells for -bv 3\n";
+    cerr << " -hgridcellsize n n n - Set the number of gridcells at level 1, 2 and 3 -bv 4\n";
+    cerr << " -minobjs n n - Set the number of objects in each grid cell for -bv 4\n";
     cerr << " -perfex n1 n2    - Collect performance counters n1 and n2 for\n";
     cerr << "                   each frame.\n";
     cerr << " -visual criteria - Uses criteria for selecting the OpenGL\n";
@@ -110,6 +114,10 @@ int main(int argc, char* argv[])
   int use_bv=1;
   char* scenename=0;
   int gridcellsize=4;
+  int gridcellsizeL2=4;
+  int gridcellsizeL3=4;
+  int minObjs1 = 100;
+  int minObjs2 = 20;
   int c0;
   int c1;
   int ncounters=0;
@@ -146,6 +154,15 @@ int main(int argc, char* argv[])
     } else if(strcmp(argv[i], "-gridcellsize")==0){
       i++;
       gridcellsize=atoi(argv[i]);
+    } else if(strcmp(argv[i], "-hgridcellsize")==0){
+      i++;
+      gridcellsize=atoi(argv[i++]);
+      gridcellsizeL2=atoi(argv[i++]);
+      gridcellsizeL3=atoi(argv[i]);
+    } else if(strcmp(argv[i], "-minobjs")==0){
+      i++;
+      minObjs1=atoi(argv[i++]);
+      minObjs2=atoi(argv[i]);
     } else if(strcmp(argv[i], "-scene")==0){
       i++;
       scenename=argv[i];
@@ -327,6 +344,13 @@ int main(int argc, char* argv[])
 	scene->set_object(new BV2(scene->get_object()));
       } else if(use_bv==3){
 	scene->set_object(new Grid(scene->get_object(), gridcellsize));
+      } else if(use_bv==4){
+	  scene->set_object(new HierarchicalGrid( scene->get_object(), 
+						  gridcellsize, 
+						  gridcellsizeL2,
+						  gridcellsizeL3,
+						  minObjs1, minObjs2,
+						  1 ) );
       } else {
 	cerr << "WARNING: Unknown bv method\n";
       }
