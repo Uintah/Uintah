@@ -12,6 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <iostream.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -100,6 +101,9 @@ Demand_Message::~Demand_Message()
 
 //
 // $Log$
+// Revision 1.4  1999/09/23 01:01:07  moulding
+// added #include <iostream.h> at top
+//
 // Revision 1.3  1999/09/08 02:26:41  sparker
 // Various #include cleanups
 //
