@@ -239,8 +239,18 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
   // If the user accepted the license then create a .scirunrc for them
   if (tclresult == "accept") {
     string homerc = string(HOME)+"/.scirunrc";
-    string cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
-    std::cout << "Copying default " << srcdir << "/scirunrc to " <<
+    string cmd;
+    if (gui->eval("validFile "+homerc) == "1") {
+      string backuprc = homerc+"."+string(SCIRUN_VERSION);
+      cmd = string("cp -f ")+homerc+" "+backuprc;
+      std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
+      if (sci_system(cmd.c_str())) {
+	std::cerr << "Error executing: " << cmd << std::endl;
+      }
+    }
+
+    cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
+    std::cout << "Copying " << srcdir << "/scirunrc to " <<
       homerc << "...\n";
     if (sci_system(cmd.c_str())) {
       std::cerr << "Error executing: " << cmd << std::endl;
@@ -414,7 +424,19 @@ main(int argc, char *argv[], char **environment) {
   new NetworkEditor(net, gui);
 
   // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
+  if (!find_and_parse_scirunrc()) 
+    show_license_and_copy_scirunrc(gui);
+  else { 
+    const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
+    // If the .scirunrc is an old version
+    if (!rcversion || string(rcversion) != string(SCIRUN_VERSION))
+      // Ask them if they want to copy over a new one
+      if (gui->eval("promptUserToCopySCIRunrc") == "1")
+	show_license_and_copy_scirunrc(gui);
+  }
+
+
+    
 
   // Activate the scheduler.  Arguments and return values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
@@ -444,7 +466,7 @@ main(int argc, char *argv[], char **environment) {
     } else if(strstr(argv[startnetno], "BioImage")) {
       // need to make a BioImage splash screen
       gui->eval("set splashImageFile $bioImageSplashImageFile");
-      gui->eval("showProgress 1 310 1");
+      gui->eval("showProgress 1 660 1");
     } else if(strstr(argv[startnetno], "FusionViewer")) {
       // need to make a FusionViewer splash screen
       gui->eval("set splashImageFile $fusionViewerSplashImageFile");
@@ -452,6 +474,7 @@ main(int argc, char *argv[], char **environment) {
     }
 
   }
+
 
   packageDB->loadPackage();  // load the packages
 
