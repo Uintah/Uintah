@@ -55,7 +55,7 @@ protected:
   T index_;
 private:
   //! Hide this in private to prevent it from being called.
-  T operator ++(int) { T tmp = index; index_++; return tmp; }
+  T operator ++(int) { T tmp = index; ++index_; return tmp; }
 };
 
 //! Distinct type for node FieldIterator.
