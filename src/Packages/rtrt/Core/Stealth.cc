@@ -7,12 +7,12 @@ using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
 
-Stealth::Stealth( double scale /* = 100 */ ) :
+Stealth::Stealth( double scale, double gravity_force ) :
   speed_( 0 ), horizontal_speed_( 0 ), vertical_speed_( 0 ),
   pitch_speed_( 0 ), rotate_speed_( 0 ),
   accel_cnt_( 0 ), horizontal_accel_cnt_( 0 ),
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
-  scale_( scale ), segment_percentage_( 0 )
+  scale_( scale ), segment_percentage_( 0 ), gravity_force_( gravity_force )
 {
   cout << "scale is " << scale << "\n";
 
@@ -232,6 +232,13 @@ Stealth::getNextLocation( Point & point, Point & look_at )
 
   segment_percentage_ += accel_cnt_;
 
+  if( segment_percentage_ < 0 ) // Moving backward
+    {
+      // This will start us at the end of the path.
+      cout << "got to the beginning of the path... going to end\n";
+      segment_percentage_ = ((path_.size()-1) * 100) - 1;
+    }
+
   int begin_index = segment_percentage_ / 100;
   int end_index   = (segment_percentage_ / 100) + 1;
 
@@ -320,3 +327,20 @@ Stealth::savePath( const string & filename )
     }
   fclose( fp );
 }
+
+void
+Stealth::toggleGravity()
+{
+  gravity_on_ = !gravity_on_; 
+  cout << "Gravity is now: " << gravity_on_ << "\n";
+}
+
+bool
+Stealth::moving()
+{
+  bool moven = speed_ != 0 || horizontal_speed_ != 0 || vertical_speed_ != 0 ||
+    pitch_speed_ != 0 || rotate_speed_ != 0;
+
+  return moven;
+}
+

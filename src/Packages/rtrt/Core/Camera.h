@@ -12,6 +12,8 @@ namespace rtrt {
   
 class Ray;
 class Stealth;
+class Scene;
+class PerProcessorContext;
 
 class Camera {
     friend class Dpy;
@@ -23,6 +25,7 @@ class Camera {
     Vector u,v;
     Vector direction;
     double eyesep;
+
     char pad2[128];
 public:
     Camera(const Point& eye, const Point& lookat,
@@ -53,9 +56,12 @@ public:
     void getParams(Point& origin, Vector& lookdir,
 		   Vector& up, double& fov);
 
-    void updatePosition( Stealth & stealth );
+    void updatePosition( Stealth & stealth, 
+			 Scene * scene, PerProcessorContext * ppc );
+
     void followPath( Stealth & stealth );
     void flatten(); // reset pitch to 0 and roll to 0.(note: no roll currently)
+
 };
 
 } // end namespace rtrt

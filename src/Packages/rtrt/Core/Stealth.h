@@ -46,12 +46,12 @@ class Stealth {
 
 public:
 
-  // Default scale of 50 is good if the eye is 5 units (or so) from
+  // Scale of '50' is good if the eye is 5 units (or so) from
   // the area of interest and the area of interest is ~20 units across.
-  Stealth( double scale = 50 );
+  Stealth( double scale, double gravity_force );
   ~Stealth();
 
-  // Tells the eye to update its position based on its current
+  // Tells the eye (camera) to update its position based on its current
   // velocity vector.
   void updatePosition();
 
@@ -107,6 +107,17 @@ public:
   void loadPath( const string & filename );
   void savePath( const string & filename );
 
+  // If gravity is on, the stealth/camera will "fall" towards the ground.
+  void toggleGravity();
+
+  // Stealths and Cameras are highly integrated right now... perhaps
+  // stealth should be a sub class in camera?  This needs more thought.
+
+  bool   gravityIsOn() { return gravity_on_; }
+  double getGravityForce() { return gravity_force_; }
+
+  bool   moving(); // Returns true if moving in any direction
+
 private:
 
   void increase_a_speed( double & speed, int & accel_cnt );
@@ -138,8 +149,10 @@ private:
   vector<Point> path_;     // Points along the path for the stealth to move.
   vector<Point> look_ats_; // Look at locations along path.
 
-  double         segment_percentage_;
+  double        segment_percentage_;
 
+  bool          gravity_on_;
+  double        gravity_force_;
 };
 
 } // end namespace rtrt

@@ -10,26 +10,27 @@ namespace rtrt {
   using namespace SCIRun;
   
 class Ray {
-    Point o;
-    Vector d;
+    Point  _origin;
+    Vector _direction;
 public:
     inline Ray() {
     }
-    inline Ray(const Point& o, const Vector& d) : o(o), d(d)
+    inline Ray(const Point& origin, const Vector& dir) : _origin(origin), 
+      _direction(dir)
     {
     }
 	
     inline Point origin() const {
-	return o;
+	return _origin;
     }
     inline Vector direction() const {
-	return d;
+	return _direction;
     }
     inline void set_origin(const Point& p) {
-	o=p;
+	_origin = p;
     }
     inline void set_direction(const Vector& v) {
-	d=v;
+	_direction = v;
     }
 };
 

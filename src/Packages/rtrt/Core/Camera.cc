@@ -1,7 +1,12 @@
 
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/Stealth.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Transform.h>
 #include <iostream>
 
@@ -9,13 +14,15 @@ using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
 
-Camera::Camera()
+Camera::Camera() :
+  gravity_on( false )
 {
 }
 
 Camera::Camera(const Point& eye, const Point& lookat,
 	       const Vector& up, double fov)
-  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1)
+  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1), gravity_on( false )
+
 {
     setup();
 }
@@ -164,7 +171,8 @@ Camera::flatten() // reset pitch to 0 and roll to 0.(note: no roll currently)
 }
 
 void
-Camera::updatePosition( Stealth & stealth )
+Camera::updatePosition( Stealth & stealth, 
+			Scene * scene, PerProcessorContext * ppc )
 {
   Vector forward( direction );
   Vector theUp( u );
@@ -173,6 +181,8 @@ Camera::updatePosition( Stealth & stealth )
   forward.normalize();
   theUp.normalize();
   side.normalize();
+
+  double rotational_speed_damper = 100;
 
   double speed;
 
@@ -192,7 +202,7 @@ Camera::updatePosition( Stealth & stealth )
       // Keeps you from pitching up or down completely!
       Transform t;
       t.post_translate( Vector(eye) );
-      t.post_rotate( speed/20, side );
+      t.post_rotate( speed/rotational_speed_damper, side );
       t.post_translate( Vector(-eye) );
 
       Point old_lookat = lookat;
@@ -219,10 +229,44 @@ Camera::updatePosition( Stealth & stealth )
     {
       Transform t;
       t.post_translate( Vector(eye) );
-      t.post_rotate( -speed/20, theUp );
+      t.post_rotate( -speed/rotational_speed_damper, theUp );
       t.post_translate( Vector(-eye) );
       lookat = t.project( lookat );
       setup();
     }
+
+  // After updating position based on stealth, update based on gravity
+  if( stealth.gravityIsOn() ) {
+
+    HitInfo    hit;
+    DepthStats ds;
+    Ray        r( eye, -up ); // ray pointing straight downward
+    Object   * obj = scene->get_object();
+
+    obj->intersect( r, hit, &ds, ppc );
+
+    double time = hit.min_t;
+
+    // I want to stay this far from the ground:
+    double height_off_ground = 100;
+
+
+    if( time < MAXDOUBLE ) // Ie: ray hit the ground
+      {
+	double gravity = stealth.getGravityForce();
+
+	if( time > height_off_ground )
+	  {
+	    // Move downward
+	    eye    -= up * gravity;
+	    lookat -= up * gravity;
+	  }
+	else if( time < height_off_ground ) 
+	  { // move upwards to maintain constant distance from ground
+	    eye(2)    += height_off_ground - time;
+	    lookat(2) += height_off_ground - time;
+	  }
+      }
+  }
 }
 

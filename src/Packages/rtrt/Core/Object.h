@@ -14,21 +14,20 @@ namespace SCIRun {
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
-class HitInfo;
-class Material;
-class Ray;
-class Light;
-class BBox;
-class DepthStats;
-class PerProcessorContext;
-template<class T> class Array1;
-
-
+using namespace SCIRun;
 using namespace std;
+  
+struct DepthStats;
 
+class  HitInfo;
+class  Material;
+class  Ray;
+class  Light;
+class  BBox;
+class  PerProcessorContext;
 class UVMapping;
+
+template<class T> class Array1;
 
 class Object {
     Material* matl;
