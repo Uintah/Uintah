@@ -35,7 +35,8 @@
       <p>
       Upon execution the UI will display the input field name and the
       current location the data values for the field are located.  
-
+      </p>
+      <p>
       The output field's data value location is selected from a list
       of available locations.  The output field will contain the same
       geometry as the input field with the data value storage at the
