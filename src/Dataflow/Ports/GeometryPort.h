@@ -93,7 +93,7 @@ class PSECORESHARE GeometryOPort : public OPort {
     virtual void finish();
 
     Mailbox<MessageBase*>* outbox;
-    virtual void attach(Connection*);
+
 public:
     GeometryOPort(Module*, const string& name);
     virtual ~GeometryOPort();
@@ -107,6 +107,9 @@ public:
 
     void forward(GeometryComm* msg);
     bool direct_forward(GeometryComm* msg);
+
+    virtual void attach(Connection*);
+    virtual void detach(Connection*);
 
     virtual bool have_data();
     virtual void resend(Connection*);

@@ -88,7 +88,10 @@ void GeometryIPort::finish()
 void GeometryOPort::reset()
 {
     if(nconnections() == 0)
+    {
+        outbox = 0;
 	return;
+    }
     if(!outbox){
 	if (module->showStats()) turn_on(Resetting);
 	Connection* connection=connections[0];
@@ -243,9 +246,20 @@ void GeometryOPort::attach(Connection* c)
     if (module->showStats()) turn_off();
 }
 
+
+void GeometryOPort::detach(Connection* c)
+{
+    OPort::detach(c);
+    if (nconnections() == 0)
+    {
+      outbox = 0;
+    }
+}
+
+
 bool GeometryOPort::have_data()
 {
-  return false;
+    return false;
 }
 
 void GeometryOPort::resend(Connection*)
