@@ -114,7 +114,7 @@ namespace Uintah
     d_radiusOfBall     = 0.10 * gridMax.x();
     d_radiusOfOrbit    = 0.25 * gridMax.x();
     d_currentAngle     = 0;
-    d_angularVelocity  = 5;
+    d_angularVelocity  = 1;
     d_centerOfBall     = d_centerOfDomain;
     d_centerOfBall[0] += d_radiusOfOrbit * cos( ( pi * d_currentAngle ) / 180.0 );
     d_centerOfBall[1] += d_radiusOfOrbit * sin( ( pi * d_currentAngle ) / 180.0 );
