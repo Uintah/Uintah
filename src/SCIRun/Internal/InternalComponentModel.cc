@@ -100,7 +100,6 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
   InternalComponentDescription* cd = iter->second;
   InternalComponentInstance* ci;
   if(cd->isSingleton){
-    string cname = "internal: "+type;
     ci=cd->singleton_instance;
   } else {
     string cname = "internal: "+type+" for "+componentName;
@@ -113,7 +112,7 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
   return true;
 }
 
-bool InternalComponentModel::haveComponent(const std::string& name)
+bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 {
   return false;
 }

@@ -54,7 +54,7 @@ BuilderService::~BuilderService()
 gov::cca::ComponentID::pointer
 BuilderService::createInstance(const std::string& instanceName,
 			       const std::string& className,
-			       const gov::cca::TypeMap::pointer& properties)
+			       const gov::cca::TypeMap::pointer& /*properties*/)
 {
   cerr << "Need to do something with properties...\n";
   return framework->createComponentInstance(instanceName, className);
@@ -106,32 +106,32 @@ CIA::array1<gov::cca::ComponentID::pointer> BuilderService::getComponentIDs()
   return junk;
 }
 
-gov::cca::TypeMap::pointer BuilderService::getComponentProperties(const gov::cca::ComponentID::pointer& cid)
+gov::cca::TypeMap::pointer BuilderService::getComponentProperties(const gov::cca::ComponentID::pointer& /*cid*/)
 {
   cerr << "BuilderService::getComponentProperties not finished\n";
   return gov::cca::TypeMap::pointer(0);
 }
 
-void BuilderService::setComponentProperties(const gov::cca::ComponentID::pointer& cid,
-					const gov::cca::TypeMap::pointer& map)
+void BuilderService::setComponentProperties(const gov::cca::ComponentID::pointer& /*cid*/,
+					    const gov::cca::TypeMap::pointer& /*map*/)
 {
   cerr << "BuilderService::setComponentProperties not finished\n";
 }
 
-gov::cca::ComponentID::pointer BuilderService::getDeserialization(const std::string& s)
+gov::cca::ComponentID::pointer BuilderService::getDeserialization(const std::string& /*s*/)
 {
   cerr << "BuilderService::getDeserialization not finished\n";
   return gov::cca::ComponentID::pointer(0);
 }
 
-gov::cca::ComponentID::pointer BuilderService::getComponentID(const std::string& componentInstanceName)
+gov::cca::ComponentID::pointer BuilderService::getComponentID(const std::string& /*componentInstanceName*/)
 {
   cerr << "BuilderService::getComponentID not finished\n";
   return gov::cca::ComponentID::pointer(0);
 }
 
-void BuilderService::destroyInstance(const gov::cca::ComponentID::pointer& toDie,
-				 float timeout)
+void BuilderService::destroyInstance(const gov::cca::ComponentID::pointer& /*toDie*/,
+				     float /*timeout*/)
 {
   cerr << "BuilderService::destroyInstance not finished\n";
 }
@@ -160,21 +160,21 @@ CIA::array1<std::string> BuilderService::getUsedPortNames(const gov::cca::Compon
   return result;
 }
 
-gov::cca::TypeMap::pointer BuilderService::getPortProperties(const gov::cca::ComponentID::pointer& cid,
-							     const std::string& portname)
+gov::cca::TypeMap::pointer BuilderService::getPortProperties(const gov::cca::ComponentID::pointer& /*cid*/,
+							     const std::string& /*portname*/)
 {
   cerr << "BuilderService::getPortProperties not finished\n";
   return gov::cca::TypeMap::pointer(0);
 }
 
-void BuilderService::setPortProperties(const gov::cca::ComponentID::pointer& cid,
-				   const std::string& portname,
-				   const gov::cca::TypeMap::pointer& map)
+void BuilderService::setPortProperties(const gov::cca::ComponentID::pointer& /*cid*/,
+				       const std::string& /*portname*/,
+				       const gov::cca::TypeMap::pointer& /*map*/)
 {
   cerr << "BuilderService::setPortProperties not finished\n";
 }
 
-CIA::array1<gov::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(const CIA::array1<gov::cca::ComponentID::pointer>& componentList)
+CIA::array1<gov::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(const CIA::array1<gov::cca::ComponentID::pointer>& /*componentList*/)
 {
   cerr << "BuilderService::getConnectionIDs not finished\n";
   CIA::array1<gov::cca::ConnectionID::pointer> junk(0);
@@ -182,20 +182,20 @@ CIA::array1<gov::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(co
 }
 
 gov::cca::TypeMap::pointer
-BuilderService::getConnectionProperties(const gov::cca::ConnectionID::pointer& connID)
+BuilderService::getConnectionProperties(const gov::cca::ConnectionID::pointer& /*connID*/)
 {
   cerr << "BuilderService::getConnectionProperties not finished\n";
   return gov::cca::TypeMap::pointer(0);
 }
 
-void BuilderService::setConnectionProperties(const gov::cca::ConnectionID::pointer& connID,
-					 const gov::cca::TypeMap::pointer& map)
+void BuilderService::setConnectionProperties(const gov::cca::ConnectionID::pointer& /*connID*/,
+					     const gov::cca::TypeMap::pointer& /*map*/)
 {
   cerr << "BuilderService::setConnectionProperties not finished\n";
 }
 
 void BuilderService::disconnect(const gov::cca::ConnectionID::pointer& connID,
-			    float timeout)
+				float /*timeout*/)
 {
   ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
   ComponentID* providerID=dynamic_cast<ComponentID*>(connID->getProvider().getPointer());
@@ -209,9 +209,9 @@ void BuilderService::disconnect(const gov::cca::ConnectionID::pointer& connID,
   cerr << "BuilderService::disconnect: timeout or safty check needed "<<endl;
 }
 
-void BuilderService::disconnectAll(const gov::cca::ComponentID::pointer& id1,
-				   const gov::cca::ComponentID::pointer& id2,
-				   float timeout)
+void BuilderService::disconnectAll(const gov::cca::ComponentID::pointer& /*id1*/,
+				   const gov::cca::ComponentID::pointer& /*id2*/,
+				   float /*timeout*/)
 {
   cerr << "BuilderService::disconnectAll not finished\n";
 }

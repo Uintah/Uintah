@@ -69,14 +69,14 @@ ComponentEventService::addComponentEventListener(gov::cca::ports::ComponentEvent
 }
 
 void
-ComponentEventService::removeComponentEventListener(gov::cca::ports::ComponentEventType type,
-						    const gov::cca::ports::ComponentEventListener::pointer& l)
+ComponentEventService::removeComponentEventListener(gov::cca::ports::ComponentEventType /*type*/,
+						    const gov::cca::ports::ComponentEventListener::pointer& /*l*/)
 {
   cerr << "removeComponentEventListener not done!\n";
 }
 
-void ComponentEventService::moveComponent(const gov::cca::ComponentID::pointer& id,
-					  int x, int y)
+void ComponentEventService::moveComponent(const gov::cca::ComponentID::pointer& /*id*/,
+					  int /*x*/, int /*y*/)
 {
   cerr << "moveComponent not done!\n";
 }
