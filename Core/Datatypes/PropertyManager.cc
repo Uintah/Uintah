@@ -169,7 +169,6 @@ PropertyManager::io(Piostream &stream)
       Pio(stream, name);
       Persistent *p = i->second;
       stream.io( p, PropertyBase::type_id );
-      //i->second->io( stream );
       ++i;
     }
   }
@@ -186,7 +185,6 @@ PropertyManager::io(Piostream &stream)
       }
     }
   }
-  // TODO: implement this.  read/write all properties not marked temporary.
 
   stream.end_class();
 }
