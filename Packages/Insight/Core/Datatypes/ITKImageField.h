@@ -131,12 +131,12 @@ public:
   ITKFData2d(const ITKFData2d& data);
   virtual ~ITKFData2d();
   
-  const value_type &operator[](typename ImageMesh::Cell::index_type idx) const
+  const value_type &operator[](ImageMesh::Cell::index_type idx) const
   { 
     ASSERTFAIL("No const operator[] for ITKImageField at Cells");
     // check if image is set
   }
-  const value_type &operator[](typename ImageMesh::Face::index_type idx) const
+  const value_type &operator[](ImageMesh::Face::index_type idx) const
   { 
     if(image_set_) {
       typename image_type::IndexType index;
@@ -147,12 +147,12 @@ public:
     else
       ASSERTFAIL("ITKFData2d image not set");
   }
-  const value_type &operator[](typename ImageMesh::Edge::index_type idx) const
+  const value_type &operator[](ImageMesh::Edge::index_type idx) const
   { 
     ASSERTFAIL("No const operator[] for ITKImageField at Edges");
     // check if image is set
   }
-  const value_type &operator[](typename ImageMesh::Node::index_type idx) const
+  const value_type &operator[](ImageMesh::Node::index_type idx) const
   { 
     if(image_set_) {
       typename image_type::IndexType index;
@@ -164,12 +164,12 @@ public:
       ASSERTFAIL("ITKFData2d image not set");
   }
   
-  value_type &operator[](typename ImageMesh::Cell::index_type idx)
+  value_type &operator[](ImageMesh::Cell::index_type idx)
   { 
     ASSERTFAIL("No operator[] for ITKImageField at Cells");
     // check if image is set
   }
-  value_type &operator[](typename ImageMesh::Face::index_type idx)
+  value_type &operator[](ImageMesh::Face::index_type idx)
   {
     if(image_set_) {
       typename image_type::IndexType index;
@@ -180,12 +180,12 @@ public:
     else
       ASSERTFAIL("ITKFData2d image not set");      
   }
-  value_type &operator[](typename ImageMesh::Edge::index_type idx)
+  value_type &operator[](ImageMesh::Edge::index_type idx)
   { 
     ASSERTFAIL("No operator[] for ITKImageField at Edges");
     // check if image is set
   }
-  value_type &operator[](typename ImageMesh::Node::index_type idx)
+  value_type &operator[](ImageMesh::Node::index_type idx)
   {
     if(image_set_) {
       typename image_type::IndexType index;
