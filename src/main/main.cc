@@ -93,7 +93,7 @@ usage()
 void
 parse_args( int argc, char *argv[] )
 {
-  for( int cnt = 0; cnt < argc; cnt++ )
+  for( int cnt = 1; cnt < argc; cnt++ )
     {
       string arg( argv[ cnt ] );
       if( ( arg == "--version" ) || ( arg == "-version" )
