@@ -59,7 +59,7 @@ typedef struct {
     Display *display;		/* X's token for the window's display. */
     Tcl_Interp *interp;		/* Interpreter associated with widget. */
     char* geometry;
-    Cursor cursor;
+    Tk_Cursor cursor;
 
     /*
      * glXChooseVisual options
@@ -433,7 +433,6 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
 
     Tk_DefineCursor( OpenGLPtr->tkwin, OpenGLPtr->cursor );
     //Tk_GetCursor( interp, OpenGLPtr->tkwin, "fleur" );
-    //    Tk_AllocCursorFromObj( interp, OpenGLPtr->tkwin, OpenGLPtr->cursor);
 
     return TCL_OK;
 }
