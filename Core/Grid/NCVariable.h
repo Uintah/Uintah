@@ -127,7 +127,7 @@ WARNING
     virtual IntVector getLow()
     { return getLowIndex(); }
     virtual IntVector getHigh()
-    { return getLowIndex(); }
+    { return getHighIndex(); }
 
     virtual void emitNormal(ostream& out, DOM_Element /*varnode*/)
     {
