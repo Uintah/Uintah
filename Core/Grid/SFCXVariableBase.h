@@ -67,9 +67,11 @@ WARNING
      void getMPIBuffer(BufferInfo& buffer,
 		       const IntVector& low, const IntVector& high);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
-      virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
       virtual void getSizes(IntVector& low, IntVector& high,
-			    IntVector& siz, IntVector& strides) const = 0;
+			    IntVector& siz) const = 0;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			    IntVector& dataLow, IntVector& siz,
+			    IntVector& strides) const = 0;
 
      virtual RefCounted* getRefCounted() = 0;
    protected:
