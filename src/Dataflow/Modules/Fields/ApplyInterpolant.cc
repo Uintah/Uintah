@@ -308,29 +308,13 @@ ApplyInterpolant::execute()
       {
 	HAIRY_MACRO(TetVol, TetVol, double);
       }
-      else if (src_data_name == "float")
-      {
-	HAIRY_MACRO(TetVol, TetVol, float);
-      }
       else if (src_data_name == "int")
       {
 	HAIRY_MACRO(TetVol, TetVol, int);
       }
-      else if (src_data_name == "unsigned int")
-      {
-	HAIRY_MACRO(TetVol, TetVol, unsigned int);
-      }
       else if (src_data_name == "short")
       {
 	HAIRY_MACRO(TetVol, TetVol, short);
-      }
-      else if (src_data_name == "unsigned short")
-      {
-	HAIRY_MACRO(TetVol, TetVol, unsigned short);
-      }
-      else if (src_data_name == "char")
-      {
-	HAIRY_MACRO(TetVol, TetVol, char);
       }
       else if (src_data_name == "unsigned char")
       {
@@ -395,29 +379,13 @@ ApplyInterpolant::execute()
       {
 	HAIRY_MACRO(TetVol, TriSurf, double);
       }
-      else if (src_data_name == "float")
-      {
-	HAIRY_MACRO(TetVol, TriSurf, float);
-      }
       else if (src_data_name == "int")
       {
 	HAIRY_MACRO(TetVol, TriSurf, int);
       }
-      else if (src_data_name == "unsigned int")
-      {
-	HAIRY_MACRO(TetVol, TriSurf, unsigned int);
-      }
       else if (src_data_name == "short")
       {
 	HAIRY_MACRO(TetVol, TriSurf, short);
-      }
-      else if (src_data_name == "unsigned short")
-      {
-	HAIRY_MACRO(TetVol, TriSurf, unsigned short);
-      }
-      else if (src_data_name == "char")
-      {
-	HAIRY_MACRO(TetVol, TriSurf, char);
       }
       else if (src_data_name == "unsigned char")
       {
@@ -438,29 +406,13 @@ ApplyInterpolant::execute()
       {
 	HAIRY_MACRO(TetVol, ContourField, double);
       }
-      else if (src_data_name == "float")
-      {
-	HAIRY_MACRO(TetVol, ContourField, float);
-      }
       else if (src_data_name == "int")
       {
 	HAIRY_MACRO(TetVol, ContourField, int);
       }
-      else if (src_data_name == "unsigned int")
-      {
-	HAIRY_MACRO(TetVol, ContourField, unsigned int);
-      }
       else if (src_data_name == "short")
       {
 	HAIRY_MACRO(TetVol, ContourField, short);
-      }
-      else if (src_data_name == "unsigned short")
-      {
-	HAIRY_MACRO(TetVol, ContourField, unsigned short);
-      }
-      else if (src_data_name == "char")
-      {
-	HAIRY_MACRO(TetVol, ContourField, char);
       }
       else if (src_data_name == "unsigned char")
       {
@@ -481,29 +433,13 @@ ApplyInterpolant::execute()
       {
 	HAIRY_MACRO(TetVol, PointCloud, double);
       }
-      else if (src_data_name == "float")
-      {
-	HAIRY_MACRO(TetVol, PointCloud, float);
-      }
       else if (src_data_name == "int")
       {
 	HAIRY_MACRO(TetVol, PointCloud, int);
       }
-      else if (src_data_name == "unsigned int")
-      {
-	HAIRY_MACRO(TetVol, PointCloud, unsigned int);
-      }
       else if (src_data_name == "short")
       {
 	HAIRY_MACRO(TetVol, PointCloud, short);
-      }
-      else if (src_data_name == "unsigned short")
-      {
-	HAIRY_MACRO(TetVol, PointCloud, unsigned short);
-      }
-      else if (src_data_name == "char")
-      {
-	HAIRY_MACRO(TetVol, PointCloud, char);
       }
       else if (src_data_name == "unsigned char")
       {

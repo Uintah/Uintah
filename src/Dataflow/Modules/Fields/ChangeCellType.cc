@@ -31,7 +31,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Datatypes/TetVol.h>
-//#include <Core/Datatypes/TypeName.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Tester/RigorousTest.h>
@@ -283,33 +282,36 @@ ChangeCellType::execute()
     update_state(JustStarted);
       
     // then we have proper input
-    if (input_handle->type_name(1) == "double") {
-
+    if (input_handle->type_name(1) == "double")
+    {
       TetVol<double> *tvol = new TetVol<double>();
       LatticeVol<double> *lvol = 
 	dynamic_cast<LatticeVol<double>*>(input_handle.get_rep());
       fill_tet_vol<double>(*lvol, *tvol);
       output_->send(FieldHandle(tvol));
-    } else if (input_handle->type_name(1) == "float") {
-
-      TetVol<float> *tvol = new TetVol<float>();
-      LatticeVol<float> *lvol = 
-	dynamic_cast<LatticeVol<float>*>(input_handle.get_rep());
-      fill_tet_vol<float>(*lvol, *tvol);
-      output_->send(FieldHandle(tvol));
-    } else if (input_handle->type_name(1) == "int") {
-
+    }
+    else if (input_handle->type_name(1) == "int")
+    {
       TetVol<int> *tvol = new TetVol<int>();
       LatticeVol<int> *lvol = 
 	dynamic_cast<LatticeVol<int>*>(input_handle.get_rep());
       fill_tet_vol<int>(*lvol, *tvol);
       output_->send(FieldHandle(tvol));
-    } else if (input_handle->type_name(1) == "char") {
-
-      TetVol<char> *tvol = new TetVol<char>();
-      LatticeVol<char> *lvol = 
-	dynamic_cast<LatticeVol<char>*>(input_handle.get_rep());
-      fill_tet_vol<char>(*lvol, *tvol);
+    }
+    else if (input_handle->type_name(1) == "short")
+    {
+      TetVol<short> *tvol = new TetVol<short>();
+      LatticeVol<short> *lvol = 
+	dynamic_cast<LatticeVol<short>*>(input_handle.get_rep());
+      fill_tet_vol<short>(*lvol, *tvol);
+      output_->send(FieldHandle(tvol));
+    }
+    else if (input_handle->type_name(1) == "unsigned char")
+    {
+      TetVol<unsigned char> *tvol = new TetVol<unsigned char>();
+      LatticeVol<unsigned char> *lvol = 
+	dynamic_cast<LatticeVol<unsigned char>*>(input_handle.get_rep());
+      fill_tet_vol<unsigned char>(*lvol, *tvol);
       output_->send(FieldHandle(tvol));
     } 
   } else {
