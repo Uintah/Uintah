@@ -13,7 +13,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/DynamicProcedure.h>
+#include <Packages/Uintah/CCA/Components/Arches/IncDynamicProcedure.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -157,7 +157,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
   else if (turbModel == "dynamicprocedure") 
-    d_turbModel = scinew DynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
   else if (turbModel == "mixmodel") { 
     d_turbModel = scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,

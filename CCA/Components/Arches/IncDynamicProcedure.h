@@ -1,18 +1,18 @@
-//----- DynamicProcedure.h --------------------------------------------------
+//----- IncDynamicProcedure.h --------------------------------------------------
 
-#ifndef Uintah_Component_Arches_DynamicProcedure_h
-#define Uintah_Component_Arches_DynamicProcedure_h
+#ifndef Uintah_Component_Arches_IncDynamicProcedure_h
+#define Uintah_Component_Arches_IncDynamicProcedure_h
 
 /**************************************
 CLASS
-   DynamicProcedure
+   IncDynamicProcedure
    
-   Class DynamicProcedure is an LES model for
+   Class IncDynamicProcedure is an LES model for
    computing sub-grid scale turbulent viscosity.
 
 
 GENERAL INFORMATION
-   DynamicProcedure.h - declaration of the class
+   IncDynamicProcedure.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
       
@@ -26,7 +26,7 @@ KEYWORDS
 
 
 DESCRIPTION
-   Class DynamicProcedure is an LES model for
+   Class IncDynamicProcedure is an LES model for
    computing sub-grid scale turbulent viscosity.
 
 
@@ -44,22 +44,22 @@ class PhysicalConstants;
 class BoundaryCondition;
 
 
-class DynamicProcedure: public TurbulenceModel {
+class IncDynamicProcedure: public TurbulenceModel {
 
 public:
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for DynamicProcedure.
-      DynamicProcedure(const ArchesLabel* label, 
+      // Blank constructor for IncDynamicProcedure.
+      IncDynamicProcedure(const ArchesLabel* label, 
 		       const MPMArchesLabel* MAlb,
 		       PhysicalConstants* phyConsts,
 		       BoundaryCondition* bndryCondition);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for DynamicProcedure.
-      virtual ~DynamicProcedure();
+      // Virtual destructor for IncDynamicProcedure.
+      virtual ~IncDynamicProcedure();
 
       // GROUP: Problem Setup :
       ///////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Get the Smagorinsky model constant
       double getSmagorinskyConst() const {
-	cerr << "There is no Smagorinsky constant in Dynamic Procedure" << endl;
+	cerr << "There is no Smagorinsky constant in IncDynamic Procedure" << endl;
 	exit(0);
 	return 0;
       }
@@ -108,8 +108,8 @@ private:
 
       // GROUP: Constructors (not instantiated):
       ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for DynamicProcedure.
-      DynamicProcedure();
+      // Blank constructor for IncDynamicProcedure.
+      IncDynamicProcedure();
 
       // GROUP: Action Methods (private)  :
 
@@ -162,7 +162,7 @@ private:
       double d_filterl; // prescribed filter length scale
       double d_CFVar; // model constant for mixture fraction variance
       double d_turbPrNo; // turbulent prandtl number
-      bool d_filter_cs_squared; //option for filtering Cs^2 in Dynamic Procedure
+      bool d_filter_cs_squared; //option for filtering Cs^2 in IncDynamic Procedure
       bool d_3d_periodic;
 
 
@@ -170,7 +170,7 @@ private:
 
       // const VarLabel* variables 
 
- }; // End class DynamicProcedure
+ }; // End class IncDynamicProcedure
 } // End namespace Uintah
   
   
