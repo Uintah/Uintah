@@ -444,15 +444,17 @@ itcl_class Module {
 	frame $w.log
 	text $w.log.txt -relief sunken -bd 2 -yscrollcommand "$w.log.sb set"
 	scrollbar $w.log.sb -relief sunken -command "$w.log.txt yview"
-	pack $w.log.txt $w.log.sb -side left -padx 5 -pady 5 -fill y
+	pack $w.log.txt -side left -padx 5 -pady 5 -expand 1 -fill both
+	pack $w.log.sb -side left -padx 0 -pady 5 -fill y
 
 	frame $w.fbuttons 
 	# TODO: unregister only for streams with the supplied output
 	button $w.fbuttons.ok -text "OK" \
 	    -command "$this destroyStreamOutput $w"
 	
-	pack $w.log $w.fbuttons -side top -padx 5 -pady 5
-	pack $w.fbuttons.ok -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
+	pack $w.fbuttons.ok -side bottom -padx 5 -pady 5 -ipadx 3 -ipady 3
+	pack $w.log -side top -padx 5 -pady 5 -fill both -expand 1
+	pack $w.fbuttons -side bottom -padx 5 -pady 5 -fill none -expand 0
 
 	$msgLogStream registerOutput $w.log.txt
     }
@@ -597,7 +599,7 @@ proc regenConnectionMenu { menu_id conn } {
     global Subnet Disabled
     $menu_id add command -label "Connection" -state disabled
     $menu_id add separator
-    $menu_id add command -label "Delete" -command "destroyConnection {$conn}"
+    $menu_id add command -label "Delete" -command "destroyConnection {$conn} 1"
     set connid [makeConnID $conn]
     setIfExists disabled Disabled($connid) 0
     set label [expr $disabled?"Enable":"Disable"]
@@ -730,7 +732,7 @@ proc drawConnections { connlist } {
 	    $canvas bind $id <1> "$canvas raise $id;traceConnection {$conn}"
 	    $canvas bind $id <Control-Button-1> "$canvas raise $id
 						 traceConnection {$conn} 1"
-	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn}"
+	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn} 1"
 	    $canvas bind $id <3> "connectionMenu %X %Y {$conn}"
 	    $canvas bind $id <ButtonRelease> "+deleteTraces"
 	    canvasTooltip $canvas $id $ToolTipText(Connection)
@@ -846,15 +848,23 @@ proc addConnection { omodid owhich imodid iwhich } {
     return [createConnection [list $omodid $owhich $imodid $iwhich]]
 }
 
-proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
-    global Subnet Notes Disabled Color
-    if {[string equal [oMod conn] Subnet]&& [info exists Subnet([iMod conn])] } {
+proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
+    global Subnet Notes Disabled Color undoList redoList
+
+    # If the in or out module of the connection is exactly "Subnet"
+    # append the subnet number of the opposite ends module to the name
+    if {[string equal [oMod conn] Subnet]&&[info exists Subnet([iMod conn])]} {
 	set conn [lreplace $conn 0 0 Subnet$Subnet([iMod conn])]
     }
-    if {[string equal [iMod conn] Subnet]&& [info exists Subnet([oMod conn])] } {
+    if {[string equal [iMod conn] Subnet]&&[info exists Subnet([oMod conn])]} {
 	set conn [lreplace $conn 2 2 Subnet$Subnet([oMod conn])]
     }
+    
+    # if the module name is blank discard this call and return with no error
+    # this is mainly for loading networks that have unfound modules
     if {![string length [iMod conn]] || ![string length [oMod conn]]} {return}
+
+    # make sure the connection lives entirely on the same subnet
     if { ![info exists Subnet([oMod conn])] ||
 	 ![info exists Subnet([iMod conn])] ||
 	 $Subnet([oMod conn]) != $Subnet([iMod conn]) } {
@@ -862,8 +872,8 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 	return
     }
 
-    # Trying to create subnet connections on the main network editor window
-    # most likely the user is loading a subnet into the main window
+    # Trying to create subnet editor interface connection in the main network
+    # editor window, happens when user is loading a subnet into the main window
     if {($Subnet([oMod conn]) == 0 && [isaSubnetEditor [oMod conn]]) || \
 	($Subnet([iMod conn]) == 0 && [isaSubnetEditor [iMod conn]]) } {
 	return
@@ -892,20 +902,17 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
 
-    #if we got here from undo, record this action as undoable
-    if { $undo } {
-	global undoList redoList
+    if $record_undo {
+	set redoList "" ; # new actions invalidate the redo list
 	lappend undoList [list "createConnection" $conn]
-	# new actions invalidate the redo list
-	set redoList ""	
     }
     return $connid
 }
 		      
 
 
-proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } { 
-    global Subnet Color Disabled Notes
+proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } { 
+    global Subnet Color Disabled Notes undoList redoList
     networkHasChanged
     deleteTraces
     set connid [makeConnID $conn]
@@ -920,9 +927,7 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 
     array unset Disabled $connid
     array unset Color $connid
-    array unset Notes $connid
-    array unset Notes $connid-Position
-    array unset Notes $connid-Color
+    array unset Notes $connid* ;# Delete Notes text, position, & color
 
     if { $tell_SCIRun } {
 	foreach realConn [findRealConnections $conn] {
@@ -951,13 +956,10 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
 
-    #if we got here from undo, record this action as undoable
-    if { $undo } {
-	global undoList redoList
+    if $record_undo {
+	set redoList "" ;# new actions invalidate the redo list
 	lappend undoList [list "destroyConnection" $conn]
-	# new actions invalidate the redo list
-	set redoList ""
-    }
+    } 
 }
 
 proc shadow { pos } {
@@ -1006,24 +1008,17 @@ proc getModuleNotesOptions { module } {
     global Subnet Notes
     set bbox [$Subnet(Subnet$Subnet($module)_canvas) bbox $module]
     set off 2
+    set xCenter [expr ([lindex $bbox 0]+[lindex $bbox 2])/2]
+    set yCenter [expr ([lindex $bbox 1]+[lindex $bbox 3])/2]
+    set left    [expr [lindex $bbox 0] - $off]
+    set right   [expr [lindex $bbox 2] + $off]
     setIfExists pos Notes($module-Position) def
     switch $pos {
-	n {
-	    return [list [lindex $bbox 0] [lindex $bbox 1] \
-			-anchor sw -justify left]
-	}
-	s {
-	    return [list [lindex $bbox 0] [lindex $bbox 3]  \
-			-anchor nw -justify left]
-	}
-	w {
-	    return [list [expr [lindex $bbox 0] - $off] [lindex $bbox 1] \
-			-anchor ne -justify left]
-	}
+	n { return [list $xCenter [lindex $bbox 1] -anchor s -justify center] }
+	s { return [list $xCenter [lindex $bbox 3] -anchor n -justify center] }
+	w { return [list $left $yCenter -anchor e -justify right] }
 	# east is default
-	default {
-	    return [list [expr [lindex $bbox 2] + $off] [lindex $bbox 1] \
-			-anchor nw -justify right]
+	default {  return [list $right $yCenter	-anchor w -justify left]
 	}
 
     }
@@ -1123,30 +1118,35 @@ proc parseConnectionID {conn} {
 }
 
 proc undo {} {
-    global undoList redoList
+    global undoList redoList Subnet
     if ![llength $undoList] {
 	return
     }
+
     # Get the last action performed
     set undo_item [lindex $undoList end]
     # Remove it from the list
-    listRemove undoList end
+    set undoList [lrange $undoList 0 end-1]
     # Add it to the redo list
     lappend redoList $undo_item
 
-    set action [lindex $undo_item 0]
-
-    if { $action == "createConnection" } {
-	destroyConnection [lindex $undo_item 1]
+    # if the connection now spans subnets, invalidate undo stack
+    set conn [lindex $undo_item 1] 
+    if { $Subnet([oMod conn]) != $Subnet([iMod conn]) } {
+	set undoList ""
+	set redoList ""
+	return
     }
-    if { $action == "destroyConnection" } {
-	createConnection [lindex $undo_item 1]
+
+    case [lindex $undo_item 0] {
+	"createConnection"  { destroyConnection [lindex $undo_item 1] }
+	"destroyConnection" { createConnection [lindex $undo_item 1] }
     }
 }
 
 
 proc redo {} {
-    global undoList redoList
+    global undoList redoList Subnet
     if ![llength $redoList] {
 	return
     }
@@ -1156,6 +1156,14 @@ proc redo {} {
     listRemove redoList end
     # Add it to the undo list
     lappend undoList $redo_item
+
+    # if the connection now spans subnets, invalidate undo stack
+    set conn [lindex $redo_item 1] 
+    if { $Subnet([oMod conn]) != $Subnet([iMod conn]) } {
+	set undoList ""
+	set redoList ""
+	return
+    }
 
     eval $redo_item
 }
