@@ -2,7 +2,8 @@
 
 <!-- 
   This is supposed to be a valid xhtml file!
-  Please visit http://validator.w3.org after editing this file.
+  Please visit http://validator.w3.org after editing this file (That
+  includes *you* Ted).
 -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -30,6 +31,20 @@
       padding-right: 2%;
       padding-bottom: 2%;
       padding-top: 2%;
+      }
+      caption {
+      margin-top: 1em;
+      }
+      table {
+      border-collapse: collapse;
+      margin-bottom: 1em;
+      }
+      th {
+      text-align: left;
+      }
+      th, td {
+      border: thin solid #999999;
+      padding: 2px;
       }
     </style>
 
@@ -75,9 +90,46 @@
 	</li>
 	<li value="4">
 	  <a href="#section_4">Registration of Echo-Planar DWIs</a>
+	  <ol>
+	    <li value="1">
+	      <a href="#section_4_1">Visualizing Mis-registration Problems</a>
+	    </li>
+	    <li value="2">
+	      <a href="#section_4_2">Gradients Data</a>
+	    </li>
+	    <li value="3">
+	      <a href="#section_4_3">Reference Image</a>
+	    </li>
+	    <li value="4">
+	      <a href="#section_4_4">Segmentation Settings</a>
+	    </li>
+	    <li value="5">
+	      <a href="#section_4_5">Fitting Percentage</a>
+	    </li>
+	    <li value="6">
+	      <a href="#section_4_6">Resampling Filter</a>
+	    </li>
+	    <li value="7">
+	      <a href="#section_4_7">Computing Registration</a>
+	    </li>
+	  </ol>
 	</li>
 	<li value="5">
 	  <a href="#section_5">Building Tensors (Tensor Estimation)</a>
+	  <ol>
+	    <li value="1">
+	      <a href="#section_5_1">DWI Smoothing</a>
+	    </li>
+	    <li value="2">
+	      <a href="#section_5_2">Masking Threshold</a>
+	    </li>
+	    <li value="3">
+	      <a href="#section_5_3">B-Matrix</a>
+	    </li>
+	    <li value="4">
+	      <a href="#section_5_4">Build Tensors</a>
+	    </li>
+	  </ol>
 	</li>
 	<li value="6">
 	  <a href="#section_6">Visualization</a> 
@@ -102,8 +154,15 @@
       </ol>
       <h3>Appendices</h3>
       <ol type="A">
-	<li><a href="#appendix_a">Data Formats and Preparation</a></li>
+	<li><a href="#appendix_a">Image Formats and Preparation</a></li>
+	<li><a href="#appendix_b">B-Matrix File Format</a></li>
       </ol>
+      <h3>Tables</h3>
+      <ul>
+	<li>
+	  <a href="#table_1">Rendering Window's Mouse Controls</a>
+	</li>
+      </ul>
       <h3>
 	Figures
       </h3>
@@ -129,12 +188,10 @@
 	  <a href="#figure_6">Figure 6: Registration Tab</a>
 	</li>
 	<li>
-	  <a href="#figure_7">Figure 7: Registration
-	    Improvement</a>
+	  <a href="#figure_7">Figure 7: Registration Improvement</a>
 	</li>
 	<li>
-	  <a href="#figure_8">Figure 8: Final Processing
-	    Stage</a>
+	  <a href="#figure_8">Figure 8: Final Processing Stage</a>
 	</li>
 	<li>
 	  <a href="#figure_9">Figure 9: Cutting Plane
@@ -238,8 +295,8 @@
       <a name="section_2" id="section_2"/>
       <h2>Section 2&mdash;Getting Started</h2> 
       <p>
-	This section describes how to start BioTensor. Subsequent
-	sections show how to load, process, and visualize data.
+	This section demonstrates how to start BioTensor. Subsequent
+	sections demonstrates how to load, process, and visualize data.
       </p>
 
       <h3>
@@ -256,10 +313,18 @@
 	<dd>
 	  SCIRUN_DATA points to the sample data sets directory.  This tutorial
 	  assumes the SCIRun sample data directory is
-	  <tt>/usr/sci/data/SCIRunData/1.20.0</tt> so SCIRUN_DATA is set to
-	  (assuming for csh-like shell):
+	  <tt>/usr/sci/data/SCIRunData/1.20.0</tt>.
+	  
+	  <p>For a csh-like shell:</p>
+
 	  <pre>
-	    setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.20.0
+  setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.20.0
+	  </pre>
+
+	  <p>For a sh-like shell:</p>
+
+	  <pre>
+  export SCIRUN_DATA=/usr/sci/data/SCIRun/SCIRunData/1.20.0
 	  </pre>
 	</dd>
 	<dt>SCIRUN_DATASET</dt>
@@ -267,41 +332,67 @@
 	  SCIRUN_DATASET points to a specific data set directory within the data
 	  directory.  The tutorial requires SCIRUN_DATASET to be set to the
 	  "brain-dt" dataset:
+
+	  <p>For a csh-like shell:</p>
+
 	  <pre>
-	    setenv SCIRUN_DATASET brain-dt
+  setenv SCIRUN_DATASET brain-dt
+	  </pre>
+
+	  <p>For a sh-like shell:</p>
+
+	  <pre>
+  export SCIRUN_DATASET=brain-dt
 	  </pre>
 	</dd>
-	<dt>SCIRUN_ON_THE_FLY_LIBS_DIR</dt>
-	<dd>
-	  SCIRUN_ON_THE_FLY_LIBS_DIR points to an "on the fly libs" directory.
-	  It should be set as follows:
-	  <pre>
-	    mkdir ~/on-the-fly-libs
-	    setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/on-the-fly-libs
-	  </pre>
-	</dd>
+
+<!-- 	<dt>SCIRUN_ON_THE_FLY_LIBS_DIR</dt> -->
+<!-- 	<dd> -->
+<!-- 	  SCIRUN_ON_THE_FLY_LIBS_DIR points to an "on the fly libs" directory. -->
+<!-- 	  It should be set as follows: -->
+<!-- 	  <pre> -->
+<!--   mkdir ~/on-the-fly-libs -->
+<!-- 	  </pre> -->
+
+<!-- 	  <p>For a csh-like shell:</p> -->
+<!-- 	  <pre> -->
+<!--   setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/on-the-fly-libs -->
+<!-- 	  </pre> -->
+<!-- 	  <p>For a sh-like shell:</p> -->
+<!-- 	  <pre> -->
+<!--   export SCIRUN_ON_THE_FLY_LIBS_DIR=~/on-the-fly-libs -->
+<!-- 	  </pre> -->
+<!-- 	</dd> -->
       </dl>
+
       <p>
 	When running BioTensor on Apple's OSX operating system, the limit on
-	the number of open files must be increased.  Users of csh-like shells
-	must type:
+	the number of open files must be increased.
       </p>
+
+      <p>Users of csh-like shells type:</p>
       <pre>
-	limit descriptors unlimited
+  limit descriptors unlimited
       </pre>
-      <p>and users of sh-like shells must type:</p>
+
+      <p>Users of sh-like shells type:</p>
       <pre>
-	ulimit -n unlimited
+  ulimit -n unlimited
       </pre>
       <h3>
 	<a name="section_2_2" id="section_2_2">2.2 Launching
 	  BioTensor</a>
       </h3> 
       <p>
-	To launch the BioTensor application, 'cd' into the directory where the
-	BioTensor executable is located (the directory for an RPM installation
-	is /usr/local/SCIRun/bin/), then type './BioTensor'.  BioTensor takes
-	a few moments to start up.  It launches a user interface window as
+	To launch the BioTensor application, change the current
+	working directory (using the <b>cd</b> command) to the
+	directory containing the
+	BioTensor executable.  The directory for an RPM installation
+	is /usr/local/SCIRun/bin/.
+	</p>
+      <p>
+	Type <tt>./BioTensor</tt> to start the program.  BioTensor takes
+	a few moments to start up, then launches a user interface window
 	shown in <a href="#figure_1">Figure 1</a>.  
       </p> 
 
@@ -325,11 +416,12 @@
       </h3>
 
       <p>
-	BioTensor's user interface is is typical for a SCIRun/BioPSE PowerApp.
-	The Processing Pane, on the left side of the window, guides the user
-	through the application. The Rendering Pane, in the middle of the
-	window, is where data interaction and visualization is performed.
-	The Visualization Pane, on the right side of the window, controls
+	BioTensor's user interface, shown in <a
+	href="#figure_1">Figure 1</a>, contains three panes.  The
+	Processing Pane, the left pane, guides the user through the
+	application. The Rendering Pane, the center pane, is where
+	data interaction and visualization is performed.  The
+	Visualization Pane, the right pane, controls
 	parameters for the Rendering Pane.
       </p>
       <p>
@@ -338,7 +430,7 @@
 	lines separating the panes.  When separated, the panes appear as shown
 	in <a href="#figure_2">Figure 2.</a> <a name="figure_2"
 	  id="figure_2"></a>.  Detaching the Rendering window allows it to
-	be viewed at maximum resolution.  Panes are re-attached by again
+	be viewed at maximum resolution.  Panes are re-attached by 
 	clicking on the pane detachment/attachment controls.
       </p>
 
@@ -356,22 +448,20 @@
       <p>
 	The Processing Pane has two top-level menus: File and Help, as
 	shown in <a href="#figure_3">Figures 3</a> and <a
-	  href="#figure_4">4</a>. The File menu contains items Load
-	Session..., Save Session..., and Quit.  
+	  href="#figure_4">4</a>. 
       </p>
 
       <p>
-	The user is not required to complete all processing steps
-	before exiting BioTensor.  A BioTensor session can be stopped
-	and resumed later using File menu items Save Session... and
-	Load Session... respectively.  After loading a saved session with
-	Load Session..., processing and visualization are resumed by
-	clicking Execute.
+	File menu items Save Session... and Load Session... allow the
+	user to stop and resume BioTensor sessions.  After loading a
+	saved session with Load Session..., resume processing and
+	visualization by clicking Execute.
       </p>
 
       <p>
-	Tooltips may be toggled on and off by selecting menu item Show
-	Tooltips from the Help menu.
+	Help menu item Show Tooltips toggles tooltips. "Hovering" the
+	mouse pointer over a control
+	displays a tooltip describing a control.
       </p>
 
       <a name="figure_3" id="figure_3"></a>
@@ -394,18 +484,22 @@
       <br/>
 
       <p>
-	The bottom of the Processing Pane has a Progress Indicator and a text
-	description that indicate the current state of the application, and
-	suggests the next processing step. Just above the Progress Indicator
-	are two buttons: a blue Execute button and a yellow Next button. The
-	Execute button can be pressed to invoke the current processing
-	step. Once a stage has been completed, the Next button becomes
-	enabled, allowing progress to the next stage.
+	The bottom of the Processing Pane contains a Progress
+	Indicator, a text description indicating the current
+	state of the application, and suggests the next processing
+	step.
       </p>
 
       <p>
-	The Progress Indicator will indicate an error if one occurs.  Clicking
-	on the Progress Indicator will display an error log.
+	Just above the Progress Indicator are two buttons: an Execute
+	 button and a Next button. Press the Execute button to
+	 complete the current processing step.  Press Next to begin
+	 the next processing step.
+      </p>
+
+      <p>
+	The Progress Indicator  indicates an error if an error occurs.  Clicking
+	on the Progress Indicator displays an error log.
       </p>
 
       <a name="section_3" id="section_3"/>
@@ -419,20 +513,20 @@
 	BioTensor for immediate investigation (bypassing processing stages).
 	BioTensor supports the NRRD, Analyze, and DICOM data formats.  <a
 	  href="#appendix_a">Appendix A</a> gives more information on supported
-	data formats.
+	image formats.
       </p>
 
       <p>
 	To load data for this tutorial:
       </p>
       <ol>
-	<li><p>Click on the Processing Pane's Load Data tab</p></li>
-	<li><p>Click the radio button labeled: DWI with B0 Reference Data</p></li>
-	<li><p>Click on the Load Data panel's Nrrd tab</p></li> 
+	<li><p>Click on the Processing Pane's Load Data tab.</p></li>
+	<li><p>Click the radio button labeled: DWI with B0 Reference Data.</p></li>
+	<li><p>Click on the Load Data panel's Nrrd tab.</p></li> 
 	<li><p>Use the Nrrd panel's
 	    Browse buttons to select DWI data,
 	    <tt>/usr/sci/data/SCIRunData/1.20.0/demo-DWI.nrrd</tt>, and B0 data,
-	    <tt>/usr/sci/data/SCIRunData/1.20.0/demo-B0.nrrd</tt></p></li>
+	    <tt>/usr/sci/data/SCIRunData/1.20.0/demo-B0.nrrd.</tt></p></li>
       </ol>
 
       <p>
@@ -446,10 +540,11 @@
       <ul>
 	<li>
 	  <p>
-	    Pre-computed diffusion tensor data are loaded by clicking the radio
-	    button labeled: Load Tensor Volumes.  If this is done then processing
-	    steps are skipped and tensor volume data may be visualized directly
-	    (as described in <a href="#section_6">Section 6</a>)
+	    Load pre-computed diffusion tensor data by clicking the
+	    radio button labeled: Load Tensor Volumes.  Pressing this
+	    radio button skips processing steps, and tensor volume data
+	    may be visualized directly (as described in <a
+	    href="#section_6">Section 6</a>)
 	  </p>
 	</li>
 	<li>
@@ -481,9 +576,9 @@
 	select different slices from the volume to inspect.
       </p>
       <p>
-	The next step in the BioTensor application is performing distortion
-	correction on the DWI channels.  Press the yellow Next button at the
-	bottom of the Processing pane to proceed to the registration
+	The next step in the BioTensor application is performing
+	distortion correction on the DWI channels.  Press Next (at the
+	bottom of the Processing pane) to proceed to the registration
 	processing step.
       </p>
 
@@ -492,18 +587,23 @@
 	Section 4&mdash;Registration of Echo-Planar DWIs
       </h2> 
       <p>
-	Many diffusion weighted images are acquired with a fast method known
-	as echo-planar imaging (EPI). This type of imaging can suffer from two
-	kinds of distortion: global distortions due to eddy currents, and
-	local distortions due to susceptibility artifacts.  BioTensor can
-	correct the first type of distortion.  Future versions may include
-	field-map based correction of the second type of distortion. Following
+	Many diffusion weighted images are acquired with a fast method
+	known as echo-planar imaging (EPI). This type of imaging can
+	suffer from two kinds of distortion: global distortions due to
+	eddy currents, and local distortions due to susceptibility
+	artifacts.  BioTensor can correct the first type of
+	distortion.  Future versions may include field-map based
+	correction of the second type of distortion. Following
 	convention, BioTensor assumes the X direction is the read-out
-	direction, and the Y direction is the phase-encoding direction, along
-	which EPI distortions occur.  <a href="#figure_6">Figure 6</a> shows
-	the UI for the Registration tab of the Processing pane. The "Perform
-	Global EPI Registration" check-box controls whether any EPI
-	registration is performed.  </p>
+	direction, and the Y direction is the phase-encoding
+	direction, along which EPI distortions occur.  <a
+	href="#figure_6">Figure 6</a> shows the Processing pane's
+	Registration tab. "Check" the Registration tab's "Perform
+	Global EPI Registration" check-box to perform EPI
+	registration.  The following sections describe each
+	registration paramter.  This tutorial assumes use of default
+	registration settings.
+      </p>
 
       <a name="figure_6" id="figure_6"></a>
       <center>
@@ -515,17 +615,22 @@
       </center>
       <br/><br/>
 
+      <h3 id="section_4_1">4.1 Visualizing Mis-registration Problems</h3>
       <p>
-	Problems due to poor DWI registration can be visualized by looking at
-	the variance, at each voxel, across the DWIs, as shown in <a
-	  href="#figure_6">Figure 6</a>, by selecting the "View Variance of
-	Original Data" check-box in the visualization pane. DWI variance is a
-	simple indicator of anisotropy, since isotropic regions should
-	generate constant DWI values for all gradient directions. Note,
-	however, the regions of high spurious ("ghost") anisotropy at the top
-	(anterior) and bottom (posterior) edges of the brain, due to DWI
-	mis-registration.
+	Problems due to poor DWI registration can be visualized by
+	looking at the variance, at each voxel, across the DWIs, as
+	shown in <a href="#figure_6">Figure 6</a>, by selecting the
+	"View Variance of Original Data" check-box in the
+	visualization pane's Vis Options > Variance tab. DWI variance
+	is a simple indicator of anisotropy, since isotropic regions
+	should generate constant DWI values for all gradient
+	directions. Note, however, the regions of high spurious
+	("ghost") anisotropy at the top (anterior) and bottom
+	(posterior) edges of the brain, due to DWI mis-registration.
       </p>
+
+      
+      <h3 id="section_4_2">4.2 Gradients Data</h3>
       <p>
 	The method for registering EPI acquired images looks at over-all brain
 	cross-section changes across the DWIs to estimate (and correct for)
@@ -535,19 +640,28 @@
 	diffusion).  This is given as the "Gradients File:". This is a plain
 	text file, with three numbers per line, giving the X, Y, and Z
 	components of the gradient. There must be one line per DWI.
+	This tutorial uses the file demo-gradients.txt, which is part
+	of the brain-dt dataset.
       </p>
+
+      <h3 id="section_4_3">4.3 Reference Image</h3>
       <p>
-	The registration method can perform implicit registration with the
-	reference (B=0) image ("Implicit Reference: estimate distortion
-	parameters from all images"), or it can use a diffusion weighted image
-	chosen by the user. The user should choose the diffusion weighted
-	image least affected by EPI distortion ("Choose Reference
-	Image"). Note that DWIs are sequentially numbered, starting with 1 (as
-	opposed to 0). Implicit registration attempts to model the
-	relationship between gradient directions and the resulting distortion,
-	which allows this method to map the DWIs back to the coordinate space
-	of the B=0 image without explicitly registering with it.
+	The registration method can perform implicit registration with
+	the reference (B=0) image ("Implicit Reference: estimate
+	distortion parameters from all images"), or it can use a
+	diffusion weighted image chosen by the user.  When using a
+	diffusion weighted image, the user should choose the image
+	least affected by EPI distortion.  Use the slider labled
+	"Choose Reference Image" to choose an image. Note that DWIs
+	are sequentially numbered, starting with 1 (as opposed to
+	0). Implicit registration attempts to model the relationship
+	between gradient directions and the resulting distortion,
+	which allows this method to map the DWIs back to the
+	coordinate space of the B=0 image without explicitly
+	registering with it.
       </p>
+
+      <h3 id="section_4_4">4.4 Segmentation Settings</h3>
       <p>
 	The registration method's estimate of the over-all shape of the brain
 	cross-section is based on a simple segmentation of the
@@ -567,8 +681,8 @@
       <p>
 	The "Background/DWI Threshold" area of the UI allows use of automatic
 	determination of the threshold DWI value between background and brain
-	tissue ("Automatically Determine Threshold"), or enter one directly
-	("Specify Threshold").
+	tissue ("Automatically Determine Threshold"), or allows the
+	user to enter a threshold value ("Specify Threshold").
       </p>
       <p>
 	The "Use Connected Components" check box determines whether connected
@@ -577,6 +691,9 @@
 	brain cross-section shape that are more similar across the diffusion
 	weighted images.
       </p>
+
+
+      <h3 id="section_4_5">4.5 Fitting Percentage</h3>
       <p>
 	Based on the segmentation of the brain interior, the registration
 	method estimates the distortion on each slice of the DWI volumes. To
@@ -592,6 +709,9 @@
 	versus how many slices (with the poorest segmentation results) should
 	be ignored. The default setting works well.
       </p>
+
+
+      <h3 id="section_4_6">4.6 Resampling Filter</h3>
       <p>
 	The kernel used when applying the warp to the individual images is the
 	final parameter in the registration method. In order of ascending
@@ -608,9 +728,11 @@
 	  <p>Windowed Sinc (Hann window with 8-sample radius)</p>
 	</li>
       </ul>
+
+      <h3 id="section_4_7">4.7 Computing Registration</h3>
       <p>
-	Once parameters have been estimated, press "Execute".  Due to the
-	complexity of the process, the registration step can take some time.
+	Press "Execute" after registration parameters have been set.  Due to the
+	complexity of the process,  registration can take some time.
       </p>
       <p>
 	Once registration is finished, visualize the improvement, as shown in
@@ -618,6 +740,9 @@
 	Registered Data" check-box in the visualization pane. This shows, side
 	by side, slices of DWI variance before and after registration. Note
 	the reduction of spurious anisotropy at the edges of the brain.
+      </p>
+      <p>
+	Press Next to go to the next step&mdash;building tensors.
       </p>
 
       <a name="figure_7" id="figure_7"/>
@@ -635,11 +760,14 @@
 
 
       <p>
-	<a href="#figure_8">Figure 8</a> shows the UI at the final stage of
-	processing, in which the diffusion weighted images are combined to
-	estimate the diffusion tensors at each sample point. This step takes
-	as input, the output of the DWI registration step, and a small number
-	of additional parameters.  
+	The final processing step combines the diffusion weighted
+	images to estimate diffusion tensors at each sample point.  <a
+	href="#figure_8">Figure 8</a> shows the Processing Pane and
+	the Rendering Pane at the final step of processing.   Note the
+	Processing Pane's Build Tensors tab is selected.  Following
+	sub-sections discuss the DWI smoothing, masking threshold, and
+	B-matrix parameters.  Press Execute after setting these
+	parameters to compute tensors. 
       </p>
 
       <a name="figure_8" id="figure_8"/>
@@ -651,16 +779,19 @@
 	<b>Figure 8: Final Processing Stage.</b>
       </center>
 
+      <h3 id="section_5_1">5.1 DWI Smoothing</h3>
       <p>
-	DWI Smoothing: Prior to the estimation of tensors, later visualization
+	 Prior to the estimation of tensors, later visualization
 	and analysis stages sometimes benefit from some smoothing of the
 	individual DWIs prior to estimation of tensors. This option allows the
 	user to Gaussian blur the DWIs by controlling the radius (the standard
 	deviation) of the Gaussian kernel within the slice plane ("Radius in X
 	and Y") and across slices ("Radius in Z").
       </p>
+
+      <h3 id="section_5_2">5.2 Masking Threshold</h3>
       <p>
-	Masking Threshold: Diffusion tensors can not be meaningfully
+	Diffusion tensors can not be meaningfully
 	calculated in the background (air) of the DWIs; neither the
 	non-diffusion-weighted image nor any DWIs has significant signal in
 	the background. Diffusion tensors can be calculated inside the CSF
@@ -675,8 +806,10 @@
 	scalar field that BioTensor uses for controlling visualization, but
 	does not scale tensors themselves.
       </p>
+
+      <h3 id="section_5_3">5.3 B-Matrix</h3>
       <p>
-	B-Matrix: In order to estimate tensors from DWIs, the relationship
+	In order to estimate tensors from DWIs, the relationship
 	between each DWI and the diffusion tensor must be known. The B-matrix
 	is a matrix that captures the weighting that each diffusion tensor
 	coefficient received in a given DWI. BioTensor currently refers to the
@@ -693,41 +826,14 @@
 	("B=0").
       </p>
       <p>
-	Alternatively, if a B-matrix has been computed for each DWI, from both
-	imaging gradients and diffusion-encoding gradients, a it can be loaded
-	as a separate text ("Load B-Matrix").
+	Alternatively, if a B-matrix has been computed for each DWI,
+	from both imaging gradients and diffusion-encoding gradients,
+	a it can be loaded as a separate text ("Load B-Matrix").  <a
+	href="#appendix_b">Appendix B</a> discusses the format of a
+	B-Matrix file.
       </p>
-      <p>
-	Some important notes on the formatting of the B-Matrix file:
-      </p>
-      <ul>
-	<li>
-	  <p>
-	    This is a plain text file with six numbers per line, however, lines
-	    beginning with the pound character ("#") are treated as comments.
-	  </p>
-	</li>
-	<li>
-	  <p>
-	    The six floating-point values per line convey the
-	    B-matrix for a single DWI.
-	  </p>
-	</li>
-	<li>
-	  <p>
-	    The ordering of the B-matrix elements per line is:
-	    Bxx Bxy Bxz Byy Byz Bzz
-	  </p>
-	</li>
-	<li>
-	  <p>
-	    The off-diagonal elements of the B-matrix have NOT been pre-multiplied
-	    by two. This multiplication is done internally, to account for how the
-	    off-diagonal elements of the diffusion tensor are actually weighted in
-	    each DWI.
-	  </p>
-	</li>
-      </ul>
+
+      <h3 id="section_5_4">5.4 Build Tensors</h3>
       <p>
 	Currently, BioTensor performs linear least-squares fitting to estimate
 	the diffusion tensors at each sample point. Non-linear tensor
@@ -758,20 +864,69 @@
 	To begin visualizing the data, press the AutoView button to move the
 	rendered geometry into the middle of the window. The AutoView button
 	is located on the Viewer Options tab, or press Ctrl-V while the mouse
-	is in the Rendering window. Controls for navigating within the
+	is in the Rendering window. 
+      </p>
+      <p>
+	Interaction with the Rendering window is performed with the
+	mouse.  The Rendering window's scene can be translated,
+	zoomed, rotated, etc.  <a href="#table_1">Table 1</a> shows
+	mouse actions.  Controls for navigating within the
 	Rendering window are similar to the SCIRun <a
 	  href="http://software.sci.utah.edu/doc/User/Guide/usersguide/srug6_1.html">Viewer</a>.
 	However, the full control pane normally found at the bottom of the
 	SCIRun ViewWindow, has been replaced with the most frequently used
-	subset of those controls, and is now located on the Viewer Options
+	subset of those controls, and is located on the Viewer Options
 	tab.
       </p>
+
+      <a name="table_1" id="table_1"/>
+      <center>
+	<table>
+	  <caption><b>Table 1</b>: Rendering Window's Mouse Controls</caption>
+	  <thead>
+	    <tr>
+	      <th>Modifier Key</th>
+	      <th>Mouse Button</th>
+	      <th>Renderer Window Action</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr>
+	      <td rowspan="3">none</td>
+	      <td>Left</td>
+	      <td>Translate scene</td>
+	    </tr>
+	    <tr>
+	      <td>Middle</td>
+	      <td>Rotate scene</td>
+	    </tr>
+	    <tr>
+	      <td>Right</td>
+	      <td>Zoom scene</td>
+	    </tr>
+	    <tr>
+	      <td rowspan="3">Control</td>
+	      <td>Left</td>
+	      <td>Translate scene in Z-direction</td>
+	    </tr>
+	    <tr>
+	      <td>Middle</td>
+	      <td>Rotate the camera view about the eye point</td>
+	    </tr>
+	    <tr>
+	      <td>Right</td>
+	      <td>Unicam movement</td>
+	    </tr>
+	  </tbody>
+	</table>
+      </center>
+
       <p>
-	Within the Vis Options tab of the Visualization pane, there are five
-	sub-tabs for controlling visualization settings. The first tab,
-	"Variance", was used in Section 3 to visualize DTI variance data. The
-	following sections investigate options on the four other tabs: Planes,
-	Isosurface, Glyphs, and Fibers.
+	Within the Vis Options tab of the Visualization pane, there
+	are five sub-tabs for controlling visualization settings. The
+	first tab, "Variance", was used in Section 3 to visualize DTI
+	variance data. The following sections investigate options on
+	the Planes, Isosurface, Glyphs, and Fibers tabs.
       </p>
 
       <a name="section_6_2" id="section_6_2"></a>
@@ -975,7 +1130,7 @@
       <br/><br/>
 
       <a id="appendix_a" name="appendix_a" />
-      <h2>Appendix A&mdash;Data Formats and Preparation</h2>
+      <h2>Appendix A&mdash;Image Formats and Preparation</h2>
       <p>
 	BioTensor supports NRRD, DICOM, and Analyze data formats.  The <a
 	  href="http://teem.sourceforge.net/nrrd/index.html">NRRD</a>, <a
@@ -1004,6 +1159,29 @@
       <p>
 	For DICOM data, a collection of sequences (directories) that make up
 	the DWI and reference volumes must be identified.
+      </p>
+
+      <a id="appendix_b" name="appendix_b"/>
+      <h2>Appendix B&mdash;B-Matrix File Format</h2>
+      
+      <p>
+	A B-Matrix data file is a plain text file with six numbers per
+	line. Lines beginning with the pound character ("#") are
+	treated as comments.
+      </p>
+      <p>
+	The six floating-point values per line convey the
+	B-matrix for a single DWI.
+      </p>
+      <p>
+	The ordering of the B-matrix elements per line is:
+	Bxx Bxy Bxz Byy Byz Bzz
+      </p>
+      <p>
+	The off-diagonal elements of the B-matrix have NOT been pre-multiplied
+	by two. This multiplication is done internally, to account for how the
+	off-diagonal elements of the diffusion tensor are actually weighted in
+	each DWI.
       </p>
 
       <center>
