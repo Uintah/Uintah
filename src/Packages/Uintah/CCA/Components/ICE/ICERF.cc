@@ -8,8 +8,8 @@
 _____________________________________________________________________*/
 void ICE::scheduleComputeNonEquilibrationPressureRF(SchedulerP& sched,
                                                  const PatchSet* patches,
-                                            const MaterialSubset* ice_matls,
-                                            const MaterialSubset* press_matl,
+                                                 const MaterialSubset* ice_matls,
+                                                 const MaterialSubset* press_matl,
                                                  const MaterialSet*    all_matls)
 {
   cout_doing << "ICE::scheduleComputeNonEquilibrationPressureRF" << endl;
@@ -70,9 +70,9 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeFaceCenteredVelocitiesRF(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSubset* ice_matls,
-                                          const MaterialSubset* mpm_matls,
-                                          const MaterialSubset* press_matl,
-                                          const MaterialSet* all_matls)
+                                                const MaterialSubset* mpm_matls,
+                                                const MaterialSubset* press_matl,
+                                                const MaterialSet* all_matls)
 {
   cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" << endl;
   Task* task = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
@@ -114,8 +114,8 @@ void ICE::scheduleComputeFaceCenteredVelocitiesRF(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateMomentumSourceSinksRF(SchedulerP& sched,
                                                 const PatchSet* patches,
-                                          const MaterialSubset* press_matl,
-                                          const MaterialSubset* ice_matls_sub,
+                                                const MaterialSubset* press_matl,
+                                                const MaterialSubset* ice_matls_sub,
                                                 const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleAccumulateMomentumSourceSinksRF" << endl; 
@@ -150,7 +150,7 @@ void ICE::scheduleAccumulateMomentumSourceSinksRF(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateEnergySourceSinksRF(SchedulerP& sched,
                                               const PatchSet* patches,
-                                         const MaterialSubset* press_matl,
+                                              const MaterialSubset* press_matl,
                                               const MaterialSet* matls)
 
 {
@@ -181,21 +181,22 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianSpecificVolumeRF(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSubset* press_matl,
+                                               const MaterialSubset* ice_matls,
                                                const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeLagrangianSpecificVolumeRF" << endl;
   Task* task = scinew Task("ICE::computeLagrangianSpecificVolumeRF",
                       this,&ICE::computeLagrangianSpecificVolumeRF);
   task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::NewDW, lb->rho_CCLabel,                  Ghost::None);
-  task->requires(Task::NewDW, lb->rho_micro_CCLabel,            Ghost::None);
+  task->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, Ghost::None);
+  task->requires(Task::NewDW, lb->rho_micro_CCLabel, ice_matls, Ghost::None);
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,  ice_matls, Ghost::None);
+  task->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, Ghost::None);
+  task->requires(Task::NewDW, lb->Tdot_CCLabel,      ice_matls, Ghost::None);
+  task->requires(Task::NewDW, lb->f_theta_CCLabel,   ice_matls, Ghost::None);
   task->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
   task->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
-  task->requires(Task::OldDW, lb->temp_CCLabel,                 Ghost::None);
-  task->requires(Task::NewDW, lb->Tdot_CCLabel,                 Ghost::None);
-  task->requires(Task::NewDW, lb->f_theta_CCLabel,              Ghost::None);
-
+  
   task->computes(lb->spec_vol_L_CCLabel);
   task->computes(lb->spec_vol_source_CCLabel);
 
