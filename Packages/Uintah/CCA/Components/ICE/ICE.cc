@@ -437,7 +437,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // The task will have a reference to press_matl
   if (press_matl->removeReference())
     delete press_matl; // shouln't happen, but...
-  }
+}
+
 /* ---------------------------------------------------------------------
  Function~  ICE::restartInitialize--
  Purpose:   Set variables that are normally set during the initialization
@@ -542,6 +543,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
   
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
+  scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
+                                                          maxMach_PSS);
+                                                          
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
   
   scheduleComputePressure(                sched, patches, press_matl,
@@ -553,6 +558,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           all_matls);           
   }  
   
+
+ 
+  
   scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
                                                            mpm_matls_sub,
                                                            all_matls);    
@@ -562,7 +570,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   scheduleUpdateVolumeFraction(            sched, level,   all_matls);
 
   if(d_impICE) {        //  I M P L I C I T
-    scheduleImplicitPressureSolve(         sched, level,   patches,       
+    scheduleImplicitPressureSolve(         sched, level,   patches,
                                                            one_matl,      
                                                            press_matl,    
                                                            ice_matls_sub,  
@@ -618,13 +626,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
   scheduleComputeLagrangian_Transported_Vars(sched, patches,
                                                           all_matls);
-                                                       
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
-  scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
-                                                          maxMach_PSS);
                                    
-  scheduleAdvectAndAdvanceInTime(         sched, patches, maxMach_PSS,
-                                                          ice_matls_sub,
+  scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
                                                           press_matl,
                                                           all_matls);
@@ -637,14 +640,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   //  clean up memory
   if (press_matl->removeReference()){
     delete press_matl;
-  }
-  
-  if(d_usingLODI){
-    for(int f=0;f<Patch::numFaces;f++){
-      if(maxMach_PSS[f]->removeReference()){
-        delete maxMach_PSS[f];
-      }
-    }
   }
 }
 
@@ -715,11 +710,20 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(lb->rho_CCLabel);
   t->computes(lb->press_equil_CCLabel, press_matl, oims);
   t->computes(lb->press_CCLabel,       press_matl, oims);  // needed by implicit
-
+ 
   if (d_RateForm) {     // RATE FORM
     t->computes(lb->matl_press_CCLabel, press_matl,oims);
   }
-    
+  //__________________________________  
+  if(d_usingLODI) {
+    t->requires(Task::OldDW, lb->vel_CCLabel,ice_matls->getUnion(), gn);
+    vector<Patch::FaceType>::iterator f ;   // MaxMach
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {
+      VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
+      t->requires(Task::NewDW,V_Label, ice_matls->getUnion());
+    }
+  }
   sched->addTask(t, patches, ice_matls);
 }
 
@@ -899,18 +903,20 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->sp_vol_CCLabel,     gn);
   task->requires( Task::NewDW, lb->rho_CCLabel,        gn);    
   task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
-//__________________________________
+  //__________________________________
   if(d_models.size() > 0){
     task->requires(Task::NewDW, lb->modelVol_srcLabel,  gn);
     task->requires(Task::NewDW, lb->modelMass_srcLabel, gn);
   }
-//__________________________________  
+  //__________________________________  
   if(d_usingLODI) {
-    task->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn);
-    task->requires(Task::NewDW, lb->specific_heatLabel,ice_matls, gn);
-    task->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gn);
-    task->requires(Task::NewDW,MIlb->temp_CCLabel,     mpm_matls, gn);
-    task->requires(Task::NewDW, lb->f_theta_CCLabel,             gn);
+    task->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn);
+    vector<Patch::FaceType>::iterator f ;   // MaxMach
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {
+      VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
+      task->requires(Task::NewDW,V_Label, ice_matls);
+    }
   }
   
   task->modifies(lb->press_CCLabel,        press_matl, oims);
@@ -1223,6 +1229,20 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn); 
   }
 
+/*`==========TESTING==========*/
+  if(d_usingLODI){
+    t->requires(Task::NewDW, lb->press_CCLabel,      gn);      
+    t->requires(Task::NewDW, lb->speedSound_CCLabel, gn);
+
+    vector<Patch::FaceType>::iterator f ;   // MaxMach
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {    
+      VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
+      cout << " requiring " << V_Label->getName() << endl;
+      t->requires(Task::NewDW,V_Label, ice_matls);
+    }
+  } 
+/*===========TESTING==========`*/
   t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_ME_CCLabel);      
   t->computes(lb->eng_L_ME_CCLabel); 
@@ -1241,7 +1261,7 @@ _____________________________________________________________________*/
 void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched, 
                                      const LevelP& level,
                                      const MaterialSet* matls,
-                                     vector<PatchSubset*> & maxMach_PSS)
+                                     vector<PatchSubset*> & /*maxMach_PSS*/)
 {
   if(d_usingLODI) {
     cout_doing << "ICE::scheduleMaxMach_on_Lodi_BC_Faces" << endl;
@@ -1251,16 +1271,17 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
     task->requires( Task::OldDW, lb->vel_CCLabel,        gn);   
     task->requires( Task::OldDW, lb->speedSound_CCLabel, gn);
     
-    Lodi_maxMach_patchSubset(level, d_sharedState, maxMach_PSS);
+    // Reduction variables with patch subsets don't work with mpi.
+    //Lodi_maxMach_patchSubset(level, d_sharedState, maxMach_PSS);
                              
     //__________________________________
-    // loop over all faces and add computes(maxMach_<face>)
-    // for the patchSubset maxMach_PSS[f]
-    for(Patch::FaceType f = Patch::startFace;
-                        f <= Patch::endFace; f=Patch::nextFace(f)){
-      VarLabel* V_Label = getMaxMach_face_VarLabel(f);
- 
-      task->computes(V_Label, maxMach_PSS[f]);
+    // loop over the Lodi face
+    //  add computes for maxMach
+    vector<Patch::FaceType>::iterator f ;
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {
+      VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
+      task->computes(V_Label, matls->getUnion());
     }
     sched->addTask(task, level->eachPatch(), matls);
   }
@@ -1271,8 +1292,7 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patch_set,
-                                    const vector<PatchSubset*> & maxMach_PSS,
-                                    const MaterialSubset* /*ice_matls*/,
+                                    const MaterialSubset* ice_matlsub,
                                     const MaterialSubset* /*mpm_matls*/,
                                     const MaterialSubset* press_matl,
                                     const MaterialSet* ice_matls)
@@ -1298,17 +1318,15 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   //__________________________________
   if(d_usingLODI) { 
     task->requires(Task::NewDW, lb->gammaLabel,        gn,  0);   
-    task->requires(Task::OldDW, lb->temp_CCLabel,      gac, 1);       
-    task->requires(Task::OldDW, lb->rho_CCLabel,       gac, 1);       
-    task->requires(Task::OldDW, lb->vel_CCLabel,       gac, 1);   
-    task->requires(Task::OldDW, lb->vol_frac_CCLabel,  gac, 2);
-    task->requires(Task::OldDW, lb->press_CCLabel,    press_matl,oims,gac, 2);
+    task->requires(Task::NewDW, lb->vol_frac_CCLabel,  gac, 2);
+    task->requires(Task::NewDW, lb->press_CCLabel,    press_matl,oims,gac, 2);
 
     // For Lodi faces require(maxMach_<face>)
-    for(Patch::FaceType f = Patch::startFace;
-                        f <= Patch::endFace; f=Patch::nextFace(f)){
-      VarLabel* V_Label = getMaxMach_face_VarLabel(f);
-      task->requires(Task::NewDW,V_Label, maxMach_PSS[f]);
+    vector<Patch::FaceType>::iterator f ;
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {
+      VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
+      task->requires(Task::NewDW,V_Label, ice_matlsub);
     }
   } // Lodi
   
@@ -1850,7 +1868,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing calc_equilibration_pressure on patch "<<patch->getID()
-         << "\t\t ICE" << endl;
+               << "\t\t ICE" << endl;
     double    converg_coeff = 15;              
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    sum=0., tmp;
@@ -2100,12 +2118,37 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     //__________________________________
     // - update Boundary conditions
-    //   Don't set Lodi bcs, we already compute Press
-    //   in all the extra cells.
     // - make copy of press for implicit calc.
-    Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
-    lv->setLodiBcs = false;
- 
+
+ /*`==========TESTING==========*/
+    Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(1);
+    lv->setLodiBcs = true;
+    lv->usingLODI = d_usingLODI;
+   
+    if(d_usingLODI) {            // this only works for 1 matl!!!!!
+      constCCVariable<Vector> vel_CC;
+      
+      for(int m = 0; m < numMatls; m++) {
+        Material* matl = d_sharedState->getICEMaterial( m );
+        int indx = matl->getDWIndex();   
+        old_dw->get(lv->vel_CC, lb->vel_CCLabel, indx,patch,gn,0);
+        
+        new_dw->allocateTemporary(lv->speedSound,patch);
+        new_dw->allocateTemporary(lv->rho_CC,    patch);
+        lv->rho_CC.copyData(rho_CC[m]);
+        lv->speedSound.copyData(speedSound_new[m]);
+        
+        // compute Li 
+        for (int i = 0; i <= 5; i++){ 
+          new_dw->allocateTemporary(lv->Li[i], patch);
+          lv->Li[i].initialize(Vector(-9e30,-9e30,-9e30));
+        } 
+
+        computeLi( lv->Li, lv->rho_CC, press_new,  lv->vel_CC, lv->speedSound, 
+                   patch, new_dw, d_sharedState, d_Lodi_variable_basket, false);
+      }
+    } 
+/*===========TESTING==========`*/
     setBC(press_new,   rho_micro, placeHolder, d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
     delete lv;
@@ -2152,7 +2195,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       for (int m = 0; m < numMatls; m++) {
         f_theta[m][c] = vol_frac[m][c]*kappa[m]/sumVolFrac_kappa;
       }
-    }    
+    }
+
    //---- P R I N T   D A T A ------   
     if (switchDebug_EQ_RF_press) {
       ostringstream desc;
@@ -2878,15 +2922,39 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         press_CC[c] = max(1.0e-12, press_CC[c]);  
       }
     }
+/*`==========TESTING==========*/
     //__________________________________
     //  Set Boundary Conditions
     // if LODI are specified then set them.
     Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(numMatls);
     lv->setLodiBcs = true;
     lv->usingLODI = d_usingLODI;
-    if(d_usingLODI) { 
-      lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, old_dw, new_dw);
+    
+    if(d_usingLODI) {            // this only works for 1 matl!!!!!
+      for(int m = 0; m < numMatls; m++) {
+        Material* matl = d_sharedState->getICEMaterial( m );
+        int indx = matl->getDWIndex();   
+
+        constCCVariable<double> tmp1, tmp2;
+        old_dw->get(lv->vel_CC, lb->vel_CCLabel,        indx,patch,gn,0);  
+        new_dw->get(tmp1,       lb->speedSound_CCLabel, indx,patch,gn,0); 
+        new_dw->get(tmp2,       lb->rho_CCLabel,        indx,patch,gn,0);
+        new_dw->allocateTemporary(lv->speedSound,patch);
+        new_dw->allocateTemporary(lv->rho_CC,patch);
+        lv->speedSound.copyData(tmp1);
+        lv->rho_CC.copyData(tmp2); 
+
+        // compute Li 
+        for (int i = 0; i <= 5; i++){ 
+          new_dw->allocateTemporary(lv->Li[i], patch);
+          lv->Li[i].initialize(Vector(-9e30,-9e30,-9e30));
+        } 
+
+        computeLi(lv->Li, lv->rho_CC, press_CC,  lv->vel_CC, lv->speedSound,
+                  patch, new_dw, d_sharedState, d_Lodi_variable_basket, false); 
+      }
     } 
+/*===========TESTING==========`*/ 
     
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
@@ -3874,7 +3942,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numICEMatls = d_sharedState->getNumICEMatls();
     int numALLMatls = numMPMMatls + numICEMatls;
-
+    Ghost::GhostType  gn = Ghost::None;
+    
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
     //Vector zero(0.,0.,0.);
@@ -3930,7 +3999,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
-      Ghost::GhostType  gn = Ghost::None;
       new_dw->allocateTemporary(cv[m], patch);
       
       if(mpm_matl){                 // M P M
@@ -4260,10 +4328,52 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 #endif
 /*`==========TESTING==========*/
     //__________________________________
-    //  Set the Boundary conditions except Lodi bcs
-    //  -- PATRICK WE NEED TO THINK ABOUT THIS
+    //  Set the Boundary conditions
     Lodi_vars* lv = new Lodi_vars();
-    lv->setLodiBcs = false;
+    lv->setLodiBcs = true;
+    
+    if(d_usingLODI) {            // this only works for 1 matl!!!!!
+      constCCVariable<double> speedSound, press_CC;
+      Vector dx = patch->dCell();
+      double cellVol = dx.x() * dx.y() * dx.z();
+      
+      new_dw->get(press_CC, lb->press_CCLabel, 0,patch,gn,0);
+      
+      for(int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getICEMaterial( m );
+        int indx = matl->getDWIndex();   
+        new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
+
+        // compute rho
+        new_dw->allocateTemporary(lv->rho_CC,   patch);
+        for(CellIterator iter = patch->getExtraCellIterator(); 
+                                                  !iter.done();iter++){
+          IntVector c = *iter;
+          lv->rho_CC[c] = mass_L[m][c]/cellVol;
+        }
+        
+        
+        // push everything into the struct 
+        new_dw->allocateTemporary(lv->vel_CC,   patch);
+        new_dw->allocateTemporary(lv->temp_CC,  patch);
+        lv->vel_CC.copyData(vel_CC[m]);  
+        lv->temp_CC.copyData(Temp_CC[m]);
+        
+        // compute Li 
+        // StaticArray<CCVariable<Vector> >& Li = lv->Li;
+        for (int i = 0; i <= 5; i++){ 
+          new_dw->allocateTemporary(lv->Li[i], patch);
+          lv->Li[i].initialize(Vector(-9e30,-9e30,-9e30));
+        } 
+
+        computeLi( lv->Li, lv->rho_CC, press_CC,  lv->vel_CC, lv->speedSound, 
+                   patch, new_dw, d_sharedState, d_Lodi_variable_basket, false);
+
+        lv->gamma = gamma[m];
+      }
+    }
+    //__________________________________
+    /*==========TESTING==========`*/    
   
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
@@ -4371,15 +4481,18 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
     }
 
     //__________________________________
-    // Work on outside faces
-    vector<Patch::FaceType>::const_iterator iter;
-    for (iter  = patch->getBoundaryFaces()->begin(); 
-         iter != patch->getBoundaryFaces()->end(); ++iter){
-      Patch::FaceType face = *iter;
+    // Work on the lodi faces for each patch.
+    // Every patch has to compute a maxMach
+    // even if it isn't on a boundary.  We
+    // can't do reduction variables with patch subsets yet.
+    vector<Patch::FaceType>::iterator f ;
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {
+      Patch::FaceType face = *f;
       
       //__________________________________
       // compute maxMach number on this lodi face
-      // for only ICE matls
+      // only ICE matls
       double maxMach = 0.0;
       if (is_LODI_face(patch,face, d_sharedState) ) {
         
@@ -4556,18 +4669,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
    }
  }
 /*==========TESTING==========`*/
-      //__________________________________
-      //  preprocessing for lodi bcs
-      Lodi_vars* lodi_vars = new Lodi_vars();
-      lodi_vars->setLodiBcs = true;
-      if(d_usingLODI) {
-        lodi_vars->cv   = cv;
-        lodi_vars->delT = delT;
-        lodi_vars->speedSound = speedSound;
-        lodi_vars->var_basket = d_Lodi_variable_basket;
-        lodi_bc_preprocess( patch, lodi_vars, lb, indx, old_dw, new_dw,
-                            d_sharedState);
-      }
+
 
       //__________________________________
       //   Advection preprocessing
@@ -4584,12 +4686,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
         mass_new[c]  = (mass_L[c] + mass_advected[c]);
         rho_CC[c]    = mass_new[c] * invvol;
       }   
-      setBC(rho_CC, "Density", placeHolder, placeHolder,
-                               patch, d_sharedState, indx, new_dw,lodi_vars);
 
-      if(d_usingLODI){  // you need rho_new
-        lodi_vars->rho_CC.copyData(rho_CC);
-      }
       //__________________________________
       // Advect  momentum and backout vel_CC
       advector->advectQ(mom_L_ME,patch,qV_advected, new_dw);
@@ -4609,11 +4706,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       //  }
       //}
       
-      setBC(vel_CC, "Velocity", patch,d_sharedState, indx, new_dw, lodi_vars); 
 
-      if(d_usingLODI){  // you need vel_CC_new
-        lodi_vars->vel_CC.copyData(vel_CC);
-      }
 
       
       //__________________________________
@@ -4680,15 +4773,33 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
         }
       }
 
+/*`==========TESTING==========*/
       //__________________________________
       // Advect internal energy and backout Temp_CC
       advector->advectQ(int_eng_L_ME,patch,q_advected, new_dw);
       
       update_q_CC<constCCVariable<double>, double>
                   ("energy",temp, int_eng_L_ME, q_advected, 
-                   mass_L, mass_new, mass_advected, cv, cv_new, patch);
+                   mass_L, mass_new, mass_advected, cv, cv_new, patch);                        
+                                                    
+      //__________________________________
+      //  set BC for rho_CC, temp_CC, vel_CC
+      //  preprocessing for lodi bcs
+      Lodi_vars* lv = new Lodi_vars();
+      lv->setLodiBcs = true;
+      if(d_usingLODI){
+        lv->speedSound = speedSound;
+        lv->var_basket = d_Lodi_variable_basket;
+        lodi_bc_preprocess( patch, lv, lb, indx, 
+                            rho_CC, vel_CC, old_dw, new_dw,
+                            d_sharedState);
+      }
+      setBC(rho_CC, "Density",  placeHolder, placeHolder,
+                                patch,d_sharedState, indx, new_dw, lv);
+      setBC(vel_CC, "Velocity", patch,d_sharedState, indx, new_dw, lv);       
       setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,
-                                                    indx, new_dw,lodi_vars);
+                                                     indx, new_dw,lv); 
+/*===========TESTING==========`*/
       //__________________________________
       // Compute Auxilary quantities
       for(CellIterator iter = patch->getExtraCellIterator();
@@ -4729,7 +4840,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
              << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str());
       } 
-      delete lodi_vars;
+      delete lv;
     }  // ice_matls loop
     delete advector;
   }  // patch loop
