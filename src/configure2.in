@@ -254,7 +254,7 @@ EOF
         eval $_SCI_NOTFOUND_
       fi
 
-#      rm -f conftest* a.out
+      rm -f conftest* a.out
     done
 
     if test "$_SCI_LOOPTEST_" = "true"; then
@@ -563,14 +563,10 @@ SCI_ARG_WITH(unipetsc,
   [  --with-unipetsc=<path-to-tcl>     <path-to-tcl>/lib/libpetsc.so],
   [unipetsc="$withval"],
   [unipetsc=""])
-#SCI_ARG_WITH(tau,
-#  [  --with-tau=<tau-makefile>         Specify Tau Makefile],
-#  [tau="$withval"],
-#  [tau=""])
-#SCI_ARG_WITH(with_nektar,
-#  [  --with-nektar=DIR                 Use the nektar installation in DIR],
-#  [with_nektar="$withval"],
-#  [with_nektar=${with_nektar='no'}])
+SCI_ARG_WITH(tau,
+  [  --with-tau=<tau-makefile>         Specify Tau Makefile],
+  [tau="$withval"],
+  [tau=""])
 SCI_ARG_WITH(with_globus,
   [  --with-globus=DIR                 Use the globus installation in DIR],
   [with_globus="$withval"],
@@ -900,7 +896,7 @@ case $host in
     fi
     CPP="$CC"
     CXXCPP="$CXX"
-    # this WOFF is required for configure 
+    ##  this WOFF is required for configure 
     WOFF="-woff 1047 -Wl,-woff -Wl,84"
     CPPFLAGS=" -E $WOFF -LANG:std"
     if test "$is_64bit" = "yes"; then
@@ -1018,7 +1014,7 @@ AC_PROG_LEX
 AC_CHECK_PROG(PERL, perl, perl)
 AC_CHECK_PROG(ETAGS, etags, etags)
 
-# Create the Packages/Uintah/tools dir for later use.
+##  Create the Packages/Uintah/tools dir for later use.
 if test "$uintah" = "yes" ; then
   if ! test -d "Packages/Uintah/tools"; then
     AC_MSG_RESULT(Creating Packages/Uintah/tools directory)
@@ -1417,41 +1413,41 @@ AC_SUBST(INCMPI_H)
 
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
-#if test "$uintah" = "yes"; then
-#  if test "$tau" ; then
-#    if ! test -f "$tau" ; then
-#      AC_MSG_ERROR('$tau' does not exist.  Bye!)
-#    fi
-#
-#    AC_MSG_RESULT(Using TAU makefile: $tau)
-#
-#    TAU_MAKEFILE=${tau}
-#
-#    cat > conftest-tau.cc <<EOF
-#
-#    #include <Profile/Profiler.h>
-#
-#    int main(int argc, char **argv)
-#    {
-#      TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
-#      TAU_PROFILE_INIT(argc, argv);
-#      return 0;
-#    }
-#EOF
-#
-#    cat > conftest-tau-makefile <<EOF
-#include $(TAU_MAKEFILE)
-#all:
-#        $(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INCLUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
-#EOF
-#
-#    if ! (make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1 ; then
-#      rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-#      AC_MSG_ERROR(TAU libraries not working. Bye!)
-#    fi
-#    rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-#  fi
-#fi
+if test "$uintah" = "yes"; then
+  if test "$tau" ; then
+    if ! test -f "$tau" ; then
+      AC_MSG_ERROR('$tau' does not exist.  Bye!)
+    fi
+
+    AC_MSG_RESULT(Using TAU makefile: $tau)
+
+    TAU_MAKEFILE=${tau}
+
+    cat > conftest-tau.cc <<EOF
+
+    #include <Profile/Profiler.h>
+
+    int main(int argc, char **argv)
+    {
+      TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
+      TAU_PROFILE_INIT(argc, argv);
+      return 0;
+    }
+EOF
+
+    cat > conftest-tau-makefile <<EOF
+include $(TAU_MAKEFILE)
+all:
+        $(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INCLUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
+EOF
+
+    if ! (make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1 ; then
+      rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+      AC_MSG_ERROR(TAU libraries not working. Bye!)
+    fi
+    rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+  fi
+fi
 
 AC_SUBST(TAU_MAKEFILE)
 
@@ -1617,9 +1613,9 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
     -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_gaa,main,,continue,
     -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
-  #
-  # which globus headers should be tested for?
-  #
+  ##
+  ##  which globus headers should be tested for?
+  ##
   if test "$HAVE_LIBGLOBUS_UTP" &&
      test "$HAVE_LIBGLOBUS_MP" &&
      test "$HAVE_LIBGLOBUS_GSS_ASSIST" &&
@@ -1655,18 +1651,6 @@ AC_SUBST(GLOBUS_INCLUDE)
 AC_SUBST(GLOBUS_LIB)
 AC_SUBST(PARALLEL_DEFINE)
 AC_SUBST(BUILD_PARALLEL)
-
-##  --  search for Nektar  -----------------------------------------------
-
-#for i in $nektar $thirdparty $SCI_LAB_TP_DEFAULT; do
-#  if test ! -d "$i"; then 
-#    continue
-#  fi
-#  SCI_CHECK_LIB($i/lib,vec,main,,continue,)
-#  SCI_CHECK_LIB($i/lib,hybridopt,LIBNEKTAR=$i/lib,continue,)
-#done
-#
-#AC_SUBST(LIBNEKTAR)
 
 ##  --  search fo gzopen (and related)  ----------------------------------
 
@@ -1850,9 +1834,6 @@ output_files="configVars.mk \
               on-the-fly-libs/Makefile \
               disjointPackageMakefile \
               sci_testdefs.h"
-
-#              Dataflow/Modules/Fields/Manip/Makefile \
-#              Dataflow/Modules/Math/Manip/Makefile \
 
 ##   Only do the following if configuring with Uintah
 ##   Add a list of Uintah specific output files.
