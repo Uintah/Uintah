@@ -108,6 +108,9 @@ public:
   virtual LatticeVol<Data> *clone() const;
   virtual ~LatticeVol();
 
+  virtual ScalarFieldInterface* query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
+
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
@@ -153,6 +156,37 @@ LatticeVol<Data>::clone() const
 template <class Data>
 LatticeVol<Data>::~LatticeVol()
 {
+}
+
+
+template <> ScalarFieldInterface *
+LatticeVol<double>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+LatticeVol<int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+LatticeVol<short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+LatticeVol<unsigned char>::query_scalar_interface() const;
+
+template <class T>
+ScalarFieldInterface*
+LatticeVol<T>::query_scalar_interface() const 
+{
+  return 0;
+}
+
+template <>
+VectorFieldInterface*
+LatticeVol<Vector>::query_vector_interface() const;
+
+template <class T>
+VectorFieldInterface*
+LatticeVol<T>::query_vector_interface() const
+{
+  return 0;
 }
 
 

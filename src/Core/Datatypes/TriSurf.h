@@ -50,9 +50,11 @@ public:
   virtual TriSurf<T> *clone() const;
   virtual ~TriSurf();
   
+  virtual ScalarFieldInterface* query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
+
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
-
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
   virtual const TypeDescription* get_type_description() const;
@@ -137,6 +139,37 @@ template <class T>
 TriSurf<T>::~TriSurf()
 {
 }
+
+template <> ScalarFieldInterface *
+TriSurf<double>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+TriSurf<int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+TriSurf<short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+TriSurf<unsigned char>::query_scalar_interface() const;
+
+template <class T>
+ScalarFieldInterface*
+TriSurf<T>::query_scalar_interface() const 
+{
+  return 0;
+}
+
+template <>
+VectorFieldInterface*
+TriSurf<Vector>::query_vector_interface() const;
+
+template <class T>
+VectorFieldInterface*
+TriSurf<T>::query_vector_interface() const
+{
+  return 0;
+}
+
 
 template <class T>
 const string 

@@ -48,8 +48,10 @@ public:
   TetVol(Field::data_location data_at);
   TetVol(TetVolMeshHandle mesh, Field::data_location data_at);
   virtual TetVol<T> *clone() const;
-
   virtual ~TetVol();
+
+  virtual ScalarFieldInterface* query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
 
   /*! Ask mesh to compute edges and faces. Does nothing if mesh 
     is already finished. */
@@ -57,8 +59,6 @@ public:
 
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::Cell::index_type);
-
-  virtual ScalarFieldInterface* query_scalar_interface() const;
 
   //! Persistent IO
   void    io(Piostream &stream);
@@ -100,28 +100,36 @@ TetVol<T>::~TetVol()
 {
 }
 
-template <>
-ScalarFieldInterface*
+template <> ScalarFieldInterface *
 TetVol<double>::query_scalar_interface() const;
 
-template <>
-ScalarFieldInterface*
+template <> ScalarFieldInterface *
 TetVol<int>::query_scalar_interface() const;
 
-template <>
-ScalarFieldInterface*
+template <> ScalarFieldInterface*
 TetVol<short>::query_scalar_interface() const;
 
-template <>
-ScalarFieldInterface*
+template <> ScalarFieldInterface*
 TetVol<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-TetVol<T>::query_scalar_interface() const
+TetVol<T>::query_scalar_interface() const 
 {
   return 0;
 }
+
+template <>
+VectorFieldInterface*
+TetVol<Vector>::query_vector_interface() const;
+
+template <class T>
+VectorFieldInterface*
+TetVol<T>::query_vector_interface() const
+{
+  return 0;
+}
+
 
 template <class T>
 void
