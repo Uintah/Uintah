@@ -3544,15 +3544,15 @@ extern "C" { // The linux uuid.h does not have this, so we need extern C here
 #endif
 #endif
 	], [
-  UUID_LIB=$i
+  UUID_LIB_FLAG=$i
   break
 	])
   done
   if test "$UUID_LIB_FLAG" != unknown; then
-    if test -z "$UUID_LIB"; then
+    if test -z "$UUID_LIB_FLAG"; then
       AC_MSG_RESULT(none required)
     else
-      AC_MSG_RESULT($UUID_LIB)
+      AC_MSG_RESULT($UUID_LIB_FLAG)
     fi
   else
     AC_MSG_RESULT(not found)
