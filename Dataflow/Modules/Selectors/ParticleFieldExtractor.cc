@@ -29,7 +29,6 @@ LOG
 ****************************************/
 #include "ParticleFieldExtractor.h"
 
-#include <Core/Util/NotFinished.h>
 #include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
