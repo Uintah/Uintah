@@ -32,18 +32,22 @@ itcl_class GenSurface {
 	set $this-cyl_rad .1
 	global $this-cyl_nu $this-cyl_nv $this-cyl_ndiscu
 	set $this-cyl_nu 4
-	set $this-cyl_nv 10
-	set $this-cyl_ndiscu 2
+	set $this-cyl_nv 30
+	set $this-cyl_ndiscu 4
 
 	global $this-sph_cen-x $this-sph_cen-y $this-sph_cen-z
 	set $this-sph_cen-x 0
 	set $this-sph_cen-y 0
 	set $this-sph_cen-z 0
+	global $this-sph_axis-x $this-sph_axis-y $this-sph_axis-z
+	set $this-sph_axis-x 0
+	set $this-sph_axis-y 0
+	set $this-sph_axis-z 0
 	global $this-sph_rad
 	set $this-sph_rad .1
 	global $this-sph_nu $this-sph_nv
-	set $this-sph_nu 4
-	set $this-sph_nv 10
+	set $this-sph_nu 20
+	set $this-sph_nv 30
 
 	global $this-point_pos-x $this-point_pos-y $this-point_pos-z
 	set $this-point_pos-x 0
@@ -76,6 +80,8 @@ itcl_class GenSurface {
 	pack $w.e -side right
     }
     method ui {} {
+	global $this-cyl_rad
+	puts "rad is [set $this-cyl_rad]";
 	set w .ui$this
 		if {[winfo exists $w]} {
 	    raise $w
@@ -85,9 +91,9 @@ itcl_class GenSurface {
 	wm minsize $w 200 20
 	set n "$this-c needexecute "
 
-	make_labeled_radio $w.type "Surface Type:" "$this switch_type" \
+	make_labeled_radio $w.type "Surface Type:" "$this switch_type yes" \
 		top $this-surfacetype \
-		{{Point point} {Cylinder cylinder} {Sphere sphere}}
+		{{Cylinder cylinder} {Sphere sphere}}
 	pack $w.type -side top -padx 5 -anchor w -side top
 
 	frame $w.cylinder -borderwidth 2 -relief groove
@@ -95,7 +101,9 @@ itcl_class GenSurface {
 	pack $w.cylinder.cyl -side top -pady 5 -anchor w
 	make_entry $w.cylinder.bc "Voltage:" \
 		$this-cyl_boundary_expr $n
+	puts "rad is [set $this-cyl_rad]";
 	make_entry $w.cylinder.rad "Radius:" $this-cyl_rad $n
+	puts "rad is [set $this-cyl_rad]";
 	make_entry $w.cylinder.nu "nu:" $this-cyl_nu $n
 	make_entry $w.cylinder.nv "nv:" $this-cyl_nv $n
 	make_entry $w.cylinder.ndiscu "ndiscu:" $this-cyl_ndiscu $n
@@ -113,15 +121,18 @@ itcl_class GenSurface {
 
 	frame $w.point
 
-	switch_type
+	switch_type no
+	puts "rad is [set $this-cyl_rad]";
     }
-    method switch_type {} {
+    method switch_type {exec} {
 	set w .ui$this
 	global $this-oldst $this-surfacetype
 	pack forget $w.[set $this-oldst]
 	pack $w.[set $this-surfacetype] \
 		-side top -padx 2 -pady 2 -ipadx 2 -ipady 2 -fill x
 	set $this-oldst [set $this-surfacetype]
-	$this-c needexecute
+	if {$exec} {
+	    $this-c needexecute
+	}
     }
 }

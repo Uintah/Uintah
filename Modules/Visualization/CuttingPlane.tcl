@@ -24,7 +24,7 @@ itcl_class CuttingPlane {
 	global $this-offset
 	set $this-offset 0
 	global $this-num_contours
-	set $this-num_contours 2
+	set $this-num_contours 20
 	$this-c needexecute
 
     }

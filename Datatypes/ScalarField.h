@@ -54,7 +54,8 @@ public:
     void get_bounds(Point&, Point&);
     double longest_dimension();
     virtual Vector gradient(const Point&)=0;
-    virtual int interpolate(const Point&, double&)=0;
+    virtual int interpolate(const Point&, double&, double epsilon1=1.e-6, double epsilon2=1.e-6)=0;
+    virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

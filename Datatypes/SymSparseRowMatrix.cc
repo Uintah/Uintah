@@ -41,6 +41,15 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
     }
 }
 
+SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
+				       int* rows, int* columns,
+				       int nnz)
+: Matrix(Matrix::symmetric, Matrix::symsparse), nnrows(nnrows),
+  nncols(nncols), rows(rows), columns(columns), nnz(nnz)
+{
+    a=scinew double[nnz];
+}
+
 SymSparseRowMatrix::~SymSparseRowMatrix()
 {
     if(a)

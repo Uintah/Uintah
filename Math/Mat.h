@@ -14,7 +14,13 @@
 #ifndef sci_Math_Mat_h
 #define sci_Math_Mat_h 1
 
-void matsolve3by3(double mat[3][3], double rhs[3]);
-void matsolve3by3(double mat[3][3], double rhs[3], double& rcond);
+#ifdef __cplusplus
+extern "C" {
+#endif
+    void matsolve3by3(double mat[3][3], double rhs[3]);
+    void matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
+#ifdef __cplusplus
+};
+#endif
 
 #endif

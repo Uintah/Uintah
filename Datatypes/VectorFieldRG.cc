@@ -83,6 +83,11 @@ void VectorFieldRG::compute_bounds()
     // Nothing to do - we store the bounds in the base class...
 }
 
+int VectorFieldRG::interpolate(const Point& p, Vector& value, int& ix)
+{
+    return interpolate(p, value);
+}
+
 int VectorFieldRG::interpolate(const Point& p, Vector& value)
 {
     Vector pn=p-bmin;

@@ -102,7 +102,7 @@ void CylinderSurface::add_node(Array1<NodeHandle>& nodes,
 	    boundary_type = None;
 	    return;
 	}
-	node->bc=new DirichletBC(this, value);
+	node->bc=scinew DirichletBC(this, value);
     }
     nodes.add(node);
 }
@@ -199,8 +199,8 @@ GeomObj* CylinderSurface::get_obj(const ColormapHandle& cmap)
     if(boundary_type == None)
 	return scinew GeomCappedCylinder(p1, p2, radius);
 
-    GeomGroup* group=new GeomGroup;
-    GeomTrianglesPC* tris=new GeomTrianglesPC;
+    GeomGroup* group=scinew GeomGroup;
+    GeomTrianglesPC* tris=scinew GeomTrianglesPC;
     group->add(tris);
 
     int s=1;
@@ -263,18 +263,18 @@ GeomObj* CylinderSurface::get_obj(const ColormapHandle& cmap)
 
 static Persistent* make_SphereSurface()
 {
-    return scinew SphereSurface(Point(0,0,0),1,10,10);
+    return scinew SphereSurface(Point(0,0,0),1,Vector(0,0,1),10,10);
 }
 
 PersistentTypeID SphereSurface::type_id("SphereSurface", "Surface",
 					make_SphereSurface);
 
 SphereSurface::SphereSurface(const Point& cen, double radius,
+			     const Vector& p,
 			     int nu, int nv)
 : Surface(Other, 1),
-  cen(cen), radius(radius), nu(nu), nv(nv)
+  cen(cen), radius(radius), pole(p), nu(nu), nv(nv)
 {
-    pole=Vector(0,0,1);
     rad2=radius*radius;
     if(pole.length2() > 1.e-6) {
 	pole.normalize();
@@ -291,6 +291,7 @@ SphereSurface::~SphereSurface()
 
 SphereSurface::SphereSurface(const SphereSurface& copy)
 : Surface(copy), cen(copy.cen), radius(copy.radius),
+  pole(copy.pole),
   nu(copy.nu), nv(copy.nv)
 {
 }
@@ -331,7 +332,7 @@ void SphereSurface::add_node(Array1<NodeHandle>& nodes,
 	    boundary_type = None;
 	    return;
 	}
-	node->bc=new DirichletBC(this, value);
+	node->bc=scinew DirichletBC(this, value);
     }
     nodes.add(node);
 }
@@ -406,8 +407,8 @@ GeomObj* SphereSurface::get_obj(const ColormapHandle& cmap)
     if(boundary_type == None)
 	return scinew GeomSphere(cen, radius);
 
-    GeomGroup* group=new GeomGroup;
-    GeomTrianglesPC* tris=new GeomTrianglesPC;
+    GeomGroup* group=scinew GeomGroup;
+    GeomTrianglesPC* tris=scinew GeomTrianglesPC;
     group->add(tris);
 
     int s=1;
@@ -519,7 +520,7 @@ void PointSurface::add_node(Array1<NodeHandle>& nodes,
 	    cerr << "Bad result from boundary value" << endl;
 	    return;
 	}
-	node->bc=new DirichletBC(this, value);
+	node->bc=scinew DirichletBC(this, value);
     }
     nodes.add(node);
 }

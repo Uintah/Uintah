@@ -174,7 +174,7 @@ IsoSurface::IsoSurface(const clString& id)
     need_seed=1;
 
     matl=scinew Material(Color(0,0,0), Color(0,.8,0),
-		      Color(.7,.7,.7), 20);
+		      Color(.7,.7,.7), 50);
     isosurface_id=0;
 
     old_min=old_max=0;
@@ -829,10 +829,10 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    NodeHandle n1=mesh->nodes[element->n[0]];
-    NodeHandle n2=mesh->nodes[element->n[1]];
-    NodeHandle n3=mesh->nodes[element->n[2]];
-    NodeHandle n4=mesh->nodes[element->n[3]];
+    Node* n1=mesh->nodes[element->n[0]].get_rep();
+    Node* n2=mesh->nodes[element->n[1]].get_rep();
+    Node* n3=mesh->nodes[element->n[2]].get_rep();
+    Node* n4=mesh->nodes[element->n[3]].get_rep();
     if(v1 == v2 && v3 == v4 && v1 == v4)
 	return 0;
     int f1=v1<0;

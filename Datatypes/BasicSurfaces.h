@@ -88,7 +88,7 @@ class SphereSurface : public Surface {
 		  char* id, const Point& p, double r,
 		  double theta, double phi);
 public:
-    SphereSurface(const Point& cen, double radius,
+    SphereSurface(const Point& cen, double radius, const Vector& pole,
 		    int nu, int nv);
     SphereSurface(const SphereSurface&);
     virtual ~SphereSurface();

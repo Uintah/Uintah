@@ -37,6 +37,7 @@ public:
 
     virtual void compute_bounds();
     virtual int interpolate(const Point&, Vector&);
+    virtual int interpolate(const Point&, Vector&, int&);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

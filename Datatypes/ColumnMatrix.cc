@@ -116,7 +116,7 @@ void ColumnMatrix::io(Piostream& stream)
 
     stream.io(rows);
     if(stream.reading()){
-	data=new double[rows];
+	data=scinew double[rows];
     }
     int i;
     for(i=0;i<rows;i++)

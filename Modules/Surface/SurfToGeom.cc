@@ -87,6 +87,9 @@ Module* SurfToGeom::clone(int deep)
     return scinew SurfToGeom(*this, deep);
 }
 
+MaterialHandle outmatl(new Material(Color(0,0,0), Color(0,0,0),
+				    Color(0,0,0), 0));
+
 void SurfToGeom::execute()
 {
     SurfaceHandle surf;
@@ -107,23 +110,42 @@ void SurfToGeom::execute()
     TriSurface* ts=surf->getTriSurface();
     
     if(ts){
+	int ix=0;;
 	for (int i=0; i< ts->elements.size(); i++) {
 	    if (have_cm && have_sf) {
 		double interp;
 		MaterialHandle mat1,mat2,mat3;
 		int ok=1;
 		if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
-				       interp))
+					interp, ix, 1.e-6, 1.e-6)){
 		    mat1=cmap->lookup(interp);
-		else ok=0;
+		} else {
+		    ix=0;
+		    if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
+					    interp, ix, 1.e-6, 30.))
+		    mat1=cmap->lookup(interp);
+		    else mat1=outmatl; //ok=0;
+		}
 		if (sfield->interpolate(ts->points[ts->elements[i]->i2], 
-				       interp))
+				       interp, ix, 1.e-6, 1.e-6)){
 		    mat2=cmap->lookup(interp);
-		else ok=0;
+		} else {
+		    ix=0;
+		    if (sfield->interpolate(ts->points[ts->elements[i]->i2], 
+				       interp, ix, 1.e-6, 30.))
+		    mat2=cmap->lookup(interp);
+		    else mat2=outmatl; //ok=0;
+		}
 		if (sfield->interpolate(ts->points[ts->elements[i]->i3], 
-				       interp))
+				       interp, ix, 1.e-6, 1.e-6)){
 		    mat3=cmap->lookup(interp);
-		else ok=0;
+		} else {
+		    ix=0;
+	  	    if (sfield->interpolate(ts->points[ts->elements[i]->i3], 
+				       interp, ix, 1.e-6, 30.))
+		    mat3=cmap->lookup(interp);
+		    else mat3=outmatl; //ok=0;
+		}
 		if (ok) {
 		  if (cmap->non_diffuse_constant) {
 		    PCgroup->add(ts->points[ts->elements[i]->i1], mat1->diffuse,

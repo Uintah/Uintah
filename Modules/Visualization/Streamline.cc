@@ -39,6 +39,7 @@ hook up user interface buttons
 #include <Datatypes/ScalarFieldUG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorField.h>
+#include <Datatypes/VectorFieldUG.h>
 #include <Datatypes/VectorFieldPort.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
@@ -59,6 +60,7 @@ hook up user interface buttons
 #include <Widgets/ScaledFrameWidget.h>
 
 #include <iostream.h>
+#include <values.h>
 
 class Streamline;
 
@@ -66,24 +68,35 @@ struct SLTracer {
     Point p;
     double s,t;
     int inside;
+    int ix;
     Vector grad;
+    double sign;
 
     SLTracer(const Point&, double s, double t,
-	     const VectorFieldHandle& vfield);
+	     const VectorFieldHandle& vfield, double sign);
     virtual ~SLTracer();
     virtual int advance(const VectorFieldHandle&, double stepsize, int skip)=0;
 };
 
 struct SLEulerTracer : public SLTracer {
+    int stagnate;
     SLEulerTracer(const Point&, double s, double t,
-		  const VectorFieldHandle& vfield);
+		  const VectorFieldHandle& vfield, double sign);
     virtual ~SLEulerTracer();
     virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
 };    
 
+struct SLExactTracer : public SLTracer {
+    SLExactTracer(const Point&, double s, double t,
+		  const VectorFieldHandle& vfield, double sign);
+    virtual ~SLExactTracer();
+    virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
+};    
+
 struct SLRK4Tracer : public SLTracer {
+    int stagnate;
     SLRK4Tracer(const Point&, double s, double t,
-		const VectorFieldHandle& vfield);
+		const VectorFieldHandle& vfield, double sign);
     virtual ~SLRK4Tracer();
     virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
 };    
@@ -178,7 +191,7 @@ class Streamline : public Module {
     virtual void geom_release(GeomPick*, void*);
 
     enum ALGS {
-	Euler, RK4,
+	Exact, Euler, RK4,
     };
 
     void make_tracers(SLSource*, Array1<SLTracer*>&,
@@ -186,11 +199,11 @@ class Streamline : public Module {
 		      ALGS alg_enum, double width=0);
     SLTracer* make_tracer(SLSource* source, double s, double t,
 			  const VectorFieldHandle& vfield,
-			  ALGS alg_enum);
+			  ALGS alg_enum, double sign);
     SLTracer* make_tracer(const Point& p,
 			  double s, double t,
 			  const VectorFieldHandle& vfield,
-			  ALGS alg_enum);
+			  ALGS alg_enum, double sign);
     void do_streamline(SLSourceInfo* si, const VectorFieldHandle&,
 		       double stepsize, int maxsteps, int skip,
 		       const ScalarFieldHandle& sfield,
@@ -224,6 +237,11 @@ class Streamline : public Module {
 			   const ScalarFieldHandle& sfield,
 			   const ColormapHandle& cmap,
 			   const Vector& normal);
+    GeomVertex* get_vertex(const Point& p,
+			   const ScalarFieldHandle& sfield,
+			   const ColormapHandle& cmap,
+			   const Vector& normal,
+			   int& ix);
 public:
     CrowdMonitor widget_lock;
 
@@ -352,9 +370,10 @@ void Streamline::execute()
 	    error("Error reading algorithm variable");
 	    return;
 	}
-	cerr << alg << endl;
 	ALGS alg_enum;
-	if(alg == "Euler"){
+	if(alg == "Exact"){
+	    alg_enum=Exact;
+	} else if(alg == "Euler"){
 	    alg_enum=Euler;
 	} else if(alg == "RK4"){
 	    alg_enum=RK4;
@@ -407,22 +426,24 @@ void Streamline::execute()
 
 SLTracer* Streamline::make_tracer(SLSource* source, double s, double t,
 				  const VectorFieldHandle& vfield,
-				  ALGS alg_enum)
+				  ALGS alg_enum, double sign)
 {
     Point start(source->trace_start(s, t));
-    return make_tracer(start, s, t, vfield, alg_enum);
+    return make_tracer(start, s, t, vfield, alg_enum, sign);
 }
 
 SLTracer* Streamline::make_tracer(const Point& start,
 				  double s, double t,
 				  const VectorFieldHandle& vfield,
-				  ALGS alg_enum)
+				  ALGS alg_enum, double sign)
 {
     switch(alg_enum){
+    case Exact:
+	return scinew SLExactTracer(start, s, t, vfield, sign);
     case Euler:
-	return scinew SLEulerTracer(start, s, t, vfield);
+	return scinew SLEulerTracer(start, s, t, vfield, sign);
     case RK4:
-	return scinew SLRK4Tracer(start, s, t, vfield);
+	return scinew SLRK4Tracer(start, s, t, vfield, sign);
     }
     return 0;
 }
@@ -438,12 +459,15 @@ void Streamline::make_tracers(SLSource* source, Array1<SLTracer*>& tracers,
 	for(int t=0;t<nt;t++){
 	    Point start(source->trace_start(s, t));
 	    if(ribbonsize == 0){
-		tracers.add(make_tracer(start, s, t, vfield, alg_enum));
+		tracers.add(make_tracer(start, s, t, vfield, alg_enum, 1));
+		tracers.add(make_tracer(start, s, t, vfield, alg_enum, -1));
 	    } else {
 		Vector v(source->ribbon_direction(s, t, start, vfield)
 			 *(ribbonsize/2));
-		tracers.add(make_tracer(start-v, s, t, vfield, alg_enum));
-		tracers.add(make_tracer(start+v, s, t, vfield, alg_enum));
+		tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, 1));
+		tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, 1));
+		tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, -1));
+		tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, -1));
 	    }
 	}
     }
@@ -488,7 +512,9 @@ void SLSourceInfo::make_anim_groups(const clString& animation, GeomGroup* top,
 	    }
 	    GeomGroup* timegroup=scinew GeomGroup;
 	    anim_groups.add(timegroup);
-	    GeomTimeSwitch* timeswitch=scinew GeomTimeSwitch(timegroup, tbeg, tend);
+	    double ntbeg=(tbeg-anim_begin)/(anim_end-anim_begin);
+	    double ntend=(tend-anim_begin)/(anim_end-anim_begin);
+	    GeomTimeSwitch* timeswitch=scinew GeomTimeSwitch(timegroup, ntbeg, ntend);
 	    top->add(timeswitch);
 	}
     }
@@ -502,7 +528,7 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	double sval;
 	if(sfield->interpolate(p, sval)){
 	    MaterialHandle matl(cmap->lookup(sval));
-	    return scinew GeomMVertex(p, matl);
+	    return scinew GeomCVertex(p, matl->diffuse);
 	}
     }
     return scinew GeomVertex(p);
@@ -513,14 +539,42 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 				   const ColormapHandle& cmap,
 				   const Vector& normal)
 {
+    Vector n(normal);
+    double l=n.length2();
+    if(l < 1.e-6){
+	l*=100000;
+	n*=100000;
+    }
+    if(l > 1.e-6){
+	n.normalize();
+    }
     if(sfield.get_rep()){
 	double sval;
 	if(sfield->interpolate(p, sval)){
 	    MaterialHandle matl(cmap->lookup(sval));
-	    return scinew GeomNMVertex(p, normal, matl);
+	    return scinew GeomNMVertex(p, n, matl);
 	}
     }
-    return scinew GeomNVertex(p, normal);
+    return scinew GeomNVertex(p, n);
+}
+
+GeomVertex* Streamline::get_vertex(const Point& p,
+				   const ScalarFieldHandle& sfield,
+				   const ColormapHandle& cmap,
+				   const Vector& normal,
+				   int& ix)
+{
+    Vector n(normal);
+    if(n.length2() > 1.e-6)
+	n.normalize();
+    if(sfield.get_rep()){
+	double sval;
+	if(sfield->interpolate(p, sval, ix)){
+	    MaterialHandle matl(cmap->lookup(sval));
+	    return scinew GeomNMVertex(p, n, matl);
+	}
+    }
+    return scinew GeomNVertex(p, n);
 }
 
 void Streamline::do_streamline(SLSourceInfo* si,
@@ -568,6 +622,9 @@ void Streamline::do_streamline(SLSourceInfo* si,
 	    ninside+=inside;
 	}
     }
+    for(int i=0;i<tracers.size();i++){
+	delete tracers[i];
+    }
 }
 
 void Streamline::do_streamtube(SLSourceInfo* si,
@@ -597,8 +654,9 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 		    tubes[i]=scinew GeomTube;
 		    group->add(tubes[i]);
 		    Vector grad=tracers[i]->grad;
-		    field->interpolate(tracers[i]->p, grad);
 		    GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
+		    if(grad.length2() < 1.e-6)
+			grad=Vector(0,0,1);
 		    tubes[i]->add(vtx, tubesize, grad);
 		} else {
 		    tubes[i]=0;
@@ -613,12 +671,16 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 	    int inside=tracers[i]->advance(field, stepsize, skip);
 	    if(inside){
 		Vector grad=tracers[i]->grad;
-		field->interpolate(tracers[i]->p, grad);
 		GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
+		if(grad .length2() < 1.e-6)
+		    grad=Vector(0,0,1);
 		tubes[i]->add(vtx, tubesize, grad);
 	    }
 	    ninside+=inside;
 	}
+    }
+    for(int i=0;i<tracers.size();i++){
+	delete tracers[i];
     }
 }
 
@@ -656,7 +718,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 		    Vector vec(p2-p1);
 		    // Left tracer
 		    Vector grad=left_tracer(tracers, i)->grad;
-		    field->interpolate(left_tracer(tracers, i)->p, grad);
+		    //field->interpolate(left_tracer(tracers, i)->p, grad);
 		    Vector n1(Cross(vec, grad));
 		    GeomVertex* vtx=get_vertex(left_tracer(tracers, i)->p,
 					       sfield, cmap, n1);
@@ -664,7 +726,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 
 		    // Right tracer
 		    grad=right_tracer(tracers, i)->grad;
-		    field->interpolate(right_tracer(tracers, i)->p, grad);
+		    //field->interpolate(right_tracer(tracers, i)->p, grad);
 		    Vector n2(Cross(vec, grad));
 		    vtx=get_vertex(right_tracer(tracers, i)->p,
 				   sfield, cmap, n2);
@@ -683,31 +745,46 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 	    int rinside=right_tracer(tracers, i)->advance(field, stepsize, skip);
 	    if(linside && rinside){
 		// Normalize the distance between them...
-		Point p1(left_tracer(tracers, i)->p);
-		Point p2(right_tracer(tracers, i)->p);
-		Vector vec(p2-p1);
-		double l=vec.normalize();
-		double d1=(l-ribbonsize)/2;
-		double d2=(l+ribbonsize)/2;
-		left_tracer(tracers, i)->p=p1+vec*d1;
-		right_tracer(tracers, i)->p=p1+vec*d2;
+		Vector g1(left_tracer(tracers, i)->grad);
+		Vector g2(right_tracer(tracers, i)->grad);
+		if(g1.length2() < 1.e-6 || g2.length2() < 1.e-6){
+		    left_tracer(tracers, i)->inside=0;
+		    right_tracer(tracers, i)->inside=0;
+		} else {
+		    Point p1(left_tracer(tracers, i)->p);
+		    Point p2(right_tracer(tracers, i)->p);
+		    g1.normalize();
+		    g2.normalize();
+		    p2-=g2*Dot(g1, (p2-p1));
+		    Vector vec(p2-p1);
+		    if(vec.length2() < 1.e-6){
+			left_tracer(tracers, i)->inside=0;
+			right_tracer(tracers, i)->inside=0;
+		    } else {
+			double l=vec.normalize();
+			double d1=(l-ribbonsize)/2;
+			double d2=(l+ribbonsize)/2;
+			left_tracer(tracers, i)->p=p1+vec*d1;
+			right_tracer(tracers, i)->p=p1+vec*d2;
 
-		// Get left vertex
-		Vector grad=left_tracer(tracers, i)->grad;
-		field->interpolate(left_tracer(tracers, i)->p, grad);
-		Vector n1(Cross(vec, grad));
-		GeomVertex* lvtx=get_vertex(left_tracer(tracers, i)->p,
-					   sfield, cmap, n1);
+			// Get left vertex
+			Vector grad=left_tracer(tracers, i)->grad;
+			//field->interpolate(left_tracer(tracers, i)->p, grad);
+			Vector n1(Cross(vec, grad));
+			GeomVertex* lvtx=get_vertex(left_tracer(tracers, i)->p,
+						    sfield, cmap, n1);
 
-		// Get right vertex
-		grad=right_tracer(tracers, i)->grad;
-		field->interpolate(right_tracer(tracers, i)->p, grad);
-		Vector n2(Cross(vec, grad));
-		GeomVertex* rvtx=get_vertex(right_tracer(tracers, i)->p,
-			       sfield, cmap, n2);
+			// Get right vertex
+			grad=right_tracer(tracers, i)->grad;
+			//field->interpolate(right_tracer(tracers, i)->p, grad);
+			Vector n2(Cross(vec, grad));
+			GeomVertex* rvtx=get_vertex(right_tracer(tracers, i)->p,
+						    sfield, cmap, n2);
 
-		ribbons[i]->add(lvtx);
-		ribbons[i]->add(rvtx);
+			ribbons[i]->add(lvtx);
+			ribbons[i]->add(rvtx);
+		    }
+		}
 	    } else {
 		// Make sure that we stop doing work for both tracers...
 		left_tracer(tracers, i)->inside=0;
@@ -715,6 +792,9 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 	    }
 	    ninside+=(linside && rinside);
 	}
+    }
+    for(int i=0;i<tracers.size();i++){
+	delete tracers[i];
     }
 }
 
@@ -734,6 +814,8 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 	return;
     }
     Array1<GeomTriStrip*> surfs(tracers.size()-1);
+    for(int i=0;i<surfs.size();i++)
+	surfs[0]=0;
     double t=0;
     GeomGroup* group=0;
     int step=0;
@@ -745,12 +827,11 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 	// If the group is discontinued, we have to start new surfaces
 	GeomGroup* newgroup=si->get_group(t);
 	if(newgroup != group || splitlast){
-	    group=newgroup;
 	    for(int i=0;i<surfs.size();i++){
 		if( (newgroup != group || !surfs[i]) &&
 		   tracers[i]->inside && tracers[i+1]->inside){
 		    surfs[i]=scinew GeomTriStrip;
-		    group->add(surfs[i]);
+		    newgroup->add(surfs[i]);
 		    // Compute vector between points
 		    Point p1(tracers[i]->p);
 		    Point p2(tracers[i+1]->p);
@@ -758,23 +839,38 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 
 		    // Left tracer
 		    Vector grad=tracers[i]->grad;
-		    field->interpolate(tracers[i]->p, grad);
-		    Vector n1(Cross(grad, vec));
-		    GeomVertex* vtx=get_vertex(tracers[i]->p,
-					       sfield, cmap, n1);
-		    surfs[i]->add(vtx);
-
-		    // Right tracer
+		    //field->interpolate(tracers[i]->p, grad);
+		    Vector n1(Cross(vec, grad));
 		    grad=tracers[i+1]->grad;
-		    field->interpolate(tracers[i+1]->p, grad);
-		    Vector n2(Cross(grad, -vec));
-		    vtx=get_vertex(tracers[i]->p,
-				   sfield, cmap, n2);
-		    surfs[i]->add(vtx);
+		    //field->interpolate(tracers[i+1]->p, grad);
+		    Vector n2(Cross(vec, grad));
+		    if(n1.length2() < 1.e-8){
+			if(n2.length2() < 1.e-8){
+			    surfs[i]=0;
+			    cerr << "Degenerate normals. stopping surface...\n";
+			} else {
+			    n1=n2;
+			}
+		    } else {
+			if(n2.length2() < 1.e-8){
+			    n2=n1;
+			}
+		    }
+		    if(surfs[i]){
+			GeomVertex* vtx=get_vertex(tracers[i]->p,
+						   sfield, cmap, n1);
+			surfs[i]->add(vtx);
+
+			// Right tracer
+			vtx=get_vertex(tracers[i+1]->p,
+				       sfield, cmap, n2);
+			surfs[i]->add(vtx);
+		    }
 		} else {
 		    surfs[i]=0;
 		}
 	    }
+	    group=newgroup;
 	}
 	t+=stepsize;
 
@@ -787,43 +883,60 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 	// Draw new points...
 	for(i=0;i<surfs.size();i++){
 	    if(tracers[i]->inside && tracers[i+1]->inside){
-		Point p1(left_tracer(tracers, i)->p);
-		Point p2(right_tracer(tracers, i)->p);
+		Point p1(tracers[i]->p);
+		Point p2(tracers[i+1]->p);
 		Vector vec(p2-p1);
 		// Get left vertex
 		SLTracer* left=tracers[i];
 		Vector grad=left->grad;
-		field->interpolate(left->p, grad);
-		Vector n1(Cross(grad, vec));
-		GeomVertex* lvtx=get_vertex(left->p,
-					    sfield, cmap, n1);
-
-		// Get right vertex
+		//field->interpolate(left->p, grad);
+		Vector n1(Cross(vec, grad));
 		SLTracer* right=tracers[i+1];
 		grad=right->grad;
-		field->interpolate(right->p, grad);
-		Vector n2(Cross(grad, -vec));
-		GeomVertex* rvtx=get_vertex(right->p,
-					    sfield, cmap, n2);
+		Vector n2(Cross(vec, grad));
+		if(n1.length2() < 1.e-8){
+		    if(n2.length2() < 1.e-8){
+			surfs[i]=0;
+			cerr << "2. Degenerate normals, stopping surface...\n";
+		    } else {
+			n1=n2;
+		    }
+		} else {
+		    if(n2.length2() < 1.e-8){
+			n2=n1;
+		    }
+		}
+		if(surfs[i]){
+		    GeomVertex* lvtx=get_vertex(left->p,
+						sfield, cmap, n1);
 
-		surfs[i]->add(lvtx);
-		surfs[i]->add(rvtx);
+		    // Get right vertex
+		    //field->interpolate(right->p, grad);
+		    GeomVertex* rvtx=get_vertex(right->p,
+						sfield, cmap, n2);
+
+		    surfs[i]->add(lvtx);
+		    surfs[i]->add(rvtx);
+		}
 	    }
 	}
 
 	// See if any of the surfaces need to be split
+#if 0
 	Array1<int> split(surfs.size());
 	split[0]=0;
 	for(i=1;i<surfs.size();i++){
 	    split[i]=0;
 	    Vector v1(tracers[i-1]->p - tracers[i]->p);
 	    Vector v2(tracers[i+1]->p - tracers[i]->p);
-	    v1.normalize();
-	    v2.normalize();
-	    double cosangle=Dot(v1, v2);
-	    if(cosangle < maxcosangle){
-		// Split them both
-		split[i-1]=split[i]=1;
+	    if(v1.length2() > 1.e-8 && v2.length2() > 1.e-8){
+		v1.normalize();
+		v2.normalize();
+		double cosangle=Dot(v1, v2);
+		if(cosangle < maxcosangle){
+		    // Split them both
+		    split[i-1]=split[i]=1;
+		}
 	    }
 	}
 
@@ -872,8 +985,11 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 	    surfs=new_surfs;
 	    splitlast=1;
 	} else {
+#endif
 	    splitlast=0;
+#if 0
 	}
+#endif
     }
 }
 
@@ -1011,6 +1127,7 @@ SLRingSource::SLRingSource(Streamline* sl)
 : SLSource(sl, "Ring")
 {
     widget=rw=scinew RingWidget(sl, &sl->widget_lock, 1);
+    rw->SetRatio(0.05);
 }
 
 SLRingSource::~SLRingSource()
@@ -1021,6 +1138,7 @@ void SLRingSource::find(const Point& start, const Vector& downstream,
 			double scale)
 {
     rw->SetPosition(start, downstream, scale/10);
+    rw->SetRadius(scale/4);
     rw->SetScale(scale/50);
 }
 
@@ -1059,8 +1177,8 @@ Vector SLRingSource::ribbon_direction(double s, double,
 }
 
 SLTracer::SLTracer(const Point& p, double s, double t,
-		   const VectorFieldHandle& vfield)
-: p(p), s(s), t(t), inside(1)
+		   const VectorFieldHandle& vfield, double sign)
+: p(p), s(s), t(t), inside(1), sign(sign)
 {
     // Interpolate initial gradient
     if(!vfield->interpolate(p, grad))
@@ -1071,10 +1189,111 @@ SLTracer::~SLTracer()
 {
 }
 
-SLEulerTracer::SLEulerTracer(const Point& p, double s, double t,
-			     const VectorFieldHandle& vfield)
-: SLTracer(p, s, t, vfield)
+SLExactTracer::SLExactTracer(const Point& p, double s, double t,
+			     const VectorFieldHandle& vfield, double sign)
+: SLTracer(p, s, t, vfield, sign)
 {
+    ix=0;
+}
+
+SLExactTracer::~SLExactTracer()
+{
+}
+
+int SLExactTracer::advance(const VectorFieldHandle& vfield, double stepsize, int skip)
+{
+    double s=stepsize*skip;
+    s=100000000000000000000.;
+    double total=0;
+    VectorFieldUG* ug=vfield->getUG();
+    if(!ug){
+	inside=0;
+	return 0;
+    }
+    if(ug->typ != VectorFieldUG::ElementValues){
+	inside=0;
+	return 0;
+    }
+    Mesh* mesh=ug->mesh.get_rep();
+    if(ix==-1){
+	if(!mesh->locate(p, ix)){
+	    inside=0;
+	    return 0;
+	}
+    }
+    int done=0;
+    while(!done){
+	Element* e=mesh->elems[ix];
+	grad=ug->data[ix];
+
+    again:
+	int f=-1;
+	double min=MAXDOUBLE;
+	for(int j=0;j<4;j++){
+	    double denom=Dot(e->g[j],grad);
+	    if(denom < 1.e-10 && denom > -1.e-10){
+		//cerr << "Denom is zero (g=" << e->g[j] << ", grad=" << grad << endl;
+	    } else {
+		double tf=-(e->a[j]+Dot(e->g[j], p))/denom;
+		if(tf>1.e-6 && tf<min){
+		    f=j;
+		    min=tf;
+		}
+	    }
+	}
+	if(f==-1){
+	    if(grad.length2() < 1.e-10){
+		cerr << "RETURNING because of stagnation!\n";
+		inside=0;
+		return 0;
+	    }
+#if 0
+	    cerr << "NO MIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+	    for(int i=0;i<4;i++){
+		double tf=-(e->a[i]+Dot(e->g[i], p))/Dot(e->g[i], grad);
+		cerr << "tf[" << i << "]=" << tf << endl;
+	    }
+#endif
+	    p-=grad*10;
+	    if(!mesh->locate(p, ix)){
+		inside=0;
+		return 0;
+	    }
+	    goto again;
+	    inside=0;
+	    return 0;
+	}
+	if(total+min > s){
+	    min=s-total;
+	    done=1;
+	} else {
+	    // Go to our neighbor next time...
+	    ix=e->face(f);
+	    if(ix==-1){
+		inside=0;
+		return done;
+	    }
+	}
+	min*=1.1;
+	p+=grad*min;
+	
+	if(!mesh->locate(p, ix)){
+	    inside=0;
+	    return 1;
+	}
+	total+=min;
+	return 1;
+    }
+    return 1;
+}
+
+SLEulerTracer::SLEulerTracer(const Point& p, double s, double t,
+			     const VectorFieldHandle& vfield,
+			     double sign)
+: SLTracer(p, s, t, vfield, sign)
+{
+    stagnate=0;
+    ix=0;
 }
 
 SLEulerTracer::~SLEulerTracer()
@@ -1083,11 +1302,26 @@ SLEulerTracer::~SLEulerTracer()
 
 int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize, int skip)
 {
+    if(stagnate){
+	inside=0;
+	return 0;
+    }
     for(int i=0;i<skip;i++){
-	if(!vfield->interpolate(p, grad)){
+	if(!vfield->interpolate(p, grad, ix)){
 	    inside=0;
 	    return 0;
 	} else {
+	    if(grad.length2() < 1.e-6){
+		grad*=100000;
+		if(grad.length2() < 1.e-6){
+		    stagnate=1;
+		} else {
+		    grad.normalize();
+		}
+	    } else {
+		grad.normalize();
+	    }
+	    grad*=sign;
 	    p+=(grad*stepsize);
 	}
     }
@@ -1095,9 +1329,11 @@ int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize, int
 }
 
 SLRK4Tracer::SLRK4Tracer(const Point& p, double s, double t,
-			 const VectorFieldHandle& vfield)
-: SLTracer(p, s, t, vfield)
+			 const VectorFieldHandle& vfield, double sign)
+: SLTracer(p, s, t, vfield, sign)
 {
+    stagnate=0;
+    ix=0;
 }
 
 SLRK4Tracer::~SLRK4Tracer()
@@ -1108,33 +1344,96 @@ int SLRK4Tracer::advance(const VectorFieldHandle& vfield, double stepsize, int s
 {
     Vector F1, F2, F3, F4;
 
+    if(stagnate){
+	inside=0;
+	return 0;
+    }
     for(int i=0;i<skip;i++){
-	if(!vfield->interpolate(p, grad)){
+	if(!vfield->interpolate(p, grad, ix)){
 	    inside=0;
 	    return 0;
 	} else {
+	    if(grad.length2() < 1.e-6){
+		grad*=100000;
+		if(grad.length2() < 1.e-6){
+		    stagnate=1;
+		} else {
+		    grad.normalize();
+		}
+	    } else {
+		grad.normalize();
+	    }
+	    grad*=sign;
 	    F1 = grad*stepsize;
-	    if(!vfield->interpolate(p+F1*0.5, grad)){
+	    if(!vfield->interpolate(p+F1*0.5, grad, ix)){
 		inside=0;
 		return 0;
 	    } else {
-		F2 = grad*stepsize;
-		if(!vfield->interpolate(p+F2*0.5, grad)){
-		    inside=0;
-		    return 0;
+		if(grad.length2() < 1.e-6){
+		    grad*=100000;
+		    if(grad.length2() < 1.e-6){
+			stagnate=1;
+		    } else {
+			grad.normalize();
+		    }
 		} else {
-		F3 = grad*stepsize;
-		if(!vfield->interpolate(p+F3, grad)){
-		    inside=0;
-		    return 0;
-		} else {
-		    F4 = grad * stepsize;
+		    grad.normalize();
 		}
+		grad*=sign;
+		F2 = grad*stepsize;
+		if(!vfield->interpolate(p+F2*0.5, grad, ix)){
+		    inside=0;
+		    return 0;
+		} else {
+		    if(grad.length2() < 1.e-6){
+			grad*=100000;
+			if(grad.length2() < 1.e-6){
+			    stagnate=1;
+			} else {
+			    grad.normalize();
+			}
+		    } else {
+			grad.normalize();
+		    }
+		    grad*=sign;
+		    F3 = grad*stepsize;
+		    if(!vfield->interpolate(p+F3, grad, ix)){
+			inside=0;
+			return 0;
+		    } else {
+			if(grad.length2() < 1.e-6){
+			    grad*=100000;
+			    if(grad.length2() < 1.e-6){
+				stagnate=1;
+			    } else {
+				grad.normalize();
+			    }
+			} else {
+			    grad.normalize();
+			}
+			grad*=sign;
+			F4 = grad * stepsize;
+		    }
 		}
 	    }
 	}
     
 	p += (F1 + F2 * 2.0 + F3 * 2.0 + F4) / 6.0;
+	if(!vfield->interpolate(p, grad, ix)){
+	    inside=0;
+	    return 0;
+	}
+	if(grad.length2() < 1.e-6){
+	    grad*=100000;
+	    if(grad.length2() < 1.e-6){
+		stagnate=1;
+	    } else {
+		grad.normalize();
+	    }
+	} else {
+	    grad.normalize();
+	}
+	grad*=sign;
     }
     return 1;
 }

@@ -157,8 +157,11 @@ void Mesh::io(Piostream& stream)
     Pio(stream, elems);
     stream.end_class();
     if(stream.reading()){
-	for(int i=0;i<elems.size();i++)
+	for(int i=0;i<elems.size();i++){
 	    elems[i]->mesh=this;
+	    elems[i]->orient();
+	    elems[i]->compute_basis();
+	}
 	compute_neighbors();
     }
 }
@@ -195,10 +198,63 @@ Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
 {
     n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
     faces[0]=faces[1]=faces[2]=faces[3]=-2;
+
+    if(mesh)
+	compute_basis();
+    else
+	vol=-9999;
+}
+
+void Element::compute_basis()
+{
+    Point p1(mesh->nodes[n[0]]->p);
+    Point p2(mesh->nodes[n[1]]->p);
+    Point p3(mesh->nodes[n[2]]->p);
+    Point p4(mesh->nodes[n[3]]->p);
+    double x1=p1.x();
+    double y1=p1.y();
+    double z1=p1.z();
+    double x2=p2.x();
+    double y2=p2.y();
+    double z2=p2.z();
+    double x3=p3.x();
+    double y3=p3.y();
+    double z3=p3.z();
+    double x4=p4.x();
+    double y4=p4.y();
+    double z4=p4.z();
+    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+    double iV6=1./(a1+a2+a3+a4);
+
+    double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+    double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+    double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+    g[0]=Vector(b1*iV6, c1*iV6, d1*iV6);
+    double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+    double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+    double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+    g[1]=Vector(b2*iV6, c2*iV6, d2*iV6);
+    double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+    double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+    double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+    g[2]=Vector(b3*iV6, c3*iV6, d3*iV6);
+    double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+    double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+    double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+    g[3]=Vector(b4*iV6, c4*iV6, d4*iV6);
+    a[0]=a1*iV6;
+    a[1]=a2*iV6;
+    a[2]=a3*iV6;
+    a[3]=a4*iV6;
+
+    vol=(1./iV6)/6.0;
 }
 
 Element::Element(const Element& copy, Mesh* mesh)
-: generation(0), cond(copy.cond), mesh(mesh)
+: generation(0), cond(copy.cond), mesh(mesh), vol(copy.vol)
 {
     faces[0]=copy.faces[0];
     faces[1]=copy.faces[1];
@@ -208,6 +264,14 @@ Element::Element(const Element& copy, Mesh* mesh)
     n[1]=copy.n[1];
     n[2]=copy.n[2];
     n[3]=copy.n[3];
+    g[0]=copy.g[0];
+    g[1]=copy.g[1];
+    g[2]=copy.g[2];
+    g[3]=copy.g[3];
+    a[0]=copy.a[0];
+    a[1]=copy.a[1];
+    a[2]=copy.a[2];
+    a[3]=copy.a[3];
 }
 
 Node::Node(const Point& p)
@@ -278,9 +342,6 @@ void Element::get_sphere2(Point& cen, double& rad2, double& err)
     Point p1(mesh->nodes[n[1]]->p);
     Point p2(mesh->nodes[n[2]]->p);
     Point p3(mesh->nodes[n[3]]->p);
-//    Vector v1(p1-p0);
-//    Vector v2(p2-p0);
-//    Vector v3(p3-p0);
     double mat[3][3];
     mat[0][0]=p1.x()-p0.x();
     mat[0][1]=p1.y()-p0.y();
@@ -300,23 +361,15 @@ void Element::get_sphere2(Point& cen, double& rad2, double& err)
     rhs[1]=(c2-c0)*0.5;
     rhs[2]=(c3-c0)*0.5;
     double rcond;
-    matsolve3by3(mat, rhs, rcond);
-//    cerr << "rcond=" << rcond << endl;
-    if(rcond < 1.e-6){
+    matsolve3by3_cond(mat, rhs, &rcond);
+    if(rcond < 1.e-7){
 	cerr << "WARNING - degenerate element, rcond=" << rcond << endl;
     }
     cen=Point(rhs[0], rhs[1], rhs[2]);
     rad2=(p0-cen).length2();
-    if(Abs(rad2-(p1-cen).length2())>1.e-6 || Abs(rad2-(p2-cen).length2())>1.e-6 || Abs(rad2-(p3-cen).length2()>1.e-6)){
-	cerr << "ERROR!!!!!!!!\n";
-	cerr << (p0-cen).length2() << " " << (p1-cen).length2() << " " << (p2-cen).length2() << " " << (p3-cen).length2() << endl;
-	cerr << cen << endl;
-	cerr << p0 << endl;
-	cerr << p1 << endl;
-	cerr << p2 << endl;
-	cerr << p3 << endl;
-    }
-    err=Max(1.e-6, 1.e-6/rcond);
+    //err=Max(1.e-6, 1.e-6/rcond);
+    err=1.e-4;
+
 }
 
 Point Element::centroid()
@@ -374,6 +427,8 @@ void Mesh::compute_neighbors()
 
 int Mesh::inside(const Point& p, Element* elem)
 {
+    cerr << "inside called...\n";
+#if 0
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
     Point p3(nodes[elem->n[2]]->p);
@@ -423,12 +478,27 @@ int Mesh::inside(const Point& p, Element* elem)
     double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
     if(s4<-1.e-6)
 	return 0;
+#endif
+    double s0=elem->a[0]+Dot(elem->g[0], p);
+    if(s0<-1.e-6)
+	return 0;
+    double s1=elem->a[1]+Dot(elem->g[1], p);
+    if(s0<-1.e-6)
+	return 0;
+    double s2=elem->a[2]+Dot(elem->g[2], p);
+    if(s0<-1.e-6)
+	return 0;
+    double s3=elem->a[3]+Dot(elem->g[3], p);
+    if(s0<-1.e-6)
+	return 0;
+
     return 1;
 }
 
 void Mesh::get_interp(Element* elem, const Point& p,
-		      double& s1, double& s2, double& s3, double& s4)
+		      double& s0, double& s1, double& s2, double& s3)
 {
+#if 0
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
     Point p3(nodes[elem->n[2]]->p);
@@ -454,24 +524,31 @@ void Mesh::get_interp(Element* elem, const Point& p,
     double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
     double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
     double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
-    s1=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
+    s0=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
     double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
     double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
     double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
-    s2=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
+    s1=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
     double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
     double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
     double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
-    s3=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
+    s2=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
     double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
     double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
     double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
-    s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+    s3=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+#else
+    s0=elem->a[0]+Dot(elem->g[0], p);
+    s1=elem->a[1]+Dot(elem->g[1], p);
+    s2=elem->a[2]+Dot(elem->g[2], p);
+    s3=elem->a[3]+Dot(elem->g[3], p);
+#endif
 }
 
 double Mesh::get_grad(Element* elem, const Point&,
-		    Vector& g1, Vector& g2, Vector& g3, Vector& g4)
+		      Vector& g0, Vector& g1, Vector& g2, Vector& g3)
 {
+#if 0
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
     Point p3(nodes[elem->n[2]]->p);
@@ -497,22 +574,30 @@ double Mesh::get_grad(Element* elem, const Point&,
     double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
     double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
     double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
-    g1=Vector(b1*iV6, c1*iV6, d1*iV6);
+    g0=Vector(b1*iV6, c1*iV6, d1*iV6);
     double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
     double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
     double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
-    g2=Vector(b2*iV6, c2*iV6, d2*iV6);
+    g1=Vector(b2*iV6, c2*iV6, d2*iV6);
     double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
     double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
     double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
-    g3=Vector(b3*iV6, c3*iV6, d3*iV6);
+    g2=Vector(b3*iV6, c3*iV6, d3*iV6);
     double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
     double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
     double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
-    g4=Vector(b4*iV6, c4*iV6, d4*iV6);
+    g3=Vector(b4*iV6, c4*iV6, d4*iV6);
 
     double vol=(1./iV6)/6.0;
     return(vol);
+#else
+    elem->compute_basis();
+    g0=elem->g[0];
+    g1=elem->g[1];
+    g2=elem->g[2];
+    g3=elem->g[3];
+    return elem->vol;
+#endif
 }
 
 void print_element(Element* e, Mesh* mesh)
@@ -547,14 +632,24 @@ void dump_mesh(Mesh* mesh)
     }
 }
 
-int Mesh::locate(const Point& p, int& ix)
+int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
 {
-    int i=0;
-    while(!elems[i])i++;
+    // Start with the initial element
+    int i=ix;
+    if(i<0)
+	i=0;
+    // Find the next valid element in the list
+    while(i<elems.size() && !elems[i])i++;
+    if(i>=elems.size()){
+	// If we get to the end, start over...
+	i=0;
+	while(i<ix && i<elems.size() && !elems[i])i++;
+    }
     int count=0;
     int nelems=elems.size();
     while(count++<nelems){
 	Element* elem=elems[i];
+#if 0
 	Point p1(nodes[elem->n[0]]->p);
 	Point p2(nodes[elem->n[1]]->p);
 	Point p3(nodes[elem->n[2]]->p);
@@ -580,40 +675,79 @@ int Mesh::locate(const Point& p, int& ix)
 	double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
 	double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
 	double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
-	double s1=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
+	double s0=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
 
 	double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
 	double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
 	double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
-	double s2=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
+	double s1=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
 
 	double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
 	double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
 	double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
-	double s3=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
+	double s2=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
 
 	double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
 	double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
 	double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
-	double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+	double s3=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+#else
+	double s0=elem->a[0]+Dot(elem->g[0], p);
+	double s1=elem->a[1]+Dot(elem->g[1], p);
+	double s2=elem->a[2]+Dot(elem->g[2], p);
+	double s3=elem->a[3]+Dot(elem->g[3], p);
+#endif
 	int f=0;
-	double min=s1;
+	double min=s0;
+	if(s1<min){
+	    min=s1;
+	    f=1;
+	}
 	if(s2<min){
 	    min=s2;
-	    f=1;
+	    f=2;
 	}
 	if(s3<min){
 	    min=s3;
-	    f=2;
-	}
-	if(s4<min){
-	    min=s4;
 	    f=3;
 	}
-	if(min<-1.e-6){
-	    i=elem->face(f);
-	    if(i==-1)
+	if(min<-epsilon1){
+	    int ni=elem->face(f);
+#if 0
+	    if(i==-1){
+		cerr << "Boundary, min=" << min << endl;
+		min=s0;
+		f=0;
+		if(s1<min && elem->face(1)!=-1){
+		    min=s1;
+		    f=1;
+		}
+		if(s2<min && elem->face(2)!=-1){
+		    min=s2;
+		    f=2;
+		}
+		if(s3<min && elem->face(3)!=-1){
+		    min=s3;
+		    f=3;
+		}
+		if(min<-1.e-6){
+		    i=elem->face(f);
+	            if(i != -1)
+		         continue;
+	        }
 		return 0;
+	    }
+#endif
+	    if(ni==-1){
+		ix=i;
+#if 0
+		if(min < -epsilon2){
+		    cerr << "Boundary, min=" << min << endl;
+		}
+#endif
+		return min<-epsilon2?0:1;
+	    }
+	    i=ni;
 	    continue;
 	}
 	ix=i;
@@ -653,6 +787,7 @@ int Element::orient()
 	tmp=faces[0];
 	faces[0]=faces[1];
 	faces[1]=tmp;
+	compute_basis();
 	sgn=-sgn;
     }
     if(sgn < 1.e-9){
@@ -764,27 +899,6 @@ int Mesh::face_idx(int p, int f)
     return 0;
 }
 
-#if 0
-int face_idx2(Mesh* mesh, const Array1<int>& to_remove, int nr, int p, int f)
-{
-    Element* e=mesh->elems[p];
-    int n=e->faces[f];
-    if(n==-1)
-	return -1;
-    Element* ne=mesh->elems[n];
-    for(int i=0;i<4;i++){
-	if(ne->faces[i]==p){
-	    for(int ii=0;ii<=nr;ii++){
-		ASSERT(n!=to_remove[ii]);
-	    }
-	    return (n<<2)|i;
-	}
-    }
-    cerr << "face_idx confused!\n";
-    return 0;
-}
-#endif
-
 int Mesh::insert_delaunay(const Point& p, GeometryOPort* ogeom)
 {
     int idx=nodes.size();
@@ -829,6 +943,8 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
     if(!have_all_neighbors)
 	compute_face_neighbors();
     Point p(nodes[node]->p);
+
+    // Start the element search at the last added element...
     int in_element=elems.size()-1;
     while(!elems[in_element] && in_element>0)
 	in_element--;
@@ -850,6 +966,9 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	// See if the neighbor should also be removed...
 	int tr=to_remove[i];
 	Element* e=elems[tr];
+	if(!e){
+	    cerr << "Removing a zero element!!!!!!!!!!!!!\n\n\n\n";
+	}
 
 	for(int j=0;j<4;j++){
 	    // Add these faces to the list of exposed faces...
@@ -869,6 +988,13 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	    int neighbor=e->faces[j];
 	    if(neighbor != -1){
 		Element* ne=elems[neighbor];
+		if(!ne){
+		    cerr << endl;
+		    cerr << "neighbor=" << neighbor << endl;
+		    cerr << "is a neighbor of " << tr << endl;
+		    cerr << "node=" << node << endl;
+		    cerr << "WHAT!!!!!!!!!!\n";
+		}
 		if(ne->generation != current_generation){
 		    Point cen;
 		    double rad2;
@@ -891,6 +1017,8 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	elems[tr]=0;
     }
 
+    int start_new=elems.size();
+
     // Add the new elements from the faces...
     FastHashTableIter<DFace> fiter(&face_table);
     
@@ -905,7 +1033,6 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	// If the new element is not degenerate, add it to the mix...
 	if(ne->orient()){
 	    int nen=elems.size();
-	    
 	    for(int j=0;j<4;j++){
 		// Add these faces to the list of exposed faces...
 		DFace* f=new DFace(ne->n[(j+1)%4], ne->n[(j+2)%4], ne->n[(j+3)%4]);
@@ -937,6 +1064,128 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	}
     }
 
+    
+#if 0
+    // Go through and look for small elements - try to get rid of
+    // them by swapping an edge
+    for(int degen=start_new;degen<elems.size();degen++){
+	Element* e=elems[degen];
+	if(e->volume() < 1.e-10){
+	    cerr << "Crap, element " << degen << " is degenerate...\n";
+	    // Hmmm...
+	    int d1a=0;
+	    int d1b=-999;
+	    double d1l=0;
+	    Point p0=nodes[e->n[0]]->p;
+	    for(int i=1;i<4;i++){
+		double l=(nodes[e->n[i]]->p-p0).length2();
+		if(l>d1l){
+		    d1l=l;
+		    d1b=i;
+		}
+	    }
+	    int d2a=1;
+	    while(d2a == d1b)d2a++;
+	    int d2b=1;
+	    while(d2b == d1b || d2b == d2a)d2b++;
+	    double d2l=(nodes[e->n[d2a]]->p - nodes[e->n[d2b]]->p).length2();
+	    cerr << "d1l=" << d1l << ", d2l=" << d2l << endl;
+	    int a, b;
+	    int c, d;
+	    if(d1l < d2l){
+		a=d1a;
+		b=d1b;
+		c=d2a;
+		d=d2b;
+	    } else {
+		a=d2a;
+		b=d2b;
+		c=d1a;
+		d=d1b;
+	    }
+
+	    cerr << "degen=" << degen << endl;
+	    cerr << "a,b,c,d=" << a << " " << b << " " << c << " " << d << endl;
+	    cerr << "nodes of degen are: " << e->n[a] << " " << e->n[b] << " " << e->n[c] << " " << e->n[d] << endl;
+
+	    int e1=e->faces[a];
+	    if(e1 != -1){
+		Element* ee1=elems[e1];
+		int j1;
+		for(j1=0;j1<4;j1++){
+		    if(ee1->faces[j1] == degen)
+			break;
+		}
+		cerr << "ee1=" << ee1->n[0] << " " << ee1->n[1] << " " << ee1->n[2] << " " << ee1->n[3] << endl;
+		ASSERT(j1<4);
+		int n1=ee1->n[j1];
+
+		int e2=e->faces[b];
+		if(e2 != -1){
+		    Element* ee2=elems[e2];
+		    cerr << "ee2=" << ee2->n[0] << " " << ee2->n[1] << " " << ee2->n[2] << " " << ee2->n[3] << endl;
+		    int j2;
+		    for(j2=0;j2<4;j2++){
+			if(ee2->faces[j2] == degen)
+			    break;
+		    }
+		    ASSERT(j2<4);
+		    int n2=ee2->n[j2];
+
+		    if(n1 == n2){
+			ee1->n[(j1+1)%4]=a;
+			ee1->n[(j1+2)%4]=b;
+			ee1->n[(j1+3)%4]=c;
+			ee2->n[(j2+1)%4]=a;
+			ee2->n[(j2+2)%4]=b;
+			ee2->n[(j2+3)%4]=d;
+
+			// Fix up face neighbors...
+			ee2->faces[j2]=e1;
+			ee1->faces[j1]=e2;
+			
+			// Let the face code figure out the other ones
+			ee1->faces[(j1+1)%4]=-2;
+			ee1->faces[(j1+2)%4]=-2;
+			ee1->faces[(j1+3)%4]=-2;
+			ee2->faces[(j2+1)%4]=-2;
+			ee2->faces[(j2+2)%4]=-2;
+			ee2->faces[(j2+3)%4]=-2;
+			int ii;
+			for(ii=0;ii<4;ii++){
+			    int nn=elems[degen]->n[ii];
+			    Node* n=nodes[nn].get_rep();
+			    for(int j=0;j<n->elems.size();j++){
+				if(n->elems[j] == degen){
+				    n->elems.remove(j);
+				    break;
+				}
+			    }
+			}
+			for(ii=0;ii<4;ii++){
+			    ee1->face(ii);
+			    ee2->face(ii);
+			}
+			ee1->orient();
+			ee2->orient();
+			cerr << "after, ee1=" << ee1->n[0] << " " << ee1->n[1] << " " << ee1->n[2] << " " << ee1->n[3] << endl;
+			cerr << "after, ee2=" << ee2->n[0] << " " << ee2->n[1] << " " << ee2->n[2] << " " << ee2->n[3] << endl;
+			delete elems[degen];
+			elems[degen]=0;
+		    } else {
+			cerr << "Sorry, can't fix this one..." << endl;
+		    }
+		} else {
+		    cerr << "Can't fix because it is on the edge, case 2\n";
+		}
+	    } else {
+		cerr << "Can't fix because it is on the edge, case 1\n";
+	    }
+	}
+    }
+#endif
+
+#if 0
     {
 	int nelems=elems.size();
 	for(int i=0;i<nelems;i++){
@@ -959,6 +1208,40 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	    }
 	}
     }
+    if(node > 13800){
+	for(int i=0;i<elems.size();i++){
+	    Element* e=elems[i];
+	    if(e){
+		for(int j=0;j<4;j++){
+		    int face=e->faces[j];
+		    if(face != -1){
+			if(elems[face] == 0){
+			    cerr << "FACE MESSED UP!!!!!!!!!\n";
+			    cerr << "face=" << face << endl;
+			    cerr << "element=" << i << endl;
+			    cerr << "node=" << node << endl;
+			    cerr << endl;
+			} else {
+			    Element* ne=elems[face];
+			    for(int jj=0;jj>4;jj++){
+				if(ne->faces[jj] == i)
+				    break;
+			    }
+			    if(jj==4){
+				cerr << "Inconsistent neighbor information!!!!!!!\n";
+				cerr << "element=" << i << endl;
+				cerr << "neighbor=" << face << endl;
+				cerr << endl;
+			    }
+			}
+
+		    }
+		}
+	    }
+	}
+    }
+#endif
+
     return 1;
 }
 

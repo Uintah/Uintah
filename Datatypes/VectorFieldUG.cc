@@ -54,7 +54,22 @@ void VectorFieldUG::compute_bounds()
 
 int VectorFieldUG::interpolate(const Point& p, Vector& value)
 {
-    int ix;
+    int ix=0;
+    if(!mesh->locate(p, ix))
+	return 0;
+    if(typ == NodalValues){
+	double s1,s2,s3,s4;
+	Element* e=mesh->elems[ix];
+	mesh->get_interp(e, p, s1, s2, s3, s4);
+	value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
+    } else {
+	value=data[ix];
+    }
+    return 1;
+}
+
+int VectorFieldUG::interpolate(const Point& p, Vector& value, int& ix)
+{
     if(!mesh->locate(p, ix))
 	return 0;
     if(typ == NodalValues){

@@ -30,6 +30,8 @@ typedef LockingHandle<Node> NodeHandle;
 
 class GeomGroup;
 class Mesh;
+class RPoint;
+class BigRational;
 
 struct Element {
     int faces[4];
@@ -37,6 +39,13 @@ struct Element {
     int generation; // For insert_delaunay
     int cond; // index to the conductivities array for the cond
               // tensor of this element
+
+    Vector g[4];
+    double a[4];
+    double vol;
+
+    void compute_basis();
+
     Mesh* mesh;
     Element(Mesh*, int, int, int, int);
     Element(const Element&, Mesh* mesh);
@@ -47,6 +56,7 @@ struct Element {
     double volume();
     int orient();
     void get_sphere2(Point& cen, double& rad2, double& err);
+    void get_sphere2(RPoint& cen, BigRational& rad2);
     Point centroid();
 };
 
@@ -121,7 +131,8 @@ public:
 
     void detach_nodes();
     void compute_neighbors();
-    int locate(const Point&, int&);
+    int locate(const Point&, int&, double epsilon1=1.e-6, double epsilon2=1.e-6);
+    int locate(const RPoint&, int&);
     int inside(const Point& p, Element* elem);
     void get_interp(Element* elem, const Point& p, double& s1,
 		    double& s2, double& s3, double& s4);

@@ -61,8 +61,8 @@ itcl_class IsoSurface {
 		-command $n -state disabled
 	pack $w.f.isoval -side top -fill x
 
-	makePoint $w.f.seed "Seed Point" $this-seed_point $n
-	pack $w.f.seed -fill x
+	#makePoint $w.f.seed "Seed Point" $this-seed_point $n
+	#pack $w.f.seed -fill x
 	global $this-xmin $this-ymin $this-zmin $this-xmax $this-ymax $this-zmax
 	set_bounds [set $this-xmin] [set $this-ymin] [set $this-zmin] \
 		[set $this-xmax] [set $this-ymax] [set $this-zmax]
@@ -79,6 +79,7 @@ itcl_class IsoSurface {
 	$w.f.isoval configure -from $min -to $max
     }
     method set_bounds {xmin ymin zmin xmax ymax zmax} {
+	return
 	set w .ui$this
 	$w.f.seed.x configure -from $xmin -to $xmax
 	$w.f.seed.y configure -from $ymin -to $ymax
@@ -98,9 +99,9 @@ itcl_class IsoSurface {
 	set w .ui$this
 	$w.f.seedpoint.w3d configure -state disabled
 	$w.f.isoval configure -state normal
-	$w.f.seed.x configure -state disabled
-	$w.f.seed.y configure -state disabled
-	$w.f.seed.z configure -state disabled
+	#$w.f.seed.x configure -state disabled
+	#$w.f.seed.y configure -state disabled
+	#$w.f.seed.z configure -state disabled
 	$this-c needexecute
     }
     method do_seed {} {

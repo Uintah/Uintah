@@ -94,7 +94,7 @@ CuttingPlane::CuttingPlane(const clString& id)
     widget = scinew ScaledFrameWidget(this, &widget_lock, INIT);
     grid_id=0;
 
-    need_find=1;
+    need_find=3;
     
     outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
 }
@@ -134,8 +134,8 @@ void CuttingPlane::execute()
 	GeomObj *w = widget->GetWidget() ;
 	widget_id = ogeom->addObj( w, widget_name, &widget_lock );
 	widget->Connect( ogeom );
-	widget->SetRatioR( 0.2 );
-	widget->SetRatioD( 0.2 );
+	widget->SetRatioR( 0.4 );
+	widget->SetRatioD( 0.4 );
     }
     if (need_find != 0)
     {
@@ -167,7 +167,7 @@ void CuttingPlane::execute()
 	    widget->SetPosition( center, right, down);
 	    max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
 	}
-	widget->SetScale( max_scale/20. );
+	widget->SetScale( max_scale/30. );
 	need_find = 0;
     }
 
@@ -191,19 +191,26 @@ void CuttingPlane::execute()
            scale_fac = scale.get(),
            offset_fac = offset.get();
 
-    int u_num = (int) (u_fac * 100),
-        v_num = (int) (v_fac * 100);
+    int u_num = (int) (u_fac * 500),
+        v_num = (int) (v_fac * 500);
 
-    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
+//    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
 
     // Get the scalar values and corresponding
     // colors to put in the cutting plane
     if (cptype != CP_CONTOUR)
     {
+	double alpha=1.0;
 	GeomGrid* grid = new GeomGrid( u_num, v_num, corner, u, v);
         Vector unorm=u.normal();
         Vector vnorm=v.normal();
         Vector N(Cross(unorm, vnorm));
+#if 0
+	if (cptype != CP_SURFACE)
+	  grid->texture();
+#endif
+
+	int ix = 0;
 	for (int i = 0; i < u_num; i++)
 	    for (int j = 0; j < v_num; j++)
 	    {
@@ -213,12 +220,13 @@ void CuttingPlane::execute()
 
 		// get the color from cmap for p 	    
 		MaterialHandle matl;
-		if (sfield->interpolate( p, sval))
+		if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix)) {
 		    matl = cmap->lookup( sval);
-		else
-		{
+		    alpha = 0.8;
+		} else {
 		    matl = outcolor;
 		    sval = 0;
+		    alpha=0.0;
 		}
 
 		// put the color into the cutting plane (grid) at i, j
@@ -229,11 +237,14 @@ void CuttingPlane::execute()
 		    double umag=Dot(unorm, G)*scale_fac;
 		    double vmag=Dot(vnorm, G)*scale_fac;
 		    Vector normal(N-unorm*umag-vnorm*vmag);
-		    grid->set(i, j, ((h*scale_fac) + offset_fac), normal, matl);
+		    grid->set(i, j, ((h*scale_fac) + offset_fac), normal, matl/*,alpha*/);
 		}
 		else  			// if (cptype == CP_PLANE)
-		    grid->set(i, j, 0, matl);
+		    grid->set(i, j, 0, matl/*,alpha*/);
 	    }
+    // delete the old grid/cutting plane
+    if (old_grid_id != 0)
+        ogeom->delObj( old_grid_id );
 
 	grid_id = ogeom->addObj(grid, "Cutting Plane");
     }
@@ -266,7 +277,7 @@ void CuttingPlane::execute()
 		colrs[i] = new GeomMaterial( col_group[i], matl );
 		cs->add( colrs[i] );
 	    }
-
+	    int ix=0;
 	    // look at areas in the plane to find the contours
 	    for (i = 0; i < u_num-1; i++)
 		for (int j = 0; j < v_num-1; j++)
@@ -285,10 +296,14 @@ void CuttingPlane::execute()
 		    double sval4;
 
 		    // get the value from the field for each point	    
-		    if ( sfield->interpolate( p1, sval1) && 
-			 sfield->interpolate( p2, sval2) && 
-			 sfield->interpolate( p3, sval3) && 
-			 sfield->interpolate( p4, sval4))
+		    if ( (sfield->interpolate( p1, sval1,ix) || 
+			  (ix=0) || sfield->interpolate( p1, sval1,ix)) && 
+			(sfield->interpolate( p2, sval2,ix) || 
+			 (ix=0) || sfield->interpolate( p2, sval2,ix)) && 
+			(sfield->interpolate( p3, sval3,ix) || 
+			 (ix=0) || sfield->interpolate( p3, sval3,ix)) && 
+			(sfield->interpolate( p4, sval4,ix) || 
+			 (ix=0) || sfield->interpolate( p4, sval4,ix)))
 		    {
 			// find the indices of the values array between smin & smax
 			double smin = Min( Min( sval1, sval2), Min( sval3, sval4)),
@@ -344,14 +359,15 @@ void CuttingPlane::execute()
 			}
 		    }
 		}
+    // delete the old grid/cutting plane
+    if (old_grid_id != 0)
+        ogeom->delObj( old_grid_id );
+
 	    grid_id = ogeom->addObj( cs, "Contour Plane");
 	}
 	
     }
 
-    // delete the old grid/cutting plane
-    if (old_grid_id != 0)
-	ogeom->delObj( old_grid_id );
 }
 
 void CuttingPlane::widget_moved(int last)

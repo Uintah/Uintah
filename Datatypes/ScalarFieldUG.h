@@ -31,7 +31,8 @@ public:
     virtual void compute_bounds();
     virtual void compute_minmax();
     virtual Vector gradient(const Point&);
-    virtual int interpolate(const Point&, double&);
+    virtual int interpolate(const Point&, double&, double epsilon1=1.e-6, double epsilon2=1.e-6);
+    virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

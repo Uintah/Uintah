@@ -28,11 +28,12 @@ class SymSparseRowMatrix : public Matrix {
     double minVal;
     double maxVal;
 protected:
-    double* a;
     int* columns;
 public:
+    double* a;
     SymSparseRowMatrix();
     SymSparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
+    SymSparseRowMatrix(int, int, int*, int*, int);
     virtual ~SymSparseRowMatrix();
     SymSparseRowMatrix(const SymSparseRowMatrix&);
     SymSparseRowMatrix& operator=(const SymSparseRowMatrix&);

@@ -49,6 +49,7 @@ public:
     void get_bounds(Point&, Point&);
     double longest_dimension();
     virtual int interpolate(const Point&, Vector&)=0;
+    virtual int interpolate(const Point&, Vector&, int& cache)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

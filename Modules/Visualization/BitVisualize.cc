@@ -266,6 +266,8 @@ void BitVisualize::vol_render_grid(ScalarFieldRG* field) {
 }
 
 void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
+    NOT_FINISHED("BitVisualize::iso_reg_grid is broken for now - it takes too long to compile.");
+#if 0
     int nx=field->nx;
     int ny=field->ny;
     int nz=field->nz;
@@ -539,6 +541,7 @@ void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
 		return;
 	}
     }
+#endif
 }
 
 #ifdef __GNUG__

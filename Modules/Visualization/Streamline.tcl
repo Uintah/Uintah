@@ -153,7 +153,7 @@ itcl_class Streamline {
 	scale $mi.info.iSurface -orient horizontal -from 0 -to 90 \
 		-tickinterval 30 -label "Maximum Angle:"
 
-	scale $mi.skip -from 1 -to 20 -orient horizontal \
+	scale $mi.skip -from 1 -to 100 -orient horizontal \
 		-label "Skip:"
 	pack $mi.skip -side top -fill x
 
@@ -176,12 +176,12 @@ itcl_class Streamline {
 	pack $ii.label -side top -anchor w
 
 	#
-	# Selector for algorithm - Euler, RK4, PC, Stream function
+	# Selector for algorithm - Exact, Euler, RK4, PC, Stream function
 	#
 
 	make_labeled_radio $ii.alg "Algorithm:" "$this set_algorithm" \
 		left $this-algorithm \
-		{Euler RK4}
+		{Exact Euler RK4}
 	pack $ii.alg -side top -fill x
 
 	#
@@ -191,8 +191,8 @@ itcl_class Streamline {
 	pack $ii.stepsize -fill x -pady 2
 	
 	scale $ii.maxsteps \
-		-from 0 -to 1000 -label "Maximum steps:" \
-		-showvalue true -tickinterval 200 \
+		-from 0 -to 5000 -label "Maximum steps:" \
+		-showvalue true -tickinterval 1000 \
 		-orient horizontal
 	pack $ii.maxsteps -fill x -pady 2
 
@@ -243,6 +243,9 @@ itcl_class Streamline {
 	    }
 	}
     }
+    method redo_animation {} {
+	$this-c needexecute
+    }
 	
     method newsource {} {
 	set sid $nextsource
@@ -266,13 +269,13 @@ itcl_class Streamline {
 	set $s-source "Line"
 
 	global $s-markertype
-	set $s-markertype "Ribbon"
+	set $s-markertype "Tube"
 
 	global $s-tubesize
-	set $s-tubesize .01
+	set $s-tubesize 2
 
 	global $s-ribbonsize
-	set $s-ribbonsize .01
+	set $s-ribbonsize 4
 
 	global $s-maxbend
 	set $s-maxbend 20
@@ -287,13 +290,13 @@ itcl_class Streamline {
 	set $s-anim_timesteps 30
 
 	global $s-stepsize
-	set $s-stepsize 0.01
+	set $s-stepsize 0.5
 
 	global $s-skip
-	set $s-skip 5
+	set $s-skip 25
 
 	global $s-maxsteps
-	set $s-maxsteps 200
+	set $s-maxsteps 1000
 
 	global $s-widget_scale
 	set $s-widget_scale 1

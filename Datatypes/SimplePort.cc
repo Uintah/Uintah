@@ -155,10 +155,8 @@ template<class T>
 void SimpleOPort<T>::resend(Connection* conn)
 {
     turn_on();
-    cerr << "conn=" << (void*)conn << endl;
     for(int i=0;i<nconnections();i++){
 	if(connections[i] == conn){
-	    cerr << "resending to module: " << conn->iport->get_module()->name << endl;
 	    SimplePortComm<T>* msg=scinew SimplePortComm<T>(handle);
 	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}

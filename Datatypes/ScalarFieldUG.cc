@@ -78,10 +78,21 @@ void ScalarFieldUG::compute_minmax()
     have_minmax=1;
 }
 
-int ScalarFieldUG::interpolate(const Point& p, double& value)
+int ScalarFieldUG::interpolate(const Point& p, double& value, double epsilon1, double epsilon2)
 {
-    int ix;
-    if(!mesh->locate(p, ix))
+    int ix=0;
+    if(!mesh->locate(p, ix, epsilon1, epsilon2))
+	return 0;
+    double s1,s2,s3,s4;
+    Element* e=mesh->elems[ix];
+    mesh->get_interp(e, p, s1, s2, s3, s4);
+    value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
+    return 1;
+}
+
+int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double epsilon1, double epsilon2)
+{
+    if(!mesh->locate(p, ix, epsilon1, epsilon2))
 	return 0;
     double s1,s2,s3,s4;
     Element* e=mesh->elems[ix];
