@@ -127,9 +127,10 @@ class MatlabBundle : public Module, public ServiceBase
 	// execute():
 	//   Execute the module and put data on the output port
 	
-	void execute();
+	virtual void execute();
+  virtual void presave();
 	
-  void tcl_command(GuiArgs& args, void* userdata);
+  virtual void tcl_command(GuiArgs& args, void* userdata);
 
   static std::string totclstring(std::string &instring);
 	std::vector<std::string>	converttcllist(std::string str);
@@ -476,6 +477,7 @@ bool MatlabBundle::synchronise_input()
 	str = output_bundle_pnrrds_.get(); output_bundle_pnrrds_list_ = converttcllist(str);
 	str = output_bundle_pbundles_.get(); output_bundle_pbundles_list_ = converttcllist(str);
 
+        gui->execute(id + " update_text"); // update matlab_code_ before use.
 	matlab_code_list_ = matlab_code_.get(); 
 	
 	return(true);
@@ -581,6 +583,13 @@ bool MatlabBundle::send_matlab_job()
 	thread_info_->unlock();
 	
 	return(success);
+}
+
+
+
+void MatlabBundle::presave()
+{
+  gui->execute(id + " update_text"); // update matlab_code_ before use.
 }
 
 

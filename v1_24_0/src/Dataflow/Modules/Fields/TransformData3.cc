@@ -73,6 +73,7 @@ public:
   TransformData3(GuiContext* ctx);
   virtual ~TransformData3();
   virtual void execute();
+  virtual void presave();
 };
 
 
@@ -175,6 +176,7 @@ TransformData3::execute()
   }
 
   string outputDataType = gOutputDataType_.get();
+  gui->execute(id + " update_text"); // update gFunction_ before get.
   string function = gFunction_.get();
 
   if( outputDataType_ != outputDataType ||
@@ -292,6 +294,13 @@ TransformData3::execute()
     }
     ofield_port->send(fHandle_);
   }
+}
+
+
+void
+TransformData3::presave()
+{
+  gui->execute(id + " update_text"); // update gFunction_ before saving.
 }
 
 

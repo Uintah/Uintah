@@ -73,7 +73,6 @@ itcl_class SCIRun_FieldsData_TransformData {
 	option add *textBackground white	
 	iwidgets::scrolledtext $w.row1 -height 60 -hscrollmode dynamic
 
-	bind $w.row1 <Leave> "$this update_text"
 	$w.row1 insert end [set $this-function]
 
 	pack $w.info -side top -anchor w -padx 5 -pady 5
