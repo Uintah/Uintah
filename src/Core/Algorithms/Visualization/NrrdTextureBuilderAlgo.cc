@@ -31,6 +31,7 @@
 
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 
@@ -107,14 +108,36 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
   const BBox bbox(Point(0,0,0), Point(1,1,1)); 
 
   Transform tform;
-  const Point nmin(axis_min[nv_nrrd->dim-3],
-                   axis_min[nv_nrrd->dim-2],
-                   axis_min[nv_nrrd->dim-1]);
-  const Point nmax(axis_max[nv_nrrd->dim-3],
-                   axis_max[nv_nrrd->dim-2],
-                   axis_max[nv_nrrd->dim-1]);
-  tform.pre_scale(nmax - nmin);
-  tform.pre_translate(nmin.asVector());
+  string trans_str;
+  // See if it's stored in the nrrd first.
+  if (nvn->get_property("Transform", trans_str) && trans_str != "Unknown")
+  {
+    double t[16];
+    int old_index=0, new_index=0;
+    for(int i=0; i<16; i++)
+    {
+      new_index = trans_str.find(" ", old_index);
+      string temp = trans_str.substr(old_index, new_index-old_index);
+      old_index = new_index+1;
+      string_to_double(temp, t[i]);
+    }
+    tform.set(t);
+
+    const Vector scale(nx - 1, ny - 1, nz - 1);
+    tform.post_scale(scale);
+  } 
+  else
+  {
+    // Reconstruct the axis aligned transform.
+    const Point nmin(axis_min[nv_nrrd->dim-3],
+                     axis_min[nv_nrrd->dim-2],
+                     axis_min[nv_nrrd->dim-1]);
+    const Point nmax(axis_max[nv_nrrd->dim-3],
+                     axis_max[nv_nrrd->dim-2],
+                     axis_max[nv_nrrd->dim-1]);
+    tform.pre_scale(nmax - nmin);
+    tform.pre_translate(nmin.asVector());
+  }
 
   texture->lock_bricks();
   vector<TextureBrickHandle>& bricks = texture->bricks();
