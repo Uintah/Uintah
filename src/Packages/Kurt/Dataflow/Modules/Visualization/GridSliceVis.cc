@@ -35,8 +35,10 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
@@ -48,11 +50,10 @@
 
 
 
-namespace Kurt {
+using namespace Kurt ;
 
-using SCIRun::postMessage;
+using SCIRun::TCLInterface;
 using SCIRun::Field;
-using SCIRun::TCL;
 using SCIRun::to_string;
 using SCIRun::GeometryData;
 using SCIRun::Allocator;
@@ -60,33 +61,31 @@ using SCIRun::AuditAllocator;
 using SCIRun::DumpAllocator;
 using SCIRun::LatVolMesh;
 using SCIRun::Interpolate;
+using SCIRun::GuiContext;
 
-static string control_name("Control Widget");
+static std::string control_name("Control Widget");
 			 
-extern "C" Module* make_GridSliceVis( const string& id) {
-  return scinew GridSliceVis(id);
-}
+DECLARE_MAKER(GridSliceVis);
 
-
-GridSliceVis::GridSliceVis(const string& id)
-  : Module("GridSliceVis", id, Filter, "Visualization", "Kurt"), 
+GridSliceVis::GridSliceVis(SCIRun::GuiContext *ctx)
+  : Module("GridSliceVis", ctx, Filter, "Visualization", "Kurt"), 
   tex(0),
   control_lock("GridSliceVis resolution lock"),
   control_widget(0),
   control_id(-1),
-  is_fixed_("is_fixed_", id, this),
-  max_brick_dim_("max_brick_dim_",id, this),
-  min_("min_", id ,this),
-  max_("max_", id , this),
-  drawX("drawX", id, this),
-  drawY("drawY", id, this),
-  drawZ("drawZ", id, this),
-  drawView("drawView", id, this),
-  interp_mode("interp_mode", id, this),
-  point_x("point_x", id, this),
-  point_y("point_y", id, this),
-  point_z("point_z", id, this),
-  point_init("pointk_init", id, this),
+  is_fixed_(ctx->subVar("is_fixed_")),
+  max_brick_dim_(ctx->subVar("max_brick_dim_")),
+  min_(ctx->subVar("min_")),
+  max_(ctx->subVar("max_")),
+  drawX(ctx->subVar("drawX")),
+  drawY(ctx->subVar("drawY")),
+  drawZ(ctx->subVar("drawZ")),
+  drawView(ctx->subVar("drawView")),
+  interp_mode(ctx->subVar("interp_mode")),
+  point_x(ctx->subVar("point_x")),
+  point_y(ctx->subVar("point_y")),
+  point_z(ctx->subVar("point_z")),
+  point_init(ctx->subVar("point_init")),
   sliceren(0),
   svr(0)
 {
@@ -97,7 +96,7 @@ GridSliceVis::~GridSliceVis()
 
 }
 void 
-GridSliceVis::tcl_command( TCLArgs& args, void* userdata)
+GridSliceVis::tcl_command( SCIRun::GuiArgs& args, void* userdata)
 {
   if (args[1] == "MoveWidget") {
       if (!control_widget) return;
@@ -157,15 +156,15 @@ void GridSliceVis::execute(void)
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    gui->postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!incolormap) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    gui->postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!ogeom) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    gui->postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
   
@@ -237,7 +236,7 @@ void GridSliceVis::execute(void)
     cerr<<"Need to initialize sliceren\n";
     old_cmap = cmap;
     old_tex = tex;
-    TCL::execute(id + " SetDims " + to_string( sliceren->get_brick_size()));
+    gui->execute(id + " SetDims " + to_string( sliceren->get_brick_size()));
     max_brick_dim_.set(  sliceren->get_brick_size() );
     old_brick_size = max_brick_dim_.get();
     if( is_fixed_.get() !=1 ){
@@ -336,6 +335,5 @@ void GridSliceVis::execute(void)
   //AuditAllocator(default_allocator);
 }
 
-} // End namespace SCIRun
 
 

@@ -32,10 +32,11 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLInterface.h>
+#include <Core/GuiInterface/GuiContext.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Widgets/PointWidget.h>
@@ -51,36 +52,34 @@ using std::dec;
 using std::ostrstream;
 
 
-namespace Kurt {
 
-using SCIRun::postMessage;
+using SCIRun::TCLInterface;
 using SCIRun::Field;
-using SCIRun::TCL;
 using SCIRun::to_string;
 using SCIRun::Allocator;
 using SCIRun::AuditAllocator;
 using SCIRun::DumpAllocator;
+using SCIRun::GuiContext;
 
 using SCIRun::default_allocator;
 
-static string control_name("Control Widget");
-			 
-extern "C" Module* make_GridVolVis( const string& id)
-{
-  return scinew GridVolVis(id);
-}
+static std::string control_name("Control Widget");
 
 
-GridVolVis::GridVolVis(const string& id)
-  : Module("GridVolVis", id, Filter, "Visualization", "Kurt"),
+using namespace Kurt;
+
+DECLARE_MAKER(GridVolVis)
+
+GridVolVis::GridVolVis(GuiContext* ctx)
+  : Module("GridVolVis", ctx,  Filter, "Visualization", "Kurt"),
     tex(0), gvr(0),
-    is_fixed_("is_fixed_", id, this),
-    max_brick_dim_("max_brick_dim_", id, this),
-    min_("min_", id, this), max_("max_", id, this),
-    num_slices("num_slices", id, this),
-    render_style("render_style", id, this),
-    alpha_scale("alpha_scale", id, this),
-    interp_mode("interp_mode", id, this),
+    is_fixed_(ctx->subVar("is_fixed_")),
+    max_brick_dim_(ctx->subVar("max_brick_dim_")),
+    min_(ctx->subVar("min_")), max_(ctx->subVar("max_")),
+    num_slices(ctx->subVar("num_slices")),
+    render_style(ctx->subVar("render_style")),
+    alpha_scale(ctx->subVar("alpha_scale")),
+    interp_mode(ctx->subVar("interp_mode")),
     volren(0)
 {
 }
@@ -105,15 +104,15 @@ void GridVolVis::execute(void)
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    gui->postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!incolormap) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    gui->postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
   if (!ogeom) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    gui->postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
 
@@ -139,10 +138,10 @@ void GridVolVis::execute(void)
       volren->SetInterp(false);
       interp_mode.set(0);
     }
-    cerr<<"Need to initialize volren\n";
+    std::cerr<<"Need to initialize volren\n";
     old_cmap = cmap;
     old_tex = tex;
-    TCL::execute(id + " SetDims " + to_string( volren->get_brick_size()));
+    gui->execute(id + " SetDims " + to_string( volren->get_brick_size()));
     max_brick_dim_.set(  volren->get_brick_size() );
     old_brick_size = max_brick_dim_.get();
     if( is_fixed_.get() !=1 ){
@@ -190,7 +189,7 @@ void GridVolVis::execute(void)
       max_.set(old_max);
     }
     
-    cerr<<"Initialized\n";
+    std::cerr<<"Initialized\n";
   }
  
   //AuditAllocator(default_allocator);
@@ -218,12 +217,11 @@ void GridVolVis::execute(void)
   char buf[16];
   ostrstream num(buf, 16);
   num <<dumpcounter++;
-  string dump_string("gd");
+  std::string dump_string("gd");
   dump_string += num.str();
   //  DumpAllocator(default_allocator, dump_string.c_str() );
 }
 
-} // End namespace Kurt
 
 
 

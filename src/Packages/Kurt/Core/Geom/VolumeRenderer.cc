@@ -163,22 +163,21 @@ VolumeRenderer::setup()
 {
 
 
-#ifdef __sgi
   glEnable(GL_TEXTURE_3D_EXT);
-#endif
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
   if( cmap.get_rep() ) {
-#ifdef __sgi
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI
     //cerr << "Using Lookup!\n";
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
-    
+#elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
+    glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);   
+#endif
     if( cmapHasChanged ) {
       BuildTransferFunction();
       gvr_->SetColorMap(TransferFunction);
       cmapHasChanged = false;
     }
-#endif
   }
   glColor4f(1,1,1,1); // set to all white for modulation
 }
@@ -189,9 +188,7 @@ VolumeRenderer::preDraw()
   switch (rs_) {
   case OVEROP:
     glEnable(GL_BLEND);
-#ifdef __sgi
     glBlendEquation(GL_FUNC_ADD_EXT);
-#endif
     glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     break;
   case MIP:
@@ -231,11 +228,13 @@ VolumeRenderer::cleanup()
 {
 
 
-#ifdef __sgi
   if( cmap.get_rep() )
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-  glDisable(GL_TEXTURE_3D_EXT);
+#elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
+  glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
 #endif
+  glDisable(GL_TEXTURE_3D_EXT);
   // glEnable(GL_DEPTH_TEST);  
 }  
 
@@ -250,7 +249,7 @@ void VolumeRenderer::io(Piostream&)
 
 
 bool
-VolumeRenderer::saveobj(std::ostream&, const string&, GeomSave*)
+VolumeRenderer::saveobj(std::ostream&, const std::string&, GeomSave*)
 {
    NOT_FINISHED("VolumeRenderer::saveobj");
     return false;

@@ -11,16 +11,17 @@
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <functional>
 
+
+namespace Kurt {
 using std::cerr;
 using std::endl;
 using std::vector;
 using std::binary_function;
 using std::sort;
-
-namespace Kurt {
 using SCIRun::Thread;
 using SCIRun::Semaphore;
 using SCIRun::Point;
@@ -44,12 +45,12 @@ BrickGrid::BrickGrid(FieldHandle tex, int bricksize, bool fixed,
 
 void BrickGrid::init() 
 {
-  const string field_type = tex_->get_type_name(0);
+  const std::string field_type = tex_->get_type_name(0);
   if( field_type != "LatVolField"){
     cerr<<"BrickGrid not compatible with field type "<<field_type<<endl;
     return;
   }
-  const string data_type = tex_->get_type_name(1);
+  const std::string data_type = tex_->get_type_name(1);
   
   if( field_type == "LatVolField" ) {
     if( data_type == "double" ) {
