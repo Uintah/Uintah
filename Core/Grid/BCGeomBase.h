@@ -68,6 +68,7 @@ WARNING
     std::vector<IntVector> boundary,interior,sfcx,sfcy,sfcz,nboundary;
   };
 
+  bool cmp_type(BCGeomBase* p);
   template<class T> bool cmp_type(BCGeomBase* p) 
     {
       return (typeid(T) == typeid(*p));
