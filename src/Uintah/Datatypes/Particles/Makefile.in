@@ -6,6 +6,6 @@ SRCS     = MPMaterial.cc MPVizParticleSet.cc ParticleGridReader.cc \
            ParticleGridReaderPort.cc ParticleSet.cc ParticleSetPort.cc \
            cfdlibParticleSet.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

@@ -14,6 +14,6 @@ SRCS     = ContourSet.cc TriSurface.cc BasicSurfaces.cc Boolean.cc \
            VectorFieldUG.cc VectorFieldZone.cc VoidStar.cc cDMatrix.cc \
            cMatrix.cc cSMatrix.cc cVector.cc SurfTree.cc TopoSurfTree.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

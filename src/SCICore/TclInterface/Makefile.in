@@ -10,7 +10,7 @@ SRCS     = DebugSettings.cc GuiManager.cc GuiServer.cc Histogram.cc \
            MemStats.cc Remote.cc TCL.cc TCLInit.cc TCLTask.cc TCLvar.cc \
            ThreadStats.cc
 
-INCLUDES = -I$(OBJTOP) \
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk

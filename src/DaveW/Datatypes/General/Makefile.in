@@ -5,6 +5,6 @@ OBJTOP   = ../../..
 SRCS	 = ManhattanDist.cc ScalarTriSurface.cc SegFld.cc SegFldPort.cc \
 	   SigmaSet.cc SigmaSetPort.cc
 
-INCLUDES = -I$(OBJTOP) 
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) 
 
 include $(SRCTOP)/scripts/objs.mk

@@ -1,7 +1,7 @@
 ifndef _included_solib_mk
 _included_solib_mk = yes
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
 include $(OBJTOP)/scripts/compile.mk
 
 SUBOBJS = $(shell $(MAKE) --no-print-directory reportObjs)

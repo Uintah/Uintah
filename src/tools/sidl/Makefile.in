@@ -6,7 +6,7 @@ SRCS      = Spec.cc SymbolTable.cc main.cc parser.y scanner.l \
 		static_check.cc
 LIBRARIES = @LEXLIB@
 CFLAGS := $(CFLAGS)
-INCLUDES  = -I$(SRCTOP)
+INCLUDES  = -I$(SRCTOP) -I$(SRCTOP)
             
 PROGRAM   = sidl
 LEX = lex -t

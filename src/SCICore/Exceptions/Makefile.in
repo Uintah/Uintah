@@ -4,6 +4,6 @@ OBJTOP   = ../..
 
 SRCS     = Exceptions.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk
