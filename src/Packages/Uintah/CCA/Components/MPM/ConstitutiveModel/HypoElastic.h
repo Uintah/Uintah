@@ -25,6 +25,9 @@ namespace Uintah {
     // Create datatype for storing model parameters
     // Crack propagation criterion
     string crackPropagationCriterion;
+    // Parameters in the empirical criterion
+    // (KI/KIc)^p+(KII/KIIc)^q=1 for crack initialization (KIIc=r*KIc)
+    double p,q,r;
     double CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&,
 		    const double&, const double&); 
   public:
