@@ -86,7 +86,7 @@ color="maroon">
     <center>
     <a NAME=figure-1.1>
     <p><img height="461" width="450" src="images/figures/1_1.gif"><br>
-    <b>Figure 1.1</b></p>
+    <b>Figure 1.1, SCIRun environment after building the Chapter 1 network</b></p>
     </center>
     <div align="left">
     <p>
@@ -106,7 +106,7 @@ color="maroon">
       since many of our example networks run with a variety of data inputs such as sphere, brain-EG, and utahtorso-lowres.
     </ol> 
 
-<p>To begin, we will construct a network that loads a geometric mesh from disk and render it to the screen.  In your Unix shell window:</p><br>
+<p>To begin, we will construct a network that loads a geometric mesh from disk and render it to the screen.  In your Unix shell window:</p>
 <ol>
   <li value="1.">Set your SCIRUN_DATA variable, pointing to the
   location of SCIRunData.  
@@ -135,20 +135,21 @@ color="maroon">
   start SCIRun.   
   <ol>
     <li value="1.">Change into your SCIRun/src/ directory, and
-    enter the command &quot;./scirun&quot;.  
+    enter the command &quot;./scirun&quot;.  SCIRun cannot be run as a background application.  
     <li value="2.">The SCIRun NetworkEditor window appears on your
     screen, as shown in 
-    <b>Figure 1.3.</b></ol>
+    <b>Figure 1.3.</b>.</ol>
+	<p> The NetworkEditor screen consists of three frames: the GlobalView frame in the left uppermost corner; the Error frame in the right uppermost corner, and the NetEdit frame which is the largest.  The NetEdit frame is a large area in which you will construct your networks of modules. Since the NetEdit frame is so extensive, the Global View frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red, during startup or during the execution of a net.  
     
     </div>
     <center>
     <p><img height="410" width="400" src="images/figures/1_3a.gif"><br>
-    <b>Figure 1.3</b></p>
+    <b>Figure 1.3, SCIRun environment showing blank NetworkEditor window</b></p>
     </center>
     <div align="left">
     <p><br>
     
-    <p>We will first create a FieldReader module,from the
+    <p>We will first create a FieldReader module. From the
     SCIRun menu, select DataIO/FieldReader, as shown in
     <b>Figure 1.3.1.</b> To find out more about using nets, see the <a
     HREF="../Guide/usersguide/srug4.html#sec:workingwithnets">User's Guide
@@ -163,21 +164,21 @@ color="maroon">
     <div align="left">
     <p><br>
     
-    <p>The module appears as a box on the network map, 
-    as seen in <b>Figure 1.4.</b><p>
+    <p>The module appears in the NetEdit frame, 
+    as shown in <b>Figure 1.4.</b><p>
     
     </div>
     <center>
     <p><img height="512" width="500" src="images/figures/1_4.gif"><br>
-    <b>Figure 1.4</b></p>
+    <b>Figure 1.4, showing the file browser window that corresponds to this module</b></p>
     </center>
     <div align="left">
     <p><br>
     
     <p>To continue creating the module:
     <ol>
-      <li value="1.">Press the user interface button to launch the file
-      browser window. 
+      <li value="1.">Press the user interface button (UI) to launch the file
+      browser window, titled "Open field file."  You should now have a  
       <li value+"2.">Type, or point-and-click navigate to the
       utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld input file.
       (this dataset is a low resolution tetrahedral mesh of a human
