@@ -711,8 +711,8 @@ void HDF5ProtoType::tcl_command(GuiArgs& args, void* userdata)
     
 	gui->execute(str.str().c_str());
       }
-#endif
     }
+#endif
   } else {
     Module::tcl_command(args, userdata);
   }
