@@ -152,11 +152,11 @@ class Diagram {
 
 	pack $ui.d
 
-	bind DiagramTags <ButtonPress> "$this-c ButtonPress %x %y %b "
-	bind DiagramTags <B1-Motion> "$this-c Motion %x %y 1 "
-	bind DiagramTags <B2-Motion> "$this-c Motion %x %y 2 "
-	bind DiagramTags <B3-Motion> "$this-c Motion %x %y 3 "
-	bind DiagramTags <ButtonRelease> "$this-c ButtonRelease %x %y %b "
+	bind $name-DiagramTags <ButtonPress> "$this-c ButtonPress %x %y %b "
+	bind $name-DiagramTags <B1-Motion> "$this-c Motion %x %y 1 "
+	bind $name-DiagramTags <B2-Motion> "$this-c Motion %x %y 2 "
+	bind $name-DiagramTags <B3-Motion> "$this-c Motion %x %y 3 "
+	bind $name-DiagramTags <ButtonRelease> "$this-c ButtonRelease %x %y %b "
 
 	bind DiagramZoom <KeyPress>   "$this zoom-key press %K; break" 
 	bind DiagramZoom <KeyRelease> "$this zoom-key release %K; break"
@@ -200,7 +200,8 @@ class Diagram {
     }
 
     method getbinds {} {
-	return DiagramTags
+	puts "getbinds =  $name-DiagramTags"
+	return $name-DiagramTags
     }
 
     method new-opt {} {
