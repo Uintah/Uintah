@@ -71,15 +71,15 @@ public:
 
   bool get_valid_nodes_and_data(vector<pair<TetVolMesh::Node::index_type, T> > &data) {
     data.erase(data.begin(), data.end());
-    if (basis_order() != 1) return false;
+    if (this->basis_order() != 1) return false;
     TetVolMesh::Node::iterator ni, nie;
-    mesh_->begin(ni);
-    mesh_->end(nie);
+    this->mesh_->begin(ni);
+    this->mesh_->end(nie);
     for (; ni != nie; ++ni) { 
       if (mask_[*ni]) { 
 	pair<TetVolMesh::Node::index_type, T> p;
 	p.first=*ni; 
-	p.second=fdata()[*ni];
+	p.second=this->fdata()[*ni];
 	data.push_back(p);
       }
     }
@@ -90,13 +90,13 @@ public:
   virtual ~MaskedTetVolField() {};
 
   bool value(T &val, typename TetVolMesh::Node::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
+  { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
   bool value(T &val, typename TetVolMesh::Edge::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
+  { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
   bool value(T &val, typename TetVolMesh::Face::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
+  { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
   bool value(T &val, typename TetVolMesh::Cell::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
+  { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
 
   void initialize_mask(char masked) {
     for (vector<char>::iterator c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
@@ -107,16 +107,16 @@ public:
   typedef GenericField<TetVolMesh,vector<T> > GF;
 
   void resize_fdata() {
-    if (basis_order() == 0)
+    if (this->basis_order() == 0)
     {
       typename GF::mesh_type::Cell::size_type ssize;
-      mesh_->size(ssize);
+      this->mesh_->size(ssize);
       mask_.resize(ssize);
     }
     else
     {
       typename GF::mesh_type::Node::size_type ssize;
-      mesh_->size(ssize);
+      this->mesh_->size(ssize);
       mask_.resize(ssize);
     }
     TetVolField<T>::resize_fdata();
