@@ -553,12 +553,16 @@ WARNING
      IntVector neighborsHigh() const;
      
      //////////
-     // Locations in space of opposite box corners:
+     // Locations in space of opposite box corners.
+     // These are in terms of cells positioned from the level's anchor,
+     // and they include extra cells
      IntVector d_lowIndex;
      IntVector d_highIndex;
 
      //////////
-     // Insert Documentation here.
+     // Locations in space of opposite box corners.
+     // There are in terms of cells positioned from the level's anchor,
+     // and represent the interior cells (no extra cells)
      IntVector d_inLowIndex;
      IntVector d_inHighIndex;
      IntVector d_nodeHighIndex;
