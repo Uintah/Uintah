@@ -31,6 +31,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/ManageFieldSet.tcl \
 	$(SRCDIR)/ManipFields.tcl \
+        $(SRCDIR)/ManipMatrix.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
 	$(SRCDIR)/Module.tcl \
