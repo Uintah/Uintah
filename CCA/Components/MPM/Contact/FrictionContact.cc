@@ -272,7 +272,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               int ip = i+1; int im = i-1;
               for (j = JLOW; j<JHIGH; j++) {
                 surnor = Vector(
-                       -(gmass[m][IV(ip,j,K)] - gmass[m][IV(ip,j,K)])/dx.x(),
+                       -(gmass[m][IV(ip,j,K)] - gmass[m][IV(im,j,K)])/dx.x(),
                        -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(),
                        0.0);
                 double length = surnor.length();
