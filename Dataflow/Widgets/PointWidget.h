@@ -54,7 +54,7 @@ public:
   void SetPosition( const Point& );
   Point GetPosition() const;
 
-  virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( GuiArgs& );
 
   // Variable indexs
   enum { PointVar };

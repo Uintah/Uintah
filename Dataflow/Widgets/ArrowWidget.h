@@ -61,7 +61,7 @@ public:
   void SetDirection( const Vector& v );
   const Vector& GetDirection();
 
-  virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( GuiArgs& );
 
   // Variable indexs         
   enum { PointVar, HeadVar, DistVar };

@@ -34,6 +34,7 @@
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomTorus.h>
 #include <Core/Geom/GeomSphere.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 
@@ -517,7 +518,7 @@ CriticalPointWidget::GetMaterialName( const Index mindex ) const
 
 
 void
-CriticalPointWidget::widget_tcl( TCLArgs& args )
+CriticalPointWidget::widget_tcl( GuiArgs& args )
 {
   if (args[1] == "translate")
   {

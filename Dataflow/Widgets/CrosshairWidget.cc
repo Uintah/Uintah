@@ -33,6 +33,7 @@
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
@@ -266,7 +267,7 @@ CrosshairWidget::GetMaterialName( const Index mindex ) const
 
 
 void
-CrosshairWidget::widget_tcl( TCLArgs& args )
+CrosshairWidget::widget_tcl( GuiArgs& args )
 {
   if (args[1] == "translate")
   {

@@ -58,7 +58,7 @@ public:
   void SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 );
   void GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const;
 
-  virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( GuiArgs& );
 
   // Variable indexs
   enum { CenterVar };

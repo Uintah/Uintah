@@ -38,11 +38,11 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
-#include <Core/Geom/Pickable.h>
+#include <Core/GeomInterface/Pickable.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/Switch.h>
 #include <Core/Geom/GuiGeom.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
@@ -57,7 +57,7 @@ class BaseConstraint;
 class ViewWindow;
 
 
-class BaseWidget : public TCL, public WidgetPickable {
+class BaseWidget : public GuiCallback, public WidgetPickable {
 public:
   BaseWidget( Module* module, CrowdMonitor* lock,
 	      const string& name,
@@ -119,7 +119,7 @@ public:
   void print( std::ostream& os ) const;
 
   void init_tcl();
-  void tcl_command( TCLArgs&, void* );
+  void tcl_command( GuiArgs&, void* );
    
   // Use this to pop up the widget ui.
   void ui() const;
@@ -169,7 +169,7 @@ protected:
    
   // Individual widgets use this for tcl if necessary.
   // tcl command in args[1], params in args[2], args[3], ...
-  virtual void widget_tcl( TCLArgs& );
+  virtual void widget_tcl( GuiArgs& );
 
   void CreateModeSwitch( const Index snum, GeomObj* o );
   void SetMode( const Index mode, const long swtchs );
@@ -177,6 +177,8 @@ protected:
   void FinishWidget();
 
   // Used to pass a material to .tcl file.
+  GuiInterface* gui;
+  GuiContext* ctx;
   GuiMaterial tclmat_;
 
   // These affect ALL widgets!!!

@@ -32,6 +32,7 @@
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
@@ -208,7 +209,7 @@ PointWidget::GetMaterialName( const Index mindex ) const
 
 
 void
-PointWidget::widget_tcl( TCLArgs& args )
+PointWidget::widget_tcl( GuiArgs& args )
 {
   if (args[1] == "translate")
   {

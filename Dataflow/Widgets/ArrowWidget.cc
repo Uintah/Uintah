@@ -35,6 +35,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GeomCylinder.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Constraints/DistanceConstraint.h>
@@ -337,7 +338,7 @@ ArrowWidget::GetMaterialName( const Index mindex ) const
 
 
 void
-ArrowWidget::widget_tcl( TCLArgs& args )
+ArrowWidget::widget_tcl( GuiArgs& args )
 {
   if (args[1] == "translate")
   {
