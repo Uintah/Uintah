@@ -71,6 +71,7 @@ WARNING
       virtual void getSizes(IntVector& low, IntVector& high,
 			    IntVector& siz, IntVector& strides) const = 0;
 
+     virtual RefCounted* getRefCounted() = 0;
    protected:
       SFCZVariableBase(const SFCZVariableBase&);
       SFCZVariableBase();

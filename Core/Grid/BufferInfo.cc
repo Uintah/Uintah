@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
+#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Core/Util/Assert.h>
 
 using namespace Uintah;
@@ -8,6 +9,7 @@ BufferInfo::BufferInfo()
 {
   have_datatype=false;
   free_datatype=false;
+  sendlist=0;
 }
 
 BufferInfo::~BufferInfo()
@@ -18,12 +20,14 @@ BufferInfo::~BufferInfo()
     if(free_datatypes[i])
       MPI_Type_free(&datatypes[i]);
   }
+  if(sendlist)
+    delete sendlist;
 }
 
 int
 BufferInfo::count() const
 {
-  return datatypes.size();
+  return (int)datatypes.size();
 }
 
 void
@@ -63,4 +67,36 @@ BufferInfo::get_type(void*& out_buf, int& out_count,
   out_buf=buf;
   out_count=cnt;
   out_datatype=datatype;
+}
+
+Sendlist::~Sendlist()
+{
+  if(obj && obj->removeReference())
+    delete obj;
+
+  // A little more complicated than normal, so that this doesn't need
+  // to be recursive...
+  Sendlist* p = next;
+  while(p){
+    if(p->obj->removeReference())
+      delete p->obj;
+    Sendlist* n = p->next;
+    p->next=0;  // So that DTOR won't recurse...
+    p->obj=0;
+    delete p;
+    p=n;
+  }
+}
+
+void BufferInfo::addSendlist(RefCounted* obj)
+{
+  obj->addReference();
+  sendlist=new Sendlist(sendlist, obj);
+}
+
+Sendlist* BufferInfo::takeSendlist()
+{
+  Sendlist* rtn = sendlist;
+  sendlist = 0; // They are now responsible for freeing...
+  return rtn;
 }

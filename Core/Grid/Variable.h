@@ -74,6 +74,7 @@ public:
   
   virtual void allocate(const Patch* patch) = 0;
 
+  virtual RefCounted* getRefCounted() = 0;
 protected:
   Variable();
   virtual ~Variable();

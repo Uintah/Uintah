@@ -50,6 +50,7 @@ WARNING
       virtual void getMPIBuffer(void*& buf, int& count,
 				MPI_Datatype& datatype, MPI_Op& op) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
+      virtual RefCounted* getRefCounted();
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();
