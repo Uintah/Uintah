@@ -45,9 +45,9 @@ class SCICORESHARE TrivialAllocator {
     };
     List* freelist;
     List* chunklist;
-    unsigned int nalloc;
-    unsigned int alloc_size;
-    unsigned int size;
+    unsigned long nalloc;
+    unsigned long alloc_size;
+    unsigned long size;
     Mutex lock;
     int ta_disable;
 public:
