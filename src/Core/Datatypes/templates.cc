@@ -126,10 +126,17 @@ template class GenericField<ContourMesh, vector<double> >;
 
 #include <Core/Datatypes/PropertyManager.h>
 template class Property<string>;
-template class Property<pair<double,double> >;
 template class Property<Array1<double> >;
 template class Property<Array1<Tensor> >;
 template class Property<pair<int,double> >;
+template class Property<pair<double,double> >;
+template class Property<pair<float,float> >;
+template class Property<pair<unsigned int,unsigned int> >;
+template class Property<pair<int,int> >;
+template class Property<pair<unsigned short,unsigned short> >;
+template class Property<pair<short,short> >;
+template class Property<pair<unsigned char,unsigned char> >;
+template class Property<pair<char,char> >;
 
 
 //! Compute the gradient g in cell ci.
