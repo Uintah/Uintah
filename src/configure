@@ -20500,7 +20500,8 @@ echo "${ECHO_T}yes." >&6
 fi
 
 if test "$HAVE_PNG" = "no"; then
-  # Try looking in a sci specific location
+  # Try looking in a sci specific location (but only if it exists)
+  if test -d /usr/sci/local; then
 
 ##
 ## BASE_LIB_PATH:
@@ -20528,7 +20529,6 @@ if test "$HAVE_PNG" = "no"; then
     fi
   fi
   eval png_lib_dir='"$_new_lib_path"'
-
 
 
 ##
@@ -21001,6 +21001,7 @@ _sci_includes=''
 ##
 
 
+  fi
 else
   if test "$_sci_optional" = "specific"; then
        # verify that it was found in the location requested.
@@ -22060,7 +22061,6 @@ fi
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
 
-#
 ##  --  search for scisock --------------------------------------
 
 
@@ -22070,7 +22070,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
 
 sci_defs_files="$sci_defs_files include/sci_defs/scisock_testdefs.h"
 
-#
 ##  --  search for unp --------------------------------------
 
 if test "$with_unp" = "yes"; then
@@ -40651,7 +40650,10 @@ _sci_lib="$sci_thirdparty_lib"
 _sci_inc="$sci_thirdparty_include"
 
 if test "$with_teem"; then
-  if test "$with_teem" != "yes"; then
+  if test "$with_teem" = "yes"; then
+    { echo "$as_me:$LINENO: WARNING: Teem is already required - you do not need to specify --with-teem." >&5
+echo "$as_me: WARNING: Teem is already required - you do not need to specify --with-teem." >&2;}
+  else
     # If --with-teem has a parameter, then use it
     _sci_lib="$with_teem"
     _sci_inc="$with_teem/include"
@@ -40684,10 +40686,6 @@ if test "$with_teem"; then
   eval _sci_lib='"$_new_lib_path"'
 
     _sci_optional=specific
-  fi
-else
-  if test "$pkg_rtrt" = "yes" && test "$pkg_BioPSE" != "yes" && test "$pkg_teem" != "yes" && test "$pkg_MatlabInterface" != "yes" && test "$pkg_Uintah" != "yes"; then
-     _sci_optional=optional
   fi
 fi
 
@@ -41719,16 +41717,20 @@ sci_defs_files="$sci_defs_files include/sci_defs/mdsplus_testdefs.h"
 # with_hdf5 agument or from a package in the aclocal.m4 it.
 # These are the only two locations that the sci_required_* should be set.
 
+_sci_lib="/usr/local/lib"			# default directory
+_sci_inc="/usr/local/include"
+
 if test "$sci_required_hdf5" = "yes"; then
+
+  _sci_optional=required
   if test "$with_hdf5"; then
-    _sci_lib="$with_hdf5/lib"			# user defined directory
-    _sci_inc="$with_hdf5/include"
-  else
-    _sci_lib="/usr/local/lib"			# default directory
-    _sci_inc="/usr/local/include"
+    if test "$with_hdf5" != "yes"; then
+      _sci_lib="$with_hdf5/lib"			# user defined directory
+      _sci_inc="$with_hdf5/include"
+      _sci_optional=specific
+    fi
   fi
 
-  # Basic check for the header file.
 
 ##
 ## SCI_TRY_LINK (HDF5):  hdf5 library and headers
@@ -41770,7 +41772,7 @@ if test "$sci_required_hdf5" = "yes"; then
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : optional
+## arg 9 : $_sci_optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -41789,8 +41791,8 @@ echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for hdf5 li
 fi
 
 
-echo "$as_me:$LINENO: checking for hdf5 library and headers (optional)" >&5
-echo $ECHO_N "checking for hdf5 library and headers (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for hdf5 library and headers ($_sci_optional)" >&5
+echo $ECHO_N "checking for hdf5 library and headers ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -41798,10 +41800,10 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for hdf5 library and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for hdf5 library and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for hdf5 library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for hdf5 library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -41939,7 +41941,7 @@ echo "$as_me: WARNING: The path given $the_path is not a valid directory... igno
    done
 fi
 
-if test "optional" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -42119,7 +42121,7 @@ eval INC_HDF5_H=''
 eval HAVE_HDF5_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "optional" != "optional"; then
+if test "$_sci_optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -42163,7 +42165,7 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 
-if test "optional" = "specific"; then
+if test "$_sci_optional" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
   for i in "" hdf5.h; do
@@ -42207,16 +42209,6 @@ _sci_includes=''
      DEF_HDF5="#define HAVE_HDF5 1"
   fi
 
-  # Since the library was searched for as "optional" in the SCI_TRY_LINK
-  # there will not be an error if it failed. As such, if the with_hdf5
-  # variable was used then a test for failure must be done.
-  if test "$with_hdf5" && test ! "$DEF_HDF5"; then
-    echo
-    { { echo "$as_me:$LINENO: error: One or more of the HDF5 components is missing." >&5
-echo "$as_me: error: One or more of the HDF5 components is missing." >&2;}
-   { (exit 1); exit 1; }; }
-    echo
-  fi
 fi #end sci_required_hdf5
 
 		# Place this var in the hdf5_testdefs.h.in
