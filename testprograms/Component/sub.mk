@@ -26,8 +26,7 @@ SUBDIRS := \
 	$(SRCDIR)/mitest	\
 	$(SRCDIR)/objects	\
 	$(SRCDIR)/pingpong	\
-	$(SRCDIR)/spectest      \
-	$(SRCDIR)/oneway
+	$(SRCDIR)/spectest      
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
