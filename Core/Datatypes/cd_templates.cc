@@ -48,6 +48,8 @@ using namespace SCIRun;
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/ImageField.h>
+#include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
@@ -112,6 +114,20 @@ template class GenericField<TriSurfMesh, vector<int> >;
 template class GenericField<TriSurfMesh, vector<short> >;
 template class GenericField<TriSurfMesh, vector<unsigned char> >;
 
+template class ImageField<Tensor>;
+template class ImageField<Vector>;
+template class ImageField<double>;
+template class ImageField<int>;
+template class ImageField<short>;
+template class ImageField<unsigned char>;
+template class GenericField<ImageMesh, FData2d<Tensor> >;
+template class GenericField<ImageMesh, FData2d<Vector> >;
+template class GenericField<ImageMesh, FData2d<double> >;
+template class GenericField<ImageMesh, FData2d<int> >;
+template class GenericField<ImageMesh, FData2d<short> >;
+template class GenericField<ImageMesh, FData2d<unsigned char> >;
+
+
 template class ContourField<Tensor>;
 template class ContourField<Vector>;
 template class ContourField<double>;
@@ -124,6 +140,19 @@ template class GenericField<ContourMesh, vector<double> >;
 template class GenericField<ContourMesh, vector<int> >;
 template class GenericField<ContourMesh, vector<short> >;
 template class GenericField<ContourMesh, vector<unsigned char> >;
+
+template class ScanlineField<Tensor>;
+template class ScanlineField<Vector>;
+template class ScanlineField<double>;
+template class ScanlineField<int>;
+template class ScanlineField<short>;
+template class ScanlineField<unsigned char>;
+template class GenericField<ScanlineMesh, vector<Tensor> >;
+template class GenericField<ScanlineMesh, vector<Vector> >;
+template class GenericField<ScanlineMesh, vector<double> >;
+template class GenericField<ScanlineMesh, vector<int> >;
+template class GenericField<ScanlineMesh, vector<short> >;
+template class GenericField<ScanlineMesh, vector<unsigned char> >;
 
 template class PointCloud<Tensor>;
 template class PointCloud<Vector>;

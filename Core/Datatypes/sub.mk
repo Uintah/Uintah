@@ -34,11 +34,13 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/Geom.c          	    \
         $(SRCDIR)/HexMesh.cc		    \
         $(SRCDIR)/Image.cc		    \
+        $(SRCDIR)/ImageMesh.cc		    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/MeshBase.cc		    \
         $(SRCDIR)/Path.cc		    \
 	$(SRCDIR)/PointCloudMesh.cc         \
         $(SRCDIR)/PropertyManager.cc	    \
+	$(SRCDIR)/ScanlineMesh.cc           \
         $(SRCDIR)/SparseRowMatrix.cc	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
         $(SRCDIR)/TetVolMesh.cc 	    \

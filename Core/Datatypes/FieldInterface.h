@@ -56,19 +56,20 @@ typedef GenericInterpolate<double> InterpolateToScalar;
 class ScalarFieldInterface {
 public:
   //! needed interface for LockingHandle
-  int ref_cnt;
   Mutex lock;
+  int ref_cnt;
 
   ScalarFieldInterface() :
-    lock("ScalarFieldInterface ref_cnt lock")
+    lock("ScalarFieldInterface ref_cnt lock"),
+    ref_cnt(0)
+    
   {
-    ref_cnt = 0;
   }
 
   ScalarFieldInterface(const ScalarFieldInterface&) :
-    lock("ScalarFieldInterface ref_cnt lock")
+    lock("ScalarFieldInterface ref_cnt lock"),
+    ref_cnt(0)
   {
-    ref_cnt = 0;
   }
   
   virtual ~ScalarFieldInterface() {}
@@ -77,6 +78,7 @@ public:
 				vector<bool> &success,
 				const vector<Point> &pts) const = 0;
 };
+
 
 typedef LockingHandle<ScalarFieldInterface> SFIHandle;
 
