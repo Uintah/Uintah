@@ -1,12 +1,15 @@
 #include <Packages/Uintah/Core/Grid/CCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
+extern Mutex varLock;
 
 CCVariableBase::~CCVariableBase()
 {
@@ -19,6 +22,7 @@ CCVariableBase::CCVariableBase()
 void CCVariableBase::getMPIBuffer(BufferInfo& buffer,
 				  const IntVector& low, const IntVector& high)
 {
+  varLock.lock();
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
   MPI_Datatype basetype=td->getMPIType();
   IntVector l, h, s, strides, dataLow;
@@ -39,4 +43,5 @@ void CCVariableBase::getMPIBuffer(BufferInfo& buffer,
   MPI_Type_free(&type2d);
   MPI_Type_commit(&type3d);
   buffer.add(startbuf, 1, type3d, true);
+  varLock.unlock();
 }

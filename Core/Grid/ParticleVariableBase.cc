@@ -1,11 +1,16 @@
 
 #include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
+
+#include <Core/Thread/Mutex.h>
+
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
+
+extern Mutex varLock;
 
 ParticleVariableBase::~ParticleVariableBase()
 {	
@@ -42,7 +47,14 @@ ParticleVariableBase& ParticleVariableBase::operator=(const ParticleVariableBase
 void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
 					ParticleSubset* sendset)
 {
+  varLock.lock();
+
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
+
+  //  cerr << "ParticleVariableBase::getMPIBuffer for a " <<  td->getName() 
+  //       << endl;
+  //  cerr << "   buffer: " << &buffer << ", sendset: " << sendset << "\n";
+
   bool linear=true;
   ParticleSubset::iterator iter = sendset->begin();
   if(iter != sendset->end()){
@@ -60,12 +72,17 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
   if(linear){
     buffer.add(buf, count, td->getMPIType(), false);
   } else {
-    vector<int> blocklens(sendset->numParticles(), 1);
+    vector<int> blocklens( count, 1);
     MPI_Datatype datatype;
+
+    //    cerr << "cnt: " << count << ", buf: " << buf << "\n";
+
     MPI_Type_indexed(count, &blocklens[0],
 		     sendset->getPointer(), td->getMPIType(), &datatype);
     MPI_Type_commit(&datatype);
     buffer.add(buf, 1, datatype, true);
   } 
+
+  varLock.unlock();
 }
 

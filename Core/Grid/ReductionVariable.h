@@ -3,8 +3,8 @@
 
 #include <Packages/Uintah/Core/Grid/ReductionVariableBase.h>
 #include <Packages/Uintah/Core/Grid/DataItem.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/TypeUtils.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ErrnoException.h>
