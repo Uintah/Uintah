@@ -74,6 +74,9 @@ C-----------------------------------------------------------------------
                GE = 0.5*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
                GP = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))*UU(I,J,K)
                GW = 0.5*(DEN(I-1,J,K)+DEN(I-2,J,K))*UU(I-1,J,K)
+c               GE = DEN(I,J,K)*(UU(I+1,J,K)+UU(I,J,K))
+c               GP = 0.0D0
+c               GW = DEN(I-1,J,K)*(UU(I,J,K)+UU(I-1,J,K))
                GN = 0.5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
                GNW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J+1,K))*VV(I-1,J+1,K)
                GS = 0.5*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
@@ -200,6 +203,7 @@ C-----------------------------------------------------------------------
                IF (COEFE.LT.0.0 .OR. COEFW.LT.0.0) TEW = 0.0
                IF (COEFN.LT.0.0 .OR. COEFS.LT.0.0) TNS = 0.0
                IF (COEFT.LT.0.0 .OR. COEFB.LT.0.0) TTB = 0.0
+c               if (tew*tns*ttb.eq.0.0) write(6,*) i,' ',j,' ',k
 c ** this is a version that uses double precision
                AEC = -0.5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
                AWC = 0.5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)

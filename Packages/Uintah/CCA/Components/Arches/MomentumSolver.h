@@ -115,6 +115,17 @@ public:
 				   const MaterialSet* matls,
 				   int index);
 
+      void solveInterm(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
+		 int index);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized momentum matrix
+      void sched_buildLinearMatrixInterm(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   int index);
+
 
 protected: 
 
@@ -156,6 +167,13 @@ private:
 			       DataWarehouse* new_dw,
 			       int index);
 
+      void buildLinearMatrixInterm(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     int index);
+   
 private:
 
       // computes coefficients
