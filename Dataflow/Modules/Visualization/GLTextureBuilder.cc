@@ -29,7 +29,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TCL.h>
 #include <Core/GuiInterface/TCLTask.h>
-#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <Dataflow/Network/Module.h>
 
 #include <sys/types.h>

@@ -18,7 +18,7 @@
 #ifndef UINTAH_GLTEXTURE3D_H
 #define UINTAH_GLTEXTURE3D_H
 
-#include <Core/Datatypes/GLTexture3D.h>
+#include <Core/GLVolumeRenderer/GLTexture3D.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Field.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
