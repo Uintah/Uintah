@@ -45,8 +45,12 @@ public:
   void setServices(const gov::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
   void addModule(const char *name, gov::cca::ports::UIPort::pointer &uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
-  void addConnection(Module *m1, int portnum1, Module *m2, int portnum2);	
+  void addConnection(Module *m1, const std::string & portname1, Module *m2, const std::string & portname2);	
   void removeConnection(QCanvasItem *c);
+  void highlightConnection(QCanvasItem *c);
+  void showPossibleConnections(Module *m, 
+			       const std::string &protname, Module::PortType);
+  void clearPossibleConnections();
 protected:
   void contentsMousePressEvent(QMouseEvent*);
   void contentsMouseMoveEvent(QMouseEvent*);
@@ -56,10 +60,12 @@ private:
   Module* moving;
   Module* connecting;
   Module::PortType porttype;
-  int portnum;	
+  std::string portname;	
   QPoint moving_start;
   std::vector<Module*> modules;
   std::vector<Connection*> connections;
+  std::vector<Connection*> possibleConns;
+  Connection *highlightedConnection;
   NetworkCanvasView(const NetworkCanvasView&);
   NetworkCanvasView& operator=(const NetworkCanvasView&);
   
@@ -67,6 +73,12 @@ private:
 };
 //}
 #endif
+
+
+
+
+
+
 
 
 

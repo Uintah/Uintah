@@ -39,6 +39,7 @@ NetworkCanvasView::NetworkCanvasView(QCanvas* canvas, QWidget* parent)
   : QCanvasView(canvas, parent)
 {
 	moving=connecting=0;
+	highlightedConnection=0;
 }
 
 NetworkCanvasView::~NetworkCanvasView()
@@ -63,9 +64,12 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 		     if( (QWidget*)(*it)==who ){
 			QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
 		        cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;	
-			if((*it)->clickedPort(localpos, porttype, portnum)){
-				connecting= *it;
-				return;
+			if((*it)->clickedPort(localpos, porttype, portname)){
+
+	
+			  connecting= *it;
+			  showPossibleConnections(connecting, portname, porttype);
+			  return;
 			}
 		     }
 		}
@@ -85,31 +89,18 @@ void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* e)
 {
         //IMPORTANT NOTES: e->pos() returns the mouse point in the canvas coordinates
         //cerr<<"MousePress e->pos()="<<e->pos().x()<<endl;
-        QPoint p = contentsToViewport(e->pos());
-        QWidget *who=childAt(p);
-  if(connecting)
-  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
-     if( (QWidget*)(*it)==who ){
-             if( (QWidget*)(*it)==who ){
-                        QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
-                        cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;
-                       	int portnum1=0;
-			Module::PortType porttype1=Module::USES;
-			 if((*it)->clickedPort(localpos, porttype1, portnum1)){
-				if(connecting!=(*it) && porttype!=porttype1){ 
-					if(porttype==Module::USES)
-						addConnection(connecting, portnum, *it, portnum1); 
-		                	else
-						addConnection(*it, portnum1, connecting, portnum); 
-
-			 cerr<<"Connection added"<<endl;
-				}
-                        }
-		   break;		
-             }
-     }
+   if(connecting && highlightedConnection!=0){
+ 
+      if(porttype==Module::USES)
+	addConnection(connecting, portname, highlightedConnection->getProvidesModule(),
+		    highlightedConnection->getProvidesPortName());
+      else
+	addConnection(highlightedConnection->getUsesModule(),
+		      highlightedConnection->getUsesPortName(), connecting, portname); 
   }
+  clearPossibleConnections();
   connecting=0;
+  highlightedConnection=0;
   moving = 0;
 }
 
@@ -117,6 +108,7 @@ void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* e)
 
 void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 {
+
   if ( moving ) {
 		int dx=0;
 		int dy=0;
@@ -186,6 +178,12 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 		}
     canvas()->update();
   }
+  if(connecting){
+
+          QCanvasItemList lst=canvas()->collisions(e->pos());
+          if(lst.size()>0) highlightConnection(lst[0]);
+	  else if(highlightedConnection!=0) highlightConnection(0);
+  }
 }
 
 void NetworkCanvasView::addModule(const char *name, gov::cca::ports::UIPort::pointer &uip,CIA::array1<std::string> & up, CIA::array1<std::string> &pp , const gov::cca::ComponentID::pointer &cid)
@@ -197,18 +195,18 @@ void NetworkCanvasView::addModule(const char *name, gov::cca::ports::UIPort::poi
 	module->show();		
 }
 
-void NetworkCanvasView::addConnection(Module *m1,int portnum1,  Module *m2, int portnum2)
+void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  Module *m2, const std::string &portname2)
 {
 
 gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
-  bs->connect(m1->cid, m1->usesPortName(portnum1), m2->cid, m2->providesPortName(portnum2));
+  gov::cca::ConnectionID::pointer connID=bs->connect(m1->cid, portname1, m2->cid, portname2);
 
   services->releasePort("cca.builderService");
 
-	Connection *con=new Connection(m1,portnum1, m2,portnum2, this);
+	Connection *con=new Connection(m1,portname1, m2,portname2, connID,this);
 
 
 	con->show();
@@ -228,6 +226,12 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
 		//canvas()->removeChild(c); //
                 cerr<<"connection.size()="<<connections.size()<<endl;
                 cerr<<"all item.size before del="<<canvas()->allItems().size()<<endl;
+		gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+		if(bs.isNull()){
+		  cerr << "Fatal Error: Cannot find builder service\n";
+		}
+		bs->disconnect((*iter)->getConnectionID(),0);
+		services->releasePort("cca.builderService");		
 		delete c;
                 cerr<<"all item.size after del="<<canvas()->allItems().size()<<endl;
 	        canvas()->update();
@@ -237,9 +241,85 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
 	}
 }
 
-
-
 void NetworkCanvasView::setServices(const gov::cca::Services::pointer &services)
 {
 	this->services=services;
 }
+
+
+void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &portname,
+						Module::PortType porttype)
+{
+  
+  gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  if(bs.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+  }
+
+  cerr<<"Possible Ports:"<<endl;
+  for(unsigned int i=0; i<modules.size(); i++){
+      CIA::array1<std::string> portList=bs->getAvailablePortList(m->cid,portname,modules[i]->cid );
+      for(unsigned int j=0; j<portList.size(); j++){
+	Connection *con;
+	if(porttype==Module::USES)
+	   con=new Connection(m,portname, modules[i],portList[j], 
+			      gov::cca::ConnectionID::pointer(0),this);			      
+	else			       
+	   con=new Connection(modules[i],portList[j], m, portname, 
+			     gov::cca::ConnectionID::pointer(0),this);
+	con->show();
+	possibleConns.push_back(con);
+	canvas()->update();
+	cerr<<portList[j]<<endl;
+      }
+  }    
+  services->releasePort("cca.builderService");		
+	  
+  
+}
+
+void NetworkCanvasView::clearPossibleConnections()
+{
+
+	for(unsigned int i=0; i<possibleConns.size(); i++){
+	   delete possibleConns[i];
+        }
+	possibleConns.erase(possibleConns.begin(),possibleConns.end());
+	canvas()->update();
+}  
+
+void NetworkCanvasView::highlightConnection(QCanvasItem *c)
+{
+
+	//cerr<<"Highlight"<<endl;
+  if(highlightedConnection!=0){
+    highlightedConnection->setDefault();
+    highlightedConnection->hide();
+    canvas()->update();
+    highlightedConnection->show();
+    canvas()->update();
+    highlightedConnection=0;  
+  }
+
+
+	for(unsigned int i=0; i<possibleConns.size();i++){
+	  if((QCanvasItem*) (possibleConns[i])==c){
+	     possibleConns[i]->highlight();
+	     possibleConns[i]->hide();
+	     canvas()->update();
+	     possibleConns[i]->show();
+	     canvas()->update();
+	     highlightedConnection=possibleConns[i];
+	     break;
+	  }			
+	}
+
+}
+
+
+
+
+
+
+
+

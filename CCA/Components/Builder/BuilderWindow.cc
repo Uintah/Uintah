@@ -145,7 +145,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   QCanvasView* miniview = new QCanvasView(minicanvas, hsplit);
   QVBox* layout3 = new QVBox(hsplit);
   QHBox* layout4 = new QHBox(layout3);
-  QLabel* message_label = new QLabel(" Messages: ", layout4);
+  new QLabel(" Messages: ", layout4);
 //  QMimeSourceFactory::defaultFactory()->setPixmap("fileopen", QPixmap(SCIRun_logo));
 //  QLabel* logo_image = new QLabel("SCIRun logo", layout4);
 //  logo_image->setPixmap( QPixmap(SCIRun_logo));
@@ -374,14 +374,14 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
   cerr<<"Uses Port size="<<usesPorts.size()<<endl;
 
-  for(int i=0;i<usesPorts.size();i++){
+  for(unsigned int i=0;i<usesPorts.size();i++){
 	cerr<<"Uses Port # "<<i<<"="<<usesPorts[i]<<endl;
   }	
 	
   CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
   cerr<<"Provides Port size="<<providesPorts.size()<<endl;
 
-  for(int i=0;i<providesPorts.size();i++){
+  for(unsigned int i=0;i<providesPorts.size();i++){
         cerr<<"Provides Port # "<<i<<"="<<providesPorts[i]<<endl;
   }
 

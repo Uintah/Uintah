@@ -21,6 +21,7 @@
 #include <qimage.h>
 #include <qpixmap.h>
 #include "ZList.h"
+#include <string.h>
 static QPixmap uic_load_pixmap_ListForm( const QString &name )
 {
     const QMimeSource *m = QMimeSourceFactory::defaultFactory()->data( name );
@@ -96,6 +97,15 @@ ListForm::ListForm(ZList *com, QWidget* parent,  const char* name, bool modal, W
     connect( closePushButton, SIGNAL( clicked() ), this, SLOT( close() ) );
     connect( numListBox, SIGNAL( highlighted(int) ), this, SLOT( enableDelete(int) ) );
     connect( deletePushButton, SIGNAL( clicked() ), this, SLOT( del() ) );
+
+    if(com->datalist.size()>0){
+        numListBox->clear();
+	for(unsigned int i=0; i<com->datalist.size();i++){
+	  char s[20];
+	  sprintf(s,"%lf",com->datalist[i]);
+	    numListBox->insertItem(s, i);
+	}    
+    } 
 }
 
 /*  

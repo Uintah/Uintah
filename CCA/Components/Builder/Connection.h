@@ -19,19 +19,35 @@
 #include <vector>
 #include <qlayout.h>
 #include <qpainter.h>
+#include <SCIRun/CCA/ConnectionID.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include "Module.h"
+
+using namespace SCIRun;
 
 class Connection:public QCanvasPolygon
 {
 public:
-  Connection(Module*, int, Module*, int, QCanvasView *cv);
+  Connection(Module*, const std::string&, Module*, const std::string&, const gov::cca::ConnectionID::pointer &connID,  QCanvasView *cv);
 	void resetPoints();
 	bool isConnectedTo(Module *);
+	ConnectionID::pointer getConnectionID();
+	void highlight();
+	void setDefault();
+	Module * getUsesModule();
+	Module * getProvidesModule();
+	std::string getUsesPortName();
+	std::string getProvidesPortName();
 protected:
 	void drawShape ( QPainter & );
 	QCanvasView *cv;
 	Module *pUse, *pProvide;
-	int portnum1, portnum2;
+	std::string portname1, portname2;
+	ConnectionID::pointer connID;
+	QColor color;
 };
 
 #endif
+
+
+

@@ -1,16 +1,19 @@
 #include "Connection.h"
 
-Connection::Connection(Module *pU, int portnum1, Module *pP, int portnum2, QCanvasView *cview)
+Connection::Connection(Module *pU, const std::string &portname1, Module *pP, 
+		       const std::string &portname2,
+		       const gov::cca::ConnectionID::pointer &connID,QCanvasView *cview)
   :QCanvasPolygon(cview->canvas())
 
 {
-	this->portnum1=portnum1;
-	this->portnum2=portnum2;
-	
-		pUse=pU;
-		pProvide=pP;
-		cv=cview;
-		resetPoints();
+	this->portname1=portname1;
+	this->portname2=portname2;
+	this->connID=connID;
+	pUse=pU;
+	pProvide=pP;
+	cv=cview;
+	resetPoints();
+	setDefault();	
 }
 
 bool Connection::isConnectedTo(Module *who)
@@ -21,8 +24,8 @@ bool Connection::isConnectedTo(Module *who)
 
 void Connection::resetPoints()
 {
-		QPoint R=pUse->usePortPoint(portnum1)+QPoint(cv->childX(pUse),cv->childY(pUse));
-		QPoint P=pProvide->providePortPoint(portnum2)+QPoint(cv->childX(pProvide),cv->childY(pProvide));
+		QPoint R=pUse->usePortPoint(portname1)+QPoint(cv->childX(pUse),cv->childY(pUse));
+		QPoint P=pProvide->providePortPoint(portname2)+QPoint(cv->childX(pProvide),cv->childY(pProvide));
     QRect rUse(cv->childX(pUse),cv->childY(pUse),pUse->width(),pUse->height() );
 		QRect rProvide(cv->childX(pProvide),cv->childY(pProvide),pProvide->width(),pProvide->height() );
 
@@ -97,11 +100,44 @@ void Connection::drawShape ( QPainter & p)
 	QPointArray par(6);
 	for(int i=0;i<6;i++)	par[i]=(points()[i]+points()[11-i])/2;
 
-	p.setPen(QPen(yellow,4));
+	p.setPen(QPen(color,4));
 	p.setBrush(blue);
 	p.drawPolyline(par);
 	//p.drawPolygon(points());
 }
 
+ConnectionID::pointer Connection::getConnectionID()
+{
+  return connID;
+}
+
+void Connection:: setDefault()
+{
+  color=yellow;
+}
+
+void Connection:: highlight()
+{
+  color=red;
+}
 
 
+Module * Connection::getUsesModule()
+{
+  return pUse;
+}
+
+Module * Connection::getProvidesModule()
+{
+  return pProvide;
+}
+
+std::string Connection::getUsesPortName()
+{
+  return portname1;    
+}
+
+std::string Connection::getProvidesPortName()
+{
+  return portname2;
+}
