@@ -132,7 +132,8 @@ WARNING
       // Node Centered (NC) Variables
       virtual void allocateTemporary(NCVariableBase&, const Patch*,
 				     Ghost::GhostType = Ghost::None,
-				     int numGhostCells = 0) = 0;
+				     int numGhostCells = 0,
+				     const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
       virtual void allocateAndPut(NCVariableBase&, const VarLabel*,
 				  int matlIndex, const Patch*,
 				  Ghost::GhostType = Ghost::None,
@@ -141,6 +142,9 @@ WARNING
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(NCVariableBase&, const VarLabel*,
 				 int matlIndex, const Patch*) = 0;
+      virtual void getRegion(constNCVariableBase&, const VarLabel*,
+			     int matlIndex, const Level* level,
+			     const IntVector& low, const IntVector& high) = 0;
       void copyOut(NCVariableBase& var, const VarLabel* label, int matlIndex,
 		   const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 		   int numGhostCells = 0)
@@ -155,7 +159,8 @@ WARNING
       // Cell Centered (CC) Variables
       virtual void allocateTemporary(CCVariableBase&, const Patch*, 
 				     Ghost::GhostType = Ghost::None,
-				     int numGhostCells = 0) = 0;
+				     int numGhostCells = 0,
+				     const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
       virtual void allocateAndPut(CCVariableBase&, const VarLabel*,
 				  int matlIndex, const Patch*, 
 				  Ghost::GhostType = Ghost::None,
@@ -164,6 +169,9 @@ WARNING
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(CCVariableBase&, const VarLabel*,
 				 int matlIndex, const Patch*) = 0;
+      virtual void getRegion(constCCVariableBase&, const VarLabel*,
+			     int matlIndex, const Level* level,
+			     const IntVector& low, const IntVector& high) = 0;
       void copyOut(CCVariableBase& var, const VarLabel* label, int matlIndex,
 		   const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 		   int numGhostCells = 0)
@@ -178,13 +186,17 @@ WARNING
       // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
       virtual void allocateTemporary(SFCXVariableBase&, const Patch*,
 				     Ghost::GhostType = Ghost::None,
-				     int numGhostCells = 0) = 0;
+				     int numGhostCells = 0,
+				     const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
       virtual void allocateAndPut(SFCXVariableBase&, const VarLabel*,
 				  int matlIndex, const Patch*,
 				  Ghost::GhostType = Ghost::None,
 				  int numGhostCells = 0) = 0;
       virtual void get(constSFCXVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
+			     int matlIndex, const Level* level,
+			     const IntVector& low, const IntVector& high) = 0;
       virtual void getModifiable(SFCXVariableBase&, const VarLabel*,
 				 int matlIndex, const Patch*) = 0;
       void copyOut(SFCXVariableBase& var, const VarLabel* label, int matlIndex,
@@ -200,7 +212,8 @@ WARNING
 
       virtual void allocateTemporary(SFCYVariableBase&, const Patch*,
 				     Ghost::GhostType = Ghost::None,
-				     int numGhostCells = 0) = 0;
+				     int numGhostCells = 0,
+				     const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
       virtual void allocateAndPut(SFCYVariableBase&, const VarLabel*,
 				  int matlIndex, const Patch*,
 				  Ghost::GhostType = Ghost::None,
@@ -209,6 +222,9 @@ WARNING
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(SFCYVariableBase&, const VarLabel*,
 				 int matlIndex, const Patch*) = 0;
+      virtual void getRegion(constSFCYVariableBase&, const VarLabel*,
+			     int matlIndex, const Level* level,
+			     const IntVector& low, const IntVector& high) = 0;
       void copyOut(SFCYVariableBase& var, const VarLabel* label, int matlIndex,
 		   const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 		   int numGhostCells = 0)
@@ -222,7 +238,8 @@ WARNING
 
       virtual void allocateTemporary(SFCZVariableBase&, const Patch*,
 				     Ghost::GhostType = Ghost::None,
-				     int numGhostCells = 0) = 0;
+				     int numGhostCells = 0,
+				     const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
       virtual void allocateAndPut(SFCZVariableBase&, const VarLabel*,
 				  int matlIndex, const Patch*,
 				  Ghost::GhostType = Ghost::None,
@@ -231,6 +248,9 @@ WARNING
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void getModifiable(SFCZVariableBase&, const VarLabel*,
 				 int matlIndex, const Patch*) = 0;
+      virtual void getRegion(constSFCZVariableBase&, const VarLabel*,
+			     int matlIndex, const Level* level,
+			     const IntVector& low, const IntVector& high) = 0;
       void copyOut(SFCZVariableBase& var, const VarLabel* label, int matlIndex,
 		   const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 		   int numGhostCells = 0)
