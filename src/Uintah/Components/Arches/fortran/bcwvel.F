@@ -75,7 +75,7 @@ c     Start :
 c*********************************************************************
       ISTU = idxLoW(1)+1
       JSTU = idxLoW(2)+1
-      KSTU = idxLoW(3)+1
+      KSTU = idxLoW(3)+2
       IENDU = idxHiW(1)-1
       JENDU = idxHiW(2)-1
       KENDU = idxHiW(3)-1
@@ -88,8 +88,8 @@ c------------------------------------------------------------------
          do 810 j=jstu, jendu
             do 800 i=istu, iendu
 
-               if (pcell(i-1,j,k).eq.wall.or.
-     $              pcell(i,j,k).eq.wall)
+               if (pcell(i,j,k).eq.wall.or.
+     $              pcell(i,j,k-1).eq.wall)
      $              call fixval(zero,ae(i,j,k),aw(i,j,k),an(i,j,k),
      $                          as(i,j,k),at(i,j,k),ab(i,j,k),
      $              su(i,j,k),sp(i,j,k),const)
@@ -255,6 +255,9 @@ c                  SU(I+1,J,K+1) = SUL(I+1,J,K+1)
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/08/17 20:32:02  rawat
+c Fixed some bugs
+c
 c Revision 1.1  2000/07/14 03:58:43  bbanerje
 c Added missed files.
 c

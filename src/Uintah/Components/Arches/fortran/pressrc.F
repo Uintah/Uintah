@@ -2,7 +2,7 @@ c
 c $Id$
 c
       subroutine pressrc(domLo, domHi, idxLo, idxHi, 
-     $     su, sp, 
+     $     sp, su, 
      &     den, old_den,
      &     domLoU, domHiU, uu, 
      $     aup, aue, auw, aun, aus, aut, aub, suu,
@@ -266,6 +266,9 @@ c        convs = convs/((KEND-KST+1)*(JEND-JST+1)*(IEND-IST+1))
          end
 c
 c $Log$
+c Revision 1.3  2000/08/17 20:32:02  rawat
+c Fixed some bugs
+c
 c Revision 1.2  2000/07/17 22:07:03  rawat
 c modified momentum source
 c

@@ -194,10 +194,25 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
     computePressResidual(pc, patch, old_dw, new_dw, vars);
     pressResid = vars->residPress;
     ++pressIter;
-  } while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)||
-				      (pressResid > trunc_conv)));
+  } while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)));
+  // while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)||
+  //			      (pressResid > trunc_conv)));
   cerr << "After pressure solve " << pressIter << " " << pressResid << endl;
   cerr << "After pressure solve " << nlResid << " " << trunc_conv <<  endl;
+#ifdef ARCHES_DEBUG
+  cerr << " After Pressure solve : " << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "pressure for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(10);
+	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+#endif
+
   
 
 }
@@ -779,6 +794,9 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.20  2000/08/17 20:32:00  rawat
+// Fixed some bugs
+//
 // Revision 1.19  2000/08/15 00:23:32  rawat
 // added explicit solve for momentum and scalar eqns
 //
