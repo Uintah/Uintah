@@ -219,7 +219,7 @@ get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &, int);
 template <class Fdata>
 void* get_raw_data_ptr(Fdata &data, int pad) {
 
-  if (pad > 0) {
+  if (pad > 3) {
     int sz = data.size() * pad;
     double *new_data = new double[sz];
     double *p = new_data;
@@ -403,7 +403,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   // create the Data Nrrd
   if (compute_data_p)
   {
-    if (pad_data)
+    if (pad_data > 3)
     {
       ndata = scinew NrrdData();
     }
