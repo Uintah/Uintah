@@ -100,7 +100,6 @@ SynchronizeGeometry::do_execute()
 int
 SynchronizeGeometry::enforce_barrier(MessageBase* msg)
 {
-  const bool enforce = gui_enforce_.get();
   GeometryComm* gmsg = (GeometryComm*)msg;
 
   switch (msg->type)
@@ -120,7 +119,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
   case MessageTypes::GeometryDelObj:
   case MessageTypes::GeometryDelAll:
   case MessageTypes::GeometryAddObj:
-    if (enforce)
+    if (gui_enforce_.get())
     {
       append_msg(gmsg);
     }
@@ -138,7 +137,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
 
   case MessageTypes::GeometryFlush:
   case MessageTypes::GeometryFlushViews:
-    if (enforce)
+    if (gui_enforce_.get())
     {
       append_msg(gmsg);
       forward_saved_msg();
