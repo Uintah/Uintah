@@ -14,6 +14,7 @@
 
 #include "TestSuite/SuiteTree.h"
 #include "TestMatrix3/testmatrix3.h"
+#include "TestConsecutiveRangeSet/TestConsecutiveRangeSet.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -62,6 +63,7 @@ int main(int argc, char* argv[])
 
   // populate the suites tree
   suites->addSubTree(matrix3TestTree());
+  suites->addSubTree(ConsecutiveRangeSetTestTree());
 
   /* ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES */
 
