@@ -247,16 +247,16 @@ case $host in
              echo "no"
            fi
            if test "${CC}" = "" ; then
-             if which CC > /dev/null 2>&1 ; then
-               CXX=`which CC`
+             if type CC | sed 's/^.* //' > /dev/null 2>&1 ; then
+               CXX=`type CC | sed 's/^.* //' `
                echo "Using C++ compiler ${CXX}"
              fi
-             if which cc > /dev/null 2>&1 ; then
-               CC=`which cc`
+             if type cc | sed 's/^.* //' > /dev/null 2>&1 ; then
+               CC=`type cc | sed 's/^.* //' `
                echo "Using C compiler ${CC}"
              fi
-             if which as > /dev/null 2>&1 ; then
-               AS=`which as`
+             if type as | sed 's/^.* //' > /dev/null 2>&1 ; then
+               AS=`type as | sed 's/^.* //' `
                echo "Using Assembler ${AS}"
              fi
            fi
@@ -414,7 +414,7 @@ AC_SUBST(MAKE_PARALLELISM)
 
 echo -n "Looking for Pre-built TCL 8.0.4... "
 unset Wish80
-if Wish80="`which tclsh8.0`" ; then
+if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
   unset cfsh
   cfsh="`dirname $Wish80`/../lib/tclConfig.sh"
   if test -f $cfsh ; then
@@ -448,7 +448,7 @@ AC_SUBST(TCL_LIB_FLAG)
 
 echo -n "Looking for Pre-built Tk 8.0.4... "
 unset Wish80
-if Wish80="`which wish8.0`" ; then
+if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
   unset cfsh
   cfsh="`dirname $Wish80`/../lib/tkConfig.sh"
   if test -f $cfsh ; then
@@ -493,7 +493,7 @@ AC_SUBST(TK_LIB_FLAG)
 echo -n "Looking for Pre-built iTk 3.0... "
 if test "$BUILDING_TK" = "" ; then
   unset Wish80
-  if sh="`which itkwish3.0`" ; then
+  if sh="`type itkwish3.0 | sed 's/^.* //'`" ; then
     unset cfsh
     shdir="`dirname $sh`"
     cfsh="$shdir/../lib/itkConfig.sh"
@@ -524,7 +524,7 @@ AC_SUBST(ITCL_WIDGETS)
 ##-- Find BLT ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built blt2.4... "
-if sh="`which bltwish24`" ; then
+if sh="`type bltwish24 | sed 's/^.* //'`" ; then
   shdir="`dirname $sh`"
   BLT_PREFIX="`cd $shdir/.. ; pwd`"
   BLT_INCLUDE_DIR="${BLT_PREFIX}/include"
