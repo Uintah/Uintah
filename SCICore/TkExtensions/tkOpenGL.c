@@ -12,8 +12,10 @@
 #include <stdio.h>
 #include <tkPort.h>
 #include <tkInt.h>
+#ifdef _WIN32
 #include <tkWinInt.h>
 #include <tkWinPort.h>
+#endif
 
 #include <GL/gl.h>
 #include <GL/glu.h>

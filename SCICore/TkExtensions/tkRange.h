@@ -19,16 +19,16 @@
 #define TK_RANGE_H 1
 
 #ifndef _TK
-#define BUILD_tk
+
 #include "tk.h"
-#undef BUILD_tk
+
 #endif
 
 #include <SCICore/share/share.h>
 
 #if defined BUILD_tk || defined BUILD_SCICORE
 # undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS __declspec(dllexport)
+# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -244,11 +244,13 @@ EXTERN int		TkpValueToPixel _ANSI_ARGS_((TkRange *rangePtr,
 			    double value));
 
 # undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS __declspec(dllimport)
+# define TCL_STORAGE_CLASS  DLLIMPORT
 
+#ifdef _WIN32
 EXTERN Tk_Uid tkDisabledUid;
 EXTERN Tk_Uid tkActiveUid;
 EXTERN Tk_Uid tkNormalUid;
+#endif
 
 /* These are in tk/unix/tkUnixDefault.h for all other widgets. */
 
