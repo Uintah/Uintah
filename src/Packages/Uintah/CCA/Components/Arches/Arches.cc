@@ -282,8 +282,9 @@ Arches::sched_paramInit(const LevelP& level,
 
     for (int ii = 0; ii < d_nofScalars; ii++) 
       tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
-    for (int ii = 0; ii < d_nofScalarStats; ii++) {
-      tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarStat
+    if (d_nofScalarStats > 0) {
+      for (int ii = 0; ii < d_nofScalarStats; ii++)
+        tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarStat
       tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarStat
     }
     if (d_calcReactingScalar)
@@ -565,10 +566,13 @@ Arches::paramInit(const ProcessorGroup* ,
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
-    for (int ii = 0; ii < d_nofScalarStats; ii++) {
-      new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    if (d_nofScalarStats > 0) {
+      for (int ii = 0; ii < d_nofScalarStats; ii++) {
+        new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
+        scalarVar_new[ii].initialize(0.0);
+      }
       new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, matlIndex, patch);
-      
+      scalarDiss_new.initialize(0.0);  
     }
     CCVariable<double> reactscalar;
     if (d_calcReactingScalar) {
