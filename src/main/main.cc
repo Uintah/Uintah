@@ -200,7 +200,15 @@ main(int argc, char *argv[], char **envp) {
 
   // Start up TCL...
   TCLTask* tcl_task = new TCLTask(1, argv);// Only passes program name to TCL
-  Thread* t=new Thread(tcl_task, "TCL main event loop");
+  // We need to start the thread in the NotActivated state, so we can
+  // change the stack size.  The 0 is a pointer to a ThreadGroup which
+  // will default to the global thread group.
+  Thread* t=new Thread(tcl_task, "TCL main event loop",
+		       0, Thread::NotActivated);
+  t->setStackSize(1024*1024);
+  // False here is stating that the tread was stopped or not.  Since
+  // we have never started it the parameter should be false.
+  t->activate(false);
   t->detach();
   tcl_task->mainloop_waitstart();
 
