@@ -450,8 +450,7 @@ public:
     ASSERTFAIL("LatVolMesh::get_edges not implemented."); }
   void get_edges(Edge::array_type &, Cell::index_type) const {
     ASSERTFAIL("LatVolMesh::get_edges not implemented."); }
-  void get_faces(Face::array_type &, Cell::index_type) const {
-    ASSERTFAIL("LatVolMesh::get_faces not implemented."); }
+  void get_faces(Face::array_type &, Cell::index_type) const;
 
   //! get the parent element(s) of the given index
   unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
@@ -478,10 +477,10 @@ public:
   
   //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/,
-		    Face::index_type /*idx*/) const {
-    ASSERTFAIL("LatVolMesh::get_neighbor not implemented.");
-  }
+  bool get_neighbor(Cell::index_type &neighbor,
+		    const Cell::index_type &from,
+		    const Face::index_type &face) const;
+
   //! get the center point (in object space) of an element
   void get_center(Point &, Node::index_type) const;
   void get_center(Point &, Edge::index_type) const;

@@ -224,6 +224,30 @@ LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
   array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
 }
 
+
+void
+LatVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
+{
+  array.resize(6);
+
+  const unsigned int i = idx.i_;
+  const unsigned int j = idx.j_;
+  const unsigned int k = idx.k_;
+
+  const unsigned int offset1 = (nx_ - 1) * (ny_ - 1) * nz_;
+  const unsigned int offset2 = offset1 + nx_ * (ny_ - 1) * (nz_ - 1);
+
+  array[0] = i + (j + k * (ny_-1)) * (nx_-1);
+  array[1] = i + (j + (k+1) * (ny_-1)) * (nx_-1);
+
+  array[2] = offset1 + j + (k + i * (nz_-1)) * (ny_-1);
+  array[3] = offset1 + j + (k + (i+1) * (nz_-1)) * (ny_-1);
+
+  array[4] = offset2 + k + (i + j * (nx_-1)) * (nz_-1);
+  array[5] = offset2 + k + (i + (j+1) * (nx_-1)) * (nz_-1);
+}
+
+
 //! return all cell_indecies that overlap the BBox in arr.
 
 void
@@ -246,6 +270,87 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
       }
     }
   }
+}
+
+
+bool
+LatVolMesh::get_neighbor(Cell::index_type &neighbor,
+			 const Cell::index_type &from,
+			 const Face::index_type &face) const
+{
+  const unsigned int xidx = face;
+  if (xidx < (nx_ - 1) * (ny_ - 1) * nz_)
+  {
+    //const unsigned int i = xidx % (nx_ - 1);
+    const unsigned int jk = xidx / (nx_ - 1);
+    //const unsigned int j = jk % (ny_ - 1);
+    const unsigned int k = jk / (ny_ - 1);
+
+    if (k == from.k_ && k > 0)
+    {
+      neighbor.i_ = from.i_;
+      neighbor.j_ = from.j_;
+      neighbor.k_ = k-1;
+      return true;
+    }
+    else if (k == (from.k_+1) && k < (nz_-1))
+    {
+      neighbor.i_ = from.i_;
+      neighbor.j_ = from.j_;
+      neighbor.k_ = k;
+      return true;
+    }
+  }
+  else
+  {
+    const unsigned int yidx = xidx - (nx_ - 1) * (ny_ - 1) * nz_;
+    if (yidx < nx_ * (ny_ - 1) * (nz_ - 1))
+    {
+      //const unsigned int j = yidx % (ny_ - 1);
+      const unsigned int ik = yidx / (ny_ - 1);
+      //const unsigned int k = ik % (nz_ - 1);
+      const unsigned int i = ik / (nz_ - 1);
+
+      if (i == from.i_ && i > 0)
+      {
+	neighbor.i_ = i-1;
+	neighbor.j_ = from.j_;
+	neighbor.k_ = from.k_;
+	return true;
+      }
+      else if (i == (from.i_+1) && i < (nx_-1))
+      {
+	neighbor.i_ = i;
+	neighbor.j_ = from.j_;
+	neighbor.k_ = from.k_;
+	return true;
+      }
+    }
+    else
+    {
+      const unsigned int zidx = yidx - nx_ * (ny_ - 1) * (nz_ - 1);
+      //const unsigned int k = zidx % (nz_ - 1);
+      const unsigned int ij = zidx / (nz_ - 1);
+      //const unsigned int i = ij % (nx_ - 1);
+      const unsigned int j = ij / (nx_ - 1);
+
+      if (j == from.j_ && j > 0)
+      {
+	neighbor.i_ = from.i_;
+	neighbor.j_ = j-1;
+	neighbor.k_ = from.k_;
+	return true;
+      }
+      else if (j == (from.j_+1) && j < (ny_-1))
+      {
+	neighbor.i_ = from.i_;
+	neighbor.j_ = j;
+	neighbor.k_ = from.k_;
+	return true;
+      }
+    }
+  }
+  return false;
 }
 
 
