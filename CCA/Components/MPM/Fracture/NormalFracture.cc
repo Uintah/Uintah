@@ -168,7 +168,7 @@ void NormalFracture::computeConnectivity(
     const Patch* patch = patches->get(p);
 
     const Vector dx = patch->dCell();
-    //double cellLength = dx.x();
+    double cellLength = dx.x();
 
     int matlindex = mpm_matl->getDWIndex();
     ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
@@ -377,8 +377,8 @@ void NormalFracture::computeFracture(
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    const Vector dx = patch->dCell();
-    double cellLength = dx.x();
+    //const Vector dx = patch->dCell();
+    //double cellLength = dx.x();
 
     int matlindex = mpm_matl->getDWIndex();
     ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
