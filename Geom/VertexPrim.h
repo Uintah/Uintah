@@ -16,6 +16,7 @@
 
 #include <Geom/Geom.h>
 #include <Geom/Material.h>
+#include <Geom/Color.h>
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
 
@@ -77,7 +78,20 @@ struct GeomMVertex : public GeomVertex {
     virtual void emit_all(DrawInfoOpenGL* di);
     virtual void emit_matl(DrawInfoOpenGL* di);
 #endif
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+};
 
+struct GeomCVertex : public GeomVertex {
+    Color color;
+    GeomCVertex(const Point& p, const Color& clr);
+    GeomCVertex(const GeomCVertex&);
+    virtual GeomVertex* clone();
+    ~GeomCVertex();
+#ifdef SCI_OPENGL
+    virtual void emit_all(DrawInfoOpenGL* di);
+    virtual void emit_matl(DrawInfoOpenGL* di);
+#endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
@@ -98,6 +112,7 @@ public:
     void add(const Point&);
     void add(const Point&, const Vector&);
     void add(const Point&, const MaterialHandle&);
+    void add(const Point&, const Color&);
     void add(const Point&, const Vector&, const MaterialHandle&);
     void add(GeomVertex*);
 
@@ -106,4 +121,6 @@ public:
 };
 
 #endif /* SCI_Geom_VertexPrim_h */
+
+
 

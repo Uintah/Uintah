@@ -70,6 +70,11 @@ void GeomVertexPrim::add(const Point& p, const MaterialHandle& matl)
     verts.add(scinew GeomMVertex(p, matl));
 }
 
+void GeomVertexPrim::add(const Point& p, const Color& clr)
+{
+    verts.add(scinew GeomCVertex(p, clr));
+}
+
 void GeomVertexPrim::add(const Point& p, const Vector& normal,
 			 const MaterialHandle& matl)
 {
@@ -207,6 +212,35 @@ void GeomMVertex::io(Piostream& stream)
     stream.end_class();
 }
 
+#define GEOMCVERTEX_VERSION 1
+
+void GeomCVertex::io(Piostream& stream)
+{
+    stream.begin_class("GeomCVertex", GEOMMVERTEX_VERSION);
+    GeomVertex::io(stream);
+    Pio(stream, color);
+    stream.end_class();
+}
+
+GeomCVertex::GeomCVertex(const Point& p, const Color& clr)
+: GeomVertex(p), color(clr)
+{
+}
+
+GeomCVertex::GeomCVertex(const GeomCVertex& copy)
+: GeomVertex(copy), color(copy.color)
+{
+}
+
+GeomVertex* GeomCVertex::clone()
+{
+    return scinew GeomCVertex(*this);
+}
+
+GeomCVertex::~GeomCVertex()
+{
+}
+
 void Pio(Piostream& stream, GeomVertex*& obj)
 {
     Persistent* tmp=obj;
@@ -223,3 +257,6 @@ template class Array1<GeomVertex*>;
 template void Pio(Piostream&, Array1<GeomVertex*>&);
 
 #endif
+
+
+
