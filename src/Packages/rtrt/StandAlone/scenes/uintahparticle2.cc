@@ -68,6 +68,7 @@ using namespace SCIRun;
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <values.h>
 
 using namespace std;
 using namespace Uintah;
@@ -204,11 +205,10 @@ void get_material_cmap(rtrt::Array1<Material*> &matls, char *file) {
   int ncolors = 5000;
   cmap.scale(0, ncolors);
   matls.resize(ncolors);
-  float Ka=.8;
   float Kd=.8;
   float Ks=.8;
   float refl=0;
-  float specpow=40;
+  int specpow=40;
   for(int i = 0; i < ncolors; i++) {
     Color c(cmap.interpolate(i));
     matls[i]=new Phong( c*Kd, c*Ks, specpow, refl);
@@ -251,11 +251,10 @@ void get_material(rtrt::Array1<Material*> &matls) {
 #endif  
   int ncolors=5000;
   matls.resize(ncolors);
-  float Ka=.8;
   float Kd=.8;
   float Ks=.8;
   float refl=0;
-  float specpow=40;
+  int specpow=40;
   for(int i=0;i<ncolors;i++){
     float frac=float(i)/(ncolors-1);
     Color c(spline(frac));
@@ -273,7 +272,7 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
   if (debug) patchdata.print();
   //  bool data_found = false;
   long num_particles = 0;
-  int num_variables = 0;
+  unsigned int num_variables = 0;
   
   // calculate the number of particles and number of variables
 
@@ -458,8 +457,8 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
   maxs = (float*)malloc(numvars * sizeof(float));
   // initialize the mins and maxs
   for (int i = 0; i < numvars; i++) {
-    mins[i] =  MAXFLOAT;
-    maxs[i] = -MAXFLOAT;
+    mins[i] =  FLT_MAX;
+    maxs[i] = -FLT_MAX;
   }
   cerr << "Total number of spheres: " << total_spheres << endl;
   return new GridSpheres(data, mins, maxs, total_spheres, numvars-3, gridcellsize, griddepth, radius, matls.size(), &matls[0], data_group[0].var_names);  
