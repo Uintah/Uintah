@@ -65,6 +65,10 @@ private:
   GuiInt       use_conf_;
   GuiDouble    conf_thresh_;
   GuiString    kernel_;
+
+  tenFiberContext *tfx;
+  Nrrd *tfx_nrrd;
+  
 };
 
 DECLARE_MAKER(TendFiber)
@@ -85,11 +89,15 @@ TendFiber::TendFiber(SCIRun::GuiContext *ctx) :
   steps_(ctx->subVar("steps")),
   use_conf_(ctx->subVar("use-conf")),
   conf_thresh_(ctx->subVar("conf-thresh")),
-  kernel_(ctx->subVar("kernel"))
+  kernel_(ctx->subVar("kernel")),
+  tfx(0),
+  tfx_nrrd(0)
 {
 }
 
 TendFiber::~TendFiber() {
+  if (tfx)
+    tenFiberContextNix(tfx);
 }
 
 unsigned 
@@ -270,7 +278,11 @@ TendFiber::execute()
     p[1] = 0.0834; 
   }
 
-  tenFiberContext *tfx = tenFiberContextNew(nin);
+  if (!tfx || nin != tfx_nrrd) {
+    if (tfx)
+      tenFiberContextNix(tfx);
+    tfx = tenFiberContextNew(nin);
+  }
   if (!tfx) {
     char *err = biffGetDone(TEN);
     error(string("Failed to create the fiber context: ") + err);
@@ -303,7 +315,7 @@ TendFiber::execute()
   }
 
   tenFiberParmSet(tfx, tenFiberParmStepSize, stepsize);
-  tenFiberParmSet(tfx, tenFiberParmWPunct, stepsize);
+  tenFiberParmSet(tfx, tenFiberParmWPunct, puncture);
   tenFiberParmSet(tfx, tenFiberParmUseIndexSpace, AIR_TRUE);
 
   Nrrd *nout = nrrdNew();
