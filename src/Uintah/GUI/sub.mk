@@ -20,7 +20,7 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl $(SRCDIR)/EigenEvaluator.tcl \
-	$(SRCDIR)/InPlaneEigenEvaluator.tcl \
+	$(SRCDIR)/InPlaneEigenEvaluator.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 
@@ -28,6 +28,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.9  2000/08/28 22:41:53  bigler
+# Fixed a typo.  Extra "\" at the end of the dependancies list for tclIndex.
+#
 # Revision 1.8  2000/08/25 17:29:47  witzel
 # Added InPlaneEigenEvaluator.tcl
 #
