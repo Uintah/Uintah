@@ -99,6 +99,28 @@ RenderFieldBase::add_axis(const Point &p0, double scale, GeomLines *lines,
 }
 
 
+void 
+RenderFieldBase::add_axis(const Point &p0, double scale, GeomLines *lines,
+			  const MaterialHandle &vcol)
+{
+  static const Vector x(1., 0., 0.);
+  static const Vector y(0., 1., 0.);
+  static const Vector z(0., 0., 1.);
+
+  Point p1 = p0 + x * scale;
+  Point p2 = p0 - x * scale;
+  lines->add(p1, vcol, p2, vcol);
+
+  p1 = p0 + y * scale;
+  p2 = p0 - y * scale;
+  lines->add(p1, vcol, p2, vcol);
+
+  p1 = p0 + z * scale;
+  p2 = p0 - z * scale;
+  lines->add(p1, vcol, p2, vcol);
+}
+
+
 
 RenderVectorFieldBase::RenderVectorFieldBase()
 {}
