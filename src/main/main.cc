@@ -113,11 +113,11 @@ parse_args( int argc, char *argv[] )
     else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
 	      ( arg == "-r" ) ||  ( arg == "--r" ) )
     {
-      putenv("SCI_REGRESSION_TESTING=1");
+      sci_putenv("SCI_REGRESSION_TESTING","1");
     }
     else if ( arg == "--nosplash" )
     {
-      putenv("SCI_NOSPLASH=1");
+      sci_putenv("SCI_NOSPLASH", "1");
     }
     else
     {
@@ -171,7 +171,7 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     Thread::exitAll(1);
   }
   // check to make sure home directory is there
-  char* HOME = getenv("HOME");
+  char* HOME = sci_getenv("HOME");
   if (!HOME) return;
   // If the user accepted the license then create a .scirunrc for them
   if (tclresult == "accept") {
@@ -184,13 +184,13 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
       parse_scirunrc(homerc);
     }
   }
+  delete [] HOME;
 }
 
 
 
 int
-main(int argc, char *argv[], char **envp) {
-  store_existing_environment(envp);
+main( int argc, char *argv[] ) {
   const int startnetno = parse_args( argc, argv );
 
 #if defined(__APPLE__)  
@@ -272,20 +272,23 @@ main(int argc, char *argv[], char **envp) {
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
 
+  char * doing_regressions = sci_getenv("SCI_REGRESSION_TESTING");
+
   if (startnetno)
   {
     gui->execute(string("loadnet {")+argv[startnetno]+string("}"));
-    if (execute_flag || getenv("SCI_REGRESSION_TESTING"))
+    if (execute_flag || doing_regressions )
     {
       gui->execute("netedit scheduleall");
     }
   }
 
-  if (getenv("SCI_REGRESSION_TESTING"))
+  if( doing_regressions )
   {
     RegressionKiller *kill = scinew RegressionKiller();
     Thread *tkill = scinew Thread(kill, "Kill a hung SCIRun");
     tkill->detach();
+    delete [] doing_regressions;
   }
 
   // Now activate the TCL event loop
