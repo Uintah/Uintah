@@ -375,55 +375,78 @@ void DrawInfoOpenGL::init_view(double /*znear*/, double /*zfar*/,
 void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 
-    int n=positions.size();
-    di->polycount+=6*n;
+  int n=positions.size();
+  di->polycount+=6*n;
 
-    // Draw shafts - they are the same for all draw types....
-    double shaft_scale=headlength;
-    //cout << "Current shaft scale = " << shaft_scale << endl;
+  // Draw shafts - they are the same for all draw types....
+  double shaft_scale=headlength;
+  //cout << "Current shaft scale = " << shaft_scale << endl;
 
-    // if we're not drawing cylinders, draw lines
-    if( drawcylinders == 0 ) {
-      if(di->get_drawtype() == DrawInfoOpenGL::WireFrame)
-	shaft_scale=1.0;
-      if(shaft_matls.size() == 1){
-	if(!pre_draw(di, shaft_matls[0].get_rep(), 0)) return;
-	glBegin(GL_LINES);
-	for(int i=0;i<n;i++){
-	  Point from(positions[i]);
-	  Point to(from+directions[i]*shaft_scale);
-	  glVertex3d(from.x(), from.y(), from.z());
-	  glVertex3d(to.x(), to.y(), to.z());
-	}
-	glEnd();
-      } else {
-	if(!pre_draw(di, matl, 0)) return;
-	glBegin(GL_LINES);
-	for(int i=0;i<n;i++){
-	  di->set_matl(shaft_matls[i+1].get_rep());
-	  Point from(positions[i]);
-	  Point to(from+directions[i]*shaft_scale);
-	  glVertex3d(from.x(), from.y(), from.z());
-	  glVertex3d(to.x(), to.y(), to.z());
-	}
-	glEnd();
+  // if we're not drawing cylinders, draw lines
+  if( drawcylinders == 0 ) {
+    if(di->get_drawtype() == DrawInfoOpenGL::WireFrame)
+      shaft_scale=1.0;
+    if(shaft_matls.size() == 1){
+      if(!pre_draw(di, shaft_matls[0].get_rep(), 0)) return;
+      glBegin(GL_LINES);
+      for(int i=0;i<n;i++){
+	Point from(positions[i]);
+	Point to(from+directions[i]*shaft_scale);
+	glVertex3d(from.x(), from.y(), from.z());
+	glVertex3d(to.x(), to.y(), to.z());
       }
-
+      glEnd();
     } else {
-      // drawing cylinders
-      if( shaft_matls.size() == 1) {
-	if(!pre_draw(di, shaft_matls[0].get_rep(), 1)) return;
-      } else {
-	if(!pre_draw(di, matl, 1)) return;
+      if(!pre_draw(di, matl, 0)) return;
+      glBegin(GL_LINES);
+      for(int i=0;i<n;i++){
+	di->set_matl(shaft_matls[i+1].get_rep());
+	Point from(positions[i]);
+	Point to(from+directions[i]*shaft_scale);
+	glVertex3d(from.x(), from.y(), from.z());
+	glVertex3d(to.x(), to.y(), to.z());
       }
-      // number of subdivisions
-      int nu = 7;
-      int nv = 3;
-	
-      for( int i =0; i < n; i++ ) {
-	if( shaft_matls.size() != 1) 
-	  di->set_matl(shaft_matls[i+1].get_rep());
+      glEnd();
+    }
 
+  } else {
+    // number of subdivisions
+    int nu = 4;
+    int nv = 1;
+	
+    // drawing cylinders
+    if( shaft_matls.size() == 1) {
+      if(!pre_draw(di, shaft_matls[0].get_rep(), 1)) return;
+      for( int i =0; i < n; i++ ) {
+	Point from(positions[i]);
+	Point to(from+directions[i]*shaft_scale);
+	// create cylinder along axis with endpoints from and to
+	Vector axis = to - from;
+	Vector z(0,0,1);
+	Vector zrotaxis;
+	double zrotangle;
+	if( Abs(axis.y())+Abs(axis.x()) < 1.e-5){
+	  // Only in x-z plane...
+	  zrotaxis=Vector(0,-1,0);
+	} else {
+	  zrotaxis=Cross(axis, z);
+	  zrotaxis.normalize();
+	}
+	double cangle=Dot(z, axis)/axis.length();
+	zrotangle=-Acos(cangle);
+
+	// draw cylinder
+	glPushMatrix();
+	glTranslated( from.x(), from.y(), from.z() );
+	glRotated( RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+	di->polycount += 2*(nu-1)*(nv-1);
+	gluCylinder(di->qobj, rad, rad, axis.length(), nu, nv);
+	glPopMatrix();
+      }
+    } else {
+      if(!pre_draw(di, matl, 1)) return;
+      for( int i =0; i < n; i++ ) {
+	di->set_matl(shaft_matls[i+1].get_rep());
 	Point from(positions[i]);
 	Point to(from+directions[i]*shaft_scale);
 	// create cylinder along axis with endpoints from and to
@@ -450,69 +473,104 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glPopMatrix();
       }
     }
+  }
 
-    if (headwidth == 0 || headlength == 0) { post_draw(di); return; }
+  if (headwidth == 0 || headlength == 0) { post_draw(di); return; }
 
-    // Draw back and head
-    switch(di->get_drawtype()){
-    case DrawInfoOpenGL::WireFrame:
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	break;
-    case DrawInfoOpenGL::Flat:
-    case DrawInfoOpenGL::Gouraud:
-	break;
-    }
+  // Draw back and head
+  switch(di->get_drawtype()){
+  case DrawInfoOpenGL::WireFrame:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    break;
+  case DrawInfoOpenGL::Flat:
+  case DrawInfoOpenGL::Gouraud:
+    break;
+  }
 
-    int do_normals=1;
-    if(di->get_drawtype() == DrawInfoOpenGL::Flat ||
-       di->get_drawtype() == DrawInfoOpenGL::WireFrame)
-	do_normals=0;
+  int do_normals=1;
+  if(di->get_drawtype() == DrawInfoOpenGL::Flat ||
+     di->get_drawtype() == DrawInfoOpenGL::WireFrame)
+    do_normals=0;
 
-    if (drawcylinders == 0) {
+  if (drawcylinders == 0) {
 
-      // Draw the back of the arrow
-      if(back_matls.size() == 1) {
-	if(!pre_draw(di, back_matls[0].get_rep(), 1)) return;
-      } else {
-	if(!pre_draw(di, matl, 1)) return;
-      }
-
+    // Draw the back of the arrow
+    if(back_matls.size() == 1) {
+      if(!pre_draw(di, back_matls[0].get_rep(), 1)) return;
       glBegin(GL_QUADS);
-      for(int i=0;i<n;i++){
-
-	if(back_matls.size() > 1) di->set_matl(back_matls[i+1].get_rep());
-	if(do_normals) glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
-
-	Point from(positions[i]+directions[i]*headlength);
-	Point p1(from+v1[i]);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	Point p2(from+v2[i]);
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	Point p3(from-v1[i]);
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	Point p4(from-v2[i]);
-	glVertex3d(p4.x(), p4.y(), p4.z());
+      if (do_normals) {
+	for(int i=0;i<n;i++){
+	  glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
+	  Point from(positions[i]+directions[i]*headlength);
+	  Point p1(from+v1[i]);
+	  glVertex3d(p1.x(), p1.y(), p1.z());
+	  Point p2(from+v2[i]);
+	  glVertex3d(p2.x(), p2.y(), p2.z());
+	  Point p3(from-v1[i]);
+	  glVertex3d(p3.x(), p3.y(), p3.z());
+	  Point p4(from-v2[i]);
+	  glVertex3d(p4.x(), p4.y(), p4.z());
+	}
+      } else {
+	for(int i=0;i<n;i++){
+	  Point from(positions[i]+directions[i]*headlength);
+	  Point p1(from+v1[i]);
+	  glVertex3d(p1.x(), p1.y(), p1.z());
+	  Point p2(from+v2[i]);
+	  glVertex3d(p2.x(), p2.y(), p2.z());
+	  Point p3(from-v1[i]);
+	  glVertex3d(p3.x(), p3.y(), p3.z());
+	  Point p4(from-v2[i]);
+	  glVertex3d(p4.x(), p4.y(), p4.z());
+	}
       }
       glEnd();
-
-
-      // Draw the head of the arrow
-      if(head_matls.size() == 1){
-	if(!pre_draw(di, head_matls[0].get_rep(), 1)) return;
+    } else {
+      if(!pre_draw(di, matl, 1)) return;
+      glBegin(GL_QUADS);
+      if (do_normals) {
+	for(int i=0;i<n;i++){
+	  di->set_matl(back_matls[i+1].get_rep());
+	  glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
+	  Point from(positions[i]+directions[i]*headlength);
+	  Point p1(from+v1[i]);
+	  glVertex3d(p1.x(), p1.y(), p1.z());
+	  Point p2(from+v2[i]);
+	  glVertex3d(p2.x(), p2.y(), p2.z());
+	  Point p3(from-v1[i]);
+	  glVertex3d(p3.x(), p3.y(), p3.z());
+	  Point p4(from-v2[i]);
+	  glVertex3d(p4.x(), p4.y(), p4.z());
+	}
       } else {
-	if(!pre_draw(di, matl, 1)) return;
+	for(int i=0;i<n;i++){
+	  di->set_matl(back_matls[i+1].get_rep());
+	  Point from(positions[i]+directions[i]*headlength);
+	  Point p1(from+v1[i]);
+	  glVertex3d(p1.x(), p1.y(), p1.z());
+	  Point p2(from+v2[i]);
+	  glVertex3d(p2.x(), p2.y(), p2.z());
+	  Point p3(from-v1[i]);
+	  glVertex3d(p3.x(), p3.y(), p3.z());
+	  Point p4(from-v2[i]);
+	  glVertex3d(p4.x(), p4.y(), p4.z());
+	}
       }
+      glEnd();
+    }
+
+    // Draw the head of the arrow
+    if(head_matls.size() == 1){
+      if(!pre_draw(di, head_matls[0].get_rep(), 1)) return;
       if(do_normals){
 	double w=headwidth;
 	double h=1.0-headlength;
 	double w2h2=w*w/h;
 	for(int i=0;i<n;i++){
 	  glBegin(GL_TRIANGLES);
-	  if (head_matls.size() > 1) di->set_matl(back_matls[i+1].get_rep());
 	  Vector dn(directions[i]*w2h2);
 	  Vector n(dn+v1[i]+v2[i]);
 	  glNormal3d(n.x(), n.y(), n.z());
-
 	  Point top(positions[i]+directions[i]);
 	  Point from=top-directions[i]*h;
 	  //Point to(from+directions[i]);
@@ -543,7 +601,6 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
       } else {
 	for(int i=0;i<n;i++){
 	  glBegin(GL_TRIANGLE_FAN);
-	  if (head_matls.size() > 1) di->set_matl(back_matls[i+1].get_rep());
 	  Point from(positions[i]+directions[i]);
 	  glVertex3d(from.x(), from.y(), from.z());
 	  from-=directions[i]*(1.0-headlength);
@@ -560,39 +617,91 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	  glEnd();
 	}
       }
-
-      switch(di->get_drawtype()){
-      case DrawInfoOpenGL::WireFrame:
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	break;
-      case DrawInfoOpenGL::Flat:
-      case DrawInfoOpenGL::Gouraud:
-	break;
-      }
-      post_draw(di);
-
     } else {
-
-      // Draw the head as a capped cone
-      int nu = 7;
-      int nv = 3;
-      int nvdisc = 1;
-
-      if(head_matls.size() == 1){
-	if(!pre_draw(di, head_matls[0].get_rep(), 1)) return;
+      if(!pre_draw(di, matl, 1)) return;
+      if(do_normals){
+	double w=headwidth;
+	double h=1.0-headlength;
+	double w2h2=w*w/h;
+	for(int i=0;i<n;i++){
+	  glBegin(GL_TRIANGLES);
+	  di->set_matl(head_matls[i+1].get_rep());
+	  Vector dn(directions[i]*w2h2);
+	  Vector n(dn+v1[i]+v2[i]);
+	  glNormal3d(n.x(), n.y(), n.z());
+	  Point top(positions[i]+directions[i]);
+	  Point from=top-directions[i]*h;
+	  //Point to(from+directions[i]);
+	  Point p1(from+v1[i]);
+	  Point p2(from+v2[i]);
+	  glVertex3d(top.x(), top.y(), top.z());
+	  glVertex3d(p1.x(), p1.y(), p1.z());
+	  glVertex3d(p2.x(), p2.y(), p2.z()); // 1st tri
+	  n=dn-v1[i]+v2[i];
+	  glNormal3d(n.x(), n.y(), n.z());
+	  Point p3(from-v1[i]);
+	  glVertex3d(top.x(), top.y(), top.z());
+	  glVertex3d(p2.x(), p2.y(), p2.z());
+	  glVertex3d(p3.x(), p3.y(), p3.z()); // 2nd tri
+	  n=dn-v1[i]-v2[i];
+	  glNormal3d(n.x(), n.y(), n.z());
+	  Point p4(from-v2[i]);
+	  glVertex3d(top.x(), top.y(), top.z());
+	  glVertex3d(p3.x(), p3.y(), p3.z());
+	  glVertex3d(p4.x(), p4.y(), p4.z()); // 3rd tri
+	  n=dn+v1[i]-v2[i];
+	  glNormal3d(n.x(), n.y(), n.z());
+	  glVertex3d(top.x(), top.y(), top.z());
+	  glVertex3d(p4.x(), p4.y(), p4.z());
+	  glVertex3d(p1.x(), p1.y(), p1.z()); // 4th tri
+	  glEnd();
+	}
       } else {
-	if(!pre_draw(di, matl, 1)) return;
+	for(int i=0;i<n;i++){
+	  glBegin(GL_TRIANGLE_FAN);
+	  di->set_matl(head_matls[i+1].get_rep());
+	  Point from(positions[i]+directions[i]);
+	  glVertex3d(from.x(), from.y(), from.z());
+	  from-=directions[i]*(1.0-headlength);
+	  //Point to(from+directions[i]);
+	  Point p1(from+v1[i]);
+	  glVertex3d(p1.x(), p1.y(), p1.z());
+	  Point p2(from+v2[i]);
+	  glVertex3d(p2.x(), p2.y(), p2.z());
+	  Point p3(from-v1[i]);
+	  glVertex3d(p3.x(), p3.y(), p3.z());
+	  Point p4(from-v2[i]);
+	  glVertex3d(p4.x(), p4.y(), p4.z());
+	  glVertex3d(p1.x(), p1.y(), p1.z());
+	  glEnd();
+	}
       }
+    }
 
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+      break;
+    }
+    post_draw(di);
+
+  } else {
+
+    // Draw the head as a capped cone
+    int nu = 4;
+    int nv = 1;
+    int nvdisc = 1;
+
+    if(head_matls.size() == 1){
+      if(!pre_draw(di, head_matls[0].get_rep(), 1)) return;
       for(int i=0;i<n;i++){
-	  if (head_matls.size() > 1) di->set_matl(back_matls[i+1].get_rep());
-
 	glPushMatrix();
-
 	Point top(positions[i]+directions[i]);
-	Point bottom = top - directions[i]*(1.0-headlength);
+	Point bottom = top - directions[i]*(1-headlength);
 	glTranslated(bottom.x(), bottom.y(), bottom.z());
-
 	Vector axis = top - bottom;
 	Vector z(0,0,1);
 	Vector zrotaxis;
@@ -607,9 +716,8 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	double cangle=Dot(z, axis)/axis.length();
 	zrotangle=-Acos(cangle);
 	glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-
-        double bot_rad = 0.5*headwidth;
-        double top_rad = 1e-6;
+	double bot_rad = 0.5*headwidth;
+	double top_rad = 0.01*headwidth;
 	di->polycount+=2*(nu-1)*(nv-1);
 	gluCylinder(di->qobj, bot_rad, top_rad, headlength, nu, nv);
 	if(bot_rad > 1.e-6){
@@ -617,11 +725,56 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	  di->polycount+=2*(nu-1)*(nvdisc-1);
 	  gluDisk(di->qobj, 0, bot_rad, nu, nvdisc);
 	}
+	if(top_rad > 1.e-6){
+	  // Top endcap
+	  glTranslated(0, 0, headlength);
+	  di->polycount+=2*(nu-1)*(nvdisc-1);
+	  gluDisk(di->qobj, 0, top_rad, nu, nvdisc);
+	}
 	glPopMatrix();
       }
-      post_draw(di);
+    } else {
+      if(!pre_draw(di, matl, 1)) return;
+      for(int i=0;i<n;i++){
+	di->set_matl(head_matls[i+1].get_rep());
+	glPushMatrix();
+	Point top(positions[i]+directions[i]);
+	Point bottom = top - directions[i]*(1-headlength);
+	glTranslated(bottom.x(), bottom.y(), bottom.z());
+	Vector axis = top - bottom;
+	Vector z(0,0,1);
+	Vector zrotaxis;
+	double zrotangle;
+	if( Abs(axis.y())+Abs(axis.x()) < 1.e-5){
+	  // Only in x-z plane...
+	  zrotaxis=Vector(0,-1,0);
+	} else {
+	  zrotaxis=Cross(axis, z);
+	  zrotaxis.normalize();
+	}
+	double cangle=Dot(z, axis)/axis.length();
+	zrotangle=-Acos(cangle);
+	glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+	double bot_rad = 0.5*headwidth;
+	double top_rad = 0.01*headwidth;
+	di->polycount+=2*(nu-1)*(nv-1);
+	gluCylinder(di->qobj, bot_rad, top_rad, headlength, nu, nv);
+	if(bot_rad > 1.e-6){
+	  // Bottom endcap
+	  di->polycount+=2*(nu-1)*(nvdisc-1);
+	  gluDisk(di->qobj, 0, bot_rad, nu, nvdisc);
+	}
+	if(top_rad > 1.e-6){
+	  // Top endcap
+	  glTranslated(0, 0, headlength);
+	  di->polycount+=2*(nu-1)*(nvdisc-1);
+	  gluDisk(di->qobj, 0, top_rad, nu, nvdisc);
+	}
+	glPopMatrix();
+      }
     }
-
+    post_draw(di);
+  }
 }
 
 void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
