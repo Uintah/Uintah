@@ -716,7 +716,7 @@ VolumeRenderer::multi_level_draw()
     }
 //      int i = 2;
 
-    for(unsigned int i = 0; i < levels; ++i ){
+    for(int i = 0; i < levels; ++i ){
       if( !draw_level_[i] ) continue;
       if( i > 0 ){
 	bool go_on = false;

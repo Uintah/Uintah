@@ -178,7 +178,7 @@ TextureBuilder::execute()
   if(   MRLatVolField<double>* vmrfield =
       dynamic_cast< MRLatVolField< double >* > (vfield.get_rep()) ) {
 
-    for(unsigned int i = 0 ; i < vmrfield->nlevels(); i++ ){
+    for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
       const MultiResLevel<double>* lev = vmrfield->level( i );
       for(unsigned int j = 0; j < lev->patches.size(); j++ ){
 	LatVolField<double>* vmr = lev->patches[j].get_rep(); 
