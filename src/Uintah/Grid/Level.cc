@@ -16,10 +16,7 @@ using namespace std;
 using namespace PSECore::XMLUtil;
 #include <map>
 #include <Uintah/Grid/BoundCondFactory.h>
-#include <Uintah/Grid/KinematicBoundCond.h>
-#include <Uintah/Grid/FluxThermalBoundCond.h>
-#include <Uintah/Grid/TempThermalBoundCond.h>
-#include <Uintah/Grid/SymmetryBoundCond.h>
+
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
    : grid(grid), d_anchor(anchor), d_dcell(dcell)
@@ -260,7 +257,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
     if (fc == "z+")
       face_side = Patch::zplus;
 
-    vector<BoundCond *> bcs;
+    vector<BoundCondBase*> bcs;
     BoundCondFactory::create(face_ps,bcs);
 
     for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
@@ -270,7 +267,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
       if (bc_type == Patch::None) {
 	patch->setBCValues(face_side,bcs);
       }
-      vector<BoundCond* > new_bcs;
+      vector<BoundCondBase*> new_bcs;
       new_bcs = patch->getBCValues(face_side);
     }  // end of patch iterator
   } // end of face_ps
@@ -279,6 +276,11 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.23  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.22  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >

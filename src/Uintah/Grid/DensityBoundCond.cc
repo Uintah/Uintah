@@ -1,25 +1,19 @@
 #include <Uintah/Grid/DensityBoundCond.h>
 #include <Uintah/Interface/ProblemSpec.h>
 
-DensityBoundCond::DensityBoundCond(double& rho) : d_rho(rho)
+DensityBoundCond::DensityBoundCond(ProblemSpecP& ps, std::string& kind) 
+  : BoundCond<double>(kind)
 {
-}
-
-DensityBoundCond::DensityBoundCond(ProblemSpecP& ps)
-{
-  ps->require("density",d_rho);
+  d_type = "Density";
+  ps->require("value",d_rho);
 }
 
 DensityBoundCond::~DensityBoundCond()
 {
 }
 
-double DensityBoundCond::getRho() const
+double DensityBoundCond::getValue() const
 {
   return d_rho;
 }
 
-std::string DensityBoundCond::getType() const
-{
-  return "Density";
-}

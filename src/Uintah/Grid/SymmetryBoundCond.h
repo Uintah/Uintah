@@ -1,7 +1,7 @@
 #ifndef UINTAH_GRID_SymmetryBoundCond_H
 #define UINTAH_GRID_SymmetryBoundCond_H
 
-#include <Uintah/Grid/BoundCond.h>
+#include <Uintah/Grid/BoundCondBase.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 using namespace Uintah;
 
@@ -36,14 +36,11 @@ WARNING
   
 ****************************************/
 
-   class SymmetryBoundCond : public BoundCond  {
+   class SymmetryBoundCond : public BoundCondBase  {
    public:
-      SymmetryBoundCond() {};
+      SymmetryBoundCond():BoundCondBase("Symmetry") {};
       SymmetryBoundCond(ProblemSpecP&) {};
       virtual ~SymmetryBoundCond() {};
-      virtual std::string getType() const {
-	return "Symmetry";
-      };
          
    private:
       SymmetryBoundCond(const SymmetryBoundCond&);
@@ -56,6 +53,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.2  2000/10/14 17:09:59  sparker
 // Added get() method to PerPatch
 // Fixed warning in SymmetryBoundCond

@@ -1,5 +1,5 @@
-#ifndef UINTAH_GRID_KinematicBoundCond_H
-#define UINTAH_GRID_KinematicBoundCond_H
+#ifndef UINTAH_GRID_VelocityBoundCond_H
+#define UINTAH_GRID_VelocityBoundCond_H
 
 #include <Uintah/Grid/BoundCond.h>
 #include <SCICore/Geometry/Vector.h>
@@ -14,12 +14,12 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   KinematicBoundCond
+   VelocityBoundCond
    
    
 GENERAL INFORMATION
 
-   KinematicBoundCond.h
+   VelocityBoundCond.h
 
    John A. Schmidt
    Department of Mechanical Engineering
@@ -30,7 +30,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   KinematicBoundCond
+   VelocityBoundCond
 
 DESCRIPTION
    Long description...
@@ -39,18 +39,15 @@ WARNING
   
 ****************************************/
 
-   class KinematicBoundCond : public BoundCond  {
+   class VelocityBoundCond : public BoundCond<Vector>  {
    public:
-      KinematicBoundCond(Vector& v);
-      KinematicBoundCond(ProblemSpecP& ps);
-      virtual ~KinematicBoundCond();
-      virtual std::string getType() const;
-
-      Vector getVelocity() const;
-         
+     VelocityBoundCond(ProblemSpecP& ps, const std::string& kind);
+     virtual ~VelocityBoundCond();
+     virtual Vector getValue() const;
+     
    private:
-      KinematicBoundCond(const KinematicBoundCond&);
-      KinematicBoundCond& operator=(const KinematicBoundCond&);
+      VelocityBoundCond(const VelocityBoundCond&);
+      VelocityBoundCond& operator=(const VelocityBoundCond&);
       
       Vector d_vel;
      
@@ -60,6 +57,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.1  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.1  2000/06/27 22:31:50  jas
 // Grid boundary conditions that are stored at the patch level.
 //

@@ -32,7 +32,7 @@ namespace Uintah {
    
    class NodeIterator;
    class CellIterator;
-   class BoundCond;
+   class BoundCondBase;
    
 /**************************************
       
@@ -203,8 +203,8 @@ WARNING
      
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
-     void setBCValues(FaceType face, vector<BoundCond* >& bc);
-     vector<BoundCond* > getBCValues(FaceType face) const;
+     void setBCValues(FaceType face, vector<BoundCondBase*>& bc);
+     vector<BoundCondBase*> getBCValues(FaceType face) const;
 
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {
@@ -293,7 +293,7 @@ WARNING
      
      int d_id;
      BCType d_bctypes[numFaces];
-     vector<vector<BoundCond* > > d_bcs;
+     vector<vector<BoundCondBase*> > d_bcs;
      friend class NodeIterator;
    };
    
@@ -303,6 +303,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.20  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.19  2000/09/26 21:34:05  dav
 // inlined a few things
 //

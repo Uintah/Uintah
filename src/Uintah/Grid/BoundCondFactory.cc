@@ -2,9 +2,8 @@
 #include <Uintah/Grid/NoneBoundCond.h>
 #include <Uintah/Grid/SymmetryBoundCond.h>
 #include <Uintah/Grid/NeighBoundCond.h>
-#include <Uintah/Grid/KinematicBoundCond.h>
-#include <Uintah/Grid/TempThermalBoundCond.h>
-#include <Uintah/Grid/FluxThermalBoundCond.h>
+#include <Uintah/Grid/VelocityBoundCond.h>
+#include <Uintah/Grid/TemperatureBoundCond.h>
 #include <Uintah/Grid/PressureBoundCond.h>
 #include <Uintah/Grid/DensityBoundCond.h>
 #include <Uintah/Interface/ProblemSpec.h>
@@ -18,7 +17,7 @@ using namespace std;
 using namespace Uintah;
 
 void BoundCondFactory::create(const ProblemSpecP& ps,
-				   std::vector<BoundCond*>& objs)
+				   std::vector<BoundCondBase*>& objs)
 
 {
    for(ProblemSpecP child = ps->findBlock("BCType"); child != 0;
@@ -36,20 +35,17 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
      else if (bc_attr["var"] ==  "neigh")
        objs.push_back(new NeighBoundCond(child));
      
-     else if (bc_attr["var"] == "velocity")
-       objs.push_back(new KinematicBoundCond(child));
+     else if (bc_attr["label"] == "Velocity")
+       objs.push_back(new VelocityBoundCond(child,bc_attr["var"]));
      
-     else if (bc_attr["var"] == "temperature")
-       objs.push_back(new TempThermalBoundCond(child));
+     else if (bc_attr["label"] == "Temperature") 
+       objs.push_back(new TemperatureBoundCond(child,bc_attr["var"]));
      
-     else if (bc_attr["var"] == "heat_flux")
-       objs.push_back(new FluxThermalBoundCond(child));
+     else if (bc_attr["label"] == "Pressure")
+       objs.push_back(new PressureBoundCond(child,bc_attr["var"]));
      
-     else if (bc_attr["var"] == "pressure")
-       objs.push_back(new PressureBoundCond(child));
-     
-     else if (bc_attr["var"] == "density")
-       objs.push_back(new DensityBoundCond(child));
+     else if (bc_attr["label"] == "Density")
+       objs.push_back(new DensityBoundCond(child,bc_attr["var"]));
 
      else {
        cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
@@ -60,6 +56,11 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
 }
 
 // $Log$
+// Revision 1.4  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.3  2000/10/26 23:27:20  jas
 // Added Density Boundary Conditions needed for ICE.
 //

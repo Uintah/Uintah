@@ -34,9 +34,9 @@ Patch::Patch(const Level* level,
    if(d_id == -1)
       d_id = ids++;
 
-   d_bcs = vector<vector<BoundCond* > >(numFaces);
+   d_bcs = vector<vector<BoundCondBase*> >(numFaces);
    for (int i = 0; i<numFaces; i++ ) {
-     vector<BoundCond* > a;
+     vector<BoundCondBase*> a;
      d_bcs[i] = a;
    }
 }
@@ -188,12 +188,12 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 }
 
 void 
-Patch::setBCValues(Patch::FaceType face, vector<BoundCond*>& bc)
+Patch::setBCValues(Patch::FaceType face, vector<BoundCondBase*>& bc)
 {
   d_bcs[face] = bc;
 }
 
-vector<BoundCond* >
+vector<BoundCondBase*>
 Patch::getBCValues(Patch::FaceType face) const
 {
   return d_bcs[face];
@@ -678,6 +678,11 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.25  2000/11/02 21:25:55  jas
+// Rearranged the boundary conditions so there is consistency between ICE
+// and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+// declared differently in the *.ups file.
+//
 // Revision 1.24  2000/10/11 21:39:59  sparker
 // Added rewindow to CCVariable - just copies the array to a different window
 //

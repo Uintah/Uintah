@@ -1,27 +1,19 @@
 #include <Uintah/Grid/PressureBoundCond.h>
 #include <Uintah/Interface/ProblemSpec.h>
 
-PressureBoundCond::PressureBoundCond(double& p)
+PressureBoundCond::PressureBoundCond(ProblemSpecP& ps,std::string& kind) 
+  : BoundCond<double>(kind)
 {
-  d_press = p;
-}
-
-PressureBoundCond::PressureBoundCond(ProblemSpecP& ps)
-{
-  ps->require("pressure",d_press);
+  d_type = "Pressure";
+  ps->require("value",d_press);
 }
 
 PressureBoundCond::~PressureBoundCond()
 {
 }
 
-double PressureBoundCond::getPressure() const
+double PressureBoundCond::getValue() const
 {
   return d_press;
-}
-
-std::string PressureBoundCond::getType() const
-{
-  return "Pressure";
 }
 

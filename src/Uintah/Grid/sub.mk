@@ -35,9 +35,8 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/DifferenceGeometryPiece.cc \
 	$(SRCDIR)/IntersectionGeometryPiece.cc \
 	$(SRCDIR)/GeometryPieceFactory.cc \
-	$(SRCDIR)/KinematicBoundCond.cc \
-	$(SRCDIR)/TempThermalBoundCond.cc \
-	$(SRCDIR)/FluxThermalBoundCond.cc \
+	$(SRCDIR)/VelocityBoundCond.cc \
+	$(SRCDIR)/TemperatureBoundCond.cc \
 	$(SRCDIR)/PressureBoundCond.cc \
 	$(SRCDIR)/DensityBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc
@@ -52,6 +51,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.26  2000/11/02 21:25:55  jas
+# Rearranged the boundary conditions so there is consistency between ICE
+# and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
+# declared differently in the *.ups file.
+#
 # Revision 1.25  2000/10/26 23:27:20  jas
 # Added Density Boundary Conditions needed for ICE.
 #
