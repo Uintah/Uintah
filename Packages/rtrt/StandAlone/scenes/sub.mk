@@ -17,6 +17,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/6.mo \
 	$(SRCDIR)/7.mo \
 	$(SRCDIR)/sr2.mo \
+	$(SRCDIR)/science-room-min.mo \
 	$(SRCDIR)/3ds.mo \
 	$(SRCDIR)/3dsm_ase.mo \
 	$(SRCDIR)/bunny.mo \
