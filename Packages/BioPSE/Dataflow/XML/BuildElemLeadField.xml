@@ -37,7 +37,7 @@
       </port>
       <port>
         <name>Electrode Interpolant</name>
-	<datatype>SCIRun::Field</datatype>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
         <name>Solution Vectors</name>
