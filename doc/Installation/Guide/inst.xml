@@ -11,7 +11,7 @@
   The Original Source Code is SCIRun, released March 12, 2001.
   
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 -->
 
@@ -25,7 +25,7 @@
 
 <para>
 &sr; is officially compatible with two platforms: SGI and Linux.
-<xref linkend="tbl.min_sys_rec"/> lists the recommened system requirements.
+<xref linkend="tbl.min_sys_rec"/> lists the recommended system requirements.
 </para>
  
 <para>&recommendations;</para>
@@ -87,6 +87,9 @@ sets.</para>
 <listitem>
 <para>Installing &sr;'s sample data sets.</para>
 </listitem>
+<listitem>
+<para>Installing &sr;'s documentation.</para>
+</listitem>
 </orderedlist>
 </para>
 
@@ -95,16 +98,33 @@ sets.</para>
 <section>
 <title>Downloading</title>
 <para>
-Obtain the appropriate &sr; rpm, either
+From SCI's <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page download the following files:
+
+<itemizedlist>
+<listitem>
+<para>Either
 <filename>SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
 for Mandrake 9 systems or
 <filename>SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
-for Redhad 8 systems.  Be sure to get
-<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-too.  These files can be downloaded from SCI's <ulink
-url="http://software.sci.utah.edu/archive_entry.html">software
-archive</ulink> page.
+for Redhat 8 systems.
 </para>
+</listitem>
+<listitem>
+<para>
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+too.
+</para>
+</listitem>
+<listitem>
+<para>
+<filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+</itemizedlist>
+</para>
+
 </section>
 
 <section>
@@ -170,9 +190,9 @@ RPM installation process.  Assumes RPM file was downloaded to
 <title>Installing &sr;'s Sample Data Sets</title>
 <para>
 You may want to install the sample data sets in a location accessible
-by all &sr; users.  The following procedure assumes you will install
+to all &sr; users.  The following procedure installs
 the sample data sets in the directory
-<filename>/usr/local/SCIRun</filename>.  It also assumes you can
+<filename>/usr/local</filename>.  It  assumes you can
 become the root user.
 </para>
 <para>
@@ -180,12 +200,36 @@ Use the <command>su</command> command to become the root user.  Then
 <command>Cd</command> to the directory containing the compressed data
 sets tarball and type:
 <literallayout class="monospaced">
-gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | \
-  (cd /usr/local/SCIRun &amp;&amp; tar xf -)
+gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
 </literallayout>
-This will create <filename>/usr/local/&sr;/&sr;Data</filename>, the
+This will create <filename>/usr/local/&sr;Data</filename>, the
 sample data sets directory.  Type <command>exit</command> to exit the
 root account.
+</para>
+</section>
+
+<section>
+<title>Installing &sr;'s Documentation</title>
+<para>
+You may want to install &sr;'s documentation in a location accessible
+to all &sr; users. The following procedure installs the documentation
+in the directory <filename>/usr/local</filename>
+</para>
+<para>
+Use the <command>su</command> command to become the root user.  Then
+<command>Cd</command> to the directory containing the compressed
+documentation tarball and type:
+<literallayout class="monospaced">
+gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+</literallayout>
+This will create <filename>/usr/local/&sr;Docs</filename>, the
+&sr; documentation directory. Type <command>exit</command> to exit the
+root account.
+</para>
+<para>
+Point your browser at
+<filename>/usr/local/&sr;Docs/doc/index.html</filename> to view &sr;'s
+online documentation.
 </para>
 </section>
 
@@ -220,7 +264,7 @@ third party software, and sample data sets.</para>
 <para>Building &sr;</para>
 </listitem>
 </orderedlist>
-</para> 
+</para>
 
 <note>
 <para>If you are building
@@ -238,7 +282,7 @@ CFLAGS=fPIC
 CXXFLAGS=fPIC
 export CFLAGS CXXFLAGS
 </programlisting>
-for sh-type shells, 
+for sh-type shells,
 </para>
 </note>
 </section>
@@ -251,19 +295,43 @@ for sh-type shells,
 <listitem>
 
 <para>
-Obtain the source code for SCIRun and any desired packages.  Be sure
-to get the <filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename> and
-<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename> files too.  The compressed
-tarballs for these sources can be downloaded from SCI's <ulink
+From SCI's <ulink
 url="http://software.sci.utah.edu/archive_entry.html">software
-archive</ulink> page.
+archive</ulink> page obtain the following:
+<itemizedlist>
+<listitem>
+<para>
+&sr; sources, <filename>&sr;.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; package sources, e.g. <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Third-party sources, <filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; sample data sets, <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; documentation, <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+</itemizedlist>
 </para>
 
 </listitem>
 
 <listitem>
 <para>
-Unpack the &sr; tarball in a directory of your choice:
+Unpack the &sr; sources tarball in a directory of your choice:
 <literallayout class="monospaced">
 gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
@@ -282,14 +350,6 @@ gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Pack
 </literallayout>
 to unpack the BioPSE package.
 </para>
-<note>
-<title>Note</title>
-<para><xref linkend="ap.lsrcvs"/> discusses a method for putting the
-downloaded &sr; sources under control of the CVS version control
-system.  This is useful if you will be writing modules or other &sr;
-code.  This is <emphasis>not</emphasis> a requirement for installing
-&sr; though!</para>
-</note>
 </listitem>
 
 <listitem>
@@ -300,7 +360,7 @@ gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
 This will create the directory <filename>SCIRunData</filename>.  You
 may want to move this directory to a location accessible to all &sr;
-users. 
+users.
 </para>
 </listitem>
 
@@ -311,11 +371,34 @@ Unpack the third party tarball:
 gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
 This will create the directory
-<filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>. 
+<filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the documentation tarball:
+<literallayout class="monospaced">
+gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+</literallayout>
+This will create the directory <filename>&sr;Docs</filename>.  You
+may want to move this directory to a location accessible to all &sr;
+users.  Point your browser at
+<filename>&sr;Docs/doc/index.html</filename> to access &sr;'s online
+documentation.
 </para>
 </listitem>
 
 </orderedlist>
+
+<note>
+<title>Note</title>
+<para><xref linkend="ap.lsrcvs"/> discusses a method for putting the
+downloaded &sr; sources under control of the CVS version control
+system.  This is useful if you will be writing modules or other &sr;
+code.  This is <emphasis>not</emphasis> a requirement for installing
+&sr; though!</para>
+</note>
 
 </section>
 
@@ -373,7 +456,7 @@ python install /usr/local/&sr;/Third_Party 32 1
 </literallayout>
 When finished, the installation script will display the complete path
 of the third-party software installation directory&mdash;make note of
-this value.  
+this value.
 </para>
 
 </listitem>
@@ -425,7 +508,7 @@ Run &sr;'s configure script.    Do this from a sub-directory of
 <literallayout class="monospaced">
 mkdir &sr;/<replaceable>dir</replaceable>
 cd &sr;/<replaceable>dir</replaceable>
-../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \ 
+../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
 --enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
 </literallayout>
 in which case &sr; will be built in the directory
@@ -475,7 +558,7 @@ cd &sr;/sgi64
 There are many options to the configure command in addition to the
 <option>--with-thirdparty</option> and
 <option>--enable-package</option> options you have already seen.
-<xref linkend="appendix"/> lists many of them.
+The <command>configure --help</command> command lists them all.
 </para>
 
 </listitem>
@@ -535,12 +618,11 @@ purpose of the variables and how to initalize them.
 </para>
 
 <section id="sec.dyncomp">
-<title id="title.dyncomp">Dynamic
-Compilation (and <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>)</title>
+<title id="title.dyncomp">Dynamic Compilation</title>
 
 <para>Before starting &sr; you
 should be aware of a feature called <firstterm>Dynamic
-Compilation</firstterm>.</para> 
+Compilation</firstterm>.</para>
 
 <para>Dynamic compilition is a technique used by &sr; that discovers
 and generates code for the data types and algorithms used by modules
@@ -624,20 +706,38 @@ between instances of &sr;.</para>
 </section>
 
 <section>
-<title>Accessing Data Sets (and <envar>SCIRUN_DATA</envar>)</title>
+<title>Accessing Data Sets</title>
 
 <para>
-<envar>SCIRUN_DATA</envar> specifies the default data directory of
-&sr; data sets. If you will be working through &sr;'s <ulink
-url="../../User/Tutorial/index.html">tutorial</ulink> then you will
-want to set the value of <envar>SCIRUN_DATA</envar> to point to the
-sample data sets directory, <filename>SCIRunData</filename>:
+The environment variables <envar>SCIRUN_DATA</envar> and
+<envar>SCIRUN_DATASET</envar> specify the complete path to a &sr;
+<firstterm>data set</firstterm>.  <envar>SCIRUN_DATA</envar> specifies
+a directory which contains a collection of data set directories.
+<envar>SCIRUN_DATA</envar> is used in conjunction with
+<envar>SCIRUN_DATASET</envar> to specify the full path of a data set.
+<envar>SCIRUN_DATASET</envar> specifies a specific data set directory.
+</para>
+
+<para>
+When working through &sr;'s <ulink
+url="../../User/Tutorial/index.html">tutorial</ulink> you must
+set the value of <envar>SCIRUN_DATA</envar> to point to the sample
+data sets directory, <filename>SCIRunData</filename>:
 <literallayout class="monospaced">
 export SCIRUN_DATA=<replaceable>/path/to/</replaceable>SCIRunData
 </literallayout>
 or
 <literallayout class="monospaced">
 setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
+</literallayout>
+and <envar>SCIRUN_DATASET</envar> must point to one of the directories
+within <filename>SCIRunData</filename>, e.g. <filename>utahtorso</filename>:
+<literallayout class="monospaced">
+export SCIRUN_DATASET=utahtorso
+</literallayout>
+or
+<literallayout class="monospaced">
+setenv SCIRUN_DATA utahtorso
 </literallayout>
 </para>
 </section>
@@ -649,15 +749,15 @@ setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
 <title>Starting &sr;</title>
 
 <para>
-If you installed &sr; from it's rpm you can test it's installation by
+If you installed &sr; from its rpm you can test its installation by
 typing <command>/usr/local/SCIRun/bin/scirun</command> (you may want
 to add <filename>/usr/local/SCIRun/bin</filename> to your
 <envar>PATH</envar> variable).
 </para>
 
 <para>
-If you built &sr; from it's source code tarballs then you can test
-it's installation by <command>cd</command>ing to it's build directory
+If you built &sr; from its source code tarballs then you can test
+its installation by <command>cd</command>ing to its build directory
 and typing <command>./scirun</command>.
 </para>
 
@@ -703,8 +803,11 @@ displayed.  Also include a short description of what you we're doing
 you have.
 </para>
 
-<para>See also the <ulink
-url="../../FAQBook/index.html">FAQs</ulink></para>
+<para>
+See also the <ulink
+url="../../Installation/FAQ/faq.html">Installation</ulink> and <ulink
+url="../../User/FAQ/faq.html">User</ulink> FAQs.
+</para>
 
 </section>
 
