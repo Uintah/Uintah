@@ -12,7 +12,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geom/GeomLine.h>
