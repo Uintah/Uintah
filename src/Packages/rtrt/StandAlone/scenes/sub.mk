@@ -5,6 +5,8 @@ SRCDIR := Packages/rtrt/StandAlone/scenes
 SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/gl.mo \
+	$(SRCDIR)/simple.mo \
+	$(SRCDIR)/simple_spheres.mo \
 	$(SRCDIR)/1.mo \
 	$(SRCDIR)/2.mo \
 	$(SRCDIR)/3.mo \
