@@ -746,7 +746,7 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
   }
   //__________________________________
   if(d_ice->d_models.size() > 0){
-    t->requires(Task::NewDW,Ilb->modelVol_srcLabel, Ghost::AroundCells,1);
+    t->requires(Task::NewDW,Ilb->modelMass_srcLabel, Ghost::AroundCells,1);
   }
   t->computes(Mlb->massBurnFractionLabel);
 
