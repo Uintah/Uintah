@@ -15,14 +15,6 @@ SRCS     += $(SRCDIR)/CIA_sidl.cc $(SRCDIR)/Class.cc \
 	$(SRCDIR)/NoSuchMethodException.cc $(SRCDIR)/Object.cc \
 	$(SRCDIR)/Throwable.cc 
 
-$(SRCDIR)/CIA_sidl.o: $(SRCDIR)/CIA_sidl.cc $(SRCDIR)/CIA_sidl.h
-
-$(SRCDIR)/CIA_sidl.cc: $(SRCDIR)/cia.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -cia -o $@ $<
-
-$(SRCDIR)/CIA_sidl.h: $(SRCDIR)/cia.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -cia -h -o $@ $<
-
 GENHDRS := $(SRCDIR)/CIA_sidl.h
 
 PSELIBS := Component/PIDL
@@ -32,6 +24,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/03/21 06:13:31  sparker
+# Added pattern rule for .sidl files
+# Compile component testprograms
+#
 # Revision 1.3  2000/03/20 19:35:45  sparker
 # Added VPATH support
 #
