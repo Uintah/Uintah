@@ -68,8 +68,8 @@ TimestepSelector::execute()
 
    vector< double > times;
    vector< int > indices;
+   DataArchive& archive = *((*(handle.get_rep()))());
    try {
-     DataArchive& archive = *((*(handle.get_rep()))());
      archive.queryTimesteps( indices, times );
      if( archiveH.get_rep() == 0 ||
 	 archiveH.get_rep() != handle.get_rep()){
@@ -116,8 +116,7 @@ TimestepSelector::execute()
    if( animate.get() ){
      //DataArchive& archive = *((*(handle.get_rep()))());
      while( animate.get() ) { // && idx < (int)times.size() - 1){
-       //       archive.purgeTimestepCache( times[idx] );
-       DataArchive::cacheOnlyCurrentTimestep = true;
+       archive.turnOffXMLCaching();
        // Get tinc and make sure it is a good value.
        int tinc_val = tinc.get();
        if (tinc_val < 0) {
@@ -126,15 +125,12 @@ TimestepSelector::execute()
        } else if (tinc_val == 0) {
 	 warning("Time Step Increment is equal to 0.  The time step will not increment.");
        }
-       cout << "times.size() = "<<times.size()<<endl;
-       cout << "idx = "<<idx<<", tinc_val = "<<tinc_val<<endl;
        // See if incrementing idx will go out of bounds.  If it will
        // don't change it.
        if (idx + tinc_val < times.size() )
 	 idx+=tinc_val;
        else
 	 break;
-       cout << "after: idx = "<<idx<<", tinc_val = "<<tinc_val<<endl;
        tcl_status.set( to_string( times[idx] ));
        time.set( idx );
        handle->SetTimestep( idx );
@@ -169,6 +165,7 @@ TimestepSelector::execute()
        sleep(unsigned( anisleep.get()));
      }
      animate.set(0);
+     archive.turnOnXMLCaching();
    }
    time.set( idx );
    reset_vars();
