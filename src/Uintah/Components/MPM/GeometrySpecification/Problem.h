@@ -1,57 +1,64 @@
 #ifndef __PROBLEM_H__
 #define __PROBLEM_H__
 
-#include "GeometryObject.h"
-#include "../BoundCond.h"
-#include "Material.h"
+#include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Uintah/Components/MPM/BoundCond.h>
+#include <Uintah/Components/MPM/GeometrySpecification/Material.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
 #include <string>
 #include <vector>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::Point;
+using Uintah::Interface::ProblemSpec;
+using Uintah::Interface::ProblemSpecP;
+
 namespace Uintah {
     namespace Grid {
 	class Region;
     }
 }
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/GridP.h>
 
 class Problem {
-private:
-  int                NumMaterial; //
-    std::vector<Material *> materials;   //
-  double             bnds[7];     // 1-6 are x-z boundaries xlo, xhi, ylo, yhi
-  double             dx[4];       // 1-3 are spacing
-  int                nppcel[4];   // 1-3 number of particles per cell
-  int                NumObjects;  //
-    std::vector<int>        npieces;     // number of pieces for each object
-    std::vector<GeomObject> Objects;
-  int                numbcs;      // number of boundary conditions;
-    std::vector<BoundCond>  BC;          // boundary conditions
-
   
-public:
+ public:
   Problem();
   ~Problem();
-
-    void getBnds(double bnds[7]) {
-	for(int i=1;i<7;i++)
-	    bnds[i] = this->bnds[i];
-    }
-    void getDx(double dx[4]) {
-	for(int i=1;i<4;i++)
-	    dx[i] = this->dx[i];
-    }
-
-  void preProcessor(std::string filename);
-  void createParticles(const Uintah::Grid::Region* region, Uintah::Interface::DataWarehouseP&);
-  void writeGridFiles(std::string gridposname, std::string gridcellname);
-  void writeSAMRAIGridFile(std::string gridname);
+  
+    
+  void preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
+		    Uintah::Grid::GridP grid);
+  void createParticles(const Uintah::Grid::Region* region, 
+		       Uintah::Interface::DataWarehouseP&);
+   
   int  getNumMaterial() const;
   int getNumObjects() const;
-    std::vector<GeomObject> * getObjects();
+  std::vector<GeometryObject>* getObjects();
+ 
+
+ private:
+  int d_num_material; //
+  std::vector<Material *> d_materials;   //
+  int  d_num_objects;  //
+  std::vector<GeometryObject> d_objects;
+  int d_num_bcs;      // number of boundary conditions;
+  std::vector<BoundCond>  d_bcs;          // boundary conditions
+
 };
 
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.4  2000/04/14 02:05:46  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.3  2000/03/20 17:17:15  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

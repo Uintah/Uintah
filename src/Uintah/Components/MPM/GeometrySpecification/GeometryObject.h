@@ -1,11 +1,24 @@
 #ifndef __GEOMETRY_OBJECT_H__
 #define __GEOMETRY_OBJECT_H__
 
-#include "GeometryPiece.h"
-#include "../BoundCond.h"
+#include <Uintah/Components/MPM/GeometrySpecification/GeometryPiece.h>
+#include <Uintah/Components/MPM/BoundCond.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <iosfwd>
 #include <vector>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/IntVector.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpec.h>
+
+
+using Uintah::Interface::ProblemSpecP;
+using Uintah::Interface::ProblemSpec;
+using SCICore::Geometry::Point;
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::IntVector;
+
 namespace SCICore {
     namespace Geometry {
 	class Vector;
@@ -15,42 +28,52 @@ class Material;
 class ParticleSet;
 class Region;
 
-class GeomObject {
-private:
-
-  int                     numPieces,objectNumber,inPiece;
-  double                  dXYZ[4];
-  int                     numParPCell[4];
-  GeomPiece               gP[50];
-  double                  probBounds[7];
-  double                  dxpp,dypp,dzpp; // distance between particles
+class GeometryObject {
        
-public:
+ public:
 
-  GeomObject();
-  ~GeomObject();
+  GeometryObject();
+  ~GeometryObject();
   
-  void setObjInfo(int n, double bds[7], int np,double dx[4],int nppc[4]);
-  double * getObjInfoBounds();
-  void setObjInfoBounds(double bds[7]);
+  void setObjInfo(int n, Point low, Point hi, Vector dx,IntVector ppc);
+  Point getObjInfoBoundsLower();
+  Point getObjInfoBoundsUpper();
+  void setObjInfoBounds(Point lo, Point up);
   int getObjInfoNumPieces();
-  double * getObjInfoDx();
-  int * getObjInfoNumParticlesPerCell();
-  void addPieces(std::ifstream &filename);
+  Vector getObjInfoDx();
+  IntVector getObjInfoNumParticlesPerCell();
+  void addPieces(ProblemSpecP prob_spec);
   int  getPieceInfo();
   void readFromFile(std::ifstream &filename);
-  void FillWParticles(std::vector<Material *> materials,
-		      std::vector<BoundCond> BC,
+  void fillWithParticles(std::vector<Material *> &materials,
+		      std::vector<BoundCond> &BC,
 		      const Region* region,
 		      Uintah::Interface::DataWarehouseP&);
-  int CheckShapes(double x[3], int &np);
-  void Surface(double x[3], int surf[7], int &np);
-  void Norm(SCICore::Geometry::Vector &norm,double x[3], int surf[7], int ptype, int &np);
+  int checkShapes(Point part_pos, int &np);
+  void surface(Point part_pos, int surf[7], int &np);
+  void norm(Vector &norm,Point part_pos, int surf[7], int ptype, int &np);
+
+ private:
+
+  int d_num_pieces;
+  int d_object_number;
+  int d_in_piece;
+  Vector d_xyz;
+  IntVector d_num_par_per_cell;
+  std::vector<GeometryPiece *> d_geom_pieces;
+  Point d_upper_prob_coord;
+  Point d_lower_prob_coord;
+  Vector d_particle_spacing; // distance between particles
 
 };
 
 #endif // __GEOMETRY_OBJECT_H__
 // $Log$
+// Revision 1.5  2000/04/14 02:05:45  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.4  2000/03/20 17:17:14  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

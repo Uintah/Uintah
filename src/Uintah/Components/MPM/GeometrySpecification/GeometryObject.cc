@@ -1,12 +1,20 @@
 
 #include <math.h>
 #include "GeometryObject.h"
+#include "BoxGeometryPiece.h"
+#include "SphereGeometryPiece.h"
+#include "CylinderGeometryPiece.h"
+#include "TriGeometryPiece.h"   
 #include "Material.h"
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
 using SCICore::Geometry::Vector;
+using SCICore::Geometry::Point;
+using Uintah::Interface::DataWarehouseP;
+using Uintah::Grid::ParticleVariable;
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -15,420 +23,169 @@ using std::ifstream;
 using std::string;
 using std::vector;
 
-GeomObject::GeomObject()
+GeometryObject::GeometryObject()
 {
 }
-GeomObject::~GeomObject()
+GeometryObject::~GeometryObject()
 {
 }
 
-void GeomObject::setObjInfo(int n, double bds[7],int np,double dx[4],int nppc[4])
+void GeometryObject::setObjInfo(int n,Point lo,Point hi,
+				Vector dx,IntVector nppc)
 {
 
-  objectNumber=n;
-  numPieces = np;
-  for(int i=1;i<=3;i++){
-    dXYZ[i]         = dx[i];
-    numParPCell[i]  = nppc[i];
-    probBounds[i]   = bds[i];
-    probBounds[i+3] = bds[i+3];
-  }
+  d_object_number=n;
+  
+  d_xyz = dx;
+  d_num_par_per_cell  = nppc;
+  
+
+  d_upper_prob_coord = hi;
+  d_lower_prob_coord = lo;
 }
 
-double * GeomObject::getObjInfoBounds()
+Point GeometryObject::getObjInfoBoundsLower()
 {
-	return probBounds;
+  return d_lower_prob_coord;
 }
 
-void GeomObject::setObjInfoBounds(double bds[7])
+Point GeometryObject::getObjInfoBoundsUpper()
 {
-      for (int i = 1; i<=6; i++) {
-	  probBounds[i] = bds[i];
-      }	
+  return d_upper_prob_coord;
 }
 
-int GeomObject::getObjInfoNumPieces()
+void GeometryObject::setObjInfoBounds(Point lo, Point hi)
 {
- 	return numPieces;
+  d_lower_prob_coord = lo;
+  d_upper_prob_coord = hi;    
 }
 
-double * GeomObject::getObjInfoDx()
+int GeometryObject::getObjInfoNumPieces()
 {
-	return dXYZ;
+  return d_num_pieces;
 }
 
-int * GeomObject::getObjInfoNumParticlesPerCell()
+Vector GeometryObject::getObjInfoDx()
 {
-	return numParPCell;
+  return d_xyz;
+}
+
+IntVector GeometryObject::getObjInfoNumParticlesPerCell()
+{
+  return d_num_par_per_cell;
 }
    
 
-void GeomObject::addPieces(ifstream &filename)
+void GeometryObject::addPieces(ProblemSpecP prob_spec)
 {
   int pt,pn,mn,i,m,vf_num;
   double gb[7];
   string stuff;
-  double icv[4];
+  Vector init_cond_vel;
+  Point origin;
+  double radius;
+  double length;
+  Point lo, up;
+  CylinderGeometryPiece::AXIS axis;
 
-  for(i=1;i<=numPieces;i++){
-    filename >> stuff;
-    //cout << stuff << endl;
-    filename >> pt >> pn >> mn >> vf_num;
-    gP[i].setPieceType(pt);
-    gP[i].setPosNeg(pn);
-    gP[i].setMaterialNum(mn);
-    gP[i].setVelFieldNum(vf_num);
-    
-    if(pt==1){              // Box
-      filename >> stuff;;
-      //cout << stuff << endl;
-      filename >> gb[1]>>gb[2]>>gb[3]>>gb[4]>>gb[5]>>gb[6];
-      gP[i].setGeomBounds(gb);
-      filename >> stuff;
-      //cout << stuff << endl;
-      filename >> icv[1]>>icv[2]>>icv[3];
-      gP[i].setInitialConditions(icv);
-    }
-    else if(pt==2){         // Cylinder
-      filename >> stuff;
-      //cout << stuff << endl;
-      filename >> gb[1]>>gb[2]>>gb[3]>>gb[4]>>gb[5]>>gb[6];
-      gP[i].setGeomBounds(gb);
-      filename >> stuff;
-      //cout << stuff << endl;
-      filename >> icv[1]>>icv[2]>>icv[3];
-      gP[i].setInitialConditions(icv);
-    }
-    else if(pt==3){         // Sphere
-      filename >> stuff;
-      //cout << stuff << endl;
-      filename >>gb[1]>>gb[2]>>gb[3]>>gb[4];
-      gP[i].setGeomBounds(gb);
-      filename >> stuff;
-      //cout << stuff << endl;
-      filename >>icv[1]>>icv[2]>> icv[3];
-      gP[i].setInitialConditions(icv);
-    }
-    else if(pt==4){         // Planes
-      for(m=i;m<i+pn;m++){
-	filename >> stuff;
-	//cout << stuff << endl;
-	filename >>gb[1]>>gb[2]>>gb[3]>>gb[4];
-	gP[m].setGeomBounds(gb);
-      }
-      filename >> stuff;
-      //cout << stuff << endl;
-      filename >> icv[1] >> icv[2] >> icv[3];
-      gP[i].setInitialConditions(icv);
-      i=i+pn;
-    }
+  std::string type;
+  prob_spec->require("type",type);
+
+  GeometryPiece *geom_piece;
+
+  // NOTE: In the original code, we set the initial conditions, but this
+  // hasn't been implemented yet.  Probably shouldn't be here either.
+
+  if (type == "box") {
+    Point min,max;
+    prob_spec->require("min",min);
+    prob_spec->require("max",max);
+  
+    geom_piece = new BoxGeometryPiece(min,max);
+
   }
+
+  else if (type == "cylinder") {
+    std::string ax;
+    prob_spec->require("axis",ax);
+    prob_spec->require("origin",origin);
+    prob_spec->require("length",length);
+    prob_spec->require("radius",radius);
+    
+    if (ax == "X") axis = CylinderGeometryPiece::X;
+    if (ax == "Y") axis = CylinderGeometryPiece::Y;
+    if (ax == "Z") axis = CylinderGeometryPiece::Z;
+
+    geom_piece = new CylinderGeometryPiece(axis,origin,length,radius);
+
+  }
+
+  else if (type == "sphere") {
+    prob_spec->require("origin",origin);
+    prob_spec->require("radius",radius);
+
+    geom_piece = new SphereGeometryPiece(radius,origin);
+    
+  }
+
+  else if (type == "tri") {
+
+    geom_piece = new TriGeometryPiece;
+
+  }
+    
+  d_geom_pieces.push_back(geom_piece);
   
 }
-int GeomObject::CheckShapes(double x[3], int &np)
+
+
+int GeometryObject::checkShapes(Point part_pos, int &np)
 {
-  int i,j,pp=0,ppold,numplanes,m;
-  double xlow,ylow,zlow;
-  double xhigh,yhigh,zhigh;
-  double rsqr,rdpsqr,dlpp;
-  double a,b,c,d,pln;
-  double gb[7];
+  int pp=0,ppold;
+  double dlpp;
   
-  dlpp=dxpp;
-  if(dlpp<dypp){
-    dlpp=dypp;
+  dlpp=d_particle_spacing.x();
+  if(dlpp<d_particle_spacing.y()){
+    dlpp=d_particle_spacing.y();
   }
-  if(dlpp<dzpp){
-    dlpp=dzpp;
+  if(dlpp<d_particle_spacing.z()){
+    dlpp=d_particle_spacing.z();
   }
   
-  for(i=1;i<=numPieces;i++){
-    for(j=1;j<=6;j++){ gb[j]=gP[i].getGeomBounds(j); }
-    if((pp<=0)&&(gP[i].getPosNeg()>=1.0)){ //  "Positive" space objects go here
-      if(gP[i].getPieceType()==3.0){                /*sphere*/
-	if(Sqr(x[0]-gb[2])+Sqr(x[1]-gb[3])+Sqr(x[2]-gb[4]) <= Sqr(gb[1]))
-	  {
-	    pp = 3;
-	    inPiece=i;
-	  }
-      }
-      else if(gP[i].getPieceType()==2.0){              /*cylinder*/
-	rsqr=Sqr(gb[6]);
-	rdpsqr=Sqr(gb[6]+dlpp);
-	if(gb[1]==1.0){
-	  if(Sqr(x[1]-gb[3])+Sqr(x[2]-gb[4]) <= rsqr
-	     && gb[2]-dxpp-x[0] <= 0.0
-	     && gb[2]+gb[5]+dxpp-x[0] >= 0.0){
-	    pp = 2;
-	    inPiece=i;
-	    if((gb[2]-x[0] <= dxpp)&&(gb[2]-x[0]>0.0)){
-	      pp = -7;
-	    }
-	    else if((gb[2]+gb[5]-x[0]>=-dxpp)&&
-		    (gb[2]+gb[5]-x[0] < 0.0) ){
-	      pp = -8;
-	    }
-	  }
-	  else if(Sqr(x[1]-gb[3])+Sqr(x[2]-gb[4]) > rsqr
-		  && Sqr(x[1]-gb[3])+Sqr(x[2]-gb[4]) <= rdpsqr
-		  && x[0] >= gb[2] 
-		  && x[0] < gb[2]+gb[5])
-	    {
-	      pp = -9;
-	    }
-	}
-	
-	else if(gb[1]==2.0){
-	  if(Sqr(x[0]-gb[2])+Sqr(x[2]-gb[4]) <= rsqr
-	     && gb[3]-dypp-x[1] <= 0.0
-	     && gb[3]+gb[5]+dypp-x[1] >= 0.0){
-	    pp = 2;
-	    inPiece=i;
-	    if((gb[3]-x[1] <= dypp)&&(gb[3]-x[1]>0.0)){
-	      pp = -7;
-	    }
-	    else if((gb[3]+gb[5]-x[1]>=-dypp)&&
-		    (gb[3]+gb[5]-x[1] < 0.0) ){
-	      pp = -8;
-	    }
-	  }
-	  else if(Sqr(x[0]-gb[2])+Sqr(x[2]-gb[4]) > rsqr
-		  && Sqr(x[0]-gb[2])+Sqr(x[2]-gb[4]) <= rdpsqr
-		  && x[1] >= gb[3]
-		  && x[1] < gb[3]+gb[5])
-	    {
-	      pp = -9;
-	    }
-	}
-	
-	else if(gb[1]==3.0){
-	  if(Sqr(x[0]-gb[2])+Sqr(x[1]-gb[3]) <= rsqr
-	     && gb[4]-dzpp-x[2] <= 0.0
-	     && gb[4]+gb[5]+dzpp-x[2] >= 0.0){
-	      pp = 2;
-	      inPiece=i;
-	    if((gb[4]-x[2] <= dzpp)&&(gb[4]-x[2]>0.0)){
-	      pp = -7;
-	    }
-	    else if((gb[4]+gb[5]-x[2]>=-dzpp)&&
-		    (gb[4]+gb[5]-x[2] < 0.0) ){
-	      pp = -8;
-	    }
-	  }
-	  else if(Sqr(x[0]-gb[2])+Sqr(x[1]-gb[3]) > rsqr
-		  && Sqr(x[0]-gb[2])+Sqr(x[1]-gb[3]) <= rdpsqr
-		  && x[2] >= gb[4]
-		  && x[2] < gb[4]+gb[5])
-	    {
-	      pp = -9;
-	    }
-	}
-      }
-      else if(gP[i].getPieceType()==1.0){                   /*hexahedron*/
-	xlow =gb[1];
-	xhigh=gb[2];
-	ylow =gb[3];
-	yhigh=gb[4];
-	zlow =gb[5];
-	zhigh=gb[6];
-	if     ((x[0]-xlow>=0.0) && (xhigh-x[0]>=0.0) &&
-		(x[1]-ylow>=0.0) && (yhigh-x[1]>=0.0) &&
-		(x[2]-zlow>=0.0) && (zhigh-x[2]>=0.0) ){
-	  pp = 1;
-//	  pp = 3; 
-	  inPiece=i;
-	} 
-	else if(xlow-x[0] <= dxpp && 
-		xlow-x[0] > 0.0){
-	  pp= -1;
-	}
-	else if(xhigh-x[0] >= -dxpp &&
-		xhigh-x[0] < 0.0){
-	  pp= -2;
-	}
-	else if(ylow-x[1] <= dypp &&
-		ylow-x[1] > 0.0){
-	  pp= -3;
-	}
-	else if(yhigh-x[1] >= -dypp &&
-		yhigh-x[1] < 0.0){
-	  pp= -4;
-	}
-	else if(zlow-x[2] <= dzpp &&
-		zlow-x[2] > 0.0){
-	  pp= -5;
-	}
-	else if(zhigh-x[2] >= -dzpp &&
-		zhigh-x[2] < 0.0){
-	  pp= -6;
-	}
-      }
-      else if(gP[i].getPieceType()==4.0){
-	numplanes=gP[i].getPosNeg();
-	for(m=i;m<i+numplanes;m++){
-	  a=gP[m].getGeomBounds(1);
-	  b=gP[m].getGeomBounds(2);
-	  c=gP[m].getGeomBounds(3);
-	  d=gP[m].getGeomBounds(4);
-	  pln=a*x[0]+b*x[1]+c*x[2]+d;
-	  if(pln>=0.0){
-	    pp=4;
-	    inPiece=i;
-	  }
-	  else{
-	    pp=-100*m;
-	    m=i+numplanes;
-	  }
-	}
-	i=i+numplanes;
-      }
+  for(int i=1;i<=d_geom_pieces.size();i++){
+   
+    //  "Positive" space objects go here
+  
+    if((pp<=0)&&(d_geom_pieces[i]->getPosNeg()>=1.0)){
+       pp = d_geom_pieces[i]->checkShapesPositive(part_pos,np,i,d_particle_spacing, ppold);
+       d_in_piece = d_geom_pieces[i]->getInPiece();
+
     }      /* if (pp<=0)           */
-    
+
+
 /* Negative stuff       */
-    if((pp>0)&&(gP[i].getPosNeg()==0.0)){
+    if((pp>0)&&(d_geom_pieces[i]->getPosNeg()==0.0)){
       ppold=pp;
-      if(gP[i].getPieceType()==3.0){                   /*sphere*/
-	if(Sqr(x[0]-gb[2])+Sqr(x[1]-gb[3])+Sqr(x[2]-gb[4]) < Sqr(gb[1])) {
-	  pp = -30;
-	  np = i;
-	}
-      }
-      else if(gP[i].getPieceType()==2.0){              /*cylinder*/
-	if(gb[1]==1.0){
-	  if(Sqr(x[1]-gb[3])+Sqr(x[2]-gb[4]) < Sqr(gb[6])) {
-	    pp = -91;
-	    np = i;
-	    if((x[0]<gb[2])||(x[0]>(gb[2]+gb[5]))){
-	      pp = ppold;
-	    }
-	    else if((x[0]-gb[2] <= dxpp) &&
-		    (x[0]-gb[2] > 0.0 )  &&
-		    (pp != -91)){
-	      pp = -71;
-	    }
-	    else if((x[0]-(gb[2]+gb[5]) >= -dxpp) &&
-		    (x[0]-(gb[2]+gb[5]) < 0.0 )   &&
-		    (pp != -91)){
-	      pp = -81;
-	    }
-	  }
-	}
-	else if(gb[1]==2.0){
-	  if(Sqr(x[0]-gb[2])+Sqr(x[2]-gb[4]) < Sqr(gb[6])) {
-	    pp = -91;
-	    np = i;
-	    if((x[1]<gb[3])||(x[1]>(gb[3]+gb[5]))){
-	      pp = ppold;
-	    }
-	    else if((x[1]-gb[3] <= dypp) &&
-		    (x[1]-gb[3] > 0.0 )  &&
-		    (pp != -91)){
-	      pp = -71;
-	    }
-	    else if((x[1]-(gb[3]+gb[5]) >= -dypp) &&
-		    (x[1]-(gb[3]+gb[5]) < 0.0 )  &&
-		    (pp != -91)){
-	      pp = -81;
-	    }
-	  }
-	}
-	else if(gb[1]==3.0){
-	  if(Sqr(x[0]-gb[2])+Sqr(x[1]-gb[3]) < Sqr(gb[6])) {
-	    pp = -91;
-	    np = i;
-	    if((x[2]<gb[4])||(x[2]>(gb[4]+gb[5]))){
-	      pp = ppold;
-	    }
-	    else if((x[2]-gb[4] <= dzpp) &&
-		    (x[2]-gb[4] > 0.0 )  &&
-		    (pp != -91)){
-	      pp = -71;
-	    }
-	    else if((x[2]-(gb[4]+gb[5]) >= -dzpp) &&
-		    (x[2]-(gb[4]+gb[5]) < 0.0 )  &&
-		    (pp != -91)){
-	      pp = -81;
-	    }
-	  }
-	}
-      }
-      else if(gP[i].getPieceType()==1.0){                   /*hexahedron*/
-	xlow =gb[1];
-	xhigh=gb[2];
-	ylow =gb[3];
-	yhigh=gb[4];
-	zlow =gb[5];
-	zhigh=gb[6];
-	if((x[0]-xlow>0.0) && (xhigh-x[0]>0.0) &&
-	   (x[1]-ylow>0.0) && (yhigh-x[1]>0.0) &&
-	   (x[2]-zlow>0.0) && (zhigh-x[2]>0.0) ){
-	  pp = -10;
-	  np = i;
-	}
-	
-	if(xlow-x[0] >= -dxpp &&
-	   xlow-x[0] < 0.0   &&
-	   x[1]-ylow>0.0 && yhigh-x[1]>0.0 &&
-	   x[2]-zlow>0.0 && zhigh-x[2]>0.0 ){
-	  pp= -11;
-	  np = i;
-	}
-	if(xhigh-x[0] <= dxpp &&
-	   xhigh-x[0] > 0.0   &&
-	   x[1]-ylow>0.0 && yhigh-x[1]>0.0 &&
-	   x[2]-zlow>0.0 && zhigh-x[2]>0.0 ){
-	  pp= -21;
-	  np = i;
-	}
-	if(ylow-x[1] >= -dypp &&
-	   ylow-x[1] < 0.0    &&
-	   x[0]-xlow>0.0 && xhigh-x[0]>0.0 &&
-	   x[2]-zlow>0.0 && zhigh-x[2]>0.0 ){
-	  pp= -31;
-	  np = i;
-	}
-	if(yhigh-x[1] <= dypp &&
-	   yhigh-x[1] > 0.0  &&
-	   x[0]-xlow>0.0 && xhigh-x[0]>0.0 &&
-	   x[2]-zlow>0.0 && zhigh-x[2]>0.0 ){
-	  pp= -41;
-	  np = i;
-	}
-	if(zlow-x[2] >= -dzpp &&
-	   zlow-x[2] < 0.0    &&
-	   x[0]-xlow>0.0 && xhigh-x[0]>0.0 &&
-	   x[1]-ylow>0.0 && yhigh-x[1]>0.0){
-	  pp= -51;
-	  np = i;
-	}
-	if(zhigh-x[2] <= dzpp &&
-	   zhigh-x[2] > 0.0   &&
-	   x[0]-xlow>0.0 && xhigh-x[0]>0.0 &&
-	   x[1]-ylow>0.0 && yhigh-x[1]>0.0){
-	  pp= -61;
-	  np = i;
-	}
-	
-	
-      }     /* if (which shape)     */
+      pp = d_geom_pieces[i]->checkShapesNegative(part_pos,np,i,d_particle_spacing, ppold);
     }      /* if (pp>0)            */
+
   }         /* for */
   
   return pp;
+
 }
 
-void GeomObject::Surface(double x[3],int surf[7], int &np)
+void GeometryObject::surface(Point part_pos,int surf[7], int &np)
 {
-  double cp[3];
+  Point check_point;
   int next=1,last=6,ss;
   /*  Check the candidate points which surround the point just passed
       in.  If any of those points are not also inside the body
       described in SHAPE, the current point is on the surface */
 
-  cp[0]=x[0]-dxpp;        /* Check to the left */
-  cp[1]=x[1];
-  cp[2]=x[2];
-  ss=CheckShapes(cp,np);
+ // Check to the left
+  check_point = Point(part_pos.x()-d_particle_spacing.x(),part_pos.y(),part_pos.z());
+  ss=checkShapes(check_point,np);
   if(ss<1){
     surf[next]=ss;
     next=next+1;
@@ -438,10 +195,9 @@ void GeomObject::Surface(double x[3],int surf[7], int &np)
     last=last-1;
   }
 
-  cp[0]=x[0]+dxpp;        /* Check to the right */
-  cp[1]=x[1];
-  cp[2]=x[2];
-  ss=CheckShapes(cp,np);
+  // Check to the right
+  check_point = Point(part_pos.x()+d_particle_spacing.x(),part_pos.y(),part_pos.z());
+  ss=checkShapes(check_point,np);
   if(ss<1){
     surf[next]=ss;
     next=next+1;
@@ -451,10 +207,9 @@ void GeomObject::Surface(double x[3],int surf[7], int &np)
     last=last-1;
   }
 
-  cp[0]=x[0];
-  cp[1]=x[1]-dypp;        /* Check below */
-  cp[2]=x[2];
-  ss=CheckShapes(cp,np);
+  // Check below
+  check_point = Point(part_pos.x(),part_pos.y()-d_particle_spacing.y(),part_pos.z());
+  ss=checkShapes(check_point,np);
   if(ss<1){
     surf[next]=ss;
     next=next+1;
@@ -464,10 +219,9 @@ void GeomObject::Surface(double x[3],int surf[7], int &np)
     last=last-1;
   }
 
-  cp[0]=x[0];
-  cp[1]=x[1]+dypp;        /* Check above  */
-  cp[2]=x[2];
-  ss=CheckShapes(cp,np);
+  // Check above
+  check_point = Point(part_pos.x(),part_pos.y()+d_particle_spacing.y(),part_pos.z());
+  ss=checkShapes(check_point,np);
   if(ss<1){
     surf[next]=ss;
     next=next+1;
@@ -477,10 +231,9 @@ void GeomObject::Surface(double x[3],int surf[7], int &np)
     last=last-1;
   }
 
-  cp[0]=x[0];
-  cp[1]=x[1];
-  cp[2]=x[2]-dzpp;        /* Check behind */
-  ss=CheckShapes(cp,np);
+  // Check behind
+  check_point = Point(part_pos.x(),part_pos.y(),part_pos.z()-d_particle_spacing.z());
+  ss=checkShapes(check_point,np);
   if(ss<1){
     surf[next]=ss;
     next=next+1;
@@ -490,10 +243,9 @@ void GeomObject::Surface(double x[3],int surf[7], int &np)
     last=last-1;
   }
   
-  cp[0]=x[0];
-  cp[1]=x[1];
-  cp[2]=x[2]+dzpp;        /* Check in front */
-  ss=CheckShapes(cp,np);
+  // Check in front
+  check_point = Point(part_pos.x(),part_pos.y(),part_pos.z()+d_particle_spacing.z());
+  ss=checkShapes(check_point,np);
   if(ss<1){
     surf[next]=ss;
     next=next+1;
@@ -503,230 +255,47 @@ void GeomObject::Surface(double x[3],int surf[7], int &np)
     last=last-1;
   }
 
+
+ 
+
   return;
 }
 
-void GeomObject::Norm(Vector &norm, double x[3], int sf[7], int inPiece, int &np)
+void GeometryObject::norm(Vector &norm, Point part_pos, int sf[7], 
+			  int inPiece, int &np)
 {
 
   Vector dir(0.0,0.0,0.0);
-  double gb[7],len;
   norm = Vector(0.0,0.0,0.0);
   int small = 1;
 
-  for(int i=1;i<=6;i++){
-	if(sf[i] < small){ small = sf[i]; }
-  }
-  if(small == 1){ return; }		// Not a surface point
 
-
-  for(int j=1;j<=6;j++){ gb[j]=gP[inPiece].getGeomBounds(j); }
-  int ptype = gP[inPiece].getPieceType();
-
-  if(ptype == 1){			// hexahedron
-	for(int i=1;i<=6;i++){
-	  if(sf[i]==(-1)){		// low x
-		dir = Vector(-1.0,0.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-2)){		// high x
-		dir = Vector(1.0,0.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-3)){		// low y
-		dir = Vector(0.0,-1.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-4)){		// high y
-		dir = Vector(0.0,1.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-5)){		// low z
-		dir = Vector(0.0,0.0,-1.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-6)){		// high z
-		dir = Vector(0.0,0.0,1.0);
-		norm+=dir;
-	  }
-	}
-  }
-  else if(ptype == 2){			// cylinder
-     if(gb[1]==1.0){			// x-axis aligned
-	for(int i=1;i<=6;i++){
-          if(sf[i]==(-7)){		// low x
-		dir = Vector(-1.0,0.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-8)){		// high x
-		dir = Vector(1.0,0.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-9)){		// curved surface
-		dir = Vector(0.0,2.0*(x[1]-gb[3]),2.0*(x[2]-gb[4]));
-		dir.normalize();
-		norm+=dir;
-          }
-	}
-     }
-     else if(gb[1]==2.0){		// y-axis aligned
-	for(int i=1;i<=6;i++){
-          if(sf[i]==(-7)){		// low y
-		dir = Vector(0.0,-1.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-8)){		// high y
-		dir = Vector(0.0,1.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-9)){		// curved surface
-		dir = Vector(2.0*(x[0]-gb[2]),0.0,2.0*(x[2]-gb[4]));
-		dir.normalize();
-		norm+=dir;
-          }
-	}
-     }
-     else if(gb[1]==3.0){		// z-axis aligned
-	for(int i=1;i<=6;i++){
-          if(sf[i]==(-7)){		// low z
-		dir = Vector(0.0,0.0,-1.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-8)){		// high z
-		dir = Vector(0.0,0.0,1.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-9)){		// curved surface
-		dir = Vector(2.0*(x[0]-gb[2]),2.0*(x[1]-gb[3]),0.0);
-		dir.normalize();
-		norm+=dir;
-          }
-	}
-     }
-  }
-  else if(ptype == 3){
-	for(int i=1;i<=6;i++){
-	  if(sf[i]==(0)){		// sphere's surface
-		dir = Vector(2.0*(x[0]-gb[1]),2.0*(x[1]-gb[2]),2.0*(x[2]-gb[3]));
-		dir.normalize();
-		norm+=dir;
-	  }
-	}
-  }
-
-  if(small < -10){	// The point is on the surface of a "negative" object.
-    // Get the geometry information for the negative object so we can determine
-    // a surface normal.
-    for(int j=1;j<=6;j++){ gb[j]=gP[np].getGeomBounds(j); }
-     int ptype = gP[np].getPieceType();
-
-     if(ptype == 1){			// hexahedron
-	for(int i=1;i<=6;i++){
-	  if(sf[i]==(-11)){			// low x
-		dir = Vector(1.0,0.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-21)){		// high x
-		dir = Vector(-1.0,0.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-31)){		// low y
-		dir = Vector(0.0,1.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-41)){		// high y
-		dir = Vector(0.0,-1.0,0.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-51)){		// low z
-		dir = Vector(0.0,0.0,1.0);
-		norm+=dir;
-	  }
-	  else if(sf[i]==(-61)){		// high z
-		dir = Vector (0.0,0.0,-1.0);
-		norm+=dir;
-	  }
-	}
-     }
-     else if(ptype == 2){	// cylinder
-      if(gb[1]==1.0){			// x-axis aligned
-	for(int i=1;i<=6;i++){
-          if(sf[i]==(-71)){		// low x
-		dir = Vector(1.0,0.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-81)){		// high x
-		dir = Vector(-1.0,0.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-91)){		// curved surface
-		dir = Vector(0.0,-2.0*(x[1]-gb[3]),-2.0*(x[2]-gb[4]));
-		dir.normalize();
-		norm+=dir;
-          }
-	}
-      }
-      else if(gb[1]==2.0){		// y-axis aligned
-	for(int i=1;i<=6;i++){
-          if(sf[i]==(-71)){		// low y
-		dir = Vector(0.0,1.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-81)){		// high y
-		dir = Vector(0.0,-1.0,0.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-91)){		// curved surface
-		dir = Vector(-2.0*(x[0]-gb[2]),0.0,-2.0*(x[2]-gb[4]));
-		dir.normalize();
-		norm+=dir;
-          }
-	}
-      }
-      else if(gb[1]==3.0){		// z-axis aligned
-	for(int i=1;i<=6;i++){
-          if(sf[i]==(-71)){		// low z
-		dir = Vector(0.0,0.0,1.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-81)){		// high z
-		dir = Vector(0.0,0.0,-1.0);
-		norm+=dir;
-          }
-          if(sf[i]==(-91)){		// curved surface
-		dir = Vector(-2.0*(x[0]-gb[2]),-2.0*(x[1]-gb[3]),0.0);
-		dir.normalize();
-		norm+=dir;
-          }
-	}
-     }
+ for(int i=1;i<=6;i++) {
+    if(sf[i] < small) { 
+      small = sf[i]; 
     }
-    else if(ptype == 3){
-	for(int i=1;i<=6;i++){
-	  if(sf[i]==(-30)){		// sphere's surface
-		dir = Vector(-2.0*(x[0]-gb[1]),-2.0*(x[1]-gb[2]),-2.0*(x[2]-gb[3]));
-		dir.normalize();
-		norm+=dir;
-	  }
-	}
-    }
-
   }
+  
+  // Not a surface point
+  if(small == 1){ 
+    return; 
+  }		
 
-  // Normalize the surface normal vector
-  len = norm.length();
-  if(len > 0.0){ norm*=1./len; }
+  d_geom_pieces[inPiece]->computeNorm(norm, part_pos,sf,inPiece,np);
 
-  return;
+
 }
 
-#ifdef WONT_COMPILE_YET
 
-void GeomObject::FillWParticles(vector<Material *> materials,
-				vector<BoundCond> BC,
+
+void GeometryObject::fillWithParticles(vector<Material *> &materials,
+				vector<BoundCond> &BC,
 				const Region* region,
 				DataWarehouseP& dw)
 {
+
+#ifdef WONT_COMPILE_YET
+
     cerr << "In FillWParticles\n";
     ParticleVariable<Vector> pposition;
     dw->get(pposition, "p.x", region, 0);
@@ -770,24 +339,24 @@ void GeomObject::FillWParticles(vector<Material *> materials,
       while(xp[0]<probBounds[2]) {
 	//                       determine if particle is within the
 	//                       object
-	inObj=CheckShapes(xp,np);
+	inObj=checkShapes(xp,np);
 	if(inObj>=1){
 	  temp = inPiece;
   //  check to see if current point is a
   //  surface point
-	  Surface(xp,surflag,np);
+	  surface(xp,surflag,np);
 	  inPiece = temp;
   //  Norm will find the surface normal at the current particle position.
   //  If the particle is not on the surface, (0,0,0) is returned.
-          Norm(norm,xp,surflag,inPiece,np);
-	  mat_num =gP[inPiece].getMaterialNum();
-	  vf_num  =gP[inPiece].getVFNum(); 
+          norm(norm,xp,surflag,inPiece,np);
+	  mat_num =d_geom_pieces[inPiece].getMaterialNum();
+	  vf_num  =d_geom_pieces[inPiece].getVFNum(); 
 	  density = materials[mat_num-1]->getDensity();
 	  mat_type= materials[mat_num-1]->getMaterialType();
 	  mass = density*volume;	// Particle mass
 
 	  for(iva=1;iva<=3;iva++){
-	    icv[iva]=gP[inPiece].getInitVel(iva);
+	    icv[iva]=d_geom_pieces[inPiece].getInitVel(iva);
 	  }
 
 	  // Determine if the particle has a boundary condition that needs 
@@ -894,11 +463,18 @@ void GeomObject::FillWParticles(vector<Material *> materials,
     dw->put(pvel, "p.velocity", region, 0);
     dw->put(pexternalforce, "p.externalforce", region, 0);
     dw->put(pconmod, "p.conmod", region, 0);
-}
 
 #endif
+}
+
+
   
 // $Log$
+// Revision 1.3  2000/04/14 02:05:45  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.2  2000/03/20 17:17:14  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

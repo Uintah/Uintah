@@ -1,39 +1,60 @@
 #ifndef __GEOMETRY_PIECE_H__
 #define __GEOMETRY_PIECE_H__
 
-class GeomPiece {
-private:
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/IntVector.h>
+#include <SCICore/Geometry/Point.h>
 
-        double          geomBounds[7];
-        int             pieceType;
-        int             piecePosNeg;
-        int             pieceMatNum;
-	int		pieceVelFieldNum;
-	double		initVel[4];
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::IntVector;
+using SCICore::Geometry::Point;
 
-public:
+class GeometryPiece {
 
-        GeomPiece();
-        ~GeomPiece();
+ public:
 
-        void    setPieceType(int pt);
-        void    setPosNeg(int pn);
-        void    setMaterialNum(int mt);
-        void    setVelFieldNum(int vf_num);
-        int     getPosNeg();
-        int     getPieceType();
-        int     getMaterialNum();
-	int	getVFNum();
-        double  getGeomBounds(int j);
-        void    setGeomBounds(double bnds[7]);
-	void	setInitialConditions(double icv[4]);
-	double	getInitVel(int i);
+  GeometryPiece();
+  virtual ~GeometryPiece();
+  
+  void    setPosNeg(int pn);
+  void    setMaterialNum(int mt);
+  void    setVelFieldNum(int vf_num);
+  int     getPosNeg();
+  int     getMaterialNum();
+  int	  getVFNum();
+  void	  setInitialConditions(Vector icv);
+  Vector  getInitVel();
+  int     getInPiece();
+
+  virtual int checkShapesPositive(Point check_point, int &np,
+                                  int piece_num, Vector part_spacing,
+                                  int ppold) = 0;
+  virtual int checkShapesNegative(Point check_point, int &np,
+                                  int piece_num, Vector part_spacing,
+                                  int ppold) = 0;
+ 
+  virtual void computeNorm(Vector &norm,Point part_pos, int surf[7],
+                           int ptype, int &np) = 0;        
+
+ protected:
+  
+  int             d_piece_pos_neg;
+  int             d_piece_mat_num;
+  int		  d_piece_vel_field_num;
+  Vector          d_init_cond_vel;
+  int             d_in_piece;
+  IntVector  d_num_particles_cell;  
 
 };
 
 #endif // __GEOEMTRY_PIECE_H__
 
 // $Log$
+// Revision 1.2  2000/04/14 02:05:46  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.1  2000/03/14 22:10:49  jas
 // Initial creation of the geometry specification directory with the legacy
 // problem setup.

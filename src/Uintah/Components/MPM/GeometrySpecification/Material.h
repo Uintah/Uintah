@@ -1,24 +1,43 @@
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
-#include <iosfwd>
+
+#include <string>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpec.h>
+
+using Uintah::Interface::ProblemSpec;
+using Uintah::Interface::ProblemSpecP;
 
 class Material {
-private:
-	double	Density;
-	int	MatType;
-        double mp[10];
 
-public:
-	Material();
-	~Material();
+ public:
+  Material();
+  ~Material();
+  
+  void addMaterial(ProblemSpecP ps);
+  double getDensity() const;
+  double getToughness() const;
+  double getThermalConductivity() const;
+  double getSpecificHeat() const;
+  std::string getMaterialType() const;
+  void getMatProps(double matprop[10]) const;
+  
+ private:
+  double d_density;
+  double d_toughness;
+  double d_thermal_cond;
+  double d_spec_heat;
+  std::string d_mat_type;
+  double d_mat_properties[10];
 
-	void addMaterial(std::ifstream &filename);
-	double getDensity() const;
-	int getMaterialType() const;
-	void getMatProps(double matprop[10]) const;
 };
 
 // $Log$
+// Revision 1.2  2000/04/14 02:05:46  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.1  2000/03/14 22:10:49  jas
 // Initial creation of the geometry specification directory with the legacy
 // problem setup.

@@ -1,49 +1,62 @@
 #include "GeometryPiece.h"
 
-GeomPiece::GeomPiece() {}
-
-GeomPiece::~GeomPiece()
+GeometryPiece::GeometryPiece()
 {
 }
 
-void GeomPiece::setPieceType(int pt) { pieceType = pt; }
-
-void GeomPiece::setPosNeg(int pn) { piecePosNeg = pn; }
-
-void GeomPiece::setMaterialNum(int mt) { pieceMatNum = mt; }
-
-void GeomPiece::setVelFieldNum(int vf_num) { pieceVelFieldNum = vf_num; }
-
-int GeomPiece::getPosNeg() { return piecePosNeg; }
-
-int GeomPiece::getPieceType() { return pieceType; }
-
-int GeomPiece::getMaterialNum() { return pieceMatNum; }
-
-int GeomPiece::getVFNum() { return pieceVelFieldNum; }
-
-double GeomPiece::getGeomBounds(int j) { return geomBounds[j]; }
-
-void GeomPiece::setGeomBounds(double bnds[7])
+GeometryPiece::~GeometryPiece()
 {
-  int i;
-  
-  for(i=1;i<=6;i++){
-    geomBounds[i] = bnds[i];
-  }
-}
-void GeomPiece::setInitialConditions(double icv[4])
-{
-  int i;
-  
-  for(i=1;i<=3;i++){
-    initVel[i] = icv[i];
-  }
 }
 
-double GeomPiece::getInitVel(int i) { return initVel[i]; }
+
+void GeometryPiece::setPosNeg(int pn) 
+{ 
+  d_piece_pos_neg = pn; 
+}
+
+void GeometryPiece::setMaterialNum(int mt)
+{
+  d_piece_mat_num = mt; 
+}
+
+void GeometryPiece::setVelFieldNum(int vf_num) 
+{ 
+  d_piece_vel_field_num = vf_num; 
+}
+
+int GeometryPiece::getPosNeg() 
+{ 
+  return d_piece_pos_neg; 
+}
+
+
+int GeometryPiece::getMaterialNum() 
+{ 
+  return d_piece_mat_num; 
+}
+
+int GeometryPiece::getVFNum() 
+{ 
+  return d_piece_vel_field_num; 
+}
+
+
+void GeometryPiece::setInitialConditions(Vector icv)
+{
+  d_init_cond_vel = icv;
+}
+
+Vector GeometryPiece::getInitVel() { 
+  return d_init_cond_vel;; 
+
+}
 
 // $Log$
+// Revision 1.2  2000/04/14 02:05:45  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.1  2000/03/14 22:36:05  jas
 // Readded geometry specification source files.
 //

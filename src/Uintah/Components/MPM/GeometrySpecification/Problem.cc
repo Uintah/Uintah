@@ -3,133 +3,106 @@
 #include <Uintah/Components/MPM/BoundCond.h>
 #include "Material.h"
 #include <iostream>
-#include <fstream>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <SCICore/Geometry/Point.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/GridP.h>
+
+using Uintah::Interface::DataWarehouseP;
+using Uintah::Grid::GridP;
+
+
+
+using Uintah::Interface::ProblemSpec;
+using Uintah::Interface::ProblemSpecP;
+using SCICore::Geometry::Point;
+
 using std::cerr;
 using std::endl;
-using std::ifstream;
-using std::ofstream;
+
 using std::string;
 using std::vector;
 
 Problem::Problem()
-  : NumMaterial(0),
-    NumObjects(0),
-    numbcs(0)
+  : d_num_material(0),
+    d_num_objects(0),
+    d_num_bcs(0)
 {
 }
 
 Problem::~Problem()
 {
-  int i;
-  for(i = 0; i < NumMaterial; i++)
+  
+  for(int i = 0; i < d_materials.size(); i++)
     {
-      delete materials[i];
+      delete d_materials[i];
     }
 }
 
-#ifdef WONT_COMPILE_YET
 
-void Problem::preProcessor(string filename)
+void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
+			   Uintah::Grid::GridP grid)
 {
   int n;
   int obj, piece, surf;
   double   force[4];
   BoundCond BCTemp;
-  string stuff;		//stuff is a throwaway string
+ 
+  Point lo,hi;
+  Vector dx;
+  
 
-  ifstream infile;
+    
+  // Search for the MaterialProperties block and then get the MPM section
   
-  infile.open(filename.c_str());
-  if (infile.bad()) {
-    cerr << "Error opening input file" << endl;
-    exit(1);
-  }
+  ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
+ 
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");  
+
   
-  infile >> stuff;
-  if(stuff != string("Material_Property_Info"))
-    {
-      cerr << "Bad input file: " << filename << endl;
-      cerr << "Input file needs:  Material_Property_Info" << endl;
-      exit(1);
-    }
-  infile >> stuff;
-  if(stuff != string("Number_of_Materials"))
-    {
-      cerr << "Bad input file: " << filename << endl;
-      cerr << "Input file needs: Number_of_Materials" << endl;	
-      exit(1);
-    }
-  infile >> NumMaterial;
-  for(n = 1; n <= NumMaterial; n++)
-    {
-      infile >> stuff;
-      char tmpnum[5];
-      sprintf(tmpnum, "%d", n);
-      string tmp = string("Density&CONSTANTS_for_material_") + string(tmpnum);
-      if(stuff != tmp)
-	{
-	  cerr << "Bad input file: " << filename << endl;
-	  cerr << "Input file needs: Density&CONSTANTS_for_material_#" << endl;
-	  exit(1);
-	}
-      materials.push_back( new Material );
-      materials[n-1]->addMaterial(infile);
-    }
-  infile >> stuff;
-  if(stuff != string("Problem_Boundaries"))
-    {
-      cerr << "Bad input file: " << filename << endl;
-      cerr << "Input file needs: Problem_Boundaries" <<  endl;
-      exit(1);
-    }
-  infile >> bnds[1] >> bnds[2] >> bnds[3] >> bnds[4] >> bnds[5] >> bnds[6];
-  infile >> stuff;
-  if(stuff != string("Grid_Spacing"))
-    {
-      cerr << "Bad input file: " << filename << endl;
-      cerr << "Input file needs: Grid_Spacing" << endl;
-      exit(1);
-    }
-  infile >> dx[1] >> dx[2] >> dx[3];
-  infile >> stuff;
-  if(stuff != string("Number_of_Particles/Cell"))
-    {
-      cerr << "Bad input file: " << filename << endl;
-      cerr << "Input file needs: Number_of_Particles/Cell" << endl;
-      exit(1);
-    }
-  infile >> nppcel[1] >> nppcel[2] >> nppcel[3];
-  infile >> stuff;
-  if(stuff != string("Number_of_Objects"))
-    {
-      cerr << "Bad input file: " << filename << endl;
-      cerr << "Input file needs: Number_of_Objects" << endl;
-      exit(1);
-    }
-  infile >> NumObjects;
-  
-  for(n = 1; n <= NumObjects; n++)
-    {
-      infile >> stuff;
-      char tmpnum[5];
-      sprintf(tmpnum, "%d", n);
-      string tmp = string("Number_of_Pieces_this_Object") + string(tmpnum);
-      if(stuff != tmp)
-	{
-	  cerr << "Bad input file: " << filename << endl;
-	  cerr << "Input file needs Number_of_Pieces_this_Object" << endl;
-	  exit(1);
-	}
-      int tmpnpieces;
-      infile >> tmpnpieces;
-      npieces.push_back(tmpnpieces);
+  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
+       ps = ps->findNextBlock("material") ) {
+    d_num_material++;
+    // Extract out the type of constitutive model and the 
+    // associated parameters
+
+    Material *mat = new Material;
+    mat->addMaterial(ps);
+    d_materials.push_back(mat);
+    
+    std::string material_type;
+    ps->require("material_type", material_type);
+    cout << "material_type is " <<  material_type << endl;
+
+    // Extract out the GeometryObject (and all of the GeometryPieces)
+    ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
+
+    // Loop through all of the pieces in this geometry object
+
+    int piece_num = 0;
+    for (ProblemSpecP geom_piece_ps = geom_obj_ps->findBlock("geom_piece");
+	 geom_piece_ps != 0; 
+	 geom_piece_ps = geom_piece_ps->findNextBlock("geom_piece") ) {
+      piece_num++;
+      IntVector res;
+      geom_piece_ps->require("res",res);
       
-      GeomObject tempObject;
+      GeometryObject geom_obj;
+
+      geom_obj.setObjInfo(piece_num,lo, hi,dx,res);
+      geom_obj.addPieces(geom_piece_ps);
+      d_objects.push_back(geom_obj);
       
-      tempObject.setObjInfo(n, bnds, npieces[n-1], dx, nppcel);
-      tempObject.addPieces(infile);
-      Objects.push_back(tempObject);
+
     }
+
+  }                                                                
+      
+
+  // Extract out the BCS
+    
+#if 0
   
   infile >>stuff;
   if(stuff != string("Number_of_Force_Boundary_Conditions"))
@@ -149,146 +122,48 @@ void Problem::preProcessor(string filename)
       BCTemp.setBC(obj, piece, surf, force);
       BC.push_back(BCTemp);
     }
+
+#endif 
 }
 
-void Problem::createParticles(const Region* region, DataWarehouseP& dw)
+
+void Problem::createParticles(const Uintah::Grid::Region* region, 
+			      Uintah::Interface::DataWarehouseP& dw)
 {
-  for (int i = 0; i < NumObjects; i++)
+  for (int i = 0; i < d_objects.size(); i++)
     {
-      Objects[i].FillWParticles(materials, BC, region, dw);
+
+#ifdef WONT_COMPILE_YET
+      d_objects[i].fillWithParticles(d_materials, d_bcs, region, dw);
+#endif
     }
 }
 
-void Problem::writeGridFiles(string gridposname, string gridcellname)
-{
-  GeometryGrid ProblemGrid;
-  ProblemGrid.buildGeometryGrid(gridposname, gridcellname, bnds, dx);
-}
 
 int Problem::getNumMaterial() const
 {
-  return(NumMaterial);
+  return(d_materials.size());
 }
 
 
 int Problem::getNumObjects() const
 {
-   return(NumObjects);
+   return(d_objects.size());
 }
 
-vector<GeomObject> * Problem::getObjects()
+vector<GeometryObject> * Problem::getObjects()
 {
-    return(&Objects);
+    return(&d_objects);
 }
 
-
-void Problem::writeSAMRAIGridFile(string gridname)
-{
-  ofstream f(gridname.c_str());
-  if(!f)
-    {
-      cerr << "Can't open " << gridname << endl;
-      exit(1);
-    }
-  
-  int ncelx,ncely,ncelz;  /* # of cells in each dir.      */
-  
-  ncelx = (int)((bnds[2]-bnds[1])/dx[1]+.000001);
-  ncely = (int)((bnds[4]-bnds[3])/dx[2]+.000001);
-  ncelz = (int)((bnds[6]-bnds[5])/dx[3]+.000001);
-  
-  f << "CartesianGeometry" << endl;
-  f << endl;
-
-  // Write out info for 1 box     
-  
-  f << "  domain_boxes     1" << endl;
-  f << "    box1  ";
-  f << "1 1 1  "
-    << ncelx << " " << ncely << " " << ncelz << endl;
-  f << "  end_domain_boxes" << endl;
-  f << endl;
-
- 
-
-  f << "  cartesian_grid_data" << endl;
-  f << "    x_lo  " << bnds[1] << " " << bnds[3] << " " << bnds[5] << endl;
-  f << "    x_up  " << bnds[2] << " " << bnds[4] << " " << bnds[6] << endl;
-  f << "  end_cartesian_grid_data" << endl;
-  f << endl;
-  f << "end" << endl;
-
-  // Specify info about Time Refinement Integrator
-
-  f << endl;	
-  f << endl;	
-  f << endl;	
-  f << "TimeRefinementIntegrator" << endl;
-  f << "    start_time         0.e0" << endl;
-  f << "    end_time            10.e0" << endl;
-  f << "    grow_dt	       1.0e0" << endl;
-  f << "    max_integrator_steps  80" << endl;
-  f << "end" << endl;
-  f << endl;
-  f << endl;
-
-  // Specify info about the Gridding Algorithm
-
-  f << "GriddingAlgorithm" << endl;
-  f <<  "   max_levels        1" << endl;
-  f << endl;
-  f << endl;
-
-  f << "   ratio_to_coarser"  << endl;
-  f << "      level1    4 4 4" << endl;
-  f << "      level2    4 4 4" << endl;
-  f << "      level3    4 4 4" << endl;
-  f << "   end_ratio_to_coarser" << endl;
-
-  f << endl;
-  f << endl;
-
-  f << "   regrid_interval" << endl;
-  f << "     level0         2" << endl;
-  f << "     level1         2" << endl;
-  f << "     level2         2" << endl;
-  f << "   end_regrid_interval" << endl;
-
-  f << endl; 
-  f << endl; 
-
-  f << "   smallest_patch_size  1 1 1" << endl;
-  f << "   largest_patch_size " << ncelx << " " << ncely << " " << ncelz  << endl;
-
-  f << endl;
-  f << endl;
-
-  f << "   efficiency_tolerance    0.85e0" << endl;
-  f << "   combine_efficiency      0.95e0" << endl;
-
-  f << endl;
-  f << endl;
-
-  f << "end" << endl;
-
-  // Specify infor about the Material Point Level Integrator
-
-  f << "MaterialPointLevelIntegrator" << endl;
-  f << "   cfl            1.0e0" << endl;
-  f << "   cfl_init       1.0e0" << endl;
-  f << "   lag_dt_computation     1" << endl;
-  f << "   use_ghosts_to_compute_dt  1" << endl;
-  f << "   use_ghosts_for_cons_diff  1" << endl;
-  f << "end" << endl; 
- 
-
-
-}
-
-#endif
 
 
 // $Log$
+// Revision 1.4  2000/04/14 02:05:46  jas
+// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
+// Tri.  This made the GeometryObject class simpler since many of the
+// methods are now relegated to the GeometryPiece subclasses.
+//
 // Revision 1.3  2000/03/22 23:41:23  sparker
 // Working towards getting arches to compile/run
 //
