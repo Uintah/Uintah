@@ -16,13 +16,14 @@
 -->
 
 <section id="sec.intro">
-<title>Introduction</title> <para>This guide provides instructions for
-installing &sr;, its third party libraries, and the (optional)
-<acronym>PETSc</acronym> library.</para>
+<title>Introduction</title> 
 
-<para>
-The optional <acronym>PETSc</acronym> library adds equation solvers to
-&sr;'s SolveMatrix module.
+<para>This guide provides instructions for installing &sr;, its third
+party libraries, the (optional) <acronym>PETSc</acronym> library,
+sample data sets, and &sr; documentation. The <acronym>PETSc</acronym>
+library adds equation solvers to &sr;'s SolveMatrix module (see <citetitle
+pubwork="section"><xref linkend="sec.petsc"
+endterm="title.petsc"/></citetitle>).
 </para>
 
 <para>
@@ -42,30 +43,29 @@ requirements for building &sr;.
 <para>
 On Linux systems (Mandrake 9 and Red Hat 8), &sr; binaries may be
 <link linkend="sec.rpminst">installed via
-<acronym>RPM</acronym></link> (Red Hat Package Manager).
-Alternatively, &sr; binaries may be built and <link
-linkend="sec.source_inst">installed from source code tarballs</link>.
-<para>
+an <acronym>RPM</acronym> package</link> or <link
+linkend="sec.source_inst">from &sr;'s source code distribution</link>.
 The &sr; <acronym>RPM</acronym> distribution does
 <emphasis>not</emphasis> provide support for <acronym>PETSc</acronym>.
-<acronym>PETSc</acronym> support is available only through the &sr; source
-code distribution.  The <acronym>PETSc</acronym> library adds
-additional solvers to &sr;'s SolveMatrix module.  See
-<citetitle pubwork="section"><xref linkend="sec.petsc"
-endterm="title.petsc"/></citetitle> for details.
-</para>
+<acronym>PETSc</acronym> support is available only through the &sr;
+source code distribution.
 </para>
 
 <para>
-On SGI systems &sr; binaries must be built and <link
-linkend="sec.source_inst">installed from the source code
-distribution</link>.
+On SGI systems &sr; must be <link linkend="sec.source_inst">installed
+from the source code distribution</link>.
 </para>
 
 <para>
-Be sure to read  <citetitle pubwork="section"><xref
+Read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
 installing but before starting &sr;.
+</para>
+
+<para>
+Start with <xref linkend="sec.petsc" endterm="title.petsc"/> if installing
+<acronym>PETSc</acronym>.  Otherwise start with <xref linkend="sec.source_inst"
+endterm="title.source_inst" />
 </para>
 
 </section>

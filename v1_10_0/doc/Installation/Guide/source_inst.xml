@@ -16,7 +16,8 @@
 -->
 
 <section id="sec.source_inst">
-<title>Source Code (Linux and <acronym>SGI</acronym>)</title>
+<title id="title.source_inst">&sr; Installation from Source Code (Linux and
+<acronym>SGI</acronym>)</title>
 <section>
 <title>Introduction</title>
 
@@ -31,21 +32,11 @@ with the source installation.
 Installation from sources consists of these steps:
 <orderedlist>
 <listitem>
-<para>
-Installing, <emphasis>optionally</emphasis>, the <ulink
-url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
-library.  This library adds additional solvers to &sr;'s SolveMatrix
-module.  Proceed with <citetitle pubwork="section"><xref
-linkend="sec.petsc" endterm="title.petsc"/></citetitle> if
-<acronym>PETSc</acronym> library support is needed.
-</para>
+<para>Downloading &sr; sources, packages,
+third party software, sample data sets, and documentation.</para>
 </listitem>
 <listitem>
-<para>Downloading (compressed) tarballs containing &sr; sources, packages,
-third party software, and sample data sets.</para>
-</listitem>
-<listitem>
-<para>Unpacking the tarballs.</para>
+<para>Unpacking sources.</para>
 </listitem>
 <listitem>
 <para>Building and installing third party software.</para>
@@ -120,7 +111,7 @@ Third-party sources, <filename>Thirdparty_install.<replaceable>x.x.x</replaceabl
 
 <listitem>
 <para>
-Unpack the &sr; sources tarball:
+Unpack the &sr; sources:
 <literallayout class="monospaced">
 gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
@@ -132,7 +123,7 @@ directory.
 
 <listitem>
 <para>
-Unpack the compressed package tarballs into
+Unpack the compressed package sources into
 <filename>&sr;/src/Packages</filename>, for example:
 <literallayout class="monospaced">
 gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
@@ -143,7 +134,7 @@ to unpack the BioPSE package.
 
 <listitem>
 <para>
-Unpack the tarball containing sample datasets:
+Unpack the sample datasets:
 <literallayout class="monospaced">
 gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
@@ -155,7 +146,7 @@ users.
 
 <listitem>
 <para>
-Unpack the third party tarball:
+Unpack third party sources:
 <literallayout class="monospaced">
 gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
@@ -166,7 +157,7 @@ This will create the directory
 
 <listitem>
 <para>
-Unpack the documentation tarball:
+Unpack the documentation:
 <literallayout class="monospaced">
 gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
@@ -215,26 +206,26 @@ Run the third party installation script.
 </para>
 
 <para>
-The simplest execution of
-the script only requires a single argument:
+The simplest 
+script invocation requires a single argument:
 <literallayout class="monospaced">
-python install dir
+python install <replaceable>dir</replaceable>
 </literallayout>
-where <replaceable>dir</replaceable> is the directory under which the
+where <replaceable>dir</replaceable> is the directory where
 third-party software will be installed.
 </para>
 
 <para>
-The installation script takes additional optional arguments as well:
+The installation script takes additional optional arguments:
 <literallayout class="monospaced">
 python install <replaceable>dir</replaceable> <replaceable>bits</replaceable> <replaceable>jobs</replaceable>
 </literallayout>
 where <replaceable>dir</replaceable> is the directory under which the
 third-party software will be installed,
-<replaceable>bits</replaceable> is either 32 or 64 and specifies
-one of 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
-is the number of processes that make will use when building the
-software.  For example:
+<replaceable>bits</replaceable> is either 32 or 64 and specifies one
+of 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable> is
+the number of processes <command>make</command> uses when
+building the software.  For example:
 <literallayout class="monospaced">
 python install /usr/local/&sr;/Third_Party 64 2
 </literallayout>
@@ -242,11 +233,10 @@ or
 <literallayout class="monospaced">
 python install /usr/local/&sr;/Third_Party 32 1
 </literallayout>
-When finished, the installation script will display the complete path
-of the third-party software installation directory&mdash;make note of
-this value.
+When finished, the installation script displays the complete path
+of the third-party software installation directory&mdash;please make note of
+this value&mdash;it is needed later.
 </para>
-
 </listitem>
 
 </orderedlist>
@@ -298,12 +288,11 @@ cd &sr;/<replaceable>dir</replaceable>
 </literallayout>
 in which case &sr; will be built in the directory
 <filename>&sr;/<replaceable>dir</replaceable></filename> (where
-<replaceable>dir</replaceable> is a directory name).
-Above,
+<replaceable>dir</replaceable> is a directory name).  Above,
 <replaceable>third-party-dir</replaceable> is replaced by the name of
-the third party software installation directory and
-"<replaceable>package-name1 package-name2 &hellip;</replaceable>" is
-replaced by a list of (previously downloaded and unpacked) package
+the third party software installation directory (provided by the third
+party installation script) and "<replaceable>package-name1
+package-name2 &hellip;</replaceable>" is replaced by a list of package
 names , e.g. "BioPSE MatlabInterface".  For example:
 <literallayout class="monospaced">
 ../src/configure \
@@ -314,9 +303,10 @@ For &sr; to use the <acronym>PETSc</acronym> libraries the option
 <option>--with-unipetsc</option> must be used.  Options
 <option>--with-lapack</option> and <option>--with-blas</option> must
 be used if the <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
-libraries are not in <filename>/usr/lib</filename>
-(<citetitle><xref endterm="title.petsc_sr_config"
-linkend="sec.petsc_sr_config"/></citetitle> describes the options).  For example:
+libraries are not in <filename>/usr/lib</filename> (<citetitle><xref
+endterm="title.petsc_sr_config"
+linkend="sec.petsc_sr_config"/></citetitle> describes these options).
+For example:
 <literallayout class="monospaced">
 ../src/configure \
   --with-thirdparty=/usr/local/&sr;/Third_Party/1.8.0/Irix/CC-32bit \
@@ -327,10 +317,9 @@ linkend="sec.petsc_sr_config"/></citetitle> describes the options).  For example
 </literallayout>
 </para>
 <para>
-There are many options to the configure command in addition to the
-<option>--with-thirdparty</option> and
-<option>--enable-package</option> options already mentioned.
-The <command>configure --help</command> command lists them all.
+There are many options to the configure command in addition to those
+already mentioned.  The <command>configure --help</command> command
+lists them all.
 </para>
 
 </listitem>
@@ -353,8 +342,8 @@ sometimes named <command>gmake</command> or
 </para>
 
 <para>
-For a multiprocessor system you can use GNU make's <option>-j</option>
-option to reduce the build time:
+For a multiprocessor system GNU make's <option>-j</option> option can
+be used to reduce the build time:
 <literallayout class="monospaced">
 make -j <replaceable>N</replaceable>
 </literallayout>
@@ -377,11 +366,10 @@ will contain the <filename>scirun</filename> executable.
 
 <tip>
 <para>
-It is possible to build &sr; for multiple machine
-architectures, say, a Linux version and
-32 bit and 64 bit Irix versions.  Assuming the directory
-<filename>&sr;</filename> resides on a volume shared by all machines
-do this:
+It is possible to build &sr; for multiple machine architectures, say,
+a Linux version and 32 bit and 64 bit Irix versions.  If the
+<filename>&sr;</filename> directory resides on a volume shared by all
+machines then do this:
 <literallayout class="monospaced">
 mkdir &sr;/linux
 mkdir &sr;/sgi32
