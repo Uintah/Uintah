@@ -41,9 +41,9 @@ ifeq ($(HAVE_MPI),yes)
 SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello $(SRCDIR)/PLinSolver
 endif
 
-#ifeq ($(HAVE_BABEL),yes)
-#SUBDIRS:= $(SUBDIRS) $(SRCDIR)/BabelTest
-#endif
+ifeq ($(HAVE_BABEL),yes)
+SUBDIRS+= $(SUBDIRS) $(SRCDIR)/BabelTest
+endif
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
