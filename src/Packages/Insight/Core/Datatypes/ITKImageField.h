@@ -16,6 +16,11 @@
 */
 
 
+/*************************************************************
+  This field is similar to the SCIRun::LatVolField except for
+  it points to an itk::Image< Data, 3 >. 
+*************************************************************/
+
 #ifndef Datatypes_ITKImageField_h
 #define Datatypes_ITKImageField_h
 
@@ -82,11 +87,31 @@ public:
   const_iterator *const_begin_;
   const_iterator *const_end_;
 
-  const iterator &begin() { return *begin_; }
-  const iterator &end() { return *end_; }
+  const iterator &begin() { 
+    if(image_set_)
+      return *begin_; 
+    else
+      ASSERTFAIL("ITKFData2d image not set");
+  }
+  const iterator &end() { 
+    if(image_set_)
+      return *end_; 
+    else
+      ASSERTFAIL("ITKFData2d image not set");
+  }
 
-  const const_iterator &begin() const { return *const_begin_; }
-  const const_iterator &end() const { return *const_end_; }
+  const const_iterator &begin() const { 
+    if(image_set_)
+      return *const_begin_; 
+    else
+      ASSERTFAIL("ITKFData2d image not set");
+  }
+  const const_iterator &end() const { 
+    if(image_set_)
+      return *const_end_; 
+    else
+      ASSERTFAIL("ITKFData2d image not set");
+  }
 
   ITKFData2d();
   ITKFData2d(int);  //default var sgi bug workaround.
@@ -96,66 +121,82 @@ public:
   const value_type &operator[](typename ImageMesh::Cell::index_type idx) const
   { 
     ASSERTFAIL("No const operator[] for ITKImageField at Cells");
+    // check if image is set
   }
   const value_type &operator[](typename ImageMesh::Face::index_type idx) const
   { 
-   typename image_type::IndexType index;
-    index[0] = idx.i_;
-    index[1] = idx.j_;
-    return image_->GetPixel( index );
+    if(image_set_) {
+      typename image_type::IndexType index;
+      index[0] = idx.i_;
+      index[1] = idx.j_;
+      return image_->GetPixel( index );
+    }
+    else
+      ASSERTFAIL("ITKFData2d image not set");
   }
   const value_type &operator[](typename ImageMesh::Edge::index_type idx) const
   { 
     ASSERTFAIL("No const operator[] for ITKImageField at Edges");
+    // check if image is set
   }
   const value_type &operator[](typename ImageMesh::Node::index_type idx) const
   { 
-   typename image_type::IndexType index;
-    index[0] = idx.i_;
-    index[1] = idx.j_;
-    return image_->GetPixel( index );
+    if(image_set_) {
+      typename image_type::IndexType index;
+      index[0] = idx.i_;
+      index[1] = idx.j_;
+      return image_->GetPixel( index );
+    }
+    else
+      ASSERTFAIL("ITKFData2d image not set");
   }
-
+  
   value_type &operator[](typename ImageMesh::Cell::index_type idx)
   { 
     ASSERTFAIL("No operator[] for ITKImageField at Cells");
+    // check if image is set
   }
   value_type &operator[](typename ImageMesh::Face::index_type idx)
   {
-   typename image_type::IndexType index;
-    index[0] = idx.i_;
-    index[1] = idx.j_;
-    return image_->GetPixel( index );
+    if(image_set_) {
+      typename image_type::IndexType index;
+      index[0] = idx.i_;
+      index[1] = idx.j_;
+      return image_->GetPixel( index );
+    }
+    else
+      ASSERTFAIL("ITKFData2d image not set");      
   }
   value_type &operator[](typename ImageMesh::Edge::index_type idx)
   { 
     ASSERTFAIL("No operator[] for ITKImageField at Edges");
+    // check if image is set
   }
   value_type &operator[](typename ImageMesh::Node::index_type idx)
   {
-   typename image_type::IndexType index;
-    index[0] = idx.i_;
-    index[1] = idx.j_;
-    return image_->GetPixel( index );
+    if(image_set_) {
+      typename image_type::IndexType index;
+      index[0] = idx.i_;
+      index[1] = idx.j_;
+      return image_->GetPixel( index );
+    }
+    else
+      ASSERTFAIL("ITKFData2d image not set");
   }    
 
+  // These do not do anything because and itk::Image takes care of
+  // allocation.  This field merely points to an itk::Image.
   void resize(const ImageMesh::Node::size_type &size)
   { 
-    if( (size.i_ < dim1()) || (size.j_ < dim2()))
-      ASSERTFAIL("Cannot resize ITKImageField at Nodes to smaller image");
   }
   void resize(const ImageMesh::Edge::size_type &size)
   { 
-    ASSERTFAIL("Cannot resize ITKImageField at Edges to smaller image");
   }
   void resize(const ImageMesh::Face::size_type &size)
   { 
-    if( (size.i_ < dim1()) || (size.j_ < dim2()))
-      ASSERTFAIL("Cannot resize ITKImageField at Faces to smaller image");
   }
   void resize(const ImageMesh::Cell::size_type &size)
   { 
-    ASSERTFAIL("Cannot resize ITKImageField at Cells - NOT IMPLEMENTED");
   }
 
   void set_image(itk::Image<Data, 2>* img) {
@@ -174,6 +215,8 @@ public:
     if ( const_end_ ) delete const_end_;
     const_end_ = new const_iterator(image_, image_->GetRequestedRegion());
     const_end_->GoToEnd();
+    
+    image_set_ = true;
   }
 
   unsigned int size() { return dim1() * dim2(); }
@@ -181,7 +224,11 @@ public:
   unsigned int dim2();
 
   static const string type_name(int n = -1);
+
+  image_type::Pointer get_image() { return image_; }
+
 private:
+  bool image_set_;
   typename image_type::Pointer image_;
 };
 
@@ -197,8 +244,20 @@ ITKFData2d<Data>::~ITKFData2d()
 }
 
 template <class Data>
+ITKFData2d<Data>::ITKFData2d()
+{
+  image_set_ = false;
+  image_ = image_type::New(); 
+  begin_ = 0;
+  end_ = 0;
+  const_begin_ = 0;
+  const_end_ = 0;
+}
+
+template <class Data>
 ITKFData2d<Data>::ITKFData2d(int a)
 {
+  image_set_ = false;
   image_ = image_type::New(); 
   begin_ = 0;
   end_ = 0;
@@ -208,6 +267,7 @@ ITKFData2d<Data>::ITKFData2d(int a)
 
 template <class Data>
 ITKFData2d<Data>::ITKFData2d(const ITKFData2d& data) {
+  image_set_ = false;
   image_ = image_type::New();
 
   if(dynamic_cast<itk::Image<Data, 2>* >(data.image_.GetPointer() )) {
@@ -242,13 +302,21 @@ ITKFData2d<Data>::type_name(int n)
 template <class Data>
 unsigned int ITKFData2d<Data>::dim1()
 {
-  return image_->GetLargestPossibleRegion().GetSize()[0];
+  if(image_set_)
+    return image_->GetLargestPossibleRegion().GetSize()[0];
+  else
+    ASSERTFAIL("ITKFData2d Image not set");
+  return 0;
 }
 
 template <class Data>
 unsigned int ITKFData2d<Data>::dim2()
 {
-  return image_->GetLargestPossibleRegion().GetSize()[1];
+  if(image_set_)
+    return image_->GetLargestPossibleRegion().GetSize()[1];
+  else
+    ASSERTFAIL("ITKFData2d Image not set");
+  return 0;
 }
 
 ///////////////////////////////////////////////////////
@@ -272,7 +340,11 @@ public:
   static const string type_name(int n = -1);
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
+
+  itk::Object* get_image() { return fdata().get_image(); }
+
 private:
+  bool image_set_;
   static Persistent* maker();
 };
 
@@ -282,6 +354,8 @@ template <class Data>
 ITKImageField<Data>::ITKImageField()
   : GenericField<ImageMesh, ITKFData2d<Data> >()
 {
+  // need to set image
+  image_set_ = false;
 }
 
 
@@ -289,6 +363,8 @@ template <class Data>
 ITKImageField<Data>::ITKImageField(Field::data_location data_at)
   : GenericField<ImageMesh, ITKFData2d<Data> >(data_at)
 {
+  // need to set image
+  image_set_ = false;
 }
 
 
@@ -297,6 +373,8 @@ ITKImageField<Data>::ITKImageField(ImageMeshHandle mesh,
 			     Field::data_location data_at)
   : GenericField<ImageMesh, ITKFData2d<Data> >(mesh, data_at)
 {
+  // need to set image
+  image_set_ = false;
 }
 
 template <class Data>
@@ -312,6 +390,7 @@ void ITKImageField<Data>::SetImage(itk::Object* img)
 {
   if(dynamic_cast<itk::Image<Data, 2>* >(img)) {
     fdata().set_image(dynamic_cast<itk::Image<Data, 2>* >(img));
+    image_set_ = true;
   }
   else {
     ASSERTFAIL("ITKImageField's SetImage has wrong image type");
@@ -352,20 +431,25 @@ template <class Data>
 void
 ITKImageField<Data>::io(Piostream &stream)
 {
-  /*
-  int version = stream.begin_class(type_name(-1), IMAGE_FIELD_VERSION);
-  GenericField<ImageMesh, ITKFData2d<Data> >::io(stream); 
-  stream.end_class();                                                         
-  if (version < 2) { 
-    ITKFData2d<Data> temp; 
-    temp.copy(fdata()); 
-    resize_fdata(); 
-    int i, j; 
-    for (i=0; i<fdata().dim1(); i++) 
+  ASSERTFAIL("ITKImageField::io not implemented yet");
+  if(image_set_) {  
+    /*
+      int version = stream.begin_class(type_name(-1), IMAGE_FIELD_VERSION);
+      GenericField<ImageMesh, ITKFData2d<Data> >::io(stream); 
+      stream.end_class();                                                         
+      if (version < 2) { 
+      ITKFData2d<Data> temp; 
+      temp.copy(fdata()); 
+      resize_fdata(); 
+      int i, j; 
+      for (i=0; i<fdata().dim1(); i++) 
       for (j=0; j<fdata().dim2(); j++) 
-	fdata()(i,j)=temp(j,i); 
-  }   
-  */
+      fdata()(i,j)=temp(j,i); 
+      }   
+    */
+  }
+  else
+    ASSERTFAIL("ITKImageField image not set");
 }
 
 template <class Data>
