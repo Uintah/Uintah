@@ -234,17 +234,21 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
   int pad_data = 0; // if 0 then no copy is made 
   int sink_size = 1;
   string sink_label = label + string(":Scalar");
+  int kind = nrrdKindScalar;
   if (data_name == ten) {
     pad_data = 7; // copy the data, and pad for tensor values
     sink_size = 7;
+    kind = nrrdKind3DMaskedSymTensor;
     sink_label = label + string(":Tensor");
   } else if (data_name== vec) {
     pad_data = 3; // copy the data and pad for vector values
     sink_size = 3;
     sink_label = label + string(":Vector");
+    kind = nrrdKind3Vector;
   }
 
   nout = scinew NrrdData(pad_data);
+
 
   vector<unsigned int> dims;
   Vector spc;
@@ -338,6 +342,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 	nout->nrrd->axis[0].max=maxP.x();
 	nout->nrrd->axis[0].spacing=spc.x();
       }
+      
+      nout->nrrd->axis[0].kind = nrrdKindDomain;
     }
     break;
   case 2:
@@ -346,9 +352,13 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
       if (pad_data > 0) {
 	nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		 get_nrrd_type<val_t>(), 2, pad_data, dims[0]);
+	nout->nrrd->axis[0].kind = kind;
+	nout->nrrd->axis[1].kind = nrrdKindDomain;
       } else {
 	nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		 get_nrrd_type<val_t>(), 2, dims[0], dims[1]);
+	nout->nrrd->axis[0].kind = nrrdKindDomain;
+	nout->nrrd->axis[1].kind = nrrdKindDomain;
       }
 
       if (f->data_at() == Field::NODE) {
@@ -396,10 +406,16 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 	  nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		   get_nrrd_type<val_t>(), 3, pad_data,
 		   dims[0], dims[1]);
+	  nout->nrrd->axis[0].kind = kind;
+	  nout->nrrd->axis[1].kind = nrrdKindDomain;
+	  nout->nrrd->axis[2].kind = nrrdKindDomain;
 	} else {
 	  // 3D nrrd of scalars NODE
 	  nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
 		   get_nrrd_type<val_t>(), 3, dims[0], dims[1], dims[2]);
+	  nout->nrrd->axis[0].kind = nrrdKindDomain;
+	  nout->nrrd->axis[1].kind = nrrdKindDomain;
+	  nout->nrrd->axis[2].kind = nrrdKindDomain;
 	}
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
 			nrrdCenterNode, nrrdCenterNode, 
@@ -465,6 +481,11 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
       if (pad_data == 1) {
 	return false;
       }
+
+      nout->nrrd->axis[0].kind = kind;
+      nout->nrrd->axis[1].kind = nrrdKindDomain;
+      nout->nrrd->axis[2].kind = nrrdKindDomain;
+      nout->nrrd->axis[3].kind = nrrdKindDomain;
 
       if (f->data_at() == Field::NODE) {
 	nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 

@@ -34,7 +34,7 @@
 
 /* bad Gordon */
 extern "C" {
-  int _nrrdReadNrrdParse_keyvalue(Nrrd *nrrd, NrrdIO *io, int useBiff);
+  int _nrrdReadNrrdParse_keyvalue(Nrrd *nrrd, NrrdIoState *io, int useBiff);
 }
 
 namespace SCITeem {
@@ -78,7 +78,7 @@ private:
   GuiString       val3_;
 
   NrrdData*       nout_;
-  NrrdIO*         nio_;
+  NrrdIoState*    nio_;
   NrrdDataHandle  read_handle_;
 
   string          old_filename_;
@@ -168,7 +168,7 @@ void UnuMake::read_file_and_create_nrrd() {
     read_handle_ = 0;
 
     nout_ = scinew NrrdData();
-    nio_ = nrrdIONew();
+    nio_ = nrrdIoStateNew();
     
     
     // Reset guivars
@@ -217,7 +217,7 @@ void UnuMake::read_file_and_create_nrrd() {
       nout_->nrrd->axis[i].label = strdup(lb_[i].c_str());
       nout_->nrrd->axis[i].size = sz_[i];
       nout_->nrrd->axis[i].spacing = sp_[i];
-      nrrdAxisMinMaxSet(nout_->nrrd, i, nrrdCenterUnknown);
+      nrrdAxisInfoMinMaxSet(nout_->nrrd, i, nrrdCenterUnknown);
     }
     
     nout_->nrrd->content = airStrdup(content_.get().c_str());
@@ -303,7 +303,7 @@ void UnuMake::read_file_and_create_nrrd() {
 	  return;
 	} else {
 	  nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
-	  AIR_FCLOSE(fileOut);
+	  airFclose(fileOut);
 	}
       } else {
 	if (!(fileOut = airFopen(header_filename_.get().c_str(),stdout, "wb"))) {
@@ -311,7 +311,7 @@ void UnuMake::read_file_and_create_nrrd() {
 	  return;
 	} else {
 	  nrrdFormatNRRD->write(fileOut, nout_->nrrd, nio_);
-	  AIR_FCLOSE(fileOut);
+	  airFclose(fileOut);
 	}
       }
     } 
@@ -322,7 +322,7 @@ void UnuMake::read_file_and_create_nrrd() {
     nio_->detachedHeader = AIR_FALSE;
     nio_->skipData = AIR_FALSE;
     
-    nrrdIOInit(nio_);
+    nrrdIoStateInit(nio_);
     nio_->lineSkip = line_skip_.get();
     nio_->byteSkip = byte_skip_.get();
     
@@ -350,13 +350,13 @@ void UnuMake::read_file_and_create_nrrd() {
     }
     if(nrrdLineSkip(nio_)) {
       error("Couldn't skip lines.");
-      AIR_FCLOSE(nio_->dataFile);
+      airFclose(nio_->dataFile);
       return;
     } 
     if(!nio_->encoding->isCompression) {
       if(nrrdByteSkip(nout_->nrrd,nio_)) {
 	error("Couldn't skip bytes.");
-	AIR_FCLOSE(nio_->dataFile);
+	airFclose(nio_->dataFile);
 	return;
       }
     }
@@ -364,11 +364,11 @@ void UnuMake::read_file_and_create_nrrd() {
       error("Error reading data.");
       string err = biffGetDone(NRRD);
       error(err);
-      AIR_FCLOSE(nio_->dataFile);
+      airFclose(nio_->dataFile);
       return;
     } 
     
-    AIR_FCLOSE(nio_->dataFile);
+    airFclose(nio_->dataFile);
     
     if(1 < nrrdElementSize(nout_->nrrd)
        && nio_->encoding->endianMatters

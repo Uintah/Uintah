@@ -51,7 +51,6 @@ private:
   GuiDouble       weight_;
   GuiInt          bins_;
   GuiInt          pad_;
-  GuiInt          non_scalar_data_;
 };
 
 DECLARE_MAKER(UnuCmedian)
@@ -62,8 +61,7 @@ UnuCmedian::UnuCmedian(SCIRun::GuiContext *ctx) :
   radius_(ctx->subVar("radius")),
   weight_(ctx->subVar("weight")),
   bins_(ctx->subVar("bins")),
-  pad_(ctx->subVar("pad")),
-  non_scalar_data_(ctx->subVar("non-scalar-data"))
+  pad_(ctx->subVar("pad"))
 {
 }
 
@@ -77,20 +75,21 @@ UnuCmedian::do_filter(Nrrd *nin)
   reset_vars();
   Nrrd *ntmp, *nout;
   nout = nrrdNew();
-  if (pad_.get()) {
-    ntmp = nrrdNew();
-    if (nrrdSimplePad(ntmp, nin, radius_.get(), nrrdBoundaryBleed)) {
-      char *err = biffGetDone(NRRD);
-      error(string("Error padding: ") + err);
-      free(err);
-      return 0;
-    }
-  }
-  else {
-    ntmp = nin;
-  }
+  ntmp = nin;
+//   if (pad_.get()) {
+//     ntmp = nrrdNew();
+//     if (nrrdSimplePad(ntmp, nin, radius_.get(), nrrdBoundaryBleed)) {
+//       char *err = biffGetDone(NRRD);
+//       error(string("Error padding: ") + err);
+//       free(err);
+//       return 0;
+//     }
+//   }
+//   else {
+//     ntmp = nin;
+//   }
 
-  if (nrrdCheapMedian(nout, ntmp, mode_.get(), radius_.get(), 
+  if (nrrdCheapMedian(nout, ntmp, pad_.get(), mode_.get(), radius_.get(), 
 		      weight_.get(), bins_.get())) {
     char *err = biffGetDone(NRRD);
     error(string("Error doing cheap median: ") + err);
@@ -98,16 +97,16 @@ UnuCmedian::do_filter(Nrrd *nin)
     return 0;
   }
   
-  if (pad_.get()) {
-    if (nrrdSimpleCrop(ntmp, nout, radius_.get())) {
-      char *err = biffGetDone(NRRD);
-      error(string("Error cropping: ") + err);
-      free(err);
-      return 0;
-    }
-    nrrdNuke(nout);
-    return ntmp;
-  }
+//   if (pad_.get()) {
+//     if (nrrdSimpleCrop(ntmp, nout, radius_.get())) {
+//       char *err = biffGetDone(NRRD);
+//       error(string("Error cropping: ") + err);
+//       free(err);
+//       return 0;
+//     }
+//     nrrdNuke(nout);
+//     return ntmp;
+//   }
   return nout;
 }
 
@@ -162,7 +161,7 @@ UnuCmedian::execute()
   //! Slice a scalar out of the tuple axis and filter it. So for Vectors
   //! and Tensors, a component wise filtering occurs.
 
-  if(non_scalar_data_.get()) {
+  if(nrrdKindSize(nrrd_handle->nrrd->axis[0].kind) > 1) {
     vector<Nrrd*> out;
     for (int i = 0; i < nrrd_handle->nrrd->axis[0].size; i++) 
     { 

@@ -28,7 +28,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Segmentation
 
 
 SRCS     += \
-	$(SRCDIR)/MRITissueClassifier.cc\
+#	$(SRCDIR)/MRITissueClassifier.cc\
 
 #[INSERT NEW CODE FILE HERE]
 

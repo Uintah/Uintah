@@ -56,6 +56,7 @@ public:
   GuiString           type_;
   GuiString           label0_;
   vector<GuiString*>  label_;
+  vector<GuiString*>  kind_;
   vector<GuiString*>  center_;
   vector<GuiDouble*>  size_;
   vector<GuiDouble*>  min_;
@@ -93,9 +94,11 @@ void UnuAxinfo::load_gui() {
   
   if(max_vectors_ != dimension_.get()) {
     for(int a = max_vectors_; a <= dimension_.get(); a++) {
-      ostringstream lab, cntr, sz, min, max, spac;
+      ostringstream lab, kind, cntr, sz, min, max, spac;
       lab << "label" << a;
       label_.push_back(new GuiString(ctx->subVar(lab.str())));
+      kind << "kind" << a;
+      kind_.push_back(new GuiString(ctx->subVar(kind.str())));
       cntr << "center" << a;
       center_.push_back(new GuiString(ctx->subVar(cntr.str())));
       sz << "size" << a;
@@ -176,6 +179,13 @@ void UnuAxinfo::execute()
 	++iter1;
       }
       label_.clear();
+      iter1 = kind_.begin();
+      while(iter1 != kind_.end()) {
+	delete *iter1;
+	++iter1;
+      }
+      kind_.clear();
+
       iter1 = center_.begin();
       while(iter1 != center_.end()) {
 	delete *iter1;
@@ -262,6 +272,27 @@ void UnuAxinfo::execute()
 	} else {
 	  label_[a]->set(nh->nrrd->axis[a].label);
 	}
+	switch(nh->nrrd->axis[a].kind) {
+	case nrrdKindDomain:
+	  kind_[a]->set("nrrdKindDomain");
+	  break;
+	case nrrdKindScalar:
+	  kind_[a]->set("nrrdKindScalar");
+	  break;
+	case nrrdKind3DSymTensor:
+	  kind_[a]->set("nrrdKind3DSymTensor");
+	  break;
+	case nrrdKind3DMaskedSymTensor:
+	  kind_[a]->set("nrrdKind3DMaskedSymTensor");
+	  break;
+	case nrrdKind3DTensor:
+	  kind_[a]->set("nrrdKind3DTensor");
+	  break;
+	default:
+	  kind_[a]->set("nrrdKindUnknown");
+	  break;
+	}
+
 	switch (nh->nrrd->axis[a].center) {
 	case nrrdCenterUnknown :
 	  center_[a]->set("Unknown");
@@ -288,6 +319,7 @@ void UnuAxinfo::execute()
   label0_.reset();
   for(int a = 0; a < dimension_.get(); a++) {
     label_[a]->reset();
+    kind_[a]->reset();
     center_[a]->reset();
     size_[a]->reset();
     min_[a]->reset();
@@ -307,12 +339,35 @@ void UnuAxinfo::execute()
     free(err);
     return;
   }
+
   int dimension = nh->nrrd->dim;
   for(int i=0; i<dimension; i++) {
     if (strlen(label_[i]->get().c_str())) {
       //AIR_FREE((void*)nout->axis[i].label);
       nout->axis[i].label = (char*)airFree(nout->axis[i].label);
       nout->axis[i].label = airStrdup(const_cast<char*>(label_[i]->get().c_str()));
+
+      string kind = kind_[i]->get();
+      if (kind == "nrrdKindDomain") {
+	nout->axis[i].kind = nrrdKindDomain;
+      } else if (kind == "nrrdKindScalar") {
+	nout->axis[i].kind = nrrdKindScalar;
+      } else if (kind == "nrrdKind3Color") {
+	nout->axis[i].kind = nrrdKind3Color;
+      } else if (kind == "nrrdKind3Vector") {
+	nout->axis[i].kind = nrrdKind3Vector;
+      } else if (kind == "nrrdKind3Normal") {
+	nout->axis[i].kind = nrrdKind3Normal;
+      } else if (kind == "nrrdKind3DSymTensor") {
+	nout->axis[i].kind = nrrdKind3DSymTensor;
+      } else if (kind == "nrrdKind3DMaskedSymTensor") {
+	nout->axis[i].kind = nrrdKind3DMaskedSymTensor;
+      } else if (kind == "nrrdKind3DTensor") {
+	nout->axis[i].kind = nrrdKind3DTensor;
+      } else {
+	nout->axis[i].kind = nrrdKindUnknown;
+      }
+
 
       if (AIR_EXISTS(min_[i]->get())) {
 	nout->axis[i].min = min_[i]->get();

@@ -373,10 +373,10 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
       nrrd->axis[1].spacing = image.get_spacing(1);
       nrrd->axis[2].spacing = image.get_spacing(2);
 
-      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
-      //nrrdAxisMinMaxSet(nrrd, 3, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 2, nrrdCenterNode);
+      //nrrdAxisInfoMinMaxSet(nrrd, 3, nrrdCenterNode);
     }
     else if( dim == 2 ) 
     {
@@ -401,9 +401,9 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
       nrrd->axis[0].spacing = image.get_spacing(0);
       nrrd->axis[1].spacing = image.get_spacing(1);
 
-      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
-      //nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 1, nrrdCenterNode);
+      //nrrdAxisInfoMinMaxSet(nrrd, 2, nrrdCenterNode);
     }
     else
     {
@@ -485,10 +485,10 @@ NrrdData * AnalyzeToNrrd::join_nrrds( vector<Nrrd*> arr )
       sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
       sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
 
-      nrrdAxisMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-      nrrdAxisMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
-      nrrdAxisMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
     } else {
       return 0;
     }
@@ -510,9 +510,9 @@ NrrdData * AnalyzeToNrrd::join_nrrds( vector<Nrrd*> arr )
       sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
     }
     
-    nrrdAxisMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-    nrrdAxisMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-    nrrdAxisMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
     break;
   case 2:
     if (incr) {
@@ -523,8 +523,8 @@ NrrdData * AnalyzeToNrrd::join_nrrds( vector<Nrrd*> arr )
       sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
       sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
 
-      nrrdAxisMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-      nrrdAxisMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
     }
     break;
   default:

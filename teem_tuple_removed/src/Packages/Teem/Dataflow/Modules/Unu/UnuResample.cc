@@ -243,7 +243,7 @@ UnuResample::execute()
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (info->kernel[a] && 
 	(!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))) {
-      nrrdAxisMinMaxSet(nrrdH->nrrd, a, nin->axis[a].center ? 
+      nrrdAxisInfoMinMaxSet(nrrdH->nrrd, a, nin->axis[a].center ? 
 			nin->axis[a].center : nrrdDefCenter);
     }
     info->min[a] = nrrdH->nrrd->axis[a].min;

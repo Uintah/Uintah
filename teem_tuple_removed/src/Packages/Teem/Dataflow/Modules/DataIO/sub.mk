@@ -39,6 +39,8 @@ SRCS     += \
 	$(SRCDIR)/NrrdReader.cc\
 	$(SRCDIR)/NrrdWriter.cc\
 	$(SRCDIR)/NrrdToField.cc\
+	$(SRCDIR)/NrrdToMatrix.cc\
+	$(SRCDIR)/MatrixToNrrd.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \

@@ -58,7 +58,6 @@ public:
   FieldOPort* ofield_;
 
   GuiInt      permute_;
-  GuiInt      non_scalar_data_;
   GuiInt      build_eigens_;
   GuiString   quad_or_tet_;
   GuiString   struct_unstruct_;
@@ -121,7 +120,6 @@ DECLARE_MAKER(NrrdToField)
 NrrdToField::NrrdToField(GuiContext* ctx)
   : Module("NrrdToField", ctx, Source, "DataIO", "Teem"),
     permute_(ctx->subVar("permute")),
-    non_scalar_data_(ctx->subVar("non-scalar-data")),
     build_eigens_(ctx->subVar("build-eigens")),
     quad_or_tet_(ctx->subVar("quad-or-tet")),
     struct_unstruct_(ctx->subVar("struct-unstruct")),
@@ -221,7 +219,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
     has_points_ = true;
   if (connectH != 0)
     has_connect_ = true;
-  if (has_origfield_ != 0)
+  if (origfieldH != 0)
     has_origfield_ = true;
 
 
@@ -236,7 +234,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       // Based on the gui checkbox indicating whether or not
       // the first dimension is vector/tensor data, alter
       // the dim accordingly.
-      int non_scalar_data = non_scalar_data_.get();
+      int non_scalar_data = 0;
+      if (nrrdKindSize( dataH->nrrd->axis[0].kind ) > 1) {
+	cerr << "Vector/tensor data\n";
+	non_scalar_data = 1;
+      }
       
       if (non_scalar_data && has_data_) {
 	if (dataH->nrrd->axis[0].size == 3) {
@@ -250,8 +252,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
     } else {
       dataH = 0;
     }
+
     mHandle = origfieldH->mesh();
-    
     
     cerr << "Creating FIELD2\n";
     // Now create field based on the mesh created above and send it
@@ -299,7 +301,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 
 
   /////////////////// DETERMINE MESH BASED ON INPUTS AND GUI INFO ///////////////////
-  int non_scalar_data = non_scalar_data_.get();
+  int non_scalar_data = 0;
+  if (has_data_ && nrrdKindSize( dataH->nrrd->axis[0].kind ) > 1) {
+    cerr << "Vector/tensor data\n";
+    non_scalar_data = 1;
+  }
   
   if (non_scalar_data && has_data_) {
     if (dataH->nrrd->axis[0].size == 3) {
@@ -439,7 +445,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       if (has_points_) {
 	cerr << "Creating point cloud, structcurve, structquad, or structhex\n";
 	int offset = 0;
-	if (non_scalar_data_.get()) {
+	if (nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
 	  cerr << "Vector/Tensor data\n";
 	  offset = 1;
 	}
@@ -579,13 +585,17 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
 
 	int data_size = 1;
-	if (non_scalar_data_.get() && has_data_)
+	if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1)
 	  data_size = dataH->nrrd->axis[0].size;
 	
 	algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
       } else {
 	cerr << "Creating scanline, image, or latvol\n";
-	int non_scalar_data = non_scalar_data_.get();
+	int non_scalar_data = 0;
+	if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
+	  cerr << "Vector/tensor data\n";
+	  non_scalar_data = 1;
+	}
 	int dim = dataH->nrrd->dim;
 	int offset = 0;
 	if (non_scalar_data) {
@@ -595,7 +605,32 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	}
 	
 	Nrrd* data = dataH->nrrd;
+	bool has_min_pt = true;
+	vector<double> sp;
+	int data_center = nrrdCenterUnknown;
+	int mesh_off = 0, pt_off = 0;
+	
+	if (has_data_) {
+	  for (int i=offset; i<dataH->nrrd->dim; i++) {
+	    if (!(AIR_EXISTS(data->axis[i].min) && AIR_EXISTS(data->axis[i].max))) {
+	      has_min_pt = false;
+	      nrrdAxisInfoMinMaxSet(data, i, nrrdCenterNode);
+	    }
+	    if (AIR_EXISTS(data->axis[i].spacing))
+	      sp.push_back(data->axis[i].spacing);
+	    else
+	      sp.push_back(1.0);
+	    if (data->axis[i].center != nrrdCenterUnknown) 
+	      data_center = data->axis[i].center;
+	  }
+	} else {
+	  has_min_pt = false;
+	}
 
+	if (data_center == nrrdCenterCell) 
+	  mesh_off = 1;
+	else 
+	  pt_off = 1;
 	switch (dim) {
 	case 1:
 	  {
@@ -604,11 +639,15 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    topology_ = STRUCTURED;
 	    geometry_ = REGULAR;
 	    if (offset && data->dim == 2) {
-	      maxpt = Point (data->axis[1].size, 0, 0);
-	      mHandle = scinew ScanlineMesh( data->axis[1].size, minpt, maxpt );
+	      if (has_min_pt)
+		minpt = Point (data->axis[1].min, 0, 0);
+	      maxpt = Point ((data->axis[1].size - pt_off) * sp[0] + minpt.x(), 0, 0);
+	      mHandle = scinew ScanlineMesh( data->axis[1].size + mesh_off, minpt, maxpt );
 	    } else {
-	      maxpt = Point (data->axis[0].size, 0, 0);
-	      mHandle = scinew ScanlineMesh( data->axis[0].size, minpt, maxpt );
+	      if (has_min_pt)
+		minpt = Point (data->axis[0].min, 0, 0);
+	      maxpt = Point ((data->axis[0].size - pt_off) * sp[0] + minpt.x(), 0, 0);
+	      mHandle = scinew ScanlineMesh( data->axis[0].size + mesh_off, minpt, maxpt );
 	    }
 	  }
 	  break;
@@ -619,11 +658,21 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    topology_ = STRUCTURED;
 	    geometry_ = REGULAR;
 	    if (offset && data->dim == 3) {
-	      maxpt = Point( data->axis[1].size, data->axis[2].size, 0);
-	      mHandle = scinew ImageMesh( data->axis[1].size, data->axis[2].size, minpt, maxpt);
+	      if (has_min_pt)
+		minpt = Point ( data->axis[1].min, data->axis[2].min, 0);
+	      maxpt = Point( (data->axis[1].size - pt_off) * sp[0] + minpt.x(), 
+			     (data->axis[2].size - pt_off) * sp[1] + minpt.y(), 0);
+	      mHandle = scinew ImageMesh( data->axis[1].size + mesh_off, 
+					  data->axis[2].size + mesh_off, 
+					  minpt, maxpt);
 	    } else {
-	      maxpt = Point( data->axis[0].size, data->axis[1].size, 0);
-	      mHandle = scinew ImageMesh( data->axis[0].size, data->axis[1].size, minpt, maxpt);
+	      if (has_min_pt)
+		minpt = Point ( data->axis[0].min, data->axis[1].min, 0);
+	      maxpt = Point( (data->axis[0].size - pt_off) * sp[0] + minpt.x(), 
+			     (data->axis[1].size - pt_off) * sp[1] + minpt.y(), 0);	      
+	      mHandle = scinew ImageMesh( data->axis[0].size + mesh_off, 
+					  data->axis[1].size + mesh_off, 
+					  minpt, maxpt);
 	    }
 	  }
 	  break;
@@ -634,11 +683,25 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    topology_ = STRUCTURED;
 	    geometry_ = REGULAR;
 	    if (offset && data->dim == 4) {
-	      maxpt = Point( data->axis[1].size, data->axis[2].size, data->axis[3].size ); 	
-	      mHandle = scinew LatVolMesh( data->axis[1].size, data->axis[2].size, data->axis[3].size, minpt, maxpt );
+	      if (has_min_pt)
+		minpt = Point ( data->axis[1].min, data->axis[2].min, data->axis[3].min);
+	      maxpt = Point( (data->axis[1].size - pt_off) * sp[0] + minpt.x(), 
+			     (data->axis[2].size - pt_off) * sp[1] + minpt.y(), 
+			     (data->axis[3].size - pt_off) * sp[3] + minpt.z());
+	      mHandle = scinew LatVolMesh( data->axis[1].size + mesh_off, 
+					   data->axis[2].size + mesh_off, 
+					   data->axis[3].size + mesh_off, 
+					   minpt, maxpt );
 	    } else {
-	      maxpt = Point( data->axis[0].size, data->axis[1].size, data->axis[2].size ); 	
-	      mHandle = scinew LatVolMesh( data->axis[0].size, data->axis[1].size, data->axis[2].size, minpt, maxpt );
+	      if (has_min_pt)
+		minpt = Point ( data->axis[0].min, data->axis[1].min, data->axis[2].min);
+	      maxpt = Point( (data->axis[0].size - pt_off) * sp[0] + minpt.x(), 
+			     (data->axis[1].size - pt_off) * sp[1] + minpt.y(), 
+			     (data->axis[2].size - pt_off) * sp[3] + minpt.z());
+	      mHandle = scinew LatVolMesh( data->axis[0].size + mesh_off, 
+					   data->axis[1].size + mesh_off, 
+					   data->axis[2].size + mesh_off, 
+					   minpt, maxpt );
 	    }
 	  }
 	  break;
@@ -682,7 +745,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	
 	Nrrd* points = pointsH->nrrd;
 	int offset = 0;
-	if (non_scalar_data_.get()) {
+	if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
 	  cerr << "Vector/Tensor data\n";
 	  offset = 1;
 	}
@@ -781,7 +844,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   
   //if( topology_ & STRUCTURED ) {
   //if (idim != 0) { // has been changed 
-  if (topology_ == STRUCTURED) {
+  if (topology_ == STRUCTURED && geometry_ == IRREGULAR) {
     ofield_handle = algo->execute( mHandle, dataH, idim, jdim, kdim, permute);
     
   } else  {
@@ -890,27 +953,27 @@ NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string base_class_name("NrrdFieldConverterFieldAlgo");
-
+  
   string typeStr, typeName;
-
+  
   get_nrrd_compile_type( type, typeStr, typeName );
-
+  
   string extension;
   switch (rank)
-  {
-  case 7:
-    extension = "Tensor";
-    break;
-
-  case 3:
-    extension = "Vector";
-    break;
-
-  default:
-    extension = "Scalar";
-    break;
-  }
-
+    {
+    case 7:
+      extension = "Tensor";
+      break;
+      
+    case 3:
+      extension = "Vector";
+      break;
+      
+    default:
+      extension = "Scalar";
+      break;
+    }
+  
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
 		       mtd->get_filename() + "." + 
@@ -921,7 +984,7 @@ NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
 		       "< " + (rank==1 ? typeStr : extension) + " >" + ", " + 
 		       mtd->get_name() + ", " + 
 		       typeStr );
-
+  
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_namespace("SCITeem");
