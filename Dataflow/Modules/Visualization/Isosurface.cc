@@ -74,6 +74,7 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include <strstream>
 #include <values.h>
 
 
@@ -812,9 +813,13 @@ namespace PSECommon {
 	delete buffer;
       }
       
-      ostringstream str;
-      str << id << " span-read-image "<< filename << '\0';
-      TCL::execute(str.str().c_str());
+      //std::strstream string;
+      //string << id << " span-read-image "<< filename << '\0';
+      //clString str (string.str().c_str());
+      char *str = new char[strlen(filename())+strlen(id())+25];
+      sprintf(str,"%s span-read-image %s",id(),filename());
+      TCL::execute(str);
+      delete[] str;
     }
 
     int
