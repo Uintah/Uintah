@@ -7,16 +7,73 @@
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Volume/Core/Util/SliceTable.h>
 
-static const char* ShaderString =
-"!!ARBfp1.0 \n\
-TEMP c0, c; \n\
-ATTRIB fc = fragment.color; \n\
-ATTRIB tf = fragment.texcoord[0]; \n\
-TEX c0, tf, texture[0], 3D; \n\
-TEX c, c0, texture[1], 1D; \n\
-MUL c, c, fc; \n\
-MOV_SAT result.color, c; \n\
-END";
+// static const char* ShaderString =
+// "!!ARBfp1.0 \n
+// TEMP c0, c; \n
+// ATTRIB fc = fragment.color; \n
+// ATTRIB tf = fragment.texcoord[0]; \n
+// TEX c0, tf, texture[0], 3D; \n
+// TEX c, c0, texture[1], 1D; \n
+// MUL c, c, fc; \n
+// MOV_SAT result.color, c; \n
+// END";
+
+static const char* ShaderString1 =
+"!!ARBfp1.0 \n"
+"TEMP v, c; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"ATTRIB f = fragment.color; \n"
+"TEX v, t, texture[0], 3D; \n"
+"TEX c, v, texture[1], 1D; \n"
+"MUL result.color, c, f; \n"
+"END";
+
+
+static const char* ShaderString4 =
+"!!ARBfp1.0 \n"
+"TEMP v, c; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"ATTRIB f = fragment.color; \n"
+"TEX v, t, texture[0], 3D; \n"
+"TEX c, v.w, texture[1], 1D; \n"
+"MUL result.color, c, f; \n"
+"END";
+
+
+static const char* FogShaderString1 =
+"!!ARBfp1.0 \n"
+"TEMP value, color, fogFactor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB texCoord = fragment.texcoord[0]; \n"
+"ATTRIB fragmentColor = fragment.color; \n"
+"SUB fogFactor.x, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, fogFactor.x, fogParam.w; \n"
+"TEX value, texCoord, texture[0], 3D; \n"
+"TEX color, value, texture[1], 1D; \n"
+"MUL color, color, fragmentColor; \n"
+"LRP color.xyz, fogFactor.x, color.xyzz, fogColor.xyzz; \n"
+"MOV result.color, color; \n"
+"END";
+
+static const char* FogShaderString4 =
+"!!ARBfp1.0 \n"
+"TEMP value, color, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB texCoord = fragment.texcoord[0]; \n"
+"ATTRIB fragmentColor = fragment.color; \n"
+"SUB fogFactor.x, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, fogFactor.x, fogParam.w; \n"
+"TEX value, texCoord, texture[0], 3D; \n"
+"TEX color, value.w, texture[1], 1D; \n"
+"MUL color, color, fragmentColor; \n"
+"LRP color.xyz, fogFactor.x, color.xyzz, fogColor.xyzz; \n"
+"MOV result.color, color; \n"
+"END";
+
 
 using namespace Volume;
 using SCIRun::DrawInfoOpenGL;
@@ -33,9 +90,11 @@ SliceRenderer::SliceRenderer():
   phi1_(0),
   draw_cyl_(false)
 {
-#if defined(GL_ARB_fragment_program)
-  VolShader = new FragmentProgramARB( ShaderString, false );
-#endif
+  VolShader1 = new FragmentProgramARB(ShaderString1, false);
+  VolShader4 = new FragmentProgramARB(ShaderString4, false);
+  FogVolShader1 = new FragmentProgramARB(FogShaderString1, false);
+  FogVolShader4 = new FragmentProgramARB(FogShaderString4, false);
+
   lighting_ = 1;
 }
 
@@ -52,9 +111,10 @@ SliceRenderer::SliceRenderer(TextureHandle tex, ColorMapHandle map):
   phi1_(0),
   draw_cyl_(false)
 {
-#if defined(GL_ARB_fragment_program)
-  VolShader = new FragmentProgramARB( ShaderString, false );
-#endif
+  VolShader1 = new FragmentProgramARB(ShaderString1, false);
+  VolShader4 = new FragmentProgramARB(ShaderString4, false);
+  FogVolShader1 = new FragmentProgramARB(FogShaderString1, false);
+  FogVolShader4 = new FragmentProgramARB(FogShaderString4, false);
   lighting_ = 1;
 }
 
@@ -71,9 +131,10 @@ SliceRenderer::SliceRenderer( const SliceRenderer& copy ) :
   phi1_(copy.phi1_),
   draw_cyl_(copy.draw_cyl_)
 {
-#if defined(GL_ARB_fragment_program)
-  VolShader = copy.VolShader;
-#endif
+  VolShader1 = copy.VolShader1;
+  VolShader4 = copy.VolShader4;
+  FogVolShader1 = copy.FogVolShader1;
+  FogVolShader4 = copy.FogVolShader4;
   lighting_ = 1;
 }
 
@@ -112,31 +173,24 @@ SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 SliceRenderer::setup()
 {
-  // First set up the Textures.
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
-  glActiveTextureARB(GL_TEXTURE0_ARB);
-#endif
-  glEnable(GL_TEXTURE_3D);
-  glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
-
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
-    glActiveTextureARB(GL_TEXTURE1_ARB);
-    glEnable(GL_TEXTURE_1D);
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-#elif defined(GL_TEXTURE_COLOR_TABLE_SGI)
-    //cerr << "Using Lookup!\n";
-    glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
-#elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
-    glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
-#endif
   if( cmap_.get_rep() ) {
     if( cmap_has_changed_ || r_count_ != 1) {
       BuildTransferFunction();
       // cmap_has_changed_ = false;
     }
   }
-  glColor4f(1,1,1,1);  //set to all white for modulation
+  load_colormap();
+  
+  // First set up the Textures.
+  glActiveTextureARB(GL_TEXTURE0_ARB);
+  glEnable(GL_TEXTURE_3D);
+  glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_REPLACE); 
 
+  glActiveTextureARB(GL_TEXTURE1_ARB);
+  glEnable(GL_TEXTURE_1D);
+  glActiveTextureARB(GL_TEXTURE0_ARB);
+
+  glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_TRUE);
   glEnable(GL_ALPHA_TEST);
   glAlphaFunc(GL_GREATER, 0.0);
@@ -148,15 +202,9 @@ SliceRenderer::cleanup()
   glDisable(GL_ALPHA_TEST);
   glDepthMask(GL_TRUE);
   if( cmap_.get_rep() ){
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glDisable(GL_TEXTURE_1D);
     glActiveTextureARB(GL_TEXTURE0_ARB);
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI)
-    glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-#elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
-    glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
-#endif
   }
   glDisable(GL_TEXTURE_3D);
   // glEnable(GL_DEPTH_TEST);  
@@ -166,7 +214,6 @@ SliceRenderer::cleanup()
 void
 SliceRenderer::draw()
 {
-
   Ray viewRay;
   compute_view( viewRay );
 
@@ -179,10 +226,50 @@ SliceRenderer::draw()
   BBox brickbounds;
   tex_->get_bounds( brickbounds );
 
+
+  GLboolean fog;
+  glGetBooleanv(GL_FOG, &fog);
+  GLboolean lighting;
+  glGetBooleanv(GL_LIGHTING, &lighting);
+  int nb = (*bricks.begin())->data()->nb(0);
+
+  if(fog) {
+    switch (nb) {
+    case 1:
+      if(!FogVolShader1->valid()) {
+        FogVolShader1->create();
+      }
+      FogVolShader1->bind();
+      break;
+    case 4:
+      if(!FogVolShader4->valid()) {
+        FogVolShader4->create();
+      }
+      FogVolShader4->bind();
+      break;
+    }
+  } else {
+    switch(nb) {
+    case 1:
+      if(!VolShader1->valid()) {
+        VolShader1->create();
+      }
+      VolShader1->bind();
+      break;
+    case 4:
+      if(!VolShader4->valid()) {
+        VolShader4->create();
+      }
+      VolShader4->bind();
+      break;
+    }
+  }
+  
   Polygon*  poly;
   BBox box;
   double t;
-  for( ; it != it_end; it++ ){
+  for( ; it != it_end; it++ ) {
+
     Brick& b = *(*it);
 
     box = b.bbox();
@@ -281,6 +368,26 @@ SliceRenderer::draw()
       }
     }
   }
+
+  if(fog) {
+    switch(nb) {
+    case 1:
+      FogVolShader1->release();
+      break;
+    case 4:
+      FogVolShader4->release();
+      break;
+    }
+  } else {
+    switch(nb) {
+    case 1:
+      VolShader1->release();
+      break;
+    case 4:
+      VolShader4->release();
+      break;
+    }
+  }
 }
   
 
@@ -288,22 +395,18 @@ void
 SliceRenderer::draw(Brick& b, Polygon* poly)
 {
   vector<Polygon *> polys;
-  polys.push_back( poly );
+  polys.push_back(poly);
 
-  load_colormap();
-  load_texture( b );
+  load_texture(b);
 //   make_texture_matrix( b );
 //   enable_tex_coords();
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
-  if( !VolShader->valid() ){
-    VolShader->create();
-  }
-  VolShader->bind();
-#endif
-  drawPolys( polys );
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
-  VolShader->release();
-#endif
+  
+//   if( !VolShader->valid() ){
+//     VolShader->create();
+//   }
+//   VolShader->bind();
+  drawPolys(polys);
+//   VolShader->release();
 //   disable_tex_coords();
 }
 
@@ -319,8 +422,6 @@ void
 SliceRenderer::load_colormap()
 {
   const unsigned char *arr = transfer_function_;
-
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
 
   glActiveTextureARB(GL_TEXTURE1_ARB);
   {
@@ -345,47 +446,8 @@ SliceRenderer::load_colormap()
     }
     glActiveTexture(GL_TEXTURE0_ARB);
   }
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI )
-  //  cerr<<"GL_TEXTURE_COLOR_TABLE_SGI defined\n";
-  glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
-               GL_RGBA,
-               256, // try larger sizes?
-               GL_RGBA,  // need an alpha value...
-               GL_UNSIGNED_BYTE, // try shorts...
-               arr);
-#elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
-  //  cerr<<"GL_SHARED_TEXTURE_PALETTE_EXT  defined \n";
-
-#ifndef HAVE_CHROMIUM
-    ASSERT(glColorTableEXT != NULL );
-  glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
-		  GL_RGBA,
-		  256, // try larger sizes?
-		  GL_RGBA,  // need an alpha value...
-		  GL_UNSIGNED_BYTE, // try shorts...
-		  arr);
-#endif
-  //   glCheckForError("After glColorTableEXT");
-#endif
 }
-
 #endif // #if defined(SCI_OPENGL)
-// void
-// SliceRenderer::BuildTransferFunction()
-// {
-//   const int tSize = 256;
-//   float mul = 1.0/(tSize - 1);
-//   for ( int j = 0; j < tSize; j++ )
-//   {
-//     const Color c = cmap_->getColor(j*mul);
-//     const double alpha = cmap_->getAlpha(j*mul);
-    
-//     transfer_function_[4*j + 0] = (unsigned char)(c.r());
-//     transfer_function_[4*j + 1] = (unsigned char)(c.g());
-//     transfer_function_[4*j + 2] = (unsigned char)(c.b());
-//     transfer_function_[4*j + 3] = (unsigned char)(alpha);
-//   }
-// }
 
 void
 SliceRenderer::BuildTransferFunction()
