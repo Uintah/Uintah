@@ -36,6 +36,7 @@
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Math/MusilRNG.h>
+#include <Core/Math/Gaussian.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
@@ -86,7 +87,6 @@ class ConductivitySearch : public Module {
   static double OUT_OF_BOUNDS_MISFIT_;
 
   void build_basis_matrices();
-  double gaussian(double sigma);
   void initialize_search();
   MatrixHandle build_composite_matrix(int which_conductivity);
   void send_and_get_data(int which_conductivity);
@@ -166,13 +166,6 @@ void ConductivitySearch::build_basis_matrices() {
 }
 
 
-double ConductivitySearch::gaussian(double sigma) {
-  double x;
-  x = 2.0 * (*mr)() - 1.0;
-  return x*sigma*sqrt((-2.0 * log(x*x)) / (x*x));
-}
-
-
 //! Initialization sets up our conductivity search matrix, our misfit vector,
 //!   and our stiffness matrix frame
 
@@ -197,16 +190,15 @@ void ConductivitySearch::initialize_search() {
   // load Gaussian distribution of conductivity values into our search matrix
   int i, j;
   for (i=0; i<NDIM_; i++) {
+    double val, min, max, sigma, avg;
+    avg=(*(cond_params_.get_rep()))[i][0];
+    sigma=(*(cond_params_.get_rep()))[i][1];
+    min=(*(cond_params_.get_rep()))[i][2];
+    max=(*(cond_params_.get_rep()))[i][3];
+    Gaussian g(avg, sigma);
     for (j=0; j<NDIM_+2; j++) {
-      double val, min, max;
       do {
-	double g, sigma, avg;
-	avg=(*(cond_params_.get_rep()))[i][0];
-	sigma=(*(cond_params_.get_rep()))[i][1];
-	g=gaussian(sigma);
-	min=(*(cond_params_.get_rep()))[i][2];
-	max=(*(cond_params_.get_rep()))[i][3];
-	val= conductivities_(j,i) = avg + g;
+	val= conductivities_(j,i) = g.rand();
       } while (val > max || val < min);
     }
   }
