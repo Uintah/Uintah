@@ -221,7 +221,7 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
   old_dw->get(residP, lab->d_presResidPSLabel);
   old_dw->get(truncP, lab->d_presTruncPSLabel);
   double nlResid = residP;
-  double trunc_conv = truncP*1.0E-7;
+  // double trunc_conv = truncP*1.0E-7;
   //  double theta = 0.5;
   double theta = 0.0;
   int pressIter = 0;
@@ -612,12 +612,12 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 // Velocity Solve
 //****************************************************************************
 void 
-RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
+RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
 			    const Patch* patch,
 			    int index, double delta_t,
 			    ArchesVariables* vars,
 			    CellInformation* cellinfo,
-			    const ArchesLabel* lab)
+			    const ArchesLabel* /*lab*/)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo;
@@ -649,7 +649,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   double nlResid;
   double trunc_conv;
 
-  int velIter = 0;
+  // int velIter = 0;
   double velResid = 0.0;
   double theta = 0.5;
 
@@ -1115,7 +1115,8 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 }
 
 void 
-RBGSSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
+RBGSSolver::matrixCreate(const PatchSet* allpatches,
+			 const PatchSubset* mypatches)
 {
 }
 

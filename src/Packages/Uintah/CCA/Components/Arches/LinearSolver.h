@@ -172,7 +172,8 @@ public:
 				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
 
 
-   virtual void matrixCreate(const LevelP& level, LoadBalancer* lb) = 0;
+   virtual void matrixCreate(const PatchSet* allpatches,
+			     const PatchSubset* mypatches) = 0;
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
 			       ArchesVariables* vars,
 			       const ArchesLabel* lab) = 0;

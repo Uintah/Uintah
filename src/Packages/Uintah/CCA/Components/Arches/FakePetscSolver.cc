@@ -60,7 +60,8 @@ PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 }
 
 void 
-PetscSolver::matrixCreate(const LevelP&, LoadBalancer*)
+PetscSolver::matrixCreate(const PatchSet*,
+			  const PatchSubset*)
 {
   throw InternalError("PetscSolver not configured");
 }

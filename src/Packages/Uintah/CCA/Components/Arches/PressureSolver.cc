@@ -33,9 +33,9 @@
 using namespace Uintah;
 using namespace std;
 
-//****************************************************************************
+// ****************************************************************************
 // Default constructor for PressureSolver
-//****************************************************************************
+// ****************************************************************************
 PressureSolver::PressureSolver(const ArchesLabel* label,
 			       const MPMArchesLabel* MAlb,
 			       TurbulenceModel* turb_model,
@@ -48,18 +48,21 @@ PressureSolver::PressureSolver(const ArchesLabel* label,
 				     d_physicalConsts(physConst),
 				     d_myworld(myworld)
 {
+  d_perproc_patches=0;
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Destructor
-//****************************************************************************
+// ****************************************************************************
 PressureSolver::~PressureSolver()
 {
+  if(d_perproc_patches && d_perproc_patches->removeReference())
+    delete d_perproc_patches;
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Problem Setup
-//****************************************************************************
+// ****************************************************************************
 void 
 PressureSolver::problemSetup(const ProblemSpecP& params)
 {
@@ -87,12 +90,12 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   d_linearSolver->problemSetup(db);
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule solve of linearized pressure equation
-//****************************************************************************
+// ****************************************************************************
 void PressureSolver::solve(const LevelP& level,
 			   SchedulerP& sched,
-			   double time, double delta_t)
+			   double /*time*/, double delta_t)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -159,9 +162,9 @@ void PressureSolver::solve(const LevelP& level,
 #endif
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule build of linear matrix
-//****************************************************************************
+// ****************************************************************************
 void 
 PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
 					const MaterialSet* matls,double delta_t)
@@ -248,7 +251,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     
     int numGhostCells = 1;
     int zeroGhostCells = 0;
-    int matlIndex = 0;
+    // int matlIndex = 0;
     // Requires
     // from old_dw for time integration
   // get old_dw from getTop function
@@ -463,24 +466,22 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
 }
 
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule solver for linear matrix
-//****************************************************************************
+// ****************************************************************************
 void 
 PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 					  SchedulerP& sched)
 {
-  const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
-  int numProcessors = d_myworld->size();
-  vector<Task*> tasks(numProcessors, (Task*)0);
+  if(d_perproc_patches && d_perproc_patches->removeReference())
+    delete d_perproc_patches;
   LoadBalancer* lb = sched->getLoadBalancer();
-  int archIndex = 0; // only one arches material
-  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  d_perproc_patches = lb->createPerProcessorPatchSet(level, d_myworld);
+  d_perproc_patches->addReference();
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
   Task* tsk = scinew Task("PressureSolver::PressLinearSolve",
-		    this,
-		    &PressureSolver::pressureLinearSolve_all,
-		    level, sched);
+			  this,
+			  &PressureSolver::pressureLinearSolve_all);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
     // Requires
@@ -498,9 +499,23 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 #ifdef ARCHES_PRES_DEBUG
   cerr << "Adding computes on patch: " << patch->getID() << '\n';
 #endif
-  sched->addTask(tsk, patches, matls);
-  sched->releaseLoadBalancer();
+  sched->addTask(tsk, d_perproc_patches, matls);
 
+  const Patch* d_pressRefPatch = level->selectPatch(d_pressRef);
+  if(!d_pressRefPatch){
+    cerr << "d_pressRef=" << d_pressRef << '\n';
+    for(Level::const_patchIterator iter=level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+      const Patch* patch=*iter;
+      cerr << *patch << '\n';
+      if(patch->containsCell(d_pressRef))
+	d_pressRefPatch = patch;
+    }
+    if(!d_pressRefPatch)
+      throw InternalError("Patch containing pressure reference point was not found");
+  }
+  d_pressRefProc = lb->getPatchwiseProcessorAssignment(d_pressRefPatch,
+						       d_myworld);
 #if 0
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
@@ -588,9 +603,9 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 }
 
 
-//****************************************************************************
+// ****************************************************************************
 // Actually build of linear matrix
-//****************************************************************************
+// ****************************************************************************
 void 
 PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  const PatchSubset* patches,
@@ -815,9 +830,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
   }
 }
-//****************************************************************************
+// ****************************************************************************
 // Actually build of linear matrix
-//****************************************************************************
+// ****************************************************************************
 void 
 PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
 				       const PatchSubset* patches,
@@ -946,67 +961,55 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
 void 
 PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 					 const PatchSubset* patches,
-					 const MaterialSubset* matls,
+					 const MaterialSubset*,
 					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw,
-					 LevelP level,
-					 SchedulerP sched)
+					 DataWarehouse* new_dw)
 {
   int archIndex = 0; // only one arches material
   int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
   ArchesVariables pressureVars;
   int me = pg->myrank();
-  LoadBalancer* lb = sched->getLoadBalancer();
   // initializeMatrix...
-  d_linearSolver->matrixCreate(level, lb);
+  d_linearSolver->matrixCreate(d_perproc_patches, patches);
   for (int p = 0; p < patches->size(); p++) {
     const Patch *patch = patches->get(p);
-    int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-    if(proc == me){
-      // Underrelax...
-      
-      // This calls fillRows on linear(petsc) solver
-      pressureLinearSolve(pg, patch, matlIndex, old_dw, new_dw, pressureVars);
-    }
+    // Underrelax...
+    // This calls fillRows on linear(petsc) solver
+    pressureLinearSolve(pg, patch, matlIndex, old_dw, new_dw, pressureVars);
   }
   bool converged =  d_linearSolver->pressLinearSolve();
-  int pressRefProc = -1;
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch *patch = patches->get(p);
-    int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-     if (converged) {
-      if(proc == me){
-	//	  unpack from linear solver.
-	d_linearSolver->copyPressSoln(patch, &pressureVars);
-      }
+  if (converged) {
+    for (int p = 0; p < patches->size(); p++) {
+      const Patch *patch = patches->get(p);
+      //	  unpack from linear solver.
+      d_linearSolver->copyPressSoln(patch, &pressureVars);
     }
-    else {
-      if ((proc == me)&&(me==0))
-	cerr << "pressure solver not converged, using old values" << endl;
-    }
-    if (patch->containsCell(d_pressRef)) {
-      pressRefProc = proc;
-      if(pressRefProc == me){
-	pressureVars.press_ref = pressureVars.pressure[d_pressRef];
-	cerr << "press_ref for norm: " << pressureVars.press_ref << " " <<
-	  pressRefProc << endl;
-      }
+  } else {
+    if (pg->myrank() == 0){
+      cerr << "pressure solver not converged, using old values" << endl;
     }
   }
-    if(pressRefProc == -1)
-      throw InternalError("Patch containing pressure reference point was not found");
-  
-  MPI_Bcast(&pressureVars.press_ref, 1, MPI_DOUBLE, pressRefProc, pg->getComm());
+  if(d_pressRefProc == me){
+    CCVariable<double> pressure;
+#if 0
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    new_dw->get(pressure, d_lab->d_pressureINLabel, 
+		matlIndex, d_pressRefPatch, Ghost::None, 0);
+#else
+    pressure = pressureVars.pressure;
+#endif
+    pressureVars.press_ref = pressure[d_pressRef];
+    cerr << "press_ref for norm: " << pressureVars.press_ref << " " <<
+      d_pressRefProc << endl;
+  }
+  MPI_Bcast(&pressureVars.press_ref, 1, MPI_DOUBLE, d_pressRefProc, pg->getComm());
   for (int p = 0; p < patches->size(); p++) {
     const Patch *patch = patches->get(p);
-    int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-    //int proc = find_processor_assignment(patch);
-    if(proc == me){
-      normPressure(pg, patch, &pressureVars);
-      // put back the results
-      new_dw->put(pressureVars.pressure, d_lab->d_pressurePSLabel, 
-		       matlIndex, patch);
-    }
+    normPressure(pg, patch, &pressureVars);
+    // put back the results
+    new_dw->put(pressureVars.pressure, d_lab->d_pressurePSLabel, 
+		matlIndex, patch);
   }
 
   // destroy matrix
@@ -1124,7 +1127,7 @@ void
 PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 				     const Patch* patch,
 				     const int matlIndex,
-				     DataWarehouse* old_dw,
+				     DataWarehouse* /*old_dw*/,
 				     DataWarehouse* new_dw,
 				     ArchesVariables& pressureVars)
 {
@@ -1224,13 +1227,13 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   
   
 
-//****************************************************************************
+// ****************************************************************************
 // normalize the pressure solution
-//****************************************************************************
+// ****************************************************************************
 void 
 PressureSolver::normPressure(const ProcessorGroup*,
-			     const Patch* patch,
-			     ArchesVariables* vars)
+			     const Patch* /*patch*/,
+			     ArchesVariables* /*vars*/)
 {
 #if 0
   IntVector domLo = vars->pressure.getFortLowIndex();

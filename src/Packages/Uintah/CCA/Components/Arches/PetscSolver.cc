@@ -150,126 +150,111 @@ PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 }
 
 void 
-PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
+PetscSolver::matrixCreate(const PatchSet* allpatches,
+			  const PatchSubset* mypatches)
 {
   // for global index get a petsc index that
   // make it a data memeber
   int numProcessors = d_myworld->size();
+  ASSERTEQ(numProcessors, allpatches->size());
+
   // number of patches for each processor
   vector<int> numCells(numProcessors, 0);
-  long totalCells = 0;
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    IntVector plowIndex = patch->getCellFORTLowIndex();
-    IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
+  vector<int> startIndex(numProcessors);
+  int totalCells = 0;
+  for(int s=0;s<allpatches->size();s++){
+    startIndex[s]=totalCells;
+    int mytotal = 0;
+    const PatchSubset* patches = allpatches->getSubset(s);
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      IntVector plowIndex = patch->getCellFORTLowIndex();
+      IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
   
-    int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-    int nc = (phighIndex[0]-plowIndex[0])*
-             (phighIndex[1]-plowIndex[1])*
-             (phighIndex[2]-plowIndex[2]);
-    numCells[proc] += nc;
-    totalCells += nc;
+      long nc = (phighIndex[0]-plowIndex[0])*
+	(phighIndex[1]-plowIndex[1])*
+	(phighIndex[2]-plowIndex[2]);
+      d_petscGlobalStart[patch]=totalCells;
+      totalCells+=nc;
+      mytotal+=nc;
+    }
+    numCells[s] = mytotal;
   }
 #ifdef ARCHES_PETSC_DEBUG
   cerr << "totalCells = " << totalCells << '\n';
 #endif
-  vector<int> startIndex(numProcessors);
-  startIndex[0]=0;
-  for(int i=1;i<numProcessors;i++)
-     startIndex[i]=startIndex[i-1]+numCells[i-1];
 
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-     const Patch* patch=*iter;
-     int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-     int globalIndex = startIndex[proc];
-     d_petscGlobalStart[patch]=globalIndex;
+  for(int p=0;p<mypatches->size();p++){
+    const Patch* patch=mypatches->get(p);
+    IntVector lowIndex = patch->getGhostCellLowIndex(1);
+    IntVector highIndex = patch->getGhostCellHighIndex(1);
+    Array3<int> l2g(lowIndex, highIndex);
+    l2g.initialize(-1234);
+    long totalCells=0;
+    const Level* level = patch->getLevel();
+    Level::selectType neighbors;
+    level->selectPatches(lowIndex, highIndex, neighbors);
+    for(int i=0;i<neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
 
-    IntVector plowIndex = patch->getCellFORTLowIndex();
-    IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
-     int nc = (phighIndex[0]-plowIndex[0])*
-	      (phighIndex[1]-plowIndex[1])*
-	      (phighIndex[2]-plowIndex[2]);
-     startIndex[proc]+=nc;
-  }
+      IntVector plow = neighbor->getCellFORTLowIndex();
+      IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
+      IntVector low = Max(lowIndex, plow);
+      IntVector high= Min(highIndex, phigh);
 
-  int me = d_myworld->myrank();
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-     const Patch* patch=*iter;
-     int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-     if(proc == me){
-	IntVector lowIndex = patch->getGhostCellLowIndex(1);
-	IntVector highIndex = patch->getGhostCellHighIndex(1);
-	Array3<int> l2g(lowIndex, highIndex);
-	l2g.initialize(-1234);
-	long totalCells=0;
-	const Level* level = patch->getLevel();
-	Level::selectType neighbors;
-	level->selectPatches(lowIndex, highIndex, neighbors);
-	for(int i=0;i<neighbors.size();i++){
-	   const Patch* neighbor = neighbors[i];
-
-	   IntVector plow = neighbor->getCellFORTLowIndex();
-	   IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
-	   IntVector low = Max(lowIndex, plow);
-	   IntVector high= Min(highIndex, phigh);
-
-	   if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	       || ( high.z() < low.z() ) )
-	      throw InternalError("Patch doesn't overlap?");
-
-	   int petscglobalIndex = d_petscGlobalStart[neighbor];
-	   IntVector dcells = phigh-plow;
-	   IntVector start = low-plow;
-	   petscglobalIndex += start.z()*dcells.x()*dcells.y()
-	                      +start.y()*dcells.x()
-	                      +start.x();
+      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+	  || ( high.z() < low.z() ) )
+	throw InternalError("Patch doesn't overlap?");
+      
+      int petscglobalIndex = d_petscGlobalStart[neighbor];
+      IntVector dcells = phigh-plow;
+      IntVector start = low-plow;
+      petscglobalIndex += start.z()*dcells.x()*dcells.y()
+	+start.y()*dcells.x()+start.x();
 #ifdef ARCHES_PETSC_DEBUG
-	   cerr << "Looking at patch: " << neighbor->getID() << '\n';
-	   cerr << "low=" << low << '\n';
-	   cerr << "high=" << high << '\n';
-	   cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
-	   cerr << "globalIndex = " << petscglobalIndex << '\n';
+      cerr << "Looking at patch: " << neighbor->getID() << '\n';
+      cerr << "low=" << low << '\n';
+      cerr << "high=" << high << '\n';
+      cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
+      cerr << "globalIndex = " << petscglobalIndex << '\n';
 #endif
-	   for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-	      int idx_slab = petscglobalIndex;
-	      petscglobalIndex += dcells.x()*dcells.y();
-
-	      for (int colY = low.y(); colY < high.y(); colY ++) {
-		 int idx = idx_slab;
-		 idx_slab += dcells.x();
-		 for (int colX = low.x(); colX < high.x(); colX ++) {
-		    l2g[IntVector(colX, colY, colZ)] = idx++;
-		 }
-	      }
-	   }
-	   IntVector d = high-low;
-	   totalCells+=d.x()*d.y()*d.z();
+      for (int colZ = low.z(); colZ < high.z(); colZ ++) {
+	int idx_slab = petscglobalIndex;
+	petscglobalIndex += dcells.x()*dcells.y();
+	
+	for (int colY = low.y(); colY < high.y(); colY ++) {
+	  int idx = idx_slab;
+	  idx_slab += dcells.x();
+	  for (int colX = low.x(); colX < high.x(); colX ++) {
+	    l2g[IntVector(colX, colY, colZ)] = idx++;
+	  }
 	}
-	d_petscLocalToGlobal[patch]=l2g;
+      }
+      IntVector d = high-low;
+      totalCells+=d.x()*d.y()*d.z();
+    }
+    d_petscLocalToGlobal[patch]=l2g;
 #ifdef ARCHES_PETSC_DEBUG
-	{	
-	   IntVector l = l2g.getWindow()->getLowIndex();
-	   IntVector h = l2g.getWindow()->getHighIndex();
-	   for(int z=l.z();z<h.z();z++){
-	      for(int y=l.y();y<h.y();y++){
-		 for(int x=l.x();x<h.x();x++){
-		    IntVector idx(x,y,z);
-		    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
-		 }
-	      }
-	   }
+    {	
+      IntVector l = l2g.getWindow()->getLowIndex();
+      IntVector h = l2g.getWindow()->getHighIndex();
+      for(int z=l.z();z<h.z();z++){
+	for(int y=l.y();y<h.y();y++){
+	  for(int x=l.x();x<h.x();x++){
+	    IntVector idx(x,y,z);
+	    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
+	  }
 	}
+      }
+    }
 #endif
 #if 0
-	IntVector dn = highIndex-lowIndex;
-	long wantcells = dn.x()*dn.y()*dn.z();
-	ASSERTEQ(wantcells, totalCells);
+    IntVector dn = highIndex-lowIndex;
+    long wantcells = dn.x()*dn.y()*dn.z();
+    ASSERTEQ(wantcells, totalCells);
 #endif
-     }
   }
+  int me = d_myworld->myrank();
   int numlrows = numCells[me];
   int numlcolumns = numlrows;
   int globalrows = (int)totalCells;
@@ -290,8 +275,6 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
   ierr = VecSetFromOptions(d_x);CHKERRA(ierr);
   ierr = VecDuplicate(d_x,&d_b);CHKERRA(ierr);
   ierr = VecDuplicate(d_x,&d_u);CHKERRA(ierr);
-
-
 }
 
 // ****************************************************************************
