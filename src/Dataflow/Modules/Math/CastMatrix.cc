@@ -72,10 +72,10 @@ void CastMatrix::execute() {
     if (dynamic_cast<DenseMatrix *>(imH.get_rep())) {
       oldtype_.set("DenseMatrix");
       omH = imH;
-    } else if (cm = dynamic_cast<ColumnMatrix *>(imH.get_rep())) {
+    } else if ((cm = dynamic_cast<ColumnMatrix *>(imH.get_rep()))) {
       oldtype_.set("ColumnMatrix");
       omH = cm->toDense();
-    } else if (sm = dynamic_cast<SparseRowMatrix *>(imH.get_rep())) {
+    } else if ((sm = dynamic_cast<SparseRowMatrix *>(imH.get_rep()))) {
       oldtype_.set("SparseRowMatrix");
       omH = sm->toDense();
     } else {
@@ -86,10 +86,10 @@ void CastMatrix::execute() {
     if (dynamic_cast<SparseRowMatrix *>(imH.get_rep())) {
       oldtype_.set("SparseRowMatrix");
       omH = imH;
-    } else if (dm = dynamic_cast<DenseMatrix *>(imH.get_rep())) {
+    } else if ((dm = dynamic_cast<DenseMatrix *>(imH.get_rep()))) {
       oldtype_.set("DenseMatrix");
       omH = dm->toSparse();
-    } else if (cm = dynamic_cast<ColumnMatrix *>(imH.get_rep())) {
+    } else if ((cm = dynamic_cast<ColumnMatrix *>(imH.get_rep()))) {
       oldtype_.set("ColumnMatrix");
       omH = cm->toSparse();
     } else {
@@ -100,10 +100,10 @@ void CastMatrix::execute() {
     if (dynamic_cast<ColumnMatrix *>(imH.get_rep())) {
       oldtype_.set("ColumnMatrix");
       omH = imH;
-    } else if (dm = dynamic_cast<DenseMatrix *>(imH.get_rep())) {
+    } else if ((dm = dynamic_cast<DenseMatrix *>(imH.get_rep()))) {
       oldtype_.set("DenseMatrix");
       omH = dm->toColumn();
-    } else if (sm = dynamic_cast<SparseRowMatrix *>(imH.get_rep())) {
+    } else if ((sm = dynamic_cast<SparseRowMatrix *>(imH.get_rep()))) {
       oldtype_.set("SparseRowMatrix");
       omH = sm->toColumn();
     } else {
