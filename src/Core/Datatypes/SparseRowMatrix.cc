@@ -777,4 +777,24 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
                                 (int)valsv.size(), vals);
 }
 
+
+SparseRowMatrix *
+SparseRowMatrix::identity(int size)
+{ 
+  int *r = scinew int[size+1];
+  int *c = scinew int[size];
+  double *d = scinew double[size];
+
+  int i;
+  for (i=0; i<size; i++)
+  {
+    c[i] = r[i] = i;
+    d[i] = 1.0;
+  }
+  r[i] = i;
+
+  return scinew SparseRowMatrix(size, size, r, c, size, d);
+}
+
+
 } // End namespace SCIRun
