@@ -52,7 +52,7 @@ class ParticleVis : public Module {
  public:
   ParticleVis(GuiContext* ctx);
     virtual ~ParticleVis();
-    virtual void geom_pick(GeomPick*, void*, GeomObj*);
+    virtual void geom_pick(GeomPickHandle, void*, GeomHandle);
     virtual void execute();
 };
 } // End namespace Uintah
