@@ -142,7 +142,7 @@ public:
 
   void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }
-  void set_point(const Node::index_type &index, const Point &point);
+  void set_point(const Point &point, const Node::index_type &index);
 
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }

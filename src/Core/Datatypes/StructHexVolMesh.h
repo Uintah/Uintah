@@ -62,17 +62,9 @@ class SCICORESHARE StructHexVolMesh : public LatVolMesh
 {
 public:
 
-  StructHexVolMesh() : grid_lock_("StructHexVolMesh grid lock") {}
-  StructHexVolMesh(unsigned int x, unsigned int y, unsigned int z)
-    : LatVolMesh(x, y, z, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
-      points_(x, y, z),
-      grid_lock_("StructHexVolMesh grid lock")
-  {}
-  StructHexVolMesh(const StructHexVolMesh &copy)
-    : LatVolMesh(copy),
-      //points_(copy.points_),
-      grid_lock_("StructHexVolMesh grid lock")
-  {}
+  StructHexVolMesh();
+  StructHexVolMesh(unsigned int x, unsigned int y, unsigned int z);
+  StructHexVolMesh(const StructHexVolMesh &copy);
   virtual StructHexVolMesh *clone() { return new StructHexVolMesh(*this); }
   virtual ~StructHexVolMesh() {}
 
@@ -115,7 +107,7 @@ public:
 
   void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }
-  void set_point(const Node::index_type &index, const Point &point);
+  void set_point(const Point &point, const Node::index_type &index);
 
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
