@@ -705,8 +705,9 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
         } // End of loop over ranks (i)
 
         // Output fracture parameters and crack-front position
-        if(calFractParameters || doCrackPropagation) {
-          if(pid==0) OutputCrackFrontResults(m);
+	if(pid==0) { 
+          if(calFractParameters || doCrackPropagation)
+	    OutputCrackFrontResults(m);
         }
 
       } // End if(calFractParameters || doCrackPropagation)
@@ -717,51 +718,52 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 // Output fracture parameters and crack-front position
 void Crack::OutputCrackFrontResults(const int& m)
 {
-
-  // Create output file name in format: CrackFrontResults.matXXX
-  char outFileName[200]="";
-  strcat(outFileName,(udaDir+"/CrackFrontResults.mat").c_str());
+  if(cfSegNodes[m].size()>0) {
+    // Create output file name in format: CrackFrontResults.matXXX
+    char outFileName[200]="";
+    strcat(outFileName,(udaDir+"/CrackFrontResults.mat").c_str());
       
-  char* matbuf=new char[10];
-  sprintf(matbuf,"%d",m);
-  if(m<10) strcat(outFileName,"00");
-  else if(m<100) strcat(outFileName,"0");
-  strcat(outFileName,matbuf);
+    char* matbuf=new char[10];
+    sprintf(matbuf,"%d",m);
+    if(m<10) strcat(outFileName,"00");
+    else if(m<100) strcat(outFileName,"0");
+    strcat(outFileName,matbuf);
 	                 	
-  ofstream outCrkFrt(outFileName, ios::app);
+    ofstream outCrkFrt(outFileName, ios::app);
 
-  // Output crack-front parameters at the scheduled time steps
-  bool timeToDump = dataArchiver->wasOutputTimestep();
-  if(timeToDump) {
-    double time=d_sharedState->getElapsedTime();
-    int timestep=d_sharedState->getCurrentTopLevelTimeStep();
+    // Output crack-front parameters at the scheduled time steps
+    bool timeToDump = dataArchiver->wasOutputTimestep();
+    if(timeToDump) {
+      double time=d_sharedState->getElapsedTime();
+      int timestep=d_sharedState->getCurrentTopLevelTimeStep();
 
-    int num=(int)cfSegNodes[m].size();
-    int numSubCracks=0;
-    for(int i=0;i<num;i++) {
-      if(i==0 || i==num-1 || cfSegPreIdx[m][i]<0) {
-        if(i==cfSegMinIdx[m][i]) numSubCracks++;
-        int node=cfSegNodes[m][i];
-        Point cp=cx[m][node];
-        Vector cfPara=cfSegK[m][i];
-        outCrkFrt << setw(5) << timestep
-                  << setw(15) << time
-                  << setw(5)  << (i-1+2*numSubCracks)/2
-                  << setw(10)  << node
-                  << setw(15) << cp.x()
-                  << setw(15) << cp.y()
-                  << setw(15) << cp.z()
-                  << setw(15) << cfPara.x()
-                  << setw(15) << cfPara.y()
-                  << setw(5) << cfPara.z();
-        if(cfPara.x()!=0.) 
-          outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
-        else 
-          outCrkFrt << setw(15) << "inf" << endl;
+      int num=(int)cfSegNodes[m].size();
+      int numSubCracks=0;
+      for(int i=0;i<num;i++) {
+        if(i==0 || i==num-1 || cfSegPreIdx[m][i]<0) {
+          if(i==cfSegMinIdx[m][i]) numSubCracks++;
+          int node=cfSegNodes[m][i];
+          Point cp=cx[m][node];
+          Vector cfPara=cfSegK[m][i];
+          outCrkFrt << setw(5) << timestep
+                    << setw(15) << time
+                    << setw(5)  << (i-1+2*numSubCracks)/2
+                    << setw(10)  << node
+                    << setw(15) << cp.x()
+                    << setw(15) << cp.y()
+                    << setw(15) << cp.z()
+                    << setw(15) << cfPara.x()
+                    << setw(15) << cfPara.y()
+                    << setw(5) << cfPara.z();
+          if(cfPara.x()!=0.) 
+            outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
+          else 
+            outCrkFrt << setw(15) << "inf" << endl;
 
-        if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
+          if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
+        }
       }
-    }
-  } // End if(timeToDump)
+    } // End if(timeToDump)
+  } // End if(cfSegNodes[m].size()>0)
 }
 
