@@ -106,60 +106,6 @@ void UnuAxinfo::execute()
     }
     
     generation_ = nh->generation;
-
-    // if any tcl_values are different from defaults reset them
-    // set non-gui variables to be that of nrrd
-    // set nrrd info to be like the nh->nrrd's
-    // because this is new input
-    /*
-    if (nh->nrrd->axis[axis].label == NULL || 
-	string(nh->nrrd->axis[axis].label).length() == 0) {
-      label = "---";
-      nh->nrrd->axis[axis].label = "";
-    } else {
-      label = nh->nrrd->axis[axis].label;
-    }
-    
-    switch(nh->nrrd->axis[axis].kind) {
-    case nrrdKindDomain:
-      kind = "nrrdKindDomain";
-      break;
-    case nrrdKindScalar:
-      kind = "nrrdKindScalar";
-      break;
-    case nrrdKind3Color:
-      kind = "nrrdKind3Color";
-      break;
-    case nrrdKind3Vector:
-      kind = "nrrdKind3Vector";
-      break;
-    case nrrdKind3Normal:
-      kind = "nrrdKind3Normal";
-      break;
-    case nrrdKind3DSymTensor:
-      kind = "nrrdKind3DSymTensor";
-      break;
-    case nrrdKind3DMaskedSymTensor:
-      kind = "nrrdKind3DMaskedSymTensor";
-      break;
-    case nrrdKind3DTensor:
-      kind = "nrrdKind3DTensor";
-      break;
-    case nrrdKindList:
-      kind = "nrrdKindList";
-      break;
-    case nrrdKindStub:
-      kind = "nrrdKindStub";
-      break;
-    default:
-      kind = "nrrdKindUnknown";
-      break;
-    }
-    
-    spacing = nh->nrrd->axis[axis].spacing;
-    min = nh->nrrd->axis[axis].min;
-    max = nh->nrrd->axis[axis].max;
-    */
   }
   
   reset_vars();
