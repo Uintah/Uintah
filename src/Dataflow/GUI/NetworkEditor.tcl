@@ -1760,20 +1760,12 @@ proc maybeWrite_init_DATADIR_and_DATASET { out } {
 
 proc maybeWriteTCLStyleCopyright { out } {
     if { ![envBool SCIRUN_INSERT_NET_COPYRIGHT] } return 
-    puts $out "\# The contents of this file are subject to the University of Utah Public"
-    puts $out "\# License (the \"License\"); you may not use this file except in compliance"
-    puts $out "\# with the License."
-    puts $out "\#"
-    puts $out "\# Software distributed under the License is distributed on an \"AS IS\""
-    puts $out "\# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the"
-    puts $out "\# License for the specific language governing rights and limitations under"
-    puts $out "\# the License."
-    puts $out "\#"
-    puts $out "\# The Original Source Code is SCIRun, released March 12, 2001."
-    puts $out "\#"
-    puts $out "\# The Original Source Code was developed by the University of Utah."
-    puts $out "\# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 "
-    puts $out "\# University of Utah. All Rights Reserved.\n"
+    catch "set license [open [netedit getenv SCIRUN_SRCDIR]/LICENSE]"
+    if { ![info exists license] } return
+    while { ![eof $license] } {
+	puts $out "\# [gets $license]"
+    }
+    close $license
 }
 
 
