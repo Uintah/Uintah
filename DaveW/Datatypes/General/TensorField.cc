@@ -50,7 +50,7 @@ TensorField<DATA>::TensorField(int in_slices, int in_width, int in_height)
 
 template<class DATA>
 TensorField<DATA>::TensorField(int in_width, int in_height, int in_slices,
-			       float *data)
+			       float *data, int just_tensors)
 {
   m_width = in_width;
   m_height = in_height;
@@ -64,40 +64,45 @@ TensorField<DATA>::TensorField(int in_width, int in_height, int in_slices,
   for (ii = 0; ii < TENSOR_ELEMENTS; ii ++)
       m_tensor_field[ii].newsize(m_width, m_height, m_slices);
   
-  /* Set up the arrays for the eigenvectors*/
-  m_e_vectors.resize(EVECTOR_ELEMENTS);
+  if (!just_tensors) {
+      /* Set up the arrays for the eigenvectors*/
+      m_e_vectors.resize(EVECTOR_ELEMENTS);
     
-  /* Set up the arrays for the eigenvalues*/
-  m_e_values.resize(EVECTOR_ELEMENTS);
+      /* Set up the arrays for the eigenvalues*/
+      m_e_values.resize(EVECTOR_ELEMENTS);
+      for (ii = 0; ii < EVECTOR_ELEMENTS; ii ++) {
+	  m_e_vectors[ii].resize(m_width, m_height, m_slices);
+	  m_e_values[ii].resize(m_width, m_height, m_slices);
+      }
+  }
 
   m_inside.newsize(m_width, m_height, m_slices);
-
-  for (ii = 0; ii < EVECTOR_ELEMENTS; ii ++) {
-      m_e_vectors[ii].resize(m_width, m_height, m_slices);
-      m_e_values[ii].resize(m_width, m_height, m_slices);
-  }
 
   float *p=&(data[0]);
   for (int z=0; z<in_slices; z++) {
       for (int y=0; y<in_height; y++) {
 	  for (int x=0; x<in_width; x++) {
+	      if (just_tensors) m_inside(x,y,z)=*p++;
+
 	      for (int w=0; w<TENSOR_ELEMENTS; w++)
 		  (m_tensor_field[w])(x,y,z)=*p++;
-	      for (int v=0; v<3; v++) {
-		  Vector vec;
-		  vec.x(*p++);
-		  vec.y(*p++);
-		  vec.z(*p++);
-		  double vl=vec.length();
-		  if (vl>0.000000001) vec.normalize();
-		  m_e_vectors[v].grid(x,y,z)=vec;
-		  m_e_values[v].grid(x,y,z)=vl;
-	      }
-	      m_inside(x,y,z)=*p++;
+	      if (!just_tensors) 
+		  for (int v=0; v<3; v++) {
+		      Vector vec;
+		      vec.x(*p++);
+		      vec.y(*p++);
+		      vec.z(*p++);
+		      double vl=vec.length();
+		      if (vl>0.000000001) vec.normalize();
+		      m_e_vectors[v].grid(x,y,z)=vec;
+		      m_e_values[v].grid(x,y,z)=vl;
+		  }
+	      if (!just_tensors) m_inside(x,y,z)=*p++;
 	  }
       }
   }
-  m_tensorsGood = m_vectorsGood = m_valuesGood = 1;
+  m_tensorsGood = 1;
+  m_vectorsGood = m_valuesGood = !(just_tensors);
 }
 
 template<class DATA>
@@ -224,6 +229,9 @@ void TensorField<DATA>::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.4  2000/03/10 07:42:27  dmw
+// added a just_tensors flag to the constructor so evecs and evals dont have to be provided
+//
 // Revision 1.3  1999/09/08 02:26:18  sparker
 // Various #include cleanups
 //
