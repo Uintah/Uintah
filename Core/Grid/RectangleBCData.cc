@@ -105,23 +105,3 @@ bool RectangleBCData::inside(const Point &p) const
     return false;
 }
 
-#if 0
-Box RectangleBCData::getBoundingBox() const
-{
-
-  Point lo,hi;
-
-  // Initialize the lo and hi points to the first element
-
-  lo = child[0]->getBoundingBox().lower();
-  hi = child[0]->getBoundingBox().upper();
-
-  for (int i = 0; i < (int)child.size(); i++) {
-    Box box = child[i]->getBoundingBox();
-    lo = Min(lo,box.lower());
-    hi = Max(hi,box.upper());
-  }
-
-  return Box(lo,hi);
-}
-#endif
