@@ -19,7 +19,6 @@
 #include <Core/Geometry/Ray.h>
 #include <Core/Datatypes/ROIIterator.h>
 #include <Core/Datatypes/Brick.h>
-#include <Core/Datatypes/Polygon.h>
 #include <Core/Datatypes/SliceTable.h>
 #include <Core/Datatypes/GLVolumeRenderer.h>
 #include <Core/Datatypes/VolumeUtils.h>

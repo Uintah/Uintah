@@ -21,7 +21,6 @@
 #include <Core/Datatypes/GLTexture3D.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Datatypes/Brick.h>
-#include <Core/Datatypes/Polygon.h>
 #include <vector>
 #include <stdlib.h>
 #include <iostream>

@@ -24,11 +24,11 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Polygon.h>
 #include <Core/Containers/Array3.h>
 #include <string.h>
 #include <vector>
 
-#include <Core/Datatypes/Polygon.h>
 #include <Core/Datatypes/GLVolRenState.h>
 
 namespace SCIRun {
