@@ -38,49 +38,49 @@
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
+
+using std::vector;
+using std::string;
 class GuiInterface;
 
 class GuiContext {
   public:
-    GuiContext(GuiInterface* ctx, const std::string& name, bool save=true);
+    GuiContext(GuiInterface* ctx, const string& name, bool save=true);
 
-    GuiContext* subVar(const std::string& name, bool save=true);
-    void erase( const std::string& subname );
+    GuiContext*		subVar(const string& name, bool save=true);
+    void		erase(const string& subname);
 
-    void lock();
-    void unlock();
-    bool get(std::string& value);
-    bool getSub(const std::string& name, std::string& value);
-    void set(const std::string& value);
-    void setSub(const std::string& name, const std::string& value);
+    void		lock();
+    void		unlock();
 
-    bool get(double& value);
-    bool getSub(const std::string& name, double& value);
-    void set(double value);
-    void setSub(const std::string& name, double value);
+    bool		get(string& value);
+    void		set(const string& value);
 
-    bool get(int& value);
-    bool getSub(const std::string& name, int& value);
-    void set(int value);
-    void setSub(const std::string& name, int value);
-    void reset();
-    void emit(std::ostream& out, 
-	      const std::string &midx,
-	      const std::string& prefix="");
+    bool		get(double& value);
+    void		set(double value);
 
-    GuiInterface* getInterface();
-    std::string getfullname();
-    void dontSave();
-    void setUseDatadir(bool flag);
+    bool		get(int& value);
+    void		set(int value);
 
+    void		reset();
+    void		emit(std::ostream& out, 
+			     const string &midx,
+			     const string& prefix="");
+
+    GuiInterface*	getInterface();
+    string		getfullname();
+
+    void		dontSave();
+    void		setUseDatadir(bool flag);
   private:
-    std::string format_varname();
-    GuiInterface* gui;
-    std::string name;
-    std::vector<GuiContext*> children;
-    bool cached;
-    bool save;
-    bool usedatadir;
+    string		format_varname();
+
+    GuiInterface*	gui;
+    string		name;
+    vector<GuiContext*> children;
+    bool		cached;
+    bool		save;
+    bool		usedatadir;
 
     GuiContext(const GuiContext&);
     GuiContext& operator=(const GuiContext&);
