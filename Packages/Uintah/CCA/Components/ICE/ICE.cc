@@ -44,8 +44,8 @@ using namespace Uintah;
 static int iterNum = 0;
 static bool computeDt = false;
 
-#define DOING
-//#undef DOING
+//#define DOING
+#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -368,8 +368,6 @@ void ICE::scheduleComputeEquilibrationPressure(const Patch* patch,
     task->computes(new_dw,lb->speedSound_CCLabel,    dwindex, patch);
     task->computes(new_dw,lb->vol_frac_CCLabel,      dwindex, patch);
     task->computes(new_dw,lb->rho_micro_CCLabel,     dwindex, patch);
-    // only needed by MPMICE
-    task->computes(new_dw,lb->sp_vol_equilLabel,     dwindex, patch);
     task->computes(new_dw,lb->rho_CCLabel,           dwindex, patch);
   }
 
@@ -531,8 +529,8 @@ void ICE::scheduleAccumulateMomentumSourceSinks(const Patch* patch,
 			   &ICE::accumulateMomentumSourceSinks);
   int dwindex;
   task->requires(new_dw,lb->pressX_FCLabel, 0, patch, Ghost::AroundCells,1);
-  task->requires(new_dw,lb->pressY_FCLabel, 0, patch,  Ghost::AroundCells,1);
-  task->requires(new_dw,lb->pressZ_FCLabel, 0,  patch,  Ghost::AroundCells,1);
+  task->requires(new_dw,lb->pressY_FCLabel, 0, patch, Ghost::AroundCells,1);
+  task->requires(new_dw,lb->pressZ_FCLabel, 0, patch, Ghost::AroundCells,1);
   int numMatls=d_sharedState->getNumMatls();
   
   for (int m = 0; m < numMatls; m++) {
@@ -541,8 +539,8 @@ void ICE::scheduleAccumulateMomentumSourceSinks(const Patch* patch,
     task->requires(new_dw,  lb->rho_CCLabel,        dwindex,patch,Ghost::None);
     task->requires(new_dw,  lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
 // TURN ON WHEN WE HAVE VISCOUS TERMS
-//   task->requires(old_dw,  lb->vel_CCLabel,dwindex,patch,Ghost::None);
-//   task->requires(old_dw,  lb->viscosity_CCLabel,dwindex,patch,Ghost::None);
+//   task->requires(old_dw,  lb->vel_CCLabel,       dwindex,patch,Ghost::None);
+//   task->requires(old_dw,  lb->viscosity_CCLabel, dwindex,patch,Ghost::None);
  
     task->computes(new_dw,  lb->mom_source_CCLabel, dwindex,patch);
     
@@ -676,7 +674,6 @@ void ICE::scheduleAdvectAndAdvanceInTime(const Patch* patch, SchedulerP& sched,
     task->requires(new_dw, lb->mass_L_CCLabel,    dwindex,patch,
 		   Ghost::AroundCells,1);
 
-    task->requires(new_dw, lb->sp_vol_equilLabel, dwindex,patch,Ghost::None,0);
     task->requires(new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		   Ghost::AroundCells,1);    
    
@@ -925,9 +922,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     end
  
 Note:  The nomenclature follows the reference.   
-
-ICE doesn't need sp_vol_equil but MPMICE does so.  We simply push
-it forward with the correct value and never use it.                              
 _____________________________________________________________________*/
 void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 				       const Patch* patch,
@@ -953,7 +947,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   vector<CCVariable<double> > rho_micro(numMatls);
   vector<CCVariable<double> > rho_CC(numMatls);
   vector<CCVariable<double> > rho_CC_new(numMatls);
-  vector<CCVariable<double> > sp_vol_equil(numMatls);
   vector<CCVariable<double> > Temp(numMatls);
   vector<CCVariable<double> > speedSound(numMatls),speedSound_new(numMatls);
   CCVariable<double> press,press_new;
@@ -972,7 +965,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,dwindex, patch);
     new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel, dwindex, patch); 
     new_dw->allocate(vol_frac[m],      lb->vol_frac_CCLabel,  dwindex, patch);
-    new_dw->allocate(sp_vol_equil[m],  lb->sp_vol_equilLabel, dwindex, patch); 
     new_dw->allocate(rho_CC_new[m],    lb->rho_CCLabel, dwindex, patch);
     cv[m] = matl->getSpecificHeat();
   }
@@ -1080,8 +1072,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        rho_micro[m][*iter] = 
          ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,
                                              cv[m],Temp[m][*iter]);
-                                             
-       sp_vol_equil[m][*iter] = 1.0/rho_micro[m][*iter];
      }
      //__________________________________
      // - compute the updated volume fractions
@@ -1174,7 +1164,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     new_dw->put( speedSound_new[m],lb->speedSound_CCLabel, dwindex, patch);
     new_dw->put( rho_micro[m],     lb->rho_micro_CCLabel,  dwindex, patch);
     new_dw->put( rho_CC_new[m],    lb->rho_CCLabel,        dwindex, patch);
-    new_dw->put( sp_vol_equil[m],  lb->sp_vol_equilLabel,  dwindex, patch);
   }
   new_dw->put(press_new,lb->press_equil_CCLabel,0,patch);
   
@@ -2125,7 +2114,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
   int numALLMatls = d_sharedState->getNumMatls();
   Vector    dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
-
   //__________________________________ 
   //  Compute the Lagrangian quantities
   for(int m = 0; m < numALLMatls; m++) {
@@ -2465,17 +2453,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
   int numALLmatls = d_sharedState->getNumMatls();
   int numICEmatls = d_sharedState->getNumICEMatls();
 
-#if 0  
-  CCVariable<double > int_eng_L_ME, mass_L,speedSound;
-  CCVariable<double > mass_CC;
-  CCVariable<double > sp_vol_equil;
-  CCVariable<Vector > mom_L_ME;
-  
-  SFCXVariable<double > uvel_FC;
-  SFCYVariable<double > vvel_FC;
-  SFCZVariable<double > wvel_FC;
-#endif
-  
   // These arrays get re-used for each material, and for each
   // advected quantity
   CCVariable<double> q_CC, q_advected;
@@ -2484,6 +2461,14 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
   CCVariable<fflux> OFS;
   CCVariable<eflux> OFE;
   CCVariable<cflux> OFC;
+
+  CCVariable<double> rho_CC, mass_CC, visc_CC, temp, sp_vol_CC, rho_micro;
+  CCVariable<Vector> vel_CC, mom_L_ME;
+  CCVariable<double > int_eng_L_ME, mass_L,speedSound;
+
+  SFCXVariable<double > uvel_FC;
+  SFCYVariable<double > vvel_FC;
+  SFCZVariable<double > wvel_FC;
 
   new_dw->allocate(q_CC,       lb->q_CCLabel,       0, patch,gc);
   new_dw->allocate(q_advected, lb->q_advectedLabel, 0, patch);
@@ -2496,28 +2481,18 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
   for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
-    CCVariable<double > int_eng_L_ME, mass_L,speedSound;
-    CCVariable<double > sp_vol_equil;
-    CCVariable<Vector > mom_L_ME;
     
-    SFCXVariable<double > uvel_FC;
-    SFCYVariable<double > vvel_FC;
-    SFCZVariable<double > wvel_FC;
-
     new_dw->get(uvel_FC,lb->uvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
     new_dw->get(vvel_FC,lb->vvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
     new_dw->get(wvel_FC,lb->wvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
     new_dw->get(mom_L_ME,  lb->mom_L_ME_CCLabel, dwindex,patch,
 		Ghost::AroundCells,1);
     new_dw->get(mass_L,lb->mass_L_CCLabel,dwindex,patch,Ghost::AroundCells,1);
-    new_dw->get(sp_vol_equil,lb->sp_vol_equilLabel,dwindex,patch,
-		Ghost::None,0);
+    new_dw->get(rho_micro,
+		lb->rho_micro_CCLabel,dwindex,patch,Ghost::AroundCells,1);
     new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		Ghost::AroundCells,1);
 
-    CCVariable<double> rho_CC, mass_CC, visc_CC, temp;
-    CCVariable<double> sp_vol_CC;
-    CCVariable<Vector> vel_CC;
     new_dw->allocate(rho_CC,    lb->rho_CC_top_cycleLabel,  dwindex,patch);
     new_dw->allocate(mass_CC,   lb->mass_CCLabel,           dwindex,patch);
     new_dw->allocate(sp_vol_CC, lb->sp_vol_CCLabel,         dwindex,patch);
@@ -2526,18 +2501,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     new_dw->allocate(visc_CC,   lb->viscosity_CCLabel,      dwindex,patch);
 
     double cv = ice_matl->getSpecificHeat();
-    sp_vol_CC = sp_vol_equil;  
     //__________________________________
     //   Advection preprocessing
 
     influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,OFS,OFE,OFC);
     
-    // outflowVolCentroid goes here if doing second order
-    //outflowVolCentroid(uvel_FC,vvel_FC,wvel_FC,delT,dx,
-    //           r_out_x, r_out_y, r_out_z,
-    //           r_out_x_CF, r_out_y_CF, r_out_z_CF);
     //__________________________________
-    // Advect mass and backout mass_CC
+    // Advect mass and backout mass_CC and rho_CC
     //for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
     for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
       q_CC[*iter] = mass_L[*iter] * invvol;
@@ -2548,9 +2518,14 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       rho_CC[*iter]  = (mass_L[*iter] + q_advected[*iter]) * invvol;
     }
+    setBC(rho_CC,   "Density",              patch);
+    // mass_CC is needed for MPMICE
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+      mass_CC[*iter] = rho_CC[*iter] * vol;
+    }
+
     //__________________________________
     // Advect  momentum and backout vel_CC
-    // for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
     for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
       qV_CC[*iter] = mom_L_ME[*iter] * invvol;
     }
@@ -2561,6 +2536,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
       mass = rho_CC[*iter] * vol;
       vel_CC[*iter] = (mom_L_ME[*iter] + qV_advected[*iter])/mass ;
     }
+    setBC(vel_CC,   "Velocity",             patch);
 
     //__________________________________
     // Advect internal energy and backout Temp_CC
@@ -2568,48 +2544,38 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
       q_CC[*iter] = int_eng_L_ME[*iter] * invvol;
     }
-    
-    advectQFirst(q_CC, patch, OFS,OFE, OFC, q_advected);
-/**/  int i, j, k;
-/**/  double d_rho, d_cv, d_q_advect, d_int_eng_L;
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-/**/    IntVector curcell = *iter;       
-/**/    i = curcell.x();
-/**/    j = curcell.y();
-/**/    k = curcell.z();
-/**/    d_rho       = rho_CC[*iter];
-/**/    d_cv        = cv;
-/**/    d_q_advect  = q_advected[*iter];
-/**/    d_int_eng_L = int_eng_L_ME[*iter];
 
+    advectQFirst(q_CC, patch, OFS,OFE, OFC, q_advected);
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       mass = rho_CC[*iter] * vol;
       temp[*iter] = (int_eng_L_ME[*iter] + q_advected[*iter])/(mass*cv);
     }
-    
+    setBC(temp,     "Temperature",          patch);
+
     //__________________________________
-    // Advect 1/rho_micro_CC only needed by MPMICE
-    // BOUNDARY CONDITIONS FOR SP_VOL??
+    // Advection of specific volume.  Advected quantity is a volume fraction
     if (numICEmatls != numALLmatls)  {
+      sp_vol_CC.initialize(1.0);  // Do this so extra cells work out
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
-        q_CC[*iter] = sp_vol_equil[*iter] * invvol;
+        q_CC[*iter] = (mass_L[*iter]/rho_micro[*iter])*invvol;
       }
 
       advectQFirst(q_CC, patch, OFS,OFE, OFC, q_advected);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        sp_vol_CC[*iter] = (sp_vol_CC[*iter] + q_advected[*iter]);
+        sp_vol_CC[*iter] = (q_CC[*iter] + q_advected[*iter]);
       }
+     // Divide by the new rho_CC.  This must be done in the extraCells
+     // for now, because I don't know how to set the BCs for sp_vol.
+     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){        if(rho_CC[*iter] > 1000.*d_SMALL_NUM){
+                sp_vol_CC[*iter] /= (rho_CC[*iter] + d_SMALL_NUM);
+        }
+        else{
+                sp_vol_CC[*iter] = 1./rho_micro[*iter];
+        }
+     }
     }
-    //__________________________________
-    //  Set the BC and compute mass_CC
-    //  Note only MPMICE needs mass_CC
-    setBC(rho_CC,   "Density",              patch);
-    setBC(temp,     "Temperature",          patch);
-    setBC(vel_CC,   "Velocity",             patch);
-    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
-      mass_CC[*iter] = rho_CC[*iter] * vol;
-    }
-    
+
     /*`==========DEBUG============*/  
     if (switchDebug_advance_advect ) {
     char description[50];
