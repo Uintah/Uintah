@@ -7,13 +7,27 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/Properties.h>
-#include <SCICore/Util/NotFinished.h>
-#include <Uintah/Interface/ProblemSpec.h>
-#include <Uintah/Interface/DataWarehouse.h>
-#include <Uintah/Exceptions/InvalidValue.h>
-#include <Uintah/Grid/SoleVariable.h>
+#include <Uintah/Grid/Array3Index.h>
+#include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/SimulationState.h>
+#include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/VarTypes.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Exceptions/ParameterNotFound.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Util/NotFinished.h>
+#include <Uintah/Exceptions/InvalidValue.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -23,6 +37,18 @@ using namespace Uintah::ArchesSpace;
 Arches::Arches( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
+  d_deltLabel = new VarLabel("delt",
+			     delt_vartype::getTypeDescription() );
+  d_densityLabel = new VarLabel("density", 
+				CCVariable<double>::getTypeDescription() );
+  d_pressureLabel = new VarLabel("pressure", 
+				 CCVariable<double>::getTypeDescription() );
+  d_scalarLabel = new VarLabel("scalars", 
+			       CCVariable<Vector>::getTypeDescription() );
+  d_velocityLabel = new VarLabel("velocity", 
+				 CCVariable<Vector>::getTypeDescription() );
+  d_viscosityLabel = new VarLabel("viscosity", 
+				  CCVariable<double>::getTypeDescription() );
 }
 
 Arches::~Arches()
@@ -30,21 +56,29 @@ Arches::~Arches()
 
 }
 
-void Arches::problemSetup(const ProblemSpecP& params, GridP&,
-			  SimulationStateP&)
+void 
+Arches::problemSetup(const ProblemSpecP& params, GridP&,
+		     SimulationStateP& sharedState)
 {
-  ProblemSpecP db = params->findBlock("CFD")->findBlock("Arches");
+  // d_sharedState = sharedState;
+  ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
 
   db->require("grow_dt", d_deltaT);
+
   // physical constants
   d_physicalConsts = new PhysicalConstants();
-  d_physicalConsts->problemSetup(params);
+
+  // ** BB 5/19/2000 ** For now read the Physical constants from the 
+  // CFD-ARCHES block
+  //d_physicalConsts->problemSetup(params);
+  d_physicalConsts->problemSetup(db);
+
   // read properties, boundary and turbulence model
   d_props = new Properties();
   d_props->problemSetup(db);
   string turbModel;
   db->require("turbulence_model", turbModel);
-  if (turbModel == "Smagorinsky") 
+  if (turbModel == "smagorinsky") 
     d_turbModel = new SmagorinskyModel(d_physicalConsts);
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
@@ -63,10 +97,13 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   d_nlSolver->problemSetup(db);
 }
 
-void Arches::problemInit(const LevelP&,
-			 SchedulerP&, DataWarehouseP&,
-			 bool)
+void 
+Arches::problemInit(const LevelP& ,
+		    SchedulerP& , 
+		    DataWarehouseP& ,
+		    bool )
 {
+  cerr << "** NOTE ** Problem init has been called for ARCHES";
 #if 0
   // initializes variables
   if (!restrt) {
@@ -80,25 +117,32 @@ void Arches::problemInit(const LevelP&,
 #endif
 }
 
-void Arches::scheduleInitialize(const LevelP&,
-				SchedulerP&,
-				DataWarehouseP&)
+void 
+Arches::scheduleInitialize(const LevelP& level,
+			   SchedulerP& sched,
+			   DataWarehouseP& dw)
 {
-   cerr << "SerialMPM::scheduleInitialize not done\n";
+  // BB : 5/19/2000 : Start scheduling the initializations one by one
+  // Parameter initialization
+  cerr << "Schedule parameter initialization\n" ;
+  sched_paramInit(level, sched, dw);
+  cerr << "SerialArches::scheduleInitialize not completely done\n";
 }
 
-void Arches::scheduleComputeStableTimestep(const LevelP&,
-					   SchedulerP&,
-					   DataWarehouseP&)
+void 
+Arches::scheduleComputeStableTimestep(const LevelP&,
+				      SchedulerP&,
+				      DataWarehouseP&)
 {
 #ifdef WONT_COMPILE_YET
   dw->put(SoleVariable<double>(d_deltaT), "delt"); 
 #endif
 }
 
-void Arches::scheduleTimeAdvance(double time, double dt,
-				 const LevelP&, SchedulerP&,
-				 const DataWarehouseP&, DataWarehouseP&)
+void 
+Arches::scheduleTimeAdvance(double time, double dt,
+			    const LevelP&, SchedulerP&,
+			    const DataWarehouseP&, DataWarehouseP&)
 {
 #ifdef WONT_COMPILE_YET
   int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
@@ -114,65 +158,76 @@ void Arches::scheduleTimeAdvance(double time, double dt,
 #endif
 }
 
-void Arches::sched_paramInit(const LevelP&,
-			     SchedulerP&, DataWarehouseP&)
+void 
+Arches::sched_paramInit(const LevelP& level,
+			SchedulerP& sched, 
+			DataWarehouseP& dw)
 {
-#ifdef WONT_COMPILE_YET
-    for(Level::const_regionIterator iter=level->regionsBegin();
+  for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
     {
       Task* tsk = new Task("Arches::Initialization",
-			   region, dw, this,
-			   Arches::paramInit);
-      tsk->computes(dw, "velocity", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(dw, "pressure", region, 0,
-		    CCVariable<double>::getTypeDescription());
-      tsk->computes(dw, "scalars", region, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(dw, "density", region, 0,
-		    CCVariable<double>::getTypeDescription());
-      tsk->computes(dw, "viscosity", region, 0,
-		    CCVariable<double>::getTypeDescription());
+			   region, dw, dw, this,
+			   &Arches::paramInit);
+      cerr << "New task created successfully\n";
+      tsk->computes(dw, d_velocityLabel, 0, region);
+      tsk->computes(dw, d_pressureLabel, 0, region);
+      tsk->computes(dw, d_scalarLabel, 0, region);
+      tsk->computes(dw, d_densityLabel, 0, region);
+      tsk->computes(dw, d_viscosityLabel, 0, region);
       sched->addTask(tsk);
+      cerr << "New task added successfully to scheduler\n";
     }
   }
-#endif
 }
 
-void Arches::paramInit(const ProcessorContext*,
-		       const Region*,
-		       const DataWarehouseP&)
+void
+Arches::paramInit(const ProcessorContext* ,
+		  const Region* region,
+		  DataWarehouseP& old_dw,
+		  DataWarehouseP& )
 {
-#ifdef WONT_COMPILE_YET
-  FCVariable<Vector> velocity;
   // ....but will only compute for computational domain
-  old_dw->allocate(velocity,"velocity",region, 1);
-  CCVariable<double> pressure;
-  old_dw->allocate(pressure, "pressure", region, 1);
-  CCVariable<Vector> scalar;
-  old_dw->allocate(scalar, "scalar", region, 1);
-  CCVariable<double> density;
-  old_dw->allocate(density, "density", region, 1);
-  CCVariable<double> viscosity;
-  old_dw->allocate(viscosity, "viscosity", region, 1);
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
 
+  CCVariable<Vector> velocity;
+  CCVariable<double> pressure;
+  CCVariable<Vector> scalar;
+  CCVariable<double> density;
+  CCVariable<double> viscosity;
+
+  cerr << "Actual initialization - before allocation : old_dw = " 
+       << old_dw <<"\n";
+  old_dw->allocate(velocity, d_velocityLabel, 1, region);
+  old_dw->allocate(pressure, d_pressureLabel, 1, region);
+  old_dw->allocate(scalar, d_scalarLabel, 1, region);
+  old_dw->allocate(density, d_densityLabel, 1, region);
+  old_dw->allocate(viscosity, d_viscosityLabel, 1, region);
+  cerr << "Actual initialization - after allocation\n";
+
+  IntVector lowIndex = region->getCellLowIndex();
+  IntVector highIndex = region->getCellHighIndex();
+
+#ifdef WONT_COMPILE_YET
   FORT_INIT(velocity, pressure, scalar, density, viscosity,
 	    lowIndex, highIndex);
-  old_dw->put(velocity, "velocity", region, 0);
-  old_dw->put(pressure, "pressure", region, 0);
-  old_dw->put(scalar, "scalar", region, 0);
-  old_dw->put(density, "density", region, 0);
-  old_dw->put(viscosity, "viscosity", region, 0);
 #endif
+  cerr << "Actual initialization - before put : old_dw = " 
+       << old_dw <<"\n";
+  old_dw->put(velocity, d_velocityLabel, 0, region);
+  old_dw->put(pressure, d_pressureLabel, 0, region);
+  old_dw->put(scalar, d_scalarLabel, 0, region);
+  old_dw->put(density, d_densityLabel, 0, region);
+  old_dw->put(viscosity, d_viscosityLabel, 0, region);
+  cerr << "Actual initialization - after put \n";
 }
   
 
 //
 // $Log$
+// Revision 1.26  2000/05/20 22:54:14  bbanerje
+// Again, adding the first set of changes to get the scheduler to add tasks.
+//
 // Revision 1.25  2000/05/09 22:56:22  sparker
 // Changed name of namespace
 //

@@ -33,9 +33,9 @@ SmagorinskyModel::~SmagorinskyModel()
 void SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
-  db->require("CF", d_CF);
-  db->require("FAC_MESH", d_factorMesh);
-  db->require("FILTERL", d_filterl);
+  db->require("cf", d_CF);
+  db->require("fac_mesh", d_factorMesh);
+  db->require("filterl", d_filterl);
 }
 
 void SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
