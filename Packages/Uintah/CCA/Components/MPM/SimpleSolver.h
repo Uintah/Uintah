@@ -1,17 +1,13 @@
-#ifndef PETSC_SOLVER_H
-#define PETSC_SOLVER_H
+#ifndef SIMPLE_SOLVER_H
+#define SIMPLE_SOLVER_H
 
 #include "Solver.h"
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/Core/Math/Sparse.h>
 #include <map>
 #include <vector>
 
-#ifdef HAVE_PETSC
-extern "C" {
-#include "petscsles.h"
-}
-#endif
 using std::map;
 using std::vector;
 
@@ -20,11 +16,11 @@ namespace Uintah {
   class ProcessorGroup;
   class Patch;
 
-  class PetscSolver : public Solver {
+  class SimpleSolver : public Solver {
 
   public:
-    PetscSolver();
-    virtual ~PetscSolver();
+    SimpleSolver();
+    virtual ~SimpleSolver();
 
     virtual void initialize();
 
@@ -50,7 +46,7 @@ namespace Uintah {
 
     virtual void flushMatrix();
 
-    virtual int getSolution(vector<double>& xPetsc);
+    virtual int getSolution(vector<double>& xSimple);
 
     virtual void assembleVector();
   private:
@@ -61,14 +57,12 @@ namespace Uintah {
     vector<int> d_numNodes,d_startIndex;
     int d_totalNodes;
     
-    // Petsc matrix and vectors
-#ifdef HAVE_PETSC
-    Mat d_A;
-    Vec d_B;
-    Vec d_diagonal;
-    Vec d_x;
-    SLES sles;
-#endif
+    // Simple matrix and vectors
+
+    SparseMatrix<double,int> KK;
+    valarray<double> Q;
+    valarray<double> d_x;
+
     inline bool compare(double num1, double num2)
       {
 	double EPSILON=1.e-16;

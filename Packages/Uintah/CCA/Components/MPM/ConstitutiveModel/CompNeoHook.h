@@ -18,11 +18,6 @@
 #include <vector>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
-#ifdef HAVE_PETSC
-extern "C" {
-#include "petscsles.h"
-}
-#endif
 namespace Uintah {
       class CompNeoHook : public ConstitutiveModel {
       private:
