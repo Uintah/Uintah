@@ -161,18 +161,16 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 #		    $w.$index.stride $w.$index.wrap
 	}
 
-	frame $w.misc
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-	button $w.misc.close -text Close -command "destroy $w"
-	pack $w.misc.execute $w.misc.close -side left -padx 25
-
 	if { [set $this-dims] == 3 } {
-	    pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
+	    pack $w.l $w.i $w.j $w.k -side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 2 } {
-	    pack $w.l $w.i $w.j $w.misc -side top -padx 10 -pady 5	    
+	    pack $w.l $w.i $w.j -side top -padx 10 -pady 5	    
 	} elseif { [set $this-dims] == 1 } {
-	    pack $w.l $w.i $w.misc -side top -padx 10 -pady 5	    
+	    pack $w.l $w.i -side top -padx 10 -pady 5	    
 	}
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method scaleEntry2 { win start stop length var1 var2 } {
