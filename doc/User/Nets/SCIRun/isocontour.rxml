@@ -32,7 +32,7 @@ field.</para>
 
 <para>Isosurface is used to extract surfaces, and contours from a
 field. Go to the 
-<ulink url=<!--%= doc.treeUrl("src/Dataflow/XML/Isosurface.html") %-->> module
+<ulink url="(%= doc.treeUrl("src/Dataflow/XML/Isosurface.html") %)"> module
 description</ulink> for more information about this module's
 features.</para>
 
