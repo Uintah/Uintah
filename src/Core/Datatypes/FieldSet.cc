@@ -97,7 +97,8 @@ FieldSet::find_first_field(FieldHandle &result, const string name)
   vector<FieldHandle>::iterator fi = fields_.begin();
   while (fi != fields_.end())
   {
-    if ((*fi)->get_string("name") == name)
+    string s;
+    if ((*fi)->get("name", s) && s == name)
     {
       result = *fi;
       return true;
