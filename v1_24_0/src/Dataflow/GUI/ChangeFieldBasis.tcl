@@ -58,9 +58,10 @@ itcl_class SCIRun_FieldsData_ChangeFieldBasis {
         # Set our new basis variable based upon the contents of the old
         # dataat variable.
 	global $this-output-basis
-        if {[string equal $this-outputdataat "None"]} {
+        global $this-outputdataat
+        if {[string equal [set $this-outputdataat] "None"]} {
             set $this-output-basis "None"
-        } elseif {![string equal $this-outputdataat "Nodes"]} {
+        } elseif {![string equal [set $this-outputdataat] "Nodes"]} {
             set $this-output-basis "Constant"
         }
         set $this-outputdataat "Nodes"
