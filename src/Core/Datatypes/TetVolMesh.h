@@ -242,7 +242,7 @@ private:
 		 cell_index ci, hash_set<Edge, EdgeHash> &table) const;
 
   inline
-  void hash_face(node_index n1, node_index n2, node_index n2,
+  void hash_face(node_index n1, node_index n2, node_index n3,
 		 cell_index ci, hash_set<Face, FaceHash> &table) const;
 };
 

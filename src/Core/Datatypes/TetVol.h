@@ -17,8 +17,8 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Util/Assert.h>
 #include <vector>
-
 
 namespace SCIRun {
 
@@ -29,10 +29,11 @@ public:
     GenericField<TetVolMesh, vector<T> >() {};
   TetVol(Field::data_location data_at) : 
     GenericField<TetVolMesh, vector<T> >(data_at) {};
-  TetVol(TetVolMeshHandle mesh) :
-    GenericField<TetVolMesh, vector<T> >(mesh) {};
   TetVol(TetVolMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<TetVolMesh, vector<T> >(mesh, data_at) {};
+    GenericField<TetVolMesh, vector<T> >(mesh, data_at) 
+  {
+    resize_fdata();
+  };
 
   virtual ~TetVol() {};
 
@@ -43,6 +44,20 @@ public:
   //! Persistent IO
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
+
+  void resize_fdata() {
+    if (data_at() == NODE)
+      fdata().resize(get_typed_mesh()->nodes_size());
+    else if (data_at() == EDGE)
+      fdata().resize(get_typed_mesh()->edges_size());
+    else if (data_at() == FACE)
+      ASSERTFAIL("tetvol can't have data at faces (yet)")
+    else if (data_at() == CELL)
+      fdata().resize(get_typed_mesh()->cells_size());
+    else
+      ASSERTFAIL("data at unrecognized location")
+  }
+
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
@@ -100,22 +115,3 @@ TetVol<T>::type_name(int n)
 } // end namespace SCIRun
 
 #endif // Datatypes_TetVol_h
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

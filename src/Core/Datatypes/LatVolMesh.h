@@ -171,12 +171,23 @@ public:
 
   node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
   node_iterator node_end() const { return node_iterator(this, 0, 0, nz_); }
+  index_type    nodes_size() const { return LatIndex(nx_, ny_, nz_); }
+
   edge_iterator edge_begin() const { return 0; }
   edge_iterator edge_end() const { return 0; }
-  face_iterator face_begin() const { return 0; }
-  face_iterator face_end() const { return 0; }
+  int edges_size() const { return nx_*ny_*nz_*3 -
+			     (nx_*ny_ + ny_*nz_ + nx_*nz_); }
+
   cell_iterator cell_begin() const { return cell_iterator(this, 0, 0, 0); }
   cell_iterator cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
+  index_type    cells_size() const { return LatIndex(nx_-1, ny_-1, nz_-1); }
+
+  face_iterator face_begin() const { return 0; }
+  face_iterator face_end() const { return 0; }
+  int           faces_size() const { return (nx_-1)*(ny_-1)*(nz_-1)*3 + 
+				       (nx_-1)*(ny_-1) +
+				       (ny_-1)*(nz_-1) + 
+				       (nx_-1)*(nz_-1); }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }

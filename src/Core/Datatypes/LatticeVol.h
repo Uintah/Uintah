@@ -7,6 +7,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
 #include <string>
 
 namespace SCIRun {
@@ -72,16 +73,34 @@ public:
     GenericField<LatVolMesh, FData3d<Data> >() {}
   LatticeVol(Field::data_location data_at) :
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {}
-  LatticeVol(LatVolMeshHandle mesh) :
-    GenericField<LatVolMesh, FData3d<Data> >(mesh) {};
   LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) {};
+    GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) 
+  {
+    resize_fdata();
+  };
   
   virtual ~LatticeVol(){}
 
   virtual LatticeVol<Data> *clone() const 
     { return new LatticeVol<Data>(*this); }
  
+  void resize_fdata() {
+    if (data_at() == NODE)
+      fdata().newsize(get_typed_mesh()->nodes_size().i_, 
+		      get_typed_mesh()->nodes_size().j_,
+		      get_typed_mesh()->nodes_size().k_);
+    else if (data_at() == EDGE) 
+      ASSERTFAIL("latticevol can't have data at edges (yet)")
+    else if (data_at() == FACE)
+      ASSERTFAIL("latticevol can't have data at faces (yet)")
+    else if (data_at() == CELL)
+      fdata().newsize(get_typed_mesh()->cells_size().i_, 
+		      get_typed_mesh()->cells_size().j_,
+		      get_typed_mesh()->cells_size().k_);      
+    else
+      ASSERTFAIL("data at unrecognized location")
+  }
+
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
   static PersistentTypeID type_id;

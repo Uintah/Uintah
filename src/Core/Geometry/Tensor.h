@@ -14,6 +14,7 @@
 #define Geometry_Tensor_h 1
 
 #include <Core/share/share.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Persistent.h>
 
@@ -28,6 +29,7 @@ public:
   Tensor();
   Tensor(const Tensor&);
   Tensor(int);
+  Tensor(const Array1<double> &);
   Tensor(const double *);
   Tensor(const double **);
   Tensor(const Vector&, const Vector&, const Vector&);
