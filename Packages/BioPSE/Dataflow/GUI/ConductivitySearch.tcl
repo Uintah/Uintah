@@ -42,8 +42,7 @@ itcl_class BioPSE_Inverse_ConductivitySearch {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm minsize $w 100 50
@@ -60,6 +59,9 @@ itcl_class BioPSE_Inverse_ConductivitySearch {
 		"$this-c needexecute"
 	pack $w.seed.seed -side top -fill x -expand 1
 	pack $w.g $w.seed -side top -fill x -expand 1
+
+	makeSciButtonPanel $w $w $this -no_execute
+	moveToCursor $w
     }
 }
 
