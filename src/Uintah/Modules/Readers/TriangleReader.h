@@ -74,9 +74,16 @@ public:
     virtual ~TriangleReader();
     virtual void execute();
     TCLstring filename;
+    TCLint animate;
+    TCLint startFrame;
+    TCLint endFrame;
+    TCLint increment;
+    TCLstring status;
 
 private:
   bool Read(istream& is, ColorMapHandle cmh, GeomGroup* tris);
+  void doAnimation( ColorMapHandle cmh );
+  bool checkFile( clString filename );
 
 };
 } // End namespace Modules
@@ -85,6 +92,9 @@ private:
 
 //
 // $Log$
+// Revision 1.6  1999/10/05 16:40:36  kuzimmer
+// added animation control to triangle file reader
+//
 // Revision 1.5  1999/09/21 16:12:27  kuzimmer
 // changes made to support binary/ASCII file IO
 //
