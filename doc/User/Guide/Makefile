@@ -64,10 +64,7 @@ latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
 
 mainfile := ${bn}.tex
 dvifile := ${bn}.dvi
-psfile = ${bn}.ps
 pdffile = ${bn}.pdf
-gzpsfile := ${psfile}.gz
-gzpdffile := ${pdffile}.gz
 htmldir := ${bn}
 treetop:=../../..
 stylesheet:=${treetop}/doc/Utilities/XML/comp2latex.xsl
@@ -166,15 +163,13 @@ endef
 
 # ########## Targets for making various forms of the users guide.
 
-.PHONY: all latex html ps pdf bib
+.PHONY: all latex html pdf bib
 
-all: dvi ps pdf html  bib
+all: dvi pdf html  bib
 
 dvi: ${dvifile}
 
 html: ${htmldir}
-
-ps: ${psfile}
 
 pdf: ${pdffile}
 
@@ -200,13 +195,8 @@ ${htmldir}: ${dvifile} ${htmlfigs}
 	${call rmdirs,${htmldir}}
 	latex2html ${latex2htmloptions} ${mainfile}
 
-${psfile}: ${dvifile}
-	dvips -t letter -o ${psfile} ${dvifile}
-	gzip -c <${psfile} >${gzpsfile}
-
 ${pdffile}: ${dvifile}
 	dvipdfm -o ${pdffile} -p letter ${dvifile}
-	gzip -c <${pdffile} >${gzpdffile}
 
 # ########## Targets for making tex version module docs.
 
@@ -426,4 +416,4 @@ veryclean_eps_files: ${addsuffix _veryclean_eps_files,${packages}}
 
 veryclean: ${addsuffix _veryclean,${packages}}
 	${call rmdirs,${htmldir}}
-	${call rmfiles,${psfile} ${pdffile} *.gz *.bbl ${macrosfile} ${styfile}}
+	${call rmfiles,${pdffile} *.bbl ${macrosfile} ${styfile}}
