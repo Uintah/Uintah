@@ -25,7 +25,7 @@ else
 PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
 	Core/Exceptions Core/globus_threads Core/CCA/Component/Comm
 endif
-LIBS := 
+LIBS := $(GLOBUS_LIBRARY)
 
 PROGRAM := $(SRCDIR)/pingpong
 SRCS := $(SRCDIR)/pingpong.cc $(SRCDIR)/PingPong_sidl.cc \
