@@ -193,6 +193,28 @@ LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# slb
+
+SRCS := $(SRCDIR)/slb.cc
+PROGRAM := Packages/Uintah/StandAlone/slb
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/CCA/Ports \
+	Packages/Uintah/CCA/Components/ProblemSpecification \
+	Core/Exceptions
+endif
+
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # restart_merger
 
 SRCS := $(SRCDIR)/restart_merger.cc
@@ -254,3 +276,5 @@ compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 
 gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
+
+slb: prereqs Packages/Uintah/StandAlone/slb
