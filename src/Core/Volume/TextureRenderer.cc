@@ -397,7 +397,7 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
     glActiveTexture(GL_TEXTURE3);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   }
-  for(int i=0, k=0; i<poly.size(); i++) {
+  for(unsigned int i=0, k=0; i<poly.size(); i++) {
     if(buffer) {
       buffer->bind(GL_FRONT);
     }
@@ -451,7 +451,7 @@ TextureRenderer::draw_polygons_wireframe(vector<float>& vertex,
   if(fog) {
     glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
   }
-  for(int i=0, k=0; i<poly.size(); i++)
+  for(unsigned int i=0, k=0; i<poly.size(); i++)
   {
     glBegin(GL_LINE_LOOP);
     {
