@@ -42,7 +42,6 @@ using namespace Uintah;
 using namespace Uintah::ICESpace;
 using SCICore::Datatypes::DenseMatrix;
 
-
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
 {
@@ -525,9 +524,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
   new_dw->allocate(press,lb->press_CCLabel,0,patch);
 
-  XFCVariable<double> uvel_FC;
-  YFCVariable<double> vvel_FC;
-  ZFCVariable<double> wvel_FC;
+  SFCXVariable<double> uvel_FC;
+  SFCYVariable<double> vvel_FC;
+  SFCZVariable<double> wvel_FC;
 
   cout << "Initial pressure = " << d_pressure << endl;
   // Store the initial pressure
@@ -578,7 +577,19 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
       // Set the boundary conditions:
       //    uvel,vvel,wvel,temp,rho_CC
-
+#if 1
+      cout << "Before doing the boundary conditions" << endl;
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++){
+	cout << "rho_CC["<< *iter<< "]=" << rho_CC[*iter] << endl;
+	cout << "rho_micro["<< *iter<< "]=" << rho_micro[*iter] << endl;
+	cout << "temp["<< *iter<< "]=" << temp[*iter] << endl;
+	cout << "uvel_CC["<< *iter<< "]=" << uvel_CC[*iter] << endl;
+	cout << "vvel_CC["<< *iter<< "]=" << vvel_CC[*iter] << endl;
+	cout << "wvel_CC["<< *iter<< "]=" << wvel_CC[*iter] << endl;
+	
+      } 
+#endif
       setBC(rho_CC,"Density",patch);
       setBC(temp,"Temperature",patch);
       setBC(uvel_CC,"Velocity","x",patch);
@@ -907,104 +918,140 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
       old_dw->get(wvel_CC, lb->wvel_CCLabel,  dwindex, patch, Ghost::None, 0);
 
       // Create variables for the results
-      XFCVariable<double> uvel_FC;
-      YFCVariable<double> vvel_FC;
-      ZFCVariable<double> wvel_FC;
+      SFCXVariable<double> uvel_FC;
+      SFCYVariable<double> vvel_FC;
+      SFCZVariable<double> wvel_FC;
       new_dw->allocate(uvel_FC, lb->uvel_FCLabel, dwindex, patch);
       new_dw->allocate(vvel_FC, lb->vvel_FCLabel, dwindex, patch);
       new_dw->allocate(wvel_FC, lb->wvel_FCLabel, dwindex, patch);
 
+      uvel_FC.initialize(0.);
+      vvel_FC.initialize(0.);
+      wvel_FC.initialize(0.);
+      
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
 
 #if 1
    // This can't be uncommented until ExtraCells are implemented
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++){
 	IntVector curcell = *iter;
+	cout << "Iterator = " << *iter << endl;
 
-       // Top face
-	IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
+	// Top face
+	// Extend the computation into the left and right ExtraCells
+	if (curcell.y() < (patch->getCellHighIndex()).y()-1) {
+	  IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
+	  cout << "Top face adjacent = " << adjcell << endl;
+	  
+	  rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
+	  cout << "rho_micro_CC adjacent = " << rho_micro_CC[adjcell] << 
+	    " current = " << rho_micro_CC[curcell] << endl;
+	  cout << "Top face rho_micro_FC = " << rho_micro_FC << endl;
+	  rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
+	  cout << "Top face rho_FC = " << rho_FC << endl;
+	  cout << "vvel_CC adjacent = " << vvel_CC[adjcell] << " current = " 
+	       << vvel_CC[curcell] << endl;
+	  
+	  term1 = (rho_CC[adjcell] * vvel_CC[adjcell] +
+		   rho_CC[curcell] * vvel_CC[curcell])/rho_FC;
+	  
+	  press_coeff = 2.0/(rho_micro_FC);
+	  
+	  term2 =   delT * press_coeff *
+	    (press_CC[adjcell] - press_CC[curcell])/dx.y();
+	  term3 =  delT * gravity.y();
+	  
+	  cout << "Top face term 1 = " << term1 << " term 2 = " << term2 << 
+	    " term 3 = " << term3 << endl;
+	  
+	  // I don't know what this is going to look like yet
+	  // but the equations are right I think.
+	  //	  uvel_FC[curcell + IntVector(0,1,0)] = 0.0;
+	  vvel_FC[curcell + IntVector(0,1,0)] = term1- term2 + term3;
+	  //wvel_FC[curcell + IntVector(0,1,0)] = 0.0;
 
-	rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	cout << "rho_micro_CC adjacent = " << rho_micro_CC[adjcell] << 
-	  " current = " << rho_micro_CC[curcell] << endl;
-	cout << "Top face rho_micro_FC = " << rho_micro_FC << endl;
-	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-	cout << "Top face rho_FC = " << rho_FC << endl;
-	cout << "vvel_CC adjacent = " << vvel_CC[adjcell] << " current = " 
-	     << vvel_CC[curcell] << endl;
-
-	term1 = (rho_CC[adjcell] * vvel_CC[adjcell] +
-		 rho_CC[curcell] * vvel_CC[curcell])/rho_FC;
-
-	press_coeff = 2.0/(rho_micro_FC);
-
-	term2 =   delT * press_coeff *
-			(press_CC[adjcell] - press_CC[curcell])/dx.y();
-	term3 =  delT * gravity.y();
-
-	cout << "Top face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
-
-	// I don't know what this is going to look like yet
-	// but the equations are right I think.
-	uvel_FC[curcell + IntVector(0,1,0)] = 0.0;
-	vvel_FC[curcell + IntVector(0,1,0)] = term1- term2 + term3;
-	wvel_FC[curcell + IntVector(0,1,0)] = 0.0;
+	  cout << "uvel="<< uvel_FC[curcell+IntVector(0,1,0)] << endl;
+	  cout << "vvel="<< vvel_FC[curcell+IntVector(0,1,0)] << endl;
+	  cout << "wvel="<< wvel_FC[curcell+IntVector(0,1,0)] << endl<<endl;
+	}
 
        // Right face
-	adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z()); 
+	if (curcell.x() < (patch->getCellHighIndex()).x()-1) {
+	 IntVector adjcell(curcell.x()+1,curcell.y(),curcell.z()); 
+	 cout << "Right face adjacent = " << adjcell << endl;
+	  
+	 rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
+	 rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
+	 
+	 term1 = (rho_CC[adjcell] * uvel_CC[adjcell] +
+		  rho_CC[curcell] * uvel_CC[curcell])/rho_FC;
+	 
+	 press_coeff = 2.0/(rho_micro_FC);
+	 
+	 term2 =   delT * press_coeff *
+	   (press_CC[adjcell] - press_CC[curcell])/dx.x();
+	 term3 =  delT * gravity.x();
+	 
+	 cout << "Right face term 1 = " << term1 << " term 2 = " << term2 << 
+	   " term 3 = " << term3 << endl;
+	 
+	 // I don't know what this is going to look like yet
+	 // but the equations are right I think.
+	 uvel_FC[curcell + IntVector(1,0,0)] = term1- term2 + term3;
+	 //	 vvel_FC[curcell + IntVector(1,0,0)] = 0.0;
+	 //wvel_FC[curcell + IntVector(1,0,0)] = 0.0;
+	  cout << "uvel="<< uvel_FC[curcell+IntVector(1,0,0)] << endl;
+	  cout << "vvel="<< vvel_FC[curcell+IntVector(1,0,0)] << endl;
+	  cout << "wvel="<< wvel_FC[curcell+IntVector(1,0,0)] << endl<<endl;
+	}
 
-	rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-
-	term1 = (rho_CC[adjcell] * uvel_CC[adjcell] +
-		 rho_CC[curcell] * uvel_CC[curcell])/rho_FC;
-
-	press_coeff = 2.0/(rho_micro_FC);
-
-	term2 =   delT * press_coeff *
-			(press_CC[adjcell] - press_CC[curcell])/dx.x();
-	term3 =  delT * gravity.x();
-
-	cout << "Right face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
-
-	// I don't know what this is going to look like yet
-	// but the equations are right I think.
-	uvel_FC[curcell + IntVector(1,0,0)] = term1- term2 + term3;
-	vvel_FC[curcell + IntVector(1,0,0)] = 0.0;
-	wvel_FC[curcell + IntVector(1,0,0)] = 0.0;
-
-       // Front face
-	adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+0); 
-
-	rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-
-	term1 = (rho_CC[adjcell] * wvel_CC[adjcell] +
-		 rho_CC[curcell] * wvel_CC[curcell])/rho_FC;
-
-	press_coeff = 2.0/(rho_micro_FC);
-
-	term2 =   delT * press_coeff *
-			(press_CC[adjcell] - press_CC[curcell])/dx.z();
-	term3 =  delT * gravity.z();
-
-	cout << "Front face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
-
-	// I don't know what this is going to look like yet
-	// but the equations are right I think.
-	uvel_FC[curcell + IntVector(0,0,1)] = 0.0;
-	vvel_FC[curcell + IntVector(0,0,1)] = 0.0;
-	wvel_FC[curcell + IntVector(0,0,1)] = term1- term2 + term3;
+	// Front face
+	if (curcell.z() < (patch->getCellHighIndex()).z()-1) {
+	  IntVector adjcell(curcell.x(),curcell.y(),curcell.z()+1); 
+	  cout << "Front face adjacent = " << adjcell << endl;
+	  rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
+	  rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
+	  
+	  term1 = (rho_CC[adjcell] * wvel_CC[adjcell] +
+		   rho_CC[curcell] * wvel_CC[curcell])/rho_FC;
+	  
+	  press_coeff = 2.0/(rho_micro_FC);
+	  
+	  term2 =   delT * press_coeff *
+	    (press_CC[adjcell] - press_CC[curcell])/dx.z();
+	  term3 =  delT * gravity.z();
+	  
+	  cout << "Front face term 1 = " << term1 << " term 2 = " << term2 << 
+	    " term 3 = " << term3 << endl;
+	  
+	  // I don't know what this is going to look like yet
+	  // but the equations are right I think.
+	  //uvel_FC[curcell + IntVector(0,0,1)] = 0.0;
+	  //vvel_FC[curcell + IntVector(0,0,1)] = 0.0;
+	  wvel_FC[curcell + IntVector(0,0,1)] = term1- term2 + term3;
+	  cout << "uvel="<< uvel_FC[curcell+IntVector(0,0,1)] << endl;
+	  cout << "vvel="<< vvel_FC[curcell+IntVector(0,0,1)] << endl;
+	  cout << "wvel="<< wvel_FC[curcell+IntVector(0,0,1)] << endl<<endl;
+	}
       }
 #endif
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	IntVector curcell = *iter;
-	cout << "face velocity" << curcell<<" = " << uvel_FC[*iter] << " " << 
-	  vvel_FC[*iter] << " " << wvel_FC[*iter] << endl;
+#if 1
+      cout << "Before BC application" << endl << endl;
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++) {
+	cout << "left face velocity" << *iter << "=" <<uvel_FC[*iter] << endl;
+	cout << "right face velocity" << *iter << "=" 
+	     <<uvel_FC[*iter+IntVector(1,0,0)] << endl;
+	cout << "bottom face velocity" << *iter << "=" <<vvel_FC[*iter] << endl;
+	cout << "top face velocity" << *iter << "=" 
+	     <<vvel_FC[*iter + IntVector(0,1,0)] << endl;
+	cout << "back face velocity" << *iter << "=" <<wvel_FC[*iter] << endl;
+	cout << "front face velocity" << *iter << "=" 
+	     <<wvel_FC[*iter+IntVector(0,0,1)] << endl << endl;
       }
+#endif     
+      
       // Put Boundary condition stuff in here
       // Update any neumann boundary conditions
       setBC(uvel_CC,"Velocity","x",patch);
@@ -1014,11 +1061,28 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
       setBC(vvel_FC,"Velocity","y",patch);
       setBC(wvel_FC,"Velocity","z",patch);
 
+
+      cout << "Array limits for uvel_FC: " << uvel_FC.getLowIndex() << " " <<
+	uvel_FC.getHighIndex() << endl;
+      cout << "Array limits for vvel_FC: " << vvel_FC.getLowIndex() << " " <<
+	vvel_FC.getHighIndex() << endl;
+      cout << "Array limits for wvel_FC: " << wvel_FC.getLowIndex() << " " <<
+	wvel_FC.getHighIndex() << endl;
+      // Note:  The right face BC is not being applied for some reason
+      // Not sure if the limits on the array are correct or not?
 #if 1
+      cout << "After BC in step 1c application" << endl << endl;
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	  iter++) {
-//	cout << "face velocity = " << uvel_FC[*iter] << " " << 
-//	  vvel_FC[*iter] << " " << wvel_FC[*iter] << endl;
+	cout << "left face velocity" << *iter << "=" <<uvel_FC[*iter] << endl;
+	cout << "right face velocity" << *iter << "=" 
+	     <<uvel_FC[*iter+IntVector(1,0,0)] << endl;
+	cout << "bottom face velocity" << *iter << "=" <<vvel_FC[*iter] << endl;
+	cout << "top face velocity" << *iter << "=" 
+	     <<vvel_FC[*iter + IntVector(0,1,0)] << endl;
+	cout << "back face velocity" << *iter << "=" <<wvel_FC[*iter] << endl;
+	cout << "front face velocity" << *iter << "=" 
+	     <<wvel_FC[*iter+IntVector(0,0,1)] << endl << endl;
       }
 #endif       
       // Put the result in the datawarehouse
@@ -1047,14 +1111,14 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   // Create variables for the required values
   vector<CCVariable<double> > rho_micro_CC(numMatls);
   vector<CCVariable<double> > vol_frac_CC(numMatls);
-  vector<XFCVariable<double> > uvel_FC(numMatls);
-  vector<YFCVariable<double> > vvel_FC(numMatls);
-  vector<ZFCVariable<double> > wvel_FC(numMatls);
+  vector<SFCXVariable<double> > uvel_FC(numMatls);
+  vector<SFCYVariable<double> > vvel_FC(numMatls);
+  vector<SFCZVariable<double> > wvel_FC(numMatls);
 
   // Create variables for the results
-  vector<XFCVariable<double> > uvel_FCME(numMatls);
-  vector<YFCVariable<double> > vvel_FCME(numMatls);
-  vector<ZFCVariable<double> > wvel_FCME(numMatls);
+  vector<SFCXVariable<double> > uvel_FCME(numMatls);
+  vector<SFCYVariable<double> > vvel_FCME(numMatls);
+  vector<SFCZVariable<double> > wvel_FCME(numMatls);
 
   vector<double> b(numMatls);
   DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls),K(numMatls,numMatls);
@@ -1078,104 +1142,148 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
     new_dw->allocate(wvel_FCME[m], lb->wvel_FCMELabel, dwindex, patch);
   }
 
-
+#if 1
+  cout << "At the beginning of step1d" << endl << endl;
+  for (int m = 0; m < numMatls; m++) {
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	iter++) {
+      cout << "left face velocity" << *iter << "=" <<uvel_FC[m][*iter] << endl;
+      cout << "right face velocity" << *iter << "=" 
+	   <<uvel_FC[m][*iter+IntVector(1,0,0)] << endl;
+      cout << "bottom face velocity" << *iter << "=" <<vvel_FC[m][*iter] << endl;
+      cout << "top face velocity" << *iter << "=" 
+	   <<vvel_FC[m][*iter + IntVector(0,1,0)] << endl;
+      cout << "back face velocity" << *iter << "=" <<wvel_FC[m][*iter] << endl;
+      cout << "front face velocity" << *iter << "=" 
+	   <<wvel_FC[m][*iter+IntVector(0,0,1)] << endl << endl;
+    }
+  }
+#endif       
+  
+  for (int m = 0; m < numMatls; m++) {
+    uvel_FCME[m] = uvel_FC[m];
+    vvel_FCME[m] = vvel_FC[m];
+    wvel_FCME[m] = wvel_FC[m];
+  }
+  
    // This can't be uncommented until ExtraCells are implemented
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
+      iter++){
     IntVector curcell = *iter;
+    cout << "Working on cell " << curcell << endl;
 
 #if 1
    // Top face
-    IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
+    if (curcell.y() < (patch->getCellHighIndex()).y()-1) {
+      IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
 
-    for(int m = 0; m < numMatls; m++){
-      for(int n = 0; n < numMatls; n++){
-	temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
-	beta[m][n] = delT * temp/
-		       (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
-	a[m][n] = -beta[m][n];
+      for(int m = 0; m < numMatls; m++){
+	for(int n = 0; n < numMatls; n++){
+	  temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+	  beta[m][n] = delT * temp/
+	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+	  a[m][n] = -beta[m][n];
+	}
       }
-    }
-
-    for(int m = 0; m < numMatls; m++){
-      a[m][m] = 1.;
-      for(int n = 0; n < numMatls; n++){
-	a[m][m] +=  beta[m][n];
+      
+      for(int m = 0; m < numMatls; m++){
+	a[m][m] = 1.;
+	for(int n = 0; n < numMatls; n++){
+	  a[m][m] +=  beta[m][n];
+	}
       }
-    }
-
-    for(int m = 0; m < numMatls; m++){
-      b[m] = 0.0;
-      for(int n = 0; n < numMatls; n++){
-	b[m] += beta[m][n] * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
+      
+      for(int m = 0; m < numMatls; m++){
+	b[m] = 0.0;
+	for(int n = 0; n < numMatls; n++){
+	  b[m] += beta[m][n] * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
+	}
       }
-    }
-
-   int itworked = a.solve(b);
-
-    for(int m = 0; m < numMatls; m++){
-      vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
+      
+      int itworked = a.solve(b);
+      for (int i = 0; i < (int)b.size(); i++) {
+	cout << "Top faced b[" << i << "]=" << b[i] << endl;
+      }
+	
+      
+      for(int m = 0; m < numMatls; m++){
+	vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
+      }
     }
 
    // Right face
-    adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z()); 
-    for(int m = 0; m < numMatls; m++){
-      for(int n = 0; n < numMatls; n++){
-	temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
-	beta[m][n] = delT * temp/
-		       (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
-	a[m][n] = -beta[m][n];
+    if (curcell.x() < (patch->getCellHighIndex()).x()-1) {
+      IntVector adjcell(curcell.x()+1,curcell.y(),curcell.z()); 
+      for(int m = 0; m < numMatls; m++){
+	for(int n = 0; n < numMatls; n++){
+	  temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+	  beta[m][n] = delT * temp/
+	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+	  a[m][n] = -beta[m][n];
+	}
+      }
+      
+      for(int m = 0; m < numMatls; m++){
+	a[m][m] = 1.;
+	for(int n = 0; n < numMatls; n++){
+	  a[m][m] +=  beta[m][n];
+	}
+      }
+      
+      for(int m = 0; m < numMatls; m++){
+	b[m] = 0.0;
+	for(int n = 0; n < numMatls; n++){
+	  b[m] += beta[m][n] * (uvel_FC[n][*iter] - uvel_FC[m][*iter]);
+	}
+      }
+      
+      int itworked = a.solve(b);
+      for (int i = 0; i < (int)b.size(); i++) {
+	cout << "Right faced b[" << i << "]=" << b[i] << endl;
+      }
+	
+      
+      for(int m = 0; m < numMatls; m++){
+	uvel_FCME[m][*iter] = uvel_FC[m][*iter] + b[m];
+	cout << "uvel_FC = " << uvel_FC[m][*iter] << " b = " << b[m] <<
+	  "uvel_FCME = " << uvel_FCME[m][*iter] << endl;
       }
     }
 
-    for(int m = 0; m < numMatls; m++){
-      a[m][m] = 1.;
-      for(int n = 0; n < numMatls; n++){
-	a[m][m] +=  beta[m][n];
+    // Front face
+    if (curcell.z() < (patch->getCellHighIndex()).z()-1) {
+      IntVector adjcell(curcell.x(),curcell.y(),curcell.z()+1); 
+      for(int m = 0; m < numMatls; m++){
+	for(int n = 0; n < numMatls; n++){
+	  temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+	  beta[m][n] = delT * temp/
+	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+	  a[m][n] = -beta[m][n];
+	}
       }
-    }
-
-    for(int m = 0; m < numMatls; m++){
-      b[m] = 0.0;
-      for(int n = 0; n < numMatls; n++){
-	b[m] += beta[m][n] * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
+      
+      for(int m = 0; m < numMatls; m++){
+	a[m][m] = 1.;
+	for(int n = 0; n < numMatls; n++){
+	  a[m][m] +=  beta[m][n];
+	}
       }
-    }
-
-    itworked = a.solve(b);
-
-    for(int m = 0; m < numMatls; m++){
-      vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
-    }
-
-   // Front face
-    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1); 
-    for(int m = 0; m < numMatls; m++){
-      for(int n = 0; n < numMatls; n++){
-	temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
-	beta[m][n] = delT * temp/
-		       (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
-	a[m][n] = -beta[m][n];
+      
+      for(int m = 0; m < numMatls; m++){
+	b[m] = 0.0;
+	for(int n = 0; n < numMatls; n++){
+	  b[m] += beta[m][n] * (wvel_FC[n][*iter] - wvel_FC[m][*iter]);
+	}
       }
-    }
+      
+      int itworked = a.solve(b);
+      for (int i = 0; i < (int)b.size(); i++) {
+	cout << "Front faced b[" << i << "]=" << b[i] << endl;
+      }      
 
-    for(int m = 0; m < numMatls; m++){
-      a[m][m] = 1.;
-      for(int n = 0; n < numMatls; n++){
-	a[m][m] +=  beta[m][n];
+      for(int m = 0; m < numMatls; m++){
+	wvel_FCME[m][*iter] = wvel_FC[m][*iter] + b[m];
       }
-    }
-
-    for(int m = 0; m < numMatls; m++){
-      b[m] = 0.0;
-      for(int n = 0; n < numMatls; n++){
-	b[m] += beta[m][n] * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
-      }
-    }
-
-    itworked = a.solve(b);
-
-    for(int m = 0; m < numMatls; m++){
-      vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
     }
 #endif
   }
@@ -1183,23 +1291,38 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
 
   // Apply grid boundary conditions to the velocity
   // before storing the data
-
+  cout << "Before the BCs in step1d" << endl << endl;
   for (int m = 0; m < numMatls; m++) {
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();
 	 iter++) {
-      cout << "velocity" << *iter <<" = " << uvel_FCME[m][*iter] << " " 
-	   << vvel_FCME[m][*iter] << " " << wvel_FCME[m][*iter] << endl;
+      cout << "left face velocity" << *iter << "=" <<uvel_FCME[m][*iter] << endl;
+      cout << "right face velocity" << *iter << "=" 
+	   <<uvel_FCME[m][*iter+IntVector(1,0,0)] << endl;
+      cout << "bottom face velocity" << *iter << "=" <<vvel_FCME[m][*iter] << endl;
+      cout << "top face velocity" << *iter << "=" 
+	   <<vvel_FCME[m][*iter + IntVector(0,1,0)] << endl;
+      cout << "back face velocity" << *iter << "=" <<wvel_FCME[m][*iter] << endl;
+      cout << "front face velocity" << *iter << "=" 
+	   <<wvel_FCME[m][*iter+IntVector(0,0,1)] << endl << endl;
     }
   }
-  cout << endl << endl << "Now doing the BC" << endl << endl;
+
+  cout << endl << endl << "Now doing the BC in step1d" << endl << endl;
   for (int m = 0; m < numMatls; m++) {
     setBC(uvel_FCME[m],"Velocity","x",patch);
     setBC(vvel_FCME[m],"Velocity","y",patch);
     setBC(wvel_FCME[m],"Velocity","z",patch);
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done();
 	 iter++) {
-      cout << "velocity" << *iter <<" = " << uvel_FCME[m][*iter] << " " 
-	   << vvel_FCME[m][*iter] << " " << wvel_FCME[m][*iter] << endl;
+      cout << "left face velocity" << *iter << "=" <<uvel_FCME[m][*iter] << endl;
+      cout << "right face velocity" << *iter << "=" 
+	   <<uvel_FCME[m][*iter+IntVector(1,0,0)] << endl;
+      cout << "bottom face velocity" << *iter << "=" <<vvel_FCME[m][*iter] << endl;
+      cout << "top face velocity" << *iter << "=" 
+	   <<vvel_FCME[m][*iter + IntVector(0,1,0)] << endl;
+      cout << "back face velocity" << *iter << "=" <<wvel_FCME[m][*iter] << endl;
+      cout << "front face velocity" << *iter << "=" 
+	   <<wvel_FCME[m][*iter+IntVector(0,0,1)] << endl << endl;
     }
   }
 
@@ -1260,9 +1383,9 @@ void ICE::actuallyStep2(const ProcessorGroup*,
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
       int dwindex = matl->getDWIndex();
       // Get required variables for this patch
-      XFCVariable<double> uvel_FC;
-      YFCVariable<double> vvel_FC;
-      ZFCVariable<double> wvel_FC;
+      SFCXVariable<double> uvel_FC;
+      SFCYVariable<double> vvel_FC;
+      SFCZVariable<double> wvel_FC;
       CCVariable<double> vol_frac;
       CCVariable<double> rho_micro_CC;
       CCVariable<double> speedSound;
@@ -1280,15 +1403,28 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       new_dw->allocate(div_velfc_CC, lb->div_velfc_CCLabel, dwindex, patch);
       cout << "dx = " << dx << endl;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	cout << "top face velocity = " << vvel_FC[*iter+IntVector(0,1,0)] 
+	     << endl;
+	cout << "bottom face velocity = " << vvel_FC[*iter+IntVector(0,0,0)] 
+	     << endl;
+	cout << "left face velocity = " << uvel_FC[*iter+IntVector(1,0,0)] 
+	     << endl;
+	cout << "right face velocity = " << uvel_FC[*iter+IntVector(0,0,0)] 
+	     << endl;
+	cout << "front face velocity = " << wvel_FC[*iter+IntVector(0,0,1)] 
+	     << endl;
+	cout << "back face velocity = " << wvel_FC[*iter+IntVector(0,0,0)] 
+	     << endl;
 	top      =  dx.x()*dx.z()* vvel_FC[*iter+IntVector(0,1,0)];
 	bottom   = -dx.x()*dx.z()* vvel_FC[*iter+IntVector(0,0,0)];
 	left     = -dx.y()*dx.z()* uvel_FC[*iter+IntVector(0,0,0)];
 	right    =  dx.y()*dx.z()* uvel_FC[*iter+IntVector(1,0,0)];
-	front    =  dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,0)];
-	back     = -dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,1)];
+	front    =  dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,1)];
+	back     = -dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,0)];
 	cout << "top = " << top << " bottom = " << bottom << " left = " 
 	     << left << " right = " << right << " front = " << front 
-	     << " back = " << back << endl;
+	     << " back = " << back << " vol_frac = " << vol_frac[*iter] << 
+	  endl;
 	  
 	div_velfc_CC[*iter] = vol_frac[*iter]*
 			     (top + bottom + left + right + front  + back );
@@ -1308,12 +1444,13 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                      q_advected);
       }
 
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
 	  iter++){
 	term1[*iter] = 0.;
 	term2[*iter] -= q_advected[*iter];
 	term3[*iter] += vol_frac[*iter] /(rho_micro_CC[*iter] *
 					  speedSound[*iter]*speedSound[*iter]);
+	cout << "term1 = " << term1[*iter] << " term2 = " << term2[*iter] << " term3 = " << term3[*iter] << endl;
       }
 
       new_dw->put(div_velfc_CC, lb->div_velfc_CCLabel, dwindex, patch);
@@ -1328,9 +1465,11 @@ void ICE::actuallyStep2(const ProcessorGroup*,
   new_dw->allocate(delPress,     lb->delPress_CCLabel, 0, patch);
   new_dw->allocate(pressdP,      lb->pressdP_CCLabel,  0, patch);
 
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-	delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
-	pressdP[*iter]  = pressure[*iter] + delPress[*iter];
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
+    pressdP[*iter]  = pressure[*iter] + delPress[*iter];
+    cout << "delPress = " << delPress[*iter] << " pressdP = " 
+	 << pressdP[*iter] << endl;
   }
 
 
@@ -1361,9 +1500,9 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 
 
   // Create variables for the results
-  XFCVariable<double> pressX_FC;
-  YFCVariable<double> pressY_FC;
-  ZFCVariable<double> pressZ_FC;
+  SFCXVariable<double> pressX_FC;
+  SFCYVariable<double> pressY_FC;
+  SFCZVariable<double> pressZ_FC;
   new_dw->allocate(pressX_FC,lb->pressX_FCLabel, 0, patch);
   new_dw->allocate(pressY_FC,lb->pressY_FCLabel, 0, patch);
   new_dw->allocate(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
@@ -1413,7 +1552,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 
 
    // Front face
-    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+0);
+    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
 
     sum_rho=0.0;
     sum_rho_adj  = 0.0;
@@ -1423,7 +1562,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     }
     sum_all_rho  = sum_rho     +  sum_rho_adj;
 
-    pressZ_FC[curcell+IntVector(0,0,0)]    =
+    pressZ_FC[curcell+IntVector(0,0,1)]    =
              (press_CC[curcell] * sum_rho
            +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
 
@@ -1464,14 +1603,14 @@ void ICE::actuallyStep4a(const ProcessorGroup*,
   CCVariable<double> uvel_CC, vvel_CC, wvel_CC;
   CCVariable<double> visc_CC;
   CCVariable<double> vol_frac;
-  XFCVariable<double> pressX_FC;
-  YFCVariable<double> pressY_FC;
-  ZFCVariable<double> pressZ_FC;
+  SFCXVariable<double> pressX_FC;
+  SFCYVariable<double> pressY_FC;
+  SFCZVariable<double> pressZ_FC;
 
   CCVariable<double> xmom_source, ymom_source, zmom_source;
-  XFCVariable<double> tau_X_FC;
-  YFCVariable<double> tau_Y_FC;
-  ZFCVariable<double> tau_Z_FC;
+  SFCXVariable<double> tau_X_FC;
+  SFCYVariable<double> tau_Y_FC;
+  SFCZVariable<double> tau_Z_FC;
 
   new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch,Ghost::None, 0);
   new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch,Ghost::None, 0);
@@ -1854,9 +1993,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC,rho_CC,visc_CC,cv,temp;
   CCVariable<double> xmom_L_ME,ymom_L_ME,zmom_L_ME,int_eng_L_ME,mass_L;
 
-  XFCVariable<double> uvel_FC;
-  YFCVariable<double> vvel_FC;
-  ZFCVariable<double> wvel_FC;
+  SFCXVariable<double> uvel_FC;
+  SFCYVariable<double> vvel_FC;
+  SFCZVariable<double> wvel_FC;
 
   // Allocate the temporary variables needed for advection
   // These arrays get re-used for each material, and for each
@@ -2034,6 +2173,7 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
       
       if (bc->getKind() == "Neumann") 
 	variable.fillFaceFlux(face,bc->getValue(),dx);
+	
     }
     if (bc_base->getType() == "Density") {
       DensityBoundCond* bc = dynamic_cast<DensityBoundCond*>(bc_base);
@@ -2050,6 +2190,7 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
       
       if (bc->getKind() == "Neumann") 
 	variable.fillFaceFlux(face,bc->getValue(),dx);
+	
     }
   }
 
@@ -2096,7 +2237,7 @@ void ICE::setBC(CCVariable<double>& variable, const  string& kind,
 
 }
 
-void ICE::setBC(XFCVariable<double>& variable, const string& kind, 
+void ICE::setBC(SFCXVariable<double>& variable, const string& kind, 
 		const Patch* patch)
 {
 
@@ -2142,7 +2283,7 @@ void ICE::setBC(XFCVariable<double>& variable, const string& kind,
 
 }
 
-void ICE::setBC(XFCVariable<double>& variable, const  string& kind, 
+void ICE::setBC(SFCXVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch) 
 {
   Vector dx = patch->dCell();
@@ -2183,7 +2324,7 @@ void ICE::setBC(XFCVariable<double>& variable, const  string& kind,
 
 }
 
-void ICE::setBC(YFCVariable<double>& variable, const string& kind, 
+void ICE::setBC(SFCYVariable<double>& variable, const string& kind, 
 		const Patch* patch)
 {
 
@@ -2229,7 +2370,7 @@ void ICE::setBC(YFCVariable<double>& variable, const string& kind,
 
 }
 
-void ICE::setBC(YFCVariable<double>& variable, const  string& kind, 
+void ICE::setBC(SFCYVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch) 
 {
   Vector dx = patch->dCell();
@@ -2273,7 +2414,7 @@ void ICE::setBC(YFCVariable<double>& variable, const  string& kind,
 
 
 
-void ICE::setBC(ZFCVariable<double>& variable, const string& kind, 
+void ICE::setBC(SFCZVariable<double>& variable, const string& kind, 
 		const Patch* patch)
 {
 
@@ -2319,7 +2460,7 @@ void ICE::setBC(ZFCVariable<double>& variable, const string& kind,
 
 }
 
-void ICE::setBC(ZFCVariable<double>& variable, const  string& kind, 
+void ICE::setBC(SFCZVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch) 
 {
   Vector dx = patch->dCell();
@@ -2360,9 +2501,9 @@ void ICE::setBC(ZFCVariable<double>& variable, const  string& kind,
 
 }
 
-void ICE::influxOutfluxVolume(const XFCVariable<double>& uvel_FC,
-			      const YFCVariable<double>& vvel_FC,
-			      const ZFCVariable<double>& wvel_FC,
+void ICE::influxOutfluxVolume(const SFCXVariable<double>& uvel_FC,
+			      const SFCYVariable<double>& vvel_FC,
+			      const SFCZVariable<double>& wvel_FC,
 			      const double& delT, const Patch* patch,
 			      CCVariable<fflux>& OFS, CCVariable<eflux>& OFE,
 			      CCVariable<fflux>& IFS, CCVariable<eflux>& IFE)
@@ -2381,8 +2522,8 @@ void ICE::influxOutfluxVolume(const XFCVariable<double>& uvel_FC,
     delY_bottom = std::max(0.0,-(vvel_FC[*iter+IntVector(0,0,0)] * delT));
     delX_right  = std::max(0.0, (uvel_FC[*iter+IntVector(1,0,0)] * delT));
     delX_left   = std::max(0.0,-(uvel_FC[*iter+IntVector(0,0,0)] * delT));
-    delZ_front  = std::max(0.0, (wvel_FC[*iter+IntVector(0,0,0)] * delT));
-    delZ_back   = std::max(0.0,-(wvel_FC[*iter+IntVector(0,0,1)] * delT));
+    delZ_front  = std::max(0.0, (wvel_FC[*iter+IntVector(0,0,1)] * delT));
+    delZ_back   = std::max(0.0,-(wvel_FC[*iter+IntVector(0,0,0)] * delT));
 
     delX_tmp    = dx.x() - delX_right - delX_left;
     delY_tmp    = dx.y() - delY_top   - delY_bottom;
@@ -2465,9 +2606,9 @@ void ICE::influxOutfluxVolume(const XFCVariable<double>& uvel_FC,
 
 }
 
-void ICE::outflowVolCentroid(const XFCVariable<double>& uvel_FC,
-			     const YFCVariable<double>& vvel_FC,
-			     const ZFCVariable<double>& wvel_FC,
+void ICE::outflowVolCentroid(const SFCXVariable<double>& uvel_FC,
+			     const SFCYVariable<double>& vvel_FC,
+			     const SFCZVariable<double>& wvel_FC,
 			     const double& delT, const Vector& dx,
 			     CCVariable<fflux>& r_out_x,
 			     CCVariable<fflux>& r_out_y,
@@ -2656,6 +2797,10 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.61  2000/12/05 15:45:29  jas
+// Now using SFC{X,Y,Z} data types.  Fixed some small bugs and things appear
+// to be working up to the middle of step 2.
+//
 // Revision 1.60  2000/11/28 03:50:28  jas
 // Added {X,Y,Z}FCVariables.  Things still don't work yet!
 //
