@@ -76,36 +76,21 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
       dynamic_cast<LevelField<float>*>(texfld_.get_rep());
     if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
-  } else if (type == "unsigned int") {
-    LevelField<unsigned int> *fld =
-      dynamic_cast<LevelField<unsigned int>*>(texfld_.get_rep());
+  } else if (type == "long") {
+    LevelField<long> *fld =
+      dynamic_cast<LevelField<long>*>(texfld_.get_rep());
     if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
-  } else if (type == "int") {
-    LevelField<int> *fld =
-      dynamic_cast<LevelField<int>*>(texfld_.get_rep());
-    if( !use_minmax ) fld->minmax(minmax);
-    mesh_ = fld->get_typed_mesh();
-  } else if (type == "unsigned short") {
-    LevelField<unsigned short> *fld =
-      dynamic_cast<LevelField<unsigned short>*>(texfld_.get_rep());
-    if( !use_minmax ) fld->minmax(minmax);
-    mesh_ = fld->get_typed_mesh();
-  } else if (type == "short") {
-    LevelField<short> *fld =
-      dynamic_cast<LevelField<short>*>(texfld_.get_rep());
-    if( !use_minmax ) fld->minmax(minmax);
-    mesh_ = fld->get_typed_mesh();
-  } else if (type == "unsigned char") {
-    LevelField<unsigned char> *fld =
-      dynamic_cast<LevelField<unsigned char>*>(texfld_.get_rep());
-    if( !use_minmax ) fld->minmax(minmax);
-    mesh_ = fld->get_typed_mesh();
-  } else if (type == "char") {
-    LevelField<char> *fld =
-      dynamic_cast<LevelField<char>*>(texfld_.get_rep());
-    if( !use_minmax ) fld->minmax(minmax);
-    mesh_ = fld->get_typed_mesh();
+//    } else if (type == "int") {
+//      LevelField<int> *fld =
+//        dynamic_cast<LevelField<int>*>(texfld_.get_rep());
+//      if( !use_minmax ) fld->minmax(minmax);
+//      mesh_ = fld->get_typed_mesh();
+//    } else if (type == "unsigned_char") {
+//      LevelField<unsigned char> *fld =
+//        dynamic_cast<LevelField<unsigned char>*>(texfld_.get_rep());
+//      if( !use_minmax ) fld->minmax(minmax);
+//      mesh_ = fld->get_typed_mesh();
   } else {
     cerr << "GLTexture3D constructor error - unknown LevelField type: " << type << endl;
     return;
