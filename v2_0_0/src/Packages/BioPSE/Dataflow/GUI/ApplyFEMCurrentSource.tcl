@@ -47,8 +47,7 @@ itcl_class BioPSE_Forward_ApplyFEMCurrentSource {
 
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	
@@ -59,5 +58,8 @@ itcl_class BioPSE_Forward_ApplyFEMCurrentSource {
 	bind $w.source <Return> "$this-c needexecute"
 	bind $w.sink <Return> "$this-c needexecute"
 	pack $w.mode $w.source $w.sink -side top -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

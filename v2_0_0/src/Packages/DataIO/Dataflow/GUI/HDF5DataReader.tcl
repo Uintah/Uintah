@@ -123,14 +123,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w [format "%s-filebox" .ui[modname]]
 
 	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return;
+	    return
 	}
 
-	#toplevel $w
+	toplevel $w -class TkFDialog
 	set initdir ""
 	
 	# place to put preferred data directory
@@ -160,10 +156,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	######################################################
 	
 	makeOpenFilebox \
-	    -parent . \
+	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c update_file; destroy " \
-	    -cancel "destroy " \
+	    -command "$this-c update_file; wm withdrawn $w" \
+	    -cancel "wm withdrawn $w" \
 	    -title $title \
 	    -filetypes $types \
 	    -initialdir $initdir \
@@ -194,17 +190,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
-
-#	if {[winfo exists $w]} {
-#	    set child [lindex [winfo children $w] 0]
-#
-#	    # $w withdrawn by $child's procedures
-#	    raise $child
-#	    return;
-#	}
 
 	# Before building the tree save the current selections since
 	# they erased when the tree is built.
@@ -1175,7 +1162,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    # $w withdrawn by $child's procedures
 	    raise $child
-	    return;
+	    return
 	}
 
         toplevel $w

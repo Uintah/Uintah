@@ -42,13 +42,12 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
 
 	frame $w.p1
-	label $w.p1.units-l -text "Units :" -anchor w -just left
+	label $w.p1.units-l -text "Units:" -anchor w -just left
 	entry $w.p1.units -width 14 -just left -textvariable $this-units
 	pack $w.p1.units-l $w.p1.units -side left
 
@@ -62,9 +61,11 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 	entry $w.p3.max -width 14 -just left -textvariable $this-max
 	pack $w.p3.max-l $w.p3.max -side left
 
+	button $w.sel -text " Open New File " -command "$this file_selection"
+	pack $w.p1 $w.p2 $w.p3 $w.sel -side top -padx 4 -pady 4 -anchor e
 
-	button $w.sel -text "Open New File" -command "$this file_selection"
-	pack $w.p1 $w.p2 $w.p3 $w.sel -side top
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
     
     method file_selection {} {
@@ -72,10 +73,14 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 
         set w [format "%s-fb" .ui[modname]]
         if {[winfo exists $w]} {
-            raise $w
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
             return
         }
-	#toplevel $w
+	toplevel $w -class TkFDialog
 	set initdir ""
 	
 	#######################################################
@@ -94,10 +99,10 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent . \
+		-parent $w \
 		-filevar $this-filename \
-		-command "$this working_files from-gui; destroy " \
-		-cancel "destroy " \
+		-command "$this working_files from-gui; wm withdraw $w" \
+		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
 		-initialdir $initdir \

@@ -48,49 +48,49 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 	set sd [$w.sd childsite]
 
         pack $w.row8 $w.row10 $w.which \
-        $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 5
+        $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 2
 
-	button $w.row10.browse_button -text "Open Analyze File" -command \
-	    "$this ChooseFile; \ 
-             $this AddData"
-       
+	button $w.row10.browse_button -text "Open Analyze File" \
+	    -command "$this ChooseFile; $this AddData"
 
 	pack $w.row10.browse_button -side right -fill x -expand yes
 
 	set selected [Scrolled_Listbox $sd.selected -width 100 -height 10 -selectmode single]
+	button $sd.delete -text "Remove Data" -command "$this DeleteData"
 
-	button $sd.delete -text "Remove Data" \
-	    -command "$this DeleteData"
-
-	pack $sd.selected $sd.delete -side top -fill x -expand yes
+	pack $sd.selected $sd.delete -side top -fill x -expand yes -padx 4 -pady 4
         pack $sd.selected -side top -fill x -expand yes
 
-	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.row4.execute -side top -e n -f both
-
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
 
     method ChooseFile { } {
         set w .ui[modname]
 
-	if [ expr [winfo exists $w] ] {
-
-            set defext ".hdr"
-	
-	    # File types to appers in filter box
-	    set types {
-	        {{Analyze Header File}        {.hdr} }
+	if { [winfo exists $w] } {
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
 	    }
+	    return
+	}
 
-	    set $this-file [tk_getOpenFile  \
-		-parent $w \
-		-title "Open Analyze File" \
-                -filetypes $types \
-                -defaultextension $defext]
-        }
+	set defext ".hdr"
+	
+	# File types to appers in filter box
+	set types {
+	    {{Analyze Header File}        {.hdr} }
+	}
+	
+	set $this-file [tk_getOpenFile  \
+			    -parent $w \
+			    -title "Open Analyze File" \
+			    -filetypes $types \
+			    -defaultextension $defext]
     }
-
 
     method AddData { } {
     

@@ -51,14 +51,15 @@ itcl_class Teem_DataIO_NrrdReader {
 	set w [format "%s-fb" .ui[modname]]
 
 	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return;
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
+	    return $w
 	}
 
-	#toplevel $w
+	toplevel $w -class TkFDialog
 	set initdir ""
 	
 	# place to put preferred data directory
@@ -81,20 +82,19 @@ itcl_class Teem_DataIO_NrrdReader {
 	
 	# file types to appers in filter box
 	set types {
-            {{Nrrd Header File}     {.nhdr}    }
-            {{Nrrd File}     {.nrrd}    }
-	    {{NrrdData File}     {.nd}      }
-	    {{All Files} {.*}   }
+            {{Nrrd Files}         {.nhdr .nrrd}   }
+	    {{NrrdData File}      {.nd}           }
+	    {{All Files}          {.*}            }
 	}
 	
 	######################################################
 	
 	return \
 	    [makeOpenFilebox \
-		 -parent . \
+		 -parent $w \
 		 -filevar $this-filename \
-		 -command "set $this-axis \"\";$this-c read_nrrd;destroy " \
-		 -cancel "destroy " \
+		 -command "set $this-axis \"\";$this-c read_nrrd; wm withdraw $w" \
+		 -cancel "wm withdraw $w" \
 		 -title $title \
 		 -filetypes $types \
 		 -initialdir $initdir \
@@ -144,7 +144,7 @@ itcl_class Teem_DataIO_NrrdReader {
 
 	    # $w withdrawn by $child's procedures
 	    raise $child
-	    return;
+	    return
 	}
 
 	toplevel $w
