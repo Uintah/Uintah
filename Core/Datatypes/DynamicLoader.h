@@ -60,20 +60,23 @@ typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
 class DynamicLoader
 {
 public:
+  typedef DynamicAlgoBase* (*maker_fun)();
+
   DynamicLoader();
   ~DynamicLoader();
 
   // Compile and load .so for the selected manipulation
-  bool compile_and_store(const CompileInfo &info);
-  bool get( const string &, DynamicAlgoHandle&);
+  bool get(const CompileInfo &info, DynamicAlgoHandle&);
 
 
 private:
   bool create_cc(const CompileInfo &info);
   bool compile_so(const string &file);
-  void store( const string &, DynamicAlgoHandle);
+  void store( const string &, maker_fun);
+  bool fetch(const CompileInfo &info, DynamicAlgoHandle&);
+  bool compile_and_store(const CompileInfo &info);
 
-  typedef map<string, DynamicAlgoHandle> map_type;
+  typedef map<string, maker_fun> map_type;
   map_type algo_map_;
 };
 
