@@ -714,7 +714,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
   } // End of loop patches
 }
 
-// Output fracture parameters and crack-front position
+// Output fracture parameters and crack-front position every time step 
 void Crack::OutputCrackFrontResults(const int& m)
 {
   if(cfSegNodes[m].size()>0) {
@@ -729,52 +729,36 @@ void Crack::OutputCrackFrontResults(const int& m)
     strcat(outFileName,matbuf);
 	                 	
     ofstream outCrkFrt(outFileName, ios::app);
-
-    // Scheduled time steps for dumping
-    bool timeToDump = dataArchiver->wasOutputTimestep();
-
-    // Detect if doing output at this time step
-    short outputJKThisStep=NO; 
-        if(d_calFractParameters=="every_time_step" || 
-       d_doCrackPropagation=="every_time_step") {
-      if(timeToDump) outputJKThisStep=YES;
-    }
-    else {
-      if(calFractParameters || doCrackPropagation) 
-	outputJKThisStep=YES;
-    }    
      
-    if(outputJKThisStep) {
-      double time=d_sharedState->getElapsedTime();
-      int timestep=d_sharedState->getCurrentTopLevelTimeStep();
+    double time=d_sharedState->getElapsedTime();
+    int timestep=d_sharedState->getCurrentTopLevelTimeStep();
 
-      int num=(int)cfSegNodes[m].size();
-      int numSubCracks=0;
-      for(int i=0;i<num;i++) {
-        if(i==0 || i==num-1 || cfSegPreIdx[m][i]<0) {
-          if(i==cfSegMinIdx[m][i]) numSubCracks++;
-          int node=cfSegNodes[m][i];
-          Point cp=cx[m][node];
-          Vector cfPara=cfSegK[m][i];
-          outCrkFrt << setw(5) << timestep
-                    << setw(15) << time
-                    << setw(5)  << (i-1+2*numSubCracks)/2
-                    << setw(10)  << node
-                    << setw(15) << cp.x()
-                    << setw(15) << cp.y()
-                    << setw(15) << cp.z()
-                    << setw(15) << cfPara.x()
-                    << setw(15) << cfPara.y()
-                    << setw(5) << cfPara.z();
-          if(cfPara.x()!=0.) 
-            outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
-          else 
-            outCrkFrt << setw(15) << "inf" << endl;
+    int num=(int)cfSegNodes[m].size();
+    int numSubCracks=0;
+    for(int i=0;i<num;i++) {
+      if(i==0 || i==num-1 || cfSegPreIdx[m][i]<0) {
+        if(i==cfSegMinIdx[m][i]) numSubCracks++;
+        int node=cfSegNodes[m][i];
+        Point cp=cx[m][node];
+        Vector cfPara=cfSegK[m][i];
+        outCrkFrt << setw(5) << timestep
+                  << setw(15) << time
+                  << setw(5)  << (i-1+2*numSubCracks)/2
+                  << setw(10)  << node
+                  << setw(15) << cp.x()
+                  << setw(15) << cp.y()
+                  << setw(15) << cp.z()
+                  << setw(15) << cfPara.x()
+                  << setw(15) << cfPara.y()
+                  << setw(5) << cfPara.z();
+        if(cfPara.x()!=0.) 
+          outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
+        else 
+          outCrkFrt << setw(15) << "inf" << endl;
 
-          if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
-        }
+        if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
       }
-    } // End if(timeToDump)
+    } // End of loop over i 
   } // End if(cfSegNodes[m].size()>0)
 }
 
